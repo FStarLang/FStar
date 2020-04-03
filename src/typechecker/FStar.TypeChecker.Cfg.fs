@@ -26,6 +26,7 @@ type fsteps = {
      beta : bool;
      iota : bool;
      zeta : bool;
+     zeta_full : bool;
      weak : bool;
      hnf  : bool;
      primops : bool;
@@ -63,6 +64,7 @@ let steps_to_string f =
     beta = %s;\n\
     iota = %s;\n\
     zeta = %s;\n\
+    zeta_full = %s;\n\
     weak = %s;\n\
     hnf  = %s;\n\
     primops = %s;\n\
@@ -88,6 +90,7 @@ let steps_to_string f =
   [ f.beta |> b;
     f.iota |> b;
     f.zeta |> b;
+    f.zeta_full |> b;
     f.weak |> b;
     f.hnf  |> b;
     f.primops |> b;
@@ -114,6 +117,7 @@ let default_steps : fsteps = {
     beta = true;
     iota = true;
     zeta = true;
+    zeta_full = false;
     weak = false;
     hnf  = false;
     primops = false;
@@ -144,6 +148,7 @@ let fstep_add_one s fs =
     | Beta -> { fs with beta = true }
     | Iota -> { fs with iota = true }
     | Zeta -> { fs with zeta = true }
+    | ZetaFull -> { fs with zeta_full = true }
     | Exclude Beta -> { fs with beta = false }
     | Exclude Iota -> { fs with iota = false }
     | Exclude Zeta -> { fs with zeta = false }

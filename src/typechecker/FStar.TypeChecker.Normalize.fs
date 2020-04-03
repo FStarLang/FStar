@@ -714,6 +714,7 @@ let is_nbe_request s = BU.for_some (eq_step NBE) s
 
 let tr_norm_step = function
     | EMB.Zeta ->    [Zeta]
+    | EMB.ZetaFull -> [ZetaFull]    
     | EMB.Iota ->    [Iota]
     | EMB.Delta ->   [UnfoldUntil delta_constant]
     | EMB.Simpl ->   [Simplify]
@@ -895,7 +896,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
 
     // Recursive lets may only be unfolded when Zeta is on
     | Some (Inr ({sigquals=qs; sigel=Sig_let((is_rec, _), _)}, _), _), _, _, _ when
-            is_rec && not cfg.steps.zeta ->
+            is_rec && not cfg.steps.zeta && not cfg.steps.zeta_full ->
         log_unfolding cfg (fun () -> BU.print_string " >> It's a recursive definition but we're not doing Zeta, not unfolding\n");
         no
 
@@ -1128,6 +1129,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 if cfg.debug.print_normalized
                 then (Debug(tm, BU.now())::tail)
                 else tail in
+              BU.print1 ">>>>>>>Norm request with cfg = %s\n"
+                (Cfg.cfg_to_string cfg');
               norm cfg' env stack' tm
             end
 
@@ -1147,7 +1150,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | Univ _ -> failwith "Impossible: term variable is bound to a universe"
                 | Dummy -> failwith "Term variable not found"
                 | Clos(env, t0, r, fix) ->
-                   if not fix || cfg.steps.zeta
+                   if not fix 
+                   || cfg.steps.zeta
+                   || cfg.steps.zeta_full
                    then match !r with
                         | Some (env, t') ->
                             log cfg  (fun () -> BU.print2 "Lazy hit: %s cached to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
@@ -1389,8 +1394,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_let((true, lbs), body)
                 when cfg.steps.compress_uvars
-                  || ((not cfg.steps.zeta) &&
-                      cfg.steps.pure_subterms_within_computations) -> //no fixpoint reduction allowed
+                  || (not cfg.steps.zeta &&
+                     not cfg.steps.zeta_full && 
+                     cfg.steps.pure_subterms_within_computations) -> //no fixpoint reduction allowed
             let lbs, body = Subst.open_let_rec lbs body in
             let lbs = List.map (fun lb ->
                 let ty = norm cfg env [] lb.lbtyp in
@@ -1415,7 +1421,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let t = {t with n=Tm_let((true, lbs), body)} in
             rebuild cfg env stack t
 
-          | Tm_let(lbs, body) when not cfg.steps.zeta -> //no fixpoint reduction allowed
+          | Tm_let(lbs, body) when not cfg.steps.zeta && not cfg.steps.zeta_full -> //no fixpoint reduction allowed
             rebuild cfg env stack (closure_as_term cfg env t)
 
           | Tm_let(lbs, body) ->
@@ -1561,7 +1567,8 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
                          Primops;
                          AllowUnboundUniverses;
                          EraseUniverses;
-                         Exclude Zeta;
+      //we exclude Zeta; but if zeta_full is set, this will still unroll fixpoints                         
+                         Exclude Zeta; 
                          Inlining]
         in
         let cfg' = { cfg with
@@ -2468,6 +2475,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           // If either Weak or HNF, then don't descend into branch
           let whnf = cfg.steps.weak || cfg.steps.hnf in
           let cfg_exclude_zeta =
+            if cfg.steps.zeta_full 
+            then cfg 
+            else
              let new_delta =
                cfg.delta_level |> List.filter (function
                  | Env.InliningDelta
