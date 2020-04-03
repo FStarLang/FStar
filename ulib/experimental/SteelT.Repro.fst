@@ -69,6 +69,7 @@ let resolve () : Tac unit =
 
 
 //#push-options "--debug Repro --debug_level ResolveImplicitsHook"
+#push-options "--print_implicits"
 val test_ok1 (_:unit)
   : SteelT unit emp (fun c -> emp)
 let test_ok1 _
