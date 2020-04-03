@@ -342,6 +342,7 @@ type raw_error =
   | Fatal_PolymonadicBind_conflict
   | Warning_BleedingEdge_Feature
   | Warning_IgnoredBinding
+  | Warning_AbstractQualifier
 
 type flag = error_flag
 
@@ -681,6 +682,7 @@ let default_flags =
   (Fatal_PolymonadicBind_conflict                    , CError);
   (Warning_BleedingEdge_Feature                      , CWarning);
   (Warning_IgnoredBinding                            , CWarning);
+  (Warning_AbstractQualifier                         , CWarning);
   ]
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
