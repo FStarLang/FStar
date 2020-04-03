@@ -11,8 +11,8 @@ open FStar.Range
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 open FStar.Syntax.Embeddings
-open FStar.Tactics.Basic
 open FStar.Tactics.Native
+open FStar.Tactics.Monad
 
 module S     = FStar.Syntax.Syntax
 module SS    = FStar.Syntax.Subst

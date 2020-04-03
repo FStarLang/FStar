@@ -1,30 +1,17 @@
 #light "off"
 module FStar.Tactics.Basic
 
-open FStar.TypeChecker.Env
-open FStar.Tactics.Types
-open FStar.Tactics.Result
 open FStar.Syntax.Syntax
-
+open FStar.TypeChecker.Env
 open FStar.Reflection.Data
+open FStar.Tactics.Types
+open FStar.Tactics.Monad
+
+module O     = FStar.Options
 module Range = FStar.Range
-module EMB = FStar.Syntax.Embeddings
-module Z = FStar.BigInt
-module BU = FStar.Util
-
-type tac<'a>
-
-val run      : tac<'a> -> proofstate -> __result<'a>
-val run_safe : tac<'a> -> proofstate -> __result<'a> (* Won't raise any exception, just fail within the monad *)
-val ret : 'a -> tac<'a>
-val set : proofstate -> tac<unit>
-val get : tac<proofstate>
-val bind : tac<'a> -> ('a -> tac<'b>) -> tac<'b>
-val traise : exn -> tac<'a>
-val fail : string -> tac<'a>
-
-val set_goals     : list<goal> -> tac<unit>
-val set_smt_goals : list<goal> -> tac<unit>
+module EMB   = FStar.Syntax.Embeddings
+module Z     = FStar.BigInt
+module BU    = FStar.Util
 
 val get_guard_policy : unit -> tac<guard_policy>
 val set_guard_policy : guard_policy -> tac<unit>
@@ -38,14 +25,7 @@ val join    : unit -> tac<unit>
 val inspect : term -> tac<term_view>
 val pack    : term_view -> tac<term>
 
-// Not very uniform....
-val log : proofstate -> (unit -> unit) -> unit
-val tacprint  : string -> unit
-val tacprint1 : string -> string -> unit
-val tacprint2 : string -> string -> string -> unit
-val tacprint3 : string -> string -> string -> string -> unit
 val print     : string -> tac<unit>
-val do_dump_proofstate : proofstate -> string -> unit
 val dump : string -> tac<unit>
 val debugging : unit -> tac<bool>
 
@@ -82,8 +62,6 @@ val launch_process : string -> list<string> -> string -> tac<string>
 
 val fresh_bv_named : string -> typ -> tac<bv>
 
-val t_pointwise : direction -> tac<unit> -> tac<unit>
-val topdown_rewrite: (term -> tac<(bool * FStar.BigInt.t)>) -> tac<unit> -> tac<unit>
 val trefl : unit -> tac<unit>
 
 val dup      : unit -> tac<unit>

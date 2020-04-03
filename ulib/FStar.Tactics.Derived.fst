@@ -151,6 +151,57 @@ under some guard [g], adding the guard as a goal. *)
 let exact_guard (t : term) : Tac unit =
     with_policy Goal (fun () -> t_exact true false t)
 
+(** (TODO: explain bettter) When running [pointwise tau] For every
+subterm [t'] of the goal's type [t], the engine will build a goal [Gamma
+|= t' == ?u] and run [tau] on it. When the tactic proves the goal,
+the engine will rewrite [t'] for [?u] in the original goal type. This
+is done for every subterm, bottom-up. This allows to recurse over an
+unknown goal type. By inspecting the goal, the [tau] can then decide
+what to do (to not do anything, use [trefl]). *)
+let t_pointwise (d:direction) (tau : unit -> Tac unit) : Tac unit =
+  let ctrl (t:term) : Tac (bool & ctrl_flag) =
+    true, Continue
+  in
+  let rw () : Tac unit =
+    tau ()
+  in
+  ctrl_rewrite d ctrl rw
+
+(** [topdown_rewrite ctrl rw] is used to rewrite those sub-terms [t]
+    of the goal on which [fst (ctrl t)] returns true.
+
+    On each such sub-term, [rw] is presented with an equality of goal
+    of the form [Gamma |= t == ?u]. When [rw] proves the goal,
+    the engine will rewrite [t] for [?u] in the original goal
+    type.
+
+    The goal formula is traversed top-down and the traversal can be
+    controlled by [snd (ctrl t)]:
+
+    When [snd (ctrl t) = 0], the traversal continues down through the
+    position in the goal term.
+
+    When [snd (ctrl t) = 1], the traversal continues to the next
+    sub-tree of the goal.
+
+    When [snd (ctrl t) = 2], no more rewrites are performed in the
+    goal.
+*)
+let topdown_rewrite (ctrl : term -> Tac (bool * int))
+                    (rw:unit -> Tac unit) : Tac unit
+  = let ctrl' (t:term) : Tac (bool & ctrl_flag) =
+      let b, i = ctrl t in
+      let f =
+        match i with
+        | 0 -> Continue
+        | 1 -> Skip
+        | 2 -> Abort
+        | _ -> fail "topdown_rewrite: bad value from ctrl"
+      in
+      b, f
+    in
+    ctrl_rewrite TopDown ctrl' rw
+
 let pointwise  (tau : unit -> Tac unit) : Tac unit = t_pointwise BottomUp tau
 let pointwise' (tau : unit -> Tac unit) : Tac unit = t_pointwise TopDown  tau
 

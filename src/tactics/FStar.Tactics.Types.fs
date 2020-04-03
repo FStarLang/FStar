@@ -143,5 +143,18 @@ type direction =
     | TopDown
     | BottomUp
 
+type ctrl_flag =
+    | Continue
+    | Skip
+    | Abort
+
 exception TacticFailure of string
 exception EExn of term
+
+let check_goal_solved' goal =
+  match FStar.Syntax.Unionfind.find goal.goal_ctx_uvar.ctx_uvar_head with
+  | Some t -> Some t
+  | None   -> None
+
+let check_goal_solved goal =
+  Option.isSome (check_goal_solved' goal)

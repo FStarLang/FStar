@@ -7,6 +7,7 @@ open FStar_Tactics_Effect
 module N = FStar_TypeChecker_Normalize
 module E = FStar_Tactics_Effect
 module B = FStar_Tactics_Basic
+module CTRW = FStar_Tactics_CtrlRewrite
 module RT = FStar_Reflection_Types
 module RD = FStar_Reflection_Data
 module EMB = FStar_Syntax_Embeddings
@@ -129,7 +130,9 @@ let catch (t: unit -> 'a __tac): ((exn, 'a) FStar_Pervasives.either) __tac =
 let recover (t: unit -> 'a __tac): ((exn, 'a) FStar_Pervasives.either) __tac =
         fun ps -> fmap fix_either (from_tac_1 B.recover (to_tac_0 (t ())) ps)
 
-let t_pointwise (d : direction) (t: unit -> unit __tac): unit __tac = from_tac_2 B.t_pointwise d (to_tac_0 (t ()))
-
-let topdown_rewrite (t1 : RT.term -> (bool * int) __tac) (t2 : unit -> unit __tac) : unit __tac =
-        from_tac_2 B.topdown_rewrite (to_tac_1 t1) (to_tac_0 (t2 ()))
+let ctrl_rewrite
+    (d : direction)
+    (t1 : RT.term -> (bool * ctrl_flag) __tac)
+    (t2 : unit -> unit __tac)
+  : unit __tac
+  = from_tac_3 CTRW.ctrl_rewrite d (to_tac_1 t1) (to_tac_0 (t2 ()))

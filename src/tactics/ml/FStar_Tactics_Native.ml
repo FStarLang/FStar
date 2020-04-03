@@ -2,6 +2,7 @@ open FStar_Range
 open FStar_Tactics_Types
 open FStar_Tactics_Result
 open FStar_Tactics_Basic
+open FStar_Tactics_Monad
 open FStar_Syntax_Syntax
 
 module N = FStar_TypeChecker_Normalize
