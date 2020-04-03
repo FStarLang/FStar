@@ -198,8 +198,8 @@ let sort_goals (env:FStar.TypeChecker.Env.env) (imps:implicits) : implicits =
 
       | _ ->
         let imp_goal () =
-            if Env.debug env <| Options.Other "ResolveImplicitsHook"
-            then BU.print1 "Goal is a generic implicit: %s\n" (Print.term_to_string imp.imp_uvar.ctx_uvar_typ);
+           if Env.debug env <| Options.Other "ResolveImplicitsHook"
+           then BU.print1 "Goal is a generic implicit: %s\n" (Print.term_to_string imp.imp_uvar.ctx_uvar_typ);
             { goal_dep_id = !goal_dep_id;
               goal_type = Imp(imp.imp_uvar);
               goal_imp = imp;
@@ -218,6 +218,17 @@ let sort_goals (env:FStar.TypeChecker.Env.env) (imps:implicits) : implicits =
             match (U.un_uinst head).n, args with
             | Tm_fvar fv, [(outer, _);(inner, _);(frame, _)]
                 when fv_eq_lid fv (Ident.lid_of_str "Steel.Memory.Tactics.can_be_split_into")
+                && is_flex frame ->
+              let imp_uvar = flex_uvar_head frame in
+              { goal_dep_id = !goal_dep_id;
+                goal_type = Can_be_split_into(outer, inner, imp_uvar);
+                goal_imp = imp;
+                assignees = BU.set_add imp_uvar empty_uv_set;
+                goal_dep_uvars = BU.set_union (Free.uvars outer) (Free.uvars inner);
+                dependences = BU.mk_ref [];
+                visited = BU.mk_ref mark_unset }
+            | Tm_fvar fv, [(_, _); (outer, _);(inner, _);(frame, _)]
+                when fv_eq_lid fv (Ident.lid_of_str "SteelT.FramingBind.can_be_split_into_forall")
                 && is_flex frame ->
               let imp_uvar = flex_uvar_head frame in
               { goal_dep_id = !goal_dep_id;
