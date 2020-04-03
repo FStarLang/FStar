@@ -27,4 +27,4 @@ open FStar.Exn
 open FStar.All
 open FStar.TypeChecker.Env
 
-val sort_goals:  env -> eqs:implicits -> rest:implicits -> implicits
+val sort_goals:  env -> implicits -> implicits

@@ -15,10 +15,6 @@
 
    Authors: Nikhil Swamy, ...
 *)
-//////////////////////////////////////////////////////////////////////////
-//Refinement subtyping with higher-order unification
-//with special treatment for higher-order patterns
-//////////////////////////////////////////////////////////////////////////
 
 #light "off"
 module FStar.TypeChecker.DeferredImplicits
@@ -92,12 +88,14 @@ let print_goal_dep gd =
     - [env]: This is the current typechecking environment, currently
       mainly used for debugging
 
-    - [eqs]: All deferred equations. E.g., if the typechecker
+    - [imps]: All deferred constraints.
+
+      E.g., if the typechecker
       generated and deferred a constraint, [?pre_f = t], this
       constraint appears in this list in the form of a goal
       [?witness : (eq2 #tf ?pre_f t)], where [tf] is the type of [pre_f].
 
-    - [implicits]: All non-equality deferred constraints. E.g., if the
+      E.g., if the
       typechecker generated and deferred solving an implicit variable
       and [?frame : hprop] or
       [?u : squash (can_be_split_into outer inner frame)], these constraints
@@ -128,7 +126,7 @@ let print_goal_dep gd =
          let can_be_split_into (outer inner frame:hprop) = ...
        ]}
 *)
-let sort_goals (env:FStar.TypeChecker.Env.env) (eqs:implicits) (rest:implicits) : implicits =
+let sort_goals (env:FStar.TypeChecker.Env.env) (imps:implicits) : implicits =
   (* For each goal g, maintain:
        1. Assigned uvars, at most 2 of them
            - if g is a flex_rigid eq goal, then it assigns one uvar
@@ -159,83 +157,79 @@ let sort_goals (env:FStar.TypeChecker.Env.env) (eqs:implicits) (rest:implicits) 
   let mark_unset, mark_inprogress, mark_finished = 0, 1, 2 in
   //Functional (ie., immutable) sets of uvars
   let empty_uv_set = Free.new_uv_set () in
-  (** Converting an eq goal into a goal_dep *)
-  let eq_as_goal_dep (eq:implicit) =
-    let goal_type, assignees, dep_uvars =
-      match (eq.imp_uvar.ctx_uvar_typ).n with
+  (** Converting an implicit into a goal_dep:
+        -- Determines the case of an equality goal (Flex_flex, Flex_right etc.)
+        -- Inteprets can_be_split_into
+   *)
+  let imp_as_goal_dep (imp:implicit) =
+      BU.incr goal_dep_id;
+      match (imp.imp_uvar.ctx_uvar_typ).n with
       | Tm_app({n=Tm_uinst({n=Tm_fvar fv}, _)}, [_; (lhs, _); (rhs, _)])
               when S.fv_eq_lid fv FStar.Parser.Const.eq2_lid ->
         let flex_lhs = is_flex lhs in
         let flex_rhs = is_flex rhs in
-        if flex_lhs && flex_rhs
-        then let lhs, rhs = flex_uvar_head lhs, flex_uvar_head rhs in
-             let assignees = BU.set_add rhs (BU.set_add lhs empty_uv_set) in
-             //Note, for a flex-flex, the assignees and the dep_uvars are the same
-             //If we're not careful below, this will induce cycles in the graph
-             //immediately. See handling in fill_deps
-             FlexFlex (lhs, rhs), assignees, assignees
-        else if flex_lhs
-        then let lhs = flex_uvar_head lhs in
-             let assignees = BU.set_add lhs empty_uv_set in
-             let dep_uvars = Free.uvars rhs in
-             FlexRigid (lhs, rhs), assignees, dep_uvars
-        else if flex_rhs
-        then let rhs = flex_uvar_head rhs in
-             let assignees = BU.set_add rhs empty_uv_set in
-             let dep_uvars = Free.uvars lhs in
-             FlexRigid (rhs, lhs), assignees, dep_uvars
-        else failwith "Impossible: deferred goals must be flex on one at least one side"
-      | _ -> failwith "Not an eq"
-    in
-    BU.incr goal_dep_id;
-    { goal_dep_id = !goal_dep_id;
-      goal_type = goal_type;
-      goal_imp = eq;
-      assignees = assignees;
-      goal_dep_uvars = dep_uvars;
-      dependences = BU.mk_ref [];
-      visited = BU.mk_ref mark_unset }
-  in
-  (** This converts non-eq goals into a goal_dep.
-      Its main job is to interpret can_be_split_into.
-      Any other goal is just dumped into the default case of Imp
-      Imp goals will be scheduled last *)
-  let imp_as_goal_dep (i:implicit) =
-    BU.incr goal_dep_id;
-    let imp_goal () =
-      if Env.debug env <| Options.Other "ResolveImplicitsHook"
-      then BU.print1 "Discarding goal as imp: %s\n" (Print.term_to_string i.imp_uvar.ctx_uvar_typ);
-      { goal_dep_id = !goal_dep_id;
-        goal_type = Imp(i.imp_uvar);
-        goal_imp = i;
-        assignees = empty_uv_set;
-        goal_dep_uvars = empty_uv_set;
-        dependences = BU.mk_ref [];
-        visited = BU.mk_ref mark_unset }
-    in
-    match U.un_squash i.imp_uvar.ctx_uvar_typ with
-    | None -> imp_goal()
-    | Some t ->
-      let head, args = U.head_and_args t in
-      //Here, rather than matching specifically on this type
-      //We could consult the [env] for attributes on fv to see if is
-      //tagged with any dependence annotations and process it accordingly
-      match (U.un_uinst head).n, args with
-      | Tm_fvar fv, [(outer, _);(inner, _);(frame, _)]
-                when fv_eq_lid fv (Ident.lid_of_str "Steel.Memory.Tactics.can_be_split_into")
-                && is_flex frame ->
-        let imp_uvar = flex_uvar_head frame in
+        let goal_type, assignees, dep_uvars =
+          if flex_lhs && flex_rhs
+          then let lhs, rhs = flex_uvar_head lhs, flex_uvar_head rhs in
+               let assignees = BU.set_add rhs (BU.set_add lhs empty_uv_set) in
+               //Note, for a flex-flex, the assignees and the dep_uvars are the same
+               //If we're not careful below, this will induce cycles in the graph
+               //immediately. See handling in fill_deps
+               FlexFlex (lhs, rhs), assignees, assignees
+          else if flex_lhs
+          then let lhs = flex_uvar_head lhs in
+               let assignees = BU.set_add lhs empty_uv_set in
+               let dep_uvars = Free.uvars rhs in
+               FlexRigid (lhs, rhs), assignees, dep_uvars
+          else if flex_rhs
+          then let rhs = flex_uvar_head rhs in
+               let assignees = BU.set_add rhs empty_uv_set in
+               let dep_uvars = Free.uvars lhs in
+               FlexRigid (rhs, lhs), assignees, dep_uvars
+          else failwith "Impossible: deferred goals must be flex on one at least one side"
+        in
         { goal_dep_id = !goal_dep_id;
-          goal_type = Can_be_split_into(outer, inner, imp_uvar);
-          goal_imp = i;
-          assignees = BU.set_add imp_uvar empty_uv_set;
-          goal_dep_uvars = BU.set_union (Free.uvars outer) (Free.uvars inner);
+          goal_type = goal_type;
+          goal_imp = imp;
+          assignees = assignees;
+          goal_dep_uvars = dep_uvars;
           dependences = BU.mk_ref [];
           visited = BU.mk_ref mark_unset }
+
       | _ ->
-        imp_goal()
+        let imp_goal () =
+            if Env.debug env <| Options.Other "ResolveImplicitsHook"
+            then BU.print1 "Goal is a generic implicit: %s\n" (Print.term_to_string imp.imp_uvar.ctx_uvar_typ);
+            { goal_dep_id = !goal_dep_id;
+              goal_type = Imp(imp.imp_uvar);
+              goal_imp = imp;
+              assignees = empty_uv_set;
+              goal_dep_uvars = empty_uv_set;
+              dependences = BU.mk_ref [];
+              visited = BU.mk_ref mark_unset }
+        in
+        match U.un_squash imp.imp_uvar.ctx_uvar_typ with
+        | None -> imp_goal()
+        | Some t ->
+            let head, args = U.head_and_args t in
+            //Here, rather than matching specifically on this type
+            //We could consult the [env] for attributes on fv to see if is
+            //tagged with any dependence annotations and process it accordingly
+            match (U.un_uinst head).n, args with
+            | Tm_fvar fv, [(outer, _);(inner, _);(frame, _)]
+                when fv_eq_lid fv (Ident.lid_of_str "Steel.Memory.Tactics.can_be_split_into")
+                && is_flex frame ->
+              let imp_uvar = flex_uvar_head frame in
+              { goal_dep_id = !goal_dep_id;
+                goal_type = Can_be_split_into(outer, inner, imp_uvar);
+                goal_imp = imp;
+                assignees = BU.set_add imp_uvar empty_uv_set;
+                goal_dep_uvars = BU.set_union (Free.uvars outer) (Free.uvars inner);
+                dependences = BU.mk_ref [];
+                visited = BU.mk_ref mark_unset }
+            | _ -> imp_goal()
   in
-  let goal_deps = List.map eq_as_goal_dep eqs @ List.map imp_as_goal_dep rest in
+  let goal_deps = List.map imp_as_goal_dep imps in
   //We split out the Imp goals into [rest] and will not consider them
   //during the sort ... they'll all just go at the end
   let goal_deps, rest =
