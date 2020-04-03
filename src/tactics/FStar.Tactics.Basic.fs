@@ -1586,7 +1586,9 @@ let lset (_ty:term) (k:string) (t:term) : tac<unit> = wrap_err "lset" <|
     set ps)
 
 let goal_of_goal_ty env typ : goal * guard_t =
-    let u, ctx_uvars, g_u = TcUtil.new_implicit_var "proofstate_of_goal_ty" typ.pos env typ in
+    let u, ctx_uvars, g_u =
+        Env.new_implicit_var_aux "proofstate_of_goal_ty" typ.pos env typ Allow_untyped None
+    in
     let ctx_uvar, _ = List.hd ctx_uvars in
     let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
     g, g_u
