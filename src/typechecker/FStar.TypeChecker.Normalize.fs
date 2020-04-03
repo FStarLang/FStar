@@ -1129,8 +1129,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 if cfg.debug.print_normalized
                 then (Debug(tm, BU.now())::tail)
                 else tail in
-              BU.print1 ">>>>>>>Norm request with cfg = %s\n"
-                (Cfg.cfg_to_string cfg');
               norm cfg' env stack' tm
             end
 
