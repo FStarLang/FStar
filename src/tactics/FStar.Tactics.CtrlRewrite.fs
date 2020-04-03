@@ -27,7 +27,7 @@ module N      = FStar.TypeChecker.Normalize
 type controller_ty = term -> tac<(bool * ctrl_flag)>
 type rewriter_ty   = tac<unit>
 
-let do_rewrite
+let __do_rewrite
     (g0:goal)
     (rewriter : rewriter_ty)
     (env : env)
@@ -65,6 +65,18 @@ let do_rewrite
                    (Print.term_to_string tm)
                    (Print.term_to_string ut)) (fun () ->
     ret ut)))))
+
+(* If __do_rewrite fails with "SKIP" we do nothing *)
+let do_rewrite
+    (g0:goal)
+    (rewriter : rewriter_ty)
+    (env : env)
+    (tm : term)
+  : tac<term>
+= bind (catch (__do_rewrite g0 rewriter env tm)) (function
+       | Inl (TacticFailure "SKIP") -> ret tm
+       | Inl e -> traise e
+       | Inr tm' -> ret tm')
 
 type ctac<'a> = 'a -> tac<('a * ctrl_flag)>
 
