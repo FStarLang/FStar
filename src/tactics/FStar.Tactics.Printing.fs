@@ -18,12 +18,15 @@ module SS      = FStar.Syntax.Subst
 module S       = FStar.Syntax.Syntax
 module Env     = FStar.TypeChecker.Env
 
+let term_to_string (e:Env.env) (t:term) : string =
+    Print.term_to_string' e.dsenv t
+
 let goal_to_string_verbose (g:goal) : string =
     BU.format2 "%s%s\n"
         (Print.ctx_uvar_to_string g.goal_ctx_uvar)
         (match check_goal_solved' g with
          | None -> ""
-         | Some t -> BU.format1 "\tGOAL ALREADY SOLVED!: %s" (Print.term_to_string t))
+         | Some t -> BU.format1 "\tGOAL ALREADY SOLVED!: %s" (term_to_string (goal_env g) t))
 
 let unshadow (bs : binders) (t : term) : binders * term =
     (* string name of a bv *)
@@ -56,10 +59,10 @@ let unshadow (bs : binders) (t : term) : binders * term =
 let goal_to_string (kind : string) (maybe_num : option<(int * int)>) (ps:proofstate) (g:goal) : string =
     let w =
         if Options.print_implicits ()
-        then Print.term_to_string (goal_witness g)
+        then term_to_string (goal_env g) (goal_witness g)
         else match check_goal_solved' g with
              | None -> "_"
-             | Some t -> Print.term_to_string (goal_witness g) (* shouldn't really happen that we print a solved goal *)
+             | Some t -> term_to_string (goal_env g) (goal_witness g) (* shouldn't really happen that we print a solved goal *)
     in
     let num = match maybe_num with
               | None -> ""
@@ -78,7 +81,7 @@ let goal_to_string (kind : string) (maybe_num : option<(int * int)>) (ps:proofst
         then goal_to_string_verbose g
         else BU.format3 "%s |- %s : %s\n" (Print.binders_to_string ", " goal_binders)
                                           w
-                                          (Print.term_to_string goal_ty)
+                                          (term_to_string (goal_env g) goal_ty)
     in
     BU.format4 "%s%s%s:\n%s\n" kind num maybe_label actual_goal
 
@@ -108,8 +111,8 @@ let goal_to_json g =
     let g_binders, g_type = unshadow g_binders g_type in
     let j_binders = Print.binders_to_json (Env.dsenv (goal_env g)) g_binders in
     JsonAssoc [("hyps", j_binders);
-               ("goal", JsonAssoc [("witness", JsonStr (Print.term_to_string (goal_witness g)));
-                                   ("type", JsonStr (Print.term_to_string g_type));
+               ("goal", JsonAssoc [("witness", JsonStr (term_to_string (goal_env g) (goal_witness g)));
+                                   ("type", JsonStr (term_to_string (goal_env g) g_type));
                                    ("label", JsonStr g.label)
                                   ])]
 

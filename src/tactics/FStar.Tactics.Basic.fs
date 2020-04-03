@@ -49,6 +49,8 @@ let whnf e t = N.unfold_whnf e t
  * flags. *)
 let tts = N.term_to_string
 
+let term_to_string e t = Print.term_to_string' e.dsenv t
+
 let bnorm_goal g = goal_with_type g (bnorm (goal_env g) (goal_type g))
 
 let tacprint  (s:string)       = BU.print1 "TAC>> %s\n" s
@@ -608,7 +610,7 @@ let rec  __try_unify_by_application
         (* Not a match, try instantiating the first type by application *)
         match U.arrow_one ty1 with
         | None ->
-            fail2 "Could not instantiate, %s to %s" (Print.term_to_string ty1) (Print.term_to_string ty2)
+            fail2 "Could not instantiate, %s to %s" (term_to_string e ty1) (term_to_string e ty2)
         | Some (b, c) ->
             if not (U.is_total_comp c) then fail "Codomain is effectful" else
             bind (new_uvar "apply arg" e (fst b).sort) (fun (uvt, uv) ->
@@ -1389,6 +1391,7 @@ let rec init (l:list<'a>) : list<'a> =
 
 (* TODO: these are mostly duplicated from FStar.Reflection.Basic, unify *)
 let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
+    bind (top_env ()) (fun e ->
     let t = U.unascribe t in
     let t = U.un_uinst t in
     let t = U.unlazy_emb t in
@@ -1499,9 +1502,9 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
         ret <| Tv_Unknown
 
     | _ ->
-        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (Print.term_to_string t));
+        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (term_to_string e t));
         ret <| Tv_Unknown
-    )
+    ))
 
 (* This function could actually be pure, it doesn't need freshness
  * like `inspect` does, but we mark it as Tac for uniformity. *)
