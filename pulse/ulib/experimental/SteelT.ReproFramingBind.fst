@@ -83,3 +83,10 @@ let test_ok3 _
   = let tr = dependent_provides () in
     let _ = nop () in
     ret tr ()
+
+
+val test_ok4 (_:unit)
+  : SteelT myref emp myref_hprop
+let test_ok4 _
+  = let tr = dependent_provides () in
+    ret tr (nop ())
