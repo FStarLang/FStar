@@ -227,6 +227,7 @@ install: all
 	@# Then the rest of the static files.
 	@# (those are not used in the opam package, not sure if their Makefiles work)
 	$(call install_dir,examples,share/fstar/examples)
+	$(call install_dir,tests,share/fstar/tests)
 	$(call install_dir,ucontrib,share/fstar/contrib)
 	@# Then the tutorial
 ifeq ($(MADOKO),Madoko)
@@ -264,12 +265,15 @@ package: all
 	$(INSTALL_EXEC) -m 755 $(FSTAR_MAIN_NATIVE) $(PREFIX)/bin/fstar.exe
 	@# Then the standard library.
 	$(call fexport,ulib)
+	$(INSTALL_EXEC) -m 644 ../../ulib/ml/FStar_Int*.ml $(PREFIX)/ulib/ml
+	$(INSTALL_EXEC) -m 644 ../../ulib/ml/FStar_UInt*.ml $(PREFIX)/ulib/ml
 	mkdir -p $(PREFIX)/src/ocaml-output/
 	cp ../../src/ocaml-output/FStar_Pervasives.ml $(PREFIX)/src/ocaml-output/
 	cp ../../version.txt $(PREFIX)/
 	cp ../../_tags $(PREFIX)/
 	@# Then the rest of the static files.
 	$(call fexport,examples)
+	$(call fexport,tests)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
 
