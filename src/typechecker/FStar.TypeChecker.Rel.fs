@@ -176,12 +176,12 @@ let prob_to_string env = function
 let uvi_to_string env = function
     | UNIV (u, t) ->
       let x = if (Options.hide_uvar_nums()) then "?" else UF.univ_uvar_id u |> string_of_int in
-      BU.format2 "UNIV %s %s" x (Print.univ_to_string t)
+      BU.format2 "UNIV %s <- %s" x (Print.univ_to_string t)
 
     | TERM (u, t) ->
       let x = if (Options.hide_uvar_nums()) then "?" else UF.uvar_id u.ctx_uvar_head |> string_of_int in
-      BU.format2 "TERM %s %s" x (N.term_to_string env t)
-let uvis_to_string env uvis = List.map (uvi_to_string env) uvis |> String.concat  ", "
+      BU.format2 "TERM %s <- %s" x (N.term_to_string env t)
+let uvis_to_string env uvis = FStar.Common.string_of_list (uvi_to_string env) uvis
 let names_to_string nms = BU.set_elements nms |> List.map Print.bv_to_string |> String.concat ", "
 let args_to_string args = args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " "
 
@@ -758,7 +758,8 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
 
 let extend_solution pid sol wl =
     if Env.debug wl.tcenv <| Options.Other "Rel"
-    then BU.print2 "Solving %s: with [%s]\n" (string_of_int pid) (List.map (uvi_to_string wl.tcenv) sol |> String.concat ", ");
+    then BU.print2 "Solving %s: with [%s]\n" (string_of_int pid)
+                                             (uvis_to_string wl.tcenv sol);
     commit sol;
     {wl with ctr=wl.ctr+1}
 
@@ -766,7 +767,8 @@ let solve_prob (prob : prob) (logical_guard : option<term>) (uvis : list<uvi>) (
     def_check_prob "solve_prob.prob" prob;
     BU.iter_opt logical_guard (def_check_scoped "solve_prob.guard" prob);
     if Env.debug wl.tcenv <| Options.Other "Rel"
-    then BU.print2 "Solving %s: with %s\n" (string_of_int <| p_pid prob) (List.map (uvi_to_string wl.tcenv) uvis |> String.concat ", ");
+    then BU.print2 "Solving %s: with %s\n" (string_of_int <| p_pid prob)
+                                           (uvis_to_string wl.tcenv uvis);
     solve_prob' false prob logical_guard uvis wl
 
 (* ------------------------------------------------ *)
