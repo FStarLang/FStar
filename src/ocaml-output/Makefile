@@ -271,6 +271,7 @@ package: all
 	cp ../../src/ocaml-output/FStar_Pervasives.ml $(PREFIX)/src/ocaml-output/
 	cp ../../version.txt $(PREFIX)/
 	cp ../../_tags $(PREFIX)/
+	cp ../../.common.mk $(PREFIX)/
 	@# Then the rest of the static files.
 	$(call fexport,examples)
 	$(call fexport,tests)
