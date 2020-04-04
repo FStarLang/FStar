@@ -519,3 +519,14 @@ let (check_goal_solved : goal -> Prims.bool) =
     let uu____1175 = check_goal_solved' goal  in
     FStar_Option.isSome uu____1175
   
+let (get_phi :
+  goal -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) =
+  fun g  ->
+    let uu____1188 =
+      let uu____1189 = goal_env g  in
+      let uu____1190 = goal_type g  in
+      FStar_TypeChecker_Normalize.unfold_whnf uu____1189 uu____1190  in
+    FStar_Syntax_Util.un_squash uu____1188
+  
+let (is_irrelevant : goal -> Prims.bool) =
+  fun g  -> let uu____1199 = get_phi g  in FStar_Option.isSome uu____1199 

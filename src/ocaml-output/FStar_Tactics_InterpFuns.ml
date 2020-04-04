@@ -1350,8 +1350,8 @@ let (mk :
       fun nunivs  ->
         fun interp  ->
           fun nbe_interp  ->
-            let nm1 =
-              FStar_Tactics_Embedding.fstar_tactics_lid' ["Builtins"; nm]  in
+            let nm1 = FStar_Parser_Const.fstar_tactics_lid' ["Builtins"; nm]
+               in
             {
               FStar_TypeChecker_Cfg.name = nm1;
               FStar_TypeChecker_Cfg.arity = arity;
@@ -1583,8 +1583,8 @@ let (mkt :
       fun nunivs  ->
         fun interp  ->
           fun nbe_interp  ->
-            let nm1 =
-              FStar_Tactics_Embedding.fstar_tactics_lid' ["Builtins"; nm]  in
+            let nm1 = FStar_Parser_Const.fstar_tactics_lid' ["Builtins"; nm]
+               in
             {
               FStar_TypeChecker_Cfg.name = nm1;
               FStar_TypeChecker_Cfg.arity = arity;
