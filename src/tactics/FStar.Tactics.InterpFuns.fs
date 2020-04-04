@@ -337,17 +337,6 @@ let mk_tactic_nbe_interpretation_6 cb (t:'a -> 'b -> 'c -> 'd -> 'e -> 'f -> tac
   let r = run_safe (t a b c d e f) ps in
   Some (NBETerm.embed (E.e_result_nbe er) cb r))
 
-let step_from_native_step (s: native_primitive_step): Cfg.primitive_step =
-  { Cfg.name                         = s.name
-  ; Cfg.arity                        = s.arity
-  ; Cfg.univ_arity                   = 0 // Zoe : We might need to change that
-  ; Cfg.auto_reflect                 = Some (s.arity - 1)
-  ; Cfg.strong_reduction_ok          = s.strong_reduction_ok
-  ; Cfg.requires_binder_substitution = false // GM: Don't think we care about pretty-printing on native
-  ; Cfg.interpretation               = s.tactic
-  ; Cfg.interpretation_nbe           = fun _cb -> NBETerm.dummy_interp s.name
-  }
-
 let timing_int (l:Ident.lid) f =
     fun psc cb args ->
         (* BU.print1 "Entering primitive %s {\n" (Ident.string_of_lid l); *)
@@ -373,9 +362,6 @@ let mk nm arity nunivs interp nbe_interp =
   ; Cfg.interpretation               = timing_int nm interp
   ; Cfg.interpretation_nbe           = timing_nbe nm nbe_interp
   }
-
-let native_tactics () = list_all ()
-let native_tactics_steps () = List.map step_from_native_step (native_tactics ())
 
 let rec drop n l =
     if n = 0 then l

@@ -46,6 +46,20 @@ open FStar.Tactics.InterpFuns
 
 let tacdbg = BU.mk_ref false
 
+let native_tactics_steps () =
+  let step_from_native_step (s: native_primitive_step): Cfg.primitive_step =
+    { Cfg.name                         = s.name
+    ; Cfg.arity                        = s.arity
+    ; Cfg.univ_arity                   = 0 // Zoe : We might need to change that
+    ; Cfg.auto_reflect                 = Some (s.arity - 1)
+    ; Cfg.strong_reduction_ok          = s.strong_reduction_ok
+    ; Cfg.requires_binder_substitution = false // GM: Don't think we care about pretty-printing on native
+    ; Cfg.interpretation               = s.tactic
+    ; Cfg.interpretation_nbe           = fun _cb -> NBETerm.dummy_interp s.name
+    }
+  in
+  List.map step_from_native_step (Native.list_all ())
+
 (* mktot1/mktot2 uses names in FStar.Tactics.Builtins, we override these few who
  * are in other modules: *)
 let mktot1' uarity nm f ea er nf ena enr =
