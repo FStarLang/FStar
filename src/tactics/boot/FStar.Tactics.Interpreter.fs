@@ -3,6 +3,7 @@ module FStar.Tactics.Interpreter
 
 open FStar
 open FStar.All
+open FStar.Util
 open FStar.Range
 open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
