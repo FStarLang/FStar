@@ -21,7 +21,7 @@ CACHE_DIR=--cache_dir .cache --hint_dir .cache
 
 OTHERFLAGS+=$(USE_EXTRACTED_INTERFACES)
 
-include $(FSTAR_HOME)/src/Makefile.common
+include $(FSTAR_HOME)/.common.mk
 include gmake/z3.mk
 include gmake/fstar.mk
 include gmake/Makefile.tmpl

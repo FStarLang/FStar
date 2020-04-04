@@ -6,7 +6,7 @@ else
 HAS_VALID_MENHIR := 0
 endif
 
-include ../Makefile.common
+include ../../.common.mk
 
 MENHIR=menhir #--explain --infer -la 1 --table
 OCAMLLEX=ocamllex

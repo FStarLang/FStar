@@ -19,7 +19,7 @@ extra: .cache
 	mkdir -p .cache
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
-include $(FSTAR_HOME)/src/Makefile.common
+include $(FSTAR_HOME)/.common.mk
 
 fstarlib.mgen: *.fst *.fsti
 	mkdir -p ml/extracted
