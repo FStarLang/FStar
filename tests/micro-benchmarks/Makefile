@@ -23,7 +23,7 @@ Erasable.ml: Erasable.fst
 	$(FSTAR) --codegen OCaml --extract Erasable $^
 
 Erasable.ml-cmp: Erasable.ml Erasable.ml.expected
-	diff --strip-trailing-cr $< $<.expected
+	diff -u --strip-trailing-cr $< $<.expected
 
 clean:
 	rm -f .depend
