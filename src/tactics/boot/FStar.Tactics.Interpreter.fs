@@ -46,6 +46,9 @@ open FStar.Tactics.InterpFuns
 
 let tacdbg = BU.mk_ref false
 
+let unembed ea a norm_cb = unembed ea a true norm_cb
+let embed ea r x norm_cb = embed ea x r None norm_cb
+
 let native_tactics_steps () =
   let step_from_native_step (s: native_primitive_step): Cfg.primitive_step =
     { Cfg.name                         = s.name

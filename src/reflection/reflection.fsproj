@@ -57,6 +57,7 @@
     <Compile Include="FStar.Reflection.Embeddings.fs" />
     <Compile Include="FStar.Reflection.NBEEmbeddings.fsi" />
     <Compile Include="FStar.Reflection.NBEEmbeddings.fs" />
+    <Compile Include="FStar.Reflection.Interpreter.fsi" />
     <Compile Include="FStar.Reflection.Interpreter.fs" />
   </ItemGroup>
   <ItemGroup>
