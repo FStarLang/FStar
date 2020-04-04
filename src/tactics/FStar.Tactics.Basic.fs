@@ -58,12 +58,6 @@ let tacprint1 (s:string) x     = BU.print1 "TAC>> %s\n" (BU.format1 s x)
 let tacprint2 (s:string) x y   = BU.print1 "TAC>> %s\n" (BU.format2 s x y)
 let tacprint3 (s:string) x y z = BU.print1 "TAC>> %s\n" (BU.format3 s x y z)
 
-let get_phi (g:goal) : option<term> =
-    U.un_squash (whnf (goal_env g) (goal_type g))
-
-let is_irrelevant (g:goal) : bool =
-    Option.isSome (get_phi g)
-
 let print (msg:string) : tac<unit> =
     if not (Options.silent ()) then
       tacprint msg;

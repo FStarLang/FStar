@@ -1,48 +1,43 @@
 ﻿#light "off"
 module FStar.Tactics.Interpreter
-open FStar
-open FStar.ST
-open FStar.Exn
-open FStar.All
-open FStar.Syntax.Syntax
-open FStar.Util
-open FStar.Range
 
-module Err = FStar.Errors
-module S = FStar.Syntax.Syntax
-module SS = FStar.Syntax.Subst
-module PC = FStar.Parser.Const
+open FStar
+open FStar.All
+open FStar.Range
+open FStar.Syntax.Syntax
+open FStar.Syntax.Embeddings
 open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
-module Env = FStar.TypeChecker.Env
-module BU = FStar.Util
-module U = FStar.Syntax.Util
-module TcRel = FStar.TypeChecker.Rel
-module Print = FStar.Syntax.Print
-module TcUtil = FStar.TypeChecker.Util
-module TcTerm = FStar.TypeChecker.TcTerm
-module Cfg = FStar.TypeChecker.Cfg
-module N = FStar.TypeChecker.Normalize
-module TcComm = FStar.TypeChecker.Common
-module Env = FStar.TypeChecker.Env
-open FStar.Tactics.Types
-open FStar.Tactics.Monad
-open FStar.Tactics.Printing
-open FStar.Tactics.Result
-open FStar.Tactics.Basic
-open FStar.Tactics.CtrlRewrite
-module E = FStar.Tactics.Embedding
-open FStar.Syntax.Embeddings
 open FStar.Reflection.Basic
 open FStar.Reflection.Interpreter
-module RD = FStar.Reflection.Data
-module RE = FStar.Reflection.Embeddings
-module NRE = FStar.Reflection.NBEEmbeddings
-module NBE = FStar.TypeChecker.NBE
-module NBETerm = FStar.TypeChecker.NBETerm
-module NBET    = FStar.TypeChecker.NBETerm
-open FStar.Tactics.Native
+open FStar.Tactics.Result
+open FStar.Tactics.Types
+open FStar.Tactics.Printing
+open FStar.Tactics.Monad
+open FStar.Tactics.Basic
+open FStar.Tactics.CtrlRewrite
 open FStar.Tactics.InterpFuns
+open FStar.Tactics.Native
+
+module BU      = FStar.Util
+module Cfg     = FStar.TypeChecker.Cfg
+module E       = FStar.Tactics.Embedding
+module Env     = FStar.TypeChecker.Env
+module Err     = FStar.Errors
+module NBE     = FStar.TypeChecker.NBE
+module NBET    = FStar.TypeChecker.NBETerm
+module N       = FStar.TypeChecker.Normalize
+module NRE     = FStar.Reflection.NBEEmbeddings
+module PC      = FStar.Parser.Const
+module Print   = FStar.Syntax.Print
+module RE      = FStar.Reflection.Embeddings
+module S       = FStar.Syntax.Syntax
+module SS      = FStar.Syntax.Subst
+module TcComm  = FStar.TypeChecker.Common
+module TcRel   = FStar.TypeChecker.Rel
+module TcTerm  = FStar.TypeChecker.TcTerm
+module TcUtil  = FStar.TypeChecker.Util
+module U       = FStar.Syntax.Util
 
 let tacdbg = BU.mk_ref false
 
@@ -58,7 +53,7 @@ let native_tactics_steps () =
     ; Cfg.strong_reduction_ok          = s.strong_reduction_ok
     ; Cfg.requires_binder_substitution = false // GM: Don't think we care about pretty-printing on native
     ; Cfg.interpretation               = s.tactic
-    ; Cfg.interpretation_nbe           = fun _cb -> NBETerm.dummy_interp s.name
+    ; Cfg.interpretation_nbe           = fun _cb -> NBET.dummy_interp s.name
     }
   in
   List.map step_from_native_step (Native.list_all ())
@@ -87,7 +82,7 @@ let rec e_tactic_thunk (er : embedding<'r>) : embedding<(tac<'r>)> // JUST FSHAR
 // IN F*: and e_tactic_nbe_thunk (#r:Type) (er : NBET.embedding r) : NBET.embedding (tac r)
 and e_tactic_nbe_thunk (er : NBET.embedding<'r>) : NBET.embedding<tac<'r>> // JUST FSHARP
     =
-    NBETerm.mk_emb
+    NBET.mk_emb
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (thunk)?")
            (fun cb t -> Some (unembed_tactic_nbe_1 NBET.e_unit er cb t ()))
            (NBET.Constant NBET.Unit)
@@ -103,7 +98,7 @@ and e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<
 // IN F*: and e_tactic_nbe_1 (#a:Type) (#r:Type) (ea : NBET.embedding a) (er : NBET.embedding r) : NBET.embedding (a -> tac r)
 and e_tactic_nbe_1 (ea : NBET.embedding<'a>) (er : NBET.embedding<'r>) : NBET.embedding<('a -> tac<'r>)> // JUST FSHARP
     =
-    NBETerm.mk_emb
+    NBET.mk_emb
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (1)?")
            (fun cb t -> Some (unembed_tactic_nbe_1 ea er cb t))
            (NBET.Constant NBET.Unit)

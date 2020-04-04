@@ -352,7 +352,7 @@ let timing_nbe (l:Ident.lid) f =
         r
 
 let mk nm arity nunivs interp nbe_interp =
-  let nm = E.fstar_tactics_lid' ["Builtins"; nm] in
+  let nm = PC.fstar_tactics_lid' ["Builtins"; nm] in
   { Cfg.name                         = nm
   ; Cfg.arity                        = arity
   ; Cfg.univ_arity                   = nunivs
@@ -415,7 +415,7 @@ let mktac5 (nunivs:int) (name : string)
 (* Total interpretations *)
 
 let mkt nm arity nunivs interp nbe_interp =
-  let nm = E.fstar_tactics_lid' ["Builtins"; nm] in
+  let nm = PC.fstar_tactics_lid' ["Builtins"; nm] in
   { Cfg.name                         = nm
   ; Cfg.arity                        = arity
   ; Cfg.univ_arity                   = nunivs

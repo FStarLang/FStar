@@ -95,3 +95,5 @@ exception EExn of term
 
 val check_goal_solved' : goal -> option<term>
 val check_goal_solved  : goal -> bool
+val get_phi            : goal -> option<term>
+val is_irrelevant      : goal -> bool

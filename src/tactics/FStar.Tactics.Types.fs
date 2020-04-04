@@ -4,14 +4,16 @@ module FStar.Tactics.Types
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
-module Env = FStar.TypeChecker.Env
-module Options = FStar.Options
-module SS = FStar.Syntax.Subst
-module Cfg = FStar.TypeChecker.Cfg
-module N = FStar.TypeChecker.Normalize
-module Range = FStar.Range
-module BU = FStar.Util
-module S = FStar.Syntax.Syntax
+
+module Env     = FStar.TypeChecker.Env
+module O       = FStar.Options
+module SS      = FStar.Syntax.Subst
+module Cfg     = FStar.TypeChecker.Cfg
+module N       = FStar.TypeChecker.Normalize
+module Range   = FStar.Range
+module BU      = FStar.Util
+module S       = FStar.Syntax.Syntax
+module U       = FStar.Syntax.Util
 
 (*
    f: x:int -> P
@@ -28,7 +30,7 @@ module S = FStar.Syntax.Syntax
 type goal = {
     goal_main_env : env;
     goal_ctx_uvar : ctx_uvar;
-    opts    : FStar.Options.optionstate; // option state for this particular goal
+    opts    : O.optionstate; // option state for this particular goal
     is_guard : bool; // Marks whether this goal arised from a guard during tactic runtime
                      // We make the distinction to be more user-friendly at times
     label : string; // A user-defined description
@@ -108,7 +110,7 @@ type proofstate = {
 }
 
 let subst_proof_state subst ps =
-    if Options.tactic_raw_binders ()
+    if O.tactic_raw_binders ()
     then ps
     else { ps with goals = List.map (subst_goal subst) ps.goals
     }
@@ -122,7 +124,7 @@ let incr_depth (ps:proofstate) : proofstate =
 let set_ps_psc psc ps = { ps with psc = psc }
 
 let tracepoint psc ps : unit =
-    if Options.tactic_trace () || (ps.depth <= Options.tactic_trace_d ()) then begin
+    if O.tactic_trace () || (ps.depth <= O.tactic_trace_d ()) then begin
         let ps = set_ps_psc psc ps in
         let subst = Cfg.psc_subst ps.psc in
         ps.__dump (subst_proof_state subst ps) "TRACE"
@@ -158,3 +160,9 @@ let check_goal_solved' goal =
 
 let check_goal_solved goal =
   Option.isSome (check_goal_solved' goal)
+
+let get_phi (g:goal) : option<term> =
+    U.un_squash (N.unfold_whnf (goal_env g) (goal_type g))
+
+let is_irrelevant (g:goal) : bool =
+    Option.isSome (get_phi g)
