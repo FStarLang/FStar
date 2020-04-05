@@ -75,6 +75,7 @@ let rec last (l : list 'a) : Tac 'a =
   | [x] -> x
   | _::xs -> last xs
 
+[@plugin]
 let mk_class (nm:string) : Tac decls =
     let ns = explode_qn nm in
     let r = lookup_typ (top_env ()) ns in
