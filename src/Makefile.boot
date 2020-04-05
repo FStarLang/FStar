@@ -2,7 +2,9 @@ include Makefile.config
 
 FSTAR_HOME ?= ..
 
-include Makefile.boot.common  #provides variables INCLUDE_PATHS, FSTAR_BOOT_OPTIONS, and CACHE_DIR, shared with interactive mode targets
+# Provides variables INCLUDE_PATHS, FSTAR_BOOT_OPTIONS,
+# and CACHE_DIR, shared with interactive mode targets
+include Makefile.boot.common
 
 FSTAR_BOOT ?= $(FSTAR)
 
