@@ -111,13 +111,16 @@ TACLIB_OUTPUTS=$(addprefix tactics_ml/_build/ulib/tactics_ml/, \
 	*.cmi *.cmx fstarlib_leftovers/*.cmi fstarlib_leftovers/*.cmx extracted/*.cmi extracted/*.cmx $(TACLIB_OBJECTS))
 
 install-fstarlib: $(FSTARLIB_OBJECTS)
-	mkdir -p $(FSTARLIB_DIR)
-	cp $(FSTARLIB_OUTPUTS) $(FSTARLIB_DIR)
-	sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstarlib-META >$(FSTARLIB_DIR)/META
+	@echo '[INSTALL   fstarlib]'
+	$(Q)mkdir -p $(FSTARLIB_DIR)
+	$(Q)cp $(FSTARLIB_OUTPUTS) $(FSTARLIB_DIR)
+	$(Q)sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstarlib-META >$(FSTARLIB_DIR)/META
+
 install-fstar-tactics: $(TACLIB_OBJECTS)
-	mkdir -p $(TACLIB_DIR)
-	cp $(TACLIB_OUTPUTS) $(TACLIB_DIR)
-	sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstar-tactics-lib-META >$(TACLIB_DIR)/META
+	@echo '[INSTALL   fstartaclib]'
+	$(Q)mkdir -p $(TACLIB_DIR)
+	$(Q)cp $(TACLIB_OUTPUTS) $(TACLIB_DIR)
+	$(Q)sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstar-tactics-lib-META >$(TACLIB_DIR)/META
 
 clean:
 	@echo "[CLEAN     ulib/]"
