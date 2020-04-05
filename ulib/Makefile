@@ -102,8 +102,9 @@ _fstartaclib: tactics_ml/fstartaclib.mllib
 $(FSTARLIB_OBJECTS): _fstarlib
 $(TACLIB_OBJECTS): _fstartaclib
 
-FSTARLIB_DIR=../bin/fstarlib/
-TACLIB_DIR=../bin/fstar-tactics-lib/
+# No trailing slash please
+FSTARLIB_DIR=../bin/fstarlib
+TACLIB_DIR=../bin/fstar-tactics-lib
 
 FSTARLIB_OUTPUTS=$(addprefix ml/_build/ulib/ml/, \
 	*.cmi *.cmx extracted/*.cmi extracted/*.cmx $(FSTARLIB_OBJECTS))
@@ -112,15 +113,21 @@ TACLIB_OUTPUTS=$(addprefix tactics_ml/_build/ulib/tactics_ml/, \
 
 install-fstarlib: $(FSTARLIB_OBJECTS)
 	@echo '[INSTALL   fstarlib]'
-	$(Q)mkdir -p $(FSTARLIB_DIR)
-	$(Q)cp $(FSTARLIB_OUTPUTS) $(FSTARLIB_DIR)
-	$(Q)sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstarlib-META >$(FSTARLIB_DIR)/META
+	$(Q)rm -rf $(FSTARLIB_DIR)_new
+	$(Q)mkdir -p $(FSTARLIB_DIR)_new
+	$(Q)cp $(FSTARLIB_OUTPUTS) $(FSTARLIB_DIR)_new
+	$(Q)sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstarlib-META >$(FSTARLIB_DIR)_new/META
+	$(Q)rm -rf $(FSTARLIB_DIR)
+	$(Q)mv -T $(FSTARLIB_DIR)_new $(FSTARLIB_DIR)
 
 install-fstar-tactics: $(TACLIB_OBJECTS)
 	@echo '[INSTALL   fstartaclib]'
-	$(Q)mkdir -p $(TACLIB_DIR)
-	$(Q)cp $(TACLIB_OUTPUTS) $(TACLIB_DIR)
-	$(Q)sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstar-tactics-lib-META >$(TACLIB_DIR)/META
+	$(Q)rm -rf $(TACLIB_DIR)_new
+	$(Q)mkdir -p $(TACLIB_DIR)_new
+	$(Q)cp $(TACLIB_OUTPUTS) $(TACLIB_DIR)_new
+	$(Q)sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstar-tactics-lib-META >$(TACLIB_DIR)_new/META
+	$(Q)rm -rf $(TACLIB_DIR)
+	$(Q)mv -T $(TACLIB_DIR)_new $(TACLIB_DIR)
 
 clean:
 	@echo "[CLEAN     ulib/]"
