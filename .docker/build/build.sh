@@ -12,6 +12,49 @@ branchname=$4
 # Make sure to get verbose output from makefiles
 export V=1
 
+# The file descriptor we will use for the job server
+# WARNING, DUPLICATED BELOW IN mk_jobserver, UPDATE THERE TOO
+JOBSERVERFD=42
+
+# Create/release a process slot
+function job_put() {
+    # Just put a token in the pipe
+    echo -n X >&${JOBSERVERFD}
+}
+
+# Grab a process slot
+function job_get() {
+    # Just read a character, but careful to retry.
+    while ! read -n1 2>/dev/null <&${JOBSERVERFD}; do
+        # It can happen that `read` on a pipe returns
+        # EAGAIN when a process has the pipe opened
+        # for writing but has no written yet. This is
+        # avoided by not using O_NONBLOCK, but we don't have
+        # access to that here, so just sleep and retry,
+        # which is not too bad.
+        sleep 1
+    done
+}
+
+# `make`, when called directly, always assumes it has at least one slot
+# available, so we wrap invocations to take a slot before it starts.
+function job_spawn () {
+    (
+    job_get
+    bash -c "$@" || true
+    job_put # Note: we should always return the token even if the command fails.
+    )&
+}
+
+function mk_jobserver () {
+    # Create a named pipe for the jobserver
+    # Using FD 42, would be nice to get a fresh one.
+    rm -f ._jobpipe
+    mkfifo ._jobpipe
+    exec 42<>._jobpipe
+    rm -f ._jobpipe
+}
+
 function export_home() {
     local home_path=""
     if command -v cygpath >/dev/null 2>&1; then
@@ -265,58 +308,80 @@ function fstar_default_build () {
     export_home QD "$(pwd)/qd"
 
     # Once F* is built, run its main regression suite, along with more relevant
-    # tests.
-    {
-        $gnutime make -C src -j $threads -k $localTarget && echo true >$status_file
-        echo Done building FStar
-    } &
+    # tests. We run everything in parallel, having the different `make` invocations
+    # share a single jobserver, so we are 1) always running at most $threads threads,
+    # and 2) not idle if we can do some useful work.
 
-    {
+    # Create and populate a job server
+    mk_jobserver
+    for i in $(seq $threads); do
+        job_put
+    done
+
+    # Make it visible to `make` too
+    export MAKEFLAGS="$MAKEFLAGS --jobserver-auth=${JOBSERVERFD},${JOBSERVERFD}"
+
+    # NOTE: from here onwards, we do not pass -j to make, it is implied
+    # by the --jobserver above.
+
+    job_spawn "{
+        $gnutime make -C src -k $localTarget && echo true >$status_file;
+        echo 'Done building FStar';
+    }"
+
+    job_spawn "{
         OTHERFLAGS='--warn_error -276 --use_hint_hashes' \
-        NOOPENSSLCHECK=1 make -C hacl-star -j $threads min-test ||
+        NOOPENSSLCHECK=1 make -C hacl-star min-test ||
             {
-                echo "Error - Hacl.Hash.MD.fst.checked (HACL*)"
-                echo " - min-test (HACL*)" >>$ORANGE_FILE
-            }
-    } &
+                echo 'Error - Hacl.Hash.MD.fst.checked (HACL*)';
+                echo ' - min-test (HACL*)' >>$ORANGE_FILE;
+            };
+    }"
 
     # The LowParse test suite is now in project-everest/everparse
-    {
-        $gnutime make -C qd -j $threads -k lowparse-fstar-test || {
-            echo "Error - LowParse"
-            echo " - min-test (LowParse)" >>$ORANGE_FILE
-        }
-    } &
+    job_spawn "{
+        $gnutime make -C qd -k lowparse-fstar-test || {
+            echo 'Error - LowParse';
+            echo ' - min-test (LowParse)' >>$ORANGE_FILE;
+        };
+    }"
 
     # We now run all (hardcoded) tests in mitls-fstar@master
-    {
+    job_spawn "{
         # First regenerate dependencies and parsers (maybe not
         # really needed for now, since any test of this set
         # already does this; but it will become necessary if
         # we later decide to perform these tests in parallel,
         # to avoid races.)
-        make -C mitls-fstar/src/tls refresh-depend
+        make -C mitls-fstar/src/tls refresh-depend;
 
-        OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads StreamAE.fst-ver ||
+        OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls StreamAE.fst-ver ||
             {
-                echo "Error - StreamAE.fst-ver (mitls)"
-                echo " - StreamAE.fst-ver (mitls)" >>$ORANGE_FILE
-            }
+                echo 'Error - StreamAE.fst-ver (mitls)';
+                echo ' - StreamAE.fst-ver (mitls)' >>$ORANGE_FILE;
+            };
 
-        OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+        OTHERFLAGS=--use_hint_hashes make -C mitls-fstar/src/tls Pkg.fst-ver ||
             {
-                echo "Error - Pkg.fst-ver (mitls verify)"
-                echo " - Pkg.fst-ver (mitls verify)" >>$ORANGE_FILE
-            }
+                echo 'Error - Pkg.fst-ver (mitls verify)';
+                echo ' - Pkg.fst-ver (mitls verify)' >>$ORANGE_FILE;
+            };
 
-        OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
+        OTHERFLAGS='--use_hint_hashes --use_extracted_interfaces true' make -C mitls-fstar/src/tls Pkg.fst-ver ||
             {
-                echo "Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)"
-                echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >>$ORANGE_FILE
-            }
-    } &
+                echo 'Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)';
+                echo ' - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)' >>$ORANGE_FILE;
+            };
+    }"
 
+    # Wait for every spawned job.
     wait
+
+    # Make sure to claim back the tokens, something
+    # is wrong if this blocks.
+    for i in $(seq $threads); do
+        job_get
+    done
 
     # Make it an orange if there's a git diff. Note: FStar_Version.ml is in the
     # .gitignore.
