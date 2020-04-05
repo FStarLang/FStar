@@ -23,7 +23,7 @@
         "typing_FStar.SL.Monotonic.Heap.sel", "typing_FStar.UInt64.t"
       ],
       0,
-      "255c33428e075ca0f8ea104a30442896"
+      "24697a67e50d3e4c6d785b599a4c32c7"
     ],
     [
       "SL.Tactics.lemma_alloc_return",
@@ -156,7 +156,7 @@
         "refinement_interpretation_Tm_refine_21b1a52b8391e4e12f8b5cceb522aea1"
       ],
       0,
-      "9377e637d9dd491e1694a9269db2357e"
+      "835a7d02cfe74545b4292e9ea516cf04"
     ],
     [
       "SL.Tactics.lemma_addr_not_eq_refl",

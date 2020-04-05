@@ -115,7 +115,7 @@
         "typing_Formatting.response", "typing_RPC.k"
       ],
       0,
-      "fce594ce4cfbf7a20ef5a009969db8de"
+      "ebcaa9b08d4446f46b808de715ad48c9"
     ],
     [
       "RPC.server",
@@ -163,7 +163,7 @@
         "typing_Platform.Bytes.utf8", "typing_RPC.k"
       ],
       0,
-      "94a69d1d4acfd09a9ba048adde3ba137"
+      "8592a3c47c4fc810893f0ee59901ffb9"
     ],
     [
       "RPC.test",

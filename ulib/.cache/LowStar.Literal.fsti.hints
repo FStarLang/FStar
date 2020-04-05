@@ -111,7 +111,7 @@
         "typing_LowStar.Literal.ascii_chars_of_ascii_string"
       ],
       0,
-      "bc2cc2f1cde65c46e74f7de763cee879"
+      "f81e39bdb2fc8e9ffa1d92394b528f39"
     ],
     [
       "LowStar.Literal.buffer_of_literal_post",
@@ -194,7 +194,7 @@
         "typing_LowStar.Monotonic.Buffer.len", "typing_Prims.pow2"
       ],
       0,
-      "9c4b44cd340d567dd3d0b321b0207f7b"
+      "cd10dc453bc1aeb260b9eebf31c169d0"
     ]
   ]
 ]
