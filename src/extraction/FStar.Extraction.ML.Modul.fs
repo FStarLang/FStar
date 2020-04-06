@@ -398,7 +398,7 @@ let extract_bundle_iface env se
                     (Util.udelta_unfold env_iparams)
                     (Term.term_as_mlty env_iparams ctor.dtyp) in
         let tys = (ml_tyvars, mlt) in
-        let fvv = mkFvvar ctor.dname ctor.dtyp in
+        let fvv = lid_as_fv ctor.dname delta_constant None in
         let env, _, b = extend_fv env fvv tys false false in
         env, (fvv, b)
     in
@@ -683,7 +683,7 @@ let extract_bundle env se =
               []
         in
         let tys = (ml_tyvars, mlt) in
-        let fvv = mkFvvar ctor.dname ctor.dtyp in
+        let fvv = lid_as_fv ctor.dname delta_constant None in
         let env, mls, _ = extend_fv env fvv tys false false in
         env,
         (mls, List.zip names (argTypes mlt)) in

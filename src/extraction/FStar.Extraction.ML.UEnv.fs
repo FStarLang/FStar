@@ -1,5 +1,5 @@
 ﻿(*
-   Copyright 2008-2015 Abhishek Anand, Nikhil Swamy and Microsoft Research
+   Copyright 2008-2020 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,6 +15,28 @@
 *)
 #light "off"
 module FStar.Extraction.ML.UEnv
+
+(** This module provides a typing environment used for extracting
+    programs to ML. It addresses the following main concerns:
+
+    It distinguishes between several kinds of names:
+        - local type variable ('a, 'b, ...)
+        - type definition (list, option, ...)
+        - local variable (x, y, ...)
+        - top-level names (List.map, ...)
+        - record field names
+        - module names
+
+    For each kind, it supports generating an OCaml/F# compatible name
+    respecting the naming and keyword conventions of those languages.
+
+    Further, for each F* name of a given kind (except for module
+    names), it generates a unique name in a scope for that kind.
+
+    See tests/bug-reports/Bug310.fst for several examples of the
+    kinds of concerns this addresses.
+ *)
+
 open FStar.ST
 open FStar.All
 open FStar
@@ -28,18 +50,35 @@ module U  = FStar.Syntax.Util
 module BU = FStar.Util
 module Const = FStar.Parser.Const
 
-// JP: my understanding of this is: we either bind a type (left injection) or a
-// term variable (right injection). In the latter case, the variable may need to
-// be coerced, hence the [mlexpr] (instead of the [mlident]). In order to avoid
-// shadowing (which may occur, as the F* normalization potentially breaks the
-// original lexical structure of the F* term), we ALSO keep the [mlsymbol], but
-// only for the purpose of resolving name collisions.
-// The boolean tells whether this is a recursive binding or not.
+
+(** An ML identifier corresponding to an identifier in F* that binds a
+    type, e.g., [a:Type].
+
+    In the common case, [ty_b_name] is a type variable (e.g., ['a]),
+    and [ty_b_ty] is just an [(MLTY_Var 'a)]
+
+    However, there are cases where the F* identifier cannot be
+    translated to a type-identifier in OCaml, e.g., if [a:Type] does
+    not appear prenex quantified. In such cases, [ty_b_name] is a
+    ML term identifer (e.g., [a]) and [ty_b_ty] is [MLTY_Top].
+  *)
 type ty_binding = {
     ty_b_name: mlident;
     ty_b_ty: mlty
 }
 
+(** A term identifier in ML
+      -- [exp_b_name] is the short name
+
+      -- [exp_b_expr] is usually the long name, although in some cases
+         it could be the long name applied to a unit, in case extraction
+         needed to add a thunk to respect ML's value restriction.
+
+      -- [exp_b_tscheme] the polymorphic ML type
+
+      -- [exp_b_inst_ok] a flag that tells whether its okay for this
+         identifier to be instantiated
+ *)
 type exp_binding = {
     exp_b_name: mlident;
     exp_b_expr: mlexpr;
@@ -49,22 +88,51 @@ type exp_binding = {
 
 type ty_or_exp_b = either<ty_binding, exp_binding>
 
+(**
+    [Bv]: An F* local binding [bv] can either correspond to an ML
+          type or term binding.
+
+    [Fv]: An F* top-level fv is associated with an ML term binding.
+          Type definitions are maintained separately, see [tydef].
+  *)
 type binding =
     | Bv  of bv * ty_or_exp_b
     | Fv  of fv * exp_binding
 
+(** A top-level F* type definition, i.e., a type abbreviation,
+    corresponds to a [tydef] in ML.
+
+    Note, inductive types (e.g., list, option etc.) are separately
+    tracked as [tyname], see below.
+
+    - [fv] The source F* identifier
+    - [tydef_mlmodule_name, tydef_name] An mlpath for [fv]
+    - [tydef_def]: The definition of the abbreviation
+ *)
 type tydef = {
     tydef_fv:fv;
     tydef_mlmodule_name:list<mlsymbol>;
     tydef_name:mlsymbol;
-    tydef_mangled_name:option<mlsymbol>;
     tydef_def:mltyscheme
 }
 
+(** tydef is abstract:  Some accessors *)
 let tydef_fv (td : tydef) = td.tydef_fv
 let tydef_def (td : tydef) = td.tydef_def
 let tydef_mlpath (td: tydef) : mlpath = td.tydef_mlmodule_name, td.tydef_name
 
+(** The main type of this module; it's abstract
+
+    - [env_tcenv]: The underlying typechecker environment
+    - [env_bindings]: names in scope
+    - [env_mlident_map]: The set of names currently in scope
+    - [mlpath_of_lid]: A map from a full F* lident to its corresponding mlpath
+    - [env_fieldname_map]: The set of record field names current in scope
+    - [mlpath_of_fieldname]: A map from a full F* record field identifier to its corresponding mlpath
+    - [tydefs]: Type abbreviations in scope
+    - [type_names]: Inductive type constructors in scope
+    - [currentModule]: ML name of the current module being extracted
+ *)
 type uenv = {
     env_tcenv: TypeChecker.Env.env;
     env_bindings:list<binding>;
@@ -83,6 +151,7 @@ let set_tcenv (u:uenv) (t:TypeChecker.Env.env) = { u with env_tcenv=t}
 let current_module_of_uenv (u:uenv) : mlpath = u.currentModule
 let set_current_module (u:uenv) (m:mlpath) : uenv = { u with currentModule = m }
 
+(* Only for printing in Modul.fs *)
 let bindings_of_uenv u = u.env_bindings
 
 let debug g f =
@@ -90,26 +159,6 @@ let debug g f =
     if Options.debug_at_level c (Options.Other "Extraction")
     then f ()
 
-// TODO delete
-let mkFvvar (l: lident) (t:typ) : fv = lid_as_fv l delta_constant None
-
-(* MLTY_Tuple [] extracts to (), and is an alternate choice.
-    However, it represets both the unit type and the unit value. Ocaml gets confused sometimes*)
-let erasedContent : mlty = MLTY_Erased
-
-let erasableTypeNoDelta (t:mlty) =
-    if t = ml_unit_ty then true
-    else match t with
-        | MLTY_Named (_, (["FStar"; "Ghost"], "erased")) -> true
-        (* erase tactic terms, unless extracting for tactic compilation *)
-        | MLTY_Named (_, (["FStar"; "Tactics"; "Effect"], "tactic")) -> Options.codegen () <> Some Options.Plugin
-        | _ -> false // this function is used by another function which does delta unfolding
-
-(* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
-let unknownType : mlty =  MLTY_Top
-
-let convRange (r:Range.range) : int = 0 (*FIX!!*)
-let convIdent (id:ident) : mlident = id.idText
 
 (* TODO : need to make sure that the result of this name change does not collide with a variable already in the context. That might cause a change in semantics.
    E.g. , consider the following in F*
@@ -148,19 +197,6 @@ let lookup_ty_const (env:uenv) ((module_name, ty_name):mlpath) : option<mltysche
         else None)
 
 let module_name_of_fv fv = fv.fv_name.v.ns |> List.map (fun (i:ident) -> i.idText)
-
-let maybe_mangle_type_projector (env:uenv) (fv:fv) : option<mlpath> =
-    let mname = module_name_of_fv fv in
-    let ty_name = fv.fv_name.v.ident.idText in
-    BU.find_map env.tydefs  (fun tydef ->
-        if tydef.tydef_name = ty_name
-        && tydef.tydef_mlmodule_name = mname
-        then match tydef.tydef_mangled_name with
-             | None -> Some (mname, ty_name)
-             | Some mangled -> Some (mname, mangled)
-        else None)
-
-let lookup_tyvar (g:uenv) (bt:bv) : mlty = lookup_ty_local g.env_bindings bt
 
 let try_lookup_fv (g:uenv) (fv:fv) : option<exp_binding> =
     BU.find_map g.env_bindings (function
@@ -408,7 +444,6 @@ let extend_tydef (g:uenv) (fv:fv) (ts:mltyscheme) : tydef * mlpath * uenv =
         tydef_fv = fv;
         tydef_mlmodule_name=fst name;
         tydef_name = snd name;
-        tydef_mangled_name = None;
         tydef_def = ts;
     } in
     tydef,
@@ -425,8 +460,6 @@ let is_type_name g fv = g.type_names |> BU.for_some (fun (x, _) -> fv_eq fv x)
 let is_fv_type g fv =
     is_type_name g fv ||
     g.tydefs |> BU.for_some (fun tydef -> fv_eq fv tydef.tydef_fv)
-
-let emptyMlPath : mlpath = ([],"")
 
 let initial_mlident_map =
   let map = BU.mk_ref None in
@@ -455,7 +488,7 @@ let mkContext (e:TypeChecker.Env.env) : uenv =
      mlpath_of_fieldname = BU.psmap_empty();
      tydefs =[];
      type_names=[];
-     currentModule = emptyMlPath
+     currentModule = ([], "");
    } in
    let a = "'a" in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in

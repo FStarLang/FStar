@@ -577,11 +577,11 @@ let bv_as_mlty (g:uenv) (bv:bv) =
 
     First \beta, \iota and \zeta reduce ft.
     Since F* does not have SN, one has to be more careful for the termination argument.
-    Because OCaml does not support computations in Type, unknownType is supposed to be used if they are really unaviodable.
-    The classic example is the type : T b \def if b then nat else bool. If we dont compute, T true will extract to unknownType.
+    Because OCaml does not support computations in Type, MLTY_Top is supposed to be used if they are really unaviodable.
+    The classic example is the type : T b \def if b then nat else bool. If we dont compute, T true will extract to MLTY_Top.
     Why not \delta? I guess the reason is that unfolding definitions will make the resultant OCaml code less readable.
-    However in the Typ_app case,  \delta reduction is done as the second-last resort, just before giving up and returing unknownType;
-        a bloated type is atleast as good as unknownType?
+    However in the Typ_app case,  \delta reduction is done as the second-last resort, just before giving up and returing MLTY_Top;
+        a bloated type is atleast as good as MLTY_Top?
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
 let extraction_norm_steps_core =
@@ -635,9 +635,9 @@ let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
 
 let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
     let arg_as_mlty (g:uenv) (a, _) : mlty =
-        if is_type g a //This is just an optimization; we could in principle always emit erasedContent, at the expense of more magics
+        if is_type g a //This is just an optimization; we could in principle always emit MLTY_Erased, at the expense of more magics
         then translate_term_to_mlty g a
-        else erasedContent
+        else MLTY_Erased
     in
 
     let fv_app_as_mlty (g:uenv) (fv:fv) (args : args) : mlty =
@@ -653,13 +653,9 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
                 let n_args = List.length args in
                 if List.length formals > n_args //it's not fully applied; so apply the rest to unit
                 then let _, rest = BU.first_N n_args formals in
-                     mlargs @ (List.map (fun _ -> erasedContent) rest)
+                     mlargs @ (List.map (fun _ -> MLTY_Erased) rest)
                 else mlargs in
-            let nm = match maybe_mangle_type_projector g fv with
-                     | Some p ->
-                       p
-                     | None ->
-                       UEnv.mlpath_of_lident g fv.fv_name.v in
+            let nm = UEnv.mlpath_of_lident g fv.fv_name.v in
             MLTY_Named (mlargs, nm)
 
     in
@@ -675,10 +671,10 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
 
           | Tm_lazy i -> translate_term_to_mlty env (U.unfold_lazy i)
 
-          | Tm_constant _ -> unknownType
-          | Tm_quoted _ -> unknownType
+          | Tm_constant _ -> MLTY_Top
+          | Tm_quoted _ -> MLTY_Top
 
-          | Tm_uvar _ -> unknownType //really shouldn't have any uvars left; TODO: fatal failure?
+          | Tm_uvar _ -> MLTY_Top //really shouldn't have any uvars left; TODO: fatal failure?
 
           | Tm_meta(t, _)
           | Tm_refine({sort=t}, _)
@@ -715,7 +711,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
                 | Tm_app (head, args') ->
                   translate_term_to_mlty env (S.mk (Tm_app(head, args'@args)) None t.pos)
 
-                | _ -> unknownType in
+                | _ -> MLTY_Top in
             res
 
           | Tm_abs(bs,ty,_) ->  (* (sch) rule in \hat{\epsilon} *)
@@ -725,7 +721,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
             translate_term_to_mlty env ty
 
           | Tm_let _
-          | Tm_match _ -> unknownType
+          | Tm_match _ -> MLTY_Top
     in
 
     let rec is_top_ty t = match t with
@@ -1811,9 +1807,10 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
                                     None,
                                     with_ty ml_bool_ty <| MLE_Const(MLC_Bool false)])))
     in
+    let _, name = mlpath_of_lident env discName in
     MLM_Let (NonRec, 
             [{ mllb_meta=[];
-               mllb_name=convIdent discName.ident;
+               mllb_name=name;
                mllb_tysc=None; 
                mllb_add_unit=false; 
                mllb_def=discrBody; 

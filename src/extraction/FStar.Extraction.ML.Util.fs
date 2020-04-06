@@ -333,18 +333,32 @@ let ml_module_name_of_lid (l:lident) =
   let mlp = l.ns |> List.map (fun i -> i.idText),  l.ident.idText in
   flatten_mlpath mlp
 
+
 let rec erasableType (unfold_ty:unfold_t) (t:mlty) :bool =
-    //printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
-   if UEnv.erasableTypeNoDelta t
+   let erasableTypeNoDelta (t:mlty) =
+     if t = ml_unit_ty then true
+     else match t with
+          | MLTY_Named (_, (["FStar"; "Ghost"], "erased")) -> true
+          (* erase tactic terms, unless extracting for tactic compilation *)
+          | MLTY_Named (_, (["FStar"; "Tactics"; "Effect"], "tactic")) -> Options.codegen () <> Some Options.Plugin
+          | _ -> false // this function is used by another function which does delta unfolding
+   in
+   if erasableTypeNoDelta t
    then true
    else match unfold_ty t with
-     | Some t -> (erasableType unfold_ty t)
+     | Some t -> erasableType unfold_ty t
      | None  -> false
 
 let rec eraseTypeDeep unfold_ty (t:mlty) : mlty =
     match t with
-    | MLTY_Fun (tyd, etag, tycd) -> if etag=E_PURE then MLTY_Fun (eraseTypeDeep unfold_ty tyd, etag, eraseTypeDeep unfold_ty tycd) else t
-    | MLTY_Named (lty, mlp) -> if erasableType unfold_ty t then UEnv.erasedContent else MLTY_Named (List.map (eraseTypeDeep unfold_ty) lty, mlp)  // only some named constants are erased to unit.
+    | MLTY_Fun (tyd, etag, tycd) ->
+      if etag=E_PURE
+      then MLTY_Fun (eraseTypeDeep unfold_ty tyd, etag, eraseTypeDeep unfold_ty tycd)
+      else t
+    | MLTY_Named (lty, mlp) ->
+      if erasableType unfold_ty t
+      then MLTY_Erased
+      else MLTY_Named (List.map (eraseTypeDeep unfold_ty) lty, mlp)  // only some named constants are erased to unit.
     | MLTY_Tuple lty ->  MLTY_Tuple (List.map (eraseTypeDeep unfold_ty) lty)
     | _ ->  t
 

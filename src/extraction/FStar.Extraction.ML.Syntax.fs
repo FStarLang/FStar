@@ -91,7 +91,7 @@ type mlty =
 | MLTY_Fun   of mlty * e_tag * mlty
 | MLTY_Named of list<mlty> * mlpath
 | MLTY_Tuple of list<mlty>
-| MLTY_Top
+| MLTY_Top  (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
 | MLTY_Erased //a type that extracts to unit
 
 type mltyscheme = mlidents * mlty   //forall a1..an. t  (the list of binders can be empty)

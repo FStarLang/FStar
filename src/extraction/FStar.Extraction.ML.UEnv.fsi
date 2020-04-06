@@ -68,19 +68,7 @@ val bindings_of_uenv : uenv -> list<binding>
 
 val debug: g:uenv -> f:(unit -> unit) -> unit
 
-val mkFvvar : l:lident -> t:typ -> fv
-
-val erasedContent:mlty
-
-val erasableTypeNoDelta: t:mlty -> bool
-
-val unknownType:mlty
-
-val convIdent: id:ident -> mlident
-
 val lookup_ty_const: env: uenv -> mlpath -> option<mltyscheme>
-
-val maybe_mangle_type_projector: env:uenv -> fv:fv -> option<mlpath>
 
 val try_lookup_fv: g:uenv -> fv:fv -> option<exp_binding>
 
@@ -121,7 +109,7 @@ val extend_type_name: g:uenv -> fv:fv -> mlpath * uenv
 val is_type_name : g:uenv -> fv:fv -> bool
 
 val is_fv_type: uenv -> fv -> bool
-val emptyMlPath:mlpath
+
 val mkContext : e:TypeChecker.Env.env -> uenv
 
 val extend_with_monad_op_name : uenv ->

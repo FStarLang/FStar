@@ -887,7 +887,10 @@ let (extract_bundle_iface :
             (FStar_Extraction_ML_Util.udelta_unfold env_iparams) uu____2301
            in
         let tys = (ml_tyvars, mlt)  in
-        let fvv = FStar_Extraction_ML_UEnv.mkFvvar ctor.dname ctor.dtyp  in
+        let fvv =
+          FStar_Syntax_Syntax.lid_as_fv ctor.dname
+            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
+           in
         let uu____2308 =
           FStar_Extraction_ML_UEnv.extend_fv env1 fvv tys false false  in
         match uu____2308 with | (env2,uu____2327,b) -> (env2, (fvv, b))  in
@@ -1534,7 +1537,10 @@ let (extract_bundle :
                        -> ppname.FStar_Ident.idText) bs
           | uu____4385 -> []  in
         let tys = (ml_tyvars, mlt)  in
-        let fvv = FStar_Extraction_ML_UEnv.mkFvvar ctor.dname ctor.dtyp  in
+        let fvv =
+          FStar_Syntax_Syntax.lid_as_fv ctor.dname
+            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
+           in
         let uu____4393 =
           FStar_Extraction_ML_UEnv.extend_fv env1 fvv tys false false  in
         match uu____4393 with
