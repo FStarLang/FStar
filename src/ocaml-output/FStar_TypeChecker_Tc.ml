@@ -857,12 +857,12 @@ let proc_check_with :
          in
       match uu____1207 with
       | FStar_Pervasives_Native.None  -> kont ()
-      | FStar_Pervasives_Native.Some ((a,FStar_Pervasives_Native.None )::[])
+      | FStar_Pervasives_Native.Some ((a1,FStar_Pervasives_Native.None )::[])
           ->
           FStar_Options.with_saved_options
             (fun uu____1235  ->
                (let uu____1237 =
-                  let uu____1238 = unembed_optionstate a  in
+                  let uu____1238 = unembed_optionstate a1  in
                   FStar_All.pipe_right uu____1238 FStar_Util.must  in
                 FStar_Options.set uu____1237);
                kont ())

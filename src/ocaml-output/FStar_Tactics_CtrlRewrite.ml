@@ -280,7 +280,7 @@ let rec map_ctac : 'a . 'a ctac -> 'a Prims.list ctac =
                    FStar_Tactics_Monad.ret ((x1 :: xs2), flag))
   
 let bind_ctac : 'a 'b . 'a ctac -> ('a -> 'b ctac) -> 'b ctac =
-  fun t  -> fun f  -> fun b  -> failwith "" 
+  fun t  -> fun f  -> fun b1  -> failwith "" 
 let ctac_id :
   'a . 'a -> ('a * FStar_Tactics_Types.ctrl_flag) FStar_Tactics_Monad.tac =
   fun x  -> FStar_Tactics_Monad.ret (x, FStar_Tactics_Types.Continue) 

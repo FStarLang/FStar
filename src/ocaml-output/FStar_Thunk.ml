@@ -9,9 +9,10 @@ let force : 'a . 'a thunk -> 'a =
   fun t1  ->
     let uu____84 = FStar_ST.op_Bang t1  in
     match uu____84 with
-    | FStar_Util.Inr a -> a
+    | FStar_Util.Inr a1 -> a1
     | FStar_Util.Inl f ->
-        let a = f ()  in (FStar_ST.op_Colon_Equals t1 (FStar_Util.Inr a); a)
+        let a1 = f ()  in
+        (FStar_ST.op_Colon_Equals t1 (FStar_Util.Inr a1); a1)
   
 let map : 'a 'b . ('a -> 'b) -> 'a thunk -> 'b thunk =
   fun f  ->

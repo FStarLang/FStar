@@ -1707,11 +1707,11 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
     FStar_All.pipe_right (FStar_Pervasives_Native.fst a)
       (try_unembed_simple FStar_Syntax_Embeddings.e_string)
      in
-  let arg_as_list e a =
+  let arg_as_list e a1 =
     let uu____4072 =
       let uu____4081 = FStar_Syntax_Embeddings.e_list e  in
       try_unembed_simple uu____4081  in
-    FStar_All.pipe_right (FStar_Pervasives_Native.fst a) uu____4072  in
+    FStar_All.pipe_right (FStar_Pervasives_Native.fst a1) uu____4072  in
   let arg_as_bounded_int uu____4111 =
     match uu____4111 with
     | (a,uu____4125) ->
@@ -1748,8 +1748,8 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
      in
   let lift_unary f aopts =
     match aopts with
-    | (FStar_Pervasives_Native.Some a)::[] ->
-        let uu____4356 = f a  in FStar_Pervasives_Native.Some uu____4356
+    | (FStar_Pervasives_Native.Some a1)::[] ->
+        let uu____4356 = f a1  in FStar_Pervasives_Native.Some uu____4356
     | uu____4357 -> FStar_Pervasives_Native.None  in
   let lift_binary f aopts =
     match aopts with
@@ -1817,15 +1817,15 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
      in
   let mixed_binary_op as_a as_b embed_c f res _norm_cb args =
     match args with
-    | a::b::[] ->
+    | a1::b1::[] ->
         let uu____5068 =
-          let uu____5077 = as_a a  in
-          let uu____5080 = as_b b  in (uu____5077, uu____5080)  in
+          let uu____5077 = as_a a1  in
+          let uu____5080 = as_b b1  in (uu____5077, uu____5080)  in
         (match uu____5068 with
-         | (FStar_Pervasives_Native.Some a1,FStar_Pervasives_Native.Some b1)
+         | (FStar_Pervasives_Native.Some a2,FStar_Pervasives_Native.Some b2)
              ->
              let uu____5095 =
-               let uu____5096 = f res.psc_range a1 b1  in
+               let uu____5096 = f res.psc_range a2 b2  in
                embed_c res.psc_range uu____5096  in
              FStar_Pervasives_Native.Some uu____5095
          | uu____5097 -> FStar_Pervasives_Native.None)

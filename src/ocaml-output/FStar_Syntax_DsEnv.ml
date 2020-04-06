@@ -721,7 +721,7 @@ let option_of_cont :
   fun k_ignore  ->
     fun uu___1_3039  ->
       match uu___1_3039 with
-      | Cont_ok a -> FStar_Pervasives_Native.Some a
+      | Cont_ok a1 -> FStar_Pervasives_Native.Some a1
       | Cont_fail  -> FStar_Pervasives_Native.None
       | Cont_ignore  -> k_ignore ()
   
@@ -897,8 +897,8 @@ let try_lookup_id'' :
                     | uu____3670 -> Cont_ignore  in
                   let rec aux uu___8_3680 =
                     match uu___8_3680 with
-                    | a::q ->
-                        let uu____3689 = proc a  in
+                    | a1::q ->
+                        let uu____3689 = proc a1  in
                         option_of_cont (fun uu____3693  -> aux q) uu____3689
                     | [] ->
                         let uu____3694 = lookup_default_id Cont_fail id  in

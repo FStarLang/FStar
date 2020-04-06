@@ -47,8 +47,8 @@ let bind : 'a 'b . 'a tac -> ('a -> 'b tac) -> 'b tac =
         (fun ps  ->
            let uu____200 = run t1 ps  in
            match uu____200 with
-           | FStar_Tactics_Result.Success (a,q) ->
-               let uu____207 = t2 a  in run uu____207 q
+           | FStar_Tactics_Result.Success (a1,q) ->
+               let uu____207 = t2 a1  in run uu____207 q
            | FStar_Tactics_Result.Failed (msg,q) ->
                FStar_Tactics_Result.Failed (msg, q))
   
@@ -569,8 +569,8 @@ let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
         (fun ps  ->
            let uu____1019 = run t ps  in
            match uu____1019 with
-           | FStar_Tactics_Result.Success (a,q) ->
-               FStar_Tactics_Result.Success (a, q)
+           | FStar_Tactics_Result.Success (a1,q) ->
+               FStar_Tactics_Result.Success (a1, q)
            | FStar_Tactics_Result.Failed
                (FStar_Tactics_Types.TacticFailure msg,q) ->
                FStar_Tactics_Result.Failed

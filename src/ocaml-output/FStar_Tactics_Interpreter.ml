@@ -1599,10 +1599,10 @@ and unembed_tactic_0 :
                unembed uu____1893 result ncb  in
              match res with
              | FStar_Pervasives_Native.Some (FStar_Tactics_Result.Success
-                 (b,ps)) ->
+                 (b1,ps)) ->
                  let uu____1906 = FStar_Tactics_Monad.set ps  in
                  FStar_Tactics_Monad.bind uu____1906
-                   (fun uu____1910  -> FStar_Tactics_Monad.ret b)
+                   (fun uu____1910  -> FStar_Tactics_Monad.ret b1)
              | FStar_Pervasives_Native.Some (FStar_Tactics_Result.Failed
                  (e,ps)) ->
                  let uu____1915 = FStar_Tactics_Monad.set ps  in
@@ -1669,10 +1669,10 @@ and unembed_tactic_nbe_0 :
                FStar_TypeChecker_NBETerm.unembed uu____1994 cb result  in
              match res with
              | FStar_Pervasives_Native.Some (FStar_Tactics_Result.Success
-                 (b,ps)) ->
+                 (b1,ps)) ->
                  let uu____2007 = FStar_Tactics_Monad.set ps  in
                  FStar_Tactics_Monad.bind uu____2007
-                   (fun uu____2011  -> FStar_Tactics_Monad.ret b)
+                   (fun uu____2011  -> FStar_Tactics_Monad.ret b1)
              | FStar_Pervasives_Native.Some (FStar_Tactics_Result.Failed
                  (e,ps)) ->
                  let uu____2016 = FStar_Tactics_Monad.set ps  in

@@ -536,7 +536,7 @@ let e_result :
   fun ea  ->
     let embed_result res rng uu____1372 uu____1373 =
       match res with
-      | FStar_Tactics_Result.Success (a,ps) ->
+      | FStar_Tactics_Result.Success (a1,ps) ->
           let uu____1379 =
             let uu____1384 =
               FStar_Syntax_Syntax.mk_Tm_uinst fstar_tactics_Success_tm
@@ -548,7 +548,7 @@ let e_result :
                 FStar_Syntax_Syntax.iarg uu____1395  in
               let uu____1396 =
                 let uu____1407 =
-                  let uu____1416 = embed ea rng a  in
+                  let uu____1416 = embed ea rng a1  in
                   FStar_Syntax_Syntax.as_arg uu____1416  in
                 let uu____1417 =
                   let uu____1428 =
@@ -587,16 +587,16 @@ let e_result :
       let uu____1591 = hd'_and_args t  in
       match uu____1591 with
       | (FStar_Syntax_Syntax.Tm_fvar
-         fv,_t::(a,uu____1613)::(ps,uu____1615)::[]) when
+         fv,_t::(a1,uu____1613)::(ps,uu____1615)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Success_lid ->
-          let uu____1682 = unembed' w ea a  in
+          let uu____1682 = unembed' w ea a1  in
           FStar_Util.bind_opt uu____1682
-            (fun a1  ->
+            (fun a2  ->
                let uu____1690 = unembed' w e_proofstate ps  in
                FStar_Util.bind_opt uu____1690
                  (fun ps1  ->
                     FStar_Pervasives_Native.Some
-                      (FStar_Tactics_Result.Success (a1, ps1))))
+                      (FStar_Tactics_Result.Success (a2, ps1))))
       | (FStar_Syntax_Syntax.Tm_fvar
          fv,_t::(e,uu____1702)::(ps,uu____1704)::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Failed_lid ->
@@ -666,14 +666,14 @@ let e_result_nbe :
             uu____1892 :: uu____1898  in
           mkConstruct fstar_tactics_Failed_fv [FStar_Syntax_Syntax.U_zero]
             uu____1885
-      | FStar_Tactics_Result.Success (a,ps) ->
+      | FStar_Tactics_Result.Success (a1,ps) ->
           let uu____1942 =
             let uu____1949 =
               let uu____1954 = FStar_TypeChecker_NBETerm.type_of ea  in
               FStar_TypeChecker_NBETerm.as_iarg uu____1954  in
             let uu____1955 =
               let uu____1962 =
-                let uu____1967 = FStar_TypeChecker_NBETerm.embed ea cb a  in
+                let uu____1967 = FStar_TypeChecker_NBETerm.embed ea cb a1  in
                 FStar_TypeChecker_NBETerm.as_arg uu____1967  in
               let uu____1968 =
                 let uu____1975 =
@@ -690,17 +690,17 @@ let e_result_nbe :
     let unembed_result cb t =
       match t with
       | FStar_TypeChecker_NBETerm.Construct
-          (fv,uu____2017,(ps,uu____2019)::(a,uu____2021)::_t::[]) when
+          (fv,uu____2017,(ps,uu____2019)::(a1,uu____2021)::_t::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Success_lid ->
-          let uu____2053 = FStar_TypeChecker_NBETerm.unembed ea cb a  in
+          let uu____2053 = FStar_TypeChecker_NBETerm.unembed ea cb a1  in
           FStar_Util.bind_opt uu____2053
-            (fun a1  ->
+            (fun a2  ->
                let uu____2061 =
                  FStar_TypeChecker_NBETerm.unembed e_proofstate_nbe cb ps  in
                FStar_Util.bind_opt uu____2061
                  (fun ps1  ->
                     FStar_Pervasives_Native.Some
-                      (FStar_Tactics_Result.Success (a1, ps1))))
+                      (FStar_Tactics_Result.Success (a2, ps1))))
       | FStar_TypeChecker_NBETerm.Construct
           (fv,uu____2071,(ps,uu____2073)::(e,uu____2075)::_t::[]) when
           FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_Failed_lid ->

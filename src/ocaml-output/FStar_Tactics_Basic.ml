@@ -149,9 +149,9 @@ let catch :
          let tx = FStar_Syntax_Unionfind.new_transaction ()  in
          let uu____404 = FStar_Tactics_Monad.run t ps  in
          match uu____404 with
-         | FStar_Tactics_Result.Success (a,q) ->
+         | FStar_Tactics_Result.Success (a1,q) ->
              (FStar_Syntax_Unionfind.commit tx;
-              FStar_Tactics_Result.Success ((FStar_Util.Inr a), q))
+              FStar_Tactics_Result.Success ((FStar_Util.Inr a1), q))
          | FStar_Tactics_Result.Failed (m,q) ->
              (FStar_Syntax_Unionfind.rollback tx;
               (let ps1 =
@@ -194,8 +194,8 @@ let recover :
       (fun ps  ->
          let uu____467 = FStar_Tactics_Monad.run t ps  in
          match uu____467 with
-         | FStar_Tactics_Result.Success (a,q) ->
-             FStar_Tactics_Result.Success ((FStar_Util.Inr a), q)
+         | FStar_Tactics_Result.Success (a1,q) ->
+             FStar_Tactics_Result.Success ((FStar_Util.Inr a1), q)
          | FStar_Tactics_Result.Failed (m,q) ->
              FStar_Tactics_Result.Success ((FStar_Util.Inl m), q))
   
@@ -1462,7 +1462,7 @@ let divide :
                       FStar_Tactics_Monad.bind uu____2110
                         (fun uu____2118  ->
                            FStar_Tactics_Monad.bind l
-                             (fun a  ->
+                             (fun a1  ->
                                 FStar_Tactics_Monad.bind
                                   FStar_Tactics_Monad.get
                                   (fun lp'  ->
@@ -1497,7 +1497,7 @@ let divide :
                                      FStar_Tactics_Monad.bind uu____2135
                                        (fun uu____2143  ->
                                           FStar_Tactics_Monad.bind r
-                                            (fun b  ->
+                                            (fun b1  ->
                                                FStar_Tactics_Monad.bind
                                                  FStar_Tactics_Monad.get
                                                  (fun rp'  ->
@@ -1560,14 +1560,14 @@ let divide :
                                                            (fun uu____2174 
                                                               ->
                                                               FStar_Tactics_Monad.ret
-                                                                (a, b)))))))))))
+                                                                (a1, b1)))))))))))
   
 let focus : 'a . 'a FStar_Tactics_Monad.tac -> 'a FStar_Tactics_Monad.tac =
   fun f  ->
     let uu____2196 = divide FStar_BigInt.one f FStar_Tactics_Monad.idtac  in
     FStar_Tactics_Monad.bind uu____2196
       (fun uu____2209  ->
-         match uu____2209 with | (a,()) -> FStar_Tactics_Monad.ret a)
+         match uu____2209 with | (a1,()) -> FStar_Tactics_Monad.ret a1)
   
 let rec map :
   'a . 'a FStar_Tactics_Monad.tac -> 'a Prims.list FStar_Tactics_Monad.tac =
