@@ -60,7 +60,6 @@ let rec serialize_nlist'
     serialize_synth (serialize_nondep_then s (serialize_nlist' (n - 1) s)) (synth_nlist (n - 1)) (synth_nlist_recip (n - 1)) ()
   end
 
-abstract
 let serialize_nlist
   (n: nat)
   (#t: Type0)
