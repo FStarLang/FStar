@@ -111,7 +111,12 @@ FSTARLIB_OUTPUTS=$(addprefix ml/_build/ulib/ml/, \
 TACLIB_OUTPUTS=$(addprefix tactics_ml/_build/ulib/tactics_ml/, \
 	*.cmi *.cmx fstarlib_leftovers/*.cmi fstarlib_leftovers/*.cmx extracted/*.cmi extracted/*.cmx $(TACLIB_OBJECTS))
 
-install-fstarlib: $(FSTARLIB_OBJECTS)
+install-fstarlib: $(FSTARLIB_DIR)/META
+install-fstar-tactics: $(TACLIB_DIR)/META
+
+# This rule is doing an atomic copy into FSTARLIB_DIR,
+# so we never see a partial file in bin/
+$(FSTARLIB_DIR)/META: $(FSTARLIB_OBJECTS)
 	@echo '[INSTALL   fstarlib]'
 	$(Q)rm -rf $(FSTARLIB_DIR)_new
 	$(Q)mkdir -p $(FSTARLIB_DIR)_new
@@ -120,7 +125,8 @@ install-fstarlib: $(FSTARLIB_OBJECTS)
 	$(Q)rm -rf $(FSTARLIB_DIR)
 	$(Q)mv -T $(FSTARLIB_DIR)_new $(FSTARLIB_DIR)
 
-install-fstar-tactics: $(TACLIB_OBJECTS)
+# See comment for $(FSTARLIB_DIR)/META
+$(TACLIB_DIR)/META: $(TACLIB_OBJECTS)
 	@echo '[INSTALL   fstartaclib]'
 	$(Q)rm -rf $(TACLIB_DIR)_new
 	$(Q)mkdir -p $(TACLIB_DIR)_new
