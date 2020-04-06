@@ -15,8 +15,8 @@
 *)
 module Bug1427
 
-type stack = list int
-  
-let is_empty = Nil? #int
+val stack : Type0
 
-let empty = []
+val is_empty : stack -> Tot bool
+
+val empty : s:stack{is_empty s}
