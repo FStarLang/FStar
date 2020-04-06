@@ -5990,7 +5990,7 @@ let (new_implicit_var_aux :
     fun r  ->
       fun env  ->
         fun k  ->
-          fun should_check  ->
+          fun should_check1  ->
             fun meta  ->
               let uu____27719 =
                 FStar_Syntax_Util.destruct k FStar_Parser_Const.range_of_lid
@@ -6018,7 +6018,7 @@ let (new_implicit_var_aux :
                       FStar_Syntax_Syntax.ctx_uvar_typ = k;
                       FStar_Syntax_Syntax.ctx_uvar_reason = reason;
                       FStar_Syntax_Syntax.ctx_uvar_should_check =
-                        should_check;
+                        should_check1;
                       FStar_Syntax_Syntax.ctx_uvar_range = r;
                       FStar_Syntax_Syntax.ctx_uvar_meta = meta
                     }  in

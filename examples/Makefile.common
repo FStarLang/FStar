@@ -69,13 +69,11 @@ include .depend
 %.fst.checked:
 	@echo "[CHECK     $(basename $(notdir $@))]"
 	$(Q)$(MY_FSTAR) $<
-	@touch -c $@
 
 # a.fsti.checked is the binary, checked version of a.fsti
 %.fsti.checked:
 	@echo "[CHECK     $(basename $(notdir $@))]"
 	$(Q)$(MY_FSTAR) $<
-	@touch -c $@
 
 clean:
 	rm -rf $(CACHE_DIR)

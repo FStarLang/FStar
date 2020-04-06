@@ -15,7 +15,6 @@ depend: .depend
 
 %.checked:
 	$(FSTAR) $<
-	touch -c $@
 
 %.fst-in:
 	@echo $(FSTAR_FLAGS) --max_fuel 0 --max_ifuel 0

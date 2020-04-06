@@ -1442,13 +1442,18 @@ let module_name_of_file_name f =
     let f = String.substring f 0 (String.length f - String.length (get_file_extension f) - 1) in
     String.lowercase f
 
-let should_verify m =
-  if get_lax () then
-    false
-  else let l = get_verify_module () in
-       List.contains (String.lowercase m) l
+let should_check m =
+  let l = get_verify_module () in
+  List.contains (String.lowercase m) l
 
-let should_verify_file fn = should_verify (module_name_of_file_name fn)
+let should_verify m =
+  not (get_lax ()) && should_check m
+
+let should_check_file fn =
+    should_check (module_name_of_file_name fn)
+
+let should_verify_file fn =
+    should_verify (module_name_of_file_name fn)
 
 let module_name_eq m1 m2 = String.lowercase m1 = String.lowercase m2
 
