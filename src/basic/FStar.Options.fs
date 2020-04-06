@@ -207,6 +207,7 @@ let defaults =
       ("MLish"                        , Bool false);
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
+      ("no_load_fstartaclib"          , Bool false);
       ("no_location_info"             , Bool false);
       ("no_smt"                       , Bool false);
       ("no_plugins"                   , Bool false);
@@ -365,6 +366,7 @@ let get_min_fuel                ()      = lookup_opt "min_fuel"                 
 let get_MLish                   ()      = lookup_opt "MLish"                    as_bool
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
+let get_no_load_fstartaclib     ()      = lookup_opt "no_load_fstartaclib"      as_bool
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
 let get_no_plugins              ()      = lookup_opt "no_plugins"               as_bool
 let get_no_smt                  ()      = lookup_opt "no_smt"                   as_bool
@@ -906,6 +908,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "no_extract",
         Accumulated (PathStr "module name"),
         "Deprecated: use --extract instead; Do not extract code from this module");
+
+       ( noshort,
+        "no_load_fstartaclib",
+        Const (Bool true),
+        "Do not attempt to load fstartaclib by default");
 
        ( noshort,
         "no_location_info",
@@ -1653,6 +1660,7 @@ let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = get_no_extract() |> List.existsb (module_name_eq s)
 let normalize_pure_terms_for_extraction
                                  () = get_normalize_pure_terms_for_extraction ()
+let no_load_fstartaclib          () = get_no_load_fstartaclib         ()
 let no_location_info             () = get_no_location_info            ()
 let no_plugins                   () = get_no_plugins                  ()
 let no_smt                       () = get_no_smt                      ()
