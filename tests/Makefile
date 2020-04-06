@@ -9,7 +9,8 @@ interactive \
 machine_integers \
 micro-benchmarks \
 prettyprinting \
-struct
+struct \
+tactics
 
 all: $(addsuffix .all, $(ALL_TEST_DIRS))
 clean: $(addsuffix .clean, $(ALL_TEST_DIRS))

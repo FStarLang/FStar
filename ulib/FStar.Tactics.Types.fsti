@@ -44,6 +44,11 @@ type direction =
     | TopDown
     | BottomUp
 
+type ctrl_flag =
+    | Continue
+    | Skip
+    | Abort
+
 type guard_policy =
     | SMT
     | Goal

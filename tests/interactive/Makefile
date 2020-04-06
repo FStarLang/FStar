@@ -62,4 +62,4 @@ FSTAR:=${FSTAR_HOME}/bin/fstar.exe $(SMT) --ide --warn_error -282
 
 # Verify that a given output matches the corresponding input
 %.out.check: %.out
-	diff -u "$<.expected" "$<"
+	diff -u --strip-trailing-cr "$<.expected" "$<"

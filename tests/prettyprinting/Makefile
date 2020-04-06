@@ -15,13 +15,13 @@ all: $(TESTS) $(TESTS_IN_PLACE)
 	$(FSTAR) --print_in_place $@
 
 %.print_in_place.fst-test: %.base.fst %.print_in_place.fst
-	diff --strip-trailing-cr $^
+	diff -u --strip-trailing-cr $^
 
 %.print.fst: %.base.fst
 	$(FSTAR) --print $< > $@
 
 %.print.fst-test: %.base.fst %.print.fst
-	diff --strip-trailing-cr $^
+	diff -u --strip-trailing-cr $^
 
 clean:
 	rm -f *.print.fst

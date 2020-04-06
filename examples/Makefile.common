@@ -1,7 +1,7 @@
 FSTAR_HOME?=..
 include $(FSTAR_HOME)/ulib/gmake/z3.mk
 include $(FSTAR_HOME)/ulib/gmake/fstar.mk
-include $(FSTAR_HOME)/src/Makefile.common
+include $(FSTAR_HOME)/.common.mk
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 
 #################################################################################
