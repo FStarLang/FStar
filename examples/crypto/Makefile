@@ -64,7 +64,7 @@ verify_hh-%: __force__
 		 --z3rlimit 20 $*
 
 all: uall
-	+$(MAKE) -f Makefile.oplss
+	+$(MAKE) -f Makefile.oplss verify-all
 
 uall: $(VERFILES:%=verify-%) $(HH_VERFILES:%=verify_hh-%) RPC.ml CntProtocol.ml
 
