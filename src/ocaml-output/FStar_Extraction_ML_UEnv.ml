@@ -606,7 +606,7 @@ let (print_mlpath_map : uenv -> Prims.string) =
            fun value  ->
              fun entries  ->
                let uu____1866 =
-                 FStar_Util.format2 "%s -> %s\n" key (string_of_mlpath value)
+                 FStar_Util.format2 "%s -> %s" key (string_of_mlpath value)
                   in
                uu____1866 :: entries) []
        in

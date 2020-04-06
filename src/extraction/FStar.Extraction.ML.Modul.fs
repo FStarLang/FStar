@@ -769,10 +769,10 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
                   | Some (interp, nbe_interp, arity, plugin) ->
                       let register, args =
                         if plugin
-                        then "FStar_Tactics_Native.register_plugin", [interp; nbe_interp]
-                        else "FStar_Tactics_Native.register_tactic", [interp]
+                        then (["FStar_Tactics_Native"], "register_plugin"), [interp; nbe_interp]
+                        else (["FStar_Tactics_Native"], "register_tactic"), [interp]
                       in
-                      let h = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident g (lid_of_str register)) in
+                      let h = with_ty MLTY_Top <| MLE_Name register in
                       let arity  = MLE_Const (MLC_Int(string_of_int arity, None)) in
                       let app = with_ty MLTY_Top <| MLE_App (h, [w ml_name_str; w arity] @ args) in
                       [MLM_Top app]

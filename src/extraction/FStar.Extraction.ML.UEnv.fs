@@ -294,7 +294,7 @@ let print_mlpath_map (g:uenv) =
   in
   let entries =
     BU.psmap_fold g.mlpath_of_lid (fun key value entries ->
-      BU.format2 "%s -> %s\n" key (string_of_mlpath value) :: entries) []
+      BU.format2 "%s -> %s" key (string_of_mlpath value) :: entries) []
   in
   String.concat "\n" entries
 

@@ -411,17 +411,16 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
       Env.UnfoldUntil S.delta_constant // unfold abbreviations such as nat
     ] tcenv t in
     let w = with_ty MLTY_Top in
+    let as_name mlp       = with_ty MLTY_Top <| MLE_Name mlp in
     let lid_to_name l     = with_ty MLTY_Top <| MLE_Name (UEnv.mlpath_of_lident env l) in
-    let lid_to_top_name l = with_ty MLTY_Top <| MLE_Name (UEnv.mlpath_of_lident env l) in
-    let str_to_name s     = lid_to_name (lid_of_str s) in
-    let str_to_top_name s = lid_to_top_name (lid_of_str s) in
-    let fstar_tc_nbe_prefix s = str_to_name ("FStar_TypeChecker_NBETerm." ^ s) in
-    let fstar_syn_emb_prefix s = str_to_name ("FStar_Syntax_Embeddings." ^ s) in
-    let fstar_refl_emb_prefix s = str_to_name ("FStar_Reflection_Embeddings." ^ s) in
-    let fstar_refl_nbeemb_prefix s = str_to_name ("FStar_Reflection_NBEEmbeddings." ^ s) in
+    let str_to_name s     = as_name ([], s) in
+    let fstar_tc_nbe_prefix s = as_name (["FStar_TypeChecker_NBETerm"], s) in
+    let fstar_syn_emb_prefix s = as_name (["FStar_Syntax_Embeddings"], s) in
+    let fstar_refl_emb_prefix s = as_name (["FStar_Reflection_Embeddings"], s) in
+    let fstar_refl_nbeemb_prefix s = as_name (["FStar_Reflection_NBEEmbeddings"], s) in
     let fv_lid_embedded =
         with_ty MLTY_Top <|
-            MLE_App (str_to_name "FStar_Ident.lid_of_str",
+            MLE_App (as_name (["FStar_Ident"],"lid_of_str"),
                      [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid))])
     in
     let emb_prefix = function
@@ -430,15 +429,23 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         | NBE_t -> fstar_tc_nbe_prefix
         | NBERefl_emb -> fstar_refl_nbeemb_prefix
     in
-    let mk_tactic_interpretation l =
-      match l with
-      | Syntax_term -> "FStar_Tactics_InterpFuns.mk_tactic_interpretation_"
-      | _ -> "FStar_Tactics_InterpFuns.mk_nbe_tactic_interpretation_"
+    let mk_tactic_interpretation l arity =
+      let idroot =
+        match l with
+        | Syntax_term ->
+          "mk_tactic_interpretation_"
+        | _ ->
+          "mk_nbe_tactic_interpretation_"
+      in
+      as_name (["FStar_Tactics_InterpFuns"], idroot^string_of_int arity)
     in
-    let mk_from_tactic l =
-      match l with
-      | Syntax_term -> "FStar_Tactics_Native.from_tactic_"
-      | _ -> "FStar_Tactics_Native.from_nbe_tactic_"
+    let mk_from_tactic l arity =
+      let idroot =
+        match l with
+        | Syntax_term -> "from_tactic_"
+        | _ -> "from_nbe_tactic_"
+      in
+      as_name (["FStar_Tactics_Native"], idroot^string_of_int arity)
     in
     let mk_basic_embedding (l:emb_loc) (s: string): mlexpr =
         emb_prefix l ("e_" ^ s)
@@ -568,7 +575,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         match tvar_names with
         | [] ->
           let body =
-              w <| MLE_App(str_to_name "FStar_Syntax_Embeddings.debug_wrap",
+              w <| MLE_App(as_name (["FStar_Syntax_Embeddings"], "debug_wrap"),
                             [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid));
                              mk_lam "_" (w <| MLE_App(body, [str_to_name "args"]))])
           in
@@ -590,7 +597,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
           let branch =
              pattern,
              None,
-             w <| MLE_App(body, [str_to_name "args"])
+             w <| MLE_App(body, [as_name ([], "args")])
           in
           let default_branch =
               MLP_Wild,
@@ -601,10 +608,10 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                                    (FStar.Const.Const_string("arity mismatch", Range.dummyRange))])
           in
           let body =
-              w <| MLE_Match(str_to_name "args", [branch; default_branch])
+              w <| MLE_Match(as_name ([], "args"), [branch; default_branch])
           in
           let body =
-              w <| MLE_App(str_to_name "FStar_Syntax_Embeddings.debug_wrap",
+              w <| MLE_App(as_name (["FStar_Syntax_Embeddings"], "debug_wrap"),
                             [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid));
                              mk_lam "_" body])
           in
@@ -681,7 +688,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
             let embed_fun_N = mk_arrow_as_prim_step loc non_tvar_arity in
             let args = arg_unembeddings
                     @ [res_embedding;
-                       lid_to_top_name fv_lid;
+                       lid_to_name fv_lid;
                        with_ty MLTY_Top <| MLE_Const (MLC_Int(string_of_int tvar_arity, None));
                        fv_lid_embedded;
                        cb]
@@ -696,9 +703,9 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
           else if Ident.lid_equals (FStar.TypeChecker.Env.norm_eff_name tcenv (U.comp_effect_name c))
                                     PC.effect_TAC_lid
           then begin
-            let h = str_to_top_name (mk_tactic_interpretation loc ^ string_of_int non_tvar_arity) in
-            let tac_fun = w <| MLE_App (str_to_top_name (mk_from_tactic loc ^ string_of_int non_tvar_arity),
-                                        [lid_to_top_name fv_lid])
+            let h = mk_tactic_interpretation loc non_tvar_arity in
+            let tac_fun = w <| MLE_App (mk_from_tactic loc non_tvar_arity,
+                                      [lid_to_name fv_lid])
             in
             let psc = str_to_name "psc" in
             let ncb = str_to_name "ncb" in
