@@ -803,9 +803,9 @@ let mk_MLE_Let top_level (lbs:mlletbinding) (body:mlexpr) =
           | _ -> MLE_Let(lbs, body))
        | _ -> MLE_Let(lbs, body)
 
-let record_fields (g:uenv) (ty:lident) (fns:list<ident>) (xs:list<'a>) =
-  let ty_ns = Ident.lid_of_ids ty.ns in
-  let fns = List.map (fun x -> UEnv.lookup_record_field_name g (ty_ns, x)) fns in
+let record_fields (g:uenv) (ctor:lident) (fns:list<ident>) (xs:list<'a>) =
+  let ty = TcEnv.typ_of_datacon (UEnv.tcenv_of_uenv g) ctor in
+  let fns = List.map (fun x -> UEnv.lookup_record_field_name g (ty, x)) fns in
   List.map2 (fun (p, s) x -> (s, x)) fns xs
   
 let resugar_pat g q p = match p with
@@ -983,8 +983,7 @@ let maybe_eta_data_and_project_record (g:uenv) (qual : option<fv_qual>) (residua
 
         | MLE_App({expr=MLE_Name mlp}, mle::args), Some (Record_projector (constrname, f))
         | MLE_App({expr=MLE_TApp({expr=MLE_Name mlp}, _)}, mle::args), Some (Record_projector (constrname, f))->
-          let f = lid_of_ids (constrname.ns @ [f]) in
-          let fn = UEnv.mlpath_of_lident g f in
+          let fn = UEnv.lookup_record_field_name g (TcEnv.typ_of_datacon (tcenv_of_uenv g) constrname, f) in
           let proj = MLE_Proj(mle, fn) in
           let e = match args with
             | [] -> proj
@@ -1287,7 +1286,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                end
 
         | Tm_fvar fv -> //Nearly identical to Tm_name, except the fv may have been erased altogether; if so return Erased
-          if is_type g t //Here, we really need to be certain that g is a type; unclear if level ensures it
+          if is_type g t //Here, we really need to be certain that g is a type
           then ml_unit, E_PURE, ml_unit_ty //Erase type argument
           else
           begin

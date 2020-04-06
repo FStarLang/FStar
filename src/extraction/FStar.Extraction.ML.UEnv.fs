@@ -160,15 +160,6 @@ let maybe_mangle_type_projector (env:uenv) (fv:fv) : option<mlpath> =
 
 let lookup_tyvar (g:uenv) (bt:bv) : mlty = lookup_ty_local g.env_bindings bt
 
-let lookup_fv_by_lid (g:uenv) (lid:lident) : ty_or_exp_b =
-    let x = BU.find_map g.env_bindings (function
-        | Fv (fv', x) when fv_eq_lid fv' lid -> Some x
-        | _ -> None) in
-    match x with
-        | None -> failwith (BU.format1 "free Variable %s not found\n" (lid.str))
-        | Some y -> Inr y
-
-(*keep this in sync with lookup_fv_by_lid, or call it here. lid does not have position information*)
 let try_lookup_fv (g:uenv) (fv:fv) : option<exp_binding> =
     BU.find_map g.env_bindings (function
         | Fv (fv', t) when fv_eq fv fv' -> Some t
@@ -461,13 +452,22 @@ let extend_with_action_name g (ed:Syntax.eff_decl) (a:Syntax.action) ts =
     let mlp = mlns_of_lid lid, mlid in
     mlp, lid, exp_b, g
 
-let extend_record_field_name g (ns, fn) =
-  new_mlpath_of_lident g (Ident.lid_of_ids (Ident.ids_of_lid ns@[fn]))
+let extend_record_field_name g (type_name, fn) =
+  new_mlpath_of_lident g (Ident.lid_of_ids (Ident.ids_of_lid type_name@[fn]))
 
-let lookup_record_field_name g (ns, fn) =
-  let f = Ident.lid_of_ids (Ident.ids_of_lid ns@[fn]) in
-  mlpath_of_lident g f
+let lookup_record_field_name g (type_name, fn) =
+  let f = Ident.lid_of_ids (Ident.ids_of_lid type_name@[fn]) in
+  let mlns, f = mlpath_of_lident g f in
+  let mlns, tn = BU.prefix mlns in //the type is not really part of the name; only used for disambiguation
+  mlns, f
 
 let extend_with_module_name g (m:lid) = new_mlpath_of_lident g m
 
-let exit_module g = { g with env_mlident_map=initial_mlident_map() }
+let exit_module g =
+  let string_of_mlpath mlp =
+    (String.concat "." (fst mlp) ^ "." ^ (snd mlp))
+  in
+  BU.print1 "Exiting module %s\n" (string_of_mlpath g.currentModule);
+  BU.psmap_fold g.mlpath_of_lid (fun key value () ->
+    BU.print2 "%s -> %s\n" key (string_of_mlpath value)) ();
+  { g with env_mlident_map=initial_mlident_map() }

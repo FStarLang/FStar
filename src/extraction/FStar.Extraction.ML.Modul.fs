@@ -410,11 +410,10 @@ let extract_bundle_iface env se
        let env =
          match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
          | Some (RecordType (ns, ids)) ->
-           let ns_lid = lid_of_ids ns in
            let g =
             List.fold_right
                 (fun id g ->
-                   let mlp, g = UEnv.extend_record_field_name g (ns_lid, id) in
+                   let mlp, g = UEnv.extend_record_field_name g (ind.iname, id) in
                    g)
                 ids
                 env
@@ -699,11 +698,10 @@ let extract_bundle env se =
          | Some (RecordType (ns, ids)) ->
              let _, c_ty = List.hd ctors in
              assert (List.length ids = List.length c_ty);
-             let ns_lid = lid_of_ids ns in
              let fields, g =
                 List.fold_right2
                   (fun id (_, ty) (fields, g) ->
-                     let mlp, g = UEnv.extend_record_field_name g (ns_lid, id) in
+                     let mlp, g = UEnv.extend_record_field_name g (ind.iname, id) in
                      (snd mlp, ty)::fields, g)
                    ids
                    c_ty
