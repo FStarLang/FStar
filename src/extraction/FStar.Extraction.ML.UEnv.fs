@@ -464,10 +464,10 @@ let lookup_record_field_name g (type_name, fn) =
 let extend_with_module_name g (m:lid) = new_mlpath_of_lident g m
 
 let exit_module g =
-  let string_of_mlpath mlp =
-    (String.concat "." (fst mlp) ^ "." ^ (snd mlp))
-  in
-  BU.print1 "Exiting module %s\n" (string_of_mlpath g.currentModule);
-  BU.psmap_fold g.mlpath_of_lid (fun key value () ->
-    BU.print2 "%s -> %s\n" key (string_of_mlpath value)) ();
+  // let string_of_mlpath mlp =
+  //   (String.concat "." (fst mlp) ^ "." ^ (snd mlp))
+  // in
+  // BU.print1 "Exiting module %s\n" (string_of_mlpath g.currentModule);
+  // BU.psmap_fold g.mlpath_of_lid (fun key value () ->
+  //   BU.print2 "%s -> %s\n" key (string_of_mlpath value)) ();
   { g with env_mlident_map=initial_mlident_map() }
