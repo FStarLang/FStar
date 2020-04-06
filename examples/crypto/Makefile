@@ -50,7 +50,7 @@ OTHERFLAGS += --use_extracted_interfaces true
 
 FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst	      
 
-%.fst-in: 
+%.fsti-in %.fst-in: 
 	@echo $(FSTAR_INCLUDE_PATHS) \
 	      --z3rlimit 20 \
 	      --use_hints
@@ -64,7 +64,7 @@ verify_hh-%: __force__
 		 --z3rlimit 20 $*
 
 all: uall
-	+$(MAKE) -f Makefile.oplss
+	+$(MAKE) -f Makefile.oplss verify-all
 
 uall: $(VERFILES:%=verify-%) $(HH_VERFILES:%=verify_hh-%) RPC.ml CntProtocol.ml
 

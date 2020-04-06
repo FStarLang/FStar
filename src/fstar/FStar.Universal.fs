@@ -360,21 +360,33 @@ let tc_one_file
                  BU.format1 "Cross-module inlining expects all modules to be checked first; %s was not checked"
                             fn);
 
-
         let tc_result, mllib, env = tc_source_file () in
+
         if FStar.Errors.get_err_count() = 0
         && (Options.lax()  //we'll write out a .checked.lax file
             || Options.should_verify tc_result.checked_module.name.str) //we'll write out a .checked file
         //but we will not write out a .checked file for an unverified dependence
         //of some file that should be checked
+        //(i.e. we DO write .checked.lax files for dependencies even if not provided as an argument)
         then Ch.store_module_to_cache env fn parsing_data tc_result;
         tc_result, mllib, env
 
-      | Some tc_result ->
+      | Some (tc_result, checked_fname) ->
         let tcmod = tc_result.checked_module in
         let smt_decls = tc_result.smt_decls in
         if Options.dump_module tcmod.name.str
         then BU.print1 "Module after type checking:\n%s\n" (FStar.Syntax.Print.modul_to_string tcmod);
+
+        (* If we were called to verify (or lax check) this file, and we found
+         * a good, non-stale checked file, update the timestamp as if we had
+         * built it again. This simplifies Makefile logic a lot. However if we're
+         * called to extract, leave the .checked file as-is. See
+         * issue #1978 (starting from "Also, separate issue: ..."). *)
+        if Options.should_check_file fn && Option.isNone (Options.codegen ()) then begin
+            if Options.debug_at_level_no_module (Options.Other "CheckedFiles") then
+              BU.print1 "Updating timestamp on checked file %s\n" checked_fname;
+            BU.touch_file checked_fname
+        end;
 
         let extend_tcenv tcmod tcenv =
             let _, tcenv =

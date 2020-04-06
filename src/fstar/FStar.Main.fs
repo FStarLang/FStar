@@ -84,6 +84,8 @@ let load_native_tactics () =
     in
     let cmxs_files = modules_to_load |> List.map cmxs_file in
     List.iter (fun x -> Util.print1 "cmxs file: %s\n" x) cmxs_files;
+    if not (Options.no_load_fstartaclib ()) then
+        Tactics.Load.load_lib ();
     Tactics.Load.load_tactics cmxs_files;
     iter_opt (Options.use_native_tactics ()) Tactics.Load.load_tactics_dir;
     ()
@@ -113,7 +115,6 @@ let go _ =
 
     | Success ->
         fstar_files := Some filenames;
-        load_native_tactics ();
 
         (* --dep: Just compute and print the transitive dependency graph;
                   don't verify anything *)
@@ -133,12 +134,28 @@ let go _ =
                                found " ^ (string_of_int (List.length filenames)))
                              Range.dummyRange
 
+        (* --print: Emit files in canonical source syntax *)
+        else if Options.print () || Options.print_in_place () then
+          if FStar.Platform.is_fstar_compiler_using_ocaml
+          then let printing_mode =
+                   if Options.print ()
+                   then FStar.Prettyprint.FromTempToStdout
+                   else FStar.Prettyprint.FromTempToFile
+               in
+               FStar.Prettyprint.generate printing_mode filenames
+          else failwith "You seem to be using the F#-generated version ofthe compiler ; \o
+                         reindenting is not known to work yet with this version"
+
         (* --lsp *)
         else if Options.lsp_server () then
           FStar.Interactive.Lsp.start_server ()
 
+        (* For the following cases we might need fstartaclib/native tactics, try to load *)
+        else begin
+        load_native_tactics ();
+
         (* --ide, --in: Interactive mode *)
-        else if Options.interactive () then begin
+        if Options.interactive () then begin
           match filenames with
           | [] -> (* input validation: move to process args? *)
             Errors.log_issue
@@ -159,18 +176,6 @@ let go _ =
               FStar.Interactive.Ide.interactive_mode filename
           end
 
-        (* --print: Emit files in canonical source syntax *)
-        else if Options.print () || Options.print_in_place () then
-          if FStar.Platform.is_fstar_compiler_using_ocaml
-          then let printing_mode =
-                   if Options.print ()
-                   then FStar.Prettyprint.FromTempToStdout
-                   else FStar.Prettyprint.FromTempToFile
-               in
-               FStar.Prettyprint.generate printing_mode filenames
-          else failwith "You seem to be using the F#-generated version ofthe compiler ; \o
-                         reindenting is not known to work yet with this version"
-
         (* Normal, batch mode compiler *)
         else if List.length filenames >= 1 then begin //normal batch mode
           let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames FStar.CheckedFiles.load_parsing_data_from_cache in
@@ -187,6 +192,7 @@ let go _ =
 
         else
           Errors.raise_error (Errors.Error_MissingFileName, "No file provided") Range.dummyRange
+        end
 
 (* This is pretty awful. Now that we have Lazy_embedding, we can get rid of this table. *)
 let lazy_chooser k i = match k with

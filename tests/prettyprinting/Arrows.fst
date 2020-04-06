@@ -16,7 +16,6 @@
 
 module Arrows
 
-abstract
 val op_At_Bar (#a: Type) (s1 s2: array a)
     : ST (array a)
       (requires (fun h -> contains h s1 /\ contains h s2))
@@ -102,7 +101,6 @@ val hmac_part2
               Spec_Hash.hash (Seq.append (reveal_sbytes (as_seq h0 s5))
                     (reveal_sbytes (as_seq h0 s4))))))
 
-abstract
 val gf128_add_pure_loop (#n: pos) (a: seq (bv_t 8) {length a = n}) (b: seq (bv_t 8) {length b = n})
     : //line after Tot should actually be indented
     Tot

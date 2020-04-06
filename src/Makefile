@@ -9,7 +9,7 @@ FSLEX   := $(RUNTIME) $(FSLYDIR)/build/fslex.exe
 .SUFFIXES:
 MAKEFLAGS += --no-builtin-rules
 
-.PHONY: fstar-in-fsharp clean boot ocaml nuget-restore nuget-clean
+.PHONY: fstar-in-fsharp clean boot ocaml nuget-restore nuget-clean fstarlib
 
 # --------------------------------------------------------------------
 # An artefact of the build process is that parse.fsi is auto-generated
@@ -172,7 +172,15 @@ uregressions: ulib-extra tutorial utests uexamples
 # We may add more nightly tests here in the future
 uregressions-ulong: uregressions
 
-fstarlib:
+# This is not optimal, since if some dependencies
+# of fstarlib change we will not rebuild. However
+# simply calling the install-fstar-tactics rule
+# will unconditionally reinstall everything,
+# which is also not good.
+fstarlib: $(FSTARLIB_DIR)/fstarlib.cmxs
+	touch $@
+
+$(FSTARLIB_DIR)/fstarlib.cmxs:
 	+$(MAKE) -C ../ulib/ml
 	+$(MAKE) -C ../ulib install-fstar-tactics
 	+$(MAKE) -C ../ulib

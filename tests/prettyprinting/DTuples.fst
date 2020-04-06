@@ -1,4 +1,4 @@
-module TestDTuples
+module DTuples
 
 (* cf. issue #1945
  * ideally, we would also compare the output of --dump_module TestDTuples

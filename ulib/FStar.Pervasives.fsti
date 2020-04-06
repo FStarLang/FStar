@@ -766,9 +766,3 @@ val singleton (#a: Type) (x: a) : Tot (y: a{y == x})
     an identity function, we have an SMT axiom:
     [forall t e.{:pattern (with_type t e)} has_type (with_type t e) t] *)
 val with_type (#t: Type) (e: t) : Tot t
-
-
-(** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
-    Incrementing this forces all .checked files to be invalidated *)
-irreducible
-let __cache_version_number__ = 19
