@@ -50,7 +50,7 @@ OTHERFLAGS += --use_extracted_interfaces true
 
 FSTAR_INCLUDE_PATHS=--include $(FSTAR_HOME)/ucontrib/Platform/fst --include $(FSTAR_HOME)/ucontrib/CoreCrypto/fst	      
 
-%.fst-in: 
+%.fsti-in %.fst-in: 
 	@echo $(FSTAR_INCLUDE_PATHS) \
 	      --z3rlimit 20 \
 	      --use_hints
