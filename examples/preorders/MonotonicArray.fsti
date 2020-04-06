@@ -337,6 +337,15 @@ val lemma_disjoint_sibling_remain_same_transitive
   :Lemma (requires (disjoint_siblings_remain_same arr h0 h1 /\ disjoint_siblings_remain_same arr h1 h2))
          (ensures  (disjoint_siblings_remain_same arr h0 h2))
 
+val fill (#a:Type0) (#n:nat) (arr:array a n) (buf:seq a{Seq.length buf <= n})
+  :ST unit (requires (fun h0      -> True))
+           (ensures  (fun h0 _ h1 -> modifies (array_footprint arr) h0 h1                   /\
+	                          all_init_i_j arr 0 (Seq.length buf)                    /\
+				  init_arr_in_heap_i_j arr h1 0 (Seq.length buf)         /\
+				  buf == as_initialized_subseq arr h1 0 (Seq.length buf) /\
+				  is_mutable arr h1                                      /\
+				  disjoint_siblings_remain_same arr h0 h1))
+
 val ffill (#a:Type0) (#n:nat) (arr:farray a n) (buf:seq a{Seq.length buf <= n})
   :ST unit (requires (fun h0      -> is_mutable arr h0))
            (ensures  (fun h0 _ h1 -> modifies (array_footprint arr) h0 h1                   /\
