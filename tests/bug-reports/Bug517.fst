@@ -26,18 +26,18 @@ let add' (a:new_int 1) (b:new_int 2) : Tot (new_int 3) = a + b
 
 
 assume new type foo : Type0
-noeq abstract type bar = | Cons: foo -> bar
+noeq type bar = | Cons: foo -> bar
 type bar' = bar
 type tt = ref bar
 
 (*
 type rfoo = ref foo
 
-abstract type bar = | Cons: v:int -> bar | None
+type bar = | Cons: v:int -> bar | None
 
 assume new type bar : Type0
 
-abstract type foo = | Cons2: v:bar -> foo
+type foo = | Cons2: v:bar -> foo
 
 
 

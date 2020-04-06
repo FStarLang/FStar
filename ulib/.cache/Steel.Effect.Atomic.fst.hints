@@ -394,7 +394,7 @@
         "typing_FStar.UInt32.v", "typing_Steel.Memory.length"
       ],
       0,
-      "340bfcb1fd7dcc15f20c1e0357113361"
+      "f9ce8b4c3bcd6d8c880d9bcf74315e8b"
     ],
     [
       "Steel.Effect.Atomic.upd",
@@ -460,7 +460,7 @@
         "typing_FStar.UInt32.v", "typing_Steel.Memory.length"
       ],
       0,
-      "6b79b70a8361056e5a05951cf6318f6b"
+      "163e4097bd69c5b91b647a9f8fd13536"
     ],
     [
       "Steel.Effect.Atomic.cas",
@@ -759,7 +759,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "f22f403b92bea12d14fc7858576acf05"
+      "ebacd6f8b7191ad62e895ab4f0066167"
     ],
     [
       "Steel.Effect.Atomic.new_inv",
@@ -921,7 +921,7 @@
         "typing_FStar.UInt32.v", "typing_Steel.Memory.length"
       ],
       0,
-      "b5639619d7a822d702fbf269b783d5f8"
+      "bb44324939206cd21330ac882c6270c1"
     ],
     [
       "Steel.Effect.Atomic.index",
@@ -1006,7 +1006,7 @@
         "typing_FStar.UInt32.v", "typing_Steel.Memory.length"
       ],
       0,
-      "5a92c8999325b010e0b657e47e34e8b3"
+      "ce48792675496fa1286a0cd64117be08"
     ],
     [
       "Steel.Effect.Atomic.upd",
@@ -1035,7 +1035,7 @@
         "typing_FStar.UInt32.v", "typing_Steel.Memory.length"
       ],
       0,
-      "f1d0c6ce13dfe8ba6623b99174019b84"
+      "669c1ea53822ff45da46cf5a5aefe249"
     ],
     [
       "Steel.Effect.Atomic.cas",

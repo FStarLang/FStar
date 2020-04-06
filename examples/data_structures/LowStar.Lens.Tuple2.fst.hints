@@ -523,7 +523,7 @@
         "typing_tok_LowStar.Lens.Buffer.Pointer@tok"
       ],
       0,
-      "86fb8c4c26844007c925f5e0ed16147a"
+      "1e27c7c6357f0208269a87871b3b90f8"
     ],
     [
       "LowStar.Lens.Tuple2.test_read_buf_snd",
@@ -628,7 +628,7 @@
         "typing_tok_LowStar.Lens.Buffer.Pointer@tok"
       ],
       0,
-      "62cecb39a0f8c1a251c5e25fe0738eba"
+      "c8c8f14951f4b887ba2bed39a4d44ef0"
     ],
     [
       "LowStar.Lens.Tuple2.test_write_buf",

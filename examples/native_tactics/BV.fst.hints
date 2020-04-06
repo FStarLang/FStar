@@ -786,7 +786,7 @@
         "typing_FStar.UInt64.logand"
       ],
       0,
-      "9b4f7db82da4c1c310530ca2deb15377"
+      "02e24b2820b22824652baf56dc5d4441"
     ],
     [
       "BV.unfold_logor64",
@@ -799,7 +799,7 @@
         "typing_FStar.UInt64.logor"
       ],
       0,
-      "df608009157da6bfb7ae37ca55db9e57"
+      "3a6259b605b484259266b6bcba29b71f"
     ],
     [
       "BV.unfold_logxor64",
@@ -812,7 +812,7 @@
         "typing_FStar.UInt64.logxor"
       ],
       0,
-      "c93037cce87b6d36af51a6ce064d12dd"
+      "ee715cc23fb4780ffd82703bde5fab85"
     ]
   ]
 ]

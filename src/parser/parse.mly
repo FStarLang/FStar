@@ -24,6 +24,9 @@ open FStar_String
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
+let abstract_qualifier_warning =
+  "abstract qualifier will soon be removed from F*, use interfaces instead"
+
 %}
 
 %token <bytes> BYTEARRAY
@@ -368,7 +371,11 @@ qualifier:
   | DEFAULT       { DefaultEffect }
   | TOTAL         { TotalEffect }
   | PRIVATE       { Private }
-  | ABSTRACT      { Abstract }
+  
+  | ABSTRACT      { log_issue (lhs parseState) (Warning_AbstractQualifier,
+                                                abstract_qualifier_warning);
+		    Abstract }
+  
   | NOEQUALITY    { Noeq }
   | UNOPTEQUALITY { Unopteq }
   | NEW           { New }

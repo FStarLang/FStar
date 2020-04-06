@@ -17,7 +17,8 @@ FSTAR_FLAGS = \
   --cache_dir $(CACHE_DIR) \
   $(FSTAR_INCLUDES) 
 
-FSTAR = $(FSTAR_HOME)/bin/fstar.exe $(FSTAR_FLAGS) $(OTHERFLAGS)
+#TODO: use Makefile.include or Makefile.tmpl
+FSTAR = $(FSTAR_HOME)/bin/fstar.exe $(FSTAR_FLAGS) $(OTHERFLAGS) --warn_error @332
 
 all: verify-all
 
@@ -36,14 +37,12 @@ $(CACHE_DIR) $(OUT_DIR):
 	mkdir -p $@
 
 $(CACHE_DIR)/%.checked: | $(CACHE_DIR) .depend
-	$(FSTAR) $< && \
-	touch -c $@
+	$(FSTAR) $<
 
 $(OUT_DIR)/%.ml: | $(OUT_DIR) .depend
 	$(FSTAR) --codegen OCaml \
 	  --extract_module $(basename $(notdir $(subst .checked,,$<))) \
-	  $(notdir $(subst .checked,,$<)) && \
-	touch $@
+	  $(notdir $(subst .checked,,$<))
 
 %.cmx:
 	$(OCAMLOPT) -I $(OUT_DIR) -c $< -o $@

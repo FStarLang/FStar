@@ -27,8 +27,7 @@ all:
 include .depend
 
 $(CACHE_DIR)/%.checked: | .depend
-	$(FSTAR) $< $(ENABLE_HINTS) --hint_file $(HINT_DIR)/$(notdir $<).hints && \
-	touch $@
+	$(FSTAR) $< $(ENABLE_HINTS) --hint_file $(HINT_DIR)/$(notdir $<).hints
 
 # 2. Compile all .ml files to .cmx and link them to get an executable
 $(OUT_DIR):
@@ -37,8 +36,7 @@ $(OUT_DIR):
 $(OUT_DIR)/%.ml: | .depend
 	$(FSTAR) --codegen OCaml \
 	  --extract_module $(basename $(notdir $(subst .checked,,$<))) \
-	  $(notdir $(subst .checked,,$<)) && \
-	touch $@
+	  $(notdir $(subst .checked,,$<))
 
 %.cmx:
 	$(OCAMLOPT) -I $(OUT_DIR) -c $< -o $@

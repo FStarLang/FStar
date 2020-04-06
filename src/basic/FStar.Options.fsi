@@ -162,6 +162,7 @@ val ml_ish                      : unit    -> bool
 val set_ml_ish                  : unit    -> unit
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
+val no_load_fstartaclib         : unit    -> bool
 val no_location_info            : unit    -> bool
 val no_plugins                  : unit    -> bool
 val no_smt                      : unit    -> bool
@@ -194,8 +195,10 @@ val set_options                 : string -> parse_cmdline_res
 val should_be_already_cached    : string  -> bool
 val should_print_message        : string  -> bool
 val should_extract              : string  -> bool
-val should_verify               : string  -> bool
-val should_verify_file          : string  -> bool
+val should_check                : string  -> bool (* Should check this module, lax or not. *)
+val should_check_file           : string  -> bool (* Should check this file, lax or not. *)
+val should_verify               : string  -> bool (* Should check this module with verification enabled. *)
+val should_verify_file          : string  -> bool (* Should check this file with verification enabled. *)
 val silent                      : unit    -> bool
 val smtencoding_elim_box        : unit    -> bool
 val smtencoding_nl_arith_default: unit    -> bool

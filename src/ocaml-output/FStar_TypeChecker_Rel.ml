@@ -115,7 +115,7 @@ let (new_uvar :
         fun gamma  ->
           fun binders  ->
             fun k  ->
-              fun should_check  ->
+              fun should_check1  ->
                 fun meta  ->
                   let ctx_uvar =
                     let uu____570 = FStar_Syntax_Unionfind.fresh ()  in
@@ -126,7 +126,7 @@ let (new_uvar :
                       FStar_Syntax_Syntax.ctx_uvar_typ = k;
                       FStar_Syntax_Syntax.ctx_uvar_reason = reason;
                       FStar_Syntax_Syntax.ctx_uvar_should_check =
-                        should_check;
+                        should_check1;
                       FStar_Syntax_Syntax.ctx_uvar_range = r;
                       FStar_Syntax_Syntax.ctx_uvar_meta = meta
                     }  in

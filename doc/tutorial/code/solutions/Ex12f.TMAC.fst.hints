@@ -28,7 +28,7 @@
         "token_correspondence_Ex12f.TMAC.bspec", "typing_FStar.UInt8.t"
       ],
       0,
-      "8762bfbb34f2620fdb751f60a0b627b8"
+      "d4e3d866f2fe02b4745660b09a3f7078"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -49,7 +49,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "3b00217e0e47a0a9e7a6f3a2f72656ce"
+      "c1522587bbef97170afb64cf1fd4bcec"
     ],
     [
       "Ex12f.TMAC.keygen",
@@ -78,7 +78,7 @@
         "token_correspondence_Ex12f.TMAC.bspec", "typing_FStar.UInt8.t"
       ],
       0,
-      "02aa5e2153084ba6c13e8b0c06fb7afe"
+      "fca79489256055c15be98383981970b6"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -99,7 +99,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "03197d20cde53ed6926679e527586590"
+      "cf55637cb4690332b63a057b8484f6e6"
     ]
   ]
 ]

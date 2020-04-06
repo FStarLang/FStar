@@ -14,46 +14,21 @@
    limitations under the License.
 *)
 module Benton2004.DDCC
-include Benton2004
-
-type per (t: Type0) = ( f: rel t { is_per f } )
-
-type nstype (t: Type0) = per t
-
-let ns_f (#t: Type0) : nstype t =
-  let f (x y: t) = False in
-  Classical.forall_intro_2 (holds_equiv f);
-  f
 
 let holds_ns_f (#t: Type0) (x y: t): Lemma
   (holds ns_f x y <==> False)
   [SMTPat (holds ns_f x y)]
 = holds_equiv ns_f x y
 
-let ns_t (#t: Type0) : nstype t =
-  let f (x y: t) = True in
-  Classical.forall_intro_2 (holds_equiv f);
-  f
-
 let holds_ns_t (#t: Type0) (x y: t): Lemma
   (holds ns_t x y <==> True)
   [SMTPat (holds ns_t x y)]
 = holds_equiv ns_t x y
 
-let ns_singl (#t: Type0) (c: t) : nstype t =
-  let f (x y: t) = (x == c /\ y == c) in
-  Classical.forall_intro_2 (holds_equiv f);
-  f
-
 let holds_ns_singl (#t: Type0) (c: t) (x y: t) : Lemma
   (holds (ns_singl c) x y <==> (x == c /\ y == c))
   [SMTPat (holds (ns_singl c) x y)]
 = holds_equiv (ns_singl c) x y
-
-let ns_delta (#t: Type0) : nstype t =
-  let f (x y: t) = (x == y) in
-  Classical.forall_intro_2 (holds_equiv f);
-  f
 
 let holds_ns_delta (#t: Type0) (x y : t) : Lemma
   (holds ns_delta x y <==> x == y)
@@ -65,12 +40,6 @@ let interpolable_ns_t #t : Lemma (interpolable #t ns_t) = ()
 let interpolable_ns_singl #t (c: t) : Lemma (interpolable (ns_singl c)) = ()
 let interpolable_ns_delta #t : Lemma (interpolable #t ns_delta) = ()
 
-type sttype = (f: per heap { interpolable f } )
-
-let st_nil: sttype =
-  let f (x y : heap) : GTot Type0 = True in
-  f
-
 #set-options "--z3rlimit 128 --max_fuel 8 --max_ifuel 8"
 
 let holds_st_nil
@@ -79,14 +48,6 @@ let holds_st_nil
   (holds st_nil x y <==> True)
   [SMTPat (holds st_nil x y)]
 = Classical.forall_intro_2 (holds_equiv st_nil)
-
-let st_var
-  (x: var)
-  (v: nstype int)
-: GTot sttype
-= let f (s1 s2: heap) : GTot Type0 = holds v (sel s1 x) (sel s2 x) in
-  Classical.forall_intro_2 (holds_equiv f);
-  f
 
 let holds_st_var
   (x: var)
@@ -97,11 +58,6 @@ let holds_st_var
   [SMTPat (holds (st_var x v) a b)]
 = holds_equiv (st_var x v) a b
 
-let st_intersect
-  (p1 p2: sttype)
-: GTot sttype
-= intersect p1 p2
-
 let holds_st_intersect
   (ns1 ns2: sttype)
   (x y: heap)
@@ -110,30 +66,11 @@ let holds_st_intersect
   [SMTPat (holds (st_intersect ns1 ns2) x y)]
 = ()
 
-let st_fresh_in
-  (x: var)
-  (p: sttype)
-: GTot Type0
-= forall s1 s1' s2 s2' . 
-  (holds p s1 s2 /\ (
-    forall y . y <> x ==> (sel s1' y == sel s1 y /\ sel s2' y == sel s2 y)
-  )) ==>
-  holds p s1' s2'
-
 let st_fresh_in_nil
   (x: var)
 : Lemma
   (x `st_fresh_in` st_nil)
 = ()
-
-let st_cons
-  (p: sttype)
-  (x: var)
-  (v: nstype int)
-: Ghost sttype
-  (requires (x `st_fresh_in` p))
-  (ensures (fun _ -> True))
-= st_intersect p (st_var x v)
 
 let st_fresh_in_var
   (x: var)
@@ -212,7 +149,6 @@ let subtype_st_cons (phi phi' : sttype) (f f' : nstype int) (x: var) : Lemma
   ))
 = ()
 
-abstract
 let eval_equiv_reified
   (#t: Type0)
   (p: sttype)
@@ -232,7 +168,6 @@ let eval_equiv_reified_elim
   (ensures (holds e (fst (f s)) (fst (f' s'))))
 = ()  
 
-abstract
 let terminates_equiv_reified
   (p : sttype)
   (f f' : reified_computation)
@@ -248,7 +183,6 @@ let terminates_equiv_reified_elim
   (ensures (terminates_on f s <==> terminates_on f' s'))
 = ()
 
-abstract
 let exec_equiv_reified
   (p p' : sttype)
   (f f' : reified_computation)
@@ -272,14 +206,6 @@ let exec_equiv_reified_elim
   (requires (exec_equiv_reified p p' f f' /\ holds p s s' /\ fst (f fuel s) == true /\ fst (f' fuel s') == true))
   (ensures (holds p' (snd (f fuel s)) (snd (f' fuel s'))))
 = ()
-
-let exec_equiv
-  (p p' : sttype)
-  (f f' : computation)
-: GTot Type0
-= let f = reify_computation f in
-  let f' = reify_computation f' in
-  exec_equiv_reified p p' f f'
 
 let eval_equiv_sym
   (#t: Type0)
@@ -381,14 +307,6 @@ let d_et2
   [SMTPat (eval_equiv (st_cons p x ns_f) p' f f')]
 = ()
 
-let d_esym = eval_equiv_sym
-
-let d_etr = eval_equiv_trans
-
-let d_csym = exec_equiv_sym
-
-let d_ctr = exec_equiv_trans
-
 let d_esub
   (#t: Type0)
   (f f' : exp t)
@@ -437,9 +355,6 @@ let eval_equiv_const
   (eval_equiv p (ns_singl c) (const c) (const c))
   [SMTPat (eval_equiv p (ns_singl c) (const c) (const c))]
 = ()
-
-let d_n = eval_equiv_const #int
-let d_b = eval_equiv_const #bool
 
 let d_op
   (#from #to: Type0)
@@ -812,9 +727,6 @@ let d_kb
   (ensures (exec_equiv phi phi' (ifthenelse b c1 c2) c'))
   [SMTPat (eval_equiv phi (ns_singl v) b b); SMTPat (exec_equiv phi phi' (ifthenelse b c1 c2) c')]
 = ()
-
-let d_kbt = d_kb true
-let d_kbf = d_kb false
 
 (* Dead while *)
 

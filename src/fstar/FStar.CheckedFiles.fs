@@ -40,7 +40,7 @@ module Dep     = FStar.Parser.Dep
 (*
  * We write this version number to the cache files, and
  * detect when loading the cache that the version number is same
- * It need to be kept in sync with FStar.Pervasives.fst
+ * It need to be kept in sync with prims.fst
  *)
 let cache_version_number = 19
 
@@ -383,7 +383,7 @@ let load_module_from_cache =
       | Inr tc_result ->
         if Options.debug_at_level_no_module (Options.Other "CheckedFiles") then
           BU.print1 "Successfully loaded module from checked file %s\n" cache_file;
-        Some tc_result
+        Some (tc_result, cache_file)
       (* | _ -> failwith "load_checked_file_tc_result must have an Invalid or Valid entry" *)
     in
     Profiling.profile

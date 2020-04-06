@@ -425,6 +425,7 @@ val load_2values_from_file: string -> option<('a * 'b)>
 val print_exn: exn -> string
 val digest_of_file: string -> string
 val digest_of_string: string -> string
+val touch_file: string -> unit (* Precondition: file exists *)
 
 val ensure_decimal: string -> string
 val measure_execution_time: string -> (unit -> 'a) -> 'a

@@ -25,7 +25,7 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   BugWildcardTelescopes.fst NormalizingGhostSubterms.fst UnificationCrash.fst Bug1150.fst Bug1076.fst\
   Bug1341.fst Bug1345.fst Bug1345b.fst Bug1345c.fst Bug1346.fst Bug1348.fst Bug1362.fst \
   Bug1347b.fst Bug1206.fst Bug1271.fst Bug1305.fst Bug1361.fst Bug1383.fst Bug1414.fst \
-  unfold.fst Bug1091.fst BugUnfoldAbstractEquational.fst Bug1449.fst Bug1427.fst Bug1423.fst Bug1352.fst Bug1123.fst ScopeOfBinderGuard.fst \
+  unfold.fst Bug1091.fst Bug1449.fst Bug1427.fst Bug1423.fst Bug1352.fst Bug1123.fst ScopeOfBinderGuard.fst \
   Bug1319a.fst Bug1319b.fst Bug1319c.fst Bug1319d.fst Bug1319e.fst Bug1319f.fst Bug807a.fst Bug807b.fst Bug807c.fst Bug807d.fst Bug807e.fst \
   Bug1502.fst \
   Bug1488.fst Bug607.fst Bug466.fst Bug400.fst Bug1470.fst Bug1481.fst Bug1506.fst Bug606.fst Bug543.fst Bug1521.fst \
