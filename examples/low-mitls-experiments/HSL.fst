@@ -60,7 +60,6 @@ let hsl_get_p1 (st:hsl_state) :reference u32 = st.p1
 let hsl_get_msgs (st:hsl_state) :reference (list (u32 * u32)) = st.msgs
 
 (* Finally, the abstract invariant and its elimination *)
-//abstract
 let hsl_invariant (st:hsl_state) (h:mem) = hsl_invariant_predicate st h
 
 (*
@@ -72,16 +71,6 @@ let lemma_hsl_invariant_elim (st:hsl_state) (h:mem)
          (ensures  (hsl_invariant_predicate st h))
          [SMTPat (hsl_invariant st h)]
   = ()
-
-(*
- * HSL footprint = p0, p1, buffer contents between 0 and p1, and msgs
- * This is not abstract, so that the client (Record) can append the buffer after p1, and use the framing lemma
- *)
-let hsl_footprint (st:hsl_state) (h:mem{hsl_invariant st h}) =
-  loc_union (loc_union (loc_buffer (Buffer.gsub (hsl_get_buf st) 0ul (sel h (hsl_get_p1 st))))
-		       (loc_mreference (hsl_get_p0 st)))
-	    (loc_union (loc_mreference (hsl_get_p1 st))
-	               (loc_mreference (hsl_get_msgs st)))
 
 (*
  * Framing the HSL invariant across its footprint
