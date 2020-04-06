@@ -894,3 +894,9 @@ let (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
   fun t  -> FStar_Syntax_Print.term_to_string t 
 let (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =
   fun c  -> FStar_Syntax_Print.comp_to_string c 
+let (implode_qn : Prims.string Prims.list -> Prims.string) =
+  fun ns  -> FStar_String.concat "." ns 
+let (explode_qn : Prims.string -> Prims.string Prims.list) =
+  fun s  -> FStar_String.split [46] s 
+let (compare_string : Prims.string -> Prims.string -> FStar_BigInt.t) =
+  fun s1  -> fun s2  -> FStar_BigInt.of_int_fs (FStar_String.compare s1 s2) 

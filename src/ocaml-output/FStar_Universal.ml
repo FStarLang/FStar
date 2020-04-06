@@ -1471,41 +1471,43 @@ let (batch_mode_tc :
   =
   fun filenames  ->
     fun dep_graph  ->
-      (let uu____2298 = FStar_Options.debug_any ()  in
+      (let uu____2298 =
+         FStar_Options.debug_at_level_no_module (FStar_Options.Other "Dep")
+          in
        if uu____2298
        then
          (FStar_Util.print_endline "Auto-deps kicked in; here's some info.";
           FStar_Util.print1
             "Here's the list of filenames we will process: %s\n"
             (FStar_String.concat " " filenames);
-          (let uu____2306 =
-             let uu____2308 =
+          (let uu____2307 =
+             let uu____2309 =
                FStar_All.pipe_right filenames
                  (FStar_List.filter FStar_Options.should_verify_file)
                 in
-             FStar_String.concat " " uu____2308  in
+             FStar_String.concat " " uu____2309  in
            FStar_Util.print1
-             "Here's the list of modules we will verify: %s\n" uu____2306))
+             "Here's the list of modules we will verify: %s\n" uu____2307))
        else ());
       (let env =
-         let uu____2324 = init_env dep_graph  in
-         FStar_Extraction_ML_UEnv.mkContext uu____2324  in
-       let uu____2325 = tc_fold_interleave dep_graph ([], [], env) filenames
+         let uu____2325 = init_env dep_graph  in
+         FStar_Extraction_ML_UEnv.mkContext uu____2325  in
+       let uu____2326 = tc_fold_interleave dep_graph ([], [], env) filenames
           in
-       match uu____2325 with
+       match uu____2326 with
        | (all_mods,mllibs,env1) ->
            (emit mllibs;
             (let solver_refresh env2 =
-               let uu____2369 =
+               let uu____2370 =
                  with_tcenv_of_env env2
                    (fun tcenv  ->
-                      (let uu____2378 =
+                      (let uu____2379 =
                          (FStar_Options.interactive ()) &&
-                           (let uu____2381 = FStar_Errors.get_err_count ()
+                           (let uu____2382 = FStar_Errors.get_err_count ()
                                in
-                            uu____2381 = Prims.int_zero)
+                            uu____2382 = Prims.int_zero)
                           in
-                       if uu____2378
+                       if uu____2379
                        then
                          (tcenv.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
                            ()
@@ -1514,6 +1516,6 @@ let (batch_mode_tc :
                            ());
                       ((), tcenv))
                   in
-               FStar_All.pipe_left FStar_Pervasives_Native.snd uu____2369  in
+               FStar_All.pipe_left FStar_Pervasives_Native.snd uu____2370  in
              (all_mods, env1, solver_refresh))))
   

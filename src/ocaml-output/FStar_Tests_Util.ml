@@ -240,22 +240,22 @@ let rec (term_eq' :
       | (uu____1725,FStar_Syntax_Syntax.Tm_meta (t22,uu____1727)) ->
           term_eq' t11 t22
       | (FStar_Syntax_Syntax.Tm_delayed uu____1732,uu____1733) ->
-          let uu____1756 =
-            let uu____1758 = FStar_Syntax_Print.tag_of_term t11  in
-            let uu____1760 = FStar_Syntax_Print.tag_of_term t21  in
-            FStar_Util.format2 "Impossible: %s and %s" uu____1758 uu____1760
+          let uu____1748 =
+            let uu____1750 = FStar_Syntax_Print.tag_of_term t11  in
+            let uu____1752 = FStar_Syntax_Print.tag_of_term t21  in
+            FStar_Util.format2 "Impossible: %s and %s" uu____1750 uu____1752
              in
-          failwith uu____1756
-      | (uu____1764,FStar_Syntax_Syntax.Tm_delayed uu____1765) ->
-          let uu____1788 =
-            let uu____1790 = FStar_Syntax_Print.tag_of_term t11  in
-            let uu____1792 = FStar_Syntax_Print.tag_of_term t21  in
-            FStar_Util.format2 "Impossible: %s and %s" uu____1790 uu____1792
+          failwith uu____1748
+      | (uu____1756,FStar_Syntax_Syntax.Tm_delayed uu____1757) ->
+          let uu____1772 =
+            let uu____1774 = FStar_Syntax_Print.tag_of_term t11  in
+            let uu____1776 = FStar_Syntax_Print.tag_of_term t21  in
+            FStar_Util.format2 "Impossible: %s and %s" uu____1774 uu____1776
              in
-          failwith uu____1788
+          failwith uu____1772
       | (FStar_Syntax_Syntax.Tm_unknown ,FStar_Syntax_Syntax.Tm_unknown ) ->
           true
-      | uu____1797 -> false
+      | uu____1781 -> false
   
 let (term_eq :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -266,10 +266,10 @@ let (term_eq :
       let b = term_eq' t1 t2  in
       if Prims.op_Negation b
       then
-        (let uu____1827 = FStar_Syntax_Print.term_to_string t1  in
-         let uu____1829 = FStar_Syntax_Print.term_to_string t2  in
+        (let uu____1811 = FStar_Syntax_Print.term_to_string t1  in
+         let uu____1813 = FStar_Syntax_Print.term_to_string t2  in
          FStar_Util.print2 ">>>>>>>>>>>Term %s is not equal to %s\n"
-           uu____1827 uu____1829)
+           uu____1811 uu____1813)
       else ();
       b
   

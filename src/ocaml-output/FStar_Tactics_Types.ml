@@ -469,21 +469,64 @@ let (uu___is_BottomUp : direction -> Prims.bool) =
   fun projectee  ->
     match projectee with | BottomUp  -> true | uu____1068 -> false
   
+type ctrl_flag =
+  | Continue 
+  | Skip 
+  | Abort 
+let (uu___is_Continue : ctrl_flag -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | Continue  -> true | uu____1079 -> false
+  
+let (uu___is_Skip : ctrl_flag -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | Skip  -> true | uu____1090 -> false
+  
+let (uu___is_Abort : ctrl_flag -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | Abort  -> true | uu____1101 -> false
+  
 exception TacticFailure of Prims.string 
 let (uu___is_TacticFailure : Prims.exn -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | TacticFailure uu____1083 -> true
-    | uu____1086 -> false
+    | TacticFailure uu____1116 -> true
+    | uu____1119 -> false
   
 let (__proj__TacticFailure__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee  ->
-    match projectee with | TacticFailure uu____1096 -> uu____1096
+    match projectee with | TacticFailure uu____1129 -> uu____1129
   
 exception EExn of FStar_Syntax_Syntax.term 
 let (uu___is_EExn : Prims.exn -> Prims.bool) =
   fun projectee  ->
-    match projectee with | EExn uu____1110 -> true | uu____1112 -> false
+    match projectee with | EExn uu____1143 -> true | uu____1145 -> false
   
 let (__proj__EExn__item__uu___ : Prims.exn -> FStar_Syntax_Syntax.term) =
-  fun projectee  -> match projectee with | EExn uu____1120 -> uu____1120 
+  fun projectee  -> match projectee with | EExn uu____1153 -> uu____1153 
+let (check_goal_solved' :
+  goal -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) =
+  fun goal1  ->
+    let uu____1162 =
+      FStar_Syntax_Unionfind.find
+        (goal1.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_head
+       in
+    match uu____1162 with
+    | FStar_Pervasives_Native.Some t -> FStar_Pervasives_Native.Some t
+    | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
+  
+let (check_goal_solved : goal -> Prims.bool) =
+  fun goal1  ->
+    let uu____1175 = check_goal_solved' goal1  in
+    FStar_Option.isSome uu____1175
+  
+let (get_phi :
+  goal -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) =
+  fun g  ->
+    let uu____1188 =
+      let uu____1189 = goal_env g  in
+      let uu____1190 = goal_type g  in
+      FStar_TypeChecker_Normalize.unfold_whnf uu____1189 uu____1190  in
+    FStar_Syntax_Util.un_squash uu____1188
+  
+let (is_irrelevant : goal -> Prims.bool) =
+  fun g  -> let uu____1199 = get_phi g  in FStar_Option.isSome uu____1199 

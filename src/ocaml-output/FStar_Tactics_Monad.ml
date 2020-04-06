@@ -218,18 +218,18 @@ let (cur_goal : FStar_Tactics_Types.goal tac) =
     (fun uu___0_579  ->
        match uu___0_579 with
        | [] -> fail "No more goals"
-       | hd1::tl1 ->
-           let uu____589 = FStar_Tactics_Types.check_goal_solved' hd1  in
+       | hd::tl ->
+           let uu____589 = FStar_Tactics_Types.check_goal_solved' hd  in
            (match uu____589 with
-            | FStar_Pervasives_Native.None  -> ret hd1
+            | FStar_Pervasives_Native.None  -> ret hd
             | FStar_Pervasives_Native.Some t ->
                 ((let uu____596 =
-                    FStar_Tactics_Printing.goal_to_string_verbose hd1  in
+                    FStar_Tactics_Printing.goal_to_string_verbose hd  in
                   let uu____598 = FStar_Syntax_Print.term_to_string t  in
                   FStar_Util.print2
                     "!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n"
                     uu____596 uu____598);
-                 ret hd1)))
+                 ret hd)))
   
 let (remove_solved_goals : unit tac) =
   bind cur_goals
