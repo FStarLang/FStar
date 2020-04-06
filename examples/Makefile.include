@@ -5,7 +5,6 @@ endif
 
 include $(FSTAR_HOME)/ulib/gmake/z3.mk
 include $(FSTAR_HOME)/ulib/gmake/fstar.mk
-include $(FSTAR_HOME)/.common.mk
 
 #332 -> `abstract` keyword is fatal error
 OTHERFLAGS+=--warn_error @332
