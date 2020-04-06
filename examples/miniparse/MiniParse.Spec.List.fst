@@ -43,23 +43,6 @@ let parse_nlist
 : Tot (y: parser_spec (nlist n t) { y == parse_nlist' n p } )
 = parse_nlist' n p
 
-let rec serialize_nlist'
-  (n: nat)
-  (#t: Type0)
-  (#p: parser_spec t)
-  (s: serializer_spec p)
-: Tot (serializer_spec (parse_nlist n p))
-= if n = 0
-  then begin
-    Classical.forall_intro (nlist_nil_unique t);
-    Serializer (fun _ -> Seq.empty)
-  end
-  else begin
-    synth_inverse_1 t (n - 1);
-    synth_inverse_2 t (n - 1);
-    serialize_synth (serialize_nondep_then s (serialize_nlist' (n - 1) s)) (synth_nlist (n - 1)) (synth_nlist_recip (n - 1)) ()
-  end
-
 let serialize_nlist
   (n: nat)
   (#t: Type0)
