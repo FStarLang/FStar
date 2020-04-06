@@ -1,4 +1,4 @@
-module TestDTuples
+module DTuples
 
 (* cf. issue #1945
  * ideally, we would also compare the output of --dump_module TestDTuples
@@ -37,4 +37,3 @@ let b_d_2 = Box #_ (| 2 + 2, 1 |)
 let b_d_3 = Box (Mkdtuple2 (2 + 2) 1)
 let b_d_4 = Box (Mkdtuple2 #_ #_ (2 + 2) 1)
 let b_d_5 = Box #_ (Mkdtuple2 #_ #_ (2 + 2) 1)
-
