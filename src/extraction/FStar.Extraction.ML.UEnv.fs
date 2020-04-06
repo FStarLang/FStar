@@ -410,13 +410,22 @@ let is_fv_type g fv =
 
 let emptyMlPath : mlpath = ([],"")
 
-let initial_mlident_map () =
-     List.fold_right
-       (fun x m -> BU.psmap_add m x "")
-       (if Options.codegen() = Some Options.FSharp
-        then fsharpkeywords
-        else ocamlkeywords)
-       (BU.psmap_empty())
+let initial_mlident_map =
+  let map = BU.mk_ref None in
+  fun () ->
+    match !map with
+    | Some m -> m
+    | None ->
+      let m =
+        List.fold_right
+          (fun x m -> BU.psmap_add m x "")
+          (if Options.codegen() = Some Options.FSharp
+           then fsharpkeywords
+           else ocamlkeywords)
+        (BU.psmap_empty())
+      in
+      map := Some m;
+      m
 
 let mkContext (e:TypeChecker.Env.env) : uenv =
    let env = {
@@ -453,13 +462,20 @@ let extend_with_action_name g (ed:Syntax.eff_decl) (a:Syntax.action) ts =
     mlp, lid, exp_b, g
 
 let extend_record_field_name g (type_name, fn) =
-  new_mlpath_of_lident g (Ident.lid_of_ids (Ident.ids_of_lid type_name@[fn]))
+    let mlp =
+      let name = find_uniq (initial_mlident_map()) fn.idText false in
+      let ns = List.map (fun x -> x.idText) type_name.ns in
+      ns, name
+    in
+    let key = Ident.lid_of_ids (Ident.ids_of_lid type_name@[fn]) in
+    let g = { g with
+      mlpath_of_lid = BU.psmap_add g.mlpath_of_lid key.str mlp
+    } in
+    mlp, g
 
 let lookup_record_field_name g (type_name, fn) =
   let f = Ident.lid_of_ids (Ident.ids_of_lid type_name@[fn]) in
-  let mlns, f = mlpath_of_lident g f in
-  let mlns, tn = BU.prefix mlns in //the type is not really part of the name; only used for disambiguation
-  mlns, f
+  mlpath_of_lident g f
 
 let extend_with_module_name g (m:lid) = new_mlpath_of_lident g m
 

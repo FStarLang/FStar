@@ -10,9 +10,9 @@ let (__proj__Inner_let_rec__item__uu___ :
 let add_fuel :
   'uuuuuu92 . 'uuuuuu92 -> 'uuuuuu92 Prims.list -> 'uuuuuu92 Prims.list =
   fun x  ->
-    fun tl1  ->
+    fun tl  ->
       let uu____109 = FStar_Options.unthrottle_inductives ()  in
-      if uu____109 then tl1 else x :: tl1
+      if uu____109 then tl else x :: tl
   
 let withenv :
   'uuuuuu127 'uuuuuu128 'uuuuuu129 .
@@ -50,7 +50,7 @@ let (primitive_projector_by_pos :
   fun env  ->
     fun lid  ->
       fun i  ->
-        let fail1 uu____294 =
+        let fail uu____294 =
           let uu____295 =
             FStar_Util.format2
               "Projector %s on data constructor %s not found"
@@ -71,12 +71,12 @@ let (primitive_projector_by_pos :
                       if
                         (i < Prims.int_zero) ||
                           (i >= (FStar_List.length binders))
-                      then fail1 ()
+                      then fail ()
                       else
                         (let b = FStar_List.nth binders i  in
                          mk_term_projector_name lid
                            (FStar_Pervasives_Native.fst b)))
-             | uu____368 -> fail1 ())
+             | uu____368 -> fail ())
   
 let (mk_term_projector_name_by_pos :
   FStar_Ident.lident -> Prims.int -> Prims.string) =
@@ -145,86 +145,75 @@ type varops_t =
 let (__proj__Mkvarops_t__item__push : varops_t -> unit -> unit) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; reset_fresh; string_const;
-        next_id = next_id1; mk_unique;_} -> push1
+    | { push; pop; snapshot; rollback; new_var; new_fvar; fresh; reset_fresh;
+        string_const; next_id; mk_unique;_} -> push
   
 let (__proj__Mkvarops_t__item__pop : varops_t -> unit -> unit) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; reset_fresh; string_const;
-        next_id = next_id1; mk_unique;_} -> pop1
+    | { push; pop; snapshot; rollback; new_var; new_fvar; fresh; reset_fresh;
+        string_const; next_id; mk_unique;_} -> pop
   
 let (__proj__Mkvarops_t__item__snapshot :
   varops_t -> unit -> (Prims.int * unit)) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; reset_fresh; string_const;
-        next_id = next_id1; mk_unique;_} -> snapshot1
+    | { push; pop; snapshot; rollback; new_var; new_fvar; fresh; reset_fresh;
+        string_const; next_id; mk_unique;_} -> snapshot
   
 let (__proj__Mkvarops_t__item__rollback :
   varops_t -> Prims.int FStar_Pervasives_Native.option -> unit) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; reset_fresh; string_const;
-        next_id = next_id1; mk_unique;_} -> rollback1
+    | { push; pop; snapshot; rollback; new_var; new_fvar; fresh; reset_fresh;
+        string_const; next_id; mk_unique;_} -> rollback
   
 let (__proj__Mkvarops_t__item__new_var :
   varops_t -> FStar_Ident.ident -> Prims.int -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; reset_fresh; string_const;
-        next_id = next_id1; mk_unique;_} -> new_var
+    | { push; pop; snapshot; rollback; new_var; new_fvar; fresh; reset_fresh;
+        string_const; next_id; mk_unique;_} -> new_var
   
 let (__proj__Mkvarops_t__item__new_fvar :
   varops_t -> FStar_Ident.lident -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; reset_fresh; string_const;
-        next_id = next_id1; mk_unique;_} -> new_fvar
+    | { push; pop; snapshot; rollback; new_var; new_fvar; fresh; reset_fresh;
+        string_const; next_id; mk_unique;_} -> new_fvar
   
 let (__proj__Mkvarops_t__item__fresh :
   varops_t -> Prims.string -> Prims.string -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; reset_fresh; string_const;
-        next_id = next_id1; mk_unique;_} -> fresh1
+    | { push; pop; snapshot; rollback; new_var; new_fvar; fresh; reset_fresh;
+        string_const; next_id; mk_unique;_} -> fresh
   
 let (__proj__Mkvarops_t__item__reset_fresh : varops_t -> unit -> unit) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; reset_fresh; string_const;
-        next_id = next_id1; mk_unique;_} -> reset_fresh
+    | { push; pop; snapshot; rollback; new_var; new_fvar; fresh; reset_fresh;
+        string_const; next_id; mk_unique;_} -> reset_fresh
   
 let (__proj__Mkvarops_t__item__string_const :
   varops_t -> Prims.string -> FStar_SMTEncoding_Term.term) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; reset_fresh; string_const;
-        next_id = next_id1; mk_unique;_} -> string_const
+    | { push; pop; snapshot; rollback; new_var; new_fvar; fresh; reset_fresh;
+        string_const; next_id; mk_unique;_} -> string_const
   
 let (__proj__Mkvarops_t__item__next_id : varops_t -> unit -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; reset_fresh; string_const;
-        next_id = next_id1; mk_unique;_} -> next_id1
+    | { push; pop; snapshot; rollback; new_var; new_fvar; fresh; reset_fresh;
+        string_const; next_id; mk_unique;_} -> next_id
   
 let (__proj__Mkvarops_t__item__mk_unique :
   varops_t -> Prims.string -> Prims.string) =
   fun projectee  ->
     match projectee with
-    | { push = push1; pop = pop1; snapshot = snapshot1; rollback = rollback1;
-        new_var; new_fvar; fresh = fresh1; reset_fresh; string_const;
-        next_id = next_id1; mk_unique;_} -> mk_unique
+    | { push; pop; snapshot; rollback; new_var; new_fvar; fresh; reset_fresh;
+        string_const; next_id; mk_unique;_} -> mk_unique
   
 let (varops : varops_t) =
   let initial_ctr = (Prims.of_int (100))  in
@@ -244,7 +233,7 @@ let (varops : varops_t) =
         FStar_Util.find_map uu____1657
           (fun uu____1723  ->
              match uu____1723 with
-             | (names1,uu____1737) -> FStar_Util.smap_try_find names1 y1)
+             | (names,uu____1737) -> FStar_Util.smap_try_find names y1)
          in
       match uu____1653 with
       | FStar_Pervasives_Native.None  -> y1
@@ -269,10 +258,10 @@ let (varops : varops_t) =
          (Prims.op_Hat "__" (Prims.string_of_int rn)))
      in
   let new_fvar lid = mk_unique lid.FStar_Ident.str  in
-  let next_id1 uu____1909 = FStar_Util.incr ctr; FStar_ST.op_Bang ctr  in
-  let fresh1 mname pfx =
+  let next_id uu____1909 = FStar_Util.incr ctr; FStar_ST.op_Bang ctr  in
+  let fresh mname pfx =
     let uu____1948 =
-      let uu____1950 = next_id1 ()  in
+      let uu____1950 = next_id ()  in
       FStar_All.pipe_left Prims.string_of_int uu____1950  in
     FStar_Util.format3 "%s_%s_%s" pfx mname uu____1948  in
   let reset_fresh uu____1960 = FStar_ST.op_Colon_Equals ctr initial_ctr  in
@@ -287,9 +276,9 @@ let (varops : varops_t) =
     match uu____1990 with
     | FStar_Pervasives_Native.Some f -> f
     | FStar_Pervasives_Native.None  ->
-        let id1 = next_id1 ()  in
+        let id = next_id ()  in
         let f =
-          let uu____2086 = FStar_SMTEncoding_Util.mk_String_const id1  in
+          let uu____2086 = FStar_SMTEncoding_Util.mk_String_const id  in
           FStar_All.pipe_left FStar_SMTEncoding_Term.boxString uu____2086  in
         let top_scope =
           let uu____2090 =
@@ -298,30 +287,30 @@ let (varops : varops_t) =
           FStar_All.pipe_left FStar_Pervasives_Native.snd uu____2090  in
         (FStar_Util.smap_add top_scope s f; f)
      in
-  let push1 uu____2184 =
+  let push uu____2184 =
     let uu____2185 =
       let uu____2197 = new_scope ()  in
       let uu____2207 = FStar_ST.op_Bang scopes  in uu____2197 :: uu____2207
        in
     FStar_ST.op_Colon_Equals scopes uu____2185  in
-  let pop1 uu____2315 =
+  let pop uu____2315 =
     let uu____2316 =
       let uu____2328 = FStar_ST.op_Bang scopes  in FStar_List.tl uu____2328
        in
     FStar_ST.op_Colon_Equals scopes uu____2316  in
-  let snapshot1 uu____2441 = FStar_Common.snapshot push1 scopes ()  in
-  let rollback1 depth = FStar_Common.rollback pop1 scopes depth  in
+  let snapshot uu____2441 = FStar_Common.snapshot push scopes ()  in
+  let rollback depth = FStar_Common.rollback pop scopes depth  in
   {
-    push = push1;
-    pop = pop1;
-    snapshot = snapshot1;
-    rollback = rollback1;
+    push;
+    pop;
+    snapshot;
+    rollback;
     new_var;
     new_fvar;
-    fresh = fresh1;
+    fresh;
     reset_fresh;
     string_const;
-    next_id = next_id1;
+    next_id;
     mk_unique
   } 
 type fvar_binding =
@@ -430,7 +419,7 @@ let (check_valid_fvb : fvar_binding -> unit) =
 let binder_of_eithervar :
   'uuuuuu2730 'uuuuuu2731 .
     'uuuuuu2730 -> ('uuuuuu2730 * 'uuuuuu2731 FStar_Pervasives_Native.option)
-  = fun v1  -> (v1, FStar_Pervasives_Native.None) 
+  = fun v  -> (v, FStar_Pervasives_Native.None) 
 type env_t =
   {
   bvar_bindings:

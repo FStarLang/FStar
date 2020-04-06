@@ -608,11 +608,17 @@ let (__proj__MLE_Try__item___0 :
       Prims.list))
   = fun projectee  -> match projectee with | MLE_Try _0 -> _0 
 let (__proj__Mkmlexpr__item__expr : mlexpr -> mlexpr') =
-  fun projectee  -> match projectee with | { expr; mlty; loc;_} -> expr 
+  fun projectee  ->
+    match projectee with | { expr; mlty = mlty1; loc;_} -> expr
+  
 let (__proj__Mkmlexpr__item__mlty : mlexpr -> mlty) =
-  fun projectee  -> match projectee with | { expr; mlty; loc;_} -> mlty 
+  fun projectee  ->
+    match projectee with | { expr; mlty = mlty1; loc;_} -> mlty1
+  
 let (__proj__Mkmlexpr__item__loc : mlexpr -> mlloc) =
-  fun projectee  -> match projectee with | { expr; mlty; loc;_} -> loc 
+  fun projectee  ->
+    match projectee with | { expr; mlty = mlty1; loc;_} -> loc
+  
 let (__proj__Mkmllb__item__mllb_name : mllb -> mlident) =
   fun projectee  ->
     match projectee with

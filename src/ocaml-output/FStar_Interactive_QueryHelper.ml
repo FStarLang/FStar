@@ -140,14 +140,14 @@ let (symlookup :
                     FStar_List.mem "definition" requested_info ->
                     def_of_lid lid
                 | uu____766 -> FStar_Pervasives_Native.None  in
-              let def_range1 =
+              let def_range =
                 if FStar_List.mem "defined-at" requested_info
                 then FStar_Pervasives_Native.Some rng
                 else FStar_Pervasives_Native.None  in
               FStar_Pervasives_Native.Some
                 {
                   slr_name = name;
-                  slr_def_range = def_range1;
+                  slr_def_range = def_range;
                   slr_typ = typ_str;
                   slr_doc = doc_str;
                   slr_def = def_str
@@ -242,7 +242,7 @@ let (hoverlookup :
         symlookup env "" uu____936 ["type"; "definition"]  in
       match uu____933 with
       | FStar_Pervasives_Native.Some
-          { slr_name = n1; slr_def_range = uu____949;
+          { slr_name = n; slr_def_range = uu____949;
             slr_typ = FStar_Pervasives_Native.Some t; slr_doc = uu____951;
             slr_def = FStar_Pervasives_Native.Some d;_}
           ->

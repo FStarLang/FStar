@@ -55,18 +55,18 @@ let int1 :
       fun ea  ->
         fun er  ->
           fun psc  ->
-            fun n1  ->
+            fun n  ->
               fun args  ->
                 match args with
                 | (a,uu____202)::[] ->
-                    let uu____227 = try_unembed ea a n1  in
+                    let uu____227 = try_unembed ea a n  in
                     FStar_Util.bind_opt uu____227
                       (fun a1  ->
                          let uu____233 =
                            let uu____234 =
                              FStar_TypeChecker_Cfg.psc_range psc  in
                            let uu____235 = f a1  in
-                           embed er uu____234 uu____235 n1  in
+                           embed er uu____234 uu____235 n  in
                          FStar_Pervasives_Native.Some uu____233)
                 | uu____236 -> FStar_Pervasives_Native.None
   
@@ -88,21 +88,21 @@ let int2 :
         fun eb  ->
           fun er  ->
             fun psc  ->
-              fun n1  ->
+              fun n  ->
                 fun args  ->
                   match args with
                   | (a,uu____330)::(b,uu____332)::[] ->
-                      let uu____373 = try_unembed ea a n1  in
+                      let uu____373 = try_unembed ea a n  in
                       FStar_Util.bind_opt uu____373
                         (fun a1  ->
-                           let uu____379 = try_unembed eb b n1  in
+                           let uu____379 = try_unembed eb b n  in
                            FStar_Util.bind_opt uu____379
                              (fun b1  ->
                                 let uu____385 =
                                   let uu____386 =
                                     FStar_TypeChecker_Cfg.psc_range psc  in
                                   let uu____387 = f a1 b1  in
-                                  embed er uu____386 uu____387 n1  in
+                                  embed er uu____386 uu____387 n  in
                                 FStar_Pervasives_Native.Some uu____385))
                   | uu____388 -> FStar_Pervasives_Native.None
   

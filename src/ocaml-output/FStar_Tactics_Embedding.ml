@@ -177,9 +177,9 @@ let (hd'_and_args :
     let tm1 = FStar_Syntax_Util.unascribe tm  in
     let uu____421 = FStar_Syntax_Util.head_and_args tm1  in
     match uu____421 with
-    | (hd1,args) ->
+    | (hd,args) ->
         let uu____478 =
-          let uu____479 = FStar_Syntax_Util.un_uinst hd1  in
+          let uu____479 = FStar_Syntax_Util.un_uinst hd  in
           uu____479.FStar_Syntax_Syntax.n  in
         (uu____478, args)
   
@@ -267,14 +267,14 @@ let (e_proofstate_nbe :
         FStar_Syntax_Syntax.ltyp = t_proofstate;
         FStar_Syntax_Syntax.rng = FStar_Range.dummyRange
       }  in
-    let thunk1 =
+    let thunk =
       FStar_Thunk.mk
         (fun uu____673  ->
            FStar_TypeChecker_NBETerm.Constant
              (FStar_TypeChecker_NBETerm.String
                 ("(((proofstate.nbe)))", FStar_Range.dummyRange)))
        in
-    FStar_TypeChecker_NBETerm.Lazy ((FStar_Util.Inl li), thunk1)  in
+    FStar_TypeChecker_NBETerm.Lazy ((FStar_Util.Inl li), thunk)  in
   let unembed_proofstate _cb t =
     match t with
     | FStar_TypeChecker_NBETerm.Lazy
@@ -358,14 +358,14 @@ let (e_goal_nbe :
         FStar_Syntax_Syntax.ltyp = t_goal;
         FStar_Syntax_Syntax.rng = FStar_Range.dummyRange
       }  in
-    let thunk1 =
+    let thunk =
       FStar_Thunk.mk
         (fun uu____867  ->
            FStar_TypeChecker_NBETerm.Constant
              (FStar_TypeChecker_NBETerm.String
                 ("(((goal.nbe)))", FStar_Range.dummyRange)))
        in
-    FStar_TypeChecker_NBETerm.Lazy ((FStar_Util.Inl li), thunk1)  in
+    FStar_TypeChecker_NBETerm.Lazy ((FStar_Util.Inl li), thunk)  in
   let unembed_goal _cb t =
     match t with
     | FStar_TypeChecker_NBETerm.Lazy

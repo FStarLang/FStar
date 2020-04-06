@@ -14,7 +14,7 @@ let with_dsenv_of_tcenv :
     fun f  ->
       let uu____39 = f tcenv.FStar_TypeChecker_Env.dsenv  in
       match uu____39 with
-      | (a,dsenv1) ->
+      | (a,dsenv) ->
           (a,
             (let uu___8_51 = tcenv  in
              {
@@ -104,7 +104,7 @@ let with_dsenv_of_tcenv :
                  (uu___8_51.FStar_TypeChecker_Env.identifier_info);
                FStar_TypeChecker_Env.tc_hooks =
                  (uu___8_51.FStar_TypeChecker_Env.tc_hooks);
-               FStar_TypeChecker_Env.dsenv = dsenv1;
+               FStar_TypeChecker_Env.dsenv = dsenv;
                FStar_TypeChecker_Env.nbe =
                  (uu___8_51.FStar_TypeChecker_Env.nbe);
                FStar_TypeChecker_Env.strict_args_tab =
@@ -222,7 +222,7 @@ let (parse :
   
 let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
   fun deps  ->
-    let solver1 =
+    let solver =
       let uu____385 = FStar_Options.lax ()  in
       if uu____385
       then FStar_SMTEncoding_Solver.dummy
@@ -258,7 +258,7 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
       FStar_TypeChecker_Env.initial_env deps FStar_TypeChecker_TcTerm.tc_term
         FStar_TypeChecker_TcTerm.type_of_tot_term
         FStar_TypeChecker_TcTerm.universe_of
-        FStar_TypeChecker_TcTerm.check_type_of_well_typed_term solver1
+        FStar_TypeChecker_TcTerm.check_type_of_well_typed_term solver
         FStar_Parser_Const.prims_lid uu____392
        in
     let env1 =
@@ -1142,7 +1142,7 @@ let (tc_one_file :
                      fmod.FStar_Syntax_Syntax.name
                     in
                  let check_mod uu____1250 =
-                   let check1 env2 =
+                   let check env2 =
                      with_tcenv_of_env env2
                        (fun tcenv  ->
                           (match tcenv.FStar_TypeChecker_Env.gamma with
@@ -1173,7 +1173,7 @@ let (tc_one_file :
                                  ((modul, smt_decls), env3)))))
                       in
                    let uu____1363 =
-                     FStar_Profiling.profile (fun uu____1393  -> check1 env1)
+                     FStar_Profiling.profile (fun uu____1393  -> check env1)
                        (FStar_Pervasives_Native.Some
                           ((fmod.FStar_Syntax_Syntax.name).FStar_Ident.str))
                        "FStar.Universal.tc_source_file"
@@ -1470,7 +1470,7 @@ let (batch_mode_tc :
       (FStar_CheckedFiles.tc_result Prims.list * uenv * (uenv -> uenv)))
   =
   fun filenames  ->
-    fun dep_graph1  ->
+    fun dep_graph  ->
       (let uu____2298 = FStar_Options.debug_any ()  in
        if uu____2298
        then
@@ -1488,9 +1488,9 @@ let (batch_mode_tc :
              "Here's the list of modules we will verify: %s\n" uu____2306))
        else ());
       (let env =
-         let uu____2324 = init_env dep_graph1  in
+         let uu____2324 = init_env dep_graph  in
          FStar_Extraction_ML_UEnv.mkContext uu____2324  in
-       let uu____2325 = tc_fold_interleave dep_graph1 ([], [], env) filenames
+       let uu____2325 = tc_fold_interleave dep_graph ([], [], env) filenames
           in
        match uu____2325 with
        | (all_mods,mllibs,env1) ->

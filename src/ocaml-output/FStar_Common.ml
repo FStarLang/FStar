@@ -52,22 +52,22 @@ let rollback :
   fun pop  ->
     fun stackref  ->
       fun depth  ->
-        let rec aux n1 =
-          if n1 <= Prims.int_zero
+        let rec aux n =
+          if n <= Prims.int_zero
           then failwith "Too many pops"
           else
-            if n1 = Prims.int_one
+            if n = Prims.int_one
             then pop ()
-            else ((let uu____218 = pop ()  in ()); aux (n1 - Prims.int_one))
+            else ((let uu____218 = pop ()  in ()); aux (n - Prims.int_one))
            in
         let curdepth =
           let uu____221 = FStar_ST.op_Bang stackref  in
           FStar_List.length uu____221  in
-        let n1 =
+        let n =
           match depth with
           | FStar_Pervasives_Native.Some d -> curdepth - d
           | FStar_Pervasives_Native.None  -> Prims.int_one  in
-        FStar_Util.atomically (fun uu____256  -> aux n1)
+        FStar_Util.atomically (fun uu____256  -> aux n)
   
 let raise_failed_assertion : 'uuuuuu262 . Prims.string -> 'uuuuuu262 =
   fun msg  ->
@@ -110,10 +110,10 @@ let string_of_option :
           let uu____385 = f x  in Prims.op_Hat "Some " uu____385
   
 let tabulate : 'a . Prims.int -> (Prims.int -> 'a) -> 'a Prims.list =
-  fun n1  ->
+  fun n  ->
     fun f  ->
       let rec aux i =
-        if i < n1
+        if i < n
         then
           let uu____430 = f i  in
           let uu____431 = aux (i + Prims.int_one)  in uu____430 :: uu____431

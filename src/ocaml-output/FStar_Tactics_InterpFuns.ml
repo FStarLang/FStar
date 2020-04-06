@@ -8,9 +8,9 @@ let unembed :
   =
   fun e  ->
     fun t  ->
-      fun n1  ->
+      fun n  ->
         let uu____32 = FStar_Syntax_Embeddings.unembed e t  in
-        uu____32 true n1
+        uu____32 true n
   
 let embed :
   'uuuuuu51 .
@@ -22,9 +22,9 @@ let embed :
   fun e  ->
     fun rng  ->
       fun t  ->
-        fun n1  ->
+        fun n  ->
           let uu____78 = FStar_Syntax_Embeddings.embed e t  in
-          uu____78 rng FStar_Pervasives_Native.None n1
+          uu____78 rng FStar_Pervasives_Native.None n
   
 let extract_1 :
   'a .
@@ -1398,14 +1398,14 @@ let (native_tactics_steps :
 let rec drop :
   'uuuuuu6925 . Prims.int -> 'uuuuuu6925 Prims.list -> 'uuuuuu6925 Prims.list
   =
-  fun n1  ->
+  fun n  ->
     fun l  ->
-      if n1 = Prims.int_zero
+      if n = Prims.int_zero
       then l
       else
         (match l with
          | [] -> failwith "drop: impossible"
-         | uu____6954::xs -> drop (n1 - Prims.int_one) xs)
+         | uu____6954::xs -> drop (n - Prims.int_one) xs)
   
 let mktac1 :
   'a 'na 'nr 'r .

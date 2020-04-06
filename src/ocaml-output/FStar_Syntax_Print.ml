@@ -191,8 +191,8 @@ let rec find : 'a . ('a -> Prims.bool) -> 'a Prims.list -> 'a =
     fun l  ->
       match l with
       | [] -> failwith "blah"
-      | hd1::tl1 ->
-          let uu____701 = f hd1  in if uu____701 then hd1 else find f tl1
+      | hd::tl ->
+          let uu____701 = f hd  in if uu____701 then hd else find f tl
   
 let (find_lid :
   FStar_Ident.lident ->
@@ -237,9 +237,9 @@ let (uvar_to_string : FStar_Syntax_Syntax.uvar -> Prims.string) =
        Prims.op_Hat "?" uu____820)
   
 let (version_to_string : FStar_Syntax_Syntax.version -> Prims.string) =
-  fun v1  ->
-    let uu____834 = FStar_Util.string_of_int v1.FStar_Syntax_Syntax.major  in
-    let uu____836 = FStar_Util.string_of_int v1.FStar_Syntax_Syntax.minor  in
+  fun v  ->
+    let uu____834 = FStar_Util.string_of_int v.FStar_Syntax_Syntax.major  in
+    let uu____836 = FStar_Util.string_of_int v.FStar_Syntax_Syntax.minor  in
     FStar_Util.format2 "%s.%s" uu____834 uu____836
   
 let (univ_uvar_to_string :
@@ -268,13 +268,13 @@ let rec (int_of_univ :
       (Prims.int * FStar_Syntax_Syntax.universe
         FStar_Pervasives_Native.option))
   =
-  fun n1  ->
+  fun n  ->
     fun u  ->
       let uu____907 = FStar_Syntax_Subst.compress_univ u  in
       match uu____907 with
-      | FStar_Syntax_Syntax.U_zero  -> (n1, FStar_Pervasives_Native.None)
-      | FStar_Syntax_Syntax.U_succ u1 -> int_of_univ (n1 + Prims.int_one) u1
-      | uu____920 -> (n1, (FStar_Pervasives_Native.Some u))
+      | FStar_Syntax_Syntax.U_zero  -> (n, FStar_Pervasives_Native.None)
+      | FStar_Syntax_Syntax.U_succ u1 -> int_of_univ (n + Prims.int_one) u1
+      | uu____920 -> (n, (FStar_Pervasives_Native.Some u))
   
 let rec (univ_to_string : FStar_Syntax_Syntax.universe -> Prims.string) =
   fun u  ->
@@ -292,10 +292,10 @@ let rec (univ_to_string : FStar_Syntax_Syntax.universe -> Prims.string) =
     | FStar_Syntax_Syntax.U_succ u1 ->
         let uu____954 = int_of_univ Prims.int_one u1  in
         (match uu____954 with
-         | (n1,FStar_Pervasives_Native.None ) -> FStar_Util.string_of_int n1
-         | (n1,FStar_Pervasives_Native.Some u2) ->
+         | (n,FStar_Pervasives_Native.None ) -> FStar_Util.string_of_int n
+         | (n,FStar_Pervasives_Native.Some u2) ->
              let uu____975 = univ_to_string u2  in
-             let uu____977 = FStar_Util.string_of_int n1  in
+             let uu____977 = FStar_Util.string_of_int n  in
              FStar_Util.format2 "(%s + %s)" uu____975 uu____977)
     | FStar_Syntax_Syntax.U_max us ->
         let uu____983 =
@@ -459,13 +459,13 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
        | FStar_Syntax_Syntax.Tm_lazy
            { FStar_Syntax_Syntax.blob = b;
              FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_embedding
-               (uu____1729,thunk1);
+               (uu____1729,thunk);
              FStar_Syntax_Syntax.ltyp = uu____1731;
              FStar_Syntax_Syntax.rng = uu____1732;_}
            ->
            let uu____1743 =
              let uu____1745 =
-               let uu____1747 = FStar_Thunk.force thunk1  in
+               let uu____1747 = FStar_Thunk.force thunk  in
                term_to_string uu____1747  in
              Prims.op_Hat uu____1745 "]"  in
            Prims.op_Hat "[LAZYEMB:" uu____1743
@@ -674,8 +674,8 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
               in
            let uu____2437 = term_to_string e  in
            FStar_Util.format3 "(%s <ascribed: %s %s)" uu____2437 annot1 topt1
-       | FStar_Syntax_Syntax.Tm_match (head1,branches) ->
-           let uu____2478 = term_to_string head1  in
+       | FStar_Syntax_Syntax.Tm_match (head,branches) ->
+           let uu____2478 = term_to_string head  in
            let uu____2480 =
              let uu____2482 =
                FStar_All.pipe_right branches
@@ -1236,7 +1236,7 @@ let (binder_to_json :
       let uu____3566 = b  in
       match uu____3566 with
       | (a,imp) ->
-          let n1 =
+          let n =
             let uu____3574 = FStar_Syntax_Syntax.is_null_binder b  in
             if uu____3574
             then FStar_Util.JsonNull
@@ -1250,7 +1250,7 @@ let (binder_to_json :
             let uu____3584 = term_to_string' env a.FStar_Syntax_Syntax.sort
                in
             FStar_Util.JsonStr uu____3584  in
-          FStar_Util.JsonAssoc [("name", n1); ("type", t)]
+          FStar_Util.JsonAssoc [("name", n); ("type", t)]
   
 let (binders_to_json :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.binders -> FStar_Util.json) =
@@ -1513,25 +1513,25 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
       | FStar_Syntax_Syntax.Sig_pragma (FStar_Syntax_Syntax.PopOptions ) ->
           "#pop-options"
       | FStar_Syntax_Syntax.Sig_inductive_typ
-          (lid,univs1,tps,k,uu____4107,uu____4108) ->
+          (lid,univs,tps,k,uu____4107,uu____4108) ->
           let quals_str = quals_to_string' x.FStar_Syntax_Syntax.sigquals  in
           let binders_str = binders_to_string " " tps  in
           let term_str = term_to_string k  in
           let uu____4124 = FStar_Options.print_universes ()  in
           if uu____4124
           then
-            let uu____4128 = univ_names_to_string univs1  in
+            let uu____4128 = univ_names_to_string univs  in
             FStar_Util.format5 "%stype %s<%s> %s : %s" quals_str
               lid.FStar_Ident.str uu____4128 binders_str term_str
           else
             FStar_Util.format4 "%stype %s %s : %s" quals_str
               lid.FStar_Ident.str binders_str term_str
       | FStar_Syntax_Syntax.Sig_datacon
-          (lid,univs1,t,uu____4137,uu____4138,uu____4139) ->
+          (lid,univs,t,uu____4137,uu____4138,uu____4139) ->
           let uu____4146 = FStar_Options.print_universes ()  in
           if uu____4146
           then
-            let uu____4150 = univ_names_to_string univs1  in
+            let uu____4150 = univ_names_to_string univs  in
             let uu____4152 = term_to_string t  in
             FStar_Util.format3 "datacon<%s> %s : %s" uu____4150
               lid.FStar_Ident.str uu____4152
@@ -1539,14 +1539,14 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
             (let uu____4157 = term_to_string t  in
              FStar_Util.format2 "datacon %s : %s" lid.FStar_Ident.str
                uu____4157)
-      | FStar_Syntax_Syntax.Sig_declare_typ (lid,univs1,t) ->
+      | FStar_Syntax_Syntax.Sig_declare_typ (lid,univs,t) ->
           let uu____4163 = quals_to_string' x.FStar_Syntax_Syntax.sigquals
              in
           let uu____4165 =
             let uu____4167 = FStar_Options.print_universes ()  in
             if uu____4167
             then
-              let uu____4171 = univ_names_to_string univs1  in
+              let uu____4171 = univ_names_to_string univs  in
               FStar_Util.format1 "<%s>" uu____4171
             else ""  in
           let uu____4177 = term_to_string t  in
@@ -1573,8 +1573,8 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
             let uu____4219 = FStar_List.map sigelt_to_string ses  in
             FStar_All.pipe_right uu____4219 (FStar_String.concat "\n")  in
           Prims.op_Hat "(* Sig_bundle *)" uu____4217
-      | FStar_Syntax_Syntax.Sig_fail (errs,lax1,ses) ->
-          let uu____4245 = FStar_Util.string_of_bool lax1  in
+      | FStar_Syntax_Syntax.Sig_fail (errs,lax,ses) ->
+          let uu____4245 = FStar_Util.string_of_bool lax  in
           let uu____4247 =
             FStar_Common.string_of_list FStar_Util.string_of_int errs  in
           let uu____4250 =
@@ -1587,7 +1587,7 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
           eff_decl_to_string' uu____4264 x.FStar_Syntax_Syntax.sigrng
             x.FStar_Syntax_Syntax.sigquals ed
       | FStar_Syntax_Syntax.Sig_sub_effect se -> sub_eff_to_string se
-      | FStar_Syntax_Syntax.Sig_effect_abbrev (l,univs1,tps,c,flags) ->
+      | FStar_Syntax_Syntax.Sig_effect_abbrev (l,univs,tps,c,flags) ->
           let uu____4276 = FStar_Options.print_universes ()  in
           if uu____4276
           then
@@ -1597,9 +1597,9 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
                   (FStar_Syntax_Syntax.Tm_arrow (tps, c))
                   FStar_Pervasives_Native.None FStar_Range.dummyRange
                  in
-              FStar_Syntax_Subst.open_univ_vars univs1 uu____4285  in
+              FStar_Syntax_Subst.open_univ_vars univs uu____4285  in
             (match uu____4280 with
-             | (univs2,t) ->
+             | (univs1,t) ->
                  let uu____4299 =
                    let uu____4304 =
                      let uu____4305 = FStar_Syntax_Subst.compress t  in
@@ -1610,7 +1610,7 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
                  (match uu____4299 with
                   | (tps1,c1) ->
                       let uu____4343 = sli l  in
-                      let uu____4345 = univ_names_to_string univs2  in
+                      let uu____4345 = univ_names_to_string univs1  in
                       let uu____4347 = binders_to_string " " tps1  in
                       let uu____4350 = comp_to_string c1  in
                       FStar_Util.format4 "effect %s<%s> %s = %s" uu____4343
@@ -1628,9 +1628,9 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
             FStar_All.pipe_left (FStar_String.concat "; ") uu____4371  in
           let uu____4381 = term_to_string t  in
           FStar_Util.format2 "splice[%s] (%s)" uu____4369 uu____4381
-      | FStar_Syntax_Syntax.Sig_polymonadic_bind (m,n1,p,t,ty) ->
+      | FStar_Syntax_Syntax.Sig_polymonadic_bind (m,n,p,t,ty) ->
           let uu____4389 = FStar_Ident.string_of_lid m  in
-          let uu____4391 = FStar_Ident.string_of_lid n1  in
+          let uu____4391 = FStar_Ident.string_of_lid n  in
           let uu____4393 = FStar_Ident.string_of_lid p  in
           let uu____4395 = tscheme_to_string t  in
           let uu____4397 = tscheme_to_string ty  in

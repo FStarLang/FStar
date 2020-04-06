@@ -144,24 +144,24 @@ let rec (pow2 : FStar_BigInt.bigint -> FStar_BigInt.bigint) =
   
 let (bounds :
   signedness -> width -> (FStar_BigInt.bigint * FStar_BigInt.bigint)) =
-  fun signedness  ->
-    fun width  ->
-      let n1 =
-        match width with
+  fun signedness1  ->
+    fun width1  ->
+      let n =
+        match width1 with
         | Int8  -> FStar_BigInt.big_int_of_string "8"
         | Int16  -> FStar_BigInt.big_int_of_string "16"
         | Int32  -> FStar_BigInt.big_int_of_string "32"
         | Int64  -> FStar_BigInt.big_int_of_string "64"  in
       let uu____584 =
-        match signedness with
+        match signedness1 with
         | Unsigned  ->
             let uu____593 =
-              let uu____594 = pow2 n1  in FStar_BigInt.pred_big_int uu____594
+              let uu____594 = pow2 n  in FStar_BigInt.pred_big_int uu____594
                in
             (FStar_BigInt.zero, uu____593)
         | Signed  ->
             let upper =
-              let uu____596 = FStar_BigInt.pred_big_int n1  in pow2 uu____596
+              let uu____596 = FStar_BigInt.pred_big_int n  in pow2 uu____596
                in
             let uu____597 = FStar_BigInt.minus_big_int upper  in
             let uu____598 = FStar_BigInt.pred_big_int upper  in
@@ -171,9 +171,9 @@ let (bounds :
   
 let (within_bounds : Prims.string -> signedness -> width -> Prims.bool) =
   fun repr  ->
-    fun signedness  ->
-      fun width  ->
-        let uu____624 = bounds signedness width  in
+    fun signedness1  ->
+      fun width1  ->
+        let uu____624 = bounds signedness1 width1  in
         match uu____624 with
         | (lower,upper) ->
             let value =

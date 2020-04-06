@@ -21,9 +21,9 @@ let (finished_message :
            (FStar_List.iter
               (fun uu____91  ->
                  match uu____91 with
-                 | (iface1,name) ->
+                 | (iface,name) ->
                      let tag =
-                       if iface1 then "i'face (or impl+i'face)" else "module"
+                       if iface then "i'face (or impl+i'face)" else "module"
                         in
                      let uu____109 =
                        FStar_Options.should_print_message
@@ -231,10 +231,10 @@ let go : 'uuuuuu329 . 'uuuuuu329 -> unit =
                                     FStar_CheckedFiles.load_parsing_data_from_cache
                                    in
                                 match uu____499 with
-                                | (filenames1,dep_graph1) ->
+                                | (filenames1,dep_graph) ->
                                     let uu____515 =
                                       FStar_Universal.batch_mode_tc
-                                        filenames1 dep_graph1
+                                        filenames1 dep_graph
                                        in
                                     (match uu____515 with
                                      | (tcrs,env,cleanup1) ->
