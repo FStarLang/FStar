@@ -8,21 +8,22 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_FStar.SL.Heap.ref",
-        "equation_Lang.addr", "equation_Lang.t",
-        "function_token_typing_FStar.UInt64.t",
+        "equation_FStar.SL.Heap.trivial_preorder", "equation_Lang.addr",
+        "equation_Lang.t", "equation_Prims.eqtype",
         "lemma_FStar.SL.Monotonic.Heap.equal_extensional",
         "lemma_FStar.SL.Monotonic.Heap.lemma_join_tot_restrict_minus",
         "lemma_FStar.SL.Monotonic.Heap.lemma_restrict_eq_points_to",
-        "refinement_interpretation_Tm_refine_54d354f73662f2240c4d684d186be14a",
+        "refinement_interpretation_Tm_refine_21b1a52b8391e4e12f8b5cceb522aea1",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_b665c5d9d02615543412d6d1fdaeb68b",
         "typing_FStar.SL.Heap.trivial_preorder",
         "typing_FStar.SL.Monotonic.Heap.minus",
         "typing_FStar.SL.Monotonic.Heap.points_to",
         "typing_FStar.SL.Monotonic.Heap.restrict",
-        "typing_FStar.SL.Monotonic.Heap.sel"
+        "typing_FStar.SL.Monotonic.Heap.sel", "typing_FStar.UInt64.t"
       ],
       0,
-      "2434c2a36db801f3c13515442edf6ee8"
+      "24697a67e50d3e4c6d785b599a4c32c7"
     ],
     [
       "SL.Tactics.lemma_alloc_return",
@@ -39,7 +40,7 @@
         "typing_FStar.SL.Monotonic.Heap.get_next_addr"
       ],
       0,
-      "c7bdd59e233afeb67a1b761332d2e0c4"
+      "b98f09700970f709b3e120c766d77550"
     ],
     [
       "SL.Tactics.lemma_bind",
@@ -53,7 +54,7 @@
         "typing_FStar.SL.Monotonic.Heap.get_next_addr"
       ],
       0,
-      "b5d321880e10261ef98a536568929849"
+      "a38baebe18bea54d42a482993101b4e1"
     ],
     [
       "SL.Tactics.lemma_eq_implies_intro",
@@ -62,7 +63,7 @@
       1,
       [ "@query" ],
       0,
-      "2c69c521c9f1563332a9e0f9811661b0"
+      "ae91ec58eec4f4f3bc80411927aceddd"
     ],
     [
       "SL.Tactics.lemma_eq_implies_intro'",
@@ -71,7 +72,7 @@
       1,
       [ "@query" ],
       0,
-      "6f07bb3085f3ab0bae2452c0e237b938"
+      "782ef1d37bb45ece1cf319a9e317bd87"
     ],
     [
       "SL.Tactics.lemma_addr_not_eq_refl",
@@ -85,7 +86,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3abaa71bd4da9c0fc1e6b9d6aa35531a"
+      "43ff00e80aa08195c11426f19576aee4"
     ],
     [
       "SL.Tactics.lemma_impl_l_cong",
@@ -99,7 +100,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c37d0d88f7ce296ba06f614d913780cb"
+      "6c4ef3db0728cf46ba20319ca0be5240"
     ],
     [
       "SL.Tactics.lemma_eq_l_cong",
@@ -112,7 +113,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a7c43b40d7bea7eaa122b7207a3bce11"
+      "7c8e98ba77a5a3d1c949a77a2a538f43"
     ],
     [
       "SL.Tactics.lemma_eq_cong",
@@ -125,7 +126,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3522cde1af02ccf652bdd6d2f82cc339"
+      "5eee55cbe344f4e346eb5c8821c62086"
     ],
     [
       "SL.Tactics.repeat_step_select",
@@ -143,7 +144,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "2f1ef29e24e8be0e7123bc9735e45b41"
+      "0abd847488e8112f6928a5d4ba18b6bc"
     ],
     [
       "SL.Tactics.lemma_read_write",
@@ -152,10 +153,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_54d354f73662f2240c4d684d186be14a"
+        "refinement_interpretation_Tm_refine_21b1a52b8391e4e12f8b5cceb522aea1"
       ],
       0,
-      "ff792f85c369767209b35dac6ee65dbe"
+      "835a7d02cfe74545b4292e9ea516cf04"
     ],
     [
       "SL.Tactics.lemma_addr_not_eq_refl",
@@ -169,7 +170,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b8e24fcac964b25f66419f20d831d593"
+      "63600808e39dbd9cc60fe1fcfb62ba30"
     ],
     [
       "SL.Tactics.repeat_step_select",
@@ -187,7 +188,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "1fe1ded701d4ba02bf556e48fe7c1865"
+      "23f835285580f70d2714ec57832c5320"
     ]
   ]
 ]

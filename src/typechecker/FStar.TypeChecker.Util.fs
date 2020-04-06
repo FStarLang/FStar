@@ -715,7 +715,9 @@ let mk_indexed_bind env
         let bs_subst = NT (List.hd bs |> fst, x_a |> fst |> S.bv_to_name) in
         let c = SS.subst_comp [bs_subst] c in
         effect_args_from_repr (SS.compress (U.comp_result c)) (U.is_layered n_ed) r1
-        |> List.map (SS.subst subst) in
+        |> List.map (SS.subst subst)
+      | _ -> failwith "imspossible: mk_indexed_bind"
+    in
 
     let env_g = Env.push_binders env [x_a] in
     List.fold_left2
@@ -893,22 +895,6 @@ let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) f
 
          bind_pure_wp_with env pure_assert_wp c flags
 
-let record_simplify = 
-  let x = BU.mk_ref 0 in
-  fun env guard ->
-    let n = !x in
-    x := n + 1;
-    let start = BU.now() in
-    let g = Rel.simplify_guard env guard in
-    let fin = BU.now () in
-    if Options.debug_any()
-    then
-      BU.print2 "Simplify_guard %s in %s ms\n"
-        (BU.string_of_int n)
-        (BU.string_of_int (snd (BU.time_diff start fin)));
-    g
-
-  
 let strengthen_precondition
             (reason:option<(unit -> string)>)
             env
@@ -995,8 +981,8 @@ let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) : comp * gu
     if is_unit then      
       if c |> U.comp_effect_name |> Env.norm_eff_name env |> Env.is_layered_effect env
       then
-        let [b], phi = SS.open_term [b, None] phi in
-        let phi = SS.subst [NT (b |> fst, S.unit_const)] phi in
+        let b, phi = SS.open_term_bv b phi in
+        let phi = SS.subst [NT (b, S.unit_const)] phi in
         weaken_comp env c phi
       else close_wp_comp env [x] c, Env.trivial_guard
     else c, Env.trivial_guard
@@ -2911,7 +2897,7 @@ let get_field_projector_name env datacon index =
     if List.length bs <= index then err (List.length bs)
     else
       let b = List.nth bs index in
-      U.mk_field_projector_name datacon (fst b) index |> fst
+      U.mk_field_projector_name datacon (fst b) index
   | _ -> err 0
 
 

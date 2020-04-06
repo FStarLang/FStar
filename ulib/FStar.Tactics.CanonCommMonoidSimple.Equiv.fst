@@ -241,7 +241,7 @@ let permute_via_swaps_correct
 
 // Here we sort the variable numbers
 
-let sort : permute = List.Tot.sortWith #int (compare_of_bool (<))
+let sort : permute = List.Tot.Base.sortWith #int (compare_of_bool (<))
 
 let sort_via_swaps (#a:Type) (am:amap a)  (xs:list atom)
   : Lemma (exists (ss:swaps_for xs). sort xs == apply_swaps xs ss) =
@@ -404,7 +404,7 @@ let canon_monoid (eq: term) (m: term) : Tac unit =
        let rel, xy = collect_app_ref rel_xy in
        if (length xy >= 2)
        then (
-         match FStar.List.Tot.index xy (length xy - 2) , FStar.List.Tot.index xy (length xy - 1) with
+         match FStar.List.Tot.Base.index xy (length xy - 2) , FStar.List.Tot.index xy (length xy - 1) with
          | (lhs, Q_Explicit) , (rhs, Q_Explicit) -> canon_lhs_rhs eq m lhs rhs
          | _ -> fail "Goal should have been an application of a binary relation to 2 explicit arguments"
        )

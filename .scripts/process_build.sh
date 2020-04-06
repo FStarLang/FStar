@@ -65,6 +65,7 @@ fi
 
 diag "*** Make package (clean build directory first) ***"
 cd src/ocaml-output
+git clean -dffx
 make package
 
 # 'make package' makes the package using the major version from version.txt. This script is a weekly process to make minor versions so use timestamp in file name instead of major version
@@ -108,7 +109,7 @@ bin/fstar.exe --version
 bin/z3 --version
 
 diag "-- Verify micro benchmarks --"
-make -C examples/micro-benchmarks
+make -C tests/micro-benchmarks
 if [ $? -ne 0 ]; then
   echo -e "* ${RED}FAIL!${NC} for micro benchmarks - make returned $?"
   exit 1

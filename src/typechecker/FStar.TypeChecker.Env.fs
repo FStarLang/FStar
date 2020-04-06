@@ -1015,7 +1015,7 @@ let lookup_projector env lid i =
           if ((i < 0) || i >= List.length binders) //this has to be within bounds!
           then fail ()
           else let b = List.nth binders i in
-               U.mk_field_projector_name lid (fst b) i |> fst
+               U.mk_field_projector_name lid (fst b) i
         | _ -> fail ()
 
 let is_projector env (l:lident) : bool =

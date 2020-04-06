@@ -2039,7 +2039,7 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
     let p = range_of_lid lid in
 
     fields |> List.mapi (fun i (x, _) ->
-        let field_name, _ = U.mk_field_projector_name lid x i in
+        let field_name = U.mk_field_projector_name lid x i in
         let only_decl =
             lid_equals C.prims_lid  (Env.current_module env)
             || fvq<>Data_ctor
@@ -3133,6 +3133,9 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
     let quals = d.quals in
     let attrs = d.attrs in
     desugar_effect env d quals true eff_name eff_binders eff_typ eff_decls attrs
+
+  | LayeredEffect (RedefineEffect _) ->
+    failwith "Impossible: LayeredEffect (RedefineEffect _) (should not be parseable)"
 
   | SubEffect l ->
     let src_ed = lookup_effect_lid env l.msource d.drange in

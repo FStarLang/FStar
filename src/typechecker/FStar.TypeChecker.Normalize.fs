@@ -77,6 +77,7 @@ type stack_elt =
  | Match    of env * branches * cfg * Range.range
  | Abs      of env * binders * env * option<residual_comp> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
  | App      of env * term * aqual * Range.range
+ | CBVApp   of env * term * aqual * Range.range
  | Meta     of env * S.metadata * Range.range
  | Let      of env * binders * letbinding * Range.range
  | Cfg      of cfg
@@ -112,6 +113,7 @@ let stack_elt_to_string = function
     | UnivArgs _ -> "UnivArgs"
     | Match   _ -> "Match"
     | App (_, t,_,_) -> BU.format1 "App %s" (Print.term_to_string t)
+    | CBVApp (_, t,_,_) -> BU.format1 "CBVApp %s" (Print.term_to_string t)
     | Meta (_, m,_) -> "Meta"
     | Let  _ -> "Let"
     | Cfg _ -> "Cfg"
@@ -423,6 +425,10 @@ and rebuild_closure cfg env stack t =
       let t = S.extend_app head (t,aq) None r in
       rebuild_closure cfg env stack t
 
+    | CBVApp(env, head, aq, r)::stack ->
+      let t = S.extend_app head (t,aq) None r in
+      rebuild_closure cfg env stack t
+
     | Abs (env', bs, env'', lopt, r)::stack ->
       let bs, _ = close_binders cfg env' bs in
       let lopt = close_lcomp_opt cfg env'' lopt in
@@ -551,7 +557,7 @@ let closure_as_term cfg env t = non_tail_inline_closure_env cfg env t
 let unembed_binder_knot : ref<option<EMB.embedding<binder>>> = BU.mk_ref None
 let unembed_binder (t : term) : option<S.binder> =
     match !unembed_binder_knot with
-    | Some e -> EMB.unembed e t true EMB.id_norm_cb
+    | Some e -> EMB.unembed e t false EMB.id_norm_cb
     | None ->
         Errors.log_issue t.pos (Errors.Warning_UnembedBinderKnot, "unembed_binder_knot is unset!");
         None
@@ -1196,6 +1202,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | Meta _::_
                 | Let _ :: _
                 | App _ :: _
+                | CBVApp _ :: _
                 | Abs _ :: _
                 | [] ->
                   if cfg.steps.weak
@@ -1349,9 +1356,20 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  let env = (Some binder, Clos(env, lb.lbdef, BU.mk_ref None, false))::env in
                  log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
                  norm cfg env stack body
+
+            (* If we are reifying, we reduce Div lets faithfully, i.e. in CBV *)
+            (* This is important for tactics, see issue #1594 *)
+            else if cfg.steps.reify_
+                    && U.is_div_effect (Env.norm_eff_name cfg.tcenv lb.lbeff)
+            then let ffun = S.mk (Tm_abs ([S.mk_binder (lb.lbname |> BU.left)], body, None)) None t.pos in
+                 let stack = (CBVApp (env, ffun, None, t.pos)) :: stack in
+                 log cfg (fun () -> BU.print_string "+++ Evaluating DIV Tm_let\n");
+                 norm cfg env stack lb.lbdef
+
             else if cfg.steps.weak
             then (log cfg (fun () -> BU.print_string "+++ Not touching Tm_let\n");
                   rebuild cfg env stack (closure_as_term cfg env t))
+
             else let bs, body = Subst.open_term [lb.lbname |> BU.left |> S.mk_binder] body in
                  log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- type");
                  let ty = norm cfg env [] lb.lbtyp in
@@ -1536,8 +1554,7 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
     (* the Meta_monadic marker and reconstruct the computation after      *)
     (* normalization.                                                     *)
     let t = norm cfg env [] t in
-    let stack = (Cfg cfg)::stack in
-    let cfg =
+    let cfg, stack =
       if cfg.steps.pure_subterms_within_computations
       then
         let new_steps = [PureSubtermsWithinComputations;
@@ -1546,11 +1563,14 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
                          EraseUniverses;
                          Exclude Zeta;
                          Inlining]
-        in { cfg with
-               steps = List.fold_right fstep_add_one new_steps cfg.steps;
-               delta_level = [Env.InliningDelta; Env.Eager_unfolding_only]
-           }
-      else cfg
+        in
+        let cfg' = { cfg with
+                       steps = List.fold_right fstep_add_one new_steps cfg.steps;
+                       delta_level = [Env.InliningDelta; Env.Eager_unfolding_only]
+                   }
+        in
+        cfg', (Cfg cfg)::stack
+      else cfg, stack
     in
     (* monadic annotations don't block reduction, but we need to put the label back *)
     let metadata = match m with
@@ -1579,7 +1599,9 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
       (*        M.bind_repr (reify e1) (fun x -> reify e2)                          *)
       (*                                                                            *)
       (* ****************************************************************************)
-      let ed = Env.get_effect_decl cfg.tcenv (Env.norm_eff_name cfg.tcenv m) in
+      let eff_name = Env.norm_eff_name cfg.tcenv m in
+      let ed = Env.get_effect_decl cfg.tcenv eff_name in
+      let _, repr = ed |> U.get_eff_repr |> must in
       let _, bind_repr = ed |> U.get_bind_repr |> must in
       begin match lb.lbname with
         | Inr _ -> failwith "Cannot reify a top-level let binding"
@@ -1616,6 +1638,22 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
               let rng = top.pos in
 
               let head = U.mk_reify <| lb.lbdef in
+              let lb_head, head_bv, head =
+                let bv = S.new_bv None x.sort in
+                let lb =
+                    { lbname = Inl bv;
+                      lbunivs = [];
+                      lbtyp = U.mk_app repr [S.as_arg x.sort];
+                      lbeff = if is_total_effect cfg.tcenv eff_name then PC.effect_Tot_lid
+                                                                    else PC.effect_Dv_lid;
+                      lbdef = head;
+                      lbattrs = [];
+                      lbpos = head.pos;
+                    }
+                in
+                lb, bv, S.bv_to_name bv
+              in
+
               let body = U.mk_reify <| body in
               (* TODO : Check that there is no sensible cflags to pass in the residual_comp *)
               let body_rc = {
@@ -1666,8 +1704,11 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                       (* wp_head, head--the term shouldn't depend on wp_head *)
                       as_arg S.tun; as_arg head;
                       (* wp_body, body--the term shouldn't depend on wp_body *)
-                      as_arg S.tun; as_arg body] in
-                S.mk (Tm_app(bind_inst, args)) None rng in
+                      as_arg S.tun; as_arg body]
+                in
+                S.mk (Tm_let ((false, [lb_head]),
+                   SS.close [S.mk_binder head_bv] <|
+                   S.mk (Tm_app(bind_inst, args)) None rng)) None rng in
               log cfg (fun () -> BU.print2 "Reified (1) <%s> to %s\n" (Print.term_to_string top0) (Print.term_to_string reified));
               norm cfg env (List.tl stack) reified
             )
@@ -1782,13 +1823,32 @@ and reify_lift cfg e msrc mtgt t : term =
      not (mtgt |> Env.is_layered_effect env)
   then
     let ed = Env.get_effect_decl env (Env.norm_eff_name cfg.tcenv mtgt) in
+    let _, repr = ed |> U.get_eff_repr |> must in
     let _, return_repr = ed |> U.get_return_repr |> must in
     let return_inst = match (SS.compress return_repr).n with
         | Tm_uinst(return_tm, [_]) ->
             S.mk (Tm_uinst (return_tm, [env.universe_of env t])) None e.pos
         | _ -> failwith "NIY : Reification of indexed effects"
     in
-    S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
+
+    let lb_e, e_bv, e =
+      let bv = S.new_bv None t in
+      let lb =
+          { lbname = Inl bv;
+            lbunivs = [];
+            lbtyp = U.mk_app repr [S.as_arg t];
+            lbeff = msrc;
+            lbdef = e;
+            lbattrs = [];
+            lbpos = e.pos;
+          }
+      in
+      lb, bv, S.bv_to_name bv
+    in
+
+    S.mk (Tm_let ((false, [lb_e]), SS.close [S.mk_binder e_bv] <|
+            S.mk (Tm_app(return_inst, [as_arg t ; as_arg e])) None e.pos
+    )) None e.pos
   else
     match Env.monad_leq env msrc mtgt with
     | None ->
@@ -2389,6 +2449,9 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       | App(env, head, aq, r)::stack ->
         let t = S.extend_app head (t,aq) None r in
         rebuild cfg env stack t
+
+      | CBVApp(env', head, aq, r)::stack ->
+        norm cfg env' (Arg (Clos (env, t, BU.mk_ref None, false), aq, t.pos) :: stack) head
 
       | Match(env', branches, cfg, r) :: stack ->
         log cfg  (fun () -> BU.print1 "Rebuilding with match, scrutinee is %s ...\n" (Print.term_to_string t));

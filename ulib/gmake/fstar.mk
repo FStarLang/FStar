@@ -20,7 +20,7 @@ FSTAR=fstar.exe $(OTHERFLAGS) $(HINTS_ENABLED) $(CACHE_DIR)
 endif
 
 # Benchmarking wrappers are enabled by setting BENCHMARK_CMD, for example:
-#  make -C examples/micro-benchmarks BENCHMARK_CMD=time
+#  make -C tests/micro-benchmarks BENCHMARK_CMD=time
 #  make -C ulib benchmark BENCHMARK_CMD='perf stat -x,'
 #
 # This will utilize the BENCHMARK_CMD to collect data on the executed commands

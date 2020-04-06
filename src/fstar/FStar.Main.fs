@@ -102,8 +102,15 @@ let go _ =
   match res with
     | Help ->
         Options.display_usage(); exit 0
+
     | Error msg ->
         Util.print_error msg; exit 1
+
+    | _ when Options.print_cache_version () ->
+        Util.print1 "F* cache version number: %s\n"
+                     (string_of_int FStar.CheckedFiles.cache_version_number);
+        exit 0
+
     | Success ->
         fstar_files := Some filenames;
         load_native_tactics ();

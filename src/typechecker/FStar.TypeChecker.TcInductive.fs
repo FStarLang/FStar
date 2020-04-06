@@ -1171,7 +1171,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     let arg = U.arg_of_non_null_binder arg_binder in
 
     let subst = fields |> List.mapi (fun i (a, _) ->
-            let field_name, _ = U.mk_field_projector_name lid a i in
+            let field_name = U.mk_field_projector_name lid a i in
             let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name (Delta_equational_at_level 1) None)) inst_univs in
             let proj = mk_Tm_app field_proj_tm [arg] None p in
             NT(a, proj))
@@ -1180,7 +1180,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     let projectors_ses =
       fields |> List.mapi (fun i (x, _) ->
           let p = S.range_of_bv x in
-          let field_name, _ = U.mk_field_projector_name lid x i in
+          let field_name = U.mk_field_projector_name lid x i in
           let t =
             let result_comp =
               let t = Subst.subst subst x.sort in

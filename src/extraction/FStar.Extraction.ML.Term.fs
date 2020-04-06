@@ -1313,7 +1313,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             match rcopt with
             | Some rc ->
                 if TcEnv.is_reifiable_rc (tcenv_of_uenv env) rc
-                then TcUtil.reify_body (tcenv_of_uenv env) [TcEnv.Inlining] body
+                then TcUtil.reify_body (tcenv_of_uenv env) [TcEnv.Inlining; TcEnv.Unascribe] body
                 else body
             | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (Print.term_to_string body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
@@ -1352,7 +1352,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               |> term_as_mlexpr g
 
             | Tm_constant Const_reify ->
-              let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining] head (List.hd args) in
+              let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining; TcEnv.Unascribe] head (List.hd args) in
               let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) None t.pos in
               term_as_mlexpr g tm
 
@@ -1553,7 +1553,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           when not (is_top_level [lb])
           && BU.is_some (U.get_attribute FStar.Parser.Const.rename_let_attr lb.lbattrs) ->
           let b = BU.left lb.lbname, None in
-          let ((x, _)::_), body = SS.open_term [b] e' in
+          let (x, _), body = SS.open_term_1 b e' in
           // BU.print_string "Reached let with rename_let attribute\n";
           let suggested_name = 
               let attr = U.get_attribute FStar.Parser.Const.rename_let_attr lb.lbattrs in
@@ -1570,6 +1570,10 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                 | _ -> 
                   None
                 end
+              | Some _ ->
+                Errors.log_issue top.pos (Errors.Warning_UnrecognizedAttribute,
+                                         ("Ill-formed application of `rename_let`"));
+                None
               | None -> 
                 None
           in

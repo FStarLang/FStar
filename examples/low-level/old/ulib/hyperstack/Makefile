@@ -29,7 +29,7 @@ chacha-ver:
 	$(FSTAR) $(OPTIONS_VER) chacha.fst 
 
 chacha-ml:
-	$(MAKE) -C $(FSTAR_HOME)/ulib/ml PRIMS_DIR=native_int
+	+$(MAKE) -C $(FSTAR_HOME)/ulib/ml PRIMS_DIR=native_int
 	mkdir -p $(CHACHA_ODIR)
 	$(FSTAR) $(NO_CODEGEN) $(OPTIONS_OCAML) $(FSTAR_LIB) chacha.fst --odir $(CHACHA_ODIR) 
 	$(OCAMLOPT) -I ml -I $(CHACHA_ODIR) \
@@ -45,5 +45,5 @@ chacha-compile:
 	./test_chacha.exe
 
 clean:
-	$(MAKE) -C $(FSTAR_HOME)/ulib/ml clean
+	+$(MAKE) -C $(FSTAR_HOME)/ulib/ml clean
 	rm -rf $(CHACHA_ODIR) *~ ./ml/*.cmi ./ml/*.cmx ./ml/*.cmo ./ml/*.o test_chacha.exe

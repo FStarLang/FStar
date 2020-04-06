@@ -723,6 +723,11 @@ let decl_to_string (d:decl) = match d.d with
   | Exception(i, _) -> "exception " ^ i.idText
   | NewEffect(DefineEffect(i, _, _, _))
   | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
+  | LayeredEffect(DefineEffect(i, _, _, _))
+  | LayeredEffect(RedefineEffect(i, _, _)) -> "layered_effect " ^ i.idText
+  | Polymonadic_bind (l1, l2, l3, _) ->
+      Util.format3 "polymonadic_bind (%s, %s) |> %s"
+                    (string_of_lid l1) (string_of_lid l2) (string_of_lid l3)
   | Splice (ids, t) -> "splice[" ^ (String.concat ";" <| List.map (fun i -> i.idText) ids) ^ "] (" ^ term_to_string t ^ ")"
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"

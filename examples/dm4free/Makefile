@@ -24,7 +24,7 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.Id.uver
 
 old:
-	$(MAKE) -C old
+	+$(MAKE) -C old
 
 %.uver-explicit: %.fst
 	$(FSTAR) $^ --explicit_deps

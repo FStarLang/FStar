@@ -359,7 +359,7 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
             x
             (fun () ->
                 let proj i ab =
-                    let proj_1, _ = U.mk_field_projector_name (PC.mk_tuple_data_lid 2 rng) (S.null_bv S.tun) i in
+                    let proj_1 = U.mk_field_projector_name (PC.mk_tuple_data_lid 2 rng) (S.null_bv S.tun) i in
                     let proj_1_tm = S.fv_to_tm (lid_as_fv proj_1 delta_equational None) in
                     S.mk_Tm_app (S.mk_Tm_uinst proj_1_tm [U_zero])
                                 [S.iarg (type_of ea);

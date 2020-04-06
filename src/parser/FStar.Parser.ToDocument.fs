@@ -741,6 +741,12 @@ and p_rawDecl d = match d.d with
     str "new_effect" ^^ space ^^ p_newEffect ne
   | SubEffect(se) ->
     str "sub_effect" ^^ space ^^ p_subEffect se
+  | LayeredEffect(ne) ->
+    str "layered_effect" ^^ space ^^ p_newEffect ne
+  | Polymonadic_bind (l1, l2, l3, t) ->
+    (str "polymonadic_bind")
+          ^^ lparen ^^ p_quident l1 ^^ comma ^^ break1 ^^ p_quident l2 ^^ rparen
+          ^^ (str "|>") ^^ p_quident l3 ^^ equals ^^ p_simpleTerm false false t
   | Pragma p ->
     p_pragma p
   | Main _ ->

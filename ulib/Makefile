@@ -18,14 +18,15 @@ extra: .cache
 .cache:
 	mkdir -p .cache
 
-include ml/Makefile.include
+include $(FSTAR_HOME)/ulib/ml/Makefile.include
+include $(FSTAR_HOME)/.common.mk
 
 fstarlib.mgen: *.fst *.fsti
 	mkdir -p ml/extracted
 	rm -f .depend.extract
-	OUTPUT_DIRECTORY=ml/extracted \
-	EXTRACT_MODULES="--extract '-Prims +FStar +LowStar +Steel -FStar.Tactics -FStar.Reflection -Steel.Tactics $(NOEXTRACT_MODULES)'" \
-	$(MAKE) -f Makefile.extract all-ml
+	+OUTPUT_DIRECTORY=ml/extracted \
+	    EXTRACT_MODULES="--extract '-Prims +FStar +LowStar +Steel -FStar.Tactics -FStar.Reflection -Steel.Tactics $(NOEXTRACT_MODULES)'" \
+	    $(MAKE) -f Makefile.extract all-ml
 	# the next cp is done because FStar_Pervasives.ml is needed to bootstrap the compiler
 	# we could follow this style for other files too, e.g., FStar_Option.ml
 	cp ../src/ocaml-output/FStar_Pervasives.ml ml/extracted
@@ -36,10 +37,10 @@ FSTARLIB_LEFTOVERS=$(shell ocaml fstarlib_leftovers.ml +ml +ml/extracted -../bin
 fstartaclib.mgen: fstarlib.mgen
 	mkdir -p tactics_ml/extracted
 	rm -f .depend.extract
-	OUTPUT_DIRECTORY=tactics_ml/extracted \
-	CODEGEN=Plugin \
-	EXTRACT_MODULES="--extract '+FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES)'" \
-	$(MAKE) -f Makefile.extract all-ml
+	+OUTPUT_DIRECTORY=tactics_ml/extracted \
+	    CODEGEN=Plugin \
+	    EXTRACT_MODULES="--extract '+FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES)'" \
+	    $(MAKE) -f Makefile.extract all-ml
 	mkdir -p tactics_ml/fstarlib_leftovers
 	cp $(FSTARLIB_LEFTOVERS) tactics_ml/fstarlib_leftovers
 	touch fstartaclib.mgen
@@ -92,10 +93,10 @@ FSTARLIB_OBJECTS=fstarlib.a fstarlib.cma fstarlib.cmxs fstarlib.cmxa
 TACLIB_OBJECTS=fstartaclib.cma fstartaclib.cmxs fstartaclib.cmxa
 
 _fstarlib: ml/fstarlib.mllib
-	$(MAKE) -C ml/ intfiles
+	+$(MAKE) -C ml/ intfiles
 	$(FSTARLIB_OCAMLBUILD) $(FSTARLIB_OBJECTS)
 _fstartaclib: tactics_ml/fstartaclib.mllib
-	$(MAKE) -C ml/ intfiles
+	+$(MAKE) -C ml/ intfiles
 	$(TACLIB_OCAMLBUILD) $(TACLIB_OBJECTS)
 
 $(FSTARLIB_OBJECTS): _fstarlib
@@ -119,16 +120,17 @@ install-fstar-tactics: $(TACLIB_OBJECTS)
 	sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstar-tactics-lib-META >$(TACLIB_DIR)/META
 
 clean:
-	rm -f .depend .depend.extract
-	rm -f *.mgen
-	rm -f *.checked *.checked.lax .cache/*.checked .cache/*.checked.lax
-	rm -fr ml/extracted tactics_ml/extracted tactics_ml/fstarlib_leftovers
-	rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~
-	rm -f $(FSTARLIB_DIR)/*.cm[aiox]
-	rm -f $(FSTARLIB_DIR)/*.cmx[as]
-	rm -f $(TACLIB_DIR)/*.cm[aiox]
-	rm -f $(TACLIB_DIR)/*.cmx[as]
-	rm -rf ml/_build tactics_ml/_build # ← ocamlbuild -clean does not work on Cygwin
+	@echo "[CLEAN     ulib/]"
+	$(Q)rm -f .depend .depend.extract
+	$(Q)rm -f *.mgen
+	$(Q)rm -f *.checked *.checked.lax .cache/*.checked .cache/*.checked.lax
+	$(Q)rm -fr ml/extracted tactics_ml/extracted tactics_ml/fstarlib_leftovers
+	$(Q)rm -f ml/*.mllib tactics_ml/*.mllib tactics_ml/*.mldylib *~
+	$(Q)rm -f $(FSTARLIB_DIR)/*.cm[aiox]
+	$(Q)rm -f $(FSTARLIB_DIR)/*.cmx[as]
+	$(Q)rm -f $(TACLIB_DIR)/*.cm[aiox]
+	$(Q)rm -f $(TACLIB_DIR)/*.cmx[as]
+	$(Q)rm -rf ml/_build tactics_ml/_build # ← ocamlbuild -clean does not work on Cygwin
 
 clean_ocaml:
 	rm -f *.mgen

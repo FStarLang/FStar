@@ -114,14 +114,12 @@ val admit_smt_queries           : unit    -> bool
 val admit_except                : unit    -> option<string>
 val cache_checked_modules       : unit    -> bool
 val cache_off                   : unit    -> bool
+val print_cache_version         : unit    -> bool
 val cmi                         : unit    -> bool
 type codegen_t =
     | OCaml | FSharp | Kremlin | Plugin
 val codegen                     : unit    -> option<codegen_t>
 val codegen_libs                : unit    -> list<list<string>>
-val debug_any                   : unit    -> bool
-val debug_module                : string  -> bool
-val debug_at_level              : string  -> debug_level_t -> bool
 val profile_enabled             : module_name:option<string> -> profile_phase:string -> bool
 val profile_group_by_decls      : unit    -> bool
 val defensive                   : unit    -> bool // true if "warn" or "fail"
@@ -244,6 +242,20 @@ val use_nbe                     : unit    -> bool
 val use_nbe_for_extraction      : unit    -> bool
 val trivial_pre_for_unannotated_effectful_fns
                                 : unit    -> bool
+
+(* True iff the user passed '--debug M' for some M *)
+val debug_any                   : unit    -> bool
+
+(* True for M when the user passed '--debug M' *)
+val debug_module                : string  -> bool
+
+(* True for M and L when the user passed '--debug M --debug_level L'
+ * (and possibly more) *)
+val debug_at_level              : string  -> debug_level_t -> bool
+
+(* True for L when the user passed '--debug_level L'
+ * (and possibly more, but independent of --debug) *)
+val debug_at_level_no_module    : debug_level_t -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the

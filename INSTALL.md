@@ -77,7 +77,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 
 2. Run the micro benchmarks:
 
-        $ make -C examples/micro-benchmarks
+        $ make -C tests/micro-benchmarks
 
 3. If you have OCaml installed and intend to extract and compile OCaml code
    against the F* library, please build it with:
