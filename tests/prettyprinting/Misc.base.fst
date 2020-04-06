@@ -267,20 +267,14 @@ val modifies_preserves_liveness
 val count: #a: eqtype -> a -> s: seq a -> Tot nat (decreases (length s))
 let rec count #a x s =
   if length s = 0 then 0 else if head s = x then 1 + count x (tail s) else count x (tail s)
-abstract
 val mem: 'a -> set 'a -> Tot Type0
 let mem x s = s x
 
 (* constructors *)
-abstract
 val empty (#a: Type) : Tot (set a)
-abstract
 val singleton (#a: Type) (x: a) : Tot (set a)
-abstract
 val union (#a: Type) (x y: set a) : Tot (set a)
-abstract
 val intersect (#a: Type) (x y: set a) : Tot (set a)
-abstract
 val complement (#a: Type) (x: set a) : Tot (set a)
 
 type map' (a: Type) (b: (a -> Type)) = f : (x: a -> Tot (option (b x)))
@@ -350,7 +344,6 @@ val singleton (#a: Type) (x: a) : Tot (set a)
 
 
 val dummy:unit
-abstract
 val empty (#a: Type) : Tot (set a)
 
 
