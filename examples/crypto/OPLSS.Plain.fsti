@@ -17,30 +17,25 @@ module OPLSS.Plain
 open OPLSS
 open OPLSS.Ideal
 
-type plain : eqtype = AES.plain
+val plain : eqtype
 
-let reveal (p:plain) : GTot AES.plain = p
+val reveal (p:plain) : GTot AES.plain
 
-let hide (b:AES.plain) : GTot plain = b
+val hide (b:AES.plain) : GTot plain
 
-let reveal_hide (p:plain) 
+val reveal_hide (p:plain) 
   : Lemma (hide (reveal p) == p)
           [SMTPat (reveal p)]
-  = ()
 
-let hide_reveal (b:AES.plain)
+val hide_reveal (b:AES.plain)
   : Lemma (reveal (hide b) == b)
           [SMTPat (hide b)]
-  = ()
 
-let repr (p:plain{not (Flag.reveal conf)}) 
+val repr (p:plain{not (Flag.reveal conf)}) 
   : (b:AES.plain{b == reveal p}) 
-  = p
 
-let coerce (r:AES.plain{not (Flag.reveal auth)}) 
+val coerce (r:AES.plain{not (Flag.reveal auth)}) 
   : (p:plain{p == hide r}) 
-  = r
 
-let length (p:plain) 
+val length (p:plain) 
   : (n:nat{n = Seq.length (reveal p)})
-  = Seq.length p
