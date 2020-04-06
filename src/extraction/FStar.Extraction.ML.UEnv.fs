@@ -419,19 +419,19 @@ let is_fv_type g fv =
 
 let emptyMlPath : mlpath = ([],"")
 
-let mkContext (e:TypeChecker.Env.env) : uenv =
-   let initial_mlident_map =
+let initial_mlident_map () =
      List.fold_right
        (fun x m -> BU.psmap_add m x "")
        (if Options.codegen() = Some Options.FSharp
         then fsharpkeywords
         else ocamlkeywords)
        (BU.psmap_empty())
-   in
+
+let mkContext (e:TypeChecker.Env.env) : uenv =
    let env = {
      env_tcenv = e;
      env_bindings =[];
-     env_mlident_map=initial_mlident_map;
+     env_mlident_map=initial_mlident_map ();
      mlpath_of_lid = BU.psmap_empty();
      tydefs =[];
      type_names=[];
@@ -461,15 +461,6 @@ let extend_with_action_name g (ed:Syntax.eff_decl) (a:Syntax.action) ts =
     let mlp = mlns_of_lid lid, mlid in
     mlp, lid, exp_b, g
 
-let extend_with_iface g (m:mlpath) bs tds tns =
-     let mlident_map = List.fold_left
-        (fun acc (_,x) -> BU.psmap_add acc x.exp_b_name "") g.env_mlident_map bs in
-     { g with
-         env_bindings=List.map Fv bs@g.env_bindings;
-         env_mlident_map = mlident_map;
-         tydefs=tds@g.tydefs;
-         type_names=tns@g.type_names}
-
 let extend_record_field_name g (ns, fn) =
   new_mlpath_of_lident g (Ident.lid_of_ids (Ident.ids_of_lid ns@[fn]))
 
@@ -478,3 +469,5 @@ let lookup_record_field_name g (ns, fn) =
   mlpath_of_lident g f
 
 let extend_with_module_name g (m:lid) = new_mlpath_of_lident g m
+
+let exit_module g = { g with env_mlident_map=initial_mlident_map() }

@@ -639,14 +639,14 @@ let extract_iface' (g:env_t) modul =
     res
 
 let extract_iface (g:env_t) modul =
-    if Options.debug_any()
-    then FStar.Util.measure_execution_time
+    let g, iface =
+      if Options.debug_any()
+      then FStar.Util.measure_execution_time
              (BU.format1 "Extracted interface of %s" modul.name.str)
              (fun () -> extract_iface' g modul)
-    else extract_iface' g modul
-
-// let extend_with_iface (g:env_t) (iface:iface) =
-//     UEnv.extend_with_iface g iface.iface_module_name iface.iface_bindings iface.iface_tydefs iface.iface_type_names
+      else extract_iface' g modul
+    in
+    UEnv.exit_module g, iface
 
 (********************************************************************************************)
 (* Extract Implementations *)
@@ -971,11 +971,11 @@ let extract (g:uenv) (m:modul) =
   if not (Options.should_extract m.name.str)
   then failwith (BU.format1 "Extract called on a module %s that should not be extracted" (Ident.string_of_lid m.name));
   if Options.interactive() then g, None else
-  let res =
+  let g, mllib =
       if Options.debug_any ()
       then let msg = BU.format1 "Extracting module %s" (Print.lid_to_string m.name) in
            BU.measure_execution_time msg (fun () -> extract' g m)
       else extract' g m
   in
   ignore <| Options.restore_cmd_line_options true;
-  res
+  exit_module g, mllib

@@ -141,14 +141,7 @@ val extend_with_action_name: uenv ->
                              lident *
                              exp_binding *
                              uenv
-
-// val extend_with_iface : uenv ->
-//                         module_name:mlpath ->
-//                         bindings:list<(fv * exp_binding)> ->
-//                         tydefs:list<tydef> ->
-//                         type_names:list<(fv * mlpath)> ->
-//                         uenv
-
+                             
 val extend_record_field_name : uenv ->
                                (lident * ident) ->
                                mlpath * uenv
@@ -160,3 +153,5 @@ val lookup_record_field_name : uenv ->
 val extend_with_module_name : uenv -> 
                               lident ->
                               mlpath * uenv
+
+val exit_module : uenv -> uenv

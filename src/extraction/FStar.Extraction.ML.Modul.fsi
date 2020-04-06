@@ -22,5 +22,5 @@ open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.UEnv
 type iface
 val extract_iface: uenv -> modul -> uenv * iface
-val extend_with_iface: uenv -> iface -> uenv
 val extract : uenv -> modul -> uenv * option<mllib>
+
