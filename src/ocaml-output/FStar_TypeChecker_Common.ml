@@ -457,7 +457,7 @@ let (check_uvar_ctx_invariant :
   =
   fun reason  ->
     fun r  ->
-      fun should_check  ->
+      fun should_check1  ->
         fun g  ->
           fun bs  ->
             let print_gamma gamma =
@@ -487,11 +487,11 @@ let (check_uvar_ctx_invariant :
                 FStar_Util.format5
                   "Invariant violation: gamma and binders are out of sync\n\treason=%s, range=%s, should_check=%s\n\t\n                               gamma=%s\n\tbinders=%s\n"
                   reason uu____1774
-                  (if should_check then "true" else "false") uu____1776
+                  (if should_check1 then "true" else "false") uu____1776
                   uu____1778
                  in
               failwith uu____1772  in
-            if Prims.op_Negation should_check
+            if Prims.op_Negation should_check1
             then ()
             else
               (let uu____1791 =
