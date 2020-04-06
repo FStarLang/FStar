@@ -859,7 +859,7 @@ let restrict_ctx (tgt:ctx_uvar) (src:ctx_uvar) wl =
     let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
     let g = gamma_until src.ctx_uvar_gamma pfx in
     let _, src', wl = new_uvar ("restrict:"^src.ctx_uvar_reason) wl src.ctx_uvar_range g pfx src.ctx_uvar_typ src.ctx_uvar_should_check src.ctx_uvar_meta in
-    Unionfind.change src.ctx_uvar_head src';
+    U.set_uvar src.ctx_uvar_head src';
     wl
 
 let restrict_all_uvars (tgt:ctx_uvar) (sources:list<ctx_uvar>) wl  =
