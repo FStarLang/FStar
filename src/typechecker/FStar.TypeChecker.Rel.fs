@@ -637,9 +637,9 @@ let wl_to_string wl =
 (* </printing worklists>                             *)
 (* ------------------------------------------------ *)
 
-(* A flexible term: a unification variable
- * (repr. twice as a term and as a ctx_uvar for convenience)
- * applied to some arguments. *)
+(* A flexible term: the full term,
+ * its unification variable at the head,
+ * and the arguments the uvar is applied to. *)
 type flex_t = (term * ctx_uvar * args)
 
 let flex_t_to_string (_, c, args) =
@@ -657,75 +657,110 @@ let flex_uvar_head t =
     | Tm_uvar (u, _) -> u
     | _ -> failwith "Not a flex-uvar"
 
-let destruct_flex_t t wl : flex_t * worklist =
+(* Make sure the uvar at the head of t0 is not affected by a
+ * substitution.
+ *
+ * In the case that it is, first solve it to a new appropriate uvar
+ * without a substitution. This function returns t again, though
+ * it is unchanged (the changes only happen in the UF graph).
+ *
+ * The way we generate the new uvar is find the x's in the domain of ?u
+ * that are not affected by the substitution and make a new variable with
+ * only those binders in the domain. The ones that are affected we will
+ * "hoist" by making the type of ?u' an arrow.
+ *
+ * Example:
+ * If we have (x,y |- ?u : ty)[(x:a) <- x, (y:int) <- 42], we will make
+ * ?u' with x in its binders, abstracted over y:
+ *
+ * (x |- ?u') : int -> ty
+ *
+ * and then solve
+ *
+ * ?u <- (?u' y)
+ *
+ * Which means the original term now compresses to ?u' 42. The flex
+ * problem we now return is
+ *
+ * ?u', [42]
+ *
+ * We return early if the substitution is empty or if the uvar is
+ * totally unaffected by it.
+ *
+ * (It's not strictly needed for this function to return t, compressing
+ *  t0 will give you the same term.)
+ *)
+let ensure_no_uvar_subst (t0:term) (wl:worklist)
+  : term * worklist
+  = (* Returns true iff the variable x is not affected by substitution s *)
+    let not_affected_by (s:subst_ts) (x:bv) : bool =
+      let t_x = S.bv_to_name x in
+      let t_x' = SS.subst' s t_x in
+      match (SS.compress t_x').n with
+      | Tm_name y ->
+         S.bv_eq x y // Check if substituting returned the same variable
+      | _ -> false
+    in
+    (* Splits a gamma into the part which is not affected by the substitution s
+     * and the part that is. *)
+    let split_gamma (s:subst_ts) (gamma:list<binding>) : list<binding> * list<binding> =
+      gamma |> List.partition (function
+      | Binding_var x -> not_affected_by s x
+      | _ -> true)
+    in
+    let head, args = U.head_and_args t0 in
+    match (SS.compress head).n with
+    | Tm_uvar (uv, ([], _)) ->
+      (* No subst, good already *)
+      t0, wl
+    | Tm_uvar (uv, s) ->
+      let new_gamma, gamma_aff = split_gamma s uv.ctx_uvar_gamma in
+      begin match gamma_aff with
+      | [] ->
+        (* Not affected by the substitution at all, do nothing *)
+        t0, wl
+      | _ ->
+        (* At least one variable is affected, make a new uvar *)
+        let dom_binders = Env.binders_of_bindings gamma_aff in
+        let v, t_v, wl = new_uvar (uv.ctx_uvar_reason ^ "; force delayed")
+                         wl
+                         t0.pos
+                         new_gamma
+                         (Env.binders_of_bindings new_gamma)
+                         (U.arrow dom_binders (S.mk_Total uv.ctx_uvar_typ))
+                         uv.ctx_uvar_should_check
+                         uv.ctx_uvar_meta
+        in
+
+        (* Solve the old variable *)
+        let args_sol = List.map (fun (x, i) -> S.bv_to_name x, i) dom_binders in
+        let sol = S.mk_Tm_app t_v args_sol None t0.pos in
+        U.set_uvar uv.ctx_uvar_head sol;
+
+        (* Make a term for the new uvar, applied to the substitutions of
+         * the abstracted arguments, plus all the original arguments. *)
+        let args_sol_s = List.map (fun (a, i) -> SS.subst' s a, i) args_sol in
+        let t = S.mk_Tm_app t_v (args_sol_s @ args) None t0.pos in
+        t, wl
+      end
+    | _ ->
+      failwith "impossible"
+
+(* Only call if ensure_no_uvar_subst was called on t before *)
+let destruct_flex_t' t : flex_t =
     let head, args = U.head_and_args t in
     match (SS.compress head).n with
-    | Tm_uvar (uv, ([], _)) -> (t, uv, args), wl
     | Tm_uvar (uv, s) ->
-      (* If we have ?u[x1 <- t1, ..., xn <- tn] at the head, we
-       * generate a new uvar ?u' in a proper context, solve ?u to an
-       * application of ?u', and return the flex for ?u'.
-       *
-       * The way we generate it is find the x's in the domain of ?u that
-       * are not affected by the subsitution and make a new variable
-       * with only those binders in the domain. The ones that are
-       * affected we will "approximate" by making the type of ?u' an
-       * arrow.
-       *
-       * Example:
-       * If we have (x,y |- ?u : ty)[(x:a) <- x, (y:int) <- 42], we will
-       * make ?u' with x in its binders, abstracted over y:
-       *
-       * (x |- ?u') : int -> ty
-       *
-       * and then solve
-       *
-       * ?u <- (?u' y)
-       *
-       * Which means the original term now compresses to ?u' 42.
-       *
-       * The flex problem we now return is
-       *
-       * ?u' [42 , ...]
-       *
-       * where ... is the rest of the arguments that ?u had
-       *)
-
-      let not_affected_by (s:subst_ts) (x:bv) : bool =
-        let t_x = S.bv_to_name x in
-        let t_x' = SS.subst' s t_x in
-        match (SS.compress t_x').n with
-        | Tm_name y ->
-           S.bv_eq x y // Substituting returned the same variable
-        | _ -> false
-      in
-      let new_gamma, dom_binders_rev =
-          uv.ctx_uvar_gamma |> List.partition (function
-          | Binding_var x -> not_affected_by s x
-          | _ -> true)
-      in
-      let dom_binders = Env.binders_of_bindings dom_binders_rev in
-      let v, t_v, wl = new_uvar (uv.ctx_uvar_reason ^ "; force delayed")
-                       wl
-                       t.pos
-                       new_gamma
-                       (Env.binders_of_bindings new_gamma)
-                       (U.arrow dom_binders (S.mk_Total uv.ctx_uvar_typ))
-                       uv.ctx_uvar_should_check
-                       uv.ctx_uvar_meta
-      in
-
-      (* Solve the old variable *)
-      let args_sol = List.map (fun (x, i) -> S.bv_to_name x, i) dom_binders in
-      let sol = S.mk_Tm_app t_v args_sol None t.pos in
-      U.set_uvar uv.ctx_uvar_head sol;
-
-      let args_sol_s = List.map (fun (a, i) -> SS.subst' s a, i) args_sol in
-      let all_args = args_sol_s @ args in
-      let t = S.mk_Tm_app t_v all_args None t.pos in
-      (t, v, all_args), wl
-
+      (t, uv, args)
     | _ -> failwith "Not a flex-uvar"
+
+(* Destruct a term into its uvar head and arguments *)
+let destruct_flex_t t wl : flex_t * worklist =
+  let t, wl = ensure_no_uvar_subst t wl in
+  (* If there's any substitution on the head of t, it must
+   * have been made trivial by the call above, so
+   * calling destruct_flex_t' is fine. *)
+  destruct_flex_t' t, wl
 
 (* ------------------------------------------------ *)
 (* <solving problems>                               *)
@@ -2824,8 +2859,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | Tm_app({n=Tm_uvar _}, _), Tm_uvar _
       | Tm_uvar _,                Tm_app({n=Tm_uvar _}, _)
       | Tm_app({n=Tm_uvar _}, _), Tm_app({n=Tm_uvar _}, _) ->
-        let f1, wl = destruct_flex_t t1 wl in
-        let f2, wl = destruct_flex_t t2 wl in
+        (* We need to do both ensure_no_uvar_subst calls before
+         * destructing since we might have the same uvar on
+         * both sides. See #1616. *)
+        let t1, wl = ensure_no_uvar_subst t1 wl in
+        let t2, wl = ensure_no_uvar_subst t2 wl in
+        let f1 = destruct_flex_t' t1 in
+        let f2 = destruct_flex_t' t2 in
         solve_t_flex_flex env orig wl f1 f2
 
       (* flex-rigid equalities *)
