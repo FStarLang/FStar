@@ -34,7 +34,7 @@ let struct11 = 18
 //They are extracted as
 // - [struct2] (to not clash with [struct1] above, though that isn't strictly necessary)
 // - [constraint1]
-type t = {
+type record_t = {
   struct : int;
   constraint: bool
 }

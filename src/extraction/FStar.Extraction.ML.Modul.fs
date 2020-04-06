@@ -407,6 +407,22 @@ let extract_bundle_iface env se
         : env_t * list<(fv * exp_binding)> =
        let env_iparams, vars  = binders_as_mlty_binders env ind.iparams in
        let env, ctors = ind.idatas |> BU.fold_map (extract_ctor env_iparams vars) env in
+       let env =
+         match BU.find_opt (function RecordType _ -> true | _ -> false) ind.iquals with
+         | Some (RecordType (ns, ids)) ->
+           let ns_lid = lid_of_ids ns in
+           let g =
+            List.fold_right
+                (fun id g ->
+                   let mlp, g = UEnv.extend_record_field_name g (ns_lid, id) in
+                   g)
+                ids
+                env
+           in
+           g
+         | _ ->
+          env
+       in
        env, ctors
     in
 
