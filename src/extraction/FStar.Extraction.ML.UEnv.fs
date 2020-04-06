@@ -500,7 +500,7 @@ let lookup_record_field_name g (type_name, fn) =
 (* Module names are in a different namespace in OCaml
    and cannot clash with keywords (since they are uppercase in F* )
    or with other identifiers *)
-let extend_with_module_name g (m:lid) =
+let extend_with_module_name (g:uenv) (m:lid) =
   let ns = mlns_of_lid m in
   let p = m.ident.idText in
   (ns, p), g
