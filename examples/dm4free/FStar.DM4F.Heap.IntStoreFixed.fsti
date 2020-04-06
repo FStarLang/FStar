@@ -17,19 +17,31 @@ module FStar.DM4F.Heap.IntStoreFixed
 
 open FStar.Seq
 
-let id = i:nat{i < store_size}
-let heap = h:seq int{length h == store_size}
+let store_size = 10
 
-let to_id n = n
+val id : eqtype
+val heap : eqtype
 
-let index h i = Seq.index h i
+val to_id (n:nat{n < store_size}) : id
 
-let upd h i x = let h1 = upd h i x in assert (length h1 = store_size) ; h1
+val index (h:heap) (i:id) : int
+let sel = index
 
-let create x = create #int store_size x
+val upd (h:heap) (i:id) (x:int) : heap
 
-let lemma_index_upd1 s n v = lemma_index_upd1 #int s n v
+val create (x:int) : heap
 
-let lemma_index_upd2 s n v i = lemma_index_upd2 #int s n v i
+val lemma_index_upd1: s:heap -> n:id -> v:int -> Lemma
+  (requires True)
+  (ensures (index (upd s n v) n == v))
+  [SMTPat (index (upd s n v) n)]
 
-let lemma_index_create v i = lemma_index_create #int store_size v i
+val lemma_index_upd2: s:heap -> n:id -> v:int -> i:id{i<>n} -> Lemma
+  (requires True)
+  (ensures (index (upd s n v) i == index s i))
+  [SMTPat (index (upd s n v) i)]
+
+val lemma_index_create: v:int -> i:id -> Lemma
+  (requires True)
+  (ensures (index (create v) i == v))
+  [SMTPat (index (create v) i)]
