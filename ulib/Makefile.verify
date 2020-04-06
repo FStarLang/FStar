@@ -19,9 +19,10 @@ USE_EXTRACTED_INTERFACES=--use_extracted_interfaces true
 
 CACHE_DIR=--cache_dir .cache --hint_dir .cache
 
-OTHERFLAGS+=$(USE_EXTRACTED_INTERFACES)
+#332 -> `abstract` keyword is fatal error
+OTHERFLAGS+=$(USE_EXTRACTED_INTERFACES) --warn_error @332
 
-include $(FSTAR_HOME)/src/Makefile.common
+include $(FSTAR_HOME)/.common.mk
 include gmake/z3.mk
 include gmake/fstar.mk
 include gmake/Makefile.tmpl

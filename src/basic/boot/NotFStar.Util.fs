@@ -930,7 +930,9 @@ let load_2values_from_file (fname:string) =
     printfn "Failed to load file because: %A" e;
     None
 
-
+(* Precondition: file exists *)
+let touch_file (fname:string) : unit =
+  File.SetLastWriteTime (fname, DateTime.Now)
 
 let print_exn (e: exn): string =
   e.Message

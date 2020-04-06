@@ -28,6 +28,7 @@ accept: ${ACCEPT_TARGETS}
 # Remove all .out files
 clean:
 	rm -f *.out
+	rm -f *.out.check
 
 touch:
 	touch ${IN}
@@ -61,5 +62,6 @@ FSTAR:=${FSTAR_HOME}/bin/fstar.exe $(SMT) --ide --warn_error -282
 	python cleanup.py "$@" < "$<"
 
 # Verify that a given output matches the corresponding input
-%.out.check: %.out
-	diff -u "$<.expected" "$<"
+%.out.check: %.out %.out.expected
+	diff -u --strip-trailing-cr "$<.expected" "$<"
+	touch $@

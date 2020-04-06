@@ -19,7 +19,7 @@ extra: .cache
 	mkdir -p .cache
 
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
-include $(FSTAR_HOME)/src/Makefile.common
+include $(FSTAR_HOME)/.common.mk
 
 fstarlib.mgen: *.fst *.fsti
 	mkdir -p ml/extracted
@@ -102,22 +102,38 @@ _fstartaclib: tactics_ml/fstartaclib.mllib
 $(FSTARLIB_OBJECTS): _fstarlib
 $(TACLIB_OBJECTS): _fstartaclib
 
-FSTARLIB_DIR=../bin/fstarlib/
-TACLIB_DIR=../bin/fstar-tactics-lib/
+# No trailing slash please
+FSTARLIB_DIR=../bin/fstarlib
+TACLIB_DIR=../bin/fstar-tactics-lib
 
 FSTARLIB_OUTPUTS=$(addprefix ml/_build/ulib/ml/, \
 	*.cmi *.cmx extracted/*.cmi extracted/*.cmx $(FSTARLIB_OBJECTS))
 TACLIB_OUTPUTS=$(addprefix tactics_ml/_build/ulib/tactics_ml/, \
 	*.cmi *.cmx fstarlib_leftovers/*.cmi fstarlib_leftovers/*.cmx extracted/*.cmi extracted/*.cmx $(TACLIB_OBJECTS))
 
-install-fstarlib: $(FSTARLIB_OBJECTS)
-	mkdir -p $(FSTARLIB_DIR)
-	cp $(FSTARLIB_OUTPUTS) $(FSTARLIB_DIR)
-	sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstarlib-META >$(FSTARLIB_DIR)/META
-install-fstar-tactics: $(TACLIB_OBJECTS)
-	mkdir -p $(TACLIB_DIR)
-	cp $(TACLIB_OUTPUTS) $(TACLIB_DIR)
-	sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstar-tactics-lib-META >$(TACLIB_DIR)/META
+install-fstarlib: $(FSTARLIB_DIR)/META
+install-fstar-tactics: $(TACLIB_DIR)/META
+
+# This rule is doing an atomic copy into FSTARLIB_DIR,
+# so we never see a partial file in bin/
+$(FSTARLIB_DIR)/META: $(FSTARLIB_OBJECTS)
+	@echo '[INSTALL   fstarlib]'
+	$(Q)rm -rf $(FSTARLIB_DIR)_new
+	$(Q)mkdir -p $(FSTARLIB_DIR)_new
+	$(Q)cp $(FSTARLIB_OUTPUTS) $(FSTARLIB_DIR)_new
+	$(Q)sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstarlib-META >$(FSTARLIB_DIR)_new/META
+	$(Q)rm -rf $(FSTARLIB_DIR)
+	$(Q)mv -T $(FSTARLIB_DIR)_new $(FSTARLIB_DIR)
+
+# See comment for $(FSTARLIB_DIR)/META
+$(TACLIB_DIR)/META: $(TACLIB_OBJECTS)
+	@echo '[INSTALL   fstartaclib]'
+	$(Q)rm -rf $(TACLIB_DIR)_new
+	$(Q)mkdir -p $(TACLIB_DIR)_new
+	$(Q)cp $(TACLIB_OUTPUTS) $(TACLIB_DIR)_new
+	$(Q)sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstar-tactics-lib-META >$(TACLIB_DIR)_new/META
+	$(Q)rm -rf $(TACLIB_DIR)
+	$(Q)mv -T $(TACLIB_DIR)_new $(TACLIB_DIR)
 
 clean:
 	@echo "[CLEAN     ulib/]"

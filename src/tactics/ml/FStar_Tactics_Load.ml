@@ -7,8 +7,6 @@ module O = FStar_Options
 let perr  s   = if O.debug_any () then U.print_error s
 let perr1 s x = if O.debug_any () then U.print1_error s x
 
-let loaded_taclib = ref false
-
 let find_taclib () =
   let r = Process.run "ocamlfind" [| "query"; "fstar-tactics-lib" |] in
   match r with
@@ -19,16 +17,21 @@ let find_taclib () =
 
 let dynlink fname =
   try
-    perr ("Loading plugin from " ^ fname ^ "\n");
+    perr ("Attempting to load plugin from " ^ fname ^ "\n");
     Dynlink.loadfile fname
   with Dynlink.Error e ->
     failwith (U.format2 "Dynlinking %s failed: %s" fname (Dynlink.error_message e))
 
-let load_tactic tac =
-  if not !loaded_taclib then begin
+let load_lib () =
+  (* It might not be there, just try to load it and ignore if not *)
+  try
     dynlink (find_taclib () ^ "/fstartaclib.cmxs");
-    loaded_taclib := true
-  end;
+    perr "Loaded fstartaclib successfully\n"
+  with | _ ->
+    perr "Did NOT load fstartaclib\n";
+    ()
+
+let load_tactic tac =
   dynlink tac;
   perr1 "Dynlinked %s\n" tac
 

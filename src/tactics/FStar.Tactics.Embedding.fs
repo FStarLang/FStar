@@ -56,6 +56,17 @@ let fstar_tactics_bottomup = lid_as_data_tm fstar_tactics_bottomup_lid
 let fstar_tactics_topdown_fv  = lid_as_data_fv fstar_tactics_topdown_lid
 let fstar_tactics_bottomup_fv = lid_as_data_fv fstar_tactics_bottomup_lid
 
+let fstar_tactics_Continue_lid   = fstar_tactics_lid' ["Types"; "Continue"]
+let fstar_tactics_Skip_lid       = fstar_tactics_lid' ["Types"; "Skip"]
+let fstar_tactics_Abort_lid      = fstar_tactics_lid' ["Types"; "Abort"]
+
+let fstar_tactics_Continue     = lid_as_data_tm fstar_tactics_Continue_lid
+let fstar_tactics_Skip         = lid_as_data_tm fstar_tactics_Skip_lid
+let fstar_tactics_Abort        = lid_as_data_tm fstar_tactics_Abort_lid
+let fstar_tactics_Continue_fv  = lid_as_data_fv fstar_tactics_Continue_lid
+let fstar_tactics_Skip_fv      = lid_as_data_fv fstar_tactics_Skip_lid
+let fstar_tactics_Abort_fv     = lid_as_data_fv fstar_tactics_Abort_lid
+
 let fstar_tactics_SMT_lid   = fstar_tactics_lid' ["Types"; "SMT"]
 let fstar_tactics_Goal_lid  = fstar_tactics_lid' ["Types"; "Goal"]
 let fstar_tactics_Drop_lid  = fstar_tactics_lid' ["Types"; "Drop"]
@@ -90,6 +101,9 @@ let t_guard_policy  = S.tconst (fstar_tactics_lid' ["Types"; "guard_policy"])
 let fv_guard_policy = S.fvconst (fstar_tactics_lid' ["Types"; "guard_policy"])
 let t_direction     = S.tconst (fstar_tactics_lid' ["Types"; "direction"])
 let fv_direction    = S.fvconst (fstar_tactics_lid' ["Types"; "direction"])
+
+let t_ctrl_flag     = S.tconst (fstar_tactics_lid' ["Types"; "ctrl_flag"])
+let fv_ctrl_flag    = S.fvconst (fstar_tactics_lid' ["Types"; "ctrl_flag"])
 
 let mk_emb (em: Range.range -> 'a -> term)
            (un: bool -> term -> option<'a>)
@@ -374,6 +388,47 @@ let e_direction_nbe  =
     ; NBETerm.un = unembed_direction
     ; NBETerm.typ = mkFV fv_direction [] []
     ; NBETerm.emb_typ = fv_as_emb_typ fv_direction}
+
+let e_ctrl_flag =
+    let embed_ctrl_flag (rng:Range.range) (d : ctrl_flag) : term =
+        match d with
+        | Continue -> fstar_tactics_Continue
+        | Skip     -> fstar_tactics_Skip
+        | Abort    -> fstar_tactics_Abort
+    in
+    let unembed_ctrl_flag w (t : term) : option<ctrl_flag> =
+        match (SS.compress t).n with
+        | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Continue_lid -> Some Continue
+        | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Skip_lid     -> Some Skip
+        | Tm_fvar fv when S.fv_eq_lid fv fstar_tactics_Abort_lid    -> Some Abort
+        | _ ->
+            if w then
+                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded ctrl_flag: %s" (Print.term_to_string t)));
+            None
+    in
+    mk_emb embed_ctrl_flag unembed_ctrl_flag t_ctrl_flag
+
+let e_ctrl_flag_nbe  =
+    let embed_ctrl_flag cb (res:ctrl_flag) : NBET.t =
+        match res with
+        | Continue -> mkConstruct fstar_tactics_Continue_fv [] []
+        | Skip     -> mkConstruct fstar_tactics_Skip_fv [] []
+        | Abort    -> mkConstruct fstar_tactics_Abort_fv [] []
+    in
+    let unembed_ctrl_flag cb (t:NBET.t) : option<ctrl_flag> =
+        match t with
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Continue_lid  -> Some Continue
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Skip_lid  -> Some Skip
+        | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Abort_lid -> Some Abort
+        | _ ->
+          if !Options.debug_embedding then
+            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded ctrl_flag: %s" (NBETerm.t_to_string t)));
+          None
+    in
+    { NBETerm.em = embed_ctrl_flag
+    ; NBETerm.un = unembed_ctrl_flag
+    ; NBETerm.typ = mkFV fv_ctrl_flag [] []
+    ; NBETerm.emb_typ = fv_as_emb_typ fv_ctrl_flag}
 
 let e_guard_policy =
     let embed_guard_policy (rng:Range.range) (p : guard_policy) : term =

@@ -1,6 +1,6 @@
 .PHONY: all package clean boot 0 1 2 3 hints bench
 
-include src/Makefile.common
+include .common.mk
 
 all:
 	$(Q)+$(MAKE) -C src/ocaml-output
@@ -8,7 +8,6 @@ all:
 	$(Q)+$(MAKE) -C ulib/ml
 
 package:
-	$(Q)git clean -ffdx .
 	$(Q)+$(MAKE) -C src/ocaml-output package
 
 clean:

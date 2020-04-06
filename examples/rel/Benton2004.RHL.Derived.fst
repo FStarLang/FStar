@@ -18,7 +18,7 @@ include Benton2004.RHL
 
 (* Derived rules and patterns *)
 
-let r_ass
+let r_ass_derived
   (x y: var)
   (e e' : exp int)
   (p p': gexp bool)
@@ -37,7 +37,7 @@ let r_ass
   [SMTPat (exec_equiv p p' (assign x e) (assign y e'))]
 = Benton2004.RHL.r_ass x y e e' p'
 
-let r_dassl
+let r_dassl_derived
   (x: var)
   (e: exp int)
   (phi phi': gexp bool)
@@ -66,7 +66,7 @@ let r_dassr
   ))
   (ensures (exec_equiv phi phi' skip (assign x e)))
   [SMTPat (exec_equiv phi phi' skip (assign x e))]
-= r_dassl x e (flip phi) (flip phi')
+= r_dassl_derived x e (flip phi) (flip phi')
 
 let d_su1'_flip
   (c'' c c' : computation)

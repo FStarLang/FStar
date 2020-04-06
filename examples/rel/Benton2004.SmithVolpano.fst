@@ -14,34 +14,6 @@
    limitations under the License.
 *)
 module Benton2004.SmithVolpano
-include Benton2004.DDCC
-
-type seclevel = | Low | High
-
-let interp_seclevel (t: Type0) (s: seclevel) : GTot (nstype t) =
-  match s with
-  | Low -> ns_delta
-  | High -> ns_t
-
-type context = (l: list (var * seclevel) { List.Tot.noRepeats (List.Tot.map fst l) } )
-
-let rec interp_context
-  (gamma: context)
-: Ghost sttype
-  (requires True)
-  (ensures (fun phi -> forall x' . List.Tot.mem x' (List.Tot.map fst gamma) == false ==> x' `st_fresh_in` phi))
-=  match gamma with
-  | [] -> st_nil
-  | (x, s) :: gamma' -> st_cons (interp_context gamma') x (interp_seclevel int s)
-
-abstract
-let eval_equiv
-  (#t: Type0)
-  (c: context)
-  (f: exp t)
-  (s: seclevel)
-: GTot Type0
-= Benton2004.DDCC.eval_equiv (interp_context c) (interp_seclevel _ s) f f
 
 let eval_equiv_def
   (#t: Type0)
@@ -52,7 +24,6 @@ let eval_equiv_def
   (eval_equiv gamma f s <==> Benton2004.DDCC.eval_equiv (interp_context gamma) (interp_seclevel _ s) f f)
 = ()
 
-abstract
 let exec_equiv
   (gamma: context)
   (c: computation)
@@ -69,9 +40,6 @@ let exec_equiv_def
 = ()
 
 (* Figure 4 *)
-
-let fresh_in (x: var) (gamma: context) : GTot Type0 =
-  List.Tot.mem x (List.Tot.map fst gamma) == false
 
 let eval_equiv_var_same
   (gamma: context)
@@ -220,12 +188,3 @@ let exec_equiv_high_to_low
   (ensures (exec_equiv gamma c Low))
   [SMTPat (exec_equiv gamma c Low)]
 = ()
-
-(* Definition 2 *)
-
-let strong_sequential_noninterference
-  (gamma: context)
-  (c: computation)
-: GTot Type0
-= exec_equiv gamma c Low
-  

@@ -220,7 +220,6 @@ type norm_step =
   | Primops 
   | Delta 
   | Zeta 
-  | ZetaFull 
   | Iota 
   | NBE 
   | Reify 
@@ -249,35 +248,31 @@ let (uu___is_Zeta : norm_step -> Prims.bool) =
   fun projectee  ->
     match projectee with | Zeta  -> true | uu____1984 -> false
   
-let (uu___is_ZetaFull : norm_step -> Prims.bool) =
-  fun projectee  ->
-    match projectee with | ZetaFull  -> true | uu____1995 -> false
-  
 let (uu___is_Iota : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Iota  -> true | uu____2006 -> false
+    match projectee with | Iota  -> true | uu____1995 -> false
   
 let (uu___is_NBE : norm_step -> Prims.bool) =
-  fun projectee  -> match projectee with | NBE  -> true | uu____2017 -> false 
+  fun projectee  -> match projectee with | NBE  -> true | uu____2006 -> false 
 let (uu___is_Reify : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Reify  -> true | uu____2028 -> false
+    match projectee with | Reify  -> true | uu____2017 -> false
   
 let (uu___is_UnfoldOnly : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldOnly _0 -> true | uu____2043 -> false
+    match projectee with | UnfoldOnly _0 -> true | uu____2032 -> false
   
 let (__proj__UnfoldOnly__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee  -> match projectee with | UnfoldOnly _0 -> _0 
 let (uu___is_UnfoldFully : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldFully _0 -> true | uu____2074 -> false
+    match projectee with | UnfoldFully _0 -> true | uu____2063 -> false
   
 let (__proj__UnfoldFully__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee  -> match projectee with | UnfoldFully _0 -> _0 
 let (uu___is_UnfoldAttr : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldAttr _0 -> true | uu____2105 -> false
+    match projectee with | UnfoldAttr _0 -> true | uu____2094 -> false
   
 let (__proj__UnfoldAttr__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee  -> match projectee with | UnfoldAttr _0 -> _0 
@@ -287,7 +282,6 @@ let (hnf : norm_step) = HNF
 let (primops : norm_step) = Primops 
 let (delta : norm_step) = Delta 
 let (zeta : norm_step) = Zeta 
-let (zeta_full : norm_step) = ZetaFull 
 let (iota : norm_step) = Iota 
 let (nbe : norm_step) = NBE 
 let (reify_ : norm_step) = Reify 
@@ -298,12 +292,11 @@ let (delta_fully : Prims.string Prims.list -> norm_step) =
 let (delta_attr : Prims.string Prims.list -> norm_step) =
   fun s  -> UnfoldAttr s 
 let (norm : norm_step Prims.list -> unit -> Obj.t -> Obj.t) =
-  fun uu____2184  -> fun uu____2185  -> fun x  -> x 
+  fun uu____2172  -> fun uu____2173  -> fun x  -> x 
 
 
 
 
 
-let singleton : 'Auu____2199 . 'Auu____2199 -> 'Auu____2199 = fun x  -> x 
-let with_type : 'Auu____2210 . 'Auu____2210 -> 'Auu____2210 = fun e  -> e 
-let (__cache_version_number__ : Prims.int) = (Prims.of_int (19)) 
+let singleton : 'Auu____2187 . 'Auu____2187 -> 'Auu____2187 = fun x  -> x 
+let with_type : 'Auu____2198 . 'Auu____2198 -> 'Auu____2198 = fun e  -> e 

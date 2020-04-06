@@ -8,6 +8,7 @@ module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module Range = FStar.Range
 module BU = FStar.Util
+module O = FStar.Options
 
 (*
    f: x:int -> P
@@ -79,9 +80,20 @@ val goals_of     : proofstate -> list<goal>
 val smt_goals_of : proofstate -> list<goal>
 
 val mk_goal: env -> ctx_uvar -> FStar.Options.optionstate -> bool -> string -> goal
+
+type ctrl_flag =
+    | Continue
+    | Skip
+    | Abort
+
 type direction =
     | TopDown
     | BottomUp
 
 exception TacticFailure of string
 exception EExn of term
+
+val check_goal_solved' : goal -> option<term>
+val check_goal_solved  : goal -> bool
+val get_phi            : goal -> option<term>
+val is_irrelevant      : goal -> bool

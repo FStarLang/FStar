@@ -1,6 +1,6 @@
 module Bug1614f
 
-abstract let w (p:Type) : Type = p
+let w (p:Type) : Type = p
 
 [@expect_failure]
 let test1 (p:Type) : Pure unit (requires (w (squash p))) (ensures (fun _ -> p)) = ()

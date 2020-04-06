@@ -17,7 +17,6 @@ module Logic
 
 open FStar.Tactics
 
-
 let tau () : Tac unit =
     let h = implies_intro () in
     right ();
