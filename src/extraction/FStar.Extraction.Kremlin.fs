@@ -702,7 +702,8 @@ and translate_expr env e: expr =
       (match arg with
        | {expr=MLE_Const (MLC_String msg)} -> EAbortS msg
        | _ ->
-         let print = with_ty MLTY_Top (MLE_Name (mlpath_of_lident (Ident.lid_of_str "FStar.HyperStack.IO.print_string"))) in
+         let print_nm = ["FStar"; "HyperStack"; "IO"], "print_string" in
+         let print = with_ty MLTY_Top (MLE_Name print_nm) in
          let print = with_ty MLTY_Top (MLE_App (print, [arg])) in
          let t = translate_expr env print in
          ESequence [t; EAbort])

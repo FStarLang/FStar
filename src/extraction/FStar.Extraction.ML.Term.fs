@@ -67,15 +67,6 @@ let eraseTypeDeep g t = Util.eraseTypeDeep (Util.udelta_unfold g) t
 
 module Print = FStar.Syntax.Print
 
-
-(* taramana 2016-10-31: we redefine
-FStar.Extraction.ML.BU.record_fields here because the desugaring
-of field names has changed, but we cannot change the definition in
-FStar.Extraction.ML.Util for now because it is used by legacy
-extraction, which is still used in the bootstrapping process *)
-
-let record_fields fs vs = List.map2 (fun (f:ident) e -> avoid_keyword f.idText, e) fs vs
-
 (********************************************************************************************)
 (* Some basic error reporting; all are fatal errors at this stage                           *)
 (********************************************************************************************)
@@ -359,7 +350,6 @@ let check_pats_for_ite (l:list<(pat * option<term> * term)>) : (bool   //if l is
 //            | (None, None, Pat_constant (Const_bool false), Pat_var _)
 //            | (None, None, Pat_constant (Const_bool true), Pat_wild _)
 //            | (None, None, Pat_constant (Const_bool true), Pat_var _)
-
             | _ -> def
 
 
@@ -669,7 +659,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
                      | Some p ->
                        p
                      | None ->
-                       mlpath_of_lident fv.fv_name.v in
+                       UEnv.mlpath_of_lident g fv.fv_name.v in
             MLTY_Named (mlargs, nm)
 
     in
@@ -813,17 +803,22 @@ let mk_MLE_Let top_level (lbs:mlletbinding) (body:mlexpr) =
           | _ -> MLE_Let(lbs, body))
        | _ -> MLE_Let(lbs, body)
 
-let resugar_pat q p = match p with
+let record_fields (g:uenv) (ty:lident) (fns:list<ident>) (xs:list<'a>) =
+  let ty_ns = Ident.lid_of_ids ty.ns in
+  let fns = List.map (fun x -> UEnv.lookup_record_field_name g (ty_ns, x)) fns in
+  List.map2 (fun (p, s) x -> (s, x)) fns xs
+  
+let resugar_pat g q p = match p with
     | MLP_CTor(d, pats) ->
       begin match is_xtuple d with
         | Some n -> MLP_Tuple(pats)
         | _ ->
           match q with
-              | Some (Record_ctor (ty, fns)) ->
+          | Some (Record_ctor (ty, fns)) ->
               let path = List.map text_of_id ty.ns in
-              let fs = record_fields fns pats in
+              let fs = record_fields g ty fns pats in
               MLP_Record(path, fs)
-            | _ -> p
+          | _ -> p
       end
     | _ -> p
 
@@ -918,7 +913,7 @@ let rec extract_one_pat (imp : bool)
         let pat_ty_compat = match f_ty_opt with
             | Some ([], t) -> ok t
             | _ -> false in
-        g, Some (resugar_pat f.fv_qual (MLP_CTor (d, mlPats)), when_clauses |> List.flatten), pat_ty_compat
+        g, Some (resugar_pat g f.fv_qual (MLP_CTor (d, mlPats)), when_clauses |> List.flatten), pat_ty_compat
 
 let extract_pat (g:uenv) (p:S.pat) (expected_t:mlty)
                 (term_as_mlexpr: uenv -> S.term -> (mlexpr * e_tag * mlty))
@@ -967,10 +962,10 @@ let maybe_eta_data_and_project_record (g:uenv) (qual : option<fv_qual>) (residua
       match e.expr, qual with
       | MLE_CTor(_, args), Some (Record_ctor(tyname, fields)) ->
         let path = List.map text_of_id tyname.ns in
-        let fields = record_fields fields args in
+        let fields = record_fields g tyname fields args in
         with_ty e.mlty <| MLE_Record(path, fields)
       | _ -> e
-    in
+     in
     let resugar_and_maybe_eta qual e =
         let eargs, tres = eta_args g [] residualType in
         match eargs with
@@ -989,7 +984,7 @@ let maybe_eta_data_and_project_record (g:uenv) (qual : option<fv_qual>) (residua
         | MLE_App({expr=MLE_Name mlp}, mle::args), Some (Record_projector (constrname, f))
         | MLE_App({expr=MLE_TApp({expr=MLE_Name mlp}, _)}, mle::args), Some (Record_projector (constrname, f))->
           let f = lid_of_ids (constrname.ns @ [f]) in
-          let fn = Util.mlpath_of_lid f in
+          let fn = UEnv.mlpath_of_lident g f in
           let proj = MLE_Proj(mle, fn) in
           let e = match args with
             | [] -> proj
@@ -1806,6 +1801,18 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
                     with_ty ml_bool_ty <|
                         (MLE_Match(with_ty targ <| MLE_Name([], mlid),
                                     // Note: it is legal in OCaml to write [Foo _] for a constructor with zero arguments, so don't bother.
-                                   [MLP_CTor(mlpath_of_lident constrName, [MLP_Wild]), None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool true);
-                                    MLP_Wild, None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool false)]))) in
-    MLM_Let (NonRec,[{mllb_meta=[]; mllb_name=convIdent discName.ident; mllb_tysc=None; mllb_add_unit=false; mllb_def=discrBody; print_typ=false}] )
+                                   [MLP_CTor(mlpath_of_lident g constrName, [MLP_Wild]),
+                                    None,
+                                    with_ty ml_bool_ty <| MLE_Const(MLC_Bool true);
+
+                                    MLP_Wild,
+                                    None,
+                                    with_ty ml_bool_ty <| MLE_Const(MLC_Bool false)])))
+    in
+    MLM_Let (NonRec, 
+            [{ mllb_meta=[];
+               mllb_name=convIdent discName.ident;
+               mllb_tysc=None; 
+               mllb_add_unit=false; 
+               mllb_def=discrBody; 
+               print_typ=false}] )

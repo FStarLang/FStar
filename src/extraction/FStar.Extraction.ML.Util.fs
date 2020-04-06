@@ -329,7 +329,9 @@ let flatten_mlpath (ns, n) =
     if codegen_fsharp()
     then String.concat "." (ns@[n])
     else String.concat "_" (ns@[n])
-let mlpath_of_lid (l:lident) = (l.ns |> List.map (fun i -> i.idText),  l.ident.idText)
+let ml_module_name_of_lid (l:lident) =
+  let mlp = l.ns |> List.map (fun i -> i.idText),  l.ident.idText in
+  flatten_mlpath mlp
 
 let rec erasableType (unfold_ty:unfold_t) (t:mlty) :bool =
     //printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
@@ -398,17 +400,19 @@ type emb_loc =
     | NBERefl_emb (* FStar.Reflection.NBEEmbeddings *)
 
 type wrapped_term = mlexpr * mlexpr * int * bool
-let interpret_plugin_as_term_fun tcenv (fv:fv) (t:typ) (arity_opt:option<int>) (ml_fv:mlexpr')
+
+let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:option<int>) (ml_fv:mlexpr')
     : option<wrapped_term> =
     let fv_lid = fv.fv_name.v in
+    let tcenv = UEnv.tcenv_of_uenv env in
     let t = N.normalize [
       Env.EraseUniverses;
       Env.AllowUnboundUniverses;
       Env.UnfoldUntil S.delta_constant // unfold abbreviations such as nat
     ] tcenv t in
     let w = with_ty MLTY_Top in
-    let lid_to_name l     = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident l) in
-    let lid_to_top_name l = with_ty MLTY_Top <| MLE_Name (mlpath_of_lident l) in
+    let lid_to_name l     = with_ty MLTY_Top <| MLE_Name (UEnv.mlpath_of_lident env l) in
+    let lid_to_top_name l = with_ty MLTY_Top <| MLE_Name (UEnv.mlpath_of_lident env l) in
     let str_to_name s     = lid_to_name (lid_of_str s) in
     let str_to_top_name s = lid_to_top_name (lid_of_str s) in
     let fstar_tc_nbe_prefix s = str_to_name ("FStar_TypeChecker_NBETerm." ^ s) in

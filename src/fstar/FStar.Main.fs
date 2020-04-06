@@ -61,10 +61,7 @@ let report_errors fmods =
 
 let load_native_tactics () =
     let modules_to_load = Options.load() |> List.map Ident.lid_of_str in
-    let ml_module_name m =
-        FStar.Extraction.ML.Util.mlpath_of_lid m
-        |> FStar.Extraction.ML.Util.flatten_mlpath
-    in
+    let ml_module_name m = FStar.Extraction.ML.Util.ml_module_name_of_lid m in
     let ml_file m = ml_module_name m ^ ".ml" in
     let cmxs_file m =
         let cmxs = ml_module_name m ^ ".cmxs" in

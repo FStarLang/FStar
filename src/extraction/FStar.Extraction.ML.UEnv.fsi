@@ -51,13 +51,10 @@ type binding =
     | Bv  of bv * ty_or_exp_b
     | Fv  of fv * exp_binding
 
-type tydef = {
-  tydef_fv:fv;
-  tydef_mlmodule_name:list<mlsymbol>;
-  tydef_name:mlsymbol;
-  tydef_mangled_name:option<mlsymbol>;
-  tydef_def:mltyscheme
-}
+type tydef
+val tydef_fv : tydef -> fv
+val tydef_mlpath : tydef -> mlpath
+val tydef_def: tydef -> mltyscheme
 
 type uenv 
 
@@ -93,6 +90,8 @@ val lookup_bv: g:uenv -> bv: bv -> ty_or_exp_b
 
 val lookup_term: g:uenv -> t:term -> ty_or_exp_b * option<fv_qual>
 
+val mlpath_of_lident : uenv -> lident -> mlpath
+
 val extend_ty: g:uenv -> a:bv -> map_to_top:bool -> uenv
 
 val lookup_ty: g:uenv -> bv:bv -> ty_binding
@@ -110,24 +109,54 @@ val extend_bv:
 
 val new_mlident : g:uenv -> uenv * mlident
 
-val extend_fv': g:uenv -> x:fv -> y:mlpath -> t_x:mltyscheme -> add_unit:bool ->
-                is_rec:bool -> uenv * mlident * exp_binding
-
 val extend_fv: g:uenv -> x:fv -> t_x:mltyscheme -> add_unit:bool ->
-                is_rec:bool -> uenv * mlident * exp_binding
+               is_rec:bool -> uenv * mlident * exp_binding
 
 val extend_lb: g:uenv -> l:lbname -> t:typ -> t_x:mltyscheme -> add_unit:bool -> is_rec: bool
     -> uenv * mlident * exp_binding
 
-val extend_tydef : g:uenv -> fv:fv -> td:one_mltydecl -> uenv * tydef
-val extend_type_name: g:uenv -> fv:fv -> uenv
+val extend_tydef : g:uenv -> fv:fv -> ts:mltyscheme -> tydef * mlpath * uenv
+val extend_type_name: g:uenv -> fv:fv -> mlpath * uenv
 
 val is_type_name : g:uenv -> fv:fv -> bool
 
 val is_fv_type: uenv -> fv -> bool
 val emptyMlPath:mlpath
 val mkContext : e:TypeChecker.Env.env -> uenv
-val monad_op_name : ed:Syntax.eff_decl -> nm:string -> mlpath * lident
-val action_name: ed:Syntax.eff_decl -> a:Syntax.action -> mlpath * lident
 
-val extend_with_iface : uenv -> module_name:mlpath -> bindings:list<(fv * exp_binding)> -> tydefs:list<tydef> -> type_names:list<fv> -> uenv
+val extend_with_monad_op_name : uenv ->
+                          ed:Syntax.eff_decl ->
+                          nm:string ->
+                          ts:mltyscheme ->
+                          mlpath *
+                          lident *
+                          exp_binding *
+                          uenv
+
+val extend_with_action_name: uenv ->
+                             ed:Syntax.eff_decl ->
+                             a:Syntax.action ->
+                             ts:mltyscheme ->
+                             mlpath *
+                             lident *
+                             exp_binding *
+                             uenv
+
+// val extend_with_iface : uenv ->
+//                         module_name:mlpath ->
+//                         bindings:list<(fv * exp_binding)> ->
+//                         tydefs:list<tydef> ->
+//                         type_names:list<(fv * mlpath)> ->
+//                         uenv
+
+val extend_record_field_name : uenv ->
+                               (lident * ident) ->
+                               mlpath * uenv
+                               
+val lookup_record_field_name : uenv -> 
+                               (lident * ident) ->
+                               mlpath
+
+val extend_with_module_name : uenv -> 
+                              lident ->
+                              mlpath * uenv

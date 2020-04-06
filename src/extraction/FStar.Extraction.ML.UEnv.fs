@@ -61,12 +61,17 @@ type tydef = {
     tydef_def:mltyscheme
 }
 
+let tydef_fv (td : tydef) = td.tydef_fv
+let tydef_def (td : tydef) = td.tydef_def
+let tydef_mlpath (td: tydef) : mlpath = td.tydef_mlmodule_name, td.tydef_name
+
 type uenv = {
     env_tcenv: TypeChecker.Env.env;
     env_bindings:list<binding>;
     env_mlident_map:psmap<mlident>;
+    mlpath_of_lid:psmap<mlpath>;
     tydefs:list<tydef>;
-    type_names:list<fv>;
+    type_names:list<(fv*mlpath)>;
     currentModule: mlpath // needed to properly translate the definitions in the current file
 }
 
@@ -160,7 +165,7 @@ let lookup_fv_by_lid (g:uenv) (lid:lident) : ty_or_exp_b =
         | Fv (fv', x) when fv_eq_lid fv' lid -> Some x
         | _ -> None) in
     match x with
-        | None -> failwith (BU.format1 "free Variable %s not found\n" (lid.nsstr))
+        | None -> failwith (BU.format1 "free Variable %s not found\n" (lid.str))
         | Some y -> Inr y
 
 (*keep this in sync with lookup_fv_by_lid, or call it here. lid does not have position information*)
@@ -223,6 +228,41 @@ let sanitize (s:string) (is_type:bool) : string =
     (if is_type then sanitize_typ() else sanitize_term())
 
 
+// (* 20161021, JP: trying to make sense of this code...
+//  * - the second field of the [mlident] was meant, I assume, to disambiguate
+//  *   variables; however, many places provide a placeholder value (0)
+//  * - my assumption is thus that the code extraction never generates code that
+//  *   needs to refer to a shadowed variable; since the scoping rules
+//  *   of both F* and OCaml are lexical, then this probably works out somehow
+//  *   (sic);
+//  * - however, since this function is not parameterized over the environment, now
+//  *   that I avoid generating names that are OCaml keywords, it is no longer
+//  *   injective, because of the following F* example:
+//  *     let land_15 = 0 in
+//  *     let land = () in
+//  *     print_int land_15
+//  * It's slightly tricky to get into this case, but... not impossible. There's a
+//  * similar problem for top-level bindings. For instance, this will be a problem:
+//  *   let land_ = 0
+//  *   let land = ()
+//  * One solution is to carry the environment; for a pair of names (original,
+//  * destination), compute the set of original names shadowed by the original
+//  * name; make sure that the destination name does not shadow more than the
+//  * destination names of these original names; otherwise, keep generating fresh
+//  * destination names.
+//  *)
+// let avoid_keyword s =
+//   if is_reserved s then
+//     s ^ "_"
+//   else
+//     s
+
+let bv_as_mlident (x:bv): mlident =
+  if BU.starts_with x.ppname.idText Ident.reserved_prefix
+  || is_null_bv x
+  then x.ppname.idText ^ "_" ^ (string_of_int x.index)
+  else x.ppname.idText
+
 // Need to avoid shadowing an existing identifier (see comment about ty_or_exp_b)
 let find_uniq ml_ident_map mlident is_type =
   let mlident = sanitize mlident is_type in
@@ -234,6 +274,27 @@ let find_uniq ml_ident_map mlident is_type =
       | None -> target_mlident
   in
   aux ml_ident_map mlident 0
+
+(* -------------------------------------------------------------------- *)
+let mlns_of_lid (x:lident) = List.map (fun x -> x.idText) x.ns
+
+let new_mlpath_of_lident (g:uenv) (x : lident) : mlpath * uenv =
+  let mlp =
+    if Ident.lid_equals x FStar.Parser.Const.failwith_lid
+    then ([], x.ident.idText)
+    else let name = find_uniq g.env_mlident_map x.ident.idText false in
+         mlns_of_lid x, name
+  in
+  let g = { g with
+    env_mlident_map = BU.psmap_add g.env_mlident_map (snd mlp) "";
+    mlpath_of_lid = BU.psmap_add g.mlpath_of_lid x.str mlp
+  } in
+  mlp, g
+
+let mlpath_of_lident (g:uenv) (x:lident) : mlpath =
+  match BU.psmap_try_find g.mlpath_of_lid x.str with
+  | None -> failwith ("Identifier not found: " ^ x.str)
+  | Some mlp -> mlp
 
 let extend_ty (g:uenv) (a:bv) (map_to_top:bool) : uenv =
     let is_type = not map_to_top in
@@ -299,7 +360,7 @@ let rec subsetMlidents (la : list<mlident>) (lb : list<mlident>)  : bool =
 let tySchemeIsClosed (tys : mltyscheme) : bool =
     subsetMlidents  (mltyFvars (snd tys)) (fst tys)
 
-let extend_fv' (g:uenv) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
+let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
     : uenv
     * mlident
     * exp_binding =
@@ -308,11 +369,10 @@ let extend_fv' (g:uenv) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_r
         let ml_ty = match t_x with
             | ([], t) -> t
             | _ -> MLTY_Top in
-        let mlpath, mlsymbol =
-          let ns, i = y in
-          let mlsymbol = avoid_keyword i in
-          (ns, mlsymbol), mlsymbol
-        in
+        let mlpath, g = new_mlpath_of_lident g x.fv_name.v in
+        // the mlpath cannot be determined here. it can be determined at use site, depending on the name of the module where it is used
+        // so this conversion should be moved to lookup_fv
+        let mlsymbol = snd mlpath in
         let mly = MLE_Name mlpath in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
         let t_x = if add_unit then pop_unit t_x else t_x in
@@ -321,17 +381,6 @@ let extend_fv' (g:uenv) (x:fv) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) (is_r
         let mlident_map = BU.psmap_add g.env_mlident_map mlsymbol "" in
         {g with env_bindings=gamma; env_mlident_map=mlident_map}, mlsymbol, exp_binding
     else failwith "freevars found"
-
-let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
-    : uenv
-    * mlident
-    * exp_binding =
-    let mlp = mlpath_of_lident x.fv_name.v in
-    // the mlpath cannot be determined here. it can be determined at use site, depending on the name of the module where it is used
-    // so this conversion should be moved to lookup_fv
-
-    //let _ = printfn "(* old name  \n %A \n new name \n %A \n name in dependent module \n %A \n *) \n"  (Backends.ML.Syntax.mlpath_of_lident x.v) mlp (mlpath_of_lident ([],"SomeDepMod") x.v) in
-    extend_fv' g x mlp t_x add_unit is_rec
 
 let extend_lb (g:uenv) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
     : uenv
@@ -342,26 +391,27 @@ let extend_lb (g:uenv) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_r
         // FIXME missing in lib; NS: what does ths mean??
         extend_bv g x t_x add_unit is_rec false
     | Inr f ->
-        let p, y = mlpath_of_lident f.fv_name.v in
-        extend_fv' g f (p, y) t_x add_unit is_rec
+        extend_fv g f t_x add_unit is_rec
 
-let extend_tydef (g:uenv) (fv:fv) (td:one_mltydecl) : uenv * tydef =
-    let m = module_name_of_fv fv in
-    let _assumed, name, mangled, vars, metadata, body_opt = td in
+let extend_tydef (g:uenv) (fv:fv) (ts:mltyscheme) : tydef * mlpath * uenv =
+    let name, g = new_mlpath_of_lident g fv.fv_name.v in
     let tydef = {
         tydef_fv = fv;
-        tydef_mlmodule_name=m;
-        tydef_name = name;
-        tydef_mangled_name = mangled;
-        tydef_def = Option.get (tyscheme_of_td td);
+        tydef_mlmodule_name=fst name;
+        tydef_name = snd name;
+        tydef_mangled_name = None;
+        tydef_def = ts;
     } in
-    {g with tydefs=tydef::g.tydefs; type_names=fv::g.type_names},
-    tydef
+    tydef,
+    name,
+    {g with tydefs=tydef::g.tydefs; type_names=(fv, name)::g.type_names}
 
-let extend_type_name (g:uenv) (fv:fv) : uenv =
-    {g with type_names=fv::g.type_names}
+let extend_type_name (g:uenv) (fv:fv) : mlpath * uenv =
+  let name, g = new_mlpath_of_lident g fv.fv_name.v in
+  name,
+  {g with type_names=(fv,name)::g.type_names}
 
-let is_type_name g fv = g.type_names |> BU.for_some (fv_eq fv)
+let is_type_name g fv = g.type_names |> BU.for_some (fun (x, _) -> fv_eq fv x)
 
 let is_fv_type g fv =
     is_type_name g fv ||
@@ -370,7 +420,23 @@ let is_fv_type g fv =
 let emptyMlPath : mlpath = ([],"")
 
 let mkContext (e:TypeChecker.Env.env) : uenv =
-   let env = { env_tcenv = e; env_bindings =[]; env_mlident_map=BU.psmap_empty (); tydefs =[]; type_names=[]; currentModule = emptyMlPath} in
+   let initial_mlident_map =
+     List.fold_right
+       (fun x m -> BU.psmap_add m x "")
+       (if Options.codegen() = Some Options.FSharp
+        then fsharpkeywords
+        else ocamlkeywords)
+       (BU.psmap_empty())
+   in
+   let env = {
+     env_tcenv = e;
+     env_bindings =[];
+     env_mlident_map=initial_mlident_map;
+     mlpath_of_lid = BU.psmap_empty();
+     tydefs =[];
+     type_names=[];
+     currentModule = emptyMlPath
+   } in
    let a = "'a" in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
    let g, _, _ =
@@ -378,18 +444,22 @@ let mkContext (e:TypeChecker.Env.env) : uenv =
    in
    g
 
-let monad_op_name (ed:Syntax.eff_decl) nm =
+let extend_with_monad_op_name g (ed:Syntax.eff_decl) nm ts =
     (* Extract bind and return of effects as (unqualified) projectors of that effect, *)
     (* same as for actions. However, extracted code should not make explicit use of them. *)
-    let lid = U.mk_field_projector_name_from_ident (ed.mname) (id_of_text nm) in
-    (mlpath_of_lident lid), lid
+    let lid = U.mk_field_projector_name_from_ident ed.mname (id_of_text nm) in
+    let g, mlid, exp_b = extend_fv g (lid_as_fv lid delta_constant None) ts false false in
+    let mlp = mlns_of_lid lid, mlid in
+    mlp, lid, exp_b, g
 
-let action_name (ed:Syntax.eff_decl) (a:Syntax.action) =
+
+let extend_with_action_name g (ed:Syntax.eff_decl) (a:Syntax.action) ts =
     let nm = a.action_name.ident.idText in
     let module_name = ed.mname.ns in
     let lid = Ident.lid_of_ids (module_name@[Ident.id_of_text nm]) in
-    (mlpath_of_lident lid), lid
-
+    let g, mlid, exp_b = extend_fv g (lid_as_fv lid delta_constant None) ts false false in
+    let mlp = mlns_of_lid lid, mlid in
+    mlp, lid, exp_b, g
 
 let extend_with_iface g (m:mlpath) bs tds tns =
      let mlident_map = List.fold_left
@@ -399,3 +469,12 @@ let extend_with_iface g (m:mlpath) bs tds tns =
          env_mlident_map = mlident_map;
          tydefs=tds@g.tydefs;
          type_names=tns@g.type_names}
+
+let extend_record_field_name g (ns, fn) =
+  new_mlpath_of_lident g (Ident.lid_of_ids (Ident.ids_of_lid ns@[fn]))
+
+let lookup_record_field_name g (ns, fn) =
+  let f = Ident.lid_of_ids (Ident.ids_of_lid ns@[fn]) in
+  mlpath_of_lident g f
+
+let extend_with_module_name g (m:lid) = new_mlpath_of_lident g m
