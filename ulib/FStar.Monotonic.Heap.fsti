@@ -370,8 +370,7 @@ val aref_of_gref_of
   [SMTPat (aref_of (gref_of a t rel))]
 
 (* Operators lowered to ref *)
-abstract
-let addr_of_gref_of
+val addr_of_gref_of
   (a: aref)
   (t: Type0)
   (rel: preorder t)
@@ -379,10 +378,8 @@ let addr_of_gref_of
   (requires (exists h . aref_live_at h a t rel))
   (ensures ((exists h . aref_live_at h a t rel) /\ addr_of (gref_of a t rel) == addr_of_aref a))
   [SMTPat (addr_of (gref_of a t rel))]
-= addr_of_aref_of (gref_of a t rel)
 
-abstract
-let is_mm_gref_of
+val is_mm_gref_of
   (a: aref)
   (t: Type0)
   (rel: preorder t)
@@ -390,10 +387,8 @@ let is_mm_gref_of
   (requires (exists h . aref_live_at h a t rel))
   (ensures ((exists h . aref_live_at h a t rel) /\ is_mm (gref_of a t rel) == aref_is_mm a))
   [SMTPat (is_mm (gref_of a t rel))]
-= is_mm_aref_of (gref_of a t rel)
 
-abstract
-let unused_in_gref_of
+val unused_in_gref_of
   (a: aref)
   (t: Type0)
   (rel: preorder t)
@@ -402,10 +397,8 @@ let unused_in_gref_of
   (requires (exists h . aref_live_at h a t rel))
   (ensures ((exists h . aref_live_at h a t rel) /\ (unused_in (gref_of a t rel) h <==> aref_unused_in a h)))
   [SMTPat (unused_in (gref_of a t rel) h)]
-= unused_in_aref_of (gref_of a t rel) h
 
-abstract
-let sel_ref_of
+val sel_ref_of
   (a: aref)
   (t: Type0)
   (rel: preorder t)
@@ -414,10 +407,8 @@ let sel_ref_of
   (requires (aref_live_at h1 a t rel /\ aref_live_at h2 a t rel))
   (ensures (aref_live_at h2 a t rel /\ sel h1 (ref_of h2 a t rel) == sel h1 (gref_of a t rel)))
   [SMTPat (sel h1 (ref_of h2 a t rel))]
-= ()
 
-abstract
-let upd_ref_of
+val upd_ref_of
   (a: aref)
   (t: Type0)
   (rel: preorder t)
@@ -427,4 +418,3 @@ let upd_ref_of
   (requires (aref_live_at h1 a t rel /\ aref_live_at h2 a t rel))
   (ensures (aref_live_at h2 a t rel /\ upd h1 (ref_of h2 a t rel) x == upd h1 (gref_of a t rel) x))
   [SMTPat (upd h1 (ref_of h2 a t rel) x)]
-= lemma_heap_equality_upd_same_addr h1 (ref_of h2 a t rel) (gref_of a t rel) x

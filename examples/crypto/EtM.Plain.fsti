@@ -13,14 +13,33 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module BugUnfoldAbstractEquational
-let t0 (b:bool) =
-  match b with
-  | true -> int
-  | false -> string
-let f0 #b (x:t0 b) = ()
+module EtM.Plain
 
-abstract
-let iint (b:bool) = t0 b
+open Platform.Bytes
+open CoreCrypto
+open EtM.Ideal
 
-let test #b (i:iint b) = f0 i
+val plain : eqtype
+
+val reveal (p:plain) : GTot bytes
+
+val hide (b:bytes) : GTot plain
+
+val reveal_hide (p:plain) 
+  : Lemma (hide (reveal p) == p)
+          [SMTPat (reveal p)]
+
+val hide_reveal (b:bytes) 
+  : Lemma (reveal (hide b) == b)
+          [SMTPat (hide b)]
+
+val repr (p:plain{not conf}) 
+  : (b:bytes{b == reveal p}) 
+
+val coerce (r:bytes{not auth}) 
+  : (p:plain{p == hide r}) 
+
+module B = Platform.Bytes
+
+val length (p:plain) 
+  : (n:nat{n = B.length (reveal p)})

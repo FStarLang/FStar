@@ -25,6 +25,9 @@ open FStar.String
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
+let abstract_qualifier_warning =
+  "abstract qualifier will soon be removed from F*, use interfaces instead"
+
 %}
 %start inputFragment
 %start term
@@ -956,7 +959,9 @@ qualifier:
                   ( Private )}
 | ABSTRACT
     {let _1 = () in
-                  ( Abstract )}
+                  ( log_issue (lhs parseState) (Warning_AbstractQualifier,
+                                                abstract_qualifier_warning);
+		    Abstract )}
 | NOEQUALITY
     {let _1 = () in
                   ( Noeq )}

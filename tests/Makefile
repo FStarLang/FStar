@@ -1,6 +1,9 @@
 FSTAR_HOME=..
 include ../examples/Makefile.include
 
+#332 -> abstract fatal error
+OTHERFLAGS+=--warn_error @332
+
 ALL_TEST_DIRS=\
 bug-reports \
 friends \

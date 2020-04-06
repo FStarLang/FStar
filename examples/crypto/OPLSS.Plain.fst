@@ -17,13 +17,10 @@ module OPLSS.Plain
 open OPLSS
 open OPLSS.Ideal
 
-abstract 
 type plain : eqtype = AES.plain
 
-abstract
 let reveal (p:plain) : GTot AES.plain = p
 
-abstract
 let hide (b:AES.plain) : GTot plain = b
 
 let reveal_hide (p:plain) 
@@ -36,17 +33,14 @@ let hide_reveal (b:AES.plain)
           [SMTPat (hide b)]
   = ()
 
-abstract
 let repr (p:plain{not (Flag.reveal conf)}) 
   : (b:AES.plain{b == reveal p}) 
   = p
 
-abstract
 let coerce (r:AES.plain{not (Flag.reveal auth)}) 
   : (p:plain{p == hide r}) 
   = r
 
-abstract
 let length (p:plain) 
   : (n:nat{n = Seq.length (reveal p)})
   = Seq.length p
