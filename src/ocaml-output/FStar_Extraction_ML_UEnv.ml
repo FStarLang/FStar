@@ -1012,27 +1012,15 @@ let (extend_with_module_name :
   fun g  -> fun m  -> new_mlpath_of_lident g m 
 let (exit_module : uenv -> uenv) =
   fun g  ->
-    let string_of_mlpath1 mlp =
-      Prims.op_Hat
-        (FStar_String.concat "." (FStar_Pervasives_Native.fst mlp))
-        (Prims.op_Hat "." (FStar_Pervasives_Native.snd mlp))
-       in
-    FStar_Util.print1 "Exiting module %s\n"
-      (string_of_mlpath1 g.currentModule);
-    FStar_Util.psmap_fold g.mlpath_of_lid
-      (fun key  ->
-         fun value  ->
-           fun uu____2607  ->
-             FStar_Util.print2 "%s -> %s\n" key (string_of_mlpath1 value)) ();
-    (let uu___491_2610 = g  in
-     let uu____2611 = initial_mlident_map ()  in
-     {
-       env_tcenv = (uu___491_2610.env_tcenv);
-       env_bindings = (uu___491_2610.env_bindings);
-       env_mlident_map = uu____2611;
-       mlpath_of_lid = (uu___491_2610.mlpath_of_lid);
-       tydefs = (uu___491_2610.tydefs);
-       type_names = (uu___491_2610.type_names);
-       currentModule = (uu___491_2610.currentModule)
-     })
+    let uu___484_2566 = g  in
+    let uu____2567 = initial_mlident_map ()  in
+    {
+      env_tcenv = (uu___484_2566.env_tcenv);
+      env_bindings = (uu___484_2566.env_bindings);
+      env_mlident_map = uu____2567;
+      mlpath_of_lid = (uu___484_2566.mlpath_of_lid);
+      tydefs = (uu___484_2566.tydefs);
+      type_names = (uu___484_2566.type_names);
+      currentModule = (uu___484_2566.currentModule)
+    }
   
