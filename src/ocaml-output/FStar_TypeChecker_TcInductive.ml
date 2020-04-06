@@ -3847,7 +3847,7 @@ let (mk_data_operations :
                                             (uu____9324,fns) ->
                                             FStar_Pervasives_Native.Some
                                               (FStar_Syntax_Syntax.Record_ctor
-                                                 (constr_lid, fns))
+                                                 (typ_lid, fns))
                                         | uu____9336 ->
                                             FStar_Pervasives_Native.None
                                          in

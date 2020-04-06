@@ -803,8 +803,7 @@ let mk_MLE_Let top_level (lbs:mlletbinding) (body:mlexpr) =
           | _ -> MLE_Let(lbs, body))
        | _ -> MLE_Let(lbs, body)
 
-let record_fields (g:uenv) (ctor:lident) (fns:list<ident>) (xs:list<'a>) =
-  let ty = TcEnv.typ_of_datacon (UEnv.tcenv_of_uenv g) ctor in
+let record_fields (g:uenv) (ty:lident) (fns:list<ident>) (xs:list<'a>) =
   let fns = List.map (fun x -> UEnv.lookup_record_field_name g (ty, x)) fns in
   List.map2 (fun (p, s) x -> (s, x)) fns xs
   
