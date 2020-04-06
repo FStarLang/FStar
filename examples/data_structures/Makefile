@@ -17,7 +17,8 @@ FSTAR_FLAGS = \
   --cache_dir $(CACHE_DIR) \
   $(FSTAR_INCLUDES) 
 
-FSTAR = $(FSTAR_HOME)/bin/fstar.exe $(FSTAR_FLAGS) $(OTHERFLAGS)
+#TODO: use Makefile.include or Makefile.tmpl
+FSTAR = $(FSTAR_HOME)/bin/fstar.exe $(FSTAR_FLAGS) $(OTHERFLAGS) --warn_error @332
 
 all: verify-all
 
