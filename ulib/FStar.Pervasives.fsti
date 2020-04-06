@@ -694,6 +694,9 @@ val zeta : norm_step
     Unlike [zeta], [zeta_full] has no looping prevention
     heuristics. F* will try to unroll recursive functions as much as
     it can, potentially looping. Use with care.
+
+    Note, [zeta_full] implies [zeta].
+    See [tests/micro-benchmarks/ReduceRecUnderMatch.fst] for an example.
  *)
 val zeta_full : norm_step
 
