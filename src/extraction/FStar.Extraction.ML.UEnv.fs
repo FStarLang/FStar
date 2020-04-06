@@ -70,6 +70,8 @@ type uenv = {
     env_bindings:list<binding>;
     env_mlident_map:psmap<mlident>;
     mlpath_of_lid:psmap<mlpath>;
+    env_fieldname_map:psmap<mlident>;
+    mlpath_of_fieldname:psmap<mlpath>;
     tydefs:list<tydef>;
     type_names:list<(fv*mlpath)>;
     currentModule: mlpath // needed to properly translate the definitions in the current file
@@ -256,41 +258,58 @@ let bv_as_mlident (x:bv): mlident =
 
 // Need to avoid shadowing an existing identifier (see comment about ty_or_exp_b)
 let find_uniq ml_ident_map mlident is_type =
-  let mlident = sanitize mlident is_type in
-
-  let rec aux sm mlident i =
+  let rec aux i mlident =
     let target_mlident = if i = 0 then mlident else mlident ^ (string_of_int i) in
-    match BU.psmap_try_find sm target_mlident with
-      | Some x -> aux sm mlident (i+1)
-      | None -> target_mlident
+    match BU.psmap_try_find ml_ident_map target_mlident with
+      | Some x -> aux (i+1) mlident
+      | None ->
+        let map = BU.psmap_add ml_ident_map target_mlident "" in
+        target_mlident, map
   in
-  aux ml_ident_map mlident 0
+  let mlident = sanitize mlident is_type in
+  if is_type
+  then let nm, map = aux 0 (BU.substring_from mlident 1) in
+       "'" ^ nm, map
+  else aux 0 mlident
 
 (* -------------------------------------------------------------------- *)
 let mlns_of_lid (x:lident) = List.map (fun x -> x.idText) x.ns
 
 let new_mlpath_of_lident (g:uenv) (x : lident) : mlpath * uenv =
-  let mlp =
+  let mlp, g =
     if Ident.lid_equals x FStar.Parser.Const.failwith_lid
-    then ([], x.ident.idText)
-    else let name = find_uniq g.env_mlident_map x.ident.idText false in
-         mlns_of_lid x, name
+    then ([], x.ident.idText), g
+    else let name, map = find_uniq g.env_mlident_map x.ident.idText false in
+         let g = { g with env_mlident_map = map } in
+         (mlns_of_lid x, name), g
   in
   let g = { g with
-    env_mlident_map = BU.psmap_add g.env_mlident_map (snd mlp) "";
     mlpath_of_lid = BU.psmap_add g.mlpath_of_lid x.str mlp
   } in
   mlp, g
 
+let print_mlpath_map (g:uenv) =
+  let string_of_mlpath mlp =
+    (String.concat "." (fst mlp) ^ "." ^ (snd mlp))
+  in
+  let entries =
+    BU.psmap_fold g.mlpath_of_lid (fun key value entries ->
+      BU.format2 "%s -> %s\n" key (string_of_mlpath value) :: entries) []
+  in
+  String.concat "\n" entries
+
 let mlpath_of_lident (g:uenv) (x:lident) : mlpath =
   match BU.psmap_try_find g.mlpath_of_lid x.str with
-  | None -> failwith ("Identifier not found: " ^ x.str)
+  | None ->
+    debug g (fun _ ->
+      BU.print1 "Identifier not found: %s" x.str;
+      BU.print1 "Env is \n%s\n" (print_mlpath_map g));
+    failwith ("Identifier not found: " ^ x.str)
   | Some mlp -> mlp
 
 let extend_ty (g:uenv) (a:bv) (map_to_top:bool) : uenv =
     let is_type = not map_to_top in
-    let ml_a = find_uniq g.env_mlident_map (bv_as_mlident a) is_type in
-    let mlident_map = BU.psmap_add g.env_mlident_map ml_a "" in
+    let ml_a, mlident_map = find_uniq g.env_mlident_map (bv_as_mlident a) is_type in
     let mapped_to =
       if map_to_top
       then MLTY_Top
@@ -313,7 +332,7 @@ let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
     let ml_ty = match t_x with
         | ([], t) -> t
         | _ -> MLTY_Top in
-    let mlident = find_uniq g.env_mlident_map (bv_as_mlident x) false in
+    let mlident, mlident_map = find_uniq g.env_mlident_map (bv_as_mlident x) false in
     let mlx = MLE_Var mlident in
     let mlx = if mk_unit
               then ml_unit
@@ -323,7 +342,6 @@ let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
     let t_x = if add_unit then pop_unit t_x else t_x in
     let exp_binding = {exp_b_name=mlident; exp_b_expr=mlx; exp_b_tscheme=t_x; exp_b_inst_ok=is_rec} in
     let gamma = Bv(x, Inr exp_binding)::g.env_bindings in
-    let mlident_map = BU.psmap_add g.env_mlident_map mlident "" in
     let tcenv = TypeChecker.Env.push_binders g.env_tcenv (binders_of_list [x]) in
     {g with env_bindings=gamma; env_mlident_map = mlident_map; env_tcenv=tcenv}, mlident, exp_binding
 
@@ -433,6 +451,8 @@ let mkContext (e:TypeChecker.Env.env) : uenv =
      env_bindings =[];
      env_mlident_map=initial_mlident_map ();
      mlpath_of_lid = BU.psmap_empty();
+     env_fieldname_map=initial_mlident_map ();
+     mlpath_of_fieldname = BU.psmap_empty();
      tydefs =[];
      type_names=[];
      currentModule = emptyMlPath
@@ -462,28 +482,29 @@ let extend_with_action_name g (ed:Syntax.eff_decl) (a:Syntax.action) ts =
     mlp, lid, exp_b, g
 
 let extend_record_field_name g (type_name, fn) =
-    let mlp =
-      let name = find_uniq (initial_mlident_map()) fn.idText false in
-      let ns = List.map (fun x -> x.idText) type_name.ns in
-      ns, name
+    let key = Ident.lid_of_ids (type_name.ns@[fn]) in
+    let name, fieldname_map = find_uniq g.env_fieldname_map fn.idText false in
+    let ns = mlns_of_lid key in
+    let mlp = ns, name in
+    let g = { g with env_fieldname_map = fieldname_map;
+                     mlpath_of_fieldname = BU.psmap_add g.mlpath_of_fieldname key.str mlp }
     in
-    let key = Ident.lid_of_ids (Ident.ids_of_lid type_name@[fn]) in
-    let g = { g with
-      mlpath_of_lid = BU.psmap_add g.mlpath_of_lid key.str mlp
-    } in
     mlp, g
 
 let lookup_record_field_name g (type_name, fn) =
-  let f = Ident.lid_of_ids (Ident.ids_of_lid type_name@[fn]) in
-  mlpath_of_lident g f
+  let key = Ident.lid_of_ids (type_name.ns@[fn]) in
+  match BU.psmap_try_find g.mlpath_of_fieldname key.str with
+  | None -> failwith ("Field name not found: " ^ key.str)
+  | Some mlp -> mlp
 
-let extend_with_module_name g (m:lid) = new_mlpath_of_lident g m
+(* Module names are in a different namespace in OCaml
+   and cannot clash with keywords (since they are uppercase in F* )
+   or with other identifiers *)
+let extend_with_module_name g (m:lid) =
+  let ns = mlns_of_lid m in
+  let p = m.ident.idText in
+  (ns, p), g
 
 let exit_module g =
-  // let string_of_mlpath mlp =
-  //   (String.concat "." (fst mlp) ^ "." ^ (snd mlp))
-  // in
-  // BU.print1 "Exiting module %s\n" (string_of_mlpath g.currentModule);
-  // BU.psmap_fold g.mlpath_of_lid (fun key value () ->
-  //   BU.print2 "%s -> %s\n" key (string_of_mlpath value)) ();
-  { g with env_mlident_map=initial_mlident_map() }
+  { g with env_mlident_map=initial_mlident_map();
+           env_fieldname_map=initial_mlident_map()}
