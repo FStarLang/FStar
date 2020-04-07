@@ -14,7 +14,7 @@ export V=1
 
 # The file descriptor we will use for the job server
 # WARNING, DUPLICATED BELOW IN mk_jobserver, UPDATE THERE TOO
-JOBSERVERFD=42
+JOBSERVERFD=3
 
 # Create/release a process slot
 function job_put() {
@@ -48,10 +48,10 @@ function job_spawn () {
 
 function mk_jobserver () {
     # Create a named pipe for the jobserver
-    # Using FD 42, would be nice to get a fresh one.
+    # Using FD 3, would be nice to get a fresh one.
     rm -f ._jobpipe
     mkfifo ._jobpipe
-    exec 42<>._jobpipe
+    exec 3<>._jobpipe
     rm -f ._jobpipe
 }
 
