@@ -4,6 +4,7 @@ fsharp-output
 /backend/
 u_boot_fsts
 u_ocaml-output
+.fstarlib
 
 [Bb]in/
 [Oo]bj/

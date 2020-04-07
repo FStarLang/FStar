@@ -9,7 +9,7 @@ FSLEX   := $(RUNTIME) $(FSLYDIR)/build/fslex.exe
 .SUFFIXES:
 MAKEFLAGS += --no-builtin-rules
 
-.PHONY: fstar-in-fsharp clean boot ocaml nuget-restore nuget-clean fstarlib
+.PHONY: fstar-in-fsharp clean boot ocaml nuget-restore nuget-clean
 
 # --------------------------------------------------------------------
 # An artefact of the build process is that parse.fsi is auto-generated
@@ -158,7 +158,7 @@ utest-prelude: fsharp-build-and-test
 	+$(MAKE) clean_extracted   #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml       #extract the compiler again and build the result
 	+$(MAKE) ocaml-unit-tests  #run the unit tests
-	+$(MAKE) fstarlib
+	+$(MAKE) .fstarlib
 
 ocaml-unit-tests:
 	$(BIN)/tests.exe
@@ -177,7 +177,7 @@ uregressions-ulong: uregressions
 # simply calling the install-fstar-tactics rule
 # will unconditionally reinstall everything,
 # which is also not good.
-fstarlib: $(FSTARLIB_DIR)/fstarlib.cmxs
+.fstarlib: $(FSTARLIB_DIR)/fstarlib.cmxs
 	touch $@
 
 $(FSTARLIB_DIR)/fstarlib.cmxs:
@@ -188,13 +188,13 @@ $(FSTARLIB_DIR)/fstarlib.cmxs:
 ulib-extra:
 	+$(MAKE) -C ../ulib extra
 
-tutorial: fstarlib
+tutorial: .fstarlib
 	+$(MAKE) -C ../doc/tutorial regressions
 
-utests: fstarlib
+utests: .fstarlib
 	+$(MAKE) -C ../tests all
 
-uexamples: fstarlib
+uexamples: .fstarlib
 	+$(MAKE) -C ../examples all
 	+$(MAKE) -C ../examples native_tactics.all
 	+$(MAKE) -C ../examples semiring.all
