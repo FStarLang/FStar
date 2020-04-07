@@ -1,0 +1,143 @@
+[
+  "\f\u0004\u001aoŽ+Ã~ˆÆçé\u001e9\u001b\u001f",
+  [
+    [
+      "FStar.DM4F.Heap.IntStoreFixed.id",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "7073a7f71684209106003f371c75a51c"
+    ],
+    [
+      "FStar.DM4F.Heap.IntStoreFixed.heap",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int",
+        "lemma_FStar.Seq.Base.hasEq_lemma",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "c61172658e7a17bb74a4219229cbbeb1"
+    ],
+    [
+      "FStar.DM4F.Heap.IntStoreFixed.index",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.heap",
+        "refinement_interpretation_Tm_refine_6df2ffe10bff6bf2a3fe27af74739e18"
+      ],
+      0,
+      "c1ad82d73c7a4bf3e04e4032870f1046"
+    ],
+    [
+      "FStar.DM4F.Heap.IntStoreFixed.upd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.heap",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.id", "equation_Prims.eqtype",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "int_inversion",
+        "lemma_FStar.Seq.Base.lemma_len_upd",
+        "refinement_interpretation_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_6970eb1cc2a7cbece1f97684ca23fd46",
+        "refinement_interpretation_Tm_refine_6df2ffe10bff6bf2a3fe27af74739e18"
+      ],
+      0,
+      "aa99dadb50ffa975c6ec70a92e6a91c5"
+    ],
+    [
+      "FStar.DM4F.Heap.IntStoreFixed.create",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.store_size",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int", "int_inversion",
+        "lemma_FStar.Seq.Base.lemma_create_len",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "7737518904005c0a35e99bc3d77f37a6"
+    ],
+    [
+      "FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.heap",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.id",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.index",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.upd", "equation_Prims.nat",
+        "int_inversion",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_6970eb1cc2a7cbece1f97684ca23fd46",
+        "refinement_interpretation_Tm_refine_6df2ffe10bff6bf2a3fe27af74739e18"
+      ],
+      0,
+      "96620b530dee719509a9abba2c386641"
+    ],
+    [
+      "FStar.DM4F.Heap.IntStoreFixed.lemma_index_upd2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.heap",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.id",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.index",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.upd", "equation_Prims.nat",
+        "int_inversion",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_682c9ab92a8eed1ab5b3c14d312fe8be",
+        "refinement_interpretation_Tm_refine_6970eb1cc2a7cbece1f97684ca23fd46",
+        "refinement_interpretation_Tm_refine_6df2ffe10bff6bf2a3fe27af74739e18"
+      ],
+      0,
+      "c0ea4c38bb6cd8e11899a8367a85acef"
+    ],
+    [
+      "FStar.DM4F.Heap.IntStoreFixed.lemma_index_create",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.create",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.id",
+        "equation_FStar.DM4F.Heap.IntStoreFixed.index", "equation_Prims.nat",
+        "int_inversion",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_6970eb1cc2a7cbece1f97684ca23fd46"
+      ],
+      0,
+      "3d93c4eb781949826e88348b80685ddc"
+    ]
+  ]
+]

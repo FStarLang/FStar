@@ -86,7 +86,8 @@ Currently, the flags (provided in Prims) are
 [primops] (performing primitive reductions, such as arithmetic and
 string operations)
 [delta] (unfold names)
-[zeta] (inline let bindings)
+[zeta] (unroll let rec bindings, but with heuristics to avoid loops)
+[zeta_full] (unroll let rec bindings fully)
 [iota] (reduce match statements over constructors)
 [delta_only] (restrict delta to only unfold this list of fully-qualfied identifiers)
 *)
