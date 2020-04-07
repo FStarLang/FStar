@@ -30,6 +30,7 @@ type fsteps = {
      beta : bool;
      iota : bool;
      zeta : bool;
+     zeta_full : bool;
      weak : bool;
      hnf  : bool;
      primops : bool;

@@ -30,6 +30,7 @@ type step =
   | Beta
   | Iota            //pattern matching
   | Zeta            //fixed points
+  | ZetaFull        //fixed points, even under blocked matches
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
   | Weak            //Do not descend into binders
   | HNF             //Only produce a head normal form

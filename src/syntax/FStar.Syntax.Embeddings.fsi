@@ -18,6 +18,7 @@ type norm_step =
     | Primops
     | Delta
     | Zeta
+    | ZetaFull
     | Iota
     | Reify
     | UnfoldOnly  of list<string>
@@ -31,6 +32,7 @@ val steps_HNF           : term
 val steps_Primops       : term
 val steps_Delta         : term
 val steps_Zeta          : term
+val steps_ZetaFull      : term
 val steps_Iota          : term
 val steps_Reify         : term
 val steps_UnfoldOnly    : term
