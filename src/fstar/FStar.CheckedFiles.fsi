@@ -55,7 +55,6 @@ val load_parsing_data_from_cache: file_name:string -> option<Parser.Dep.parsing_
 (* Loading and storing cache files                                     *)
 (***********************************************************************)
 
-(* Returns tc_result and path of .checked file loaded *)
-val load_module_from_cache: (uenv -> string -> option<(tc_result * string)>)
+val load_module_from_cache: (uenv -> string -> option<tc_result>)
 
 val store_module_to_cache: uenv -> file_name:string -> Dep.parsing_data -> tc_result -> unit 

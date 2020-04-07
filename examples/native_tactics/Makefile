@@ -58,6 +58,7 @@ all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 
 %.ml: %.fst
 	$(FSTAR) $*.fst --cache_checked_modules --codegen Plugin --extract $*
+	touch $@
 
 %.clean:
 	rm -f Registers_List.ml Registers.List.ml Registers_List.cmxs

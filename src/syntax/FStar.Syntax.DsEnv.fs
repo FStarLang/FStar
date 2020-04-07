@@ -768,8 +768,10 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match
     sigs |> List.iter (function
       | { sigel = Sig_inductive_typ(typename, univs, parms, _, _, [dc]); sigquals = typename_quals } ->
         begin match must <| find_dc dc with
-            | { sigel = Sig_datacon(constrname, _, t, _, _, _) } ->
-                let formals, _ = U.arrow_formals t in
+            | { sigel = Sig_datacon(constrname, _, t, _, n, _) } ->
+                let all_formals, _ = U.arrow_formals t in
+                (* Ignore parameters, we don't create projectors for them *)
+                let _params, formals = BU.first_N n all_formals in
                 let is_rec = is_record typename_quals in
                 let formals' = formals |> List.collect (fun (x,q) ->
                         if S.is_null_bv x
