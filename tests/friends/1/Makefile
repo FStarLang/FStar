@@ -12,6 +12,7 @@ verify-all: $(ALL_CHECKED_FILES)
 
 %.checked:
 	$(FSTAR) --cache_checked_modules $<
+	touch -c $@
 
 clean:
 	rm -f .depend *.checked
