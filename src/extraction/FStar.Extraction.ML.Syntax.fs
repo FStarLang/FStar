@@ -32,6 +32,8 @@ type mlident  = mlsymbol
 type mlpath   = list<mlsymbol> * mlsymbol //Path and name of a module
 
 (* -------------------------------------------------------------------- *)
+let kremlin_keywords = []
+
 let ocamlkeywords = [
   "and"; "as"; "assert"; "asr"; "begin"; "class";
   "constraint"; "do"; "done"; "downto"; "else"; "end";

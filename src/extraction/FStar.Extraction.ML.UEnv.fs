@@ -470,9 +470,12 @@ let initial_mlident_map =
       let m =
         List.fold_right
           (fun x m -> BU.psmap_add m x "")
-          (if Options.codegen() = Some Options.FSharp
-           then fsharpkeywords
-           else ocamlkeywords)
+          (match Options.codegen() with
+            | Some Options.FSharp -> fsharpkeywords
+            | Some Options.OCaml
+            | Some Options.Plugin -> ocamlkeywords
+            | Some Options.Kremlin -> kremlin_keywords
+            | None -> [])
         (BU.psmap_empty())
       in
       map := Some m;
