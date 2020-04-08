@@ -26,13 +26,14 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.TypeChecker
 
-// JP: my understanding of this is: we either bind a type (left injection) or a
-// term variable (right injection). In the latter case, the variable may need to
-// be coerced, hence the [mlexpr] (instead of the [mlident]). In order to avoid
-// shadowing (which may occur, as the F* normalization potentially breaks the
-// original lexical structure of the F* term), we ALSO keep the [mlsymbol], but
-// only for the purpose of resolving name collisions.
-// The boolean tells whether this is a recursive binding or not.
+(** This module provides a typing environment used for extracting
+    programs to ML.
+    
+    See the implementation for more detailed descriptions. *)
+
+
+(**** Types *)
+
 type ty_binding = {
   ty_b_name:mlident;
   ty_b_ty:mlty
@@ -48,40 +49,45 @@ type exp_binding = {
 type ty_or_exp_b = either<ty_binding, exp_binding>
 
 type binding =
-    | Bv  of bv * ty_or_exp_b
-    | Fv  of fv * exp_binding
+  | Bv  of bv * ty_or_exp_b
+  | Fv  of fv * exp_binding
 
+(** Type abbreviations, aka definitions *)
 type tydef
 val tydef_fv : tydef -> fv
 val tydef_mlpath : tydef -> mlpath
 val tydef_def: tydef -> mltyscheme
 
+(** The main type of this module *)
 type uenv 
-
 val tcenv_of_uenv : u:uenv -> TypeChecker.Env.env
 val set_tcenv : u:uenv -> t:TypeChecker.Env.env -> uenv
-
 val current_module_of_uenv : u:uenv -> mlpath
 val set_current_module : u:uenv -> p:mlpath -> uenv
 
+(** Debugging only *)
 val bindings_of_uenv : uenv -> list<binding>
-
 val debug: g:uenv -> f:(unit -> unit) -> unit
 
-val mkContext : e:TypeChecker.Env.env -> uenv
+(** Constructor *)
+val new_uenv : e:TypeChecker.Env.env -> uenv
 
 (*** Looking up identifiers *)
 
+(** Lookup a top-level term identifier *)
 val try_lookup_fv: g:uenv -> fv:fv -> option<exp_binding>
-
 val lookup_fv: g:uenv -> fv:fv -> exp_binding
 
+(** Lookup a local term or type variable *)
 val lookup_bv: g:uenv -> bv: bv -> ty_or_exp_b
 
+(** Lookup a top-level term or local type variable *)
 val lookup_term: g:uenv -> t:term -> ty_or_exp_b * option<fv_qual>
 
+(** Lookup a type variable *)
 val lookup_ty: g:uenv -> bv:bv -> ty_binding
 
+(** Lookup a type abbreviation, definition *)
 val lookup_ty_const : uenv -> mlpath -> option<mltyscheme>
 
 val mlpath_of_lident : uenv -> lident -> mlpath

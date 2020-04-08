@@ -172,7 +172,7 @@ let with_env : 'a . uenv -> (uenv -> 'a) -> 'a =
   
 let (env_of_tcenv :
   FStar_TypeChecker_Env.env -> FStar_Extraction_ML_UEnv.uenv) =
-  fun env  -> FStar_Extraction_ML_UEnv.mkContext env 
+  fun env  -> FStar_Extraction_ML_UEnv.new_uenv env 
 let (parse :
   uenv ->
     Prims.string FStar_Pervasives_Native.option ->
@@ -1491,7 +1491,7 @@ let (batch_mode_tc :
        else ());
       (let env =
          let uu____2325 = init_env dep_graph  in
-         FStar_Extraction_ML_UEnv.mkContext uu____2325  in
+         FStar_Extraction_ML_UEnv.new_uenv uu____2325  in
        let uu____2326 = tc_fold_interleave dep_graph ([], [], env) filenames
           in
        match uu____2326 with

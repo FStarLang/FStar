@@ -478,8 +478,6 @@ let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
             | ([], t) -> t
             | _ -> MLTY_Top in
         let mlpath, g = new_mlpath_of_lident g x.fv_name.v in
-        // the mlpath cannot be determined here. it can be determined at use site, depending on the name of the module where it is used
-        // so this conversion should be moved to lookup_fv
         let mlsymbol = snd mlpath in
         let mly = MLE_Name mlpath in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
@@ -579,7 +577,7 @@ let exit_module g =
 
 (**** Constructor for a uenv *)
 
-let mkContext (e:TypeChecker.Env.env)
+let new_uenv (e:TypeChecker.Env.env)
   : uenv
   = let env = {
       env_tcenv = e;

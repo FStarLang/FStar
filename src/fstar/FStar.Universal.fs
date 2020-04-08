@@ -81,7 +81,7 @@ let with_env env (f:uenv -> 'a) : 'a =
     res
 
 let env_of_tcenv (env:TcEnv.env) =
-    FStar.Extraction.ML.UEnv.mkContext env
+    FStar.Extraction.ML.UEnv.new_uenv env
 
 (***********************************************************************)
 (* Parse and desugar a file                                            *)
@@ -486,7 +486,7 @@ let batch_mode_tc filenames dep_graph =
     FStar.Util.print1 "Here's the list of modules we will verify: %s\n"
       (String.concat " " (filenames |> List.filter Options.should_verify_file))
   end;
-  let env = FStar.Extraction.ML.UEnv.mkContext (init_env dep_graph) in
+  let env = FStar.Extraction.ML.UEnv.new_uenv (init_env dep_graph) in
   let all_mods, mllibs, env = tc_fold_interleave dep_graph ([], [], env) filenames in
   emit mllibs;
   let solver_refresh env =

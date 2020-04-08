@@ -997,7 +997,7 @@ let (exit_module : uenv -> uenv) =
       currentModule = (uu___443_2548.currentModule)
     }
   
-let (mkContext : FStar_TypeChecker_Env.env -> uenv) =
+let (new_uenv : FStar_TypeChecker_Env.env -> uenv) =
   fun e  ->
     let env =
       let uu____2564 = initial_mlident_map ()  in
