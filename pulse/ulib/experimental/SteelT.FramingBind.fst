@@ -18,7 +18,7 @@ let returnc (a:Type u#a) (x:a) (#[@resolve_framing] p:a -> hprop)
 open Steel.Memory.Tactics
 
 let can_be_split_into_forall (#a:Type) (outer inner:post_t a) (delta:pre_t)
-  = forall x. can_be_split_into (outer x) (inner x) delta
+  = forall (x:a). can_be_split_into (outer x) (inner x) delta
 
 let bind (a:Type) (b:Type)
   (#[@resolve_framing] outer_pre:pre_t)
@@ -29,7 +29,7 @@ let bind (a:Type) (b:Type)
   (#[@resolve_framing] _u:squash (can_be_split_into outer_pre pre_f frame_f))
   (#[@resolve_framing] frame_g:hprop)
   (#[@resolve_framing] pre_g:post_t a)
-  (#[@resolve_framing_forall] _v:squash (can_be_split_into_forall
+  (#[@resolve_framing] _v:squash (can_be_split_into_forall
     (fun x -> post_f x `star` frame_f) pre_g frame_g))
   (f:repr a pre_f post_f)
   (g:(x:a -> repr b (pre_g x) post_g))
@@ -98,36 +98,61 @@ inline_for_extraction noextract let resolve_frame () : Tac unit =
         primops; iota; zeta];
   canon()
 
+inline_for_extraction noextract let resolve_frame_forall () : Tac unit =
+  T.dump "entering resolve forall";
+  ignore (forall_intro ());
+  T.dump "before resolve";
+  resolve_frame()
+
 [@(resolve_implicits)
   (resolve_framing)]
 let resolve () : Tac unit =
     let rec aux (i:int) : Tac unit =
-    T.dump ("State: " ^ string_of_int i);
+//    T.dump ("State: " ^ string_of_int i);
     match T.goals () with
     | [] -> ()
     | g :: _ ->
       let f = T.term_as_formula' (goal_type g) in
-      T.print ("Goal formula is " ^ (formula_to_string f));
+//      T.print ("Goal formula is " ^ (formula_to_string f));
       match f with
       | Comp (Eq _) _ _ ->
-        T.print "Solving equality goal\n";
+//        T.print "Solving equality goal\n";
         T.trefl();
         aux (i + 1)
 
-      | _ -> //has to be framing
-        T.print "Solving framing goal\n";
-        T.focus resolve_frame;
-        aux (i + 1)
+      | App t t' ->
+//        T.print "Solving app goal\n";
+        begin
+        match T.inspect t' with
+        | Tv_App hd _ ->
+          begin
+          match T.inspect hd with
+          | Tv_App hd _ -> begin
+            match T.inspect hd with
+            | Tv_App hd _ ->
+              if T.term_eq hd (quote (can_be_split_into)) then (
+                T.focus resolve_frame;
+                aux (i+1)
+              ) else begin
+                match T.inspect hd with
+                | Tv_App hd _ ->
+                  if T.term_eq hd (quote (can_be_split_into_forall)) then (
+                    T.focus resolve_frame_forall;
+                    aux (i+1)
+                  ) else T.fail "this is not an equality or a framing goal"
+                | _ -> T.fail "this is not an equality or a framing goal"
+                end
+            | _ -> T.fail "this is not an equality or a framing goal"
+          end
+          | _ -> T.fail "this is not an equality or a framing goal"
+          end
+        | _ -> T.fail "this is not an equality or a framing goal"
+        end
+
+      | _ -> // framing should have been handled beforehand
+        T.fail "this is not an equality or a framing goal"
   in
   aux 0
-
-
-[@(resolve_implicits)
-  (resolve_framing_forall)]
-let resolve_forall () : Tac unit =
-  // TODO: Implement this
-  T.dump "hello";
-  T.trivial ()
 
 assume
 val myref : Type0
@@ -145,9 +170,6 @@ val nop (_:unit) : SteelT unit emp (fun c -> emp)
 //#push-options "--print_implicits --debug_level ResolveImplicitsHook"
 val test_ok1 (_:unit)
   : SteelT myref emp (fun x -> myref_hprop x)
-// TODO: (AF) It does not seem like F* picks resolve_forall for
-// the resolve_framing_forall attribute
-[@expect_failure]
 let test_ok1 _
   = let tr = dependent_provides () in
     nop ();
