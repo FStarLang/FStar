@@ -36,12 +36,13 @@ let bind (a:Type) (b:Type)
 : repr b outer_pre (fun y -> post_g y `star` frame_g)
 = admit()
 
-let subcomp (a:Type) (pre:pre_t) (post:post_t a)
+let subcomp
+  (a:Type) (pre:pre_t) (post:post_t a)
   (f:repr a pre post)
 : Pure (repr a pre post)
   (requires True)
   (ensures fun _ -> True)
-= f
+= admit() //f
 
 
 let if_then_else (a:Type) (pre:pre_t) (post:post_t a)
@@ -99,16 +100,14 @@ inline_for_extraction noextract let resolve_frame () : Tac unit =
   canon()
 
 inline_for_extraction noextract let resolve_frame_forall () : Tac unit =
-  T.dump "entering resolve forall";
   ignore (forall_intro ());
-  T.dump "before resolve";
   resolve_frame()
 
 [@(resolve_implicits)
   (resolve_framing)]
 let resolve () : Tac unit =
     let rec aux (i:int) : Tac unit =
-//    T.dump ("State: " ^ string_of_int i);
+    T.dump ("State: " ^ string_of_int i);
     match T.goals () with
     | [] -> ()
     | g :: _ ->
@@ -139,18 +138,19 @@ let resolve () : Tac unit =
                   if T.term_eq hd (quote (can_be_split_into_forall)) then (
                     T.focus resolve_frame_forall;
                     aux (i+1)
-                  ) else T.fail "this is not an equality or a framing goal"
-                | _ -> T.fail "this is not an equality or a framing goal"
+                  ) else T.fail "this is not an equality or a framing goal 1"
+                | _ -> T.fail "this is not an equality or a framing goal 2"
                 end
-            | _ -> T.fail "this is not an equality or a framing goal"
+            | _ -> T.fail "this is not an equality or a framing goal 3"
           end
-          | _ -> T.fail "this is not an equality or a framing goal"
+          | _ -> T.fail "this is not an equality or a framing goal 4"
           end
-        | _ -> T.fail "this is not an equality or a framing goal"
+        | _ -> T.fail "this is not an equality or a framing goal 5"
         end
 
       | _ -> // framing should have been handled beforehand
-        T.fail "this is not an equality or a framing goal"
+        T.dump "wat";
+        T.fail "this is not an equality or a framing goal 6"
   in
   aux 0
 
@@ -167,10 +167,29 @@ val dependent_provides (_:unit)
 assume
 val nop (_:unit) : SteelT unit emp (fun c -> emp)
 
+assume
+val h_admit (#a:Type)
+             (#[@resolve_framing] p:hprop)
+             (#[@resolve_framing] q:a -> hprop)
+             (_:unit) : SteelT a p q
+
+assume
+val process (x:myref)
+  : SteelT myref (myref_hprop x) myref_hprop
+
 //#push-options "--print_implicits --debug_level ResolveImplicitsHook"
 val test_ok1 (_:unit)
-  : SteelT myref emp (fun x -> myref_hprop x)
+  : SteelT myref emp (fun x -> myref_hprop x `star` emp)
+
+
+#push-options "--debug SteelT.FramingBind --debug_level Extreme"
+
 let test_ok1 _
   = let tr = dependent_provides () in
-    nop ();
-    tr
+    // h_admit #_ #(myref_hprop tr) #myref_hprop ()
+    // AF: This does not work because of scoping issues on myref_hprop tr
+    nop();
+    process tr
+
+    // nop ();
+    // tr
