@@ -675,8 +675,30 @@ val primops : norm_step
 (** Unfold all non-recursive definitions *)
 val delta : norm_step
 
-(** Unroll recursive calls *)
+(** Unroll recursive calls
+
+    Note: Since F*'s termination check is semantic rather than
+    syntactically structural, recursive calls in inconsistent contexts,
+    or recursive evaluation of open terms can diverge.
+
+    When asking for the [zeta] step, F* implements a heuristic to
+    disable [zeta] when reducing terms beneath a blocked match. This
+    helps prevent some trivial looping behavior. However, it also
+    means that with [zeta] alone, your term may not reduce as much as
+    you might want. See [zeta_full] for that.
+  *)
 val zeta : norm_step
+
+(** Unroll recursive calls 
+
+    Unlike [zeta], [zeta_full] has no looping prevention
+    heuristics. F* will try to unroll recursive functions as much as
+    it can, potentially looping. Use with care.
+
+    Note, [zeta_full] implies [zeta].
+    See [tests/micro-benchmarks/ReduceRecUnderMatch.fst] for an example.
+ *)
+val zeta_full : norm_step
 
 (** Reduce case analysis (i.e., match) *)
 val iota : norm_step

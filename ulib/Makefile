@@ -123,7 +123,7 @@ $(FSTARLIB_DIR)/META: $(FSTARLIB_OBJECTS)
 	$(Q)cp $(FSTARLIB_OUTPUTS) $(FSTARLIB_DIR)_new
 	$(Q)sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstarlib-META >$(FSTARLIB_DIR)_new/META
 	$(Q)rm -rf $(FSTARLIB_DIR)
-	$(Q)mv -T $(FSTARLIB_DIR)_new $(FSTARLIB_DIR)
+	$(Q)mv $(FSTARLIB_DIR)_new $(FSTARLIB_DIR)
 
 # See comment for $(FSTARLIB_DIR)/META
 $(TACLIB_DIR)/META: $(TACLIB_OBJECTS)
@@ -133,7 +133,7 @@ $(TACLIB_DIR)/META: $(TACLIB_OBJECTS)
 	$(Q)cp $(TACLIB_OUTPUTS) $(TACLIB_DIR)_new
 	$(Q)sed "s/__FSTAR_VERSION__/$$(cat ../version.txt)/" <ml/fstar-tactics-lib-META >$(TACLIB_DIR)_new/META
 	$(Q)rm -rf $(TACLIB_DIR)
-	$(Q)mv -T $(TACLIB_DIR)_new $(TACLIB_DIR)
+	$(Q)mv $(TACLIB_DIR)_new $(TACLIB_DIR)
 
 clean:
 	@echo "[CLEAN     ulib/]"

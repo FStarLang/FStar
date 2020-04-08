@@ -269,15 +269,7 @@ let cache_file_name =
                                 mname
                                 path
                                 (Options.prepend_cache_dir cache_fn));
-
-        (* This expression morally just returns [path], but prefers
-         * the path in [expected_cache_file] is possible to give
-         * preference to relative filenames. This is mostly since
-         * GNU make doesn't resolve paths in targets, so we try
-         * to keep target paths relative. See issue #1978. *)
-        if BU.file_exists expected_cache_file && BU.paths_to_same_file path expected_cache_file
-        then expected_cache_file
-        else path
+        path
       | None ->
           if mname |> Options.should_be_already_cached
           then

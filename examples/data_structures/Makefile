@@ -37,12 +37,14 @@ $(CACHE_DIR) $(OUT_DIR):
 	mkdir -p $@
 
 $(CACHE_DIR)/%.checked: | $(CACHE_DIR) .depend
-	$(FSTAR) $<
+	$(FSTAR) $< && \
+	touch -c $@
 
 $(OUT_DIR)/%.ml: | $(OUT_DIR) .depend
 	$(FSTAR) --codegen OCaml \
 	  --extract_module $(basename $(notdir $(subst .checked,,$<))) \
-	  $(notdir $(subst .checked,,$<))
+	  $(notdir $(subst .checked,,$<)) && \
+	touch $@
 
 %.cmx:
 	$(OCAMLOPT) -I $(OUT_DIR) -c $< -o $@

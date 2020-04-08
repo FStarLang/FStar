@@ -2091,7 +2091,7 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
                          sigopts = None; } in
             if no_decl then [impl] else [decl;impl]) |> List.flatten
 
-let mk_data_projector_names iquals env se =
+let mk_data_projector_names iquals env se : list<sigelt> =
   match se.sigel with
   | Sig_datacon(lid, _, t, _, n, _) when (//(not env.iface || env.admitted_iface) &&
                                                 not (lid_equals lid C.lexcons_lid)) ->
@@ -2113,6 +2113,7 @@ let mk_data_projector_names iquals env se =
                 then S.Private::iquals
                 else iquals
             in
+            (* ignoring parameters *)
             let _, rest = BU.first_N n formals in
             mk_indexed_projector_names iquals fv_qual env lid rest
     end

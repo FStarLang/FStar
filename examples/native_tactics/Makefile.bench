@@ -77,6 +77,7 @@ prep: $(addsuffix .fst.checked , Registers.List Registers.Fun Imp.List Imp.Fun) 
 
 %.ml: %.fst.checked
 	$(FSTAR) $*.fst --codegen Plugin --extract $*
+	touch $@
 
 %.Load.run: %.Load.fst
 	$(FSTAR) $< --load Registers.List --load Registers.Fun  --warn_error -266 | grep Checked

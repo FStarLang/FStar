@@ -383,7 +383,7 @@ let load_module_from_cache =
       | Inr tc_result ->
         if Options.debug_at_level_no_module (Options.Other "CheckedFiles") then
           BU.print1 "Successfully loaded module from checked file %s\n" cache_file;
-        Some (tc_result, cache_file)
+        Some tc_result
       (* | _ -> failwith "load_checked_file_tc_result must have an Invalid or Valid entry" *)
     in
     Profiling.profile
