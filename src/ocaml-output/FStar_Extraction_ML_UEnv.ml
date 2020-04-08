@@ -1089,24 +1089,18 @@ let (extend_with_module_name :
   
 let (exit_module : uenv -> uenv) =
   fun g  ->
-    let uu____2769 =
-      let uu____2771 = FStar_Options.codegen ()  in
-      uu____2771 = (FStar_Pervasives_Native.Some FStar_Options.Kremlin)  in
-    if uu____2769
-    then g
-    else
-      (let uu___492_2779 = g  in
-       let uu____2780 = initial_mlident_map ()  in
-       let uu____2784 = initial_mlident_map ()  in
-       {
-         env_tcenv = (uu___492_2779.env_tcenv);
-         env_bindings = (uu___492_2779.env_bindings);
-         env_mlident_map = uu____2780;
-         mlpath_of_lid = (uu___492_2779.mlpath_of_lid);
-         env_fieldname_map = uu____2784;
-         mlpath_of_fieldname = (uu___492_2779.mlpath_of_fieldname);
-         tydefs = (uu___492_2779.tydefs);
-         type_names = (uu___492_2779.type_names);
-         currentModule = (uu___492_2779.currentModule)
-       })
+    let uu___491_2769 = g  in
+    let uu____2770 = initial_mlident_map ()  in
+    let uu____2774 = initial_mlident_map ()  in
+    {
+      env_tcenv = (uu___491_2769.env_tcenv);
+      env_bindings = (uu___491_2769.env_bindings);
+      env_mlident_map = uu____2770;
+      mlpath_of_lid = (uu___491_2769.mlpath_of_lid);
+      env_fieldname_map = uu____2774;
+      mlpath_of_fieldname = (uu___491_2769.mlpath_of_fieldname);
+      tydefs = (uu___491_2769.tydefs);
+      type_names = (uu___491_2769.type_names);
+      currentModule = (uu___491_2769.currentModule)
+    }
   
