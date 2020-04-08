@@ -61,7 +61,11 @@ let rec composable_array_struct' (s0 s1: array_struct) : Tot prop (decreases s0.
   | _ -> False
 
 let rec composable_sym (s0 s1: array_struct)
-    : Lemma(composable_array_struct' s0 s1 <==> composable_array_struct' s1 s0) =
+    : Lemma
+      (requires True)
+      (ensures (composable_array_struct' s0 s1 <==> composable_array_struct' s1 s0))
+      (decreases s0.contents)
+  =
   match s0.contents, s1.contents with
   | Base a0 pcm0, Base a1 pcm1 ->
     ()
@@ -79,8 +83,6 @@ let rec composable_sym (s0 s1: array_struct)
         let val1 = Seq.index s1.value i in
         let sub_s0 = ArrayStruct contents0 val0 in
         let sub_s1 = ArrayStruct contents1 val1 in
-        assume(sub_s0 << s0);
-        assume(sub_s1 << s1);
         composable_sym sub_s0 sub_s1
       in
       Classical.forall_intro aux
@@ -99,8 +101,6 @@ let rec composable_sym (s0 s1: array_struct)
         let val1 = Seq.index s1.value i in
         let sub_s0 = ArrayStruct contents0 val0 in
         let sub_s1 = ArrayStruct contents1 val1 in
-        assume(sub_s0 << s0);
-        assume(sub_s1 << s1);
         composable_sym sub_s0 sub_s1
       in
       Classical.forall_intro aux
@@ -116,6 +116,7 @@ let rec compose_array_struct
   (s0 : array_struct)
   (s1: array_struct{s0 `composable_array_struct` s1})
     : Tot (s':array_struct{s'.contents == s0.contents})
+      (decreases s0.contents)
   =
   match s0.contents, s1.contents with
   | Base a0 pcm0, Base a1 pcm1 ->
@@ -127,8 +128,6 @@ let rec compose_array_struct
         let val1 = Seq.index s1.value i in
         let sub_s0 = ArrayStruct contents0 val0 in
         let sub_s1 = ArrayStruct contents1 val1 in
-        assume(sub_s0 << s0);
-        assume(sub_s1 << s1);
         let new_as : array_struct = compose_array_struct sub_s0 sub_s1 in
         let out : (array_struct_type contents0) = new_as.value in
         out
@@ -136,8 +135,19 @@ let rec compose_array_struct
     in
     ArrayStruct s0.contents new_val
 
+let one_pcm : pcm unit = {
+  p = {
+    composable = (fun () () -> True);
+    op = (fun () () -> ());
+    one = ()
+  };
+  comm = (fun _ _  -> ());
+  assoc = (fun _ _ _ -> ());
+  assoc_r = (fun _ _ _ -> ());
+  is_unit = (fun _ -> ())
+}
 
-let one_array_struct = ArrayStruct (Base unit (magic())) ()
+let one_array_struct = ArrayStruct (Base unit one_pcm) ()
 
 let array_struct_pcm' : pcm' array_struct = {
   composable = composable_array_struct;
