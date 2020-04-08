@@ -68,7 +68,9 @@ val bindings_of_uenv : uenv -> list<binding>
 
 val debug: g:uenv -> f:(unit -> unit) -> unit
 
-val lookup_ty_const: env: uenv -> mlpath -> option<mltyscheme>
+val mkContext : e:TypeChecker.Env.env -> uenv
+
+(*** Looking up identifiers *)
 
 val try_lookup_fv: g:uenv -> fv:fv -> option<exp_binding>
 
@@ -78,11 +80,26 @@ val lookup_bv: g:uenv -> bv: bv -> ty_or_exp_b
 
 val lookup_term: g:uenv -> t:term -> ty_or_exp_b * option<fv_qual>
 
+val lookup_ty: g:uenv -> bv:bv -> ty_binding
+
+val lookup_ty_const : uenv -> mlpath -> option<mltyscheme>
+
 val mlpath_of_lident : uenv -> lident -> mlpath
 
-val extend_ty: g:uenv -> a:bv -> map_to_top:bool -> uenv
+val is_type_name : g:uenv -> fv:fv -> bool
 
-val lookup_ty: g:uenv -> bv:bv -> ty_binding
+val is_fv_type: uenv -> fv -> bool
+                               
+val lookup_record_field_name : uenv -> 
+                               (lident * ident) ->
+                               mlpath
+
+(*** Extending environment *)
+
+
+val new_mlident : g:uenv -> uenv * mlident
+
+val extend_ty: g:uenv -> a:bv -> map_to_top:bool -> uenv
 
 val extend_bv:
     uenv ->
@@ -95,8 +112,6 @@ val extend_bv:
       bool
   -> uenv * mlident * exp_binding
 
-val new_mlident : g:uenv -> uenv * mlident
-
 val extend_fv: g:uenv -> x:fv -> t_x:mltyscheme -> add_unit:bool ->
                is_rec:bool -> uenv * mlident * exp_binding
 
@@ -104,13 +119,8 @@ val extend_lb: g:uenv -> l:lbname -> t:typ -> t_x:mltyscheme -> add_unit:bool ->
     -> uenv * mlident * exp_binding
 
 val extend_tydef : g:uenv -> fv:fv -> ts:mltyscheme -> tydef * mlpath * uenv
+
 val extend_type_name: g:uenv -> fv:fv -> mlpath * uenv
-
-val is_type_name : g:uenv -> fv:fv -> bool
-
-val is_fv_type: uenv -> fv -> bool
-
-val mkContext : e:TypeChecker.Env.env -> uenv
 
 val extend_with_monad_op_name : uenv ->
                           ed:Syntax.eff_decl ->
@@ -133,10 +143,6 @@ val extend_with_action_name: uenv ->
 val extend_record_field_name : uenv ->
                                (lident * ident) ->
                                mlpath * uenv
-                               
-val lookup_record_field_name : uenv -> 
-                               (lident * ident) ->
-                               mlpath
 
 val extend_with_module_name : uenv -> 
                               lident ->

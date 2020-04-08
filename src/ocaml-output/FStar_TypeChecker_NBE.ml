@@ -193,6 +193,8 @@ let (zeta_false : config -> config) =
                FStar_TypeChecker_Cfg.iota =
                  (uu___103_598.FStar_TypeChecker_Cfg.iota);
                FStar_TypeChecker_Cfg.zeta = false;
+               FStar_TypeChecker_Cfg.zeta_full =
+                 (uu___103_598.FStar_TypeChecker_Cfg.zeta_full);
                FStar_TypeChecker_Cfg.weak =
                  (uu___103_598.FStar_TypeChecker_Cfg.weak);
                FStar_TypeChecker_Cfg.hnf =
@@ -2968,6 +2970,8 @@ let (normalize :
                      (uu___1475_9798.FStar_TypeChecker_Cfg.iota);
                    FStar_TypeChecker_Cfg.zeta =
                      (uu___1475_9798.FStar_TypeChecker_Cfg.zeta);
+                   FStar_TypeChecker_Cfg.zeta_full =
+                     (uu___1475_9798.FStar_TypeChecker_Cfg.zeta_full);
                    FStar_TypeChecker_Cfg.weak =
                      (uu___1475_9798.FStar_TypeChecker_Cfg.weak);
                    FStar_TypeChecker_Cfg.hnf =
@@ -3078,6 +3082,8 @@ let (normalize_for_unit_test :
                    (uu___1493_9850.FStar_TypeChecker_Cfg.iota);
                  FStar_TypeChecker_Cfg.zeta =
                    (uu___1493_9850.FStar_TypeChecker_Cfg.zeta);
+                 FStar_TypeChecker_Cfg.zeta_full =
+                   (uu___1493_9850.FStar_TypeChecker_Cfg.zeta_full);
                  FStar_TypeChecker_Cfg.weak =
                    (uu___1493_9850.FStar_TypeChecker_Cfg.weak);
                  FStar_TypeChecker_Cfg.hnf =
