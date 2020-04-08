@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f3549ae5c51566eb966b3a2025f812f6"
+      "511b903a8be86d2657302c819ebe359c"
     ],
     [
       "Ex10b.__proj__Point__item__y",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "7539a2b3d9258e7eae8c10d55518550f"
+      "f10d71907bb93bb4102859661fcd6900"
     ],
     [
       "Ex10b.__proj__Point__item__y",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6ea5e9fa341c91480dd9003944a15dfe"
+      "8a80f8021c6fd997f81ecc169b99acda"
     ],
     [
       "Ex10b.new_point",
@@ -57,7 +57,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "68ddc40be266e559ff0cb659b7950ec0"
+      "2adac7aa25544c01e156d4b5c145d137"
     ],
     [
       "Ex10b.new_point",
@@ -91,7 +91,7 @@
         "typing_FStar.Monotonic.Heap.addr_of", "typing_FStar.Set.empty"
       ],
       0,
-      "cd422ae36493e2c99460e0836010b81d"
+      "1b06192772509ab855f04c24a560a7cb"
     ],
     [
       "Ex10b.shift_x",
@@ -100,7 +100,7 @@
       1,
       [ "@query" ],
       0,
-      "b5a37cebe00e8b33af2da23851cdac64"
+      "63fb30d00617a245d7fcc6e5c2fdb7f0"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -114,7 +114,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "f4ed7c67ce427ae3209b6048b0297937"
+      "467d78a6cbfb528050b14ef91baee585"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -128,7 +128,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "59e8b3a6c10637ef0b3ae81468cef795"
+      "548820136470a11831bbb40c0086c603"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -167,7 +167,7 @@
         "typing_FStar.Monotonic.Heap.only"
       ],
       0,
-      "7752565e3e5c46ce695a3d34ea4585bf"
+      "cdd854cb5102d05ce8c15226b8cb35a8"
     ],
     [
       "Ex10b.test1",
@@ -195,7 +195,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "df0a790ca234797cb67f7b2e79a8d0cc"
+      "254cd7edcbf178d9e044c4175e39b85c"
     ],
     [
       "Ex10b.test2",
@@ -222,7 +222,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "477a0a2621e1b4a3149323cbcece508f"
+      "98dbdfb14d5ad7cd68d0dfeb7b8dbdc8"
     ],
     [
       "Ex10b.shift_p1",
@@ -236,7 +236,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "75052eb7d4b5b3ba444f4f4bac6f5b2b"
+      "bc14f77f59042200a33cb21c1c996f4b"
     ],
     [
       "Ex10b.shift_p1",
@@ -250,7 +250,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6ce141ca7dd7257c8a43b92eb6864522"
+      "c412a340e92961eda1a25f37c377ef34"
     ],
     [
       "Ex10b.shift_p1",
@@ -294,7 +294,7 @@
         "typing_FStar.Monotonic.Heap.op_Hat_Plus_Hat", "typing_FStar.Set.mem"
       ],
       0,
-      "01af216aa3e872fceba5304ec40ba664"
+      "86e52ec0634f6a62b8105113ee75764f"
     ],
     [
       "Ex10b.test",
@@ -322,7 +322,7 @@
         "typing_FStar.Heap.trivial_preorder"
       ],
       0,
-      "f27f04c77c02f62182cad87a1e63fdba"
+      "36062ba39e97303dbbdda34af85592b2"
     ],
     [
       "Ex10b.point",
@@ -336,7 +336,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3b2ae045c12f17a78eb85feebc4508d9"
+      "75779333490d959b18fb266da6e66c23"
     ],
     [
       "Ex10b.__proj__Point__item__y",
@@ -350,7 +350,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e3fbb8d1730a8a83e0234e6597f9880c"
+      "06bf5ed318d45c1c0400b435776cdcb8"
     ],
     [
       "Ex10b.__proj__Point__item__y",
@@ -366,7 +366,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "41ab928425e7c34407c03787883f9195"
+      "db65c3cb0d3dc1323f2769ab5ef9f7fd"
     ],
     [
       "Ex10b.new_point",
@@ -380,7 +380,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "7677ef9ffbb17878ecec87a8152c816f"
+      "692957f17b6f38ef65816b60aeb4267b"
     ],
     [
       "Ex10b.shift_x_p1",
@@ -394,7 +394,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "fdd337aba9fbfc8add98254ebab0a1b0"
+      "3ae809990b5e5e7c62748b6220111463"
     ],
     [
       "Ex10b.shift_p1",
@@ -408,7 +408,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "58acacaf974163c953f50caab67fe086"
+      "3503b3b42eb2a6bb7a067179108d35f5"
     ]
   ]
 ]
