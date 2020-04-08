@@ -43,8 +43,8 @@ let rec array_struct_type (descriptor: array_struct_descriptor u#a) : Tot (Type 
   match descriptor with
   | Base a pcm -> a
   | Array descriptor' len ->
-    let type' = array_struct_type descriptor' in
-    Seq.lseq type' (v_usize len)
+    let typ' = array_struct_type descriptor' in
+    Seq.lseq typ' (v_usize len)
   | Struct field_descriptors ->
     DepMap.t field_id (fun field_id -> match field_descriptors field_id with
       | Some descr ->
