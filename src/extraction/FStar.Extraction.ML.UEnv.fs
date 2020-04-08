@@ -542,5 +542,10 @@ let extend_with_module_name (g:uenv) (m:lid) =
   (ns, p), g
 
 let exit_module g =
-  { g with env_mlident_map=initial_mlident_map();
-           env_fieldname_map=initial_mlident_map()}
+  if Options.codegen() = Some Options.Kremlin
+  then g //Don't reset the used name sets for Kremlin.
+         //Otherwise we end up with collisions among local names
+         //and types that confuses Kremlin
+  else
+    { g with env_mlident_map=initial_mlident_map();
+             env_fieldname_map=initial_mlident_map()}
