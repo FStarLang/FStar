@@ -42,8 +42,7 @@ type ty_binding = {
 type exp_binding = {
   exp_b_name:mlident;
   exp_b_expr:mlexpr;
-  exp_b_tscheme:mltyscheme;
-  exp_b_inst_ok:bool
+  exp_b_tscheme:mltyscheme
 }
 
 type ty_or_exp_b = either<ty_binding, exp_binding>
@@ -112,17 +111,16 @@ val extend_bv:
     bv ->
     mltyscheme ->
     add_unit: bool ->
-    is_rec: bool ->
     mk_unit:
       (*some pattern terms become unit while extracting*)
       bool
   -> uenv * mlident * exp_binding
 
 val extend_fv: g:uenv -> x:fv -> t_x:mltyscheme -> add_unit:bool ->
-               is_rec:bool -> uenv * mlident * exp_binding
+               uenv * mlident * exp_binding
 
-val extend_lb: g:uenv -> l:lbname -> t:typ -> t_x:mltyscheme -> add_unit:bool -> is_rec: bool
-    -> uenv * mlident * exp_binding
+val extend_lb: g:uenv -> l:lbname -> t:typ -> t_x:mltyscheme -> add_unit:bool
+               -> uenv * mlident * exp_binding
 
 val extend_tydef : g:uenv -> fv:fv -> ts:mltyscheme -> tydef * mlpath * uenv
 

@@ -76,15 +76,11 @@ type ty_binding = {
          needed to add a thunk to respect ML's value restriction.
 
       -- [exp_b_tscheme] the polymorphic ML type
-
-      -- [exp_b_inst_ok] a flag that tells whether its okay for this
-         identifier to be instantiated. It's set for recursive definitions.
  *)
 type exp_binding = {
   exp_b_name: mlident;
   exp_b_expr: mlexpr;
-  exp_b_tscheme: mltyscheme;
-  exp_b_inst_ok: bool
+  exp_b_tscheme: mltyscheme
 }
 
 type ty_or_exp_b = either<ty_binding, exp_binding>
@@ -421,7 +417,7 @@ let extend_ty (g:uenv) (a:bv) (map_to_top:bool) : uenv =
     - [is_rec] if the variable is bound to a local recursive definition
     - [mk_unit] if every use of the variable to be erased to [()]
   *)
-let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
+let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool)
               (mk_unit:bool (*some pattern terms become unit while extracting*))
     : uenv
     * mlident
@@ -437,7 +433,7 @@ let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
               then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit])
               else with_ty ml_ty mlx in
     let t_x = if add_unit then pop_unit t_x else t_x in
-    let exp_binding = {exp_b_name=mlident; exp_b_expr=mlx; exp_b_tscheme=t_x; exp_b_inst_ok=false} in
+    let exp_binding = {exp_b_name=mlident; exp_b_expr=mlx; exp_b_tscheme=t_x } in
     let gamma = Bv(x, Inr exp_binding)::g.env_bindings in
     let tcenv = TypeChecker.Env.push_binders g.env_tcenv (binders_of_list [x]) in
     {g with env_bindings=gamma; env_mlident_map = mlident_map; env_tcenv=tcenv}, mlident, exp_binding
@@ -447,11 +443,11 @@ let new_mlident (g:uenv)
   : uenv * mlident
   = let ml_ty = MLTY_Top in
     let x = FStar.Syntax.Syntax.new_bv None FStar.Syntax.Syntax.tun in
-    let g, id, _ = extend_bv g x ([], MLTY_Top) false false false in
+    let g, id, _ = extend_bv g x ([], MLTY_Top) false false in
     g, id
 
 (** Similar to [extend_bv], except for top-level term identifiers *)
-let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
+let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool)
     : uenv
     * mlident
     * exp_binding =
@@ -482,23 +478,23 @@ let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
         let mly = MLE_Name mlpath in
         let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
         let t_x = if add_unit then pop_unit t_x else t_x in
-        let exp_binding = {exp_b_name=mlsymbol; exp_b_expr=mly; exp_b_tscheme=t_x; exp_b_inst_ok=false} in
+        let exp_binding = {exp_b_name=mlsymbol; exp_b_expr=mly; exp_b_tscheme=t_x } in
         let gamma = Fv(x, exp_binding)::g.env_bindings in
         let mlident_map = BU.psmap_add g.env_mlident_map mlsymbol "" in
         {g with env_bindings=gamma; env_mlident_map=mlident_map}, mlsymbol, exp_binding
     else failwith "freevars found"
 
 (** Extend with a let binding, either local or top-level *)
-let extend_lb (g:uenv) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) (is_rec:bool)
+let extend_lb (g:uenv) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool)
     : uenv
     * mlident
     * exp_binding =
     match l with
     | Inl x ->
         // FIXME missing in lib; NS: what does this mean??
-        extend_bv g x t_x add_unit is_rec false
+        extend_bv g x t_x add_unit false
     | Inr f ->
-        extend_fv g f t_x add_unit is_rec
+        extend_fv g f t_x add_unit
 
 (** Extend with an abbreviation [fv] for the type scheme [ts] *)
 let extend_tydef (g:uenv) (fv:fv) (ts:mltyscheme) : tydef * mlpath * uenv =
@@ -526,7 +522,7 @@ let extend_with_monad_op_name g (ed:Syntax.eff_decl) nm ts =
     (* Extract bind and return of effects as (unqualified) projectors of that effect, *)
     (* same as for actions. However, extracted code should not make explicit use of them. *)
     let lid = U.mk_field_projector_name_from_ident ed.mname (id_of_text nm) in
-    let g, mlid, exp_b = extend_fv g (lid_as_fv lid delta_constant None) ts false false in
+    let g, mlid, exp_b = extend_fv g (lid_as_fv lid delta_constant None) ts false in
     let mlp = mlns_of_lid lid, mlid in
     mlp, lid, exp_b, g
 
@@ -536,7 +532,7 @@ let extend_with_action_name g (ed:Syntax.eff_decl) (a:Syntax.action) ts =
     let nm = a.action_name.ident.idText in
     let module_name = ed.mname.ns in
     let lid = Ident.lid_of_ids (module_name@[Ident.id_of_text nm]) in
-    let g, mlid, exp_b = extend_fv g (lid_as_fv lid delta_constant None) ts false false in
+    let g, mlid, exp_b = extend_fv g (lid_as_fv lid delta_constant None) ts false in
     let mlp = mlns_of_lid lid, mlid in
     mlp, lid, exp_b, g
 
@@ -595,6 +591,6 @@ let new_uenv (e:TypeChecker.Env.env)
     let a = "'a" in
     let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
     let g, _, _ =
-        extend_lb env (Inr (lid_as_fv Const.failwith_lid delta_constant None)) tun failwith_ty false false
+        extend_lb env (Inr (lid_as_fv Const.failwith_lid delta_constant None)) tun failwith_ty false
     in
     g

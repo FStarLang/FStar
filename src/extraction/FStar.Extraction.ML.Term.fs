@@ -753,7 +753,7 @@ and binders_as_ml_binders (g:uenv) (bs:binders) : list<(mlident * mlty)> * uenv 
                  ml_b::ml_bs, env
             else let b = fst b in
                  let t = translate_term_to_mlty env b.sort in
-                 let env, b, _ = extend_bv env b ([], t) false false false in
+                 let env, b, _ = extend_bv env b ([], t) false false in
                  let ml_b = b, t in
                  ml_b::ml_bs, env)
     ([], g) in
@@ -869,7 +869,7 @@ let rec extract_one_pat (imp : bool)
         // JP,NS: Pat_wild turns into a binder in the internal syntax because
         // the types of other terms may depend on it
         let mlty = term_as_mlty g x.sort in
-        let g, x, _ = extend_bv g x ([], mlty) false false imp in
+        let g, x, _ = extend_bv g x ([], mlty) false imp in
         g, (if imp then None else Some (MLP_Var x, [])), ok mlty
 
     | Pat_dot_term _ ->
@@ -1126,7 +1126,7 @@ let extract_lb_iface (g:uenv) (lbs:letbindings)
     BU.fold_map (fun env
                      (lbname, e_tag, (typ, (binders, mltyscheme)), add_unit, _body) ->
                   let env, _, exp_binding =
-                      UEnv.extend_lb env lbname typ mltyscheme add_unit is_rec in
+                      UEnv.extend_lb env lbname typ mltyscheme add_unit in
                   env, (BU.right lbname, exp_binding))
                 g
                 lbs
@@ -1439,29 +1439,21 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                     | Tm_name _
                     | Tm_fvar _ ->
                        //             debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
-                      let (head_ml, (vars, t), inst_ok), qual =
+                      let (head_ml, (vars, t)), qual =
                         match lookup_term g head with
                         | Inr exp_b, q ->
                           debug g (fun () ->
-                              BU.print4 "@@@looked up %s: got %s at %s (inst_ok=%s)\n"
+                              BU.print3 "@@@looked up %s: got %s at %s\n"
                                   (Print.term_to_string head)
                                   (Code.string_of_mlexpr (current_module_of_uenv g) exp_b.exp_b_expr)
-                                  (Code.string_of_mlty (current_module_of_uenv g) (snd exp_b.exp_b_tscheme))
-                                  (BU.string_of_bool exp_b.exp_b_inst_ok));
-                          (exp_b.exp_b_expr, exp_b.exp_b_tscheme, exp_b.exp_b_inst_ok), q
+                                  (Code.string_of_mlty (current_module_of_uenv g) (snd exp_b.exp_b_tscheme)));
+                          (exp_b.exp_b_expr, exp_b.exp_b_tscheme), q
                         | _ -> failwith "FIXME Ty" in
 
                       let has_typ_apps = match args with
                         | (a, _)::_ -> is_type g a
                         | _ -> false in
                       let head_ml, head_t, args =
-                        match vars with
-                        | _::_ when ((not has_typ_apps) && inst_ok) ->
-                          (* no explicit type applications although some were expected; but instantiation is permissible *)
-                          //              debug g (fun () -> printfn "Taking the type of %A to be %A\n" head_ml t);
-                          head_ml, t, args
-
-                        | _ ->
                           (* Here, we have, say, f extracted to head_ml, with a polymorphic ML type with n type-args
                              If, in F*, `f` is applied to exactly `n` type args, then things are easy:
                                We extract those n arguments to ML types
@@ -1663,7 +1655,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
 
           let env_body, lbs = List.fold_right (fun lb (env, lbs) ->
               let (lbname, _, (t, (_, polytype)), add_unit, _) = lb in
-              let env, nm, _ = UEnv.extend_lb env lbname t polytype add_unit true in
+              let env, nm, _ = UEnv.extend_lb env lbname t polytype add_unit in
               env, (nm,lb)::lbs) lbs (g, []) in
 
           let env_def = if is_rec then env_body else g in

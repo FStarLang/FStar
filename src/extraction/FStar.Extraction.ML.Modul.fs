@@ -258,11 +258,10 @@ let mlpath_to_string (p:mlpath) =
 let tscheme_to_string cm ts =
         (Code.string_of_mlty cm (snd ts))
 let print_exp_binding cm e =
-    BU.format4 "{\n\texp_b_name = %s\n\texp_b_expr = %s\n\texp_b_tscheme = %s\n\texp_b_is_rec = %s }"
+    BU.format3 "{\n\texp_b_name = %s\n\texp_b_expr = %s\n\texp_b_tscheme = %s }"
         e.exp_b_name
         (Code.string_of_mlexpr cm e.exp_b_expr)
         (tscheme_to_string cm e.exp_b_tscheme)
-        (BU.string_of_bool e.exp_b_inst_ok)
 let print_binding cm (fv, exp_binding) =
     BU.format2 "(%s, %s)"
             (Print.fv_to_string fv)
@@ -399,7 +398,7 @@ let extract_bundle_iface env se
                     (Term.term_as_mlty env_iparams ctor.dtyp) in
         let tys = (ml_tyvars, mlt) in
         let fvv = lid_as_fv ctor.dname delta_constant None in
-        let env, _, b = extend_fv env fvv tys false false in
+        let env, _, b = extend_fv env fvv tys false in
         env, (fvv, b)
     in
 
@@ -684,7 +683,7 @@ let extract_bundle env se =
         in
         let tys = (ml_tyvars, mlt) in
         let fvv = lid_as_fv ctor.dname delta_constant None in
-        let env, mls, _ = extend_fv env fvv tys false false in
+        let env, mls, _ = extend_fv env fvv tys false in
         env,
         (mls, List.zip names (argTypes mlt)) in
 
@@ -901,10 +900,9 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                                                 (right lbname)
                                                 (must ml_lb.mllb_tysc)
                                                 ml_lb.mllb_add_unit
-                                                false
                                      in
                                      env, {ml_lb with mllb_name=mls }
-                                else let env, _, _ = UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit false in
+                                else let env, _, _ = UEnv.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit in
                                      env, ml_lb in
                         g, ml_lb::ml_lbs)
                 (g, [])
