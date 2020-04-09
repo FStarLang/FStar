@@ -1,13 +1,13 @@
 open Prims
 let (always : Prims.int -> Prims.bool -> unit) =
-  fun id  ->
+  fun id1  ->
     fun b  ->
       if b
       then ()
       else
         (let uu____17 =
            let uu____23 =
-             let uu____25 = FStar_Util.string_of_int id  in
+             let uu____25 = FStar_Util.string_of_int id1  in
              FStar_Util.format1 "Assertion failed: test %s" uu____25  in
            (FStar_Errors.Fatal_AssertionFailure, uu____23)  in
          FStar_Errors.raise_error uu____17 FStar_Range.dummyRange)
@@ -32,7 +32,7 @@ let (m : FStar_Syntax_Syntax.bv) =
   FStar_Syntax_Syntax.gen_bv "m" FStar_Pervasives_Native.None
     FStar_Syntax_Syntax.tun
   
-let tm : 'uuuuuu44 . 'uuuuuu44 -> 'uuuuuu44 FStar_Syntax_Syntax.syntax =
+let tm : 'Auu____44 . 'Auu____44 -> 'Auu____44 FStar_Syntax_Syntax.syntax =
   fun t  ->
     FStar_Syntax_Syntax.mk t FStar_Pervasives_Native.None
       FStar_Range.dummyRange
@@ -127,8 +127,8 @@ let rec (term_eq' :
           term_eq' t s
       | (FStar_Syntax_Syntax.Tm_constant c1,FStar_Syntax_Syntax.Tm_constant
          c2) -> FStar_Const.eq_const c1 c2
-      | (FStar_Syntax_Syntax.Tm_type u,FStar_Syntax_Syntax.Tm_type v) ->
-          u = v
+      | (FStar_Syntax_Syntax.Tm_type u,FStar_Syntax_Syntax.Tm_type v1) ->
+          u = v1
       | (FStar_Syntax_Syntax.Tm_abs
          (xs,t,uu____580),FStar_Syntax_Syntax.Tm_abs (ys,u,uu____583)) when
           (FStar_List.length xs) = (FStar_List.length ys) ->

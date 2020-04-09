@@ -1,9 +1,9 @@
 open Prims
 type inst_t = (FStar_Ident.lident * FStar_Syntax_Syntax.universes) Prims.list
 let mk :
-  'uuuuuu14 'uuuuuu15 .
-    'uuuuuu14 FStar_Syntax_Syntax.syntax ->
-      'uuuuuu15 -> 'uuuuuu15 FStar_Syntax_Syntax.syntax
+  'Auu____14 'Auu____15 .
+    'Auu____14 FStar_Syntax_Syntax.syntax ->
+      'Auu____15 -> 'Auu____15 FStar_Syntax_Syntax.syntax
   =
   fun t  ->
     fun s  ->

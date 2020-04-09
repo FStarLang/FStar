@@ -47,8 +47,8 @@ let bind : 'a 'b . 'a tac -> ('a -> 'b tac) -> 'b tac =
         (fun ps  ->
            let uu____200 = run t1 ps  in
            match uu____200 with
-           | FStar_Tactics_Result.Success (a1,q) ->
-               let uu____207 = t2 a1  in run uu____207 q
+           | FStar_Tactics_Result.Success (a,q) ->
+               let uu____207 = t2 a  in run uu____207 q
            | FStar_Tactics_Result.Failed (msg,q) ->
                FStar_Tactics_Result.Failed (msg, q))
   
@@ -218,18 +218,18 @@ let (cur_goal : FStar_Tactics_Types.goal tac) =
     (fun uu___0_579  ->
        match uu___0_579 with
        | [] -> fail "No more goals"
-       | hd::tl ->
-           let uu____589 = FStar_Tactics_Types.check_goal_solved' hd  in
+       | hd1::tl1 ->
+           let uu____589 = FStar_Tactics_Types.check_goal_solved' hd1  in
            (match uu____589 with
-            | FStar_Pervasives_Native.None  -> ret hd
+            | FStar_Pervasives_Native.None  -> ret hd1
             | FStar_Pervasives_Native.Some t ->
                 ((let uu____596 =
-                    FStar_Tactics_Printing.goal_to_string_verbose hd  in
+                    FStar_Tactics_Printing.goal_to_string_verbose hd1  in
                   let uu____598 = FStar_Syntax_Print.term_to_string t  in
                   FStar_Util.print2
                     "!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n"
                     uu____596 uu____598);
-                 ret hd)))
+                 ret hd1)))
   
 let (remove_solved_goals : unit tac) =
   bind cur_goals
@@ -569,8 +569,8 @@ let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
         (fun ps  ->
            let uu____1019 = run t ps  in
            match uu____1019 with
-           | FStar_Tactics_Result.Success (a1,q) ->
-               FStar_Tactics_Result.Success (a1, q)
+           | FStar_Tactics_Result.Success (a,q) ->
+               FStar_Tactics_Result.Success (a, q)
            | FStar_Tactics_Result.Failed
                (FStar_Tactics_Types.TacticFailure msg,q) ->
                FStar_Tactics_Result.Failed

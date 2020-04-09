@@ -20,16 +20,16 @@ let (parse_mod :
     FStar_Syntax_DsEnv.env ->
       (FStar_Syntax_DsEnv.env * FStar_Syntax_Syntax.modul))
   =
-  fun mod_name  ->
-    fun dsenv  ->
+  fun mod_name1  ->
+    fun dsenv1  ->
       let uu____35 =
-        FStar_Parser_ParseIt.parse (FStar_Parser_ParseIt.Filename mod_name)
+        FStar_Parser_ParseIt.parse (FStar_Parser_ParseIt.Filename mod_name1)
          in
       match uu____35 with
       | FStar_Parser_ParseIt.ASTFragment (FStar_Util.Inl m,uu____41) ->
           let uu____58 =
             let uu____63 = FStar_ToSyntax_ToSyntax.ast_modul_to_modul m  in
-            uu____63 dsenv  in
+            uu____63 dsenv1  in
           (match uu____58 with
            | (m1,env') ->
                let uu____74 =
@@ -44,7 +44,8 @@ let (parse_mod :
           FStar_Exn.raise (FStar_Errors.Error (err, msg, r))
       | FStar_Parser_ParseIt.ASTFragment (FStar_Util.Inr uu____104,uu____105)
           ->
-          let msg = FStar_Util.format1 "%s: expected a module\n" mod_name  in
+          let msg = FStar_Util.format1 "%s: expected a module\n" mod_name1
+             in
           FStar_Errors.raise_error (FStar_Errors.Fatal_ModuleExpected, msg)
             FStar_Range.dummyRange
       | FStar_Parser_ParseIt.Term uu____132 ->
@@ -58,32 +59,32 @@ let (add_mods :
         (FStar_Syntax_DsEnv.env * FStar_TypeChecker_Env.env))
   =
   fun mod_names  ->
-    fun dsenv  ->
+    fun dsenv1  ->
       fun env  ->
         FStar_List.fold_left
           (fun uu____179  ->
-             fun mod_name  ->
+             fun mod_name1  ->
                match uu____179 with
-               | (dsenv1,env1) ->
-                   let uu____192 = parse_mod mod_name dsenv1  in
+               | (dsenv2,env1) ->
+                   let uu____192 = parse_mod mod_name1 dsenv2  in
                    (match uu____192 with
-                    | (dsenv2,string_mod) ->
+                    | (dsenv3,string_mod) ->
                         let uu____203 =
                           FStar_TypeChecker_Tc.check_module env1 string_mod
                             false
                            in
-                        (match uu____203 with | (_mod,env2) -> (dsenv2, env2))))
-          (dsenv, env) mod_names
+                        (match uu____203 with | (_mod,env2) -> (dsenv3, env2))))
+          (dsenv1, env) mod_names
   
 let (init_once : unit -> unit) =
   fun uu____220  ->
-    let solver = FStar_SMTEncoding_Solver.dummy  in
+    let solver1 = FStar_SMTEncoding_Solver.dummy  in
     let env =
       FStar_TypeChecker_Env.initial_env FStar_Parser_Dep.empty_deps
         FStar_TypeChecker_TcTerm.tc_term
         FStar_TypeChecker_TcTerm.type_of_tot_term
         FStar_TypeChecker_TcTerm.universe_of
-        FStar_TypeChecker_TcTerm.check_type_of_well_typed_term solver
+        FStar_TypeChecker_TcTerm.check_type_of_well_typed_term solver1
         FStar_Parser_Const.prims_lid
         FStar_TypeChecker_NBE.normalize_for_unit_test
        in
@@ -94,7 +95,7 @@ let (init_once : unit -> unit) =
          FStar_Syntax_DsEnv.empty_env FStar_Parser_Dep.empty_deps  in
        parse_mod uu____229 uu____231  in
      match uu____224 with
-     | (dsenv,prims_mod) ->
+     | (dsenv1,prims_mod) ->
          let env1 =
            let uu___46_235 = env  in
            {
@@ -184,7 +185,7 @@ let (init_once : unit -> unit) =
                (uu___46_235.FStar_TypeChecker_Env.identifier_info);
              FStar_TypeChecker_Env.tc_hooks =
                (uu___46_235.FStar_TypeChecker_Env.tc_hooks);
-             FStar_TypeChecker_Env.dsenv = dsenv;
+             FStar_TypeChecker_Env.dsenv = dsenv1;
              FStar_TypeChecker_Env.nbe =
                (uu___46_235.FStar_TypeChecker_Env.nbe);
              FStar_TypeChecker_Env.strict_args_tab =
@@ -285,7 +286,7 @@ let (init_once : unit -> unit) =
                     (uu___52_245.FStar_TypeChecker_Env.identifier_info);
                   FStar_TypeChecker_Env.tc_hooks =
                     (uu___52_245.FStar_TypeChecker_Env.tc_hooks);
-                  FStar_TypeChecker_Env.dsenv = dsenv;
+                  FStar_TypeChecker_Env.dsenv = dsenv1;
                   FStar_TypeChecker_Env.nbe =
                     (uu___52_245.FStar_TypeChecker_Env.nbe);
                   FStar_TypeChecker_Env.strict_args_tab =
@@ -327,7 +328,7 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
              let uu____334 =
                let uu____335 =
                  FStar_All.pipe_left
-                   (fun uu____336  -> FStar_Parser_ParseIt.Fragment uu____336)
+                   (fun _336  -> FStar_Parser_ParseIt.Fragment _336)
                    (frag_of_text s)
                   in
                FStar_Parser_ParseIt.parse uu____335  in
@@ -576,54 +577,54 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
     FStar_Options.set_option "trace_error" (FStar_Options.Bool true);
     (let report uu____470 =
        let uu____471 = FStar_Errors.report_all ()  in
-       FStar_All.pipe_right uu____471 (fun uu____476  -> ())  in
+       FStar_All.pipe_right uu____471 (fun a1  -> ())  in
      try
-       (fun uu___116_480  ->
+       (fun uu___116_479  ->
           match () with
           | () ->
               let tcenv = init ()  in
               let frag = frag_of_text s  in
               (try
-                 (fun uu___124_492  ->
+                 (fun uu___124_491  ->
                     match () with
                     | () ->
-                        let uu____493 =
-                          let uu____500 = FStar_ST.op_Bang test_mod_ref  in
-                          FStar_Universal.tc_one_fragment uu____500 tcenv
+                        let uu____492 =
+                          let uu____499 = FStar_ST.op_Bang test_mod_ref  in
+                          FStar_Universal.tc_one_fragment uu____499 tcenv
                             frag
                            in
-                        (match uu____493 with
+                        (match uu____492 with
                          | (test_mod',tcenv') ->
                              (FStar_ST.op_Colon_Equals test_mod_ref test_mod';
                               FStar_ST.op_Colon_Equals tcenv_ref
                                 (FStar_Pervasives_Native.Some tcenv');
-                              (let n = FStar_Errors.get_err_count ()  in
-                               if n <> Prims.int_zero
+                              (let n1 = FStar_Errors.get_err_count ()  in
+                               if n1 <> Prims.int_zero
                                then
                                  (report ();
-                                  (let uu____586 =
-                                     let uu____592 =
-                                       let uu____594 =
-                                         FStar_Util.string_of_int n  in
+                                  (let uu____585 =
+                                     let uu____591 =
+                                       let uu____593 =
+                                         FStar_Util.string_of_int n1  in
                                        FStar_Util.format1
-                                         "%s errors were reported" uu____594
+                                         "%s errors were reported" uu____593
                                         in
                                      (FStar_Errors.Fatal_ErrorsReported,
-                                       uu____592)
+                                       uu____591)
                                       in
-                                   FStar_Errors.raise_err uu____586))
+                                   FStar_Errors.raise_err uu____585))
                                else ())))) ()
                with
-               | uu___123_602 ->
+               | uu___123_601 ->
                    (report ();
                     FStar_Errors.raise_err
                       (FStar_Errors.Fatal_TcOneFragmentFailed,
                         (Prims.op_Hat "tc_one_fragment failed: " s))))) ()
      with
-     | uu___115_607 ->
+     | uu___115_606 ->
          if
-           let uu____608 = FStar_Options.trace_error ()  in
-           Prims.op_Negation uu____608
-         then Obj.magic (Obj.repr (FStar_Exn.raise uu___115_607))
+           let uu____607 = FStar_Options.trace_error ()  in
+           Prims.op_Negation uu____607
+         then Obj.magic (Obj.repr (FStar_Exn.raise uu___115_606))
          else Obj.magic (Obj.repr (failwith "unreachable")))
   

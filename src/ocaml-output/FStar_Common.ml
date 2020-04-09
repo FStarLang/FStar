@@ -52,24 +52,24 @@ let rollback :
   fun pop  ->
     fun stackref  ->
       fun depth  ->
-        let rec aux n =
-          if n <= Prims.int_zero
+        let rec aux n1 =
+          if n1 <= Prims.int_zero
           then failwith "Too many pops"
           else
-            if n = Prims.int_one
+            if n1 = Prims.int_one
             then pop ()
-            else ((let uu____218 = pop ()  in ()); aux (n - Prims.int_one))
+            else ((let uu____218 = pop ()  in ()); aux (n1 - Prims.int_one))
            in
         let curdepth =
           let uu____221 = FStar_ST.op_Bang stackref  in
           FStar_List.length uu____221  in
-        let n =
+        let n1 =
           match depth with
           | FStar_Pervasives_Native.Some d -> curdepth - d
           | FStar_Pervasives_Native.None  -> Prims.int_one  in
-        FStar_Util.atomically (fun uu____256  -> aux n)
+        FStar_Util.atomically (fun uu____256  -> aux n1)
   
-let raise_failed_assertion : 'uuuuuu262 . Prims.string -> 'uuuuuu262 =
+let raise_failed_assertion : 'Auu____262 . Prims.string -> 'Auu____262 =
   fun msg  ->
     let uu____270 = FStar_Util.format1 "Assertion failed: %s" msg  in
     failwith uu____270
@@ -98,9 +98,9 @@ let list_of_option : 'a . 'a FStar_Pervasives_Native.option -> 'a Prims.list
     | FStar_Pervasives_Native.Some x -> [x]
   
 let string_of_option :
-  'uuuuuu360 .
-    ('uuuuuu360 -> Prims.string) ->
-      'uuuuuu360 FStar_Pervasives_Native.option -> Prims.string
+  'Auu____360 .
+    ('Auu____360 -> Prims.string) ->
+      'Auu____360 FStar_Pervasives_Native.option -> Prims.string
   =
   fun f  ->
     fun uu___0_377  ->
@@ -110,10 +110,10 @@ let string_of_option :
           let uu____385 = f x  in Prims.op_Hat "Some " uu____385
   
 let tabulate : 'a . Prims.int -> (Prims.int -> 'a) -> 'a Prims.list =
-  fun n  ->
+  fun n1  ->
     fun f  ->
       let rec aux i =
-        if i < n
+        if i < n1
         then
           let uu____430 = f i  in
           let uu____431 = aux (i + Prims.int_one)  in uu____430 :: uu____431

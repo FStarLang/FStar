@@ -48,7 +48,7 @@ let print_discrepancy :
   fun f  ->
     fun x  ->
       fun y  ->
-        let print uu____229 =
+        let print7 uu____229 =
           let xs = f x  in let ys = f y  in (xs, ys, (xs <> ys))  in
         let rec blist_leq l1 l2 =
           match (l1, l2) with
@@ -69,13 +69,13 @@ let print_discrepancy :
           | uu____395 -> failwith "print_discrepancy: impossible"  in
         let set_bool_option s b =
           FStar_Options.set_option s (FStar_Options.Bool b)  in
-        let get uu____421 =
+        let get1 uu____421 =
           let pi = get_bool_option "print_implicits"  in
           let pu = get_bool_option "print_universes"  in
           let pea = get_bool_option "print_effect_args"  in
           let pf = get_bool_option "print_full_names"  in [pi; pu; pea; pf]
            in
-        let set l =
+        let set1 l =
           match l with
           | pi::pu::pea::pf::[] ->
               (set_bool_option "print_implicits" pi;
@@ -83,19 +83,19 @@ let print_discrepancy :
                set_bool_option "print_effect_args" pea;
                set_bool_option "print_full_names " pf)
           | uu____474 -> failwith "impossible: print_discrepancy"  in
-        let bas = get ()  in
+        let bas = get1 ()  in
         let rec go cur =
           match () with
           | () when full cur ->
-              let uu____507 = print ()  in
+              let uu____507 = print7 ()  in
               (match uu____507 with | (xs,ys,uu____525) -> (xs, ys))
           | () when
               let uu____534 = blist_leq bas cur  in
               Prims.op_Negation uu____534 ->
               let uu____536 = succ cur  in go uu____536
           | () ->
-              (set cur;
-               (let uu____541 = print ()  in
+              (set1 cur;
+               (let uu____541 = print7 ()  in
                 match uu____541 with
                 | (xs,ys,true ) -> (xs, ys)
                 | uu____567 -> let uu____577 = succ cur  in go uu____577))
@@ -103,11 +103,11 @@ let print_discrepancy :
         FStar_Options.with_saved_options (fun uu____588  -> go bas)
   
 let errors_smt_detail :
-  'uuuuuu598 .
+  'Auu____598 .
     FStar_TypeChecker_Env.env ->
-      ('uuuuuu598 * Prims.string * FStar_Range.range) Prims.list ->
+      ('Auu____598 * Prims.string * FStar_Range.range) Prims.list ->
         (Prims.string,Prims.string) FStar_Util.either ->
-          ('uuuuuu598 * Prims.string * FStar_Range.range) Prims.list
+          ('Auu____598 * Prims.string * FStar_Range.range) Prims.list
   =
   fun env  ->
     fun errs  ->
@@ -356,8 +356,8 @@ let (occurs_check : (FStar_Errors.raw_error * Prims.string)) =
     "Possibly infinite typ (occurs check failed)")
   
 let constructor_fails_the_positivity_check :
-  'uuuuuu1272 .
-    'uuuuuu1272 ->
+  'Auu____1272 .
+    'Auu____1272 ->
       FStar_Syntax_Syntax.term ->
         FStar_Ident.lid -> (FStar_Errors.raw_error * Prims.string)
   =
@@ -444,9 +444,9 @@ let (disjunctive_pattern_vars :
   =
   fun v1  ->
     fun v2  ->
-      let vars v =
+      let vars v3 =
         let uu____1440 =
-          FStar_All.pipe_right v
+          FStar_All.pipe_right v3
             (FStar_List.map FStar_Syntax_Print.bv_to_string)
            in
         FStar_All.pipe_right uu____1440 (FStar_String.concat ", ")  in
@@ -474,9 +474,9 @@ let (name_and_result :
         (uu____1516, (ct.FStar_Syntax_Syntax.result_typ))
   
 let computed_computation_type_does_not_match_annotation :
-  'uuuuuu1532 .
+  'Auu____1532 .
     FStar_TypeChecker_Env.env ->
-      'uuuuuu1532 ->
+      'Auu____1532 ->
         FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
           FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
             (FStar_Errors.raw_error * Prims.string)
@@ -503,9 +503,9 @@ let computed_computation_type_does_not_match_annotation :
                           uu____1626)))
   
 let computed_computation_type_does_not_match_annotation_eq :
-  'uuuuuu1641 .
+  'Auu____1641 .
     FStar_TypeChecker_Env.env ->
-      'uuuuuu1641 ->
+      'Auu____1641 ->
         FStar_Syntax_Syntax.comp ->
           FStar_Syntax_Syntax.comp -> (FStar_Errors.raw_error * Prims.string)
   =

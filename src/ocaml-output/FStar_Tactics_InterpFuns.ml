@@ -1,30 +1,30 @@
 open Prims
 let unembed :
-  'uuuuuu8 .
-    'uuuuuu8 FStar_Syntax_Embeddings.embedding ->
+  'Auu____8 .
+    'Auu____8 FStar_Syntax_Embeddings.embedding ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Embeddings.norm_cb ->
-          'uuuuuu8 FStar_Pervasives_Native.option
+          'Auu____8 FStar_Pervasives_Native.option
   =
   fun e  ->
     fun t  ->
-      fun n  ->
+      fun n1  ->
         let uu____32 = FStar_Syntax_Embeddings.unembed e t  in
-        uu____32 true n
+        uu____32 true n1
   
 let embed :
-  'uuuuuu51 .
-    'uuuuuu51 FStar_Syntax_Embeddings.embedding ->
+  'Auu____51 .
+    'Auu____51 FStar_Syntax_Embeddings.embedding ->
       FStar_Range.range ->
-        'uuuuuu51 ->
+        'Auu____51 ->
           FStar_Syntax_Embeddings.norm_cb -> FStar_Syntax_Syntax.term
   =
   fun e  ->
     fun rng  ->
       fun t  ->
-        fun n  ->
+        fun n1  ->
           let uu____78 = FStar_Syntax_Embeddings.embed e t  in
-          uu____78 rng FStar_Pervasives_Native.None n
+          uu____78 rng FStar_Pervasives_Native.None n1
   
 let extract_1 :
   'a .
@@ -36,10 +36,10 @@ let extract_1 :
     fun ncb  ->
       fun args  ->
         match args with
-        | (a1,uu____121)::[] ->
-            let uu____146 = unembed ea a1 ncb  in
+        | (a,uu____121)::[] ->
+            let uu____146 = unembed ea a ncb  in
             FStar_Util.bind_opt uu____146
-              (fun a2  -> FStar_Pervasives_Native.Some a2)
+              (fun a1  -> FStar_Pervasives_Native.Some a1)
         | uu____151 -> failwith "extract_1: wrong number of arguments"
   
 let extract_2 :
@@ -55,13 +55,13 @@ let extract_2 :
       fun ncb  ->
         fun args  ->
           match args with
-          | (a1,uu____207)::(b1,uu____209)::[] ->
-              let uu____250 = unembed ea a1 ncb  in
+          | (a,uu____207)::(b,uu____209)::[] ->
+              let uu____250 = unembed ea a ncb  in
               FStar_Util.bind_opt uu____250
-                (fun a2  ->
-                   let uu____260 = unembed eb b1 ncb  in
+                (fun a1  ->
+                   let uu____260 = unembed eb b ncb  in
                    FStar_Util.bind_opt uu____260
-                     (fun b2  -> FStar_Pervasives_Native.Some (a2, b2)))
+                     (fun b1  -> FStar_Pervasives_Native.Some (a1, b1)))
           | uu____273 -> failwith "extract_2: wrong number of arguments"
   
 let extract_3 :
@@ -79,17 +79,17 @@ let extract_3 :
         fun ncb  ->
           fun args  ->
             match args with
-            | (a1,uu____349)::(b1,uu____351)::(c1,uu____353)::[] ->
-                let uu____410 = unembed ea a1 ncb  in
+            | (a,uu____349)::(b,uu____351)::(c,uu____353)::[] ->
+                let uu____410 = unembed ea a ncb  in
                 FStar_Util.bind_opt uu____410
-                  (fun a2  ->
-                     let uu____422 = unembed eb b1 ncb  in
+                  (fun a1  ->
+                     let uu____422 = unembed eb b ncb  in
                      FStar_Util.bind_opt uu____422
-                       (fun b2  ->
-                          let uu____434 = unembed ec c1 ncb  in
+                       (fun b1  ->
+                          let uu____434 = unembed ec c ncb  in
                           FStar_Util.bind_opt uu____434
-                            (fun c2  ->
-                               FStar_Pervasives_Native.Some (a2, b2, c2))))
+                            (fun c1  ->
+                               FStar_Pervasives_Native.Some (a1, b1, c1))))
             | uu____451 -> failwith "extract_3: wrong number of arguments"
   
 let extract_4 :
@@ -109,22 +109,22 @@ let extract_4 :
           fun ncb  ->
             fun args  ->
               match args with
-              | (a1,uu____545)::(b1,uu____547)::(c1,uu____549)::(d1,uu____551)::[]
+              | (a,uu____545)::(b,uu____547)::(c,uu____549)::(d,uu____551)::[]
                   ->
-                  let uu____624 = unembed ea a1 ncb  in
+                  let uu____624 = unembed ea a ncb  in
                   FStar_Util.bind_opt uu____624
-                    (fun a2  ->
-                       let uu____638 = unembed eb b1 ncb  in
+                    (fun a1  ->
+                       let uu____638 = unembed eb b ncb  in
                        FStar_Util.bind_opt uu____638
-                         (fun b2  ->
-                            let uu____652 = unembed ec c1 ncb  in
+                         (fun b1  ->
+                            let uu____652 = unembed ec c ncb  in
                             FStar_Util.bind_opt uu____652
-                              (fun c2  ->
-                                 let uu____666 = unembed ed d1 ncb  in
+                              (fun c1  ->
+                                 let uu____666 = unembed ed d ncb  in
                                  FStar_Util.bind_opt uu____666
-                                   (fun d2  ->
+                                   (fun d1  ->
                                       FStar_Pervasives_Native.Some
-                                        (a2, b2, c2, d2)))))
+                                        (a1, b1, c1, d1)))))
               | uu____687 -> failwith "extract_4: wrong number of arguments"
   
 let extract_5 :
@@ -146,25 +146,25 @@ let extract_5 :
             fun ncb  ->
               fun args  ->
                 match args with
-                | (a1,uu____799)::(b1,uu____801)::(c1,uu____803)::(d1,uu____805)::
-                    (e1,uu____807)::[] ->
-                    let uu____896 = unembed ea a1 ncb  in
+                | (a,uu____799)::(b,uu____801)::(c,uu____803)::(d,uu____805)::
+                    (e,uu____807)::[] ->
+                    let uu____896 = unembed ea a ncb  in
                     FStar_Util.bind_opt uu____896
-                      (fun a2  ->
-                         let uu____912 = unembed eb b1 ncb  in
+                      (fun a1  ->
+                         let uu____912 = unembed eb b ncb  in
                          FStar_Util.bind_opt uu____912
-                           (fun b2  ->
-                              let uu____928 = unembed ec c1 ncb  in
+                           (fun b1  ->
+                              let uu____928 = unembed ec c ncb  in
                               FStar_Util.bind_opt uu____928
-                                (fun c2  ->
-                                   let uu____944 = unembed ed d1 ncb  in
+                                (fun c1  ->
+                                   let uu____944 = unembed ed d ncb  in
                                    FStar_Util.bind_opt uu____944
-                                     (fun d2  ->
-                                        let uu____960 = unembed ee e1 ncb  in
+                                     (fun d1  ->
+                                        let uu____960 = unembed ee e ncb  in
                                         FStar_Util.bind_opt uu____960
-                                          (fun e2  ->
+                                          (fun e1  ->
                                              FStar_Pervasives_Native.Some
-                                               (a2, b2, c2, d2, e2))))))
+                                               (a1, b1, c1, d1, e1))))))
                 | uu____985 ->
                     failwith "extract_5: wrong number of arguments"
   
@@ -190,32 +190,31 @@ let extract_6 :
               fun ncb  ->
                 fun args  ->
                   match args with
-                  | (a1,uu____1115)::(b1,uu____1117)::(c1,uu____1119)::
-                      (d1,uu____1121)::(e1,uu____1123)::(f1,uu____1125)::[]
-                      ->
-                      let uu____1230 = unembed ea a1 ncb  in
+                  | (a,uu____1115)::(b,uu____1117)::(c,uu____1119)::(d,uu____1121)::
+                      (e,uu____1123)::(f,uu____1125)::[] ->
+                      let uu____1230 = unembed ea a ncb  in
                       FStar_Util.bind_opt uu____1230
-                        (fun a2  ->
-                           let uu____1248 = unembed eb b1 ncb  in
+                        (fun a1  ->
+                           let uu____1248 = unembed eb b ncb  in
                            FStar_Util.bind_opt uu____1248
-                             (fun b2  ->
-                                let uu____1266 = unembed ec c1 ncb  in
+                             (fun b1  ->
+                                let uu____1266 = unembed ec c ncb  in
                                 FStar_Util.bind_opt uu____1266
-                                  (fun c2  ->
-                                     let uu____1284 = unembed ed d1 ncb  in
+                                  (fun c1  ->
+                                     let uu____1284 = unembed ed d ncb  in
                                      FStar_Util.bind_opt uu____1284
-                                       (fun d2  ->
-                                          let uu____1302 = unembed ee e1 ncb
+                                       (fun d1  ->
+                                          let uu____1302 = unembed ee e ncb
                                              in
                                           FStar_Util.bind_opt uu____1302
-                                            (fun e2  ->
+                                            (fun e1  ->
                                                let uu____1320 =
-                                                 unembed ef f1 ncb  in
+                                                 unembed ef f ncb  in
                                                FStar_Util.bind_opt uu____1320
-                                                 (fun f2  ->
+                                                 (fun f1  ->
                                                     FStar_Pervasives_Native.Some
-                                                      (a2, b2, c2, d2, e2,
-                                                        f2)))))))
+                                                      (a1, b1, c1, d1, e1,
+                                                        f1)))))))
                   | uu____1349 ->
                       failwith "extract_6: wrong number of arguments"
   
@@ -243,38 +242,38 @@ let extract_7 :
                 fun ncb  ->
                   fun args  ->
                     match args with
-                    | (a1,uu____1497)::(b1,uu____1499)::(c1,uu____1501)::
-                        (d1,uu____1503)::(e1,uu____1505)::(f1,uu____1507)::
-                        (g1,uu____1509)::[] ->
-                        let uu____1630 = unembed ea a1 ncb  in
+                    | (a,uu____1497)::(b,uu____1499)::(c,uu____1501)::
+                        (d,uu____1503)::(e,uu____1505)::(f,uu____1507)::
+                        (g,uu____1509)::[] ->
+                        let uu____1630 = unembed ea a ncb  in
                         FStar_Util.bind_opt uu____1630
-                          (fun a2  ->
-                             let uu____1650 = unembed eb b1 ncb  in
+                          (fun a1  ->
+                             let uu____1650 = unembed eb b ncb  in
                              FStar_Util.bind_opt uu____1650
-                               (fun b2  ->
-                                  let uu____1670 = unembed ec c1 ncb  in
+                               (fun b1  ->
+                                  let uu____1670 = unembed ec c ncb  in
                                   FStar_Util.bind_opt uu____1670
-                                    (fun c2  ->
-                                       let uu____1690 = unembed ed d1 ncb  in
+                                    (fun c1  ->
+                                       let uu____1690 = unembed ed d ncb  in
                                        FStar_Util.bind_opt uu____1690
-                                         (fun d2  ->
-                                            let uu____1710 =
-                                              unembed ee e1 ncb  in
+                                         (fun d1  ->
+                                            let uu____1710 = unembed ee e ncb
+                                               in
                                             FStar_Util.bind_opt uu____1710
-                                              (fun e2  ->
+                                              (fun e1  ->
                                                  let uu____1730 =
-                                                   unembed ef f1 ncb  in
+                                                   unembed ef f ncb  in
                                                  FStar_Util.bind_opt
                                                    uu____1730
-                                                   (fun f2  ->
+                                                   (fun f1  ->
                                                       let uu____1750 =
-                                                        unembed eg g1 ncb  in
+                                                        unembed eg g ncb  in
                                                       FStar_Util.bind_opt
                                                         uu____1750
-                                                        (fun g2  ->
+                                                        (fun g1  ->
                                                            FStar_Pervasives_Native.Some
-                                                             (a2, b2, c2, d2,
-                                                               e2, f2, g2))))))))
+                                                             (a1, b1, c1, d1,
+                                                               e1, f1, g1))))))))
                     | uu____1783 ->
                         failwith "extract_7: wrong number of arguments"
   
@@ -456,10 +455,10 @@ let extract_1_nbe :
     fun ea  ->
       fun args  ->
         match args with
-        | (a1,uu____2871)::[] ->
-            let uu____2880 = FStar_TypeChecker_NBETerm.unembed ea cb a1  in
+        | (a,uu____2871)::[] ->
+            let uu____2880 = FStar_TypeChecker_NBETerm.unembed ea cb a  in
             FStar_Util.bind_opt uu____2880
-              (fun a2  -> FStar_Pervasives_Native.Some a2)
+              (fun a1  -> FStar_Pervasives_Native.Some a1)
         | uu____2885 -> failwith "extract_1_nbe: wrong number of arguments"
   
 let extract_2_nbe :
@@ -475,14 +474,14 @@ let extract_2_nbe :
       fun eb  ->
         fun args  ->
           match args with
-          | (a1,uu____2939)::(b1,uu____2941)::[] ->
-              let uu____2954 = FStar_TypeChecker_NBETerm.unembed ea cb a1  in
+          | (a,uu____2939)::(b,uu____2941)::[] ->
+              let uu____2954 = FStar_TypeChecker_NBETerm.unembed ea cb a  in
               FStar_Util.bind_opt uu____2954
-                (fun a2  ->
-                   let uu____2964 =
-                     FStar_TypeChecker_NBETerm.unembed eb cb b1  in
+                (fun a1  ->
+                   let uu____2964 = FStar_TypeChecker_NBETerm.unembed eb cb b
+                      in
                    FStar_Util.bind_opt uu____2964
-                     (fun b2  -> FStar_Pervasives_Native.Some (a2, b2)))
+                     (fun b1  -> FStar_Pervasives_Native.Some (a1, b1)))
           | uu____2977 -> failwith "extract_2_nbe: wrong number of arguments"
   
 let extract_3_nbe :
@@ -500,20 +499,20 @@ let extract_3_nbe :
         fun ec  ->
           fun args  ->
             match args with
-            | (a1,uu____3051)::(b1,uu____3053)::(c1,uu____3055)::[] ->
-                let uu____3072 = FStar_TypeChecker_NBETerm.unembed ea cb a1
+            | (a,uu____3051)::(b,uu____3053)::(c,uu____3055)::[] ->
+                let uu____3072 = FStar_TypeChecker_NBETerm.unembed ea cb a
                    in
                 FStar_Util.bind_opt uu____3072
-                  (fun a2  ->
+                  (fun a1  ->
                      let uu____3084 =
-                       FStar_TypeChecker_NBETerm.unembed eb cb b1  in
+                       FStar_TypeChecker_NBETerm.unembed eb cb b  in
                      FStar_Util.bind_opt uu____3084
-                       (fun b2  ->
+                       (fun b1  ->
                           let uu____3096 =
-                            FStar_TypeChecker_NBETerm.unembed ec cb c1  in
+                            FStar_TypeChecker_NBETerm.unembed ec cb c  in
                           FStar_Util.bind_opt uu____3096
-                            (fun c2  ->
-                               FStar_Pervasives_Native.Some (a2, b2, c2))))
+                            (fun c1  ->
+                               FStar_Pervasives_Native.Some (a1, b1, c1))))
             | uu____3113 ->
                 failwith "extract_3_nbe: wrong number of arguments"
   
@@ -534,27 +533,27 @@ let extract_4_nbe :
           fun ed  ->
             fun args  ->
               match args with
-              | (a1,uu____3205)::(b1,uu____3207)::(c1,uu____3209)::(d1,uu____3211)::[]
+              | (a,uu____3205)::(b,uu____3207)::(c,uu____3209)::(d,uu____3211)::[]
                   ->
-                  let uu____3232 = FStar_TypeChecker_NBETerm.unembed ea cb a1
+                  let uu____3232 = FStar_TypeChecker_NBETerm.unembed ea cb a
                      in
                   FStar_Util.bind_opt uu____3232
-                    (fun a2  ->
+                    (fun a1  ->
                        let uu____3246 =
-                         FStar_TypeChecker_NBETerm.unembed eb cb b1  in
+                         FStar_TypeChecker_NBETerm.unembed eb cb b  in
                        FStar_Util.bind_opt uu____3246
-                         (fun b2  ->
+                         (fun b1  ->
                             let uu____3260 =
-                              FStar_TypeChecker_NBETerm.unembed ec cb c1  in
+                              FStar_TypeChecker_NBETerm.unembed ec cb c  in
                             FStar_Util.bind_opt uu____3260
-                              (fun c2  ->
+                              (fun c1  ->
                                  let uu____3274 =
-                                   FStar_TypeChecker_NBETerm.unembed ed cb d1
+                                   FStar_TypeChecker_NBETerm.unembed ed cb d
                                     in
                                  FStar_Util.bind_opt uu____3274
-                                   (fun d2  ->
+                                   (fun d1  ->
                                       FStar_Pervasives_Native.Some
-                                        (a2, b2, c2, d2)))))
+                                        (a1, b1, c1, d1)))))
               | uu____3295 ->
                   failwith "extract_4_nbe: wrong number of arguments"
   
@@ -577,35 +576,34 @@ let extract_5_nbe :
             fun ee  ->
               fun args  ->
                 match args with
-                | (a1,uu____3405)::(b1,uu____3407)::(c1,uu____3409)::
-                    (d1,uu____3411)::(e1,uu____3413)::[] ->
+                | (a,uu____3405)::(b,uu____3407)::(c,uu____3409)::(d,uu____3411)::
+                    (e,uu____3413)::[] ->
                     let uu____3438 =
-                      FStar_TypeChecker_NBETerm.unembed ea cb a1  in
+                      FStar_TypeChecker_NBETerm.unembed ea cb a  in
                     FStar_Util.bind_opt uu____3438
-                      (fun a2  ->
+                      (fun a1  ->
                          let uu____3454 =
-                           FStar_TypeChecker_NBETerm.unembed eb cb b1  in
+                           FStar_TypeChecker_NBETerm.unembed eb cb b  in
                          FStar_Util.bind_opt uu____3454
-                           (fun b2  ->
+                           (fun b1  ->
                               let uu____3470 =
-                                FStar_TypeChecker_NBETerm.unembed ec cb c1
-                                 in
+                                FStar_TypeChecker_NBETerm.unembed ec cb c  in
                               FStar_Util.bind_opt uu____3470
-                                (fun c2  ->
+                                (fun c1  ->
                                    let uu____3486 =
                                      FStar_TypeChecker_NBETerm.unembed ed cb
-                                       d1
+                                       d
                                       in
                                    FStar_Util.bind_opt uu____3486
-                                     (fun d2  ->
+                                     (fun d1  ->
                                         let uu____3502 =
                                           FStar_TypeChecker_NBETerm.unembed
-                                            ee cb e1
+                                            ee cb e
                                            in
                                         FStar_Util.bind_opt uu____3502
-                                          (fun e2  ->
+                                          (fun e1  ->
                                              FStar_Pervasives_Native.Some
-                                               (a2, b2, c2, d2, e2))))))
+                                               (a1, b1, c1, d1, e1))))))
                 | uu____3527 ->
                     failwith "extract_5_nbe: wrong number of arguments"
   
@@ -631,43 +629,42 @@ let extract_6_nbe :
               fun ef  ->
                 fun args  ->
                   match args with
-                  | (a1,uu____3655)::(b1,uu____3657)::(c1,uu____3659)::
-                      (d1,uu____3661)::(e1,uu____3663)::(f1,uu____3665)::[]
-                      ->
+                  | (a,uu____3655)::(b,uu____3657)::(c,uu____3659)::(d,uu____3661)::
+                      (e,uu____3663)::(f,uu____3665)::[] ->
                       let uu____3694 =
-                        FStar_TypeChecker_NBETerm.unembed ea cb a1  in
+                        FStar_TypeChecker_NBETerm.unembed ea cb a  in
                       FStar_Util.bind_opt uu____3694
-                        (fun a2  ->
+                        (fun a1  ->
                            let uu____3712 =
-                             FStar_TypeChecker_NBETerm.unembed eb cb b1  in
+                             FStar_TypeChecker_NBETerm.unembed eb cb b  in
                            FStar_Util.bind_opt uu____3712
-                             (fun b2  ->
+                             (fun b1  ->
                                 let uu____3730 =
-                                  FStar_TypeChecker_NBETerm.unembed ec cb c1
+                                  FStar_TypeChecker_NBETerm.unembed ec cb c
                                    in
                                 FStar_Util.bind_opt uu____3730
-                                  (fun c2  ->
+                                  (fun c1  ->
                                      let uu____3748 =
                                        FStar_TypeChecker_NBETerm.unembed ed
-                                         cb d1
+                                         cb d
                                         in
                                      FStar_Util.bind_opt uu____3748
-                                       (fun d2  ->
+                                       (fun d1  ->
                                           let uu____3766 =
                                             FStar_TypeChecker_NBETerm.unembed
-                                              ee cb e1
+                                              ee cb e
                                              in
                                           FStar_Util.bind_opt uu____3766
-                                            (fun e2  ->
+                                            (fun e1  ->
                                                let uu____3784 =
                                                  FStar_TypeChecker_NBETerm.unembed
-                                                   ef cb f1
+                                                   ef cb f
                                                   in
                                                FStar_Util.bind_opt uu____3784
-                                                 (fun f2  ->
+                                                 (fun f1  ->
                                                     FStar_Pervasives_Native.Some
-                                                      (a2, b2, c2, d2, e2,
-                                                        f2)))))))
+                                                      (a1, b1, c1, d1, e1,
+                                                        f1)))))))
                   | uu____3813 ->
                       failwith "extract_6_nbe: wrong number of arguments"
   
@@ -695,52 +692,51 @@ let extract_7_nbe :
                 fun eg  ->
                   fun args  ->
                     match args with
-                    | (a1,uu____3959)::(b1,uu____3961)::(c1,uu____3963)::
-                        (d1,uu____3965)::(e1,uu____3967)::(f1,uu____3969)::
-                        (g1,uu____3971)::[] ->
+                    | (a,uu____3959)::(b,uu____3961)::(c,uu____3963)::
+                        (d,uu____3965)::(e,uu____3967)::(f,uu____3969)::
+                        (g,uu____3971)::[] ->
                         let uu____4004 =
-                          FStar_TypeChecker_NBETerm.unembed ea cb a1  in
+                          FStar_TypeChecker_NBETerm.unembed ea cb a  in
                         FStar_Util.bind_opt uu____4004
-                          (fun a2  ->
+                          (fun a1  ->
                              let uu____4024 =
-                               FStar_TypeChecker_NBETerm.unembed eb cb b1  in
+                               FStar_TypeChecker_NBETerm.unembed eb cb b  in
                              FStar_Util.bind_opt uu____4024
-                               (fun b2  ->
+                               (fun b1  ->
                                   let uu____4044 =
-                                    FStar_TypeChecker_NBETerm.unembed ec cb
-                                      c1
+                                    FStar_TypeChecker_NBETerm.unembed ec cb c
                                      in
                                   FStar_Util.bind_opt uu____4044
-                                    (fun c2  ->
+                                    (fun c1  ->
                                        let uu____4064 =
                                          FStar_TypeChecker_NBETerm.unembed ed
-                                           cb d1
+                                           cb d
                                           in
                                        FStar_Util.bind_opt uu____4064
-                                         (fun d2  ->
+                                         (fun d1  ->
                                             let uu____4084 =
                                               FStar_TypeChecker_NBETerm.unembed
-                                                ee cb e1
+                                                ee cb e
                                                in
                                             FStar_Util.bind_opt uu____4084
-                                              (fun e2  ->
+                                              (fun e1  ->
                                                  let uu____4104 =
                                                    FStar_TypeChecker_NBETerm.unembed
-                                                     ef cb f1
+                                                     ef cb f
                                                     in
                                                  FStar_Util.bind_opt
                                                    uu____4104
-                                                   (fun f2  ->
+                                                   (fun f1  ->
                                                       let uu____4124 =
                                                         FStar_TypeChecker_NBETerm.unembed
-                                                          eg cb g1
+                                                          eg cb g
                                                          in
                                                       FStar_Util.bind_opt
                                                         uu____4124
-                                                        (fun g2  ->
+                                                        (fun g1  ->
                                                            FStar_Pervasives_Native.Some
-                                                             (a2, b2, c2, d2,
-                                                               e2, f2, g2))))))))
+                                                             (a1, b1, c1, d1,
+                                                               e1, f1, g1))))))))
                     | uu____4157 ->
                         failwith "extract_7_nbe: wrong number of arguments"
   
@@ -766,17 +762,17 @@ let mk_tactic_interpretation_1 :
               FStar_Util.bind_opt uu____4245
                 (fun uu____4262  ->
                    match uu____4262 with
-                   | (a1,ps) ->
+                   | (a,ps) ->
                        let ps1 = FStar_Tactics_Types.set_ps_psc psc ps  in
-                       let r1 =
-                         let uu____4275 = t a1  in
+                       let r =
+                         let uu____4275 = t a  in
                          FStar_Tactics_Monad.run_safe uu____4275 ps1  in
                        let uu____4278 =
                          let uu____4279 = FStar_Tactics_Embedding.e_result er
                             in
                          let uu____4284 = FStar_TypeChecker_Cfg.psc_range psc
                             in
-                         embed uu____4279 uu____4284 r1 ncb  in
+                         embed uu____4279 uu____4284 r ncb  in
                        FStar_Pervasives_Native.Some uu____4278)
   
 let mk_tactic_interpretation_2 :
@@ -804,17 +800,17 @@ let mk_tactic_interpretation_2 :
                 FStar_Util.bind_opt uu____4376
                   (fun uu____4398  ->
                      match uu____4398 with
-                     | (a1,b1,ps) ->
+                     | (a,b,ps) ->
                          let ps1 = FStar_Tactics_Types.set_ps_psc psc ps  in
-                         let r1 =
-                           let uu____4414 = t a1 b1  in
+                         let r =
+                           let uu____4414 = t a b  in
                            FStar_Tactics_Monad.run_safe uu____4414 ps1  in
                          let uu____4417 =
                            let uu____4418 =
                              FStar_Tactics_Embedding.e_result er  in
                            let uu____4423 =
                              FStar_TypeChecker_Cfg.psc_range psc  in
-                           embed uu____4418 uu____4423 r1 ncb  in
+                           embed uu____4418 uu____4423 r ncb  in
                          FStar_Pervasives_Native.Some uu____4417)
   
 let mk_tactic_interpretation_3 :
@@ -844,18 +840,18 @@ let mk_tactic_interpretation_3 :
                   FStar_Util.bind_opt uu____4534
                     (fun uu____4561  ->
                        match uu____4561 with
-                       | (a1,b1,c1,ps) ->
+                       | (a,b,c,ps) ->
                            let ps1 = FStar_Tactics_Types.set_ps_psc psc ps
                               in
-                           let r1 =
-                             let uu____4580 = t a1 b1 c1  in
+                           let r =
+                             let uu____4580 = t a b c  in
                              FStar_Tactics_Monad.run_safe uu____4580 ps1  in
                            let uu____4583 =
                              let uu____4584 =
                                FStar_Tactics_Embedding.e_result er  in
                              let uu____4589 =
                                FStar_TypeChecker_Cfg.psc_range psc  in
-                             embed uu____4584 uu____4589 r1 ncb  in
+                             embed uu____4584 uu____4589 r ncb  in
                            FStar_Pervasives_Native.Some uu____4583)
   
 let mk_tactic_interpretation_4 :
@@ -887,11 +883,11 @@ let mk_tactic_interpretation_4 :
                     FStar_Util.bind_opt uu____4719
                       (fun uu____4751  ->
                          match uu____4751 with
-                         | (a1,b1,c1,d1,ps) ->
+                         | (a,b,c,d,ps) ->
                              let ps1 = FStar_Tactics_Types.set_ps_psc psc ps
                                 in
-                             let r1 =
-                               let uu____4773 = t a1 b1 c1 d1  in
+                             let r =
+                               let uu____4773 = t a b c d  in
                                FStar_Tactics_Monad.run_safe uu____4773 ps1
                                 in
                              let uu____4776 =
@@ -899,7 +895,7 @@ let mk_tactic_interpretation_4 :
                                  FStar_Tactics_Embedding.e_result er  in
                                let uu____4782 =
                                  FStar_TypeChecker_Cfg.psc_range psc  in
-                               embed uu____4777 uu____4782 r1 ncb  in
+                               embed uu____4777 uu____4782 r ncb  in
                              FStar_Pervasives_Native.Some uu____4776)
   
 let mk_tactic_interpretation_5 :
@@ -934,11 +930,11 @@ let mk_tactic_interpretation_5 :
                       FStar_Util.bind_opt uu____4931
                         (fun uu____4968  ->
                            match uu____4968 with
-                           | (a1,b1,c1,d1,e1,ps) ->
+                           | (a,b,c,d,e,ps) ->
                                let ps1 =
                                  FStar_Tactics_Types.set_ps_psc psc ps  in
-                               let r1 =
-                                 let uu____4993 = t a1 b1 c1 d1 e1  in
+                               let r =
+                                 let uu____4993 = t a b c d e  in
                                  FStar_Tactics_Monad.run_safe uu____4993 ps1
                                   in
                                let uu____4996 =
@@ -946,7 +942,7 @@ let mk_tactic_interpretation_5 :
                                    FStar_Tactics_Embedding.e_result er  in
                                  let uu____5002 =
                                    FStar_TypeChecker_Cfg.psc_range psc  in
-                                 embed uu____4997 uu____5002 r1 ncb  in
+                                 embed uu____4997 uu____5002 r ncb  in
                                FStar_Pervasives_Native.Some uu____4996)
   
 let mk_tactic_interpretation_6 :
@@ -983,11 +979,11 @@ let mk_tactic_interpretation_6 :
                         FStar_Util.bind_opt uu____5170
                           (fun uu____5212  ->
                              match uu____5212 with
-                             | (a1,b1,c1,d1,e1,f1,ps) ->
+                             | (a,b,c,d,e,f,ps) ->
                                  let ps1 =
                                    FStar_Tactics_Types.set_ps_psc psc ps  in
-                                 let r1 =
-                                   let uu____5240 = t a1 b1 c1 d1 e1 f1  in
+                                 let r =
+                                   let uu____5240 = t a b c d e f  in
                                    FStar_Tactics_Monad.run_safe uu____5240
                                      ps1
                                     in
@@ -996,7 +992,7 @@ let mk_tactic_interpretation_6 :
                                      FStar_Tactics_Embedding.e_result er  in
                                    let uu____5249 =
                                      FStar_TypeChecker_Cfg.psc_range psc  in
-                                   embed uu____5244 uu____5249 r1 ncb  in
+                                   embed uu____5244 uu____5249 r ncb  in
                                  FStar_Pervasives_Native.Some uu____5243)
   
 let mk_tactic_interpretation_13 :
@@ -1067,7 +1063,7 @@ let mk_tactic_interpretation_13 :
                                                  FStar_Tactics_Types.set_ps_psc
                                                    psc ps
                                                   in
-                                               let r1 =
+                                               let r =
                                                  let uu____5676 =
                                                    t a1 a2 a3 a4 a5 a6 a7 a8
                                                      a9 a10 a11 a12 a13
@@ -1085,7 +1081,7 @@ let mk_tactic_interpretation_13 :
                                                      psc
                                                     in
                                                  embed uu____5680 uu____5685
-                                                   r1 ncb
+                                                   r ncb
                                                   in
                                                FStar_Pervasives_Native.Some
                                                  uu____5679)
@@ -1111,14 +1107,14 @@ let mk_tactic_nbe_interpretation_1 :
             FStar_Util.bind_opt uu____5749
               (fun uu____5765  ->
                  match uu____5765 with
-                 | (a1,ps) ->
-                     let r1 =
-                       let uu____5777 = t a1  in
+                 | (a,ps) ->
+                     let r =
+                       let uu____5777 = t a  in
                        FStar_Tactics_Monad.run_safe uu____5777 ps  in
                      let uu____5780 =
                        let uu____5781 =
                          FStar_Tactics_Embedding.e_result_nbe er  in
-                       FStar_TypeChecker_NBETerm.embed uu____5781 cb r1  in
+                       FStar_TypeChecker_NBETerm.embed uu____5781 cb r  in
                      FStar_Pervasives_Native.Some uu____5780)
   
 let mk_tactic_nbe_interpretation_2 :
@@ -1144,14 +1140,14 @@ let mk_tactic_nbe_interpretation_2 :
               FStar_Util.bind_opt uu____5868
                 (fun uu____5889  ->
                    match uu____5889 with
-                   | (a1,b1,ps) ->
-                       let r1 =
-                         let uu____5904 = t a1 b1  in
+                   | (a,b,ps) ->
+                       let r =
+                         let uu____5904 = t a b  in
                          FStar_Tactics_Monad.run_safe uu____5904 ps  in
                        let uu____5907 =
                          let uu____5908 =
                            FStar_Tactics_Embedding.e_result_nbe er  in
-                         FStar_TypeChecker_NBETerm.embed uu____5908 cb r1  in
+                         FStar_TypeChecker_NBETerm.embed uu____5908 cb r  in
                        FStar_Pervasives_Native.Some uu____5907)
   
 let mk_tactic_nbe_interpretation_3 :
@@ -1179,14 +1175,14 @@ let mk_tactic_nbe_interpretation_3 :
                 FStar_Util.bind_opt uu____6014
                   (fun uu____6040  ->
                      match uu____6040 with
-                     | (a1,b1,c1,ps) ->
-                         let r1 =
-                           let uu____6058 = t a1 b1 c1  in
+                     | (a,b,c,ps) ->
+                         let r =
+                           let uu____6058 = t a b c  in
                            FStar_Tactics_Monad.run_safe uu____6058 ps  in
                          let uu____6061 =
                            let uu____6062 =
                              FStar_Tactics_Embedding.e_result_nbe er  in
-                           FStar_TypeChecker_NBETerm.embed uu____6062 cb r1
+                           FStar_TypeChecker_NBETerm.embed uu____6062 cb r
                             in
                          FStar_Pervasives_Native.Some uu____6061)
   
@@ -1218,14 +1214,14 @@ let mk_tactic_nbe_interpretation_4 :
                   FStar_Util.bind_opt uu____6187
                     (fun uu____6218  ->
                        match uu____6218 with
-                       | (a1,b1,c1,d1,ps) ->
-                           let r1 =
-                             let uu____6239 = t a1 b1 c1 d1  in
+                       | (a,b,c,d,ps) ->
+                           let r =
+                             let uu____6239 = t a b c d  in
                              FStar_Tactics_Monad.run_safe uu____6239 ps  in
                            let uu____6242 =
                              let uu____6243 =
                                FStar_Tactics_Embedding.e_result_nbe er  in
-                             FStar_TypeChecker_NBETerm.embed uu____6243 cb r1
+                             FStar_TypeChecker_NBETerm.embed uu____6243 cb r
                               in
                            FStar_Pervasives_Native.Some uu____6242)
   
@@ -1259,15 +1255,15 @@ let mk_tactic_nbe_interpretation_5 :
                     FStar_Util.bind_opt uu____6387
                       (fun uu____6423  ->
                          match uu____6423 with
-                         | (a1,b1,c1,d1,e1,ps) ->
-                             let r1 =
-                               let uu____6447 = t a1 b1 c1 d1 e1  in
+                         | (a,b,c,d,e,ps) ->
+                             let r =
+                               let uu____6447 = t a b c d e  in
                                FStar_Tactics_Monad.run_safe uu____6447 ps  in
                              let uu____6450 =
                                let uu____6451 =
                                  FStar_Tactics_Embedding.e_result_nbe er  in
                                FStar_TypeChecker_NBETerm.embed uu____6451 cb
-                                 r1
+                                 r
                                 in
                              FStar_Pervasives_Native.Some uu____6450)
   
@@ -1303,9 +1299,9 @@ let mk_tactic_nbe_interpretation_6 :
                       FStar_Util.bind_opt uu____6614
                         (fun uu____6655  ->
                            match uu____6655 with
-                           | (a1,b1,c1,d1,e1,f1,ps) ->
-                               let r1 =
-                                 let uu____6682 = t a1 b1 c1 d1 e1 f1  in
+                           | (a,b,c,d,e,f,ps) ->
+                               let r =
+                                 let uu____6682 = t a b c d e f  in
                                  FStar_Tactics_Monad.run_safe uu____6682 ps
                                   in
                                let uu____6685 =
@@ -1313,24 +1309,24 @@ let mk_tactic_nbe_interpretation_6 :
                                    FStar_Tactics_Embedding.e_result_nbe er
                                     in
                                  FStar_TypeChecker_NBETerm.embed uu____6686
-                                   cb r1
+                                   cb r
                                   in
                                FStar_Pervasives_Native.Some uu____6685)
   
 let timing_int :
-  'uuuuuu6712 'uuuuuu6713 'uuuuuu6714 'uuuuuu6715 .
+  'Auu____6712 'Auu____6713 'Auu____6714 'Auu____6715 .
     FStar_Ident.lid ->
-      ('uuuuuu6712 -> 'uuuuuu6713 -> 'uuuuuu6714 -> 'uuuuuu6715) ->
-        'uuuuuu6712 -> 'uuuuuu6713 -> 'uuuuuu6714 -> 'uuuuuu6715
+      ('Auu____6712 -> 'Auu____6713 -> 'Auu____6714 -> 'Auu____6715) ->
+        'Auu____6712 -> 'Auu____6713 -> 'Auu____6714 -> 'Auu____6715
   =
   fun l  ->
     fun f  -> fun psc  -> fun cb  -> fun args  -> let r = f psc cb args  in r
   
 let timing_nbe :
-  'uuuuuu6772 'uuuuuu6773 'uuuuuu6774 .
+  'Auu____6772 'Auu____6773 'Auu____6774 .
     FStar_Ident.lid ->
-      ('uuuuuu6772 -> 'uuuuuu6773 -> 'uuuuuu6774) ->
-        'uuuuuu6772 -> 'uuuuuu6773 -> 'uuuuuu6774
+      ('Auu____6772 -> 'Auu____6773 -> 'Auu____6774) ->
+        'Auu____6772 -> 'Auu____6773 -> 'Auu____6774
   =
   fun l  ->
     fun f  -> fun nbe_cbs  -> fun args  -> let r = f nbe_cbs args  in r
@@ -1370,16 +1366,17 @@ let (mk :
             }
   
 let rec drop :
-  'uuuuuu6894 . Prims.int -> 'uuuuuu6894 Prims.list -> 'uuuuuu6894 Prims.list
+  'Auu____6894 .
+    Prims.int -> 'Auu____6894 Prims.list -> 'Auu____6894 Prims.list
   =
-  fun n  ->
+  fun n1  ->
     fun l  ->
-      if n = Prims.int_zero
+      if n1 = Prims.int_zero
       then l
       else
         (match l with
          | [] -> failwith "drop: impossible"
-         | uu____6923::xs -> drop (n - Prims.int_one) xs)
+         | uu____6923::xs -> drop (n1 - Prims.int_one) xs)
   
 let mktac1 :
   'a 'na 'nr 'r .
@@ -1619,11 +1616,11 @@ let mk_total_interpretation_1 :
             fun args  ->
               let uu____8044 = extract_1 ea ncb args  in
               FStar_Util.bind_opt uu____8044
-                (fun a1  ->
-                   let r1 = f a1  in
+                (fun a  ->
+                   let r = f a  in
                    let uu____8052 =
                      let uu____8053 = FStar_TypeChecker_Cfg.psc_range psc  in
-                     embed er uu____8053 r1 ncb  in
+                     embed er uu____8053 r ncb  in
                    FStar_Pervasives_Native.Some uu____8052)
   
 let mk_total_interpretation_1_psc :
@@ -1644,11 +1641,11 @@ let mk_total_interpretation_1_psc :
             fun args  ->
               let uu____8125 = extract_1 ea ncb args  in
               FStar_Util.bind_opt uu____8125
-                (fun a1  ->
-                   let r1 = f psc a1  in
+                (fun a  ->
+                   let r = f psc a  in
                    let uu____8133 =
                      let uu____8134 = FStar_TypeChecker_Cfg.psc_range psc  in
-                     embed er uu____8134 r1 ncb  in
+                     embed er uu____8134 r ncb  in
                    FStar_Pervasives_Native.Some uu____8133)
   
 let mk_total_interpretation_2 :
@@ -1673,12 +1670,12 @@ let mk_total_interpretation_2 :
                 FStar_Util.bind_opt uu____8220
                   (fun uu____8236  ->
                      match uu____8236 with
-                     | (a1,b1) ->
-                         let r1 = f a1 b1  in
+                     | (a,b) ->
+                         let r = f a b  in
                          let uu____8246 =
                            let uu____8247 =
                              FStar_TypeChecker_Cfg.psc_range psc  in
-                           embed er uu____8247 r1 ncb  in
+                           embed er uu____8247 r ncb  in
                          FStar_Pervasives_Native.Some uu____8246)
   
 let mk_total_nbe_interpretation_1 :
@@ -1697,10 +1694,9 @@ let mk_total_nbe_interpretation_1 :
           fun args  ->
             let uu____8305 = extract_1_nbe cb ea args  in
             FStar_Util.bind_opt uu____8305
-              (fun a1  ->
-                 let r1 = f a1  in
-                 let uu____8313 = FStar_TypeChecker_NBETerm.embed er cb r1
-                    in
+              (fun a  ->
+                 let r = f a  in
+                 let uu____8313 = FStar_TypeChecker_NBETerm.embed er cb r  in
                  FStar_Pervasives_Native.Some uu____8313)
   
 let mk_total_nbe_interpretation_1_psc :
@@ -1719,10 +1715,9 @@ let mk_total_nbe_interpretation_1_psc :
           fun args  ->
             let uu____8376 = extract_1_nbe cb ea args  in
             FStar_Util.bind_opt uu____8376
-              (fun a1  ->
-                 let r1 = f FStar_TypeChecker_Cfg.null_psc a1  in
-                 let uu____8384 = FStar_TypeChecker_NBETerm.embed er cb r1
-                    in
+              (fun a  ->
+                 let r = f FStar_TypeChecker_Cfg.null_psc a  in
+                 let uu____8384 = FStar_TypeChecker_NBETerm.embed er cb r  in
                  FStar_Pervasives_Native.Some uu____8384)
   
 let mk_total_nbe_interpretation_2 :
@@ -1745,10 +1740,10 @@ let mk_total_nbe_interpretation_2 :
               FStar_Util.bind_opt uu____8461
                 (fun uu____8477  ->
                    match uu____8477 with
-                   | (a1,b1) ->
-                       let r1 = f a1 b1  in
+                   | (a,b) ->
+                       let r = f a b  in
                        let uu____8487 =
-                         FStar_TypeChecker_NBETerm.embed er cb r1  in
+                         FStar_TypeChecker_NBETerm.embed er cb r  in
                        FStar_Pervasives_Native.Some uu____8487)
   
 let mktot1 :

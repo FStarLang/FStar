@@ -280,7 +280,7 @@ let rec map_ctac : 'a . 'a ctac -> 'a Prims.list ctac =
                    FStar_Tactics_Monad.ret ((x1 :: xs2), flag))
   
 let bind_ctac : 'a 'b . 'a ctac -> ('a -> 'b ctac) -> 'b ctac =
-  fun t  -> fun f  -> fun b1  -> failwith "" 
+  fun t  -> fun f  -> fun b  -> failwith "" 
 let ctac_id :
   'a . 'a -> ('a * FStar_Tactics_Types.ctrl_flag) FStar_Tactics_Monad.tac =
   fun x  -> FStar_Tactics_Monad.ret (x, FStar_Tactics_Types.Continue) 
@@ -367,18 +367,18 @@ and (on_subterms :
               let go uu____976 =
                 let tm1 = FStar_Syntax_Subst.compress tm  in
                 match tm1.FStar_Syntax_Syntax.n with
-                | FStar_Syntax_Syntax.Tm_app (hd,args) ->
+                | FStar_Syntax_Syntax.Tm_app (hd1,args) ->
                     let uu____1016 =
                       let uu____1027 =
                         let uu____1036 = ctac_args rr  in
                         par_ctac rr uu____1036  in
-                      uu____1027 (hd, args)  in
+                      uu____1027 (hd1, args)  in
                     FStar_Tactics_Monad.bind uu____1016
                       (fun uu____1057  ->
                          match uu____1057 with
-                         | ((hd1,args1),flag) ->
+                         | ((hd2,args1),flag) ->
                              FStar_Tactics_Monad.ret
-                               ((FStar_Syntax_Syntax.Tm_app (hd1, args1)),
+                               ((FStar_Syntax_Syntax.Tm_app (hd2, args1)),
                                  flag))
                 | FStar_Syntax_Syntax.Tm_abs (bs,t,k) ->
                     let uu____1122 = FStar_Syntax_Subst.open_term bs t  in
@@ -410,7 +410,7 @@ and (on_subterms :
                     FStar_Tactics_Monad.ret
                       ((tm1.FStar_Syntax_Syntax.n),
                         FStar_Tactics_Types.Continue)
-                | FStar_Syntax_Syntax.Tm_match (hd,brs) ->
+                | FStar_Syntax_Syntax.Tm_match (hd1,brs) ->
                     let c_branch br =
                       let uu____1303 = FStar_Syntax_Subst.open_branch br  in
                       match uu____1303 with
@@ -434,13 +434,13 @@ and (on_subterms :
                       let uu____1391 =
                         let uu____1402 = map_ctac c_branch  in
                         par_ctac rr uu____1402  in
-                      uu____1391 (hd, brs)  in
+                      uu____1391 (hd1, brs)  in
                     FStar_Tactics_Monad.bind uu____1378
                       (fun uu____1431  ->
                          match uu____1431 with
-                         | ((hd1,brs1),flag) ->
+                         | ((hd2,brs1),flag) ->
                              FStar_Tactics_Monad.ret
-                               ((FStar_Syntax_Syntax.Tm_match (hd1, brs1)),
+                               ((FStar_Syntax_Syntax.Tm_match (hd2, brs1)),
                                  flag))
                 | FStar_Syntax_Syntax.Tm_let
                     ((false
@@ -626,18 +626,18 @@ let (ctrl_rewrite :
                | (g,gs) ->
                    FStar_Tactics_Monad.bind FStar_Tactics_Monad.dismiss_all
                      (fun uu____2193  ->
-                        let gt = FStar_Tactics_Types.goal_type g  in
+                        let gt1 = FStar_Tactics_Types.goal_type g  in
                         FStar_Tactics_Monad.log ps
                           (fun uu____2198  ->
                              let uu____2199 =
-                               FStar_Syntax_Print.term_to_string gt  in
+                               FStar_Syntax_Print.term_to_string gt1  in
                              FStar_Util.print1
                                "ctrl_rewrite starting with %s\n" uu____2199);
                         (let uu____2202 =
                            let uu____2205 = FStar_Tactics_Types.goal_env g
                               in
                            do_ctrl_rewrite g dir controller rewriter
-                             uu____2205 gt
+                             uu____2205 gt1
                             in
                          FStar_Tactics_Monad.bind uu____2202
                            (fun gt'  ->

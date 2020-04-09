@@ -130,12 +130,12 @@ let (mk_goal :
             }
   
 let rename_binders :
-  'uuuuuu220 .
+  'Auu____220 .
     FStar_Syntax_Syntax.subst_elt Prims.list ->
-      (FStar_Syntax_Syntax.bv * 'uuuuuu220) Prims.list ->
-        (FStar_Syntax_Syntax.bv * 'uuuuuu220) Prims.list
+      (FStar_Syntax_Syntax.bv * 'Auu____220) Prims.list ->
+        (FStar_Syntax_Syntax.bv * 'Auu____220) Prims.list
   =
-  fun subst  ->
+  fun subst1  ->
     fun bs  ->
       FStar_All.pipe_right bs
         (FStar_List.map
@@ -144,7 +144,7 @@ let rename_binders :
               | (x,imp) ->
                   let y =
                     let uu____292 = FStar_Syntax_Syntax.bv_to_name x  in
-                    FStar_Syntax_Subst.subst subst uu____292  in
+                    FStar_Syntax_Subst.subst subst1 uu____292  in
                   let uu____293 =
                     let uu____294 = FStar_Syntax_Subst.compress y  in
                     uu____294.FStar_Syntax_Syntax.n  in
@@ -153,7 +153,7 @@ let rename_binders :
                        let uu____302 =
                          let uu___49_303 = y1  in
                          let uu____304 =
-                           FStar_Syntax_Subst.subst subst
+                           FStar_Syntax_Subst.subst subst1
                              x.FStar_Syntax_Syntax.sort
                             in
                          {
@@ -167,19 +167,19 @@ let rename_binders :
                    | uu____307 -> failwith "Not a renaming")))
   
 let (subst_goal : FStar_Syntax_Syntax.subst_elt Prims.list -> goal -> goal) =
-  fun subst  ->
-    fun goal1  ->
-      let g = goal1.goal_ctx_uvar  in
+  fun subst1  ->
+    fun goal  ->
+      let g = goal.goal_ctx_uvar  in
       let ctx_uvar =
         let uu___55_330 = g  in
         let uu____331 =
-          FStar_TypeChecker_Env.rename_gamma subst
+          FStar_TypeChecker_Env.rename_gamma subst1
             g.FStar_Syntax_Syntax.ctx_uvar_gamma
            in
         let uu____334 =
-          rename_binders subst g.FStar_Syntax_Syntax.ctx_uvar_binders  in
+          rename_binders subst1 g.FStar_Syntax_Syntax.ctx_uvar_binders  in
         let uu____345 =
-          FStar_Syntax_Subst.subst subst g.FStar_Syntax_Syntax.ctx_uvar_typ
+          FStar_Syntax_Subst.subst subst1 g.FStar_Syntax_Syntax.ctx_uvar_typ
            in
         {
           FStar_Syntax_Syntax.ctx_uvar_head =
@@ -196,7 +196,7 @@ let (subst_goal : FStar_Syntax_Syntax.subst_elt Prims.list -> goal -> goal) =
           FStar_Syntax_Syntax.ctx_uvar_meta =
             (uu___55_330.FStar_Syntax_Syntax.ctx_uvar_meta)
         }  in
-      let uu___58_348 = goal1  in
+      let uu___58_348 = goal  in
       {
         goal_main_env = (uu___58_348.goal_main_env);
         goal_ctx_uvar = ctx_uvar;
@@ -239,101 +239,101 @@ let (__proj__Mkproofstate__item__main_context :
   fun projectee  ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state;_} -> main_context
+        psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> main_context
   
 let (__proj__Mkproofstate__item__all_implicits :
   proofstate -> FStar_TypeChecker_Env.implicits) =
   fun projectee  ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state;_} -> all_implicits
+        psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> all_implicits
   
 let (__proj__Mkproofstate__item__goals : proofstate -> goal Prims.list) =
   fun projectee  ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state;_} -> goals
+        psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> goals
   
 let (__proj__Mkproofstate__item__smt_goals : proofstate -> goal Prims.list) =
   fun projectee  ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state;_} -> smt_goals
+        psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> smt_goals
   
 let (__proj__Mkproofstate__item__depth : proofstate -> Prims.int) =
   fun projectee  ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state;_} -> depth
+        psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> depth
   
 let (__proj__Mkproofstate__item____dump :
   proofstate -> proofstate -> Prims.string -> unit) =
   fun projectee  ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state;_} -> __dump
+        psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> __dump
   
 let (__proj__Mkproofstate__item__psc :
   proofstate -> FStar_TypeChecker_Cfg.psc) =
   fun projectee  ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state;_} -> psc
+        psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> psc
   
 let (__proj__Mkproofstate__item__entry_range :
   proofstate -> FStar_Range.range) =
   fun projectee  ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state;_} -> entry_range
+        psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> entry_range
   
 let (__proj__Mkproofstate__item__guard_policy : proofstate -> guard_policy) =
   fun projectee  ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state;_} -> guard_policy1
+        psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> guard_policy
   
 let (__proj__Mkproofstate__item__freshness : proofstate -> Prims.int) =
   fun projectee  ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state;_} -> freshness
+        psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> freshness
   
 let (__proj__Mkproofstate__item__tac_verb_dbg : proofstate -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state;_} -> tac_verb_dbg
+        psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> tac_verb_dbg
   
 let (__proj__Mkproofstate__item__local_state :
   proofstate -> FStar_Syntax_Syntax.term FStar_Util.psmap) =
   fun projectee  ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
-        psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state;_} -> local_state
+        psc; entry_range; guard_policy; freshness; tac_verb_dbg;
+        local_state;_} -> local_state
   
 let (subst_proof_state :
   FStar_Syntax_Syntax.subst_t -> proofstate -> proofstate) =
-  fun subst  ->
+  fun subst1  ->
     fun ps  ->
       let uu____926 = FStar_Options.tactic_raw_binders ()  in
       if uu____926
       then ps
       else
         (let uu___99_931 = ps  in
-         let uu____932 = FStar_List.map (subst_goal subst) ps.goals  in
+         let uu____932 = FStar_List.map (subst_goal subst1) ps.goals  in
          {
            main_context = (uu___99_931.main_context);
            all_implicits = (uu___99_931.all_implicits);
@@ -415,8 +415,8 @@ let (tracepoint : FStar_TypeChecker_Cfg.psc -> proofstate -> unit) =
       if uu____974
       then
         let ps1 = set_ps_psc psc ps  in
-        let subst = FStar_TypeChecker_Cfg.psc_subst ps1.psc  in
-        let uu____982 = subst_proof_state subst ps1  in
+        let subst1 = FStar_TypeChecker_Cfg.psc_subst ps1.psc  in
+        let uu____982 = subst_proof_state subst1 ps1  in
         ps1.__dump uu____982 "TRACE"
       else ()
   
@@ -505,18 +505,18 @@ let (__proj__EExn__item__uu___ : Prims.exn -> FStar_Syntax_Syntax.term) =
   fun projectee  -> match projectee with | EExn uu____1153 -> uu____1153 
 let (check_goal_solved' :
   goal -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) =
-  fun goal1  ->
+  fun goal  ->
     let uu____1162 =
       FStar_Syntax_Unionfind.find
-        (goal1.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_head
+        (goal.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_head
        in
     match uu____1162 with
     | FStar_Pervasives_Native.Some t -> FStar_Pervasives_Native.Some t
     | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
   
 let (check_goal_solved : goal -> Prims.bool) =
-  fun goal1  ->
-    let uu____1175 = check_goal_solved' goal1  in
+  fun goal  ->
+    let uu____1175 = check_goal_solved' goal  in
     FStar_Option.isSome uu____1175
   
 let (get_phi :
