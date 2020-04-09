@@ -120,3 +120,32 @@ let tabulate : 'a . Prims.int -> (Prims.int -> 'a) -> 'a Prims.list =
         else []  in
       aux Prims.int_zero
   
+let rec max_prefix :
+  'a . ('a -> Prims.bool) -> 'a Prims.list -> ('a Prims.list * 'a Prims.list)
+  =
+  fun f  ->
+    fun xs  ->
+      match xs with
+      | [] -> ([], [])
+      | x::xs1 when f x ->
+          let uu____484 = max_prefix f xs1  in
+          (match uu____484 with | (l,r) -> ((x :: l), r))
+      | x::xs1 -> ([], (x :: xs1))
+  
+let max_suffix :
+  'a . ('a -> Prims.bool) -> 'a Prims.list -> ('a Prims.list * 'a Prims.list)
+  =
+  fun f  ->
+    fun xs  ->
+      let rec aux acc xs1 =
+        match xs1 with
+        | [] -> (acc, [])
+        | x::xs2 when f x -> aux (x :: acc) xs2
+        | x::xs2 -> (acc, (x :: xs2))  in
+      let uu____611 =
+        let uu____620 = FStar_All.pipe_right xs FStar_List.rev  in
+        FStar_All.pipe_right uu____620 (aux [])  in
+      FStar_All.pipe_right uu____611
+        (fun uu____656  ->
+           match uu____656 with | (xs1,ys) -> ((FStar_List.rev ys), xs1))
+  
