@@ -66,19 +66,28 @@ let field_type
     array_struct_type descr
   | None -> Univ.raise_t u#0 u#a False
 
+let field_type_unroll_lemma_aux
+  (field_descriptors : (field_id ^-> option (array_struct_descriptor u#a)))
+  (value : (array_struct_type (Struct field_descriptors)))
+  (field : field_id)
+    : Lemma (
+      DependentMap.t field_id (field_type (ArrayStruct (Struct field_descriptors) value)) ==
+      array_struct_type (Struct field_descriptors)
+     )
+  =
+  let open FStar.Tactics in
+  assert (
+    DependentMap.t field_id (field_type (ArrayStruct (Struct field_descriptors) value)) ==
+    array_struct_type (Struct field_descriptors)
+  ) by begin
+    compute ()
+  end
+
 let field_type_unroll_lemma
   (s: array_struct u#a{Struct? s.descriptor})
   (field: field_id)
   : Lemma (DependentMap.t field_id (field_type s) == array_struct_type s.descriptor)
-  =
-  let open FStar.Tactics in
-  // TODO: prove that using some kind of normalization ?
-  admit();
-  assert (DependentMap.t field_id (field_type s) == array_struct_type s.descriptor) by begin
-    norm [delta_only ["Steel.PCM.ArrayStruct.Memory.field_type"]];
-    // TODO: how to unroll array_struct_type recursive definition here? zeta(_full) does not work
-    fail "HERE"
-  end
+  = field_type_unroll_lemma_aux (Struct?.field_descriptors s.descriptor) s.value field
 
 let rec composable_array_struct' (s0 s1: array_struct) : Tot prop (decreases s0.descriptor) =
   match s0.descriptor, s1.descriptor with
