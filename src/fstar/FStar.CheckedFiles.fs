@@ -426,7 +426,7 @@ let load_module_from_cache =
       "FStar.CheckedFiles" in
 
     let i_fn_opt = Dep.interface_of
-      (TcEnv.dep_graph env.env_tcenv)
+      (TcEnv.dep_graph (tcenv_of_uenv env))
       (Dep.lowercase_module_name fn) in
 
     if Dep.is_implementation fn
