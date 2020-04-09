@@ -1300,7 +1300,7 @@ let mk_data_operations iquals attrs env tcs se =
 
     let fv_qual =
         let filter_records = function
-            | RecordConstructor (_, fns) -> Some (Record_ctor(constr_lid, fns))
+            | RecordConstructor (_, fns) -> Some (Record_ctor(typ_lid, fns))
             | _ -> None
         in match BU.find_map se.sigquals filter_records with
             | None -> Data_ctor
