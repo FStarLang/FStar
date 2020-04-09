@@ -133,11 +133,15 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * 
   let module_name = Dep.lowercase_module_name fn in
   let source_hash = BU.digest_of_file fn in
   let has_interface = Option.isSome (Dep.interface_of deps module_name) in
-  let interface_hash =
+  let interface_checked_file_name =
     if Dep.is_implementation fn
     && has_interface
-    then ["interface", BU.digest_of_file (Option.get (Dep.interface_of deps module_name))]
-    else []
+    then module_name
+      |> Dep.interface_of deps
+      |> must
+      |> Dep.cache_file_name
+      |> Some
+    else None
   in
   let binary_deps = Dep.deps_of deps fn
     |> List.filter (fun fn ->
@@ -149,8 +153,27 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * 
        String.compare (Dep.lowercase_module_name fn1)
                       (Dep.lowercase_module_name fn2))
     binary_deps in
+
+  let maybe_add_iface_hash out =
+    match interface_checked_file_name with
+    | None -> Inr (("source", source_hash)::out)
+    | Some iface ->
+       (match BU.smap_try_find mcache iface with
+       | None ->
+         let msg = BU.format1
+           "hash_dependences::the interface checked file %s does not exist\n"
+           iface in
+       
+         if Options.debug_at_level_no_module (Options.Other "CheckedFiles")
+         then BU.print1 "%s\n" msg;
+         
+         Inl msg
+       | Some (Invalid msg, _) -> Inl msg
+       | Some (Valid h, _) -> Inr (("source", source_hash)::("interface", h)::out)
+       | Some (Unknown, _) -> failwith "Impossible!") in
+
   let rec hash_deps out = function
-  | [] -> Inr (("source", source_hash)::interface_hash@out)
+  | [] -> maybe_add_iface_hash out
   | fn::deps ->
     let cache_fn = Dep.cache_file_name fn in
     (*
@@ -359,7 +382,7 @@ let load_module_from_cache =
   //this is only used for supressing more than one cache invalid warnings
   let already_failed = BU.mk_ref false in
   fun env fn ->
-    let load_it () =
+    let load_it fn () =
       let cache_file = Dep.cache_file_name fn in
       let fail msg cache_file =
         //Don't feel too bad if fn is the file on the command line
@@ -386,10 +409,35 @@ let load_module_from_cache =
         Some tc_result
       (* | _ -> failwith "load_checked_file_tc_result must have an Invalid or Valid entry" *)
     in
-    Profiling.profile
-      load_it
+
+    (*
+     * AR: cf. #1919, A.fst.checked implicitly depends on A.fsti.checked
+     *       and this transitively on the dependencies of A.fsti.checked
+     *     the dependency on A.fsti.checked is unusual in the sense that
+     *       tcenv is not populated with its contents
+     *     that happens via interleaving later
+     *     this is just to make sure that we track the dependence of A.fst
+     *       on the dependences of A.fsti
+     *)
+
+    let load_with_profiling fn = Profiling.profile
+      (load_it fn)
       None
-      "FStar.CheckedFiles"
+      "FStar.CheckedFiles" in
+
+    let i_fn_opt = Dep.interface_of
+      (TcEnv.dep_graph env.env_tcenv)
+      (Dep.lowercase_module_name fn) in
+
+    if Dep.is_implementation fn
+    && (i_fn_opt |> is_some)
+    then let i_fn = i_fn_opt |> must in
+         let i_tc = load_with_profiling i_fn in
+         match i_tc with
+         | None -> None
+         | Some _ -> load_with_profiling fn
+           
+    else load_with_profiling fn
 
 
 (*

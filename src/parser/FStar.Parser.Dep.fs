@@ -1485,13 +1485,14 @@ let print_full (deps:deps) : unit =
         (fun all_checked_files file_name ->
           let process_one_key () =
             let dep_node = deps_try_find deps.dep_graph file_name |> Option.get in
-            let iface_deps =
+            let iface_fn, iface_deps =
                 if is_interface file_name
-                then None
+                then None, None
                 else match interface_of deps (lowercase_module_name file_name) with
                      | None ->
-                       None
+                       None, None
                      | Some iface ->
+                       Some iface,
                        Some ((Option.get (deps_try_find deps.dep_graph iface)).edges)
             in
             let iface_deps =
@@ -1515,6 +1516,18 @@ let print_full (deps:deps) : unit =
                   in
                   BU.remove_dups (fun x y -> x = y) (files @ iface_files)
             in
+
+            (*
+             * AR: depend on A.fsti.checked, rather than A.fsti
+             *     see #1919
+             *)
+            let files =
+              if iface_fn |> is_some then
+                let iface_fn = iface_fn |> must in
+                files |> List.filter (fun f -> f <> iface_fn)
+                      |> (fun files -> (cache_file_name iface_fn)::files)
+              else files in
+
             let files = List.map norm_path files in
             let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
             let files = String.concat "\\\n\t" files in
