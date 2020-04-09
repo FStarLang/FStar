@@ -130,7 +130,7 @@ let subst ts args =
 
 let udelta_unfold (g:UEnv.uenv) = function
     | MLTY_Named(args, n) ->
-      begin match UEnv.lookup_ty_const g n with
+      begin match UEnv.lookup_tydef g n with
         | Some ts ->
           begin
             match try_subst ts args with

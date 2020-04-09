@@ -317,7 +317,7 @@ let (lookup_ty : uenv -> FStar_Syntax_Syntax.bv -> ty_binding) =
       | FStar_Util.Inl ty -> ty
       | uu____980 -> failwith "Expected a type name"
   
-let (lookup_ty_const :
+let (lookup_tydef :
   uenv ->
     FStar_Extraction_ML_Syntax.mlpath ->
       FStar_Extraction_ML_Syntax.mltyscheme FStar_Pervasives_Native.option)
@@ -753,17 +753,17 @@ let (extend_fv :
                 let gamma = (Fv (x, exp_binding1)) :: (g1.env_bindings)  in
                 let mlident_map =
                   FStar_Util.psmap_add g1.env_mlident_map mlsymbol ""  in
-                ((let uu___351_2085 = g1  in
+                ((let uu___348_2085 = g1  in
                   {
-                    env_tcenv = (uu___351_2085.env_tcenv);
+                    env_tcenv = (uu___348_2085.env_tcenv);
                     env_bindings = gamma;
                     env_mlident_map = mlident_map;
-                    mlpath_of_lid = (uu___351_2085.mlpath_of_lid);
-                    env_fieldname_map = (uu___351_2085.env_fieldname_map);
-                    mlpath_of_fieldname = (uu___351_2085.mlpath_of_fieldname);
-                    tydefs = (uu___351_2085.tydefs);
-                    type_names = (uu___351_2085.type_names);
-                    currentModule = (uu___351_2085.currentModule)
+                    mlpath_of_lid = (uu___348_2085.mlpath_of_lid);
+                    env_fieldname_map = (uu___348_2085.env_fieldname_map);
+                    mlpath_of_fieldname = (uu___348_2085.mlpath_of_fieldname);
+                    tydefs = (uu___348_2085.tydefs);
+                    type_names = (uu___348_2085.type_names);
+                    currentModule = (uu___348_2085.currentModule)
                   }), mlsymbol, exp_binding1)
           else failwith "freevars found"
   
@@ -807,17 +807,17 @@ let (extend_tydef :
                 tydef_def = ts
               }  in
             (tydef1, name,
-              (let uu___377_2192 = g1  in
+              (let uu___370_2192 = g1  in
                {
-                 env_tcenv = (uu___377_2192.env_tcenv);
-                 env_bindings = (uu___377_2192.env_bindings);
-                 env_mlident_map = (uu___377_2192.env_mlident_map);
-                 mlpath_of_lid = (uu___377_2192.mlpath_of_lid);
-                 env_fieldname_map = (uu___377_2192.env_fieldname_map);
-                 mlpath_of_fieldname = (uu___377_2192.mlpath_of_fieldname);
+                 env_tcenv = (uu___370_2192.env_tcenv);
+                 env_bindings = (uu___370_2192.env_bindings);
+                 env_mlident_map = (uu___370_2192.env_mlident_map);
+                 mlpath_of_lid = (uu___370_2192.mlpath_of_lid);
+                 env_fieldname_map = (uu___370_2192.env_fieldname_map);
+                 mlpath_of_fieldname = (uu___370_2192.mlpath_of_fieldname);
                  tydefs = (tydef1 :: (g1.tydefs));
                  type_names = ((fv, name) :: (g1.type_names));
-                 currentModule = (uu___377_2192.currentModule)
+                 currentModule = (uu___370_2192.currentModule)
                }))
   
 let (extend_type_name :
@@ -833,17 +833,17 @@ let (extend_type_name :
       match uu____2216 with
       | (name,g1) ->
           (name,
-            (let uu___386_2228 = g1  in
+            (let uu___377_2228 = g1  in
              {
-               env_tcenv = (uu___386_2228.env_tcenv);
-               env_bindings = (uu___386_2228.env_bindings);
-               env_mlident_map = (uu___386_2228.env_mlident_map);
-               mlpath_of_lid = (uu___386_2228.mlpath_of_lid);
-               env_fieldname_map = (uu___386_2228.env_fieldname_map);
-               mlpath_of_fieldname = (uu___386_2228.mlpath_of_fieldname);
-               tydefs = (uu___386_2228.tydefs);
+               env_tcenv = (uu___377_2228.env_tcenv);
+               env_bindings = (uu___377_2228.env_bindings);
+               env_mlident_map = (uu___377_2228.env_mlident_map);
+               mlpath_of_lid = (uu___377_2228.mlpath_of_lid);
+               env_fieldname_map = (uu___377_2228.env_fieldname_map);
+               mlpath_of_fieldname = (uu___377_2228.mlpath_of_fieldname);
+               tydefs = (uu___377_2228.tydefs);
                type_names = ((fv, name) :: (g1.type_names));
-               currentModule = (uu___386_2228.currentModule)
+               currentModule = (uu___377_2228.currentModule)
              }))
   
 let (extend_with_monad_op_name :
@@ -932,21 +932,21 @@ let (extend_record_field_name :
                let ns = mlns_of_lid key  in
                let mlp = (ns, name)  in
                let g1 =
-                 let uu___426_2460 = g  in
+                 let uu___411_2460 = g  in
                  let uu____2461 =
                    FStar_Util.psmap_add g.mlpath_of_fieldname
                      key.FStar_Ident.str mlp
                     in
                  {
-                   env_tcenv = (uu___426_2460.env_tcenv);
-                   env_bindings = (uu___426_2460.env_bindings);
-                   env_mlident_map = (uu___426_2460.env_mlident_map);
-                   mlpath_of_lid = (uu___426_2460.mlpath_of_lid);
+                   env_tcenv = (uu___411_2460.env_tcenv);
+                   env_bindings = (uu___411_2460.env_bindings);
+                   env_mlident_map = (uu___411_2460.env_mlident_map);
+                   mlpath_of_lid = (uu___411_2460.mlpath_of_lid);
                    env_fieldname_map = fieldname_map;
                    mlpath_of_fieldname = uu____2461;
-                   tydefs = (uu___426_2460.tydefs);
-                   type_names = (uu___426_2460.type_names);
-                   currentModule = (uu___426_2460.currentModule)
+                   tydefs = (uu___411_2460.tydefs);
+                   type_names = (uu___411_2460.type_names);
+                   currentModule = (uu___411_2460.currentModule)
                  }  in
                (mlp, g1))
   
@@ -959,19 +959,19 @@ let (extend_with_module_name :
   
 let (exit_module : uenv -> uenv) =
   fun g  ->
-    let uu___434_2495 = g  in
+    let uu___419_2495 = g  in
     let uu____2496 = initial_mlident_map ()  in
     let uu____2500 = initial_mlident_map ()  in
     {
-      env_tcenv = (uu___434_2495.env_tcenv);
-      env_bindings = (uu___434_2495.env_bindings);
+      env_tcenv = (uu___419_2495.env_tcenv);
+      env_bindings = (uu___419_2495.env_bindings);
       env_mlident_map = uu____2496;
-      mlpath_of_lid = (uu___434_2495.mlpath_of_lid);
+      mlpath_of_lid = (uu___419_2495.mlpath_of_lid);
       env_fieldname_map = uu____2500;
-      mlpath_of_fieldname = (uu___434_2495.mlpath_of_fieldname);
-      tydefs = (uu___434_2495.tydefs);
-      type_names = (uu___434_2495.type_names);
-      currentModule = (uu___434_2495.currentModule)
+      mlpath_of_fieldname = (uu___419_2495.mlpath_of_fieldname);
+      tydefs = (uu___419_2495.tydefs);
+      type_names = (uu___419_2495.type_names);
+      currentModule = (uu___419_2495.currentModule)
     }
   
 let (new_uenv : FStar_TypeChecker_Env.env -> uenv) =

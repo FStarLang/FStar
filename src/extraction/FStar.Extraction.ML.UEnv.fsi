@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2015 Abhishek Anand, Nikhil Swamy and Microsoft Research
+   Copyright 2008-2020 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -86,70 +86,97 @@ val lookup_term: g:uenv -> t:term -> ty_or_exp_b * option<fv_qual>
 (** Lookup a type variable *)
 val lookup_ty: g:uenv -> bv:bv -> ty_binding
 
-(** Lookup a type abbreviation, definition *)
-val lookup_ty_const : uenv -> mlpath -> option<mltyscheme>
+(** Lookup a type definition *)
+val lookup_tydef : uenv -> mlpath -> option<mltyscheme>
 
+(** ML qualified name corresponding to an F* qualified name *)
 val mlpath_of_lident : uenv -> lident -> mlpath
 
+(** Does the fv bind an F* inductive type? *)
 val is_type_name : g:uenv -> fv:fv -> bool
 
+(** Does the fv bind an F* inductive type or abbreviation? *)
 val is_fv_type: uenv -> fv -> bool
-                               
-val lookup_record_field_name : uenv -> 
-                               (lident * ident) ->
-                               mlpath
+
+(** ML record name for an F* pair of type name and field name *)
+val lookup_record_field_name: uenv -> (lident * ident) -> mlpath
 
 (*** Extending environment *)
 
 
+(** Fresh local identifer *)
 val new_mlident : g:uenv -> uenv * mlident
 
+(** Extend with a type variable, potentially erased to MLTY_Top *)
 val extend_ty: g:uenv -> a:bv -> map_to_top:bool -> uenv
 
+(** Extend with a local term variable, maybe thunked, maybe erased *)
 val extend_bv:
     uenv ->
     bv ->
     mltyscheme ->
     add_unit: bool ->
-    mk_unit:
-      (*some pattern terms become unit while extracting*)
-      bool
-  -> uenv * mlident * exp_binding
+    mk_unit: bool ->
+    uenv * mlident * exp_binding
 
-val extend_fv: g:uenv -> x:fv -> t_x:mltyscheme -> add_unit:bool ->
-               uenv * mlident * exp_binding
+(** Extend with an top-level term identifier, maybe thunked *)
+val extend_fv: 
+    uenv ->
+    fv ->
+    mltyscheme ->
+    add_unit:bool ->
+    uenv * mlident * exp_binding
 
-val extend_lb: g:uenv -> l:lbname -> t:typ -> t_x:mltyscheme -> add_unit:bool
-               -> uenv * mlident * exp_binding
+(** Extend with a local or top-level let binding, maybe thunked *)
+val extend_lb: 
+    uenv ->
+    l:lbname ->
+    t:typ ->
+    t_x:mltyscheme ->
+    add_unit:bool ->
+    uenv * mlident * exp_binding
 
-val extend_tydef : g:uenv -> fv:fv -> ts:mltyscheme -> tydef * mlpath * uenv
+(** Extend with a type abbreviation *)
+val extend_tydef:
+    uenv ->
+    fv ->
+    mltyscheme ->
+    tydef * mlpath * uenv
 
-val extend_type_name: g:uenv -> fv:fv -> mlpath * uenv
+(** Extend with an inductive type *)
+val extend_type_name: 
+    uenv ->
+    fv ->
+    mlpath * uenv
 
-val extend_with_monad_op_name : uenv ->
-                          ed:Syntax.eff_decl ->
-                          nm:string ->
-                          ts:mltyscheme ->
-                          mlpath *
-                          lident *
-                          exp_binding *
-                          uenv
+(** Extend with a [bind] or [return], 
+      returns both the ML identifier and the generated F* lid for it *)
+val extend_with_monad_op_name:
+    uenv ->
+    Syntax.eff_decl ->
+    string -> (* name of the op *)
+    mltyscheme ->
+    mlpath * lident * exp_binding * uenv
 
-val extend_with_action_name: uenv ->
-                             ed:Syntax.eff_decl ->
-                             a:Syntax.action ->
-                             ts:mltyscheme ->
-                             mlpath *
-                             lident *
-                             exp_binding *
-                             uenv
-                             
-val extend_record_field_name : uenv ->
-                               (lident * ident) ->
-                               mlpath * uenv
+(** Extend with an action, returns both the ML identifer and generated F* lident *)
+val extend_with_action_name:
+    uenv ->
+    Syntax.eff_decl ->
+    Syntax.action ->
+    mltyscheme -> 
+    mlpath * lident * exp_binding * uenv
 
-val extend_with_module_name : uenv -> 
-                              lident ->
-                              mlpath * uenv
+(** The F* record field identifier is a pair of the *typename* and the field name *)
+val extend_record_field_name :
+    uenv ->
+    (lident * ident) ->
+    mlpath * uenv
 
+(** ML module identifier for an F* module name *)
+val extend_with_module_name : 
+    uenv -> 
+    lident ->
+    mlpath * uenv
+
+(** Mark exiting a module scope *)
 val exit_module : uenv -> uenv

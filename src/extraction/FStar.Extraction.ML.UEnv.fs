@@ -223,7 +223,7 @@ let lookup_ty (g:uenv) (x:bv) : ty_binding =
     | _ -> failwith "Expected a type name"
 
 (** Lookup a type abbreviation *)
-let lookup_ty_const (env:uenv) ((module_name, ty_name):mlpath)
+let lookup_tydef (env:uenv) ((module_name, ty_name):mlpath)
   : option<mltyscheme>
   = BU.find_map env.tydefs  (fun tydef ->
         if ty_name = tydef.tydef_name

@@ -218,7 +218,7 @@ let (udelta_unfold :
     fun uu___0_450  ->
       match uu___0_450 with
       | FStar_Extraction_ML_Syntax.MLTY_Named (args,n) ->
-          let uu____459 = FStar_Extraction_ML_UEnv.lookup_ty_const g n  in
+          let uu____459 = FStar_Extraction_ML_UEnv.lookup_tydef g n  in
           (match uu____459 with
            | FStar_Pervasives_Native.Some ts ->
                let uu____465 = try_subst ts args  in
