@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "6fff7b35e4f48ba6597890a5302fc564"
+      "e9b95fe8b60317ef223e7db740d27d71"
     ],
     [
       "Steel.Actions.is_m_frame_and_preorder_preserving",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_6d6ac730cf5173080f7a5fc2258a4aaf"
       ],
       0,
-      "f36234dd19918dfbe675cefafc0c9f9b"
+      "f7879deef849ddca984453fab90c98f2"
     ],
     [
       "Steel.Actions.is_atomic_frame_and_preorder_preserving",
@@ -34,7 +34,7 @@
         "refinement_interpretation_Tm_refine_099571e8d0c1f7a8710e3c6d01989094"
       ],
       0,
-      "30e4f253917506eb2fbde9881844324b"
+      "fdfc43898ca8c126d7802577c0038260"
     ],
     [
       "Steel.Actions.as_seq",
@@ -48,7 +48,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "ff7cf45cc68211eff36b8f18a8b0d338"
+      "1d4de72c796898bfa0af6426b8990c82"
     ],
     [
       "Steel.Actions.as_seq_lemma",
@@ -62,7 +62,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "40ad4335be4ca15f474bb99934c71988"
+      "0833a6eefd01aa2d0acd3ec7c9dc8786"
     ],
     [
       "Steel.Actions.index_array",
@@ -83,7 +83,7 @@
         "typing_FStar.UInt32.v", "typing_Steel.Memory.length"
       ],
       0,
-      "9cd470d37467ab5186a86b37ea83ca91"
+      "1b51c92bdc280dac453e6172a0d57e50"
     ],
     [
       "Steel.Actions.upd_array",
@@ -112,7 +112,7 @@
         "typing_FStar.UInt32.v", "typing_Steel.Memory.length"
       ],
       0,
-      "a9002a4332c16bc51a26ef062225aac6"
+      "7dc204dd65752584d0ec0fc88a0454d1"
     ],
     [
       "Steel.Actions.alloc_array",
@@ -137,7 +137,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "c42698e4d3f8a98e354c19bac9a0f456"
+      "e86991f7ec0ffcf4402539ad23f18b84"
     ],
     [
       "Steel.Actions.free_array",
@@ -154,7 +154,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "de167419dd273f84a91cc0c4ca108b75"
+      "2ef8c7ef821605425952bf667e74a015"
     ],
     [
       "Steel.Actions.split_array",
@@ -200,7 +200,7 @@
         "typing_Steel.Memory.offset", "typing_Steel.Memory.readable"
       ],
       0,
-      "56ec88365d4e3f662dba197529105d27"
+      "133c1edff17d030077305d705f4858e0"
     ],
     [
       "Steel.Actions.glue_array",
@@ -238,7 +238,7 @@
         "typing_Steel.Memory.readable"
       ],
       0,
-      "ccb2376bb3e48776d86568bbbee20f94"
+      "88ab2b0ec329a49a852dd0e069747581"
     ],
     [
       "Steel.Actions.sel_ref_lemma",
@@ -247,7 +247,7 @@
       1,
       [ "@query" ],
       0,
-      "0e09f3cbcdf02ac32da734ae239b83f7"
+      "b481dbdfb6b0f73194f177823979697b"
     ],
     [
       "Steel.Actions.sel_ref_or_dead_lemma",
@@ -256,7 +256,7 @@
       1,
       [ "@query" ],
       0,
-      "6cc638a0e6222b5162bd2743cd34a447"
+      "a5145240c6e8fe66a67728eb09d28f78"
     ],
     [
       "Steel.Actions.sel_ref_depends_only_on",
@@ -268,7 +268,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "533ebc1387917e8012cf8a0c7ce91ea7"
+      "f89ca4f727d93be5faa3e5d31ec3c5da"
     ],
     [
       "Steel.Actions.set_ref",
@@ -285,7 +285,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "2a5bd2ce1b2a83635dbbdb864b490e45"
+      "64052a3682c5f7f8b79b9b21cca1f456"
     ],
     [
       "Steel.Actions.alloc_ref",
@@ -302,7 +302,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "5298bf6cf916791c03aa8349ec412895"
+      "193014504dde94158769b1a9396cd897"
     ],
     [
       "Steel.Actions.free_ref",
@@ -319,7 +319,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "15224f2ac4a37b74d07d93d3ecb2124b"
+      "2d0b99f2490ed17fa86e005ff10a60c6"
     ],
     [
       "Steel.Actions.raise_preorder",
@@ -336,7 +336,7 @@
         "typing_FStar.Universe.downgrade_val"
       ],
       0,
-      "fae66d462d1147dd67c28c26fb26d6b4"
+      "4a669cb16ad4de29497a777a94f59e39"
     ],
     [
       "Steel.Actions.cas",
@@ -353,7 +353,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "4b2996ddcef52e8a8cbc015303d61835"
+      "de06bd6598915fe49d821ea3a4a5bee2"
     ],
     [
       "Steel.Actions.reference_preorder_respected",
@@ -366,7 +366,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "afef507747fd6d9f0fb8966562c2c55f"
+      "170d9bd416022000f8cafe35696c27dc"
     ]
   ]
 ]

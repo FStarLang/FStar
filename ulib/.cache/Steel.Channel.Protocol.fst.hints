@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_9e311d9829f293e5f0a3cce21e17ed7d"
       ],
       0,
-      "c298797c0dac0607ab4d14ded1da1291"
+      "cac79580b5d14909eb5f5e5f3559e935"
     ],
     [
       "Steel.Channel.Protocol.__proj__Return__item__v",
@@ -29,7 +29,7 @@
         "refinement_interpretation_Tm_refine_9e311d9829f293e5f0a3cce21e17ed7d"
       ],
       0,
-      "67ef5a6f204e05cb64b330506e4c4f76"
+      "6e7cc0330344ccc4f71a20a8238fb5ff"
     ],
     [
       "Steel.Channel.Protocol.__proj__Msg__item__a",
@@ -43,7 +43,7 @@
         "refinement_interpretation_Tm_refine_c325a7c6e1f350720513fe524f77e449"
       ],
       0,
-      "a626f0bbc5ccee369f88b89251c8016e"
+      "f9e5f98ab2eeb78ff3817b2a430d8e14"
     ],
     [
       "Steel.Channel.Protocol.__proj__Msg__item__b",
@@ -57,7 +57,7 @@
         "refinement_interpretation_Tm_refine_c325a7c6e1f350720513fe524f77e449"
       ],
       0,
-      "dbc63ccb14af2e8eaa706667c0aa9781"
+      "26589a73bf2aec9ba2161ffd337b4fb6"
     ],
     [
       "Steel.Channel.Protocol.__proj__Msg__item__k",
@@ -75,7 +75,7 @@
         "refinement_interpretation_Tm_refine_c325a7c6e1f350720513fe524f77e449"
       ],
       0,
-      "3d19fc62f1a0a75343bab5a29420e287"
+      "e2528d4af727b868fba13a8de086c9dc"
     ],
     [
       "Steel.Channel.Protocol.__proj__DoWhile__item___0",
@@ -89,7 +89,7 @@
         "refinement_interpretation_Tm_refine_3b04407c996f8401617dceb17844164e"
       ],
       0,
-      "9395e9d5b30d105438a09006415dd004"
+      "f500490c90307abf36dbf9ca4a1df23b"
     ],
     [
       "Steel.Channel.Protocol.__proj__DoWhile__item__a",
@@ -103,7 +103,7 @@
         "refinement_interpretation_Tm_refine_3b04407c996f8401617dceb17844164e"
       ],
       0,
-      "a190227d4bff59525611dd6234f713e6"
+      "e075823e5f64a85ed4adec55800281bc"
     ],
     [
       "Steel.Channel.Protocol.__proj__DoWhile__item__k",
@@ -119,7 +119,7 @@
         "refinement_interpretation_Tm_refine_3b04407c996f8401617dceb17844164e"
       ],
       0,
-      "82c284c762131b1b9e7032431fdbc9d6"
+      "e6fb127a5b1b69deef064ce3f0a05463"
     ],
     [
       "Steel.Channel.Protocol.ok",
@@ -139,7 +139,7 @@
         "subterm_ordering_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "5d079e1568dddcc50c1519aab206dfb8"
+      "eef80d929e6bc0e307bb1b0475272c2f"
     ],
     [
       "Steel.Channel.Protocol.bind",
@@ -180,7 +180,7 @@
         "subterm_ordering_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "32df958fbbd7fa6a5169f98ac87208b2"
+      "e0e546ff258bd878e67038a7d01818ab"
     ],
     [
       "Steel.Channel.Protocol.return",
@@ -197,7 +197,7 @@
         "projection_inverse_Steel.Channel.Protocol.Return_v", "true_interp"
       ],
       0,
-      "f15fcbeae1baaf264f3ef24a1e920a3a"
+      "7be3e9a1aca3cd8a4955bfec67e3e891"
     ],
     [
       "Steel.Channel.Protocol.msg",
@@ -225,7 +225,7 @@
         "typing_Tm_abs_875501b6408ee3dd742fd99899342071"
       ],
       0,
-      "f4157edb14bea85abe7689c65fa9f0e7"
+      "2a216b4487de68ae168293721521746c"
     ],
     [
       "Steel.Channel.Protocol.hnf",
@@ -267,7 +267,7 @@
         "typing_Steel.Channel.Protocol.uu___is_Msg"
       ],
       0,
-      "6a0a2daa77649ed7384ac129cc932a88"
+      "657a30b2fda4f28b6602a3acdca8e5da"
     ],
     [
       "Steel.Channel.Protocol.next_msg_t",
@@ -285,7 +285,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "3788dc72dd051324f17873e656af1fd9"
+      "94ac5c10413b13c0e6051f91f958e963"
     ],
     [
       "Steel.Channel.Protocol.step",
@@ -316,7 +316,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "0ece4564986a80005d05632ff065e68c"
+      "3eb126e8cd0dc41b0a26ca1027c6c99e"
     ],
     [
       "Steel.Channel.Protocol.__proj__Waiting__item__p",
@@ -330,7 +330,7 @@
         "refinement_interpretation_Tm_refine_77c299da1c98aaee2771c18281d3b6fb"
       ],
       0,
-      "7b785c358f648b99bf47db02e84c42fa"
+      "d732345ccde71c9a8333c6fb79632495"
     ],
     [
       "Steel.Channel.Protocol.__proj__Message__item__from",
@@ -344,7 +344,7 @@
         "refinement_interpretation_Tm_refine_9a72eb67d0f2e7a3580b02e60e5eb3ae"
       ],
       0,
-      "b783786394a9c9efa19df37b213c4eeb"
+      "69c554238a5bb242c935364d6be5e3a0"
     ],
     [
       "Steel.Channel.Protocol.__proj__Message__item__x",
@@ -368,7 +368,7 @@
         "unit_typing"
       ],
       0,
-      "03f99a133eb03a3375a5a790b6b620c7"
+      "85c8896bf4c3a0b62b47ab470b28deb6"
     ],
     [
       "Steel.Channel.Protocol.__proj__Message__item__to",
@@ -382,7 +382,7 @@
         "refinement_interpretation_Tm_refine_9a72eb67d0f2e7a3580b02e60e5eb3ae"
       ],
       0,
-      "083c1a8ceb236eab71852aae79ce2997"
+      "e4afed29682ffe1e5a1eb66104752744"
     ],
     [
       "Steel.Channel.Protocol.__proj__Message__item___3",
@@ -402,7 +402,7 @@
         "refinement_interpretation_Tm_refine_9a72eb67d0f2e7a3580b02e60e5eb3ae"
       ],
       0,
-      "ce6d85aa350022683f3f6bfc636aa88e"
+      "0a2b74d1a58af2dcdb27d78189f08426"
     ],
     [
       "Steel.Channel.Protocol.extend",
@@ -414,7 +414,7 @@
         "refinement_interpretation_Tm_refine_a32d6af70eb825a20c139698f69438df"
       ],
       0,
-      "ab85bb9a1acb3d36c9c2e98c883c8a8e"
+      "7c6d2585e4c0604f6ebd89ea62d5f64e"
     ],
     [
       "Steel.Channel.Protocol.extend",
@@ -440,7 +440,7 @@
         "subterm_ordering_Steel.Channel.Protocol.Message", "unit_typing"
       ],
       0,
-      "5e9c85d3ae0354b3539f82495f2215d5"
+      "51ed278cf3655c144fc6ede2a2eeba67"
     ],
     [
       "Steel.Channel.Protocol.last_step_of",
@@ -473,7 +473,7 @@
         "subterm_ordering_Steel.Channel.Protocol.Message"
       ],
       0,
-      "d65e802236cfeb226f1e945b97bdac63"
+      "dcd10e2ec6611dc90697c238eea4032b"
     ],
     [
       "Steel.Channel.Protocol.__proj__Mkpartial_trace_of__item__tr",
@@ -486,7 +486,7 @@
         "projection_inverse_Steel.Channel.Protocol.Mkpartial_trace_of_to"
       ],
       0,
-      "c2dadeab6c2f51bf6346d1974e12aab4"
+      "a998a9415432e7c6fc18810818a03528"
     ],
     [
       "Steel.Channel.Protocol.next",
@@ -495,7 +495,7 @@
       1,
       [ "@query" ],
       0,
-      "81867167aa6e7e6d7088eab5a016d570"
+      "6f57105bf9cc4352ba9ff62241d4f822"
     ],
     [
       "Steel.Channel.Protocol.extend_partial_trace",
@@ -523,7 +523,7 @@
         "typing_Steel.Channel.Protocol.next", "unit_typing"
       ],
       0,
-      "0d31333891068807926cf1acf1683ede"
+      "bb619af5db180fc1372fc8f452aa2f86"
     ],
     [
       "Steel.Channel.Protocol.__proj__Return__item__a",
@@ -537,7 +537,7 @@
         "refinement_interpretation_Tm_refine_9e311d9829f293e5f0a3cce21e17ed7d"
       ],
       0,
-      "18d75aa0f5727e71b8e64558d24478d3"
+      "71dbaf61c67781031c7e5ed227f1fb2e"
     ],
     [
       "Steel.Channel.Protocol.__proj__Return__item__v",
@@ -553,7 +553,7 @@
         "refinement_interpretation_Tm_refine_9e311d9829f293e5f0a3cce21e17ed7d"
       ],
       0,
-      "5346d3bbea9341e4d38b62d75ebc2b87"
+      "de73a548163a88484cafe0ce4c448548"
     ],
     [
       "Steel.Channel.Protocol.__proj__Msg__item__a",
@@ -567,7 +567,7 @@
         "refinement_interpretation_Tm_refine_c325a7c6e1f350720513fe524f77e449"
       ],
       0,
-      "20a1e539dc6b928b7a5f33e264fcfcd4"
+      "030baec23aab7eb6a817f73eedb9fc4f"
     ],
     [
       "Steel.Channel.Protocol.__proj__Msg__item__b",
@@ -581,7 +581,7 @@
         "refinement_interpretation_Tm_refine_c325a7c6e1f350720513fe524f77e449"
       ],
       0,
-      "9754e2c7f6e443e0953ef6f4fceddfd7"
+      "3904cdc71be1a8c51bfe29a4dfb10961"
     ],
     [
       "Steel.Channel.Protocol.__proj__Msg__item__k",
@@ -599,7 +599,7 @@
         "refinement_interpretation_Tm_refine_c325a7c6e1f350720513fe524f77e449"
       ],
       0,
-      "a5808c00a5c6d833c0890604d226a6e8"
+      "a366f782ed6f9953adca3c719e1426be"
     ],
     [
       "Steel.Channel.Protocol.__proj__DoWhile__item___0",
@@ -613,7 +613,7 @@
         "refinement_interpretation_Tm_refine_3b04407c996f8401617dceb17844164e"
       ],
       0,
-      "0103b823c148a820d534eda03280c41e"
+      "b97bee29b82d04e582c126cfd1e5d6ce"
     ],
     [
       "Steel.Channel.Protocol.__proj__DoWhile__item__a",
@@ -627,7 +627,7 @@
         "refinement_interpretation_Tm_refine_3b04407c996f8401617dceb17844164e"
       ],
       0,
-      "6b50bc95bf41508861dae526022d470d"
+      "cac2c17074d9ec86d0cf20d2ca359ecc"
     ],
     [
       "Steel.Channel.Protocol.__proj__DoWhile__item__k",
@@ -643,7 +643,7 @@
         "refinement_interpretation_Tm_refine_3b04407c996f8401617dceb17844164e"
       ],
       0,
-      "24a600f50252cae77ebd84ad35ac0c22"
+      "a3b04d9587ec8fe2447cb4ab01fa3215"
     ],
     [
       "Steel.Channel.Protocol.ok",
@@ -663,7 +663,7 @@
         "subterm_ordering_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "4e65f8796bdb2593df27d2a5d72e6fb7"
+      "df2a5c1ca4e7527e0a726f355a6e14ef"
     ],
     [
       "Steel.Channel.Protocol.bind",
@@ -704,7 +704,7 @@
         "subterm_ordering_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "fc2ddeec6007a71525cc5fc4f0b5ec5c"
+      "25e06a017ddfa7fc33d00fb782b85f08"
     ],
     [
       "Steel.Channel.Protocol.return",
@@ -721,7 +721,7 @@
         "projection_inverse_Steel.Channel.Protocol.Return_v", "true_interp"
       ],
       0,
-      "2d337c047a7ef90271e18b267bcfcb81"
+      "27f20cadcedd80a25888d32ab60657d8"
     ],
     [
       "Steel.Channel.Protocol.msg",
@@ -749,7 +749,7 @@
         "typing_Tm_abs_875501b6408ee3dd742fd99899342071"
       ],
       0,
-      "491016b0e12e4ae54af524099eeb5af3"
+      "8e3519d229d96cd7f72a2669d350f544"
     ],
     [
       "Steel.Channel.Protocol.hnf",
@@ -791,7 +791,7 @@
         "typing_Steel.Channel.Protocol.uu___is_Msg"
       ],
       0,
-      "dc8de366e0e3d962adf0d6f2b27dd840"
+      "6ef9343cf1f34433f0f3eef378039dbb"
     ],
     [
       "Steel.Channel.Protocol.next_msg_t",
@@ -809,7 +809,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "d404b6df4bd32d2656c5c9756dd737d7"
+      "cfbb68230c119001c6347d1ea70827d9"
     ],
     [
       "Steel.Channel.Protocol.step",
@@ -840,7 +840,7 @@
         "typing_Steel.Channel.Protocol.hnf"
       ],
       0,
-      "01ed7f34832aa82ebfbe020293e10cf5"
+      "bf33dca9e7653af69103297062210b7b"
     ],
     [
       "Steel.Channel.Protocol.__proj__Waiting__item__p",
@@ -854,7 +854,7 @@
         "refinement_interpretation_Tm_refine_77c299da1c98aaee2771c18281d3b6fb"
       ],
       0,
-      "a35ccf78543f497c3c070441eadc0456"
+      "30cb1949688a3f0ff6599f2d0f4bf52b"
     ],
     [
       "Steel.Channel.Protocol.__proj__Message__item__from",
@@ -868,7 +868,7 @@
         "refinement_interpretation_Tm_refine_9a72eb67d0f2e7a3580b02e60e5eb3ae"
       ],
       0,
-      "ec4473ee28acdf0f3f12576d981881c2"
+      "45c98eb022d87f5d4ad75ec4c006fd3e"
     ],
     [
       "Steel.Channel.Protocol.__proj__Message__item__x",
@@ -892,7 +892,7 @@
         "unit_typing"
       ],
       0,
-      "170d7ce1a0f21e51787ab247fe57f006"
+      "6315375e8524ce69fbb97cea6e3c6782"
     ],
     [
       "Steel.Channel.Protocol.__proj__Message__item__to",
@@ -906,7 +906,7 @@
         "refinement_interpretation_Tm_refine_9a72eb67d0f2e7a3580b02e60e5eb3ae"
       ],
       0,
-      "0f2df8dc5e9421a3e0246ee076810e4e"
+      "3c02d68020dbcf280db3d4b761b61331"
     ],
     [
       "Steel.Channel.Protocol.__proj__Message__item___3",
@@ -926,7 +926,7 @@
         "refinement_interpretation_Tm_refine_9a72eb67d0f2e7a3580b02e60e5eb3ae"
       ],
       0,
-      "d38d6efd125622c28f36ac11127deb9c"
+      "28ab0c84d917731702e010bea554f015"
     ],
     [
       "Steel.Channel.Protocol.extend",
@@ -938,7 +938,7 @@
         "refinement_interpretation_Tm_refine_a32d6af70eb825a20c139698f69438df"
       ],
       0,
-      "19e63733efe68c65e79677315d3e13f1"
+      "867352e474cb25a8e4c8361a39b5cd00"
     ],
     [
       "Steel.Channel.Protocol.extend",
@@ -964,7 +964,7 @@
         "subterm_ordering_Steel.Channel.Protocol.Message", "unit_typing"
       ],
       0,
-      "ec4a5271316f672e8cfa0159821d0ff2"
+      "7ae1319409460c6361cb89f306966fb1"
     ],
     [
       "Steel.Channel.Protocol.last_step_of",
@@ -1010,7 +1010,7 @@
         "projection_inverse_Steel.Channel.Protocol.Mkpartial_trace_of_to"
       ],
       0,
-      "d1b96883244cb2c70a4a11f7ccb90832"
+      "bd14b9429d5f42b40d0c6a6bbc978cb2"
     ],
     [
       "Steel.Channel.Protocol.next",
@@ -1019,7 +1019,7 @@
       1,
       [ "@query" ],
       0,
-      "9ba66b7fea5ecfbcd7c40c14f7cfc809"
+      "a633816a257bcaa0e6ff5d2d2fbc0944"
     ],
     [
       "Steel.Channel.Protocol.extend_partial_trace",
@@ -1047,7 +1047,7 @@
         "typing_Steel.Channel.Protocol.next", "unit_typing"
       ],
       0,
-      "7d69141204913d0ee159310c56c6769f"
+      "72afaec12daa53c75beea239d9b42cf5"
     ]
   ]
 ]

@@ -269,15 +269,7 @@ let cache_file_name =
                                 mname
                                 path
                                 (Options.prepend_cache_dir cache_fn));
-
-        (* This expression morally just returns [path], but prefers
-         * the path in [expected_cache_file] is possible to give
-         * preference to relative filenames. This is mostly since
-         * GNU make doesn't resolve paths in targets, so we try
-         * to keep target paths relative. See issue #1978. *)
-        if BU.file_exists expected_cache_file && BU.paths_to_same_file path expected_cache_file
-        then expected_cache_file
-        else path
+        path
       | None ->
           if mname |> Options.should_be_already_cached
           then
@@ -1493,13 +1485,14 @@ let print_full (deps:deps) : unit =
         (fun all_checked_files file_name ->
           let process_one_key () =
             let dep_node = deps_try_find deps.dep_graph file_name |> Option.get in
-            let iface_deps =
+            let iface_fn, iface_deps =
                 if is_interface file_name
-                then None
+                then None, None
                 else match interface_of deps (lowercase_module_name file_name) with
                      | None ->
-                       None
+                       None, None
                      | Some iface ->
+                       Some iface,
                        Some ((Option.get (deps_try_find deps.dep_graph iface)).edges)
             in
             let iface_deps =
@@ -1523,6 +1516,18 @@ let print_full (deps:deps) : unit =
                   in
                   BU.remove_dups (fun x y -> x = y) (files @ iface_files)
             in
+
+            (*
+             * AR: depend on A.fsti.checked, rather than A.fsti
+             *     see #1919
+             *)
+            let files =
+              if iface_fn |> is_some then
+                let iface_fn = iface_fn |> must in
+                files |> List.filter (fun f -> f <> iface_fn)
+                      |> (fun files -> (cache_file_name iface_fn)::files)
+              else files in
+
             let files = List.map norm_path files in
             let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
             let files = String.concat "\\\n\t" files in

@@ -141,7 +141,7 @@ let rec (free_names_and_uvs' :
         let from_binders =
           FStar_All.pipe_right bs
             (FStar_List.fold_left
-               (fun n1  ->
+               (fun n  ->
                   fun uu____308  ->
                     match uu____308 with
                     | (x,uu____316) ->
@@ -149,7 +149,7 @@ let rec (free_names_and_uvs' :
                           free_names_and_uvars x.FStar_Syntax_Syntax.sort
                             use_cache
                            in
-                        union n1 uu____321) no_free_vars)
+                        union n uu____321) no_free_vars)
            in
         union from_binders from_body  in
       let t = FStar_Syntax_Subst.compress tm  in
@@ -185,11 +185,11 @@ let rec (free_names_and_uvs' :
           let uu____519 =
             let uu____538 = free_names_and_uvars t1 use_cache  in
             FStar_List.fold_left
-              (fun n1  ->
+              (fun n  ->
                  fun uu____561  ->
                    match uu____561 with
                    | (p,wopt,t2) ->
-                       let n11 =
+                       let n1 =
                          match wopt with
                          | FStar_Pervasives_Native.None  -> no_free_vars
                          | FStar_Pervasives_Native.Some w ->
@@ -206,9 +206,9 @@ let rec (free_names_and_uvs' :
                                      free_names_and_uvars
                                        x.FStar_Syntax_Syntax.sort use_cache
                                       in
-                                   union n3 uu____609) n1)
+                                   union n3 uu____609) n)
                           in
-                       let uu____610 = union n11 n2  in union n3 uu____610)
+                       let uu____610 = union n1 n2  in union n3 uu____610)
               uu____538
              in
           FStar_All.pipe_right pats uu____519
@@ -228,7 +228,7 @@ let rec (free_names_and_uvs' :
           let uu____737 =
             let uu____744 = free_names_and_uvars t1 use_cache  in
             FStar_List.fold_left
-              (fun n1  ->
+              (fun n  ->
                  fun lb  ->
                    let uu____750 =
                      let uu____751 =
@@ -240,7 +240,7 @@ let rec (free_names_and_uvs' :
                          use_cache
                         in
                      union uu____751 uu____752  in
-                   union n1 uu____750) uu____744
+                   union n uu____750) uu____744
              in
           FStar_All.pipe_right (FStar_Pervasives_Native.snd lbs) uu____737
       | FStar_Syntax_Syntax.Tm_quoted (tm1,qi) ->
@@ -276,18 +276,18 @@ and (free_names_and_uvars :
       let t1 = FStar_Syntax_Subst.compress t  in
       let uu____873 = FStar_ST.op_Bang t1.FStar_Syntax_Syntax.vars  in
       match uu____873 with
-      | FStar_Pervasives_Native.Some n1 when
-          let uu____900 = should_invalidate_cache n1 use_cache  in
+      | FStar_Pervasives_Native.Some n when
+          let uu____900 = should_invalidate_cache n use_cache  in
           Prims.op_Negation uu____900 ->
           let uu____902 = FStar_Syntax_Syntax.new_fv_set ()  in
-          (n1, uu____902)
+          (n, uu____902)
       | uu____907 ->
           (FStar_ST.op_Colon_Equals t1.FStar_Syntax_Syntax.vars
              FStar_Pervasives_Native.None;
-           (let n1 = free_names_and_uvs' t1 use_cache  in
+           (let n = free_names_and_uvs' t1 use_cache  in
             FStar_ST.op_Colon_Equals t1.FStar_Syntax_Syntax.vars
-              (FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst n1));
-            n1))
+              (FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst n));
+            n))
 
 and (free_names_and_uvars_args :
   (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
@@ -302,12 +302,12 @@ and (free_names_and_uvars_args :
       fun use_cache  ->
         FStar_All.pipe_right args
           (FStar_List.fold_left
-             (fun n1  ->
+             (fun n  ->
                 fun uu____1011  ->
                   match uu____1011 with
                   | (x,uu____1021) ->
                       let uu____1030 = free_names_and_uvars x use_cache  in
-                      union n1 uu____1030) acc)
+                      union n uu____1030) acc)
 
 and (free_names_and_uvars_comp :
   FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
@@ -317,8 +317,8 @@ and (free_names_and_uvars_comp :
     fun use_cache  ->
       let uu____1036 = FStar_ST.op_Bang c.FStar_Syntax_Syntax.vars  in
       match uu____1036 with
-      | FStar_Pervasives_Native.Some n1 ->
-          let uu____1063 = should_invalidate_cache n1 use_cache  in
+      | FStar_Pervasives_Native.Some n ->
+          let uu____1063 = should_invalidate_cache n use_cache  in
           if uu____1063
           then
             (FStar_ST.op_Colon_Equals c.FStar_Syntax_Syntax.vars
@@ -326,9 +326,9 @@ and (free_names_and_uvars_comp :
              free_names_and_uvars_comp c use_cache)
           else
             (let uu____1092 = FStar_Syntax_Syntax.new_fv_set ()  in
-             (n1, uu____1092))
+             (n, uu____1092))
       | uu____1097 ->
-          let n1 =
+          let n =
             match c.FStar_Syntax_Syntax.n with
             | FStar_Syntax_Syntax.GTotal (t,FStar_Pervasives_Native.None ) ->
                 free_names_and_uvars t use_cache
@@ -359,15 +359,15 @@ and (free_names_and_uvars_comp :
                   us ct.FStar_Syntax_Syntax.comp_univs
              in
           (FStar_ST.op_Colon_Equals c.FStar_Syntax_Syntax.vars
-             (FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst n1));
-           n1)
+             (FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst n));
+           n)
 
 and (should_invalidate_cache :
   FStar_Syntax_Syntax.free_vars -> Prims.bool -> Prims.bool) =
-  fun n1  ->
+  fun n  ->
     fun use_cache  ->
       (Prims.op_Negation use_cache) ||
-        ((FStar_All.pipe_right n1.FStar_Syntax_Syntax.free_uvars
+        ((FStar_All.pipe_right n.FStar_Syntax_Syntax.free_uvars
             (FStar_Util.for_some
                (fun u  ->
                   let uu____1204 =
@@ -378,7 +378,7 @@ and (should_invalidate_cache :
                   | FStar_Pervasives_Native.Some uu____1208 -> true
                   | uu____1210 -> false)))
            ||
-           (FStar_All.pipe_right n1.FStar_Syntax_Syntax.free_univs
+           (FStar_All.pipe_right n.FStar_Syntax_Syntax.free_univs
               (FStar_Util.for_some
                  (fun u  ->
                     let uu____1221 = FStar_Syntax_Unionfind.univ_find u  in
@@ -395,7 +395,7 @@ let (free_names_and_uvars_binders :
       fun use_cache  ->
         FStar_All.pipe_right bs
           (FStar_List.fold_left
-             (fun n1  ->
+             (fun n  ->
                 fun uu____1266  ->
                   match uu____1266 with
                   | (x,uu____1274) ->
@@ -403,7 +403,7 @@ let (free_names_and_uvars_binders :
                         free_names_and_uvars x.FStar_Syntax_Syntax.sort
                           use_cache
                          in
-                      union n1 uu____1279) acc)
+                      union n uu____1279) acc)
   
 let (compare_uv :
   FStar_Syntax_Syntax.ctx_uvar -> FStar_Syntax_Syntax.ctx_uvar -> Prims.int)

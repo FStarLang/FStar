@@ -580,6 +580,7 @@ type norm_step =
     | Primops
     | Delta
     | Zeta
+    | ZetaFull
     | Iota
     | Reify
     | UnfoldOnly  of list<string>
@@ -588,18 +589,19 @@ type norm_step =
     | NBE
 
 (* the steps as terms *)
-let steps_Simpl         = tdataconstr PC.steps_simpl
-let steps_Weak          = tdataconstr PC.steps_weak
-let steps_HNF           = tdataconstr PC.steps_hnf
-let steps_Primops       = tdataconstr PC.steps_primops
-let steps_Delta         = tdataconstr PC.steps_delta
-let steps_Zeta          = tdataconstr PC.steps_zeta
-let steps_Iota          = tdataconstr PC.steps_iota
-let steps_Reify         = tdataconstr PC.steps_reify
-let steps_UnfoldOnly    = tdataconstr PC.steps_unfoldonly
-let steps_UnfoldFully   = tdataconstr PC.steps_unfoldonly
-let steps_UnfoldAttr    = tdataconstr PC.steps_unfoldattr
-let steps_NBE           = tdataconstr PC.steps_nbe
+let steps_Simpl         = tconst PC.steps_simpl
+let steps_Weak          = tconst PC.steps_weak
+let steps_HNF           = tconst PC.steps_hnf
+let steps_Primops       = tconst PC.steps_primops
+let steps_Delta         = tconst PC.steps_delta
+let steps_Zeta          = tconst PC.steps_zeta
+let steps_ZetaFull      = tconst PC.steps_zeta_full
+let steps_Iota          = tconst PC.steps_iota
+let steps_Reify         = tconst PC.steps_reify
+let steps_UnfoldOnly    = tconst PC.steps_unfoldonly
+let steps_UnfoldFully   = tconst PC.steps_unfoldonly
+let steps_UnfoldAttr    = tconst PC.steps_unfoldattr
+let steps_NBE           = tconst PC.steps_nbe
 
 let e_norm_step =
     let t_norm_step = U.fvar_const (Ident.lid_of_str "FStar.Syntax.Embeddings.norm_step") in
@@ -626,6 +628,8 @@ let e_norm_step =
                     steps_Delta
                 | Zeta ->
                     steps_Zeta
+                | ZetaFull ->
+                    steps_ZetaFull
                 | Iota ->
                     steps_Iota
                 | NBE ->
@@ -665,6 +669,8 @@ let e_norm_step =
                     Some Delta
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_zeta ->
                     Some Zeta
+                | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_zeta_full ->
+                    Some ZetaFull
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_iota ->
                     Some Iota
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_nbe ->

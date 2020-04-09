@@ -59,16 +59,16 @@ let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv<'a>) : 'a * TcEnv.env
     a, ({tcenv with dsenv = dsenv})
 
 let with_tcenv_of_env (e:uenv) (f:TcEnv.env -> 'a * TcEnv.env) : 'a * uenv =
-     let a, t' = f e.env_tcenv in
-     a, ({e with env_tcenv=t'})
+     let a, t' = f (tcenv_of_uenv e) in
+     a, (set_tcenv e t')
 
 let with_dsenv_of_env (e:uenv) (f:DsEnv.withenv<'a>) : 'a * uenv =
-     let a, tcenv = with_dsenv_of_tcenv e.env_tcenv f in
-     a, ({e with env_tcenv=tcenv})
+     let a, tcenv = with_dsenv_of_tcenv (tcenv_of_uenv e) f in
+     a, (set_tcenv e tcenv)
 
 let push_env (env:uenv) =
     snd (with_tcenv_of_env env (fun tcenv ->
-            (), FStar.TypeChecker.Env.push env.env_tcenv "top-level: push_env"))
+            (), FStar.TypeChecker.Env.push (tcenv_of_uenv env) "top-level: push_env"))
 
 let pop_env (env:uenv) =
     snd (with_tcenv_of_env env (fun tcenv ->
@@ -81,7 +81,7 @@ let with_env env (f:uenv -> 'a) : 'a =
     res
 
 let env_of_tcenv (env:TcEnv.env) =
-    FStar.Extraction.ML.UEnv.mkContext env
+    FStar.Extraction.ML.UEnv.new_uenv env
 
 (***********************************************************************)
 (* Parse and desugar a file                                            *)
@@ -298,7 +298,7 @@ let tc_one_file
   in
   let tc_source_file () =
       let fmod, env = parse env pre_fn fn in
-      let mii = FStar.Syntax.DsEnv.inclusion_info env.env_tcenv.dsenv fmod.name in
+      let mii = FStar.Syntax.DsEnv.inclusion_info (tcenv_of_uenv env).dsenv fmod.name in
       let check_mod () =
           let check env =
               with_tcenv_of_env env (fun tcenv ->
@@ -371,22 +371,11 @@ let tc_one_file
         then Ch.store_module_to_cache env fn parsing_data tc_result;
         tc_result, mllib, env
 
-      | Some (tc_result, checked_fname) ->
+      | Some tc_result ->
         let tcmod = tc_result.checked_module in
         let smt_decls = tc_result.smt_decls in
         if Options.dump_module tcmod.name.str
         then BU.print1 "Module after type checking:\n%s\n" (FStar.Syntax.Print.modul_to_string tcmod);
-
-        (* If we were called to verify (or lax check) this file, and we found
-         * a good, non-stale checked file, update the timestamp as if we had
-         * built it again. This simplifies Makefile logic a lot. However if we're
-         * called to extract, leave the .checked file as-is. See
-         * issue #1978 (starting from "Also, separate issue: ..."). *)
-        if Options.should_check_file fn && Option.isNone (Options.codegen ()) then begin
-            if Options.debug_at_level_no_module (Options.Other "CheckedFiles") then
-              BU.print1 "Updating timestamp on checked file %s\n" checked_fname;
-            BU.touch_file checked_fname
-        end;
 
         let extend_tcenv tcmod tcenv =
             let _, tcenv =
@@ -444,7 +433,7 @@ let tc_one_file_for_ide
     =
     let env = env_of_tcenv env in
     let tc_result, _, env = tc_one_file env pre_fn fn parsing_data in
-    tc_result, env.env_tcenv
+    tc_result, (tcenv_of_uenv env)
 
 (***********************************************************************)
 (* Batch mode: composing many files in the presence of pre-modules     *)
@@ -497,7 +486,7 @@ let batch_mode_tc filenames dep_graph =
     FStar.Util.print1 "Here's the list of modules we will verify: %s\n"
       (String.concat " " (filenames |> List.filter Options.should_verify_file))
   end;
-  let env = FStar.Extraction.ML.UEnv.mkContext (init_env dep_graph) in
+  let env = FStar.Extraction.ML.UEnv.new_uenv (init_env dep_graph) in
   let all_mods, mllibs, env = tc_fold_interleave dep_graph ([], [], env) filenames in
   emit mllibs;
   let solver_refresh env =

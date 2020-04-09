@@ -20,15 +20,18 @@ type rng = {
   end_pos: pos }[@@deriving yojson,show]
 let (__proj__Mkrng__item__file_name : rng -> file_name) =
   fun projectee  ->
-    match projectee with | { file_name; start_pos; end_pos;_} -> file_name
+    match projectee with
+    | { file_name = file_name1; start_pos; end_pos;_} -> file_name1
   
 let (__proj__Mkrng__item__start_pos : rng -> pos) =
   fun projectee  ->
-    match projectee with | { file_name; start_pos; end_pos;_} -> start_pos
+    match projectee with
+    | { file_name = file_name1; start_pos; end_pos;_} -> start_pos
   
 let (__proj__Mkrng__item__end_pos : rng -> pos) =
   fun projectee  ->
-    match projectee with | { file_name; start_pos; end_pos;_} -> end_pos
+    match projectee with
+    | { file_name = file_name1; start_pos; end_pos;_} -> end_pos
   
 type range = {
   def_range: rng ;
@@ -72,8 +75,9 @@ let (mk_pos : Prims.int -> Prims.int -> pos) =
     fun c  -> { line = (max Prims.int_zero l); col = (max Prims.int_zero c) }
   
 let (mk_rng : file_name -> pos -> pos -> rng) =
-  fun file_name  ->
-    fun start_pos  -> fun end_pos  -> { file_name; start_pos; end_pos }
+  fun file_name1  ->
+    fun start_pos  ->
+      fun end_pos  -> { file_name = file_name1; start_pos; end_pos }
   
 let (mk_range : Prims.string -> pos -> pos -> range) =
   fun f  -> fun b  -> fun e  -> let r = mk_rng f b e  in range_of_rng r r 
@@ -110,9 +114,9 @@ let (rng_included : rng -> rng -> Prims.bool) =
           (pos_geq r2.end_pos r1.end_pos)
   
 let (string_of_pos : pos -> Prims.string) =
-  fun pos  ->
-    let uu____323 = FStar_Util.string_of_int pos.line  in
-    let uu____325 = FStar_Util.string_of_int pos.col  in
+  fun pos1  ->
+    let uu____323 = FStar_Util.string_of_int pos1.line  in
+    let uu____325 = FStar_Util.string_of_int pos1.col  in
     FStar_Util.format2 "%s,%s" uu____323 uu____325
   
 let (string_of_file_name : Prims.string -> Prims.string) =
@@ -246,13 +250,14 @@ let (prims_to_fstar_range :
                   { def_range = r11; use_range = r21 }))
   
 let (json_of_pos : pos -> FStar_Util.json) =
-  fun pos  ->
+  fun pos1  ->
     let uu____896 =
       let uu____899 =
-        let uu____900 = line_of_pos pos  in FStar_Util.JsonInt uu____900  in
+        let uu____900 = line_of_pos pos1  in FStar_Util.JsonInt uu____900  in
       let uu____902 =
         let uu____905 =
-          let uu____906 = col_of_pos pos  in FStar_Util.JsonInt uu____906  in
+          let uu____906 = col_of_pos pos1  in FStar_Util.JsonInt uu____906
+           in
         [uu____905]  in
       uu____899 :: uu____902  in
     FStar_Util.JsonList uu____896

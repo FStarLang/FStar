@@ -78,8 +78,8 @@ write_simple_summary() {
     awk -F',' '
         BEGIN {total=0; user=0; sys=0; mem=0}
         BEGIN {printf "%-10s %10s %10s %10s %10s\n", "N_benches", "total", "user", "system", "mem(mb)"}
-        NR>1 {total+=$2; user+=$3; sys+=$4; mem+=$5}
-        END { printf "%-10d %10g %10g %10g %10d\n", NR-1,total, user, sys, mem/1000}' \
+        NR>0 {total+=$2; user+=$3; sys+=$4; mem+=$5}
+        END { printf "%-10d %10g %10g %10g %10d\n", NR-1, total, user, sys, mem/1000}' \
         < ${IN}.csv > ${AGG}
     echo "Wrote ${AGG}"
 
@@ -89,7 +89,7 @@ write_simple_summary() {
     sort -n -k 2 -t, -r |
     awk -F',' '
         BEGIN {printf "%-40s %10s %10s %10s %10s\n", "file", "total", "user", "system", "mem(kb)"}
-        NR>1  {printf "%-40s %10g %10g %10g %10d\n", $1, $2, $3, $4, $5}' \
+        NR>0  {printf "%-40s %10g %10g %10g %10d\n", $1, $2, $3, $4, $5}' \
         > ${IND}
     echo "Wrote ${IND}"
 }

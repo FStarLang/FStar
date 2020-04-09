@@ -92,7 +92,7 @@ let (report_and_clear : Prims.string -> unit) =
   fun tag  ->
     let ctrs =
       FStar_Util.smap_fold all_counters
-        (fun uu____532  -> fun v1  -> fun l  -> v1 :: l) []
+        (fun uu____532  -> fun v  -> fun l  -> v :: l) []
        in
     FStar_Util.smap_clear all_counters;
     (let ctrs1 =

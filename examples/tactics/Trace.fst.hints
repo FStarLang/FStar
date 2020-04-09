@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "22cc0099a15688d754066c86d411877b"
+      "c83a98c6d27c1c726e094b04f25dae5f"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "be4222607590a207c65871324879c9a2"
+      "feca968648d060dc2185d25ef4b23a3d"
     ],
     [
       "Trace.tick_last",
@@ -35,7 +35,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "09228316f0da00ffdb48cb9121e4b6cb"
+      "e32fd849a3e67fa38189ac5bb1a49ffe"
     ],
     [
       "Trace.cutlast",
@@ -49,7 +49,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "cc44a545669773e9d329509072c4ffc2"
+      "09697473952af530cd7a2f1a1a4cb273"
     ],
     [
       "Trace.fall",
@@ -63,7 +63,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "35338808f678d148ea6a3b50c00fde9a"
+      "fcac85588d275c593aec84e1b0443ae7"
     ],
     [
       "Trace.uu___100",
@@ -82,7 +82,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "96ed267aed4012f6f219e056020e6b13"
+      "dbf0383efebc3ec10162308b277b364b"
     ],
     [
       "Trace.fact_aux",
@@ -100,7 +100,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "70f89b6db9863930cd540401026f4b80"
+      "2c16f4039cd75635b5edee01355392fd"
     ],
     [
       "Trace.uu___110",
@@ -125,7 +125,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "05334c194ebd478e95235a9bffe5bb56"
+      "8b3c5bfc75af55d46e2c58073792ff86"
     ],
     [
       "Trace.uu___114",
@@ -151,7 +151,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "221fc42b39d962498c18d4e238c139a0"
+      "beff9aefd173dda8d096122aef1ca9d9"
     ],
     [
       "Trace.mynat",
@@ -160,7 +160,7 @@
       1,
       [ "@query" ],
       0,
-      "9d85e229109ee27abfbd526c8eae276c"
+      "9d3d71a74e971066fdf5a0ce83ce6d84"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -173,7 +173,7 @@
         "refinement_interpretation_Tm_refine_404885b3cc4eeb5f45b884df07c7ad02"
       ],
       0,
-      "dc389923b659f53f1e0689585a1d4815"
+      "fa80bfafaa7297da5fce5785468e75c4"
     ],
     [
       "Trace.tick_last",
@@ -187,7 +187,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "388ebcfdfcd8d7c434bf30904b4ae04d"
+      "1dcb161b197e02a54038dc3c25633c45"
     ],
     [
       "Trace.term_is_fv",
@@ -204,7 +204,7 @@
         "typing_FStar.Tactics.Result.uu___is_Failed"
       ],
       0,
-      "dbc860993eb53a7ace51b97ae17b15f4"
+      "7ab9084e2a8bfcd2fc27d359be6328be"
     ],
     [
       "Trace.cutlast",
@@ -218,7 +218,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4dd8875e5660f7005ff0b5b0b5a395e2"
+      "5cd4a9c91fdc1a0f4fa89930421a6e18"
     ],
     [
       "Trace.fall",
@@ -232,7 +232,7 @@
         "fuel_guarded_inversion_Trace.mynat", "subterm_ordering_Trace.S"
       ],
       0,
-      "c93f364a7b8c4c8743651c5fbed68370"
+      "49e60ad4949bf31d5e10a8ba2e99d02d"
     ],
     [
       "Trace.uu___100",
@@ -251,7 +251,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "ba6d5c06de428dad9ea850ad402c7d43"
+      "ace3d6492c07409359b36518622e58aa"
     ],
     [
       "Trace.fact_aux",
@@ -269,7 +269,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "e0f0013358574a754d0614700adce6f2"
+      "b53e184cfbc9c548c30cf068e57b2ec3"
     ],
     [
       "Trace.uu___110",
@@ -294,7 +294,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "ca9d074153be30b3e0f3abf94e1b564f"
+      "7698499c86b15853af1f8e706e0eaa28"
     ],
     [
       "Trace.uu___114",
@@ -320,7 +320,7 @@
         "typing_Trace.fact_"
       ],
       0,
-      "f3782532b15632f0bfd54999afe83afc"
+      "516f0055e44a3c5aee352af8b5d6fb2b"
     ]
   ]
 ]

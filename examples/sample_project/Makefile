@@ -24,6 +24,7 @@ all: verify-all
 # a.fst.checked is the binary, checked version of a.fst
 %.checked: %
 	$(FSTAR) $*
+	touch $@
 
 # The _tags file is a directive to ocamlbuild
 # The extracted ML files are precious, because you may want to examine them,
