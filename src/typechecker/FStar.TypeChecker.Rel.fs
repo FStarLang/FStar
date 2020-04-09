@@ -658,42 +658,39 @@ let flex_uvar_head t =
     | _ -> failwith "Not a flex-uvar"
 
 (* Make sure the uvar at the head of t0 is not affected by a
- * substitution.
+ * the substitution in the Tm_uvar node.
  *
  * In the case that it is, first solve it to a new appropriate uvar
- * without a substitution. This function returns t again, though
- * it is unchanged (the changes only happen in the UF graph).
+ * without a substitution. This function returns t again, though it is
+ * unchanged (the changes only happen in the UF graph).
  *
- * The way we generate the new uvar is find the x's in the domain of ?u
- * that are not affected by the substitution and make a new variable with
- * only those binders in the domain. The ones that are affected we will
- * "hoist" by making the type of ?u' an arrow.
+ * The way we generate the new uvar is by making a new variable with
+ * that is "hoisted" and which we apply to the binders of the original
+ * uvar. There is an optimization in place to hoist as few binders as
+ * possible.
  *
- * Example:
- * If we have (x,y |- ?u : ty)[(x:a) <- x, (y:int) <- 42], we will make
- * ?u' with x in its binders, abstracted over y:
+ * Example: If we have ((x:a),(y:b),(z:c) |- ?u : ty)[y <- 42], we will
+ * make ?u' with x in its binders, abstracted over y and z:
  *
- * (x |- ?u') : int -> ty
+ * (x |- ?u') : b -> c -> ty
  *
- * and then solve
+ * (we keep x since it's unaffected by the substitution; z is not since
+ * it has y in scope) and then solve
  *
- * ?u <- (?u' y)
+ * ?u <- (?u' y z)
  *
- * Which means the original term now compresses to ?u' 42. The flex
+ * Which means the original term now compresses to ?u' 42 z. The flex
  * problem we now return is
  *
- * ?u', [42]
+ * ?u', [42 z]
  *
- * We return early if the substitution is empty or if the uvar is
+ * We also return early if the substitution is empty or if the uvar is
  * totally unaffected by it.
- *
- * (It's not strictly needed for this function to return t, compressing
- *  t0 will give you the same term.)
  *)
 let ensure_no_uvar_subst (t0:term) (wl:worklist)
   : term * worklist
   = (* Returns true iff the variable x is not affected by substitution s *)
-    let not_affected_by (s:subst_ts) (x:bv) : bool =
+    let bv_not_affected_by (s:subst_ts) (x:bv) : bool =
       let t_x = S.bv_to_name x in
       let t_x' = SS.subst' s t_x in
       match (SS.compress t_x').n with
@@ -701,20 +698,27 @@ let ensure_no_uvar_subst (t0:term) (wl:worklist)
          S.bv_eq x y // Check if substituting returned the same variable
       | _ -> false
     in
-    (* Splits a gamma into the part which is not affected by the substitution s
-     * and the part that is. *)
-    let split_gamma (s:subst_ts) (gamma:list<binding>) : list<binding> * list<binding> =
-      gamma |> List.partition (function
-      | Binding_var x -> not_affected_by s x
-      | _ -> true)
+    let binding_not_affected_by (s:subst_ts) (b:binding) : bool =
+      match b with
+      | Binding_var x -> bv_not_affected_by s x
+      | _ -> true
     in
     let head, args = U.head_and_args t0 in
     match (SS.compress head).n with
     | Tm_uvar (uv, ([], _)) ->
-      (* No subst, good already *)
+      (* No subst, nothing to do *)
       t0, wl
+
+    | Tm_uvar (uv, _) when List.isEmpty uv.ctx_uvar_binders ->
+      (* No binders in scope, also good *)
+      t0, wl
+
     | Tm_uvar (uv, s) ->
-      let new_gamma, gamma_aff = split_gamma s uv.ctx_uvar_gamma in
+      (* Obtain the maximum prefix of the binders that can remain as-is
+       * (gamma is a snoc list, so we want a suffix of it. *)
+      let gamma_aff, new_gamma = FStar.Common.max_suffix (binding_not_affected_by s)
+                                                         uv.ctx_uvar_gamma
+      in
       begin match gamma_aff with
       | [] ->
         (* Not affected by the substitution at all, do nothing *)
@@ -744,7 +748,7 @@ let ensure_no_uvar_subst (t0:term) (wl:worklist)
         t, wl
       end
     | _ ->
-      failwith "impossible"
+      failwith "ensure_no_uvar_subst: expected a uvar at the head"
 
 (* Only call if ensure_no_uvar_subst was called on t before *)
 let destruct_flex_t' t : flex_t =
@@ -2859,9 +2863,17 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | Tm_app({n=Tm_uvar _}, _), Tm_uvar _
       | Tm_uvar _,                Tm_app({n=Tm_uvar _}, _)
       | Tm_app({n=Tm_uvar _}, _), Tm_app({n=Tm_uvar _}, _) ->
-        (* We need to do both ensure_no_uvar_subst calls before
-         * destructing since we might have the same uvar on
-         * both sides. See #1616. *)
+      (* In the case that we have the same uvar on both sides, we cannot
+       * simply call destruct_flex_t on them, and instead we need to do
+       * both ensure_no_uvar_subst calls before destructing.
+       *
+       * Calling destruct_flex_t would (potentially) first solve the
+       * head uvar to a fresh one and then return the new one. So, if we
+       * we were calling destruct_flex_t directly, the second call will
+       * solve the uvar returned by the first call. We would then pass
+       * it to to solve_t_flex_flex, causing a crash.
+       *
+       * See issue #1616. *)
         let t1, wl = ensure_no_uvar_subst t1 wl in
         let t2, wl = ensure_no_uvar_subst t2 wl in
         let f1 = destruct_flex_t' t1 in
