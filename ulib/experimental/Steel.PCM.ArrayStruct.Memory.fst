@@ -33,7 +33,7 @@ type field_id = string
 noeq type array_struct_descriptor : Type u#(a+1) =
   // You can store your own funky PCM in the Base case
   | Base: a: Type u#a -> pcm: pcm a -> array_struct_descriptor
-  | Array: t:array_struct_descriptor u#a -> len:usize -> array_struct_descriptor
+  | Array: cell_descriptor:array_struct_descriptor u#a -> len:usize -> array_struct_descriptor
   | Struct: field_descriptors: (field_id ^-> option (array_struct_descriptor u#a)) ->
     array_struct_descriptor
   // Missing: untagged unions (not must have)
@@ -71,7 +71,7 @@ noeq type array_struct : Type u#(a+1) =
     descriptor: array_struct_descriptor u#a ->
     value:(array_struct_type  descriptor) -> array_struct
 
-let struct_field_type_unroll_lemma
+let struct_field_type_unroll_lemma_aux
   (field_descriptors : (field_id ^-> option (array_struct_descriptor u#a)))
     : Lemma (
       DependentMap.t u#a field_id (struct_field_type u#a field_descriptors) ==
@@ -86,45 +86,69 @@ let struct_field_type_unroll_lemma
     compute ()
   end
 
-unfold let composable_array_cell'
-  (cell_descriptor: array_struct_descriptor u#a)
-  (len : usize)
-  (i:nat{i < v_usize len})
-  (v0 v1: array_struct_type u#a (Array u#a cell_descriptor len))
-  (composable_array_struct':
-    (s0: array_struct{s0.descriptor << Array cell_descriptor len}) ->
-    (s1: array_struct) -> Tot prop
+let struct_field_type_unroll_lemma
+  (s: array_struct u#a{Struct? s.descriptor})
+  : Lemma (
+    DependentMap.t u#a field_id (struct_field_type u#a (Struct?.field_descriptors s.descriptor))
+    ==
+    array_struct_type u#a s.descriptor
   )
-  : Tot prop
   =
-  let v0: Seq.lseq u#a (array_struct_type u#a cell_descriptor) (v_usize len) = v0 in
-  let sub_v0 = Seq.index u#a v0 i in
-  let v1: Seq.lseq u#a (array_struct_type u#a cell_descriptor) (v_usize len) = v1 in
-  let sub_v1 = Seq.index u#a v1 i in
-  let sub_s0 = ArrayStruct u#a cell_descriptor sub_v0 in
-  let sub_s1 = ArrayStruct u#a cell_descriptor sub_v1 in
-  composable_array_struct' sub_s0 sub_s1
+  struct_field_type_unroll_lemma_aux (Struct?.field_descriptors s.descriptor)
 
-unfold let composable_struct_field'
-  (field_descriptors: field_id ^-> option (array_struct_descriptor u#a))
-  (field: field_id)
-  (v0 v1: array_struct_type u#a (Struct u#a field_descriptors))
-  (composable_array_struct':
-    (s0: array_struct u#a{s0.descriptor << Struct u#a field_descriptors}) ->
-    (s1: array_struct u#a) -> Tot prop
-  )
-  : Tot prop
+let array_cell_type_unroll_lemma_aux
+  (cell_descriptor : array_struct_descriptor u#a)
+  (len: usize)
+    : Lemma (
+      Seq.lseq (array_struct_type cell_descriptor) (v_usize len) ==
+      array_struct_type u#a (Array u#a cell_descriptor len)
+     )
   =
-  match field_descriptors field with
-  | Some sub_descriptor ->
-    struct_field_type_unroll_lemma u#a field_descriptors;
-    let sub_v0 = DepMap.sel u#a #_ #(struct_field_type field_descriptors) v0 field in
-    let sub_v1 = DepMap.sel u#a #_ #(struct_field_type field_descriptors) v1 field in
-    let sub_s0 = ArrayStruct sub_descriptor sub_v0 in
-    let sub_s1 = ArrayStruct sub_descriptor sub_v1 in
-    FStar.WellFounded.axiom1 field_descriptors field;
-    composable_array_struct' sub_s0 sub_s1
-  | None -> True
+  let open FStar.Tactics in
+  assert (
+     Seq.lseq (array_struct_type cell_descriptor) (v_usize len) ==
+      array_struct_type u#a (Array u#a cell_descriptor len)
+  ) by begin
+    compute ()
+  end
+
+let array_cell_type_unroll_lemma
+  (s: array_struct u#a{Array? s.descriptor})
+    : Lemma (
+      Seq.lseq
+        (array_struct_type (Array?.cell_descriptor s.descriptor))
+        (v_usize (Array?.len s.descriptor)) ==
+      array_struct_type u#a s.descriptor
+     )
+  =
+  array_cell_type_unroll_lemma_aux
+    (Array?.cell_descriptor s.descriptor)
+    (Array?.len s.descriptor)
+
+
+let array_cell_sub_array_struct
+  (s: array_struct u#a{Array? s.descriptor})
+  (i:nat{i < v_usize (Array?.len s.descriptor)})
+  : Tot (s':array_struct u#a{s'.descriptor << s.descriptor})
+  =
+  let cell_descriptor = Array?.cell_descriptor s.descriptor in
+  let len = Array?.len s.descriptor in
+  array_cell_type_unroll_lemma s;
+  let v: Seq.lseq u#a (array_struct_type u#a cell_descriptor) (v_usize len) = s.value in
+  let sub_v = Seq.index u#a v i in
+  ArrayStruct u#a cell_descriptor sub_v
+
+let struct_field_sub_array_struct
+  (s: array_struct u#a{Struct? s.descriptor})
+  (field: field_id{Some? ((Struct?.field_descriptors s.descriptor) field)})
+  : Tot (s':array_struct u#a{s'.descriptor << s.descriptor})
+  =
+  let field_descriptors = Struct?.field_descriptors s.descriptor in
+  let Some sub_descriptor = field_descriptors field in
+  struct_field_type_unroll_lemma u#a s;
+  let sub_v = DepMap.sel u#a #_ #(struct_field_type field_descriptors) s.value field in
+  FStar.WellFounded.axiom1 field_descriptors field;
+  ArrayStruct sub_descriptor sub_v
 
 let rec composable_array_struct' (s0 s1: array_struct u#a) : Tot prop (decreases s0.descriptor) =
   match s0.descriptor, s1.descriptor with
@@ -134,66 +158,48 @@ let rec composable_array_struct' (s0 s1: array_struct u#a) : Tot prop (decreases
   | Array descriptor0 len0, Array descriptor1 len1 ->
     descriptor0 == descriptor1 /\ len0 == len1 /\
     begin forall (i:nat{i < v_usize len0}).
-      composable_array_cell' descriptor0 len0 i s0.value s1.value
-        (fun s0 s1 -> composable_array_struct' s0 s1)
-        // We need the eta-expansion here to convince F* of recursive termination
+       composable_array_struct'
+         (array_cell_sub_array_struct s0 i)
+         (array_cell_sub_array_struct s1 i)
     end
   | Struct field_descriptors0, Struct field_descriptors1 ->
     field_descriptors0 == field_descriptors1 /\
-    begin forall (field: field_id).
-      composable_struct_field' field_descriptors0 field s0.value s1.value
-       (fun s0 s1 -> composable_array_struct' s0 s1)
+    begin forall (field: field_id{Some? (field_descriptors0 field)}).
+      composable_array_struct'
+        (struct_field_sub_array_struct s0 field)
+        (struct_field_sub_array_struct s1 field)
     end
   | _ -> False
 
-unfold let composable_array_cell
-  (cell_descriptor: array_struct_descriptor u#a)
-  (len : usize)
-  (i:nat{i < v_usize len})
-  (v0 v1: array_struct_type u#a (Array cell_descriptor len))
-  : Tot prop
-  =
-  composable_array_cell' cell_descriptor len i v0 v1
-    composable_array_struct'
-
-unfold let composable_struct_field
-  (field_descriptors: field_id ^-> option (array_struct_descriptor u#a))
-  (field: field_id)
-  (v0 v1: array_struct_type u#a (Struct field_descriptors))
-  : Tot prop
-  =
-  composable_struct_field' field_descriptors field v0 v1
-    composable_array_struct'
 
 let composable_array_struct_struct_case_intro
-  (s0: array_struct{Struct? s0.descriptor})
-  (s1: array_struct{Struct? s1.descriptor /\
+  (s0: array_struct u#a{Struct? s0.descriptor})
+  (s1: array_struct u#a {Struct? s1.descriptor /\
     Struct?.field_descriptors s0.descriptor == Struct?.field_descriptors s1.descriptor
   })
-  (lemma: (field: field_id) -> Lemma (
-    composable_struct_field'
-      (Struct?.field_descriptors s0.descriptor)
-      field s0.value s1.value
+  (lemma: (field: field_id{Some? ((Struct?.field_descriptors s0.descriptor) field)}) -> Lemma (
       composable_array_struct'
+        (struct_field_sub_array_struct s0 field)
+        (struct_field_sub_array_struct s1 field)
   ))
     : Lemma (composable_array_struct' s0 s1)
   =
-  admit()
+  struct_field_type_unroll_lemma u#a s0;
+  struct_field_type_unroll_lemma u#a s1;
+  Classical.forall_intro lemma
 
 let composable_array_struct_struct_case_elim
   (s0: array_struct{Struct? s0.descriptor})
   (s1: array_struct{Struct? s1.descriptor /\ composable_array_struct' s0 s1})
-  (field: field_id)
+  (field: field_id{Some? ((Struct?.field_descriptors s0.descriptor) field)})
     : Lemma (
       Struct?.field_descriptors s0.descriptor == Struct?.field_descriptors s1.descriptor /\
-      composable_array_struct' s0 s1 /\
-      composable_struct_field'
-        (Struct?.field_descriptors s0.descriptor)
-        field s0.value s1.value
-        composable_array_struct'
+      composable_array_struct'
+        (struct_field_sub_array_struct s0 field)
+        (struct_field_sub_array_struct s1 field)
     )
   =
-  admit()
+  ()
 
 open FStar.Tactics
 
@@ -209,43 +215,43 @@ let rec composable_sym (s0 s1: array_struct u#a)
     ()
   | Array descriptor0 len0, Array descriptor1 len1 ->
     let aux (i:nat{i < v_usize len0}) : Lemma (
-      composable_array_cell descriptor1 len1 i s1.value s0.value
+       composable_array_struct'
+         (array_cell_sub_array_struct s1 i)
+         (array_cell_sub_array_struct s0 i)
     ) =
-      let v0: Seq.lseq u#a (array_struct_type u#a descriptor0) (v_usize len0) = s0.value in
-      let sub_v0 = Seq.index u#a v0 i in
-      let v1: Seq.lseq u#a (array_struct_type u#a descriptor1) (v_usize len1) = s1.value in
-      let sub_v1 = Seq.index u#a v1 i in
-      let sub_s0 = ArrayStruct u#a descriptor0 sub_v0 in
-      let sub_s1 = ArrayStruct u#a descriptor1 sub_v1 in
-      composable_sym sub_s0 sub_s1
+      composable_sym
+        (array_cell_sub_array_struct s0 i)
+        (array_cell_sub_array_struct s1 i)
     in
     Classical.forall_intro aux
   | Struct field_descriptors0, Struct field_descriptors1 ->
-    struct_field_type_unroll_lemma field_descriptors1;
-    struct_field_type_unroll_lemma field_descriptors0;
-    let aux (field: field_id) : Lemma (
-       composable_struct_field field_descriptors1 field s1.value s0.value
+    let aux (field: field_id{Some? (field_descriptors0 field)}) : Lemma (
+       composable_array_struct'
+         (struct_field_sub_array_struct s1 field)
+         (struct_field_sub_array_struct s0 field)
     ) =
-      match field_descriptors0 field with
-      | Some sub_descriptor ->
-        struct_field_type_unroll_lemma u#a field_descriptors0;
-        let sub_v0 = DepMap.sel u#a #_ #(struct_field_type field_descriptors0) s0.value field in
-        let sub_v1 = DepMap.sel u#a #_ #(struct_field_type field_descriptors0) s1.value field in
-        let sub_s0 = ArrayStruct sub_descriptor sub_v0 in
-        let sub_s1 = ArrayStruct sub_descriptor sub_v1 in
-        FStar.WellFounded.axiom1 field_descriptors0 field;
-        composable_array_struct_struct_case_elim s0 s1 field;
-        assume(composable_array_struct' sub_s0 sub_s1);
-        admit();
-        composable_sym sub_s0 sub_s1
-      | None -> ()
+       composable_sym
+         (struct_field_sub_array_struct s0 field)
+         (struct_field_sub_array_struct s1 field)
     in
-    Classical.forall_intro aux;
-    composable_array_struct_struct_case_intro s1 s0 (fun _ -> admit())
+    Classical.forall_intro aux
   | _ -> ()
+#pop-options
 
-let composable_array_struct : symrel array_struct =
-  Classical.forall_intro_2 composable_sym;
+unfold let composable_array_struct : symrel array_struct =
+  let aux (s0 s1: array_struct) : Lemma (
+    composable_array_struct' s0 s1 <==> composable_array_struct' s1 s0
+  ) =
+    let aux (_: squash (composable_array_struct' s0 s1)) : Lemma (composable_array_struct' s1 s0) =
+      composable_sym s0 s1
+    in
+    Classical.impl_intro aux;
+    let aux (_: squash (composable_array_struct' s1 s0)) : Lemma (composable_array_struct' s0 s1) =
+      composable_sym s1 s0
+    in
+    Classical.impl_intro aux
+  in
+  Classical.forall_intro_2 aux;
   composable_array_struct'
 
 let rec compose_array_struct
