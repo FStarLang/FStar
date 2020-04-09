@@ -42,9 +42,9 @@ let vargs args = List.filter (function (BU.Inl _, _) -> false | _ -> true) args
 (* Some operations on constants *)
 let escape (s:string) = BU.replace_char s '\'' '_'
 let mk_term_projector_name lid (a:bv) =
-    escape <| BU.format2 "%s_%s" lid.str a.ppname.idText
+    escape <| BU.format2 "%s_%s" (string_of_lid lid) (text_of_id a.ppname)
 let primitive_projector_by_pos env lid i =
-    let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (string_of_int i) (lid.str)) in
+    let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (string_of_int i) (string_of_lid lid)) in
     let _, t = Env.lookup_datacon env lid in
     match (SS.compress t).n with
         | Tm_arrow(bs, c) ->
@@ -54,12 +54,12 @@ let primitive_projector_by_pos env lid i =
           else let b = List.nth binders i in
                 mk_term_projector_name lid (fst b)
         | _ -> fail ()
-let mk_term_projector_name_by_pos lid (i:int) = escape <| BU.format2 "%s_%s" lid.str (string_of_int i)
+let mk_term_projector_name_by_pos lid (i:int) = escape <| BU.format2 "%s_%s" (string_of_lid lid) (string_of_int i)
 let mk_term_projector (lid:lident) (a:bv) : term =
     mkFreeV <| mk_fv (mk_term_projector_name lid a, Arrow(Term_sort, Term_sort))
 let mk_term_projector_by_pos (lid:lident) (i:int) : term =
     mkFreeV <| mk_fv (mk_term_projector_name_by_pos lid i, Arrow(Term_sort, Term_sort))
-let mk_data_tester env l x = mk_tester (escape l.str) x
+let mk_data_tester env l x = mk_tester (escape (string_of_lid l)) x
 (* ------------------------------------ *)
 (* New name generation *)
 type varops_t = {
@@ -87,8 +87,8 @@ let varops =
                   | Some _ -> BU.incr ctr; y ^ "__" ^ (string_of_int !ctr) in
         let top_scope = fst <| List.hd !scopes in
         BU.smap_add top_scope y true; y in
-    let new_var pp rn = mk_unique <| pp.idText ^ "__" ^ (string_of_int rn) in
-    let new_fvar lid = mk_unique lid.str in
+    let new_var pp rn = mk_unique <| (text_of_id pp) ^ "__" ^ (string_of_int rn) in
+    let new_fvar lid = mk_unique (string_of_lid lid) in
     let next_id () = BU.incr ctr; !ctr in
     //AR: adding module name after the prefix, else it interferes for name matching for fuel arguments
     //    see try_lookup_free_var below
@@ -188,20 +188,20 @@ let print_env e =
     String.concat ", " (last_fvar :: bvars)
 
 let lookup_bvar_binding env bv =
-    match BU.psmap_try_find env.bvar_bindings bv.ppname.idText with
+    match BU.psmap_try_find env.bvar_bindings (text_of_id bv.ppname) with
     | Some bvs -> BU.pimap_try_find bvs bv.index
     | None -> None
 
 let lookup_fvar_binding env lid =
-    BU.psmap_try_find (env.fvar_bindings |> fst) lid.str
+    BU.psmap_try_find (env.fvar_bindings |> fst) (string_of_lid lid)
 
 let add_bvar_binding bvb bvbs =
-  BU.psmap_modify bvbs (fst bvb).ppname.idText
+  BU.psmap_modify bvbs (text_of_id (fst bvb).ppname)
     (fun pimap_opt ->
      BU.pimap_add (BU.dflt (BU.pimap_empty ()) pimap_opt) (fst bvb).index bvb)
 
 let add_fvar_binding fvb (fvb_map, fvb_list) =
-  (BU.psmap_add fvb_map fvb.fvar_lid.str fvb, fvb::fvb_list)
+  (BU.psmap_add fvb_map (string_of_lid fvb.fvar_lid) fvb, fvb::fvb_list)
 
 let fresh_fvar mname x s = let xsym = varops.fresh mname x in xsym, mkFreeV <| mk_fv (xsym, s)
 (* generate terms corresponding to a variable and record the mapping in the environment *)

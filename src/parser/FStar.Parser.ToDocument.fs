@@ -226,7 +226,7 @@ let is_unit e =
 
 let matches_var t x =
     match t.tm with
-        | Var y -> x.idText = text_of_lid y
+        | Var y -> (text_of_id x) = string_of_lid y
         | _ -> false
 
 let is_tuple_constructor = C.is_tuple_data_lid'
@@ -668,7 +668,7 @@ let rec p_decl (d: decl): document =
     (* Don't push 'assume' on a new line when it used as a keyword *)
     match (d.quals, d.d) with
     | ([Assumption], Assume(id, _)) ->
-      if char_at id.idText 0 |> is_upper then
+      if char_at (text_of_id id) 0 |> is_upper then
         p_qualifier Assumption ^^ space
       else
         p_qualifiers d.quals
@@ -730,7 +730,7 @@ and p_rawDecl d = match d.d with
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
   | Assume(id, t) ->
     let decl_keyword =
-      if char_at id.idText 0 |> is_upper
+      if char_at (text_of_id id) 0 |> is_upper
       then empty
       else str "val" ^^ space
     in
@@ -803,7 +803,7 @@ and p_typeDecl pre = function
     empty, p_typeDeclPrefix pre true lid bs typ_opt, p_fields, (fun d -> space ^^ d)
   | TyconVariant (lid, bs, typ_opt, ct_decls) ->
     let p_constructorBranchAndComments (uid, t_opt, use_of) =
-        let range = extend_to_end_of_line (dflt uid.idRange (map_opt t_opt (fun t -> t.range))) in
+        let range = extend_to_end_of_line (dflt (range_of_id uid) (map_opt t_opt (fun t -> t.range))) in
         let comm, ctor = with_comment_sep p_constructorBranch (uid, t_opt, use_of) range in
         inline_comment_or_above comm ctor empty
     in
@@ -1007,7 +1007,7 @@ and p_atomicPattern p = match p.pat with
      * simpleArrow RPAREN). *)
     begin match pat.pat, t.tm with
     | PatVar (lid, aqual), Refine({b = Annotated(lid', t)}, phi)
-      when lid.idText = lid'.idText ->
+      when (text_of_id lid) = (text_of_id lid') ->
       (* p_refinement jumps into p_appTerm for the annotated type; this is
        * tighter than simpleArrow (which is what the parser uses), meaning that
        * this printer may conservatively insert parentheses. TODO fix, but be
@@ -1049,7 +1049,7 @@ and p_atomicPattern p = match p.pat with
 (* Skipping patternOrMultibinder since it would need retro-engineering the flattening of binders *)
 
 and is_typ_tuple e = match e.tm with
-  | Op({idText = "*"}, _) -> true
+  | Op(id, _) when text_of_id id = "*" -> true
   | _ -> false
 
 and is_meta_qualifier aq =
@@ -1071,7 +1071,7 @@ and p_binder' (is_atomic: bool) (b: binder): document * option<document> * catf 
   | Annotated (lid, t) ->
       let b', t' =
         match t.tm with
-        | Refine ({b = Annotated (lid', t)}, phi) when lid.idText = lid'.idText ->
+        | Refine ({b = Annotated (lid', t)}, phi) when (text_of_id lid) = (text_of_id lid') ->
           p_refinement' b.aqual (p_lident lid) t phi
         | _ ->
           let t' = if is_typ_tuple t then
@@ -1137,14 +1137,14 @@ and p_binders (is_atomic: bool) (bs: list<binder>): document = separate_or_flow 
 (* ****************************************************************************)
 
 and text_of_id_or_underscore lid =
-  if starts_with lid.idText reserved_prefix && not (Options.print_real_names ())
+  if starts_with (text_of_id lid) reserved_prefix && not (Options.print_real_names ())
   then underscore
   else str (text_of_id lid)
 
 and text_of_lid_or_underscore lid =
-  if starts_with lid.ident.idText reserved_prefix && not (Options.print_real_names ())
+  if starts_with (text_of_id (ident_of_lid lid)) reserved_prefix && not (Options.print_real_names ())
   then underscore
-  else str (text_of_lid lid)
+  else str (string_of_lid lid)
 
 and p_qlident lid =
   text_of_lid_or_underscore lid
@@ -1236,11 +1236,11 @@ and p_noSeqTerm' ps pb e = match e.tm with
       group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ ps pb t)
   | Ascribed (e, t, Some tac) ->
       group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ false false t ^/^ str "by" ^/^ p_typ ps pb (maybe_unthunk tac))
-  | Op ({idText = ".()<-"}, [ e1; e2; e3 ]) ->
+  | Op (id, [ e1; e2; e3 ]) when text_of_id id = ".()<-" ->
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term false false e2)
           ^^ space ^^ larrow) ^^ jump2 (p_noSeqTermAndComment ps pb e3))
-  | Op ({idText = ".[]<-"}, [ e1; e2; e3 ]) ->
+  | Op (id, [ e1; e2; e3 ]) when text_of_id id = ".[]<-" ->
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_brackets_with_nesting (p_term false false e2)
           ^^ space ^^ larrow) ^^ jump2 (p_noSeqTermAndComment ps pb e3))
@@ -1407,7 +1407,7 @@ and pats_as_binders_if_possible pats =
   | PatAscribed(pat, (t, None)) ->
     (match pat.pat, t.tm  with
      | PatVar (lid, aqual), Refine({b = Annotated(lid', t)}, phi)
-       when lid.idText = lid'.idText ->
+       when (text_of_id lid) = (text_of_id lid') ->
          Some (p_refinement' aqual (p_ident lid) t phi)
      | PatVar (lid, aqual), _ ->
        Some (optional p_aqual aqual ^^ p_ident lid, p_tmEqNoRefinement t)
@@ -1501,11 +1501,13 @@ and p_patternBranch pb (pat, when_opt, e) =
 
 (* Nothing underneath tmIff is at risk of swallowing a semicolon. *)
 and p_tmIff e = match e.tm with
-    | Op({idText = "<==>"}, [e1;e2]) -> infix0 (str "<==>") (p_tmImplies e1) (p_tmIff e2)
+    | Op(id, [e1;e2]) when text_of_id id = "<==>" ->
+        infix0 (str "<==>") (p_tmImplies e1) (p_tmIff e2)
     | _ -> p_tmImplies e
 
 and p_tmImplies e = match e.tm with
-    | Op({idText = "==>"}, [e1;e2]) -> infix0 (str "==>") (p_tmArrow (Arrows (2, 2)) false p_tmFormula e1) (p_tmImplies e2)
+    | Op(id, [e1;e2]) when text_of_id id = "==>" ->
+        infix0 (str "==>") (p_tmArrow (Arrows (2, 2)) false p_tmFormula e1) (p_tmImplies e2)
     | _ -> p_tmArrow (Arrows (2, 2)) false p_tmFormula e
 
 // This function is somewhat convoluted because it is used in a few
@@ -1607,12 +1609,12 @@ and p_tmFormula e =
     flow_map disj (fun d -> flow_map conj (fun x -> group x) d) formula
 
 and p_tmDisjunction e = match e.tm with
-  | Op({idText = "\\/"}, [e1;e2]) ->
+  | Op(id, [e1;e2]) when text_of_id id = "\\/" ->
       (p_tmDisjunction e1) @ [p_tmConjunction e2]
   | _ -> [p_tmConjunction e]
 
 and p_tmConjunction e = match e.tm with
-  | Op({idText = "/\\"}, [e1;e2]) ->
+  | Op(id, [e1;e2]) when text_of_id id = "/\\" ->
       (p_tmConjunction e1) @ [p_tmTuple e2]
   | _ -> [p_tmTuple e]
 
@@ -1640,9 +1642,9 @@ and p_tmEqWith' p_X curr e = match e.tm with
       let op = Ident.text_of_id op in
       let left, mine, right = levels op in
       paren_if_gt curr mine (infix0 (str <| op) (p_tmEqWith' p_X left e1) (p_tmEqWith' p_X right e2))
-  | Op ({idText = ":="}, [ e1; e2 ]) ->
+  | Op(id, [ e1; e2 ]) when text_of_id id = ":=" ->
       group (p_tmEqWith p_X e1 ^^ space ^^ colon ^^ equals ^/+^ p_tmEqWith p_X e2)
-  | Op({idText = "-"}, [e]) ->
+  | Op(id, [e]) when text_of_id id = "-" ->
       let left, mine, right = levels "-" in
       minus ^/^ p_tmEqWith' p_X mine e
   | _ -> p_tmNoEqWith p_X e
@@ -1666,7 +1668,7 @@ and p_tmNoEqWith' inside_tuple p_X curr e = match e.tm with
         | Inr t -> p_tmNoEqWith' false p_X left t ^^ space ^^ str op ^^ break1
       in
       paren_if_gt curr mine (concat_map p_dsumfst binders ^^ p_tmNoEqWith' false p_X right res)
-  | Op({idText = "*"}, [e1; e2]) when !unfold_tuples ->
+  | Op(id, [e1; e2]) when text_of_id id = "*" && !unfold_tuples ->
       let op = "*" in
       let left, mine, right = levels op in
       if inside_tuple then
@@ -1680,11 +1682,11 @@ and p_tmNoEqWith' inside_tuple p_X curr e = match e.tm with
   | Record(with_opt, record_fields) ->
       braces_with_nesting ( default_or_map empty p_with_clause with_opt ^^
                             separate_map_last (semi ^^ break1) p_simpleDef record_fields )
-  | Op({idText = "~"}, [e]) ->
+  | Op(id, [e]) when text_of_id id = "~" ->
       group (str "~" ^^ p_atomicTerm e)
   | Paren p when inside_tuple ->
       (match p.tm with
-       | Op({idText = "*"}, [e1; e2]) ->
+       | Op(id, [e1; e2]) when text_of_id id = "*" ->
            let op = "*" in
            let left, mine, right = levels op in
            paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2))
@@ -1766,10 +1768,10 @@ and p_argTerm arg_imp = match arg_imp with
 and p_fsTypArg (e, _) = p_indexingTerm e
 
 and p_indexingTerm_aux exit e = match e.tm with
-  | Op({idText = ".()"}, [e1 ; e2]) ->
+  | Op(id, [e1 ; e2]) when text_of_id id = ".()" ->
         group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^
         soft_parens_with_nesting (p_term false false e2))
-  | Op({idText = ".[]"}, [e1; e2]) ->
+  | Op(id, [e1; e2]) when text_of_id id = ".[]" ->
         group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^
         soft_brackets_with_nesting (p_term false false e2))
   | _ ->
@@ -1926,7 +1928,7 @@ and p_constant = function
 and p_universe u = str "u#" ^^ p_atomicUniverse u
 
 and p_universeFrom u = match u.tm with
-  | Op({idText = "+"}, [u1 ; u2]) ->
+  | Op(id, [u1 ; u2]) when text_of_id id = "+" ->
     group (p_universeFrom u1 ^/^ plus ^/^ p_universeFrom u2)
   | App _ ->
     let head, args = head_and_args u in
@@ -1945,8 +1947,8 @@ and p_atomicUniverse u = match u.tm with
   | Const (Const_int (r, sw)) -> p_constant (Const_int (r, sw))
   | Uvar id -> str (text_of_id id)
   | Paren u -> soft_parens_with_nesting (p_universeFrom u)
-  | Op({idText = "+"}, [_ ; _])
   | App _ -> soft_parens_with_nesting (p_universeFrom u)
+  | Op(id, [_ ; _]) when text_of_id id = "+" -> soft_parens_with_nesting (p_universeFrom u)
   | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
 
 let term_to_document e =

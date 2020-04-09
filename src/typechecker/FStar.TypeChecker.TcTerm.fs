@@ -730,7 +730,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let c, g_c = TcComm.lcomp_comp c in
     let ef = U.comp_effect_name c in
     if not (is_user_reifiable_effect env ef) then
-        raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" ef.str)) e.pos;
+        raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" (string_of_lid ef))) e.pos;
     let repr = Env.reify_comp env c u_c in
     let e = mk (Tm_app(reify_op, [(e, aqual)])) None top.pos in
     let c =
@@ -755,7 +755,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
     if not (is_user_reflectable_effect env l) then
       raise_error (Errors.Fatal_EffectCannotBeReified,
-        BU.format1 "Effect %s cannot be reflected" l.str) e.pos;
+        BU.format1 "Effect %s cannot be reflected" (string_of_lid l)) e.pos;
 
     let reflect_op, _ = U.head_and_args top in
 
@@ -1037,7 +1037,7 @@ and tc_value env (e:term) : term
         | Some (Record_ctor _) -> true
         | _ -> false in
     if is_data_ctor dc && not(Env.is_datacon env v.v)
-    then raise_error (Errors.Fatal_MissingDataConstructor, (BU.format1 "Expected a data constructor; got %s" v.v.str)) (Env.get_range env)
+    then raise_error (Errors.Fatal_MissingDataConstructor, (BU.format1 "Expected a data constructor; got %s" (string_of_lid v.v))) (Env.get_range env)
     else value_check_expected_typ env e tc implicits in
 
   //As a general naming convention, we use e for the term being analyzed and its subterms as e1, e2, etc.
@@ -1755,7 +1755,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                    if warn_effectful_args then
                      Errors.log_issue e.pos (Errors.Warning_EffectfulArgumentToErasedFunction,
                                              (format3 "Effectful argument %s (%s) to erased function %s, consider let binding it"
-                                                      (Print.term_to_string e) c.eff_name.str (Print.term_to_string head)));
+                                                      (Print.term_to_string e) (string_of_lid c.eff_name) (Print.term_to_string head)));
                    if Env.debug env Options.Extreme then
                        BU.print_string "... lifting!\n";
                    let x = S.new_bv None c.res_typ in

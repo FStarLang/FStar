@@ -109,13 +109,13 @@ let err_unexpected_eff env t ty f0 f1 =
 let effect_as_etag =
     let cache = BU.smap_create 20 in
     let rec delta_norm_eff g (l:lident) =
-        match BU.smap_try_find cache l.str with
+        match BU.smap_try_find cache (string_of_lid l) with
             | Some l -> l
             | None ->
                 let res = match TypeChecker.Env.lookup_effect_abbrev (tcenv_of_uenv g) [S.U_zero] l with
                 | None -> l
                 | Some (_, c) -> delta_norm_eff g (U.comp_effect_name c) in
-                BU.smap_add cache l.str res;
+                BU.smap_add cache (string_of_lid l) res;
                 res in
     fun g l ->
         let l = delta_norm_eff g l in
@@ -810,7 +810,7 @@ let resugar_pat g q p = match p with
         | _ ->
           match q with
           | Some (Record_ctor (ty, fns)) ->
-              let path = List.map text_of_id ty.ns in
+              let path = List.map text_of_id (ns_of_lid ty) in
               let fs = record_fields g ty fns pats in
               MLP_Record(path, fs)
           | _ -> p
@@ -956,7 +956,7 @@ let maybe_eta_data_and_project_record (g:uenv) (qual : option<fv_qual>) (residua
     let as_record qual e =
       match e.expr, qual with
       | MLE_CTor(_, args), Some (Record_ctor(tyname, fields)) ->
-        let path = List.map text_of_id tyname.ns in
+        let path = List.map text_of_id (ns_of_lid tyname) in
         let fields = record_fields g tyname fields args in
         with_ty e.mlty <| MLE_Record(path, fields)
       | _ -> e

@@ -484,21 +484,24 @@ let contains_reflectable (l: list<qualifier>): bool =
 let withinfo v r = {v=v; p=r}
 let withsort v = withinfo v dummyRange
 
-let bv_eq (bv1:bv) (bv2:bv) = bv1.ppname.idText=bv2.ppname.idText && bv1.index=bv2.index
+let bv_eq (bv1:bv) (bv2:bv) =
+    ident_equals bv1.ppname bv2.ppname && bv1.index=bv2.index
+
 let order_bv x y =
-  let i = String.compare x.ppname.idText y.ppname.idText in
+  let i = String.compare (text_of_id x.ppname) (text_of_id y.ppname) in
   if i = 0
   then x.index - y.index
   else i
 
-let order_ident x y = String.compare x.idText y.idText
-let order_fv x y = String.compare x.str y.str
+let order_ident x y = String.compare (text_of_id x) (text_of_id y)
+let order_fv x y = String.compare (string_of_lid x) (string_of_lid y)
 
 let range_of_lbname (l:lbname) = match l with
-    | Inl x -> x.ppname.idRange
+    | Inl x -> range_of_id x.ppname
     | Inr fv -> range_of_lid fv.fv_name.v
-let range_of_bv x = x.ppname.idRange
-let set_range_of_bv x r = {x with ppname=Ident.mk_ident(x.ppname.idText, r)}
+let range_of_bv x = range_of_id x.ppname
+
+let set_range_of_bv x r = {x with ppname = set_id_range r x.ppname }
 
 
 (* Helpers *)
@@ -609,7 +612,7 @@ let null_binder t : binder = null_bv t, None
 let imp_tag = Implicit false
 let iarg t : arg = t, Some imp_tag
 let as_arg t : arg = t, None
-let is_null_bv (b:bv) = b.ppname.idText = null_id.idText
+let is_null_bv (b:bv) = text_of_id b.ppname = text_of_id null_id
 let is_null_binder (b:binder) = is_null_bv (fst b)
 
 let is_top_level = function
@@ -659,7 +662,9 @@ let lbname_eq l1 l2 = match l1, l2 with
   | _ -> false
 let fv_eq fv1 fv2 = lid_equals fv1.fv_name.v fv2.fv_name.v
 let fv_eq_lid fv lid = lid_equals fv.fv_name.v lid
-let set_bv_range bv r = {bv with ppname=mk_ident(bv.ppname.idText, r)}
+
+let set_bv_range bv r = {bv with ppname = set_id_range r bv.ppname}
+
 let lid_as_fv l dd dq : fv = {
     fv_name=withinfo l (range_of_lid l);
     fv_delta=dd;

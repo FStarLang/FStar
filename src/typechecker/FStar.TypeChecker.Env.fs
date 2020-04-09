@@ -245,7 +245,7 @@ type sigtable = BU.smap<sigelt>
 let should_verify env =
     not env.lax
     && not env.admit
-    && Options.should_verify env.curmodule.str
+    && Options.should_verify (string_of_lid env.curmodule)
 
 let visible_at d q = match d, q with
   | NoDelta,    _
@@ -393,19 +393,19 @@ let incr_query_index env =
     | None ->
       let next = n + 1 in
       add_query_index (l, next);
-      BU.smap_add tbl l.str next;
+      BU.smap_add tbl (string_of_lid l) next;
       {env with qtbl_name_and_index=tbl, Some (l, next)}
     | Some (_, m) ->
       let next = m + 1 in
       add_query_index (l, next);
-      BU.smap_add tbl l.str next;
+      BU.smap_add tbl (string_of_lid l) next;
       {env with qtbl_name_and_index=tbl, Some (l, next)}
 
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //
 ////////////////////////////////////////////////////////////
 let debug env (l:Options.debug_level_t) =
-    Options.debug_at_level env.curmodule.str l
+    Options.debug_at_level (string_of_lid env.curmodule) l
 let set_range e r = if r=dummyRange then e else {e with range=r}
 let get_range e = e.range
 
@@ -429,10 +429,10 @@ let modules env = env.modules
 let current_module env = env.curmodule
 let set_current_module env lid = {env with curmodule=lid}
 let has_interface env l = env.modules |> BU.for_some (fun m -> m.is_interface && lid_equals m.name l)
-let find_in_sigtab env lid = BU.smap_try_find (sigtab env) (text_of_lid lid)
+let find_in_sigtab env lid = BU.smap_try_find (sigtab env) (string_of_lid lid)
 
 let name_not_found (l:lid) =
-  (Errors.Fatal_NameNotFound, (format1 "Name \"%s\" not found" l.str))
+  (Errors.Fatal_NameNotFound, (format1 "Name \"%s\" not found" (string_of_lid l)))
 
 let variable_not_found v =
   (Errors.Fatal_VariableNotFound, (format1 "Variable \"%s\" not found" (Print.bv_to_string v)))
@@ -488,14 +488,14 @@ type tri =
 
 let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace check! *)
     let cur = current_module env in
-    if l.nsstr = cur.str then Yes (* fast case; works for everything except records *)
-    else if BU.starts_with l.nsstr cur.str
-    then let lns = l.ns@[l.ident] in
-         let cur = cur.ns@[cur.ident] in
+    if nsstr l = (string_of_lid cur) then Yes (* fast case; works for everything except records *)
+    else if BU.starts_with (nsstr l) (string_of_lid cur)
+    then let lns = ns_of_lid l   @ [ident_of_lid l] in
+         let cur = ns_of_lid cur @ [ident_of_lid cur] in
          let rec aux c l = match c, l with
             | [], _ -> Maybe
             | _, [] -> No
-            | hd::tl, hd'::tl' when (hd.idText=hd'.idText) -> aux tl tl'
+            | hd::tl, hd'::tl' when ((text_of_id hd = text_of_id hd')) -> aux tl tl'
             | _ -> No in
          aux cur lns
     else No
@@ -504,10 +504,10 @@ type qninfo = option<(BU.either<(universes * typ),(sigelt * option<universes>)> 
 
 let lookup_qname env (lid:lident) : qninfo =
   let cur_mod = in_cur_mod env lid in
-  let cache t = BU.smap_add (gamma_cache env) lid.str t; Some t in
+  let cache t = BU.smap_add (gamma_cache env) (string_of_lid lid) t; Some t in
   let found =
     if cur_mod<>No
-    then match BU.smap_try_find (gamma_cache env) lid.str with
+    then match BU.smap_try_find (gamma_cache env) (string_of_lid lid) with
       | None ->
         BU.catch_opt
             (BU.find_map env.gamma (function
@@ -553,14 +553,14 @@ let add_se_to_attrtab env se =
     let add_one env se attr = BU.smap_add (attrtab env) attr (se :: lookup_attr env attr) in
     List.iter (fun attr ->
                 match (Subst.compress attr).n with
-                | Tm_fvar fv -> add_one env se (lid_of_fv fv).str
+                | Tm_fvar fv -> add_one env se (string_of_lid (lid_of_fv fv))
                 | _ -> ()) se.sigattrs
 
 let rec add_sigelt env se = match se.sigel with
     | Sig_bundle(ses, _) -> add_sigelts env ses
     | _ ->
       let lids = lids_of_sigelt se in
-      List.iter (fun l -> BU.smap_add (sigtab env) l.str se) lids;
+      List.iter (fun l -> BU.smap_add (sigtab env) (string_of_lid l) se) lids;
       add_se_to_attrtab env se
 
 and add_sigelts env ses =
@@ -572,7 +572,7 @@ and add_sigelts env ses =
 let try_lookup_bv env (bv:bv) =
   BU.find_map env.gamma (function
     | Binding_var id when bv_eq id bv ->
-      Some (id.sort, id.ppname.idRange)
+      Some (id.sort, (range_of_id id.ppname))
     | _ -> None)
 
 let lookup_type_of_let us_opt se lid =
@@ -609,7 +609,7 @@ let effect_signature (us_opt:option<universes>) (se:sigelt) rng : option<((unive
      | Some us ->
        if List.length us <> List.length (fst ne.signature)
        then failwith ("effect_signature: incorrect number of universes for the signature of " ^
-         ne.mname.str ^ ", expected " ^ (string_of_int (List.length (fst ne.signature))) ^
+         (string_of_lid ne.mname) ^ ", expected " ^ (string_of_int (List.length (fst ne.signature))) ^
          ", got " ^ (string_of_int (List.length us)))
        else ());
 
@@ -733,7 +733,7 @@ let lookup_lid env l =
 
 let lookup_univ env x =
     List.find (function
-        | Binding_univ y -> x.idText=y.idText
+        | Binding_univ y -> (text_of_id x = text_of_id y)
         | _ -> false) env.gamma
     |> Option.isSome
 
@@ -796,7 +796,7 @@ let lookup_nonrec_definition delta_levels env lid =
 
 let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
     let lid = fv.fv_name.v in
-    if lid.nsstr = "Prims" then Some fv.fv_delta //NS delta: too many special cases in existing code
+    if nsstr lid = "Prims" then Some fv.fv_delta //NS delta: too many special cases in existing code
     else match qn with
     | None
     | Some (Inl _, _) -> Some (Delta_constant_at_level 0)
@@ -827,10 +827,10 @@ let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
 
 let delta_depth_of_fv env fv =
   let lid = fv.fv_name.v in
-  if lid.nsstr = "Prims" then fv.fv_delta //NS delta: too many special cases in existing code for prims; FIXME!
+  if nsstr lid = "Prims" then fv.fv_delta //NS delta: too many special cases in existing code for prims; FIXME!
   else
     //try cache
-    lid.str |> BU.smap_try_find env.fv_delta_depths |> (fun d_opt ->
+    (string_of_lid lid) |> BU.smap_try_find env.fv_delta_depths |> (fun d_opt ->
       if d_opt |> is_some then d_opt |> must
       else
         match delta_depth_of_qninfo fv (lookup_qname env fv.fv_name.v) with
@@ -842,7 +842,7 @@ let delta_depth_of_fv env fv =
                          (Print.fv_to_string fv)
                          (Print.delta_depth_to_string fv.fv_delta)
                          (Print.delta_depth_to_string d);
-          BU.smap_add env.fv_delta_depths lid.str d;
+          BU.smap_add env.fv_delta_depths (string_of_lid lid) d;
           d)
 
 let quals_of_qninfo (qninfo : qninfo) : option<list<qualifier>> =
@@ -876,7 +876,7 @@ let fv_has_attr env fv attr_lid =
   fv_with_lid_has_attr env fv.fv_name.v attr_lid
 
 let cache_in_fv_tab (tab:BU.smap<'a>) (fv:fv) (f:unit -> (bool * 'a)) : 'a =
-  let s = (S.lid_of_fv fv).str in
+  let s = string_of_lid (S.lid_of_fv fv) in
   match BU.smap_try_find tab s with
   | None ->
     let should_cache, res = f () in
@@ -982,12 +982,12 @@ let norm_eff_name =
                 match find l with
                     | None -> Some l
                     | Some l' -> Some l' in
-       let res = match BU.smap_try_find env.normalized_eff_names l.str with
+       let res = match BU.smap_try_find env.normalized_eff_names (string_of_lid l) with
             | Some l -> l
             | None ->
               begin match find l with
                         | None -> l
-                        | Some m -> BU.smap_add env.normalized_eff_names l.str m;
+                        | Some m -> BU.smap_add env.normalized_eff_names (string_of_lid l) m;
                                     m
               end in
        Ident.set_lid_range res (range_of_lid l)
@@ -1145,7 +1145,7 @@ let monad_leq env l1 l2 : option<edge> =
 
 let wp_sig_aux decls m =
   match decls |> BU.find_opt (fun (d, _) -> lid_equals d.mname m) with
-  | None -> failwith (BU.format1 "Impossible: declaration for monad %s not found" m.str)
+  | None -> failwith (BU.format1 "Impossible: declaration for monad %s not found" (string_of_lid m))
   | Some (md, _q) ->
     (*
      * AR: this code used to be inst_tscheme md.univs md.signature
@@ -1373,7 +1373,7 @@ let update_effect_lattice env src tgt st_mlift =
   let _ = order |> List.iter (fun edge ->
     if Ident.lid_equals edge.msource Const.effect_DIV_lid
     && lookup_effect_quals env edge.mtarget |> List.contains TotalEffect
-    then raise_error (Errors.Fatal_DivergentComputationCannotBeIncludedInTotal, (BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'" edge.mtarget.str)) (get_range env))
+    then raise_error (Errors.Fatal_DivergentComputationCannotBeIncludedInTotal, (BU.format1 "Divergent computations cannot be included in an effect %s marked 'total'" (string_of_lid edge.mtarget))) (get_range env))
   in
   let joins =
     ms |> List.collect (fun i ->
@@ -1399,10 +1399,10 @@ let update_effect_lattice env src tgt st_mlift =
                           (* a join an effect which might not be comparable with all *)
                           (* upper bounds (which means that the order of joins does matter) *)
                           (* raise (Error (BU.format4 "Uncomparable upper bounds for effects %s and %s : %s %s" *)
-                          (*                 (Ident.text_of_lid i) *)
-                          (*                 (Ident.text_of_lid j) *)
-                          (*                 (Ident.text_of_lid k) *)
-                          (*                 (Ident.text_of_lid ub), *)
+                          (*                 (Ident.string_of_lid i) *)
+                          (*                 (Ident.string_of_lid j) *)
+                          (*                 (Ident.string_of_lid k) *)
+                          (*                 (Ident.string_of_lid ub), *)
                           (*               get_range env)) *)
                   | true, false -> Some (k, ik, jk) //k is less than ub
                   | false, true -> bopt
@@ -1424,8 +1424,8 @@ let update_effect_lattice env src tgt st_mlift =
   in
 
   let effects = {env.effects with order=order; joins=joins} in
-//    order |> List.iter (fun o -> Printf.printf "%s <: %s\n\t%s\n" o.msource.str o.mtarget.str (print_mlift o.mlift));
-//    joins |> List.iter (fun (e1, e2, e3, l1, l2) -> if lid_equals e1 e2 then () else Printf.printf "%s join %s = %s\n\t%s\n\t%s\n" e1.str e2.str e3.str (print_mlift l1) (print_mlift l2));
+//    order |> List.iter (fun o -> Printf.printf "%s <: %s\n\t%s\n" (string_of_lid o.msource) (string_of_lid o.mtarget) (print_mlift o.mlift));
+//    joins |> List.iter (fun (e1, e2, e3, l1, l2) -> if lid_equals e1 e2 then () else Printf.printf "%s join %s = %s\n\t%s\n\t%s\n" (string_of_lid e1) (string_of_lid e2) (string_of_lid e3) (print_mlift l1) (print_mlift l2));
   {env with effects=effects}
 
 let add_polymonadic_bind env m n p ty =
@@ -1553,7 +1553,7 @@ let all_binders env = binders_of_bindings env.gamma
 let print_gamma gamma =
     (gamma |> List.map (function
         | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
-        | Binding_univ u -> "Binding_univ " ^ u.idText
+        | Binding_univ u -> "Binding_univ " ^ (text_of_id u)
         | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)))//  @
     // (env.gamma_sig |> List.map (fun (ls, _) ->
     //     "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")

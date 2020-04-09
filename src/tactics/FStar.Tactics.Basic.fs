@@ -914,7 +914,7 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
 let rename_to (b : binder) (s : string) : tac<binder> = wrap_err "rename_to" <|
     bind cur_goal (fun goal ->
     let bv, q = b in
-    let bv' = freshen_bv ({ bv with ppname = mk_ident (s, bv.ppname.idRange) }) in
+    let bv' = freshen_bv ({ bv with ppname = mk_ident (s, (range_of_id bv.ppname)) }) in
     bind (subst_goal bv bv' goal) (function
     | None -> fail "binder not found in environment"
     | Some (bv',  goal) ->
@@ -1311,7 +1311,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         let bs, comp =
                           let rename_bv bv =
                               let ppname = bv.ppname in
-                              let ppname = { ppname with idText = "a" ^ ppname.idText } in
+                              let ppname = mk_ident ("a" ^ text_of_id ppname, range_of_id ppname) in
                               // freshen just to be extra safe.. probably not needed
                               freshen_bv ({ bv with ppname = ppname })
                           in

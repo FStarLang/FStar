@@ -542,8 +542,8 @@ val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term
 val binders_to_names: binders -> list<term>
 
-val bv_eq:           bv -> bv -> Tot<bool>
-val order_bv:        bv -> bv -> Tot<int>
+val bv_eq:           bv -> bv -> bool
+val order_bv:        bv -> bv -> int
 val range_of_lbname: lbname -> range
 val range_of_bv:     bv -> range
 val set_range_of_bv: bv -> range -> bv

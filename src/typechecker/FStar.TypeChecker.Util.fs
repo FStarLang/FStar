@@ -182,14 +182,14 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 
 //            | Pat_cons(fv, []), Tm_fvar fv' ->
 //              if not (Syntax.fv_eq fv fv')
-//              then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
+//              then failwith (BU.format2 "Expected pattern constructor %s; got %s" (string_of_lid fv.fv_name.v) (string_of_lid fv'.fv_name.v));
 //              pkg (Pat_cons(fv', []))
 
 //            | Pat_cons(fv, argpats), Tm_app({n=Tm_fvar(fv')}, args)
 //            | Pat_cons(fv, argpats), Tm_app({n=Tm_uinst({n=Tm_fvar(fv')}, _)}, args) ->
 
 //              if fv_eq fv fv' |> not
-//              then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
+//              then failwith (BU.format2 "Expected pattern constructor %s; got %s" (string_of_lid fv.fv_name.v) (string_of_lid fv'.fv_name.v));
 
 //              let fv = fv' in
 //              let rec match_args matched_pats args argpats = match args, argpats with
@@ -2454,7 +2454,7 @@ let maybe_add_implicit_binders (env:env) (bs:binders)  : binders =
                         | None -> bs
                         | Some ([], _, _) -> bs //no implicits
                         | Some (imps, _,  _) ->
-                          if imps |> BU.for_all (fun (x, _) -> BU.starts_with x.ppname.idText "'")
+                          if imps |> BU.for_all (fun (x, _) -> BU.starts_with (text_of_id x.ppname) "'")
                           then let r = pos bs in
                                let imps = imps |> List.map (fun (x, i) -> (S.set_range_of_bv x r, i)) in
                                imps@bs //we have a prefix of ticked variables
@@ -2489,8 +2489,8 @@ let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s
 let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
   // Debug
   if Env.debug env (Options.Other "ED") then begin
-    d (text_of_lid lident);
-    BU.print2 "Registering top-level definition: %s\n%s\n" (text_of_lid lident) (Print.term_to_string def)
+    d (string_of_lid lident);
+    BU.print2 "Registering top-level definition: %s\n%s\n" (string_of_lid lident) (Print.term_to_string def)
   end;
   // Allocate a new top-level name.
   let fv = S.lid_as_fv lident (U.incr_delta_qualifier def) None in
@@ -2730,7 +2730,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
        let is, g = Env.uvars_for_binders env bs [NT (fst a, a_tm)]
          (fun b -> BU.format3
            "uvar for binder %s when creating a fresh repr for %s at %s"
-           (Print.binder_to_string b) eff_name.str (Range.string_of_range r)) r in
+           (Print.binder_to_string b) (string_of_lid eff_name) (Range.string_of_range r)) r in
        (match repr_ts_opt with
         | None ->  //no repr, return thunked computation type
           let eff_c = mk_Comp ({

@@ -277,7 +277,7 @@ let tc_one_file
   in
   let maybe_extract_mldefs tcmod env =
       if Options.codegen() = None
-      || not (Options.should_extract tcmod.name.str)
+      || not (Options.should_extract (string_of_lid tcmod.name))
       then None, 0
       else
         FStar.Util.record_time (fun () ->
@@ -321,7 +321,7 @@ let tc_one_file
 
           let ((tcmod, smt_decls), env) =
             Profiling.profile (fun () -> check env)
-                              (Some fmod.name.str)
+                              (Some (string_of_lid fmod.name))
                               "FStar.Universal.tc_source_file"
           in
 
@@ -339,7 +339,7 @@ let tc_one_file
           extracted_defs,
           env
       in
-      if (Options.should_verify fmod.name.str //if we're verifying this module
+      if (Options.should_verify (string_of_lid fmod.name) //if we're verifying this module
             && (FStar.Options.record_hints() //and if we're recording or using hints
                 || FStar.Options.use_hints()))
       then SMT.with_hints_db (Pars.find_file fn) check_mod
@@ -364,7 +364,7 @@ let tc_one_file
 
         if FStar.Errors.get_err_count() = 0
         && (Options.lax()  //we'll write out a .checked.lax file
-            || Options.should_verify tc_result.checked_module.name.str) //we'll write out a .checked file
+            || Options.should_verify (string_of_lid tc_result.checked_module.name)) //we'll write out a .checked file
         //but we will not write out a .checked file for an unverified dependence
         //of some file that should be checked
         //(i.e. we DO write .checked.lax files for dependencies even if not provided as an argument)
@@ -374,7 +374,7 @@ let tc_one_file
       | Some tc_result ->
         let tcmod = tc_result.checked_module in
         let smt_decls = tc_result.smt_decls in
-        if Options.dump_module tcmod.name.str
+        if Options.dump_module (string_of_lid tcmod.name)
         then BU.print1 "Module after type checking:\n%s\n" (FStar.Syntax.Print.modul_to_string tcmod);
 
         let extend_tcenv tcmod tcenv =
@@ -406,7 +406,7 @@ let tc_one_file
         (* If we have to extract this module, then do it first *)
         let mllib =
             if Options.codegen()<>None
-            && Options.should_extract tcmod.name.str
+            && Options.should_extract (string_of_lid tcmod.name)
             && (not tcmod.is_interface || Options.codegen()=Some Options.Kremlin)
             then
                  let extracted_defs, _extraction_time = maybe_extract_mldefs tcmod env in

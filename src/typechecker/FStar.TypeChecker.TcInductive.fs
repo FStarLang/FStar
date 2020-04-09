@@ -235,7 +235,7 @@ let generalize_and_inst_within (env:env_t) (tcs:list<(sigelt * universe)>) (data
         let (uvs, t) = TcUtil.generalize_universes env t in
         if Env.debug env <| Options.Other "GenUniverses"
         then BU.print2 "@@@@@@Generalized to (%s, %s)\n"
-                            (uvs |> List.map (fun u -> u.idText) |> String.concat ", ")
+                            (uvs |> List.map (fun u -> (text_of_id u)) |> String.concat ", ")
                             (Print.term_to_string t);
         //Now, (uvs, t) is the generalized type scheme for all the inductives and their data constuctors
 
@@ -376,7 +376,7 @@ let rec ty_strictly_positive_in_type (ty_lid:lident) (btype:term) (unfolded:unfo
 //us are the universes that the inductive ilid's data constructors can be instantiated with if needed, these us come from the application of ilid that called this function
 //TODO: change the name of the function to reflect this behavior
 and ty_nested_positive_in_inductive (ty_lid:lident) (ilid:lident) (us:universes) (args:args) (unfolded:unfolded_memo_t) (env:env_t) :bool =
-  debug_log env (fun () -> "Checking nested positivity in the inductive " ^ ilid.str ^ " applied to arguments: " ^ (PP.args_to_string args));
+  debug_log env (fun () -> "Checking nested positivity in the inductive " ^ (string_of_lid ilid) ^ " applied to arguments: " ^ (PP.args_to_string args));
   let b, idatas = datacons_of_typ env ilid in
   //if ilid is not an inductive, return false
   if not b then begin
@@ -407,7 +407,7 @@ and ty_nested_positive_in_inductive (ty_lid:lident) (ilid:lident) (us:universes)
 //dlid is a data constructor of ilid, args are the arguments of the ilid application, num_ibs is the # of type parameters of ilid
 //us are the universes, see the exaplanation on ty_nested_positive_in_inductive
 and ty_nested_positive_in_dlid (ty_lid:lident) (dlid:lident) (ilid:lident) (us:universes) (args:args) (num_ibs:int) (unfolded:unfolded_memo_t) (env:env_t) :bool =
-  debug_log env (fun () -> "Checking nested positivity in data constructor " ^ dlid.str ^ " of the inductive " ^ ilid.str);
+  debug_log env (fun () -> "Checking nested positivity in data constructor " ^ (string_of_lid dlid) ^ " of the inductive " ^ (string_of_lid ilid));
   //get the type of the data constructor
   let univ_unif_vars, dt = lookup_datacon env dlid in
   //lookup_datacon instantiates the universes of dlid with unification variables
@@ -546,12 +546,14 @@ let datacon_typ (data:sigelt) :term =
 let haseq_suffix = "__uu___haseq"
 
 let is_haseq_lid lid =
-  let str = lid.str in let len = String.length str in
+  let str = (string_of_lid lid) in
+  let len = String.length str in
   let haseq_suffix_len = String.length haseq_suffix in
   len > haseq_suffix_len &&
   String.compare (String.substring str (len - haseq_suffix_len) haseq_suffix_len) haseq_suffix = 0
 
-let get_haseq_axiom_lid lid = lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ haseq_suffix))])
+let get_haseq_axiom_lid lid =
+    lid_of_ids (ns_of_lid lid @ [(id_of_text (text_of_id (ident_of_lid lid) ^ haseq_suffix))])
 
 //get the optimized hasEq axiom for this inductive
 //the caller is supposed to open the universes, and pass along the universe substitution and universe names
@@ -630,7 +632,7 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
       //label the haseq predicate so that we get a proper error message if the assertion fails
       let sort_range = (fst b).sort.pos in
       let haseq_b = TcUtil.label
-                    (BU.format1 "Failed to prove that the type '%s' supports decidable equality because of this argument; add either the 'noeq' or 'unopteq' qualifier" ty_lid.str)
+                    (BU.format1 "Failed to prove that the type '%s' supports decidable equality because of this argument; add either the 'noeq' or 'unopteq' qualifier" (string_of_lid ty_lid))
                     sort_range
                     haseq_b
       in
@@ -1077,7 +1079,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let early_prims_inductive =
       lid_equals C.prims_lid  (Env.current_module env) &&
-      List.existsb (fun s -> s = tc.ident.idText) early_prims_inductives
+      List.existsb (fun s -> s = (text_of_id (ident_of_lid tc))) early_prims_inductives
     in
 
     let discriminator_ses =
@@ -1088,7 +1090,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             let no_decl = false in
             let only_decl =
               early_prims_inductive ||
-              Options.dont_gen_projectors (Env.current_module env).str
+              Options.dont_gen_projectors (string_of_lid (Env.current_module env))
             in
             let quals =
                 (* KM : What about Logic ? should it still be there even with an implementation *)
@@ -1128,8 +1130,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                         let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
                             let b = S.is_implicit imp in
                             if b && j < ntps
-                            then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
-                            else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
+                            then pos (Pat_dot_term (S.gen_bv (text_of_id x.ppname) None tun, tun)), b
+                            else pos (Pat_wild (S.gen_bv (text_of_id x.ppname) None tun)), b)
                         in
                         let pat_true = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, U.exp_true_bool in
                         let pat_false = pos (Pat_wild (S.new_bv None tun)), None, U.exp_false_bool in
@@ -1192,7 +1194,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           in
           let only_decl =
             early_prims_inductive ||
-            Options.dont_gen_projectors (Env.current_module env).str
+            Options.dont_gen_projectors (string_of_lid (Env.current_module env))
           in
           (* KM : Why would we want to prevent a declaration only in this particular case ? *)
           (* TODO : If we don't want the declaration then we need to propagate the right types in the patterns *)
@@ -1223,14 +1225,14 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           if only_decl
           then [decl] //only the signature
           else
-              let projection = S.gen_bv x.ppname.idText None tun in
+              let projection = S.gen_bv (text_of_id x.ppname) None tun in
               let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
                   let b = S.is_implicit imp in
                   if i+ntps=j  //this is the one to project
                   then pos (Pat_var projection), b
                   else if b && j < ntps
-                  then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
-                  else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
+                  then pos (Pat_dot_term (S.gen_bv (text_of_id x.ppname) None tun, tun)), b
+                  else pos (Pat_wild (S.gen_bv (text_of_id x.ppname) None tun)), b)
               in
               let pat = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
               let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in

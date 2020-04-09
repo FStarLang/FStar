@@ -28,15 +28,15 @@ open FStar.Syntax.Syntax
 open FStar.Parser.AST
 
 (* Some basic utilities *)
-let id_eq_lid i (l:lident) = i.idText = l.ident.idText
+let id_eq_lid i (l:lident) = (text_of_id i) = (text_of_id (ident_of_lid l))
 
 let is_val x d = match d.d with
-    | Val(y, _) -> x.idText = y.idText
+    | Val(y, _) -> (text_of_id x) = (text_of_id y)
     | _ -> false
 
 let is_type x d = match d.d with
     | Tycon(_, _, tys) ->
-        tys |> Util.for_some (fun t -> id_of_tycon t = x.idText)
+        tys |> Util.for_some (fun t -> id_of_tycon t = (text_of_id x))
     | _ -> false
 
 //is d of of the form 'let x = ...' or 'type x = ...'
@@ -156,9 +156,9 @@ let rec prefix_with_iface_decls
        let defines_x = Util.for_some (id_eq_lid x) def_ids in
        if not defines_x
        then if def_ids |> Util.for_some (fun y ->
-               iface_tl |> Util.for_some (is_val y.ident))
+               iface_tl |> Util.for_some (is_val (ident_of_lid y)))
             then raise_error (Errors.Fatal_WrongDefinitionOrder, (Util.format2 "Expected the definition of %s to precede %s"
-                                           x.idText
+                                           (text_of_id x)
                                            (def_ids |> List.map Ident.string_of_lid |> String.concat ", "))) impl.drange
             else iface, [qualify_kremlin_private impl]
        else let mutually_defined_with_x = def_ids |> List.filter (fun y -> not (id_eq_lid x y)) in
@@ -167,10 +167,10 @@ let rec prefix_with_iface_decls
                 | [], _ -> [], iface
                 | _::_, [] -> [], []
                 | y::ys, iface_hd::iface_tl ->
-                  if is_val y.ident iface_hd
+                  if is_val (ident_of_lid y) iface_hd
                   then let val_ys, iface = aux ys iface_tl in
                        iface_hd::val_ys, iface
-                  else if Option.isSome <| List.tryFind (is_val y.ident) iface_tl
+                  else if Option.isSome <| List.tryFind (is_val (ident_of_lid y)) iface_tl
                   then raise_error (Errors.Fatal_WrongDefinitionOrder, (Util.format2 "%s is out of order with the definition of %s"
                                             (decl_to_string iface_hd)
                                             (Ident.string_of_lid y))) iface_hd.drange
@@ -200,7 +200,7 @@ let check_initial_interface (iface:list<decl>) =
 
             | Val(x, t) ->  //we have a 'val x' in the interface
               if Util.for_some (is_definition_of x) tl
-              then raise_error (Errors.Fatal_BothValAndLetInInterface, (Util.format2 "'val %s' and 'let %s' cannot both be provided in an interface" x.idText x.idText)) hd.drange
+              then raise_error (Errors.Fatal_BothValAndLetInInterface, (Util.format2 "'val %s' and 'let %s' cannot both be provided in an interface" (text_of_id x) (text_of_id x))) hd.drange
               else if hd.quals |> List.contains Assumption
               then raise_error (Errors.Fatal_AssumeValInInterface, "Interfaces cannot use `assume val x : t`; just write `val x : t` instead") hd.drange
               else ()
@@ -229,7 +229,7 @@ let ml_mode_prefix_with_iface_decls
      let xs = lids_of_let defs in
      let val_xs, rest_iface =
         List.partition
-            (fun d -> xs |> Util.for_some (fun x -> is_val x.ident d))
+            (fun d -> xs |> Util.for_some (fun x -> is_val (ident_of_lid x) d))
             iface
      in
      rest_iface, val_xs@[impl]

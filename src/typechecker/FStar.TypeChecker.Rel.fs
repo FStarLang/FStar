@@ -911,7 +911,7 @@ let fv_delta_depth env fv =
     let d = Env.delta_depth_of_fv env fv in
     match d with
     | Delta_abstract d ->
-      if env.curmodule.str = fv.fv_name.v.nsstr && not env.is_iface  //AR: TODO: this is to prevent unfolding of abstract symbols in the extracted interface
+      if string_of_lid env.curmodule = nsstr fv.fv_name.v && not env.is_iface  //AR: TODO: this is to prevent unfolding of abstract symbols in the extracted interface
                                                                      //    a better way would be create new fvs with appripriate delta_depth at extraction time
       then d //we're in the defining module
       else delta_constant
@@ -1314,7 +1314,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
                                         (Print.univ_to_string u2))
 
         | U_name x, U_name y ->
-          if x.idText = y.idText
+          if (text_of_id x) = (text_of_id y)
           then USolved wl
           else ufailed_simple "Incompatible universes"
 
@@ -3285,7 +3285,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                  else begin
                     let c1 = Env.unfold_effect_abbrev env c1 in
                     let c2 = Env.unfold_effect_abbrev env c2 in
-                    if debug env <| Options.Other "Rel" then BU.print2 "solve_c for %s and %s\n" (c1.effect_name.str) (c2.effect_name.str);
+                    if debug env <| Options.Other "Rel" then BU.print2 "solve_c for %s and %s\n" (string_of_lid c1.effect_name) (string_of_lid c2.effect_name);
                     match Env.monad_leq env c1.effect_name c2.effect_name with
                     | None ->
                        giveup env (mklstr (fun () -> BU.format2 "incompatible monad ordering: %s </: %s"

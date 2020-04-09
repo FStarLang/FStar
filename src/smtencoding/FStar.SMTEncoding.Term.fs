@@ -895,8 +895,8 @@ let rec declToSmt' print_captions z3options decl =
   | Assume a ->
     let fact_ids_to_string ids =
         ids |> List.map (function
-        | Name n -> "Name " ^Ident.text_of_lid n
-        | Namespace ns -> "Namespace " ^Ident.text_of_lid ns
+        | Name n -> "Name " ^ Ident.string_of_lid n
+        | Namespace ns -> "Namespace " ^ Ident.string_of_lid ns
         | Tag t -> "Tag " ^t)
     in
     let fids =

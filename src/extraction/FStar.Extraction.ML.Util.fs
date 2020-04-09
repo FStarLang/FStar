@@ -286,11 +286,11 @@ let resugar_exp e = match e.expr with
 
 let record_field_path = function
     | f::_ ->
-        let ns, _ = BU.prefix f.ns in
-        ns |> List.map (fun id -> id.idText)
+        let ns, _ = BU.prefix (ns_of_lid f) in
+        ns |> List.map (fun id -> (text_of_id id))
     | _ -> failwith "impos"
 
-let record_fields fs vs = List.map2 (fun (f:lident) e -> f.ident.idText, e) fs vs
+let record_fields fs vs = List.map2 (fun (f:lident) e -> (text_of_id (ident_of_lid f)), e) fs vs
 //
 //let resugar_pat q p = match p with
 //    | MLP_CTor(d, pats) ->
@@ -330,7 +330,7 @@ let flatten_mlpath (ns, n) =
     then String.concat "." (ns@[n])
     else String.concat "_" (ns@[n])
 let ml_module_name_of_lid (l:lident) =
-  let mlp = l.ns |> List.map (fun i -> i.idText),  l.ident.idText in
+  let mlp = l |> ns_of_lid |> List.map text_of_id,  text_of_id (ident_of_lid l) in
   flatten_mlpath mlp
 
 
@@ -555,7 +555,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                 args
                 |> List.map (fun (t, _) -> mk_embedding l env t)
             in
-            let nm = fv.fv_name.v.ident.idText in
+            let nm = text_of_id (ident_of_lid fv.fv_name.v) in
             let (_, t_arity, _trepr_head), loc_embedding =
                 BU.find_opt
                     (fun ((x, _, _), _) -> fv_eq_lid fv x)

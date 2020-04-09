@@ -55,7 +55,7 @@ let set_hint_correlator env se =
     //this is useful when we verify the extracted interface alongside
     let tbl = env.qtbl_name_and_index |> fst in
     let get_n lid =
-      let n_opt = BU.smap_try_find tbl lid.str in
+      let n_opt = BU.smap_try_find tbl (string_of_lid lid) in
       if is_some n_opt then n_opt |> must else 0
     in
 
@@ -201,7 +201,7 @@ let tc_inductive' env ses quals attrs lids =
              | Sig_inductive_typ (lid, _, _, _, _, _) -> lid, ty.sigrng
              | _                                         -> failwith "Impossible!"
            in
-           Errors.log_issue r (Errors.Error_InductiveTypeNotSatisfyPositivityCondition, ("Inductive type " ^ lid.str ^ " does not satisfy the positivity condition"))
+           Errors.log_issue r (Errors.Error_InductiveTypeNotSatisfyPositivityCondition, ("Inductive type " ^ (string_of_lid lid) ^ " does not satisfy the positivity condition"))
          else ()
        ) tcs;
 
@@ -216,7 +216,7 @@ let tc_inductive' env ses quals attrs lids =
          if lid_equals ty_lid PC.exn_lid && not (TcInductive.check_exn_positivity data_lid env) then
             Errors.log_issue d.sigrng
                      (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-                        ("Exception " ^ data_lid.str ^ " does not satisfy the positivity condition"))
+                        ("Exception " ^ (string_of_lid data_lid) ^ " does not satisfy the positivity condition"))
        ) datas
     end;
 
@@ -232,7 +232,7 @@ let tc_inductive' env ses quals attrs lids =
           | _                                         -> failwith "Impossible"
         in
         //these are the prims type we are skipping
-        List.existsb (fun s -> s = lid.ident.idText) TcInductive.early_prims_inductives in
+        List.existsb (fun s -> s = (text_of_id (ident_of_lid lid))) TcInductive.early_prims_inductives in
 
       let is_noeq = List.existsb (fun q -> q = Noeq) quals in
 
@@ -283,7 +283,7 @@ let check_must_erase_attribute env se =
             snd lbs |> List.iter (fun lb ->
                 let lbname = BU.right lb.lbname in
                 let has_iface_val =
-                    iface_decls |> BU.for_some (FStar.Parser.AST.decl_is_val lbname.fv_name.v.ident)
+                    iface_decls |> BU.for_some (FStar.Parser.AST.decl_is_val (ident_of_lid lbname.fv_name.v))
                 in
                 if has_iface_val
                 then
@@ -506,7 +506,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     if lid_exists env lid
     then raise_error (Errors.Fatal_AlreadyDefinedTopLevelDeclaration, (BU.format1 "Top-level declaration %s for a name that is already used in this module; \
                                    top-level declarations must be unique in their module"
-                                   (Ident.text_of_lid lid))) r;
+                                   (Ident.string_of_lid lid))) r;
 
     let uvs, t =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
@@ -595,7 +595,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
         match typ with
         | { n = Tm_arrow(val_bs, c); pos = r } -> begin
           let has_auto_name bv =
-            BU.starts_with bv.ppname.idText Ident.reserved_prefix in
+            BU.starts_with (text_of_id bv.ppname) Ident.reserved_prefix in
           let rec rename_binders def_bs val_bs =
             match def_bs, val_bs with
             | [], _ | _, [] -> val_bs
@@ -603,13 +603,12 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
               (match has_auto_name body_bv, has_auto_name val_bv with
                | true, _ -> (val_bv, aqual)
                | false, true -> ({ val_bv with
-                                   ppname = { val_bv.ppname with
-                                              idText = body_bv.ppname.idText } }, aqual)
+                                   ppname = mk_ident (text_of_id body_bv.ppname, range_of_id val_bv.ppname) }, aqual)
                | false, false ->
-                 // if body_bv.ppname.idText <> val_bv.ppname.idText then
-                 //   Errors.warn body_bv.ppname.idRange
+                 // if (text_of_id body_bv.ppname) <> (text_of_id val_bv.ppname) then
+                 //   Errors.warn (range_of_id body_bv.ppname)
                  //     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
-                 //                  body_bv.ppname.idText val_bv.ppname.idText);
+                 //                  (text_of_id body_bv.ppname) (text_of_id val_bv.ppname));
                  (val_bv, aqual)) :: rename_binders bt vt in
           Syntax.mk (Tm_arrow(rename_binders def_bs val_bs, c)) None r end
         | _ -> typ in
@@ -809,8 +808,8 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
   then [], [], env
   else begin
    let env = set_hint_correlator env se in
-   if Options.debug_module env.curmodule.str then
-     BU.print1 "Processing %s\n" (U.lids_of_sigelt se |> List.map (fun l -> l.str) |> String.concat ", ");
+   if Options.debug_module (string_of_lid env.curmodule) then
+     BU.print1 "Processing %s\n" (U.lids_of_sigelt se |> List.map string_of_lid |> String.concat ", ");
    if Env.debug env Options.Low then
      BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
 
@@ -1266,13 +1265,13 @@ let push_context env msg = snd (snapshot_context env msg)
 let pop_context env msg = rollback_context env.solver msg None
 
 let tc_partial_modul env modul =
-  let verify = Options.should_verify modul.name.str in
+  let verify = Options.should_verify (string_of_lid modul.name) in
   let action = if verify then "Verifying" else "Lax-checking" in
   let label = if modul.is_interface then "interface" else "implementation" in
   if Options.debug_any () then
-    BU.print3 "%s %s of %s\n" action label modul.name.str;
+    BU.print3 "%s %s of %s\n" action label (string_of_lid modul.name);
 
-  let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
+  let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") (string_of_lid modul.name) in
   let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
   let env = Env.set_current_module env modul.name in
   let ses, exports, env = tc_decls env modul.declarations in
@@ -1284,7 +1283,7 @@ let tc_more_partial_modul env modul decls =
   modul, exports, env
 
 let rec tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul * env) =
-  let msg = "Internals for " ^ m.name.str in
+  let msg = "Internals for " ^ string_of_lid m.name in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
   let modul, non_private_decls, env = tc_partial_modul env0 m in
@@ -1303,15 +1302,15 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
     //extract the interface in the new environment, this helps us figure out things like if an effect is reifiable
     let modul_iface = extract_interface en m in
     if Env.debug en <| Options.Low then
-      BU.print4 "Extracting and type checking module %s interface%s%s%s\n" m.name.str
-                (if Options.should_verify m.name.str then "" else " (in lax mode) ")
-                (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
-                (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
+      BU.print4 "Extracting and type checking module %s interface%s%s%s\n" (string_of_lid m.name)
+                (if Options.should_verify (string_of_lid m.name) then "" else " (in lax mode) ")
+                (if Options.dump_module (string_of_lid m.name) then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
+                (if Options.dump_module (string_of_lid m.name) then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
 
     //set up the environment to verify the interface
     let en0 =
       //pop to get the env before this module type checking...
-      let en0 = pop_context en ("Ending modul " ^ m.name.str) in
+      let en0 = pop_context en ("Ending modul " ^ (string_of_lid m.name)) in
       //.. but restore the dsenv, since typechecking `m` might have elaborated
       // some %splices that we need to properly resolve further modules
       let en0 = { en0 with dsenv = en.dsenv } in
@@ -1342,7 +1341,7 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
     then check_exports env modul exports;
 
     //pop BUT ignore the old env
-    pop_context env ("Ending modul " ^ modul.name.str) |> ignore;
+    pop_context env ("Ending modul " ^ string_of_lid modul.name) |> ignore;
 
     //moved the code for encoding the module to smt to Universal
 
@@ -1376,16 +1375,16 @@ let load_checked_module (en:env) (m:modul) :env =
 let check_module env m b =
   if Options.debug_any()
   then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
-  if Options.dump_module m.name.str
+  if Options.dump_module (string_of_lid m.name)
   then BU.print1 "Module before type checking:\n%s\n" (Print.modul_to_string m);
 
-  let env = {env with lax=not (Options.should_verify m.name.str)} in
+  let env = {env with lax=not (Options.should_verify (string_of_lid m.name))} in
   let m, env = tc_modul env m b in
 
   (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)
-  if Options.dump_module m.name.str
+  if Options.dump_module (string_of_lid m.name)
   then BU.print1 "Module after type checking:\n%s\n" (Print.modul_to_string m);
-  if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
+  if Options.dump_module (string_of_lid m.name) && Options.debug_at_level (string_of_lid m.name) (Options.Other "Normalize")
   then begin
     let normalize_toplevel_lets = fun se -> match se.sigel with
         | Sig_let ((b, lbs), ids) ->

@@ -43,8 +43,8 @@ let rec delta_depth_to_string = function
 
 let sli (l:lident) : string =
     if Options.print_real_names()
-    then l.str
-    else l.ident.idText
+    then string_of_lid l
+    else text_of_id (ident_of_lid l)
 //    Util.format3 "%s@{def=%s;use=%s}" s
 //        (Range.string_of_range (Ident.range_of_lid l))
 //        (Range.string_of_use_range (Ident.range_of_lid l))
@@ -53,14 +53,14 @@ let lid_to_string (l:lid) = sli l
 
 // let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
 let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ delta_depth_to_string fv.fv_delta ^ ")"
-let bv_to_string bv = bv.ppname.idText ^ "#" ^ (string_of_int bv.index)
+let bv_to_string bv = (text_of_id bv.ppname) ^ "#" ^ (string_of_int bv.index)
 
 let nm_to_string bv =
     if Options.print_real_names()
     then bv_to_string bv
-    else bv.ppname.idText
+    else (text_of_id bv.ppname)
 
-let db_to_string bv = bv.ppname.idText ^ "@" ^ string_of_int bv.index
+let db_to_string bv = (text_of_id bv.ppname) ^ "@" ^ string_of_int bv.index
 
 (* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
 let infix_prim_ops = [
@@ -174,7 +174,7 @@ let rec univ_to_string u =
   // else
   match Subst.compress_univ u with
     | U_unif u -> "U_unif "^univ_uvar_to_string u
-    | U_name x -> "U_name "^x.idText
+    | U_name x -> "U_name "^(text_of_id x)
     | U_bvar x -> "@"^string_of_int x
     | U_zero   -> "0"
     | U_succ u ->
@@ -187,7 +187,7 @@ let rec univ_to_string u =
 
 let univs_to_string us = List.map univ_to_string us |> String.concat ", "
 
-let univ_names_to_string us = List.map (fun x -> x.idText) us |> String.concat ", "
+let univ_names_to_string us = List.map (fun x -> (text_of_id x)) us |> String.concat ", "
 
 let qual_to_string = function
   | Assumption            -> "assume"
@@ -204,7 +204,7 @@ let qual_to_string = function
   | Logic                 -> "logic"
   | TotalEffect           -> "total"
   | Discriminator l       -> U.format1 "(Discriminator %s)" (lid_to_string l)
-  | Projector (l, x)      -> U.format2 "(Projector %s %s)" (lid_to_string l) x.idText
+  | Projector (l, x)      -> U.format2 "(Projector %s %s)" (lid_to_string l) (text_of_id x)
   | RecordType (ns, fns)  -> U.format2 "(RecordType %s %s)" (text_of_path (path_of_ns ns)) (fns |> List.map text_of_id |> String.concat ", ")
   | RecordConstructor (ns, fns) -> U.format2 "(RecordConstructor %s %s)" (text_of_path (path_of_ns ns))  (fns |> List.map text_of_id |> String.concat ", ")
   | Action eff_lid        -> U.format1 "(Action %s)" (lid_to_string eff_lid)
@@ -212,7 +212,7 @@ let qual_to_string = function
   | HasMaskedEffect       -> "HasMaskedEffect"
   | Effect                -> "Effect"
   | Reifiable             -> "reify"
-  | Reflectable l         -> U.format1 "(reflect %s)" l.str
+  | Reflectable l         -> U.format1 "(reflect %s)" (string_of_lid l)
   | OnlyName              -> "OnlyName"
 
 let quals_to_string quals =
@@ -327,7 +327,7 @@ and term_to_string x =
               U.format4 "(fun %s -> (%s $$ (residual) %s %s))"
                             (binders_to_string " " bs)
                             (term_to_string t2)
-                            rc.residual_effect.str
+                            (string_of_lid rc.residual_effect)
                             (if Option.isNone rc.residual_typ then "None" else term_to_string (Option.get rc.residual_typ))
             | _ ->
               U.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
@@ -337,7 +337,7 @@ and term_to_string x =
       | Tm_let(lbs, e) ->   U.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
       | Tm_ascribed(e,(annot, topt),eff_name) ->
         let annot = match annot with
-            | Inl t -> U.format2 "[%s] %s" (map_opt eff_name Ident.text_of_lid |> dflt "default") (term_to_string t)
+            | Inl t -> U.format2 "[%s] %s" (map_opt eff_name Ident.string_of_lid |> dflt "default") (term_to_string t)
             | Inr c -> comp_to_string c in
         let topt = match topt with
             | None -> ""
@@ -373,7 +373,7 @@ and subst_elt_to_string = function
    | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
    | NT(x, t) -> U.format2 "NT (%s, %s)" (bv_to_string x) (term_to_string t)
    | UN(i, u) -> U.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
-   | UD(u, i) -> U.format2 "UD (%s, %s)" u.idText (string_of_int i)
+   | UD(u, i) -> U.format2 "UD (%s, %s)" (text_of_id u) (string_of_int i)
 
 and subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
 
@@ -729,23 +729,23 @@ let rec sigelt_to_string (x: sigelt) =
         let quals_str = quals_to_string' x.sigquals in
         let binders_str = binders_to_string " " tps in
         let term_str = term_to_string k in
-        if Options.print_universes () then U.format5 "%stype %s<%s> %s : %s" quals_str lid.str (univ_names_to_string univs) binders_str term_str
-        else U.format4 "%stype %s %s : %s" quals_str lid.str binders_str term_str
+        if Options.print_universes () then U.format5 "%stype %s<%s> %s : %s" quals_str (string_of_lid lid) (univ_names_to_string univs) binders_str term_str
+        else U.format4 "%stype %s %s : %s" quals_str (string_of_lid lid) binders_str term_str
       | Sig_datacon(lid, univs, t, _, _, _) ->
         if (Options.print_universes())
         then //let univs, t = Subst.open_univ_vars univs t in (* AR: don't open the universes, else it's a bit confusing *)
-             U.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) lid.str (term_to_string t)
-        else U.format2 "datacon %s : %s" lid.str (term_to_string t)
+             U.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) (string_of_lid lid) (term_to_string t)
+        else U.format2 "datacon %s : %s" (string_of_lid lid) (term_to_string t)
       | Sig_declare_typ(lid, univs, t) ->
         //let univs, t = Subst.open_univ_vars univs t in
-        U.format4 "%sval %s %s : %s" (quals_to_string' x.sigquals) lid.str
+        U.format4 "%sval %s %s : %s" (quals_to_string' x.sigquals) (string_of_lid lid)
             (if (Options.print_universes())
              then U.format1 "<%s>" (univ_names_to_string univs)
              else "")
             (term_to_string t)
       | Sig_assume(lid, us, f) ->
-        if Options.print_universes () then U.format3 "val %s<%s> : %s" lid.str (univ_names_to_string us) (term_to_string f)
-        else U.format2 "val %s : %s" lid.str (term_to_string f)
+        if Options.print_universes () then U.format3 "val %s<%s> : %s" (string_of_lid lid) (univ_names_to_string us) (term_to_string f)
+        else U.format2 "val %s : %s" (string_of_lid lid) (term_to_string f)
       | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
       | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
       | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
@@ -784,7 +784,7 @@ let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 let sigelt_to_string_short (x: sigelt) = match x.sigel with
   | Sig_let((_, [{lbname=lb; lbtyp=t}]), _) -> U.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
   | _ ->
-    SU.lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
+    SU.lids_of_sigelt x |> List.map (fun l -> string_of_lid l) |> String.concat ", "
 
 let tag_of_sigelt (se:sigelt) : string =
   match se.sigel with
@@ -815,10 +815,10 @@ let modul_to_string (m:modul) =
 //      | None -> U.string_builder_append strb "None"
 //      | Some (Inl lc) ->
 //          U.string_builder_append strb "Some Inr " ;
-//          U.string_builder_append strb (Ident.text_of_lid lc.eff_name)
+//          U.string_builder_append strb (Ident.string_of_lid lc.eff_name)
 //      | Some (Inr lid) ->
 //          U.string_builder_append strb "Some Inr " ;
-//          U.string_builder_append strb (Ident.text_of_lid lid)
+//          U.string_builder_append strb (Ident.string_of_lid lid)
 //  end ;
 //  U.string_of_string_builder strb
 

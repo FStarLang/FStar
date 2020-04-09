@@ -364,7 +364,7 @@ let is_free (x:bv) (t:term) : bool =
 let lookup_attr (attr:term) (env:Env.env) : list<fv> =
     match (SS.compress attr).n with
     | Tm_fvar fv ->
-        let ses = Env.lookup_attr env (Ident.text_of_lid (lid_of_fv fv)) in
+        let ses = Env.lookup_attr env (Ident.string_of_lid (lid_of_fv fv)) in
         List.concatMap (fun se -> match U.lid_of_sigelt se with
                                   | None -> []
                                   // FIXME: Get a proper delta depth
@@ -378,7 +378,7 @@ let defs_in_module (env:Env.env) (modul:name) : list<fv> =
     List.concatMap
         (fun l ->
                 (* must succeed, ids_of_lid always returns a non-empty list *)
-                let ns = Ident.ids_of_lid l |> init |> List.map Ident.string_of_ident in
+                let ns = Ident.ids_of_lid l |> init |> List.map Ident.text_of_id in
                 if ns = modul
                 then [S.lid_as_fv l (S.Delta_constant_at_level 999) None]
                 else [])
@@ -511,7 +511,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
 
 let inspect_bv (bv:bv) : bv_view =
     {
-      bv_ppname = Ident.string_of_ident bv.ppname;
+      bv_ppname = Ident.text_of_id bv.ppname;
       bv_index = Z.of_int_fs bv.index;
       bv_sort = bv.sort;
     }
