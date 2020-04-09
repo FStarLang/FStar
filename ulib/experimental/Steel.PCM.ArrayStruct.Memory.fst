@@ -201,9 +201,6 @@ let composable_array_struct_struct_case_elim
   =
   ()
 
-open FStar.Tactics
-
-#push-options "--warn_error -271 --fuel 1 --ifuel 1 --z3rlimit 50"
 let rec composable_sym (s0 s1: array_struct u#a)
     : Lemma
       (requires composable_array_struct' s0 s1)
@@ -236,7 +233,7 @@ let rec composable_sym (s0 s1: array_struct u#a)
     in
     Classical.forall_intro aux
   | _ -> ()
-#pop-options
+
 
 unfold let composable_array_struct : symrel array_struct =
   let aux (s0 s1: array_struct) : Lemma (
@@ -253,32 +250,54 @@ unfold let composable_array_struct : symrel array_struct =
   in
   Classical.forall_intro_2 aux;
   composable_array_struct'
+#set-options "--print_universes"
 
 let rec compose_array_struct
-  (s0 : array_struct)
-  (s1: array_struct{s0 `composable_array_struct` s1})
-    : Tot (s':array_struct{s'.descriptor == s0.descriptor})
+  (s0 : array_struct u#a)
+  (s1: array_struct u#a{s0 `composable_array_struct` s1})
+    : Tot (s':array_struct u#a{s'.descriptor == s0.descriptor})
       (decreases s0.descriptor)
   =
+
   match s0.descriptor, s1.descriptor with
   | Base a0 pcm0, Base a1 pcm1 ->
     ArrayStruct s0.descriptor (op pcm0 s0.value s1.value)
   | Array descriptor0 len0, Array descriptor1 len1 ->
-    let new_val : Seq.lseq (array_struct_type descriptor0) (v_usize len0) =
+    let new_val : Seq.lseq u#a (array_struct_type u#a descriptor0) (v_usize len0) =
       Seq.init (v_usize len0) (fun i ->
-        let val0 = Seq.index s0.value i in
-        let val1 = Seq.index s1.value i in
-        let sub_s0 = ArrayStruct descriptor0 val0 in
-        let sub_s1 = ArrayStruct descriptor1 val1 in
-        admit();
-        let new_as : array_struct = compose_array_struct sub_s0 sub_s1 in
-        let out : (array_struct_type descriptor0) = new_as.value in
-        out
+        let new_sub_array_struct : array_struct u#a =
+          compose_array_struct
+            (array_cell_sub_array_struct s0 i)
+            (array_cell_sub_array_struct s1 i)
+        in
+        let cell_val : array_struct_type u#a descriptor0 = new_sub_array_struct.value in
+        cell_val
       )
     in
     ArrayStruct s0.descriptor new_val
   | Struct field_descriptors0, Struct field_descriptors1 ->
-    admit()
+    let aux (field: field_id) : Tot (struct_field_type field_descriptors0 field) =
+      match field_descriptors0 field, field_descriptors1 field with
+      | None, None ->
+        assert(struct_field_type field_descriptors0 field == Univ.raise_t u#0 u#a False);
+        // Here I chose the type to be False, but how to provide a value ?
+        magic()
+      | Some sub_descriptor0, Some sub_descriptor1 ->
+        let new_sub_array_struct : array_struct u#a =
+          compose_array_struct
+            (struct_field_sub_array_struct s0 field)
+            (struct_field_sub_array_struct s1 field)
+        in
+        let cell_val : struct_field_type u#a field_descriptors0 field =
+          new_sub_array_struct.value
+        in
+        cell_val
+    in
+    struct_field_type_unroll_lemma_aux u#a field_descriptors0;
+    let new_val : array_struct_type u#a s0.descriptor =
+      DepMap.create #_ #(struct_field_type field_descriptors0) aux
+    in
+    ArrayStruct s0.descriptor new_val
 
 let unit_pcm : pcm unit = {
   p = {

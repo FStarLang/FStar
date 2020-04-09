@@ -32,7 +32,7 @@ val create: #a:Type -> nat -> a -> Tot (seq a)
 private val init_aux (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> Tot a))
   :Tot (seq a)
 
-inline_for_extraction val init: #a:Type -> len:nat -> contents: (i:nat { i < len } -> Tot a) -> Tot (seq a)
+inline_for_extraction val init: #a:Type u#a -> len:nat -> contents: (i:nat { i < len } -> Tot a) -> Tot (seq u#a a)
 
 private val init_aux_ghost (#a:Type) (len:nat) (k:nat{k < len}) (contents:(i:nat { i < len } -> GTot a))
   : GTot (seq a)
