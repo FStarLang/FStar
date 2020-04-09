@@ -170,7 +170,11 @@ let hash_dependences (deps:Dep.deps) (fn:string) :either<string, list<(string * 
          Inl msg
        | Some (Invalid msg, _) -> Inl msg
        | Some (Valid h, _) -> Inr (("source", source_hash)::("interface", h)::out)
-       | Some (Unknown, _) -> failwith "Impossible!") in
+       | Some (Unknown, _) ->
+         failwith (BU.format1
+           "Impossible: unknown entry in the mcache for interface %s\n"
+           iface))
+  in
 
   let rec hash_deps out = function
   | [] -> maybe_add_iface_hash out
@@ -412,11 +416,11 @@ let load_module_from_cache =
 
     (*
      * AR: cf. #1919, A.fst.checked implicitly depends on A.fsti.checked
-     *       and this transitively on the dependencies of A.fsti.checked
+     *       and thus, transitively on the dependencies of A.fsti.checked
      *     the dependency on A.fsti.checked is unusual in the sense that
      *       tcenv is not populated with its contents
      *     that happens via interleaving later
-     *     this is just to make sure that we track the dependence of A.fst
+     *     this is just to make sure that we correctly track the dependence of A.fst
      *       on the dependences of A.fsti
      *)
 
