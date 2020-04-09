@@ -98,7 +98,8 @@ SHOULD_NOT_VERIFY_NOT_WORKING=Bug186.fst Bug397b.fst
 ####################
 
 # These will be checked as part of the F* regressions.
-SHOULD_EXTRACT_CLOSED=Bug086.fst Bug314.fst Bug540.fst Bug541.fst Bug589.fst ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst
+SHOULD_EXTRACT_CLOSED=Bug086.fst Bug314.fst Bug540.fst Bug541.fst Bug589.fst \
+	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst
 #ExtractionBug03.fst
 
 # Bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
@@ -127,6 +128,8 @@ CAPPED=$(subst Bug,Bug,$*)
 
 Bug1383.verify: OTHERFLAGS += --warn_error @275 #Z3 warnings are fatal
 Bug1694.verify: OTHERFLAGS += --codegen OCaml
+
+
 verify: $(subst .fst,.verify,$(SHOULD_VERIFY_CLOSED))
 
 %.iverify: %.fsti
@@ -141,6 +144,10 @@ verify-maybe-close: $(subst .fst,.verify,$(SHOULD_VERIFY_MAYBE_CLOSE))
 	(! $(FSTAR) $^ >/dev/null 2>&1) || (echo "Negative test failed ($@)!" ; false)
 
 not-verify: $(subst .fst,.not-verify,$(SHOULD_NOT_VERIFY_CLOSED))
+
+Bug310.extract:
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug310 --codegen OCaml Bug310.fst
+	cmp Bug310.ml Bug310.ml.expected
 
 %.extract: %.fst
 	mkdir -p out_$*

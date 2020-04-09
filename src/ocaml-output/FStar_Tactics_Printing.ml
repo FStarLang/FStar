@@ -48,14 +48,14 @@ let (unshadow :
           if uu____113 then t1 else aux (i + Prims.int_one)  in
         let uu____120 = f b  in if uu____120 then b else aux Prims.int_zero
          in
-      let rec go seen subst1 bs1 bs' t1 =
+      let rec go seen subst bs1 bs' t1 =
         match bs1 with
         | [] ->
-            let uu____225 = FStar_Syntax_Subst.subst subst1 t1  in
+            let uu____225 = FStar_Syntax_Subst.subst subst t1  in
             ((FStar_List.rev bs'), uu____225)
         | b::bs2 ->
             let b1 =
-              let uu____269 = FStar_Syntax_Subst.subst_binders subst1 [b]  in
+              let uu____269 = FStar_Syntax_Subst.subst_binders subst [b]  in
               match uu____269 with
               | b1::[] -> b1
               | uu____307 -> failwith "impossible: unshadow subst_binders"
@@ -78,7 +78,7 @@ let (unshadow :
                          (bv0, uu____370)  in
                        FStar_Syntax_Syntax.NT uu____363  in
                      [uu____362]  in
-                   FStar_List.append subst1 uu____359  in
+                   FStar_List.append subst uu____359  in
                  go (nbs :: seen) uu____356 bs2 (b2 :: bs') t1)
          in
       go [] [] bs [] t
@@ -112,9 +112,9 @@ let (goal_to_string :
           let num =
             match maybe_num with
             | FStar_Pervasives_Native.None  -> ""
-            | FStar_Pervasives_Native.Some (i,n1) ->
+            | FStar_Pervasives_Native.Some (i,n) ->
                 let uu____470 = FStar_Util.string_of_int i  in
-                let uu____472 = FStar_Util.string_of_int n1  in
+                let uu____472 = FStar_Util.string_of_int n  in
                 FStar_Util.format2 " %s/%s" uu____470 uu____472
              in
           let maybe_label =
@@ -156,7 +156,7 @@ let (ps_to_string :
            in
         let n_active = FStar_List.length ps.FStar_Tactics_Types.goals  in
         let n_smt = FStar_List.length ps.FStar_Tactics_Types.smt_goals  in
-        let n1 = n_active + n_smt  in
+        let n = n_active + n_smt  in
         let uu____551 =
           let uu____555 =
             let uu____559 =
@@ -201,9 +201,8 @@ let (ps_to_string :
                 (fun i  ->
                    fun g  ->
                      goal_to_string "Goal"
-                       (FStar_Pervasives_Native.Some
-                          ((Prims.int_one + i), n1)) ps g)
-                ps.FStar_Tactics_Types.goals
+                       (FStar_Pervasives_Native.Some ((Prims.int_one + i), n))
+                       ps g) ps.FStar_Tactics_Types.goals
                in
             let uu____623 =
               FStar_List.mapi
@@ -211,7 +210,7 @@ let (ps_to_string :
                    fun g  ->
                      goal_to_string "SMT Goal"
                        (FStar_Pervasives_Native.Some
-                          (((Prims.int_one + n_active) + i), n1)) ps g)
+                          (((Prims.int_one + n_active) + i), n)) ps g)
                 ps.FStar_Tactics_Types.smt_goals
                in
             FStar_List.append uu____603 uu____623  in
