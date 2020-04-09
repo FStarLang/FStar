@@ -13,14 +13,14 @@ let (unpack_lsp_query :
       (fun uu___3_36  ->
          match () with
          | () ->
-             let method_37 =
+             let method1 =
                let uu____39 = FStar_Interactive_JsonHelper.assoc "method" r
                   in
                FStar_All.pipe_right uu____39
                  FStar_Interactive_JsonHelper.js_str
                 in
              let uu____42 =
-               match method_37 with
+               match method1 with
                | "initialize" ->
                    let uu____44 =
                      let uu____51 =
@@ -279,27 +279,27 @@ let (invoke_full_lax :
   fun gst  ->
     fun fname  ->
       fun text  ->
-        fun force1  ->
+        fun force  ->
           let aux uu____326 =
             FStar_Parser_ParseIt.add_vfs_entry fname text;
             (let uu____328 =
                let uu____335 = repl_state_init fname  in
                FStar_Interactive_PushHelper.full_lax text uu____335  in
              match uu____328 with
-             | (diag1,st') ->
+             | (diag,st') ->
                  let repls =
                    FStar_Util.psmap_add
                      gst.FStar_Interactive_JsonHelper.grepl_repls fname st'
                     in
-                 let diag2 =
-                   if FStar_Util.is_some diag1
-                   then diag1
+                 let diag1 =
+                   if FStar_Util.is_some diag
+                   then diag
                    else
                      (let uu____364 =
                         FStar_Interactive_JsonHelper.js_diag_clear fname  in
                       FStar_Pervasives_Native.Some uu____364)
                     in
-                 (diag2,
+                 (diag1,
                    (FStar_Util.Inl
                       (let uu___88_374 = gst  in
                        {
@@ -314,7 +314,7 @@ let (invoke_full_lax :
              in
           match uu____375 with
           | FStar_Pervasives_Native.Some uu____382 ->
-              if force1
+              if force
               then aux ()
               else (FStar_Pervasives_Native.None, (FStar_Util.Inl gst))
           | FStar_Pervasives_Native.None  -> aux ()
@@ -338,7 +338,7 @@ let (run_query :
           (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
       | FStar_Interactive_JsonHelper.Exit  ->
           (FStar_Pervasives_Native.None, (FStar_Util.Inr Prims.int_zero))
-      | FStar_Interactive_JsonHelper.Cancel id1 ->
+      | FStar_Interactive_JsonHelper.Cancel id ->
           (FStar_Pervasives_Native.None, (FStar_Util.Inl gst))
       | FStar_Interactive_JsonHelper.FolderChange evt ->
           (FStar_Interactive_JsonHelper.nullResponse, (FStar_Util.Inl gst))
@@ -496,13 +496,13 @@ let rec (read_lsp_query :
       (fun uu___190_594  ->
          match () with
          | () ->
-             let n1 = parse_header_len stream Prims.int_zero  in
-             let uu____598 = FStar_Util.nread stream n1  in
+             let n = parse_header_len stream Prims.int_zero  in
+             let uu____598 = FStar_Util.nread stream n  in
              (match uu____598 with
               | FStar_Pervasives_Native.Some s -> parse_lsp_query s
               | FStar_Pervasives_Native.None  ->
                   let uu____606 =
-                    let uu____608 = FStar_Util.string_of_int n1  in
+                    let uu____608 = FStar_Util.string_of_int n  in
                     FStar_Util.format1 "Could not read %s bytes" uu____608
                      in
                   FStar_Interactive_JsonHelper.wrap_content_szerr uu____606))

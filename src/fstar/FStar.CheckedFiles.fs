@@ -376,7 +376,7 @@ let load_module_from_cache =
         end
       in
       match load_checked_file_with_tc_result
-              (TcEnv.dep_graph env.env_tcenv)
+              (TcEnv.dep_graph (tcenv_of_uenv env))
               fn
               cache_file with
       | Inl msg -> fail msg cache_file; None
@@ -407,7 +407,7 @@ let store_module_to_cache env fn parsing_data tc_result =
   && not (Options.cache_off())
   then begin
     let cache_file = FStar.Parser.Dep.cache_file_name fn in
-    let digest = hash_dependences (TcEnv.dep_graph env.env_tcenv) fn in
+    let digest = hash_dependences (TcEnv.dep_graph (tcenv_of_uenv env)) fn in
     match digest with
     | Inr hashes ->
       let tc_result = { tc_result with tc_time=0; extraction_time=0 } in

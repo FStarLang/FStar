@@ -55,7 +55,7 @@ let (assoc : Prims.string -> assoct -> FStar_Util.json) =
     fun a  ->
       let uu____223 = try_assoc key a  in
       match uu____223 with
-      | FStar_Pervasives_Native.Some v1 -> v1
+      | FStar_Pervasives_Native.Some v -> v
       | FStar_Pervasives_Native.None  ->
           let uu____227 =
             let uu____228 = FStar_Util.format1 "Missing key [%s]" key  in

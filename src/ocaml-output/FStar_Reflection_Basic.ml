@@ -123,9 +123,9 @@ let rec (inspect_ln :
     | FStar_Syntax_Syntax.Tm_name bv -> FStar_Reflection_Data.Tv_Var bv
     | FStar_Syntax_Syntax.Tm_bvar bv -> FStar_Reflection_Data.Tv_BVar bv
     | FStar_Syntax_Syntax.Tm_fvar fv -> FStar_Reflection_Data.Tv_FVar fv
-    | FStar_Syntax_Syntax.Tm_app (hd1,[]) ->
+    | FStar_Syntax_Syntax.Tm_app (hd,[]) ->
         failwith "inspect_ln: empty arguments on Tm_app"
-    | FStar_Syntax_Syntax.Tm_app (hd1,args) ->
+    | FStar_Syntax_Syntax.Tm_app (hd,args) ->
         let uu____330 = last args  in
         (match uu____330 with
          | (a,q) ->
@@ -134,7 +134,7 @@ let rec (inspect_ln :
                let uu____363 =
                  let uu____364 =
                    let uu____369 = init args  in
-                   FStar_Syntax_Syntax.mk_Tm_app hd1 uu____369  in
+                   FStar_Syntax_Syntax.mk_Tm_app hd uu____369  in
                  uu____364 FStar_Pervasives_Native.None
                    t3.FStar_Syntax_Syntax.pos
                   in
@@ -453,9 +453,9 @@ let (pack_ln : FStar_Reflection_Data.term_view -> FStar_Syntax_Syntax.term) =
           (FStar_Syntax_Syntax.Tm_let ((true, [lb]), t2))
           FStar_Pervasives_Native.None FStar_Range.dummyRange
     | FStar_Reflection_Data.Tv_Match (t,brs) ->
-        let wrap v1 =
+        let wrap v =
           {
-            FStar_Syntax_Syntax.v = v1;
+            FStar_Syntax_Syntax.v = v;
             FStar_Syntax_Syntax.p = FStar_Range.dummyRange
           }  in
         let rec pack_pat p =
@@ -515,10 +515,10 @@ let (compare_bv :
   FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.bv -> FStar_Order.order) =
   fun x  ->
     fun y  ->
-      let n1 = FStar_Syntax_Syntax.order_bv x y  in
-      if n1 < Prims.int_zero
+      let n = FStar_Syntax_Syntax.order_bv x y  in
+      if n < Prims.int_zero
       then FStar_Order.Lt
-      else if n1 = Prims.int_zero then FStar_Order.Eq else FStar_Order.Gt
+      else if n = Prims.int_zero then FStar_Order.Eq else FStar_Order.Gt
   
 let (is_free :
   FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term -> Prims.bool) =
@@ -787,7 +787,7 @@ let (inspect_sigelt :
                   in
                (nm, us1, bs1, ty1, uu____2237)  in
              FStar_Reflection_Data.Sg_Inductive uu____2220)
-    | FStar_Syntax_Syntax.Sig_datacon (lid,us,ty,uu____2249,n1,uu____2251) ->
+    | FStar_Syntax_Syntax.Sig_datacon (lid,us,ty,uu____2249,n,uu____2251) ->
         let uu____2258 = FStar_Syntax_Subst.univ_var_opening us  in
         (match uu____2258 with
          | (s,us1) ->
@@ -803,12 +803,12 @@ let (pack_sigelt :
   FStar_Reflection_Data.sigelt_view -> FStar_Syntax_Syntax.sigelt) =
   fun sv  ->
     match sv with
-    | FStar_Reflection_Data.Sg_Let (r,fv,univs1,typ,def) ->
-        let s = FStar_Syntax_Subst.univ_var_closing univs1  in
+    | FStar_Reflection_Data.Sg_Let (r,fv,univs,typ,def) ->
+        let s = FStar_Syntax_Subst.univ_var_closing univs  in
         let typ1 = FStar_Syntax_Subst.subst s typ  in
         let def1 = FStar_Syntax_Subst.subst s def  in
         let lb =
-          FStar_Syntax_Util.mk_letbinding (FStar_Util.Inr fv) univs1 typ1
+          FStar_Syntax_Util.mk_letbinding (FStar_Util.Inr fv) univs typ1
             FStar_Parser_Const.effect_Tot_lid def1 []
             def1.FStar_Syntax_Syntax.pos
            in
