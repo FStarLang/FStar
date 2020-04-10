@@ -8,6 +8,10 @@ FSTAR_FILES=$(wildcard *.fst)
 # 333: "unable to read hints"
 OTHERFLAGS+=--warn_error -241-247-333
 
+# Remove --query_stats from this subdir, since
+# it outputs timing info.
+OTHERFLAGS := $(filter-out --query_stats, $(OTHERFLAGS))
+
 all: verify-all
 
 include $(FSTAR_HOME)/examples/Makefile.common
