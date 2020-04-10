@@ -4339,7 +4339,7 @@ and (encode_formula :
                              FStar_SMTEncoding_Term.rng = uu____13329;_}::[])::[]
                             when
                             let uu____13349 =
-                              FStar_Ident.text_of_lid
+                              FStar_Ident.string_of_lid
                                 FStar_Parser_Const.guard_free
                                in
                             uu____13349 = gf -> []

@@ -5784,8 +5784,8 @@ and (reify_lift :
                 match uu____17162 with
                 | FStar_Pervasives_Native.None  ->
                     let uu____17165 =
-                      let uu____17167 = FStar_Ident.text_of_lid msrc  in
-                      let uu____17169 = FStar_Ident.text_of_lid mtgt  in
+                      let uu____17167 = FStar_Ident.string_of_lid msrc  in
+                      let uu____17169 = FStar_Ident.string_of_lid mtgt  in
                       FStar_Util.format2
                         "Impossible : trying to reify a lift between unrelated effects (%s and %s)"
                         uu____17167 uu____17169
@@ -5800,8 +5800,8 @@ and (reify_lift :
                             FStar_Pervasives_Native.None ;_};_}
                     ->
                     let uu____17194 =
-                      let uu____17196 = FStar_Ident.text_of_lid msrc  in
-                      let uu____17198 = FStar_Ident.text_of_lid mtgt  in
+                      let uu____17196 = FStar_Ident.string_of_lid msrc  in
+                      let uu____17198 = FStar_Ident.string_of_lid mtgt  in
                       FStar_Util.format2
                         "Impossible : trying to reify a non-reifiable lift (from %s to %s)"
                         uu____17196 uu____17198
