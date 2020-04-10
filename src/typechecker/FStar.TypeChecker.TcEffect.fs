@@ -510,16 +510,19 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
       let _, subcomp_t, subcomp_ty = stronger_repr in
       let _, subcomp_t = SS.open_univ_vars us subcomp_t in
 
-      let bs_except_last =
+      let aqs_except_last, last_aq =
         let _, subcomp_ty = SS.open_univ_vars us subcomp_ty in
         match (SS.compress subcomp_ty).n with
-        | Tm_arrow (bs, _) -> bs |> List.splitAt (List.length bs - 1) |> fst
+        | Tm_arrow (bs, _) ->
+          let bs_except_last, last_b = bs |> List.splitAt (List.length bs - 1) in
+          bs_except_last |> List.map snd, last_b |> List.hd |> snd
         | _ -> failwith "Impossible! subcomp_ty must have been an arrow with at lease 1 binder" in
 
-     let aux t = 
+     let aux t =
+      let tun_args = aqs_except_last |> List.map (fun aq -> S.tun, aq) in
       S.mk_Tm_app
         subcomp_t
-        (((bs_except_last |> List.map (fun _ -> S.tun))@[t]) |> List.map S.as_arg)
+        (tun_args@[t, last_aq])
         None r in
 
      aux f_t, aux g_t in
