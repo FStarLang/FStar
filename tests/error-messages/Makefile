@@ -8,9 +8,10 @@ FSTAR_FILES=$(wildcard *.fst)
 # 333: "unable to read hints"
 OTHERFLAGS+=--warn_error -241-247-333
 
-# Remove --query_stats from this subdir, since
-# it outputs timing info.
+# Remove --query_stats and --hint_info from this subdir, since
+# they output timing info.
 OTHERFLAGS := $(filter-out --query_stats, $(OTHERFLAGS))
+OTHERFLAGS := $(filter-out --hint_info, $(OTHERFLAGS))
 
 all: verify-all
 
