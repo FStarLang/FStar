@@ -1,9 +1,6 @@
-/home/guido/r/fstar/guido_error_regs/ulib/FStar.HyperStack.ST.fsti(485,47-485,58): (Warning 288) FStar.HyperStack.ST.stable_on_t is deprecated, use FStar.HyperStack.ST.stable_on instead
-/home/guido/r/fstar/guido_error_regs/ulib/FStar.Monotonic.DependentMap.fsti(150,24-150,35): (Warning 288) FStar.HyperStack.ST.stable_on_t is deprecated, use FStar.HyperStack.ST.stable_on instead
-/home/guido/r/fstar/guido_error_regs/ulib/FStar.Monotonic.DependentMap.fsti(162,24-162,35): (Warning 288) FStar.HyperStack.ST.stable_on_t is deprecated, use FStar.HyperStack.ST.stable_on instead
 >> Got issues: [
-Inference.fst(20,14-20,15): (Error 19) Subtyping check failed; expected type Prims.eqtype; got type Type0; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also /home/guido/r/fstar/guido_error_regs/ulib/prims.fst(45,23-45,30))
-Inference.fst(20,14-20,15): (Error 19) Subtyping check failed; expected type Prims.eqtype; got type Type0; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also /home/guido/r/fstar/guido_error_regs/ulib/prims.fst(45,23-45,30))
+Inference.fst(20,14-20,15): (Error 19) Subtyping check failed; expected type Prims.eqtype; got type Type0; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(45,23-45,30))
+Inference.fst(20,14-20,15): (Error 19) Subtyping check failed; expected type Prims.eqtype; got type Type0; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(45,23-45,30))
 >>]
 Verified module: Inference
 All verification conditions discharged successfully
