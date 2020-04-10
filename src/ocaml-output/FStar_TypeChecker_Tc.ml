@@ -1051,7 +1051,8 @@ let (tc_decl' :
                  match uu____1498 with
                  | (errs,uu____1672) ->
                      ((let uu____1702 =
-                         FStar_TypeChecker_Env.debug env FStar_Options.Low
+                         (FStar_Options.print_expected_failures ()) ||
+                           (FStar_TypeChecker_Env.debug env FStar_Options.Low)
                           in
                        if uu____1702
                        then
