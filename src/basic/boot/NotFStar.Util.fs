@@ -1095,7 +1095,7 @@ let read_hints (filename : string) : hints_read_result =
         HintsOK (hints_db_from_json_db (unjson (sr.ReadToEnd()) known_json_types))
     with
     | Failure _ ->
-        MalformedJSon
+        MalformedJson
     | :? System.ArgumentException
     | :? System.ArgumentNullException
     | :? System.IO.FileNotFoundException
