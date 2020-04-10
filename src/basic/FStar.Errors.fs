@@ -729,11 +729,14 @@ let format_issue issue =
     let range_str, see_also_str =
         match issue.issue_range with
         | None -> "", ""
-        | Some r when r = dummyRange -> "", ""
+        | Some r when r = dummyRange ->
+            "", (if def_range r = def_range dummyRange then ""
+                 else BU.format1 " (see also %s)" (Range.string_of_range r))
         | Some r ->
           (BU.format1 "%s: " (Range.string_of_use_range r),
            (if use_range r = def_range r then ""
-            else BU.format1 " (see also %s)" (Range.string_of_range r))) in
+            else BU.format1 " (see also %s)" (Range.string_of_range r)))
+    in
     let issue_number =
         match issue.issue_number with
         | None -> ""
