@@ -8,6 +8,11 @@ FSTAR_FILES=$(wildcard *.fst)
 # 333: "unable to read hints"
 OTHERFLAGS+=--warn_error -241-247-333
 
+# Sorry, without this we can get noise in error locations.
+# See issue #1993. Also, warnings from dependencies would
+# pollute the output.
+OTHERFLAGS+=--already_cached 'Prims FStar'
+
 # Remove --query_stats and --hint_info from this subdir, since
 # they output timing info.
 OTHERFLAGS := $(filter-out --query_stats, $(OTHERFLAGS))
