@@ -38,12 +38,15 @@ MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
 # YOU SHOULDN'T NEED TO TOUCH THE REST
 ################################################################################
 
-MY_FSTAR=$(Q)$(BENCHMARK_PRE) $(FSTAR)                      \
-		 $(SIL) --cache_checked_modules             \
+VERBOSE_FSTAR=$(BENCHMARK_PRE) $(FSTAR)                     \
+		  --cache_checked_modules                   \
 		  --odir $(OUTPUT_DIRECTORY)                \
 		  --cache_dir $(CACHE_DIR)                  \
 		  $(addprefix --include , $(INCLUDE_PATHS)) \
 		  $(OTHERFLAGS) $(MAYBE_ADMIT)
+
+# As above, but perhaps with --silent
+MY_FSTAR=$(VERBOSE_FSTAR) $(SIL)
 
 #--------------------------------------------------------------------------------
 # Default target: verify all FSTAR_FILES
