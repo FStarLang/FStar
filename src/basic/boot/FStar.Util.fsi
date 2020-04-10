@@ -449,8 +449,13 @@ type hints_db = {
     hints: hints
 }
 
+type hints_read_result =
+  | HintsOK of hints_db
+  | MalformedJson
+  | UnableToOpen
+
 val write_hints: string -> hints_db -> unit
-val read_hints: string -> bool -> option<hints_db>
+val read_hints: string -> hints_read_result
 
 val json_of_string : string -> option<json>
 val string_of_json : json -> string
