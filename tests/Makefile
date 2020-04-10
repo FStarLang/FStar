@@ -6,6 +6,7 @@ OTHERFLAGS+=--warn_error @332
 
 ALL_TEST_DIRS=\
 bug-reports \
+error-messages \
 friends \
 incl \
 interactive \
