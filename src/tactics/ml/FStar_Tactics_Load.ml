@@ -22,9 +22,14 @@ let dynlink fname =
   with Dynlink.Error e ->
     failwith (U.format2 "Dynlinking %s failed: %s" fname (Dynlink.error_message e))
 
-let load_lib () =
-    dynlink (find_taclib () ^ "/fstartaclib.cmxs");
-    perr "Loaded fstartaclib successfully\n"
+let load_lib : unit -> unit =
+  let already_loaded = ref false in
+  fun () ->
+    if not (!already_loaded) then begin
+      dynlink (find_taclib () ^ "/fstartaclib.cmxs");
+      already_loaded := true;
+      perr "Loaded fstartaclib successfully\n"
+    end
 
 let try_load_lib () =
   (* It might not be there, just try to load it and ignore if not *)
