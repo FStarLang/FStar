@@ -23,15 +23,16 @@ let dynlink fname =
     failwith (U.format2 "Dynlinking %s failed: %s" fname (Dynlink.error_message e))
 
 let load_lib () =
-  (* It might not be there, just try to load it and ignore if not *)
-  try
     dynlink (find_taclib () ^ "/fstartaclib.cmxs");
     perr "Loaded fstartaclib successfully\n"
-  with | _ ->
-    perr "Did NOT load fstartaclib\n";
-    ()
+
+let try_load_lib () =
+  (* It might not be there, just try to load it and ignore if not *)
+  try load_lib ()
+  with | _ -> perr "Did NOT load fstartaclib\n"
 
 let load_tactic tac =
+  load_lib ();
   dynlink tac;
   perr1 "Dynlinked %s\n" tac
 
