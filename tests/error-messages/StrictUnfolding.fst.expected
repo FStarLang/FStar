@@ -1,0 +1,45 @@
+proof-state: State dump @ depth 1 (A):
+Location: StrictUnfolding.fst(28,8-28,16)
+Goal 1/1:
+(x: FStar.Pervasives.Native.option (x: FStar.Integers.int{x = 0}) {Some? x}) |- _ : Prims.squash (StrictUnfolding.project x == 0)
+
+proof-state: State dump @ depth 1 (B):
+Location: StrictUnfolding.fst(30,8-30,16)
+Goal 1/1:
+(x: FStar.Pervasives.Native.option (x: FStar.Integers.int{x = 0}) {Some? x}) |- _ : Prims.squash (StrictUnfolding.project x == 0)
+
+proof-state: State dump @ depth 1 (A):
+Location: StrictUnfolding.fst(35,8-35,16)
+Goal 1/1:
+(_: Prims.unit), (return_val: x: FStar.Pervasives.Native.option Prims.int {Some? x}), (_: return_val == FStar.Pervasives.Native.Some 0), (any_result: Prims.int), (_: StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == any_result), (any_result'0: Prims.logical), (_: StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == 0 == any_result'0) |- _ : Prims.squash (StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == 0)
+
+proof-state: State dump @ depth 1 (B):
+Location: StrictUnfolding.fst(37,8-37,16)
+Goal 1/1:
+(_: Prims.unit), (return_val: x: FStar.Pervasives.Native.option Prims.int {Some? x}), (_: return_val == FStar.Pervasives.Native.Some 0), (any_result: Prims.int), (_: StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == any_result), (any_result'0: Prims.logical), (_: StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == 0 == any_result'0) |- _ : Prims.squash (0 == 0)
+
+>> Got issues: [
+StrictUnfolding.fst(50,2-50,8): (Error 19) Could not prove goal #1; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also StrictUnfolding.fst(50,48-50,72))
+>>]
+proof-state: State dump @ depth 1 (A):
+Location: StrictUnfolding.fst(28,8-28,16)
+Goal 1/1:
+(x: FStar.Pervasives.Native.option (x: FStar.Integers.int{x = 0}) {Some? x}) |- _ : Prims.squash (StrictUnfolding.project x == 0)
+
+proof-state: State dump @ depth 1 (B):
+Location: StrictUnfolding.fst(30,8-30,16)
+Goal 1/1:
+(x: FStar.Pervasives.Native.option (x: FStar.Integers.int{x = 0}) {Some? x}) |- _ : Prims.squash (StrictUnfolding.project x == 0)
+
+proof-state: State dump @ depth 1 (A):
+Location: StrictUnfolding.fst(35,8-35,16)
+Goal 1/1:
+(_: Prims.unit), (return_val: x: FStar.Pervasives.Native.option Prims.int {Some? x}), (_: return_val == FStar.Pervasives.Native.Some 0), (any_result: Prims.int), (_: StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == any_result), (any_result'0: Prims.logical), (_: StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == 0 == any_result'0) |- _ : Prims.squash (StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == 0)
+
+proof-state: State dump @ depth 1 (B):
+Location: StrictUnfolding.fst(37,8-37,16)
+Goal 1/1:
+(_: Prims.unit), (return_val: x: FStar.Pervasives.Native.option Prims.int {Some? x}), (_: return_val == FStar.Pervasives.Native.Some 0), (any_result: Prims.int), (_: StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == any_result), (any_result'0: Prims.logical), (_: StrictUnfolding.project (FStar.Pervasives.Native.Some 0) == 0 == any_result'0) |- _ : Prims.squash (0 == 0)
+
+Verified module: StrictUnfolding
+All verification conditions discharged successfully

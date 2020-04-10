@@ -1,0 +1,35 @@
+>> Got issues: [
+(Error 19) Patterns are incomplete (Also see: PatternMatch.fst(21,4-21,8)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+>> Got issues: [
+(Error 19) Patterns are incomplete (Also see: PatternMatch.fst(24,4-24,11)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+>> Got issues: [
+(Error 19) Patterns are incomplete (Also see: PatternMatch.fst(29,4-29,8)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+>> Got issues: [
+PatternMatch.fst(32,4-32,9): (Error 114) Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
+>>]
+>> Got issues: [
+PatternMatch.fst(35,4-35,5): (Error 114) Type of pattern (PatternMatch.ab) does not match type of scrutinee (Prims.int); head mismatch PatternMatch.ab vs Prims.int
+>>]
+>> Got issues: [
+(Error 19) Patterns are incomplete (Also see: PatternMatch.fst(38,4-38,5)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+>> Got issues: [
+PatternMatch.fst(55,4-55,8): (Error 114) Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
+>>]
+>> Got issues: [
+PatternMatch.fst(58,4-58,16): (Error 114) Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
+>>]
+>> Got issues: [
+(Error 19) Patterns are incomplete (Also see: PatternMatch.fst(61,5-61,12)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+>> Got issues: [
+(Error 19) Patterns are incomplete (Also see: PatternMatch.fst(64,5-64,20)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+>> Got issues: [
+PatternMatch.fst(69,5-69,15): (Error 114) Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
+>>]
+Verified module: PatternMatch
+All verification conditions discharged successfully
