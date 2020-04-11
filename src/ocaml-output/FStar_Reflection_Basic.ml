@@ -900,3 +900,7 @@ let (explode_qn : Prims.string -> Prims.string Prims.list) =
   fun s  -> FStar_String.split [46] s 
 let (compare_string : Prims.string -> Prims.string -> FStar_BigInt.t) =
   fun s1  -> fun s2  -> FStar_BigInt.of_int_fs (FStar_String.compare s1 s2) 
+let (push_binder :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.binder -> FStar_TypeChecker_Env.env)
+  = fun e  -> fun b  -> FStar_TypeChecker_Env.push_binders e [b] 

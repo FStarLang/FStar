@@ -276,7 +276,7 @@ let (preprocess_with : FStar_Ident.lident) =
 let (postprocess_extr_with : FStar_Ident.lident) =
   p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"] 
 let (check_with_lid : FStar_Ident.lident) =
-  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Basic"; "check_with"]
+  FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Builtins"; "check_with"]
     FStar_Range.dummyRange
   
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
