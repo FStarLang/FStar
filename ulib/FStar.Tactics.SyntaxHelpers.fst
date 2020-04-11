@@ -44,6 +44,7 @@ let collect_abs t =
     (List.Tot.Base.rev bs, t')
 
 (* Copied from FStar.Tactics.Derived *)
+private
 let fail (#a:Type) (m:string) = raise #a (TacticFailure m)
 
 let rec mk_arr (bs: list binder) (cod : comp) : Tac term =
