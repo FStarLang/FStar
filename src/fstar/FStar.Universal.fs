@@ -114,7 +114,7 @@ let init_env deps : TcEnv.env =
   let solver =
     if Options.lax()
     then SMT.dummy
-    else {SMT.solver with preprocess=FStar.Tactics.Interpreter.preprocess} in
+    else {SMT.solver with preprocess=FStar.Tactics.Hooks.preprocess} in
   let env =
       TcEnv.initial_env
         deps
@@ -128,11 +128,11 @@ let init_env deps : TcEnv.env =
           (FStar.Tactics.Interpreter.primitive_steps ()))
   in
   (* Set up some tactics callbacks *)
-  let env = { env with synth_hook       = FStar.Tactics.Interpreter.synthesize } in
-  let env = { env with try_solve_implicits_hook = FStar.Tactics.Interpreter.solve_implicits } in
-  let env = { env with splice           = FStar.Tactics.Interpreter.splice} in
-  let env = { env with mpreprocess      = FStar.Tactics.Interpreter.mpreprocess} in
-  let env = { env with postprocess      = FStar.Tactics.Interpreter.postprocess} in
+  let env = { env with synth_hook       = FStar.Tactics.Hooks.synthesize } in
+  let env = { env with try_solve_implicits_hook = FStar.Tactics.Hooks.solve_implicits } in
+  let env = { env with splice           = FStar.Tactics.Hooks.splice} in
+  let env = { env with mpreprocess      = FStar.Tactics.Hooks.mpreprocess} in
+  let env = { env with postprocess      = FStar.Tactics.Hooks.postprocess} in
   let env = { env with is_native_tactic = FStar.Tactics.Native.is_native_tactic } in
   env.solver.init env;
   env

@@ -1,16 +1,14 @@
-﻿#light "off"
-module FStar.Tactics.Interpreter
-open FStar
-open FStar.ST
-open FStar.All
+#light "off"
+module FStar.Tactics.Hooks
+
 open FStar.Syntax.Syntax
+
+module O   = FStar.Options
 module Env = FStar.TypeChecker.Env
 
-val preprocess: Env.env -> term -> list<(Env.env * term * FStar.Options.optionstate)>
+val preprocess: Env.env -> term -> list<(Env.env * term * O.optionstate)>
 val synthesize: Env.env -> typ -> term -> term
 val solve_implicits: Env.env -> term -> Env.implicits -> unit
 val splice : Env.env -> term -> list<sigelt>
 val mpreprocess : Env.env -> term -> term -> term
 val postprocess : Env.env -> term -> typ -> term -> term
-
-val primitive_steps : unit -> list<FStar.TypeChecker.Cfg.primitive_step>

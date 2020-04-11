@@ -1,6 +1,13 @@
 #light "off"
 module FStar.Tactics.Basic
 
+(* This module implements the primitives in
+ * ulib/FStar.Tactics.Builtins. It would be named
+ * the same, but there needs to be a thin adapter
+ * layer since the tac monad representation differs
+ * between compiler and userspace (and a few other
+ * annoyances too). *)
+
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.Reflection.Data
