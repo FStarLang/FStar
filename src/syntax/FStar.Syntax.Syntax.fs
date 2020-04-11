@@ -553,12 +553,14 @@ let mk_Tm_app (t1:typ) (args:list<arg>) (k:option<unit>) p =
     match args with
     | [] -> t1
     | _ -> mk (Tm_app (t1, args)) None p
-let mk_Tm_uinst (t:term) = function
+let mk_Tm_uinst (t:term) (us:universes) =
+  match t.n with
+  | Tm_fvar _ ->
+    begin match us with
     | [] -> t
-    | us ->
-      match t.n with
-        | Tm_fvar _ ->  mk (Tm_uinst(t, us)) None t.pos
-        | _ -> failwith "Unexpected universe instantiation"
+    | us -> mk (Tm_uinst(t, us)) None t.pos
+    end
+  | _ -> failwith "Unexpected universe instantiation"
 
 let extend_app_n t args' kopt r = match t.n with
     | Tm_app(head, args) -> mk_Tm_app head (args@args') kopt r
