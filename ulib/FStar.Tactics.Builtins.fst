@@ -29,14 +29,6 @@ open FStar.Tactics.Result
  * This works even if no goals are present. *)
 assume val top_env : unit -> Tac env
 
-(** [push_binder] extends the environment with a single binder.
-    This is useful as one traverses the syntax of a term,
-    pushing binders as one traverses a binder in a lambda,
-    match, etc. Note, the environment here is disconnected to
-    (though perhaps derived from) the environment in the proofstate *)
-(* TODO: move to FStar.Reflection.Basic? *)
-assume val push_binder : env -> binder -> env
-
 (** [fresh ()] returns a fresh integer. It does not get reset when
 catching a failure. *)
 assume val fresh : unit -> Tac int

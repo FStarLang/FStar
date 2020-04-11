@@ -546,3 +546,5 @@ let comp_to_string c = Print.comp_to_string c
 let implode_qn ns = String.concat "." ns
 let explode_qn s = String.split ['.'] s
 let compare_string s1 s2 = Z.of_int_fs (String.compare s1 s2)
+
+let push_binder e b = Env.push_binders e [b]

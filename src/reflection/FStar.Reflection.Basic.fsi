@@ -73,3 +73,5 @@ FStar.Tactics into FStar.String, which pulls a LOT of modules. *)
 val implode_qn     : list<string> -> string
 val explode_qn     : string -> list<string>
 val compare_string : string -> string -> Z.t
+
+val push_binder    : Env.env -> binder -> Env.env

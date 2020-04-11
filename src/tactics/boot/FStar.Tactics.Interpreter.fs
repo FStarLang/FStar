@@ -149,9 +149,6 @@ and primitive_steps () : list<Cfg.primitive_step> =
       mktot2' 0 "set_label"     set_label e_string E.e_goal E.e_goal
                                 set_label NBET.e_string E.e_goal_nbe E.e_goal_nbe;
 
-      mktot2 0 "push_binder"   (fun env b -> Env.push_binders env [b]) RE.e_env RE.e_binder RE.e_env
-                               (fun env b -> Env.push_binders env [b]) NRE.e_env NRE.e_binder NRE.e_env;
-
       mktac1 0 "set_goals"     set_goals (e_list E.e_goal) e_unit
                                set_goals (NBET.e_list E.e_goal_nbe) (NBET.e_unit);
 

@@ -188,6 +188,9 @@ let reflection_primops : list<Cfg.primitive_step> = [
 
     mk2 "compare_string"        compare_string        e_string            e_string          e_int
                                 compare_string        NBET.e_string       NBET.e_string     NBET.e_int;
+
+    mk2 "push_binder"           push_binder           E.e_env             E.e_binder        E.e_env
+                                push_binder           NRE.e_env           NRE.e_binder      NRE.e_env;
 ]
 
 let _ = List.iter FStar.TypeChecker.Cfg.register_extra_step reflection_primops
