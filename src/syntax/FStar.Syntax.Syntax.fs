@@ -622,6 +622,7 @@ let freenames_of_binders (bs:binders) : freenames =
 let binders_of_list fvs : binders = (fvs |> List.map (fun t -> t, None))
 let binders_of_freenames (fvs:freenames) = Util.set_elements fvs |> binders_of_list
 let is_implicit = function Some (Implicit _) -> true | _ -> false
+let is_implicit_or_meta = function Some (Implicit _) | Some (Meta _) -> true | _ -> false
 let as_implicit = function true -> Some imp_tag | _ -> None
 
 let pat_bvs (p:pat) : list<bv> =

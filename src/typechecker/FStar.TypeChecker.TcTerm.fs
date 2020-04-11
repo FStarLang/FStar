@@ -1301,6 +1301,12 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
             match bs, bs_expected with
             | [], [] -> env, [], None, Env.trivial_guard, subst
 
+            | (_, None)::_, (hd_e, q)::_ when S.is_implicit_or_meta q ->
+              (* When an implicit is expected, but the user provided an
+               * explicit binder, insert a nameless implicit binder. *)
+              let bv = S.new_bv (Some (Ident.range_of_id hd_e.ppname)) (SS.subst subst hd_e.sort) in
+              aux (env, subst) ((bv, q) :: bs) bs_expected
+
             | (hd, imp)::bs, (hd_expected, imp')::bs_expected ->
                begin
                  (* These are the discrepancies in qualifiers that we allow *)
@@ -1410,7 +1416,13 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                             b. fewer immediate binders, meaning that the function type is explicitly curried
                       2. If the function is a let-rec and it is to be total, then we need to add termination checks.
                   *)
-                let check_actuals_against_formals env bs bs_expected body =
+                let check_actuals_against_formals env bs bs_expected body
+                  : Env.env
+                  * binders
+                  * guard_t
+                  * comp
+                  * term
+                =
                     let rec handle_more (env_bs, bs, more, guard_env, subst) c_expected body =
                       match more with
                       | None -> //number of binders match up

@@ -575,6 +575,7 @@ val is_null_binder: binder -> bool
 val argpos:         arg -> Range.range
 val pat_bvs:        pat -> list<bv>
 val is_implicit:    aqual -> bool
+val is_implicit_or_meta: aqual -> bool
 val as_implicit:    bool -> aqual
 val is_top_level:   list<letbinding> -> bool
 
