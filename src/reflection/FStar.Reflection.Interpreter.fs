@@ -65,7 +65,7 @@ let nbe_int2 (m:lid) (f:'a -> 'b -> 'r) (ea:NBET.embedding<'a>) (eb:NBET.embeddi
         Some (NBET.embed er cb (f a b))))
     | _ -> None
 
-let mklid (nm : string) : lid = fstar_refl_basic_lid nm
+let mklid (nm : string) : lid = fstar_refl_builtins_lid nm
 
 let mk (l : lid) (arity : int) (fn     : Cfg.psc -> norm_cb -> args -> option<term>)
                                (nbe_fn : NBET.nbe_cbs -> NBET.args -> option<NBET.t>) : Cfg.primitive_step

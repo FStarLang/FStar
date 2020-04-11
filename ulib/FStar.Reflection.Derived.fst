@@ -16,7 +16,7 @@
 module FStar.Reflection.Derived
 
 open FStar.Reflection.Types
-open FStar.Reflection.Basic
+open FStar.Reflection.Builtins
 open FStar.Reflection.Data
 open FStar.Reflection.Const
 open FStar.Order

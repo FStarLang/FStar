@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Reflection.Basic
+module FStar.Reflection.Builtins
 
 open FStar.Order
 open FStar.Reflection.Types
@@ -68,6 +68,12 @@ assume val term_eq               : term -> term -> bool
 assume val term_to_string        : term -> string
 assume val comp_to_string        : comp -> string
 assume val env_open_modules      : env -> list name
+
+(** [push_binder] extends the environment with a single binder.
+    This is useful as one traverses the syntax of a term,
+    pushing binders as one traverses a binder in a lambda,
+    match, etc. *)
+assume val push_binder           : env -> binder -> env
 
 (* Attributes are terms, not to be confused with Prims.attribute *)
 assume val sigelt_attrs     : sigelt -> list term
