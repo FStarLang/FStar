@@ -18,11 +18,11 @@ OTHERFLAGS+=--already_cached 'Prims FStar'
 OTHERFLAGS := $(filter-out --query_stats, $(OTHERFLAGS))
 OTHERFLAGS := $(filter-out --hint_info, $(OTHERFLAGS))
 
-all: verify-all
+check-all: $(addsuffix .check, $(FSTAR_FILES))
+all: check-all
 
 include $(FSTAR_HOME)/examples/Makefile.common
 
-verify-all: $(addsuffix .check, $(FSTAR_FILES))
 
 %.check: %.expected %.output
 	$(Q)diff -u --strip-trailing-cr $^
