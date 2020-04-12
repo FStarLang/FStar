@@ -133,7 +133,6 @@ let init_env deps : TcEnv.env =
   let env = { env with splice           = FStar.Tactics.Hooks.splice} in
   let env = { env with mpreprocess      = FStar.Tactics.Hooks.mpreprocess} in
   let env = { env with postprocess      = FStar.Tactics.Hooks.postprocess} in
-  let env = { env with is_native_tactic = FStar.Tactics.Native.is_native_tactic } in
   env.solver.init env;
   env
 
