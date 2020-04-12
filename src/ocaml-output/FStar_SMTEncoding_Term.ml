@@ -2425,14 +2425,17 @@ let (kick_partial_app : term -> term) =
       mk_ApplyTT uu____9464 t t.rng  in
     FStar_All.pipe_right uu____9463 mk_Valid
   
-let (mk_String_const : Prims.int -> FStar_Range.range -> term) =
+let (mk_String_const : FStar_BigInt.t -> FStar_Range.range -> term) =
   fun i  ->
     fun r  ->
-      let uu____9482 =
-        let uu____9490 = let uu____9493 = mkInteger' i norng  in [uu____9493]
-           in
-        ("FString_const", uu____9490)  in
-      mkApp uu____9482 r
+      let uu____9480 =
+        let uu____9488 =
+          let uu____9491 =
+            let uu____9492 = FStar_BigInt.string_of_big_int i  in
+            mkInteger uu____9492 norng  in
+          [uu____9491]  in
+        ("FString_const", uu____9488)  in
+      mkApp uu____9480 r
   
 let (mk_Precedes : term -> term -> term -> term -> FStar_Range.range -> term)
   =
