@@ -21,8 +21,9 @@ OTHERFLAGS := $(filter-out --hint_info, $(OTHERFLAGS))
 check-all: $(addsuffix .check, $(FSTAR_FILES))
 all: check-all
 
-include $(FSTAR_HOME)/examples/Makefile.common
+Bug1997.fst.output: OTHERFLAGS+=--dump_module Bug1997
 
+include $(FSTAR_HOME)/examples/Makefile.common
 
 %.check: %.expected %.output
 	$(Q)diff -u --strip-trailing-cr $^
