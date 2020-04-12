@@ -1097,6 +1097,12 @@ and tc_value env (e:term) : term
     let e = S.mk_Tm_uinst (mk (Tm_fvar fv') None e.pos) us in
     check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
 
+  (* not an fvar, fail *)
+  | Tm_uinst(_, us) ->
+    raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
+                 "Universe applications are only allowed on top-level identifiers")
+                (Env.get_range env)
+
   | Tm_fvar fv ->
     let (us, t), range = Env.lookup_lid env fv.fv_name.v in
     if Env.debug env <| Options.Other "Range"

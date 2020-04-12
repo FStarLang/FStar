@@ -377,7 +377,7 @@ let rec push_subst s t =
         //t' must be an fvar---it cannot be substituted
         //but the universes may be substituted
         let us = List.map (subst_univ (fst s)) us in
-        tag_with_range (mk_Tm_uinst t' us) s
+        tag_with_range (mk (Tm_uinst (t', us))) s
 
     | Tm_app(t0, args) -> mk (Tm_app(subst' s t0, subst_args' s args))
 
