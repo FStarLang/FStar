@@ -209,19 +209,19 @@ let sort_ftv ftv =
   BU.sort_with (fun x y -> String.compare (string_of_id x) (string_of_id y)) <|
       BU.remove_dups (fun x y -> (string_of_id x) = (string_of_id y)) ftv
 
-let rec free_type_vars_b env binder = match binder.b with
+let rec free_tick_vars_b env binder = match binder.b with
   | Variable _ -> env, []
   | TVariable x ->
     let env, _ = Env.push_bv env x in
     (env, [x])
   | Annotated(_, term) ->
-    (env, free_type_vars env term)
+    (env, free_tick_vars env term)
   | TAnnotated(id, _) ->
     let env, _ = Env.push_bv env id in
     (env, [])
   | NoName t ->
-    (env, free_type_vars env t)
-and free_type_vars env t = match (unparen t).tm with
+    (env, free_tick_vars env t)
+and free_tick_vars env t = match (unparen t).tm with
   | Labeled _ -> failwith "Impossible --- labeled source term"
 
   | Tvar a ->
@@ -240,51 +240,51 @@ and free_type_vars env t = match (unparen t).tm with
   | Requires (t, _)
   | Ensures (t, _)
   | Decreases (t, _)
-  | NamedTyp(_, t) -> free_type_vars env t
+  | NamedTyp(_, t) -> free_tick_vars env t
   | Paren t -> failwith "impossible"
   | Ascribed(t, t', tacopt) ->
     let ts = t::t'::(match tacopt with None -> [] | Some t -> [t]) in
-    List.collect (free_type_vars env) ts
+    List.collect (free_tick_vars env) ts
 
-  | Construct(_, ts) -> List.collect (fun (t, _) -> free_type_vars env t) ts
+  | Construct(_, ts) -> List.collect (fun (t, _) -> free_tick_vars env t) ts
 
-  | Op(_, ts) -> List.collect (free_type_vars env) ts
+  | Op(_, ts) -> List.collect (free_tick_vars env) ts
 
-  | App(t1,t2,_) -> free_type_vars env t1@free_type_vars env t2
+  | App(t1,t2,_) -> free_tick_vars env t1@free_tick_vars env t2
 
   | Refine (b, t) ->
-    let env, f = free_type_vars_b env b in
-    f@free_type_vars env t
+    let env, f = free_tick_vars_b env b in
+    f@free_tick_vars env t
 
   | Sum(binders, body) ->
     let env, free = List.fold_left (fun (env, free) bt ->
       let env, f =
         match bt with
-        | Inl binder -> free_type_vars_b env binder
-        | Inr t -> env, free_type_vars env t
+        | Inl binder -> free_tick_vars_b env binder
+        | Inr t -> env, free_tick_vars env t
       in
       env, f@free) (env, []) binders in
-    free@free_type_vars env body
+    free@free_tick_vars env body
 
   | Product(binders, body) ->
     let env, free = List.fold_left (fun (env, free) binder ->
-      let env, f = free_type_vars_b env binder in
+      let env, f = free_tick_vars_b env binder in
       env, f@free) (env, []) binders in
-    free@free_type_vars env body
+    free@free_tick_vars env body
 
-  | Project(t, _) -> free_type_vars env t
+  | Project(t, _) -> free_tick_vars env t
 
   | Attributes cattributes ->
       (* attributes should be closed but better safe than sorry *)
-      List.collect (free_type_vars env) cattributes
+      List.collect (free_tick_vars env) cattributes
 
   | CalcProof (rel, init, steps) ->
-    free_type_vars env rel
-    @ free_type_vars env init
+    free_tick_vars env rel
+    @ free_tick_vars env init
     @ List.collect (fun (CalcStep (rel, just, next)) ->
-                            free_type_vars env rel
-                            @ free_type_vars env just
-                            @ free_type_vars env next) steps
+                            free_tick_vars env rel
+                            @ free_tick_vars env just
+                            @ free_tick_vars env next) steps
 
   | Abs _  (* not closing implicitly over free vars in all these forms: TODO: Fixme! *)
   | Let _
@@ -309,7 +309,7 @@ let head_and_args t =
     aux [] t
 
 let close env t =
-  let ftv = sort_ftv <| free_type_vars env t in
+  let ftv = sort_ftv <| free_tick_vars env t in
   if List.length ftv = 0
   then t
   else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, tm_type (range_of_id x))) (range_of_id x) Type_level (Some Implicit)) in
@@ -317,7 +317,7 @@ let close env t =
        result
 
 let close_fun env t =
-  let ftv = sort_ftv <| free_type_vars env t in
+  let ftv = sort_ftv <| free_tick_vars env t in
   if List.length ftv = 0
   then t
   else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, tm_type (range_of_id x))) (range_of_id x) Type_level (Some Implicit)) in
@@ -1181,8 +1181,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let binders = binders |> List.map replace_unit_pattern in
       let _, ftv = List.fold_left (fun (env, ftvs) pat ->
         match pat.pat with
-          | PatAscribed(_, (t, None)) -> env, free_type_vars env t@ftvs
-          | PatAscribed(_, (t, Some tac)) -> env, free_type_vars env t@free_type_vars env tac@ftvs
+          | PatAscribed(_, (t, None)) -> env, free_tick_vars env t@ftvs
+          | PatAscribed(_, (t, Some tac)) -> env, free_tick_vars env t@free_tick_vars env tac@ftvs
           | _ -> env, ftvs) (env, []) binders in
       let ftv = sort_ftv ftv in
       let binders = (ftv |> List.map (fun a ->
