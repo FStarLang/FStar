@@ -71,21 +71,20 @@ type varops_t = {
     new_fvar:lident -> string;
     fresh:string -> string -> string;  (* module name -> prefix -> name *)
     reset_fresh:unit -> unit;
-    string_const:string -> term;
     next_id: unit -> int;
     mk_unique:string -> string;
 }
 let varops =
     let initial_ctr = 100 in
     let ctr = BU.mk_ref initial_ctr in
-    let new_scope () = (BU.smap_create 100, BU.smap_create 100) in (* a scope records all the names and string constants used in that scope *)
+    let new_scope () : BU.smap<bool> = BU.smap_create 100 in (* a scope records all the names used in that scope *)
     let scopes = BU.mk_ref [new_scope ()] in
     let mk_unique y =
         let y = escape y in
-        let y = match BU.find_map (!scopes) (fun (names, _) -> BU.smap_try_find names y) with
+        let y = match BU.find_map (!scopes) (fun names -> BU.smap_try_find names y) with
                   | None -> y
                   | Some _ -> BU.incr ctr; y ^ "__" ^ (string_of_int !ctr) in
-        let top_scope = fst <| List.hd !scopes in
+        let top_scope = List.hd !scopes in
         BU.smap_add top_scope y true; y in
     let new_var pp rn = mk_unique <| pp.idText ^ "__" ^ (string_of_int rn) in
     let new_fvar lid = mk_unique lid.str in
@@ -95,14 +94,6 @@ let varops =
     let fresh mname pfx = BU.format3 "%s_%s_%s" pfx mname (string_of_int <| next_id()) in
     //the fresh counter is reset after every module
     let reset_fresh () = ctr := initial_ctr in
-    let string_const s = match BU.find_map !scopes (fun (_, strings) -> BU.smap_try_find strings s) with
-        | Some f -> f
-        | None ->
-            let id = next_id () in
-            let f = Term.boxString <| mk_String_const id in
-            let top_scope = snd <| List.hd !scopes in
-            BU.smap_add top_scope s f;
-            f in
     let push () = scopes := new_scope() :: !scopes in // already signal-atomic
     let pop () = scopes := List.tl !scopes in // already signal-atomic
     let snapshot () = FStar.Common.snapshot push scopes () in
@@ -115,7 +106,6 @@ let varops =
      new_fvar=new_fvar;
      fresh=fresh;
      reset_fresh=reset_fresh;
-     string_const=string_const;
      next_id=next_id;
      mk_unique=mk_unique}
 

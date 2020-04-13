@@ -391,8 +391,8 @@ let levels op =
 
 let operatorInfix0ad12 = [opinfix0a ; opinfix0b ; opinfix0c ; opinfix0d ; opinfix1 ; opinfix2 ]
 
-let is_operatorInfix0ad12 =
-    fun op -> List.tryFind (matches_level <| Ident.text_of_id op) operatorInfix0ad12 <> None
+let is_operatorInfix0ad12 op =
+    List.tryFind (matches_level <| Ident.text_of_id op) operatorInfix0ad12 <> None
 
 let is_operatorInfix34 =
     let opinfix34 = [ opinfix3 ; opinfix4 ] in
@@ -1635,8 +1635,13 @@ and p_tmEqWith p_X e =
   p_tmEqWith' p_X n e
 
 and p_tmEqWith' p_X curr e = match e.tm with
-    (* We don't have any information to print `infix` aplication *)
-  | Op (op, [ e1; e2 ]) when is_operatorInfix0ad12 op || Ident.text_of_id op = "=" || Ident.text_of_id op = "|>" ->
+  (* We don't have any information to print `infix` aplication *)
+  | Op (op, [e1; e2]) when (* Implications and iffs are handled specially by the parser *)
+                           not (Ident.text_of_id op = "==>"
+                                || Ident.text_of_id op = "<==>")
+                           && (is_operatorInfix0ad12 op
+                               || Ident.text_of_id op = "="
+                               || Ident.text_of_id op = "|>") ->
       let op = Ident.text_of_id op in
       let left, mine, right = levels op in
       paren_if_gt curr mine (infix0 (str <| op) (p_tmEqWith' p_X left e1) (p_tmEqWith' p_X right e2))
