@@ -1,7 +1,9 @@
 #light "off"
 module FStar.Syntax.Unionfind
 open FStar.All
+open FStar.Errors
 open FStar.Syntax.Syntax
+
 module S = FStar.Syntax.Syntax
 module PU = FStar.Unionfind
 module BU = FStar.Util
@@ -93,11 +95,13 @@ let chk_v_t (u, v) =
     if v.major = expected.major
     && v.minor <= expected.minor
     then u
-    else failwith (BU.format3
-                        "Incompatible version for term unification variable %s: current version is %s; got version %s"
+    else
+      raise_error (Fatal_BadUvar,
+                   BU.format3 "Internal error: incompatible version for term unification variable %s: current version is %s; got version %s"
                         (uvar_to_string u)
                         (version_to_string expected)
                         (version_to_string v))
+                  Range.dummyRange
 
 let uvar_id u  = PU.puf_id (get_term_graph()) (chk_v_t u)
 let fresh ()   = PU.puf_fresh (get_term_graph()) None, get_version()
@@ -120,11 +124,13 @@ let chk_v_u (u, v) =
     if v.major = expected.major
     && v.minor <= expected.minor
     then u
-    else failwith (BU.format3
-                        "Incompatible version for universe unification variable %s: current version is %s; got version %s"
+    else
+      raise_error (Fatal_BadUvar,
+                   BU.format3 "Internal error: incompatible version for universe unification variable %s: current version is %s; got version %s"
                         (uvar_to_string u)
                         (version_to_string expected)
                         (version_to_string v))
+                  Range.dummyRange
 
 (*private*)
 let set_univ_graph (ug:ugraph) =
