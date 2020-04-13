@@ -1692,8 +1692,6 @@ and (encode_term :
                                 (uu___741_5428.FStar_TypeChecker_Env.mpreprocess);
                               FStar_TypeChecker_Env.postprocess =
                                 (uu___741_5428.FStar_TypeChecker_Env.postprocess);
-                              FStar_TypeChecker_Env.is_native_tactic =
-                                (uu___741_5428.FStar_TypeChecker_Env.is_native_tactic);
                               FStar_TypeChecker_Env.identifier_info =
                                 (uu___741_5428.FStar_TypeChecker_Env.identifier_info);
                               FStar_TypeChecker_Env.tc_hooks =

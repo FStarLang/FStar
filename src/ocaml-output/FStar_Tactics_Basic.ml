@@ -644,8 +644,6 @@ let (__tc :
                       (uu___209_1177.FStar_TypeChecker_Env.mpreprocess);
                     FStar_TypeChecker_Env.postprocess =
                       (uu___209_1177.FStar_TypeChecker_Env.postprocess);
-                    FStar_TypeChecker_Env.is_native_tactic =
-                      (uu___209_1177.FStar_TypeChecker_Env.is_native_tactic);
                     FStar_TypeChecker_Env.identifier_info =
                       (uu___209_1177.FStar_TypeChecker_Env.identifier_info);
                     FStar_TypeChecker_Env.tc_hooks =
@@ -785,8 +783,6 @@ let (__tc_ghost :
                       (uu___230_1313.FStar_TypeChecker_Env.mpreprocess);
                     FStar_TypeChecker_Env.postprocess =
                       (uu___230_1313.FStar_TypeChecker_Env.postprocess);
-                    FStar_TypeChecker_Env.is_native_tactic =
-                      (uu___230_1313.FStar_TypeChecker_Env.is_native_tactic);
                     FStar_TypeChecker_Env.identifier_info =
                       (uu___230_1313.FStar_TypeChecker_Env.identifier_info);
                     FStar_TypeChecker_Env.tc_hooks =
@@ -931,8 +927,6 @@ let (__tc_lax :
                       (uu___255_1464.FStar_TypeChecker_Env.mpreprocess);
                     FStar_TypeChecker_Env.postprocess =
                       (uu___255_1464.FStar_TypeChecker_Env.postprocess);
-                    FStar_TypeChecker_Env.is_native_tactic =
-                      (uu___255_1464.FStar_TypeChecker_Env.is_native_tactic);
                     FStar_TypeChecker_Env.identifier_info =
                       (uu___255_1464.FStar_TypeChecker_Env.identifier_info);
                     FStar_TypeChecker_Env.tc_hooks =
@@ -1028,8 +1022,6 @@ let (__tc_lax :
                       (uu___258_1467.FStar_TypeChecker_Env.mpreprocess);
                     FStar_TypeChecker_Env.postprocess =
                       (uu___258_1467.FStar_TypeChecker_Env.postprocess);
-                    FStar_TypeChecker_Env.is_native_tactic =
-                      (uu___258_1467.FStar_TypeChecker_Env.is_native_tactic);
                     FStar_TypeChecker_Env.identifier_info =
                       (uu___258_1467.FStar_TypeChecker_Env.identifier_info);
                     FStar_TypeChecker_Env.tc_hooks =
@@ -3827,8 +3819,6 @@ let (join_goals :
                                     (uu___1088_8018.FStar_TypeChecker_Env.mpreprocess);
                                   FStar_TypeChecker_Env.postprocess =
                                     (uu___1088_8018.FStar_TypeChecker_Env.postprocess);
-                                  FStar_TypeChecker_Env.is_native_tactic =
-                                    (uu___1088_8018.FStar_TypeChecker_Env.is_native_tactic);
                                   FStar_TypeChecker_Env.identifier_info =
                                     (uu___1088_8018.FStar_TypeChecker_Env.identifier_info);
                                   FStar_TypeChecker_Env.tc_hooks =
@@ -4144,8 +4134,6 @@ let (unshelve : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
                      (uu___1168_8438.FStar_TypeChecker_Env.mpreprocess);
                    FStar_TypeChecker_Env.postprocess =
                      (uu___1168_8438.FStar_TypeChecker_Env.postprocess);
-                   FStar_TypeChecker_Env.is_native_tactic =
-                     (uu___1168_8438.FStar_TypeChecker_Env.is_native_tactic);
                    FStar_TypeChecker_Env.identifier_info =
                      (uu___1168_8438.FStar_TypeChecker_Env.identifier_info);
                    FStar_TypeChecker_Env.tc_hooks =
@@ -4914,9 +4902,6 @@ let (t_destruct :
                                                                     FStar_TypeChecker_Env.postprocess
                                                                     =
                                                                     (uu___1357_10181.FStar_TypeChecker_Env.postprocess);
-                                                                    FStar_TypeChecker_Env.is_native_tactic
-                                                                    =
-                                                                    (uu___1357_10181.FStar_TypeChecker_Env.is_native_tactic);
                                                                     FStar_TypeChecker_Env.identifier_info
                                                                     =
                                                                     (uu___1357_10181.FStar_TypeChecker_Env.identifier_info);
@@ -5670,8 +5655,6 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
               (uu___1679_12234.FStar_TypeChecker_Env.mpreprocess);
             FStar_TypeChecker_Env.postprocess =
               (uu___1679_12234.FStar_TypeChecker_Env.postprocess);
-            FStar_TypeChecker_Env.is_native_tactic =
-              (uu___1679_12234.FStar_TypeChecker_Env.is_native_tactic);
             FStar_TypeChecker_Env.identifier_info =
               (uu___1679_12234.FStar_TypeChecker_Env.identifier_info);
             FStar_TypeChecker_Env.tc_hooks =
@@ -5767,8 +5750,6 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
               (uu___1682_12237.FStar_TypeChecker_Env.mpreprocess);
             FStar_TypeChecker_Env.postprocess =
               (uu___1682_12237.FStar_TypeChecker_Env.postprocess);
-            FStar_TypeChecker_Env.is_native_tactic =
-              (uu___1682_12237.FStar_TypeChecker_Env.is_native_tactic);
             FStar_TypeChecker_Env.identifier_info =
               (uu___1682_12237.FStar_TypeChecker_Env.identifier_info);
             FStar_TypeChecker_Env.tc_hooks =

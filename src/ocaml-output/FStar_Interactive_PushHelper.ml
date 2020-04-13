@@ -109,8 +109,6 @@ let (set_check_kind :
           (uu___4_71.FStar_TypeChecker_Env.mpreprocess);
         FStar_TypeChecker_Env.postprocess =
           (uu___4_71.FStar_TypeChecker_Env.postprocess);
-        FStar_TypeChecker_Env.is_native_tactic =
-          (uu___4_71.FStar_TypeChecker_Env.is_native_tactic);
         FStar_TypeChecker_Env.identifier_info =
           (uu___4_71.FStar_TypeChecker_Env.identifier_info);
         FStar_TypeChecker_Env.tc_hooks =

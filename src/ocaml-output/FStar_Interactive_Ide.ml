@@ -1754,8 +1754,6 @@ let run_push_without_deps :
                  (uu___573_4547.FStar_TypeChecker_Env.mpreprocess);
                FStar_TypeChecker_Env.postprocess =
                  (uu___573_4547.FStar_TypeChecker_Env.postprocess);
-               FStar_TypeChecker_Env.is_native_tactic =
-                 (uu___573_4547.FStar_TypeChecker_Env.is_native_tactic);
                FStar_TypeChecker_Env.identifier_info =
                  (uu___573_4547.FStar_TypeChecker_Env.identifier_info);
                FStar_TypeChecker_Env.tc_hooks =
