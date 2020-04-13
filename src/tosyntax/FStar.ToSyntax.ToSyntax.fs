@@ -549,9 +549,7 @@ let rec desugar_maybe_non_constant_universe t
   : either<int, Syntax.universe>  (* level of universe or desugared universe *)
 =
   match (unparen t).tm with
-      (* TODO : Check how this unification works *)
-      (* The unification might introduce universe variables *)
-  | Wild -> Inr (U_unif (Unionfind.univ_fresh ()))
+  | Wild -> Inr U_unknown
   | Uvar u -> Inr (U_name u)
 
   | Const (Const_int (repr, _)) ->
