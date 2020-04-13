@@ -1070,7 +1070,7 @@ let (ask_and_report_errors :
                  | (uu____3600,FStar_Pervasives_Native.None ) ->
                      failwith "No query name set!"
                  | (uu____3626,FStar_Pervasives_Native.Some (q,n)) ->
-                     let uu____3649 = FStar_Ident.text_of_lid q  in
+                     let uu____3649 = FStar_Ident.string_of_lid q  in
                      (uu____3649, n)
                   in
                match uu____3587 with

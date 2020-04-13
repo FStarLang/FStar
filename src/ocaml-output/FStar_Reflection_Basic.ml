@@ -537,7 +537,7 @@ let (lookup_attr :
           let ses =
             let uu____1823 =
               let uu____1825 = FStar_Syntax_Syntax.lid_of_fv fv  in
-              FStar_Ident.text_of_lid uu____1825  in
+              FStar_Ident.string_of_lid uu____1825  in
             FStar_TypeChecker_Env.lookup_attr env uu____1823  in
           FStar_List.concatMap
             (fun se  ->
@@ -577,7 +577,7 @@ let (defs_in_module :
                let uu____1880 = FStar_Ident.ids_of_lid l  in
                FStar_All.pipe_right uu____1880 init  in
              FStar_All.pipe_right uu____1877
-               (FStar_List.map FStar_Ident.string_of_ident)
+               (FStar_List.map FStar_Ident.text_of_id)
               in
            if ns = modul
            then
@@ -828,8 +828,7 @@ let (pack_sigelt :
   
 let (inspect_bv : FStar_Syntax_Syntax.bv -> FStar_Reflection_Data.bv_view) =
   fun bv  ->
-    let uu____2359 =
-      FStar_Ident.string_of_ident bv.FStar_Syntax_Syntax.ppname  in
+    let uu____2359 = FStar_Ident.text_of_id bv.FStar_Syntax_Syntax.ppname  in
     let uu____2361 = FStar_BigInt.of_int_fs bv.FStar_Syntax_Syntax.index  in
     {
       FStar_Reflection_Data.bv_ppname = uu____2359;
@@ -900,3 +899,7 @@ let (explode_qn : Prims.string -> Prims.string Prims.list) =
   fun s  -> FStar_String.split [46] s 
 let (compare_string : Prims.string -> Prims.string -> FStar_BigInt.t) =
   fun s1  -> fun s2  -> FStar_BigInt.of_int_fs (FStar_String.compare s1 s2) 
+let (push_binder :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.binder -> FStar_TypeChecker_Env.env)
+  = fun e  -> fun b  -> FStar_TypeChecker_Env.push_binders e [b] 

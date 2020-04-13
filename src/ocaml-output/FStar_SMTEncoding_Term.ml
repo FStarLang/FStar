@@ -1987,10 +1987,10 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
                    (fun uu___7_8122  ->
                       match uu___7_8122 with
                       | Name n ->
-                          let uu____8125 = FStar_Ident.text_of_lid n  in
+                          let uu____8125 = FStar_Ident.string_of_lid n  in
                           Prims.op_Hat "Name " uu____8125
                       | Namespace ns ->
-                          let uu____8129 = FStar_Ident.text_of_lid ns  in
+                          let uu____8129 = FStar_Ident.string_of_lid ns  in
                           Prims.op_Hat "Namespace " uu____8129
                       | Tag t -> Prims.op_Hat "Tag " t))
                in

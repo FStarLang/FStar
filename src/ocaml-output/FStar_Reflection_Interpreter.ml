@@ -171,7 +171,7 @@ let nbe_int2 :
                 | uu____585 -> FStar_Pervasives_Native.None
   
 let (mklid : Prims.string -> FStar_Ident.lid) =
-  fun nm  -> FStar_Reflection_Data.fstar_refl_basic_lid nm 
+  fun nm  -> FStar_Reflection_Data.fstar_refl_builtins_lid nm 
 let (mk :
   FStar_Ident.lid ->
     Prims.int ->
@@ -626,7 +626,25 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_int
                                                                    in
-                                                                [uu____1210]
+                                                                let uu____1216
+                                                                  =
+                                                                  let uu____1219
+                                                                    =
+                                                                    mk2
+                                                                    "push_binder"
+                                                                    FStar_Reflection_Basic.push_binder
+                                                                    FStar_Reflection_Embeddings.e_env
+                                                                    FStar_Reflection_Embeddings.e_binder
+                                                                    FStar_Reflection_Embeddings.e_env
+                                                                    FStar_Reflection_Basic.push_binder
+                                                                    FStar_Reflection_NBEEmbeddings.e_env
+                                                                    FStar_Reflection_NBEEmbeddings.e_binder
+                                                                    FStar_Reflection_NBEEmbeddings.e_env
+                                                                     in
+                                                                  [uu____1219]
+                                                                   in
+                                                                uu____1210 ::
+                                                                  uu____1216
                                                                  in
                                                               uu____1197 ::
                                                                 uu____1207
