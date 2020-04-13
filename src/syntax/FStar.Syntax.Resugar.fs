@@ -49,13 +49,13 @@ let map_opt = List.filter_map
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
   let unique_name =
-    if starts_with reserved_prefix x.ppname.idText
+    if starts_with reserved_prefix (text_of_id x.ppname)
     ||  Options.print_real_names () then
-      x.ppname.idText ^ (string_of_int x.index)
+      (text_of_id x.ppname) ^ (string_of_int x.index)
     else
-      x.ppname.idText
+      (text_of_id x.ppname)
   in
-  I.mk_ident (unique_name, x.ppname.idRange)
+  I.mk_ident (unique_name, (range_of_id x.ppname))
 
 let filter_imp a =
   (* keep typeclass args *)
@@ -78,7 +78,7 @@ let rec universe_to_int n u =
 
 let universe_to_string univs =
   if (Options.print_universes()) then
-    List.map (fun x -> x.idText) univs |> String.concat  ", "
+    List.map (fun x -> (text_of_id x)) univs |> String.concat  ", "
   else ""
 
 let rec resugar_universe (u:S.universe) r: A.term =
@@ -221,20 +221,20 @@ let rec resugar_term_as_op (t:S.term) : option<(string*expected_arity)> =
     | Some op ->
       Some (snd op, None)
     | _ ->
-      let length = String.length(fv.fv_name.v.nsstr) in
-      let str = if length=0 then fv.fv_name.v.str
-          else BU.substring_from fv.fv_name.v.str (length+1) in
+      let length = String.length (nsstr fv.fv_name.v) in
+      let str = if length=0 then (string_of_lid fv.fv_name.v)
+          else BU.substring_from (string_of_lid fv.fv_name.v) (length+1) in
       if BU.starts_with str "dtuple" then Some ("dtuple", None)
       else if BU.starts_with str "tuple" then Some ("tuple", None)
       else if BU.starts_with str "try_with" then Some ("try_with", None)
-      else if fv_eq_lid fv C.sread_lid then Some (fv.fv_name.v.str, None)
+      else if fv_eq_lid fv C.sread_lid then Some (string_of_lid fv.fv_name.v, None)
       else None
   in
   match (SS.compress t).n with
     | Tm_fvar fv ->
-      let length = String.length(fv.fv_name.v.nsstr) in
-      let s = if length=0 then fv.fv_name.v.str
-              else BU.substring_from fv.fv_name.v.str (length+1) in
+      let length = String.length (nsstr fv.fv_name.v) in
+      let s = if length=0 then string_of_lid fv.fv_name.v
+              else BU.substring_from (string_of_lid fv.fv_name.v) (length+1) in
       begin match string_to_op s with
         | Some t -> Some t
         | _ -> fallback fv
@@ -256,7 +256,7 @@ let is_tuple_constructor_lid lid =
   || C.is_dtuple_data_lid' lid
 
 let may_shorten lid =
-  match lid.str with
+  match string_of_lid lid with
   | "Prims.Nil"
   | "Prims.Cons" -> false
   | _ -> not (is_tuple_constructor_lid lid)
@@ -299,9 +299,9 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       //should be A.Var if lowercase
       //and A.Name if uppercase
       let a = fv.fv_name.v in
-      let length = String.length(fv.fv_name.v.nsstr) in
-      let s = if length=0 then a.str
-          else BU.substring_from a.str (length+1) in
+      let length = String.length (nsstr fv.fv_name.v) in
+      let s = if length=0 then string_of_lid a
+          else BU.substring_from (string_of_lid a) (length+1) in
       let is_prefix = I.reserved_prefix ^ "is_" in
       if BU.starts_with s is_prefix then
         let rest = BU.substring_from s (String.length is_prefix) in
@@ -468,11 +468,11 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         | Some ("dtuple", _) ->
           resugar_as_app e args
 
-        | Some (ref_read, _) when (ref_read = C.sread_lid.str) ->
+        | Some (ref_read, _) when (ref_read = string_of_lid C.sread_lid) ->
           let (t, _) = List.hd args in
           begin match (SS.compress t).n with
-            | Tm_fvar fv when (U.field_projector_contains_constructor fv.fv_name.v.str) ->
-              let f = lid_of_path [fv.fv_name.v.str] t.pos in
+            | Tm_fvar fv when (U.field_projector_contains_constructor (string_of_lid fv.fv_name.v)) ->
+              let f = lid_of_path [string_of_lid fv.fv_name.v] t.pos in
               mk (A.Project(resugar_term' env t, f))
             | _ -> resugar_term' env t
           end
@@ -933,8 +933,8 @@ and resugar_pat' env (p:S.pat) (branch_bv: set<bv>) : A.pattern =
       // both A.PatTvar and A.PatVar are desugared to S.Pat_var. A PatTvar in the original file coresponds
       // to some type variable which is implicitly bound to the enclosing toplevel declaration.
       // When resugaring it will be just a normal (explicitly bound) variable.
-      begin match string_to_op v.ppname.idText with
-       | Some (op, _) -> mk (A.PatOp (Ident.mk_ident (op, v.ppname.idRange)))
+      begin match string_to_op (text_of_id v.ppname) with
+       | Some (op, _) -> mk (A.PatOp (Ident.mk_ident (op, (range_of_id v.ppname))))
        | None -> resugar_bv_as_pat' env v (to_arg_qual imp_opt) branch_bv None
       end
 
@@ -1029,18 +1029,18 @@ let resugar_typ env datacon_ses se : sigelts * A.tycon =
             | _ -> failwith "unexpected"
           in
           let fields =  List.fold_left resugar_datacon_as_fields [] current_datacons in
-          A.TyconRecord(tylid.ident, bs, None, fields)
+          A.TyconRecord(ident_of_lid tylid, bs, None, fields)
         else
           (* Resugar as a variant *)
           let resugar_datacon constructors se = match se.sigel with
             | Sig_datacon (l, univs, term, _, num, _) ->
               (* Todo: resugar univs *)
-              let c = (l.ident, Some (resugar_term' env term), false)  in
+              let c = (ident_of_lid l, Some (resugar_term' env term), false)  in
               c::constructors
             | _ -> failwith "unexpected"
           in
           let constructors =  List.fold_left resugar_datacon [] current_datacons in
-          A.TyconVariant(tylid.ident, bs, None, constructors)
+          A.TyconVariant(ident_of_lid tylid, bs, None, constructors)
       in
       other_datacons, tyc
   | _ -> failwith "Impossible : only Sig_inductive_typ can be resugared as types"
@@ -1113,11 +1113,11 @@ let resugar_eff_decl' env r q ed =
     if for_free then
       let a = A.Construct ((I.lid_of_str "construct"), [(action_defn, A.Nothing);(action_typ, A.Nothing)]) in
       let t = A.mk_term a r A.Un in
-      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, t ))]))
+      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(ident_of_lid d.action_name, action_params, None, t ))]))
     else
-      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, action_defn))]))
+      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(ident_of_lid d.action_name, action_params, None, action_defn))]))
   in
-  let eff_name = ed.mname.ident in
+  let eff_name = ident_of_lid ed.mname in
   let eff_binders, eff_typ = SS.open_term ed.binders (ed.signature |> snd) in
   let eff_binders = if (Options.print_implicits()) then eff_binders else filter_imp eff_binders in
   let eff_binders = eff_binders |> map_opt (fun b -> resugar_binder' env b r) |> List.rev in
@@ -1153,7 +1153,7 @@ let resugar_sigelt' env se : option<A.decl> =
         (* Exception constructor declaration case *)
         begin match se.sigel with
         | Sig_datacon(l, _, _, _, _, _) ->
-          Some (decl'_to_decl se (A.Exception (l.ident, None)))
+          Some (decl'_to_decl se (A.Exception (ident_of_lid l, None)))
         | _ -> failwith "wrong format for resguar to Exception"
         end
       | _ ->
@@ -1178,7 +1178,7 @@ let resugar_sigelt' env se : option<A.decl> =
       end
 
   | Sig_assume (lid, _, fml) ->
-    Some (decl'_to_decl se (Assume (lid.ident, resugar_term' env fml)))
+    Some (decl'_to_decl se (Assume (ident_of_lid lid, resugar_term' env fml)))
 
   | Sig_new_effect ed ->
     Some (resugar_eff_decl' env se.sigrng se.sigquals ed)
@@ -1208,7 +1208,7 @@ let resugar_sigelt' env se : option<A.decl> =
     let bs, c = SS.open_comp bs c in
     let bs = if (Options.print_implicits()) then bs else filter_imp bs in
     let bs = bs |> map_opt (fun b -> resugar_binder' env b se.sigrng) in
-    Some (decl'_to_decl se (A.Tycon(false, false, [A.TyconAbbrev(lid.ident, bs, None, resugar_comp' env c)])))
+    Some (decl'_to_decl se (A.Tycon(false, false, [A.TyconAbbrev(ident_of_lid lid, bs, None, resugar_comp' env c)])))
 
   | Sig_pragma p ->
     Some (decl'_to_decl se (A.Pragma (resugar_pragma p)))
@@ -1224,10 +1224,10 @@ let resugar_sigelt' env se : option<A.decl> =
           let universes = universe_to_string uvs in
           label universes (resugar_term' env t)
       in
-      Some (decl'_to_decl se (A.Val (lid.ident,t')))
+      Some (decl'_to_decl se (A.Val (ident_of_lid lid,t')))
 
   | Sig_splice (ids, t) ->
-    Some (decl'_to_decl se (A.Splice (List.map (fun l -> l.ident) ids, resugar_term' env t)))
+    Some (decl'_to_decl se (A.Splice (List.map (fun l -> ident_of_lid l) ids, resugar_term' env t)))
 
   (* Already desugared in one of the above case or non-relevant *)
   | Sig_inductive_typ _

@@ -179,7 +179,7 @@ let totality_check  = "This term may not terminate"
 
 let unexpected_signature_for_monad env m k =
   (Errors.Fatal_UnexpectedSignatureForMonad, (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type => WP a => Effect); got %s"
-    m.str (N.term_to_string env k)))
+    (string_of_lid m) (N.term_to_string env k)))
 
 let expected_a_term_of_type_t_got_a_function env msg t e =
   (Errors.Fatal_ExpectTermGotFunction, (format3 "Expected a term of type \"%s\"; got a function \"%s\" (%s)"

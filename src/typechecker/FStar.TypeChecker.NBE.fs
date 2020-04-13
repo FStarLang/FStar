@@ -171,10 +171,10 @@ let zeta_false (cfg:config) =
     else cfg
 let cache_add (cfg:config) (fv:fv) (v:t) =
   let lid = fv.fv_name.v in
-  BU.smap_add cfg.fv_cache lid.str v
+  BU.smap_add cfg.fv_cache (string_of_lid lid) v
 let try_in_cache (cfg:config) (fv:fv) : option<t> =
   let lid = fv.fv_name.v in
-  BU.smap_try_find cfg.fv_cache lid.str
+  BU.smap_try_find cfg.fv_cache (string_of_lid lid)
 let debug cfg f =
   log_nbe cfg.core_cfg f
 
@@ -1056,12 +1056,12 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
     match Env.monad_leq cfg.core_cfg.tcenv msrc mtgt with
     | None ->
       failwith (BU.format2 "Impossible : trying to reify a lift between unrelated effects (%s and %s)"
-                            (Ident.text_of_lid msrc)
-                            (Ident.text_of_lid mtgt))
+                            (Ident.string_of_lid msrc)
+                            (Ident.string_of_lid mtgt))
     | Some {mlift={mlift_term=None}} ->
       failwith (BU.format2 "Impossible : trying to reify a non-reifiable lift (from %s to %s)"
-                            (Ident.text_of_lid msrc)
-                            (Ident.text_of_lid mtgt))
+                            (Ident.string_of_lid msrc)
+                            (Ident.string_of_lid mtgt))
 
     | Some {mlift={mlift_term=Some lift}} ->
       (* We don't have any reasonable wp to provide so we just pass unknown *)

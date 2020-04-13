@@ -330,8 +330,8 @@ let next_id = fst gen_reset
 
 let sli (l:lident) : string =
   if FStar.Options.print_real_names()
-  then l.str
-  else l.ident.idText
+  then string_of_lid l
+  else text_of_id (ident_of_lid l)
 
 let const_to_string x = match x with
   | Const_effect -> "Effect"
@@ -362,7 +362,7 @@ let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
 
 let is_tuple_constructor_id  id  = is_tuple_constructor_string (text_of_id id)
-let is_tuple_constructor_lid lid = is_tuple_constructor_string (text_of_lid lid)
+let is_tuple_constructor_lid lid = is_tuple_constructor_string (string_of_lid lid)
 
 let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
@@ -374,12 +374,12 @@ let is_tuple_datacon_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.Mktuple"
 
 let is_tuple_datacon_id  id  = is_tuple_datacon_string (text_of_id id)
-let is_tuple_datacon_lid lid = is_tuple_datacon_string (text_of_lid lid)
+let is_tuple_datacon_lid lid = is_tuple_datacon_string (string_of_lid lid)
 
 let is_tuple_data_lid f n =
   lid_equals f (mk_tuple_data_lid n dummyRange)
 
-let is_tuple_data_lid' f = is_tuple_datacon_string f.str
+let is_tuple_data_lid' f = is_tuple_datacon_string (string_of_lid f)
 
 
 (* Dtuples *)
@@ -395,7 +395,7 @@ let mk_dtuple_lid n r =
 let is_dtuple_constructor_string (s:string) :bool =
   s = "Prims.dtuple2" || U.starts_with s "FStar.Pervasives.dtuple"
 
-let is_dtuple_constructor_lid lid = is_dtuple_constructor_string lid.str
+let is_dtuple_constructor_lid lid = is_dtuple_constructor_string (string_of_lid lid)
 
 let mk_dtuple_data_lid n r =
   let t = U.format1 "Mkdtuple%s" (U.string_of_int n) in
@@ -407,10 +407,10 @@ let is_dtuple_datacon_string (s:string) :bool =
 let is_dtuple_data_lid f n =
   lid_equals f (mk_dtuple_data_lid n dummyRange)
 
-let is_dtuple_data_lid' f = is_dtuple_datacon_string (text_of_lid f)
+let is_dtuple_data_lid' f = is_dtuple_datacon_string (string_of_lid f)
 
 let is_name (lid:lident) =
-  let c = U.char_at lid.ident.idText 0 in
+  let c = U.char_at (text_of_id (ident_of_lid lid)) 0 in
   U.is_upper c
 
 (* tactic constants *)

@@ -102,9 +102,9 @@ let lowercase_module_name f = String.lowercase (module_name_of_file f)
 
 let namespace_of_module f =
     let lid = FStar.Ident.lid_of_path (FStar.Ident.path_of_text f) Range.dummyRange in
-    match lid.ns with
+    match ns_of_lid lid with
     | [] -> None
-    | _ -> Some (FStar.Ident.lid_of_ids lid.ns)
+    | ns -> Some (FStar.Ident.lid_of_ids ns)
 
 type file_name = string
 type module_name = string
@@ -155,12 +155,12 @@ let str_of_parsing_data_elt elt =
     | Open_namespace -> "P_open_namespace"
   in
   match elt with
-  | P_begin_module lid -> "P_begin_module (" ^ (text_of_lid lid) ^ ")"
-  | P_open (b, lid) -> "P_open (" ^ (string_of_bool b) ^ ", " ^ (text_of_lid lid) ^ ")"
-  | P_open_module_or_namespace (k, lid) -> "P_open_module_or_namespace (" ^ (str_of_open_kind k) ^ ", " ^ (text_of_lid lid) ^ ")"
-  | P_dep (b, lid) -> "P_dep (" ^ (text_of_lid lid) ^ ", " ^ (string_of_bool b) ^ ")"
-  | P_alias (id, lid) -> "P_alias (" ^ (text_of_id id) ^ ", " ^ (text_of_lid lid) ^ ")"
-  | P_lid lid -> "P_lid (" ^ (text_of_lid lid) ^ ")"
+  | P_begin_module lid -> "P_begin_module (" ^ (string_of_lid lid) ^ ")"
+  | P_open (b, lid) -> "P_open (" ^ (string_of_bool b) ^ ", " ^ (string_of_lid lid) ^ ")"
+  | P_open_module_or_namespace (k, lid) -> "P_open_module_or_namespace (" ^ (str_of_open_kind k) ^ ", " ^ (string_of_lid lid) ^ ")"
+  | P_dep (b, lid) -> "P_dep (" ^ (string_of_lid lid) ^ ", " ^ (string_of_bool b) ^ ")"
+  | P_alias (id, lid) -> "P_alias (" ^ (text_of_id id) ^ ", " ^ (string_of_lid lid) ^ ")"
+  | P_lid lid -> "P_lid (" ^ (string_of_lid lid) ^ ")"
   | P_inline_for_extraction -> "P_inline_for_extraction"
 
 let str_of_parsing_data = function
@@ -452,8 +452,8 @@ let enter_namespace (original_map: files_for_module_name) (working_map: files_fo
 
 
 let string_of_lid (l: lident) (last: bool) =
-  let suffix = if last then [ l.ident.idText ] else [ ] in
-  let names = List.map (fun x -> x.idText) l.ns @ suffix in
+  let suffix = if last then [ (text_of_id (ident_of_lid l)) ] else [ ] in
+  let names = List.map (fun x -> (text_of_id x)) (ns_of_lid l) @ suffix in
   String.concat "." names
 
 (** All the components of a [lident] joined by "." (the last component of the
@@ -462,7 +462,7 @@ let lowercase_join_longident (l: lident) (last: bool) =
   String.lowercase (string_of_lid l last)
 
 let namespace_of_lid l =
-  String.concat "_" (List.map text_of_id l.ns)
+  String.concat "_" (List.map text_of_id (ns_of_lid l))
 
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
@@ -644,15 +644,15 @@ let collect_one
          (* Thanks to the new `?.` and `.(` syntaxes, `lid` is no longer a
             module name itself, so only its namespace part is to be
             recorded as a module dependency.  *)
-         match lid.ns with
+         match ns_of_lid lid with
          | [] -> ()
-         | _ ->
-           let module_name = Ident.lid_of_ids lid.ns in
+         | ns ->
+           let module_name = Ident.lid_of_ids ns in
            add_dep_on_module module_name false
        in
       
        let begin_module lid =
-         if List.length lid.ns > 0 then
+         if List.length (ns_of_lid lid) > 0 then
          ignore (enter_namespace original_map working_map (namespace_of_lid lid))
        in
 

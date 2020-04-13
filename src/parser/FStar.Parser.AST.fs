@@ -229,10 +229,10 @@ let decl_drange decl = decl.drange
 
 (********************************************************************************)
 let check_id id =
-    let first_char = String.substring id.idText 0 1 in
+    let first_char = String.substring (text_of_id id) 0 1 in
     if String.lowercase first_char = first_char
     then ()
-    else raise_error (Fatal_InvalidIdentifier, Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" id.idText)  id.idRange
+    else raise_error (Fatal_InvalidIdentifier, Util.format1 "Invalid identifer '%s'; expected a symbol that begins with a lower-case character" (text_of_id id))  (range_of_id id)
 
 let at_most_one s r l = match l with
   | [ x ] -> Some x
@@ -529,15 +529,15 @@ let rec term_to_string (x:term) = match x.tm with
   | Op(s, xs) ->
       Util.format2 "%s(%s)" (text_of_id s) (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
   | Tvar id
-  | Uvar id -> id.idText
+  | Uvar id -> (text_of_id id)
   | Var l
-  | Name l -> l.str
+  | Name l -> (string_of_lid l)
 
   | Projector (rec_lid, field_id) ->
-    Util.format2 "%s?.%s" (string_of_lid rec_lid) (field_id.idText)
+    Util.format2 "%s?.%s" (string_of_lid rec_lid) ((text_of_id field_id))
 
   | Construct (l, args) ->
-    Util.format2 "(%s %s)" l.str (to_string_l " " (fun (a,imp) -> Util.format2 "%s%s" (imp_to_string imp) (term_to_string a)) args)
+    Util.format2 "(%s %s)" (string_of_lid l) (to_string_l " " (fun (a,imp) -> Util.format2 "%s%s" (imp_to_string imp) (term_to_string a)) args)
   | Abs(pats, t) ->
     Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
   | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (imp_to_string imp) (t2|> term_to_string)
@@ -570,7 +570,7 @@ let rec term_to_string (x:term) = match x.tm with
     Util.format2 "%s; %s" (t1|> term_to_string) (t2|> term_to_string)
 
   | Bind (id, t1, t2) ->
-    Util.format3 "%s <- %s; %s" id.idText (term_to_string t1) (term_to_string t2)
+    Util.format3 "%s <- %s; %s" (text_of_id id) (term_to_string t1) (term_to_string t2)
 
   | If(t1, t2, t3) ->
     Util.format3 "if %s then %s else %s" (t1|> term_to_string) (t2|> term_to_string) (t3|> term_to_string)
@@ -596,11 +596,11 @@ let rec term_to_string (x:term) = match x.tm with
   | Ascribed(t1, t2, Some tac) ->
     Util.format3 "(%s : %s by %s)" (t1|> term_to_string) (t2|> term_to_string) (tac |> term_to_string)
   | Record(Some e, fields) ->
-    Util.format2 "{%s with %s}" (e|> term_to_string) (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" (l.str) (e|> term_to_string)) fields)
+    Util.format2 "{%s with %s}" (e|> term_to_string) (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" ((string_of_lid l)) (e|> term_to_string)) fields)
   | Record(None, fields) ->
-    Util.format1 "{%s}" (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" (l.str) (e|> term_to_string)) fields)
+    Util.format1 "{%s}" (to_string_l " " (fun (l,e) -> Util.format2 "%s=%s" ((string_of_lid l)) (e|> term_to_string)) fields)
   | Project(e,l) ->
-    Util.format2 "%s.%s" (e|> term_to_string) (l.str)
+    Util.format2 "%s.%s" (e|> term_to_string) ((string_of_lid l))
   | Product([], t) ->
     term_to_string t
   | Product(b::hd::tl, t) ->
@@ -627,7 +627,7 @@ let rec term_to_string (x:term) = match x.tm with
   | Refine(b, t) ->
     Util.format2 "%s:{%s}" (b|> binder_to_string) (t|> term_to_string)
   | NamedTyp(x, t) ->
-    Util.format2 "%s:%s" x.idText  (t|> term_to_string)
+    Util.format2 "%s:%s" (text_of_id x)  (t|> term_to_string)
   | Paren t -> Util.format1 "(%s)" (t|> term_to_string)
   | Product(bs, t) ->
         Util.format2 "Unidentified product: [%s] %s"
@@ -661,10 +661,10 @@ and calc_step_to_string (CalcStep (rel, just, next)) =
 
 and binder_to_string x =
   let s = match x.b with
-  | Variable i -> i.idText
-  | TVariable i -> Util.format1 "%s:_" (i.idText)
+  | Variable i -> (text_of_id i)
+  | TVariable i -> Util.format1 "%s:_" ((text_of_id i))
   | TAnnotated(i,t)
-  | Annotated(i,t) -> Util.format2 "%s:%s" (i.idText) (t |> term_to_string)
+  | Annotated(i,t) -> Util.format2 "%s:%s" ((text_of_id i)) (t |> term_to_string)
   | NoName t -> t |> term_to_string in
   Util.format2 "%s%s" (aqual_to_string x.aqual) s
 
@@ -679,12 +679,12 @@ and pat_to_string x = match x.pat with
   | PatConst c -> C.const_to_string c
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
   | PatTvar (i, aq)
-  | PatVar (i,  aq) -> Util.format2 "%s%s" (aqual_to_string aq) i.idText
-  | PatName l -> l.str
+  | PatVar (i,  aq) -> Util.format2 "%s%s" (aqual_to_string aq) (text_of_id i)
+  | PatName l -> (string_of_lid l)
   | PatList l -> Util.format1 "[%s]" (to_string_l "; " pat_to_string l)
   | PatTuple (l, false) -> Util.format1 "(%s)" (to_string_l ", " pat_to_string l)
   | PatTuple (l, true) -> Util.format1 "(|%s|)" (to_string_l ", " pat_to_string l)
-  | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" (f.str) (e |> pat_to_string)) l)
+  | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" ((string_of_lid f)) (e |> pat_to_string)) l)
   | PatOr l ->  to_string_l "|\n " pat_to_string l
   | PatOp op ->  Util.format1 "(%s)" (Ident.text_of_id op)
   | PatAscribed(p,(t, None)) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
@@ -707,28 +707,28 @@ let id_of_tycon = function
   | TyconAbstract(i, _, _)
   | TyconAbbrev(i, _, _, _)
   | TyconRecord(i, _, _, _)
-  | TyconVariant(i, _, _, _) -> i.idText
+  | TyconVariant(i, _, _, _) -> (text_of_id i)
 
 let decl_to_string (d:decl) = match d.d with
-  | TopLevelModule l -> "module " ^ l.str
-  | Open l -> "open " ^ l.str
-  | Friend l -> "friend " ^ l.str
-  | Include l -> "include " ^ l.str
-  | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" i.idText l.str
-  | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> l.str) |> String.concat ", ")
+  | TopLevelModule l -> "module " ^ (string_of_lid l)
+  | Open l -> "open " ^ (string_of_lid l)
+  | Friend l -> "friend " ^ (string_of_lid l)
+  | Include l -> "include " ^ (string_of_lid l)
+  | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" (text_of_id i) (string_of_lid l)
+  | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> (string_of_lid l)) |> String.concat ", ")
   | Main _ -> "main ..."
-  | Assume(i, _) -> "assume " ^ i.idText
+  | Assume(i, _) -> "assume " ^ (text_of_id i)
   | Tycon(_, _, tys) -> "type " ^ (tys |> List.map id_of_tycon |> String.concat ", ")
-  | Val(i, _) -> "val " ^ i.idText
-  | Exception(i, _) -> "exception " ^ i.idText
+  | Val(i, _) -> "val " ^ (text_of_id i)
+  | Exception(i, _) -> "exception " ^ (text_of_id i)
   | NewEffect(DefineEffect(i, _, _, _))
-  | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ i.idText
+  | NewEffect(RedefineEffect(i, _, _)) -> "new_effect " ^ (text_of_id i)
   | LayeredEffect(DefineEffect(i, _, _, _))
-  | LayeredEffect(RedefineEffect(i, _, _)) -> "layered_effect " ^ i.idText
+  | LayeredEffect(RedefineEffect(i, _, _)) -> "layered_effect " ^ (text_of_id i)
   | Polymonadic_bind (l1, l2, l3, _) ->
       Util.format3 "polymonadic_bind (%s, %s) |> %s"
                     (string_of_lid l1) (string_of_lid l2) (string_of_lid l3)
-  | Splice (ids, t) -> "splice[" ^ (String.concat ";" <| List.map (fun i -> i.idText) ids) ^ "] (" ^ term_to_string t ^ ")"
+  | Splice (ids, t) -> "splice[" ^ (String.concat ";" <| List.map (fun i -> (text_of_id i)) ids) ^ "] (" ^ term_to_string t ^ ")"
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
 

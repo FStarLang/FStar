@@ -80,7 +80,7 @@ let rec js_of_const (c:sconst) : expression_t =
     | Const_bytearray(ba,r) | Const_string(ba,r) -> JSE_String(Util.string_of_bytes ba)
 
 and js_of_fun (fn:option<string>) (x:bvvdef) (t:typ) (e:exp) : expression_t =
-    JSE_Function(fn, [x.ppname.idText], [JS_Statement(JSS_Return(
+    JSE_Function(fn, [(text_of_id x.ppname)], [JS_Statement(JSS_Return(
         match js_of_expr None e with JSE_Elision | JSE_Undefined -> None | e -> Some(e)
     ))])
 
@@ -112,7 +112,7 @@ and try_compile_constructor (e:exp) : option<expression_t> =
     in aux [] e
 
 and js_of_binding ((x,t,e):(either<bvvdef,lident> * typ * exp)) =
-    let n = match x with Inl(x) -> x.ppname.idText | Inr(x) -> x.ident.idText in
+    let n = match x with Inl(x) -> (text_of_id x.ppname) | Inr(x) -> (text_of_id x.ident) in
     (n, Some(js_of_expr None e))
 
 and compress_let (e:exp) =
@@ -137,7 +137,7 @@ and js_of_match (e:exp) (cases:list<(pat * option<exp> * exp)>) =
                 fun (cur, b, i) p -> let (next, nb) = aux (id^".v["^(Util.string_of_int i)^"]") p in
                 (and_cond cur next, b @ nb, i+1)
             ) (JSE_Bool(true), [], 0) l in (and_cond tagcond valcond, valbinds)
-        | Pat_var(bv, _) -> (JSE_Bool(true), [JSP_Property(bv.v.ppname.idText, JSE_Identifier(id))])
+        | Pat_var(bv, _) -> (JSE_Bool(true), [(text_of_id JSP_Property(bv.v.ppname), JSE_Identifier(id))])
         | Pat_tvar(_) -> failwith "fail..."
         | Pat_constant(c) -> (JSE_Sequal(JSE_Identifier(id), js_of_const c), [])
         | Pat_disj(l) -> List.fold_left (fun (cur,b) p->
@@ -160,7 +160,7 @@ and js_of_expr (binder:option<string>) (expr:exp) : expression_t =
     match try_compile_constructor expr with
     | Some(result) -> result
     | None -> (match expr.n with
-        | Exp_bvar(x) -> JSE_Identifier(x.v.ppname.idText)
+        | Exp_bvar(x) -> (text_of_id JSE_Identifier(x.v.ppname))
         | Exp_fvar(x,b) -> JSE_Identifier(x.v.str)
         | Exp_constant(c) -> js_of_const c
         | Exp_abs([], e) -> js_of_expr binder e
@@ -215,8 +215,8 @@ and compile_def (d:sigelt) =
     let add_fieldnames cons vnames =
         let rec aux i l = match l with
         | x::r -> (match x with None -> aux i r
-            | Some(v) -> if Util.starts_with v.ppname.idText "^fname^" then
-                (Util.smap_add constructors (cons^"."^(Util.substring_from v.ppname.idText 7))
+            | Some(v) -> if Util.starts_with (text_of_id v.ppname) "^fname^" then
+                (Util.smap_add constructors (cons^"."^(Util.substring_from (text_of_id v.ppname) 7))
                 (Some(1), Some(function x::[] -> JSE_Dot(x, "v["^(Util.string_of_int i)^"]") | _ -> failwith "")));
                 aux (i+1) r)
         | [] -> ()
@@ -231,7 +231,7 @@ and compile_def (d:sigelt) =
 
 and js_of_exports isrec (id,typ,expr) : source_t =
     let (n,sn) = match id with Inl(x) -> failwith "unexpected boundvar in module export"
-            | Inr(x) -> (x.str,x.ident.idText) in
+            | Inr(x) -> ((text_of_id x.str,x.ident)) in
     let s = match js_of_expr (if isrec then Some(sn) else None) (untype_expr expr) with
     | JSE_Elision -> JSS_Empty
     | e -> JSS_Expression(JSE_Assign(JSE_Identifier(n), e))

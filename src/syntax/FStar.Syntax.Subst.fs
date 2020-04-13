@@ -35,7 +35,7 @@ module S = FStar.Syntax.Syntax
 
 (* A subst_t is a composition of parallel substitutions, expressed as a list of lists *)
 let subst_to_string s =
-    s |> List.map (fun (b, _) -> b.ppname.idText) |> String.concat ", "
+    s |> List.map (fun (b, _) -> (text_of_id b.ppname)) |> String.concat ", "
 
 (* apply_until_some f s
       applies f to each element of s until it returns (Some t)
@@ -136,7 +136,7 @@ let subst_univ_bv x s = U.find_map s (function
     | UN(y, t) when (x=y) -> Some t
     | _ -> None)
 let subst_univ_nm (x:univ_name) s = U.find_map s (function
-    | UD(y, i) when (x.idText=y.idText) -> Some (U_bvar i)
+    | UD(y, i) when (ident_equals x y) -> Some (U_bvar i)
     | _ -> None)
 
 let rec subst_univ s u =

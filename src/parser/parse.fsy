@@ -768,7 +768,7 @@ typars:
 tvarinsts:
   TYP_APP_LESS separated_nonempty_list_COMMA_tvar_ TYP_APP_GREATER
     {let (_1, tvs, _3) = ((), $2, ()) in
-      ( map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind None) tvs )}
+      ( map (fun tv -> mk_binder (TVariable(tv)) (range_of_id tv) Kind None) tvs )}
 
 typeDefinition:
   
@@ -1101,7 +1101,7 @@ let p =     ( (x, y) ) in
       ( p )}
 | qlident
     {let lid = $1 in
-      ( lid, mk_pattern (PatVar (lid.ident, None)) (rhs parseState 1) )}
+      ( lid, mk_pattern (PatVar (ident_of_lid lid, None)) (rhs parseState 1) )}
 
 patternOrMultibinder:
   LBRACK_BAR UNDERSCORE COLON simpleArrow BAR_RBRACK
@@ -1237,15 +1237,15 @@ lidentOrOperator:
 | LPAREN OPPREFIX RPAREN
     {let (_1, op, _3) = ((), $2, ()) in
 let id =     ( mk_ident (op, rhs parseState 1) ) in
-    ( {id with idText = compile_op' id.idText id.idRange} )}
+    ( mk_ident (compile_op' (text_of_id id) (range_of_id id), range_of_id id) )}
 | LPAREN binop_name RPAREN
     {let (_1, op, _3) = ((), $2, ()) in
 let id =     ( op ) in
-    ( {id with idText = compile_op' id.idText id.idRange} )}
+    ( mk_ident (compile_op' (text_of_id id) (range_of_id id), range_of_id id) )}
 | LPAREN TILDE RPAREN
     {let (_1, op, _3) = ((), $2, ()) in
 let id =     ( mk_ident (op, rhs parseState 1) ) in
-    ( {id with idText = compile_op' id.idText id.idRange} )}
+    ( mk_ident (compile_op' (text_of_id id) (range_of_id id), range_of_id id) )}
 
 lidentOrUnderscore:
   IDENT
@@ -1336,7 +1336,8 @@ let op_expr =
 in
       (
         let (op, e2, _) = op_expr in
-        mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
+        let opid = mk_ident (text_of_id op ^ "<-", range_of_id op) in
+        mk_term (Op(opid, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
 | atomicTermNotQUident DOT_LBRACK term RBRACK LARROW noSeqTerm
     {let (e1, _1, e, _3_inlined1, _3, e3) = ($1, (), $3, (), (), $6) in
@@ -1346,7 +1347,8 @@ let op_expr =
 in
       (
         let (op, e2, _) = op_expr in
-        mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
+        let opid = mk_ident (text_of_id op ^ "<-", range_of_id op) in
+        mk_term (Op(opid, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
 | atomicTermNotQUident DOT_LBRACK_BAR term BAR_RBRACK LARROW noSeqTerm
     {let (e1, _1, e, _3_inlined1, _3, e3) = ($1, (), $3, (), (), $6) in
@@ -1356,7 +1358,8 @@ let op_expr =
 in
       (
         let (op, e2, _) = op_expr in
-        mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
+        let opid = mk_ident (text_of_id op ^ "<-", range_of_id op) in
+        mk_term (Op(opid, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
 | atomicTermNotQUident DOT_LENS_PAREN_LEFT term LENS_PAREN_RIGHT LARROW noSeqTerm
     {let (e1, _1, e, _3_inlined1, _3, e3) = ($1, (), $3, (), (), $6) in
@@ -1366,7 +1369,8 @@ let op_expr =
 in
       (
         let (op, e2, _) = op_expr in
-        mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
+        let opid = mk_ident (text_of_id op ^ "<-", range_of_id op) in
+        mk_term (Op(opid, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
 | REQUIRES typ
     {let (_1, t) = ((), $2) in
@@ -2030,7 +2034,7 @@ let e =     ( (x, y) ) in
                                                  ( e )}
 | qlident
     {let lid = $1 in
-                ( lid, mk_term (Name (lid_of_ids [ lid.ident ])) (rhs parseState 1) Un )}
+                ( lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rhs parseState 1) Un )}
 
 appTerm:
   indexingTerm list_argTerm_
@@ -2321,7 +2325,7 @@ universeFrom:
 | ident nonempty_list_atomicUniverse_
     {let (max, us) = ($1, $2) in
       (
-        if text_of_id max <> text_of_lid max_lid
+        if text_of_id max <> string_of_lid max_lid
         then log_issue (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ text_of_id max ^
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.");
@@ -2342,7 +2346,7 @@ atomicUniverse:
       )}
 | lident
     {let u = $1 in
-             ( mk_term (Uvar u) u.idRange Expr )}
+             ( mk_term (Uvar u) (range_of_id u) Expr )}
 | LPAREN universeFrom RPAREN
     {let (_1, u, _3) = ((), $2, ()) in
     ( u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) )}
@@ -2477,5 +2481,4 @@ in
    ( x :: xs )}
 
 %%
-
 

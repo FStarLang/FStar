@@ -923,7 +923,7 @@ let sc_fvars tcenv sc = // Memoized version of fc_vars
 
 let json_of_search_result tcenv sc =
   let typ_str = term_to_string tcenv (sc_typ tcenv sc) in
-  JsonAssoc [("lid", JsonStr (DsEnv.shorten_lid tcenv.dsenv sc.sc_lid).str);
+  JsonAssoc [("lid", JsonStr (string_of_lid (DsEnv.shorten_lid tcenv.dsenv sc.sc_lid)));
              ("type", JsonStr typ_str)]
 
 exception InvalidSearch of string
@@ -935,7 +935,7 @@ let run_search st search_str =
   let st_matches candidate term =
     let found =
       match term.st_term with
-      | NameContainsStr str -> Util.contains candidate.sc_lid.str str
+      | NameContainsStr str -> Util.contains (string_of_lid candidate.sc_lid) str
       | TypeContainsLid lid -> set_mem lid (sc_fvars tcenv candidate) in
     found <> term.st_negate in
 
@@ -970,7 +970,7 @@ let run_search st search_str =
     (if term.st_negate then "-" else "")
     ^ (match term.st_term with
        | NameContainsStr s -> Util.format1 "\"%s\"" s
-       | TypeContainsLid l -> Util.format1 "%s" l.str) in
+       | TypeContainsLid l -> Util.format1 "%s" (string_of_lid l)) in
 
   let results =
     try
@@ -978,7 +978,7 @@ let run_search st search_str =
       let all_lidents = TcEnv.lidents tcenv in
       let all_candidates = List.map sc_of_lid all_lidents in
       let matches_all candidate = List.for_all (st_matches candidate) terms in
-      let cmp r1 r2 = Util.compare r1.sc_lid.str r2.sc_lid.str in
+      let cmp r1 r2 = Util.compare (string_of_lid r1.sc_lid) (string_of_lid r2.sc_lid) in
       let results = List.filter matches_all all_candidates in
       let sorted = Util.sort_with cmp results in
       let js = List.map (json_of_search_result tcenv) sorted in
