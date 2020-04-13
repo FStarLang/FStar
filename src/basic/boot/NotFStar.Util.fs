@@ -995,6 +995,11 @@ type hints_db = {
     hints: hints
 }
 
+type hints_read_result =
+  | HintsOK of hints_db
+  | MalformedJson
+  | UnableToOpen
+
 [<DataContract>]
 type internal json_db = System.Object []
 
@@ -1084,21 +1089,19 @@ let write_hints (filename : string) (hdb : hints_db) : unit =
     let jdb = (json_db_from_hints_db hdb) in
     write_file filename (json jdb known_json_types)
 
-let read_hints (filename : string) (warn : bool) : option<hints_db> =
+let read_hints (filename : string) : hints_read_result =
     try
         let sr = new System.IO.StreamReader(filename) in
-        Some (hints_db_from_json_db (unjson (sr.ReadToEnd()) known_json_types))
+        HintsOK (hints_db_from_json_db (unjson (sr.ReadToEnd()) known_json_types))
     with
     | Failure _ ->
-        if warn then Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
-        None
+        MalformedJson
     | :? System.ArgumentException
     | :? System.ArgumentNullException
     | :? System.IO.FileNotFoundException
     | :? System.IO.DirectoryNotFoundException
     | :? System.IO.IOException ->
-        if warn then Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
-        None
+        UnableToOpen
 
 (** Interactive protocol **)
 

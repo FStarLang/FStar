@@ -1,0 +1,20 @@
+>> Got issues: [
+NegativeTests.BST.fst(37,38-37,42): (Error 19) Subtyping check failed; expected type right:
+FStar.Pervasives.Native.option (NegativeTests.BST.tree 2)
+  { 0 <= 1 /\ 1 <= 2 /\ (None? right <==> 1 = 2) /\
+    (None? (FStar.Pervasives.Native.None) <==> 1 = 0) }; got type FStar.Pervasives.Native.option (NegativeTests.BST.tree 2); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also NegativeTests.BST.fst(27,37-27,48))
+>>]
+>> Got issues: [
+NegativeTests.BST.fst(40,61-40,65): (Error 19) Subtyping check failed; expected type right:
+FStar.Pervasives.Native.option (NegativeTests.BST.tree (l + 1))
+  { l <= l /\ l <= l + 1 /\ (None? right <==> l = l + 1) /\
+    (None? (FStar.Pervasives.Native.Some t) <==> l = l) }; got type FStar.Pervasives.Native.option (NegativeTests.BST.tree (l + 1)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also NegativeTests.BST.fst(27,36-27,58))
+>>]
+>> Got issues: [
+NegativeTests.BST.fst(43,78-43,87): (Error 19) Subtyping check failed; expected type right:
+FStar.Pervasives.Native.option (NegativeTests.BST.tree (l + 1))
+  { l <= l + 1 /\ l + 1 <= l + 1 /\ (None? right <==> l + 1 = l + 1) /\
+    (None? (FStar.Pervasives.Native.Some t1) <==> l + 1 = l) }; got type FStar.Pervasives.Native.option (NegativeTests.BST.tree (l + 1)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also NegativeTests.BST.fst(27,37-27,48))
+>>]
+Verified module: NegativeTests.BST
+All verification conditions discharged successfully

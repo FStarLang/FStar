@@ -1,0 +1,23 @@
+>> Got issues: [
+ExpectFailure.fst(20,12-20,15): (Error 189) Expected expression of type "Prims.int"; got expression "'a'" of type "FStar.Char.char"
+>>]
+>> Got issues: [
+ExpectFailure.fst(24,12-24,15): (Error 189) Expected expression of type "Prims.int"; got expression "'a'" of type "FStar.Char.char"
+>>]
+>> Got issues: [
+ExpectFailure.fst(28,8-28,14): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also ExpectFailure.fst(28,15-28,20))
+>>]
+>> Got issues: [
+ExpectFailure.fst(30,8-30,14): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also ExpectFailure.fst(30,15-30,20))
+>>]
+>> Got issues: [
+ExpectFailure.fst(43,12-43,15): (Error 189) Expected expression of type "Prims.int"; got expression "'a'" of type "FStar.Char.char"
+>>]
+>> Got issues: [
+ExpectFailure.fst(50,12-50,15): (Error 189) Expected expression of type "Prims.int"; got expression "'a'" of type "FStar.Char.char"
+>>]
+>> Got issues: [
+ExpectFailure.fst(61,12-61,15): (Error 189) Expected expression of type "Prims.int"; got expression "'a'" of type "FStar.Char.char"
+>>]
+Verified module: ExpectFailure
+All verification conditions discharged successfully

@@ -38,12 +38,15 @@ MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
 # YOU SHOULDN'T NEED TO TOUCH THE REST
 ################################################################################
 
-MY_FSTAR=$(Q)$(BENCHMARK_PRE) $(FSTAR)                      \
-		 $(SIL) --cache_checked_modules             \
+VERBOSE_FSTAR=$(BENCHMARK_PRE) $(FSTAR)                     \
+		  --cache_checked_modules                   \
 		  --odir $(OUTPUT_DIRECTORY)                \
 		  --cache_dir $(CACHE_DIR)                  \
 		  $(addprefix --include , $(INCLUDE_PATHS)) \
 		  $(OTHERFLAGS) $(MAYBE_ADMIT)
+
+# As above, but perhaps with --silent
+MY_FSTAR=$(VERBOSE_FSTAR) $(SIL)
 
 #--------------------------------------------------------------------------------
 # Default target: verify all FSTAR_FILES
@@ -76,6 +79,14 @@ include .depend
 	@echo "[CHECK     $(basename $(notdir $@))]"
 	$(Q)$(MY_FSTAR) $<
 	@touch -c $@
+
+%.fst.output: %.fst
+	@echo "[OUTPUT    $(basename $(notdir $@))]"
+	$(Q)$(VERBOSE_FSTAR) --print_expected_failures $< >$@ 2>&1
+
+%.fsti.output: %.fsti
+	@echo "[OUTPUT    $(basename $(notdir $@))]"
+	$(Q)$(VERBOSE_FSTAR) --print_expected_failures $< >$@ 2>&1
 
 clean:
 	rm -rf $(CACHE_DIR)

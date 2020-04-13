@@ -1,0 +1,5 @@
+>> Got issues: [
+WPExtensionality.fst(118,3-118,34): (Error 19) assertion failed (Also see: prims.fst(367,31-367,43))(Other related locations: prims.fst(364,70-364,82)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+Verified module: WPExtensionality
+All verification conditions discharged successfully

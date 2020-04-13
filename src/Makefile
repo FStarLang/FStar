@@ -131,7 +131,6 @@ rebuild:
 # --------------------------------------------------------------------
 # Testing
 # --------------------------------------------------------------------
-OTHERFLAGS+=--hint_info
 
 # The regressions to be run with a working F# build of F*
 fsharp-unit-tests:

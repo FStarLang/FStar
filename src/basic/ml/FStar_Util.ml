@@ -1061,6 +1061,11 @@ type hints_db = {
     hints: hints
 }
 
+type hints_read_result =
+  | HintsOK of hints_db
+  | MalformedJson
+  | UnableToOpen
+
 let write_hints (filename: string) (hints: hints_db): unit =
   let json = `List [
     `String hints.module_digest;
@@ -1087,7 +1092,7 @@ let write_hints (filename: string) (hints: hints_db): unit =
     (fun channel -> Yojson.Safe.pretty_to_channel channel json)
     channel
 
-let read_hints (filename: string) (warn: bool) : hints_db option =
+let read_hints (filename: string) : hints_read_result =
   let mk_hint nm ix fuel ifuel unsat_core time hash_opt = {
       hint_name = nm;
       hint_index = Z.of_int ix;
@@ -1113,7 +1118,7 @@ let read_hints (filename: string) (warn: bool) : hints_db option =
     let chan = open_in filename in
     let json = Yojson.Safe.from_channel chan in
     close_in chan;
-    Some (
+    HintsOK (
         match json with
         | `List [
             `String module_digest;
@@ -1150,11 +1155,9 @@ let read_hints (filename: string) (warn: bool) : hints_db option =
     )
   with
    | Exit ->
-      if warn then print1_warning "Malformed JSON hints file: %s; ran without hints\n" filename;
-      None
+      MalformedJson
    | Sys_error _ ->
-      if warn then print1_warning "Unable to open hints file: %s; ran without hints\n" filename;
-      None
+      UnableToOpen
 
 (** Interactive protocol **)
 

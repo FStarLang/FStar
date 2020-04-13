@@ -1,0 +1,8 @@
+>> Got issues: [
+AnotType.fst(19,0-19,19): (Error 309) Type annotation Prims.int for inductive AnotType.tc is not Type or eqtype, or it is eqtype but contains unopteq qualifier
+>>]
+>> Got issues: [
+AnotType.fst(27,14-27,16): (Error 189) Expected expression of type "Type0"; got expression "AnotType.tb" of type "Type"
+>>]
+Verified module: AnotType
+All verification conditions discharged successfully

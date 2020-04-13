@@ -178,6 +178,7 @@ val pervasives_basename         : unit    -> string
 val pervasives_native_basename  : unit    -> string
 val print_bound_var_types       : unit    -> bool
 val print_effect_args           : unit    -> bool
+val print_expected_failures     : unit    -> bool
 val print_implicits             : unit    -> bool
 val print_real_names            : unit    -> bool
 val print_universes             : unit    -> bool

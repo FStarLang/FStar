@@ -343,6 +343,7 @@ type raw_error =
   | Warning_BleedingEdge_Feature
   | Warning_IgnoredBinding
   | Warning_AbstractQualifier
+  | Warning_CouldNotReadHints
 
 type flag = error_flag
 
@@ -683,6 +684,7 @@ let default_flags =
   (Warning_BleedingEdge_Feature                      , CWarning);
   (Warning_IgnoredBinding                            , CWarning);
   (Warning_AbstractQualifier                         , CWarning);
+  (Warning_CouldNotReadHints                         , CWarning); // 333
   ]
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
@@ -729,11 +731,14 @@ let format_issue issue =
     let range_str, see_also_str =
         match issue.issue_range with
         | None -> "", ""
-        | Some r when r = dummyRange -> "", ""
+        | Some r when r = dummyRange ->
+            "", (if def_range r = def_range dummyRange then ""
+                 else BU.format1 " (see also %s)" (Range.string_of_range r))
         | Some r ->
           (BU.format1 "%s: " (Range.string_of_use_range r),
            (if use_range r = def_range r then ""
-            else BU.format1 " (see also %s)" (Range.string_of_range r))) in
+            else BU.format1 " (see also %s)" (Range.string_of_range r)))
+    in
     let issue_number =
         match issue.issue_number with
         | None -> ""

@@ -1,0 +1,20 @@
+>> Got issues: [
+NegativeTests.Positivity.fst(22,5-23,26): (Error 3) Inductive type NegativeTests.Positivity.t1 does not satisfy the positivity condition
+>>]
+>> Got issues: [
+NegativeTests.Positivity.fst(37,5-38,26): (Error 3) Inductive type NegativeTests.Positivity.t5 does not satisfy the positivity condition
+>>]
+>> Got issues: [
+NegativeTests.Positivity.fst(48,5-49,24): (Error 3) Inductive type NegativeTests.Positivity.t7 does not satisfy the positivity condition
+>>]
+>> Got issues: [
+NegativeTests.Positivity.fst(53,5-54,24): (Error 3) Inductive type NegativeTests.Positivity.t8 does not satisfy the positivity condition
+>>]
+>> Got issues: [
+NegativeTests.Positivity.fst(61,5-62,23): (Error 3) Inductive type NegativeTests.Positivity.t10 does not satisfy the positivity condition
+>>]
+>> Got issues: [
+NegativeTests.Positivity.fst(66,5-67,30): (Error 3) Inductive type NegativeTests.Positivity.t11 does not satisfy the positivity condition
+>>]
+Verified module: NegativeTests.Positivity
+All verification conditions discharged successfully

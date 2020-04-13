@@ -371,7 +371,9 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
                     Options.with_saved_options (fun () ->
                       BU.must (!tc_decls_knot) env' ses)) in
 
-    if Env.debug env Options.Low then begin
+    if Options.print_expected_failures ()
+       || Env.debug env Options.Low then
+    begin
         BU.print_string ">> Got issues: [\n";
         List.iter Errors.print_issue errs;
         BU.print_string ">>]\n"
