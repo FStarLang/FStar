@@ -312,7 +312,7 @@ let close env t =
   let ftv = sort_ftv <| free_tick_vars env t in
   if List.length ftv = 0
   then t
-  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, tm_type (range_of_id x))) (range_of_id x) Type_level (Some Implicit)) in
+  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, mk_term Wild (range_of_id x) Type_level)) (range_of_id x) Type_level (Some Implicit)) in
        let result = mk_term (Product(binders, t)) t.range t.level in
        result
 
@@ -320,7 +320,7 @@ let close_fun env t =
   let ftv = sort_ftv <| free_tick_vars env t in
   if List.length ftv = 0
   then t
-  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, tm_type (range_of_id x))) (range_of_id x) Type_level (Some Implicit)) in
+  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, mk_term Wild (range_of_id x) Type_level)) (range_of_id x) Type_level (Some Implicit)) in
        let t = match (unparen t).tm with
         | Product _ -> t
         | _ -> mk_term (App(mk_term (Name C.effect_Tot_lid) t.range t.level, t, Nothing)) t.range t.level in
