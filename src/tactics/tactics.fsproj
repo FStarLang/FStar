@@ -109,8 +109,10 @@
     <Compile Include="FStar.Tactics.Native.fs" />
     <Compile Include="FStar.Tactics.InterpFuns.fsi" />
     <Compile Include="FStar.Tactics.InterpFuns.fs" />
-    <Compile Include="boot/FStar.Tactics.Interpreter.fsi" />
-    <Compile Include="boot/FStar.Tactics.Interpreter.fs" />
+    <Compile Include="FStar.Tactics.Interpreter.fsi" />
+    <Compile Include="FStar.Tactics.Interpreter.fs" />
+    <Compile Include="FStar.Tactics.Hooks.fsi" />
+    <Compile Include="FStar.Tactics.Hooks.fs" />
     <Compile Include="FStar.Tactics.Load.fsi" />
     <Compile Include="FStar.Tactics.Load.fs" />
   </ItemGroup>

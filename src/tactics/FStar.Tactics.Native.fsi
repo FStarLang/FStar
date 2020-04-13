@@ -18,4 +18,3 @@ type native_primitive_step =
       tactic: itac}
 
 val list_all            : unit -> list<native_primitive_step>
-val is_native_tactic    : FStar.Ident.lid -> bool

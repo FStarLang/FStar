@@ -23,5 +23,5 @@ let l x y = admit_dump ()
 val l' : x:int -> y:int -> Lemma (x + y == x + x)
 let l' x y = admit_dump ()
 
-val x : r:int{False}
-let x = magic_dump ()
+val x : nat -> r:int{False}
+let x nn = magic_dump ()

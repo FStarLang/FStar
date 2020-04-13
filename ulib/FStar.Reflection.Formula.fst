@@ -17,7 +17,7 @@ module FStar.Reflection.Formula
 
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
-open FStar.Reflection.Basic
+open FStar.Reflection.Builtins
 open FStar.Reflection.Types
 open FStar.Reflection.Derived
 open FStar.Reflection.Const

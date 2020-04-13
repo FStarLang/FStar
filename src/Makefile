@@ -46,9 +46,7 @@ $(FSYACC) $(FSLEX): nuget-restore
 ALL_BOOT=$(addprefix boot/FStar., Util.fsti List.fsti			\
 			          Compiler.Bytes.fsti String.fsti	\
 			          BigInt.fsti Pprint.fsti		\
-			          Tactics.Interpreter.fst		\
 			          Parser.Parse.fsti			\
-			          Tactics.Interpreter.fsti		 \
 			          Tests.Test.fst \
 			          StringBuffer.fsti)
 
@@ -69,8 +67,6 @@ boot/%.fsti: basic/boot/%.fsi | boot_dir
 boot/%.fsti: prettyprint/boot/%.fsi | boot_dir
 	$(call from_boot_file)
 
-boot/FStar.Tactics.Interpreter.fst: tactics/boot/FStar.Tactics.Interpreter.fs | boot_dir
-	$(call from_boot_file)
 
 boot/FStar.Tests.Test.fst: tests/boot/FStar.Tests.Test.fs | boot_dir
 	$(call from_boot_file)
@@ -82,9 +78,6 @@ boot/FStar.Parser.Parse.fsti: parser/parse.fsi | boot_dir
 	$(Q)$(HEAD) -n12 $^ >> $@
 
 boot/FStar.Parser.Parse.fst: parser/parse.fs | boot_dir
-	$(call from_boot_file)
-
-boot/FStar.Tactics.Interpreter.fsti: tactics/boot/FStar.Tactics.Interpreter.fsi | boot_dir
 	$(call from_boot_file)
 
 boot_dir:

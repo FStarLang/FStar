@@ -140,21 +140,6 @@ let mk_tactic_interpretation_9 :
                                    embed uu____5244 uu____5249 r ncb  in
                                  FStar_Pervasives_Native.Some uu____5243)
 
-let from_tactic_9 (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g -> 'h -> 'i -> ('j, unit) FStar_Tactics_Effect._dm4f_TAC_repr): ('a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g -> 'h -> 'i -> 'j FStar_Tactics_Monad.tac) =
-    fun (x: 'a) ->
-        fun (y: 'b) ->
-            fun (z: 'c) ->
-                fun (w: 'd) ->
-                    fun (v: 'e) ->
-                        fun (u: 'f) ->
-                          fun (u1: 'g) ->
-                          fun (u2: 'h) ->
-                          fun (a: 'i) ->                          
-                            (fun (ps:FStar_Tactics_Types.proofstate) ->
-                                FStar_Util.print_string "In compiled code (9)\n";
-                                FStar_Tactics_Native.interpret_tactic ps (t x y z w v u u1 u2 a)) |> FStar_Tactics_Monad.mk_tac
-
-
 let _ =
   FStar_Tactics_Native.register_tactic "CanonCommSemiring.canon_semiring_aux"
     (Prims.parse_int "11")
@@ -164,7 +149,7 @@ let _ =
           match args with
           | (tv_0,_)::args_tail ->
               (mk_tactic_interpretation_9
-                 (from_tactic_9 canon_semiring_aux)
+                 (FStar_Tactics_Native.from_tactic_9 canon_semiring_aux)
                  FStar_Reflection_Embeddings.e_term
                  (FStar_Tactics_Interpreter.e_tactic_1_alt
                      FStar_Reflection_Embeddings.e_term

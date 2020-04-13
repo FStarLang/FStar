@@ -187,7 +187,6 @@ and env = {
   splice         :env -> term -> list<sigelt>;       (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
   mpreprocess     :env -> term -> term -> term;       (* hook for postprocessing typechecked terms via metaprograms *)
   postprocess    :env -> term -> typ -> term -> term; (* hook for postprocessing typechecked terms via metaprograms *)
-  is_native_tactic: lid -> bool;                        (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                        (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStar.Syntax.DsEnv.env;             (* The desugaring environment from the front-end *)
@@ -300,7 +299,6 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     splice = (fun e tau -> failwith "no splicer available");
     mpreprocess = (fun e tau tm -> failwith "no preprocessor available");
     postprocess = (fun e tau typ tm -> failwith "no postprocessor available");
-    is_native_tactic = (fun _ -> false);
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
     tc_hooks = default_tc_hooks;
     dsenv = FStar.Syntax.DsEnv.empty_env deps;
