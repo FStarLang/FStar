@@ -392,24 +392,6 @@ let is_BitVector_primitive head args =
     | _ -> false
 
 
-module CBytes = FStar.Compiler.Bytes
-
-(*
- * Hashcons the string constant
- * We were earlier using a counter, which is not precise in the presence of
- *   checked files, cf. #1999
- *)
-let encode_string_const (s:string) : term =
-  let rec aux (acc:BigInt.bigint) (i:int) (bs:CBytes.bytes) =
-    if i = CBytes.length bs then acc
-    else
-      let acc = BigInt.add_big_int
-        (BigInt.mult_big_int (256 |> BigInt.of_int_fs) acc)
-        (CBytes.get bs i |> BigInt.of_int_fs) in
-      aux acc (i+1) bs in
-  let id = aux BigInt.zero 0 (CBytes.string_as_unicode_bytes s) in
-  Term.boxString <| mk_String_const id
-
 let rec encode_const c env =
     match c with
     | Const_unit -> mk_Term_unit, []
@@ -420,7 +402,7 @@ let rec encode_const c env =
     | Const_int (repr, Some sw) ->
       let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
       encode_term syntax_term env
-    | Const_string(s, _) -> encode_string_const s, []
+    | Const_string(s, _) -> Term.boxString <| mk_String_const s, []
     | Const_range _ -> mk_Range_const (), []
     | Const_effect -> mk_Term_type, []
     | Const_real r -> boxReal (mkReal r), []
