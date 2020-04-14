@@ -803,12 +803,6 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
  * the list of typechecked sig_elts, and a list of new sig_elts elaborated
  * during typechecking but not yet typechecked *)
 let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
-  (* If emacs is peeking, and debugging is on, don't do anything,
-   * otherwise the user will see a bunch of output from typechecking
-   * definitions that were not yet advanced over. *)
-  if env.nosynth && Options.debug_any ()
-  then [], [], env
-  else begin
    let env = set_hint_correlator env se in
    if Options.debug_module (string_of_lid env.curmodule) then
      BU.print1 "Processing %s\n" (U.lids_of_sigelt se |> List.map string_of_lid |> String.concat ", ");
@@ -816,7 +810,6 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
      BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
 
    tc_decl' env se
-  end
 
 let for_export env hidden se : list<sigelt> * list<lident> =
    (* Exporting symbols based on whether they have been marked 'abstract'
@@ -977,6 +970,12 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
 
 let tc_decls env ses =
   let rec process_one_decl (ses, exports, env, hidden) se =
+    (* If emacs is peeking, and debugging is on, don't do anything,
+     * otherwise the user will see a bunch of output from typechecking
+     * definitions that were not yet advanced over. *)
+    if env.nosynth && Options.debug_any ()
+    then (ses, exports, env, hidden), []
+    else begin
     if Env.debug env Options.Low
     then BU.print2 ">>>>>>>>>>>>>>Checking top-level %s decl %s\n"
                         (Print.tag_of_sigelt se)
@@ -1020,6 +1019,7 @@ let tc_decls env ses =
         List.fold_left accum_exports_hidden (exports, hidden) ses'
     in
     (List.rev_append ses' ses, exports, env, hidden), ses_elaborated
+    end
   in
   // A wrapper to (maybe) print the time taken for each sigelt
   let process_one_decl_timed acc se =
