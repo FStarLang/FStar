@@ -1858,12 +1858,12 @@ and reify_lift cfg e msrc mtgt t : term =
     match Env.monad_leq env msrc mtgt with
     | None ->
       failwith (BU.format2 "Impossible : trying to reify a lift between unrelated effects (%s and %s)"
-                            (Ident.text_of_lid msrc)
-                            (Ident.text_of_lid mtgt))
+                            (Ident.string_of_lid msrc)
+                            (Ident.string_of_lid mtgt))
     | Some {mlift={mlift_term=None}} ->
       failwith (BU.format2 "Impossible : trying to reify a non-reifiable lift (from %s to %s)"
-                            (Ident.text_of_lid msrc)
-                            (Ident.text_of_lid mtgt))
+                            (Ident.string_of_lid msrc)
+                            (Ident.string_of_lid mtgt))
     | Some {mlift={mlift_term=Some lift}} ->
       (*
        * AR: we need to apply the lift combinator to `e`

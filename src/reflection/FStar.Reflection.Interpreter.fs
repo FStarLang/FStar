@@ -65,7 +65,7 @@ let nbe_int2 (m:lid) (f:'a -> 'b -> 'r) (ea:NBET.embedding<'a>) (eb:NBET.embeddi
         Some (NBET.embed er cb (f a b))))
     | _ -> None
 
-let mklid (nm : string) : lid = fstar_refl_basic_lid nm
+let mklid (nm : string) : lid = fstar_refl_builtins_lid nm
 
 let mk (l : lid) (arity : int) (fn     : Cfg.psc -> norm_cb -> args -> option<term>)
                                (nbe_fn : NBET.nbe_cbs -> NBET.args -> option<NBET.t>) : Cfg.primitive_step
@@ -188,6 +188,9 @@ let reflection_primops : list<Cfg.primitive_step> = [
 
     mk2 "compare_string"        compare_string        e_string            e_string          e_int
                                 compare_string        NBET.e_string       NBET.e_string     NBET.e_int;
+
+    mk2 "push_binder"           push_binder           E.e_env             E.e_binder        E.e_env
+                                push_binder           NRE.e_env           NRE.e_binder      NRE.e_env;
 ]
 
 let _ = List.iter FStar.TypeChecker.Cfg.register_extra_step reflection_primops

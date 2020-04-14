@@ -528,7 +528,14 @@ val mk_lb :         (lbname * list<univ_name> * lident * typ * term * list<attri
 val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
 val mk_Tm_app:      term -> args -> Tot<mk_t>
+
+(* This raise an exception if the term is not a Tm_fvar,
+ * use with care. It has to be an Tm_fvar *immediately*,
+ * there is no solving of Tm_delayed nor Tm_uvar. If it's
+ * possible that it is not a Tm_fvar, which can be the case
+ * for non-typechecked terms, just use `mk`. *)
 val mk_Tm_uinst:    term -> universes -> term
+
 val extend_app:     term -> arg -> Tot<mk_t>
 val extend_app_n:   term -> args -> Tot<mk_t>
 val mk_Tm_delayed:  (term * subst_ts) -> Range.range -> term
@@ -542,8 +549,8 @@ val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term
 val binders_to_names: binders -> list<term>
 
-val bv_eq:           bv -> bv -> Tot<bool>
-val order_bv:        bv -> bv -> Tot<int>
+val bv_eq:           bv -> bv -> bool
+val order_bv:        bv -> bv -> int
 val range_of_lbname: lbname -> range
 val range_of_bv:     bv -> range
 val set_range_of_bv: bv -> range -> bv
@@ -575,6 +582,7 @@ val is_null_binder: binder -> bool
 val argpos:         arg -> Range.range
 val pat_bvs:        pat -> list<bv>
 val is_implicit:    aqual -> bool
+val is_implicit_or_meta: aqual -> bool
 val as_implicit:    bool -> aqual
 val is_top_level:   list<letbinding> -> bool
 

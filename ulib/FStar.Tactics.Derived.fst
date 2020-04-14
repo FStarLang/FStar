@@ -661,10 +661,23 @@ let rec apply_squash_or_lem d t =
 let mapply (t : term) : Tac unit =
     apply_squash_or_lem 10 t
 
-val admit_dump : #a:Type -> (#[(dump "Admitting"; exact (quote (fun () -> admit #a () <: Admit a)))] x : (unit -> Admit a)) -> unit -> Admit a
+
+private
+let admit_dump_t () : Tac unit =
+  dump "Admitting";
+  apply (`admit)
+
+val admit_dump : #a:Type -> (#[admit_dump_t ()] x : (unit -> Admit a)) -> unit -> Admit a
 let admit_dump #a #x () = x ()
 
-val magic_dump : #a:Type -> (#[(dump "Admitting"; exact (quote (magic #a ())))] x : a) -> unit -> Tot a
+private
+let magic_dump_t () : Tac unit =
+  dump "Admitting";
+  apply (`magic);
+  exact (`());
+  ()
+
+val magic_dump : #a:Type -> (#[magic_dump_t ()] x : a) -> unit -> Tot a
 let magic_dump #a #x () = x
 
 let change_with t1 t2 : Tac unit =

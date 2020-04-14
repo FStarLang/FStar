@@ -145,7 +145,7 @@ clean_slate () {
     # verify ulib and install
     T0=`date +'%Y%m%d_%H%M%S'`
     echo "Starting fstarlib build ${T0}"
-    make -j${JLEVEL} -C src fstarlib 2>&1 | tee ${BENCH_OUTDIR}/build_fstarlib.log
+    make -j${JLEVEL} -C src .fstarlib 2>&1 | tee ${BENCH_OUTDIR}/build_fstarlib.log
     T1=`date +'%Y%m%d_%H%M%S'`
     echo "Finished fstar compiler boostrap ${T1} (started at ${T0})"
 

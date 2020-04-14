@@ -41,8 +41,8 @@ let finished_message fmods errs =
   if not (Options.silent()) then begin
     fmods |> List.iter (fun (iface, name) ->
                 let tag = if iface then "i'face (or impl+i'face)" else "module" in
-                if Options.should_print_message name.str
-                then print_to (Util.format2 "Verified %s: %s\n" tag (Ident.text_of_lid name)));
+                if Options.should_print_message (string_of_lid name)
+                then print_to (Util.format2 "Verified %s: %s\n" tag (Ident.string_of_lid name)));
     if errs > 0
     then if errs = 1
          then Util.print_error "1 error was reported (see above)\n"

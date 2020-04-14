@@ -924,7 +924,7 @@ and infer (env: env) (e: term): nm * term * term =
       let env, u_binders = List.fold_left (fun (env, acc) (bv, qual) ->
         let c = bv.sort in
         if is_C c then
-          let xw = S.gen_bv (bv.ppname.idText ^ "__w") None (star_type' env c) in
+          let xw = S.gen_bv ((text_of_id bv.ppname) ^ "__w") None (star_type' env c) in
           let x = { bv with sort = trans_F_ env c (S.bv_to_name xw) } in
           let env = { env with subst = NT (bv, S.bv_to_name xw) :: env.subst } in
           env, S.mk_binder x :: S.mk_binder xw :: acc
@@ -1298,10 +1298,10 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
       let bvs, binders = List.split (List.map (fun (bv, q) ->
         let h = bv.sort in
         if is_C h then
-          let w' = S.gen_bv (bv.ppname.idText ^ "__w'") None (star_type' env h) in
+          let w' = S.gen_bv ((text_of_id bv.ppname) ^ "__w'") None (star_type' env h) in
           w', [ w', q; S.null_bv (trans_F_ env h (S.bv_to_name w')), q ]
         else
-          let x = S.gen_bv (bv.ppname.idText ^ "__x") None (star_type' env h) in
+          let x = S.gen_bv ((text_of_id bv.ppname) ^ "__x") None (star_type' env h) in
           x, [ x, q ]
       ) binders_orig) in
       let binders = List.flatten binders in
@@ -1474,7 +1474,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
               (Print.term_to_string body)
               (match what' with
                | None -> "None"
-               | Some rc -> FStar.Ident.text_of_lid rc.residual_effect)
+               | Some rc -> FStar.Ident.string_of_lid rc.residual_effect)
           in raise_error (Errors.Fatal_WrongBodyTypeForReturnWP, error_msg)
         in
         begin match what' with
@@ -1574,7 +1574,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     let dmff_env, action_t, action_wp, action_elab =
       elaborate_and_star dmff_env' action_params (action.action_univs, action.action_defn)
     in
-    let name = action.action_name.ident.idText in
+    let name = text_of_id (ident_of_lid action.action_name) in
     let action_typ_with_wp = trans_F dmff_env' action_t action_wp in
     let action_params = SS.close_binders action_params in
     let action_elab = SS.close action_params action_elab in

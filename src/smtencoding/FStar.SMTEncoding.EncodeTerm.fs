@@ -402,7 +402,7 @@ let rec encode_const c env =
     | Const_int (repr, Some sw) ->
       let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
       encode_term syntax_term env
-    | Const_string(s, _) -> varops.string_const s, []
+    | Const_string(s, _) -> Term.boxString <| mk_String_const s, []
     | Const_range _ -> mk_Range_const (), []
     | Const_effect -> mk_Term_type, []
     | Const_real r -> boxReal (mkReal r), []
@@ -1584,7 +1584,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         let pats, decls' = encode_smt_patterns ps env in
         let body, decls'' = encode_formula body env in
         let guards = match pats with
-          | [[{tm=App(Var gf, [p])}]] when Ident.text_of_lid Const.guard_free = gf -> []
+          | [[{tm=App(Var gf, [p])}]] when Ident.string_of_lid Const.guard_free = gf -> []
           | _ -> guards in
         vars, pats, mk_and_l guards, body, decls@decls'@decls'' in
 

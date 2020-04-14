@@ -699,7 +699,7 @@ let arg_as_list   (e:embedding<'a>) (a:arg) = fst a |> unembed (e_list e) bogus_
 let arg_as_bounded_int ((a, _) : arg) : option<(fv * Z.t)> =
     match a with
     | FV (fv1, [], [(Constant (Int i), _)])
-      when BU.ends_with (Ident.text_of_lid fv1.fv_name.v)
+      when BU.ends_with (Ident.string_of_lid fv1.fv_name.v)
                         "int_to_t" ->
       Some (fv1, i)
     | _ -> None

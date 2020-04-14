@@ -656,7 +656,7 @@ let extract_iface (g:env_t) modul =
     let g, iface =
       if Options.debug_any()
       then FStar.Util.measure_execution_time
-             (BU.format1 "Extracted interface of %s" modul.name.str)
+             (BU.format1 "Extracted interface of %s" (string_of_lid modul.name))
              (fun () -> extract_iface' g modul)
       else extract_iface' g modul
     in
@@ -677,7 +677,7 @@ let extract_bundle env se =
         let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses ] in
         let names = match (SS.compress (N.normalize steps (tcenv_of_uenv env_iparams) ctor.dtyp)).n with
           | Tm_arrow (bs, _) ->
-              List.map (fun ({ ppname = ppname }, _) -> ppname.idText) bs
+              List.map (fun ({ ppname = ppname }, _) -> (text_of_id ppname)) bs
           | _ ->
               []
         in
@@ -960,7 +960,7 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
   let g, sigs =
     BU.fold_map
         (fun g se ->
-            if Options.debug_module m.name.str
+            if Options.debug_module (string_of_lid m.name)
             then let nm = FStar.Syntax.Util.lids_of_sigelt se |> List.map Ident.string_of_lid |> String.concat ", " in
                  BU.print1 "+++About to extract {%s}\n" nm;
                  FStar.Util.measure_execution_time
@@ -970,7 +970,7 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
         g m.declarations in
   let mlm : mlmodule = List.flatten sigs in
   let is_kremlin = Options.codegen () = Some Options.Kremlin in
-  if m.name.str <> "Prims"
+  if string_of_lid m.name <> "Prims"
   && (is_kremlin || not m.is_interface)
   then begin
     if not (Options.silent()) then (BU.print1 "Extracted module %s\n" (string_of_lid m.name));
@@ -980,7 +980,7 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
 
 let extract (g:uenv) (m:modul) =
   ignore <| Options.restore_cmd_line_options true;
-  if not (Options.should_extract m.name.str)
+  if not (Options.should_extract (string_of_lid m.name))
   then failwith (BU.format1 "Extract called on a module %s that should not be extracted" (Ident.string_of_lid m.name));
   if Options.interactive() then g, None else
   let g, mllib =

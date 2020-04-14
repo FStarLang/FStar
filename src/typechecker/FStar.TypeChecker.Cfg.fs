@@ -233,7 +233,7 @@ let empty_prim_steps () : prim_step_set =
     BU.psmap_empty ()
 
 let add_step (s : primitive_step) (ss : prim_step_set) =
-    BU.psmap_add ss (I.text_of_lid s.name) s
+    BU.psmap_add ss (I.string_of_lid s.name) s
 
 let merge_steps (s1 : prim_step_set) (s2 : prim_step_set) : prim_step_set =
     BU.psmap_merge s1 s2
@@ -266,10 +266,10 @@ let cfg_to_string cfg =
 let cfg_env cfg = cfg.tcenv
 
 let find_prim_step cfg fv =
-    BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v)
+    BU.psmap_try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v)
 
 let is_prim_step cfg fv =
-    BU.is_some (BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v))
+    BU.is_some (BU.psmap_try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v))
 
 let log cfg f =
     if cfg.debug.gen then f () else ()
@@ -309,7 +309,7 @@ let built_in_primitive_steps : prim_step_set =
         let a = U.unlazy_emb a in
         match (SS.compress hd).n, args with
         | Tm_fvar fv1, [(arg, _)]
-            when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
+            when BU.ends_with (Ident.string_of_lid fv1.fv_name.v) "int_to_t" ->
             let arg = U.unlazy_emb arg in
             begin match (SS.compress arg).n with
             | Tm_constant (FC.Const_int (i, None)) ->
