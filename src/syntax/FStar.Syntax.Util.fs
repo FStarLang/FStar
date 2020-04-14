@@ -1783,6 +1783,7 @@ let remove_attr (attr : lident) (attrs:list<attribute>) : list<attribute> =
 // Setting pragmas
 ///////////////////////////////////////////
 let process_pragma p r =
+    FStar.Errors.set_option_warning_callback_range (Some r);
     let set_options s =
       match Options.set_options s with
       | Getopt.Success -> ()

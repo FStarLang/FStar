@@ -211,7 +211,7 @@ let lazy_chooser k i = match k with
 
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =
-    Options.initialize_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
+    FStar.Errors.set_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
     FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder;

@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+   Copyright 2008-2020 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -45,16 +45,6 @@ type option_val =
   | Int of int
   | List of list<option_val>
   | Unset
-
-type error_flag =
-  | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
-  | CAlwaysError    //CAlwaysError: these errors are reported using log_issue and cannot be suppressed
-                    //the compiler can progress after reporting them
-  | CError          //CError: these are reported as errors using log_issue
-                    //        but they can be turned into warnings or silenced
-  | CWarning        //CWarning: reported using log_issue as warnings by default;
-                    //          then can be silenced or escalated to errors
-  | CSilent         //CSilent: never the default for any issue, but warnings can be silenced
 
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
 let __unit_tests__ = Util.mk_ref false
@@ -233,6 +223,7 @@ let defaults =
       ("query_stats"                  , Bool false);
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
+      ("report_assumes"               , Unset);
       ("reuse_hint_for"               , Unset);
       ("silent"                       , Bool false);
       ("smt"                          , Unset);
@@ -280,24 +271,6 @@ let defaults =
       ("profile_component"            , Unset);
       ("profile"                      , Unset);
       ]
-
-let parse_warn_error_set_get =
-    let r = Util.mk_ref None in
-    let set (f:(string -> list<error_flag>)) =
-        match !r with
-        | None -> r := Some f
-        | _ -> failwith "Multiple initialization of FStar.Options"
-    in
-    let get () =
-        match !r with
-        | Some f -> f
-        | None ->
-          failwith "FStar.Options is improperly initialized"
-    in
-    set, get
-
-let initialize_parse_warn_error f = fst (parse_warn_error_set_get) f
-let parse_warn_error s = snd (parse_warn_error_set_get) () s
 
 let init () =
    let o = internal_peek () in
@@ -392,6 +365,7 @@ let get_record_hints            ()      = lookup_opt "record_hints"             
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
 let get_retry                   ()      = lookup_opt "retry"                    as_bool
 let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
+let get_report_assumes          ()      = lookup_opt "report_assumes"           (as_option as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
 let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     as_bool
@@ -627,7 +601,21 @@ let interp_quake_arg (s:string)
     else failwith "unexpected value for --quake"
   | _ -> failwith "unexpected value for --quake"
 
-let rec specs_with_types () : list<(char * string * opt_type * string)> =
+let set_option_warning_callback_aux,
+    option_warning_callback =
+    let cb = mk_ref None in
+    let set (f:string -> unit) =
+      cb := Some f
+    in
+    let call msg =
+      match !cb with
+      | None -> ()
+      | Some f -> f msg
+    in
+    set, call
+let set_option_warning_callback f = set_option_warning_callback_aux f
+
+let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)> =
      [( noshort,
         "abort_on",
         PostProcessed ((function Int x -> abort_counter := x; Int x
@@ -636,12 +624,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
       ( noshort,
         "admit_smt_queries",
-        BoolStr,
+        WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "admit_smt_queries"), BoolStr),
         "Admit SMT queries, unsafe! (default 'false')");
 
       ( noshort,
         "admit_except",
-        SimpleStr "[symbol|(symbol, id)]",
+        WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "admit_except"), SimpleStr "[symbol|(symbol, id)]"),
         "Admit all queries, except those with label (<symbol>, <id>)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
 
        ( noshort,
@@ -863,7 +851,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "lax",
-        Const (Bool true),
+        WithSideEffect ((fun () -> if warn_unsafe then option_warning_callback "lax"), Const (Bool true)),
         "Run the lax-type checker only (admit all verification conditions)");
 
       ( noshort,
@@ -1033,6 +1021,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "reuse_hint_for",
         SimpleStr "toplevel_name",
         "Optimistically, attempt using the recorded hint for <toplevel_name> (a top-level name in the current module) when trying to verify some other term 'g'");
+
+       ( noshort,
+         "report_assumes",
+         EnumStr ["warn"; "error"],
+         "Report every use of an escape hatch, include assume, admit, etc.");
 
        ( noshort,
         "silent",
@@ -1314,14 +1307,14 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
           This option is a module or namespace selector, like many other options (e.g., `--extract`)");
 
        ('h',
-        "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
+        "help", WithSideEffect ((fun _ -> display_usage_aux (specs warn_unsafe); exit 0),
                                 (Const (Bool true))),
         "Display this information")]
 
-and specs () : list<FStar.Getopt.opt> = // FIXME: Why does the interactive mode log the type of opt_specs_with_types as a triple??
+and specs (warn_unsafe:bool) : list<FStar.Getopt.opt> = // FIXME: Why does the interactive mode log the type of opt_specs_with_types as a triple??
   List.map (fun (short, long, typ, doc) ->
             mk_spec (short, long, arg_spec_of_opt_type long typ, doc))
-           (specs_with_types ())
+           (specs_with_types warn_unsafe)
 
 // Several options can only be set at the time the process is created,
 // and not controlled interactively via pragmas.
@@ -1372,6 +1365,7 @@ let settable = function
     | "record_options"
     | "retry"
     | "reuse_hint_for"
+    | "report_assumes"
     | "silent"
     | "smtencoding.elim_box"
     | "smtencoding.l_arith_repr"
@@ -1407,31 +1401,38 @@ let settable = function
     | "profile" -> true
     | _ -> false
 
-let all_specs = specs ()
-let all_specs_with_types = specs_with_types ()
+let all_specs = specs true
+let all_specs_with_types = specs_with_types true
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PUBLIC API
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-let display_usage () = display_usage_aux (specs())
+let set_error_flags_callback_aux,
+    set_error_flags =
+    let callback : ref<(option<(unit -> parse_cmdline_res)>)> = mk_ref None in
+    let set f = callback := Some f in
+    let call () =
+      match !callback with
+      | None -> failwith "Error flags callback not yet set"
+      | Some f -> f ()
+    in
+    set, call
+
+let set_error_flags_callback = set_error_flags_callback_aux
+let display_usage () = display_usage_aux all_specs
 
 let fstar_bin_directory = Util.get_exec_dir ()
-
-exception File_argument of string
-
-let set_options s =
-    try
-        if s = ""
-        then Success
-        else Getopt.parse_string settable_specs (fun s -> raise (File_argument s); ()) s
-    with
-    | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
 
 let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
 let parse_cmd_line () =
   let res = Getopt.parse_cmdline all_specs (fun i -> file_list_ := !file_list_ @ [i]) in
+  let res =
+    if res = Success
+    then set_error_flags()
+    else res
+  in
   res, List.map FC.try_convert_file_name_to_mixed !file_list_
 
 let file_list () =
@@ -1442,7 +1443,7 @@ let restore_cmd_line_options should_clear =
      * Add them here as needed. *)
     let old_verify_module = get_verify_module() in
     if should_clear then clear() else init();
-    let r = Getopt.parse_cmdline (specs()) (fun x -> ()) in
+    let r = Getopt.parse_cmdline (specs false) (fun x -> ()) in
     set_option' ("verify_module", List (List.map String old_verify_module));
     r
 
@@ -1695,6 +1696,7 @@ let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()
 let retry                        () = get_retry                       ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
+let report_assumes               () = get_report_assumes              ()
 let silent                       () = get_silent                      ()
 let smtencoding_elim_box         () = get_smtencoding_elim_box        ()
 let smtencoding_nl_arith_native  () = get_smtencoding_nl_arith_repr () = "native"
@@ -1729,6 +1731,7 @@ let vcgen_decorate_with_type     () = match get_vcgen_optimize_bind_as_seq  () w
                                       | Some "with_type" -> true
                                       | _ -> false
 let warn_default_effects         () = get_warn_default_effects        ()
+let warn_error                   () = String.concat " " (get_warn_error())
 let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
                                     | Some s -> s
@@ -1741,7 +1744,6 @@ let use_two_phase_tc             () = get_use_two_phase_tc            ()
                                     && not (lax())
 let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
-let warn_error                   () = String.concat "" (get_warn_error ())
 let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
 let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
@@ -1826,16 +1828,6 @@ let should_be_already_cached m =
   | Some already_cached_setting ->
     module_matches_namespace_filter m already_cached_setting
 
-let error_flags =
-    let cache : Util.smap<list<error_flag>> = Util.smap_create 10 in
-    fun () ->
-        let we = warn_error() in
-        match Util.smap_try_find cache we with
-        | None ->
-          let r = parse_warn_error we in
-          Util.smap_add cache we r;
-          r
-        | Some r -> r
 
 let profile_enabled modul_opt phase =
   match modul_opt with
@@ -1845,3 +1837,16 @@ let profile_enabled modul_opt phase =
   | Some modul ->
     matches_namespace_filter_opt modul (get_profile())
     && matches_namespace_filter_opt phase (get_profile_component())
+
+exception File_argument of string
+
+let set_options s =
+    try
+        if s = ""
+        then Success
+        else let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); ()) s in
+             if res=Success
+             then set_error_flags()
+             else res
+    with
+    | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)

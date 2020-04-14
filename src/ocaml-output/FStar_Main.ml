@@ -305,8 +305,7 @@ let (lazy_chooser :
   
 let (setup_hooks : unit -> unit) =
   fun uu____626  ->
-    FStar_Options.initialize_parse_warn_error
-      FStar_Parser_ParseIt.parse_warn_error;
+    FStar_Errors.set_parse_warn_error FStar_Parser_ParseIt.parse_warn_error;
     FStar_ST.op_Colon_Equals FStar_Syntax_Syntax.lazy_chooser
       (FStar_Pervasives_Native.Some lazy_chooser);
     FStar_ST.op_Colon_Equals FStar_Syntax_Util.tts_f

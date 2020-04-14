@@ -518,6 +518,23 @@ type array : Type -> Type0
 irreducible
 let deprecated (s: string) : unit = ()
 
+(** This attribute can be added to the declaration or definition of
+    any top-level symbol. It causes F* to report a warning on any
+    use of that symbol, printing the [msg] argument.
+    
+    This is used, for instance to:
+    
+    - tag every escape hatch, e.g., [assume], [admit], etc
+
+    Reports for uses of symbols tagged with this attribute
+    are controlled using the `--report_assumes` option
+    and warning number 334. 
+    
+    See tests/micro-benchmarks/WarnOnUse.fst
+ *)
+irreducible
+let warn_on_use (msg: string) : unit = ()
+
 (** String concatenation and its abbreviation as [^].  TODO, both
     should be removed in favor of what is present in FStar.String *)
 assume
@@ -605,27 +622,32 @@ let as_ensures (#a: Type) (wp: pure_wp a) (x: a) = ~(wp (fun y -> (y =!= x)))
 (** The keyword term-level keyword [assume] is desugared to [_assume].
     It explicitly provides an escape hatch to assume a given property
     [p]. *)
+[@(warn_on_use "uses an axiom")]
 assume
 val _assume (p: Type) : Pure unit (requires (True)) (ensures (fun x -> p))
 
 (** [admit] is another escape hatch: It discards the continuation and
     returns a value of any type *)
+[@(warn_on_use "uses an axiom")]
 assume
 val admit: #a: Type -> unit -> Admit a
 
 (** [magic] is another escape hatch: It retains the continuation but
     returns a value of any type *)
+[@(warn_on_use "uses an axiom")]
 assume
 val magic: #a: Type -> unit -> Tot a
 
 (** [unsafe_coerce] is another escape hatch: It coerces an [a] to a
     [b].  *)
+[@(warn_on_use "uses an axiom")]
 irreducible
 let unsafe_coerce (#a #b: Type) (x: a) : b =
   admit ();
   x
 
 (** [admitP]: TODO: Unused ... remove? *)
+[@(warn_on_use "uses an axiom")]
 assume
 val admitP (p: Type) : Pure unit True (fun x -> p)
 
