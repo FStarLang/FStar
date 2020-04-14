@@ -753,7 +753,7 @@ let (encode_string_const : Prims.string -> FStar_SMTEncoding_Term.term) =
          aux acc1 (i + Prims.int_one) bs)
        in
     let id =
-      let uu____2213 = FStar_Compiler_Bytes.string_as_unicode_bytes s  in
+      let uu____2213 = FStar_Compiler_Bytes.string_as_utf8_bytes s  in
       aux FStar_BigInt.zero Prims.int_zero uu____2213  in
     let uu____2215 = FStar_SMTEncoding_Util.mk_String_const id  in
     FStar_All.pipe_left FStar_SMTEncoding_Term.boxString uu____2215
