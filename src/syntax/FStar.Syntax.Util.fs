@@ -722,7 +722,6 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
-  | Sig_main _ 
   | Sig_fail _
   | Sig_polymonadic_bind _ -> []
 

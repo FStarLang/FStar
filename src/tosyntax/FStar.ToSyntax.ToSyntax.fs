@@ -508,7 +508,6 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
 
   | Sig_new_effect _
   | Sig_sub_effect _
-  | Sig_main _
   | Sig_polymonadic_bind _
   | Sig_splice _
   | Sig_pragma _ ->
@@ -3060,16 +3059,6 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       if List.isEmpty bvs && not (is_var_pattern pat)
       then build_coverage_check main_let
       else List.fold_left build_projection main_let bvs
-
-  | Main t ->
-    let e = desugar_term env t in
-    let se = { sigel = Sig_main(e);
-               sigquals = [];
-               sigrng = d.drange;
-               sigmeta = default_sigmeta  ;
-               sigattrs = [];
-               sigopts = None; } in
-    env, [se]
 
   | Assume(id, t) ->
     let f = desugar_formula env t in

@@ -1026,7 +1026,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_fail _ ->
          failwith "impossible -- Sig_fail should have been removed by Tc.fs"
      | Sig_pragma _
-     | Sig_main _
      | Sig_effect_abbrev _
      | Sig_sub_effect _
      | Sig_polymonadic_bind _ -> [], env

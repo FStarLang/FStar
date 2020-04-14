@@ -613,7 +613,6 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       let g, bindings = Term.extract_lb_iface g lbs in
       g, iface_of_bindings bindings
 
-    | Sig_main _
     | Sig_assume _
     | Sig_sub_effect  _
     | Sig_effect_abbrev _
@@ -938,10 +937,6 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
                 end
          else g, [] //it's not assumed, so wait for the corresponding Sig_let to generate code
                     //or, it must be erased
-
-       | Sig_main(e) ->
-         let ml_main, _, _ = Term.term_as_mlexpr g e in
-         g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Top ml_main]
 
        | Sig_assume _ //not needed; purely logical
        | Sig_sub_effect  _

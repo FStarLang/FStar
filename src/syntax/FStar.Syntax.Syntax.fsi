@@ -473,7 +473,6 @@ type sigelt' =
                           * typ
   | Sig_let               of letbindings
                           * list<lident>               //mutually defined
-  | Sig_main              of term
   | Sig_assume            of lident
                           * univ_names
                           * formula

@@ -815,7 +815,6 @@ let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
       | Sig_splice  _ ->
         failwith "impossible: delta_depth_of_qninfo"
 
-      | Sig_main   _
       | Sig_assume _
       | Sig_new_effect _
       | Sig_sub_effect _

@@ -537,18 +537,6 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let uvs, t = tc_assume env (uvs, t) se.sigrng in
     [ { se with sigel = Sig_assume (lid, uvs, t) }], [], env0
 
-  | Sig_main(e) ->
-    let env = Env.set_range env r in
-    let env = Env.set_expected_typ env t_unit in
-    let e, c, g1 = tc_term env e in
-    let e, _, g =
-      let c, g_lc = TcComm.lcomp_comp c in
-      let e, _x, g = check_expected_effect env (Some (U.ml_comp t_unit r)) (e, c) in
-      e, _x, Env.conj_guard g_lc g in
-    Rel.force_trivial_guard env (Env.conj_guard g1 g);
-    let se = { se with sigel = Sig_main(e) } in
-    [se], [], env0
-
   | Sig_splice (lids, t) ->
     if Options.debug_any () then
         BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
@@ -896,8 +884,6 @@ let for_export env hidden se : list<sigelt> * list<lident> =
     else [], hidden   //other declarations vanish
                       //they will be replaced by the definitions that must follow
 
-  | Sig_main  _ -> [], hidden
-
   | Sig_new_effect     _
   | Sig_sub_effect     _
   | Sig_effect_abbrev  _
@@ -1102,7 +1088,6 @@ let check_exports env (modul:modul) exports : unit =
           if not (se.sigquals |> List.contains Private)
           then let arrow = S.mk (Tm_arrow(binders, comp)) None se.sigrng in
                check_term l univs arrow
-        | Sig_main _
         | Sig_assume _
         | Sig_new_effect _
         | Sig_sub_effect _
@@ -1238,7 +1223,6 @@ let extract_interface (en:env) (m:modul) :modul =
           let should_keep_defs = List.existsML (fun (_, t, _) -> t |> should_keep_lbdef) typs_and_defs in
           if should_keep_defs then [ s ]
           else vals
-    | Sig_main t -> failwith "Did not anticipate main would arise when extracting interfaces!"
     | Sig_assume (lid, _, _) ->
       //keep hasEq of abstract inductive, and drop for others (since they will be regenerated)
       let is_haseq = TcInductive.is_haseq_lid lid in
