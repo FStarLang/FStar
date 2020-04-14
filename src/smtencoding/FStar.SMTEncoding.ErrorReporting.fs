@@ -111,6 +111,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
      =  match q.tm with
         | BoundV _
         | Integer _
+        | String _
         | Real _ ->
           labels, q
 
