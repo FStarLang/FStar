@@ -825,7 +825,28 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let t_decls = [tdecl; k_assumption; pre_typing; t_interp] in
              t, decls@decls'@guard_decls@(mk_decls tsym tkey_hash t_decls (decls@decls'@guard_decls))
 
-        else let tsym = varops.fresh module_name "Non_total_Tm_arrow" in
+        else 
+             (*
+              * AR: compute a hash for the Non total arrow,
+              *       that we will use in the name of the arrow
+              *       so that we can get some hashconsing
+              *)
+             let tkey_hash =
+               (*
+                * AR: any decls computed here are ignored
+                *     we encode terms in this let-scope just to compute a hash
+                *)
+               let vars, guards_l, env_bs, _, _ = encode_binders None binders env in
+               let c = Env.unfold_effect_abbrev env.tcenv res |> S.mk_Comp in
+               let ct, _ = encode_term (c |> U.comp_result) env_bs in
+               let effect_args, _ = encode_args (c |> U.comp_effect_args) env_bs in
+               let tkey = mkForall t.pos
+                 ([], vars, mk_and_l (guards_l@[ct]@effect_args)) in
+               let tkey_hash = "Non_total_Tm_arrow" ^ (hash_of_term tkey) ^ "@Effect=" ^
+                 (c |> U.comp_effect_name |> string_of_lid) in
+               BU.digest_of_string tkey_hash in                 
+        
+             let tsym = "Non_total_Tm_arrow_" ^ tkey_hash in
              let tdecl = Term.DeclFun(tsym, [], Term_sort, None) in
              let t = mkApp(tsym, []) in
              let t_kinding =
@@ -845,7 +866,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                               Some a_name,
                               a_name) in
 
-             t, [tdecl; t_kinding; t_interp] |> mk_decls_trivial (* TODO: At least preserve alpha-equivalence of non-pure function types *)
+             t, mk_decls tsym tkey_hash [tdecl; t_kinding; t_interp] []
 
       | Tm_refine _ ->
         let x, f =
