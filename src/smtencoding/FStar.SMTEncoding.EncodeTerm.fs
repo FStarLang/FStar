@@ -407,7 +407,7 @@ let encode_string_const (s:string) : term =
         (BigInt.mult_big_int (256 |> BigInt.of_int_fs) acc)
         (CBytes.get bs i |> BigInt.of_int_fs) in
       aux acc (i+1) bs in
-  let id = aux BigInt.zero 0 (CBytes.string_as_unicode_bytes s) in
+  let id = aux BigInt.zero 0 (CBytes.string_as_utf8_bytes s) in
   Term.boxString <| mk_String_const id
 
 let rec encode_const c env =
