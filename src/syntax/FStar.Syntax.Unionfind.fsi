@@ -5,12 +5,22 @@ module FStar.Syntax.Unionfind
  * universes on top of the existing union-find implementation. *)
 
 open FStar.All
+module Range = FStar.Range
 module S = FStar.Syntax.Syntax
 
 type uf
 val get : unit -> uf
 val set : uf -> unit
 val reset : unit -> unit
+
+(* Set read-only mode *)
+val set_ro : unit -> unit
+
+(* Set read-write mode *)
+val set_rw : unit -> unit
+
+(* Run a function with rw mode enabled *)
+val with_uf_enabled : (unit -> 'a) -> 'a
 
 type tx
 val new_transaction    : (unit -> tx)
