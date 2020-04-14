@@ -1636,7 +1636,7 @@ let (add_step :
   primitive_step -> prim_step_set -> primitive_step FStar_Util.psmap) =
   fun s  ->
     fun ss  ->
-      let uu____3549 = FStar_Ident.text_of_lid s.name  in
+      let uu____3549 = FStar_Ident.string_of_lid s.name  in
       FStar_Util.psmap_add ss uu____3549 s
   
 let (merge_steps : prim_step_set -> prim_step_set -> prim_step_set) =
@@ -1730,7 +1730,7 @@ let (find_prim_step :
   fun cfg1  ->
     fun fv  ->
       let uu____3886 =
-        FStar_Ident.text_of_lid
+        FStar_Ident.string_of_lid
           (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
          in
       FStar_Util.psmap_try_find cfg1.primitive_steps uu____3886
@@ -1740,7 +1740,7 @@ let (is_prim_step : cfg -> FStar_Syntax_Syntax.fv -> Prims.bool) =
     fun fv  ->
       let uu____3900 =
         let uu____3903 =
-          FStar_Ident.text_of_lid
+          FStar_Ident.string_of_lid
             (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
            in
         FStar_Util.psmap_try_find cfg1.primitive_steps uu____3903  in
@@ -1823,7 +1823,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
              (match uu____4323 with
               | (FStar_Syntax_Syntax.Tm_fvar fv1,(arg,uu____4360)::[]) when
                   let uu____4395 =
-                    FStar_Ident.text_of_lid
+                    FStar_Ident.string_of_lid
                       (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                      in
                   FStar_Util.ends_with uu____4395 "int_to_t" ->

@@ -207,7 +207,7 @@ let (mk_ApplyTT :
   FStar_SMTEncoding_Term.term ->
     FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)
   = norng2 FStar_SMTEncoding_Term.mk_ApplyTT 
-let (mk_String_const : Prims.int -> FStar_SMTEncoding_Term.term) =
+let (mk_String_const : Prims.string -> FStar_SMTEncoding_Term.term) =
   norng FStar_SMTEncoding_Term.mk_String_const 
 let (mk_Precedes :
   FStar_SMTEncoding_Term.term ->
