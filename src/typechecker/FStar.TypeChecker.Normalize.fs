@@ -149,12 +149,12 @@ let downgrade_ghost_effect_name l =
 (*          where the size of the list is at least 2                                                                *)
 (********************************************************************************************************************)
 let norm_universe cfg (env:env) u =
-    let norm_univs us =
+    let norm_univs_for_max us =
         let us = BU.sort_with U.compare_univs us in
         (* us is in sorted order;                                                               *)
         (* so, for each sub-sequence in us with a common kernel, just retain the largest one    *)
         (* e.g., normalize [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2]         *)
-        (*            to   [        S S Z;     S u1;           S S u2;      S ?v1; ?v2]          *)
+        (*            to   [        S S Z;     S u1;           S S u2;      S ?v1; ?v2]         *)
         let _, u, out =
             List.fold_left (fun (cur_kernel, cur_max, out) u ->
                 let k_u, n = U.univ_kernel u in
@@ -168,7 +168,7 @@ let norm_universe cfg (env:env) u =
     (*   1. flattening all max nodes                                   *)
     (*   2. pushing all S nodes under a single top-level max node      *)
     (*   3. sorting the terms in a max node, and partially evaluate it *)
-    let rec aux u =
+    let rec aux (u:universe) : list<universe> =
         let u = Subst.compress_univ u in
         match u with
           | U_bvar x ->
@@ -197,7 +197,7 @@ let norm_universe cfg (env:env) u =
           | U_unknown -> [u]
           | U_max []  -> [U_zero]
           | U_max us ->
-            let us = List.collect aux us |> norm_univs in
+            let us = List.collect aux us |> norm_univs_for_max in
             begin match us with
             | u_k::hd::rest ->
               let rest = hd::rest in
