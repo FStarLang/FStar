@@ -782,8 +782,8 @@ let termToSmt
   : print_ranges:bool -> enclosing_name:string -> t:term -> string
   =
   //a counter and a hash table for string constants to integer ids mapping
-  let string_id_counter : ref int = BU.mk_ref 0 in
-  let string_cache : BU.smap<string> = BU.smap_create 20 in
+  let string_id_counter = BU.mk_ref 0 in
+  let string_cache= BU.smap_create 20 in
 
   fun print_ranges enclosing_name t ->
       let next_qid =
