@@ -404,16 +404,20 @@ let json_of_issue_level i =
            | EError -> "error")
 
 let json_of_issue issue =
-  JsonAssoc [("level", json_of_issue_level issue.issue_level);
-             ("message", JsonStr issue.issue_message);
-             ("ranges", JsonList
-                          ((match issue.issue_range with
-                            | None -> []
-                            | Some r -> [json_of_use_range r]) @
-                           (match issue.issue_range with
-                            | Some r when def_range r <> use_range r ->
-                              [json_of_def_range r]
-                            | _ -> [])))]
+  JsonAssoc <|
+     [("level", json_of_issue_level issue.issue_level)]
+    @(match issue.issue_number with
+      | None -> []
+      | Some n -> [("number", JsonInt n)])
+    @[("message", JsonStr issue.issue_message);
+      ("ranges", JsonList
+                   ((match issue.issue_range with
+                     | None -> []
+                     | Some r -> [json_of_use_range r]) @
+                    (match issue.issue_range with
+                     | Some r when def_range r <> use_range r ->
+                       [json_of_def_range r]
+                     | _ -> [])))]
 
 let alist_of_symbol_lookup_result lr =
   [("name", JsonStr lr.slr_name);
