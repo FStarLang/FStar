@@ -1211,7 +1211,7 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
 
       | _ -> raise_error (Errors.Fatal_UnsupportedConstant, "Unsupported constant") r
   in
-  { res with pos = r }
+  SS.set_use_range r res
 
 
 (************************************************************************************************************)
