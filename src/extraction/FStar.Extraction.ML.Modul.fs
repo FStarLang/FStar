@@ -34,6 +34,7 @@ module MLS = FStar.Extraction.ML.Syntax
 module BU = FStar.Util
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
+module UF = FStar.Syntax.Unionfind
 module U  = FStar.Syntax.Util
 module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
@@ -653,14 +654,15 @@ let extract_iface' (g:env_t) modul =
     res
 
 let extract_iface (g:env_t) modul =
-    let g, iface =
+  let g, iface =
+    UF.with_uf_enabled (fun () ->
       if Options.debug_any()
       then FStar.Util.measure_execution_time
              (BU.format1 "Extracted interface of %s" (string_of_lid modul.name))
              (fun () -> extract_iface' g modul)
-      else extract_iface' g modul
-    in
-    UEnv.exit_module g, iface
+      else extract_iface' g modul)
+  in
+  UEnv.exit_module g, iface
 
 (********************************************************************************************)
 (* Extract Implementations *)
@@ -982,12 +984,14 @@ let extract (g:uenv) (m:modul) =
   ignore <| Options.restore_cmd_line_options true;
   if not (Options.should_extract (string_of_lid m.name))
   then failwith (BU.format1 "Extract called on a module %s that should not be extracted" (Ident.string_of_lid m.name));
-  if Options.interactive() then g, None else
+  if Options.interactive() then g, None else begin
   let g, mllib =
+    UF.with_uf_enabled (fun () ->
       if Options.debug_any ()
       then let msg = BU.format1 "Extracting module %s" (Print.lid_to_string m.name) in
            BU.measure_execution_time msg (fun () -> extract' g m)
-      else extract' g m
+      else extract' g m)
   in
   ignore <| Options.restore_cmd_line_options true;
   exit_module g, mllib
+  end
