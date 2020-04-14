@@ -147,49 +147,53 @@ let constant_univ_as_nat u = snd (univ_kernel u)
 //    unification variables next, in lexical order of their kernels and their offsets
 //    max terms come last
 //e.g, [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2]
-let rec compare_univs u1 u2 = match u1, u2 with
+let rec compare_univs (u1:universe) (u2:universe) : int =
+  let rec compare_kernel (uk1:universe) (uk2:universe) : int =
+    match uk1, uk2 with
     | U_bvar _, _
-    | _, U_bvar _  -> failwith "Impossible: compare_univs"
+    | _, U_bvar _  -> failwith "Impossible: compare_kernel bvar"
+
+    | U_succ _, _
+    | _, U_succ _  -> failwith "Impossible: compare_kernel succ"
 
     | U_unknown, U_unknown -> 0
     | U_unknown, _ -> -1
-    | _, U_unknown -> 1
+    | _, U_unknown ->  1
 
     | U_zero, U_zero -> 0
     | U_zero, _ -> -1
-    | _, U_zero -> 1
+    | _, U_zero ->  1
 
     | U_name u1 , U_name u2 -> String.compare (text_of_id u1) (text_of_id u2)
-    | U_name _, U_unif _ -> -1
-    | U_unif _, U_name _ -> 1
+    | U_name _, _ -> -1
+    | _, U_name _ ->  1
 
     | U_unif u1, U_unif u2 -> Unionfind.univ_uvar_id u1 - Unionfind.univ_uvar_id u2
+    | U_unif _, _ -> -1
+    | _, U_unif _ ->  1
 
+    (* Only remaining case *)
     | U_max us1, U_max us2 ->
       let n1 = List.length us1 in
       let n2 = List.length us2 in
       if n1 <> n2
-      then n1 - n2
-      else let copt = U.find_map (List.zip us1 us2) (fun (u1, u2) ->
-                let c = compare_univs u1 u2 in
-                if c<>0 then Some c
-                else None) in
-           begin match copt with
-            | None -> 0
-            | Some c -> c
-           end
-
-    | U_max _, _ -> -1
-
-    | _, U_max _ -> 1
-
-    | _ ->
-        let k1, n1 = univ_kernel u1 in
-        let k2, n2 = univ_kernel u2 in
-        let r = compare_univs k1 k2 in
-        if r=0
-        then n1 - n2
-        else r
+      then n1 - n2 (* first order by increasing length *)
+      else
+        (* for same length, order lexicographically *)
+        let copt = U.find_map (List.zip us1 us2) (fun (u1, u2) ->
+             let c = compare_univs u1 u2 in
+             if c<>0 then Some c
+             else None) in
+        begin match copt with
+         | None -> 0
+         | Some c -> c
+        end
+  in
+  let uk1, n1 = univ_kernel u1 in
+  let uk2, n2 = univ_kernel u2 in
+  match compare_kernel uk1 uk2 with
+  | 0 -> n1 - n2
+  | n -> n
 
 let eq_univs u1 u2 = compare_univs u1 u2 = 0
 
