@@ -88,7 +88,7 @@ type worklist = {
 (* --------------------------------------------------------- *)
 let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
     let ctx_uvar = {
-         ctx_uvar_head=UF.fresh();
+         ctx_uvar_head=UF.fresh r;
          ctx_uvar_gamma=gamma;
          ctx_uvar_binders=binders;
          ctx_uvar_typ=k;

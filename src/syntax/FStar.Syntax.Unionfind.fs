@@ -89,7 +89,7 @@ let set_term_graph tg =
   set ({get() with term_graph = tg})
 
 (*private*)
-let chk_v_t (u, v) =
+let chk_v_t (u, v, rng) =
     let uvar_to_string u = "?" ^ (PU.puf_id (get_term_graph ()) u |> BU.string_of_int) in
     let expected = get_version () in
     if v.major = expected.major
@@ -101,10 +101,10 @@ let chk_v_t (u, v) =
                         (uvar_to_string u)
                         (version_to_string expected)
                         (version_to_string v))
-                  Range.dummyRange
+                  rng
 
 let uvar_id u  = PU.puf_id (get_term_graph()) (chk_v_t u)
-let fresh ()   = PU.puf_fresh (get_term_graph()) None, get_version()
+let fresh rng  = PU.puf_fresh (get_term_graph()) None, get_version(), rng
 let find u     = PU.puf_find (get_term_graph()) (chk_v_t u)
 let change u t = set_term_graph (PU.puf_change (get_term_graph()) (chk_v_t u) (Some t))
 let equiv u v  = PU.puf_equivalent (get_term_graph()) (chk_v_t u) (chk_v_t v)
@@ -118,7 +118,7 @@ let union  u v = set_term_graph (PU.puf_union (get_term_graph()) (chk_v_t u) (ch
 let get_univ_graph () = (get()).univ_graph
 
 (*private*)
-let chk_v_u (u, v) =
+let chk_v_u (u, v, rng) =
     let uvar_to_string u = "?" ^ (PU.puf_id (get_univ_graph ()) u |> BU.string_of_int) in
     let expected = get_version () in
     if v.major = expected.major
@@ -130,14 +130,14 @@ let chk_v_u (u, v) =
                         (uvar_to_string u)
                         (version_to_string expected)
                         (version_to_string v))
-                  Range.dummyRange
+                  rng
 
 (*private*)
 let set_univ_graph (ug:ugraph) =
   set ({get() with univ_graph = ug})
 
 let univ_uvar_id u  = PU.puf_id (get_univ_graph()) (chk_v_u u)
-let univ_fresh ()   = PU.puf_fresh (get_univ_graph()) None, get_version()
+let univ_fresh rng  = PU.puf_fresh (get_univ_graph()) None, get_version(), rng
 let univ_find u     = PU.puf_find (get_univ_graph()) (chk_v_u u)
 let univ_change u t = set_univ_graph (PU.puf_change (get_univ_graph()) (chk_v_u u) (Some t))
 let univ_equiv  u v = PU.puf_equivalent (get_univ_graph()) (chk_v_u u) (chk_v_u v)
