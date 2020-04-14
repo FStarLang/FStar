@@ -132,9 +132,9 @@ let rec univ_kernel u = match u with
     | U_unknown
     | U_name _
     | U_unif _
+    | U_max _
     | U_zero -> u, 0
     | U_succ u -> let k, n = univ_kernel u in k, n+1
-    | U_max _  -> failwith "Imposible: univ_kernel (U_max _)"
     | U_bvar _ -> failwith "Imposible: univ_kernel (U_bvar _)"
 
 //requires: kernel u = U_zero, n
