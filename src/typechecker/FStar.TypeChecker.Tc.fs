@@ -1076,8 +1076,8 @@ let check_exports env (modul:modul) exports : unit =
     let check_term lid univs t =
         let _ = Errors.message_prefix.set_prefix
                 (BU.format2 "Interface of %s violates its abstraction (add a 'private' qualifier to '%s'?)"
-                        (Print.lid_to_string modul.name)
-                        (Print.lid_to_string lid)) in
+                        (string_of_lid modul.name)
+                        (string_of_lid lid)) in
         check_term lid univs t;
         Errors.message_prefix.clear_prefix()
     in
