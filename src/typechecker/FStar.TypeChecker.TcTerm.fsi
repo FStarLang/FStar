@@ -29,7 +29,9 @@ val check_type_of_well_typed_term: bool -> env -> term -> typ -> guard_t  // gua
 val check_type_of_well_typed_term': bool -> env -> term -> typ -> guard_t // always fast
 
 val tc_tot_or_gtot_term: env -> term -> term * lcomp * guard_t
-val tc_check_tot_or_gtot_term: env -> term -> typ -> term * lcomp * guard_t
+//the last string argument is the reason to be printed in the error message
+//pass "" if NA
+val tc_check_tot_or_gtot_term: env -> term -> typ -> string -> term * lcomp * guard_t
 val tc_tactic : typ -> typ -> env -> term -> term * lcomp * guard_t
 val tc_trivial_guard: env -> term -> term * lcomp
 val tc_check_trivial_guard: env -> term -> term -> term
