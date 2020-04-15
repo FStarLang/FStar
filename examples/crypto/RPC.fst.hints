@@ -163,7 +163,7 @@
         "typing_Platform.Bytes.utf8", "typing_RPC.k"
       ],
       0,
-      "7c1c2667a26eef10eea762791cb8c3ba"
+      "77a65c5039205aad8bef86058963d0c7"
     ],
     [
       "RPC.test",
@@ -184,7 +184,7 @@
         "typing_Platform.Bytes.utf8", "unit_typing"
       ],
       0,
-      "ec4d21bef54e0dfb377676d5c981d349"
+      "ac7c6276dc235b74c9b1bd468b036a6d"
     ],
     [
       "RPC.reqresp",
