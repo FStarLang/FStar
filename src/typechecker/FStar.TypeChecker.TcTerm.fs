@@ -590,7 +590,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_meta(e, Meta_pattern(names, pats)) ->
     let t, u = U.type_u () in
-    let e, c, g = tc_check_tot_or_gtot_term env e t in
+    let e, c, g = tc_check_tot_or_gtot_term env e t "" in
     //NS: PATTERN INFERENCE
     //if `pats` is empty (that means the user did not annotate a pattern).
     //In that case try to infer a pattern by
@@ -716,7 +716,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
   | Tm_ascribed (e, (Inl t, topt), _) ->
     let k, u = U.type_u () in
-    let t, _, f = tc_check_tot_or_gtot_term env t k in
+    let t, _, f = tc_check_tot_or_gtot_term env t k "" in
     let topt, gtac = tc_tactic_opt env topt in
     let e, c, g = tc_term (Env.set_expected_typ env t) e in
     //NS: Maybe redundant strengthen
@@ -1051,7 +1051,7 @@ and tc_synth head env args rng =
 
 and tc_tactic a b env tau =
     let env = { env with failhard = true } in
-    tc_check_tot_or_gtot_term env tau (t_tac_of a b)
+    tc_check_tot_or_gtot_term env tau (t_tac_of a b) ""
 
 and tc_tactic_opt env topt : option<term> * guard_t =
     match topt with
@@ -1201,7 +1201,8 @@ and tc_value env (e:term) : term
     then BU.print3 "(%s) Checking refinement formula %s; binder is %s\n"
         (Range.string_of_range top.pos) (Print.term_to_string phi) (Print.bv_to_string (fst x));
     let t_phi, _ = U.type_u () in
-    let phi, _, f2 = tc_check_tot_or_gtot_term env phi t_phi in
+    let phi, _, f2 = tc_check_tot_or_gtot_term env phi t_phi
+      "refinement formula must be pure or ghost" in
     let e = {U.refine (fst x) phi with pos=top.pos} in
     let t = mk (Tm_type u) None top.pos in
     let g = Env.conj_guard f1 (Env.close_guard_univs [u] [x] f2) in
@@ -1266,12 +1267,12 @@ and tc_comp env c : comp                                      (* checked version
   match c.n with
     | Total (t, _) ->
       let k, u = U.type_u () in
-      let t, _, g = tc_check_tot_or_gtot_term env t k in
+      let t, _, g = tc_check_tot_or_gtot_term env t k "" in
       mk_Total' t (Some u), u, g
 
     | GTotal (t, _) ->
       let k, u = U.type_u () in
-      let t, _, g = tc_check_tot_or_gtot_term env t k in
+      let t, _, g = tc_check_tot_or_gtot_term env t k "" in
       mk_GTotal' t (Some u), u, g
 
     | Comp c ->
@@ -1280,7 +1281,7 @@ and tc_comp env c : comp                                      (* checked version
          | [] -> head
          | us -> S.mk (Tm_uinst(head, us)) None c0.pos in
       let tc = mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) None c.result_typ.pos in
-      let tc, _, f = tc_check_tot_or_gtot_term env tc S.teff in
+      let tc, _, f = tc_check_tot_or_gtot_term env tc S.teff "" in
       let head, args = U.head_and_args tc in
       let comp_univs = match (SS.compress head).n with
         | Tm_uinst(_, us) -> us
@@ -2045,7 +2046,8 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
           let args, guard, ghost = List.fold_left2 (fun (seen, guard, ghost) (e, aq) (b, aq') ->
                 if eq_aqual aq aq' <> Equal
                 then raise_error (Errors.Fatal_InconsistentImplicitQualifier, "Inconsistent implicit qualifiers") e.pos;
-                let e, c, g = tc_check_tot_or_gtot_term env e b.sort in //NS: this forbids stuff like !x && y, maybe that's ok
+                let e, c, g = tc_check_tot_or_gtot_term env e b.sort
+                  "arguments to short circuiting operators must be pure or ghost" in //NS: this forbids stuff like !x && y, maybe that's ok
                 let short = TcUtil.short_circuit head seen in
                 let g = Env.imp_guard (Env.guard_of_guard_formula short) g in
                 let ghost = ghost
@@ -2580,7 +2582,7 @@ and tc_eqn scrutinee env branch
              then TcUtil.fvar_const env Const.true_lid //if we're not verifying, then don't even bother building it
              else let t = U.mk_conj_l <| build_branch_guard scrutinee_tm pattern pat in
                   let k, _ = U.type_u() in
-                  let t, _, _ = tc_check_tot_or_gtot_term scrutinee_env t k in
+                  let t, _, _ = tc_check_tot_or_gtot_term scrutinee_env t k "" in
                   //NS: discarding the guard here means that the VC is not fully type-checked
                   //    and may contain unresolved unification variables, e.g. FIXME!
                   t in
@@ -3146,7 +3148,7 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t * guard_t =
             if not check_t
             then g_acc, t
             else (let env0 = Env.push_univ_vars env0 univ_vars in
-                  let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) in
+                  let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) "" in
                   Env.conj_guard g_acc (g |> Rel.resolve_implicits env |> Rel.discharge_guard env), norm env0 t) in
         let env = if termination_check_enabled lb.lbname e t  //AR: This code also used to have && Env.should_verify env
                                                               //i.e. when lax checking it was adding lbname in the second branch
@@ -3251,7 +3253,7 @@ and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, 
           then Some t, Env.trivial_guard, univ_vars, univ_opening, Env.set_expected_typ env1 t //t has already been kind-checked
           else //we have an inline annotation
                let k, _ = U.type_u () in
-               let t, _, g = tc_check_tot_or_gtot_term env1 t k in
+               let t, _, g = tc_check_tot_or_gtot_term env1 t k "" in
                if debug env Options.Medium
                then BU.print2 "(%s) Checked type annotation %s\n"
                         (Range.string_of_range (range_of_lbname lb.lbname))
@@ -3267,7 +3269,7 @@ and tc_binder env (x, imp) =
                    (Print.bv_to_string x)
                    (Print.term_to_string x.sort)
                    (Print.term_to_string tu);
-    let t, _, g = tc_check_tot_or_gtot_term env x.sort tu in //ghost effect ok in the types of binders
+    let t, _, g = tc_check_tot_or_gtot_term env x.sort tu "" in //ghost effect ok in the types of binders
     let imp, g' =
         match imp with
         | Some (Meta tau) ->
@@ -3304,10 +3306,9 @@ and tc_smt_pats en pats =
       let args, g' = tc_args en p in
       (args::pats, Env.conj_guard g g')) pats ([], Env.trivial_guard)
 
-and tc_tot_or_gtot_term env e : term
-                                * lcomp
-                                * guard_t =
-  let e, c, g = tc_maybe_toplevel_term env e in
+and tc_tot_or_gtot_term' (env:env) (e:term) (msg:string)
+: term * lcomp * guard_t
+= let e, c, g = tc_maybe_toplevel_term env e in
   if TcComm.is_tot_or_gtot_lcomp c
   then e, c, g
   else let g = Rel.solve_deferred_constraints env g in
@@ -3320,15 +3321,16 @@ and tc_tot_or_gtot_term env e : term
        match Rel.sub_comp env c target_comp with
         | Some g' -> e, TcComm.lcomp_of_comp target_comp, Env.conj_guard g (Env.conj_guard g_c g')
         | _ ->
-            if allow_ghost
-            then raise_error (Err.expected_ghost_expression e c) e.pos
-            else raise_error (Err.expected_pure_expression e c) e.pos
+          if allow_ghost
+          then raise_error (Err.expected_ghost_expression e c msg) e.pos
+          else raise_error (Err.expected_pure_expression e c msg) e.pos
 
-and tc_check_tot_or_gtot_term env e t : term
-                                      * lcomp
-                                      * guard_t =
-    let env = Env.set_expected_typ env t in
-    tc_tot_or_gtot_term env e
+and tc_tot_or_gtot_term env e = tc_tot_or_gtot_term' env e ""
+
+and tc_check_tot_or_gtot_term env e t msg
+: term * lcomp * guard_t
+= let env = Env.set_expected_typ env t in
+  tc_tot_or_gtot_term' env e msg
 
 and tc_trivial_guard env t =
   let t, c, g = tc_tot_or_gtot_term env t in
@@ -3336,7 +3338,7 @@ and tc_trivial_guard env t =
   t,c
 
 let tc_check_trivial_guard env t k =
-  let t, _, g = tc_check_tot_or_gtot_term env t k in
+  let t, _, g = tc_check_tot_or_gtot_term env t k "" in
   Rel.force_trivial_guard env g;
   t
 

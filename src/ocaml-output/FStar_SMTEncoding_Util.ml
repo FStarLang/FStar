@@ -207,7 +207,7 @@ let (mk_ApplyTT :
   FStar_SMTEncoding_Term.term ->
     FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)
   = norng2 FStar_SMTEncoding_Term.mk_ApplyTT 
-let (mk_String_const : FStar_BigInt.t -> FStar_SMTEncoding_Term.term) =
+let (mk_String_const : Prims.string -> FStar_SMTEncoding_Term.term) =
   norng FStar_SMTEncoding_Term.mk_String_const 
 let (mk_Precedes :
   FStar_SMTEncoding_Term.term ->
@@ -225,17 +225,17 @@ let (is_smt_reifiable_effect :
   fun en  ->
     fun l  ->
       (FStar_TypeChecker_Env.is_reifiable_effect en l) &&
-        (let uu____849 =
-           let uu____851 =
-             let uu____852 =
+        (let uu____851 =
+           let uu____853 =
+             let uu____854 =
                FStar_All.pipe_right l
                  (FStar_TypeChecker_Env.norm_eff_name en)
                 in
-             FStar_All.pipe_right uu____852
+             FStar_All.pipe_right uu____854
                (FStar_TypeChecker_Env.get_effect_decl en)
               in
-           FStar_All.pipe_right uu____851 FStar_Syntax_Util.is_layered  in
-         Prims.op_Negation uu____849)
+           FStar_All.pipe_right uu____853 FStar_Syntax_Util.is_layered  in
+         Prims.op_Negation uu____851)
   
 let (is_smt_reifiable_comp :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.comp -> Prims.bool) =
@@ -244,7 +244,7 @@ let (is_smt_reifiable_comp :
       match c.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Comp ct ->
           is_smt_reifiable_effect en ct.FStar_Syntax_Syntax.effect_name
-      | uu____868 -> false
+      | uu____870 -> false
   
 let (is_smt_reifiable_rc :
   FStar_TypeChecker_Env.env ->
@@ -258,11 +258,11 @@ let (is_smt_reifiable_function :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun en  ->
     fun t  ->
-      let uu____896 =
-        let uu____897 = FStar_Syntax_Subst.compress t  in
-        uu____897.FStar_Syntax_Syntax.n  in
-      match uu____896 with
-      | FStar_Syntax_Syntax.Tm_arrow (uu____901,c) ->
+      let uu____898 =
+        let uu____899 = FStar_Syntax_Subst.compress t  in
+        uu____899.FStar_Syntax_Syntax.n  in
+      match uu____898 with
+      | FStar_Syntax_Syntax.Tm_arrow (uu____903,c) ->
           is_smt_reifiable_comp en c
-      | uu____923 -> false
+      | uu____925 -> false
   

@@ -257,11 +257,25 @@ let computed_computation_type_does_not_match_annotation_eq env e c c' =
 let unexpected_non_trivial_precondition_on_term env f =
  (Errors.Fatal_UnExpectedPreCondition, (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)))
 
-let expected_pure_expression e c =
-  (Errors.Fatal_ExpectedPureExpression, (format2 "Expected a pure expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)))
+let expected_pure_expression e c reason =
+  let msg = "Expected a pure expression" in
+  let msg =
+    if reason = ""
+    then msg
+    else BU.format1 (msg ^ " (%s)") reason in
+  (Errors.Fatal_ExpectedPureExpression,
+   format2 (msg ^ "; got an expression \"%s\" with effect \"%s\"")   
+     (Print.term_to_string e) (fst <| name_and_result c))
 
-let expected_ghost_expression e c =
-  (Errors.Fatal_ExpectedGhostExpression, (format2 "Expected a ghost expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)))
+let expected_ghost_expression e c reason =
+  let msg = "Expected a ghost expression" in
+  let msg =
+    if reason = ""
+    then msg
+    else BU.format1 (msg ^ " (%s)") reason in
+  (Errors.Fatal_ExpectedGhostExpression,
+   format2 (msg ^ "; got an expression \"%s\" with effect \"%s\"")   
+     (Print.term_to_string e) (fst <| name_and_result c))
 
 let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
   (Errors.Fatal_UnexpectedEffect, (format2 "Expected a computation with effect %s; but it has effect %s" (Print.lid_to_string c1) (Print.lid_to_string c2)))

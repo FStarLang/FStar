@@ -392,24 +392,6 @@ let is_BitVector_primitive head args =
     | _ -> false
 
 
-module CBytes = FStar.Compiler.Bytes
-
-(*
- * Hashcons the string constant
- * We were earlier using a counter, which is not precise in the presence of
- *   checked files, cf. #1999
- *)
-let encode_string_const (s:string) : term =
-  let rec aux (acc:BigInt.bigint) (i:int) (bs:CBytes.bytes) =
-    if i = CBytes.length bs then acc
-    else
-      let acc = BigInt.add_big_int
-        (BigInt.mult_big_int (256 |> BigInt.of_int_fs) acc)
-        (CBytes.get bs i |> BigInt.of_int_fs) in
-      aux acc (i+1) bs in
-  let id = aux BigInt.zero 0 (CBytes.string_as_unicode_bytes s) in
-  Term.boxString <| mk_String_const id
-
 let rec encode_const c env =
     match c with
     | Const_unit -> mk_Term_unit, []
@@ -420,7 +402,7 @@ let rec encode_const c env =
     | Const_int (repr, Some sw) ->
       let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
       encode_term syntax_term env
-    | Const_string(s, _) -> encode_string_const s, []
+    | Const_string(s, _) -> Term.boxString <| mk_String_const s, []
     | Const_range _ -> mk_Range_const (), []
     | Const_effect -> mk_Term_type, []
     | Const_real r -> boxReal (mkReal r), []
@@ -843,7 +825,28 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let t_decls = [tdecl; k_assumption; pre_typing; t_interp] in
              t, decls@decls'@guard_decls@(mk_decls tsym tkey_hash t_decls (decls@decls'@guard_decls))
 
-        else let tsym = varops.fresh module_name "Non_total_Tm_arrow" in
+        else 
+             (*
+              * AR: compute a hash for the Non total arrow,
+              *       that we will use in the name of the arrow
+              *       so that we can get some hashconsing
+              *)
+             let tkey_hash =
+               (*
+                * AR: any decls computed here are ignored
+                *     we encode terms in this let-scope just to compute a hash
+                *)
+               let vars, guards_l, env_bs, _, _ = encode_binders None binders env in
+               let c = Env.unfold_effect_abbrev env.tcenv res |> S.mk_Comp in
+               let ct, _ = encode_term (c |> U.comp_result) env_bs in
+               let effect_args, _ = encode_args (c |> U.comp_effect_args) env_bs in
+               let tkey = mkForall t.pos
+                 ([], vars, mk_and_l (guards_l@[ct]@effect_args)) in
+               let tkey_hash = "Non_total_Tm_arrow" ^ (hash_of_term tkey) ^ "@Effect=" ^
+                 (c |> U.comp_effect_name |> string_of_lid) in
+               BU.digest_of_string tkey_hash in                 
+        
+             let tsym = "Non_total_Tm_arrow_" ^ tkey_hash in
              let tdecl = Term.DeclFun(tsym, [], Term_sort, None) in
              let t = mkApp(tsym, []) in
              let t_kinding =
@@ -863,7 +866,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                               Some a_name,
                               a_name) in
 
-             t, [tdecl; t_kinding; t_interp] |> mk_decls_trivial (* TODO: At least preserve alpha-equivalence of non-pure function types *)
+             t, mk_decls tsym tkey_hash [tdecl; t_kinding; t_interp] []
 
       | Tm_refine _ ->
         let x, f =
