@@ -364,7 +364,7 @@ type raw_error =
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
-let default_flags : list<error_setting> =
+let default_settings : list<error_setting> =
   [
     Error_DependencyAnalysisFailed                    , CAlwaysError, 0;
     Error_IDETooManyPops                              , CAlwaysError, 1;
@@ -740,7 +740,7 @@ let update_flags (l:list<(error_flag * string)>)
       | _ -> flag
    in
    let set_flag_for_range (flag, range) =
-    let errs = lookup_error_range default_flags range in
+    let errs = lookup_error_range default_settings range in
     List.map (fun (v, default_flag, i) -> v, set_one_flag i flag default_flag, i) errs
    in
    let compute_range (flag, s) =
@@ -760,7 +760,7 @@ let update_flags (l:list<(error_flag * string)>)
   in
   let error_range_settings = List.map compute_range l in
   List.collect set_flag_for_range error_range_settings
-  @ default_flags
+  @ default_settings
 
 
 type error = raw_error * string * Range.range
@@ -925,25 +925,53 @@ let set_option_warning_callback_range (ropt:option<Range.range>) =
 
 let set_parse_warn_error,
     error_flags =
+    (* To parse a warn_error string we expect a callback to be set in FStar.Main.setup_hooks *)
     let parser_callback : ref<option<(string -> list<error_setting>)>> = mk_ref None in
-    let error_flags : ref<(option<(list<error_setting>)>)> = mk_ref None in
-    let parse (s:string) =
-      match !parser_callback with
-      | None -> failwith "Callback for parsing warn_error strings is not set"
-      | Some f -> f s
-    in
+    (* The reporting of errors, particularly errors in the warn_error string itself
+       is delicate.
+       We keep a map from warn_error strings to their parsed results,
+         - Some list<error_setting> in case it parses and is interpreted successfully
+         - None in case it does not parse or is not intepretable
+    *)
+    let error_flags : BU.smap<(option<(list<error_setting>)>)> = BU.smap_create 10 in
+    (* set_error_flags is called by Options.set_options, parse_cmd_line etc,
+       upon parsing the options.
+       It parses the current warn_error string and sets the result in the
+       error_flags map above. In case it fails, it reports an Getopt error
+       for Options to report. Options may, in turn, report that error
+       back using the functionality of this module, e.g., log_issue *)
     let set_error_flags () =
+        let parse (s:string) =
+          match !parser_callback with
+          | None -> failwith "Callback for parsing warn_error strings is not set"
+          | Some f -> f s
+        in
         let we = Options.warn_error () in
         try let r = parse we in
-            error_flags := Some r;
+            BU.smap_add error_flags we (Some r);
             Getopt.Success
-        with Invalid_warn_error_setting msg -> Getopt.Error ("Invalid --warn_error setting: " ^msg)
+        with Invalid_warn_error_setting msg ->
+            (BU.smap_add error_flags we None;
+             Getopt.Error ("Invalid --warn_error setting: " ^msg))
     in
+    (* get_error_flags is called when logging an issue to figure out
+       which error level to report a particular issue at (Warning, Error etc.)
+       It is important that this function itself never raises an exception:
+       raising an error when trying to report an error is bad news, e.g., it
+       crashes the ide mode since it causes F* to exit abruptly.
+       So, we don't do any parsing here ... just look up the result of a
+       prior parse, falling back to the default settings in case the
+       parse didn't succeed *)
     let get_error_flags () =
-      match !error_flags with
-      | None -> failwith "Error flags not yet set"
-      | Some e -> e
+      let we = Options.warn_error () in
+      match BU.smap_try_find error_flags we with
+      | Some (Some w) -> w
+      | _ -> default_settings
     in
+    (* Setting the parser callback received from setup_hooks
+       and installing, in turn, callbacks in Options for
+       parsing warn_error settings and also for warning on the use of
+       unsafe options. *)
     let set_callbacks (f:string -> list<error_setting>) =
         parser_callback := Some f;
         Options.set_error_flags_callback set_error_flags;
