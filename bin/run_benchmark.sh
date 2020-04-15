@@ -255,7 +255,7 @@ check_for orun "\
 To install a local pinned copy of orun do the following:
  $ git clone https://github.com/ocaml-bench/sandmark.git sandmark
  $ cd sandmark/orun
- $ opam install  "
+ $ opam install ."
 
 # Second pass for options, only handles --custom which needs to run after the others
 OPTIONS=
