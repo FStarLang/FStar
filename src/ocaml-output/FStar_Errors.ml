@@ -2355,7 +2355,7 @@ let (uu___is_Warning_WarnOnUse : raw_error -> Prims.bool) =
   
 type flag = error_flag
 type error_setting = (raw_error * error_flag * Prims.int)
-let (default_flags : error_setting Prims.list) =
+let (default_settings : error_setting Prims.list) =
   [(Error_DependencyAnalysisFailed, CAlwaysError, Prims.int_zero);
   (Error_IDETooManyPops, CAlwaysError, Prims.int_one);
   (Error_IDEUnrecognized, CAlwaysError, (Prims.of_int (2)));
@@ -2781,7 +2781,7 @@ let (update_flags :
     let set_flag_for_range uu____4858 =
       match uu____4858 with
       | (flag1,range) ->
-          let errs = lookup_error_range default_flags range  in
+          let errs = lookup_error_range default_settings range  in
           FStar_List.map
             (fun uu____4921  ->
                match uu____4921 with
@@ -2823,7 +2823,7 @@ let (update_flags :
     let error_range_settings = FStar_List.map compute_range l  in
     let uu____5108 =
       FStar_List.collect set_flag_for_range error_range_settings  in
-    FStar_List.append uu____5108 default_flags
+    FStar_List.append uu____5108 default_settings
   
 type error = (raw_error * Prims.string * FStar_Range.range)
 exception Err of (raw_error * Prims.string) 
@@ -3211,13 +3211,13 @@ let (uu___205 :
   =
   let parser_callback = FStar_Util.mk_ref FStar_Pervasives_Native.None  in
   let error_flags = FStar_Util.smap_create (Prims.of_int (10))  in
-  let parse s =
-    let uu____6622 = FStar_ST.op_Bang parser_callback  in
-    match uu____6622 with
-    | FStar_Pervasives_Native.None  ->
-        failwith "Callback for parsing warn_error strings is not set"
-    | FStar_Pervasives_Native.Some f -> f s  in
-  let set_error_flags uu____6695 =
+  let set_error_flags uu____6617 =
+    let parse s =
+      let uu____6628 = FStar_ST.op_Bang parser_callback  in
+      match uu____6628 with
+      | FStar_Pervasives_Native.None  ->
+          failwith "Callback for parsing warn_error strings is not set"
+      | FStar_Pervasives_Native.Some f -> f s  in
     let we = FStar_Options.warn_error ()  in
     try
       (fun uu___217_6701  ->
@@ -3239,7 +3239,7 @@ let (uu___205 :
     let uu____6739 = FStar_Util.smap_try_find error_flags we  in
     match uu____6739 with
     | FStar_Pervasives_Native.Some (FStar_Pervasives_Native.Some w) -> w
-    | uu____6761 -> default_flags  in
+    | uu____6761 -> default_settings  in
   let set_callbacks f =
     FStar_ST.op_Colon_Equals parser_callback (FStar_Pervasives_Native.Some f);
     FStar_Options.set_error_flags_callback set_error_flags;
