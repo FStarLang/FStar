@@ -540,38 +540,52 @@ let (unexpected_non_trivial_precondition_on_term :
 let (expected_pure_expression :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-      (FStar_Errors.raw_error * Prims.string))
+      Prims.string -> (FStar_Errors.raw_error * Prims.string))
   =
   fun e  ->
     fun c  ->
-      let uu____1733 =
-        let uu____1735 = FStar_Syntax_Print.term_to_string e  in
-        let uu____1737 =
-          let uu____1739 = name_and_result c  in
-          FStar_All.pipe_left FStar_Pervasives_Native.fst uu____1739  in
-        FStar_Util.format2
-          "Expected a pure expression; got an expression \"%s\" with effect \"%s\""
-          uu____1735 uu____1737
-         in
-      (FStar_Errors.Fatal_ExpectedPureExpression, uu____1733)
+      fun reason  ->
+        let msg = "Expected a pure expression"  in
+        let msg1 =
+          if reason = ""
+          then msg
+          else FStar_Util.format1 (Prims.op_Hat msg " (%s)") reason  in
+        let uu____1752 =
+          let uu____1754 = FStar_Syntax_Print.term_to_string e  in
+          let uu____1756 =
+            let uu____1758 = name_and_result c  in
+            FStar_All.pipe_left FStar_Pervasives_Native.fst uu____1758  in
+          FStar_Util.format2
+            (Prims.op_Hat msg1
+               "; got an expression \"%s\" with effect \"%s\"") uu____1754
+            uu____1756
+           in
+        (FStar_Errors.Fatal_ExpectedPureExpression, uu____1752)
   
 let (expected_ghost_expression :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-      (FStar_Errors.raw_error * Prims.string))
+      Prims.string -> (FStar_Errors.raw_error * Prims.string))
   =
   fun e  ->
     fun c  ->
-      let uu____1780 =
-        let uu____1782 = FStar_Syntax_Print.term_to_string e  in
-        let uu____1784 =
-          let uu____1786 = name_and_result c  in
-          FStar_All.pipe_left FStar_Pervasives_Native.fst uu____1786  in
-        FStar_Util.format2
-          "Expected a ghost expression; got an expression \"%s\" with effect \"%s\""
-          uu____1782 uu____1784
-         in
-      (FStar_Errors.Fatal_ExpectedGhostExpression, uu____1780)
+      fun reason  ->
+        let msg = "Expected a ghost expression"  in
+        let msg1 =
+          if reason = ""
+          then msg
+          else FStar_Util.format1 (Prims.op_Hat msg " (%s)") reason  in
+        let uu____1818 =
+          let uu____1820 = FStar_Syntax_Print.term_to_string e  in
+          let uu____1822 =
+            let uu____1824 = name_and_result c  in
+            FStar_All.pipe_left FStar_Pervasives_Native.fst uu____1824  in
+          FStar_Util.format2
+            (Prims.op_Hat msg1
+               "; got an expression \"%s\" with effect \"%s\"") uu____1820
+            uu____1822
+           in
+        (FStar_Errors.Fatal_ExpectedGhostExpression, uu____1818)
   
 let (expected_effect_1_got_effect_2 :
   FStar_Ident.lident ->
@@ -579,14 +593,14 @@ let (expected_effect_1_got_effect_2 :
   =
   fun c1  ->
     fun c2  ->
-      let uu____1823 =
-        let uu____1825 = FStar_Syntax_Print.lid_to_string c1  in
-        let uu____1827 = FStar_Syntax_Print.lid_to_string c2  in
+      let uu____1861 =
+        let uu____1863 = FStar_Syntax_Print.lid_to_string c1  in
+        let uu____1865 = FStar_Syntax_Print.lid_to_string c2  in
         FStar_Util.format2
           "Expected a computation with effect %s; but it has effect %s"
-          uu____1825 uu____1827
+          uu____1863 uu____1865
          in
-      (FStar_Errors.Fatal_UnexpectedEffect, uu____1823)
+      (FStar_Errors.Fatal_UnexpectedEffect, uu____1861)
   
 let (failed_to_prove_specification_of :
   FStar_Syntax_Syntax.lbname ->
@@ -594,15 +608,15 @@ let (failed_to_prove_specification_of :
   =
   fun l  ->
     fun lbls  ->
-      let uu____1853 =
-        let uu____1855 = FStar_Syntax_Print.lbname_to_string l  in
-        let uu____1857 = FStar_All.pipe_right lbls (FStar_String.concat ", ")
+      let uu____1891 =
+        let uu____1893 = FStar_Syntax_Print.lbname_to_string l  in
+        let uu____1895 = FStar_All.pipe_right lbls (FStar_String.concat ", ")
            in
         FStar_Util.format2
           "Failed to prove specification of %s; assertions at [%s] may fail"
-          uu____1855 uu____1857
+          uu____1893 uu____1895
          in
-      (FStar_Errors.Error_TypeCheckerFailToProve, uu____1853)
+      (FStar_Errors.Error_TypeCheckerFailToProve, uu____1891)
   
 let (failed_to_prove_specification :
   Prims.string Prims.list -> (FStar_Errors.raw_error * Prims.string)) =
@@ -611,11 +625,11 @@ let (failed_to_prove_specification :
       match lbls with
       | [] ->
           "An unknown assertion in the term at this location was not provable"
-      | uu____1888 ->
-          let uu____1892 =
+      | uu____1926 ->
+          let uu____1930 =
             FStar_All.pipe_right lbls (FStar_String.concat "\n\t")  in
           FStar_Util.format1 "The following problems were found:\n\t%s"
-            uu____1892
+            uu____1930
        in
     (FStar_Errors.Error_TypeCheckerFailToProve, msg)
   
@@ -630,13 +644,13 @@ let (cardinality_constraint_violated :
   =
   fun l  ->
     fun a  ->
-      let uu____1929 =
-        let uu____1931 = FStar_Syntax_Print.lid_to_string l  in
-        let uu____1933 =
+      let uu____1967 =
+        let uu____1969 = FStar_Syntax_Print.lid_to_string l  in
+        let uu____1971 =
           FStar_Syntax_Print.bv_to_string a.FStar_Syntax_Syntax.v  in
         FStar_Util.format2
           "Constructor %s violates the cardinality of Type at parameter '%s'; type arguments are not allowed"
-          uu____1931 uu____1933
+          uu____1969 uu____1971
          in
-      (FStar_Errors.Fatal_CardinalityConstraintViolated, uu____1929)
+      (FStar_Errors.Fatal_CardinalityConstraintViolated, uu____1967)
   
