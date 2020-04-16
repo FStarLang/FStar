@@ -4282,17 +4282,22 @@ and (encode_formula :
                    FStar_Parser_Const.labeled_lid
                  ->
                  let uu____13110 =
-                   let uu____13115 =
-                     let uu____13116 = FStar_Syntax_Subst.compress r  in
-                     uu____13116.FStar_Syntax_Syntax.n  in
-                   let uu____13119 =
-                     let uu____13120 = FStar_Syntax_Subst.compress msg  in
-                     uu____13120.FStar_Syntax_Syntax.n  in
-                   (uu____13115, uu____13119)  in
+                   let uu____13120 =
+                     let uu____13123 =
+                       FStar_Syntax_Embeddings.unembed
+                         FStar_Syntax_Embeddings.e_range r
+                        in
+                     uu____13123 false FStar_Syntax_Embeddings.id_norm_cb  in
+                   let uu____13131 =
+                     let uu____13135 =
+                       FStar_Syntax_Embeddings.unembed
+                         FStar_Syntax_Embeddings.e_string msg
+                        in
+                     uu____13135 false FStar_Syntax_Embeddings.id_norm_cb  in
+                   (uu____13120, uu____13131)  in
                  (match uu____13110 with
-                  | (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range
-                     r1),FStar_Syntax_Syntax.Tm_constant
-                     (FStar_Const.Const_string (s,uu____13129))) ->
+                  | (FStar_Pervasives_Native.Some
+                     r1,FStar_Pervasives_Native.Some s) ->
                       let phi3 =
                         FStar_Syntax_Syntax.mk
                           (FStar_Syntax_Syntax.Tm_meta
@@ -4302,95 +4307,107 @@ and (encode_formula :
                           FStar_Pervasives_Native.None r1
                          in
                       fallback phi3
-                  | uu____13140 -> fallback phi2)
-             | (FStar_Syntax_Syntax.Tm_fvar fv,(t,uu____13147)::[]) when
+                  | (FStar_Pervasives_Native.None
+                     ,FStar_Pervasives_Native.Some s) ->
+                      let phi3 =
+                        FStar_Syntax_Syntax.mk
+                          (FStar_Syntax_Syntax.Tm_meta
+                             (phi2,
+                               (FStar_Syntax_Syntax.Meta_labeled
+                                  (s, (phi2.FStar_Syntax_Syntax.pos), false))))
+                          FStar_Pervasives_Native.None
+                          phi2.FStar_Syntax_Syntax.pos
+                         in
+                      fallback phi3
+                  | uu____13187 -> fallback phi2)
+             | (FStar_Syntax_Syntax.Tm_fvar fv,(t,uu____13199)::[]) when
                  (FStar_Syntax_Syntax.fv_eq_lid fv
                     FStar_Parser_Const.squash_lid)
                    ||
                    (FStar_Syntax_Syntax.fv_eq_lid fv
                       FStar_Parser_Const.auto_squash_lid)
                  -> encode_formula t env
-             | uu____13182 ->
-                 let encode_valid uu____13206 =
-                   let uu____13207 = encode_term phi1 env  in
-                   match uu____13207 with
+             | uu____13234 ->
+                 let encode_valid uu____13258 =
+                   let uu____13259 = encode_term phi1 env  in
+                   match uu____13259 with
                    | (tt,decls) ->
                        let tt1 =
-                         let uu____13219 =
-                           let uu____13221 =
+                         let uu____13271 =
+                           let uu____13273 =
                              FStar_Range.use_range
                                tt.FStar_SMTEncoding_Term.rng
                               in
-                           let uu____13222 =
+                           let uu____13274 =
                              FStar_Range.use_range
                                phi1.FStar_Syntax_Syntax.pos
                               in
-                           FStar_Range.rng_included uu____13221 uu____13222
+                           FStar_Range.rng_included uu____13273 uu____13274
                             in
-                         if uu____13219
+                         if uu____13271
                          then tt
                          else
-                           (let uu___1712_13226 = tt  in
+                           (let uu___1713_13278 = tt  in
                             {
                               FStar_SMTEncoding_Term.tm =
-                                (uu___1712_13226.FStar_SMTEncoding_Term.tm);
+                                (uu___1713_13278.FStar_SMTEncoding_Term.tm);
                               FStar_SMTEncoding_Term.freevars =
-                                (uu___1712_13226.FStar_SMTEncoding_Term.freevars);
+                                (uu___1713_13278.FStar_SMTEncoding_Term.freevars);
                               FStar_SMTEncoding_Term.rng =
                                 (phi1.FStar_Syntax_Syntax.pos)
                             })
                           in
-                       let uu____13227 = FStar_SMTEncoding_Term.mk_Valid tt1
+                       let uu____13279 = FStar_SMTEncoding_Term.mk_Valid tt1
                           in
-                       (uu____13227, decls)
+                       (uu____13279, decls)
                     in
-                 let uu____13228 = head_redex env head1  in
-                 if uu____13228
+                 let uu____13280 = head_redex env head1  in
+                 if uu____13280
                  then
-                   let uu____13235 = maybe_whnf env head1  in
-                   (match uu____13235 with
+                   let uu____13287 = maybe_whnf env head1  in
+                   (match uu____13287 with
                     | FStar_Pervasives_Native.None  -> encode_valid ()
                     | FStar_Pervasives_Native.Some phi2 ->
                         encode_formula phi2 env)
                  else encode_valid ())
-        | uu____13245 ->
-            let uu____13246 = encode_term phi1 env  in
-            (match uu____13246 with
+        | uu____13297 ->
+            let uu____13298 = encode_term phi1 env  in
+            (match uu____13298 with
              | (tt,decls) ->
                  let tt1 =
-                   let uu____13258 =
-                     let uu____13260 =
+                   let uu____13310 =
+                     let uu____13312 =
                        FStar_Range.use_range tt.FStar_SMTEncoding_Term.rng
                         in
-                     let uu____13261 =
+                     let uu____13313 =
                        FStar_Range.use_range phi1.FStar_Syntax_Syntax.pos  in
-                     FStar_Range.rng_included uu____13260 uu____13261  in
-                   if uu____13258
+                     FStar_Range.rng_included uu____13312 uu____13313  in
+                   if uu____13310
                    then tt
                    else
-                     (let uu___1724_13265 = tt  in
+                     (let uu___1725_13317 = tt  in
                       {
                         FStar_SMTEncoding_Term.tm =
-                          (uu___1724_13265.FStar_SMTEncoding_Term.tm);
+                          (uu___1725_13317.FStar_SMTEncoding_Term.tm);
                         FStar_SMTEncoding_Term.freevars =
-                          (uu___1724_13265.FStar_SMTEncoding_Term.freevars);
+                          (uu___1725_13317.FStar_SMTEncoding_Term.freevars);
                         FStar_SMTEncoding_Term.rng =
                           (phi1.FStar_Syntax_Syntax.pos)
                       })
                     in
-                 let uu____13266 = FStar_SMTEncoding_Term.mk_Valid tt1  in
-                 (uu____13266, decls))
+                 let uu____13318 = FStar_SMTEncoding_Term.mk_Valid tt1  in
+                 (uu____13318, decls))
          in
       let encode_q_body env1 bs ps body =
-        let uu____13310 = encode_binders FStar_Pervasives_Native.None bs env1
+        let uu____13362 = encode_binders FStar_Pervasives_Native.None bs env1
            in
-        match uu____13310 with
-        | (vars,guards,env2,decls,uu____13349) ->
-            let uu____13362 = encode_smt_patterns ps env2  in
-            (match uu____13362 with
+        match uu____13362 with
+        | (vars,guards,env2,decls,uu____13401) ->
+            let uu____13414 = encode_smt_patterns ps env2  in
+            (match uu____13414 with
              | (pats,decls') ->
-                 let uu____13399 = encode_formula body env2  in
-                 (match uu____13399 with
+                 let uu____13451 = encode_formula body env2  in
+                 (match uu____13451 with
                   | (body1,decls'') ->
                       let guards1 =
                         match pats with
@@ -4398,68 +4415,68 @@ and (encode_formula :
                              FStar_SMTEncoding_Term.tm =
                                FStar_SMTEncoding_Term.App
                                (FStar_SMTEncoding_Term.Var gf,p::[]);
-                             FStar_SMTEncoding_Term.freevars = uu____13431;
-                             FStar_SMTEncoding_Term.rng = uu____13432;_}::[])::[]
+                             FStar_SMTEncoding_Term.freevars = uu____13483;
+                             FStar_SMTEncoding_Term.rng = uu____13484;_}::[])::[]
                             when
-                            let uu____13452 =
+                            let uu____13504 =
                               FStar_Ident.string_of_lid
                                 FStar_Parser_Const.guard_free
                                in
-                            uu____13452 = gf -> []
-                        | uu____13455 -> guards  in
-                      let uu____13460 =
+                            uu____13504 = gf -> []
+                        | uu____13507 -> guards  in
+                      let uu____13512 =
                         FStar_SMTEncoding_Util.mk_and_l guards1  in
-                      (vars, pats, uu____13460, body1,
+                      (vars, pats, uu____13512, body1,
                         (FStar_List.append decls
                            (FStar_List.append decls' decls'')))))
          in
       debug phi;
       (let phi1 = FStar_Syntax_Util.unascribe phi  in
-       let uu____13471 = FStar_Syntax_Util.destruct_typ_as_formula phi1  in
-       match uu____13471 with
+       let uu____13523 = FStar_Syntax_Util.destruct_typ_as_formula phi1  in
+       match uu____13523 with
        | FStar_Pervasives_Native.None  -> fallback phi1
        | FStar_Pervasives_Native.Some (FStar_Syntax_Util.BaseConn (op,arms))
            ->
-           let uu____13480 =
+           let uu____13532 =
              FStar_All.pipe_right connectives
                (FStar_List.tryFind
-                  (fun uu____13586  ->
-                     match uu____13586 with
-                     | (l,uu____13611) -> FStar_Ident.lid_equals op l))
+                  (fun uu____13638  ->
+                     match uu____13638 with
+                     | (l,uu____13663) -> FStar_Ident.lid_equals op l))
               in
-           (match uu____13480 with
+           (match uu____13532 with
             | FStar_Pervasives_Native.None  -> fallback phi1
-            | FStar_Pervasives_Native.Some (uu____13680,f) ->
+            | FStar_Pervasives_Native.Some (uu____13732,f) ->
                 f phi1.FStar_Syntax_Syntax.pos arms)
        | FStar_Pervasives_Native.Some (FStar_Syntax_Util.QAll
            (vars,pats,body)) ->
            (FStar_All.pipe_right pats
               (FStar_List.iter (check_pattern_vars env vars));
-            (let uu____13772 = encode_q_body env vars pats body  in
-             match uu____13772 with
+            (let uu____13824 = encode_q_body env vars pats body  in
+             match uu____13824 with
              | (vars1,pats1,guard,body1,decls) ->
                  let tm =
-                   let uu____13817 =
-                     let uu____13828 =
+                   let uu____13869 =
+                     let uu____13880 =
                        FStar_SMTEncoding_Util.mkImp (guard, body1)  in
-                     (pats1, vars1, uu____13828)  in
+                     (pats1, vars1, uu____13880)  in
                    FStar_SMTEncoding_Term.mkForall
-                     phi1.FStar_Syntax_Syntax.pos uu____13817
+                     phi1.FStar_Syntax_Syntax.pos uu____13869
                     in
                  (tm, decls)))
        | FStar_Pervasives_Native.Some (FStar_Syntax_Util.QEx
            (vars,pats,body)) ->
            (FStar_All.pipe_right pats
               (FStar_List.iter (check_pattern_vars env vars));
-            (let uu____13859 = encode_q_body env vars pats body  in
-             match uu____13859 with
+            (let uu____13911 = encode_q_body env vars pats body  in
+             match uu____13911 with
              | (vars1,pats1,guard,body1,decls) ->
-                 let uu____13903 =
-                   let uu____13904 =
-                     let uu____13915 =
+                 let uu____13955 =
+                   let uu____13956 =
+                     let uu____13967 =
                        FStar_SMTEncoding_Util.mkAnd (guard, body1)  in
-                     (pats1, vars1, uu____13915)  in
+                     (pats1, vars1, uu____13967)  in
                    FStar_SMTEncoding_Term.mkExists
-                     phi1.FStar_Syntax_Syntax.pos uu____13904
+                     phi1.FStar_Syntax_Syntax.pos uu____13956
                     in
-                 (uu____13903, decls))))
+                 (uu____13955, decls))))
