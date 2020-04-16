@@ -706,12 +706,14 @@ let extract_bundle env se =
                    c_ty
                    ([], env)
              in
-             MLTD_Record fields, g
+             Some (MLTD_Record fields), g
+         | _ when List.length ctors = 0 ->
+             None, env
          | _ ->
-             MLTD_DType ctors, env
+             Some (MLTD_DType ctors), env
        in
        env,
-       (false, snd (mlpath_of_lident env ind.iname), None, ml_params, ind.imetadata, Some tbody)
+       (false, snd (mlpath_of_lident env ind.iname), None, ml_params, ind.imetadata, tbody)
     in
 
     match se.sigel, se.sigquals with
