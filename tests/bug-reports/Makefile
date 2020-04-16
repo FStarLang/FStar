@@ -63,7 +63,7 @@ SHOULD_VERIFY_MAYBE_CLOSE=Bug121b.fst Bug351.fst Bug351b.fst Bug812.fst Bug853.f
 SHOULD_VERIFY_NOT_WORKING=Bug015.fst Bug021.fst Bug023.fst  Bug060.fst Bug062.fst Bug029.fst Bug096.fst Bug097a.fst\
   Bug100.fst Bug101.fst Bug111.fst Bug117.fst Bug148.fst Bug179.fst Bug184b.fst Bug185.fst Bug189.fst Bug203.fst\
   Bug237.fst Bug295.fst Bug377.fst Bug389.fst Bug422.fst Bug463a.fst Bug713.fst Bug974.fst \
-  Bug1287.fst Bug1291.fst Bug1347.fst
+  Bug1287.fst Bug1291.fst Bug1347.fst Bug2014.fst
 
 
 ##################
