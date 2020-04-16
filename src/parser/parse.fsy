@@ -380,6 +380,13 @@ list_attr_letbinding_:
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
+list_calcStep_:
+  
+    {    ( [] )}
+| calcStep list_calcStep_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
 list_constructorDecl_:
   
     {    ( [] )}
@@ -445,14 +452,6 @@ nonempty_list_atomicUniverse_:
     {let x = $1 in
     ( [ x ] )}
 | atomicUniverse nonempty_list_atomicUniverse_
-    {let (x, xs) = ($1, $2) in
-    ( x :: xs )}
-
-nonempty_list_calcStep_:
-  calcStep
-    {let x = $1 in
-    ( [ x ] )}
-| calcStep nonempty_list_calcStep_
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
@@ -1458,10 +1457,10 @@ let pbs =    ( List.rev xs ) in
          let a = set_lid_range synth_lid (rhs parseState 1) in
          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
      )}
-| CALC atomicTerm LBRACE noSeqTerm SEMICOLON nonempty_list_calcStep_ RBRACE
+| CALC atomicTerm LBRACE noSeqTerm SEMICOLON list_calcStep_ RBRACE
     {let (_1, rel, _3, init, _5, steps, _7) = ((), $2, (), $4, (), $6, ()) in
      (
-         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 6) Expr
+         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 7) Expr
      )}
 
 calcRel:
