@@ -1630,7 +1630,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let push_impl r = mk_term (Var C.calc_push_impl_lid) r Expr in
       let last_expr = match List.last steps with
                       | Some (CalcStep (_, _, last_expr)) -> last_expr
-                      | _ -> failwith "impossible: no last_expr on calc"
+                      | None -> init_expr
       in
       let step r = mk_term (Var C.calc_step_lid) r Expr in
       let finish = mkApp (mk_term (Var C.calc_finish_lid) top.range Expr) [(rel, Nothing)] top.range in
