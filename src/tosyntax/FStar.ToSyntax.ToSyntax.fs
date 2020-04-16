@@ -3041,8 +3041,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
             bv_pat, branch
         in
         let body = mk_term (Match (main, [pat, None, branch])) main.range Expr in
-        (* TODO : do we need to put some attributes for this declaration ? *)
         let id_decl = mk_decl (TopLevelLet(NoLetQualifier, [bv_pat, body])) Range.dummyRange [] in
+        let id_decl = { id_decl with quals = d.quals } in
         let env, ses' = desugar_decl env id_decl in
         env, ses @ ses'
       in
