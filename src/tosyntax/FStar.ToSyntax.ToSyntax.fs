@@ -159,7 +159,7 @@ let desugar_name mk setpos env resolve l =
 
 let compile_op_lid n s r = [mk_ident(compile_op n s r, r)] |> lid_of_ids
 
-let op_as_term env arity rng op : option<S.term> =
+let op_as_term env arity op : option<S.term> =
   let r l dd = Some (S.lid_as_fv (set_lid_range l (range_of_id op)) dd None |> S.fv_to_tm) in
   let fallback () =
     match Ident.text_of_id op with
@@ -964,14 +964,14 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     (* if op_Star has not been rebound, then it's reserved for tuples *)
     | Op(op_star, [lhs;rhs]) when
       (Ident.text_of_id op_star = "*" &&
-       op_as_term env 2 top.range op_star |> Option.isNone) ->
+       op_as_term env 2 op_star |> Option.isNone) ->
       (* See the comment in parse.mly to understand why this implicitly relies
        * on the presence of a Paren node in the AST. *)
       let rec flatten t = match t.tm with
         // * is left-associative
         | Op(id, [t1;t2]) when
            text_of_id id = "*" &&
-           op_as_term env 2 top.range op_star |> Option.isNone ->
+           op_as_term env 2 op_star |> Option.isNone ->
           flatten t1 @ [ t2 ]
         | _ -> [t]
       in
@@ -993,7 +993,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | Op(s, args) ->
       begin
-      match op_as_term env (List.length args) top.range s with
+      match op_as_term env (List.length args) s with
       | None ->
         raise_error (Errors.Fatal_UnepxectedOrUnboundOperator,
                      "Unexpected or unbound operator: " ^
@@ -1586,7 +1586,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         in
         match (unparen rel).tm with
         | Op (id, _) ->
-            begin match op_as_term env 2 Range.dummyRange id with
+            begin match op_as_term env 2 id with
             | Some t -> is_impl_t t
             | None -> false
             end
