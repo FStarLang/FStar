@@ -2999,11 +2999,17 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
           | PatAscribed (pat, ty) -> { pat with pat = PatAscribed (var_pat, ty) }
           | _ -> var_pat
       in
-      (* TODO : We should ensure that the result of body always matches pat (add a type annotation ?) *)
       let main_let =
+        (* GM: I'm not sure why we are even marking this private,
+         * since it has a reserved name, but anyway keeping it
+         * and making it not duplicate the qualifier. *)
+        let quals = if List.mem Private d.quals
+                    then d.quals
+                    else Private :: d.quals
+        in
         desugar_decl env ({ d with
           d = TopLevelLet (isrec, [fresh_pat, body]) ;
-          quals = Private :: d.quals })
+          quals = quals })
       in
 
       let main : term = mk_term (Var (lid_of_ids [fresh_toplevel_name])) pat.prange Expr in
