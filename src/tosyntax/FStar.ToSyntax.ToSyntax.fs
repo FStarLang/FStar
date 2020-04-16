@@ -1647,7 +1647,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                                            (init_expr, Hash);
                                            (prev, Hash);
                                            (eta_and_annot rel, Nothing); (next_expr, Nothing);
-                                           (thunk e, Nothing); (thunk just, Nothing)] just.range in
+                                           (thunk e, Nothing); (thunk just, Nothing)]
+                                           Range.dummyRange // GM: using any other range here
+                                                            // seems to make things worse,
+                                                            // see test_1763 in
+                                                            // tests/error-messages/Calc.fst.
+                                                            // A mistery for some later day.
+                          in
                           (pf, next_expr))
                    (e, init_expr) steps in
       let e = mkApp finish [(init_expr, Hash); (last_expr, Hash); (thunk e, Nothing)] top.range in
