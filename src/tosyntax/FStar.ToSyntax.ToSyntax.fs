@@ -119,7 +119,7 @@ let rec is_comp_type env t =
     | LetOpen(_, t) -> is_comp_type env t
     | _ -> false
 
-let unit_ty = mk_term (Name C.unit_lid) Range.dummyRange Type_level
+let unit_ty rng = mk_term (Name C.unit_lid) rng Type_level
 
 type env_t = Env.env
 type lenv_t = list<bv>
@@ -361,7 +361,7 @@ let rec is_app_pattern p = match p.pat with
 
 let replace_unit_pattern p = match p.pat with
   | PatConst FStar.Const.Const_unit ->
-    mk_pattern (PatAscribed (mk_pattern (PatWild None) p.prange, (unit_ty, None))) p.prange
+    mk_pattern (PatAscribed (mk_pattern (PatWild None) p.prange, (unit_ty p.prange, None))) p.prange
   | _ -> p
 
 let rec destruct_app_pattern env is_top_level p = match p.pat with
@@ -3037,7 +3037,8 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
             let id = Ident.gen Range.dummyRange in
             let branch = mk_term (Const FStar.Const.Const_unit) Range.dummyRange Expr in
             let bv_pat = mk_pattern (PatVar (id, None)) (range_of_id id) in
-            let bv_pat = mk_pattern (PatAscribed (bv_pat, (unit_ty, None))) (range_of_id id) in
+            let bv_pat = mk_pattern (PatAscribed (bv_pat, (unit_ty (range_of_id id), None)))
+                                    (range_of_id id) in
             bv_pat, branch
         in
         let body = mk_term (Match (main, [pat, None, branch])) main.range Expr in
