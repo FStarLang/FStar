@@ -1236,7 +1236,13 @@ and tc_comp env c : comp                                      (* checked version
          | [] -> head
          | us -> S.mk (Tm_uinst(head, us)) None c0.pos in
       let tc = mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) None c.result_typ.pos in
-      let tc, _, f = tc_check_tot_or_gtot_term env tc S.teff "" in
+      (*
+       * Failhard if we can't typecheck the effect constructor application
+       * If we don't, an ill-typed effect constructor application may end up reaching the unifier,
+       *   breaking its invariant that it works only with well-typed terms
+       *)
+      let tc, _, f = tc_check_tot_or_gtot_term ({ env with failhard = true })
+        tc S.teff "" in
       let head, args = U.head_and_args tc in
       let comp_univs = match (SS.compress head).n with
         | Tm_uinst(_, us) -> us
