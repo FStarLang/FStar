@@ -3627,12 +3627,13 @@ let solve_universe_inequalities env ineqs =
     solve_universe_inequalities' tx env ineqs;
     UF.commit tx
 
-let try_solve_deferred_constraints defer_ok env (g:guard_t) =
+let try_solve_deferred_constraints defer_ok smt_ok env (g:guard_t) =
    let fail (d,s) =
       let msg = explain env d s in
       raise_error (Errors.Fatal_ErrorInSolveDeferredConstraints, msg) (p_loc d)
    in
-   let wl = {wl_of_guard env g.deferred with defer_ok=defer_ok} in
+   let wl = {wl_of_guard env g.deferred with defer_ok=defer_ok
+                                           ; smt_ok=smt_ok } in
    if Env.debug env <| Options.Other "Rel"
    then begin
          BU.print3 "Trying to solve carried problems (defer_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
@@ -3654,11 +3655,14 @@ let try_solve_deferred_constraints defer_ok env (g:guard_t) =
    solve_universe_inequalities env g.univ_ineqs;
    {g with univ_ineqs=([], [])}
 
+let solve_deferred_constraints' smt_ok env (g:guard_t) =
+    try_solve_deferred_constraints false smt_ok env g
+
 let solve_deferred_constraints env (g:guard_t) =
-    try_solve_deferred_constraints false env g
+    solve_deferred_constraints' true env g
 
 let solve_some_deferred_constraints env (g:guard_t) =
-    try_solve_deferred_constraints true env g
+    try_solve_deferred_constraints true true env g
 
 //use_smt flag says whether to use the smt solver to discharge this guard
 //if use_smt = true, this function NEVER returns None, the error might come from the smt solver though
@@ -3669,7 +3673,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
     || (Env.debug env <| Options.Other "SMTQuery")
     || (Env.debug env <| Options.Other "Tac")
   in
-  let g = solve_deferred_constraints env g in
+  let g = solve_deferred_constraints' use_smt env g in
   let ret_g = {g with guard_f = Trivial} in
   if not (Env.should_verify env) then Some ret_g
   else
