@@ -674,7 +674,7 @@ noSeqTerm:
 
    | CALC rel=atomicTerm LBRACE init=noSeqTerm SEMICOLON steps=nonempty_list(calcStep) RBRACE
      {
-         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 6) Expr
+         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 7) Expr
      }
 
 calcRel:
