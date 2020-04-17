@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "9c5bde27671add5a3478967d2178f194"
+      "c246fab2ebf23fea2ac6ae419f34ead0"
     ],
     [
       "CalcTest.calc0",
@@ -26,7 +26,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "5504a73cf3b6aa871ef82d587ef659ad"
+      "d92ea44aa57933addaea3ea7c72db668"
     ],
     [
       "CalcTest.calc0_desugared",
@@ -40,7 +40,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "489d429dff42ed6eb9e7533c7b6a4840"
+      "5a52dce7eb2705cf3172c210e78b5f82"
     ],
     [
       "CalcTest.calc1",
@@ -86,7 +86,7 @@
         "typing_FStar.Preorder.relation", "unit_typing"
       ],
       0,
-      "14cc1f20426c6d234a7ca027ac1f1bfb"
+      "5be283f7a2fc0fc1111125e6c0f98f9a"
     ],
     [
       "CalcTest.test_ge",
@@ -118,7 +118,7 @@
         "typing_FStar.Preorder.relation"
       ],
       0,
-      "f4e7cb9e7bfdd2ba4235db9d259152be"
+      "039f0791457bbe609b82181ac55cedad"
     ],
     [
       "CalcTest.test_erase",
@@ -150,7 +150,7 @@
         "typing_FStar.Preorder.relation"
       ],
       0,
-      "0413d9b60c6f95214ebefdc38f19ce59"
+      "c468c4a54f5b03a783c11fb9ae3b2321"
     ],
     [
       "CalcTest.test_gt",
@@ -185,7 +185,7 @@
         "typing_FStar.Preorder.relation"
       ],
       0,
-      "5fc68e5cba270000cd4d1dfae800f063"
+      "9a1dbe8612582f11afa8f0eb559c171d"
     ],
     [
       "CalcTest.test_ge",
@@ -217,7 +217,7 @@
         "typing_FStar.Preorder.relation"
       ],
       0,
-      "96b71b6c3e9f627dba8f79caaf064389"
+      "10a7b3171c8c80d0864d53232e859185"
     ],
     [
       "CalcTest.test_erase",
@@ -249,7 +249,7 @@
         "typing_FStar.Preorder.relation"
       ],
       0,
-      "303d92d50f16d41d2b37ca36a09bb85f"
+      "d7ee41be7bbfe47b6a99333bde074ae3"
     ],
     [
       "CalcTest.test_gt",
@@ -284,7 +284,7 @@
         "typing_FStar.Preorder.relation"
       ],
       0,
-      "d07693f15eb4a5f5bd4151123ee6a949"
+      "6a5fa67833a8fc4cfe52da568ad0d3c8"
     ]
   ]
 ]
