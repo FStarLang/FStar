@@ -1422,7 +1422,7 @@ let mk_total_step_1
   (ner:NBET.embedding<'nr>)
   : Cfg.primitive_step
   =
-    mk name 2 nunivs
+    mk name 1 nunivs
       (mk_total_interpretation_1 f e1 er)
       (fun cb args -> mk_total_nbe_interpretation_1 cb nf ne1 ner (drop nunivs args))
 
@@ -1439,7 +1439,7 @@ let mk_total_step_2
   (ner:NBET.embedding<'nr>)
   : Cfg.primitive_step
   =
-    mk name 3 nunivs
+    mk name 2 nunivs
       (mk_total_interpretation_2 f e1 e2 er)
       (fun cb args -> mk_total_nbe_interpretation_2 cb nf ne1 ne2 ner (drop nunivs args))
 
@@ -1458,7 +1458,7 @@ let mk_total_step_3
   (ner:NBET.embedding<'nr>)
   : Cfg.primitive_step
   =
-    mk name 4 nunivs
+    mk name 3 nunivs
       (mk_total_interpretation_3 f e1 e2 e3 er)
       (fun cb args -> mk_total_nbe_interpretation_3 cb nf ne1 ne2 ne3 ner (drop nunivs args))
 
@@ -1479,7 +1479,7 @@ let mk_total_step_4
   (ner:NBET.embedding<'nr>)
   : Cfg.primitive_step
   =
-    mk name 5 nunivs
+    mk name 4 nunivs
       (mk_total_interpretation_4 f e1 e2 e3 e4 er)
       (fun cb args -> mk_total_nbe_interpretation_4 cb nf ne1 ne2 ne3 ne4 ner (drop nunivs args))
 
@@ -1502,7 +1502,7 @@ let mk_total_step_5
   (ner:NBET.embedding<'nr>)
   : Cfg.primitive_step
   =
-    mk name 6 nunivs
+    mk name 5 nunivs
       (mk_total_interpretation_5 f e1 e2 e3 e4 e5 er)
       (fun cb args -> mk_total_nbe_interpretation_5 cb nf ne1 ne2 ne3 ne4 ne5 ner (drop nunivs args))
 
@@ -1527,7 +1527,7 @@ let mk_total_step_6
   (ner:NBET.embedding<'nr>)
   : Cfg.primitive_step
   =
-    mk name 7 nunivs
+    mk name 6 nunivs
       (mk_total_interpretation_6 f e1 e2 e3 e4 e5 e6 er)
       (fun cb args -> mk_total_nbe_interpretation_6 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ner (drop nunivs args))
 
@@ -1554,7 +1554,7 @@ let mk_total_step_7
   (ner:NBET.embedding<'nr>)
   : Cfg.primitive_step
   =
-    mk name 8 nunivs
+    mk name 7 nunivs
       (mk_total_interpretation_7 f e1 e2 e3 e4 e5 e6 e7 er)
       (fun cb args -> mk_total_nbe_interpretation_7 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ner (drop nunivs args))
 
@@ -1583,7 +1583,7 @@ let mk_total_step_8
   (ner:NBET.embedding<'nr>)
   : Cfg.primitive_step
   =
-    mk name 9 nunivs
+    mk name 8 nunivs
       (mk_total_interpretation_8 f e1 e2 e3 e4 e5 e6 e7 e8 er)
       (fun cb args -> mk_total_nbe_interpretation_8 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ner (drop nunivs args))
 
@@ -1614,7 +1614,7 @@ let mk_total_step_9
   (ner:NBET.embedding<'nr>)
   : Cfg.primitive_step
   =
-    mk name 10 nunivs
+    mk name 9 nunivs
       (mk_total_interpretation_9 f e1 e2 e3 e4 e5 e6 e7 e8 e9 er)
       (fun cb args -> mk_total_nbe_interpretation_9 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ner (drop nunivs args))
 
@@ -1647,7 +1647,7 @@ let mk_total_step_10
   (ner:NBET.embedding<'nr>)
   : Cfg.primitive_step
   =
-    mk name 11 nunivs
+    mk name 10 nunivs
       (mk_total_interpretation_10 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 er)
       (fun cb args -> mk_total_nbe_interpretation_10 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ner (drop nunivs args))
 

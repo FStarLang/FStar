@@ -189,7 +189,7 @@ function make_total_step_def () {
     echo "  (ner:NBET.embedding<'nr>)"
     echo "  : Cfg.primitive_step"
     echo "  ="
-    echo "    mk name $((n+1)) nunivs"
+    echo "    mk name $n nunivs"
     echo -n "      (mk_total_interpretation_$n f"
       for i in $(seq 1 $n); do echo -n " e$i"; done; echo " er)"
     echo -n "      (fun cb args -> mk_total_nbe_interpretation_$n cb nf"
