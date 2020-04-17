@@ -292,7 +292,7 @@ type raw_error =
   | Warning_UseDefaultEffect
   | Warning_WrongErrorLocation
   | Warning_Z3InvocationWarning
-  | Warning_CallNotImplementedAsWarning
+  | Warning_PluginNotImplemented
   | Warning_MissingInterfaceOrImplementation
   | Warning_ConstructorBuildsUnexpectedType
   | Warning_ModuleOrFileNotFoundWarning
@@ -589,7 +589,7 @@ let default_flags =
   (Fatal_WrongTerm                                   , CFatal);
   (Fatal_WhenClauseNotSupported                      , CFatal);
   (Unused01                                          , CFatal);
-  (Warning_CallNotImplementedAsWarning               , CWarning);
+  (Warning_PluginNotImplemented                      , CError);
   (Warning_AddImplicitAssumeNewQualifier             , CWarning);
   (Warning_AdmitWithoutDefinition                    , CWarning);
   (Warning_CachedFile                                , CWarning);

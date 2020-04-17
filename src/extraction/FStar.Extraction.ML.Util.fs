@@ -404,8 +404,11 @@ exception NoTacticEmbedding of string
 
 let not_implemented_warning r t msg =
     Errors.log_issue r
-        (Errors.Warning_CallNotImplementedAsWarning,
-         BU.format2 "Plugin %s will not run natively because %s.\n" t msg)
+        (Errors.Warning_PluginNotImplemented,
+         BU.format3 "Plugin %s can not run natively because %s (use --warn_error -%s to carry on)."
+                        t
+                        msg
+                        (string_of_int <| Errors.errno_of_error (Errors.Warning_PluginNotImplemented)))
 
 type emb_loc =
     | Syntax_term (* FStar.Syntax.Embeddings *)
