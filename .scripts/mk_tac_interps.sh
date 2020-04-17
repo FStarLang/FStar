@@ -151,7 +151,7 @@ function make_tac_step_def () {
     done
     echo "  (er:embedding<'r>)"
     echo -n "  (nt : 'nt1"
-    for i in $(seq 2 $n); do echo -n " -> 't$i"; done
+    for i in $(seq 2 $n); do echo -n " -> 'nt$i"; done
     echo " -> tac<'nr>)"
     for i in $(seq 1 $n); do
     echo "  (ne$i:NBET.embedding<'nt$i>)"
@@ -181,7 +181,7 @@ function make_total_step_def () {
     done
     echo "  (er:embedding<'r>)"
     echo -n "  (nf : 'nt1"
-    for i in $(seq 2 $n); do echo -n " -> 't$i"; done
+    for i in $(seq 2 $n); do echo -n " -> 'nt$i"; done
     echo " -> 'nr)"
     for i in $(seq 1 $n); do
     echo "  (ne$i:NBET.embedding<'nt$i>)"
