@@ -3529,48 +3529,23 @@ let mk_tac_step_2 :
                       'nr FStar_TypeChecker_NBETerm.embedding ->
                         FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____11957  ->
-    fun uu____11956  ->
-      fun uu____11955  ->
-        fun uu____11954  ->
-          fun uu____11953  ->
-            fun uu____11952  ->
-              fun uu____11951  ->
-                fun uu____11950  ->
-                  fun uu____11949  ->
-                    fun uu____11948  ->
-                      (fun nunivs  ->
-                         fun name  ->
-                           fun t  ->
-                             fun e1  ->
-                               fun e2  ->
-                                 fun er  ->
-                                   fun nt  ->
-                                     let nt = Obj.magic nt  in
-                                     fun ne1  ->
-                                       fun ne2  ->
-                                         fun ner  ->
-                                           Obj.magic
-                                             (mk name (Prims.of_int (3))
-                                                nunivs
-                                                (mk_tactic_interpretation_2 t
-                                                   e1 e2 er)
-                                                (fun cb  ->
-                                                   fun args  ->
-                                                     let uu____11941 =
-                                                       drop nunivs args  in
-                                                     mk_tactic_nbe_interpretation_2
-                                                       cb
-                                                       (fun uu____11947  ->
-                                                          fun uu____11946  ->
-                                                            (Obj.magic nt)
-                                                              uu____11947
-                                                              uu____11946)
-                                                       ne1 ne2 ner
-                                                       uu____11941)))
-                        uu____11957 uu____11956 uu____11955 uu____11954
-                        uu____11953 uu____11952 uu____11951 uu____11950
-                        uu____11949 uu____11948
+  fun nunivs  ->
+    fun name  ->
+      fun t  ->
+        fun e1  ->
+          fun e2  ->
+            fun er  ->
+              fun nt  ->
+                fun ne1  ->
+                  fun ne2  ->
+                    fun ner  ->
+                      mk name (Prims.of_int (3)) nunivs
+                        (mk_tactic_interpretation_2 t e1 e2 er)
+                        (fun cb  ->
+                           fun args  ->
+                             let uu____11941 = drop nunivs args  in
+                             mk_tactic_nbe_interpretation_2 cb nt ne1 ne2 ner
+                               uu____11941)
   
 let mk_tac_step_3 :
   'nr 'nt1 'nt2 'nt3 'r 't1 't2 't3 .
@@ -3588,66 +3563,25 @@ let mk_tac_step_3 :
                           'nr FStar_TypeChecker_NBETerm.embedding ->
                             FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____12166  ->
-    fun uu____12165  ->
-      fun uu____12164  ->
-        fun uu____12163  ->
-          fun uu____12162  ->
-            fun uu____12161  ->
-              fun uu____12160  ->
-                fun uu____12159  ->
-                  fun uu____12158  ->
-                    fun uu____12157  ->
-                      fun uu____12156  ->
-                        fun uu____12155  ->
-                          (fun nunivs  ->
-                             fun name  ->
-                               fun t  ->
-                                 fun e1  ->
-                                   fun e2  ->
-                                     fun e3  ->
-                                       fun er  ->
-                                         fun nt  ->
-                                           let nt = Obj.magic nt  in
-                                           fun ne1  ->
-                                             fun ne2  ->
-                                               fun ne3  ->
-                                                 fun ner  ->
-                                                   Obj.magic
-                                                     (mk name
-                                                        (Prims.of_int (4))
-                                                        nunivs
-                                                        (mk_tactic_interpretation_3
-                                                           t e1 e2 e3 er)
-                                                        (fun cb  ->
-                                                           fun args  ->
-                                                             let uu____12147
-                                                               =
-                                                               drop nunivs
-                                                                 args
-                                                                in
-                                                             mk_tactic_nbe_interpretation_3
-                                                               cb
-                                                               (fun
-                                                                  uu____12154
-                                                                   ->
-                                                                  fun
-                                                                    uu____12153
-                                                                     ->
-                                                                    fun
-                                                                    uu____12152
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nt)
-                                                                    uu____12154
-                                                                    uu____12153
-                                                                    uu____12152)
-                                                               ne1 ne2 ne3
-                                                               ner
-                                                               uu____12147)))
-                            uu____12166 uu____12165 uu____12164 uu____12163
-                            uu____12162 uu____12161 uu____12160 uu____12159
-                            uu____12158 uu____12157 uu____12156 uu____12155
+  fun nunivs  ->
+    fun name  ->
+      fun t  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun er  ->
+                fun nt  ->
+                  fun ne1  ->
+                    fun ne2  ->
+                      fun ne3  ->
+                        fun ner  ->
+                          mk name (Prims.of_int (4)) nunivs
+                            (mk_tactic_interpretation_3 t e1 e2 e3 er)
+                            (fun cb  ->
+                               fun args  ->
+                                 let uu____12135 = drop nunivs args  in
+                                 mk_tactic_nbe_interpretation_3 cb nt ne1 ne2
+                                   ne3 ner uu____12135)
   
 let mk_tac_step_4 :
   'nr 'nt1 'nt2 'nt3 'nt4 'r 't1 't2 't3 't4 .
@@ -3669,79 +3603,27 @@ let mk_tac_step_4 :
                               'nr FStar_TypeChecker_NBETerm.embedding ->
                                 FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____12416  ->
-    fun uu____12415  ->
-      fun uu____12414  ->
-        fun uu____12413  ->
-          fun uu____12412  ->
-            fun uu____12411  ->
-              fun uu____12410  ->
-                fun uu____12409  ->
-                  fun uu____12408  ->
-                    fun uu____12407  ->
-                      fun uu____12406  ->
-                        fun uu____12405  ->
-                          fun uu____12404  ->
-                            fun uu____12403  ->
-                              (fun nunivs  ->
-                                 fun name  ->
-                                   fun t  ->
-                                     fun e1  ->
-                                       fun e2  ->
-                                         fun e3  ->
-                                           fun e4  ->
-                                             fun er  ->
-                                               fun nt  ->
-                                                 let nt = Obj.magic nt  in
-                                                 fun ne1  ->
-                                                   fun ne2  ->
-                                                     fun ne3  ->
-                                                       fun ne4  ->
-                                                         fun ner  ->
-                                                           Obj.magic
-                                                             (mk name
-                                                                (Prims.of_int (5))
-                                                                nunivs
-                                                                (mk_tactic_interpretation_4
-                                                                   t e1 e2 e3
-                                                                   e4 er)
-                                                                (fun cb  ->
-                                                                   fun args 
-                                                                    ->
-                                                                    let uu____12394
-                                                                    =
-                                                                    drop
-                                                                    nunivs
-                                                                    args  in
-                                                                    mk_tactic_nbe_interpretation_4
-                                                                    cb
-                                                                    (fun
-                                                                    uu____12402
-                                                                     ->
-                                                                    fun
-                                                                    uu____12401
-                                                                     ->
-                                                                    fun
-                                                                    uu____12400
-                                                                     ->
-                                                                    fun
-                                                                    uu____12399
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nt)
-                                                                    uu____12402
-                                                                    uu____12401
-                                                                    uu____12400
-                                                                    uu____12399)
-                                                                    ne1 ne2
-                                                                    ne3 ne4
-                                                                    ner
-                                                                    uu____12394)))
-                                uu____12416 uu____12415 uu____12414
-                                uu____12413 uu____12412 uu____12411
-                                uu____12410 uu____12409 uu____12408
-                                uu____12407 uu____12406 uu____12405
-                                uu____12404 uu____12403
+  fun nunivs  ->
+    fun name  ->
+      fun t  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun e4  ->
+                fun er  ->
+                  fun nt  ->
+                    fun ne1  ->
+                      fun ne2  ->
+                        fun ne3  ->
+                          fun ne4  ->
+                            fun ner  ->
+                              mk name (Prims.of_int (5)) nunivs
+                                (mk_tactic_interpretation_4 t e1 e2 e3 e4 er)
+                                (fun cb  ->
+                                   fun args  ->
+                                     let uu____12367 = drop nunivs args  in
+                                     mk_tactic_nbe_interpretation_4 cb nt ne1
+                                       ne2 ne3 ne4 ner uu____12367)
   
 let mk_tac_step_5 :
   'nr 'nt1 'nt2 'nt3 'nt4 'nt5 'r 't1 't2 't3 't4 't5 .
@@ -3767,91 +3649,32 @@ let mk_tac_step_5 :
                                   'nr FStar_TypeChecker_NBETerm.embedding ->
                                     FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____12707  ->
-    fun uu____12706  ->
-      fun uu____12705  ->
-        fun uu____12704  ->
-          fun uu____12703  ->
-            fun uu____12702  ->
-              fun uu____12701  ->
-                fun uu____12700  ->
-                  fun uu____12699  ->
-                    fun uu____12698  ->
-                      fun uu____12697  ->
-                        fun uu____12696  ->
-                          fun uu____12695  ->
-                            fun uu____12694  ->
-                              fun uu____12693  ->
-                                fun uu____12692  ->
-                                  (fun nunivs  ->
-                                     fun name  ->
-                                       fun t  ->
-                                         fun e1  ->
-                                           fun e2  ->
-                                             fun e3  ->
-                                               fun e4  ->
-                                                 fun e5  ->
-                                                   fun er  ->
-                                                     fun nt  ->
-                                                       let nt = Obj.magic nt
-                                                          in
-                                                       fun ne1  ->
-                                                         fun ne2  ->
-                                                           fun ne3  ->
-                                                             fun ne4  ->
-                                                               fun ne5  ->
-                                                                 fun ner  ->
-                                                                   Obj.magic
-                                                                    (mk name
-                                                                    (Prims.of_int (6))
-                                                                    nunivs
-                                                                    (mk_tactic_interpretation_5
-                                                                    t e1 e2
-                                                                    e3 e4 e5
-                                                                    er)
-                                                                    (fun cb 
-                                                                    ->
-                                                                    fun args 
-                                                                    ->
-                                                                    let uu____12682
-                                                                    =
-                                                                    drop
-                                                                    nunivs
-                                                                    args  in
-                                                                    mk_tactic_nbe_interpretation_5
-                                                                    cb
-                                                                    (fun
-                                                                    uu____12691
-                                                                     ->
-                                                                    fun
-                                                                    uu____12690
-                                                                     ->
-                                                                    fun
-                                                                    uu____12689
-                                                                     ->
-                                                                    fun
-                                                                    uu____12688
-                                                                     ->
-                                                                    fun
-                                                                    uu____12687
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nt)
-                                                                    uu____12691
-                                                                    uu____12690
-                                                                    uu____12689
-                                                                    uu____12688
-                                                                    uu____12687)
-                                                                    ne1 ne2
-                                                                    ne3 ne4
-                                                                    ne5 ner
-                                                                    uu____12682)))
-                                    uu____12707 uu____12706 uu____12705
-                                    uu____12704 uu____12703 uu____12702
-                                    uu____12701 uu____12700 uu____12699
-                                    uu____12698 uu____12697 uu____12696
-                                    uu____12695 uu____12694 uu____12693
-                                    uu____12692
+  fun nunivs  ->
+    fun name  ->
+      fun t  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun e4  ->
+                fun e5  ->
+                  fun er  ->
+                    fun nt  ->
+                      fun ne1  ->
+                        fun ne2  ->
+                          fun ne3  ->
+                            fun ne4  ->
+                              fun ne5  ->
+                                fun ner  ->
+                                  mk name (Prims.of_int (6)) nunivs
+                                    (mk_tactic_interpretation_5 t e1 e2 e3 e4
+                                       e5 er)
+                                    (fun cb  ->
+                                       fun args  ->
+                                         let uu____12637 = drop nunivs args
+                                            in
+                                         mk_tactic_nbe_interpretation_5 cb nt
+                                           ne1 ne2 ne3 ne4 ne5 ner
+                                           uu____12637)
   
 let mk_tac_step_6 :
   'nr 'nt1 'nt2 'nt3 'nt4 'nt5 'nt6 'r 't1 't2 't3 't4 't5 't6 .
@@ -3883,105 +3706,34 @@ let mk_tac_step_6 :
                                         ->
                                         FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____13039  ->
-    fun uu____13038  ->
-      fun uu____13037  ->
-        fun uu____13036  ->
-          fun uu____13035  ->
-            fun uu____13034  ->
-              fun uu____13033  ->
-                fun uu____13032  ->
-                  fun uu____13031  ->
-                    fun uu____13030  ->
-                      fun uu____13029  ->
-                        fun uu____13028  ->
-                          fun uu____13027  ->
-                            fun uu____13026  ->
-                              fun uu____13025  ->
-                                fun uu____13024  ->
-                                  fun uu____13023  ->
-                                    fun uu____13022  ->
-                                      (fun nunivs  ->
-                                         fun name  ->
-                                           fun t  ->
-                                             fun e1  ->
-                                               fun e2  ->
-                                                 fun e3  ->
-                                                   fun e4  ->
-                                                     fun e5  ->
-                                                       fun e6  ->
-                                                         fun er  ->
-                                                           fun nt  ->
-                                                             let nt =
-                                                               Obj.magic nt
-                                                                in
-                                                             fun ne1  ->
-                                                               fun ne2  ->
-                                                                 fun ne3  ->
-                                                                   fun ne4 
-                                                                    ->
-                                                                    fun ne5 
-                                                                    ->
-                                                                    fun ne6 
-                                                                    ->
-                                                                    fun ner 
-                                                                    ->
-                                                                    Obj.magic
-                                                                    (mk name
-                                                                    (Prims.of_int (7))
-                                                                    nunivs
-                                                                    (mk_tactic_interpretation_6
-                                                                    t e1 e2
-                                                                    e3 e4 e5
-                                                                    e6 er)
-                                                                    (fun cb 
-                                                                    ->
-                                                                    fun args 
-                                                                    ->
-                                                                    let uu____13011
-                                                                    =
-                                                                    drop
-                                                                    nunivs
-                                                                    args  in
-                                                                    mk_tactic_nbe_interpretation_6
-                                                                    cb
-                                                                    (fun
-                                                                    uu____13021
-                                                                     ->
-                                                                    fun
-                                                                    uu____13020
-                                                                     ->
-                                                                    fun
-                                                                    uu____13019
-                                                                     ->
-                                                                    fun
-                                                                    uu____13018
-                                                                     ->
-                                                                    fun
-                                                                    uu____13017
-                                                                     ->
-                                                                    fun
-                                                                    uu____13016
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nt)
-                                                                    uu____13021
-                                                                    uu____13020
-                                                                    uu____13019
-                                                                    uu____13018
-                                                                    uu____13017
-                                                                    uu____13016)
-                                                                    ne1 ne2
-                                                                    ne3 ne4
-                                                                    ne5 ne6
-                                                                    ner
-                                                                    uu____13011)))
-                                        uu____13039 uu____13038 uu____13037
-                                        uu____13036 uu____13035 uu____13034
-                                        uu____13033 uu____13032 uu____13031
-                                        uu____13030 uu____13029 uu____13028
-                                        uu____13027 uu____13026 uu____13025
-                                        uu____13024 uu____13023 uu____13022
+  fun nunivs  ->
+    fun name  ->
+      fun t  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun e4  ->
+                fun e5  ->
+                  fun e6  ->
+                    fun er  ->
+                      fun nt  ->
+                        fun ne1  ->
+                          fun ne2  ->
+                            fun ne3  ->
+                              fun ne4  ->
+                                fun ne5  ->
+                                  fun ne6  ->
+                                    fun ner  ->
+                                      mk name (Prims.of_int (7)) nunivs
+                                        (mk_tactic_interpretation_6 t e1 e2
+                                           e3 e4 e5 e6 er)
+                                        (fun cb  ->
+                                           fun args  ->
+                                             let uu____12945 =
+                                               drop nunivs args  in
+                                             mk_tactic_nbe_interpretation_6
+                                               cb nt ne1 ne2 ne3 ne4 ne5 ne6
+                                               ner uu____12945)
   
 let mk_tac_step_7 :
   'nr 'nt1 'nt2 'nt3 'nt4 'nt5 'nt6 'nt7 'r 't1 't2 't3 't4 't5 't6 't7 .
@@ -4024,121 +3776,36 @@ let mk_tac_step_7 :
                                             ->
                                             FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____13412  ->
-    fun uu____13411  ->
-      fun uu____13410  ->
-        fun uu____13409  ->
-          fun uu____13408  ->
-            fun uu____13407  ->
-              fun uu____13406  ->
-                fun uu____13405  ->
-                  fun uu____13404  ->
-                    fun uu____13403  ->
-                      fun uu____13402  ->
-                        fun uu____13401  ->
-                          fun uu____13400  ->
-                            fun uu____13399  ->
-                              fun uu____13398  ->
-                                fun uu____13397  ->
-                                  fun uu____13396  ->
-                                    fun uu____13395  ->
-                                      fun uu____13394  ->
-                                        fun uu____13393  ->
-                                          (fun nunivs  ->
-                                             fun name  ->
-                                               fun t  ->
-                                                 fun e1  ->
-                                                   fun e2  ->
-                                                     fun e3  ->
-                                                       fun e4  ->
-                                                         fun e5  ->
-                                                           fun e6  ->
-                                                             fun e7  ->
-                                                               fun er  ->
-                                                                 fun nt  ->
-                                                                   let nt =
-                                                                    Obj.magic
-                                                                    nt  in
-                                                                   fun ne1 
-                                                                    ->
-                                                                    fun ne2 
-                                                                    ->
-                                                                    fun ne3 
-                                                                    ->
-                                                                    fun ne4 
-                                                                    ->
-                                                                    fun ne5 
-                                                                    ->
-                                                                    fun ne6 
-                                                                    ->
-                                                                    fun ne7 
-                                                                    ->
-                                                                    fun ner 
-                                                                    ->
-                                                                    Obj.magic
-                                                                    (mk name
-                                                                    (Prims.of_int (8))
-                                                                    nunivs
-                                                                    (mk_tactic_interpretation_7
-                                                                    t e1 e2
-                                                                    e3 e4 e5
-                                                                    e6 e7 er)
-                                                                    (fun cb 
-                                                                    ->
-                                                                    fun args 
-                                                                    ->
-                                                                    let uu____13381
-                                                                    =
-                                                                    drop
-                                                                    nunivs
-                                                                    args  in
-                                                                    mk_tactic_nbe_interpretation_7
-                                                                    cb
-                                                                    (fun
-                                                                    uu____13392
-                                                                     ->
-                                                                    fun
-                                                                    uu____13391
-                                                                     ->
-                                                                    fun
-                                                                    uu____13390
-                                                                     ->
-                                                                    fun
-                                                                    uu____13389
-                                                                     ->
-                                                                    fun
-                                                                    uu____13388
-                                                                     ->
-                                                                    fun
-                                                                    uu____13387
-                                                                     ->
-                                                                    fun
-                                                                    uu____13386
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nt)
-                                                                    uu____13392
-                                                                    uu____13391
-                                                                    uu____13390
-                                                                    uu____13389
-                                                                    uu____13388
-                                                                    uu____13387
-                                                                    uu____13386)
-                                                                    ne1 ne2
-                                                                    ne3 ne4
-                                                                    ne5 ne6
-                                                                    ne7 ner
-                                                                    uu____13381)))
-                                            uu____13412 uu____13411
-                                            uu____13410 uu____13409
-                                            uu____13408 uu____13407
-                                            uu____13406 uu____13405
-                                            uu____13404 uu____13403
-                                            uu____13402 uu____13401
-                                            uu____13400 uu____13399
-                                            uu____13398 uu____13397
-                                            uu____13396 uu____13395
-                                            uu____13394 uu____13393
+  fun nunivs  ->
+    fun name  ->
+      fun t  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun e4  ->
+                fun e5  ->
+                  fun e6  ->
+                    fun e7  ->
+                      fun er  ->
+                        fun nt  ->
+                          fun ne1  ->
+                            fun ne2  ->
+                              fun ne3  ->
+                                fun ne4  ->
+                                  fun ne5  ->
+                                    fun ne6  ->
+                                      fun ne7  ->
+                                        fun ner  ->
+                                          mk name (Prims.of_int (8)) nunivs
+                                            (mk_tactic_interpretation_7 t e1
+                                               e2 e3 e4 e5 e6 e7 er)
+                                            (fun cb  ->
+                                               fun args  ->
+                                                 let uu____13291 =
+                                                   drop nunivs args  in
+                                                 mk_tactic_nbe_interpretation_7
+                                                   cb nt ne1 ne2 ne3 ne4 ne5
+                                                   ne6 ne7 ner uu____13291)
   
 let mk_tac_step_8 :
   'nr 'nt1 'nt2 'nt3 'nt4 'nt5 'nt6 'nt7 'nt8 'r 't1 't2 't3 't4 't5 't6 't7
@@ -4191,135 +3858,40 @@ let mk_tac_step_8 :
                                                 ->
                                                 FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____13826  ->
-    fun uu____13825  ->
-      fun uu____13824  ->
-        fun uu____13823  ->
-          fun uu____13822  ->
-            fun uu____13821  ->
-              fun uu____13820  ->
-                fun uu____13819  ->
-                  fun uu____13818  ->
-                    fun uu____13817  ->
-                      fun uu____13816  ->
-                        fun uu____13815  ->
-                          fun uu____13814  ->
-                            fun uu____13813  ->
-                              fun uu____13812  ->
-                                fun uu____13811  ->
-                                  fun uu____13810  ->
-                                    fun uu____13809  ->
-                                      fun uu____13808  ->
-                                        fun uu____13807  ->
-                                          fun uu____13806  ->
-                                            fun uu____13805  ->
-                                              (fun nunivs  ->
-                                                 fun name  ->
-                                                   fun t  ->
-                                                     fun e1  ->
-                                                       fun e2  ->
-                                                         fun e3  ->
-                                                           fun e4  ->
-                                                             fun e5  ->
-                                                               fun e6  ->
-                                                                 fun e7  ->
-                                                                   fun e8  ->
-                                                                    fun er 
-                                                                    ->
-                                                                    fun nt 
-                                                                    ->
-                                                                    let nt =
-                                                                    Obj.magic
-                                                                    nt  in
-                                                                    fun ne1 
-                                                                    ->
-                                                                    fun ne2 
-                                                                    ->
-                                                                    fun ne3 
-                                                                    ->
-                                                                    fun ne4 
-                                                                    ->
-                                                                    fun ne5 
-                                                                    ->
-                                                                    fun ne6 
-                                                                    ->
-                                                                    fun ne7 
-                                                                    ->
-                                                                    fun ne8 
-                                                                    ->
-                                                                    fun ner 
-                                                                    ->
-                                                                    Obj.magic
-                                                                    (mk name
-                                                                    (Prims.of_int (9))
-                                                                    nunivs
-                                                                    (mk_tactic_interpretation_8
-                                                                    t e1 e2
-                                                                    e3 e4 e5
-                                                                    e6 e7 e8
-                                                                    er)
-                                                                    (fun cb 
-                                                                    ->
-                                                                    fun args 
-                                                                    ->
-                                                                    let uu____13792
-                                                                    =
-                                                                    drop
-                                                                    nunivs
-                                                                    args  in
-                                                                    mk_tactic_nbe_interpretation_8
-                                                                    cb
-                                                                    (fun
-                                                                    uu____13804
-                                                                     ->
-                                                                    fun
-                                                                    uu____13803
-                                                                     ->
-                                                                    fun
-                                                                    uu____13802
-                                                                     ->
-                                                                    fun
-                                                                    uu____13801
-                                                                     ->
-                                                                    fun
-                                                                    uu____13800
-                                                                     ->
-                                                                    fun
-                                                                    uu____13799
-                                                                     ->
-                                                                    fun
-                                                                    uu____13798
-                                                                     ->
-                                                                    fun
-                                                                    uu____13797
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nt)
-                                                                    uu____13804
-                                                                    uu____13803
-                                                                    uu____13802
-                                                                    uu____13801
-                                                                    uu____13800
-                                                                    uu____13799
-                                                                    uu____13798
-                                                                    uu____13797)
-                                                                    ne1 ne2
-                                                                    ne3 ne4
-                                                                    ne5 ne6
-                                                                    ne7 ne8
-                                                                    ner
-                                                                    uu____13792)))
-                                                uu____13826 uu____13825
-                                                uu____13824 uu____13823
-                                                uu____13822 uu____13821
-                                                uu____13820 uu____13819
-                                                uu____13818 uu____13817
-                                                uu____13816 uu____13815
-                                                uu____13814 uu____13813
-                                                uu____13812 uu____13811
-                                                uu____13810 uu____13809
-                                                uu____13808 uu____13807
-                                                uu____13806 uu____13805
+  fun nunivs  ->
+    fun name  ->
+      fun t  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun e4  ->
+                fun e5  ->
+                  fun e6  ->
+                    fun e7  ->
+                      fun e8  ->
+                        fun er  ->
+                          fun nt  ->
+                            fun ne1  ->
+                              fun ne2  ->
+                                fun ne3  ->
+                                  fun ne4  ->
+                                    fun ne5  ->
+                                      fun ne6  ->
+                                        fun ne7  ->
+                                          fun ne8  ->
+                                            fun ner  ->
+                                              mk name (Prims.of_int (9))
+                                                nunivs
+                                                (mk_tactic_interpretation_8 t
+                                                   e1 e2 e3 e4 e5 e6 e7 e8 er)
+                                                (fun cb  ->
+                                                   fun args  ->
+                                                     let uu____13675 =
+                                                       drop nunivs args  in
+                                                     mk_tactic_nbe_interpretation_8
+                                                       cb nt ne1 ne2 ne3 ne4
+                                                       ne5 ne6 ne7 ne8 ner
+                                                       uu____13675)
   
 let mk_tac_step_9 :
   'nr 'nt1 'nt2 'nt3 'nt4 'nt5 'nt6 'nt7 'nt8 'nt9 'r 't1 't2 't3 't4 't5 't6
@@ -4381,148 +3953,45 @@ let mk_tac_step_9 :
                                                     ->
                                                     FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____14281  ->
-    fun uu____14280  ->
-      fun uu____14279  ->
-        fun uu____14278  ->
-          fun uu____14277  ->
-            fun uu____14276  ->
-              fun uu____14275  ->
-                fun uu____14274  ->
-                  fun uu____14273  ->
-                    fun uu____14272  ->
-                      fun uu____14271  ->
-                        fun uu____14270  ->
-                          fun uu____14269  ->
-                            fun uu____14268  ->
-                              fun uu____14267  ->
-                                fun uu____14266  ->
-                                  fun uu____14265  ->
-                                    fun uu____14264  ->
-                                      fun uu____14263  ->
-                                        fun uu____14262  ->
-                                          fun uu____14261  ->
-                                            fun uu____14260  ->
-                                              fun uu____14259  ->
-                                                fun uu____14258  ->
-                                                  (fun nunivs  ->
-                                                     fun name  ->
-                                                       fun t  ->
-                                                         fun e1  ->
-                                                           fun e2  ->
-                                                             fun e3  ->
-                                                               fun e4  ->
-                                                                 fun e5  ->
-                                                                   fun e6  ->
-                                                                    fun e7 
-                                                                    ->
-                                                                    fun e8 
-                                                                    ->
-                                                                    fun e9 
-                                                                    ->
-                                                                    fun er 
-                                                                    ->
-                                                                    fun nt 
-                                                                    ->
-                                                                    let nt =
-                                                                    Obj.magic
-                                                                    nt  in
-                                                                    fun ne1 
-                                                                    ->
-                                                                    fun ne2 
-                                                                    ->
-                                                                    fun ne3 
-                                                                    ->
-                                                                    fun ne4 
-                                                                    ->
-                                                                    fun ne5 
-                                                                    ->
-                                                                    fun ne6 
-                                                                    ->
-                                                                    fun ne7 
-                                                                    ->
-                                                                    fun ne8 
-                                                                    ->
-                                                                    fun ne9 
-                                                                    ->
-                                                                    fun ner 
-                                                                    ->
-                                                                    Obj.magic
-                                                                    (mk name
-                                                                    (Prims.of_int (10))
-                                                                    nunivs
-                                                                    (mk_tactic_interpretation_9
-                                                                    t e1 e2
-                                                                    e3 e4 e5
-                                                                    e6 e7 e8
-                                                                    e9 er)
-                                                                    (fun cb 
-                                                                    ->
-                                                                    fun args 
-                                                                    ->
-                                                                    let uu____14244
-                                                                    =
-                                                                    drop
-                                                                    nunivs
-                                                                    args  in
-                                                                    mk_tactic_nbe_interpretation_9
-                                                                    cb
-                                                                    (fun
-                                                                    uu____14257
-                                                                     ->
-                                                                    fun
-                                                                    uu____14256
-                                                                     ->
-                                                                    fun
-                                                                    uu____14255
-                                                                     ->
-                                                                    fun
-                                                                    uu____14254
-                                                                     ->
-                                                                    fun
-                                                                    uu____14253
-                                                                     ->
-                                                                    fun
-                                                                    uu____14252
-                                                                     ->
-                                                                    fun
-                                                                    uu____14251
-                                                                     ->
-                                                                    fun
-                                                                    uu____14250
-                                                                     ->
-                                                                    fun
-                                                                    uu____14249
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nt)
-                                                                    uu____14257
-                                                                    uu____14256
-                                                                    uu____14255
-                                                                    uu____14254
-                                                                    uu____14253
-                                                                    uu____14252
-                                                                    uu____14251
-                                                                    uu____14250
-                                                                    uu____14249)
-                                                                    ne1 ne2
-                                                                    ne3 ne4
-                                                                    ne5 ne6
-                                                                    ne7 ne8
-                                                                    ne9 ner
-                                                                    uu____14244)))
-                                                    uu____14281 uu____14280
-                                                    uu____14279 uu____14278
-                                                    uu____14277 uu____14276
-                                                    uu____14275 uu____14274
-                                                    uu____14273 uu____14272
-                                                    uu____14271 uu____14270
-                                                    uu____14269 uu____14268
-                                                    uu____14267 uu____14266
-                                                    uu____14265 uu____14264
-                                                    uu____14263 uu____14262
-                                                    uu____14261 uu____14260
-                                                    uu____14259 uu____14258
+  fun nunivs  ->
+    fun name  ->
+      fun t  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun e4  ->
+                fun e5  ->
+                  fun e6  ->
+                    fun e7  ->
+                      fun e8  ->
+                        fun e9  ->
+                          fun er  ->
+                            fun nt  ->
+                              fun ne1  ->
+                                fun ne2  ->
+                                  fun ne3  ->
+                                    fun ne4  ->
+                                      fun ne5  ->
+                                        fun ne6  ->
+                                          fun ne7  ->
+                                            fun ne8  ->
+                                              fun ne9  ->
+                                                fun ner  ->
+                                                  mk name (Prims.of_int (10))
+                                                    nunivs
+                                                    (mk_tactic_interpretation_9
+                                                       t e1 e2 e3 e4 e5 e6 e7
+                                                       e8 e9 er)
+                                                    (fun cb  ->
+                                                       fun args  ->
+                                                         let uu____14097 =
+                                                           drop nunivs args
+                                                            in
+                                                         mk_tactic_nbe_interpretation_9
+                                                           cb nt ne1 ne2 ne3
+                                                           ne4 ne5 ne6 ne7
+                                                           ne8 ne9 ner
+                                                           uu____14097)
   
 let mk_tac_step_10 :
   'nr 'nt1 'nt10 'nt2 'nt3 'nt4 'nt5 'nt6 'nt7 'nt8 'nt9 'r 't1 't10 't2 't3
@@ -4593,175 +4062,51 @@ let mk_tac_step_10 :
                                                         ->
                                                         FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____14777  ->
-    fun uu____14776  ->
-      fun uu____14775  ->
-        fun uu____14774  ->
-          fun uu____14773  ->
-            fun uu____14772  ->
-              fun uu____14771  ->
-                fun uu____14770  ->
-                  fun uu____14769  ->
-                    fun uu____14768  ->
-                      fun uu____14767  ->
-                        fun uu____14766  ->
-                          fun uu____14765  ->
-                            fun uu____14764  ->
-                              fun uu____14763  ->
-                                fun uu____14762  ->
-                                  fun uu____14761  ->
-                                    fun uu____14760  ->
-                                      fun uu____14759  ->
-                                        fun uu____14758  ->
-                                          fun uu____14757  ->
-                                            fun uu____14756  ->
-                                              fun uu____14755  ->
-                                                fun uu____14754  ->
-                                                  fun uu____14753  ->
-                                                    fun uu____14752  ->
-                                                      (fun nunivs  ->
-                                                         fun name  ->
-                                                           fun t  ->
-                                                             fun e1  ->
-                                                               fun e2  ->
-                                                                 fun e3  ->
-                                                                   fun e4  ->
-                                                                    fun e5 
-                                                                    ->
-                                                                    fun e6 
-                                                                    ->
-                                                                    fun e7 
-                                                                    ->
-                                                                    fun e8 
-                                                                    ->
-                                                                    fun e9 
-                                                                    ->
-                                                                    fun e10 
-                                                                    ->
-                                                                    fun er 
-                                                                    ->
-                                                                    fun nt 
-                                                                    ->
-                                                                    let nt =
-                                                                    Obj.magic
-                                                                    nt  in
-                                                                    fun ne1 
-                                                                    ->
-                                                                    fun ne2 
-                                                                    ->
-                                                                    fun ne3 
-                                                                    ->
-                                                                    fun ne4 
-                                                                    ->
-                                                                    fun ne5 
-                                                                    ->
-                                                                    fun ne6 
-                                                                    ->
-                                                                    fun ne7 
-                                                                    ->
-                                                                    fun ne8 
-                                                                    ->
-                                                                    fun ne9 
-                                                                    ->
-                                                                    fun ne10 
-                                                                    ->
-                                                                    fun ner 
-                                                                    ->
-                                                                    Obj.magic
-                                                                    (mk name
-                                                                    (Prims.of_int (11))
-                                                                    nunivs
-                                                                    (mk_tactic_interpretation_10
-                                                                    t e1 e2
-                                                                    e3 e4 e5
-                                                                    e6 e7 e8
-                                                                    e9 e10 er)
-                                                                    (fun cb 
-                                                                    ->
-                                                                    fun args 
-                                                                    ->
-                                                                    let uu____14737
-                                                                    =
-                                                                    drop
-                                                                    nunivs
-                                                                    args  in
-                                                                    mk_tactic_nbe_interpretation_10
-                                                                    cb
-                                                                    (fun
-                                                                    uu____14751
-                                                                     ->
-                                                                    fun
-                                                                    uu____14750
-                                                                     ->
-                                                                    fun
-                                                                    uu____14749
-                                                                     ->
-                                                                    fun
-                                                                    uu____14748
-                                                                     ->
-                                                                    fun
-                                                                    uu____14747
-                                                                     ->
-                                                                    fun
-                                                                    uu____14746
-                                                                     ->
-                                                                    fun
-                                                                    uu____14745
-                                                                     ->
-                                                                    fun
-                                                                    uu____14744
-                                                                     ->
-                                                                    fun
-                                                                    uu____14743
-                                                                     ->
-                                                                    fun
-                                                                    uu____14742
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nt)
-                                                                    uu____14751
-                                                                    uu____14750
-                                                                    uu____14749
-                                                                    uu____14748
-                                                                    uu____14747
-                                                                    uu____14746
-                                                                    uu____14745
-                                                                    uu____14744
-                                                                    uu____14743
-                                                                    uu____14742)
-                                                                    ne1 ne2
-                                                                    ne3 ne4
-                                                                    ne5 ne6
-                                                                    ne7 ne8
-                                                                    ne9 ne10
-                                                                    ner
-                                                                    uu____14737)))
-                                                        uu____14777
-                                                        uu____14776
-                                                        uu____14775
-                                                        uu____14774
-                                                        uu____14773
-                                                        uu____14772
-                                                        uu____14771
-                                                        uu____14770
-                                                        uu____14769
-                                                        uu____14768
-                                                        uu____14767
-                                                        uu____14766
-                                                        uu____14765
-                                                        uu____14764
-                                                        uu____14763
-                                                        uu____14762
-                                                        uu____14761
-                                                        uu____14760
-                                                        uu____14759
-                                                        uu____14758
-                                                        uu____14757
-                                                        uu____14756
-                                                        uu____14755
-                                                        uu____14754
-                                                        uu____14753
-                                                        uu____14752
+  fun nunivs  ->
+    fun name  ->
+      fun t  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun e4  ->
+                fun e5  ->
+                  fun e6  ->
+                    fun e7  ->
+                      fun e8  ->
+                        fun e9  ->
+                          fun e10  ->
+                            fun er  ->
+                              fun nt  ->
+                                fun ne1  ->
+                                  fun ne2  ->
+                                    fun ne3  ->
+                                      fun ne4  ->
+                                        fun ne5  ->
+                                          fun ne6  ->
+                                            fun ne7  ->
+                                              fun ne8  ->
+                                                fun ne9  ->
+                                                  fun ne10  ->
+                                                    fun ner  ->
+                                                      mk name
+                                                        (Prims.of_int (11))
+                                                        nunivs
+                                                        (mk_tactic_interpretation_10
+                                                           t e1 e2 e3 e4 e5
+                                                           e6 e7 e8 e9 e10 er)
+                                                        (fun cb  ->
+                                                           fun args  ->
+                                                             let uu____14557
+                                                               =
+                                                               drop nunivs
+                                                                 args
+                                                                in
+                                                             mk_tactic_nbe_interpretation_10
+                                                               cb nt ne1 ne2
+                                                               ne3 ne4 ne5
+                                                               ne6 ne7 ne8
+                                                               ne9 ne10 ner
+                                                               uu____14557)
   
 let mk_total_step_1 :
   'nr 'nt1 'r 't1 .
@@ -4787,9 +4132,9 @@ let mk_total_step_1 :
                     (mk_total_interpretation_1 f e1 er)
                     (fun cb  ->
                        fun args  ->
-                         let uu____14883 = drop nunivs args  in
+                         let uu____14667 = drop nunivs args  in
                          mk_total_nbe_interpretation_1 cb nf ne1 ner
-                           uu____14883)
+                           uu____14667)
   
 let mk_total_step_2 :
   'nr 'nt1 'nt2 'r 't1 't2 .
@@ -4805,48 +4150,23 @@ let mk_total_step_2 :
                       'nr FStar_TypeChecker_NBETerm.embedding ->
                         FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____15047  ->
-    fun uu____15046  ->
-      fun uu____15045  ->
-        fun uu____15044  ->
-          fun uu____15043  ->
-            fun uu____15042  ->
-              fun uu____15041  ->
-                fun uu____15040  ->
-                  fun uu____15039  ->
-                    fun uu____15038  ->
-                      (fun nunivs  ->
-                         fun name  ->
-                           fun f  ->
-                             fun e1  ->
-                               fun e2  ->
-                                 fun er  ->
-                                   fun nf  ->
-                                     let nf = Obj.magic nf  in
-                                     fun ne1  ->
-                                       fun ne2  ->
-                                         fun ner  ->
-                                           Obj.magic
-                                             (mk name (Prims.of_int (3))
-                                                nunivs
-                                                (mk_total_interpretation_2 f
-                                                   e1 e2 er)
-                                                (fun cb  ->
-                                                   fun args  ->
-                                                     let uu____15031 =
-                                                       drop nunivs args  in
-                                                     mk_total_nbe_interpretation_2
-                                                       cb
-                                                       (fun uu____15037  ->
-                                                          fun uu____15036  ->
-                                                            (Obj.magic nf)
-                                                              uu____15037
-                                                              uu____15036)
-                                                       ne1 ne2 ner
-                                                       uu____15031)))
-                        uu____15047 uu____15046 uu____15045 uu____15044
-                        uu____15043 uu____15042 uu____15041 uu____15040
-                        uu____15039 uu____15038
+  fun nunivs  ->
+    fun name  ->
+      fun f  ->
+        fun e1  ->
+          fun e2  ->
+            fun er  ->
+              fun nf  ->
+                fun ne1  ->
+                  fun ne2  ->
+                    fun ner  ->
+                      mk name (Prims.of_int (3)) nunivs
+                        (mk_total_interpretation_2 f e1 e2 er)
+                        (fun cb  ->
+                           fun args  ->
+                             let uu____14815 = drop nunivs args  in
+                             mk_total_nbe_interpretation_2 cb nf ne1 ne2 ner
+                               uu____14815)
   
 let mk_total_step_3 :
   'nr 'nt1 'nt2 'nt3 'r 't1 't2 't3 .
@@ -4864,66 +4184,25 @@ let mk_total_step_3 :
                           'nr FStar_TypeChecker_NBETerm.embedding ->
                             FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____15248  ->
-    fun uu____15247  ->
-      fun uu____15246  ->
-        fun uu____15245  ->
-          fun uu____15244  ->
-            fun uu____15243  ->
-              fun uu____15242  ->
-                fun uu____15241  ->
-                  fun uu____15240  ->
-                    fun uu____15239  ->
-                      fun uu____15238  ->
-                        fun uu____15237  ->
-                          (fun nunivs  ->
-                             fun name  ->
-                               fun f  ->
-                                 fun e1  ->
-                                   fun e2  ->
-                                     fun e3  ->
-                                       fun er  ->
-                                         fun nf  ->
-                                           let nf = Obj.magic nf  in
-                                           fun ne1  ->
-                                             fun ne2  ->
-                                               fun ne3  ->
-                                                 fun ner  ->
-                                                   Obj.magic
-                                                     (mk name
-                                                        (Prims.of_int (4))
-                                                        nunivs
-                                                        (mk_total_interpretation_3
-                                                           f e1 e2 e3 er)
-                                                        (fun cb  ->
-                                                           fun args  ->
-                                                             let uu____15229
-                                                               =
-                                                               drop nunivs
-                                                                 args
-                                                                in
-                                                             mk_total_nbe_interpretation_3
-                                                               cb
-                                                               (fun
-                                                                  uu____15236
-                                                                   ->
-                                                                  fun
-                                                                    uu____15235
-                                                                     ->
-                                                                    fun
-                                                                    uu____15234
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nf)
-                                                                    uu____15236
-                                                                    uu____15235
-                                                                    uu____15234)
-                                                               ne1 ne2 ne3
-                                                               ner
-                                                               uu____15229)))
-                            uu____15248 uu____15247 uu____15246 uu____15245
-                            uu____15244 uu____15243 uu____15242 uu____15241
-                            uu____15240 uu____15239 uu____15238 uu____15237
+  fun nunivs  ->
+    fun name  ->
+      fun f  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun er  ->
+                fun nf  ->
+                  fun ne1  ->
+                    fun ne2  ->
+                      fun ne3  ->
+                        fun ner  ->
+                          mk name (Prims.of_int (4)) nunivs
+                            (mk_total_interpretation_3 f e1 e2 e3 er)
+                            (fun cb  ->
+                               fun args  ->
+                                 let uu____15001 = drop nunivs args  in
+                                 mk_total_nbe_interpretation_3 cb nf ne1 ne2
+                                   ne3 ner uu____15001)
   
 let mk_total_step_4 :
   'nr 'nt1 'nt2 'nt3 'nt4 'r 't1 't2 't3 't4 .
@@ -4943,79 +4222,27 @@ let mk_total_step_4 :
                               'nr FStar_TypeChecker_NBETerm.embedding ->
                                 FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____15490  ->
-    fun uu____15489  ->
-      fun uu____15488  ->
-        fun uu____15487  ->
-          fun uu____15486  ->
-            fun uu____15485  ->
-              fun uu____15484  ->
-                fun uu____15483  ->
-                  fun uu____15482  ->
-                    fun uu____15481  ->
-                      fun uu____15480  ->
-                        fun uu____15479  ->
-                          fun uu____15478  ->
-                            fun uu____15477  ->
-                              (fun nunivs  ->
-                                 fun name  ->
-                                   fun f  ->
-                                     fun e1  ->
-                                       fun e2  ->
-                                         fun e3  ->
-                                           fun e4  ->
-                                             fun er  ->
-                                               fun nf  ->
-                                                 let nf = Obj.magic nf  in
-                                                 fun ne1  ->
-                                                   fun ne2  ->
-                                                     fun ne3  ->
-                                                       fun ne4  ->
-                                                         fun ner  ->
-                                                           Obj.magic
-                                                             (mk name
-                                                                (Prims.of_int (5))
-                                                                nunivs
-                                                                (mk_total_interpretation_4
-                                                                   f e1 e2 e3
-                                                                   e4 er)
-                                                                (fun cb  ->
-                                                                   fun args 
-                                                                    ->
-                                                                    let uu____15468
-                                                                    =
-                                                                    drop
-                                                                    nunivs
-                                                                    args  in
-                                                                    mk_total_nbe_interpretation_4
-                                                                    cb
-                                                                    (fun
-                                                                    uu____15476
-                                                                     ->
-                                                                    fun
-                                                                    uu____15475
-                                                                     ->
-                                                                    fun
-                                                                    uu____15474
-                                                                     ->
-                                                                    fun
-                                                                    uu____15473
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nf)
-                                                                    uu____15476
-                                                                    uu____15475
-                                                                    uu____15474
-                                                                    uu____15473)
-                                                                    ne1 ne2
-                                                                    ne3 ne4
-                                                                    ner
-                                                                    uu____15468)))
-                                uu____15490 uu____15489 uu____15488
-                                uu____15487 uu____15486 uu____15485
-                                uu____15484 uu____15483 uu____15482
-                                uu____15481 uu____15480 uu____15479
-                                uu____15478 uu____15477
+  fun nunivs  ->
+    fun name  ->
+      fun f  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun e4  ->
+                fun er  ->
+                  fun nf  ->
+                    fun ne1  ->
+                      fun ne2  ->
+                        fun ne3  ->
+                          fun ne4  ->
+                            fun ner  ->
+                              mk name (Prims.of_int (5)) nunivs
+                                (mk_total_interpretation_4 f e1 e2 e3 e4 er)
+                                (fun cb  ->
+                                   fun args  ->
+                                     let uu____15225 = drop nunivs args  in
+                                     mk_total_nbe_interpretation_4 cb nf ne1
+                                       ne2 ne3 ne4 ner uu____15225)
   
 let mk_total_step_5 :
   'nr 'nt1 'nt2 'nt3 'nt4 'nt5 'r 't1 't2 't3 't4 't5 .
@@ -5037,91 +4264,32 @@ let mk_total_step_5 :
                                   'nr FStar_TypeChecker_NBETerm.embedding ->
                                     FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____15773  ->
-    fun uu____15772  ->
-      fun uu____15771  ->
-        fun uu____15770  ->
-          fun uu____15769  ->
-            fun uu____15768  ->
-              fun uu____15767  ->
-                fun uu____15766  ->
-                  fun uu____15765  ->
-                    fun uu____15764  ->
-                      fun uu____15763  ->
-                        fun uu____15762  ->
-                          fun uu____15761  ->
-                            fun uu____15760  ->
-                              fun uu____15759  ->
-                                fun uu____15758  ->
-                                  (fun nunivs  ->
-                                     fun name  ->
-                                       fun f  ->
-                                         fun e1  ->
-                                           fun e2  ->
-                                             fun e3  ->
-                                               fun e4  ->
-                                                 fun e5  ->
-                                                   fun er  ->
-                                                     fun nf  ->
-                                                       let nf = Obj.magic nf
-                                                          in
-                                                       fun ne1  ->
-                                                         fun ne2  ->
-                                                           fun ne3  ->
-                                                             fun ne4  ->
-                                                               fun ne5  ->
-                                                                 fun ner  ->
-                                                                   Obj.magic
-                                                                    (mk name
-                                                                    (Prims.of_int (6))
-                                                                    nunivs
-                                                                    (mk_total_interpretation_5
-                                                                    f e1 e2
-                                                                    e3 e4 e5
-                                                                    er)
-                                                                    (fun cb 
-                                                                    ->
-                                                                    fun args 
-                                                                    ->
-                                                                    let uu____15748
-                                                                    =
-                                                                    drop
-                                                                    nunivs
-                                                                    args  in
-                                                                    mk_total_nbe_interpretation_5
-                                                                    cb
-                                                                    (fun
-                                                                    uu____15757
-                                                                     ->
-                                                                    fun
-                                                                    uu____15756
-                                                                     ->
-                                                                    fun
-                                                                    uu____15755
-                                                                     ->
-                                                                    fun
-                                                                    uu____15754
-                                                                     ->
-                                                                    fun
-                                                                    uu____15753
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nf)
-                                                                    uu____15757
-                                                                    uu____15756
-                                                                    uu____15755
-                                                                    uu____15754
-                                                                    uu____15753)
-                                                                    ne1 ne2
-                                                                    ne3 ne4
-                                                                    ne5 ner
-                                                                    uu____15748)))
-                                    uu____15773 uu____15772 uu____15771
-                                    uu____15770 uu____15769 uu____15768
-                                    uu____15767 uu____15766 uu____15765
-                                    uu____15764 uu____15763 uu____15762
-                                    uu____15761 uu____15760 uu____15759
-                                    uu____15758
+  fun nunivs  ->
+    fun name  ->
+      fun f  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun e4  ->
+                fun e5  ->
+                  fun er  ->
+                    fun nf  ->
+                      fun ne1  ->
+                        fun ne2  ->
+                          fun ne3  ->
+                            fun ne4  ->
+                              fun ne5  ->
+                                fun ner  ->
+                                  mk name (Prims.of_int (6)) nunivs
+                                    (mk_total_interpretation_5 f e1 e2 e3 e4
+                                       e5 er)
+                                    (fun cb  ->
+                                       fun args  ->
+                                         let uu____15487 = drop nunivs args
+                                            in
+                                         mk_total_nbe_interpretation_5 cb nf
+                                           ne1 ne2 ne3 ne4 ne5 ner
+                                           uu____15487)
   
 let mk_total_step_6 :
   'nr 'nt1 'nt2 'nt3 'nt4 'nt5 'nt6 'r 't1 't2 't3 't4 't5 't6 .
@@ -5148,105 +4316,34 @@ let mk_total_step_6 :
                                         ->
                                         FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____16097  ->
-    fun uu____16096  ->
-      fun uu____16095  ->
-        fun uu____16094  ->
-          fun uu____16093  ->
-            fun uu____16092  ->
-              fun uu____16091  ->
-                fun uu____16090  ->
-                  fun uu____16089  ->
-                    fun uu____16088  ->
-                      fun uu____16087  ->
-                        fun uu____16086  ->
-                          fun uu____16085  ->
-                            fun uu____16084  ->
-                              fun uu____16083  ->
-                                fun uu____16082  ->
-                                  fun uu____16081  ->
-                                    fun uu____16080  ->
-                                      (fun nunivs  ->
-                                         fun name  ->
-                                           fun f  ->
-                                             fun e1  ->
-                                               fun e2  ->
-                                                 fun e3  ->
-                                                   fun e4  ->
-                                                     fun e5  ->
-                                                       fun e6  ->
-                                                         fun er  ->
-                                                           fun nf  ->
-                                                             let nf =
-                                                               Obj.magic nf
-                                                                in
-                                                             fun ne1  ->
-                                                               fun ne2  ->
-                                                                 fun ne3  ->
-                                                                   fun ne4 
-                                                                    ->
-                                                                    fun ne5 
-                                                                    ->
-                                                                    fun ne6 
-                                                                    ->
-                                                                    fun ner 
-                                                                    ->
-                                                                    Obj.magic
-                                                                    (mk name
-                                                                    (Prims.of_int (7))
-                                                                    nunivs
-                                                                    (mk_total_interpretation_6
-                                                                    f e1 e2
-                                                                    e3 e4 e5
-                                                                    e6 er)
-                                                                    (fun cb 
-                                                                    ->
-                                                                    fun args 
-                                                                    ->
-                                                                    let uu____16069
-                                                                    =
-                                                                    drop
-                                                                    nunivs
-                                                                    args  in
-                                                                    mk_total_nbe_interpretation_6
-                                                                    cb
-                                                                    (fun
-                                                                    uu____16079
-                                                                     ->
-                                                                    fun
-                                                                    uu____16078
-                                                                     ->
-                                                                    fun
-                                                                    uu____16077
-                                                                     ->
-                                                                    fun
-                                                                    uu____16076
-                                                                     ->
-                                                                    fun
-                                                                    uu____16075
-                                                                     ->
-                                                                    fun
-                                                                    uu____16074
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nf)
-                                                                    uu____16079
-                                                                    uu____16078
-                                                                    uu____16077
-                                                                    uu____16076
-                                                                    uu____16075
-                                                                    uu____16074)
-                                                                    ne1 ne2
-                                                                    ne3 ne4
-                                                                    ne5 ne6
-                                                                    ner
-                                                                    uu____16069)))
-                                        uu____16097 uu____16096 uu____16095
-                                        uu____16094 uu____16093 uu____16092
-                                        uu____16091 uu____16090 uu____16089
-                                        uu____16088 uu____16087 uu____16086
-                                        uu____16085 uu____16084 uu____16083
-                                        uu____16082 uu____16081 uu____16080
+  fun nunivs  ->
+    fun name  ->
+      fun f  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun e4  ->
+                fun e5  ->
+                  fun e6  ->
+                    fun er  ->
+                      fun nf  ->
+                        fun ne1  ->
+                          fun ne2  ->
+                            fun ne3  ->
+                              fun ne4  ->
+                                fun ne5  ->
+                                  fun ne6  ->
+                                    fun ner  ->
+                                      mk name (Prims.of_int (7)) nunivs
+                                        (mk_total_interpretation_6 f e1 e2 e3
+                                           e4 e5 e6 er)
+                                        (fun cb  ->
+                                           fun args  ->
+                                             let uu____15787 =
+                                               drop nunivs args  in
+                                             mk_total_nbe_interpretation_6 cb
+                                               nf ne1 ne2 ne3 ne4 ne5 ne6 ner
+                                               uu____15787)
   
 let mk_total_step_7 :
   'nr 'nt1 'nt2 'nt3 'nt4 'nt5 'nt6 'nt7 'r 't1 't2 't3 't4 't5 't6 't7 .
@@ -5282,121 +4379,36 @@ let mk_total_step_7 :
                                             ->
                                             FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____16462  ->
-    fun uu____16461  ->
-      fun uu____16460  ->
-        fun uu____16459  ->
-          fun uu____16458  ->
-            fun uu____16457  ->
-              fun uu____16456  ->
-                fun uu____16455  ->
-                  fun uu____16454  ->
-                    fun uu____16453  ->
-                      fun uu____16452  ->
-                        fun uu____16451  ->
-                          fun uu____16450  ->
-                            fun uu____16449  ->
-                              fun uu____16448  ->
-                                fun uu____16447  ->
-                                  fun uu____16446  ->
-                                    fun uu____16445  ->
-                                      fun uu____16444  ->
-                                        fun uu____16443  ->
-                                          (fun nunivs  ->
-                                             fun name  ->
-                                               fun f  ->
-                                                 fun e1  ->
-                                                   fun e2  ->
-                                                     fun e3  ->
-                                                       fun e4  ->
-                                                         fun e5  ->
-                                                           fun e6  ->
-                                                             fun e7  ->
-                                                               fun er  ->
-                                                                 fun nf  ->
-                                                                   let nf =
-                                                                    Obj.magic
-                                                                    nf  in
-                                                                   fun ne1 
-                                                                    ->
-                                                                    fun ne2 
-                                                                    ->
-                                                                    fun ne3 
-                                                                    ->
-                                                                    fun ne4 
-                                                                    ->
-                                                                    fun ne5 
-                                                                    ->
-                                                                    fun ne6 
-                                                                    ->
-                                                                    fun ne7 
-                                                                    ->
-                                                                    fun ner 
-                                                                    ->
-                                                                    Obj.magic
-                                                                    (mk name
-                                                                    (Prims.of_int (8))
-                                                                    nunivs
-                                                                    (mk_total_interpretation_7
-                                                                    f e1 e2
-                                                                    e3 e4 e5
-                                                                    e6 e7 er)
-                                                                    (fun cb 
-                                                                    ->
-                                                                    fun args 
-                                                                    ->
-                                                                    let uu____16431
-                                                                    =
-                                                                    drop
-                                                                    nunivs
-                                                                    args  in
-                                                                    mk_total_nbe_interpretation_7
-                                                                    cb
-                                                                    (fun
-                                                                    uu____16442
-                                                                     ->
-                                                                    fun
-                                                                    uu____16441
-                                                                     ->
-                                                                    fun
-                                                                    uu____16440
-                                                                     ->
-                                                                    fun
-                                                                    uu____16439
-                                                                     ->
-                                                                    fun
-                                                                    uu____16438
-                                                                     ->
-                                                                    fun
-                                                                    uu____16437
-                                                                     ->
-                                                                    fun
-                                                                    uu____16436
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nf)
-                                                                    uu____16442
-                                                                    uu____16441
-                                                                    uu____16440
-                                                                    uu____16439
-                                                                    uu____16438
-                                                                    uu____16437
-                                                                    uu____16436)
-                                                                    ne1 ne2
-                                                                    ne3 ne4
-                                                                    ne5 ne6
-                                                                    ne7 ner
-                                                                    uu____16431)))
-                                            uu____16462 uu____16461
-                                            uu____16460 uu____16459
-                                            uu____16458 uu____16457
-                                            uu____16456 uu____16455
-                                            uu____16454 uu____16453
-                                            uu____16452 uu____16451
-                                            uu____16450 uu____16449
-                                            uu____16448 uu____16447
-                                            uu____16446 uu____16445
-                                            uu____16444 uu____16443
+  fun nunivs  ->
+    fun name  ->
+      fun f  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun e4  ->
+                fun e5  ->
+                  fun e6  ->
+                    fun e7  ->
+                      fun er  ->
+                        fun nf  ->
+                          fun ne1  ->
+                            fun ne2  ->
+                              fun ne3  ->
+                                fun ne4  ->
+                                  fun ne5  ->
+                                    fun ne6  ->
+                                      fun ne7  ->
+                                        fun ner  ->
+                                          mk name (Prims.of_int (8)) nunivs
+                                            (mk_total_interpretation_7 f e1
+                                               e2 e3 e4 e5 e6 e7 er)
+                                            (fun cb  ->
+                                               fun args  ->
+                                                 let uu____16125 =
+                                                   drop nunivs args  in
+                                                 mk_total_nbe_interpretation_7
+                                                   cb nf ne1 ne2 ne3 ne4 ne5
+                                                   ne6 ne7 ner uu____16125)
   
 let mk_total_step_8 :
   'nr 'nt1 'nt2 'nt3 'nt4 'nt5 'nt6 'nt7 'nt8 'r 't1 't2 't3 't4 't5 't6 't7
@@ -5441,135 +4453,40 @@ let mk_total_step_8 :
                                                 ->
                                                 FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____16868  ->
-    fun uu____16867  ->
-      fun uu____16866  ->
-        fun uu____16865  ->
-          fun uu____16864  ->
-            fun uu____16863  ->
-              fun uu____16862  ->
-                fun uu____16861  ->
-                  fun uu____16860  ->
-                    fun uu____16859  ->
-                      fun uu____16858  ->
-                        fun uu____16857  ->
-                          fun uu____16856  ->
-                            fun uu____16855  ->
-                              fun uu____16854  ->
-                                fun uu____16853  ->
-                                  fun uu____16852  ->
-                                    fun uu____16851  ->
-                                      fun uu____16850  ->
-                                        fun uu____16849  ->
-                                          fun uu____16848  ->
-                                            fun uu____16847  ->
-                                              (fun nunivs  ->
-                                                 fun name  ->
-                                                   fun f  ->
-                                                     fun e1  ->
-                                                       fun e2  ->
-                                                         fun e3  ->
-                                                           fun e4  ->
-                                                             fun e5  ->
-                                                               fun e6  ->
-                                                                 fun e7  ->
-                                                                   fun e8  ->
-                                                                    fun er 
-                                                                    ->
-                                                                    fun nf 
-                                                                    ->
-                                                                    let nf =
-                                                                    Obj.magic
-                                                                    nf  in
-                                                                    fun ne1 
-                                                                    ->
-                                                                    fun ne2 
-                                                                    ->
-                                                                    fun ne3 
-                                                                    ->
-                                                                    fun ne4 
-                                                                    ->
-                                                                    fun ne5 
-                                                                    ->
-                                                                    fun ne6 
-                                                                    ->
-                                                                    fun ne7 
-                                                                    ->
-                                                                    fun ne8 
-                                                                    ->
-                                                                    fun ner 
-                                                                    ->
-                                                                    Obj.magic
-                                                                    (mk name
-                                                                    (Prims.of_int (9))
-                                                                    nunivs
-                                                                    (mk_total_interpretation_8
-                                                                    f e1 e2
-                                                                    e3 e4 e5
-                                                                    e6 e7 e8
-                                                                    er)
-                                                                    (fun cb 
-                                                                    ->
-                                                                    fun args 
-                                                                    ->
-                                                                    let uu____16834
-                                                                    =
-                                                                    drop
-                                                                    nunivs
-                                                                    args  in
-                                                                    mk_total_nbe_interpretation_8
-                                                                    cb
-                                                                    (fun
-                                                                    uu____16846
-                                                                     ->
-                                                                    fun
-                                                                    uu____16845
-                                                                     ->
-                                                                    fun
-                                                                    uu____16844
-                                                                     ->
-                                                                    fun
-                                                                    uu____16843
-                                                                     ->
-                                                                    fun
-                                                                    uu____16842
-                                                                     ->
-                                                                    fun
-                                                                    uu____16841
-                                                                     ->
-                                                                    fun
-                                                                    uu____16840
-                                                                     ->
-                                                                    fun
-                                                                    uu____16839
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nf)
-                                                                    uu____16846
-                                                                    uu____16845
-                                                                    uu____16844
-                                                                    uu____16843
-                                                                    uu____16842
-                                                                    uu____16841
-                                                                    uu____16840
-                                                                    uu____16839)
-                                                                    ne1 ne2
-                                                                    ne3 ne4
-                                                                    ne5 ne6
-                                                                    ne7 ne8
-                                                                    ner
-                                                                    uu____16834)))
-                                                uu____16868 uu____16867
-                                                uu____16866 uu____16865
-                                                uu____16864 uu____16863
-                                                uu____16862 uu____16861
-                                                uu____16860 uu____16859
-                                                uu____16858 uu____16857
-                                                uu____16856 uu____16855
-                                                uu____16854 uu____16853
-                                                uu____16852 uu____16851
-                                                uu____16850 uu____16849
-                                                uu____16848 uu____16847
+  fun nunivs  ->
+    fun name  ->
+      fun f  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun e4  ->
+                fun e5  ->
+                  fun e6  ->
+                    fun e7  ->
+                      fun e8  ->
+                        fun er  ->
+                          fun nf  ->
+                            fun ne1  ->
+                              fun ne2  ->
+                                fun ne3  ->
+                                  fun ne4  ->
+                                    fun ne5  ->
+                                      fun ne6  ->
+                                        fun ne7  ->
+                                          fun ne8  ->
+                                            fun ner  ->
+                                              mk name (Prims.of_int (9))
+                                                nunivs
+                                                (mk_total_interpretation_8 f
+                                                   e1 e2 e3 e4 e5 e6 e7 e8 er)
+                                                (fun cb  ->
+                                                   fun args  ->
+                                                     let uu____16501 =
+                                                       drop nunivs args  in
+                                                     mk_total_nbe_interpretation_8
+                                                       cb nf ne1 ne2 ne3 ne4
+                                                       ne5 ne6 ne7 ne8 ner
+                                                       uu____16501)
   
 let mk_total_step_9 :
   'nr 'nt1 'nt2 'nt3 'nt4 'nt5 'nt6 'nt7 'nt8 'nt9 'r 't1 't2 't3 't4 't5 't6
@@ -5622,148 +4539,45 @@ let mk_total_step_9 :
                                                     ->
                                                     FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____17315  ->
-    fun uu____17314  ->
-      fun uu____17313  ->
-        fun uu____17312  ->
-          fun uu____17311  ->
-            fun uu____17310  ->
-              fun uu____17309  ->
-                fun uu____17308  ->
-                  fun uu____17307  ->
-                    fun uu____17306  ->
-                      fun uu____17305  ->
-                        fun uu____17304  ->
-                          fun uu____17303  ->
-                            fun uu____17302  ->
-                              fun uu____17301  ->
-                                fun uu____17300  ->
-                                  fun uu____17299  ->
-                                    fun uu____17298  ->
-                                      fun uu____17297  ->
-                                        fun uu____17296  ->
-                                          fun uu____17295  ->
-                                            fun uu____17294  ->
-                                              fun uu____17293  ->
-                                                fun uu____17292  ->
-                                                  (fun nunivs  ->
-                                                     fun name  ->
-                                                       fun f  ->
-                                                         fun e1  ->
-                                                           fun e2  ->
-                                                             fun e3  ->
-                                                               fun e4  ->
-                                                                 fun e5  ->
-                                                                   fun e6  ->
-                                                                    fun e7 
-                                                                    ->
-                                                                    fun e8 
-                                                                    ->
-                                                                    fun e9 
-                                                                    ->
-                                                                    fun er 
-                                                                    ->
-                                                                    fun nf 
-                                                                    ->
-                                                                    let nf =
-                                                                    Obj.magic
-                                                                    nf  in
-                                                                    fun ne1 
-                                                                    ->
-                                                                    fun ne2 
-                                                                    ->
-                                                                    fun ne3 
-                                                                    ->
-                                                                    fun ne4 
-                                                                    ->
-                                                                    fun ne5 
-                                                                    ->
-                                                                    fun ne6 
-                                                                    ->
-                                                                    fun ne7 
-                                                                    ->
-                                                                    fun ne8 
-                                                                    ->
-                                                                    fun ne9 
-                                                                    ->
-                                                                    fun ner 
-                                                                    ->
-                                                                    Obj.magic
-                                                                    (mk name
-                                                                    (Prims.of_int (10))
-                                                                    nunivs
-                                                                    (mk_total_interpretation_9
-                                                                    f e1 e2
-                                                                    e3 e4 e5
-                                                                    e6 e7 e8
-                                                                    e9 er)
-                                                                    (fun cb 
-                                                                    ->
-                                                                    fun args 
-                                                                    ->
-                                                                    let uu____17278
-                                                                    =
-                                                                    drop
-                                                                    nunivs
-                                                                    args  in
-                                                                    mk_total_nbe_interpretation_9
-                                                                    cb
-                                                                    (fun
-                                                                    uu____17291
-                                                                     ->
-                                                                    fun
-                                                                    uu____17290
-                                                                     ->
-                                                                    fun
-                                                                    uu____17289
-                                                                     ->
-                                                                    fun
-                                                                    uu____17288
-                                                                     ->
-                                                                    fun
-                                                                    uu____17287
-                                                                     ->
-                                                                    fun
-                                                                    uu____17286
-                                                                     ->
-                                                                    fun
-                                                                    uu____17285
-                                                                     ->
-                                                                    fun
-                                                                    uu____17284
-                                                                     ->
-                                                                    fun
-                                                                    uu____17283
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nf)
-                                                                    uu____17291
-                                                                    uu____17290
-                                                                    uu____17289
-                                                                    uu____17288
-                                                                    uu____17287
-                                                                    uu____17286
-                                                                    uu____17285
-                                                                    uu____17284
-                                                                    uu____17283)
-                                                                    ne1 ne2
-                                                                    ne3 ne4
-                                                                    ne5 ne6
-                                                                    ne7 ne8
-                                                                    ne9 ner
-                                                                    uu____17278)))
-                                                    uu____17315 uu____17314
-                                                    uu____17313 uu____17312
-                                                    uu____17311 uu____17310
-                                                    uu____17309 uu____17308
-                                                    uu____17307 uu____17306
-                                                    uu____17305 uu____17304
-                                                    uu____17303 uu____17302
-                                                    uu____17301 uu____17300
-                                                    uu____17299 uu____17298
-                                                    uu____17297 uu____17296
-                                                    uu____17295 uu____17294
-                                                    uu____17293 uu____17292
+  fun nunivs  ->
+    fun name  ->
+      fun f  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun e4  ->
+                fun e5  ->
+                  fun e6  ->
+                    fun e7  ->
+                      fun e8  ->
+                        fun e9  ->
+                          fun er  ->
+                            fun nf  ->
+                              fun ne1  ->
+                                fun ne2  ->
+                                  fun ne3  ->
+                                    fun ne4  ->
+                                      fun ne5  ->
+                                        fun ne6  ->
+                                          fun ne7  ->
+                                            fun ne8  ->
+                                              fun ne9  ->
+                                                fun ner  ->
+                                                  mk name (Prims.of_int (10))
+                                                    nunivs
+                                                    (mk_total_interpretation_9
+                                                       f e1 e2 e3 e4 e5 e6 e7
+                                                       e8 e9 er)
+                                                    (fun cb  ->
+                                                       fun args  ->
+                                                         let uu____16915 =
+                                                           drop nunivs args
+                                                            in
+                                                         mk_total_nbe_interpretation_9
+                                                           cb nf ne1 ne2 ne3
+                                                           ne4 ne5 ne6 ne7
+                                                           ne8 ne9 ner
+                                                           uu____16915)
   
 let mk_total_step_10 :
   'nr 'nt1 'nt10 'nt2 'nt3 'nt4 'nt5 'nt6 'nt7 'nt8 'nt9 'r 't1 't10 't2 't3
@@ -5825,173 +4639,49 @@ let mk_total_step_10 :
                                                         ->
                                                         FStar_TypeChecker_Cfg.primitive_step
   =
-  fun uu____17803  ->
-    fun uu____17802  ->
-      fun uu____17801  ->
-        fun uu____17800  ->
-          fun uu____17799  ->
-            fun uu____17798  ->
-              fun uu____17797  ->
-                fun uu____17796  ->
-                  fun uu____17795  ->
-                    fun uu____17794  ->
-                      fun uu____17793  ->
-                        fun uu____17792  ->
-                          fun uu____17791  ->
-                            fun uu____17790  ->
-                              fun uu____17789  ->
-                                fun uu____17788  ->
-                                  fun uu____17787  ->
-                                    fun uu____17786  ->
-                                      fun uu____17785  ->
-                                        fun uu____17784  ->
-                                          fun uu____17783  ->
-                                            fun uu____17782  ->
-                                              fun uu____17781  ->
-                                                fun uu____17780  ->
-                                                  fun uu____17779  ->
-                                                    fun uu____17778  ->
-                                                      (fun nunivs  ->
-                                                         fun name  ->
-                                                           fun f  ->
-                                                             fun e1  ->
-                                                               fun e2  ->
-                                                                 fun e3  ->
-                                                                   fun e4  ->
-                                                                    fun e5 
-                                                                    ->
-                                                                    fun e6 
-                                                                    ->
-                                                                    fun e7 
-                                                                    ->
-                                                                    fun e8 
-                                                                    ->
-                                                                    fun e9 
-                                                                    ->
-                                                                    fun e10 
-                                                                    ->
-                                                                    fun er 
-                                                                    ->
-                                                                    fun nf 
-                                                                    ->
-                                                                    let nf =
-                                                                    Obj.magic
-                                                                    nf  in
-                                                                    fun ne1 
-                                                                    ->
-                                                                    fun ne2 
-                                                                    ->
-                                                                    fun ne3 
-                                                                    ->
-                                                                    fun ne4 
-                                                                    ->
-                                                                    fun ne5 
-                                                                    ->
-                                                                    fun ne6 
-                                                                    ->
-                                                                    fun ne7 
-                                                                    ->
-                                                                    fun ne8 
-                                                                    ->
-                                                                    fun ne9 
-                                                                    ->
-                                                                    fun ne10 
-                                                                    ->
-                                                                    fun ner 
-                                                                    ->
-                                                                    Obj.magic
-                                                                    (mk name
-                                                                    (Prims.of_int (11))
-                                                                    nunivs
-                                                                    (mk_total_interpretation_10
-                                                                    f e1 e2
-                                                                    e3 e4 e5
-                                                                    e6 e7 e8
-                                                                    e9 e10 er)
-                                                                    (fun cb 
-                                                                    ->
-                                                                    fun args 
-                                                                    ->
-                                                                    let uu____17763
-                                                                    =
-                                                                    drop
-                                                                    nunivs
-                                                                    args  in
-                                                                    mk_total_nbe_interpretation_10
-                                                                    cb
-                                                                    (fun
-                                                                    uu____17777
-                                                                     ->
-                                                                    fun
-                                                                    uu____17776
-                                                                     ->
-                                                                    fun
-                                                                    uu____17775
-                                                                     ->
-                                                                    fun
-                                                                    uu____17774
-                                                                     ->
-                                                                    fun
-                                                                    uu____17773
-                                                                     ->
-                                                                    fun
-                                                                    uu____17772
-                                                                     ->
-                                                                    fun
-                                                                    uu____17771
-                                                                     ->
-                                                                    fun
-                                                                    uu____17770
-                                                                     ->
-                                                                    fun
-                                                                    uu____17769
-                                                                     ->
-                                                                    fun
-                                                                    uu____17768
-                                                                     ->
-                                                                    (Obj.magic
-                                                                    nf)
-                                                                    uu____17777
-                                                                    uu____17776
-                                                                    uu____17775
-                                                                    uu____17774
-                                                                    uu____17773
-                                                                    uu____17772
-                                                                    uu____17771
-                                                                    uu____17770
-                                                                    uu____17769
-                                                                    uu____17768)
-                                                                    ne1 ne2
-                                                                    ne3 ne4
-                                                                    ne5 ne6
-                                                                    ne7 ne8
-                                                                    ne9 ne10
-                                                                    ner
-                                                                    uu____17763)))
-                                                        uu____17803
-                                                        uu____17802
-                                                        uu____17801
-                                                        uu____17800
-                                                        uu____17799
-                                                        uu____17798
-                                                        uu____17797
-                                                        uu____17796
-                                                        uu____17795
-                                                        uu____17794
-                                                        uu____17793
-                                                        uu____17792
-                                                        uu____17791
-                                                        uu____17790
-                                                        uu____17789
-                                                        uu____17788
-                                                        uu____17787
-                                                        uu____17786
-                                                        uu____17785
-                                                        uu____17784
-                                                        uu____17783
-                                                        uu____17782
-                                                        uu____17781
-                                                        uu____17780
-                                                        uu____17779
-                                                        uu____17778
+  fun nunivs  ->
+    fun name  ->
+      fun f  ->
+        fun e1  ->
+          fun e2  ->
+            fun e3  ->
+              fun e4  ->
+                fun e5  ->
+                  fun e6  ->
+                    fun e7  ->
+                      fun e8  ->
+                        fun e9  ->
+                          fun e10  ->
+                            fun er  ->
+                              fun nf  ->
+                                fun ne1  ->
+                                  fun ne2  ->
+                                    fun ne3  ->
+                                      fun ne4  ->
+                                        fun ne5  ->
+                                          fun ne6  ->
+                                            fun ne7  ->
+                                              fun ne8  ->
+                                                fun ne9  ->
+                                                  fun ne10  ->
+                                                    fun ner  ->
+                                                      mk name
+                                                        (Prims.of_int (11))
+                                                        nunivs
+                                                        (mk_total_interpretation_10
+                                                           f e1 e2 e3 e4 e5
+                                                           e6 e7 e8 e9 e10 er)
+                                                        (fun cb  ->
+                                                           fun args  ->
+                                                             let uu____17367
+                                                               =
+                                                               drop nunivs
+                                                                 args
+                                                                in
+                                                             mk_total_nbe_interpretation_10
+                                                               cb nf ne1 ne2
+                                                               ne3 ne4 ne5
+                                                               ne6 ne7 ne8
+                                                               ne9 ne10 ner
+                                                               uu____17367)
   
