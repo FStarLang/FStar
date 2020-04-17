@@ -54,18 +54,18 @@ let native_tactics_steps () =
   in
   List.map step_from_native_step (Native.list_all ())
 
-(* mktot1/mktot2 uses names in FStar.Tactics.Builtins, we override these few who
+(* mk_total_step_1/mk_total_step_2 uses names in FStar.Tactics.Builtins, we override these few who
  * are in other modules: *)
-let mktot1' uarity nm f ea er nf ena enr =
-  { mktot1  uarity nm f ea er nf ena enr
+let mk_total_step_1' uarity nm f ea er nf ena enr =
+  { mk_total_step_1  uarity nm f ea er nf ena enr
     with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
 
-let mktot1'_psc uarity nm f ea er nf ena enr =
-  { mktot1_psc  uarity nm f ea er nf ena enr
+let mk_total_step_1'_psc uarity nm f ea er nf ena enr =
+  { mk_total_step_1_psc  uarity nm f ea er nf ena enr
     with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
 
-let mktot2' uarity nm f ea eb er nf ena enb enr =
-  { mktot2  uarity nm f ea eb er nf ena enb enr
+let mk_total_step_2' uarity nm f ea eb er nf ena enb enr =
+  { mk_total_step_2  uarity nm f ea eb er nf ena enb enr
     with Cfg.name = Ident.lid_of_str ("FStar.Tactics.Types." ^ nm) }
 
 (* Set below in the file, to avoid a huge recursive group *)
@@ -190,203 +190,261 @@ let () =
     (* Sigh, due to lack to expressive typing we need to duplicate a bunch of information here,
      * like which embeddings are needed for the arguments, but more annoyingly the underlying
      * implementation. Would be nice to have something better in the not-so-long run. *)
-    [ mktot1'_psc 0 "tracepoint"  tracepoint E.e_proofstate e_unit
-                                  tracepoint E.e_proofstate_nbe NBET.e_unit;
+    [ mk_total_step_1'_psc 0 "tracepoint"
+        tracepoint E.e_proofstate e_unit
+        tracepoint E.e_proofstate_nbe NBET.e_unit;
 
-      mktot2' 0 "set_proofstate_range" set_proofstate_range E.e_proofstate e_range E.e_proofstate
-                                       set_proofstate_range E.e_proofstate_nbe NBET.e_range E.e_proofstate_nbe;
+      mk_total_step_2' 0 "set_proofstate_range"
+        set_proofstate_range E.e_proofstate e_range E.e_proofstate
+        set_proofstate_range E.e_proofstate_nbe NBET.e_range E.e_proofstate_nbe;
 
-      mktot1' 0 "incr_depth" incr_depth E.e_proofstate E.e_proofstate
-                             incr_depth E.e_proofstate_nbe E.e_proofstate_nbe;
+      mk_total_step_1' 0 "incr_depth"
+        incr_depth E.e_proofstate E.e_proofstate
+        incr_depth E.e_proofstate_nbe E.e_proofstate_nbe;
 
-      mktot1' 0 "decr_depth" decr_depth E.e_proofstate E.e_proofstate
-                             decr_depth E.e_proofstate_nbe E.e_proofstate_nbe;
+      mk_total_step_1' 0 "decr_depth"
+        decr_depth E.e_proofstate E.e_proofstate
+        decr_depth E.e_proofstate_nbe E.e_proofstate_nbe;
 
-      mktot1' 0 "goals_of"    goals_of E.e_proofstate (e_list E.e_goal)
-                              goals_of E.e_proofstate_nbe (NBET.e_list E.e_goal_nbe);
+      mk_total_step_1' 0 "goals_of"
+        goals_of E.e_proofstate (e_list E.e_goal)
+        goals_of E.e_proofstate_nbe (NBET.e_list E.e_goal_nbe);
 
-      mktot1' 0 "smt_goals_of" smt_goals_of E.e_proofstate (e_list E.e_goal)
-                               smt_goals_of E.e_proofstate_nbe (NBET.e_list E.e_goal_nbe);
+      mk_total_step_1' 0 "smt_goals_of"
+        smt_goals_of E.e_proofstate (e_list E.e_goal)
+        smt_goals_of E.e_proofstate_nbe (NBET.e_list E.e_goal_nbe);
 
-      mktot1' 0 "goal_env"    goal_env E.e_goal RE.e_env
-                              goal_env E.e_goal_nbe NRE.e_env;
+      mk_total_step_1' 0 "goal_env"
+        goal_env E.e_goal RE.e_env
+        goal_env E.e_goal_nbe NRE.e_env;
 
-      mktot1' 0 "goal_type"    goal_type E.e_goal RE.e_term
-                               goal_type E.e_goal_nbe NRE.e_term;
+      mk_total_step_1' 0 "goal_type"
+        goal_type E.e_goal RE.e_term
+        goal_type E.e_goal_nbe NRE.e_term;
 
-      mktot1' 0 "goal_witness"  goal_witness E.e_goal RE.e_term
-                                goal_witness E.e_goal_nbe NRE.e_term;
+      mk_total_step_1' 0 "goal_witness"
+        goal_witness E.e_goal RE.e_term
+        goal_witness E.e_goal_nbe NRE.e_term;
 
-      mktot1' 0 "is_guard"      is_guard E.e_goal e_bool
-                                is_guard E.e_goal_nbe NBET.e_bool;
+      mk_total_step_1' 0 "is_guard"
+        is_guard E.e_goal e_bool
+        is_guard E.e_goal_nbe NBET.e_bool;
 
-      mktot1' 0 "get_label"     get_label E.e_goal e_string
-                                get_label E.e_goal_nbe NBET.e_string;
+      mk_total_step_1' 0 "get_label"
+        get_label E.e_goal e_string
+        get_label E.e_goal_nbe NBET.e_string;
 
-      mktot2' 0 "set_label"     set_label e_string E.e_goal E.e_goal
-                                set_label NBET.e_string E.e_goal_nbe E.e_goal_nbe;
+      mk_total_step_2' 0 "set_label"
+        set_label e_string E.e_goal E.e_goal
+        set_label NBET.e_string E.e_goal_nbe E.e_goal_nbe;
 
-      mktac1 0 "set_goals"     set_goals (e_list E.e_goal) e_unit
-                               set_goals (NBET.e_list E.e_goal_nbe) (NBET.e_unit);
+      mk_tac_step_1 0 "set_goals"
+        set_goals (e_list E.e_goal) e_unit
+        set_goals (NBET.e_list E.e_goal_nbe) (NBET.e_unit);
 
-      mktac1 0 "set_smt_goals" set_smt_goals (e_list E.e_goal) e_unit
-                               set_smt_goals (NBET.e_list E.e_goal_nbe) (NBET.e_unit);
+      mk_tac_step_1 0 "set_smt_goals"
+        set_smt_goals (e_list E.e_goal) e_unit
+        set_smt_goals (NBET.e_list E.e_goal_nbe) (NBET.e_unit);
 
-      mktac1 0 "trivial"       trivial e_unit e_unit
-                               trivial NBET.e_unit NBET.e_unit;
+      mk_tac_step_1 0 "trivial"
+        trivial e_unit e_unit
+        trivial NBET.e_unit NBET.e_unit;
 
-      mktac2 1 "catch"         (fun _ -> catch) e_any (e_tactic_thunk e_any) (e_either E.e_exn e_any)
-                               (fun _ -> catch) NBET.e_any (e_tactic_nbe_thunk NBET.e_any) (NBET.e_either E.e_exn_nbe NBET.e_any);
+      mk_tac_step_2 1 "catch"
+        (fun _ -> catch) e_any (e_tactic_thunk e_any) (e_either E.e_exn e_any)
+        (fun _ -> catch) NBET.e_any (e_tactic_nbe_thunk NBET.e_any) (NBET.e_either E.e_exn_nbe NBET.e_any);
 
-      mktac2 1 "recover"       (fun _ -> recover) e_any (e_tactic_thunk e_any) (e_either E.e_exn e_any)
-                               (fun _ -> recover) NBET.e_any (e_tactic_nbe_thunk NBET.e_any) (NBET.e_either E.e_exn_nbe NBET.e_any);
+      mk_tac_step_2 1 "recover"
+        (fun _ -> recover) e_any (e_tactic_thunk e_any) (e_either E.e_exn e_any)
+        (fun _ -> recover) NBET.e_any (e_tactic_nbe_thunk NBET.e_any) (NBET.e_either E.e_exn_nbe NBET.e_any);
 
-      mktac1 0 "intro"         intro e_unit RE.e_binder
-                               intro NBET.e_unit NRE.e_binder;
+      mk_tac_step_1 0 "intro"
+        intro e_unit RE.e_binder
+        intro NBET.e_unit NRE.e_binder;
 
-      mktac1 0 "intro_rec"     intro_rec e_unit (e_tuple2 RE.e_binder RE.e_binder)
-                               intro_rec NBET.e_unit (NBET.e_tuple2 NRE.e_binder NRE.e_binder);
+      mk_tac_step_1 0 "intro_rec"
+        intro_rec e_unit (e_tuple2 RE.e_binder RE.e_binder)
+        intro_rec NBET.e_unit (NBET.e_tuple2 NRE.e_binder NRE.e_binder);
 
-      mktac1 0 "norm"          norm (e_list e_norm_step) e_unit
-                               norm (NBET.e_list NBET.e_norm_step) NBET.e_unit;
+      mk_tac_step_1 0 "norm"
+        norm (e_list e_norm_step) e_unit
+        norm (NBET.e_list NBET.e_norm_step) NBET.e_unit;
 
-      mktac3 0 "norm_term_env" norm_term_env RE.e_env (e_list e_norm_step) RE.e_term RE.e_term
-                               norm_term_env NRE.e_env (NBET.e_list NBET.e_norm_step) NRE.e_term NRE.e_term;
+      mk_tac_step_3 0 "norm_term_env"
+        norm_term_env RE.e_env (e_list e_norm_step) RE.e_term RE.e_term
+        norm_term_env NRE.e_env (NBET.e_list NBET.e_norm_step) NRE.e_term NRE.e_term;
 
-      mktac2 0 "norm_binder_type"
-                               norm_binder_type (e_list e_norm_step) RE.e_binder e_unit
-                               norm_binder_type (NBET.e_list NBET.e_norm_step) NRE.e_binder NBET.e_unit;
+      mk_tac_step_2 0 "norm_binder_type"
+        norm_binder_type (e_list e_norm_step) RE.e_binder e_unit
+        norm_binder_type (NBET.e_list NBET.e_norm_step) NRE.e_binder NBET.e_unit;
 
-      mktac2 0 "rename_to"     rename_to RE.e_binder e_string RE.e_binder
-                               rename_to NRE.e_binder NBET.e_string NRE.e_binder;
+      mk_tac_step_2 0 "rename_to"
+        rename_to RE.e_binder e_string RE.e_binder
+        rename_to NRE.e_binder NBET.e_string NRE.e_binder;
 
-      mktac1 0 "binder_retype" binder_retype RE.e_binder e_unit
-                               binder_retype NRE.e_binder NBET.e_unit;
+      mk_tac_step_1 0 "binder_retype"
+        binder_retype RE.e_binder e_unit
+        binder_retype NRE.e_binder NBET.e_unit;
 
-      mktac1 0 "revert"        revert e_unit e_unit
-                               revert NBET.e_unit NBET.e_unit;
+      mk_tac_step_1 0 "revert"
+        revert e_unit e_unit
+        revert NBET.e_unit NBET.e_unit;
 
-      mktac1 0 "clear_top"     clear_top e_unit e_unit
-                               clear_top NBET.e_unit NBET.e_unit;
+      mk_tac_step_1 0 "clear_top"
+        clear_top e_unit e_unit
+        clear_top NBET.e_unit NBET.e_unit;
 
-      mktac1 0 "clear"         clear RE.e_binder e_unit
-                               clear NRE.e_binder NBET.e_unit;
+      mk_tac_step_1 0 "clear"
+        clear RE.e_binder e_unit
+        clear NRE.e_binder NBET.e_unit;
 
-      mktac1 0 "rewrite"       rewrite RE.e_binder e_unit
-                               rewrite NRE.e_binder NBET.e_unit;
+      mk_tac_step_1 0 "rewrite"
+        rewrite RE.e_binder e_unit
+        rewrite NRE.e_binder NBET.e_unit;
 
-      mktac1 0 "refine_intro"  refine_intro e_unit e_unit
-                               refine_intro NBET.e_unit NBET.e_unit;
+      mk_tac_step_1 0 "refine_intro"
+        refine_intro e_unit e_unit
+        refine_intro NBET.e_unit NBET.e_unit;
 
-      mktac3 0 "t_exact"       t_exact e_bool e_bool RE.e_term e_unit
-                               t_exact NBET.e_bool NBET.e_bool NRE.e_term NBET.e_unit;
+      mk_tac_step_3 0 "t_exact"
+        t_exact e_bool e_bool RE.e_term e_unit
+        t_exact NBET.e_bool NBET.e_bool NRE.e_term NBET.e_unit;
 
-      mktac3 0 "t_apply"       t_apply e_bool e_bool RE.e_term e_unit
-                               t_apply NBET.e_bool NBET.e_bool NRE.e_term NBET.e_unit;
+      mk_tac_step_3 0 "t_apply"
+        t_apply e_bool e_bool RE.e_term e_unit
+        t_apply NBET.e_bool NBET.e_bool NRE.e_term NBET.e_unit;
 
-      mktac1 0 "apply_lemma"   apply_lemma RE.e_term e_unit
-                               apply_lemma NRE.e_term NBET.e_unit;
+      mk_tac_step_1 0 "apply_lemma"
+        apply_lemma RE.e_term e_unit
+        apply_lemma NRE.e_term NBET.e_unit;
 
-      mktac1 0 "set_options"   set_options e_string e_unit
-                               set_options NBET.e_string NBET.e_unit;
+      mk_tac_step_1 0 "set_options"
+        set_options e_string e_unit
+        set_options NBET.e_string NBET.e_unit;
 
-      mktac2 0 "tcc"           tcc RE.e_env RE.e_term RE.e_comp
-                               tcc NRE.e_env NRE.e_term NRE.e_comp;
+      mk_tac_step_2 0 "tcc"
+        tcc RE.e_env RE.e_term RE.e_comp
+        tcc NRE.e_env NRE.e_term NRE.e_comp;
 
-      mktac2 0 "tc"            tc RE.e_env RE.e_term RE.e_term
-                               tc NRE.e_env NRE.e_term NRE.e_term;
+      mk_tac_step_2 0 "tc"
+        tc RE.e_env RE.e_term RE.e_term
+        tc NRE.e_env NRE.e_term NRE.e_term;
 
-      mktac1 0 "unshelve"      unshelve RE.e_term e_unit
-                               unshelve NRE.e_term NBET.e_unit;
+      mk_tac_step_1 0 "unshelve"
+        unshelve RE.e_term e_unit
+        unshelve NRE.e_term NBET.e_unit;
 
-      mktac2 1 "unquote"       unquote e_any RE.e_term e_any
-                               (fun _ _ -> failwith "NBE unquote") NBET.e_any NRE.e_term NBET.e_any;
+      mk_tac_step_2 1 "unquote"
+        unquote e_any RE.e_term e_any
+        (fun _ _ -> failwith "NBE unquote") NBET.e_any NRE.e_term NBET.e_any;
 
-      mktac1 0 "prune"         prune e_string e_unit
-                               prune NBET.e_string NBET.e_unit;
+      mk_tac_step_1 0 "prune"
+        prune e_string e_unit
+        prune NBET.e_string NBET.e_unit;
 
-      mktac1 0 "addns"         addns e_string e_unit
-                               addns NBET.e_string NBET.e_unit;
+      mk_tac_step_1 0 "addns"
+        addns e_string e_unit
+        addns NBET.e_string NBET.e_unit;
 
-      mktac1 0 "print"         print e_string e_unit
-                               print NBET.e_string NBET.e_unit;
+      mk_tac_step_1 0 "print"
+        print e_string e_unit
+        print NBET.e_string NBET.e_unit;
 
-      mktac1 0 "debugging"     debugging e_unit e_bool
-                               debugging NBET.e_unit NBET.e_bool;
+      mk_tac_step_1 0 "debugging"
+        debugging e_unit e_bool
+        debugging NBET.e_unit NBET.e_bool;
 
-      mktac1 0 "dump"          dump e_string e_unit
-                               dump NBET.e_string NBET.e_unit;
+      mk_tac_step_1 0 "dump"
+        dump e_string e_unit
+        dump NBET.e_string NBET.e_unit;
 
-      mktac3 0 "ctrl_rewrite"  ctrl_rewrite E.e_direction
-                                            (e_tactic_1 RE.e_term (e_tuple2 e_bool E.e_ctrl_flag))
-                                            (e_tactic_thunk e_unit)
-                                            e_unit
-                               ctrl_rewrite E.e_direction_nbe
-                                            (e_tactic_nbe_1 NRE.e_term (NBET.e_tuple2 NBET.e_bool E.e_ctrl_flag_nbe))
-                                            (e_tactic_nbe_thunk NBET.e_unit)
-                                            NBET.e_unit;
+      mk_tac_step_3 0 "ctrl_rewrite"
+        ctrl_rewrite E.e_direction (e_tactic_1 RE.e_term (e_tuple2 e_bool E.e_ctrl_flag))
+                                   (e_tactic_thunk e_unit)
+                                   e_unit
+        ctrl_rewrite E.e_direction_nbe (e_tactic_nbe_1 NRE.e_term (NBET.e_tuple2 NBET.e_bool E.e_ctrl_flag_nbe))
+                                       (e_tactic_nbe_thunk NBET.e_unit)
+                                        NBET.e_unit;
 
-      mktac1 0 "trefl"         trefl   e_unit e_unit
-                               trefl   NBET.e_unit NBET.e_unit;
+      mk_tac_step_1 0 "trefl"
+        trefl   e_unit e_unit
+        trefl   NBET.e_unit NBET.e_unit;
 
-      mktac1 0 "dup"           dup     e_unit e_unit
-                               dup     NBET.e_unit NBET.e_unit;
+      mk_tac_step_1 0 "dup"
+        dup     e_unit e_unit
+        dup     NBET.e_unit NBET.e_unit;
 
-      mktac1 0 "tadmit_t"      tadmit_t  RE.e_term e_unit
-                               tadmit_t  NRE.e_term NBET.e_unit;
+      mk_tac_step_1 0 "tadmit_t"
+        tadmit_t  RE.e_term e_unit
+        tadmit_t  NRE.e_term NBET.e_unit;
 
-      mktac1 0 "join"          join  e_unit e_unit
-                               join  NBET.e_unit NBET.e_unit;
+      mk_tac_step_1 0 "join"
+        join  e_unit e_unit
+        join  NBET.e_unit NBET.e_unit;
 
-      mktac1 0 "t_destruct"    t_destruct RE.e_term (e_list (e_tuple2 RE.e_fv e_int))
-                               t_destruct NRE.e_term (NBET.e_list (NBET.e_tuple2 NRE.e_fv NBET.e_int));
+      mk_tac_step_1 0 "t_destruct"
+        t_destruct RE.e_term (e_list (e_tuple2 RE.e_fv e_int))
+        t_destruct NRE.e_term (NBET.e_list (NBET.e_tuple2 NRE.e_fv NBET.e_int));
 
-      mktac1 0 "top_env"       top_env     e_unit RE.e_env
-                               top_env     NBET.e_unit NRE.e_env;
+      mk_tac_step_1 0 "top_env"
+        top_env     e_unit RE.e_env
+        top_env     NBET.e_unit NRE.e_env;
 
-      mktac1 0 "inspect"       inspect RE.e_term      RE.e_term_view
-                               inspect NRE.e_term     NRE.e_term_view;
+      mk_tac_step_1 0 "inspect"
+        inspect RE.e_term      RE.e_term_view
+        inspect NRE.e_term     NRE.e_term_view;
 
-      mktac1 0 "pack"          pack    RE.e_term_view RE.e_term
-                               pack    NRE.e_term_view NRE.e_term;
+      mk_tac_step_1 0 "pack"
+        pack    RE.e_term_view RE.e_term
+        pack    NRE.e_term_view NRE.e_term;
 
-      mktac1 0 "fresh"         fresh       e_unit e_int
-                               fresh       NBET.e_unit NBET.e_int;
+      mk_tac_step_1 0 "fresh"
+        fresh       e_unit e_int
+        fresh       NBET.e_unit NBET.e_int;
 
-      mktac1 0 "curms"         curms       e_unit e_int
-                               curms       NBET.e_unit NBET.e_int;
+      mk_tac_step_1 0 "curms"
+        curms       e_unit e_int
+        curms       NBET.e_unit NBET.e_int;
 
-      mktac2 0 "uvar_env"      uvar_env RE.e_env (e_option RE.e_term) RE.e_term
-                               uvar_env NRE.e_env (NBET.e_option NRE.e_term) NRE.e_term;
+      mk_tac_step_2 0 "uvar_env"
+        uvar_env RE.e_env (e_option RE.e_term) RE.e_term
+        uvar_env NRE.e_env (NBET.e_option NRE.e_term) NRE.e_term;
 
-      mktac3 0 "unify_env"     unify_env RE.e_env RE.e_term RE.e_term e_bool
-                               unify_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
+      mk_tac_step_3 0 "unify_env"
+        unify_env RE.e_env RE.e_term RE.e_term e_bool
+        unify_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
 
-      mktac3 0 "launch_process" launch_process e_string (e_list e_string) e_string e_string
-                                launch_process NBET.e_string (NBET.e_list NBET.e_string) NBET.e_string NBET.e_string;
+      mk_tac_step_3 0 "launch_process"
+        launch_process e_string (e_list e_string) e_string e_string
+        launch_process NBET.e_string (NBET.e_list NBET.e_string) NBET.e_string NBET.e_string;
 
-      mktac2 0 "fresh_bv_named"  fresh_bv_named e_string RE.e_term RE.e_bv
-                                 fresh_bv_named NBET.e_string NRE.e_term NRE.e_bv;
+      mk_tac_step_2 0 "fresh_bv_named"
+        fresh_bv_named e_string RE.e_term RE.e_bv
+        fresh_bv_named NBET.e_string NRE.e_term NRE.e_bv;
 
-      mktac1 0 "change"          change RE.e_term e_unit
-                                 change NRE.e_term NBET.e_unit;
+      mk_tac_step_1 0 "change"
+        change RE.e_term e_unit
+        change NRE.e_term NBET.e_unit;
 
-      mktac1 0 "get_guard_policy" get_guard_policy e_unit E.e_guard_policy
-                                  get_guard_policy NBET.e_unit E.e_guard_policy_nbe;
+      mk_tac_step_1 0 "get_guard_policy"
+        get_guard_policy e_unit E.e_guard_policy
+        get_guard_policy NBET.e_unit E.e_guard_policy_nbe;
 
-      mktac1 0 "set_guard_policy" set_guard_policy E.e_guard_policy e_unit
-                                  set_guard_policy E.e_guard_policy_nbe NBET.e_unit;
+      mk_tac_step_1 0 "set_guard_policy"
+        set_guard_policy E.e_guard_policy e_unit
+        set_guard_policy E.e_guard_policy_nbe NBET.e_unit;
 
-      mktac1 0 "lax_on"           lax_on e_unit e_bool
-                                  lax_on NBET.e_unit NBET.e_bool;
+      mk_tac_step_1 0 "lax_on"
+        lax_on e_unit e_bool
+        lax_on NBET.e_unit NBET.e_bool;
 
-      mktac2 1 "lget"             lget e_any e_string e_any
-                                  (fun _ _ -> fail "sorry, `lget` does not work in NBE")
-                                        NBET.e_any NBET.e_string NBET.e_any;
+      mk_tac_step_2 1 "lget"
+        lget e_any e_string e_any
+        (fun _ _ -> fail "sorry, `lget` does not work in NBE") NBET.e_any NBET.e_string NBET.e_any;
 
-      mktac3 1 "lset"             lset e_any e_string e_any e_unit
-                                  (fun _ _ _ -> fail "sorry, `lset` does not work in NBE")
-                                        NBET.e_any NBET.e_string NBET.e_any NBET.e_unit;
+      mk_tac_step_3 1 "lset"
+        lset e_any e_string e_any e_unit
+        (fun _ _ _ -> fail "sorry, `lset` does not work in NBE") NBET.e_any NBET.e_string NBET.e_any NBET.e_unit;
 
     ]
 
