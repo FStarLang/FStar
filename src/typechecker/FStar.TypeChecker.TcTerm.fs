@@ -1273,11 +1273,215 @@ and tc_universe env u : universe =
           then u
           else failwith ("Universe variable " ^ (Print.univ_to_string u) ^ " not found")
    in if env.lax_universes then U_zero
-      else match u with
-           | U_unknown -> U.type_u () |> snd
-           | _ -> aux u
+      else (match u with
+            | U_unknown -> U.type_u () |> snd
+            | _ -> aux u)
 
 (* Several complex cases from the main type-checker are factored in to separate functions below *)
+
+
+(*
+ * Called when typechecking a Tm_abs node
+ * 
+ * t0 is the expected type in the environment for the Tm_abs node
+ *)
+and tc_abs_expected_function_typ env (bs:binders) t0 (body:term)
+: (option<typ>        (* any remaining expected type to check against *)
+* binders             (* binders from the abstraction checked against the binders in the corresponding Typ_fun, if any *)
+* binders             (* let rec binders, suitably guarded with termination check, if any *)
+* option<comp>        (* the expected comp type for the body *)
+* Env.env             (* environment for the body *)
+* term                (* the body itself *)
+* guard_t)            (* accumulated guard from checking the binders, well-formed in the initial env *)
+
+= match t0 with
+  | None -> (* no expected type; just build a function type from the binders in the term *)
+    (* env.letrecs are the current letrecs we are checking *)
+    let _ = match env.letrecs with
+      | [] -> ()
+      | _ -> failwith "Impossible: Can't have a let rec annotation but no expected type" in
+    let bs, envbody, g_env, _ = tc_binders env bs in
+    None, bs, [], None, envbody, body, g_env
+
+  | Some t ->
+    let t = SS.compress t in
+    let rec as_function_typ norm t =
+      match (SS.compress t).n with
+      (* we are type checking abs so all cases except arrow are required for definitional equality *)
+      | Tm_uvar _
+      | Tm_app({n=Tm_uvar _}, _) ->
+        (* expected a uvar; build a function type from the term and unify with it *)
+        let _ = match env.letrecs with | [] -> () | _ -> failwith "Impossible" in
+        let bs, envbody, g_env, _ = tc_binders env bs in
+        let envbody, _ = Env.clear_expected_typ envbody in
+        Some t, bs, [], None, envbody, body, g_env
+
+      (* CK: add this case since the type may be f:(a -> M b wp){φ}, in which case I drop the refinement *)
+      (* NS: 07/21 dropping the refinement is not sound; we need to check that f validates phi. See Bug #284 *)
+      | Tm_refine (b, _) ->
+        let _, bs, bs', copt, env_body, body, g_env = as_function_typ norm b.sort in
+        //we pass type `t` out to check afterwards the full refinement type is respected
+        Some t, bs, bs', copt, env_body, body, g_env
+
+      | Tm_arrow(bs_expected, c_expected) ->
+        let bs_expected, c_expected = SS.open_comp bs_expected c_expected in
+        (* Two main interesting bits here;
+           1. The expected type may have
+              a. more immediate binders, whereas the function may itself return a function
+              b. fewer immediate binders, meaning that the function type is explicitly curried
+           2. If the function is a let-rec and it is to be total, then we need to add termination checks.
+         *)
+        let check_actuals_against_formals env bs bs_expected body
+          : Env.env
+          * binders
+          * guard_t
+          * comp
+          * term
+          = let rec handle_more (env_bs, bs, more, guard_env, subst) c_expected body =
+              match more with
+              | None -> //number of binders match up
+                env_bs, bs, guard_env, SS.subst_comp subst c_expected, body
+
+              | Some (Inr more_bs_expected) -> //more formal parameters; expect the body to return a total function
+                let c = S.mk_Total (U.arrow more_bs_expected c_expected) in
+                env_bs, bs, guard_env, SS.subst_comp subst c, body
+
+              | Some (Inl more_bs) ->  //more actual args
+                let c = SS.subst_comp subst c_expected in
+                (* the expected type is explicitly curried *)
+                if Options.ml_ish () || U.is_named_tot c then
+                  let t = N.unfold_whnf env_bs (U.comp_result c) in
+                  match t.n with
+                  | Tm_arrow(bs_expected, c_expected) ->
+                    let bs_expected, c_expected = SS.open_comp bs_expected c_expected in
+                    let (env_bs_bs', bs', more, guard'_env_bs, subst) = tc_abs_check_binders env_bs more_bs bs_expected in
+                    let guard'_env = Env.close_guard env_bs bs guard'_env_bs in
+                    handle_more (env_bs_bs', bs@bs', more, Env.conj_guard guard_env guard'_env, subst) c_expected body
+                  | _ ->
+                    let body = U.abs more_bs body None in
+                    env_bs, bs, guard_env, c, body
+                else let body = U.abs more_bs body None in
+                     env_bs, bs, guard_env, c, body
+            in  //end let rec handle_more
+
+            handle_more (tc_abs_check_binders env bs bs_expected) c_expected body
+        in  //end let rec check_actuals_against_formals
+
+        let mk_letrec_env envbody bs c =
+          let letrecs = guard_letrecs envbody bs c in
+          let envbody = {envbody with letrecs=[]} in
+          let envbody, letrec_binders, g =
+            letrecs |> List.fold_left (fun (env, letrec_binders, g) (l,t,u_names) ->
+              //let t = N.normalize [Env.EraseUniverses; Env.Beta] env t in
+              //printfn "Checking let rec annot: %s\n" (Print.term_to_string t);
+              let t, _, g' = tc_term (Env.clear_expected_typ env |> fst) t in
+              let env = Env.push_let_binding env l (u_names, t) in
+              let lb = match l with
+                | Inl x -> S.mk_binder ({x with sort=t})::letrec_binders
+                | _ -> letrec_binders in
+              env, lb, Env.conj_guard g g') (envbody, [], Env.trivial_guard) in
+          (envbody, letrec_binders, Env.close_guard envbody bs g)
+        in
+
+        let envbody, bs, g_env, c, body = check_actuals_against_formals env bs bs_expected body in
+        let envbody, letrecs, g_annots = mk_letrec_env envbody bs c in
+        let envbody = Env.set_expected_typ envbody (U.comp_result c) in
+        Some t, bs, letrecs, Some c, envbody, body, Env.conj_guard g_env g_annots
+
+      | _ -> (* expected type is not a function;
+               try normalizing it first;
+               otherwise synthesize a type and check it against the given type *)
+        if not norm
+        then as_function_typ true (t |> N.unfold_whnf env |> U.unascribe)  //AR: without the unascribe we lose out on some arrows
+        else let _, bs, _, c_opt, envbody, body, g_env = tc_abs_expected_function_typ env bs None body in
+            Some t, bs, [], c_opt, envbody, body, g_env
+    in
+    as_function_typ false t
+
+(***************************************************************************************************************)
+    (* check_binders checks that the binders bs of top                                                             *)
+    (*               are compatible with the binders of the function typ expected by the context                   *)
+    (*               If there are more bs than bs_expected, we only check a prefix and the suffix is returned Inl  *)
+    (*               If there are more bs_expected than bs, the suffix of bs_expected is returned Inr              *)
+(***************************************************************************************************************)
+and tc_abs_check_binders env bs bs_expected  : Env.env                         (* env extended with a prefix of bs  *)
+                                             * binders                         (* the type-checked prefix of bs     *)
+                                             * option<either<binders,binders>> (* suffix of either bs or bs_expected*)
+                                             * guard_t                         (* accumulated logical guard
+                                                                                  well-formed in argument env *)
+                                             * subst_t =                       (* alpha conv. of bs_expected to bs  *)
+  let rec aux (env, subst) (bs:binders) (bs_expected:binders)
+    : Env.env
+    * binders
+    * option<either<binders,binders>>
+    * guard_t    //guard is well-formed in the input environment
+    * subst_t =
+    match bs, bs_expected with
+    | [], [] -> env, [], None, Env.trivial_guard, subst
+
+    | (_, None)::_, (hd_e, q)::_ when S.is_implicit_or_meta q ->
+      (* When an implicit is expected, but the user provided an
+       * explicit binder, insert a nameless implicit binder. *)
+      let bv = S.new_bv (Some (Ident.range_of_id hd_e.ppname)) (SS.subst subst hd_e.sort) in
+      aux (env, subst) ((bv, q) :: bs) bs_expected
+
+    | (hd, imp)::bs, (hd_expected, imp')::bs_expected -> begin
+        (* These are the discrepancies in qualifiers that we allow *)
+        let special q1 q2 = match q1, q2 with
+        | Some (Meta _), Some (Meta _) -> true (* don't compare the metaprograms *)
+        | None, Some Equality -> true
+        | Some (Implicit _), Some (Meta _) -> true
+        | _ -> false in
+  
+        if not (special imp imp') && U.eq_aqual imp imp' <> U.Equal
+        then raise_error (Errors.Fatal_InconsistentImplicitArgumentAnnotation,
+                          BU.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd))
+                         (S.range_of_bv hd)
+        end;
+        
+        (* since binders depend on previous ones, we accumulate a substitution *)
+        let expected_t = SS.subst subst hd_expected.sort in
+        let t, g_env =
+          match (U.unmeta hd.sort).n with
+          | Tm_unknown -> expected_t, Env.trivial_guard
+            (* in case we have an annotation on both implementation and declaration, we:
+             * 1) type check the implementation type
+             * 2) add an extra guard that the two types must be equal (use_eq will be used in Rel.teq
+             *)
+          | _ ->
+            if Env.debug env Options.High then BU.print1 "Checking binder %s\n" (Print.bv_to_string hd);
+            let t, _, g1_env = tc_tot_or_gtot_term env hd.sort in
+            let g2_env =
+              //cf issue #57 (the discussion at the end about subtyping vs. equality in check_binders)
+              //check that the context is more demanding of the argument type
+              match Rel.teq_nosmt env t expected_t with
+              | Some g -> g |> Rel.resolve_implicits env
+              | None ->
+                match Rel.get_subtyping_prop env expected_t t with
+                | None -> raise_error (Err.basic_type_error env None expected_t t) (Env.get_range env)
+                | Some g_env ->
+                  TcUtil.label_guard
+                    hd.sort.pos
+                    "Type annotation on parameter incompatible with the expected type"
+                    g_env in
+            t, Env.conj_guard g1_env g2_env in
+        
+        let hd = {hd with sort=t} in
+        let b = hd, imp in
+        let b_expected = (hd_expected, imp') in
+        let env_b = push_binding env b in
+        let subst = maybe_extend_subst subst b_expected (S.bv_to_name hd) in
+        let env_bs, bs, rest, g'_env_b, subst = aux (env_b, subst) bs bs_expected in
+        let g'_env = Env.close_guard env_bs [b] g'_env_b in
+        env_bs, b::bs, rest, Env.conj_guard g_env g'_env, subst
+
+    | rest, [] ->
+      env, [], Some (Inl rest), Env.trivial_guard, subst
+
+    | [], rest ->
+      env, [], Some (Inr rest), Env.trivial_guard, subst in
+
+      aux (env, []) bs bs_expected
 
 (*******************************************************************************************************************)
 (* Type-checking abstractions, aka lambdas                                                                         *)
@@ -1287,213 +1491,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let fail :string -> typ -> 'a = fun msg t ->
         raise_error (Err.expected_a_term_of_type_t_got_a_function env msg t top) (top.pos) in
 
-    (***************************************************************************************************************)
-    (* check_binders checks that the binders bs of top                                                             *)
-    (*               are compatible with the binders of the function typ expected by the context                   *)
-    (*               If there are more bs than bs_expected, we only check a prefix and the suffix is returned Inl  *)
-    (*               If there are more bs_expected than bs, the suffix of bs_expected is returned Inr              *)
-    (***************************************************************************************************************)
-    let check_binders env bs bs_expected  : Env.env                           (* env extended with a prefix of bs  *)
-                                            * binders                         (* the type-checked prefix of bs     *)
-                                            * option<either<binders,binders>> (* suffix of either bs or bs_expected*)
-                                            * guard_t                         (* accumulated logical guard
-                                                                                       well-formed in argument env *)
-                                            * subst_t =                       (* alpha conv. of bs_expected to bs  *)
-        let rec aux (env, subst) (bs:binders) (bs_expected:binders)
-            : Env.env
-            * binders
-            * option<either<binders,binders>>
-            * guard_t    //guard is well-formed in the input environment
-            * subst_t =
-            match bs, bs_expected with
-            | [], [] -> env, [], None, Env.trivial_guard, subst
-
-            | (_, None)::_, (hd_e, q)::_ when S.is_implicit_or_meta q ->
-              (* When an implicit is expected, but the user provided an
-               * explicit binder, insert a nameless implicit binder. *)
-              let bv = S.new_bv (Some (Ident.range_of_id hd_e.ppname)) (SS.subst subst hd_e.sort) in
-              aux (env, subst) ((bv, q) :: bs) bs_expected
-
-            | (hd, imp)::bs, (hd_expected, imp')::bs_expected ->
-               begin
-                 (* These are the discrepancies in qualifiers that we allow *)
-                 let special q1 q2 = match q1, q2 with
-                 | Some (Meta _), Some (Meta _) -> true (* don't compare the metaprograms *)
-                 | None, Some Equality -> true
-                 | Some (Implicit _), Some (Meta _) -> true
-                 | _ -> false
-                 in
-                 if not (special imp imp') && U.eq_aqual imp imp' <> U.Equal
-                 then raise_error (Errors.Fatal_InconsistentImplicitArgumentAnnotation,
-                                   BU.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd))
-                                  (S.range_of_bv hd)
-               end;
-               (* since binders depend on previous ones, we accumulate a substitution *)
-               let expected_t = SS.subst subst hd_expected.sort in
-               let t, g_env =
-                    match (U.unmeta hd.sort).n with
-                    | Tm_unknown -> expected_t, Env.trivial_guard
-                    (* in case we have an annotation on both implementation and declaration, we:
-                      * 1) type check the implementation type
-                      * 2) add an extra guard that the two types must be equal (use_eq will be used in Rel.teq
-                    *)
-                    | _ ->
-                      if Env.debug env Options.High then BU.print1 "Checking binder %s\n" (Print.bv_to_string hd);
-                      let t, _, g1_env = tc_tot_or_gtot_term env hd.sort in
-                      let g2_env =
-                        //cf issue #57 (the discussion at the end about subtyping vs. equality in check_binders)
-                        //check that the context is more demanding of the argument type
-                        match Rel.teq_nosmt env t expected_t with
-                        | Some g -> g |> Rel.resolve_implicits env
-                        | None ->
-                          match Rel.get_subtyping_prop env expected_t t with
-                          | None ->
-                            raise_error (Err.basic_type_error env None expected_t t) (Env.get_range env)
-                          | Some g_env ->
-                            TcUtil.label_guard
-                              hd.sort.pos
-                              "Type annotation on parameter incompatible with the expected type"
-                              g_env
-                      in
-                      t, Env.conj_guard g1_env g2_env
-                in
-                let hd = {hd with sort=t} in
-                let b = hd, imp in
-                let b_expected = (hd_expected, imp') in
-                let env_b = push_binding env b in
-                let subst = maybe_extend_subst subst b_expected (S.bv_to_name hd) in
-                let env_bs, bs, rest, g'_env_b, subst = aux (env_b, subst) bs bs_expected in
-                let g'_env = Env.close_guard env_bs [b] g'_env_b in
-                env_bs, b::bs, rest, Env.conj_guard g_env g'_env, subst
-
-          | rest, [] ->
-            env, [], Some (Inl rest), Env.trivial_guard, subst
-
-          | [], rest ->
-            env, [], Some (Inr rest), Env.trivial_guard, subst in
-
-        aux (env, []) bs bs_expected
-    in //end check_binders
-
-
-    let rec expected_function_typ env t0 (body:term)
-        : (option<typ>        (* any remaining expected type to check against *)
-        * binders             (* binders from the abstraction checked against the binders in the corresponding Typ_fun, if any *)
-        * binders             (* let rec binders, suitably guarded with termination check, if any *)
-        * option<comp>        (* the expected comp type for the body *)
-        * Env.env             (* environment for the body *)
-        * term                (* the body itself *)
-        * guard_t)            (* accumulated guard from checking the binders, well-formed in the initial env *)
-    =
-      match t0 with
-      | None -> (* no expected type; just build a function type from the binders in the term *)
-          (* env.letrecs are the current letrecs we are checking *)
-          let _ = match env.letrecs with
-              | [] -> ()
-              | _ -> failwith "Impossible: Can't have a let rec annotation but no expected type"
-          in
-          let bs, envbody, g_env, _ = tc_binders env bs in
-          None, bs, [], None, envbody, body, g_env
-
-      | Some t ->
-          let t = SS.compress t in
-          let rec as_function_typ norm t =
-              match (SS.compress t).n with
-              (* we are type checking abs so all cases except arrow are required for definitional equality *)
-              | Tm_uvar _
-              | Tm_app({n=Tm_uvar _}, _) ->
-                (* expected a uvar; build a function type from the term and unify with it *)
-                let _ = match env.letrecs with | [] -> () | _ -> failwith "Impossible" in
-                let bs, envbody, g_env, _ = tc_binders env bs in
-                let envbody, _ = Env.clear_expected_typ envbody in
-                Some t, bs, [], None, envbody, body, g_env
-
-              (* CK: add this case since the type may be f:(a -> M b wp){φ}, in which case I drop the refinement *)
-              (* NS: 07/21 dropping the refinement is not sound; we need to check that f validates phi. See Bug #284 *)
-              | Tm_refine (b, _) ->
-                let _, bs, bs', copt, env_body, body, g_env = as_function_typ norm b.sort in
-                //we pass type `t` out to check afterwards the full refinement type is respected
-                Some t, bs, bs', copt, env_body, body, g_env
-
-              | Tm_arrow(bs_expected, c_expected) ->
-                let bs_expected, c_expected = SS.open_comp bs_expected c_expected in
-                  (* Two main interesting bits here;
-                      1. The expected type may have
-                            a. more immediate binders, whereas the function may itself return a function
-                            b. fewer immediate binders, meaning that the function type is explicitly curried
-                      2. If the function is a let-rec and it is to be total, then we need to add termination checks.
-                  *)
-                let check_actuals_against_formals env bs bs_expected body
-                  : Env.env
-                  * binders
-                  * guard_t
-                  * comp
-                  * term
-                =
-                    let rec handle_more (env_bs, bs, more, guard_env, subst) c_expected body =
-                      match more with
-                      | None -> //number of binders match up
-                        env_bs, bs, guard_env, SS.subst_comp subst c_expected, body
-
-                      | Some (Inr more_bs_expected) -> //more formal parameters; expect the body to return a total function
-                        let c = S.mk_Total (U.arrow more_bs_expected c_expected) in
-                        env_bs, bs, guard_env, SS.subst_comp subst c, body
-
-                      | Some (Inl more_bs) ->  //more actual args
-                        let c = SS.subst_comp subst c_expected in
-                        (* the expected type is explicitly curried *)
-                        if Options.ml_ish () || U.is_named_tot c then
-                          let t = N.unfold_whnf env_bs (U.comp_result c) in
-                          match t.n with
-                          | Tm_arrow(bs_expected, c_expected) ->
-                            let bs_expected, c_expected = SS.open_comp bs_expected c_expected in
-                            let (env_bs_bs', bs', more, guard'_env_bs, subst) = check_binders env_bs more_bs bs_expected in
-                            let guard'_env = Env.close_guard env_bs bs guard'_env_bs in
-                            handle_more (env_bs_bs', bs@bs', more, Env.conj_guard guard_env guard'_env, subst) c_expected body
-                          | _ ->
-                            let body = U.abs more_bs body None in
-                            env_bs, bs, guard_env, c, body
-                        else let body = U.abs more_bs body None in
-                             env_bs, bs, guard_env, c, body
-                      in
-
-                      handle_more (check_binders env bs bs_expected) c_expected body
-                in
-
-                let mk_letrec_env envbody bs c =
-                    let letrecs = guard_letrecs envbody bs c in
-                    let envbody = {envbody with letrecs=[]} in
-                    let envbody, letrec_binders, g =
-                            letrecs |> List.fold_left (fun (env, letrec_binders, g) (l,t,u_names) ->
-                                //let t = N.normalize [Env.EraseUniverses; Env.Beta] env t in
-                                //printfn "Checking let rec annot: %s\n" (Print.term_to_string t);
-                                let t, _, g' = tc_term (Env.clear_expected_typ env |> fst) t in
-                                let env = Env.push_let_binding env l (u_names, t) in
-                                let lb = match l with
-                                    | Inl x -> S.mk_binder ({x with sort=t})::letrec_binders
-                                    | _ -> letrec_binders in
-                                env, lb, Env.conj_guard g g')
-                              (envbody, [], Env.trivial_guard)
-                    in
-                    (envbody, letrec_binders, Env.close_guard envbody bs g)
-                in
-
-                let envbody, bs, g_env, c, body = check_actuals_against_formals env bs bs_expected body in
-                let envbody, letrecs, g_annots = mk_letrec_env envbody bs c in
-                let envbody = Env.set_expected_typ envbody (U.comp_result c) in
-                Some t, bs, letrecs, Some c, envbody, body, Env.conj_guard g_env g_annots
-
-              | _ -> (* expected type is not a function;
-                        try normalizing it first;
-                        otherwise synthesize a type and check it against the given type *)
-                if not norm
-                then as_function_typ true (t |> N.unfold_whnf env |> U.unascribe)  //AR: without the unascribe we lose out on some arrows
-                else let _, bs, _, c_opt, envbody, body, g_env = expected_function_typ env None body in
-                     Some t, bs, [], c_opt, envbody, body, g_env
-          in
-          as_function_typ false t
-    in
-
+    
     (* whether to try first to use unification for solving sub-typing constraints or only propagate to the SMT solver *)
     let use_eq = env.use_eq in
     (* topt is the expected type of the expression obtained from the env *)
@@ -1504,7 +1502,8 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
           (match topt with | None -> "None" | Some t -> Print.term_to_string t)
           (if env.top_level then "true" else "false");
 
-    let tfun_opt, bs, letrec_binders, c_opt, envbody, body, g_env = expected_function_typ env topt body in
+    let tfun_opt, bs, letrec_binders, c_opt, envbody, body, g_env =
+      tc_abs_expected_function_typ env bs topt body in
 
     if Env.debug env Options.Extreme
     then BU.print3 "After expected_function_typ, tfun_opt: %s, c_opt: %s, and expected type in envbody: %s\n"
@@ -1525,31 +1524,53 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
     let envbody = Env.set_range envbody body.pos in
     let body, cbody, guard_body =
-        let should_check_expected_effect =
-            match c_opt, (SS.compress body).n with
-            | None, Tm_ascribed (_, (Inr expected_c, _), _) ->
-              //body is already ascribed a computation type;
-              //don't check it again
-              //Not only is it redundant and inefficient, it also sometimes leads to bizarre errors
-              //e.g., Issue #1208
-              false
-            | _ ->
-              true
-        in
-        let body, cbody, guard_body =
-            tc_term ({envbody with top_level=false; use_eq=use_eq}) body in
-        let guard_body =  //we don't abstract over subtyping constraints; so solve them now
-            Rel.solve_deferred_constraints envbody guard_body in
-        if should_check_expected_effect
+      (*
+       * AR: Special casing the typechecking of the body when it is a M.reflect e
+       *     If so, and c_opt is not None, i.e. we have an expected type in the env,
+       *       we make the body as (M.reflect e) <: c_opt
+       *     Basically, typechecking a reflect can be made better by the effect indices
+       *     See also special casing of M.reflect <: C in the same file
+       *)
+      let envbody, body, should_check_expected_effect =
+        if c_opt |> is_some &&
+           (match (SS.compress body).n with  //body is an M.reflect
+            | Tm_app (head, args) when List.length args = 1 ->
+              (match (SS.compress head).n with
+               | Tm_constant (Const_reflect _) -> true
+               | _ -> false)
+            | _ -> false)
         then
-          let cbody, g_lc = TcComm.lcomp_comp cbody in
-          let body, cbody, guard = check_expected_effect
-            ({envbody with use_eq=use_eq})
-            c_opt (body, cbody) in
-          body, cbody, Env.conj_guard guard_body (Env.conj_guard g_lc guard)
-        else
-          let cbody, g_lc = TcComm.lcomp_comp cbody in
-          body, cbody, Env.conj_guard guard_body g_lc
+          Env.clear_expected_typ envbody |> fst,
+          S.mk
+            (Tm_ascribed (body, (Inr (c_opt |> must), None), None))
+            None Range.dummyRange,
+          false
+        else 
+          envbody,
+          body,
+          (match c_opt, (SS.compress body).n with
+           | None, Tm_ascribed (_, (Inr expected_c, _), _) ->
+             //body is already ascribed a computation type;
+             //don't check it again
+             //Not only is it redundant and inefficient, it also sometimes leads to bizarre errors
+             //e.g., Issue #1208
+             false
+           | _ -> true)
+      in
+      let body, cbody, guard_body =
+        tc_term ({envbody with top_level=false; use_eq=use_eq}) body in
+
+      //we don't abstract over subtyping constraints; so solve them now
+      let guard_body = Rel.solve_deferred_constraints envbody guard_body in
+
+      if should_check_expected_effect
+      then let cbody, g_lc = TcComm.lcomp_comp cbody in
+           let body, cbody, guard = check_expected_effect
+             ({envbody with use_eq=use_eq})
+             c_opt (body, cbody) in
+           body, cbody, Env.conj_guard guard_body (Env.conj_guard g_lc guard)
+      else let cbody, g_lc = TcComm.lcomp_comp cbody in
+           body, cbody, Env.conj_guard guard_body g_lc
     in
 
     let guard = if env.top_level || not(Env.should_verify env)
