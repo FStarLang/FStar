@@ -4128,7 +4128,7 @@ let mk_total_step_1 :
             fun nf  ->
               fun ne1  ->
                 fun ner  ->
-                  mk name (Prims.of_int (2)) nunivs
+                  mk name Prims.int_one nunivs
                     (mk_total_interpretation_1 f e1 er)
                     (fun cb  ->
                        fun args  ->
@@ -4160,7 +4160,7 @@ let mk_total_step_2 :
                 fun ne1  ->
                   fun ne2  ->
                     fun ner  ->
-                      mk name (Prims.of_int (3)) nunivs
+                      mk name (Prims.of_int (2)) nunivs
                         (mk_total_interpretation_2 f e1 e2 er)
                         (fun cb  ->
                            fun args  ->
@@ -4196,7 +4196,7 @@ let mk_total_step_3 :
                     fun ne2  ->
                       fun ne3  ->
                         fun ner  ->
-                          mk name (Prims.of_int (4)) nunivs
+                          mk name (Prims.of_int (3)) nunivs
                             (mk_total_interpretation_3 f e1 e2 e3 er)
                             (fun cb  ->
                                fun args  ->
@@ -4236,7 +4236,7 @@ let mk_total_step_4 :
                         fun ne3  ->
                           fun ne4  ->
                             fun ner  ->
-                              mk name (Prims.of_int (5)) nunivs
+                              mk name (Prims.of_int (4)) nunivs
                                 (mk_total_interpretation_4 f e1 e2 e3 e4 er)
                                 (fun cb  ->
                                    fun args  ->
@@ -4280,7 +4280,7 @@ let mk_total_step_5 :
                             fun ne4  ->
                               fun ne5  ->
                                 fun ner  ->
-                                  mk name (Prims.of_int (6)) nunivs
+                                  mk name (Prims.of_int (5)) nunivs
                                     (mk_total_interpretation_5 f e1 e2 e3 e4
                                        e5 er)
                                     (fun cb  ->
@@ -4334,7 +4334,7 @@ let mk_total_step_6 :
                                 fun ne5  ->
                                   fun ne6  ->
                                     fun ner  ->
-                                      mk name (Prims.of_int (7)) nunivs
+                                      mk name (Prims.of_int (6)) nunivs
                                         (mk_total_interpretation_6 f e1 e2 e3
                                            e4 e5 e6 er)
                                         (fun cb  ->
@@ -4399,7 +4399,7 @@ let mk_total_step_7 :
                                     fun ne6  ->
                                       fun ne7  ->
                                         fun ner  ->
-                                          mk name (Prims.of_int (8)) nunivs
+                                          mk name (Prims.of_int (7)) nunivs
                                             (mk_total_interpretation_7 f e1
                                                e2 e3 e4 e5 e6 e7 er)
                                             (fun cb  ->
@@ -4475,7 +4475,7 @@ let mk_total_step_8 :
                                         fun ne7  ->
                                           fun ne8  ->
                                             fun ner  ->
-                                              mk name (Prims.of_int (9))
+                                              mk name (Prims.of_int (8))
                                                 nunivs
                                                 (mk_total_interpretation_8 f
                                                    e1 e2 e3 e4 e5 e6 e7 e8 er)
@@ -4563,7 +4563,7 @@ let mk_total_step_9 :
                                             fun ne8  ->
                                               fun ne9  ->
                                                 fun ner  ->
-                                                  mk name (Prims.of_int (10))
+                                                  mk name (Prims.of_int (9))
                                                     nunivs
                                                     (mk_total_interpretation_9
                                                        f e1 e2 e3 e4 e5 e6 e7
@@ -4666,7 +4666,7 @@ let mk_total_step_10 :
                                                   fun ne10  ->
                                                     fun ner  ->
                                                       mk name
-                                                        (Prims.of_int (11))
+                                                        (Prims.of_int (10))
                                                         nunivs
                                                         (mk_total_interpretation_10
                                                            f e1 e2 e3 e4 e5
