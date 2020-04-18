@@ -836,20 +836,23 @@ let compare_issues i1 i2 =
     | Some r1, Some r2 -> Range.compare_use_range r1 r2
 
 let mk_default_handler print =
-    let errs : ref<list<issue>> = BU.mk_ref [] in
-    let add_one (e: issue) =
-        match e.issue_level with
-        | EError -> errs := e :: !errs
-        | _ -> print_issue e in
+    let issues : ref<list<issue>> = BU.mk_ref [] in
+    let add_one (e: issue) = issues := e :: !issues in
     let count_errors () =
-        List.length !errs in
+        List.fold_left (fun n i ->
+          match i.issue_level with
+          | EError -> n + 1
+          | _ -> n)
+          0
+          (!issues)
+    in
     let report () =
-        let sorted = List.sortWith compare_issues !errs in
-        if print then
-            List.iter print_issue sorted;
-        sorted in
-    let clear () =
-        errs := [] in
+        let sorted = List.sortWith compare_issues !issues in
+        let unique = BU.remove_dups (fun i0 i1 -> i0=i1) sorted in
+        if print then List.iter print_issue unique;
+        unique
+    in
+    let clear () = issues := [] in
     { eh_add_one = add_one;
       eh_count_errors = count_errors;
       eh_report = report;
