@@ -1072,6 +1072,7 @@ let catch_errors (f : unit -> 'a) : list<issue> * option<'a> =
     in
     let errs = newh.eh_report() in
     current_handler := old;
+    let errs = List.filter (fun i -> i.issue_level = EError) errs in
     errs, r
 
 (* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2)

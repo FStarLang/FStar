@@ -3418,7 +3418,10 @@ let catch_errors :
            (err_exn uu___348_7424; FStar_Pervasives_Native.None)
         in
      let errs = newh.eh_report ()  in
-     FStar_ST.op_Colon_Equals current_handler old; (errs, r))
+     FStar_ST.op_Colon_Equals current_handler old;
+     (let errs1 = FStar_List.filter (fun i  -> i.issue_level = EError) errs
+         in
+      (errs1, r)))
   
 let (find_multiset_discrepancy :
   Prims.int Prims.list ->
@@ -3432,8 +3435,8 @@ let (find_multiset_discrepancy :
         match l with
         | [] -> []
         | hd::tl ->
-            let uu____7549 = collect tl  in
-            (match uu____7549 with
+            let uu____7554 = collect tl  in
+            (match uu____7554 with
              | [] -> [(hd, Prims.int_one)]
              | (h,n)::t ->
                  if h = hd
@@ -3441,14 +3444,14 @@ let (find_multiset_discrepancy :
                  else (hd, Prims.int_one) :: (h, n) :: t)
          in
       let summ l = collect l  in
-      let l11 = let uu____7658 = sort l1  in summ uu____7658  in
-      let l21 = let uu____7671 = sort l2  in summ uu____7671  in
+      let l11 = let uu____7663 = sort l1  in summ uu____7663  in
+      let l21 = let uu____7676 = sort l2  in summ uu____7676  in
       let rec aux l12 l22 =
         match (l12, l22) with
         | ([],[]) -> FStar_Pervasives_Native.None
-        | ((e,n)::uu____7795,[]) ->
+        | ((e,n)::uu____7800,[]) ->
             FStar_Pervasives_Native.Some (e, n, Prims.int_zero)
-        | ([],(e,n)::uu____7851) ->
+        | ([],(e,n)::uu____7856) ->
             FStar_Pervasives_Native.Some (e, Prims.int_zero, n)
         | ((hd1,n1)::tl1,(hd2,n2)::tl2) ->
             if hd1 < hd2
