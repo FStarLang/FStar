@@ -750,5 +750,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         Some (w, w', a, b)
     with
     | NoTacticEmbedding msg ->
-      not_implemented_warning t.pos (FStar.Syntax.Print.fv_to_string fv) msg;
+      not_implemented_warning (range_of_lid fv.fv_name.v)
+                              (FStar.Syntax.Print.fv_to_string fv)
+                              msg;
       None
