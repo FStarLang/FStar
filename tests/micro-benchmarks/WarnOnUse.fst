@@ -28,4 +28,14 @@ let f (x:int) : False = admit()
 #pop-options
 
 #push-options "--report_assumes warn"
-#push-options "--admit_smt_queries true"
+#push-options "--admit_smt_queries true" //triggers a warning
+#pop-options
+
+#push-options "--report_assumes error"
+[@(expect_failure [334])]
+let ff (x:int) : False = admit()
+
+#push-options "--report_assumes warn" //can't downgrade --report_assumes
+[@(expect_failure [334])]
+let ff (x:int) : False = admit()
+#pop-options

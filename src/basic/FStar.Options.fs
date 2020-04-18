@@ -136,7 +136,16 @@ let set o =
 let snapshot () = Common.snapshot push fstar_options ()
 let rollback depth = Common.rollback pop fstar_options depth
 
-let set_option k v = Util.smap_add (internal_peek()) k v
+let set_option k v =
+  let map = internal_peek() in
+  if k = "report_assumes"
+  then match Util.smap_try_find map k with
+       | Some (String "error") ->
+         //It's already set to error; ignore any attempt to change it
+         ()
+       | _ -> Util.smap_add map k v
+  else Util.smap_add map k v
+
 let set_option' (k,v) =  set_option k v
 
 let light_off_files : ref<list<string>> = Util.mk_ref []
@@ -1024,7 +1033,7 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
 
        ( noshort,
          "report_assumes",
-         EnumStr ["warn"; "error"],
+          EnumStr ["warn"; "error"],
          "Report every use of an escape hatch, include assume, admit, etc.");
 
        ( noshort,
