@@ -100,7 +100,7 @@ let set_lcomp_result lc t =
 let memo_tk (e:term) (t:typ) = e
 
 let maybe_warn_on_use env fv : unit =
-  if env.lax || env.phase1
+  if not env.phase1
   then
     match Env.lookup_attrs_of_lid env fv.fv_name.v with
     | None -> ()

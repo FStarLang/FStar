@@ -702,7 +702,6 @@ let default_settings : list<error_setting> =
     Warning_CouldNotReadHints                         , CWarning, 333;
     Warning_WarnOnUse                                 , CSilent, 334
   ]
-let max_error_number = 334
 module BU = FStar.Util
 
 let lookup_error settings e =
@@ -713,6 +712,12 @@ let lookup_error settings e =
   | None -> failwith "Impossible: unrecognized error"
 
 let lookup_error_range settings (l, h) =
+  BU.for_range l h (fun i ->
+     match BU.try_find (fun (_, _, j) -> i=j) settings with
+     | None ->
+       raise (Invalid_warn_error_setting
+                     (BU.format1 "Malformed warn-error range: %s does not exist" (string_of_int i)))
+     | Some _ -> ());
   let matches, _ =
     List.partition (fun (_, _, i) -> l <= i && i <= h) settings
   in
@@ -751,12 +756,7 @@ let update_flags (l:list<(error_flag * string)>)
          | _ -> raise (Invalid_warn_error_setting
                        (BU.format1 "Malformed warn-error range %s" s))
      in
-     if 0 <= l
-     && l <= h
-     && h <= max_error_number
-     then flag, (l, h)
-     else raise (Invalid_warn_error_setting
-                      (BU.format1 "Malformed warn-error range %s" s))
+     flag, (l, h)
   in
   let error_range_settings = List.map compute_range l in
   List.collect set_flag_for_range error_range_settings
@@ -981,25 +981,34 @@ let set_parse_warn_error,
 
 let lookup err =
   let flags = error_flags () in
-  let with_tag tag =
-    let v, _, i = lookup_error flags err in
-    v, tag, i
-  in
-  match err with
+  let v, level, i = lookup_error flags err in
+  let with_level level = v, level, i in
+  match v with
   | Warning_Defensive
         when Options.defensive_fail() ->
-    with_tag CAlwaysError
+    with_level CAlwaysError
 
-  | Warning_WarnOnUse
-        when Options.report_assumes () = Some "warn" ->
-    with_tag CWarning
-
-  | Warning_WarnOnUse
-         when Options.report_assumes () = Some "error" ->
-    with_tag CError
+  | Warning_WarnOnUse ->
+    let level' =
+      //the level of warn_on_use is the
+      //max severity of the report_assumes setting (none, warn, error)
+      //and whatever the level is by default (e.g., due to a --warn_error setting)
+      match Options.report_assumes () with
+      | None -> level
+      | Some "warn" ->
+        (match level with
+         | CSilent -> CWarning
+         | _ -> level)
+      | Some "error" ->
+        (match level with
+         | CWarning
+         | CSilent -> CError
+         | _ -> level)
+    in
+    with_level level'
 
   | _ ->
-    lookup_error flags err
+    with_level level
 
 let log_issue r (e, msg) =
   match lookup e with
@@ -1023,8 +1032,6 @@ let issue_of_exn = function
     | Error(e, msg, r) ->
       let errno = error_number (lookup e) in
       Some (mk_issue EError (Some r) (message_prefix.append_prefix msg) (Some errno))
-    | NYI msg ->
-      Some (mk_issue ENotImplemented None (message_prefix.append_prefix msg) None)
     | Err (e, msg) ->
       let errno = error_number (lookup e) in
       Some (mk_issue EError None (message_prefix.append_prefix msg) (Some errno))
@@ -1039,7 +1046,6 @@ let err_exn exn =
 
 let handleable = function
   | Error _
-  | NYI _
   | Stop
   | Err _ -> true
   | _ -> false

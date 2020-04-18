@@ -29,8 +29,6 @@ let is_before t1 t2 = compare t1 t2 < 0
 let string_of_time = string_of_float
 
 exception Impos
-exception NYI of string
-exception HardError of string
 
 let cur_sigint_handler : Sys.signal_behavior ref =
   ref Sys.Signal_default

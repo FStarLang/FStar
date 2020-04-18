@@ -371,7 +371,7 @@ let (maybe_warn_on_use :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.fv -> unit) =
   fun env  ->
     fun fv  ->
-      if env.FStar_TypeChecker_Env.lax || env.FStar_TypeChecker_Env.phase1
+      if Prims.op_Negation env.FStar_TypeChecker_Env.phase1
       then
         let uu____453 =
           FStar_TypeChecker_Env.lookup_attrs_of_lid env
