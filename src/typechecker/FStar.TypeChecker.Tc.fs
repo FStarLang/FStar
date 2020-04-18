@@ -451,6 +451,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
        | _ -> false in
 
     if is_unelaborated_dm4f then
+      let env = Env.set_range env r in
       let ses, ne, lift_from_pure_opt = TcEff.dmff_cps_and_elaborate env ne in
       let effect_and_lift_ses = match lift_from_pure_opt with
         | Some lift -> [ { se with sigel = Sig_new_effect (ne) } ; lift ]

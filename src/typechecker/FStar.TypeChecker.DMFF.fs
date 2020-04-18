@@ -1407,6 +1407,8 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   if Env.debug env (Options.Other "ED") then
     BU.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
+  let ed_range = Env.get_range env in
+
   let dmff_env = empty env (TcTerm.tc_constant env Range.dummyRange) in
   let wp_type = star_type dmff_env repr in
   let _ = recheck_debug "*" env wp_type in
@@ -1495,7 +1497,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
         in
 
         (* fun b1 wp -> (fun bs@bs'-> wp (fun b2 -> body $$ Type0) $$ Type0) $$ wp_a *)
-        let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None Range.dummyRange in
+        let body = mk_Tm_app (S.bv_to_name wp) [U.abs [b2] body what', None] None ed_range in
         U.abs ([ b1; S.mk_binder wp ])
               (U.abs (bs) body what)
               (Some rc_gtot)
@@ -1536,7 +1538,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   let register name item =
     let p = path_of_lid ed.mname in
     let p' = apply_last (fun s -> "__" ^ s ^ "_eff_override_" ^ name) p in
-    let l' = lid_of_path p' Range.dummyRange in
+    let l' = lid_of_path p' ed_range in
     match try_lookup_lid env l' with
     | Some (_us,_t) -> begin
       if Options.debug_any () then
@@ -1550,7 +1552,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
       fv
   in
   let lift_from_pure_wp = register "lift_from_pure" lift_from_pure_wp in
-
+  let mk_sigelt se = { mk_sigelt se with sigrng=ed_range } in
   // we do not expect the return_elab to verify, since that may require internalizing monotonicity of WPs (i.e. continuation monad)
   let return_wp = register "return_wp" return_wp in
   sigelts := mk_sigelt (Sig_pragma (PushOptions (Some "--admit_smt_queries true"))) :: !sigelts;
