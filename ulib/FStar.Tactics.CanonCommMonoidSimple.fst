@@ -210,7 +210,7 @@ let sort_correct : permute_correct sort = (fun #a -> sort_correct_aux #a)
 
 (***** Canonicalization tactics *)
 
-[@plugin]
+(* [@plugin] *)
 let canon (e:exp) = sort (flatten e)
 
 let canon_correct (#a:Type) (m:cm a) (am:amap a) (e:exp) :
