@@ -282,7 +282,7 @@ type raw_error =
   | Warning_UseDefaultEffect 
   | Warning_WrongErrorLocation 
   | Warning_Z3InvocationWarning 
-  | Warning_CallNotImplementedAsWarning 
+  | Warning_PluginNotImplemented 
   | Warning_MissingInterfaceOrImplementation 
   | Warning_ConstructorBuildsUnexpectedType 
   | Warning_ModuleOrFileNotFoundWarning 
@@ -2016,10 +2016,10 @@ let (uu___is_Warning_Z3InvocationWarning : raw_error -> Prims.bool) =
     | Warning_Z3InvocationWarning  -> true
     | uu____3110 -> false
   
-let (uu___is_Warning_CallNotImplementedAsWarning : raw_error -> Prims.bool) =
+let (uu___is_Warning_PluginNotImplemented : raw_error -> Prims.bool) =
   fun projectee  ->
     match projectee with
-    | Warning_CallNotImplementedAsWarning  -> true
+    | Warning_PluginNotImplemented  -> true
     | uu____3121 -> false
   
 let (uu___is_Warning_MissingInterfaceOrImplementation :
@@ -2547,7 +2547,7 @@ let (default_flags : (raw_error * FStar_Options.error_flag) Prims.list) =
   (Fatal_WrongTerm, FStar_Options.CFatal);
   (Fatal_WhenClauseNotSupported, FStar_Options.CFatal);
   (Unused01, FStar_Options.CFatal);
-  (Warning_CallNotImplementedAsWarning, FStar_Options.CWarning);
+  (Warning_PluginNotImplemented, FStar_Options.CError);
   (Warning_AddImplicitAssumeNewQualifier, FStar_Options.CWarning);
   (Warning_AdmitWithoutDefinition, FStar_Options.CWarning);
   (Warning_CachedFile, FStar_Options.CWarning);
