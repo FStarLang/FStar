@@ -368,6 +368,16 @@ let type_of (e:embedding<'a>) : t = e.typ
 
 let mk_emb em un typ et = {em = em; un = un; typ = typ; emb_typ=et}
 
+let embed_as (ea:embedding<'a>)
+             (ab : 'a -> 'b)
+             (ba : 'b -> 'a)
+             (ot:option<t>)
+             : embedding<'b>
+ = mk_emb (fun cbs (x:'b) -> embed ea cbs (ba x))
+          (fun cbs t -> BU.map_opt (unembed ea cbs t) ab)
+          (match ot with | Some t -> t | None -> ea.typ)
+          ea.emb_typ
+
 let lid_as_constr (l:lident) (us:list<universe>) (args:args) : t =
     mkConstruct (lid_as_fv l S.delta_constant (Some Data_ctor)) us args
 

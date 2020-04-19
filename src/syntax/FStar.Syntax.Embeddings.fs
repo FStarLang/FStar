@@ -74,13 +74,19 @@ let mk_emb_full em un typ printer emb_typ = {
 }
 
 (* Eta-expand to make F# happy *)
-let embed       (e:embedding<'a>) x   = e.em x
-let unembed     (e:embedding<'a>) t   = e.un t
+let embed        (e:embedding<'a>) x   = e.em x
+let unembed      (e:embedding<'a>) t   = e.un t
 let warn_unembed (e:embedding<'a>) t n = unembed e t true n
 let try_unembed  (e:embedding<'a>) t n = unembed e t false n
-let type_of     (e:embedding<'a>)     = e.typ
-let set_type ty (e:embedding<'a>)     = { e with typ = ty }
+let type_of      (e:embedding<'a>)     = e.typ
+let set_type ty  (e:embedding<'a>)     = { e with typ = ty }
 
+let embed_as (ea:embedding<'a>) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option<typ>) =
+    mk_emb_full (fun (x:'b) -> embed ea (ba x))
+                (fun (t:term) w cb -> BU.map_opt (unembed ea t w cb) ab)
+                (match o with | Some t -> t | _ -> type_of ea)
+                (fun (x:'b) -> BU.format1 "(embed_as>> %s)\n" (ea.print (ba x)))
+                ea.emb_typ
 
 let lazy_embed (pa:printer<'a>) (et:emb_typ) rng ta (x:'a) (f:unit -> term) =
     if !Options.debug_embedding

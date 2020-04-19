@@ -81,6 +81,11 @@ val try_unembed  : embedding<'a> -> term -> norm_cb -> option<'a>
 val type_of      : embedding<'a> -> typ
 val set_type     : typ -> embedding<'a> -> embedding<'a>
 
+val embed_as     : embedding<'a> ->
+                   ('a -> 'b) ->
+                   ('b -> 'a) ->
+                   option<typ> -> (* optionally change the type *)
+                   embedding<'b>
 
 (* Embeddings, both ways and containing type information *)
 val e_any         : embedding<term> // an identity

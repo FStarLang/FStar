@@ -232,6 +232,8 @@ val mk_emb : (nbe_cbs -> 'a -> t) ->
              emb_typ ->
              embedding<'a>
 
+val embed_as : embedding<'a> -> ('a -> 'b) -> ('b -> 'a) -> option<t> -> embedding<'b>
+
 val embed   : embedding<'a> -> nbe_cbs -> 'a -> t
 val unembed : embedding<'a> -> nbe_cbs -> t -> option<'a>
 val type_of : embedding<'a> -> t
