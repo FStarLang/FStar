@@ -498,7 +498,7 @@ let rec token = lexer
       * creates a lexing conflict with op_infix3 which is caught below. *)
      one_line_comment (L.lexeme lexbuf) lexbuf
 
- | '"' -> string (Buffer.create 0) lexbuf.start_p lexbuf
+ | '"' -> string (Buffer.create 0) lexbuf.Ulexing.start_p lexbuf
 
  | '`' '`' (([^'`' 10 13 0x2028 0x2029] | '`' [^'`' 10 13 0x2028 0x2029])+) '`' '`' ->
    IDENT (trim_both lexbuf 2 2)
@@ -555,11 +555,11 @@ and string buffer start_pos = lexer
    string buffer start_pos lexbuf
  | '"' ->
     (* position info must be set since the start of the string *)
-    lexbuf.start_p <- start_pos;
+    lexbuf.Ulexing.start_p <- start_pos;
     STRING (Buffer.contents buffer)
  | '"''B' ->
     (* as above *)
-    lexbuf.start_p <- start_pos;
+    lexbuf.Ulexing.start_p <- start_pos;
     BYTEARRAY (ba_of_string (Buffer.contents buffer))
  | _ ->
    Buffer.add_string buffer (L.lexeme lexbuf);
