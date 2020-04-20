@@ -1545,8 +1545,13 @@ let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tschem
 
   let guard_eq = Rel.teq env ty k in
   List.iter (Rel.force_trivial_guard env) [guard_f; guard_ret_t; guard_wp; guard_eq];
-  (us, t),
-  (us, k
+  let k = k
     |> N.remove_uvar_solutions env
     |> N.normalize [Env.Beta; Env.Eager_unfolding] env
-    |> SS.close_univ_vars us)
+    |> SS.close_univ_vars us in
+
+  if Env.debug env <| Options.Other "LayeredEffects" then
+    BU.print2 "Polymonadic subcomp %s type after unification : %s\n"
+      combinator_name (Print.term_to_string k);
+
+  (us, t), (us, k)
