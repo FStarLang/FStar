@@ -6635,8 +6635,8 @@ let (tc_polymonadic_subcomp :
                                             if uu____12925
                                             then
                                               let uu____12930 =
-                                                FStar_Syntax_Print.term_to_string
-                                                  k1
+                                                FStar_Syntax_Print.tscheme_to_string
+                                                  (us1, k1)
                                                  in
                                               FStar_Util.print2
                                                 "Polymonadic subcomp %s type after unification : %s\n"
