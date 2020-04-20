@@ -1485,3 +1485,68 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
       eff_name);
 
   (us, t), (us, k |> N.remove_uvar_solutions env |> SS.close_univ_vars us)
+
+
+let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
+  let r = (snd ts).pos in
+
+  let combinator_name = string_of_lid m ^ "<:" ^ string_of_lid n in
+
+  let us, t, ty = check_and_gen env0 combinator_name "polymonadic_subcomp" 1 ts in
+
+  //make sure that the combinator has the right shape
+
+  let us, ty = SS.open_univ_vars us ty in
+  let env = Env.push_univ_vars env0 us in
+
+  check_no_subtyping_for_layered_combinator env ty None;
+
+  //construct the expected type k to be:
+  //a:Type -> <some binders> -> m_repr a is -> PURE (n_repr a js) wp
+
+  let a, u = U.type_u () |> (fun (t, u) -> S.gen_bv "a" None t |> S.mk_binder, u) in
+  let rest_bs =
+    match (SS.compress ty).n with
+    | Tm_arrow (bs, _) when List.length bs >= 2 ->
+      let ((a', _)::bs) = SS.open_binders bs in
+      bs |> List.splitAt (List.length bs - 1) |> fst
+         |> SS.subst_binders [NT (a', bv_to_name (fst a))]
+    | _ -> 
+      raise_error (Errors.Fatal_UnexpectedEffect,
+        BU.format3 "Type of polymonadic subcomp %s is not an arrow with >= 2 binders (%s::%s)"
+          combinator_name
+          (Print.tag_of_term t) (Print.term_to_string t)) r in
+    
+  let bs = a::rest_bs in
+  let f, guard_f =
+    let repr, g = TcUtil.fresh_effect_repr_en (Env.push_binders env bs) r m u
+      (a |> fst |> S.bv_to_name) in
+    S.gen_bv "f" None repr |> S.mk_binder, g in
+    
+  let ret_t, guard_ret_t = TcUtil.fresh_effect_repr_en (Env.push_binders env bs)
+    r n u (a |> fst |> S.bv_to_name) in
+
+  let pure_wp_uvar, guard_wp = pure_wp_uvar (Env.push_binders env bs) ret_t 
+    (BU.format1 "implicit for pure_wp in checking polymonadic subcomp %s" combinator_name)
+    r in
+  let c = S.mk_Comp ({
+    comp_univs = [ Env.new_u_univ () ];
+    effect_name = PC.effect_PURE_lid;
+    result_typ = ret_t;
+    effect_args = [ pure_wp_uvar |> S.as_arg ];
+    flags = [] }) in
+
+  let k = U.arrow (bs@[f]) c in
+
+  if Env.debug env <| Options.Other "LayeredEffects" then
+    BU.print2 "Expected type of polymonadic subcomp %s before unification: %s\n"
+      combinator_name
+      (Print.term_to_string k);
+
+  let guard_eq = Rel.teq env ty k in
+  List.iter (Rel.force_trivial_guard env) [guard_f; guard_ret_t; guard_wp; guard_eq];
+  (us, t),
+  (us, k
+    |> N.remove_uvar_solutions env
+    |> N.normalize [Env.Beta; Env.Eager_unfolding] env
+    |> SS.close_univ_vars us)
