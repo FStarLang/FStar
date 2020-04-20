@@ -387,14 +387,21 @@ let join_lcomp env c1 c2 =
   then C.effect_Tot_lid
   else join_effects env c1.eff_name c2.eff_name
 
+type lift_context =
+  | Lift_for_bind
+  | Lift_for_match
+
 (*
  * This functions returns the two lifted computations,
  *   and guards for each of them
  *
  * The separate guards are important when it is called from the pattern matching code (bind_cases)
  *   where the two guards are weakened using different branch conditions
+ *
+ * Note that this code may use polymonadic binds for lifts,
+ *   for now we intend to use it only for pattern matches (lifting the wildcard case)
  *)
-let lift_comps_sep_guards env c1 c2 (b:option<bv>) (for_bind:bool)
+let lift_comps_sep_guards env c1 c2 (b:option<bv>) (lift_context:lift_context)
 : lident * comp * comp * guard_t * guard_t =
   let c1 = Env.unfold_effect_abbrev env c1 in
   let c2 = Env.unfold_effect_abbrev env c2 in
@@ -402,7 +409,7 @@ let lift_comps_sep_guards env c1 c2 (b:option<bv>) (for_bind:bool)
   | Some (m, lift1, lift2) ->
     let c1, g1 = lift_comp env c1 lift1 in
     let c2, g2 =
-      if not for_bind then lift_comp env c2 lift2
+      if lift_context = Lift_for_match then lift_comp env c2 lift2
       else
         let x_a =
           match b with
@@ -424,6 +431,8 @@ let lift_comps_sep_guards env c1 c2 (b:option<bv>) (for_bind:bool)
      *
      *     we could also try to find a P such that (M1, P) |> P and (M2, P) |> P exist
      *       but leaving that for later
+     *
+     *     we do it ONLY FOR pattern matches
      *)
 
     let rng = env.range in
@@ -433,12 +442,14 @@ let lift_comps_sep_guards env c1 c2 (b:option<bv>) (for_bind:bool)
           (Print.lid_to_string c1.effect_name) (Print.lid_to_string c2.effect_name))) rng in
 
     if Env.debug env <| Options.Other "LayeredEffects"
-    then BU.print3 "Lifting comps %s and %s with for_bind %s{\n"
+    then BU.print3 "Lifting comps %s and %s with lift context %s{\n"
            (c1 |> S.mk_Comp |> Print.comp_to_string)
            (c2 |> S.mk_Comp |> Print.comp_to_string)
-           (string_of_bool for_bind);
+           (match lift_context with
+            | Lift_for_bind -> "bind"
+            | Lift_for_match -> "match");
 
-    if for_bind then err ()
+    if lift_context = Lift_for_bind then err ()
     else
 
       let bind_with_return (ct:comp_typ) (ret_eff:lident) (f_bind:Env.polymonadic_bind_t)
@@ -476,9 +487,9 @@ let lift_comps_sep_guards env c1 c2 (b:option<bv>) (for_bind:bool)
 
       p, c1, c2, g1, g2
 
-let lift_comps env c1 c2 (b:option<bv>) (for_bind:bool)
+let lift_comps env c1 c2 (b:option<bv>) (lift_context:lift_context)
 : lident * comp * comp * guard_t
-= let l, c1, c2, g1, g2 = lift_comps_sep_guards env c1 c2 b for_bind in
+= let l, c1, c2, g1, g2 = lift_comps_sep_guards env c1 c2 b lift_context in
   l, c1, c2, Env.conj_guard g1 g2
 
 let is_pure_effect env l =
@@ -795,7 +806,7 @@ let mk_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range
      *     however, if you see lift_comps_sep_guards, it is already doing the closing
      *       so it's fine to return g_return as is
      *)
-    let m, c1, c2, g_lift = lift_comps env c1 c2 b true in
+    let m, c1, c2, g_lift = lift_comps env c1 c2 b Lift_for_bind in
     let ct1, ct2 = U.comp_to_comp_typ c1, U.comp_to_comp_typ c2 in
 
     let c, g_bind =
@@ -1500,7 +1511,7 @@ let bind_cases env0 (res_t:typ)
                 let gthen = TcComm.weaken_guard_formula gthen (U.mk_conj bcond g) in
                 let md, ct_then, ct_else, g_lift_then, g_lift_else =
                   let m, cthen, celse, g_lift_then, g_lift_else =
-                    lift_comps_sep_guards env cthen celse None false in
+                    lift_comps_sep_guards env cthen celse None Lift_for_match in
                   let md = Env.get_effect_decl env m in
                   md, cthen |> U.comp_to_comp_typ, celse |> U.comp_to_comp_typ, g_lift_then, g_lift_else in
                 let fn =
