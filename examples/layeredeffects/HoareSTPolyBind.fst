@@ -190,8 +190,10 @@ let subcomp_pure_hoarest (a:Type) (wp:pure_wp a) (req:pre_t) (ens:post_t a)
   fun _ -> f ()
 
 
-#set-options "--debug HoareSTPolyBind --debug_level LayeredEffects --ugly --print_implicits --print_universes --print_effect_args"
+// #set-options "--debug HoareSTPolyBind --debug_level LayeredEffects --ugly --print_implicits --print_universes --print_effect_args"
 polymonadic_subcomp PURE <: HoareST = subcomp_pure_hoarest
+
+let test () : HoareST int (fun _ -> True) (fun _ r _ -> r > 0) = 0
 
 
 // assume val f : x:int -> HoareST int (fun _ -> True) (fun _ r _ -> r == x + 1)
