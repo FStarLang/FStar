@@ -194,6 +194,7 @@ The steps require a working OCaml setup. OCaml version from 4.05.X to 4.08.1 sho
 
 2. If needed switch to a supported OCaml version by running the following commands:
   ```sh
+  $ opam update
   $ opam switch list-available
   $ opam switch create ocaml-variants.4.07.1+mingw64c
   ```
