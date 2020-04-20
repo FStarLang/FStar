@@ -617,7 +617,8 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
     | Sig_assume _
     | Sig_sub_effect  _
     | Sig_effect_abbrev _
-    | Sig_polymonadic_bind _ ->
+    | Sig_polymonadic_bind _
+    | Sig_polymonadic_subcomp _ ->
       g, empty_iface
 
     | Sig_pragma (p) ->
@@ -948,7 +949,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_assume _ //not needed; purely logical
        | Sig_sub_effect  _
        | Sig_effect_abbrev _ //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
-       | Sig_polymonadic_bind _ ->
+       | Sig_polymonadic_bind _
+       | Sig_polymonadic_subcomp _ ->
          g, []
        | Sig_pragma (p) ->
          U.process_pragma p se.sigrng;

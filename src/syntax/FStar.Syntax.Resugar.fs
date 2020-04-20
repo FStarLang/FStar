@@ -1237,6 +1237,9 @@ let resugar_sigelt' env se : option<A.decl> =
   | Sig_polymonadic_bind (m, n, p, (_, t), _) ->
     Some (decl'_to_decl se (A.Polymonadic_bind (m, n, p, resugar_term' env t)))
 
+  | Sig_polymonadic_subcomp (m, n, (_, t), _) ->
+    Some (decl'_to_decl se (A.Polymonadic_subcomp (m, n, resugar_term' env t)))
+
 (* Old interface: no envs *)
 
 let empty_env = DsEnv.empty_env FStar.Parser.Dep.empty_deps //dep graph not needed for resugaring

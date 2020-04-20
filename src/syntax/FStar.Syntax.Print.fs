@@ -774,6 +774,12 @@ let rec sigelt_to_string (x: sigelt) =
           (Ident.string_of_lid p)
           (tscheme_to_string t)
           (tscheme_to_string ty)
+      | Sig_polymonadic_subcomp (m, n, t, ty) ->
+        U.format4 "polymonadic_subcomp %s <: %s = (%s, %s)"
+          (Ident.string_of_lid m)
+          (Ident.string_of_lid n)
+          (tscheme_to_string t)
+          (tscheme_to_string ty)
       in
       match x.sigattrs with
       | [] -> "[@ ]" ^ "\n" ^ basic //It is important to keep this empty attribute marker since the Vale type extractor uses it as a delimiter
@@ -788,20 +794,21 @@ let sigelt_to_string_short (x: sigelt) = match x.sigel with
 
 let tag_of_sigelt (se:sigelt) : string =
   match se.sigel with
-  | Sig_inductive_typ _    -> "Sig_inductive_typ"
-  | Sig_bundle _           -> "Sig_bundle"
-  | Sig_datacon _          -> "Sig_datacon"
-  | Sig_declare_typ _      -> "Sig_declare_typ"
-  | Sig_let _              -> "Sig_let"
-  | Sig_main _             -> "Sig_main"
-  | Sig_assume _           -> "Sig_assume"
-  | Sig_new_effect _       -> "Sig_new_effect"
-  | Sig_sub_effect _       -> "Sig_sub_effect"
-  | Sig_effect_abbrev _    -> "Sig_effect_abbrev"
-  | Sig_pragma _           -> "Sig_pragma"
-  | Sig_splice _           -> "Sig_splice"
-  | Sig_polymonadic_bind _ -> "Sig_polymonadic_bind"
-  | Sig_fail _             -> "Sig_fail"
+  | Sig_inductive_typ _       -> "Sig_inductive_typ"
+  | Sig_bundle _              -> "Sig_bundle"
+  | Sig_datacon _             -> "Sig_datacon"
+  | Sig_declare_typ _         -> "Sig_declare_typ"
+  | Sig_let _                 -> "Sig_let"
+  | Sig_main _                -> "Sig_main"
+  | Sig_assume _              -> "Sig_assume"
+  | Sig_new_effect _          -> "Sig_new_effect"
+  | Sig_sub_effect _          -> "Sig_sub_effect"
+  | Sig_effect_abbrev _       -> "Sig_effect_abbrev"
+  | Sig_pragma _              -> "Sig_pragma"
+  | Sig_splice _              -> "Sig_splice"
+  | Sig_polymonadic_bind _    -> "Sig_polymonadic_bind"
+  | Sig_polymonadic_subcomp _ -> "Sig_polymonadic_subcomp"
+  | Sig_fail _                -> "Sig_fail"
 
 let modul_to_string (m:modul) =
   U.format3 "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" (sli m.name)

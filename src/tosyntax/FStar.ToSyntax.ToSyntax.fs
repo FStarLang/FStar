@@ -3208,20 +3208,18 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       sigopts = None }]
 
   | Polymonadic_subcomp (m_eff, n_eff, subcomp) ->
-    failwith "NYI: desugaring of polymonadic subcomp"    
-    // let m = lookup_effect_lid env m_eff d.drange in
-    // let n = lookup_effect_lid env n_eff d.drange in
-    // let p = lookup_effect_lid env p_eff d.drange in
-    // env, [{
-    //   sigel = Sig_polymonadic_bind (
-    //     m.mname, n.mname, p.mname,
-    //     ([], desugar_term env bind),
-    //     ([], S.tun));
-    //   sigquals = [];
-    //   sigrng = d.drange;
-    //   sigmeta = default_sigmeta;
-    //   sigattrs = [];
-    //   sigopts = None }]
+    let m = lookup_effect_lid env m_eff d.drange in
+    let n = lookup_effect_lid env n_eff d.drange in
+    env, [{
+      sigel = Sig_polymonadic_subcomp (
+        m.mname, n.mname,
+        ([], desugar_term env subcomp),
+        ([], S.tun));
+      sigquals = [];
+      sigrng = d.drange;
+      sigmeta = default_sigmeta;
+      sigattrs = [];
+      sigopts = None }]
 
   | Splice (ids, t) ->
     let t = desugar_term env t in
