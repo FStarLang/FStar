@@ -120,6 +120,7 @@ let go _ =
         (* Set the unionfind graph to read-only mode.
          * This will be unset by the typechecker and other pieces
          * of code that intend to use it. It helps us catch errors. *)
+        (* TODO: also needed by the interactive mode below. *)
         UF.set_ro ();
 
         (* --dep: Just compute and print the transitive dependency graph;
@@ -162,6 +163,7 @@ let go _ =
 
         (* --ide, --in: Interactive mode *)
         if Options.interactive () then begin
+          UF.set_rw ();
           match filenames with
           | [] -> (* input validation: move to process args? *)
             Errors.log_issue
