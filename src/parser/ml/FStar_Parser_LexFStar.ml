@@ -80,6 +80,7 @@ let () =
   Hashtbl.add keywords "new_effect"    NEW_EFFECT  ;
   Hashtbl.add keywords "layered_effect"               LAYERED_EFFECT             ;
   Hashtbl.add keywords "polymonadic_bind"             POLYMONADIC_BIND           ;
+  Hashtbl.add keywords "polymonadic_subcomp"          POLYMONADIC_SUBCOMP        ;
   Hashtbl.add keywords "noextract"     NOEXTRACT   ;
   Hashtbl.add keywords "of"            OF          ;
   Hashtbl.add keywords "open"          OPEN        ;
