@@ -1231,8 +1231,7 @@ let resugar_sigelt' env se : option<A.decl> =
 
   (* Already desugared in one of the above case or non-relevant *)
   | Sig_inductive_typ _
-  | Sig_datacon _
-  | Sig_main _ -> None
+  | Sig_datacon _ -> None
 
   | Sig_polymonadic_bind (m, n, p, (_, t), _) ->
     Some (decl'_to_decl se (A.Polymonadic_bind (m, n, p, resugar_term' env t)))

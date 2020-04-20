@@ -726,7 +726,6 @@ let collect_one
             add_to_parsing_data (P_alias (ident, lid))
         | TopLevelLet (_, patterms) ->
             List.iter (fun (pat, t) -> collect_pattern pat; collect_term t) patterms
-        | Main t
         | Splice (_, t)
         | Assume (_, t)
         | SubEffect { lift_op = NonReifiableLift t }

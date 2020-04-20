@@ -749,8 +749,6 @@ and p_rawDecl d = match d.d with
           ^^ (str "|>") ^^ p_quident l3 ^^ equals ^^ p_simpleTerm false false t
   | Pragma p ->
     p_pragma p
-  | Main _ ->
-    failwith "*Main declaration* : Is that really still in use ??"
   | Tycon(true, _, _) ->
     failwith "Effect abbreviation is expected to be defined by an abbreviation"
   | Splice (ids, t) ->

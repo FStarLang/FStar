@@ -292,7 +292,7 @@ type raw_error =
   | Warning_UseDefaultEffect
   | Warning_WrongErrorLocation
   | Warning_Z3InvocationWarning
-  | Warning_CallNotImplementedAsWarning
+  | Warning_PluginNotImplemented
   | Warning_MissingInterfaceOrImplementation
   | Warning_ConstructorBuildsUnexpectedType
   | Warning_ModuleOrFileNotFoundWarning
@@ -344,6 +344,7 @@ type raw_error =
   | Warning_IgnoredBinding
   | Warning_AbstractQualifier
   | Warning_CouldNotReadHints
+  | Fatal_BadUvar
 
 type flag = error_flag
 
@@ -589,7 +590,7 @@ let default_flags =
   (Fatal_WrongTerm                                   , CFatal);
   (Fatal_WhenClauseNotSupported                      , CFatal);
   (Unused01                                          , CFatal);
-  (Warning_CallNotImplementedAsWarning               , CWarning);
+  (Warning_PluginNotImplemented                      , CError);
   (Warning_AddImplicitAssumeNewQualifier             , CWarning);
   (Warning_AdmitWithoutDefinition                    , CWarning);
   (Warning_CachedFile                                , CWarning);
@@ -685,6 +686,7 @@ let default_flags =
   (Warning_IgnoredBinding                            , CWarning);
   (Warning_AbstractQualifier                         , CWarning);
   (Warning_CouldNotReadHints                         , CWarning); // 333
+  (Fatal_BadUvar                                     , CFatal);
   ]
   (* Protip: if we keep the semicolon at the end, we modify exactly one
    * line for each error we add. This means we get a cleaner git history/blame *)
@@ -736,7 +738,8 @@ let format_issue issue =
                  else BU.format1 " (see also %s)" (Range.string_of_range r))
         | Some r ->
           (BU.format1 "%s: " (Range.string_of_use_range r),
-           (if use_range r = def_range r then ""
+           (if use_range r = def_range r || def_range r = def_range dummyRange
+            then ""
             else BU.format1 " (see also %s)" (Range.string_of_range r)))
     in
     let issue_number =

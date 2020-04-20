@@ -40,6 +40,11 @@ boot:
 	$(Q)+$(MAKE) -C src/ ocaml
 	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
 
+# Build the libraries: fstar-compiler-lib, fstarlib, fstartaclib
+libs:
+	$(Q)+$(MAKE) -C src/ocaml-output
+	$(Q)+$(MAKE) -C ulib/ml
+
 # Regenerate all hints for the standard library and regression test suite
 hints:
 	+$(Q)OTHERFLAGS=--record_hints $(MAKE) -C ulib/

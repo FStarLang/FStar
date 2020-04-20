@@ -498,7 +498,7 @@ let rec token = lexer
       * creates a lexing conflict with op_infix3 which is caught below. *)
      one_line_comment (L.lexeme lexbuf) lexbuf
 
- | '"' -> string (Buffer.create 0) lexbuf
+ | '"' -> string (Buffer.create 0) lexbuf.Ulexing.start_p lexbuf
 
  | '`' '`' (([^'`' 10 13 0x2028 0x2029] | '`' [^'`' 10 13 0x2028 0x2029])+) '`' '`' ->
    IDENT (trim_both lexbuf 2 2)
@@ -545,19 +545,25 @@ and one_line_comment pre = lexer
 and symbolchar_parser = lexer
  | symbolchar* -> OPINFIX0c (">" ^  L.lexeme lexbuf)
 
-and string buffer = lexer
- | '\\' newline anywhite* -> L.new_line lexbuf; string buffer lexbuf
+and string buffer start_pos = lexer
+ | '\\' newline anywhite* -> L.new_line lexbuf; string buffer start_pos lexbuf
  | newline ->
    Buffer.add_string buffer (L.lexeme lexbuf);
-   L.new_line lexbuf; string buffer lexbuf
+   L.new_line lexbuf; string buffer start_pos lexbuf
  | escape_char -> 
    Buffer.add_string buffer (BatUTF8.init 1 (fun _ -> unescape (L.ulexeme lexbuf) |> BatUChar.chr));
-   string buffer lexbuf
- | '"' -> STRING (Buffer.contents buffer)
- | '"''B' -> BYTEARRAY (ba_of_string (Buffer.contents buffer))
+   string buffer start_pos lexbuf
+ | '"' ->
+    (* position info must be set since the start of the string *)
+    lexbuf.Ulexing.start_p <- start_pos;
+    STRING (Buffer.contents buffer)
+ | '"''B' ->
+    (* as above *)
+    lexbuf.Ulexing.start_p <- start_pos;
+    BYTEARRAY (ba_of_string (Buffer.contents buffer))
  | _ ->
    Buffer.add_string buffer (L.lexeme lexbuf);
-   string buffer lexbuf
+   string buffer start_pos lexbuf
  | eof -> fail lexbuf (E.Fatal_SyntaxError, "unterminated string")
 
 and comment inner buffer startpos = lexer

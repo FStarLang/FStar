@@ -17,7 +17,7 @@ let find_taclib () =
 
 let dynlink fname =
   try
-    perr ("Attempting to load plugin from " ^ fname ^ "\n");
+    perr ("Attempting to load " ^ fname ^ "\n");
     Dynlink.loadfile fname
   with Dynlink.Error e ->
     failwith (U.format2 "Dynlinking %s failed: %s" fname (Dynlink.error_message e))
@@ -39,7 +39,7 @@ let try_load_lib () =
 let load_tactic tac =
   load_lib ();
   dynlink tac;
-  perr1 "Dynlinked %s\n" tac
+  perr1 "Loaded %s\n" tac
 
 let load_tactics tacs =
     List.iter load_tactic tacs
