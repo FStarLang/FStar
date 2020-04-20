@@ -2676,25 +2676,35 @@ let (resugar_sigelt' :
               FStar_Parser_AST.Polymonadic_bind uu____9555  in
             decl'_to_decl se uu____9554  in
           FStar_Pervasives_Native.Some uu____9553
+      | FStar_Syntax_Syntax.Sig_polymonadic_subcomp
+          (m,n,(uu____9567,t),uu____9569) ->
+          let uu____9578 =
+            let uu____9579 =
+              let uu____9580 =
+                let uu____9587 = resugar_term' env t  in (m, n, uu____9587)
+                 in
+              FStar_Parser_AST.Polymonadic_subcomp uu____9580  in
+            decl'_to_decl se uu____9579  in
+          FStar_Pervasives_Native.Some uu____9578
   
 let (empty_env : FStar_Syntax_DsEnv.env) =
   FStar_Syntax_DsEnv.empty_env FStar_Parser_Dep.empty_deps 
 let noenv : 'a . (FStar_Syntax_DsEnv.env -> 'a) -> 'a = fun f  -> f empty_env 
 let (resugar_term : FStar_Syntax_Syntax.term -> FStar_Parser_AST.term) =
-  fun t  -> let uu____9588 = noenv resugar_term'  in uu____9588 t 
+  fun t  -> let uu____9611 = noenv resugar_term'  in uu____9611 t 
 let (resugar_sigelt :
   FStar_Syntax_Syntax.sigelt ->
     FStar_Parser_AST.decl FStar_Pervasives_Native.option)
-  = fun se  -> let uu____9606 = noenv resugar_sigelt'  in uu____9606 se 
+  = fun se  -> let uu____9629 = noenv resugar_sigelt'  in uu____9629 se 
 let (resugar_comp : FStar_Syntax_Syntax.comp -> FStar_Parser_AST.term) =
-  fun c  -> let uu____9624 = noenv resugar_comp'  in uu____9624 c 
+  fun c  -> let uu____9647 = noenv resugar_comp'  in uu____9647 c 
 let (resugar_pat :
   FStar_Syntax_Syntax.pat ->
     FStar_Syntax_Syntax.bv FStar_Util.set -> FStar_Parser_AST.pattern)
   =
   fun p  ->
     fun branch_bv  ->
-      let uu____9647 = noenv resugar_pat'  in uu____9647 p branch_bv
+      let uu____9670 = noenv resugar_pat'  in uu____9670 p branch_bv
   
 let (resugar_binder :
   FStar_Syntax_Syntax.binder ->
@@ -2702,10 +2712,10 @@ let (resugar_binder :
       FStar_Parser_AST.binder FStar_Pervasives_Native.option)
   =
   fun b  ->
-    fun r  -> let uu____9681 = noenv resugar_binder'  in uu____9681 b r
+    fun r  -> let uu____9704 = noenv resugar_binder'  in uu____9704 b r
   
 let (resugar_tscheme : FStar_Syntax_Syntax.tscheme -> FStar_Parser_AST.decl)
-  = fun ts  -> let uu____9706 = noenv resugar_tscheme'  in uu____9706 ts 
+  = fun ts  -> let uu____9729 = noenv resugar_tscheme'  in uu____9729 ts 
 let (resugar_eff_decl :
   FStar_Range.range ->
     FStar_Syntax_Syntax.qualifier Prims.list ->
@@ -2714,5 +2724,5 @@ let (resugar_eff_decl :
   fun r  ->
     fun q  ->
       fun ed  ->
-        let uu____9734 = noenv resugar_eff_decl'  in uu____9734 r q ed
+        let uu____9757 = noenv resugar_eff_decl'  in uu____9757 r q ed
   
