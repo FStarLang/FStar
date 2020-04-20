@@ -245,6 +245,25 @@ let comp_to_comp_typ (c:comp) : comp_typ =
        flags=comp_flags c}
     | _ -> failwith "Assertion failed: Computation type without universe"
 
+
+(*
+ * For layered effects, given a (repr a is), return is
+ * For wp effects, given a (unit -> M a wp), return wp
+ *
+ * The pattern matching is very syntactic inside this function
+ *)
+let effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.range) (err:string)
+: list<term> =
+  let err () = Errors.raise_error (Errors.Fatal_UnexpectedEffect, err) r in
+  let repr = compress repr in
+  if is_layered
+  then match repr.n with
+       | Tm_app (_, _::is) -> is |> List.map fst
+       | _ -> err ()
+  else match repr.n with 
+       | Tm_arrow (_, c) -> c |> comp_to_comp_typ |> (fun ct -> ct.effect_args |> List.map fst)
+       | _ -> err ()
+
 let destruct_comp c : (universe * typ * typ) =
   let wp = match c.effect_args with
     | [(wp, _)] -> wp

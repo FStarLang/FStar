@@ -268,21 +268,6 @@ let mk_comp_l mname u_result result wp flags =
 
 let mk_comp md = mk_comp_l md.mname
 
-let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.range) : list<term> =
-  let err () =
-    raise_error (Errors.Fatal_UnexpectedEffect,
-      BU.format2 "Could not get effect args from repr %s with is_layered %s"
-        (Print.term_to_string repr) (string_of_bool is_layered)) r in
-  let repr = SS.compress repr in
-  if is_layered
-  then match repr.n with
-       | Tm_app (_, _::is) -> is |> List.map fst
-       | _ -> err ()
-  else match repr.n with 
-       | Tm_arrow (_, c) -> c |> U.comp_to_comp_typ |> (fun ct -> ct.effect_args |> List.map fst)
-       | _ -> err ()
-
-
 (*
  * Build the M.return comp for a wp effect
  *
@@ -297,6 +282,9 @@ let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.ra
     None
     r in
   mk_comp ed u_a a wp [RETURN]
+
+
+//AR: TODO: streamline errors of effect_indices_from_repr
 
 
 (*
@@ -339,7 +327,9 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
     (a_b::x_b::rest_bs) (a::e::rest_bs_uvars) in
 
   let is =
-    effect_args_from_repr (SS.compress return_ct.result_typ) (U.is_layered ed) r
+    U.effect_indices_from_repr (SS.compress return_ct.result_typ) (U.is_layered ed) r
+      (BU.format2 "return result type for %s is not a repr (%s)"
+        (Ident.string_of_lid ed.mname) (Print.term_to_string return_ct.result_typ))
     |> List.map (SS.subst subst) in
 
   let c = mk_Comp ({
@@ -706,9 +696,12 @@ let mk_indexed_bind env
     (a_b::b_b::rest_bs) (t1::t2::rest_bs_uvars) in
 
   let f_guard =  //unify c1's indices with f's indices in the bind_wp
-    let f_sort_is = effect_args_from_repr
+    let f_sort_is = U.effect_indices_from_repr
       (SS.compress (f_b |> fst).sort)
-      (U.is_layered m_ed) r1 |> List.map (SS.subst subst) in
+      (U.is_layered m_ed) r1
+      (BU.format1 "bind f binder sort is not a repr (%s)"
+        (Print.term_to_string (f_b |> fst).sort))      
+      |> List.map (SS.subst subst) in
     List.fold_left2
       (fun g i1 f_i1 -> Env.conj_guard g (Rel.teq env i1 f_i1))
       Env.trivial_guard is1 f_sort_is in 
@@ -725,7 +718,9 @@ let mk_indexed_bind env
         let bs, c = SS.open_comp bs c in
         let bs_subst = NT (List.hd bs |> fst, x_a |> fst |> S.bv_to_name) in
         let c = SS.subst_comp [bs_subst] c in
-        effect_args_from_repr (SS.compress (U.comp_result c)) (U.is_layered n_ed) r1
+        U.effect_indices_from_repr (SS.compress (U.comp_result c)) (U.is_layered n_ed) r1
+          (BU.format1 "bind g binder comp type is not a repr (%s)"
+            (Print.term_to_string (U.comp_result c)))
         |> List.map (SS.subst subst)
       | _ -> failwith "imspossible: mk_indexed_bind"
     in
@@ -744,7 +739,8 @@ let mk_indexed_bind env
     Env.pure_precondition_for_trivial_post env u bind_ct.result_typ wp Range.dummyRange in
 
   let is : list<term> =  //indices of the resultant computation
-    effect_args_from_repr (SS.compress bind_ct.result_typ) (U.is_layered p_ed) r1 in
+    U.effect_indices_from_repr (SS.compress bind_ct.result_typ) (U.is_layered p_ed) r1
+      (BU.format1 "bind ct result type not a repr (%s)" (Print.term_to_string bind_ct.result_typ)) in
 
   let c = mk_Comp ({
     comp_univs = ct2.comp_univs;
@@ -2842,14 +2838,14 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
 
   let guard_f =
     let f_sort = (fst f_b).sort |> SS.subst substs |> SS.compress in
-    let f_sort_is = effect_args_from_repr f_sort (Env.is_layered_effect env ct.effect_name) r in
+    let f_sort_is = U.effect_indices_from_repr f_sort (Env.is_layered_effect env ct.effect_name) r "" in
     List.fold_left2
       (fun g i1 i2 -> Env.conj_guard g (Rel.teq env i1 i2))
       Env.trivial_guard c_is f_sort_is in
 
   let lift_ct = lift_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
   
-  let is = effect_args_from_repr lift_ct.result_typ (Env.is_layered_effect env tgt) r in
+  let is = U.effect_indices_from_repr lift_ct.result_typ (Env.is_layered_effect env tgt) r "" in
 
   //compute the formula `lift_c.wp (fun _ -> True)` and add it to the final guard
   let fml =
