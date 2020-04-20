@@ -175,6 +175,23 @@ let bind_hoarest_pure (a:Type) (b:Type) (req:pre_t) (ens:post_t a) (wp:a -> pure
 
 polymonadic_bind (HoareST, PURE) |> HoareST = bind_hoarest_pure
 
+(*
+ * PURE a wp <: HoareST a req ens
+ *)
+
+let subcomp_pure_hoarest (a:Type) (wp:pure_wp a) (req:pre_t) (ens:post_t a)
+  (f:unit -> PURE a wp)
+: Pure (repr a req ens)
+  (requires
+    (forall h. req h ==>  wp (fun _ -> True)) /\
+    (forall h0 r h1. (~ (wp (fun x -> x =!= r \/ h0 =!= h1))) ==>  ens h0 r h1))
+  (ensures fun _ -> True)
+= wp_monotonic_pure ();
+  fun _ -> f ()
+
+
+polymonadic_subcomp PURE <: HoareST = subcomp_pure_hoarest
+
 
 assume val f : x:int -> HoareST int (fun _ -> True) (fun _ r _ -> r == x + 1)
 
