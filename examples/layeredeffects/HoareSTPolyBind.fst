@@ -189,128 +189,133 @@ let subcomp_pure_hoarest (a:Type) (wp:pure_wp a) (req:pre_t) (ens:post_t a)
 = wp_monotonic_pure ();
   fun _ -> f ()
 
-
-// #set-options "--debug HoareSTPolyBind --debug_level LayeredEffects --ugly --print_implicits --print_universes --print_effect_args"
 polymonadic_subcomp PURE <: HoareST = subcomp_pure_hoarest
 
-let test () : HoareST int (fun _ -> True) (fun _ r _ -> r > 0) = 0
+let test_subcomp () : HoareST int (fun _ -> True) (fun _ r _ -> r == 0) = 0
+
+assume val f_test_subcomp (n:int) : Pure int (n > 0) (fun r -> r > 0)
+
+[@expect_failure]
+let test_subcomp2 (n:int) : HoareST int (fun _ -> True) (fun _ _ _ -> True) = f_test_subcomp n
+
+let test_subcomp3 (n:int) : HoareST int (fun _ -> n > 2) (fun _ _ _ -> True) = f_test_subcomp n
 
 
-// assume val f : x:int -> HoareST int (fun _ -> True) (fun _ r _ -> r == x + 1)
+assume val f : x:int -> HoareST int (fun _ -> True) (fun _ r _ -> r == x + 1)
 
-// let test () : HoareST int (fun _ -> True) (fun _ r _ -> r == 1)
-// = f 0
-
-
-// assume val g : int -> int -> PURE int (fun p -> forall x. p x)
-
-// let test2 () : HoareST int (fun _ -> True) (fun _ _ _ -> True)
-// = g 2 (f 0)
+let test () : HoareST int (fun _ -> True) (fun _ r _ -> r == 1)
+= f 0
 
 
-// module Seq = FStar.Seq
+assume val g : int -> int -> PURE int (fun p -> forall x. p x)
+
+let test2 () : HoareST int (fun _ -> True) (fun _ _ _ -> True)
+= g 2 (f 0)
 
 
-// type array (a:Type0) = ref (Seq.seq a)
-
-// let op_At_Bar (#a:Type0) (s1:array a) (s2:array a)
-// : HoareST (array a)
-//   (fun _ -> True)
-//   (fun h0 r h1 ->
-//     sel h1 r == Seq.append (sel h0 s1) (sel h0 s2) /\
-//     modifies Set.empty h0 h1)
-// = let s1 = !s1 in
-//   let s2 = !s2 in
-//   alloc (Seq.append s1 s2)
-
-// let index (#a:Type0) (x:array a) (i:nat)
-// : HoareST a
-//   (fun h -> i < Seq.length (sel h x))
-//   (fun h0 v h1 ->
-//     i < Seq.length (sel h0 x) /\
-//     h0 == h1 /\
-//     v == Seq.index (sel h0 x) i)
-// = let s = !x in
-//   Seq.index s i
-
-// let upd (#a:Type0) (x:array a) (i:nat) (v:a)
-// : HoareST unit
-//   (fun h -> i < Seq.length (sel h x))
-//   (fun h0 _ h1 ->
-//     i < Seq.length (sel h0 x) /\
-//     modifies (Set.singleton (addr_of x)) h0 h1 /\
-//     sel h1 x == Seq.upd (sel h0 x) i v)
-// = let s = !x in
-//   let s = Seq.upd s i v in
-//   x := s
-
-// let length (#a:Type0) (x:array a)
-// : HoareST nat
-//   (fun _ -> True)
-//   (fun h0 y h1 -> y == Seq.length (sel h0 x) /\ h0 == h1)
-// = let s = !x in
-//   Seq.length s
-
-// let swap (#a:Type0) (x:array a) (i:nat) (j:nat{i <= j})
-// : HoareST unit
-//   (fun h -> j < Seq.length (sel h x))
-//   (fun h0 _ h1 ->
-//     j < Seq.length (sel h0 x) /\
-//     modifies (Set.singleton (addr_of x)) h0 h1 /\
-//     sel h1 x == Seq.swap (sel h0 x) i j)
-// = let v_i = index x i in
-//   let v_j = index x j in
-//   upd x j v_i;
-//   upd x i v_j
+module Seq = FStar.Seq
 
 
-// /// `match` with PURE code in one branch and HoareST in another doesn't work
-// ///
-// /// Since it requires lifts
-// ///
-// /// Just writing `admit ()` at the end of a HoareST function also doesn't work for the same reason
+type array (a:Type0) = ref (Seq.seq a)
+
+let op_At_Bar (#a:Type0) (s1:array a) (s2:array a)
+: HoareST (array a)
+  (fun _ -> True)
+  (fun h0 r h1 ->
+    sel h1 r == Seq.append (sel h0 s1) (sel h0 s2) /\
+    modifies Set.empty h0 h1)
+= let s1 = !s1 in
+  let s2 = !s2 in
+  alloc (Seq.append s1 s2)
+
+let index (#a:Type0) (x:array a) (i:nat)
+: HoareST a
+  (fun h -> i < Seq.length (sel h x))
+  (fun h0 v h1 ->
+    i < Seq.length (sel h0 x) /\
+    h0 == h1 /\
+    v == Seq.index (sel h0 x) i)
+= let s = !x in
+  Seq.index s i
+
+let upd (#a:Type0) (x:array a) (i:nat) (v:a)
+: HoareST unit
+  (fun h -> i < Seq.length (sel h x))
+  (fun h0 _ h1 ->
+    i < Seq.length (sel h0 x) /\
+    modifies (Set.singleton (addr_of x)) h0 h1 /\
+    sel h1 x == Seq.upd (sel h0 x) i v)
+= let s = !x in
+  let s = Seq.upd s i v in
+  x := s
+
+let length (#a:Type0) (x:array a)
+: HoareST nat
+  (fun _ -> True)
+  (fun h0 y h1 -> y == Seq.length (sel h0 x) /\ h0 == h1)
+= let s = !x in
+  Seq.length s
+
+let swap (#a:Type0) (x:array a) (i:nat) (j:nat{i <= j})
+: HoareST unit
+  (fun h -> j < Seq.length (sel h x))
+  (fun h0 _ h1 ->
+    j < Seq.length (sel h0 x) /\
+    modifies (Set.singleton (addr_of x)) h0 h1 /\
+    sel h1 x == Seq.swap (sel h0 x) i j)
+= let v_i = index x i in
+  let v_j = index x j in
+  upd x j v_i;
+  upd x i v_j
 
 
-// /// But we can define a return combinator and use it
+/// `match` with PURE code in one branch and HoareST in another doesn't work
+///
+/// Since it requires lifts
+///
+/// Just writing `admit ()` at the end of a HoareST function also doesn't work for the same reason
 
-// let return (#a:Type) (x:a)
-// : HoareST a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
-// = HoareST?.reflect (returnc a x)
+
+/// But we can define a return combinator and use it
+
+let return (#a:Type) (x:a)
+: HoareST a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
+= HoareST?.reflect (returnc a x)
 
 
-// let test_lift (b:bool) : HoareST int (fun _ -> b == true) (fun h0 x h1 -> h0 == h1 /\ x == 0)
-// = match b with
-//   | true -> return 0
-//   | false -> return 1
+let test_lift (b:bool) : HoareST int (fun _ -> b == true) (fun h0 x h1 -> h0 == h1 /\ x == 0)
+= match b with
+  | true -> return 0
+  | false -> return 1
 
-// let rec copy_aux
-//   (#a:Type) (s:array a) (cpy:array a) (ctr:nat)
-// : HoareST unit
-//   (fun h ->
-//     addr_of s =!= addr_of cpy /\
-//     Seq.length (sel h cpy) == Seq.length (sel h s) /\
-//     ctr <= Seq.length (sel h cpy) /\
-//     (forall (i:nat). i < ctr ==> Seq.index (sel h s) i == Seq.index (sel h cpy) i))
-//   (fun h0 _ h1 ->
-//     modifies (only cpy) h0 h1 /\
-//     Seq.equal (sel h1 cpy) (sel h1 s))
-// = recall s; recall cpy;
-//   let diff = length cpy - ctr in
-//   match diff with
-//   | 0 -> return ()
-//   | _ ->
-//     upd cpy ctr (index s ctr);
-//     copy_aux s cpy (ctr + 1)
+let rec copy_aux
+  (#a:Type) (s:array a) (cpy:array a) (ctr:nat)
+: HoareST unit
+  (fun h ->
+    addr_of s =!= addr_of cpy /\
+    Seq.length (sel h cpy) == Seq.length (sel h s) /\
+    ctr <= Seq.length (sel h cpy) /\
+    (forall (i:nat). i < ctr ==> Seq.index (sel h s) i == Seq.index (sel h cpy) i))
+  (fun h0 _ h1 ->
+    modifies (only cpy) h0 h1 /\
+    Seq.equal (sel h1 cpy) (sel h1 s))
+= recall s; recall cpy;
+  let diff = length cpy - ctr in
+  match diff with
+  | 0 -> return ()
+  | _ ->
+    upd cpy ctr (index s ctr);
+    copy_aux s cpy (ctr + 1)
 
-// let copy (#a:Type0) (s:array a)
-// : HoareST (array a)
-//   (fun h -> Seq.length (sel h s) > 0)
-//   (fun h0 r h1 ->
-//     modifies Set.empty h0 h1 /\
-//     r `unused_in` h0 /\
-//     contains h1 r /\
-//     sel h1 r == sel h0 s)
-// = recall s;
-//   let cpy = alloc (Seq.create (length s) (index s 0)) in
-//   copy_aux s cpy 0;
-//   cpy
+let copy (#a:Type0) (s:array a)
+: HoareST (array a)
+  (fun h -> Seq.length (sel h s) > 0)
+  (fun h0 r h1 ->
+    modifies Set.empty h0 h1 /\
+    r `unused_in` h0 /\
+    contains h1 r /\
+    sel h1 r == sel h0 s)
+= recall s;
+  let cpy = alloc (Seq.create (length s) (index s 0)) in
+  copy_aux s cpy 0;
+  cpy
