@@ -447,6 +447,9 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         | NBERefl_emb -> fstar_refl_nbeemb_prefix
     in
     let mk_tactic_interpretation l arity =
+      if arity > FStar.Tactics.InterpFuns.max_tac_arity then
+        raise (NoTacticEmbedding("tactic plugins can only take up to 20 arguments"))
+      else
       let idroot =
         match l with
         | Syntax_term ->
