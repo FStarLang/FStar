@@ -987,8 +987,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
 
     | Sig_polymonadic_bind (m, n, p, _, ty) -> TcUtil.update_env_polymonadic_bind env m n p ty
 
-    | Sig_polymonadic_subcomp (m, n, _, ty) ->
-      failwith "NYI: updateing env with polymonadic subcomp"
+    | Sig_polymonadic_subcomp (m, n, _, ty) -> Env.add_polymonadic_subcomp env m n ty
 
     | _ -> env
 

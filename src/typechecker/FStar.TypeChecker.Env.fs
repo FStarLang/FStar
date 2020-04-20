@@ -141,6 +141,7 @@ and effects = {
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
   polymonadic_binds :list<(lident * lident * lident * polymonadic_bind_t)>;
+  polymonadic_subcomps :list<(lident * lident * tscheme)>;  (* m <: n *)
 }
 
 and env = {
@@ -270,7 +271,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     sigtab=new_sigtab();
     attrtab=new_sigtab();
     instantiate_imp=true;
-    effects={decls=[]; order=[]; joins=[]; polymonadic_binds=[]};
+    effects={decls=[]; order=[]; joins=[]; polymonadic_binds=[]; polymonadic_subcomps=[]};
     generalize=true;
     letrecs=[];
     top_level=false;
@@ -1296,8 +1297,15 @@ let push_new_effect env (ed, quals) =
   {env with effects=effects}
 
 let exists_polymonadic_bind env m n =
-  match env.effects.polymonadic_binds |> BU.find_opt (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
+  match env.effects.polymonadic_binds
+        |> BU.find_opt (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
   | Some (_, _, p, t) -> Some (p, t)
+  | _ -> None
+
+let exists_polymonadic_subcomp env m n =
+  match env.effects.polymonadic_subcomps
+        |> BU.find_opt (fun (m1, n1, _) -> lid_equals m m1 && lid_equals n n1) with
+  | Some (_, _, ts) -> Some ts
   | _ -> None
 
 let update_effect_lattice env src tgt st_mlift =
@@ -1440,7 +1448,13 @@ let add_polymonadic_bind env m n p ty =
   then raise_error (Errors.Fatal_PolymonadicBind_conflict, (err_msg false)) env.range
   else { env with
          effects = ({ env.effects with polymonadic_binds = (m, n, p, ty)::env.effects.polymonadic_binds }) }
-  
+
+let add_polymonadic_subcomp env m n ts =
+  //TODO: AR: 04/20: think about coherence etc.?
+  //                 check that there is a unique polymonadic subcomp
+  { env with
+    effects = ({ env.effects with polymonadic_subcomps = (m, n, ts)::env.effects.polymonadic_subcomps }) }
+
 let push_local_binding env b =
   {env with gamma=b::env.gamma}
 
