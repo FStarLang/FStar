@@ -1552,6 +1552,6 @@ let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tschem
 
   if Env.debug env <| Options.Other "LayeredEffects" then
     BU.print2 "Polymonadic subcomp %s type after unification : %s\n"
-      combinator_name (Print.term_to_string k);
+      combinator_name (Print.tscheme_to_string (us, k));
 
   (us, t), (us, k)
