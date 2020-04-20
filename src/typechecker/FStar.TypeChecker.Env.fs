@@ -1450,10 +1450,20 @@ let add_polymonadic_bind env m n p ty =
          effects = ({ env.effects with polymonadic_binds = (m, n, p, ty)::env.effects.polymonadic_binds }) }
 
 let add_polymonadic_subcomp env m n ts =
-  //TODO: AR: 04/20: think about coherence etc.?
-  //                 check that there is a unique polymonadic subcomp
-  { env with
-    effects = ({ env.effects with polymonadic_subcomps = (m, n, ts)::env.effects.polymonadic_subcomps }) }
+  let err_msg (poly:bool) =
+    BU.format3 "Polymonadic subcomp %s <: %s conflicts with \
+      an already existing %s"
+      (Ident.string_of_lid m) (Ident.string_of_lid n)
+      (if poly then "polymonadic subcomp"
+       else "path in the effect lattice") in
+
+  if exists_polymonadic_subcomp env m n |> is_some
+  then raise_error (Errors.Fatal_PolymonadicBind_conflict, (err_msg true)) env.range
+  else if join_opt env m n |> is_some
+  then raise_error (Errors.Fatal_PolymonadicBind_conflict, (err_msg false)) env.range
+  else { env with
+         effects = ({ env.effects with
+                      polymonadic_subcomps = (m, n, ts)::env.effects.polymonadic_subcomps }) }
 
 let push_local_binding env b =
   {env with gamma=b::env.gamma}
