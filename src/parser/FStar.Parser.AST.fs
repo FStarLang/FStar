@@ -204,6 +204,7 @@ type decl' =
   | LayeredEffect of effect_decl
   | SubEffect of lift
   | Polymonadic_bind of lid * lid * lid * term
+  | Polymonadic_subcomp of lid * lid * term
   | Pragma of pragma
   | Assume of ident * term
   | Splice of list<ident> * term
@@ -728,6 +729,9 @@ let decl_to_string (d:decl) = match d.d with
   | Polymonadic_bind (l1, l2, l3, _) ->
       Util.format3 "polymonadic_bind (%s, %s) |> %s"
                     (string_of_lid l1) (string_of_lid l2) (string_of_lid l3)
+  | Polymonadic_subcomp (l1, l2, _) ->
+      Util.format2 "polymonadic_subcomp %s <: %s"
+                    (string_of_lid l1) (string_of_lid l2)
   | Splice (ids, t) -> "splice[" ^ (String.concat ";" <| List.map (fun i -> (text_of_id i)) ids) ^ "] (" ^ term_to_string t ^ ")"
   | SubEffect _ -> "sub_effect"
   | Pragma _ -> "pragma"
