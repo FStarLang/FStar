@@ -9,6 +9,7 @@ module S     = FStar.Syntax.Syntax
 module PU    = FStar.Unionfind
 module BU    = FStar.Util
 module L     = FStar.List
+module O     = FStar.Options
 
 type vops_t = {
     next_major : unit -> S.version;
@@ -78,11 +79,14 @@ let with_uf_enabled (f : unit -> 'a) : 'a =
     set_rw ();
     let restore () = if s.ro then set_ro () in
 
-    let r = try f ()
-            with | e -> begin
-                   restore ();
-                   raise e
-                 end
+    let r =
+        if O.trace_error ()
+        then f ()
+        else try f ()
+             with | e -> begin
+                    restore ();
+                    raise e
+                  end
     in
     restore ();
     r
