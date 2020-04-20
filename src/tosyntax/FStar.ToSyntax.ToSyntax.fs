@@ -510,6 +510,7 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
   | Sig_sub_effect _
   | Sig_main _
   | Sig_polymonadic_bind _
+  | Sig_polymonadic_subcomp _
   | Sig_splice _
   | Sig_pragma _ ->
     s
