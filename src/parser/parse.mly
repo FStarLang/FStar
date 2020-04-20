@@ -1160,7 +1160,7 @@ range:
 /*                       Miscellanous, tools                                   */
 /******************************************************************************/
 
-%inline string:
+string:
   | s=STRING { s }
 
 %inline operator:
