@@ -36,6 +36,7 @@ open FStar.TypeChecker.TcTerm
 module S  = FStar.Syntax.Syntax
 module SP  = FStar.Syntax.Print
 module SS = FStar.Syntax.Subst
+module UF = FStar.Syntax.Unionfind
 module N  = FStar.TypeChecker.Normalize
 module TcComm = FStar.TypeChecker.Common
 module TcUtil = FStar.TypeChecker.Util
@@ -986,7 +987,7 @@ let tc_decls env ses =
               env
               t); //update the id_info table after having removed their uvars
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se false) env in
-    FStar.Syntax.Unionfind.reset();
+    UF.reset();
 
     if Options.log_types() || Env.debug env <| Options.Other "LogTypes"
     then begin
@@ -1027,7 +1028,9 @@ let tc_decls env ses =
     end;
     r
   in
-  let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
+  let ses, exports, env, _ =
+    UF.with_uf_enabled (fun () ->
+      BU.fold_flatten process_one_decl_timed ([], [], env, []) ses) in
   List.rev_append ses [], List.rev_append exports [], env
 
 let _ =
@@ -1062,8 +1065,8 @@ let check_exports env (modul:modul) exports : unit =
     let check_term lid univs t =
         let _ = Errors.message_prefix.set_prefix
                 (BU.format2 "Interface of %s violates its abstraction (add a 'private' qualifier to '%s'?)"
-                        (Print.lid_to_string modul.name)
-                        (Print.lid_to_string lid)) in
+                        (string_of_lid modul.name)
+                        (string_of_lid lid)) in
         check_term lid univs t;
         Errors.message_prefix.clear_prefix()
     in
@@ -1324,7 +1327,9 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
     if not (Options.lax())
     && not loading_from_cache
     && not (Options.use_extracted_interfaces ())
-    then check_exports env modul exports;
+    then begin
+      UF.with_uf_enabled (fun () -> check_exports env modul exports)
+    end;
 
     //pop BUT ignore the old env
     pop_context env ("Ending modul " ^ string_of_lid modul.name) |> ignore;

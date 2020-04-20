@@ -32,6 +32,7 @@ open FStar.SMTEncoding
 open FStar.SMTEncoding.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
+module UF = FStar.Syntax.Unionfind
 module N = FStar.TypeChecker.Normalize
 module BU = FStar.Util
 module U = FStar.Syntax.Util
@@ -1702,6 +1703,7 @@ let give_decls_to_z3_and_set_env (env:env_t) (name:string) (decls:decls_t) :unit
 let encode_modul tcenv modul =
   if Options.lax() && Options.ml_ish() then [], []
   else begin
+    UF.with_uf_enabled (fun () ->
     varops.reset_fresh ();
     let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  (string_of_lid modul.name) in
     if Env.debug tcenv Options.Medium
@@ -1716,7 +1718,7 @@ let encode_modul tcenv modul =
     give_decls_to_z3_and_set_env env name decls;
     if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals for %s\n" name;
     decls, env |> get_current_module_fvbs
-  end
+  ) end
 
 let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
   if Options.lax () && Options.ml_ish () then ()

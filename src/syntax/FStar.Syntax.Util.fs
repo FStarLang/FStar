@@ -1079,7 +1079,7 @@ let ktype0 : term = mk (Tm_type(U_zero)) None dummyRange
 
 //Type(u), where u is a new universe unification variable
 let type_u () : typ * universe =
-    let u = U_unif <| Unionfind.univ_fresh () in
+    let u = U_unif <| Unionfind.univ_fresh Range.dummyRange in
     mk (Tm_type u) None dummyRange, u
 
 // works on anything, really

@@ -436,7 +436,7 @@ let variable_not_found v =
   (Errors.Fatal_VariableNotFound, (format1 "Variable \"%s\" not found" (Print.bv_to_string v)))
 
 //Construct a new universe unification variable
-let new_u_univ () = U_unif (Unionfind.univ_fresh ())
+let new_u_univ () = U_unif (Unionfind.univ_fresh Range.dummyRange)
 
 let mk_univ_subst (formals : list<univ_name>) (us : universes) : list<subst_elt> =
     assert (List.length us = List.length formals);
@@ -1729,7 +1729,7 @@ let new_implicit_var_aux reason r env k should_check meta =
       let binders = all_binders env in
       let gamma = env.gamma in
       let ctx_uvar = {
-          ctx_uvar_head=FStar.Syntax.Unionfind.fresh();
+          ctx_uvar_head=FStar.Syntax.Unionfind.fresh r;
           ctx_uvar_gamma=gamma;
           ctx_uvar_binders=binders;
           ctx_uvar_typ=k;
