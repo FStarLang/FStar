@@ -747,7 +747,6 @@ let rec sigelt_to_string (x: sigelt) =
         if Options.print_universes () then U.format3 "val %s<%s> : %s" (string_of_lid lid) (univ_names_to_string us) (term_to_string f)
         else U.format2 "val %s : %s" (string_of_lid lid) (term_to_string f)
       | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
-      | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
       | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
       | Sig_fail (errs, lax, ses) ->
         U.format3 "(* Sig_fail %s %s *)\n%s\n(* / Sig_fail*)\n"
@@ -793,7 +792,6 @@ let tag_of_sigelt (se:sigelt) : string =
   | Sig_datacon _          -> "Sig_datacon"
   | Sig_declare_typ _      -> "Sig_declare_typ"
   | Sig_let _              -> "Sig_let"
-  | Sig_main _             -> "Sig_main"
   | Sig_assume _           -> "Sig_assume"
   | Sig_new_effect _       -> "Sig_new_effect"
   | Sig_sub_effect _       -> "Sig_sub_effect"
