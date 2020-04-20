@@ -3097,14 +3097,14 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
           (c1 |> S.mk_Comp |> Print.comp_to_string)
           (c2 |> S.mk_Comp |> Print.comp_to_string);
 
-      let c1, g_lift = 
+      let lift_c1 () : comp_typ * guard_t =
         c1 |> S.mk_Comp |> edge.mlift.mlift_wp env
            |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
 
-      if Env.debug env <| Options.Other "LayeredEffects" then
-        BU.print2 "solve_layered_sub after lift c1: %s and c2: %s\n"
-          (c1 |> S.mk_Comp |> Print.comp_to_string)
-          (c2 |> S.mk_Comp |> Print.comp_to_string);
+      // if Env.debug env <| Options.Other "LayeredEffects" then
+      //   BU.print2 "solve_layered_sub after lift c1: %s and c2: %s\n"
+      //     (c1 |> S.mk_Comp |> Print.comp_to_string)
+      //     (c2 |> S.mk_Comp |> Print.comp_to_string);
 
       (*
        * M t1 i_1 ... i_n <: M t2 j_1 ... j_n (equality is simple, just unify the indices, as before)
@@ -3133,39 +3133,53 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
        *)
 
       if problem.relation = EQ
-      then solve_eq c1 c2 g_lift
+      then
+        let c1, g_lift = lift_c1 () in
+        solve_eq c1 c2 g_lift
       else
         let r = Env.get_range env in
+
+        let c1, g_lift, stronger_t, is_polymonadic =
+          match Env.exists_polymonadic_subcomp env c1.effect_name c2.effect_name with
+          | None ->
+            let c1, g_lift = lift_c1 () in
+            c1, g_lift,
+            c2.effect_name
+              |> Env.get_effect_decl env
+              |> U.get_stronger_vc_combinator
+              |> (fun ts -> Env.inst_tscheme_with ts c2.comp_univs |> snd),
+            false
+          | Some t ->
+            c1, Env.trivial_guard,
+            Env.inst_tscheme_with t c2.comp_univs |> snd,
+            true in
+
         let wl = { wl with wl_implicits = g_lift.implicits@wl.wl_implicits } in
 
         //sub problems for uvar indices in c1
         let is_sub_probs, wl =
-          let rec is_uvar t =
-            match (SS.compress t).n with
-            | Tm_uvar _ -> true
-            | Tm_uinst (t, _) -> is_uvar t
-            | Tm_app (t, _) -> is_uvar t
-            | _ -> false in
-          List.fold_right2 (fun (a1, _) (a2, _) (is_sub_probs, wl) ->
-            if is_uvar a1
-            then begin
-                   if Env.debug env <| Options.Other "LayeredEffects" then
-                   BU.print2 "solve_layered_sub: adding index equality for %s and %s (since a1 uvar)\n"
-                     (Print.term_to_string a1) (Print.term_to_string a2);
-                   let p, wl = sub_prob wl a1 EQ a2 "l.h.s. effect index uvar" in
-                   p::is_sub_probs, wl
-                 end
-            else is_sub_probs, wl
-          ) c1.effect_args c2.effect_args ([], wl) in
+          if is_polymonadic then [], wl
+          else
+            let rec is_uvar t =
+              match (SS.compress t).n with
+              | Tm_uvar _ -> true
+              | Tm_uinst (t, _) -> is_uvar t
+              | Tm_app (t, _) -> is_uvar t
+              | _ -> false in
+            List.fold_right2 (fun (a1, _) (a2, _) (is_sub_probs, wl) ->
+              if is_uvar a1
+              then begin
+                     if Env.debug env <| Options.Other "LayeredEffects" then
+                     BU.print2 "solve_layered_sub: adding index equality for %s and %s (since a1 uvar)\n"
+                       (Print.term_to_string a1) (Print.term_to_string a2);
+                     let p, wl = sub_prob wl a1 EQ a2 "l.h.s. effect index uvar" in
+                     p::is_sub_probs, wl
+                   end
+              else is_sub_probs, wl
+            ) c1.effect_args c2.effect_args ([], wl) in
 
         //return type sub problem
         let ret_sub_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in
-
-        let _, stronger_t =
-          c2.effect_name
-          |> Env.get_effect_decl env
-          |> U.get_stronger_vc_combinator
-          |> (fun ts -> Env.inst_tscheme_with ts c2.comp_univs) in
 
         let stronger_t_shape_error s = BU.format3
           "Unexpected shape of stronger for %s, reason: %s (t:%s)"
