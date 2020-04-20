@@ -13,6 +13,7 @@ module CTRW = FStar_Tactics_CtrlRewrite
 module RT   = FStar_Reflection_Types
 module RD   = FStar_Reflection_Data
 module EMB  = FStar_Syntax_Embeddings
+module NBET = FStar_TypeChecker_NBETerm
 
 let interpret_tac (t: 'a TM.tac) (ps: proofstate): 'a __result =
   TM.run t ps
@@ -20,21 +21,44 @@ let interpret_tac (t: 'a TM.tac) (ps: proofstate): 'a __result =
 let uninterpret_tac (t: 'a __tac) (ps: proofstate): 'a __result =
   t ps
 
+let tr1 = function
+          | Simpl          -> EMB.Simpl
+          | Weak           -> EMB.Weak
+          | HNF            -> EMB.HNF
+          | Primops        -> EMB.Primops
+          | Delta          -> EMB.Delta
+          | Zeta           -> EMB.Zeta
+          | ZetaFull       -> EMB.ZetaFull
+          | Iota           -> EMB.Iota
+          | NBE            -> EMB.NBE
+          | Reify          -> EMB.Reify
+          | UnfoldOnly  ss -> EMB.UnfoldOnly ss
+          | UnfoldFully ss -> EMB.UnfoldFully ss
+          | UnfoldAttr  ss -> EMB.UnfoldAttr  ss
+let rt1 = function
+          | EMB.Simpl          -> Simpl
+          | EMB.Weak           -> Weak
+          | EMB.HNF            -> HNF
+          | EMB.Primops        -> Primops
+          | EMB.Delta          -> Delta
+          | EMB.Zeta           -> Zeta
+          | EMB.ZetaFull       -> ZetaFull
+          | EMB.Iota           -> Iota
+          | EMB.NBE            -> NBE
+          | EMB.Reify          -> Reify
+          | EMB.UnfoldOnly  ss -> UnfoldOnly ss
+          | EMB.UnfoldFully ss -> UnfoldFully ss
+          | EMB.UnfoldAttr  ss -> UnfoldAttr  ss
+
+(* the one plugins actually use *)
+let e_norm_step' : norm_step EMB.embedding =
+    EMB.embed_as EMB.e_norm_step rt1 tr1 None
+
+let e_norm_step_nbe' : norm_step NBET.embedding =
+    NBET.embed_as NBET.e_norm_step rt1 tr1 None
+
 let tr_repr_steps =
-    let tr1 = function
-              | Simpl         -> EMB.Simpl
-              | Weak          -> EMB.Weak
-              | HNF           -> EMB.HNF
-              | Primops       -> EMB.Primops
-              | Delta         -> EMB.Delta
-              | Zeta          -> EMB.Zeta
-              | Iota          -> EMB.Iota
-              | NBE           -> EMB.NBE
-              | Reify         -> EMB.Reify
-              | UnfoldOnly  ss -> EMB.UnfoldOnly ss
-              | UnfoldFully ss -> EMB.UnfoldFully ss
-              | UnfoldAttr  ss -> EMB.UnfoldAttr  ss
-    in List.map tr1
+    List.map tr1
 
 let to_tac_0 (t: 'a __tac): 'a TM.tac =
   (fun (ps: proofstate) ->

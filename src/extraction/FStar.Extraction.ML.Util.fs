@@ -465,7 +465,12 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
       as_name (["FStar_Tactics_Native"], idroot^string_of_int arity)
     in
     let mk_basic_embedding (l:emb_loc) (s: string): mlexpr =
-        emb_prefix l ("e_" ^ s)
+        if s = "norm_step" (* hack, ignore me *)
+        then
+          match l with
+          | Syntax_term -> as_name (["FStar_Tactics_Builtins"], "e_norm_step'")
+          | NBE_t -> as_name (["FStar_Tactics_Builtins"], "e_norm_step_nbe'")
+        else emb_prefix l ("e_" ^ s)
     in
     let mk_arrow_as_prim_step l (arity: int): mlexpr =
         emb_prefix l ("arrow_as_prim_step_" ^ string_of_int arity)
