@@ -158,6 +158,7 @@ let rec composable_array_struct' (s0 s1: array_struct u#a) : Tot prop (decreases
   | Array descriptor0 len0, Array descriptor1 len1 ->
     descriptor0 == descriptor1 /\ len0 == len1 /\
     begin forall (i:nat{i < v_usize len0}).
+      {:pattern (array_cell_sub_array_struct s0 i) \/ (array_cell_sub_array_struct s1 i)}
        composable_array_struct'
          (array_cell_sub_array_struct s0 i)
          (array_cell_sub_array_struct s1 i)
@@ -165,6 +166,7 @@ let rec composable_array_struct' (s0 s1: array_struct u#a) : Tot prop (decreases
   | Struct field_descriptors0, Struct field_descriptors1 ->
     field_descriptors0 == field_descriptors1 /\
     begin forall (field: field_id{Some? (field_descriptors0 field)}).
+      {:pattern (struct_field_sub_array_struct s0 field) \/ (struct_field_sub_array_struct s1 field)}
       composable_array_struct'
         (struct_field_sub_array_struct s0 field)
         (struct_field_sub_array_struct s1 field)
@@ -304,24 +306,25 @@ let unit_pcm' : pcm' u#a (Univ.raise_t u#0 u#a unit) = {
     one =  Univ.raise_val u#0 u#a ()
   }
 
+let higher_unit (x: Univ.raise_t u#0 u#a unit) : Lemma (x == Univ.raise_val u#0 u#a ()) =
+  let aux (_ : squash (x =!= Univ.raise_val u#0 u#a ())) : Lemma (False) =
+      let x0 = Univ.downgrade_val u#0 u#a x in
+      assert(x0 == ())
+  in
+  Classical.excluded_middle (x == Univ.raise_val u#0 u#a ());
+  Classical.or_elim
+    #(x == Univ.raise_val u#0 u#a ())
+    #(x =!= Univ.raise_val u#0 u#a ())
+    #(fun _ -> unit_pcm'.composable x unit_pcm'.one /\ unit_pcm'.op x unit_pcm'.one == x)
+    (fun _ -> ())
+    (fun _ -> aux ())
+
 let unit_pcm : pcm u#a (Univ.raise_t u#0 u#a unit)  = {
   p = unit_pcm' u#a;
   comm = (fun _ _  -> ());
   assoc = (fun _ _ _ -> ());
   assoc_r = (fun _ _ _ -> ());
-  is_unit = (fun x ->
-    let aux (_ : squash (x =!= Univ.raise_val u#0 u#a ())) : Lemma (False) =
-      let x0 = Univ.downgrade_val u#0 u#a x in
-      assert(x0 == ())
-    in
-    Classical.excluded_middle (x == Univ.raise_val u#0 u#a ());
-    Classical.or_elim
-      #(x == Univ.raise_val u#0 u#a ())
-      #(x =!= Univ.raise_val u#0 u#a ())
-      #(fun _ -> unit_pcm'.composable x unit_pcm'.one /\ unit_pcm'.op x unit_pcm'.one == x)
-      (fun _ -> ())
-      (fun _ -> aux ())
-  )
+  is_unit = (fun x -> higher_unit x)
 }
 
 let one_array_struct : array_struct u#a  =
@@ -332,3 +335,187 @@ let array_struct_pcm' : pcm' u#(a+1) (array_struct u#a) = {
   op = compose_array_struct;
   one = one_array_struct
 }
+
+open FStar.Tactics
+
+let compose_opaque (x: array_struct u#a) (y :array_struct u#a{x `composable_array_struct` y}) =
+  x `compose_array_struct` y
+
+let struct_field_sub_array_struct_opaque
+  (s: array_struct u#a{Struct? s.descriptor})
+  (field: field_id{Some? ((Struct?.field_descriptors s.descriptor) field)})
+  = struct_field_sub_array_struct s field
+
+
+let compose_struct_field_sub_array_struct_lemma (x y : array_struct u#a) (field: field_id)
+    : Lemma
+      (requires (
+        Struct? x.descriptor /\ x `composable_array_struct` y /\
+        Some? ((Struct?.field_descriptors x.descriptor) field)
+      ))
+      (ensures (
+         let xf = struct_field_sub_array_struct x field in
+         let yf = struct_field_sub_array_struct y field in
+         let xyf = struct_field_sub_array_struct (x `compose_array_struct` y) field in
+         xyf == xf `compose_array_struct` yf
+      ))
+  =
+  let xf = struct_field_sub_array_struct_opaque x field in
+  let yf = struct_field_sub_array_struct_opaque y field in
+  let xyf = struct_field_sub_array_struct (x `compose_array_struct` y) field in
+  match x.descriptor, y.descriptor, (x `compose_array_struct` y).descriptor with
+  | Struct fields, Struct fields', Struct fields'' ->
+    assert(fields == fields');
+    assert(fields == fields'');
+    assert(xf.descriptor == Some?.v (fields field));
+    assert(yf.descriptor == Some?.v (fields field));
+    assert(xyf.descriptor == Some?.v (fields field));
+    let xfyf = xf `compose_opaque` yf in
+    assert(xyf == xfyf) by begin
+      norm [delta_only ["Steel.PCM.ArrayStruct.Memory.compose_array_struct"]; zeta];
+      norm [nbe; simplify; weak; hnf];
+      // Here we just want the tactics engine to figure out that it can reduce the match...
+      tadmit ()
+    end;
+    admit()
+  | _ -> ()
+
+#push-options "--z3rlimit 20"
+let array_struct_assoc_l_helper
+  (x: array_struct u#a{Struct? x.descriptor})
+  (y: array_struct u#a)
+  (z: array_struct u#a{
+    y `composable_array_struct` z /\
+    x `composable_array_struct` (y `compose_array_struct` z)
+  })
+  (field: field_id{Some? (( Struct?.field_descriptors x.descriptor) field)})
+    : Lemma (requires (
+      let fields = Struct?.field_descriptors x.descriptor in
+      let xi = struct_field_sub_array_struct x field in
+      let yi = struct_field_sub_array_struct y field in
+      let zi = struct_field_sub_array_struct z field in
+      composable_array_struct yi zi /\ composable_array_struct xi (yi `compose_array_struct` zi)
+    ))
+    (ensures (
+      let fields = Struct?.field_descriptors x.descriptor in
+      struct_field_type_unroll_lemma_aux u#a fields;
+      let xi = struct_field_sub_array_struct x field in
+      let yi = struct_field_sub_array_struct y field in
+      let zi = struct_field_sub_array_struct z field in
+      (xi `compose_array_struct` (yi `compose_array_struct` zi)).value ==
+      FStar.DependentMap.sel
+        #field_id
+        #(struct_field_type (Struct?.field_descriptors x.descriptor))
+        (x `compose_array_struct` (y `compose_array_struct` z)).value field
+    ))
+  =
+  admit()
+
+
+#push-options "--z3rlimit 50 --warn_error -271"
+let rec arraystruct_assoc_l
+  (x:array_struct u#a)
+  (y:array_struct u#a)
+  (z:array_struct u#a)
+    : Lemma (requires (
+      composable_array_struct y z /\ composable_array_struct x (y `compose_array_struct` z)
+    )) (ensures (
+      composable_array_struct x y /\ composable_array_struct (x `compose_array_struct` y) z /\
+      x `compose_array_struct` (y `compose_array_struct` z) ==
+        (x `compose_array_struct` y) `compose_array_struct` z
+    )) (decreases x.descriptor)
+  =
+  match x.descriptor, y.descriptor, z.descriptor with
+  | Base _ pcm, Base _ _, Base _ _ ->
+    pcm.assoc x.value y.value z.value
+  | Array a len, Array _ _, Array _ _ ->
+    let aux (i:nat{i < v_usize len}) : Lemma (
+      let xi = array_cell_sub_array_struct x i in
+      let yi = array_cell_sub_array_struct y i in
+      let zi = array_cell_sub_array_struct z i in
+      composable_array_struct xi yi /\ composable_array_struct (xi `compose_array_struct` yi) zi /\
+      xi `compose_array_struct` (yi `compose_array_struct` zi) ==
+        (xi `compose_array_struct` yi) `compose_array_struct` zi
+    ) =
+      let xi = array_cell_sub_array_struct x i in
+      let yi = array_cell_sub_array_struct y i in
+      let zi = array_cell_sub_array_struct z i in
+      arraystruct_assoc_l xi yi zi
+    in
+    Classical.forall_intro aux;
+    let yz = y `compose_array_struct` z in
+    let xy = x `compose_array_struct` y in
+    assert(
+      (x `compose_array_struct` yz).value `Seq.equal #(array_struct_type a)`
+      (xy `compose_array_struct` z).value
+    )
+  | Struct fields, Struct _, Struct _ ->
+      let aux_helper (x y: array_struct u#a) (field: field_id)
+        : Lemma
+          (requires (
+            Struct? x.descriptor /\ x `composable_array_struct` y /\
+            Some? ((Struct?.field_descriptors x.descriptor) field)
+          ))
+          (ensures (
+             let xf = struct_field_sub_array_struct x field in
+             let yf = struct_field_sub_array_struct y field in
+             let xyf = struct_field_sub_array_struct (x `compose_array_struct` y) field in
+             xyf == xf `compose_array_struct` yf
+          )) [SMTPat ()]
+      =
+      compose_struct_field_sub_array_struct_lemma x y field
+    in
+    let aux1 (field: field_id{Some? (fields field)}) : Lemma (
+      let xi = struct_field_sub_array_struct x field in
+      let yi = struct_field_sub_array_struct y field in
+      let zi = struct_field_sub_array_struct z field in
+      composable_array_struct xi yi /\ composable_array_struct (xi `compose_array_struct` yi) zi /\
+      xi `compose_array_struct` (yi `compose_array_struct` zi) ==
+        (xi `compose_array_struct` yi) `compose_array_struct` zi
+    ) [SMTPat ()] =
+      let xi = struct_field_sub_array_struct x field in
+      let yi = struct_field_sub_array_struct y field in
+      let zi = struct_field_sub_array_struct z field in
+      let yzi = struct_field_sub_array_struct (y `compose_array_struct` z) field in
+      arraystruct_assoc_l xi yi zi
+    in
+    assert(composable_array_struct x y);
+    assert(composable_array_struct (x `compose_array_struct` y) z);
+    struct_field_type_unroll_lemma_aux u#a fields;
+    let aux2 (field: field_id) : Lemma (
+      FStar.DependentMap.sel #field_id #(struct_field_type fields)
+        (x `compose_array_struct` (y `compose_array_struct` z)).value field ==
+      FStar.DependentMap.sel #field_id #(struct_field_type fields)
+        ((x `compose_array_struct` y) `compose_array_struct` z).value field
+    ) =
+      let v1 =
+        FStar.DependentMap.sel #field_id #(struct_field_type fields)
+          (x `compose_array_struct` (y `compose_array_struct` z)).value field
+      in
+      let v2 =
+        FStar.DependentMap.sel #field_id #(struct_field_type fields)
+          ((x `compose_array_struct` y) `compose_array_struct` z).value field
+      in
+      match
+        fields field
+      with
+      | None ->
+        assert((struct_field_type fields) field == Univ.raise_t u#0 u#a unit);
+        higher_unit u#a v1; higher_unit u#a v2
+      | Some descr ->
+        assert((struct_field_type fields) field == array_struct_type descr);
+        aux1 field;
+        let xi = struct_field_sub_array_struct x field in
+        let yi = struct_field_sub_array_struct y field in
+        let zi = struct_field_sub_array_struct z field in
+        array_struct_assoc_l_helper x y z field;
+        // DM 04/21/2020: Why are these assumes still needed?
+        assume((xi `compose_array_struct` (yi `compose_array_struct` zi)).value == v1);
+        assume(((xi `compose_array_struct` yi) `compose_array_struct` zi).value == v2)
+    in
+    Classical.forall_intro aux2;
+    assert(
+      (x `compose_array_struct` (y `compose_array_struct` z)).value
+        `FStar.DependentMap.equal #field_id #(struct_field_type fields)`
+          ((x `compose_array_struct` y) `compose_array_struct` z).value
+    )
