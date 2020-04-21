@@ -725,11 +725,12 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     let uvs = List.rev uvs in
     let pre  = SS.subst subst pre in
     let post = SS.subst subst post in
-    bind (do_unify env (U.mk_squash U_zero post) (goal_type goal)) (fun b ->
+    let post_u = env.universe_of env post in
+    bind (do_unify env (U.mk_squash post_u post) (goal_type goal)) (fun b ->
     if not b
     then begin
         let post, goalt = TypeChecker.Err.print_discrepancy (tts env)
-                                                            (U.mk_squash U_zero post)
+                                                            (U.mk_squash post_u post)
                                                             (goal_type goal) in
         fail3 "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
                             (tts env tm) post goalt
@@ -785,7 +786,8 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
         in
         let sub_goals = filter' (fun g goals -> not (checkone (goal_witness g) goals)) sub_goals in
         bind (proc_guard "apply_lemma guard" env guard) (fun _ ->
-        bind (if not (istrivial env (U.mk_squash U_zero pre)) //lemma preconditions are in U_zero
+        let pre_u = env.universe_of env pre in
+        bind (if not (istrivial env (U.mk_squash pre_u pre)) //lemma preconditions are in U_zero
               then add_irrelevant_goal goal "apply_lemma precondition" env pre
               else ret ()) (fun _ ->
         add_goals sub_goals))))
