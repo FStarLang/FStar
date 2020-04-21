@@ -701,7 +701,8 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     | _ -> false
     in
     bind cur_goal (fun goal ->
-    bind (__tc (goal_env goal) tm) (fun (tm, t, guard) ->
+    let env = goal_env goal in
+    bind (__tc env tm) (fun (tm, t, guard) ->
     let bs, comp = U.arrow_formals_comp t in
     match lemma_or_sq comp with
     | None -> fail "not a lemma or squashed function"
@@ -714,7 +715,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                    // Simplification: if the argument is simply unit, then don't ask for it
                    ret <| ((U.exp_unit, aq)::uvs, imps, S.NT(b, U.exp_unit)::subst)
                else
-                   bind (new_uvar "apply_lemma" (goal_env goal) b_t) (fun (t, u) ->
+                   bind (new_uvar "apply_lemma" env b_t) (fun (t, u) ->
                    ret <| ((t, aq)::uvs, (t, u)::imps, S.NT(b, t)::subst))
                )
        ([], [], [])
@@ -724,14 +725,14 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     let uvs = List.rev uvs in
     let pre  = SS.subst subst pre in
     let post = SS.subst subst post in
-    bind (do_unify (goal_env goal) (U.mk_squash U_zero post) (goal_type goal)) (fun b ->
+    bind (do_unify env (U.mk_squash U_zero post) (goal_type goal)) (fun b ->
     if not b
     then begin
-        let post, goalt = TypeChecker.Err.print_discrepancy (tts (goal_env goal))
+        let post, goalt = TypeChecker.Err.print_discrepancy (tts env)
                                                             (U.mk_squash U_zero post)
                                                             (goal_type goal) in
         fail3 "Cannot instantiate lemma %s (with postcondition: %s) to match goal (%s)"
-                            (tts (goal_env goal) tm) post goalt
+                            (tts env tm) post goalt
     end else
         // We solve with (), we don't care about the witness if applying a lemma
         bind (solve' goal U.exp_unit) (fun _ ->
@@ -764,14 +765,14 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
                   //           since it causes a regression in examples/vale/*Math_i.fst
                   // GM: Made it the default, but setting must_total to true
                   FStar.TypeChecker.TcTerm.check_type_of_well_typed_term'
-                            true (goal_env goal) term ctx_uvar.ctx_uvar_typ
+                            true env term ctx_uvar.ctx_uvar_typ
                 in
                 bind (proc_guard
                        (if ps.tac_verb_dbg
                         then BU.format2 "apply_lemma solved arg %s to %s\n" (Print.ctx_uvar_to_string ctx_uvar)
                                                                             (Print.term_to_string term)
                         else "apply_lemma solved arg")
-                        (goal_env goal) g_typ) (fun () ->
+                        env g_typ) (fun () ->
                 ret [])))
             ) (fun sub_goals ->
         let sub_goals = List.flatten sub_goals in
@@ -783,9 +784,9 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
              | x::xs -> if f x xs then x::(filter' f xs) else filter' f xs
         in
         let sub_goals = filter' (fun g goals -> not (checkone (goal_witness g) goals)) sub_goals in
-        bind (proc_guard "apply_lemma guard" (goal_env goal) guard) (fun _ ->
-        bind (if not (istrivial (goal_env goal) (U.mk_squash U_zero pre)) //lemma preconditions are in U_zero
-              then add_irrelevant_goal goal "apply_lemma precondition" (goal_env goal) pre
+        bind (proc_guard "apply_lemma guard" env guard) (fun _ ->
+        bind (if not (istrivial env (U.mk_squash U_zero pre)) //lemma preconditions are in U_zero
+              then add_irrelevant_goal goal "apply_lemma precondition" env pre
               else ret ()) (fun _ ->
         add_goals sub_goals))))
     )))))))
