@@ -65,3 +65,9 @@ noeq type t10 =
 [@ (expect_failure [3])]
 noeq type t11 (a:Type) =
   | C111: t11 (t11 a) -> t11 a
+
+type t_t13 (a:Type) = a -> unit
+
+[@ (expect_failure [3])]
+noeq type t13 =
+  | C131 : t_t13 t13 -> t13
