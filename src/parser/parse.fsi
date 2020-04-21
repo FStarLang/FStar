@@ -471,6 +471,7 @@ type nonTerminalId =
     | NONTERM_warn_error
     | NONTERM_flag
     | NONTERM_range
+    | NONTERM_string
     | NONTERM_some_fsTypeArgs_
     | NONTERM_right_flexible_list_SEMICOLON_fieldPattern_
     | NONTERM_right_flexible_list_SEMICOLON_noSeqTerm_
