@@ -61,17 +61,17 @@ type ('heap,'a,'b,'wp,'p,'h) all_close_wp = unit
 type ('heap,'a,'wp) all_trivial = unit
 type 'uuuuuu929 inversion = unit
 
-
+let invertOption : 'uuuuuu933 . unit -> unit = fun uu____935  -> () 
 type ('a,'b) either =
   | Inl of 'a 
   | Inr of 'b 
 let uu___is_Inl : 'a 'b . ('a,'b) either -> Prims.bool =
-  fun projectee  -> match projectee with | Inl v -> true | uu____980 -> false 
+  fun projectee  -> match projectee with | Inl v -> true | uu____985 -> false 
 let __proj__Inl__item__v : 'a 'b . ('a,'b) either -> 'a =
   fun projectee  -> match projectee with | Inl v -> v 
 let uu___is_Inr : 'a 'b . ('a,'b) either -> Prims.bool =
   fun projectee  ->
-    match projectee with | Inr v -> true | uu____1034 -> false
+    match projectee with | Inr v -> true | uu____1039 -> false
   
 let __proj__Inr__item__v : 'a 'b . ('a,'b) either -> 'b =
   fun projectee  -> match projectee with | Inr v -> v 
@@ -102,8 +102,8 @@ let __proj__Mkdtuple4__item___3 : 'a 'b 'c 'd . ('a,'b,'c,'d) dtuple4 -> 'c =
 let __proj__Mkdtuple4__item___4 : 'a 'b 'c 'd . ('a,'b,'c,'d) dtuple4 -> 'd =
   fun projectee  -> match projectee with | Mkdtuple4 (_1,_2,_3,_4) -> _4 
 
-let rec false_elim : 'uuuuuu1599 . unit -> 'uuuuuu1599 =
-  fun uu____1604  -> false_elim () 
+let rec false_elim : 'uuuuuu1604 . unit -> 'uuuuuu1604 =
+  fun uu____1609  -> false_elim () 
 type __internal_ocaml_attributes =
   | PpxDerivingShow 
   | PpxDerivingShowConstant of Prims.string 
@@ -121,75 +121,75 @@ type __internal_ocaml_attributes =
   | CMacro 
 let (uu___is_PpxDerivingShow : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | PpxDerivingShow  -> true | uu____1650 -> false
+    match projectee with | PpxDerivingShow  -> true | uu____1655 -> false
   
 let (uu___is_PpxDerivingShowConstant :
   __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
     match projectee with
     | PpxDerivingShowConstant _0 -> true
-    | uu____1663 -> false
+    | uu____1668 -> false
   
 let (__proj__PpxDerivingShowConstant__item___0 :
   __internal_ocaml_attributes -> Prims.string) =
   fun projectee  -> match projectee with | PpxDerivingShowConstant _0 -> _0 
 let (uu___is_PpxDerivingYoJson : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | PpxDerivingYoJson  -> true | uu____1684 -> false
+    match projectee with | PpxDerivingYoJson  -> true | uu____1689 -> false
   
 let (uu___is_CInline : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CInline  -> true | uu____1695 -> false
+    match projectee with | CInline  -> true | uu____1700 -> false
   
 let (uu___is_Substitute : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Substitute  -> true | uu____1706 -> false
+    match projectee with | Substitute  -> true | uu____1711 -> false
   
 let (uu___is_Gc : __internal_ocaml_attributes -> Prims.bool) =
-  fun projectee  -> match projectee with | Gc  -> true | uu____1717 -> false 
+  fun projectee  -> match projectee with | Gc  -> true | uu____1722 -> false 
 let (uu___is_Comment : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Comment _0 -> true | uu____1730 -> false
+    match projectee with | Comment _0 -> true | uu____1735 -> false
   
 let (__proj__Comment__item___0 : __internal_ocaml_attributes -> Prims.string)
   = fun projectee  -> match projectee with | Comment _0 -> _0 
 let (uu___is_CPrologue : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CPrologue _0 -> true | uu____1753 -> false
+    match projectee with | CPrologue _0 -> true | uu____1758 -> false
   
 let (__proj__CPrologue__item___0 :
   __internal_ocaml_attributes -> Prims.string) =
   fun projectee  -> match projectee with | CPrologue _0 -> _0 
 let (uu___is_CEpilogue : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CEpilogue _0 -> true | uu____1776 -> false
+    match projectee with | CEpilogue _0 -> true | uu____1781 -> false
   
 let (__proj__CEpilogue__item___0 :
   __internal_ocaml_attributes -> Prims.string) =
   fun projectee  -> match projectee with | CEpilogue _0 -> _0 
 let (uu___is_CConst : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CConst _0 -> true | uu____1799 -> false
+    match projectee with | CConst _0 -> true | uu____1804 -> false
   
 let (__proj__CConst__item___0 : __internal_ocaml_attributes -> Prims.string)
   = fun projectee  -> match projectee with | CConst _0 -> _0 
 let (uu___is_CCConv : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CCConv _0 -> true | uu____1822 -> false
+    match projectee with | CCConv _0 -> true | uu____1827 -> false
   
 let (__proj__CCConv__item___0 : __internal_ocaml_attributes -> Prims.string)
   = fun projectee  -> match projectee with | CCConv _0 -> _0 
 let (uu___is_CAbstractStruct : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CAbstractStruct  -> true | uu____1843 -> false
+    match projectee with | CAbstractStruct  -> true | uu____1848 -> false
   
 let (uu___is_CIfDef : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CIfDef  -> true | uu____1854 -> false
+    match projectee with | CIfDef  -> true | uu____1859 -> false
   
 let (uu___is_CMacro : __internal_ocaml_attributes -> Prims.bool) =
   fun projectee  ->
-    match projectee with | CMacro  -> true | uu____1865 -> false
+    match projectee with | CMacro  -> true | uu____1870 -> false
   
 
 
@@ -205,7 +205,7 @@ let (uu___is_CMacro : __internal_ocaml_attributes -> Prims.bool) =
 
 
 
-let normalize_term : 'uuuuuu1886 . 'uuuuuu1886 -> 'uuuuuu1886 = fun x  -> x 
+let normalize_term : 'uuuuuu1891 . 'uuuuuu1891 -> 'uuuuuu1891 = fun x  -> x 
 type 'a normalize = 'a
 type norm_step =
   | Simpl 
@@ -223,55 +223,55 @@ type norm_step =
   | UnfoldAttr of Prims.string Prims.list 
 let (uu___is_Simpl : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Simpl  -> true | uu____1929 -> false
+    match projectee with | Simpl  -> true | uu____1934 -> false
   
 let (uu___is_Weak : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Weak  -> true | uu____1940 -> false
+    match projectee with | Weak  -> true | uu____1945 -> false
   
 let (uu___is_HNF : norm_step -> Prims.bool) =
-  fun projectee  -> match projectee with | HNF  -> true | uu____1951 -> false 
+  fun projectee  -> match projectee with | HNF  -> true | uu____1956 -> false 
 let (uu___is_Primops : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Primops  -> true | uu____1962 -> false
+    match projectee with | Primops  -> true | uu____1967 -> false
   
 let (uu___is_Delta : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Delta  -> true | uu____1973 -> false
+    match projectee with | Delta  -> true | uu____1978 -> false
   
 let (uu___is_Zeta : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Zeta  -> true | uu____1984 -> false
+    match projectee with | Zeta  -> true | uu____1989 -> false
   
 let (uu___is_ZetaFull : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | ZetaFull  -> true | uu____1995 -> false
+    match projectee with | ZetaFull  -> true | uu____2000 -> false
   
 let (uu___is_Iota : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Iota  -> true | uu____2006 -> false
+    match projectee with | Iota  -> true | uu____2011 -> false
   
 let (uu___is_NBE : norm_step -> Prims.bool) =
-  fun projectee  -> match projectee with | NBE  -> true | uu____2017 -> false 
+  fun projectee  -> match projectee with | NBE  -> true | uu____2022 -> false 
 let (uu___is_Reify : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | Reify  -> true | uu____2028 -> false
+    match projectee with | Reify  -> true | uu____2033 -> false
   
 let (uu___is_UnfoldOnly : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldOnly _0 -> true | uu____2043 -> false
+    match projectee with | UnfoldOnly _0 -> true | uu____2048 -> false
   
 let (__proj__UnfoldOnly__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee  -> match projectee with | UnfoldOnly _0 -> _0 
 let (uu___is_UnfoldFully : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldFully _0 -> true | uu____2074 -> false
+    match projectee with | UnfoldFully _0 -> true | uu____2079 -> false
   
 let (__proj__UnfoldFully__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee  -> match projectee with | UnfoldFully _0 -> _0 
 let (uu___is_UnfoldAttr : norm_step -> Prims.bool) =
   fun projectee  ->
-    match projectee with | UnfoldAttr _0 -> true | uu____2105 -> false
+    match projectee with | UnfoldAttr _0 -> true | uu____2110 -> false
   
 let (__proj__UnfoldAttr__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee  -> match projectee with | UnfoldAttr _0 -> _0 
@@ -292,11 +292,14 @@ let (delta_fully : Prims.string Prims.list -> norm_step) =
 let (delta_attr : Prims.string Prims.list -> norm_step) =
   fun s  -> UnfoldAttr s 
 let (norm : norm_step Prims.list -> unit -> Obj.t -> Obj.t) =
-  fun uu____2184  -> fun uu____2185  -> fun x  -> x 
+  fun uu____2189  -> fun uu____2190  -> fun x  -> x 
 
-
-
-
-
-let singleton : 'uuuuuu2199 . 'uuuuuu2199 -> 'uuuuuu2199 = fun x  -> x 
-let with_type : 'uuuuuu2210 . 'uuuuuu2210 -> 'uuuuuu2210 = fun e  -> e 
+let normalize_term_spec : 'uuuuuu2200 . 'uuuuuu2200 -> unit =
+  fun uu____2206  -> () 
+let normalize_spec : 'uuuuuu2210 . unit -> unit = fun uu____2212  -> () 
+let (norm_spec : norm_step Prims.list -> unit -> Obj.t -> unit) =
+  fun uu____2229  -> fun uu____2230  -> fun uu____2231  -> () 
+let (reveal_opaque : Prims.string -> unit -> Obj.t -> unit) =
+  fun s  -> norm_spec [delta_only [s]] 
+let singleton : 'uuuuuu2260 . 'uuuuuu2260 -> 'uuuuuu2260 = fun x  -> x 
+let with_type : 'uuuuuu2271 . 'uuuuuu2271 -> 'uuuuuu2271 = fun e  -> e 
