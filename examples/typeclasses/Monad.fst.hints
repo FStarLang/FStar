@@ -13,7 +13,7 @@
         "projection_inverse_Monad.Mkmonad_return"
       ],
       0,
-      "ae3093501f231737e753a8253146ced2"
+      "155d31dbed16966dea01875a3fded8ae"
     ],
     [
       "Monad.g",
@@ -31,7 +31,7 @@
         "token_correspondence_Monad.return"
       ],
       0,
-      "cc043bc71331c95253a5d61277e9dce8"
+      "5b249ec7600a31d15ca6e5fff81adeb4"
     ],
     [
       "Monad.g'",
@@ -49,7 +49,7 @@
         "token_correspondence_Monad.return"
       ],
       0,
-      "8a391a97a71fb81f321ce6501dcc7a8b"
+      "d27dbac7dfd9501f30d4720969026a5a"
     ],
     [
       "Monad.__proj__Mkmonad__item__laws",
@@ -63,7 +63,7 @@
         "projection_inverse_Monad.Mkmonad_return"
       ],
       0,
-      "0c91f3fab65db55f54e8d2dad20a563e"
+      "9f4f18efd510f3c5edc330260e44f46b"
     ],
     [
       "Monad.g",
@@ -81,7 +81,7 @@
         "token_correspondence_Monad.return"
       ],
       0,
-      "d439f4d5d91043d1fb03e09a5fdd4f4f"
+      "e19e9e5c5cc896c831374936e7bdeebf"
     ],
     [
       "Monad.g'",
@@ -99,7 +99,7 @@
         "token_correspondence_Monad.return"
       ],
       0,
-      "1f2666752e8189febcc3e4ae7b8c8de2"
+      "06b6e8a38600ae629ffb04d2a9d33c55"
     ]
   ]
 ]
