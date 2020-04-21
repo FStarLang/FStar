@@ -680,7 +680,7 @@ let lemma_or_sq (c : comp) : option<(term * term)> =
                         | pre::post::_ -> fst pre, fst post
                         | _ -> failwith "apply_lemma: impossible: not a lemma"
         in
-        // Lemma post is thunked, and is specialized to U_zero
+        // Lemma post is thunked
         let post = U.mk_app post [S.as_arg U.exp_unit] in
         Some (pre, post)
     else if U.is_pure_effect ct.effect_name then
@@ -787,7 +787,7 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
         let sub_goals = filter' (fun g goals -> not (checkone (goal_witness g) goals)) sub_goals in
         bind (proc_guard "apply_lemma guard" env guard) (fun _ ->
         let pre_u = env.universe_of env pre in
-        bind (if not (istrivial env (U.mk_squash pre_u pre)) //lemma preconditions are in U_zero
+        bind (if not (istrivial env (U.mk_squash pre_u pre))
               then add_irrelevant_goal goal "apply_lemma precondition" env pre
               else ret ()) (fun _ ->
         add_goals sub_goals))))
