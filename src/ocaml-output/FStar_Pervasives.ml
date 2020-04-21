@@ -1,4 +1,5 @@
 open Prims
+type pattern = unit
 
 
 type 'p spinoff = 'p
