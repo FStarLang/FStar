@@ -49,7 +49,7 @@ unfold let struct_field_type'
       | Some descr ->
         FStar.WellFounded.axiom1 field_descriptors field;
         array_struct_type descr
-      | None -> Univ.raise_t u#0 u#a False
+      | None -> Univ.raise_t u#0 u#a unit
 
 let rec array_struct_type (descriptor: array_struct_descriptor u#a) : Tot (Type u#a) (decreases descriptor) =
   match descriptor with
@@ -201,7 +201,7 @@ let composable_array_struct_struct_case_elim
   =
   ()
 
-let rec composable_sym (s0 s1: array_struct u#a)
+let rec composable_symmetric (s0 s1: array_struct u#a)
     : Lemma
       (requires composable_array_struct' s0 s1)
       (ensures composable_array_struct' s1 s0)
@@ -216,7 +216,7 @@ let rec composable_sym (s0 s1: array_struct u#a)
          (array_cell_sub_array_struct s1 i)
          (array_cell_sub_array_struct s0 i)
     ) =
-      composable_sym
+      composable_symmetric
         (array_cell_sub_array_struct s0 i)
         (array_cell_sub_array_struct s1 i)
     in
@@ -227,7 +227,7 @@ let rec composable_sym (s0 s1: array_struct u#a)
          (struct_field_sub_array_struct s1 field)
          (struct_field_sub_array_struct s0 field)
     ) =
-       composable_sym
+       composable_symmetric
          (struct_field_sub_array_struct s0 field)
          (struct_field_sub_array_struct s1 field)
     in
@@ -240,11 +240,11 @@ unfold let composable_array_struct : symrel array_struct =
     composable_array_struct' s0 s1 <==> composable_array_struct' s1 s0
   ) =
     let aux (_: squash (composable_array_struct' s0 s1)) : Lemma (composable_array_struct' s1 s0) =
-      composable_sym s0 s1
+      composable_symmetric s0 s1
     in
     Classical.impl_intro aux;
     let aux (_: squash (composable_array_struct' s1 s0)) : Lemma (composable_array_struct' s0 s1) =
-      composable_sym s1 s0
+      composable_symmetric s1 s0
     in
     Classical.impl_intro aux
   in
@@ -279,9 +279,8 @@ let rec compose_array_struct
     let aux (field: field_id) : Tot (struct_field_type field_descriptors0 field) =
       match field_descriptors0 field, field_descriptors1 field with
       | None, None ->
-        assert(struct_field_type field_descriptors0 field == Univ.raise_t u#0 u#a False);
         // Here I chose the type to be False, but how to provide a value ?
-        magic()
+        Univ.raise_val u#0 u#a ()
       | Some sub_descriptor0, Some sub_descriptor1 ->
         let new_sub_array_struct : array_struct u#a =
           compose_array_struct
@@ -299,21 +298,36 @@ let rec compose_array_struct
     in
     ArrayStruct s0.descriptor new_val
 
-let unit_pcm : pcm unit = {
-  p = {
-    composable = (fun () () -> True);
-    op = (fun () () -> ());
-    one = ()
-  };
+let unit_pcm' : pcm' u#a (Univ.raise_t u#0 u#a unit) = {
+    composable = (fun _ _ -> True);
+    op = (fun _ _ -> Univ.raise_val u#0 u#a () );
+    one =  Univ.raise_val u#0 u#a ()
+  }
+
+let unit_pcm : pcm u#a (Univ.raise_t u#0 u#a unit)  = {
+  p = unit_pcm' u#a;
   comm = (fun _ _  -> ());
   assoc = (fun _ _ _ -> ());
   assoc_r = (fun _ _ _ -> ());
-  is_unit = (fun _ -> ())
+  is_unit = (fun x ->
+    let aux (_ : squash (x =!= Univ.raise_val u#0 u#a ())) : Lemma (False) =
+      let x0 = Univ.downgrade_val u#0 u#a x in
+      assert(x0 == ())
+    in
+    Classical.excluded_middle (x == Univ.raise_val u#0 u#a ());
+    Classical.or_elim
+      #(x == Univ.raise_val u#0 u#a ())
+      #(x =!= Univ.raise_val u#0 u#a ())
+      #(fun _ -> unit_pcm'.composable x unit_pcm'.one /\ unit_pcm'.op x unit_pcm'.one == x)
+      (fun _ -> ())
+      (fun _ -> aux ())
+  )
 }
 
-let one_array_struct = ArrayStruct (Base unit unit_pcm) ()
+let one_array_struct : array_struct u#a  =
+  ArrayStruct u#a (Base (Univ.raise_t unit) unit_pcm) (Univ.raise_val ())
 
-let array_struct_pcm' : pcm' array_struct = {
+let array_struct_pcm' : pcm' u#(a+1) (array_struct u#a) = {
   composable = composable_array_struct;
   op = compose_array_struct;
   one = one_array_struct
