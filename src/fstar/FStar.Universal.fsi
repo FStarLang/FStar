@@ -75,7 +75,7 @@ for the interface and implementation of a (single) module. *)
 val needs_interleaving :
     string ->
     string ->
-    bool 
+    bool
 
 (* Batch mode: check multiple files. *)
 val batch_mode_tc :
