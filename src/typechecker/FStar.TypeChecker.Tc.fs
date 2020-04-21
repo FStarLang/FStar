@@ -815,8 +815,15 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
      BU.print1 "Processing %s\n" (U.lids_of_sigelt se |> List.map string_of_lid |> String.concat ", ");
    if Env.debug env Options.Low then
      BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
-
-   tc_decl' env se
+   if se.sigmeta.sigmeta_admit
+   then begin
+     let old = Options.admit_smt_queries () in
+     Options.set_admit_smt_queries true;  
+     let result = tc_decl' env se in
+     Options.set_admit_smt_queries old;
+     result
+   end
+   else tc_decl' env se
   end
 
 let for_export env hidden se : list<sigelt> * list<lident> =

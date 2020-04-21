@@ -147,6 +147,7 @@ let set_option k v =
   else Util.smap_add map k v
 
 let set_option' (k,v) =  set_option k v
+let set_admit_smt_queries (b:bool) = set_option "admit_smt_queries" (Bool b)
 
 let light_off_files : ref<list<string>> = Util.mk_ref []
 let add_light_off_file (filename:string) = light_off_files := filename :: !light_off_files

@@ -1535,7 +1535,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     | [a] -> [f a]
     | (x::xs) -> x :: (apply_last f xs)
   in
-  let register name item =
+  let register maybe_admit name item =
     let p = path_of_lid ed.mname in
     let p' = apply_last (fun s -> "__" ^ s ^ "_eff_override_" ^ name) p in
     let l' = lid_of_path p' ed_range in
@@ -1548,21 +1548,32 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
       end
     | None ->
       let sigelt, fv = TcUtil.mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
+      let sigelt =
+        if maybe_admit 
+        then { sigelt with sigmeta={sigelt.sigmeta with sigmeta_admit=true}}
+        else sigelt
+      in
       sigelts := sigelt :: !sigelts;
       fv
   in
+  let register_admit = register true in
+  let register = register false in
   let lift_from_pure_wp = register "lift_from_pure" lift_from_pure_wp in
   let mk_sigelt se = { mk_sigelt se with sigrng=ed_range } in
-  // we do not expect the return_elab to verify, since that may require internalizing monotonicity of WPs (i.e. continuation monad)
+  // we do not expect the return_elab to verify,
+  // since that may require internalizing monotonicity of WPs (i.e. continuation monad)
+  // The push/pop are not strictly necessary, since the sigmeta_admit is handled
+  // in a scoped way in Tc.tc_decl; still we retain the push/pop to be doubly sure
+  // that the admit on return_elab and bind_elab do not escape their context
   let return_wp = register "return_wp" return_wp in
-  sigelts := mk_sigelt (Sig_pragma (PushOptions (Some "--admit_smt_queries true"))) :: !sigelts;
-  let return_elab = register "return_elab" return_elab in
+  sigelts := mk_sigelt (Sig_pragma (PushOptions None)) :: !sigelts;
+  let return_elab = register_admit "return_elab" return_elab in
   sigelts := mk_sigelt (Sig_pragma PopOptions) :: !sigelts;
 
   // we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
   let bind_wp = register "bind_wp" bind_wp in
-  sigelts := mk_sigelt (Sig_pragma (PushOptions (Some "--admit_smt_queries true"))) :: !sigelts;
-  let bind_elab = register "bind_elab" bind_elab in
+  sigelts := mk_sigelt (Sig_pragma (PushOptions None)) :: !sigelts;
+  let bind_elab = register_admit "bind_elab" bind_elab in
   sigelts := mk_sigelt (Sig_pragma PopOptions) :: !sigelts;
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->

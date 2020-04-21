@@ -1070,9 +1070,10 @@ let catch_errors (f : unit -> 'a) : list<issue> * option<'a> =
     let r = try let r = f () in Some r
             with | ex -> err_exn ex; None
     in
-    let errs = newh.eh_report() in
+    let all_issues = newh.eh_report() in //de-duplicated already
     current_handler := old;
-    let errs = List.filter (fun i -> i.issue_level = EError) errs in
+    let errs, rest = List.partition (fun i -> i.issue_level = EError) all_issues in
+    List.iter old.eh_add_one rest; //add the remaining issues back to the outer handler to be reported as usual
     errs, r
 
 (* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2)

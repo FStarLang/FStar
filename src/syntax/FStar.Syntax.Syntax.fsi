@@ -429,6 +429,8 @@ type eff_decl = {
 type sig_metadata = {
     sigmeta_active:bool;
     sigmeta_fact_db_ids:list<string>;
+    sigmeta_admit:bool; //An internal flag to record that a sigelt's SMT proof should be admitted
+                        //Used in DM4Free
 }
 
 
