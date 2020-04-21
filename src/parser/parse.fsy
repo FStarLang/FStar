@@ -291,9 +291,8 @@ let x =     ( (x, y) ) in
 option_string_:
   
     {    ( None )}
-| STRING
-    {let s = $1 in
-let x =              ( s ) in
+| string
+    {let x = $1 in
     ( Some x )}
 
 option_term_:
@@ -609,9 +608,8 @@ inputFragment:
       )}
 
 pragma:
-  PRAGMA_SET_OPTIONS STRING
+  PRAGMA_SET_OPTIONS string
     {let (_1, s) = ((), $2) in
-let s =              ( s ) in
       ( SetOptions s )}
 | PRAGMA_RESET_OPTIONS option_string_
     {let (_1, s_opt) = ((), $2) in
@@ -2381,6 +2379,11 @@ range:
 | RANGE
     {let r = $1 in
     ( r )}
+
+string:
+  STRING
+    {let s = $1 in
+             ( s )}
 
 some_fsTypeArgs_:
   fsTypeArgs
