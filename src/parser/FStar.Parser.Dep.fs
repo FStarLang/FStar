@@ -1674,6 +1674,15 @@ let print_full (deps:deps) : unit =
         List.iter (fun f -> pr (norm_path f); pr " \\\n\t") files;
         pr "\n"
     in
+    all_fsti_files 
+    |> List.iter
+      (fun fsti ->
+         let mn = lowercase_module_name fsti in
+         if not (has_implementation deps.file_system_map mn)
+         then FStar.Errors.log_issue
+                    (Range.set_file_of_range Range.dummyRange fsti)
+                    (Warning_WarnOnUse,
+                     BU.format1 "Interface %s is admitted without an implementation" mn));
     print_all "ALL_FST_FILES" all_fst_files;
     print_all "ALL_FSTI_FILES" all_fsti_files;
     print_all "ALL_CHECKED_FILES" all_checked_files;

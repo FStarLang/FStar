@@ -525,6 +525,9 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     [ { se with sigel = Sig_declare_typ (lid, uvs, t) }], [], env0
 
   | Sig_assume(lid, uvs, t) ->
+    FStar.Errors.log_issue r
+                 (Warning_WarnOnUse,
+                  BU.format1 "Admitting a top-level assumption %s" (Print.lid_to_string lid));
     let env = Env.set_range env r in
 
     let uvs, t =
@@ -807,7 +810,6 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
      result
    end
    else tc_decl' env se
-  end
 
 let for_export env hidden se : list<sigelt> * list<lident> =
    (* Exporting symbols based on whether they have been marked 'abstract'

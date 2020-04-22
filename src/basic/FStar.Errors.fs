@@ -605,7 +605,7 @@ let default_settings : list<error_setting> =
     Fatal_WrongTerm                                   , CFatal, 235;
     Fatal_WhenClauseNotSupported                      , CFatal, 236;
     Unused01                                          , CFatal, 237;
-    Warning_CallNotImplementedAsWarning               , CWarning, 238;
+    Warning_PluginNotImplemented                      , CError, 238;
     Warning_AddImplicitAssumeNewQualifier             , CWarning, 239;
     Warning_AdmitWithoutDefinition                    , CWarning, 240;
     Warning_CachedFile                                , CWarning, 241;
@@ -713,13 +713,12 @@ let lookup_error settings e =
   | Some i -> i
   | None -> failwith "Impossible: unrecognized error"
 
+(** Find a (potentially empty) set of issues whose numbers
+    are in the interval [l,h].
+
+    Note: We intentionally do not warn on the use of non-existent
+    issue number *)
 let lookup_error_range settings (l, h) =
-  BU.for_range l h (fun i ->
-     match BU.try_find (fun (_, _, j) -> i=j) settings with
-     | None ->
-       raise (Invalid_warn_error_setting
-                     (BU.format1 "Malformed warn-error range: %s does not exist" (string_of_int i)))
-     | Some _ -> ());
   let matches, _ =
     List.partition (fun (_, _, i) -> l <= i && i <= h) settings
   in
