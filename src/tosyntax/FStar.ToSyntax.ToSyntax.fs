@@ -119,7 +119,7 @@ let rec is_comp_type env t =
     | LetOpen(_, t) -> is_comp_type env t
     | _ -> false
 
-let unit_ty = mk_term (Name C.unit_lid) Range.dummyRange Type_level
+let unit_ty rng = mk_term (Name C.unit_lid) rng Type_level
 
 type env_t = Env.env
 type lenv_t = list<bv>
@@ -141,7 +141,7 @@ let desugar_name mk setpos env resolve l =
 
 let compile_op_lid n s r = [mk_ident(compile_op n s r, r)] |> lid_of_ids
 
-let op_as_term env arity rng op : option<S.term> =
+let op_as_term env arity op : option<S.term> =
   let r l dd = Some (S.lid_as_fv (set_lid_range l (range_of_id op)) dd None |> S.fv_to_tm) in
   let fallback () =
     match Ident.text_of_id op with
@@ -343,7 +343,7 @@ let rec is_app_pattern p = match p.pat with
 
 let replace_unit_pattern p = match p.pat with
   | PatConst FStar.Const.Const_unit ->
-    mk_pattern (PatAscribed (mk_pattern (PatWild None) p.prange, (unit_ty, None))) p.prange
+    mk_pattern (PatAscribed (mk_pattern (PatWild None) p.prange, (unit_ty p.prange, None))) p.prange
   | _ -> p
 
 let rec destruct_app_pattern env is_top_level p = match p.pat with
@@ -490,7 +490,6 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
 
   | Sig_new_effect _
   | Sig_sub_effect _
-  | Sig_main _
   | Sig_polymonadic_bind _
   | Sig_splice _
   | Sig_pragma _ ->
@@ -946,14 +945,14 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     (* if op_Star has not been rebound, then it's reserved for tuples *)
     | Op(op_star, [lhs;rhs]) when
       (Ident.text_of_id op_star = "*" &&
-       op_as_term env 2 top.range op_star |> Option.isNone) ->
+       op_as_term env 2 op_star |> Option.isNone) ->
       (* See the comment in parse.mly to understand why this implicitly relies
        * on the presence of a Paren node in the AST. *)
       let rec flatten t = match t.tm with
         // * is left-associative
         | Op(id, [t1;t2]) when
            text_of_id id = "*" &&
-           op_as_term env 2 top.range op_star |> Option.isNone ->
+           op_as_term env 2 op_star |> Option.isNone ->
           flatten t1 @ [ t2 ]
         | _ -> [t]
       in
@@ -975,7 +974,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | Op(s, args) ->
       begin
-      match op_as_term env (List.length args) top.range s with
+      match op_as_term env (List.length args) s with
       | None ->
         raise_error (Errors.Fatal_UnepxectedOrUnboundOperator,
                      "Unexpected or unbound operator: " ^
@@ -1568,7 +1567,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         in
         match (unparen rel).tm with
         | Op (id, _) ->
-            begin match op_as_term env 2 Range.dummyRange id with
+            begin match op_as_term env 2 id with
             | Some t -> is_impl_t t
             | None -> false
             end
@@ -1608,16 +1607,16 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let rel = eta_and_annot rel in
 
       let wild r = mk_term Wild r Expr in
-      let init   = mk_term (Var C.calc_init_lid) Range.dummyRange Expr in
+      let init   = mk_term (Var C.calc_init_lid) init_expr.range Expr in
       let push_impl r = mk_term (Var C.calc_push_impl_lid) r Expr in
       let last_expr = match List.last steps with
                       | Some (CalcStep (_, _, last_expr)) -> last_expr
-                      | _ -> failwith "impossible: no last_expr on calc"
+                      | None -> init_expr
       in
       let step r = mk_term (Var C.calc_step_lid) r Expr in
       let finish = mkApp (mk_term (Var C.calc_finish_lid) top.range Expr) [(rel, Nothing)] top.range in
 
-      let e = mkApp init [(init_expr, Nothing)] Range.dummyRange in
+      let e = mkApp init [(init_expr, Nothing)] init_expr.range in
       let (e, _) = List.fold_left (fun (e, prev) (CalcStep (rel, just, next_expr)) ->
                           let just =
                             if is_impl rel
@@ -1629,10 +1628,16 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                                            (init_expr, Hash);
                                            (prev, Hash);
                                            (eta_and_annot rel, Nothing); (next_expr, Nothing);
-                                           (thunk e, Nothing); (thunk just, Nothing)] Range.dummyRange in
+                                           (thunk e, Nothing); (thunk just, Nothing)]
+                                           Range.dummyRange // GM: using any other range here
+                                                            // seems to make things worse,
+                                                            // see test_1763 in
+                                                            // tests/error-messages/Calc.fst.
+                                                            // A mistery for some later day.
+                          in
                           (pf, next_expr))
                    (e, init_expr) steps in
-      let e = mkApp finish [(init_expr, Hash); (last_expr, Hash); (thunk e, Nothing)] Range.dummyRange in
+      let e = mkApp finish [(init_expr, Hash); (last_expr, Hash); (thunk e, Nothing)] top.range in
       desugar_term_maybe_top top_level env e
 
     | _ when (top.level=Formula) -> desugar_formula env top, noaqs
@@ -2981,11 +2986,17 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
           | PatAscribed (pat, ty) -> { pat with pat = PatAscribed (var_pat, ty) }
           | _ -> var_pat
       in
-      (* TODO : We should ensure that the result of body always matches pat (add a type annotation ?) *)
       let main_let =
+        (* GM: I'm not sure why we are even marking this private,
+         * since it has a reserved name, but anyway keeping it
+         * and making it not duplicate the qualifier. *)
+        let quals = if List.mem Private d.quals
+                    then d.quals
+                    else Private :: d.quals
+        in
         desugar_decl env ({ d with
           d = TopLevelLet (isrec, [fresh_pat, body]) ;
-          quals = Private :: d.quals })
+          quals = quals })
       in
 
       let main : term = mk_term (Var (lid_of_ids [fresh_toplevel_name])) pat.prange Expr in
@@ -3013,12 +3024,13 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
             let id = Ident.gen Range.dummyRange in
             let branch = mk_term (Const FStar.Const.Const_unit) Range.dummyRange Expr in
             let bv_pat = mk_pattern (PatVar (id, None)) (range_of_id id) in
-            let bv_pat = mk_pattern (PatAscribed (bv_pat, (unit_ty, None))) (range_of_id id) in
+            let bv_pat = mk_pattern (PatAscribed (bv_pat, (unit_ty (range_of_id id), None)))
+                                    (range_of_id id) in
             bv_pat, branch
         in
         let body = mk_term (Match (main, [pat, None, branch])) main.range Expr in
-        (* TODO : do we need to put some attributes for this declaration ? *)
         let id_decl = mk_decl (TopLevelLet(NoLetQualifier, [bv_pat, body])) Range.dummyRange [] in
+        let id_decl = { id_decl with quals = d.quals } in
         let env, ses' = desugar_decl env id_decl in
         env, ses @ ses'
       in
@@ -3042,16 +3054,6 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       if List.isEmpty bvs && not (is_var_pattern pat)
       then build_coverage_check main_let
       else List.fold_left build_projection main_let bvs
-
-  | Main t ->
-    let e = desugar_term env t in
-    let se = { sigel = Sig_main(e);
-               sigquals = [];
-               sigrng = d.drange;
-               sigmeta = default_sigmeta  ;
-               sigattrs = [];
-               sigopts = None; } in
-    env, [se]
 
   | Assume(id, t) ->
     let f = desugar_formula env t in

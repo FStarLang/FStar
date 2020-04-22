@@ -531,7 +531,9 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
                                   g.fv_qual = Some Data_ctor -> Some (f, args1, g, args2)
       | _ -> None
     in
-    match (unmeta t1).n, (unmeta t2).n with
+    let t1 = unmeta t1 in
+    let t2 = unmeta t2 in
+    match t1.n, t2.n with
     // We sometimes compare open terms, as we get alpha-equivalence
     // for free.
     | Tm_bvar bv1, Tm_bvar bv2 ->
@@ -722,7 +724,6 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
-  | Sig_main _ 
   | Sig_fail _
   | Sig_polymonadic_bind _ -> []
 
@@ -1078,7 +1079,7 @@ let ktype0 : term = mk (Tm_type(U_zero)) None dummyRange
 
 //Type(u), where u is a new universe unification variable
 let type_u () : typ * universe =
-    let u = U_unif <| Unionfind.univ_fresh () in
+    let u = U_unif <| Unionfind.univ_fresh Range.dummyRange in
     mk (Tm_type u) None dummyRange, u
 
 // works on anything, really

@@ -1,0 +1,38 @@
+>> Got issues: [
+Basic.fst(4,13-4,17): (Error 189) Expected expression of type "Prims.int"; got expression "true" of type "Prims.bool"
+>>]
+>> Got issues: [
+Basic.fst(6,37-6,43): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also Basic.fst(6,44-6,49))
+>>]
+>> Got issues: [
+Basic.fst(7,37-7,43): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also Basic.fst(7,44-7,49))
+>>]
+>> Got issues: [
+Basic.fst(8,37-8,43): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also Basic.fst(8,44-8,49))
+>>]
+>> Got issues: [
+Basic.fst(9,37-9,43): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also Basic.fst(9,44-9,49))
+>>]
+>> Got issues: [
+Basic.fst(11,37-11,48): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also Basic.fst(11,49-11,54))
+>>]
+>> Got issues: [
+Basic.fst(12,37-12,48): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also Basic.fst(12,49-12,54))
+>>]
+>> Got issues: [
+Basic.fst(13,37-13,48): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also Basic.fst(13,49-13,54))
+>>]
+>> Got issues: [
+Basic.fst(14,37-14,48): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also Basic.fst(14,49-14,54))
+>>]
+>> Got issues: [
+Basic.fst(17,29-17,31): (Error 19) assertion failed (Also see: prims.fst(367,31-367,43))(Other related locations: prims.fst(364,70-364,82)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+>> Got issues: [
+Basic.fst(20,29-20,31): (Error 19) assertion failed (Also see: prims.fst(367,31-367,43))(Other related locations: prims.fst(364,70-364,82)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+>> Got issues: [
+Basic.fst(23,46-23,48): (Error 19) assertion failed (Also see: prims.fst(367,31-367,43))(Other related locations: prims.fst(364,70-364,82)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+Verified module: Basic
+All verification conditions discharged successfully

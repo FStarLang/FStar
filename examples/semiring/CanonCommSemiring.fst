@@ -1615,7 +1615,8 @@ let semiring_reflect (#a:eqtype) (r:cr a) (vm:vmap a) (e1 e2:polynomial a) (a1 a
   polynomial_simplify_ok r vm e1;
   polynomial_simplify_ok r vm e2
 
-[@plugin]
+(* [@plugin] *)
+(* this is anyway made a plugin by a fixup file *)
 let canon_semiring_aux
     (a: Type) (ta: term) (unquotea: term -> Tac a) (quotea: a -> Tac term)
     (tr tadd topp tmone tmult: term)

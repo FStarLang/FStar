@@ -25,7 +25,7 @@ and nlist (a:Type) =
   | NNil : nlist a
   | NCons: a -> mlist a -> nlist a
 
-(* this is ok since it's an efectful arrow *)
+(* this is ok since it's an effectful arrow *)
 noeq type t1 =
   | C1: (t1 -> ML t1) -> t1
 
@@ -49,4 +49,14 @@ type t =
 let l_868: eqtype = (y: Seq.seq int {Seq.mem 2 y })
 type essai_868 = | T of list (l_868 * essai_868)
 
+type t_t12 = unit
+
+noeq type t12 (a:Type) =
+  | C121 : t_t12 -> a -> t12 a
+
+
+assume val t_t14 : Type0
+
+noeq type t14 =
+  | C141: t_t14 -> t14
 

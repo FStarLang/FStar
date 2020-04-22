@@ -5,12 +5,12 @@ let (struct11 : Prims.int) = (Prims.of_int (2))
 let (test : (Prims.int * Prims.int)) =
   let x = Prims.int_zero  in let x1 = (Prims.of_int (2))  in (x, x1) 
 let (r : unit -> unit -> (Obj.t -> Obj.t) -> Prims.int) =
-  fun uu____1096  -> fun uu____1097  -> fun uu____1098  -> Prims.int_zero 
+  fun uu____1068  -> fun uu____1069  -> fun uu____1070  -> Prims.int_zero 
 let (g : Prims.int -> Prims.int -> Prims.int) =
-  fun uu____1116  -> fun uu____1117  -> Prims.int_zero 
+  fun uu____1088  -> fun uu____1089  -> Prims.int_zero 
 let (ko : Prims.int -> Prims.int) =
   fun a  ->
-    let a1 = a  in r () () (fun uu____1134  -> (Obj.magic (g a1)) uu____1134)
+    let a1 = a  in r () () (fun uu____1106  -> (Obj.magic (g a1)) uu____1106)
   
 type record_t = {
   struct1: Prims.int ;

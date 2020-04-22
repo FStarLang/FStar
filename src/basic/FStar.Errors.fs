@@ -308,7 +308,7 @@ type raw_error =
   | Warning_UseDefaultEffect
   | Warning_WrongErrorLocation
   | Warning_Z3InvocationWarning
-  | Warning_CallNotImplementedAsWarning
+  | Warning_PluginNotImplemented
   | Warning_MissingInterfaceOrImplementation
   | Warning_ConstructorBuildsUnexpectedType
   | Warning_ModuleOrFileNotFoundWarning
@@ -360,6 +360,7 @@ type raw_error =
   | Warning_IgnoredBinding
   | Warning_AbstractQualifier
   | Warning_CouldNotReadHints
+  | Fatal_BadUvar
   | Warning_WarnOnUse
 
 type flag = error_flag
@@ -700,8 +701,9 @@ let default_settings : list<error_setting> =
     Warning_IgnoredBinding                            , CWarning, 331;
     Warning_AbstractQualifier                         , CWarning, 332;
     Warning_CouldNotReadHints                         , CWarning, 333;
-    Warning_WarnOnUse                                 , CSilent, 334
-  ]
+    Fatal_BadUvar                                     , CFatal,   334;
+    Warning_WarnOnUse                                 , CSilent,  335
+    ]
 module BU = FStar.Util
 
 let lookup_error settings e =
@@ -810,7 +812,8 @@ let format_issue issue =
                  else BU.format1 " (see also %s)" (Range.string_of_range r))
         | Some r ->
           (BU.format1 "%s: " (Range.string_of_use_range r),
-           (if use_range r = def_range r then ""
+           (if use_range r = def_range r || def_range r = def_range dummyRange
+            then ""
             else BU.format1 " (see also %s)" (Range.string_of_range r)))
     in
     let issue_number =

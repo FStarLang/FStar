@@ -869,7 +869,9 @@ let (postprocess :
                   let goal =
                     let uu____3089 = FStar_Syntax_Util.mk_eq2 u typ tm uvtm
                        in
-                    FStar_Syntax_Util.mk_squash u uu____3089  in
+                    FStar_Syntax_Util.mk_squash FStar_Syntax_Syntax.U_zero
+                      uu____3089
+                     in
                   let uu____3090 =
                     run_tactic_on_typ tau.FStar_Syntax_Syntax.pos
                       tm.FStar_Syntax_Syntax.pos tau env goal

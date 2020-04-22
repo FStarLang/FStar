@@ -42,6 +42,7 @@ module RD = FStar.Reflection.Data
 module EMB = FStar.Syntax.Embeddings
 module RE = FStar.Reflection.Embeddings
 module Env = FStar.TypeChecker.Env
+module SE = FStar.Syntax.Embeddings
 open FStar.SMTEncoding.Env
 
 (*---------------------------------------------------------------------------------*)
@@ -1563,12 +1564,19 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
               mk_HasType x t, decls@decls'
 
             | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
-              begin match (SS.compress r).n, (SS.compress msg).n with
-                | Tm_constant (Const_range r), Tm_constant (Const_string (s, _)) ->
-                  let phi = S.mk (Tm_meta(phi,  Meta_labeled(s, r, false))) None r in
-                  fallback phi
-                | _ ->
-                  fallback phi
+              begin match SE.unembed SE.e_range r false SE.id_norm_cb,
+                          SE.unembed SE.e_string msg false SE.id_norm_cb with
+              | Some r, Some s ->
+                let phi = S.mk (Tm_meta(phi,  Meta_labeled(s, r, false))) None r in
+                fallback phi
+
+              (* If we could not unembed the position, still use the string *)
+              | None, Some s ->
+                let phi = S.mk (Tm_meta(phi,  Meta_labeled(s, phi.pos, false))) None phi.pos in
+                fallback phi
+
+              | _ ->
+                fallback phi
               end
 
             | Tm_fvar fv, [(t, _)]

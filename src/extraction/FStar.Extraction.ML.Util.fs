@@ -404,8 +404,11 @@ exception NoTacticEmbedding of string
 
 let not_implemented_warning r t msg =
     Errors.log_issue r
-        (Errors.Warning_CallNotImplementedAsWarning,
-         BU.format2 "Plugin %s will not run natively because %s.\n" t msg)
+        (Errors.Warning_PluginNotImplemented,
+         BU.format3 "Plugin %s can not run natively because %s (use --warn_error -%s to carry on)."
+                        t
+                        msg
+                        (string_of_int <| Errors.errno_of_error (Errors.Warning_PluginNotImplemented)))
 
 type emb_loc =
     | Syntax_term (* FStar.Syntax.Embeddings *)
@@ -444,6 +447,9 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         | NBERefl_emb -> fstar_refl_nbeemb_prefix
     in
     let mk_tactic_interpretation l arity =
+      if arity > FStar.Tactics.InterpFuns.max_tac_arity then
+        raise (NoTacticEmbedding("tactic plugins can only take up to 20 arguments"))
+      else
       let idroot =
         match l with
         | Syntax_term ->
@@ -462,7 +468,13 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
       as_name (["FStar_Tactics_Native"], idroot^string_of_int arity)
     in
     let mk_basic_embedding (l:emb_loc) (s: string): mlexpr =
-        emb_prefix l ("e_" ^ s)
+        if s = "norm_step" (* hack, ignore me *)
+        then
+          match l with
+          | Syntax_term -> as_name (["FStar_Tactics_Builtins"], "e_norm_step'")
+          | NBE_t -> as_name (["FStar_Tactics_Builtins"], "e_norm_step_nbe'")
+          | _ -> failwith "impossible: mk_basic_embedding norm_step"
+        else emb_prefix l ("e_" ^ s)
     in
     let mk_arrow_as_prim_step l (arity: int): mlexpr =
         emb_prefix l ("arrow_as_prim_step_" ^ string_of_int arity)
@@ -750,5 +762,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         Some (w, w', a, b)
     with
     | NoTacticEmbedding msg ->
-      not_implemented_warning t.pos (FStar.Syntax.Print.fv_to_string fv) msg;
+      not_implemented_warning (range_of_lid fv.fv_name.v)
+                              (FStar.Syntax.Print.fv_to_string fv)
+                              msg;
       None

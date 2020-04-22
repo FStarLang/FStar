@@ -771,7 +771,7 @@ let inspect_abspat_problem #a (abspat: a) : Tac matching_problem =
 
 (** Inspect the matching solution produced by parsing and solving an abspat. **)
 let inspect_abspat_solution #a (abspat: a) : Tac matching_solution =
-  match_abspat abspat (fun _ -> (fun solution -> solution) <: Tac _)
+  match_abspat abspat (fun _ -> (fun solution -> solution <: Tac _) <: Tac _)
 
 let tpair #a #b (x : a) : Tac (b -> Tac (a * b)) =
   fun (y: b) -> (x, y)

@@ -253,7 +253,7 @@ let (unexpected_signature_for_monad :
           let uu____1052 = FStar_TypeChecker_Normalize.term_to_string env k
              in
           FStar_Util.format2
-            "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type => WP a => Effect); got %s"
+            "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type -> WP a -> Effect); got %s"
             uu____1050 uu____1052
            in
         (FStar_Errors.Fatal_UnexpectedSignatureForMonad, uu____1048)

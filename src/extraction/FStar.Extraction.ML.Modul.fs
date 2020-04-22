@@ -34,6 +34,7 @@ module MLS = FStar.Extraction.ML.Syntax
 module BU = FStar.Util
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
+module UF = FStar.Syntax.Unionfind
 module U  = FStar.Syntax.Util
 module TC = FStar.TypeChecker.Tc
 module N  = FStar.TypeChecker.Normalize
@@ -613,7 +614,6 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       let g, bindings = Term.extract_lb_iface g lbs in
       g, iface_of_bindings bindings
 
-    | Sig_main _
     | Sig_assume _
     | Sig_sub_effect  _
     | Sig_effect_abbrev _
@@ -653,14 +653,15 @@ let extract_iface' (g:env_t) modul =
     res
 
 let extract_iface (g:env_t) modul =
-    let g, iface =
+  let g, iface =
+    UF.with_uf_enabled (fun () ->
       if Options.debug_any()
       then FStar.Util.measure_execution_time
              (BU.format1 "Extracted interface of %s" (string_of_lid modul.name))
              (fun () -> extract_iface' g modul)
-      else extract_iface' g modul
-    in
-    UEnv.exit_module g, iface
+      else extract_iface' g modul)
+  in
+  UEnv.exit_module g, iface
 
 (********************************************************************************************)
 (* Extract Implementations *)
@@ -706,12 +707,14 @@ let extract_bundle env se =
                    c_ty
                    ([], env)
              in
-             MLTD_Record fields, g
+             Some (MLTD_Record fields), g
+         | _ when List.length ctors = 0 ->
+             None, env
          | _ ->
-             MLTD_DType ctors, env
+             Some (MLTD_DType ctors), env
        in
        env,
-       (false, snd (mlpath_of_lident env ind.iname), None, ml_params, ind.imetadata, Some tbody)
+       (false, snd (mlpath_of_lident env ind.iname), None, ml_params, ind.imetadata, tbody)
     in
 
     match se.sigel, se.sigquals with
@@ -939,10 +942,6 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
          else g, [] //it's not assumed, so wait for the corresponding Sig_let to generate code
                     //or, it must be erased
 
-       | Sig_main(e) ->
-         let ml_main, _, _ = Term.term_as_mlexpr g e in
-         g, [MLM_Loc (Util.mlloc_of_range se.sigrng); MLM_Top ml_main]
-
        | Sig_assume _ //not needed; purely logical
        | Sig_sub_effect  _
        | Sig_effect_abbrev _ //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
@@ -982,12 +981,14 @@ let extract (g:uenv) (m:modul) =
   ignore <| Options.restore_cmd_line_options true;
   if not (Options.should_extract (string_of_lid m.name))
   then failwith (BU.format1 "Extract called on a module %s that should not be extracted" (Ident.string_of_lid m.name));
-  if Options.interactive() then g, None else
+  if Options.interactive() then g, None else begin
   let g, mllib =
+    UF.with_uf_enabled (fun () ->
       if Options.debug_any ()
       then let msg = BU.format1 "Extracting module %s" (Print.lid_to_string m.name) in
            BU.measure_execution_time msg (fun () -> extract' g m)
-      else extract' g m
+      else extract' g m)
   in
   ignore <| Options.restore_cmd_line_options true;
   exit_module g, mllib
+  end

@@ -39,7 +39,7 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug1130.fst Bug1170.fst Bug1191.fst Bug1799.fst Bug1900.fst Bug1908.fst Bug1913.fst BugLexTop.fst Bug1940a.fst \
   Bug1940b.fst Bug1940c.fst Bug1936.fst Bug1952a.fst Bug1952b.fst Bug1953.fst Bug1074.fst Bug442.fst Bug1954.fst \
   Bug1903.fst Bug1121a.fst Bug1121b.fst Bug1956.fst Bug1228.fst Bug829.fst Bug451.fst Bug1966a.fst Bug1966b.fst Bug1976.fst \
-  Bug1986.fst Bug1995.fst Bug1507.fst Bug2001.fst Bug2004.fst Bug855a.fst Bug855b.fst
+  Bug1986.fst Bug1995.fst Bug1507.fst Bug2001.fst Bug2004.fst Bug855a.fst Bug855b.fst Bug1097.fst Bug1918.fst Bug1390.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
@@ -52,7 +52,7 @@ SHOULD_VERIFY_OPEN=Bug045.fst Bug057.fst Bug064.fst Bug065.fst Bug071.fst Bug121
   Bug171b.fst Bug171c.fst Bug258.fst Bug259.fst Bug282.fst Bug291.fst Bug419.fst \
   Bug442b.fst Bug484.fst Bug542.fst Bug543.fst Bug554.fst Bug604.fst Bug606.fst\
   Bug626.fst Bug682.fst Bug715.fst Bug739.fst Bug815.fst Bug815b.fst Bug851.fst Bug933.fst Bug933b.fst\
-  Bug1038.fst Bug1091.fst Bug1390.fst Bug807d.fst Bug1486.fst Bug1392.fst Bug1867.fst
+  Bug1038.fst Bug1091.fst Bug807d.fst Bug1486.fst Bug1392.fst Bug1867.fst
 
 # These examples go through but their corresponding GitHub issue is still open. Consider closing and adding them
 # to SHOULD_VERIFY_CLOSED.
@@ -63,7 +63,7 @@ SHOULD_VERIFY_MAYBE_CLOSE=Bug121b.fst Bug351.fst Bug351b.fst Bug812.fst Bug853.f
 SHOULD_VERIFY_NOT_WORKING=Bug015.fst Bug021.fst Bug023.fst  Bug060.fst Bug062.fst Bug029.fst Bug096.fst Bug097a.fst\
   Bug100.fst Bug101.fst Bug111.fst Bug117.fst Bug148.fst Bug179.fst Bug184b.fst Bug185.fst Bug189.fst Bug203.fst\
   Bug237.fst Bug295.fst Bug377.fst Bug389.fst Bug422.fst Bug463a.fst Bug713.fst Bug974.fst \
-  Bug1287.fst Bug1291.fst Bug1347.fst
+  Bug1287.fst Bug1291.fst Bug1347.fst Bug2014.fst
 
 
 ##################

@@ -2223,14 +2223,14 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      let lecs = lec_hd :: lecs in
 
      let gen_types (uvs:list<ctx_uvar>) : list<(bv * aqual)> =
-         let fail k : unit =
+         let fail rng k : unit =
              let lbname, e, c = lec_hd in
                raise_error (Errors.Fatal_FailToResolveImplicitArgument,
                             BU.format3 "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"
                                        (Print.term_to_string k)
                                        (Print.lbname_to_string lbname)
                                        (Print.term_to_string (U.comp_result c)))
-                            (Env.get_range env)
+                            rng
          in
          uvs |> List.map (fun u ->
          match Unionfind.find u.ctx_uvar_head with
@@ -2247,10 +2247,10 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
              match (U.unrefine (N.unfold_whnf env kres)).n with
              | Tm_type _ ->
                 let free = FStar.Syntax.Free.names kres in
-                if not (BU.set_is_empty free) then fail kres
+                if not (BU.set_is_empty free) then fail u.ctx_uvar_range kres
 
              | _ ->
-               fail kres
+               fail u.ctx_uvar_range kres
            in
            let a = S.new_bv (Some <| Env.get_range env) kres in
            let t =

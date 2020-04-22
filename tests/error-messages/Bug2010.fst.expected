@@ -1,0 +1,6 @@
+>> Got issues: [
+Bug2010.fst(6,66-6,67): (Error 66) Failed to resolve implicit argument of type 'Prims.nat' in the type of concat' (s1: FStar.Seq.Properties.lseq 'a l1 -> s2: FStar.Seq.Properties.lseq 'a l2
+  -> Prims.Tot (FStar.Seq.Properties.lseq 'a (*?u14*) _))
+>>]
+Verified module: Bug2010
+All verification conditions discharged successfully

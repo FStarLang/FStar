@@ -672,9 +672,9 @@ noSeqTerm:
          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
      }
 
-   | CALC rel=atomicTerm LBRACE init=noSeqTerm SEMICOLON steps=nonempty_list(calcStep) RBRACE
+   | CALC rel=atomicTerm LBRACE init=noSeqTerm SEMICOLON steps=list(calcStep) RBRACE
      {
-         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 6) Expr
+         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 7) Expr
      }
 
 calcRel:
@@ -1160,7 +1160,7 @@ range:
 /*                       Miscellanous, tools                                   */
 /******************************************************************************/
 
-%inline string:
+string:
   | s=STRING { s }
 
 %inline operator:

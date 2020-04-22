@@ -36,6 +36,7 @@ open FStar.TypeChecker.TcTerm
 module S  = FStar.Syntax.Syntax
 module SP  = FStar.Syntax.Print
 module SS = FStar.Syntax.Subst
+module UF = FStar.Syntax.Unionfind
 module N  = FStar.TypeChecker.Normalize
 module TcComm = FStar.TypeChecker.Common
 module TcUtil = FStar.TypeChecker.Util
@@ -538,18 +539,6 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let uvs, t = tc_assume env (uvs, t) se.sigrng in
     [ { se with sigel = Sig_assume (lid, uvs, t) }], [], env0
 
-  | Sig_main(e) ->
-    let env = Env.set_range env r in
-    let env = Env.set_expected_typ env t_unit in
-    let e, c, g1 = tc_term env e in
-    let e, _, g =
-      let c, g_lc = TcComm.lcomp_comp c in
-      let e, _x, g = check_expected_effect env (Some (U.ml_comp t_unit r)) (e, c) in
-      e, _x, Env.conj_guard g_lc g in
-    Rel.force_trivial_guard env (Env.conj_guard g1 g);
-    let se = { se with sigel = Sig_main(e) } in
-    [se], [], env0
-
   | Sig_splice (lids, t) ->
     if Options.debug_any () then
         BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
@@ -804,12 +793,6 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
  * the list of typechecked sig_elts, and a list of new sig_elts elaborated
  * during typechecking but not yet typechecked *)
 let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
-  (* If emacs is peeking, and debugging is on, don't do anything,
-   * otherwise the user will see a bunch of output from typechecking
-   * definitions that were not yet advanced over. *)
-  if env.nosynth && Options.debug_any ()
-  then [], [], env
-  else begin
    let env = set_hint_correlator env se in
    if Options.debug_module (string_of_lid env.curmodule) then
      BU.print1 "Processing %s\n" (U.lids_of_sigelt se |> List.map string_of_lid |> String.concat ", ");
@@ -904,8 +887,6 @@ let for_export env hidden se : list<sigelt> * list<lident> =
     else [], hidden   //other declarations vanish
                       //they will be replaced by the definitions that must follow
 
-  | Sig_main  _ -> [], hidden
-
   | Sig_new_effect     _
   | Sig_sub_effect     _
   | Sig_effect_abbrev  _
@@ -985,6 +966,12 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
 
 let tc_decls env ses =
   let rec process_one_decl (ses, exports, env, hidden) se =
+    (* If emacs is peeking, and debugging is on, don't do anything,
+     * otherwise the user will see a bunch of output from typechecking
+     * definitions that were not yet advanced over. *)
+    if env.nosynth && Options.debug_any ()
+    then (ses, exports, env, hidden), []
+    else begin
     if Env.debug env Options.Low
     then BU.print2 ">>>>>>>>>>>>>>Checking top-level %s decl %s\n"
                         (Print.tag_of_sigelt se)
@@ -1009,7 +996,7 @@ let tc_decls env ses =
               env
               t); //update the id_info table after having removed their uvars
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se false) env in
-    FStar.Syntax.Unionfind.reset();
+    UF.reset();
 
     if Options.log_types() || Env.debug env <| Options.Other "LogTypes"
     then begin
@@ -1028,6 +1015,7 @@ let tc_decls env ses =
         List.fold_left accum_exports_hidden (exports, hidden) ses'
     in
     (List.rev_append ses' ses, exports, env, hidden), ses_elaborated
+    end
   in
   // A wrapper to (maybe) print the time taken for each sigelt
   let process_one_decl_timed acc se =
@@ -1049,7 +1037,9 @@ let tc_decls env ses =
     end;
     r
   in
-  let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
+  let ses, exports, env, _ =
+    UF.with_uf_enabled (fun () ->
+      BU.fold_flatten process_one_decl_timed ([], [], env, []) ses) in
   List.rev_append ses [], List.rev_append exports [], env
 
 let _ =
@@ -1084,8 +1074,8 @@ let check_exports env (modul:modul) exports : unit =
     let check_term lid univs t =
         let _ = Errors.message_prefix.set_prefix
                 (BU.format2 "Interface of %s violates its abstraction (add a 'private' qualifier to '%s'?)"
-                        (Print.lid_to_string modul.name)
-                        (Print.lid_to_string lid)) in
+                        (string_of_lid modul.name)
+                        (string_of_lid lid)) in
         check_term lid univs t;
         Errors.message_prefix.clear_prefix()
     in
@@ -1110,7 +1100,6 @@ let check_exports env (modul:modul) exports : unit =
           if not (se.sigquals |> List.contains Private)
           then let arrow = S.mk (Tm_arrow(binders, comp)) None se.sigrng in
                check_term l univs arrow
-        | Sig_main _
         | Sig_assume _
         | Sig_new_effect _
         | Sig_sub_effect _
@@ -1246,7 +1235,6 @@ let extract_interface (en:env) (m:modul) :modul =
           let should_keep_defs = List.existsML (fun (_, t, _) -> t |> should_keep_lbdef) typs_and_defs in
           if should_keep_defs then [ s ]
           else vals
-    | Sig_main t -> failwith "Did not anticipate main would arise when extracting interfaces!"
     | Sig_assume (lid, _, _) ->
       //keep hasEq of abstract inductive, and drop for others (since they will be regenerated)
       let is_haseq = TcInductive.is_haseq_lid lid in
@@ -1348,7 +1336,9 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
     if not (Options.lax())
     && not loading_from_cache
     && not (Options.use_extracted_interfaces ())
-    then check_exports env modul exports;
+    then begin
+      UF.with_uf_enabled (fun () -> check_exports env modul exports)
+    end;
 
     //pop BUT ignore the old env
     pop_context env ("Ending modul " ^ string_of_lid modul.name) |> ignore;

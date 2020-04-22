@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "a72f79cc250491c7d363c7535943a862"
+      "67ff33d06df3a3b63a3e0c5e5f38571a"
     ],
     [
       "Ex12f.TMAC.mac",
@@ -28,7 +28,7 @@
         "token_correspondence_Ex12f.TMAC.bspec", "typing_FStar.UInt8.t"
       ],
       0,
-      "4570c99404ea2bac4794d460b77b2508"
+      "fb80048501aadcc3d32fb5a58fbb105a"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -49,7 +49,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "e6b01451e5cbff5d46d1461d82c7f9c1"
+      "baa588d7712f15b185d070aa8450a0e6"
     ],
     [
       "Ex12f.TMAC.keygen",
@@ -58,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "a4bae01047c6d9a4faed6fcbc4f07c68"
+      "13e4f280d99114c5740960f482545023"
     ],
     [
       "Ex12f.TMAC.mac",
@@ -78,7 +78,7 @@
         "token_correspondence_Ex12f.TMAC.bspec", "typing_FStar.UInt8.t"
       ],
       0,
-      "4c715a0ae9b6d6d5404a863d18620cb1"
+      "0fe46804c47753588124ff4b3cd7b737"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -99,7 +99,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "c62c5ba68c8745ee95dd7bb49adae0ba"
+      "173a6bc634983e05db31f3cef24407d3"
     ]
   ]
 ]

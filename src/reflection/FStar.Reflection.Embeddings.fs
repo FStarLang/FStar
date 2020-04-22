@@ -624,28 +624,14 @@ let e_sigelt =
     in
     mk_emb embed_sigelt unembed_sigelt fstar_refl_sigelt
 
-// TODO: It would be nice to have a
-// embed_as : ('a -> 'b) -> ('b -> 'a) -> embedding<'a> -> embedding<'b>
-// so we don't write these things
 let e_ident : embedding<I.ident> =
-    let repr = e_tuple2 e_range e_string in
-    let embed_ident (i:I.ident) (rng:Range.range)  _ _ : term =
-        embed repr rng (I.range_of_id i, I.text_of_id i)
-    in
-    let unembed_ident (t:term) w _ : option<I.ident> =
-        match unembed' w repr t with
-        | Some (rng, s) -> Some (I.mk_ident (s, rng))
-        | None -> None
-    in
-    mk_emb_full
-      embed_ident
-      unembed_ident
-      fstar_refl_ident
-      FStar.Ident.text_of_id
-      (emb_typ_of repr)
+    let repr = e_tuple2 e_string e_range in
+    embed_as repr
+             I.mk_ident
+             (fun i -> I.text_of_id i, I.range_of_id i)
+             (Some fstar_refl_ident)
 
 let e_univ_name =
-    (* TODO: Should be this, but there's a delta depth issue *)
     set_type fstar_refl_univ_name e_ident
 
 let e_univ_names = e_list e_univ_name

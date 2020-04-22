@@ -291,9 +291,8 @@ let x =     ( (x, y) ) in
 option_string_:
   
     {    ( None )}
-| STRING
-    {let s = $1 in
-let x =              ( s ) in
+| string
+    {let x = $1 in
     ( Some x )}
 
 option_term_:
@@ -380,6 +379,13 @@ list_attr_letbinding_:
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
+list_calcStep_:
+  
+    {    ( [] )}
+| calcStep list_calcStep_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
 list_constructorDecl_:
   
     {    ( [] )}
@@ -445,14 +451,6 @@ nonempty_list_atomicUniverse_:
     {let x = $1 in
     ( [ x ] )}
 | atomicUniverse nonempty_list_atomicUniverse_
-    {let (x, xs) = ($1, $2) in
-    ( x :: xs )}
-
-nonempty_list_calcStep_:
-  calcStep
-    {let x = $1 in
-    ( [ x ] )}
-| calcStep nonempty_list_calcStep_
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
@@ -610,9 +608,8 @@ inputFragment:
       )}
 
 pragma:
-  PRAGMA_SET_OPTIONS STRING
+  PRAGMA_SET_OPTIONS string
     {let (_1, s) = ((), $2) in
-let s =              ( s ) in
       ( SetOptions s )}
 | PRAGMA_RESET_OPTIONS option_string_
     {let (_1, s_opt) = ((), $2) in
@@ -1458,10 +1455,10 @@ let pbs =    ( List.rev xs ) in
          let a = set_lid_range synth_lid (rhs parseState 1) in
          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
      )}
-| CALC atomicTerm LBRACE noSeqTerm SEMICOLON nonempty_list_calcStep_ RBRACE
+| CALC atomicTerm LBRACE noSeqTerm SEMICOLON list_calcStep_ RBRACE
     {let (_1, rel, _3, init, _5, steps, _7) = ((), $2, (), $4, (), $6, ()) in
      (
-         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 6) Expr
+         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 7) Expr
      )}
 
 calcRel:
@@ -2382,6 +2379,11 @@ range:
 | RANGE
     {let r = $1 in
     ( r )}
+
+string:
+  STRING
+    {let s = $1 in
+             ( s )}
 
 some_fsTypeArgs_:
   fsTypeArgs
