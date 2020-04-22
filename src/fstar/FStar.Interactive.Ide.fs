@@ -1067,7 +1067,9 @@ let interactive_error_handler = // No printing here — collect everything for f
     let issues = Util.remove_dups (fun i0 i1 -> i0=i1) !issues in
     List.length (List.filter (fun e -> e.issue_level = EError) issues)
   in
-  let report () = Util.remove_dups (fun i0 i1 -> i0=i1) (List.sortWith compare_issues !issues) in
+  let report () =
+    List.sortWith compare_issues (Util.remove_dups (fun i0 i1 -> i0=i1) !issues)
+  in
   let clear () = issues := [] in
   { eh_add_one = add_one;
     eh_count_errors = count_errors;

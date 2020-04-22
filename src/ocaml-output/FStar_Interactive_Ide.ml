@@ -2799,8 +2799,8 @@ let (interactive_error_handler : FStar_Errors.error_handler) =
   let report uu____8095 =
     let uu____8096 =
       let uu____8099 = FStar_ST.op_Bang issues  in
-      FStar_List.sortWith FStar_Errors.compare_issues uu____8099  in
-    FStar_Util.remove_dups (fun i0  -> fun i1  -> i0 = i1) uu____8096  in
+      FStar_Util.remove_dups (fun i0  -> fun i1  -> i0 = i1) uu____8099  in
+    FStar_List.sortWith FStar_Errors.compare_issues uu____8096  in
   let clear uu____8134 = FStar_ST.op_Colon_Equals issues []  in
   {
     FStar_Errors.eh_add_one = add_one;

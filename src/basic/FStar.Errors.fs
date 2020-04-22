@@ -849,10 +849,10 @@ let mk_default_handler print =
           (!issues)
     in
     let report () =
-        let sorted = List.sortWith compare_issues !issues in
-        let unique = BU.remove_dups (fun i0 i1 -> i0=i1) sorted in
-        if print then List.iter print_issue unique;
-        unique
+        let unique_issues = BU.remove_dups (fun i0 i1 -> i0=i1) !issues in
+        let sorted_unique_issues = List.sortWith compare_issues unique_issues in
+        if print then List.iter print_issue sorted_unique_issues;
+        sorted_unique_issues
     in
     let clear () = issues := [] in
     { eh_add_one = add_one;

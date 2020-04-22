@@ -3033,12 +3033,13 @@ let (mk_default_handler : Prims.bool -> error_handler) =
              | uu____5840 -> n) Prims.int_zero uu____5806
        in
     let report uu____5849 =
-      let sorted =
+      let unique_issues =
         let uu____5853 = FStar_ST.op_Bang issues  in
-        FStar_List.sortWith compare_issues uu____5853  in
-      let unique =
-        FStar_Util.remove_dups (fun i0  -> fun i1  -> i0 = i1) sorted  in
-      if print then FStar_List.iter print_issue unique else (); unique  in
+        FStar_Util.remove_dups (fun i0  -> fun i1  -> i0 = i1) uu____5853  in
+      let sorted_unique_issues =
+        FStar_List.sortWith compare_issues unique_issues  in
+      if print then FStar_List.iter print_issue sorted_unique_issues else ();
+      sorted_unique_issues  in
     let clear uu____5895 = FStar_ST.op_Colon_Equals issues []  in
     {
       eh_add_one = add_one;
