@@ -530,41 +530,10 @@ type list (a: Type) =
   | Nil : list a
   | Cons : hd: a -> tl: list a -> list a
 
-(** Values of type [pattern] are used to tag [Lemma]s with SMT
-    quantifier triggers *)
-type pattern : Type0 = unit
-
 (** The [decreases] attribute on a recursive function is used to
     specify a well-founded ordering for a termination proof *)
 assume
 type decreases : #a: Type -> a -> Type0 
-
-(** [Lemma] is a very widely used effect abbreviation.
-
-    It stands for a unit-returning [Ghost] computation, whose main
-    value is its logical payload in proving an implication between its
-    pre- and postcondition.
-
-    [Lemma] is desugared specially. The valid forms are:
-
-     Lemma (ensures post)
-     Lemma post [SMTPat ...]
-     Lemma (ensures post) [SMTPat ...]
-     Lemma (ensures post) (decreases d)
-     Lemma (ensures post) (decreases d) [SMTPat ...]
-     Lemma (requires pre) (ensures post) (decreases d)
-     Lemma (requires pre) (ensures post) [SMTPat ...]
-     Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]
-
-   and
-
-     Lemma post    (== Lemma (ensures post))
-
-   the squash argument on the postcondition allows to assume the
-   precondition for the *well-formedness* of the postcondition.
-*)
-effect Lemma (a: Type) (pre: Type) (post: (squash pre -> Type)) (pats: list pattern) =
-  Pure a pre (fun r -> post ())
 
 (** The [M] marker is interpreted by the Dijkstra Monads for Free
      construction. It has a "double meaning", either as an alias for
@@ -698,4 +667,4 @@ let labeled (r: range) (msg: string) (b: Type) : Type = b
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 22
+let __cache_version_number__ = 24

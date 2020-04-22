@@ -158,7 +158,8 @@ let version_to_string v = U.format2 "%s.%s" (U.string_of_int v.major) (U.string_
 let univ_uvar_to_string u =
     if (Options.hide_uvar_nums())
     then "?"
-    else "?" ^ (Unionfind.univ_uvar_id u |> string_of_int) ^ ":" ^ (version_to_string (snd u))
+    else "?" ^ (Unionfind.univ_uvar_id u |> string_of_int)
+            ^ ":" ^ (u |> (fun (_, u, _) -> version_to_string u))
 
 let rec int_of_univ n u = match Subst.compress_univ u with
     | U_zero -> n, None
@@ -250,7 +251,7 @@ let rec tag_of_term (t:term) = match t.n with
   | Tm_ascribed _ -> "Tm_ascribed"
   | Tm_let _ -> "Tm_let"
   | Tm_uvar _ -> "Tm_uvar"
-  | Tm_delayed _ -> "Tm_delayed-resolved" (* TODO: remove -resolved once Vale gets fixed *)
+  | Tm_delayed _ -> "Tm_delayed"
   | Tm_meta (_, m) -> "Tm_meta:" ^ metadata_to_string m
   | Tm_unknown -> "Tm_unknown"
   | Tm_lazy _ -> "Tm_lazy"
@@ -747,7 +748,6 @@ let rec sigelt_to_string (x: sigelt) =
         if Options.print_universes () then U.format3 "val %s<%s> : %s" (string_of_lid lid) (univ_names_to_string us) (term_to_string f)
         else U.format2 "val %s : %s" (string_of_lid lid) (term_to_string f)
       | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
-      | Sig_main(e) -> U.format1 "let _ = %s" (term_to_string e)
       | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
       | Sig_fail (errs, lax, ses) ->
         U.format3 "(* Sig_fail %s %s *)\n%s\n(* / Sig_fail*)\n"
@@ -794,21 +794,20 @@ let sigelt_to_string_short (x: sigelt) = match x.sigel with
 
 let tag_of_sigelt (se:sigelt) : string =
   match se.sigel with
-  | Sig_inductive_typ _       -> "Sig_inductive_typ"
-  | Sig_bundle _              -> "Sig_bundle"
-  | Sig_datacon _             -> "Sig_datacon"
-  | Sig_declare_typ _         -> "Sig_declare_typ"
-  | Sig_let _                 -> "Sig_let"
-  | Sig_main _                -> "Sig_main"
-  | Sig_assume _              -> "Sig_assume"
-  | Sig_new_effect _          -> "Sig_new_effect"
-  | Sig_sub_effect _          -> "Sig_sub_effect"
-  | Sig_effect_abbrev _       -> "Sig_effect_abbrev"
-  | Sig_pragma _              -> "Sig_pragma"
-  | Sig_splice _              -> "Sig_splice"
-  | Sig_polymonadic_bind _    -> "Sig_polymonadic_bind"
+  | Sig_inductive_typ _    -> "Sig_inductive_typ"
+  | Sig_bundle _           -> "Sig_bundle"
+  | Sig_datacon _          -> "Sig_datacon"
+  | Sig_declare_typ _      -> "Sig_declare_typ"
+  | Sig_let _              -> "Sig_let"
+  | Sig_assume _           -> "Sig_assume"
+  | Sig_new_effect _       -> "Sig_new_effect"
+  | Sig_sub_effect _       -> "Sig_sub_effect"
+  | Sig_effect_abbrev _    -> "Sig_effect_abbrev"
+  | Sig_pragma _           -> "Sig_pragma"
+  | Sig_splice _           -> "Sig_splice"
+  | Sig_polymonadic_bind _ -> "Sig_polymonadic_bind"
   | Sig_polymonadic_subcomp _ -> "Sig_polymonadic_subcomp"
-  | Sig_fail _                -> "Sig_fail"
+  | Sig_fail _             -> "Sig_fail"
 
 let modul_to_string (m:modul) =
   U.format3 "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" (sli m.name)

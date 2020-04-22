@@ -13,7 +13,7 @@
         "unit_inversion"
       ],
       0,
-      "1b34b63b209529c22e7765404056486e"
+      "a24ae172b2deae70b9cc617d4d63e7c3"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.inj_injective",
@@ -27,7 +27,7 @@
         "token_correspondence_PropImpredicativeAndNonStrictlyPositiveInductives.inj"
       ],
       0,
-      "bce7f6dbb7d4cadcb5a878d149a60efb"
+      "609b35b89ccee613cb66f52c026af257"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.f_injective",
@@ -40,7 +40,7 @@
         "projection_inverse_PropImpredicativeAndNonStrictlyPositiveInductives.IntroA__0"
       ],
       0,
-      "c90cbc3281197369c0b82eff5abf0f04"
+      "05d3aedd11292d023f6cd37ad12e727b"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.p0",
@@ -54,7 +54,7 @@
         "unit_inversion"
       ],
       0,
-      "c82d6801f5f3f635fea32d4ca3e16d2e"
+      "908f4c16f80e4c56c366152926ef6a96"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad1",
@@ -68,7 +68,7 @@
         "refinement_interpretation_Tm_refine_104aa28b549e0db1b9235eb785e4cc79"
       ],
       0,
-      "fe370b3bd2d6478e1761cab9c3cfd0d0"
+      "688e16efb9128b8b7f4bf711c78e855c"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad2",
@@ -83,7 +83,7 @@
         "l_quant_interp_47acc1ba6e48f85f7ef66adc112f8bce"
       ],
       0,
-      "1356af1ceb4eb097049c26ff530d9b55"
+      "25fdcb1d9f7582e8f413b1deeebe83b0"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.bad",
@@ -92,7 +92,7 @@
       1,
       [ "@query" ],
       0,
-      "43e649dd5fc88f02648d4adfc8a7b6aa"
+      "fd1b96b502cd98f3d484877e682bf54f"
     ],
     [
       "PropImpredicativeAndNonStrictlyPositiveInductives.worse",
@@ -101,7 +101,7 @@
       1,
       [ "@query" ],
       0,
-      "f3abfb06f1bf7c45e44ee874146ce3df"
+      "dc1516535e39e194a7dfe7ff90421ae2"
     ]
   ]
 ]

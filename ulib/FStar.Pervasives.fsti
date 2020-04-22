@@ -40,6 +40,10 @@ include FStar.Pervasives.Native
 ///   trigger various kinds of special treatments for those
 ///   definitions.
 
+(** Values of type [pattern] are used to tag [Lemma]s with SMT
+    quantifier triggers *)
+type pattern : Type0 = unit
+
 (** The concrete syntax [SMTPat] desugars to [smt_pat] *)
 val smt_pat (#a: Type) (x: a) : Tot pattern
 
@@ -55,6 +59,32 @@ val smt_pat (#a: Type) (x: a) : Tot pattern
 *)
 val smt_pat_or (x: list (list pattern)) : Tot pattern
 
+(** [Lemma] is a very widely used effect abbreviation.
+
+    It stands for a unit-returning [Ghost] computation, whose main
+    value is its logical payload in proving an implication between its
+    pre- and postcondition.
+
+    [Lemma] is desugared specially. The valid forms are:
+
+     Lemma (ensures post)
+     Lemma post [SMTPat ...]
+     Lemma (ensures post) [SMTPat ...]
+     Lemma (ensures post) (decreases d)
+     Lemma (ensures post) (decreases d) [SMTPat ...]
+     Lemma (requires pre) (ensures post) (decreases d)
+     Lemma (requires pre) (ensures post) [SMTPat ...]
+     Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]
+
+   and
+
+     Lemma post    (== Lemma (ensures post))
+
+   the squash argument on the postcondition allows to assume the
+   precondition for the *well-formedness* of the postcondition.
+*)
+effect Lemma (a: Type) (pre: Type) (post: (squash pre -> Type)) (pats: list pattern) =
+  Pure a pre (fun r -> post ())
 
 (** In the default mode of operation, all proofs in a verification
     condition are bundled into a single SMT query. Sub-terms marked

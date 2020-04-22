@@ -23,6 +23,7 @@ open FStar.Ident
 open FStar.CheckedFiles
 open FStar.Universal
 module E = FStar.Errors
+module UF = FStar.Syntax.Unionfind
 
 let _ = FStar.Version.dummy ()
 
@@ -116,6 +117,12 @@ let go _ =
     | Success ->
         fstar_files := Some filenames;
 
+        (* Set the unionfind graph to read-only mode.
+         * This will be unset by the typechecker and other pieces
+         * of code that intend to use it. It helps us catch errors. *)
+        (* TODO: also needed by the interactive mode below. *)
+        UF.set_ro ();
+
         (* --dep: Just compute and print the transitive dependency graph;
                   don't verify anything *)
         if Options.dep() <> None
@@ -156,6 +163,7 @@ let go _ =
 
         (* --ide, --in: Interactive mode *)
         if Options.interactive () then begin
+          UF.set_rw ();
           match filenames with
           | [] -> (* input validation: move to process args? *)
             Errors.log_issue

@@ -194,7 +194,6 @@ type decl' =
   | Include of lid
   | ModuleAbbrev of ident * lid
   | TopLevelLet of let_qualifier * list<(pattern * term)>
-  | Main of term
   | Tycon of bool * bool * list<tycon>
     (* first bool is for effect *)
     (* second bool is for typeclass *)
@@ -717,7 +716,6 @@ let decl_to_string (d:decl) = match d.d with
   | Include l -> "include " ^ (string_of_lid l)
   | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" (text_of_id i) (string_of_lid l)
   | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> (string_of_lid l)) |> String.concat ", ")
-  | Main _ -> "main ..."
   | Assume(i, _) -> "assume " ^ (text_of_id i)
   | Tycon(_, _, tys) -> "type " ^ (tys |> List.map id_of_tycon |> String.concat ", ")
   | Val(i, _) -> "val " ^ (text_of_id i)

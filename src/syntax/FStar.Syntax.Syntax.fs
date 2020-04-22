@@ -82,7 +82,7 @@ type universe =
   | U_unif  of universe_uvar
   | U_unknown
 and univ_name = ident
-and universe_uvar = Unionfind.p_uvar<option<universe>> * version
+and universe_uvar = Unionfind.p_uvar<option<universe>> * version * Range.range
 
 
 // IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
@@ -148,7 +148,7 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_meta: option<(dyn * term)>; (* the dyn is an FStar.TypeChecker.Env.env *)
 }
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
-and uvar = Unionfind.p_uvar<option<term>> * version
+and uvar = Unionfind.p_uvar<option<term>> * version * Range.range
 and uvars = set<ctx_uvar>
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -420,36 +420,35 @@ type sigelt' =
    i.e., all the type constructors first; then all the data which may refer to the type constructors *)
   | Sig_bundle              of list<sigelt>              //the set of mutually defined type and data constructors
                           * list<lident>               //all the inductive types and data constructor names in this bundle
-  | Sig_datacon             of lident                    //name of the datacon
-                            * univ_names                 //universe variables of the inductive type it belongs to
-                            * typ                        //the constructor's type as an arrow
-                            * lident                     //the inductive type of the value this constructs
-                            * int                        //and the number of parameters of the inductive
-                            * list<lident>               //mutually defined types
-  | Sig_declare_typ         of lident
-                            * univ_names
-                            * typ
-  | Sig_let                 of letbindings
-                            * list<lident>               //mutually defined
-  | Sig_main                of term
-  | Sig_assume              of lident
-                            * univ_names
-                            * formula
-  | Sig_new_effect          of eff_decl
-  | Sig_sub_effect          of sub_eff
-  | Sig_effect_abbrev       of lident
-                            * univ_names
-                            * binders
-                            * comp
-                            * list<cflag>
-  | Sig_pragma              of pragma
-  | Sig_splice              of list<lident> * term
+  | Sig_datacon           of lident                    //name of the datacon
+                          * univ_names                 //universe variables of the inductive type it belongs to
+                          * typ                        //the constructor's type as an arrow
+                          * lident                     //the inductive type of the value this constructs
+                          * int                        //and the number of parameters of the inductive
+                          * list<lident>               //mutually defined types
+  | Sig_declare_typ       of lident
+                          * univ_names
+                          * typ
+  | Sig_let               of letbindings
+                          * list<lident>               //mutually defined
+  | Sig_assume            of lident
+                          * univ_names
+                          * formula
+  | Sig_new_effect        of eff_decl
+  | Sig_sub_effect        of sub_eff
+  | Sig_effect_abbrev     of lident
+                          * univ_names
+                          * binders
+                          * comp
+                          * list<cflag>
+  | Sig_pragma            of pragma
+  | Sig_splice            of list<lident> * term
 
-  | Sig_polymonadic_bind    of lident * lident * lident * tscheme * tscheme  //(m, n) |> p, the polymonadic bind term, and its type
+  | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme
   | Sig_polymonadic_subcomp of lident * lident * tscheme * tscheme  //m <: n, the polymonadic subcomp term, and its type
-  | Sig_fail                of list<int>         (* Expected errors (empty for 'any') *)
-                             * bool               (* true if should fail in --lax *)
-                             * list<sigelt>       (* The sigelts to be checked *)
+  | Sig_fail              of list<int>         (* Expected errors *)
+                          * bool               (* true if should fail in --lax *)
+                          * list<sigelt>       (* The sigelts to be checked *)
   
 and sigelt = {
     sigel:    sigelt';

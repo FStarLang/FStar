@@ -81,6 +81,11 @@ type worklist = {
     umax_heuristic_ok: bool;                    //whether or not it's ok to apply a structural match on umax us = umax us'
     tcenv:        Env.env;
     wl_implicits: implicits;                    //additional uvars introduced
+    repr_subcomp_allowed:bool;                  //whether subtyping of effectful computations
+                                                //with a representation (which need a monadic lift)
+                                                //is allowed; disabled by default, enabled in
+                                                //sub_comp which is called by the typechecker, and
+                                                //will insert the appropriate lifts.
 }
 
 (* --------------------------------------------------------- *)
@@ -88,7 +93,7 @@ type worklist = {
 (* --------------------------------------------------------- *)
 let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
     let ctx_uvar = {
-         ctx_uvar_head=UF.fresh();
+         ctx_uvar_head=UF.fresh r;
          ctx_uvar_gamma=gamma;
          ctx_uvar_binders=binders;
          ctx_uvar_typ=k;
@@ -200,7 +205,8 @@ let empty_worklist env = {
     defer_ok=true;
     smt_ok=true;
     umax_heuristic_ok=true;
-    wl_implicits=[]
+    wl_implicits=[];
+    repr_subcomp_allowed=false;
 }
 
 let giveup env (reason : lstring) prob =
@@ -3260,6 +3266,8 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
           solve env (attempt sub_probs wl) in
 
     let solve_sub c1 edge c2 =
+        if problem.relation <> SUB then
+          failwith "impossible: solve_sub";
         let r = Env.get_range env in
         let lift_c1 () =
              let univs =
@@ -3277,8 +3285,19 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                      (Ident.string_of_lid c1.effect_name) (Ident.string_of_lid c2.effect_name)) r
                  else U.comp_to_comp_typ c)
         in
-        if problem.relation = EQ
-        then solve_eq (lift_c1 ()) c2 Env.trivial_guard
+        if not wl.repr_subcomp_allowed
+        && not (lid_equals c1.effect_name c2.effect_name)
+        && Env.is_reifiable_effect env c2.effect_name
+                  // GM: What I would like to write instead of these two
+                  // last conjuncts is something like
+                  // [Option.isSome edge.mlift.mlift_term],
+                  // but it seems that we always carry around a Some
+                  // (fun _ _ e -> e) instead of a None even for
+                  // primitive effects.
+        then giveup env (mklstr (fun () -> BU.format2 "Cannot lift from %s to %s, it needs a lift\n"
+                                            (string_of_lid c1.effect_name)
+                                            (string_of_lid c2.effect_name)))
+                        orig
         else let is_null_wp_2 = c2.flags |> BU.for_some (function TOTAL | MLEFFECT | SOMETRIVIAL -> true | _ -> false) in
              let wpc1, wpc2 = match c1.effect_args, c2.effect_args with
               | (wp1, _)::_, (wp2, _)::_ -> wp1, wp2
@@ -3558,6 +3577,7 @@ let sub_comp env c1 c2 =
   if debug env <| Options.Other "Rel" then
     BU.print3 "sub_comp of %s --and-- %s --with-- %s\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB");
   let prob, wl = new_problem (empty_worklist env) env c1 rel c2 None (Env.get_range env) "sub_comp" in
+  let wl = { wl with repr_subcomp_allowed = true } in
   let prob = CProb prob in
   def_check_prob "sub_comp" prob;
   let (r, ms) = BU.record_time

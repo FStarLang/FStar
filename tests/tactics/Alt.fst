@@ -25,8 +25,8 @@ let _ = assert True by (let i =
                           Tactics.first [(fun () -> fail "1"; 1);
                                          (fun () -> fail "2"; 2);
                                          (fun () -> fail "3"; 3);
-                                         (fun () ->           4);
+                                         (fun () -> 4 <: Tac _);
                                          (fun () -> fail "5"; 5);
-                                         (fun () ->           6);
+                                         (fun () -> 6 <: Tac _);
                                          ]
                         in guard (i = 4))

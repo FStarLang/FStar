@@ -1176,6 +1176,7 @@ and tc_value env (e:term) : term
     failwith (BU.format2 "Unexpected value: %s (%s)" (Print.term_to_string top) (Print.tag_of_term top))
 
 and tc_constant (env:env_t) r (c:sconst) : typ =
+  let res =
      match c with
       | Const_unit -> t_unit
       | Const_bool _ -> t_bool
@@ -1210,6 +1211,8 @@ and tc_constant (env:env_t) r (c:sconst) : typ =
                                  (Const.const_to_string c)) r
 
       | _ -> raise_error (Errors.Fatal_UnsupportedConstant, "Unsupported constant") r
+  in
+  SS.set_use_range r res
 
 
 (************************************************************************************************************)
