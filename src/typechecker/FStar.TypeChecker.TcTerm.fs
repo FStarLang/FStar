@@ -126,16 +126,6 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
      let t = lc.res_typ in
      let g = Env.conj_guard g guard in
      (* adding a guard for confirming that the computed type t is a subtype of the expected type t' *)
-     let lc, g =
-       if tlc |> is_left && TcUtil.should_return env (Some e) lc
-            && TcComm.is_pure_lcomp lc // this last conjunct is crucial, otherwise
-                                  // we could drop the effects of `e` here
-       then
-         let u_opt, g_lc = TcUtil.lcomp_univ_opt lc in
-         TcUtil.return_value env u_opt t e |> TcComm.lcomp_of_comp,
-         Env.conj_guard g g_lc
-       else lc, g
-     in
      let msg = if Env.is_trivial_guard_formula g then None else Some <| Err.subtyping_failed env t t' in
      let lc, g = TcUtil.strengthen_precondition msg env e lc g in
      memo_tk e t', set_lcomp_result lc t', g
