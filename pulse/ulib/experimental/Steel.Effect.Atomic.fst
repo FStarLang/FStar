@@ -131,9 +131,12 @@ let atomic_preserves_frame_and_preorder
   )
 = let (| x, m1 |) = act m0 in
   let frame : hprop = emp in
-  intro_emp_left pre (locks_invariant uses m0) m0;
-  let m0 : hmem_with_inv' uses (pre `star` emp) = m0 in
-  ()
+  intro_emp_left pre (locks_invariant uses m0) m0
+  (*
+   * m0 : hmem_with_inv' uses (pre `star` emp)
+   * 
+   * for instantiating the quentifier in is_m_frame_preserving
+   *)
 #pop-options
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit 10"
