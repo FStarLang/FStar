@@ -127,7 +127,8 @@ let go _ =
                   don't verify anything *)
         if Options.dep() <> None
         then let _, deps = Parser.Dep.collect filenames FStar.CheckedFiles.load_parsing_data_from_cache in
-             Parser.Dep.print deps
+             Parser.Dep.print deps;
+             report_errors []
 
         (* Input validation: should this go to process_args? *)
         (*          don't verify anything *)
