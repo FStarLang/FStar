@@ -67,3 +67,11 @@ assume type hasEq: Type -> GTot Type0
 effect Lemma (a:Type) (pre:Type) (post:squash pre -> Type) (pats:list pattern) =
        Pure a pre (fun r -> post ())
 ```
+
+> [`c_True`](#c_True) [`c_True`](#c_True)
+
+[`c_True`](#c_True) [`c_True`](#c_True)
+
+[`c_True`](#c_True) [`c_True`](#c_True)
+
+### `c_True` `c_True`
