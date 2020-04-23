@@ -142,40 +142,16 @@ let atomic_preserves_frame_and_preorder
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit 10"
 
-let frame_repr_raw (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_t) (#post:post_t a)
-    (f:atomic_repr a uses is_ghost pre post)
-    (frame:hprop)
-    (_:unit)
-  : MstTot a
-      (requires fun m0 ->
-        let open Sem in
-        let st = state_uses uses in
-        st.interp ((pre `st.star` frame) `st.star` st.locks_invariant m0) m0)
-      (ensures fun m0 x m1 ->
-        let open Sem in
-        let st = state_uses uses in
-        st.interp ((post x `st.star` frame) `st.star` st.locks_invariant m1) m1 /\
-        Sem.preserves_frame #st (pre `st.star` frame) (post x `st.star` frame) m0 m1)
- = let open Sem in
-   let st = state_uses uses in
-   let m0 = mst_get() in
-   let x = f () in
-   let m1 = mst_get() in
-   assert (preserves_frame #st pre (post x) m0 m1);
-   assert (st.interp (post x `st.star` st.locks_invariant m1) m1);
-   assert (st.interp (post x) m1);
-   assert (st.interp (post x `st.star` frame) m1);
-   assert (st.interp ((post x `st.star` frame) `st.star` st.locks_invariant m1) m1);
-   Sem.preserves_frame_star #st pre (post x) m0 m1 frame;
-   assert (preserves_frame #st (pre `st.star` frame) (post x `st.star` frame) m0 m1);
-   x
-
-
 let frame_repr (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_t) (#post:post_t a)
     (f:atomic_repr a uses is_ghost pre post)
     (frame:hprop)
   : atomic_repr a uses is_ghost (pre `star` frame) (fun x -> post x `star` frame)
-  = frame_repr_raw f frame
+  = fun () ->
+     let m0 = mst_get() in
+     let x = f () in
+     let m1 = mst_get() in
+     Sem.preserves_frame_star #(state_uses uses) pre (post x) m0 m1 frame;
+     x
 
 let frame0 (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_t) (#post:post_t a)
   (f:atomic_repr a uses is_ghost pre post)
