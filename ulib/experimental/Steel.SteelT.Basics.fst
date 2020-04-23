@@ -77,3 +77,10 @@ let frame (#a:Type) (#pre:pre_t) (#post:post_t a)
 
 let noop (#p:hprop) (u:unit) : SteelT unit p (fun _ -> p)
   = return ()
+
+let change_hprop
+  (p q:hprop)
+  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
+  : SteelT unit p (fun _ -> q)
+  = Steel.SteelAtomic.Basics.lift_atomic_to_steelT
+      (fun () -> Steel.Effect.Atomic.change_hprop p q proof)
