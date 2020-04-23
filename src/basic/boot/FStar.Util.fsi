@@ -21,8 +21,6 @@ open FStar.All
 open FStar.BaseTypes
 
 exception Impos
-exception NYI of string
-exception HardError of string
 
 val max_int: int
 val return_all: 'a -> ML<'a>

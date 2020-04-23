@@ -133,24 +133,6 @@ let desugar_name' setpos (env: env_t) (resolve: bool) (l: lid) : option<S.term> 
     match tm_attrs_opt with
     | None -> None
     | Some (tm, attrs) ->
-        let warn_if_deprecated (attrs:list<attribute>) :unit =
-          List.iter (fun a -> match a.n with
-            | Tm_app ({ n = Tm_fvar fv }, args) when lid_equals fv.fv_name.v C.deprecated_attr ->
-              let msg = (Print.term_to_string tm) ^ " is deprecated" in
-              let msg =
-                if List.length args > 0 then
-                  (match (fst (List.hd args)).n with
-                   | Tm_constant (Const_string (s, _)) when not (trim_string s = "") -> msg ^ ", use "  ^ s ^ " instead"
-                   | _ -> msg)
-                else msg
-              in
-              log_issue (range_of_lid l) (Warning_DeprecatedDefinition, msg)
-            | Tm_fvar fv when lid_equals fv.fv_name.v C.deprecated_attr ->
-              let msg = (Print.term_to_string tm) ^ " is deprecated" in
-              log_issue (range_of_lid l) (Warning_DeprecatedDefinition, msg)
-            | _ -> ()) attrs
-        in
-        warn_if_deprecated attrs;
         let tm = setpos tm in
         Some tm
 

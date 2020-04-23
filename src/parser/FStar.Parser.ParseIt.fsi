@@ -50,4 +50,4 @@ type parse_result =
 val parse: parse_frag -> parse_result // either<(AST.inputFragment * list<(string * Range.range)>) , (string * Range.range)>
 val find_file: string -> string
 
-val parse_warn_error: string -> list<FStar.Options.error_flag>
+val parse_warn_error: string -> list<FStar.Errors.error_setting>

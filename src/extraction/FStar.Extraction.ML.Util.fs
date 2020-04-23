@@ -408,7 +408,7 @@ let not_implemented_warning r t msg =
          BU.format3 "Plugin %s can not run natively because %s (use --warn_error -%s to carry on)."
                         t
                         msg
-                        (string_of_int <| Errors.errno_of_error (Errors.Warning_PluginNotImplemented)))
+                        (string_of_int <| Errors.error_number (Errors.lookup Errors.Warning_PluginNotImplemented)))
 
 type emb_loc =
     | Syntax_term (* FStar.Syntax.Embeddings *)

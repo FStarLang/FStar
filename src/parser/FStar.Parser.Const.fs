@@ -301,6 +301,7 @@ let steps_nbe           = psconst "nbe"
 
 (* attributes *)
 let deprecated_attr = pconst "deprecated"
+let warn_on_use_attr = pconst "warn_on_use"
 let inline_let_attr = p2l ["FStar"; "Pervasives"; "inline_let"]
 let rename_let_attr = p2l ["FStar"; "Pervasives"; "rename_let"]
 let plugin_attr     = p2l ["FStar"; "Pervasives"; "plugin"]
