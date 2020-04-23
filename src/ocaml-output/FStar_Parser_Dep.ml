@@ -2569,7 +2569,35 @@ let (print_full : deps -> unit) =
           pr "=\\\n\t";
           FStar_List.iter (fun f  -> pr (norm_path f); pr " \\\n\t") files;
           pr "\n"  in
-        (print_all "ALL_FST_FILES" all_fst_files;
+        (FStar_All.pipe_right all_fsti_files
+           (FStar_List.iter
+              (fun fsti  ->
+                 let mn = lowercase_module_name fsti  in
+                 let range_of_file fsti1 =
+                   let r =
+                     FStar_Range.set_file_of_range FStar_Range.dummyRange
+                       fsti1
+                      in
+                   let uu____8306 = FStar_Range.def_range r  in
+                   FStar_Range.set_use_range r uu____8306  in
+                 let uu____8307 =
+                   let uu____8309 =
+                     has_implementation deps1.file_system_map mn  in
+                   Prims.op_Negation uu____8309  in
+                 if uu____8307
+                 then
+                   let uu____8312 = range_of_file fsti  in
+                   let uu____8313 =
+                     let uu____8319 =
+                       let uu____8321 = module_name_of_file fsti  in
+                       FStar_Util.format1
+                         "Interface %s is admitted without an implementation"
+                         uu____8321
+                        in
+                     (FStar_Errors.Warning_WarnOnUse, uu____8319)  in
+                   FStar_Errors.log_issue uu____8312 uu____8313
+                 else ()));
+         print_all "ALL_FST_FILES" all_fst_files;
          print_all "ALL_FSTI_FILES" all_fsti_files;
          print_all "ALL_CHECKED_FILES" all_checked_files;
          print_all "ALL_ML_FILES" all_ml_files;
@@ -2578,15 +2606,15 @@ let (print_full : deps -> unit) =
   
 let (print : deps -> unit) =
   fun deps1  ->
-    let uu____8298 = FStar_Options.dep ()  in
-    match uu____8298 with
+    let uu____8343 = FStar_Options.dep ()  in
+    match uu____8343 with
     | FStar_Pervasives_Native.Some "make" -> print_make deps1
     | FStar_Pervasives_Native.Some "full" ->
-        profile (fun uu____8307  -> print_full deps1)
+        profile (fun uu____8352  -> print_full deps1)
           "FStar.Parser.Deps.print_full_deps"
     | FStar_Pervasives_Native.Some "graph" -> print_graph deps1.dep_graph
     | FStar_Pervasives_Native.Some "raw" -> print_raw deps1
-    | FStar_Pervasives_Native.Some uu____8313 ->
+    | FStar_Pervasives_Native.Some uu____8358 ->
         FStar_Errors.raise_err
           (FStar_Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
     | FStar_Pervasives_Native.None  -> ()
@@ -2598,38 +2626,38 @@ let (print_fsmap :
   fun fsmap  ->
     FStar_Util.smap_fold fsmap
       (fun k  ->
-         fun uu____8368  ->
+         fun uu____8413  ->
            fun s  ->
-             match uu____8368 with
+             match uu____8413 with
              | (v0,v1) ->
-                 let uu____8397 =
-                   let uu____8399 =
+                 let uu____8442 =
+                   let uu____8444 =
                      FStar_Util.format3 "%s -> (%s, %s)" k
                        (FStar_Util.dflt "_" v0) (FStar_Util.dflt "_" v1)
                       in
-                   FStar_String.op_Hat "; " uu____8399  in
-                 FStar_String.op_Hat s uu____8397) ""
+                   FStar_String.op_Hat "; " uu____8444  in
+                 FStar_String.op_Hat s uu____8442) ""
   
 let (module_has_interface : deps -> FStar_Ident.lident -> Prims.bool) =
   fun deps1  ->
     fun module_name1  ->
-      let uu____8420 =
-        let uu____8422 = FStar_Ident.string_of_lid module_name1  in
-        FStar_String.lowercase uu____8422  in
-      has_interface deps1.file_system_map uu____8420
+      let uu____8465 =
+        let uu____8467 = FStar_Ident.string_of_lid module_name1  in
+        FStar_String.lowercase uu____8467  in
+      has_interface deps1.file_system_map uu____8465
   
 let (deps_has_implementation : deps -> FStar_Ident.lident -> Prims.bool) =
   fun deps1  ->
     fun module_name1  ->
       let m =
-        let uu____8438 = FStar_Ident.string_of_lid module_name1  in
-        FStar_String.lowercase uu____8438  in
+        let uu____8483 = FStar_Ident.string_of_lid module_name1  in
+        FStar_String.lowercase uu____8483  in
       FStar_All.pipe_right deps1.all_files
         (FStar_Util.for_some
            (fun f  ->
               (is_implementation f) &&
-                (let uu____8449 =
-                   let uu____8451 = module_name_of_file f  in
-                   FStar_String.lowercase uu____8451  in
-                 uu____8449 = m)))
+                (let uu____8494 =
+                   let uu____8496 = module_name_of_file f  in
+                   FStar_String.lowercase uu____8496  in
+                 uu____8494 = m)))
   
