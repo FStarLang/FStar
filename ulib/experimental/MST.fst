@@ -207,3 +207,11 @@ let mst_assert (#state:Type u#2) (#rel:P.preorder state) (p:Type)
     : MSTATE unit state rel (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
     =
   assert p
+
+let lift_mst_total_mst (a:Type) (state:Type u#2) (rel:P.preorder state)
+  (req:pre_t state) (ens:post_t state a)
+  (f:MSTTotal.repr a state rel req ens)
+: repr a state rel req ens
+= fun s0 -> f s0
+
+sub_effect MSTTotal.MSTATETOT ~> MSTATE = lift_mst_total_mst
