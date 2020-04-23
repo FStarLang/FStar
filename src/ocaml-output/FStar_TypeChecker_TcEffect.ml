@@ -162,7 +162,7 @@ let (check_no_subtyping_for_layered_combinator :
       fun k  ->
         (let uu____333 =
            FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-             (FStar_Options.Other "LayeredEffects")
+             (FStar_Options.Other "LayeredEffectsTc")
             in
          if uu____333
          then
@@ -293,7 +293,7 @@ let (tc_layered_eff_decl :
       fun quals  ->
         (let uu____379 =
            FStar_All.pipe_left (FStar_TypeChecker_Env.debug env0)
-             (FStar_Options.Other "LayeredEffects")
+             (FStar_Options.Other "LayeredEffectsTc")
             in
          if uu____379
          then
@@ -326,7 +326,7 @@ let (tc_layered_eff_decl :
            | (us,t,ty) ->
                let uu____472 =
                  FStar_All.pipe_left (FStar_TypeChecker_Env.debug env0)
-                   (FStar_Options.Other "LayeredEffects")
+                   (FStar_Options.Other "LayeredEffectsTc")
                   in
                if uu____472
                then
@@ -1068,7 +1068,7 @@ let (tc_layered_eff_decl :
                         ((let uu____2395 =
                             FStar_All.pipe_left
                               (FStar_TypeChecker_Env.debug env0)
-                              (FStar_Options.Other "LayeredEffects")
+                              (FStar_Options.Other "LayeredEffectsTc")
                              in
                           if uu____2395
                           then
@@ -1254,7 +1254,7 @@ let (tc_layered_eff_decl :
                                                          (FStar_TypeChecker_Env.debug
                                                             env)
                                                          (FStar_Options.Other
-                                                            "LayeredEffects")
+                                                            "LayeredEffectsTc")
                                                         in
                                                      if uu____2889
                                                      then
@@ -1263,7 +1263,7 @@ let (tc_layered_eff_decl :
                                                            k
                                                           in
                                                        FStar_Util.print1
-                                                         "Expected type before unification: %s\n"
+                                                         "Expected type of subcomp before unification: %s\n"
                                                          uu____2894
                                                      else ());
                                                     (let guard_eq =
@@ -1772,7 +1772,7 @@ let (tc_layered_eff_decl :
                                                   (FStar_TypeChecker_Env.debug
                                                      env)
                                                   (FStar_Options.Other
-                                                     "LayeredEffects")
+                                                     "LayeredEffectsTc")
                                                  in
                                               if uu____4649
                                               then
@@ -2110,7 +2110,7 @@ let (tc_layered_eff_decl :
                                          FStar_All.pipe_left
                                            (FStar_TypeChecker_Env.debug env1)
                                            (FStar_Options.Other
-                                              "LayeredEffects")
+                                              "LayeredEffectsTc")
                                           in
                                        if uu____4939
                                        then
@@ -2246,7 +2246,7 @@ let (tc_layered_eff_decl :
                                                  (FStar_TypeChecker_Env.debug
                                                     env1)
                                                  (FStar_Options.Other
-                                                    "LayeredEffects")
+                                                    "LayeredEffectsTc")
                                                 in
                                              if uu____5106
                                              then
@@ -2270,7 +2270,7 @@ let (tc_layered_eff_decl :
                                                   (FStar_TypeChecker_Env.debug
                                                      env1)
                                                   (FStar_Options.Other
-                                                     "LayeredEffects")
+                                                     "LayeredEffectsTc")
                                                  in
                                               if uu____5119
                                               then
@@ -2411,7 +2411,7 @@ let (tc_layered_eff_decl :
                                                    (FStar_TypeChecker_Env.debug
                                                       env1)
                                                    (FStar_Options.Other
-                                                      "LayeredEffects")
+                                                      "LayeredEffectsTc")
                                                   in
                                                if uu____5326
                                                then
@@ -4834,7 +4834,7 @@ let (tc_layered_lift :
     fun sub  ->
       (let uu____8948 =
          FStar_All.pipe_left (FStar_TypeChecker_Env.debug env0)
-           (FStar_Options.Other "LayeredEffects")
+           (FStar_Options.Other "LayeredEffectsTc")
           in
        if uu____8948
        then
@@ -4908,7 +4908,7 @@ let (tc_layered_lift :
         | (us,lift,lift_ty) ->
             ((let uu____9040 =
                 FStar_All.pipe_left (FStar_TypeChecker_Env.debug env0)
-                  (FStar_Options.Other "LayeredEffects")
+                  (FStar_Options.Other "LayeredEffectsTc")
                  in
               if uu____9040
               then
@@ -5136,7 +5136,7 @@ let (tc_layered_lift :
                         ((let uu____9567 =
                             FStar_All.pipe_left
                               (FStar_TypeChecker_Env.debug env)
-                              (FStar_Options.Other "LayeredEffects")
+                              (FStar_Options.Other "LayeredEffectsTc")
                              in
                           if uu____9567
                           then
@@ -5153,7 +5153,7 @@ let (tc_layered_lift :
                           (let uu____9581 =
                              FStar_All.pipe_left
                                (FStar_TypeChecker_Env.debug env0)
-                               (FStar_Options.Other "LayeredEffects")
+                               (FStar_Options.Other "LayeredEffectsTc")
                               in
                            if uu____9581
                            then
@@ -5189,7 +5189,7 @@ let (tc_layered_lift :
                            (let uu____9612 =
                               FStar_All.pipe_left
                                 (FStar_TypeChecker_Env.debug env0)
-                                (FStar_Options.Other "LayeredEffects")
+                                (FStar_Options.Other "LayeredEffectsTc")
                                in
                             if uu____9612
                             then
@@ -6584,7 +6584,7 @@ let (tc_polymonadic_subcomp :
                                               (FStar_TypeChecker_Env.debug
                                                  env)
                                               (FStar_Options.Other
-                                                 "LayeredEffects")
+                                                 "LayeredEffectsTc")
                                              in
                                           if uu____12905
                                           then
@@ -6630,7 +6630,7 @@ let (tc_polymonadic_subcomp :
                                                 (FStar_TypeChecker_Env.debug
                                                    env)
                                                 (FStar_Options.Other
-                                                   "LayeredEffects")
+                                                   "LayeredEffectsTc")
                                                in
                                             if uu____12925
                                             then
