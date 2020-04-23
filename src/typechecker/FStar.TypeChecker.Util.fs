@@ -2842,7 +2842,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
 
   let guard_f =
     let f_sort = (fst f_b).sort |> SS.subst substs |> SS.compress in
-    let f_sort_is = U.effect_indices_from_repr f_sort (Env.is_layered_effect env ct.effect_name) r "" in
+    let f_sort_is = U.effect_indices_from_repr f_sort (Env.is_layered_effect env ct.effect_name) r "f binder of lift is not a repr" in
     List.fold_left2
       (fun g i1 i2 ->
         if Env.debug env <| Options.Other "LayeredEffectsRel"
@@ -2853,7 +2853,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
 
   let lift_ct = lift_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
   
-  let is = U.effect_indices_from_repr lift_ct.result_typ (Env.is_layered_effect env tgt) r "" in
+  let is = U.effect_indices_from_repr lift_ct.result_typ (Env.is_layered_effect env tgt) r "return type of lift is not a repr" in
 
   //compute the formula `lift_c.wp (fun _ -> True)` and add it to the final guard
   let fml =

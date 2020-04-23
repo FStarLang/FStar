@@ -7400,7 +7400,8 @@ let (lift_tf_layered_effect :
                                       env ct.FStar_Syntax_Syntax.effect_name
                                      in
                                   FStar_Syntax_Util.effect_indices_from_repr
-                                    f_sort uu____19478 r ""
+                                    f_sort uu____19478 r
+                                    "f binder of lift is not a repr"
                                    in
                                 FStar_List.fold_left2
                                   (fun g1  ->
@@ -7451,7 +7452,8 @@ let (lift_tf_layered_effect :
                                    in
                                 FStar_Syntax_Util.effect_indices_from_repr
                                   lift_ct.FStar_Syntax_Syntax.result_typ
-                                  uu____19516 r ""
+                                  uu____19516 r
+                                  "return type of lift is not a repr"
                                  in
                               let fml =
                                 let uu____19520 =
