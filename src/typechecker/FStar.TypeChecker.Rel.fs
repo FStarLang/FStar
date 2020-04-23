@@ -3098,7 +3098,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
     in
 
     let solve_layered_sub c1 c2 =
-      if Env.debug env <| Options.Other "LayeredEffects" then
+      if Env.debug env <| Options.Other "LayeredEffectsApp" then
         BU.print2 "solve_layered_sub c1: %s and c2: %s\n"
           (c1 |> S.mk_Comp |> Print.comp_to_string)
           (c2 |> S.mk_Comp |> Print.comp_to_string);
@@ -3182,8 +3182,8 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
               List.fold_right2 (fun (a1, _) (a2, _) (is_sub_probs, wl) ->
                 if is_uvar a1
                 then begin
-                       if Env.debug env <| Options.Other "LayeredEffects" then
-                       BU.print2 "solve_layered_sub: adding index equality for %s and %s (since a1 uvar)\n"
+                       if Env.debug env <| Options.Other "LayeredEffectsRel" then
+                       BU.print2 "Layered Effects teq (rel c1 index uvar) %s = %s\n"
                          (Print.term_to_string a1) (Print.term_to_string a2);
                        let p, wl = sub_prob wl a1 EQ a2 "l.h.s. effect index uvar" in
                        p::is_sub_probs, wl
@@ -3213,13 +3213,8 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
 
           let rest_bs_uvars, g_uvars = Env.uvars_for_binders env rest_bs
             [NT (a_b |> fst, c2.result_typ)]
-            (fun b -> BU.format3 "implicit for binder %s in stronger of %s at %s"
+            (fun b -> BU.format3 "implicit for binder %s in subcomp of %s at %s"
               (Print.binder_to_string b) (Ident.string_of_lid c2.effect_name) (Range.string_of_range r)) r in
-
-          if debug env <| Options.Other "LayeredEffects"
-          then BU.print1 "Introduced uvars for subcomp: %s\n"
-                 (List.fold_left (fun s u -> s ^ ";;;;" ^ (Print.term_to_string u)) "" rest_bs_uvars);
-
 
           let wl = { wl with wl_implicits = g_uvars.implicits@wl.wl_implicits } in  //AR: TODO: FIXME: using knowledge that g_uvars is only implicits
 
@@ -3235,6 +3230,9 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
               |> List.map (SS.subst substs) in
 
             List.fold_left2 (fun (ps, wl) f_sort_i c1_i ->
+              if Env.debug env <| Options.Other "LayeredEffectsRel"
+              then BU.print2 "Layered Effects teq %s = %s\n"
+                     (Print.term_to_string f_sort_i) (Print.term_to_string c1_i);
               let p, wl = sub_prob wl f_sort_i EQ c1_i "indices of c1" in
               ps@[p], wl
             ) ([], wl) f_sort_is (c1.effect_args |> List.map fst) in
@@ -3245,9 +3243,12 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
             let g_sort_is = U.effect_indices_from_repr
               stronger_ct.result_typ
               (Env.is_layered_effect env c2.effect_name)
-              r (stronger_t_shape_error "return type is not a repr") in
+              r (stronger_t_shape_error "subcomp return type is not a repr") in
 
             List.fold_left2 (fun (ps, wl) g_sort_i c2_i ->
+              if Env.debug env <| Options.Other "LayeredEffectsRel"
+              then BU.print2 "Layered Effects teq %s = %s\n"
+                     (Print.term_to_string g_sort_i) (Print.term_to_string c2_i);
               let p, wl = sub_prob wl g_sort_i EQ c2_i "indices of c2" in
               ps@[p], wl
             ) ([], wl) g_sort_is (c2.effect_args |> List.map fst) in

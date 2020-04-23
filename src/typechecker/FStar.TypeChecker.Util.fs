@@ -294,7 +294,7 @@ let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.ra
  *)
 let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
 : comp * guard_t
-= if Env.debug env <| Options.Other "LayeredEffects"
+= if Env.debug env <| Options.Other "LayeredEffectsApp"
   then BU.print4 "Computing %s.return for u_a:%s, a:%s, and e:%s{\n"
          (Ident.string_of_lid ed.mname) (Print.univ_to_string u_a)
          (Print.term_to_string a) (Print.term_to_string e);
@@ -317,7 +317,7 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
 
   let rest_bs_uvars, g_uvars = Env.uvars_for_binders
     env rest_bs [NT (a_b |> fst, a); NT (x_b |> fst, e)]
-    (fun b -> BU.format3 "implicit var for binder %s of %s at %s"
+    (fun b -> BU.format3 "implicit for binder %s of %s at %s"
              (Print.binder_to_string b)
              (BU.format1 "%s.return" (Ident.string_of_lid ed.mname))
              (Range.string_of_range r)) r in
@@ -340,7 +340,7 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
     flags = []
   }) in
 
-  if Env.debug env <| Options.Other "LayeredEffects"
+  if Env.debug env <| Options.Other "LayeredEffectsApp"
   then BU.print1 "} c after return %s\n" (Print.comp_to_string c);
 
   c, g_uvars
@@ -431,7 +431,7 @@ let lift_comps_sep_guards env c1 c2 (b:option<bv>) (lift_context:lift_context)
         (BU.format2 "Effects %s and %s cannot be composed" 
           (Print.lid_to_string c1.effect_name) (Print.lid_to_string c2.effect_name))) rng in
 
-    if Env.debug env <| Options.Other "LayeredEffects"
+    if Env.debug env <| Options.Other "LayeredEffectsApp"
     then BU.print3 "Lifting comps %s and %s with lift context %s{\n"
            (c1 |> S.mk_Comp |> Print.comp_to_string)
            (c2 |> S.mk_Comp |> Print.comp_to_string)
@@ -471,7 +471,7 @@ let lift_comps_sep_guards env c1 c2 (b:option<bv>) (lift_context:lift_context)
           | Some (p, c2, c1, g) -> p, c1, c2, Env.trivial_guard, g
           | None -> err () in
 
-      if Env.debug env <| Options.Other "LayeredEffects"
+      if Env.debug env <| Options.Other "LayeredEffectsApp"
       then BU.print3 "} Returning p %s, c1 %s, and c2 %s\n"
              (Ident.string_of_lid p) (Print.comp_to_string c1) (Print.comp_to_string c2);
 
@@ -657,7 +657,7 @@ let mk_indexed_bind env
   (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ)
   (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
 
-  if Env.debug env <| Options.Other "LayeredEffects" then
+  if Env.debug env <| Options.Other "LayeredEffectsApp" then
     BU.print2 "Binding c1:%s and c2:%s {\n"
       (Print.comp_to_string (S.mk_Comp ct1)) (Print.comp_to_string (S.mk_Comp ct2));
 
@@ -686,7 +686,7 @@ let mk_indexed_bind env
   let rest_bs_uvars, g_uvars = Env.uvars_for_binders
     env rest_bs [NT (a_b |> fst, t1); NT (b_b |> fst, t2)]
     (fun b -> BU.format3
-      "implicit var for binder %s of %s at %s"
+      "implicit for binder %s of %s at %s"
       (Print.binder_to_string b)
       (BU.format3 "(%s, %s) |> %s" (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p))
       (Range.string_of_range r1)) r1 in
@@ -703,7 +703,11 @@ let mk_indexed_bind env
         (Print.term_to_string (f_b |> fst).sort))      
       |> List.map (SS.subst subst) in
     List.fold_left2
-      (fun g i1 f_i1 -> Env.conj_guard g (Rel.teq env i1 f_i1))
+      (fun g i1 f_i1 ->
+        if Env.debug env <| Options.Other "LayeredEffectsRel"
+        then BU.print2 "Layered effects teq %s = %s\n"
+               (Print.term_to_string i1) (Print.term_to_string f_i1);
+        Env.conj_guard g (Rel.teq env i1 f_i1))
       Env.trivial_guard is1 f_sort_is in 
 
   let g_guard =  //unify c2's indices with g's indices in the bind_wp
@@ -727,7 +731,11 @@ let mk_indexed_bind env
 
     let env_g = Env.push_binders env [x_a] in
     List.fold_left2
-      (fun g i1 g_i1 -> Env.conj_guard g (Rel.teq env_g i1 g_i1))
+      (fun g i1 g_i1 ->
+        if Env.debug env <| Options.Other "LayeredEffectsRel"
+        then BU.print2 "LayeredEffects teq %s = %s\n"
+               (Print.term_to_string i1) (Print.term_to_string g_i1);
+        Env.conj_guard g (Rel.teq env_g i1 g_i1))
       Env.trivial_guard is2 g_sort_is
     |> Env.close_guard env [x_a] in
 
@@ -750,7 +758,7 @@ let mk_indexed_bind env
     flags = flags
   }) in
 
-  if Env.debug env <| Options.Other "LayeredEffects" then
+  if Env.debug env <| Options.Other "LayeredEffectsApp" then
     BU.print1 "} c after bind: %s\n" (Print.comp_to_string c);
 
   c, Env.conj_guards [
@@ -2793,7 +2801,7 @@ let layered_effect_indices_as_binders env r eff_name sig_ts u a_tm =
  * + we add (wp[substs] (fun _ -> True)) to the returned guard
  *)
 let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * guard_t =
-  if Env.debug env <| Options.Other "LayeredEffects" then
+  if Env.debug env <| Options.Other "LayeredEffectsApp" then
     BU.print2 "Lifting comp %s to layered effect %s {\n"
       (Print.comp_to_string c) (Print.lid_to_string tgt);
 
@@ -2824,13 +2832,9 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
   let rest_bs_uvars, g = Env.uvars_for_binders env rest_bs
     [NT (a_b |> fst, a)]
     (fun b -> BU.format4
-      "implicit var for binder %s of %s~>%s at %s"
+      "implicit for binder %s of %s~>%s at %s"
       (Print.binder_to_string b) (Ident.string_of_lid ct.effect_name)
       (Ident.string_of_lid tgt) (Range.string_of_range r)) r in
-
-  if debug env <| Options.Other "LayeredEffects" then
-    BU.print1 "Introduced uvars: %s\n"
-      (List.fold_left (fun s u -> s ^ ";;;;" ^ (Print.term_to_string u)) "" rest_bs_uvars);
 
   let substs = List.map2
     (fun b t -> NT (b |> fst, t))
@@ -2840,7 +2844,11 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
     let f_sort = (fst f_b).sort |> SS.subst substs |> SS.compress in
     let f_sort_is = U.effect_indices_from_repr f_sort (Env.is_layered_effect env ct.effect_name) r "" in
     List.fold_left2
-      (fun g i1 i2 -> Env.conj_guard g (Rel.teq env i1 i2))
+      (fun g i1 i2 ->
+        if Env.debug env <| Options.Other "LayeredEffectsRel"
+        then BU.print2 "Layered Effects teq %s = %s\n"
+               (Print.term_to_string i1) (Print.term_to_string i2);
+        Env.conj_guard g (Rel.teq env i1 i2))
       Env.trivial_guard c_is f_sort_is in
 
   let lift_ct = lift_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
@@ -2852,10 +2860,6 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
     let u, wp = List.hd lift_ct.comp_univs, fst (List.hd lift_ct.effect_args) in
     Env.pure_precondition_for_trivial_post env u lift_ct.result_typ wp Range.dummyRange in
 
-  if Env.debug env <| Options.Other "LayeredEffects" &&
-     Env.debug env <| Options.Extreme
-  then BU.print1 "Guard for lift is: %s" (Print.term_to_string fml);
-
   let c = mk_Comp ({
     comp_univs = lift_ct.comp_univs;  //AR: TODO: not too sure about this
     effect_name = tgt;
@@ -2864,7 +2868,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
     flags = []  //AR: setting the flags to empty
   }) in
 
-  if debug env <| Options.Other "LayeredEffects" then
+  if debug env <| Options.Other "LayeredEffectsApp" then
     BU.print1 "} Lifted comp: %s\n" (Print.comp_to_string c);
 
   c, Env.conj_guard (Env.conj_guard g guard_f) (Env.guard_of_guard_formula (TcComm.NonTrivial fml))
