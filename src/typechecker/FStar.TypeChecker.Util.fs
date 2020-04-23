@@ -726,7 +726,7 @@ let mk_indexed_bind env
           (BU.format1 "bind g binder comp type is not a repr (%s)"
             (Print.term_to_string (U.comp_result c)))
         |> List.map (SS.subst subst)
-      | _ -> failwith "imspossible: mk_indexed_bind"
+      | _ -> failwith "impossible: mk_indexed_bind"
     in
 
     let env_g = Env.push_binders env [x_a] in
@@ -800,7 +800,11 @@ let mk_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range
   let ct1, ct2 = Env.unfold_effect_abbrev env c1, Env.unfold_effect_abbrev env c2 in
 
   match Env.exists_polymonadic_bind env ct1.effect_name ct2.effect_name with
-  | Some (p, f_bind) -> f_bind env ct1 b ct2 flags r1
+  | Some (p, f_bind) ->
+    if Env.debug env <| Options.Other "LayeredEffectsApp"
+    then BU.print3 "Found a polymonadic bind (%s, %s) |> %s, using it\n"
+           (string_of_lid ct1.effect_name) (string_of_lid ct2.effect_name) (string_of_lid p);
+    f_bind env ct1 b ct2 flags r1
   | None ->    
     (*
      * AR: g_lift here consists of the guard of lifting c1 and c2

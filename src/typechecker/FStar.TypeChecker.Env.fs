@@ -1444,6 +1444,7 @@ let add_polymonadic_bind env m n p ty =
   if exists_polymonadic_bind env m n |> is_some
   then raise_error (Errors.Fatal_PolymonadicBind_conflict, (err_msg true)) env.range
   else if join_opt env m n |> is_some
+       && not (lid_equals m n)
   then raise_error (Errors.Fatal_PolymonadicBind_conflict, (err_msg false)) env.range
   else { env with
          effects = ({ env.effects with polymonadic_binds = (m, n, p, ty)::env.effects.polymonadic_binds }) }
