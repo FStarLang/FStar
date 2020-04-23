@@ -28,7 +28,7 @@ type post_t (a:Type) = a -> hprop u#1
 let state_uses (uses:Set.set lock_addr) : Sem.st = state_obeys_st_laws uses; state0 uses
 
 type atomic_repr (a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:post_t a) =
-  Sem.action_t #(state_uses uses) pre post (fun _ -> True) (fun _ _ _ -> True)
+  Sem.action_t_tot #(state_uses uses) pre post (fun _ -> True) (fun _ _ _ -> True)
 
 let return (a:Type u#a) (x:a) (uses:Set.set lock_addr) (p:a -> hprop u#1)
 : atomic_repr a uses true (p x) p
@@ -58,6 +58,7 @@ let if_then_else (a:Type) (uses:Set.set lock_addr) (pre:pre_t) (post:post_t a)
   : Type
   = atomic_repr a uses true pre post
 
+total
 reifiable reflectable
 layered_effect {
   SteelAtomic : a:Type -> uses:Set.set lock_addr -> is_ghost:bool -> pre:pre_t -> post:post_t a
@@ -82,21 +83,21 @@ let lift_pure_steel_atomic (a:Type) (uses:Set.set lock_addr) (p:pre_t) (wp:pure_
 
 sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
 
-effect Mst (a:Type) (req:mem -> Type0) (ens:mem -> a -> mem -> Type0) =
-  NMST.NMSTATE a mem mem_evolves req ens
+effect MstTot (a:Type) (req:mem -> Type0) (ens:mem -> a -> mem -> Type0) =
+  NMSTTotal.NMSTATETOT a mem mem_evolves req ens
 
 let mst_get ()
-  : Mst mem (fun _ -> True) (fun m0 r m1 -> m0 == r /\ r == m1)
-  = NMST.get ()
+  : MstTot mem (fun _ -> True) (fun m0 r m1 -> m0 == r /\ r == m1)
+  = NMSTTotal.get ()
 
 let mst_put (m:mem)
-  : Mst unit (fun m0 -> mem_evolves m0 m) (fun _ _ m1 -> m1 == m)
-  = NMST.put m
+  : MstTot unit (fun m0 -> mem_evolves m0 m) (fun _ _ m1 -> m1 == m)
+  = NMSTTotal.put m
 
 let steel_admit (a:Type) (uses:Set.set lock_addr) (p:hprop) (q:a -> hprop)
   : SteelAtomic a uses true p q
   = SteelAtomic?.reflect (fun _ ->
-      let m0 = NMST.nmst_admit() in
+      let m0 = NMSTTotal.nmst_tot_admit() in
       mst_put m0
     )
 
