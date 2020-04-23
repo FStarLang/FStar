@@ -404,6 +404,8 @@ type eff_decl = {
 type sig_metadata = {
     sigmeta_active:bool;
     sigmeta_fact_db_ids:list<string>;
+    sigmeta_admit:bool; //An internal flag to record that a sigelt's SMT proof should be admitted
+                        //Used in DM4Free
 }
 
 type sigelt' =
@@ -593,7 +595,7 @@ let mk_Tac t =
                flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
             })
 
-let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
+let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[]; sigmeta_admit=false }
 let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] ; sigopts = None }
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s

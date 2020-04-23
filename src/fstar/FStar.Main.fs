@@ -127,7 +127,8 @@ let go _ =
                   don't verify anything *)
         if Options.dep() <> None
         then let _, deps = Parser.Dep.collect filenames FStar.CheckedFiles.load_parsing_data_from_cache in
-             Parser.Dep.print deps
+             Parser.Dep.print deps;
+             report_errors []
 
         (* Input validation: should this go to process_args? *)
         (*          don't verify anything *)
@@ -219,7 +220,7 @@ let lazy_chooser k i = match k with
 
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =
-    Options.initialize_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
+    FStar.Errors.set_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
     FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder;

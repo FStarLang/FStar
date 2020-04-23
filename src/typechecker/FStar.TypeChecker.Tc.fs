@@ -452,6 +452,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
        | _ -> false in
 
     if is_unelaborated_dm4f then
+      let env = Env.set_range env r in
       let ses, ne, lift_from_pure_opt = TcEff.dmff_cps_and_elaborate env ne in
       let effect_and_lift_ses = match lift_from_pure_opt with
         | Some lift -> [ { se with sigel = Sig_new_effect (ne) } ; lift ]
@@ -524,6 +525,9 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     [ { se with sigel = Sig_declare_typ (lid, uvs, t) }], [], env0
 
   | Sig_assume(lid, uvs, t) ->
+    FStar.Errors.log_issue r
+                 (Warning_WarnOnUse,
+                  BU.format1 "Admitting a top-level assumption %s" (Print.lid_to_string lid));
     let env = Env.set_range env r in
 
     let uvs, t =
@@ -817,8 +821,15 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
      BU.print1 "Processing %s\n" (U.lids_of_sigelt se |> List.map string_of_lid |> String.concat ", ");
    if Env.debug env Options.Low then
      BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
-
-   tc_decl' env se
+   if se.sigmeta.sigmeta_admit
+   then begin
+     let old = Options.admit_smt_queries () in
+     Options.set_admit_smt_queries true;  
+     let result = tc_decl' env se in
+     Options.set_admit_smt_queries old;
+     result
+   end
+   else tc_decl' env se
 
 let for_export env hidden se : list<sigelt> * list<lident> =
    (* Exporting symbols based on whether they have been marked 'abstract'

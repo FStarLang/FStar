@@ -47,8 +47,6 @@ let is_before t1 t2 = System.DateTime.Compare (t1, t2) < 0
 let string_of_time (t:time) = t.ToString "MM-dd-yyyy"
 
 exception Impos
-exception NYI of string
-exception HardError of string
 
 let max_int = System.Int32.MaxValue
 
