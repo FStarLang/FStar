@@ -681,8 +681,8 @@ let rec p_decl (d: decl): document =
 and p_attributes attrs =
     match attrs with
     | [] -> empty
-    | _ -> lbracket ^^ str "@ " ^^
-             align ((flow break1 (List.map p_atomicTerm attrs)) ^^ rbracket) ^^ hardline
+    | _ -> lbracket ^^ str "@@ " ^^
+             align ((flow (str "; ") (List.map (p_noSeqTermAndComment false false) attrs)) ^^ rbracket) ^^ hardline
 
 and p_justSig d = match d.d with
   | Val (lid, t) ->
@@ -1345,7 +1345,11 @@ and p_calcStep _ (CalcStep (rel, just, next)) =
 and p_attrs_opt = function
   | None -> empty
   | Some terms ->
-    group (str "[@" ^/^ (separate_map break1 p_atomicTerm terms) ^/^ str "]")
+    group (str "[@@" ^/^
+           (separate_map (str "; ")
+                         (p_noSeqTermAndComment false false)
+                         terms) ^/^
+           str "]")
 
 and p_typ ps pb e = with_comment (p_typ' ps pb) e e.range
 
