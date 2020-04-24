@@ -1,5 +1,5 @@
 [
-  "?\u0006bÅ,…UF\u0014ì\u001e¸ÊE=j",
+  "©\u001fÔ¸ùHé\u0006(‹∫“0e†\u0000",
   [
     [
       "MST.return",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "dd63a098b347e9fdc940d310e70cd7f5"
+      "42a9aad41dc03e3c3f1654b21a99f1b1"
     ],
     [
       "MST.bind",
@@ -29,7 +29,7 @@
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "39d1a379ba4ad35fdaf44cf24f4c3b8e"
+      "10068a22c2d71d6307472551b241a173"
     ],
     [
       "MST.subcomp",
@@ -38,7 +38,7 @@
       1,
       [ "@query", "equation_MST.repr" ],
       0,
-      "35eb7830952d33ef42be7aaa1113378e"
+      "5b77d668677ae6a39e05f160cd847689"
     ],
     [
       "MST.MSTATE",
@@ -47,7 +47,7 @@
       1,
       [ "@query" ],
       0,
-      "21fd38df988e577f86b5385751f39565"
+      "cebaf6cb3d32bd10265b18b3db28b155"
     ],
     [
       "MST.MSTATE",
@@ -56,7 +56,7 @@
       1,
       [ "@query" ],
       0,
-      "5870eb2405f70ed10f01a3c9bf8b08c3"
+      "a9fc3e36e998bc0492bf0b265f42df74"
     ],
     [
       "MST.get",
@@ -70,7 +70,7 @@
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "74a9f0a5412bdab0a9933822072a80bb"
+      "1b5efb579351ec988086e10b0234c3c5"
     ],
     [
       "MST.put",
@@ -79,7 +79,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "68ece30be3ab70fc39fa1abdb57dfbe9"
+      "403e47ef572c926fc35186f04c78fbc2"
     ],
     [
       "MST.lift_pure_mst",
@@ -108,7 +108,7 @@
         "typing_Tm_abs_da437716eb372fac740da22fdb123c4f"
       ],
       0,
-      "855859d1e05830df56e8865481fa3c2f"
+      "6f5db1b4fe2b74b4eca88df79f85f0da"
     ],
     [
       "MST.mst_assume",
@@ -117,7 +117,7 @@
       1,
       [ "@query" ],
       0,
-      "c0893835cffe093276fec5f6c751d235"
+      "1e781fd2aceb3ae812a219f3bc34089b"
     ],
     [
       "MST.mst_assert",
@@ -126,7 +126,16 @@
       1,
       [ "@query" ],
       0,
-      "0d05effe1ccc6e92ddf5753a14d74ef4"
+      "bc865c06862b630b49a5dfdd6b5d0970"
+    ],
+    [
+      "MST.lift_mst_total_mst",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1b80f27a726a88455626df93763de7b0"
     ],
     [
       "MST.return",
@@ -140,7 +149,7 @@
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "5a713610207d713062b53491933d9f62"
+      "6c80219c5925b3e1974b2369057cee7c"
     ],
     [
       "MST.bind",
@@ -156,7 +165,7 @@
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "3931950a21dabbd5ae644bf1346f5973"
+      "c5faae985a0dafc3f719b756337faf75"
     ],
     [
       "MST.subcomp",
@@ -165,7 +174,7 @@
       1,
       [ "@query", "equation_MST.repr" ],
       0,
-      "84ec14349a36311cc62b1823bebb9a2b"
+      "11fe0774c19d93cdaf874ca8ed8780fa"
     ],
     [
       "MST.MSTATE",
@@ -174,7 +183,7 @@
       1,
       [ "@query" ],
       0,
-      "7a1aa627b0a50248e976ed0b3ca74e69"
+      "f1f801a148600cb692d5d11a9f218cf8"
     ],
     [
       "MST.MSTATE",
@@ -183,7 +192,7 @@
       1,
       [ "@query" ],
       0,
-      "21a8a84ca1cae4f3417f3f7b7ec0739b"
+      "64af8959aa1da3b8ea6ac6756452a667"
     ],
     [
       "MST.get",
@@ -197,7 +206,7 @@
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c"
       ],
       0,
-      "4341a3242716ed33105bef106d14b871"
+      "5a72616305db67ff280275ab63e5c08a"
     ],
     [
       "MST.put",
@@ -206,7 +215,7 @@
       1,
       [ "@query", "unit_typing" ],
       0,
-      "6cccefbd2d4ab57ae14327b441031be2"
+      "96f0b9316c56412602cb819d28de52e2"
     ],
     [
       "MST.lift_pure_mst",
@@ -235,7 +244,7 @@
         "typing_Tm_abs_da437716eb372fac740da22fdb123c4f"
       ],
       0,
-      "573c611c3d0e9078dcabbca59c3c61d8"
+      "70e391fce94152a8fcdb506a9eb3cb43"
     ],
     [
       "MST.mst_assume",
@@ -244,7 +253,7 @@
       1,
       [ "@query" ],
       0,
-      "cee6a7a8ccedde5ea01292912629934a"
+      "ba28dc3af27947e1e6dbcb45561ed790"
     ],
     [
       "MST.mst_assert",
@@ -253,7 +262,16 @@
       1,
       [ "@query" ],
       0,
-      "3279f1c8b6990a5595ccbcd64d425dab"
+      "0db5cd69b47147f48685fff835bc8ec8"
+    ],
+    [
+      "MST.lift_mst_total_mst",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f4239658c1a8c2adf2006769c7dae025"
     ]
   ]
 ]
