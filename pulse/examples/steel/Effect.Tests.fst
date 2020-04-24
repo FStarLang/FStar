@@ -37,7 +37,7 @@ val crash_h_assert (_:unit)
 
 assume val crash_get_prop : int -> hprop
 
-[@expect_failure]
+[@@expect_failure]
 let crash_test (_:unit)
   : SteelT unit emp (fun _ -> emp)
   = let r = 0 in
