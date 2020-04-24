@@ -608,6 +608,7 @@ let reduce_primops norm_cb cfg env tm =
                                        then args, []
                                        else List.splitAt prim_step.arity args
                   in
+                  let args_1 = List.map (fun (targ, qual) -> (U.unmeta targ, qual)) args_1 in
                   log_primops cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (Print.term_to_string tm));
                   let psc = {
                       psc_range = head.pos;
@@ -663,9 +664,9 @@ let reduce_primops norm_cb cfg env tm =
          | _ -> tm
    end
 
-let reduce_equality norm_cb cfg tm =
+let reduce_equality norm_cb cfg env tm =
     reduce_primops norm_cb ({cfg with steps = { default_steps with primops = true };
-                              primitive_steps=equality_ops}) tm
+                              primitive_steps=equality_ops}) env tm
 
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
