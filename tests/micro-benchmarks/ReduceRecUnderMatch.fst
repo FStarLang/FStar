@@ -54,12 +54,12 @@ let rec f2 (l : list nat)
 
 (** To partially evaluate all the recursion in [f2],
     postprocess the definition with the unroll tactic *)
-[@(postprocess_with (unroll (`%f2)))]
+[@@(postprocess_with (unroll (`%f2)))]
 let f3 (b:bool) : Dv bool =
     f2 [1;2;3;4] b
 
 (** You can also do the same, but wait until extraction to unroll it *)
-[@(postprocess_for_extraction_with (unroll (`%f2)))]
+[@@(postprocess_for_extraction_with (unroll (`%f2)))]
 let f4 (b:bool) : Dv bool =
     f2 [1;2;3;4] b
 

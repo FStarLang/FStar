@@ -15,7 +15,7 @@ let g (a:t) =
   match a with
   | C -> true
 
-[@expect_failure]
+[@@expect_failure]
 let foo (a:t) (x: ee (f a)) : ee (g a) = x
 
 (*
