@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Steel.PCM.ArrayStruct.Memory
+module Steel.PCM.ArrayStruct
 module U32 = FStar.UInt32
 module Univ = FStar.Universe
 module DepMap = FStar.DependentMap
