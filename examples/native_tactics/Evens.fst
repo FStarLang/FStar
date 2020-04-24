@@ -38,7 +38,7 @@ let evenSSn (n: unary_nat) :
          apply (`Even_SSn);
          assumption ())
 
-[@plugin]
+[@@plugin]
 let prove_even () : Tac unit =
    ignore (repeat (fun () -> apply_lemma (`evenSSn)));
    apply_lemma (`even0)

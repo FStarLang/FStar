@@ -180,7 +180,7 @@ let arith_to_bv_tac () : Tac unit =
 (* As things are right now, we need to be able to parse NatToBv
 too. This can be useful, if we have mixed expressions so I'll leave it
 as is for now *)
-[@plugin]
+[@@plugin]
 let bv_tac ()  =
   mapply (`eq_to_bv);
   mapply (`trans);
@@ -250,7 +250,7 @@ let unfold64 () : Tac unit =
 let aux () : Tac unit = or_else unfold64 (fun () -> fail "SKIP")
 
 /// Finally, a tactic for bitwise operations on U64.t
-[@plugin]
+[@@plugin]
 let bv64_tac () : Tac unit =
     //introduce a single `v e = v e'` at the top, if the goal is a U64.t equality
     mapply (`v64_eq);

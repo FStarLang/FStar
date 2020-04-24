@@ -18,7 +18,7 @@ open Imp.Fun
 module R = Registers.Fun
 module L = FStar.List.Tot
 
-[@unfold_defs]
+[@@unfold_defs]
 let long_zero x : prog =
     let l = x_times_42 x in
     let l = l `L.append` l in

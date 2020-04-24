@@ -264,7 +264,7 @@ let ser_u32 v = fun buf ->
 let enc_u16_array_st (a: u16_array_st) (h:mem{live h a.a16_st}) : GTot bytes =
     encode_u16 a.len16_st `append` as_seq h a.a16_st
 
-inline_for_extraction [@"substitute"]
+inline_for_extraction [@@"substitute"]
 val ser_u16_array : a:u16_array_st ->
   serializer_any (hide (TSet.singleton a.a16_st)) (fun h -> enc_u16_array_st a h)
 let ser_u16_array a = fun buf ->

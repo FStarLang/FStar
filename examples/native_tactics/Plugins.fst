@@ -23,41 +23,41 @@ module Plugins
 open FStar.Reflection
 open FStar.Tactics
 
-[@plugin]
+[@@plugin]
 let int_plugin: int -> int = id
 
-[@plugin]
+[@@plugin]
 let bool_plugin: bool -> bool = id
 
-[@plugin]
+[@@plugin]
 let unit_plugin: unit -> bool = fun _ -> true
 
-[@plugin]
+[@@plugin]
 let string_plugin: string -> string = id
 
-[@plugin]
+[@@plugin]
 let term_plugin: term -> term = id
 
-[@plugin]
+[@@plugin]
 let binder_plugin: binder -> binder = id
 
-[@plugin]
+[@@plugin]
 let binders_plugin: binders -> binders = id
 
-[@plugin]
+[@@plugin]
 let norm_step_plugin: norm_step -> norm_step = id
 
-[@plugin]
+[@@plugin]
 let fv_plugin: fv -> fv = id
 
-[@plugin]
+[@@plugin]
 let list_plugin: list int -> (list int) = id
 
-[@plugin]
+[@@plugin]
 let option_plugin: option term -> (option term) = id
 
-[@plugin]
+[@@plugin]
 let tuple_plugin: int -> bool -> (int * bool) = fun x y -> (x,y)
 
-[@plugin]
+[@@plugin]
 let any_plugin (#a: Type) (l: list a): list a = l
