@@ -1140,7 +1140,7 @@ and (p_attributes : FStar_Parser_AST.attributes_ -> FStar_Pprint.document) =
             let uu____4905 =
               let uu____4906 =
                 let uu____4907 =
-                  let uu____4908 = str ";"  in
+                  let uu____4908 = str "; "  in
                   let uu____4910 =
                     FStar_List.map (p_noSeqTermAndComment false false) attrs
                      in
@@ -2947,7 +2947,7 @@ and (p_attrs_opt :
           let uu____7502 = str "[@@"  in
           let uu____7504 =
             let uu____7505 =
-              let uu____7506 = str ";"  in
+              let uu____7506 = str "; "  in
               FStar_Pprint.separate_map uu____7506
                 (p_noSeqTermAndComment false false) terms
                in

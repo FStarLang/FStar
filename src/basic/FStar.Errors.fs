@@ -362,6 +362,7 @@ type raw_error =
   | Warning_CouldNotReadHints
   | Fatal_BadUvar
   | Warning_WarnOnUse
+  | Warning_DeprecatedAttributeSyntax
   | Warning_DeprecatedGeneric
 
 type flag = error_flag
@@ -704,7 +705,8 @@ let default_settings : list<error_setting> =
     Warning_CouldNotReadHints                         , CWarning, 333;
     Fatal_BadUvar                                     , CFatal,   334;
     Warning_WarnOnUse                                 , CSilent,  335;
-    Warning_DeprecatedGeneric                         , CWarning, 336
+    Warning_DeprecatedAttributeSyntax                 , CSilent,  336;
+    Warning_DeprecatedGeneric                         , CWarning,  337
     ]
 module BU = FStar.Util
 
