@@ -43,7 +43,7 @@ let grows_aux (#a:Type) :Preorder.preorder (seq a)
     length s1 <= length s2 /\
     (forall (i:nat).{:pattern (Seq.index s1 i) \/ (Seq.index s2 i)} i < length s1 ==> index s1 i == index s2 i)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 let grows #a = grows_aux #a
 
 type rid = HST.erid

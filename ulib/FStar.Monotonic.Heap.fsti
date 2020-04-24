@@ -35,7 +35,7 @@ val emp :heap
 
 val next_addr: heap -> GTot pos
 
-[@ assume_strictly_positive]
+[@@ assume_strictly_positive]
 val mref (a:Type0) (rel:preorder a) :Type0
 
 val addr_of: #a:Type0 -> #rel:preorder a -> mref a rel -> GTot pos

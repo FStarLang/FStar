@@ -25,7 +25,7 @@ unfold let n = 64
 ///
 /// Except, as compared to [FStar.IntN.fstp], here:
 ///  - every occurrence of [int_t] has been replaced with [uint_t]
-///  - every occurrence of [@%] has been replaced with [%].
+///  - every occurrence of [@@%] has been replaced with [%].
 ///  - some functions (e.g., add_underspec, etc.) are only defined here, not on signed integers
 
 /// This module provides an abstract type for machine integers of a

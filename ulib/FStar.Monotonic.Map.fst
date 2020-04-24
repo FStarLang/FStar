@@ -43,7 +43,7 @@ let grows_aux #a #b #inv :Preorder.preorder (map a b inv) =
   forall x.{:pattern (Some? (m1 x))}
       Some? (m1 x) ==> Some? (m2 x) /\ Some?.v (m1 x) == Some?.v (m2 x)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 let grows #a #b #inv = grows_aux #a #b #inv
 
 (* Monotone, partial, dependent maps, with a whole-map invariant *)
