@@ -11,6 +11,8 @@ noeq type perm : Type u#a =
 
 let perm_one : perm = MkPerm 1.0R
 
+let perm_zero : perm = MkPerm 0.0R
+
 let readable (p: perm) : GTot bool =
   MkPerm?.v p >. 0.0R
 
@@ -31,32 +33,31 @@ noeq type with_perm (a: Type u#a) = {
   perm: perm
 }
 
-let composable_with_perm' (#a: Type u#a) (pcm: pcm a) (x y: with_perm a) : prop =
-  composable pcm x.value y.value /\
+let composable_with_perm' (#a: Type u#a) (x y: with_perm a) : prop =
+  x.value == y.value /\
   lesser_equal_perm (sum_perm x.perm y.perm) perm_one
 
-let composable_with_perm (#a: Type u#a) (pcm: pcm a) : symrel (with_perm a) =
-  fun (x y: with_perm a) -> composable_with_perm' pcm x y
+let composable_with_perm (#a: Type u#a) : symrel (with_perm a) =
+  fun (x y: with_perm a) -> composable_with_perm' x y
 
 
 let compose_with_perm
   (#a: Type u#a)
-  (pcm: pcm a)
   (x: with_perm a)
-  (y: with_perm a{x `composable_with_perm pcm` y}) =
+  (y: with_perm a{x `composable_with_perm ` y}) =
   {
-   value = op pcm x.value y.value;
+   value = x.value;
    perm = sum_perm x.perm y.perm
   }
 
-let frac_perm_pcm' (#a: Type u#a) (pcm: pcm a) : pcm' (with_perm a) = {
-  composable = composable_with_perm pcm;
-  op = compose_with_perm pcm;
-  one = { value = pcm.p.one; perm = perm_one }
+let frac_perm_pcm' (#a: Type u#a) (def: a) : pcm' (with_perm a) = {
+  composable = composable_with_perm;
+  op = compose_with_perm;
+  one = { value = def; perm = perm_zero }
 }
 
-let fram_perm_pcm (#a: Type u#a) (p: pcm a) : pcm (with_perm a) = {
-  p = frac_perm_pcm' p;
+let frac_perm_pcm (#a: Type u#a) (def: a) : pcm (with_perm a) = {
+  p = frac_perm_pcm' def;
   comm = (fun _ _ -> admit());
   assoc = (fun _ _ _ -> admit());
   assoc_r = (fun _ _ _ -> admit());
