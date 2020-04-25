@@ -235,7 +235,7 @@
         "typing_Steel.Semantics.Instantiate.state0"
       ],
       0,
-      "db6e585b019ba90178a133a45e377281"
+      "0c984b020b063bb2d070b5e66301d8fe"
     ],
     [
       "Steel.Effect.Atomic.new_inv",
@@ -300,7 +300,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "46f2fa931316cd7fc062dd0a2c1b6497"
+      "27ff8722836509efc9616599bc957525"
     ],
     [
       "Steel.Effect.Atomic.change_hprop",
@@ -765,7 +765,7 @@
         "typing_Steel.Semantics.Instantiate.state0"
       ],
       0,
-      "62a9aafa6c4eaaaf2810ef16ab5d681c"
+      "3de4c3d2b470845ce58e17371fabcb73"
     ],
     [
       "Steel.Effect.Atomic.new_inv",
@@ -830,7 +830,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "80a62c6a8711541f532b62573874f458"
+      "3f12926502a399a886773fa874336940"
     ],
     [
       "Steel.Effect.Atomic.change_hprop",
