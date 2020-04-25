@@ -1883,7 +1883,21 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
         | (x, Some (Implicit _))::rest, (_, None)::_ -> (* instantiate an implicit arg *)
             let t = SS.subst subst x.sort in
             let t, g_ex = check_no_escape (Some head) env fvs t in
-            let varg, _, implicits = TcUtil.new_implicit_var "Instantiating implicit argument in application" head.pos env t in //new_uvar env t in
+            (* We compute a range by combining the range of the head
+             * and the last argument we checked (if any). This is such that
+             * if we instantiate an implicit for `f ()` (of type `#x:a -> ...),
+             * we give it the range of `f ()` instead of just the range for `f`.
+             * See issue #2021. This is only for the use range, we take
+             * the def range from the head, so the 'see also' should still
+             * point to the definition of the head. *)
+            let r = match outargs with
+                    | [] -> head.pos
+                    | ((t, _), _, _)::_ ->
+                        Range.range_of_rng (Range.def_range head.pos)
+                                           (Range.union_rng (Range.use_range head.pos)
+                                                            (Range.use_range t.pos))
+            in
+            let varg, _, implicits = TcUtil.new_implicit_var "Instantiating implicit argument in application" r env t in //new_uvar env t in
             let subst = NT(x, varg)::subst in
             let arg = varg, as_implicit true in
             let guard = List.fold_right Env.conj_guard [g_ex; g] implicits in
@@ -1904,7 +1918,14 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
             let t = SS.subst subst x.sort in
             let t, g_ex = check_no_escape (Some head) env fvs t in
-            let varg, _, implicits = new_implicit_var_aux "Instantiating meta argument in application" head.pos env t Strict (Some (mkdyn env, tau)) in
+            let r = match outargs with
+                    | [] -> head.pos
+                    | ((t, _), _, _)::_ ->
+                        Range.range_of_rng (Range.def_range head.pos)
+                                           (Range.union_rng (Range.use_range head.pos)
+                                                            (Range.use_range t.pos))
+            in
+            let varg, _, implicits = new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some (mkdyn env, tau)) in
             let subst = NT(x, varg)::subst in
             let arg = varg, as_implicit true in
             let guard = List.fold_right Env.conj_guard [g_ex; g; g_tau] implicits in
