@@ -43,13 +43,14 @@ let rec tcresolve' (seen:list term) (fuel:int) : Tac unit =
     local seen fuel `or_else` (fun () -> global seen fuel `or_else` (fun () -> fail ("could not solve constraint: " ^ term_to_string g)))
 and local (seen:list term) (fuel:int) () : Tac unit =
     let bs = binders_of_env (cur_env ()) in
-    first (fun b -> trywith seen fuel (pack (Tv_Var (bv_of_binder b)))) bs
+    first (fun b -> trywith true seen fuel (pack (Tv_Var (bv_of_binder b)))) bs
 and global (seen:list term) (fuel:int) () : Tac unit =
     let cands = lookup_attr (`tcinstance) (cur_env ()) in
-    first (fun fv -> trywith seen fuel (pack (Tv_FVar fv))) cands
-and trywith (seen:list term) (fuel:int) (t:term) : Tac unit =
+    first (fun fv -> trywith false seen fuel (pack (Tv_FVar fv))) cands
+and trywith (local:bool) (seen:list term) (fuel:int) (t:term) : Tac unit =
     debug ("Trying to apply hypothesis/instance: " ^ term_to_string t);
-    (fun () -> apply_noinst t) `seq` (fun () -> tcresolve' seen (fuel-1))
+    (fun () -> if local then apply t
+                        else apply_noinst t) `seq` (fun () -> tcresolve' seen (fuel-1))
 
 [@plugin]
 let tcresolve () : Tac unit =
