@@ -45,8 +45,11 @@ module RE = FStar.Reflection.Embeddings
 open FStar.SMTEncoding.Env
 open FStar.SMTEncoding.EncodeTerm
 open FStar.Parser
-
 module Env = FStar.TypeChecker.Env
+
+let reify_comp (env:Env.env) (c:S.comp) (u:S.universe) : S.term =
+    FStar.Syntax.Unionfind.with_uf_enabled (fun () ->
+      Env.reify_comp env c u)
 
 let norm_before_encoding env t =
     let steps = [Env.Eager_unfolding;
@@ -440,7 +443,8 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
                   else comp
                 in
                 if encode_non_total_function_typ
-                then args, TypeChecker.Util.pure_or_ghost_pre_and_post env.tcenv comp
+                then args, FStar.Syntax.Unionfind.with_uf_enabled (fun () ->
+                            TypeChecker.Util.pure_or_ghost_pre_and_post env.tcenv comp)
                 else args, (None, U.comp_result comp)
               in
               let mk_disc_proj_axioms guard encoded_res_t vapp (vars:fvs) = quals |> List.collect (function
@@ -710,7 +714,8 @@ let encode_top_level_let :
       let binders, body, comp =
           if is_smt_reifiable_comp tcenv comp
           then let comp = reify_comp tcenv comp U_unknown in
-               let body = TcUtil.reify_body tcenv [] body in
+               let body = FStar.Syntax.Unionfind.with_uf_enabled (fun () ->
+                              TcUtil.reify_body tcenv [] body) in
                let more_binders, body, comp = aux comp body in
                binders@more_binders, body, comp
           else binders, body, comp
@@ -853,7 +858,8 @@ let encode_top_level_let :
             (* Open binders *)
             let (binders, body, tres_comp) = destruct_bound_function t_norm e in
             let curry = fvb.smt_arity <> List.length binders in
-            let pre_opt, tres = TcUtil.pure_or_ghost_pre_and_post env.tcenv tres_comp in
+            let pre_opt, tres = FStar.Syntax.Unionfind.with_uf_enabled (fun () ->
+                                    TcUtil.pure_or_ghost_pre_and_post env.tcenv tres_comp) in
             if Env.debug env0.tcenv <| Options.Other "SMTEncodingReify"
             then BU.print4 "Encoding let rec %s: \n\tbinders=[%s], \n\tbody=%s, \n\ttres=%s\n"
                               (Print.lbname_to_string lbn)
@@ -1208,7 +1214,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
              in
              let tps, k = SS.open_term tps k in
              let _, k = U.arrow_formals k in //don't care about indices here
-             let tps, env_tps, _, us = TcTerm.tc_binders env tps in
+             let tps, env_tps, _, us = UF.with_uf_enabled (fun () ->
+                                            TcTerm.tc_binders env tps) in
              let u_k =
                TcTerm.level_of_type
                  env_tps
@@ -1243,7 +1250,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 if u_leq_u_k u_tp
                 then true
                 else let formals, _ = U.arrow_formals t_tp in
-                     let _, _, _, u_formals = TcTerm.tc_binders env_tps formals in
+                     let _, _, _, u_formals = UF.with_uf_enabled (fun () ->
+                                                   TcTerm.tc_binders env_tps formals) in
                      //List.iter (fun u -> BU.print1 "Universe of formal: %s\n" (Print.univ_to_string u)) u_formals;
                      BU.for_all (fun u_formal -> u_leq_u_k u_formal) u_formals
              in
@@ -1261,12 +1269,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  [Term.DeclFun(name, args |> List.map (fun (_, sort, _) -> sort), Term_sort, None)]
             else constructor_to_decl (Ident.range_of_lid t) c in
         let inversion_axioms tapp vars =
-            if datas |> BU.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone) //Q: Why would this happen?
-            then []
-            else
+            (* if datas |> BU.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone) //Q: Why would this happen? *)
+            (* then [] *)
+            (* else *)
                  let xxsym, xx = fresh_fvar env.current_module_name "x" Term_sort in
                  let data_ax, decls = datas |> List.fold_left (fun (out, decls) l ->
-                    let _, data_t = Env.lookup_datacon env.tcenv l in
+                    let data_t = Env.lookup_datacon_noinst env.tcenv l in
                     let args, res = U.arrow_formals data_t in
                     let indices = match (SS.compress res).n with
                         | Tm_app(_, indices) -> indices
@@ -1703,7 +1711,6 @@ let give_decls_to_z3_and_set_env (env:env_t) (name:string) (decls:decls_t) :unit
 let encode_modul tcenv modul =
   if Options.lax() && Options.ml_ish() then [], []
   else begin
-    UF.with_uf_enabled (fun () ->
     varops.reset_fresh ();
     let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  (string_of_lid modul.name) in
     if Env.debug tcenv Options.Medium
@@ -1718,7 +1725,7 @@ let encode_modul tcenv modul =
     give_decls_to_z3_and_set_env env name decls;
     if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals for %s\n" name;
     decls, env |> get_current_module_fvbs
-  ) end
+  end
 
 let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
   if Options.lax () && Options.ml_ish () then ()

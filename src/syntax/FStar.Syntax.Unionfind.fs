@@ -92,9 +92,11 @@ let with_uf_enabled (f : unit -> 'a) : 'a =
     r
 
 let fail_if_ro () =
-    if (get ()).ro then
+    if (get ()).ro then begin
+      BU.print_error (BU.stack_dump ());
       raise_error (Fatal_BadUvar, "Internal error: UF graph was in read-only mode")
                   Range.dummyRange
+    end
 
 let set (u:uf) =
     fail_if_ro ();

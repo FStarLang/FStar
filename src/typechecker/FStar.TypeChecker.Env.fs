@@ -75,7 +75,7 @@ let rec eq_step s1 s2 =
   | Beta, Beta
   | Iota, Iota           //pattern matching
   | Zeta, Zeta            //fixed points
-  | ZetaFull, ZetaFull    //fixed points  
+  | ZetaFull, ZetaFull    //fixed points
   | Weak, Weak            //Do not descend into binders
   | HNF, HNF             //Only produce a head normal form
   | Primops, Primops         //reduce primitive operators like +, -, *, /, etc.
@@ -498,7 +498,8 @@ let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace c
          aux cur lns
     else No
 
-type qninfo = option<(BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range)>
+type qninfo_0 = BU.either<(universes * typ),(sigelt * option<universes>)> * Range.range
+type qninfo = option<qninfo_0>
 
 let lookup_qname env (lid:lident) : qninfo =
   let cur_mod = in_cur_mod env lid in
@@ -573,104 +574,100 @@ let try_lookup_bv env (bv:bv) =
       Some (id.sort, (range_of_id id.ppname))
     | _ -> None)
 
-let lookup_type_of_let us_opt se lid =
-    let inst_tscheme ts =
-      match us_opt with
-      | None -> inst_tscheme ts
-      | Some us -> inst_tscheme_with ts us
-    in
+let lookup_type_of_let (se:sigelt) (lid:Ident.lid) : option<(tscheme * Range.range)> =
     match se.sigel with
     | Sig_let((_, [lb]), _) ->
-      Some (inst_tscheme (lb.lbunivs, lb.lbtyp), S.range_of_lbname lb.lbname)
+      Some ((lb.lbunivs, lb.lbtyp), S.range_of_lbname lb.lbname)
 
     | Sig_let((_, lbs), _) ->
         BU.find_map lbs (fun lb -> match lb.lbname with
           | Inl _ -> failwith "impossible"
           | Inr fv ->
             if fv_eq_lid fv lid
-            then Some (inst_tscheme (lb.lbunivs, lb.lbtyp), S.range_of_fv fv)
+            then Some ((lb.lbunivs, lb.lbtyp), S.range_of_fv fv)
             else None)
 
     | _ -> None
 
-let effect_signature (us_opt:option<universes>) (se:sigelt) rng : option<((universes * typ) * Range.range)> =
-  let inst_ts us_opt ts =
+let effect_signature (se:sigelt) rng : option<(tscheme * Range.range)> =
+  match se.sigel with
+  | Sig_new_effect ne ->
+    check_effect_is_not_a_template ne rng;
+    Some (ne.signature, se.sigrng)
+
+  | Sig_effect_abbrev (lid, us, binders, _, _) ->
+    Some ((us, U.arrow binders (mk_Total teff)), se.sigrng)
+
+  | _ -> None
+
+let lookup_mapper0 env lid ((lr, rng) : qninfo_0) : option<(tscheme * range)> =
+  match lr with
+  | Inl t ->
+    Some (([], snd t), rng)
+
+  | Inr ({sigel = Sig_datacon(_, uvs, t, _, _, _) }, None) ->
+    Some ((uvs, t), rng)
+
+  | Inr ({sigel = Sig_declare_typ (l, uvs, t); sigquals=qs }, None) ->
+    if in_cur_mod env l = Yes
+    then if qs |> List.contains Assumption || env.is_iface
+         then Some ((uvs, t), rng)
+         else None
+    else Some ((uvs, t), rng)
+
+  | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, k, _, _) }, None) ->
+    begin match tps with
+      | [] -> Some ((uvs, k), rng)
+      | _ ->  Some ((uvs, U.flat_arrow tps (mk_Total k)), rng)
+    end
+
+  | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, k, _, _) }, Some us) ->
+    failwith "GGG??"
+    (* begin match tps with *)
+    (*   | [] -> Some (inst_tscheme_with (uvs, k) us, rng) *)
+    (*   | _ ->  Some (inst_tscheme_with (uvs, U.flat_arrow tps (mk_Total k)) us, rng) *)
+    (* end *)
+
+  | Inr se ->
+    begin match se with // FIXME why does this branch not use rng?
+      | { sigel = Sig_let _ }, None ->
+        lookup_type_of_let (fst se) lid
+
+      | _ ->
+        effect_signature (fst se) env.range
+    end |> BU.map_option (fun (us_t, rng) -> (us_t, rng))
+
+let try_lookup_lid_aux_noinst env lid : option<(term * range)> =
+    match BU.bind_opt (lookup_qname env lid) (lookup_mapper0 env lid) with
+      | Some ((us, t), r) -> Some ({t with pos=range_of_lid lid}, r)
+      | None -> None
+
+let try_lookup_lid_aux us_opt env lid : option<((universes * term) * range)> =
+  let inst_tscheme ts =
     match us_opt with
     | None -> inst_tscheme ts
     | Some us -> inst_tscheme_with ts us
   in
-  match se.sigel with
-  | Sig_new_effect ne ->
-    check_effect_is_not_a_template ne rng;
-    (match us_opt with
-     | None -> ()
-     | Some us ->
-       if List.length us <> List.length (fst ne.signature)
-       then failwith ("effect_signature: incorrect number of universes for the signature of " ^
-         (string_of_lid ne.mname) ^ ", expected " ^ (string_of_int (List.length (fst ne.signature))) ^
-         ", got " ^ (string_of_int (List.length us)))
-       else ());
-
-    Some (inst_ts us_opt ne.signature, se.sigrng)
-
-  | Sig_effect_abbrev (lid, us, binders, _, _) ->
-    Some (inst_ts us_opt (us, U.arrow binders (mk_Total teff)), se.sigrng)
-
-  | _ -> None
-
-let try_lookup_lid_aux us_opt env lid =
-  let inst_tscheme ts =
-      match us_opt with
-      | None -> inst_tscheme ts
-      | Some us -> inst_tscheme_with ts us
-  in
-  let mapper (lr, rng) =
+  let mapper ((lr, rng) : qninfo_0) : option<((universes * term) * range)> =
     match lr with
     | Inl t ->
       Some (t, rng)
-
-    | Inr ({sigel = Sig_datacon(_, uvs, t, _, _, _) }, None) ->
-      Some (inst_tscheme (uvs, t), rng)
-
-    | Inr ({sigel = Sig_declare_typ (l, uvs, t); sigquals=qs }, None) ->
-      if in_cur_mod env l = Yes
-      then if qs |> List.contains Assumption || env.is_iface
-           then Some (inst_tscheme (uvs, t), rng)
-           else None
-      else Some (inst_tscheme (uvs, t), rng)
-
-    | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, k, _, _) }, None) ->
-      begin match tps with
-        | [] -> Some (inst_tscheme (uvs, k), rng)
-        | _ ->  Some (inst_tscheme (uvs, U.flat_arrow tps (mk_Total k)), rng)
-      end
-
-    | Inr ({sigel = Sig_inductive_typ (lid, uvs, tps, k, _, _) }, Some us) ->
-      begin match tps with
-        | [] -> Some (inst_tscheme_with (uvs, k) us, rng)
-        | _ ->  Some (inst_tscheme_with (uvs, U.flat_arrow tps (mk_Total k)) us, rng)
-      end
-
-    | Inr se ->
-      begin match se with // FIXME why does this branch not use rng?
-        | { sigel = Sig_let _ }, None ->
-          lookup_type_of_let us_opt (fst se) lid
-
-        | _ ->
-          effect_signature us_opt (fst se) env.range
-      end |> BU.map_option (fun (us_t, rng) -> (us_t, rng))
+    | _ ->
+      BU.map_opt (lookup_mapper0 env lid (lr, rng)) (fun (ts, r) -> (inst_tscheme ts, r))
   in
-    match BU.bind_opt (lookup_qname env lid) mapper with
-      | Some ((us, t), r) -> Some ((us, {t with pos=range_of_lid lid}), r)
-      | None -> None
+  match BU.bind_opt (lookup_qname env lid) mapper with
+  | Some ((us, t), r) ->
+      Some ((us, {t with pos=range_of_lid lid}), r)
+  | None -> None
+
 
 ////////////////////////////////////////////////////////////////
 //External interaface for querying identifiers
 //Provides, in order from the interface env.fsi:
 //        val lid_exists             : env -> lident -> bool
 //        val lookup_bv              : env -> bv -> typ
-//        val try_lookup_lid         : env -> lident -> option<(universes * typ)>
-//        val lookup_lid             : env -> lident -> (universes * typ)
+//        val try_lookup_lid         : env -> lident -> option<((universes * typ) * range)>
+//        val lookup_lid             : env -> lident -> (universes * typ) * range
 //        val lookup_univ            : env -> univ_name -> bool
 //        val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
 //        val lookup_val_decl        : env -> lident -> universes * typ
@@ -725,9 +722,17 @@ let try_lookup_and_inst_lid env us l =
       Some (Subst.set_use_range use_range t, r)
 
 let lookup_lid env l =
-    match try_lookup_lid env l with
+     match try_lookup_lid env l with
+     | None -> raise_error (name_not_found l) (range_of_lid l)
+     | Some v -> v
+
+let lookup_lid_noinst env l =
+    match try_lookup_lid_aux_noinst env l with
+    | Some (t, r) ->
+      let use_range = range_of_lid l in
+      let r = Range.set_use_range r (Range.use_range use_range) in
+      (Subst.set_use_range use_range t, r)
     | None -> raise_error (name_not_found l) (range_of_lid l)
-    | Some v -> v
 
 let lookup_univ env x =
     List.find (function
@@ -752,6 +757,12 @@ let lookup_datacon env lid =
   match lookup_qname env lid with
     | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _) }, None), _) ->
       inst_tscheme_with_range (range_of_lid lid) (uvs, t)
+    | _ -> raise_error (name_not_found lid) (range_of_lid lid)
+
+let lookup_datacon_noinst env lid =
+  match lookup_qname env lid with
+    | Some (Inr ({ sigel = Sig_datacon (_, uvs, t, _, _, _) }, None), _) ->
+      t
     | _ -> raise_error (name_not_found lid) (range_of_lid lid)
 
 let datacons_of_typ env lid =
@@ -931,9 +942,11 @@ let fv_has_strict_args env fv =
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
     | Some (Inr (se, None), _) ->
-      begin match effect_signature None se env.range with
+      begin match effect_signature se env.range with
         | None -> None
-        | Some ((_, t), r) -> Some (Subst.set_use_range (range_of_lid ftv) t)
+        | Some (ts, r) ->
+            let (_, t)= inst_tscheme ts in
+            Some (Subst.set_use_range (range_of_lid ftv) t)
       end
     | _ -> None
 
@@ -997,7 +1010,7 @@ let num_effect_indices env name r =
     raise_error (Errors.Fatal_UnexpectedSignatureForMonad,
       BU.format2 "Signature for %s not an arrow (%s)" (Ident.string_of_lid name)
       (Print.term_to_string sig_t)) r
-    
+
 
 let lookup_effect_quals env l =
     let l = norm_eff_name env l in
@@ -1130,7 +1143,7 @@ let join env l1 l2 : (lident * mlift * mlift) =
   match join_opt env l1 l2 with
   | None ->
     raise_error (Errors.Fatal_EffectsCannotBeComposed,
-      (BU.format2 "Effects %s and %s cannot be composed" 
+      (BU.format2 "Effects %s and %s cannot be composed"
         (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
   | Some t -> t
 
@@ -1195,7 +1208,7 @@ let effect_repr_aux only_reifiable env c u_res =
         like [TAC int] instead of [Tac int] (given:%s, expected:%s)."
         (Ident.string_of_lid eff_name) (string_of_int given) (string_of_int expected) in
       raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, message) r in
-      
+
   let effect_name = norm_eff_name env (U.comp_effect_name c) in
   match effect_decl_opt env effect_name with
   | None -> None
@@ -1439,7 +1452,7 @@ let add_polymonadic_bind env m n p ty =
   then raise_error (Errors.Fatal_PolymonadicBind_conflict, (err_msg false)) env.range
   else { env with
          effects = ({ env.effects with polymonadic_binds = (m, n, p, ty)::env.effects.polymonadic_binds }) }
-  
+
 let push_local_binding env b =
   {env with gamma=b::env.gamma}
 

@@ -734,7 +734,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let fsym = mk_fv (varops.fresh module_name "f", Term_sort) in
              let f = mkFreeV  fsym in
              let app = mk_Apply f vars in
-             let pre_opt, res_t = TcUtil.pure_or_ghost_pre_and_post ({env.tcenv with lax=true}) res in
+             let pre_opt, res_t =
+                    FStar.Syntax.Unionfind.with_uf_enabled (fun () ->
+                        TcUtil.pure_or_ghost_pre_and_post ({env.tcenv with lax=true}) res)
+             in
              let res_pred, decls' = encode_term_pred None res_t env' app in
              let guards, guard_decls = match pre_opt with
                 | None -> mk_and_l guards_l, []
@@ -1009,7 +1012,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             encode_term arg env
 
         | Tm_constant Const_reify, _ (* (_::_::_) *) ->
-            let e0 = TcUtil.reify_body_with_arg env.tcenv [] head (List.hd args_e) in
+            let e0 = FStar.Syntax.Unionfind.with_uf_enabled (fun () ->
+                         TcUtil.reify_body_with_arg env.tcenv [] head (List.hd args_e))
+            in
             if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
             then BU.print1 "Result of normalization %s\n" (Print.term_to_string e0);
             let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) None t0.pos in
@@ -1112,7 +1117,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Tm_uinst({n=Tm_name x}, _)
                 | Tm_name x -> Some x.sort
                 | Tm_uinst({n=Tm_fvar fv}, _)
-                | Tm_fvar fv -> Some (Env.lookup_lid env.tcenv fv.fv_name.v |> fst |> snd)
+                | Tm_fvar fv -> Some (Env.lookup_lid_noinst env.tcenv fv.fv_name.v |> fst)
                 | Tm_ascribed(_, (BU.Inl t, _), _) -> Some t
                 | Tm_ascribed(_, (BU.Inr c, _), _) -> Some (U.comp_result c)
                 | _ -> None
@@ -1215,7 +1220,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               else
                 let vars, guards, envbody, decls, _ = encode_binders None bs env in
                 let body = if is_smt_reifiable_rc env.tcenv rc
-                           then TcUtil.reify_body env.tcenv [] body
+                           then FStar.Syntax.Unionfind.with_uf_enabled (fun () ->
+                                    TcUtil.reify_body env.tcenv [] body)
                            else body
                 in
                 let body, decls' = encode_term body envbody in

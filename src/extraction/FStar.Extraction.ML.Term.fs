@@ -629,7 +629,7 @@ let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
   let c = comp_no_args c in
 
   if c |> U.comp_effect_name |> TcEnv.norm_eff_name env |> TcEnv.is_reifiable_effect env
-  then TcEnv.reify_comp env c S.U_unknown
+  then FStar.Syntax.Unionfind.with_uf_enabled (fun () -> TcEnv.reify_comp env c S.U_unknown)
   else U.comp_result c
 
 
@@ -645,8 +645,8 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
         then MLTY_Top //it was translated as an expression or erased
         else
             let formals, _ =
-                let (_, fvty), _ = FStar.TypeChecker.Env.lookup_lid (tcenv_of_uenv g) fv.fv_name.v in
-                let fvty = N.normalize [Env.UnfoldUntil delta_constant] (tcenv_of_uenv g) fvty in
+                let fvty, _ = FStar.TypeChecker.Env.lookup_lid_noinst (tcenv_of_uenv g) fv.fv_name.v in
+                let fvty = N.normalize [Env.AllowUnboundUniverses; Env.UnfoldUntil delta_constant] (tcenv_of_uenv g) fvty in
                 U.arrow_formals fvty in
             let mlargs = List.map (arg_as_mlty g) args in
             let mlargs =
@@ -1309,7 +1309,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             match rcopt with
             | Some rc ->
                 if TcEnv.is_reifiable_rc (tcenv_of_uenv env) rc
-                then TcUtil.reify_body (tcenv_of_uenv env) [TcEnv.Inlining; TcEnv.Unascribe] body
+                then FStar.Syntax.Unionfind.with_uf_enabled (fun () ->
+                        TcUtil.reify_body (tcenv_of_uenv env) [TcEnv.Inlining; TcEnv.Unascribe] body)
                 else body
             | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (Print.term_to_string body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
@@ -1348,7 +1349,12 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               |> term_as_mlexpr g
 
             | Tm_constant Const_reify ->
-              let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining; TcEnv.Unascribe] head (List.hd args) in
+              let e =
+                FStar.Syntax.Unionfind.with_uf_enabled (fun () ->
+                    TcUtil.reify_body_with_arg (tcenv_of_uenv g)
+                                               [TcEnv.Inlining; TcEnv.Unascribe] head (List.hd args)
+                )
+              in
               let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) None t.pos in
               term_as_mlexpr g tm
 
@@ -1761,7 +1767,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
 
 let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1 =
     // First, lookup the original (F*) type to figure out how many implicit arguments there are.
-    let _, fstar_disc_type = fst <| TypeChecker.Env.lookup_lid (tcenv_of_uenv env) discName in
+    let fstar_disc_type = fst <| TypeChecker.Env.lookup_lid_noinst (tcenv_of_uenv env) discName in
     let g, wildcards = match (SS.compress fstar_disc_type).n with
         | Tm_arrow (binders, _) ->
           let binders = 

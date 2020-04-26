@@ -45,7 +45,7 @@ let mk_term_projector_name lid (a:bv) =
     escape <| BU.format2 "%s_%s" (string_of_lid lid) (text_of_id a.ppname)
 let primitive_projector_by_pos env lid i =
     let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (string_of_int i) (string_of_lid lid)) in
-    let _, t = Env.lookup_datacon env lid in
+    let t = Env.lookup_datacon_noinst env lid in
     match (SS.compress t).n with
         | Tm_arrow(bs, c) ->
           let binders, _ = SS.open_comp bs c in

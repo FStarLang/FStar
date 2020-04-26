@@ -281,6 +281,11 @@ val num_inductive_ty_params: env -> lident -> option<int>
 val delta_depth_of_qninfo  : fv -> qninfo -> option<delta_depth>
 val delta_depth_of_fv      : env -> fv -> delta_depth
 
+// Can have unbound universes, to be used by extraction and encoding
+// where that does not matter. The upside is that this has no UF effect.
+val lookup_lid_noinst      : env -> lident -> typ * Range.range
+val lookup_datacon_noinst  : env -> lident -> typ
+
 (* Universe instantiation *)
 
 (* Construct a new universe unification variable *)
