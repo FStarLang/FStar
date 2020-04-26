@@ -28,7 +28,7 @@ type post_t (a:Type) = a -> hprop u#1
 let state_uses (uses:Set.set lock_addr) : Sem.st = state_obeys_st_laws uses; state0 uses
 
 type atomic_repr (a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:post_t a) =
-  Sem.action_t #(state_uses uses) pre post (fun _ -> True) (fun _ _ _ -> True)
+  Sem.action_t_tot #(state_uses uses) pre post (fun _ -> True) (fun _ _ _ -> True)
 
 let return (a:Type u#a) (x:a) (uses:Set.set lock_addr) (p:a -> hprop u#1)
 : atomic_repr a uses true (p x) p
@@ -58,6 +58,7 @@ let if_then_else (a:Type) (uses:Set.set lock_addr) (pre:pre_t) (post:post_t a)
   : Type
   = atomic_repr a uses true pre post
 
+total
 reifiable reflectable
 layered_effect {
   SteelAtomic : a:Type -> uses:Set.set lock_addr -> is_ghost:bool -> pre:pre_t -> post:post_t a
@@ -82,21 +83,21 @@ let lift_pure_steel_atomic (a:Type) (uses:Set.set lock_addr) (p:pre_t) (wp:pure_
 
 sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
 
-effect Mst (a:Type) (req:mem -> Type0) (ens:mem -> a -> mem -> Type0) =
-  NMST.NMSTATE a mem mem_evolves req ens
+effect MstTot (a:Type) (req:mem -> Type0) (ens:mem -> a -> mem -> Type0) =
+  NMSTTotal.NMSTATETOT a mem mem_evolves req ens
 
 let mst_get ()
-  : Mst mem (fun _ -> True) (fun m0 r m1 -> m0 == r /\ r == m1)
-  = NMST.get ()
+  : MstTot mem (fun _ -> True) (fun m0 r m1 -> m0 == r /\ r == m1)
+  = NMSTTotal.get ()
 
 let mst_put (m:mem)
-  : Mst unit (fun m0 -> mem_evolves m0 m) (fun _ _ m1 -> m1 == m)
-  = NMST.put m
+  : MstTot unit (fun m0 -> mem_evolves m0 m) (fun _ _ m1 -> m1 == m)
+  = NMSTTotal.put m
 
 let steel_admit (a:Type) (uses:Set.set lock_addr) (p:hprop) (q:a -> hprop)
   : SteelAtomic a uses true p q
   = SteelAtomic?.reflect (fun _ ->
-      let m0 = NMST.nmst_admit() in
+      let m0 = NMSTTotal.nmst_tot_admit() in
       mst_put m0
     )
 
@@ -131,12 +132,27 @@ let atomic_preserves_frame_and_preorder
   )
 = let (| x, m1 |) = act m0 in
   let frame : hprop = emp in
-  intro_emp_left pre (locks_invariant uses m0) m0;
-  let m0 : hmem_with_inv' uses (pre `star` emp) = m0 in
-  ()
+  intro_emp_left pre (locks_invariant uses m0) m0
+  (*
+   * m0 : hmem_with_inv' uses (pre `star` emp)
+   * 
+   * for instantiating the quentifier in is_m_frame_preserving
+   *)
 #pop-options
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit 10"
+
+let frame_repr (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_t) (#post:post_t a)
+    (f:atomic_repr a uses is_ghost pre post)
+    (frame:hprop)
+  : atomic_repr a uses is_ghost (pre `star` frame) (fun x -> post x `star` frame)
+  = fun () ->
+     let m0 = mst_get() in
+     let x = f () in
+     let m1 = mst_get() in
+     Sem.preserves_frame_star #(state_uses uses) pre (post x) m0 m1 frame;
+     x
+
 let frame0 (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_t) (#post:post_t a)
   (f:atomic_repr a uses is_ghost pre post)
   (frame:hprop)
@@ -145,7 +161,7 @@ let frame0 (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_t) (#p
   is_ghost
   (pre `star` frame)
   (fun x -> post x `star` frame)
-= SteelAtomic?.reflect (fun _ -> Sem.run #(state_uses uses) #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame (fun _ -> True)))
+= SteelAtomic?.reflect (frame_repr f frame)
 #pop-options
 
 let atomic_frame (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_t) (#post:post_t a)
@@ -159,7 +175,7 @@ let atomic_frame (#a:Type) (#uses:Set.set lock_addr) (#is_ghost:bool) (#pre:pre_
 = frame0 (reify (f ())) frame
 
 let inv_witnessed (#p:hprop) (i:inv p) =
-  NMST.witnessed mem mem_evolves (inv_ok i)
+  NMSTTotal.witnessed mem mem_evolves (inv_ok i)
 
 let ival (p:hprop) = i:inv p{inv_witnessed i}
 
@@ -172,7 +188,7 @@ let new_inv (p:hprop) : SteelAtomic (ival p) Set.empty false p (fun _ -> emp)
       Classical.forall_intro (Classical.move_requires (new_inv_preserves_frame p m0));
       mst_put m1;
       Classical.forall_intro_2 (inv_ok_stable i);
-      NMST.witness mem mem_evolves (inv_ok i);
+      NMSTTotal.witness mem mem_evolves (inv_ok i);
       i)
 #pop-options
 
@@ -305,13 +321,13 @@ let with_invariant_aux
   (f:atomic_repr a (Set.union (Set.singleton i) uses) is_ghost (p `star` fp) (fun x -> p `star` fp' x))
   : atomic_repr a uses is_ghost fp fp'
   = fun _ ->
-      NMST.recall mem mem_evolves (inv_ok i);
-      let m0 = NMST.get() in
+      NMSTTotal.recall mem mem_evolves (inv_ok i);
+      let m0 = NMSTTotal.get() in
       let s = Set.union (Set.singleton i) uses in
       interp_inv_unused i uses fp m0;
       let x = f () in
-      let m1 = NMST.get() in
-      NMST.recall mem mem_evolves (inv_ok i);
+      let m1 = NMSTTotal.get() in
+      NMSTTotal.recall mem mem_evolves (inv_ok i);
       interp_inv_unused i uses (fp' x) m1;
       lemma_sem_preserves fp (fp' x) m0 m1 uses i;
       x

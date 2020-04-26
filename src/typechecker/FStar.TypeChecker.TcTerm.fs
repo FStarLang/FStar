@@ -99,6 +99,45 @@ let set_lcomp_result lc t =
 
 let memo_tk (e:term) (t:typ) = e
 
+let maybe_warn_on_use env fv : unit =
+    match Env.lookup_attrs_of_lid env fv.fv_name.v with
+    | None -> ()
+    | Some attrs ->
+      attrs |>
+      List.iter
+        (fun a ->
+          let head, args = U.head_and_args a in
+          let msg_arg m =
+              match args with
+              | [{n=Tm_constant (Const_string (s, _))}, _] ->
+                m ^ ": " ^ s
+              | _ ->
+                m
+          in
+          match head.n with
+          | Tm_fvar attr_fv
+              when lid_equals attr_fv.fv_name.v Const.warn_on_use_attr ->
+            let m =
+              BU.format1 "Every use of %s triggers a warning"
+                         (Ident.string_of_lid fv.fv_name.v)
+            in
+            log_issue (range_of_lid fv.fv_name.v)
+                      (Warning_WarnOnUse,
+                       msg_arg m)
+
+          | Tm_fvar attr_fv
+              when lid_equals attr_fv.fv_name.v Const.deprecated_attr ->
+            let m =
+              BU.format1
+                "%s is deprecated"
+                (Ident.string_of_lid fv.fv_name.v)
+            in
+            log_issue (range_of_lid fv.fv_name.v)
+                      (Warning_DeprecatedDefinition,
+                        msg_arg m)
+
+          | _ -> ())
+
 //Interface to FStar.TypeChecker.Rel:
 
 (************************************************************************************************************)
@@ -126,16 +165,6 @@ let value_check_expected_typ env (e:term) (tlc:either<term,lcomp>) (guard:guard_
      let t = lc.res_typ in
      let g = Env.conj_guard g guard in
      (* adding a guard for confirming that the computed type t is a subtype of the expected type t' *)
-     let lc, g =
-       if tlc |> is_left && TcUtil.should_return env (Some e) lc
-            && TcComm.is_pure_lcomp lc // this last conjunct is crucial, otherwise
-                                  // we could drop the effects of `e` here
-       then
-         let u_opt, g_lc = TcUtil.lcomp_univ_opt lc in
-         TcUtil.return_value env u_opt t e |> TcComm.lcomp_of_comp,
-         Env.conj_guard g g_lc
-       else lc, g
-     in
      let msg = if Env.is_trivial_guard_formula g then None else Some <| Err.subtyping_failed env t t' in
      let lc, g = TcUtil.strengthen_precondition msg env e lc g in
      memo_tk e t', set_lcomp_result lc t', g
@@ -1084,18 +1113,21 @@ and tc_value env (e:term) : term
   | Tm_uinst({n=Tm_fvar fv}, us) ->
     let us = List.map (tc_universe env) us in
     let (us', t), range = Env.lookup_lid env fv.fv_name.v in
+    let fv = S.set_range_of_fv fv range in
+    maybe_warn_on_use env fv;
     if List.length us <> List.length us'
-    then raise_error (Errors.Fatal_UnexpectedNumberOfUniverse, (BU.format3 "Unexpected number of universe instantiations for \"%s\" (%s vs %s)"
+    then raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
+                      BU.format3 "Unexpected number of universe instantiations for \"%s\" (%s vs %s)"
                                     (Print.fv_to_string fv)
                                     (string_of_int (List.length us))
-                                    (string_of_int (List.length us')))) (Env.get_range env)
+                                    (string_of_int (List.length us')))
+                      (Env.get_range env)
     else List.iter2 (fun u' u -> match u' with
             | U_unif u'' -> UF.univ_change u'' u
             | _ -> failwith "Impossible") us' us;
-    let fv' = S.set_range_of_fv fv range in
-    Env.insert_fv_info env fv' t;
-    let e = S.mk_Tm_uinst (mk (Tm_fvar fv') None e.pos) us in
-    check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
+    Env.insert_fv_info env fv t;
+    let e = S.mk_Tm_uinst (mk (Tm_fvar fv) None e.pos) us in
+    check_instantiated_fvar env fv.fv_name fv.fv_qual e t
 
   (* not an fvar, fail *)
   | Tm_uinst(_, us) ->
@@ -1105,6 +1137,8 @@ and tc_value env (e:term) : term
 
   | Tm_fvar fv ->
     let (us, t), range = Env.lookup_lid env fv.fv_name.v in
+    let fv = S.set_range_of_fv fv range in
+    maybe_warn_on_use env fv;
     if Env.debug env <| Options.Other "Range"
     then BU.print5 "Lookup up fvar %s at location %s (lid range = defined at %s, used at %s); got universes type %s"
             (Print.lid_to_string (lid_of_fv fv))
@@ -1112,10 +1146,9 @@ and tc_value env (e:term) : term
             (Range.string_of_range range)
             (Range.string_of_use_range range)
             (Print.term_to_string t);
-    let fv' = S.set_range_of_fv fv range in
-    Env.insert_fv_info env fv' t;
-    let e = S.mk_Tm_uinst (mk (Tm_fvar fv') None e.pos) us in
-    check_instantiated_fvar env fv'.fv_name fv'.fv_qual e t
+    Env.insert_fv_info env fv t;
+    let e = S.mk_Tm_uinst (mk (Tm_fvar fv) None e.pos) us in
+    check_instantiated_fvar env fv.fv_name fv.fv_qual e t
 
   | Tm_constant c ->
     let t = tc_constant env top.pos c in
@@ -1850,7 +1883,21 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
         | (x, Some (Implicit _))::rest, (_, None)::_ -> (* instantiate an implicit arg *)
             let t = SS.subst subst x.sort in
             let t, g_ex = check_no_escape (Some head) env fvs t in
-            let varg, _, implicits = TcUtil.new_implicit_var "Instantiating implicit argument in application" head.pos env t in //new_uvar env t in
+            (* We compute a range by combining the range of the head
+             * and the last argument we checked (if any). This is such that
+             * if we instantiate an implicit for `f ()` (of type `#x:a -> ...),
+             * we give it the range of `f ()` instead of just the range for `f`.
+             * See issue #2021. This is only for the use range, we take
+             * the def range from the head, so the 'see also' should still
+             * point to the definition of the head. *)
+            let r = match outargs with
+                    | [] -> head.pos
+                    | ((t, _), _, _)::_ ->
+                        Range.range_of_rng (Range.def_range head.pos)
+                                           (Range.union_rng (Range.use_range head.pos)
+                                                            (Range.use_range t.pos))
+            in
+            let varg, _, implicits = TcUtil.new_implicit_var "Instantiating implicit argument in application" r env t in //new_uvar env t in
             let subst = NT(x, varg)::subst in
             let arg = varg, as_implicit true in
             let guard = List.fold_right Env.conj_guard [g_ex; g] implicits in
@@ -1871,7 +1918,14 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
             let t = SS.subst subst x.sort in
             let t, g_ex = check_no_escape (Some head) env fvs t in
-            let varg, _, implicits = new_implicit_var_aux "Instantiating meta argument in application" head.pos env t Strict (Some (mkdyn env, tau)) in
+            let r = match outargs with
+                    | [] -> head.pos
+                    | ((t, _), _, _)::_ ->
+                        Range.range_of_rng (Range.def_range head.pos)
+                                           (Range.union_rng (Range.use_range head.pos)
+                                                            (Range.use_range t.pos))
+            in
+            let varg, _, implicits = new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some (mkdyn env, tau)) in
             let subst = NT(x, varg)::subst in
             let arg = varg, as_implicit true in
             let guard = List.fold_right Env.conj_guard [g_ex; g; g_tau] implicits in

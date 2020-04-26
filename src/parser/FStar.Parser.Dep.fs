@@ -1472,7 +1472,7 @@ let print_full (deps:deps) : unit =
         let ml_base_name = replace_chars (Option.get (check_and_strip_suffix (BU.basename fst_file))) '.' "_" in
         Options.prepend_output_dir (ml_base_name ^ ext)
     in
-    let norm_path s = replace_chars s '\\' "/" in
+    let norm_path s = replace_chars (replace_chars s '\\' "/") ' ' "\\ " in
     let output_ml_file f = norm_path (output_file ".ml" f) in
     let output_krml_file f = norm_path (output_file ".krml" f) in
     let output_cmx_file f = norm_path (output_file ".cmx" f) in
@@ -1528,7 +1528,6 @@ let print_full (deps:deps) : unit =
               else files in
 
             let files = List.map norm_path files in
-            let files = List.map (fun s -> replace_chars s ' ' "\\ ") files in
             let files = String.concat "\\\n\t" files in
             let cache_file_name = cache_file file_name in
 
@@ -1674,6 +1673,20 @@ let print_full (deps:deps) : unit =
         List.iter (fun f -> pr (norm_path f); pr " \\\n\t") files;
         pr "\n"
     in
+    all_fsti_files
+    |> List.iter
+      (fun fsti ->
+          let mn = lowercase_module_name fsti in
+         let range_of_file fsti =
+           let r = Range.set_file_of_range Range.dummyRange fsti in
+           Range.set_use_range r (Range.def_range r)
+         in
+         if not (has_implementation deps.file_system_map mn)
+         then (FStar.Errors.log_issue
+                    (range_of_file fsti)
+                    (Warning_WarnOnUse,
+                     BU.format1 "Interface %s is admitted without an implementation"
+                       (module_name_of_file fsti))));
     print_all "ALL_FST_FILES" all_fst_files;
     print_all "ALL_FSTI_FILES" all_fsti_files;
     print_all "ALL_CHECKED_FILES" all_checked_files;

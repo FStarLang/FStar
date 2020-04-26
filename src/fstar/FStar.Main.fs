@@ -66,10 +66,10 @@ let load_native_tactics () =
     let ml_file m = ml_module_name m ^ ".ml" in
     let cmxs_file m =
         let cmxs = ml_module_name m ^ ".cmxs" in
-        match FStar.Options.find_file cmxs with
+        match FStar.Options.find_file (cmxs |> Options.prepend_output_dir) with
         | Some f -> f
         | None ->
-        match FStar.Options.find_file (ml_file m) with
+        match FStar.Options.find_file (ml_file m |> Options.prepend_output_dir) with
         | None ->
             E.raise_err (E.Fatal_FailToCompileNativeTactic,
                          Util.format1 "Failed to compile native tactic; extracted module %s not found" (ml_file m))
@@ -127,7 +127,8 @@ let go _ =
                   don't verify anything *)
         if Options.dep() <> None
         then let _, deps = Parser.Dep.collect filenames FStar.CheckedFiles.load_parsing_data_from_cache in
-             Parser.Dep.print deps
+             Parser.Dep.print deps;
+             report_errors []
 
         (* Input validation: should this go to process_args? *)
         (*          don't verify anything *)
@@ -219,7 +220,7 @@ let lazy_chooser k i = match k with
 
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =
-    Options.initialize_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
+    FStar.Errors.set_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
     FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder;

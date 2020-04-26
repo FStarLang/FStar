@@ -2240,71 +2240,73 @@ let (print_full : deps -> unit) =
         FStar_Util.replace_chars uu____7555 46 "_"  in
       let uu____7566 = FStar_String.op_Hat ml_base_name ext  in
       FStar_Options.prepend_output_dir uu____7566  in
-    let norm_path s = FStar_Util.replace_chars s 92 "/"  in
+    let norm_path s =
+      FStar_Util.replace_chars (FStar_Util.replace_chars s 92 "/") 32 "\\ "
+       in
     let output_ml_file f =
-      let uu____7588 = output_file ".ml" f  in norm_path uu____7588  in
+      let uu____7590 = output_file ".ml" f  in norm_path uu____7590  in
     let output_krml_file f =
-      let uu____7600 = output_file ".krml" f  in norm_path uu____7600  in
+      let uu____7602 = output_file ".krml" f  in norm_path uu____7602  in
     let output_cmx_file f =
-      let uu____7612 = output_file ".cmx" f  in norm_path uu____7612  in
+      let uu____7614 = output_file ".cmx" f  in norm_path uu____7614  in
     let cache_file f =
-      let uu____7624 = cache_file_name f  in norm_path uu____7624  in
-    let uu____7626 =
+      let uu____7626 = cache_file_name f  in norm_path uu____7626  in
+    let uu____7628 =
       phase1 deps1.file_system_map deps1.dep_graph
         deps1.interfaces_with_inlining true
        in
-    match uu____7626 with
+    match uu____7628 with
     | (widened,dep_graph) ->
         let all_checked_files =
           FStar_All.pipe_right keys
             (FStar_List.fold_left
                (fun all_checked_files  ->
                   fun file_name1  ->
-                    let process_one_key uu____7668 =
+                    let process_one_key uu____7670 =
                       let dep_node1 =
-                        let uu____7670 =
+                        let uu____7672 =
                           deps_try_find deps1.dep_graph file_name1  in
-                        FStar_All.pipe_right uu____7670 FStar_Option.get  in
-                      let uu____7675 =
-                        let uu____7687 = is_interface file_name1  in
-                        if uu____7687
+                        FStar_All.pipe_right uu____7672 FStar_Option.get  in
+                      let uu____7677 =
+                        let uu____7689 = is_interface file_name1  in
+                        if uu____7689
                         then
                           (FStar_Pervasives_Native.None,
                             FStar_Pervasives_Native.None)
                         else
-                          (let uu____7713 =
-                             let uu____7717 =
+                          (let uu____7715 =
+                             let uu____7719 =
                                lowercase_module_name file_name1  in
-                             interface_of deps1 uu____7717  in
-                           match uu____7713 with
+                             interface_of deps1 uu____7719  in
+                           match uu____7715 with
                            | FStar_Pervasives_Native.None  ->
                                (FStar_Pervasives_Native.None,
                                  FStar_Pervasives_Native.None)
                            | FStar_Pervasives_Native.Some iface ->
-                               let uu____7744 =
-                                 let uu____7749 =
-                                   let uu____7752 =
-                                     let uu____7753 =
+                               let uu____7746 =
+                                 let uu____7751 =
+                                   let uu____7754 =
+                                     let uu____7755 =
                                        deps_try_find deps1.dep_graph iface
                                         in
-                                     FStar_Option.get uu____7753  in
-                                   uu____7752.edges  in
-                                 FStar_Pervasives_Native.Some uu____7749  in
+                                     FStar_Option.get uu____7755  in
+                                   uu____7754.edges  in
+                                 FStar_Pervasives_Native.Some uu____7751  in
                                ((FStar_Pervasives_Native.Some iface),
-                                 uu____7744))
+                                 uu____7746))
                          in
-                      match uu____7675 with
+                      match uu____7677 with
                       | (iface_fn,iface_deps) ->
                           let iface_deps1 =
                             FStar_Util.map_opt iface_deps
                               (FStar_List.filter
                                  (fun iface_dep  ->
-                                    let uu____7797 =
+                                    let uu____7799 =
                                       FStar_Util.for_some
                                         (dep_subsumed_by iface_dep)
                                         dep_node1.edges
                                        in
-                                    Prims.op_Negation uu____7797))
+                                    Prims.op_Negation uu____7799))
                              in
                           let norm_f = norm_path file_name1  in
                           let files =
@@ -2327,61 +2329,56 @@ let (print_full : deps -> unit) =
                                   (FStar_List.append files iface_files)
                              in
                           let files2 =
-                            let uu____7840 =
+                            let uu____7842 =
                               FStar_All.pipe_right iface_fn
                                 FStar_Util.is_some
                                in
-                            if uu____7840
+                            if uu____7842
                             then
                               let iface_fn1 =
                                 FStar_All.pipe_right iface_fn FStar_Util.must
                                  in
-                              let uu____7858 =
+                              let uu____7860 =
                                 FStar_All.pipe_right files1
                                   (FStar_List.filter
                                      (fun f  -> f <> iface_fn1))
                                  in
-                              FStar_All.pipe_right uu____7858
+                              FStar_All.pipe_right uu____7860
                                 (fun files2  ->
-                                   let uu____7885 = cache_file_name iface_fn1
+                                   let uu____7887 = cache_file_name iface_fn1
                                       in
-                                   uu____7885 :: files2)
+                                   uu____7887 :: files2)
                             else files1  in
                           let files3 = FStar_List.map norm_path files2  in
-                          let files4 =
-                            FStar_List.map
-                              (fun s  -> FStar_Util.replace_chars s 32 "\\ ")
-                              files3
-                             in
-                          let files5 = FStar_String.concat "\\\n\t" files4
+                          let files4 = FStar_String.concat "\\\n\t" files3
                              in
                           let cache_file_name1 = cache_file file_name1  in
                           let all_checked_files1 =
-                            let uu____7916 =
-                              let uu____7918 =
-                                let uu____7920 =
+                            let uu____7907 =
+                              let uu____7909 =
+                                let uu____7911 =
                                   module_name_of_file file_name1  in
                                 FStar_Options.should_be_already_cached
-                                  uu____7920
+                                  uu____7911
                                  in
-                              Prims.op_Negation uu____7918  in
-                            if uu____7916
+                              Prims.op_Negation uu____7909  in
+                            if uu____7907
                             then
-                              (print_entry cache_file_name1 norm_f files5;
+                              (print_entry cache_file_name1 norm_f files4;
                                cache_file_name1
                                ::
                                all_checked_files)
                             else all_checked_files  in
-                          let uu____7930 =
-                            let uu____7939 = FStar_Options.cmi ()  in
-                            if uu____7939
+                          let uu____7921 =
+                            let uu____7930 = FStar_Options.cmi ()  in
+                            if uu____7930
                             then
                               profile
-                                (fun uu____7960  ->
-                                   let uu____7961 = dep_graph_copy dep_graph
+                                (fun uu____7951  ->
+                                   let uu____7952 = dep_graph_copy dep_graph
                                       in
                                    topological_dependences_of'
-                                     deps1.file_system_map uu____7961
+                                     deps1.file_system_map uu____7952
                                      deps1.interfaces_with_inlining
                                      [file_name1] widened)
                                 "FStar.Parser.Dep.topological_dependences_of_2"
@@ -2401,15 +2398,15 @@ let (print_full : deps -> unit) =
                                  | FStar_Pervasives_Native.Some iface_deps2
                                      -> maybe_widen_deps iface_deps2
                                   in
-                               let uu____7999 =
+                               let uu____7990 =
                                  FStar_Util.remove_dups
                                    (fun x  -> fun y  -> x = y)
                                    (FStar_List.append fst_files
                                       fst_files_from_iface)
                                   in
-                               (uu____7999, false))
+                               (uu____7990, false))
                              in
-                          (match uu____7930 with
+                          (match uu____7921 with
                            | (all_fst_files_dep,widened1) ->
                                let all_checked_fst_dep_files =
                                  FStar_All.pipe_right all_fst_files_dep
@@ -2419,32 +2416,32 @@ let (print_full : deps -> unit) =
                                  FStar_String.concat " \\\n\t"
                                    all_checked_fst_dep_files
                                   in
-                               ((let uu____8046 =
+                               ((let uu____8037 =
                                    is_implementation file_name1  in
-                                 if uu____8046
+                                 if uu____8037
                                  then
-                                   ((let uu____8050 =
+                                   ((let uu____8041 =
                                        (FStar_Options.cmi ()) && widened1  in
-                                     if uu____8050
+                                     if uu____8041
                                      then
-                                       ((let uu____8054 =
+                                       ((let uu____8045 =
                                            output_ml_file file_name1  in
-                                         print_entry uu____8054
+                                         print_entry uu____8045
                                            cache_file_name1
                                            all_checked_fst_dep_files_string);
-                                        (let uu____8056 =
+                                        (let uu____8047 =
                                            output_krml_file file_name1  in
-                                         print_entry uu____8056
+                                         print_entry uu____8047
                                            cache_file_name1
                                            all_checked_fst_dep_files_string))
                                      else
-                                       ((let uu____8061 =
+                                       ((let uu____8052 =
                                            output_ml_file file_name1  in
-                                         print_entry uu____8061
+                                         print_entry uu____8052
                                            cache_file_name1 "");
-                                        (let uu____8064 =
+                                        (let uu____8055 =
                                            output_krml_file file_name1  in
-                                         print_entry uu____8064
+                                         print_entry uu____8055
                                            cache_file_name1 "")));
                                     (let cmx_files =
                                        let extracted_fst_files =
@@ -2452,74 +2449,74 @@ let (print_full : deps -> unit) =
                                            all_fst_files_dep
                                            (FStar_List.filter
                                               (fun df  ->
-                                                 (let uu____8089 =
+                                                 (let uu____8080 =
                                                     lowercase_module_name df
                                                      in
-                                                  let uu____8091 =
+                                                  let uu____8082 =
                                                     lowercase_module_name
                                                       file_name1
                                                      in
-                                                  uu____8089 <> uu____8091)
+                                                  uu____8080 <> uu____8082)
                                                    &&
-                                                   (let uu____8095 =
+                                                   (let uu____8086 =
                                                       lowercase_module_name
                                                         df
                                                        in
                                                     FStar_Options.should_extract
-                                                      uu____8095)))
+                                                      uu____8086)))
                                           in
                                        FStar_All.pipe_right
                                          extracted_fst_files
                                          (FStar_List.map output_cmx_file)
                                         in
-                                     let uu____8105 =
-                                       let uu____8107 =
+                                     let uu____8096 =
+                                       let uu____8098 =
                                          lowercase_module_name file_name1  in
                                        FStar_Options.should_extract
-                                         uu____8107
+                                         uu____8098
                                         in
-                                     if uu____8105
+                                     if uu____8096
                                      then
                                        let cmx_files1 =
                                          FStar_String.concat "\\\n\t"
                                            cmx_files
                                           in
-                                       let uu____8113 =
+                                       let uu____8104 =
                                          output_cmx_file file_name1  in
-                                       let uu____8115 =
+                                       let uu____8106 =
                                          output_ml_file file_name1  in
-                                       print_entry uu____8113 uu____8115
+                                       print_entry uu____8104 uu____8106
                                          cmx_files1
                                      else ()))
                                  else
-                                   (let uu____8121 =
-                                      (let uu____8125 =
-                                         let uu____8127 =
+                                   (let uu____8112 =
+                                      (let uu____8116 =
+                                         let uu____8118 =
                                            lowercase_module_name file_name1
                                             in
                                          has_implementation
-                                           deps1.file_system_map uu____8127
+                                           deps1.file_system_map uu____8118
                                           in
-                                       Prims.op_Negation uu____8125) &&
+                                       Prims.op_Negation uu____8116) &&
                                         (is_interface file_name1)
                                        in
-                                    if uu____8121
+                                    if uu____8112
                                     then
-                                      let uu____8130 =
+                                      let uu____8121 =
                                         (FStar_Options.cmi ()) &&
                                           (widened1 || true)
                                          in
-                                      (if uu____8130
+                                      (if uu____8121
                                        then
-                                         let uu____8134 =
+                                         let uu____8125 =
                                            output_krml_file file_name1  in
-                                         print_entry uu____8134
+                                         print_entry uu____8125
                                            cache_file_name1
                                            all_checked_fst_dep_files_string
                                        else
-                                         (let uu____8138 =
+                                         (let uu____8129 =
                                             output_krml_file file_name1  in
-                                          print_entry uu____8138
+                                          print_entry uu____8129
                                             cache_file_name1 ""))
                                     else ()));
                                 all_checked_files1))
@@ -2528,16 +2525,16 @@ let (print_full : deps -> unit) =
                       "FStar.Parser.Dep.process_one_key") [])
            in
         let all_fst_files =
-          let uu____8152 =
+          let uu____8143 =
             FStar_All.pipe_right keys (FStar_List.filter is_implementation)
              in
-          FStar_All.pipe_right uu____8152
+          FStar_All.pipe_right uu____8143
             (FStar_Util.sort_with FStar_String.compare)
            in
         let all_fsti_files =
-          let uu____8174 =
+          let uu____8165 =
             FStar_All.pipe_right keys (FStar_List.filter is_interface)  in
-          FStar_All.pipe_right uu____8174
+          FStar_All.pipe_right uu____8165
             (FStar_Util.sort_with FStar_String.compare)
            in
         let all_ml_files =
@@ -2546,11 +2543,11 @@ let (print_full : deps -> unit) =
             (FStar_List.iter
                (fun fst_file  ->
                   let mname = lowercase_module_name fst_file  in
-                  let uu____8215 = FStar_Options.should_extract mname  in
-                  if uu____8215
+                  let uu____8206 = FStar_Options.should_extract mname  in
+                  if uu____8206
                   then
-                    let uu____8218 = output_ml_file fst_file  in
-                    FStar_Util.smap_add ml_file_map mname uu____8218
+                    let uu____8209 = output_ml_file fst_file  in
+                    FStar_Util.smap_add ml_file_map mname uu____8209
                   else ()));
           sort_output_files ml_file_map  in
         let all_krml_files =
@@ -2559,15 +2556,43 @@ let (print_full : deps -> unit) =
             (FStar_List.iter
                (fun fst_file  ->
                   let mname = lowercase_module_name fst_file  in
-                  let uu____8245 = output_krml_file fst_file  in
-                  FStar_Util.smap_add krml_file_map mname uu____8245));
+                  let uu____8236 = output_krml_file fst_file  in
+                  FStar_Util.smap_add krml_file_map mname uu____8236));
           sort_output_files krml_file_map  in
         let print_all tag files =
           pr tag;
           pr "=\\\n\t";
           FStar_List.iter (fun f  -> pr (norm_path f); pr " \\\n\t") files;
           pr "\n"  in
-        (print_all "ALL_FST_FILES" all_fst_files;
+        (FStar_All.pipe_right all_fsti_files
+           (FStar_List.iter
+              (fun fsti  ->
+                 let mn = lowercase_module_name fsti  in
+                 let range_of_file fsti1 =
+                   let r =
+                     FStar_Range.set_file_of_range FStar_Range.dummyRange
+                       fsti1
+                      in
+                   let uu____8294 = FStar_Range.def_range r  in
+                   FStar_Range.set_use_range r uu____8294  in
+                 let uu____8295 =
+                   let uu____8297 =
+                     has_implementation deps1.file_system_map mn  in
+                   Prims.op_Negation uu____8297  in
+                 if uu____8295
+                 then
+                   let uu____8300 = range_of_file fsti  in
+                   let uu____8301 =
+                     let uu____8307 =
+                       let uu____8309 = module_name_of_file fsti  in
+                       FStar_Util.format1
+                         "Interface %s is admitted without an implementation"
+                         uu____8309
+                        in
+                     (FStar_Errors.Warning_WarnOnUse, uu____8307)  in
+                   FStar_Errors.log_issue uu____8300 uu____8301
+                 else ()));
+         print_all "ALL_FST_FILES" all_fst_files;
          print_all "ALL_FSTI_FILES" all_fsti_files;
          print_all "ALL_CHECKED_FILES" all_checked_files;
          print_all "ALL_ML_FILES" all_ml_files;
@@ -2576,15 +2601,15 @@ let (print_full : deps -> unit) =
   
 let (print : deps -> unit) =
   fun deps1  ->
-    let uu____8295 = FStar_Options.dep ()  in
-    match uu____8295 with
+    let uu____8331 = FStar_Options.dep ()  in
+    match uu____8331 with
     | FStar_Pervasives_Native.Some "make" -> print_make deps1
     | FStar_Pervasives_Native.Some "full" ->
-        profile (fun uu____8304  -> print_full deps1)
+        profile (fun uu____8340  -> print_full deps1)
           "FStar.Parser.Deps.print_full_deps"
     | FStar_Pervasives_Native.Some "graph" -> print_graph deps1.dep_graph
     | FStar_Pervasives_Native.Some "raw" -> print_raw deps1
-    | FStar_Pervasives_Native.Some uu____8310 ->
+    | FStar_Pervasives_Native.Some uu____8346 ->
         FStar_Errors.raise_err
           (FStar_Errors.Fatal_UnknownToolForDep, "unknown tool for --dep\n")
     | FStar_Pervasives_Native.None  -> ()
@@ -2596,38 +2621,38 @@ let (print_fsmap :
   fun fsmap  ->
     FStar_Util.smap_fold fsmap
       (fun k  ->
-         fun uu____8365  ->
+         fun uu____8401  ->
            fun s  ->
-             match uu____8365 with
+             match uu____8401 with
              | (v0,v1) ->
-                 let uu____8394 =
-                   let uu____8396 =
+                 let uu____8430 =
+                   let uu____8432 =
                      FStar_Util.format3 "%s -> (%s, %s)" k
                        (FStar_Util.dflt "_" v0) (FStar_Util.dflt "_" v1)
                       in
-                   FStar_String.op_Hat "; " uu____8396  in
-                 FStar_String.op_Hat s uu____8394) ""
+                   FStar_String.op_Hat "; " uu____8432  in
+                 FStar_String.op_Hat s uu____8430) ""
   
 let (module_has_interface : deps -> FStar_Ident.lident -> Prims.bool) =
   fun deps1  ->
     fun module_name1  ->
-      let uu____8417 =
-        let uu____8419 = FStar_Ident.string_of_lid module_name1  in
-        FStar_String.lowercase uu____8419  in
-      has_interface deps1.file_system_map uu____8417
+      let uu____8453 =
+        let uu____8455 = FStar_Ident.string_of_lid module_name1  in
+        FStar_String.lowercase uu____8455  in
+      has_interface deps1.file_system_map uu____8453
   
 let (deps_has_implementation : deps -> FStar_Ident.lident -> Prims.bool) =
   fun deps1  ->
     fun module_name1  ->
       let m =
-        let uu____8435 = FStar_Ident.string_of_lid module_name1  in
-        FStar_String.lowercase uu____8435  in
+        let uu____8471 = FStar_Ident.string_of_lid module_name1  in
+        FStar_String.lowercase uu____8471  in
       FStar_All.pipe_right deps1.all_files
         (FStar_Util.for_some
            (fun f  ->
               (is_implementation f) &&
-                (let uu____8446 =
-                   let uu____8448 = module_name_of_file f  in
-                   FStar_String.lowercase uu____8448  in
-                 uu____8446 = m)))
+                (let uu____8482 =
+                   let uu____8484 = module_name_of_file f  in
+                   FStar_String.lowercase uu____8484  in
+                 uu____8482 = m)))
   

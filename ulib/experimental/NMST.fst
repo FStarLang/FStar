@@ -182,3 +182,11 @@ let nmst_assert (#state:Type u#2) (#rel:P.preorder state) (p:Type)
     : NMSTATE unit state rel (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
     =
   assert p
+
+let lift_nmst_total_nmst (a:Type) (state:Type u#2) (rel:P.preorder state)
+  (req:M.pre_t state) (ens:M.post_t state a)
+  (f:NMSTTotal.repr a state rel req ens)
+: repr a state rel req ens
+= fun (t, n) -> f (t, n)
+
+sub_effect NMSTTotal.NMSTATETOT ~> NMSTATE = lift_nmst_total_nmst

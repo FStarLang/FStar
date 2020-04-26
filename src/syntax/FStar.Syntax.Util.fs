@@ -1788,6 +1788,7 @@ let remove_attr (attr : lident) (attrs:list<attribute>) : list<attribute> =
 // Setting pragmas
 ///////////////////////////////////////////
 let process_pragma p r =
+    FStar.Errors.set_option_warning_callback_range (Some r);
     let set_options s =
       match Options.set_options s with
       | Getopt.Success -> ()
@@ -1985,7 +1986,10 @@ let rec list_elements (e:term) : option<list<term>> =
   | _ ->
       None
 
-let unthunk_lemma_post t =
+(* Takes a term of shape `fun x -> e` and returns `e` when
+`x` is not free in it. If it is free or the term
+has some other shape just apply it to `()`. *)
+let unthunk (t:term) : term =
     match (compress t).n with
     | Tm_abs ([b], e, _) ->
         let bs, e = open_term [b] e in
@@ -1995,6 +1999,9 @@ let unthunk_lemma_post t =
         else e
     | _ ->
         mk_app t [as_arg exp_unit]
+
+let unthunk_lemma_post t =
+    unthunk t
 
 let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list<universe>)
    : term
