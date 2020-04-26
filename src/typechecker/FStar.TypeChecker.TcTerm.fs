@@ -887,7 +887,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                        e, c, g
                   else check_application_args env head chead g_head args (Env.expected_typ env0) in
     let e, c, implicits =
-        if TcComm.is_tot_or_gtot_lcomp c
+        if TcComm.is_tot_or_gtot_lcomp (TcComm.lcomp_of_comp (TcComm.lcomp_comp c |> fst))
         then let e, res_typ, implicits = TcUtil.maybe_instantiate env0 e c.res_typ in
              e, TcComm.set_result_typ_lc c res_typ, implicits
         else e, c, Env.trivial_guard
