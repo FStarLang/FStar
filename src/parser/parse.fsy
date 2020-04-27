@@ -28,6 +28,10 @@ let logic_qualifier_deprecation_warning =
 let abstract_qualifier_warning =
   "abstract qualifier will soon be removed from F*, use interfaces instead"
 
+let old_attribute_syntax_warning =
+  "The `[@ ...]` syntax of attributes is deprecated. \
+   Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
+
 %}
 %start inputFragment
 %start term
@@ -100,6 +104,7 @@ let abstract_qualifier_warning =
 %token LBRACE_COLON_PATTERN
 %token LBRACK
 %token LBRACK_AT
+%token LBRACK_AT_AT
 %token LBRACK_BAR
 %token LENS_PAREN_LEFT
 %token LENS_PAREN_RIGHT
@@ -291,9 +296,8 @@ let x =     ( (x, y) ) in
 option_string_:
   
     {    ( None )}
-| STRING
-    {let s = $1 in
-let x =              ( s ) in
+| string
+    {let x = $1 in
     ( Some x )}
 
 option_term_:
@@ -609,9 +613,8 @@ inputFragment:
       )}
 
 pragma:
-  PRAGMA_SET_OPTIONS STRING
+  PRAGMA_SET_OPTIONS string
     {let (_1, s) = ((), $2) in
-let s =              ( s ) in
       ( SetOptions s )}
 | PRAGMA_RESET_OPTIONS option_string_
     {let (_1, s_opt) = ((), $2) in
@@ -629,6 +632,18 @@ let s =              ( s ) in
 attribute:
   LBRACK_AT list_atomicTerm_ RBRACK
     {let (_1, x, _3) = ((), $2, ()) in
+      (
+        let _ =
+            match x with
+            | _::_::_ ->
+                  log_issue (lhs parseState) (Warning_DeprecatedGeneric,
+                                              old_attribute_syntax_warning)
+            | _ -> () in
+         x
+      )}
+| LBRACK_AT_AT right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
+    {let (_1, l, _3) = ((), $2, ()) in
+let x =                                                 ( l ) in
       ( x )}
 
 decoration:
@@ -2382,6 +2397,11 @@ range:
     {let r = $1 in
     ( r )}
 
+string:
+  STRING
+    {let s = $1 in
+             ( s )}
+
 some_fsTypeArgs_:
   fsTypeArgs
     {let x = $1 in
@@ -2480,4 +2500,5 @@ in
    ( x :: xs )}
 
 %%
+
 

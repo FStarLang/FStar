@@ -184,7 +184,7 @@ and env = {
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
   synth_hook     :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
   try_solve_implicits_hook: env -> term -> implicits -> unit;
-  splice         :env -> term -> list<sigelt>;       (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
+  splice         :env -> Range.range -> term -> list<sigelt>; (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
   mpreprocess     :env -> term -> term -> term;       (* hook for postprocessing typechecked terms via metaprograms *)
   postprocess    :env -> term -> typ -> term -> term; (* hook for postprocessing typechecked terms via metaprograms *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
@@ -296,7 +296,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     proof_ns = Options.using_facts_from ();
     synth_hook = (fun e g tau -> failwith "no synthesizer available");
     try_solve_implicits_hook = (fun e tau imps -> failwith "no implicit hook available");
-    splice = (fun e tau -> failwith "no splicer available");
+    splice = (fun e rng tau -> failwith "no splicer available");
     mpreprocess = (fun e tau tm -> failwith "no preprocessor available");
     postprocess = (fun e tau typ tm -> failwith "no postprocessor available");
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
@@ -436,7 +436,7 @@ let variable_not_found v =
   (Errors.Fatal_VariableNotFound, (format1 "Variable \"%s\" not found" (Print.bv_to_string v)))
 
 //Construct a new universe unification variable
-let new_u_univ () = U_unif (Unionfind.univ_fresh ())
+let new_u_univ () = U_unif (Unionfind.univ_fresh Range.dummyRange)
 
 let mk_univ_subst (formals : list<univ_name>) (us : universes) : list<subst_elt> =
     assert (List.length us = List.length formals);
@@ -815,7 +815,6 @@ let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option<delta_depth> =
       | Sig_splice  _ ->
         failwith "impossible: delta_depth_of_qninfo"
 
-      | Sig_main   _
       | Sig_assume _
       | Sig_new_effect _
       | Sig_sub_effect _
@@ -1730,7 +1729,7 @@ let new_implicit_var_aux reason r env k should_check meta =
       let binders = all_binders env in
       let gamma = env.gamma in
       let ctx_uvar = {
-          ctx_uvar_head=FStar.Syntax.Unionfind.fresh();
+          ctx_uvar_head=FStar.Syntax.Unionfind.fresh r;
           ctx_uvar_gamma=gamma;
           ctx_uvar_binders=binders;
           ctx_uvar_typ=k;

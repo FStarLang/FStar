@@ -342,7 +342,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
     ()
     end
 
-let splice (env:Env.env) (tau:term) : list<sigelt> =
+let splice (env:Env.env) (rng:Range.range) (tau:term) : list<sigelt> =
     if env.nosynth then [] else begin
     tacdbg := Env.debug env (O.Other "Tac");
 
@@ -364,7 +364,7 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
       BU.print1 "splice: got decls = %s\n"
                  (FStar.Common.string_of_list Print.sigelt_to_string sigelts);
 
-    // Unembed the result, this must work if things are well-typed
+    let sigelts = List.map (fun se -> { se with sigrng = rng }) sigelts in
     sigelts
     end
 
@@ -382,7 +382,8 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
     let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ Allow_untyped None in
 
     let u = env.universe_of env typ in
-    let goal = U.mk_squash u (U.mk_eq2 u typ tm uvtm) in
+    // eq2 is squashed already, so it's in Type0
+    let goal = U.mk_squash U_zero (U.mk_eq2 u typ tm uvtm) in
     let gs, w = run_tactic_on_typ tau.pos tm.pos tau env goal in
     // see comment in`synthesize`
     List.iter (fun g ->

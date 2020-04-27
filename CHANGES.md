@@ -97,6 +97,11 @@ Guidelines for the changelog:
      the multiplication on integers, the `&` symbol can be used for
      tuples while reserving `*` for multiplication.
 
+   * Attributes are now specified using the notation `[@@ a1; ... ; an]` i.e.,
+     a semicolon separated list of terms. The old syntax will soon
+     be deprecated.
+
+
 ## Extraction
 
    * Cross-module inlining: Declarations in interfaces marked with the

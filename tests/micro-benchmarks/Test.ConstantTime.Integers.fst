@@ -39,7 +39,7 @@ let ex1 (x:s_uint32) (y:s_uint32) = x +% y
 
 
 /// But, you can also work with label-polymorphic code
-[@mark_for_norm]
+[@@mark_for_norm]
 unfold
 let l_uint32 #sl (l:lattice_element sl) =
   t (Secret l (Unsigned W32))

@@ -1,5 +1,3 @@
-Erasable.fst(56,4-56,11): (Warning 240) Admitting Erasable.e_nat_3 without a definition
-Erasable.fst(49,4-49,11): (Warning 240) Admitting Erasable.e_nat_2 without a definition
 >> Got issues: [
 Erasable.fst(6,0-8,17): (Error 162) Incompatible attributes and qualifiers: erasable types do not support decidable equality and must be marked `noeq`
 >>]
@@ -18,5 +16,7 @@ Erasable.fst(52,0-52,17): (Error 162) Mismatch of attributes between declaration
 >> Got issues: [
 Erasable.fst(59,0-59,29): (Error 162) Mismatch of attributes between declaration and definition: Declaration is marked `erasable` but the definition is not
 >>]
+Erasable.fst(49,4-49,11): (Warning 240) Admitting Erasable.e_nat_2 without a definition
+Erasable.fst(56,4-56,11): (Warning 240) Admitting Erasable.e_nat_3 without a definition
 Verified module: Erasable
 All verification conditions discharged successfully

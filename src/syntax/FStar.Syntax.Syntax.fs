@@ -31,21 +31,21 @@ module O = FStar.Options
 module PC = FStar.Parser.Const
 
 (* Objects with metadata *)
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type withinfo_t<'a> = {
   v:  'a;
   p: Range.range;
 }
 
 (* Free term and type variables *)
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type var = withinfo_t<lident>
 
 (* Term language *)
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type sconst = FStar.Const.sconst
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type pragma =
   | SetOptions of string
   | ResetOptions of option<string>
@@ -66,13 +66,13 @@ type emb_typ =
   | ET_app  of string * list<emb_typ>
 
 //versioning for unification variables
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type version = {
     major:int;
     minor:int
 }
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type universe =
   | U_zero
   | U_succ  of universe
@@ -82,35 +82,35 @@ type universe =
   | U_unif  of universe_uvar
   | U_unknown
 and univ_name = ident
-and universe_uvar = Unionfind.p_uvar<option<universe>> * version
+and universe_uvar = Unionfind.p_uvar<option<universe>> * version * Range.range
 
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type univ_names    = list<univ_name>
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type universes     = list<universe>
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type monad_name    = lident
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type quote_kind =
   | Quote_static
   | Quote_dynamic
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type maybe_set_use_range =
   | NoUseRange
   | SomeUseRange of range
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type delta_depth =
   | Delta_constant_at_level of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int, level 0 is a constant
   | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
   | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type should_check_uvar =
   | Allow_unresolved      (* Escape hatch for uvars in logical guards that are sometimes left unresolved *)
   | Allow_untyped         (* Escape hatch to not re-typecheck guards in WPs and types of pattern bound vars *)
@@ -148,7 +148,7 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_meta: option<(dyn * term)>; (* the dyn is an FStar.TypeChecker.Env.env *)
 }
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
-and uvar = Unionfind.p_uvar<option<term>> * version
+and uvar = Unionfind.p_uvar<option<term>> * version * Range.range
 and uvars = set<ctx_uvar>
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -404,6 +404,8 @@ type eff_decl = {
 type sig_metadata = {
     sigmeta_active:bool;
     sigmeta_fact_db_ids:list<string>;
+    sigmeta_admit:bool; //An internal flag to record that a sigelt's SMT proof should be admitted
+                        //Used in DM4Free
 }
 
 type sigelt' =
@@ -431,7 +433,6 @@ type sigelt' =
                           * typ
   | Sig_let               of letbindings
                           * list<lident>               //mutually defined
-  | Sig_main              of term
   | Sig_assume            of lident
                           * univ_names
                           * formula
@@ -593,7 +594,7 @@ let mk_Tac t =
                flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
             })
 
-let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[] }
+let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[]; sigmeta_admit=false }
 let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] ; sigopts = None }
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s

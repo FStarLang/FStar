@@ -48,7 +48,7 @@ let list_lid        = pconst "list"
 let eqtype_lid      = pconst "eqtype"
 let option_lid      = psnconst "option"
 let either_lid      = psconst "either"
-let pattern_lid     = pconst "pattern"
+let pattern_lid     = psconst "pattern"
 let precedes_lid    = pconst "precedes"
 let lex_t_lid       = pconst "lex_t"
 let lexcons_lid     = pconst "LexCons"
@@ -235,7 +235,7 @@ let erased_lid    = p2l ["FStar"; "Ghost"; "erased"]
 let effect_PURE_lid  = pconst "PURE"
 let effect_Pure_lid  = pconst "Pure"
 let effect_Tot_lid   = pconst "Tot"
-let effect_Lemma_lid = pconst "Lemma"
+let effect_Lemma_lid = psconst "Lemma"
 let effect_GTot_lid  = pconst "GTot"
 let effect_GHOST_lid = pconst "GHOST"
 let effect_Ghost_lid = pconst "Ghost"
@@ -301,6 +301,7 @@ let steps_nbe           = psconst "nbe"
 
 (* attributes *)
 let deprecated_attr = pconst "deprecated"
+let warn_on_use_attr = pconst "warn_on_use"
 let inline_let_attr = p2l ["FStar"; "Pervasives"; "inline_let"]
 let rename_let_attr = p2l ["FStar"; "Pervasives"; "rename_let"]
 let plugin_attr     = p2l ["FStar"; "Pervasives"; "plugin"]

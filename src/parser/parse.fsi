@@ -88,6 +88,7 @@ type token =
   | LENS_PAREN_RIGHT
   | LENS_PAREN_LEFT
   | LBRACK_BAR
+  | LBRACK_AT_AT
   | LBRACK_AT
   | LBRACK
   | LBRACE_COLON_PATTERN
@@ -243,6 +244,7 @@ type tokenId =
     | TOKEN_LENS_PAREN_RIGHT
     | TOKEN_LENS_PAREN_LEFT
     | TOKEN_LBRACK_BAR
+    | TOKEN_LBRACK_AT_AT
     | TOKEN_LBRACK_AT
     | TOKEN_LBRACK
     | TOKEN_LBRACE_COLON_PATTERN
@@ -471,6 +473,7 @@ type nonTerminalId =
     | NONTERM_warn_error
     | NONTERM_flag
     | NONTERM_range
+    | NONTERM_string
     | NONTERM_some_fsTypeArgs_
     | NONTERM_right_flexible_list_SEMICOLON_fieldPattern_
     | NONTERM_right_flexible_list_SEMICOLON_noSeqTerm_

@@ -43,7 +43,7 @@ let __reduce__ = ()
 (** We wrap [norm] with a module-specific custom usage, triggering
     specific reduction steps *)
 
-[@ __reduce__]
+[@@ __reduce__]
 unfold
 let normal (#a: Type) (x: a) : a =
   FStar.Pervasives.norm [
@@ -63,7 +63,7 @@ val normal_eq (#a: Type) (f: a) : Lemma (f == normal f)
 
 (** A utility that combines map and fold: [map_op' op f l z] maps each
     element of [l] by [f] and then combines them using [op] *)
-[@ __reduce__]
+[@@ __reduce__]
 let map_op' #a #b #c (op: (b -> c -> GTot c)) (f: (a -> GTot b)) (l: list a) (z: c) : GTot c =
   L.fold_right_gtot #a #c l (fun x acc -> (f x) `op` acc) z
 
@@ -84,7 +84,7 @@ val map_op'_cons
 (**** Conjunction *)
 
 (** [big_and' f l] = [/\_{x in l} f x] *)
-[@ __reduce__]
+[@@ __reduce__]
 let big_and' #a (f: (a -> Type)) (l: list a) : Type = map_op' l_and f l True
 
 (** Equations for [big_and'] showing it to be trivial over the empty list *)
@@ -115,7 +115,7 @@ val big_and'_forall (#a: Type) (f: (a -> Type)) (l: list a)
 (** [big_and f l] is an implicitly reducing variant of [big_and']
     It is defined in [prop] *)
 
-[@ __reduce__]
+[@@ __reduce__]
 unfold
 let big_and #a (f: (a -> Type)) (l: list a) : prop =
   big_and'_prop f l;
@@ -124,7 +124,7 @@ let big_and #a (f: (a -> Type)) (l: list a) : prop =
 (**** Disjunction *)
 
 (** [big_or f l] = [\/_{x in l} f x] *)
-[@ __reduce__]
+[@@ __reduce__]
 let big_or' #a (f: (a -> Type)) (l: list a) : Type = map_op' l_or f l False
 
 (** Equations for [big_or] showing it to be [False] on the empty list *)
@@ -146,7 +146,7 @@ val big_or'_exists (#a: Type) (f: (a -> Type)) (l: list a)
 (** [big_or f l] is an implicitly reducing variant of [big_or']
      It is defined in [prop] *)
 
-[@ __reduce__]
+[@@ __reduce__]
 unfold
 let big_or #a (f: (a -> Type)) (l: list a) : prop =
   big_or'_prop f l;
@@ -173,7 +173,7 @@ let big_or #a (f: (a -> Type)) (l: list a) : prop =
 
 (** Mapping pairs of elements of [l] using [f] and combining them with
     [op]. *)
-[@ __reduce__]
+[@@ __reduce__]
 let rec pairwise_op' #a #b (op: (b -> b -> GTot b)) (f: (a -> a -> b)) (l: list a) (z: b) : GTot b =
   match l with
   | [] -> z
@@ -194,7 +194,7 @@ let anti_reflexive (#a: Type) (f: (a -> a -> Type)) = forall x. ~(f x x)
     i.e.,
 
       {[ pairwise_and f [a; b; c] = f a b /\ f a c /\ f b c ]} *)
-[@ __reduce__]
+[@@ __reduce__]
 let pairwise_and' #a (f: (a -> a -> Type)) (l: list a) : Type = pairwise_op' l_and f l True
 
 (** Equations for [pairwise_and] showing it to be a fold with [big_and] *)
@@ -224,7 +224,7 @@ val pairwise_and'_forall_no_repeats (#a: Type) (f: (a -> a -> Type)) (l: list a)
 (** [pairwise_and f l] is an implicitly reducing variant of [pairwise_and']
     It is defined in [prop] *)
 
-[@ __reduce__]
+[@@ __reduce__]
 unfold
 let pairwise_and #a (f: (a -> a -> Type)) (l: list a) : prop =
   pairwise_and'_prop f l;
@@ -234,7 +234,7 @@ let pairwise_and #a (f: (a -> a -> Type)) (l: list a) : prop =
 
 (** [pairwise_or f l] disjoins [f] on all pairs excluding the diagonal
     i.e., [pairwise_or f [a; b; c] = f a b \/ f a c \/ f b c] *)
-[@ __reduce__]
+[@@ __reduce__]
 let pairwise_or' #a (f: (a -> a -> Type)) (l: list a) : Type = pairwise_op' l_or f l False
 
 (** Equations for [pairwise_or'] showing it to be a fold with [big_or'] *)
@@ -266,7 +266,7 @@ val pairwise_or'_exists_no_repeats (#a: Type) (f: (a -> a -> Type)) (l: list a)
 (** [pairwise_or f l] is an implicitly reducing variant of [pairwise_or']
     It is defined in [prop] *)
 
-[@ __reduce__]
+[@@ __reduce__]
 unfold
 let pairwise_or #a (f: (a -> a -> Type)) (l: list a) : prop =
   pairwise_or'_prop f l;

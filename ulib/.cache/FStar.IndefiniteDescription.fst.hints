@@ -12,7 +12,7 @@
         "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "e09b29f155f195a7d7e425288768cdbf"
+      "b12bf822d94130f3b4fd87f9b11da0af"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
@@ -21,11 +21,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "int_inversion", "projection_inverse_Prims.Mkdtuple2__1",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "cf24a348e0147a36c42ff6fe8668883b"
+      "c94792ab36229dc72ef1dc38d5d04319"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle_prop",
@@ -34,11 +34,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion",
+        "int_inversion", "projection_inverse_Prims.Mkdtuple2__1",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "61c3e29217edd5bd7ecf7bb380ef3207"
+      "35f805bd63c93825637ddc4e96579c69"
     ],
     [
       "FStar.IndefiniteDescription.strong_excluded_middle",
@@ -51,7 +51,7 @@
         "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "cce46de408353da7a55a1c7576639cfa"
+      "be9283487ddb617020763c3479b7e6d2"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
@@ -60,11 +60,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion",
-        "refinement_interpretation_Tm_refine_ba523126f67e00e7cd55f0b92f16681d"
+        "int_inversion", "projection_inverse_Prims.Mkdtuple2__1",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "89a95336e0d35dc43b3c0712c7dc8eea"
+      "1b8118513a200ee134ee0d564cca1d94"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle_prop",
@@ -73,11 +73,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion",
+        "int_inversion", "projection_inverse_Prims.Mkdtuple2__1",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "dd08288c9648aa962932855781ce94fc"
+      "e9fcd387a72bda7a17becddd0f412ea4"
     ]
   ]
 ]

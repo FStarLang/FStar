@@ -2964,9 +2964,6 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       in
       {s with sigel = Sig_let((b, lbs), lids)}
 
-    | Sig_main t ->
-      {s with sigel = Sig_main (remove_uvar_solutions env t)}
-
     | Sig_assume (l, us, t) ->
       let us, _, t = elim_uvars_aux_t env us [] t in
       {s with sigel = Sig_assume (l, us, t)}

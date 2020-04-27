@@ -75,7 +75,7 @@ type universe =
   | U_unif  of universe_uvar
   | U_unknown
 and univ_name = ident
-and universe_uvar = Unionfind.p_uvar<option<universe>> * version
+and universe_uvar = Unionfind.p_uvar<option<universe>> * version * Range.range
 
 type univ_names    = list<univ_name>
 type universes     = list<universe>
@@ -131,7 +131,7 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_meta: option<(dyn * term)>; (* the dyn is an FStar.TypeChecker.Env.env *)
 }
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
-and uvar = Unionfind.p_uvar<option<term>> * version
+and uvar = Unionfind.p_uvar<option<term>> * version * Range.range
 and uvars = set<ctx_uvar>
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -429,6 +429,8 @@ type eff_decl = {
 type sig_metadata = {
     sigmeta_active:bool;
     sigmeta_fact_db_ids:list<string>;
+    sigmeta_admit:bool; //An internal flag to record that a sigelt's SMT proof should be admitted
+                        //Used in DM4Free
 }
 
 
@@ -473,7 +475,6 @@ type sigelt' =
                           * typ
   | Sig_let               of letbindings
                           * list<lident>               //mutually defined
-  | Sig_main              of term
   | Sig_assume            of lident
                           * univ_names
                           * formula

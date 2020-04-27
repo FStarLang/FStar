@@ -72,6 +72,7 @@
     <Compile Include="FStar.Dependencies.fs" />
     <Compile Include="FStar.CheckedFiles.fsi" />
     <Compile Include="FStar.CheckedFiles.fs" />
+    <Compile Include="FStar.Universal.fsi" />
     <Compile Include="FStar.Universal.fs" />
     <Compile Include="FStar.Interactive.CompletionTable.fsi" />
     <Compile Include="FStar.Interactive.CompletionTable.fs" />

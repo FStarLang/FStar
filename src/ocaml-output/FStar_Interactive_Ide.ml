@@ -2788,17 +2788,20 @@ let (interactive_error_handler : FStar_Errors.error_handler) =
       let uu____7995 = FStar_ST.op_Bang issues  in e :: uu____7995  in
     FStar_ST.op_Colon_Equals issues uu____7992  in
   let count_errors uu____8049 =
-    let uu____8050 =
+    let issues1 =
       let uu____8053 = FStar_ST.op_Bang issues  in
+      FStar_Util.remove_dups (fun i0  -> fun i1  -> i0 = i1) uu____8053  in
+    let uu____8083 =
       FStar_List.filter
-        (fun e  -> e.FStar_Errors.issue_level = FStar_Errors.EError)
-        uu____8053
+        (fun e  -> e.FStar_Errors.issue_level = FStar_Errors.EError) issues1
        in
-    FStar_List.length uu____8050  in
-  let report uu____8088 =
-    let uu____8089 = FStar_ST.op_Bang issues  in
-    FStar_List.sortWith FStar_Errors.compare_issues uu____8089  in
-  let clear uu____8120 = FStar_ST.op_Colon_Equals issues []  in
+    FStar_List.length uu____8083  in
+  let report uu____8095 =
+    let uu____8096 =
+      let uu____8099 = FStar_ST.op_Bang issues  in
+      FStar_Util.remove_dups (fun i0  -> fun i1  -> i0 = i1) uu____8099  in
+    FStar_List.sortWith FStar_Errors.compare_issues uu____8096  in
+  let clear uu____8134 = FStar_ST.op_Colon_Equals issues []  in
   {
     FStar_Errors.eh_add_one = add_one;
     FStar_Errors.eh_count_errors = count_errors;
@@ -2818,8 +2821,8 @@ let (interactive_printer : (FStar_Util.json -> unit) -> FStar_Util.printer) =
         (fun label  ->
            fun get_string  ->
              fun get_json  ->
-               let uu____8181 = get_json ()  in
-               forward_message printer label uu____8181)
+               let uu____8195 = get_json ()  in
+               forward_message printer label uu____8195)
     }
   
 let (install_ide_mode_hooks : (FStar_Util.json -> unit) -> unit) =
@@ -2828,15 +2831,15 @@ let (install_ide_mode_hooks : (FStar_Util.json -> unit) -> unit) =
     FStar_Errors.set_handler interactive_error_handler
   
 let (initial_range : FStar_Range.range) =
-  let uu____8195 = FStar_Range.mk_pos Prims.int_one Prims.int_zero  in
-  let uu____8198 = FStar_Range.mk_pos Prims.int_one Prims.int_zero  in
-  FStar_Range.mk_range "<input>" uu____8195 uu____8198 
+  let uu____8209 = FStar_Range.mk_pos Prims.int_one Prims.int_zero  in
+  let uu____8212 = FStar_Range.mk_pos Prims.int_one Prims.int_zero  in
+  FStar_Range.mk_range "<input>" uu____8209 uu____8212 
 let (build_initial_repl_state :
   Prims.string -> FStar_Interactive_JsonHelper.repl_state) =
   fun filename  ->
     let env = FStar_Universal.init_env FStar_Parser_Dep.empty_deps  in
     let env1 = FStar_TypeChecker_Env.set_range env initial_range  in
-    let uu____8212 = FStar_Util.open_stdin ()  in
+    let uu____8226 = FStar_Util.open_stdin ()  in
     {
       FStar_Interactive_JsonHelper.repl_line = Prims.int_one;
       FStar_Interactive_JsonHelper.repl_column = Prims.int_zero;
@@ -2844,25 +2847,25 @@ let (build_initial_repl_state :
       FStar_Interactive_JsonHelper.repl_deps_stack = [];
       FStar_Interactive_JsonHelper.repl_curmod = FStar_Pervasives_Native.None;
       FStar_Interactive_JsonHelper.repl_env = env1;
-      FStar_Interactive_JsonHelper.repl_stdin = uu____8212;
+      FStar_Interactive_JsonHelper.repl_stdin = uu____8226;
       FStar_Interactive_JsonHelper.repl_names =
         FStar_Interactive_CompletionTable.empty
     }
   
 let interactive_mode' :
-  'uuuuuu8228 . FStar_Interactive_JsonHelper.repl_state -> 'uuuuuu8228 =
+  'uuuuuu8242 . FStar_Interactive_JsonHelper.repl_state -> 'uuuuuu8242 =
   fun init_st  ->
     write_hello ();
     (let exit_code =
-       let uu____8237 =
+       let uu____8251 =
          (FStar_Options.record_hints ()) || (FStar_Options.use_hints ())  in
-       if uu____8237
+       if uu____8251
        then
-         let uu____8241 =
-           let uu____8243 = FStar_Options.file_list ()  in
-           FStar_List.hd uu____8243  in
-         FStar_SMTEncoding_Solver.with_hints_db uu____8241
-           (fun uu____8250  -> go init_st)
+         let uu____8255 =
+           let uu____8257 = FStar_Options.file_list ()  in
+           FStar_List.hd uu____8257  in
+         FStar_SMTEncoding_Solver.with_hints_db uu____8255
+           (fun uu____8264  -> go init_st)
        else go init_st  in
      FStar_All.exit exit_code)
   
@@ -2870,24 +2873,24 @@ let (interactive_mode : Prims.string -> unit) =
   fun filename  ->
     install_ide_mode_hooks FStar_Interactive_JsonHelper.write_json;
     FStar_Util.set_sigint_handler FStar_Util.sigint_ignore;
-    (let uu____8264 =
-       let uu____8266 = FStar_Options.codegen ()  in
-       FStar_Option.isSome uu____8266  in
-     if uu____8264
+    (let uu____8278 =
+       let uu____8280 = FStar_Options.codegen ()  in
+       FStar_Option.isSome uu____8280  in
+     if uu____8278
      then
        FStar_Errors.log_issue FStar_Range.dummyRange
          (FStar_Errors.Warning_IDEIgnoreCodeGen, "--ide: ignoring --codegen")
      else ());
     (let init = build_initial_repl_state filename  in
-     let uu____8275 = FStar_Options.trace_error ()  in
-     if uu____8275
+     let uu____8289 = FStar_Options.trace_error ()  in
+     if uu____8289
      then interactive_mode' init
      else
        (try
-          (fun uu___1073_8281  ->
+          (fun uu___1078_8295  ->
              match () with | () -> interactive_mode' init) ()
         with
-        | uu___1072_8284 ->
+        | uu___1077_8298 ->
             (FStar_Errors.set_handler FStar_Errors.default_handler;
-             FStar_Exn.raise uu___1072_8284)))
+             FStar_Exn.raise uu___1077_8298)))
   

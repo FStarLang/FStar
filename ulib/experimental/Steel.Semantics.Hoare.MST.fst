@@ -279,8 +279,13 @@ let l_post (#st:st) (#a:Type) (pre:st.hprop) (post:post_t st a) = fp_prop2 pre p
 (**** End expects, provides, requires,
       and ensures defns ****)
 
+open NMSTTotal
+
 effect Mst (a:Type) (#st:st) (req:st.mem -> Type0) (ens:st.mem -> a -> st.mem -> Type0) =
   NMSTATE a st.mem st.locks_preorder req ens
+
+effect MstTot (a:Type) (#st:st) (req:st.mem -> Type0) (ens:st.mem -> a -> st.mem -> Type0) =
+  NMSTATETOT a st.mem st.locks_preorder req ens
 
 
 (**** Begin interface of actions ****)
@@ -303,6 +308,24 @@ let action_t
     =
   unit ->
     Mst a
+      (requires fun m0 ->
+        st.interp (pre `st.star` st.locks_invariant m0) m0 /\
+        lpre (st.core m0))
+      (ensures fun m0 x m1 ->
+        st.interp ((post x) `st.star` st.locks_invariant m1) m1 /\
+        lpost (st.core m0) x (st.core m1) /\
+        preserves_frame pre (post x) m0 m1)
+
+let action_t_tot
+      (#st:st)
+      (#a:Type)
+      (pre:st.hprop)
+      (post:post_t st a)
+      (lpre:l_pre pre)
+      (lpost:l_post pre post)
+    =
+  unit ->
+    MstTot a
       (requires fun m0 ->
         st.interp (pre `st.star` st.locks_invariant m0) m0 /\
         lpre (st.core m0))

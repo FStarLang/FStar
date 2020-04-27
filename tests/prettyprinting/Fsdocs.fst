@@ -85,15 +85,15 @@ and tm = 3
 //  *)
 (** TODO: we need dependent functional extensionality *)
 
-[@ "opaque_to_smt"]
+[@@ "opaque_to_smt"]
 unfold private
 let equal_heap_dom (r: rid) (m0 m1: mem) : Type0 = Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r)
 
-[@ "opaque_to_smt"]
+[@@ "opaque_to_smt"]
 unfold private
 let equal_heap_dom (r: rid) (m0 m1: mem) : Type0 = Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r)
 
-[@ "opaque_to_smt"]
+[@@ "opaque_to_smt"]
 unfold private
 let equal_heap_dom (r: rid) (m0 m1: mem) : Type0 = Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r)
 
@@ -103,7 +103,7 @@ let equal_heap_dom (r: rid) (m0 m1: mem) : Type0 = Heap.equal_dom (Map.sel m0.h 
 //  *)
 (** TODO: we need dependent functional extensionality *)
 
-[@ "opaque_to_smt"]
+[@@ "opaque_to_smt"]
 unfold private
 let equal_heap_dom (r: rid) (m0 m1: mem) : Type0 = Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r)
 

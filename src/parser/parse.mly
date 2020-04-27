@@ -27,6 +27,10 @@ let logic_qualifier_deprecation_warning =
 let abstract_qualifier_warning =
   "abstract qualifier will soon be removed from F*, use interfaces instead"
 
+let old_attribute_syntax_warning =
+  "The `[@ ...]` syntax of attributes is deprecated. \
+   Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
+
 %}
 
 %token <bytes> BYTEARRAY
@@ -68,7 +72,8 @@ let abstract_qualifier_warning =
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
-%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT DOT_LBRACK DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE BANG_LBRACE
+%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT DOT_LBRACK
+%token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
@@ -139,7 +144,18 @@ pragma:
 
 attribute:
   | LBRACK_AT x = list(atomicTerm) RBRACK
+      {
+        let _ =
+            match x with
+            | _::_::_ ->
+                  log_issue (lhs parseState) (Warning_DeprecatedGeneric,
+                                              old_attribute_syntax_warning)
+            | _ -> () in
+         x
+      }
+  | LBRACK_AT_AT x = semiColonTermList RBRACK
       { x }
+
 
 decoration:
   | x=attribute
@@ -1160,7 +1176,7 @@ range:
 /*                       Miscellanous, tools                                   */
 /******************************************************************************/
 
-%inline string:
+string:
   | s=STRING { s }
 
 %inline operator:

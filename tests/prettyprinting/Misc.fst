@@ -82,7 +82,7 @@ val push_binder: env -> binder -> env
 //  *)
 (** TODO: we need dependent functional extensionality *)
 
-[@ "opaque_to_smt"]
+[@@ "opaque_to_smt"]
 unfold private
 let equal_heap_dom (r: rid) (m0 m1: mem) : Type0 = Heap.equal_dom (Map.sel m0.h r) (Map.sel m1.h r)
 
@@ -150,7 +150,7 @@ assume GhostExtensionality: forall (a: Type) (b: Type) (f: gfun a b) (g: gfun a 
   {:pattern gfeq #a #b f g}
   gfeq #a #b f g <==> f == g
 
-[@ (deprecated "FStar.HyperStack.ST.is_eternal_region")]
+[@@ (deprecated "FStar.HyperStack.ST.is_eternal_region")]
 let is_eternal_region r = is_eternal_color (color r)
 
 let string_of_matching_problem mp =
@@ -177,7 +177,7 @@ val gsub_old_to_new (#t: Type0) (b: Old.buffer t) (i len: U32.t)
         ]
       ]
 
-[@ mark_for_norm]
+[@@ mark_for_norm]
 unfold
 let op_Slash (#sw: signed_width{sw <> Unsigned W128}) = ()
 

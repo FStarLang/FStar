@@ -16,7 +16,7 @@
 module SimpleTactic
 open FStar.Tactics
 
-[@ plugin]
+[@@ plugin]
 let test () =
   dump "Test";
   print "hello";
