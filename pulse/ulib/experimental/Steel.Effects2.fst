@@ -65,6 +65,14 @@ assume val implies_preserves_frame (p q:hprop u#1)
       Sem.preserves_frame #state q r m1 m2 ==>
       Sem.preserves_frame #state p r m1 m2)
 
+assume val implies_preserves_frame_right (p q:hprop u#1)
+: Lemma
+  (requires p `implies` q)
+  (ensures
+    forall (m1 m2:mem) (r:hprop).
+      Sem.preserves_frame #state r p m1 m2 ==>
+      Sem.preserves_frame #state r q m1 m2)
+
 let frame_aux (#a:Type) (#pre:pre_t) (#post:post_t a)
   (f:repr a pre post) (frame:hprop)
 : repr a (pre `star` frame) (fun x -> post x `star` frame)
@@ -141,7 +149,12 @@ assume WP_monotonic :
   forall (a:Type) (wp:pure_wp a).
     (forall p q. (forall x. p x ==>  q x) ==>  (wp p ==>  wp q))
 
-let bind_pure_steelf (a:Type) (b:Type)
+
+(*
+ * TODO: implementation of this combinator requires substitution of f and g
+ *       in the comp type
+ *)
+let bind_pure_steel_ (a:Type) (b:Type)
   (wp:pure_wp a) (pre_g:a -> pre_t) (post_g:a -> post_t b)
   (_:squash (wp (fun _ -> True)))
   (f:unit -> PURE a wp) (g:(x:a -> repr b (pre_g x) (post_g x)))
@@ -150,12 +163,10 @@ let bind_pure_steelf (a:Type) (b:Type)
   let x = f () in
   (g x) ()
 
-polymonadic_bind (PURE, SteelF) |> SteelF = bind_pure_steelf
+polymonadic_bind (PURE, SteelF) |> SteelF = bind_pure_steel_
 
-polymonadic_bind (PURE, Steel) |> Steel = bind_pure_steelf
+polymonadic_bind (PURE, Steel) |> Steel = bind_pure_steel_
 
-#restart-solver
-#reset-options "--z3cliopt 'smt.qi.eager_threshold=100' --z3rlimit 200"
 let bind_pure_steel (a:Type) (b:Type)
   (pre_f:pre_t) (post_f:post_t a) (wp:a -> pure_wp b)
   (frame_f:hprop) (post_g:post_t b)
@@ -164,14 +175,33 @@ let bind_pure_steel (a:Type) (b:Type)
   (_:squash (forall x. (post_f x `star` frame_f) `implies` (post_g (g x ()))))
 : repr b (pre_f `star` frame_f) post_g
 = fun _ ->
+  let m0 = NMST.get () in
+
   let x = f () in
-  implies_preserves_frame (post_f x `star` frame_f) (post_g (g x ()));
-  implies_interp (post_f x `star` frame_f) (post_g (g x ()));
-  g x ()
 
+  let m1 = NMST.get () in
 
-  // admit ();
+  let y = (g x) () in
 
+  let m2 = NMST.get () in
 
-  // admit ();
-  // g x ()
+  implies_interp (post_f x `star` frame_f) (post_g y);
+
+  //from executing f
+  assert (Sem.preserves_frame pre_f (post_f x) m0 m1);
+
+  //add frame_f
+  Sem.preserves_frame_star #state pre_f (post_f x) m0 m1 frame_f;
+  assert (Sem.preserves_frame (pre_f `star` frame_f) (post_f x `star` frame_f) m0 m1);
+
+  //g is pure, get preserves_frame in m2
+  assert (m1 == m2);  
+  assert (Sem.preserves_frame (pre_f `star` frame_f) (post_f x `star` frame_f) m0 m2);
+
+  //from last hypothesis in the signature
+  assert (post_f x `star` frame_f `implies` post_g y);
+  
+  implies_preserves_frame_right (post_f x `star` frame_f) (post_g y);
+  assert (Sem.preserves_frame (pre_f `star` frame_f) (post_g y) m0 m2);
+
+  y
