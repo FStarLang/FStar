@@ -1,8 +1,6 @@
 module Erasable
 
-[@@erasable
- (expect_failure [162]) //must be marked noeq
-]
+[@@erasable; expect_failure [162]] //must be marked noeq
 type t0 =
   | This0 of int
   | That0 of bool
@@ -35,9 +33,7 @@ let test_promotion (x:t) : Tot t =
 
 //this is illegal:
 //erasable is only permitted inductive type definitions
-[@@erasable
-  (expect_failure [162])
-]
+[@@erasable; expect_failure [162]]
 let e_nat = nat
 
 (* GM: Note: e_nat_2 and e_nat_3 will appear
