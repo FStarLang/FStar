@@ -2118,7 +2118,10 @@ let (tc_decl' :
                  match uu____2610 with
                  | (t1,uu____2628,g) ->
                      (FStar_TypeChecker_Rel.force_trivial_guard env g;
-                      (let ses = env.FStar_TypeChecker_Env.splice env t1  in
+                      (let ses =
+                         env.FStar_TypeChecker_Env.splice env
+                           se1.FStar_Syntax_Syntax.sigrng t1
+                          in
                        let lids' =
                          FStar_List.collect FStar_Syntax_Util.lids_of_sigelt
                            ses

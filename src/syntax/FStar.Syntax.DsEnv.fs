@@ -879,7 +879,8 @@ let push_scope_mod env scope_mod =
  {env with scope_mods = scope_mod :: env.scope_mods}
 
 let push_bv' env (x:ident) =
-  let bv = S.gen_bv (text_of_id x) (Some (range_of_id x)) tun in
+  let r = range_of_id x in
+  let bv = S.gen_bv (text_of_id x) (Some r) ({ tun with pos = r }) in
   let used_marker = BU.mk_ref false in
   push_scope_mod env (Local_binding (x, bv, used_marker)), bv, used_marker
 

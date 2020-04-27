@@ -550,7 +550,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let t, _, g = tc_tactic t_unit S.t_decls env t in
     Rel.force_trivial_guard env g;
 
-    let ses = env.splice env t in
+    let ses = env.splice env se.sigrng t in
     let lids' = List.collect U.lids_of_sigelt ses in
     List.iter (fun lid ->
         match List.tryFind (Ident.lid_equals lid) lids' with
