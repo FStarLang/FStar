@@ -35,7 +35,7 @@ module S = FStar.Syntax.Syntax
 
 (* A subst_t is a composition of parallel substitutions, expressed as a list of lists *)
 let subst_to_string s =
-    s |> List.map (fun (b, _) -> b.ppname.idText) |> String.concat ", "
+    s |> List.map (fun (b, _) -> (text_of_id b.ppname)) |> String.concat ", "
 
 (* apply_until_some f s
       applies f to each element of s until it returns (Some t)
@@ -74,14 +74,14 @@ let compose_subst s1 s2 =
 //composing it with any other delayed substitution that may already be there
 let delay t s =
  match t.n with
- | Tm_delayed((t', s'), m) ->
+ | Tm_delayed (t', s') ->
     //s' is the subsitution already associated with this node;
     //s is the new subsitution to add to it
     //compose substitutions by concatenating them
     //the order of concatenation is important!
     mk_Tm_delayed (t', compose_subst s' s) t.pos
  | _ ->
-    mk_Tm_delayed ((t, s)) t.pos
+    mk_Tm_delayed (t, s) t.pos
 
 (*
     force_uvar' (t:term) : term * bool
@@ -111,24 +111,6 @@ let force_uvar t =
   then delay t' ([], SomeUseRange t.pos)
   else t
 
-//If a delayed node has already been memoized, then return the memo
-//THIS DOES NOT PUSH A SUBSTITUTION UNDER A DELAYED NODE---see push_subst for that
-let rec try_read_memo_aux t =
-  match t.n with
-  | Tm_delayed(f, m) ->
-    (match !m with
-      | None -> t, false
-      | Some t' ->
-        let t', shorten = try_read_memo_aux t' in
-        if shorten then m := Some t';
-        t', true)
-  | _ -> t, false
-
-//  Warning: if try_read_memo changes to operate on inputs other
-//    than Tm_delayed then the fastpath out match in compress will
-//    need to be updated.
-let try_read_memo t = fst (try_read_memo_aux t)
-
 let rec compress_univ u = match u with
     | U_unif u' ->
       begin match Unionfind.univ_find u' with
@@ -154,7 +136,7 @@ let subst_univ_bv x s = U.find_map s (function
     | UN(y, t) when (x=y) -> Some t
     | _ -> None)
 let subst_univ_nm (x:univ_name) s = U.find_map s (function
-    | UD(y, i) when (x.idText=y.idText) -> Some (U_bvar i)
+    | UD(y, i) when (ident_equals x y) -> Some (U_bvar i)
     | _ -> None)
 
 let rec subst_univ s u =
@@ -216,18 +198,18 @@ let rec subst' (s:subst_ts) t =
   | [], NoUseRange
   | [[]], NoUseRange -> t
   | _ ->
-    let t0 = try_read_memo t in
+    let t0 = t in
     match t0.n with
     | Tm_unknown
     | Tm_constant _                      //a constant cannot be substituted
     | Tm_fvar _ -> tag_with_range t0 s   //fvars are never subject to substitution
 
-    | Tm_delayed((t', s'), m) ->
+    | Tm_delayed (t', s') ->
         //s' is the subsitution already associated with this node;
         //s is the new subsitution to add to it
         //compose substitutions by concatenating them
         //the order of concatenation is important!
-        mk_Tm_delayed ((t', compose_subst s' s)) t.pos
+        mk_Tm_delayed (t', compose_subst s' s) t.pos
 
     | Tm_bvar a ->
         apply_until_some_then_map (subst_bv a) (fst s) subst_tail t0
@@ -242,7 +224,7 @@ let rec subst' (s:subst_ts) t =
       //NS: 04/12/2018
       //    Substitutions on Tm_uvar just gets delayed
       //    since its solution may eventually end up being an open term
-      mk_Tm_delayed ((t0, s)) (mk_range t.pos s)
+      mk_Tm_delayed (t0, s) (mk_range t.pos s)
 
 let subst_flags' s flags =
     flags |> List.map (function
@@ -395,7 +377,7 @@ let rec push_subst s t =
         //t' must be an fvar---it cannot be substituted
         //but the universes may be substituted
         let us = List.map (subst_univ (fst s)) us in
-        tag_with_range (mk_Tm_uinst t' us) s
+        tag_with_range (mk (Tm_uinst (t', us))) s
 
     | Tm_app(t0, args) -> mk (Tm_app(subst' s t0, subst_args' s args))
 
@@ -478,33 +460,30 @@ let rec push_subst s t =
          2. eliminate any top-level (Tm_uvar uv) node,
             when uv has been assigned a solution already
 
-      Internally, compress should memoize the result of any
-      delayed substitution (i.e., step 1 above), but not
-      memoize the result of uvar solutions (since those
-      could be reverted).
+      `compress` should will *not* memoize the result of uvar
+      solutions (since those could be reverted), nor the result
+      of `push_subst` (since it internally uses the unionfind
+      graph too).
 
       The function is broken into a fast-path where the
       result can be easily determined and a recursive slow
       path.
 
-      Warning: if try_read_memo or force_uvar change to
-      operate on inputs other than Tm_delayed or Tm_uvar
-      then the fastpath out match in compress will need to
-      be updated.
+      Warning: if force_uvar changes to operate on inputs other than
+      Tm_uvar then the fastpath out match in compress will need to be
+      updated.
 *)
-let rec compress_slow (t:term) =
-    let t = try_read_memo t in
+let compress_slow (t:term) =
     let t = force_uvar t in
     match t.n with
-    | Tm_delayed((t', s), memo) ->
-        memo := Some (push_subst s t');
-        compress_slow t
+    | Tm_delayed (t', s) ->
+        push_subst s t'
     | _ ->
         t
 
 let compress (t:term) =
   match t.n with
-    | Tm_delayed(_, _) | Tm_uvar(_, _) ->
+    | Tm_delayed (_, _) | Tm_uvar(_, _) ->
         compress_slow t
     | _ ->
         t

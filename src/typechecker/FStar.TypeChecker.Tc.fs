@@ -36,6 +36,7 @@ open FStar.TypeChecker.TcTerm
 module S  = FStar.Syntax.Syntax
 module SP  = FStar.Syntax.Print
 module SS = FStar.Syntax.Subst
+module UF = FStar.Syntax.Unionfind
 module N  = FStar.TypeChecker.Normalize
 module TcComm = FStar.TypeChecker.Common
 module TcUtil = FStar.TypeChecker.Util
@@ -55,7 +56,7 @@ let set_hint_correlator env se =
     //this is useful when we verify the extracted interface alongside
     let tbl = env.qtbl_name_and_index |> fst in
     let get_n lid =
-      let n_opt = BU.smap_try_find tbl lid.str in
+      let n_opt = BU.smap_try_find tbl (string_of_lid lid) in
       if is_some n_opt then n_opt |> must else 0
     in
 
@@ -201,7 +202,7 @@ let tc_inductive' env ses quals attrs lids =
              | Sig_inductive_typ (lid, _, _, _, _, _) -> lid, ty.sigrng
              | _                                         -> failwith "Impossible!"
            in
-           Errors.log_issue r (Errors.Error_InductiveTypeNotSatisfyPositivityCondition, ("Inductive type " ^ lid.str ^ " does not satisfy the positivity condition"))
+           Errors.log_issue r (Errors.Error_InductiveTypeNotSatisfyPositivityCondition, ("Inductive type " ^ (string_of_lid lid) ^ " does not satisfy the positivity condition"))
          else ()
        ) tcs;
 
@@ -216,7 +217,7 @@ let tc_inductive' env ses quals attrs lids =
          if lid_equals ty_lid PC.exn_lid && not (TcInductive.check_exn_positivity data_lid env) then
             Errors.log_issue d.sigrng
                      (Errors.Error_InductiveTypeNotSatisfyPositivityCondition,
-                        ("Exception " ^ data_lid.str ^ " does not satisfy the positivity condition"))
+                        ("Exception " ^ (string_of_lid data_lid) ^ " does not satisfy the positivity condition"))
        ) datas
     end;
 
@@ -232,7 +233,7 @@ let tc_inductive' env ses quals attrs lids =
           | _                                         -> failwith "Impossible"
         in
         //these are the prims type we are skipping
-        List.existsb (fun s -> s = lid.ident.idText) TcInductive.early_prims_inductives in
+        List.existsb (fun s -> s = (text_of_id (ident_of_lid lid))) TcInductive.early_prims_inductives in
 
       let is_noeq = List.existsb (fun q -> q = Noeq) quals in
 
@@ -263,63 +264,6 @@ let tc_inductive env ses quals attrs lids =
   try tc_inductive' env ses quals attrs lids |> (fun r -> pop (); r)
   with e -> pop (); raise e
 
-let get_fail_se (se:sigelt) : option<(list<int> * bool)> =
-    let comb f1 f2 =
-        match f1, f2 with
-        | Some (e1, l1), Some (e2, l2) ->
-            Some (e1@e2, l1 || l2)
-        | Some (e, l), None
-        | None, Some (e, l) ->
-            Some (e, l)
-        | _ -> None
-    in
-    List.fold_right (fun at acc -> comb (ToSyntax.get_fail_attr true at) acc) se.sigattrs None
-
-let list_of_option = function
-    | None -> []
-    | Some x -> [x]
-
-(* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2) *)
-(* Precondition: lists are sorted *)
-let check_multi_eq (l1 : list<int>) (l2 : list<int>) : option<(int * int * int)> =
-    let rec collect (l : list<'a>) : list<('a * int)> =
-        match l with
-        | [] -> []
-        | hd :: tl ->
-            begin match collect tl with
-            | [] -> [(hd, 1)]
-            | (h, n) :: t ->
-                if h = hd
-                then (h, n+1) :: t
-                else (hd, 1) :: (h, n) :: t
-            end
-    in
-    let summ l =
-        collect l
-    in
-    let l1 = summ l1 in
-    let l2 = summ l2 in
-    let rec aux l1 l2 =
-        match l1, l2 with
-        | [], [] -> None
-
-        | (e, n) :: _, [] ->
-            Some (e, n, 0)
-
-        | [], (e, n) :: _ ->
-            Some (e, 0, n)
-
-        | (hd1, n1) :: tl1, (hd2, n2) :: tl2 ->
-            if hd1 < hd2 then
-                Some (hd1, n1, 0)
-            else if hd1 > hd2 then
-                Some (hd2, 0, n2)
-            else if n1 <> n2 then
-                Some (hd1, n1, n2)
-            else aux tl1 tl2
-    in
-    aux l1 l2
-
 (*
  *  Given `val t : Type` in an interface
  *  and   `let t = e`    in the corresponding implementation
@@ -340,7 +284,7 @@ let check_must_erase_attribute env se =
             snd lbs |> List.iter (fun lb ->
                 let lbname = BU.right lb.lbname in
                 let has_iface_val =
-                    iface_decls |> BU.for_some (FStar.Parser.AST.decl_is_val lbname.fv_name.v.ident)
+                    iface_decls |> BU.for_some (FStar.Parser.AST.decl_is_val (ident_of_lid lbname.fv_name.v))
                 in
                 if has_iface_val
                 then
@@ -390,6 +334,10 @@ let proc_check_with (attrs:list<attribute>) (kont : unit -> 'a) : 'a =
       kont ())
   | _ -> failwith "huh?"
 
+(* Alternative to making a huge let rec... knot is set below in this file *)
+let tc_decls_knot : ref<option<(Env.env -> list<sigelt> -> list<sigelt> * list<sigelt> * Env.env)>> =
+  BU.mk_ref None
+
 let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   let env = env0 in
   TcUtil.check_sigelt_quals env se;
@@ -404,6 +352,59 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   | Sig_inductive_typ _
   | Sig_datacon _ ->
     failwith "Impossible bare data-constructor"
+
+  (* If we're --laxing, and this is not an `expect_lax_failure`, then just ignore the definition *)
+  | Sig_fail (_, false, _) when not (Env.should_verify env) || Options.admit_smt_queries () ->
+    [], [], env
+
+  | Sig_fail (expected_errors, lax, ses) ->
+    let env' = if lax then { env with lax = true } else env in
+    let env' = Env.push env' "expect_failure" in
+    (* We need to call push since tc_decls will encode the sigelts that
+     * succeed to SMT, which may be relevant in checking the ones that
+     * follow it. See #1956 for an example of what goes wrong if we
+     * don't pop the context (spoiler: we prove false). *)
+
+    if Env.debug env Options.Low then
+        BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int expected_errors);
+
+    let errs, _ = Errors.catch_errors (fun () ->
+                    Options.with_saved_options (fun () ->
+                      BU.must (!tc_decls_knot) env' ses)) in
+
+    if Options.print_expected_failures ()
+       || Env.debug env Options.Low then
+    begin
+        BU.print_string ">> Got issues: [\n";
+        List.iter Errors.print_issue errs;
+        BU.print_string ">>]\n"
+    end;
+
+    (* Pop environment, reset SMT context *)
+    let _ = Env.pop env' "expect_failure" in
+
+    let actual_errors = List.concatMap (fun i -> FStar.Common.list_of_option i.issue_number) errs in
+
+    begin match errs with
+    | [] ->
+        List.iter Errors.print_issue errs;
+        Errors.log_issue se.sigrng (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded")
+    | _ ->
+        if expected_errors <> [] then
+          match Errors.find_multiset_discrepancy expected_errors actual_errors with
+          | None -> ()
+          | Some (e, n1, n2) ->
+            List.iter Errors.print_issue errs;
+            Errors.log_issue
+                     se.sigrng
+                     (Errors.Error_DidNotFail,
+                      BU.format5 "This top-level definition was expected to raise error codes %s, \
+                                  but it raised %s. Error #%s was raised %s times, instead of %s."
+                                    (FStar.Common.string_of_list string_of_int expected_errors)
+                                    (FStar.Common.string_of_list string_of_int actual_errors)
+                                    (string_of_int e) (string_of_int n2) (string_of_int n1))
+    end;
+    [], [], env
 
   | Sig_bundle(ses, lids) when (lids |> BU.for_some (lid_equals PC.lex_t_lid)) ->
     //lex_t is very special; it uses a more expressive form of universe polymorphism than is allowed elsewhere
@@ -451,6 +452,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
        | _ -> false in
 
     if is_unelaborated_dm4f then
+      let env = Env.set_range env r in
       let ses, ne, lift_from_pure_opt = TcEff.dmff_cps_and_elaborate env ne in
       let effect_and_lift_ses = match lift_from_pure_opt with
         | Some lift -> [ { se with sigel = Sig_new_effect (ne) } ; lift ]
@@ -508,7 +510,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     if lid_exists env lid
     then raise_error (Errors.Fatal_AlreadyDefinedTopLevelDeclaration, (BU.format1 "Top-level declaration %s for a name that is already used in this module; \
                                    top-level declarations must be unique in their module"
-                                   (Ident.text_of_lid lid))) r;
+                                   (Ident.string_of_lid lid))) r;
 
     let uvs, t =
       if Options.use_two_phase_tc () && Env.should_verify env then begin
@@ -523,6 +525,9 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     [ { se with sigel = Sig_declare_typ (lid, uvs, t) }], [], env0
 
   | Sig_assume(lid, uvs, t) ->
+    FStar.Errors.log_issue r
+                 (Warning_WarnOnUse,
+                  BU.format1 "Admitting a top-level assumption %s" (Print.lid_to_string lid));
     let env = Env.set_range env r in
 
     let uvs, t =
@@ -537,18 +542,6 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let uvs, t = tc_assume env (uvs, t) se.sigrng in
     [ { se with sigel = Sig_assume (lid, uvs, t) }], [], env0
 
-  | Sig_main(e) ->
-    let env = Env.set_range env r in
-    let env = Env.set_expected_typ env t_unit in
-    let e, c, g1 = tc_term env e in
-    let e, _, g =
-      let c, g_lc = TcComm.lcomp_comp c in
-      let e, _x, g = check_expected_effect env (Some (U.ml_comp t_unit r)) (e, c) in
-      e, _x, Env.conj_guard g_lc g in
-    Rel.force_trivial_guard env (Env.conj_guard g1 g);
-    let se = { se with sigel = Sig_main(e) } in
-    [se], [], env0
-
   | Sig_splice (lids, t) ->
     if Options.debug_any () then
         BU.print2 "%s: Found splice of (%s)\n" (string_of_lid env.curmodule) (Print.term_to_string t);
@@ -557,7 +550,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     let t, _, g = tc_tactic t_unit S.t_decls env t in
     Rel.force_trivial_guard env g;
 
-    let ses = env.splice env t in
+    let ses = env.splice env se.sigrng t in
     let lids' = List.collect U.lids_of_sigelt ses in
     List.iter (fun lid ->
         match List.tryFind (Ident.lid_equals lid) lids' with
@@ -597,7 +590,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
         match typ with
         | { n = Tm_arrow(val_bs, c); pos = r } -> begin
           let has_auto_name bv =
-            BU.starts_with bv.ppname.idText Ident.reserved_prefix in
+            BU.starts_with (text_of_id bv.ppname) Ident.reserved_prefix in
           let rec rename_binders def_bs val_bs =
             match def_bs, val_bs with
             | [], _ | _, [] -> val_bs
@@ -605,13 +598,12 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
               (match has_auto_name body_bv, has_auto_name val_bv with
                | true, _ -> (val_bv, aqual)
                | false, true -> ({ val_bv with
-                                   ppname = { val_bv.ppname with
-                                              idText = body_bv.ppname.idText } }, aqual)
+                                   ppname = mk_ident (text_of_id body_bv.ppname, range_of_id val_bv.ppname) }, aqual)
                | false, false ->
-                 // if body_bv.ppname.idText <> val_bv.ppname.idText then
-                 //   Errors.warn body_bv.ppname.idRange
+                 // if (text_of_id body_bv.ppname) <> (text_of_id val_bv.ppname) then
+                 //   Errors.warn (range_of_id body_bv.ppname)
                  //     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
-                 //                  body_bv.ppname.idText val_bv.ppname.idText);
+                 //                  (text_of_id body_bv.ppname) (text_of_id val_bv.ppname));
                  (val_bv, aqual)) :: rename_binders bt vt in
           Syntax.mk (Tm_arrow(rename_binders def_bs val_bs, c)) None r end
         | _ -> typ in
@@ -800,57 +792,24 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     [se], [], env0)
 
 
-(* [tc_decl env se] typechecks [se] in environment [env] and returns *)
-(* the list of typechecked sig_elts, and a list of new sig_elts elaborated during typechecking but not yet typechecked *)
+(* [tc_decl env se] typechecks [se] in environment [env] and returns *
+ * the list of typechecked sig_elts, and a list of new sig_elts elaborated
+ * during typechecking but not yet typechecked *)
 let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
-  let env = set_hint_correlator env se in
-  if Options.debug_any()
-  then BU.print1 "Processing %s\n" (U.lids_of_sigelt se |> List.map (fun l -> l.str) |> String.concat ", ");
-  if Env.debug env Options.Low
-  then BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
-  match get_fail_se se with
-  | Some (_, false) when not (Env.should_verify env) || Options.admit_smt_queries () ->
-    (* If we're --laxing, and this is not an `expect_lax_failure`, then just ignore the definition *)
-    [], [], env
-
-  | Some (errnos, lax) ->
-    let env' = if lax then { env with lax = true } else env in
-    if Env.debug env Options.Low then
-        BU.print1 ">> Expecting errors: [%s]\n" (String.concat "; " <| List.map string_of_int errnos);
-    let errs, _ = Errors.catch_errors (fun () -> Options.with_saved_options (fun () -> tc_decl' env' se)) in
-    if Env.debug env Options.Low then begin
-        BU.print_string ">> Got issues: [\n";
-        List.iter Errors.print_issue errs;
-        BU.print_string ">>]\n"
-    end;
-    let sort = List.sortWith (fun x y -> x - y) in
-    let errnos = sort errnos in
-    let actual = sort (List.concatMap (fun i -> list_of_option i.issue_number) errs) in
-    begin match errs with
-    | [] ->
-        List.iter Errors.print_issue errs;
-        Errors.log_issue se.sigrng (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded")
-    | _ ->
-        if errnos <> [] && errnos <> actual then
-            let (e, n1, n2) = match check_multi_eq errnos actual with
-                              | Some r -> r
-                              | None -> (-1, -1, -1) // should be impossible
-            in
-            List.iter Errors.print_issue errs;
-            Errors.log_issue
-                     se.sigrng
-                     (Errors.Error_DidNotFail,
-                      BU.format5 "This top-level definition was expected to raise error codes %s, \
-                                  but it raised %s. Error #%s was raised %s times, instead of %s."
-                                    (FStar.Common.string_of_list string_of_int errnos)
-                                    (FStar.Common.string_of_list string_of_int actual)
-                                    (string_of_int e) (string_of_int n2) (string_of_int n1))
-        else ()
-    end;
-    [], [], env
-
-  | None ->
-    tc_decl' env se
+   let env = set_hint_correlator env se in
+   if Options.debug_module (string_of_lid env.curmodule) then
+     BU.print1 "Processing %s\n" (U.lids_of_sigelt se |> List.map string_of_lid |> String.concat ", ");
+   if Env.debug env Options.Low then
+     BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
+   if se.sigmeta.sigmeta_admit
+   then begin
+     let old = Options.admit_smt_queries () in
+     Options.set_admit_smt_queries true;  
+     let result = tc_decl' env se in
+     Options.set_admit_smt_queries old;
+     result
+   end
+   else tc_decl' env se
 
 let for_export env hidden se : list<sigelt> * list<lident> =
    (* Exporting symbols based on whether they have been marked 'abstract'
@@ -885,6 +844,7 @@ let for_export env hidden se : list<sigelt> * list<lident> =
    match se.sigel with
   | Sig_pragma         _ -> [], hidden
 
+  | Sig_fail _
   | Sig_splice _
   | Sig_inductive_typ _
   | Sig_datacon _ -> failwith "Impossible (Already handled)"
@@ -928,8 +888,6 @@ let for_export env hidden se : list<sigelt> * list<lident> =
     then [se], hidden //Assumptions, Intepreted proj/disc are retained
     else [], hidden   //other declarations vanish
                       //they will be replaced by the definitions that must follow
-
-  | Sig_main  _ -> [], hidden
 
   | Sig_new_effect     _
   | Sig_sub_effect     _
@@ -1010,8 +968,16 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
 
 let tc_decls env ses =
   let rec process_one_decl (ses, exports, env, hidden) se =
+    (* If emacs is peeking, and debugging is on, don't do anything,
+     * otherwise the user will see a bunch of output from typechecking
+     * definitions that were not yet advanced over. *)
+    if env.nosynth && Options.debug_any ()
+    then (ses, exports, env, hidden), []
+    else begin
     if Env.debug env Options.Low
-    then BU.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
+    then BU.print2 ">>>>>>>>>>>>>>Checking top-level %s decl %s\n"
+                        (Print.tag_of_sigelt se)
+                        (Print.sigelt_to_string se);
 
     let ses', ses_elaborated, env = tc_decl env se in
     let ses' = ses' |> List.map (fun se ->
@@ -1020,7 +986,7 @@ let tc_decls env ses =
         N.elim_uvars env se) in
     let ses_elaborated = ses_elaborated |> List.map (fun se ->
         if Env.debug env (Options.Other "UF")
-        then BU.print1 "About to elim vars from (elaborated) %s\m" (Print.sigelt_to_string se);
+        then BU.print1 "About to elim vars from (elaborated) %s\n" (Print.sigelt_to_string se);
         N.elim_uvars env se) in
 
     Env.promote_id_info env (fun t ->
@@ -1032,7 +998,7 @@ let tc_decls env ses =
               env
               t); //update the id_info table after having removed their uvars
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se false) env in
-    FStar.Syntax.Unionfind.reset();
+    UF.reset();
 
     if Options.log_types() || Env.debug env <| Options.Other "LogTypes"
     then begin
@@ -1050,14 +1016,8 @@ let tc_decls env ses =
         in
         List.fold_left accum_exports_hidden (exports, hidden) ses'
     in
-
-    // GM: Aug 28 2018, pretty sure this is unneded as the only sigelt that can
-    // be present in ses' is the typechecked se (or none). I'm taking it out
-    // so I can make `postprocess_with` remove itself during typechecking
-    // (otherwise, it would run twice with extracted interfaces)
-    (* let ses' = List.map (fun s -> { s with sigattrs = se.sigattrs }) ses' in *)
-
     (List.rev_append ses' ses, exports, env, hidden), ses_elaborated
+    end
   in
   // A wrapper to (maybe) print the time taken for each sigelt
   let process_one_decl_timed acc se =
@@ -1079,8 +1039,13 @@ let tc_decls env ses =
     end;
     r
   in
-  let ses, exports, env, _ = BU.fold_flatten process_one_decl_timed ([], [], env, []) ses in
+  let ses, exports, env, _ =
+    UF.with_uf_enabled (fun () ->
+      BU.fold_flatten process_one_decl_timed ([], [], env, []) ses) in
   List.rev_append ses [], List.rev_append exports [], env
+
+let _ =
+    tc_decls_knot := Some tc_decls
 
 (* Consider the module:
         module Test
@@ -1096,7 +1061,7 @@ let tc_decls env ses =
    perspective.
 *)
 open FStar.TypeChecker.Err
-let check_exports env (modul:modul) exports =
+let check_exports env (modul:modul) exports : unit =
     let env = {env with lax=true; lax_universes=true; top_level=true} in
     let check_term lid univs t =
         let univs, t = SS.open_univ_vars univs t in
@@ -1111,8 +1076,8 @@ let check_exports env (modul:modul) exports =
     let check_term lid univs t =
         let _ = Errors.message_prefix.set_prefix
                 (BU.format2 "Interface of %s violates its abstraction (add a 'private' qualifier to '%s'?)"
-                        (Print.lid_to_string modul.name)
-                        (Print.lid_to_string lid)) in
+                        (string_of_lid modul.name)
+                        (string_of_lid lid)) in
         check_term lid univs t;
         Errors.message_prefix.clear_prefix()
     in
@@ -1137,13 +1102,14 @@ let check_exports env (modul:modul) exports =
           if not (se.sigquals |> List.contains Private)
           then let arrow = S.mk (Tm_arrow(binders, comp)) None se.sigrng in
                check_term l univs arrow
-        | Sig_main _
         | Sig_assume _
         | Sig_new_effect _
         | Sig_sub_effect _
-        | Sig_splice _
         | Sig_pragma _
         | Sig_polymonadic_bind _ -> ()
+
+        | Sig_fail _
+        | Sig_splice _ -> failwith "Impossible (Already handled)"
     in
     if Ident.lid_equals modul.name PC.prims_lid
     then ()
@@ -1234,6 +1200,8 @@ let extract_interface (en:env) (m:modul) :modul =
 
     | Sig_splice _ -> failwith "Impossible! extract_interface: trying to extract splice"
 
+    | Sig_fail _ -> failwith "Impossible! extract_interface: trying to extract Sig_fail"
+
     | Sig_bundle (sigelts, lidents) ->
       if is_abstract s.sigquals then
         //for an abstract inductive type, we will only retain the type declarations, in an unbundled form
@@ -1269,7 +1237,6 @@ let extract_interface (en:env) (m:modul) :modul =
           let should_keep_defs = List.existsML (fun (_, t, _) -> t |> should_keep_lbdef) typs_and_defs in
           if should_keep_defs then [ s ]
           else vals
-    | Sig_main t -> failwith "Did not anticipate main would arise when extracting interfaces!"
     | Sig_assume (lid, _, _) ->
       //keep hasEq of abstract inductive, and drop for others (since they will be regenerated)
       let is_haseq = TcInductive.is_haseq_lid lid in
@@ -1298,13 +1265,13 @@ let push_context env msg = snd (snapshot_context env msg)
 let pop_context env msg = rollback_context env.solver msg None
 
 let tc_partial_modul env modul =
-  let verify = Options.should_verify modul.name.str in
+  let verify = Options.should_verify (string_of_lid modul.name) in
   let action = if verify then "Verifying" else "Lax-checking" in
   let label = if modul.is_interface then "interface" else "implementation" in
   if Options.debug_any () then
-    BU.print3 "%s %s of %s\n" action label modul.name.str;
+    BU.print3 "%s %s of %s\n" action label (string_of_lid modul.name);
 
-  let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
+  let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") (string_of_lid modul.name) in
   let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
   let env = Env.set_current_module env modul.name in
   let ses, exports, env = tc_decls env modul.declarations in
@@ -1316,7 +1283,7 @@ let tc_more_partial_modul env modul decls =
   modul, exports, env
 
 let rec tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul * env) =
-  let msg = "Internals for " ^ m.name.str in
+  let msg = "Internals for " ^ string_of_lid m.name in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
   let modul, non_private_decls, env = tc_partial_modul env0 m in
@@ -1335,15 +1302,15 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
     //extract the interface in the new environment, this helps us figure out things like if an effect is reifiable
     let modul_iface = extract_interface en m in
     if Env.debug en <| Options.Low then
-      BU.print4 "Extracting and type checking module %s interface%s%s%s\n" m.name.str
-                (if Options.should_verify m.name.str then "" else " (in lax mode) ")
-                (if Options.dump_module m.name.str then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
-                (if Options.dump_module m.name.str then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
+      BU.print4 "Extracting and type checking module %s interface%s%s%s\n" (string_of_lid m.name)
+                (if Options.should_verify (string_of_lid m.name) then "" else " (in lax mode) ")
+                (if Options.dump_module (string_of_lid m.name) then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
+                (if Options.dump_module (string_of_lid m.name) then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
 
     //set up the environment to verify the interface
     let en0 =
       //pop to get the env before this module type checking...
-      let en0 = pop_context en ("Ending modul " ^ m.name.str) in
+      let en0 = pop_context en ("Ending modul " ^ (string_of_lid m.name)) in
       //.. but restore the dsenv, since typechecking `m` might have elaborated
       // some %splices that we need to properly resolve further modules
       let en0 = { en0 with dsenv = en.dsenv } in
@@ -1371,10 +1338,12 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
     if not (Options.lax())
     && not loading_from_cache
     && not (Options.use_extracted_interfaces ())
-    then check_exports env modul exports;
+    then begin
+      UF.with_uf_enabled (fun () -> check_exports env modul exports)
+    end;
 
     //pop BUT ignore the old env
-    pop_context env ("Ending modul " ^ modul.name.str) |> ignore;
+    pop_context env ("Ending modul " ^ string_of_lid modul.name) |> ignore;
 
     //moved the code for encoding the module to smt to Universal
 
@@ -1408,16 +1377,16 @@ let load_checked_module (en:env) (m:modul) :env =
 let check_module env m b =
   if Options.debug_any()
   then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
-  if Options.dump_module m.name.str
+  if Options.dump_module (string_of_lid m.name)
   then BU.print1 "Module before type checking:\n%s\n" (Print.modul_to_string m);
 
-  let env = {env with lax=not (Options.should_verify m.name.str)} in
+  let env = {env with lax=not (Options.should_verify (string_of_lid m.name))} in
   let m, env = tc_modul env m b in
 
   (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)
-  if Options.dump_module m.name.str
+  if Options.dump_module (string_of_lid m.name)
   then BU.print1 "Module after type checking:\n%s\n" (Print.modul_to_string m);
-  if Options.dump_module m.name.str && Options.debug_at_level m.name.str (Options.Other "Normalize")
+  if Options.dump_module (string_of_lid m.name) && Options.debug_at_level (string_of_lid m.name) (Options.Other "Normalize")
   then begin
     let normalize_toplevel_lets = fun se -> match se.sigel with
         | Sig_let ((b, lbs), ids) ->

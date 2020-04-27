@@ -93,10 +93,10 @@ let lemma_extends_not_root _ _ = ()
 
 let lemma_extends_only_parent _ _ = ()
 
-private abstract let test0 :unit =
+private let test0 :unit =
   assert (includes (hide [(0, 1, false) ; (1, 0, false)]) (hide [(2, 2, false); (0, 1, false); (1, 0, false)]))
 
-private abstract let test1 (r1:rid) (r2:rid{includes r1 r2}) :unit = assert (includes r1 (hide ((0, 0, false)::(Ghost.reveal r2))))
+private let test1 (r1:rid) (r2:rid{includes r1 r2}) :unit = assert (includes r1 (hide ((0, 0, false)::(Ghost.reveal r2))))
 
 let mod_set _ = magic ()
 

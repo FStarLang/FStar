@@ -1,5 +1,5 @@
 [
-  "èÖ˙H·ÛiŒsÜ∆ºπx}\\",
+  "\\\u001b‹_\rD\u001dN'd\u000fHk  '",
   [
     [
       "Tests.sum",
@@ -16,7 +16,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "171c50b334f37fc524af29001770b9f1"
+      "2d7d1a236a4c1e14b372b6640e181e50"
     ],
     [
       "Tests.uu___13",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "d6800e06eb85370ce1d00259b139ac9f"
+      "5c9609722df050657c4a46e915e357c3"
     ],
     [
       "Tests.uu___14",
@@ -34,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "0e3fb04f70544757257394596ef9b2b6"
+      "053a71c377512ad6bfd21642bfcc3f87"
     ],
     [
       "Tests.test1",
@@ -49,10 +49,12 @@
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equation_Add.add_int",
         "equation_Add.mkadd", "equation_Add.plus", "equation_Add.zero",
-        "equation_Eq.uu___3", "equation_Num.add_num", "equation_Num.mknum",
+        "equation_Eq.uu___20", "equation_Num.add_num", "equation_Num.mknum",
         "equation_Num.num_int", "equation_Prims.eqtype",
         "equation_with_fuel_Tests.sum.fuel_instrumented",
         "function_token_typing_Prims.int", "int_inversion", "int_typing",
+        "interpretation_Tm_abs_40026aa5a5e3b3e50d1af1c281a9904a",
+        "interpretation_Tm_abs_83d3c34387f9be4650dcd2c8d934e9cf",
         "primitive_Prims.op_Addition", "proj_equation_Add.Mkadditive_plus",
         "proj_equation_Add.Mkadditive_zero",
         "proj_equation_Num.Mknum_add_super",
@@ -64,12 +66,12 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "token_correspondence_Add.plus",
+        "token_correspondence_Add.plus", "token_correspondence_Add.zero",
         "token_correspondence_Prims.op_Addition", "typing_Num.add_num",
         "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "2e97dd420db4795879904ed1f37fbdc9"
+      "5219e37de417028f5b1740da3d5d539b"
     ],
     [
       "Tests.test2",
@@ -77,9 +79,14 @@
       2,
       1,
       [
-        "@query", "equation_Add.add_int", "equation_Add.mkadd",
-        "equation_Add.plus", "equation_Eq.eq_int", "equation_Num.add_num",
-        "equation_Num.minus", "equation_Num.mknum", "equation_Num.num_int",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Add.add_int", "equation_Add.mkadd", "equation_Add.plus",
+        "equation_Eq.uu___20", "equation_Num.add_num", "equation_Num.minus",
+        "equation_Num.mknum", "equation_Num.num_int",
+        "function_token_typing_Prims.__cache_version_number__",
+        "interpretation_Tm_abs_40026aa5a5e3b3e50d1af1c281a9904a",
+        "interpretation_Tm_abs_f1927ad0930192edc55cbc50c157da6d",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
         "proj_equation_Add.Mkadditive_plus",
         "proj_equation_Num.Mknum_add_super", "proj_equation_Num.Mknum_minus",
@@ -92,7 +99,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "75695ebe48213758397d1ea2b06417bf"
+      "475cca23b0e979582673f4b72a43f9fe"
     ],
     [
       "Tests.sum",
@@ -109,7 +116,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "14e4a3374f61f796a7d6641ed0e487b5"
+      "c304cc8976e1fdc43556bec5a7dba335"
     ],
     [
       "Tests.uu___13",
@@ -118,7 +125,7 @@
       1,
       [ "@query" ],
       0,
-      "a417cd8c548fe9d1f852d7b7994c04bd"
+      "e8ad6179e7768e719e71f277843fb617"
     ],
     [
       "Tests.uu___14",
@@ -127,7 +134,7 @@
       1,
       [ "@query" ],
       0,
-      "177bd8588b6208e83082468b865b6692"
+      "5a2fcbefb07b9a258841d9955d8d6f55"
     ],
     [
       "Tests.test1",
@@ -142,10 +149,12 @@
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "equation_Add.add_int",
         "equation_Add.mkadd", "equation_Add.plus", "equation_Add.zero",
-        "equation_Eq.uu___3", "equation_Num.add_num", "equation_Num.mknum",
+        "equation_Eq.uu___20", "equation_Num.add_num", "equation_Num.mknum",
         "equation_Num.num_int", "equation_Prims.eqtype",
         "equation_with_fuel_Tests.sum.fuel_instrumented",
         "function_token_typing_Prims.int", "int_inversion", "int_typing",
+        "interpretation_Tm_abs_40026aa5a5e3b3e50d1af1c281a9904a",
+        "interpretation_Tm_abs_83d3c34387f9be4650dcd2c8d934e9cf",
         "primitive_Prims.op_Addition", "proj_equation_Add.Mkadditive_plus",
         "proj_equation_Add.Mkadditive_zero",
         "proj_equation_Num.Mknum_add_super",
@@ -157,12 +166,12 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "token_correspondence_Add.plus",
+        "token_correspondence_Add.plus", "token_correspondence_Add.zero",
         "token_correspondence_Prims.op_Addition", "typing_Num.add_num",
         "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "fc877bd6dec1a53675f026348e2d0013"
+      "ef379d1d53c207950a43e4c1b58f2da0"
     ],
     [
       "Tests.test2",
@@ -170,9 +179,14 @@
       2,
       1,
       [
-        "@query", "equation_Add.add_int", "equation_Add.mkadd",
-        "equation_Add.plus", "equation_Eq.eq_int", "equation_Num.add_num",
-        "equation_Num.minus", "equation_Num.mknum", "equation_Num.num_int",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Add.add_int", "equation_Add.mkadd", "equation_Add.plus",
+        "equation_Eq.uu___20", "equation_Num.add_num", "equation_Num.minus",
+        "equation_Num.mknum", "equation_Num.num_int",
+        "function_token_typing_Prims.__cache_version_number__",
+        "interpretation_Tm_abs_40026aa5a5e3b3e50d1af1c281a9904a",
+        "interpretation_Tm_abs_f1927ad0930192edc55cbc50c157da6d",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
         "proj_equation_Add.Mkadditive_plus",
         "proj_equation_Num.Mknum_add_super", "proj_equation_Num.Mknum_minus",
@@ -185,7 +199,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "969c47b18336e0176c96ffd4a9a3f6ac"
+      "d8ac9c0cf30d8fb92643b01576f35227"
     ]
   ]
 ]

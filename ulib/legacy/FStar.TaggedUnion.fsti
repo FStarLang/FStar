@@ -421,7 +421,7 @@ let get_field (#l: P.union_typ) (#tgs: tags l) (tu: t l tgs)
   raw_get_field tu
 
 let get_tag (#l: P.union_typ) (#tgs: tags l) (tu: t l tgs)
-: Pure (t: UInt32.t)
+: Pure (UInt32.t)
   (requires True)
   (ensures (fun t ->
     List.Tot.mem t tgs /\

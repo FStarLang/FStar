@@ -1,0 +1,40 @@
+>> Got issues: [
+NegativeTests.Neg.fst(20,8-20,10): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(634,18-634,24))
+>>]
+>> Got issues: [
+NegativeTests.Neg.fst(24,8-24,10): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(634,18-634,24))
+>>]
+>> Got issues: [
+NegativeTests.Neg.fst(27,30-27,35): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+>> Got issues: [
+NegativeTests.Neg.fst(30,28-31,15): (Error 19) Patterns are incomplete; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+>> Got issues: [
+NegativeTests.Neg.fst(38,32-38,42): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also NegativeTests.Neg.fst(33,44-33,57))
+>>]
+>> Got issues: [
+NegativeTests.Neg.fst(42,33-42,34): (Error 19) could not prove post-condition; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also NegativeTests.Neg.fst(40,83-40,88))
+>>]
+>> Got issues: [
+NegativeTests.Neg.fst(46,30-46,31): (Error 19) Subtyping check failed; expected type _: FStar.Pervasives.Native.option 'a {Some? _}; got type FStar.Pervasives.Native.option 'a; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also FStar.Pervasives.Native.fst(33,4-33,8))
+>>]
+>> Got issues: [
+NegativeTests.Neg.fst(50,45-50,47): (Error 19) Subtyping check failed; expected type _: FStar.Pervasives.result Prims.int {V? _}; got type FStar.Pervasives.result Prims.int; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also FStar.Pervasives.fsti(239,4-239,5))
+>>]
+>> Got issues: [
+NegativeTests.Neg.fst(55,25-55,26): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(634,18-634,24))
+>>]
+>> Got issues: [
+NegativeTests.Neg.fst(59,0-60,17): (Error 309) Type annotation _: Type0{NegativeTests.Neg.phi_1510} for inductive NegativeTests.Neg.t is not Type or eqtype, or it is eqtype but contains unopteq qualifier
+>>]
+>> Got issues: [
+NegativeTests.Neg.fst(63,0-63,32): (Error 309) Type annotation _: Type{Prims.l_False} for inductive NegativeTests.Neg.t2 is not Type or eqtype, or it is eqtype but contains unopteq qualifier
+>>]
+NegativeTests.Neg.fst(18,4-18,5): (Warning 240) Admitting NegativeTests.Neg.x without a definition
+NegativeTests.Neg.fst(22,4-22,5): (Warning 240) Admitting NegativeTests.Neg.y without a definition
+NegativeTests.Neg.fst(36,4-36,27): (Warning 240) Admitting NegativeTests.Neg.test_precondition_label without a definition
+NegativeTests.Neg.fst(40,4-40,28): (Warning 240) Admitting NegativeTests.Neg.test_postcondition_label without a definition
+NegativeTests.Neg.fst(44,4-44,17): (Warning 240) Admitting NegativeTests.Neg.bad_projector without a definition
+Verified module: NegativeTests.Neg
+All verification conditions discharged successfully

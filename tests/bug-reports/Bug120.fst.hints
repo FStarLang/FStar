@@ -1,0 +1,46 @@
+[
+  "~\u001cd;=‹˝RÉ´i⁄ùùYv",
+  [
+    [
+      "Bug120.exp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Bug120.var",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "2ec56ffd05c600844e7bf86407f31be8"
+    ],
+    [
+      "Bug120.__proj__EVar__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug120.EVar",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_3d608774a59a6a8de561bf79f54add50"
+      ],
+      0,
+      "4ada8c660a4f45513310be52f612df89"
+    ],
+    [
+      "Bug120.__proj__EAbs__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug120.EAbs",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_b130c893a7c00b8fa4c55e9d2d914c50"
+      ],
+      0,
+      "975551ad3a51135ed97ad3b91d6b701c"
+    ]
+  ]
+]

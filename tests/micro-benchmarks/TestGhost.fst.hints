@@ -1,0 +1,49 @@
+[
+  "©\u007f©Àp?eH<\u0004º†ZSX",
+  [
+    [
+      "TestGhost.h",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5a1e4044fde6d646b65012af538268a5"
+    ],
+    [
+      "TestGhost.i",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int", "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "c9a6a7336c97b3131a109d3df66b992f"
+    ],
+    [
+      "TestGhost.h",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b29ed04cdb5424c5f1926a5834a20ddb"
+    ],
+    [
+      "TestGhost.i",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int", "lemma_FStar.Ghost.hide_reveal",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "cbf6fef5315b600637583d798b3a807f"
+    ]
+  ]
+]

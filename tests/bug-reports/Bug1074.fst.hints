@@ -1,0 +1,32 @@
+[
+  "åZ\u0000§‹\u0002>C\fj\u0007Á§\u0010g´",
+  [
+    [
+      "Bug1074.foo",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "equation_Prims.nat", "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "f2527ab872d82f2e36bbfb985affe24b"
+    ],
+    [
+      "Bug1074.does_not_fail_if_annot",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Pervasives.dfst",
+        "proj_equation_Prims.Mkdtuple2__1",
+        "projection_inverse_Prims.Mkdtuple2__1"
+      ],
+      0,
+      "62e104cc746f74589aee0a49944cf24b"
+    ]
+  ]
+]

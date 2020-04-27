@@ -1,0 +1,5 @@
+>> Got issues: [
+StringNormalization.fst(83,2-83,8): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also StringNormalization.fst(83,9-83,58))
+>>]
+Verified module: StringNormalization
+All verification conditions discharged successfully

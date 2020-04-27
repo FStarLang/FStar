@@ -209,7 +209,7 @@ let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:ga
     let print_gamma gamma =
         (gamma |> List.map (function
           | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
-          | Binding_univ u -> "Binding_univ " ^ u.idText
+          | Binding_univ u -> "Binding_univ " ^ (text_of_id u)
           | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)))//  @
     // (env.gamma_sig |> List.map (fun (ls, _) ->
     //     "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
@@ -250,6 +250,12 @@ type implicit = {
     imp_range  : Range.range;             // Position where it was introduced
 }
 type implicits = list<implicit>
+
+let implicits_to_string imps =
+    let imp_to_string i =
+        Print.uvar_to_string i.imp_uvar.ctx_uvar_head
+    in
+    FStar.Common.string_of_list imp_to_string imps
 
 type guard_t = {
   guard_f:    guard_formula;

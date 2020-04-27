@@ -25,6 +25,13 @@ open FStar.String
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
+let abstract_qualifier_warning =
+  "abstract qualifier will soon be removed from F*, use interfaces instead"
+
+let old_attribute_syntax_warning =
+  "The `[@ ...]` syntax of attributes is deprecated. \
+   Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
+
 %}
 %start inputFragment
 %start term
@@ -97,6 +104,7 @@ let logic_qualifier_deprecation_warning =
 %token LBRACE_COLON_PATTERN
 %token LBRACK
 %token LBRACK_AT
+%token LBRACK_AT_AT
 %token LBRACK_BAR
 %token LENS_PAREN_LEFT
 %token LENS_PAREN_RIGHT
@@ -288,9 +296,8 @@ let x =     ( (x, y) ) in
 option_string_:
   
     {    ( None )}
-| STRING
-    {let s = $1 in
-let x =              ( s ) in
+| string
+    {let x = $1 in
     ( Some x )}
 
 option_term_:
@@ -377,6 +384,13 @@ list_attr_letbinding_:
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
+list_calcStep_:
+  
+    {    ( [] )}
+| calcStep list_calcStep_
+    {let (x, xs) = ($1, $2) in
+    ( x :: xs )}
+
 list_constructorDecl_:
   
     {    ( [] )}
@@ -442,14 +456,6 @@ nonempty_list_atomicUniverse_:
     {let x = $1 in
     ( [ x ] )}
 | atomicUniverse nonempty_list_atomicUniverse_
-    {let (x, xs) = ($1, $2) in
-    ( x :: xs )}
-
-nonempty_list_calcStep_:
-  calcStep
-    {let x = $1 in
-    ( [ x ] )}
-| calcStep nonempty_list_calcStep_
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
@@ -607,9 +613,8 @@ inputFragment:
       )}
 
 pragma:
-  PRAGMA_SET_OPTIONS STRING
+  PRAGMA_SET_OPTIONS string
     {let (_1, s) = ((), $2) in
-let s =              ( s ) in
       ( SetOptions s )}
 | PRAGMA_RESET_OPTIONS option_string_
     {let (_1, s_opt) = ((), $2) in
@@ -627,6 +632,18 @@ let s =              ( s ) in
 attribute:
   LBRACK_AT list_atomicTerm_ RBRACK
     {let (_1, x, _3) = ((), $2, ()) in
+      (
+        let _ =
+            match x with
+            | _::_::_ ->
+                  log_issue (lhs parseState) (Warning_DeprecatedAttributeSyntax,
+                                              old_attribute_syntax_warning)
+            | _ -> () in
+         x
+      )}
+| LBRACK_AT_AT right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
+    {let (_1, l, _3) = ((), $2, ()) in
+let x =                                                 ( l ) in
       ( x )}
 
 decoration:
@@ -694,6 +711,9 @@ rawDecl:
 | MODULE uident EQUALS quident
     {let (_1, uid1, _3, uid2) = ((), $2, (), $4) in
       ( ModuleAbbrev(uid1, uid2) )}
+| MODULE qlident
+    {let (_1, _2) = ((), $2) in
+      ( raise_error (Fatal_SyntaxError, "Syntax error: expected a module name") (rhs parseState 2) )}
 | MODULE quident
     {let (_1, uid) = ((), $2) in
       (  TopLevelModule uid )}
@@ -711,6 +731,12 @@ rawDecl:
         if q <> Rec && List.length lbs <> 1
         then raise_error (Fatal_MultipleLetBinding, "Unexpected multiple let-binding (Did you forget some rec qualifier ?)") r;
         TopLevelLet(q, lbs)
+      )}
+| VAL constant
+    {let (_1, c) = ((), $2) in
+      (
+        (* This is just to provide a better error than "syntax error" *)
+        raise_error (Fatal_SyntaxError, "Syntax error: constants are not allowed in val declarations") (rhs2 parseState 1 2)
       )}
 | VAL lidentOrOperator list_multiBinder_ COLON typ
     {let (_1, lid, bss, _4, t) = ((), $2, $3, (), $5) in
@@ -756,7 +782,7 @@ typars:
 tvarinsts:
   TYP_APP_LESS separated_nonempty_list_COMMA_tvar_ TYP_APP_GREATER
     {let (_1, tvs, _3) = ((), $2, ()) in
-      ( map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind None) tvs )}
+      ( map (fun tv -> mk_binder (TVariable(tv)) (range_of_id tv) Kind None) tvs )}
 
 typeDefinition:
   
@@ -947,7 +973,9 @@ qualifier:
                   ( Private )}
 | ABSTRACT
     {let _1 = () in
-                  ( Abstract )}
+                  ( log_issue (lhs parseState) (Warning_AbstractQualifier,
+                                                abstract_qualifier_warning);
+		    Abstract )}
 | NOEQUALITY
     {let _1 = () in
                   ( Noeq )}
@@ -1087,7 +1115,7 @@ let p =     ( (x, y) ) in
       ( p )}
 | qlident
     {let lid = $1 in
-      ( lid, mk_pattern (PatVar (lid.ident, None)) (rhs parseState 1) )}
+      ( lid, mk_pattern (PatVar (ident_of_lid lid, None)) (rhs parseState 1) )}
 
 patternOrMultibinder:
   LBRACK_BAR UNDERSCORE COLON simpleArrow BAR_RBRACK
@@ -1223,15 +1251,15 @@ lidentOrOperator:
 | LPAREN OPPREFIX RPAREN
     {let (_1, op, _3) = ((), $2, ()) in
 let id =     ( mk_ident (op, rhs parseState 1) ) in
-    ( {id with idText = compile_op' id.idText id.idRange} )}
+    ( mk_ident (compile_op' (text_of_id id) (range_of_id id), range_of_id id) )}
 | LPAREN binop_name RPAREN
     {let (_1, op, _3) = ((), $2, ()) in
 let id =     ( op ) in
-    ( {id with idText = compile_op' id.idText id.idRange} )}
+    ( mk_ident (compile_op' (text_of_id id) (range_of_id id), range_of_id id) )}
 | LPAREN TILDE RPAREN
     {let (_1, op, _3) = ((), $2, ()) in
 let id =     ( mk_ident (op, rhs parseState 1) ) in
-    ( {id with idText = compile_op' id.idText id.idRange} )}
+    ( mk_ident (compile_op' (text_of_id id) (range_of_id id), range_of_id id) )}
 
 lidentOrUnderscore:
   IDENT
@@ -1322,7 +1350,8 @@ let op_expr =
 in
       (
         let (op, e2, _) = op_expr in
-        mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
+        let opid = mk_ident (text_of_id op ^ "<-", range_of_id op) in
+        mk_term (Op(opid, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
 | atomicTermNotQUident DOT_LBRACK term RBRACK LARROW noSeqTerm
     {let (e1, _1, e, _3_inlined1, _3, e3) = ($1, (), $3, (), (), $6) in
@@ -1332,7 +1361,8 @@ let op_expr =
 in
       (
         let (op, e2, _) = op_expr in
-        mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
+        let opid = mk_ident (text_of_id op ^ "<-", range_of_id op) in
+        mk_term (Op(opid, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
 | atomicTermNotQUident DOT_LBRACK_BAR term BAR_RBRACK LARROW noSeqTerm
     {let (e1, _1, e, _3_inlined1, _3, e3) = ($1, (), $3, (), (), $6) in
@@ -1342,7 +1372,8 @@ let op_expr =
 in
       (
         let (op, e2, _) = op_expr in
-        mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
+        let opid = mk_ident (text_of_id op ^ "<-", range_of_id op) in
+        mk_term (Op(opid, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
 | atomicTermNotQUident DOT_LENS_PAREN_LEFT term LENS_PAREN_RIGHT LARROW noSeqTerm
     {let (e1, _1, e, _3_inlined1, _3, e3) = ($1, (), $3, (), (), $6) in
@@ -1352,7 +1383,8 @@ let op_expr =
 in
       (
         let (op, e2, _) = op_expr in
-        mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
+        let opid = mk_ident (text_of_id op ^ "<-", range_of_id op) in
+        mk_term (Op(opid, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       )}
 | REQUIRES typ
     {let (_1, t) = ((), $2) in
@@ -1440,16 +1472,16 @@ let pbs =    ( List.rev xs ) in
          let a = set_lid_range synth_lid (rhs parseState 1) in
          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
      )}
-| CALC atomicTerm LBRACE noSeqTerm SEMICOLON nonempty_list_calcStep_ RBRACE
+| CALC atomicTerm LBRACE noSeqTerm SEMICOLON list_calcStep_ RBRACE
     {let (_1, rel, _3, init, _5, steps, _7) = ((), $2, (), $4, (), $6, ()) in
      (
-         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 6) Expr
+         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 7) Expr
      )}
 
 calcRel:
   binop_name
     {let i = $1 in
-                 ( mk_term (Op (i, [])) (rhs parseState 2) Expr )}
+                 ( mk_term (Op (i, [])) (rhs parseState 1) Expr )}
 | BACKTICK qlident BACKTICK
     {let (_1, id, _3) = ((), $2, ()) in
                                  ( mk_term (Var id) (rhs2 parseState 2 4) Un )}
@@ -2016,7 +2048,7 @@ let e =     ( (x, y) ) in
                                                  ( e )}
 | qlident
     {let lid = $1 in
-                ( lid, mk_term (Name (lid_of_ids [ lid.ident ])) (rhs parseState 1) Un )}
+                ( lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rhs parseState 1) Un )}
 
 appTerm:
   indexingTerm list_argTerm_
@@ -2307,7 +2339,7 @@ universeFrom:
 | ident nonempty_list_atomicUniverse_
     {let (max, us) = ($1, $2) in
       (
-        if text_of_id max <> text_of_lid max_lid
+        if text_of_id max <> string_of_lid max_lid
         then log_issue (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ text_of_id max ^
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.");
@@ -2328,7 +2360,7 @@ atomicUniverse:
       )}
 | lident
     {let u = $1 in
-             ( mk_term (Uvar u) u.idRange Expr )}
+             ( mk_term (Uvar u) (range_of_id u) Expr )}
 | LPAREN universeFrom RPAREN
     {let (_1, u, _3) = ((), $2, ()) in
     ( u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) )}
@@ -2364,6 +2396,11 @@ range:
 | RANGE
     {let r = $1 in
     ( r )}
+
+string:
+  STRING
+    {let s = $1 in
+             ( s )}
 
 some_fsTypeArgs_:
   fsTypeArgs
@@ -2463,5 +2500,4 @@ in
    ( x :: xs )}
 
 %%
-
 

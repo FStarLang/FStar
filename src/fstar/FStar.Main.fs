@@ -23,6 +23,7 @@ open FStar.Ident
 open FStar.CheckedFiles
 open FStar.Universal
 module E = FStar.Errors
+module UF = FStar.Syntax.Unionfind
 
 let _ = FStar.Version.dummy ()
 
@@ -41,8 +42,8 @@ let finished_message fmods errs =
   if not (Options.silent()) then begin
     fmods |> List.iter (fun (iface, name) ->
                 let tag = if iface then "i'face (or impl+i'face)" else "module" in
-                if Options.should_print_message name.str
-                then print_to (Util.format2 "Verified %s: %s\n" tag (Ident.text_of_lid name)));
+                if Options.should_print_message (string_of_lid name)
+                then print_to (Util.format2 "Verified %s: %s\n" tag (Ident.string_of_lid name)));
     if errs > 0
     then if errs = 1
          then Util.print_error "1 error was reported (see above)\n"
@@ -61,17 +62,14 @@ let report_errors fmods =
 
 let load_native_tactics () =
     let modules_to_load = Options.load() |> List.map Ident.lid_of_str in
-    let ml_module_name m =
-        FStar.Extraction.ML.Util.mlpath_of_lid m
-        |> FStar.Extraction.ML.Util.flatten_mlpath
-    in
+    let ml_module_name m = FStar.Extraction.ML.Util.ml_module_name_of_lid m in
     let ml_file m = ml_module_name m ^ ".ml" in
     let cmxs_file m =
         let cmxs = ml_module_name m ^ ".cmxs" in
-        match FStar.Options.find_file cmxs with
+        match FStar.Options.find_file (cmxs |> Options.prepend_output_dir) with
         | Some f -> f
         | None ->
-        match FStar.Options.find_file (ml_file m) with
+        match FStar.Options.find_file (ml_file m |> Options.prepend_output_dir) with
         | None ->
             E.raise_err (E.Fatal_FailToCompileNativeTactic,
                          Util.format1 "Failed to compile native tactic; extracted module %s not found" (ml_file m))
@@ -87,6 +85,8 @@ let load_native_tactics () =
     in
     let cmxs_files = modules_to_load |> List.map cmxs_file in
     List.iter (fun x -> Util.print1 "cmxs file: %s\n" x) cmxs_files;
+    if not (Options.no_load_fstartaclib ()) && not (FStar.Platform.system = FStar.Platform.Windows) then
+        Tactics.Load.try_load_lib ();
     Tactics.Load.load_tactics cmxs_files;
     iter_opt (Options.use_native_tactics ()) Tactics.Load.load_tactics_dir;
     ()
@@ -105,17 +105,30 @@ let go _ =
   match res with
     | Help ->
         Options.display_usage(); exit 0
+
     | Error msg ->
         Util.print_error msg; exit 1
+
+    | _ when Options.print_cache_version () ->
+        Util.print1 "F* cache version number: %s\n"
+                     (string_of_int FStar.CheckedFiles.cache_version_number);
+        exit 0
+
     | Success ->
         fstar_files := Some filenames;
-        load_native_tactics ();
+
+        (* Set the unionfind graph to read-only mode.
+         * This will be unset by the typechecker and other pieces
+         * of code that intend to use it. It helps us catch errors. *)
+        (* TODO: also needed by the interactive mode below. *)
+        UF.set_ro ();
 
         (* --dep: Just compute and print the transitive dependency graph;
                   don't verify anything *)
         if Options.dep() <> None
         then let _, deps = Parser.Dep.collect filenames FStar.CheckedFiles.load_parsing_data_from_cache in
-             Parser.Dep.print deps
+             Parser.Dep.print deps;
+             report_errors []
 
         (* Input validation: should this go to process_args? *)
         (*          don't verify anything *)
@@ -129,12 +142,29 @@ let go _ =
                                found " ^ (string_of_int (List.length filenames)))
                              Range.dummyRange
 
+        (* --print: Emit files in canonical source syntax *)
+        else if Options.print () || Options.print_in_place () then
+          if FStar.Platform.is_fstar_compiler_using_ocaml
+          then let printing_mode =
+                   if Options.print ()
+                   then FStar.Prettyprint.FromTempToStdout
+                   else FStar.Prettyprint.FromTempToFile
+               in
+               FStar.Prettyprint.generate printing_mode filenames
+          else failwith "You seem to be using the F#-generated version ofthe compiler ; \o
+                         reindenting is not known to work yet with this version"
+
         (* --lsp *)
         else if Options.lsp_server () then
           FStar.Interactive.Lsp.start_server ()
 
+        (* For the following cases we might need fstartaclib/native tactics, try to load *)
+        else begin
+        load_native_tactics ();
+
         (* --ide, --in: Interactive mode *)
-        else if Options.interactive () then begin
+        if Options.interactive () then begin
+          UF.set_rw ();
           match filenames with
           | [] -> (* input validation: move to process args? *)
             Errors.log_issue
@@ -155,18 +185,6 @@ let go _ =
               FStar.Interactive.Ide.interactive_mode filename
           end
 
-        (* --print: Emit files in canonical source syntax *)
-        else if Options.print () || Options.print_in_place () then
-          if FStar.Platform.is_fstar_compiler_using_ocaml
-          then let printing_mode =
-                   if Options.print ()
-                   then FStar.Prettyprint.FromTempToStdout
-                   else FStar.Prettyprint.FromTempToFile
-               in
-               FStar.Prettyprint.generate printing_mode filenames
-          else failwith "You seem to be using the F#-generated version ofthe compiler ; \o
-                         reindenting is not known to work yet with this version"
-
         (* Normal, batch mode compiler *)
         else if List.length filenames >= 1 then begin //normal batch mode
           let filenames, dep_graph = FStar.Dependencies.find_deps_if_needed filenames FStar.CheckedFiles.load_parsing_data_from_cache in
@@ -183,6 +201,7 @@ let go _ =
 
         else
           Errors.raise_error (Errors.Error_MissingFileName, "No file provided") Range.dummyRange
+        end
 
 (* This is pretty awful. Now that we have Lazy_embedding, we can get rid of this table. *)
 let lazy_chooser k i = match k with
@@ -201,7 +220,7 @@ let lazy_chooser k i = match k with
 
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =
-    Options.initialize_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
+    FStar.Errors.set_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
     FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder;

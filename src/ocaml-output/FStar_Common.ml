@@ -52,24 +52,24 @@ let rollback :
   fun pop  ->
     fun stackref  ->
       fun depth  ->
-        let rec aux n1 =
-          if n1 <= Prims.int_zero
+        let rec aux n =
+          if n <= Prims.int_zero
           then failwith "Too many pops"
           else
-            if n1 = Prims.int_one
+            if n = Prims.int_one
             then pop ()
-            else ((let uu____218 = pop ()  in ()); aux (n1 - Prims.int_one))
+            else ((let uu____218 = pop ()  in ()); aux (n - Prims.int_one))
            in
         let curdepth =
           let uu____221 = FStar_ST.op_Bang stackref  in
           FStar_List.length uu____221  in
-        let n1 =
+        let n =
           match depth with
           | FStar_Pervasives_Native.Some d -> curdepth - d
           | FStar_Pervasives_Native.None  -> Prims.int_one  in
-        FStar_Util.atomically (fun uu____256  -> aux n1)
+        FStar_Util.atomically (fun uu____256  -> aux n)
   
-let raise_failed_assertion : 'Auu____262 . Prims.string -> 'Auu____262 =
+let raise_failed_assertion : 'uuuuuu262 . Prims.string -> 'uuuuuu262 =
   fun msg  ->
     let uu____270 = FStar_Util.format1 "Assertion failed: %s" msg  in
     failwith uu____270
@@ -98,9 +98,9 @@ let list_of_option : 'a . 'a FStar_Pervasives_Native.option -> 'a Prims.list
     | FStar_Pervasives_Native.Some x -> [x]
   
 let string_of_option :
-  'Auu____360 .
-    ('Auu____360 -> Prims.string) ->
-      'Auu____360 FStar_Pervasives_Native.option -> Prims.string
+  'uuuuuu360 .
+    ('uuuuuu360 -> Prims.string) ->
+      'uuuuuu360 FStar_Pervasives_Native.option -> Prims.string
   =
   fun f  ->
     fun uu___0_377  ->
@@ -110,13 +110,42 @@ let string_of_option :
           let uu____385 = f x  in Prims.op_Hat "Some " uu____385
   
 let tabulate : 'a . Prims.int -> (Prims.int -> 'a) -> 'a Prims.list =
-  fun n1  ->
+  fun n  ->
     fun f  ->
       let rec aux i =
-        if i < n1
+        if i < n
         then
           let uu____430 = f i  in
           let uu____431 = aux (i + Prims.int_one)  in uu____430 :: uu____431
         else []  in
       aux Prims.int_zero
+  
+let rec max_prefix :
+  'a . ('a -> Prims.bool) -> 'a Prims.list -> ('a Prims.list * 'a Prims.list)
+  =
+  fun f  ->
+    fun xs  ->
+      match xs with
+      | [] -> ([], [])
+      | x::xs1 when f x ->
+          let uu____484 = max_prefix f xs1  in
+          (match uu____484 with | (l,r) -> ((x :: l), r))
+      | x::xs1 -> ([], (x :: xs1))
+  
+let max_suffix :
+  'a . ('a -> Prims.bool) -> 'a Prims.list -> ('a Prims.list * 'a Prims.list)
+  =
+  fun f  ->
+    fun xs  ->
+      let rec aux acc xs1 =
+        match xs1 with
+        | [] -> (acc, [])
+        | x::xs2 when f x -> aux (x :: acc) xs2
+        | x::xs2 -> (acc, (x :: xs2))  in
+      let uu____611 =
+        let uu____620 = FStar_All.pipe_right xs FStar_List.rev  in
+        FStar_All.pipe_right uu____620 (aux [])  in
+      FStar_All.pipe_right uu____611
+        (fun uu____656  ->
+           match uu____656 with | (xs1,ys) -> ((FStar_List.rev ys), xs1))
   

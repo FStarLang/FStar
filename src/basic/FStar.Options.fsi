@@ -1,5 +1,5 @@
 ﻿(*
-   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+   Copyright 2008-2020 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -39,23 +39,11 @@ type option_val =
   | List of list<option_val>
   | Unset
 
-type error_flag =
-  | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
-  | CAlwaysError    //CAlwaysError: these errors are reported using log_issue and cannot be suppressed
-                    //the compiler can progress after reporting them
-  | CError          //CError: these are reported as errors using log_issue
-                    //        but they can be turned into warnings or silenced
-  | CWarning        //CWarning: reported using log_issue as warnings by default;
-                    //          then can be silenced or escalated to errors
-  | CSilent         //CSilent: never the default for any issue, but warnings can be silenced
-
 val defaults                    : list<(string * option_val)>
 
-val initialize_parse_warn_error : (string -> list<error_flag>) -> unit
-val error_flags                 : (unit -> list<error_flag>)
 val init                        : unit    -> unit  //sets the current options to their defaults
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits
-val restore_cmd_line_options    : bool    -> parse_cmdline_res //inits or clears (if the flag is set) the current options and then sets it to the cmd line
+val restore_cmd_line_options    : bool -> parse_cmdline_res //inits or clears (if the flag is set) the current options and then sets it to the cmd line
 
 type optionstate = Util.smap<option_val>
 (* Control the option stack *)
@@ -102,6 +90,7 @@ type opt_type =
 | WithSideEffect of ((unit -> unit) * opt_type (* elem spec *))
   // For options like --version that have side effects
 
+val set_option_warning_callback : (string -> unit) -> unit
 val desc_of_opt_type            : opt_type -> option<string>
 val all_specs_with_types        : list<(char * string * opt_type * string)>
 val settable                    : string -> bool
@@ -111,17 +100,16 @@ val abort_counter : ref<int>
 val __temp_no_proj              : string  -> bool
 val __temp_fast_implicits       : unit    -> bool
 val admit_smt_queries           : unit    -> bool
+val set_admit_smt_queries       : bool    -> unit
 val admit_except                : unit    -> option<string>
 val cache_checked_modules       : unit    -> bool
 val cache_off                   : unit    -> bool
+val print_cache_version         : unit    -> bool
 val cmi                         : unit    -> bool
 type codegen_t =
     | OCaml | FSharp | Kremlin | Plugin
 val codegen                     : unit    -> option<codegen_t>
 val codegen_libs                : unit    -> list<list<string>>
-val debug_any                   : unit    -> bool
-val debug_module                : string  -> bool
-val debug_at_level              : string  -> debug_level_t -> bool
 val profile_enabled             : module_name:option<string> -> profile_phase:string -> bool
 val profile_group_by_decls      : unit    -> bool
 val defensive                   : unit    -> bool // true if "warn" or "fail"
@@ -164,6 +152,7 @@ val ml_ish                      : unit    -> bool
 val set_ml_ish                  : unit    -> unit
 val no_default_includes         : unit    -> bool
 val no_extract                  : string  -> bool
+val no_load_fstartaclib         : unit    -> bool
 val no_location_info            : unit    -> bool
 val no_plugins                  : unit    -> bool
 val no_smt                      : unit    -> bool
@@ -179,6 +168,7 @@ val pervasives_basename         : unit    -> string
 val pervasives_native_basename  : unit    -> string
 val print_bound_var_types       : unit    -> bool
 val print_effect_args           : unit    -> bool
+val print_expected_failures     : unit    -> bool
 val print_implicits             : unit    -> bool
 val print_real_names            : unit    -> bool
 val print_universes             : unit    -> bool
@@ -191,13 +181,16 @@ val record_hints                : unit    -> bool
 val record_options              : unit    -> bool
 val retry                       : unit    -> bool
 val reuse_hint_for              : unit    -> option<string>
+val report_assumes              : unit    -> option<string>
 val set_option                  : string  -> option_val -> unit
 val set_options                 : string -> parse_cmdline_res
 val should_be_already_cached    : string  -> bool
 val should_print_message        : string  -> bool
 val should_extract              : string  -> bool
-val should_verify               : string  -> bool
-val should_verify_file          : string  -> bool
+val should_check                : string  -> bool (* Should check this module, lax or not. *)
+val should_check_file           : string  -> bool (* Should check this file, lax or not. *)
+val should_verify               : string  -> bool (* Should check this module with verification enabled. *)
+val should_verify_file          : string  -> bool (* Should check this file with verification enabled. *)
 val silent                      : unit    -> bool
 val smtencoding_elim_box        : unit    -> bool
 val smtencoding_nl_arith_default: unit    -> bool
@@ -239,11 +232,26 @@ val use_two_phase_tc            : unit    -> bool
 val no_positivity               : unit    -> bool
 val ml_no_eta_expand_coertions  : unit    -> bool
 val warn_error                  : unit    -> string
+val set_error_flags_callback    : ((unit  -> parse_cmdline_res) -> unit)
 val use_extracted_interfaces    : unit    -> bool
 val use_nbe                     : unit    -> bool
 val use_nbe_for_extraction      : unit    -> bool
 val trivial_pre_for_unannotated_effectful_fns
                                 : unit    -> bool
+
+(* True iff the user passed '--debug M' for some M *)
+val debug_any                   : unit    -> bool
+
+(* True for M when the user passed '--debug M' *)
+val debug_module                : string  -> bool
+
+(* True for M and L when the user passed '--debug M --debug_level L'
+ * (and possibly more) *)
+val debug_at_level              : string  -> debug_level_t -> bool
+
+(* True for L when the user passed '--debug_level L'
+ * (and possibly more, but independent of --debug) *)
+val debug_at_level_no_module    : debug_level_t -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the

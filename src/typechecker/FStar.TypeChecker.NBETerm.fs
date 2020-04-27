@@ -368,6 +368,16 @@ let type_of (e:embedding<'a>) : t = e.typ
 
 let mk_emb em un typ et = {em = em; un = un; typ = typ; emb_typ=et}
 
+let embed_as (ea:embedding<'a>)
+             (ab : 'a -> 'b)
+             (ba : 'b -> 'a)
+             (ot:option<t>)
+             : embedding<'b>
+ = mk_emb (fun cbs (x:'b) -> embed ea cbs (ba x))
+          (fun cbs t -> BU.map_opt (unembed ea cbs t) ab)
+          (match ot with | Some t -> t | None -> ea.typ)
+          ea.emb_typ
+
 let lid_as_constr (l:lident) (us:list<universe>) (args:args) : t =
     mkConstruct (lid_as_fv l S.delta_constant (Some Data_ctor)) us args
 
@@ -699,7 +709,7 @@ let arg_as_list   (e:embedding<'a>) (a:arg) = fst a |> unembed (e_list e) bogus_
 let arg_as_bounded_int ((a, _) : arg) : option<(fv * Z.t)> =
     match a with
     | FV (fv1, [], [(Constant (Int i), _)])
-      when BU.ends_with (Ident.text_of_lid fv1.fv_name.v)
+      when BU.ends_with (Ident.string_of_lid fv1.fv_name.v)
                         "int_to_t" ->
       Some (fv1, i)
     | _ -> None

@@ -305,16 +305,16 @@ let pack_ln (tv:term_view) : term =
         U.mk_app l [(r, q')]
 
     | Tv_Abs (b, t) ->
-        U.abs [b] t None // TODO: effect?
+        mk (Tm_abs ([b], t, None)) None t.pos // TODO: effect?
 
     | Tv_Arrow (b, c) ->
-        U.arrow [b] c
+        mk (Tm_arrow ([b], c)) None c.pos
 
     | Tv_Type () ->
         U.ktype
 
     | Tv_Refine (bv, t) ->
-        U.refine bv t
+        mk (Tm_refine (bv, t)) None t.pos
 
     | Tv_Const c ->
         S.mk (Tm_constant (pack_const c)) None Range.dummyRange
@@ -364,7 +364,7 @@ let is_free (x:bv) (t:term) : bool =
 let lookup_attr (attr:term) (env:Env.env) : list<fv> =
     match (SS.compress attr).n with
     | Tm_fvar fv ->
-        let ses = Env.lookup_attr env (Ident.text_of_lid (lid_of_fv fv)) in
+        let ses = Env.lookup_attr env (Ident.string_of_lid (lid_of_fv fv)) in
         List.concatMap (fun se -> match U.lid_of_sigelt se with
                                   | None -> []
                                   // FIXME: Get a proper delta depth
@@ -378,7 +378,7 @@ let defs_in_module (env:Env.env) (modul:name) : list<fv> =
     List.concatMap
         (fun l ->
                 (* must succeed, ids_of_lid always returns a non-empty list *)
-                let ns = Ident.ids_of_lid l |> init |> List.map Ident.string_of_ident in
+                let ns = Ident.ids_of_lid l |> init |> List.map Ident.text_of_id in
                 if ns = modul
                 then [S.lid_as_fv l (S.Delta_constant_at_level 999) None]
                 else [])
@@ -484,6 +484,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
     | Sig_datacon (lid, us, ty, _, n, _) ->
         let s, us = SS.univ_var_opening us in
         let ty = SS.subst s ty in
+        let ty = U.remove_inacc ty in
         (* TODO: return universes *)
         Sg_Constructor (Ident.path_of_lid lid, ty)
 
@@ -510,7 +511,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
 
 let inspect_bv (bv:bv) : bv_view =
     {
-      bv_ppname = Ident.string_of_ident bv.ppname;
+      bv_ppname = Ident.text_of_id bv.ppname;
       bv_index = Z.of_int_fs bv.index;
       bv_sort = bv.sort;
     }
@@ -541,3 +542,9 @@ let binders_of_env e = FStar.TypeChecker.Env.all_binders e
 let term_eq t1 t2 = U.term_eq (U.un_uinst t1) (U.un_uinst t2) // temporary, until universes are exposed
 let term_to_string t = Print.term_to_string t
 let comp_to_string c = Print.comp_to_string c
+
+let implode_qn ns = String.concat "." ns
+let explode_qn s = String.split ['.'] s
+let compare_string s1 s2 = Z.of_int_fs (String.compare s1 s2)
+
+let push_binder e b = Env.push_binders e [b]

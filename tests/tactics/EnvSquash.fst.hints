@@ -1,0 +1,107 @@
+[
+  "ŸY¡ÿ¦sN¼N\u001at\u0005G\u0014¤Þ",
+  [
+    [
+      "EnvSquash.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
+        "bool_typing", "constructor_distinct_FStar.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_Prims.Cons",
+        "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v", "unit_typing"
+      ],
+      0,
+      "758f1c172c40e888755968706248ea02"
+    ],
+    [
+      "EnvSquash.test",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
+        "bool_typing", "constructor_distinct_FStar.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_Prims.Cons",
+        "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v", "true_interp",
+        "unit_typing"
+      ],
+      0,
+      "afab12c24eba5fc1062192682fb5804a"
+    ],
+    [
+      "EnvSquash.test",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
+        "bool_typing", "constructor_distinct_FStar.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_Prims.Cons",
+        "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v", "unit_typing"
+      ],
+      0,
+      "8f06d018d37714af7770047b675d03d0"
+    ],
+    [
+      "EnvSquash.test",
+      4,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "bool_inversion",
+        "bool_typing", "constructor_distinct_FStar.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "disc_equation_FStar.Tactics.Result.Failed",
+        "disc_equation_Prims.Cons",
+        "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v", "true_interp",
+        "unit_typing"
+      ],
+      0,
+      "cba1e2f9bbf4eb5160d2aacf5c9d5556"
+    ]
+  ]
+]

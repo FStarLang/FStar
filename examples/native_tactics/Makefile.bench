@@ -6,7 +6,7 @@ FSTARTACLIB=$(FSTAR_HOME)/bin/fstar-tactics-lib/fstartaclib.cmxs
 .PRECIOUS:
 
 all: prep
-	$(MAKE) -f Makefile.bench go
+	+$(MAKE) -f Makefile.bench go
 
 TESTS=\
 	Bench.Fun.Norm.Lazy.Size6.Interpret.run\
@@ -45,7 +45,7 @@ TESTS=\
 
 __go: $(TESTS)
 go:
-	$(MAKE) -f Makefile.bench __go 2>&1 | tee LOG
+	+$(MAKE) -f Makefile.bench __go 2>&1 | tee LOG
 	echo "----------- SUMMARY -----------"
 	grep '^Checked' LOG
 

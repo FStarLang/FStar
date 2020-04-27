@@ -378,7 +378,7 @@ let rec lemma_unsnoc_index (#t:Type) (l:list t) (i:nat) :
 
     NOTE: Uses [strong_excluded_middle] axiom. *)
 let rec split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
-  GTot (r:(list t * list t)) =
+  GTot (list t * list t) =
   match l with
   | [_] -> [], l
   | a :: as ->

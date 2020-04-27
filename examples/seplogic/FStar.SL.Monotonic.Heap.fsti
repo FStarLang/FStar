@@ -541,7 +541,6 @@ val aref_of_gref_of
   [SMTPat (aref_of (gref_of a t rel))]
 
 (* Operators lowered to ref *)
-abstract
 let addr_of_gref_of
   (a: aref)
   (t: Type0)
@@ -552,7 +551,6 @@ let addr_of_gref_of
   [SMTPat (addr_of (gref_of a t rel))]
 = addr_of_aref_of (gref_of a t rel)
 
-abstract
 let is_mm_gref_of
   (a: aref)
   (t: Type0)
@@ -563,7 +561,6 @@ let is_mm_gref_of
   [SMTPat (is_mm (gref_of a t rel))]
 = is_mm_aref_of (gref_of a t rel)
 
-abstract
 let unused_in_gref_of
   (a: aref)
   (t: Type0)
@@ -575,7 +572,6 @@ let unused_in_gref_of
   [SMTPat (unused_in (gref_of a t rel) h)]
 = unused_in_aref_of (gref_of a t rel) h
 
-abstract
 let sel_ref_of
   (a: aref)
   (t: Type0)
@@ -587,7 +583,6 @@ let sel_ref_of
   [SMTPat (sel h1 (ref_of h2 a t rel))]
 = ()
 
-abstract
 let upd_ref_of
   (a: aref)
   (t: Type0)

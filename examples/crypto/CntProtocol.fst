@@ -11,7 +11,6 @@ open FStar.Ref
 
 let init_print = print_string "\ninitializing...\n\n"
 
-open FStar.Seq
 open Platform.Bytes
 open SHA1
 open CntFormat
@@ -34,7 +33,7 @@ let client_cnt = lemma_repr_bytes_values 1; ST.alloc 1
 val server_cnt: ref uint16
 let server_cnt = lemma_repr_bytes_values 0; ST.alloc 0
 
-val server_max: l:list event -> Tot (c:uint16)
+val server_max: l:list event -> Tot (uint16)
 let rec server_max l =
   match l with
   | [] -> lemma_repr_bytes_values 0; 0

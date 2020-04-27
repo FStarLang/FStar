@@ -32,6 +32,8 @@ type mlident  = mlsymbol
 type mlpath   = list<mlsymbol> * mlsymbol //Path and name of a module
 
 (* -------------------------------------------------------------------- *)
+let kremlin_keywords = []
+
 let ocamlkeywords = [
   "and"; "as"; "assert"; "asr"; "begin"; "class";
   "constraint"; "do"; "done"; "downto"; "else"; "end";
@@ -68,23 +70,8 @@ let fsharpkeywords = [
   "sealed"; "tailcall"; "trait"; "virtual"; "volatile"
 ]
 
-let is_reserved k =
-  let reserved_keywords () =
-      if Options.codegen() = Some Options.FSharp
-      then fsharpkeywords
-      else ocamlkeywords
-  in
-  List.existsb (fun k' -> k' = k) (reserved_keywords ())
-
 let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
     String.concat "." (p @ [s])
-
-let gensym () =
-    let i = Ident.next_id() in
-   "_" ^ Util.string_of_int i
-let rec gensyms x = match x with
-  | 0 -> []
-  | n -> gensym ()::gensyms (n-1)
 
 
 (* -------------------------------------------------------------------- *)
@@ -106,7 +93,7 @@ type mlty =
 | MLTY_Fun   of mlty * e_tag * mlty
 | MLTY_Named of list<mlty> * mlpath
 | MLTY_Tuple of list<mlty>
-| MLTY_Top
+| MLTY_Top  (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
 | MLTY_Erased //a type that extracts to unit
 
 type mltyscheme = mlidents * mlty   //forall a1..an. t  (the list of binders can be empty)
@@ -254,47 +241,7 @@ let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
     let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name([obj_ns], "repr")) in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc
 
-(* 20161021, JP: trying to make sense of this code...
- * - the second field of the [mlident] was meant, I assume, to disambiguate
- *   variables; however, many places provide a placeholder value (0)
- * - my assumption is thus that the code extraction never generates code that
- *   needs to refer to a shadowed variable; since the scoping rules
- *   of both F* and OCaml are lexical, then this probably works out somehow
- *   (sic);
- * - however, since this function is not parameterized over the environment, now
- *   that I avoid generating names that are OCaml keywords, it is no longer
- *   injective, because of the following F* example:
- *     let land_15 = 0 in
- *     let land = () in
- *     print_int land_15
- * It's slightly tricky to get into this case, but... not impossible. There's a
- * similar problem for top-level bindings. For instance, this will be a problem:
- *   let land_ = 0
- *   let land = ()
- * One solution is to carry the environment; for a pair of names (original,
- * destination), compute the set of original names shadowed by the original
- * name; make sure that the destination name does not shadow more than the
- * destination names of these original names; otherwise, keep generating fresh
- * destination names.
- *)
-let avoid_keyword s =
-  if is_reserved s then
-    s ^ "_"
-  else
-    s
-
 open FStar.Syntax.Syntax
-let bv_as_mlident (x:bv): mlident =
-  if Util.starts_with x.ppname.idText Ident.reserved_prefix
-  || is_null_bv x || is_reserved x.ppname.idText
-  then avoid_keyword <| x.ppname.idText ^ "_" ^ (string_of_int x.index)
-  else avoid_keyword <| x.ppname.idText
-
-(* -------------------------------------------------------------------- *)
-let mlpath_of_lident (x : lident) : mlpath =
-    if Ident.lid_equals x FStar.Parser.Const.failwith_lid
-    then ([], x.ident.idText)
-    else (List.map (fun x -> x.idText) x.ns, avoid_keyword x.ident.idText)
 
 let push_unit (ts : mltyscheme) : mltyscheme =
     let vs, ty = ts in

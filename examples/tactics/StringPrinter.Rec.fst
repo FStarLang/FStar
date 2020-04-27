@@ -136,7 +136,7 @@ let do_while_body_res_intro
 let rec do_while
   (tin tout: Type)
   (decrease: (tin -> GTot lex_t))
-  (body: ((x: tin) -> Tot (y: m (c_or (tin_decr tin decrease x) tout))))
+  (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
   (x: tin)
 : Tot (m tout)
   (decreases (decrease x))

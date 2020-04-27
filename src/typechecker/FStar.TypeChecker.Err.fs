@@ -43,6 +43,86 @@ let info_at_pos env file row col =
       | Inr fv -> Some (Inr (FStar.Syntax.Syntax.lid_of_fv fv), info.identifier_ty,
                        FStar.Syntax.Syntax.range_of_fv fv)
 
+(* Will attempt to enable certain printing flags to make x and y
+ * visibly different. It will try to enable the least possible
+ * subset of implicits, universes, effect_args and full_names.
+ * It will also prioritize them in that order, prefering to show
+ * a discrepancy of implicits before one of universes, etc.
+ *)
+let print_discrepancy (f : 'a -> string) (x : 'a) (y : 'a) : string * string =
+    let print () : string * string * bool =
+        let xs = f x in
+        let ys = f y in
+        xs, ys, xs <> ys
+    in
+    let rec blist_leq (l1 : list<bool>) (l2 : list<bool>) =
+        match l1, l2 with
+        | h1::t1, h2::t2 ->
+            (not h1 || h2) && blist_leq t1 t2
+        | [], [] ->
+            true
+        | _ ->
+            failwith "print_discrepancy: bad lists"
+    in
+    let rec succ (l : list<bool>) : list<bool> =
+        match l with
+        | false::t -> true::t
+        | true::t -> false::(succ t)
+        | [] -> failwith ""
+    in
+    let full (l : list<bool>) : bool =
+        List.for_all (fun b -> b) l
+    in
+    let get_bool_option (s:string) : bool =
+        match Options.get_option s with
+        | Options.Bool b -> b
+        | _ -> failwith "print_discrepancy: impossible"
+    in
+    let set_bool_option (s:string) (b:bool) : unit =
+        Options.set_option s (Options.Bool b)
+    in
+    let get () : list<bool> =
+        let pi  = get_bool_option "print_implicits" in
+        let pu  = get_bool_option "print_universes" in
+        let pea = get_bool_option "print_effect_args" in
+        let pf  = get_bool_option "print_full_names" in
+        [pi; pu; pea; pf]
+    in
+    let set (l : list<bool>) : unit =
+        match l with
+        | [pi; pu; pea; pf] ->
+          set_bool_option "print_implicits"   pi;
+          set_bool_option "print_universes"   pu;
+          set_bool_option "print_effect_args" pea;
+          set_bool_option "print_full_names " pf
+        | _ -> failwith "impossible: print_discrepancy"
+    in
+    let bas = get () in
+    let rec go (cur : list<bool>) =
+        match () with
+        (* give up, nothing more we can do *)
+        | () when full cur ->
+            let xs, ys, _ = print () in
+            xs, ys
+
+        (* skip this configuration, we do not want to disable any flag
+         * given by the user *)
+        | () when not (blist_leq bas cur) ->
+            go (succ cur)
+
+        | () ->
+            set cur;
+            match print () with
+            (* got a discrepancy! we're done *)
+            | xs, ys, true ->
+                xs, ys
+
+            (* keep trying *)
+            | _ ->
+                go (succ cur)
+    in
+    Options.with_saved_options (fun () -> go bas)
+
 (*
  * AR: smt_detail is either an Inr of a long multi-line message or Inr of a short one
  *     in the first case, we print it starting from a newline,
@@ -83,24 +163,10 @@ let add_errors_smt_detail env errs smt_detail =
 let add_errors env errs = add_errors_smt_detail env errs (Inl "")
 
 let err_msg_type_strings env t1 t2 :(string * string) =
-  let s1 = N.term_to_string env t1 in
-  let s2 = N.term_to_string env t2 in
-  if s1 = s2 then
-    Options.with_saved_options (fun _ ->
-      ignore (Options.set_options "--print_full_names --print_universes");
-      N.term_to_string env t1, N.term_to_string env t2
-    )
-  else s1, s2
+  print_discrepancy (N.term_to_string env) t1 t2
 
 let err_msg_comp_strings env c1 c2 :(string * string) =
-  let s1 = N.comp_to_string env c1 in
-  let s2 = N.comp_to_string env c2 in
-  if s1 = s2 then
-    Options.with_saved_options (fun _ ->
-      ignore (Options.set_options "--print_full_names --print_universes --print_effect_args");
-      N.comp_to_string env c1, N.comp_to_string env c2
-    )
-  else s1, s2
+  print_discrepancy (N.comp_to_string env) c1 c2
 
 (* Error messages for labels in VCs *)
 let exhaustiveness_check = "Patterns are incomplete"
@@ -112,8 +178,8 @@ let ill_kinded_type = "Ill-kinded type"
 let totality_check  = "This term may not terminate"
 
 let unexpected_signature_for_monad env m k =
-  (Errors.Fatal_UnexpectedSignatureForMonad, (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type => WP a => Effect); got %s"
-    m.str (N.term_to_string env k)))
+  (Errors.Fatal_UnexpectedSignatureForMonad, (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type -> WP a -> Effect); got %s"
+    (string_of_lid m) (N.term_to_string env k)))
 
 let expected_a_term_of_type_t_got_a_function env msg t e =
   (Errors.Fatal_ExpectTermGotFunction, (format3 "Expected a term of type \"%s\"; got a function \"%s\" (%s)"
@@ -141,14 +207,6 @@ let basic_type_error env eopt t1 t2 =
 
 let occurs_check =
   (Errors.Fatal_PossibleInfiniteTyp, "Possibly infinite typ (occurs check failed)")
-
-let incompatible_kinds env k1 k2 =
-  (Errors.Fatal_IncompatibleKinds, (format2 "Kinds \"%s\" and \"%s\" are incompatible"
-    (N.term_to_string env k1) (N.term_to_string env k2)))
-
-let constructor_builds_the_wrong_type env d t t' =
-  (Errors.Fatal_ConstsructorBuildWrongType, (format3 "Constructor \"%s\" builds a value of type \"%s\"; expected \"%s\""
-    (Print.term_to_string d) (N.term_to_string env t) (N.term_to_string env t')))
 
 let constructor_fails_the_positivity_check env d l =
   (Errors.Fatal_ConstructorFailedCheck, (format2 "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type"
@@ -199,11 +257,25 @@ let computed_computation_type_does_not_match_annotation_eq env e c c' =
 let unexpected_non_trivial_precondition_on_term env f =
  (Errors.Fatal_UnExpectedPreCondition, (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)))
 
-let expected_pure_expression e c =
-  (Errors.Fatal_ExpectedPureExpression, (format2 "Expected a pure expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)))
+let expected_pure_expression e c reason =
+  let msg = "Expected a pure expression" in
+  let msg =
+    if reason = ""
+    then msg
+    else BU.format1 (msg ^ " (%s)") reason in
+  (Errors.Fatal_ExpectedPureExpression,
+   format2 (msg ^ "; got an expression \"%s\" with effect \"%s\"")   
+     (Print.term_to_string e) (fst <| name_and_result c))
 
-let expected_ghost_expression e c =
-  (Errors.Fatal_ExpectedGhostExpression, (format2 "Expected a ghost expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)))
+let expected_ghost_expression e c reason =
+  let msg = "Expected a ghost expression" in
+  let msg =
+    if reason = ""
+    then msg
+    else BU.format1 (msg ^ " (%s)") reason in
+  (Errors.Fatal_ExpectedGhostExpression,
+   format2 (msg ^ "; got an expression \"%s\" with effect \"%s\"")   
+     (Print.term_to_string e) (fst <| name_and_result c))
 
 let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
   (Errors.Fatal_UnexpectedEffect, (format2 "Expected a computation with effect %s; but it has effect %s" (Print.lid_to_string c1) (Print.lid_to_string c2)))

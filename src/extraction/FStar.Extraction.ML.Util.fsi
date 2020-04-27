@@ -48,8 +48,8 @@ val record_field_path : list<lident> -> list<string>
 val record_fields : fs:list<lident> -> vs:list<'a> -> list<(string * 'a)>
 
 val flatten_ns : ns:list<string> -> string
-val flatten_mlpath : ns:list<string> * n:string -> string
-val mlpath_of_lid : l:lident -> list<string> * string
+val flatten_mlpath : list<string> * string -> string
+val ml_module_name_of_lid: lident -> string
 val erasableType : unfold_ty:unfold_t -> t:mlty -> bool
 val eraseTypeDeep : unfold_ty:unfold_t -> t:mlty -> mlty
 val prims_op_equality : mlexpr
@@ -62,7 +62,7 @@ val argTypes : t:mlty -> list<mlty>
 val uncurry_mlty_fun : t:mlty -> list<mlty> * mlty
 
 val interpret_plugin_as_term_fun :
-               TypeChecker.Env.env
+              UEnv.uenv
             -> fv:S.fv
             -> t:S.typ
             -> arity:option<int>

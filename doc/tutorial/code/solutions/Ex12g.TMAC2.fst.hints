@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "6355a24dbb66506b6ddd7e1e471e8d1a"
+      "7dad72ca90dbf677b034c3fc55ebffee"
     ],
     [
       "Ex12g.TMAC2.bspec1",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "c394991c9eb0da8e418f108f2654f2e1"
+      "9c79125db8ae1cd8df1a22bb97c78de0"
     ],
     [
       "Ex12g.TMAC2.keygen",
@@ -40,7 +40,7 @@
         "typing_Ex12.BMAC.keygen"
       ],
       0,
-      "2ff57883b553d98c67b4e77d9e438e5c"
+      "cb27ff6839bb64858cdcdcfe01fa9d0b"
     ],
     [
       "Ex12g.TMAC2.mac",
@@ -52,8 +52,8 @@
         "equation_Ex12.Pad.bytes", "equation_Ex12.Pad.text",
         "equation_Ex12g.TMAC2.bspec0", "equation_Ex12g.TMAC2.bspec1",
         "equation_Ex12g.TMAC2.pkey", "equation_Ex12g.TMAC2.text2",
-        "equation_Prims.nat", "function_token_typing_Ex12.BMAC.key_prop",
-        "function_token_typing_FStar.UInt8.t", "int_inversion",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Ex12.BMAC.key_prop", "int_inversion",
         "lemma_Ex12.Pad.inj", "lemma_FStar.Seq.Base.lemma_eq_elim",
         "primitive_Prims.op_LessThan", "proj_equation_Ex12g.TMAC2.Keys_k0",
         "proj_equation_Ex12g.TMAC2.Keys_k1",
@@ -61,17 +61,18 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Ex12g.TMAC2.Keys_k0",
         "projection_inverse_Ex12g.TMAC2.Keys_k1",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_9a019c37bda9aa395e0805475b581d9a",
+        "refinement_interpretation_Tm_refine_dededb70fb94e9a423bec802a85357ed",
         "refinement_interpretation_Tm_refine_e3d4eb3b9c71d04bf5e6aaaac2533376",
-        "refinement_interpretation_Tm_refine_e7d49a12d3df8c08b458b9f6bfd3dbdf",
         "refinement_interpretation_Tm_refine_f62a4b8b0af8dcca8132351ce07f1d2d",
+        "refinement_interpretation_Tm_refine_fd2be8198e39878f352c13c0237d0cb2",
         "token_correspondence_Ex12g.TMAC2.bspec0",
         "token_correspondence_Ex12g.TMAC2.bspec1",
-        "typing_FStar.Seq.Base.length"
+        "typing_FStar.Seq.Base.length", "typing_FStar.UInt8.t"
       ],
       0,
-      "48693e3b0da6fbfc788f296ae00d3be3"
+      "990c7991a3708aa358e12b7217b9fb1f"
     ],
     [
       "Ex12g.TMAC2.verify",
@@ -84,8 +85,8 @@
         "equation_Ex12.Pad.nbytes", "equation_Ex12.Pad.text",
         "equation_Ex12g.TMAC2.bspec0", "equation_Ex12g.TMAC2.bspec1",
         "equation_Ex12g.TMAC2.pkey", "equation_Ex12g.TMAC2.text2",
-        "equation_Prims.nat", "function_token_typing_Ex12.BMAC.key_prop",
-        "function_token_typing_FStar.UInt8.t", "int_inversion",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Ex12.BMAC.key_prop", "int_inversion",
         "lemma_FStar.Seq.Base.lemma_eq_refl", "primitive_Prims.op_LessThan",
         "proj_equation_Ex12g.TMAC2.Keys_k0",
         "proj_equation_Ex12g.TMAC2.Keys_k1",
@@ -93,17 +94,18 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Ex12g.TMAC2.Keys_k0",
         "projection_inverse_Ex12g.TMAC2.Keys_k1",
-        "refinement_interpretation_Tm_refine_43058a325e271c84cdddd4bb5cf626de",
+        "refinement_interpretation_Tm_refine_314facab926fb5ccee666fe97e081552",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_9a019c37bda9aa395e0805475b581d9a",
-        "refinement_interpretation_Tm_refine_e7d49a12d3df8c08b458b9f6bfd3dbdf",
+        "refinement_interpretation_Tm_refine_dededb70fb94e9a423bec802a85357ed",
         "refinement_interpretation_Tm_refine_f62a4b8b0af8dcca8132351ce07f1d2d",
+        "refinement_interpretation_Tm_refine_fd2be8198e39878f352c13c0237d0cb2",
         "token_correspondence_Ex12g.TMAC2.bspec0",
         "token_correspondence_Ex12g.TMAC2.bspec1",
-        "typing_FStar.Seq.Base.length"
+        "typing_FStar.Seq.Base.length", "typing_FStar.UInt8.t"
       ],
       0,
-      "9edb65f966b3fe42b2ba4edaee4c8220"
+      "3af7514cb059f713873993008f95b4b6"
     ],
     [
       "Ex12g.TMAC2.bspec0",
@@ -112,7 +114,7 @@
       1,
       [ "@query" ],
       0,
-      "1c3067018f98966efea5755f84e9a59f"
+      "09d64a6010ba5888043603e4b4d7e323"
     ],
     [
       "Ex12g.TMAC2.bspec1",
@@ -121,7 +123,7 @@
       1,
       [ "@query" ],
       0,
-      "68a0b20cb349d2966df31d22ef58376e"
+      "ce500954e5ee2d02c3f846216ed53c03"
     ],
     [
       "Ex12g.TMAC2.keygen",
@@ -144,7 +146,7 @@
         "typing_Ex12.BMAC.keygen"
       ],
       0,
-      "65c804f09b4d18b290b5c4375dc4f17f"
+      "5f0dfd36a8a8f18595e959992d929b22"
     ],
     [
       "Ex12g.TMAC2.mac",
@@ -156,8 +158,8 @@
         "equation_Ex12.Pad.bytes", "equation_Ex12.Pad.text",
         "equation_Ex12g.TMAC2.bspec0", "equation_Ex12g.TMAC2.bspec1",
         "equation_Ex12g.TMAC2.pkey", "equation_Ex12g.TMAC2.text2",
-        "equation_Prims.nat", "function_token_typing_Ex12.BMAC.key_prop",
-        "function_token_typing_FStar.UInt8.t", "int_inversion",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Ex12.BMAC.key_prop", "int_inversion",
         "lemma_Ex12.Pad.inj", "lemma_FStar.Seq.Base.lemma_eq_elim",
         "primitive_Prims.op_LessThan", "proj_equation_Ex12g.TMAC2.Keys_k0",
         "proj_equation_Ex12g.TMAC2.Keys_k1",
@@ -165,17 +167,18 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Ex12g.TMAC2.Keys_k0",
         "projection_inverse_Ex12g.TMAC2.Keys_k1",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_9a019c37bda9aa395e0805475b581d9a",
+        "refinement_interpretation_Tm_refine_dededb70fb94e9a423bec802a85357ed",
         "refinement_interpretation_Tm_refine_e3d4eb3b9c71d04bf5e6aaaac2533376",
-        "refinement_interpretation_Tm_refine_e7d49a12d3df8c08b458b9f6bfd3dbdf",
         "refinement_interpretation_Tm_refine_f62a4b8b0af8dcca8132351ce07f1d2d",
+        "refinement_interpretation_Tm_refine_fd2be8198e39878f352c13c0237d0cb2",
         "token_correspondence_Ex12g.TMAC2.bspec0",
         "token_correspondence_Ex12g.TMAC2.bspec1",
-        "typing_FStar.Seq.Base.length"
+        "typing_FStar.Seq.Base.length", "typing_FStar.UInt8.t"
       ],
       0,
-      "459e60a73c77b2389043af1418f592eb"
+      "b075528f82b9fc188241adf4e278651a"
     ],
     [
       "Ex12g.TMAC2.verify",
@@ -188,8 +191,8 @@
         "equation_Ex12.Pad.nbytes", "equation_Ex12.Pad.text",
         "equation_Ex12g.TMAC2.bspec0", "equation_Ex12g.TMAC2.bspec1",
         "equation_Ex12g.TMAC2.pkey", "equation_Ex12g.TMAC2.text2",
-        "equation_Prims.nat", "function_token_typing_Ex12.BMAC.key_prop",
-        "function_token_typing_FStar.UInt8.t", "int_inversion",
+        "equation_Prims.eqtype", "equation_Prims.nat",
+        "function_token_typing_Ex12.BMAC.key_prop", "int_inversion",
         "lemma_FStar.Seq.Base.lemma_eq_refl", "primitive_Prims.op_LessThan",
         "proj_equation_Ex12g.TMAC2.Keys_k0",
         "proj_equation_Ex12g.TMAC2.Keys_k1",
@@ -197,17 +200,18 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Ex12g.TMAC2.Keys_k0",
         "projection_inverse_Ex12g.TMAC2.Keys_k1",
-        "refinement_interpretation_Tm_refine_43058a325e271c84cdddd4bb5cf626de",
+        "refinement_interpretation_Tm_refine_314facab926fb5ccee666fe97e081552",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_9a019c37bda9aa395e0805475b581d9a",
-        "refinement_interpretation_Tm_refine_e7d49a12d3df8c08b458b9f6bfd3dbdf",
+        "refinement_interpretation_Tm_refine_dededb70fb94e9a423bec802a85357ed",
         "refinement_interpretation_Tm_refine_f62a4b8b0af8dcca8132351ce07f1d2d",
+        "refinement_interpretation_Tm_refine_fd2be8198e39878f352c13c0237d0cb2",
         "token_correspondence_Ex12g.TMAC2.bspec0",
         "token_correspondence_Ex12g.TMAC2.bspec1",
-        "typing_FStar.Seq.Base.length"
+        "typing_FStar.Seq.Base.length", "typing_FStar.UInt8.t"
       ],
       0,
-      "044e59e04ddee382a67b8bdf2df20ffe"
+      "ea07ce67841b0bb1a1c6ad7271714b5c"
     ]
   ]
 ]

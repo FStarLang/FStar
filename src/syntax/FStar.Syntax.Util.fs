@@ -44,13 +44,13 @@ let tts t : string =
     | None -> "<<hook unset>>"
     | Some f -> f t
 
-let qual_id lid id = set_lid_range (lid_of_ids (lid.ns @ [lid.ident;id])) id.idRange
-
 let mk_discriminator lid =
-  lid_of_ids (lid.ns@[mk_ident(Ident.reserved_prefix ^ "is_" ^ lid.ident.idText, lid.ident.idRange)])
+  lid_of_ids (ns_of_lid lid
+              @ [mk_ident (Ident.reserved_prefix ^ "is_" ^ (text_of_id (ident_of_lid lid)),
+                           range_of_lid lid)])
 
 let is_name (lid:lident) =
-  let c = U.char_at lid.ident.idText 0 in
+  let c = U.char_at (text_of_id (ident_of_lid lid)) 0 in
   U.is_upper c
 
 let arg_of_non_null_binder (b, imp) = (bv_to_name b, imp)
@@ -132,9 +132,9 @@ let rec univ_kernel u = match u with
     | U_unknown
     | U_name _
     | U_unif _
+    | U_max _
     | U_zero -> u, 0
     | U_succ u -> let k, n = univ_kernel u in k, n+1
-    | U_max _  -> failwith "Imposible: univ_kernel (U_max _)"
     | U_bvar _ -> failwith "Imposible: univ_kernel (U_bvar _)"
 
 //requires: kernel u = U_zero, n
@@ -147,49 +147,53 @@ let constant_univ_as_nat u = snd (univ_kernel u)
 //    unification variables next, in lexical order of their kernels and their offsets
 //    max terms come last
 //e.g, [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2]
-let rec compare_univs u1 u2 = match u1, u2 with
+let rec compare_univs (u1:universe) (u2:universe) : int =
+  let rec compare_kernel (uk1:universe) (uk2:universe) : int =
+    match uk1, uk2 with
     | U_bvar _, _
-    | _, U_bvar _  -> failwith "Impossible: compare_univs"
+    | _, U_bvar _  -> failwith "Impossible: compare_kernel bvar"
+
+    | U_succ _, _
+    | _, U_succ _  -> failwith "Impossible: compare_kernel succ"
 
     | U_unknown, U_unknown -> 0
     | U_unknown, _ -> -1
-    | _, U_unknown -> 1
+    | _, U_unknown ->  1
 
     | U_zero, U_zero -> 0
     | U_zero, _ -> -1
-    | _, U_zero -> 1
+    | _, U_zero ->  1
 
-    | U_name u1 , U_name u2 -> String.compare u1.idText u2.idText
-    | U_name _, U_unif _ -> -1
-    | U_unif _, U_name _ -> 1
+    | U_name u1 , U_name u2 -> String.compare (text_of_id u1) (text_of_id u2)
+    | U_name _, _ -> -1
+    | _, U_name _ ->  1
 
     | U_unif u1, U_unif u2 -> Unionfind.univ_uvar_id u1 - Unionfind.univ_uvar_id u2
+    | U_unif _, _ -> -1
+    | _, U_unif _ ->  1
 
+    (* Only remaining case *)
     | U_max us1, U_max us2 ->
       let n1 = List.length us1 in
       let n2 = List.length us2 in
       if n1 <> n2
-      then n1 - n2
-      else let copt = U.find_map (List.zip us1 us2) (fun (u1, u2) ->
-                let c = compare_univs u1 u2 in
-                if c<>0 then Some c
-                else None) in
-           begin match copt with
-            | None -> 0
-            | Some c -> c
-           end
-
-    | U_max _, _ -> -1
-
-    | _, U_max _ -> 1
-
-    | _ ->
-        let k1, n1 = univ_kernel u1 in
-        let k2, n2 = univ_kernel u2 in
-        let r = compare_univs k1 k2 in
-        if r=0
-        then n1 - n2
-        else r
+      then n1 - n2 (* first order by increasing length *)
+      else
+        (* for same length, order lexicographically *)
+        let copt = U.find_map (List.zip us1 us2) (fun (u1, u2) ->
+             let c = compare_univs u1 u2 in
+             if c<>0 then Some c
+             else None) in
+        begin match copt with
+         | None -> 0
+         | Some c -> c
+        end
+  in
+  let uk1, n1 = univ_kernel u1 in
+  let uk2, n2 = univ_kernel u2 in
+  match compare_kernel uk1 uk2 with
+  | 0 -> n1 - n2
+  | n -> n
 
 let eq_univs u1 u2 = compare_univs u1 u2 = 0
 
@@ -247,7 +251,7 @@ let destruct_comp c : (universe * typ * typ) =
     | _ ->
       failwith (U.format2
         "Impossible: Got a computation %s with %s effect args"
-        c.effect_name.str
+        (string_of_lid c.effect_name)
         (c.effect_args |> List.length |> string_of_int)) in
   List.hd c.comp_univs, c.result_typ, wp
 
@@ -527,7 +531,9 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
                                   g.fv_qual = Some Data_ctor -> Some (f, args1, g, args2)
       | _ -> None
     in
-    match (unmeta t1).n, (unmeta t2).n with
+    let t1 = unmeta t1 in
+    let t2 = unmeta t2 in
+    match t1.n, t2.n with
     // We sometimes compare open terms, as we get alpha-equivalence
     // for free.
     | Tm_bvar bv1, Tm_bvar bv2 ->
@@ -718,7 +724,7 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_new_effect(n) -> [n.mname]
   | Sig_sub_effect _
   | Sig_pragma _
-  | Sig_main _ 
+  | Sig_fail _
   | Sig_polymonadic_bind _ -> []
 
 let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
@@ -747,14 +753,6 @@ let mk_app f args =
 
 let mk_app_binders f bs =
     mk_app f (List.map (fun (bv, aq) -> (bv_to_name bv, aq)) bs)
-
-let mk_data l args =
-  match args with
-    | [] ->
-      mk (fvar l delta_constant (Some Data_ctor)) None (range_of_lid l) //NS delta: ok
-    | _ ->
-      let e = mk_app (fvar l delta_constant (Some Data_ctor)) args in //NS delta: ok
-      mk e None e.pos
 
 (***********************************************************************************************)
 (* Combining an effect name with the name of one of its actions, or a
@@ -794,20 +792,19 @@ let mk_field_projector_name_from_string constr field =
     field_projector_prefix ^ constr ^ field_projector_sep ^ field
 
 let mk_field_projector_name_from_ident lid (i : ident) =
-    let itext = i.idText in
+    let itext = (text_of_id i) in
     let newi =
         if field_projector_contains_constructor itext
         then i
-        else mk_ident (mk_field_projector_name_from_string lid.ident.idText itext, i.idRange)
+        else mk_ident (mk_field_projector_name_from_string (text_of_id (ident_of_lid lid)) itext, range_of_id i)
     in
-    lid_of_ids (lid.ns @ [newi])
+    lid_of_ids (ns_of_lid lid @ [newi])
 
 let mk_field_projector_name lid (x:bv) i =
     let nm = if Syntax.is_null_bv x
              then mk_ident("_" ^ U.string_of_int i, Syntax.range_of_bv x)
              else x.ppname in
-    let y = {x with ppname=nm} in
-    mk_field_projector_name_from_ident lid nm, y
+    mk_field_projector_name_from_ident lid nm
 
 let ses_of_sigbundle (se:sigelt) :list<sigelt> =
   match se.sigel with
@@ -821,11 +818,11 @@ let set_uvar uv t =
 
 let qualifier_equal q1 q2 = match q1, q2 with
   | Discriminator l1, Discriminator l2 -> lid_equals l1 l2
-  | Projector (l1a, l1b), Projector (l2a, l2b) -> lid_equals l1a l2a && l1b.idText=l2b.idText
+  | Projector (l1a, l1b), Projector (l2a, l2b) -> lid_equals l1a l2a && (text_of_id l1b = text_of_id l2b)
   | RecordType (ns1, f1), RecordType (ns2, f2)
   | RecordConstructor (ns1, f1), RecordConstructor (ns2, f2) ->
-      List.length ns1 = List.length ns2 && List.forall2 (fun x1 x2 -> x1.idText = x2.idText) f1 f2 &&
-      List.length f1 = List.length f2 && List.forall2 (fun x1 x2 -> x1.idText = x2.idText) f1 f2
+      List.length ns1 = List.length ns2 && List.forall2 (fun x1 x2 -> (text_of_id x1) = (text_of_id x2)) f1 f2 &&
+      List.length f1 = List.length f2 && List.forall2 (fun x1 x2 -> (text_of_id x1) = (text_of_id x2)) f1 f2
   | _ -> q1=q2
 
 
@@ -865,6 +862,17 @@ let flat_arrow bs c =
     end
   | _ -> t
 
+let rec canon_arrow t =
+  match (compress t).n with
+  | Tm_arrow (bs, c) ->
+      let cn = match c.n with
+               | Total (t, u) -> Total (canon_arrow t, u)
+               | _ -> c.n
+      in
+      let c = { c with n = cn } in
+      flat_arrow bs c
+  | _ -> t
+
 let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) None (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
 
@@ -873,13 +881,12 @@ let branch b = Subst.close_branch b
  *     flattening arrows of the form t -> Tot (t1 -> C), so that it returns two binders in this example
  *     the function also descends under the refinements (e.g. t -> Tot (f:(t1 -> C){phi}))
  *)
-let rec arrow_formals_comp k =
+let rec arrow_formals_comp_ln k =
     let k = Subst.compress k in
     match k.n with
         | Tm_arrow(bs, c) ->
-            let bs, c = Subst.open_comp bs c in
             if is_total_comp c
-            then let bs', k = arrow_formals_comp (comp_result c) in
+            then let bs', k = arrow_formals_comp_ln (comp_result c) in
                  bs@bs', k
             else bs, c
         | Tm_refine ({ sort = s }, _) ->
@@ -888,12 +895,20 @@ let rec arrow_formals_comp k =
            *)
           let rec aux (s:term) (k:term) =
             match (Subst.compress s).n with
-            | Tm_arrow _ -> arrow_formals_comp s  //found an arrow, go to the main function
+            | Tm_arrow _ -> arrow_formals_comp_ln s  //found an arrow, go to the main function
             | Tm_refine ({ sort = s }, _) -> aux s k  //another refinement, descend into it, but with the same def
             | _ -> [], Syntax.mk_Total k  //return def
           in
           aux s k
         | _ -> [], Syntax.mk_Total k
+
+let arrow_formals_comp k =
+    let bs, c = arrow_formals_comp_ln k in
+    Subst.open_comp bs c
+
+let arrow_formals_ln k =
+    let bs, c = arrow_formals_comp_ln k in
+    bs, comp_result c
 
 let arrow_formals k =
     let bs, c = arrow_formals_comp k in
@@ -957,6 +972,20 @@ let abs_formals t =
     let abs_body_lcomp = subst_lcomp_opt opening abs_body_lcomp in
     bs, t, abs_body_lcomp
 
+let remove_inacc (t:term) : term =
+    let no_acc ((b, aq) : binder) : binder =
+      let aq =
+        match aq with
+        | Some (Implicit true) -> Some (Implicit false)
+        | _ -> aq
+      in
+      (b, aq)
+    in
+    let bs, c = arrow_formals_comp_ln t in
+    match bs with
+    | [] -> t
+    | _ -> mk (Tm_arrow (List.map no_acc bs, c)) None t.pos
+
 let mk_letbinding (lbname : either<bv,fv>) univ_vars typ eff def lbattrs pos =
     {lbname=lbname;
      lbunivs=univ_vars;
@@ -998,7 +1027,7 @@ let open_univ_vars_binders_and_comp uvs binders c =
 (********************************************************************************)
 
 let is_tuple_constructor (t:typ) = match t.n with
-  | Tm_fvar fv -> PC.is_tuple_constructor_string fv.fv_name.v.str
+  | Tm_fvar fv -> PC.is_tuple_constructor_string (string_of_lid fv.fv_name.v)
   | _ -> false
 
 let is_dtuple_constructor (t:typ) = match t.n with
@@ -1061,7 +1090,7 @@ let ktype0 : term = mk (Tm_type(U_zero)) None dummyRange
 
 //Type(u), where u is a new universe unification variable
 let type_u () : typ * universe =
-    let u = U_unif <| Unionfind.univ_fresh () in
+    let u = U_unif <| Unionfind.univ_fresh Range.dummyRange in
     mk (Tm_type u) None dummyRange, u
 
 // works on anything, really
@@ -1770,6 +1799,7 @@ let remove_attr (attr : lident) (attrs:list<attribute>) : list<attribute> =
 // Setting pragmas
 ///////////////////////////////////////////
 let process_pragma p r =
+    FStar.Errors.set_option_warning_callback_range (Some r);
     let set_options s =
       match Options.set_options s with
       | Getopt.Success -> ()
@@ -1967,7 +1997,10 @@ let rec list_elements (e:term) : option<list<term>> =
   | _ ->
       None
 
-let unthunk_lemma_post t =
+(* Takes a term of shape `fun x -> e` and returns `e` when
+`x` is not free in it. If it is free or the term
+has some other shape just apply it to `()`. *)
+let unthunk (t:term) : term =
     match (compress t).n with
     | Tm_abs ([b], e, _) ->
         let bs, e = open_term [b] e in
@@ -1977,6 +2010,9 @@ let unthunk_lemma_post t =
         else e
     | _ ->
         mk_app t [as_arg exp_unit]
+
+let unthunk_lemma_post t =
+    unthunk t
 
 let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list<universe>)
    : term

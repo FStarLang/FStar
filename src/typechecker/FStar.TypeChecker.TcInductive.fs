@@ -119,13 +119,13 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                         Some (Env.push_binders env tps, tps, u_tc)
                      | _ -> failwith "Impossible"
                 else None) in
-           match tps_u_opt with
-            | Some x -> x
-            | None ->
-              if lid_equals tc_lid FStar.Parser.Const.exn_lid
-              then env, [], U_zero
-              else raise_error (Errors.Fatal_UnexpectedDataConstructor, ("Unexpected data constructor")) se.sigrng in
-
+            match tps_u_opt with
+             | Some x -> x
+             | None ->
+               if lid_equals tc_lid FStar.Parser.Const.exn_lid
+               then env, [], U_zero
+               else raise_error (Errors.Fatal_UnexpectedDataConstructor, ("Unexpected data constructor")) se.sigrng
+         in
 
          let arguments, result =
             let t = N.normalize (N.whnf_steps @ [Env.AllowUnboundUniverses]) env t in  //AR: allow unbounded universes, since we haven't typechecked t yet
@@ -136,8 +136,17 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                   let _, bs' = BU.first_N ntps bs in
                   let t = mk (Tm_arrow(bs', res)) None t.pos in
                   let subst = tps |> List.mapi (fun i (x, _) -> DB(ntps - (1 + i), x)) in
-(*open*)          U.arrow_formals (SS.subst subst t)
-                | _ -> [], t in
+(*open*)          let bs, c = U.arrow_formals_comp (SS.subst subst t) in
+                  (* check that c is a Tot computation, reject it otherwise
+                   * (unless --MLish, which will mark all of them with ML effect) *)
+                  if Options.ml_ish () || is_total_comp c
+                  then bs, comp_result c
+                  else raise_error (Errors.Fatal_UnexpectedConstructorType,
+                                     "Constructors cannot have effects")
+                                   (range_of_lid (U.comp_effect_name c))
+
+                | _ -> [], t
+         in
 
          if Env.debug env Options.Low then BU.print3 "Checking datacon  %s : %s -> %s \n"
                 (Print.lid_to_string c)
@@ -226,7 +235,7 @@ let generalize_and_inst_within (env:env_t) (tcs:list<(sigelt * universe)>) (data
         let (uvs, t) = TcUtil.generalize_universes env t in
         if Env.debug env <| Options.Other "GenUniverses"
         then BU.print2 "@@@@@@Generalized to (%s, %s)\n"
-                            (uvs |> List.map (fun u -> u.idText) |> String.concat ", ")
+                            (uvs |> List.map (fun u -> (text_of_id u)) |> String.concat ", ")
                             (Print.term_to_string t);
         //Now, (uvs, t) is the generalized type scheme for all the inductives and their data constuctors
 
@@ -279,14 +288,17 @@ let ty_occurs_in (ty_lid:lident) (t:term) :bool = FStar.Util.set_mem ty_lid (Fre
 
 //this function is called during the positivity check, when we have a binder type that is a Tm_app, and t is the head node of Tm_app
 //it tries to get fvar from this t, since the type is already normalized, other cases should have been handled
-let try_get_fv (t:term) :(fv * universes) =
-match (SS.compress t).n with
-| Tm_fvar fv       -> fv, []
-| Tm_uinst (t, us) ->
-    (match t.n with
-    | Tm_fvar fv   -> fv, us
-    | _            -> failwith "Node is a Tm_uinst, but Tm_uinst is not an fvar")
-| _                -> failwith "Node is not an fvar or a Tm_uinst"
+let rec try_get_fv (t:term) :option<(fv * universes)> =
+  match (SS.compress t).n with
+  | Tm_name _ -> None  //names are ok, e.g. some parameter or binder
+  | Tm_fvar fv -> Some (fv, [])
+  | Tm_uinst (t, us) ->
+    (match (SS.compress t).n with
+     | Tm_fvar fv -> Some (fv, us)
+     | _ -> failwith "try_get_fv: Node is a Tm_uinst, but Tm_uinst is not an fvar")
+  | Tm_ascribed (t, _, _) -> try_get_fv t
+  | _ ->
+    failwith ("try_get_fv: did not expect t to be a : " ^ (Print.tag_of_term t))
 
 type unfolded_memo_elt = list<(lident * args)>
 type unfolded_memo_t = ref<unfolded_memo_elt>
@@ -304,24 +316,35 @@ let already_unfolded (ilid:lident) (arrghs:args) (unfolded:unfolded_memo_t) (env
 //check if ty_lid occurs strictly positively in some binder type btype
 let rec ty_strictly_positive_in_type (ty_lid:lident) (btype:term) (unfolded:unfolded_memo_t) (env:env_t) :bool =
   debug_log env (fun () -> "Checking strict positivity in type: " ^ (PP.term_to_string btype));
-  //normalize the type to unfold any type abbreviations, TODO: what steps?
-  let btype = N.normalize [Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil delta_constant; Env.Iota; Env.Zeta; Env.AllowUnboundUniverses] env btype in
+  //normalize the type to unfold any type abbreviations
+  let btype = N.normalize
+    [Env.Beta;
+     Env.HNF;
+     Env.Weak;
+     Env.UnfoldUntil delta_constant;
+     Env.Iota;
+     Env.ForExtraction;
+     Env.Unascribe;
+     Env.AllowUnboundUniverses] env btype in
   debug_log env (fun () -> "Checking strict positivity in type, after normalization: " ^ (PP.term_to_string btype));
   not (ty_occurs_in ty_lid btype) ||  //true if ty does not occur in btype
     (debug_log env (fun () -> "ty does occur in this type, pressing ahead");
      match (SS.compress btype).n with
      | Tm_app (t, args) ->  //the binder type is an application
        //get the head node fv, try_get_fv would fail if it's not an fv
-       let fv, us = try_get_fv t in
-       //if it's same as ty_lid, then check that ty_lid does not occur in the arguments
-       if Ident.lid_equals fv.fv_name.v ty_lid then
-         let _ = debug_log env (fun () -> "Checking strict positivity in the Tm_app node where head lid is ty itself, checking that ty does not occur in the arguments") in
-         List.for_all (fun (t, _) -> not (ty_occurs_in ty_lid t)) args
-         //else it must be another inductive type, and we would check nested positivity, ty_nested_positive fails if fv is not another inductive
-         //that case could arise when, for example, it's a type constructor that we could not unfold in normalization
+       let fv_us_opt = try_get_fv t in
+       if fv_us_opt |> is_none then true  //head is not an fv, ok
        else
-         let _ = debug_log env (fun () -> "Checking strict positivity in the Tm_app node, head lid is not ty, so checking nested positivity") in
-         ty_nested_positive_in_inductive ty_lid fv.fv_name.v us args unfolded env
+         let fv, us = fv_us_opt |> must in
+         //if it's same as ty_lid, then check that ty_lid does not occur in the arguments
+         if Ident.lid_equals fv.fv_name.v ty_lid then
+           let _ = debug_log env (fun () -> "Checking strict positivity in the Tm_app node where head lid is ty itself, checking that ty does not occur in the arguments") in
+           List.for_all (fun (t, _) -> not (ty_occurs_in ty_lid t)) args
+           //else it must be another inductive type, and we would check nested positivity, ty_nested_positive fails if fv is not another inductive
+           //that case could arise when, for example, it's a type constructor that we could not unfold in normalization
+         else
+           let _ = debug_log env (fun () -> "Checking strict positivity in the Tm_app node, head lid is not ty, so checking nested positivity") in
+           ty_nested_positive_in_inductive ty_lid fv.fv_name.v us args unfolded env
      | Tm_arrow (sbs, c) ->  //binder type is an arrow type
        debug_log env (fun () -> "Checking strict positivity in Tm_arrow");
        let check_comp =
@@ -367,7 +390,7 @@ let rec ty_strictly_positive_in_type (ty_lid:lident) (btype:term) (unfolded:unfo
 //us are the universes that the inductive ilid's data constructors can be instantiated with if needed, these us come from the application of ilid that called this function
 //TODO: change the name of the function to reflect this behavior
 and ty_nested_positive_in_inductive (ty_lid:lident) (ilid:lident) (us:universes) (args:args) (unfolded:unfolded_memo_t) (env:env_t) :bool =
-  debug_log env (fun () -> "Checking nested positivity in the inductive " ^ ilid.str ^ " applied to arguments: " ^ (PP.args_to_string args));
+  debug_log env (fun () -> "Checking nested positivity in the inductive " ^ (string_of_lid ilid) ^ " applied to arguments: " ^ (PP.args_to_string args));
   let b, idatas = datacons_of_typ env ilid in
   //if ilid is not an inductive, return false
   if not b then begin
@@ -398,7 +421,7 @@ and ty_nested_positive_in_inductive (ty_lid:lident) (ilid:lident) (us:universes)
 //dlid is a data constructor of ilid, args are the arguments of the ilid application, num_ibs is the # of type parameters of ilid
 //us are the universes, see the exaplanation on ty_nested_positive_in_inductive
 and ty_nested_positive_in_dlid (ty_lid:lident) (dlid:lident) (ilid:lident) (us:universes) (args:args) (num_ibs:int) (unfolded:unfolded_memo_t) (env:env_t) :bool =
-  debug_log env (fun () -> "Checking nested positivity in data constructor " ^ dlid.str ^ " of the inductive " ^ ilid.str);
+  debug_log env (fun () -> "Checking nested positivity in data constructor " ^ (string_of_lid dlid) ^ " of the inductive " ^ (string_of_lid ilid));
   //get the type of the data constructor
   let univ_unif_vars, dt = lookup_datacon env dlid in
   //lookup_datacon instantiates the universes of dlid with unification variables
@@ -406,9 +429,6 @@ and ty_nested_positive_in_dlid (ty_lid:lident) (dlid:lident) (ilid:lident) (us:u
   (List.iter2 (fun u' u -> match u' with
      | U_unif u'' -> UF.univ_change u'' u
      | _          -> failwith "Impossible! Expected universe unification variables") univ_unif_vars us);
-
-  //normalize it, TODO: as before steps?
-  let dt = N.normalize [Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil delta_constant; Env.Iota; Env.Zeta; Env.AllowUnboundUniverses] env dt in
 
   debug_log env (fun () -> "Checking nested positivity in the data constructor type: " ^ (PP.term_to_string dt));
   match (SS.compress dt).n with
@@ -432,8 +452,9 @@ and ty_nested_positive_in_dlid (ty_lid:lident) (dlid:lident) (ilid:lident) (us:u
     debug_log env (fun () -> "Checking nested positivity in the unfolded data constructor binders as: " ^ (PP.binders_to_string "; " dbs) ^ ", and c: " ^ (PP.comp_to_string c));
     ty_nested_positive_in_type ty_lid (Tm_arrow (dbs, c)) ilid num_ibs unfolded env
   | _ ->
+    //AR: TODO: 04/21: may be this should be an error since data constructor type is not an arrow?
     debug_log env (fun () -> "Checking nested positivity in the data constructor type that is not an arrow");
-    ty_nested_positive_in_type ty_lid (SS.compress dt).n ilid num_ibs unfolded env  //in this case, we don't have anything to substitute, simply check
+    ty_nested_positive_in_type ty_lid (SS.compress dt).n ilid num_ibs unfolded env //in this case, we don't have anything to substitute, simply check
 
 //t is some data constructor type of ilid, after ilid type parameters have been substituted
 and ty_nested_positive_in_type (ty_lid:lident) (t:term') (ilid:lident) (num_ibs:int) (unfolded:unfolded_memo_t) (env:env_t) :bool =
@@ -441,7 +462,7 @@ and ty_nested_positive_in_type (ty_lid:lident) (t:term') (ilid:lident) (num_ibs:
   | Tm_app (t, args) ->
     //if it's an application node, it must be ilid directly
     debug_log env (fun () -> "Checking nested positivity in an Tm_app node, which is expected to be the ilid itself");
-    let fv, _ = try_get_fv t in
+    let fv, _ = try_get_fv t |> must in
     if Ident.lid_equals fv.fv_name.v ilid then true  //TODO: in this case Coq manual says we should check for indexes
     else failwith "Impossible, expected the type to be ilid"
   | Tm_arrow (sbs, c) ->
@@ -537,12 +558,14 @@ let datacon_typ (data:sigelt) :term =
 let haseq_suffix = "__uu___haseq"
 
 let is_haseq_lid lid =
-  let str = lid.str in let len = String.length str in
+  let str = (string_of_lid lid) in
+  let len = String.length str in
   let haseq_suffix_len = String.length haseq_suffix in
   len > haseq_suffix_len &&
   String.compare (String.substring str (len - haseq_suffix_len) haseq_suffix_len) haseq_suffix = 0
 
-let get_haseq_axiom_lid lid = lid_of_ids (lid.ns @ [(id_of_text (lid.ident.idText ^ haseq_suffix))])
+let get_haseq_axiom_lid lid =
+    lid_of_ids (ns_of_lid lid @ [(id_of_text (text_of_id (ident_of_lid lid) ^ haseq_suffix))])
 
 //get the optimized hasEq axiom for this inductive
 //the caller is supposed to open the universes, and pass along the universe substitution and universe names
@@ -621,7 +644,7 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
       //label the haseq predicate so that we get a proper error message if the assertion fails
       let sort_range = (fst b).sort.pos in
       let haseq_b = TcUtil.label
-                    (BU.format1 "Failed to prove that the type '%s' supports decidable equality because of this argument; add either the 'noeq' or 'unopteq' qualifier" ty_lid.str)
+                    (BU.format1 "Failed to prove that the type '%s' supports decidable equality because of this argument; add either the 'noeq' or 'unopteq' qualifier" (string_of_lid ty_lid))
                     sort_range
                     haseq_b
       in
@@ -1068,7 +1091,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let early_prims_inductive =
       lid_equals C.prims_lid  (Env.current_module env) &&
-      List.existsb (fun s -> s = tc.ident.idText) early_prims_inductives
+      List.existsb (fun s -> s = (text_of_id (ident_of_lid tc))) early_prims_inductives
     in
 
     let discriminator_ses =
@@ -1079,7 +1102,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
             let no_decl = false in
             let only_decl =
               early_prims_inductive ||
-              Options.dont_gen_projectors (Env.current_module env).str
+              Options.dont_gen_projectors (string_of_lid (Env.current_module env))
             in
             let quals =
                 (* KM : What about Logic ? should it still be there even with an implementation *)
@@ -1119,8 +1142,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                         let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
                             let b = S.is_implicit imp in
                             if b && j < ntps
-                            then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
-                            else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
+                            then pos (Pat_dot_term (S.gen_bv (text_of_id x.ppname) None tun, tun)), b
+                            else pos (Pat_wild (S.gen_bv (text_of_id x.ppname) None tun)), b)
                         in
                         let pat_true = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, U.exp_true_bool in
                         let pat_false = pos (Pat_wild (S.new_bv None tun)), None, U.exp_false_bool in
@@ -1162,7 +1185,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     let arg = U.arg_of_non_null_binder arg_binder in
 
     let subst = fields |> List.mapi (fun i (a, _) ->
-            let field_name, _ = U.mk_field_projector_name lid a i in
+            let field_name = U.mk_field_projector_name lid a i in
             let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name (Delta_equational_at_level 1) None)) inst_univs in
             let proj = mk_Tm_app field_proj_tm [arg] None p in
             NT(a, proj))
@@ -1171,7 +1194,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     let projectors_ses =
       fields |> List.mapi (fun i (x, _) ->
           let p = S.range_of_bv x in
-          let field_name, _ = U.mk_field_projector_name lid x i in
+          let field_name = U.mk_field_projector_name lid x i in
           let t =
             let result_comp =
               let t = Subst.subst subst x.sort in
@@ -1183,7 +1206,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           in
           let only_decl =
             early_prims_inductive ||
-            Options.dont_gen_projectors (Env.current_module env).str
+            Options.dont_gen_projectors (string_of_lid (Env.current_module env))
           in
           (* KM : Why would we want to prevent a declaration only in this particular case ? *)
           (* TODO : If we don't want the declaration then we need to propagate the right types in the patterns *)
@@ -1214,14 +1237,14 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           if only_decl
           then [decl] //only the signature
           else
-              let projection = S.gen_bv x.ppname.idText None tun in
+              let projection = S.gen_bv (text_of_id x.ppname) None tun in
               let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
                   let b = S.is_implicit imp in
                   if i+ntps=j  //this is the one to project
                   then pos (Pat_var projection), b
                   else if b && j < ntps
-                  then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b
-                  else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b)
+                  then pos (Pat_dot_term (S.gen_bv (text_of_id x.ppname) None tun, tun)), b
+                  else pos (Pat_wild (S.gen_bv (text_of_id x.ppname) None tun)), b)
               in
               let pat = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
               let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
@@ -1291,7 +1314,7 @@ let mk_data_operations iquals attrs env tcs se =
 
     let fv_qual =
         let filter_records = function
-            | RecordConstructor (_, fns) -> Some (Record_ctor(constr_lid, fns))
+            | RecordConstructor (_, fns) -> Some (Record_ctor(typ_lid, fns))
             | _ -> None
         in match BU.find_map se.sigquals filter_records with
             | None -> Data_ctor

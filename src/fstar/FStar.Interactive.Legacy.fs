@@ -433,7 +433,7 @@ let rec go (line_col:(int*int))
             Util.map_option (fun (prefix, matched, len) -> (hc :: prefix, matched, len)) in
     let str_of_ids ids = Util.concat_l "." (List.map FStar.Ident.text_of_id ids) in
     let match_lident_against needle lident =
-        locate_match needle (lident.ns @ [lident.ident])
+        locate_match needle (ns_of_lid lident @ [ident_of_lid lident])
     in
     let shorten_namespace (prefix, matched, match_len) =
       let naked_match = match matched with [_] -> true | _ -> false in
@@ -469,7 +469,7 @@ let rec go (line_col:(int*int))
             List.filter_map (fun n ->
             if Util.starts_with n id
             then let lid = Ident.lid_of_ns_and_id (Ident.ids_of_lid m) (Ident.id_of_text n) in
-                 Option.map (fun fqn -> [], (List.map Ident.id_of_text orig_ns)@[fqn.ident], matched_length)
+                 Option.map (fun fqn -> [], (List.map Ident.id_of_text orig_ns)@[ident_of_lid fqn], matched_length)
                             (DsEnv.resolve_to_fully_qualified_name env.dsenv lid)
             else None)
         in

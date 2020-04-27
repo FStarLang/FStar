@@ -26,24 +26,24 @@ noeq type state = {
   mem: int;
 }
 
-[@qattr]
+[@@qattr]
 let up_reg (r:int) (v:int) (s:state) : state =
   { s with regs = R.upd s.regs r v }
 
-[@qattr]
+[@@qattr]
 let up_xmm (x:int) (v:int) (s:state) : state =
   { s with xmms = R.upd s.xmms x v }
 
-[@qattr]
+[@@qattr]
 let update_reg (r:int) (sM:state) (sK:state) : state = up_reg r (R.sel sM.regs r) sK
 
-[@qattr]
+[@@qattr]
 let update_xmm (x:int) (sM:state) (sK:state) : state = up_xmm x (R.sel sM.xmms x) sK
 
-[@qattr]
+[@@qattr]
 let upd_flags (flags:int) (s:state) : state = { s with flags = flags }
 
-[@qattr]
+[@@qattr]
 let upd_mem (mem:int) (s:state) : state = { s with mem = mem }
 
 unfold
@@ -64,7 +64,7 @@ unfold
 let normal (x:Type0) : Type0 = norm [iota; zeta; simplify; primops; delta_attr [`%qattr]; delta_only normal_steps//; nbe
   ] x
 
-[@qattr]
+[@@qattr]
 let eta_state (s0:state) =
   {
     ok    = s0.ok;
@@ -74,7 +74,7 @@ let eta_state (s0:state) =
     mem   = s0.mem
   }
 
-[@ "opaque_to_smt" qattr]
+[@@ "opaque_to_smt"; qattr]
 let wp_compute_ghash_incremental (x:int) (s0:state) (k:(state -> Type0)) : Type0 =
   let sM = eta_state s0 in
   let sM = up_xmm 1 x (up_xmm 2 x (up_reg 9 x (up_reg 4 x sM))) in

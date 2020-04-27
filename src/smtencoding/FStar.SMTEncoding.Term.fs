@@ -101,6 +101,10 @@ type qop =
 //de Bruijn representation of terms in locally nameless style
 type term' =
   | Integer    of string //unbounded mathematical integers
+  | String     of string //string constants
+                         //we keep the string constants as is in the AST (and hence in the checked files)
+                         //and convert them to integer ids just before sending them to Z3
+                         //(see termToSmt)
   | Real       of string //real numbers
   | BoundV     of int
   | FreeV      of fv
@@ -286,6 +290,7 @@ let fv_of_term = function
     | _ -> failwith "impossible"
 let rec freevars t = match t.tm with
   | Integer _
+  | String _
   | Real _
   | BoundV _ -> []
   | FreeV fv when fv_force fv -> [] //this is actually a top-level constant
@@ -354,6 +359,7 @@ let weightToSmt = function
 
 let rec hash_of_term' t = match t with
   | Integer i ->  i
+  | String s -> s
   | Real r -> r
   | BoundV i  -> "@"^string_of_int i
   | FreeV x   -> fv_name x ^ ":" ^ strSort (fv_sort x) //Question: Why is the sort part of the hash?
@@ -481,6 +487,7 @@ let check_pattern_ok (t:term) : option<term> =
     let rec aux t =
         match t.tm with
         | Integer _
+        | String _
         | Real _
         | BoundV _
         | FreeV _ -> None
@@ -544,6 +551,7 @@ let check_pattern_ok (t:term) : option<term> =
  let rec print_smt_term (t:term) :string =
   match t.tm with
   | Integer n               -> BU.format1 "(Integer %s)" n
+  | String s                -> BU.format1 "(String %s)" s
   | Real r                  -> BU.format1 "(Real %s)" r
   | BoundV  n               -> BU.format1 "(BoundV %s)" (BU.string_of_int n)
   | FreeV  fv               -> BU.format1 "(FreeV %s)" (fv_name fv)
@@ -596,6 +604,7 @@ let abstr fvs t = //fvs is a subset of the free vars of t; the result closes ove
     | _ ->
       begin match t.tm with
         | Integer _
+        | String _
         | Real _
         | BoundV _ -> t
         | FreeV x ->
@@ -621,6 +630,7 @@ let inst tms t =
   let n = List.length tms in //instantiate the first n BoundV's with tms, in order
   let rec aux shift t = match t.tm with
     | Integer _
+    | String _
     | Real _
     | FreeV _ -> t
     | BoundV i ->
@@ -771,6 +781,10 @@ let name_macro_binders sorts =
 let termToSmt
   : print_ranges:bool -> enclosing_name:string -> t:term -> string
   =
+  //a counter and a hash table for string constants to integer ids mapping
+  let string_id_counter = BU.mk_ref 0 in
+  let string_cache= BU.smap_create 20 in
+
   fun print_ranges enclosing_name t ->
       let next_qid =
           let ctr = BU.mk_ref 0 in
@@ -793,6 +807,15 @@ let termToSmt
         match t.tm with
         | Integer i -> i
         | Real r -> r
+        | String s ->
+          let id_opt = BU.smap_try_find string_cache s in
+          (match id_opt with
+           | Some id -> id
+           | None ->
+             let id = !string_id_counter |> string_of_int in
+             BU.incr string_id_counter;
+             BU.smap_add string_cache s id;
+             id)
         | BoundV i ->
           List.nth names i |> fv_name
         | FreeV x when fv_force x -> "(" ^ fv_name x ^ " Dummy_value)" //force a thunked name
@@ -895,8 +918,8 @@ let rec declToSmt' print_captions z3options decl =
   | Assume a ->
     let fact_ids_to_string ids =
         ids |> List.map (function
-        | Name n -> "Name " ^Ident.text_of_lid n
-        | Namespace ns -> "Namespace " ^Ident.text_of_lid ns
+        | Name n -> "Name " ^ Ident.string_of_lid n
+        | Namespace ns -> "Namespace " ^ Ident.string_of_lid ns
         | Tag t -> "Tag " ^t)
     in
     let fids =
@@ -1138,7 +1161,7 @@ let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
 let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
 let kick_partial_app t  = mk_ApplyTT (mkApp("__uu__PartialApp", []) t.rng) t t.rng |> mk_Valid
-let mk_String_const i r = mkApp("FString_const", [ mkInteger' i norng]) r
+let mk_String_const s r = mkApp ("FString_const", [mk (String s) r]) r
 let mk_Precedes x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4])  r|> mk_Valid
 let mk_LexCons x1 x2 x3 r  = mkApp("LexCons", [x1;x2;x3]) r
 let rec n_fuel n =

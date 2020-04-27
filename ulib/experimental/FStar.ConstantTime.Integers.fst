@@ -31,7 +31,7 @@ open FStar.Integers
 /// signedness/width `s`.
 let secret_int (#sl:sl)
                (l:lattice_element sl)
-               (s:sw) =
+               (s:sw) : Type0 =
     protected l (int_t s)
 
 /// A `secret_int l s` can be seen as an int in spec

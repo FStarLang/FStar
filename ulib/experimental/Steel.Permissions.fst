@@ -19,7 +19,7 @@ open FStar.Real
 (**** Permissions as real numbers *)
 
 /// A permission is a real number between 0 and 1.
-[@erasable]
+[@@erasable]
 noeq type permission =
   | Permission:  (r:real{r >=. zero /\ r <=. one}) -> permission
 

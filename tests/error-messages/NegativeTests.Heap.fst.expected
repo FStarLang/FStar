@@ -1,0 +1,5 @@
+>> Got issues: [
+NegativeTests.Heap.fst(26,21-26,54): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+Verified module: NegativeTests.Heap
+All verification conditions discharged successfully

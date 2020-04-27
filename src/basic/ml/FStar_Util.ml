@@ -29,8 +29,6 @@ let is_before t1 t2 = compare t1 t2 < 0
 let string_of_time = string_of_float
 
 exception Impos
-exception NYI of string
-exception HardError of string
 
 let cur_sigint_handler : Sys.signal_behavior ref =
   ref Sys.Signal_default
@@ -1024,6 +1022,11 @@ let digest_of_file =
 let digest_of_string (s:string) =
   BatDigest.to_hex (BatDigest.string s)
 
+(* Precondition: file exists *)
+let touch_file (fname:string) : unit =
+  (* Sets access and modification times to current time *)
+  Unix.utimes fname 0.0 0.0
+
 let ensure_decimal s = Z.to_string (Z.of_string s)
 
 let measure_execution_time tag f =
@@ -1056,6 +1059,11 @@ type hints_db = {
     hints: hints
 }
 
+type hints_read_result =
+  | HintsOK of hints_db
+  | MalformedJson
+  | UnableToOpen
+
 let write_hints (filename: string) (hints: hints_db): unit =
   let json = `List [
     `String hints.module_digest;
@@ -1082,7 +1090,7 @@ let write_hints (filename: string) (hints: hints_db): unit =
     (fun channel -> Yojson.Safe.pretty_to_channel channel json)
     channel
 
-let read_hints (filename: string): hints_db option =
+let read_hints (filename: string) : hints_read_result =
   let mk_hint nm ix fuel ifuel unsat_core time hash_opt = {
       hint_name = nm;
       hint_index = Z.of_int ix;
@@ -1108,7 +1116,7 @@ let read_hints (filename: string): hints_db option =
     let chan = open_in filename in
     let json = Yojson.Safe.from_channel chan in
     close_in chan;
-    Some (
+    HintsOK (
         match json with
         | `List [
             `String module_digest;
@@ -1145,11 +1153,9 @@ let read_hints (filename: string): hints_db option =
     )
   with
    | Exit ->
-      print1_warning "Malformed JSON hints file: %s; ran without hints\n" filename;
-      None
+      MalformedJson
    | Sys_error _ ->
-      print1_warning "Unable to open hints file: %s; ran without hints\n" filename;
-      None
+      UnableToOpen
 
 (** Interactive protocol **)
 

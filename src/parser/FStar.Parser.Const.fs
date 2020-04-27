@@ -48,15 +48,15 @@ let list_lid        = pconst "list"
 let eqtype_lid      = pconst "eqtype"
 let option_lid      = psnconst "option"
 let either_lid      = psconst "either"
-let pattern_lid     = pconst "pattern"
+let pattern_lid     = psconst "pattern"
 let precedes_lid    = pconst "precedes"
 let lex_t_lid       = pconst "lex_t"
 let lexcons_lid     = pconst "LexCons"
 let lextop_lid      = pconst "LexTop"
-let smtpat_lid      = pconst "smt_pat"
-let smtpatOr_lid    = pconst "smt_pat_or"
+let smtpat_lid      = psconst "smt_pat"
+let smtpatOr_lid    = psconst "smt_pat_or"
 let monadic_lid     = pconst "M"
-let spinoff_lid     = pconst "spinoff"
+let spinoff_lid     = psconst "spinoff"
 let inl_lid         = psconst "Inl"
 let inr_lid         = psconst "Inr"
 
@@ -235,7 +235,7 @@ let erased_lid    = p2l ["FStar"; "Ghost"; "erased"]
 let effect_PURE_lid  = pconst "PURE"
 let effect_Pure_lid  = pconst "Pure"
 let effect_Tot_lid   = pconst "Tot"
-let effect_Lemma_lid = pconst "Lemma"
+let effect_Lemma_lid = psconst "Lemma"
 let effect_GTot_lid  = pconst "GTot"
 let effect_GHOST_lid = pconst "GHOST"
 let effect_Ghost_lid = pconst "Ghost"
@@ -290,6 +290,7 @@ let steps_weak          = psconst "weak"
 let steps_hnf           = psconst "hnf"
 let steps_primops       = psconst "primops"
 let steps_zeta          = psconst "zeta"
+let steps_zeta_full     = psconst "zeta_full"
 let steps_iota          = psconst "iota"
 let steps_delta         = psconst "delta"
 let steps_reify         = psconst "reify_"
@@ -300,6 +301,7 @@ let steps_nbe           = psconst "nbe"
 
 (* attributes *)
 let deprecated_attr = pconst "deprecated"
+let warn_on_use_attr = pconst "warn_on_use"
 let inline_let_attr = p2l ["FStar"; "Pervasives"; "inline_let"]
 let rename_let_attr = p2l ["FStar"; "Pervasives"; "rename_let"]
 let plugin_attr     = p2l ["FStar"; "Pervasives"; "plugin"]
@@ -318,7 +320,7 @@ let unifier_hint_injective_lid = psconst "unifier_hint_injective"
 let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
 let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
 let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
-let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Basic"; "check_with"]) FStar.Range.dummyRange
+let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Range.dummyRange
 
 let gen_reset =
     let x = U.mk_ref 0 in
@@ -329,8 +331,8 @@ let next_id = fst gen_reset
 
 let sli (l:lident) : string =
   if FStar.Options.print_real_names()
-  then l.str
-  else l.ident.idText
+  then string_of_lid l
+  else text_of_id (ident_of_lid l)
 
 let const_to_string x = match x with
   | Const_effect -> "Effect"
@@ -361,7 +363,7 @@ let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
 
 let is_tuple_constructor_id  id  = is_tuple_constructor_string (text_of_id id)
-let is_tuple_constructor_lid lid = is_tuple_constructor_string (text_of_lid lid)
+let is_tuple_constructor_lid lid = is_tuple_constructor_string (string_of_lid lid)
 
 let mk_tuple_data_lid n r =
   let t = U.format1 "Mktuple%s" (U.string_of_int n) in
@@ -373,12 +375,12 @@ let is_tuple_datacon_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.Mktuple"
 
 let is_tuple_datacon_id  id  = is_tuple_datacon_string (text_of_id id)
-let is_tuple_datacon_lid lid = is_tuple_datacon_string (text_of_lid lid)
+let is_tuple_datacon_lid lid = is_tuple_datacon_string (string_of_lid lid)
 
 let is_tuple_data_lid f n =
   lid_equals f (mk_tuple_data_lid n dummyRange)
 
-let is_tuple_data_lid' f = is_tuple_datacon_string f.str
+let is_tuple_data_lid' f = is_tuple_datacon_string (string_of_lid f)
 
 
 (* Dtuples *)
@@ -394,7 +396,7 @@ let mk_dtuple_lid n r =
 let is_dtuple_constructor_string (s:string) :bool =
   s = "Prims.dtuple2" || U.starts_with s "FStar.Pervasives.dtuple"
 
-let is_dtuple_constructor_lid lid = is_dtuple_constructor_string lid.str
+let is_dtuple_constructor_lid lid = is_dtuple_constructor_string (string_of_lid lid)
 
 let mk_dtuple_data_lid n r =
   let t = U.format1 "Mkdtuple%s" (U.string_of_int n) in
@@ -406,10 +408,10 @@ let is_dtuple_datacon_string (s:string) :bool =
 let is_dtuple_data_lid f n =
   lid_equals f (mk_dtuple_data_lid n dummyRange)
 
-let is_dtuple_data_lid' f = is_dtuple_datacon_string (text_of_lid f)
+let is_dtuple_data_lid' f = is_dtuple_datacon_string (string_of_lid f)
 
 let is_name (lid:lident) =
-  let c = U.char_at lid.ident.idText 0 in
+  let c = U.char_at (text_of_id (ident_of_lid lid)) 0 in
   U.is_upper c
 
 (* tactic constants *)
@@ -433,7 +435,7 @@ let binder_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binder"]) FStar.
 let binders_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "binders"]) FStar.Range.dummyRange
 let bv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "bv"]) FStar.Range.dummyRange
 let fv_lid = lid_of_path (["FStar"; "Reflection"; "Types"; "fv"]) FStar.Range.dummyRange
-let norm_step_lid = lid_of_path (["FStar"; "Syntax"; "Embeddings"; "norm_step"]) FStar.Range.dummyRange
+let norm_step_lid = psconst "norm_step"
 
 (* Calculational proofs, from FStar.Calc *)
 let calc_lid i : lid = lid_of_path ["FStar"; "Calc"; i] FStar.Range.dummyRange

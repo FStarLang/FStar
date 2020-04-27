@@ -1,6 +1,7 @@
 FSTAR_HOME?=..
 include $(FSTAR_HOME)/ulib/gmake/z3.mk
 include $(FSTAR_HOME)/ulib/gmake/fstar.mk
+include $(FSTAR_HOME)/.common.mk
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
 
 #################################################################################
@@ -26,18 +27,26 @@ OUTPUT_DIRECTORY ?= _output
 # A place to put all the .checked files
 CACHE_DIR ?= _cache
 
-# Additionaly flags to pass to F*
-OTHERFLAGS += --use_extracted_interfaces true --use_hints
+# Additionaly flags to pass to F*, 332 -> abstract usage
+OTHERFLAGS += --use_extracted_interfaces true --use_hints --warn_error @332
+
+# Set ADMIT=1 to admit queries
+ADMIT ?=
+MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
 
 ################################################################################
 # YOU SHOULDN'T NEED TO TOUCH THE REST
 ################################################################################
 
-MY_FSTAR=$(FSTAR) --cache_checked_modules                   \
+VERBOSE_FSTAR=$(BENCHMARK_PRE) $(FSTAR)                     \
+		  --cache_checked_modules                   \
 		  --odir $(OUTPUT_DIRECTORY)                \
 		  --cache_dir $(CACHE_DIR)                  \
 		  $(addprefix --include , $(INCLUDE_PATHS)) \
-		  $(OTHERFLAGS)
+		  $(OTHERFLAGS) $(MAYBE_ADMIT)
+
+# As above, but perhaps with --silent
+MY_FSTAR=$(VERBOSE_FSTAR) $(SIL)
 
 #--------------------------------------------------------------------------------
 # Default target: verify all FSTAR_FILES
@@ -46,9 +55,13 @@ MY_FSTAR=$(FSTAR) --cache_checked_modules                   \
 #--------------------------------------------------------------------------------
 # Include the .depend before any other target
 # since we rely on the dependences it computes in other rules
+# #
+# We do an indirection via ._depend so we don't write an empty file if
+# the dependency analysis failed.
 #--------------------------------------------------------------------------------
 .depend: $(FSTAR_FILES)
-	$(MY_FSTAR) --dep full $(FSTAR_FILES) > .depend
+	$(Q)$(MY_FSTAR) --dep full $(FSTAR_FILES) > ._depend
+	mv ._depend .depend
 
 depend: .depend
 
@@ -57,13 +70,23 @@ include .depend
 
 # a.fst.checked is the binary, checked version of a.fst
 %.fst.checked:
-	$(MY_FSTAR) $<
-	touch -c $@
+	@echo "[CHECK     $(basename $(notdir $@))]"
+	$(Q)$(MY_FSTAR) $<
+	@touch -c $@
 
 # a.fsti.checked is the binary, checked version of a.fsti
 %.fsti.checked:
-	$(MY_FSTAR) $<
-	touch -c $@
+	@echo "[CHECK     $(basename $(notdir $@))]"
+	$(Q)$(MY_FSTAR) $<
+	@touch -c $@
+
+%.fst.output: %.fst
+	@echo "[OUTPUT    $(basename $(notdir $@))]"
+	$(Q)$(VERBOSE_FSTAR) --print_expected_failures $< >$@ 2>&1
+
+%.fsti.output: %.fsti
+	@echo "[OUTPUT    $(basename $(notdir $@))]"
+	$(Q)$(VERBOSE_FSTAR) --print_expected_failures $< >$@ 2>&1
 
 clean:
 	rm -rf $(CACHE_DIR)

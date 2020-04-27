@@ -1,0 +1,23 @@
+>> Got issues: [
+Coercions.fst(6,38-6,39): (Error 34) Computed type "Prims.int" and effect "GTot" is not compatible with the annotated type "Prims.int" effect "Tot"
+>>]
+>> Got issues: [
+Coercions.fst(19,37-19,38): (Error 34) Computed type "'a" and effect "GTot" is not compatible with the annotated type "'a" effect "Tot"
+>>]
+>> Got issues: [
+Coercions.fst(71,4-71,8): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(634,18-634,24))
+>>]
+>> Got issues: [
+Coercions.fst(74,49-74,57): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(634,18-634,24))
+>>]
+>> Got issues: [
+Coercions.fst(76,55-76,56): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(634,18-634,24))
+>>]
+>> Got issues: [
+Coercions.fst(78,50-78,51): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(634,18-634,24))
+>>]
+>> Got issues: [
+Coercions.fst(80,51-80,52): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(634,18-634,24))
+>>]
+Verified module: Coercions
+All verification conditions discharged successfully

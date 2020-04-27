@@ -11,8 +11,8 @@ open FStar.Range
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 open FStar.Syntax.Embeddings
-open FStar.Tactics.Basic
 open FStar.Tactics.Native
+open FStar.Tactics.Monad
 
 module S     = FStar.Syntax.Syntax
 module SS    = FStar.Syntax.Subst
@@ -28,325 +28,12 @@ module NBET    = FStar.TypeChecker.NBETerm
 let unembed e t n = FStar.Syntax.Embeddings.unembed e t true n
 let embed e rng t n = FStar.Syntax.Embeddings.embed e t rng None n
 
-let extract_1 (ea:embedding<'a>)
-              (ncb:norm_cb) (args:args) : option<'a> =
-    match args with
-    | [(a, _)] ->
-      BU.bind_opt (unembed ea a ncb) (fun a ->
-      Some a)
-    | _ ->
-      failwith "extract_1: wrong number of arguments"
-
-let extract_2 (ea:embedding<'a>) (eb:embedding<'b>)
-              (ncb:norm_cb) (args:args) : option<('a * 'b)> =
-    match args with
-    | [(a, _); (b, _)] ->
-      BU.bind_opt (unembed ea a ncb) (fun a ->
-      BU.bind_opt (unembed eb b ncb) (fun b ->
-      Some (a, b)))
-    | _ ->
-      failwith "extract_2: wrong number of arguments"
-
-let extract_3 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>)
-              (ncb:norm_cb) (args:args) : option<('a * 'b * 'c)> =
-    match args with
-    | [(a, _); (b, _); (c, _)] ->
-      BU.bind_opt (unembed ea a ncb) (fun a ->
-      BU.bind_opt (unembed eb b ncb) (fun b ->
-      BU.bind_opt (unembed ec c ncb) (fun c ->
-      Some (a, b, c))))
-    | _ ->
-      failwith "extract_3: wrong number of arguments"
-
-let extract_4 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embedding<'d>)
-              (ncb:norm_cb) (args:args) : option<('a * 'b * 'c * 'd)> =
-    match args with
-    | [(a, _); (b, _); (c, _); (d, _)] ->
-      BU.bind_opt (unembed ea a ncb) (fun a ->
-      BU.bind_opt (unembed eb b ncb) (fun b ->
-      BU.bind_opt (unembed ec c ncb) (fun c ->
-      BU.bind_opt (unembed ed d ncb) (fun d ->
-      Some (a, b, c, d)))))
-    | _ ->
-      failwith "extract_4: wrong number of arguments"
-
-let extract_5 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embedding<'d>)
-              (ee:embedding<'e>)
-              (ncb:norm_cb) (args:args) : option<('a * 'b * 'c * 'd * 'e)> =
-    match args with
-    | [(a, _); (b, _); (c, _); (d, _); (e, _)] ->
-      BU.bind_opt (unembed ea a ncb) (fun a ->
-      BU.bind_opt (unembed eb b ncb) (fun b ->
-      BU.bind_opt (unembed ec c ncb) (fun c ->
-      BU.bind_opt (unembed ed d ncb) (fun d ->
-      BU.bind_opt (unembed ee e ncb) (fun e ->
-      Some (a, b, c, d, e))))))
-    | _ ->
-      failwith "extract_5: wrong number of arguments"
-
-let extract_6 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embedding<'d>)
-              (ee:embedding<'e>) (ef:embedding<'f>)
-              (ncb:norm_cb) (args:args) : option<('a * 'b * 'c * 'd * 'e * 'f)> =
-    match args with
-    | [(a, _); (b, _); (c, _); (d, _); (e, _); (f, _)] ->
-      BU.bind_opt (unembed ea a ncb) (fun a ->
-      BU.bind_opt (unembed eb b ncb) (fun b ->
-      BU.bind_opt (unembed ec c ncb) (fun c ->
-      BU.bind_opt (unembed ed d ncb) (fun d ->
-      BU.bind_opt (unembed ee e ncb) (fun e ->
-      BU.bind_opt (unembed ef f ncb) (fun f ->
-      Some (a, b, c, d, e, f)))))))
-    | _ ->
-      failwith "extract_6: wrong number of arguments"
-
-let extract_7 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embedding<'d>)
-              (ee:embedding<'e>) (ef:embedding<'f>) (eg:embedding<'g>)
-              (ncb:norm_cb) (args:args) : option<('a * 'b * 'c * 'd * 'e * 'f * 'g)> =
-    match args with
-    | [(a, _); (b, _); (c, _); (d, _); (e, _); (f, _); (g, _)] ->
-      BU.bind_opt (unembed ea a ncb) (fun a ->
-      BU.bind_opt (unembed eb b ncb) (fun b ->
-      BU.bind_opt (unembed ec c ncb) (fun c ->
-      BU.bind_opt (unembed ed d ncb) (fun d ->
-      BU.bind_opt (unembed ee e ncb) (fun e ->
-      BU.bind_opt (unembed ef f ncb) (fun f ->
-      BU.bind_opt (unembed eg g ncb) (fun g ->
-      Some (a, b, c, d, e, f, g))))))))
-    | _ ->
-      failwith "extract_7: wrong number of arguments"
-
-let extract_14 (e_t1: embedding<'t1>) (e_t2: embedding<'t2>) (e_t3: embedding<'t3>) (e_t4: embedding<'t4>)
-               (e_t5: embedding<'t5>) (e_t6: embedding<'t6>) (e_t7: embedding<'t7>) (e_t8: embedding<'t8>)
-               (e_t9: embedding<'t9>) (e_t10: embedding<'t10>) (e_t11: embedding<'t11>) (e_t12: embedding<'t12>)
-               (e_t13: embedding<'t13>) (e_t14:embedding<'t14>)
-               (ncb:norm_cb) (args:args) : option<('t1 * 't2 * 't3 * 't4 * 't5 * 't6 * 't7 * 't8 * 't9 * 't10 * 't11 * 't12 * 't13 * 't14)> =
-  match args with
-  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _)] ->
-    BU.bind_opt (unembed e_t1 a1 ncb) (fun  a1 ->
-    BU.bind_opt (unembed e_t2 a2 ncb) (fun  a2 ->
-    BU.bind_opt (unembed e_t3 a3 ncb) (fun  a3 ->
-    BU.bind_opt (unembed e_t4 a4 ncb) (fun  a4 ->
-    BU.bind_opt (unembed e_t5 a5 ncb) (fun  a5 ->
-    BU.bind_opt (unembed e_t6 a6 ncb) (fun  a6 ->
-    BU.bind_opt (unembed e_t7 a7 ncb) (fun  a7 ->
-    BU.bind_opt (unembed e_t8 a8 ncb) (fun  a8 ->
-    BU.bind_opt (unembed e_t9 a9 ncb) (fun  a9 ->
-    BU.bind_opt (unembed e_t10 a10 ncb) (fun a10 ->
-    BU.bind_opt (unembed e_t11 a11 ncb) (fun a11 ->
-    BU.bind_opt (unembed e_t12 a12 ncb) (fun a12 ->
-    BU.bind_opt (unembed e_t13 a13 ncb) (fun a13 ->
-    BU.bind_opt (unembed e_t14 a14 ncb) (fun a14 ->
-    Some (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14)))))))))))))))
-  | _ ->
-    failwith "extract_14: wrong number of arguments"
-
-
-let extract_1_nbe cb (ea:NBETerm.embedding<'a>)
-              (args:NBETerm.args) : option<'a> =
-    match args with
-    | [(a, _)] ->
-      BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
-      Some a)
-    | _ ->
-      failwith "extract_1_nbe: wrong number of arguments"
-
-let extract_2_nbe cb (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>)
-              (args:NBETerm.args) : option<('a * 'b)> =
-    match args with
-    | [(a, _); (b, _)] ->
-      BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
-      BU.bind_opt (NBETerm.unembed eb cb b) (fun b ->
-      Some (a, b)))
-    | _ ->
-      failwith "extract_2_nbe: wrong number of arguments"
-
-let extract_3_nbe cb (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>) (ec:NBETerm.embedding<'c>)
-              (args:NBETerm.args) : option<('a * 'b * 'c)> =
-    match args with
-    | [(a, _); (b, _); (c, _)] ->
-      BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
-      BU.bind_opt (NBETerm.unembed eb cb b) (fun b ->
-      BU.bind_opt (NBETerm.unembed ec cb c) (fun c ->
-      Some (a, b, c))))
-    | _ ->
-      failwith "extract_3_nbe: wrong number of arguments"
-
-let extract_4_nbe cb (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>) (ec:NBETerm.embedding<'c>) (ed:NBETerm.embedding<'d>)
-              (args:NBETerm.args) : option<('a * 'b * 'c * 'd)> =
-    match args with
-    | [(a, _); (b, _); (c, _); (d, _)] ->
-      BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
-      BU.bind_opt (NBETerm.unembed eb cb b) (fun b ->
-      BU.bind_opt (NBETerm.unembed ec cb c) (fun c ->
-      BU.bind_opt (NBETerm.unembed ed cb d) (fun d ->
-      Some (a, b, c, d)))))
-    | _ ->
-      failwith "extract_4_nbe: wrong number of arguments"
-
-let extract_5_nbe cb (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>) (ec:NBETerm.embedding<'c>) (ed:NBETerm.embedding<'d>)
-              (ee:NBETerm.embedding<'e>)
-              (args:NBETerm.args) : option<('a * 'b * 'c * 'd * 'e)> =
-    match args with
-    | [(a, _); (b, _); (c, _); (d, _); (e, _)] ->
-      BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
-      BU.bind_opt (NBETerm.unembed eb cb b) (fun b ->
-      BU.bind_opt (NBETerm.unembed ec cb c) (fun c ->
-      BU.bind_opt (NBETerm.unembed ed cb d) (fun d ->
-      BU.bind_opt (NBETerm.unembed ee cb e) (fun e ->
-      Some (a, b, c, d, e))))))
-    | _ ->
-      failwith "extract_5_nbe: wrong number of arguments"
-
-let extract_6_nbe cb (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>) (ec:NBETerm.embedding<'c>) (ed:NBETerm.embedding<'d>)
-              (ee:NBETerm.embedding<'e>) (ef:NBETerm.embedding<'f>)
-              (args:NBETerm.args) : option<('a * 'b * 'c * 'd * 'e * 'f)> =
-    match args with
-    | [(a, _); (b, _); (c, _); (d, _); (e, _); (f, _)] ->
-      BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
-      BU.bind_opt (NBETerm.unembed eb cb b) (fun b ->
-      BU.bind_opt (NBETerm.unembed ec cb c) (fun c ->
-      BU.bind_opt (NBETerm.unembed ed cb d) (fun d ->
-      BU.bind_opt (NBETerm.unembed ee cb e) (fun e ->
-      BU.bind_opt (NBETerm.unembed ef cb f) (fun f ->
-      Some (a, b, c, d, e, f)))))))
-    | _ ->
-      failwith "extract_6_nbe: wrong number of arguments"
-
-let extract_7_nbe cb (ea:NBETerm.embedding<'a>) (eb:NBETerm.embedding<'b>) (ec:NBETerm.embedding<'c>) (ed:NBETerm.embedding<'d>)
-              (ee:NBETerm.embedding<'e>) (ef:NBETerm.embedding<'f>) (eg:NBETerm.embedding<'g>)
-              (args:NBETerm.args) : option<('a * 'b * 'c * 'd * 'e * 'f * 'g)> =
-    match args with
-    | [(a, _); (b, _); (c, _); (d, _); (e, _); (f, _); (g, _)] ->
-      BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
-      BU.bind_opt (NBETerm.unembed eb cb b) (fun b ->
-      BU.bind_opt (NBETerm.unembed ec cb c) (fun c ->
-      BU.bind_opt (NBETerm.unembed ed cb d) (fun d ->
-      BU.bind_opt (NBETerm.unembed ee cb e) (fun e ->
-      BU.bind_opt (NBETerm.unembed ef cb f) (fun f ->
-      BU.bind_opt (NBETerm.unembed eg cb g) (fun g ->
-      Some (a, b, c, d, e, f, g))))))))
-    | _ ->
-      failwith "extract_7_nbe: wrong number of arguments"
-
-
-let mk_tactic_interpretation_1 (t:'a -> tac<'r>)
-                               (ea:embedding<'a>) (er:embedding<'r>)
-                               (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-  BU.bind_opt (extract_2 ea E.e_proofstate ncb args) (fun (a, ps) ->
-  let ps = set_ps_psc psc ps in
-  let r = run_safe (t a) ps in
-  Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
-
-let mk_tactic_interpretation_2 (t:'a -> 'b -> tac<'r>)
-                               (ea:embedding<'a>) (eb:embedding<'b>) (er:embedding<'r>)
-                               (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-  BU.bind_opt (extract_3 ea eb E.e_proofstate ncb args) (fun (a, b, ps) ->
-  let ps = set_ps_psc psc ps in
-  let r = run_safe (t a b) ps in
-  Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
-
-let mk_tactic_interpretation_3 (t:'a -> 'b -> 'c -> tac<'r>)
-                               (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (er:embedding<'r>)
-                               (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-  BU.bind_opt (extract_4 ea eb ec E.e_proofstate ncb args) (fun (a, b, c, ps) ->
-  let ps = set_ps_psc psc ps in
-  let r = run_safe (t a b c) ps in
-  Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
-
-let mk_tactic_interpretation_4 (t:'a -> 'b -> 'c -> 'd -> tac<'r>)
-                               (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embedding<'d>)
-                               (er:embedding<'r>)
-                               (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-  BU.bind_opt (extract_5 ea eb ec ed E.e_proofstate ncb args) (fun (a, b, c, d, ps) ->
-  let ps = set_ps_psc psc ps in
-  let r = run_safe (t a b c d) ps in
-  Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
-
-let mk_tactic_interpretation_5 (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
-                               (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embedding<'d>)
-                               (ee:embedding<'e>) (er:embedding<'r>)
-                               (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-  BU.bind_opt (extract_6 ea eb ec ed ee E.e_proofstate ncb args) (fun (a, b, c, d, e, ps) ->
-  let ps = set_ps_psc psc ps in
-  let r = run_safe (t a b c d e) ps in
-  Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
-
-let mk_tactic_interpretation_6 (t:'a -> 'b -> 'c -> 'd -> 'e -> 'f -> tac<'r>)
-                               (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) (ed:embedding<'d>)
-                               (ee:embedding<'e>) (ef:embedding<'f>) (er:embedding<'r>)
-                               (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-  BU.bind_opt (extract_7 ea eb ec ed ee ef E.e_proofstate ncb args) (fun (a, b, c, d, e, f, ps) ->
-  let ps = set_ps_psc psc ps in
-  let r = run_safe (t a b c d e f) ps in
-  Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
-
-let mk_tactic_interpretation_13 (t:'t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> tac<'r>)
-                                (e_t1: embedding<'t1>) (e_t2: embedding<'t2>) (e_t3: embedding<'t3>) (e_t4: embedding<'t4>)
-                                (e_t5: embedding<'t5>) (e_t6: embedding<'t6>) (e_t7: embedding<'t7>) (e_t8: embedding<'t8>)
-                                (e_t9: embedding<'t9>) (e_t10: embedding<'t10>) (e_t11: embedding<'t11>) (e_t12: embedding<'t12>)
-                                (e_t13: embedding<'t13>) (er:embedding<'r>)
-                                (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-  BU.bind_opt (extract_14 e_t1 e_t2 e_t3 e_t4 e_t5 e_t6 e_t7 e_t8 e_t9 e_t10 e_t11 e_t12 e_t13 E.e_proofstate ncb args) (
-  fun (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, ps) ->
-  let ps = set_ps_psc psc ps in
-  let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) ps in
-  Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))
-
-let mk_tactic_nbe_interpretation_1 cb (t:'a -> tac<'r>)
-                               (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>)
-                               (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_2_nbe cb ea E.e_proofstate_nbe args) (fun (a, ps) ->
-  let r = run_safe (t a) ps in
-  Some (NBETerm.embed (E.e_result_nbe er) cb r))
-
-let mk_tactic_nbe_interpretation_2 cb (t:'a -> 'b -> tac<'r>)
-                               (ea:NBET.embedding<'a>) (eb:NBET.embedding<'b>) (er:NBET.embedding<'r>)
-                               (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_3_nbe cb ea eb E.e_proofstate_nbe args) (fun (a, b, ps) ->
-  let r = run_safe (t a b) ps in
-  Some (NBETerm.embed (E.e_result_nbe er) cb r))
-
-let mk_tactic_nbe_interpretation_3 cb (t:'a -> 'b -> 'c -> tac<'r>)
-                               (ea:NBET.embedding<'a>) (eb:NBET.embedding<'b>) (ec:NBET.embedding<'c>) (er:NBET.embedding<'r>)
-                               (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_4_nbe cb ea eb ec E.e_proofstate_nbe args) (fun (a, b, c, ps) ->
-  let r = run_safe (t a b c) ps in
-  Some (NBETerm.embed (E.e_result_nbe er) cb r))
-
-let mk_tactic_nbe_interpretation_4 cb (t:'a -> 'b -> 'c -> 'd -> tac<'r>)
-                               (ea:NBET.embedding<'a>) (eb:NBET.embedding<'b>) (ec:NBET.embedding<'c>) (ed:NBET.embedding<'d>)
-                               (er:NBET.embedding<'r>)
-                               (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_5_nbe cb ea eb ec ed E.e_proofstate_nbe args) (fun (a, b, c, d, ps) ->
-  let r = run_safe (t a b c d) ps in
-  Some (NBETerm.embed (E.e_result_nbe er) cb r))
-
-let mk_tactic_nbe_interpretation_5 cb (t:'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)
-                               (ea:NBET.embedding<'a>) (eb:NBET.embedding<'b>) (ec:NBET.embedding<'c>) (ed:NBET.embedding<'d>)
-                               (ee:NBET.embedding<'e>) (er:NBET.embedding<'r>)
-                               (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_6_nbe cb ea eb ec ed ee E.e_proofstate_nbe args) (fun (a, b, c, d, e, ps) ->
-  let r = run_safe (t a b c d e) ps in
-  Some (NBETerm.embed (E.e_result_nbe er) cb r))
-
-let mk_tactic_nbe_interpretation_6 cb (t:'a -> 'b -> 'c -> 'd -> 'e -> 'f -> tac<'r>)
-                               (ea:NBET.embedding<'a>) (eb:NBET.embedding<'b>) (ec:NBET.embedding<'c>) (ed:NBET.embedding<'d>)
-                               (ee:NBET.embedding<'e>) (ef:NBET.embedding<'f>) (er:NBET.embedding<'r>)
-                               (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_7_nbe cb ea eb ec ed ee ef E.e_proofstate_nbe args) (fun (a, b, c, d, e, f, ps) ->
-  let r = run_safe (t a b c d e f) ps in
-  Some (NBETerm.embed (E.e_result_nbe er) cb r))
-
-let step_from_native_step (s: native_primitive_step): Cfg.primitive_step =
-  { Cfg.name                         = s.name
-  ; Cfg.arity                        = s.arity
-  ; Cfg.univ_arity                   = 0 // Zoe : We might need to change that
-  ; Cfg.auto_reflect                 = Some (s.arity - 1)
-  ; Cfg.strong_reduction_ok          = s.strong_reduction_ok
-  ; Cfg.requires_binder_substitution = false // GM: Don't think we care about pretty-printing on native
-  ; Cfg.interpretation               = s.tactic
-  ; Cfg.interpretation_nbe           = fun _cb -> NBETerm.dummy_interp s.name
-  }
+let rec drop n l =
+    if n = 0 then l
+    else
+        match l with
+        | [] -> failwith "drop: impossible"
+        | _::xs -> drop (n-1) xs
 
 let timing_int (l:Ident.lid) f =
     fun psc cb args ->
@@ -363,7 +50,7 @@ let timing_nbe (l:Ident.lid) f =
         r
 
 let mk nm arity nunivs interp nbe_interp =
-  let nm = E.fstar_tactics_lid' ["Builtins"; nm] in
+  let nm = PC.fstar_tactics_lid' ["Builtins"; nm] in
   { Cfg.name                         = nm
   ; Cfg.arity                        = arity
   ; Cfg.univ_arity                   = nunivs
@@ -374,62 +61,8 @@ let mk nm arity nunivs interp nbe_interp =
   ; Cfg.interpretation_nbe           = timing_nbe nm nbe_interp
   }
 
-let native_tactics () = list_all ()
-let native_tactics_steps () = List.map step_from_native_step (native_tactics ())
-
-let rec drop n l =
-    if n = 0 then l
-    else
-        match l with
-        | [] -> failwith "drop: impossible"
-        | _::xs -> drop (n-1) xs
-
-(* These functions are suboptimal, since they need to take embeddings for both
- * the interpreter AND the NBE evaluator. Attempting to coallesce them
- * is not easy, since we have some parametric e_any embeddings of differing types
- * (S.embedding<term> vs NBETerm.embedding<NBETerm.t>). So we pass both of them.
- * We also need to pass in two versions of the underlying primitive, since they
- * will be instantiated differently (again term vs NBETerm.t). Such is life
- * without higher-order polymorphism. *)
-let mktac1 (nunivs:int) (name : string)
-           (f : 'a -> tac<'r>) (ea : embedding<'a>) (er : embedding<'r>)
-           (nf : 'na -> tac<'nr>) (nea : NBET.embedding<'na>) (ner : NBET.embedding<'nr>)
-           : Cfg.primitive_step =
-    mk name 2 nunivs (mk_tactic_interpretation_1     f  ea  er)
-                     (fun cb args -> mk_tactic_nbe_interpretation_1 cb nf nea ner (drop nunivs args))
-
-let mktac2 (nunivs:int) (name : string)
-           (f : 'a -> 'b -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (er : embedding<'r>)
-           (nf : 'na -> 'nb -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (ner : NBET.embedding<'nr>)
-           : Cfg.primitive_step =
-    mk name 3 nunivs (mk_tactic_interpretation_2     f  ea  eb  er)
-                     (fun cb args -> mk_tactic_nbe_interpretation_2 cb nf nea neb ner (drop nunivs args))
-
-let mktac3 (nunivs:int) (name : string)
-           (f : 'a -> 'b -> 'c -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (ec : embedding<'c>)  (er : embedding<'r>)
-           (nf : 'na -> 'nb -> 'nc -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (nec : NBET.embedding<'nc>) (ner : NBET.embedding<'nr>)
-           : Cfg.primitive_step =
-    mk name 4 nunivs (mk_tactic_interpretation_3 f ea eb ec er)
-                     (fun cb args -> mk_tactic_nbe_interpretation_3 cb nf nea neb nec ner (drop nunivs args))
-
-let mktac4 (nunivs:int) (name : string)
-           (f : 'a -> 'b -> 'c -> 'd -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (ec : embedding<'c>)  (ed : embedding<'d>)  (er : embedding<'r>)
-           (nf : 'na -> 'nb -> 'nc -> 'nd -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (nec : NBET.embedding<'nc>) (ned : NBET.embedding<'nd>) (ner : NBET.embedding<'nr>)
-           : Cfg.primitive_step =
-    mk name 5 nunivs (mk_tactic_interpretation_4 f ea eb ec ed er)
-                     (fun cb args -> mk_tactic_nbe_interpretation_4 cb nf nea neb nec ned ner (drop nunivs args))
-
-let mktac5 (nunivs:int) (name : string)
-           (f : 'a -> 'b -> 'c -> 'd -> 'e -> tac<'r>)  (ea : embedding<'a>)  (eb : embedding<'b>)  (ec : embedding<'c>)  (ed : embedding<'d>)  (ee : embedding<'e>)  (er : embedding<'r>)
-           (nf : 'na -> 'nb -> 'nc -> 'nd -> 'ne -> tac<'nr>) (nea : NBET.embedding<'na>) (neb : NBET.embedding<'nb>) (nec : NBET.embedding<'nc>) (ned : NBET.embedding<'nd>) (nee : NBET.embedding<'ne>) (ner : NBET.embedding<'nr>)
-           : Cfg.primitive_step =
-    mk name 6 nunivs (mk_tactic_interpretation_5 f ea eb ec ed ee er)
-                     (fun cb args -> mk_tactic_nbe_interpretation_5 cb nf nea neb nec ned nee ner (drop nunivs args))
-
-(* Total interpretations *)
-
 let mkt nm arity nunivs interp nbe_interp =
-  let nm = E.fstar_tactics_lid' ["Builtins"; nm] in
+  let nm = PC.fstar_tactics_lid' ["Builtins"; nm] in
   { Cfg.name                         = nm
   ; Cfg.arity                        = arity
   ; Cfg.univ_arity                   = nunivs
@@ -440,62 +73,41 @@ let mkt nm arity nunivs interp nbe_interp =
   ; Cfg.interpretation_nbe           = timing_nbe nm nbe_interp
   }
 
-let mk_total_interpretation_1 (f:'a -> 'r)
-                              (ea:embedding<'a>) (er:embedding<'r>)
-                              (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-  BU.bind_opt (extract_1 ea ncb args) (fun a ->
-  let r = f a in
-  Some (embed er (Cfg.psc_range psc) r ncb))
+(* This _psc variant is a special case *)
+let mk_total_interpretation_1_psc
+    (f:Cfg.psc -> 't1 -> 'r)
+    (e1: embedding<'t1>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    let r = f psc a1 in
+    Some (embed er (Cfg.psc_range psc) r ncb))
+  | _ ->
+    None
 
-let mk_total_interpretation_1_psc (f:Cfg.psc -> 'a -> 'r)
-                              (ea:embedding<'a>) (er:embedding<'r>)
-                              (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-  BU.bind_opt (extract_1 ea ncb args) (fun a ->
-  let r = f psc a in
-  Some (embed er (Cfg.psc_range psc) r ncb))
+let mk_total_nbe_interpretation_1_psc
+    cb
+    (f:Cfg.psc -> 't1 -> 'r)
+    (e1: NBET.embedding<'t1>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    let r = f Cfg.null_psc a1 in // TODO: no psc here?
+    Some (NBET.embed er cb r))
+  | _ ->
+    None
 
-let mk_total_interpretation_2 (f:'a -> 'b -> 'r)
-                              (ea:embedding<'a>) (eb:embedding<'b>) (er:embedding<'r>)
-                              (psc:Cfg.psc) (ncb:norm_cb) (args:args) : option<term> =
-  BU.bind_opt (extract_2 ea eb ncb args) (fun (a, b) ->
-  let r = f a b in
-  Some (embed er (Cfg.psc_range psc) r ncb))
-
-let mk_total_nbe_interpretation_1 cb (f:'a -> 'r)
-                              (ea:NBETerm.embedding<'a>) (er:NBETerm.embedding<'r>)
-                              (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_1_nbe cb ea args) (fun a ->
-  let r = f a in
-  Some (NBETerm.embed er cb r))
-
-let mk_total_nbe_interpretation_1_psc cb (f:Cfg.psc -> 'a -> 'r)
-                              (ea:NBETerm.embedding<'a>) (er:NBETerm.embedding<'r>)
-                              (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_1_nbe cb ea args) (fun a ->
-  let r = f Cfg.null_psc a in // TODO: why don't we have a psc here?
-  Some (NBETerm.embed er cb r))
-
-let mk_total_nbe_interpretation_2 cb (f:'a -> 'b -> 'r)
-                              (ea:NBETerm.embedding<'a>)
-                              (eb:NBETerm.embedding<'b>)
-                              (er:NBETerm.embedding<'r>)
-                              (args:NBETerm.args) : option<NBETerm.t> =
-  BU.bind_opt (extract_2_nbe cb ea eb args) (fun (a, b) ->
-  let r = f a b in
-  Some (NBETerm.embed er cb r))
-
-let mktot1 (nunivs:int) (name : string)
-           (f : 'a -> 'r)
-           (ea : embedding<'a>)
-           (er : embedding<'r>)
-           (nf : 'na -> 'nr)
-           (nea : NBETerm.embedding<'na>)
-           (ner : NBETerm.embedding<'nr>)
-           : Cfg.primitive_step =
-    mkt name 1 nunivs (mk_total_interpretation_1     f  ea  er)
-                      (fun cb args -> mk_total_nbe_interpretation_1 cb nf nea ner (drop nunivs args))
-
-let mktot1_psc (nunivs:int) (name : string)
+let mk_total_step_1_psc (nunivs:int) (name : string)
            (f : Cfg.psc -> 'a -> 'r)
            (ea : embedding<'a>)
            (er : embedding<'r>)
@@ -506,13 +118,4267 @@ let mktot1_psc (nunivs:int) (name : string)
     mkt name 1 nunivs (mk_total_interpretation_1_psc     f  ea  er)
                       (fun cb args -> mk_total_nbe_interpretation_1_psc cb nf nea ner (drop nunivs args))
 
-let mktot2 (nunivs:int) (name : string)
-           (f : 'a -> 'b -> 'r)
-           (ea : embedding<'a>) (eb:embedding<'b>)
-           (er : embedding<'r>)
-           (nf : 'na -> 'nb -> 'nr)
-           (nea : NBETerm.embedding<'na>) (neb:NBETerm.embedding<'nb>)
-           (ner : NBETerm.embedding<'nr>)
-           : Cfg.primitive_step =
-    mkt name 2 nunivs (mk_total_interpretation_2     f  ea  eb  er)
-                      (fun cb args -> mk_total_nbe_interpretation_2 cb nf nea neb ner (drop nunivs args))
+let max_tac_arity = 20
+
+(* NOTE: THE REST OF THIS MODULE IS AUTOGENERATED
+ * See .scripts/mk_tac_interps.sh *)
+let mk_tactic_interpretation_1
+    (t : 't1 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed E.e_proofstate a2 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_2
+    (t : 't1 -> 't2 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed E.e_proofstate a3 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_3
+    (t : 't1 -> 't2 -> 't3 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed E.e_proofstate a4 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_4
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed E.e_proofstate a5 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_5
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed E.e_proofstate a6 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_6
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed E.e_proofstate a7 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5 a6) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_7
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed E.e_proofstate a8 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_8
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed E.e_proofstate a9 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_9
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed E.e_proofstate a10 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_10
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed E.e_proofstate a11 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_11
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed E.e_proofstate a12 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_12
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed E.e_proofstate a13 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_13
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed E.e_proofstate a14 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_14
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (e14:embedding<'t14>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
+    BU.bind_opt (unembed E.e_proofstate a15 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_15
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (e14:embedding<'t14>)
+    (e15:embedding<'t15>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
+    BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
+    BU.bind_opt (unembed E.e_proofstate a16 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_16
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (e14:embedding<'t14>)
+    (e15:embedding<'t15>)
+    (e16:embedding<'t16>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
+    BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
+    BU.bind_opt (unembed e16 a16 ncb) (fun a16 ->
+    BU.bind_opt (unembed E.e_proofstate a17 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_17
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (e14:embedding<'t14>)
+    (e15:embedding<'t15>)
+    (e16:embedding<'t16>)
+    (e17:embedding<'t17>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
+    BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
+    BU.bind_opt (unembed e16 a16 ncb) (fun a16 ->
+    BU.bind_opt (unembed e17 a17 ncb) (fun a17 ->
+    BU.bind_opt (unembed E.e_proofstate a18 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_18
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (e14:embedding<'t14>)
+    (e15:embedding<'t15>)
+    (e16:embedding<'t16>)
+    (e17:embedding<'t17>)
+    (e18:embedding<'t18>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
+    BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
+    BU.bind_opt (unembed e16 a16 ncb) (fun a16 ->
+    BU.bind_opt (unembed e17 a17 ncb) (fun a17 ->
+    BU.bind_opt (unembed e18 a18 ncb) (fun a18 ->
+    BU.bind_opt (unembed E.e_proofstate a19 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_19
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (e14:embedding<'t14>)
+    (e15:embedding<'t15>)
+    (e16:embedding<'t16>)
+    (e17:embedding<'t17>)
+    (e18:embedding<'t18>)
+    (e19:embedding<'t19>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _); (a20, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
+    BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
+    BU.bind_opt (unembed e16 a16 ncb) (fun a16 ->
+    BU.bind_opt (unembed e17 a17 ncb) (fun a17 ->
+    BU.bind_opt (unembed e18 a18 ncb) (fun a18 ->
+    BU.bind_opt (unembed e19 a19 ncb) (fun a19 ->
+    BU.bind_opt (unembed E.e_proofstate a20 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb)))))))))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_interpretation_20
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 't20 -> tac<'r>)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (e14:embedding<'t14>)
+    (e15:embedding<'t15>)
+    (e16:embedding<'t16>)
+    (e17:embedding<'t17>)
+    (e18:embedding<'t18>)
+    (e19:embedding<'t19>)
+    (e20:embedding<'t20>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _); (a20, _); (a21, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
+    BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
+    BU.bind_opt (unembed e16 a16 ncb) (fun a16 ->
+    BU.bind_opt (unembed e17 a17 ncb) (fun a17 ->
+    BU.bind_opt (unembed e18 a18 ncb) (fun a18 ->
+    BU.bind_opt (unembed e19 a19 ncb) (fun a19 ->
+    BU.bind_opt (unembed e20 a20 ncb) (fun a20 ->
+    BU.bind_opt (unembed E.e_proofstate a21 ncb) (fun ps ->
+    let ps = set_ps_psc psc ps in
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20) ps in
+    Some (embed (E.e_result er) (Cfg.psc_range psc) r ncb))))))))))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_1
+    cb
+    (t : 't1 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a2) (fun ps ->
+    let r = run_safe (t a1) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r)))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_2
+    cb
+    (t : 't1 -> 't2 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a3) (fun ps ->
+    let r = run_safe (t a1 a2) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_3
+    cb
+    (t : 't1 -> 't2 -> 't3 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a4) (fun ps ->
+    let r = run_safe (t a1 a2 a3) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r)))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_4
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a5) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_5
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a6) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r)))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_6
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a7) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5 a6) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r))))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_7
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a8) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r)))))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_8
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a9) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r))))))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_9
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a10) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_10
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a11) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_11
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a12) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_12
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a13) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_13
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a14) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_14
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (e14:NBET.embedding<'t14>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a15) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_15
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (e14:NBET.embedding<'t14>)
+    (e15:NBET.embedding<'t15>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
+    BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a16) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_16
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (e14:NBET.embedding<'t14>)
+    (e15:NBET.embedding<'t15>)
+    (e16:NBET.embedding<'t16>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
+    BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
+    BU.bind_opt (NBET.unembed e16 cb a16) (fun a16 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a17) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_17
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (e14:NBET.embedding<'t14>)
+    (e15:NBET.embedding<'t15>)
+    (e16:NBET.embedding<'t16>)
+    (e17:NBET.embedding<'t17>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
+    BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
+    BU.bind_opt (NBET.unembed e16 cb a16) (fun a16 ->
+    BU.bind_opt (NBET.unembed e17 cb a17) (fun a17 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a18) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_18
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (e14:NBET.embedding<'t14>)
+    (e15:NBET.embedding<'t15>)
+    (e16:NBET.embedding<'t16>)
+    (e17:NBET.embedding<'t17>)
+    (e18:NBET.embedding<'t18>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
+    BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
+    BU.bind_opt (NBET.unembed e16 cb a16) (fun a16 ->
+    BU.bind_opt (NBET.unembed e17 cb a17) (fun a17 ->
+    BU.bind_opt (NBET.unembed e18 cb a18) (fun a18 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a19) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_19
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (e14:NBET.embedding<'t14>)
+    (e15:NBET.embedding<'t15>)
+    (e16:NBET.embedding<'t16>)
+    (e17:NBET.embedding<'t17>)
+    (e18:NBET.embedding<'t18>)
+    (e19:NBET.embedding<'t19>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _); (a20, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
+    BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
+    BU.bind_opt (NBET.unembed e16 cb a16) (fun a16 ->
+    BU.bind_opt (NBET.unembed e17 cb a17) (fun a17 ->
+    BU.bind_opt (NBET.unembed e18 cb a18) (fun a18 ->
+    BU.bind_opt (NBET.unembed e19 cb a19) (fun a19 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a20) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r)))))))))))))))))))))
+  | _ ->
+    None
+
+let mk_tactic_nbe_interpretation_20
+    cb
+    (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 't20 -> tac<'r>)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (e14:NBET.embedding<'t14>)
+    (e15:NBET.embedding<'t15>)
+    (e16:NBET.embedding<'t16>)
+    (e17:NBET.embedding<'t17>)
+    (e18:NBET.embedding<'t18>)
+    (e19:NBET.embedding<'t19>)
+    (e20:NBET.embedding<'t20>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _); (a20, _); (a21, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
+    BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
+    BU.bind_opt (NBET.unembed e16 cb a16) (fun a16 ->
+    BU.bind_opt (NBET.unembed e17 cb a17) (fun a17 ->
+    BU.bind_opt (NBET.unembed e18 cb a18) (fun a18 ->
+    BU.bind_opt (NBET.unembed e19 cb a19) (fun a19 ->
+    BU.bind_opt (NBET.unembed e20 cb a20) (fun a20 ->
+    BU.bind_opt (NBET.unembed E.e_proofstate_nbe cb a21) (fun ps ->
+    let r = run_safe (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20) ps in
+    Some (NBET.embed (E.e_result_nbe er) cb r))))))))))))))))))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_1
+    (f : 't1 -> 'r)
+    (e1:embedding<'t1>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    let r = f a1 in
+    Some (embed er (Cfg.psc_range psc) r ncb))
+  | _ ->
+    None
+
+let mk_total_interpretation_2
+    (f : 't1 -> 't2 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    let r = f a1 a2 in
+    Some (embed er (Cfg.psc_range psc) r ncb)))
+  | _ ->
+    None
+
+let mk_total_interpretation_3
+    (f : 't1 -> 't2 -> 't3 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    let r = f a1 a2 a3 in
+    Some (embed er (Cfg.psc_range psc) r ncb))))
+  | _ ->
+    None
+
+let mk_total_interpretation_4
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    let r = f a1 a2 a3 a4 in
+    Some (embed er (Cfg.psc_range psc) r ncb)))))
+  | _ ->
+    None
+
+let mk_total_interpretation_5
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    let r = f a1 a2 a3 a4 a5 in
+    Some (embed er (Cfg.psc_range psc) r ncb))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_6
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    let r = f a1 a2 a3 a4 a5 a6 in
+    Some (embed er (Cfg.psc_range psc) r ncb)))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_7
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 in
+    Some (embed er (Cfg.psc_range psc) r ncb))))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_8
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 in
+    Some (embed er (Cfg.psc_range psc) r ncb)))))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_9
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 in
+    Some (embed er (Cfg.psc_range psc) r ncb))))))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_10
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 in
+    Some (embed er (Cfg.psc_range psc) r ncb)))))))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_11
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 in
+    Some (embed er (Cfg.psc_range psc) r ncb))))))))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_12
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 in
+    Some (embed er (Cfg.psc_range psc) r ncb)))))))))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_13
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 in
+    Some (embed er (Cfg.psc_range psc) r ncb))))))))))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_14
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (e14:embedding<'t14>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 in
+    Some (embed er (Cfg.psc_range psc) r ncb)))))))))))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_15
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (e14:embedding<'t14>)
+    (e15:embedding<'t15>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
+    BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 in
+    Some (embed er (Cfg.psc_range psc) r ncb))))))))))))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_16
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (e14:embedding<'t14>)
+    (e15:embedding<'t15>)
+    (e16:embedding<'t16>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
+    BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
+    BU.bind_opt (unembed e16 a16 ncb) (fun a16 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 in
+    Some (embed er (Cfg.psc_range psc) r ncb)))))))))))))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_17
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (e14:embedding<'t14>)
+    (e15:embedding<'t15>)
+    (e16:embedding<'t16>)
+    (e17:embedding<'t17>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
+    BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
+    BU.bind_opt (unembed e16 a16 ncb) (fun a16 ->
+    BU.bind_opt (unembed e17 a17 ncb) (fun a17 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 in
+    Some (embed er (Cfg.psc_range psc) r ncb))))))))))))))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_18
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (e14:embedding<'t14>)
+    (e15:embedding<'t15>)
+    (e16:embedding<'t16>)
+    (e17:embedding<'t17>)
+    (e18:embedding<'t18>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
+    BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
+    BU.bind_opt (unembed e16 a16 ncb) (fun a16 ->
+    BU.bind_opt (unembed e17 a17 ncb) (fun a17 ->
+    BU.bind_opt (unembed e18 a18 ncb) (fun a18 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 in
+    Some (embed er (Cfg.psc_range psc) r ncb)))))))))))))))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_19
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (e14:embedding<'t14>)
+    (e15:embedding<'t15>)
+    (e16:embedding<'t16>)
+    (e17:embedding<'t17>)
+    (e18:embedding<'t18>)
+    (e19:embedding<'t19>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
+    BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
+    BU.bind_opt (unembed e16 a16 ncb) (fun a16 ->
+    BU.bind_opt (unembed e17 a17 ncb) (fun a17 ->
+    BU.bind_opt (unembed e18 a18 ncb) (fun a18 ->
+    BU.bind_opt (unembed e19 a19 ncb) (fun a19 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 in
+    Some (embed er (Cfg.psc_range psc) r ncb))))))))))))))))))))
+  | _ ->
+    None
+
+let mk_total_interpretation_20
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 't20 -> 'r)
+    (e1:embedding<'t1>)
+    (e2:embedding<'t2>)
+    (e3:embedding<'t3>)
+    (e4:embedding<'t4>)
+    (e5:embedding<'t5>)
+    (e6:embedding<'t6>)
+    (e7:embedding<'t7>)
+    (e8:embedding<'t8>)
+    (e9:embedding<'t9>)
+    (e10:embedding<'t10>)
+    (e11:embedding<'t11>)
+    (e12:embedding<'t12>)
+    (e13:embedding<'t13>)
+    (e14:embedding<'t14>)
+    (e15:embedding<'t15>)
+    (e16:embedding<'t16>)
+    (e17:embedding<'t17>)
+    (e18:embedding<'t18>)
+    (e19:embedding<'t19>)
+    (e20:embedding<'t20>)
+    (er:embedding<'r>)
+    (psc:Cfg.psc)
+    (ncb:norm_cb)
+    (args:args)
+  : option<term>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _); (a20, _)] ->
+    BU.bind_opt (unembed e1 a1 ncb) (fun a1 ->
+    BU.bind_opt (unembed e2 a2 ncb) (fun a2 ->
+    BU.bind_opt (unembed e3 a3 ncb) (fun a3 ->
+    BU.bind_opt (unembed e4 a4 ncb) (fun a4 ->
+    BU.bind_opt (unembed e5 a5 ncb) (fun a5 ->
+    BU.bind_opt (unembed e6 a6 ncb) (fun a6 ->
+    BU.bind_opt (unembed e7 a7 ncb) (fun a7 ->
+    BU.bind_opt (unembed e8 a8 ncb) (fun a8 ->
+    BU.bind_opt (unembed e9 a9 ncb) (fun a9 ->
+    BU.bind_opt (unembed e10 a10 ncb) (fun a10 ->
+    BU.bind_opt (unembed e11 a11 ncb) (fun a11 ->
+    BU.bind_opt (unembed e12 a12 ncb) (fun a12 ->
+    BU.bind_opt (unembed e13 a13 ncb) (fun a13 ->
+    BU.bind_opt (unembed e14 a14 ncb) (fun a14 ->
+    BU.bind_opt (unembed e15 a15 ncb) (fun a15 ->
+    BU.bind_opt (unembed e16 a16 ncb) (fun a16 ->
+    BU.bind_opt (unembed e17 a17 ncb) (fun a17 ->
+    BU.bind_opt (unembed e18 a18 ncb) (fun a18 ->
+    BU.bind_opt (unembed e19 a19 ncb) (fun a19 ->
+    BU.bind_opt (unembed e20 a20 ncb) (fun a20 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 in
+    Some (embed er (Cfg.psc_range psc) r ncb)))))))))))))))))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_1
+    cb
+    (f : 't1 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    let r = f a1 in
+    Some (NBET.embed er cb r))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_2
+    cb
+    (f : 't1 -> 't2 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    let r = f a1 a2 in
+    Some (NBET.embed er cb r)))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_3
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    let r = f a1 a2 a3 in
+    Some (NBET.embed er cb r))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_4
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    let r = f a1 a2 a3 a4 in
+    Some (NBET.embed er cb r)))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_5
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    let r = f a1 a2 a3 a4 a5 in
+    Some (NBET.embed er cb r))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_6
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    let r = f a1 a2 a3 a4 a5 a6 in
+    Some (NBET.embed er cb r)))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_7
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 in
+    Some (NBET.embed er cb r))))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_8
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 in
+    Some (NBET.embed er cb r)))))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_9
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 in
+    Some (NBET.embed er cb r))))))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_10
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 in
+    Some (NBET.embed er cb r)))))))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_11
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 in
+    Some (NBET.embed er cb r))))))))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_12
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 in
+    Some (NBET.embed er cb r)))))))))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_13
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 in
+    Some (NBET.embed er cb r))))))))))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_14
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (e14:NBET.embedding<'t14>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 in
+    Some (NBET.embed er cb r)))))))))))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_15
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (e14:NBET.embedding<'t14>)
+    (e15:NBET.embedding<'t15>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
+    BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 in
+    Some (NBET.embed er cb r))))))))))))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_16
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (e14:NBET.embedding<'t14>)
+    (e15:NBET.embedding<'t15>)
+    (e16:NBET.embedding<'t16>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
+    BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
+    BU.bind_opt (NBET.unembed e16 cb a16) (fun a16 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 in
+    Some (NBET.embed er cb r)))))))))))))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_17
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (e14:NBET.embedding<'t14>)
+    (e15:NBET.embedding<'t15>)
+    (e16:NBET.embedding<'t16>)
+    (e17:NBET.embedding<'t17>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
+    BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
+    BU.bind_opt (NBET.unembed e16 cb a16) (fun a16 ->
+    BU.bind_opt (NBET.unembed e17 cb a17) (fun a17 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 in
+    Some (NBET.embed er cb r))))))))))))))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_18
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (e14:NBET.embedding<'t14>)
+    (e15:NBET.embedding<'t15>)
+    (e16:NBET.embedding<'t16>)
+    (e17:NBET.embedding<'t17>)
+    (e18:NBET.embedding<'t18>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
+    BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
+    BU.bind_opt (NBET.unembed e16 cb a16) (fun a16 ->
+    BU.bind_opt (NBET.unembed e17 cb a17) (fun a17 ->
+    BU.bind_opt (NBET.unembed e18 cb a18) (fun a18 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 in
+    Some (NBET.embed er cb r)))))))))))))))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_19
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (e14:NBET.embedding<'t14>)
+    (e15:NBET.embedding<'t15>)
+    (e16:NBET.embedding<'t16>)
+    (e17:NBET.embedding<'t17>)
+    (e18:NBET.embedding<'t18>)
+    (e19:NBET.embedding<'t19>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
+    BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
+    BU.bind_opt (NBET.unembed e16 cb a16) (fun a16 ->
+    BU.bind_opt (NBET.unembed e17 cb a17) (fun a17 ->
+    BU.bind_opt (NBET.unembed e18 cb a18) (fun a18 ->
+    BU.bind_opt (NBET.unembed e19 cb a19) (fun a19 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 in
+    Some (NBET.embed er cb r))))))))))))))))))))
+  | _ ->
+    None
+
+let mk_total_nbe_interpretation_20
+    cb
+    (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 't20 -> 'r)
+    (e1:NBET.embedding<'t1>)
+    (e2:NBET.embedding<'t2>)
+    (e3:NBET.embedding<'t3>)
+    (e4:NBET.embedding<'t4>)
+    (e5:NBET.embedding<'t5>)
+    (e6:NBET.embedding<'t6>)
+    (e7:NBET.embedding<'t7>)
+    (e8:NBET.embedding<'t8>)
+    (e9:NBET.embedding<'t9>)
+    (e10:NBET.embedding<'t10>)
+    (e11:NBET.embedding<'t11>)
+    (e12:NBET.embedding<'t12>)
+    (e13:NBET.embedding<'t13>)
+    (e14:NBET.embedding<'t14>)
+    (e15:NBET.embedding<'t15>)
+    (e16:NBET.embedding<'t16>)
+    (e17:NBET.embedding<'t17>)
+    (e18:NBET.embedding<'t18>)
+    (e19:NBET.embedding<'t19>)
+    (e20:NBET.embedding<'t20>)
+    (er:NBET.embedding<'r>)
+    (args:NBET.args)
+  : option<NBET.t>
+  =
+  match args with
+  | [(a1, _); (a2, _); (a3, _); (a4, _); (a5, _); (a6, _); (a7, _); (a8, _); (a9, _); (a10, _); (a11, _); (a12, _); (a13, _); (a14, _); (a15, _); (a16, _); (a17, _); (a18, _); (a19, _); (a20, _)] ->
+    BU.bind_opt (NBET.unembed e1 cb a1) (fun a1 ->
+    BU.bind_opt (NBET.unembed e2 cb a2) (fun a2 ->
+    BU.bind_opt (NBET.unembed e3 cb a3) (fun a3 ->
+    BU.bind_opt (NBET.unembed e4 cb a4) (fun a4 ->
+    BU.bind_opt (NBET.unembed e5 cb a5) (fun a5 ->
+    BU.bind_opt (NBET.unembed e6 cb a6) (fun a6 ->
+    BU.bind_opt (NBET.unembed e7 cb a7) (fun a7 ->
+    BU.bind_opt (NBET.unembed e8 cb a8) (fun a8 ->
+    BU.bind_opt (NBET.unembed e9 cb a9) (fun a9 ->
+    BU.bind_opt (NBET.unembed e10 cb a10) (fun a10 ->
+    BU.bind_opt (NBET.unembed e11 cb a11) (fun a11 ->
+    BU.bind_opt (NBET.unembed e12 cb a12) (fun a12 ->
+    BU.bind_opt (NBET.unembed e13 cb a13) (fun a13 ->
+    BU.bind_opt (NBET.unembed e14 cb a14) (fun a14 ->
+    BU.bind_opt (NBET.unembed e15 cb a15) (fun a15 ->
+    BU.bind_opt (NBET.unembed e16 cb a16) (fun a16 ->
+    BU.bind_opt (NBET.unembed e17 cb a17) (fun a17 ->
+    BU.bind_opt (NBET.unembed e18 cb a18) (fun a18 ->
+    BU.bind_opt (NBET.unembed e19 cb a19) (fun a19 ->
+    BU.bind_opt (NBET.unembed e20 cb a20) (fun a20 ->
+    let r = f a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 in
+    Some (NBET.embed er cb r)))))))))))))))))))))
+  | _ ->
+    None
+
+let mk_tac_step_1
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 2 nunivs
+      (mk_tactic_interpretation_1 t e1 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_1 cb nt ne1 ner (drop nunivs args))
+
+let mk_tac_step_2
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 3 nunivs
+      (mk_tactic_interpretation_2 t e1 e2 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_2 cb nt ne1 ne2 ner (drop nunivs args))
+
+let mk_tac_step_3
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 4 nunivs
+      (mk_tactic_interpretation_3 t e1 e2 e3 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_3 cb nt ne1 ne2 ne3 ner (drop nunivs args))
+
+let mk_tac_step_4
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 5 nunivs
+      (mk_tactic_interpretation_4 t e1 e2 e3 e4 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_4 cb nt ne1 ne2 ne3 ne4 ner (drop nunivs args))
+
+let mk_tac_step_5
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 6 nunivs
+      (mk_tactic_interpretation_5 t e1 e2 e3 e4 e5 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_5 cb nt ne1 ne2 ne3 ne4 ne5 ner (drop nunivs args))
+
+let mk_tac_step_6
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 7 nunivs
+      (mk_tactic_interpretation_6 t e1 e2 e3 e4 e5 e6 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_6 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ner (drop nunivs args))
+
+let mk_tac_step_7
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 8 nunivs
+      (mk_tactic_interpretation_7 t e1 e2 e3 e4 e5 e6 e7 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_7 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ner (drop nunivs args))
+
+let mk_tac_step_8
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 9 nunivs
+      (mk_tactic_interpretation_8 t e1 e2 e3 e4 e5 e6 e7 e8 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_8 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ner (drop nunivs args))
+
+let mk_tac_step_9
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 10 nunivs
+      (mk_tactic_interpretation_9 t e1 e2 e3 e4 e5 e6 e7 e8 e9 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_9 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ner (drop nunivs args))
+
+let mk_tac_step_10
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 11 nunivs
+      (mk_tactic_interpretation_10 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_10 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ner (drop nunivs args))
+
+let mk_tac_step_11
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 12 nunivs
+      (mk_tactic_interpretation_11 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_11 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ner (drop nunivs args))
+
+let mk_tac_step_12
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 13 nunivs
+      (mk_tactic_interpretation_12 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_12 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ner (drop nunivs args))
+
+let mk_tac_step_13
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 14 nunivs
+      (mk_tactic_interpretation_13 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_13 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ner (drop nunivs args))
+
+let mk_tac_step_14
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (e14:embedding<'t14>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ne14:NBET.embedding<'nt14>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 15 nunivs
+      (mk_tactic_interpretation_14 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_14 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ner (drop nunivs args))
+
+let mk_tac_step_15
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (e14:embedding<'t14>)
+  (e15:embedding<'t15>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ne14:NBET.embedding<'nt14>)
+  (ne15:NBET.embedding<'nt15>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 16 nunivs
+      (mk_tactic_interpretation_15 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_15 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ner (drop nunivs args))
+
+let mk_tac_step_16
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (e14:embedding<'t14>)
+  (e15:embedding<'t15>)
+  (e16:embedding<'t16>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ne14:NBET.embedding<'nt14>)
+  (ne15:NBET.embedding<'nt15>)
+  (ne16:NBET.embedding<'nt16>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 17 nunivs
+      (mk_tactic_interpretation_16 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_16 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ner (drop nunivs args))
+
+let mk_tac_step_17
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (e14:embedding<'t14>)
+  (e15:embedding<'t15>)
+  (e16:embedding<'t16>)
+  (e17:embedding<'t17>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ne14:NBET.embedding<'nt14>)
+  (ne15:NBET.embedding<'nt15>)
+  (ne16:NBET.embedding<'nt16>)
+  (ne17:NBET.embedding<'nt17>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 18 nunivs
+      (mk_tactic_interpretation_17 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_17 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ner (drop nunivs args))
+
+let mk_tac_step_18
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (e14:embedding<'t14>)
+  (e15:embedding<'t15>)
+  (e16:embedding<'t16>)
+  (e17:embedding<'t17>)
+  (e18:embedding<'t18>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> 'nt18 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ne14:NBET.embedding<'nt14>)
+  (ne15:NBET.embedding<'nt15>)
+  (ne16:NBET.embedding<'nt16>)
+  (ne17:NBET.embedding<'nt17>)
+  (ne18:NBET.embedding<'nt18>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 19 nunivs
+      (mk_tactic_interpretation_18 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 e18 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_18 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ne18 ner (drop nunivs args))
+
+let mk_tac_step_19
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (e14:embedding<'t14>)
+  (e15:embedding<'t15>)
+  (e16:embedding<'t16>)
+  (e17:embedding<'t17>)
+  (e18:embedding<'t18>)
+  (e19:embedding<'t19>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> 'nt18 -> 'nt19 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ne14:NBET.embedding<'nt14>)
+  (ne15:NBET.embedding<'nt15>)
+  (ne16:NBET.embedding<'nt16>)
+  (ne17:NBET.embedding<'nt17>)
+  (ne18:NBET.embedding<'nt18>)
+  (ne19:NBET.embedding<'nt19>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 20 nunivs
+      (mk_tactic_interpretation_19 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 e18 e19 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_19 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ne18 ne19 ner (drop nunivs args))
+
+let mk_tac_step_20
+  (nunivs:int)
+  (name:string)
+  (t : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 't20 -> tac<'r>)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (e14:embedding<'t14>)
+  (e15:embedding<'t15>)
+  (e16:embedding<'t16>)
+  (e17:embedding<'t17>)
+  (e18:embedding<'t18>)
+  (e19:embedding<'t19>)
+  (e20:embedding<'t20>)
+  (er:embedding<'r>)
+  (nt : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> 'nt18 -> 'nt19 -> 'nt20 -> tac<'nr>)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ne14:NBET.embedding<'nt14>)
+  (ne15:NBET.embedding<'nt15>)
+  (ne16:NBET.embedding<'nt16>)
+  (ne17:NBET.embedding<'nt17>)
+  (ne18:NBET.embedding<'nt18>)
+  (ne19:NBET.embedding<'nt19>)
+  (ne20:NBET.embedding<'nt20>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 21 nunivs
+      (mk_tactic_interpretation_20 t e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 e18 e19 e20 er)
+      (fun cb args -> mk_tactic_nbe_interpretation_20 cb nt ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ne18 ne19 ne20 ner (drop nunivs args))
+
+let mk_total_step_1
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 'r)
+  (e1:embedding<'t1>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 1 nunivs
+      (mk_total_interpretation_1 f e1 er)
+      (fun cb args -> mk_total_nbe_interpretation_1 cb nf ne1 ner (drop nunivs args))
+
+let mk_total_step_2
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 2 nunivs
+      (mk_total_interpretation_2 f e1 e2 er)
+      (fun cb args -> mk_total_nbe_interpretation_2 cb nf ne1 ne2 ner (drop nunivs args))
+
+let mk_total_step_3
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 3 nunivs
+      (mk_total_interpretation_3 f e1 e2 e3 er)
+      (fun cb args -> mk_total_nbe_interpretation_3 cb nf ne1 ne2 ne3 ner (drop nunivs args))
+
+let mk_total_step_4
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 4 nunivs
+      (mk_total_interpretation_4 f e1 e2 e3 e4 er)
+      (fun cb args -> mk_total_nbe_interpretation_4 cb nf ne1 ne2 ne3 ne4 ner (drop nunivs args))
+
+let mk_total_step_5
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 5 nunivs
+      (mk_total_interpretation_5 f e1 e2 e3 e4 e5 er)
+      (fun cb args -> mk_total_nbe_interpretation_5 cb nf ne1 ne2 ne3 ne4 ne5 ner (drop nunivs args))
+
+let mk_total_step_6
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 6 nunivs
+      (mk_total_interpretation_6 f e1 e2 e3 e4 e5 e6 er)
+      (fun cb args -> mk_total_nbe_interpretation_6 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ner (drop nunivs args))
+
+let mk_total_step_7
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 7 nunivs
+      (mk_total_interpretation_7 f e1 e2 e3 e4 e5 e6 e7 er)
+      (fun cb args -> mk_total_nbe_interpretation_7 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ner (drop nunivs args))
+
+let mk_total_step_8
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 8 nunivs
+      (mk_total_interpretation_8 f e1 e2 e3 e4 e5 e6 e7 e8 er)
+      (fun cb args -> mk_total_nbe_interpretation_8 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ner (drop nunivs args))
+
+let mk_total_step_9
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 9 nunivs
+      (mk_total_interpretation_9 f e1 e2 e3 e4 e5 e6 e7 e8 e9 er)
+      (fun cb args -> mk_total_nbe_interpretation_9 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ner (drop nunivs args))
+
+let mk_total_step_10
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 10 nunivs
+      (mk_total_interpretation_10 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 er)
+      (fun cb args -> mk_total_nbe_interpretation_10 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ner (drop nunivs args))
+
+let mk_total_step_11
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 11 nunivs
+      (mk_total_interpretation_11 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 er)
+      (fun cb args -> mk_total_nbe_interpretation_11 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ner (drop nunivs args))
+
+let mk_total_step_12
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 12 nunivs
+      (mk_total_interpretation_12 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 er)
+      (fun cb args -> mk_total_nbe_interpretation_12 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ner (drop nunivs args))
+
+let mk_total_step_13
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 13 nunivs
+      (mk_total_interpretation_13 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 er)
+      (fun cb args -> mk_total_nbe_interpretation_13 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ner (drop nunivs args))
+
+let mk_total_step_14
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (e14:embedding<'t14>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ne14:NBET.embedding<'nt14>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 14 nunivs
+      (mk_total_interpretation_14 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 er)
+      (fun cb args -> mk_total_nbe_interpretation_14 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ner (drop nunivs args))
+
+let mk_total_step_15
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (e14:embedding<'t14>)
+  (e15:embedding<'t15>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ne14:NBET.embedding<'nt14>)
+  (ne15:NBET.embedding<'nt15>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 15 nunivs
+      (mk_total_interpretation_15 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 er)
+      (fun cb args -> mk_total_nbe_interpretation_15 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ner (drop nunivs args))
+
+let mk_total_step_16
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (e14:embedding<'t14>)
+  (e15:embedding<'t15>)
+  (e16:embedding<'t16>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ne14:NBET.embedding<'nt14>)
+  (ne15:NBET.embedding<'nt15>)
+  (ne16:NBET.embedding<'nt16>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 16 nunivs
+      (mk_total_interpretation_16 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 er)
+      (fun cb args -> mk_total_nbe_interpretation_16 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ner (drop nunivs args))
+
+let mk_total_step_17
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (e14:embedding<'t14>)
+  (e15:embedding<'t15>)
+  (e16:embedding<'t16>)
+  (e17:embedding<'t17>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ne14:NBET.embedding<'nt14>)
+  (ne15:NBET.embedding<'nt15>)
+  (ne16:NBET.embedding<'nt16>)
+  (ne17:NBET.embedding<'nt17>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 17 nunivs
+      (mk_total_interpretation_17 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 er)
+      (fun cb args -> mk_total_nbe_interpretation_17 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ner (drop nunivs args))
+
+let mk_total_step_18
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (e14:embedding<'t14>)
+  (e15:embedding<'t15>)
+  (e16:embedding<'t16>)
+  (e17:embedding<'t17>)
+  (e18:embedding<'t18>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> 'nt18 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ne14:NBET.embedding<'nt14>)
+  (ne15:NBET.embedding<'nt15>)
+  (ne16:NBET.embedding<'nt16>)
+  (ne17:NBET.embedding<'nt17>)
+  (ne18:NBET.embedding<'nt18>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 18 nunivs
+      (mk_total_interpretation_18 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 e18 er)
+      (fun cb args -> mk_total_nbe_interpretation_18 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ne18 ner (drop nunivs args))
+
+let mk_total_step_19
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (e14:embedding<'t14>)
+  (e15:embedding<'t15>)
+  (e16:embedding<'t16>)
+  (e17:embedding<'t17>)
+  (e18:embedding<'t18>)
+  (e19:embedding<'t19>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> 'nt18 -> 'nt19 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ne14:NBET.embedding<'nt14>)
+  (ne15:NBET.embedding<'nt15>)
+  (ne16:NBET.embedding<'nt16>)
+  (ne17:NBET.embedding<'nt17>)
+  (ne18:NBET.embedding<'nt18>)
+  (ne19:NBET.embedding<'nt19>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 19 nunivs
+      (mk_total_interpretation_19 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 e18 e19 er)
+      (fun cb args -> mk_total_nbe_interpretation_19 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ne18 ne19 ner (drop nunivs args))
+
+let mk_total_step_20
+  (nunivs:int)
+  (name:string)
+  (f : 't1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 't14 -> 't15 -> 't16 -> 't17 -> 't18 -> 't19 -> 't20 -> 'r)
+  (e1:embedding<'t1>)
+  (e2:embedding<'t2>)
+  (e3:embedding<'t3>)
+  (e4:embedding<'t4>)
+  (e5:embedding<'t5>)
+  (e6:embedding<'t6>)
+  (e7:embedding<'t7>)
+  (e8:embedding<'t8>)
+  (e9:embedding<'t9>)
+  (e10:embedding<'t10>)
+  (e11:embedding<'t11>)
+  (e12:embedding<'t12>)
+  (e13:embedding<'t13>)
+  (e14:embedding<'t14>)
+  (e15:embedding<'t15>)
+  (e16:embedding<'t16>)
+  (e17:embedding<'t17>)
+  (e18:embedding<'t18>)
+  (e19:embedding<'t19>)
+  (e20:embedding<'t20>)
+  (er:embedding<'r>)
+  (nf : 'nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> 'nt6 -> 'nt7 -> 'nt8 -> 'nt9 -> 'nt10 -> 'nt11 -> 'nt12 -> 'nt13 -> 'nt14 -> 'nt15 -> 'nt16 -> 'nt17 -> 'nt18 -> 'nt19 -> 'nt20 -> 'nr)
+  (ne1:NBET.embedding<'nt1>)
+  (ne2:NBET.embedding<'nt2>)
+  (ne3:NBET.embedding<'nt3>)
+  (ne4:NBET.embedding<'nt4>)
+  (ne5:NBET.embedding<'nt5>)
+  (ne6:NBET.embedding<'nt6>)
+  (ne7:NBET.embedding<'nt7>)
+  (ne8:NBET.embedding<'nt8>)
+  (ne9:NBET.embedding<'nt9>)
+  (ne10:NBET.embedding<'nt10>)
+  (ne11:NBET.embedding<'nt11>)
+  (ne12:NBET.embedding<'nt12>)
+  (ne13:NBET.embedding<'nt13>)
+  (ne14:NBET.embedding<'nt14>)
+  (ne15:NBET.embedding<'nt15>)
+  (ne16:NBET.embedding<'nt16>)
+  (ne17:NBET.embedding<'nt17>)
+  (ne18:NBET.embedding<'nt18>)
+  (ne19:NBET.embedding<'nt19>)
+  (ne20:NBET.embedding<'nt20>)
+  (ner:NBET.embedding<'nr>)
+  : Cfg.primitive_step
+  =
+    mk name 20 nunivs
+      (mk_total_interpretation_20 f e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 e18 e19 e20 er)
+      (fun cb args -> mk_total_nbe_interpretation_20 cb nf ne1 ne2 ne3 ne4 ne5 ne6 ne7 ne8 ne9 ne10 ne11 ne12 ne13 ne14 ne15 ne16 ne17 ne18 ne19 ne20 ner (drop nunivs args))
+

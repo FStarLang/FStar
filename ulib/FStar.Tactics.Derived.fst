@@ -151,6 +151,57 @@ under some guard [g], adding the guard as a goal. *)
 let exact_guard (t : term) : Tac unit =
     with_policy Goal (fun () -> t_exact true false t)
 
+(** (TODO: explain bettter) When running [pointwise tau] For every
+subterm [t'] of the goal's type [t], the engine will build a goal [Gamma
+|= t' == ?u] and run [tau] on it. When the tactic proves the goal,
+the engine will rewrite [t'] for [?u] in the original goal type. This
+is done for every subterm, bottom-up. This allows to recurse over an
+unknown goal type. By inspecting the goal, the [tau] can then decide
+what to do (to not do anything, use [trefl]). *)
+let t_pointwise (d:direction) (tau : unit -> Tac unit) : Tac unit =
+  let ctrl (t:term) : Tac (bool & ctrl_flag) =
+    true, Continue
+  in
+  let rw () : Tac unit =
+    tau ()
+  in
+  ctrl_rewrite d ctrl rw
+
+(** [topdown_rewrite ctrl rw] is used to rewrite those sub-terms [t]
+    of the goal on which [fst (ctrl t)] returns true.
+
+    On each such sub-term, [rw] is presented with an equality of goal
+    of the form [Gamma |= t == ?u]. When [rw] proves the goal,
+    the engine will rewrite [t] for [?u] in the original goal
+    type.
+
+    The goal formula is traversed top-down and the traversal can be
+    controlled by [snd (ctrl t)]:
+
+    When [snd (ctrl t) = 0], the traversal continues down through the
+    position in the goal term.
+
+    When [snd (ctrl t) = 1], the traversal continues to the next
+    sub-tree of the goal.
+
+    When [snd (ctrl t) = 2], no more rewrites are performed in the
+    goal.
+*)
+let topdown_rewrite (ctrl : term -> Tac (bool * int))
+                    (rw:unit -> Tac unit) : Tac unit
+  = let ctrl' (t:term) : Tac (bool & ctrl_flag) =
+      let b, i = ctrl t in
+      let f =
+        match i with
+        | 0 -> Continue
+        | 1 -> Skip
+        | 2 -> Abort
+        | _ -> fail "topdown_rewrite: bad value from ctrl"
+      in
+      b, f
+    in
+    ctrl_rewrite TopDown ctrl' rw
+
 let pointwise  (tau : unit -> Tac unit) : Tac unit = t_pointwise BottomUp tau
 let pointwise' (tau : unit -> Tac unit) : Tac unit = t_pointwise TopDown  tau
 
@@ -181,7 +232,7 @@ let divide (n:int) (l : unit -> Tac 'a) (r : unit -> Tac 'b) : Tac ('a * 'b) =
     if n < 0 then
       fail "divide: negative n";
     let gs, sgs = goals (), smt_goals () in
-    let gs1, gs2 = List.Tot.splitAt n gs in
+    let gs1, gs2 = List.Tot.Base.splitAt n gs in
 
     set_goals gs1; set_smt_goals [];
     let x = l () in
@@ -242,7 +293,7 @@ let seq (f : unit -> Tac unit) (g : unit -> Tac unit) : Tac unit =
 
 let exact_args (qs : list aqualv) (t : term) : Tac unit =
     focus (fun () ->
-        let n = List.length qs in
+        let n = List.Tot.Base.length qs in
         let uvs = repeatn n (fun () -> fresh_uvar None) in
         let t' = mk_app t (zip uvs qs) in
         exact t';
@@ -255,10 +306,10 @@ let exact_n (n : int) (t : term) : Tac unit =
     exact_args (repeatn n (fun () -> Q_Explicit)) t
 
 (** [ngoals ()] returns the number of goals *)
-let ngoals () : Tac int = List.length (goals ())
+let ngoals () : Tac int = List.Tot.Base.length (goals ())
 
 (** [ngoals_smt ()] returns the number of SMT goals *)
-let ngoals_smt () : Tac int = List.length (smt_goals ())
+let ngoals_smt () : Tac int = List.Tot.Base.length (smt_goals ())
 
 let fresh_bv t : Tac bv =
     (* These bvs are fresh anyway through a separate counter,
@@ -394,13 +445,11 @@ let pose (t:term) : Tac binder =
 
 let intro_as (s:string) : Tac binder =
     let b = intro () in
-    rename_to b s;
-    b
+    rename_to b s
 
 let pose_as (s:string) (t:term) : Tac binder =
     let b = pose t in
-    rename_to b s;
-    b
+    rename_to b s
 
 let for_each_binder (f : binder -> Tac 'a) : Tac (list 'a) =
     map f (cur_binders ())
@@ -484,7 +533,7 @@ let rewrite_equality (t:term) : Tac unit =
 let unfold_def (t:term) : Tac unit =
     match inspect t with
     | Tv_FVar fv ->
-        let n = String.concat "." (inspect_fv fv) in
+        let n = implode_qn (inspect_fv fv) in
         norm [delta_fully [n]]
     | _ -> fail "unfold_def: term is not a fv"
 
@@ -612,10 +661,23 @@ let rec apply_squash_or_lem d t =
 let mapply (t : term) : Tac unit =
     apply_squash_or_lem 10 t
 
-val admit_dump : #a:Type -> (#[(dump "Admitting"; exact (quote (fun () -> admit #a () <: Admit a)))] x : (unit -> Admit a)) -> unit -> Admit a
+
+private
+let admit_dump_t () : Tac unit =
+  dump "Admitting";
+  apply (`admit)
+
+val admit_dump : #a:Type -> (#[admit_dump_t ()] x : (unit -> Admit a)) -> unit -> Admit a
 let admit_dump #a #x () = x ()
 
-val magic_dump : #a:Type -> (#[(dump "Admitting"; exact (quote (magic #a ())))] x : a) -> unit -> Tot a
+private
+let magic_dump_t () : Tac unit =
+  dump "Admitting";
+  apply (`magic);
+  exact (`());
+  ()
+
+val magic_dump : #a:Type -> (#[magic_dump_t ()] x : a) -> unit -> Tot a
 let magic_dump #a #x () = x
 
 let change_with t1 t2 : Tac unit =
@@ -850,8 +912,8 @@ will return the last binder, [nth_binder (-2)] the second to last, and
 so on. *)
 let nth_binder (i:int) : Tac binder =
   let bs = cur_binders () in
-  let k : int = if i >= 0 then i else List.length bs + i in
+  let k : int = if i >= 0 then i else List.Tot.Base.length bs + i in
   let k : nat = if k < 0 then fail "not enough binders" else k in
-  match List.Tot.nth bs k with
+  match List.Tot.Base.nth bs k with
   | None -> fail "not enough binders"
   | Some b -> b

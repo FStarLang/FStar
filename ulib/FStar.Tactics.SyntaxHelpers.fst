@@ -3,6 +3,7 @@ module FStar.Tactics.SyntaxHelpers
 open FStar.Reflection
 open FStar.Tactics.Effect
 open FStar.Tactics.Builtins
+open FStar.Tactics.Types
 
 (* These are fully-named variants of functions found in FStar.Reflection *)
 
@@ -22,13 +23,13 @@ let rec collect_arr' (bs : list binder) (c : comp) : Tac (list binder * comp) =
 val collect_arr_bs : typ -> Tac (list binder * comp)
 let collect_arr_bs t =
     let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
-    (List.Tot.rev bs, c)
+    (List.Tot.Base.rev bs, c)
 
 val collect_arr : typ -> Tac (list typ * comp)
 let collect_arr t =
     let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
-    let ts = List.Tot.map type_of_binder bs in
-    (List.Tot.rev ts, c)
+    let ts = List.Tot.Base.map type_of_binder bs in
+    (List.Tot.Base.rev ts, c)
 
 private
 let rec collect_abs' (bs : list binder) (t : term) : Tac (list binder * term) (decreases t) =
@@ -40,7 +41,17 @@ let rec collect_abs' (bs : list binder) (t : term) : Tac (list binder * term) (d
 val collect_abs : term -> Tac (list binder * term)
 let collect_abs t =
     let (bs, t') = collect_abs' [] t in
-    (List.Tot.rev bs, t')
+    (List.Tot.Base.rev bs, t')
+
+(* Copied from FStar.Tactics.Derived *)
+private
+let fail (#a:Type) (m:string) = raise #a (TacticFailure m)
+
+let rec mk_arr (bs: list binder) (cod : comp) : Tac term =
+    match bs with
+    | [] -> fail "mk_arr, empty binders"
+    | [b] -> pack (Tv_Arrow b cod)
+    | (b::bs) -> pack (Tv_Arrow b (pack_comp (C_Total (mk_arr bs cod) None)))
 
 let rec mk_tot_arr (bs: list binder) (cod : term) : Tac term =
     match bs with

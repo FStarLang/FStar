@@ -24,7 +24,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "ff67924a7f7570ae62a3bbd3b12f3dd3"
+      "e4b93d5b4e37713a525e71acaf44aecb"
     ],
     [
       "SigeltOpts.tau",
@@ -50,10 +50,10 @@
         "projection_inverse_FStar.Tactics.Result.Success_v",
         "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some",
-        "typing_FStar.Reflection.Basic.sigelt_opts"
+        "typing_FStar.Reflection.Builtins.sigelt_opts"
       ],
       0,
-      "eb1d294bbb4c4f5b7e9c4165427ddeb4"
+      "ec8df5db85e8ac5c5937f0c5f8d4c77e"
     ],
     [
       "SigeltOpts.blah",
@@ -78,7 +78,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "d97286f51993c6ecdc2e8fe9caad221b"
+      "b13c950f87086d145721c1e55585957f"
     ],
     [
       "SigeltOpts.sp1",
@@ -103,7 +103,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "932cd834ae7e80748900a4660625aeef"
+      "e2922b8fe1f0e42525b7de1020351dc3"
     ],
     [
       "SigeltOpts.tau",
@@ -129,10 +129,10 @@
         "projection_inverse_FStar.Tactics.Result.Success_v",
         "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some",
-        "typing_FStar.Reflection.Basic.sigelt_opts"
+        "typing_FStar.Reflection.Builtins.sigelt_opts"
       ],
       0,
-      "ce498f271ea28aa3407f70450fed7d30"
+      "2018c4812181bdadc00f658614ff4ef8"
     ],
     [
       "SigeltOpts.blah",
@@ -157,7 +157,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "756bd74d47b4e95edae2a05f1891cfc0"
+      "df0423bde8bf4b70721c0057070d247f"
     ]
   ]
 ]

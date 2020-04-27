@@ -2,6 +2,7 @@ open FStar_Range
 open FStar_Tactics_Types
 open FStar_Tactics_Result
 open FStar_Tactics_Basic
+open FStar_Tactics_Monad
 open FStar_Syntax_Syntax
 
 module N = FStar_TypeChecker_Normalize
@@ -36,9 +37,6 @@ let list_all () =
     then []
     else !compiled_tactics
 
-let is_native_tactic lid =
-    BU.is_some (BU.try_find (fun x -> FStar_Ident.lid_equals lid x.name) !compiled_tactics)
-
 let register_plugin (s: string) (arity: Prims.int) (t: itac) (n:nbe_itac) =
     let step =
            { C.name=FStar_Ident.lid_of_str s;
@@ -63,82 +61,36 @@ let register_tactic (s: string) (arity: Prims.int) (t: itac)=
     compiled_tactics := step :: !compiled_tactics;
     perr1 "Registered tactic %s\n" s
 
-let interpret_tactic (ps: proofstate) (t: proofstate -> 'a __result) = t ps
+let bump (f : 'b -> 'c) (g : 'a -> 'b) : 'a -> 'c =
+    fun x -> f (g x)
 
-let from_tactic_0 (t: 'b __tac): ('b tac) =
+let from_tactic_0 (tau: 'b __tac) : 'b tac =
     (fun (ps: proofstate) ->
-        perr "In compiled code (0)\n";
-        interpret_tactic ps t) |> mk_tac
+        perr "Entering native tactic\n";
+        tau ps) |> mk_tac
 
-let from_tactic_1 (t: 'a -> 'b __tac): ('a -> 'b tac) =
-    fun (x: 'a) ->
-        (fun (ps: proofstate) ->
-            perr "In compiled code (1)\n";
-            interpret_tactic ps (t x)) |> mk_tac
-
-let from_tactic_2 (t: 'a -> 'b -> 'c __tac): ('a -> 'b -> 'c tac) =
-    fun (x: 'a) ->
-        fun (y: 'b) ->
-            (fun (ps: proofstate) ->
-                perr "In compiled code (2)\n";
-                interpret_tactic ps (t x y)) |> mk_tac
-
-let from_tactic_3 (t: 'a -> 'b -> 'c -> 'd __tac): ('a -> 'b -> 'c -> 'd tac) =
-    fun (x: 'a) ->
-        fun (y: 'b) ->
-            fun (z: 'c) ->
-                (fun (ps: proofstate) ->
-                    perr "In compiled code (3)\n";
-                    interpret_tactic ps (t x y z)) |> mk_tac
-
-let from_tactic_4 (t: 'a -> 'b -> 'c -> 'd -> 'e __tac): ('a -> 'b -> 'c -> 'd -> 'e tac) =
-    fun (x: 'a) ->
-        fun (y: 'b) ->
-            fun (z: 'c) ->
-                fun (w: 'd) ->
-                    (fun (ps: proofstate) ->
-                        perr "In compiled code (4)\n";
-                        interpret_tactic ps (t x y z w)) |> mk_tac
-
-let from_tactic_5 (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'f __tac): ('a -> 'b -> 'c -> 'd -> 'e -> 'f tac) =
-    fun (x: 'a) ->
-        fun (y: 'b) ->
-            fun (z: 'c) ->
-                fun (w: 'd) ->
-                    fun (v: 'e) ->
-                        (fun (ps: proofstate) ->
-                            perr "In compiled code (5)\n";
-                            interpret_tactic ps (t x y z w v)) |> mk_tac
-
-let from_tactic_6 (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g __tac): ('a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g tac) =
-    fun (x: 'a) ->
-        fun (y: 'b) ->
-            fun (z: 'c) ->
-                fun (w: 'd) ->
-                    fun (v: 'e) ->
-                        fun (u: 'f) ->
-                            (fun (ps: proofstate) ->
-                                perr "In compiled code (6)\n";
-                                interpret_tactic ps (t x y z w v u)) |> mk_tac
-
-
-let from_tactic_13 (t:'t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 'r __tac):
-                     ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> 't6 -> 't7 -> 't8 -> 't9 -> 't10 -> 't11 -> 't12 -> 't13 -> 'r tac)
-                    =
-    fun (a1: 't1) ->
-    fun (a2: 't2) ->
-    fun (a3: 't3) ->
-    fun (a4: 't4) ->
-    fun (a5: 't5) ->
-    fun (a6: 't6) ->
-    fun (a7: 't7) ->
-    fun (a8: 't8) ->
-    fun (a9: 't9) ->
-    fun (a10: 't10) ->
-    fun (a11: 't11) ->
-    fun (a12: 't12) ->
-    fun (a13: 't13) ->
-    (fun (ps: proofstate) ->
-       perr "In compiled code (13)\n";
-       interpret_tactic ps (t a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13)) |> mk_tac
-
+let from_tactic_1  t = bump from_tactic_0  t
+let from_tactic_2  t = bump from_tactic_1  t
+let from_tactic_3  t = bump from_tactic_2  t
+let from_tactic_4  t = bump from_tactic_3  t
+let from_tactic_5  t = bump from_tactic_4  t
+let from_tactic_6  t = bump from_tactic_5  t
+let from_tactic_7  t = bump from_tactic_6  t
+let from_tactic_8  t = bump from_tactic_7  t
+let from_tactic_9  t = bump from_tactic_8  t
+let from_tactic_10 t = bump from_tactic_9  t
+let from_tactic_11 t = bump from_tactic_10 t
+let from_tactic_12 t = bump from_tactic_11 t
+let from_tactic_13 t = bump from_tactic_12 t
+let from_tactic_14 t = bump from_tactic_13 t
+let from_tactic_15 t = bump from_tactic_14 t
+let from_tactic_16 t = bump from_tactic_15 t
+let from_tactic_17 t = bump from_tactic_16 t
+let from_tactic_18 t = bump from_tactic_17 t
+let from_tactic_19 t = bump from_tactic_18 t
+let from_tactic_20 t = bump from_tactic_19 t
+let from_tactic_21 t = bump from_tactic_20 t
+let from_tactic_22 t = bump from_tactic_21 t
+let from_tactic_23 t = bump from_tactic_22 t
+let from_tactic_24 t = bump from_tactic_23 t
+let from_tactic_25 t = bump from_tactic_24 t

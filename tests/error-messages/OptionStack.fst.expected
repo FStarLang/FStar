@@ -1,0 +1,8 @@
+>> Got issues: [
+OptionStack.fst(19,8-19,14): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also OptionStack.fst(19,15-19,20))
+>>]
+>> Got issues: [
+OptionStack.fst(28,8-28,14): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also OptionStack.fst(28,15-28,20))
+>>]
+Verified module: OptionStack
+All verification conditions discharged successfully

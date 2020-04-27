@@ -75,7 +75,7 @@ type universe =
   | U_unif  of universe_uvar
   | U_unknown
 and univ_name = ident
-and universe_uvar = Unionfind.p_uvar<option<universe>> * version
+and universe_uvar = Unionfind.p_uvar<option<universe>> * version * Range.range
 
 type univ_names    = list<univ_name>
 type universes     = list<universe>
@@ -115,8 +115,7 @@ type term' =
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of ctx_uvar_and_subst                          (* A unification variable ?u (aka meta-variable)
                                                                    and a delayed substitution of only NM or NT elements *)
-  | Tm_delayed    of (term * subst_ts)
-                   * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
+  | Tm_delayed    of term * subst_ts                             (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
   | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
@@ -132,7 +131,7 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_meta: option<(dyn * term)>; (* the dyn is an FStar.TypeChecker.Env.env *)
 }
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
-and uvar = Unionfind.p_uvar<option<term>> * version
+and uvar = Unionfind.p_uvar<option<term>> * version * Range.range
 and uvars = set<ctx_uvar>
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -430,6 +429,8 @@ type eff_decl = {
 type sig_metadata = {
     sigmeta_active:bool;
     sigmeta_fact_db_ids:list<string>;
+    sigmeta_admit:bool; //An internal flag to record that a sigelt's SMT proof should be admitted
+                        //Used in DM4Free
 }
 
 
@@ -474,7 +475,6 @@ type sigelt' =
                           * typ
   | Sig_let               of letbindings
                           * list<lident>               //mutually defined
-  | Sig_main              of term
   | Sig_assume            of lident
                           * univ_names
                           * formula
@@ -489,6 +489,9 @@ type sigelt' =
   | Sig_splice            of list<lident> * term
 
   | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme  //(m, n) |> p, the polymonadic term, and its type
+  | Sig_fail              of list<int>         (* Expected errors (empty for 'any') *)
+                          * bool               (* true if should fail in --lax *)
+                          * list<sigelt>       (* The sigelts to be checked *)
 
 and sigelt = {
     sigel:    sigelt';
@@ -526,7 +529,14 @@ val mk_lb :         (lbname * list<univ_name> * lident * typ * term * list<attri
 val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
 val mk_Tm_app:      term -> args -> Tot<mk_t>
+
+(* This raise an exception if the term is not a Tm_fvar,
+ * use with care. It has to be an Tm_fvar *immediately*,
+ * there is no solving of Tm_delayed nor Tm_uvar. If it's
+ * possible that it is not a Tm_fvar, which can be the case
+ * for non-typechecked terms, just use `mk`. *)
 val mk_Tm_uinst:    term -> universes -> term
+
 val extend_app:     term -> arg -> Tot<mk_t>
 val extend_app_n:   term -> args -> Tot<mk_t>
 val mk_Tm_delayed:  (term * subst_ts) -> Range.range -> term
@@ -540,8 +550,8 @@ val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term
 val binders_to_names: binders -> list<term>
 
-val bv_eq:           bv -> bv -> Tot<bool>
-val order_bv:        bv -> bv -> Tot<int>
+val bv_eq:           bv -> bv -> bool
+val order_bv:        bv -> bv -> int
 val range_of_lbname: lbname -> range
 val range_of_bv:     bv -> range
 val set_range_of_bv: bv -> range -> bv
@@ -573,6 +583,7 @@ val is_null_binder: binder -> bool
 val argpos:         arg -> Range.range
 val pat_bvs:        pat -> list<bv>
 val is_implicit:    aqual -> bool
+val is_implicit_or_meta: aqual -> bool
 val as_implicit:    bool -> aqual
 val is_top_level:   list<letbinding> -> bool
 

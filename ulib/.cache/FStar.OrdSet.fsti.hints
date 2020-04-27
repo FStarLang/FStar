@@ -1,0 +1,93 @@
+[
+  "S’&Z\u0001—¯·ùû[qÿ∆\u000fr",
+  [
+    [
+      "FStar.OrdSet.sorted",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_374b44ccfcb77ed85d505dbc44265913_2",
+        "binder_x_9cd1733a5204f989dbb2f01d5984df93_0",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "equality_tok_Prims.LexTop@tok", "equation_FStar.OrdSet.cmp",
+        "equation_Prims.eqtype", "fuel_guarded_inversion_Prims.list",
+        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_7aac12c24449a22c34d98a0ea8ed4a32",
+        "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
+      ],
+      0,
+      "cce5778be858add13f757a9a7e8bfa35"
+    ],
+    [
+      "FStar.OrdSet.disjoint",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
+      0,
+      "d64b02aa53be2edcb66f1082ac2a11b8"
+    ],
+    [
+      "FStar.OrdSet.equal",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "f14813410f3e46ddbde51b334c199b03"
+    ],
+    [
+      "FStar.OrdSet.eq_lemma",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
+      0,
+      "86bdd33b8e29cf2996a8659cc3097e18"
+    ],
+    [
+      "FStar.OrdSet.choose_s",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
+      0,
+      "65fe9a49b270cba03302937fc997f219"
+    ],
+    [
+      "FStar.OrdSet.eq_remove",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
+      0,
+      "5d497d451f99c724d0e3830f9db858d5"
+    ],
+    [
+      "FStar.OrdSet.size_empty",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
+      0,
+      "d5afdbe45c27b8d1034aea7140927851"
+    ],
+    [
+      "FStar.OrdSet.lemma_as_set_disjoint",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
+      0,
+      "beec5a87329f81e819e06ad080dcaed4"
+    ]
+  ]
+]

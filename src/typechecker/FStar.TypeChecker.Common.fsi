@@ -128,6 +128,8 @@ type implicit = {
 }
 type implicits = list<implicit>
 
+val implicits_to_string : implicits -> string
+
 type guard_t = {
   guard_f:    guard_formula;
   deferred:   deferred;

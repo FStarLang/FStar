@@ -120,10 +120,10 @@ let refl_constant_lid rc = rc.lid
 let refl_constant_term rc = rc.t
 let fstar_refl_lid s = Ident.lid_of_path (["FStar"; "Reflection"]@s) Range.dummyRange
 
-let fstar_refl_basic_lid  s = fstar_refl_lid ["Basic";  s]
-let fstar_refl_syntax_lid s = fstar_refl_lid ["Syntax"; s]
-let fstar_refl_types_lid  s = fstar_refl_lid ["Types";  s]
-let fstar_refl_data_lid   s = fstar_refl_lid ["Data";   s]
+let fstar_refl_builtins_lid  s = fstar_refl_lid ["Builtins";  s]
+let fstar_refl_syntax_lid    s = fstar_refl_lid ["Syntax";    s]
+let fstar_refl_types_lid     s = fstar_refl_lid ["Types";     s]
+let fstar_refl_data_lid      s = fstar_refl_lid ["Data";      s]
 
 let fstar_refl_data_const s =
     let lid = fstar_refl_data_lid s in
@@ -140,8 +140,8 @@ let mk_refl_data_lid_as_term   (s:string) = tconst  (fstar_refl_data_lid s)
 let mk_refl_data_lid_as_fv     (s:string) = fvconst (fstar_refl_data_lid s)
 
 let mk_inspect_pack_pair s =
-    let inspect_lid = fstar_refl_basic_lid ("inspect" ^ s) in
-    let pack_lid    = fstar_refl_basic_lid ("pack" ^ s) in
+    let inspect_lid = fstar_refl_builtins_lid ("inspect" ^ s) in
+    let pack_lid    = fstar_refl_builtins_lid ("pack" ^ s) in
     let inspect_fv  = lid_as_fv inspect_lid (Delta_constant_at_level 1) None in
     let pack_fv     = lid_as_fv pack_lid    (Delta_constant_at_level 1) None in
     let inspect     = { lid = inspect_lid ; fv = inspect_fv ; t = fv_to_tm inspect_fv } in

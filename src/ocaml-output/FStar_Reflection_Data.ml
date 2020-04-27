@@ -512,8 +512,8 @@ let (fstar_refl_lid : Prims.string Prims.list -> FStar_Ident.lident) =
     FStar_Ident.lid_of_path (FStar_List.append ["FStar"; "Reflection"] s)
       FStar_Range.dummyRange
   
-let (fstar_refl_basic_lid : Prims.string -> FStar_Ident.lident) =
-  fun s  -> fstar_refl_lid ["Basic"; s] 
+let (fstar_refl_builtins_lid : Prims.string -> FStar_Ident.lident) =
+  fun s  -> fstar_refl_lid ["Builtins"; s] 
 let (fstar_refl_syntax_lid : Prims.string -> FStar_Ident.lident) =
   fun s  -> fstar_refl_lid ["Syntax"; s] 
 let (fstar_refl_types_lid : Prims.string -> FStar_Ident.lident) =
@@ -563,8 +563,8 @@ let (mk_refl_data_lid_as_fv : Prims.string -> FStar_Syntax_Syntax.fv) =
 let (mk_inspect_pack_pair : Prims.string -> (refl_constant * refl_constant))
   =
   fun s  ->
-    let inspect_lid = fstar_refl_basic_lid (Prims.op_Hat "inspect" s)  in
-    let pack_lid = fstar_refl_basic_lid (Prims.op_Hat "pack" s)  in
+    let inspect_lid = fstar_refl_builtins_lid (Prims.op_Hat "inspect" s)  in
+    let pack_lid = fstar_refl_builtins_lid (Prims.op_Hat "pack" s)  in
     let inspect_fv =
       FStar_Syntax_Syntax.lid_as_fv inspect_lid
         (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
@@ -575,13 +575,13 @@ let (mk_inspect_pack_pair : Prims.string -> (refl_constant * refl_constant))
         (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
         FStar_Pervasives_Native.None
        in
-    let inspect1 =
+    let inspect =
       let uu____2293 = FStar_Syntax_Syntax.fv_to_tm inspect_fv  in
       { lid = inspect_lid; fv = inspect_fv; t = uu____2293 }  in
-    let pack1 =
+    let pack =
       let uu____2295 = FStar_Syntax_Syntax.fv_to_tm pack_fv  in
       { lid = pack_lid; fv = pack_fv; t = uu____2295 }  in
-    (inspect1, pack1)
+    (inspect, pack)
   
 let (uu___79 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_ln" 
 let (fstar_refl_inspect_ln : refl_constant) =

@@ -1,0 +1,85 @@
+[
+  "¯öï uÑÿš\u0003>BþR…UÞ",
+  [
+    [
+      "FStar.DependentMap.restrict",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "fb47e2360cfaa1e96172742ed9d4de38"
+    ],
+    [
+      "FStar.DependentMap.sel_restrict",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "6572152765ffdefdbcfcd5795c3c12ec"
+    ],
+    [
+      "FStar.DependentMap.concat_value",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Pervasives.Inl",
+        "disc_equation_FStar.Pervasives.Inr",
+        "fuel_guarded_inversion_FStar.Pervasives.either"
+      ],
+      0,
+      "28e9550a25d4175bf2e2f72eb99ee1fa"
+    ],
+    [
+      "FStar.DependentMap.concat",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.either__uu___haseq",
+        "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "580231e3db7c91a57da33e2161141f54"
+    ],
+    [
+      "FStar.DependentMap.sel_concat_l",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.either__uu___haseq",
+        "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "0443d4af67c2014d7ca2cd1c920be5fc"
+    ],
+    [
+      "FStar.DependentMap.sel_concat_r",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.either__uu___haseq",
+        "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "f38877556320caee39f9f6bcc4ffceb2"
+    ]
+  ]
+]

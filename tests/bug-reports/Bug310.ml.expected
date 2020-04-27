@@ -1,0 +1,25 @@
+open Prims
+type ('a,'a1) capture = ('a1 * 'a)
+let (struct1 : Prims.int) = Prims.int_one 
+let (struct11 : Prims.int) = (Prims.of_int (2)) 
+let (test : (Prims.int * Prims.int)) =
+  let x = Prims.int_zero  in let x1 = (Prims.of_int (2))  in (x, x1) 
+let (r : unit -> unit -> (Obj.t -> Obj.t) -> Prims.int) =
+  fun uu____1068  -> fun uu____1069  -> fun uu____1070  -> Prims.int_zero 
+let (g : Prims.int -> Prims.int -> Prims.int) =
+  fun uu____1088  -> fun uu____1089  -> Prims.int_zero 
+let (ko : Prims.int -> Prims.int) =
+  fun a  ->
+    let a1 = a  in r () () (fun uu____1106  -> (Obj.magic (g a1)) uu____1106)
+  
+type record_t = {
+  struct1: Prims.int ;
+  constraint1: Prims.bool }
+let (__proj__Mkrecord_t__item__struct : record_t -> Prims.int) =
+  fun projectee  ->
+    match projectee with | { struct1 = struct2; constraint1;_} -> struct2
+  
+let (__proj__Mkrecord_t__item__constraint : record_t -> Prims.bool) =
+  fun projectee  ->
+    match projectee with | { struct1 = struct2; constraint1;_} -> constraint1
+  

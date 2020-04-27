@@ -1,14 +1,35 @@
 [
-  "Y—f!\u001bŠWq°-ÆW\r-\u0014ñ",
+  "¹?\u0014¸ºx´\u0003R5Ä{JüHÏ",
   [
+    [
+      "FStar.Pervasives.Lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5"
+      ],
+      0,
+      "b75bfea5cdd4b8775c97f4aeca4ad6c0"
+    ],
+    [
+      "FStar.Pervasives.assert_spinoff",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "50b04c7b4515d66284b1cbc8918ab3f6"
+    ],
     [
       "FStar.Pervasives.intro_ambient",
       1,
       2,
       1,
-      [ "@query", "equation_FStar.Pervasives.ambient" ],
+      [ "@query", "equation_FStar.Pervasives.ambient", "true_interp" ],
       0,
-      "66c16bbf5b66b7b8a5ab9a4fdb28765a"
+      "60af0382531e89203430984f1e8a1746"
     ],
     [
       "FStar.Pervasives.__proj__V__item__v",
@@ -21,7 +42,7 @@
         "refinement_interpretation_Tm_refine_9db520b26a7f39c5a01493a3f375290d"
       ],
       0,
-      "f20d10fe3b72645f68d63c3873a5ff48"
+      "b5fddb474b0ed805938ec4c0d90a3989"
     ],
     [
       "FStar.Pervasives.__proj__E__item__e",
@@ -34,7 +55,7 @@
         "refinement_interpretation_Tm_refine_95e1e2ee29104754cc3740f5575fc6e5"
       ],
       0,
-      "dc8bca0ed3e0867344c2c43feee25671"
+      "50f41fc1c932850141baa288979454e9"
     ],
     [
       "FStar.Pervasives.__proj__Err__item__msg",
@@ -48,7 +69,7 @@
         "refinement_interpretation_Tm_refine_22fb403854eba07427f92e79848f9d9f"
       ],
       0,
-      "a0cf9d17dbc538ba89fc7ed2f567e92a"
+      "1545b09e139bb8aaf35169c4c9e97409"
     ],
     [
       "FStar.Pervasives.ex_bind_wp",
@@ -62,7 +83,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.result"
       ],
       0,
-      "54c4d341a806755c5aea03d1a07ead19"
+      "4c64f143801463eb98c77928e4752958"
     ],
     [
       "FStar.Pervasives.Exn",
@@ -71,7 +92,7 @@
       1,
       [ "@query" ],
       0,
-      "0a9959174b95dbbbe5fcbc44e3eb44b0"
+      "148f01b182a3ee1aa6eb7a72ed1445f8"
     ],
     [
       "FStar.Pervasives.all_bind_wp",
@@ -85,16 +106,16 @@
         "fuel_guarded_inversion_FStar.Pervasives.result"
       ],
       0,
-      "9d9ae312bc0eaf3eade553f191e81c5e"
+      "51eb47701bb6675f3cc35ac51aab4f04"
     ],
     [
       "FStar.Pervasives.allow_inversion",
       1,
       2,
       1,
-      [ "@query", "equation_FStar.Pervasives.inversion" ],
+      [ "@query", "equation_FStar.Pervasives.inversion", "true_interp" ],
       0,
-      "4c0d50126c93d23f6c52c9badf8fe2d6"
+      "32895281dfb2e5a9337803b61c02218a"
     ],
     [
       "FStar.Pervasives.invertOption",
@@ -109,7 +130,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d379c9987ffd593195be8e5b30192059"
+      "cbd97259488d1ec99e615f11fefe382e"
     ],
     [
       "FStar.Pervasives.either",
@@ -118,7 +139,7 @@
       1,
       [ "@query" ],
       0,
-      "4c586e1b323902bf573f2cdc883dc4b5"
+      "909393f469cd1d95323f821280455a6b"
     ],
     [
       "FStar.Pervasives.__proj__Inl__item__v",
@@ -132,7 +153,7 @@
         "refinement_interpretation_Tm_refine_85e0cc884f8457202f90cd77f23733ba"
       ],
       0,
-      "ec47061f868e19ffc15eba097d015026"
+      "375bb6bef5c64317c5951447661173fe"
     ],
     [
       "FStar.Pervasives.__proj__Inr__item__v",
@@ -146,7 +167,7 @@
         "refinement_interpretation_Tm_refine_8f1f5f564dae90240db429de2eb41517"
       ],
       0,
-      "c028721991c2168d0344eb7e565116a5"
+      "13fa1ca8952cf959de709c58ab467b5d"
     ],
     [
       "FStar.Pervasives.__proj__Mkdtuple3__item___2",
@@ -158,7 +179,7 @@
         "projection_inverse_FStar.Pervasives.Mkdtuple3__1"
       ],
       0,
-      "4d598204005b6415fcebc8680c4e0548"
+      "9c4b15f73df7ff723fdaff9161578360"
     ],
     [
       "FStar.Pervasives.__proj__Mkdtuple3__item___3",
@@ -172,7 +193,7 @@
         "projection_inverse_FStar.Pervasives.Mkdtuple3__2"
       ],
       0,
-      "d546a6267832eb1a1c100c4c78ae4c7f"
+      "c63634f0839e07100818615a46d6e5fc"
     ],
     [
       "FStar.Pervasives.__proj__Mkdtuple4__item___2",
@@ -184,7 +205,7 @@
         "projection_inverse_FStar.Pervasives.Mkdtuple4__1"
       ],
       0,
-      "163ae65687a6c6479f27e039470be1e4"
+      "9c3390e657fe33aa77db528bb2608ae2"
     ],
     [
       "FStar.Pervasives.__proj__Mkdtuple4__item___3",
@@ -198,7 +219,7 @@
         "projection_inverse_FStar.Pervasives.Mkdtuple4__2"
       ],
       0,
-      "6558b03fb2ad9ff8dda0d99dcecbe50e"
+      "c9210f3c3a54d8bbd7bb1a9d46ac246d"
     ],
     [
       "FStar.Pervasives.__proj__Mkdtuple4__item___4",
@@ -214,7 +235,7 @@
         "projection_inverse_FStar.Pervasives.Mkdtuple4__3"
       ],
       0,
-      "d053cc6cf5eebba911dcb3b9d8604f16"
+      "aa273e26d4fc3630f9e0651bb9e29acf"
     ],
     [
       "FStar.Pervasives.false_elim",
@@ -227,7 +248,7 @@
         "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
       ],
       0,
-      "8b844eadc3ae8b63b087e7a6f32c31fe"
+      "7cda8f6b68d2910541559d1083ab4a59"
     ],
     [
       "FStar.Pervasives.__proj__PpxDerivingShowConstant__item___0",
@@ -241,7 +262,7 @@
         "refinement_interpretation_Tm_refine_564db2f0aa0878b4d96c60508be3dd36"
       ],
       0,
-      "07a57ea222fa1d108f7673807fd5395f"
+      "8b47d01afbeadce11e35f22b9d0d0f0e"
     ],
     [
       "FStar.Pervasives.__proj__Comment__item___0",
@@ -255,7 +276,7 @@
         "refinement_interpretation_Tm_refine_c53089e2d20d1b0f5a267296ac8e45f0"
       ],
       0,
-      "476352ff0314b021dbdfd79de71a24ee"
+      "3c89fbaf49d8b12530a74b6fb990fe95"
     ],
     [
       "FStar.Pervasives.__proj__CPrologue__item___0",
@@ -269,7 +290,7 @@
         "refinement_interpretation_Tm_refine_ac46c1a2a06ce46a180e0eda48004c47"
       ],
       0,
-      "f70997020aa674b35a7e3063bc29e4f5"
+      "d604cc1d7038e3986f2f644fab79e3f9"
     ],
     [
       "FStar.Pervasives.__proj__CEpilogue__item___0",
@@ -283,7 +304,7 @@
         "refinement_interpretation_Tm_refine_47384bef739d1f0729fd782d351dc9a5"
       ],
       0,
-      "e7b82478fb22cf5e05a6d52b529466f2"
+      "dfaeee3f1ad0dc046c1f377a7ee203e5"
     ],
     [
       "FStar.Pervasives.__proj__CConst__item___0",
@@ -297,7 +318,7 @@
         "refinement_interpretation_Tm_refine_5036c6b2983454bc3afeffcba3f00f50"
       ],
       0,
-      "46cbe3a1887636340142000ce990cf8f"
+      "57b86015b23ee573d2ab99ea0b2a065c"
     ],
     [
       "FStar.Pervasives.__proj__CCConv__item___0",
@@ -311,7 +332,7 @@
         "refinement_interpretation_Tm_refine_2c4510f48649a66c3dca1fc9e3a2d320"
       ],
       0,
-      "02573a7849b8987da69bb56e08d0f1cc"
+      "9907e68b991d9db9f51f7dbf7a8674eb"
     ],
     [
       "FStar.Pervasives.__proj__UnfoldOnly__item___0",
@@ -325,7 +346,7 @@
         "refinement_interpretation_Tm_refine_13de8e33f187202d2c4a5d80966ea035"
       ],
       0,
-      "92a5b10a70c0b959ce18661f08b0542d"
+      "762f97b7c3d35620a7b12dd8f7296b4f"
     ],
     [
       "FStar.Pervasives.__proj__UnfoldFully__item___0",
@@ -339,7 +360,7 @@
         "refinement_interpretation_Tm_refine_e6c43ff652fa6b792396796b43993774"
       ],
       0,
-      "4f59d1084f066777d110ff3d4643aaf0"
+      "491b0103923af2e79ec797bd0391144c"
     ],
     [
       "FStar.Pervasives.__proj__UnfoldAttr__item___0",
@@ -353,7 +374,7 @@
         "refinement_interpretation_Tm_refine_f14ca5ebef9af83c4cf22600f4f19756"
       ],
       0,
-      "b61464b3c6df82ba4139787d56ffbfc6"
+      "69728a7d092c0ae85fc354fb600e48ad"
     ],
     [
       "FStar.Pervasives.assert_norm",
@@ -362,7 +383,7 @@
       1,
       [ "@query" ],
       0,
-      "a63b0648d086fcc15c594d882c6be777"
+      "caa2d6c9a581c128ed7a9730a3a2e90b"
     ],
     [
       "FStar.Pervasives.norm_spec",
@@ -371,282 +392,7 @@
       1,
       [ "@query", "equation_FStar.Pervasives.norm" ],
       0,
-      "a36f470e25ad2e5b1b00da689a4efd99"
-    ],
-    [
-      "FStar.Pervasives.__proj__V__item__v",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.Pervasives.V",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9db520b26a7f39c5a01493a3f375290d"
-      ],
-      0,
-      "a5c5977060f14209417fa973eecfb4fa"
-    ],
-    [
-      "FStar.Pervasives.__proj__E__item__e",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.Pervasives.E",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_95e1e2ee29104754cc3740f5575fc6e5"
-      ],
-      0,
-      "327432e1dc825644214871107d543636"
-    ],
-    [
-      "FStar.Pervasives.__proj__Err__item__msg",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.Err",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_22fb403854eba07427f92e79848f9d9f"
-      ],
-      0,
-      "70cfb0aaf89bf729d65d997c4dac97b3"
-    ],
-    [
-      "FStar.Pervasives.ex_bind_wp",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.Pervasives.E",
-        "disc_equation_FStar.Pervasives.Err",
-        "disc_equation_FStar.Pervasives.V",
-        "fuel_guarded_inversion_FStar.Pervasives.result"
-      ],
-      0,
-      "15df7a500a2a44673d08e5d6ee12329d"
-    ],
-    [
-      "FStar.Pervasives.Exn",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "fad169d5de478494f4d8eab10dba0ad6"
-    ],
-    [
-      "FStar.Pervasives.all_bind_wp",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.Pervasives.E",
-        "disc_equation_FStar.Pervasives.Err",
-        "disc_equation_FStar.Pervasives.V",
-        "fuel_guarded_inversion_FStar.Pervasives.result"
-      ],
-      0,
-      "f28f05499aa574fec1eb4ef432f6d4cb"
-    ],
-    [
-      "FStar.Pervasives.allow_inversion",
-      2,
-      2,
-      1,
-      [ "@query", "equation_FStar.Pervasives.inversion" ],
-      0,
-      "8a5e76016acef14cd8c5f4c066243490"
-    ],
-    [
-      "FStar.Pervasives.either",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "08b0224f6f539225d66591570ffc7b8f"
-    ],
-    [
-      "FStar.Pervasives.__proj__Inl__item__v",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.Inl",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_85e0cc884f8457202f90cd77f23733ba"
-      ],
-      0,
-      "ab51ff2d02cf40ff36d6c4ec8e10b5fd"
-    ],
-    [
-      "FStar.Pervasives.__proj__Inr__item__v",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.Inr",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_8f1f5f564dae90240db429de2eb41517"
-      ],
-      0,
-      "504062e6f339bf113f149020e051f5dd"
-    ],
-    [
-      "FStar.Pervasives.__proj__Mkdtuple3__item___2",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Pervasives.Mkdtuple3__1",
-        "projection_inverse_FStar.Pervasives.Mkdtuple3__1"
-      ],
-      0,
-      "ca3f602db4f6192b56ba283556366ad0"
-    ],
-    [
-      "FStar.Pervasives.__proj__Mkdtuple3__item___3",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Pervasives.Mkdtuple3__1",
-        "proj_equation_FStar.Pervasives.Mkdtuple3__2",
-        "projection_inverse_FStar.Pervasives.Mkdtuple3__1",
-        "projection_inverse_FStar.Pervasives.Mkdtuple3__2"
-      ],
-      0,
-      "d73016e243f16a879e7facfe9ba15dfd"
-    ],
-    [
-      "FStar.Pervasives.__proj__Mkdtuple4__item___2",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Pervasives.Mkdtuple4__1",
-        "projection_inverse_FStar.Pervasives.Mkdtuple4__1"
-      ],
-      0,
-      "a76bc5c6cac1612eef5287bdf56afb6d"
-    ],
-    [
-      "FStar.Pervasives.__proj__Mkdtuple4__item___3",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Pervasives.Mkdtuple4__1",
-        "proj_equation_FStar.Pervasives.Mkdtuple4__2",
-        "projection_inverse_FStar.Pervasives.Mkdtuple4__1",
-        "projection_inverse_FStar.Pervasives.Mkdtuple4__2"
-      ],
-      0,
-      "5fd2b30aaa649c4df14fb611270bcf62"
-    ],
-    [
-      "FStar.Pervasives.__proj__Mkdtuple4__item___4",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Pervasives.Mkdtuple4__1",
-        "proj_equation_FStar.Pervasives.Mkdtuple4__2",
-        "proj_equation_FStar.Pervasives.Mkdtuple4__3",
-        "projection_inverse_FStar.Pervasives.Mkdtuple4__1",
-        "projection_inverse_FStar.Pervasives.Mkdtuple4__2",
-        "projection_inverse_FStar.Pervasives.Mkdtuple4__3"
-      ],
-      0,
-      "483582f74b6ee4fa56a061bbae80a35c"
-    ],
-    [
-      "FStar.Pervasives.__proj__PpxDerivingShowConstant__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.PpxDerivingShowConstant",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_564db2f0aa0878b4d96c60508be3dd36"
-      ],
-      0,
-      "c617f9a3cc9517d98f99e8ee3d1401da"
-    ],
-    [
-      "FStar.Pervasives.__proj__Comment__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.Comment",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_c53089e2d20d1b0f5a267296ac8e45f0"
-      ],
-      0,
-      "0da2ffa2a50f1d9fc1709d10e17d9b43"
-    ],
-    [
-      "FStar.Pervasives.__proj__CPrologue__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.CPrologue",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_ac46c1a2a06ce46a180e0eda48004c47"
-      ],
-      0,
-      "147ab3a561c255e9366998f7ebbd784c"
-    ],
-    [
-      "FStar.Pervasives.__proj__CEpilogue__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.CEpilogue",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_47384bef739d1f0729fd782d351dc9a5"
-      ],
-      0,
-      "eb871aefc32b618c0dbcbc4a66c437d3"
-    ],
-    [
-      "FStar.Pervasives.__proj__CConst__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.CConst",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_5036c6b2983454bc3afeffcba3f00f50"
-      ],
-      0,
-      "b316765c5514a032f04caaec559a4ec4"
-    ],
-    [
-      "FStar.Pervasives.__proj__CCConv__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Pervasives.CCConv",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_2c4510f48649a66c3dca1fc9e3a2d320"
-      ],
-      0,
-      "ba39a85a4707ac94c0cebf43192c99f0"
+      "49dc79d749beb07ff7c5a53445094a52"
     ]
   ]
 ]

@@ -204,7 +204,7 @@ assume val fn (_:unit) : STATE unit (fun p h -> p () h)
 ///   BUT this time it succeeds! See the code below after chacha_fn
 
 
-[@expect_failure]
+[@@expect_failure]
 let chacha_fn ()
 : Chacha unit
   (requires fun _ -> True)
@@ -302,7 +302,6 @@ assume val hfn (_:unit) : STATE unit (fun p h -> p () h)
  *
  *       YOU COULD READ THE COMMENTS IN THIS MODULE IF YOU ARE CURIOUS
  *)
-
 let ref_hfn ()
 : Ref unit
   (requires fun _ -> True)

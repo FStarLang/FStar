@@ -17,7 +17,7 @@ module FStar.Printf
 
 (*
  * A variable arity C-style printf
- * See examples/micro-benchmarks/Test.Printf.fst for example usage
+ * See tests/micro-benchmarks/Test.Printf.fst for example usage
  *)
 
 open FStar.Char

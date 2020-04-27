@@ -1,0 +1,29 @@
+[
+  "n¿c”g›¯ˆG\u001dà\u0003vR«þ",
+  [
+    [
+      "DependentSynth.f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_DependentSynth.myty", "int_typing", "unit_typing"
+      ],
+      0,
+      "ed92b0e70e613b8ae216be3e5e6e5662"
+    ],
+    [
+      "DependentSynth.f",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_DependentSynth.myty", "int_typing", "unit_typing"
+      ],
+      0,
+      "60d5db0590885cb7ce06bd909201106f"
+    ]
+  ]
+]

@@ -77,7 +77,7 @@ following commands. (On Windows this requires Cygwin and `make`)
 
 2. Run the micro benchmarks:
 
-        $ make -C examples/micro-benchmarks
+        $ make -C tests/micro-benchmarks
 
 3. If you have OCaml installed and intend to extract and compile OCaml code
    against the F* library, please build it with:
@@ -194,6 +194,7 @@ The steps require a working OCaml setup. OCaml version from 4.05.X to 4.08.1 sho
 
 2. If needed switch to a supported OCaml version by running the following commands:
   ```sh
+  $ opam update
   $ opam switch list-available
   $ opam switch create ocaml-variants.4.07.1+mingw64c
   ```

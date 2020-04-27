@@ -29,7 +29,7 @@ type t<'a> = thunk<'a>
 
 (* Creating thunks *)
 val mk : (unit -> 'a) -> thunk<'a>
-val mkv : 'a -> thunk <'a>
+val mkv : 'a -> thunk<'a>
 
 (* Forcing *)
 val force : thunk<'a> -> 'a

@@ -1,0 +1,113 @@
+[
+  "+\u001aªãòıÌ#á\u0014ù”SqÖN",
+  [
+    [
+      "NormVsSMT.l2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "06d55c95192a611abfba394c9221eb5a"
+    ],
+    [
+      "NormVsSMT.uu___5",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "fe2233a80a91a24aae2048410c87690e"
+    ],
+    [
+      "NormVsSMT.uu___6",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8eddb6c2a090cc7c12f1cb9fac498234"
+    ],
+    [
+      "NormVsSMT.uu___7",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1fabf2593ae7312e99404f48607ebaab"
+    ],
+    [
+      "NormVsSMT.uu___11",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1780a0fddfda88c43d203b562c6d3f5b"
+      ],
+      0,
+      "ade005d8eaa1aa16ed856df25bfe1dd8"
+    ],
+    [
+      "NormVsSMT.uu___14",
+      1,
+      2,
+      1,
+      [ "@query", "equation_NormVsSMT.trigger", "int_typing" ],
+      0,
+      "d28639d17bc2b0446df34b481c0db495"
+    ],
+    [
+      "NormVsSMT.uu___5",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "68a901b87af0bf03c61d0187a21bd067"
+    ],
+    [
+      "NormVsSMT.uu___6",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "565fd5d776f7a400bed62d0489814140"
+    ],
+    [
+      "NormVsSMT.uu___7",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e49d9b8c458c5d2845c390daef07823a"
+    ],
+    [
+      "NormVsSMT.uu___11",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_1780a0fddfda88c43d203b562c6d3f5b"
+      ],
+      0,
+      "c6b8d5c3ebb8a88f7d4ed7af8f191c5a"
+    ],
+    [
+      "NormVsSMT.uu___14",
+      2,
+      2,
+      1,
+      [ "@query", "equation_NormVsSMT.trigger", "int_typing" ],
+      0,
+      "ce4d8bb42f4b54b24b22cfa6bdca26ad"
+    ]
+  ]
+]

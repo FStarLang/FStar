@@ -22,7 +22,7 @@ open FStar.DM4F.Heap.ST
 private let contains_well_typed_refs (h:heap) (s:list (ref nat)) =
   forall (r:ref nat). memP r s ==> h `contains_a_well_typed` r
 
-private type fp = l:list (ref nat)
+private type fp = list (ref nat)
 
 private type move_t (inv:heap -> fp -> Type0) =
   s:fp -> ST unit (requires (fun h0       -> inv h0 s))

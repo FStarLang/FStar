@@ -47,6 +47,7 @@ val univ_to_string        : universe -> string
 val attrs_to_string       : list<attribute> -> string
 val sigelt_to_string      : sigelt -> string
 val sigelt_to_string_short: sigelt -> string
+val tag_of_sigelt         : sigelt -> string
 val binder_to_string      : binder -> string
 val binders_to_string     : string -> binders -> string
 val binder_to_json        : DsEnv.env -> binder -> json

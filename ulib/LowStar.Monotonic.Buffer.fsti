@@ -33,7 +33,7 @@ unfold let srel (a:Type0) = Preorder.preorder (Seq.seq a)
 (*
  * A compatibility relation between preorders of a sequence and its subsequence
  *)
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold
 let compatible_subseq_preorder (#a:Type0)
   (len:nat) (rel:srel a) (i:nat) (j:nat{i <= j /\ j <= len}) (sub_rel:srel a)
@@ -266,7 +266,7 @@ val mbuffer_injectivity_in_first_preorder (_:unit)
  * The quantifiers are fiercely guarded, so if you are working directly with them,
  * you may have to write additional asserts as triggers
  *)
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold let compatible_sub
   (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (i:U32.t) (len:U32.t{U32.v i + U32.v len <= length b}) (sub_rel:srel a)
@@ -987,26 +987,26 @@ val loc_disjoint_regions
 let buf_t = a:Type0 & rrel:srel a & rel:srel a & mbuffer a rrel rel
 
 (* A convenience to construct a buf_t *)
-[@BigOps.__reduce__]
+[@@BigOps.__reduce__]
 let buf (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) : buf_t = (|a, rrel, rel, b|)
 
 (* A conjunction of liveness conditions on the buffers in `l`
    Implicitly reduced at typechecking time *)
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold
 let all_live (h:HS.mem) (l:list buf_t) : Type0 =
   BigOps.big_and #buf_t (fun (| _, _, _, b |) -> live h b) l
 
 (* Pairwise disjointness of locations;
    Implicitly reduced at typechecking time *)
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold
 let all_disjoint (l:list loc) : Type0 =
   BigOps.pairwise_and loc_disjoint l
 
 (* Union of a list of locations;
    Implicitly reduced at typechecking time *)
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold
 let loc_union_l (l:list loc) =
   BigOps.normal (List.Tot.fold_right_gtot l loc_union loc_none)
@@ -1014,7 +1014,7 @@ let loc_union_l (l:list loc) =
 (*
  * Same as all_disjoint, retaining for backward compatibility
  *)
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold
 let loc_pairwise_disjoint (l:list loc) :Type0 = BigOps.pairwise_and loc_disjoint l
 
@@ -2220,7 +2220,7 @@ val malloca (#a:Type0) (#rrel:srel a)
  *)
 val malloca_and_blit (#a:Type0) (#rrel:srel a)
   (#rrel1 #rel1:srel a) (src:mbuffer a rrel1 rel1) (id_src:U32.t) (len:U32.t)
-  : HST.StackInline (b:lmbuffer a rrel rrel (U32.v len))
+  : HST.StackInline (lmbuffer a rrel rrel (U32.v len))
     (requires fun h0 ->
       alloca_pre len /\
       live h0 src /\ U32.v id_src + U32.v len <= length src)

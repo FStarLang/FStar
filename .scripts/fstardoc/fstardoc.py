@@ -93,7 +93,10 @@ class fst_parsed:
         r = None
         for s in splitters:
             if s in code.split():
-                s = s + ' '
+                if s == 'let' and 'rec' in code.split():
+                    s = 'let rec '
+                else:
+                    s = s + ' '
                 r = [x for x in code[code.index(s) + len(s):].split(' ')
                      if x not in ('','{')][0]
                 r = r.rstrip(':')

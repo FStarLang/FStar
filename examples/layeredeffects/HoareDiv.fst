@@ -37,9 +37,11 @@ let bind (a:Type) (b:Type)
   let x = f () in
   g x ()
 
+//the implicit markers on req_f and req_g don't mean much,
+//just testing that we support marking some arguments as implicit
 let subcomp (a:Type)
-  (req_f:Type0) (ens_f:a -> Type0)
-  (req_g:Type0) (ens_g:a -> Type0)
+  (#req_f:Type0) (ens_f:a -> Type0)
+  (#req_g:Type0) (ens_g:a -> Type0)
   (f:repr a req_f ens_f)
 : Pure (repr a req_g ens_g)
   (requires

@@ -187,19 +187,21 @@ let witnessed_exists (#t:Type) (p:(t -> s_pred))
 
 /// Some actions
 
-let get ()
-: MSeqExn state
-  (fun _ -> True)
+(*
+ * Written using val specifically to make sure that it works even then
+ *)
+val get: unit -> MSeqExn state
+  (fun _ -> True) 
   (fun s0 r s1 -> r == Success s0 /\ s0 == s1)
-= MSeqEXN?.reflect (fun s0 -> Success s0, s0)
+let get () = MSeqEXN?.reflect (fun s0 -> Success s0, s0)
 
-let put (s:state)
+val put (s:state)
 : MSeqExn unit
   (fun s0 -> grows s0 s)
   (fun _ r s1 ->
     r == Success () /\
     s1 == s)
-= MSeqEXN?.reflect (fun _ -> Success (), s)
+let put s = MSeqEXN?.reflect (fun _ -> Success (), s)
 
 let raise (#a:Type) (e:string)
 : MSeqExn a

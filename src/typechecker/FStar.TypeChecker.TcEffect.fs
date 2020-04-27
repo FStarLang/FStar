@@ -134,13 +134,13 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
   //we don't support effect binders in layered effects yet
   if List.length ed.univs <> 0 || List.length ed.binders <> 0 then
     raise_error
-      (Errors.Fatal_UnexpectedEffect, "Binders are not supported for layered effects (" ^ ed.mname.str ^")")
+      (Errors.Fatal_UnexpectedEffect, "Binders are not supported for layered effects (" ^ (string_of_lid ed.mname) ^")")
       (range_of_lid ed.mname);
 
   let log_combinator s (us, t, ty) =
     if Env.debug env0 <| Options.Other "LayeredEffects" then
       BU.print4 "Typechecked %s:%s = %s:%s\n"
-        ed.mname.str s
+        (string_of_lid ed.mname) s
         (Print.tscheme_to_string (us, t)) (Print.tscheme_to_string (us, ty)) in
 
   //helper function to get (a:Type ?u), returns the binder and ?u
@@ -158,7 +158,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
    *   - Record k in the effect declaration (along with the combinator)
    *)
 
-  let check_and_gen = check_and_gen env0 ed.mname.str in
+  let check_and_gen = check_and_gen env0 (string_of_lid ed.mname) in
 
 
   (*
@@ -248,7 +248,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
   let not_an_arrow_error comb n t r =
     raise_error (Errors.Fatal_UnexpectedEffect,
-      BU.format5 "Type of %s:%s is not an arrow with >= %s binders (%s::%s)" ed.mname.str comb
+      BU.format5 "Type of %s:%s is not an arrow with >= %s binders (%s::%s)" (string_of_lid ed.mname) comb
         (string_of_int n) (Print.tag_of_term t) (Print.term_to_string t)
     ) r in
 
@@ -335,7 +335,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
     //the computation type of the bind combinator can be a PURE type
     let pure_wp_uvar, g_pure_wp_uvar = pure_wp_uvar (Env.push_binders env bs) repr
-      (BU.format1 "implicit for pure_wp in checking bind for %s" ed.mname.str)
+      (BU.format1 "implicit for pure_wp in checking bind for %s" (string_of_lid ed.mname))
       r in
 
     let k = U.arrow (bs@[f; g]) (S.mk_Comp ({
@@ -391,7 +391,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let ret_t, guard_ret_t = fresh_repr r (Env.push_binders env bs) u (fst a |> S.bv_to_name) in
 
     let pure_wp_uvar, guard_wp = pure_wp_uvar (Env.push_binders env bs) ret_t 
-      (BU.format1 "implicit for pure_wp in checking stronger for %s" ed.mname.str)
+      (BU.format1 "implicit for pure_wp in checking stronger for %s" (string_of_lid ed.mname))
       r in
     let c = S.mk_Comp ({
       comp_univs = [ Env.new_u_univ () ];
@@ -510,16 +510,19 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
       let _, subcomp_t, subcomp_ty = stronger_repr in
       let _, subcomp_t = SS.open_univ_vars us subcomp_t in
 
-      let bs_except_last =
+      let aqs_except_last, last_aq =
         let _, subcomp_ty = SS.open_univ_vars us subcomp_ty in
         match (SS.compress subcomp_ty).n with
-        | Tm_arrow (bs, _) -> bs |> List.splitAt (List.length bs - 1) |> fst
+        | Tm_arrow (bs, _) ->
+          let bs_except_last, last_b = bs |> List.splitAt (List.length bs - 1) in
+          bs_except_last |> List.map snd, last_b |> List.hd |> snd
         | _ -> failwith "Impossible! subcomp_ty must have been an arrow with at lease 1 binder" in
 
-     let aux t = 
+     let aux t =
+      let tun_args = aqs_except_last |> List.map (fun aq -> S.tun, aq) in
       S.mk_Tm_app
         subcomp_t
-        (((bs_except_last |> List.map (fun _ -> S.tun))@[t]) |> List.map S.as_arg)
+        (tun_args@[t, last_aq])
         None r in
 
      aux f_t, aux g_t in
@@ -570,7 +573,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     if List.length act.action_params <> 0
     then raise_error (Errors.Fatal_MalformedActionDeclaration,
       BU.format3 "Action %s:%s has non-empty action params (%s)"
-        ed.mname.str act.action_name.str (Print.binders_to_string "; " act.action_params)) r;
+        (string_of_lid ed.mname) (string_of_lid act.action_name) (Print.binders_to_string "; " act.action_params)) r;
 
     let env, act =
       let usubst, us = SS.univ_var_opening act.action_univs in
@@ -614,13 +617,13 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
         let env = Env.push_binders env bs in
         let t, u = U.type_u () in
         let reason = BU.format2 "implicit for return type of action %s:%s"
-          ed.mname.str act.action_name.str in
+          (string_of_lid ed.mname) (string_of_lid act.action_name) in
         let a_tm, _, g_tm = TcUtil.new_implicit_var reason r env t in
         let repr, g = fresh_repr r env u a_tm in
         U.arrow bs (S.mk_Total' repr (Env.new_u_univ () |> Some)), Env.conj_guard g g_tm
       | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType,
         BU.format3 "Unexpected non-function type for action %s:%s (%s)"
-          ed.mname.str act.action_name.str (Print.term_to_string act_typ)) r in
+          (string_of_lid ed.mname) (string_of_lid act.action_name) (Print.term_to_string act_typ)) r in
 
     if Env.debug env <| Options.Other "LayeredEffects" then
       BU.print1 "Expected action type: %s\n" (Print.term_to_string k);
@@ -634,7 +637,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let act_typ =
       let err_msg t = BU.format3
         "Unexpected (k-)type of action %s:%s, expected bs -> repr<u> i_1 ... i_n, found: %s"
-        ed.mname.str act.action_name.str (Print.term_to_string t) in
+        (string_of_lid ed.mname) (string_of_lid act.action_name) (Print.term_to_string t) in
       let repr_args t : universes * term * args =
         match (SS.compress t).n with
         | Tm_app (head, a::is) ->
@@ -676,7 +679,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
           action_typ = SS.close_univ_vars act.action_univs act_typ }
         else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
                (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
-                 ed.mname.str act.action_name.str (Print.univ_names_to_string us) (Print.univ_names_to_string act.action_univs)))
+                 (string_of_lid ed.mname) (string_of_lid act.action_name) (Print.univ_names_to_string us) (Print.univ_names_to_string act.action_univs)))
              r in
 
     act in
@@ -726,7 +729,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
       then us, bs
       else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
              (BU.format3 "Expected and generalized universes in effect declaration for %s are different, expected: %s, but found %s"
-               ed.mname.str (BU.string_of_int (List.length ed_univs)) (BU.string_of_int (List.length us))))
+               (string_of_lid ed.mname) (BU.string_of_int (List.length ed_univs)) (BU.string_of_int (List.length us))))
              (range_of_lid ed.mname)
   in
 
@@ -780,7 +783,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
       if List.length g_us <> n then
         let error = BU.format4
           "Expected %s:%s to be universe-polymorphic in %s universes, found %s"
-          ed.mname.str comb (string_of_int n) (g_us |> List.length |> string_of_int) in
+          (string_of_lid ed.mname) comb (string_of_int n) (g_us |> List.length |> string_of_int) in
         raise_error (Errors.Fatal_MismatchUniversePolymorphic, error) t.pos
     end;
     match us with
@@ -791,7 +794,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
      then g_us, t
      else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
             (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, expected: %s, but found %s"
-               ed.mname.str comb (BU.string_of_int (List.length us)) (BU.string_of_int (List.length g_us))))
+               (string_of_lid ed.mname) comb (BU.string_of_int (List.length us)) (BU.string_of_int (List.length g_us))))
             t.pos
   in
 
@@ -818,7 +821,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
 
   let log_combinator s ts =
     if Env.debug env <| Options.Other "ED" then
-      BU.print3 "Typechecked %s:%s = %s\n" ed.mname.str s (Print.tscheme_to_string ts) in
+      BU.print3 "Typechecked %s:%s = %s\n" (string_of_lid ed.mname) s (Print.tscheme_to_string ts) in
 
   let ret_wp =
     let a, wp_sort = fresh_a_and_wp () in
@@ -1009,7 +1012,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
           let env' = { Env.set_expected_typ env act_typ with instantiate_imp = false } in
           if Env.debug env (Options.Other "ED") then
             BU.print3 "Checking action %s:\n[definition]: %s\n[cps'd type]: %s\n"
-              (text_of_lid act.action_name) (Print.term_to_string act.action_defn)
+              (string_of_lid act.action_name) (Print.term_to_string act.action_defn)
               (Print.term_to_string act_typ);
           let act_defn, _, g_a = tc_tot_or_gtot_term env' act.action_defn in
 
@@ -1261,7 +1264,7 @@ let tc_lift env sub r =
     let expected_k  = U.arrow [S.mk_binder a; S.null_binder wp_a_src] (S.mk_Total wp_a_tgt) in
     let repr_type eff_name a wp =
       if not (is_reifiable_effect env eff_name)
-      then raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" eff_name.str)) (Env.get_range env);
+      then raise_error (Errors.Fatal_EffectCannotBeReified, (BU.format1 "Effect %s cannot be reified" (string_of_lid eff_name))) (Env.get_range env);
       match Env.effect_decl_opt env eff_name with
       | None -> failwith "internal error: reifiable effect has no decl?"
       | Some (ed, qualifiers) ->

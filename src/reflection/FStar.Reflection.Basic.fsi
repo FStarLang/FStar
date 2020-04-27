@@ -11,6 +11,7 @@ open FStar.ST
 module O = FStar.Options
 module RD = FStar.Reflection.Data
 module EMB = FStar.Syntax.Embeddings
+module Z = FStar.BigInt
 
 (* Tying a knot into the environment which started execution.
  * Needed to inspect sigelts and the like without needing
@@ -66,3 +67,11 @@ val pack_binder    : bv -> aqualv -> binder
 
 val inspect_aqual  : aqual -> aqualv
 val pack_aqual     : aqualv -> aqual
+
+(* We're only taking these as primitives to break the dependency from *
+FStar.Tactics into FStar.String, which pulls a LOT of modules. *)
+val implode_qn     : list<string> -> string
+val explode_qn     : string -> list<string>
+val compare_string : string -> string -> Z.t
+
+val push_binder    : Env.env -> binder -> Env.env

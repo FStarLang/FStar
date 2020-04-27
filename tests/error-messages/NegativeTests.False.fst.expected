@@ -1,0 +1,13 @@
+>> Got issues: [
+NegativeTests.False.fst(23,13-23,33): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(371,54-371,66))
+>>]
+>> Got issues: [
+NegativeTests.False.fst(30,18-30,35): (Error 12) Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Left (Prims.T)" has type "Prims.c_or (*?u1*) _ Prims.l_True"
+NegativeTests.False.fst(30,18-30,35): (Error 12) Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Left (Prims.T)" has type "Prims.c_or Prims.c_True Prims.l_True"
+NegativeTests.False.fst(30,36-30,54): (Error 12) Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Right (Prims.T)" has type "Prims.c_or Prims.l_True (*?u6*) _"
+NegativeTests.False.fst(30,36-30,54): (Error 12) Expected type "Prims.l_True \/ Prims.l_True"; but "Prims.Right (Prims.T)" has type "Prims.c_or Prims.l_True Prims.c_True"
+>>]
+NegativeTests.False.fst(21,4-21,7): (Warning 240) Admitting NegativeTests.False.bar without a definition
+NegativeTests.False.fst(28,4-28,10): (Warning 240) Admitting NegativeTests.False.absurd without a definition
+Verified module: NegativeTests.False
+All verification conditions discharged successfully

@@ -29,14 +29,6 @@ open FStar.Tactics.Result
  * This works even if no goals are present. *)
 assume val top_env : unit -> Tac env
 
-(** [push_binder] extends the environment with a single binder.
-    This is useful as one traverses the syntax of a term,
-    pushing binders as one traverses a binder in a lambda,
-    match, etc. Note, the environment here is disconnected to
-    (though perhaps derived from) the environment in the proofstate *)
-(* TODO: move to FStar.Reflection.Basic? *)
-assume val push_binder : env -> binder -> env
-
 (** [fresh ()] returns a fresh integer. It does not get reset when
 catching a failure. *)
 assume val fresh : unit -> Tac int
@@ -86,7 +78,8 @@ Currently, the flags (provided in Prims) are
 [primops] (performing primitive reductions, such as arithmetic and
 string operations)
 [delta] (unfold names)
-[zeta] (inline let bindings)
+[zeta] (unroll let rec bindings, but with heuristics to avoid loops)
+[zeta_full] (unroll let rec bindings fully)
 [iota] (reduce match statements over constructors)
 [delta_only] (restrict delta to only unfold this list of fully-qualfied identifiers)
 *)
@@ -115,8 +108,9 @@ assume val intro_rec  : unit -> Tac (binder * binder)
 
 (** [rename_to b nm] will rename the binder [b] to [nm] in
 the environment, goal, and witness in a safe manner. The only use of this
-is to make goals and terms more user readable. *)
-assume val rename_to  : binder -> string -> Tac unit
+is to make goals and terms more user readable. The primitive returns
+the new binder, since the old one disappears from the context. *)
+assume val rename_to  : binder -> string -> Tac binder
 
 (** [revert] pushes out a binder from the environment into the goal type,
 so a behaviour opposite to [intros].
@@ -187,36 +181,34 @@ assume val dump : string -> Tac unit
 when trying to [apply] a reflexivity lemma. *)
 assume val trefl : unit -> Tac unit
 
-(** (TODO: explain bettter) When running [pointwise tau] For every
-subterm [t'] of the goal's type [t], the engine will build a goal [Gamma
-|= t' == ?u] and run [tau] on it. When the tactic proves the goal,
-the engine will rewrite [t'] for [?u] in the original goal type. This
-is done for every subterm, bottom-up. This allows to recurse over an
-unknown goal type. By inspecting the goal, the [tau] can then decide
-what to do (to not do anything, use [trefl]). *)
-assume val t_pointwise : direction -> (unit -> Tac unit) -> Tac unit
-
-(** [topdown_rewrite ctrl rw] is used to rewrite those sub-terms [t]
-    of the goal on which [fst (ctrl t)] returns true.
-
-    On each such sub-term, [rw] is presented with an equality of goal
-    of the form [Gamma |= t == ?u]. When [rw] proves the goal,
-    the engine will rewrite [t] for [?u] in the original goal
-    type.
-
-    The goal formula is traversed top-down and the traversal can be
-    controlled by [snd (ctrl t)]:
-
-    When [snd (ctrl t) = 0], the traversal continues down through the
-    position in the goal term.
-
-    When [snd (ctrl t) = 1], the traversal continues to the next
-    sub-tree of the goal.
-
-    When [snd (ctrl t) = 2], no more rewrites are performed in the
-    goal.
-*)
-assume val topdown_rewrite : (ctrl : term -> Tac (bool * int)) -> (rw:unit -> Tac unit) -> Tac unit
+(** [ctrl_rewrite] will traverse the current goal, and call [ctrl]
+ * repeatedly on subterms. When [ctrl t] returns [(true, _)], the
+ * tactic will call [rw] with a goal of type [t = ?u], which once
+ * solved will rewrite [t] to the solution of [?u]. No goal is
+ * made if [ctrl t] returns [(false, _)].
+ *
+ * The second component of the return value of [ctrl] specifies
+ * whether for continue descending in the goal or not. It can
+ * either be:
+ *   - Continue: keep on with further subterms
+ *   - Skip: stop descending in this tree
+ *   - Abort: stop everything
+ *
+ * The first argument is the direction, [TopDown] or [BottomUp]. It
+ * specifies how the AST of the goal is traversed (preorder or postorder).
+ *
+ * Note: for [BottomUp] a [Skip] means to stop trying to rewrite everything
+ * from the current node up to the root, but still consider sibilings. This
+ * means that [ctrl_rewrite BottomUp (fun _ -> (true, Skip)) t] will call [t]
+ * for every leaf node in the AST.
+ *
+ * See [pointwise] and [topdown_rewrite] for more friendly versions.
+ *)
+assume val ctrl_rewrite :
+    direction ->
+    (ctrl : term -> Tac (bool & ctrl_flag)) ->
+    (rw:unit -> Tac unit) ->
+    Tac unit
 
 (** Given the current goal [Gamma |- w : t],
 [dup] will turn this goal into

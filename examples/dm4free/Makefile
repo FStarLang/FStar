@@ -11,6 +11,7 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.ST.uver \
 	FStar.DM4F.Heap.uver \
 	FStar.DM4F.Heap.ST.uver \
+	FStar.DM4F.Heap.IntStoreFixed.uver \
 	FStar.DM4F.StExnC.uver \
 	FStar.DM4F.IFC.uver \
 	FStar.DM4F.Continuations.uver \
@@ -24,7 +25,7 @@ uall:	FStar.DM4F.MonadLaws.uver \
 	FStar.DM4F.Id.uver
 
 old:
-	$(MAKE) -C old
+	+$(MAKE) -C old
 
 %.uver-explicit: %.fst
 	$(FSTAR) $^ --explicit_deps

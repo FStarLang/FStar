@@ -404,16 +404,20 @@ let json_of_issue_level i =
            | EError -> "error")
 
 let json_of_issue issue =
-  JsonAssoc [("level", json_of_issue_level issue.issue_level);
-             ("message", JsonStr issue.issue_message);
-             ("ranges", JsonList
-                          ((match issue.issue_range with
-                            | None -> []
-                            | Some r -> [json_of_use_range r]) @
-                           (match issue.issue_range with
-                            | Some r when def_range r <> use_range r ->
-                              [json_of_def_range r]
-                            | _ -> [])))]
+  JsonAssoc <|
+     [("level", json_of_issue_level issue.issue_level)]
+    @(match issue.issue_number with
+      | None -> []
+      | Some n -> [("number", JsonInt n)])
+    @[("message", JsonStr issue.issue_message);
+      ("ranges", JsonList
+                   ((match issue.issue_range with
+                     | None -> []
+                     | Some r -> [json_of_use_range r]) @
+                    (match issue.issue_range with
+                     | Some r when def_range r <> use_range r ->
+                       [json_of_def_range r]
+                     | _ -> [])))]
 
 let alist_of_symbol_lookup_result lr =
   [("name", JsonStr lr.slr_name);
@@ -923,7 +927,7 @@ let sc_fvars tcenv sc = // Memoized version of fc_vars
 
 let json_of_search_result tcenv sc =
   let typ_str = term_to_string tcenv (sc_typ tcenv sc) in
-  JsonAssoc [("lid", JsonStr (DsEnv.shorten_lid tcenv.dsenv sc.sc_lid).str);
+  JsonAssoc [("lid", JsonStr (string_of_lid (DsEnv.shorten_lid tcenv.dsenv sc.sc_lid)));
              ("type", JsonStr typ_str)]
 
 exception InvalidSearch of string
@@ -935,7 +939,7 @@ let run_search st search_str =
   let st_matches candidate term =
     let found =
       match term.st_term with
-      | NameContainsStr str -> Util.contains candidate.sc_lid.str str
+      | NameContainsStr str -> Util.contains (string_of_lid candidate.sc_lid) str
       | TypeContainsLid lid -> set_mem lid (sc_fvars tcenv candidate) in
     found <> term.st_negate in
 
@@ -970,7 +974,7 @@ let run_search st search_str =
     (if term.st_negate then "-" else "")
     ^ (match term.st_term with
        | NameContainsStr s -> Util.format1 "\"%s\"" s
-       | TypeContainsLid l -> Util.format1 "%s" l.str) in
+       | TypeContainsLid l -> Util.format1 "%s" (string_of_lid l)) in
 
   let results =
     try
@@ -978,7 +982,7 @@ let run_search st search_str =
       let all_lidents = TcEnv.lidents tcenv in
       let all_candidates = List.map sc_of_lid all_lidents in
       let matches_all candidate = List.for_all (st_matches candidate) terms in
-      let cmp r1 r2 = Util.compare r1.sc_lid.str r2.sc_lid.str in
+      let cmp r1 r2 = Util.compare (string_of_lid r1.sc_lid) (string_of_lid r2.sc_lid) in
       let results = List.filter matches_all all_candidates in
       let sorted = Util.sort_with cmp results in
       let js = List.map (json_of_search_result tcenv) sorted in
@@ -1059,8 +1063,13 @@ let rec go st : int =
 let interactive_error_handler = // No printing here — collect everything for future use
   let issues : ref<list<issue>> = Util.mk_ref [] in
   let add_one (e: issue) = issues := e :: !issues in
-  let count_errors () = List.length (List.filter (fun e -> e.issue_level = EError) !issues) in
-  let report () = List.sortWith compare_issues !issues in
+  let count_errors () =
+    let issues = Util.remove_dups (fun i0 i1 -> i0=i1) !issues in
+    List.length (List.filter (fun e -> e.issue_level = EError) issues)
+  in
+  let report () =
+    List.sortWith compare_issues (Util.remove_dups (fun i0 i1 -> i0=i1) !issues)
+  in
   let clear () = issues := [] in
   { eh_add_one = add_one;
     eh_count_errors = count_errors;

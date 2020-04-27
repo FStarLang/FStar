@@ -182,14 +182,14 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 
 //            | Pat_cons(fv, []), Tm_fvar fv' ->
 //              if not (Syntax.fv_eq fv fv')
-//              then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
+//              then failwith (BU.format2 "Expected pattern constructor %s; got %s" (string_of_lid fv.fv_name.v) (string_of_lid fv'.fv_name.v));
 //              pkg (Pat_cons(fv', []))
 
 //            | Pat_cons(fv, argpats), Tm_app({n=Tm_fvar(fv')}, args)
 //            | Pat_cons(fv, argpats), Tm_app({n=Tm_uinst({n=Tm_fvar(fv')}, _)}, args) ->
 
 //              if fv_eq fv fv' |> not
-//              then failwith (BU.format2 "Expected pattern constructor %s; got %s" fv.fv_name.v.str fv'.fv_name.v.str);
+//              then failwith (BU.format2 "Expected pattern constructor %s; got %s" (string_of_lid fv.fv_name.v) (string_of_lid fv'.fv_name.v));
 
 //              let fv = fv' in
 //              let rec match_args matched_pats args argpats = match args, argpats with
@@ -715,7 +715,9 @@ let mk_indexed_bind env
         let bs_subst = NT (List.hd bs |> fst, x_a |> fst |> S.bv_to_name) in
         let c = SS.subst_comp [bs_subst] c in
         effect_args_from_repr (SS.compress (U.comp_result c)) (U.is_layered n_ed) r1
-        |> List.map (SS.subst subst) in
+        |> List.map (SS.subst subst)
+      | _ -> failwith "imspossible: mk_indexed_bind"
+    in
 
     let env_g = Env.push_binders env [x_a] in
     List.fold_left2
@@ -893,22 +895,6 @@ let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) f
 
          bind_pure_wp_with env pure_assert_wp c flags
 
-let record_simplify = 
-  let x = BU.mk_ref 0 in
-  fun env guard ->
-    let n = !x in
-    x := n + 1;
-    let start = BU.now() in
-    let g = Rel.simplify_guard env guard in
-    let fin = BU.now () in
-    if Options.debug_any()
-    then
-      BU.print2 "Simplify_guard %s in %s ms\n"
-        (BU.string_of_int n)
-        (BU.string_of_int (snd (BU.time_diff start fin)));
-    g
-
-  
 let strengthen_precondition
             (reason:option<(unit -> string)>)
             env
@@ -995,8 +981,8 @@ let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) : comp * gu
     if is_unit then      
       if c |> U.comp_effect_name |> Env.norm_eff_name env |> Env.is_layered_effect env
       then
-        let [b], phi = SS.open_term [b, None] phi in
-        let phi = SS.subst [NT (b |> fst, S.unit_const)] phi in
+        let b, phi = SS.open_term_bv b phi in
+        let phi = SS.subst [NT (b, S.unit_const)] phi in
         weaken_comp env c phi
       else close_wp_comp env [x] c, Env.trivial_guard
     else c, Env.trivial_guard
@@ -2237,14 +2223,14 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      let lecs = lec_hd :: lecs in
 
      let gen_types (uvs:list<ctx_uvar>) : list<(bv * aqual)> =
-         let fail k : unit =
+         let fail rng k : unit =
              let lbname, e, c = lec_hd in
                raise_error (Errors.Fatal_FailToResolveImplicitArgument,
                             BU.format3 "Failed to resolve implicit argument of type '%s' in the type of %s (%s)"
                                        (Print.term_to_string k)
                                        (Print.lbname_to_string lbname)
                                        (Print.term_to_string (U.comp_result c)))
-                            (Env.get_range env)
+                            rng
          in
          uvs |> List.map (fun u ->
          match Unionfind.find u.ctx_uvar_head with
@@ -2261,10 +2247,10 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
              match (U.unrefine (N.unfold_whnf env kres)).n with
              | Tm_type _ ->
                 let free = FStar.Syntax.Free.names kres in
-                if not (BU.set_is_empty free) then fail kres
+                if not (BU.set_is_empty free) then fail u.ctx_uvar_range kres
 
              | _ ->
-               fail kres
+               fail u.ctx_uvar_range kres
            in
            let a = S.new_bv (Some <| Env.get_range env) kres in
            let t =
@@ -2468,7 +2454,7 @@ let maybe_add_implicit_binders (env:env) (bs:binders)  : binders =
                         | None -> bs
                         | Some ([], _, _) -> bs //no implicits
                         | Some (imps, _,  _) ->
-                          if imps |> BU.for_all (fun (x, _) -> BU.starts_with x.ppname.idText "'")
+                          if imps |> BU.for_all (fun (x, _) -> BU.starts_with (text_of_id x.ppname) "'")
                           then let r = pos bs in
                                let imps = imps |> List.map (fun (x, i) -> (S.set_range_of_bv x r, i)) in
                                imps@bs //we have a prefix of ticked variables
@@ -2503,8 +2489,8 @@ let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s
 let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
   // Debug
   if Env.debug env (Options.Other "ED") then begin
-    d (text_of_lid lident);
-    BU.print2 "Registering top-level definition: %s\n%s\n" (text_of_lid lident) (Print.term_to_string def)
+    d (string_of_lid lident);
+    BU.print2 "Registering top-level definition: %s\n%s\n" (string_of_lid lident) (Print.term_to_string def)
   end;
   // Allocate a new top-level name.
   let fv = S.lid_as_fv lident (U.incr_delta_qualifier def) None in
@@ -2627,6 +2613,8 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
                     r
           | Sig_declare_typ _ ->
             ()
+          | Sig_fail _ ->
+            () (* just ignore it, the member ses have the attribute too *)
           | _ ->
             raise_error
               (Errors.Fatal_QulifierListNotPermitted,
@@ -2742,7 +2730,7 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
        let is, g = Env.uvars_for_binders env bs [NT (fst a, a_tm)]
          (fun b -> BU.format3
            "uvar for binder %s when creating a fresh repr for %s at %s"
-           (Print.binder_to_string b) eff_name.str (Range.string_of_range r)) r in
+           (Print.binder_to_string b) (string_of_lid eff_name) (Range.string_of_range r)) r in
        (match repr_ts_opt with
         | None ->  //no repr, return thunked computation type
           let eff_c = mk_Comp ({
@@ -2909,7 +2897,7 @@ let get_field_projector_name env datacon index =
     if List.length bs <= index then err (List.length bs)
     else
       let b = List.nth bs index in
-      U.mk_field_projector_name datacon (fst b) index |> fst
+      U.mk_field_projector_name datacon (fst b) index
   | _ -> err 0
 
 

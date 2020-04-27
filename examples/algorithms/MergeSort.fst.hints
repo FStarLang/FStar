@@ -45,7 +45,7 @@
         "typing_Prims.__proj__Cons__item__tl", "typing_Prims.uu___is_Cons"
       ],
       0,
-      "f987cdf6668ea612acf50e84f39bc3ba"
+      "b2a23f6628c0983f81a1fa9181049fd6"
     ],
     [
       "MergeSort.split",
@@ -93,7 +93,7 @@
         "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "6498970123c7cfc75803004022158173"
+      "2cf2c1661825ef5b6908850a9133ebd1"
     ],
     [
       "MergeSort.merge_inv",
@@ -102,7 +102,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "88ecfa82a8ab44cd631cbb5e070a860d"
+      "4f6a1e57cc9595ec784321bd50403eb2"
     ],
     [
       "MergeSort.merge",
@@ -154,7 +154,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_IntSort.sorted"
       ],
       0,
-      "6d7ac8431a257dac7acf723539b38b21"
+      "d70745a3b5acd3a71c2e7e002d4305aa"
     ],
     [
       "MergeSort.mergesort",
@@ -194,7 +194,7 @@
         "typing_Prims.__proj__Cons__item__tl", "well-founded-ordering-on-nat"
       ],
       0,
-      "1c66ea18a6e512616c265d3d2e8a469a"
+      "858d97329a64c3e4fde6386bbac26405"
     ],
     [
       "MergeSort.split",
@@ -203,7 +203,7 @@
       1,
       [ "@query" ],
       0,
-      "688498c9bdaaed75572e740b1f3858f7"
+      "9a8a21c8a4b2c5825d6126020559867d"
     ],
     [
       "MergeSort.split",
@@ -251,7 +251,7 @@
         "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "56740e5309b99aab62036f5c89c74cb0"
+      "d11c138d63ba9136cf14df35b97acaaf"
     ],
     [
       "MergeSort.merge_inv",
@@ -260,7 +260,7 @@
       1,
       [ "@query", "assumption_Prims.HasEq_int" ],
       0,
-      "08902cf450669c753122e0bd4b10cbfc"
+      "39e3c05535b8e68e088101efdd7379b5"
     ],
     [
       "MergeSort.merge",
@@ -312,7 +312,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_IntSort.sorted"
       ],
       0,
-      "d28c499e4a7615f984138ce1f89d121b"
+      "b42c4cec482db07b48823c59227b57bf"
     ],
     [
       "MergeSort.mergesort",
@@ -352,7 +352,7 @@
         "typing_Prims.__proj__Cons__item__tl", "well-founded-ordering-on-nat"
       ],
       0,
-      "0efb1cba2694c26aae00da0c3d9534a2"
+      "390b72cacadc6e6769b1e70a6f421c52"
     ]
   ]
 ]

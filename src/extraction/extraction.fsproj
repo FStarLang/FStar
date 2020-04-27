@@ -51,6 +51,7 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="FStar.Extraction.ML.Syntax.fs" />
+    <Compile Include="FStar.Extraction.ML.UEnv.fsi" />
     <Compile Include="FStar.Extraction.ML.UEnv.fs" />
     <Compile Include="FStar.Extraction.ML.Util.fsi" />
     <Compile Include="FStar.Extraction.ML.Util.fs" />
@@ -122,6 +123,11 @@
     <ProjectReference Include="..\reflection\reflection.fsproj">
       <Name>reflection</Name>
       <Project>{8869FA4E-96AF-4E01-99BC-B52C88610E3D}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\tactics\tactics.fsproj">
+      <Name>tactics</Name>
+      <Project>{82336f31-a87c-4403-a2f4-2b90b4f0996b}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

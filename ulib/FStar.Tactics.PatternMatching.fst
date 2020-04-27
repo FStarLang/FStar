@@ -298,7 +298,7 @@ let rec interp_pattern_aux (pat: pattern) (cur_bindings: bindings) (tm:term)
   let interp_any () cur_bindings tm =
     return [] in
   let interp_var (v: varname) cur_bindings tm =
-    match List.Tot.assoc v cur_bindings with
+    match List.Tot.Base.assoc v cur_bindings with
     | Some tm' -> if term_eq tm tm' then return cur_bindings
                  else raise (NonLinearMismatch (v, tm, tm'))
     | None -> return ((v, tm) :: cur_bindings) in
@@ -334,7 +334,7 @@ Returns a result in the exception monad. **)
 let interp_pattern (pat: pattern) : term -> Tac (match_res bindings) =
   fun (tm: term) ->
     rev_bindings <-- interp_pattern_aux pat [] tm;
-    return (List.Tot.rev rev_bindings)
+    return (List.Tot.Base.rev rev_bindings)
 
 (** Match a term `tm` against a pattern `pat`.
 Raises an exception if the match fails.  This is mostly useful for debugging:
@@ -371,7 +371,7 @@ let string_of_matching_problem mp =
     String.concat ", " mp.mp_vars in
   let hyps =
     String.concat "\n        "
-      (List.Tot.map (fun (nm, pat) ->
+      (List.Tot.Base.map (fun (nm, pat) ->
         nm ^ ": " ^ (string_of_pattern pat)) mp.mp_hyps) in
   let goal = match mp.mp_goal with
              | None -> "_"
@@ -402,7 +402,7 @@ let string_of_matching_solution ms =
 (** Find a varname in an association list; fail if it can't be found. **)
 let assoc_varname_fail (#b: Type) (key: varname) (ls: list (varname * b))
     : Tac b =
-  match List.Tot.assoc key ls with
+  match List.Tot.Base.assoc key ls with
   | None -> fail ("Not found: " ^ key)
   | Some x -> x
 
@@ -672,8 +672,8 @@ let matching_problem_of_abs (tm: term)
     (map abspat_argspec_of_binder classified_binders, tm) in
 
   let mp =
-    { mp_vars = List.rev #varname problem.mp_vars;
-      mp_hyps = List.rev #(varname * pattern) problem.mp_hyps;
+    { mp_vars = List.Tot.Base.rev #varname problem.mp_vars;
+      mp_hyps = List.Tot.Base.rev #(varname * pattern) problem.mp_hyps;
       mp_goal = problem.mp_goal } in
 
   debug ("Got matching problem: " ^ (string_of_matching_problem mp));
@@ -771,7 +771,7 @@ let inspect_abspat_problem #a (abspat: a) : Tac matching_problem =
 
 (** Inspect the matching solution produced by parsing and solving an abspat. **)
 let inspect_abspat_solution #a (abspat: a) : Tac matching_solution =
-  match_abspat abspat (fun _ -> (fun solution -> solution) <: Tac _)
+  match_abspat abspat (fun _ -> (fun solution -> solution <: Tac _) <: Tac _)
 
 let tpair #a #b (x : a) : Tac (b -> Tac (a * b)) =
   fun (y: b) -> (x, y)

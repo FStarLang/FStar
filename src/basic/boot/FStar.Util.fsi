@@ -21,8 +21,6 @@ open FStar.All
 open FStar.BaseTypes
 
 exception Impos
-exception NYI of string
-exception HardError of string
 
 val max_int: int
 val return_all: 'a -> ML<'a>
@@ -425,6 +423,7 @@ val load_2values_from_file: string -> option<('a * 'b)>
 val print_exn: exn -> string
 val digest_of_file: string -> string
 val digest_of_string: string -> string
+val touch_file: string -> unit (* Precondition: file exists *)
 
 val ensure_decimal: string -> string
 val measure_execution_time: string -> (unit -> 'a) -> 'a
@@ -448,8 +447,13 @@ type hints_db = {
     hints: hints
 }
 
+type hints_read_result =
+  | HintsOK of hints_db
+  | MalformedJson
+  | UnableToOpen
+
 val write_hints: string -> hints_db -> unit
-val read_hints: string -> option<hints_db>
+val read_hints: string -> hints_read_result
 
 val json_of_string : string -> option<json>
 val string_of_json : json -> string

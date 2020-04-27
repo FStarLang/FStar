@@ -83,6 +83,10 @@ Guidelines for the changelog:
      staging ground, and a .cache directory in which .checked and
      .hints files are maintained.
 
+   * FStar.UInt[N].mul_div has been removed. This operation was not
+     supported uniformly, with only an implementation for UInt64
+     provided (using UInt128).
+
 ## Syntax
 
    * We now overload `&` to construct both dependent and non-dependent
@@ -92,6 +96,11 @@ Guidelines for the changelog:
      proposition here is that in contrast to `*`, which clashes with
      the multiplication on integers, the `&` symbol can be used for
      tuples while reserving `*` for multiplication.
+
+   * Attributes are now specified using the notation `[@@ a1; ... ; an]` i.e.,
+     a semicolon separated list of terms. The old syntax will soon
+     be deprecated.
+
 
 ## Extraction
 

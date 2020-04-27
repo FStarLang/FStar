@@ -74,13 +74,19 @@ let mk_emb_full em un typ printer emb_typ = {
 }
 
 (* Eta-expand to make F# happy *)
-let embed       (e:embedding<'a>) x   = e.em x
-let unembed     (e:embedding<'a>) t   = e.un t
+let embed        (e:embedding<'a>) x   = e.em x
+let unembed      (e:embedding<'a>) t   = e.un t
 let warn_unembed (e:embedding<'a>) t n = unembed e t true n
 let try_unembed  (e:embedding<'a>) t n = unembed e t false n
-let type_of     (e:embedding<'a>)     = e.typ
-let set_type ty (e:embedding<'a>)     = { e with typ = ty }
+let type_of      (e:embedding<'a>)     = e.typ
+let set_type ty  (e:embedding<'a>)     = { e with typ = ty }
 
+let embed_as (ea:embedding<'a>) (ab : 'a -> 'b) (ba : 'b -> 'a) (o:option<typ>) =
+    mk_emb_full (fun (x:'b) -> embed ea (ba x))
+                (fun (t:term) w cb -> BU.map_opt (unembed ea t w cb) ab)
+                (match o with | Some t -> t | _ -> type_of ea)
+                (fun (x:'b) -> BU.format1 "(embed_as>> %s)\n" (ea.print (ba x)))
+                ea.emb_typ
 
 let lazy_embed (pa:printer<'a>) (et:emb_typ) rng ta (x:'a) (f:unit -> term) =
     if !Options.debug_embedding
@@ -359,7 +365,7 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
             x
             (fun () ->
                 let proj i ab =
-                    let proj_1, _ = U.mk_field_projector_name (PC.mk_tuple_data_lid 2 rng) (S.null_bv S.tun) i in
+                    let proj_1 = U.mk_field_projector_name (PC.mk_tuple_data_lid 2 rng) (S.null_bv S.tun) i in
                     let proj_1_tm = S.fv_to_tm (lid_as_fv proj_1 delta_equational None) in
                     S.mk_Tm_app (S.mk_Tm_uinst proj_1_tm [U_zero])
                                 [S.iarg (type_of ea);
@@ -580,6 +586,7 @@ type norm_step =
     | Primops
     | Delta
     | Zeta
+    | ZetaFull
     | Iota
     | Reify
     | UnfoldOnly  of list<string>
@@ -588,18 +595,19 @@ type norm_step =
     | NBE
 
 (* the steps as terms *)
-let steps_Simpl         = tdataconstr PC.steps_simpl
-let steps_Weak          = tdataconstr PC.steps_weak
-let steps_HNF           = tdataconstr PC.steps_hnf
-let steps_Primops       = tdataconstr PC.steps_primops
-let steps_Delta         = tdataconstr PC.steps_delta
-let steps_Zeta          = tdataconstr PC.steps_zeta
-let steps_Iota          = tdataconstr PC.steps_iota
-let steps_Reify         = tdataconstr PC.steps_reify
-let steps_UnfoldOnly    = tdataconstr PC.steps_unfoldonly
-let steps_UnfoldFully   = tdataconstr PC.steps_unfoldonly
-let steps_UnfoldAttr    = tdataconstr PC.steps_unfoldattr
-let steps_NBE           = tdataconstr PC.steps_nbe
+let steps_Simpl         = tconst PC.steps_simpl
+let steps_Weak          = tconst PC.steps_weak
+let steps_HNF           = tconst PC.steps_hnf
+let steps_Primops       = tconst PC.steps_primops
+let steps_Delta         = tconst PC.steps_delta
+let steps_Zeta          = tconst PC.steps_zeta
+let steps_ZetaFull      = tconst PC.steps_zeta_full
+let steps_Iota          = tconst PC.steps_iota
+let steps_Reify         = tconst PC.steps_reify
+let steps_UnfoldOnly    = tconst PC.steps_unfoldonly
+let steps_UnfoldFully   = tconst PC.steps_unfoldonly
+let steps_UnfoldAttr    = tconst PC.steps_unfoldattr
+let steps_NBE           = tconst PC.steps_nbe
 
 let e_norm_step =
     let t_norm_step = U.fvar_const (Ident.lid_of_str "FStar.Syntax.Embeddings.norm_step") in
@@ -626,6 +634,8 @@ let e_norm_step =
                     steps_Delta
                 | Zeta ->
                     steps_Zeta
+                | ZetaFull ->
+                    steps_ZetaFull
                 | Iota ->
                     steps_Iota
                 | NBE ->
@@ -665,6 +675,8 @@ let e_norm_step =
                     Some Delta
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_zeta ->
                     Some Zeta
+                | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_zeta_full ->
+                    Some ZetaFull
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_iota ->
                     Some Iota
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_nbe ->

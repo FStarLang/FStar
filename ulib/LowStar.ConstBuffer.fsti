@@ -48,7 +48,7 @@ module B = LowStar.Buffer
 /// The concrete type `const_buffer` is defined later
 
 /// `qual`: mutability qualifier
-[@erasable]
+[@@erasable]
 noeq
 type qual =
   | MUTABLE

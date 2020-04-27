@@ -23,7 +23,6 @@ val isEmpty : (list<'a>) -> Tot<bool>
 val hd : (list<'a>) -> 'a
 val length : (list<'a>) -> Tot<nat>
 val nth : (list<'a>) -> int -> 'a
-val count<'a when 'a : equality> : 'a -> (list<'a>) -> Tot<nat>
 val rev_acc : (list<'a>) -> (list<'a>) -> Tot<(list<'a>)>
 val rev : (list<'a>) -> Tot<(list<'a>)>
 val append : (list<'a>) -> (list<'a>) -> Tot<(list<'a>)>
@@ -42,8 +41,8 @@ val fold_left2 : ('s -> 'a -> 'b -> 's) -> 's -> (list<'a>) -> (list<'b>) -> 's
 val fold_right : ('a -> 'b -> 'b) -> (list<'a>) -> 'b -> 'b
 val fold_right2 : ('a -> 'b -> 'c -> 'c) -> list<'a> -> list<'b> -> 'c -> 'c
 val rev_map_onto : ('a -> 'b) -> (list<'a>) -> (list<'b>) -> (list<'b>)
+val init : (list<'a>) -> list<'a>
 val last : (list<'a>) -> option<'a>
-val mem<'a when 'a : equality>  : 'a -> (list<'a>) -> Tot<bool>
 val existsb : f:('a -> bool) -> (list<'a>) -> Tot<bool>
 val existsML : f:('a -> bool) -> (list<'a>) -> bool
 val find : f:('a -> bool) -> (list<'a>) -> Tot<(option<'a>)>
@@ -55,7 +54,6 @@ val tryFind : ('a -> bool) -> (list<'a>) -> (option<'a>)
 val tryPick : ('a -> (option<'b>)) -> (list<'a>) -> (option<'b>)
 val choose : ('a -> (option<'b>)) -> (list<'a>) -> (list<'b>)
 val partition : ('a -> bool) -> (list<'a>) -> ((list<'a>) * (list<'a>))
-val assoc<'a, 'b when 'a : equality>  : 'a -> (list<('a * 'b)>) -> Tot<(option<'b>)>
 val splitAt : int -> list<'a> -> list<'a> * list<'a>
 val split : (list<('a * 'b)>) -> Tot<((list<'a>) * (list<'b>))>
 val unzip3 : (list<('a * 'b * 'c)>) -> Tot<((list<'a>) * (list<'b>) * (list<'c>))>
@@ -67,8 +65,35 @@ val tail : (list<'_1225>) -> (list<'_1225>)
 val tl : list<'_1230> -> list<'_1230>
 val rev_append : (list<'_5110>) -> (list<'_5110>) -> Tot<(list<'_5110>)>
 val concat : (list<(list<'_6116>)>) -> Tot<(list<'_6116>)>
-val contains<'_17778 when '_17778 : equality>  : '_17778 -> (list<'_17778>) -> Tot<bool>
 val unzip : (list<('_36948 * '_36947)>) -> Tot<((list<'_36948>) * (list<'_36947>))>
-val unique<'a when 'a : equality> : list<'a> -> list<'a>
 val filter_map: ('a -> option<'b>) -> list<'a> -> list<'b>
-val index<'a when 'a : equality> : ('a -> bool) -> list<'a> -> int
+
+
+(* Functions with eqtypes, they require the annotation for F#, we delete it for F* *)
+(* It would be nice to just put the type annotation in a "JUST FSHARP" line,
+ * but F# will then complain that there is whitespace between the name and
+ * its parameters. Oh well. *)
+
+val count<'a when 'a : equality> // JUST FSHARP
+// IN F*: val count
+    : 'a -> (list<'a>) -> Tot<nat>
+
+val mem<'a when 'a : equality> // JUST FSHARP
+// IN F*: val mem
+    : 'a -> (list<'a>) -> Tot<bool>
+
+val assoc<'a, 'b when 'a : equality> // JUST FSHARP
+// IN F*: val assoc
+    : 'a -> (list<('a * 'b)>) -> Tot<(option<'b>)>
+
+val contains<'a when 'a : equality> // JUST FSHARP
+// IN F*: val contains
+    : 'a -> (list<'a>) -> Tot<bool>
+
+val unique<'a when 'a : equality> // JUST FSHARP
+// IN F*: val unique
+    : list<'a> -> list<'a>
+
+val index<'a when 'a : equality> // JUST FSHARP
+// IN F*: val index
+    : ('a -> bool) -> list<'a> -> int
