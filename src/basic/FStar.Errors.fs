@@ -730,6 +730,9 @@ let lookup_error_range settings (l, h) =
 
 let error_number (_, _, i) = i
 
+let warn_on_use_errno =
+  error_number (lookup_error default_settings Warning_WarnOnUse)
+
 let update_flags (l:list<(error_flag * string)>)
   : list<error_setting>
   = let set_one_flag i flag default_flag =
@@ -928,9 +931,9 @@ let diag r msg =
 let warn_unsafe_options rng_opt msg =
   match Options.report_assumes () with
   | Some "warn" ->
-    add_one (mk_issue EWarning rng_opt ("Every use of this option triggers a warning: " ^msg) (Some 334))
+    add_one (mk_issue EWarning rng_opt ("Every use of this option triggers a warning: " ^msg) (Some warn_on_use_errno))
   | Some "error" ->
-    add_one (mk_issue EError rng_opt ("Every use of this option triggers an error: " ^msg) (Some 334))
+    add_one (mk_issue EError rng_opt ("Every use of this option triggers an error: " ^msg) (Some warn_on_use_errno))
   | _ -> ()
 
 let set_option_warning_callback_range (ropt:option<Range.range>) =
