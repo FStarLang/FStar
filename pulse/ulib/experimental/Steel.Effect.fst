@@ -352,9 +352,12 @@ let act_preserves_frame_and_preorder
    mem_evolves m0 m1)
 = let (| x, m1 |) = act m0 in
   let frame : hprop = emp in
-  intro_emp_left pre (locks_invariant Set.empty m0) m0;
-  let m0 : hmem_with_inv (pre `star` emp) = m0 in  //instantiate the quantifier in is_m_frame_preserving
-  ()
+  intro_emp_left pre (locks_invariant Set.empty m0) m0
+  (*
+   * m0 : hmem_with_inv (pre `star` emp)
+   * for instantiation of is_m_frame_preserving
+   *)
+
 
 module G = FStar.Ghost
 module P = FStar.Preorder
