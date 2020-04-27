@@ -1356,7 +1356,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_let((false, [lb]), body) ->
             if Cfg.should_reduce_local_let cfg lb
             then let binder = S.mk_binder (BU.left lb.lbname) in
-                 let env = (Some binder, Clos(env, lb.lbdef, BU.mk_ref None, false))::env in
+                 (* If this let is effectful, and marked with @inline_let
+                  * (and it passed the typechecker), then its definition
+                  * must be pure. But, it will be lifted into an effectful
+                  * computation. We need to remove it to maintain a proper
+                  * term structure. See the discussion in PR #2024. *)
+                 let def = U.unmeta_lift lb.lbdef in
+                 let env = (Some binder, Clos(env, def, BU.mk_ref None, false))::env in
                  log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
                  norm cfg env stack body
 

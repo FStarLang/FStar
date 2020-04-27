@@ -122,6 +122,11 @@ let rec unmeta_safe e =
         | Tm_ascribed(e, _, _) -> unmeta_safe e
         | _ -> e
 
+let unmeta_lift (t:term) : term =
+  match (compress t).n with
+  | Tm_meta (t, Meta_monadic_lift _) -> t
+  | _ -> t
+
 (********************************************************************************)
 (*************************** Utilities for universes ****************************)
 (********************************************************************************)
