@@ -843,7 +843,11 @@ let compare_issues i1 i2 =
 
 let mk_default_handler print =
     let issues : ref<list<issue>> = BU.mk_ref [] in
-    let add_one (e: issue) = issues := e :: !issues in
+    let add_one (e: issue) =
+        match e.issue_level with
+        | EInfo -> print_issue e
+        | _ -> issues := e :: !issues
+    in
     let count_errors () =
         List.fold_left (fun n i ->
           match i.issue_level with
