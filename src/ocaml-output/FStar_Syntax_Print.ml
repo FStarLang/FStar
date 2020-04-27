@@ -871,7 +871,7 @@ and (attrs_to_string :
                  let uu____2817 = term_to_string t  in paren uu____2817) tms
              in
           FStar_All.pipe_right uu____2809 (FStar_String.concat "; ")  in
-        FStar_Util.format1 "[@ %s]" uu____2807
+        FStar_Util.format1 "[@@ %s]" uu____2807
 
 and (aqual_to_string' :
   Prims.string ->

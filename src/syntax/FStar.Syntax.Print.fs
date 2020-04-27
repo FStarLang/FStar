@@ -423,7 +423,7 @@ and lbs_to_string quals lbs =
                                                             (lb.lbdef |> term_to_string))))
 and attrs_to_string = function
     | [] -> ""
-    | tms -> U.format1 "[@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
+    | tms -> U.format1 "[@@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
 
 //and uvar_t_to_string (uv, k) =
 //   if false && (Options.print_real_names())
