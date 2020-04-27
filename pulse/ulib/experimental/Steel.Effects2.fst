@@ -137,9 +137,41 @@ let bind_steelf_steelf (a:Type) (b:Type)
 
 polymonadic_bind (SteelF, SteelF) |> SteelF = bind_steelf_steelf
 
+assume WP_monotonic :
+  forall (a:Type) (wp:pure_wp a).
+    (forall p q. (forall x. p x ==>  q x) ==>  (wp p ==>  wp q))
 
-let bind_pure_steel (a:Type)
+let bind_pure_steelf (a:Type) (b:Type)
   (wp:pure_wp a) (pre_g:a -> pre_t) (post_g:a -> post_t b)
   (_:squash (wp (fun _ -> True)))
-  (f:unit -> PURE wp a) (g:(x:a -> repr b (pre_g x) (post_g x)))
-: repr b (pre_g (f ())) (post_g
+  (f:unit -> PURE a wp) (g:(x:a -> repr b (pre_g x) (post_g x)))
+: repr b (pre_g (f ())) (post_g (f ()))
+= fun _ ->
+  let x = f () in
+  (g x) ()
+
+polymonadic_bind (PURE, SteelF) |> SteelF = bind_pure_steelf
+
+polymonadic_bind (PURE, Steel) |> Steel = bind_pure_steelf
+
+#restart-solver
+#reset-options "--z3cliopt 'smt.qi.eager_threshold=100' --z3rlimit 200"
+let bind_pure_steel (a:Type) (b:Type)
+  (pre_f:pre_t) (post_f:post_t a) (wp:a -> pure_wp b)
+  (frame_f:hprop) (post_g:post_t b)
+  (_:squash (forall x. wp x (fun _ -> True)))
+  (f:repr a pre_f post_f) (g:(x:a -> unit -> PURE b (wp x)))
+  (_:squash (forall x. (post_f x `star` frame_f) `implies` (post_g (g x ()))))
+: repr b (pre_f `star` frame_f) post_g
+= fun _ ->
+  let x = f () in
+  implies_preserves_frame (post_f x `star` frame_f) (post_g (g x ()));
+  implies_interp (post_f x `star` frame_f) (post_g (g x ()));
+  g x ()
+
+
+  // admit ();
+
+
+  // admit ();
+  // g x ()
