@@ -175,34 +175,11 @@ let bind_pure_steel (a:Type) (b:Type)
   (_:squash (forall x. (post_f x `star` frame_f) `implies` (post_g (g x ()))))
 : repr b (pre_f `star` frame_f) post_g
 = fun _ ->
-  let m0 = NMST.get () in
-
-  let x = f () in
-
-  let m1 = NMST.get () in
-
+  let x = (frame_aux f frame_f) () in
   let y = (g x) () in
 
-  let m2 = NMST.get () in
-
   implies_interp (post_f x `star` frame_f) (post_g y);
-
-  //from executing f
-  assert (Sem.preserves_frame pre_f (post_f x) m0 m1);
-
-  //add frame_f
-  Sem.preserves_frame_star #state pre_f (post_f x) m0 m1 frame_f;
-  assert (Sem.preserves_frame (pre_f `star` frame_f) (post_f x `star` frame_f) m0 m1);
-
-  //g is pure, extends preserves_frame to m2
-  assert (m1 == m2);  
-  assert (Sem.preserves_frame (pre_f `star` frame_f) (post_f x `star` frame_f) m0 m2);
-
-  //from last hypothesis in the signature
-  assert (post_f x `star` frame_f `implies` post_g y);
-  
   implies_preserves_frame_right (post_f x `star` frame_f) (post_g y);
-  assert (Sem.preserves_frame (pre_f `star` frame_f) (post_g y) m0 m2);
 
   y
 
