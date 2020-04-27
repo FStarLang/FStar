@@ -13,7 +13,7 @@ open FStar.Mul
 
 #push-options "--no_smt --tactic_trace_d 0" // Look, no SMT!
 
-[@tcdecltime]
+[@@tcdecltime]
 let test1 (a:int) =
   assert (a + a + a == 3 * a) by (int_semiring ())
 
@@ -71,22 +71,22 @@ let prime: pos =
 
 let ring : eqtype = a:nat{a < prime}
 
-[@canon_attr]
+[@@canon_attr]
 let zero : ring = 0
 
-[@canon_attr]
+[@@canon_attr]
 let one : ring = 1
 
 // Can't mark this as strict because https://github.com/FStarLang/FStar/issues/1923
-//[@(strict_on_arguments [0;1])]
+//[@@(strict_on_arguments [0;1])]
 let ( +% ) (a b:ring) : ring = (a + b) % prime
 
 // Can't mark this as strict because https://github.com/FStarLang/FStar/issues/1923
-//[@(strict_on_arguments [0;1])]
+//[@@(strict_on_arguments [0;1])]
 let ( *% ) (a b:ring) : ring = (a * b) % prime
 
 // We want this only to be unfolded for constants
-[@(strict_on_arguments [0])]
+[@@(strict_on_arguments [0])]
 let ( ~% ) (a:ring) : ring = (-a) % prime
 
 val add_identity (a:ring) : Lemma (zero +% a == a)
@@ -131,11 +131,11 @@ let mul_associativity a b c =
 val mul_commutativity (a b:ring) : Lemma (a *% b == b *% a)
 let mul_commutativity a b = ()
 
-[@canon_attr]
+[@@canon_attr]
 let ring_add_cm : cm ring =
   CM zero ( +% ) add_identity add_associativity add_commutativity
 
-[@canon_attr]
+[@@canon_attr]
 let ring_mul_cm : cm ring =
   CM one ( *% ) mul_identity mul_associativity mul_commutativity
 
@@ -169,7 +169,7 @@ let mul_zero_l a = assert_norm (0 % prime == 0)
 val add_opp (a:ring) : Lemma (a +% ~%a == zero)
 let add_opp a = ()
 
-[@canon_attr]
+[@@canon_attr]
 let ring_cr : cr ring = CR ring_add_cm ring_mul_cm ( ~% ) add_opp mul_add_distr mul_zero_l
 
 let poly_semiring () : Tac unit = canon_semiring ring_cr; trefl()

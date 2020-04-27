@@ -17,5 +17,5 @@ module UnitTests
 
 open FStar.Tactics
 
-[@plugin]
+[@@plugin]
 let testnat (n:nat) : Tac nat = 42

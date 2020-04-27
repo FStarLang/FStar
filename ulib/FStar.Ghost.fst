@@ -15,7 +15,7 @@
 *)
 module FStar.Ghost
 
-[@erasable]
+[@@erasable]
 noeq
 type erased (a:Type) =
   | E of a

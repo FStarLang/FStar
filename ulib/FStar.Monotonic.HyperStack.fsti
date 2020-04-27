@@ -28,7 +28,7 @@ unfold let is_in (r:rid) (h:hmap) = h `Map.contains` r
 let is_stack_region r = color r > 0
 let is_heap_color c = c <= 0
 
-[@(deprecated "FStar.HyperStack.ST.is_eternal_region")]
+[@@(deprecated "FStar.HyperStack.ST.is_eternal_region")]
 let is_eternal_region r  = is_heap_color (color r) && not (rid_freeable r)
 
 unfold let is_eternal_region_hs r = is_heap_color (color r) && not (rid_freeable r)
@@ -45,12 +45,12 @@ let is_strictly_below r1 r2 = r1 `is_below` r2 && r1 <> r2
 let is_strictly_above r1 r2 = r1 `is_above` r2 && r1 <> r2
 
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let map_invariant_predicate (m:hmap) :Type0 =
   forall r. Map.contains m r ==>
       (forall s. includes s r ==> Map.contains m s)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let downward_closed_predicate (h:hmap) :Type0 =
   forall (r:rid). r `is_in` h  //for any region in the memory
         ==> (r=root    //either is the root
@@ -59,7 +59,7 @@ unfold private let downward_closed_predicate (h:hmap) :Type0 =
                      ==> ((is_stack_region r = is_stack_region s) /\  //must be of the same flavor as itself
                           ((is_heap_color (color r) /\ rid_freeable r) ==> s == r)))) //and if r is a freeable heap region, s can only be r (no regions strictly below r)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let tip_top_predicate (tip:rid) (h:hmap) :Type0 =
   forall (r:sid). r `is_in` h <==> r `is_above` tip
 
@@ -69,7 +69,7 @@ let rid_last_component (r:rid) :GTot int
     if length r = 0 then 0
     else snd (hd r)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let rid_ctr_pred_predicate (h:hmap) (n:int) :Type0 =
   forall (r:rid). h `Map.contains` r ==> rid_last_component r < n
 
@@ -445,13 +445,13 @@ noeq type some_ref =
 
 let some_refs = list some_ref
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 private let rec regions_of_some_refs (rs:some_refs) :Tot (Set.set rid) =
   match rs with
   | []         -> Set.empty
   | (Ref r)::tl -> Set.union (Set.singleton (frameOf r)) (regions_of_some_refs tl)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 private let rec refs_in_region (r:rid) (rs:some_refs) :GTot (Set.set nat) =
   match rs with
   | []         -> Set.empty
@@ -459,7 +459,7 @@ private let rec refs_in_region (r:rid) (rs:some_refs) :GTot (Set.set nat) =
     Set.union (if frameOf x = r then Set.singleton (as_addr x) else Set.empty)
               (refs_in_region r tl)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 private let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem) :GTot Type0 =
   match i with
   | []         -> True
@@ -467,7 +467,7 @@ private let rec modifies_some_refs (i:some_refs) (rs:some_refs) (h0:mem) (h1:mem
     (modifies_ref (frameOf x) (refs_in_region (frameOf x) rs) h0 h1) /\
     (modifies_some_refs tl rs h0 h1)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let norm_steps :list norm_step =
   //iota for reducing match
   [iota; zeta; delta; delta_only ["FStar.Monotonic.HyperStack.regions_of_some_refs";
@@ -475,7 +475,7 @@ unfold private let norm_steps :list norm_step =
                                   "FStar.Monotonic.HyperStack.modifies_some_refs"];
    primops]
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold let mods (rs:some_refs) (h0 h1:mem) :GTot Type0 =
   (norm norm_steps (modifies (regions_of_some_refs rs) h0 h1)) /\
   (norm norm_steps (modifies_some_refs rs rs h0 h1))

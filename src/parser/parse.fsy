@@ -28,6 +28,10 @@ let logic_qualifier_deprecation_warning =
 let abstract_qualifier_warning =
   "abstract qualifier will soon be removed from F*, use interfaces instead"
 
+let old_attribute_syntax_warning =
+  "The `[@ ...]` syntax of attributes is deprecated. \
+   Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
+
 %}
 %start inputFragment
 %start term
@@ -100,6 +104,7 @@ let abstract_qualifier_warning =
 %token LBRACE_COLON_PATTERN
 %token LBRACK
 %token LBRACK_AT
+%token LBRACK_AT_AT
 %token LBRACK_BAR
 %token LENS_PAREN_LEFT
 %token LENS_PAREN_RIGHT
@@ -627,6 +632,18 @@ pragma:
 attribute:
   LBRACK_AT list_atomicTerm_ RBRACK
     {let (_1, x, _3) = ((), $2, ()) in
+      (
+        let _ =
+            match x with
+            | _::_::_ ->
+                  log_issue (lhs parseState) (Warning_DeprecatedGeneric,
+                                              old_attribute_syntax_warning)
+            | _ -> () in
+         x
+      )}
+| LBRACK_AT_AT right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
+    {let (_1, l, _3) = ((), $2, ()) in
+let x =                                                 ( l ) in
       ( x )}
 
 decoration:

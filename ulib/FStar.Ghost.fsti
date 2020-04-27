@@ -44,7 +44,7 @@ module FStar.Ghost
 /// [erased Y], it will insert [reveal], and viceversa for [hide].
 
 (** [erased t] is the computationally irrelevant counterpart of [t] *)
-[@ erasable]
+[@@ erasable]
 val erased: Type u#a -> Type u#a
 
 (** [erased t] is in a bijection with [t], as witnessed by [reveal]

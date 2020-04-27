@@ -108,16 +108,16 @@ let param t =
   let t = norm_term [] t in
   t
 
-[@(preprocess_with param)]
+[@@(preprocess_with param)]
 let test0 = Type
 
-[@(preprocess_with param)]
+[@@(preprocess_with param)]
 let test1 = Type -> Type
 
-[@(preprocess_with param)]
+[@@(preprocess_with param)]
 let test2 = bd1:Type -> bd2:Type -> bd1
 
-[@(preprocess_with param)]
+[@@(preprocess_with param)]
 let param_id = a:Type -> a -> a
 
 let id_is_unique (f : (a:Type -> a -> a)) (f_parametric : param_id f f) : Lemma (forall a (x:a). f a x == x) =
@@ -126,16 +126,16 @@ let id_is_unique (f : (a:Type -> a -> a)) (f_parametric : param_id f f) : Lemma 
   in
   Classical.forall_intro_2 aux
 
-[@(preprocess_with param)]
+[@@(preprocess_with param)]
 let test_int_to_int = int -> int
 
-[@(preprocess_with param)]
+[@@(preprocess_with param)]
 let test_list_0 = list
 
-[@(preprocess_with param)]
+[@@(preprocess_with param)]
 let test_list = list int
 
-[@(preprocess_with param)]
+[@@(preprocess_with param)]
 let rev_param = a:Type -> list a -> list a
 
 let rel_of_fun #a #b (f : a -> b) : a -> b -> Type =

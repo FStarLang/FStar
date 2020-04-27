@@ -78,7 +78,7 @@ private
 unfold let __TAC_eff_override_bind_wp (r:range) (a:Type) (b:Type) (wp:__tac_wp a) (f:a -> __tac_wp b) =
     g_compact b (g_bind a b wp f)
 
-[@ dm4f_bind_range ]
+[@@ dm4f_bind_range ]
 new_effect {
   TAC : a:Type -> Effect
   with repr     = __tac

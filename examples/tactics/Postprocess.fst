@@ -20,10 +20,10 @@ open FStar.Tactics
 let lem () : Lemma (1 == 2) = admit ()
 let tau () = apply_lemma (`lem)
 
-[@(postprocess_with tau)]
+[@@(postprocess_with tau)]
 let x : int = 1
 
-[@(postprocess_for_extraction_with tau)]
+[@@(postprocess_for_extraction_with tau)]
 let y : int = 1
 
 let _ = assert (x == 2)
@@ -120,11 +120,11 @@ let push_lifts () : Tac unit =
   (* dump "after"; *)
   ()
 
-[@(postprocess_with push_lifts)]
+[@@(postprocess_with push_lifts)]
 let yy = lift xx
 
-[@(postprocess_with push_lifts)]
+[@@(postprocess_with push_lifts)]
 let zz1 = lift (C1 (fun y -> (C1 (fun x -> A1))))
 
-[@(postprocess_for_extraction_with push_lifts)]
+[@@(postprocess_for_extraction_with push_lifts)]
 let zz2 = lift (C1 (fun y -> (C1 (fun x -> A1))))

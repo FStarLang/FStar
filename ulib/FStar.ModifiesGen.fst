@@ -31,7 +31,7 @@ let aloc_domain (#al: aloc_t) (c: cls al) (regions: Ghost.erased (Set.set HS.rid
 module F = FStar.FunctionalExtensionality
 
 
-[@(unifier_hint_injective)]
+[@@(unifier_hint_injective)]
 let i_restricted_g_t = F.restricted_g_t
 
 let addrs_dom regions =

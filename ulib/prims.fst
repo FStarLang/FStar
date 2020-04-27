@@ -85,7 +85,7 @@ type unit : eqtype
 
     See FStar.Squash for various ways of manipulating squashed
     types. *)
-[@ "tac_opaque"]
+[@@ "tac_opaque"]
 type squash (p: Type) : Type0 = x: unit{p}
 
 (** [auto_squash] is equivalent to [squash]. However, F* will
@@ -121,13 +121,13 @@ val smt_theory_symbol:attribute
 (** [l_True] has a special bit of syntactic sugar. It is written just
     as "True" and rendered in the ide as [True]. It is a squashed version
     of constructive truth, [c_True]. *)
-[@ "tac_opaque" smt_theory_symbol]
+[@@ "tac_opaque"; smt_theory_symbol]
 let l_True:logical = squash c_True
 
 (** [l_False] has a special bit of syntactic sugar. It is written just
     as "False" and rendered in the ide as [Falsee]. It is a squashed version
     of constructive truth, [c_True]. *)
-[@ "tac_opaque" smt_theory_symbol]
+[@@ "tac_opaque"; smt_theory_symbol]
 let l_False:logical = squash c_False
 
 (** The type of provable equalities, defined as the usual inductive
@@ -143,7 +143,7 @@ type equals (#a: Type) (x: a) : a -> Type = | Refl : equals x x
    TODO: instead of hard-wiring the == syntax,
          we should just rename eq2 to op_Equals_Equals
 *)
-[@ "tac_opaque" smt_theory_symbol]
+[@@ "tac_opaque"; smt_theory_symbol]
 type eq2 (#a: Type) (x: a) (y: a) : logical = squash (equals x y)
 
 (** [h_equals] is the heterogeneous equality, allowing stating
@@ -152,7 +152,7 @@ type eq2 (#a: Type) (x: a) (y: a) : logical = squash (equals x y)
 type h_equals (#a: Type) (x: a) : #b: Type -> b -> Type = | HRefl : h_equals x x
 
 (** [eq3] is the squashed variant of [h_equals] *)
-[@ "tac_opaque" smt_theory_symbol]
+[@@ "tac_opaque"; smt_theory_symbol]
 type eq3 (#a: Type) (#b: Type) (x: a) (y: b) : logical = squash (h_equals x y)
 
 (** We typically write [eq3] as a infix, binary [===] *)
@@ -169,7 +169,7 @@ type c_and (p: Type) (q: Type) = | And : p -> q -> c_and p q
 
 (** squashed conjunction, specialized to [Type0], written with an
     infix binary [/\] *)
-[@ "tac_opaque" smt_theory_symbol]
+[@@ "tac_opaque"; smt_theory_symbol]
 type l_and (p: logical) (q: logical) : logical = squash (c_and p q)
 
 (** constructive disjunction *)
@@ -179,23 +179,23 @@ type c_or (p: Type) (q: Type) =
 
 (** squashed disjunction, specialized to [Type0], written with an
     infix binary [\/] *)
-[@ "tac_opaque" smt_theory_symbol]
+[@@ "tac_opaque"; smt_theory_symbol]
 type l_or (p: logical) (q: logical) : logical = squash (c_or p q)
 
 (** squashed (non-dependent) implication, specialized to [Type0],
     written with an infix binary [==>]. Note, [==>] binds weaker than
     [/\] and [\/] *)
-[@ "tac_opaque" smt_theory_symbol]
+[@@ "tac_opaque"; smt_theory_symbol]
 type l_imp (p: logical) (q: logical) : logical = squash (p -> GTot q)
 (* ^^^ NB: The GTot effect is primitive;            *)
 (*         elaborated using GHOST a few lines below *)
 
 (** squashed double implication, infix binary [<==>] *)
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 type l_iff (p: logical) (q: logical) : logical = (p ==> q) /\ (q ==> p)
 
 (** squashed negation, prefix unary [~] *)
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 type l_not (p: logical) : logical = l_imp p False
 
 (** l_ITE is a weak form of if-then-else at the level of
@@ -235,7 +235,7 @@ type has_type : #a: Type -> a -> Type -> Type0
 
 (** Squashed universal quantification, or dependent products, written
     [forall (x:a). p x], specialized to Type0 *)
-[@ "tac_opaque" smt_theory_symbol]
+[@@ "tac_opaque"; smt_theory_symbol]
 type l_Forall (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a -> GTot (p x))
 
 (** [p1 `subtype_of` p2] when every element of [p1] is also an element
@@ -366,11 +366,11 @@ let pure_null_wp (a: Type) (p: pure_post a) = forall (any_result: a). p any_resu
 (** [Tot]: From here on, we have [Tot] as a defined symbol in F*. *)
 effect Tot (a: Type) = PURE a (pure_null_wp a)
 
-[@ "opaque_to_smt"]
+[@@ "opaque_to_smt"]
 unfold
 let pure_assert_wp (p: Type) (post: pure_post unit) = p /\ post ()
 
-[@ "opaque_to_smt"]
+[@@ "opaque_to_smt"]
 unfold
 let pure_assume_wp (p: Type) (post: pure_post unit) = p ==> post ()
 
@@ -407,7 +407,7 @@ type dtuple2 (a: Type) (b: (a -> GTot Type)) = | Mkdtuple2 : _1: a -> _2: b _1 -
 
 (** Squashed existential quantification, or dependent sums,
     are written [exists (x:a). p x] : specialized to Type0 *)
-[@ "tac_opaque" smt_theory_symbol]
+[@@ "tac_opaque"; smt_theory_symbol]
 type l_Exists (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a & p x)
 
 (** Primitive type of mathematical intgers, mapped to zarith in OCaml
@@ -427,79 +427,79 @@ val mk_range (file: string) (from_line from_col to_line to_col: int) : Tot range
 
 (** [&&] boolean conjunction *)
 
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 assume
 val op_AmpAmp: bool -> bool -> Tot bool
 
 (** [||] boolean disjunction *)
 
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 assume
 val op_BarBar: bool -> bool -> Tot bool
 
 (** [not] boolean negation *)
 
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 assume
 val op_Negation: bool -> Tot bool
 
 (** Integer multiplication, no special symbol. See FStar.Mul *)
 
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 assume
 val op_Multiply: int -> int -> Tot int
 
 (** [-] integer subtraction *)
 
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 assume
 val op_Subtraction: int -> int -> Tot int
 
 (** [+] integer addition *)
 
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 assume
 val op_Addition: int -> int -> Tot int
 
 (** [-] prefix unary integer negation *)
 
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 assume
 val op_Minus: int -> Tot int
 
 (** [<=] integer comparison *)
 
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 assume
 val op_LessThanOrEqual: int -> int -> Tot bool
 
 (** [>] integer comparison *)
 
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 assume
 val op_GreaterThan: int -> int -> Tot bool
 
 (** [>=] integer comparison *)
 
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 assume
 val op_GreaterThanOrEqual: int -> int -> Tot bool
 
 (** [<] integer comparison *)
 
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 assume
 val op_LessThan: int -> int -> Tot bool
 
 (** [=] decidable equality on [eqtype] *)
 
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 assume
 val op_Equality: #a: eqtype -> a -> a -> Tot bool
 
 (** [<>] decidable dis-equality on [eqtype] *)
 
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 assume
 val op_disEquality: #a: eqtype -> a -> a -> Tot bool
 
@@ -591,32 +591,32 @@ let as_ensures (#a: Type) (wp: pure_wp a) (x: a) = ~(wp (fun y -> (y =!= x)))
 (** The keyword term-level keyword [assume] is desugared to [_assume].
     It explicitly provides an escape hatch to assume a given property
     [p]. *)
-[@(warn_on_use "uses an axiom")]
+[@@ warn_on_use "uses an axiom"]
 assume
 val _assume (p: Type) : Pure unit (requires (True)) (ensures (fun x -> p))
 
 (** [admit] is another escape hatch: It discards the continuation and
     returns a value of any type *)
-[@(warn_on_use "uses an axiom")]
+[@@ warn_on_use "uses an axiom"]
 assume
 val admit: #a: Type -> unit -> Admit a
 
 (** [magic] is another escape hatch: It retains the continuation but
     returns a value of any type *)
-[@(warn_on_use "uses an axiom")]
+[@@ warn_on_use "uses an axiom"]
 assume
 val magic: #a: Type -> unit -> Tot a
 
 (** [unsafe_coerce] is another escape hatch: It coerces an [a] to a
     [b].  *)
-[@(warn_on_use "uses an axiom")]
+[@@ warn_on_use "uses an axiom"]
 irreducible
 let unsafe_coerce (#a #b: Type) (x: a) : b =
   admit ();
   x
 
 (** [admitP]: TODO: Unused ... remove? *)
-[@(warn_on_use "uses an axiom")]
+[@@ warn_on_use "uses an axiom"]
 assume
 val admitP (p: Type) : Pure unit True (fun x -> p)
 
@@ -646,13 +646,13 @@ type nonzero = i: int{i <> 0}
 
 (** Euclidean modulus *)
 
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 assume
 val op_Modulus: int -> nonzero -> Tot int
 
 (** Euclidean division, written [/] *)
 
-[@ smt_theory_symbol]
+[@@ smt_theory_symbol]
 assume
 val op_Division: int -> nonzero -> Tot int
 

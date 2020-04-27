@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Simple
-[@ plugin]
+[@@ plugin]
 let id (x:int{x >= 0}) =
   let rec countdown (y:nat) =
     if y=0 then x
@@ -22,7 +22,7 @@ let id (x:int{x >= 0}) =
   in
   countdown x
 
-[@ plugin]
+[@@ plugin]
 let poly_id (#a:Type) (x:int{x >= 0}) (r:a) : a =
   let rec countdown (y:nat) =
     if y=0 then r
@@ -30,7 +30,7 @@ let poly_id (#a:Type) (x:int{x >= 0}) (r:a) : a =
   in
   countdown x
 
-[@ plugin]
+[@@ plugin]
 let mk_n_list (#a:Type) (n:nat) (x:a) : list a =
   let rec aux (n:nat) out =
     if n = 0 then out
@@ -38,7 +38,7 @@ let mk_n_list (#a:Type) (n:nat) (x:a) : list a =
   in
   aux n []
 
-[@ plugin]
+[@@ plugin]
 let poly_list_id (#a:Type) (l:list a) =
   let rec aux (l:list a) (out:list a) =
       match l with
@@ -47,7 +47,7 @@ let poly_list_id (#a:Type) (l:list a) =
   in
   aux l []
 
-[@ plugin]
+[@@ plugin]
 let rec eq_int_list (l m :list int) : Tot bool (decreases l) =
   match l, m with
   | [], [] -> true

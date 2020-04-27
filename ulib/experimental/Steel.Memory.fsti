@@ -22,7 +22,7 @@ module U = FStar.Universe
 
 let trivial_preorder (a: Type u#a) : Preorder.preorder a = fun _ _ -> True
 
-[@erasable]
+[@@erasable]
 noeq type perm : Type u#a =
   | MkPerm: v:real -> perm
 
@@ -73,7 +73,7 @@ val ref_address (#t: Type)(#pre: Preorder.preorder t) (r: reference t pre) : GTo
 
 /// The type of mem assertions
 
-[@erasable]
+[@@erasable]
 val hprop : Type u#(a + 1)
 
 /// Type of mem

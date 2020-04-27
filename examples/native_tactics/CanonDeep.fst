@@ -195,7 +195,7 @@ assume val y : int
 assume val z : int
 
 // Testing the canonizer, it should be the only thing needed for this file
-[@plugin]
+[@@plugin]
 let check_canon_deep () =
     canon_deep ();
     or_else qed

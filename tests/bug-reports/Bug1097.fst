@@ -6,7 +6,7 @@ let m (f : int -> int) : Tot int =
 
 // 114: type of pattern does not match scrutinee
 // this used to succeed via SMT at some point
-[@(expect_failure [114])]
+[@@(expect_failure [114])]
 let m2 (a:Type) (_ : a == int) (x : a) =
     match x with
     | 0 -> 0
@@ -23,7 +23,7 @@ let m2' (a:Type) (_ : a == int) (x : a) =
 let f (x:int) = x
 
 (* incomplete patterns *)
-[@(expect_failure [19])]
+[@@(expect_failure [19])]
 let m3 =
     match f with
 

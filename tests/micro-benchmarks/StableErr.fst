@@ -22,5 +22,5 @@ module StableErr
  * fixed. *)
 
 #set-options "--no_smt"
-[@(expect_failure [298])]
+[@@(expect_failure [298])]
 let _ = assert False

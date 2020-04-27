@@ -89,7 +89,7 @@ let do_while_sz_body
       if U32.sub 4294967295ul sz' `U32.lt` sz_accu
       then IOverflow
       else
-        [@inline_let]
+        [@@inline_let]
         let sz_accu' = U32.add sz_accu sz' in
         match y' with
         | Left x' -> ILeft sz_accu' x'

@@ -392,7 +392,7 @@ let canon_lhs_rhs (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   or_else (fun _ -> apply_lemma (`(EQ?.reflexivity (`#eq))))
           (fun _ -> repeat_cong_right_identity eq m)
 
-[@plugin]
+[@@plugin]
 let canon_monoid (eq: term) (m: term) : Tac unit =
   norm [iota; zeta];
   let t = cur_goal () in
