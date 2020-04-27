@@ -61,7 +61,7 @@ val join_associative (m0 m1 m2:heap)
        join m0 (join m1 m2) == join (join m0 m1) m2))
 
 /// The type of heap assertions
-[@erasable]
+[@@erasable]
 val slprop : Type u#(a + 1)
 
 /// interpreting heap assertions as memory predicates

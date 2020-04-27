@@ -241,7 +241,7 @@ let a_heap_prop : Type u#(a + 1) =
 
 module W = FStar.WellFounded
 
-[@erasable]
+[@@erasable]
 noeq
 type slprop : Type u#(a + 1) =
   | Emp : slprop
