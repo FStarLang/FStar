@@ -67,7 +67,7 @@ let hmac_part2:
 
 val last (a b: int) : Tot (array a)
 
-[@@@ one; two; three; four; five; six; seven; eight; nine; ten; eleven; ten; eleven; ten; eleven; ten; eleven; ten; here;
+[@@ one; two; three; four; five; six; seven; eight; nine; ten; eleven; ten; eleven; ten; eleven; ten; eleven; ten; here;
     eleven; ten; eleven; ten; eleven; ten; eleven]
 type t =
   | A : int -> t

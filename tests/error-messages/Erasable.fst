@@ -1,6 +1,6 @@
 module Erasable
 
-[@@erasable
+[@@erasable;
  (expect_failure [162]) //must be marked noeq
 ]
 type t0 =
@@ -35,7 +35,7 @@ let test_promotion (x:t) : Tot t =
 
 //this is illegal:
 //erasable is only permitted inductive type definitions
-[@@erasable
+[@@erasable;
   (expect_failure [162])
 ]
 let e_nat = nat
