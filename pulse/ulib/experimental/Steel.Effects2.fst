@@ -194,7 +194,7 @@ let bind_pure_steel (a:Type) (b:Type)
   Sem.preserves_frame_star #state pre_f (post_f x) m0 m1 frame_f;
   assert (Sem.preserves_frame (pre_f `star` frame_f) (post_f x `star` frame_f) m0 m1);
 
-  //g is pure, get preserves_frame in m2
+  //g is pure, extends preserves_frame to m2
   assert (m1 == m2);  
   assert (Sem.preserves_frame (pre_f `star` frame_f) (post_f x `star` frame_f) m0 m2);
 
@@ -205,3 +205,28 @@ let bind_pure_steel (a:Type) (b:Type)
   assert (Sem.preserves_frame (pre_f `star` frame_f) (post_g y) m0 m2);
 
   y
+
+// TODO:
+// polymonadic_bind (Steel, PURE) |> SteelF = bind_pure_steel
+
+
+let bind_pure_steelf (a:Type) (b:Type)
+  (pre_f:pre_t) (post_f:post_t a) (wp:a -> pure_wp b)
+  (post_g:post_t b)
+  (_:squash (forall x. wp x (fun _ -> True)))
+  (f:repr a pre_f post_f) (g:(x:a -> unit -> PURE b (wp x)))
+  (_:squash (forall x. post_f x `implies` (post_g (g x ()))))
+: repr b pre_f post_g
+= fun _ ->
+  let x = f () in
+  let y = (g x) () in
+
+  implies_interp (post_f x) (post_g y);
+  implies_preserves_frame_right (post_f x) (post_g y);
+  
+  y
+
+// TODO:
+// polymonadic_bind (SteelF, PURE) |> SteelF = bind_pure_steelf
+
+
