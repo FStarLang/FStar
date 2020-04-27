@@ -14,11 +14,11 @@
    limitations under the License.
 *)
 
-module NMST
+module NMSTTotal
 
 module P = FStar.Preorder
 
-module M = MST
+module M = MSTTotal
 
 type tape = nat -> bool
 
@@ -30,7 +30,7 @@ type repr
       (ens:M.post_t state a)
     =
   (tape & nat) ->
-    M.MSTATE (a & nat) state rel req (fun s0 (x, _) s1 -> ens s0 x s1)
+    M.MSTATETOT (a & nat) state rel req (fun s0 (x, _) s1 -> ens s0 x s1)
 
 
 let return (a:Type) (x:a) (state:Type u#2) (rel:P.preorder state)
@@ -91,9 +91,10 @@ let if_then_else
     (fun s0 -> (p ==> req_then s0) /\ ((~ p) ==> req_else s0))
     (fun s0 x s1 -> (p ==> ens_then s0 x s1) /\ ((~ p) ==> ens_else s0 x s1))
 
+total
 reifiable reflectable
 layered_effect {
-  NMSTATE :
+  NMSTATETOT :
     a:Type ->
     state:Type u#2 ->
     rel:P.preorder state ->
@@ -108,18 +109,18 @@ layered_effect {
 }
 
 let get (#state:Type u#2) (#rel:P.preorder state) ()
-    : NMSTATE state state rel
+    : NMSTATETOT state state rel
       (fun _ -> True)
       (fun s0 s s1 -> s0 == s /\ s == s1)
     =
-  NMSTATE?.reflect (fun (_, n) -> MST.get (), n)
+  NMSTATETOT?.reflect (fun (_, n) -> MSTTotal.get (), n)
 
 let put (#state:Type u#2) (#rel:P.preorder state) (s:state)
-    : NMSTATE unit state rel
+    : NMSTATETOT unit state rel
       (fun s0 -> rel s0 s)
       (fun _ _ s1 -> s1 == s)
     =
-  NMSTATE?.reflect (fun (_, n) -> MST.put s, n)
+  NMSTATETOT?.reflect (fun (_, n) -> MSTTotal.put s, n)
 
 type s_predicate (state:Type u#2) = state -> Type0
 
@@ -130,26 +131,26 @@ let witnessed (state:Type u#2) (rel:P.preorder state) (p:s_predicate state) =
   M.witnessed state rel p
 
 let witness (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
-    : NMSTATE unit state rel
+    : NMSTATETOT unit state rel
       (fun s0 -> p s0 /\ stable state rel p)
       (fun s0 _ s1 -> s0 == s1 /\ witnessed state rel p)
     =
-  NMSTATE?.reflect (fun (_, n) -> M.witness state rel p, n)
+  NMSTATETOT?.reflect (fun (_, n) -> M.witness state rel p, n)
 
 let recall (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
-    : NMSTATE unit state rel
+    : NMSTATETOT unit state rel
       (fun _ -> witnessed state rel p)
       (fun s0 _ s1 -> s0 == s1 /\ p s1)
     =
-  NMSTATE?.reflect (fun (_, n) -> M.recall state rel p, n)
+  NMSTATETOT?.reflect (fun (_, n) -> M.recall state rel p, n)
 
 
 let sample (#state:Type u#2) (#rel:P.preorder state) ()
-    : NMSTATE bool state rel
+    : NMSTATETOT bool state rel
       (fun _ -> True)
       (fun s0 _ s1 -> s0 == s1)
     =
-  NMSTATE?.reflect (fun (t, n) -> t n, n+1)
+  NMSTATETOT?.reflect (fun (t, n) -> t n, n+1)
 
 let lift_pure_nmst
       (a:Type)
@@ -166,27 +167,19 @@ let lift_pure_nmst
     let x = f () in
     x, n
 
-sub_effect PURE ~> NMSTATE = lift_pure_nmst
+sub_effect PURE ~> NMSTATETOT = lift_pure_nmst
 
-let nmst_assume (#state:Type u#2) (#rel:P.preorder state) (p:Type)
-    : NMSTATE unit state rel (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
+let nmst_tot_assume (#state:Type u#2) (#rel:P.preorder state) (p:Type)
+    : NMSTATETOT unit state rel (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
     =
   assume p
 
-let nmst_admit (#state:Type u#2) (#rel:P.preorder state) (#a:Type) ()
-    : NMSTATE a state rel (fun _ -> True) (fun _ _ _ -> False)
+let nmst_tot_admit (#state:Type u#2) (#rel:P.preorder state) (#a:Type) ()
+    : NMSTATETOT a state rel (fun _ -> True) (fun _ _ _ -> False)
     =
   admit ()
 
-let nmst_assert (#state:Type u#2) (#rel:P.preorder state) (p:Type)
-    : NMSTATE unit state rel (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
+let nmst_tot_assert (#state:Type u#2) (#rel:P.preorder state) (p:Type)
+    : NMSTATETOT unit state rel (fun _ -> p) (fun m0 _ m1 -> p /\ m0 == m1)
     =
   assert p
-
-let lift_nmst_total_nmst (a:Type) (state:Type u#2) (rel:P.preorder state)
-  (req:M.pre_t state) (ens:M.post_t state a)
-  (f:NMSTTotal.repr a state rel req ens)
-: repr a state rel req ens
-= fun (t, n) -> f (t, n)
-
-sub_effect NMSTTotal.NMSTATETOT ~> NMSTATE = lift_nmst_total_nmst
