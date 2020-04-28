@@ -192,7 +192,7 @@ let mk_range r (s:subst_ts) =
 (* Applies a substitution to a node,
      immediately if it is a variable
      or builds a delayed node otherwise *)
-let rec subst' (s:subst_ts) t =
+let rec subst' (s:subst_ts) (t:term) : term =
   let subst_tail (tl:list<list<subst_elt>>) = subst' (tl, snd s) in
   match s with
   | [], NoUseRange
@@ -355,7 +355,7 @@ let rec push_subst s t =
           push_subst s t
         | _ ->
             (* All others must be closed, so don't bother *)
-            t
+            tag_with_range t s
         end
 
     | Tm_constant _
