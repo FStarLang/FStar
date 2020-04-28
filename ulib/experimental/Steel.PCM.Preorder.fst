@@ -29,9 +29,19 @@ let rec qhistory #a (q:preorder a) (l:list a) =
 
 let hist #a (q:preorder a) = l:list a{qhistory q l}
 
-let rec extends #a (#q:preorder a) (h0 h1:hist q) =
+let rec extends' #a (#q:preorder a) (h0 h1:hist q) =
   h0 == h1 \/
-  (Cons? h0 /\ extends (Cons?.tl h0) h1)
+  (Cons? h0 /\ extends' (Cons?.tl h0) h1)
+
+let rec extends_trans #a (#q:preorder a) (x y z:hist q)
+  : Lemma (x `extends'` y /\ y `extends'` z ==> x `extends'` z)
+          [SMTPat (x `extends'` y);
+           SMTPat (y `extends'` z)]
+  = match x with
+    | [] -> ()
+    | _::tl -> extends_trans tl y z
+
+let extends #a (#q:preorder a) : preorder (hist q) = extends'
 
 module L = FStar.List.Tot
 
@@ -83,13 +93,6 @@ let comm_op #a (q:preorder a) (x:hist q) (y:hist q{p_composable q x y})
   = extends_length_eq x y;
     extends_length_eq y x
 
-let rec extends_trans #a (#q:preorder a) (x y z:hist q)
-  : Lemma (x `extends` y /\ y `extends` z ==> x `extends` z)
-          [SMTPat (x `extends` y);
-           SMTPat (y `extends` z)]
-  = match x with
-    | [] -> ()
-    | _::tl -> extends_trans tl y z
 
 let rec extends_disjunction #a (#q:preorder a) (x y z:hist q)
   : Lemma (z `extends` x /\ z `extends` y ==> x `extends` y \/ y `extends` x)
@@ -131,8 +134,25 @@ let curval #a (#q:preorder a) (v:vhist q) = Cons?.hd v
 
 // Given a frame-preserving update from x to y
 // for any value of resource z (compatible with x)
-// the current value of the history y is related to the z by the preorder q
+// the new value y advances the history z in a preorder respecting manner
 let frame_preserving_q #a (q:preorder a) (x y:vhist q)
   : Lemma (requires frame_preserving (pcm_of_preorder q) x y)
           (ensures (forall (z:hist q). compatible (pcm_of_preorder q) x z ==> curval z `q` curval y))
+  = ()
+
+let frame_preserving_extends #a (q:preorder a) (x y:vhist q)
+  : Lemma (requires frame_preserving (pcm_of_preorder q) x y)
+          (ensures (forall (z:hist q). compatible (pcm_of_preorder q) x z ==> y `extends` z))
+  = ()
+
+let flip #a (p:preorder a) : preorder a = fun x y -> p y x
+
+let frame_preserving_extends2 #a (q:preorder a) (x y:hist q)
+  : Lemma (requires frame_preserving (pcm_of_preorder q) x y)
+          (ensures (forall (z:hist q). compatible (pcm_of_preorder q) x z ==> z `flip extends` y))
+          [SMTPat (frame_preserving (pcm_of_preorder q) x y)]
+  = ()
+
+let pcm_of_preorder_induces_extends #a (q:preorder a)
+  : Lemma (induces_preorder (pcm_of_preorder q) (flip extends))
   = ()
