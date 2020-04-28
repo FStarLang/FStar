@@ -42,7 +42,7 @@ let (goal_witness : goal -> FStar_Syntax_Syntax.term) =
     FStar_Syntax_Syntax.mk
       (FStar_Syntax_Syntax.Tm_uvar
          ((g.goal_ctx_uvar), ([], FStar_Syntax_Syntax.NoUseRange)))
-      FStar_Pervasives_Native.None FStar_Range.dummyRange
+      FStar_Range.dummyRange
   
 let (goal_type : goal -> FStar_Syntax_Syntax.term) =
   fun g  -> (g.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_typ 

@@ -1610,7 +1610,7 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
               let uu____4278 =
                 FStar_Syntax_Syntax.mk
                   (FStar_Syntax_Syntax.Tm_arrow (tps, c))
-                  FStar_Pervasives_Native.None FStar_Range.dummyRange
+                  FStar_Range.dummyRange
                  in
               FStar_Syntax_Subst.open_univ_vars univs uu____4278  in
             (match uu____4273 with
