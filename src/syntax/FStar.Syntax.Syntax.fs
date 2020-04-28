@@ -472,9 +472,6 @@ let mod_name (m: modul) = m.name
 
 type path = list<string>
 type subst_t = list<subst_elt>
-type mk_t_a<'a> = option<unit> -> range -> syntax<'a>
-type mk_t = mk_t_a<term'>
-
 
 let contains_reflectable (l: list<qualifier>): bool =
     Util.for_some (function Reflectable _ -> true | _ -> false) l
@@ -545,37 +542,38 @@ let freenames_of_list l = List.fold_right Util.set_add l no_names
 let list_of_freenames (fvs:freenames) = Util.set_elements fvs
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
-let mk (t:'a) = fun (_:option<unit>) r -> {
+let mk (t:'a) r = {
     n=t;
     pos=r;
     vars=Util.mk_ref None;
 }
-let bv_to_tm   bv :term = mk (Tm_bvar bv) None (range_of_bv bv)
-let bv_to_name bv :term = mk (Tm_name bv) None (range_of_bv bv)
+
+let bv_to_tm   bv :term = mk (Tm_bvar bv) (range_of_bv bv)
+let bv_to_name bv :term = mk (Tm_name bv) (range_of_bv bv)
 let binders_to_names (bs:binders) : list<term> = bs |> List.map (fun (x, _) -> bv_to_name x)
-let mk_Tm_app (t1:typ) (args:list<arg>) (k:option<unit>) p =
+let mk_Tm_app (t1:typ) (args:list<arg>) p =
     match args with
     | [] -> t1
-    | _ -> mk (Tm_app (t1, args)) None p
+    | _ -> mk (Tm_app (t1, args)) p
 let mk_Tm_uinst (t:term) (us:universes) =
   match t.n with
   | Tm_fvar _ ->
     begin match us with
     | [] -> t
-    | us -> mk (Tm_uinst(t, us)) None t.pos
+    | us -> mk (Tm_uinst(t, us)) t.pos
     end
   | _ -> failwith "Unexpected universe instantiation"
 
-let extend_app_n t args' kopt r = match t.n with
-    | Tm_app(head, args) -> mk_Tm_app head (args@args') kopt r
-    | _ -> mk_Tm_app t args' kopt r
-let extend_app t arg kopt r = extend_app_n t [arg] kopt r
-let mk_Tm_delayed lr pos : term = mk (Tm_delayed lr) None pos
-let mk_Total' t  u: comp  = mk (Total(t, u)) None t.pos
-let mk_GTotal' t u: comp = mk (GTotal(t, u)) None t.pos
+let extend_app_n t args' r = match t.n with
+    | Tm_app(head, args) -> mk_Tm_app head (args@args') r
+    | _ -> mk_Tm_app t args' r
+let extend_app t arg r = extend_app_n t [arg] r
+let mk_Tm_delayed lr pos : term = mk (Tm_delayed lr) pos
+let mk_Total' t  u: comp  = mk (Total(t, u)) t.pos
+let mk_GTotal' t u: comp = mk (GTotal(t, u)) t.pos
 let mk_Total t = mk_Total' t None
 let mk_GTotal t = mk_GTotal' t None
-let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
+let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) ct.result_typ.pos
 let mk_lb (x, univs, eff, t, e, attrs, pos) = {
     lbname=x;
     lbunivs=univs;
@@ -600,8 +598,8 @@ let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos
 
-let tun : term = mk (Tm_unknown) None dummyRange
-let teff : term = mk (Tm_constant Const_effect) None dummyRange
+let tun : term = mk (Tm_unknown) dummyRange
+let teff : term = mk (Tm_constant Const_effect) dummyRange
 let is_teff (t:term) = match t.n with
     | Tm_constant Const_effect -> true
     | _ -> false
@@ -674,7 +672,7 @@ let lid_as_fv l dd dq : fv = {
     fv_delta=dd;
     fv_qual =dq;
 }
-let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) None (range_of_lid fv.fv_name.v)
+let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) (range_of_lid fv.fv_name.v)
 let fvar l dd dq =  fv_to_tm (lid_as_fv l dd dq)
 let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
@@ -710,8 +708,8 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
 let delta_constant = Delta_constant_at_level 0
 let delta_equational = Delta_equational_at_level 0
 let fvconst l = lid_as_fv l delta_constant None
-let tconst l = mk (Tm_fvar (fvconst l)) None Range.dummyRange
-let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_constant_at_level 1) None)) None Range.dummyRange
+let tconst l = mk (Tm_fvar (fvconst l)) Range.dummyRange
+let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_constant_at_level 1) None)) Range.dummyRange
 let tdataconstr l = fv_to_tm (lid_as_fv l delta_constant (Some Data_ctor))
 let t_unit      = tconst PC.unit_lid
 let t_bool      = tconst PC.bool_lid
@@ -733,14 +731,14 @@ let t_fv        = tconst PC.fv_lid
 let t_norm_step = tconst PC.norm_step_lid
 let t_tac_of a b =
     mk_Tm_app (mk_Tm_uinst (tabbrev PC.tac_lid) [U_zero; U_zero])
-              [as_arg a; as_arg b] None Range.dummyRange
+              [as_arg a; as_arg b] Range.dummyRange
 let t_tactic_of t =
     mk_Tm_app (mk_Tm_uinst (tabbrev PC.tactic_lid) [U_zero])
-              [as_arg t] None Range.dummyRange
+              [as_arg t] Range.dummyRange
 
 let t_tactic_unit = t_tactic_of t_unit
-let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] None Range.dummyRange
-let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] None Range.dummyRange
-let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero;U_zero]) [as_arg t1; as_arg t2] None Range.dummyRange
-let t_either_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.either_lid) [U_zero;U_zero]) [as_arg t1; as_arg t2] None Range.dummyRange
-let unit_const = mk (Tm_constant FStar.Const.Const_unit) None Range.dummyRange
+let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg t] Range.dummyRange
+let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] Range.dummyRange
+let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero;U_zero]) [as_arg t1; as_arg t2] Range.dummyRange
+let t_either_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.either_lid) [U_zero;U_zero]) [as_arg t1; as_arg t2] Range.dummyRange
+let unit_const = mk (Tm_constant FStar.Const.Const_unit) Range.dummyRange

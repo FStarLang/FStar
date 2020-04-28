@@ -80,7 +80,7 @@ module C = FStar.Parser.Const
 
 let mk_by_tactic tac f =
     let t_by_tactic = S.mk_Tm_uinst (tabbrev C.by_tactic_lid) [U_zero] in
-    S.mk_Tm_app t_by_tactic [S.as_arg tac; S.as_arg f] None Range.dummyRange
+    S.mk_Tm_app t_by_tactic [S.as_arg tac; S.as_arg f] Range.dummyRange
 
 let rec delta_depth_greater_than l m = match l, m with
     | Delta_equational_at_level i, Delta_equational_at_level j -> i > j
@@ -463,7 +463,7 @@ let simplify (debug:bool) (tm:term) : term =
         in
         let head, args = U.head_and_args t in
         let args = List.map maybe_un_auto_squash_arg args in
-        S.mk_Tm_app head args None t.pos
+        S.mk_Tm_app head args t.pos
     in
     let rec clearly_inhabited (ty : typ) : bool =
         match (U.unmeta ty).n with

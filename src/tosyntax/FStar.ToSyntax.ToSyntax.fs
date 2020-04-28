@@ -50,7 +50,7 @@ let desugar_disjunctive_pattern annotated_pats when_opt branch =
         let branch = List.fold_left (fun br (bv, ty) ->
                         let lb = U.mk_letbinding (Inl bv) [] ty C.effect_Tot_lid (S.bv_to_name bv) [] br.pos in
                         let branch = SS.close [S.mk_binder bv] branch in
-                        mk (Tm_let ((false, [lb]), branch)) None br.pos) branch annots in
+                        mk (Tm_let ((false, [lb]), branch)) br.pos) branch annots in
         U.branch(pat, when_opt, branch)
     )
 
@@ -415,19 +415,19 @@ let mk_ref_read tm =
   let tm' = Tm_app (
     S.fv_to_tm (S.lid_as_fv C.sread_lid delta_constant None),
     [ tm, S.as_implicit false ]) in
-  S.mk tm' None tm.pos
+  S.mk tm' tm.pos
 
 let mk_ref_alloc tm =
   let tm' = Tm_app (
     S.fv_to_tm (S.lid_as_fv C.salloc_lid delta_constant None),
     [ tm, S.as_implicit false ]) in
-  S.mk tm' None tm.pos
+  S.mk tm' tm.pos
 
 let mk_ref_assign t1 t2 pos =
   let tm = Tm_app (
     S.fv_to_tm (S.lid_as_fv C.swrite_lid delta_constant None),
     [ t1, S.as_implicit false; t2, S.as_implicit false ]) in
-  S.mk tm None pos
+  S.mk tm pos
 
 (*
  * Collect the explicitly annotated universes in the sigelt, close the sigelt with them, and stash them appropriately in the sigelt
@@ -916,11 +916,11 @@ and desugar_machine_integer env repr (signedness, width) range =
       end
     | None ->
       raise_error (Errors.Fatal_UnexpectedNumericLiteral, (BU.format1 "Unexpected numeric literal.  Restart F* to load %s." tnm)) range in
-  let repr = S.mk (Tm_constant (Const_int (repr, None))) None range in
-  S.mk (Tm_app (lid, [repr, as_implicit false])) None range
+  let repr = S.mk (Tm_constant (Const_int (repr, None))) range in
+  S.mk (Tm_app (lid, [repr, as_implicit false])) range
 
 and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * antiquotations =
-  let mk e = S.mk e None top.range in
+  let mk e = S.mk e top.range in
   let noaqs = [] in
   let join_aqs aqs = List.flatten aqs in
   let setpos e = {e with pos=top.range} in
@@ -1198,7 +1198,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             let body = match sc_pat_opt with
             | Some (sc, pat) ->
                 let body = Subst.close (S.pat_bvs pat |> List.map S.mk_binder) body in
-                S.mk (Tm_match(sc, [(pat, None, body)])) None body.pos
+                S.mk (Tm_match(sc, [(pat, None, body)])) body.pos
             | None -> body in
             setpos (no_annot_abs (List.rev bs) body), aq
 
@@ -1223,7 +1223,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                           match sc.n, p'.v with
                           | Tm_name _, _ ->
                             let tup2 = S.lid_as_fv (C.mk_tuple_data_lid 2 top.range) delta_constant (Some Data_ctor) in
-                            let sc = S.mk (Tm_app(mk (Tm_fvar tup2), [as_arg sc; as_arg <| S.bv_to_name x])) None top.range in
+                            let sc = S.mk (Tm_app(mk (Tm_fvar tup2), [as_arg sc; as_arg <| S.bv_to_name x])) top.range in
                             let p = withinfo (Pat_cons(tup2, [(p', false);(p, false)])) (Range.union_ranges p'.p p.p) in
                             Some(sc, p)
                           | Tm_app(_, args), Pat_cons(_, pats) ->
@@ -1421,7 +1421,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
              | []
              | [{v=Pat_wild _}, _] -> body
              | _ ->
-               S.mk (Tm_match(S.bv_to_name x, desugar_disjunctive_pattern pat None body)) None top.range
+               S.mk (Tm_match(S.bv_to_name x, desugar_disjunctive_pattern pat None body)) top.range
            in
            mk <| Tm_let((false, [mk_lb (attrs, Inl x, x.sort, t1, t1.pos)]), Subst.close [S.mk_binder x] body), aq
         in
@@ -1880,10 +1880,10 @@ and desugar_comp r (allow_type_promotion:bool) env t =
                 let pattern =
                   S.fvar (Ident.set_lid_range Const.pattern_lid pat.pos) delta_constant None //NS delta: incorrect, should be Delta_abstract (Delta_constant_at_level 1)?
                 in
-                S.mk_Tm_app nil [(pattern, Some S.imp_tag)] None pat.pos
+                S.mk_Tm_app nil [(pattern, Some S.imp_tag)] pat.pos
               | _ -> pat
             in
-            [req; ens; (S.mk (Tm_meta(pat, Meta_desugared Meta_smt_pat)) None pat.pos, aq)]
+            [req; ens; (S.mk (Tm_meta(pat, Meta_desugared Meta_smt_pat)) pat.pos, aq)]
           | _ -> rest
         else rest
       in
@@ -1894,7 +1894,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
                 flags=flags@decreases_clause})
 
 and desugar_formula env (f:term) : S.term =
-  let mk t = S.mk t None f.range in
+  let mk t = S.mk t f.range in
   let setpos t = {t with pos=f.range} in
   let desugar_quant (q:lident) b pats body =
     let tk = desugar_binder env ({b with blevel=Formula}) in
@@ -1969,7 +1969,7 @@ and desugar_formula env (f:term) : S.term =
 and desugar_binder env b : option<ident> * S.term = match b.b with
   | TAnnotated(x, t)
   | Annotated(x, t) -> Some x, desugar_typ env t
-  | TVariable x     -> Some x, mk (Tm_type U_unknown) None (range_of_id x)
+  | TVariable x     -> Some x, mk (Tm_type U_unknown) (range_of_id x)
   | NoName t        -> None, desugar_typ env t
   | Variable x      -> Some x, tun_r (range_of_id x)
 
@@ -2228,7 +2228,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
                                  S.Assumption :: S.New :: quals) in
              let t = match typars with
                 | [] -> k
-                | _ -> mk (Tm_arrow(typars, mk_Total k)) None se.sigrng in
+                | _ -> mk (Tm_arrow(typars, mk_Total k)) se.sigrng in
              { se with sigel = Sig_declare_typ(l, [], t);
                        sigquals = quals }
            | _ -> failwith "Impossible" in
@@ -3300,7 +3300,7 @@ let add_modul_to_env (m:Syntax.modul)
               match bs with
               | [] -> []
               | _ ->
-                let t = erase_univs (S.mk (Tm_abs(bs, S.t_unit, None)) None Range.dummyRange) in
+                let t = erase_univs (S.mk (Tm_abs(bs, S.t_unit, None)) Range.dummyRange) in
                 match (Subst.compress t).n with
                 | Tm_abs(bs, _, _) -> bs
                 | _ -> failwith "Impossible"
@@ -3321,7 +3321,7 @@ let add_modul_to_env (m:Syntax.modul)
                   | [] -> []
                   | _ ->
                     let bs = erase_binders <| Subst.subst_binders opening action.action_params in
-                    let t = S.mk (Tm_abs(bs, S.t_unit, None)) None Range.dummyRange in
+                    let t = S.mk (Tm_abs(bs, S.t_unit, None)) Range.dummyRange in
                     match (Subst.compress (Subst.close binders t)).n with
                     | Tm_abs(bs, _, _) -> bs
                     | _ -> failwith "Impossible"

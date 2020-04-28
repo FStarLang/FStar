@@ -466,8 +466,8 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
     | Tm_app({n=Tm_constant FC.Const_reify},   arg::more::args)
     | Tm_app({n=Tm_constant (FC.Const_reflect _)}, arg::more::args) ->
       let head, _ = U.head_and_args e in
-      let head = S.mk_Tm_app head [arg] None e.pos in
-      translate cfg bs (S.mk_Tm_app head (more::args) None e.pos)
+      let head = S.mk_Tm_app head [arg] e.pos in
+      translate cfg bs (S.mk_Tm_app head (more::args) e.pos)
 
     | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [arg]) when cfg.core_cfg.reifying ->
       let cfg = reifying_false cfg in
@@ -876,7 +876,7 @@ and readback_comp cfg (c: comp) : S.comp =
     | Tot  (typ, u) -> S.Total (readback cfg typ, u)
     | GTot (typ, u) -> S.GTotal (readback cfg typ, u)
     | Comp ctyp     -> S.Comp (readback_comp_typ cfg ctyp)
-   in S.mk c' None Range.dummyRange
+   in S.mk c' Range.dummyRange
 
 and translate_comp_typ cfg bs (c:S.comp_typ) : comp_typ =
   let { S.comp_univs  = comp_univs
@@ -956,7 +956,7 @@ and translate_monadic (m, ty) cfg bs e : t =
                 S.residual_flags=[];
                 S.residual_typ=Some ty
             } in
-           S.mk (Tm_abs([(BU.left lb.lbname, None)], body, Some body_rc)) None body.pos
+           S.mk (Tm_abs([(BU.left lb.lbname, None)], body, Some body_rc)) body.pos
        in
        let maybe_range_arg =
            if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
@@ -996,7 +996,7 @@ and translate_monadic (m, ty) cfg bs e : t =
          translate cfg bs e
      in
      let fallback2 () =
-         translate (reifying_false cfg) bs (S.mk (Tm_meta (e, Meta_monadic (m, ty))) None e.pos)
+         translate (reifying_false cfg) bs (S.mk (Tm_meta (e, Meta_monadic (m, ty))) e.pos)
      in
      begin match (U.un_uinst head).n with
      | Tm_fvar fv ->
@@ -1015,7 +1015,7 @@ and translate_monadic (m, ty) cfg bs e : t =
         else
 
         (* Turn it info (reify head) args, then translate_fv will kick in on the head *)
-        let e = S.mk_Tm_app (U.mk_reify head) args None e.pos in
+        let e = S.mk_Tm_app (U.mk_reify head) args e.pos in
         translate (reifying_false cfg) bs e
      | _ ->
         fallback1 ()
@@ -1024,7 +1024,7 @@ and translate_monadic (m, ty) cfg bs e : t =
    | Tm_match (sc, branches) ->
      (* Commutation of reify with match. See the comment in the normalizer about it. *)
      let branches = branches |> List.map (fun (pat, wopt, tm) -> pat, wopt, U.mk_reify tm) in
-     let tm = S.mk (Tm_match(sc, branches)) None e.pos in
+     let tm = S.mk (Tm_match(sc, branches)) e.pos in
      translate (reifying_false cfg) bs tm
 
    | Tm_meta (t, Meta_monadic _) ->
@@ -1040,7 +1040,7 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
    if U.is_pure_effect msrc || U.is_div_effect msrc
    then let ed = Env.get_effect_decl cfg.core_cfg.tcenv (Env.norm_eff_name cfg.core_cfg.tcenv mtgt) in
         let ret = match (SS.compress (ed |> U.get_return_repr |> BU.must |> snd)).n with
-                  | Tm_uinst (ret, [_]) -> S.mk (Tm_uinst (ret, [U_unknown])) None e.pos
+                  | Tm_uinst (ret, [_]) -> S.mk (Tm_uinst (ret, [U_unknown])) e.pos
                   | _ -> failwith "NYI: Reification of indexed effect (NBE)"
         in
         let cfg' = reifying_false cfg in
@@ -1103,20 +1103,20 @@ and readback (cfg:config) (x:t) : term =
     match x with
     | Univ u -> failwith "Readback of universes should not occur"
 
-    | Unknown -> S.mk Tm_unknown None Range.dummyRange
+    | Unknown -> S.mk Tm_unknown Range.dummyRange
 
     | Constant Unit -> S.unit_const
     | Constant (Bool true) -> U.exp_true_bool
     | Constant (Bool false) -> U.exp_false_bool
     | Constant (Int i) -> Z.string_of_big_int i |> U.exp_int
-    | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r))) None Range.dummyRange
+    | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r))) Range.dummyRange
     | Constant (Char c) -> U.exp_char c
     | Constant (Range r) -> Cfg.embed_simple EMB.e_range r Range.dummyRange
-    | Constant (SConst c) -> mk (S.Tm_constant c) None Range.dummyRange
+    | Constant (SConst c) -> mk (S.Tm_constant c) Range.dummyRange
 
 
     | Type_t u ->
-      S.mk (Tm_type u) None Range.dummyRange
+      S.mk (Tm_type u) Range.dummyRange
 
     | Lam (f, binders, arity) ->
       let binders, accus_rev, rc =
@@ -1188,13 +1188,13 @@ and readback (cfg:config) (x:t) : term =
 
     | Construct (fv, us, args) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
-      let fv = S.mk (Tm_fvar fv) None Range.dummyRange in
+      let fv = S.mk (Tm_fvar fv) Range.dummyRange in
       let app = U.mk_app (S.mk_Tm_uinst fv (List.rev us)) args in
       app
 
     | FV (fv, us, args) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
-      let fv = S.mk (Tm_fvar fv) None Range.dummyRange in
+      let fv = S.mk (Tm_fvar fv) Range.dummyRange in
       let app = U.mk_app (S.mk_Tm_uinst fv (List.rev us)) args in
       if cfg.core_cfg.steps.simplify
       then Common.simplify cfg.core_cfg.debug.wpe app
@@ -1215,7 +1215,7 @@ and readback (cfg:config) (x:t) : term =
       let head =
         let scrut_new = readback cfg scrut in
         let branches_new = make_branches () in
-        S.mk (Tm_match (scrut_new, branches_new)) None Range.dummyRange
+        S.mk (Tm_match (scrut_new, branches_new)) Range.dummyRange
       in
       (*  When `cases scrut` returns a Accu(Match ..))
           we need to reconstruct a source match node.
@@ -1252,7 +1252,7 @@ and readback (cfg:config) (x:t) : term =
       let body = SS.close [var, None] (readback cfg (Thunk.force body)) in
       let lbname = BU.Inl ({ BU.left lb.lbname with sort = typ }) in
       let lb = { lb with lbname = lbname; lbtyp = typ; lbdef = defn } in
-      let hd = S.mk (Tm_let((false, [lb]), body)) None Range.dummyRange in
+      let hd = S.mk (Tm_let((false, [lb]), body)) Range.dummyRange in
       let args = readback_args cfg args in
       U.mk_app hd args
 
@@ -1271,7 +1271,7 @@ and readback (cfg:config) (x:t) : term =
       in
       let body = readback cfg body in
       let lbs, body = SS.close_let_rec lbs body in
-      let hd = S.mk (Tm_let((true, lbs), body)) None Range.dummyRange in
+      let hd = S.mk (Tm_let((true, lbs), body)) Range.dummyRange in
       let args = readback_args cfg args in
       U.mk_app hd args
 
@@ -1288,7 +1288,7 @@ and readback (cfg:config) (x:t) : term =
 
     | TopLevelRec(lb, _, _, args) ->
       let fv = BU.right lb.lbname in
-      let head = S.mk (Tm_fvar fv) None Range.dummyRange in
+      let head = S.mk (Tm_fvar fv) Range.dummyRange in
       let args = List.map (fun (t, q) -> readback cfg t, q) args in
       U.mk_app head args
 
@@ -1340,17 +1340,17 @@ and readback (cfg:config) (x:t) : term =
       //5. close everything to switch back to locally nameless
       let lbs, body = FStar.Syntax.Subst.close_let_rec lbs body in
       //6. Build the head term
-      let head = S.mk (Tm_let ((true, lbs), body)) None Range.dummyRange in
+      let head = S.mk (Tm_let ((true, lbs), body)) Range.dummyRange in
       //7. Readback the arguments and apply it to the head
       let args = List.map (fun (x, q) -> readback cfg x, q) args in
       U.mk_app head args
 
     | Quote (qt, qi) ->
-        S.mk (Tm_quoted (qt, qi)) None Range.dummyRange
+        S.mk (Tm_quoted (qt, qi)) Range.dummyRange
 
     // Need this case for "cheat" embeddings
     | Lazy (BU.Inl li, _) ->
-        S.mk (Tm_lazy li) None Range.dummyRange
+        S.mk (Tm_lazy li) Range.dummyRange
 
     | Lazy (_, thunk) ->
         readback cfg (Thunk.force thunk)

@@ -547,7 +547,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                  let dd = delta_depth_of_declaration lid quals in
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
                  | Some refl_monad ->
-                        let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in
+                        let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) occurrence_range in
                         Some (Term_name (refl_const, se.sigattrs))
                  | _ ->
                    Some (Term_name(fvar lid dd (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
@@ -1051,7 +1051,7 @@ let finish env modul =
                   BU.smap_remove (sigmap env) (string_of_lid lid);
                   if not (List.contains Private quals)
                   then //it's only abstract; add it back to the environment as an abstract type
-                       let sigel = Sig_declare_typ(lid, univ_names, S.mk (Tm_arrow(binders, S.mk_Total typ)) None (Ident.range_of_lid lid)) in
+                       let sigel = Sig_declare_typ(lid, univ_names, S.mk (Tm_arrow(binders, S.mk_Total typ)) (Ident.range_of_lid lid)) in
                        let se = {se with sigel=sigel; sigquals=Assumption::quals} in
                        BU.smap_add (sigmap env) (string_of_lid lid) (se, false)
                 | _ -> ())

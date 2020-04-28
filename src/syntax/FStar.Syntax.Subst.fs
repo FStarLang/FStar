@@ -218,7 +218,7 @@ let rec subst' (s:subst_ts) t =
         apply_until_some_then_map (subst_nm a) (fst s) subst_tail t0
 
     | Tm_type u ->
-        mk (Tm_type (subst_univ (fst s) u)) None (mk_range t0.pos s)
+        mk (Tm_type (subst_univ (fst s) u)) (mk_range t0.pos s)
 
     | _ ->
       //NS: 04/12/2018
@@ -341,7 +341,7 @@ let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
 
 let rec push_subst s t =
     //makes a syntax node, setting it's use range as appropriate from s
-    let mk t' = Syntax.mk t' None (mk_range t.pos s) in
+    let mk t' = Syntax.mk t' (mk_range t.pos s) in
     match t.n with
     | Tm_delayed _ -> failwith "Impossible"
 
