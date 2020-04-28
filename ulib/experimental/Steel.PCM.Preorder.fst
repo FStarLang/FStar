@@ -21,15 +21,11 @@ let frame_preserving_is_preorder_respecting #a (p:pcm a) (x y:a)
           (ensures (forall z. compatible p x z ==> preorder_of_pcm p z y))
   = ()
 
-type wv a = | Witnessed : a -> wv a | Value : a -> wv a
-
-let least #a (q:preorder a) = x:a{forall (y:a). q x y}
-
 let rec qhistory #a (q:preorder a) (l:list a) =
   match l with
   | []
   | [_] -> True
-  | x::y::tl -> x `q` y /\ qhistory q (y::tl)
+  | x::y::tl -> y `q` x /\ qhistory q (y::tl)
 
 let hist #a (q:preorder a) = l:list a{qhistory q l}
 
@@ -103,6 +99,17 @@ let rec extends_disjunction #a (#q:preorder a) (x y z:hist q)
     | [] -> ()
     | _::tl -> extends_disjunction x y tl
 
+let rec extends_related_head #a (#q:preorder a) (x y:hist q)
+  : Lemma
+    (ensures
+      x `extends` y /\
+      Cons? x /\
+      Cons? y ==> Cons?.hd y `q` Cons?.hd x)
+    [SMTPat (x `extends` y)]
+  = match x with
+    | [] -> ()
+    | _::tl -> extends_related_head tl y
+
 
 let pcm_of_preorder #a (q:preorder a) : pcm (hist q) = {
   p = p q;
@@ -112,7 +119,20 @@ let pcm_of_preorder #a (q:preorder a) : pcm (hist q) = {
   is_unit = (fun _ -> ())
 }
 
-let frame_preserving_q #a (q:preorder a) (x y:hist q) (z:hist q)
+let frame_preserving_q_aux #a (q:preorder a) (x y:hist q) (z:hist q)
   : Lemma (requires (frame_preserving (pcm_of_preorder q) x y /\ compatible (pcm_of_preorder q) x z))
           (ensures (y `extends` z))
+  = ()
+
+//A non-empty history
+let vhist #a (q:preorder a) = h:hist q{Cons? h}
+
+let curval #a (#q:preorder a) (v:vhist q) = Cons?.hd v
+
+// Given a frame-preserving update from x to y
+// for any value of resource z (compatible with x)
+// the current value of the history y is related to the z by the preorder q
+let frame_preserving_q #a (q:preorder a) (x y:vhist q)
+  : Lemma (requires frame_preserving (pcm_of_preorder q) x y)
+          (ensures (forall (z:hist q). compatible (pcm_of_preorder q) x z ==> curval z `q` curval y))
   = ()
