@@ -1526,7 +1526,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       let e, s = desugar_term_aq env e in
       let projname = mk_field_projector_name_from_ident constrname (ident_of_lid f) in
       let qual = if is_rec then Some (Record_projector (constrname, ident_of_lid f)) else None in
-      mk <| Tm_app(S.fvar (Ident.set_lid_range projname (range_of_lid f)) (Delta_equational_at_level 1) qual, //NS delta: ok, projector
+      mk <| Tm_app(S.fvar (Ident.set_lid_range projname top.range) (Delta_equational_at_level 1) qual, //NS delta: ok, projector
                    [as_arg e]), s
 
     | NamedTyp(n, e) ->
