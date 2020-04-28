@@ -472,19 +472,27 @@ let rec push_subst s t =
       Warning: if force_uvar changes to operate on inputs other than
       Tm_uvar then the fastpath out match in compress will need to be
       updated.
+
+      This function should NEVER return a Tm_delayed. If you do any
+      non-trivial change to it, it would be wise to uncomment the check
+      below and run a full regression build.
 *)
-let compress_slow (t:term) =
+let rec compress_slow (t:term) =
     let t = force_uvar t in
     match t.n with
     | Tm_delayed (t', s) ->
-        push_subst s t'
+        compress (push_subst s t')
     | _ ->
         t
-
-let compress (t:term) =
+and compress (t:term) =
   match t.n with
     | Tm_delayed (_, _) | Tm_uvar(_, _) ->
-        compress_slow t
+        let r = compress_slow t in
+        (* begin match r.n with *)
+        (* | Tm_delayed _ -> failwith "compress attempting to return a Tm_delayed" *)
+        (* | _ -> () *)
+        (* end; *)
+        r
     | _ ->
         t
 
