@@ -1,14 +1,14 @@
 >> Got issues: [
-Calc.fst(12,2-17,23): (Error 19) assertion failed (Also see: FStar.Calc.fst(29,44-29,49)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+Calc.fst(12,2-17,23): (Error 19) Could not prove that this calc-chain is compatible (Also see: FStar.Calc.fst(29,44-29,49)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
 >>]
 >> Got issues: [
-Calc.fst(22,2-28,3): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also Calc.fst(22,7-22,11))
+Calc.fst(22,2-28,3): (Error 19) Could not prove that this calc-chain is compatible (Also see: FStar.Calc.fst(29,2-29,49))(Other related locations: Calc.fst(22,7-22,11)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
 >>]
 >> Got issues: [
-Calc.fst(33,2-35,3): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also Calc.fst(33,7-33,10))
+Calc.fst(33,2-35,3): (Error 19) Could not prove that this calc-chain is compatible (Also see: FStar.Calc.fst(29,2-29,49))(Other related locations: Calc.fst(33,7-33,10)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
 >>]
 >> Got issues: [
-Calc.fst(40,2-44,3): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also Calc.fst(40,7-40,10))
+Calc.fst(40,2-44,3): (Error 19) Could not prove that this calc-chain is compatible (Also see: FStar.Calc.fst(29,2-29,49))(Other related locations: Calc.fst(40,7-40,10)); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
 >>]
 >> Got issues: [
 Calc.fst(51,6-51,8): (Error 19) Subtyping check failed; expected type Prims.squash (1 == 2); got type Prims.unit; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also Calc.fst(51,3-51,5))

@@ -148,7 +148,7 @@ attribute:
         let _ =
             match x with
             | _::_::_ ->
-                  log_issue (lhs parseState) (Warning_DeprecatedGeneric,
+                  log_issue (lhs parseState) (Warning_DeprecatedAttributeSyntax,
                                               old_attribute_syntax_warning)
             | _ -> () in
          x
