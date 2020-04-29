@@ -2092,7 +2092,7 @@
         "token_correspondence_Prims.op_Multiply"
       ],
       0,
-      "9d362e8fd2fbf50790fb57343732a73e"
+      "66f47b51d6b14a45f20d7368c28bcefe"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.eq_nat_via_int",
@@ -2105,7 +2105,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "51bcbc314c1aa807582c79bd4a8bdffe"
+      "e8a324b726d0fcebe92accd5dddc58bd"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__CR__item__add_opp",
@@ -3101,7 +3101,7 @@
         "token_correspondence_Prims.op_Multiply"
       ],
       0,
-      "4bb6f4a6a464c9cebdc48af7daeb3b4c"
+      "1d177b16eb5c50a488933b5a79bc7249"
     ]
   ]
 ]
