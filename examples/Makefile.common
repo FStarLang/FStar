@@ -82,11 +82,11 @@ include .depend
 
 %.fst.output: %.fst
 	@echo "[OUTPUT    $(basename $(notdir $@))]"
-	$(Q)$(VERBOSE_FSTAR) --print_expected_failures $< >$@ 2>&1
+	$(Q)$(VERBOSE_FSTAR) -f --print_expected_failures $< >$@ 2>&1
 
 %.fsti.output: %.fsti
 	@echo "[OUTPUT    $(basename $(notdir $@))]"
-	$(Q)$(VERBOSE_FSTAR) --print_expected_failures $< >$@ 2>&1
+	$(Q)$(VERBOSE_FSTAR) -f --print_expected_failures $< >$@ 2>&1
 
 clean:
 	rm -rf $(CACHE_DIR)
