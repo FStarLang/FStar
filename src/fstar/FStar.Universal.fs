@@ -234,6 +234,13 @@ let emit (mllibs:list<FStar.Extraction.ML.Syntax.mllib>) =
       | Some Options.Kremlin -> ".krml"
       | _ -> failwith "Unrecognized option"
     in
+    let mllibs =
+      match opt with
+      | Some Options.FSharp ->
+        FStar.Extraction.ML.RemoveUnusedParameters.elim_mllibs mllibs
+      |  _ ->
+        mllibs
+    in
     match opt with
     | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin ->
         (* When bootstrapped in F#, this will use the old printer in
