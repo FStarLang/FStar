@@ -188,7 +188,7 @@ let st_if_then_else
       (wp_then wp_else: st_wp_h heap a)
       (post: st_post_h heap a)
       (h0: heap)
-     = l_ITE p (wp_then post h0) (wp_else post h0)
+     = wp_then post h0 /\ (~p ==> wp_else post h0)
 
 (** As with [PURE] the [ite_wp] combinator names the postcondition as
     [k] to avoid duplicating it. *)
@@ -272,7 +272,7 @@ let ex_bind_wp (r1: range) (a b: Type) (wp1: ex_wp a) (wp2: (a -> GTot (ex_wp b)
     First, a simple case analysis on [p] *)
 unfold
 let ex_if_then_else (a p: Type) (wp_then wp_else: ex_wp a) (post: ex_post a) =
-  l_ITE p (wp_then post) (wp_else post)
+  wp_then post /\ (~p ==> wp_else post)
 
 (** Naming continuations for use with branching *)
 unfold
@@ -378,7 +378,7 @@ let all_if_then_else
       (wp_then wp_else: all_wp_h heap a)
       (post: all_post_h heap a)
       (h0: heap)
-     = l_ITE p (wp_then post h0) (wp_else post h0)
+     = wp_then post h0 /\ (~p ==> wp_else post h0)
 
 (** Naming postcondition for better sharing in [ALL_h] *)
 unfold

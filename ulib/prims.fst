@@ -305,10 +305,22 @@ let pure_bind_wp
       (p: pure_post b)
      = wp1 (fun (bind_result_1: a) -> wp2 bind_result_1 p)
 
-(** Conditional composition for the PURE effect *)
+(** Conditional composition for the PURE effect 
+
+    The combinator is optimized to make use of how the typechecker generates VC
+    for conditionals.
+
+    The more intuitive form of the combinator would have been:
+    [(p ==> wp_then post) /\ (~p ==> wp_else post)]
+
+    However, the way the typechecker constructs the VC, [wp_then] is already
+    weakened with [p].
+
+    Hence, here we only weaken [wp_else] *)
+
 unfold
 let pure_if_then_else (a p: Type) (wp_then wp_else: pure_wp a) (post: pure_post a) =
-  l_ITE p (wp_then post) (wp_else post)
+  wp_then post /\ (~p ==> wp_else post)
 
 (** Conditional composition for the PURE effect, while trying to avoid
     duplicating the postcondition by giving it a local name [k].
