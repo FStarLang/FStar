@@ -1429,6 +1429,21 @@ let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:ty
     None (Range.union_ranges wp_t.pos wp_e.pos) in
   mk_comp ed u_a a wp [], Env.trivial_guard
 
+(*
+ * PURE<u> t (fun _ -> False)
+ *
+ * This is the comp type for a match with no cases (used in bind_cases)
+ *)
+let comp_pure_wp_false env (u:universe) (t:typ) =
+  let post_k = U.arrow [null_binder t] (S.mk_Total U.ktype0) in
+  let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
+  let post   = S.new_bv None post_k in
+  let wp     = U.abs [S.mk_binder post]
+               (fvar_const env C.false_lid)
+               (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) in
+  let md     = Env.get_effect_decl env C.effect_PURE_lid in
+  mk_comp md u t wp []
+
 let bind_cases env0 (res_t:typ)
   (lcases:list<(formula * lident * list<cflag> * (bool -> lcomp))>)
   (scrutinee:bv) : lcomp =
@@ -1451,15 +1466,6 @@ let bind_cases env0 (res_t:typ)
         then
              lax_mk_tot_or_comp_l eff u_res_t res_t [], Env.trivial_guard
         else begin
-            let default_case =
-                let post_k = U.arrow [null_binder res_t] (S.mk_Total U.ktype0) in
-                let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
-                let post   = S.new_bv None post_k in
-                let wp     = U.abs [mk_binder post]
-                                   (label Err.exhaustiveness_check (Env.get_range env) <| fvar_const env C.false_lid)
-                                   (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) in
-                let md     = Env.get_effect_decl env C.effect_PURE_lid in
-                mk_comp md u_res_t res_t wp [] in
             let maybe_return eff_label_then cthen =
                if should_not_inline_whole_match
                || not (is_pure_or_ghost_effect env eff)
@@ -1470,53 +1476,106 @@ let bind_cases env0 (res_t:typ)
             (*
              * The formula in each of the branches of lcases is the branch condition of *just* that branch,
              *   e.g. match e with | C -> ... | D -> ...
-             *     the formula in the two branches is is_C e and is_D e
+             *        the formula in the two branches is is_C e and is_D e
              *
-             * branch_conditions below builds a list where the formulas are composite
-             *   and include the negation of previous branches, e.g.
-             *   is_C e and (not (is_C e) /\ is_D e)
+             * neg_branch_conds builds a list where the formulas are negation of
+             *   all the previous branches
              *
-             * these will be used to weaken the lift guards when combining the branches
+             * In the example, neg_branch_conds would be:
+             *   [True; not (is_C e); not (is_C e) /\ not (is_D e)]
+             *   thus, the length of the list is one more than lcases
              *
-             *   (we need it because the braches are combined using fold_right)
+             * The last element of the list becomes the branch condition for the
+             *   unreachable branch (will be used to check pattern exhaustiveness)
              *
-             * note that we don't need to build these just to combine cases because the shape of if_then_else
+             * The rest of the list will be used to weaken the lift guards when combining the branches (for layered effects, lift guards can be non-trivial)
+             *
+             * note that we don't need to this just to combine cases because the shape of if_then_else
              *   (p ==> ...) /\ (not p ==> ...) takes care of it
              *)
-            let branch_conditions =
+            let neg_branch_conds, exhaustiveness_branch_cond =
               lcases
               |> List.map (fun (g, _, _, _) -> g)
               |> List.fold_left (fun (conds, acc) g ->
                   let cond = U.mk_conj acc (U.mk_neg g) in
                   (conds@[cond]), cond) ([U.t_true], U.t_true)
               |> fst
-              |> List.splitAt (List.length lcases)
-              |> fst in
+              |> (fun l -> List.splitAt (List.length l - 1) l)  //the length of the list is at least 1
+              |> (fun (l1, l2) -> l1, List.hd l2) in
 
-            //let default_case, g_comp = weaken_comp env default_case default_branch_condition in
 
-            let md, comp, g_comp = List.fold_right2 (fun (g, eff_label, _, cthen) bcond (_, celse, g_comp) ->
-                let cthen, gthen = TcComm.lcomp_comp (maybe_return eff_label cthen) in
-                let gthen = TcComm.weaken_guard_formula gthen (U.mk_conj bcond g) in
-                let md, ct_then, ct_else, g_lift_then, g_lift_else =
-                  let m, cthen, celse, g_lift_then, g_lift_else =
-                    lift_comps_sep_guards env cthen celse None false in
-                  let md = Env.get_effect_decl env m in
-                  md, cthen |> U.comp_to_comp_typ, celse |> U.comp_to_comp_typ, g_lift_then, g_lift_else in
-                let fn =
-                  if md |> U.is_layered then mk_layered_conjunction
-                  else mk_non_layered_conjunction in
+            let md, comp, g_comp =
+              match lcases with
+              | [] -> None, comp_pure_wp_false env u_res_t res_t, Env.trivial_guard
+              | _ ->
+                (*
+                 * We will now compute the VC with a fold_right2 over lcases
+                 *   and neg_branch_conds
+                 * Split the last element of lcases (and branch conditions)
+                 *   to form the base case
+                 *)
 
-                //weaken the lift guards
-                let g_lift_then = TcComm.weaken_guard_formula g_lift_then (U.mk_conj bcond g) in
-                let g_lift_else = TcComm.weaken_guard_formula g_lift_else (U.mk_conj bcond (U.mk_neg g)) in                
-                let g_lift = Env.conj_guard g_lift_then g_lift_else in
+                let lcases, neg_branch_conds, md, comp, g_comp =
+                  let neg_branch_conds, neg_last =
+                    neg_branch_conds
+                    |> List.splitAt (List.length lcases - 1)
+                    |> (fun (l1, l2) -> l1, List.hd l2) in
+                  
+                  let lcases, (g_last, eff_last, _, c_last) =
+                    lcases
+                    |> List.splitAt (List.length lcases - 1)
+                    |> (fun (l1, l2) -> l1, List.hd l2) in
 
-                let c, g_conjunction = fn env md u_res_t res_t g ct_then ct_else (Env.get_range env) in
-                Some md,
-                c,
-                Env.conj_guards [g_comp; gthen; g_lift; g_conjunction]
-            ) lcases branch_conditions (None, default_case, Env.trivial_guard) in
+                  let c, g =
+                    let lc = maybe_return eff_last c_last in
+                    let c, g = TcComm.lcomp_comp lc in
+                    c, TcComm.weaken_guard_formula g (U.mk_conj g_last neg_last) in
+
+                  lcases,
+                  neg_branch_conds,
+                  eff_last |> Env.norm_eff_name env |> Env.get_effect_decl env,
+                  c, g in
+
+                List.fold_right2 (fun (g, eff_label, _, cthen) neg_cond (_, celse, g_comp) ->
+                  let cthen, g_then = TcComm.lcomp_comp (maybe_return eff_label cthen) in
+                  //lift both the branches
+                  //separate guards so that we can weaken them appropriately later
+                  let md, ct_then, ct_else, g_lift_then, g_lift_else =
+                    let m, cthen, celse, g_lift_then, g_lift_else =
+                      lift_comps_sep_guards env cthen celse None false in
+                    let md = Env.get_effect_decl env m in
+                    md,
+                    cthen |> U.comp_to_comp_typ, celse |> U.comp_to_comp_typ,
+                    g_lift_then, g_lift_else in
+
+                  //function to apply the if-then-else combinator
+                  let fn =
+                    if md |> U.is_layered then mk_layered_conjunction
+                    else mk_non_layered_conjunction in
+
+                  let c, g_conjunction = fn env md u_res_t res_t g ct_then ct_else (Env.get_range env) in
+
+                  //weaken the then and else guards
+                  //neg_cond is the negated branch condition upto this branch
+                  let g_then = TcComm.weaken_guard_formula
+                    (Env.conj_guard g_then g_lift_then)
+                    (U.mk_conj neg_cond g) in
+                  let g_else = TcComm.weaken_guard_formula
+                    g_lift_else
+                    (U.mk_conj neg_cond (U.mk_neg g)) in                
+
+                  Some md,
+                  c,
+                  Env.conj_guards [g_comp; g_then; g_else; g_conjunction]
+                ) lcases neg_branch_conds (Some md, comp, g_comp) in
+
+            //strengthen comp with the exhaustiveness check
+            let comp, g_comp =
+              let c, g =
+                let check = U.mk_imp exhaustiveness_branch_cond U.t_false in
+                let check = label Err.exhaustiveness_check (Env.get_range env) check   in
+                strengthen_comp env None comp check bind_cases_flags in
+              c, Env.conj_guard g_comp g in
 
             //close g_comp with the scrutinee bv
             let g_comp = Env.close_guard env0 [scrutinee |> S.mk_binder] g_comp in
