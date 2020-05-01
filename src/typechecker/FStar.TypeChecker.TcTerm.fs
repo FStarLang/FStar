@@ -2647,13 +2647,7 @@ and tc_eqn scrutinee env branch
         if not (Env.should_verify env)
         then None
         else let e = SS.compress pat_exp in
-             match e.n with
-             | Tm_uvar _
-             | Tm_constant _
-             | Tm_fvar _ -> None (* Equation for non-binding forms are handled with the discriminators below *)
-             | _ ->
-               Some (U.mk_eq2 (env.universe_of env pat_t) pat_t scrutinee_tm e)
-    in
+             Some (U.mk_eq2 (env.universe_of env pat_t) pat_t scrutinee_tm e) in
 
     let c, g_branch = TcUtil.strengthen_precondition None env branch_exp c g_branch in
 
