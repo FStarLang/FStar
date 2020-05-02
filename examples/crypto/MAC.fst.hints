@@ -131,44 +131,6 @@
       ],
       0,
       "4ab9bbe38cb0d738b2b06c9aa47dc14f"
-    ],
-    [
-      "MAC.entry",
-      1,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Platform.Bytes.lbytes", "equation_SHA1.key",
-        "equation_SHA1.keysize", "equation_SHA1.tag", "equation_SHA1.text",
-        "haseqTm_refine_b3982a6d174e1d047431ae85c35dc7d8"
-      ],
-      0,
-      "18c6a5c8012945e4b608593eb58350a1"
-    ],
-    [
-      "MAC.__proj__Entry__item__t",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_MAC.Entry_k",
-        "projection_inverse_MAC.Entry_k"
-      ],
-      0,
-      "dbcf4573f87175dcc3a9cc1dbeb53ea9"
-    ],
-    [
-      "MAC.verify",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "assumption_Prims.HasEq_bool"
-      ],
-      0,
-      "edb715abe729f16856a90e6ced6cf335"
     ]
   ]
 ]

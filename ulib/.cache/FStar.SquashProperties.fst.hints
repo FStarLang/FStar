@@ -20,7 +20,7 @@
         "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "657b8fefe2700e1ee97d0f0994276c0d"
+      "501ed561d797a6b9c1f68a6a8940f284"
     ],
     [
       "FStar.SquashProperties.excluded_middle",
@@ -138,7 +138,7 @@
         "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "5747de26ce46fae2523b06ad6bd4efc1"
+      "d8f118911c401c998d0877163e54b408"
     ],
     [
       "FStar.SquashProperties.excluded_middle",

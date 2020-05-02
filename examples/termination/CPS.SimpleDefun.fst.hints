@@ -50,7 +50,7 @@
         "subterm_ordering_CPS.SimpleDefun.C1"
       ],
       0,
-      "fd0355db7472b33d49b81e7d7406c9f6"
+      "c976bebb79c192aeb0390329bdb5d5bd"
     ],
     [
       "CPS.SimpleDefun.add_cps",
@@ -67,75 +67,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "bf47023cddbdb4c0156a0fb3ee8f079d"
-    ],
-    [
-      "CPS.SimpleDefun.cont",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "b5e5d43a6ca1e6ea48b0c9fcbb1c851e"
-    ],
-    [
-      "CPS.SimpleDefun.__proj__C1__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_CPS.SimpleDefun.C1",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
-      ],
-      0,
-      "43ce9be1274ff8ed11d31d3ebdbd9d63"
-    ],
-    [
-      "CPS.SimpleDefun.__proj__C1__item___1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_CPS.SimpleDefun.C1",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_ec3b073f187e62e07276baa8a49db0b9"
-      ],
-      0,
-      "642d9f88f7ad91d6833ee92dd94401f7"
-    ],
-    [
-      "CPS.SimpleDefun.apply",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_99791f65bbeea99a630052cdf78a93a2_0",
-        "disc_equation_CPS.SimpleDefun.C0",
-        "disc_equation_CPS.SimpleDefun.C1",
-        "fuel_guarded_inversion_CPS.SimpleDefun.cont",
-        "subterm_ordering_CPS.SimpleDefun.C1"
-      ],
-      0,
-      "5a6131a1b2d2d3972fca3c4ee037c3c0"
-    ],
-    [
-      "CPS.SimpleDefun.add_cps",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_66b03f5c7897b05649fed8196554c587_0",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_Prims.__cache_version_number__",
-        "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "7c369a332a59677f5d22bb0efa2114cb"
+      "03f8d6d8f1cde552a810a2b8741162e1"
     ]
   ]
 ]

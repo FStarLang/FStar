@@ -29,35 +29,6 @@
       ],
       0,
       "bf5fd5cbe23f01815b5dbbae0fb56e8d"
-    ],
-    [
-      "HyE.RSA.plain",
-      2,
-      2,
-      1,
-      [
-        "@query", "constructor_distinct_CoreCrypto.AES_128_GCM",
-        "equality_tok_CoreCrypto.AES_128_GCM@tok",
-        "equation_CoreCrypto.aeadKeySize", "equation_HyE.RSA.plainsize",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "d7f8db1b9f10e64141723f5f01fe063f"
-    ],
-    [
-      "HyE.RSA.enc",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Pervasives.Native.option__uu___haseq",
-        "assumption_Platform.Bytes.HasEq_bytes", "equation_HyE.RSA.plain",
-        "equation_HyE.RSA.plainsize", "equation_Platform.Bytes.lbytes",
-        "function_token_typing_HyE.RSA.plain",
-        "haseqTm_refine_b3982a6d174e1d047431ae85c35dc7d8"
-      ],
-      0,
-      "3e1aae9f2908f2353eb2130c55d95f4d"
     ]
   ]
 ]

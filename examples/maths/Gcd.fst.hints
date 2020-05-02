@@ -32,15 +32,6 @@
       [ "@query", "equation_Gcd.is_gcd" ],
       0,
       "a87688b222a9d5dc9b883e5c96163e3b"
-    ],
-    [
-      "Gcd.a_divides_a'",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b4d15344ca707927d2dbc9d088f065c2"
     ]
   ]
 ]

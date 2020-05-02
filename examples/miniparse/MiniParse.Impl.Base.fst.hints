@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_f1ef48729dd48b5741a77671cc117cd5"
       ],
       0,
-      "7e7c9c2146fa6747c3b11869c76a8d9b"
+      "60cd2b57c6a37eec3d73baaef1b05d86"
     ],
     [
       "MiniParse.Impl.Base.coerce_parser_impl",
@@ -47,68 +47,7 @@
         "typing_FStar.UInt32.t"
       ],
       0,
-      "386124da07e742efddeca9a3a90b8b3a"
-    ],
-    [
-      "MiniParse.Impl.Base.parser_impl",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_MiniParse.Spec.Base.consumed_length", "equation_Prims.nat",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_f1ef48729dd48b5741a77671cc117cd5"
-      ],
-      0,
-      "ee241fac7bb5818816d1a99246f98de9"
-    ],
-    [
-      "MiniParse.Impl.Base.coerce_parser_impl",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "7e09f4e620d826d1750ab6409aba5abc"
-    ],
-    [
-      "MiniParse.Impl.Base.coerce_parser_impl",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp", "equation_Prims.eq2",
-        "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "60bcd023ee50fa0089b3a4e3c5b9ceb8"
-    ],
-    [
-      "MiniParse.Impl.Base.serializer_impl",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.UInt32_pretyping_2ab3c8ba2d08b0172817fc70b5994868",
-        "bool_inversion", "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_Prims.eqtype", "lemma_FStar.Pervasives.invertOption",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_4818621566d3edde8f9c0dac6c867ee2",
-        "typing_FStar.Pervasives.Native.uu___is_Some",
-        "typing_FStar.UInt32.t"
-      ],
-      0,
-      "326b1a50eb1881168f49bfe6a08a926a"
+      "f9a03e51be1e4e3fec24b6bc43eed6e8"
     ]
   ]
 ]

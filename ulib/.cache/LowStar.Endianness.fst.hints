@@ -435,7 +435,7 @@
         "typing_LowStar.Monotonic.Buffer.as_seq"
       ],
       0,
-      "76280db5abae9616039581cbbd66f72e"
+      "f53175baff511199f248afae566cd239"
     ],
     [
       "LowStar.Endianness.store16_be",

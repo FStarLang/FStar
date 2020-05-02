@@ -115,7 +115,7 @@
         "typing_Formatting.response", "typing_RPC.k"
       ],
       0,
-      "88b115c8ca011f996c0cb4e5a8b7804b"
+      "2cd1a456d27c4f30018e5331e64f26f9"
     ],
     [
       "RPC.server",
@@ -163,7 +163,7 @@
         "typing_Platform.Bytes.utf8", "typing_RPC.k"
       ],
       0,
-      "4befdd9616157f6840dab074d4d7ee09"
+      "ade560c6c09e423d3eebb53f1e3f4064"
     ],
     [
       "RPC.test",
@@ -185,30 +185,6 @@
       ],
       0,
       "a1a77aa509fdf9d57e1fff2df487abd2"
-    ],
-    [
-      "RPC.reqresp",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Formatting.message"
-      ],
-      0,
-      "4f442afb2448b50038c48f2e6b1378d4"
-    ],
-    [
-      "RPC.k",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Pervasives.result"
-      ],
-      0,
-      "72ea4fb92847775e7db77850d59947a5"
     ]
   ]
 ]
