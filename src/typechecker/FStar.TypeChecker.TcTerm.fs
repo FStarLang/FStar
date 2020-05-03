@@ -1533,7 +1533,6 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let fail :string -> typ -> 'a = fun msg t ->
         raise_error (Err.expected_a_term_of_type_t_got_a_function env msg t top) (top.pos) in
 
-    
     (* whether to try first to use unification for solving sub-typing constraints or only propagate to the SMT solver *)
     let use_eq = env.use_eq in
     (* topt is the expected type of the expression obtained from the env *)
@@ -3130,12 +3129,14 @@ and check_inner_let_rec env top =
 and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
    let env0 = env in
    let termination_check_enabled (lbname:lbname) (lbdef:term) (lbtyp:term)
-     : option<int> // when enabled returns recursion arity
+     : option<(int * term)> // when enabled returns recursion arity;
+                            // plus the term elaborated with implicit binders
+                            // (TODO: move all that logic to desugaring)
      =
      if Options.ml_ish () then None else
 
      let lbtyp0 = lbtyp in
-     let actuals, body, _ = abs_formals lbdef in
+     let actuals, body, body_lc = abs_formals lbdef in
 
      //add implicit binders, in case, for instance
      //lbtyp is of the form x:'a -> t
@@ -3167,7 +3168,7 @@ and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
       * totality. Another way of seeing this check is that we take
       * the minimum amount of binders from the actuals and formals. *)
      if U.comp_effect_name c |> Env.lookup_effect_quals env |> List.contains TotalEffect then
-       Some nformals
+       Some (nformals, U.abs actuals body body_lc)
      else
        None
    in
@@ -3185,18 +3186,21 @@ and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
         // i.e. when lax checking it was adding lbname in the second branch
         // this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug056)
         // Removed that check. Rest of the code relies on env.letrecs = []
-        let env = match termination_check_enabled lb.lbname e t with
-                  // AR: we need to add the binding of the let rec after adding the
-                  // binders of the lambda term, and so, here we just note in the env that
-                  // we are typechecking a let rec, the recursive binding will be added in
-                  // tc_abs adding universes here so that when we add the let binding, we
-                  // can add a typescheme with these universes
-                  | Some arity ->
-                    {env with letrecs=(lb.lbname, arity, t, univ_vars)::env.letrecs}
-                  | None ->
-                    Env.push_let_binding env lb.lbname (univ_vars, t)
+        let lb, env =
+            match termination_check_enabled lb.lbname e t with
+            // AR: we need to add the binding of the let rec after adding the
+            // binders of the lambda term, and so, here we just note in the env that
+            // we are typechecking a let rec, the recursive binding will be added in
+            // tc_abs adding universes here so that when we add the let binding, we
+            // can add a typescheme with these universes
+            | Some (arity, def) ->
+              let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=def} in
+              let env = {env with letrecs=(lb.lbname, arity, t, univ_vars)::env.letrecs} in
+              lb, env
+            | None ->
+              let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=e} in
+              lb, Env.push_let_binding env lb.lbname (univ_vars, t)
         in
-        let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=e} in
         lb::lbs,  env, g)
     ([], env, Env.trivial_guard)
     lbs  in
@@ -3212,8 +3216,31 @@ and check_let_recs env lbs =
         match bs with
         | [] -> raise_error (Errors.Fatal_RecursiveFunctionLiteral, "Only function literals may be defined recursively") (S.range_of_lbname lb.lbname)
         | _ -> ();
-        // By using abs_formals and then rebuilding, we collect all of the binders
-        let lb = { lb with lbdef = U.abs bs t lcomp } in
+
+        (* HACK ALERT: arity
+         *
+         * We build a Tm_abs node with exactly [arity] binders,
+         * and put the rest in another node in the body, so `tc_abs`
+         * will do the right thing when computing a decreases clauses.
+        *)
+        let arity = match Env.get_letrec_arity env lb.lbname with
+                    | Some n -> n
+                    | None -> List.length bs (* Keep the node as-is *)
+        in
+        let bs0, bs1 = List.splitAt arity bs in
+        let def =
+            if List.isEmpty bs1
+            then U.abs bs0 t lcomp
+            else let inner = U.abs bs1 t lcomp in
+                 let inner = SS.close bs0 inner in
+                 let bs0 = SS.close_binders bs0 in
+                 S.mk (Tm_abs (bs0, inner, None)) None inner.pos
+                 // ^ using abs again would flatten the abstraction
+        in
+        (* / HACK *)
+
+        let lb = { lb with lbdef = def } in
+
         let e, c, g = tc_tot_or_gtot_term (Env.set_expected_typ env lb.lbtyp) lb.lbdef in
         if not (TcComm.is_total_lcomp c)
         then raise_error (Errors.Fatal_UnexpectedGTotForLetRec, "Expected let rec to be a Tot term; got effect GTot") e.pos;
