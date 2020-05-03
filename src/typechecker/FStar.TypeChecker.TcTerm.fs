@@ -398,30 +398,35 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                         | [x] -> x //NS: why no promotion here?
                                    //GM: To simplify 1-argument functions
                                    //    and get (x << x0) instead of (x :: LexTop) << (x0 :: LexTop)
-                        | _ -> mk_lex_list xs in
+                        | _ -> mk_lex_list xs
+      in
 
-        let previous_dec = decreases_clause actuals expected_c in
-        let guard_one_letrec (l, t, u_names) =
-            match (SS.compress t).n with
-                | Tm_arrow(formals, c) ->
-                  //make sure they all have non-null names
-                  let formals = formals |> List.map (fun (x, imp) -> if S.is_null_bv x then (S.new_bv (Some (S.range_of_bv x)) x.sort, imp) else x,imp) in
-        (*open*)  let formals, c = SS.open_comp formals c in
-                  let dec = decreases_clause formals c in
-                  let precedes = mk_Tm_app precedes [as_arg dec; as_arg previous_dec] None r in
-                  let precedes = TcUtil.label "Could not prove termination of this recursive call" r precedes in
-                  let bs, (last, imp) = BU.prefix formals in
-                  let last = {last with sort=U.refine last precedes} in
-                  let refined_formals = bs@[(last,imp)] in
-        (*close*) let t' = U.arrow refined_formals c in
-                  if debug env Options.Medium
-                  then BU.print3 "Refined let rec %s\n\tfrom type %s\n\tto type %s\n"
-                        (Print.lbname_to_string l) (Print.term_to_string t) (Print.term_to_string t');
-                  l, t', u_names
+      let previous_dec = decreases_clause actuals expected_c in
 
-                | _ -> raise_error (Errors.Fatal_ExpectedArrowAnnotatedType, "Annotated type of 'let rec' must be an arrow") t.pos in
+      let guard_one_letrec (l, arity, t, u_names) =
+        let formals, c = N.get_n_binders env arity t in
 
-        letrecs |> List.map guard_one_letrec
+        (* This should never happen since `termination_check_enabled`
+         * takes care to not return an arity bigger than the one in
+         * the lbtyp. *)
+        if arity > List.length formals then
+          failwith "impossible: bad formals arity, guard_one_letrec";
+
+        //make sure they all have non-null names
+        let formals = formals |> List.map (fun (x, imp) -> if S.is_null_bv x then (S.new_bv (Some (S.range_of_bv x)) x.sort, imp) else x,imp) in
+        let dec = decreases_clause formals c in
+        let precedes = mk_Tm_app precedes [as_arg dec; as_arg previous_dec] None r in
+        let precedes = TcUtil.label "Could not prove termination of this recursive call" r precedes in
+        let bs, (last, imp) = BU.prefix formals in
+        let last = {last with sort=U.refine last precedes} in
+        let refined_formals = bs@[(last,imp)] in
+        let t' = U.arrow refined_formals c in
+        if debug env Options.Medium
+        then BU.print3 "Refined let rec %s\n\tfrom type %s\n\tto type %s\n"
+              (Print.lbname_to_string l) (Print.term_to_string t) (Print.term_to_string t');
+        l, t', u_names
+      in
+      letrecs |> List.map guard_one_letrec
 
 let wrap_guard_with_tactic_opt topt g =
    match topt with
@@ -3126,51 +3131,49 @@ and check_inner_let_rec env top =
 (* build an environment with recursively bound names.                         *)
 (* refining the types of those names with decreases clauses is done in tc_abs *)
 (******************************************************************************)
-and build_let_rec_env top_level env lbs : list<letbinding> * env_t * guard_t =
+and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
    let env0 = env in
-   let termination_check_enabled lbname lbdef lbtyp =
-     if Options.ml_ish () then false else
-     let t = N.unfold_whnf env lbtyp in
-     let formals, c = arrow_formals_comp t in
-     let actuals, _, _ = abs_formals lbdef in
-     if List.length formals < 1
-        || List.length actuals < 1
-     then
-       raise_error (Errors.Fatal_RecursiveFunctionLiteral, (BU.format2 "Only function literals with arrow types can be defined recursively; got %s : %s"
+   let termination_check_enabled (lbname:lbname) (lbdef:term) (lbtyp:term)
+     : option<int> // when enabled returns recursion arity
+     =
+     if Options.ml_ish () then None else
+
+     let lbtyp0 = lbtyp in
+     let actuals, body, _ = abs_formals lbdef in
+
+     //add implicit binders, in case, for instance
+     //lbtyp is of the form x:'a -> t
+     //lbdef is of the form (fun x -> t)
+     //in which case, we need to add (#'a:Type) to the actuals
+     //See the handling in Tm_abs case of tc_value, roughly line 703 (location may have changed since this comment was written)
+     let actuals = TcUtil.maybe_add_implicit_binders (Env.set_expected_typ env lbtyp) actuals in
+     let nactuals = List.length actuals in
+
+     (* Grab binders from the type. At most as many as we have in
+      * the abstraction. *)
+     let formals, c = N.get_n_binders env nactuals lbtyp in
+
+     // TODO: There's a similar error in check_let_recs, would be nice
+     // to remove this one.
+     if List.isEmpty formals || List.isEmpty actuals then
+       raise_error (Errors.Fatal_RecursiveFunctionLiteral,
+                    (BU.format2 "Only function literals with arrow types can be defined recursively; got %s : %s"
                                (Print.term_to_string lbdef)
-                               (Print.term_to_string lbtyp))) lbtyp.pos
-     else (
-       //add implicit binders, in case, for instance
-       //lbtyp is of the form x:'a -> t
-       //lbdef is of the form (fun x -> t)
-       //in which case, we need to add (#'a:Type) to the actuals
-       //See the handling in Tm_abs case of tc_value, roughly line 703 (location may have changed since this comment was written)
-       let actuals = TcUtil.maybe_add_implicit_binders (Env.set_expected_typ env lbtyp) actuals in
-       if List.length formals <> List.length actuals
-       then begin
-            let actuals_msg =
-                let n = List.length actuals in
-                if n = 1
-                then "1 argument was found"
-                else BU.format1 "%s arguments were found" (string_of_int n)
-            in
-            let formals_msg =
-                let n = List.length formals in
-                if n = 1
-                then "1 argument"
-                else BU.format1 "%s arguments" (string_of_int n)
-            in
-            let msg =
-                BU.format4 "From its type %s, the definition of `let rec %s` expects a function with %s, but %s"
-                            (Print.term_to_string lbtyp)
-                            (Print.lbname_to_string lbname)
-                            formals_msg
-                            actuals_msg in
-            raise_error (Errors.Fatal_LetRecArgumentMismatch, msg) lbdef.pos
-       end;
-       let quals = Env.lookup_effect_quals env (U.comp_effect_name c) in
-       quals |> List.contains TotalEffect
-     )
+                               (Print.term_to_string lbtyp)))
+                   lbtyp.pos; // TODO: GM: maybe point to the one that's actually empty?
+
+     let nformals = List.length formals in
+
+     (* `nformals` is exactly the arity of recursion. It is either
+      * the amount of binders we traversed until we ran into an effect
+      * in the expected type, or the total amount of binders in the
+      * abstraction's body. So we can just check the effect `c` for
+      * totality. Another way of seeing this check is that we take
+      * the minimum amount of binders from the actuals and formals. *)
+     if U.comp_effect_name c |> Env.lookup_effect_quals env |> List.contains TotalEffect then
+       Some nformals
+     else
+       None
    in
    let lbs, env, g = List.fold_left (fun (lbs, env, g_acc) lb ->
         let univ_vars, t, check_t = TcUtil.extract_let_rec_annotation env lb in
@@ -3182,14 +3185,21 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t * guard_t =
             else (let env0 = Env.push_univ_vars env0 univ_vars in
                   let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) "" in
                   Env.conj_guard g_acc (g |> Rel.resolve_implicits env |> Rel.discharge_guard env), norm env0 t) in
-        let env = if termination_check_enabled lb.lbname e t  //AR: This code also used to have && Env.should_verify env
-                                                              //i.e. when lax checking it was adding lbname in the second branch
-                                                              //this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug056)
-                                                              //Removed that check. Rest of the code relies on env.letrecs = []
-                  then {env with letrecs=(lb.lbname,t,univ_vars)::env.letrecs}  //AR: we need to add the binding of the let rec after adding the binders of the lambda term, and so, here we just note in the env
-                                                                                //that we are typechecking a let rec, the recursive binding will be added in tc_abs
-                                                                                //adding universes here so that when we add the let binding, we can add a typescheme with these universes
-                  else Env.push_let_binding env lb.lbname (univ_vars, t) in
+        // AR: This code (below) also used to have && Env.should_verify env
+        // i.e. when lax checking it was adding lbname in the second branch
+        // this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug056)
+        // Removed that check. Rest of the code relies on env.letrecs = []
+        let env = match termination_check_enabled lb.lbname e t with
+                  // AR: we need to add the binding of the let rec after adding the
+                  // binders of the lambda term, and so, here we just note in the env that
+                  // we are typechecking a let rec, the recursive binding will be added in
+                  // tc_abs adding universes here so that when we add the let binding, we
+                  // can add a typescheme with these universes
+                  | Some arity ->
+                    {env with letrecs=(lb.lbname, arity, t, univ_vars)::env.letrecs}
+                  | None ->
+                    Env.push_let_binding env lb.lbname (univ_vars, t)
+        in
         let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=e} in
         lb::lbs,  env, g)
     ([], env, Env.trivial_guard)
