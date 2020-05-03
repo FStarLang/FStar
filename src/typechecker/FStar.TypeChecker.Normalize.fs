@@ -3112,7 +3112,7 @@ let get_n_binders (env:Env.env) (n:int) (t:term) : list<binder> * comp =
       (bs_l, S.mk_Total (U.arrow bs_r c))
 
     (* We need more, descend if `c` is total *)
-    | bs, c when len < n && U.is_total_comp c ->
+    | bs, c when len < n && U.is_total_comp c && not (U.has_decreases c) ->
       let (bs', c') = aux true (n-len) (U.comp_result c) in
       (bs@bs', c')
 
