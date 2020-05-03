@@ -394,11 +394,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                 | Some (DECREASES dec) -> as_lex_list dec
                 | _ ->
                     let xs = bs |> filter_types_and_functions in
-                    match xs with
-                        | [x] -> x //NS: why no promotion here?
-                                   //GM: To simplify 1-argument functions
-                                   //    and get (x << x0) instead of (x :: LexTop) << (x0 :: LexTop)
-                        | _ -> mk_lex_list xs
+                    mk_lex_list xs
       in
 
       let previous_dec = decreases_clause actuals expected_c in
