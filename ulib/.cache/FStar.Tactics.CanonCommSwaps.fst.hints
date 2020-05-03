@@ -75,7 +75,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a6472acbca9f762e257c4b29bf34db38"
+      "444320b3844f72345ba3e6b7694e49f0"
     ],
     [
       "FStar.Tactics.CanonCommSwaps.extend_equal_counts",
@@ -441,7 +441,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c0e928f09a3bba3afed5bf7e5f1b9883"
+      "7c2299692e584fea860049b250a1b5d1"
     ],
     [
       "FStar.Tactics.CanonCommSwaps.apply_swaps",
@@ -465,7 +465,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4048e8f975372c97e8a450db50e155cf"
+      "6d9cb17638dc8ea3758b092d2135e712"
     ],
     [
       "FStar.Tactics.CanonCommSwaps.append_swaps",

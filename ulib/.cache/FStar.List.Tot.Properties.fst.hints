@@ -1568,7 +1568,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "66414d167ca12ae40803547b45617d0f"
+      "b3a3e7c4c0c1c91b049bfa4d2349d4d9"
     ],
     [
       "FStar.List.Tot.Properties.partition_mem",
@@ -3081,7 +3081,7 @@
         "subterm_ordering_FStar.Pervasives.Native.Mktuple2"
       ],
       0,
-      "c35559f1536b40e24aaba715e538de90"
+      "af02276a8c541041083c9e6a196511b9"
     ],
     [
       "FStar.List.Tot.Properties.memP_precedes",
@@ -3532,7 +3532,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "a1a7c7d2eac259b1fb6c51c232b32487"
+      "d55a6be6d34e9e768ffea6d819e5acaf"
     ],
     [
       "FStar.List.Tot.Properties.sortWith_permutation",

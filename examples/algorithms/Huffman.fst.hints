@@ -209,7 +209,7 @@
         "typing_Huffman.sorted", "unit_inversion", "unit_typing"
       ],
       0,
-      "cbcd36ee5ea1e5a79b9e90f5db85ca21"
+      "21ecf0b472f7799ad0bcaff3e55ae0e9"
     ],
     [
       "Huffman.insert_in_sorted",
@@ -633,7 +633,7 @@
         "typing_Huffman.symbol", "well-founded-ordering-on-nat"
       ],
       0,
-      "be532fb424a864c45332a495f767c2b3"
+      "1f64e1e53a646633bfcd299fa1801f74"
     ],
     [
       "Huffman.decode_aux",

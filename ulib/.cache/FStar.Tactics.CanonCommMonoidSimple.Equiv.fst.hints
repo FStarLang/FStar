@@ -419,7 +419,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "71418e44469ba47e8f090c7813257d3f"
+      "e1b2711fdebbcaeacd87fcc18bcc1dcd"
     ],
     [
       "FStar.Tactics.CanonCommMonoidSimple.Equiv.apply_swaps_correct",
@@ -796,10 +796,10 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_cf74cf5c1e7834b84db9cc7ebce886a3",
-        "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
+        "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e1f715b2a3487b5d2187fc146b129830"
+      "5a5b969a7a32064e183234a653548c89"
     ],
     [
       "FStar.Tactics.CanonCommMonoidSimple.Equiv.apply_swap_aux_correct",
@@ -854,7 +854,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "52374d6d16a8ba2137c0c444edd0870f"
+      "c3dfb5792bd46418d7abd8d81dbd4a3b"
     ],
     [
       "FStar.Tactics.CanonCommMonoidSimple.Equiv.monoid_reflect",
