@@ -1419,7 +1419,12 @@ and tc_abs_expected_function_typ env (bs:binders) t0 (body:term)
           (envbody, letrec_binders, Env.close_guard envbody bs g)
         in
 
-        let envbody, bs, g_env, c, body = check_actuals_against_formals env bs bs_expected body in
+        (* Set letrecs to [] before calling check_actuals_against_formals,
+         * then restore. That function will typecheck the types of the binders
+         * and having letrecs set will make a mess. *)
+        let envbody = { env with letrecs = [] } in
+        let envbody, bs, g_env, c, body = check_actuals_against_formals envbody bs bs_expected body in
+        let envbody = { envbody with letrecs = env.letrecs } in
         let envbody, letrecs, g_annots = mk_letrec_env envbody bs c in
         let envbody = Env.set_expected_typ envbody (U.comp_result c) in
         Some t, bs, letrecs, Some c, envbody, body, Env.conj_guard g_env g_annots
