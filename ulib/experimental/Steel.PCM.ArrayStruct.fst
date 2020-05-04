@@ -30,6 +30,8 @@ let v_usize = U32.v
 
 type field_id = string
 
+/// The descriptor contains all the information necessary to derive the type of the values
+/// corresponding to an arraystruct.
 noeq type array_struct_descriptor : Type u#(a+1) =
   | DBase:
     a: Type u#a ->
@@ -60,6 +62,7 @@ let array_type (cell_type: Type u#a) (len: usize) : Type u#a =
 let struct_type (field_typs: field_id -> Type u#a) : Type u#a =
   DepMap.t field_id field_typs
 
+/// This functions achives the descriptor -> Type correspondence
 let rec array_struct_type (descriptor: array_struct_descriptor u#a) : Tot (Type u#a) (decreases descriptor) =
   match descriptor with
   | DBase a -> a
@@ -76,6 +79,33 @@ unfold let struct_field_type
   : Tot (Type u#a) =
   struct_field_type' field_descriptors array_struct_type field
 
+/// The descriptor does not contain any information on the PCM that will govern the arraystruct
+/// values. Here, we are confronted to several choices :
+///   * We could discharge to the user the burden of defining completely the pcm corresponding to
+///   a particular, often recursive, descriptor. This is the most expressive option but defining and
+///   proving the laws of such a PCM is very tedious, and we want to help the user to define their
+///   PCM for their arraystruct.
+///   * The second option is to define a "pointwise" PCM for every arraystruct, by just taking for its
+///   laws and operations the combination of all the laws and operations of all the PCMs stored
+///   at the leaves (DBase case) of the arraystruct. This options seems sensible but this "pointwise"
+///   PCM is actually not very useful: such a PCM does not let the user define memory partition schemes
+///   like "thread A posesses the first two fields of the struct, and thread B posesses the rest".
+///   * The third option is in the middle: letting the user define their own PCM, but with some
+///   help from the arraystruct library such that common patterns are handled easily.
+///
+/// The rest of the library chooses the third option. We assume that common pattern for defining PCM on
+/// arraystructs is to define partition of structs and arrays that depend mostly on the indexes of
+/// the arrays and the fields of the struct rather than the actual values stored inside the cells of
+/// the arrays or the fields of the struct. For instance, splitting an array into two contiguous
+/// halves, or splitting the fields of a struct.
+/// To define such "value-agnostic" PCMs, we will require the user to define their own PCM based purely
+/// on restricted information:
+///   * the opaque type of the array cell values and struct fields (parametricity forbids
+///   value-dependent conditions);
+///   * the length of the array or the name of the fields of the struct;
+///   * to ensure recursivity, the array-struct for the "level below" of the arraystruct structure.
+///
+/// This may help to understand the definition below.
 noeq type array_struct_nested_pcm : Type u#(a+1) =
   | PBase:
     a: Type u#a ->
@@ -93,6 +123,9 @@ noeq type array_struct_nested_pcm : Type u#(a+1) =
     struct_pcm: ((field:field_id -> pcm (field_types field)) -> pcm (struct_type field_types)) ->
     array_struct_nested_pcm
 
+/// Because F* does not support induction-recursion, we had to resort to defining another inductive
+/// type for the nested pcm and thus have to define this recusrive "sync" predicate that ensures that
+/// the nested PCM and the descriptor match.
 let rec nested_pcm_sync
   (descriptor: array_struct_descriptor)
   (nested_pcm: array_struct_nested_pcm) : GTot prop (decreases descriptor) =
@@ -132,6 +165,8 @@ let struct_field_type_unroll_lemma
     compute ()
   end
 
+/// From the PCM builders stored inside the nested PCM, we can derive a PCM for the whole value stored
+/// inside the arraystruct.
 let rec nested_pcm_to_pcm
   (descriptor: array_struct_descriptor u#a)
   (nested_pcm: array_struct_nested_pcm u#a{descriptor `nested_pcm_sync` nested_pcm})
@@ -149,6 +184,7 @@ let rec nested_pcm_to_pcm
       nested_pcm_to_pcm (field_descriptors field) (field_nested_pcms field)
     )
 
+/// Composability is then based on the composability of the nested PCM.
 let composable_array_struct : symrel u#(a+1) (array_struct u#a) = fun (s0 s1: array_struct u#a) ->
   s0.descriptor == s1.descriptor /\ s0.nested_pcm == s1.nested_pcm /\
   composable (nested_pcm_to_pcm s0.descriptor s0.nested_pcm) s0.value s1.value
