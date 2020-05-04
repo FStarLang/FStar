@@ -206,14 +206,14 @@ let e_exn : embedding<exn> =
         | TacticFailure s ->
             S.mk_Tm_app fstar_tactics_TacticFailure.t
                 [S.as_arg (embed e_string rng s)]
-                None rng
+                rng
         | EExn t ->
             { t with pos = rng }
         | e ->
             let s = "uncaught exception: " ^ (BU.message_of_exn e) in
             S.mk_Tm_app fstar_tactics_TacticFailure.t
                 [S.as_arg (embed e_string rng s)]
-                None rng
+                rng
     in
     let unembed_exn (t:term) w _ : option<exn> =
         match hd'_and_args t with
@@ -266,13 +266,13 @@ let e_result (ea : embedding<'a>)  =
                  [S.iarg (type_of ea);
                   S.as_arg (embed ea rng a);
                   S.as_arg (embed e_proofstate rng ps)]
-                 None rng
+                 rng
         | Failed (e, ps) ->
           S.mk_Tm_app (S.mk_Tm_uinst fstar_tactics_Failed.t [U_zero])
                  [S.iarg (type_of ea);
                   S.as_arg (embed e_exn rng e);
                   S.as_arg (embed e_proofstate rng ps)]
-                 None rng
+                 rng
     in
     let unembed_result (t:term) w _ : option<__result<'a>> =
         match hd'_and_args t with

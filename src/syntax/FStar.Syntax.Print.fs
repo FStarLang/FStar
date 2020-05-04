@@ -759,7 +759,7 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_sub_effect (se) -> sub_eff_to_string se
       | Sig_effect_abbrev(l, univs, tps, c, flags) ->
         if (Options.print_universes())
-        then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) None Range.dummyRange) in
+        then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) Range.dummyRange) in
              let tps, c = match (Subst.compress t).n with
                 | Tm_arrow(bs, c) -> bs, c
                 | _ -> failwith "impossible" in

@@ -549,8 +549,8 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
           emb_arrow l (mk_embedding l env t0) (mk_embedding l env t1)
 
         | Tm_arrow(b::more::bs, c) ->
-          let tail = S.mk (Tm_arrow(more::bs, c)) None t.pos in
-          let t = S.mk (Tm_arrow([b], S.mk_Total tail)) None t.pos in
+          let tail = S.mk (Tm_arrow(more::bs, c)) t.pos in
+          let t = S.mk (Tm_arrow([b], S.mk_Total tail)) t.pos in
           mk_embedding l env t
 
         | Tm_fvar _
