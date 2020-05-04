@@ -1010,6 +1010,18 @@ let is_fext_on_domain (t:term) :option<term> =
     | _ -> None)
   | _ -> None
 
+(* Returns `true` iff the head of `t` is a primop, and
+it not applied or only partially applied. *)
+let is_partial_primop_app (cfg:Cfg.cfg) (t:term) : bool =
+  let hd, args = U.head_and_args t in
+  match (U.un_uinst hd).n with
+  | Tm_fvar fv ->
+    begin match find_prim_step cfg fv with
+    | Some prim_step -> prim_step.arity > List.length args
+    | None -> false
+    end
+  | _ -> false
+
 (* GM: Please consider this function private outside of this recursive
  * group, and call `normalize` instead. `normalize` will print timing
  * information when --debug_level NormTop is given, which makes it a
@@ -2399,7 +2411,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         // what's up with that?
         // GM: I actually get a regression if I just keep the second branch.
         if not cfg.steps.iota
-        then if cfg.steps.hnf
+        then if cfg.steps.hnf && not (is_partial_primop_app cfg t)
              then let arg = closure_as_term cfg env_arg tm in
                   let t = extend_app t (arg, aq) None r in
                   rebuild cfg env_arg stack t
@@ -2407,7 +2419,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                   norm cfg env_arg stack tm
         else begin match !m with
           | None ->
-            if cfg.steps.hnf
+            if cfg.steps.hnf && not (is_partial_primop_app cfg t)
             then let arg = closure_as_term cfg env_arg tm in
                  let t = extend_app t (arg, aq) None r in
                  rebuild cfg env_arg stack t
