@@ -4,12 +4,7 @@ let mk :
   'uuuuuu14 'uuuuuu15 .
     'uuuuuu14 FStar_Syntax_Syntax.syntax ->
       'uuuuuu15 -> 'uuuuuu15 FStar_Syntax_Syntax.syntax
-  =
-  fun t  ->
-    fun s  ->
-      FStar_Syntax_Syntax.mk s FStar_Pervasives_Native.None
-        t.FStar_Syntax_Syntax.pos
-  
+  = fun t  -> fun s  -> FStar_Syntax_Syntax.mk s t.FStar_Syntax_Syntax.pos 
 let rec (inst :
   (FStar_Syntax_Syntax.term ->
      FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.term)
