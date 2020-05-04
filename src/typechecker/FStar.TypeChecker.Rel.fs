@@ -1950,8 +1950,13 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
                  ((S.as_arg ct.result_typ)::ct.effect_args)
                  ([], wl)
              in
+             (* Drop the decreases flag, it is not needed and
+              * wouldn't be properly scoped either. *)
+             let nodec flags = List.filter (function DECREASES _ -> false
+                                                     | _ -> true) flags in
              let ct' = {ct with result_typ=fst (List.hd out_args);
-                                effect_args=List.tl out_args} in
+                                effect_args=List.tl out_args;
+                                flags=nodec ct.flags} in
              {c with n=Comp ct'}, wl
         in
         let formals, c = U.arrow_formals_comp arrow in
