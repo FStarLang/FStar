@@ -70,7 +70,7 @@ let extend_env (env:env_t) (i:mlsymbol) (e:entry) : env_t = {
 }
 
 let lookup_tyname (env:env_t) (name:mlpath)
-  : option entry
+  : option<entry>
   = BU.psmap_try_find env.tydef_map (string_of_mlpath name)
 
 (** Free variables of a type: Computed to check which parameters are used *)
