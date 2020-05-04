@@ -125,3 +125,7 @@ let rec nest_1 (l : list nat)
 (* Used to explode *)
 val list_ref: unit -> u:unit{l_Forall (fun (x:int) -> True)} -> Tot unit
 let rec list_ref _ _ = ()
+
+(* Blew up at some point since the implicit of id had
+an ill-scoped decreases clause. *)
+let test_scope_decreases = id nest_1
