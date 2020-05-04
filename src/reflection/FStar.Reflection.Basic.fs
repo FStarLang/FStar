@@ -137,7 +137,7 @@ let rec inspect_ln (t:term) : term_view =
         // expose n-ary lambdas buy unary ones.
         let (a, q) = last args in
         let q' = inspect_aqual q in
-        Tv_App (S.mk_Tm_app hd (init args) None t.pos, (a, q')) // TODO: The range and tk are probably wrong. Fix
+        Tv_App (U.mk_app hd (init args), (a, q'))
 
     | Tm_abs ([], _, _) ->
         failwith "inspect_ln: empty arguments on Tm_abs"
@@ -146,7 +146,7 @@ let rec inspect_ln (t:term) : term_view =
         let body =
             match bs with
             | [] -> t
-            | bs -> S.mk (Tm_abs (bs, t, k)) None t.pos
+            | bs -> S.mk (Tm_abs (bs, t, k)) t.pos
         in
         Tv_Abs (b, body)
 
@@ -305,30 +305,30 @@ let pack_ln (tv:term_view) : term =
         U.mk_app l [(r, q')]
 
     | Tv_Abs (b, t) ->
-        mk (Tm_abs ([b], t, None)) None t.pos // TODO: effect?
+        mk (Tm_abs ([b], t, None)) t.pos // TODO: effect?
 
     | Tv_Arrow (b, c) ->
-        mk (Tm_arrow ([b], c)) None c.pos
+        mk (Tm_arrow ([b], c)) c.pos
 
     | Tv_Type () ->
         U.ktype
 
     | Tv_Refine (bv, t) ->
-        mk (Tm_refine (bv, t)) None t.pos
+        mk (Tm_refine (bv, t)) t.pos
 
     | Tv_Const c ->
-        S.mk (Tm_constant (pack_const c)) None Range.dummyRange
+        S.mk (Tm_constant (pack_const c)) Range.dummyRange
 
     | Tv_Uvar (u, ctx_u_s) ->
-      S.mk (Tm_uvar ctx_u_s) None Range.dummyRange
+      S.mk (Tm_uvar ctx_u_s) Range.dummyRange
 
     | Tv_Let (false, attrs, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
-        S.mk (Tm_let ((false, [lb]), t2)) None Range.dummyRange
+        S.mk (Tm_let ((false, [lb]), t2)) Range.dummyRange
 
     | Tv_Let (true, attrs, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
-        S.mk (Tm_let ((true, [lb]), t2)) None Range.dummyRange
+        S.mk (Tm_let ((true, [lb]), t2)) Range.dummyRange
 
     | Tv_Match (t, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
@@ -341,16 +341,16 @@ let pack_ln (tv:term_view) : term =
             | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
-        S.mk (Tm_match (t, brs)) None Range.dummyRange
+        S.mk (Tm_match (t, brs)) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt) ->
-        S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) None Range.dummyRange
+        S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) Range.dummyRange
 
     | Tv_AscribedC(e, c, tacopt) ->
-        S.mk (Tm_ascribed(e, (BU.Inr c, tacopt), None)) None Range.dummyRange
+        S.mk (Tm_ascribed(e, (BU.Inr c, tacopt), None)) Range.dummyRange
 
     | Tv_Unknown ->
-        S.mk Tm_unknown None Range.dummyRange
+        S.mk Tm_unknown Range.dummyRange
 
 let compare_bv (x:bv) (y:bv) : order =
     let n = S.order_bv x y in

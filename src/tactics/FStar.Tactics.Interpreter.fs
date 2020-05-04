@@ -83,7 +83,6 @@ let unembed_tactic_0 (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) : ta
 
     let tm = S.mk_Tm_app embedded_tac_b
                          [S.as_arg (embed E.e_proofstate rng proof_state ncb)]
-                          None
                           rng in
 
 
@@ -142,7 +141,7 @@ let unembed_tactic_1 (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:norm_cb
     fun x ->
       let rng = FStar.Range.dummyRange  in
       let x_tm = embed ea rng x ncb in
-      let app = S.mk_Tm_app f [as_arg x_tm] None rng in
+      let app = S.mk_Tm_app f [as_arg x_tm] rng in
       unembed_tactic_0 er app ncb
 
 let unembed_tactic_nbe_1 (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>) (cb:NBET.nbe_cbs) (f:NBET.t) : 'a -> tac<'r> =
@@ -452,7 +451,7 @@ let unembed_tactic_1_alt (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:nor
     Some (fun x ->
       let rng = FStar.Range.dummyRange  in
       let x_tm = embed ea rng x ncb in
-      let app = S.mk_Tm_app f [as_arg x_tm] None rng in
+      let app = S.mk_Tm_app f [as_arg x_tm] rng in
       unembed_tactic_0 er app ncb)
 
 let e_tactic_1_alt (ea: embedding<'a>) (er:embedding<'r>): embedding<('a -> (proofstate -> __result<'r>))> =

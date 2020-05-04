@@ -709,7 +709,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
                   fv_app_as_mlty env fv args
 
                 | Tm_app (head, args') ->
-                  translate_term_to_mlty env (S.mk (Tm_app(head, args'@args)) None t.pos)
+                  translate_term_to_mlty env (S.mk (Tm_app(head, args'@args)) t.pos)
 
                 | _ -> MLTY_Top in
             res
@@ -1095,7 +1095,7 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
                        let polytype = tbinders |> List.map (fun (x, _) -> (UEnv.lookup_ty env x).ty_b_name), expected_t in
                        //In this case, an eta expansion is safe
                        let args = tbinders |> List.map (fun (bv, _) -> S.bv_to_name bv |> as_arg) in
-                       let e = mk (Tm_app(lbdef, args)) None lbdef.pos in
+                       let e = mk (Tm_app(lbdef, args)) lbdef.pos in
                        (lbname_, f_e, (lbtyp, (tbinders, polytype)), false, e)
 
                      | _ ->
@@ -1349,7 +1349,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
 
             | Tm_constant Const_reify ->
               let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining; TcEnv.Unascribe] head (List.hd args) in
-              let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) None t.pos in
+              let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos in
               term_as_mlexpr g tm
 
             | _ ->
