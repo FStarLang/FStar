@@ -687,7 +687,7 @@ let (tc_inductive' :
                             let uu____847 =
                               let uu____849 = FStar_Ident.ident_of_lid lid
                                  in
-                              FStar_Ident.text_of_id uu____849  in
+                              FStar_Ident.string_of_id uu____849  in
                             s = uu____847)
                          FStar_TypeChecker_TcInductive.early_prims_inductives
                         in
@@ -2314,7 +2314,7 @@ let (tc_decl' :
                        FStar_Syntax_Syntax.vars = uu____2862;_} ->
                        let has_auto_name bv =
                          let uu____2892 =
-                           FStar_Ident.text_of_id
+                           FStar_Ident.string_of_id
                              bv.FStar_Syntax_Syntax.ppname
                             in
                          FStar_Util.starts_with uu____2892
@@ -2338,7 +2338,7 @@ let (tc_decl' :
                                      let uu____3128 =
                                        let uu____3129 =
                                          let uu____3135 =
-                                           FStar_Ident.text_of_id
+                                           FStar_Ident.string_of_id
                                              body_bv.FStar_Syntax_Syntax.ppname
                                             in
                                          let uu____3137 =

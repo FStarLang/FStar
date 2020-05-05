@@ -2,10 +2,10 @@ open Prims
 let (id_eq_lid : FStar_Ident.ident -> FStar_Ident.lident -> Prims.bool) =
   fun i  ->
     fun l  ->
-      let uu____11 = FStar_Ident.text_of_id i  in
+      let uu____11 = FStar_Ident.string_of_id i  in
       let uu____13 =
         let uu____15 = FStar_Ident.ident_of_lid l  in
-        FStar_Ident.text_of_id uu____15  in
+        FStar_Ident.string_of_id uu____15  in
       uu____11 = uu____13
   
 let (is_val : FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool) =
@@ -13,8 +13,8 @@ let (is_val : FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool) =
     fun d  ->
       match d.FStar_Parser_AST.d with
       | FStar_Parser_AST.Val (y,uu____31) ->
-          let uu____32 = FStar_Ident.text_of_id x  in
-          let uu____34 = FStar_Ident.text_of_id y  in uu____32 = uu____34
+          let uu____32 = FStar_Ident.string_of_id x  in
+          let uu____34 = FStar_Ident.string_of_id y  in uu____32 = uu____34
       | uu____37 -> false
   
 let (is_type : FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool) =
@@ -26,7 +26,7 @@ let (is_type : FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool) =
             (FStar_Util.for_some
                (fun t  ->
                   let uu____70 = FStar_Parser_AST.id_of_tycon t  in
-                  let uu____72 = FStar_Ident.text_of_id x  in
+                  let uu____72 = FStar_Ident.string_of_id x  in
                   uu____70 = uu____72))
       | uu____75 -> false
   
@@ -122,7 +122,7 @@ let rec (prefix_with_iface_decls :
                   then
                     let uu____373 =
                       let uu____379 =
-                        let uu____381 = FStar_Ident.text_of_id x  in
+                        let uu____381 = FStar_Ident.string_of_id x  in
                         let uu____383 =
                           let uu____385 =
                             FStar_All.pipe_right def_ids
@@ -232,8 +232,8 @@ let (check_initial_interface :
                then
                  let uu____726 =
                    let uu____732 =
-                     let uu____734 = FStar_Ident.text_of_id x  in
-                     let uu____736 = FStar_Ident.text_of_id x  in
+                     let uu____734 = FStar_Ident.string_of_id x  in
+                     let uu____736 = FStar_Ident.string_of_id x  in
                      FStar_Util.format2
                        "'val %s' and 'let %s' cannot both be provided in an interface"
                        uu____734 uu____736

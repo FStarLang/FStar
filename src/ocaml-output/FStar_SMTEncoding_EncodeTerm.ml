@@ -3506,7 +3506,7 @@ and (encode_term :
                          FStar_Syntax_Syntax.lbpos = uu____9216;_} ->
                          let x = FStar_Util.left lbname  in
                          let uu____9232 =
-                           FStar_Ident.text_of_id
+                           FStar_Ident.string_of_id
                              x.FStar_Syntax_Syntax.ppname
                             in
                          let uu____9234 = FStar_Syntax_Syntax.range_of_bv x

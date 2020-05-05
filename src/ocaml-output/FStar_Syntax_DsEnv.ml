@@ -684,8 +684,8 @@ let (unmangleOpName :
          match uu____2880 with
          | (x,y,dd,dq) ->
              let uu____2907 =
-               let uu____2909 = FStar_Ident.text_of_id id  in uu____2909 = x
-                in
+               let uu____2909 = FStar_Ident.string_of_id id  in
+               uu____2909 = x  in
              if uu____2907
              then
                let uu____2915 =
@@ -759,8 +759,8 @@ let find_in_record :
                    match uu____3127 with
                    | (f,uu____3135) ->
                        let uu____3136 =
-                         let uu____3138 = FStar_Ident.text_of_id id  in
-                         let uu____3140 = FStar_Ident.text_of_id f  in
+                         let uu____3138 = FStar_Ident.string_of_id id  in
+                         let uu____3140 = FStar_Ident.string_of_id f  in
                          uu____3138 = uu____3140  in
                        if uu____3136
                        then FStar_Pervasives_Native.Some record
@@ -803,7 +803,7 @@ let find_in_module_with_includes :
         fun env1  ->
           fun ns  ->
             fun id  ->
-              let idstr = FStar_Ident.text_of_id id  in
+              let idstr = FStar_Ident.string_of_id id  in
               let rec aux uu___3_3291 =
                 match uu___3_3291 with
                 | [] -> find_in_module_default
@@ -866,15 +866,15 @@ let try_lookup_id'' :
                   let check_local_binding_id uu___5_3589 =
                     match uu___5_3589 with
                     | (id',uu____3592,uu____3593) ->
-                        let uu____3594 = FStar_Ident.text_of_id id'  in
-                        let uu____3596 = FStar_Ident.text_of_id id  in
+                        let uu____3594 = FStar_Ident.string_of_id id'  in
+                        let uu____3596 = FStar_Ident.string_of_id id  in
                         uu____3594 = uu____3596
                      in
                   let check_rec_binding_id uu___6_3605 =
                     match uu___6_3605 with
                     | (id',uu____3608,uu____3609,uu____3610) ->
-                        let uu____3611 = FStar_Ident.text_of_id id'  in
-                        let uu____3613 = FStar_Ident.text_of_id id  in
+                        let uu____3611 = FStar_Ident.string_of_id id'  in
+                        let uu____3613 = FStar_Ident.string_of_id id  in
                         uu____3611 = uu____3613
                      in
                   let curmod_ns =
@@ -898,8 +898,8 @@ let try_lookup_id'' :
                         find_in_module_with_includes eikind find_in_module
                           Cont_ignore env1 ns id
                     | Top_level_def id' when
-                        let uu____3691 = FStar_Ident.text_of_id id'  in
-                        let uu____3693 = FStar_Ident.text_of_id id  in
+                        let uu____3691 = FStar_Ident.string_of_id id'  in
+                        let uu____3693 = FStar_Ident.string_of_id id  in
                         uu____3691 = uu____3693 ->
                         lookup_default_id Cont_ignore id
                     | Record_or_dc r when is_exported_id_field eikind ->
@@ -1061,10 +1061,10 @@ let (resolve_module_name :
               else aux q
           | (Module_abbrev (name,modul))::uu____4145 when
               (nslen = Prims.int_zero) &&
-                (let uu____4152 = FStar_Ident.text_of_id name  in
+                (let uu____4152 = FStar_Ident.string_of_id name  in
                  let uu____4154 =
                    let uu____4156 = FStar_Ident.ident_of_lid lid  in
-                   FStar_Ident.text_of_id uu____4156  in
+                   FStar_Ident.string_of_id uu____4156  in
                  uu____4152 = uu____4154)
               -> FStar_Pervasives_Native.Some modul
           | uu____4158::q -> aux q  in
@@ -2206,7 +2206,7 @@ let (extract_record :
                                                           ((let uu____8740 =
                                                               let uu____8741
                                                                 =
-                                                                FStar_Ident.text_of_id
+                                                                FStar_Ident.string_of_id
                                                                   id
                                                                  in
                                                               let uu____8743
@@ -2238,7 +2238,7 @@ let (extract_record :
                                                                      in
                                                                   FStar_All.pipe_right
                                                                     uu____8788
-                                                                    FStar_Ident.text_of_id
+                                                                    FStar_Ident.string_of_id
                                                                    in
                                                                 let uu____8792
                                                                   =
@@ -2433,7 +2433,7 @@ let (push_bv' :
     fun x  ->
       let r = FStar_Ident.range_of_id x  in
       let bv =
-        let uu____9202 = FStar_Ident.text_of_id x  in
+        let uu____9202 = FStar_Ident.string_of_id x  in
         FStar_Syntax_Syntax.gen_bv uu____9202
           (FStar_Pervasives_Native.Some r)
           (let uu___1113_9205 = FStar_Syntax_Syntax.tun  in
@@ -2631,7 +2631,7 @@ let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
                                                   FStar_Ident.ident_of_lid
                                                     lid
                                                    in
-                                                FStar_Ident.text_of_id
+                                                FStar_Ident.string_of_id
                                                   uu____9729
                                                  in
                                               let uu____9730 =
@@ -3530,9 +3530,9 @@ let (enter_monad_scope : env -> FStar_Ident.ident -> env) =
           let uu____13365 =
             let uu____13371 =
               let uu____13373 =
-                let uu____13375 = FStar_Ident.text_of_id mname  in
+                let uu____13375 = FStar_Ident.string_of_id mname  in
                 let uu____13377 =
-                  let uu____13379 = FStar_Ident.text_of_id mname'  in
+                  let uu____13379 = FStar_Ident.string_of_id mname'  in
                   Prims.op_Hat ", but already in monad scope " uu____13379
                    in
                 Prims.op_Hat uu____13375 uu____13377  in
@@ -3627,7 +3627,7 @@ let fail_or :
                      let uu____13498 = FStar_Ident.string_of_lid modul'  in
                      let uu____13500 =
                        let uu____13502 = FStar_Ident.ident_of_lid lid  in
-                       FStar_Ident.text_of_id uu____13502  in
+                       FStar_Ident.string_of_id uu____13502  in
                      FStar_Util.format4
                        "%s\nModule %s resolved into %s, definition %s not found"
                        msg uu____13496 uu____13498 uu____13500)
@@ -3650,7 +3650,7 @@ let fail_or2 :
           let uu____13537 =
             let uu____13543 =
               let uu____13545 =
-                let uu____13547 = FStar_Ident.text_of_id id  in
+                let uu____13547 = FStar_Ident.string_of_id id  in
                 Prims.op_Hat uu____13547 "]"  in
               Prims.op_Hat "Identifier not found [" uu____13545  in
             (FStar_Errors.Fatal_IdentifierNotFound, uu____13543)  in

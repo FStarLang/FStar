@@ -2809,7 +2809,7 @@ and (readback :
                       let uu____9456 =
                         FStar_Util.left lb.FStar_Syntax_Syntax.lbname  in
                       uu____9456.FStar_Syntax_Syntax.ppname  in
-                    FStar_Ident.text_of_id uu____9455  in
+                    FStar_Ident.string_of_id uu____9455  in
                   FStar_Syntax_Syntax.gen_bv uu____9453
                     FStar_Pervasives_Native.None lb.FStar_Syntax_Syntax.lbtyp)
                lbs

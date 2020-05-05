@@ -1524,7 +1524,7 @@ let (extract_bundle :
                    | ({ FStar_Syntax_Syntax.ppname = ppname;
                         FStar_Syntax_Syntax.index = uu____4365;
                         FStar_Syntax_Syntax.sort = uu____4366;_},uu____4367)
-                       -> FStar_Ident.text_of_id ppname) bs
+                       -> FStar_Ident.string_of_id ppname) bs
           | uu____4375 -> []  in
         let tys = (ml_tyvars, mlt)  in
         let fvv =

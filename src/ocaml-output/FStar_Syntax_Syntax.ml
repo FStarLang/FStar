@@ -1721,16 +1721,16 @@ let (order_bv : bv -> bv -> Prims.int) =
   fun x  ->
     fun y  ->
       let i =
-        let uu____8212 = FStar_Ident.text_of_id x.ppname  in
-        let uu____8214 = FStar_Ident.text_of_id y.ppname  in
+        let uu____8212 = FStar_Ident.string_of_id x.ppname  in
+        let uu____8214 = FStar_Ident.string_of_id y.ppname  in
         FStar_String.compare uu____8212 uu____8214  in
       if i = Prims.int_zero then x.index - y.index else i
   
 let (order_ident : FStar_Ident.ident -> FStar_Ident.ident -> Prims.int) =
   fun x  ->
     fun y  ->
-      let uu____8234 = FStar_Ident.text_of_id x  in
-      let uu____8236 = FStar_Ident.text_of_id y  in
+      let uu____8234 = FStar_Ident.string_of_id x  in
+      let uu____8236 = FStar_Ident.string_of_id y  in
       FStar_String.compare uu____8234 uu____8236
   
 let (order_fv : FStar_Ident.lident -> FStar_Ident.lident -> Prims.int) =
@@ -1809,8 +1809,8 @@ let (new_fv_set : unit -> FStar_Ident.lident FStar_Util.set) =
 let (order_univ_name : univ_name -> univ_name -> Prims.int) =
   fun x  ->
     fun y  ->
-      let uu____8513 = FStar_Ident.text_of_id x  in
-      let uu____8515 = FStar_Ident.text_of_id y  in
+      let uu____8513 = FStar_Ident.string_of_id x  in
+      let uu____8515 = FStar_Ident.string_of_id y  in
       FStar_String.compare uu____8513 uu____8515
   
 let (new_universe_names_set : unit -> univ_name FStar_Util.set) =
@@ -1963,8 +1963,8 @@ let (iarg : term -> arg) =
 let (as_arg : term -> arg) = fun t  -> (t, FStar_Pervasives_Native.None) 
 let (is_null_bv : bv -> Prims.bool) =
   fun b  ->
-    let uu____9095 = FStar_Ident.text_of_id b.ppname  in
-    let uu____9097 = FStar_Ident.text_of_id null_id  in
+    let uu____9095 = FStar_Ident.string_of_id b.ppname  in
+    let uu____9097 = FStar_Ident.string_of_id null_id  in
     uu____9095 = uu____9097
   
 let (is_null_binder : binder -> Prims.bool) =

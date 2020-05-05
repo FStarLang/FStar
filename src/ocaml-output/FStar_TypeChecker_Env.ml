@@ -2354,8 +2354,8 @@ let (in_cur_mod : env -> FStar_Ident.lident -> tri) =
              | ([],uu____16943) -> Maybe
              | (uu____16950,[]) -> No
              | (hd::tl,hd'::tl') when
-                 let uu____16969 = FStar_Ident.text_of_id hd  in
-                 let uu____16971 = FStar_Ident.text_of_id hd'  in
+                 let uu____16969 = FStar_Ident.string_of_id hd  in
+                 let uu____16971 = FStar_Ident.string_of_id hd'  in
                  uu____16969 = uu____16971 -> aux tl tl'
              | uu____16974 -> No  in
            aux cur1 lns
@@ -2959,8 +2959,8 @@ let (lookup_univ : env -> FStar_Syntax_Syntax.univ_name -> Prims.bool) =
            (fun uu___5_19625  ->
               match uu___5_19625 with
               | FStar_Syntax_Syntax.Binding_univ y ->
-                  let uu____19628 = FStar_Ident.text_of_id x  in
-                  let uu____19630 = FStar_Ident.text_of_id y  in
+                  let uu____19628 = FStar_Ident.string_of_id x  in
+                  let uu____19630 = FStar_Ident.string_of_id y  in
                   uu____19628 = uu____19630
               | uu____19633 -> false) env1.gamma) FStar_Option.isSome
   
@@ -5388,7 +5388,7 @@ let (print_gamma : FStar_Syntax_Syntax.gamma -> Prims.string) =
                   let uu____26416 = FStar_Syntax_Print.bv_to_string x  in
                   Prims.op_Hat "Binding_var " uu____26416
               | FStar_Syntax_Syntax.Binding_univ u ->
-                  let uu____26420 = FStar_Ident.text_of_id u  in
+                  let uu____26420 = FStar_Ident.string_of_id u  in
                   Prims.op_Hat "Binding_univ " uu____26420
               | FStar_Syntax_Syntax.Binding_lid (l,uu____26424) ->
                   let uu____26441 = FStar_Ident.string_of_lid l  in

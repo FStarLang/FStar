@@ -783,7 +783,7 @@ let (generalize_and_inst_within :
                  let uu____1672 =
                    let uu____1674 =
                      FStar_All.pipe_right uvs
-                       (FStar_List.map (fun u  -> FStar_Ident.text_of_id u))
+                       (FStar_List.map (fun u  -> FStar_Ident.string_of_id u))
                       in
                    FStar_All.pipe_right uu____1674 (FStar_String.concat ", ")
                     in
@@ -1731,7 +1731,7 @@ let (get_haseq_axiom_lid : FStar_Ident.lid -> FStar_Ident.lid) =
           let uu____4326 =
             let uu____4328 =
               let uu____4330 = FStar_Ident.ident_of_lid lid  in
-              FStar_Ident.text_of_id uu____4330  in
+              FStar_Ident.string_of_id uu____4330  in
             Prims.op_Hat uu____4328 haseq_suffix  in
           FStar_Ident.id_of_text uu____4326  in
         [uu____4325]  in
@@ -2958,7 +2958,7 @@ let (mk_discriminator_and_indexed_projectors :
                                     let uu____7899 =
                                       let uu____7901 =
                                         FStar_Ident.ident_of_lid tc  in
-                                      FStar_Ident.text_of_id uu____7901  in
+                                      FStar_Ident.string_of_id uu____7901  in
                                     s = uu____7899) early_prims_inductives)
                              in
                           let discriminator_ses =
@@ -3082,7 +3082,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                                  =
                                                                  let uu____8086
                                                                    =
-                                                                   FStar_Ident.text_of_id
+                                                                   FStar_Ident.string_of_id
                                                                     x.FStar_Syntax_Syntax.ppname
                                                                     in
                                                                  FStar_Syntax_Syntax.gen_bv
@@ -3105,7 +3105,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                                 =
                                                                 let uu____8100
                                                                   =
-                                                                  FStar_Ident.text_of_id
+                                                                  FStar_Ident.string_of_id
                                                                     x.FStar_Syntax_Syntax.ppname
                                                                    in
                                                                 FStar_Syntax_Syntax.gen_bv
@@ -3447,7 +3447,7 @@ let (mk_discriminator_and_indexed_projectors :
                                              else
                                                (let projection =
                                                   let uu____8669 =
-                                                    FStar_Ident.text_of_id
+                                                    FStar_Ident.string_of_id
                                                       x.FStar_Syntax_Syntax.ppname
                                                      in
                                                   FStar_Syntax_Syntax.gen_bv
@@ -3496,7 +3496,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                                     =
                                                                     let uu____8768
                                                                     =
-                                                                    FStar_Ident.text_of_id
+                                                                    FStar_Ident.string_of_id
                                                                     x1.FStar_Syntax_Syntax.ppname
                                                                      in
                                                                     FStar_Syntax_Syntax.gen_bv
@@ -3525,7 +3525,7 @@ let (mk_discriminator_and_indexed_projectors :
                                                                     =
                                                                     let uu____8782
                                                                     =
-                                                                    FStar_Ident.text_of_id
+                                                                    FStar_Ident.string_of_id
                                                                     x1.FStar_Syntax_Syntax.ppname
                                                                      in
                                                                     FStar_Syntax_Syntax.gen_bv

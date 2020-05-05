@@ -8,7 +8,7 @@ let subst_to_string :
            (fun uu____44  ->
               match uu____44 with
               | (b,uu____51) ->
-                  FStar_Ident.text_of_id b.FStar_Syntax_Syntax.ppname))
+                  FStar_Ident.string_of_id b.FStar_Syntax_Syntax.ppname))
        in
     FStar_All.pipe_right uu____23 (FStar_String.concat ", ")
   

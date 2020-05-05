@@ -30,7 +30,7 @@ let (unshadow :
   =
   fun bs  ->
     fun t  ->
-      let s b = FStar_Ident.text_of_id b.FStar_Syntax_Syntax.ppname  in
+      let s b = FStar_Ident.string_of_id b.FStar_Syntax_Syntax.ppname  in
       let sset bv s1 =
         let uu____74 =
           let uu____77 =

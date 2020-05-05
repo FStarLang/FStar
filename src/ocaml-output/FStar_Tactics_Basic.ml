@@ -4505,7 +4505,7 @@ let (t_destruct :
                                                                     =
                                                                     let uu____9417
                                                                     =
-                                                                    FStar_Ident.text_of_id
+                                                                    FStar_Ident.string_of_id
                                                                     ppname
                                                                      in
                                                                     Prims.op_Hat
