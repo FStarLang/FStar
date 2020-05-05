@@ -87,8 +87,7 @@ and g : unit -> Dv unit =
 
 let rec loop0 (x : int) : int -> Dv int = fun y -> loop0 (x - 1) y
 
-(* Thislet rec loop (x : int) : Tot (int -> Dv int) = loop (x - 1)
- has to fail: the recursing is happening at "arity 1",
+(* This has to fail: the recursing is happening at "arity 1",
 but the "Dv" is at "arity 2". *)
 [@@expect_failure [19]]
 let rec loop (x : int) : Tot (int -> Dv int) = loop (x - 1)
