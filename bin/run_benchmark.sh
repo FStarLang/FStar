@@ -203,8 +203,8 @@ function compare_bench_output () {
     COMPARE_RDIR=$2
 
     mkdir -p ${BENCH_OUTDIR}
-    rm -r ${BENCH_OUTDIR}/left
-    rm -r ${BENCH_OUTDIR}/right
+    rm -rf ${BENCH_OUTDIR}/left
+    rm -rf ${BENCH_OUTDIR}/right
     cp -r ${COMPARE_LDIR}/${BENCH_OUTDIR} ${BENCH_OUTDIR}/left
     cp -r ${COMPARE_RDIR}/${BENCH_OUTDIR} ${BENCH_OUTDIR}/right
 
