@@ -331,10 +331,10 @@ let rename_conventional (s:string) (is_local_type_variable:bool) : string =
     It is either the [ppname] (pretty-printing name)
     Or, in case the [ppname] is unset, it's the unique name in F* *)
 let root_name_of_bv (x:bv): mlident =
-  if BU.starts_with (text_of_id x.ppname) Ident.reserved_prefix
+  if BU.starts_with (string_of_id x.ppname) Ident.reserved_prefix
   || is_null_bv x
-  then (text_of_id x.ppname) ^ "_" ^ (string_of_int x.index)
-  else text_of_id x.ppname
+  then (string_of_id x.ppname) ^ "_" ^ (string_of_int x.index)
+  else string_of_id x.ppname
 
 (** Given a candidate root_name, generate an ML identifier
     for it that is unique in the current scope.
@@ -362,7 +362,7 @@ let find_uniq ml_ident_map root_name is_local_type_variable =
 
 (** The ML namespace corresponding to an F* qualified name
     is just all the identifiers in the F* namespace (as strings) *)
-let mlns_of_lid (x:lident) = List.map text_of_id (ns_of_lid x)
+let mlns_of_lid (x:lident) = List.map string_of_id (ns_of_lid x)
 
 (**** Extending context with identifiers *)
 
@@ -385,8 +385,8 @@ let mlns_of_lid (x:lident) = List.map text_of_id (ns_of_lid x)
 let new_mlpath_of_lident (g:uenv) (x : lident) : mlpath * uenv =
   let mlp, g =
     if Ident.lid_equals x FStar.Parser.Const.failwith_lid
-    then ([], text_of_id (ident_of_lid x)), g
-    else let name, map = find_uniq g.env_mlident_map (text_of_id (ident_of_lid x)) false in
+    then ([], string_of_id (ident_of_lid x)), g
+    else let name, map = find_uniq g.env_mlident_map (string_of_id (ident_of_lid x)) false in
          let g = { g with env_mlident_map = map } in
          (mlns_of_lid x, name), g
   in
@@ -529,7 +529,7 @@ let extend_with_monad_op_name g (ed:Syntax.eff_decl) nm ts =
 (** The actions of an effect declaration are qualified to the module
     name in which they are defined. *)
 let extend_with_action_name g (ed:Syntax.eff_decl) (a:Syntax.action) ts =
-    let nm = text_of_id (ident_of_lid a.action_name) in
+    let nm = string_of_id (ident_of_lid a.action_name) in
     let module_name = ns_of_lid ed.mname in
     let lid = Ident.lid_of_ids (module_name@[Ident.id_of_text nm]) in
     let g, mlid, exp_b = extend_fv g (lid_as_fv lid delta_constant None) ts false in
@@ -542,7 +542,7 @@ let extend_with_action_name g (ed:Syntax.eff_decl) (a:Syntax.action) ts =
     So, we maintain then in a separate map *)
 let extend_record_field_name g (type_name, fn) =
     let key = Ident.lid_of_ids (ns_of_lid type_name @ [fn]) in
-    let name, fieldname_map = find_uniq g.env_fieldname_map (text_of_id fn) false in
+    let name, fieldname_map = find_uniq g.env_fieldname_map (string_of_id fn) false in
     let ns = mlns_of_lid key in
     let mlp = ns, name in
     let g = { g with env_fieldname_map = fieldname_map;
@@ -559,7 +559,7 @@ let extend_record_field_name g (type_name, fn) =
     When printed, instead of A.B.C, we get A_B_C *)
 let extend_with_module_name (g:uenv) (m:lid) =
   let ns = mlns_of_lid m in
-  let p = text_of_id (ident_of_lid m) in
+  let p = string_of_id (ident_of_lid m) in
   (ns, p), g
 
 (** After completing the extraction of a module

@@ -378,7 +378,7 @@ let defs_in_module (env:Env.env) (modul:name) : list<fv> =
     List.concatMap
         (fun l ->
                 (* must succeed, ids_of_lid always returns a non-empty list *)
-                let ns = Ident.ids_of_lid l |> init |> List.map Ident.text_of_id in
+                let ns = Ident.ids_of_lid l |> init |> List.map Ident.string_of_id in
                 if ns = modul
                 then [S.lid_as_fv l (S.Delta_constant_at_level 999) None]
                 else [])
@@ -511,7 +511,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
 
 let inspect_bv (bv:bv) : bv_view =
     {
-      bv_ppname = Ident.text_of_id bv.ppname;
+      bv_ppname = Ident.string_of_id bv.ppname;
       bv_index = Z.of_int_fs bv.index;
       bv_sort = bv.sort;
     }
@@ -535,7 +535,7 @@ let moduleof (e : Env.env) : list<string> =
     Ident.path_of_lid e.curmodule
 
 let env_open_modules (e : Env.env) : list<name> =
-    List.map (fun (l, m) -> List.map Ident.text_of_id (Ident.ids_of_lid l))
+    List.map (fun (l, m) -> List.map Ident.string_of_id (Ident.ids_of_lid l))
              (DsEnv.open_modules e.dsenv)
 
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e

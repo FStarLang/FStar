@@ -493,7 +493,7 @@ let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace c
          let rec aux c l = match c, l with
             | [], _ -> Maybe
             | _, [] -> No
-            | hd::tl, hd'::tl' when ((text_of_id hd = text_of_id hd')) -> aux tl tl'
+            | hd::tl, hd'::tl' when ((string_of_id hd = string_of_id hd')) -> aux tl tl'
             | _ -> No in
          aux cur lns
     else No
@@ -731,7 +731,7 @@ let lookup_lid env l =
 
 let lookup_univ env x =
     List.find (function
-        | Binding_univ y -> (text_of_id x = text_of_id y)
+        | Binding_univ y -> (string_of_id x = string_of_id y)
         | _ -> false) env.gamma
     |> Option.isSome
 
@@ -1550,7 +1550,7 @@ let all_binders env = binders_of_bindings env.gamma
 let print_gamma gamma =
     (gamma |> List.map (function
         | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
-        | Binding_univ u -> "Binding_univ " ^ (text_of_id u)
+        | Binding_univ u -> "Binding_univ " ^ (string_of_id u)
         | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)))//  @
     // (env.gamma_sig |> List.map (fun (ls, _) ->
     //     "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")

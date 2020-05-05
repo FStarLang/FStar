@@ -1311,7 +1311,7 @@ and readback (cfg:config) (x:t) : term =
       *)
       //1. generate fresh symbolic names for the let recs
       let lbnames =
-          List.map (fun lb -> S.gen_bv (Ident.text_of_id (BU.left lb.lbname).ppname) None lb.lbtyp) lbs
+          List.map (fun lb -> S.gen_bv (Ident.string_of_id (BU.left lb.lbname).ppname) None lb.lbtyp) lbs
       in
       //2. these names are in scope for all the bodies
       //   together with whatever other names (bs) that

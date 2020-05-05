@@ -35,7 +35,7 @@ module S = FStar.Syntax.Syntax
 
 (* A subst_t is a composition of parallel substitutions, expressed as a list of lists *)
 let subst_to_string s =
-    s |> List.map (fun (b, _) -> (text_of_id b.ppname)) |> String.concat ", "
+    s |> List.map (fun (b, _) -> (string_of_id b.ppname)) |> String.concat ", "
 
 (* apply_until_some f s
       applies f to each element of s until it returns (Some t)

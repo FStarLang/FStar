@@ -486,12 +486,12 @@ let bv_eq (bv1:bv) (bv2:bv) =
     ident_equals bv1.ppname bv2.ppname && bv1.index=bv2.index
 
 let order_bv x y =
-  let i = String.compare (text_of_id x.ppname) (text_of_id y.ppname) in
+  let i = String.compare (string_of_id x.ppname) (string_of_id y.ppname) in
   if i = 0
   then x.index - y.index
   else i
 
-let order_ident x y = String.compare (text_of_id x) (text_of_id y)
+let order_ident x y = String.compare (string_of_id x) (string_of_id y)
 let order_fv x y = String.compare (string_of_lid x) (string_of_lid y)
 
 let range_of_lbname (l:lbname) = match l with
@@ -523,7 +523,7 @@ let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv
 let new_id_set () : set<ident> = Util.new_set order_ident
 let new_fv_set () :set<lident> = Util.new_set order_fv
-let order_univ_name x y = String.compare (Ident.text_of_id x) (Ident.text_of_id y)
+let order_univ_name x y = String.compare (Ident.string_of_id x) (Ident.string_of_id y)
 let new_universe_names_set () : set<univ_name> = Util.new_set order_univ_name
 
 let eq_binding b1 b2 =
@@ -613,7 +613,7 @@ let null_binder t : binder = null_bv t, None
 let imp_tag = Implicit false
 let iarg t : arg = t, Some imp_tag
 let as_arg t : arg = t, None
-let is_null_bv (b:bv) = text_of_id b.ppname = text_of_id null_id
+let is_null_bv (b:bv) = string_of_id b.ppname = string_of_id null_id
 let is_null_binder (b:binder) = is_null_bv (fst b)
 
 let is_top_level = function

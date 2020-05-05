@@ -628,7 +628,7 @@ let e_ident : embedding<I.ident> =
     let repr = e_tuple2 e_string e_range in
     embed_as repr
              I.mk_ident
-             (fun i -> I.text_of_id i, I.range_of_id i)
+             (fun i -> I.string_of_id i, I.range_of_id i)
              (Some fstar_refl_ident)
 
 let e_univ_name =

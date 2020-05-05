@@ -1314,7 +1314,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         let bs, comp =
                           let rename_bv bv =
                               let ppname = bv.ppname in
-                              let ppname = mk_ident ("a" ^ text_of_id ppname, range_of_id ppname) in
+                              let ppname = mk_ident ("a" ^ string_of_id ppname, range_of_id ppname) in
                               // freshen just to be extra safe.. probably not needed
                               freshen_bv ({ bv with ppname = ppname })
                           in
