@@ -123,7 +123,7 @@ let implies b1 b2 =
   | false, _ -> true
   | true, b2 -> b2
 
-let let_rec_arity (b:letbinding) =
+let let_rec_arity (b:letbinding) : int * list<bool> =
   let (ar, maybe_lst) = U.let_rec_arity b in
   match maybe_lst with
   | None ->
