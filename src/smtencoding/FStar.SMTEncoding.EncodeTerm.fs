@@ -1296,7 +1296,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let names = lbs |> List.map (fun lb ->
                                         let {lbname = lbname} = lb in
                                         let x = BU.left lbname in (* has to be Inl *)
-                                        (Ident.text_of_id x.ppname, S.range_of_bv x)) in
+                                        (Ident.string_of_id x.ppname, S.range_of_bv x)) in
         raise (Inner_let_rec names)
 
       | Tm_match(e, pats) ->

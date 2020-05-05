@@ -235,7 +235,7 @@ let generalize_and_inst_within (env:env_t) (tcs:list<(sigelt * universe)>) (data
         let (uvs, t) = TcUtil.generalize_universes env t in
         if Env.debug env <| Options.Other "GenUniverses"
         then BU.print2 "@@@@@@Generalized to (%s, %s)\n"
-                            (uvs |> List.map (fun u -> (text_of_id u)) |> String.concat ", ")
+                            (uvs |> List.map (fun u -> (string_of_id u)) |> String.concat ", ")
                             (Print.term_to_string t);
         //Now, (uvs, t) is the generalized type scheme for all the inductives and their data constuctors
 
@@ -565,7 +565,7 @@ let is_haseq_lid lid =
   String.compare (String.substring str (len - haseq_suffix_len) haseq_suffix_len) haseq_suffix = 0
 
 let get_haseq_axiom_lid lid =
-    lid_of_ids (ns_of_lid lid @ [(id_of_text (text_of_id (ident_of_lid lid) ^ haseq_suffix))])
+    lid_of_ids (ns_of_lid lid @ [(id_of_text (string_of_id (ident_of_lid lid) ^ haseq_suffix))])
 
 //get the optimized hasEq axiom for this inductive
 //the caller is supposed to open the universes, and pass along the universe substitution and universe names
@@ -1091,7 +1091,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let early_prims_inductive =
       lid_equals C.prims_lid  (Env.current_module env) &&
-      List.existsb (fun s -> s = (text_of_id (ident_of_lid tc))) early_prims_inductives
+      List.existsb (fun s -> s = (string_of_id (ident_of_lid tc))) early_prims_inductives
     in
 
     let discriminator_ses =
@@ -1142,8 +1142,8 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                         let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
                             let b = S.is_implicit imp in
                             if b && j < ntps
-                            then pos (Pat_dot_term (S.gen_bv (text_of_id x.ppname) None tun, tun)), b
-                            else pos (Pat_wild (S.gen_bv (text_of_id x.ppname) None tun)), b)
+                            then pos (Pat_dot_term (S.gen_bv (string_of_id x.ppname) None tun, tun)), b
+                            else pos (Pat_wild (S.gen_bv (string_of_id x.ppname) None tun)), b)
                         in
                         let pat_true = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, U.exp_true_bool in
                         let pat_false = pos (Pat_wild (S.new_bv None tun)), None, U.exp_false_bool in
@@ -1237,14 +1237,14 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           if only_decl
           then [decl] //only the signature
           else
-              let projection = S.gen_bv (text_of_id x.ppname) None tun in
+              let projection = S.gen_bv (string_of_id x.ppname) None tun in
               let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
                   let b = S.is_implicit imp in
                   if i+ntps=j  //this is the one to project
                   then pos (Pat_var projection), b
                   else if b && j < ntps
-                  then pos (Pat_dot_term (S.gen_bv (text_of_id x.ppname) None tun, tun)), b
-                  else pos (Pat_wild (S.gen_bv (text_of_id x.ppname) None tun)), b)
+                  then pos (Pat_dot_term (S.gen_bv (string_of_id x.ppname) None tun, tun)), b
+                  else pos (Pat_wild (S.gen_bv (string_of_id x.ppname) None tun)), b)
               in
               let pat = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
               let body = mk (Tm_match(arg_exp, [U.branch pat])) p in

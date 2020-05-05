@@ -1149,7 +1149,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       //Discriminators are encoded directly via (our encoding of) theory of datatypes
       [], env
 
-    | Sig_let(_, lids) when (lids |> BU.for_some (fun (l:lident) -> text_of_id (List.hd (ns_of_lid l)) = "Prims")
+    | Sig_let(_, lids) when (lids |> BU.for_some (fun (l:lident) -> string_of_id (List.hd (ns_of_lid l)) = "Prims")
                              && se.sigquals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
       [], env

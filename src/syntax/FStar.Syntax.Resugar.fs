@@ -53,11 +53,11 @@ let map_opt = List.filter_map
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
   let unique_name =
-    if starts_with reserved_prefix (text_of_id x.ppname)
+    if starts_with reserved_prefix (string_of_id x.ppname)
     ||  Options.print_real_names () then
-      (text_of_id x.ppname) ^ (string_of_int x.index)
+      (string_of_id x.ppname) ^ (string_of_int x.index)
     else
-      (text_of_id x.ppname)
+      (string_of_id x.ppname)
   in
   I.mk_ident (unique_name, (range_of_id x.ppname))
 
@@ -82,7 +82,7 @@ let rec universe_to_int n u =
 
 let universe_to_string univs =
   if (Options.print_universes()) then
-    List.map (fun x -> (text_of_id x)) univs |> String.concat  ", "
+    List.map (fun x -> (string_of_id x)) univs |> String.concat  ", "
   else ""
 
 let rec resugar_universe (u:S.universe) r: A.term =
@@ -1073,7 +1073,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set<bv>) : A.pattern =
       // both A.PatTvar and A.PatVar are desugared to S.Pat_var. A PatTvar in the original file coresponds
       // to some type variable which is implicitly bound to the enclosing toplevel declaration.
       // When resugaring it will be just a normal (explicitly bound) variable.
-      begin match string_to_op (text_of_id v.ppname) with
+      begin match string_to_op (string_of_id v.ppname) with
        | Some (op, _) -> mk (A.PatOp (Ident.mk_ident (op, (range_of_id v.ppname))))
        | None -> resugar_bv_as_pat' env v (to_arg_qual imp_opt) branch_bv None
       end

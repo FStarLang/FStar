@@ -233,7 +233,7 @@ let tc_inductive' env ses quals attrs lids =
           | _                                         -> failwith "Impossible"
         in
         //these are the prims type we are skipping
-        List.existsb (fun s -> s = (text_of_id (ident_of_lid lid))) TcInductive.early_prims_inductives in
+        List.existsb (fun s -> s = (string_of_id (ident_of_lid lid))) TcInductive.early_prims_inductives in
 
       let is_noeq = List.existsb (fun q -> q = Noeq) quals in
 
@@ -590,7 +590,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
         match typ with
         | { n = Tm_arrow(val_bs, c); pos = r } -> begin
           let has_auto_name bv =
-            BU.starts_with (text_of_id bv.ppname) Ident.reserved_prefix in
+            BU.starts_with (string_of_id bv.ppname) Ident.reserved_prefix in
           let rec rename_binders def_bs val_bs =
             match def_bs, val_bs with
             | [], _ | _, [] -> val_bs
@@ -598,12 +598,12 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
               (match has_auto_name body_bv, has_auto_name val_bv with
                | true, _ -> (val_bv, aqual)
                | false, true -> ({ val_bv with
-                                   ppname = mk_ident (text_of_id body_bv.ppname, range_of_id val_bv.ppname) }, aqual)
+                                   ppname = mk_ident (string_of_id body_bv.ppname, range_of_id val_bv.ppname) }, aqual)
                | false, false ->
-                 // if (text_of_id body_bv.ppname) <> (text_of_id val_bv.ppname) then
+                 // if (string_of_id body_bv.ppname) <> (string_of_id val_bv.ppname) then
                  //   Errors.warn (range_of_id body_bv.ppname)
                  //     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
-                 //                  (text_of_id body_bv.ppname) (text_of_id val_bv.ppname));
+                 //                  (string_of_id body_bv.ppname) (string_of_id val_bv.ppname));
                  (val_bv, aqual)) :: rename_binders bt vt in
           Syntax.mk (Tm_arrow(rename_binders def_bs val_bs, c)) r end
         | _ -> typ in

@@ -676,7 +676,7 @@ let extract_bundle env se =
         let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses ] in
         let names = match (SS.compress (N.normalize steps (tcenv_of_uenv env_iparams) ctor.dtyp)).n with
           | Tm_arrow (bs, _) ->
-              List.map (fun ({ ppname = ppname }, _) -> (text_of_id ppname)) bs
+              List.map (fun ({ ppname = ppname }, _) -> (string_of_id ppname)) bs
           | _ ->
               []
         in

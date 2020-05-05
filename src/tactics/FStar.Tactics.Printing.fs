@@ -30,7 +30,7 @@ let goal_to_string_verbose (g:goal) : string =
 
 let unshadow (bs : binders) (t : term) : binders * term =
     (* string name of a bv *)
-    let s b = (text_of_id b.ppname) in
+    let s b = (string_of_id b.ppname) in
     let sset bv s = S.gen_bv s (Some (range_of_id bv.ppname)) bv.sort in
     let fresh_until b f =
         let rec aux i =

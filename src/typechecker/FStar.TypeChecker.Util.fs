@@ -2160,9 +2160,9 @@ let gather_free_univnames env t : list<univ_name> =
     let univnames = BU.set_difference tm_univnames ctx_univnames |> BU.set_elements in
     // BU.print4 "Closing universe variables in term %s : %s in ctx, %s in tm, %s globally\n"
     //     (Print.term_to_string t)
-    //     (Print.set_to_string Ident.text_of_id ctx_univnames)
-    //     (Print.set_to_string Ident.text_of_id tm_univnames)
-    //     (Print.list_to_string Ident.text_of_id univnames);
+    //     (Print.set_to_string Ident.string_of_id ctx_univnames)
+    //     (Print.set_to_string Ident.string_of_id tm_univnames)
+    //     (Print.list_to_string Ident.string_of_id univnames);
     univnames
 
 let check_universe_generalization
@@ -2506,7 +2506,7 @@ let maybe_add_implicit_binders (env:env) (bs:binders)  : binders =
                         | None -> bs
                         | Some ([], _, _) -> bs //no implicits
                         | Some (imps, _,  _) ->
-                          if imps |> BU.for_all (fun (x, _) -> BU.starts_with (text_of_id x.ppname) "'")
+                          if imps |> BU.for_all (fun (x, _) -> BU.starts_with (string_of_id x.ppname) "'")
                           then let r = pos bs in
                                let imps = imps |> List.map (fun (x, i) -> (S.set_range_of_bv x r, i)) in
                                imps@bs //we have a prefix of ticked variables

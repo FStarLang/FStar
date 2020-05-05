@@ -413,7 +413,7 @@ let rec go (line_col:(int*int))
           | [], _ -> Some ([], 0)
           | _, [] -> None
           | hs :: ts, hc :: tc ->
-            let hc_text = FStar.Ident.text_of_id hc in
+            let hc_text = FStar.Ident.string_of_id hc in
             if Util.starts_with hc_text hs then
                match ts with
                | [] -> Some (candidate, String.length hs)
@@ -431,7 +431,7 @@ let rec go (line_col:(int*int))
         | hc :: tc ->
           locate_match needle tc |>
             Util.map_option (fun (prefix, matched, len) -> (hc :: prefix, matched, len)) in
-    let str_of_ids ids = Util.concat_l "." (List.map FStar.Ident.text_of_id ids) in
+    let str_of_ids ids = Util.concat_l "." (List.map FStar.Ident.string_of_id ids) in
     let match_lident_against needle lident =
         locate_match needle (ns_of_lid lident @ [ident_of_lid lident])
     in

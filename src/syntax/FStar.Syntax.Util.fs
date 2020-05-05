@@ -46,11 +46,11 @@ let tts t : string =
 
 let mk_discriminator lid =
   lid_of_ids (ns_of_lid lid
-              @ [mk_ident (Ident.reserved_prefix ^ "is_" ^ (text_of_id (ident_of_lid lid)),
+              @ [mk_ident (Ident.reserved_prefix ^ "is_" ^ (string_of_id (ident_of_lid lid)),
                            range_of_lid lid)])
 
 let is_name (lid:lident) =
-  let c = U.char_at (text_of_id (ident_of_lid lid)) 0 in
+  let c = U.char_at (string_of_id (ident_of_lid lid)) 0 in
   U.is_upper c
 
 let arg_of_non_null_binder (b, imp) = (bv_to_name b, imp)
@@ -169,7 +169,7 @@ let rec compare_univs (u1:universe) (u2:universe) : int =
     | U_zero, _ -> -1
     | _, U_zero ->  1
 
-    | U_name u1 , U_name u2 -> String.compare (text_of_id u1) (text_of_id u2)
+    | U_name u1 , U_name u2 -> String.compare (string_of_id u1) (string_of_id u2)
     | U_name _, _ -> -1
     | _, U_name _ ->  1
 
@@ -797,11 +797,11 @@ let mk_field_projector_name_from_string constr field =
     field_projector_prefix ^ constr ^ field_projector_sep ^ field
 
 let mk_field_projector_name_from_ident lid (i : ident) =
-    let itext = (text_of_id i) in
+    let itext = (string_of_id i) in
     let newi =
         if field_projector_contains_constructor itext
         then i
-        else mk_ident (mk_field_projector_name_from_string (text_of_id (ident_of_lid lid)) itext, range_of_id i)
+        else mk_ident (mk_field_projector_name_from_string (string_of_id (ident_of_lid lid)) itext, range_of_id i)
     in
     lid_of_ids (ns_of_lid lid @ [newi])
 
@@ -823,11 +823,11 @@ let set_uvar uv t =
 
 let qualifier_equal q1 q2 = match q1, q2 with
   | Discriminator l1, Discriminator l2 -> lid_equals l1 l2
-  | Projector (l1a, l1b), Projector (l2a, l2b) -> lid_equals l1a l2a && (text_of_id l1b = text_of_id l2b)
+  | Projector (l1a, l1b), Projector (l2a, l2b) -> lid_equals l1a l2a && (string_of_id l1b = string_of_id l2b)
   | RecordType (ns1, f1), RecordType (ns2, f2)
   | RecordConstructor (ns1, f1), RecordConstructor (ns2, f2) ->
-      List.length ns1 = List.length ns2 && List.forall2 (fun x1 x2 -> (text_of_id x1) = (text_of_id x2)) f1 f2 &&
-      List.length f1 = List.length f2 && List.forall2 (fun x1 x2 -> (text_of_id x1) = (text_of_id x2)) f1 f2
+      List.length ns1 = List.length ns2 && List.forall2 (fun x1 x2 -> (string_of_id x1) = (string_of_id x2)) f1 f2 &&
+      List.length f1 = List.length f2 && List.forall2 (fun x1 x2 -> (string_of_id x1) = (string_of_id x2)) f1 f2
   | _ -> q1=q2
 
 
