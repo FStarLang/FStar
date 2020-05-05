@@ -292,7 +292,7 @@ let (sli : FStar_Ident.lident -> Prims.string) =
     then FStar_Ident.string_of_lid l
     else
       (let uu____1047 = FStar_Ident.ident_of_lid l  in
-       FStar_Ident.text_of_id uu____1047)
+       FStar_Ident.string_of_id uu____1047)
   
 let (const_to_string : FStar_Const.sconst -> Prims.string) =
   fun x  ->
@@ -332,7 +332,7 @@ let (is_tuple_constructor_string : Prims.string -> Prims.bool) =
   fun s  -> FStar_Util.starts_with s "FStar.Pervasives.Native.tuple" 
 let (is_tuple_constructor_id : FStar_Ident.ident -> Prims.bool) =
   fun id  ->
-    let uu____1153 = FStar_Ident.text_of_id id  in
+    let uu____1153 = FStar_Ident.string_of_id id  in
     is_tuple_constructor_string uu____1153
   
 let (is_tuple_constructor_lid : FStar_Ident.lident -> Prims.bool) =
@@ -355,7 +355,7 @@ let (is_tuple_datacon_string : Prims.string -> Prims.bool) =
   fun s  -> FStar_Util.starts_with s "FStar.Pervasives.Native.Mktuple" 
 let (is_tuple_datacon_id : FStar_Ident.ident -> Prims.bool) =
   fun id  ->
-    let uu____1203 = FStar_Ident.text_of_id id  in
+    let uu____1203 = FStar_Ident.string_of_id id  in
     is_tuple_datacon_string uu____1203
   
 let (is_tuple_datacon_lid : FStar_Ident.lident -> Prims.bool) =
@@ -428,7 +428,7 @@ let (is_name : FStar_Ident.lident -> Prims.bool) =
     let c =
       let uu____1381 =
         let uu____1383 = FStar_Ident.ident_of_lid lid  in
-        FStar_Ident.text_of_id uu____1383  in
+        FStar_Ident.string_of_id uu____1383  in
       FStar_Util.char_at uu____1381 Prims.int_zero  in
     FStar_Util.is_upper c
   

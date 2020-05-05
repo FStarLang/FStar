@@ -470,7 +470,7 @@ let (check_uvar_ctx_invariant :
                               FStar_Syntax_Print.bv_to_string x  in
                             Prims.op_Hat "Binding_var " uu____1730
                         | FStar_Syntax_Syntax.Binding_univ u ->
-                            let uu____1734 = FStar_Ident.text_of_id u  in
+                            let uu____1734 = FStar_Ident.string_of_id u  in
                             Prims.op_Hat "Binding_univ " uu____1734
                         | FStar_Syntax_Syntax.Binding_lid (l,uu____1738) ->
                             let uu____1755 = FStar_Ident.string_of_lid l  in

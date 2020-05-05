@@ -731,7 +731,7 @@ let rec (go :
                         FStar_Pervasives_Native.Some ([], Prims.int_zero)
                     | (uu____3369,[]) -> FStar_Pervasives_Native.None
                     | (hs::ts1,hc::tc) ->
-                        let hc_text = FStar_Ident.text_of_id hc  in
+                        let hc_text = FStar_Ident.string_of_id hc  in
                         if FStar_Util.starts_with hc_text hs
                         then
                           (match ts1 with
@@ -772,7 +772,7 @@ let rec (go :
                      in
                   let str_of_ids ids =
                     let uu____3759 =
-                      FStar_List.map FStar_Ident.text_of_id ids  in
+                      FStar_List.map FStar_Ident.string_of_id ids  in
                     FStar_Util.concat_l "." uu____3759  in
                   let match_lident_against needle lident =
                     let uu____3795 =

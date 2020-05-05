@@ -21,7 +21,7 @@ let (mk_discriminator : FStar_Ident.lident -> FStar_Ident.lident) =
               let uu____101 =
                 let uu____103 =
                   let uu____105 = FStar_Ident.ident_of_lid lid  in
-                  FStar_Ident.text_of_id uu____105  in
+                  FStar_Ident.string_of_id uu____105  in
                 Prims.op_Hat "is_" uu____103  in
               Prims.op_Hat FStar_Ident.reserved_prefix uu____101  in
             let uu____107 = FStar_Ident.range_of_lid lid  in
@@ -36,7 +36,7 @@ let (is_name : FStar_Ident.lident -> Prims.bool) =
     let c =
       let uu____118 =
         let uu____120 = FStar_Ident.ident_of_lid lid  in
-        FStar_Ident.text_of_id uu____120  in
+        FStar_Ident.string_of_id uu____120  in
       FStar_Util.char_at uu____118 Prims.int_zero  in
     FStar_Util.is_upper c
   
@@ -291,8 +291,8 @@ let rec (compare_univs :
         | (FStar_Syntax_Syntax.U_zero ,uu____1260) -> ~- Prims.int_one
         | (uu____1262,FStar_Syntax_Syntax.U_zero ) -> Prims.int_one
         | (FStar_Syntax_Syntax.U_name u11,FStar_Syntax_Syntax.U_name u21) ->
-            let uu____1266 = FStar_Ident.text_of_id u11  in
-            let uu____1268 = FStar_Ident.text_of_id u21  in
+            let uu____1266 = FStar_Ident.string_of_id u11  in
+            let uu____1268 = FStar_Ident.string_of_id u21  in
             FStar_String.compare uu____1266 uu____1268
         | (FStar_Syntax_Syntax.U_name uu____1270,uu____1271) ->
             ~- Prims.int_one
@@ -1438,7 +1438,7 @@ let (mk_field_projector_name_from_ident :
   FStar_Ident.lident -> FStar_Ident.ident -> FStar_Ident.lident) =
   fun lid  ->
     fun i  ->
-      let itext = FStar_Ident.text_of_id i  in
+      let itext = FStar_Ident.string_of_id i  in
       let newi =
         if field_projector_contains_constructor itext
         then i
@@ -1447,7 +1447,7 @@ let (mk_field_projector_name_from_ident :
              let uu____5755 =
                let uu____5757 =
                  let uu____5759 = FStar_Ident.ident_of_lid lid  in
-                 FStar_Ident.text_of_id uu____5759  in
+                 FStar_Ident.string_of_id uu____5759  in
                mk_field_projector_name_from_string uu____5757 itext  in
              let uu____5760 = FStar_Ident.range_of_id i  in
              (uu____5755, uu____5760)  in
@@ -1514,8 +1514,8 @@ let (qualifier_equal :
       | (FStar_Syntax_Syntax.Projector
          (l1a,l1b),FStar_Syntax_Syntax.Projector (l2a,l2b)) ->
           (FStar_Ident.lid_equals l1a l2a) &&
-            (let uu____5875 = FStar_Ident.text_of_id l1b  in
-             let uu____5877 = FStar_Ident.text_of_id l2b  in
+            (let uu____5875 = FStar_Ident.string_of_id l1b  in
+             let uu____5877 = FStar_Ident.string_of_id l2b  in
              uu____5875 = uu____5877)
       | (FStar_Syntax_Syntax.RecordType
          (ns1,f1),FStar_Syntax_Syntax.RecordType (ns2,f2)) ->
@@ -1523,16 +1523,16 @@ let (qualifier_equal :
               (FStar_List.forall2
                  (fun x1  ->
                     fun x2  ->
-                      let uu____5906 = FStar_Ident.text_of_id x1  in
-                      let uu____5908 = FStar_Ident.text_of_id x2  in
+                      let uu____5906 = FStar_Ident.string_of_id x1  in
+                      let uu____5908 = FStar_Ident.string_of_id x2  in
                       uu____5906 = uu____5908) f1 f2))
              && ((FStar_List.length f1) = (FStar_List.length f2)))
             &&
             (FStar_List.forall2
                (fun x1  ->
                   fun x2  ->
-                    let uu____5917 = FStar_Ident.text_of_id x1  in
-                    let uu____5919 = FStar_Ident.text_of_id x2  in
+                    let uu____5917 = FStar_Ident.string_of_id x1  in
+                    let uu____5919 = FStar_Ident.string_of_id x2  in
                     uu____5917 = uu____5919) f1 f2)
       | (FStar_Syntax_Syntax.RecordConstructor
          (ns1,f1),FStar_Syntax_Syntax.RecordConstructor (ns2,f2)) ->
@@ -1540,16 +1540,16 @@ let (qualifier_equal :
               (FStar_List.forall2
                  (fun x1  ->
                     fun x2  ->
-                      let uu____5948 = FStar_Ident.text_of_id x1  in
-                      let uu____5950 = FStar_Ident.text_of_id x2  in
+                      let uu____5948 = FStar_Ident.string_of_id x1  in
+                      let uu____5950 = FStar_Ident.string_of_id x2  in
                       uu____5948 = uu____5950) f1 f2))
              && ((FStar_List.length f1) = (FStar_List.length f2)))
             &&
             (FStar_List.forall2
                (fun x1  ->
                   fun x2  ->
-                    let uu____5959 = FStar_Ident.text_of_id x1  in
-                    let uu____5961 = FStar_Ident.text_of_id x2  in
+                    let uu____5959 = FStar_Ident.string_of_id x1  in
+                    let uu____5961 = FStar_Ident.string_of_id x2  in
                     uu____5959 = uu____5961) f1 f2)
       | uu____5964 -> q1 = q2
   

@@ -571,7 +571,7 @@ let (defs_in_module :
                let uu____1878 = FStar_Ident.ids_of_lid l  in
                FStar_All.pipe_right uu____1878 init  in
              FStar_All.pipe_right uu____1875
-               (FStar_List.map FStar_Ident.text_of_id)
+               (FStar_List.map FStar_Ident.string_of_id)
               in
            if ns = modul
            then
@@ -822,7 +822,8 @@ let (pack_sigelt :
   
 let (inspect_bv : FStar_Syntax_Syntax.bv -> FStar_Reflection_Data.bv_view) =
   fun bv  ->
-    let uu____2357 = FStar_Ident.text_of_id bv.FStar_Syntax_Syntax.ppname  in
+    let uu____2357 = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname
+       in
     let uu____2359 = FStar_BigInt.of_int_fs bv.FStar_Syntax_Syntax.index  in
     {
       FStar_Reflection_Data.bv_ppname = uu____2357;
@@ -870,7 +871,7 @@ let (env_open_modules :
          match uu____2452 with
          | (l,m) ->
              let uu____2462 = FStar_Ident.ids_of_lid l  in
-             FStar_List.map FStar_Ident.text_of_id uu____2462) uu____2434
+             FStar_List.map FStar_Ident.string_of_id uu____2462) uu____2434
   
 let (binders_of_env :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.binders) =

@@ -1632,7 +1632,7 @@ let (e_ident : FStar_Ident.ident FStar_Syntax_Embeddings.embedding) =
      in
   FStar_Syntax_Embeddings.embed_as repr FStar_Ident.mk_ident
     (fun i  ->
-       let uu____5611 = FStar_Ident.text_of_id i  in
+       let uu____5611 = FStar_Ident.string_of_id i  in
        let uu____5613 = FStar_Ident.range_of_id i  in
        (uu____5611, uu____5613))
     (FStar_Pervasives_Native.Some FStar_Reflection_Data.fstar_refl_ident)

@@ -423,7 +423,7 @@ let (__proj__NTBinding__item___0 :
   = fun projectee  -> match projectee with | NTBinding _0 -> _0 
 let (query_of_ids :
   FStar_Ident.ident Prims.list -> FStar_Interactive_CompletionTable.query) =
-  fun ids  -> FStar_List.map FStar_Ident.text_of_id ids 
+  fun ids  -> FStar_List.map FStar_Ident.string_of_id ids 
 let (query_of_lid :
   FStar_Ident.lident -> FStar_Interactive_CompletionTable.query) =
   fun lid  ->
@@ -450,7 +450,7 @@ let (update_names_from_event :
             let uu____1052 = is_cur_mod host  in
             if uu____1052
             then
-              let uu____1055 = FStar_Ident.text_of_id id  in
+              let uu____1055 = FStar_Ident.string_of_id id  in
               let uu____1057 = query_of_lid included  in
               FStar_Interactive_CompletionTable.register_alias table
                 uu____1055 [] uu____1057
@@ -492,7 +492,7 @@ let (update_names_from_event :
                       in
                    let uu____1139 =
                      let uu____1141 = FStar_Ident.ident_of_lid lid  in
-                     FStar_Ident.text_of_id uu____1141  in
+                     FStar_Ident.string_of_id uu____1141  in
                    FStar_Interactive_CompletionTable.insert tbl ns_query
                      uu____1139 lid) table lids
   

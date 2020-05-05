@@ -1352,7 +1352,8 @@ let (resugar_pat :
                       (FStar_Syntax_Syntax.Record_ctor (ty,fns)) ->
                       let path =
                         let uu____4508 = FStar_Ident.ns_of_lid ty  in
-                        FStar_List.map FStar_Ident.text_of_id uu____4508  in
+                        FStar_List.map FStar_Ident.string_of_id uu____4508
+                         in
                       let fs = record_fields g ty fns pats  in
                       FStar_Extraction_ML_Syntax.MLP_Record (path, fs)
                   | uu____4530 -> p))
@@ -1785,7 +1786,7 @@ let (maybe_eta_data_and_project_record :
                (FStar_Syntax_Syntax.Record_ctor (tyname,fields))) ->
                 let path =
                   let uu____6666 = FStar_Ident.ns_of_lid tyname  in
-                  FStar_List.map FStar_Ident.text_of_id uu____6666  in
+                  FStar_List.map FStar_Ident.string_of_id uu____6666  in
                 let fields1 = record_fields g tyname fields args  in
                 FStar_All.pipe_left
                   (FStar_Extraction_ML_Syntax.with_ty

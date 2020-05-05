@@ -6487,7 +6487,7 @@ let (maybe_add_implicit_binders :
                                    match uu____18556 with
                                    | (x,uu____18565) ->
                                        let uu____18570 =
-                                         FStar_Ident.text_of_id
+                                         FStar_Ident.string_of_id
                                            x.FStar_Syntax_Syntax.ppname
                                           in
                                        FStar_Util.starts_with uu____18570 "'"))

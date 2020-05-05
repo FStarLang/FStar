@@ -22,7 +22,7 @@ let (sli : FStar_Ident.lident -> Prims.string) =
     then FStar_Ident.string_of_lid l
     else
       (let uu____38 = FStar_Ident.ident_of_lid l  in
-       FStar_Ident.text_of_id uu____38)
+       FStar_Ident.string_of_id uu____38)
   
 let (lid_to_string : FStar_Ident.lid -> Prims.string) = fun l  -> sli l 
 let (fv_to_string : FStar_Syntax_Syntax.fv -> Prims.string) =
@@ -31,7 +31,7 @@ let (fv_to_string : FStar_Syntax_Syntax.fv -> Prims.string) =
   
 let (bv_to_string : FStar_Syntax_Syntax.bv -> Prims.string) =
   fun bv  ->
-    let uu____60 = FStar_Ident.text_of_id bv.FStar_Syntax_Syntax.ppname  in
+    let uu____60 = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname  in
     let uu____62 =
       let uu____64 = FStar_Util.string_of_int bv.FStar_Syntax_Syntax.index
          in
@@ -43,11 +43,11 @@ let (nm_to_string : FStar_Syntax_Syntax.bv -> Prims.string) =
     let uu____74 = FStar_Options.print_real_names ()  in
     if uu____74
     then bv_to_string bv
-    else FStar_Ident.text_of_id bv.FStar_Syntax_Syntax.ppname
+    else FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname
   
 let (db_to_string : FStar_Syntax_Syntax.bv -> Prims.string) =
   fun bv  ->
-    let uu____87 = FStar_Ident.text_of_id bv.FStar_Syntax_Syntax.ppname  in
+    let uu____87 = FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname  in
     let uu____89 =
       let uu____91 = FStar_Util.string_of_int bv.FStar_Syntax_Syntax.index
          in
@@ -293,7 +293,7 @@ let rec (univ_to_string : FStar_Syntax_Syntax.universe -> Prims.string) =
         let uu____987 = univ_uvar_to_string u1  in
         Prims.op_Hat "U_unif " uu____987
     | FStar_Syntax_Syntax.U_name x ->
-        let uu____991 = FStar_Ident.text_of_id x  in
+        let uu____991 = FStar_Ident.string_of_id x  in
         Prims.op_Hat "U_name " uu____991
     | FStar_Syntax_Syntax.U_bvar x ->
         let uu____996 = FStar_Util.string_of_int x  in
@@ -321,7 +321,7 @@ let (univs_to_string : FStar_Syntax_Syntax.universes -> Prims.string) =
   
 let (univ_names_to_string : FStar_Syntax_Syntax.univ_names -> Prims.string) =
   fun us  ->
-    let uu____1068 = FStar_List.map (fun x  -> FStar_Ident.text_of_id x) us
+    let uu____1068 = FStar_List.map (fun x  -> FStar_Ident.string_of_id x) us
        in
     FStar_All.pipe_right uu____1068 (FStar_String.concat ", ")
   
@@ -346,7 +346,7 @@ let (qual_to_string : FStar_Syntax_Syntax.qualifier -> Prims.string) =
         FStar_Util.format1 "(Discriminator %s)" uu____1102
     | FStar_Syntax_Syntax.Projector (l,x) ->
         let uu____1107 = lid_to_string l  in
-        let uu____1109 = FStar_Ident.text_of_id x  in
+        let uu____1109 = FStar_Ident.string_of_id x  in
         FStar_Util.format2 "(Projector %s %s)" uu____1107 uu____1109
     | FStar_Syntax_Syntax.RecordType (ns,fns) ->
         let uu____1122 =
@@ -354,7 +354,8 @@ let (qual_to_string : FStar_Syntax_Syntax.qualifier -> Prims.string) =
           FStar_Ident.text_of_path uu____1124  in
         let uu____1125 =
           let uu____1127 =
-            FStar_All.pipe_right fns (FStar_List.map FStar_Ident.text_of_id)
+            FStar_All.pipe_right fns
+              (FStar_List.map FStar_Ident.string_of_id)
              in
           FStar_All.pipe_right uu____1127 (FStar_String.concat ", ")  in
         FStar_Util.format2 "(RecordType %s %s)" uu____1122 uu____1125
@@ -364,7 +365,8 @@ let (qual_to_string : FStar_Syntax_Syntax.qualifier -> Prims.string) =
           FStar_Ident.text_of_path uu____1155  in
         let uu____1156 =
           let uu____1158 =
-            FStar_All.pipe_right fns (FStar_List.map FStar_Ident.text_of_id)
+            FStar_All.pipe_right fns
+              (FStar_List.map FStar_Ident.string_of_id)
              in
           FStar_All.pipe_right uu____1158 (FStar_String.concat ", ")  in
         FStar_Util.format2 "(RecordConstructor %s %s)" uu____1153 uu____1156
@@ -752,7 +754,7 @@ and (subst_elt_to_string : FStar_Syntax_Syntax.subst_elt -> Prims.string) =
         let uu____2583 = univ_to_string u  in
         FStar_Util.format2 "UN (%s, %s)" uu____2581 uu____2583
     | FStar_Syntax_Syntax.UD (u,i) ->
-        let uu____2590 = FStar_Ident.text_of_id u  in
+        let uu____2590 = FStar_Ident.string_of_id u  in
         let uu____2592 = FStar_Util.string_of_int i  in
         FStar_Util.format2 "UD (%s, %s)" uu____2590 uu____2592
 

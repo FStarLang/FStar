@@ -280,7 +280,7 @@ let (op_as_term :
             FStar_All.pipe_right uu____653 FStar_Syntax_Syntax.fv_to_tm  in
           FStar_Pervasives_Native.Some uu____652  in
         let fallback uu____663 =
-          let uu____664 = FStar_Ident.text_of_id op  in
+          let uu____664 = FStar_Ident.string_of_id op  in
           match uu____664 with
           | "=" ->
               r FStar_Parser_Const.op_Eq FStar_Syntax_Syntax.delta_equational
@@ -367,7 +367,7 @@ let (op_as_term :
           | uu____710 -> FStar_Pervasives_Native.None  in
         let uu____712 =
           let uu____715 =
-            let uu____716 = FStar_Ident.text_of_id op  in
+            let uu____716 = FStar_Ident.string_of_id op  in
             let uu____718 = FStar_Ident.range_of_id op  in
             compile_op_lid arity uu____716 uu____718  in
           desugar_name'
@@ -392,16 +392,16 @@ let (sort_ftv : FStar_Ident.ident Prims.list -> FStar_Ident.ident Prims.list)
       FStar_Util.remove_dups
         (fun x  ->
            fun y  ->
-             let uu____756 = FStar_Ident.text_of_id x  in
-             let uu____758 = FStar_Ident.text_of_id y  in
+             let uu____756 = FStar_Ident.string_of_id x  in
+             let uu____758 = FStar_Ident.string_of_id y  in
              uu____756 = uu____758) ftv
        in
     FStar_All.pipe_left
       (FStar_Util.sort_with
          (fun x  ->
             fun y  ->
-              let uu____771 = FStar_Ident.text_of_id x  in
-              let uu____773 = FStar_Ident.text_of_id y  in
+              let uu____771 = FStar_Ident.string_of_id x  in
+              let uu____773 = FStar_Ident.string_of_id y  in
               FStar_String.compare uu____771 uu____773)) uu____747
   
 let rec (free_type_vars_b :
@@ -766,8 +766,8 @@ let (gather_pattern_bound_vars :
       (fun id1  ->
          fun id2  ->
            let uu____2081 =
-             let uu____2083 = FStar_Ident.text_of_id id1  in
-             let uu____2085 = FStar_Ident.text_of_id id2  in
+             let uu____2083 = FStar_Ident.string_of_id id1  in
+             let uu____2085 = FStar_Ident.string_of_id id2  in
              uu____2083 = uu____2085  in
            if uu____2081 then Prims.int_zero else Prims.int_one)
      in
@@ -1499,7 +1499,7 @@ let (check_linear_pattern_variables :
                      let uu____4262 =
                        let uu____4268 =
                          let uu____4270 =
-                           FStar_Ident.text_of_id
+                           FStar_Ident.string_of_id
                              duplicate_bv.FStar_Syntax_Syntax.ppname
                             in
                          FStar_Util.format1
@@ -1536,7 +1536,7 @@ let (check_linear_pattern_variables :
                let uu____4341 =
                  let uu____4347 =
                    let uu____4349 =
-                     FStar_Ident.text_of_id
+                     FStar_Ident.string_of_id
                        first_nonlinear_var.FStar_Syntax_Syntax.ppname
                       in
                    FStar_Util.format1
@@ -1565,8 +1565,8 @@ let rec (desugar_data_pat :
             FStar_Util.find_opt
               (fun y  ->
                  let uu____4683 =
-                   FStar_Ident.text_of_id y.FStar_Syntax_Syntax.ppname  in
-                 let uu____4685 = FStar_Ident.text_of_id x  in
+                   FStar_Ident.string_of_id y.FStar_Syntax_Syntax.ppname  in
+                 let uu____4685 = FStar_Ident.string_of_id x  in
                  uu____4683 = uu____4685) l
              in
           match uu____4676 with
@@ -1587,7 +1587,7 @@ let rec (desugar_data_pat :
               let id_op =
                 let uu____4865 =
                   let uu____4871 =
-                    let uu____4873 = FStar_Ident.text_of_id op  in
+                    let uu____4873 = FStar_Ident.string_of_id op  in
                     let uu____4875 = FStar_Ident.range_of_id op  in
                     FStar_Parser_AST.compile_op Prims.int_zero uu____4873
                       uu____4875
@@ -1890,9 +1890,9 @@ let rec (desugar_data_pat :
                                       match uu____6465 with
                                       | (g,uu____6472) ->
                                           let uu____6473 =
-                                            FStar_Ident.text_of_id f  in
+                                            FStar_Ident.string_of_id f  in
                                           let uu____6475 =
-                                            FStar_Ident.text_of_id g  in
+                                            FStar_Ident.string_of_id g  in
                                           uu____6473 = uu____6475))
                                in
                             (match uu____6437 with
@@ -2026,7 +2026,7 @@ and (desugar_binding_pat_maybe_top :
           let op_to_ident x =
             let uu____7336 =
               let uu____7342 =
-                let uu____7344 = FStar_Ident.text_of_id x  in
+                let uu____7344 = FStar_Ident.string_of_id x  in
                 let uu____7346 = FStar_Ident.range_of_id x  in
                 FStar_Parser_AST.compile_op Prims.int_zero uu____7344
                   uu____7346
@@ -2305,8 +2305,8 @@ and (desugar_term_maybe_top :
             let uu____7889 = mk (FStar_Syntax_Syntax.Tm_constant c)  in
             (uu____7889, noaqs)
         | FStar_Parser_AST.Op (id,args) when
-            let uu____7896 = FStar_Ident.text_of_id id  in uu____7896 = "=!="
-            ->
+            let uu____7896 = FStar_Ident.string_of_id id  in
+            uu____7896 = "=!=" ->
             let r = FStar_Ident.range_of_id id  in
             let e =
               let uu____7902 =
@@ -2328,7 +2328,7 @@ and (desugar_term_maybe_top :
                in
             desugar_term_aq env uu____7915
         | FStar_Parser_AST.Op (op_star,lhs::rhs::[]) when
-            (let uu____7936 = FStar_Ident.text_of_id op_star  in
+            (let uu____7936 = FStar_Ident.string_of_id op_star  in
              uu____7936 = "*") &&
               (let uu____7941 = op_as_term env (Prims.of_int (2)) op_star  in
                FStar_All.pipe_right uu____7941 FStar_Option.isNone)
@@ -2336,7 +2336,7 @@ and (desugar_term_maybe_top :
             let rec flatten t =
               match t.FStar_Parser_AST.tm with
               | FStar_Parser_AST.Op (id,t1::t2::[]) when
-                  (let uu____7965 = FStar_Ident.text_of_id id  in
+                  (let uu____7965 = FStar_Ident.string_of_id id  in
                    uu____7965 = "*") &&
                     (let uu____7970 =
                        op_as_term env (Prims.of_int (2)) op_star  in
@@ -2376,7 +2376,7 @@ and (desugar_term_maybe_top :
             let uu____8024 =
               let uu____8030 =
                 let uu____8032 =
-                  let uu____8034 = FStar_Ident.text_of_id u  in
+                  let uu____8034 = FStar_Ident.string_of_id u  in
                   Prims.op_Hat uu____8034 " in non-universe context"  in
                 Prims.op_Hat "Unexpected universe variable " uu____8032  in
               (FStar_Errors.Fatal_UnexpectedUniverseVariable, uu____8030)  in
@@ -2387,7 +2387,7 @@ and (desugar_term_maybe_top :
              | FStar_Pervasives_Native.None  ->
                  let uu____8056 =
                    let uu____8062 =
-                     let uu____8064 = FStar_Ident.text_of_id s  in
+                     let uu____8064 = FStar_Ident.string_of_id s  in
                      Prims.op_Hat "Unexpected or unbound operator: "
                        uu____8064
                       in
@@ -2566,11 +2566,11 @@ and (desugar_term_maybe_top :
                in
             (uu____8475, noaqs)
         | FStar_Parser_AST.Projector (eff_name,id) when
-            (let uu____8481 = FStar_Ident.text_of_id id  in
+            (let uu____8481 = FStar_Ident.string_of_id id  in
              is_special_effect_combinator uu____8481) &&
               (FStar_Syntax_DsEnv.is_effect_name env eff_name)
             ->
-            let txt = FStar_Ident.text_of_id id  in
+            let txt = FStar_Ident.string_of_id id  in
             let uu____8485 =
               FStar_Syntax_DsEnv.try_lookup_effect_defn env eff_name  in
             (match uu____8485 with
@@ -2914,7 +2914,7 @@ and (desugar_term_maybe_top :
               | FStar_Pervasives_Native.Some id ->
                   let uu____9950 =
                     let uu____9956 =
-                      let uu____9958 = FStar_Ident.text_of_id id  in
+                      let uu____9958 = FStar_Ident.string_of_id id  in
                       FStar_Util.format1
                         "Non-linear patterns are not permitted: `%s` appears more than once in this function definition."
                         uu____9958
@@ -3535,7 +3535,8 @@ and (desugar_term_maybe_top :
                                               match f with
                                               | FStar_Util.Inl x ->
                                                   let uu____13607 =
-                                                    FStar_Ident.text_of_id x
+                                                    FStar_Ident.string_of_id
+                                                      x
                                                      in
                                                   let uu____13609 =
                                                     FStar_Ident.range_of_id x
@@ -3859,11 +3860,11 @@ and (desugar_term_maybe_top :
                      (fun uu____15491  ->
                         match uu____15491 with
                         | (g,uu____15498) ->
-                            let uu____15499 = FStar_Ident.text_of_id f  in
+                            let uu____15499 = FStar_Ident.string_of_id f  in
                             let uu____15501 =
                               let uu____15503 = FStar_Ident.ident_of_lid g
                                  in
-                              FStar_Ident.text_of_id uu____15503  in
+                              FStar_Ident.string_of_id uu____15503  in
                             uu____15499 = uu____15501))
                  in
               let fn = FStar_Ident.lid_of_ids (FStar_List.append user_ns [f])
@@ -3875,7 +3876,7 @@ and (desugar_term_maybe_top :
                    | FStar_Pervasives_Native.None  ->
                        let uu____15524 =
                          let uu____15530 =
-                           let uu____15532 = FStar_Ident.text_of_id f  in
+                           let uu____15532 = FStar_Ident.string_of_id f  in
                            let uu____15534 =
                              FStar_Ident.string_of_lid
                                record.FStar_Syntax_DsEnv.typename
@@ -4415,7 +4416,7 @@ and (desugar_comp :
                      ->
                      let uu____16705 =
                        let uu____16707 = FStar_Ident.ident_of_lid d  in
-                       FStar_Ident.text_of_id uu____16707  in
+                       FStar_Ident.string_of_id uu____16707  in
                      uu____16705 = head
                  | uu____16709 -> false)
              in
@@ -4467,7 +4468,7 @@ and (desugar_comp :
                  | FStar_Parser_AST.Name lemma when
                      let uu____16922 =
                        let uu____16924 = FStar_Ident.ident_of_lid lemma  in
-                       FStar_Ident.text_of_id uu____16924  in
+                       FStar_Ident.string_of_id uu____16924  in
                      uu____16922 = "Lemma" ->
                      let unit_tm =
                        ((FStar_Parser_AST.mk_term
@@ -4633,7 +4634,7 @@ and (desugar_comp :
                        &&
                        (let uu____17689 =
                           let uu____17691 = FStar_Ident.ident_of_lid l  in
-                          FStar_Ident.text_of_id uu____17691  in
+                          FStar_Ident.string_of_id uu____17691  in
                         uu____17689 = "Tot")
                      ->
                      let uu____17694 =
@@ -4652,7 +4653,7 @@ and (desugar_comp :
                        &&
                        (let uu____17721 =
                           let uu____17723 = FStar_Ident.ident_of_lid l  in
-                          FStar_Ident.text_of_id uu____17723  in
+                          FStar_Ident.string_of_id uu____17723  in
                         uu____17721 = "GTot")
                      ->
                      let uu____17726 =
@@ -4666,16 +4667,16 @@ and (desugar_comp :
                  | FStar_Parser_AST.Name l when
                      ((let uu____17751 =
                          let uu____17753 = FStar_Ident.ident_of_lid l  in
-                         FStar_Ident.text_of_id uu____17753  in
+                         FStar_Ident.string_of_id uu____17753  in
                        uu____17751 = "Type") ||
                         (let uu____17757 =
                            let uu____17759 = FStar_Ident.ident_of_lid l  in
-                           FStar_Ident.text_of_id uu____17759  in
+                           FStar_Ident.string_of_id uu____17759  in
                          uu____17757 = "Type0"))
                        ||
                        (let uu____17763 =
                           let uu____17765 = FStar_Ident.ident_of_lid l  in
-                          FStar_Ident.text_of_id uu____17765  in
+                          FStar_Ident.string_of_id uu____17765  in
                         uu____17763 = "Effect")
                      ->
                      let uu____17768 =
@@ -5709,7 +5710,7 @@ let rec (desugar_tycon :
                 let constrName =
                   let uu____20622 =
                     let uu____20628 =
-                      let uu____20630 = FStar_Ident.text_of_id id  in
+                      let uu____20630 = FStar_Ident.string_of_id id  in
                       Prims.op_Hat "Mk" uu____20630  in
                     let uu____20633 = FStar_Ident.range_of_id id  in
                     (uu____20628, uu____20633)  in
@@ -5757,7 +5758,7 @@ let rec (desugar_tycon :
                           then
                             let uu____20692 =
                               let uu____20698 =
-                                let uu____20700 = FStar_Ident.text_of_id f
+                                let uu____20700 = FStar_Ident.string_of_id f
                                    in
                                 FStar_Util.format1
                                   "Field %s shadows the record's name or a parameter of it, please rename it"
@@ -6727,7 +6728,7 @@ let rec (desugar_effect :
                               let uu____25523 =
                                 let uu____25525 =
                                   let uu____25527 =
-                                    FStar_Ident.text_of_id eff_name  in
+                                    FStar_Ident.string_of_id eff_name  in
                                   Prims.op_Hat uu____25527
                                     "is defined as a layered effect but has no indices"
                                    in
@@ -6763,7 +6764,7 @@ let rec (desugar_effect :
                             | FStar_Parser_AST.Tycon
                                 (uu____25595,uu____25596,(FStar_Parser_AST.TyconAbbrev
                                  (name,uu____25598,uu____25599,uu____25600))::[])
-                                -> FStar_Ident.text_of_id name
+                                -> FStar_Ident.string_of_id name
                             | uu____25615 ->
                                 failwith
                                   "Malformed effect member declaration."

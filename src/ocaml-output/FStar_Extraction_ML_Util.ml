@@ -567,7 +567,7 @@ let (record_field_path :
         (match uu____1354 with
          | (ns,uu____1368) ->
              FStar_All.pipe_right ns
-               (FStar_List.map (fun id  -> FStar_Ident.text_of_id id)))
+               (FStar_List.map (fun id  -> FStar_Ident.string_of_id id)))
     | uu____1381 -> failwith "impos"
   
 let record_fields :
@@ -582,7 +582,7 @@ let record_fields :
            fun e  ->
              let uu____1431 =
                let uu____1433 = FStar_Ident.ident_of_lid f  in
-               FStar_Ident.text_of_id uu____1433  in
+               FStar_Ident.string_of_id uu____1433  in
              (uu____1431, e)) fs vs
   
 let (is_xtuple_ty :
@@ -639,11 +639,11 @@ let (ml_module_name_of_lid : FStar_Ident.lident -> Prims.string) =
       let uu____1603 =
         let uu____1607 = FStar_All.pipe_right l FStar_Ident.ns_of_lid  in
         FStar_All.pipe_right uu____1607
-          (FStar_List.map FStar_Ident.text_of_id)
+          (FStar_List.map FStar_Ident.string_of_id)
          in
       let uu____1618 =
         let uu____1620 = FStar_Ident.ident_of_lid l  in
-        FStar_Ident.text_of_id uu____1620  in
+        FStar_Ident.string_of_id uu____1620  in
       (uu____1603, uu____1618)  in
     flatten_mlpath mlp
   
@@ -1208,7 +1208,7 @@ let (interpret_plugin_as_term_fun :
                                 FStar_Ident.ident_of_lid
                                   (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                                  in
-                              FStar_Ident.text_of_id uu____3913  in
+                              FStar_Ident.string_of_id uu____3913  in
                             let uu____3914 =
                               let uu____3927 =
                                 FStar_Util.find_opt
@@ -1268,7 +1268,7 @@ let (interpret_plugin_as_term_fun :
                                 FStar_Ident.ident_of_lid
                                   (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                                  in
-                              FStar_Ident.text_of_id uu____4157  in
+                              FStar_Ident.string_of_id uu____4157  in
                             let uu____4158 =
                               let uu____4171 =
                                 FStar_Util.find_opt
@@ -1328,7 +1328,7 @@ let (interpret_plugin_as_term_fun :
                                 FStar_Ident.ident_of_lid
                                   (fv1.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                                  in
-                              FStar_Ident.text_of_id uu____4411  in
+                              FStar_Ident.string_of_id uu____4411  in
                             let uu____4412 =
                               let uu____4425 =
                                 FStar_Util.find_opt

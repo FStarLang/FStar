@@ -2340,7 +2340,7 @@ and (infer :
                          let xw =
                            let uu____7306 =
                              let uu____7308 =
-                               FStar_Ident.text_of_id
+                               FStar_Ident.string_of_id
                                  bv.FStar_Syntax_Syntax.ppname
                                 in
                              Prims.op_Hat uu____7308 "__w"  in
@@ -3586,7 +3586,7 @@ and (trans_F_ :
                                  let w' =
                                    let uu____12790 =
                                      let uu____12792 =
-                                       FStar_Ident.text_of_id
+                                       FStar_Ident.string_of_id
                                          bv.FStar_Syntax_Syntax.ppname
                                         in
                                      Prims.op_Hat uu____12792 "__w'"  in
@@ -3615,7 +3615,7 @@ and (trans_F_ :
                                  (let x =
                                     let uu____12857 =
                                       let uu____12859 =
-                                        FStar_Ident.text_of_id
+                                        FStar_Ident.string_of_id
                                           bv.FStar_Syntax_Syntax.ppname
                                          in
                                       Prims.op_Hat uu____12859 "__x"  in
@@ -4670,7 +4670,7 @@ let (cps_and_elaborate :
                                                                     FStar_Ident.ident_of_lid
                                                                     action.FStar_Syntax_Syntax.action_name
                                                                      in
-                                                                    FStar_Ident.text_of_id
+                                                                    FStar_Ident.string_of_id
                                                                     uu____15347
                                                                      in
                                                                     let action_typ_with_wp

@@ -5028,7 +5028,7 @@ and (encode_sigelt' :
                       let uu____13884 =
                         let uu____13885 = FStar_Ident.ns_of_lid l  in
                         FStar_List.hd uu____13885  in
-                      FStar_Ident.text_of_id uu____13884  in
+                      FStar_Ident.string_of_id uu____13884  in
                     uu____13882 = "Prims")))
              &&
              (FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals

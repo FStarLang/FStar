@@ -26,19 +26,19 @@ let (bv_as_unique_ident : FStar_Syntax_Syntax.bv -> FStar_Ident.ident) =
   fun x  ->
     let unique_name =
       let uu____68 =
-        (let uu____72 = FStar_Ident.text_of_id x.FStar_Syntax_Syntax.ppname
+        (let uu____72 = FStar_Ident.string_of_id x.FStar_Syntax_Syntax.ppname
             in
          FStar_Util.starts_with FStar_Ident.reserved_prefix uu____72) ||
           (FStar_Options.print_real_names ())
          in
       if uu____68
       then
-        let uu____76 = FStar_Ident.text_of_id x.FStar_Syntax_Syntax.ppname
+        let uu____76 = FStar_Ident.string_of_id x.FStar_Syntax_Syntax.ppname
            in
         let uu____78 = FStar_Util.string_of_int x.FStar_Syntax_Syntax.index
            in
         Prims.op_Hat uu____76 uu____78
-      else FStar_Ident.text_of_id x.FStar_Syntax_Syntax.ppname  in
+      else FStar_Ident.string_of_id x.FStar_Syntax_Syntax.ppname  in
     let uu____82 =
       let uu____88 = FStar_Ident.range_of_id x.FStar_Syntax_Syntax.ppname  in
       (unique_name, uu____88)  in
@@ -105,7 +105,7 @@ let (universe_to_string : FStar_Ident.ident Prims.list -> Prims.string) =
     if uu____296
     then
       let uu____300 =
-        FStar_List.map (fun x  -> FStar_Ident.text_of_id x) univs  in
+        FStar_List.map (fun x  -> FStar_Ident.string_of_id x) univs  in
       FStar_All.pipe_right uu____300 (FStar_String.concat ", ")
     else ""
   
@@ -2135,7 +2135,7 @@ and (resugar_pat' :
           | FStar_Syntax_Syntax.Pat_var v ->
               let uu____9158 =
                 let uu____9169 =
-                  FStar_Ident.text_of_id v.FStar_Syntax_Syntax.ppname  in
+                  FStar_Ident.string_of_id v.FStar_Syntax_Syntax.ppname  in
                 string_to_op uu____9169  in
               (match uu____9158 with
                | FStar_Pervasives_Native.Some (op,uu____9172) ->

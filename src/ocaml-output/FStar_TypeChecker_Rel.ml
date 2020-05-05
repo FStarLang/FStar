@@ -3448,8 +3448,8 @@ let rec (really_solve_universe_eq :
               failwith uu____10158
           | (FStar_Syntax_Syntax.U_name x,FStar_Syntax_Syntax.U_name y) ->
               let uu____10167 =
-                let uu____10169 = FStar_Ident.text_of_id x  in
-                let uu____10171 = FStar_Ident.text_of_id y  in
+                let uu____10169 = FStar_Ident.string_of_id x  in
+                let uu____10171 = FStar_Ident.string_of_id y  in
                 uu____10169 = uu____10171  in
               if uu____10167
               then USolved wl
