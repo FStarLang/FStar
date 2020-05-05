@@ -499,7 +499,7 @@ let intro_rec () : tac<(binder * binder)> =
              let lb = U.mk_letbinding (Inl bv) [] (goal_type goal) PC.effect_Tot_lid (U.abs [b] u None) [] Range.dummyRange in
              let body = S.bv_to_name bv in
              let lbs, body = SS.close_let_rec [lb] body in
-             let tm = mk (Tm_let ((true, lbs), body)) None (goal_witness goal).pos in
+             let tm = mk (Tm_let ((true, lbs), body)) (goal_witness goal).pos in
              bind (set_solution goal tm) (fun () ->
              bind (replace_cur (bnorm_goal ({ goal with goal_ctx_uvar=ctx_uvar_u}))) (fun _ ->
              ret (S.mk_binder bv, b))))
@@ -972,7 +972,7 @@ let revert () : tac<unit> =
     | Some (x, env') ->
         let typ' = U.arrow [(x, None)] (mk_Total (goal_type goal)) in
         bind (new_uvar "revert" env' typ') (fun (r, u_r) ->
-        bind (set_solution goal (S.mk_Tm_app r [S.as_arg (S.bv_to_name x)] None (goal_type goal).pos)) (fun () ->
+        bind (set_solution goal (S.mk_Tm_app r [S.as_arg (S.bv_to_name x)] (goal_type goal).pos)) (fun () ->
         let g = mk_goal env' u_r goal.opts goal.is_guard goal.label in
         replace_cur g)))
 
@@ -1314,7 +1314,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         let bs, comp =
                           let rename_bv bv =
                               let ppname = bv.ppname in
-                              let ppname = mk_ident ("a" ^ text_of_id ppname, range_of_id ppname) in
+                              let ppname = mk_ident ("a" ^ string_of_id ppname, range_of_id ppname) in
                               // freshen just to be extra safe.. probably not needed
                               freshen_bv ({ bv with ppname = ppname })
                           in
@@ -1366,7 +1366,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         fail "impossible: not a ctor")
                  c_lids) (fun goal_brs ->
       let goals, brs, infos = List.unzip3 goal_brs in
-      let w = mk (Tm_match (s_tm, brs)) None s_tm.pos in
+      let w = mk (Tm_match (s_tm, brs)) s_tm.pos in
       bind (solve' g w) (fun () ->
       bind (add_goals goals) (fun () ->
       ret infos)))))
@@ -1413,7 +1413,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
         // expose n-ary lambdas buy unary ones.
         let (a, q) = last args in
         let q' = inspect_aqual q in
-        ret <| Tv_App (S.mk_Tm_app hd (init args) None t.pos, (a, q')) // TODO: The range and tk are probably wrong. Fix
+        ret <| Tv_App (S.mk_Tm_app hd (init args) t.pos, (a, q')) // TODO: The range and tk are probably wrong. Fix
 
     | Tm_abs ([], _, _) ->
         failwith "empty arguments on Tm_abs"
@@ -1533,19 +1533,19 @@ let pack (tv:term_view) : tac<term> =
         ret <| U.refine bv t
 
     | Tv_Const c ->
-        ret <| S.mk (Tm_constant (pack_const c)) None Range.dummyRange
+        ret <| S.mk (Tm_constant (pack_const c)) Range.dummyRange
 
     | Tv_Uvar (_u, ctx_u_s) ->
-        ret <| S.mk (Tm_uvar ctx_u_s) None Range.dummyRange
+        ret <| S.mk (Tm_uvar ctx_u_s) Range.dummyRange
 
     | Tv_Let (false, attrs, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
-        ret <| S.mk (Tm_let ((false, [lb]), SS.close [S.mk_binder bv] t2)) None Range.dummyRange
+        ret <| S.mk (Tm_let ((false, [lb]), SS.close [S.mk_binder bv] t2)) Range.dummyRange
 
     | Tv_Let (true, attrs, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
         let lbs, body = SS.close_let_rec [lb] t2 in
-        ret <| S.mk (Tm_let ((true, lbs), body)) None Range.dummyRange
+        ret <| S.mk (Tm_let ((true, lbs), body)) Range.dummyRange
 
     | Tv_Match (t, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
@@ -1559,16 +1559,16 @@ let pack (tv:term_view) : tac<term> =
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
         let brs = List.map SS.close_branch brs in
-        ret <| S.mk (Tm_match (t, brs)) None Range.dummyRange
+        ret <| S.mk (Tm_match (t, brs)) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt) ->
-        ret <| S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) None Range.dummyRange
+        ret <| S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) Range.dummyRange
 
     | Tv_AscribedC(e, c, tacopt) ->
-        ret <| S.mk (Tm_ascribed(e, (BU.Inr c, tacopt), None)) None Range.dummyRange
+        ret <| S.mk (Tm_ascribed(e, (BU.Inr c, tacopt), None)) Range.dummyRange
 
     | Tv_Unknown ->
-        ret <| S.mk Tm_unknown None Range.dummyRange
+        ret <| S.mk Tm_unknown Range.dummyRange
 
 let lget (ty:term) (k:string) : tac<term> = wrap_err "lget" <|
     bind get (fun ps ->

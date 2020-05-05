@@ -23,20 +23,6 @@
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
       "70a7ab7335ec56d35d42577afaf9091e"
-    ],
-    [
-      "Cert.ACLs.test",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_Cert.ACLs.canRead",
-        "equation_Cert.ACLs.canWrite", "equation_Cert.ACLs.publicFile",
-        "equation_Cert.ACLs.readme", "equation_Cert.ACLs.tmp",
-        "primitive_Prims.op_BarBar", "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "b887ab1d33dc9e3b9392fd0c4c827028"
     ]
   ]
 ]

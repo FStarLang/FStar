@@ -261,7 +261,7 @@
         "typing_While.interpret_com"
       ],
       0,
-      "d59c0281eb71039fbd69c5518951a392"
+      "01fe03c47a67a32280887dcaed608232"
     ],
     [
       "IfcRules.seq_com",
@@ -368,7 +368,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "60af6f3dc7147cf5e209667b9c30ca20"
+      "e41c7ebb6161e9143f0c44a5f07ea522"
     ],
     [
       "IfcRules.while_com'",
@@ -452,7 +452,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "7af4ac2bd6ac6eb0a97d474dfc6e9590"
+      "bf54a965b7eec7500abaaf42695d4abe"
     ],
     [
       "IfcRules.while_com",
@@ -462,65 +462,6 @@
       [ "@query", "equation_IfcRules.ni_com" ],
       0,
       "e03a97ccc0f92c6a33d0db7f4457f363"
-    ],
-    [
-      "IfcRules.label_of",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b9249bc92d9b02e4b2f534c76f0d88de"
-    ],
-    [
-      "IfcRules.low_equiv",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_IfcRules.label__uu___haseq",
-        "assumption_Prims.HasEq_int"
-      ],
-      0,
-      "38228de2358c62d3838d33c39aa03444"
-    ],
-    [
-      "IfcRules.ni_com'",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.ST.contains_pred", "equation_FStar.ST.heap_rel",
-        "equation_FStar.ST.stable", "equation_Prims.eqtype",
-        "function_token_typing_Prims.__cache_version_number__",
-        "function_token_typing_Prims.int",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "token_correspondence_FStar.ST.contains_pred",
-        "typing_FStar.Heap.trivial_preorder"
-      ],
-      0,
-      "845d6041c72210147559faca08e7f1b3"
-    ],
-    [
-      "IfcRules.decr_while",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "function_token_typing_FStar.Monotonic.Heap.heap",
-        "lemma_FStar.Pervasives.invertOption",
-        "primitive_Prims.op_GreaterThan",
-        "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
-      ],
-      0,
-      "2aa650f0d805c5a95da505596c545ceb"
     ]
   ]
 ]

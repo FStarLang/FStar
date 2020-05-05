@@ -28,9 +28,9 @@ let y = gen_bv "y" None S.tun
 let n = gen_bv "n" None S.tun
 let h = gen_bv "h" None S.tun
 let m = gen_bv "m" None S.tun
-let tm t = mk t None dummyRange
+let tm t = mk t dummyRange
 let nm x = bv_to_name x
-let app x ts = mk (Tm_app(x, List.map as_arg ts)) None dummyRange
+let app x ts = mk (Tm_app(x, List.map as_arg ts)) dummyRange
 
 let rec term_eq' t1 t2 =
     let t1 = SS.compress t1 in
@@ -62,10 +62,10 @@ let rec term_eq' t1 t2 =
       | Tm_abs(xs, t, _), Tm_abs(ys, u, _) ->
         if List.length xs > List.length ys
         then let xs, xs' = BU.first_N (List.length ys) xs in
-             let t1 = mk (Tm_abs(xs, mk (Tm_abs(xs', t, None)) None t1.pos, None)) None t1.pos in
+             let t1 = mk (Tm_abs(xs, mk (Tm_abs(xs', t, None)) t1.pos, None)) t1.pos in
              term_eq' t1 t2
         else let ys, ys' = BU.first_N (List.length xs) ys in
-             let t2 = mk (Tm_abs(ys, mk (Tm_abs(ys', u, None)) None t2.pos, None)) None t2.pos in
+             let t2 = mk (Tm_abs(ys, mk (Tm_abs(ys', u, None)) t2.pos, None)) t2.pos in
              term_eq' t1 t2
       | Tm_arrow(xs, c), Tm_arrow(ys, d) -> binders_eq xs ys && comp_eq c d
       | Tm_refine(x, t), Tm_refine(y, u) -> term_eq' x.sort y.sort && term_eq' t u

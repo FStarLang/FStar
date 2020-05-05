@@ -184,7 +184,7 @@ type name_tracking_event =
 | NTBinding of either<FStar.Syntax.Syntax.binding, TcEnv.sig_binding>
 
 let query_of_ids (ids: list<ident>) : CTable.query =
-  List.map text_of_id ids
+  List.map string_of_id ids
 
 let query_of_lid (lid: lident) : CTable.query =
   query_of_ids (ns_of_lid lid @ [ident_of_lid lid])
@@ -195,7 +195,7 @@ let update_names_from_event cur_mod_str table evt =
   | NTAlias (host, id, included) ->
     if is_cur_mod host then
       CTable.register_alias
-        table (text_of_id id) [] (query_of_lid included)
+        table (string_of_id id) [] (query_of_lid included)
     else
       table
   | NTOpen (host, (included, kind)) ->
@@ -218,7 +218,7 @@ let update_names_from_event cur_mod_str table evt =
          let ns_query = if nsstr lid = cur_mod_str then []
                         else query_of_ids (ns_of_lid lid) in
          CTable.insert
-           tbl ns_query (text_of_id (ident_of_lid lid)) lid)
+           tbl ns_query (string_of_id (ident_of_lid lid)) lid)
       table lids
 
 let commit_name_tracking' cur_mod names name_events =

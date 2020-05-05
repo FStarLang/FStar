@@ -555,7 +555,7 @@ lidentOrOperator:
   | id=IDENT
     { mk_ident(id, rhs parseState 1) }
   | LPAREN id=operator RPAREN
-    { mk_ident (compile_op' (text_of_id id) (range_of_id id), range_of_id id) }
+    { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -620,7 +620,7 @@ noSeqTerm:
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
         let (op, e2, _) = op_expr in
-        let opid = mk_ident (text_of_id op ^ "<-", range_of_id op) in
+        let opid = mk_ident (string_of_id op ^ "<-", range_of_id op) in
         mk_term (Op(opid, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       }
   | REQUIRES t=typ
@@ -1127,8 +1127,8 @@ universeFrom:
        }
   | max=ident us=nonempty_list(atomicUniverse)
       {
-        if text_of_id max <> string_of_lid max_lid
-        then log_issue (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ text_of_id max ^
+        if string_of_id max <> string_of_lid max_lid
+        then log_issue (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ string_of_id max ^
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.");
         let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) Expr in

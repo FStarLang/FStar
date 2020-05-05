@@ -706,7 +706,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d8e12225111559672cd57a9e39a5829c"
+      "2442054925f8839aaba2e899f5640d2d"
     ],
     [
       "FStar.Monotonic.HyperStack.refs_in_region",
@@ -744,7 +744,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "40bee78d1734201bf66ee162b1874662"
+      "2b7d3aa169e2866ea7866cb9d5bcf188"
     ],
     [
       "FStar.Monotonic.HyperStack.modifies_some_refs",
@@ -759,7 +759,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ce592722a90233d2eb9c1bf6a166fe66"
+      "dbea427eac08c0c7280ac69a4ebe5105"
     ],
     [
       "FStar.Monotonic.HyperStack.lemma_heap_equality_cancel_same_mref_upd",

@@ -572,7 +572,7 @@ let e_sigelt =
 let e_ident : embedding<I.ident> =
     let repr = e_tuple2 e_range e_string in
     let embed_ident cb (i:I.ident) : t =
-        embed repr cb (I.range_of_id i, I.text_of_id i)
+        embed repr cb (I.range_of_id i, I.string_of_id i)
     in
     let unembed_ident cb (t:t) : option<I.ident> =
         match unembed repr cb t with

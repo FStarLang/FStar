@@ -44,41 +44,6 @@
       ],
       0,
       "73b169b27daa25acd6b8a94a31e5360e"
-    ],
-    [
-      "SHA1.key",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_SHA1.keysize", "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "273843f5a20f00cc124b8f8d66630c66"
-    ],
-    [
-      "SHA1.sha1",
-      2,
-      2,
-      1,
-      [
-        "@query", "constructor_distinct_CoreCrypto.SHA1",
-        "equality_tok_CoreCrypto.SHA1@tok", "equation_CoreCrypto.hashSize"
-      ],
-      0,
-      "ea7ed4ccdb799b95c7074802de9163f5"
-    ],
-    [
-      "SHA1.hmac_sha1",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_SHA1.blocksize", "equation_SHA1.keysize",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "73a8ae11217bd472090d0e92eda0fb43"
     ]
   ]
 ]
