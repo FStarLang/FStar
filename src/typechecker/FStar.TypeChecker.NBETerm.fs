@@ -116,6 +116,7 @@ and t
   | Reflect of t
   | Quote of S.term * S.quoteinfo
   | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
+  | Meta of t * Thunk.t<S.metadata>
   | TopLevelLet of
        // 1. The definition of the fv
        letbinding *

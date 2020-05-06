@@ -184,9 +184,16 @@ let debug cfg f =
  * (Lazy i') (probably with i=i'). An example, from Meta-F*, is
  * (pack_binder (pack_bv .., Q_Explicit)).
  *)
-let unlazy t =
+let rec unlazy_unmeta t =
     match t with
-    | Lazy (_, t) -> Thunk.force t
+    | Lazy (_, t) -> unlazy_unmeta (Thunk.force t)
+    | Meta(t0, m) ->
+      begin
+      match Thunk.force m with
+      | Meta_monadic(_, _)
+      | Meta_monadic_lift(_, _, _) -> t
+      | _ -> unlazy_unmeta t0
+      end
     | t -> t
 
 let pickBranch (cfg:config) (scrut : t) (branches : list<branch>) : option<(term * list<t>)> =
@@ -199,7 +206,7 @@ let pickBranch (cfg:config) (scrut : t) (branches : list<branch>) : option<(term
         (* Inr false: p definitely does not match t *)
         (* Inr true: p may match t, but p is an open term and we cannot decide for sure *)
         debug cfg (fun () -> BU.print2 "matches_pat (%s, %s)\n" (t_to_string scrutinee0) (P.pat_to_string p));
-        let scrutinee = unlazy scrutinee0 in
+        let scrutinee = unlazy_unmeta scrutinee0 in
         let r = match p.v with
         | Pat_var bv
         | Pat_wild bv ->
@@ -243,7 +250,7 @@ let pickBranch (cfg:config) (scrut : t) (branches : list<branch>) : option<(term
                 else BU.Inr false
 
             | _ -> //must be a variable
-            BU.Inr true
+              BU.Inr true
         in
         let res_to_string = function
         | BU.Inr b -> "Inr " ^ BU.string_of_bool b
@@ -524,7 +531,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
       debug (fun () -> BU.print2 "%s: Translating match %s\n"
                               (Range.string_of_range e.pos)
                               (P.term_to_string e));
-      let scrut = unlazy scrut in
+      let scrut = unlazy_unmeta scrut in
       begin
       match scrut with
       | Construct(c, us, args) -> (* Scrutinee is a constructed value *)
@@ -566,6 +573,23 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
         when cfg.core_cfg.reifying ->
       translate_monadic_lift (m, m', t) cfg bs e
 
+    | Tm_meta (e, meta) ->
+      let norm_meta () =
+        let norm t = readback cfg (translate cfg bs t) in
+        match meta with
+          | Meta_named _
+          | Meta_labeled _
+          | Meta_desugared _ -> meta
+          | Meta_pattern (ts, args) ->
+            Meta_pattern (List.map norm ts,
+                          List.map (List.map (fun (t, a) -> norm t, a)) args)
+          | Meta_monadic(m, t) ->
+            Meta_monadic(m, norm t)
+          | Meta_monadic_lift(m0, m1, t) ->
+            Meta_monadic_lift(m0, m1, norm t)
+      in
+      Meta(translate cfg bs e, Thunk.mk norm_meta)
+
     | Tm_let((false, [lb]), body) -> // non-recursive let
       if Cfg.should_reduce_local_let cfg.core_cfg lb
       then if cfg.core_cfg.steps.for_extraction
@@ -600,9 +624,6 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
            Accu(UnreducedLetRec(List.zip3 vars typs defs, body, lbs), [])
       else translate cfg (make_rec_env lbs bs) body
 
-    | Tm_meta (e, _) ->
-      //TODO: we need to put the "meta" back when reading back
-      translate cfg bs e
 
     | Tm_quoted (qt, qi) ->
       let close t =
@@ -636,7 +657,8 @@ and translate_comp cfg bs (c:S.comp) : comp =
 
 (* uncurried application *)
 and iapp (cfg : config) (f:t) (args:args) : t =
-  match f with
+  // meta and lazy nodes shouldn't block reduction
+  match unlazy_unmeta f with
   | Lam (f, binders, n) ->
     let m = List.length args in
     if m < n then
@@ -1111,9 +1133,11 @@ and readback (cfg:config) (x:t) : term =
     | Constant (Int i) -> Z.string_of_big_int i |> U.exp_int
     | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r))) Range.dummyRange
     | Constant (Char c) -> U.exp_char c
-    | Constant (Range r) -> Cfg.embed_simple EMB.e_range r Range.dummyRange
+    | Constant (Range r) -> Cfg.embed_simple EMB.e_range Range.dummyRange r
     | Constant (SConst c) -> mk (S.Tm_constant c) Range.dummyRange
 
+    | Meta(t, m) ->
+      mk (S.Tm_meta (readback cfg t, Thunk.force m)) Range.dummyRange
 
     | Type_t u ->
       S.mk (Tm_type u) Range.dummyRange
