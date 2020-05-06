@@ -102,7 +102,7 @@ type atom
         list<letbinding>
   | UVar of Thunk.t<S.term>
 
-and t
+and t'
   =
   | Lam of (list<t> -> t)            //these expect their arguments in binder order (optimized for convenience beta reduction)
         * BU.either<(list<t> * binders * option<S.residual_comp>), list<arg>> //a context, binders and residual_comp for readback
@@ -153,6 +153,11 @@ and t
       //    This is used to detect potentially non-terminating loops
       list<bool>
 
+and t = {
+  nbe_t : t';
+  nbe_r : Range.range
+}
+
 and comp =
   | Tot of t * option<universe>
   | GTot of t * option<universe>
@@ -199,7 +204,8 @@ val arg_to_string : arg -> string
 val args_to_string : args -> string
 
 // NBE term manipulation
-
+val mk_t : t' -> t
+val nbe_t_of_t : t -> t'
 val isAccu : t -> bool
 val isNotAccu : t -> bool
 

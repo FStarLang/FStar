@@ -185,7 +185,7 @@ let debug cfg f =
  * (pack_binder (pack_bv .., Q_Explicit)).
  *)
 let rec unlazy_unmeta t =
-    match t with
+    match t.nbe_t with
     | Lazy (_, t) -> unlazy_unmeta (Thunk.force t)
     | Meta(t0, m) ->
       begin
@@ -194,7 +194,7 @@ let rec unlazy_unmeta t =
       | Meta_monadic_lift(_, _, _) -> t
       | _ -> unlazy_unmeta t0
       end
-    | t -> t
+    | _ -> t
 
 let pickBranch (cfg:config) (scrut : t) (branches : list<branch>) : option<(term * list<t>)> =
   let all_branches = branches in
@@ -221,7 +221,7 @@ let pickBranch (cfg:config) (scrut : t) (branches : list<branch>) : option<(term
             let matches_const (c: t) (s: S.sconst) =
                 debug cfg (fun () -> BU.print2 "Testing term %s against pattern %s\n"
                                     (t_to_string c) (P.const_to_string s));
-                match c with
+                match c.nbe_t with
                 | Constant (Unit) -> s = C.Const_unit
                 | Constant (Bool b) -> (match s with | C.Const_bool p -> b = p | _ -> false)
                 | Constant (Int i) -> (match s with | C.Const_int (p, None) -> i = Z.big_int_of_string p | _ -> false)
@@ -243,7 +243,7 @@ let pickBranch (cfg:config) (scrut : t) (branches : list<branch>) : option<(term
                 | _ ->
                 BU.Inr false
             in
-            match scrutinee with
+            match scrutinee.nbe_t with
             | Construct(fv', _us, args_rev) ->
                 if fv_eq fv fv'
                 then matches_args [] (List.rev args_rev) arg_pats
@@ -312,14 +312,14 @@ let find_sigelt_in_gamma cfg (env: Env.env) (lid:lident): option<sigelt> =
   BU.bind_opt (Env.lookup_qname env lid) mapper
 
 let is_univ (tm : t) =
-  match tm with
+  match tm.nbe_t with
   | Univ _ -> true
   | _ -> false
 
 let un_univ (tm:t) : universe =
-  match tm with
+  match tm.nbe_t with
   | Univ u -> u
-  | t -> failwith ("Not a universe: " ^ t_to_string t)
+  | _ -> failwith ("Not a universe: " ^ t_to_string tm)
 
 let is_constr_fv (fvar : fv) : bool =
   fvar.fv_qual = Some Data_ctor
@@ -358,6 +358,9 @@ let find_let (lbs : list<letbinding>) (fvar : fv) =
                      then Some lb
                      else None)
 
+let mk_rt r t = { nbe_t = t; nbe_r = r }
+let mk_t t = { nbe_t = t; nbe_r = Range.dummyRange }
+
 /// Normalization is implemented using two mutually recursive functions,
 /// translate and readback,
 ///  i.e., `norm cfg t = readback cfg (translate cfg [] t)`
@@ -380,16 +383,18 @@ let find_let (lbs : list<letbinding>) (fvar : fv) =
 /// strategy of the host.
 let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
     let debug = debug cfg in
+    let mk_t t = mk_rt e.pos t in
     debug (fun () -> BU.print2 "Term: %s - %s\n" (P.tag_of_term (SS.compress e)) (P.term_to_string (SS.compress e)));
 //    debug (fun () -> BU.print1 "BS list: %s\n" (String.concat ";; " (List.map (fun x -> t_to_string x) bs)));
     match (SS.compress e).n with
     | Tm_delayed (_, _) ->
       failwith "Tm_delayed: Impossible"
 
-    | Tm_unknown -> Unknown
+    | Tm_unknown ->
+      mk_t Unknown
 
     | Tm_constant c ->
-      Constant (translate_constant c)
+      mk_t <| Constant (translate_constant c)
 
     | Tm_bvar db -> //de Bruijn
       if db.index < List.length bs
@@ -405,10 +410,10 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
     | Tm_uinst(t, us) ->
       debug (fun () -> BU.print2 "Uinst term : %s\nUnivs : %s\n" (P.term_to_string t)
                                                               (List.map P.univ_to_string us |> String.concat ", "));
-      iapp cfg (translate cfg bs t) (List.map (fun x -> as_arg (Univ (translate_univ cfg bs x))) us)
+      iapp cfg (translate cfg bs t) (List.map (fun x -> as_arg (mk_t <| Univ (translate_univ cfg bs x))) us)
 
     | Tm_type u ->
-      Type_t (translate_univ cfg bs u)
+      mk_t <| Type_t (translate_univ cfg bs u)
 
     | Tm_arrow (xs, c) ->
       let norm () =
@@ -425,15 +430,16 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
         let c = readback_comp cfg (translate_comp cfg ctx c) in
         U.arrow (List.rev binders_rev) c
       in
-      Arrow (BU.Inl (Thunk.mk norm))
+      mk_t <| Arrow (BU.Inl (Thunk.mk norm))
 
     | Tm_refine (bv, tm) ->
       if cfg.core_cfg.steps.for_extraction
       then translate cfg bs bv.sort //if we're only extracting, then drop the refinement
-      else Refinement ((fun (y:t) -> translate cfg (y::bs) tm),
-                       (fun () -> as_arg (translate cfg bs bv.sort))) // XXX: Bogus type?
+      else mk_t <| Refinement ((fun (y:t) -> translate cfg (y::bs) tm),
+                              (fun () -> as_arg (translate cfg bs bv.sort))) // XXX: Bogus type?
 
-    | Tm_ascribed (t, _, _) -> translate cfg bs t
+    | Tm_ascribed (t, _, _) ->
+      translate cfg bs t
 
     | Tm_uvar (u, (subst, set_use_range)) ->
       let norm_uvar () =
@@ -451,7 +457,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
         let subst = List.map (List.map norm_subst_elt) subst in
         { e with n = Tm_uvar(u, (subst, set_use_range)) }
       in
-      Accu(UVar (Thunk.mk norm_uvar), [])
+      mk_t <| Accu(UVar (Thunk.mk norm_uvar), [])
 
     | Tm_name x ->
       mkAccuVar x
@@ -459,9 +465,9 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
     | Tm_abs ([], _, _) -> failwith "Impossible: abstraction with no binders"
 
     | Tm_abs (xs, body, resc) ->
-      Lam ((fun ys -> translate cfg (List.append ys bs) body),
-           BU.Inl (bs, xs, resc),
-           List.length xs)
+      mk_t <| Lam ((fun ys -> translate cfg (List.append ys bs) body),
+                  BU.Inl (bs, xs, resc),
+                  List.length xs)
 
     | Tm_fvar fvar ->
       begin
@@ -481,7 +487,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
       translate cfg bs (fst arg)
 
     | Tm_app({n=Tm_constant (FC.Const_reflect _)}, [arg]) ->
-      Reflect (translate cfg bs (fst arg))
+      mk_t <| Reflect (translate cfg bs (fst arg))
 
     | Tm_app({n=Tm_constant FC.Const_reify}, [arg])
         when cfg.core_cfg.steps.reify_ ->
@@ -533,7 +539,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
                               (P.term_to_string e));
       let scrut = unlazy_unmeta scrut in
       begin
-      match scrut with
+      match scrut.nbe_t with
       | Construct(c, us, args) -> (* Scrutinee is a constructed value *)
           (* Assuming that all the arguments to the pattern constructors
              are binders -- i.e. no nested patterns for now *)
@@ -559,7 +565,8 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
              translate cfg (arg::bs) branch
            | None -> //no branch is determined
              mkAccuMatch scrut make_branches
-           | Some (_, hd::tl) -> failwith "Impossible: Matching on constants cannot bind more than one variable")
+           | Some (_, hd::tl) ->
+             failwith "Impossible: Matching on constants cannot bind more than one variable")
 
         | _ ->
           mkAccuMatch scrut make_branches
@@ -588,14 +595,14 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
           | Meta_monadic_lift(m0, m1, t) ->
             Meta_monadic_lift(m0, m1, norm t)
       in
-      Meta(translate cfg bs e, Thunk.mk norm_meta)
+      mk_t <| Meta(translate cfg bs e, Thunk.mk norm_meta)
 
     | Tm_let((false, [lb]), body) -> // non-recursive let
       if Cfg.should_reduce_local_let cfg.core_cfg lb
       then if cfg.core_cfg.steps.for_extraction
            && U.is_unit lb.lbtyp
            && U.is_pure_or_ghost_effect lb.lbeff
-           then let bs = Constant Unit :: bs in
+           then let bs = mk_rt (S.range_of_lbname lb.lbname) (Constant Unit) :: bs in
                 translate cfg bs body
            else let bs = translate_letbinding cfg bs lb :: bs in
                 translate cfg bs body
@@ -603,14 +610,14 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
                if cfg.core_cfg.steps.for_extraction
                && U.is_unit lb.lbtyp
                && U.is_pure_or_ghost_effect lb.lbeff
-               then Constant Unit
+               then mk_t <| Constant Unit
                else translate cfg bs lb.lbdef
            in
            let typ () = translate cfg bs lb.lbtyp in
            let name = freshen_bv (BU.left lb.lbname) in
-           let bs = Accu (Var name, []) :: bs in
+           let bs = mk_rt (S.range_of_bv name) (Accu (Var name, [])) :: bs in
            let body () = translate cfg bs body in
-           Accu(UnreducedLet(name, Thunk.mk typ, Thunk.mk def, Thunk.mk body, lb), [])
+           mk_t <| Accu(UnreducedLet(name, Thunk.mk typ, Thunk.mk def, Thunk.mk body, lb), [])
 
     | Tm_let((_rec, lbs), body) -> //recursive let
       if not cfg.core_cfg.steps.zeta &&
@@ -618,12 +625,11 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
       then //can't reduce this let rec
            let vars = List.map (fun lb -> freshen_bv (BU.left lb.lbname)) lbs in
            let typs = List.map (fun lb -> translate cfg bs lb.lbtyp) lbs in
-           let rec_bs = List.map (fun v -> Accu (Var v, [])) vars @ bs in
+           let rec_bs = List.map (fun v -> mk_rt (S.range_of_bv v) <| Accu (Var v, [])) vars @ bs in
            let defs = List.map (fun lb -> translate cfg rec_bs lb.lbdef) lbs in
            let body = translate cfg rec_bs body in
-           Accu(UnreducedLetRec(List.zip3 vars typs defs, body, lbs), [])
+           mk_t <| Accu(UnreducedLetRec(List.zip3 vars typs defs, body, lbs), [])
       else translate cfg (make_rec_env lbs bs) body
-
 
     | Tm_quoted (qt, qi) ->
       let close t =
@@ -635,10 +641,10 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
       begin match qi.qkind with
       | Quote_dynamic ->
         let qt = close qt in
-        Quote (qt, qi)
+        mk_t <| Quote (qt, qi)
       | Quote_static  ->
         let qi = S.on_antiquoted close qi in
-        Quote (qt, qi)
+        mk_t <| Quote (qt, qi)
       end
 
     | Tm_lazy li ->
@@ -647,7 +653,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
           debug (fun () -> BU.print1 ">> Unfolding Tm_lazy to %s\n" (P.term_to_string t));
           translate cfg bs t
       in
-      Lazy (BU.Inl li, Thunk.mk f)
+      mk_t <| Lazy (BU.Inl li, Thunk.mk f)
 
 and translate_comp cfg bs (c:S.comp) : comp =
   match c.n with
@@ -658,7 +664,8 @@ and translate_comp cfg bs (c:S.comp) : comp =
 (* uncurried application *)
 and iapp (cfg : config) (f:t) (args:args) : t =
   // meta and lazy nodes shouldn't block reduction
-  match unlazy_unmeta f with
+  let mk t = mk_rt f.nbe_r t in
+  match (unlazy_unmeta f).nbe_t with
   | Lam (f, binders, n) ->
     let m = List.length args in
     if m < n then
@@ -675,6 +682,7 @@ and iapp (cfg : config) (f:t) (args:args) : t =
           let ctx = List.append arg_values_rev ctx in
           BU.Inl (ctx, xs, rc)
       in
+      mk <|
       Lam((fun l -> f (List.append l arg_values_rev)),
           binders,
           n - m)
@@ -686,25 +694,25 @@ and iapp (cfg : config) (f:t) (args:args) : t =
       // extra arguments
       let (args, args') = List.splitAt n args in
       iapp cfg (f (map_rev fst args)) args'
-  | Accu (a, ts) -> Accu (a, List.rev_append args ts)
+  | Accu (a, ts) -> mk <| Accu (a, List.rev_append args ts)
   | Construct (i, us, ts) ->
     let rec aux args us ts =
       match args with
-      | (Univ u, _) :: args -> aux args (u :: us) ts
+      | ({nbe_t=Univ u}, _) :: args -> aux args (u :: us) ts
       | a :: args -> aux args us (a :: ts)
       | [] -> (us, ts)
     in
     let (us', ts') = aux args us ts in
-    Construct (i, us', ts')
+    mk <| Construct (i, us', ts')
   | FV (i, us, ts) ->
     let rec aux args us ts =
       match args with
-      | (Univ u, _) :: args -> aux args (u :: us) ts
+      | ({nbe_t=Univ u}, _) :: args -> aux args (u :: us) ts
       | a :: args -> aux args us (a :: ts)
       | [] -> (us, ts)
     in
     let (us', ts') = aux args us ts in
-    FV (i, us', ts')
+    mk <| FV (i, us', ts')
 
   | TopLevelLet(lb, arity, args_rev) ->
     let args_rev = List.rev_append args args_rev in
@@ -734,7 +742,7 @@ and iapp (cfg : config) (f:t) (args:args) : t =
               | _ -> iapp cfg t (List.rev extra)
          else let extra, univs = BU.first_N (n_args_rev - n_univs) args_rev in
               iapp cfg (translate cfg (List.map fst univs) lb.lbdef) (List.rev extra)
-    else TopLevelLet (lb, arity, args_rev) //not enough args  yet
+    else mk <| TopLevelLet (lb, arity, args_rev) //not enough args  yet
 
   | TopLevelRec (lb, arity, decreases_list, args') ->
     let args = List.append args' args in
@@ -746,7 +754,7 @@ and iapp (cfg : config) (f:t) (args:args) : t =
          then begin
            let fv = BU.right lb.lbname in
            debug cfg (fun () -> BU.print1 "Decided to not unfold recursive definition %s\n" (P.fv_to_string fv));
-           iapp cfg (FV (fv, [], [])) args
+           iapp cfg (mk_rt (S.range_of_fv fv) (FV (fv, [], []))) args
          end
          else begin
            debug cfg (fun () -> BU.print1 "Yes, Decided to unfold recursive definition %s\n" (P.fv_to_string (BU.right lb.lbname)));
@@ -754,15 +762,15 @@ and iapp (cfg : config) (f:t) (args:args) : t =
            iapp cfg (translate cfg (List.rev (List.map fst univs)) lb.lbdef) rest
          end
     else //not enough args yet
-         TopLevelRec (lb, arity, decreases_list, args)
+         mk <| TopLevelRec (lb, arity, decreases_list, args)
 
   | LocalLetRec(i, lb, mutual_lbs, local_env, acc_args, remaining_arity, decreases_list) ->
     if remaining_arity = 0 //we've already decided to not unfold this, so just accumulate
-    then LocalLetRec(i, lb, mutual_lbs, local_env, acc_args @ args, remaining_arity, decreases_list)
+    then mk <| LocalLetRec(i, lb, mutual_lbs, local_env, acc_args @ args, remaining_arity, decreases_list)
     else
       let n_args = List.length args in
       if n_args < remaining_arity //still a partial application, just accumulate
-      then LocalLetRec(i, lb, mutual_lbs, local_env, acc_args @ args, remaining_arity - n_args, decreases_list)
+      then mk <| LocalLetRec(i, lb, mutual_lbs, local_env, acc_args @ args, remaining_arity - n_args, decreases_list)
       else begin
          let args = acc_args @ args in (* Not in reverse order *)
          let should_reduce, _, _ =
@@ -770,7 +778,7 @@ and iapp (cfg : config) (f:t) (args:args) : t =
          in
          //local let binding don't have universes
          if not should_reduce
-         then LocalLetRec(i, lb, mutual_lbs, local_env, args, 0, decreases_list)
+         then mk <| LocalLetRec(i, lb, mutual_lbs, local_env, args, 0, decreases_list)
          else let env = make_rec_env mutual_lbs local_env in
               let _ =
                 debug cfg (fun () ->
@@ -780,6 +788,20 @@ and iapp (cfg : config) (f:t) (args:args) : t =
               iapp cfg (translate cfg env lb.lbdef) args
       end
 
+  | Constant (SConst FStar.Const.Const_range_of) ->
+    begin
+    match args with
+    | [(a, _)] -> mk_rt a.nbe_r (Constant (Range a.nbe_r))
+    | _ ->     failwith ("NBE ill-typed application: " ^ t_to_string f)
+    end
+
+  | Constant (SConst FStar.Const.Const_set_range_of) ->
+    begin
+    match args with
+    | [(t, _); ({nbe_t=Constant (Range r)}, _)] ->
+      { t with nbe_r = r}
+    | _ ->      failwith ("NBE ill-typed application: " ^ t_to_string f)
+    end
   | _ ->
     failwith ("NBE ill-typed application: " ^ t_to_string f)
 
@@ -799,7 +821,7 @@ and translate_fv (cfg: config) (bs:list<t>) (fvar:fv): t =
        | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) ->
          let arity = prim_step.arity + prim_step.univ_arity in
          debug (fun () -> BU.print1 "Found a primop %s\n" (P.fv_to_string fvar));
-         Lam ((fun args_rev ->
+         mk_t <| Lam ((fun args_rev ->
                  let args' = map_rev NBETerm.as_arg args_rev in
                  let callbacks = {
                    iapp = iapp cfg;
@@ -839,7 +861,7 @@ and translate_fv (cfg: config) (bs:list<t>) (fvar:fv): t =
                if is_rec && cfg.core_cfg.steps.zeta
                then
                  let ar, lst = let_rec_arity lb in
-                 TopLevelRec(lb, ar, lst, [])
+                 mk_rt (S.range_of_fv fvar) <| TopLevelRec(lb, ar, lst, [])
                else
                  translate_letbinding cfg bs lb
              | None -> failwith "Could not find let binding"
@@ -866,7 +888,7 @@ and translate_letbinding (cfg:config) (bs:list<t>) (lb:letbinding) : t =
   then translate cfg bs lb.lbdef
   else if BU.is_right lb.lbname
   then let _ = debug (fun () -> BU.print2 "Making TopLevelLet for %s with arity %s\n" (P.lbname_to_string lb.lbname) (BU.string_of_int arity)) in
-       TopLevelLet(lb, arity, [])
+       mk_rt (S.range_of_lbname lb.lbname) <| TopLevelLet(lb, arity, [])
   else translate cfg bs lb.lbdef //local let-binding, cannot be universe polymorphic
   // Note, we only have universe polymorphic top-level pure terms (i.e., fvars bound to pure terms)
   // Thunking them is probably okay, since the common case is really top-level function
@@ -875,7 +897,7 @@ and translate_letbinding (cfg:config) (bs:list<t>) (lb:letbinding) : t =
 
 and mkRec i (b:letbinding) (bs:list<letbinding>) (env:list<t>) =
   let (ar, ar_lst) = let_rec_arity b in
-  LocalLetRec(i, b, bs, env, [], ar, ar_lst)
+  mk_t <| LocalLetRec(i, b, bs, env, [], ar, ar_lst)
 
 (* Creates the environment of mutually recursive function definitions *)
 and make_rec_env (all_lbs:list<letbinding>) (all_outer_bs:list<t>) : list<t> =
@@ -988,8 +1010,8 @@ and translate_monadic (m, ty) cfg bs e : t =
        in
        let t =
        iapp cfg (iapp cfg (translate cfg' [] (U.un_uinst (ed |> U.get_bind_repr |> BU.must |> snd)))
-                      [Univ U_unknown, None;  //We are cheating here a bit
-                      Univ U_unknown, None])  //to avoid re-computing the universe of lb.lbtyp
+                      [mk_t <| Univ U_unknown, None;  //We are cheating here a bit
+                       mk_t <| Univ U_unknown, None])  //to avoid re-computing the universe of lb.lbtyp
                                               //and ty below; but this should be okay since these
                                               //arguments should not actually appear in the resulting
                                               //term
@@ -997,10 +1019,10 @@ and translate_monadic (m, ty) cfg bs e : t =
            [(translate cfg' bs lb.lbtyp, None); //translating the type of the bound term
             (translate cfg' bs ty, None)]       //and the body is sub-optimal; it is often unused
            @maybe_range_arg    //some effects take two additional range arguments for debugging
-           @[(Unknown, None) ; //unknown WP of lb.lbdef; same as the universe argument ... should not appear in the result
-            (translate cfg bs lb.lbdef, None);
-            (Unknown, None) ;  //unknown WP of body; ditto
-            (translate cfg bs body_lam, None)]
+           @[(mk_t Unknown, None) ; //unknown WP of lb.lbdef; same as the universe argument ... should not appear in the result
+             (translate cfg bs lb.lbdef, None);
+             (mk_t Unknown, None) ;  //unknown WP of body; ditto
+             (translate cfg bs body_lam, None)]
            )
       in
       debug cfg (fun () -> BU.print1 "translate_monadic: %s\n" (t_to_string t));
@@ -1068,7 +1090,7 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
         let cfg' = reifying_false cfg in
         let t =
         iapp cfg' (iapp cfg' (translate cfg' [] ret)
-                       [Univ U_unknown, None])
+                       [mk_t <| Univ U_unknown, None])
                        [(translate cfg' bs ty, None); //translating the type of the returned term
                         (translate cfg' bs e, None)]  //translating the returned term itself
         in
@@ -1121,26 +1143,28 @@ and readback (cfg:config) (x:t) : term =
     let readback_args cfg args =
       map_rev (fun (x, q) -> (readback cfg x, q)) args
     in
+    let with_range t = { t with pos = x.nbe_r } in
+    let mk t = S.mk t x.nbe_r in
     debug (fun () -> BU.print1 "Readback: %s\n" (t_to_string x));
-    match x with
+    match x.nbe_t with
     | Univ u -> failwith "Readback of universes should not occur"
 
-    | Unknown -> S.mk Tm_unknown Range.dummyRange
+    | Unknown -> S.mk Tm_unknown x.nbe_r
 
-    | Constant Unit -> S.unit_const
-    | Constant (Bool true) -> U.exp_true_bool
-    | Constant (Bool false) -> U.exp_false_bool
-    | Constant (Int i) -> Z.string_of_big_int i |> U.exp_int
-    | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r))) Range.dummyRange
-    | Constant (Char c) -> U.exp_char c
-    | Constant (Range r) -> Cfg.embed_simple EMB.e_range Range.dummyRange r
-    | Constant (SConst c) -> mk (S.Tm_constant c) Range.dummyRange
+    | Constant Unit -> with_range S.unit_const
+    | Constant (Bool true) -> with_range U.exp_true_bool
+    | Constant (Bool false) -> with_range U.exp_false_bool
+    | Constant (Int i) -> with_range (U.exp_int (Z.string_of_big_int i))
+    | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r)))
+    | Constant (Char c) -> with_range (U.exp_char c)
+    | Constant (Range r) -> Cfg.embed_simple EMB.e_range x.nbe_r r
+    | Constant (SConst c) -> mk (S.Tm_constant c)
 
     | Meta(t, m) ->
-      mk (S.Tm_meta (readback cfg t, Thunk.force m)) Range.dummyRange
+      mk (S.Tm_meta (readback cfg t, Thunk.force m))
 
     | Type_t u ->
-      S.mk (Tm_type u) Range.dummyRange
+      mk (Tm_type u)
 
     | Lam (f, binders, arity) ->
       let binders, accus_rev, rc =
@@ -1178,7 +1202,7 @@ and readback (cfg:config) (x:t) : term =
           binders, List.rev accus, None
       in
       let body = readback cfg (f accus_rev) in
-      U.abs binders body rc
+      with_range (U.abs binders body rc)
 
     | Refinement (f, targ) ->
       if cfg.core_cfg.steps.for_extraction
@@ -1187,16 +1211,18 @@ and readback (cfg:config) (x:t) : term =
         let x =  S.new_bv None (readback cfg (fst (targ ()))) in
         let body = readback cfg (f (mkAccuVar x)) in
         let refinement = U.refine x body in
-        if cfg.core_cfg.steps.simplify
-        then Common.simplify cfg.core_cfg.debug.wpe refinement
-        else refinement
+        with_range (
+          if cfg.core_cfg.steps.simplify
+          then Common.simplify cfg.core_cfg.debug.wpe refinement
+          else refinement
+        )
 
     | Reflect t ->
       let tm = readback cfg t in
-      U.mk_reflect tm
+      with_range (U.mk_reflect tm)
 
     | Arrow (BU.Inl f) ->
-      Thunk.force f
+      with_range (Thunk.force f)
 
     | Arrow (BU.Inr (args, c)) ->
       let binders =
@@ -1208,38 +1234,42 @@ and readback (cfg:config) (x:t) : term =
           args
       in
       let c = readback_comp cfg c in
-      U.arrow binders c
+      with_range (U.arrow binders c)
 
     | Construct (fv, us, args) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
-      let fv = S.mk (Tm_fvar fv) Range.dummyRange in
+      let fv = S.mk (Tm_fvar fv) (S.range_of_fv fv) in
       let app = U.mk_app (S.mk_Tm_uinst fv (List.rev us)) args in
-      app
+      with_range (app)
 
     | FV (fv, us, args) ->
       let args = map_rev (fun (x, q) -> (readback cfg x, q)) args in
       let fv = S.mk (Tm_fvar fv) Range.dummyRange in
       let app = U.mk_app (S.mk_Tm_uinst fv (List.rev us)) args in
-      if cfg.core_cfg.steps.simplify
-      then Common.simplify cfg.core_cfg.debug.wpe app
-      else app
+      with_range (
+        if cfg.core_cfg.steps.simplify
+        then Common.simplify cfg.core_cfg.debug.wpe app
+        else app
+      )
 
     | Accu (Var bv, []) ->
-      S.bv_to_name bv
+      with_range (S.bv_to_name bv)
 
     | Accu (Var bv, args) ->
       let args = readback_args cfg args in
       let app = U.mk_app (S.bv_to_name bv) args in
-      if cfg.core_cfg.steps.simplify
-      then Common.simplify cfg.core_cfg.debug.wpe app
-      else app
+      with_range (
+        if cfg.core_cfg.steps.simplify
+        then Common.simplify cfg.core_cfg.debug.wpe app
+        else app
+      )
 
     | Accu (Match (scrut, make_branches), args) ->
       let args = readback_args cfg args in
       let head =
         let scrut_new = readback cfg scrut in
         let branches_new = make_branches () in
-        S.mk (Tm_match (scrut_new, branches_new)) Range.dummyRange
+        S.mk (Tm_match (scrut_new, branches_new)) scrut.nbe_r
       in
       (*  When `cases scrut` returns a Accu(Match ..))
           we need to reconstruct a source match node.
@@ -1265,10 +1295,11 @@ and readback (cfg:config) (x:t) : term =
                 branches
        *)
       let app = U.mk_app head args in
-      if cfg.core_cfg.steps.simplify
-      then Common.simplify cfg.core_cfg.debug.wpe app
-      else app
-
+      with_range (
+        if cfg.core_cfg.steps.simplify
+        then Common.simplify cfg.core_cfg.debug.wpe app
+        else app
+      )
 
     | Accu(UnreducedLet (var, typ, defn, body, lb), args) ->
       let typ = readback cfg (Thunk.force typ) in
@@ -1278,7 +1309,7 @@ and readback (cfg:config) (x:t) : term =
       let lb = { lb with lbname = lbname; lbtyp = typ; lbdef = defn } in
       let hd = S.mk (Tm_let((false, [lb]), body)) Range.dummyRange in
       let args = readback_args cfg args in
-      U.mk_app hd args
+      with_range (U.mk_app hd args)
 
     | Accu(UnreducedLetRec (vars_typs_defns, body, lbs), args) ->
       let lbs =
@@ -1297,12 +1328,12 @@ and readback (cfg:config) (x:t) : term =
       let lbs, body = SS.close_let_rec lbs body in
       let hd = S.mk (Tm_let((true, lbs), body)) Range.dummyRange in
       let args = readback_args cfg args in
-      U.mk_app hd args
+      with_range (U.mk_app hd args)
 
     | Accu(UVar f, args) ->
       let hd = Thunk.force f in
       let args = readback_args cfg args in
-      U.mk_app hd args
+      with_range (U.mk_app hd args)
 
     | TopLevelLet(lb, arity, args_rev) ->
       let n_univs = List.length lb.lbunivs in
@@ -1314,7 +1345,7 @@ and readback (cfg:config) (x:t) : term =
       let fv = BU.right lb.lbname in
       let head = S.mk (Tm_fvar fv) Range.dummyRange in
       let args = List.map (fun (t, q) -> readback cfg t, q) args in
-      U.mk_app head args
+      with_range (U.mk_app head args)
 
     | LocalLetRec(i, _, lbs, bs, args, _ar, _ar_lst) ->
       (* if this point is reached then the local let rec is unreduced
@@ -1341,7 +1372,7 @@ and readback (cfg:config) (x:t) : term =
       //   together with whatever other names (bs) that
       //   are in scope at this point
       let let_rec_env =
-          List.rev_append (List.map (fun x -> Accu (Var x, [])) lbnames) bs
+          List.rev_append (List.map (fun x -> mk_rt (S.range_of_bv x) (Accu (Var x, []))) lbnames) bs
       in
       //3. Reduce each e_i, both its definition (in the rec env)
       //   and its type, which doesn't have the recursive names in scope
@@ -1367,17 +1398,17 @@ and readback (cfg:config) (x:t) : term =
       let head = S.mk (Tm_let ((true, lbs), body)) Range.dummyRange in
       //7. Readback the arguments and apply it to the head
       let args = List.map (fun (x, q) -> readback cfg x, q) args in
-      U.mk_app head args
+      with_range (U.mk_app head args)
 
     | Quote (qt, qi) ->
-        S.mk (Tm_quoted (qt, qi)) Range.dummyRange
+      mk (Tm_quoted (qt, qi))
 
     // Need this case for "cheat" embeddings
     | Lazy (BU.Inl li, _) ->
-        S.mk (Tm_lazy li) Range.dummyRange
+      mk (Tm_lazy li)
 
     | Lazy (_, thunk) ->
-        readback cfg (Thunk.force thunk)
+      readback cfg (Thunk.force thunk)
 
 type step =
   | Primops
