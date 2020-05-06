@@ -1458,10 +1458,9 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
     let repr, g = TcUtil.fresh_effect_repr_en (Env.push_binders env (bs@[x_a])) r n u_b (b |> fst |> S.bv_to_name) in
     S.gen_bv "g" None (U.arrow [x_a] (S.mk_Total' repr (Some (new_u_univ ())))) |> S.mk_binder, g in
 
-  let repr, guard_repr =
-    TcUtil.fresh_effect_repr_en (Env.push_binders env (bs@[f;g])) r p u_b (b |> fst |> S.bv_to_name) in
+  let repr, guard_repr = TcUtil.fresh_effect_repr_en (Env.push_binders env bs) r p u_b (b |> fst |> S.bv_to_name) in
 
-  let pure_wp_uvar, g_pure_wp_uvar = pure_wp_uvar (Env.push_binders env (bs@[f;g])) repr
+  let pure_wp_uvar, g_pure_wp_uvar = pure_wp_uvar (Env.push_binders env bs) repr
     (BU.format1 "implicit for pure_wp in checking %s" eff_name)
     r in
 
