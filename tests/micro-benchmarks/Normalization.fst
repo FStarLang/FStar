@@ -62,7 +62,7 @@ let test_sort1 = assert_norm (FStar.List.Tot.sortWith (FStar.List.Tot.compare_of
 (*
  * Cf. #1529
  *)
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 let f_1529 (x:int) = 5
 
 let f_1529_1 () =

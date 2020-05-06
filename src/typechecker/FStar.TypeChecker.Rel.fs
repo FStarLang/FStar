@@ -103,7 +103,7 @@ let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * w
          ctx_uvar_meta=meta;
        } in
     check_uvar_ctx_invariant reason r true gamma binders;
-    let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
+    let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
     let imp = { imp_reason = reason
               ; imp_tm     = t
               ; imp_uvar   = ctx_uvar
@@ -403,7 +403,7 @@ let new_problem wl env lhs rel rhs (subject:option<bv>) loc reason =
   let lg =
     match subject with
     | None -> lg
-    | Some x -> S.mk_Tm_app lg [S.as_arg <| S.bv_to_name x] None loc
+    | Some x -> S.mk_Tm_app lg [S.as_arg <| S.bv_to_name x] loc
   in
   let prob =
    {
@@ -625,7 +625,7 @@ let force_refinement (t_base, refopt) : term =
     let y, phi = match refopt with
         | Some (y, phi) -> y, phi
         | None -> trivial_refinement t_base in
-    mk (Tm_refine(y, phi)) None t_base.pos
+    mk (Tm_refine(y, phi)) t_base.pos
 
 (* ------------------------------------------------ *)
 (* </normalization>                                 *)
@@ -744,13 +744,13 @@ let ensure_no_uvar_subst (t0:term) (wl:worklist)
 
         (* Solve the old variable *)
         let args_sol = List.map (fun (x, i) -> S.bv_to_name x, i) dom_binders in
-        let sol = S.mk_Tm_app t_v args_sol None t0.pos in
+        let sol = S.mk_Tm_app t_v args_sol t0.pos in
         U.set_uvar uv.ctx_uvar_head sol;
 
         (* Make a term for the new uvar, applied to the substitutions of
          * the abstracted arguments, plus all the original arguments. *)
         let args_sol_s = List.map (fun (a, i) -> SS.subst' s a, i) args_sol in
-        let t = S.mk_Tm_app t_v (args_sol_s @ args) None t0.pos in
+        let t = S.mk_Tm_app t_v (args_sol_s @ args) t0.pos in
         t, wl
       end
     | _ ->
@@ -1394,7 +1394,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
                                         (Print.univ_to_string u2))
 
         | U_name x, U_name y ->
-          if (text_of_id x) = (text_of_id y)
+          if (string_of_id x) = (string_of_id y)
           then USolved wl
           else ufailed_simple "Incompatible universes"
 
@@ -1930,7 +1930,7 @@ and imitate_arrow (orig:prob) (env:Env.env) (wl:worklist)
                   | None ->
                     U.type_u()
                   | Some univ ->
-                    S.mk (Tm_type univ) None t.pos, univ
+                    S.mk (Tm_type univ) t.pos, univ
               in
               let _, u, wl = copy_uvar u_lhs (bs_lhs@bs) k wl in
               f u (Some univ), wl
@@ -2113,7 +2113,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //    (Print.term_to_string rhs);
         let rhs_hd, args = U.head_and_args rhs in
         let args_rhs, last_arg_rhs = BU.prefix args in
-        let rhs' = S.mk_Tm_app rhs_hd args_rhs None rhs.pos in
+        let rhs' = S.mk_Tm_app rhs_hd args_rhs rhs.pos in
         //if Env.debug env <| Options.Other "Rel"
         //then printfn "imitate_app 2:\n\trhs'=%s\n\tlast_arg_rhs=%s\n"
         //            (Print.term_to_string rhs')
@@ -2130,7 +2130,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //then printfn "imitate_app 3:\n\tlhs'=%s\n\tlast_arg_lhs=%s\n"
         //            (Print.term_to_string lhs')
         //            (Print.term_to_string lhs'_last_arg);
-        let sol = [TERM(u_lhs, U.abs bs_lhs (S.mk_Tm_app lhs' [S.as_arg lhs'_last_arg] None t_lhs.pos)
+        let sol = [TERM(u_lhs, U.abs bs_lhs (S.mk_Tm_app lhs' [S.as_arg lhs'_last_arg] t_lhs.pos)
                                             (Some (U.residual_tot t_res_lhs)))]
         in
         let sub_probs, wl =
@@ -2270,7 +2270,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                                          wl range gamma_w ctx_w (U.arrow zs (S.mk_Total t_res_lhs))
                                          Strict
                                          None in
-                 let w_app = S.mk_Tm_app w (List.map (fun (z, _) -> S.as_arg (S.bv_to_name z)) zs) None w.pos in
+                 let w_app = S.mk_Tm_app w (List.map (fun (z, _) -> S.as_arg (S.bv_to_name z)) zs) w.pos in
                  let _ =
                     if Env.debug env <| Options.Other "Rel"
                     then BU.print "flex-flex quasi:\n\t\
@@ -2708,7 +2708,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | Tm_arrow(bs1, c1), Tm_arrow(bs2, c2) ->
         let mk_c c = function
             | [] -> c
-            | bs -> mk_Total(mk (Tm_arrow(bs, c)) None c.pos) in
+            | bs -> mk_Total(mk (Tm_arrow(bs, c)) c.pos) in
 
         let (bs1, c1), (bs2, c2) =
             match_num_binders (bs1, mk_c c1) (bs2, mk_c c2) in
@@ -2723,7 +2723,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | Tm_abs(bs1, tbody1, lopt1), Tm_abs(bs2, tbody2, lopt2) ->
         let mk_t t l = function
             | [] -> t
-            | bs -> mk (Tm_abs(bs, t, l)) None t.pos in
+            | bs -> mk (Tm_abs(bs, t, l)) t.pos in
         let (bs1, tbody1), (bs2, tbody2) =
             match_num_binders (bs1, mk_t tbody1 lopt1) (bs2, mk_t tbody2 lopt2) in
         solve_binders env bs1 bs2 orig wl
@@ -3071,9 +3071,9 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
              let univ_sub_probs, wl =
                List.fold_left2 (fun (univ_sub_probs, wl) u1 u2 ->
                  let p, wl = sub_prob wl
-                   (S.mk (S.Tm_type u1) None Range.dummyRange)
+                   (S.mk (S.Tm_type u1) Range.dummyRange)
                    EQ
-                   (S.mk (S.Tm_type u2) None Range.dummyRange)
+                   (S.mk (S.Tm_type u2) Range.dummyRange)
                    "effect universes" in
                  (univ_sub_probs@[p]), wl) ([], wl) c1_comp.comp_univs c2_comp.comp_univs in
              let ret_sub_prob, wl = sub_prob wl c1_comp.result_typ EQ c2_comp.result_typ "effect ret type" in
@@ -3344,13 +3344,13 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
                                      | Some t -> t in
                                    mk (Tm_app (inst_effect_fun_with [c1_univ] env c2_decl trivial,
                                                [as_arg c1.result_typ;
-                                                wpc1_2])) None r
+                                                wpc1_2])) r
                               else let c2_univ = env.universe_of env c2.result_typ in
                                    let stronger = c2_decl |> U.get_stronger_vc_combinator in
                                    mk (Tm_app(inst_effect_fun_with [c2_univ] env c2_decl stronger,
                                               [as_arg c2.result_typ;
                                                as_arg wpc2;
-                                               wpc1_2])) None r in
+                                               wpc1_2])) r in
                       if debug env <| Options.Other "Rel" then
                           BU.print1 "WP guard (simplifed) is (%s)\n" (Print.term_to_string (N.normalize [Env.Iota; Env.Eager_unfolding; Env.Primops; Env.Simplify] env g));
                       let base_prob, wl = sub_prob wl c1.result_typ problem.relation c2.result_typ "result type" in

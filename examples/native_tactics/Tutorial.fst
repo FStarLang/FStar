@@ -117,7 +117,7 @@ and solve one of its subformulas.
 
 *)
 
-[@plugin]
+[@@plugin]
 let tau3 () : Tac unit =
   Tactics.split ();
   smt ();
@@ -187,7 +187,7 @@ succession to each of the open goals.
 
 *)
 
-[@plugin]
+[@@plugin]
 let rec split_all () : Tac unit =
   if is_conj ()
   then

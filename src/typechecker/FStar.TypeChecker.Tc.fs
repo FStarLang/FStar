@@ -105,7 +105,7 @@ let tc_lex_t env ses quals lids =
             && lid_equals lex_cons PC.lexcons_lid) ->
 
         let u = S.new_univ_name (Some r) in
-        let t = mk (Tm_type(U_name u)) None r in
+        let t = mk (Tm_type(U_name u)) r in
         let t = Subst.close_univ_vars [u] t in
         let tc = { sigel = Sig_inductive_typ(lex_t, [u], [], t, [], [PC.lextop_lid; PC.lexcons_lid]);
                    sigquals = [];
@@ -115,7 +115,7 @@ let tc_lex_t env ses quals lids =
                    sigopts = None; } in
 
         let utop = S.new_univ_name (Some r1) in
-        let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r1) delta_constant None, [U_name utop])) None r1 in
+        let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r1) delta_constant None, [U_name utop])) r1 in
         let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
         let dc_lextop = { sigel = Sig_datacon(lex_top, [utop], lex_top_t, PC.lex_t_lid, 0, []);
                           sigquals = [];
@@ -127,10 +127,10 @@ let tc_lex_t env ses quals lids =
         let ucons1 = S.new_univ_name (Some r2) in
         let ucons2 = S.new_univ_name (Some r2) in
         let lex_cons_t =
-            let a = S.new_bv (Some r2) (mk (Tm_type(U_name ucons1)) None r2) in
+            let a = S.new_bv (Some r2) (mk (Tm_type(U_name ucons1)) r2) in
             let hd = S.new_bv (Some r2) (S.bv_to_name a) in
-            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_name ucons2])) None r2) in
-            let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
+            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_name ucons2])) r2) in
+            let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) r2 in
             U.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
         let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, PC.lex_t_lid, 0, []);
@@ -233,7 +233,7 @@ let tc_inductive' env ses quals attrs lids =
           | _                                         -> failwith "Impossible"
         in
         //these are the prims type we are skipping
-        List.existsb (fun s -> s = (text_of_id (ident_of_lid lid))) TcInductive.early_prims_inductives in
+        List.existsb (fun s -> s = (string_of_id (ident_of_lid lid))) TcInductive.early_prims_inductives in
 
       let is_noeq = List.existsb (fun q -> q = Noeq) quals in
 
@@ -590,7 +590,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
         match typ with
         | { n = Tm_arrow(val_bs, c); pos = r } -> begin
           let has_auto_name bv =
-            BU.starts_with (text_of_id bv.ppname) Ident.reserved_prefix in
+            BU.starts_with (string_of_id bv.ppname) Ident.reserved_prefix in
           let rec rename_binders def_bs val_bs =
             match def_bs, val_bs with
             | [], _ | _, [] -> val_bs
@@ -598,14 +598,14 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
               (match has_auto_name body_bv, has_auto_name val_bv with
                | true, _ -> (val_bv, aqual)
                | false, true -> ({ val_bv with
-                                   ppname = mk_ident (text_of_id body_bv.ppname, range_of_id val_bv.ppname) }, aqual)
+                                   ppname = mk_ident (string_of_id body_bv.ppname, range_of_id val_bv.ppname) }, aqual)
                | false, false ->
-                 // if (text_of_id body_bv.ppname) <> (text_of_id val_bv.ppname) then
+                 // if (string_of_id body_bv.ppname) <> (string_of_id val_bv.ppname) then
                  //   Errors.warn (range_of_id body_bv.ppname)
                  //     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
-                 //                  (text_of_id body_bv.ppname) (text_of_id val_bv.ppname));
+                 //                  (string_of_id body_bv.ppname) (string_of_id val_bv.ppname));
                  (val_bv, aqual)) :: rename_binders bt vt in
-          Syntax.mk (Tm_arrow(rename_binders def_bs val_bs, c)) None r end
+          Syntax.mk (Tm_arrow(rename_binders def_bs val_bs, c)) r end
         | _ -> typ in
       { lb with lbtyp = rename_in_typ lb.lbdef lb.lbtyp } in
 
@@ -627,7 +627,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
                 | Tm_unknown -> lb.lbdef
                 | _ ->
                   (* If there are two type ascriptions we check that they are compatible *)
-                  mk (Tm_ascribed (lb.lbdef, (Inl lb.lbtyp, None), None)) None lb.lbdef.pos
+                  mk (Tm_ascribed (lb.lbdef, (Inl lb.lbtyp, None), None)) lb.lbdef.pos
               in
               if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
               then raise_error (Errors.Fatal_IncoherentInlineUniverse, ("Inline universes are incoherent with annotation from val declaration")) r;
@@ -675,7 +675,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     (* / preprocess_with *)
 
     (* 2. Turn the top-level lb into a Tm_let with a unit body *)
-    let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) None r)) None r in
+    let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) r)) r in
 
     (* 3. Type-check the Tm_let and convert it back to Sig_let *)
     let env' = { env with top_level = true; generalize = should_generalize } in
@@ -1109,7 +1109,7 @@ let check_exports env (modul:modul) exports : unit =
           if not (se.sigquals |> List.contains Private)
           then ses |> List.iter check_sigelt
         | Sig_inductive_typ (l, univs, binders, typ, _, _) ->
-          let t = S.mk (Tm_arrow(binders, S.mk_Total typ)) None se.sigrng in
+          let t = S.mk (Tm_arrow(binders, S.mk_Total typ)) se.sigrng in
           check_term l univs t
         | Sig_datacon(l , univs, t, _, _, _) ->
           check_term l univs t
@@ -1123,7 +1123,7 @@ let check_exports env (modul:modul) exports : unit =
                check_term fv.fv_name.v lb.lbunivs lb.lbtyp)
         | Sig_effect_abbrev(l, univs, binders, comp, flags) ->
           if not (se.sigquals |> List.contains Private)
-          then let arrow = S.mk (Tm_arrow(binders, comp)) None se.sigrng in
+          then let arrow = S.mk (Tm_arrow(binders, comp)) se.sigrng in
                check_term l univs arrow
         | Sig_assume _
         | Sig_new_effect _
@@ -1170,8 +1170,8 @@ let extract_interface (en:env) (m:modul) :modul =
       | [] -> t
       | _  ->
         (match t.n with
-         | Tm_arrow (bs', c ) -> mk (Tm_arrow (bs@bs', c)) None r  //flattening arrows?
-         | _ -> mk (Tm_arrow (bs, mk_Total t)) None r)  //Total ok?
+         | Tm_arrow (bs', c ) -> mk (Tm_arrow (bs@bs', c)) r  //flattening arrows?
+         | _ -> mk (Tm_arrow (bs, mk_Total t)) r)  //Total ok?
     in
 
     match s.sigel with

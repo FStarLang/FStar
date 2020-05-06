@@ -728,7 +728,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "82db16beaaf0d295f627697b79da5d21"
+      "9e41fb27fe3f187aca67c078aa3c7805"
     ],
     [
       "FStar.Seq.Base.lemma_index_upd1'",
@@ -889,7 +889,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "314f386d9812d500b76350678779726a"
+      "303cf8cafa7e8b36de85476023b666ea"
     ],
     [
       "FStar.Seq.Base.lemma_index_upd2",
@@ -977,7 +977,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "68aa289dbbaf4b5d9c4eebe7dc2d7db9"
+      "537f6fe82ce6d75a3a389d1d4cf31cf0"
     ],
     [
       "FStar.Seq.Base.lemma_index_app1",
@@ -1060,7 +1060,7 @@
         "typing_FStar.Seq.Base.length", "well-founded-ordering-on-nat"
       ],
       0,
-      "b0641f7340c7802706c85d0fea6cd910"
+      "7d86aa673c4ccbac4fc4d08b4c18c1e1"
     ],
     [
       "FStar.Seq.Base.lemma_index_app2",
@@ -1567,6 +1567,7 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.index.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_correspondence_FStar.Seq.Base.init_aux_ghost_.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.index.fuel_instrumented",
         "@fuel_irrelevance_FStar.Seq.Base.init_aux_ghost_.fuel_instrumented",
@@ -1586,6 +1587,7 @@
         "equation_FStar.Seq.Base.init_aux_ghost",
         "equation_FStar.Seq.Base.length", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.index.fuel_instrumented",
+        "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.Seq.Base.init_aux_ghost_.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Seq.Base.seq",
         "function_token_typing_Prims.__cache_version_number__",
@@ -1607,6 +1609,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
         "refinement_interpretation_Tm_refine_c86aba5c6243e6b7f9a4b0ad41b4e9a0",
+        "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "typing_FStar.Seq.Base.__proj__MkSeq__item__l",
         "typing_FStar.Seq.Base.init_aux_ghost",
         "well-founded-ordering-on-nat"

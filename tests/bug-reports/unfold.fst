@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Unfold
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold let x = 0
 let test1 = assert (x = 0)
 let test2 y = y + x

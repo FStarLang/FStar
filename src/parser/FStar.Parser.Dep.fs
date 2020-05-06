@@ -159,7 +159,7 @@ let str_of_parsing_data_elt elt =
   | P_open (b, lid) -> "P_open (" ^ (string_of_bool b) ^ ", " ^ (string_of_lid lid) ^ ")"
   | P_open_module_or_namespace (k, lid) -> "P_open_module_or_namespace (" ^ (str_of_open_kind k) ^ ", " ^ (string_of_lid lid) ^ ")"
   | P_dep (b, lid) -> "P_dep (" ^ (string_of_lid lid) ^ ", " ^ (string_of_bool b) ^ ")"
-  | P_alias (id, lid) -> "P_alias (" ^ (text_of_id id) ^ ", " ^ (string_of_lid lid) ^ ")"
+  | P_alias (id, lid) -> "P_alias (" ^ (string_of_id id) ^ ", " ^ (string_of_lid lid) ^ ")"
   | P_lid lid -> "P_lid (" ^ (string_of_lid lid) ^ ")"
   | P_inline_for_extraction -> "P_inline_for_extraction"
 
@@ -173,7 +173,7 @@ let parsing_data_elt_eq (e1:parsing_data_elt) (e2:parsing_data_elt) =
   | P_open (b1, l1), P_open (b2, l2) -> b1 = b2 && lid_equals l1 l2
   | P_open_module_or_namespace (k1, l1), P_open_module_or_namespace (k2, l2) -> k1 = k2 && lid_equals l1 l2
   | P_dep (b1, l1), P_dep (b2, l2) -> b1 = b2 && lid_equals l1 l2
-  | P_alias (i1, l1), P_alias (i2, l2) -> text_of_id i1 = text_of_id i2 && lid_equals l1 l2
+  | P_alias (i1, l1), P_alias (i2, l2) -> string_of_id i1 = string_of_id i2 && lid_equals l1 l2
   | P_lid l1, P_lid l2 -> lid_equals l1 l2
   | P_inline_for_extraction, P_inline_for_extraction -> true
   | _, _ -> false
@@ -460,8 +460,8 @@ let enter_namespace (original_map: files_for_module_name) (working_map: files_fo
 
 
 let string_of_lid (l: lident) (last: bool) =
-  let suffix = if last then [ (text_of_id (ident_of_lid l)) ] else [ ] in
-  let names = List.map (fun x -> (text_of_id x)) (ns_of_lid l) @ suffix in
+  let suffix = if last then [ (string_of_id (ident_of_lid l)) ] else [ ] in
+  let names = List.map (fun x -> (string_of_id x)) (ns_of_lid l) @ suffix in
   String.concat "." names
 
 (** All the components of a [lident] joined by "." (the last component of the
@@ -470,7 +470,7 @@ let lowercase_join_longident (l: lident) (last: bool) =
   String.lowercase (string_of_lid l last)
 
 let namespace_of_lid l =
-  String.concat "_" (List.map text_of_id (ns_of_lid l))
+  String.concat "_" (List.map string_of_id (ns_of_lid l))
 
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
@@ -625,7 +625,7 @@ let collect_one
        in
 
        let record_module_alias ident lid =
-         let key = String.lowercase (text_of_id ident) in
+         let key = String.lowercase (string_of_id ident) in
          let alias = lowercase_join_longident lid true in
          // Only fully qualified module aliases are allowed.
          match smap_try_find original_map alias with
@@ -827,7 +827,7 @@ let collect_one
         | Const c ->
             collect_constant c
         | Op (s, ts) ->
-            if Ident.text_of_id s = "@" then
+            if Ident.string_of_id s = "@" then
               (* We use FStar.List.Tot.Base instead of FStar.List.Tot to prevent FStar.List.Tot.Properties from depending on FStar.List.Tot *)
               collect_term' (Name (lid_of_path (path_of_text "FStar.List.Tot.Base.append") Range.dummyRange));
             List.iter collect_term ts

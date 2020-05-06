@@ -469,21 +469,21 @@ let (root_name_of_bv :
   FStar_Syntax_Syntax.bv -> FStar_Extraction_ML_Syntax.mlident) =
   fun x  ->
     let uu____1480 =
-      (let uu____1484 = FStar_Ident.text_of_id x.FStar_Syntax_Syntax.ppname
+      (let uu____1484 = FStar_Ident.string_of_id x.FStar_Syntax_Syntax.ppname
           in
        FStar_Util.starts_with uu____1484 FStar_Ident.reserved_prefix) ||
         (FStar_Syntax_Syntax.is_null_bv x)
        in
     if uu____1480
     then
-      let uu____1488 = FStar_Ident.text_of_id x.FStar_Syntax_Syntax.ppname
+      let uu____1488 = FStar_Ident.string_of_id x.FStar_Syntax_Syntax.ppname
          in
       let uu____1490 =
         let uu____1492 = FStar_Util.string_of_int x.FStar_Syntax_Syntax.index
            in
         Prims.op_Hat "_" uu____1492  in
       Prims.op_Hat uu____1488 uu____1490
-    else FStar_Ident.text_of_id x.FStar_Syntax_Syntax.ppname
+    else FStar_Ident.string_of_id x.FStar_Syntax_Syntax.ppname
   
 let (find_uniq :
   Prims.string FStar_Util.psmap ->
@@ -525,7 +525,7 @@ let (find_uniq :
 let (mlns_of_lid : FStar_Ident.lident -> Prims.string Prims.list) =
   fun x  ->
     let uu____1651 = FStar_Ident.ns_of_lid x  in
-    FStar_List.map FStar_Ident.text_of_id uu____1651
+    FStar_List.map FStar_Ident.string_of_id uu____1651
   
 let (new_mlpath_of_lident :
   uenv -> FStar_Ident.lident -> (FStar_Extraction_ML_Syntax.mlpath * uenv)) =
@@ -539,14 +539,14 @@ let (new_mlpath_of_lident :
           let uu____1686 =
             let uu____1687 =
               let uu____1689 = FStar_Ident.ident_of_lid x  in
-              FStar_Ident.text_of_id uu____1689  in
+              FStar_Ident.string_of_id uu____1689  in
             ([], uu____1687)  in
           (uu____1686, g)
         else
           (let uu____1697 =
              let uu____1706 =
                let uu____1708 = FStar_Ident.ident_of_lid x  in
-               FStar_Ident.text_of_id uu____1708  in
+               FStar_Ident.string_of_id uu____1708  in
              find_uniq g.env_mlident_map uu____1706 false  in
            match uu____1697 with
            | (name,map) ->
@@ -907,7 +907,7 @@ let (extend_with_action_name :
           let nm =
             let uu____2372 =
               FStar_Ident.ident_of_lid a.FStar_Syntax_Syntax.action_name  in
-            FStar_Ident.text_of_id uu____2372  in
+            FStar_Ident.string_of_id uu____2372  in
           let module_name =
             FStar_Ident.ns_of_lid ed.FStar_Syntax_Syntax.mname  in
           let lid =
@@ -945,7 +945,7 @@ let (extend_record_field_name :
               FStar_List.append uu____2451 [fn]  in
             FStar_Ident.lid_of_ids uu____2450  in
           let uu____2454 =
-            let uu____2463 = FStar_Ident.text_of_id fn  in
+            let uu____2463 = FStar_Ident.string_of_id fn  in
             find_uniq g.env_fieldname_map uu____2463 false  in
           (match uu____2454 with
            | (name,fieldname_map) ->
@@ -977,7 +977,7 @@ let (extend_with_module_name :
       let ns = mlns_of_lid m  in
       let p =
         let uu____2525 = FStar_Ident.ident_of_lid m  in
-        FStar_Ident.text_of_id uu____2525  in
+        FStar_Ident.string_of_id uu____2525  in
       ((ns, p), g)
   
 let (exit_module : uenv -> uenv) =

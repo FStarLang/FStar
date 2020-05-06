@@ -6,5 +6,5 @@ assume val x : (y:int{y==1})
 
 (* This query used to succeed since -* was badly interpreted as removing a module named `*` *)
 
-[@expect_failure]
+[@@expect_failure]
 let _ = assert (x + 1 == 2)

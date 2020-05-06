@@ -24,7 +24,7 @@ module F = FStar.FunctionalExtensionality
 (*
  * AR: mark it must_erase_for_extraction temporarily until CMI comes in
  *)
-[@must_erase_for_extraction]
+[@@must_erase_for_extraction]
 val set (a:Type u#a) : Type u#(max 1 a)
 
 val equal (#a:Type) (s1:set a) (s2:set a) : Type0

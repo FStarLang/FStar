@@ -1569,8 +1569,8 @@ let (e_ident : FStar_Ident.ident FStar_TypeChecker_NBETerm.embedding) =
   let embed_ident cb i =
     let uu____4132 =
       let uu____4138 = FStar_Ident.range_of_id i  in
-      let uu____4139 = FStar_Ident.text_of_id i  in (uu____4138, uu____4139)
-       in
+      let uu____4139 = FStar_Ident.string_of_id i  in
+      (uu____4138, uu____4139)  in
     FStar_TypeChecker_NBETerm.embed repr cb uu____4132  in
   let unembed_ident cb t =
     let uu____4162 = FStar_TypeChecker_NBETerm.unembed repr cb t  in

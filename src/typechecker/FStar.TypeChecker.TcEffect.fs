@@ -94,7 +94,7 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
     S.mk_Tm_app
       pure_wp_t
       [t |> S.as_arg]
-      None r in
+      r in
 
   let pure_wp_uvar, _, guard_wp = TcUtil.new_implicit_var reason r env pure_wp_t in
   pure_wp_uvar, guard_wp
@@ -502,7 +502,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
         Env.push_binders (Env.push_univ_vars env0 us) bs,
         S.mk_Tm_app ite_t
           (bs |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg)
-          None r,
+          r,
         f, g, p
       | _ -> failwith "Impossible! ite_t must have been an abstraction with at least 3 binders" in
 
@@ -523,7 +523,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
       S.mk_Tm_app
         subcomp_t
         (tun_args@[t, last_aq])
-        None r in
+        r in
 
      aux f_t, aux g_t in
 
@@ -531,7 +531,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
       let aux t =
         S.mk
           (Tm_ascribed (t, (Inr (S.mk_Total ite_t_applied), None), None))
-          None r in
+          r in
 
       aux subcomp_f, aux subcomp_g in
 
@@ -551,7 +551,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
       let not_p = S.mk_Tm_app
         (S.lid_as_fv PC.not_lid S.delta_constant None |> S.fv_to_tm)
         [p_t |> S.as_arg]
-        None r in
+        r in
       Env.imp_guard (Env.guard_of_guard_formula (NonTrivial not_p)) g_g in
     Rel.force_trivial_guard env g_g in
 
@@ -594,7 +594,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
           let repr = S.mk_Tm_app
             repr
             (S.as_arg ct.result_typ::ct.effect_args)
-            None r in
+            r in
           let c = S.mk_Total' repr (Some (new_u_univ ())) in
           U.arrow bs c
         else act.action_typ
@@ -912,7 +912,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
       let mk_repr' t wp =
         let _, repr = Env.inst_tscheme repr in
         let repr = N.normalize [EraseUniverses; AllowUnboundUniverses] env repr in
-        mk (Tm_app (repr, [t |> as_arg; wp |> as_arg])) None Range.dummyRange in
+        mk (Tm_app (repr, [t |> as_arg; wp |> as_arg])) Range.dummyRange in
       let mk_repr a wp = mk_repr' (S.bv_to_name a) wp in
       let destruct_repr t =
         match (SS.compress t).n with
@@ -926,7 +926,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
         let res =
           let wp = mk_Tm_app
             (Env.inst_tscheme ret_wp |> snd)
-            [S.bv_to_name a |> S.as_arg; S.bv_to_name x_a |> S.as_arg] None Range.dummyRange in
+            [S.bv_to_name a |> S.as_arg; S.bv_to_name x_a |> S.as_arg] Range.dummyRange in
           mk_repr a wp in
         let k = U.arrow [S.mk_binder a; S.mk_binder x_a] (S.mk_Total res) in
         let k, _, _ = tc_tot_or_gtot_term env k in
@@ -944,12 +944,12 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) : S.
         let wp_f = S.gen_bv "wp_f" None wp_sort_a in
         let wp_g = S.gen_bv "wp_g" None wp_sort_a_b in
         let x_a = S.gen_bv "x_a" None (S.bv_to_name a) in
-        let wp_g_x = mk_Tm_app (S.bv_to_name wp_g) [S.bv_to_name x_a |> S.as_arg] None Range.dummyRange in
+        let wp_g_x = mk_Tm_app (S.bv_to_name wp_g) [S.bv_to_name x_a |> S.as_arg] Range.dummyRange in
         let res =
           let wp = mk_Tm_app
             (Env.inst_tscheme bind_wp |> snd)
             (List.map as_arg [r; S.bv_to_name a; S.bv_to_name b; S.bv_to_name wp_f; S.bv_to_name wp_g])
-            None Range.dummyRange in
+            Range.dummyRange in
           mk_repr b wp in
 
         let maybe_range_arg =
@@ -1269,7 +1269,7 @@ let tc_lift env sub r =
       | None -> failwith "internal error: reifiable effect has no decl?"
       | Some (ed, qualifiers) ->
         let repr = Env.inst_effect_fun_with [U_unknown] env ed (ed |> U.get_eff_repr |> must) in
-        mk (Tm_app(repr, [as_arg a; as_arg wp])) None (Env.get_range env)
+        mk (Tm_app(repr, [as_arg a; as_arg wp])) (Env.get_range env)
     in
     let lift, lift_wp =
       match sub.lift, sub.lift_wp with
@@ -1325,7 +1325,7 @@ let tc_lift env sub r =
       let repr_f = repr_type sub.source a_typ wp_a_typ in
       let repr_result =
         let lift_wp = N.normalize [Env.EraseUniverses; Env.AllowUnboundUniverses] env (snd lift_wp) in
-        let lift_wp_a = mk (Tm_app(lift_wp, [as_arg a_typ; as_arg wp_a_typ])) None (Env.get_range env) in
+        let lift_wp_a = mk (Tm_app(lift_wp, [as_arg a_typ; as_arg wp_a_typ])) (Env.get_range env) in
         repr_type sub.target a_typ lift_wp_a in
       let expected_k =
         U.arrow [S.mk_binder a; S.mk_binder wp_a; S.null_binder repr_f]
@@ -1387,7 +1387,7 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
   in
   let tps = SS.close_binders tps in
   let c = SS.close_comp tps c in
-  let uvs, t = TcUtil.generalize_universes env0 (mk (Tm_arrow(tps, c)) None r) in
+  let uvs, t = TcUtil.generalize_universes env0 (mk (Tm_arrow(tps, c)) r) in
   let tps, c = match tps, (SS.compress t).n with
     | [], Tm_arrow(_, c) -> [], c
     | _,  Tm_arrow(tps, c) -> tps, c

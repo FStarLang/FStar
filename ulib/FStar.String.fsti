@@ -99,7 +99,7 @@ val sub: s:string -> i:nat -> l:nat{i + l <= length s} -> Tot string
 
 /// `collect f s`: maps `f` over each character of `s`
 ///  from left to right, appending and flattening the result
-[@(deprecated "FStar.String.collect can be defined using list_of_string and List.collect")]
+[@@(deprecated "FStar.String.collect can be defined using list_of_string and List.collect")]
 val collect: (char -> FStar.All.ML string) -> string -> FStar.All.ML string
 
 /// `substring s i len`

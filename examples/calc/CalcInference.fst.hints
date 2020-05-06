@@ -27,33 +27,6 @@
       [ "@query" ],
       0,
       "fec555bef3853e1df59c0cc90ffcaef6"
-    ],
-    [
-      "CalcInference.test1",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "03fb8e0e8239c6373b15147bf8a3a720"
-    ],
-    [
-      "CalcInference.test2",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3329158271b0130c8a6fcec14d7bdfba"
-    ],
-    [
-      "CalcInference.test3",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "218e542f1ad7c09c03d0a2a0b9f9c1d4"
     ]
   ]
 ]

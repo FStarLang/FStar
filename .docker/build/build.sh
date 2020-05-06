@@ -2,6 +2,8 @@
 
 #set -x
 
+set -e # abort on errors
+
 target=$1
 out_file=$2 # GM: This seems unused
 threads=$3

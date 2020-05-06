@@ -993,14 +993,14 @@ let (decl_drange : decl -> FStar_Range.range) = fun decl1  -> decl1.drange
 let (check_id : FStar_Ident.ident -> unit) =
   fun id  ->
     let first_char =
-      let uu____5109 = FStar_Ident.text_of_id id  in
+      let uu____5109 = FStar_Ident.string_of_id id  in
       FStar_String.substring uu____5109 Prims.int_zero Prims.int_one  in
     if (FStar_String.lowercase first_char) = first_char
     then ()
     else
       (let uu____5117 =
          let uu____5123 =
-           let uu____5125 = FStar_Ident.text_of_id id  in
+           let uu____5125 = FStar_Ident.string_of_id id  in
            FStar_Util.format1
              "Invalid identifer '%s'; expected a symbol that begins with a lower-case character"
              uu____5125
@@ -1686,7 +1686,7 @@ let rec (term_to_string : term -> Prims.string) =
         FStar_Util.format2 "(labeled %s %s)" l uu____7558
     | Const c -> FStar_Parser_Const.const_to_string c
     | Op (s,xs) ->
-        let uu____7568 = FStar_Ident.text_of_id s  in
+        let uu____7568 = FStar_Ident.string_of_id s  in
         let uu____7570 =
           let uu____7572 =
             FStar_List.map
@@ -1694,13 +1694,13 @@ let rec (term_to_string : term -> Prims.string) =
              in
           FStar_String.concat ", " uu____7572  in
         FStar_Util.format2 "%s(%s)" uu____7568 uu____7570
-    | Tvar id -> FStar_Ident.text_of_id id
-    | Uvar id -> FStar_Ident.text_of_id id
+    | Tvar id -> FStar_Ident.string_of_id id
+    | Uvar id -> FStar_Ident.string_of_id id
     | Var l -> FStar_Ident.string_of_lid l
     | Name l -> FStar_Ident.string_of_lid l
     | Projector (rec_lid,field_id) ->
         let uu____7588 = FStar_Ident.string_of_lid rec_lid  in
-        let uu____7590 = FStar_Ident.text_of_id field_id  in
+        let uu____7590 = FStar_Ident.string_of_id field_id  in
         FStar_Util.format2 "%s?.%s" uu____7588 uu____7590
     | Construct (l,args) ->
         let uu____7607 = FStar_Ident.string_of_lid l  in
@@ -1764,7 +1764,7 @@ let rec (term_to_string : term -> Prims.string) =
         let uu____7900 = FStar_All.pipe_right t2 term_to_string  in
         FStar_Util.format2 "%s; %s" uu____7897 uu____7900
     | Bind (id,t1,t2) ->
-        let uu____7907 = FStar_Ident.text_of_id id  in
+        let uu____7907 = FStar_Ident.string_of_id id  in
         let uu____7909 = term_to_string t1  in
         let uu____7911 = term_to_string t2  in
         FStar_Util.format3 "%s <- %s; %s" uu____7907 uu____7909 uu____7911
@@ -1905,7 +1905,7 @@ let rec (term_to_string : term -> Prims.string) =
         let uu____8464 = FStar_All.pipe_right t term_to_string  in
         FStar_Util.format2 "%s:{%s}" uu____8461 uu____8464
     | NamedTyp (x1,t) ->
-        let uu____8470 = FStar_Ident.text_of_id x1  in
+        let uu____8470 = FStar_Ident.string_of_id x1  in
         let uu____8472 = FStar_All.pipe_right t term_to_string  in
         FStar_Util.format2 "%s:%s" uu____8470 uu____8472
     | Paren t ->
@@ -1961,16 +1961,16 @@ and (binder_to_string : binder -> Prims.string) =
   fun x  ->
     let s =
       match x.b with
-      | Variable i -> FStar_Ident.text_of_id i
+      | Variable i -> FStar_Ident.string_of_id i
       | TVariable i ->
-          let uu____8586 = FStar_Ident.text_of_id i  in
+          let uu____8586 = FStar_Ident.string_of_id i  in
           FStar_Util.format1 "%s:_" uu____8586
       | TAnnotated (i,t) ->
-          let uu____8591 = FStar_Ident.text_of_id i  in
+          let uu____8591 = FStar_Ident.string_of_id i  in
           let uu____8593 = FStar_All.pipe_right t term_to_string  in
           FStar_Util.format2 "%s:%s" uu____8591 uu____8593
       | Annotated (i,t) ->
-          let uu____8599 = FStar_Ident.text_of_id i  in
+          let uu____8599 = FStar_Ident.string_of_id i  in
           let uu____8601 = FStar_All.pipe_right t term_to_string  in
           FStar_Util.format2 "%s:%s" uu____8599 uu____8601
       | NoName t -> FStar_All.pipe_right t term_to_string  in
@@ -1997,11 +1997,11 @@ and (pat_to_string : pattern -> Prims.string) =
         FStar_Util.format2 "(%s %s)" uu____8634 uu____8637
     | PatTvar (i,aq) ->
         let uu____8647 = aqual_to_string aq  in
-        let uu____8649 = FStar_Ident.text_of_id i  in
+        let uu____8649 = FStar_Ident.string_of_id i  in
         FStar_Util.format2 "%s%s" uu____8647 uu____8649
     | PatVar (i,aq) ->
         let uu____8658 = aqual_to_string aq  in
-        let uu____8660 = FStar_Ident.text_of_id i  in
+        let uu____8660 = FStar_Ident.string_of_id i  in
         FStar_Util.format2 "%s%s" uu____8658 uu____8660
     | PatName l -> FStar_Ident.string_of_lid l
     | PatList l ->
@@ -2026,7 +2026,7 @@ and (pat_to_string : pattern -> Prims.string) =
         FStar_Util.format1 "{%s}" uu____8700
     | PatOr l -> to_string_l "|\n " pat_to_string l
     | PatOp op ->
-        let uu____8732 = FStar_Ident.text_of_id op  in
+        let uu____8732 = FStar_Ident.string_of_id op  in
         FStar_Util.format1 "(%s)" uu____8732
     | PatAscribed (p,(t,FStar_Pervasives_Native.None )) ->
         let uu____8745 = FStar_All.pipe_right p pat_to_string  in
@@ -2072,13 +2072,13 @@ let lids_of_let :
 let (id_of_tycon : tycon -> Prims.string) =
   fun uu___9_8894  ->
     match uu___9_8894 with
-    | TyconAbstract (i,uu____8897,uu____8898) -> FStar_Ident.text_of_id i
+    | TyconAbstract (i,uu____8897,uu____8898) -> FStar_Ident.string_of_id i
     | TyconAbbrev (i,uu____8908,uu____8909,uu____8910) ->
-        FStar_Ident.text_of_id i
+        FStar_Ident.string_of_id i
     | TyconRecord (i,uu____8920,uu____8921,uu____8922) ->
-        FStar_Ident.text_of_id i
+        FStar_Ident.string_of_id i
     | TyconVariant (i,uu____8944,uu____8945,uu____8946) ->
-        FStar_Ident.text_of_id i
+        FStar_Ident.string_of_id i
   
 let (decl_to_string : decl -> Prims.string) =
   fun d  ->
@@ -2096,7 +2096,7 @@ let (decl_to_string : decl -> Prims.string) =
         let uu____8998 = FStar_Ident.string_of_lid l  in
         Prims.op_Hat "include " uu____8998
     | ModuleAbbrev (i,l) ->
-        let uu____9003 = FStar_Ident.text_of_id i  in
+        let uu____9003 = FStar_Ident.string_of_id i  in
         let uu____9005 = FStar_Ident.string_of_lid l  in
         FStar_Util.format2 "module %s = %s" uu____9003 uu____9005
     | TopLevelLet (uu____9008,pats) ->
@@ -2109,7 +2109,7 @@ let (decl_to_string : decl -> Prims.string) =
           FStar_All.pipe_right uu____9024 (FStar_String.concat ", ")  in
         Prims.op_Hat "let " uu____9022
     | Assume (i,uu____9046) ->
-        let uu____9047 = FStar_Ident.text_of_id i  in
+        let uu____9047 = FStar_Ident.string_of_id i  in
         Prims.op_Hat "assume " uu____9047
     | Tycon (uu____9050,uu____9051,tys) ->
         let uu____9061 =
@@ -2118,22 +2118,22 @@ let (decl_to_string : decl -> Prims.string) =
           FStar_All.pipe_right uu____9063 (FStar_String.concat ", ")  in
         Prims.op_Hat "type " uu____9061
     | Val (i,uu____9080) ->
-        let uu____9081 = FStar_Ident.text_of_id i  in
+        let uu____9081 = FStar_Ident.string_of_id i  in
         Prims.op_Hat "val " uu____9081
     | Exception (i,uu____9085) ->
-        let uu____9090 = FStar_Ident.text_of_id i  in
+        let uu____9090 = FStar_Ident.string_of_id i  in
         Prims.op_Hat "exception " uu____9090
     | NewEffect (DefineEffect (i,uu____9094,uu____9095,uu____9096)) ->
-        let uu____9105 = FStar_Ident.text_of_id i  in
+        let uu____9105 = FStar_Ident.string_of_id i  in
         Prims.op_Hat "new_effect " uu____9105
     | NewEffect (RedefineEffect (i,uu____9109,uu____9110)) ->
-        let uu____9115 = FStar_Ident.text_of_id i  in
+        let uu____9115 = FStar_Ident.string_of_id i  in
         Prims.op_Hat "new_effect " uu____9115
     | LayeredEffect (DefineEffect (i,uu____9119,uu____9120,uu____9121)) ->
-        let uu____9130 = FStar_Ident.text_of_id i  in
+        let uu____9130 = FStar_Ident.string_of_id i  in
         Prims.op_Hat "layered_effect " uu____9130
     | LayeredEffect (RedefineEffect (i,uu____9134,uu____9135)) ->
-        let uu____9140 = FStar_Ident.text_of_id i  in
+        let uu____9140 = FStar_Ident.string_of_id i  in
         Prims.op_Hat "layered_effect " uu____9140
     | Polymonadic_bind (l1,l2,l3,uu____9146) ->
         let uu____9147 = FStar_Ident.string_of_lid l1  in
@@ -2150,7 +2150,7 @@ let (decl_to_string : decl -> Prims.string) =
         let uu____9168 =
           let uu____9170 =
             let uu____9172 =
-              FStar_List.map (fun i  -> FStar_Ident.text_of_id i) ids  in
+              FStar_List.map (fun i  -> FStar_Ident.string_of_id i) ids  in
             FStar_All.pipe_left (FStar_String.concat ";") uu____9172  in
           let uu____9184 =
             let uu____9186 =

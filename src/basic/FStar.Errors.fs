@@ -362,6 +362,8 @@ type raw_error =
   | Warning_CouldNotReadHints
   | Fatal_BadUvar
   | Warning_WarnOnUse
+  | Warning_DeprecatedAttributeSyntax
+  | Warning_DeprecatedGeneric
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
@@ -702,7 +704,9 @@ let default_settings : list<error_setting> =
     Warning_AbstractQualifier                         , CWarning, 332;
     Warning_CouldNotReadHints                         , CWarning, 333;
     Fatal_BadUvar                                     , CFatal,   334;
-    Warning_WarnOnUse                                 , CSilent,  335
+    Warning_WarnOnUse                                 , CSilent,  335;
+    Warning_DeprecatedAttributeSyntax                 , CSilent,  336;
+    Warning_DeprecatedGeneric                         , CWarning,  337
     ]
 module BU = FStar.Util
 
@@ -725,6 +729,9 @@ let lookup_error_range settings (l, h) =
   matches
 
 let error_number (_, _, i) = i
+
+let warn_on_use_errno =
+  error_number (lookup_error default_settings Warning_WarnOnUse)
 
 let update_flags (l:list<(error_flag * string)>)
   : list<error_setting>
@@ -839,7 +846,11 @@ let compare_issues i1 i2 =
 
 let mk_default_handler print =
     let issues : ref<list<issue>> = BU.mk_ref [] in
-    let add_one (e: issue) = issues := e :: !issues in
+    let add_one (e: issue) =
+        match e.issue_level with
+        | EInfo -> print_issue e
+        | _ -> issues := e :: !issues
+    in
     let count_errors () =
         List.fold_left (fun n i ->
           match i.issue_level with
@@ -920,9 +931,9 @@ let diag r msg =
 let warn_unsafe_options rng_opt msg =
   match Options.report_assumes () with
   | Some "warn" ->
-    add_one (mk_issue EWarning rng_opt ("Every use of this option triggers a warning: " ^msg) (Some 334))
+    add_one (mk_issue EWarning rng_opt ("Every use of this option triggers a warning: " ^msg) (Some warn_on_use_errno))
   | Some "error" ->
-    add_one (mk_issue EError rng_opt ("Every use of this option triggers an error: " ^msg) (Some 334))
+    add_one (mk_issue EError rng_opt ("Every use of this option triggers an error: " ^msg) (Some warn_on_use_errno))
   | _ -> ()
 
 let set_option_warning_callback_range (ropt:option<Range.range>) =

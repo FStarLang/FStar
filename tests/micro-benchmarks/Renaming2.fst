@@ -3,7 +3,7 @@ module Renaming2
 inline_for_extraction
 noextract
 let test (s: string) (x:int) =
-  [@(rename_let s)]
+  [@@(rename_let s)]
   let y = x + 1 in
   let essai = y + 2 in
   let z = x + y in

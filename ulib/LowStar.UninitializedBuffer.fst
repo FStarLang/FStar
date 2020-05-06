@@ -129,7 +129,7 @@ let ualloca (#a:Type0) (len:U32.t)
 (*
  * blit functionality, where src is a regular buffer
  *)
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold let valid_j_for_blit
   (#a:Type0) (#rrel #rel:srel a) (src:mbuffer a rrel rel) (idx_src:U32.t)
   (dst:ubuffer a) (idx_dst:U32.t) (j:U32.t)
@@ -139,7 +139,7 @@ unfold let valid_j_for_blit
 (*
  * postcondition of blit
  *)
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let ublit_post_j
   (#a:Type0) (#rrel #rel:srel a) (src:mbuffer a rrel rel) (idx_src:U32.t)
   (dst:ubuffer a) (idx_dst:U32.t) (j:U32.t{valid_j_for_blit src idx_src dst idx_dst j})

@@ -22,7 +22,7 @@ let struct1 = 2
  *)
 let test =
   let x = 0 in
-  [@inline_let] let y = x in
+  [@@inline_let] let y = x in
   let x = 2 in
   (y, x)
 

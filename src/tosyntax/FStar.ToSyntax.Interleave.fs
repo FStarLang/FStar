@@ -28,15 +28,15 @@ open FStar.Syntax.Syntax
 open FStar.Parser.AST
 
 (* Some basic utilities *)
-let id_eq_lid i (l:lident) = (text_of_id i) = (text_of_id (ident_of_lid l))
+let id_eq_lid i (l:lident) = (string_of_id i) = (string_of_id (ident_of_lid l))
 
 let is_val x d = match d.d with
-    | Val(y, _) -> (text_of_id x) = (text_of_id y)
+    | Val(y, _) -> (string_of_id x) = (string_of_id y)
     | _ -> false
 
 let is_type x d = match d.d with
     | Tycon(_, _, tys) ->
-        tys |> Util.for_some (fun t -> id_of_tycon t = (text_of_id x))
+        tys |> Util.for_some (fun t -> id_of_tycon t = (string_of_id x))
     | _ -> false
 
 //is d of of the form 'let x = ...' or 'type x = ...'
@@ -158,7 +158,7 @@ let rec prefix_with_iface_decls
        then if def_ids |> Util.for_some (fun y ->
                iface_tl |> Util.for_some (is_val (ident_of_lid y)))
             then raise_error (Errors.Fatal_WrongDefinitionOrder, (Util.format2 "Expected the definition of %s to precede %s"
-                                           (text_of_id x)
+                                           (string_of_id x)
                                            (def_ids |> List.map Ident.string_of_lid |> String.concat ", "))) impl.drange
             else iface, [qualify_kremlin_private impl]
        else let mutually_defined_with_x = def_ids |> List.filter (fun y -> not (id_eq_lid x y)) in
@@ -200,7 +200,7 @@ let check_initial_interface (iface:list<decl>) =
 
             | Val(x, t) ->  //we have a 'val x' in the interface
               if Util.for_some (is_definition_of x) tl
-              then raise_error (Errors.Fatal_BothValAndLetInInterface, (Util.format2 "'val %s' and 'let %s' cannot both be provided in an interface" (text_of_id x) (text_of_id x))) hd.drange
+              then raise_error (Errors.Fatal_BothValAndLetInInterface, (Util.format2 "'val %s' and 'let %s' cannot both be provided in an interface" (string_of_id x) (string_of_id x))) hd.drange
               else if hd.quals |> List.contains Assumption
               then raise_error (Errors.Fatal_AssumeValInInterface, "Interfaces cannot use `assume val x : t`; just write `val x : t` instead") hd.drange
               else ()

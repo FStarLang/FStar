@@ -72,7 +72,7 @@ let add_opp_r_lemma (a:Type) (cm_add:cm a) (opp:(a -> a)) =
   let ( + ) = cm_add.mult in
   x:a -> Lemma (x + opp x == cm_add.unit)
 
-[@canon_attr]
+[@@canon_attr]
 unopteq
 type cr (a:Type) =
   | CR :
@@ -101,7 +101,7 @@ let distribute_right (#a:Type) (r:cr a) : distribute_right_lemma a r.cm_add r.cm
  * to have a cheap mechanism to make this work without traversing the
  * whole goal.
 **)
-[@canon_attr]
+[@@canon_attr]
 unfold let norm_fully (#a:Type) (x:a) = x
 
 let index: eqtype = nat
@@ -130,7 +130,7 @@ type canonical_sum a =
   | Cons_monom : a -> varlist -> canonical_sum a -> canonical_sum a
   | Cons_varlist : varlist -> canonical_sum a -> canonical_sum a
 
-[@canon_attr]
+[@@canon_attr]
 let rec varlist_lt (x y:varlist) : bool =
   match x, y with
   | Nil_var, Cons_var _ _ -> true
@@ -138,14 +138,14 @@ let rec varlist_lt (x y:varlist) : bool =
     if i < j then true else i = j && varlist_lt xs ys
   | _, _ -> false
 
-[@canon_attr]
+[@@canon_attr]
 val varlist_merge: l1:varlist -> l2:varlist -> Tot varlist (decreases %[l1; l2; 0])
 
-[@canon_attr]
+[@@canon_attr]
 val vm_aux: index -> t1:varlist -> l2:varlist -> Tot varlist (decreases %[t1; l2; 1])
 
 (* Merges two lists of variables, preserving sortedness *)
-[@canon_attr]
+[@@canon_attr]
 let rec varlist_merge l1 l2 =
   match l1, l2 with
   | _, Nil_var -> l1
@@ -166,16 +166,16 @@ and vm_aux v1 t1 l2 =
  * Here it is convenient to fix the universe of [a] in
  * mutually recursive functions.
  *)
-[@canon_attr]
+[@@canon_attr]
 val canonical_sum_merge : #a:eqtype -> cr a
   -> s1:canonical_sum a -> s2:canonical_sum a
   -> Tot (canonical_sum a) (decreases %[s1; s2; 0])
 
-[@canon_attr]
+[@@canon_attr]
 val csm_aux: #a:eqtype -> r:cr a -> c1:a -> l1:varlist -> t1:canonical_sum a
   -> s2:canonical_sum a -> Tot (canonical_sum a) (decreases %[t1; s2; 1])
 
-[@canon_attr]
+[@@canon_attr]
 let rec canonical_sum_merge #a r s1 s2 =
   let aplus = r.cm_add.mult in
   let aone  = r.cm_mult.unit in
@@ -210,7 +210,7 @@ and csm_aux #a r c1 l1 t1 s2 =
 val monom_insert: #a:eqtype -> r:cr a
   -> c1:a -> l1:varlist -> s2:canonical_sum a -> canonical_sum a
 
-[@canon_attr]
+[@@canon_attr]
 let rec monom_insert #a r c1 l1 s2 =
   let aplus = r.cm_add.mult in
   let aone  = r.cm_mult.unit in
@@ -237,7 +237,7 @@ let rec monom_insert #a r c1 l1 s2 =
 (* Inserts a monomial without scalar into a canonical sum *)
 val varlist_insert: #a:eqtype -> cr a -> varlist -> canonical_sum a -> canonical_sum a
 
-[@canon_attr]
+[@@canon_attr]
 let varlist_insert #a r l1 s2 =
   let aone = r.cm_mult.unit in
   monom_insert r aone l1 s2
@@ -245,7 +245,7 @@ let varlist_insert #a r l1 s2 =
 (* Multiplies a sum by a scalar c0 *)
 val canonical_sum_scalar: #a:Type -> cr a -> a -> canonical_sum a -> canonical_sum a
 
-[@canon_attr]
+[@@canon_attr]
 let rec canonical_sum_scalar #a r c0 s =
   let amult = r.cm_mult.mult in
   match s with
@@ -257,7 +257,7 @@ let rec canonical_sum_scalar #a r c0 s =
 val canonical_sum_scalar2: #a:eqtype -> cr a -> varlist
   -> canonical_sum a -> canonical_sum a
 
-[@canon_attr]
+[@@canon_attr]
 let rec canonical_sum_scalar2 #a r l0 s =
   match s with
   | Cons_monom c l t ->
@@ -271,7 +271,7 @@ let rec canonical_sum_scalar2 #a r l0 s =
 val canonical_sum_scalar3: #a:eqtype -> cr a -> a -> varlist
   -> canonical_sum a -> canonical_sum a
 
-[@canon_attr]
+[@@canon_attr]
 let rec canonical_sum_scalar3 #a r c0 l0 s =
   let amult = r.cm_mult.mult in
   match s with
@@ -287,7 +287,7 @@ let rec canonical_sum_scalar3 #a r c0 l0 s =
 val canonical_sum_prod: #a:eqtype -> cr a
   -> canonical_sum a -> canonical_sum a -> canonical_sum a
 
-[@canon_attr]
+[@@canon_attr]
 let rec canonical_sum_prod #a r s1 s2 =
   match s1 with
   | Cons_monom c1 l1 t1 ->
@@ -312,7 +312,7 @@ type spolynomial a =
 (** Canonize a reflected expression *)
 val spolynomial_normalize: #a:eqtype -> cr a -> spolynomial a -> canonical_sum a
 
-[@canon_attr]
+[@@canon_attr]
 let rec spolynomial_normalize #a r p =
   match p with
   | SPvar i -> Cons_varlist (Cons_var i Nil_var) Nil_monom
@@ -328,7 +328,7 @@ let rec spolynomial_normalize #a r p =
 **)
 val canonical_sum_simplify: #a:eqtype -> cr a -> canonical_sum a -> canonical_sum a
 
-[@canon_attr]
+[@@canon_attr]
 let rec canonical_sum_simplify #a r s =
   let azero = r.cm_add.unit in
   let aone  = r.cm_mult.unit in
@@ -349,7 +349,7 @@ let rec canonical_sum_simplify #a r s =
 **)
 val spolynomial_simplify: #a:eqtype -> cr a -> spolynomial a -> canonical_sum a
 
-[@canon_attr]
+[@@canon_attr]
 let spolynomial_simplify #a r p =
   canonical_sum_simplify r
     (spolynomial_normalize r p)
@@ -399,13 +399,13 @@ let quote_vm (#a:Type) (ta: term) (quotea:a -> Tac term) (vm:vmap a) : Tac term 
  * Unbound variables are mapped to the default value according to the map.
  * This would normally never occur, but it makes it easy to prove correctness.
  *)
-[@canon_attr]
+[@@canon_attr]
 let interp_var (#a:Type) (vm:vmap a) (i:index) =
   match List.Tot.assoc i (fst vm) with
   | Some x -> x
   | _ -> snd vm
 
-[@canon_attr]
+[@@canon_attr]
 private
 let rec ivl_aux (#a:Type) (r:cr a) (vm:vmap a) (x:index) (t:varlist)
   : Tot a (decreases t) =
@@ -414,21 +414,21 @@ let rec ivl_aux (#a:Type) (r:cr a) (vm:vmap a) (x:index) (t:varlist)
   | Nil_var -> interp_var vm x
   | Cons_var x' t' -> amult (interp_var vm x) (ivl_aux r vm x' t')
 
-[@canon_attr]
+[@@canon_attr]
 let interp_vl (#a:Type) (r:cr a) (vm:vmap a) (l:varlist) =
   let aone  = r.cm_mult.unit in
   match l with
   | Nil_var -> aone
   | Cons_var x t -> ivl_aux r vm x t
 
-[@canon_attr]
+[@@canon_attr]
 let interp_m (#a:Type) (r:cr a) (vm:vmap a) (c:a) (l:varlist) =
   let amult = r.cm_mult.mult in
   match l with
   | Nil_var -> c
   | Cons_var x t -> amult c (ivl_aux r vm x t)
 
-[@canon_attr]
+[@@canon_attr]
 let rec ics_aux (#a:Type) (r:cr a) (vm:vmap a) (x:a) (s:canonical_sum a)
   : Tot a (decreases s) =
   let aplus = r.cm_add.mult in
@@ -438,7 +438,7 @@ let rec ics_aux (#a:Type) (r:cr a) (vm:vmap a) (x:a) (s:canonical_sum a)
   | Cons_monom c l t -> aplus x (ics_aux r vm (interp_m r vm c l) t)
 
 (** Interpretation of a canonical sum *)
-[@canon_attr]
+[@@canon_attr]
 let interp_cs (#a:Type) (r:cr a) (vm:vmap a) (s:canonical_sum a) : a =
   let azero = r.cm_add.unit in
   match s with
@@ -447,7 +447,7 @@ let interp_cs (#a:Type) (r:cr a) (vm:vmap a) (s:canonical_sum a) : a =
   | Cons_monom c l t -> ics_aux r vm (interp_m r vm c l) t
 
 (** Interpretation of a polynomial *)
-[@canon_attr]
+[@@canon_attr]
 let rec interp_sp (#a:Type) (r:cr a) (vm:vmap a) (p:spolynomial a) : a =
   let aplus = r.cm_add.mult in
   let amult = r.cm_mult.mult in
@@ -1368,7 +1368,7 @@ type polynomial a =
 (** Canonize a reflected expression *)
 val polynomial_normalize: #a:eqtype -> cr a -> polynomial a -> canonical_sum a
 
-[@canon_attr]
+[@@canon_attr]
 let rec polynomial_normalize #a r p =
   match p with
   | Pvar i -> Cons_varlist (Cons_var i Nil_var) Nil_monom
@@ -1382,7 +1382,7 @@ let rec polynomial_normalize #a r p =
 
 val polynomial_simplify: #a:eqtype -> cr a -> polynomial a -> canonical_sum a
 
-[@canon_attr]
+[@@canon_attr]
 let polynomial_simplify #a r p =
   canonical_sum_simplify r
     (polynomial_normalize r p)
@@ -1390,7 +1390,7 @@ let polynomial_simplify #a r p =
 (** Translate to a representation without additive inverses *)
 val spolynomial_of: #a:eqtype -> cr a -> polynomial a -> spolynomial a
 
-[@canon_attr]
+[@@canon_attr]
 let rec spolynomial_of #a r p =
   match p with
   | Pvar i -> SPvar i
@@ -1400,7 +1400,7 @@ let rec spolynomial_of #a r p =
   | Popp p -> SPmult (SPconst (r.opp r.cm_mult.unit)) (spolynomial_of r p)
 
 (** Interpretation of a polynomial *)
-[@canon_attr]
+[@@canon_attr]
 let rec interp_p (#a:Type) (r:cr a) (vm:vmap a) (p:polynomial a) : a =
   let aplus = r.cm_add.mult in
   let amult = r.cm_mult.mult in
@@ -1615,7 +1615,7 @@ let semiring_reflect (#a:eqtype) (r:cr a) (vm:vmap a) (e1 e2:polynomial a) (a1 a
   polynomial_simplify_ok r vm e1;
   polynomial_simplify_ok r vm e2
 
-(* [@plugin] *)
+(* [@@plugin] *)
 (* this is anyway made a plugin by a fixup file *)
 let canon_semiring_aux
     (a: Type) (ta: term) (unquotea: term -> Tac a) (quotea: a -> Tac term)
@@ -1682,7 +1682,7 @@ let canon_semiring (#a:eqtype) (r:cr a) : Tac unit =
 
 ///  Ring of integers
 
-[@canon_attr]
+[@@canon_attr]
 let int_cr : cr int =
   CR int_plus_cm int_multiply_cm op_Minus (fun x -> ()) (fun x y z -> ()) (fun x -> ())
 

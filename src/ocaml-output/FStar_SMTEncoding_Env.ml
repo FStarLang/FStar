@@ -39,7 +39,7 @@ let (mk_term_projector_name :
     fun a  ->
       let uu____263 =
         let uu____265 = FStar_Ident.string_of_lid lid  in
-        let uu____267 = FStar_Ident.text_of_id a.FStar_Syntax_Syntax.ppname
+        let uu____267 = FStar_Ident.string_of_id a.FStar_Syntax_Syntax.ppname
            in
         FStar_Util.format2 "%s_%s" uu____265 uu____267  in
       FStar_All.pipe_left escape uu____263
@@ -244,7 +244,7 @@ let (varops : varops_t) =
     FStar_Util.smap_add top_scope y2 true; y2  in
   let new_var pp rn =
     let uu____1610 =
-      let uu____1612 = FStar_Ident.text_of_id pp  in
+      let uu____1612 = FStar_Ident.string_of_id pp  in
       Prims.op_Hat uu____1612 (Prims.op_Hat "__" (Prims.string_of_int rn))
        in
     FStar_All.pipe_left mk_unique uu____1610  in
@@ -531,8 +531,8 @@ let (lookup_bvar_binding :
   fun env  ->
     fun bv  ->
       let uu____2891 =
-        let uu____2900 = FStar_Ident.text_of_id bv.FStar_Syntax_Syntax.ppname
-           in
+        let uu____2900 =
+          FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname  in
         FStar_Util.psmap_try_find env.bvar_bindings uu____2900  in
       match uu____2891 with
       | FStar_Pervasives_Native.Some bvs ->
@@ -561,7 +561,7 @@ let add_bvar_binding :
   fun bvb  ->
     fun bvbs  ->
       let uu____3023 =
-        FStar_Ident.text_of_id
+        FStar_Ident.string_of_id
           (FStar_Pervasives_Native.fst bvb).FStar_Syntax_Syntax.ppname
          in
       FStar_Util.psmap_modify bvbs uu____3023

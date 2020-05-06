@@ -915,7 +915,7 @@ let sc_typ tcenv sc = // Memoized version of sc_typ
    match !sc.sc_typ with
    | Some t -> t
    | None -> let typ = match try_lookup_lid tcenv sc.sc_lid with
-                       | None -> SS.mk SS.Tm_unknown None Range.dummyRange
+                       | None -> SS.mk SS.Tm_unknown Range.dummyRange
                        | Some ((_, typ), _) -> typ in
              sc.sc_typ := Some typ; typ
 

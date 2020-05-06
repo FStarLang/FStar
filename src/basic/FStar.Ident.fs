@@ -4,23 +4,23 @@ module FStar.Ident
 open Prims
 open FStar.Range
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type ident = {idText:string;
               idRange:Range.range}
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type path = list<string>
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type ipath = list<ident>
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type lident = {ns:ipath; //["FStar"; "Basic"]
                ident:ident;    //"lident"
                nsstr:string; // Cached version of the namespace
                str:string} // Cached version of string_of_lid
 
-// IN F*: [@ PpxDerivingYoJson PpxDerivingShow ]
+// IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type lid = lident
 
 let mk_ident (text,range) = {idText=text; idRange=range}
@@ -47,15 +47,15 @@ let ident_of_lid l = l.ident
 
 let range_of_id (id:ident) = id.idRange
 let id_of_text str = mk_ident(str, dummyRange)
-let text_of_id (id:ident) = id.idText
+let string_of_id (id:ident) = id.idText
 let text_of_path path = Util.concat_l "." path
 let path_of_text text = String.split ['.'] text
-let path_of_ns ns = List.map text_of_id ns
-let path_of_lid lid = List.map text_of_id (lid.ns@[lid.ident])
+let path_of_ns ns = List.map string_of_id ns
+let path_of_lid lid = List.map string_of_id (lid.ns@[lid.ident])
 let ns_of_lid lid = lid.ns
 let ids_of_lid lid = lid.ns@[lid.ident]
 let lid_of_ns_and_id ns id =
-    let nsstr = List.map text_of_id ns |> text_of_path in
+    let nsstr = List.map string_of_id ns |> text_of_path in
     {ns=ns;
      ident=id;
      nsstr=nsstr;
@@ -78,7 +78,7 @@ let lid_add_suffix l s =
     lid_of_path (path@[s]) (range_of_lid l)
 
 let ml_path_of_lid lid =
-    String.concat "_" <| (path_of_ns lid.ns)@[text_of_id lid.ident]
+    String.concat "_" <| (path_of_ns lid.ns)@[string_of_id lid.ident]
 
 let string_of_lid lid = lid.str
 

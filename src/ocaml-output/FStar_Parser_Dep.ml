@@ -298,7 +298,7 @@ let (str_of_parsing_data_elt : parsing_data_elt -> Prims.string) =
         FStar_String.op_Hat "P_dep (" uu____909
     | P_alias (id,lid) ->
         let uu____924 =
-          let uu____926 = FStar_Ident.text_of_id id  in
+          let uu____926 = FStar_Ident.string_of_id id  in
           let uu____928 =
             let uu____930 =
               let uu____932 = FStar_Ident.string_of_lid lid  in
@@ -340,8 +340,8 @@ let (parsing_data_elt_eq :
       | (P_dep (b1,l1),P_dep (b2,l2)) ->
           (b1 = b2) && (FStar_Ident.lid_equals l1 l2)
       | (P_alias (i1,l1),P_alias (i2,l2)) ->
-          (let uu____1018 = FStar_Ident.text_of_id i1  in
-           let uu____1020 = FStar_Ident.text_of_id i2  in
+          (let uu____1018 = FStar_Ident.string_of_id i1  in
+           let uu____1020 = FStar_Ident.string_of_id i2  in
            uu____1018 = uu____1020) && (FStar_Ident.lid_equals l1 l2)
       | (P_lid l1,P_lid l2) -> FStar_Ident.lid_equals l1 l2
       | (P_inline_for_extraction ,P_inline_for_extraction ) -> true
@@ -882,13 +882,14 @@ let (string_of_lid : FStar_Ident.lident -> Prims.bool -> Prims.string) =
         then
           let uu____2807 =
             let uu____2809 = FStar_Ident.ident_of_lid l  in
-            FStar_Ident.text_of_id uu____2809  in
+            FStar_Ident.string_of_id uu____2809  in
           [uu____2807]
         else []  in
       let names =
         let uu____2819 =
           let uu____2823 = FStar_Ident.ns_of_lid l  in
-          FStar_List.map (fun x  -> FStar_Ident.text_of_id x) uu____2823  in
+          FStar_List.map (fun x  -> FStar_Ident.string_of_id x) uu____2823
+           in
         FStar_List.append uu____2819 suffix  in
       FStar_String.concat "." names
   
@@ -903,7 +904,7 @@ let (namespace_of_lid : FStar_Ident.lident -> Prims.string) =
   fun l  ->
     let uu____2854 =
       let uu____2858 = FStar_Ident.ns_of_lid l  in
-      FStar_List.map FStar_Ident.text_of_id uu____2858  in
+      FStar_List.map FStar_Ident.string_of_id uu____2858  in
     FStar_String.concat "_" uu____2854
   
 let (check_module_declaration_against_filename :
@@ -1099,7 +1100,7 @@ let (collect_one :
              in
           let record_module_alias ident lid =
             let key =
-              let uu____3626 = FStar_Ident.text_of_id ident  in
+              let uu____3626 = FStar_Ident.string_of_id ident  in
               FStar_String.lowercase uu____3626  in
             let alias = lowercase_join_longident lid true  in
             let uu____3631 = FStar_Util.smap_try_find original_map1 alias  in
@@ -1457,7 +1458,7 @@ let (collect_one :
              | FStar_Parser_AST.Const c -> collect_constant c
              | FStar_Parser_AST.Op (s,ts) ->
                  ((let uu____4618 =
-                     let uu____4620 = FStar_Ident.text_of_id s  in
+                     let uu____4620 = FStar_Ident.string_of_id s  in
                      uu____4620 = "@"  in
                    if uu____4618
                    then

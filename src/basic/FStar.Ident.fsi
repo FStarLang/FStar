@@ -32,7 +32,7 @@ val set_id_range        : range -> ident -> ident
 val ident_equals        : ident -> ident -> bool
 
 (** Print an ident *)
-val text_of_id          : ident -> string
+val string_of_id        : ident -> string
 
 
 

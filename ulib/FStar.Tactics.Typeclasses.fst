@@ -51,7 +51,7 @@ and trywith (seen:list term) (fuel:int) (t:term) : Tac unit =
     debug ("Trying to apply hypothesis/instance: " ^ term_to_string t);
     (fun () -> apply_noinst t) `seq` (fun () -> tcresolve' seen (fuel-1))
 
-[@plugin]
+[@@plugin]
 let tcresolve () : Tac unit =
     try tcresolve' [] 16
     with
@@ -75,7 +75,7 @@ let rec last (l : list 'a) : Tac 'a =
   | [x] -> x
   | _::xs -> last xs
 
-[@plugin]
+[@@plugin]
 let mk_class (nm:string) : Tac decls =
     let ns = explode_qn nm in
     let r = lookup_typ (top_env ()) ns in

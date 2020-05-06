@@ -15,7 +15,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "a8f3fea0a8bd7dbf9867f7e6ae3c3a82"
+      "85262181a677bfa91d3dd10dc6dd0128"
     ],
     [
       "FStar.DM4F.IntStoreExcFixed._dm4f_INT_STORE_EXC_bind_wp",
@@ -31,7 +31,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "2440a37df762d3407eab2cee5a3c40b4"
+      "8fa103c69f50404e3a6d20cad959feab"
     ],
     [
       "FStar.DM4F.IntStoreExcFixed._dm4f_INT_STORE_EXC___proj__INT_STORE_EXC__item__get_elab",
@@ -40,7 +40,7 @@
       1,
       [ "@query" ],
       0,
-      "6d970a1b53c13898f4943ba36ae9d06b"
+      "decc44e74c79888719249b1e9df43e21"
     ],
     [
       "FStar.DM4F.IntStoreExcFixed._dm4f_INT_STORE_EXC___proj__INT_STORE_EXC__item__put_elab",
@@ -49,7 +49,7 @@
       1,
       [ "@query" ],
       0,
-      "1303b0b341d0d1b3762a04cfcd12c010"
+      "f562fe0095a961c10fe4985d12ce1837"
     ],
     [
       "FStar.DM4F.IntStoreExcFixed._dm4f_INT_STORE_EXC___proj__INT_STORE_EXC__item__raise__elab",
@@ -58,7 +58,7 @@
       1,
       [ "@query" ],
       0,
-      "ee82689889829cfd400d05ec196c1791"
+      "ad3b5888bf4679078b6b776c6f65278f"
     ],
     [
       "FStar.DM4F.IntStoreExcFixed.INT_STORE_EXC",
@@ -67,7 +67,7 @@
       1,
       [ "@query" ],
       0,
-      "057e4a8bfe39aa57c97dcf5b91085652"
+      "46f775809105ff0cb972200ec96632ca"
     ],
     [
       "FStar.DM4F.IntStoreExcFixed.INT_STORE_EXC",
@@ -76,7 +76,7 @@
       1,
       [ "@query" ],
       0,
-      "697da0a82c0a2327887fd3e416cb2a59"
+      "1d6f5a8886f5d5ef94c1ae2dfd57514c"
     ],
     [
       "FStar.DM4F.IntStoreExcFixed.INT_STORE_EXC",
@@ -85,7 +85,7 @@
       1,
       [ "@query" ],
       0,
-      "7aba7dabce6c22ca2c84abe8abe87998"
+      "e22a9b6ca91da23700b79255a5ff9180"
     ],
     [
       "FStar.DM4F.IntStoreExcFixed.raise_",
@@ -101,7 +101,7 @@
         "projection_inverse_FStar.Pervasives.Native.None_a"
       ],
       0,
-      "850692d6113cdc35bfd6bcefa1b43489"
+      "e592f02aeb223ebe9695a6d00b271773"
     ],
     [
       "FStar.DM4F.IntStoreExcFixed.read",
@@ -110,118 +110,7 @@
       1,
       [ "@query" ],
       0,
-      "d8bea846d2e54687b5a5d8c02216a34a"
-    ],
-    [
-      "FStar.DM4F.IntStoreExcFixed.bind_is",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
-      ],
-      0,
-      "4fbbc6bbc15329bf9356f1d033578ca8"
-    ],
-    [
-      "FStar.DM4F.IntStoreExcFixed._dm4f_INT_STORE_EXC_bind_wp",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
-      ],
-      0,
-      "73c59823a5e16d4ef18b9073529113d4"
-    ],
-    [
-      "FStar.DM4F.IntStoreExcFixed._dm4f_INT_STORE_EXC___proj__INT_STORE_EXC__item__get_elab",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f3b85d66f4582cf64f7d7090230c4ac9"
-    ],
-    [
-      "FStar.DM4F.IntStoreExcFixed._dm4f_INT_STORE_EXC___proj__INT_STORE_EXC__item__put_elab",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "9c75db523b0b49a645a71e4b83432ec2"
-    ],
-    [
-      "FStar.DM4F.IntStoreExcFixed._dm4f_INT_STORE_EXC___proj__INT_STORE_EXC__item__raise__elab",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "30f0b832aaa382ad320400a4250eb234"
-    ],
-    [
-      "FStar.DM4F.IntStoreExcFixed.INT_STORE_EXC",
-      4,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "fcb73e0a94e191da9c2a0840bb7c2c20"
-    ],
-    [
-      "FStar.DM4F.IntStoreExcFixed.INT_STORE_EXC",
-      5,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "899973066c893dbf12c81469219ea598"
-    ],
-    [
-      "FStar.DM4F.IntStoreExcFixed.INT_STORE_EXC",
-      6,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "fbab94352637e8fef7a3f975f922c000"
-    ],
-    [
-      "FStar.DM4F.IntStoreExcFixed.raise_",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Pervasives.Native.None",
-        "data_typing_intro_FStar.Pervasives.Native.None@tok",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.None_a"
-      ],
-      0,
-      "2d91d756cf3e806f5adbab313ef95d8a"
-    ],
-    [
-      "FStar.DM4F.IntStoreExcFixed.read",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "9b27ba6278ca6da031d2c9bf28322e03"
+      "04c1e75241d9e6003d5f2db474af6401"
     ]
   ]
 ]
