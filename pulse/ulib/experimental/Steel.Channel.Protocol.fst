@@ -16,7 +16,7 @@
 
 module Steel.Channel.Protocol
 
-[@erasable]
+[@@erasable]
 noeq
 type prot : Type -> Type =
 | Return  : #a:Type -> v:a -> prot a
