@@ -81,3 +81,32 @@ let immutable_pcm (#a: Type u#a) : pcm (option a) = {
   assoc_r = (fun _ _ _ -> ());
   is_unit = (fun _ -> ())
 }
+
+module Univ = FStar.Universe
+
+let unit_pcm' : pcm' u#a (Univ.raise_t u#0 u#a unit) = {
+    composable = (fun _ _ -> True);
+    op = (fun _ _ -> Univ.raise_val u#0 u#a () );
+    one =  Univ.raise_val u#0 u#a ()
+  }
+
+let higher_unit (x: Univ.raise_t u#0 u#a unit) : Lemma (x == Univ.raise_val u#0 u#a ()) =
+  let aux (_ : squash (x =!= Univ.raise_val u#0 u#a ())) : Lemma (False) =
+      let x0 = Univ.downgrade_val u#0 u#a x in
+      assert(x0 == ())
+  in
+  Classical.excluded_middle (x == Univ.raise_val u#0 u#a ());
+  Classical.or_elim
+    #(x == Univ.raise_val u#0 u#a ())
+    #(x =!= Univ.raise_val u#0 u#a ())
+    #(fun _ -> x == Univ.raise_val u#0 u#a ())
+    (fun _ -> ())
+    (fun _ -> aux ())
+
+let unit_pcm : pcm u#a (Univ.raise_t u#0 u#a unit)  = {
+  p = unit_pcm' u#a;
+  comm = (fun _ _  -> ());
+  assoc = (fun _ _ _ -> ());
+  assoc_r = (fun _ _ _ -> ());
+  is_unit = (fun x -> higher_unit x)
+}

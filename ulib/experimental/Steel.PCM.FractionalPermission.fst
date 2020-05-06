@@ -2,19 +2,15 @@ module Steel.PCM.FractionalPermission
 
 open FStar.Real
 open Steel.PCM
+open Steel.PCM.Unitless
 
 #set-options "--fuel 0 --ifuel 1"
 
 [@erasable]
 noeq type perm : Type u#a =
-  | MkPerm: v:real{v >=. 0.0R} -> perm
+  | MkPerm: v:real{v >. 0.0R} -> perm
 
 let perm_one : perm = MkPerm 1.0R
-
-let perm_zero : perm = MkPerm 0.0R
-
-let readable (p: perm) : GTot bool =
-  MkPerm?.v p >. 0.0R
 
 let writeable (p: perm) : GTot bool =
   MkPerm?.v p = 1.0R
@@ -50,16 +46,14 @@ let compose_with_perm
    perm = sum_perm x.perm y.perm
   }
 
-let frac_perm_pcm' (#a: Type u#a) (def: a) : pcm' (with_perm a) = {
-  composable = composable_with_perm;
-  op = compose_with_perm;
-  one = { value = def; perm = perm_zero }
+let frac_perm_pcm' (#a: Type u#a) : unitless_pcm' (with_perm a) = {
+  unitless_composable = composable_with_perm;
+  unitless_op = compose_with_perm;
 }
 
-let frac_perm_pcm (#a: Type u#a) (def: a) : pcm (with_perm a) = {
-  p = frac_perm_pcm' def;
-  comm = (fun _ _ -> admit());
-  assoc = (fun _ _ _ -> admit());
-  assoc_r = (fun _ _ _ -> admit());
-  is_unit = (fun _ -> admit())
+let frac_perm_pcm (#a: Type u#a) : unitless_pcm (with_perm a) = {
+  unitless_p = frac_perm_pcm';
+  unitless_comm = (fun _ _ -> ());
+  unitless_assoc = (fun _ _ _ -> ());
+  unitless_assoc_r = (fun _ _ _ -> ());
 }

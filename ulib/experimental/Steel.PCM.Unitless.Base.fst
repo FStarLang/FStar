@@ -60,9 +60,23 @@ let immutable_unitless_pcm' (#a: Type u#a) : unitless_pcm' a = {
   unitless_op = compose_unitless_immutable;
 }
 
-let immutable_pcm (#a: Type u#a) : unitless_pcm a = {
+let immutable_unitless_pcm (#a: Type u#a) : unitless_pcm a = {
   unitless_p = immutable_unitless_pcm';
   unitless_comm = (fun _ _ -> ());
   unitless_assoc = (fun _ _ _ -> ());
   unitless_assoc_r = (fun _ _ _ -> ());
+}
+
+module Univ = FStar.Universe
+
+let unit_pcm' : unitless_pcm' u#a (Univ.raise_t u#0 u#a unit) = {
+    unitless_composable = (fun _ _ -> True);
+    unitless_op = (fun _ _ -> Univ.raise_val u#0 u#a () )
+  }
+
+let unit_pcm : unitless_pcm u#a (Univ.raise_t u#0 u#a unit)  = {
+  unitless_p = unit_pcm' u#a;
+  unitless_comm = (fun _ _  -> ());
+  unitless_assoc = (fun _ _ _ -> ());
+  unitless_assoc_r = (fun _ _ _ -> ())
 }
