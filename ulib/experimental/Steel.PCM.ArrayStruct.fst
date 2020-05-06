@@ -245,3 +245,149 @@ let array_struct_pcm : pcm u#(a+1) (array_struct u#a) = {
   assoc_r = (fun _ _ _ -> admit());
   is_unit = (fun x -> admit());
 }
+
+////////////////////////////////////////////////////////////////////
+// Examples
+////////////////////////////////////////////////////////////////////
+
+open Steel.PCM.FractionalPermission
+open Steel.PCM.Base
+
+#set-options "--print_implicits --print_universes"
+
+let pointwise_array_pcm
+  (cell_type: Type u#a)
+  (len: usize)
+  (base_pcm: pcm cell_type)
+    : pcm (array_type cell_type len)
+  =
+  let composable_cell (x y: array_type cell_type len) (i:nat{i < v_usize len}) : prop =
+    let xi = Seq.index x i in
+    let yi = Seq.index y i in
+    composable base_pcm xi yi
+  in
+  let composable : symrel (array_type cell_type len) =
+    fun x y -> forall (i:nat{i < v_usize len}). composable_cell x y i
+  in
+  let compose
+    (x: array_type cell_type len)
+    (y: array_type cell_type len{composable x y})
+      : array_type cell_type len
+    =
+    Seq.init (v_usize len) (fun i ->
+      let xi = Seq.index x i in
+      let yi = Seq.index y i in
+      op base_pcm xi yi
+    )
+  in
+  let unit : array_type cell_type len =
+    Seq.init (v_usize len) (fun _ -> base_pcm.p.one)
+  in
+  let pcm' : pcm' (array_type cell_type len) = {
+    composable;
+    op = compose;
+    one = unit;
+  } in
+  {
+    p = pcm';
+    comm = (fun _ _ -> admit());
+    assoc = (fun _ _ _ -> admit());
+    assoc_r = (fun _ _ _ -> admit());
+    is_unit = (fun _ -> admit())
+  }
+
+#push-options "--fuel 2"
+let array_with_frac_perm_on_all_indexes (t: Type u#a) (len: usize) (v: t) : array_struct u#a
+  =
+  ArrayStruct
+    (DArray (DBase (with_perm u#a t)) len)
+    (PArray (with_perm u#a t) len
+      (PBase (with_perm u#a t) (frac_perm_pcm u#a v))
+      (pointwise_array_pcm (with_perm u#a t) len)
+    )
+    (Seq.init u#a (v_usize len) (fun _ -> { value = v; perm = perm_one} ))
+#pop-options
+
+#push-options "--fuel 2"
+let immutable_splittable_array (t: Type u#a) (len: usize) (v: t) : array_struct u#a
+  =
+  ArrayStruct
+    (DArray (DBase (option t)) len)
+    (PArray (option t) len
+       (PBase (option t) immutable_pcm)
+       (pointwise_array_pcm (option t) len)
+    )
+    (Seq.init u#a (v_usize len) (fun _ -> Some v))
+#pop-options
+
+let pointwise_array_pcm_with_prefix_pcm
+  (cell_type: Type u#a)
+  (len: usize)
+  (prefix_len:nat{prefix_len < v_usize len})
+  (prefix_pcm: pcm cell_type)
+  (base_pcm: pcm cell_type)
+    : pcm (array_type cell_type len)
+  =
+  let composable_cell (x y: array_type cell_type len) (i:nat{i < v_usize len}) : prop =
+    let xi = Seq.index x i in
+    let yi = Seq.index y i in
+    if i < prefix_len then
+      composable prefix_pcm xi yi
+    else
+      composable base_pcm xi yi
+  in
+  let composable_array : symrel (array_type cell_type len) =
+    fun x y -> forall (i:nat{i < v_usize len}). composable_cell x y i
+  in
+  let compose
+    (x: array_type cell_type len)
+    (y: array_type cell_type len{composable_array x y})
+      : array_type cell_type len
+    =
+    Seq.init (v_usize len) (fun i ->
+      let xi = Seq.index x i in
+      let yi = Seq.index y i in
+      if i < prefix_len then begin
+        assume(composable prefix_pcm xi yi);
+        op prefix_pcm xi yi
+      end else
+        op base_pcm xi yi
+    )
+  in
+  let unit : array_type cell_type len =
+    Seq.init (v_usize len) (fun i ->
+       if i < prefix_len then
+         prefix_pcm.p.one
+       else
+        base_pcm.p.one
+    )
+  in
+  let pcm' : pcm' (array_type cell_type len) = {
+    composable = composable_array;
+    op = compose;
+    one = unit;
+  } in
+  {
+    p = pcm';
+    comm = (fun _ _ -> admit());
+    assoc = (fun _ _ _ -> admit());
+    assoc_r = (fun _ _ _ -> admit());
+    is_unit = (fun _ -> admit())
+  }
+
+#push-options "--fuel 2"
+let array_with_frac_perms_and_freezable_prefix
+  (t: Type u#a)
+  (len: usize)
+  (prefix_len: usize)
+  (v: t)
+    : array_struct u#a
+  =
+  ArrayStruct
+    (DArray (DBase (with_perm u#a t)) len)
+    (PArray (with_perm u#a t) len
+      (PBase (with_perm u#a t) (frac_perm_pcm u#a v))
+      (pointwise_array_pcm_wi (with_perm u#a t) len)
+    )
+    (Seq.init u#a (v_usize len) (fun _ -> { value = v; perm = perm_one} ))
+#pop-options
