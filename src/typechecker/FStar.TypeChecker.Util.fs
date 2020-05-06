@@ -121,7 +121,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
                 then U.ml_comp t r
                 else S.mk_Total t //let rec without annotations default to Tot, except if --MLish
               | Inr c -> c in
-          let t = S.mk (Tm_arrow(bs, c)) None c.pos in
+          let t = S.mk (Tm_arrow(bs, c)) c.pos in
           if debug env Options.High
           then BU.print2 "(%s) Using type %s\n"
                     (Range.string_of_range r) (Print.term_to_string t);
@@ -220,7 +220,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 //    aux p exp
 
  let rec decorated_pattern_as_term (pat:pat) : list<bv> * term =
-    let mk f : term = mk f None pat.p in
+    let mk f : term = mk f pat.p in
 
     let pat_as_arg (p, i) =
         let vars, te = decorated_pattern_as_term p in
@@ -294,7 +294,6 @@ let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.ra
   let wp = mk_Tm_app
     (inst_effect_fun_with [u_a] env ed ret_wp)
     [S.as_arg a; S.as_arg e]
-    None
     r in
   mk_comp ed u_a a wp [RETURN]
 
@@ -500,7 +499,7 @@ let is_function t = match (compress t).n with
     | _ -> false
 
 let label reason r f : term =
-    mk (Tm_meta(f, Meta_labeled(reason, r, false))) None f.pos
+    mk (Tm_meta(f, Meta_labeled(reason, r, false))) f.pos
 
 let label_opt env reason r f = match reason with
     | None -> f
@@ -525,7 +524,7 @@ let close_wp_comp env bvs (c:comp) =
                   let bs = [mk_binder x] in
                   let us = u_res::[env.universe_of env x.sort] in
                   let wp = U.abs bs wp (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) in
-                  mk_Tm_app (inst_effect_fun_with us env md close) [S.as_arg res_t; S.as_arg x.sort; S.as_arg wp] None wp0.pos)
+                  mk_Tm_app (inst_effect_fun_with us env md close) [S.as_arg res_t; S.as_arg x.sort; S.as_arg wp] wp0.pos)
               bvs wp0 in
             let c = Env.unfold_effect_abbrev env c in
             let u_res_t, res_t, wp = destruct_wp_comp c in
@@ -604,7 +603,6 @@ let return_value env u_t_opt t v =
                             env
                             (mk_Tm_app (inst_effect_fun_with [u_t] env m ret_wp)
                                        [S.as_arg t; S.as_arg v]
-                                       None
                                        v.pos) in
          mk_comp m u_t t wp [RETURN]
   in
@@ -769,7 +767,7 @@ let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) (flag
     //we know it's total; indicate for the normalizer reduce it by adding  the TOTAL flag
     U.abs bs wp (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL]))
   in
-  let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) None r1 in
+  let r1 = S.mk (S.Tm_constant (FStar.Const.Const_range r1)) r1 in
   let wp_args = [
     S.as_arg r1;
     S.as_arg t1;
@@ -778,7 +776,7 @@ let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) (flag
     S.as_arg (mk_lam wp2)]
   in
   let bind_wp = md |> U.get_bind_vc_combinator in
-  let wp = mk_Tm_app  (inst_effect_fun_with [u_t1;u_t2] env md bind_wp) wp_args None t2.pos in
+  let wp = mk_Tm_app (inst_effect_fun_with [u_t1;u_t2] env md bind_wp) wp_args t2.pos in
   mk_comp md u_t2 t2 wp flags
 
 let mk_bind env (c1:comp) (b:option<bv>) (c2:comp) (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
@@ -848,7 +846,6 @@ let weaken_comp env (c:comp) (formula:term) : comp * guard_t =
        let pure_assume_wp = mk_Tm_app
          pure_assume_wp
          [ S.as_arg <| formula ]
-         None
          (Env.get_range env)
        in
          
@@ -889,7 +886,6 @@ let strengthen_comp env (reason:option<(unit -> string)>) (c:comp) (f:formula) f
          let pure_assert_wp = mk_Tm_app
            pure_assert_wp
            [ S.as_arg <| label_opt env reason r f ]
-           None
            r
          in
 
@@ -1127,7 +1123,6 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 let trivial = md_pure_or_ghost |> U.get_wp_trivial_combinator |> must in
                 let vc1 = mk_Tm_app (inst_effect_fun_with [u1] env md_pure_or_ghost trivial)
                                     [S.as_arg t1; S.as_arg wp1]
-                                    None
                                     r1
                 in
                 let c, g_s = strengthen_comp env None c2 vc1 bind_flags in
@@ -1426,8 +1421,23 @@ let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:ty
   let _, _, wp_e = destruct_wp_comp ct2 in
   let wp = mk_Tm_app (inst_effect_fun_with [u_a] env ed if_then_else)
     [S.as_arg a; S.as_arg p; S.as_arg wp_t; S.as_arg wp_e]
-    None (Range.union_ranges wp_t.pos wp_e.pos) in
+    (Range.union_ranges wp_t.pos wp_e.pos) in
   mk_comp ed u_a a wp [], Env.trivial_guard
+
+(*
+ * PURE<u> t (fun _ -> False)
+ *
+ * This is the comp type for a match with no cases (used in bind_cases)
+ *)
+let comp_pure_wp_false env (u:universe) (t:typ) =
+  let post_k = U.arrow [null_binder t] (S.mk_Total U.ktype0) in
+  let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
+  let post   = S.new_bv None post_k in
+  let wp     = U.abs [S.mk_binder post]
+               (fvar_const env C.false_lid)
+               (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) in
+  let md     = Env.get_effect_decl env C.effect_PURE_lid in
+  mk_comp md u t wp []
 
 let bind_cases env0 (res_t:typ)
   (lcases:list<(formula * lident * list<cflag> * (bool -> lcomp))>)
@@ -1451,15 +1461,6 @@ let bind_cases env0 (res_t:typ)
         then
              lax_mk_tot_or_comp_l eff u_res_t res_t [], Env.trivial_guard
         else begin
-            let default_case =
-                let post_k = U.arrow [null_binder res_t] (S.mk_Total U.ktype0) in
-                let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
-                let post   = S.new_bv None post_k in
-                let wp     = U.abs [mk_binder post]
-                                   (label Err.exhaustiveness_check (Env.get_range env) <| fvar_const env C.false_lid)
-                                   (Some (U.mk_residual_comp C.effect_Tot_lid None [TOTAL])) in
-                let md     = Env.get_effect_decl env C.effect_PURE_lid in
-                mk_comp md u_res_t res_t wp [] in
             let maybe_return eff_label_then cthen =
                if should_not_inline_whole_match
                || not (is_pure_or_ghost_effect env eff)
@@ -1470,53 +1471,106 @@ let bind_cases env0 (res_t:typ)
             (*
              * The formula in each of the branches of lcases is the branch condition of *just* that branch,
              *   e.g. match e with | C -> ... | D -> ...
-             *     the formula in the two branches is is_C e and is_D e
+             *        the formula in the two branches is is_C e and is_D e
              *
-             * branch_conditions below builds a list where the formulas are composite
-             *   and include the negation of previous branches, e.g.
-             *   is_C e and (not (is_C e) /\ is_D e)
+             * neg_branch_conds builds a list where the formulas are negation of
+             *   all the previous branches
              *
-             * these will be used to weaken the lift guards when combining the branches
+             * In the example, neg_branch_conds would be:
+             *   [True; not (is_C e); not (is_C e) /\ not (is_D e)]
+             *   thus, the length of the list is one more than lcases
              *
-             *   (we need it because the braches are combined using fold_right)
+             * The last element of the list becomes the branch condition for the
+             *   unreachable branch (will be used to check pattern exhaustiveness)
              *
-             * note that we don't need to build these just to combine cases because the shape of if_then_else
+             * The rest of the list will be used to weaken the lift guards when combining the branches (for layered effects, lift guards can be non-trivial)
+             *
+             * note that we don't need to this just to combine cases because the shape of if_then_else
              *   (p ==> ...) /\ (not p ==> ...) takes care of it
              *)
-            let branch_conditions =
+            let neg_branch_conds, exhaustiveness_branch_cond =
               lcases
               |> List.map (fun (g, _, _, _) -> g)
               |> List.fold_left (fun (conds, acc) g ->
                   let cond = U.mk_conj acc (U.mk_neg g) in
                   (conds@[cond]), cond) ([U.t_true], U.t_true)
               |> fst
-              |> List.splitAt (List.length lcases)
-              |> fst in
+              |> (fun l -> List.splitAt (List.length l - 1) l)  //the length of the list is at least 1
+              |> (fun (l1, l2) -> l1, List.hd l2) in
 
-            //let default_case, g_comp = weaken_comp env default_case default_branch_condition in
 
-            let md, comp, g_comp = List.fold_right2 (fun (g, eff_label, _, cthen) bcond (_, celse, g_comp) ->
-                let cthen, gthen = TcComm.lcomp_comp (maybe_return eff_label cthen) in
-                let gthen = TcComm.weaken_guard_formula gthen (U.mk_conj bcond g) in
-                let md, ct_then, ct_else, g_lift_then, g_lift_else =
-                  let m, cthen, celse, g_lift_then, g_lift_else =
-                    lift_comps_sep_guards env cthen celse None false in
-                  let md = Env.get_effect_decl env m in
-                  md, cthen |> U.comp_to_comp_typ, celse |> U.comp_to_comp_typ, g_lift_then, g_lift_else in
-                let fn =
-                  if md |> U.is_layered then mk_layered_conjunction
-                  else mk_non_layered_conjunction in
+            let md, comp, g_comp =
+              match lcases with
+              | [] -> None, comp_pure_wp_false env u_res_t res_t, Env.trivial_guard
+              | _ ->
+                (*
+                 * We will now compute the VC with a fold_right2 over lcases
+                 *   and neg_branch_conds
+                 * Split the last element of lcases (and branch conditions)
+                 *   to form the base case
+                 *)
 
-                //weaken the lift guards
-                let g_lift_then = TcComm.weaken_guard_formula g_lift_then (U.mk_conj bcond g) in
-                let g_lift_else = TcComm.weaken_guard_formula g_lift_else (U.mk_conj bcond (U.mk_neg g)) in                
-                let g_lift = Env.conj_guard g_lift_then g_lift_else in
+                let lcases, neg_branch_conds, md, comp, g_comp =
+                  let neg_branch_conds, neg_last =
+                    neg_branch_conds
+                    |> List.splitAt (List.length lcases - 1)
+                    |> (fun (l1, l2) -> l1, List.hd l2) in
+                  
+                  let lcases, (g_last, eff_last, _, c_last) =
+                    lcases
+                    |> List.splitAt (List.length lcases - 1)
+                    |> (fun (l1, l2) -> l1, List.hd l2) in
 
-                let c, g_conjunction = fn env md u_res_t res_t g ct_then ct_else (Env.get_range env) in
-                Some md,
-                c,
-                Env.conj_guards [g_comp; gthen; g_lift; g_conjunction]
-            ) lcases branch_conditions (None, default_case, Env.trivial_guard) in
+                  let c, g =
+                    let lc = maybe_return eff_last c_last in
+                    let c, g = TcComm.lcomp_comp lc in
+                    c, TcComm.weaken_guard_formula g (U.mk_conj g_last neg_last) in
+
+                  lcases,
+                  neg_branch_conds,
+                  eff_last |> Env.norm_eff_name env |> Env.get_effect_decl env,
+                  c, g in
+
+                List.fold_right2 (fun (g, eff_label, _, cthen) neg_cond (_, celse, g_comp) ->
+                  let cthen, g_then = TcComm.lcomp_comp (maybe_return eff_label cthen) in
+                  //lift both the branches
+                  //separate guards so that we can weaken them appropriately later
+                  let md, ct_then, ct_else, g_lift_then, g_lift_else =
+                    let m, cthen, celse, g_lift_then, g_lift_else =
+                      lift_comps_sep_guards env cthen celse None false in
+                    let md = Env.get_effect_decl env m in
+                    md,
+                    cthen |> U.comp_to_comp_typ, celse |> U.comp_to_comp_typ,
+                    g_lift_then, g_lift_else in
+
+                  //function to apply the if-then-else combinator
+                  let fn =
+                    if md |> U.is_layered then mk_layered_conjunction
+                    else mk_non_layered_conjunction in
+
+                  let c, g_conjunction = fn env md u_res_t res_t g ct_then ct_else (Env.get_range env) in
+
+                  //weaken the then and else guards
+                  //neg_cond is the negated branch condition upto this branch
+                  let g_then = TcComm.weaken_guard_formula
+                    (Env.conj_guard g_then g_lift_then)
+                    (U.mk_conj neg_cond g) in
+                  let g_else = TcComm.weaken_guard_formula
+                    g_lift_else
+                    (U.mk_conj neg_cond (U.mk_neg g)) in                
+
+                  Some md,
+                  c,
+                  Env.conj_guards [g_comp; g_then; g_else; g_conjunction]
+                ) lcases neg_branch_conds (Some md, comp, g_comp) in
+
+            //strengthen comp with the exhaustiveness check
+            let comp, g_comp =
+              let c, g =
+                let check = U.mk_imp exhaustiveness_branch_cond U.t_false in
+                let check = label Err.exhaustiveness_check (Env.get_range env) check   in
+                strengthen_comp env None comp check bind_cases_flags in
+              c, Env.conj_guard g_comp g in
 
             //close g_comp with the scrutinee bv
             let g_comp = Env.close_guard env0 [scrutinee |> S.mk_binder] g_comp in
@@ -1533,7 +1587,6 @@ let bind_cases env0 (res_t:typ)
                 let ite_wp = md |> U.get_wp_ite_combinator |> must in
                 let wp = mk_Tm_app (inst_effect_fun_with [u_res_t] env md ite_wp)
                                    [S.as_arg res_t; S.as_arg wp]
-                                   None
                                    wp.pos in
                 mk_comp md u_res_t res_t wp bind_cases_flags, g_comp
         end
@@ -1580,7 +1633,6 @@ let check_trivial_precondition env c =
   let vc = mk_Tm_app
     (inst_effect_fun_with [u_t] env md (md |> U.get_wp_trivial_combinator |> must))
     [S.as_arg t; S.as_arg wp]
-    None
     (Env.get_range env)
   in
 
@@ -1601,7 +1653,7 @@ let coerce_with (env:Env.env)
         let coercion = S.mk_Tm_uinst coercion us in
         let coercion = U.mk_app coercion eargs in
         let lc = bind e.pos env (Some e) lc (None, TcComm.lcomp_of_comp <| mkcomp ty) in
-        let e = mk_Tm_app coercion [S.as_arg e] None e.pos in
+        let e = mk_Tm_app coercion [S.as_arg e] e.pos in
         e, lc
     | None ->
         Errors.log_issue e.pos (Errors.Warning_CoercionNotFound,
@@ -1871,7 +1923,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                           let xexp = S.bv_to_name x in
                           let cret = return_value env u_t_opt t xexp in
                           let guard = if apply_guard
-                                      then mk_Tm_app f [S.as_arg xexp] None f.pos
+                                      then mk_Tm_app f [S.as_arg xexp] f.pos
                                       else f
                           in
                           let eq_ret, _trivial_so_ok_to_discard =
@@ -1901,7 +1953,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
 let pure_or_ghost_pre_and_post env comp =
     let mk_post_type res_t ens =
         let x = S.new_bv None res_t in
-        U.refine x (S.mk_Tm_app ens [S.as_arg (S.bv_to_name x)] None res_t.pos) in
+        U.refine x (S.mk_Tm_app ens [S.as_arg (S.bv_to_name x)] res_t.pos) in
     let norm t = Normalize.normalize [Env.Beta;Env.Eager_unfolding;Env.EraseUniverses] env t in
     if U.is_tot_or_gtot_comp comp
     then None, U.comp_result comp
@@ -1925,8 +1977,8 @@ let pure_or_ghost_pre_and_post env comp =
                               let r = ct.result_typ.pos in
                               let as_req = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_requires r) delta_equational None) us_r in
                               let as_ens = S.mk_Tm_uinst (S.fvar (Ident.set_lid_range C.as_ensures r) delta_equational None) us_e in
-                              let req = mk_Tm_app as_req [(ct.result_typ, Some S.imp_tag); S.as_arg wp] None ct.result_typ.pos in
-                              let ens = mk_Tm_app as_ens [(ct.result_typ, Some S.imp_tag); S.as_arg wp] None ct.result_typ.pos in
+                              let req = mk_Tm_app as_req [(ct.result_typ, Some S.imp_tag); S.as_arg wp] ct.result_typ.pos in
+                              let ens = mk_Tm_app as_ens [(ct.result_typ, Some S.imp_tag); S.as_arg wp] ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)
                             | _ -> failwith "Impossible"
                   end
@@ -1948,7 +2000,7 @@ let reify_body (env:Env.env) (steps:Env.steps) (t:S.term) : S.term =
     tm'
 
 let reify_body_with_arg (env:Env.env) (steps:Env.steps) (head:S.term) (arg:S.arg): S.term =
-    let tm = S.mk (S.Tm_app(head, [arg])) None head.pos in
+    let tm = S.mk (S.Tm_app(head, [arg])) head.pos in
     let tm' = N.normalize
       ([Env.Beta; Env.Reify; Env.Eager_unfolding; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.Exclude Env.Zeta]@steps)
       env tm in
@@ -2070,7 +2122,7 @@ let maybe_instantiate (env:Env.env) e t =
                     | [] -> U.comp_result c
                     | _ -> U.arrow bs c in
                   let t = SS.subst subst t in
-                  let e = S.mk_Tm_app e args None e.pos in
+                  let e = S.mk_Tm_app e args e.pos in
                   e, t, guard
               end
 
@@ -2108,9 +2160,9 @@ let gather_free_univnames env t : list<univ_name> =
     let univnames = BU.set_difference tm_univnames ctx_univnames |> BU.set_elements in
     // BU.print4 "Closing universe variables in term %s : %s in ctx, %s in tm, %s globally\n"
     //     (Print.term_to_string t)
-    //     (Print.set_to_string Ident.text_of_id ctx_univnames)
-    //     (Print.set_to_string Ident.text_of_id tm_univnames)
-    //     (Print.list_to_string Ident.text_of_id univnames);
+    //     (Print.set_to_string Ident.string_of_id ctx_univnames)
+    //     (Print.set_to_string Ident.string_of_id tm_univnames)
+    //     (Print.list_to_string Ident.string_of_id univnames);
     univnames
 
 let check_universe_generalization
@@ -2284,7 +2336,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                 then let tvar_args = List.map (fun (x, _) -> S.iarg (S.bv_to_name x)) gen_tvars in
                      let instantiate_lbname_with_app tm fv =
                         if S.fv_eq fv (right lbname)
-                        then S.mk_Tm_app tm tvar_args None tm.pos
+                        then S.mk_Tm_app tm tvar_args tm.pos
                         else tm
                     in FStar.Syntax.InstFV.inst instantiate_lbname_with_app e
                 else e
@@ -2454,7 +2506,7 @@ let maybe_add_implicit_binders (env:env) (bs:binders)  : binders =
                         | None -> bs
                         | Some ([], _, _) -> bs //no implicits
                         | Some (imps, _,  _) ->
-                          if imps |> BU.for_all (fun (x, _) -> BU.starts_with (text_of_id x.ppname) "'")
+                          if imps |> BU.for_all (fun (x, _) -> BU.starts_with (string_of_id x.ppname) "'")
                           then let r = pos bs in
                                let imps = imps |> List.map (fun (x, i) -> (S.set_range_of_bv x r, i)) in
                                imps@bs //we have a prefix of ticked variables
@@ -2472,7 +2524,7 @@ let maybe_lift env e c1 c2 t =
     || (U.is_pure_effect c1 && U.is_ghost_effect c2)
     || (U.is_pure_effect c2 && U.is_ghost_effect c1)
     then e
-    else mk (Tm_meta(e, Meta_monadic_lift(m1, m2, t))) None e.pos
+    else mk (Tm_meta(e, Meta_monadic_lift(m1, m2, t))) e.pos
 
 let maybe_monadic env e c t =
     let m = Env.norm_eff_name env c in
@@ -2480,7 +2532,7 @@ let maybe_monadic env e c t =
     || Ident.lid_equals m C.effect_Tot_lid
     || Ident.lid_equals m C.effect_GTot_lid //for the cases in prims where Pure is not yet defined
     then e
-    else mk (Tm_meta(e, Meta_monadic (m, t))) None e.pos
+    else mk (Tm_meta(e, Meta_monadic (m, t))) e.pos
 
 let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s
 
@@ -2502,7 +2554,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
   // [Inline] triggers a "Impossible: locally nameless" error // FIXME: Doc?
   let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ])) in
   {sig_ctx with sigquals=[ Unfold_for_unification_and_vcgen ]},
-  mk (Tm_fvar fv) None Range.dummyRange
+  mk (Tm_fvar fv) Range.dummyRange
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2739,13 +2791,13 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
             result_typ = a_tm;
             effect_args = List.map S.as_arg is;
             flags = [] }) in
-          S.mk (Tm_arrow ([S.null_binder S.t_unit], eff_c)) None r
+          S.mk (Tm_arrow ([S.null_binder S.t_unit], eff_c)) r
         | Some repr_ts ->
           let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
           S.mk_Tm_app
             repr
             (List.map S.as_arg (a_tm::is))
-            None r), g
+            r), g
      | _ -> fail signature)
   | _ -> fail signature
 
@@ -2883,7 +2935,7 @@ let lift_tf_layered_effect_term env (sub:sub_eff)
           (Print.tscheme_to_string lift_t)) (snd lift_t).pos in
 
   let args = (S.as_arg a)::((rest_bs |> List.map (fun _ -> S.as_arg S.unit_const))@[S.as_arg e]) in
-  mk (Tm_app (lift, args)) None e.pos
+  mk (Tm_app (lift, args)) e.pos
 
 let get_field_projector_name env datacon index =
   let _, t = Env.lookup_datacon env datacon in
@@ -2916,13 +2968,13 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
       S.mk_Comp ({ ct with
         effect_name = sub.target;
         effect_args =
-          [mk (Tm_app (lift_t, [as_arg ct.result_typ; wp])) None (fst wp).pos |> S.as_arg]
+          [mk (Tm_app (lift_t, [as_arg ct.result_typ; wp])) (fst wp).pos |> S.as_arg]
       }), TcComm.trivial_guard
     in
 
     let mk_mlift_term ts u r e =
       let _, lift_t = inst_tscheme_with ts [u] in
-      mk (Tm_app (lift_t, [as_arg r; as_arg S.tun; as_arg e])) None e.pos
+      mk (Tm_app (lift_t, [as_arg r; as_arg S.tun; as_arg e])) e.pos
     in
 
     ({ mlift_wp = sub.lift_wp |> must |> mk_mlift_wp;

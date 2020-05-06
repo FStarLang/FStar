@@ -51,57 +51,6 @@
       ],
       0,
       "7d81c0cb63a3e4000693a5f3ec9e1b83"
-    ],
-    [
-      "CalcImpl.test",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "d89e4ea8ca17f404d1023237272e6f40"
-    ],
-    [
-      "CalcImpl.test3",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_CalcImpl.any",
-        "equation_Prims.logical", "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "a75ad28cd749d331faf5321d7c7714e5"
-    ],
-    [
-      "CalcImpl.test4",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_CalcImpl.any",
-        "equation_Prims.logical", "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "b4a90569af77aca7c7cd63bc8c95190b"
-    ],
-    [
-      "CalcImpl.test5",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_CalcImpl.op_Equals_Equals_Greater",
-        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "0a1cf80e2e78f4543d80a638ec3e8ff7"
     ]
   ]
 ]

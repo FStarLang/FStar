@@ -228,7 +228,7 @@
         "subterm_ordering_Ex07c.ELet"
       ],
       0,
-      "feead7b64d1ab2dd31392416e1485de2"
+      "607320baf267a11202355478e054a67b"
     ],
     [
       "Ex07c.step",
@@ -250,7 +250,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "0b7a336c3fd6778d8dee45ff9e3d1d96"
+      "23f81255f6475f13093bedccbe741087"
     ],
     [
       "Ex07c.typing",
@@ -277,7 +277,7 @@
         "typing_tok_Ex07c.TBool@tok"
       ],
       0,
-      "a6a926ee28b929bf8480f80e22591efa"
+      "4caae39217c485d445e43ce1bd18bff3"
     ],
     [
       "Ex07c.progress",
@@ -294,7 +294,9 @@
         "Ex07c_pretyping_92b24ade2624a8307d6221bab881006c",
         "binder_x_92b24ade2624a8307d6221bab881006c_0", "bool_inversion",
         "constructor_distinct_Ex07c.EAbs", "constructor_distinct_Ex07c.EApp",
+        "constructor_distinct_Ex07c.EFalse",
         "constructor_distinct_Ex07c.EIf", "constructor_distinct_Ex07c.ELet",
+        "constructor_distinct_Ex07c.ETrue",
         "constructor_distinct_Ex07c.EVar",
         "constructor_distinct_Ex07c.TArrow",
         "constructor_distinct_Ex07c.TBool",
@@ -307,6 +309,7 @@
         "disc_equation_Ex07c.EVar",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
+        "equality_tok_Ex07c.EFalse@tok", "equality_tok_Ex07c.ETrue@tok",
         "equality_tok_Ex07c.TBool@tok", "equation_Ex07c.empty",
         "equation_Ex07c.is_value",
         "equation_with_fuel_Ex07c.step.fuel_instrumented",
@@ -335,6 +338,8 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__2",
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
+        "projection_inverse_FStar.Pervasives.Native.None_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "subterm_ordering_Ex07c.EAbs", "subterm_ordering_Ex07c.EApp",
         "subterm_ordering_Ex07c.EIf", "subterm_ordering_Ex07c.ELet",
@@ -343,10 +348,11 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1",
         "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some",
+        "typing_tok_Ex07c.EFalse@tok", "typing_tok_Ex07c.ETrue@tok",
         "typing_tok_Ex07c.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "160b6abd82bd8f62e87b98278763d159"
+      "8787070f649b99433f85508bd4abc59e"
     ],
     [
       "Ex07c.appears_free_in",
@@ -373,7 +379,7 @@
         "subterm_ordering_Ex07c.ELet"
       ],
       0,
-      "7369f6deeb18bbcc95636c08fc9c0873"
+      "fbd67986a3ba4239222fa63533ce60a5"
     ],
     [
       "Ex07c.free_in_context",
@@ -444,7 +450,7 @@
         "typing_tok_Ex07c.TBool@tok"
       ],
       0,
-      "252a2145e96e3b46474f6806b98e3d2c"
+      "4c8f19a18187c4d751b2b7b1c3f44bbf"
     ],
     [
       "Ex07c.typable_empty_closed",
@@ -557,7 +563,7 @@
         "typing_tok_Ex07c.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "b116c1795d79d6764464d8986aed5d2f"
+      "c5b6e9ef62812ce1bf5839856ec6aef8"
     ],
     [
       "Ex07c.typing_extensional",
@@ -677,7 +683,7 @@
         "typing_tok_Ex07c.TBool@tok", "unit_typing"
       ],
       0,
-      "86641bdef9186e27e5492c089f90c8e0"
+      "c09ec10b13bd4bc6c7d33b3f43ab42f7"
     ],
     [
       "Ex07c.preservation",
@@ -769,7 +775,7 @@
         "typing_tok_Ex07c.TBool@tok"
       ],
       0,
-      "8eb2324b7719bc87c26bb76de00ce156"
+      "4b2d9c1875dcc7b8360e4472d8ed089d"
     ],
     [
       "Ex07c.ty",
@@ -992,7 +998,7 @@
         "subterm_ordering_Ex07c.EIf", "subterm_ordering_Ex07c.ELet"
       ],
       0,
-      "4d0cf2e1b5e133bc3497e32b46e6f5f0"
+      "6339816ceab6fc591bfc17be3438e9ed"
     ],
     [
       "Ex07c.step",
@@ -1013,7 +1019,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "10ff7eeb6dbd5fde756187ceeee4e01f"
+      "83d6fd7fa9b9d41e3f5adcae3b00c63b"
     ],
     [
       "Ex07c.typing",
@@ -1040,7 +1046,7 @@
         "typing_tok_Ex07c.TBool@tok"
       ],
       0,
-      "8373710981817f0a982803eae0ed482e"
+      "97da16b646b5524b435453a9937bd87c"
     ],
     [
       "Ex07c.appears_free_in",
@@ -1060,7 +1066,7 @@
         "subterm_ordering_Ex07c.EIf", "subterm_ordering_Ex07c.ELet"
       ],
       0,
-      "a89a4d0640df220e03999a29806d7d1d"
+      "c2c64b5db9c3d46639a0bf85c04760b6"
     ],
     [
       "Ex07c.equal",

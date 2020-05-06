@@ -134,7 +134,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                   //the type of each datacon is already a function with the type params as arguments
                   //need to map the prefix of bs corresponding to params to the tps of the inductive
                   let _, bs' = BU.first_N ntps bs in
-                  let t = mk (Tm_arrow(bs', res)) None t.pos in
+                  let t = mk (Tm_arrow(bs', res)) t.pos in
                   let subst = tps |> List.mapi (fun i (x, _) -> DB(ntps - (1 + i), x)) in
 (*open*)          let bs, c = U.arrow_formals_comp (SS.subst subst t) in
                   (* check that c is a Tot computation, reject it otherwise
@@ -154,7 +154,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                 (Print.term_to_string result);
 
          let arguments, env', us = tc_tparams env arguments in
-         let type_u_tc = S.mk (Tm_type u_tc) None result.pos in
+         let type_u_tc = S.mk (Tm_type u_tc) result.pos in
          let env' = Env.set_expected_typ env' type_u_tc in
          let result, res_lcomp = tc_trivial_guard env' result in
          let head, args = U.head_and_args result in
@@ -190,7 +190,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
               if List.length _uvs = List.length tuvs then
                 List.fold_left2 (fun g u1 u2 ->
                   //unify the two
-                  Env.conj_guard g (Rel.teq env' (mk (Tm_type u1) None Range.dummyRange) (mk (Tm_type (U_name u2)) None Range.dummyRange))
+                  Env.conj_guard g (Rel.teq env' (mk (Tm_type u1) Range.dummyRange) (mk (Tm_type (U_name u2)) Range.dummyRange))
                 ) Env.trivial_guard tuvs _uvs
               else Errors.raise_error (Errors.Fatal_UnexpectedConstructorType,
                                        "Length of annotated universes does not match inferred universes")
@@ -235,7 +235,7 @@ let generalize_and_inst_within (env:env_t) (tcs:list<(sigelt * universe)>) (data
         let (uvs, t) = TcUtil.generalize_universes env t in
         if Env.debug env <| Options.Other "GenUniverses"
         then BU.print2 "@@@@@@Generalized to (%s, %s)\n"
-                            (uvs |> List.map (fun u -> (text_of_id u)) |> String.concat ", ")
+                            (uvs |> List.map (fun u -> (string_of_id u)) |> String.concat ", ")
                             (Print.term_to_string t);
         //Now, (uvs, t) is the generalized type scheme for all the inductives and their data constuctors
 
@@ -252,7 +252,7 @@ let generalize_and_inst_within (env:env_t) (tcs:list<(sigelt * universe)>) (data
                   let tps, rest = BU.first_N (List.length tps) binders in
                   let t = match rest with
                     | [] -> U.comp_result c
-                    | _ -> mk (Tm_arrow(rest, c)) None x.sort.pos
+                    | _ -> mk (Tm_arrow(rest, c)) x.sort.pos
                   in
                   tps, t
                 | _ -> [], ty
@@ -565,7 +565,7 @@ let is_haseq_lid lid =
   String.compare (String.substring str (len - haseq_suffix_len) haseq_suffix_len) haseq_suffix = 0
 
 let get_haseq_axiom_lid lid =
-    lid_of_ids (ns_of_lid lid @ [(id_of_text (text_of_id (ident_of_lid lid) ^ haseq_suffix))])
+    lid_of_ids (ns_of_lid lid @ [(id_of_text (string_of_id (ident_of_lid lid) ^ haseq_suffix))])
 
 //get the optimized hasEq axiom for this inductive
 //the caller is supposed to open the universes, and pass along the universe substitution and universe names
@@ -598,28 +598,28 @@ let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list<subst_elt>) (us:
   //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
   let ind = mk_Tm_uinst (S.fvar lid delta_constant None) (List.map (fun u -> U_name u) us) in
   //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) None Range.dummyRange in
+  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) Range.dummyRange in
   //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) None Range.dummyRange in
+  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) Range.dummyRange in
   //haseq of ind
-  let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None Range.dummyRange in
+  let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] Range.dummyRange in
   //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
   //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
   let bs' = List.filter (fun b ->
     Rel.subtype_nosmt_force en (fst b).sort  (fst (U.type_u ()))
   ) bs in
-  let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] None Range.dummyRange)) U.t_true bs' in
+  let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] Range.dummyRange)) U.t_true bs' in
   //implication
   let fml = U.mk_imp haseq_bs haseq_ind in
   //attach pattern -- is this the right place ?
   let fml = { fml with n = Tm_meta (fml, Meta_pattern(binders_to_names ibs, [[S.as_arg haseq_ind]])) } in
   //fold right with ibs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) ibs fml in
+  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] Range.dummyRange) ibs fml in
 
   //fold right with bs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) bs fml in
+  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] Range.dummyRange) bs fml in
 
   let axiom_lid = get_haseq_axiom_lid lid in
   axiom_lid, fml, bs, ibs, haseq_bs
@@ -640,7 +640,7 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
     let dbs = SS.open_binders dbs in
     //fold on dbs, add haseq of its sort to the guard
     let cond = List.fold_left (fun (t:term) (b:binder) ->
-      let haseq_b = mk_Tm_app U.t_haseq [S.as_arg (fst b).sort] None Range.dummyRange in
+      let haseq_b = mk_Tm_app U.t_haseq [S.as_arg (fst b).sort] Range.dummyRange in
       //label the haseq predicate so that we get a proper error message if the assertion fails
       let sort_range = (fst b).sort.pos in
       let haseq_b = TcUtil.label
@@ -651,7 +651,7 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
       U.mk_conj t haseq_b) U.t_true dbs
     in
     //fold right over dbs and add a forall for each binder in dbs
-    List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) dbs cond
+    List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] Range.dummyRange) dbs cond
   | _                -> U.t_true
 
 //this is the folding function for tcs
@@ -783,14 +783,14 @@ let unoptimized_haseq_data (usubst:list<subst_elt>) (bs:binders) (haseq_ind:term
     //cond is the conjunct of the hasEq of all the data constructor arguments
     let cond = List.fold_left (fun (t:term) (b:binder) ->
       let sort = (fst b).sort in
-      let haseq_sort = mk_Tm_app U.t_haseq [S.as_arg (fst b).sort] None Range.dummyRange in
+      let haseq_sort = mk_Tm_app U.t_haseq [S.as_arg (fst b).sort] Range.dummyRange in
       let haseq_sort = if is_mutual sort then U.mk_imp haseq_ind haseq_sort else haseq_sort in
       U.mk_conj t haseq_sort) U.t_true dbs
     in
 
             //fold right with dbs, close and add a forall b
                 //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-            let cond = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) dbs cond in
+            let cond = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] Range.dummyRange) dbs cond in
 
             //new accumulator is old one /\ cond
             U.mk_conj acc cond
@@ -823,11 +823,11 @@ let unoptimized_haseq_ty (all_datas_in_the_bundle:list<sigelt>) (mutuals:list<li
   //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
   let ind = mk_Tm_uinst (S.fvar lid delta_constant None) (List.map (fun u -> U_name u) us) in
   //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) None Range.dummyRange in
+  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) Range.dummyRange in
   //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) None Range.dummyRange in
+  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) Range.dummyRange in
   //haseq of ind applied to all bs and ibs
-  let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] None Range.dummyRange in
+  let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] Range.dummyRange in
 
 
   //filter out data constructors for this type constructor
@@ -848,10 +848,10 @@ let unoptimized_haseq_ty (all_datas_in_the_bundle:list<sigelt>) (mutuals:list<li
 
   //fold right with ibs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) ibs fml in
+  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] Range.dummyRange) ibs fml in
   //fold right with bs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] None Range.dummyRange) bs fml in
+  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] Range.dummyRange) bs fml in
 
   //new accumulator is old accumulator /\ fml
   U.mk_conj acc fml
@@ -1023,7 +1023,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list<sigelt>) (quals:list<qu
                   let body =
                       match binders with
                       | [] -> typ
-                      | _ -> S.mk (Tm_arrow(binders, S.mk_Total typ)) None se.sigrng in
+                      | _ -> S.mk (Tm_arrow(binders, S.mk_Total typ)) se.sigrng in
                   (univs, body)
               in
               if List.length univs = List.length (fst expected_typ)
@@ -1066,9 +1066,9 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     let inst_univs = List.map (fun u -> U_name u) uvs in
     let tps = inductive_tps in //List.map2 (fun (x,_) (_,imp) -> ({x,imp)) implicit_tps inductive_tps in
     let arg_typ =
-        let inst_tc = S.mk (Tm_uinst (S.fv_to_tm (S.lid_as_fv tc delta_constant None), inst_univs)) None p in
+        let inst_tc = S.mk (Tm_uinst (S.fv_to_tm (S.lid_as_fv tc delta_constant None), inst_univs)) p in
         let args = tps@indices |> List.map (fun (x, imp) -> S.bv_to_name x,imp) in
-        S.mk_Tm_app inst_tc args None p
+        S.mk_Tm_app inst_tc args p
     in
     let unrefined_arg_binder = S.mk_binder (projectee arg_typ) in
     let arg_binder =
@@ -1078,7 +1078,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
              let x = S.new_bv (Some p) arg_typ in
              let sort =
                  let disc_fvar = S.fvar (Ident.set_lid_range disc_name p) (Delta_equational_at_level 1) None in
-                 U.refine x (U.b2t (S.mk_Tm_app (S.mk_Tm_uinst disc_fvar inst_univs) [as_arg <| S.bv_to_name x] None p))
+                 U.refine x (U.b2t (S.mk_Tm_app (S.mk_Tm_uinst disc_fvar inst_univs) [as_arg <| S.bv_to_name x] p))
              in
              S.mk_binder ({projectee arg_typ with sort = sort})
     in
@@ -1091,7 +1091,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
     let early_prims_inductive =
       lid_equals C.prims_lid  (Env.current_module env) &&
-      List.existsb (fun s -> s = (text_of_id (ident_of_lid tc))) early_prims_inductives
+      List.existsb (fun s -> s = (string_of_id (ident_of_lid tc))) early_prims_inductives
     in
 
     let discriminator_ses =
@@ -1142,13 +1142,13 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                         let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
                             let b = S.is_implicit imp in
                             if b && j < ntps
-                            then pos (Pat_dot_term (S.gen_bv (text_of_id x.ppname) None tun, tun)), b
-                            else pos (Pat_wild (S.gen_bv (text_of_id x.ppname) None tun)), b)
+                            then pos (Pat_dot_term (S.gen_bv (string_of_id x.ppname) None tun, tun)), b
+                            else pos (Pat_wild (S.gen_bv (string_of_id x.ppname) None tun)), b)
                         in
                         let pat_true = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, U.exp_true_bool in
                         let pat_false = pos (Pat_wild (S.new_bv None tun)), None, U.exp_false_bool in
                         let arg_exp = S.bv_to_name (fst unrefined_arg_binder) in
-                        mk (Tm_match(arg_exp, [U.branch pat_true ; U.branch pat_false])) None p
+                        mk (Tm_match(arg_exp, [U.branch pat_true ; U.branch pat_false])) p
                 in
                 let dd =
                     if quals |> List.contains S.Abstract
@@ -1187,7 +1187,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     let subst = fields |> List.mapi (fun i (a, _) ->
             let field_name = U.mk_field_projector_name lid a i in
             let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name (Delta_equational_at_level 1) None)) inst_univs in
-            let proj = mk_Tm_app field_proj_tm [arg] None p in
+            let proj = mk_Tm_app field_proj_tm [arg] p in
             NT(a, proj))
     in
 
@@ -1237,17 +1237,17 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           if only_decl
           then [decl] //only the signature
           else
-              let projection = S.gen_bv (text_of_id x.ppname) None tun in
+              let projection = S.gen_bv (string_of_id x.ppname) None tun in
               let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
                   let b = S.is_implicit imp in
                   if i+ntps=j  //this is the one to project
                   then pos (Pat_var projection), b
                   else if b && j < ntps
-                  then pos (Pat_dot_term (S.gen_bv (text_of_id x.ppname) None tun, tun)), b
-                  else pos (Pat_wild (S.gen_bv (text_of_id x.ppname) None tun)), b)
+                  then pos (Pat_dot_term (S.gen_bv (string_of_id x.ppname) None tun, tun)), b
+                  else pos (Pat_wild (S.gen_bv (string_of_id x.ppname) None tun)), b)
               in
               let pat = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
-              let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
+              let body = mk (Tm_match(arg_exp, [U.branch pat])) p in
               let imp = U.abs binders body None in
               let dd =
                   if quals |> List.contains S.Abstract

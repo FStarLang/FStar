@@ -42,7 +42,7 @@ let vargs args = List.filter (function (BU.Inl _, _) -> false | _ -> true) args
 (* Some operations on constants *)
 let escape (s:string) = BU.replace_char s '\'' '_'
 let mk_term_projector_name lid (a:bv) =
-    escape <| BU.format2 "%s_%s" (string_of_lid lid) (text_of_id a.ppname)
+    escape <| BU.format2 "%s_%s" (string_of_lid lid) (string_of_id a.ppname)
 let primitive_projector_by_pos env lid i =
     let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (string_of_int i) (string_of_lid lid)) in
     let _, t = Env.lookup_datacon env lid in
@@ -86,7 +86,7 @@ let varops =
                   | Some _ -> BU.incr ctr; y ^ "__" ^ (string_of_int !ctr) in
         let top_scope = List.hd !scopes in
         BU.smap_add top_scope y true; y in
-    let new_var pp rn = mk_unique <| (text_of_id pp) ^ "__" ^ (string_of_int rn) in
+    let new_var pp rn = mk_unique <| (string_of_id pp) ^ "__" ^ (string_of_int rn) in
     let new_fvar lid = mk_unique (string_of_lid lid) in
     let next_id () = BU.incr ctr; !ctr in
     //AR: adding module name after the prefix, else it interferes for name matching for fuel arguments
@@ -178,7 +178,7 @@ let print_env e =
     String.concat ", " (last_fvar :: bvars)
 
 let lookup_bvar_binding env bv =
-    match BU.psmap_try_find env.bvar_bindings (text_of_id bv.ppname) with
+    match BU.psmap_try_find env.bvar_bindings (string_of_id bv.ppname) with
     | Some bvs -> BU.pimap_try_find bvs bv.index
     | None -> None
 
@@ -186,7 +186,7 @@ let lookup_fvar_binding env lid =
     BU.psmap_try_find (env.fvar_bindings |> fst) (string_of_lid lid)
 
 let add_bvar_binding bvb bvbs =
-  BU.psmap_modify bvbs (text_of_id (fst bvb).ppname)
+  BU.psmap_modify bvbs (string_of_id (fst bvb).ppname)
     (fun pimap_opt ->
      BU.pimap_add (BU.dflt (BU.pimap_empty ()) pimap_opt) (fst bvb).index bvb)
 

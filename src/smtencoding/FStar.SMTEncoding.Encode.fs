@@ -640,7 +640,7 @@ let encode_top_level_let :
       let formals, extra_formals = BU.first_N nbinders formals in
       let subst = List.map2 (fun (formal, _) (binder, _) -> NT(formal, S.bv_to_name binder)) formals binders in
       let extra_formals = extra_formals |> List.map (fun (x, i) -> {x with sort=SS.subst subst x.sort}, i) |> U.name_binders in
-      let body = Syntax.extend_app_n (SS.compress body) (snd <| U.args_of_binders extra_formals) None body.pos in
+      let body = Syntax.extend_app_n (SS.compress body) (snd <| U.args_of_binders extra_formals) body.pos in
       binders@extra_formals, body
     in
 
@@ -1048,7 +1048,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let close_effect_params tm =
               match ed.binders with
               | [] -> tm
-              | _ -> S.mk (Tm_abs(ed.binders, tm, Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL]))) None tm.pos
+              | _ -> S.mk (Tm_abs(ed.binders, tm, Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL]))) tm.pos
             in
 
             let encode_action env (a:S.action) =
@@ -1149,7 +1149,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       //Discriminators are encoded directly via (our encoding of) theory of datatypes
       [], env
 
-    | Sig_let(_, lids) when (lids |> BU.for_some (fun (l:lident) -> text_of_id (List.hd (ns_of_lid l)) = "Prims")
+    | Sig_let(_, lids) when (lids |> BU.for_some (fun (l:lident) -> string_of_id (List.hd (ns_of_lid l)) = "Prims")
                              && se.sigquals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
       [], env
@@ -1215,7 +1215,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  (S.mk_Tm_app
                    (S.fvar t (Delta_constant_at_level 0) None)
                    (snd (U.args_of_binders tps))
-                   None
                    (Ident.range_of_lid t))
                  k
              in
@@ -1299,7 +1298,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           let k =
             match tps with
             | [] -> k
-            | _ -> S.mk (Tm_arrow (tps, S.mk_Total k)) None k.pos
+            | _ -> S.mk (Tm_arrow (tps, S.mk_Total k)) k.pos
           in
           let k = norm_before_encoding env k in
           U.arrow_formals k

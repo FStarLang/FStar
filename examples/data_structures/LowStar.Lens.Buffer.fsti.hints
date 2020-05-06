@@ -49,8 +49,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "b2t_def",
+        "constructor_distinct_LowStar.Lens.Buffer.Buffer",
+        "constructor_distinct_LowStar.Lens.Buffer.Pointer",
         "disc_equation_LowStar.Lens.Buffer.Buffer",
         "disc_equation_LowStar.Lens.Buffer.Pointer",
+        "equality_tok_LowStar.Lens.Buffer.Buffer@tok",
+        "equality_tok_LowStar.Lens.Buffer.Pointer@tok",
         "equation_FStar.Seq.Properties.lseq", "equation_FStar.UInt.fits",
         "equation_FStar.UInt.lt", "equation_FStar.UInt.min_int",
         "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
@@ -69,7 +73,7 @@
         "typing_FStar.UInt32.v", "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "4dc821aa7dd01528102c720efc81c103"
+      "f3b2cffbdde2579d93a7bf84154ce7dd"
     ],
     [
       "LowStar.Lens.Buffer.put_value_at",
@@ -78,8 +82,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "b2t_def",
+        "constructor_distinct_LowStar.Lens.Buffer.Buffer",
+        "constructor_distinct_LowStar.Lens.Buffer.Pointer",
         "disc_equation_LowStar.Lens.Buffer.Buffer",
         "disc_equation_LowStar.Lens.Buffer.Pointer",
+        "equality_tok_LowStar.Lens.Buffer.Buffer@tok",
+        "equality_tok_LowStar.Lens.Buffer.Pointer@tok",
         "equation_FStar.Seq.Properties.lseq", "equation_FStar.UInt.fits",
         "equation_FStar.UInt.lt", "equation_FStar.UInt.min_int",
         "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
@@ -100,7 +108,7 @@
         "typing_FStar.UInt32.v", "typing_LowStar.Monotonic.Buffer.len"
       ],
       0,
-      "2f11472f3000702bd530d2258bd9ab93"
+      "724b3dc5fabd294f32d1cd81fbac60ab"
     ],
     [
       "LowStar.Lens.Buffer.as_seq",
@@ -109,20 +117,22 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_LowStar.Lens.Buffer.Buffer",
+        "constructor_distinct_LowStar.Lens.Buffer.Pointer",
         "disc_equation_LowStar.Lens.Buffer.Buffer",
         "disc_equation_LowStar.Lens.Buffer.Pointer",
+        "equality_tok_LowStar.Lens.Buffer.Buffer@tok",
         "equality_tok_LowStar.Lens.Buffer.Pointer@tok",
         "equation_LowStar.Lens.Buffer.flavor",
         "equation_LowStar.Lens.Buffer.view_type_of",
         "fuel_guarded_inversion_LowStar.Lens.Buffer.flav",
         "lemma_FStar.Seq.Base.lemma_create_len",
-        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_1c9044117730afbc4604b4a04ffc77eb",
         "typing_LowStar.Lens.Buffer.view_type_of",
         "typing_LowStar.Monotonic.Buffer.length"
       ],
       0,
-      "103c4dc5cb07b99530c8dbfa3d867730"
+      "ed6c67ac4cc9a560d07e66e33d5f3140"
     ],
     [
       "LowStar.Lens.Buffer.id_lens",
@@ -184,15 +194,17 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_LowStar.Lens.Buffer.Buffer",
+        "constructor_distinct_LowStar.Lens.Buffer.Pointer",
         "data_elim_LowStar.Lens.Buffer.Mk",
         "disc_equation_LowStar.Lens.Buffer.Buffer",
         "disc_equation_LowStar.Lens.Buffer.Pointer",
+        "equality_tok_LowStar.Lens.Buffer.Buffer@tok",
         "equality_tok_LowStar.Lens.Buffer.Pointer@tok",
         "equation_FStar.HyperStack.ST.equal_domains",
         "equation_FStar.Monotonic.Heap.equal_dom",
         "equation_FStar.Monotonic.HyperHeap.hmap",
-        "equation_FStar.Monotonic.HyperStack.live_region",
         "equation_FStar.Monotonic.HyperStack.mem",
         "equation_FStar.Seq.Properties.lseq",
         "equation_LowStar.Lens.Buffer.buffer_hs_lens",
@@ -207,14 +219,12 @@
         "lemma_FStar.HyperStack.ST.lemma_same_refs_in_all_regions_intro",
         "lemma_FStar.Set.lemma_equal_refl",
         "lemma_LowStar.Monotonic.Buffer.length_as_seq",
-        "lemma_LowStar.Monotonic.Buffer.live_region_frameOf",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
         "proj_equation_LowStar.Lens.Buffer.Mk_hs_lens",
         "proj_equation_LowStar.Lens.Mkhs_lens_footprint",
         "proj_equation_LowStar.Lens.Mkhs_lens_invariant",
         "proj_equation_LowStar.Lens.Mkhs_lens_snapshot",
         "proj_equation_LowStar.Lens.Mkhs_lens_x",
-        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_LowStar.Lens.Mkhs_lens_footprint",
         "projection_inverse_LowStar.Lens.Mkhs_lens_invariant",
@@ -227,14 +237,12 @@
         "token_correspondence_LowStar.Lens.__proj__Mkhs_lens__item__invariant",
         "typing_FStar.Map.domain", "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
-        "typing_FStar.Monotonic.HyperStack.live_region",
         "typing_LowStar.Lens.Buffer.view_type_of",
-        "typing_LowStar.Monotonic.Buffer.frameOf",
         "typing_LowStar.Monotonic.Buffer.loc_buffer",
         "typing_LowStar.Monotonic.Buffer.mbuffer"
       ],
       0,
-      "92222a9705b7873da90add55cf3fc7a4"
+      "4dec20db3a80717f82e3e4bc9d470e4b"
     ],
     [
       "LowStar.Lens.Buffer.index",

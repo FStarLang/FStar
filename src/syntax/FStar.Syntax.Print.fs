@@ -44,7 +44,7 @@ let rec delta_depth_to_string = function
 let sli (l:lident) : string =
     if Options.print_real_names()
     then string_of_lid l
-    else text_of_id (ident_of_lid l)
+    else string_of_id (ident_of_lid l)
 //    Util.format3 "%s@{def=%s;use=%s}" s
 //        (Range.string_of_range (Ident.range_of_lid l))
 //        (Range.string_of_use_range (Ident.range_of_lid l))
@@ -53,14 +53,14 @@ let lid_to_string (l:lid) = sli l
 
 // let fv_to_string fv = Printf.sprintf "%s@%A" (lid_to_string fv.fv_name.v) fv.fv_delta
 let fv_to_string fv = lid_to_string fv.fv_name.v //^ "(@@" ^ delta_depth_to_string fv.fv_delta ^ ")"
-let bv_to_string bv = (text_of_id bv.ppname) ^ "#" ^ (string_of_int bv.index)
+let bv_to_string bv = (string_of_id bv.ppname) ^ "#" ^ (string_of_int bv.index)
 
 let nm_to_string bv =
     if Options.print_real_names()
     then bv_to_string bv
-    else (text_of_id bv.ppname)
+    else (string_of_id bv.ppname)
 
-let db_to_string bv = (text_of_id bv.ppname) ^ "@" ^ string_of_int bv.index
+let db_to_string bv = (string_of_id bv.ppname) ^ "@" ^ string_of_int bv.index
 
 (* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
 let infix_prim_ops = [
@@ -175,7 +175,7 @@ let rec univ_to_string u =
   // else
   match Subst.compress_univ u with
     | U_unif u -> "U_unif "^univ_uvar_to_string u
-    | U_name x -> "U_name "^(text_of_id x)
+    | U_name x -> "U_name "^(string_of_id x)
     | U_bvar x -> "@"^string_of_int x
     | U_zero   -> "0"
     | U_succ u ->
@@ -188,7 +188,7 @@ let rec univ_to_string u =
 
 let univs_to_string us = List.map univ_to_string us |> String.concat ", "
 
-let univ_names_to_string us = List.map (fun x -> (text_of_id x)) us |> String.concat ", "
+let univ_names_to_string us = List.map (fun x -> (string_of_id x)) us |> String.concat ", "
 
 let qual_to_string = function
   | Assumption            -> "assume"
@@ -205,9 +205,9 @@ let qual_to_string = function
   | Logic                 -> "logic"
   | TotalEffect           -> "total"
   | Discriminator l       -> U.format1 "(Discriminator %s)" (lid_to_string l)
-  | Projector (l, x)      -> U.format2 "(Projector %s %s)" (lid_to_string l) (text_of_id x)
-  | RecordType (ns, fns)  -> U.format2 "(RecordType %s %s)" (text_of_path (path_of_ns ns)) (fns |> List.map text_of_id |> String.concat ", ")
-  | RecordConstructor (ns, fns) -> U.format2 "(RecordConstructor %s %s)" (text_of_path (path_of_ns ns))  (fns |> List.map text_of_id |> String.concat ", ")
+  | Projector (l, x)      -> U.format2 "(Projector %s %s)" (lid_to_string l) (string_of_id x)
+  | RecordType (ns, fns)  -> U.format2 "(RecordType %s %s)" (text_of_path (path_of_ns ns)) (fns |> List.map string_of_id |> String.concat ", ")
+  | RecordConstructor (ns, fns) -> U.format2 "(RecordConstructor %s %s)" (text_of_path (path_of_ns ns))  (fns |> List.map string_of_id |> String.concat ", ")
   | Action eff_lid        -> U.format1 "(Action %s)" (lid_to_string eff_lid)
   | ExceptionConstructor  -> "ExceptionConstructor"
   | HasMaskedEffect       -> "HasMaskedEffect"
@@ -374,7 +374,7 @@ and subst_elt_to_string = function
    | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
    | NT(x, t) -> U.format2 "NT (%s, %s)" (bv_to_string x) (term_to_string t)
    | UN(i, u) -> U.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
-   | UD(u, i) -> U.format2 "UD (%s, %s)" (text_of_id u) (string_of_int i)
+   | UD(u, i) -> U.format2 "UD (%s, %s)" (string_of_id u) (string_of_int i)
 
 and subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
 
@@ -759,7 +759,7 @@ let rec sigelt_to_string (x: sigelt) =
       | Sig_sub_effect (se) -> sub_eff_to_string se
       | Sig_effect_abbrev(l, univs, tps, c, flags) ->
         if (Options.print_universes())
-        then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) None Range.dummyRange) in
+        then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow(tps, c)) Range.dummyRange) in
              let tps, c = match (Subst.compress t).n with
                 | Tm_arrow(bs, c) -> bs, c
                 | _ -> failwith "impossible" in

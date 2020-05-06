@@ -1272,7 +1272,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6143ea97e6ac1db6aa61210cf4b1b5ea"
+      "c495d720cdd8af4295f03107db97299a"
     ],
     [
       "FStar.Monotonic.HyperStack.refs_in_region",
@@ -1310,7 +1310,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b69b0757ca57c808f2575af729242e24"
+      "f3a069059a21a0b7d83c172d0769c0bf"
     ],
     [
       "FStar.Monotonic.HyperStack.modifies_some_refs",
@@ -1325,7 +1325,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "72efad88c59bc7d0799b12ec87d47c98"
+      "0c06a395f9e450854a817c1780657b02"
     ],
     [
       "FStar.Monotonic.HyperStack.eternal_disjoint_from_tip",
