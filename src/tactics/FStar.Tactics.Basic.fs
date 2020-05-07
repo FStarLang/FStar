@@ -683,7 +683,8 @@ let lemma_or_sq (c : comp) : option<(term * term)> =
         // Lemma post is thunked
         let post = U.mk_app post [S.as_arg U.exp_unit] in
         Some (pre, post)
-    else if U.is_pure_effect ct.effect_name then
+    else if U.is_pure_effect ct.effect_name
+         || U.is_ghost_effect ct.effect_name then
         map_opt (U.un_squash ct.result_typ) (fun post -> (U.t_true, post))
     else
         None
