@@ -128,3 +128,23 @@ let rec list_ref _ _ = ()
 (* Blew up at some point since the implicit of id had
 an ill-scoped decreases clause. *)
 let test_scope_decreases = id nest_1
+
+open FStar.List.Tot
+
+val concatlemma (#a:Type) (l1 l2 :list a) (x:a) : Lemma (memP x (l1@l2) <==> memP x l1 \/ memP x l2)
+
+let rec concatlemma l1 l2 x =
+  match l1 with
+  | [] -> ()
+  | h::t -> concatlemma t l2 x
+
+val concatmaplemma : (#a:Type) -> (#b:Type) -> l:list a -> (f:(a -> list b)) -> x:b ->
+                               Lemma (memP x (concatMap f l) <==> (exists a. memP a l /\ memP x (f a)))
+                                     [SMTPat (memP x (concatMap f l))]
+
+let rec concatmaplemma l f x =
+  match l with
+  | [] -> ()
+  | h::t ->
+    concatlemma (f h) (concatMap f t) x;
+    concatmaplemma t f x
