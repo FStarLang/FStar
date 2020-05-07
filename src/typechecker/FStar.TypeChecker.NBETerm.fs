@@ -216,12 +216,13 @@ match x.nbe_t with
 | Accu (_, _) -> false
 | _ -> true
 
-let mk_t t = { nbe_t = t; nbe_r = Range.dummyRange }
+let mk_rt r t = { nbe_t = t; nbe_r = r }
+let mk_t t = mk_rt Range.dummyRange t
 let nbe_t_of_t t = t.nbe_t
 let mkConstruct i us ts = mk_t <| Construct(i, us, ts)
-let mkFV i us ts = mk_t <| FV(i, us, ts)
+let mkFV i us ts = mk_rt (S.range_of_fv i) (FV(i, us, ts))
 
-let mkAccuVar (v:var) = mk_t <| Accu(Var v, [])
+let mkAccuVar (v:var) = mk_rt (S.range_of_bv v) (Accu(Var v, []))
 let mkAccuMatch (s:t) (bs:(unit -> list<branch>)) = mk_t <| Accu(Match (s, bs), [])
 
 // Term equality

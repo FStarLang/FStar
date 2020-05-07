@@ -473,7 +473,7 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
       begin
       match try_in_cache cfg fvar with
       | Some t -> t
-      | _ -> translate_fv cfg bs fvar
+      | _ -> translate_fv cfg bs (S.set_range_of_fv fvar e.pos)
       end
 
     | Tm_app({n=Tm_constant FC.Const_reify},   arg::more::args)
