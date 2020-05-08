@@ -1084,14 +1084,35 @@ and tc_value env (e:term) : term
     //FIXME: Check context inclusion?
     value_check_expected_typ env e (Inl (SS.subst' s u.ctx_uvar_typ)) Env.trivial_guard
 
-  | Tm_unknown -> //only occurs where type annotations are missing in source programs
+  //only occurs where type annotations are missing in source programs
+  //or the program has explicit _ for missing terms
+  | Tm_unknown ->
     let r = Env.get_range env in
     let t, _, g0 =
         match Env.expected_typ env with
-        | None ->  let k, u = U.type_u () in
-                   TcUtil.new_implicit_var "type of user-provided implicit term" r env k
+        | None ->
+          let k, u = U.type_u () in
+          TcUtil.new_implicit_var "type of user-provided implicit term" r env k
         | Some t -> t, [], Env.trivial_guard in
-    let e, _, g1 = TcUtil.new_implicit_var ("user-provided implicit term at " ^ (Range.string_of_range r)) r env t in
+    
+    let e, _, g1 =
+      (*
+       * AR: optimize for unit and unit refinements
+       *)
+      let t_norm = N.normalize_refinement N.whnf_steps env t in
+      match (SS.compress t_norm).n with
+      | Tm_fvar fv when S.fv_eq_lid fv Const.unit_lid ->
+        S.unit_const_with_range r, [], Env.trivial_guard
+      | Tm_refine (b, phi) when U.is_unit b.sort ->
+        //return the refinement in the guard
+        let b, phi = SS.open_term_bv b phi in
+        let e = S.unit_const_with_range r in
+        e, [],
+        phi |> SS.subst [NT (b, e)] |> TcComm.NonTrivial |> Env.guard_of_guard_formula
+      | _ ->
+        TcUtil.new_implicit_var
+          ("user-provided implicit term at " ^ (Range.string_of_range r))
+          r env t in
     e, S.mk_Total t |> TcComm.lcomp_of_comp, (Env.conj_guard g0 g1)
 
   | Tm_name x ->
