@@ -1,5 +1,5 @@
 [
-  "n∞ﬁÇ`™í∆\u001dﬂëNÅÅá\u001f",
+  "π±waÆ\u001fÑ˝÷jYœ>}ÏG",
   [
     [
       "Steel.Effect.Atomic.state_uses",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "f374842d81dd8220519ca22e5cc11554"
+      "43b042a45c6e181f4f01428d9bfe1976"
     ],
     [
       "Steel.Effect.Atomic.atomic_repr",
@@ -34,7 +34,7 @@
         "true_interp", "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "d704e6d153bda16e1f56a5fe3d097ada"
+      "515ef65506fc1b0fa9fa07691048c63b"
     ],
     [
       "Steel.Effect.Atomic.return",
@@ -46,7 +46,7 @@
         "equation_Steel.Semantics.Hoare.MST.preserves_frame"
       ],
       0,
-      "e38b5af49577bfc06a5138058aea2ccc"
+      "4b235e9d7ea75a8a87aff2e71dfda2bf"
     ],
     [
       "Steel.Effect.Atomic.bind",
@@ -55,7 +55,7 @@
       1,
       [ "@query", "equation_Steel.Semantics.Hoare.MST.preserves_frame" ],
       0,
-      "58c323dd858a9e79c17f6de60f1c77d4"
+      "90cfcbe38c6ed2014decf7f9ca57e199"
     ],
     [
       "Steel.Effect.Atomic.SteelAtomic",
@@ -67,7 +67,7 @@
         "refinement_interpretation_Tm_refine_f4cea0755d4e39d144b708645ebfda17"
       ],
       0,
-      "f5afab357ba4a6598666e749dd4d74d3"
+      "01fb1c90972d28a9b08746732bb63321"
     ],
     [
       "Steel.Effect.Atomic.lift_pure_steel_atomic",
@@ -85,17 +85,17 @@
         "equation_Steel.Semantics.Instantiate.state0",
         "function_token_typing_Prims.l_True",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__interp",
-        "interpretation_Tm_abs_14129f624dccd5aac12054f36d68f94b",
+        "interpretation_Tm_abs_10e5bb79ede42633041336ab271ed44d",
         "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
-        "l_imp-interp", "l_quant_interp_308299575125c63e8e07cb64cbb4ea42",
+        "l_imp-interp", "l_quant_interp_e1ba1ab44e9bc2d24c392c09e42d9d4c",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_interp",
         "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_interp",
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "typing_Tm_abs_14129f624dccd5aac12054f36d68f94b",
+        "typing_Tm_abs_10e5bb79ede42633041336ab271ed44d",
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
       ],
       0,
-      "067134305d3b890a026de59e04bcd24f"
+      "00c9a130164f6fbd679af1eda0392e1e"
     ],
     [
       "Steel.Effect.Atomic.mst_put",
@@ -104,7 +104,7 @@
       1,
       [ "@query" ],
       0,
-      "2577d718920ff84c994d4c7b00da6dba"
+      "04edf0ed18974cae8233a4fa9c9217dc"
     ],
     [
       "Steel.Effect.Atomic.steel_assert",
@@ -121,7 +121,7 @@
         "typing_Steel.Actions.mem_evolves"
       ],
       0,
-      "d8c8ddec94c14b7c15d54fbe27288534"
+      "b4838a41c5b445541be6815396c80390"
     ],
     [
       "Steel.Effect.Atomic.intro_emp_left",
@@ -130,7 +130,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "24946d6a09e0f72b9bd82280191c9158"
+      "e232a81a3b4c2957e1e3840b0ca8dfc8"
     ],
     [
       "Steel.Effect.Atomic.atomic_preserves_frame_and_preorder",
@@ -191,48 +191,51 @@
         "typing_Steel.Memory.emp"
       ],
       0,
-      "529cfeb7f1fe5d4b869b984a20501980"
+      "ec2ed805e299dd39831c9dd562f75f17"
     ],
     [
-      "Steel.Effect.Atomic.frame0",
+      "Steel.Effect.Atomic.frame_repr",
       1,
       0,
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
-        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "Steel.Memory_interpretation_Tm_arrow_807255d14f3eb16a8e169f1b55b6143d",
+        "Steel.Semantics.Hoare.MST_interpretation_Tm_arrow_69502b18a9decf01266003970992a005",
+        "equation_Steel.Effect.Atomic.pre_t",
         "equation_Steel.Effect.Atomic.state_uses",
-        "equation_Steel.Semantics.Hoare.MST.depends_only_on2",
-        "equation_Steel.Semantics.Hoare.MST.depends_only_on_0",
-        "equation_Steel.Semantics.Hoare.MST.depends_only_on_0_2",
-        "equation_Steel.Semantics.Hoare.MST.frame_lpre",
+        "equation_Steel.Semantics.Hoare.MST.affine",
+        "equation_Steel.Semantics.Hoare.MST.associative",
+        "equation_Steel.Semantics.Hoare.MST.commutative",
+        "equation_Steel.Semantics.Hoare.MST.interp_extensionality",
+        "equation_Steel.Semantics.Hoare.MST.preserves_frame",
+        "equation_Steel.Semantics.Hoare.MST.st",
+        "equation_Steel.Semantics.Hoare.MST.st_laws",
         "equation_Steel.Semantics.Instantiate.state0",
+        "function_token_typing_Steel.Memory.locks_invariant",
+        "function_token_typing_Steel.Memory.star",
+        "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__interp",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star",
-        "function_token_typing_Steel.Semantics.Hoare.MST.frame_lpre",
-        "interpretation_Tm_abs_07cde9fb18bb19e28b4ad47e377c3fc9",
-        "interpretation_Tm_abs_5b2ff4012128aa1f211b6d78a12729a4",
-        "interpretation_Tm_abs_88364ec141f69f6701c2f14d439b9f56",
-        "l_and-interp", "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_disjoint",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_hprop",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_interp",
-        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_join",
+        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_locks_invariant",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_mem",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_star",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_disjoint",
         "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_hprop",
         "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_interp",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_join",
+        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_locks_invariant",
         "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_mem",
         "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_star",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "token_correspondence_Steel.Memory.star", "true_interp",
-        "typing_tok_Prims.T@tok"
+        "refinement_interpretation_Tm_refine_f6e2dd8dfb4bc549cb03e5fd018cee0d",
+        "token_correspondence_Steel.Memory.interp",
+        "token_correspondence_Steel.Memory.star",
+        "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__locks_invariant",
+        "typing_Steel.Effect.Atomic.state_uses", "typing_Steel.Memory.star",
+        "typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star",
+        "typing_Steel.Semantics.Instantiate.state0"
       ],
       0,
-      "15bcb1582c74429265e83f287b22eaba"
+      "5e2c18f8b2f7261a27dc71d01524b108"
     ],
     [
       "Steel.Effect.Atomic.new_inv",
@@ -243,7 +246,7 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_81e65de2755319ee661cc1adc7d951e3",
         "Steel.Memory_interpretation_Tm_arrow_4bacd71d3a7f62bca3404337db688522",
-        "data_elim_Prims.Mkdtuple2", "equation_NMST.stable",
+        "data_elim_Prims.Mkdtuple2", "equation_NMSTTotal.stable",
         "equation_Steel.Actions.inv",
         "equation_Steel.Effect.Atomic.inv_witnessed",
         "equation_Steel.Effect.Atomic.state_uses",
@@ -297,7 +300,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "98c09887a74c3b9c07b11fce3d1a1660"
+      "3e084735850a420dcece2cb054f04a96"
     ],
     [
       "Steel.Effect.Atomic.change_hprop",
@@ -330,7 +333,7 @@
         "unit_typing"
       ],
       0,
-      "ddc901f8e8617db705eddbe4b29dd15c"
+      "c187bf07f6e406c0890b0c6feebb8e50"
     ],
     [
       "Steel.Effect.Atomic.index",
@@ -344,7 +347,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "7f86b87f6bc1ff1cb3867fd6d1ab76a9"
+      "34cdf8ad8db0951da74a90cfb72e686b"
     ],
     [
       "Steel.Effect.Atomic.index",
@@ -383,8 +386,8 @@
         "refinement_interpretation_Tm_refine_099571e8d0c1f7a8710e3c6d01989094",
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
         "refinement_interpretation_Tm_refine_c50d79dd8f091b677b29a6493ddb7358",
+        "refinement_interpretation_Tm_refine_ccc1be0aa30252efcc40eb767d04adeb",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "refinement_interpretation_Tm_refine_f5d06f3a35ea8359c423be7d087423b5",
         "token_correspondence_Steel.Memory.interp",
         "token_correspondence_Steel.Memory.locks_invariant",
         "token_correspondence_Steel.Memory.star",
@@ -394,7 +397,7 @@
         "typing_FStar.UInt32.v", "typing_Steel.Memory.length"
       ],
       0,
-      "56f442bf670c7efc2a3a75061a5610c9"
+      "ffa946ca1e94e87c85b34eb6e75c56f9"
     ],
     [
       "Steel.Effect.Atomic.upd",
@@ -408,7 +411,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "64c9460d4c32f6a2f0ea1c7dd2705a99"
+      "00e1ea8608bb02b4ce256f49fb32bcc4"
     ],
     [
       "Steel.Effect.Atomic.upd",
@@ -416,8 +419,7 @@
       0,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
+        "@MaxIFuel_assumption", "@query", "b2t_def",
         "data_elim_Prims.Mkdtuple2", "equation_FStar.Seq.Properties.lseq",
         "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
         "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
@@ -449,19 +451,19 @@
         "refinement_interpretation_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
         "refinement_interpretation_Tm_refine_c50d79dd8f091b677b29a6493ddb7358",
+        "refinement_interpretation_Tm_refine_ccc1be0aa30252efcc40eb767d04adeb",
         "refinement_interpretation_Tm_refine_e29e6ffa10bbe822a6b71c00c6cce2c1",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "refinement_interpretation_Tm_refine_f5d06f3a35ea8359c423be7d087423b5",
         "token_correspondence_Steel.Memory.interp",
         "token_correspondence_Steel.Memory.locks_invariant",
         "token_correspondence_Steel.Memory.star",
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__interp",
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__locks_invariant",
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star",
-        "typing_FStar.UInt32.v", "typing_Steel.Memory.length", "unit_typing"
+        "typing_FStar.UInt32.v", "typing_Steel.Memory.length"
       ],
       0,
-      "597a70d2ed37e5e145999af7efb99164"
+      "1c2f0b6070e277b69eaa750c7c5b92dd"
     ],
     [
       "Steel.Effect.Atomic.cas",
@@ -503,7 +505,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "0762c63657e02d7451633921443a778a"
+      "942198fd7d6e6962b343aff28e181b2f"
     ],
     [
       "Steel.Effect.Atomic.lemma_sem_preserves",
@@ -561,7 +563,7 @@
         "typing_Steel.Memory.locks_invariant", "typing_Steel.Memory.star"
       ],
       0,
-      "f0facc04ab955b12d85e08832d5bfb63"
+      "abca6045af9b0d3e8ddbf5d155c74d6f"
     ],
     [
       "Steel.Effect.Atomic.with_invariant_aux",
@@ -597,7 +599,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "24fd5459506c7770c52db68c393859e5"
+      "2d8979bdbbc3747fc16ed70741282a09"
     ],
     [
       "Steel.Effect.Atomic.state_uses",
@@ -606,7 +608,7 @@
       1,
       [ "@query" ],
       0,
-      "4ed7079730e2718bff76618bb614f502"
+      "3073b5c110cd8050f76a70b5bfbc736d"
     ],
     [
       "Steel.Effect.Atomic.atomic_repr",
@@ -632,7 +634,7 @@
         "true_interp", "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "27a7f0534cbac8d95c88a13ca754b8d5"
+      "79dd09c727d1447d392a346e77b73476"
     ],
     [
       "Steel.Effect.Atomic.return",
@@ -644,7 +646,7 @@
         "equation_Steel.Semantics.Hoare.MST.preserves_frame"
       ],
       0,
-      "d852a14549536a802c27b1e39892579d"
+      "52c08e7f0335c0f0ff4ead85d2d4c473"
     ],
     [
       "Steel.Effect.Atomic.bind",
@@ -653,7 +655,7 @@
       1,
       [ "@query", "equation_Steel.Semantics.Hoare.MST.preserves_frame" ],
       0,
-      "5e770fbab37b52ab57c926ef445dc7b2"
+      "cb203e39da88d912fdcb36e51dcabd3f"
     ],
     [
       "Steel.Effect.Atomic.SteelAtomic",
@@ -665,7 +667,7 @@
         "refinement_interpretation_Tm_refine_f4cea0755d4e39d144b708645ebfda17"
       ],
       0,
-      "7d15966ffa3884b97655e96f617148d2"
+      "a0cc9634f350fa10014750f4c6cea46f"
     ],
     [
       "Steel.Effect.Atomic.lift_pure_steel_atomic",
@@ -683,17 +685,17 @@
         "equation_Steel.Semantics.Instantiate.state0",
         "function_token_typing_Prims.l_True",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__interp",
-        "interpretation_Tm_abs_14129f624dccd5aac12054f36d68f94b",
+        "interpretation_Tm_abs_10e5bb79ede42633041336ab271ed44d",
         "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
-        "l_imp-interp", "l_quant_interp_308299575125c63e8e07cb64cbb4ea42",
+        "l_imp-interp", "l_quant_interp_e1ba1ab44e9bc2d24c392c09e42d9d4c",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_interp",
         "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_interp",
         "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "typing_Tm_abs_14129f624dccd5aac12054f36d68f94b",
+        "typing_Tm_abs_10e5bb79ede42633041336ab271ed44d",
         "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
       ],
       0,
-      "e3c45df71f8824ec1241ca48699fd77b"
+      "b8149dc1c38ba82e816a8fa46729f85b"
     ],
     [
       "Steel.Effect.Atomic.mst_put",
@@ -702,7 +704,7 @@
       1,
       [ "@query" ],
       0,
-      "f3068fdff3ec4b9176c95a5fe8e5fd90"
+      "93f08f8d23bc22eb4369dbb269ac4160"
     ],
     [
       "Steel.Effect.Atomic.steel_assert",
@@ -719,48 +721,51 @@
         "typing_Steel.Actions.mem_evolves"
       ],
       0,
-      "39d7e2934a7cde24cdddf8eadb0a53a4"
+      "02d506df6d7e522d5a28e12d3023a480"
     ],
     [
-      "Steel.Effect.Atomic.frame0",
+      "Steel.Effect.Atomic.frame_repr",
       2,
       0,
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
-        "equality_tok_Prims.T@tok", "equation_Prims.l_True",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "Steel.Memory_interpretation_Tm_arrow_807255d14f3eb16a8e169f1b55b6143d",
+        "Steel.Semantics.Hoare.MST_interpretation_Tm_arrow_69502b18a9decf01266003970992a005",
+        "equation_Steel.Effect.Atomic.pre_t",
         "equation_Steel.Effect.Atomic.state_uses",
-        "equation_Steel.Semantics.Hoare.MST.depends_only_on2",
-        "equation_Steel.Semantics.Hoare.MST.depends_only_on_0",
-        "equation_Steel.Semantics.Hoare.MST.depends_only_on_0_2",
-        "equation_Steel.Semantics.Hoare.MST.frame_lpre",
+        "equation_Steel.Semantics.Hoare.MST.affine",
+        "equation_Steel.Semantics.Hoare.MST.associative",
+        "equation_Steel.Semantics.Hoare.MST.commutative",
+        "equation_Steel.Semantics.Hoare.MST.interp_extensionality",
+        "equation_Steel.Semantics.Hoare.MST.preserves_frame",
+        "equation_Steel.Semantics.Hoare.MST.st",
+        "equation_Steel.Semantics.Hoare.MST.st_laws",
         "equation_Steel.Semantics.Instantiate.state0",
+        "function_token_typing_Steel.Memory.locks_invariant",
+        "function_token_typing_Steel.Memory.star",
+        "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__interp",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star",
-        "function_token_typing_Steel.Semantics.Hoare.MST.frame_lpre",
-        "interpretation_Tm_abs_07cde9fb18bb19e28b4ad47e377c3fc9",
-        "interpretation_Tm_abs_5b2ff4012128aa1f211b6d78a12729a4",
-        "interpretation_Tm_abs_88364ec141f69f6701c2f14d439b9f56",
-        "l_and-interp", "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_disjoint",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_hprop",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_interp",
-        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_join",
+        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_locks_invariant",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_mem",
         "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_star",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_disjoint",
         "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_hprop",
         "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_interp",
-        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_join",
+        "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_locks_invariant",
         "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_mem",
         "projection_inverse_Steel.Semantics.Hoare.MST.Mkst0_star",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "token_correspondence_Steel.Memory.star", "true_interp",
-        "typing_tok_Prims.T@tok"
+        "refinement_interpretation_Tm_refine_f6e2dd8dfb4bc549cb03e5fd018cee0d",
+        "token_correspondence_Steel.Memory.interp",
+        "token_correspondence_Steel.Memory.star",
+        "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__locks_invariant",
+        "typing_Steel.Effect.Atomic.state_uses", "typing_Steel.Memory.star",
+        "typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star",
+        "typing_Steel.Semantics.Instantiate.state0"
       ],
       0,
-      "ebacd6f8b7191ad62e895ab4f0066167"
+      "42e6ef583df9fc7eed3083c752f9439e"
     ],
     [
       "Steel.Effect.Atomic.new_inv",
@@ -771,7 +776,7 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_81e65de2755319ee661cc1adc7d951e3",
         "Steel.Memory_interpretation_Tm_arrow_4bacd71d3a7f62bca3404337db688522",
-        "data_elim_Prims.Mkdtuple2", "equation_NMST.stable",
+        "data_elim_Prims.Mkdtuple2", "equation_NMSTTotal.stable",
         "equation_Steel.Actions.inv",
         "equation_Steel.Effect.Atomic.inv_witnessed",
         "equation_Steel.Effect.Atomic.state_uses",
@@ -825,7 +830,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "1ebfcafffd9b01481f5708a019463052"
+      "f40f1ad9f8e60ecb79ad68d25d3c338c"
     ],
     [
       "Steel.Effect.Atomic.change_hprop",
@@ -858,7 +863,7 @@
         "unit_typing"
       ],
       0,
-      "d123aec88cf266c9e77dd6ab7c86caa9"
+      "4b181374dbb947667e06022c3f3bb2fc"
     ],
     [
       "Steel.Effect.Atomic.index",
@@ -872,7 +877,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "a2385cff76f986cc037ffcd395b81f7f"
+      "2206b4d488b9e18a38dabb3b5d85df5a"
     ],
     [
       "Steel.Effect.Atomic.index",
@@ -911,8 +916,8 @@
         "refinement_interpretation_Tm_refine_099571e8d0c1f7a8710e3c6d01989094",
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
         "refinement_interpretation_Tm_refine_c50d79dd8f091b677b29a6493ddb7358",
+        "refinement_interpretation_Tm_refine_ccc1be0aa30252efcc40eb767d04adeb",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "refinement_interpretation_Tm_refine_f5d06f3a35ea8359c423be7d087423b5",
         "token_correspondence_Steel.Memory.interp",
         "token_correspondence_Steel.Memory.locks_invariant",
         "token_correspondence_Steel.Memory.star",
@@ -922,7 +927,7 @@
         "typing_FStar.UInt32.v", "typing_Steel.Memory.length"
       ],
       0,
-      "a6ec789425a390a6bf65d92ee60a8104"
+      "04c3c3d738118e4384382d1d64fd953e"
     ],
     [
       "Steel.Effect.Atomic.index",
@@ -941,7 +946,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "791b4de69dcb2dbfa2cc860981e43743"
+      "c6744e1b81ff1fb09ce3eef443c05b17"
     ],
     [
       "Steel.Effect.Atomic.upd",
@@ -955,7 +960,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "aec94bcee316a029b68754daaed3799b"
+      "708e7f5eb8b2a24f149a2d91879865bb"
     ],
     [
       "Steel.Effect.Atomic.upd",
@@ -963,8 +968,7 @@
       0,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
+        "@MaxIFuel_assumption", "@query", "b2t_def",
         "data_elim_Prims.Mkdtuple2", "equation_FStar.Seq.Properties.lseq",
         "equation_FStar.UInt.fits", "equation_FStar.UInt.min_int",
         "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
@@ -996,19 +1000,19 @@
         "refinement_interpretation_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
         "refinement_interpretation_Tm_refine_c50d79dd8f091b677b29a6493ddb7358",
+        "refinement_interpretation_Tm_refine_ccc1be0aa30252efcc40eb767d04adeb",
         "refinement_interpretation_Tm_refine_e29e6ffa10bbe822a6b71c00c6cce2c1",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "refinement_interpretation_Tm_refine_f5d06f3a35ea8359c423be7d087423b5",
         "token_correspondence_Steel.Memory.interp",
         "token_correspondence_Steel.Memory.locks_invariant",
         "token_correspondence_Steel.Memory.star",
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__interp",
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__locks_invariant",
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star",
-        "typing_FStar.UInt32.v", "typing_Steel.Memory.length", "unit_typing"
+        "typing_FStar.UInt32.v", "typing_Steel.Memory.length"
       ],
       0,
-      "c2e16f31b122b9a27240d9822ba60553"
+      "90088c9a628fcc824402660aa0347b6d"
     ],
     [
       "Steel.Effect.Atomic.upd",
@@ -1031,13 +1035,13 @@
         "refinement_interpretation_Tm_refine_2ca062977a42c36634b89c1c4f193f79",
         "refinement_interpretation_Tm_refine_a0cd7d06c5da6444b6b51b319febde8e",
         "refinement_interpretation_Tm_refine_c50d79dd8f091b677b29a6493ddb7358",
+        "refinement_interpretation_Tm_refine_ccc1be0aa30252efcc40eb767d04adeb",
         "refinement_interpretation_Tm_refine_e29e6ffa10bbe822a6b71c00c6cce2c1",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
-        "refinement_interpretation_Tm_refine_f5d06f3a35ea8359c423be7d087423b5",
         "typing_FStar.UInt32.v", "typing_Steel.Memory.length"
       ],
       0,
-      "9aaa6c27431a2ce64db15c6ae505e7b6"
+      "c2361913b2f303909f25b8a66795d5fe"
     ],
     [
       "Steel.Effect.Atomic.cas",
@@ -1079,7 +1083,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "6e1e25fb6d547d096271bbfbe6426f2a"
+      "2c1176b8f311f2e348c213cbdad82848"
     ],
     [
       "Steel.Effect.Atomic.cas",
@@ -1096,7 +1100,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "42e767b25b10fdbd354c66a1e3b2d539"
+      "a69e325f5b760a020ac4f0748b21ef1c"
     ],
     [
       "Steel.Effect.Atomic.with_invariant_aux",
@@ -1132,7 +1136,7 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star"
       ],
       0,
-      "71fd64a361fec1d244f1e65c800c51ac"
+      "e7f655e144c505a0f1efea9984ddecc7"
     ]
   ]
 ]
