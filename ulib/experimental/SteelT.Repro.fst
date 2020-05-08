@@ -78,7 +78,6 @@ let test_ok1 _
     h_admit #unit (*(myref_hprop tr)*) (fun _ -> emp)
 
 
-
 assume
 val frame_t_emp
   (#[@resolve_framing] outer:hprop)
@@ -99,15 +98,13 @@ let test_ok2 _
 
 assume
 val frame_t
-  (#a:Type)
   (#[@resolve_framing] outer:hprop)
   (#[@resolve_framing] inner0:hprop)
   (#[@resolve_framing] inner1:hprop)
   (#[@resolve_framing] frame:hprop)
   (#[@resolve_framing] _:squash (can_be_split_into outer inner0 frame))
-  ($f:unit -> SteelT a inner0 (fun _ -> inner1))
-  : SteelT a outer (fun _ -> frame `star` inner1)
-
+  ($f:unit -> SteelT unit inner0 (fun _ -> inner1))
+  : SteelT unit outer (fun _ -> frame `star` inner1)
 val test_ok3 (_:unit)
   : SteelT unit emp (fun c -> emp)
 let test_ok3 _
@@ -128,48 +125,3 @@ let test_ok4 _
   = let tr = dependent_provides () in
     let c = frame_t nop in
     h_admit' ()
-
-
-assume
-val f_myref (x:myref)
-  : SteelT unit (myref_hprop x) (fun _ -> myref_hprop x)
-
-val test_ok5 (_:unit)
-  : SteelT unit emp (fun c -> emp)
-let test_ok5 _
-  = let tr = dependent_provides () in
-    let c = frame_t (fun _ -> f_myref tr) in
-    h_admit' ()
-
-val test_ok6 (x:myref)
-  : SteelT unit (myref_hprop x) (fun c -> emp)
-let test_ok6 tr
-  = let c = frame_t (fun _ -> f_myref tr) in
-    h_admit' ()
-
-val test_ok7 (_:myref)
-  : SteelT unit emp (fun c -> emp)
-// TODO: trefl does not seem to unify if there is a head symbol?
-
-[@expect_failure]
-let test_ok7 _
-  = let tr = frame_t dependent_provides in
-    let c = frame_t (fun _ -> f_myref tr) in
-    h_admit' ()
-
-
-assume
-val mypair_hprop (x y:myref) : hprop
-
-assume
-val to_mypair_hprop (x y:myref)
-  : SteelT unit (myref_hprop x `star` myref_hprop y) (fun _ -> mypair_hprop x y)
-
-val test_ok8 (_:unit)
-  : SteelT (myref * myref) emp (fun (x, y) -> mypair_hprop x y `star` emp)
-// TODO: trefl does not seem to unify if there is a head symbol?
-[@expect_failure]
-let test_ok7 _
-  = let x = frame_t dependent_provides in
-    let y = frame_t dependent_provides in
-    frame_t (fun _ -> to_mypair_hprop x y)
