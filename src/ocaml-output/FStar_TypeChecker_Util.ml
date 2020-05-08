@@ -1684,7 +1684,7 @@ let (mk_indexed_bind :
                                                                     subst)))
                                                         | uu____4860 ->
                                                             failwith
-                                                              "imspossible: mk_indexed_bind"
+                                                              "impossible: mk_indexed_bind"
                                                          in
                                                       let env_g =
                                                         FStar_TypeChecker_Env.push_binders

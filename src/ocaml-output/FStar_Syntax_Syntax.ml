@@ -2307,5 +2307,6 @@ let (t_either_of : term -> term -> term) =
         uu____10265 :: uu____10274  in
       mk_Tm_app uu____10262 uu____10264 FStar_Range.dummyRange
   
-let (unit_const : term) =
-  mk (Tm_constant FStar_Const.Const_unit) FStar_Range.dummyRange 
+let (unit_const_with_range : FStar_Range.range -> term) =
+  fun r  -> mk (Tm_constant FStar_Const.Const_unit) r 
+let (unit_const : term) = unit_const_with_range FStar_Range.dummyRange 
