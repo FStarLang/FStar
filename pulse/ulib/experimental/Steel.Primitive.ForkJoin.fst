@@ -22,7 +22,6 @@ open Steel.Permissions
 open FStar.Ghost
 open Steel.Reference
 open Steel.SteelT.Basics
-open Steel.Memory.Tactics
 
 module U = FStar.Universe
 
@@ -53,33 +52,25 @@ let intro_maybe_p_true (p:hprop)
   : SteelT unit p (fun _ -> maybe_p p true)
   = h_assert (maybe_p p true)
 
-assume val h_admit (#a:Type) (#p:hprop) (q:a -> hprop) : SteelT a p q
-
 let new_thread (p:hprop)
   : SteelT (thread p) emp (fun _ -> emp)
   = intro_maybe_p_false p;
     h_assert (maybe_p p false);
     h_intro_emp_l (maybe_p p false);
-
-    let r = steel_frame_t // #(ref bool) #emp #(fun r -> pts_to r full false)
-                  (fun () -> alloc false) in
-//                  (maybe_p p false) in
-    // AF: Without this assert, there are universes issues
-    h_assert (pts_to r full false `star` maybe_p p false);
+    let r = frame #(ref bool) #emp #(fun r -> pts_to r full false)
+                  (fun () -> alloc false)
+                  (maybe_p p false) in
     intro_h_exists (U.raise_val false) (fun b -> lock_inv_pred r p (U.downgrade_val b));
-
     let l  = L.new_lock (lock_inv r p) in
     let t  =  { r = r ; l = l } in
     return t
 
 let finish (#p:hprop) (t:thread p) (v:bool)
   : SteelT unit (pts_to t.r full v `star` p) (fun _ -> emp)
-  = // TODO: We now need to specify implicits, probably because v only is unified
-    // through the resource?
-    steel_frame_t (fun _ -> write #_ #v t.r true); // p;
+  = frame (fun _ -> write t.r true) p;
     h_assert (pts_to t.r full true `star` p);
     h_commute (pts_to t.r full true) p;
-    steel_frame_t (fun _ -> intro_maybe_p_true p); // (pts_to t.r full true);
+    frame (fun _ -> intro_maybe_p_true p) (pts_to t.r full true);
     h_commute (maybe_p p true) (pts_to t.r full true);
     intro_h_exists (U.raise_val true) (fun b -> lock_inv_pred t.r p (U.downgrade_val b));
     L.release t.l
@@ -97,9 +88,9 @@ let spawn (#p #q:hprop)
           (_:unit)
   : SteelT unit p (fun _ -> emp)
   = h_intro_emp_l p;
-    let b  = steel_frame_t (fun () -> acquire t) in // p in
+    let b  = frame (fun () -> acquire t) p in
     h_commute (pts_to t.r full b) p;
-    let _ = steel_frame_t f in // (pts_to t.r full b) in
+    let _ = frame f (pts_to t.r full b) in
     h_commute q (pts_to t.r full b);
     finish t b
 
@@ -108,7 +99,7 @@ let fork (#a:Type) (#p #q #r #s:hprop)
       (g: (thread q -> unit -> SteelT unit r (fun _ -> s)))
   : SteelT unit (p `star` r) (fun _ -> s)
   = h_intro_emp_l (p `star` r);
-    let t : thread q = steel_frame_t (fun _ -> new_thread q) in // (p `star` r) in
+    let t : thread q = frame (fun _ -> new_thread q) (p `star` r) in
     h_assert (emp `star` (p `star` r));
     h_elim_emp_l (p `star` r);
     par (spawn f t) (g t);
