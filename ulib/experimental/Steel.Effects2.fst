@@ -455,6 +455,21 @@ polymonadic_bind (PURE, Steel) |> Steel = bind_pure_steel_
  *
  * Note it is in SteelF (i.e. framed already)
  *)
-let steel_ret (a:Type) (x:a) (#p:a -> hprop u#1)
+let steel_ret (#a:Type) (#p:a -> hprop u#1) (x:a)
 : SteelF a (p x) p (fun _ -> True) (fun _ r _ -> r == x)
 = SteelF?.reflect (fun _ -> x)
+
+
+(*
+ * subcomp relation from SteelF to Steel
+ *)
+
+polymonadic_subcomp SteelF <: Steel = subcomp
+
+
+(*
+ * Annotations without the req and ens
+ *)
+
+effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
+  Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
