@@ -389,12 +389,12 @@ let new_chan (p:prot)
     rassert (pts_to recv full v `star` pts_to send full v);
     // AF: To investigate, WPs seem to creep into the SteelT effect here, causing a
     // type-mismatch on the framed function: the requires and ensures are not trivial anymore
-    let _  = steel_frame_t #_ #_ #_ #_ #(_ by (resolve_frame ())) (fun _ -> share #_ #full #v recv) in //(pts_to send full v) in
-//    let _ = frame (fun _ -> share recv) _ in
-    // h_assert ((pts_to recv half v `star` pts_to recv half v) `star` pts_to send full v);
-    // h_commute _ _;
+    // let _  = steel_frame_t #_ #_ #_ #_ #(_ by (resolve_frame ())) (fun _ -> share #_ #full_perm #v recv) in //(pts_to send full v) in
+    let _ = frame (fun _ -> share recv) _ in
+    h_assert ((pts_to recv half v `star` pts_to recv half v) `star` pts_to send full v);
+    h_commute _ _;
     // AF: Same problem as above
-    let _  = steel_frame_t (fun _ -> share #_ #full #v send) in
+    let _  = frame (fun _ -> share send) _ in
     h_assert ((pts_to send half v `star` pts_to send half v) `star`
               (pts_to recv half v `star` pts_to recv half v));
     reshuffle ();
@@ -407,9 +407,9 @@ let new_chan (p:prot)
     // rassert (pts_to send half v `star` (pts_to recv half v `star` chan_inv c));
     // h_assert (pts_to send half vp `star` (pts_to recv half vp `star` chan_inv c));
     steel_frame_t #_ #_ #_ #_ #(_ by (resolve_frame())) (fun _ -> intro_in_state send p vp); //(pts_to recv half v `star` chan_inv c) in
-//    rassert (in_state send p `star` (pts_to recv half v `star` chan_inv c));
-//    reshuffle ();
-    let _ = steel_frame_t (fun _ -> intro_in_state recv p vp) in
+    rassert (in_state send p `star` (pts_to recv half v `star` chan_inv c));
+    reshuffle ();
+    let _ = frame (fun _ -> intro_in_state recv p vp) _ in
     h_assert (in_state recv p `star` (chan_inv c `star` in_state send p));
     // reshuffle ();
     // h_assert (chan_inv c `star` (in_state send p `star` in_state recv p));
