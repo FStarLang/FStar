@@ -69,6 +69,7 @@ val delta_depth_to_string : delta_depth -> string
 val action_to_string  : action -> string
 val metadata_to_string : metadata -> string
 val ctx_uvar_to_string    : ctx_uvar -> string
+val ctx_uvar_to_string_no_reason    : ctx_uvar -> string
 
 val emb_typ_to_string: emb_typ -> string
 

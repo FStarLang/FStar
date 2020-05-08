@@ -312,12 +312,12 @@ and term_to_string x =
       | Tm_uvar (u, ([], _)) ->
         if Options.print_bound_var_types()
         && Options.print_effect_args()
-        then ctx_uvar_to_string u
+        then ctx_uvar_to_string_aux true u
         else "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head)
       | Tm_uvar (u, s) ->
         if Options.print_bound_var_types()
         && Options.print_effect_args()
-        then U.format2 "(%s @ %s)" (ctx_uvar_to_string u) (List.map subst_to_string (fst s) |> String.concat "; ")
+        then U.format2 "(%s @ %s)" (ctx_uvar_to_string_aux true u) (List.map subst_to_string (fst s) |> String.concat "; ")
         else "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head)
       | Tm_constant c ->    const_to_string c
       | Tm_type u ->        if (Options.print_universes()) then U.format1 "Type u#(%s)" (univ_to_string u) else "Type"
@@ -361,13 +361,16 @@ and branch_to_string (p, wopt, e) : string =
                 (p |> pat_to_string)
                 (match wopt with | None -> "" | Some w -> U.format1 "when %s" (w |> term_to_string))
                 (e |> term_to_string)
-and ctx_uvar_to_string ctx_uvar =
-    format4 "(* %s *)\n(%s |- %s : %s)"
-            (ctx_uvar.ctx_uvar_reason)
+and ctx_uvar_to_string_aux print_reason ctx_uvar =
+    let reason_string =
+      if print_reason
+      then U.format1 "(* %s *)\n" ctx_uvar.ctx_uvar_reason
+      else "" in
+    format4 "%s(%s |- %s : %s)"
+            reason_string
             (binders_to_string ", " ctx_uvar.ctx_uvar_binders)
             (uvar_to_string ctx_uvar.ctx_uvar_head)
             (term_to_string ctx_uvar.ctx_uvar_typ)
-
 
 and subst_elt_to_string = function
    | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
@@ -859,6 +862,10 @@ let set_to_string f s =
             U.string_of_string_builder strb
 
 let bvs_to_string sep bvs = binders_to_string sep (List.map mk_binder bvs)
+
+let ctx_uvar_to_string ctx_uvar = ctx_uvar_to_string_aux true ctx_uvar
+
+let ctx_uvar_to_string_no_reason ctx_uvar = ctx_uvar_to_string_aux false ctx_uvar
 
 let rec emb_typ_to_string = function
     | ET_abstract -> "abstract"
