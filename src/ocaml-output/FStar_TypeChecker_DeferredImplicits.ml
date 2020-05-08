@@ -3,9 +3,9 @@ let (is_flex : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t  ->
     let uu____13 = FStar_Syntax_Util.head_and_args t  in
     match uu____13 with
-    | (head1,_args) ->
+    | (head,_args) ->
         let uu____57 =
-          let uu____58 = FStar_Syntax_Subst.compress head1  in
+          let uu____58 = FStar_Syntax_Subst.compress head  in
           uu____58.FStar_Syntax_Syntax.n  in
         (match uu____57 with
          | FStar_Syntax_Syntax.Tm_uvar uu____62 -> true
@@ -16,9 +16,9 @@ let (flex_uvar_head :
   fun t  ->
     let uu____84 = FStar_Syntax_Util.head_and_args t  in
     match uu____84 with
-    | (head1,_args) ->
+    | (head,_args) ->
         let uu____127 =
-          let uu____128 = FStar_Syntax_Subst.compress head1  in
+          let uu____128 = FStar_Syntax_Subst.compress head  in
           uu____128.FStar_Syntax_Syntax.n  in
         (match uu____127 with
          | FStar_Syntax_Syntax.Tm_uvar (u,uu____132) -> u
@@ -72,49 +72,49 @@ type goal_dep =
 let (__proj__Mkgoal_dep__item__goal_dep_id : goal_dep -> Prims.int) =
   fun projectee  ->
     match projectee with
-    | { goal_dep_id; goal_type; goal_imp; assignees; goal_dep_uvars;
-        dependences; visited;_} -> goal_dep_id
+    | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
+        goal_dep_uvars; dependences; visited;_} -> goal_dep_id
   
 let (__proj__Mkgoal_dep__item__goal_type : goal_dep -> goal_type) =
   fun projectee  ->
     match projectee with
-    | { goal_dep_id; goal_type; goal_imp; assignees; goal_dep_uvars;
-        dependences; visited;_} -> goal_type
+    | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
+        goal_dep_uvars; dependences; visited;_} -> goal_type1
   
 let (__proj__Mkgoal_dep__item__goal_imp :
   goal_dep -> FStar_TypeChecker_Common.implicit) =
   fun projectee  ->
     match projectee with
-    | { goal_dep_id; goal_type; goal_imp; assignees; goal_dep_uvars;
-        dependences; visited;_} -> goal_imp
+    | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
+        goal_dep_uvars; dependences; visited;_} -> goal_imp
   
 let (__proj__Mkgoal_dep__item__assignees :
   goal_dep -> FStar_Syntax_Syntax.ctx_uvar FStar_Util.set) =
   fun projectee  ->
     match projectee with
-    | { goal_dep_id; goal_type; goal_imp; assignees; goal_dep_uvars;
-        dependences; visited;_} -> assignees
+    | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
+        goal_dep_uvars; dependences; visited;_} -> assignees
   
 let (__proj__Mkgoal_dep__item__goal_dep_uvars :
   goal_dep -> FStar_Syntax_Syntax.ctx_uvar FStar_Util.set) =
   fun projectee  ->
     match projectee with
-    | { goal_dep_id; goal_type; goal_imp; assignees; goal_dep_uvars;
-        dependences; visited;_} -> goal_dep_uvars
+    | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
+        goal_dep_uvars; dependences; visited;_} -> goal_dep_uvars
   
 let (__proj__Mkgoal_dep__item__dependences :
   goal_dep -> goal_dep Prims.list FStar_ST.ref) =
   fun projectee  ->
     match projectee with
-    | { goal_dep_id; goal_type; goal_imp; assignees; goal_dep_uvars;
-        dependences; visited;_} -> dependences
+    | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
+        goal_dep_uvars; dependences; visited;_} -> dependences
   
 let (__proj__Mkgoal_dep__item__visited : goal_dep -> Prims.int FStar_ST.ref)
   =
   fun projectee  ->
     match projectee with
-    | { goal_dep_id; goal_type; goal_imp; assignees; goal_dep_uvars;
-        dependences; visited;_} -> visited
+    | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
+        goal_dep_uvars; dependences; visited;_} -> visited
   
 type goal_deps = goal_dep Prims.list
 let (print_uvar_set :
@@ -219,13 +219,13 @@ let (sort_goals :
                            "Impossible: deferred goals must be flex on one at least one side"
                     in
                  (match uu____869 with
-                  | (goal_type,assignees,dep_uvars) ->
+                  | (goal_type1,assignees,dep_uvars) ->
                       let uu____992 = FStar_ST.op_Bang goal_dep_id  in
                       let uu____1015 = FStar_Util.mk_ref []  in
                       let uu____1022 = FStar_Util.mk_ref mark_unset  in
                       {
                         goal_dep_id = uu____992;
-                        goal_type;
+                        goal_type = goal_type1;
                         goal_imp = imp;
                         assignees;
                         goal_dep_uvars = dep_uvars;
@@ -270,11 +270,11 @@ let (sort_goals :
                   | FStar_Pervasives_Native.Some t ->
                       let uu____1092 = FStar_Syntax_Util.head_and_args t  in
                       (match uu____1092 with
-                       | (head1,args) ->
+                       | (head,args) ->
                            let uu____1135 =
                              let uu____1150 =
                                let uu____1151 =
-                                 FStar_Syntax_Util.un_uinst head1  in
+                                 FStar_Syntax_Util.un_uinst head  in
                                uu____1151.FStar_Syntax_Syntax.n  in
                              (uu____1150, args)  in
                            (match uu____1135 with
@@ -315,18 +315,56 @@ let (sort_goals :
                                   dependences = uu____1277;
                                   visited = uu____1284
                                 }
-                            | uu____1289 -> imp_goal ()))))
+                            | (FStar_Syntax_Syntax.Tm_fvar
+                               fv,(uu____1290,uu____1291)::(outer,uu____1293)::
+                               (inner,uu____1295)::(frame,uu____1297)::[])
+                                when
+                                (let uu____1382 =
+                                   FStar_Ident.lid_of_str
+                                     "SteelT.FramingBind.can_be_split_into_forall"
+                                    in
+                                 FStar_Syntax_Syntax.fv_eq_lid fv uu____1382)
+                                  && (is_flex frame)
+                                ->
+                                let imp_uvar = flex_uvar_head frame  in
+                                let uu____1385 = FStar_ST.op_Bang goal_dep_id
+                                   in
+                                let uu____1408 =
+                                  FStar_Util.set_add imp_uvar empty_uv_set
+                                   in
+                                let uu____1411 =
+                                  let uu____1414 =
+                                    FStar_Syntax_Free.uvars outer  in
+                                  let uu____1417 =
+                                    FStar_Syntax_Free.uvars inner  in
+                                  FStar_Util.set_union uu____1414 uu____1417
+                                   in
+                                let uu____1420 = FStar_Util.mk_ref []  in
+                                let uu____1427 = FStar_Util.mk_ref mark_unset
+                                   in
+                                {
+                                  goal_dep_id = uu____1385;
+                                  goal_type =
+                                    (Can_be_split_into
+                                       (outer, inner, imp_uvar));
+                                  goal_imp = imp;
+                                  assignees = uu____1408;
+                                  goal_dep_uvars = uu____1411;
+                                  dependences = uu____1420;
+                                  visited = uu____1427
+                                }
+                            | uu____1432 -> imp_goal ()))))
              in
-          let goal_deps = FStar_List.map imp_as_goal_dep imps  in
-          let uu____1307 =
+          let goal_deps1 = FStar_List.map imp_as_goal_dep imps  in
+          let uu____1450 =
             FStar_List.partition
               (fun gd  ->
                  match gd.goal_type with
-                 | Imp uu____1320 -> false
-                 | uu____1322 -> true) goal_deps
+                 | Imp uu____1463 -> false
+                 | uu____1465 -> true) goal_deps1
              in
-          (match uu____1307 with
-           | (goal_deps1,rest) ->
+          (match uu____1450 with
+           | (goal_deps2,rest) ->
                let fill_deps gds =
                  let in_deps deps gd =
                    FStar_Util.for_some
@@ -343,79 +381,79 @@ let (sort_goals :
                             if gd.goal_dep_id = other_gd.goal_dep_id
                             then false
                             else
-                              (let uu____1421 = in_deps current_deps other_gd
+                              (let uu____1564 = in_deps current_deps other_gd
                                   in
-                               if uu____1421
+                               if uu____1564
                                then false
                                else
                                  (match other_gd.goal_type with
-                                  | FlexFlex uu____1429 ->
-                                      let uu____1434 =
+                                  | FlexFlex uu____1572 ->
+                                      let uu____1577 =
                                         FStar_ST.op_Bang other_gd.dependences
                                          in
-                                      (match uu____1434 with
+                                      (match uu____1577 with
                                        | [] -> false
                                        | deps ->
                                            let eligible =
-                                             let uu____1467 = in_deps deps gd
+                                             let uu____1610 = in_deps deps gd
                                                 in
-                                             Prims.op_Negation uu____1467  in
+                                             Prims.op_Negation uu____1610  in
                                            if eligible
                                            then
-                                             let uu____1471 =
-                                               let uu____1473 =
+                                             let uu____1614 =
+                                               let uu____1616 =
                                                  FStar_Util.set_intersect
                                                    dependent_uvars
                                                    other_gd.assignees
                                                   in
                                                FStar_Util.set_is_empty
-                                                 uu____1473
+                                                 uu____1616
                                                 in
-                                             Prims.op_Negation uu____1471
+                                             Prims.op_Negation uu____1614
                                            else false)
-                                  | uu____1479 ->
-                                      let uu____1480 =
-                                        let uu____1482 =
+                                  | uu____1622 ->
+                                      let uu____1623 =
+                                        let uu____1625 =
                                           FStar_Util.set_intersect
                                             dependent_uvars
                                             other_gd.assignees
                                            in
-                                        FStar_Util.set_is_empty uu____1482
+                                        FStar_Util.set_is_empty uu____1625
                                          in
-                                      Prims.op_Negation uu____1480))
+                                      Prims.op_Negation uu____1623))
                              in
                           if res
                           then FStar_ST.op_Colon_Equals changed true
                           else ();
                           res) gds
                       in
-                   (let uu____1512 =
+                   (let uu____1655 =
                       FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
                         (FStar_Options.Other "ResolveImplicitsHook")
                        in
-                    if uu____1512
+                    if uu____1655
                     then
-                      let uu____1517 = print_goal_dep gd  in
-                      let uu____1519 = print_uvar_set dependent_uvars  in
-                      let uu____1521 =
-                        let uu____1523 =
+                      let uu____1660 = print_goal_dep gd  in
+                      let uu____1662 = print_uvar_set dependent_uvars  in
+                      let uu____1664 =
+                        let uu____1666 =
                           FStar_List.map
                             (fun x  -> FStar_Util.string_of_int x.goal_dep_id)
                             deps
                            in
-                        FStar_All.pipe_right uu____1523
+                        FStar_All.pipe_right uu____1666
                           (FStar_String.concat "; ")
                          in
                       FStar_Util.print3
                         "Deps for goal %s, dep uvars = %s ... [%s]\n"
-                        uu____1517 uu____1519 uu____1521
+                        uu____1660 uu____1662 uu____1664
                     else ());
-                   (let uu____1539 =
-                      let uu____1542 = FStar_ST.op_Bang gd.dependences  in
-                      FStar_List.append deps uu____1542  in
-                    FStar_ST.op_Colon_Equals gd.dependences uu____1539);
+                   (let uu____1682 =
+                      let uu____1685 = FStar_ST.op_Bang gd.dependences  in
+                      FStar_List.append deps uu____1685  in
+                    FStar_ST.op_Colon_Equals gd.dependences uu____1682);
                    FStar_ST.op_Bang changed  in
-                 let rec aux uu____1617 =
+                 let rec aux uu____1760 =
                    let changed =
                      FStar_List.fold_right
                        (fun gd  ->
@@ -429,88 +467,88 @@ let (sort_goals :
                  let out = FStar_Util.mk_ref []  in
                  let has_cycle = FStar_Util.mk_ref false  in
                  let rec visit cycle gd =
-                   let uu____1675 =
-                     let uu____1677 = FStar_ST.op_Bang gd.visited  in
-                     uu____1677 = mark_finished  in
-                   if uu____1675
+                   let uu____1818 =
+                     let uu____1820 = FStar_ST.op_Bang gd.visited  in
+                     uu____1820 = mark_finished  in
+                   if uu____1818
                    then ()
                    else
-                     (let uu____1704 =
-                        let uu____1706 = FStar_ST.op_Bang gd.visited  in
-                        uu____1706 = mark_inprogress  in
-                      if uu____1704
+                     (let uu____1847 =
+                        let uu____1849 = FStar_ST.op_Bang gd.visited  in
+                        uu____1849 = mark_inprogress  in
+                      if uu____1847
                       then
-                        ((let uu____1732 =
+                        ((let uu____1875 =
                             FStar_All.pipe_left
                               (FStar_TypeChecker_Env.debug env)
                               (FStar_Options.Other "ResolveImplicitsHook")
                              in
-                          if uu____1732
+                          if uu____1875
                           then
-                            let uu____1737 =
-                              let uu____1739 =
+                            let uu____1880 =
+                              let uu____1882 =
                                 FStar_List.map print_goal_dep (gd :: cycle)
                                  in
-                              FStar_All.pipe_right uu____1739
+                              FStar_All.pipe_right uu____1882
                                 (FStar_String.concat ", ")
                                in
-                            FStar_Util.print1 "Cycle:\n%s\n" uu____1737
+                            FStar_Util.print1 "Cycle:\n%s\n" uu____1880
                           else ());
                          FStar_ST.op_Colon_Equals has_cycle true)
                       else
                         (FStar_ST.op_Colon_Equals gd.visited mark_inprogress;
-                         (let uu____1799 = FStar_ST.op_Bang gd.dependences
+                         (let uu____1942 = FStar_ST.op_Bang gd.dependences
                              in
-                          FStar_List.iter (visit (gd :: cycle)) uu____1799);
+                          FStar_List.iter (visit (gd :: cycle)) uu____1942);
                          FStar_ST.op_Colon_Equals gd.visited mark_finished;
-                         (let uu____1847 =
-                            let uu____1850 = FStar_ST.op_Bang out  in gd ::
-                              uu____1850
+                         (let uu____1990 =
+                            let uu____1993 = FStar_ST.op_Bang out  in gd ::
+                              uu____1993
                              in
-                          FStar_ST.op_Colon_Equals out uu____1847)))
+                          FStar_ST.op_Colon_Equals out uu____1990)))
                     in
                  FStar_List.iter (visit []) gds;
-                 (let uu____1900 = FStar_ST.op_Bang has_cycle  in
-                  if uu____1900
+                 (let uu____2043 = FStar_ST.op_Bang has_cycle  in
+                  if uu____2043
                   then FStar_Pervasives_Native.None
                   else
-                    (let uu____1932 = FStar_ST.op_Bang out  in
-                     FStar_Pervasives_Native.Some uu____1932))
+                    (let uu____2075 = FStar_ST.op_Bang out  in
+                     FStar_Pervasives_Native.Some uu____2075))
                   in
-               (fill_deps goal_deps1;
-                (let uu____1962 =
+               (fill_deps goal_deps2;
+                (let uu____2105 =
                    FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
                      (FStar_Options.Other "ResolveImplicitsHook")
                     in
-                 if uu____1962
+                 if uu____2105
                  then
                    (FStar_Util.print_string
                       "<<<<<<<<<<<<Goals before sorting>>>>>>>>>>>>>>>\n";
                     FStar_List.iter
                       (fun gd  ->
-                         let uu____1972 = print_goal_dep gd  in
-                         FStar_Util.print_string uu____1972) goal_deps1)
+                         let uu____2115 = print_goal_dep gd  in
+                         FStar_Util.print_string uu____2115) goal_deps2)
                  else ());
-                (let goal_deps2 =
-                   let uu____1979 = topological_sort goal_deps1  in
-                   match uu____1979 with
-                   | FStar_Pervasives_Native.None  -> goal_deps1
-                   | FStar_Pervasives_Native.Some sorted1 ->
-                       FStar_List.rev sorted1
+                (let goal_deps3 =
+                   let uu____2122 = topological_sort goal_deps2  in
+                   match uu____2122 with
+                   | FStar_Pervasives_Native.None  -> goal_deps2
+                   | FStar_Pervasives_Native.Some sorted ->
+                       FStar_List.rev sorted
                     in
-                 (let uu____1994 =
+                 (let uu____2137 =
                     FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
                       (FStar_Options.Other "ResolveImplicitsHook")
                      in
-                  if uu____1994
+                  if uu____2137
                   then
                     (FStar_Util.print_string
                        "<<<<<<<<<<<<Goals after sorting>>>>>>>>>>>>>>>\n";
                      FStar_List.iter
                        (fun gd  ->
-                          let uu____2004 = print_goal_dep gd  in
-                          FStar_Util.print_string uu____2004) goal_deps2)
+                          let uu____2147 = print_goal_dep gd  in
+                          FStar_Util.print_string uu____2147) goal_deps3)
                   else ());
                  FStar_List.map (fun gd  -> gd.goal_imp)
-                   (FStar_List.append goal_deps2 rest))))
+                   (FStar_List.append goal_deps3 rest))))
   

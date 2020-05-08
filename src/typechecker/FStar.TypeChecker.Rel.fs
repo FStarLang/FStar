@@ -787,7 +787,7 @@ let destruct_flex_t' t : flex_t =
     let head, args = U.head_and_args t in
     match (SS.compress head).n with
     | Tm_uvar (uv, s) ->
-      (t, uv, args)
+      Flex (t, uv, args)
     | _ -> failwith "Not a flex-uvar"
 
 (* Destruct a term into its uvar head and arguments *)
@@ -4037,11 +4037,12 @@ let force_trivial_guard env g =
                match U.lid_of_sigelt s with
                | None -> failwith "Unexpected: tactic without a name"
                | Some l ->
-                 match BU.smap_try_find map l.str with
-                 | None -> BU.smap_add map l.str ([i], s)
+                 let lstr = Ident.string_of_lid l in
+                 match BU.smap_try_find map lstr with
+                 | None -> BU.smap_add map lstr ([i], s)
                  | Some (is, s) ->
-                   BU.smap_remove map l.str;
-                   BU.smap_add map l.str (i::is, s))
+                   BU.smap_remove map lstr;
+                   BU.smap_add map lstr (i::is, s))
            is;
          BU.smap_fold map (fun _ is out -> is::out) []
        in

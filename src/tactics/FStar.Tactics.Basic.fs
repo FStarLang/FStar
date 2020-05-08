@@ -675,7 +675,7 @@ let t_apply (uopt:bool) (only_match:bool) (tm:term) : tac<unit> = wrap_err "appl
                                                   is_guard = false; })]
                ) uvs) (fun _ ->
     proc_guard "apply guard" e guard
-    )))))))
+    ))))))))
 
 // returns pre and post
 let lemma_or_sq (c : comp) : option<(term * term)> =
