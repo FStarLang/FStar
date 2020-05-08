@@ -97,15 +97,16 @@ inline_for_extraction noextract let resolve_frame () : Tac unit =
 
 inline_for_extraction noextract let reprove_frame () : Tac unit =
   apply (`squash_and);
-  split();
   norm [delta_only [`%can_be_split_into]];
   norm [delta_attr [`%__reduce__];
+       delta;
         delta_only [
           `%__proj__CM__item__unit;
           `%__proj__CM__item__mult;
           `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
           `%fst; `%snd];
         primops; iota; zeta];
+  split();
   canon();
   trivial()
 
