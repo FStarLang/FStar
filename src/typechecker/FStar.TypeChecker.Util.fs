@@ -714,7 +714,7 @@ let mk_indexed_bind env
         let c = SS.subst_comp [bs_subst] c in
         effect_args_from_repr (SS.compress (U.comp_result c)) (U.is_layered n_ed) r1
         |> List.map (SS.subst subst)
-      | _ -> failwith "imspossible: mk_indexed_bind"
+      | _ -> failwith "impossible: mk_indexed_bind"
     in
 
     let env_g = Env.push_binders env [x_a] in
