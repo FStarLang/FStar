@@ -654,6 +654,11 @@ let mk_indexed_bind env
   (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ)
   (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
 
+  let bind_name = BU.format3 "(%s, %s) |> %s"
+    (m |> Ident.ident_of_lid |> string_of_id)
+    (n |> Ident.ident_of_lid |> string_of_id)
+    (p |> Ident.ident_of_lid |> string_of_id) in
+
   if Env.debug env <| Options.Other "LayeredEffects" then
     BU.print2 "Binding c1:%s and c2:%s {\n"
       (Print.comp_to_string (S.mk_Comp ct1)) (Print.comp_to_string (S.mk_Comp ct2));
@@ -666,9 +671,9 @@ let mk_indexed_bind env
   let _, bind_t = Env.inst_tscheme_with bind_t [u1; u2] in
 
   let bind_t_shape_error (s:string) =
-    (Errors.Fatal_UnexpectedEffect, BU.format2
-       "bind %s does not have proper shape (reason:%s)"
-       (Print.term_to_string bind_t) s) in
+    (Errors.Fatal_UnexpectedEffect, BU.format3
+       "bind %s (%s) does not have proper shape (reason:%s)"
+       (Print.term_to_string bind_t) bind_name s) in
 
   let a_b, b_b, rest_bs, f_b, g_b, bind_c =
     match (SS.compress bind_t).n with
@@ -684,9 +689,7 @@ let mk_indexed_bind env
     env rest_bs [NT (a_b |> fst, t1); NT (b_b |> fst, t2)]
     (fun b -> BU.format3
       "implicit var for binder %s of %s at %s"
-      (Print.binder_to_string b)
-      (BU.format3 "(%s, %s) |> %s" (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p))
-      (Range.string_of_range r1)) r1 in
+      (Print.binder_to_string b) bind_name (Range.string_of_range r1)) r1 in
 
   let subst = List.map2
     (fun b t -> NT (b |> fst, t))
@@ -697,7 +700,8 @@ let mk_indexed_bind env
       (SS.compress (f_b |> fst).sort)
       (U.is_layered m_ed) r1 |> List.map (SS.subst subst) in
     List.fold_left2
-      (fun g i1 f_i1 -> Env.conj_guard g (Rel.teq env i1 f_i1))
+      (fun g i1 f_i1 ->
+       Env.conj_guard g (Rel.layered_effect_teq env i1 f_i1 (Some bind_name)))
       Env.trivial_guard is1 f_sort_is in 
 
   let g_guard =  //unify c2's indices with g's indices in the bind_wp
@@ -719,7 +723,7 @@ let mk_indexed_bind env
 
     let env_g = Env.push_binders env [x_a] in
     List.fold_left2
-      (fun g i1 g_i1 -> Env.conj_guard g (Rel.teq env_g i1 g_i1))
+      (fun g i1 g_i1 -> Env.conj_guard g (Rel.layered_effect_teq env_g i1 g_i1 (Some bind_name)))
       Env.trivial_guard is2 g_sort_is
     |> Env.close_guard env [x_a] in
 
@@ -1347,14 +1351,16 @@ let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) d
 let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.range)
 : comp * guard_t =
 
+  let conjunction_name = BU.format1 "%s.conjunction" (string_of_lid ed.mname) in
+
   let _, conjunction =
     Env.inst_tscheme_with (ed |> U.get_layered_if_then_else_combinator |> must) [u_a] in
   let is1, is2 = List.map fst ct1.effect_args, List.map fst ct2.effect_args in
 
   let conjunction_t_error (s:string) =
-    (Errors.Fatal_UnexpectedEffect, BU.format2
-      "conjunction %s does not have proper shape (reason:%s)"
-      (Print.term_to_string conjunction) s) in
+    (Errors.Fatal_UnexpectedEffect, BU.format3
+      "conjunction %s (%s) does not have proper shape (reason:%s)"
+      (Print.term_to_string conjunction) conjunction_name s) in
 
   let a_b, rest_bs, f_b, g_b, p_b, body =
     match (SS.compress conjunction).n with
@@ -1382,7 +1388,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
         is |> List.map fst |> List.map (SS.subst substs)
       | _ -> raise_error (conjunction_t_error "f's type is not a repr type") r in
     List.fold_left2
-      (fun g i1 f_i -> Env.conj_guard g (Rel.teq env i1 f_i))
+      (fun g i1 f_i -> Env.conj_guard g (Rel.layered_effect_teq env i1 f_i (Some conjunction_name)))
       Env.trivial_guard is1 f_sort_is in
 
   let g_guard =
@@ -1392,7 +1398,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
         is |> List.map fst |> List.map (SS.subst substs)
       | _ -> raise_error (conjunction_t_error "g's type is not a repr type") r in
     List.fold_left2
-      (fun g i2 g_i -> Env.conj_guard g (Rel.teq env i2 g_i))
+      (fun g i2 g_i -> Env.conj_guard g (Rel.layered_effect_teq env i2 g_i (Some conjunction_name)))
       Env.trivial_guard is2 g_sort_is in
 
   let body = SS.subst substs body in
@@ -2846,6 +2852,8 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
 
   let ct = U.comp_to_comp_typ c in
 
+  let lift_name = BU.format2 "%s ~> %s" (string_of_lid ct.effect_name) (string_of_lid tgt) in
+
   let u, a, c_is = List.hd ct.comp_univs, ct.result_typ, ct.effect_args |> List.map fst in
 
   //lift_ts has the arrow type: <u>a:Type -> ..bs.. -> f -> repr a is
@@ -2885,7 +2893,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
     let f_sort = (fst f_b).sort |> SS.subst substs |> SS.compress in
     let f_sort_is = effect_args_from_repr f_sort (Env.is_layered_effect env ct.effect_name) r in
     List.fold_left2
-      (fun g i1 i2 -> Env.conj_guard g (Rel.teq env i1 i2))
+      (fun g i1 i2 -> Env.conj_guard g (Rel.layered_effect_teq env i1 i2 (Some lift_name)))
       Env.trivial_guard c_is f_sort_is in
 
   let lift_ct = lift_c |> SS.subst_comp substs |> U.comp_to_comp_typ in
