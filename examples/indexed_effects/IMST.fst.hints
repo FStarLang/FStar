@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_FStar.Pervasives.dfst" ],
       0,
-      "d58ec58c3dd6a22c6df4dc8d4ac09043"
+      "2c2cde405484400c26431cf25cdf9460"
     ],
     [
       "IMST.nat_rel",
@@ -24,7 +24,7 @@
         "token_correspondence_IMST.nat_rel_"
       ],
       0,
-      "dca91576d7daa84790cd018dc6c30bff"
+      "b30ad9cf790bf06aedd515a377a3e920"
     ],
     [
       "IMST.f",
@@ -53,44 +53,7 @@
         "token_correspondence_IMST.nat_rel_", "typing_IMST.nat_rel"
       ],
       0,
-      "4ca10d00098b777058c3d7ff4977d964"
-    ],
-    [
-      "IMST.op_Greater_Less",
-      2,
-      2,
-      1,
-      [ "@query", "equation_FStar.Pervasives.dfst" ],
-      0,
-      "b149f3e43dbda2f99890a6e66dcbb128"
-    ],
-    [
-      "IMST.nat_rel",
-      2,
-      2,
-      1,
-      [
-        "@query", "b2t_def", "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive", "equation_IMST.nat_rel_",
-        "equation_Prims.nat", "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "token_correspondence_IMST.nat_rel_"
-      ],
-      0,
-      "42186c56e1066ff23f9915142c002a42"
-    ],
-    [
-      "IMST.f",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
-      0,
-      "3e2ba207f1fe0d906ca79db8f7e47ec0"
+      "b3f8a892fd5a58d730461e0f4b80cca3"
     ]
   ]
 ]

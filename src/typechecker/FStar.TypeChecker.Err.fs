@@ -89,11 +89,13 @@ let print_discrepancy (f : 'a -> string) (x : 'a) (y : 'a) : string * string =
         [pi; pu; pea; pf]
     in
     let set (l : list<bool>) : unit =
-        let [pi; pu; pea; pf] = l in
-        set_bool_option "print_implicits"   pi;
-        set_bool_option "print_universes"   pu;
-        set_bool_option "print_effect_args" pea;
-        set_bool_option "print_full_names " pf
+        match l with
+        | [pi; pu; pea; pf] ->
+          set_bool_option "print_implicits"   pi;
+          set_bool_option "print_universes"   pu;
+          set_bool_option "print_effect_args" pea;
+          set_bool_option "print_full_names " pf
+        | _ -> failwith "impossible: print_discrepancy"
     in
     let bas = get () in
     let rec go (cur : list<bool>) =
@@ -176,8 +178,8 @@ let ill_kinded_type = "Ill-kinded type"
 let totality_check  = "This term may not terminate"
 
 let unexpected_signature_for_monad env m k =
-  (Errors.Fatal_UnexpectedSignatureForMonad, (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type => WP a => Effect); got %s"
-    m.str (N.term_to_string env k)))
+  (Errors.Fatal_UnexpectedSignatureForMonad, (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type -> WP a -> Effect); got %s"
+    (string_of_lid m) (N.term_to_string env k)))
 
 let expected_a_term_of_type_t_got_a_function env msg t e =
   (Errors.Fatal_ExpectTermGotFunction, (format3 "Expected a term of type \"%s\"; got a function \"%s\" (%s)"
@@ -255,11 +257,25 @@ let computed_computation_type_does_not_match_annotation_eq env e c c' =
 let unexpected_non_trivial_precondition_on_term env f =
  (Errors.Fatal_UnExpectedPreCondition, (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)))
 
-let expected_pure_expression e c =
-  (Errors.Fatal_ExpectedPureExpression, (format2 "Expected a pure expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)))
+let expected_pure_expression e c reason =
+  let msg = "Expected a pure expression" in
+  let msg =
+    if reason = ""
+    then msg
+    else BU.format1 (msg ^ " (%s)") reason in
+  (Errors.Fatal_ExpectedPureExpression,
+   format2 (msg ^ "; got an expression \"%s\" with effect \"%s\"")   
+     (Print.term_to_string e) (fst <| name_and_result c))
 
-let expected_ghost_expression e c =
-  (Errors.Fatal_ExpectedGhostExpression, (format2 "Expected a ghost expression; got an expression \"%s\" with effect \"%s\"" (Print.term_to_string e) (fst <| name_and_result c)))
+let expected_ghost_expression e c reason =
+  let msg = "Expected a ghost expression" in
+  let msg =
+    if reason = ""
+    then msg
+    else BU.format1 (msg ^ " (%s)") reason in
+  (Errors.Fatal_ExpectedGhostExpression,
+   format2 (msg ^ "; got an expression \"%s\" with effect \"%s\"")   
+     (Print.term_to_string e) (fst <| name_and_result c))
 
 let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
   (Errors.Fatal_UnexpectedEffect, (format2 "Expected a computation with effect %s; but it has effect %s" (Print.lid_to_string c1) (Print.lid_to_string c2)))

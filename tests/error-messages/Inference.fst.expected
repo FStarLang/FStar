@@ -1,0 +1,5 @@
+>> Got issues: [
+Inference.fst(20,14-20,15): (Error 19) Subtyping check failed; expected type Prims.eqtype; got type Type0; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(45,23-45,30))
+>>]
+Verified module: Inference
+All verification conditions discharged successfully

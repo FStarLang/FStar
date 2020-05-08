@@ -95,15 +95,24 @@
     <Compile Include="FStar.Tactics.Types.fsi" />
     <Compile Include="FStar.Tactics.Types.fs" />
     <Compile Include="FStar.Tactics.Result.fs" />
+    <Compile Include="FStar.Tactics.Printing.fsi" />
+    <Compile Include="FStar.Tactics.Printing.fs" />
+    <Compile Include="FStar.Tactics.Monad.fsi" />
+    <Compile Include="FStar.Tactics.Monad.fs" />
     <Compile Include="FStar.Tactics.Basic.fsi" />
     <Compile Include="FStar.Tactics.Basic.fs" />
+    <Compile Include="FStar.Tactics.CtrlRewrite.fsi" />
+    <Compile Include="FStar.Tactics.CtrlRewrite.fs" />
     <Compile Include="FStar.Tactics.Embedding.fsi" />
     <Compile Include="FStar.Tactics.Embedding.fs" />
     <Compile Include="FStar.Tactics.Native.fsi" />
     <Compile Include="FStar.Tactics.Native.fs" />
+    <Compile Include="FStar.Tactics.InterpFuns.fsi" />
     <Compile Include="FStar.Tactics.InterpFuns.fs" />
-    <Compile Include="boot/FStar.Tactics.Interpreter.fsi" />
-    <Compile Include="boot/FStar.Tactics.Interpreter.fs" />
+    <Compile Include="FStar.Tactics.Interpreter.fsi" />
+    <Compile Include="FStar.Tactics.Interpreter.fs" />
+    <Compile Include="FStar.Tactics.Hooks.fsi" />
+    <Compile Include="FStar.Tactics.Hooks.fs" />
     <Compile Include="FStar.Tactics.Load.fsi" />
     <Compile Include="FStar.Tactics.Load.fs" />
   </ItemGroup>

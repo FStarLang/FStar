@@ -139,7 +139,7 @@ let rec inspect_ln (t:term) : term_view =
         // expose n-ary lambdas buy unary ones.
         let (a, q) = last args in
         let q' = inspect_aqual q in
-        Tv_App (S.mk_Tm_app hd (init args) None t.pos, (a, q')) // TODO: The range and tk are probably wrong. Fix
+        Tv_App (U.mk_app hd (init args), (a, q'))
 
     | Tm_abs ([], _, _) ->
         failwith "inspect_ln: empty arguments on Tm_abs"
@@ -148,7 +148,7 @@ let rec inspect_ln (t:term) : term_view =
         let body =
             match bs with
             | [] -> t
-            | bs -> S.mk (Tm_abs (bs, t, k)) None t.pos
+            | bs -> S.mk (Tm_abs (bs, t, k)) t.pos
         in
         Tv_Abs (b, body)
 
@@ -307,30 +307,30 @@ let pack_ln (tv:term_view) : term =
         U.mk_app l [(r, q')]
 
     | Tv_Abs (b, t) ->
-        mk (Tm_abs ([b], t, None)) None t.pos // TODO: effect?
+        mk (Tm_abs ([b], t, None)) t.pos // TODO: effect?
 
     | Tv_Arrow (b, c) ->
-        mk (Tm_arrow ([b], c)) None c.pos
+        mk (Tm_arrow ([b], c)) c.pos
 
     | Tv_Type () ->
         U.ktype
 
     | Tv_Refine (bv, t) ->
-        mk (Tm_refine (bv, t)) None t.pos
+        mk (Tm_refine (bv, t)) t.pos
 
     | Tv_Const c ->
-        S.mk (Tm_constant (pack_const c)) None Range.dummyRange
+        S.mk (Tm_constant (pack_const c)) Range.dummyRange
 
     | Tv_Uvar (u, ctx_u_s) ->
-      S.mk (Tm_uvar ctx_u_s) None Range.dummyRange
+      S.mk (Tm_uvar ctx_u_s) Range.dummyRange
 
     | Tv_Let (false, attrs, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
-        S.mk (Tm_let ((false, [lb]), t2)) None Range.dummyRange
+        S.mk (Tm_let ((false, [lb]), t2)) Range.dummyRange
 
     | Tv_Let (true, attrs, bv, t1, t2) ->
         let lb = U.mk_letbinding (BU.Inl bv) [] bv.sort PC.effect_Tot_lid t1 attrs Range.dummyRange in
-        S.mk (Tm_let ((true, [lb]), t2)) None Range.dummyRange
+        S.mk (Tm_let ((true, [lb]), t2)) Range.dummyRange
 
     | Tv_Match (t, brs) ->
         let wrap v = {v=v;p=Range.dummyRange} in
@@ -343,16 +343,16 @@ let pack_ln (tv:term_view) : term =
             | Pat_Dot_Term (bv, t) -> wrap <| Pat_dot_term (bv, t)
         in
         let brs = List.map (function (pat, t) -> (pack_pat pat, None, t)) brs in
-        S.mk (Tm_match (t, brs)) None Range.dummyRange
+        S.mk (Tm_match (t, brs)) Range.dummyRange
 
     | Tv_AscribedT(e, t, tacopt) ->
-        S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) None Range.dummyRange
+        S.mk (Tm_ascribed(e, (BU.Inl t, tacopt), None)) Range.dummyRange
 
     | Tv_AscribedC(e, c, tacopt) ->
-        S.mk (Tm_ascribed(e, (BU.Inr c, tacopt), None)) None Range.dummyRange
+        S.mk (Tm_ascribed(e, (BU.Inr c, tacopt), None)) Range.dummyRange
 
     | Tv_Unknown ->
-        S.mk Tm_unknown None Range.dummyRange
+        S.mk Tm_unknown Range.dummyRange
 
 let compare_bv (x:bv) (y:bv) : order =
     let n = S.order_bv x y in
@@ -366,7 +366,7 @@ let is_free (x:bv) (t:term) : bool =
 let lookup_attr (attr:term) (env:Env.env) : list<fv> =
     match (SS.compress attr).n with
     | Tm_fvar fv ->
-        let ses = Env.lookup_attr env (Ident.text_of_lid (lid_of_fv fv)) in
+        let ses = Env.lookup_attr env (Ident.string_of_lid (lid_of_fv fv)) in
         List.concatMap (fun se -> match U.lid_of_sigelt se with
                                   | None -> []
                                   // FIXME: Get a proper delta depth
@@ -380,7 +380,7 @@ let defs_in_module (env:Env.env) (modul:name) : list<fv> =
     List.concatMap
         (fun l ->
                 (* must succeed, ids_of_lid always returns a non-empty list *)
-                let ns = Ident.ids_of_lid l |> init |> List.map Ident.string_of_ident in
+                let ns = Ident.ids_of_lid l |> init |> List.map Ident.string_of_id in
                 if ns = modul
                 then [S.lid_as_fv l (S.Delta_constant_at_level 999) None]
                 else [])
@@ -513,7 +513,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
 
 let inspect_bv (bv:bv) : bv_view =
     {
-      bv_ppname = Ident.string_of_ident bv.ppname;
+      bv_ppname = Ident.string_of_id bv.ppname;
       bv_index = Z.of_int_fs bv.index;
       bv_sort = bv.sort;
     }
@@ -537,10 +537,16 @@ let moduleof (e : Env.env) : list<string> =
     Ident.path_of_lid e.curmodule
 
 let env_open_modules (e : Env.env) : list<name> =
-    List.map (fun (l, m) -> List.map Ident.text_of_id (Ident.ids_of_lid l))
+    List.map (fun (l, m) -> List.map Ident.string_of_id (Ident.ids_of_lid l))
              (DsEnv.open_modules e.dsenv)
 
 let binders_of_env e = FStar.TypeChecker.Env.all_binders e
 let term_eq t1 t2 = U.term_eq (U.un_uinst t1) (U.un_uinst t2) // temporary, until universes are exposed
 let term_to_string t = Print.term_to_string t
 let comp_to_string c = Print.comp_to_string c
+
+let implode_qn ns = String.concat "." ns
+let explode_qn s = String.split ['.'] s
+let compare_string s1 s2 = Z.of_int_fs (String.compare s1 s2)
+
+let push_binder e b = Env.push_binders e [b]

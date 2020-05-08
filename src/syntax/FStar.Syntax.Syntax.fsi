@@ -75,7 +75,7 @@ type universe =
   | U_unif  of universe_uvar
   | U_unknown
 and univ_name = ident
-and universe_uvar = Unionfind.p_uvar<option<universe>> * version
+and universe_uvar = Unionfind.p_uvar<option<universe>> * version * Range.range
 
 type univ_names    = list<univ_name>
 type universes     = list<universe>
@@ -134,7 +134,7 @@ and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of dyn * term (* the dyn is an FStar.TypeChecker.Env.env *)
   | Ctx_uvar_meta_attr of term
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
-and uvar = Unionfind.p_uvar<option<term>> * version
+and uvar = Unionfind.p_uvar<option<term>> * version * Range.range
 and uvars = set<ctx_uvar>
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -435,6 +435,8 @@ type eff_decl = {
 type sig_metadata = {
     sigmeta_active:bool;
     sigmeta_fact_db_ids:list<string>;
+    sigmeta_admit:bool; //An internal flag to record that a sigelt's SMT proof should be admitted
+                        //Used in DM4Free
 }
 
 
@@ -479,7 +481,6 @@ type sigelt' =
                           * typ
   | Sig_let               of letbindings
                           * list<lident>               //mutually defined
-  | Sig_main              of term
   | Sig_assume            of lident
                           * univ_names
                           * formula
@@ -519,8 +520,6 @@ val mod_name: modul -> lident
 
 type path = list<string>
 type subst_t = list<subst_elt>
-type mk_t_a<'a> = option<unit> -> range -> syntax<'a>
-type mk_t = mk_t_a<term'>
 
 val contains_reflectable:  list<qualifier> -> bool
 
@@ -528,15 +527,22 @@ val withsort: 'a -> withinfo_t<'a>
 val withinfo: 'a -> Range.range -> withinfo_t<'a>
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
-val mk: 'a -> Tot<mk_t_a<'a>>
+val mk: 'a -> range -> syntax<'a>
 
 val mk_lb :         (lbname * list<univ_name> * lident * typ * term * list<attribute> * range) -> letbinding
 val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
-val mk_Tm_app:      term -> args -> Tot<mk_t>
+val mk_Tm_app:      term -> args -> range -> term
+
+(* This raises an exception if the term is not a Tm_fvar,
+ * use with care. It has to be an Tm_fvar *immediately*,
+ * there is no solving of Tm_delayed nor Tm_uvar. If it's
+ * possible that it is not a Tm_fvar, which can be the case
+ * for non-typechecked terms, just use `mk`. *)
 val mk_Tm_uinst:    term -> universes -> term
-val extend_app:     term -> arg -> Tot<mk_t>
-val extend_app_n:   term -> args -> Tot<mk_t>
+
+val extend_app:     term -> arg -> range -> term
+val extend_app_n:   term -> args -> range -> term
 val mk_Tm_delayed:  (term * subst_ts) -> Range.range -> term
 val mk_Total:       typ -> comp
 val mk_GTotal:      typ -> comp
@@ -548,8 +554,8 @@ val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term
 val binders_to_names: binders -> list<term>
 
-val bv_eq:           bv -> bv -> Tot<bool>
-val order_bv:        bv -> bv -> Tot<int>
+val bv_eq:           bv -> bv -> bool
+val order_bv:        bv -> bv -> int
 val range_of_lbname: lbname -> range
 val range_of_bv:     bv -> range
 val set_range_of_bv: bv -> range -> bv
@@ -581,6 +587,7 @@ val is_null_binder: binder -> bool
 val argpos:         arg -> Range.range
 val pat_bvs:        pat -> list<bv>
 val is_implicit:    aqual -> bool
+val is_implicit_or_meta: aqual -> bool
 val as_implicit:    bool -> aqual
 val is_top_level:   list<letbinding> -> bool
 

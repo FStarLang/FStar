@@ -42,7 +42,7 @@ unfold
 let arrow (a: Type) (b: (a -> Type)) = x: a -> Tot (b x)
 
 (** Using [arrow] instead *)
-[@ (deprecated "use arrow instead")]
+[@@ (deprecated "use arrow instead")]
 let efun (a: Type) (b: (a -> Type)) = arrow a b
 
 (** feq #a #b f g: pointwise equality of [f] and [g] on domain [a] *)
@@ -140,7 +140,7 @@ unfold
 let arrow_g (a: Type) (b: (a -> Type)) = x: a -> GTot (b x)
 
 (** Use [arrow_g] instead *)
-[@ (deprecated "use arrow_g instead")]
+[@@ (deprecated "use arrow_g instead")]
 let efun_g (a: Type) (b: (a -> Type)) = arrow_g a b
 
 (** [feq_g #a #b f g]: pointwise equality of [f] and [g] on domain [a] **)

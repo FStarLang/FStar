@@ -11,7 +11,7 @@
         "projection_inverse_EtM.AE.Key_region"
       ],
       0,
-      "70a1ae0df248a7ef58dfc5df46a99585"
+      "f5b4d4a58d4bb99e2f3fefcb4a8e23e2"
     ],
     [
       "EtM.AE.__proj__Key__item__km",
@@ -35,7 +35,7 @@
         "typing_FStar.Monotonic.HyperHeap.extends"
       ],
       0,
-      "ecff8d0b5a5d4e7135df2e7d4c38dca2"
+      "18391dea295fb114616a81d0f8243c32"
     ],
     [
       "EtM.AE.__proj__Key__item__log",
@@ -47,7 +47,7 @@
         "projection_inverse_EtM.AE.Key_region"
       ],
       0,
-      "9b4fd36c90dad265398d29fbf169cd20"
+      "49e4e99e93396b65e4629be7476a95c4"
     ],
     [
       "EtM.AE.mac_only_cpa_ciphers",
@@ -81,7 +81,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d94dce78018456b560fcc4c24977bbf6"
+      "9fb6208691bae15474762082071b25f8"
     ],
     [
       "EtM.AE.mac_only_cpa_ciphers_snoc",
@@ -110,7 +110,7 @@
         "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "bc3fbfb5ea9fd042ec89c9e6c1f6fedc"
+      "2ceff1d818cc34e7fe9246e0ac7c66d2"
     ],
     [
       "EtM.AE.mac_only_cpa_ciphers_mem",
@@ -130,7 +130,7 @@
         "refinement_kinding_Tm_refine_7de8468e4c8be42394c70da6b10033dd"
       ],
       0,
-      "62f6d3f9f76e01166947b796e1874ae1"
+      "4746b8ce09313048cb01d3417f123421"
     ],
     [
       "EtM.AE.mac_only_cpa_ciphers_mem",
@@ -202,7 +202,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "ff28ca632c3fae77262655c0a404135b"
+      "2b972499986e5627434f88f582ce15f5"
     ],
     [
       "EtM.AE.mac_and_cpa_refine_ae",
@@ -237,7 +237,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2fa200f8a05b949f3fa8867f0cfca88e"
+      "9e1a7452c97b6646483c9a86d06bb58b"
     ],
     [
       "EtM.AE.mac_and_cpa_refine_ae_snoc",
@@ -269,7 +269,7 @@
         "typing_FStar.Seq.Properties.snoc"
       ],
       0,
-      "7c18481d70356c7dfc6dccb1de5730c5"
+      "710990ec992115c1bbe235032a2004fe"
     ],
     [
       "EtM.AE.invert_invariant_aux",
@@ -294,7 +294,7 @@
         "typing_EtM.Plain.plain"
       ],
       0,
-      "f1e7dcbbd20737fa6f8e3e456c0a00e3"
+      "55c33b874fe1cc3a257b5d5e3310e496"
     ],
     [
       "EtM.AE.invert_invariant_aux",
@@ -382,7 +382,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "edf68fd35e84676a67fb5914d833d5b5"
+      "e6a44aae5216976a4f720040ce2ea6e1"
     ],
     [
       "EtM.AE.invert_invariant",
@@ -413,7 +413,7 @@
         "typing_EtM.Plain.plain"
       ],
       0,
-      "4d2a449aa43c62838ad8141a0a0ff22a"
+      "e0f2a3631d82c669e8c9cd4ed85885e0"
     ],
     [
       "EtM.AE.keygen",
@@ -546,7 +546,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "626ba79953e50892957939d317168c87"
+      "eceeb9cf2c9e43d6da51d3ff9e815423"
     ],
     [
       "EtM.AE.encrypt",
@@ -711,7 +711,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "154e97a3df0120bacf3959b3e26b8249"
+      "70b6eff08e35e3c730ee6ef7a4c3f533"
     ],
     [
       "EtM.AE.decrypt",
@@ -852,217 +852,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "46a1073182adfd47d90ecad6112e8608"
-    ],
-    [
-      "EtM.AE.__proj__Key__item__ke",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_EtM.AE.Key_region",
-        "projection_inverse_EtM.AE.Key_region"
-      ],
-      0,
-      "94ff4a69a8bd1bbe82af8925c874c20a"
-    ],
-    [
-      "EtM.AE.__proj__Key__item__km",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "equation_EtM.AE.rid", "equation_EtM.MAC.rid",
-        "equation_FStar.HyperStack.ST.erid",
-        "equation_FStar.Monotonic.HyperHeap.disjoint",
-        "primitive_Prims.op_AmpAmp", "proj_equation_EtM.AE.Key_ke",
-        "proj_equation_EtM.AE.Key_region",
-        "proj_equation_EtM.MAC.Key_region",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_EtM.AE.Key_ke",
-        "projection_inverse_EtM.AE.Key_region",
-        "refinement_interpretation_EtM.AE_Tm_refine_8d49bc9ff43ccc39e9b67eab704a8474",
-        "refinement_interpretation_FStar.HyperStack.ST_Tm_refine_08d14059b664746699a12b0c359d3b8d",
-        "typing_EtM.MAC.__proj__Key__item__region",
-        "typing_FStar.Monotonic.HyperHeap.extends"
-      ],
-      0,
-      "370b631a57a5c0f815354cfb661e1dd7"
-    ],
-    [
-      "EtM.AE.__proj__Key__item__log",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_EtM.AE.Key_region",
-        "projection_inverse_EtM.AE.Key_region"
-      ],
-      0,
-      "4b450f270e98ede38199cb8b01fc1f5e"
-    ],
-    [
-      "EtM.AE.mac_only_cpa_ciphers",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_84c1bfaaf908475ecb507651910953b1_1",
-        "equality_tok_Prims.LexTop@tok", "equation_EtM.AE.cipher",
-        "equation_EtM.MAC.log_entry", "equation_EtM.MAC.msg",
-        "equation_FStar.Pervasives.Native.fst",
-        "equation_FStar.Pervasives.Native.snd",
-        "equation_FStar.Seq.Properties.snoc", "equation_Prims.nat",
-        "function_token_typing_EtM.AE.cipher", "int_typing",
-        "kinding_EtM.CPA.log_entry@tok",
-        "lemma_FStar.Seq.Base.lemma_create_len",
-        "lemma_FStar.Seq.Base.lemma_len_append",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_GreaterThan",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_240ae8b9d98499e56ee7887bf62cb7a9",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
-        "typing_FStar.Pervasives.Native.fst", "typing_FStar.Seq.Base.create",
-        "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.seq",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "c9aac516d0974058b659377b5b6f3059"
-    ],
-    [
-      "EtM.AE.mac_only_cpa_ciphers_mem",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_EtM.CPA.log_entry__uu___haseq",
-        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
-        "assumption_Platform.Bytes.HasEq_bytes", "equation_EtM.CPA.cipher",
-        "equation_EtM.MAC.log_entry", "equation_EtM.MAC.macsize",
-        "equation_EtM.MAC.msg", "equation_EtM.MAC.tag",
-        "equation_Platform.Bytes.lbytes",
-        "function_token_typing_EtM.MAC.tag",
-        "haseqTm_refine_7de8468e4c8be42394c70da6b10033dd",
-        "haseqTm_refine_b3982a6d174e1d047431ae85c35dc7d8",
-        "refinement_kinding_Tm_refine_7de8468e4c8be42394c70da6b10033dd"
-      ],
-      0,
-      "8ca2f6a34739654eb9c84351975ca1f1"
-    ],
-    [
-      "EtM.AE.mac_and_cpa_refine_ae",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Seq.Base_pretyping_7efa52b424e80c83ad68a652aa3561e4",
-        "binder_x_84c1bfaaf908475ecb507651910953b1_2",
-        "equality_tok_Prims.LexTop@tok", "equation_EtM.AE.log_entry",
-        "equation_FStar.Pervasives.Native.fst",
-        "equation_FStar.Pervasives.Native.snd",
-        "equation_FStar.Seq.Properties.snoc", "equation_Prims.nat",
-        "function_token_typing_EtM.AE.log_entry", "int_typing",
-        "kinding_EtM.CPA.log_entry@tok",
-        "lemma_FStar.Seq.Base.lemma_create_len",
-        "lemma_FStar.Seq.Base.lemma_len_append",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_disEquality",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_23b2ae0f635daec79cd2af1ece7a123f",
-        "refinement_interpretation_Tm_refine_34ea87a68a4dd2d279c9653d45537a4f",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
-        "typing_FStar.Pervasives.Native.fst", "typing_FStar.Seq.Base.create",
-        "typing_FStar.Seq.Base.length", "typing_FStar.Seq.Base.seq",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "b7d008b942feb0ff87813c9b4105b7f3"
-    ],
-    [
-      "EtM.AE.invert_invariant_aux",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_EtM.CPA.log_entry__uu___haseq",
-        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
-        "assumption_Platform.Bytes.HasEq_bytes", "equation_EtM.AE.cipher",
-        "equation_EtM.AE.log_entry", "equation_EtM.CPA.cipher",
-        "equation_EtM.MAC.log_entry", "equation_EtM.MAC.macsize",
-        "equation_EtM.MAC.msg", "equation_EtM.MAC.tag",
-        "equation_Platform.Bytes.lbytes", "equation_Prims.eqtype",
-        "function_token_typing_EtM.AE.cipher",
-        "function_token_typing_EtM.MAC.tag",
-        "haseqTm_refine_7de8468e4c8be42394c70da6b10033dd",
-        "haseqTm_refine_b3982a6d174e1d047431ae85c35dc7d8",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_kinding_Tm_refine_7de8468e4c8be42394c70da6b10033dd",
-        "typing_EtM.Plain.plain"
-      ],
-      0,
-      "2b8faff47e2e66068a8bff4f64d7cce6"
-    ],
-    [
-      "EtM.AE.invert_invariant",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_EtM.CPA.log_entry__uu___haseq",
-        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
-        "assumption_Platform.Bytes.HasEq_bytes", "equation_EtM.AE.cipher",
-        "equation_EtM.AE.log_entry", "equation_EtM.CPA.cipher",
-        "equation_EtM.MAC.log_entry", "equation_EtM.MAC.macsize",
-        "equation_EtM.MAC.msg", "equation_EtM.MAC.tag",
-        "equation_Platform.Bytes.lbytes", "equation_Prims.eqtype",
-        "function_token_typing_EtM.AE.cipher",
-        "function_token_typing_EtM.MAC.tag",
-        "haseqTm_refine_7de8468e4c8be42394c70da6b10033dd",
-        "haseqTm_refine_b3982a6d174e1d047431ae85c35dc7d8",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_kinding_Tm_refine_7de8468e4c8be42394c70da6b10033dd",
-        "typing_EtM.Plain.plain"
-      ],
-      0,
-      "477fc412b1145b55a66cdf6ef9b13bd3"
-    ],
-    [
-      "EtM.AE.decrypt",
-      2,
-      1,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
-        "assumption_Platform.Bytes.HasEq_bytes", "equation_EtM.AE.cipher",
-        "equation_EtM.AE.log_entry", "equation_EtM.CPA.cipher",
-        "equation_EtM.MAC.macsize", "equation_EtM.MAC.tag",
-        "equation_Platform.Bytes.lbytes", "equation_Prims.eqtype",
-        "function_token_typing_EtM.AE.cipher",
-        "function_token_typing_EtM.MAC.tag",
-        "haseqTm_refine_7de8468e4c8be42394c70da6b10033dd",
-        "haseqTm_refine_b3982a6d174e1d047431ae85c35dc7d8",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_kinding_Tm_refine_7de8468e4c8be42394c70da6b10033dd",
-        "typing_EtM.Plain.plain"
-      ],
-      0,
-      "167ebc1039368ecc680cbf995394e9c6"
+      "f3a5d3b3b63fed982cfb1a8f2bb2b80b"
     ]
   ]
 ]

@@ -42,6 +42,7 @@ module RD = FStar.Reflection.Data
 module EMB = FStar.Syntax.Embeddings
 module RE = FStar.Reflection.Embeddings
 module Env = FStar.TypeChecker.Env
+module SE = FStar.Syntax.Embeddings
 open FStar.SMTEncoding.Env
 
 (*---------------------------------------------------------------------------------*)
@@ -402,7 +403,7 @@ let rec encode_const c env =
     | Const_int (repr, Some sw) ->
       let syntax_term = FStar.ToSyntax.ToSyntax.desugar_machine_integer env.tcenv.dsenv repr sw Range.dummyRange in
       encode_term syntax_term env
-    | Const_string(s, _) -> varops.string_const s, []
+    | Const_string(s, _) -> Term.boxString <| mk_String_const s, []
     | Const_range _ -> mk_Range_const (), []
     | Const_effect -> mk_Term_type, []
     | Const_real r -> boxReal (mkReal r), []
@@ -825,7 +826,28 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let t_decls = [tdecl; k_assumption; pre_typing; t_interp] in
              t, decls@decls'@guard_decls@(mk_decls tsym tkey_hash t_decls (decls@decls'@guard_decls))
 
-        else let tsym = varops.fresh module_name "Non_total_Tm_arrow" in
+        else 
+             (*
+              * AR: compute a hash for the Non total arrow,
+              *       that we will use in the name of the arrow
+              *       so that we can get some hashconsing
+              *)
+             let tkey_hash =
+               (*
+                * AR: any decls computed here are ignored
+                *     we encode terms in this let-scope just to compute a hash
+                *)
+               let vars, guards_l, env_bs, _, _ = encode_binders None binders env in
+               let c = Env.unfold_effect_abbrev env.tcenv res |> S.mk_Comp in
+               let ct, _ = encode_term (c |> U.comp_result) env_bs in
+               let effect_args, _ = encode_args (c |> U.comp_effect_args) env_bs in
+               let tkey = mkForall t.pos
+                 ([], vars, mk_and_l (guards_l@[ct]@effect_args)) in
+               let tkey_hash = "Non_total_Tm_arrow" ^ (hash_of_term tkey) ^ "@Effect=" ^
+                 (c |> U.comp_effect_name |> string_of_lid) in
+               BU.digest_of_string tkey_hash in                 
+        
+             let tsym = "Non_total_Tm_arrow_" ^ tkey_hash in
              let tdecl = Term.DeclFun(tsym, [], Term_sort, None) in
              let t = mkApp(tsym, []) in
              let t_kinding =
@@ -845,7 +867,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                               Some a_name,
                               a_name) in
 
-             t, [tdecl; t_kinding; t_interp] |> mk_decls_trivial (* TODO: At least preserve alpha-equivalence of non-pure function types *)
+             t, mk_decls tsym tkey_hash [tdecl; t_kinding; t_interp] []
 
       | Tm_refine _ ->
         let x, f =
@@ -990,7 +1012,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let e0 = TcUtil.reify_body_with_arg env.tcenv [] head (List.hd args_e) in
             if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
             then BU.print1 "Result of normalization %s\n" (Print.term_to_string e0);
-            let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) None t0.pos in
+            let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) t0.pos in
             encode_term e env
 
         | Tm_constant (Const_reflect _), [(arg, _)] ->
@@ -1274,7 +1296,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let names = lbs |> List.map (fun lb ->
                                         let {lbname = lbname} = lb in
                                         let x = BU.left lbname in (* has to be Inl *)
-                                        (Ident.text_of_id x.ppname, S.range_of_bv x)) in
+                                        (Ident.string_of_id x.ppname, S.range_of_bv x)) in
         raise (Inner_let_rec names)
 
       | Tm_match(e, pats) ->
@@ -1294,7 +1316,7 @@ and encode_let
 
 and encode_match (e:S.term) (pats:list<S.branch>) (default_case:term) (env:env_t)
                  (encode_br:S.term -> env_t -> (term * decls_t)) : term * decls_t =
-    let scrsym, scr', env = gen_term_var env (S.null_bv (S.mk S.Tm_unknown None Range.dummyRange)) in
+    let scrsym, scr', env = gen_term_var env (S.null_bv (S.mk S.Tm_unknown Range.dummyRange)) in
     let scr, decls = encode_term e env in
     let match_tm, decls =
       let encode_branch b (else_case, decls) =
@@ -1542,12 +1564,19 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
               mk_HasType x t, decls@decls'
 
             | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
-              begin match (SS.compress r).n, (SS.compress msg).n with
-                | Tm_constant (Const_range r), Tm_constant (Const_string (s, _)) ->
-                  let phi = S.mk (Tm_meta(phi,  Meta_labeled(s, r, false))) None r in
-                  fallback phi
-                | _ ->
-                  fallback phi
+              begin match SE.unembed SE.e_range r false SE.id_norm_cb,
+                          SE.unembed SE.e_string msg false SE.id_norm_cb with
+              | Some r, Some s ->
+                let phi = S.mk (Tm_meta(phi,  Meta_labeled(s, r, false))) r in
+                fallback phi
+
+              (* If we could not unembed the position, still use the string *)
+              | None, Some s ->
+                let phi = S.mk (Tm_meta(phi,  Meta_labeled(s, phi.pos, false))) phi.pos in
+                fallback phi
+
+              | _ ->
+                fallback phi
               end
 
             | Tm_fvar fv, [(t, _)]
@@ -1584,7 +1613,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
         let pats, decls' = encode_smt_patterns ps env in
         let body, decls'' = encode_formula body env in
         let guards = match pats with
-          | [[{tm=App(Var gf, [p])}]] when Ident.text_of_lid Const.guard_free = gf -> []
+          | [[{tm=App(Var gf, [p])}]] when Ident.string_of_lid Const.guard_free = gf -> []
           | _ -> guards in
         vars, pats, mk_and_l guards, body, decls@decls'@decls'' in
 

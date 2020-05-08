@@ -18,7 +18,7 @@ MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --use_extracted_in
 
 %.checked.lax:
 	$(MY_FSTAR) $< --already_cached "* -$(basename $(notdir $<))"
-	touch $@
+	touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file

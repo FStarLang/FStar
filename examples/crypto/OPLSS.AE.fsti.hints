@@ -1,0 +1,41 @@
+[
+  "?“RÔ^ä’vÙ\u0010MÕèì@ã",
+  [
+    [
+      "OPLSS.AE.keygen",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "647a4812e8fa8a4a834734b0dfd3b30f"
+    ],
+    [
+      "OPLSS.AE.encrypt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3f1b87c09f7098a0819cfcc4bd9d0f3f"
+      ],
+      0,
+      "009ff2fa07ac06f3f173ca5f37d93eb9"
+    ],
+    [
+      "OPLSS.AE.decrypt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "equation_OPLSS.AE.log_entry", "equation_Prims.eqtype",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_OPLSS.AE.ae_cipher", "typing_OPLSS.Plain.plain"
+      ],
+      0,
+      "af114e47cfce8e75f6dd6ad039485470"
+    ]
+  ]
+]

@@ -7,13 +7,16 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.UInt8.t__uu___haseq",
-        "equation_FStar.Kremlin.Endianness.bytes", "equation_Slice.byte",
-        "equation_Slice.bytes", "function_token_typing_FStar.UInt8.t",
-        "lemma_FStar.Seq.Base.hasEq_lemma"
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Kremlin.Endianness.bytes", "equation_Parsing.byte",
+        "equation_Parsing.bytes", "equation_Prims.eqtype",
+        "equation_Slice.byte", "equation_Slice.bytes",
+        "lemma_FStar.Seq.Base.hasEq_lemma",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.UInt8.t"
       ],
       0,
-      "90809c6f7c1a2b043b00b2763cd44ecd"
+      "67a07c00e53d05af6e6bcfe21c1f17ee"
     ],
     [
       "KeyValue.encoded_entry",
@@ -22,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "4ceae34a5e48a4058dcb4935bf98f445"
+      "c75f3175909bc57254c5db10f79a570c"
     ],
     [
       "KeyValue.encoded_entry",
@@ -31,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "b34f48c437813bd9536ae7d5568f7d13"
+      "5fa61c7ed58d308c34654f70897076d2"
     ],
     [
       "KeyValue.encoded_entry",
@@ -40,7 +43,7 @@
       1,
       [ "@query" ],
       0,
-      "696dbfdef7e10fe1e27e933351bbf9af"
+      "72119dcc710608300fe186d2c7b56087"
     ],
     [
       "KeyValue.encoded_entry",
@@ -58,7 +61,7 @@
         "haseqIntegerParsing_Tm_refine_81c227cb3788ac9527a15eab9f2e5b39"
       ],
       0,
-      "82b0830d5017fecd8c71ad3c78ce5d51"
+      "a40a1d88e781d7c3b221864bc6005575"
     ],
     [
       "KeyValue.encoded_entry",
@@ -66,15 +69,17 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.UInt16.t__uu___haseq",
-        "assumption_FStar.UInt32.t__uu___haseq",
-        "assumption_FStar.UInt8.t__uu___haseq",
-        "equation_FStar.Kremlin.Endianness.bytes", "equation_Slice.byte",
-        "equation_Slice.bytes", "function_token_typing_FStar.UInt8.t",
-        "lemma_FStar.Seq.Base.hasEq_lemma"
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Kremlin.Endianness.bytes", "equation_Parsing.byte",
+        "equation_Parsing.bytes", "equation_Prims.eqtype",
+        "equation_Slice.byte", "equation_Slice.bytes",
+        "lemma_FStar.Seq.Base.hasEq_lemma",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.UInt16.t", "typing_FStar.UInt32.t",
+        "typing_FStar.UInt8.t"
       ],
       0,
-      "013f8d9c88fb4c75697fe08d55feb96b"
+      "4fdbddd06420c2bee50408d94769fa62"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__key",
@@ -83,7 +88,7 @@
       1,
       [ "@query" ],
       0,
-      "8dc73897cb305b41b5696a39dfba77d8"
+      "be5b967fb46a0b7d90ab6d7648d71e53"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__key",
@@ -95,7 +100,7 @@
         "projection_inverse_KeyValue.EncodedEntry_key_len"
       ],
       0,
-      "4e4d9fda6bc272ce7ca7a8ecd2790fcd"
+      "1ca7811851ec0f2229ecf9814758a823"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__value",
@@ -104,7 +109,7 @@
       1,
       [ "@query" ],
       0,
-      "c6c7769a37b44f194192b4a2769734ec"
+      "e5e8113ba64e2dbe3fd03336c2f718fb"
     ],
     [
       "KeyValue.__proj__EncodedEntry__item__value",
@@ -116,7 +121,7 @@
         "projection_inverse_KeyValue.EncodedEntry_val_len"
       ],
       0,
-      "a5ea7e5b16721001313fbdfdba79c500"
+      "ce36a158d28c97e30fd2464336bcac68"
     ],
     [
       "KeyValue.store",
@@ -125,7 +130,7 @@
       1,
       [ "@query" ],
       0,
-      "1e2d5df5d477e36ecd2ebfaef630a701"
+      "d34b35661df3c7a9fe7728db890541a0"
     ],
     [
       "KeyValue.store",
@@ -134,7 +139,7 @@
       1,
       [ "@query" ],
       0,
-      "d4a97cc44ebc17fc5752f646a8749e1a"
+      "a0c15afc0a4e125974a670b243161801"
     ],
     [
       "KeyValue.store",
@@ -149,7 +154,7 @@
         "kinding_KeyValue.encoded_entry@tok"
       ],
       0,
-      "e9b57b816ee1899c5356f694731c321c"
+      "e32b78fc49801981693f0d29fa968d2e"
     ],
     [
       "KeyValue.store",
@@ -157,14 +162,15 @@
       2,
       1,
       [
-        "@query", "assumption_FStar.UInt32.t__uu___haseq",
+        "@MaxIFuel_assumption", "@query",
         "assumption_KeyValue.encoded_entry__uu___haseq",
-        "assumption_Prims.list__uu___haseq",
-        "haseqKeyValue_Tm_refine_73061219acedf795ff1e97b86a9bc700",
-        "kinding_KeyValue.encoded_entry@tok"
+        "assumption_Prims.list__uu___haseq", "equation_Prims.eqtype",
+        "kinding_KeyValue.encoded_entry@tok",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.UInt32.t"
       ],
       0,
-      "678674dfb3e13e706d0c94e9681e7948"
+      "856e61526554a88663e2c3353f94f947"
     ],
     [
       "KeyValue.__proj__Store__item__entries",
@@ -173,7 +179,7 @@
       1,
       [ "@query" ],
       0,
-      "61e8e60baaad768f7a0f06e5dc6069d3"
+      "90c114074d11628fbada75de25000b83"
     ],
     [
       "KeyValue.__proj__Store__item__entries",
@@ -185,7 +191,7 @@
         "projection_inverse_KeyValue.Store_num_entries"
       ],
       0,
-      "1df627a52f876adea2dc140dc8635448"
+      "0cf602ba430e4fdf9cf5dff5b7370aa4"
     ],
     [
       "KeyValue.as_entry",
@@ -197,207 +203,7 @@
         "equation_KeyValue.entry_live", "equation_Slice.byte"
       ],
       0,
-      "55c315271993cbd173baacccab3bbb08"
-    ],
-    [
-      "KeyValue.entry",
-      1,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.UInt8.t__uu___haseq",
-        "equation_FStar.Kremlin.Endianness.bytes", "equation_Slice.byte",
-        "equation_Slice.bytes", "function_token_typing_FStar.UInt8.t",
-        "lemma_FStar.Seq.Base.hasEq_lemma"
-      ],
-      0,
-      "14458d97787b56fc3b0d423255050488"
-    ],
-    [
-      "KeyValue.encoded_entry",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "d7608282bd970942f1a79326fac0eae6"
-    ],
-    [
-      "KeyValue.encoded_entry",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f5720904cfa95e37d418d2a93f73b210"
-    ],
-    [
-      "KeyValue.encoded_entry",
-      3,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "7664b1f3babd6041ac1fff0c8e0cf0b0"
-    ],
-    [
-      "KeyValue.encoded_entry",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.Seq.Base.seq__uu___haseq",
-        "assumption_FStar.UInt16.t__uu___haseq",
-        "assumption_FStar.UInt32.t__uu___haseq",
-        "assumption_FStar.UInt8.t__uu___haseq", "equation_FStar.UInt8.byte",
-        "equation_Slice.byte", "equation_Slice.bytes",
-        "function_token_typing_FStar.UInt8.t",
-        "haseqIntegerParsing_Tm_refine_67a0f7da090ddd7cabafb21bf5e2ed60",
-        "haseqIntegerParsing_Tm_refine_81c227cb3788ac9527a15eab9f2e5b39"
-      ],
-      0,
-      "550d005a9ed4e09367279e0c71bc0b27"
-    ],
-    [
-      "KeyValue.encoded_entry",
-      5,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.UInt16.t__uu___haseq",
-        "assumption_FStar.UInt32.t__uu___haseq",
-        "assumption_FStar.UInt8.t__uu___haseq",
-        "equation_FStar.Kremlin.Endianness.bytes", "equation_Slice.byte",
-        "equation_Slice.bytes", "function_token_typing_FStar.UInt8.t",
-        "lemma_FStar.Seq.Base.hasEq_lemma"
-      ],
-      0,
-      "e103bb63d885273469b95834df79048e"
-    ],
-    [
-      "KeyValue.__proj__EncodedEntry__item__key",
-      3,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "fc5676d40a453d74bf3f92897b6858c2"
-    ],
-    [
-      "KeyValue.__proj__EncodedEntry__item__key",
-      4,
-      2,
-      1,
-      [
-        "@query", "proj_equation_KeyValue.EncodedEntry_key_len",
-        "projection_inverse_KeyValue.EncodedEntry_key_len"
-      ],
-      0,
-      "4ecfabe28bba82afb2fd9498f86ba7da"
-    ],
-    [
-      "KeyValue.__proj__EncodedEntry__item__value",
-      3,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b65bfab8daaf2c3ffc933d6bd7aea12f"
-    ],
-    [
-      "KeyValue.__proj__EncodedEntry__item__value",
-      4,
-      2,
-      1,
-      [
-        "@query", "proj_equation_KeyValue.EncodedEntry_val_len",
-        "projection_inverse_KeyValue.EncodedEntry_val_len"
-      ],
-      0,
-      "0705bfb4bf28da0d062ce40aaa889ae9"
-    ],
-    [
-      "KeyValue.store",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "b04ca616ee53771ecd53912ed6639039"
-    ],
-    [
-      "KeyValue.store",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "6525e90778fcafea07770a42a5da7635"
-    ],
-    [
-      "KeyValue.store",
-      3,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.UInt32.t__uu___haseq",
-        "assumption_KeyValue.encoded_entry__uu___haseq",
-        "assumption_Prims.list__uu___haseq",
-        "haseqKeyValue_Tm_refine_73061219acedf795ff1e97b86a9bc700",
-        "kinding_KeyValue.encoded_entry@tok"
-      ],
-      0,
-      "4f65c85bb260e78dd2d64173951b79ef"
-    ],
-    [
-      "KeyValue.store",
-      4,
-      2,
-      1,
-      [
-        "@query", "assumption_FStar.UInt32.t__uu___haseq",
-        "assumption_KeyValue.encoded_entry__uu___haseq",
-        "assumption_Prims.list__uu___haseq",
-        "haseqKeyValue_Tm_refine_73061219acedf795ff1e97b86a9bc700",
-        "kinding_KeyValue.encoded_entry@tok"
-      ],
-      0,
-      "5dffaaada3cf7c1d9831a62b246393fe"
-    ],
-    [
-      "KeyValue.__proj__Store__item__entries",
-      3,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "689a183128dfa62a4042c3244d9333b1"
-    ],
-    [
-      "KeyValue.__proj__Store__item__entries",
-      4,
-      2,
-      1,
-      [
-        "@query", "proj_equation_KeyValue.Store_num_entries",
-        "projection_inverse_KeyValue.Store_num_entries"
-      ],
-      0,
-      "bdca63170cf009a6d02e0a17c28fe871"
-    ],
-    [
-      "KeyValue.as_entry",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.UInt8.byte",
-        "equation_KeyValue.entry_live", "equation_Slice.byte",
-        "fuel_guarded_inversion_FStar.Monotonic.HyperStack.mem",
-        "fuel_guarded_inversion_KeyValue.entry_st"
-      ],
-      0,
-      "e51a1d8a8abf68d21f1e692f716cc165"
+      "7a902887417123d2a17b91fd55bc6e57"
     ]
   ]
 ]

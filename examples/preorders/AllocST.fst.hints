@@ -8,10 +8,10 @@
       1,
       [ "@query", "equation_AllocST.contains" ],
       0,
-      "8e8cb5b9f09d414c16776558ec17eba5"
+      "5e4dfeb69ad31cec4a838544e37962ed"
     ],
     [
-      "AllocST.1728",
+      "AllocST.1705",
       1,
       2,
       1,
@@ -23,25 +23,25 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "16e8a5eaae032f3f2c9a234a56945481"
-    ],
-    [
-      "AllocST.ist_witnessed",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_AllocST.heap_rel",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive",
-        "token_correspondence_AllocST.heap_rel"
-      ],
-      0,
-      "d2ba81c0aaa62f973467c3b5c81ffab3"
+      "a88730240ebfb88704e75ad5d5d865c3"
     ],
     [
       "AllocST.ist_witnessed",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_AllocST.heap_rel",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "token_correspondence_AllocST.heap_rel"
+      ],
+      0,
+      "83afce0336d4dd637a210209758aa93d"
+    ],
+    [
+      "AllocST.ist_witnessed",
       2,
       2,
       1,
@@ -53,7 +53,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "d518e025c2accd1d5ed6c6e86b57bcf1"
+      "2b430d085fb0c7931f0ce3589ad141bb"
     ],
     [
       "AllocST.ist_witness",
@@ -68,7 +68,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "a0bcf1512986ceb15e9f9218bf587b43"
+      "63be4ad0d012c9fcd120bfd8781e180e"
     ],
     [
       "AllocST.ist_recall",
@@ -83,7 +83,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "80fd7fea253ade2cf0117260e5143229"
+      "74d23467d03842cefbce7846466127f0"
     ],
     [
       "AllocST.ref",
@@ -97,7 +97,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "3615068655929a3678eef6e8da38b3ac"
+      "4d054940666a29ff5bfab2ed26810196"
     ],
     [
       "AllocST.alloc",
@@ -117,7 +117,7 @@
         "typing_FStar.Pervasives.Native.snd", "typing_NatHeap.ref"
       ],
       0,
-      "83d7a45ef71a39d807cdb63471ebfcca"
+      "08e980c4732ade0b0dbdeead03b9a915"
     ],
     [
       "AllocST.read",
@@ -126,7 +126,7 @@
       1,
       [ "@query", "equation_AllocST.contains" ],
       0,
-      "00e708676f3a9480240032cdf61cff61"
+      "791e67c2774f9311077b9fef0533dd78"
     ],
     [
       "AllocST.read",
@@ -142,7 +142,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "97c2d2d748764f772bcf6ae30ae2fcc8"
+      "6a4bd1c8f4b202a2c2c2f480a1350d76"
     ],
     [
       "AllocST.write",
@@ -151,7 +151,7 @@
       1,
       [ "@query", "equation_AllocST.contains" ],
       0,
-      "dbbf9be5cb1e599ff5a752d980a0e727"
+      "742dfb41cc84d554e61a357e848b1c60"
     ],
     [
       "AllocST.write",
@@ -169,7 +169,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "368335d3b97a8aaa67ac5275fe98eb0e"
+      "38548ad02a1be02d38eff4a83a863f59"
     ],
     [
       "AllocST.recall",
@@ -184,129 +184,7 @@
         "token_correspondence_AllocST.heap_rel"
       ],
       0,
-      "8a806ecd460554d7f83d773283e9822f"
-    ],
-    [
-      "AllocST.11112",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_AllocST.heap_rel",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive",
-        "token_correspondence_AllocST.heap_rel"
-      ],
-      0,
-      "78b0a13c3431c8ebb816736c9457afd7"
-    ],
-    [
-      "AllocST.ist_witnessed",
-      3,
-      2,
-      1,
-      [
-        "@query", "equation_AllocST.heap_rel",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive",
-        "token_correspondence_AllocST.heap_rel"
-      ],
-      0,
-      "404cf73ba4d8538585b028bc8f18dab9"
-    ],
-    [
-      "AllocST.ist_witnessed",
-      4,
-      2,
-      1,
-      [
-        "@query", "equation_AllocST.heap_rel",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive",
-        "token_correspondence_AllocST.heap_rel"
-      ],
-      0,
-      "6749a662175a63b49194fb2e8fe3bb20"
-    ],
-    [
-      "AllocST.ist_witnessed",
-      5,
-      2,
-      1,
-      [
-        "@query", "equation_AllocST.heap_rel",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive",
-        "token_correspondence_AllocST.heap_rel"
-      ],
-      0,
-      "4fc8e000b6dce550dd6e509d042cdb4c"
-    ],
-    [
-      "AllocST.ist_witness",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_AllocST.heap_rel",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive",
-        "token_correspondence_AllocST.heap_rel"
-      ],
-      0,
-      "bdefad30ce37962866c3a6d9e2f9e55e"
-    ],
-    [
-      "AllocST.ist_recall",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_AllocST.heap_rel",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive",
-        "token_correspondence_AllocST.heap_rel"
-      ],
-      0,
-      "d8d0b2adb56f957d7a465832aa3824ea"
-    ],
-    [
-      "AllocST.ref",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_AllocST.heap_rel",
-        "equation_FStar.Preorder.stable",
-        "token_correspondence_AllocST.contains",
-        "token_correspondence_AllocST.heap_rel"
-      ],
-      0,
-      "ae35d898172caf75417fee06f785e725"
-    ],
-    [
-      "AllocST.read",
-      3,
-      2,
-      1,
-      [ "@query", "equation_AllocST.contains" ],
-      0,
-      "71bcbbab5e8568e5abf3c023b4fdb6ea"
-    ],
-    [
-      "AllocST.write",
-      3,
-      2,
-      1,
-      [ "@query", "equation_AllocST.contains" ],
-      0,
-      "23a8a43f2d073fdbe8b1e6f0423ea576"
+      "81e17999dc2a0ae4f5f2229dc80c0909"
     ]
   ]
 ]

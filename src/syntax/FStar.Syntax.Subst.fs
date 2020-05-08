@@ -35,7 +35,7 @@ module S = FStar.Syntax.Syntax
 
 (* A subst_t is a composition of parallel substitutions, expressed as a list of lists *)
 let subst_to_string s =
-    s |> List.map (fun (b, _) -> b.ppname.idText) |> String.concat ", "
+    s |> List.map (fun (b, _) -> (string_of_id b.ppname)) |> String.concat ", "
 
 (* apply_until_some f s
       applies f to each element of s until it returns (Some t)
@@ -136,7 +136,7 @@ let subst_univ_bv x s = U.find_map s (function
     | UN(y, t) when (x=y) -> Some t
     | _ -> None)
 let subst_univ_nm (x:univ_name) s = U.find_map s (function
-    | UD(y, i) when (x.idText=y.idText) -> Some (U_bvar i)
+    | UD(y, i) when (ident_equals x y) -> Some (U_bvar i)
     | _ -> None)
 
 let rec subst_univ s u =
@@ -192,7 +192,7 @@ let mk_range r (s:subst_ts) =
 (* Applies a substitution to a node,
      immediately if it is a variable
      or builds a delayed node otherwise *)
-let rec subst' (s:subst_ts) t =
+let rec subst' (s:subst_ts) (t:term) : term =
   let subst_tail (tl:list<list<subst_elt>>) = subst' (tl, snd s) in
   match s with
   | [], NoUseRange
@@ -218,7 +218,7 @@ let rec subst' (s:subst_ts) t =
         apply_until_some_then_map (subst_nm a) (fst s) subst_tail t0
 
     | Tm_type u ->
-        mk (Tm_type (subst_univ (fst s) u)) None (mk_range t0.pos s)
+        mk (Tm_type (subst_univ (fst s) u)) (mk_range t0.pos s)
 
     | _ ->
       //NS: 04/12/2018
@@ -342,7 +342,7 @@ let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
 
 let rec push_subst s t =
     //makes a syntax node, setting it's use range as appropriate from s
-    let mk t' = Syntax.mk t' None (mk_range t.pos s) in
+    let mk t' = Syntax.mk t' (mk_range t.pos s) in
     match t.n with
     | Tm_delayed _ -> failwith "Impossible"
 
@@ -356,7 +356,7 @@ let rec push_subst s t =
           push_subst s t
         | _ ->
             (* All others must be closed, so don't bother *)
-            t
+            tag_with_range t s
         end
 
     | Tm_constant _
@@ -378,7 +378,7 @@ let rec push_subst s t =
         //t' must be an fvar---it cannot be substituted
         //but the universes may be substituted
         let us = List.map (subst_univ (fst s)) us in
-        tag_with_range (mk_Tm_uinst t' us) s
+        tag_with_range (mk (Tm_uinst (t', us))) s
 
     | Tm_app(t0, args) -> mk (Tm_app(subst' s t0, subst_args' s args))
 
@@ -473,19 +473,27 @@ let rec push_subst s t =
       Warning: if force_uvar changes to operate on inputs other than
       Tm_uvar then the fastpath out match in compress will need to be
       updated.
+
+      This function should NEVER return a Tm_delayed. If you do any
+      non-trivial change to it, it would be wise to uncomment the check
+      below and run a full regression build.
 *)
 let rec compress_slow (t:term) =
     let t = force_uvar t in
     match t.n with
     | Tm_delayed (t', s) ->
-        push_subst s t'
+        compress (push_subst s t')
     | _ ->
         t
-
-let compress (t:term) =
+and compress (t:term) =
   match t.n with
     | Tm_delayed (_, _) | Tm_uvar(_, _) ->
-        compress_slow t
+        let r = compress_slow t in
+        (* begin match r.n with *)
+        (* | Tm_delayed _ -> failwith "compress attempting to return a Tm_delayed" *)
+        (* | _ -> () *)
+        (* end; *)
+        r
     | _ ->
         t
 

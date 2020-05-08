@@ -1,0 +1,11 @@
+>> Got issues: [
+TestHasEq.fst(58,10-58,11): (Error 19) Failed to prove that the type 'TestHasEq.t3' supports decidable equality because of this argument; add either the 'noeq' or 'unopteq' qualifier; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also TestHasEq.fst(57,0-58,19))
+>>]
+>> Got issues: [
+TestHasEq.fst(84,10-84,70): (Error 19) Subtyping check failed; expected type Prims.eqtype; got type Type0; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also TestHasEq.fst(84,12-84,22))
+>>]
+>> Got issues: [
+TestHasEq.fst(88,8-89,30): (Error 162) Incompatible attributes and qualifiers: erasable types do not support decidable equality and must be marked `noeq`
+>>]
+Verified module: TestHasEq
+All verification conditions discharged successfully

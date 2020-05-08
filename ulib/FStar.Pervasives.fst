@@ -82,6 +82,7 @@ type norm_step =
   | Primops // Reduce primitive operators, e.g., [1 + 1 ~> 2]
   | Delta // Unfold all non-recursive definitions
   | Zeta // Unroll recursive calls
+  | ZetaFull // Unroll recursive calls fully
   | Iota // Reduce case analysis (i.e., match)
   | NBE // Use normalization-by-evaluation, instead of interpretation (experimental)
   | Reify // Reify effectful definitions into their representations
@@ -103,6 +104,8 @@ let primops = Primops
 let delta = Delta
 
 let zeta = Zeta
+
+let zeta_full = ZetaFull
 
 let iota = Iota
 

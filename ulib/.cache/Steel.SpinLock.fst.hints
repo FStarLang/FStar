@@ -16,7 +16,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "6cbece724490d9cf908a59c14f71a4d0"
+      "f553a27bc858152727db00f2ea55b412"
     ],
     [
       "Steel.SpinLock.intro_lockinv_available",
@@ -33,7 +33,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "136756dc8bd1f6387fb924dd6c30862d"
+      "75b656e70ba2095c0d097f57db7fa5aa"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -50,7 +50,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "2b760e91b098fc45192e882e99958a46"
+      "075ca003fc9d6bea051b79a7326a77b0"
     ],
     [
       "Steel.SpinLock.intro_lockinv_available",
@@ -74,7 +74,7 @@
         "typing_Steel.Memory.full_perm", "typing_Steel.Memory.readable"
       ],
       0,
-      "a0a96e6f343318cbed2de23a6de2aa5e"
+      "c1bffb741d4f67c12c039409b77aafbc"
     ],
     [
       "Steel.SpinLock.intro_lockinv_available",
@@ -91,7 +91,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "8ba1a530b2dfd02f0e4f358126cea9a7"
+      "632a9cce46fc5a3a5b39e1417893d6fc"
     ],
     [
       "Steel.SpinLock.intro_lockinv_available",
@@ -108,7 +108,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "52bb0d09aedfeee891a0395d4294aa4f"
+      "e7375ef0e7c7d14fb4bbc437451de408"
     ],
     [
       "Steel.SpinLock.intro_lockinv_available",
@@ -125,7 +125,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "6c697841e189c4ad8c8655aab1a7532a"
+      "2697addf21b39c6e51e7f88b5c23261d"
     ],
     [
       "Steel.SpinLock.intro_lockinv_available",
@@ -142,7 +142,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "6f2b2782cc640569b75c2c5e2edce786"
+      "d3b210df5d0d4c2772a54560ce640cdd"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -165,7 +165,7 @@
         "typing_Steel.Memory.full_perm", "typing_Steel.Memory.readable"
       ],
       0,
-      "eda490e978e0c3284667eb3197ae6d83"
+      "509eaa15319ccfbad4828dd55a725ae0"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -182,7 +182,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "ae45dc41e5a6534f21f9498b59b54b49"
+      "13bdb66a4036d62bc04f755d1a266bde"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -199,7 +199,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "43ad7e135b04360f86b7ed04c6c94e57"
+      "58770dc6979b7f4e83987d316eb0ae52"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -216,7 +216,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "0e6cab2f4ece23bc049e180c5b27d5b5"
+      "52e7f6c1e7fa57833f467d300f569407"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -233,7 +233,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "ce48522cdc746569a11bf77a77347ff6"
+      "60e9d9ac1a9d7cee3c8d4767c56ae153"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -250,7 +250,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "a408174219cb7db70ec2d4b281ab6d3c"
+      "c156fae4596e313b3eedb75d465911c4"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -267,7 +267,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "93deb290a4ee9e148886373fd44c1104"
+      "9e28795b04f8e9250003c808d09890c8"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -284,7 +284,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "617f932d35a5ce84c26e36bc96a34c51"
+      "035c0c60891767faf0ace0cb790f3620"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -301,7 +301,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "963970d7d5445654a4e5c6b3859cebdb"
+      "ad214b0041f4be917707ac91f5e18a46"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -318,7 +318,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "b490850f27c970fda0d269e79f4f5e33"
+      "a18e722de63c6be618c45c1f5d82e912"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -335,7 +335,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "d05f110e2d737c5df264b825f5e59888"
+      "878b7df55a6090342e064110c064ff35"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -352,7 +352,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "cd24df49cd9050568644ff9e4cb4e807"
+      "a7a2bdae3494594824c8e392a591687e"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -369,7 +369,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "f4025b64df279f22c94ad3cc226d4a9c"
+      "43e2884a3b2d68866e9244418f3d7e59"
     ],
     [
       "Steel.SpinLock.new_lock",
@@ -383,7 +383,7 @@
         "typing_Steel.Reference.full"
       ],
       0,
-      "549379e7a26c2108f6c18734ff0579dd"
+      "0bcfa76ba049016e71f6c7d560f7e126"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -400,7 +400,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "18037ac406b6ff36cd4e67a1891538a3"
+      "365f88e83276fa4e9d96cbe0d18f3061"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -421,7 +421,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "950f8f3ce1c3e635db26259406cf60e7"
+      "0c85ea029ba77bd377a5bb3a008b46a3"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -438,7 +438,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "4258c13cdc1b4d22d637706451fd2ebd"
+      "2ecfdbdf6cbff88923a16cd3b29913b9"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -455,7 +455,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "ed24f842863e2e4df8e06f3168275dc8"
+      "ea35696319b4a99ac4e777f21a506310"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -472,7 +472,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "3d4209088994541e62d86934231a2d58"
+      "3438c58241f318c07bce71ee0880638c"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -489,7 +489,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "0db10fb758dd76a28e9fdd3beb881fdd"
+      "c2c6c719f31c5d91701f71815c5120db"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -506,7 +506,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "3fc1a2036f9e01e483c2207182fbbdcd"
+      "8179f76ee51e529e038d6bf876d76902"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -523,7 +523,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "c96cb4d792be65a8a8f87dbd169f1691"
+      "2311823b4403e79ad8a04289788780b1"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -540,7 +540,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "b6696f2edb4ecfc44450573a18951be8"
+      "d8c42bd06dcc6329936fcd8b07a7f5b7"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -557,7 +557,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "049d14dc3f7d7fdf5682f0f0fe0d18a9"
+      "6fbac89f2a41d3a22090408fbe78f90a"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -574,7 +574,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "c48a79ae531b3f6709a445f312138988"
+      "09ac5b60882e7f769fb13d566339941d"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -591,7 +591,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "412fccee1cca7fc48a667d1f8c2a09fa"
+      "63fb8db71291e74216021cf86c7422dd"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -608,7 +608,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "fb23ad0021a42dd7b9431615622db843"
+      "8b2d33d9d0d982c299d207af19cb692b"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -625,7 +625,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "e18f01a84b04f48572a0ecf6dd035f7b"
+      "477a943a15fa68fe3ff9336c4655e8c6"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -642,7 +642,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "0f7f5bffca64b9138a2e2b74ce5657a1"
+      "e3e23d3ff504cf4077d824db5783d8fc"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -659,7 +659,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "ace72b9ec36ecc941ac4f714b7f1505b"
+      "db83e3c131303f7026b5a2e03de3aed2"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -676,7 +676,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "35201dad1136e36abe6b767cad85ee6c"
+      "1c9ef30ea120509af64b7831061f785a"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -693,7 +693,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "5862e3f244e820823670fcbefaf0f030"
+      "abcc110922ae48ea1c0bf2100105ebf1"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -718,7 +718,7 @@
         "typing_Steel.Memory.full_perm", "typing_Steel.Memory.readable"
       ],
       0,
-      "0c221e01ef23fe070044995746e04b6a"
+      "5339abdb44a2c9987c5dce87133a743b"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -735,7 +735,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "b1adaffee18e37074a6bc061a1e2fda2"
+      "7a3257ac971d75d7ed494b7e57220d7b"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -752,7 +752,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "691aa43c189731b4bdcbb59a458606aa"
+      "ba76a121adb83ede6c9984a85b900834"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -769,7 +769,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "943f7fe9e09fb882acd4c1daabe8ec90"
+      "692a0f7c044249d3a03dc46774ccb6dd"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -786,7 +786,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "d37799afb2ac8cf2d683311869ef35ac"
+      "b3badde8f5b6f242b55223f0525b17b4"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -803,7 +803,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "92fab183f91994608c492bc00c68dbe5"
+      "91d6655ba8ac9c3e44169fad37241895"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -820,7 +820,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "19db6eea03f8462c33cb78f7bd10f6db"
+      "7eea3d81b25a7e2e710105d968012932"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -837,7 +837,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "1dc16fb5b70e0d55a789465fdd5a6f58"
+      "c34dc0927224b3bb2a412a0d202d9188"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -854,7 +854,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "bc25ae75aefb190269f56c0f9acf1a6b"
+      "03c8f2e89d571a544196300600474837"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -871,7 +871,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "ffa5c4f405f90cc0aa1cfe431bff61a4"
+      "1b77d1ca1d13f15551afcd20aa5474a2"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -888,7 +888,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "5933c72f665943a2a60e5df4b829d917"
+      "010f1150603356f1d9bd1673be82b472"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -905,7 +905,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "06eb4e68b5f8648f95a5593a3093103a"
+      "8ec2304433d24be7c80a9b230aac6f1c"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -922,7 +922,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "e96288cdd9d8a863e2565770c8cc4e2b"
+      "d29144e000b3a3ab6173c2c23a16a01c"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -939,7 +939,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "d602a8f792f52f4b647b678f0be34fcb"
+      "7ab802775a33f4c92cd54371c602a289"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -956,7 +956,41 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "6eec5cbe842c15b39680982f6f873622"
+      "44c414532537c2650d1be033cc770728"
+    ],
+    [
+      "Steel.SpinLock.acquire_core",
+      16,
+      0,
+      0,
+      [
+        "@query", "equation_Steel.Memory.full_perm",
+        "equation_Steel.Memory.readable",
+        "primitive_FStar.Real.op_Greater_Dot",
+        "proj_equation_Steel.Memory.MkPerm_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxReal_proj_0",
+        "projection_inverse_Steel.Memory.MkPerm_v"
+      ],
+      0,
+      "571807e821951807d74ec2c3dd2617c1"
+    ],
+    [
+      "Steel.SpinLock.acquire_core",
+      17,
+      0,
+      0,
+      [
+        "@query", "equation_Steel.Memory.full_perm",
+        "equation_Steel.Memory.readable",
+        "primitive_FStar.Real.op_Greater_Dot",
+        "proj_equation_Steel.Memory.MkPerm_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxReal_proj_0",
+        "projection_inverse_Steel.Memory.MkPerm_v"
+      ],
+      0,
+      "056bf30cdf9ccec42ef9b1947bb85f24"
     ],
     [
       "Steel.SpinLock.acquire'",
@@ -983,7 +1017,7 @@
         "typing_Tm_abs_f7fb94acbd752e9fce013da6030bb14a"
       ],
       0,
-      "f80a08a0ba0c5554dd1f2e29ab63969e"
+      "3ea67e533f499b596143499655215dfa"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1008,7 +1042,7 @@
         "typing_Steel.Memory.full_perm", "typing_Steel.Memory.readable"
       ],
       0,
-      "7e7ff216a827367f4f9179e10ab2fb42"
+      "4a02bbf426dac341b77799dfbea05e6e"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1025,7 +1059,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "e14ac99545dbcaabd76300880a52f880"
+      "5a94ed37ce546877dda4c577b24bc613"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1042,7 +1076,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "794d5572f31edea5291691da767acc1d"
+      "79098337cc05d61efb58ee366a53f657"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1059,7 +1093,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "0962ff9d9b7c0aa6de4f80586f569427"
+      "549fae3bb6fe97235a5f42a4cf429f4e"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1076,7 +1110,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "4590c5c5f798779a1cb5c80c10cdbf70"
+      "e5ab77486be413447ac90731bf60ed2a"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1093,7 +1127,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "a292553f6e2821414453e62e10fa4069"
+      "ea9b7c80455cb6f34008f307b56857e1"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1110,7 +1144,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "1136ba03ac581d47887fdf11c3d13a11"
+      "69a0372fc7ec0865bf998a301d836988"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1127,7 +1161,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "03f2862e6451dfc0ed333978b571384f"
+      "e346ab592a3e8b4b5ea75bfbef68847a"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1144,7 +1178,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "b15a2ae799034a163f5fde17c3a8330c"
+      "841b8f5a943b618fb0e4cdb8f4db8623"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1161,7 +1195,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "ce48550e291395d9aa452e9f157d18b4"
+      "bc34f4cfe9902d342dd1e0ee02fbf7f1"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1178,7 +1212,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "77dc8351cb746deb0f2ad3ea17436ccf"
+      "9cbb8e889569e8258bc38746f8d63b15"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1195,7 +1229,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "7db15431480c5fc71ff2fdf721f4f199"
+      "62d579ce42ecbc2761c2e9077dddd5f8"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1212,7 +1246,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "8fd3ee2eccb0e5d6e98630c3049c0353"
+      "c05f54ad647aba7fdd0ef2797f4c5a7c"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1229,7 +1263,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "8a7c70133fad8600c943313cdbb45f7c"
+      "d855d5fc5028e4723a9c775b5a5f73bc"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1246,7 +1280,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "f886c20118d967d82571cb65083649d7"
+      "7c2a1275e49498cbac7d4fd851eb3678"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1263,7 +1297,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "9d489fa58b26c78638fc812f590c1988"
+      "86cf043f2eab2e60bd35f69d31f960cd"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1280,7 +1314,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "20bcb1c1d357d6ae301560f98be4f5c7"
+      "2d78d9c073a1623b787043b045c1840f"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1297,7 +1331,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "ab9a4f3db001a58dafe0f6a1cf0a995d"
+      "8c88ffb3d0aed1e3f233db80dd8ef3fd"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1314,7 +1348,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "c4a5ae7d5ce7cfd24ec3154e83af80f2"
+      "9db52071671da829a97287c417cc1be4"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1331,7 +1365,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "fe8445caa1834e57ee76383525051cff"
+      "e868c6e2a48406eee3d61884ce2007ff"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1348,7 +1382,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "dc6dec0f15a0566fa63dedf0021af5ed"
+      "50586e7e8b8e6c4e749f2b57468cb974"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1365,7 +1399,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "f387403d5edec2a05dc6547d0203b71c"
+      "293d84a55f54073f924ec38522f9d669"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1382,7 +1416,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "c94e20232e9a8b179f9905fa941731de"
+      "e7ce1038b74951e328d3193fa7c22bad"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1399,7 +1433,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "efef40de9bd4008a3726434215ad4401"
+      "7e218b1d0033efb0d3269bda55ec9a83"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1416,7 +1450,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "c09ba1c58f0123ac23aab6754a1af076"
+      "e42dfb9bb1e20d2d47e42b503d48c7eb"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1433,7 +1467,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "a5ce1eec741f0f4c7e470ef59990cfcf"
+      "389044cd55d63bdf74fbec8795f62ec2"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1450,7 +1484,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "bc2f55bac72132b15fb006d03c517700"
+      "2092a93e0d025051eb7da17252ed7f49"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1467,7 +1501,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "2c53e05458b4902f0d48efc559511809"
+      "8842a858cf17e8c11f2ded223cef3e39"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1484,7 +1518,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "5030697bb9929987586bef3063a82d42"
+      "76159a6b88511f8060d8f31eb258c4e7"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1501,7 +1535,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "1c262707fce9139990b25781b816db91"
+      "4e957732eb3528968aa061a0ad68d220"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1518,7 +1552,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "426860a856bc69a0ff1185355da09134"
+      "042bcaabdb1b209157f7212eb4b0f8ea"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1535,7 +1569,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "b344a361b45f9278f5f40e14b3b9cd5e"
+      "db49cf68ccdaa9e2bb5d59c690003967"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1552,7 +1586,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "0e94c0ab3eb767ad4f900de3c8ddf46a"
+      "1ce62a10624fd631356e8c92598b85a6"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1569,7 +1603,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "4e415e07453251ef7010352a6ba35034"
+      "9dd157d289dce1e4e3bd232b288a3dbb"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1586,7 +1620,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "8ee30af251e03bed220463e68f0c53ec"
+      "13cee8e1833bbfafcc4082b6a0547d77"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1603,7 +1637,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "b03cc6747e718d9dc6d0e0bfd996037b"
+      "900ea9c378910a25ca861459a9dfa771"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1620,7 +1654,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "aa2bbd6e7425a554d6b3f91a4c8bf61c"
+      "3db653b4c4b38208fb942eec30efed50"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1637,7 +1671,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "cdbacccd26c99768d4cd168b75eb39e2"
+      "ef425dd6051a00521ed634c395089d86"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1654,7 +1688,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "ce6f534633e23dda467febb3d1198705"
+      "4a1675ae1ad6bb9f78127e4961eaf4b9"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1671,7 +1705,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "22adba92f622f81d42fde15d2e389616"
+      "5caacfea06996891bae31a482fc48404"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1688,7 +1722,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "4604c0efa5738a952a5122f39b1da777"
+      "92fa2d651f50859b6bd92d505096b14f"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1705,7 +1739,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "1c5788f21a0229854da247849ceed6f5"
+      "6bdff0031e92525b6acc97a06ad8a537"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1722,7 +1756,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "82b90bb5fef945e44183d5fcb1ae2de7"
+      "144d2bc5cab1cd74b69fb9cdd17f75b1"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1739,7 +1773,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "686e4e5d470545d04a207d02558b489e"
+      "dca3110fbbc9ad0e7bfcc84102906158"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1756,7 +1790,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "5ffda639e794ac2976b28606b34074e0"
+      "5d8a71a7c99c6902e06ae902315adebd"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1773,7 +1807,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "75662696e13a67eff6ddc2f366107987"
+      "9ac901c1dd53a0131cf2e5452875fceb"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1790,7 +1824,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "fe4d61fbbdd4a6f4eee56ba42c80b6b3"
+      "6976ee26d23c311b2c766423f3b51ef1"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1807,7 +1841,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "342589fc46213aede62634f63a1fcfe0"
+      "aeffc21461ee103f53dd80802dae3139"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1824,7 +1858,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "846d176f47664cebb0588570732a22a4"
+      "cb474a28ad5b082bae170c5ab1f62ce8"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1841,7 +1875,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "01a67a63a30c59d5b793f47fa3a1309d"
+      "88dd3526df41cffeab9ccd02335d5995"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1858,7 +1892,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "7cea9e8ddf250c0471c81892a1081d02"
+      "c70c0c8d3aca27e7901f79922aa9fa74"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1875,7 +1909,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "09a67de8ee9d6128d96a1f97274f57af"
+      "c7d35847e75e0ea2b08abef1156da215"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1892,7 +1926,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "020a27175af6c42f60cd213ceb60ed34"
+      "b0edd7d82643b6824abd5d8d705f6e2a"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1909,7 +1943,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "107707aa8ba6ff870a4c1e551c9544f3"
+      "2fcdfa58734a9d31c9e9d7bc704cf935"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1926,7 +1960,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "b06346e60f50e54700a230247aa732c4"
+      "9e8684a99c5e1885e437a8ba92509e55"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1943,7 +1977,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "5255be5d66afafd6944c440426d7b82b"
+      "fcd3896c27ef4a8dc22c4eb1359f1c04"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1960,7 +1994,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "5e8c71b735494e7bd1f6f2ebdca1013d"
+      "2a325899be258ee5dcb445b96318bffe"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1977,7 +2011,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "07b4e6aa0eaaa8210080f7dc3da54966"
+      "7172f1bc86c0570694a76f6964f7fd3e"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -1994,7 +2028,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "1da8dcbc29a68a2e8a9a48f2c5fa31ec"
+      "cf1fc0398f882788b9b4856dea792902"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2011,7 +2045,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "eff4e2d174eff5a97c9067c7f907ad3d"
+      "a20fe529b54b0ec9bd07ecbd35d38769"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2028,7 +2062,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "4b106637041907e80077a402276dfb93"
+      "f2bfe87f8576d70b0aba4ce46bfe5ead"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2045,7 +2079,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "84b90c8460778d58a06a39f7fe138d72"
+      "435a6f8a2a9fb7f3f92d37e4e5fddda2"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2062,7 +2096,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "63b49d1630d395bd391400674de8fdf1"
+      "67bc1ba6b0e93427ae058455629bfa22"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2079,7 +2113,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "e7957683d48df64c920dae623f15afeb"
+      "36c92bc17b66d3624dfc88f3e1c5eedc"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2096,7 +2130,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "8a3b12a4e94c5df656e13696b223e038"
+      "28f3ae98ae0113289943bb9d27b7e72f"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2113,7 +2147,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "c26fd15bbe25184f31a5c07b316dc60a"
+      "9b9d44082defe59ec84e938114f0bee8"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2130,7 +2164,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "0f9ef11b67cf502758f76df4432f7a2b"
+      "d1cd8671226f04c0b676e51c83c453ad"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2147,7 +2181,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "58a74a439d5b79c24c36a86a15c30dc6"
+      "a96e036e4b2439b75a80d402cdd1df73"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2164,7 +2198,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "a811a93b92df6423666848e37947f798"
+      "c710327cbf632382281e4e1298d34f69"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2181,7 +2215,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "2863cd8d53e821350564ac7399dd43c6"
+      "4c6a421eab8b3ba011e3450e2214fd4c"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2198,7 +2232,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "deba45fc22739c22e5afce34be57c4c0"
+      "8556ae9c3df79d02fe8383bee4473b58"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2215,7 +2249,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "cc7b932ed5dd5bce6447f370f2857629"
+      "296d760553360af802e18aa7a1150494"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2232,7 +2266,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "ab9d24429ce8d2ede284dbc9b9155ede"
+      "93f1fb0169d9b8d6256ead3855b8b98b"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2249,7 +2283,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "544c7a623b66638e3880cfe7b169c0b1"
+      "ab1a9eac060eca94977bc7f61941e61b"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2266,7 +2300,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "ee63f6c05741d249639b2500bd99f51d"
+      "e2b7ff2975c257eece5952657cb544f1"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2283,7 +2317,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "ce120ef6dec2789f310b951792f11182"
+      "a195658370f61727a0b37e7739e1183d"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2300,7 +2334,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "fde42ebc340a45540c5141d99ded9f5a"
+      "efbe80423d52ff93399515cb65f60335"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2317,7 +2351,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "13558852f1a5385e658b754fba93b6a4"
+      "2a26e4b4df447c7e3d60472bf68243a1"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -2334,7 +2368,41 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "60ab1668eed0010d921793dd9ca91d6d"
+      "cf313799ce01a479db7d128633498f96"
+    ],
+    [
+      "Steel.SpinLock.release_core",
+      80,
+      0,
+      0,
+      [
+        "@query", "equation_Steel.Memory.full_perm",
+        "equation_Steel.Memory.readable",
+        "primitive_FStar.Real.op_Greater_Dot",
+        "proj_equation_Steel.Memory.MkPerm_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxReal_proj_0",
+        "projection_inverse_Steel.Memory.MkPerm_v"
+      ],
+      0,
+      "948089d98d03a2fdf3e5f02984be6247"
+    ],
+    [
+      "Steel.SpinLock.release_core",
+      81,
+      0,
+      0,
+      [
+        "@query", "equation_Steel.Memory.full_perm",
+        "equation_Steel.Memory.readable",
+        "primitive_FStar.Real.op_Greater_Dot",
+        "proj_equation_Steel.Memory.MkPerm_v",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxReal_proj_0",
+        "projection_inverse_Steel.Memory.MkPerm_v"
+      ],
+      0,
+      "580f569351ae795fc39c944ce577d501"
     ],
     [
       "Steel.SpinLock.release",
@@ -2351,7 +2419,7 @@
         "typing_Steel.Memory.lock_addr"
       ],
       0,
-      "08653338126f5f00095e39d8245e9f63"
+      "7aee14620c61152e6c6580f19fcbd279"
     ]
   ]
 ]

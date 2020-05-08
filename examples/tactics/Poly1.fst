@@ -26,7 +26,7 @@ assume val lemma_div_mod (a:int) (n:pos) : Lemma (a == (a / n) * n + a % n)
 // To print timing
 #set-options "--query_stats"
 
-[@tcdecltime]
+[@@tcdecltime]
 let lemma_poly_multiply (p:pos) (n r h r0 r1 h0 _h1 _h2 s1 d0 d1 d2 h1 h2 hh : int) : Lemma
   (requires r1 >= 0 /\ n > 0 /\ 4 * (n * n) == p + 5 /\ r == r1 * n + r0 /\
             h == h2 * (n * n) + h1 * n + h0 /\ s1 == r1 + (r1 / 4) /\ r1 % 4 == 0 /\

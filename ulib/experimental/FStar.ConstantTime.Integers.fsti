@@ -121,48 +121,48 @@ type qual =
           -> qual
 
 (** The signedness and width of a qualifier *)
-[@mark_for_norm]
+[@@mark_for_norm]
 unfold
 let sw_qual = function
   | Secret _ sw -> sw
   | Public sw -> sw
 
 (** The lattice element of a secret qualifier *)
-[@mark_for_norm]
+[@@mark_for_norm]
 unfold
 let label_qual (q:qual{Secret? q}) : lattice_element (Secret?.sl q) =
   match q with
   | Secret l _ -> l
 
 (** The type corresponding to a qualifier, either an integer or a secret integer *)
-[@mark_for_norm]
+[@@mark_for_norm]
 unfold
 let t (q:qual) =
   match q with
   | Secret l s -> secret_int l s
   | Public s -> int_t s
 
-[@mark_for_norm]
+[@@mark_for_norm]
 unfold
 let i (#q:qual) (x:t q) : GTot (int_t (sw_qual q)) =
   match q with
   | Public s -> x
   | Secret l s -> m (x <: secret_int l s)
 
-[@mark_for_norm]
+[@@mark_for_norm]
 unfold
 let as_secret (#q:qual{Secret? q}) (x:t q)
   : secret_int (label_qual q) (sw_qual q)
   = x
 
-[@mark_for_norm]
+[@@mark_for_norm]
 unfold
 let as_public (#q:qual{Public? q}) (x:t q)
   : int_t (sw_qual q)
   = x
 
 (** Lifting addition to work over both secret and public integers *)
-[@mark_for_norm]
+[@@mark_for_norm]
 unfold
 let ( + ) (#q:qual) (x:t q) (y:t q{ok (+) (i x) (i y)})
     : Tot (t q)
@@ -171,7 +171,7 @@ let ( + ) (#q:qual) (x:t q) (y:t q{ok (+) (i x) (i y)})
       | Secret l s -> as_secret x `addition` as_secret y
 
 (** Lifting addition modulo to work over both secret and public integers *)
-[@mark_for_norm]
+[@@mark_for_norm]
 unfold
 let ( +% ) (#q:qual{norm (Unsigned? (sw_qual q) /\ width_of_sw (sw_qual q) <> W128)})
            (x:t q)
@@ -181,30 +181,5 @@ let ( +% ) (#q:qual{norm (Unsigned? (sw_qual q) /\ width_of_sw (sw_qual q) <> W1
       | Public s -> as_public x +% as_public y
       | Secret l s -> as_secret x `addition_mod` as_secret y
 
-(**** Tests *)
+(**** See src/tests/microbenchmarks/Test.ConstantTimeIntegers.fst for some unit tests *)
 
-private irreducible
-let test (x:int) (y:int) = x + y
-private abstract
-let two_point_lattice = Ghost.hide (SemiLattice true ( || ))
-private abstract
-let lo : lattice_element two_point_lattice = Ghost.hide false
-private abstract
-let hi : lattice_element two_point_lattice = Ghost.hide true
-private irreducible
-let test2 (x:t (Secret lo (Unsigned W32))) (y:t (Secret lo (Unsigned W32))) = x +% y
-private irreducible
-let test3 (x:t (Secret hi (Unsigned W32))) (y:t (Secret lo (Unsigned W32))) = x +% promote y hi
-private irreducible
-let test4 (x:t (Secret lo (Unsigned W32))) (y:t (Secret hi (Unsigned W32)) { ok ( + ) (i x) (i y) }) = promote x hi + y
-
-private abstract
-let hacl_lattice = Ghost.hide (SemiLattice () (fun _ _ -> ()))
-private abstract
-let hacl_label : lattice_element hacl_lattice = Ghost.hide ()
-private abstract
-let s_uint32 = t (Secret hacl_label (Unsigned W32))
-private irreducible
-let test5 (x:s_uint32) (y:s_uint32) = x +% y
-private irreducible
-let test6 (x:s_uint32) (y:s_uint32{ok (+) (i x) (i y)}) = x + y

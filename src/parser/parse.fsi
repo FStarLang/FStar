@@ -88,6 +88,7 @@ type token =
   | LENS_PAREN_RIGHT
   | LENS_PAREN_LEFT
   | LBRACK_BAR
+  | LBRACK_AT_AT
   | LBRACK_AT
   | LBRACK
   | LBRACE_COLON_PATTERN
@@ -243,6 +244,7 @@ type tokenId =
     | TOKEN_LENS_PAREN_RIGHT
     | TOKEN_LENS_PAREN_LEFT
     | TOKEN_LBRACK_BAR
+    | TOKEN_LBRACK_AT_AT
     | TOKEN_LBRACK_AT
     | TOKEN_LBRACK
     | TOKEN_LBRACE_COLON_PATTERN
@@ -339,6 +341,7 @@ type nonTerminalId =
     | NONTERM_list_argTerm_
     | NONTERM_list_atomicTerm_
     | NONTERM_list_attr_letbinding_
+    | NONTERM_list_calcStep_
     | NONTERM_list_constructorDecl_
     | NONTERM_list_decl_
     | NONTERM_list_decoration_
@@ -348,7 +351,6 @@ type nonTerminalId =
     | NONTERM_nonempty_list_atomicPattern_
     | NONTERM_nonempty_list_atomicTerm_
     | NONTERM_nonempty_list_atomicUniverse_
-    | NONTERM_nonempty_list_calcStep_
     | NONTERM_nonempty_list_dotOperator_
     | NONTERM_nonempty_list_patternOrMultibinder_
     | NONTERM_separated_nonempty_list_AND_letbinding_
@@ -471,6 +473,7 @@ type nonTerminalId =
     | NONTERM_warn_error
     | NONTERM_flag
     | NONTERM_range
+    | NONTERM_string
     | NONTERM_some_fsTypeArgs_
     | NONTERM_right_flexible_list_SEMICOLON_fieldPattern_
     | NONTERM_right_flexible_list_SEMICOLON_noSeqTerm_

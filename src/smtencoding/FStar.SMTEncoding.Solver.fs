@@ -33,6 +33,7 @@ module U = FStar.Syntax.Util
 module TcUtil = FStar.TypeChecker.Util
 module Print = FStar.Syntax.Print
 module Env = FStar.TypeChecker.Env
+module Err = FStar.Errors
 
 (****************************************************************************)
 (* Hint databases for record and replay (private)                           *)
@@ -59,8 +60,8 @@ let initialize_hints_db src_filename format_filename : unit =
      * But it will only be used when use_hints is on
      *)
     let val_filename = Options.hint_file_for_src norm_src_filename in
-    begin match BU.read_hints val_filename (Options.use_hints ())  with
-          | Some hints ->
+    begin match BU.read_hints val_filename with
+          | HintsOK hints ->
             let expected_digest = BU.digest_of_file norm_src_filename in
             if Options.hint_info()
             then begin
@@ -71,9 +72,22 @@ let initialize_hints_db src_filename format_filename : unit =
                          val_filename
                  end;
                  replaying_hints := Some hints.hints
-          | None ->
-            if Options.hint_info()
-            then BU.print1 "(%s) Unable to read hint file.\n" norm_src_filename
+
+          | MalformedJson ->
+            if Options.use_hints () then
+              Err.log_issue Range.dummyRange
+                            (Err.Warning_CouldNotReadHints,
+                             BU.format1 "Malformed JSON hints file: %s; ran without hints\n"
+                                       val_filename);
+            ()
+
+          | UnableToOpen ->
+            if Options.use_hints () then
+              Err.log_issue Range.dummyRange
+                            (Err.Warning_CouldNotReadHints,
+                             BU.format1 "Unable to open hints file: %s; ran without hints\n"
+                                       val_filename);
+            ()
     end
 
 let finalize_hints_db src_filename :unit =
@@ -605,7 +619,7 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
         let qname, index =
             match env.qtbl_name_and_index with
             | _, None -> failwith "No query name set!"
-            | _, Some (q, n) -> Ident.text_of_lid q, n
+            | _, Some (q, n) -> Ident.string_of_lid q, n
         in
         let rlimit =
             Prims.op_Multiply

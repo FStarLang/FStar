@@ -1,5 +1,5 @@
 [
-  "œ<ýv{\\hìåÿ\u0010™Ø>à\u0000",
+  "õˆH\u0013 @;j\u0014õŸšBÑ³m",
   [
     [
       "NMST.return",
@@ -11,7 +11,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "63e0b1a5356921f7e59f943891312de0"
+      "04751680bfca5830299403af06cc8be5"
     ],
     [
       "NMST.bind",
@@ -25,7 +25,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "ad268765044516406c4507ff4f8aca80"
+      "8cb7395ac61e08960a6e2fc3aef381e7"
     ],
     [
       "NMST.subcomp",
@@ -39,7 +39,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2"
       ],
       0,
-      "45139d5066ec7fa687d0c2e8e327e557"
+      "a1e30427a3cbaf952cdcb6bc31b7e481"
     ],
     [
       "NMST.NMSTATE",
@@ -48,7 +48,7 @@
       1,
       [ "@query" ],
       0,
-      "a07b6fd4b3f23fe13dffe67fdfe09a1b"
+      "89427a68c92ea587cf4800acede1bcfb"
     ],
     [
       "NMST.NMSTATE",
@@ -57,7 +57,7 @@
       1,
       [ "@query" ],
       0,
-      "f6d7e2d8b5efe7b1eb1b4f7eeb48642c"
+      "f9e1e5a83966369dcb0953416d986de0"
     ],
     [
       "NMST.get",
@@ -69,7 +69,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "8c1b0e945971392a13c5b3d13d25179c"
+      "66cb14d8663b6f96a0df85b1a835004b"
     ],
     [
       "NMST.put",
@@ -78,7 +78,7 @@
       1,
       [ "@query" ],
       0,
-      "b299255565e078a96c6ea0c374ab2a81"
+      "e8f3d3cb38fc6df6813ca941c394fe20"
     ],
     [
       "NMST.witness",
@@ -90,7 +90,7 @@
         "equation_NMST.witnessed"
       ],
       0,
-      "0adee7f8e57ca177ea82972c8e20b270"
+      "b256afa4ad4f953dccefa0944fd5f5b9"
     ],
     [
       "NMST.recall",
@@ -99,7 +99,7 @@
       1,
       [ "@query", "equation_NMST.witnessed" ],
       0,
-      "3033c47afcab3dcff6b9942fdd6cc44e"
+      "36d0d7cbb77a32c2710e180cf97a80cc"
     ],
     [
       "NMST.sample",
@@ -112,7 +112,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "12efae9d7a109bebe2ed42b880837447"
+      "9438b98618ea8ba3d78ffc3bf3c2c200"
     ],
     [
       "NMST.lift_pure_nmst",
@@ -142,7 +142,7 @@
         "typing_Tm_abs_dc670feaee5a9cdeefefb04a5984b858"
       ],
       0,
-      "fb0f42034888f81b7ee76e88a081ca64"
+      "39af23234f22cc822e366c77370c881d"
     ],
     [
       "NMST.nmst_assume",
@@ -151,7 +151,7 @@
       1,
       [ "@query" ],
       0,
-      "6413df3fa4e4c0a134c47199f676d186"
+      "f73670787686e1698fa9c1f7864b4fd6"
     ],
     [
       "NMST.nmst_assert",
@@ -160,7 +160,16 @@
       1,
       [ "@query" ],
       0,
-      "0a0fbc6a97e31e07ba90f604f6a321ea"
+      "d0a272e6b4f10a95da53678bfd73df7f"
+    ],
+    [
+      "NMST.lift_nmst_total_nmst",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1ed5307f999ab1bf377256e5500fda36"
     ],
     [
       "NMST.return",
@@ -172,7 +181,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "ce967e11691845062ec8646c40f69e00"
+      "9debe698c1a4063acfe4b2a3bf85a9b5"
     ],
     [
       "NMST.bind",
@@ -186,7 +195,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "a313e2220a12264409337eef73dc552e"
+      "ffb3db2da412b7d562bba6f04618aac8"
     ],
     [
       "NMST.subcomp",
@@ -200,7 +209,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2"
       ],
       0,
-      "8f34e71556d8faf345d5e80510755a38"
+      "c334a32106d87bd18638fe2ccc875a8e"
     ],
     [
       "NMST.NMSTATE",
@@ -209,7 +218,7 @@
       1,
       [ "@query" ],
       0,
-      "7b21e068344d404725f7e2cda111e78d"
+      "eaff851dc182fde821009bab7769ef0f"
     ],
     [
       "NMST.NMSTATE",
@@ -218,7 +227,7 @@
       1,
       [ "@query" ],
       0,
-      "b9dbbdad34d39f5b329a8ed575ea364a"
+      "82622263a9daa308622d3d11a16ec580"
     ],
     [
       "NMST.get",
@@ -230,7 +239,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "a63b9b192675ff3ba7009c9a4953dd29"
+      "200f0342ecefbb63c6df3e97494787c3"
     ],
     [
       "NMST.put",
@@ -239,7 +248,7 @@
       1,
       [ "@query" ],
       0,
-      "19ed1d5c4ddb0f953721cdfd8781ad0d"
+      "e2921cc0e537243638fb182eeb1f3a26"
     ],
     [
       "NMST.witness",
@@ -251,7 +260,7 @@
         "equation_NMST.witnessed"
       ],
       0,
-      "ccad89c4d6f70647dabab71807ad4bc2"
+      "262290c52428c6de2955ce4ce71a22d0"
     ],
     [
       "NMST.recall",
@@ -260,7 +269,7 @@
       1,
       [ "@query", "equation_NMST.witnessed" ],
       0,
-      "eb90016b0e490652a715cb23225b3f49"
+      "2f4b18f8ff64958843957d437d0a9eb3"
     ],
     [
       "NMST.sample",
@@ -273,7 +282,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "857b0ea0bca99b35000b10fbdd675ec8"
+      "29afcd74fa15ef706a5ff4f4c4447055"
     ],
     [
       "NMST.lift_pure_nmst",
@@ -303,7 +312,7 @@
         "typing_Tm_abs_dc670feaee5a9cdeefefb04a5984b858"
       ],
       0,
-      "4c67336369f73b6eb09ea1f12bf19871"
+      "d08b4de0383fe1a299af7ab845b5ee11"
     ],
     [
       "NMST.nmst_assume",
@@ -312,7 +321,7 @@
       1,
       [ "@query" ],
       0,
-      "a190a3bf19d972c52cfd0b56aeb78145"
+      "09f2e7bdeafc0631b75b052419deafb1"
     ],
     [
       "NMST.nmst_assert",
@@ -321,7 +330,16 @@
       1,
       [ "@query" ],
       0,
-      "f755bd16782b931a7ec05d5d060f9474"
+      "103bca53785647ff23cbe5b3ccb9e74a"
+    ],
+    [
+      "NMST.lift_nmst_total_nmst",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "756141042e6b1125e635ee07ba4e9b36"
     ]
   ]
 ]

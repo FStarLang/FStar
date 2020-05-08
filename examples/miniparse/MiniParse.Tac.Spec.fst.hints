@@ -11,19 +11,7 @@
         "projection_inverse_MiniParse.Tac.Spec.Package_p"
       ],
       0,
-      "00974473294ef5dad8fab2b7590102b3"
-    ],
-    [
-      "MiniParse.Tac.Spec.__proj__Package__item__s",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_MiniParse.Tac.Spec.Package_p",
-        "projection_inverse_MiniParse.Tac.Spec.Package_p"
-      ],
-      0,
-      "6fff79aa4d6b0d68d5e33563fadd5419"
+      "73caadd8ab9575d53abe79d3b2acef5a"
     ]
   ]
 ]

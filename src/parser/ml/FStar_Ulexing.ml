@@ -2,7 +2,7 @@
 A custom version of Ulexing enhanced with
 lc, bol and fname position tracking and
 specialized for UTF-8 string inputs
-(the parser driver aloways reads whole files)
+(the parser driver always reads whole files)
 **)
 
 exception Error

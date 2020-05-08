@@ -51,7 +51,7 @@ and trywith (seen:list term) (fuel:int) (t:term) : Tac unit =
     debug ("Trying to apply hypothesis/instance: " ^ term_to_string t);
     (fun () -> apply_noinst t) `seq` (fun () -> tcresolve' seen (fuel-1))
 
-[@plugin]
+[@@plugin]
 let tcresolve () : Tac unit =
     try tcresolve' [] 16
     with
@@ -75,20 +75,20 @@ let rec last (l : list 'a) : Tac 'a =
   | [x] -> x
   | _::xs -> last xs
 
+[@@plugin]
 let mk_class (nm:string) : Tac decls =
-    (* sigh *)
-    let ns = String.split ['.'] nm in
+    let ns = explode_qn nm in
     let r = lookup_typ (top_env ()) ns in
     guard (Some? r);
     let Some se = r in
     let sv = inspect_sigelt se in
     guard (Sg_Inductive? sv);
     let Sg_Inductive name us params ty ctors = sv in
-    (* dump ("got it, name = " ^ String.concat "." name); *)
+    (* dump ("got it, name = " ^ implode_qn name); *)
     (* dump ("got it, ty = " ^ term_to_string ty); *)
     let ctor_name = last name in
     // Must have a single constructor
-    guard (List.length ctors = 1);
+    guard (List.Tot.Base.length ctors = 1);
     let [ctor] = ctors in
     let r = lookup_typ (top_env ()) ctor in
     guard (Some? r);
@@ -96,16 +96,16 @@ let mk_class (nm:string) : Tac decls =
     let r = inspect_sigelt res in
     guard (Sg_Constructor? r);
     let Sg_Constructor _ ty = r in
-    (* dump ("got ctor " ^ String.concat "." ctor ^ " of type " ^ term_to_string ty); *)
+    (* dump ("got ctor " ^ implode_qn ctor ^ " of type " ^ term_to_string ty); *)
     let bs, cod = collect_arr_bs ty in
     let r = inspect_comp cod in
     guard (C_Total? r);
     let C_Total cod _ = r in (* must be total *)
     (* The constructor of course takes the parameters of the record
      * as arguments, but we should ignore them here *)
-    let ps, bs = List.Tot.splitAt (List.length params) bs in
+    let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
 
-    (* print ("n_univs = " ^ string_of_int (List.length us)); *)
+    (* print ("n_univs = " ^ string_of_int (List.Tot.Base.length us)); *)
 
     let base : string = "__proj__Mk" ^ ctor_name ^ "__item__" in
 
@@ -133,7 +133,7 @@ let mk_class (nm:string) : Tac decls =
                   //dump ("proj_ty = " ^ term_to_string proj_ty);
                   let ty =
                     let bs, cod = collect_arr_bs proj_ty in
-                    let ps, bs = List.Tot.splitAt (List.length params) bs in
+                    let ps, bs = List.Tot.Base.splitAt (List.Tot.Base.length params) bs in
                     match bs with
                     | [] -> fail "mk_class: impossible, no binders"
                     | b1::bs' ->

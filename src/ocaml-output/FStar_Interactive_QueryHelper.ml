@@ -38,7 +38,7 @@ let (__proj__Mksl_reponse__item__slr_def :
     | { slr_name; slr_def_range; slr_typ; slr_doc; slr_def;_} -> slr_def
   
 let with_printed_effect_args :
-  'Auu____194 . (unit -> 'Auu____194) -> 'Auu____194 =
+  'uuuuuu194 . (unit -> 'uuuuuu194) -> 'uuuuuu194 =
   fun k  ->
     FStar_Options.with_saved_options
       (fun uu____207  ->
@@ -76,40 +76,40 @@ let (symlookup :
                  in
               FStar_Ident.lid_of_ids uu____293  in
             let lid1 =
-              let uu____299 =
+              let uu____297 =
                 FStar_Syntax_DsEnv.resolve_to_fully_qualified_name
                   tcenv.FStar_TypeChecker_Env.dsenv lid
                  in
-              FStar_All.pipe_left (FStar_Util.dflt lid) uu____299  in
-            let uu____304 = FStar_TypeChecker_Env.try_lookup_lid tcenv lid1
+              FStar_All.pipe_left (FStar_Util.dflt lid) uu____297  in
+            let uu____302 = FStar_TypeChecker_Env.try_lookup_lid tcenv lid1
                in
-            FStar_All.pipe_right uu____304
+            FStar_All.pipe_right uu____302
               (FStar_Util.map_option
-                 (fun uu____361  ->
-                    match uu____361 with
-                    | ((uu____381,typ),r) -> ((FStar_Util.Inr lid1), typ, r)))
+                 (fun uu____359  ->
+                    match uu____359 with
+                    | ((uu____379,typ),r) -> ((FStar_Util.Inr lid1), typ, r)))
              in
           let docs_of_lid lid = FStar_Pervasives_Native.None  in
           let def_of_lid lid =
-            let uu____413 = FStar_TypeChecker_Env.lookup_qname tcenv lid  in
-            FStar_Util.bind_opt uu____413
-              (fun uu___0_458  ->
-                 match uu___0_458 with
-                 | (FStar_Util.Inr (se,uu____481),uu____482) ->
-                     let uu____511 = sigelt_to_string se  in
-                     FStar_Pervasives_Native.Some uu____511
-                 | uu____514 -> FStar_Pervasives_Native.None)
+            let uu____411 = FStar_TypeChecker_Env.lookup_qname tcenv lid  in
+            FStar_Util.bind_opt uu____411
+              (fun uu___0_456  ->
+                 match uu___0_456 with
+                 | (FStar_Util.Inr (se,uu____479),uu____480) ->
+                     let uu____509 = sigelt_to_string se  in
+                     FStar_Pervasives_Native.Some uu____509
+                 | uu____512 -> FStar_Pervasives_Native.None)
              in
           let info_at_pos_opt =
             FStar_Util.bind_opt pos_opt
-              (fun uu____563  ->
-                 match uu____563 with
+              (fun uu____561  ->
+                 match uu____561 with
                  | (file,row,col) ->
                      FStar_TypeChecker_Err.info_at_pos tcenv file row col)
              in
           let info_opt =
             match info_at_pos_opt with
-            | FStar_Pervasives_Native.Some uu____613 -> info_at_pos_opt
+            | FStar_Pervasives_Native.Some uu____611 -> info_at_pos_opt
             | FStar_Pervasives_Native.None  ->
                 if symbol = ""
                 then FStar_Pervasives_Native.None
@@ -125,68 +125,68 @@ let (symlookup :
               let typ_str =
                 if FStar_List.mem "type" requested_info
                 then
-                  let uu____731 = term_to_string tcenv typ  in
-                  FStar_Pervasives_Native.Some uu____731
+                  let uu____729 = term_to_string tcenv typ  in
+                  FStar_Pervasives_Native.Some uu____729
                 else FStar_Pervasives_Native.None  in
               let doc_str =
                 match name_or_lid with
                 | FStar_Util.Inr lid when
                     FStar_List.mem "documentation" requested_info ->
                     docs_of_lid lid
-                | uu____748 -> FStar_Pervasives_Native.None  in
+                | uu____746 -> FStar_Pervasives_Native.None  in
               let def_str =
                 match name_or_lid with
                 | FStar_Util.Inr lid when
                     FStar_List.mem "definition" requested_info ->
                     def_of_lid lid
-                | uu____766 -> FStar_Pervasives_Native.None  in
-              let def_range1 =
+                | uu____764 -> FStar_Pervasives_Native.None  in
+              let def_range =
                 if FStar_List.mem "defined-at" requested_info
                 then FStar_Pervasives_Native.Some rng
                 else FStar_Pervasives_Native.None  in
               FStar_Pervasives_Native.Some
                 {
                   slr_name = name;
-                  slr_def_range = def_range1;
+                  slr_def_range = def_range;
                   slr_typ = typ_str;
                   slr_doc = doc_str;
                   slr_def = def_str
                 }
   
 let mod_filter :
-  'Auu____788 .
-    ('Auu____788 * FStar_Interactive_CompletionTable.mod_symbol) ->
-      ('Auu____788 * FStar_Interactive_CompletionTable.mod_symbol)
+  'uuuuuu786 .
+    ('uuuuuu786 * FStar_Interactive_CompletionTable.mod_symbol) ->
+      ('uuuuuu786 * FStar_Interactive_CompletionTable.mod_symbol)
         FStar_Pervasives_Native.option
   =
-  fun uu___1_803  ->
-    match uu___1_803 with
-    | (uu____808,FStar_Interactive_CompletionTable.Namespace uu____809) ->
+  fun uu___1_801  ->
+    match uu___1_801 with
+    | (uu____806,FStar_Interactive_CompletionTable.Namespace uu____807) ->
         FStar_Pervasives_Native.None
-    | (uu____814,FStar_Interactive_CompletionTable.Module
-       { FStar_Interactive_CompletionTable.mod_name = uu____815;
-         FStar_Interactive_CompletionTable.mod_path = uu____816;
+    | (uu____812,FStar_Interactive_CompletionTable.Module
+       { FStar_Interactive_CompletionTable.mod_name = uu____813;
+         FStar_Interactive_CompletionTable.mod_path = uu____814;
          FStar_Interactive_CompletionTable.mod_loaded = true ;_})
         -> FStar_Pervasives_Native.None
     | (pth,FStar_Interactive_CompletionTable.Module md) ->
-        let uu____826 =
-          let uu____831 =
-            let uu____832 =
-              let uu___99_833 = md  in
-              let uu____834 =
-                let uu____836 = FStar_Interactive_CompletionTable.mod_name md
+        let uu____824 =
+          let uu____829 =
+            let uu____830 =
+              let uu___99_831 = md  in
+              let uu____832 =
+                let uu____834 = FStar_Interactive_CompletionTable.mod_name md
                    in
-                Prims.op_Hat uu____836 "."  in
+                Prims.op_Hat uu____834 "."  in
               {
-                FStar_Interactive_CompletionTable.mod_name = uu____834;
+                FStar_Interactive_CompletionTable.mod_name = uu____832;
                 FStar_Interactive_CompletionTable.mod_path =
-                  (uu___99_833.FStar_Interactive_CompletionTable.mod_path);
+                  (uu___99_831.FStar_Interactive_CompletionTable.mod_path);
                 FStar_Interactive_CompletionTable.mod_loaded =
-                  (uu___99_833.FStar_Interactive_CompletionTable.mod_loaded)
+                  (uu___99_831.FStar_Interactive_CompletionTable.mod_loaded)
               }  in
-            FStar_Interactive_CompletionTable.Module uu____832  in
-          (pth, uu____831)  in
-        FStar_Pervasives_Native.Some uu____826
+            FStar_Interactive_CompletionTable.Module uu____830  in
+          (pth, uu____829)  in
+        FStar_Pervasives_Native.Some uu____824
   
 let (ck_completion :
   FStar_Interactive_JsonHelper.repl_state ->
@@ -213,20 +213,20 @@ let (deflookup :
   =
   fun env  ->
     fun pos  ->
-      let uu____886 =
-        let uu____889 =
-          let uu____892 = FStar_Interactive_JsonHelper.pos_munge pos  in
-          FStar_Pervasives_Native.Some uu____892  in
-        symlookup env "" uu____889 ["defined-at"]  in
-      match uu____886 with
+      let uu____884 =
+        let uu____887 =
+          let uu____890 = FStar_Interactive_JsonHelper.pos_munge pos  in
+          FStar_Pervasives_Native.Some uu____890  in
+        symlookup env "" uu____887 ["defined-at"]  in
+      match uu____884 with
       | FStar_Pervasives_Native.Some
-          { slr_name = uu____899;
+          { slr_name = uu____897;
             slr_def_range = FStar_Pervasives_Native.Some r;
-            slr_typ = uu____901; slr_doc = uu____902; slr_def = uu____903;_}
+            slr_typ = uu____899; slr_doc = uu____900; slr_def = uu____901;_}
           ->
-          let uu____914 = FStar_Interactive_JsonHelper.js_loclink r  in
-          FStar_Interactive_JsonHelper.resultResponse uu____914
-      | uu____915 -> FStar_Interactive_JsonHelper.nullResponse
+          let uu____912 = FStar_Interactive_JsonHelper.js_loclink r  in
+          FStar_Interactive_JsonHelper.resultResponse uu____912
+      | uu____913 -> FStar_Interactive_JsonHelper.nullResponse
   
 let (hoverlookup :
   FStar_TypeChecker_Env.env ->
@@ -235,15 +235,15 @@ let (hoverlookup :
   =
   fun env  ->
     fun pos  ->
-      let uu____933 =
-        let uu____936 =
-          let uu____939 = FStar_Interactive_JsonHelper.pos_munge pos  in
-          FStar_Pervasives_Native.Some uu____939  in
-        symlookup env "" uu____936 ["type"; "definition"]  in
-      match uu____933 with
+      let uu____931 =
+        let uu____934 =
+          let uu____937 = FStar_Interactive_JsonHelper.pos_munge pos  in
+          FStar_Pervasives_Native.Some uu____937  in
+        symlookup env "" uu____934 ["type"; "definition"]  in
+      match uu____931 with
       | FStar_Pervasives_Native.Some
-          { slr_name = n1; slr_def_range = uu____949;
-            slr_typ = FStar_Pervasives_Native.Some t; slr_doc = uu____951;
+          { slr_name = n; slr_def_range = uu____947;
+            slr_typ = FStar_Pervasives_Native.Some t; slr_doc = uu____949;
             slr_def = FStar_Pervasives_Native.Some d;_}
           ->
           let hovertxt =
@@ -256,7 +256,7 @@ let (hoverlookup :
                   (FStar_Util.JsonAssoc
                      [("kind", (FStar_Util.JsonStr "markdown"));
                      ("value", (FStar_Util.JsonStr hovertxt))]))])
-      | uu____998 -> FStar_Interactive_JsonHelper.nullResponse
+      | uu____996 -> FStar_Interactive_JsonHelper.nullResponse
   
 let (complookup :
   FStar_Interactive_JsonHelper.repl_state ->
@@ -265,12 +265,12 @@ let (complookup :
   =
   fun st  ->
     fun pos  ->
-      let uu____1016 = FStar_Interactive_JsonHelper.pos_munge pos  in
-      match uu____1016 with
+      let uu____1014 = FStar_Interactive_JsonHelper.pos_munge pos  in
+      match uu____1014 with
       | (file,row,current_col) ->
-          let uu____1037 = FStar_Parser_ParseIt.read_vfs_entry file  in
-          (match uu____1037 with
-           | FStar_Pervasives_Native.Some (uu____1047,text) ->
+          let uu____1035 = FStar_Parser_ParseIt.read_vfs_entry file  in
+          (match uu____1035 with
+           | FStar_Pervasives_Native.Some (uu____1045,text) ->
                let rec find_col l =
                  match l with
                  | [] -> Prims.int_zero
@@ -288,18 +288,18 @@ let (complookup :
                    if i < Prims.int_zero
                    then l
                    else
-                     (let uu____1132 =
-                        let uu____1136 = FStar_String.get s i  in uu____1136
+                     (let uu____1130 =
+                        let uu____1134 = FStar_String.get s i  in uu____1134
                           :: l
                          in
-                      exp (i - Prims.int_one) uu____1132)
+                      exp (i - Prims.int_one) uu____1130)
                     in
                  exp ((FStar_String.length s) - Prims.int_one) []  in
                let begin_col =
-                 let uu____1144 =
-                   let uu____1148 = explode str  in FStar_List.rev uu____1148
+                 let uu____1142 =
+                   let uu____1146 = explode str  in FStar_List.rev uu____1146
                     in
-                 find_col uu____1144  in
+                 find_col uu____1142  in
                let term =
                  FStar_Util.substring str begin_col (current_col - begin_col)
                   in

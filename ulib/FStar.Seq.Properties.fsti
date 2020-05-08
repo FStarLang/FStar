@@ -430,7 +430,7 @@ let rec seq_to_list (#a:Type) (s:seq a)
 = if length s = 0 then []
   else index s 0::seq_to_list (slice s 1 (length s))
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 let rec seq_of_list (#a:Type) (l:list a) : Tot (s:seq a{L.length l = length s})  =
   match l with
   | [] -> Seq.empty #a
@@ -642,7 +642,7 @@ val lemma_seq_of_list_index (#a:Type) (l:list a) (i:nat{i < List.Tot.length l})
          (ensures  (index (seq_of_list l) i == List.Tot.index l i))
          [SMTPat (index (seq_of_list l) i)]
 
-[@(deprecated "seq_of_list")]
+[@@(deprecated "seq_of_list")]
 let of_list (#a:Type) (l:list a) :seq a = seq_of_list l
 
 val seq_of_list_tl

@@ -1,2 +1,4 @@
-*.print.fst
-*.print_in_place.fst
+inplace/
+printed/
+.*.test.print
+.*.test.inplace

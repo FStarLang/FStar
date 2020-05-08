@@ -1,0 +1,5 @@
+>> Got issues: [
+GhostImplicits.fst(25,54-25,57): (Error 34) Computed type "Prims.nat" and effect "GHOST" is not compatible with the annotated type "Prims.nat" effect "Tot"
+>>]
+Verified module: GhostImplicits
+All verification conditions discharged successfully

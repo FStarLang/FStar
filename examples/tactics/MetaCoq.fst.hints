@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_d546a4ece9ccffe78d7c00983bdb4280"
       ],
       0,
-      "6ef08f7f9de8ad0d514e958410bf20f4"
+      "1f657a35716d7d1e39ce70b6e4adc17a"
     ],
     [
       "MetaCoq.__proj__Goal__item___1",
@@ -26,7 +26,7 @@
         "refinement_interpretation_Tm_refine_d546a4ece9ccffe78d7c00983bdb4280"
       ],
       0,
-      "1f9cc05ec4133be4ec65c9cccada3cac"
+      "b461fb44217b13a6c135d7c9db23c60b"
     ],
     [
       "MetaCoq.__proj__AHyp__item__a",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Tm_refine_44d6fb2015c988380b64ed0fb222ced8"
       ],
       0,
-      "ff40a252ecdc11a83ba68ed703bfab56"
+      "8134bd9b612560bc4506cd59cd7381b2"
     ],
     [
       "MetaCoq.__proj__AHyp__item___1",
@@ -53,7 +53,7 @@
         "refinement_interpretation_Tm_refine_44d6fb2015c988380b64ed0fb222ced8"
       ],
       0,
-      "8932e5402e6d178710b5f9ee1785a73e"
+      "0c83ea339f39e06b06fc8d5d7a0c4e6d"
     ],
     [
       "MetaCoq.__proj__AHyp__item___2",
@@ -67,75 +67,7 @@
         "refinement_interpretation_Tm_refine_44d6fb2015c988380b64ed0fb222ced8"
       ],
       0,
-      "5f0a82d67e4e951840579e1f98310223"
-    ],
-    [
-      "MetaCoq.__proj__Goal__item__a",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_MetaCoq.Goal",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_d546a4ece9ccffe78d7c00983bdb4280"
-      ],
-      0,
-      "481c3ae6db2deb37a7a26bf35c084732"
-    ],
-    [
-      "MetaCoq.__proj__Goal__item___1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_MetaCoq.Goal",
-        "proj_equation_MetaCoq.Goal_a", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_MetaCoq.Goal_a",
-        "refinement_interpretation_Tm_refine_d546a4ece9ccffe78d7c00983bdb4280"
-      ],
-      0,
-      "43eadc357d303ba3c91cd08780dbe807"
-    ],
-    [
-      "MetaCoq.__proj__AHyp__item__a",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_MetaCoq.AHyp",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_44d6fb2015c988380b64ed0fb222ced8"
-      ],
-      0,
-      "38ca0d1fb19781599a7cc07a07ef2a93"
-    ],
-    [
-      "MetaCoq.__proj__AHyp__item___1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_MetaCoq.AHyp",
-        "proj_equation_MetaCoq.AHyp_a", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_MetaCoq.AHyp_a",
-        "refinement_interpretation_Tm_refine_44d6fb2015c988380b64ed0fb222ced8"
-      ],
-      0,
-      "63c9cfaa4cece2342ab518692b55b14a"
-    ],
-    [
-      "MetaCoq.__proj__AHyp__item___2",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_MetaCoq.AHyp",
-        "proj_equation_MetaCoq.AHyp_a", "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_MetaCoq.AHyp_a",
-        "refinement_interpretation_Tm_refine_44d6fb2015c988380b64ed0fb222ced8"
-      ],
-      0,
-      "82efc937d04e0735a210942ef7fab7f8"
+      "e85758888b7f187282df43a9cc057321"
     ]
   ]
 ]

@@ -35,7 +35,7 @@ type bytes = Seq.seq byte
 /// these parsers are used as specifications, and thus use unrepresentable types
 /// such as byte sequences and natural numbers and are always pure
 
-[@"substitute"]
+[@@"substitute"]
 inline_for_extraction
 let consumed_length (b: bytes) : Tot Type0 = (n: nat { n <= Seq.length b } )
 

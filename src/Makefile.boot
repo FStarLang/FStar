@@ -2,7 +2,9 @@ include Makefile.config
 
 FSTAR_HOME ?= ..
 
-include Makefile.boot.common  #provides variables INCLUDE_PATHS, FSTAR_BOOT_OPTIONS, and CACHE_DIR, shared with interactive mode targets
+# Provides variables INCLUDE_PATHS, FSTAR_BOOT_OPTIONS,
+# and CACHE_DIR, shared with interactive mode targets
+include Makefile.boot.common
 
 FSTAR_BOOT ?= $(FSTAR)
 
@@ -48,7 +50,7 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 %.checked.lax:
 	@echo "[LAXCHECK  $(basename $(basename $(notdir $@)))]"
 	$(Q)$(FSTAR_C) $(SIL) $< --already_cached "* -$(basename $(notdir $<))"
-	$(Q)@touch $@
+	$(Q)@touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file

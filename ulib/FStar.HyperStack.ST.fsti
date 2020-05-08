@@ -26,7 +26,7 @@ open FStar.Preorder
 
 (* Starting the predicates that constitute the preorder *)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 private unfold let contains_region (m:mem) (r:rid) = get_hmap m `Map.contains` r
 
 (* The preorder is the conjunction of above predicates *)
@@ -116,27 +116,27 @@ effect Unsafe (a:Type) (pre:st_pre) (post: (m0:mem -> Tot (st_post' a (pre m0)))
 (*
 //  * marking these opaque, since expect them to be unfolded away beforehand
 //  *)
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let equal_heap_dom (r:rid) (m0 m1:mem) :Type0
   = Heap.equal_dom (get_hmap m0 `Map.sel` r) (get_hmap m1 `Map.sel` r)
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let contained_region :mem -> mem -> rid -> Type0
   = fun m0 m1 r -> m0 `contains_region` r /\ m1 `contains_region` r
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let contained_stack_region :mem -> mem -> rid -> Type0
   = fun m0 m1 r -> is_stack_region r /\ contained_region m0 m1 r
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let contained_non_tip_region :mem -> mem -> rid -> Type0
   = fun m0 m1 r -> r =!= get_tip m0 /\ r =!= get_tip m1 /\ contained_region m0 m1 r
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let contained_non_tip_stack_region :mem -> mem -> rid -> Type0
   = fun m0 m1 r -> is_stack_region r /\ contained_non_tip_region m0 m1 r
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 unfold private let same_refs_common (p:mem -> mem -> rid -> Type0) (m0 m1:mem) =
   forall (r:rid). p m0 m1 r ==> equal_heap_dom r m0 m1
 
@@ -340,12 +340,12 @@ val salloc (#a:Type) (#rel:preorder a) (init:a)
   
 // JP, AR: these are not supported in C, and `salloc` already benefits from
 // automatic memory management.
-[@ (deprecated "use salloc instead") ]
+[@@ (deprecated "use salloc instead") ]
 val salloc_mm (#a:Type) (#rel:preorder a) (init:a)
   :StackInline (mmmstackref a rel) (requires (fun m -> is_stack_region (get_tip m)))
                                    (ensures  salloc_post init)
 
-[@ (deprecated "use salloc instead") ]
+[@@ (deprecated "use salloc instead") ]
 val sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
   :StackInline unit (requires (fun m0 -> frameOf r = get_tip m0 /\ m0 `contains` r))
                     (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == HS.free r m0))
@@ -474,12 +474,12 @@ unfold type stable_on (#a:Type0) (#rel:preorder a) (p:mem_predicate) (r:mreferen
   = forall (h0 h1:mem).{:pattern (p h0); rel (HS.sel h0 r) (HS.sel h1 r)}
                   (p h0 /\ rel (HS.sel h0 r) (HS.sel h1 r)) ==> p h1
 
-[@(deprecated "FStar.HyperStack.ST.stable_on")]
+[@@(deprecated "FStar.HyperStack.ST.stable_on")]
 unfold type stable_on_t (#i:erid) (#a:Type) (#b:preorder a)
                         (r:m_rref i a b) (p:mem_predicate)
   = stable_on p r
 
-[@(deprecated "FStar.HyperStack.ST.witness_p")]
+[@@(deprecated "FStar.HyperStack.ST.witness_p")]
 val mr_witness (#r:erid) (#a:Type) (#b:preorder a)
                (m:m_rref r a b) (p:mem_predicate)
   :ST unit (requires (fun h0      -> p h0   /\ stable_on_t m p))

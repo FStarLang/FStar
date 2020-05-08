@@ -1,0 +1,22 @@
+>> Got issues: [
+Erasable.fst(6,0-8,17): (Error 162) Incompatible attributes and qualifiers: erasable types do not support decidable equality and must be marked `noeq`
+>>]
+>> Got issues: [
+Erasable.fst(18,2-20,15): (Error 34) Computed type "Prims.int" and effect "GHOST" is not compatible with the annotated type "Prims.int" effect "Tot"
+>>]
+>> Got issues: [
+Erasable.fst(28,42-28,52): (Error 34) Computed type "Prims.int" and effect "GTot" is not compatible with the annotated type "Prims.int" effect "Tot"
+>>]
+>> Got issues: [
+Erasable.fst(41,0-41,15): (Error 162) Illegal attribute: the `erasable` attribute is only permitted on inductive type definitions
+>>]
+>> Got issues: [
+Erasable.fst(52,0-52,17): (Error 162) Mismatch of attributes between declaration and definition: Declaration is marked `erasable` but the definition is not
+>>]
+>> Got issues: [
+Erasable.fst(59,0-59,29): (Error 162) Mismatch of attributes between declaration and definition: Declaration is marked `erasable` but the definition is not
+>>]
+Erasable.fst(49,4-49,11): (Warning 240) Admitting Erasable.e_nat_2 without a definition
+Erasable.fst(56,4-56,11): (Warning 240) Admitting Erasable.e_nat_3 without a definition
+Verified module: Erasable
+All verification conditions discharged successfully

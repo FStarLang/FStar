@@ -24,7 +24,15 @@ open FStar_String
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
+
 let mk_meta_tac m = Meta (Arg_qualifier_meta_tac m)
+
+let abstract_qualifier_warning =
+  "abstract qualifier will soon be removed from F*, use interfaces instead"
+
+let old_attribute_syntax_warning =
+  "The `[@ ...]` syntax of attributes is deprecated. \
+   Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 %}
 
 %token <bytes> BYTEARRAY
@@ -66,7 +74,8 @@ let mk_meta_tac m = Meta (Arg_qualifier_meta_tac m)
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
-%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT DOT_LBRACK DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE BANG_LBRACE
+%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT DOT_LBRACK
+%token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
@@ -137,7 +146,18 @@ pragma:
 
 attribute:
   | LBRACK_AT x = list(atomicTerm) RBRACK
+      {
+        let _ =
+            match x with
+            | _::_::_ ->
+                  log_issue (lhs parseState) (Warning_DeprecatedAttributeSyntax,
+                                              old_attribute_syntax_warning)
+            | _ -> () in
+         x
+      }
+  | LBRACK_AT_AT x = semiColonTermList RBRACK
       { x }
+
 
 decoration:
   | x=attribute
@@ -246,7 +266,7 @@ typars:
 
 tvarinsts:
   | TYP_APP_LESS tvs=separated_nonempty_list(COMMA, tvar) TYP_APP_GREATER
-      { map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind None) tvs }
+      { map (fun tv -> mk_binder (TVariable(tv)) (range_of_id tv) Kind None) tvs }
 
 typeDefinition:
   |   { (fun id binders kopt -> check_id id; TyconAbstract(id, binders, kopt)) }
@@ -369,7 +389,11 @@ qualifier:
   | DEFAULT       { DefaultEffect }
   | TOTAL         { TotalEffect }
   | PRIVATE       { Private }
-  | ABSTRACT      { Abstract }
+  
+  | ABSTRACT      { log_issue (lhs parseState) (Warning_AbstractQualifier,
+                                                abstract_qualifier_warning);
+		    Abstract }
+  
   | NOEQUALITY    { Noeq }
   | UNOPTEQUALITY { Unopteq }
   | NEW           { New }
@@ -454,7 +478,7 @@ fieldPattern:
   | p = separated_pair(qlident, EQUALS, tuplePattern)
       { p }
   | lid=qlident
-      { lid, mk_pattern (PatVar (lid.ident, None)) (rhs parseState 1) }
+      { lid, mk_pattern (PatVar (ident_of_lid lid, None)) (rhs parseState 1) }
 
   (* (x : t) is already covered by atomicPattern *)
   (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
@@ -534,7 +558,7 @@ lidentOrOperator:
   | id=IDENT
     { mk_ident(id, rhs parseState 1) }
   | LPAREN id=operator RPAREN
-    { {id with idText = compile_op' id.idText id.idRange} }
+    { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -599,7 +623,8 @@ noSeqTerm:
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
         let (op, e2, _) = op_expr in
-        mk_term (Op({op with idText = op.idText ^ "<-"}, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
+        let opid = mk_ident (string_of_id op ^ "<-", range_of_id op) in
+        mk_term (Op(opid, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       }
   | REQUIRES t=typ
       { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type_level }
@@ -666,9 +691,9 @@ noSeqTerm:
          mkExplicitApp (mk_term (Var a) (rhs parseState 1) Expr) [tactic] (rhs2 parseState 1 2)
      }
 
-   | CALC rel=atomicTerm LBRACE init=noSeqTerm SEMICOLON steps=nonempty_list(calcStep) RBRACE
+   | CALC rel=atomicTerm LBRACE init=noSeqTerm SEMICOLON steps=list(calcStep) RBRACE
      {
-         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 6) Expr
+         mk_term (CalcProof (rel, init, steps)) (rhs2 parseState 1 7) Expr
      }
 
 calcRel:
@@ -917,7 +942,7 @@ recordExp:
 
 simpleDef:
   | e=separated_pair(qlident, EQUALS, noSeqTerm) { e }
-  | lid=qlident { lid, mk_term (Name (lid_of_ids [ lid.ident ])) (rhs parseState 1) Un }
+  | lid=qlident { lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rhs parseState 1) Un }
 
 appTerm:
   | head=indexingTerm args=list(argTerm)
@@ -1105,8 +1130,8 @@ universeFrom:
        }
   | max=ident us=nonempty_list(atomicUniverse)
       {
-        if text_of_id max <> text_of_lid max_lid
-        then log_issue (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ text_of_id max ^
+        if string_of_id max <> string_of_lid max_lid
+        then log_issue (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ string_of_id max ^
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.");
         let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) Expr in
@@ -1122,7 +1147,7 @@ atomicUniverse:
           log_issue (lhs(parseState)) (Error_OutOfRange, "This number is outside the allowable range for representable integer constants");
         mk_term (Const (Const_int (fst n, None))) (rhs parseState 1) Expr
       }
-  | u=lident { mk_term (Uvar u) u.idRange Expr }
+  | u=lident { mk_term (Uvar u) (range_of_id u) Expr }
   | LPAREN u=universeFrom RPAREN
     { u (*mk_term (Paren u) (rhs2 parseState 1 3) Expr*) }
 
@@ -1154,7 +1179,7 @@ range:
 /*                       Miscellanous, tools                                   */
 /******************************************************************************/
 
-%inline string:
+string:
   | s=STRING { s }
 
 %inline operator:

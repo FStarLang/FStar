@@ -81,37 +81,37 @@ let int16_to_int64 x = I64.int_to_t (I16.v x @% pow2 64)
 val int16_to_int32: a:I16.t -> Tot (b:I32.t{I32.v b = I16.v a})
 let int16_to_int32 x = I32.int_to_t (I16.v x @% pow2 32)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val int16_to_int8 : a:I16.t -> Tot (b:I8.t {I8.v b  = (I16.v a @% pow2 8)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let int16_to_int8 x = I8.int_to_t (I16.v x @% pow2 8)
 
 val int32_to_int64: a:I32.t -> Tot (b:I64.t{I64.v b = I32.v a})
 let int32_to_int64 x = I64.int_to_t (I32.v x @% pow2 64)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val int32_to_int16: a:I32.t -> Tot (b:I16.t{I16.v b = (I32.v a @% pow2 16)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let int32_to_int16 x = I16.int_to_t (I32.v x @% pow2 16)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val int32_to_int8 : a:I32.t -> Tot (b:I8.t {I8.v b  = (I32.v a @% pow2 8)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let int32_to_int8 x = I8.int_to_t (I32.v x @% pow2 8)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val int64_to_int32: a:I64.t -> Tot (b:I32.t{I32.v b = (I64.v a @% pow2 32)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let int64_to_int32 x = I32.int_to_t (I64.v x @% pow2 32)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val int64_to_int16: a:I64.t -> Tot (b:I16.t{I16.v b = (I64.v a @% pow2 16)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let int64_to_int16 x = I16.int_to_t (I64.v x @% pow2 16)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val int64_to_int8 : a:I64.t -> Tot (b:I8.t {I8.v b  = (I64.v a @% pow2 8)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let int64_to_int8 x = I8.int_to_t (I64.v x @% pow2 8)
 
 /// Unsigned to signed
@@ -125,9 +125,9 @@ let uint8_to_int32 x = I32.int_to_t (U8.v x)
 val uint8_to_int16: a:U8.t -> Tot (b:I16.t{I16.v b = U8.v a})
 let uint8_to_int16 x = I16.int_to_t (U8.v x)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val uint8_to_int8 : a:U8.t -> Tot (b:I8.t {I8.v b  = (U8.v a @% pow2 8)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let uint8_to_int8 x = I8.int_to_t (U8.v x @% pow2 8)
 
 val uint16_to_int64: a:U16.t -> Tot (b:I64.t{I64.v b = U16.v a})
@@ -136,52 +136,52 @@ let uint16_to_int64 x = I64.int_to_t (U16.v x)
 val uint16_to_int32: a:U16.t -> Tot (b:I32.t{I32.v b = U16.v a})
 let uint16_to_int32 x = I32.int_to_t (U16.v x)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val uint16_to_int16: a:U16.t -> Tot (b:I16.t{I16.v b = (U16.v a @% pow2 16)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let uint16_to_int16 x = I16.int_to_t (U16.v x @% pow2 16)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val uint16_to_int8 : a:U16.t -> Tot (b:I8.t {I8.v b  = (U16.v a @% pow2 8)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let uint16_to_int8 x = I8.int_to_t (U16.v x @% pow2 8)
 
 val uint32_to_int64: a:U32.t -> Tot (b:I64.t{I64.v b = U32.v a})
 let uint32_to_int64 x = I64.int_to_t (U32.v x)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val uint32_to_int32: a:U32.t -> Tot (b:I32.t{I32.v b = (U32.v a @% pow2 32)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let uint32_to_int32 x = I32.int_to_t (U32.v x @% pow2 32)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val uint32_to_int16: a:U32.t -> Tot (b:I16.t{I16.v b = (U32.v a @% pow2 16)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let uint32_to_int16 x = I16.int_to_t (U32.v x @% pow2 16)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val uint32_to_int8 : a:U32.t -> Tot (b:I8.t {I8.v b  = (U32.v a @% pow2 8)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let uint32_to_int8 x = I8.int_to_t (U32.v x @% pow2 8)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val uint64_to_int64: a:U64.t -> Tot (b:I64.t{I64.v b = (U64.v a @% pow2 64)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let uint64_to_int64 x = I64.int_to_t (U64.v x @% pow2 64)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val uint64_to_int32: a:U64.t -> Tot (b:I32.t{I32.v b = (U64.v a @% pow2 32)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let uint64_to_int32 x = I32.int_to_t (U64.v x @% pow2 32)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val uint64_to_int16: a:U64.t -> Tot (b:I16.t{I16.v b = (U64.v a @% pow2 16)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let uint64_to_int16 x = I16.int_to_t (U64.v x @% pow2 16)
 
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 val uint64_to_int8 : a:U64.t -> Tot (b:I8.t {I8.v b  = (U64.v a @% pow2 8)})
-[@(deprecated "with care; in C the result is implementation-defined when not representable")]
+[@@(deprecated "with care; in C the result is implementation-defined when not representable")]
 let uint64_to_int8 x = I8.int_to_t (U64.v x @% pow2 8)
 
 /// Signed to unsigned

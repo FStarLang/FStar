@@ -37,7 +37,7 @@ let local_something = function
 
 inline_for_extraction
 let pkg_of_local_pkg #a (r:ref a) (lp:local_pkg a) =
-  [@inline_let]
+  [@@inline_let]
   let wrapper (x:a) =
       let v = !r in
       r := x;
@@ -64,6 +64,6 @@ let maybe_ideal_op (i:int) =
  *)
 let test (r:rid{is_eternal_region r}) (x:bool) =
   let r : ref int = FStar.HyperStack.ST.ralloc r 0 in
-  [@inline_let]
+  [@@inline_let]
   let pkg = pkg_of_local_pkg r (LocalPkg maybe_ideal_op) in
   pkg_something pkg 16

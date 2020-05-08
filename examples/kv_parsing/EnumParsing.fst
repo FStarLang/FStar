@@ -240,7 +240,7 @@ let validate_TwoNums = fun input ->
 // this function returns a pointer to a global function; probably better to do
 // this inline than go through a function pointer
 // XXX: these qualifiers don't get the right inlining into validate_numbers, which also has an and_check
-// inline_for_extraction [@"substitute"]
+// inline_for_extraction [@@"substitute"]
 let validate_numbers_data (t:numbers_tag) : stateful_validator (hide (parse_numbers_data t)) =
   if U8.eq t 0uy then
     validate_Nothing
@@ -258,7 +258,7 @@ let coerce_validator #t (#p: parser t)
 
 #reset-options "--z3rlimit 15"
 
-inline_for_extraction [@"substitute"]
+inline_for_extraction [@@"substitute"]
 val and_check (#t:Type) (#t':Type) (p: parser t) (p': t -> parser t') (p_st: parser_st (hide p))
               (v: (x:t -> stateful_validator (hide (p' x))))
               : stateful_validator (hide (p `and_then` p'))

@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "53227db9f7ecd5391f9ea8091997b3fd"
+      "a1850ee8a0e1904a82116e50a4a710d6"
     ],
     [
       "Printers.__proj__A__item___0",
@@ -26,7 +26,7 @@
         "refinement_interpretation_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
       ],
       0,
-      "efcc79ca9f25fc6c1014842981568b5e"
+      "1b3417cd0328c09c906e21ea4642746f"
     ],
     [
       "Printers.__proj__A__item___1",
@@ -39,7 +39,7 @@
         "refinement_interpretation_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
       ],
       0,
-      "3ad51f44a5df02498c7a2f4c34052821"
+      "29dab23ab0867867c0253590e24fa7b0"
     ],
     [
       "Printers.__proj__B__item___0",
@@ -52,7 +52,7 @@
         "refinement_interpretation_Tm_refine_c8b4b75e38b41b48b268ea0a3f90e3cd"
       ],
       0,
-      "fed9d3d1f0b77cebcbfb658f3e3719d5"
+      "d2f82a0e01071834dfe71922dab2ba12"
     ],
     [
       "Printers.__proj__B__item___1",
@@ -65,7 +65,7 @@
         "refinement_interpretation_Tm_refine_c8b4b75e38b41b48b268ea0a3f90e3cd"
       ],
       0,
-      "ec178ff3f4612ad5e2fa68c1ed8829aa"
+      "993f117feaedae9322064cd7495a2b8c"
     ],
     [
       "Printers.__proj__D__item___0",
@@ -78,7 +78,7 @@
         "refinement_interpretation_Tm_refine_3c3099d8265cd24e0a96805751c994d1"
       ],
       0,
-      "08d338e864f08f7143b78f31a3bf1ca8"
+      "a7013629a52abb356c34a41d435e714e"
     ],
     [
       "Printers.__proj__E__item___0",
@@ -91,7 +91,7 @@
         "refinement_interpretation_Tm_refine_410bdfe840bb48a5ed0357e092bfc39f"
       ],
       0,
-      "0f05c20269ee342286584a385de49dbb"
+      "11a62f0ab71a8b57fdd4047de27ce159"
     ],
     [
       "Printers.__proj__F__item___0",
@@ -104,7 +104,7 @@
         "refinement_interpretation_Tm_refine_9c3e9566abf10c7d01bd5254baeab0f0"
       ],
       0,
-      "c75151faa31c4c9649fbc6a88c9309b7"
+      "5fdc4ebf28bd124852fca562fee1feef"
     ],
     [
       "Printers.t1_print",
@@ -119,7 +119,7 @@
         "subterm_ordering_Printers.B", "subterm_ordering_Printers.E"
       ],
       0,
-      "9a6b32a1aebb5838f188da4915050318"
+      "3bd527da96030b771ae1fcfa0b22084f"
     ],
     [
       "Printers.uu___105",
@@ -128,7 +128,7 @@
       1,
       [ "@query" ],
       0,
-      "de97347fd12854834475bf37a1890db0"
+      "e16831139b07b9371c0a4cd8251c22b0"
     ],
     [
       "Printers.uu___106",
@@ -137,7 +137,7 @@
       1,
       [ "@query" ],
       0,
-      "bbdd170ac2cd6cf1e0996a1e3037e47d"
+      "74b115bd155551d110f27e9337f19c95"
     ],
     [
       "Printers.uu___107",
@@ -146,7 +146,7 @@
       1,
       [ "@query" ],
       0,
-      "2fbb96f556a2d27bd4fe78282acaa000"
+      "9749d8f3862d4d44ecc3f150c579e32e"
     ],
     [
       "Printers.uu___108",
@@ -155,7 +155,7 @@
       1,
       [ "@query" ],
       0,
-      "26743d43be970e886f6e261dcc83dc79"
+      "744c1d0176048a4cdb8eff55103fb3d5"
     ],
     [
       "Printers.uu___109",
@@ -164,7 +164,7 @@
       1,
       [ "@query" ],
       0,
-      "78111b4dfe25e26f4ec7bf220cba2b5b"
+      "ca8b9803b20342197b529bab88832181"
     ],
     [
       "Printers.uu___110",
@@ -173,181 +173,7 @@
       1,
       [ "@query" ],
       0,
-      "16d312aece63fa08a75708a0a38ade99"
-    ],
-    [
-      "Printers.maplast",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "97f74eae570146ff1a66e11250dd51f1"
-    ],
-    [
-      "Printers.__proj__A__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.A",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
-      ],
-      0,
-      "91b4e12522a1541fb57573f99746457e"
-    ],
-    [
-      "Printers.__proj__A__item___1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.A",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1a7b69b43f7b02549720ebdb7731aa7f"
-      ],
-      0,
-      "00b2c0aa5f660a4e892b0e862f408976"
-    ],
-    [
-      "Printers.__proj__B__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.B",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_c8b4b75e38b41b48b268ea0a3f90e3cd"
-      ],
-      0,
-      "2fc969703825d202909d39a1f2e8b02e"
-    ],
-    [
-      "Printers.__proj__B__item___1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.B",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_c8b4b75e38b41b48b268ea0a3f90e3cd"
-      ],
-      0,
-      "3b7e0931c982ca2442d446dee37fc864"
-    ],
-    [
-      "Printers.__proj__D__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.D",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_3c3099d8265cd24e0a96805751c994d1"
-      ],
-      0,
-      "b5de1292aa3224babd3d09ce3228c510"
-    ],
-    [
-      "Printers.__proj__E__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.E",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_410bdfe840bb48a5ed0357e092bfc39f"
-      ],
-      0,
-      "4f5ed515a093d90a0e85e9dc9e9f6c9c"
-    ],
-    [
-      "Printers.__proj__F__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.F",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_9c3e9566abf10c7d01bd5254baeab0f0"
-      ],
-      0,
-      "179e25da29bf7c19c9c67f65573ecfe2"
-    ],
-    [
-      "Printers.t1_print",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Printers.A",
-        "disc_equation_Printers.B", "disc_equation_Printers.C",
-        "disc_equation_Printers.D", "disc_equation_Printers.E",
-        "disc_equation_Printers.F", "fuel_guarded_inversion_Printers.t1",
-        "subterm_ordering_Printers.B", "subterm_ordering_Printers.E"
-      ],
-      0,
-      "1fe09a9691db21b75e4d108e48a4aa6b"
-    ],
-    [
-      "Printers.uu___105",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "95e822eb447cf6b4888f4299b38473c1"
-    ],
-    [
-      "Printers.uu___106",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3b626f1ef18e56a08756c6178195a989"
-    ],
-    [
-      "Printers.uu___107",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "53d44d00e8d484e3557bcbd844d75659"
-    ],
-    [
-      "Printers.uu___108",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8b2a6f127c687f15f2f3369b65d3990d"
-    ],
-    [
-      "Printers.uu___109",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8752939775389a56b6fadbe914248dbb"
-    ],
-    [
-      "Printers.uu___110",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "21acf1a46dc2607e694860d4f7633026"
+      "6f5eeb5e6f7c13f3156b0b2d7b02c296"
     ]
   ]
 ]

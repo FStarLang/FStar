@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ac9ce0c378c7a3e07472089bac09ecac"
+      "84b761ae8b2f77d8f6e3fb68d7346fe5"
     ],
     [
       "FStar.DM4F.ST._dm4f_STATE_h___proj__STATE_h__item__put_elab",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "e45f68834044efacd541ab332eb901ee"
+      "840a82c06531258100db217596c8892d"
     ],
     [
       "FStar.DM4F.ST.STATE_h",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "2de015d710277027da4884430e188921"
+      "0205cf2f0129fe55e4cb848c55adf327"
     ],
     [
       "FStar.DM4F.ST.STATE_h",
@@ -35,43 +35,7 @@
       1,
       [ "@query" ],
       0,
-      "2f714ca959dfd6223bef02a682641a84"
-    ],
-    [
-      "FStar.DM4F.ST._dm4f_STATE_h___proj__STATE_h__item__get_elab",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e7c47885d1c30112a5787c61acc14ef3"
-    ],
-    [
-      "FStar.DM4F.ST._dm4f_STATE_h___proj__STATE_h__item__put_elab",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c9bf5b39e36a0310bacf54667ef0c0de"
-    ],
-    [
-      "FStar.DM4F.ST.STATE_h",
-      3,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "8d8251c25074ceb7b8a6045f876733bc"
-    ],
-    [
-      "FStar.DM4F.ST.STATE_h",
-      4,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "a4ca75641fa74eabfe47359a489303c9"
+      "f7f6cce87781fb6513790fe7b7e5a53e"
     ]
   ]
 ]

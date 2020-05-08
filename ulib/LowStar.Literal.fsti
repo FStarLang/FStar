@@ -115,6 +115,6 @@ let buf_len_of_literal (s: string):
       UInt32.v l = normalize_term (List.Tot.length (String.list_of_string s)) /\
       UInt32.v l = IB.length b))
 =
-  [@inline_let]
+  [@@inline_let]
   let l = normalize_term (UInt32.uint_to_t (List.Tot.length (String.list_of_string s))) in
   buffer_of_literal s, l

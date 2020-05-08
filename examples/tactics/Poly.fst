@@ -20,7 +20,7 @@ open FStar.Mul
 
 #set-options "--no_smt --tactics_info"
 
-[@tcdecltime]
+[@@tcdecltime]
 let lemma_poly_multiply_canon n p r h r0 r1 h0 h1 h2 s1 d0 d1 d2 hh =
   let r1_4 = r1 / 4 in
   let h_r_expand = (h2 * (n * n) + h1 * n + h0) * ((r1_4 * 4) * n + r0) in

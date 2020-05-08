@@ -14,22 +14,7 @@
         "subterm_ordering_CPS.Expr.Plus"
       ],
       0,
-      "34cb1bfb66f46993e4e002cd48d18af1"
-    ],
-    [
-      "CPS.DoubleLambdaLifting2.eval_cps",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_0c607185f6c6768f1786fe5f14f15ea1_2",
-        "disc_equation_CPS.Expr.Const", "disc_equation_CPS.Expr.Plus",
-        "fuel_guarded_inversion_CPS.Expr.expr",
-        "subterm_ordering_CPS.Expr.Plus"
-      ],
-      0,
-      "1be839b773e9ad1d933b48d0d8405234"
+      "91a730e74b7b0efacb65b4555b34cfd8"
     ]
   ]
 ]

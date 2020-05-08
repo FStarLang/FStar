@@ -26,6 +26,7 @@ type fsteps = {
      beta : bool;
      iota : bool;
      zeta : bool;
+     zeta_full : bool;
      weak : bool;
      hnf  : bool;
      primops : bool;
@@ -63,6 +64,7 @@ let steps_to_string f =
     beta = %s;\n\
     iota = %s;\n\
     zeta = %s;\n\
+    zeta_full = %s;\n\
     weak = %s;\n\
     hnf  = %s;\n\
     primops = %s;\n\
@@ -88,6 +90,7 @@ let steps_to_string f =
   [ f.beta |> b;
     f.iota |> b;
     f.zeta |> b;
+    f.zeta_full |> b;
     f.weak |> b;
     f.hnf  |> b;
     f.primops |> b;
@@ -114,6 +117,7 @@ let default_steps : fsteps = {
     beta = true;
     iota = true;
     zeta = true;
+    zeta_full = false;
     weak = false;
     hnf  = false;
     primops = false;
@@ -144,6 +148,7 @@ let fstep_add_one s fs =
     | Beta -> { fs with beta = true }
     | Iota -> { fs with iota = true }
     | Zeta -> { fs with zeta = true }
+    | ZetaFull -> { fs with zeta_full = true }
     | Exclude Beta -> { fs with beta = false }
     | Exclude Iota -> { fs with iota = false }
     | Exclude Zeta -> { fs with zeta = false }
@@ -228,7 +233,7 @@ let empty_prim_steps () : prim_step_set =
     BU.psmap_empty ()
 
 let add_step (s : primitive_step) (ss : prim_step_set) =
-    BU.psmap_add ss (I.text_of_lid s.name) s
+    BU.psmap_add ss (I.string_of_lid s.name) s
 
 let merge_steps (s1 : prim_step_set) (s2 : prim_step_set) : prim_step_set =
     BU.psmap_merge s1 s2
@@ -261,10 +266,10 @@ let cfg_to_string cfg =
 let cfg_env cfg = cfg.tcenv
 
 let find_prim_step cfg fv =
-    BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v)
+    BU.psmap_try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v)
 
 let is_prim_step cfg fv =
-    BU.is_some (BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v))
+    BU.is_some (BU.psmap_try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v))
 
 let log cfg f =
     if cfg.debug.gen then f () else ()
@@ -292,7 +297,6 @@ let embed_simple (emb:EMB.embedding<'a>) (r:Range.range) (x:'a) : term =
     EMB.embed emb x r None EMB.id_norm_cb
 let try_unembed_simple (emb:EMB.embedding<'a>) (x:term) : option<'a> =
     EMB.unembed emb x false EMB.id_norm_cb
-let mk t r = mk t None r
 let built_in_primitive_steps : prim_step_set =
     let arg_as_int    (a:arg) = fst a |> try_unembed_simple EMB.e_int in
     let arg_as_bool   (a:arg) = fst a |> try_unembed_simple EMB.e_bool in
@@ -304,7 +308,7 @@ let built_in_primitive_steps : prim_step_set =
         let a = U.unlazy_emb a in
         match (SS.compress hd).n, args with
         | Tm_fvar fv1, [(arg, _)]
-            when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
+            when BU.ends_with (Ident.string_of_lid fv1.fv_name.v) "int_to_t" ->
             let arg = U.unlazy_emb arg in
             begin match (SS.compress arg).n with
             | Tm_constant (FC.Const_int (i, None)) ->
@@ -732,7 +736,7 @@ let built_in_primitive_steps : prim_step_set =
         let int_as_bounded r int_to_t n =
             let c = embed_simple EMB.e_int r n in
             let int_to_t = S.fv_to_tm int_to_t in
-            S.mk_Tm_app int_to_t [S.as_arg c] None r
+            S.mk_Tm_app int_to_t [S.as_arg c] r
         in
         let add_sub_mul_v =
           (bounded_signed_int_types @ bounded_unsigned_int_types)

@@ -1,0 +1,6 @@
+>> Got issues: [
+NegativeTests.Bug260.fst(26,12-26,19): (Error 19) Subtyping check failed; expected type NegativeTests.Bug260.validity (NegativeTests.Bug260.S (NegativeTests.Bug260.S t)); got type NegativeTests.Bug260.validity (NegativeTests.Bug260.S t); The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also NegativeTests.Bug260.fst(23,37-26,9))
+>>]
+NegativeTests.Bug260.fst(23,4-23,7): (Warning 240) Admitting NegativeTests.Bug260.bad without a definition
+Verified module: NegativeTests.Bug260
+All verification conditions discharged successfully

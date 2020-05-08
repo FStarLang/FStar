@@ -1,0 +1,14 @@
+>> Got issues: [
+NegativeTests.Set.fst(28,9-28,30): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+>> Got issues: [
+NegativeTests.Set.fst(33,9-33,67): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+>> Got issues: [
+NegativeTests.Set.fst(38,9-38,52): (Error 19) assertion failed; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel
+>>]
+NegativeTests.Set.fst(25,4-25,16): (Warning 240) Admitting NegativeTests.Set.should_fail1 without a definition
+NegativeTests.Set.fst(30,4-30,16): (Warning 240) Admitting NegativeTests.Set.should_fail2 without a definition
+NegativeTests.Set.fst(35,4-35,16): (Warning 240) Admitting NegativeTests.Set.should_fail3 without a definition
+Verified module: NegativeTests.Set
+All verification conditions discharged successfully

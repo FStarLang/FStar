@@ -40,6 +40,10 @@ include FStar.Pervasives.Native
 ///   trigger various kinds of special treatments for those
 ///   definitions.
 
+(** Values of type [pattern] are used to tag [Lemma]s with SMT
+    quantifier triggers *)
+type pattern : Type0 = unit
+
 (** The concrete syntax [SMTPat] desugars to [smt_pat] *)
 val smt_pat (#a: Type) (x: a) : Tot pattern
 
@@ -55,6 +59,32 @@ val smt_pat (#a: Type) (x: a) : Tot pattern
 *)
 val smt_pat_or (x: list (list pattern)) : Tot pattern
 
+(** [Lemma] is a very widely used effect abbreviation.
+
+    It stands for a unit-returning [Ghost] computation, whose main
+    value is its logical payload in proving an implication between its
+    pre- and postcondition.
+
+    [Lemma] is desugared specially. The valid forms are:
+
+     Lemma (ensures post)
+     Lemma post [SMTPat ...]
+     Lemma (ensures post) [SMTPat ...]
+     Lemma (ensures post) (decreases d)
+     Lemma (ensures post) (decreases d) [SMTPat ...]
+     Lemma (requires pre) (ensures post) (decreases d)
+     Lemma (requires pre) (ensures post) [SMTPat ...]
+     Lemma (requires pre) (ensures post) (decreases d) [SMTPat ...]
+
+   and
+
+     Lemma post    (== Lemma (ensures post))
+
+   the squash argument on the postcondition allows to assume the
+   precondition for the *well-formedness* of the postcondition.
+*)
+effect Lemma (a: Type) (pre: Type) (post: (squash pre -> Type)) (pats: list pattern) =
+  Pure a pre (fun r -> post ())
 
 (** In the default mode of operation, all proofs in a verification
     condition are bundled into a single SMT query. Sub-terms marked
@@ -158,7 +188,7 @@ let st_if_then_else
       (wp_then wp_else: st_wp_h heap a)
       (post: st_post_h heap a)
       (h0: heap)
-     = l_ITE p (wp_then post h0) (wp_else post h0)
+     = wp_then post h0 /\ (~p ==> wp_else post h0)
 
 (** As with [PURE] the [ite_wp] combinator names the postcondition as
     [k] to avoid duplicating it. *)
@@ -242,7 +272,7 @@ let ex_bind_wp (r1: range) (a b: Type) (wp1: ex_wp a) (wp2: (a -> GTot (ex_wp b)
     First, a simple case analysis on [p] *)
 unfold
 let ex_if_then_else (a p: Type) (wp_then wp_else: ex_wp a) (post: ex_post a) =
-  l_ITE p (wp_then post) (wp_else post)
+  wp_then post /\ (~p ==> wp_else post)
 
 (** Naming continuations for use with branching *)
 unfold
@@ -348,7 +378,7 @@ let all_if_then_else
       (wp_then wp_else: all_wp_h heap a)
       (post: all_post_h heap a)
       (h0: heap)
-     = l_ITE p (wp_then post h0) (wp_else post h0)
+     = wp_then post h0 /\ (~p ==> wp_else post h0)
 
 (** Naming postcondition for better sharing in [ALL_h] *)
 unfold
@@ -459,7 +489,7 @@ val false_elim (#a: Type) (u: unit{False}) : Tot a
 /// Attributes are desugared and checked for being well-scoped. But,
 /// they are not type-checked.
 ///
-/// It is associated with a definition using the [[@attribute]]
+/// It is associated with a definition using the [[@@attribute]]
 /// notation, just preceding the definition.
 
 (** We collect several internal ocaml attributes into a single
@@ -472,16 +502,16 @@ val false_elim (#a: Type) (u: unit{False}) : Tot a
     An example:
 
      {[
-        [@ CInline ] let f x = UInt32.(x +%^ 1)
+        [@@ CInline ] let f x = UInt32.(x +%^ 1)
       ]}
 
     is extracted to C by KReMLin to a C definition tagged with the
     [inline] qualifier. *)
 type __internal_ocaml_attributes =
   | PpxDerivingShow
-  | PpxDerivingShowConstant of string (* Generate [@@ deriving show ] on the resulting OCaml type *)
+  | PpxDerivingShowConstant of string (* Generate [@@@ deriving show ] on the resulting OCaml type *)
   | PpxDerivingYoJson (* Similar, but for constant printers. *)
-  | CInline (* Generate [@@ deriving yojson ] on the resulting OCaml type *)
+  | CInline (* Generate [@@@ deriving yojson ] on the resulting OCaml type *)
   (* KreMLin-only: generates a C "inline" attribute on the resulting
      * function declaration. *)
   | Substitute
@@ -608,7 +638,7 @@ val unifier_hint_injective : unit
 
   In particular, given
      {[
-        [@(strict_on_arguments [1;2])]
+        [@@(strict_on_arguments [1;2])]
         let f x0 (x1:list x0) (x1:option x0) = e
      ]}
 
@@ -675,8 +705,30 @@ val primops : norm_step
 (** Unfold all non-recursive definitions *)
 val delta : norm_step
 
-(** Unroll recursive calls *)
+(** Unroll recursive calls
+
+    Note: Since F*'s termination check is semantic rather than
+    syntactically structural, recursive calls in inconsistent contexts,
+    or recursive evaluation of open terms can diverge.
+
+    When asking for the [zeta] step, F* implements a heuristic to
+    disable [zeta] when reducing terms beneath a blocked match. This
+    helps prevent some trivial looping behavior. However, it also
+    means that with [zeta] alone, your term may not reduce as much as
+    you might want. See [zeta_full] for that.
+  *)
 val zeta : norm_step
+
+(** Unroll recursive calls 
+
+    Unlike [zeta], [zeta_full] has no looping prevention
+    heuristics. F* will try to unroll recursive functions as much as
+    it can, potentially looping. Use with care.
+
+    Note, [zeta_full] implies [zeta].
+    See [tests/micro-benchmarks/ReduceRecUnderMatch.fst] for an example.
+ *)
+val zeta_full : norm_step
 
 (** Reduce case analysis (i.e., match) *)
 val iota : norm_step
@@ -717,10 +769,10 @@ val delta_fully (s: list string) : Tot norm_step
       {[
         irreducible let my_attr = ()
 
-        [@my_attr]
+        [@@my_attr]
         let f0 = 0
 
-        [@my_attr]
+        [@@my_attr]
         let f1 = f0 + 1
       ]}
 
@@ -766,9 +818,3 @@ val singleton (#a: Type) (x: a) : Tot (y: a{y == x})
     an identity function, we have an SMT axiom:
     [forall t e.{:pattern (with_type t e)} has_type (with_type t e) t] *)
 val with_type (#t: Type) (e: t) : Tot t
-
-
-(** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
-    Incrementing this forces all .checked files to be invalidated *)
-irreducible
-let __cache_version_number__ = 20

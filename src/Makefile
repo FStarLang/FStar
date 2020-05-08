@@ -46,9 +46,7 @@ $(FSYACC) $(FSLEX): nuget-restore
 ALL_BOOT=$(addprefix boot/FStar., Util.fsti List.fsti			\
 			          Compiler.Bytes.fsti String.fsti	\
 			          BigInt.fsti Pprint.fsti		\
-			          Tactics.Interpreter.fst		\
 			          Parser.Parse.fsti			\
-			          Tactics.Interpreter.fsti		 \
 			          Tests.Test.fst \
 			          StringBuffer.fsti)
 
@@ -57,7 +55,7 @@ define from_boot_file
 	$(Q)cp $^ $@
 	$(Q)$(SED) -i.bak '/\/\/ *JUST *FSHARP */d' $@
 	$(Q)$(SED) -i.bak 's,^ *// *IN *F\* *:,,g' $@
-	$(Q)touch -r $^ $@
+	$(Q)rm -f $@.bak
 endef
 
 boot/%.fst: basic/boot/%.fs | boot_dir
@@ -69,8 +67,6 @@ boot/%.fsti: basic/boot/%.fsi | boot_dir
 boot/%.fsti: prettyprint/boot/%.fsi | boot_dir
 	$(call from_boot_file)
 
-boot/FStar.Tactics.Interpreter.fst: tactics/boot/FStar.Tactics.Interpreter.fs | boot_dir
-	$(call from_boot_file)
 
 boot/FStar.Tests.Test.fst: tests/boot/FStar.Tests.Test.fs | boot_dir
 	$(call from_boot_file)
@@ -80,12 +76,8 @@ boot/FStar.Parser.Parse.fsti: parser/parse.fsi | boot_dir
 	@echo "[BOOT      $(notdir $@)]"
 	$(Q)echo "#light \"off\"" > $@
 	$(Q)$(HEAD) -n12 $^ >> $@
-	$(Q)touch -r parser/parse.mly $@
 
 boot/FStar.Parser.Parse.fst: parser/parse.fs | boot_dir
-	$(call from_boot_file)
-
-boot/FStar.Tactics.Interpreter.fsti: tactics/boot/FStar.Tactics.Interpreter.fsi | boot_dir
 	$(call from_boot_file)
 
 boot_dir:
@@ -132,7 +124,6 @@ rebuild:
 # --------------------------------------------------------------------
 # Testing
 # --------------------------------------------------------------------
-OTHERFLAGS+=--hint_info
 
 # The regressions to be run with a working F# build of F*
 fsharp-unit-tests:
@@ -159,7 +150,7 @@ utest-prelude: fsharp-build-and-test
 	+$(MAKE) clean_extracted   #ensures that there is no leftover from previous extraction
 	+$(MAKE) fstar-ocaml       #extract the compiler again and build the result
 	+$(MAKE) ocaml-unit-tests  #run the unit tests
-	+$(MAKE) fstarlib
+	+$(MAKE) .fstarlib
 
 ocaml-unit-tests:
 	$(BIN)/tests.exe
@@ -173,7 +164,15 @@ uregressions: ulib-extra tutorial utests uexamples
 # We may add more nightly tests here in the future
 uregressions-ulong: uregressions
 
-fstarlib:
+# This is not optimal, since if some dependencies
+# of fstarlib change we will not rebuild. However
+# simply calling the install-fstar-tactics rule
+# will unconditionally reinstall everything,
+# which is also not good.
+.fstarlib: $(FSTARLIB_DIR)/fstarlib.cmxs
+	touch $@
+
+$(FSTARLIB_DIR)/fstarlib.cmxs:
 	+$(MAKE) -C ../ulib/ml
 	+$(MAKE) -C ../ulib install-fstar-tactics
 	+$(MAKE) -C ../ulib
@@ -181,13 +180,13 @@ fstarlib:
 ulib-extra:
 	+$(MAKE) -C ../ulib extra
 
-tutorial: fstarlib
+tutorial: .fstarlib
 	+$(MAKE) -C ../doc/tutorial regressions
 
-utests: fstarlib
+utests: .fstarlib
 	+$(MAKE) -C ../tests all
 
-uexamples: fstarlib
+uexamples: .fstarlib
 	+$(MAKE) -C ../examples all
 	+$(MAKE) -C ../examples native_tactics.all
 	+$(MAKE) -C ../examples semiring.all

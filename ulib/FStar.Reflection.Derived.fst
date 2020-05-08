@@ -16,7 +16,7 @@
 module FStar.Reflection.Derived
 
 open FStar.Reflection.Types
-open FStar.Reflection.Basic
+open FStar.Reflection.Builtins
 open FStar.Reflection.Data
 open FStar.Reflection.Const
 open FStar.Order
@@ -72,7 +72,7 @@ let rec mk_app (t : term) (args : list argv) : Tot term (decreases args) =
 // Helper for when all arguments are explicit
 let mk_e_app (t : term) (args : list term) : Tot term =
     let e t = (t, Q_Explicit) in
-    mk_app t (List.Tot.map e args)
+    mk_app t (List.Tot.Base.map e args)
 
 let rec mk_tot_arr_ln (bs: list binder) (cod : term) : Tot term (decreases bs) =
     match bs with
@@ -95,13 +95,13 @@ let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (d
 val collect_arr_ln_bs : typ -> list binder * comp
 let collect_arr_ln_bs t =
     let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
-    (List.Tot.rev bs, c)
+    (List.Tot.Base.rev bs, c)
 
 val collect_arr_ln : typ -> list typ * comp
 let collect_arr_ln t =
     let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
-    let ts = List.Tot.map type_of_binder bs in
-    (List.Tot.rev ts, c)
+    let ts = List.Tot.Base.map type_of_binder bs in
+    (List.Tot.Base.rev ts, c)
 
 private
 let rec collect_abs' (bs : list binder) (t : term) : Tot (list binder * term) (decreases t) =
@@ -113,15 +113,12 @@ let rec collect_abs' (bs : list binder) (t : term) : Tot (list binder * term) (d
 val collect_abs_ln : term -> list binder * term
 let collect_abs_ln t =
     let (bs, t') = collect_abs' [] t in
-    (List.Tot.rev bs, t')
-
-let explode_qn : string -> list string = String.split ['.']
-let implode_qn : list string -> string = String.concat "."
+    (List.Tot.Base.rev bs, t')
 
 let fv_to_string (fv:fv) : string = implode_qn (inspect_fv fv)
 
 let compare_name (n1 n2 : name) : order =
-    compare_list (fun s1 s2 -> order_from_int (String.compare s1 s2)) n1 n2
+    compare_list (fun s1 s2 -> order_from_int (compare_string s1 s2)) n1 n2
 
 let compare_fv (f1 f2 : fv) : order =
     compare_name (inspect_fv f1) (inspect_fv f2)
@@ -132,7 +129,7 @@ let compare_const (c1 c2 : vconst) : order =
     | C_Int i, C_Int j -> order_from_int (i - j)
     | C_True, C_True -> Eq
     | C_False, C_False -> Eq
-    | C_String s1, C_String s2 -> order_from_int (String.compare s1 s2)
+    | C_String s1, C_String s2 -> order_from_int (compare_string s1 s2)
     | C_Range r1, C_Range r2 -> Eq
     | C_Reify, C_Reify -> Eq
     | C_Reflect l1, C_Reflect l2 -> compare_name l1 l2
@@ -287,8 +284,8 @@ let rec mk_list (ts : list term) : term =
     | t::ts -> mk_cons t (mk_list ts)
 
 let mktuple_n (ts : list term) : term =
-    assume (List.Tot.length ts <= 8);
-    match List.Tot.length ts with
+    assume (List.Tot.Base.length ts <= 8);
+    match List.Tot.Base.length ts with
     | 0 -> pack_ln (Tv_Const C_Unit)
     | 1 -> let [x] = ts in x
     | n -> begin
@@ -307,10 +304,10 @@ let destruct_tuple (t : term) : option (list term) =
     let head, args = collect_app t in
     match inspect_ln head with
     | Tv_FVar fv ->
-        if List.Tot.mem
+        if List.Tot.Base.mem
                 (inspect_fv fv) [mktuple2_qn; mktuple3_qn; mktuple4_qn; mktuple5_qn;
                                  mktuple6_qn; mktuple7_qn; mktuple8_qn]
-        then Some (List.Tot.concatMap (fun (t, q) ->
+        then Some (List.Tot.Base.concatMap (fun (t, q) ->
                                       match q with
                                       | Q_Explicit -> [t]
                                       | _ -> []) args)
@@ -341,7 +338,7 @@ let rec head (t : term) : term =
 
 let nameof (t : term) : string =
     match inspect_ln t with
-    | Tv_FVar fv -> String.concat "." (inspect_fv fv)
+    | Tv_FVar fv -> implode_qn (inspect_fv fv)
     | _ -> "?"
 
 let is_uvar (t : term) : bool =

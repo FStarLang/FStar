@@ -59,7 +59,7 @@ let cm_identity (x:M.hprop) : Lemma ((M.emp `M.star` x) `M.equiv` x)
   = M.star_commutative x M.emp;
     M.emp_unit x
 
-[@__reduce__]
+[@@__reduce__]
 inline_for_extraction noextract let rm : cm M.hprop req =
   CM M.emp
      M.star
