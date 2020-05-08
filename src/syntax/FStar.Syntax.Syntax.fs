@@ -742,4 +742,6 @@ let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg
 let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] Range.dummyRange
 let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero;U_zero]) [as_arg t1; as_arg t2] Range.dummyRange
 let t_either_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.either_lid) [U_zero;U_zero]) [as_arg t1; as_arg t2] Range.dummyRange
-let unit_const = mk (Tm_constant FStar.Const.Const_unit) Range.dummyRange
+
+let unit_const_with_range r = mk (Tm_constant FStar.Const.Const_unit) r
+let unit_const = unit_const_with_range Range.dummyRange
