@@ -6186,41 +6186,63 @@ let (uvars_for_binders :
             let uu____28029 =
               FStar_All.pipe_right bs
                 (FStar_List.fold_left
-                   (fun uu____28086  ->
+                   (fun uu____28087  ->
                       fun b  ->
-                        match uu____28086 with
+                        match uu____28087 with
                         | (substs1,uvars,g) ->
                             let sort =
                               FStar_Syntax_Subst.subst substs1
                                 (FStar_Pervasives_Native.fst b).FStar_Syntax_Syntax.sort
                                in
-                            let uu____28128 =
-                              let uu____28141 = reason b  in
-                              new_implicit_var_aux uu____28141 r env1 sort
+                            let uu____28129 =
+                              new_implicit_var_aux "" r env1 sort
                                 FStar_Syntax_Syntax.Allow_untyped
                                 FStar_Pervasives_Native.None
                                in
-                            (match uu____28128 with
-                             | (t,uu____28158,g_t) ->
-                                 let uu____28172 =
-                                   let uu____28175 =
-                                     let uu____28178 =
-                                       let uu____28179 =
-                                         let uu____28186 =
-                                           FStar_All.pipe_right b
-                                             FStar_Pervasives_Native.fst
-                                            in
-                                         (uu____28186, t)  in
-                                       FStar_Syntax_Syntax.NT uu____28179  in
-                                     [uu____28178]  in
-                                   FStar_List.append substs1 uu____28175  in
-                                 let uu____28197 = conj_guard g g_t  in
-                                 (uu____28172, (FStar_List.append uvars [t]),
-                                   uu____28197))) (substs, [], trivial_guard))
+                            (match uu____28129 with
+                             | (t,l_ctx_uvars,g_t) ->
+                                 ((let uu____28173 =
+                                     FStar_All.pipe_left (debug env1)
+                                       (FStar_Options.Other
+                                          "LayeredEffectsEqns")
+                                      in
+                                   if uu____28173
+                                   then
+                                     FStar_List.iter
+                                       (fun uu____28186  ->
+                                          match uu____28186 with
+                                          | (ctx_uvar,uu____28192) ->
+                                              let uu____28193 =
+                                                FStar_Syntax_Print.ctx_uvar_to_string_no_reason
+                                                  ctx_uvar
+                                                 in
+                                              FStar_Util.print1
+                                                "Layered Effect uvar : %s\n"
+                                                uu____28193) l_ctx_uvars
+                                   else ());
+                                  (let uu____28198 =
+                                     let uu____28201 =
+                                       let uu____28204 =
+                                         let uu____28205 =
+                                           let uu____28212 =
+                                             FStar_All.pipe_right b
+                                               FStar_Pervasives_Native.fst
+                                              in
+                                           (uu____28212, t)  in
+                                         FStar_Syntax_Syntax.NT uu____28205
+                                          in
+                                       [uu____28204]  in
+                                     FStar_List.append substs1 uu____28201
+                                      in
+                                   let uu____28223 = conj_guard g g_t  in
+                                   (uu____28198,
+                                     (FStar_List.append uvars [t]),
+                                     uu____28223)))))
+                   (substs, [], trivial_guard))
                in
             FStar_All.pipe_right uu____28029
-              (fun uu____28226  ->
-                 match uu____28226 with | (uu____28243,uvars,g) -> (uvars, g))
+              (fun uu____28252  ->
+                 match uu____28252 with | (uu____28269,uvars,g) -> (uvars, g))
   
 let (pure_precondition_for_trivial_post :
   env ->
@@ -6236,45 +6258,45 @@ let (pure_precondition_for_trivial_post :
           fun r  ->
             let trivial_post =
               let post_ts =
-                let uu____28284 =
+                let uu____28310 =
                   lookup_definition [NoDelta] env1
                     FStar_Parser_Const.trivial_pure_post_lid
                    in
-                FStar_All.pipe_right uu____28284 FStar_Util.must  in
-              let uu____28301 = inst_tscheme_with post_ts [u]  in
-              match uu____28301 with
-              | (uu____28306,post) ->
-                  let uu____28308 =
-                    let uu____28309 =
+                FStar_All.pipe_right uu____28310 FStar_Util.must  in
+              let uu____28327 = inst_tscheme_with post_ts [u]  in
+              match uu____28327 with
+              | (uu____28332,post) ->
+                  let uu____28334 =
+                    let uu____28335 =
                       FStar_All.pipe_right t FStar_Syntax_Syntax.as_arg  in
-                    [uu____28309]  in
-                  FStar_Syntax_Syntax.mk_Tm_app post uu____28308 r
+                    [uu____28335]  in
+                  FStar_Syntax_Syntax.mk_Tm_app post uu____28334 r
                in
-            let uu____28342 =
-              let uu____28343 =
+            let uu____28368 =
+              let uu____28369 =
                 FStar_All.pipe_right trivial_post FStar_Syntax_Syntax.as_arg
                  in
-              [uu____28343]  in
-            FStar_Syntax_Syntax.mk_Tm_app wp uu____28342 r
+              [uu____28369]  in
+            FStar_Syntax_Syntax.mk_Tm_app wp uu____28368 r
   
 let (dummy_solver : solver_t) =
   {
-    init = (fun uu____28379  -> ());
-    push = (fun uu____28381  -> ());
-    pop = (fun uu____28384  -> ());
+    init = (fun uu____28405  -> ());
+    push = (fun uu____28407  -> ());
+    pop = (fun uu____28410  -> ());
     snapshot =
-      (fun uu____28387  ->
+      (fun uu____28413  ->
          ((Prims.int_zero, Prims.int_zero, Prims.int_zero), ()));
-    rollback = (fun uu____28406  -> fun uu____28407  -> ());
-    encode_sig = (fun uu____28422  -> fun uu____28423  -> ());
+    rollback = (fun uu____28432  -> fun uu____28433  -> ());
+    encode_sig = (fun uu____28448  -> fun uu____28449  -> ());
     preprocess =
       (fun e  ->
          fun g  ->
-           let uu____28429 =
-             let uu____28436 = FStar_Options.peek ()  in (e, g, uu____28436)
+           let uu____28455 =
+             let uu____28462 = FStar_Options.peek ()  in (e, g, uu____28462)
               in
-           [uu____28429]);
-    solve = (fun uu____28452  -> fun uu____28453  -> fun uu____28454  -> ());
-    finish = (fun uu____28461  -> ());
-    refresh = (fun uu____28463  -> ())
+           [uu____28455]);
+    solve = (fun uu____28478  -> fun uu____28479  -> fun uu____28480  -> ());
+    finish = (fun uu____28487  -> ());
+    refresh = (fun uu____28489  -> ())
   } 
