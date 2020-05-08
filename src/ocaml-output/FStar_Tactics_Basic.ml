@@ -2308,7 +2308,10 @@ let (lemma_or_sq :
           FStar_Pervasives_Native.Some (pre, post1)
     else
       (let uu____4083 =
-         FStar_Syntax_Util.is_pure_effect ct.FStar_Syntax_Syntax.effect_name
+         (FStar_Syntax_Util.is_pure_effect ct.FStar_Syntax_Syntax.effect_name)
+           ||
+           (FStar_Syntax_Util.is_ghost_effect
+              ct.FStar_Syntax_Syntax.effect_name)
           in
        if uu____4083
        then
