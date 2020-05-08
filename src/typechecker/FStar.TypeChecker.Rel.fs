@@ -3139,6 +3139,10 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
       else
         let r = Env.get_range env in
 
+        let subcomp_name = BU.format2 "%s <: %s"
+          (c1.effect_name |> Ident.ident_of_lid |> Ident.string_of_id)
+          (c2.effect_name |> Ident.ident_of_lid |> Ident.string_of_id) in
+
         let lift_c1 (edge:edge) : comp_typ * guard_t =
           c1 |> S.mk_Comp |> edge.mlift.mlift_wp env
              |> (fun (c, g) -> U.comp_to_comp_typ c, g) in
@@ -3182,7 +3186,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
               List.fold_right2 (fun (a1, _) (a2, _) (is_sub_probs, wl) ->
                 if is_uvar a1
                 then begin
-                       if Env.debug env <| Options.Other "LayeredEffectsRel" then
+                       if Env.debug env <| Options.Other "LayeredEffectsEqns" then
                        BU.print2 "Layered Effects teq (rel c1 index uvar) %s = %s\n"
                          (Print.term_to_string a1) (Print.term_to_string a2);
                        let p, wl = sub_prob wl a1 EQ a2 "l.h.s. effect index uvar" in
@@ -3230,8 +3234,8 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
               |> List.map (SS.subst substs) in
 
             List.fold_left2 (fun (ps, wl) f_sort_i c1_i ->
-              if Env.debug env <| Options.Other "LayeredEffectsRel"
-              then BU.print2 "Layered Effects teq %s = %s\n"
+              if Env.debug env <| Options.Other "LayeredEffectsEqns"
+              then BU.print3 "Layered Effects (%s) %s = %s\n" subcomp_name
                      (Print.term_to_string f_sort_i) (Print.term_to_string c1_i);
               let p, wl = sub_prob wl f_sort_i EQ c1_i "indices of c1" in
               ps@[p], wl
@@ -3246,8 +3250,8 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
               r (stronger_t_shape_error "subcomp return type is not a repr") in
 
             List.fold_left2 (fun (ps, wl) g_sort_i c2_i ->
-              if Env.debug env <| Options.Other "LayeredEffectsRel"
-              then BU.print2 "Layered Effects teq %s = %s\n"
+              if Env.debug env <| Options.Other "LayeredEffectsEqns"
+              then BU.print3 "Layered Effects (%s) %s = %s\n" subcomp_name
                      (Print.term_to_string g_sort_i) (Print.term_to_string c2_i);
               let p, wl = sub_prob wl g_sort_i EQ c2_i "indices of c2" in
               ps@[p], wl
@@ -3879,7 +3883,8 @@ let resolve_implicits' env must_total forcelax g =
                until_fixpoint (g'.implicits@out, true) tl in
   {g with implicits=until_fixpoint ([], false) g.implicits}
 
-let resolve_implicits env g = resolve_implicits' env (not env.phase1 && not env.lax)  false g
+let resolve_implicits env g =
+  resolve_implicits' env (not env.phase1 && not env.lax)  false g
 let resolve_implicits_tac env g = resolve_implicits' env false true  g
 
 let force_trivial_guard env g =
@@ -3904,6 +3909,14 @@ let teq_nosmt_force (env:env) (t1:typ) (t2:typ) :bool =
     | Some g ->
         force_trivial_guard env g;
         true
+
+let layered_effect_teq env (t1:term) (t2:term) (reason:option<string>) : guard_t =
+  if Env.debug env <| Options.Other "LayeredEffectsEqns"
+  then BU.print3 "Layered effect (%s) %s = %s\n"
+         (if reason |> is_none then "_" else reason |> must)              
+         (Print.term_to_string t1) (Print.term_to_string t2);
+  teq env t1 t2  //AR: teq_nosmt?
+
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
