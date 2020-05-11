@@ -6,7 +6,7 @@ module Bug1986
  *)
 
 (* Used to give (Error 133) Name "FStar.Pervasives.__proj__Mkdtuple4__item__b" not found *)
-[@(expect_failure [72])]
+[@@(expect_failure [72])]
 let f x = x.b
 
 type box (a:Type) = | Box : x:a -> box a
@@ -15,7 +15,7 @@ type box (a:Type) = | Box : x:a -> box a
 let px (r:box 'a) = r.x
 
 (* Used to give (Error 133) Name "Fields.__proj__Box__item__a" not found *)
-[@(expect_failure [72])]
+[@@(expect_failure [72])]
 let pa (r:box 'a) = r.a
 
 type box2 (x:Type) = | A : box2 x

@@ -184,7 +184,7 @@ and env = {
   proof_ns       :proof_namespace;                   (* the current names that will be encoded to SMT *)
   synth_hook     :env -> typ -> term -> term;        (* hook for synthesizing terms via tactics, third arg is tactic term *)
   try_solve_implicits_hook: env -> term -> implicits -> unit;
-  splice         :env -> term -> list<sigelt>;       (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
+  splice         :env -> Range.range -> term -> list<sigelt>; (* splicing hook, points to FStar.Tactics.Interpreter.splice *)
   mpreprocess     :env -> term -> term -> term;       (* hook for postprocessing typechecked terms via metaprograms *)
   postprocess    :env -> term -> typ -> term -> term; (* hook for postprocessing typechecked terms via metaprograms *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
@@ -296,7 +296,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     proof_ns = Options.using_facts_from ();
     synth_hook = (fun e g tau -> failwith "no synthesizer available");
     try_solve_implicits_hook = (fun e tau imps -> failwith "no implicit hook available");
-    splice = (fun e tau -> failwith "no splicer available");
+    splice = (fun e rng tau -> failwith "no splicer available");
     mpreprocess = (fun e tau tm -> failwith "no preprocessor available");
     postprocess = (fun e tau typ tm -> failwith "no postprocessor available");
     identifier_info=BU.mk_ref FStar.TypeChecker.Common.id_info_table_empty;
@@ -493,7 +493,7 @@ let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace c
          let rec aux c l = match c, l with
             | [], _ -> Maybe
             | _, [] -> No
-            | hd::tl, hd'::tl' when ((text_of_id hd = text_of_id hd')) -> aux tl tl'
+            | hd::tl, hd'::tl' when ((string_of_id hd = string_of_id hd')) -> aux tl tl'
             | _ -> No in
          aux cur lns
     else No
@@ -731,7 +731,7 @@ let lookup_lid env l =
 
 let lookup_univ env x =
     List.find (function
-        | Binding_univ y -> (text_of_id x = text_of_id y)
+        | Binding_univ y -> (string_of_id x = string_of_id y)
         | _ -> false) env.gamma
     |> Option.isSome
 
@@ -1207,7 +1207,7 @@ let effect_repr_aux only_reifiable env c u_res =
       let res_typ = c.result_typ in
       let repr = inst_effect_fun_with [u_res] env ed ts in
       check_partial_application effect_name c.effect_args;
-      Some (S.mk (Tm_app (repr, ((res_typ |> S.as_arg)::c.effect_args))) None (get_range env))
+      Some (S.mk (Tm_app (repr, ((res_typ |> S.as_arg)::c.effect_args))) (get_range env))
 
 let effect_repr env c u_res : option<term> = effect_repr_aux false env c u_res
 
@@ -1550,7 +1550,7 @@ let all_binders env = binders_of_bindings env.gamma
 let print_gamma gamma =
     (gamma |> List.map (function
         | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
-        | Binding_univ u -> "Binding_univ " ^ (text_of_id u)
+        | Binding_univ u -> "Binding_univ " ^ (string_of_id u)
         | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)))//  @
     // (env.gamma_sig |> List.map (fun (ls, _) ->
     //     "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
@@ -1669,7 +1669,7 @@ let def_check_guard_wf rng msg env g =
 
 let apply_guard g e = match g.guard_f with
   | Trivial -> g
-  | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [as_arg e])) None f.pos}
+  | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [as_arg e])) f.pos}
 
 let map_guard g map = match g.guard_f with
   | Trivial -> g
@@ -1722,7 +1722,7 @@ let close_guard env binders g =
 let new_implicit_var_aux reason r env k should_check meta =
     match U.destruct k FStar.Parser.Const.range_of_lid with
      | Some [_; (tm, _)] ->
-       let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) None tm.pos in
+       let t = S.mk (S.Tm_constant (FStar.Const.Const_range tm.pos)) tm.pos in
        t, [], trivial_guard
 
      | _ ->
@@ -1739,7 +1739,7 @@ let new_implicit_var_aux reason r env k should_check meta =
           ctx_uvar_meta=meta;
       } in
       check_uvar_ctx_invariant reason r true gamma binders;
-      let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) None r in
+      let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
       let imp = { imp_reason = reason
                 ; imp_tm     = t
                 ; imp_uvar   = ctx_uvar
@@ -1795,11 +1795,11 @@ let pure_precondition_for_trivial_post env u t wp r =
     S.mk_Tm_app
       post
       [t |> S.as_arg]
-      None r in
+      r in
   S.mk_Tm_app
     wp
     [trivial_post |> S.as_arg]
-    None r
+    r
 
 
 (* <Move> this out of here *)

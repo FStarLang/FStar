@@ -190,7 +190,7 @@ than the general [B.sub]. *)
 
 // general split_at primitive (think of Rust's slice::split_at_mut)
 // polymorphic: inline and hope that it type-checks in kremlin
-[@"substitute"]
+[@@"substitute"]
 val buffer_split_at: #a:Type -> b:B.buffer a ->
     off:U32.t{U32.v off <= B.length b} ->
     // TODO: this shouldn't be necessary, but Buffer provides no way to advance
@@ -204,7 +204,7 @@ val buffer_split_at: #a:Type -> b:B.buffer a ->
                      let (b1, b2) = r in
                      is_concat_of b b1 b2 /\
                      B.length b1 == U32.v off))
-[@"substitute"]
+[@@"substitute"]
 let buffer_split_at #a b off len =
     (B.sub b 0ul off, B.sub b off (U32.sub len off))
 

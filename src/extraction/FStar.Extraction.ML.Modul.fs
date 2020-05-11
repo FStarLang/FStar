@@ -53,9 +53,7 @@ let fail_exp (lid:lident) (t:typ) =
                ; S.as_arg <|
                  mk (Tm_constant
                       (Const_string ("Not yet implemented:"^(Print.lid_to_string lid), Range.dummyRange)))
-                    None
                     Range.dummyRange]))
-        None
         Range.dummyRange
 
 let always_fail lid t =
@@ -504,7 +502,7 @@ let extract_reifiable_effect g ed
         let lbname = Inl (S.new_bv (Some a.action_defn.pos) tun) in
         let lb = mk_lb (lbname, a.action_univs, PC.effect_Tot_lid, a.action_typ, a.action_defn, [], a.action_defn.pos) in
         let lbs = (false, [lb]) in
-        let action_lb = mk (Tm_let(lbs, U.exp_false_bool)) None a.action_defn.pos in
+        let action_lb = mk (Tm_let(lbs, U.exp_false_bool)) a.action_defn.pos in
         let a_let, _, ty = Term.term_as_mlexpr g action_lb in
         let exp, tysc = match a_let.expr with
             | MLE_Let((_, [mllb]), _) ->
@@ -678,7 +676,7 @@ let extract_bundle env se =
         let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses ] in
         let names = match (SS.compress (N.normalize steps (tcenv_of_uenv env_iparams) ctor.dtyp)).n with
           | Tm_arrow (bs, _) ->
-              List.map (fun ({ ppname = ppname }, _) -> (text_of_id ppname)) bs
+              List.map (fun ({ ppname = ppname }, _) -> (string_of_id ppname)) bs
           | _ ->
               []
         in
@@ -855,7 +853,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           let ml_let, _, _ =
             Term.term_as_mlexpr
                     g
-                    (mk (Tm_let(lbs, U.exp_false_bool)) None se.sigrng)
+                    (mk (Tm_let(lbs, U.exp_false_bool)) se.sigrng)
           in
           begin
           match ml_let.expr with

@@ -35,7 +35,7 @@ let op_At_Bar: #a: Type -> s1: array a -> s2: array a
   let s2' = !s2 in
   ST.alloc (Seq.append s1' s2')
 
-[@ "substitute"]
+[@@ "substitute"]
 val hmac_part2
       (mac: uint8_p{length mac = v Hash.size_hash})
       (s5: uint8_p{length s5 = v Hash.size_block /\ disjoint s5 mac})
@@ -50,7 +50,7 @@ val hmac_part2
               Spec_Hash.hash (Seq.append (reveal_sbytes (as_seq h0 s5))
                     (reveal_sbytes (as_seq h0 s4))))))
 
-[@ "substitute"]
+[@@ "substitute"]
 let hmac_part2:
     mac: uint8_p{length mac = v Hash.size_hash} ->
     s5: uint8_p{length s5 = v Hash.size_block /\ disjoint s5 mac} ->
@@ -67,8 +67,8 @@ let hmac_part2:
 
 val last (a b: int) : Tot (array a)
 
-[@ one two three four five six seven eight nine ten eleven ten eleven ten eleven ten eleven ten here
-   eleven ten eleven ten eleven ten eleven]
+[@@ one; two; three; four; five; six; seven; eight; nine; ten; eleven; ten; eleven; ten; eleven; ten; eleven; ten; here;
+    eleven; ten; eleven; ten; eleven; ten; eleven]
 type t =
   | A : int -> t
   | B
@@ -86,7 +86,7 @@ type signatureScheme =
         v <> 0x0804 /\ v <> 0x0805 /\ v <> 0x0806 /\ v <> 0x0201 /\ v <> 0x0203 /\ v <> 0x0202 /\
         v <> 0x0402 /\ v <> 0x0502 /\ v <> 0x0602 /\ v <> 0xFFFF })
 
-[@ "substitute"]
+[@@ "substitute"]
 val hmac_part2
       (mac: uint8_p{length mac = v Hash.size_hash})
       (s5: uint8_p{length s5 = v Hash.size_block /\ disjoint s5 mac})

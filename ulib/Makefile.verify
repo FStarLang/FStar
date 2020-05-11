@@ -62,16 +62,12 @@ verify-extra: $(filter $(addprefix %, $(addsuffix .checked, $(notdir $(EXTRA))))
 
 phony-benchmark:
 
-# a.fst.bench will move the a.fst.checked binary and then move it back
+# We use -f to check the file even if a valid .checked already exists
+# And remove --cache_checked_modules so we don't update them
 %.fst.bench: %.fst phony-benchmark
-	-mv -f .cache/$*.fst.checked .cache/$*.fst.checked.bench_bkp
-	$(BENCHMARK_PRE) $(MY_FSTAR) $*.fst
-	-mv -f .cache/$*.fst.checked.bench_bkp .cache/$*.fst.checked
+	$(BENCHMARK_PRE) $(filter-out --cache_checked_modules, $(MY_FSTAR)) -f $*.fst
 
-# a.fsti.bench will move the a.fsti.checked binary and then move it back
 %.fsti.bench: %.fsti phony-benchmark
-	-mv -f .cache/$*.fsti.checked .cache/$*.fsti.checked.bench_bkp
-	$(BENCHMARK_PRE) $(MY_FSTAR) $*.fsti
-	-mv -f .cache/$*.fsti.checked.bench_bkp .cache/$*.fsti.checked
+	$(BENCHMARK_PRE) $(filter-out --cache_checked_modules, $(MY_FSTAR)) -f $*.fsti
 
 verify-benchmark: $(addsuffix .bench, $(filter-out $(EXTRA) ,$(FSTAR_FILES)))

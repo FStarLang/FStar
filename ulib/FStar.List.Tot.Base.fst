@@ -118,7 +118,7 @@ let rec append x y = match x with
   | [] -> y
   | a::tl -> a::append tl y
 
-(** Defines notation [@] for [append], as in OCaml, F# . *)
+(** Defines notation [@@] for [append], as in OCaml, F# . *)
 let op_At x y = append x y
 
 (** [snoc (l, x)] adds [x] to the end of the list [l].

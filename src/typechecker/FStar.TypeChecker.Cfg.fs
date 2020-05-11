@@ -297,7 +297,6 @@ let embed_simple (emb:EMB.embedding<'a>) (r:Range.range) (x:'a) : term =
     EMB.embed emb x r None EMB.id_norm_cb
 let try_unembed_simple (emb:EMB.embedding<'a>) (x:term) : option<'a> =
     EMB.unembed emb x false EMB.id_norm_cb
-let mk t r = mk t None r
 let built_in_primitive_steps : prim_step_set =
     let arg_as_int    (a:arg) = fst a |> try_unembed_simple EMB.e_int in
     let arg_as_bool   (a:arg) = fst a |> try_unembed_simple EMB.e_bool in
@@ -737,7 +736,7 @@ let built_in_primitive_steps : prim_step_set =
         let int_as_bounded r int_to_t n =
             let c = embed_simple EMB.e_int r n in
             let int_to_t = S.fv_to_tm int_to_t in
-            S.mk_Tm_app int_to_t [S.as_arg c] None r
+            S.mk_Tm_app int_to_t [S.as_arg c] r
         in
         let add_sub_mul_v =
           (bounded_signed_int_types @ bounded_unsigned_int_types)

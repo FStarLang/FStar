@@ -11,7 +11,7 @@ module Z = FSharp.Compatibility.OCaml.Big_int
 
    Note, in OCaml, we use ZArith's ediv and erem
 *)
-let rec ediv_rem (n:Z) (d:Z.big_int) : t * t =
+let rec ediv_rem (n:Z.big_int) (d:Z.big_int) : Z.big_int * Z.big_int =
     if Z.lt_big_int d Z.zero_big_int then
       let q, r = ediv_rem n (Z.minus_big_int d) in
       Z.minus_big_int q, r
@@ -37,7 +37,7 @@ let ( > )  (x:int) (y:int) = x > y
 let (mod) (x:int) (y:int)  = snd (ediv_rem x y)
 let ( ~- ) (x:int) = (~-) x
 let abs (x:int) = BigInteger.Abs x
-let of_int (x:int) = BigInteger x
+let of_int (x:FSharp.Core.int) = BigInteger x
 let int_zero = of_int 0
 let int_one = of_int 1
 let parse_int = BigInteger.Parse

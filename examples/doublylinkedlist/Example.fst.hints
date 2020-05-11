@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "027a0dd6171cb83318e28c4a9db71deb"
+      "d844e611b5460cdc7e5494822542d7d9"
     ],
     [
       "Example.reverse",
@@ -251,20 +251,6 @@
       ],
       0,
       "92dff0c0148656b28ce6957b48a23e40"
-    ],
-    [
-      "Example.l_reverse",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "d423787d75dfd2f90ed1073b1dac4023"
     ]
   ]
 ]

@@ -45,7 +45,7 @@ let self #a v =
 
 val loop : (#a:Type) -> (a -> a) -> a
 
-[@(expect_failure [34])]
+[@@(expect_failure [34])]
 let loop #a f = reify (self (Mk (fun x -> f (self x)))) ()
 
 (*

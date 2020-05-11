@@ -49,55 +49,6 @@
       ],
       0,
       "d9ff29011c7a3645f4681c7ad649f9dd"
-    ],
-    [
-      "AES.plain",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_AES.blocksize", "equation_AES.psize",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "34efc34ff9bc6bd68f4c6c32c12ee2e4"
-    ],
-    [
-      "AES.cipher",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_AES.blocksize", "equation_AES.csize",
-        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "f15db30d19a8c265dfbf98cb3820c07b"
-    ],
-    [
-      "AES.key",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_AES.keysize", "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "774ef2a8f548891734b0bac52366b3dd"
-    ],
-    [
-      "AES.enc",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_AES.bytes", "equation_AES.nbytes", "equation_AES.plain",
-        "equation_AES.psize",
-        "haseqTm_refine_8f0006372dc7eef1f8d6507769207c67"
-      ],
-      0,
-      "6570fb2cfbebc0b19e1d7ea939926bb4"
     ]
   ]
 ]

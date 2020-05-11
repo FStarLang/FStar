@@ -99,7 +99,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "3e731393902438a6997543ca6748f33f"
+      "6646b21a01c3afcbb646921a3cb10883"
     ],
     [
       "FStar.Order.compare_option",
@@ -219,7 +219,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c76bb663c539ea22d6292895e7756d97"
+      "6b97303137714e63dd148c67477c4405"
     ],
     [
       "FStar.Order.compare_option",

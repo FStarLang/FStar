@@ -289,7 +289,7 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * O.optionstate)
 let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
     // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
     if env.nosynth
-    then mk_Tm_app (TcUtil.fvar_const env PC.magic_lid) [S.as_arg U.exp_unit] None typ.pos
+    then mk_Tm_app (TcUtil.fvar_const env PC.magic_lid) [S.as_arg U.exp_unit] typ.pos
     else begin
     tacdbg := Env.debug env (O.Other "Tac");
 
@@ -342,7 +342,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
     ()
     end
 
-let splice (env:Env.env) (tau:term) : list<sigelt> =
+let splice (env:Env.env) (rng:Range.range) (tau:term) : list<sigelt> =
     if env.nosynth then [] else begin
     tacdbg := Env.debug env (O.Other "Tac");
 
@@ -364,7 +364,7 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
       BU.print1 "splice: got decls = %s\n"
                  (FStar.Common.string_of_list Print.sigelt_to_string sigelts);
 
-    // Unembed the result, this must work if things are well-typed
+    let sigelts = List.map (fun se -> { se with sigrng = rng }) sigelts in
     sigelts
     end
 

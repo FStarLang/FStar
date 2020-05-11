@@ -27,7 +27,7 @@ module IB = LowStar.ImmutableBuffer
 (*
  * Testing normalization of lists in the buffer library
  *)
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 let l :list int = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10]
 
 let test2 (lll:list int{List.Tot.length lll > 0 /\
@@ -86,7 +86,7 @@ let test (l:list int{List.Tot.length l == 10}) :HST.St unit =
 (***** Tests for uninitialized buffers *****)
 module UB = LowStar.UninitializedBuffer
 
-[@expect_failure]
+[@@expect_failure]
 let test_index_ub (b:UB.ubuffer int) :HST.ST unit (requires (fun h0 -> UB.live h0 b /\ UB.length b == 10)) (ensures (fun _ _ _ -> True))
   = ignore (UB.uindex b 0)
 

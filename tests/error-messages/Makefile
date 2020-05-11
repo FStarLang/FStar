@@ -22,6 +22,7 @@ check-all: $(addsuffix .check, $(FSTAR_FILES))
 all: check-all
 
 Bug1997.fst.output: OTHERFLAGS+=--dump_module Bug1997
+CalcImpl.fst.output: OTHERFLAGS+=--dump_module CalcImpl
 
 include $(FSTAR_HOME)/examples/Makefile.common
 

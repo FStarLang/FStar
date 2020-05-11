@@ -45,15 +45,19 @@ let doc_to_string doc = FStar.Pprint.pretty_string (float_of_string "1.0") 100 d
 let parser_term_to_string t = doc_to_string (D.term_to_document t)
 let parser_pat_to_string t = doc_to_string (D.pat_to_document t)
 
+(* A callback into FStar.Syntax.Print.term_to_string. Careful, it's mutually recursive
+ * with this module and could loop, so only use it for debugging. *)
+let tts (t:S.term) : string = U.tts t
+
 let map_opt = List.filter_map
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
   let unique_name =
-    if starts_with reserved_prefix (text_of_id x.ppname)
+    if starts_with reserved_prefix (string_of_id x.ppname)
     ||  Options.print_real_names () then
-      (text_of_id x.ppname) ^ (string_of_int x.index)
+      (string_of_id x.ppname) ^ (string_of_int x.index)
     else
-      (text_of_id x.ppname)
+      (string_of_id x.ppname)
   in
   I.mk_ident (unique_name, (range_of_id x.ppname))
 
@@ -78,7 +82,7 @@ let rec universe_to_int n u =
 
 let universe_to_string univs =
   if (Options.print_universes()) then
-    List.map (fun x -> (text_of_id x)) univs |> String.concat  ", "
+    List.map (fun x -> (string_of_id x)) univs |> String.concat  ", "
   else ""
 
 let rec resugar_universe (u:S.universe) r: A.term =
@@ -181,6 +185,9 @@ let string_to_op s =
       None
 
 type expected_arity = option<int>
+
+(* GM: This almost never actually returns an expected arity. It does so
+only for subtraction, I think. *)
 let rec resugar_term_as_op (t:S.term) : option<(string*expected_arity)> =
   let infix_prim_ops = [
     (C.op_Addition    , "+" );
@@ -214,7 +221,8 @@ let rec resugar_term_as_op (t:S.term) : option<(string*expected_arity)> =
     (C.eq3_lid     , "===");
     (C.forall_lid  , "forall");
     (C.exists_lid  , "exists");
-    (C.salloc_lid  , "alloc")
+    (C.salloc_lid  , "alloc");
+    (C.calc_finish_lid, "calc_finish");
   ] in
   let fallback fv =
     match infix_prim_ops |> BU.find_opt (fun d -> fv_eq_lid fv (fst d)) with
@@ -428,6 +436,12 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       begin match resugar_term_as_op e with
         | None->
           resugar_as_app e args
+
+        | Some ("calc_finish", _) ->
+          begin match resugar_calc env t with
+          | Some r -> r
+          | _ -> resugar_as_app e args
+          end
 
         | Some ("tuple", _) ->
           let out =
@@ -752,6 +766,132 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
 
     | Tm_unknown -> mk A.Wild
 
+(* This entire function is of course very tied to the the desugaring
+of calc expressions in ToSyntax. This only really works for fully
+elaborated terms, sorry. *)
+and resugar_calc (env:DsEnv.env) (t0:S.term) : option<A.term> =
+  let mk (a:A.term') : A.term =
+    A.mk_term a t0.pos A.Un
+  in
+  (* Returns the non-resugared final relation and the calc_pack *)
+  let resugar_calc_finish (t:S.term) : option<(S.term * S.term)> =
+    let hd, args = U.head_and_args t in
+    match (SS.compress (U.un_uinst hd)).n, args with
+    | Tm_fvar fv, [(_, Some (S.Implicit _)); // type
+                   (rel, None);              // top relation
+                   (_, Some (S.Implicit _)); // x
+                   (_, Some (S.Implicit _)); // y
+                   (pf, None)]               // pf : unit -> GTot (calc_pack x y)
+        when S.fv_eq_lid fv C.calc_finish_lid ->
+        let pf = U.unthunk pf in
+        Some (rel, pf)
+
+    | _ ->
+        None
+  in
+  (* Un-eta expand a relation. Return it as-is if cannot be done. *)
+  let un_eta_rel (rel:S.term) : option<S.term> =
+    let bv_eq_tm (b:bv) (t:S.term) : bool =
+      match (SS.compress t).n with
+      | Tm_name b' when S.bv_eq b b' -> true
+      | _ -> false
+    in
+    match (SS.compress rel).n with
+    | Tm_abs ([b1;b2], body, _) ->
+        let ([b1;b2], body) = SS.open_term [b1;b2] body in
+        let body = U.unascribe body in
+        let body = match (U.unb2t body) with
+                   | Some body -> body
+                   | None -> body
+        in
+        begin match (SS.compress body).n with
+        | Tm_app (e, args) when List.length args >= 2 ->
+          begin match List.rev args with
+          | (a1, None)::(a2, None)::rest ->
+            if bv_eq_tm (fst b1) a2 && bv_eq_tm (fst b2) a1 // mind the flip
+            then Some <| U.mk_app e (List.rev rest)
+            else Some rel
+          | _ ->
+            Some rel
+          end
+        | _ -> Some rel
+        end
+
+    | _ ->
+        Some rel
+  in
+  (* Resugars an application of calc_step, returning the term, the relation,
+   * the justifcation, and the rest of the proof. *)
+  let resugar_step (pack:S.term) : option<(S.term * S.term * S.term * S.term)> =
+    let hd, args = U.head_and_args pack in
+    match (SS.compress (U.un_uinst hd)).n, args with
+    | Tm_fvar fv, [(_, Some (S.Implicit _)); // type
+                   (_, Some (S.Implicit _)); // x
+                   (_, Some (S.Implicit _)); // y
+                   (rel, None);              // relation
+                   (z, None);                // z, next val
+                   (pf, None);               // pf, rest of proof (thunked)
+                   (j, None)]                // justification (thunked)
+        when S.fv_eq_lid fv C.calc_step_lid ->
+        let pf = U.unthunk pf in
+        let j = U.unthunk j in
+        Some (z, rel, j, pf)
+
+    | _ ->
+        None
+  in
+  (* Resugar an application of calc_init *)
+  let resugar_init (pack:S.term) : option<S.term> =
+    let hd, args = U.head_and_args pack in
+    match (SS.compress (U.un_uinst hd)).n, args with
+    | Tm_fvar fv, [(_, Some (S.Implicit _)); // type
+                   (x, None)]                // initial value
+        when S.fv_eq_lid fv C.calc_init_lid ->
+        Some x
+
+    | _ ->
+        None
+  in
+  (* Repeats the above function until it returns none; what remains should be a calc_init *)
+  let rec resugar_all_steps (pack:S.term) : option<(list<(S.term * S.term * S.term)> * S.term)> =
+    match resugar_step pack with
+    | Some (t, r, j, k) ->
+        BU.bind_opt (resugar_all_steps k) (fun (steps, k) ->
+        Some ((t, r, j)::steps, k))
+    | None ->
+        Some ([], pack)
+  in
+  let resugar_rel (rel:S.term) : A.term =
+    (* Try to un-eta, don't worry if not *)
+    let rel = match un_eta_rel rel with
+              | Some rel -> rel
+              | None -> rel
+    in
+    let fallback () =
+        mk (A.Paren (resugar_term' env rel))
+    in
+    let hd, args = U.head_and_args rel in
+    if Options.print_implicits ()
+           && List.existsb (fun (_, q) -> S.is_implicit q) args
+    then fallback ()
+    else
+      begin match resugar_term_as_op hd with
+      | Some (s, None)
+      | Some (s, Some 2) -> mk (A.Op (Ident.id_of_text s, []))
+      | _ -> fallback ()
+      end
+  in
+  let build_calc (rel:S.term) (x0:S.term) (steps : list<(S.term * S.term * S.term)>) : A.term =
+    let r = resugar_term' env in
+    mk (CalcProof (resugar_rel rel, r x0,
+                    List.map (fun (z, rel, j) -> CalcStep (resugar_rel rel, r j, r z)) steps))
+  in
+
+  BU.bind_opt (resugar_calc_finish t0) (fun (rel, pack) ->
+  BU.bind_opt (resugar_all_steps pack) (fun (steps, k) ->
+  BU.bind_opt (resugar_init k) (fun x0 ->
+  Some <| build_calc rel x0 (List.rev steps))))
+
 and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
   let mk (a:A.term') : A.term =
         //augment `a` with its source position
@@ -933,7 +1073,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: set<bv>) : A.pattern =
       // both A.PatTvar and A.PatVar are desugared to S.Pat_var. A PatTvar in the original file coresponds
       // to some type variable which is implicitly bound to the enclosing toplevel declaration.
       // When resugaring it will be just a normal (explicitly bound) variable.
-      begin match string_to_op (text_of_id v.ppname) with
+      begin match string_to_op (string_of_id v.ppname) with
        | Some (op, _) -> mk (A.PatOp (Ident.mk_ident (op, (range_of_id v.ppname))))
        | None -> resugar_bv_as_pat' env v (to_arg_qual imp_opt) branch_bv None
       end
@@ -1167,7 +1307,7 @@ let resugar_sigelt' env se : option<A.decl> =
     if (se.sigquals |> BU.for_some (function S.Projector(_,_) | S.Discriminator _ -> true | _ -> false)) then
       None
     else
-      let mk e = S.mk e None se.sigrng in
+      let mk e = S.mk e se.sigrng in
       let dummy = mk Tm_unknown in
       let desugared_let = mk (Tm_let(lbs, dummy)) in
       let t = resugar_term' env desugared_let in

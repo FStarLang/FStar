@@ -23,7 +23,7 @@ assume val psi : Type
 assume val p1 : psi
 assume val p2 : psi -> squash phi
 
-[@plugin]
+[@@plugin]
 let tau =
         (fun () ->
              let psi' = `psi in

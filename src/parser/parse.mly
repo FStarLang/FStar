@@ -27,6 +27,10 @@ let logic_qualifier_deprecation_warning =
 let abstract_qualifier_warning =
   "abstract qualifier will soon be removed from F*, use interfaces instead"
 
+let old_attribute_syntax_warning =
+  "The `[@ ...]` syntax of attributes is deprecated. \
+   Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
+
 %}
 
 %token <bytes> BYTEARRAY
@@ -68,7 +72,8 @@ let abstract_qualifier_warning =
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
-%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT DOT_LBRACK DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE BANG_LBRACE
+%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT DOT_LBRACK
+%token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
@@ -139,7 +144,18 @@ pragma:
 
 attribute:
   | LBRACK_AT x = list(atomicTerm) RBRACK
+      {
+        let _ =
+            match x with
+            | _::_::_ ->
+                  log_issue (lhs parseState) (Warning_DeprecatedAttributeSyntax,
+                                              old_attribute_syntax_warning)
+            | _ -> () in
+         x
+      }
+  | LBRACK_AT_AT x = semiColonTermList RBRACK
       { x }
+
 
 decoration:
   | x=attribute
@@ -539,7 +555,7 @@ lidentOrOperator:
   | id=IDENT
     { mk_ident(id, rhs parseState 1) }
   | LPAREN id=operator RPAREN
-    { mk_ident (compile_op' (text_of_id id) (range_of_id id), range_of_id id) }
+    { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -604,7 +620,7 @@ noSeqTerm:
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
         let (op, e2, _) = op_expr in
-        let opid = mk_ident (text_of_id op ^ "<-", range_of_id op) in
+        let opid = mk_ident (string_of_id op ^ "<-", range_of_id op) in
         mk_term (Op(opid, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       }
   | REQUIRES t=typ
@@ -1111,8 +1127,8 @@ universeFrom:
        }
   | max=ident us=nonempty_list(atomicUniverse)
       {
-        if text_of_id max <> string_of_lid max_lid
-        then log_issue (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ text_of_id max ^
+        if string_of_id max <> string_of_lid max_lid
+        then log_issue (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ string_of_id max ^
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.");
         let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) Expr in

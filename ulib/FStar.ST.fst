@@ -45,7 +45,7 @@ type heap_predicate = heap -> Type0
 let stable (p:heap_predicate) =
   forall (h1:heap) (h2:heap). (p h1 /\ heap_rel h1 h2) ==> p h2
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 let witnessed (p:heap_predicate{stable p}) : Type0 = W.witnessed heap_rel p
 
 assume val gst_witness: p:heap_predicate -> GST unit (fun post h0 -> stable p /\ p h0 /\ (witnessed p ==> post () h0))

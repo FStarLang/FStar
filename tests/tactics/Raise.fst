@@ -32,7 +32,7 @@ let _ =
     in ()
   end
 
-[@(expect_failure [228])]
+[@@(expect_failure [228])]
 let _ =
   assert True by begin
     let i =
@@ -57,7 +57,7 @@ let _ =
     in ()
   end
 
-[@(expect_failure [228])]
+[@@(expect_failure [228])]
 let _ =
   assert True by begin
     let i =

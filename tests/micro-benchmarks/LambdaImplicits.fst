@@ -7,11 +7,11 @@ val id1 : #a:Type -> a -> a
 let id1 x = x
 
 val id2 : a:Type -> a -> a
-[@(expect_failure [189])]
+[@@(expect_failure [189])]
 let id2 x = x
 
 val id3 : a:Type -> a -> a
-[@(expect_failure [91])]
+[@@(expect_failure [91])]
 let id3 #a x = x
 
 val id4 : #a:Type -> a -> a
@@ -25,7 +25,7 @@ val id4 : #a:Type -> a -> a
  * (almost) succeeds phase 1 checking, but then the implicit type
  * for `x` cannot be solved. This is the case even before allowing
  * implicit instantiation in lambdas. *)
-[@(expect_failure [66])]
+[@@(expect_failure [66])]
 let id4 a x = x
 
 val fst0 : #a:Type -> a & a -> a

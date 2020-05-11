@@ -38,7 +38,7 @@ let mk_print_binder (bv : bv) : Tac term =
     | _ ->
         mk_stringlit "?"
 
-[@plugin]
+[@@plugin]
 let printer_fun () : Tac unit =
     admit ();
     let x = intro () in

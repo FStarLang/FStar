@@ -159,7 +159,7 @@ and env = {
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth_hook          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
   try_solve_implicits_hook :env -> term -> implicits -> unit;     (* *)
-  splice         :env -> term -> list<sigelt>;    (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  splice         :env -> Range.range -> term -> list<sigelt>; (* hook for synthesizing terms via tactics, third arg is tactic term *)
   mpreprocess    :env -> term -> term -> term;    (* hook for preprocessing typechecked terms via metaprograms *)
   postprocess    :env -> term -> typ -> term -> term; (* hook for postprocessing typechecked terms via metaprograms *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)

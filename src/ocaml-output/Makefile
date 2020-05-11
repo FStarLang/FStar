@@ -277,7 +277,6 @@ package: all
 	$(call fexport,tests)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
-
 ifeq ($(MADOKO),Madoko)
 	@# Build the tutorial
 	+$(MAKE) -C fstar/doc/tutorial
@@ -290,7 +289,6 @@ endif
 	@# Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
 	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt
-
 	@# Z3
 ifeq ($(OS),Windows_NT)
 	cp $(shell which libgmp-10.dll) $(PREFIX)/bin

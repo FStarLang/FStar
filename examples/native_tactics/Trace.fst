@@ -115,7 +115,7 @@ let rec cutlast (l : list 'a) : list 'a * 'a =
     | [x] -> [], x
     | x::xs -> let ys, y = cutlast xs in x::ys, y
 
-[@plugin]
+[@@plugin]
 let instrument (f : 'a) : Tac unit =
     admit ();
     let t = quote f in

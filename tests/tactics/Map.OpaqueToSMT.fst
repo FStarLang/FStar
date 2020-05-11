@@ -16,13 +16,13 @@
 module Map.OpaqueToSMT
 module M = Map
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 let map k v = M.map k v
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 let sel = M.sel
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 let upd = M.upd
 
 let sel_upd1 (#k:eqtype) (#v:Type) (m:map k v) (key:k) (value:v)
