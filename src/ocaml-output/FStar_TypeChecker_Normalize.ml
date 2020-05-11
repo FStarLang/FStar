@@ -9814,3 +9814,47 @@ let (unfold_head_once :
                -> aux fv us args
            | uu____31770 -> FStar_Pervasives_Native.None)
   
+let (get_n_binders :
+  FStar_TypeChecker_Env.env ->
+    Prims.int ->
+      FStar_Syntax_Syntax.term ->
+        (FStar_Syntax_Syntax.binder Prims.list * FStar_Syntax_Syntax.comp))
+  =
+  fun env1  ->
+    fun n  ->
+      fun t  ->
+        let rec aux retry n1 t1 =
+          let uu____31833 = FStar_Syntax_Util.arrow_formals_comp t1  in
+          match uu____31833 with
+          | (bs,c) ->
+              let len = FStar_List.length bs  in
+              (match (bs, c) with
+               | ([],uu____31869) when retry ->
+                   let uu____31888 = unfold_whnf env1 t1  in
+                   aux false n1 uu____31888
+               | ([],uu____31890) when Prims.op_Negation retry -> (bs, c)
+               | (bs1,c1) when len = n1 -> (bs1, c1)
+               | (bs1,c1) when len > n1 ->
+                   let uu____31958 = FStar_List.splitAt n1 bs1  in
+                   (match uu____31958 with
+                    | (bs_l,bs_r) ->
+                        let uu____32025 =
+                          let uu____32026 = FStar_Syntax_Util.arrow bs_r c1
+                             in
+                          FStar_Syntax_Syntax.mk_Total uu____32026  in
+                        (bs_l, uu____32025))
+               | (bs1,c1) when
+                   ((len < n1) && (FStar_Syntax_Util.is_total_comp c1)) &&
+                     (let uu____32052 = FStar_Syntax_Util.has_decreases c1
+                         in
+                      Prims.op_Negation uu____32052)
+                   ->
+                   let uu____32054 =
+                     aux true (n1 - len) (FStar_Syntax_Util.comp_result c1)
+                      in
+                   (match uu____32054 with
+                    | (bs',c') -> ((FStar_List.append bs1 bs'), c'))
+               | (bs1,c1) -> (bs1, c1))
+           in
+        aux true n t
+  

@@ -881,6 +881,15 @@ let rec canon_arrow t =
 let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
 
+let has_decreases (c:comp) : bool =
+  match c.n with
+  | Comp ct ->
+    begin match ct.flags |> U.find_opt (function DECREASES _ -> true | _ -> false) with
+    | Some (DECREASES d) -> true
+    | _ -> false
+    end
+  | _ -> false
+
 (*
  * AR: this function returns the binders and comp result type of an arrow type,
  *     flattening arrows of the form t -> Tot (t1 -> C), so that it returns two binders in this example
@@ -890,7 +899,7 @@ let rec arrow_formals_comp_ln k =
     let k = Subst.compress k in
     match k.n with
         | Tm_arrow(bs, c) ->
-            if is_total_comp c
+            if is_total_comp c && not (has_decreases c)
             then let bs', k = arrow_formals_comp_ln (comp_result c) in
                  bs@bs', k
             else bs, c
