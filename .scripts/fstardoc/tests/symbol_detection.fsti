@@ -43,3 +43,9 @@ effect Lemma (a:Type) (pre:Type) (post:squash pre -> Type) (pats:list pattern) =
 (* [c_True] `c_True` *)
 (** [c_True] `c_True` *)
 (*** [c_True] `c_True` *)
+
+(** Talking about [foo] and not [rec] *)
+let rec foo (l:list int) =
+  match l with
+  | [] -> ()
+  | h :: t -> foo t

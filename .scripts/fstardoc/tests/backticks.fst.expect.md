@@ -8,7 +8,7 @@ assume
 val op_Multiply           : int -> int -> Tot int
 ```
 
-#### rec
+#### pow2
 
 `pow2 x` is `2^x`:
 
