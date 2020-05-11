@@ -91,9 +91,15 @@ class fst_parsed:
         code = ' '.join(self.current_code)
         splitters = ('val', 'let rec', 'let', 'type',
                      'effect', 'new_effect', 'layered_effect')
+
+        def check_subseq(needles, haystack):
+            n = len(needles)
+            return any(haystack[i:i + n] == needles
+                       for i in range(len(haystack)))
+
         r = None
         for s in splitters:
-            if all(x in code.split() for x in s.split()):
+            if check_subseq(s.split(), code.split()):
                 s = s + ' '
                 r = [x for x in code[code.index(s) + len(s):].split(' ')
                      if x not in ('', '{')][0]
