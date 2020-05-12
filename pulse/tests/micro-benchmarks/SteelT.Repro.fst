@@ -18,13 +18,13 @@ assume
 val nop (_:unit) : SteelT unit emp (fun c -> emp)
 
 assume
-val h_admit (#a:Type) (#[@resolve_framing] p:hprop) (q:a -> hprop) : SteelT a p q
+val h_admit (#a:Type) (#[@@resolve_framing] p:hprop) (q:a -> hprop) : SteelT a p q
 
 assume
 val my_frame_t
   (outer:hprop)
-  (#[@resolve_framing] frame:hprop)
-  (#[@resolve_framing] _:squash (can_be_split_into outer emp frame))
+  (#[@@resolve_framing] frame:hprop)
+  (#[@@resolve_framing] _:squash (can_be_split_into outer emp frame))
   (_:unit)
   : SteelT unit outer (fun _ -> frame)
 
@@ -80,10 +80,10 @@ let test_ok1 _
 
 assume
 val frame_t_emp
-  (#[@resolve_framing] outer:hprop)
-  (#[@resolve_framing] inner:hprop)
-  (#[@resolve_framing] frame:hprop)
-  (#[@resolve_framing] _:squash (can_be_split_into outer inner frame))
+  (#[@@resolve_framing] outer:hprop)
+  (#[@@resolve_framing] inner:hprop)
+  (#[@@resolve_framing] frame:hprop)
+  (#[@@resolve_framing] _:squash (can_be_split_into outer inner frame))
   ($f:unit -> SteelT unit inner (fun _ -> emp))
   : SteelT unit outer (fun _ -> frame)
 
@@ -98,11 +98,11 @@ let test_ok2 _
 
 assume
 val frame_t
-  (#[@resolve_framing] outer:hprop)
-  (#[@resolve_framing] inner0:hprop)
-  (#[@resolve_framing] inner1:hprop)
-  (#[@resolve_framing] frame:hprop)
-  (#[@resolve_framing] _:squash (can_be_split_into outer inner0 frame))
+  (#[@@resolve_framing] outer:hprop)
+  (#[@@resolve_framing] inner0:hprop)
+  (#[@@resolve_framing] inner1:hprop)
+  (#[@@resolve_framing] frame:hprop)
+  (#[@@resolve_framing] _:squash (can_be_split_into outer inner0 frame))
   ($f:unit -> SteelT unit inner0 (fun _ -> inner1))
   : SteelT unit outer (fun _ -> frame `star` inner1)
 val test_ok3 (_:unit)
@@ -115,8 +115,8 @@ let test_ok3 _
 
 assume
 val h_admit' (#a:Type)
-             (#[@resolve_framing] p:hprop)
-             (#[@resolve_framing] q:a -> hprop)
+             (#[@@resolve_framing] p:hprop)
+             (#[@@resolve_framing] q:a -> hprop)
              (_:unit) : SteelT a p q
 
 val test_ok4 (_:unit)

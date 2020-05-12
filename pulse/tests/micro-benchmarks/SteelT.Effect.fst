@@ -1,4 +1,4 @@
-module SteelT.FramingBind
+module SteelT.Effect
 open Steel.Memory
 irreducible
 let resolve_framing : unit = ()
@@ -8,22 +8,17 @@ type post_t (a:Type) = a -> hprop u#1
 
 type repr (a:Type u#a) (pre:pre_t) (post:post_t a) = unit -> unit
 
-let returnc (a:Type u#a) (x:a) (#[@resolve_framing] p:a -> hprop)
+let returnc (a:Type u#a) (x:a) (p:a -> hprop)
 : repr a (p x) p
 = admit()
 
-open Steel.Memory.Tactics
-
 let bind (a:Type) (b:Type)
-  (#[@resolve_framing] outer_pre:pre_t)
-  (#[@resolve_framing] pre_f:pre_t)
-  (#[@resolve_framing] post_f:post_t a)
-  (#[@resolve_framing] post_g:post_t b)
-  (#[@resolve_framing] frame_f:hprop)
-  (#[@resolve_framing] _u:squash (can_be_split_into outer_pre pre_f frame_f))
+  (#[@@resolve_framing] pre_f:pre_t)
+  (#[@@resolve_framing] post_f:post_t a)
+  (#[@@resolve_framing] post_g:post_t b)
   (f:repr a pre_f post_f)
-  (g:(x:a -> repr b (post_f x `star` frame_f) post_g))
-: repr b outer_pre post_g
+  (g:(x:a -> repr b (post_f x) post_g))
+: repr b pre_f post_g
 = admit()
 
 let subcomp (a:Type) (pre:pre_t) (post:post_t a)
@@ -41,7 +36,6 @@ let if_then_else (a:Type) (pre:pre_t) (post:post_t a)
 : Type
 = repr a pre post
 
-#push-options "--lax"
 reifiable reflectable
 layered_effect {
   SteelT : a:Type -> pre:pre_t -> post:post_t a -> Effect
@@ -52,7 +46,6 @@ layered_effect {
   subcomp = subcomp;
   if_then_else = if_then_else
 }
-#pop-options
 
 let bind_pure_steel (a:Type) (b:Type)
   (wp:pure_wp a)
