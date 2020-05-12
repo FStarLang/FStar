@@ -12,7 +12,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ca129bce2bf5616d0a166c3e680559b2"
+      "fc6d0c303f7d0fa82ea9693789761326"
     ],
     [
       "QuickSort.List.count",
@@ -78,7 +78,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "bd2ead97d05f85125d95615f2f0da355"
+      "58934ceb160105b7fa0e7598066ca9cc"
     ],
     [
       "QuickSort.List.partition_lemma",

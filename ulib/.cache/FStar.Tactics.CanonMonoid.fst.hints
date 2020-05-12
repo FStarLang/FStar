@@ -67,7 +67,7 @@
         "subterm_ordering_FStar.Tactics.CanonMonoid.Mult"
       ],
       0,
-      "9efb0666f402be68194f6588e0ed9eeb"
+      "f33fdd3e12065767a16aebd6d9f19a63"
     ],
     [
       "FStar.Tactics.CanonMonoid.mdenote",
@@ -124,7 +124,7 @@
         "subterm_ordering_FStar.Tactics.CanonMonoid.Mult"
       ],
       0,
-      "1a37cb397666e271fd20c4d04ad4ec50"
+      "6bef219e464ca7076a5b3dc2822c25f0"
     ],
     [
       "FStar.Tactics.CanonMonoid.flatten_correct_aux",
@@ -306,7 +306,7 @@
         "subterm_ordering_FStar.Tactics.CanonMonoid.Mult"
       ],
       0,
-      "3cb309b37ee90e2ede4df612fca3bfa3"
+      "6a293c343719f24a825e376cca6aa0f1"
     ],
     [
       "FStar.Tactics.CanonMonoid.mdenote",
@@ -363,7 +363,7 @@
         "subterm_ordering_FStar.Tactics.CanonMonoid.Mult"
       ],
       0,
-      "07ba2290599bcf888db2f2b1483482cc"
+      "63047e8a0fdf0d364e24580a45f0007a"
     ],
     [
       "FStar.Tactics.CanonMonoid.monoid_reflect",

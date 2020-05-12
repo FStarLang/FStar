@@ -593,7 +593,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "de1f4860d20a5f43073605e04847bd66"
+      "3ad81433f7790fc60fdb7f312ec1c01e"
     ],
     [
       "FStar.Reflection.Arith.atom",
@@ -669,7 +669,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "569e05bbd96a29a103398369feaf94f6"
+      "eee3bef70f6b318cbee3748ded31a156"
     ],
     [
       "FStar.Reflection.Arith.as_arith_expr",
@@ -692,6 +692,7 @@
         "disc_equation_Prims.Cons",
         "equality_tok_FStar.Reflection.Data.Q_Explicit@tok",
         "equality_tok_FStar.Reflection.Data.Q_Implicit@tok",
+        "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Reflection.Arith.collect_app_ref",
         "equation_FStar.Reflection.Arith.refined_list_t",
@@ -718,7 +719,7 @@
         "typing_Tm_abs_1748a94bd9bdb84404181a05e9f738ee"
       ],
       0,
-      "16caa8bc0596b5aa829076d25e573311"
+      "236d8271a188e59d4f1ded10fa8a7f44"
     ],
     [
       "FStar.Reflection.Arith.run_tm",
@@ -792,7 +793,7 @@
         "subterm_ordering_FStar.Reflection.Arith.Umod"
       ],
       0,
-      "6f8e7f6f937a17d82a364850e02e38b8"
+      "3bd5161539b9057ece0eb3a08a5387e2"
     ],
     [
       "FStar.Reflection.Arith.compare_expr",
@@ -1411,7 +1412,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "7fec2c1ca00343c544f6d4faf5120a30"
+      "83acdf7319093721c242429e18c85b04"
     ],
     [
       "FStar.Reflection.Arith.atom",
@@ -1487,7 +1488,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fdad272c6dc2830754de01750eb2a37a"
+      "a2ca156d8254257bbf8dfdf8982af861"
     ],
     [
       "FStar.Reflection.Arith.as_arith_expr",
@@ -1510,6 +1511,7 @@
         "disc_equation_Prims.Cons",
         "equality_tok_FStar.Reflection.Data.Q_Explicit@tok",
         "equality_tok_FStar.Reflection.Data.Q_Implicit@tok",
+        "equality_tok_Prims.LexTop@tok",
         "equation_FStar.Pervasives.Native.fst",
         "equation_FStar.Reflection.Arith.collect_app_ref",
         "equation_FStar.Reflection.Arith.refined_list_t",
@@ -1536,7 +1538,7 @@
         "typing_Tm_abs_1748a94bd9bdb84404181a05e9f738ee"
       ],
       0,
-      "7c626c5892f29d62f2870d1ee39bbe33"
+      "15592155afa011fbb98a165adca98426"
     ],
     [
       "FStar.Reflection.Arith.run_tm",
@@ -1611,7 +1613,7 @@
         "subterm_ordering_FStar.Reflection.Arith.Umod"
       ],
       0,
-      "8369b4709e40584a37d4c5e165be379f"
+      "cc367c7f57aaf54e75071a355f7c4762"
     ],
     [
       "FStar.Reflection.Arith.compare_expr",

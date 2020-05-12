@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b9936c6bc88e3a7482ab8a25f5b2cec2"
+      "36c78f69e3968fde3d06bd15f9e6d14a"
     ],
     [
       "Simple.poly_id",
@@ -35,7 +35,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0ca88ea9a3949786486cb5f56e0fffad"
+      "9e6c5eae8446755423b991f92f564e7d"
     ],
     [
       "Simple.mk_n_list",
