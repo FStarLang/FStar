@@ -139,7 +139,7 @@
         "subterm_ordering_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "e853e4ddccd393ec5c844f1a6188e0a6"
+      "48345e6f80f4e55c5314231c001c9c80"
     ],
     [
       "Steel.Channel.Protocol.bind",
@@ -180,7 +180,7 @@
         "subterm_ordering_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "3b2160cd4ecc8fa355aa6c3a513b6e35"
+      "202e3a2c403092b3d1c1da56369cbd4d"
     ],
     [
       "Steel.Channel.Protocol.return",
@@ -267,7 +267,7 @@
         "typing_Steel.Channel.Protocol.uu___is_Msg"
       ],
       0,
-      "1d36301dea7a0f91f33b4a37f1c0b710"
+      "5f0bf9c29b396c7113aae266af2edde6"
     ],
     [
       "Steel.Channel.Protocol.next_msg_t",
@@ -664,7 +664,7 @@
         "subterm_ordering_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "6a99d9ea1e2f5d6ef9a34db6d45f0bb3"
+      "dabedd200924dd042c018b6d0f19a65e"
     ],
     [
       "Steel.Channel.Protocol.bind",
@@ -705,7 +705,7 @@
         "subterm_ordering_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "f2d756dc3028ef5b6c7bb4b2ef9dba6e"
+      "0ec9a6c0a81fd253b0be00df51a05317"
     ],
     [
       "Steel.Channel.Protocol.return",
@@ -792,7 +792,7 @@
         "typing_Steel.Channel.Protocol.uu___is_Msg"
       ],
       0,
-      "5eda499c704b18d56b31fc5972a5e6e5"
+      "c3a3d48830680c91231093cd0f7931ea"
     ],
     [
       "Steel.Channel.Protocol.next_msg_t",
