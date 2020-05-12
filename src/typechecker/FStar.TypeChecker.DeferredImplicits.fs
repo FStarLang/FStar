@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-   Authors: Nikhil Swamy, ...
+   Authors: Nikhil Swamy
 *)
 
 #light "off"
@@ -113,11 +113,15 @@ let solve_goals_with_tac env g (deferred_goals:implicits) (tac:sigelt) =
   let env = { env with enable_defer_to_tac = false } in
   env.try_solve_implicits_hook env resolve_tac deferred_goals
 
+(** This functions is called in Rel.force_trivial_guard to solve all
+    goals in a guard that were deferred to a tactic *)
 let solve_deferred_to_tactic_goals env g =
   let deferred = g.deferred_to_tac in
   match deferred with
   | [] -> g
   | _ ->
+    (** A unification problem between two terms is presented to
+        a tactic as an equality goal between the terms. *)
     let prob_as_implicit (reason, prob)
       : implicit * sigelt =
       match prob with
@@ -150,13 +154,19 @@ let solve_deferred_to_tactic_goals env g =
         in
         begin
         match sigelt with
-        | None -> failwith "Impossible: No tactic associated with deferred problem"
+        | None ->
+          //it shouldn't have been deferred
+          failwith "Impossible: No tactic associated with deferred problem"
         | Some se -> imp, se
         end
       | _ ->
+        //only equality problems are deferred
         failwith "Unexpected problem deferred to tactic"
     in
+    //Turn all the deferred problems into equality goals
     let eqs = List.map prob_as_implicit g.deferred_to_tac in
+    //Also take any unsolved uvars in the guard implicits that are tagged
+    //with attributes
     let more, imps =
         List.fold_right
             (fun imp (more, imps) ->
@@ -169,17 +179,13 @@ let solve_deferred_to_tactic_goals env g =
                  | None -> //no tac for this one
                    more, imp::imps
                  | Some se ->
-                   let imp =
-                     match imp.imp_uvar.ctx_uvar_meta with
-                     | Some (Ctx_uvar_meta_attr a) ->
-                       let reason = BU.format2 "%s::%s" (Print.term_to_string a) imp.imp_reason in
-                       {imp with imp_reason=reason}
-                     | _ -> imp
-                   in
                    (imp, se)::more, imps)
             g.implicits
             ([], [])
     in
+    (** Each implicit is associated with a sigelt.
+        Group them so that all implicits with the same associated sigelt
+        are in the same bucket *)
     let bucketize (is:list<(implicit * sigelt)>) : list<(implicits * sigelt)> =
       let map : BU.smap<(implicits * sigelt)> = BU.smap_create 17 in
       List.iter
@@ -197,5 +203,6 @@ let solve_deferred_to_tactic_goals env g =
         BU.smap_fold map (fun _ is out -> is::out) []
     in
     let buckets = bucketize (eqs@more) in
+    // Dispatch each bucket of implicits to their respective tactic
     List.iter (fun (imps, sigel) -> solve_goals_with_tac env g imps sigel) buckets;
     { g with deferred_to_tac=[]; implicits = imps}
