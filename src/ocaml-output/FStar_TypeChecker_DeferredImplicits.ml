@@ -632,34 +632,7 @@ let (solve_deferred_to_tactic_goals :
                              | FStar_Pervasives_Native.None  ->
                                  (more, (imp :: imps))
                              | FStar_Pervasives_Native.Some se1 ->
-                                 let imp1 =
-                                   match (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_meta
-                                   with
-                                   | FStar_Pervasives_Native.Some
-                                       (FStar_Syntax_Syntax.Ctx_uvar_meta_attr
-                                       a) ->
-                                       let reason =
-                                         let uu____1146 =
-                                           FStar_Syntax_Print.term_to_string
-                                             a
-                                            in
-                                         FStar_Util.format2 "%s::%s"
-                                           uu____1146
-                                           imp.FStar_TypeChecker_Common.imp_reason
-                                          in
-                                       let uu___128_1149 = imp  in
-                                       {
-                                         FStar_TypeChecker_Common.imp_reason
-                                           = reason;
-                                         FStar_TypeChecker_Common.imp_uvar =
-                                           (uu___128_1149.FStar_TypeChecker_Common.imp_uvar);
-                                         FStar_TypeChecker_Common.imp_tm =
-                                           (uu___128_1149.FStar_TypeChecker_Common.imp_tm);
-                                         FStar_TypeChecker_Common.imp_range =
-                                           (uu___128_1149.FStar_TypeChecker_Common.imp_range)
-                                       }
-                                   | uu____1150 -> imp  in
-                                 (((imp1, se1) :: more), imps))))
+                                 (((imp, se1) :: more), imps))))
               g.FStar_TypeChecker_Common.implicits ([], [])
              in
           (match uu____1017 with
@@ -667,19 +640,19 @@ let (solve_deferred_to_tactic_goals :
                let bucketize is =
                  let map = FStar_Util.smap_create (Prims.of_int (17))  in
                  FStar_List.iter
-                   (fun uu____1246  ->
-                      match uu____1246 with
+                   (fun uu____1233  ->
+                      match uu____1233 with
                       | (i,s) ->
-                          let uu____1253 = FStar_Syntax_Util.lid_of_sigelt s
+                          let uu____1240 = FStar_Syntax_Util.lid_of_sigelt s
                              in
-                          (match uu____1253 with
+                          (match uu____1240 with
                            | FStar_Pervasives_Native.None  ->
                                failwith "Unexpected: tactic without a name"
                            | FStar_Pervasives_Native.Some l ->
                                let lstr = FStar_Ident.string_of_lid l  in
-                               let uu____1260 =
+                               let uu____1247 =
                                  FStar_Util.smap_try_find map lstr  in
-                               (match uu____1260 with
+                               (match uu____1247 with
                                 | FStar_Pervasives_Native.None  ->
                                     FStar_Util.smap_add map lstr ([i], s)
                                 | FStar_Pervasives_Native.Some (is1,s1) ->
@@ -687,23 +660,23 @@ let (solve_deferred_to_tactic_goals :
                                      FStar_Util.smap_add map lstr
                                        ((i :: is1), s1))))) is;
                  FStar_Util.smap_fold map
-                   (fun uu____1307  -> fun is1  -> fun out  -> is1 :: out) []
+                   (fun uu____1294  -> fun is1  -> fun out  -> is1 :: out) []
                   in
                let buckets = bucketize (FStar_List.append eqs more)  in
                (FStar_List.iter
-                  (fun uu____1348  ->
-                     match uu____1348 with
+                  (fun uu____1335  ->
+                     match uu____1335 with
                      | (imps1,sigel) ->
                          solve_goals_with_tac env g imps1 sigel) buckets;
-                (let uu___160_1355 = g  in
+                (let uu___152_1342 = g  in
                  {
                    FStar_TypeChecker_Common.guard_f =
-                     (uu___160_1355.FStar_TypeChecker_Common.guard_f);
+                     (uu___152_1342.FStar_TypeChecker_Common.guard_f);
                    FStar_TypeChecker_Common.deferred_to_tac = [];
                    FStar_TypeChecker_Common.deferred =
-                     (uu___160_1355.FStar_TypeChecker_Common.deferred);
+                     (uu___152_1342.FStar_TypeChecker_Common.deferred);
                    FStar_TypeChecker_Common.univ_ineqs =
-                     (uu___160_1355.FStar_TypeChecker_Common.univ_ineqs);
+                     (uu___152_1342.FStar_TypeChecker_Common.univ_ineqs);
                    FStar_TypeChecker_Common.implicits = imps
                  })))
   
