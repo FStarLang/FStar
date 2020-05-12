@@ -2873,7 +2873,7 @@ let buffer_as_seq_gsingleton_buffer_of_pointer #t h p =
     assert (Seq.index s2 0 == v);
     assert (Seq.equal s1 s2)
   | _ ->
-    Seq.slice_length (Seq.create 1 (gread h p))
+    Seq.slice_length (Seq.create 1 (gread h p)) 0
 #pop-options
 
 let buffer_as_seq_gbuffer_of_array_pointer
@@ -2882,7 +2882,7 @@ let buffer_as_seq_gbuffer_of_array_pointer
   (h: HS.mem)
   (p: pointer (TArray length t))
 = let s : array length (type_of_typ t) = gread h p in
-  Seq.slice_length s
+  Seq.slice_length s 0
 
 let buffer_as_seq_gsub_buffer
   (#t: typ)

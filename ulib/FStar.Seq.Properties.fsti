@@ -603,10 +603,11 @@ val cons_index_slice
   (s: seq a)
   (i: nat)
   (j: nat {i < j /\ j <= length s} )
+  (k:nat{k == i+1})
 : Lemma
   (requires True)
-  (ensures (cons (index s i) (slice s (i + 1) j) == slice s i j))
-  [SMTPat (cons (index s i) (slice s (i + 1) j))]
+  (ensures (cons (index s i) (slice s k j) == slice s i j))
+  [SMTPat (cons (index s i) (slice s k j))]
 
 val slice_is_empty
   (#a: Type)
@@ -620,10 +621,11 @@ val slice_is_empty
 val slice_length
   (#a: Type)
   (s: seq a)
+  (i:nat{i == 0})
 : Lemma
   (requires True)
-  (ensures (slice s 0 (length s) == s))
-  [SMTPat (slice s 0 (length s))]
+  (ensures (slice s i (length s) == s))
+  [SMTPat (slice s i (length s))]
 
 val slice_slice
   (#a: Type)
