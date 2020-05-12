@@ -27,6 +27,7 @@ let logic_qualifier_deprecation_warning =
 
 
 let mk_meta_tac m = Meta (Arg_qualifier_meta_tac m)
+let mk_meta_attr m = Meta (Arg_qualifier_meta_attr m)
 
 let abstract_qualifier_warning =
   "abstract qualifier will soon be removed from F*, use interfaces instead"
@@ -34,7 +35,6 @@ let abstract_qualifier_warning =
 let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
-
 %}
 %start inputFragment
 %start term
@@ -1027,10 +1027,10 @@ aqual:
 aqualUniverses:
   HASH LBRACK thunk_tmNoEq_ RBRACK
     {let (_1, _2, t, _4) = ((), (), $3, ()) in
-                                       ( Meta (Arg_qualifier_meta_tac t) )}
-| HASH LBRACK_AT tmNoEq RBRACK
+                                       ( mk_meta_tac t )}
+| HASH LBRACK_AT_AT tmNoEq RBRACK
     {let (_1, _2, t, _4) = ((), (), $3, ()) in
-                                   ( Meta (Arg_qualifier_meta_attr t) )}
+                                      ( mk_meta_attr t )}
 | HASH
     {let _1 = () in
               ( Implicit )}

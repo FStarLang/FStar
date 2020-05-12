@@ -26,6 +26,7 @@ let logic_qualifier_deprecation_warning =
 
 
 let mk_meta_tac m = Meta (Arg_qualifier_meta_tac m)
+let mk_meta_attr m = Meta (Arg_qualifier_meta_attr m)
 
 let abstract_qualifier_warning =
   "abstract qualifier will soon be removed from F*, use interfaces instead"
@@ -418,8 +419,8 @@ aqual:
   | q=aqualUniverses { q }
 
 aqualUniverses:
-  | HASH LBRACK t=thunk(tmNoEq) RBRACK { Meta (Arg_qualifier_meta_tac t) }
-  | HASH LBRACK_AT t=tmNoEq RBRACK { Meta (Arg_qualifier_meta_attr t) }
+  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t }
+  | HASH LBRACK_AT_AT t=tmNoEq RBRACK { mk_meta_attr t }
   | HASH      { Implicit }
   | DOLLAR    { Equality }
 
