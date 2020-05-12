@@ -92,7 +92,7 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option<sigelt> =
 
 let should_defer_uvar_to_user_tac env (u:ctx_uvar) =
   if not env.enable_defer_to_tac then false
-  else FStar.Option.isSome (find_user_tac_for_uvar env u)
+  else Option.isSome (find_user_tac_for_uvar env u)
 
 (** This function is called by the typechecker to sort all the goals
     before dispatching control to a user-provided tactic to solve
