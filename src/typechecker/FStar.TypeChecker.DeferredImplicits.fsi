@@ -25,6 +25,9 @@ module FStar.TypeChecker.DeferredImplicits
 open FStar.ST
 open FStar.Exn
 open FStar.All
+open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
+open FStar.TypeChecker.Common
 
-val sort_goals:  env -> implicits -> implicits
+val should_defer_uvar_to_user_tac : env -> ctx_uvar -> bool
+val solve_deferred_to_tactic_goals: env -> guard_t -> guard_t

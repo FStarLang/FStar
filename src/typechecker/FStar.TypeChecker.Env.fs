@@ -157,7 +157,7 @@ and env = {
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
   generalize     :bool;                         (* should we generalize let bindings? *)
-  letrecs        :list<(lbname * typ * univ_names)>;           (* mutually recursive names and their types (for termination checking) *)
+  letrecs        :list<(lbname * int * typ * univ_names)>;  (* mutually recursive names, with recursion arity and their types (for termination checking), adding universes, see the note in TcTerm.fs:build_let_rec_env about usage of this field *)
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
   use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
@@ -1834,3 +1834,14 @@ let dummy_solver = {
 }
 (* </Move> *)
 
+let get_letrec_arity (env:env) (lbname:lbname) : option<int> =
+  let compare_either f1 f2 e1 e2 : bool =
+      match e1, e2 with
+      | BU.Inl v1, BU.Inl v2 -> f1 v1 v2
+      | BU.Inr v1, BU.Inr v2 -> f2 v1 v2
+      | _ -> false
+  in
+  match BU.find_opt (fun (lbname', _, _, _) -> compare_either S.bv_eq S.fv_eq lbname lbname')
+                    env.letrecs with
+  | Some (_, arity, _, _) -> Some arity
+  | None -> None

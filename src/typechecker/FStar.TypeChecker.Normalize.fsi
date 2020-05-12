@@ -69,3 +69,8 @@ val remove_uvar_solutions: Env.env -> term -> term
 
 val unfold_head_once: Env.env -> term -> option<term>
 val unembed_binder_knot : ref<option<FStar.Syntax.Embeddings.embedding<binder>>>
+
+(* Destructs the term as an arrow type and returns its binders and
+computation type. Only grabs up to [n] binders, and normalizes only as
+needed to discover the shape of the arrow. The binders are opened. *)
+val get_n_binders : Env.env -> int -> term -> list<binder> * comp

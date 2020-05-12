@@ -81,6 +81,19 @@ let print_goal_dep gd =
      |> String.concat "; ")
     (Print.ctx_uvar_to_string gd.goal_imp.imp_uvar)
 
+let find_user_tac_for_uvar env (u:ctx_uvar) : option<sigelt> =
+    match u.ctx_uvar_meta with
+    | Some (Ctx_uvar_meta_attr a) ->
+      let hooks = Env.lookup_attr env FStar.Parser.Const.resolve_implicits_attr_string in
+      hooks |> BU.try_find
+                  (fun hook ->
+                    hook.sigattrs |> BU.for_some (U.attr_eq a))
+    | _ -> None
+
+let should_defer_uvar_to_user_tac env (u:ctx_uvar) =
+  if not env.enable_defer_to_tac then false
+  else FStar.Option.isSome (find_user_tac_for_uvar env u)
+
 (** This function is called by the typechecker to sort all the goals
     before dispatching control to a user-provided tactic to solve
     those goals.
@@ -393,3 +406,106 @@ let sort_goals (env:FStar.TypeChecker.Env.env) (imps:implicits) : implicits =
   then (BU.print_string "<<<<<<<<<<<<Goals after sorting>>>>>>>>>>>>>>>\n";
         List.iter (fun gd -> BU.print_string (print_goal_dep gd)) goal_deps);
   List.map (fun gd -> gd.goal_imp) (goal_deps @ rest)
+
+
+let solve_goals_with_tac env g (imps:implicits) (tac:sigelt) =
+  let deferred_goals = sort_goals env imps in
+  let guard = { g with implicits = imps; deferred_to_tac=[] } in
+  let resolve_tac =
+    match tac.sigel with
+    | Sig_let (_, [lid]) ->
+      let qn = Env.lookup_qname env lid in
+      let fv = S.lid_as_fv lid (Delta_constant_at_level 0) None in
+      let dd =
+        match Env.delta_depth_of_qninfo fv qn with
+        | Some dd -> dd
+        | None -> failwith "Expected a dd"
+      in
+      let term = S.fv_to_tm (S.lid_as_fv lid dd None) in
+      term
+    | _ -> failwith "Resolve_tac not found"
+  in
+  let env = { env with enable_defer_to_tac = false } in
+  env.try_solve_implicits_hook env resolve_tac deferred_goals
+
+let solve_deferred_to_tactic_goals env g =
+  let deferred = g.deferred_to_tac in
+  match deferred with
+  | [] -> g
+  | _ ->
+    let prob_as_implicit (reason, prob)
+      : implicit * sigelt =
+      match prob with
+      | TProb tp when tp.relation=EQ ->
+        let env = {env with gamma=tp.logical_guard_uvar.ctx_uvar_gamma} in
+        let env_lax = {env with lax=true; use_bv_sorts=true} in
+        let _, tlhs, _ = env.type_of env_lax tp.lhs in
+        let goal_ty = U.mk_eq2 (env.universe_of env_lax tlhs) tlhs tp.lhs tp.rhs in
+        let goal, ctx_uvar, _ =
+            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Allow_untyped None
+        in
+        let imp =
+            { imp_reason = "";
+              imp_uvar = fst (List.hd ctx_uvar);
+              imp_tm = goal;
+              imp_range = tp.lhs.pos
+            }
+        in
+        let sigelt =
+            if is_flex tp.lhs
+            then find_user_tac_for_uvar env (flex_uvar_head tp.lhs)
+            else if is_flex tp.rhs
+            then find_user_tac_for_uvar env (flex_uvar_head tp.rhs)
+            else None
+        in
+        begin
+        match sigelt with
+        | None -> failwith "Impossible: No tactic associated with deferred problem"
+        | Some se -> imp, se
+        end
+      | _ ->
+        failwith "Unexpected problem deferred to tactic"
+    in
+    let eqs = List.map prob_as_implicit g.deferred_to_tac in
+    let more, imps =
+        List.fold_right
+            (fun imp (more, imps) ->
+               match Unionfind.find imp.imp_uvar.ctx_uvar_head with
+               | Some _ -> //aleady solved
+                 more, imp::imps
+               | None ->
+                 let se = find_user_tac_for_uvar env imp.imp_uvar in
+                 match se with
+                 | None -> //no tac for this one
+                   more, imp::imps
+                 | Some se ->
+                   let imp =
+                     match imp.imp_uvar.ctx_uvar_meta with
+                     | Some (Ctx_uvar_meta_attr a) ->
+                       let reason = BU.format2 "%s::%s" (Print.term_to_string a) imp.imp_reason in
+                       {imp with imp_reason=reason}
+                     | _ -> imp
+                   in
+                   (imp, se)::more, imps)
+            g.implicits
+            ([], [])
+    in
+    let bucketize (is:list<(implicit * sigelt)>) : list<(implicits * sigelt)> =
+      let map : BU.smap<(implicits * sigelt)> = BU.smap_create 17 in
+      List.iter
+        (fun (i, s) ->
+           match U.lid_of_sigelt s with
+           | None -> failwith "Unexpected: tactic without a name"
+           | Some l ->
+             let lstr = Ident.string_of_lid l in
+             match BU.smap_try_find map lstr with
+             | None -> BU.smap_add map lstr ([i], s)
+             | Some (is, s) ->
+               BU.smap_remove map lstr;
+               BU.smap_add map lstr (i::is, s))
+        is;
+        BU.smap_fold map (fun _ is out -> is::out) []
+    in
+    let buckets = bucketize (eqs@more) in
+    List.iter (fun (imps, sigel) -> solve_goals_with_tac env g imps sigel) buckets;
+    { g with deferred_to_tac=[]; implicits = imps}

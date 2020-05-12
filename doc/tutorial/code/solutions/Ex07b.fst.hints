@@ -254,7 +254,7 @@
         "subterm_ordering_Ex07b.EPair"
       ],
       0,
-      "243cb24cede26709fe18d5f7b99df78d"
+      "7ca339b8336889ea022d8fc0acc8872c"
     ],
     [
       "Ex07b.subst",
@@ -305,7 +305,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "bd17e2b7689c5ed8bf73c73b067fdcf1"
+      "76bb1d0e7ec189316a66c9cc3c39226c"
     ],
     [
       "Ex07b.typing",
@@ -334,7 +334,7 @@
         "typing_tok_Ex07b.TBool@tok"
       ],
       0,
-      "1c9222c1d85ed8fe2df86e1520ecf7bd"
+      "5c8d65df740fc38244832d9f5e1dac17"
     ],
     [
       "Ex07b.progress",
@@ -411,7 +411,7 @@
         "typing_tok_Ex07b.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "59a41e7ef1d0352f82a9804e75cd5ad4"
+      "7442d788227c54beba650a015c331343"
     ],
     [
       "Ex07b.appears_free_in",
@@ -633,7 +633,7 @@
         "typing_Ex07b.typing", "typing_tok_Ex07b.TBool@tok", "unit_typing"
       ],
       0,
-      "79f6fe569aa9ec330a16ecbfe0dfd724"
+      "3dc849eadfd42c371851a46f5bdcaf6d"
     ],
     [
       "Ex07b.typing_extensional",
@@ -774,10 +774,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_d037d6f6d6281e78593ba836b20561ee"
+        "refinement_interpretation_Tm_refine_86aeef4f73c893ce3a07b825160812eb"
       ],
       0,
-      "48462d3253e938e04578c188ed120157"
+      "7dd4fd0194a15718e901dc1b082e17b9"
     ],
     [
       "Ex07b.preservation",
@@ -854,7 +854,7 @@
         "typing_tok_Ex07b.TBool@tok"
       ],
       0,
-      "2f98962324e669288eb5ec43aec9f04f"
+      "2edac0f85bd90b44a9fc7e96ecd827a5"
     ],
     [
       "Ex07b.ty",
@@ -1109,7 +1109,7 @@
         "subterm_ordering_Ex07b.EPair"
       ],
       0,
-      "d0b62d0e3270cdfb4953e87f4cf54548"
+      "071a87dbfc9748294cf423511949104a"
     ],
     [
       "Ex07b.subst",
@@ -1153,7 +1153,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "ce4ea16c51eb87a028bee754c14909b0"
+      "49fc97619ebd4e546016ecf8360db781"
     ],
     [
       "Ex07b.typing",
@@ -1182,7 +1182,7 @@
         "typing_tok_Ex07b.TBool@tok"
       ],
       0,
-      "e3d1a80b638ecf0737afd76832090232"
+      "7a63ccaec7519cf205f24b8f74fa14fb"
     ],
     [
       "Ex07b.appears_free_in",
