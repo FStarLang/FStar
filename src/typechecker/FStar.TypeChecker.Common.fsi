@@ -132,7 +132,8 @@ val implicits_to_string : implicits -> string
 
 type guard_t = {
   guard_f:    guard_formula;
-  deferred_to_tac: deferred;
+  deferred_to_tac: deferred; //This field maintains problems that are to be dispatched to a tactic
+                             //They are never attempted by the unification engine in Rel
   deferred:   deferred;
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;

@@ -905,7 +905,7 @@ and (aqual_to_string' :
           let uu____2851 =
             let uu____2853 = term_to_string t  in
             Prims.op_Hat uu____2853 (Prims.op_Hat "]" s)  in
-          Prims.op_Hat "#[@" uu____2851
+          Prims.op_Hat "#[@@" uu____2851
       | FStar_Pervasives_Native.None  -> s
 
 and (imp_to_string :

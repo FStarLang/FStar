@@ -656,8 +656,8 @@ let eq_aqual a1 a2 =
     | None, _
     | _, None -> NotEqual
     | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> Equal
-    | Some (Meta (Arg_qualifier_meta_tac t1)), Some (Meta (Arg_qualifier_meta_tac t2)) -> eq_tm t1 t2
-    | Some (Meta (Arg_qualifier_meta_attr t1)), Some (Meta (Arg_qualifier_meta_attr t2)) -> eq_tm t1 t2    
+    | Some (Meta (Arg_qualifier_meta_tac t1)), Some (Meta (Arg_qualifier_meta_tac t2))
+    | Some (Meta (Arg_qualifier_meta_attr t1)), Some (Meta (Arg_qualifier_meta_attr t2)) -> eq_tm t1 t2
     | Some Equality, Some Equality -> Equal
     | _ -> NotEqual
 

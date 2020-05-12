@@ -1572,17 +1572,17 @@ let (abs :
           | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
           | FStar_Pervasives_Native.Some rc ->
               let uu____6020 =
-                let uu___1019_6021 = rc  in
+                let uu___1017_6021 = rc  in
                 let uu____6022 =
                   FStar_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ
                     (FStar_Syntax_Subst.close bs)
                    in
                 {
                   FStar_Syntax_Syntax.residual_effect =
-                    (uu___1019_6021.FStar_Syntax_Syntax.residual_effect);
+                    (uu___1017_6021.FStar_Syntax_Syntax.residual_effect);
                   FStar_Syntax_Syntax.residual_typ = uu____6022;
                   FStar_Syntax_Syntax.residual_flags =
-                    (uu___1019_6021.FStar_Syntax_Syntax.residual_flags)
+                    (uu___1017_6021.FStar_Syntax_Syntax.residual_flags)
                 }  in
               FStar_Pervasives_Native.Some uu____6020
            in
@@ -1679,13 +1679,13 @@ let rec (canon_arrow :
               FStar_Syntax_Syntax.Total uu____6437
           | uu____6453 -> c.FStar_Syntax_Syntax.n  in
         let c1 =
-          let uu___1063_6457 = c  in
+          let uu___1061_6457 = c  in
           {
             FStar_Syntax_Syntax.n = cn;
             FStar_Syntax_Syntax.pos =
-              (uu___1063_6457.FStar_Syntax_Syntax.pos);
+              (uu___1061_6457.FStar_Syntax_Syntax.pos);
             FStar_Syntax_Syntax.vars =
-              (uu___1063_6457.FStar_Syntax_Syntax.vars)
+              (uu___1061_6457.FStar_Syntax_Syntax.vars)
           }  in
         flat_arrow bs c1
     | uu____6460 -> t
@@ -1873,17 +1873,17 @@ let (abs_formals :
       match l with
       | FStar_Pervasives_Native.Some rc ->
           let uu____7431 =
-            let uu___1173_7432 = rc  in
+            let uu___1171_7432 = rc  in
             let uu____7433 =
               FStar_Util.map_opt rc.FStar_Syntax_Syntax.residual_typ
                 (FStar_Syntax_Subst.subst s)
                in
             {
               FStar_Syntax_Syntax.residual_effect =
-                (uu___1173_7432.FStar_Syntax_Syntax.residual_effect);
+                (uu___1171_7432.FStar_Syntax_Syntax.residual_effect);
               FStar_Syntax_Syntax.residual_typ = uu____7433;
               FStar_Syntax_Syntax.residual_flags =
-                (uu___1173_7432.FStar_Syntax_Syntax.residual_flags)
+                (uu___1171_7432.FStar_Syntax_Syntax.residual_flags)
             }  in
           FStar_Pervasives_Native.Some uu____7431
       | uu____7442 -> l  in
@@ -4293,19 +4293,19 @@ let (extract_attr :
       | FStar_Pervasives_Native.None  -> FStar_Pervasives_Native.None
       | FStar_Pervasives_Native.Some (attrs',t) ->
           FStar_Pervasives_Native.Some
-            ((let uu___2526_18059 = se  in
+            ((let uu___2524_18059 = se  in
               {
                 FStar_Syntax_Syntax.sigel =
-                  (uu___2526_18059.FStar_Syntax_Syntax.sigel);
+                  (uu___2524_18059.FStar_Syntax_Syntax.sigel);
                 FStar_Syntax_Syntax.sigrng =
-                  (uu___2526_18059.FStar_Syntax_Syntax.sigrng);
+                  (uu___2524_18059.FStar_Syntax_Syntax.sigrng);
                 FStar_Syntax_Syntax.sigquals =
-                  (uu___2526_18059.FStar_Syntax_Syntax.sigquals);
+                  (uu___2524_18059.FStar_Syntax_Syntax.sigquals);
                 FStar_Syntax_Syntax.sigmeta =
-                  (uu___2526_18059.FStar_Syntax_Syntax.sigmeta);
+                  (uu___2524_18059.FStar_Syntax_Syntax.sigmeta);
                 FStar_Syntax_Syntax.sigattrs = attrs';
                 FStar_Syntax_Syntax.sigopts =
-                  (uu___2526_18059.FStar_Syntax_Syntax.sigopts)
+                  (uu___2524_18059.FStar_Syntax_Syntax.sigopts)
               }), t)
   
 let (is_smt_lemma : FStar_Syntax_Syntax.term -> Prims.bool) =

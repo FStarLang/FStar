@@ -149,7 +149,7 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
 }
 and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of dyn * term (* the dyn is an FStar.TypeChecker.Env.env *)
-  | Ctx_uvar_meta_attr of term
+  | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@...] notation *)
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
 and uvar = Unionfind.p_uvar<option<term>> * version * Range.range
 and uvars = set<ctx_uvar>
@@ -301,7 +301,7 @@ and arg_qualifier =
   | Equality
 and arg_qualifier_meta_t =
   | Arg_qualifier_meta_tac of term
-  | Arg_qualifier_meta_attr of term  
+  | Arg_qualifier_meta_attr of term
 and aqual = option<arg_qualifier>
 
 // This is set in FStar.Main.main, where all modules are in-scope.

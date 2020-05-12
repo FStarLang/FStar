@@ -193,7 +193,8 @@ and env = {
   nbe            : list<step> -> env -> term -> term; (* Callback to the NBE function *)
   strict_args_tab:BU.smap<(option<(list<int>)>)>;                (* a dictionary of fv names to strict arguments *)
   erasable_types_tab:BU.smap<bool>;              (* a dictionary of type names to erasable types *)
-  enable_defer_to_tac: bool
+  enable_defer_to_tac: bool                      (* Set by default; unset when running within a tactic itself, since we do not allow
+                                                    a tactic to defer problems to another tactic via the attribute mechanism *)
 }
 and solver_depth_t = int * int * int
 and solver_t = {
@@ -1791,13 +1792,13 @@ let new_implicit_var_aux reason r env k should_check meta =
 let uvars_for_binders env (bs:S.binders) substs reason r =
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs (fst b).sort in
-    let ctx_uvar_meta_t = 
+    let ctx_uvar_meta_t =
       match snd b with
-      | Some (Meta (Arg_qualifier_meta_tac t)) -> 
+      | Some (Meta (Arg_qualifier_meta_tac t)) ->
         Some (Ctx_uvar_meta_tac (FStar.Dyn.mkdyn env, t))
       | Some (Meta (Arg_qualifier_meta_attr t)) ->
         Some (Ctx_uvar_meta_attr t)
-      | _ -> 
+      | _ ->
         None
     in
     let t, _, g_t = new_implicit_var_aux (reason b) r env sort Allow_untyped ctx_uvar_meta_t in

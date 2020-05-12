@@ -324,14 +324,6 @@ let singleton wl prob smt_ok     = {wl with attempting=[prob]; smt_ok = smt_ok}
 let wl_of_guard env g            = {empty_worklist env with attempting=List.map snd g}
 let defer reason prob wl         = {wl with wl_deferred=(wl.ctr, reason, prob)::wl.wl_deferred}
 let defer_lit reason prob wl     = defer (Thunk.mkv reason) prob wl
-let find_user_tac_for_uvar env (u:ctx_uvar) : option<sigelt> =
-    match u.ctx_uvar_meta with
-    | Some (Ctx_uvar_meta_attr a) ->
-      let hooks = Env.lookup_attr env Const.resolve_implicits_attr_string in
-      hooks |> BU.try_find
-                  (fun hook ->
-                    hook.sigattrs |> BU.for_some (U.attr_eq a))
-    | _ -> None
 let attempt probs wl             =
     List.iter (def_check_prob "attempt") probs;
     {wl with attempting=probs@wl.attempting}
@@ -1506,6 +1498,9 @@ let is_flex_pat = function
     | Flex (_, _, []) -> true
     | _ -> false
 
+(** If the head uvar of the flex term is tagged with a `Ctx_uvar_meta_attr a`
+    and if a term tagged with attribute `a` is in scope,
+    then this problem should be deferred to a tactic *)
 let should_defer_flex_to_user_tac (wl:worklist) (f:flex_t) =
   let (Flex (_, u, _)) = f in
   DeferredImplicits.should_defer_uvar_to_user_tac wl.tcenv u
@@ -3940,7 +3935,7 @@ let resolve_implicits env g =
     then BU.print1 "//////////////////////////ResolveImplicitsHook: resolve_implicits////////////\n\
                     guard = %s\n"
                     (guard_to_string env g);
-  resolve_implicits' env (not env.phase1 && not env.lax) false g
+    resolve_implicits' env (not env.phase1 && not env.lax) false g
 
 let resolve_implicits_tac env g = resolve_implicits' env false true  g
 

@@ -1104,10 +1104,9 @@ and resugar_imp env (q:option<S.arg_qualifier>) : A.imp =
   match q with
   | None -> A.Nothing
   | Some (S.Implicit false) -> A.Hash
-  | Some S.Equality
-  | Some (S.Implicit true) -> A.Nothing // We don't have syntax for inaccessible arguments
-  | Some (S.Meta (S.Arg_qualifier_meta_tac t)) -> A.HashBrace (resugar_term' env t)
-  | Some (S.Meta (S.Arg_qualifier_meta_attr t)) -> A.Nothing //TODO: Review this 03/31
+  | Some S.Equality //We don't have syntax for decorating equality contraints at applications
+  | Some (S.Implicit true) // We don't have syntax for inaccessible arguments
+  | Some (S.Meta _) -> A.Nothing //We don't have syntax to associate attributes or tactics at applications
 
 let resugar_qualifier : S.qualifier -> option<A.qualifier> = function
   | S.Assumption -> Some A.Assumption
