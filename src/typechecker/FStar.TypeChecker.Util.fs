@@ -717,20 +717,14 @@ let mk_indexed_bind env
       (SS.compress (f_b |> fst).sort)
       (U.is_layered m_ed) r1 |> List.map (SS.subst subst) in
     List.fold_left2
-<<<<<<< HEAD
-      (fun g i1 f_i1 ->
-       Env.conj_guard g (Rel.layered_effect_teq env i1 f_i1 (Some bind_name)))
-      Env.trivial_guard is1 f_sort_is in 
-=======
       (fun g i1 f_i1 -> 
         if Env.debug env <| Options.Other "ResolveImplicitsHook"
         then BU.print2 "Generating constraint %s = %s\n"
                                    (Print.term_to_string i1)
                                    (Print.term_to_string f_i1);
-        Env.conj_guard g (Rel.teq env i1 f_i1))
+        Env.conj_guard g (Rel.layered_effect_teq env i1 f_i1 (Some bind_name)))
       Env.trivial_guard is1 f_sort_is
   in 
->>>>>>> master
 
   let g_guard =  //unify c2's indices with g's indices in the bind_wp
     let x_a =
@@ -751,16 +745,12 @@ let mk_indexed_bind env
 
     let env_g = Env.push_binders env [x_a] in
     List.fold_left2
-<<<<<<< HEAD
-      (fun g i1 g_i1 -> Env.conj_guard g (Rel.layered_effect_teq env_g i1 g_i1 (Some bind_name)))
-=======
       (fun g i1 g_i1 ->
         if Env.debug env <| Options.Other "ResolveImplicitsHook"
         then BU.print2 "Generating constraint %s = %s\n"
                                    (Print.term_to_string i1)
                                    (Print.term_to_string g_i1);
-         Env.conj_guard g (Rel.teq env_g i1 g_i1))
->>>>>>> master
+         Env.conj_guard g (Rel.layered_effect_teq env_g i1 g_i1 (Some bind_name)))
       Env.trivial_guard is2 g_sort_is
     |> Env.close_guard env [x_a]
   in
