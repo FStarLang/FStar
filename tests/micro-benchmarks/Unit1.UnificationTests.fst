@@ -56,3 +56,18 @@ let h_923 (g: u_923 ()) : Tot p_923 =
 unfold let buf_760 (a:Type0) = l:list a { l == [] }
 val test_760 : a:Type0 -> Tot (buf_760 a)
 let test_760 a = admit #(buf_760 a) ()
+
+
+(***** tests for unit valued implicits *****)
+
+assume val some_predicate : prop
+assume val some_f (#_:squash some_predicate) (#_:unit) (_:unit) : unit
+
+let test_unit_valued_implicits0 () : PURE unit (fun p -> some_predicate /\ p ()) =
+  some_f _
+
+// make sure that we are not dropping the guard
+
+[@@ expect_failure [19]]
+let test_unit_valued_implicits1 () : PURE unit (fun p -> p ()) = some_f _
+
