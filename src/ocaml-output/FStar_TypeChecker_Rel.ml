@@ -12714,7 +12714,7 @@ let (try_solve_single_valued_implicits :
         match uu____32176 with
         | (ctx_u,r) ->
             let t_norm =
-              FStar_TypeChecker_Normalize.normalize_refinement
+              FStar_TypeChecker_Normalize.normalize
                 FStar_TypeChecker_Normalize.whnf_steps env
                 ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ
                in
