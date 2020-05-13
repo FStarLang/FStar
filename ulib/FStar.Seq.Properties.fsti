@@ -621,11 +621,10 @@ val slice_is_empty
 val slice_length
   (#a: Type)
   (s: seq a)
-  (i:nat{i == 0})
 : Lemma
   (requires True)
-  (ensures (slice s i (length s) == s))
-  [SMTPat (slice s i (length s))]
+  (ensures (slice s 0 (length s) == s))
+  [SMTPat (slice s 0 (length s))]
 
 val slice_slice
   (#a: Type)

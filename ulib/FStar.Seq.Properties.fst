@@ -516,7 +516,7 @@ let cons_index_slice #_ s i j _ = lemma_eq_elim (cons (index s i) (slice s (i + 
 
 let slice_is_empty #_ s i = lemma_eq_elim (slice s i i) Seq.empty
 
-let slice_length #_ s _ = lemma_eq_elim (slice s 0 (length s)) s
+let slice_length #_ s = lemma_eq_elim (slice s 0 (length s)) s
 
 let slice_slice #_ s i1 j1 i2 j2 = lemma_eq_elim (slice (slice s i1 j1) i2 j2) (slice s (i1 + i2) (i1 + j2))
 
