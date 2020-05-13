@@ -5182,7 +5182,7 @@ and (trans_aqual :
           (FStar_Parser_AST.Arg_qualifier_meta_attr t)) ->
           let t1 = desugar_term env t  in
           (FStar_Errors.log_issue t1.FStar_Syntax_Syntax.pos
-             (FStar_Errors.Warning_DeprecatedGeneric,
+             (FStar_Errors.Warning_BleedingEdge_Feature,
                "Associating attributes with a binder is an experimental feature---expect its behavior to change");
            FStar_Pervasives_Native.Some
              (FStar_Syntax_Syntax.Meta
