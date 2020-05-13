@@ -322,11 +322,11 @@ let check_no_smt_theory_symbols (en:env) (t:term) :unit =
   let rec aux (t:term) :list<term> =
     match (SS.compress t).n with
     //these cases are fine
-    | Tm_bvar _ | Tm_name _ | Tm_type _ | Tm_uvar _
+    | Tm_bvar _ | Tm_name _ | Tm_constant _ | Tm_type _ | Tm_uvar _
     | Tm_lazy _ | Tm_unknown -> []
 
     //these should not be allowed in patterns
-    | Tm_constant _ | Tm_abs _ | Tm_arrow _ | Tm_refine _
+    | Tm_abs _ | Tm_arrow _ | Tm_refine _
     | Tm_match _ | Tm_let _ | Tm_delayed _ | Tm_quoted _ -> [t]
 
     //these descend more in the term
