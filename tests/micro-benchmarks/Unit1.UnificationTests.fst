@@ -71,3 +71,16 @@ let test_unit_valued_implicits0 () : PURE unit (fun p -> some_predicate /\ p ())
 [@@ expect_failure [19]]
 let test_unit_valued_implicits1 () : PURE unit (fun p -> p ()) = some_f _
 
+// test two refinements
+assume val some_other_predicate : prop
+assume val some_g (_:(_:unit{some_predicate}){some_other_predicate}) : unit
+
+[@@ expect_failure [19]]
+let test_unit_valued_implicits2 () : PURE unit (fun p -> p ()) = some_g _
+
+[@@ expect_failure [19]]
+let test_unit_valued_implicits3 ()
+: PURE unit (fun p -> some_predicate /\ p ()) = some_g _
+
+let test_unit_valued_implicits4 ()
+: PURE unit (fun p -> some_predicate /\ some_other_predicate /\ p ()) = some_g _
