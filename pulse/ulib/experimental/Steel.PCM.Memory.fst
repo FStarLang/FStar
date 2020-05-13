@@ -205,15 +205,18 @@ let h_exists_cong (#a:Type) (p q : a -> slprop)
 
 let linv (m:mem) = locks_invariant Set.empty m
 
-let hheap_of_hmem #fp (m:hmem_with_inv fp) : H.hheap (fp `star` linv m) =
-  heap_of_mem m
+let hheap_of_hmem #fp (m:hmem_with_inv fp)
+  : h:H.hheap (fp `star` linv m) { h `H.free_above_addr` m.ctr}
+  = let h = heap_of_mem m in
+    H.refine_interp (lock_store_invariant S.empty m.locks)
+                    (heap_ctr_valid m.ctr (heap_of_mem m)) h;
+    h
 
 let hmem_of_hheap (#fp0 #fp1:slprop) (m:hmem_with_inv fp0)
                   (h:H.hheap (fp1 `star` linv m) {
-                    forall ctr. heap_of_mem m `H.free_above_addr` ctr <==>
-                           h `Heap.free_above_addr` ctr
+                       h `Heap.free_above_addr` m.ctr
                   })
-    : hmem_with_inv fp1
+    : m1:hmem_with_inv fp1{linv m `equiv` linv m1}
     = let m1 : mem = { m with heap = h } in
       assert (interp (fp1 `star` linv m) m1);
       star_commutative fp1 (linv m);
@@ -222,6 +225,9 @@ let hmem_of_hheap (#fp0 #fp1:slprop) (m:hmem_with_inv fp0)
                                      (heap_ctr_valid m1.ctr (heap_of_mem m1)));
       assert (linv m ==  H.h_refine (lock_store_invariant S.empty m1.locks)
                                     (heap_ctr_valid m1.ctr (heap_of_mem m)));
+      H.refine_interp (lock_store_invariant S.empty m1.locks)
+                      (heap_ctr_valid m1.ctr (heap_of_mem m))
+                      (heap_of_mem m);
       assert (forall h. (heap_ctr_valid m1.ctr (heap_of_mem m)) h <==>
                    (heap_ctr_valid m1.ctr (heap_of_mem m1)) h);
       H.refine_equiv (lock_store_invariant S.empty m1.locks)
@@ -263,6 +269,19 @@ let as_hprop (frame:slprop) (mp:mprop frame)
       in
       f
 
+
+let mprop_preservation_of_hprop_preservation
+       (p:slprop) (m0 m1:mem)
+    : Lemma
+      (requires (forall (hp:H.hprop p). hp (heap_of_mem m0) == hp (heap_of_mem m1)))
+      (ensures (forall (mp:mprop p). mp (core_mem m0) == mp (core_mem m1)))
+    = let aux (mp:mprop p)
+        : Lemma (mp (core_mem m0) == mp (core_mem m1))
+          [SMTPat()]
+        = assert (as_hprop p mp (heap_of_mem m0) == as_hprop p mp (heap_of_mem m1))
+      in
+      ()
+
 let lift_heap_action (#fp:slprop) (#a:Type) (#fp':a -> slprop)
                      ($f:H.action fp a fp')
   : action fp a fp'
@@ -294,20 +313,7 @@ let lift_heap_action (#fp:slprop) (#a:Type) (#fp':a -> slprop)
         assert (m1 == hmem_of_hheap m0 h1');
         assert (with_inv m1 (fp' x `star` frame));
         assert (forall (hp:H.hprop frame). hp h0 == hp h1);
-        let aux_h (hp:H.hprop frame)
-          : Lemma (hp h0 == hp h1)
-          = ()
-        in
-        let aux (mp:mprop frame)
-          : Lemma
-            (ensures mp (core_mem m0) == mp (core_mem m1))
-            [SMTPat ()]
-          = assert (core_mem m1 == (core_mem ({m0 with heap = h1})));
-            assert (heap_of_mem m0 == h0);
-            let q = as_hprop frame mp in
-            assert (mp (core_mem m0) == q h0);
-            aux_h q
-        in
+        mprop_preservation_of_hprop_preservation frame m0 m1;
         ()
     in
     assert (is_frame_preserving g);
@@ -318,3 +324,125 @@ let sel_action r v0
 
 let upd_action r v0 v1
   = lift_heap_action (H.upd_action r v0 v1)
+
+let stronger (p q:slprop) =
+  forall h. interp p h ==> interp q h
+
+let weaken (p q r:slprop) (h:H.hheap (p `star` q) { stronger q r })
+  : H.hheap (p `star` r)
+  = admit();
+    // let aux (hp hq:H.heap)
+    //   : Lemma
+    //     (requires
+    //       H.disjoint hp hq /\
+    //       h == H.join hp hq /\
+    //       H.interp p hp /\
+    //       H.interp q hq)
+    //     (ensures
+    //       H.interp (p `star` r) h)
+    //     [SMTPat (H.join hp hq)]
+    //   = admit()
+    // in
+    h
+
+let weaken_refine (p:slprop) (q r:H.a_heap_prop)
+  : Lemma
+    (requires (forall h. q h ==> r h))
+    (ensures stronger (H.h_refine p q) (H.h_refine p r))
+  = let aux (h:H.heap)
+        : Lemma (ensures (H.interp (H.h_refine p q) h ==> H.interp (H.h_refine p r) h))
+                [SMTPat ()]
+        = H.refine_interp p q h;
+          H.refine_interp p r h
+    in
+    ()
+
+let inc_ctr (#p:slprop) (m:hmem_with_inv p)
+  : m':hmem_with_inv p{m'.ctr = m.ctr + 1 /\ stronger (linv m) (linv m')}
+  = let m' : mem = { m with ctr = m.ctr + 1} in
+    assert (interp (p `star` linv m) m');
+    assert (linv m == H.h_refine (lock_store_invariant Set.empty m.locks)
+                                 (heap_ctr_valid m.ctr (heap_of_mem m)));
+    assert (linv m' == H.h_refine (lock_store_invariant Set.empty m.locks)
+                                  (heap_ctr_valid (m.ctr + 1) (heap_of_mem m)));
+    H.weaken_free_above (heap_of_mem m) m.ctr (m.ctr + 1);
+    weaken_refine (lock_store_invariant Set.empty m.locks)
+                  (heap_ctr_valid m.ctr (heap_of_mem m))
+                  (heap_ctr_valid (m.ctr + 1) (heap_of_mem m));
+    assert (stronger (linv m) (linv m'));
+    let _ = weaken p (linv m) (linv m') (heap_of_mem m) in
+    m'
+
+let frame_related_mems (fp0 fp1:slprop u#a) (m0:hmem_with_inv fp0) (m1:hmem_with_inv fp1) =
+    forall (frame:slprop u#a).
+      interp ((fp0 `star` frame) `star` linv m0) m0 ==>
+      interp ((fp1 `star` frame) `star` linv m1) m1 /\
+      (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))
+
+let refined_pre_action (fp0:slprop) (a:Type) (fp1:a -> slprop) =
+  m0:hmem_with_inv fp0 ->
+  Pure (x:a &
+        hmem_with_inv (fp1 x))
+       (requires True)
+       (ensures fun  (| x, m1 |) ->
+         frame_related_mems fp0 (fp1 x) m0 m1)
+
+let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
+                                 ($f:refined_pre_action fp0 a fp1)
+  : action fp0 a fp1
+  = let g : pre_action fp0 a fp1 = fun m -> f m in
+    let aux (frame:slprop)
+            (m0:hmem_with_inv (fp0 `star` frame))
+      : Lemma
+        (ensures
+          (ac_reasoning_for_m_frame_preserving fp0 frame (locks_invariant Set.empty m0) m0;
+           let (| x, m1 |) = g m0 in
+           interp ((fp1 x `star` frame) `star` locks_invariant Set.empty m1) m1 /\
+          (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))))
+        [SMTPat ()]
+      = ac_reasoning_for_m_frame_preserving fp0 frame (locks_invariant Set.empty m0) m0;
+        let (| x', m1' |) = g m0 in
+        let (| x, m1 |) = f m0 in
+        assert (x == x' /\ m1 == m1')
+    in
+    g
+
+let alloc_action (#a:Type u#a) (#pcm:pcm a) (x:a{compatible pcm x x})
+  = let f (m0:hmem_with_inv emp)
+      : Pure (r:ref a pcm &
+              hmem_with_inv (pts_to #a r x))
+             (requires True)
+             (ensures fun  (| r, m1 |) ->
+               frame_related_mems emp (pts_to r x) m0 m1)
+      = let h = hheap_of_hmem m0 in
+        let (|r, h'|) = H.extend x m0.ctr h in
+        let m' : hmem_with_inv emp = inc_ctr m0 in
+        let h' : H.hheap (pts_to #a r x `star` linv m') = weaken _ (linv m0) (linv m') h' in
+        let m1 : hmem_with_inv (pts_to #a r x) = hmem_of_hheap m' h' in
+        assert (forall frame. H.frame_related_heaps h h' emp (pts_to r x) frame true);
+        let aux (frame:slprop)
+          : Lemma
+            (requires
+               interp ((emp `star` frame) `star` linv m0) m0)
+            (ensures
+               interp ((pts_to #a r x `star` frame) `star` linv m1) m1 /\
+               (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
+            [SMTPat (emp `star` frame)]
+          = star_associative emp frame (linv m0);
+            assert (H.interp (emp `star` (frame `star` linv m0)) h);
+            assert (H.interp (pts_to #a r x `star` (frame `star` linv m0)) h');
+            star_associative (pts_to #a r x) frame (linv m0);
+            assert (H.interp ((pts_to #a r x `star` frame) `star` linv m0) h');
+            assert (stronger (linv m0) (linv m'));
+            assert (equiv (linv m') (linv m1));
+            assert (stronger (linv m0) (linv m1));
+            let h' : H.hheap ((pts_to #a r x `star` frame) `star` linv m1) = weaken _ (linv m0) (linv m1) h' in
+            assert (H.interp ((pts_to #a r x `star` frame) `star` linv m1) h');
+            assert (forall (mp:H.hprop frame). mp h == mp h');
+            mprop_preservation_of_hprop_preservation frame m0 m1;
+            assert (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))
+        in
+        assert (frame_related_mems emp (pts_to r x) m0 m1);
+        (| r, m1 |)
+    in
+    refined_pre_action_as_action f

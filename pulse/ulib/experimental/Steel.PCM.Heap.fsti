@@ -174,6 +174,9 @@ val refine_equiv (p0 p1:slprop u#a) (q0 q1:a_heap_prop u#a)
 ////////////////////////////////////////////////////////////////////////////////
 val free_above_addr (h:heap u#a) (a:nat) : prop
 
+val weaken_free_above (h:heap) (a b:nat)
+  : Lemma (free_above_addr h a /\ a <= b ==> free_above_addr h b)
+
 (** A heap predicate that depends only on fp *)
 let hprop (fp:slprop u#a) =
   q:(heap u#a -> prop){

@@ -219,3 +219,6 @@ val upd_action (#a:_) (#pcm:_) (r:ref a pcm)
                (v0:FStar.Ghost.erased a)
                (v1:a {Steel.PCM.frame_preserving pcm v0 v1})
   : action (pts_to r v0) unit (fun _ -> pts_to r v1)
+
+val alloc_action (#a:Type u#a) (#pcm:pcm a) (x:a{compatible pcm x x})
+  : action emp (ref a pcm) (fun r -> pts_to r x)
