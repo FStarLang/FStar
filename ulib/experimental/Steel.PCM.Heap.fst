@@ -503,6 +503,10 @@ let weaken (p q r:slprop) (h:heap u#a) = ()
 let free_above_addr h a =
   forall (i:nat). i >= a ==> h i == None
 
+let weaken_free_above (h:heap) (a b:nat)
+  : Lemma (free_above_addr h a /\ a <= b ==> free_above_addr h b)
+  = ()
+
 ////////////////////////////////////////////////////////////////////////////////
 // sel
 ////////////////////////////////////////////////////////////////////////////////
