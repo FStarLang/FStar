@@ -1988,7 +1988,7 @@ and trans_aqual env = function
   | Some (AST.Meta (AST.Arg_qualifier_meta_attr t)) ->
     let t = desugar_term env t in
     FStar.Errors.log_issue t.pos
-      (Errors.Warning_DeprecatedGeneric,
+      (Errors.Warning_BleedingEdge_Feature,
        "Associating attributes with a binder is an experimental feature---expect its behavior to change");
     Some (S.Meta (S.Arg_qualifier_meta_attr t))
   | None -> None
