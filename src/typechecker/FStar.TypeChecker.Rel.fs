@@ -3887,14 +3887,12 @@ let try_solve_single_valued_implicits env (imps:Env.implicits) : Env.implicits *
 
   in
 
-  let tx = UF.new_transaction () in
-
-  let b = List.fold_left (fun b imp ->
-    match imp_value imp with
-    | Some tm -> commit ([TERM (imp.imp_uvar, tm)]); true
-    | None -> b) false imps in
-
-  UF.commit tx;
+  let b = List.fold_left (fun b imp ->  //check that the imp is still unsolved
+    if UF.find imp.imp_uvar.ctx_uvar_head |> is_none
+    then match imp_value imp with
+         | Some tm -> commit ([TERM (imp.imp_uvar, tm)]); true
+         | None -> b
+    else b) false imps in
 
   imps, b
   
