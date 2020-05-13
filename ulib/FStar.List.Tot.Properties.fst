@@ -1008,10 +1008,6 @@ let precedes_append_cons_prod_r
   (ensures
     x << (append l1 ((x, y) :: l2)) /\
     y << (append l1 ((x, y) :: l2)))
-  [SMTPatOr [
-    [ SMTPat (x << (append l1 ((x, y) :: l2))) ];
-    [ SMTPat (y << (append l1 ((x, y) :: l2))) ];
-  ]]
 = precedes_append_cons_r l1 (x, y) l2
 
 let rec memP_precedes
