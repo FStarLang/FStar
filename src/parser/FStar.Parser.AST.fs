@@ -119,7 +119,10 @@ and branch = (pattern * option<term> * term)
 and arg_qualifier =
     | Implicit
     | Equality
-    | Meta of term
+    | Meta of arg_qualifier_meta_t
+and arg_qualifier_meta_t =
+  | Arg_qualifier_meta_tac of term
+  | Arg_qualifier_meta_attr of term
 and aqual = option<arg_qualifier>
 and imp =
     | FsTypApp

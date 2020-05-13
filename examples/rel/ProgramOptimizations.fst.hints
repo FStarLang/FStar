@@ -356,7 +356,7 @@
         "typing_FStar.DM4F.Heap.IntStoreFixed.index"
       ],
       0,
-      "2a7958ea45a0f44d2dfbd0bf13f512b9"
+      "a5e1ad4ffde4e4be2db031f191192131"
     ],
     [
       "ProgramOptimizations.b_exp_denotation",
@@ -395,7 +395,7 @@
         "subterm_ordering_ProgramOptimizations.Not"
       ],
       0,
-      "32aab98459ac7997ce042519651e0728"
+      "49183ac5bfe47957f70a8dd5b9cb0231"
     ],
     [
       "ProgramOptimizations.com_denotation",
@@ -427,7 +427,7 @@
         "unit_typing"
       ],
       0,
-      "d022e40108fe3d3700a06523365b5904"
+      "4193bbe099a2beeda1cf2a8485859748"
     ],
     [
       "ProgramOptimizations.g_exp",

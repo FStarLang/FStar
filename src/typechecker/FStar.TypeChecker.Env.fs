@@ -158,7 +158,7 @@ and env = {
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
   generalize     :bool;                         (* should we generalize let bindings? *)
-  letrecs        :list<(lbname * typ * univ_names)>;           (* mutually recursive names and their types (for termination checking) *)
+  letrecs        :list<(lbname * int * typ * univ_names)>;  (* mutually recursive names, with recursion arity and their types (for termination checking), adding universes, see the note in TcTerm.fs:build_let_rec_env about usage of this field *)
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
   use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
@@ -194,6 +194,8 @@ and env = {
   nbe            : list<step> -> env -> term -> term; (* Callback to the NBE function *)
   strict_args_tab:BU.smap<(option<(list<int>)>)>;                (* a dictionary of fv names to strict arguments *)
   erasable_types_tab:BU.smap<bool>;              (* a dictionary of type names to erasable types *)
+  enable_defer_to_tac: bool                      (* Set by default; unset when running within a tactic itself, since we do not allow
+                                                    a tactic to defer problems to another tactic via the attribute mechanism *)
 }
 and solver_depth_t = int * int * int
 and solver_t = {
@@ -306,6 +308,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     nbe = nbe;
     strict_args_tab = BU.smap_create 20;
     erasable_types_tab = BU.smap_create 20;
+    enable_defer_to_tac=true
   }
 
 let dsenv env = env.dsenv
@@ -1638,7 +1641,13 @@ let string_of_proof_ns env =
 (* ------------------------------------------------*)
 (* <guard_formula ops> Operations on guard_formula *)
 (* ------------------------------------------------*)
-let guard_of_guard_formula g = {guard_f=g; deferred=[]; univ_ineqs=([], []); implicits=[]}
+let guard_of_guard_formula g = {
+  guard_f=g;
+  deferred=[]; 
+  deferred_to_tac=[];
+  univ_ineqs=([], []); 
+  implicits=[]
+}
 
 let guard_form g = g.guard_f
 
@@ -1808,11 +1817,22 @@ let new_implicit_var_aux reason r env k should_check meta =
 let uvars_for_binders env (bs:S.binders) substs reason r =
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs (fst b).sort in
+
+    let ctx_uvar_meta_t =
+      match snd b with
+      | Some (Meta (Arg_qualifier_meta_tac t)) ->
+        Some (Ctx_uvar_meta_tac (FStar.Dyn.mkdyn env, t))
+      | Some (Meta (Arg_qualifier_meta_attr t)) ->
+        Some (Ctx_uvar_meta_attr t)
+      | _ -> None in
+
     let t, l_ctx_uvars, g_t = new_implicit_var_aux
-      (*(reason b)*) "" r env sort Allow_untyped None in
+      (*(reason b)*) "" r env sort Allow_untyped ctx_uvar_meta_t in
+
     if debug env <| Options.Other "LayeredEffectsEqns"
     then List.iter (fun (ctx_uvar, _) -> BU.print1 "Layered Effect uvar : %s\n"
       (Print.ctx_uvar_to_string_no_reason ctx_uvar)) l_ctx_uvars;
+
     substs@[NT (b |> fst, t)], uvars@[t], conj_guard g g_t
   ) (substs, [], trivial_guard) |> (fun (_, uvars, g) -> uvars, g)
 
@@ -1846,3 +1866,14 @@ let dummy_solver = {
 }
 (* </Move> *)
 
+let get_letrec_arity (env:env) (lbname:lbname) : option<int> =
+  let compare_either f1 f2 e1 e2 : bool =
+      match e1, e2 with
+      | BU.Inl v1, BU.Inl v2 -> f1 v1 v2
+      | BU.Inr v1, BU.Inr v2 -> f2 v1 v2
+      | _ -> false
+  in
+  match BU.find_opt (fun (lbname', _, _, _) -> compare_either S.bv_eq S.fv_eq lbname lbname')
+                    env.letrecs with
+  | Some (_, arity, _, _) -> Some arity
+  | None -> None

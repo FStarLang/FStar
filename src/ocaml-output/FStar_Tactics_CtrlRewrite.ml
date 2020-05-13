@@ -108,7 +108,9 @@ let (__do_rewrite :
                  FStar_TypeChecker_Env.strict_args_tab =
                    (uu___6_44.FStar_TypeChecker_Env.strict_args_tab);
                  FStar_TypeChecker_Env.erasable_types_tab =
-                   (uu___6_44.FStar_TypeChecker_Env.erasable_types_tab)
+                   (uu___6_44.FStar_TypeChecker_Env.erasable_types_tab);
+                 FStar_TypeChecker_Env.enable_defer_to_tac =
+                   (uu___6_44.FStar_TypeChecker_Env.enable_defer_to_tac)
                }) tm
              in
           match uu____36 with

@@ -49,7 +49,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d4e0b023b738add5973dfa093e09688e"
+      "e8c17fb346379b106a54481abc686357"
     ],
     [
       "Interop.elim",
@@ -120,7 +120,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "68e755356b739eca958810f3c89c5faf"
+      "4f00d0f8b78aa4376a94bbcdf415d12a"
     ],
     [
       "Interop.as_vale_pre",

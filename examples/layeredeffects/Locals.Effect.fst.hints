@@ -379,7 +379,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "3129f72062083002edd764d683da6308"
+      "2d714c1360103666dab2cb3e1d977eab"
     ],
     [
       "Locals.Effect.test1",
@@ -406,7 +406,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "c6c854baa5f86ef9e42296544038c592"
+      "79c1df677d20a85e0972a707da3b87eb"
     ]
   ]
 ]

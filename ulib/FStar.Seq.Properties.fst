@@ -512,7 +512,7 @@ let mem_cons #_ x s = lemma_append_count (create 1 x) s
 
 let snoc_slice_index #_ s i j = lemma_eq_elim (snoc (slice s i j) (index s j)) (slice s i (j + 1))
 
-let cons_index_slice #_ s i j = lemma_eq_elim (cons (index s i) (slice s (i + 1) j)) (slice s i j)
+let cons_index_slice #_ s i j _ = lemma_eq_elim (cons (index s i) (slice s (i + 1) j)) (slice s i j)
 
 let slice_is_empty #_ s i = lemma_eq_elim (slice s i i) Seq.empty
 

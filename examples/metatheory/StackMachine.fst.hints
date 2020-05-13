@@ -135,7 +135,7 @@
         "subterm_ordering_StackMachine.Binop"
       ],
       0,
-      "a1ce95d0880daecadb5d409c390a1956"
+      "b7b66bb3e5087e0726855ba7f682d418"
     ],
     [
       "StackMachine.instr",
@@ -230,7 +230,7 @@
         "subterm_ordering_StackMachine.Binop"
       ],
       0,
-      "c5c6e98474ea6bf63d841e2889ea9b37"
+      "7fa3627773e64a6bc2905667cd5550fc"
     ],
     [
       "StackMachine.app_assoc_reverse",
@@ -899,7 +899,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e8acdcac1cddba06331b05c444ce79bb"
+      "ea75a852b5ecbde7b2bfd1fdc4e6b2f7"
     ],
     [
       "StackMachine.tinstrDenote",

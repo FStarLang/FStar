@@ -20,7 +20,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "3ed4af7079e7d6902b79e01487435d72"
+      "38d31394ae2893df333151d54575955f"
     ],
     [
       "IntSort.test_sorted",

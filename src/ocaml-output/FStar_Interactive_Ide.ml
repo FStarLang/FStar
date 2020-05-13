@@ -1775,7 +1775,9 @@ let run_push_without_deps :
                FStar_TypeChecker_Env.strict_args_tab =
                  (uu___576_4606.FStar_TypeChecker_Env.strict_args_tab);
                FStar_TypeChecker_Env.erasable_types_tab =
-                 (uu___576_4606.FStar_TypeChecker_Env.erasable_types_tab)
+                 (uu___576_4606.FStar_TypeChecker_Env.erasable_types_tab);
+               FStar_TypeChecker_Env.enable_defer_to_tac =
+                 (uu___576_4606.FStar_TypeChecker_Env.enable_defer_to_tac)
              });
           FStar_Interactive_JsonHelper.repl_stdin =
             (uu___574_4604.FStar_Interactive_JsonHelper.repl_stdin);

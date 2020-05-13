@@ -663,6 +663,12 @@ let mk_indexed_bind env
     BU.print2 "Binding c1:%s and c2:%s {\n"
       (Print.comp_to_string (S.mk_Comp ct1)) (Print.comp_to_string (S.mk_Comp ct2));
 
+  if Env.debug env <| Options.Other "ResolveImplicitsHook"
+  then BU.print2 "///////////////////////////////Bind at %s/////////////////////\n\
+                  with bind_t = %s\n"                                    
+                 (Range.string_of_range (Env.get_range env))
+                 (Print.tscheme_to_string bind_t);
+                  
   let m_ed, n_ed, p_ed = Env.get_effect_decl env m, Env.get_effect_decl env n, Env.get_effect_decl env p in
 
   let u1, t1, is1 = List.hd ct1.comp_univs, ct1.result_typ, List.map fst ct1.effect_args in
@@ -691,6 +697,17 @@ let mk_indexed_bind env
       "implicit var for binder %s of %s at %s"
       (Print.binder_to_string b) bind_name (Range.string_of_range r1)) r1 in
 
+  if Env.debug env <| Options.Other "ResolveImplicitsHook"
+  then rest_bs_uvars |>
+       List.iter (fun t -> 
+         match (SS.compress t).n with
+         | Tm_uvar (u, _ ) ->
+           BU.print2 "Generated uvar %s with attribute %s\n"
+             (Print.term_to_string t)
+             (match u.ctx_uvar_meta with
+              | Some (Ctx_uvar_meta_attr a) -> Print.term_to_string a
+              | _ -> "<no attr>"));
+
   let subst = List.map2
     (fun b t -> NT (b |> fst, t))
     (a_b::b_b::rest_bs) (t1::t2::rest_bs_uvars) in
@@ -700,9 +717,20 @@ let mk_indexed_bind env
       (SS.compress (f_b |> fst).sort)
       (U.is_layered m_ed) r1 |> List.map (SS.subst subst) in
     List.fold_left2
+<<<<<<< HEAD
       (fun g i1 f_i1 ->
        Env.conj_guard g (Rel.layered_effect_teq env i1 f_i1 (Some bind_name)))
       Env.trivial_guard is1 f_sort_is in 
+=======
+      (fun g i1 f_i1 -> 
+        if Env.debug env <| Options.Other "ResolveImplicitsHook"
+        then BU.print2 "Generating constraint %s = %s\n"
+                                   (Print.term_to_string i1)
+                                   (Print.term_to_string f_i1);
+        Env.conj_guard g (Rel.teq env i1 f_i1))
+      Env.trivial_guard is1 f_sort_is
+  in 
+>>>>>>> master
 
   let g_guard =  //unify c2's indices with g's indices in the bind_wp
     let x_a =
@@ -723,9 +751,19 @@ let mk_indexed_bind env
 
     let env_g = Env.push_binders env [x_a] in
     List.fold_left2
+<<<<<<< HEAD
       (fun g i1 g_i1 -> Env.conj_guard g (Rel.layered_effect_teq env_g i1 g_i1 (Some bind_name)))
+=======
+      (fun g i1 g_i1 ->
+        if Env.debug env <| Options.Other "ResolveImplicitsHook"
+        then BU.print2 "Generating constraint %s = %s\n"
+                                   (Print.term_to_string i1)
+                                   (Print.term_to_string g_i1);
+         Env.conj_guard g (Rel.teq env_g i1 g_i1))
+>>>>>>> master
       Env.trivial_guard is2 g_sort_is
-    |> Env.close_guard env [x_a] in
+    |> Env.close_guard env [x_a]
+  in
 
   let bind_ct = bind_c |> SS.subst_comp subst |> U.comp_to_comp_typ in
 
@@ -745,14 +783,25 @@ let mk_indexed_bind env
     flags = flags
   }) in
 
-  if Env.debug env <| Options.Other "LayeredEffects" then
+  if Env.debug env <| Options.Other "LayeredEffects"
+  then
     BU.print1 "} c after bind: %s\n" (Print.comp_to_string c);
 
-  c, Env.conj_guards [
-    g_uvars;
-    f_guard;
-    g_guard;
-    Env.guard_of_guard_formula (TcComm.NonTrivial fml)]
+  let guard =
+    Env.conj_guards [
+      g_uvars;
+      f_guard;
+      g_guard;
+      Env.guard_of_guard_formula (TcComm.NonTrivial fml)]
+  in
+
+  if Env.debug env <| Options.Other "ResolveImplicitsHook"
+  then BU.print2 "///////////////////////////////EndBind at %s/////////////////////\n\
+                 guard = %s\n"
+                 (Range.string_of_range (Env.get_range env))
+                 (guard_to_string env guard);
+
+  c, guard
 
 let mk_wp_bind env (m:lident) (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ) (flags:list<cflag>) (r1:Range.range)
   : comp =
@@ -2099,11 +2148,18 @@ let maybe_instantiate (env:Env.env) e t =
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
                       (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
 
-                  | _, (x, Some (Meta tau))::rest ->
+                  | _, (x, Some (Meta tac_or_attr))::rest ->
                       let t = SS.subst subst x.sort in
+                      let meta_t = 
+                        match tac_or_attr with
+                        | Arg_qualifier_meta_tac tau ->
+                          Ctx_uvar_meta_tac (mkdyn env, tau)
+                        | Arg_qualifier_meta_attr attr ->
+                          Ctx_uvar_meta_attr attr
+                      in
                       let v, _, g = new_implicit_var_aux "Instantiation of meta argument"
                                                          e.pos env t Strict
-                                                         (Some (mkdyn env, tau)) in
+                                                         (Some meta_t) in
                       if Env.debug env Options.High then
                         BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n"
                                 (Print.term_to_string v);
