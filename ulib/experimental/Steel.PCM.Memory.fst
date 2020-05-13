@@ -87,7 +87,8 @@ let equiv_symmetric (p1 p2:slprop u#a) = H.equiv_symmetric p1 p2
 
 #push-options "--warn_error -271"
 let equiv_heap_iff_equiv (p1 p2:slprop u#a)
-  : Lemma (H.equiv p1 p2 <==> equiv p1 p2)
+  : Lemma (ensures (H.equiv p1 p2 <==> equiv p1 p2))
+          [SMTPat (equiv p1 p2)]
   = let aux_lr ()
       : Lemma
         (requires H.equiv p1 p2)
@@ -325,30 +326,14 @@ let sel_action r v0
 let upd_action r v0 v1
   = lift_heap_action (H.upd_action r v0 v1)
 
-let stronger (p q:slprop) =
-  forall h. interp p h ==> interp q h
-
-let weaken (p q r:slprop) (h:H.hheap (p `star` q) { stronger q r })
+let weaken (p q r:slprop) (h:H.hheap (p `star` q) { H.stronger q r })
   : H.hheap (p `star` r)
-  = admit();
-    // let aux (hp hq:H.heap)
-    //   : Lemma
-    //     (requires
-    //       H.disjoint hp hq /\
-    //       h == H.join hp hq /\
-    //       H.interp p hp /\
-    //       H.interp q hq)
-    //     (ensures
-    //       H.interp (p `star` r) h)
-    //     [SMTPat (H.join hp hq)]
-    //   = admit()
-    // in
-    h
+  = H.weaken p q r h; h
 
 let weaken_refine (p:slprop) (q r:H.a_heap_prop)
   : Lemma
     (requires (forall h. q h ==> r h))
-    (ensures stronger (H.h_refine p q) (H.h_refine p r))
+    (ensures H.stronger (H.h_refine p q) (H.h_refine p r))
   = let aux (h:H.heap)
         : Lemma (ensures (H.interp (H.h_refine p q) h ==> H.interp (H.h_refine p r) h))
                 [SMTPat ()]
@@ -358,7 +343,7 @@ let weaken_refine (p:slprop) (q r:H.a_heap_prop)
     ()
 
 let inc_ctr (#p:slprop) (m:hmem_with_inv p)
-  : m':hmem_with_inv p{m'.ctr = m.ctr + 1 /\ stronger (linv m) (linv m')}
+  : m':hmem_with_inv p{m'.ctr = m.ctr + 1 /\ H.stronger (linv m) (linv m')}
   = let m' : mem = { m with ctr = m.ctr + 1} in
     assert (interp (p `star` linv m) m');
     assert (linv m == H.h_refine (lock_store_invariant Set.empty m.locks)
@@ -369,7 +354,7 @@ let inc_ctr (#p:slprop) (m:hmem_with_inv p)
     weaken_refine (lock_store_invariant Set.empty m.locks)
                   (heap_ctr_valid m.ctr (heap_of_mem m))
                   (heap_ctr_valid (m.ctr + 1) (heap_of_mem m));
-    assert (stronger (linv m) (linv m'));
+    assert (H.stronger (linv m) (linv m'));
     let _ = weaken p (linv m) (linv m') (heap_of_mem m) in
     m'
 
@@ -433,9 +418,9 @@ let alloc_action (#a:Type u#a) (#pcm:pcm a) (x:a{compatible pcm x x})
             assert (H.interp (pts_to #a r x `star` (frame `star` linv m0)) h');
             star_associative (pts_to #a r x) frame (linv m0);
             assert (H.interp ((pts_to #a r x `star` frame) `star` linv m0) h');
-            assert (stronger (linv m0) (linv m'));
-            assert (equiv (linv m') (linv m1));
-            assert (stronger (linv m0) (linv m1));
+            assert (H.stronger (linv m0) (linv m'));
+            assert (H.equiv (linv m') (linv m1));
+            assert (H.stronger (linv m0) (linv m1));
             let h' : H.hheap ((pts_to #a r x `star` frame) `star` linv m1) = weaken _ (linv m0) (linv m1) h' in
             assert (H.interp ((pts_to #a r x `star` frame) `star` linv m1) h');
             assert (forall (mp:H.hprop frame). mp h == mp h');
