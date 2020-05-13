@@ -1405,7 +1405,9 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
 
 let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
   let eff_name = BU.format3 "(%s, %s) |> %s)"
-    (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p) in
+    (m |> ident_of_lid |> string_of_id)
+    (n |> ident_of_lid |> string_of_id)
+    (p |> ident_of_lid |> string_of_id) in
   let r = (snd ts).pos in
 
   //p should be non-reifiable, reification of polymonadic binds is not yet implemented
@@ -1480,7 +1482,7 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
                   (Print.tscheme_to_string (us, k));
 
   log_issue r (Errors.Warning_BleedingEdge_Feature,
-    BU.format1 "Polymonadic binds (%s in this case) is a bleeding edge F* feature;\
+    BU.format1 "Polymonadic binds (%s in this case) is an experimental feature;\
       it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
       eff_name);
 
@@ -1490,7 +1492,9 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
 let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
   let r = (snd ts).pos in
 
-  let combinator_name = string_of_lid m ^ "<:" ^ string_of_lid n in
+  let combinator_name =
+    (m |> ident_of_lid |> string_of_id) ^ " <: " ^
+    (n |> ident_of_lid |> string_of_id) in
 
   let us, t, ty = check_and_gen env0 combinator_name "polymonadic_subcomp" 1 ts in
 
@@ -1553,5 +1557,10 @@ let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tschem
   if Env.debug env <| Options.Other "LayeredEffectsTc" then
     BU.print2 "Polymonadic subcomp %s type after unification : %s\n"
       combinator_name (Print.tscheme_to_string (us, k));
+
+  log_issue r (Errors.Warning_BleedingEdge_Feature,
+    BU.format1 "Polymonadic subcomp (%s in this case) is an experimental feature;\
+      it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
+      combinator_name);
 
   (us, t), (us, k)
