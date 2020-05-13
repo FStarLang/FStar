@@ -92,8 +92,11 @@ val h_forall (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a
 val h_refine (p:slprop u#a) (r:a_heap_prop u#a) : slprop u#a
 
 ////////////////////////////////////////////////////////////////////////////////
-//properties of equiv
+//Basic properties
 ////////////////////////////////////////////////////////////////////////////////
+
+val affine_star (p q:slprop) (m:heap)
+  : Lemma ((interp (p `star` q) m ==> interp p m /\ interp q m))
 
 val equiv_symmetric (p1 p2:slprop)
   : squash (p1 `equiv` p2 ==> p2 `equiv` p1)
@@ -101,9 +104,18 @@ val equiv_symmetric (p1 p2:slprop)
 val equiv_extensional_on_star (p1 p2 p3:slprop)
   : squash (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
 
-(** Properties of emp *)
 val emp_unit (p:slprop)
   : Lemma (p `equiv` (p `star` emp))
+
+val h_exists_cong (#a:Type) (p q : a -> slprop)
+    : Lemma
+      (requires (forall x. p x `equiv` q x))
+      (ensures (h_exists p `equiv` h_exists q))
+
+val interp_depends_only_on (hp:slprop u#a)
+    : Lemma
+      (forall (m0:hheap hp) (m1:heap u#a{disjoint m0 m1}).
+        interp hp m0 <==> interp hp (join m0 m1))
 
 ////////////////////////////////////////////////////////////////////////////////
 // pts_to and abbreviations
@@ -146,9 +158,6 @@ val star_congruence (p1 p2 p3 p4:slprop)
   : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
           (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
 
-val affine_star (p q:slprop) (m:heap)
-  : Lemma ((interp (p `star` q) m ==> interp p m /\ interp q m))
-
 ////////////////////////////////////////////////////////////////////////////////
 // refine
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,7 +166,7 @@ val refine_interp (p:slprop u#a) (q:a_heap_prop u#a) (h:heap u#a)
     : Lemma (interp p h /\ q h <==> interp (h_refine p q) h)
 
 val refine_equiv (p0 p1:slprop u#a) (q0 q1:a_heap_prop u#a)
-    : Lemma (p0 `equiv` p1 /\ (forall h. q0 h <==> q1 h) <==>
+    : Lemma (p0 `equiv` p1 /\ (forall h. q0 h <==> q1 h) ==>
              equiv (h_refine p0 q0) (h_refine p1 q1))
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -182,23 +191,8 @@ let is_frame_preserving #a #fp #fp' (f:pre_action fp a fp') =
       (forall ctr. h0 `free_above_addr` ctr <==> h1 `free_above_addr` ctr) /\
       (forall (hp:hprop frame). hp h0 == hp h1))
 
-
 let action (fp:slprop) (a:Type) (fp':a -> slprop) =
   f:pre_action fp a fp'{ is_frame_preserving f }
-
-let frame_related_heaps (h0 h1:heap) (fp0 fp1 frame:slprop) =
-  interp (fp0 `star` frame) h0 /\
-  interp (fp1 `star` frame) h1 /\
-  (forall ctr. h0 `free_above_addr` ctr <==> h1 `free_above_addr` ctr) /\
-  (forall (hp:hprop frame). hp h0 == hp h1)
-
-let action_framing #a #fp #fp' ($f:action fp a fp')
-                         (frame:slprop) (h0:hheap (fp `star` frame))
-  : Lemma (affine_star fp frame h0;
-           let (| x, h1 |) = f h0 in
-           frame_related_heaps h0 h1 fp (fp' x) frame)
-  = affine_star fp frame h0;
-    emp_unit fp
 
 (** Reading *)
 val sel (#a:_) (#pcm:_) (r:ref a pcm) (m:hheap (ptr r))
@@ -219,19 +213,24 @@ val upd_action (#a:_) (#pcm:_) (r:ref a pcm)
                (v1:a {Steel.PCM.frame_preserving pcm v0 v1})
   : action (pts_to r v0) unit (fun _ -> pts_to r v1)
 
-(** Allocating, pseudo action *)
-val extend (#a:_) (#pcm:_) (x:a) (addr:nat)
+(** Allocating, pseudo action, the context needs to provide a fresh address *)
+
+let frame_related_heaps (h0 h1:heap) (fp0 fp1 frame:slprop) (allocates:bool) =
+  interp (fp0 `star` frame) h0 ==>
+  interp (fp1 `star` frame) h1 /\
+  (forall (hp:hprop frame). hp h0 == hp h1) /\
+  (not allocates ==> (forall ctr. h0 `free_above_addr` ctr <==> h1 `free_above_addr` ctr))
+
+let action_framing #a #fp #fp' ($f:action fp a fp')
+                         (frame:slprop) (h0:hheap (fp `star` frame))
+  : Lemma (affine_star fp frame h0;
+           let (| x, h1 |) = f h0 in
+           frame_related_heaps h0 h1 fp (fp' x) frame false)
+  = affine_star fp frame h0;
+    emp_unit fp
+
+val extend (#a:_) (#pcm:_) (x:a{compatible pcm x x}) (addr:nat)
            (h:heap{h `free_above_addr` addr})
-  : (r:ref a pcm & h':heap{(forall f. interp f h ==> interp f h') /\
-                           interp (pts_to r x) h' /\
-                           h' `free_above_addr` (addr + 1)})
-
-val interp_depends_only_on (hp:slprop u#a)
-    : Lemma
-      (forall (m0:hheap hp) (m1:heap u#a{disjoint m0 m1}).
-        interp hp m0 <==> interp hp (join m0 m1))
-
-val h_exists_cong (#a:Type) (p q : a -> slprop)
-    : Lemma
-      (requires (forall x. p x `equiv` q x))
-      (ensures (h_exists p `equiv` h_exists q))
+  : (r:ref a pcm
+     & h':heap{ (forall frame. frame_related_heaps h h' emp (pts_to r x) frame (true)) /\
+                 h' `free_above_addr` (addr + 1) })

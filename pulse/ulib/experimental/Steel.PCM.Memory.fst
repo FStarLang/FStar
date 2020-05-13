@@ -236,7 +236,17 @@ let hmem_of_hheap (#fp0 #fp1:slprop) (m:hmem_with_inv fp0)
       assert (interp (fp1 `star` linv m1) m1);
       m1
 
-let ac_reasoning_for_m_frame_preserving _ _ _ _ = admit()
+let ac_reasoning_for_m_frame_preserving p q r m =
+  calc (equiv) {
+    (p `star` q) `star` r;
+       (equiv) { star_commutative p q;
+                 equiv_extensional_on_star (p `star` q) (q `star` p) r }
+    (q `star` p) `star` r;
+       (equiv) { star_associative q p r }
+    q `star` (p `star` r);
+  };
+  assert (interp (q `star` (p `star` r)) m);
+  affine_star q (p `star` r) m
 
 let with_inv (m:mem) (fp:slprop) = interp (fp `star` locks_invariant Set.empty m) m
 
