@@ -3876,7 +3876,7 @@ let try_solve_single_valued_implicits env (imps:Env.implicits) : Env.implicits *
   let imp_value imp : option<term> =
     let ctx_u, r = imp.imp_uvar, imp.imp_range in
 
-    let t_norm = N.normalize_refinement N.whnf_steps env ctx_u.ctx_uvar_typ in
+    let t_norm = N.normalize N.whnf_steps env ctx_u.ctx_uvar_typ in
     
     match (SS.compress t_norm).n with
     | Tm_fvar fv when S.fv_eq_lid fv Const.unit_lid ->
