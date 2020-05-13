@@ -167,6 +167,7 @@ let bind (a:Type) (b:Type)
  *       remove the custom Tm_known typechecking code for unit
  *       bind should do substitution for pure c1 (if bind c1 c2)
  *         applications might be ok, but let bindings may fail currently
+ *       add a bleeding edge feature warning to polymonadic_subcomp
  *)
 
 (*
