@@ -48,7 +48,8 @@ let env_hook = BU.mk_ref None
 let inspect_aqual (aq : aqual) : aqualv =
     match aq with
     | Some (Implicit _) -> Data.Q_Implicit
-    | Some (Meta t) -> Data.Q_Meta t
+    | Some (Meta (Arg_qualifier_meta_tac t)) -> Data.Q_Meta t
+    | Some (Meta (Arg_qualifier_meta_attr t)) -> Data.Q_Meta_attr t
     | Some Equality
     | None -> Data.Q_Explicit
 
@@ -57,7 +58,8 @@ let pack_aqual (aqv : aqualv) : aqual =
     match aqv with
     | Data.Q_Explicit -> None
     | Data.Q_Implicit -> Some (Implicit false)
-    | Data.Q_Meta t   -> Some (Meta t)
+    | Data.Q_Meta t   -> Some (Meta (Arg_qualifier_meta_tac t))
+    | Data.Q_Meta_attr t   -> Some (Meta (Arg_qualifier_meta_attr t))
 
 let inspect_fv (fv:fv) : list<string> =
     Ident.path_of_lid (lid_of_fv fv)

@@ -168,6 +168,8 @@ and env = {
   nbe            : list<step> -> env -> term -> term;  (* Callback to the NBE function *)
   strict_args_tab:BU.smap<(option<(list<int>)>)>;  (* a dictionary of fv names to strict arguments *)
   erasable_types_tab:BU.smap<bool>;              (* a dictionary of type names to erasable types *)
+  enable_defer_to_tac: bool                      (* Set by default; unset when running within a tactic itself, since we do not allow
+                                                    a tactic to defer problems to another tactic via the attribute mechanism *)
 }
 
 and solver_depth_t = int * int * int
@@ -401,7 +403,13 @@ val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
 val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
 val close_forall              : env -> binders -> term -> term
 
-val new_implicit_var_aux : string -> Range.range -> env -> typ -> should_check_uvar -> option<(FStar.Dyn.dyn * term)> -> (term * list<(ctx_uvar * Range.range)> * guard_t)
+val new_implicit_var_aux : string ->
+                           Range.range ->
+                           env ->
+                           typ ->
+                           should_check_uvar ->
+                           option<ctx_uvar_meta_t> ->
+                           (term * list<(ctx_uvar * Range.range)> * guard_t)
 
 
 val print_gamma : gamma -> string
