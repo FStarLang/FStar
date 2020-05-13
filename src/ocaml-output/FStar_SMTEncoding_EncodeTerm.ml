@@ -1679,7 +1679,9 @@ and (encode_term :
                               FStar_TypeChecker_Env.strict_args_tab =
                                 (uu___733_5381.FStar_TypeChecker_Env.strict_args_tab);
                               FStar_TypeChecker_Env.erasable_types_tab =
-                                (uu___733_5381.FStar_TypeChecker_Env.erasable_types_tab)
+                                (uu___733_5381.FStar_TypeChecker_Env.erasable_types_tab);
+                              FStar_TypeChecker_Env.enable_defer_to_tac =
+                                (uu___733_5381.FStar_TypeChecker_Env.enable_defer_to_tac)
                             }) res
                           in
                        (match uu____5372 with

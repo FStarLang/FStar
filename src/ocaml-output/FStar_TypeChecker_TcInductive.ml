@@ -2647,6 +2647,8 @@ let (check_inductive_well_typedness :
                              {
                                FStar_TypeChecker_Common.guard_f =
                                  (uu___1023_7258.FStar_TypeChecker_Common.guard_f);
+                               FStar_TypeChecker_Common.deferred_to_tac =
+                                 (uu___1023_7258.FStar_TypeChecker_Common.deferred_to_tac);
                                FStar_TypeChecker_Common.deferred =
                                  (uu___1023_7258.FStar_TypeChecker_Common.deferred);
                                FStar_TypeChecker_Common.univ_ineqs =

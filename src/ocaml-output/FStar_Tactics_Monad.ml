@@ -497,16 +497,16 @@ let (new_uvar :
            in
         match uu____791 with
         | (u,ctx_uvar,g_u) ->
-            let uu____829 =
+            let uu____825 =
               add_implicits g_u.FStar_TypeChecker_Common.implicits  in
-            bind uu____829
-              (fun uu____838  ->
-                 let uu____839 =
-                   let uu____844 =
-                     let uu____845 = FStar_List.hd ctx_uvar  in
-                     FStar_Pervasives_Native.fst uu____845  in
-                   (u, uu____844)  in
-                 ret uu____839)
+            bind uu____825
+              (fun uu____834  ->
+                 let uu____835 =
+                   let uu____840 =
+                     let uu____841 = FStar_List.hd ctx_uvar  in
+                     FStar_Pervasives_Native.fst uu____841  in
+                   (u, uu____840)  in
+                 ret uu____835)
   
 let (mk_irrelevant_goal :
   Prims.string ->
@@ -521,14 +521,14 @@ let (mk_irrelevant_goal :
         fun opts  ->
           fun label  ->
             let typ =
-              let uu____895 = env.FStar_TypeChecker_Env.universe_of env phi
+              let uu____891 = env.FStar_TypeChecker_Env.universe_of env phi
                  in
-              FStar_Syntax_Util.mk_squash uu____895 phi  in
-            let uu____896 = new_uvar reason env typ  in
-            bind uu____896
-              (fun uu____911  ->
-                 match uu____911 with
-                 | (uu____918,ctx_uvar) ->
+              FStar_Syntax_Util.mk_squash uu____891 phi  in
+            let uu____892 = new_uvar reason env typ  in
+            bind uu____892
+              (fun uu____907  ->
+                 match uu____907 with
+                 | (uu____914,ctx_uvar) ->
                      let goal =
                        FStar_Tactics_Types.mk_goal env ctx_uvar opts false
                          label
@@ -546,8 +546,8 @@ let (add_irrelevant_goal' :
       fun phi  ->
         fun opts  ->
           fun label  ->
-            let uu____956 = mk_irrelevant_goal reason env phi opts label  in
-            bind uu____956 (fun goal  -> add_goals [goal])
+            let uu____952 = mk_irrelevant_goal reason env phi opts label  in
+            bind uu____952 (fun goal  -> add_goals [goal])
   
 let (add_irrelevant_goal :
   FStar_Tactics_Types.goal ->
@@ -567,8 +567,8 @@ let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
     fun t  ->
       mk_tac
         (fun ps  ->
-           let uu____1019 = run t ps  in
-           match uu____1019 with
+           let uu____1015 = run t ps  in
+           match uu____1015 with
            | FStar_Tactics_Result.Success (a1,q) ->
                FStar_Tactics_Result.Success (a1, q)
            | FStar_Tactics_Result.Failed
@@ -590,14 +590,16 @@ let (compress_implicits : unit tac) =
     (fun ps  ->
        let imps = ps.FStar_Tactics_Types.all_implicits  in
        let g =
-         let uu___204_1102 = FStar_TypeChecker_Env.trivial_guard  in
+         let uu___204_1098 = FStar_TypeChecker_Env.trivial_guard  in
          {
            FStar_TypeChecker_Common.guard_f =
-             (uu___204_1102.FStar_TypeChecker_Common.guard_f);
+             (uu___204_1098.FStar_TypeChecker_Common.guard_f);
+           FStar_TypeChecker_Common.deferred_to_tac =
+             (uu___204_1098.FStar_TypeChecker_Common.deferred_to_tac);
            FStar_TypeChecker_Common.deferred =
-             (uu___204_1102.FStar_TypeChecker_Common.deferred);
+             (uu___204_1098.FStar_TypeChecker_Common.deferred);
            FStar_TypeChecker_Common.univ_ineqs =
-             (uu___204_1102.FStar_TypeChecker_Common.univ_ineqs);
+             (uu___204_1098.FStar_TypeChecker_Common.univ_ineqs);
            FStar_TypeChecker_Common.implicits = imps
          }  in
        let g1 =
@@ -605,31 +607,31 @@ let (compress_implicits : unit tac) =
            ps.FStar_Tactics_Types.main_context g
           in
        let ps' =
-         let uu___208_1105 = ps  in
+         let uu___208_1101 = ps  in
          {
            FStar_Tactics_Types.main_context =
-             (uu___208_1105.FStar_Tactics_Types.main_context);
+             (uu___208_1101.FStar_Tactics_Types.main_context);
            FStar_Tactics_Types.all_implicits =
              (g1.FStar_TypeChecker_Common.implicits);
            FStar_Tactics_Types.goals =
-             (uu___208_1105.FStar_Tactics_Types.goals);
+             (uu___208_1101.FStar_Tactics_Types.goals);
            FStar_Tactics_Types.smt_goals =
-             (uu___208_1105.FStar_Tactics_Types.smt_goals);
+             (uu___208_1101.FStar_Tactics_Types.smt_goals);
            FStar_Tactics_Types.depth =
-             (uu___208_1105.FStar_Tactics_Types.depth);
+             (uu___208_1101.FStar_Tactics_Types.depth);
            FStar_Tactics_Types.__dump =
-             (uu___208_1105.FStar_Tactics_Types.__dump);
-           FStar_Tactics_Types.psc = (uu___208_1105.FStar_Tactics_Types.psc);
+             (uu___208_1101.FStar_Tactics_Types.__dump);
+           FStar_Tactics_Types.psc = (uu___208_1101.FStar_Tactics_Types.psc);
            FStar_Tactics_Types.entry_range =
-             (uu___208_1105.FStar_Tactics_Types.entry_range);
+             (uu___208_1101.FStar_Tactics_Types.entry_range);
            FStar_Tactics_Types.guard_policy =
-             (uu___208_1105.FStar_Tactics_Types.guard_policy);
+             (uu___208_1101.FStar_Tactics_Types.guard_policy);
            FStar_Tactics_Types.freshness =
-             (uu___208_1105.FStar_Tactics_Types.freshness);
+             (uu___208_1101.FStar_Tactics_Types.freshness);
            FStar_Tactics_Types.tac_verb_dbg =
-             (uu___208_1105.FStar_Tactics_Types.tac_verb_dbg);
+             (uu___208_1101.FStar_Tactics_Types.tac_verb_dbg);
            FStar_Tactics_Types.local_state =
-             (uu___208_1105.FStar_Tactics_Types.local_state)
+             (uu___208_1101.FStar_Tactics_Types.local_state)
          }  in
        set ps')
   
