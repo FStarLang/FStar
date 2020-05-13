@@ -232,11 +232,6 @@ let join_associative2 (m0 m1 m2:heap)
     join_commutative (join m0 m1) m2;
     join_associative m2 m0 m1
 
-let heap_prop_is_affine (p:heap -> prop) =
-  forall m0 m1. p m0 /\ disjoint m0 m1 ==> p (join m0 m1)
-let a_heap_prop : Type u#(a + 1) =
-  p:(heap u#a -> prop) { heap_prop_is_affine p }
-
 ////////////////////////////////////////////////////////////////////////////////
 
 module W = FStar.WellFounded
@@ -309,13 +304,37 @@ let star = Star
 let wand = Wand
 let h_exists = Ex
 let h_forall = All
+let h_refine = Refine
 
 ////////////////////////////////////////////////////////////////////////////////
 //properties of equiv
 ////////////////////////////////////////////////////////////////////////////////
-
+let affine_star _ _ _ = admit()
 let equiv_symmetric (p1 p2:slprop u#a) = ()
 let equiv_extensional_on_star (p1 p2 p3:slprop u#a) = ()
+let emp_unit p
+  = let emp_unit_1 p m
+      : Lemma
+        (requires interp p m)
+        (ensures  interp (p `star` emp) m)
+        [SMTPat (interp (p `star` emp) m)]
+      = let emp_m : heap = on _ (fun _ -> None) in
+        assert (disjoint emp_m m);
+        assert (interp (p `star` emp) (join m emp_m));
+        assert (mem_equiv m (join m emp_m))
+    in
+    let emp_unit_2 p m
+      : Lemma
+        (requires interp (p `star` emp) m)
+        (ensures interp p m)
+        [SMTPat (interp (p `star` emp) m)]
+      = affine_star p emp m
+    in
+    ()
+
+let h_exists_cong (#a:Type) (p q : a -> slprop) = ()
+
+let interp_depends_only_on (hp:slprop u#a) = emp_unit hp
 
 ////////////////////////////////////////////////////////////////////////////////
 //pts_to
@@ -465,7 +484,18 @@ let star_associative (p1 p2 p3:slprop)
 let star_congruence (p1 p2 p3 p4:slprop) = ()
 
 
-let affine_star _ _ _ = admit()
+////////////////////////////////////////////////////////////////////////////////
+// refine
+////////////////////////////////////////////////////////////////////////////////
+
+let refine_interp p q h = ()
+let refine_equiv p0 p1 q0 q1 = ()
+
+////////////////////////////////////////////////////////////////////////////////
+// Actions:
+////////////////////////////////////////////////////////////////////////////////
+let free_above_addr h a =
+  forall (i:nat). i >= a ==> h i == None
 
 ////////////////////////////////////////////////////////////////////////////////
 // sel
@@ -557,7 +587,8 @@ let upd_lemma' (#a:_) #pcm (r:ref a pcm)
       interp (pts_to r v0 `star` frame) h)
     (ensures (
       (let (| x, h1 |) = upd' r v0 v1 h in
-       interp (pts_to r v1 `star` frame) h1)))
+       interp (pts_to r v1 `star` frame) h1 /\
+       (forall (hp:hprop frame). hp h == hp h1))))
   = let aux (h0 hf:heap)
      : Lemma
        (requires
@@ -571,7 +602,8 @@ let upd_lemma' (#a:_) #pcm (r:ref a pcm)
          disjoint h0' hf /\
          interp (pts_to r v1) h0' /\
          interp frame hf /\
-         h' == join h0' hf))
+         h' == join h0' hf /\
+         (forall (hp:hprop frame). hp h == hp h')))
        [SMTPat (disjoint h0 hf)]
      = let (| _, h'|) = upd' r v0 v1 h in
        let cell1 = (Ref a pcm v1) in
@@ -637,7 +669,13 @@ let upd_lemma' (#a:_) #pcm (r:ref a pcm)
                pcm.comm vf v1
            end
        in
-       assert (mem_equiv h' (join h0' hf))
+       assert (mem_equiv h' (join h0' hf));
+       let aux (hp:hprop frame)
+         : Lemma (ensures (hp h == hp h'))
+                 [SMTPat ()]
+         = FStar.PropositionalExtensionality.apply (hp h) (hp h')
+       in
+       assert (forall (hp:hprop frame). hp h == hp h')
    in
    ()
 #pop-options
@@ -645,14 +683,56 @@ let upd_lemma' (#a:_) #pcm (r:ref a pcm)
 let upd_action (#a:_) (#pcm:_) (r:ref a pcm)
                (v0:FStar.Ghost.erased a) (v1:a {frame_preserving pcm v0 v1})
   : action (pts_to r v0) unit (fun _ -> pts_to r v1)
-  = let aux (h:hheap (pts_to r v0)) (frame:slprop)
+  = let aux (frame:slprop) (h:hheap (pts_to r v0 `star` frame))
     : Lemma
-      (requires
-        interp (pts_to r v0 `star` frame) h)
       (ensures (
-        (let (| x, h1 |) = upd' r v0 v1 h in
-        interp (pts_to r v1 `star` frame) h1)))
+        (affine_star (pts_to r v0) frame h;
+         let (| x, h1 |) = upd' r v0 v1 h in
+         interp (pts_to r v1 `star` frame) h1 /\
+         (forall ctr. h `free_above_addr` ctr <==> h1 `free_above_addr` ctr) /\
+         (forall (hp:hprop frame). hp h == hp h1)
+         )))
       [SMTPat ( interp (pts_to r v0 `star` frame) h)]
-    = upd_lemma' r v0 v1 h frame
-    in
-    upd' r v0 v1
+    = affine_star (pts_to r v0) frame h;
+      upd_lemma' r v0 v1 h frame
+   in
+   upd' r v0 v1
+
+let extend #a #pcm x addr h =
+    let r : ref a pcm = addr in
+    let h' = update_addr h r (Ref a pcm x) in
+    assert (h' `free_above_addr` (addr + 1));
+    assert (h' `contains_addr` r);
+    assert (interp (pts_to r x) h');
+    let extend_aux (frame:slprop) (h0 hf:heap)
+      : Lemma
+       (requires
+          disjoint h0 hf /\
+          h == join h0 hf /\
+          interp emp h0 /\
+          interp frame hf)
+       (ensures (
+          let h0' = update_addr h0 r (Ref a pcm x) in
+          disjoint h0' hf /\
+          interp (pts_to r x) h0' /\
+          h' == join h0' hf /\
+          interp (pts_to r x `star` frame) h' /\
+          (forall (hp:hprop frame). hp h == hp h')
+         ))
+       [SMTPat (interp emp h0);
+        SMTPat (interp frame hf)]
+      = let h0' = update_addr h0 r (Ref a pcm x) in
+        // assert (disjoint h0' hf);
+        // assert (interp (pts_to r x) h0');
+        assert (mem_equiv h' (join h0' hf));
+        // assert (h' == (join h0' hf));
+        intro_star (pts_to r x) frame h0' hf;
+        // assert (interp (pts_to r x `star` frame) h');
+        let aux (hp:hprop frame)
+          : Lemma (ensures (hp h == hp h'))
+                  [SMTPat ()]
+            = FStar.PropositionalExtensionality.apply (hp h) (hp h')
+        in
+        ()
+     in
+     (| r, h' |)

@@ -59,7 +59,7 @@ val join_associative (m0 m1 m2:mem)
        join m0 (join m1 m2) == join (join m0 m1) m2))
 
 /// The type of mem assertions
-//[@@erasable] I would like this to be abstract, but I can't define an abstract abbreviation of an erasable type and have it be erasable too. Need to fix that
+//[@@erasable] I would like this to be abstract, but I can't define an abstract abbreviation of an erasable type and have it be erasable too. Need to fix that after which this interface should not expose its dependence on Heap
 let slprop = Steel.PCM.Heap.slprop
 
 /// interpreting mem assertions as memory predicates
