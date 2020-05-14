@@ -501,7 +501,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
           |> (fun l -> let (f::g::p::[]) = l in f, g, p) in
         Env.push_binders (Env.push_univ_vars env0 us) bs,
         S.mk_Tm_app ite_t
-          (bs |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg)
+          (bs |> List.map (fun (b, qual) -> S.bv_to_name b, qual))
           r,
         f, g, p
       | _ -> failwith "Impossible! ite_t must have been an abstraction with at least 3 binders" in
