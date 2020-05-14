@@ -48,7 +48,7 @@ let returnc (a:Type) (x:a)
 /// bind bakes in the weakening of f's post to compose it with g's pre
 
 let bind (a:Type) (b:Type)
-  (pre_f:pre_t) (post_f:post_t a) (pre_g:a -> pre_t) (post_g:a -> post_t b)
+  (#pre_f:pre_t) (#post_f:post_t a) (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
   (f:repr a pre_f post_f) (g:(x:a -> repr b (pre_g x) (post_g x)))
 : repr b
   (fun h0 -> pre_f h0 /\ (forall (x:a) (h1:heap). post_f h0 x h1 ==> pre_g x h1))
@@ -61,8 +61,8 @@ let bind (a:Type) (b:Type)
 /// sub comp rule
 
 let subcomp (a:Type)
-  (pre_f:pre_t) (post_f:post_t a)
-  (pre_g:pre_t) (post_g:post_t a)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (#pre_g:pre_t) (#post_g:post_t a)
   (f:repr a pre_f post_f)
 : Pure (repr a pre_g post_g)
   (requires
@@ -72,8 +72,8 @@ let subcomp (a:Type)
 = f
 
 let if_then_else (a:Type)
-  (pre_f:pre_t) (post_f:post_t a)
-  (pre_g:pre_t) (post_g:post_t a)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (#pre_g:pre_t) (#post_g:post_t a)
   (f:repr a pre_f post_f)
   (g:repr a pre_g post_g)
   (p:Type0)
