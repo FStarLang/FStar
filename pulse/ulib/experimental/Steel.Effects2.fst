@@ -237,7 +237,8 @@ new_effect Steel = SteelF
 (*
  * Keeping f_frame aside for now
  *)
-let frame_aux (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+let frame_aux (#a:Type)
+  (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
   ($f:repr a pre post req ens) (frame:hprop)
 : repr a (pre `star` frame) (fun x -> post x `star` frame) req ens
 = fun _ ->
@@ -281,12 +282,12 @@ let bind_steel_steel_ens (#a:Type) (#b:Type)
   (exists (x:a) (m1:hmem (post_f x `star` frame_f)). ens_f m0 x m1 /\ (ens_g x) m1 y m2)
 
 let bind_steel_steel (a:Type) (b:Type)
-  (#pre_f:pre_t) (#post_f:post_t a)
+  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
-  (#pre_g:a -> pre_t) (#post_g:post_t b)
+  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
   (req_g:(x:a -> req_t (pre_g x))) (ens_g:(x:a -> ens_t (pre_g x) b post_g))
-  (#frame_f:hprop) (#frame_g:hprop)
-  (#p:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` (pre_g x `star` frame_g)))
+  (#[@@ framing_implicit] frame_f:hprop) (#[@@ framing_implicit] frame_g:hprop)
+  (#[@@ framing_implicit] p:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` (pre_g x `star` frame_g)))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) post_g (req_g x) (ens_g x)))
 : repr b
@@ -337,12 +338,12 @@ let bind_steel_steelf_ens (#a:Type) (#b:Type)
   (exists (x:a) (m1:hmem (post_f x `star` frame_f)). ens_f m0 x m1 /\ (ens_g x) m1 y m2)
 
 let bind_steel_steelf (a:Type) (b:Type)
-  (#pre_f:pre_t) (#post_f:post_t a)
+  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
-  (#pre_g:a -> pre_t) (#post_g:post_t b)
+  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
   (req_g:(x:a -> req_t (pre_g x))) (ens_g:(x:a -> ens_t (pre_g x) b post_g))
-  (#frame_f:hprop)
-  (#p:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` pre_g x))
+  (#[@@ framing_implicit] frame_f:hprop)
+  (#[@@ framing_implicit] p:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` pre_g x))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) post_g (req_g x) (ens_g x)))
 : repr b
@@ -389,12 +390,12 @@ let bind_steelf_steel_ens (#a:Type) (#b:Type)
   (exists (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 /\ (ens_g x) m1 y m2)
 
 let bind_steelf_steel (a:Type) (b:Type)
-  (#pre_f:pre_t) (#post_f:post_t a)
+  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
-  (#pre_g:a -> pre_t) (#post_g:post_t b)
+  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
   (req_g:(x:a -> req_t (pre_g x))) (ens_g:(x:a -> ens_t (pre_g x) b post_g))
-  (#frame_g:hprop)
-  (#p:squash (forall (x:a). post_f x `sl_implies` (pre_g x `star` frame_g)))
+  (#[@@ framing_implicit] frame_g:hprop)
+  (#[@@ framing_implicit] p:squash (forall (x:a). post_f x `sl_implies` (pre_g x `star` frame_g)))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) post_g (req_g x) (ens_g x)))
 : repr b
@@ -438,7 +439,8 @@ let bind_pure_steel__ens (#a:Type) (#b:Type)
 
 let bind_pure_steel_ (a:Type) (b:Type)
   (wp:pure_wp a)
-  (#pre:pre_t) (#post:post_t b) (req:a -> req_t pre) (ens:a -> ens_t pre b post)
+  (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t b)
+  (req:a -> req_t pre) (ens:a -> ens_t pre b post)
   (f:unit -> PURE a wp) (g:(x:a -> repr b pre post (req x) (ens x)))
 : repr b
     pre
@@ -461,7 +463,7 @@ polymonadic_bind (PURE, Steel) |> Steel = bind_pure_steel_
 //  *
 //  * Note it is in SteelF (i.e. framed already)
 //  *)
-let steel_ret (#a:Type) (#p:a -> hprop u#1) (x:a)
+let steel_ret (#a:Type) (#[@@ framing_implicit] p:a -> hprop u#1) (x:a)
 : SteelF a (p x) p (fun _ -> True) (fun _ r _ -> r == x)
 = SteelF?.reflect (fun _ -> x)
 
