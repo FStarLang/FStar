@@ -183,6 +183,9 @@ val weaken (p q r:slprop) (h:heap u#a)
 ////////////////////////////////////////////////////////////////////////////////
 // Actions:
 ////////////////////////////////////////////////////////////////////////////////
+
+val heap_evolves : FStar.Preorder.preorder heap
+
 val free_above_addr (h:heap u#a) (a:nat) : prop
 
 val weaken_free_above (h:heap) (a b:nat)
@@ -202,12 +205,14 @@ let is_frame_preserving #a #fp #fp' (f:pre_action fp a fp') =
      (affine_star fp frame h0;
       let (| x, h1 |) = f h0 in
       interp (fp' x `star` frame) h1 /\
+      heap_evolves h0 h1 /\
       (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr) /\
       (forall (hp:hprop frame). hp h0 == hp h1))
 
 let frame_related_heaps (h0 h1:heap) (fp0 fp1 frame:slprop) (allocates:bool) =
   interp (fp0 `star` frame) h0 ==>
   interp (fp1 `star` frame) h1 /\
+  heap_evolves h0 h1 /\
   (forall (hp:hprop frame). hp h0 == hp h1) /\
   (not allocates ==> (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr))
 
@@ -251,4 +256,5 @@ val extend (#a:_) (#pcm:_) (x:a{compatible pcm x x}) (addr:nat)
            (h:heap{h `free_above_addr` addr})
   : (r:ref a pcm
      & h':heap{ (forall frame. frame_related_heaps h h' emp (pts_to r x) frame (true)) /\
-                 h' `free_above_addr` (addr + 1) })
+                 h' `free_above_addr` (addr + 1) /\
+                 heap_evolves h h'})
