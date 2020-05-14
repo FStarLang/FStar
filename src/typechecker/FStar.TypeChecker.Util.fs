@@ -412,68 +412,9 @@ let lift_comps_sep_guards env c1 c2 (b:option<bv>) (for_bind:bool)
         c2, Env.close_guard env [x_a] g2 in
     m, c1, c2, g1, g2
   | None ->
-
-    (*
-     * AR: we could not lift the comps using the wp lattice
-     *     try using the polymonadic binds
-     *     if there exists a polymonadic bind (M1, M2) |> M2,
-     *       then lift using, lift_M1_M2 e = bind_M1_M2 e (fun x -> M2.return x)
-     *
-     *     (and similarly if exists (M2, M1) |> M1
-     *
-     *     we could also try to find a P such that (M1, P) |> P and (M2, P) |> P exist
-     *       but leaving that for later
-     *)
-
-    let rng = env.range in
-    let err () =
-      raise_error (Errors.Fatal_EffectsCannotBeComposed,
-        (BU.format2 "Effects %s and %s cannot be composed" 
-          (Print.lid_to_string c1.effect_name) (Print.lid_to_string c2.effect_name))) rng in
-
-    if Env.debug env <| Options.Other "LayeredEffects"
-    then BU.print3 "Lifting comps %s and %s with for_bind %s{\n"
-           (c1 |> S.mk_Comp |> Print.comp_to_string)
-           (c2 |> S.mk_Comp |> Print.comp_to_string)
-           (string_of_bool for_bind);
-
-    if for_bind then err ()
-    else
-
-      let bind_with_return (ct:comp_typ) (ret_eff:lident) (f_bind:Env.polymonadic_bind_t)
-      : comp * guard_t =
-        let x_bv = S.gen_bv "x" None ct.result_typ in
-        let c_ret, g_ret = mk_return
-          (Env.push_bv env x_bv)
-          (Env.get_effect_decl env ret_eff)
-          (List.hd ct.comp_univs)
-          ct.result_typ (S.bv_to_name x_bv) rng in
-        let c, g_bind = f_bind env ct (Some x_bv) (U.comp_to_comp_typ c_ret) [] rng in
-        c, Env.conj_guard g_ret g_bind in
-
-      let try_lift c1 c2 : option<(lident * comp * comp * guard_t)> =
-        let p_bind_opt = Env.exists_polymonadic_bind env c1.effect_name c2.effect_name in
-        if p_bind_opt |> is_some
-        then let p, f_bind = p_bind_opt |> must in
-             if lid_equals p c2.effect_name
-             then (let c1, g = bind_with_return c1 p f_bind in
-                   Some (c2.effect_name, c1, S.mk_Comp c2, g))
-             else None
-        else None in
-  
-      let p, c1, c2, g1, g2 =
-        match try_lift c1 c2 with
-        | Some (p, c1, c2, g) -> p, c1, c2, g, Env.trivial_guard
-        | None ->
-          match try_lift c2 c1 with
-          | Some (p, c2, c1, g) -> p, c1, c2, Env.trivial_guard, g
-          | None -> err () in
-
-      if Env.debug env <| Options.Other "LayeredEffects"
-      then BU.print3 "} Returning p %s, c1 %s, and c2 %s\n"
-             (Ident.string_of_lid p) (Print.comp_to_string c1) (Print.comp_to_string c2);
-
-      p, c1, c2, g1, g2
+    raise_error (Errors.Fatal_EffectsCannotBeComposed,
+      (BU.format2 "Effects %s and %s cannot be composed" 
+        (Print.lid_to_string c1.effect_name) (Print.lid_to_string c2.effect_name))) env.range
 
 let lift_comps env c1 c2 (b:option<bv>) (for_bind:bool)
 : lident * comp * comp * guard_t
