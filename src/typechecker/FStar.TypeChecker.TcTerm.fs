@@ -322,11 +322,11 @@ let check_no_smt_theory_symbols (en:env) (t:term) :unit =
   let rec aux (t:term) :list<term> =
     match (SS.compress t).n with
     //these cases are fine
-    | Tm_bvar _ | Tm_name _ | Tm_type _ | Tm_uvar _
+    | Tm_bvar _ | Tm_name _ | Tm_constant _ | Tm_type _ | Tm_uvar _
     | Tm_lazy _ | Tm_unknown -> []
 
     //these should not be allowed in patterns
-    | Tm_constant _ | Tm_abs _ | Tm_arrow _ | Tm_refine _
+    | Tm_abs _ | Tm_arrow _ | Tm_refine _
     | Tm_match _ | Tm_let _ | Tm_delayed _ | Tm_quoted _ -> [t]
 
     //these descend more in the term
@@ -394,34 +394,35 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                 | Some (DECREASES dec) -> as_lex_list dec
                 | _ ->
                     let xs = bs |> filter_types_and_functions in
-                    match xs with
-                        | [x] -> x //NS: why no promotion here?
-                                   //GM: To simplify 1-argument functions
-                                   //    and get (x << x0) instead of (x :: LexTop) << (x0 :: LexTop)
-                        | _ -> mk_lex_list xs in
+                    mk_lex_list xs
+      in
 
-        let previous_dec = decreases_clause actuals expected_c in
-        let guard_one_letrec (l, t, u_names) =
-            match (SS.compress t).n with
-                | Tm_arrow(formals, c) ->
-                  //make sure they all have non-null names
-                  let formals = formals |> List.map (fun (x, imp) -> if S.is_null_bv x then (S.new_bv (Some (S.range_of_bv x)) x.sort, imp) else x,imp) in
-        (*open*)  let formals, c = SS.open_comp formals c in
-                  let dec = decreases_clause formals c in
-                  let precedes = mk_Tm_app precedes [as_arg dec; as_arg previous_dec] r in
-                  let precedes = TcUtil.label "Could not prove termination of this recursive call" r precedes in
-                  let bs, (last, imp) = BU.prefix formals in
-                  let last = {last with sort=U.refine last precedes} in
-                  let refined_formals = bs@[(last,imp)] in
-        (*close*) let t' = U.arrow refined_formals c in
-                  if debug env Options.Medium
-                  then BU.print3 "Refined let rec %s\n\tfrom type %s\n\tto type %s\n"
-                        (Print.lbname_to_string l) (Print.term_to_string t) (Print.term_to_string t');
-                  l, t', u_names
+      let previous_dec = decreases_clause actuals expected_c in
 
-                | _ -> raise_error (Errors.Fatal_ExpectedArrowAnnotatedType, "Annotated type of 'let rec' must be an arrow") t.pos in
+      let guard_one_letrec (l, arity, t, u_names) =
+        let formals, c = N.get_n_binders env arity t in
 
-        letrecs |> List.map guard_one_letrec
+        (* This should never happen since `termination_check_enabled`
+         * takes care to not return an arity bigger than the one in
+         * the lbtyp. *)
+        if arity > List.length formals then
+          failwith "impossible: bad formals arity, guard_one_letrec";
+
+        //make sure they all have non-null names
+        let formals = formals |> List.map (fun (x, imp) -> if S.is_null_bv x then (S.new_bv (Some (S.range_of_bv x)) x.sort, imp) else x,imp) in
+        let dec = decreases_clause formals c in
+        let precedes = mk_Tm_app precedes [as_arg dec; as_arg previous_dec] r in
+        let precedes = TcUtil.label "Could not prove termination of this recursive call" r precedes in
+        let bs, (last, imp) = BU.prefix formals in
+        let last = {last with sort=U.refine last precedes} in
+        let refined_formals = bs@[(last,imp)] in
+        let t' = U.arrow refined_formals c in
+        if debug env Options.Medium
+        then BU.print3 "Refined let rec %s\n\tfrom type %s\n\tto type %s\n"
+              (Print.lbname_to_string l) (Print.term_to_string t) (Print.term_to_string t');
+        l, t', u_names
+      in
+      letrecs |> List.map guard_one_letrec
 
 let wrap_guard_with_tactic_opt topt g =
    match topt with
@@ -1419,7 +1420,12 @@ and tc_abs_expected_function_typ env (bs:binders) t0 (body:term)
           (envbody, letrec_binders, Env.close_guard envbody bs g)
         in
 
-        let envbody, bs, g_env, c, body = check_actuals_against_formals env bs bs_expected body in
+        (* Set letrecs to [] before calling check_actuals_against_formals,
+         * then restore. That function will typecheck the types of the binders
+         * and having letrecs set will make a mess. *)
+        let envbody = { env with letrecs = [] } in
+        let envbody, bs, g_env, c, body = check_actuals_against_formals envbody bs bs_expected body in
+        let envbody = { envbody with letrecs = env.letrecs } in
         let envbody, letrecs, g_annots = mk_letrec_env envbody bs c in
         let envbody = Env.set_expected_typ envbody (U.comp_result c) in
         Some t, bs, letrecs, Some c, envbody, body, Env.conj_guard g_env g_annots
@@ -1527,7 +1533,6 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let fail :string -> typ -> 'a = fun msg t ->
         raise_error (Err.expected_a_term_of_type_t_got_a_function env msg t top) (top.pos) in
 
-    
     (* whether to try first to use unification for solving sub-typing constraints or only propagate to the SMT solver *)
     let use_eq = env.use_eq in
     (* topt is the expected type of the expression obtained from the env *)
@@ -1903,7 +1908,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             let guard = List.fold_right Env.conj_guard [g_ex; g] implicits in
             tc_args head_info (subst, (arg, None, S.mk_Total t |> TcComm.lcomp_of_comp)::outargs, arg::arg_rets, guard, fvs) rest args
 
-        | (x, Some (Meta tau))::rest, (_, None)::_ -> (* instantiate a meta arg *)
+        | (x, Some (Meta tau_or_attr))::rest, (_, None)::_ -> (* instantiate a meta arg *)
             (* We follow the exact same procedure as for instantiating an implicit,
              * except that we keep track of the (uvar, env, metaprogram) pair in the environment
              * so we can later come back to the implicit and, if it wasn't solved by unification,
@@ -1914,8 +1919,17 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
              * to find an instance for it. We might not even be able to, since instances
              * are for concrete types.
              *)
-            let tau = SS.subst subst tau in
-            let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
+            let ctx_uvar_meta, g_tau_or_attr = 
+                match tau_or_attr with
+                | Arg_qualifier_meta_tac tau ->
+                  let tau = SS.subst subst tau in
+                  let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
+                  Ctx_uvar_meta_tac (mkdyn env, tau), g_tau
+                | Arg_qualifier_meta_attr attr ->
+                  let attr = SS.subst subst attr in
+                  let attr, _, g_attr = tc_tot_or_gtot_term env attr in
+                  Ctx_uvar_meta_attr attr, g_attr
+            in
             let t = SS.subst subst x.sort in
             let t, g_ex = check_no_escape (Some head) env fvs t in
             let r = match outargs with
@@ -1925,10 +1939,12 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                                            (Range.union_rng (Range.use_range head.pos)
                                                             (Range.use_range t.pos))
             in
-            let varg, _, implicits = new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some (mkdyn env, tau)) in
+            let varg, _, implicits = 
+              new_implicit_var_aux "Instantiating meta argument in application" r env t Strict (Some ctx_uvar_meta)
+            in
             let subst = NT(x, varg)::subst in
             let arg = varg, as_implicit true in
-            let guard = List.fold_right Env.conj_guard [g_ex; g; g_tau] implicits in
+            let guard = List.fold_right Env.conj_guard [g_ex; g; g_tau_or_attr] implicits in
             tc_args head_info (subst, (arg, None, S.mk_Total t |> TcComm.lcomp_of_comp)::outargs, arg::arg_rets, guard, fvs) rest args
 
         | (x, aqual)::rest, (e, aq)::rest' -> (* a concrete argument *)
@@ -3120,51 +3136,51 @@ and check_inner_let_rec env top =
 (* build an environment with recursively bound names.                         *)
 (* refining the types of those names with decreases clauses is done in tc_abs *)
 (******************************************************************************)
-and build_let_rec_env top_level env lbs : list<letbinding> * env_t * guard_t =
+and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
    let env0 = env in
-   let termination_check_enabled lbname lbdef lbtyp =
-     if Options.ml_ish () then false else
-     let t = N.unfold_whnf env lbtyp in
-     let formals, c = arrow_formals_comp t in
-     let actuals, _, _ = abs_formals lbdef in
-     if List.length formals < 1
-        || List.length actuals < 1
-     then
-       raise_error (Errors.Fatal_RecursiveFunctionLiteral, (BU.format2 "Only function literals with arrow types can be defined recursively; got %s : %s"
+   let termination_check_enabled (lbname:lbname) (lbdef:term) (lbtyp:term)
+     : option<(int * term)> // when enabled returns recursion arity;
+                            // plus the term elaborated with implicit binders
+                            // (TODO: move all that logic to desugaring)
+     =
+     if Options.ml_ish () then None else
+
+     let lbtyp0 = lbtyp in
+     let actuals, body, body_lc = abs_formals lbdef in
+
+     //add implicit binders, in case, for instance
+     //lbtyp is of the form x:'a -> t
+     //lbdef is of the form (fun x -> t)
+     //in which case, we need to add (#'a:Type) to the actuals
+     //See the handling in Tm_abs case of tc_value, roughly line 703 (location may have changed since this comment was written)
+     let actuals = TcUtil.maybe_add_implicit_binders (Env.set_expected_typ env lbtyp) actuals in
+     let nactuals = List.length actuals in
+
+     (* Grab binders from the type. At most as many as we have in
+      * the abstraction. *)
+     let formals, c = N.get_n_binders env nactuals lbtyp in
+
+     // TODO: There's a similar error in check_let_recs, would be nice
+     // to remove this one.
+     if List.isEmpty formals || List.isEmpty actuals then
+       raise_error (Errors.Fatal_RecursiveFunctionLiteral,
+                    (BU.format2 "Only function literals with arrow types can be defined recursively; got %s : %s"
                                (Print.term_to_string lbdef)
-                               (Print.term_to_string lbtyp))) lbtyp.pos
-     else (
-       //add implicit binders, in case, for instance
-       //lbtyp is of the form x:'a -> t
-       //lbdef is of the form (fun x -> t)
-       //in which case, we need to add (#'a:Type) to the actuals
-       //See the handling in Tm_abs case of tc_value, roughly line 703 (location may have changed since this comment was written)
-       let actuals = TcUtil.maybe_add_implicit_binders (Env.set_expected_typ env lbtyp) actuals in
-       if List.length formals <> List.length actuals
-       then begin
-            let actuals_msg =
-                let n = List.length actuals in
-                if n = 1
-                then "1 argument was found"
-                else BU.format1 "%s arguments were found" (string_of_int n)
-            in
-            let formals_msg =
-                let n = List.length formals in
-                if n = 1
-                then "1 argument"
-                else BU.format1 "%s arguments" (string_of_int n)
-            in
-            let msg =
-                BU.format4 "From its type %s, the definition of `let rec %s` expects a function with %s, but %s"
-                            (Print.term_to_string lbtyp)
-                            (Print.lbname_to_string lbname)
-                            formals_msg
-                            actuals_msg in
-            raise_error (Errors.Fatal_LetRecArgumentMismatch, msg) lbdef.pos
-       end;
-       let quals = Env.lookup_effect_quals env (U.comp_effect_name c) in
-       quals |> List.contains TotalEffect
-     )
+                               (Print.term_to_string lbtyp)))
+                   lbtyp.pos; // TODO: GM: maybe point to the one that's actually empty?
+
+     let nformals = List.length formals in
+
+     (* `nformals` is exactly the arity of recursion. It is either
+      * the amount of binders we traversed until we ran into an effect
+      * in the expected type, or the total amount of binders in the
+      * abstraction's body. So we can just check the effect `c` for
+      * totality. Another way of seeing this check is that we take
+      * the minimum amount of binders from the actuals and formals. *)
+     if U.comp_effect_name c |> Env.lookup_effect_quals env |> List.contains TotalEffect then
+       Some (nformals, U.abs actuals body body_lc)
+     else
+       None
    in
    let lbs, env, g = List.fold_left (fun (lbs, env, g_acc) lb ->
         let univ_vars, t, check_t = TcUtil.extract_let_rec_annotation env lb in
@@ -3176,15 +3192,25 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env_t * guard_t =
             else (let env0 = Env.push_univ_vars env0 univ_vars in
                   let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) "" in
                   Env.conj_guard g_acc (g |> Rel.resolve_implicits env |> Rel.discharge_guard env), norm env0 t) in
-        let env = if termination_check_enabled lb.lbname e t  //AR: This code also used to have && Env.should_verify env
-                                                              //i.e. when lax checking it was adding lbname in the second branch
-                                                              //this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug056)
-                                                              //Removed that check. Rest of the code relies on env.letrecs = []
-                  then {env with letrecs=(lb.lbname,t,univ_vars)::env.letrecs}  //AR: we need to add the binding of the let rec after adding the binders of the lambda term, and so, here we just note in the env
-                                                                                //that we are typechecking a let rec, the recursive binding will be added in tc_abs
-                                                                                //adding universes here so that when we add the let binding, we can add a typescheme with these universes
-                  else Env.push_let_binding env lb.lbname (univ_vars, t) in
-        let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=e} in
+        // AR: This code (below) also used to have && Env.should_verify env
+        // i.e. when lax checking it was adding lbname in the second branch
+        // this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug056)
+        // Removed that check. Rest of the code relies on env.letrecs = []
+        let lb, env =
+            match termination_check_enabled lb.lbname e t with
+            // AR: we need to add the binding of the let rec after adding the
+            // binders of the lambda term, and so, here we just note in the env that
+            // we are typechecking a let rec, the recursive binding will be added in
+            // tc_abs adding universes here so that when we add the let binding, we
+            // can add a typescheme with these universes
+            | Some (arity, def) ->
+              let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=def} in
+              let env = {env with letrecs=(lb.lbname, arity, t, univ_vars)::env.letrecs} in
+              lb, env
+            | None ->
+              let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=e} in
+              lb, Env.push_let_binding env lb.lbname (univ_vars, t)
+        in
         lb::lbs,  env, g)
     ([], env, Env.trivial_guard)
     lbs  in
@@ -3200,8 +3226,31 @@ and check_let_recs env lbs =
         match bs with
         | [] -> raise_error (Errors.Fatal_RecursiveFunctionLiteral, "Only function literals may be defined recursively") (S.range_of_lbname lb.lbname)
         | _ -> ();
-        // By using abs_formals and then rebuilding, we collect all of the binders
-        let lb = { lb with lbdef = U.abs bs t lcomp } in
+
+        (* HACK ALERT: arity
+         *
+         * We build a Tm_abs node with exactly [arity] binders,
+         * and put the rest in another node in the body, so `tc_abs`
+         * will do the right thing when computing a decreases clauses.
+        *)
+        let arity = match Env.get_letrec_arity env lb.lbname with
+                    | Some n -> n
+                    | None -> List.length bs (* Keep the node as-is *)
+        in
+        let bs0, bs1 = List.splitAt arity bs in
+        let def =
+            if List.isEmpty bs1
+            then U.abs bs0 t lcomp
+            else let inner = U.abs bs1 t lcomp in
+                 let inner = SS.close bs0 inner in
+                 let bs0 = SS.close_binders bs0 in
+                 S.mk (Tm_abs (bs0, inner, None)) inner.pos
+                 // ^ using abs again would flatten the abstraction
+        in
+        (* / HACK *)
+
+        let lb = { lb with lbdef = def } in
+
         let e, c, g = tc_tot_or_gtot_term (Env.set_expected_typ env lb.lbtyp) lb.lbdef in
         if not (TcComm.is_total_lcomp c)
         then raise_error (Errors.Fatal_UnexpectedGTotForLetRec, "Expected let rec to be a Tot term; got effect GTot") e.pos;
@@ -3298,9 +3347,16 @@ and tc_binder env (x, imp) =
     let t, _, g = tc_check_tot_or_gtot_term env x.sort tu "" in //ghost effect ok in the types of binders
     let imp, g' =
         match imp with
-        | Some (Meta tau) ->
+        | Some (Meta tau_or_attr) ->
+          begin
+          match tau_or_attr with
+          | Arg_qualifier_meta_tac tau ->
             let tau, _, g = tc_tactic t_unit t_unit env tau in
-            Some (Meta tau), g
+            Some (Meta (Arg_qualifier_meta_tac tau)), g
+          | Arg_qualifier_meta_attr attr ->
+            let attr, _, g = tc_check_tot_or_gtot_term env attr t_unit "" in
+            Some (Meta (Arg_qualifier_meta_attr attr)), Env.trivial_guard
+          end
         | _ -> imp, Env.trivial_guard
     in
     let x = {x with sort=t}, imp in

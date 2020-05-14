@@ -75,7 +75,7 @@
         "typing_tok_BinaryTreesEnumeration.Leaf@tok"
       ],
       0,
-      "fdca33cc4a0999eb64329bacb27b1aae"
+      "75e6e2101f6005f58973f48ac9d82394"
     ],
     [
       "BinaryTreesEnumeration.trees_of_size",
@@ -119,7 +119,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6e303b1de639b0523c7393ac29746281"
+      "e83a9b9f084733ce49fa6bf433079bca"
     ],
     [
       "BinaryTreesEnumeration.pws_complete",
@@ -174,7 +174,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.map"
       ],
       0,
-      "3c8d70f8ea91c29990ba52758526c3b4"
+      "71d1b5813e978aa69a3bb2b6a4e1cdb8"
     ],
     [
       "BinaryTreesEnumeration.pure_as_squash",
@@ -474,7 +474,7 @@
         "typing_tok_BinaryTreesEnumeration.Leaf@tok"
       ],
       0,
-      "2eef8771ac7fc39dbc54d88800f0716c"
+      "516e63c85d668f913890f07fa1240790"
     ]
   ]
 ]

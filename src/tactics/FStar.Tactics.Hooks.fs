@@ -304,6 +304,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
             if !tacdbg then
               BU.print1 "Synthesis left a goal: %s\n" (Print.term_to_string vc);
             let guard = { guard_f = NonTrivial vc
+                        ; deferred_to_tac = []
                         ; deferred = []
                         ; univ_ineqs = [], []
                         ; implicits = [] } in
@@ -331,6 +332,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
             if !tacdbg then
               BU.print1 "Synthesis left a goal: %s\n" (Print.term_to_string vc);
             let guard = { guard_f = NonTrivial vc
+                        ; deferred_to_tac = []
                         ; deferred = []
                         ; univ_ineqs = [], []
                         ; implicits = [] } in
@@ -393,6 +395,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
             if !tacdbg then
               BU.print1 "Postprocessing left a goal: %s\n" (Print.term_to_string vc);
             let guard = { guard_f = NonTrivial vc
+                        ; deferred_to_tac = []
                         ; deferred = []
                         ; univ_ineqs = [], []
                         ; implicits = [] } in

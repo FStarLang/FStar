@@ -67,6 +67,8 @@
     <Compile Include="FStar.TypeChecker.NBE.fsi" />
     <Compile Include="FStar.TypeChecker.NBE.fs" />
     <Compile Include="FStar.TypeChecker.Err.fs" />
+    <Compile Include="FStar.TypeChecker.DeferredImplicits.fsi" />
+    <Compile Include="FStar.TypeChecker.DeferredImplicits.fs" />
     <Compile Include="FStar.TypeChecker.Rel.fsi" />
     <Compile Include="FStar.TypeChecker.Rel.fs" />
     <Compile Include="FStar.TypeChecker.Util.fsi" />

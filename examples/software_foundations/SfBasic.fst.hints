@@ -231,7 +231,7 @@
         "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "36ca858e2c5cd83c9532a449d5b1dfc0"
+      "4d523496fe21f1b4d78109eb5e1f2ce7"
     ],
     [
       "SfBasic.test_oddb1",
@@ -630,7 +630,7 @@
       1,
       [ "@query", "assumption_SfBasic.nat__uu___haseq" ],
       0,
-      "b26ed1fcf9f9d3130c2437f438a2b4bf"
+      "7698d6f7091b76fde7e36d10d1d92819"
     ],
     [
       "SfBasic.plus_0_r",
@@ -653,7 +653,7 @@
         "typing_tok_SfBasic.O@tok"
       ],
       0,
-      "2dfdc34aea9bf6a2cd0059aab2d9a94a"
+      "e55f365a0fb9c22548ee6f2983cd9aea"
     ],
     [
       "SfBasic.plus_n_Sm",

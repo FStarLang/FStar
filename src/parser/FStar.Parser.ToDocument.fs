@@ -966,13 +966,15 @@ and p_letqualifier = function
 and p_aqual = function
   | Implicit -> str "#"
   | Equality -> str "$"
-  | Meta t ->
+  | Meta (Arg_qualifier_meta_tac t) ->
     let t =
       match t.tm with
       | Abs (_ ,e) -> e
       | _ -> mk_term (App (t, unit_const t.range, Nothing)) t.range Expr
     in
     str "#[" ^^ p_term false false t ^^ str "]" ^^ break1
+  | Meta (Arg_qualifier_meta_attr t) ->
+    str "#[@" ^^ p_term false false t ^^ str "]" ^^ break1
 
 (* ****************************************************************************)
 (*                                                                            *)

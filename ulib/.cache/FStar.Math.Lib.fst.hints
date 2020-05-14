@@ -151,7 +151,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "10933c4c6587f21dc3a5629a4cf68d50"
+      "7617b22aa3d322520a386d2f0ab735c3"
     ],
     [
       "FStar.Math.Lib.powx",
@@ -510,7 +510,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d843438ba11a2c70175b55cba5820642"
+      "323ca3d46f20781d0ca90e9fbe379e79"
     ],
     [
       "FStar.Math.Lib.powx",
