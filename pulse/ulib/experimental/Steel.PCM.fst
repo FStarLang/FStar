@@ -78,3 +78,12 @@ let compatible_refl #a (pcm:pcm a) (x:a)
 let frame_preserving #a (pcm:pcm a) (x y: a) =
     (forall frame. composable pcm frame x ==> composable pcm frame y) /\
     (forall frame.{:pattern (composable pcm frame x)} composable pcm frame x ==> op pcm frame y == y)
+
+let exclusive (#a:_) (p:pcm a) (x:a) =
+  forall (frame:a). composable p x frame ==> frame == Steel.PCM.(p.p.one)
+
+let exclusive_is_frame_preserving #a (p:pcm a) (x:a)
+  : Lemma (requires exclusive p x)
+          (ensures frame_preserving p x p.p.one)
+  = p.is_unit x;
+    p.is_unit p.p.one

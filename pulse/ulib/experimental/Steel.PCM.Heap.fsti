@@ -205,8 +205,22 @@ let is_frame_preserving #a #fp #fp' (f:pre_action fp a fp') =
       (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr) /\
       (forall (hp:hprop frame). hp h0 == hp h1))
 
+let frame_related_heaps (h0 h1:heap) (fp0 fp1 frame:slprop) (allocates:bool) =
+  interp (fp0 `star` frame) h0 ==>
+  interp (fp1 `star` frame) h1 /\
+  (forall (hp:hprop frame). hp h0 == hp h1) /\
+  (not allocates ==> (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr))
+
 let action (fp:slprop) (a:Type) (fp':a -> slprop) =
   f:pre_action fp a fp'{ is_frame_preserving f }
+
+let action_framing #a #fp #fp' ($f:action fp a fp')
+                         (frame:slprop) (h0:hheap (fp `star` frame))
+  : Lemma (affine_star fp frame h0;
+           let (| x, h1 |) = f h0 in
+           frame_related_heaps h0 h1 fp (fp' x) frame false)
+  = affine_star fp frame h0;
+    emp_unit fp
 
 (** Reading *)
 val sel (#a:_) (#pcm:_) (r:ref a pcm) (m:hheap (ptr r))
@@ -227,22 +241,12 @@ val upd_action (#a:_) (#pcm:_) (r:ref a pcm)
                (v1:a {Steel.PCM.frame_preserving pcm v0 v1})
   : action (pts_to r v0) unit (fun _ -> pts_to r v1)
 
+(** Deallocating *)
+val free_action (#a:_) (#pcm:_) (r:ref a pcm)
+               (v0:FStar.Ghost.erased a {exclusive pcm v0})
+  : action (pts_to r v0) unit (fun _ -> pts_to r pcm.Steel.PCM.p.one)
+
 (** Allocating, pseudo action, the context needs to provide a fresh address *)
-
-let frame_related_heaps (h0 h1:heap) (fp0 fp1 frame:slprop) (allocates:bool) =
-  interp (fp0 `star` frame) h0 ==>
-  interp (fp1 `star` frame) h1 /\
-  (forall (hp:hprop frame). hp h0 == hp h1) /\
-  (not allocates ==> (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr))
-
-let action_framing #a #fp #fp' ($f:action fp a fp')
-                         (frame:slprop) (h0:hheap (fp `star` frame))
-  : Lemma (affine_star fp frame h0;
-           let (| x, h1 |) = f h0 in
-           frame_related_heaps h0 h1 fp (fp' x) frame false)
-  = affine_star fp frame h0;
-    emp_unit fp
-
 val extend (#a:_) (#pcm:_) (x:a{compatible pcm x x}) (addr:nat)
            (h:heap{h `free_above_addr` addr})
   : (r:ref a pcm

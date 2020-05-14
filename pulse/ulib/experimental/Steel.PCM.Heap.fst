@@ -42,9 +42,13 @@ let select_addr (m:heap) (a:addr{contains_addr m a})
   : cell
   = Some?.v (m a)
 
+let update_addr' (m:heap) (a:addr) (c:option cell)
+  : heap
+  = F.on _ (fun a' -> if a = a' then c else m a')
+
 let update_addr (m:heap) (a:addr) (c:cell)
   : heap
-  = F.on _ (fun a' -> if a = a' then Some c else m a')
+  = update_addr' m a (Some c)
 
 let disjoint_cells (c0 c1:cell u#h) : prop =
     let Ref t0 p0 v0 = c0 in
@@ -538,7 +542,6 @@ let upd' (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a) (v1:a {frame_pr
     let cell = Ref a pcm v1  in
     let h' = update_addr h r cell in
     assert (h' `contains_addr` r);
-    compatible_refl pcm v1;
     assert (interp_cell (pts_to r v1) cell);
     assert (interp (pts_to r v1) h');
     (| (), h' |)
@@ -690,24 +693,54 @@ let upd_lemma' (#a:_) #pcm (r:ref a pcm)
    ()
 #pop-options
 
+let refined_pre_action (fp0:slprop) (a:Type) (fp1:a -> slprop) =
+  m0:hheap fp0 ->
+  Pure (x:a &
+        hheap (fp1 x))
+       (requires True)
+       (ensures fun  (| x, m1 |) ->
+         forall frame. frame_related_heaps m0 m1 fp0 (fp1 x) frame false)
+
+let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
+                                 ($f:refined_pre_action fp0 a fp1)
+  : action fp0 a fp1
+  = let g : pre_action fp0 a fp1 = fun m -> f m in
+    let aux (frame:slprop)
+            (m0:hheap (fp0 `star` frame))
+      : Lemma
+        (ensures
+          (affine_star fp0 frame m0;
+           let (| x, m1 |) = g m0 in
+           interp (fp1 x `star` frame) m1 /\
+          (forall (hp:hprop frame). hp m0 == hp m1) /\
+          (forall ctr. m0 `free_above_addr` ctr ==> m1 `free_above_addr` ctr)))
+        [SMTPat ()]
+      = affine_star fp0 frame m0;
+        let (| x', m1' |) = g m0 in
+        let (| x, m1 |) = f m0 in
+        assert (x == x' /\ m1 == m1')
+    in
+    g
+
 let upd_action (#a:_) (#pcm:_) (r:ref a pcm)
                (v0:FStar.Ghost.erased a) (v1:a {frame_preserving pcm v0 v1})
   : action (pts_to r v0) unit (fun _ -> pts_to r v1)
-  = let aux (frame:slprop) (h:hheap (pts_to r v0 `star` frame))
-    : Lemma
-      (ensures (
-        (affine_star (pts_to r v0) frame h;
-         let (| x, h1 |) = upd' r v0 v1 h in
-         interp (pts_to r v1 `star` frame) h1 /\
-         (forall ctr. h `free_above_addr` ctr <==> h1 `free_above_addr` ctr) /\
-         (forall (hp:hprop frame). hp h == hp h1)
-         )))
-      [SMTPat ( interp (pts_to r v0 `star` frame) h)]
-    = affine_star (pts_to r v0) frame h;
-      upd_lemma' r v0 v1 h frame
-   in
-   upd' r v0 v1
+  = let g : refined_pre_action (pts_to r v0) unit (fun _ -> pts_to r v1)
+      = fun m ->
+          let res = upd' r v0 v1 m in
+          FStar.Classical.forall_intro (FStar.Classical.move_requires (upd_lemma' r v0 v1 m));
+          res
+    in
+    refined_pre_action_as_action g
 
+////////////////////////////////////////////////////////////////////////////////
+
+let free_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a{exclusive pcm v0})
+  : action (pts_to r v0) unit (fun _ -> pts_to r pcm.Steel.PCM.p.one)
+  = Steel.PCM.exclusive_is_frame_preserving pcm v0;
+    upd_action r v0 pcm.Steel.PCM.p.one
+
+////////////////////////////////////////////////////////////////////////////////
 let extend #a #pcm x addr h =
     let r : ref a pcm = addr in
     let h' = update_addr h r (Ref a pcm x) in
