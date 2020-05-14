@@ -506,7 +506,19 @@ let weaken (p q r:slprop) (h:heap u#a) = ()
 ////////////////////////////////////////////////////////////////////////////////
 module PP = Steel.PCM.Preorder
 
-let heap_evolves : FStar.Preorder.preorder heap = fun h0 h1 -> True
+let heap_evolves : FStar.Preorder.preorder heap =
+  fun (h0 h1:heap) ->
+    forall (a:addr).
+      match h0 a, h1 a with
+      | None, _ -> True //an unused address in h0 can evolve anyway
+
+      | Some (Ref a0 p0 v0), Some (Ref a1 p1 v1) ->
+        //if a is used h0 then it remains used and ...
+        a0 == a1 /\  //its type can't change
+        p0 == p1 /\  //its pcm can't change
+        PP.preorder_of_pcm p0 v0 v1 //and its value evolves by the pcm's preorder
+
+      | _ -> False
 
 let free_above_addr h a =
   forall (i:nat). i >= a ==> h i == None
@@ -595,7 +607,17 @@ let composable_compatible #a pcm (x y z:a)
     let s : squash (exists f. composable pcm f x /\ op pcm f x == y) = () in
     ()
 
-#push-options "--z3rlimit_factor 2"
+let heap_evolves_by_frame_preserving_update #a #pcm (r:ref a pcm)
+                                            (v0:Ghost.erased a)
+                                            (v1:a {frame_preserving pcm v0 v1})
+                                            (h0:hheap (pts_to r v0))
+   : Lemma (let h1 = update_addr h0 r (Ref a pcm v1) in
+            heap_evolves h0 h1)
+  = let v = sel r h0 in
+    PP.frame_preserving_is_preorder_respecting pcm v0 v1;
+    assert (PP.preorder_of_pcm pcm v v1)
+
+#push-options "--z3rlimit_factor 4 --query_stats --max_fuel 1 --initial_ifuel 1 --max_ifuel 2"
 let upd_lemma' (#a:_) #pcm (r:ref a pcm)
                (v0:Ghost.erased a) (v1:a {frame_preserving pcm v0 v1})
                (h:hheap (pts_to r v0)) (frame:slprop)
@@ -605,6 +627,7 @@ let upd_lemma' (#a:_) #pcm (r:ref a pcm)
     (ensures (
       (let (| x, h1 |) = upd' r v0 v1 h in
        interp (pts_to r v1 `star` frame) h1 /\
+       heap_evolves h h1 /\
        (forall (hp:hprop frame). hp h == hp h1))))
   = let aux (h0 hf:heap)
      : Lemma
@@ -687,6 +710,7 @@ let upd_lemma' (#a:_) #pcm (r:ref a pcm)
            end
        in
        assert (mem_equiv h' (join h0' hf));
+       heap_evolves_by_frame_preserving_update r v0 v1 h;
        let aux (hp:hprop frame)
          : Lemma (ensures (hp h == hp h'))
                  [SMTPat ()]
@@ -717,6 +741,7 @@ let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
            let (| x, m1 |) = g m0 in
            interp (fp1 x `star` frame) m1 /\
           (forall (hp:hprop frame). hp m0 == hp m1) /\
+          heap_evolves m0 m1 /\
           (forall ctr. m0 `free_above_addr` ctr ==> m1 `free_above_addr` ctr)))
         [SMTPat ()]
       = affine_star fp0 frame m0;
@@ -763,6 +788,7 @@ let extend #a #pcm x addr h =
           disjoint h0' hf /\
           interp (pts_to r x) h0' /\
           h' == join h0' hf /\
+          heap_evolves h h' /\
           interp (pts_to r x `star` frame) h' /\
           (forall (hp:hprop frame). hp h == hp h')
          ))
