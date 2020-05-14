@@ -203,7 +203,7 @@ effect MstTot (a:Type u#a) (except:inames) (expects:slprop u#1) (provides: a -> 
     (requires fun m0 ->
         interp (expects `star` locks_invariant except m0) m0)
     (ensures fun m0 x m1 ->
-        interp (provides x `star` locks_invariant except m0) m0 /\
+        interp (provides x `star` locks_invariant except m1) m1 /\
         preserves_frame except expects (provides x) m0 m1)
 
 let action_except (a:Type u#a) (except:inames) (expects:slprop) (provides: a -> slprop) =

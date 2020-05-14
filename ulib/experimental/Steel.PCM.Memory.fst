@@ -21,7 +21,7 @@ module H = Steel.PCM.Heap
 
 noeq
 type lock_state : Type u#(a + 1) =
-  | Invariant : H.slprop u#a -> lock_state
+  | Invariant : inv:H.slprop u#a -> lock_state
 
 let lock_store : Type u#(a+1) = list (lock_state u#a)
 
@@ -205,6 +205,17 @@ let h_exists_cong (#a:Type) (p q : a -> slprop)
 ////////////////////////////////////////////////////////////////////////////////
 module PP = Steel.PCM.Preorder
 
+let lock_store_evolves : FStar.Preorder.preorder lock_store =
+  fun (l1 l2 : lock_store) ->
+    L.length l2 >= L.length l1 /\
+    (forall (i:nat{i < L.length l1}).
+       (L.index l1 i).inv == (L.index l2 i).inv)
+
+let mem_evolves =
+  fun m0 m1 ->
+    H.heap_evolves (heap_of_mem m0) (heap_of_mem m1) /\
+    m0.ctr <= m1.ctr /\
+    lock_store_evolves m0.locks m1.locks
 
 ////////////////////////////////////////////////////////////////////////////////
 // Lifting heap actions
@@ -241,6 +252,7 @@ let is_frame_preserving
     (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
      let (| x, m1 |) = f m0 in
      interp ((fp' x `star` frame) `star` locks_invariant e m1) m1 /\
+     mem_evolves m0 m1 /\
      (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
 
 let tot_action_except (e:inames) (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
@@ -330,6 +342,7 @@ let lift_heap_action (#fp:slprop) (#a:Type) (#fp':a -> slprop)
           (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
            let (| x, m1 |) = g m0 in
            interp ((fp' x `star` frame) `star` locks_invariant e m1) m1 /\
+           mem_evolves m0 m1 /\
            (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))))
         [SMTPat ()]
       = ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
@@ -353,11 +366,36 @@ let lift_heap_action (#fp:slprop) (#a:Type) (#fp':a -> slprop)
     assert (is_frame_preserving g);
     g
 
-let mem_evolves = admit()
+let frame_preserving_respects_preorder #a #e #fp #fp' ($f:tot_action_except e fp a fp') (m0:hmem_with_inv_except e fp)
+  : Lemma (let (| x, m1 |) = f m0 in
+           mem_evolves m0 m1)
+  = let aux (frame:slprop) (m0:hmem_with_inv_except e (fp `star` frame))
+        : Lemma
+          (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
+            let (| x, m1 |) = f m0 in
+            interp ((fp' x `star` frame) `star` locks_invariant e m1) m1 /\
+            mem_evolves m0 m1)
+        = ()
+    in
+    H.emp_unit fp;
+    assert (interp (fp `star` linv e m0) m0);
+    H.star_congruence (fp `star` emp) (linv e m0) fp (linv e m0);
+    assert (interp ((fp `star` emp) `star` linv e m0) m0);
+    aux emp m0
 
-let lift_tot_action #a #e #fp #fp' ($f:tot_action_except e fp a fp')
-  : action_except a e fp fp'
-  = admit()
+
+let lift_tot_action #a #e #fp #fp' ($f:tot_action_except e fp a fp') (_:unit)
+  : MstTot a e fp fp'
+  = let m0 = NMSTTotal.get () in
+    let m0' : hmem_with_inv_except e fp = m0 in
+    let r = f m0' in
+    let (| x, m1 |) = r in
+    let m1' : hmem_with_inv_except e (fp' x) = m1 in
+    assert (is_frame_preserving f);
+    assert (m1 == dsnd (f m0));
+    frame_preserving_respects_preorder f m0;
+    NMSTTotal.put #_ #(mem_evolves) m1;
+    x
 
 let sel_action e r v0
   = lift_tot_action (lift_heap_action e (H.sel_action r v0))
@@ -404,6 +442,7 @@ let frame_related_mems (fp0 fp1:slprop u#a) e (m0:hmem_with_inv_except e fp0) (m
     forall (frame:slprop u#a).
       interp ((fp0 `star` frame) `star` linv e m0) m0 ==>
       interp ((fp1 `star` frame) `star` linv e m1) m1 /\
+      mem_evolves m0 m1 /\
       (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))
 
 let refined_pre_action e (fp0:slprop) (a:Type) (fp1:a -> slprop) =
@@ -425,6 +464,7 @@ let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
           (ac_reasoning_for_m_frame_preserving fp0 frame (locks_invariant e m0) m0;
            let (| x, m1 |) = g m0 in
            interp ((fp1 x `star` frame) `star` locks_invariant e m1) m1 /\
+           mem_evolves m0 m1 /\
           (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))))
         [SMTPat ()]
       = ac_reasoning_for_m_frame_preserving fp0 frame (locks_invariant e m0) m0;
@@ -449,6 +489,7 @@ let alloc_action #a #pcm e x
                interp ((emp `star` frame) `star` linv e m0) m0)
             (ensures
                interp ((pts_to #a r x `star` frame) `star` linv e m1) m1 /\
+               mem_evolves m0 m1 /\
                (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
             [SMTPat (emp `star` frame)]
           = star_associative emp frame (linv e m0);
