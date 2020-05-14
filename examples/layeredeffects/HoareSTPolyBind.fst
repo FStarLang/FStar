@@ -213,6 +213,53 @@ let test2 () : HoareST int (fun _ -> True) (fun _ _ _ -> True)
 = g 2 (f 0)
 
 
+(*
+ * In the polymonadic bind (PURE, HoareST) |> HoareST, the return type of
+ *   g is not allowed to depend on x, the return value of f
+ *
+ * So then what happens when a function f whose return type depends on its argument
+ *   is applied to a PURE term
+ *   NOTE: PURE and not Tot, since Tot will just be substituted,
+ *   without even invoking the bind
+ *
+ * When typechecking f e, the comp type is roughly
+ *   bind C_e C_ret_f, where C_ret_f is the comp type of f (below the arrow binder)
+ *   This is where bind comes in
+ *)
+
+assume type t_int (x:int) : Type0
+assume val dep_f (x:int) : HoareST (t_int x) (fun _ -> True) (fun _ _ _ -> True)
+assume val pure_g (_:unit) : PURE int (fun p -> forall (x:int). x >= 2 ==> p x)
+
+let test_dep_f () : HoareST (t_int (pure_g ())) (fun _ -> True) (fun _ _ _ -> True) =
+  dep_f (pure_g ())
+
+(*
+ * This works!
+ *
+ * The reason is that, before bind is called, the typechecker has already
+ *   substituted the pure term (pure_g ()) into the comp type of dep_f
+ *   (below the binder)
+ *)
+
+
+(*
+ * But what happens when this is an explicit let binding?
+ *   as opposed to a function application
+ *)
+
+let test_dep_f2 () : HoareST (t_int (pure_g ())) (fun _ -> True) (fun _ _ _ -> True) =
+  let x = pure_g () in
+  dep_f x
+
+
+(*
+ * This also works because weakening the type using the annotation saves us!
+ *)
+
+
+
+
 module Seq = FStar.Seq
 
 

@@ -9,7 +9,6 @@ assume val ptr (_:ref) : hprop u#1
 assume val alloc (x:int)  : SteelT ref emp ptr
 assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 
-[@@expect_failure]
 let test1 (x:int) : SteelT ref emp ptr = alloc x
 
 // #set-options "--debug Steel.Effects2.Tests --debug_level LayeredEffectsEqns --ugly"

@@ -163,9 +163,7 @@ let bind (a:Type) (b:Type)
 
 
 (*
- * TODO: don't use polymonadic binds for lift anymore
- *       remove the custom Tm_known typechecking code for unit
- *       bind should do substitution for pure c1 (if bind c1 c2)
+ * TODO: bind should do substitution for pure c1 (if bind c1 c2)
  *         applications might be ok, but let bindings may fail currently
  *)
 
