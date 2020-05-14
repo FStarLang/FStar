@@ -326,6 +326,8 @@ let sel_action r v0
 let upd_action r v0 v1
   = lift_heap_action (H.upd_action r v0 v1)
 
+let free_action r v0 = lift_heap_action (H.free_action r v0)
+
 let weaken (p q r:slprop) (h:H.hheap (p `star` q) { H.stronger q r })
   : H.hheap (p `star` r)
   = H.weaken p q r h; h
