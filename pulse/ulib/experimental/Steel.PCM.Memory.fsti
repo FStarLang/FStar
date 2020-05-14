@@ -144,17 +144,16 @@ val affine_star (p q:slprop) (m:mem)
 ////////////////////////////////////////////////////////////////////////////////
 // Memory invariants
 ////////////////////////////////////////////////////////////////////////////////
-val lock_addr : eqtype
 module S = FStar.Set
+val iname : eqtype
+let inames = S.set iname
 
-val locks_invariant (e:S.set lock_addr) (m:mem u#a) : slprop u#a
+val locks_invariant (e:inames) (m:mem u#a) : slprop u#a
 
-let hmem_with_inv' (e:S.set lock_addr) (fp:slprop u#a) =
+let hmem_with_inv_except (e:inames) (fp:slprop u#a) =
   m:mem{interp (fp `star` locks_invariant e m) m}
 
-let hmem_with_inv (fp:slprop u#a) =
-  m:mem u#a{interp (fp `star` locks_invariant Set.empty m) m}
-
+let hmem_with_inv (fp:slprop u#a) = hmem_with_inv_except S.empty fp
 
 (***** Following lemmas are needed in Steel.Effect *****)
 
@@ -181,6 +180,8 @@ val h_exists_cong (#a:Type) (p q : a -> slprop)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Actions:
+// Note, at this point, using the NMSTTotal effect constraints the mem to be
+// in universe 2, rather than being universe polymorphic
 ////////////////////////////////////////////////////////////////////////////////
 
 (** A memory predicate that depends only on fp *)
@@ -189,39 +190,42 @@ let mprop (fp:slprop u#a) =
     forall (m0:mem{interp fp m0}) (m1:mem{disjoint m0 m1}).
       q m0 <==> q (join m0 m1)}
 
-let pre_action (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
-  hmem_with_inv fp -> (x:a & hmem_with_inv (fp' x))
+val mem_evolves : FStar.Preorder.preorder mem
 
-val ac_reasoning_for_m_frame_preserving
-    (p q r:slprop u#a) (m:mem u#a)
-  : Lemma
-    (requires interp ((p `star` q) `star` r) m)
-    (ensures interp (p `star` r) m)
+let preserves_frame (e:inames) (pre post:slprop) (m0 m1:mem) =
+  forall (frame:slprop).
+    interp ((pre `star` frame) `star` locks_invariant e m0) m0 ==>
+    (interp ((post `star` frame) `star` locks_invariant e m1) m1 /\
+     (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)))
 
-let is_frame_preserving
-  (#a:Type u#b)
-  (#fp:slprop u#a)
-  (#fp':a -> slprop u#a)
-  (f:pre_action u#a u#b fp a fp') =
-  forall (frame:slprop u#a) (m0:hmem_with_inv (fp `star` frame)).
-    (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant Set.empty m0) m0;
-     let (| x, m1 |) = f m0 in
-     interp ((fp' x `star` frame) `star` locks_invariant Set.empty m1) m1 /\
-     (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
+effect MstTot (a:Type u#a) (except:inames) (expects:slprop u#1) (provides: a -> slprop u#1) =
+  NMSTTotal.NMSTATETOT a (mem u#1) mem_evolves
+    (requires fun m0 ->
+        interp (expects `star` locks_invariant except m0) m0)
+    (ensures fun m0 x m1 ->
+        interp (provides x `star` locks_invariant except m0) m0 /\
+        preserves_frame except expects (provides x) m0 m1)
 
-let action (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
-  f:pre_action fp a fp'{ is_frame_preserving f }
+let action_except (a:Type u#a) (except:inames) (expects:slprop) (provides: a -> slprop) =
+  unit -> MstTot a except expects provides
 
-val sel_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a)
-  : action (pts_to r v0) (v:a{compatible pcm v0 v}) (fun _ -> pts_to r v0)
+val sel_action (#a:Type u#1) (#pcm:_) (e:inames) (r:ref a pcm) (v0:erased a)
+  : action_except (v:a{compatible pcm v0 v}) e (pts_to r v0) (fun _ -> pts_to r v0)
 
-val upd_action (#a:_) (#pcm:_) (r:ref a pcm)
+val upd_action (#a:Type u#1) (#pcm:_) (e:inames)
+               (r:ref a pcm)
                (v0:FStar.Ghost.erased a)
                (v1:a {Steel.PCM.frame_preserving pcm v0 v1})
-  : action (pts_to r v0) unit (fun _ -> pts_to r v1)
+  : action_except unit e (pts_to r v0) (fun _ -> pts_to r v1)
 
-val free_action (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) (x:FStar.Ghost.erased a{Steel.PCM.exclusive pcm x})
-  : action (pts_to r x) unit (fun _ -> pts_to r pcm.Steel.PCM.p.one)
+val free_action (#a:Type u#1) (#pcm:pcm a) (e:inames)
+                (r:ref a pcm) (x:FStar.Ghost.erased a{Steel.PCM.exclusive pcm x})
+  : action_except unit e (pts_to r x) (fun _ -> pts_to r pcm.Steel.PCM.p.one)
 
-val alloc_action (#a:Type u#a) (#pcm:pcm a) (x:a{compatible pcm x x})
-  : action emp (ref a pcm) (fun r -> pts_to r x)
+val alloc_action (#a:Type u#1) (#pcm:pcm a) (e:inames) (x:a{compatible pcm x x})
+  : action_except (ref a pcm) e emp (fun r -> pts_to r x)
+
+val ( >--> ) (i:iname) (p:slprop) : prop
+let inv (p:slprop) = i:iname{i >--> p}
+val new_invariant (e:inames) (p:slprop)
+  : action_except (inv p) e p (fun _ -> emp)
