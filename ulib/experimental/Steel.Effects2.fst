@@ -101,6 +101,8 @@ assume val sl_implies_preserves_frame_right (p q:hprop u#1)
   [SMTPat (p `sl_implies` q)]
 
 
+irreducible let framing_implicit : unit = ()
+
 unfold
 let return_req (p:hprop u#1) : req_t p = fun _ -> True
 
@@ -113,7 +115,7 @@ let return_ens (a:Type) (x:a) (p:a -> hprop u#1) : ens_t (p x) a p = fun _ r _ -
  *   function in the effect, that will be used to get around the scoping issues
  *   (cf. return-scoping.txt)
  *)
-let return (a:Type) (x:a) (#p:a -> hprop)
+let return (a:Type) (x:a) (#[@@ framing_implicit] p:a -> hprop)
 : repr a (p x) p (return_req (p x)) (return_ens a x p)
 = fun _ -> x
 
@@ -145,11 +147,11 @@ let bind_ens (#a:Type) (#b:Type)
   (exists (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 /\ (ens_g x) m1 y m2)
 
 let bind (a:Type) (b:Type)
-  (#pre_f:pre_t) (#post_f:post_t a)
+  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
-  (#pre_g:a -> pre_t) (#post_g:post_t b)
+  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
   (req_g:(x:a -> req_t (pre_g x))) (ens_g:(x:a -> ens_t (pre_g x) b post_g))
-  (#p:squash (forall (x:a). post_f x `sl_implies` pre_g x))
+  (#[@@ framing_implicit] p:squash (forall (x:a). post_f x `sl_implies` pre_g x))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) post_g (req_g x) (ens_g x)))
 : repr b
@@ -182,10 +184,12 @@ let subcomp_pre (#a:Type)
   (forall (m0:hmem pre_g) (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 ==> ens_g m0 x m1)
 
 let subcomp (a:Type)
-  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
-  (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
-  (p1:squash (pre_g `sl_implies` pre_f))
-  (p2:squash (forall (x:a). post_f x `sl_implies` post_g x))
+  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (#[@@ framing_implicit] pre_g:pre_t) (#[@@ framing_implicit] post_g:post_t a)
+  (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
+  (#[@@ framing_implicit] p1:squash (pre_g `sl_implies` pre_f))
+  (#[@@ framing_implicit] p2:squash (forall (x:a). post_f x `sl_implies` post_g x))
   (f:repr a pre_f post_f req_f ens_f)
 : Pure (repr a pre_g post_g req_g ens_g)
   (requires subcomp_pre req_f ens_f req_g ens_g p1 p2)
@@ -206,7 +210,8 @@ let if_then_else_ens (#a:Type) (#pre:pre_t) (#post:post_t a)
 : ens_t pre a post
 = fun h0 x h1 -> (p ==> ens_then h0 x h1) /\ ((~ p) ==> ens_else h0 x h1)
 
-let if_then_else (a:Type) (#pre:pre_t) (#post:post_t a)
+let if_then_else (a:Type)
+  (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t a)
   (req_then:req_t pre) (ens_then:ens_t pre a post)
   (req_else:req_t pre) (ens_else:ens_t pre a post)
   (f:repr a pre post req_then ens_then)
