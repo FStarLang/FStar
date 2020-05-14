@@ -511,6 +511,39 @@ let alloc_action #a #pcm e x
     in
     lift_tot_action (refined_pre_action_as_action f)
 
+let iname_for_p (i:iname) (p:slprop) : NMSTTotal.s_predicate mem =
+  fun m ->
+    i < L.length m.locks /\
+    (L.index m.locks i).inv == p
 
-let ( >--> ) (i:iname) (p:slprop) : prop = admit()
-let new_invariant (e:inames) (p:slprop) = admit()
+let iname_for_p_stable (i:iname) (p:slprop)
+  : Lemma (NMSTTotal.stable mem mem_evolves (iname_for_p i p))
+  = ()
+
+let ( >--> ) i p : prop =
+  NMSTTotal.witnessed mem mem_evolves (iname_for_p i p)
+
+let new_invariant_tot_action (e:inames) (p:slprop) (m0:hmem_with_inv_except e p)
+  : Pure (iname & hmem_with_inv_except e emp)
+         (requires True)
+         (ensures fun (i, m1) ->
+           iname_for_p i p m1 /\
+           frame_related_mems p emp e m0 m1 /\
+           mem_evolves m0 m1)
+  = let l1 = L.snoc (m0.locks, Invariant p) in
+    let i = L.length l1 in
+    let m1 = { m0 with locks = l1 } in
+    assume (iname_for_p i p m1);
+    assume (frame_related_mems p emp e m0 m1);
+    ( i, m1 )
+
+let new_invariant (e:inames) (p:slprop) ()
+  : MstTot (inv p) e p (fun _ -> emp)
+  = let m0 = NMSTTotal.get () in
+    let r = new_invariant_tot_action e p m0 in
+    let ( i, m1 ) = r in
+    assert (mem_evolves m0 m1);
+    NMSTTotal.put #mem #mem_evolves m1;
+    iname_for_p_stable i p;
+    NMSTTotal.witness mem mem_evolves (iname_for_p i p);
+    i
