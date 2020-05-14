@@ -45,6 +45,9 @@ let returnc (a:Type) (x:a)
 : repr a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
 = fun _ -> x
 
+
+irreducible let an_attr : unit = ()
+
 /// bind bakes in the weakening of f's post to compose it with g's pre
 
 let bind (a:Type) (b:Type)
@@ -61,7 +64,7 @@ let bind (a:Type) (b:Type)
 /// sub comp rule
 
 let subcomp (a:Type)
-  (#pre_f:pre_t) (#post_f:post_t a)
+  (#[@@ an_attr] pre_f:pre_t) (#post_f:post_t a)
   (#pre_g:pre_t) (#post_g:post_t a)
   (f:repr a pre_f post_f)
 : Pure (repr a pre_g post_g)
