@@ -504,6 +504,10 @@ let weaken (p q r:slprop) (h:heap u#a) = ()
 ////////////////////////////////////////////////////////////////////////////////
 // Actions:
 ////////////////////////////////////////////////////////////////////////////////
+module PP = Steel.PCM.Preorder
+
+let heap_evolves : FStar.Preorder.preorder heap = fun h0 h1 -> True
+
 let free_above_addr h a =
   forall (i:nat). i >= a ==> h i == None
 
