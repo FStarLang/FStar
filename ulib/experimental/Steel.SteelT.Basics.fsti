@@ -40,3 +40,8 @@ val frame (#a:Type) (#pre:pre_t) (#post:post_t a)
     (fun x -> post x `star` frame)
 
 val noop (#p:hprop) (u:unit) : SteelT unit p (fun _ -> p)
+
+val change_hprop
+  (p q:hprop)
+  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
+  : SteelT unit p (fun _ -> q)
