@@ -225,7 +225,7 @@ val free_action (#a:Type u#1) (#pcm:pcm a) (e:inames)
 val alloc_action (#a:Type u#1) (#pcm:pcm a) (e:inames) (x:a{compatible pcm x x})
   : action_except (ref a pcm) e emp (fun r -> pts_to r x)
 
-val ( >--> ) (i:iname) (p:slprop) : prop
+val ( >--> ) (i:iname) (p:slprop u#1) : prop
 let inv (p:slprop) = i:iname{i >--> p}
 val new_invariant (e:inames) (p:slprop)
   : action_except (inv p) e p (fun _ -> emp)
