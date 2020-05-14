@@ -3870,6 +3870,55 @@ let teq_nosmt (env:env) (t1:typ) (t2:typ) : option<guard_t> =
   | None -> None
   | Some g -> discharge_guard' None env g false
 
+(*
+ * Solve the uni-valued implicits
+ *
+ * For now we handle only unit and unit refinement typed implicits,
+ *   we can later extend it to single constructor inductives
+ *
+ * This function gets the unresolved implicits from the main resolve_implicits'
+ *   function
+ *
+ * It only sets the value of the implicit's ctx uvar in the UF graph
+ * -- leaving their typechecking to resolve_implicits'
+ *
+ * E.g. for a ?u:squash phi, this will only set ?u=unit in the UF graph,
+ *   and, as usual, resolve_implicits' will check that G |= phi
+ *
+ * It returns a boolean (true if at least one implicit was solved)
+ *   and the set of new implicits, right now this set is same as imps,
+ *   for inductives, this may later include implicits for pattern variables
+ *)
+ 
+let try_solve_single_valued_implicits env (imps:Env.implicits) : Env.implicits * bool =
+  (*
+   * Get the value of the implicit imp
+   * Going forward, it can also return new implicits for the pattern variables
+   *   (cf. the comment above about extending it to inductives)
+   *)
+  let imp_value imp : option<term> =
+    let ctx_u, r = imp.imp_uvar, imp.imp_range in
+
+    let t_norm = N.normalize N.whnf_steps env ctx_u.ctx_uvar_typ in
+    
+    match (SS.compress t_norm).n with
+    | Tm_fvar fv when S.fv_eq_lid fv Const.unit_lid ->
+      r |> S.unit_const_with_range |> Some
+    | Tm_refine (b, _) when U.is_unit b.sort ->
+      r |> S.unit_const_with_range |> Some
+    | _ -> None
+
+  in
+
+  let b = List.fold_left (fun b imp ->  //check that the imp is still unsolved
+    if UF.find imp.imp_uvar.ctx_uvar_head |> is_none
+    then match imp_value imp with
+         | Some tm -> commit ([TERM (imp.imp_uvar, tm)]); true
+         | None -> b
+    else b) false imps in
+
+  imps, b
+  
 let resolve_implicits' env must_total forcelax g =
   let rec unresolved ctx_u =
     match (Unionfind.find ctx_u.ctx_uvar_head) with
@@ -3892,7 +3941,12 @@ let resolve_implicits' env must_total forcelax g =
   let rec until_fixpoint (acc: Env.implicits * bool) (implicits:Env.implicits) : Env.implicits =
     let out, changed = acc in
     match implicits with
-    | [] -> if not changed then out else until_fixpoint ([], false) out
+    | [] ->
+      if not changed
+      then let out, changed = try_solve_single_valued_implicits env out in
+           if changed then until_fixpoint ([], false) out
+           else out
+      else until_fixpoint ([], false) out
     | hd::tl ->
           let { imp_reason = reason; imp_tm = tm; imp_uvar = ctx_u; imp_range = r } = hd in
           if ctx_u.ctx_uvar_should_check = Allow_unresolved
