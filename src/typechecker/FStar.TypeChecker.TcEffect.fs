@@ -485,6 +485,20 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
   let _if_then_else_is_sound =
     let r = (ed |> U.get_layered_if_then_else_combinator |> must |> snd).pos in
 
+    (*
+     * In constructing the application nodes for subcomp and if_then_else,
+     *   we need to adjust the qualifiers
+     *
+     * Implicits remain implicits, but meta_attr or meta_arg just become implicits
+     *
+     * Don't think the boolean true below matters
+     *)
+    let binder_aq_to_arg_aq aq =
+      match aq with
+      | Some (Implicit _) -> aq
+      | Some (Meta _) -> Some (Implicit true)
+      | _ -> None in
+
     let ite_us, ite_t, _ = if_then_else in
 
     let us, ite_t = SS.open_univ_vars ite_us ite_t in
@@ -501,7 +515,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
           |> (fun l -> let (f::g::p::[]) = l in f, g, p) in
         Env.push_binders (Env.push_univ_vars env0 us) bs,
         S.mk_Tm_app ite_t
-          (bs |> List.map (fun (b, qual) -> S.bv_to_name b, qual))
+          (bs |> List.map (fun (b, qual) -> S.bv_to_name b, binder_aq_to_arg_aq qual))
           r,
         f, g, p
       | _ -> failwith "Impossible! ite_t must have been an abstraction with at least 3 binders" in
@@ -518,8 +532,13 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
           bs_except_last |> List.map snd, last_b |> List.hd |> snd
         | _ -> failwith "Impossible! subcomp_ty must have been an arrow with at lease 1 binder" in
 
+     let aqs_except_last, last_aq =
+       aqs_except_last |> List.map binder_aq_to_arg_aq,
+       last_aq |> binder_aq_to_arg_aq in
+
      let aux t =
       let tun_args = aqs_except_last |> List.map (fun aq -> S.tun, aq) in
+
       S.mk_Tm_app
         subcomp_t
         (tun_args@[t, last_aq])
