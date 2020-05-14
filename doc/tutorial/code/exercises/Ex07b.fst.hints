@@ -233,7 +233,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "400a8f65a9527d4771a5c4f53c0f6cef"
+      "d145e4504f9cb5df030fb0bdac9247d8"
     ],
     [
       "Ex07b.typing",
@@ -259,7 +259,7 @@
         "typing_tok_Ex07b.TBool@tok"
       ],
       0,
-      "7aa7c3e3aef4857797da50a2a1d5e605"
+      "6d47c78da83877f2f5874e05003ff124"
     ],
     [
       "Ex07b.progress",
@@ -323,7 +323,7 @@
         "typing_tok_Ex07b.TBool@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "af61adff47b30e02bb061dfae9d73fab"
+      "155bdd280a78f9d5b0e12ca7fc8977cd"
     ],
     [
       "Ex07b.appears_free_in",
@@ -517,7 +517,7 @@
         "typing_tok_Ex07b.TBool@tok", "unit_typing"
       ],
       0,
-      "73395c355b9553f6f2dc46dfd3f06633"
+      "84b1e641f99281e04dfc810a8273d321"
     ],
     [
       "Ex07b.typing_extensional",
@@ -645,10 +645,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_0c12bf14bfa812897d13091c093766ac"
+        "refinement_interpretation_Tm_refine_dad3b1582cf93ab09e86c93103066702"
       ],
       0,
-      "183318b79ce4a99d2838058eff8321b1"
+      "0e57c35598c8bd78525641a8e51b0082"
     ],
     [
       "Ex07b.preservation",
@@ -710,7 +710,7 @@
         "typing_tok_Ex07b.TBool@tok"
       ],
       0,
-      "d3690fa5abccedb626c5ce2ffb54863f"
+      "c7607fba2bc88ae2d2097d4faf1cf887"
     ],
     [
       "Ex07b.ty",
@@ -939,7 +939,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "be17cc63208117874971c9a9c120e63f"
+      "181ea69c8a54ace12b114f8c8191d345"
     ],
     [
       "Ex07b.typing",
@@ -965,7 +965,7 @@
         "typing_tok_Ex07b.TBool@tok"
       ],
       0,
-      "ce2a669e473d8e95b6e8a6494dee9bd2"
+      "cfad25d2715851e810b43655cf25d00e"
     ],
     [
       "Ex07b.appears_free_in",
