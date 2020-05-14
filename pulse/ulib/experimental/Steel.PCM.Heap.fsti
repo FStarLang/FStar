@@ -202,7 +202,7 @@ let is_frame_preserving #a #fp #fp' (f:pre_action fp a fp') =
      (affine_star fp frame h0;
       let (| x, h1 |) = f h0 in
       interp (fp' x `star` frame) h1 /\
-      (forall ctr. h0 `free_above_addr` ctr <==> h1 `free_above_addr` ctr) /\
+      (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr) /\
       (forall (hp:hprop frame). hp h0 == hp h1))
 
 let action (fp:slprop) (a:Type) (fp':a -> slprop) =
@@ -233,7 +233,7 @@ let frame_related_heaps (h0 h1:heap) (fp0 fp1 frame:slprop) (allocates:bool) =
   interp (fp0 `star` frame) h0 ==>
   interp (fp1 `star` frame) h1 /\
   (forall (hp:hprop frame). hp h0 == hp h1) /\
-  (not allocates ==> (forall ctr. h0 `free_above_addr` ctr <==> h1 `free_above_addr` ctr))
+  (not allocates ==> (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr))
 
 let action_framing #a #fp #fp' ($f:action fp a fp')
                          (frame:slprop) (h0:hheap (fp `star` frame))
