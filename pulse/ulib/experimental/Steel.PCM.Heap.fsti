@@ -72,6 +72,12 @@ val slprop : Type u#(a + 1)
 /// interpreting heap assertions as heapory predicates
 val interp (p:slprop u#a) (m:heap u#a) : prop
 
+(** A heap predicate that depends only on fp *)
+let hprop (fp:slprop u#a) =
+  q:(heap u#a -> prop){
+    forall (m0:heap{interp fp m0}) (m1:heap{disjoint m0 m1}).
+      q m0 <==> q (join m0 m1)}
+
 /// A common abbreviation: heaps validating p
 let hheap (p:slprop u#a) = m:heap u#a {interp p m}
 
@@ -169,6 +175,18 @@ val refine_equiv (p0 p1:slprop u#a) (q0 q1:a_heap_prop u#a)
     : Lemma (p0 `equiv` p1 /\ (forall h. q0 h <==> q1 h) ==>
              equiv (h_refine p0 q0) (h_refine p1 q1))
 
+let pure (p:prop) = h_refine emp (fun _ -> p)
+
+val pure_equiv (p q:prop)
+  : Lemma ((p <==> q) ==> (pure p `equiv` pure q))
+
+val pure_interp (q:prop) (h:heap u#a)
+   : Lemma (interp (pure q) h <==> q)
+
+val pure_star_interp (p:slprop u#a) (q:prop) (h:heap u#a)
+   : Lemma (interp (p `star` pure q) h <==>
+            interp (p `star` emp) h /\ q)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // wand and implications
@@ -176,6 +194,9 @@ val refine_equiv (p0 p1:slprop u#a) (q0 q1:a_heap_prop u#a)
 
 let stronger (p q:slprop) =
   forall h. interp p h ==> interp q h
+
+val stronger_star (p q r:slprop)
+  : Lemma (stronger q r ==> stronger (p `star` q) (p `star` r))
 
 val weaken (p q r:slprop) (h:heap u#a)
   : Lemma (q `stronger` r /\ interp (p `star` q) h ==> interp (p `star` r) h)
@@ -190,12 +211,6 @@ val free_above_addr (h:heap u#a) (a:nat) : prop
 
 val weaken_free_above (h:heap) (a b:nat)
   : Lemma (free_above_addr h a /\ a <= b ==> free_above_addr h b)
-
-(** A heap predicate that depends only on fp *)
-let hprop (fp:slprop u#a) =
-  q:(heap u#a -> prop){
-    forall (m0:heap{interp fp m0}) (m1:heap{disjoint m0 m1}).
-      q m0 <==> q (join m0 m1)}
 
 let pre_action (fp:slprop) (a:Type) (fp':a -> slprop) =
   hheap fp -> (x:a & hheap (fp' x))
