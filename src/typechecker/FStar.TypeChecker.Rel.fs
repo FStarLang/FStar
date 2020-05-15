@@ -3761,6 +3761,10 @@ let try_solve_deferred_constraints defer_ok smt_ok env (g:guard_t) =
        failwith "Impossible: should have raised a failure already"
    in
    solve_universe_inequalities env g.univ_ineqs;
+   let g = DeferredImplicits.solve_deferred_to_tactic_goals env g in
+   if Env.debug env <| Options.Other "ResolveImplicitsHook"
+   then BU.print1 "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s\n"
+          (guard_to_string env g);
    {g with univ_ineqs=([], [])}
 
 let solve_deferred_constraints' smt_ok env (g:guard_t) =
@@ -4022,10 +4026,6 @@ let force_trivial_guard env g =
                     guard = %s\n"
                     (guard_to_string env g);
     let g = solve_deferred_constraints env g in
-    let g = DeferredImplicits.solve_deferred_to_tactic_goals env g in
-    if Env.debug env <| Options.Other "ResolveImplicitsHook"
-    then BU.print1 "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s\n"
-                                          (guard_to_string env g);
     let g = resolve_implicits env g in
     match g.implicits with
     | [] -> ignore <| discharge_guard env g
