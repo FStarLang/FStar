@@ -918,7 +918,7 @@ let gamma_until (g:gamma) (bs:binders) =
 let restrict_ctx (tgt:ctx_uvar) (src:ctx_uvar) wl =
     let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
     let g = gamma_until src.ctx_uvar_gamma pfx in
-    let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_heap)) wl
+    let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
       src.ctx_uvar_range g pfx src.ctx_uvar_typ
       src.ctx_uvar_should_check src.ctx_uvar_meta in
     U.set_uvar src.ctx_uvar_head src';
