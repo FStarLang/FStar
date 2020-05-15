@@ -70,7 +70,7 @@ let hmem (p:slprop u#a) = m:mem u#a {interp p m}
 
 /// Equivalence relation on slprops is just
 /// equivalence of their interpretations
-let equiv (p1 p2:slprop) =
+let equiv (p1 p2:slprop) : prop =
   forall m. interp p1 m <==> interp p2 m
 
 /// A heap maps a reference to its associated value
@@ -96,6 +96,8 @@ val equiv_symmetric (p1 p2:slprop)
 val equiv_extensional_on_star (p1 p2 p3:slprop)
   : squash (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
 
+val emp_unit (p:slprop)
+  : Lemma (p `equiv` (p `star` emp))
 
 ////////////////////////////////////////////////////////////////////////////////
 // pts_to and abbreviations
