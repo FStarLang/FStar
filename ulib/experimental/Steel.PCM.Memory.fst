@@ -180,12 +180,82 @@ let rec lock_store_invariant (e:inames) (l:lock_store u#a) : slprop u#a =
     else
       p `star` lock_store_invariant e tl
 
+let lock_i (i:iname) (l:lock_store { i < L.length l }) =
+  let ix = L.length l - i - 1 in
+  L.index l ix
+
+let iname_for_p (i:iname) (p:slprop) : NMSTTotal.s_predicate lock_store =
+  fun l ->
+    i < L.length l /\
+    (lock_i i l).inv == p
+
+let lock_store_evolves : FStar.Preorder.preorder lock_store =
+  fun (l1 l2 : lock_store) ->
+    L.length l2 >= L.length l1 /\
+    (forall (i:nat{i < L.length l1}).
+       (lock_i i l1).inv == (lock_i i l2).inv)
+
+let inames_in (e:inames) (l:lock_store) = forall i. Set.mem i e ==> i < L.length l
+
+let extend_lock_store (e:inames) (l:lock_store{e `inames_in` l}) (p:slprop)
+  : i:iname &
+    l':lock_store {
+      lock_store_invariant e l' == p `star` lock_store_invariant e l /\
+      iname_for_p i p l'
+    }
+  = (| L.length l, Invariant p :: l |)
+
+let set_add (i:iname) (s:inames) = Set.union (Set.singleton i) s
+
+let rec move_invariant (e:inames) (l:lock_store) (p:slprop)
+                       (i:iname{iname_for_p i p l /\ ~(i `Set.mem` e)})
+   : Lemma (H.equiv (lock_store_invariant e l)
+                    (p `star` lock_store_invariant (set_add i e) l))
+   = let rec aux (i:iname) (m:lock_store)
+       : Lemma (requires i >= L.length m)
+               (ensures (lock_store_invariant e m `H.equiv`  lock_store_invariant (set_add i e) m))
+       = match m with
+         | [] -> ()
+         | Invariant p::tl ->
+           aux i tl;
+           H.star_congruence p (lock_store_invariant e tl) p (lock_store_invariant (set_add i e) tl)
+     in
+     let current_addr = L.length l - 1 in
+     match l with
+     | [] -> ()
+     | Invariant q::tl ->
+       if i = current_addr
+       then begin
+         assert (lock_store_invariant e l == p `star` lock_store_invariant e tl);
+         aux i tl;
+         H.star_congruence p (lock_store_invariant e tl) p (lock_store_invariant (set_add i e) tl);
+         ()
+       end
+       else begin
+         move_invariant e tl p i;
+         assert (lock_store_invariant e tl `equiv`
+                 (p `star` lock_store_invariant (set_add i e) tl));
+         H.star_congruence q (lock_store_invariant e tl) q (p `star` lock_store_invariant (set_add i e) tl);
+         if Set.mem current_addr e
+         then ()
+         else begin
+           let r = lock_store_invariant (set_add i e) tl in
+           assert (lock_store_invariant e l `equiv`
+                   (q `star` (p `star` r)));
+           H.star_associative q p r;
+           H.star_commutative q p;
+           H.star_congruence (q `star` p) r (p `star` q) r;
+           H.star_associative p q r
+         end
+       end
+
 let heap_ctr_valid (ctr:nat) (h:H.heap u#a) : H.a_heap_prop u#a =
   fun _ -> h `H.free_above_addr` ctr
 
 let locks_invariant (e:inames) (m:mem u#a) : slprop u#a =
   H.h_refine (lock_store_invariant e m.locks)
              (heap_ctr_valid m.ctr (heap_of_mem m))
+
 
 (***** Following lemmas are needed in Steel.Effect *****)
 
@@ -204,12 +274,6 @@ let h_exists_cong (#a:Type) (p q : a -> slprop)
 // Preorders and effects
 ////////////////////////////////////////////////////////////////////////////////
 module PP = Steel.PCM.Preorder
-
-let lock_store_evolves : FStar.Preorder.preorder lock_store =
-  fun (l1 l2 : lock_store) ->
-    L.length l2 >= L.length l1 /\
-    (forall (i:nat{i < L.length l1}).
-       (L.index l1 i).inv == (L.index l2 i).inv)
 
 let mem_evolves =
   fun m0 m1 ->
@@ -511,39 +575,91 @@ let alloc_action #a #pcm e x
     in
     lift_tot_action (refined_pre_action_as_action f)
 
-let iname_for_p (i:iname) (p:slprop) : NMSTTotal.s_predicate mem =
-  fun m ->
-    i < L.length m.locks /\
-    (L.index m.locks i).inv == p
+let iname_for_p_mem (i:iname) (p:slprop) : NMSTTotal.s_predicate mem =
+  fun m -> iname_for_p i p m.locks
 
 let iname_for_p_stable (i:iname) (p:slprop)
-  : Lemma (NMSTTotal.stable mem mem_evolves (iname_for_p i p))
+  : Lemma (NMSTTotal.stable mem mem_evolves (iname_for_p_mem i p))
   = ()
 
-let ( >--> ) i p : prop =
-  NMSTTotal.witnessed mem mem_evolves (iname_for_p i p)
+let ( >--> ) i p : prop = NMSTTotal.witnessed mem mem_evolves (iname_for_p_mem i p)
 
-let new_invariant_tot_action (e:inames) (p:slprop) (m0:hmem_with_inv_except e p)
+let hmem_with_inv_equiv e (m:mem) (p:slprop)
+  : Lemma (interp (p `star` linv e m) m <==>
+           interp (p `star` lock_store_invariant e m.locks) m /\
+           heap_ctr_valid m.ctr (heap_of_mem m) (heap_of_mem m))
+  = admit()
+
+let frame_related_mems' (fp0 fp1:slprop u#a) e (m0:hmem_with_inv_except e fp0) (m1:hmem_with_inv_except e fp1) =
+    forall (frame:slprop u#a).
+      interp ((fp0 `star` frame) `star` linv e m0) m0 ==>
+      interp ((fp1 `star` frame) `star` linv e m1) m1 /\
+      mem_evolves m0 m1 /\
+      (forall (mp:mprop frame). mp (core_mem m0) <==> mp (core_mem m1))
+
+let new_invariant_tot_action (e:inames) (p:slprop) (m0:hmem_with_inv_except e p{ e `inames_in` m0.locks })
   : Pure (iname & hmem_with_inv_except e emp)
          (requires True)
          (ensures fun (i, m1) ->
-           iname_for_p i p m1 /\
+           iname_for_p_mem i p m1 /\
            frame_related_mems p emp e m0 m1 /\
            mem_evolves m0 m1)
-  = let l1 = L.snoc (m0.locks, Invariant p) in
-    let i = L.length l1 in
+  = let (| i, l1 |) = extend_lock_store e m0.locks p in
     let m1 = { m0 with locks = l1 } in
-    assume (iname_for_p i p m1);
-    assume (frame_related_mems p emp e m0 m1);
+    assert (lock_store_invariant e m1.locks ==
+            p `star` lock_store_invariant e m0.locks);
+    assume (linv e m1 `equiv` (p `star` linv e m0));
+    assert (iname_for_p_mem i p m1);
+    assert (lock_store_evolves m0.locks l1);
+    assert (mem_evolves m0 m1);
+    hmem_with_inv_equiv e m0 p;
+    assert (interp (p `star` lock_store_invariant e m0.locks) m1);
+    assert (interp (lock_store_invariant e m1.locks) m1);
+    H.emp_unit (lock_store_invariant e m1.locks);
+    H.star_commutative (lock_store_invariant e m1.locks) emp;
+    assert (interp (emp `star` lock_store_invariant e m1.locks) m1);
+    hmem_with_inv_equiv e m1 emp;
+    let m1 : hmem_with_inv_except e emp = m1 in
+    let aux (frame:slprop)
+      : Lemma
+        (requires interp ((p `star` frame) `star` linv e m0) m0)
+        (ensures interp ((emp `star` frame) `star` linv e m1) m1 /\
+                 mem_evolves m0 m1 /\
+                 (forall (mp:mprop frame). mp (core_mem m0) <==> mp (core_mem m1)))
+        [SMTPat (p `star` frame)]
+      = assert (interp ((p `star` frame) `star` linv e m0) m1);
+        calc (equiv) {
+          ((p `star` frame) `star` linv e m0);
+            (equiv) {
+                      H.star_commutative p frame;
+                      H.star_congruence (p `star` frame) (linv e m0) (frame `star` p) (linv e m0);
+                      H.star_associative frame p (linv e m0)
+                    }
+          (frame `star` (p `star` linv e m0));
+            (equiv) {
+                      H.star_congruence frame (p `star` linv e m0) frame (linv e m1)
+                    }
+          (frame `star` linv e m1);
+            (equiv) {
+                       H.emp_unit (frame `star` linv e m1);
+                       H.star_commutative (frame `star` linv e m1) emp;
+                       H.star_associative emp frame (linv e m1)
+                    }
+          ((emp `star` frame) `star` linv e m1);
+        };
+        assert (interp ((emp `star` frame) `star` linv e m1) m1)
+    in
+    assert (frame_related_mems p emp e m0 m1);
     ( i, m1 )
 
 let new_invariant (e:inames) (p:slprop) ()
   : MstTot (inv p) e p (fun _ -> emp)
   = let m0 = NMSTTotal.get () in
+    assume (e `inames_in` m0.locks);
     let r = new_invariant_tot_action e p m0 in
     let ( i, m1 ) = r in
     assert (mem_evolves m0 m1);
     NMSTTotal.put #mem #mem_evolves m1;
     iname_for_p_stable i p;
-    NMSTTotal.witness mem mem_evolves (iname_for_p i p);
+    NMSTTotal.witness mem mem_evolves (iname_for_p_mem i p);
     i
