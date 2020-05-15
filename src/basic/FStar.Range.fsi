@@ -37,6 +37,7 @@ val union_rng: rng -> rng -> rng
 val union_ranges: range -> range -> range
 
 val rng_included: rng -> rng -> bool
+val string_of_pos: pos -> string
 val string_of_range: range -> string
 val string_of_def_range: range -> string
 val string_of_use_range: range -> string

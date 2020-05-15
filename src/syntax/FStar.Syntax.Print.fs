@@ -365,7 +365,9 @@ and ctx_uvar_to_string_aux print_reason ctx_uvar =
     let reason_string =
       if print_reason
       then U.format1 "(* %s *)\n" ctx_uvar.ctx_uvar_reason
-      else "" in
+      else U.format2 "(%s-%s) "
+             (Range.string_of_pos (Range.start_of_range ctx_uvar.ctx_uvar_range))
+             (Range.string_of_pos (Range.end_of_range ctx_uvar.ctx_uvar_range)) in
     format4 "%s(%s |- %s : %s)"
             reason_string
             (binders_to_string ", " ctx_uvar.ctx_uvar_binders)

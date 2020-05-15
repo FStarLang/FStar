@@ -918,7 +918,9 @@ let gamma_until (g:gamma) (bs:binders) =
 let restrict_ctx (tgt:ctx_uvar) (src:ctx_uvar) wl =
     let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
     let g = gamma_until src.ctx_uvar_gamma pfx in
-    let _, src', wl = new_uvar ("restrict:"^src.ctx_uvar_reason) wl src.ctx_uvar_range g pfx src.ctx_uvar_typ src.ctx_uvar_should_check src.ctx_uvar_meta in
+    let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_heap)) wl
+      src.ctx_uvar_range g pfx src.ctx_uvar_typ
+      src.ctx_uvar_should_check src.ctx_uvar_meta in
     U.set_uvar src.ctx_uvar_head src';
     wl
 
@@ -4047,7 +4049,7 @@ let teq_nosmt_force (env:env) (t1:typ) (t2:typ) :bool =
 
 let layered_effect_teq env (t1:term) (t2:term) (reason:option<string>) : guard_t =
   if Env.debug env <| Options.Other "LayeredEffectsEqns"
-  then BU.print3 "Layered effect (%s) %s = %s\n"
+  then BU.print3 "Layered Effect (%s) %s = %s\n"
          (if reason |> is_none then "_" else reason |> must)              
          (Print.term_to_string t1) (Print.term_to_string t2);
   teq env t1 t2  //AR: teq_nosmt?
