@@ -195,7 +195,11 @@ let lock_store_evolves : FStar.Preorder.preorder lock_store =
     (forall (i:nat{i < L.length l1}).
        (lock_i i l1).inv == (lock_i i l2).inv)
 
-let inames_in (e:inames) (l:lock_store) = forall i. Set.mem i e ==> i < L.length l
+let inames_in (e:inames) (l:lock_store) : prop = forall i. Set.mem i e ==> i < L.length l
+
+let inames_ok e m = inames_in e m.locks
+
+let inames_ok_empty m = ()
 
 let extend_lock_store (e:inames) (l:lock_store{e `inames_in` l}) (p:slprop)
   : i:iname &
@@ -694,7 +698,6 @@ let new_invariant_tot_action (e:inames) (p:slprop) (m0:hmem_with_inv_except e p{
 let new_invariant (e:inames) (p:slprop) ()
   : MstTot (inv p) e p (fun _ -> emp)
   = let m0 = NMSTTotal.get () in
-    assume (e `inames_in` m0.locks);
     let r = new_invariant_tot_action e p m0 in
     let ( i, m1 ) = r in
     assert (mem_evolves m0 m1);
