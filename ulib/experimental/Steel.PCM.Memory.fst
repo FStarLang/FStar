@@ -249,13 +249,16 @@ let rec move_invariant (e:inames) (l:lock_store) (p:slprop)
          end
        end
 
-let heap_ctr_valid (ctr:nat) (h:H.heap u#a) : H.a_heap_prop u#a =
-  fun _ -> h `H.free_above_addr` ctr
+let heap_ctr_valid (ctr:nat) (h:H.heap u#a) : prop =
+    h `H.free_above_addr` ctr
+
+let ctr_validity (ctr:nat) (h:H.heap) : slprop =
+    H.pure (heap_ctr_valid ctr h)
 
 let locks_invariant (e:inames) (m:mem u#a) : slprop u#a =
-  H.h_refine (lock_store_invariant e m.locks)
-             (heap_ctr_valid m.ctr (heap_of_mem m))
-
+   lock_store_invariant e m.locks
+   `star`
+   ctr_validity m.ctr (heap_of_mem m)
 
 (***** Following lemmas are needed in Steel.Effect *****)
 
@@ -329,8 +332,7 @@ let linv e (m:mem) = locks_invariant e m
 let hheap_of_hmem #fp #e (m:hmem_with_inv_except e fp)
   : h:H.hheap (fp `star` linv e m) { h `H.free_above_addr` m.ctr}
   = let h = heap_of_mem m in
-    H.refine_interp (lock_store_invariant e m.locks)
-                    (heap_ctr_valid m.ctr (heap_of_mem m)) h;
+    H.pure_interp (heap_ctr_valid m.ctr (heap_of_mem m)) h;
     h
 
 let hmem_of_hheap #e (#fp0 #fp1:slprop) (m:hmem_with_inv_except e fp0)
@@ -342,19 +344,20 @@ let hmem_of_hheap #e (#fp0 #fp1:slprop) (m:hmem_with_inv_except e fp0)
       assert (interp (fp1 `star` linv e m) m1);
       star_commutative fp1 (linv e m);
       assert (interp (linv e m `star` fp1) m1);
-      assert (linv e m1 ==  H.h_refine (lock_store_invariant e m1.locks)
-                                       (heap_ctr_valid m1.ctr (heap_of_mem m1)));
-      assert (linv e m ==  H.h_refine (lock_store_invariant e m1.locks)
-                                      (heap_ctr_valid m1.ctr (heap_of_mem m)));
-      H.refine_interp (lock_store_invariant e m1.locks)
-                      (heap_ctr_valid m1.ctr (heap_of_mem m))
-                      (heap_of_mem m);
-      assert (forall h. (heap_ctr_valid m1.ctr (heap_of_mem m)) h <==>
-                   (heap_ctr_valid m1.ctr (heap_of_mem m1)) h);
-      H.refine_equiv (lock_store_invariant e m1.locks)
-                     (lock_store_invariant e m1.locks)
-                     (heap_ctr_valid m1.ctr (heap_of_mem m))
-                     (heap_ctr_valid m1.ctr (heap_of_mem m1));
+      assert (linv e m1 ==  (lock_store_invariant e m1.locks)
+                            `star` ctr_validity m1.ctr (heap_of_mem m1));
+      assert (linv e m ==  (lock_store_invariant e m1.locks)
+                             `star` ctr_validity m1.ctr (heap_of_mem m));
+      H.pure_interp (heap_ctr_valid m1.ctr (heap_of_mem m))
+                    (heap_of_mem m);
+      assert (heap_ctr_valid m1.ctr (heap_of_mem m) <==>
+              heap_ctr_valid m1.ctr (heap_of_mem m1));
+      H.pure_equiv (heap_ctr_valid m1.ctr (heap_of_mem m))
+                   (heap_ctr_valid m1.ctr (heap_of_mem m1));
+      H.star_congruence (lock_store_invariant e m1.locks)
+                        (ctr_validity m1.ctr (heap_of_mem m1))
+                        (lock_store_invariant e m1.locks)
+                        (ctr_validity m1.ctr (heap_of_mem m));
       assert (linv e m `equiv` linv e m1);
       let _ = equiv_extensional_on_star (linv e m) (linv e m1) fp1 in
       assert ((linv e m `star` fp1) `equiv` (linv e m1 `star` fp1));
@@ -474,15 +477,15 @@ let weaken (p q r:slprop) (h:H.hheap (p `star` q) { H.stronger q r })
   : H.hheap (p `star` r)
   = H.weaken p q r h; h
 
-let weaken_refine (p:slprop) (q r:H.a_heap_prop)
+let weaken_pure (q r: prop)
   : Lemma
-    (requires (forall h. q h ==> r h))
-    (ensures H.stronger (H.h_refine p q) (H.h_refine p r))
+    (requires (q ==> r))
+    (ensures H.stronger (H.pure q) (H.pure r))
   = let aux (h:H.heap)
-        : Lemma (ensures (H.interp (H.h_refine p q) h ==> H.interp (H.h_refine p r) h))
+        : Lemma (ensures (H.interp (H.pure q) h ==> H.interp (H.pure r) h))
                 [SMTPat ()]
-        = H.refine_interp p q h;
-          H.refine_interp p r h
+        = H.pure_interp q h;
+          H.pure_interp r h
     in
     ()
 
@@ -490,16 +493,30 @@ let inc_ctr (#p:slprop) #e (m:hmem_with_inv_except e p)
   : m':hmem_with_inv_except e p{m'.ctr = m.ctr + 1 /\ H.stronger (linv e m) (linv e m')}
   = let m' : mem = { m with ctr = m.ctr + 1} in
     assert (interp (p `star` linv e m) m');
-    assert (linv e m == H.h_refine (lock_store_invariant e m.locks)
-                                   (heap_ctr_valid m.ctr (heap_of_mem m)));
-    assert (linv e m' == H.h_refine (lock_store_invariant e m.locks)
-                                    (heap_ctr_valid (m.ctr + 1) (heap_of_mem m)));
+    assert (linv e m == lock_store_invariant e m.locks
+                        `star`
+                        ctr_validity m.ctr (heap_of_mem m));
+    assert (linv e m' == lock_store_invariant e m.locks
+                         `star`
+                        ctr_validity (m.ctr + 1) (heap_of_mem m));
     H.weaken_free_above (heap_of_mem m) m.ctr (m.ctr + 1);
-    weaken_refine (lock_store_invariant e m.locks)
-                  (heap_ctr_valid m.ctr (heap_of_mem m))
-                  (heap_ctr_valid (m.ctr + 1) (heap_of_mem m));
-    assert (H.stronger (linv e m) (linv e m'));
-    let _ = weaken p (linv e m) (linv e m') (heap_of_mem m) in
+    weaken_pure (heap_ctr_valid m.ctr (heap_of_mem m))
+                (heap_ctr_valid (m.ctr + 1) (heap_of_mem m));
+    assert (H.stronger
+                  (ctr_validity m.ctr (heap_of_mem m))
+                  (ctr_validity (m.ctr + 1) (heap_of_mem m)));
+    H.star_associative p (lock_store_invariant e m.locks)
+                         (ctr_validity m.ctr (heap_of_mem m));
+    H.stronger_star (lock_store_invariant e m.locks)
+                    (ctr_validity m.ctr (heap_of_mem m))
+                    (ctr_validity (m.ctr + 1) (heap_of_mem m));
+    H.weaken (p `star` lock_store_invariant e m.locks)
+             (ctr_validity m.ctr (heap_of_mem m))
+             (ctr_validity (m.ctr + 1) (heap_of_mem m))
+             (heap_of_mem m');
+    H.star_associative p (lock_store_invariant e m.locks)
+                         (ctr_validity (m.ctr + 1) (heap_of_mem m));
+    let m' : hmem_with_inv_except e p = m' in
     m'
 
 let frame_related_mems (fp0 fp1:slprop u#a) e (m0:hmem_with_inv_except e fp0) (m1:hmem_with_inv_except e fp1) =
@@ -587,15 +604,19 @@ let ( >--> ) i p : prop = NMSTTotal.witnessed mem mem_evolves (iname_for_p_mem i
 let hmem_with_inv_equiv e (m:mem) (p:slprop)
   : Lemma (interp (p `star` linv e m) m <==>
            interp (p `star` lock_store_invariant e m.locks) m /\
-           heap_ctr_valid m.ctr (heap_of_mem m) (heap_of_mem m))
-  = admit()
+           heap_ctr_valid m.ctr (heap_of_mem m))
+  = calc (<==>) {
+      interp (p `star` linv e m) m;
+      (<==>) { H.star_associative p (lock_store_invariant e m.locks) (ctr_validity m.ctr (heap_of_mem m)) }
+      interp ((p `star` lock_store_invariant e m.locks) `star` ctr_validity m.ctr (heap_of_mem m)) m;
+      (<==>) { H.pure_star_interp (p `star` lock_store_invariant e m.locks) (heap_ctr_valid m.ctr (heap_of_mem m)) (heap_of_mem m) }
+      interp ((p `star` lock_store_invariant e m.locks) `star` emp) m /\
+             (heap_ctr_valid m.ctr (heap_of_mem m));
+      (<==>) { H.emp_unit (p `star` lock_store_invariant e m.locks) }
+      interp (p `star` lock_store_invariant e m.locks) m /\
+             (heap_ctr_valid m.ctr (heap_of_mem m));
+    }
 
-let frame_related_mems' (fp0 fp1:slprop u#a) e (m0:hmem_with_inv_except e fp0) (m1:hmem_with_inv_except e fp1) =
-    forall (frame:slprop u#a).
-      interp ((fp0 `star` frame) `star` linv e m0) m0 ==>
-      interp ((fp1 `star` frame) `star` linv e m1) m1 /\
-      mem_evolves m0 m1 /\
-      (forall (mp:mprop frame). mp (core_mem m0) <==> mp (core_mem m1))
 
 let new_invariant_tot_action (e:inames) (p:slprop) (m0:hmem_with_inv_except e p{ e `inames_in` m0.locks })
   : Pure (iname & hmem_with_inv_except e emp)
@@ -608,7 +629,25 @@ let new_invariant_tot_action (e:inames) (p:slprop) (m0:hmem_with_inv_except e p{
     let m1 = { m0 with locks = l1 } in
     assert (lock_store_invariant e m1.locks ==
             p `star` lock_store_invariant e m0.locks);
-    assume (linv e m1 `equiv` (p `star` linv e m0));
+    calc (equiv) {
+      linv e m1;
+        (equiv) {}
+      (lock_store_invariant e m1.locks
+        `star`
+       ctr_validity m1.ctr (heap_of_mem m1));
+        (equiv) {}
+      ((p `star` lock_store_invariant e m0.locks)
+        `star`
+       ctr_validity m1.ctr (heap_of_mem m1));
+        (equiv) {
+          H.star_associative p (lock_store_invariant e m0.locks) (ctr_validity m1.ctr (heap_of_mem m1))
+         }
+      (p `star` (lock_store_invariant e m0.locks
+        `star`
+       ctr_validity m1.ctr (heap_of_mem m1)));
+        (equiv) { }
+      (p `star` linv e m0);
+    };
     assert (iname_for_p_mem i p m1);
     assert (lock_store_evolves m0.locks l1);
     assert (mem_evolves m0 m1);
