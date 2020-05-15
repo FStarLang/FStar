@@ -24,21 +24,20 @@ module Ins = Steel.PCM.Semantics.Instantiate
 
 open Steel.PCM.Memory
 
+//missing lemma in the PCM interface ... todo
+assume val intro_emp (m:mem u#a) : Lemma (interp emp m)
+
 let join_preserves_interp (hp:slprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
   : Lemma
     (ensures (interp hp (join m0 m1)))
     [SMTPat (interp hp (join m0 m1))]
-  = admit();//intro_emp m1;
+  = intro_emp m1;
     intro_star hp emp m0 m1;
     affine_star hp emp (join m0 m1)
 #push-options "--log_queries --query_stats"
-#restart-solver
 let test (pre:slprop) (h_pre:hmem pre) (h:mem{disjoint h_pre h}) =
-  // assume (forall (hp:slprop) (m0:hmem hp) (m1:mem{disjoint m0 m1}).
-  //          {:pattern (interp hp (join m0 m1))}
-  //           interp hp (join m0 m1));
   assert (interp pre (join h_pre h))
-  
+#pop-options  
 let ens_depends_only_on (#a:Type) (pre:slprop) (post:a -> slprop)
                         (q:(hmem pre -> x:a -> hmem (post x) -> prop))
   = //can join any disjoint heap to the pre-heap and q is still valid
@@ -165,6 +164,7 @@ let if_then_else (a:Type) (pre:pre_t) (post:post_t a)
 = repr a pre post
     (if_then_else_req req_then req_else p)
     (if_then_else_ens ens_then ens_else p)
+
 
 reifiable reflectable
 layered_effect {
