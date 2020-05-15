@@ -493,11 +493,9 @@ let star_congruence (p1 p2 p3 p4:slprop) = ()
 
 let refine_interp p q h = ()
 let refine_equiv p0 p1 q0 q1 = ()
-// let pure_interp p q h = () (p:slprop u#a) (q:a_heap_prop) (h:heap u#a) = ()
-//    : Lemma (interp (p `star` pure q) h <==>
-//             interp (p `star` emp) h /\ q h)
-
-
+let pure_equiv p q = ()
+let pure_interp p h = ()
+let pure_star_interp p q h = ()
 
 
 ////////////////////////////////////////////////////////////////////////////////

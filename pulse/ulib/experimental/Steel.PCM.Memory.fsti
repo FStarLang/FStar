@@ -147,11 +147,14 @@ val affine_star (p q:slprop) (m:mem)
 module S = FStar.Set
 val iname : eqtype
 let inames = S.set iname
-
+val inames_ok (e:inames) (m:mem) : prop
+val inames_ok_empty (m:mem)
+  : Lemma (ensures inames_ok Set.empty m)
+          [SMTPat (inames_ok Set.empty m)]
 val locks_invariant (e:inames) (m:mem u#a) : slprop u#a
 
 let hmem_with_inv_except (e:inames) (fp:slprop u#a) =
-  m:mem{interp (fp `star` locks_invariant e m) m}
+  m:mem{inames_ok e m /\ interp (fp `star` locks_invariant e m) m}
 
 let hmem_with_inv (fp:slprop u#a) = hmem_with_inv_except S.empty fp
 
@@ -201,8 +204,10 @@ let preserves_frame (e:inames) (pre post:slprop) (m0 m1:mem) =
 effect MstTot (a:Type u#a) (except:inames) (expects:slprop u#1) (provides: a -> slprop u#1) =
   NMSTTotal.NMSTATETOT a (mem u#1) mem_evolves
     (requires fun m0 ->
+        inames_ok except m0 /\
         interp (expects `star` locks_invariant except m0) m0)
     (ensures fun m0 x m1 ->
+        inames_ok except m1 /\
         interp (provides x `star` locks_invariant except m1) m1 /\
         preserves_frame except expects (provides x) m0 m1)
 
