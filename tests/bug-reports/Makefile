@@ -148,7 +148,7 @@ not-verify: $(subst .fst,.not-verify,$(SHOULD_NOT_VERIFY_CLOSED))
 
 Bug310.extract:
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug310 --codegen OCaml Bug310.fst
-	cmp Bug310.ml Bug310.ml.expected
+	diff -u --strip-trailing-cr Bug310.ml Bug310.ml.expected
 
 %.extract: %.fst
 	mkdir -p out_$*
