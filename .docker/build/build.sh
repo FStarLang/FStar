@@ -250,6 +250,13 @@ function fstar_default_build () {
 
     wait # for fetches above
 
+    # The commands above were executed in sub-shells and their EXPORTs are not
+    # propagated to the current shell. Re-do.
+    export_home HACL "$(pwd)/hacl-star"
+    export_home EVERCRYPT "$(pwd)/hacl-star/providers"
+    export_home KREMLIN "$(pwd)/kremlin"
+    export_home QD "$(pwd)/qd"
+
     # Fetch and build subprojects for orange tests
     make_kremlin &
     make_qd &
@@ -257,12 +264,6 @@ function fstar_default_build () {
 
     # fetch_vale depends on fetch_hacl for the hacl-star/vale/.vale_version file
     fetch_vale
-
-    # The commands above were executed in sub-shells and their EXPORTs are not
-    # propagated to the current shell. Re-do.
-    export_home HACL "$(pwd)/hacl-star"
-    export_home KREMLIN "$(pwd)/kremlin"
-    export_home QD "$(pwd)/qd"
 
     # Once F* is built, run its main regression suite, along with more relevant
     # tests.
