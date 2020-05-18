@@ -457,7 +457,7 @@ let rec unzip3 l = match l with
 (** [splitAt] takes a natural number n and a list and returns a pair
     of the maximal prefix of l of size smaller than n and the rest of
     the list *)
-let rec splitAt (#a:Type) (n:nat) (l:list a) : list a * list a =
+let rec splitAt (#a:Type) (n:nat) (l:list a) : Tot (list a * list a) =
   if n = 0 then [], l
   else
     match l with

@@ -667,7 +667,8 @@ val forall_as_seq:
   Lemma (requires (p (S.index s0 k) /\ S.slice s0 i j == S.slice s1 i j))
         (ensures (p (S.index s1 k)))
         [SMTPat (p (S.index s0 k));
-        SMTPat (S.slice s0 i j == S.slice s1 i j)]
+         SMTPat (S.slice s0 i j);
+         SMTPat (S.slice s1 i j)]
 let forall_as_seq #a s0 s1 i j k p =
   assert (S.index (S.slice s0 i j) (k - i) ==
          S.index (S.slice s1 i j) (k - i))
