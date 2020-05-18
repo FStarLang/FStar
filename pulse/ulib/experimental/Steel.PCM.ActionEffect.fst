@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Steel.PCM.Effect
+module Steel.PCM.ActionEffect
 
 module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.PCM.Memory
