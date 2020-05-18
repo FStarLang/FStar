@@ -707,3 +707,64 @@ let new_invariant (e:inames) (p:slprop) ()
     iname_for_p_stable i p;
     NMSTTotal.witness mem mem_evolves (iname_for_p_mem i p);
     i
+
+let rearrange4 (p q r s:slprop)
+  : Lemma ((p `star` ((q `star` r) `star` s)) `H.equiv`
+           ((q `star` p) `star` (r `star` s)))
+  = admit()
+
+let with_invariant_mem (#a:Type)
+                       (#fp:slprop)
+                       (#fp':a -> slprop)
+                       (#opened_invariants:inames)
+                       (#p:slprop)
+                       (i:inv p{not (i `Set.mem` opened_invariants)})
+                       (f:action_except a (set_add i opened_invariants) (p `star` fp) (fun x -> p `star` fp' x))
+                       ()
+  : MstTot a opened_invariants fp fp'
+  = let m0 = NMSTTotal.get () in
+    NMSTTotal.recall _ mem_evolves (iname_for_p_mem i p);
+    assert (iname_for_p i p m0.locks);
+    move_invariant opened_invariants m0.locks p i;
+    assert (interp (fp `star` (lock_store_invariant opened_invariants m0.locks `star` ctr_validity m0.ctr (heap_of_mem m0))) m0);
+    calc (equiv)
+    {
+       (fp `star` (lock_store_invariant opened_invariants m0.locks `star` ctr_validity m0.ctr (heap_of_mem m0)));
+         (equiv)
+           {
+             calc (equiv)
+             {
+               (lock_store_invariant opened_invariants m0.locks `star` ctr_validity m0.ctr (heap_of_mem m0));
+                 (equiv) {
+                             move_invariant opened_invariants m0.locks p i;
+                             star_congruence (lock_store_invariant opened_invariants m0.locks)
+                                             (ctr_validity m0.ctr (heap_of_mem m0))
+                                             (p `star` lock_store_invariant (set_add i opened_invariants) m0.locks)
+                                             (ctr_validity m0.ctr (heap_of_mem m0))
+                         }
+               ((p `star` lock_store_invariant (set_add i opened_invariants) m0.locks) `star` ctr_validity m0.ctr (heap_of_mem m0));
+             };
+             star_congruence fp
+                             (lock_store_invariant opened_invariants m0.locks `star` ctr_validity m0.ctr (heap_of_mem m0))
+                             fp
+                             ((p `star` lock_store_invariant (set_add i opened_invariants) m0.locks) `star` ctr_validity m0.ctr (heap_of_mem m0))
+           }
+       (fp `star` ((p `star` lock_store_invariant (set_add i opened_invariants) m0.locks) `star` ctr_validity m0.ctr (heap_of_mem m0)));
+         (equiv) { rearrange4 fp p (lock_store_invariant (set_add i opened_invariants) m0.locks) (ctr_validity m0.ctr (heap_of_mem m0)) }
+       ((p `star` fp) `star` linv (set_add i opened_invariants) m0);
+    };
+    let m0 : hmem_with_inv_except (set_add i opened_invariants) (p `star` fp) = m0 in
+    let r = f () in
+    let m1 = NMSTTotal.get () in
+    assert (interp ((p `star` fp' r) `star`
+                    (lock_store_invariant (set_add i opened_invariants) m1.locks `star` ctr_validity m1.ctr (heap_of_mem m1))) m1);
+    NMSTTotal.recall _ mem_evolves (iname_for_p_mem i p);
+    move_invariant opened_invariants m1.locks p i;
+    assert (lock_store_invariant opened_invariants m1.locks `H.equiv`
+            (p `star` lock_store_invariant (set_add i opened_invariants) m1.locks));
+    assume (interp (fp' r `star`
+                   (lock_store_invariant opened_invariants m1.locks `star` ctr_validity m1.ctr (heap_of_mem m1))) m1);
+    assert (inames_ok opened_invariants m1);
+    assert (preserves_frame (set_add i opened_invariants) (p `star` fp) (p `star` fp' r) m0 m1);
+    assume (preserves_frame opened_invariants fp (fp' r) m0 m1);
+    r
