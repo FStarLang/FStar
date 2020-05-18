@@ -1972,7 +1972,7 @@
         "typing_LowStar.Vector.as_seq", "typing_LowStar.Vector.size_of"
       ],
       0,
-      "c47cdac073cae67ecce312b3ea260edb"
+      "0aee184a8dcfa4208e9f8557aa8ef072"
     ],
     [
       "LowStar.RVector.as_seq_sub_as_seq",
