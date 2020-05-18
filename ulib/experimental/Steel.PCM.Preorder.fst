@@ -1,38 +1,85 @@
+(*
+   Copyright 2020 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Steel.PCM.Preorder
 open Steel.PCM
 open FStar.Preorder
 
-let induces_preorder #a (p:pcm a) (q:preorder a) =
+/// This module explores the connexion between PCM and preorders. More specifically, we show here
+/// that any PCM induces a preorder relation, characterized by frame-preservation for any updates.
+///
+/// Furthurmore, we also consider the reverse relationship where we derive a PCM for any preorder,
+/// by taking as elements of the PCM the trace of all the states of the element.
+
+(**** PCM to preoder *)
+
+(**
+  PCM [p] induces the preorder [q] if for any frame preserving update of [x] to [y] and
+  every element [z] compatible with [x], then [z] is before [y] in the preorder.
+*)
+let induces_preorder (#a: Type u#a) (p:pcm a) (q:preorder a) =
   forall (x y:a). frame_preserving p x y
          ==> (forall (z:a). compatible p x z ==> q z y)
 
-let preorder_of_pcm #a (p:pcm a) : preorder a =
+(**
+  We can define a canonical preorder from any PCM by taking the quantified conjunction over all the
+  preorders [q] induced by this PCM.
+*)
+let preorder_of_pcm (#a: Type u#a) (p:pcm a) : preorder a =
   fun x y -> forall (q:preorder a). induces_preorder p q ==> q x y
 
-let stability #a (fact:a -> prop) (q:preorder a) (p:pcm a)
+(**
+  This canonical preorder enjoys the nice property that it preserves fact stability of any
+  induced preorder
+*)
+let stability (#a: Type u#a) (fact:a -> prop) (q:preorder a) (p:pcm a)
   : Lemma
     (requires stable fact q /\
               induces_preorder p q)
     (ensures  stable fact (preorder_of_pcm p))
   = ()
 
-let frame_preserving_is_preorder_respecting #a (p:pcm a) (x y:a)
+(** Also, every frame-preserving update to the element of the PCM respects the canonical PCM *)
+let frame_preserving_is_preorder_respecting (#a: Type u#a) (p:pcm a) (x y:a)
   : Lemma (requires frame_preserving p x y)
           (ensures (forall z. compatible p x z ==> preorder_of_pcm p z y))
   = ()
 
+(**** Preorder to PCM *)
+
+(***** Building the preorder *)
+
+(**
+  This predicate tells that the list [l] can represent a trace of elements whose evolution is
+  compatible with the preorder [q]
+*)
 let rec qhistory #a (q:preorder a) (l:list a) =
   match l with
   | []
   | [_] -> True
   | x::y::tl -> y `q` x /\ qhistory q (y::tl)
 
-let hist #a (q:preorder a) = l:list a{qhistory q l}
+(** The history of a preorder is the type of all the traces compatible with that preorder *)
+let hist (#a: Type u#a) (q:preorder a) = l:list a{qhistory q l}
 
-let rec extends' #a (#q:preorder a) (h0 h1:hist q) =
-  h0 == h1 \/
-  (Cons? h0 /\ extends' (Cons?.tl h0) h1)
+(** Two compatible traces can extend each other *)
+let rec extends' (#a: Type u#a) (#q:preorder a) (h0 h1:hist q) =
+  h0 == h1 \/ (Cons? h0 /\ extends' (Cons?.tl h0) h1)
 
+(** This extension relation is transitive *)
 let rec extends_trans #a (#q:preorder a) (x y z:hist q)
   : Lemma (x `extends'` y /\ y `extends'` z ==> x `extends'` z)
           [SMTPat (x `extends'` y);
@@ -41,28 +88,36 @@ let rec extends_trans #a (#q:preorder a) (x y z:hist q)
     | [] -> ()
     | _::tl -> extends_trans tl y z
 
-let extends #a (#q:preorder a) : preorder (hist q) = extends'
+(** And it is also reflexive, so extensibility on traces is a preorder on traces *)
+let extends (#a: Type u#a) (#q:preorder a) : preorder (hist q) = extends'
 
 module L = FStar.List.Tot
 
-let rec extends_length_eq #a (#q:preorder a) (h0 h1:hist q)
+(** If [h0] extends by [h1], then the lenght of [h0] is superior *)
+let rec extends_length_eq (#a: Type u#a) (#q:preorder a) (h0 h1:hist q)
   : Lemma (ensures (extends h0 h1 ==> h0 == h1 \/ L.length h0 > L.length h1))
           [SMTPat (extends h0 h1)]
   = match h0 with
     | [] -> ()
     | hd::tl -> extends_length_eq tl h1
 
-let p_composable #a (q:preorder a) : symrel (hist q) =
+(**
+  We build our relation of composability for traces by reflexing the extension to ensure
+  symmetry
+*)
+let p_composable (#a: Type u#a) (q:preorder a) : symrel (hist q) =
     fun x y -> extends x y \/ extends y x
 
-let p_op #a (q:preorder a) (x:hist q) (y:hist q{p_composable q x y}) : hist q =
+(** The operation for the PCM is to return the full trace of two extensible traces *)
+let p_op (#a: Type u#a) (q:preorder a) (x:hist q) (y:hist q{p_composable q x y}) : hist q =
   if L.length x >= L.length y
   then x
   else if L.length x = L.length y
   then (assert (x == y); x)
   else y
 
-let p_op_extends #a (q:preorder a) (x:hist q) (y:hist q{p_composable q x y})
+(** The operation actually implements extension  *)
+let p_op_extends (#a: Type u#a) (q:preorder a) (x:hist q) (y:hist q{p_composable q x y})
   : Lemma (ensures (p_op q x y `extends` x /\
                     p_op q x y `extends` y /\
                     (p_op q x y == x \/ p_op q x y == y)))
@@ -70,31 +125,35 @@ let p_op_extends #a (q:preorder a) (x:hist q) (y:hist q{p_composable q x y})
   = extends_length_eq x y;
     extends_length_eq y x
 
-let rec p_op_nil #a (q:preorder a) (x:hist q)
+(** And the empty trace is the unit element *)
+let rec p_op_nil (#a: Type u#a) (q:preorder a) (x:hist q)
   : Lemma (ensures (p_composable q x [] /\ p_op q x [] == x))
           [SMTPat (p_composable q x [])]
   = match x with
     | [] -> ()
     | _::tl -> p_op_nil q tl
 
-let p #a (q:preorder a) : pcm' (hist q) = {
+(** We can finally define our PCM with these operations *)
+let p (#a: Type u#a) (q:preorder a) : pcm' (hist q) = {
   composable = p_composable q;
   op = p_op q;
   one = []
 }
 
-let comm #a (q:preorder a) (x y:hist q)
+(** Composability is commutative *)
+let comm (#a: Type u#a) (q:preorder a) (x y:hist q)
   : Lemma (requires p_composable q x y)
           (ensures p_composable q y x)
   = ()
 
-let comm_op #a (q:preorder a) (x:hist q) (y:hist q{p_composable q x y})
+(** As well as the compose operation *)
+let comm_op (#a: Type u#a) (q:preorder a) (x:hist q) (y:hist q{p_composable q x y})
   : Lemma (p_op q x y == p_op q y x)
   = extends_length_eq x y;
     extends_length_eq y x
 
-
-let rec extends_disjunction #a (#q:preorder a) (x y z:hist q)
+(** If [z] extends [x] and [y], then [x] and [y] are extending one or another *)
+let rec extends_disjunction (#a: Type u#a) (#q:preorder a) (x y z:hist q)
   : Lemma (z `extends` x /\ z `extends` y ==> x `extends` y \/ y `extends` x)
           [SMTPat (z `extends` x);
            SMTPat (z `extends` y)]
@@ -102,7 +161,8 @@ let rec extends_disjunction #a (#q:preorder a) (x y z:hist q)
     | [] -> ()
     | _::tl -> extends_disjunction x y tl
 
-let rec extends_related_head #a (#q:preorder a) (x y:hist q)
+(** If [x] extends [y], then the two heads of the traces are still related by the preorder *)
+let rec extends_related_head (#a: Type u#a) (#q:preorder a) (x y:hist q)
   : Lemma
     (ensures
       x `extends` y /\
@@ -113,8 +173,8 @@ let rec extends_related_head #a (#q:preorder a) (x y:hist q)
     | [] -> ()
     | _::tl -> extends_related_head tl y
 
-
-let pcm_of_preorder #a (q:preorder a) : pcm (hist q) = {
+(** Finally, we can have our fully-fledged PCM from the preorder *)
+let pcm_of_preorder (#a: Type u#a) (q:preorder a) : pcm (hist q) = {
   p = p q;
   comm = comm_op q;
   assoc = (fun _ _ _ -> ());
@@ -122,37 +182,53 @@ let pcm_of_preorder #a (q:preorder a) : pcm (hist q) = {
   is_unit = (fun _ -> ())
 }
 
-let frame_preserving_q_aux #a (q:preorder a) (x y:hist q) (z:hist q)
+(***** Using the preorder *)
+
+(**
+  We check that the preorder derived from the PCM derived from the preorder
+  satisfies the same properties as the original preorder. Here, we get back history
+  extension from frame-preserving updates.
+*)
+let frame_preserving_q_aux (#a : Type u#a) (q:preorder a) (x y:hist q) (z:hist q)
   : Lemma (requires (frame_preserving (pcm_of_preorder q) x y /\ compatible (pcm_of_preorder q) x z))
           (ensures (y `extends` z))
   = ()
 
-//A non-empty history
-let vhist #a (q:preorder a) = h:hist q{Cons? h}
+(** A non-empty history *)
+let vhist (#a: Type u#a) (q:preorder a) = h:hist q{Cons? h}
 
-let curval #a (#q:preorder a) (v:vhist q) = Cons?.hd v
+(** Get the current value from an history *)
+let curval (#a: Type u#a) (#q:preorder a) (v:vhist q) = Cons?.hd v
 
-// Given a frame-preserving update from x to y
-// for any value of resource z (compatible with x)
-// the new value y advances the history z in a preorder respecting manner
-let frame_preserving_q #a (q:preorder a) (x y:vhist q)
+(**
+  Given a frame-preserving update from [x] to [y]
+  for any value of resource [z] (compatible with [x])
+  the new value [y] advances the history [z] in a preorder respecting manner
+*)
+let frame_preserving_q (#a: Type u#a) (q:preorder a) (x y:vhist q)
   : Lemma (requires frame_preserving (pcm_of_preorder q) x y)
           (ensures (forall (z:hist q). compatible (pcm_of_preorder q) x z ==> curval z `q` curval y))
   = ()
 
-let frame_preserving_extends #a (q:preorder a) (x y:vhist q)
+(** Still given a frame-preserving update from [x] to [y], this update extends the history *)
+let frame_preserving_extends (#a: Type u#a) (q:preorder a) (x y:vhist q)
   : Lemma (requires frame_preserving (pcm_of_preorder q) x y)
           (ensures (forall (z:hist q). compatible (pcm_of_preorder q) x z ==> y `extends` z))
   = ()
 
-let flip #a (p:preorder a) : preorder a = fun x y -> p y x
+(** Helper function that flips a preoder *)
+let flip (#a: Type u#a) (p:preorder a) : preorder a = fun x y -> p y x
 
-let frame_preserving_extends2 #a (q:preorder a) (x y:hist q)
+(**
+  What is the preorder induced from the PCM induced by preorder [q]? It turns out that
+  it is the flipped of [q], reversed extension.
+*)
+let frame_preserving_extends2 (#a: Type u#a) (q:preorder a) (x y:hist q)
   : Lemma (requires frame_preserving (pcm_of_preorder q) x y)
           (ensures (forall (z:hist q). compatible (pcm_of_preorder q) x z ==> z `flip extends` y))
           [SMTPat (frame_preserving (pcm_of_preorder q) x y)]
   = ()
 
-let pcm_of_preorder_induces_extends #a (q:preorder a)
+let pcm_of_preorder_induces_extends (#a: Type u#a) (q:preorder a)
   : Lemma (induces_preorder (pcm_of_preorder q) (flip extends))
   = ()
