@@ -331,11 +331,14 @@ let reification (eq: term) (m: term) (ts:list term) (am:amap term) (t:term) :
 
 let rec repeat_cong_right_identity (eq: term) (m: term) : Tac unit =
   or_else (fun _ -> apply_lemma (`right_identity))
-          (fun _ -> apply_lemma (`CM?.congruence (`#m));
-                    split ();
-                    apply_lemma (`EQ?.reflexivity (`#eq));
-                    repeat_cong_right_identity eq m
-                    )
+          (fun _ -> or_else (fun _ -> apply_lemma (`EQ?.symmetry (`#eq));
+                                  apply_lemma (`right_identity))
+                          (fun _ -> apply_lemma (`CM?.congruence (`#m));
+                                    split ();
+                                    apply_lemma (`EQ?.reflexivity (`#eq));
+                                    repeat_cong_right_identity eq m
+                                    )
+          )
 
 let rec convert_map (m : list (atom * term)) : term =
   match m with
