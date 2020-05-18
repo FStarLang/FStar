@@ -122,7 +122,8 @@ function write_csv_and_summary() {
 # and remove useless info
 function cat_benches_into () {
     if hash jq 2>/dev/null; then
-        find "$1" -name '*.bench' -exec cat {} \; | jq -s ".[] | del(.ocaml)"> $2
+        find "$1" -name '*.bench' -exec cat {} \; >$2
+        cat $2 | jq -s ".[] | del(.ocaml)" >$2.pretty
     else
         echo "Unable to find jq to create csv and summary (https://stedolan.github.io/jq/)"
     fi

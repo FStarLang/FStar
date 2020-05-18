@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "39cf21dfae3c540c9bda3cc05ad4323f"
+      "7de23ab0937ab5a4014640974e9b303a"
     ],
     [
       "Steel.SteelAtomic.Basics.h_elim_emp_l",
@@ -20,7 +20,7 @@
         "typing_Steel.Memory.emp"
       ],
       0,
-      "a804255300b5e485abdf14dff0de0b01"
+      "0129bf1301e1e177a4e2888afe53301d"
     ],
     [
       "Steel.SteelAtomic.Basics.h_commute",
@@ -29,7 +29,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "7864655d654d5396c0210aeb01a79423"
+      "defb3733ea2fc9f1af73e7bf97222a78"
     ],
     [
       "Steel.SteelAtomic.Basics.h_assoc_left",
@@ -38,7 +38,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "c50fe012513ac45e55c3e9b8c1410d86"
+      "a291dc3455bd95355a9c436a3e4eda3d"
     ],
     [
       "Steel.SteelAtomic.Basics.h_assoc_right",
@@ -47,7 +47,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "600783ea62140a0a80f71885b8db62f6"
+      "0e4b7b873e882e9687f0ef6790ec3632"
     ],
     [
       "Steel.SteelAtomic.Basics.intro_h_exists",
@@ -56,7 +56,7 @@
       1,
       [ "@query" ],
       0,
-      "1dbbe786f3f01c7ec19d2d8e60e26228"
+      "5ce4e0e6081a91ec4202a26ccb65430d"
     ],
     [
       "Steel.SteelAtomic.Basics.h_affine",
@@ -65,7 +65,7 @@
       1,
       [ "@query" ],
       0,
-      "bd23c7f081faa92f9c3089c9ae241203"
+      "76773ee98abee2bf156de7a76cc17dea"
     ],
     [
       "Steel.SteelAtomic.Basics.lift_atomic_repr_to_steel_repr",
@@ -85,7 +85,7 @@
         "true_interp", "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "deba3d16043bf1b76a25f0d7bad08e08"
+      "e91ff73bf92f543e2d051b698c498b50"
     ],
     [
       "Steel.SteelAtomic.Basics.lift_atomic_repr_to_steel_repr",
@@ -130,7 +130,7 @@
         "typing_Steel.Semantics.Instantiate.state0"
       ],
       0,
-      "0ac8c56f52357d004cc8309356177fd0"
+      "3d33c41042116071092214d275719bf4"
     ],
     [
       "Steel.SteelAtomic.Basics.lift_atomic_to_steelT",
@@ -149,7 +149,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "4093e7d3913f168727d54e8553749709"
+      "0adf02c857e9c3c7f74d5e6cd205ab4d"
     ],
     [
       "Steel.SteelAtomic.Basics.h_intro_emp_l",
@@ -158,7 +158,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "97123c720e6898fe823063c63260e880"
+      "9b87d99c984f8a93404dbbd69290ca4f"
     ],
     [
       "Steel.SteelAtomic.Basics.h_elim_emp_l",
@@ -170,7 +170,7 @@
         "typing_Steel.Memory.emp"
       ],
       0,
-      "cd6471d602bcfef52f857c4ddc1e5f13"
+      "40b15ff3f8205ca04489bf4e1516c97e"
     ],
     [
       "Steel.SteelAtomic.Basics.h_commute",
@@ -179,7 +179,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "abcf475aa978d513aed81b3d01876c2f"
+      "8f4d331b2f22302c0272f6c466264bdb"
     ],
     [
       "Steel.SteelAtomic.Basics.h_assoc_left",
@@ -188,7 +188,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "d137c4ae1a1d5b2ec558808083bb86e4"
+      "17778f4e5097917c6bb080e0eec37c26"
     ],
     [
       "Steel.SteelAtomic.Basics.h_assoc_right",
@@ -197,7 +197,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "d7152c6d8053aee0a65b450ce1e879ac"
+      "f78cf3045cb47a6df60c53edc6e59ce2"
     ],
     [
       "Steel.SteelAtomic.Basics.intro_h_exists",
@@ -206,7 +206,7 @@
       1,
       [ "@query" ],
       0,
-      "3d4fb5a27f29c8a8c664a4beefd761ee"
+      "ed45d0305ec26228abc4ba7017b1d9f5"
     ],
     [
       "Steel.SteelAtomic.Basics.h_affine",
@@ -215,7 +215,7 @@
       1,
       [ "@query" ],
       0,
-      "b542c626eadfb5b1009d7886dab4d3d4"
+      "d522684de1d04ca0175eabd6525cf8f2"
     ],
     [
       "Steel.SteelAtomic.Basics.lift_atomic_repr_to_steel_repr",
@@ -279,7 +279,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "c8710c9a627fbf8fe4a6c01bfdb810a6"
+      "0383157062a838cb6d5997724e638d3a"
     ]
   ]
 ]
