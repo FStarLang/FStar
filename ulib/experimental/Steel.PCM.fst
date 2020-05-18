@@ -75,6 +75,18 @@ let compatible_refl #a (pcm:pcm a) (x:a)
     pcm.comm x pcm.p.one;
     assert (op pcm pcm.p.one x == x)
 
+let compatible_elim
+  #a (pcm:pcm a) (x y:a)
+  (goal: Type)
+  (lemma: (frame: a{composable pcm x frame /\ op pcm frame x == y}) ->
+    Lemma (goal)
+  )
+    : Lemma (requires (compatible pcm x y)) (ensures (goal))
+  =
+  Classical.exists_elim
+    goal #a #(fun frame -> composable pcm x frame /\ op pcm frame x == y)
+    () (fun frame -> lemma frame)
+
 let frame_preserving #a (pcm:pcm a) (x y: a) =
     (forall frame. composable pcm frame x ==> composable pcm frame y) /\
     (forall frame.{:pattern (composable pcm frame x)} composable pcm frame x ==> op pcm frame y == y)

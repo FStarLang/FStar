@@ -18,6 +18,8 @@ module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
 open Steel.PCM
 
+#set-options "--fuel 1 --ifuel 1"
+
 // In the future, we may have other cases of cells
 // for arrays and structs
 noeq
@@ -240,80 +242,90 @@ let join_associative2 (m0 m1 m2:heap)
 
 module W = FStar.WellFounded
 
-[@@erasable]
-noeq
-type slprop : Type u#(a + 1) =
-  | Emp : slprop
-  | Pts_to : #a:Type u#a -> #pcm:pcm a -> r:ref a pcm -> v:a -> slprop
-  | Refine : slprop u#a -> a_heap_prop u#a -> slprop
-  | And    : slprop u#a -> slprop u#a -> slprop
-  | Or     : slprop u#a -> slprop u#a -> slprop
-  | Star   : slprop u#a -> slprop u#a -> slprop
-  | Wand   : slprop u#a -> slprop u#a -> slprop
-  | Ex     : #a:Type u#a -> (a -> slprop u#a) -> slprop
-  | All    : #a:Type u#a -> (a -> slprop u#a) -> slprop
 
-let interp_cell (p:slprop u#a) (c:cell u#a) =
+let interp (p:slprop u#a) (m:heap u#a)
+  : Tot prop
+  = p m
+let emp : slprop u#a = fun h -> True
+
+let affine_hprop_intro
+   (p:heap u#a -> prop)
+   (lemma: (h0 : heap u#a) ->  (h1: heap u#a) -> Lemma
+     (requires (p h0 /\ disjoint h0 h1))
+     (ensures (p (join h0 h1)))
+   )
+     : Lemma (heap_prop_is_affine p)
+  =
+  let aux (h0 h1: heap u#a) : Lemma (p h0 /\ disjoint h0 h1 ==> p (join h0 h1)) =
+    let aux (_ : squash (p h0 /\ disjoint h0 h1)) : Lemma (disjoint h0 h1 /\ p (join h0 h1)) =
+      lemma h0 h1
+    in
+    Classical.impl_intro aux
+  in
+  Classical.forall_intro_2 aux
+
+let pts_to_cell (#a:Type u#a) (pcm:pcm a) (v:a) (c:cell u#a) =
   let Ref a' pcm' v' = c in
-  match p with
-  | Pts_to #a #pcm r v ->
-    a == a' /\
-    pcm == pcm' /\
-    compatible pcm v v'
-  | _ -> False
+  a == a' /\
+  pcm == pcm' /\
+  compatible pcm v v'
 
-let rec interp (p:slprop u#a) (m:heap u#a)
-  : Tot prop (decreases p)
-  = match p with
-    | Emp -> True
-    | Pts_to #a #pcm r v ->
-      m `contains_addr` r /\
-      interp_cell p (select_addr m r)
 
-    | Refine p q ->
-      interp p m /\ q m
+let pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a =
+  let hprop  (h: heap) : Tot prop =
+    h `contains_addr` r /\
+    pts_to_cell pcm v (select_addr h r)
+  in
+  affine_hprop_intro hprop (fun h0 h1 -> match h0 r, h1 r, (join h0 h1) r with
+  | Some (Ref a0 pcm0 v0), Some (Ref a1 pcm1 v1), Some (Ref a01 pcm01 v01) ->
+     compatible_elim pcm01 v v0 (compatible pcm01 v v01) (fun frame ->
+       pcm01.comm frame v;
+       pcm01.assoc_r v frame v1;
+       pcm01.comm frame v1;
+       let new_frame = (op pcm01 v1 frame) in
+       pcm01.comm v new_frame
+     )
+  | None, Some _, _
+  | Some _, None, _ -> ()
+  | None, None, _ -> ()
+  );
+  hprop
 
-    | And p1 p2 ->
-      interp p1 m /\
-      interp p2 m
+let h_and (p1 p2:slprop u#a) : slprop u#a =
+  fun (h: heap) -> p1 h /\ p2 h
 
-    | Or  p1 p2 ->
-      interp p1 m \/
-      interp p2 m
+let h_or (p1 p2:slprop u#a) : slprop u#a =
+  fun (h: heap) -> p1 h \/ p2 h
 
-    | Star p1 p2 ->
-      exists m1 m2.
-        m1 `disjoint` m2 /\
-        m == join m1 m2 /\
-        interp p1 m1 /\
-        interp p2 m2
+let star (p1 p2: slprop u#a) : slprop u#a =
+  fun (h: heap) -> exists (h1 h2 : heap).
+        h1 `disjoint` h2 /\
+        h == join h1 h2 /\
+        interp p1 h1 /\
+        interp p2 h2
 
-    | Wand p1 p2 ->
-      forall m1.
-        m `disjoint` m1 /\
-        interp p1 m1 ==>
-        interp p2 (join m m1)
+let wand (p1 p2: slprop u#a) : slprop u#a =
+  fun (h: heap) ->  forall (h1: heap).
+        h `disjoint` h1 /\
+        interp p1 h1 ==>
+        interp p2 (join h h1)
 
-    | Ex f ->
-      exists x. (W.axiom1 f x; interp (f x) m)
+let h_exists  (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a =
+  fun (h: heap) ->
+   exists x. (W.axiom1 f x; interp (f x) h)
 
-    | All f ->
-      forall x. (W.axiom1 f x; interp (f x) m)
+let h_forall (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a =
+  fun (h: heap) ->
+   forall x. (W.axiom1 f x; interp (f x) h)
 
-let emp : slprop u#a = Emp
-let pts_to = Pts_to
-let h_and = And
-let h_or = Or
-let star = Star
-let wand = Wand
-let h_exists = Ex
-let h_forall = All
-let h_refine = Refine
+let h_refine (p:slprop u#a) (r:slprop u#a) : slprop u#a =
+  h_and p r
 
 ////////////////////////////////////////////////////////////////////////////////
 //properties of equiv
 ////////////////////////////////////////////////////////////////////////////////
-let affine_star _ _ _ = admit()
+let affine_star p q h = ()
+
 let equiv_symmetric (p1 p2:slprop u#a) = ()
 let equiv_extensional_on_star (p1 p2 p3:slprop u#a) = ()
 let emp_unit p
@@ -374,8 +386,8 @@ let pts_to_compatible (#a:Type u#a)
       : Lemma
         (requires
            c0 `disjoint_cells` c1 /\
-           interp_cell (pts_to x v0) c0 /\
-           interp_cell (pts_to x v1) c1 /\
+           pts_to_cell pcm v0 c0 /\
+           pts_to_cell pcm v1 c1 /\
            c == join_cells c0 c1 )
         (ensures
            composable pcm v0 v1 /\
@@ -418,8 +430,8 @@ let pts_to_compatible (#a:Type u#a)
     in
     assert (exists c0 c1.
               c0 `disjoint_cells` c1 /\
-              interp_cell (pts_to x v0) c0 /\
-              interp_cell (pts_to x v1) c1 /\
+              pts_to_cell pcm v0 c0 /\
+              pts_to_cell pcm v1 c1 /\
               c == join_cells c0 c1)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -510,6 +522,7 @@ let weaken (p q r:slprop) (h:heap u#a) = ()
 ////////////////////////////////////////////////////////////////////////////////
 module PP = Steel.PCM.Preorder
 
+#push-options "--fuel 2 --ifuel 2"
 let heap_evolves : FStar.Preorder.preorder heap =
   fun (h0 h1:heap) ->
     forall (a:addr).
@@ -521,8 +534,8 @@ let heap_evolves : FStar.Preorder.preorder heap =
         a0 == a1 /\  //its type can't change
         p0 == p1 /\  //its pcm can't change
         PP.preorder_of_pcm p0 v0 v1 //and its value evolves by the pcm's preorder
-
       | _ -> False
+#pop-options
 
 let free_above_addr h a =
   forall (i:nat). i >= a ==> h i == None
@@ -555,6 +568,7 @@ let sel_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a)
     in
     f
 
+#set-options "--fuel 2 --ifuel 2"
 
 let upd' (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a) (v1:a {frame_preserving pcm v0 v1})
   : pre_action (pts_to r v0) unit (fun _ -> pts_to r v1)
@@ -562,7 +576,7 @@ let upd' (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a) (v1:a {frame_pr
     let cell = Ref a pcm v1  in
     let h' = update_addr h r cell in
     assert (h' `contains_addr` r);
-    assert (interp_cell (pts_to r v1) cell);
+    assert (pts_to_cell pcm v1 cell);
     assert (interp (pts_to r v1) h');
     (| (), h' |)
 
@@ -668,11 +682,11 @@ let upd_lemma' (#a:_) #pcm (r:ref a pcm)
                   assert (compatible pcm v0 v0_val);
 
                   compatible_refl pcm vf;
-                  assert (interp_cell (pts_to r vf) (Some?.v (hf a)));
+                  assert (pts_to_cell pcm vf (Some?.v (hf a)));
                   assert (interp (pts_to r vf) hf);
 
                   compatible_refl pcm v0_val;
-                  assert (interp_cell (pts_to r v0_val) (Some?.v (h0 a)));
+                  assert (pts_to_cell pcm v0_val (Some?.v (h0 a)));
                   assert (interp (pts_to r v0_val) h0);
                   assert (interp (pts_to r v0_val `star` pts_to r vf) h);
                   pts_to_compatible r v0_val vf h;
@@ -774,6 +788,7 @@ let free_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a{exclusive
     upd_action r v0 pcm.Steel.PCM.p.one
 
 ////////////////////////////////////////////////////////////////////////////////
+#push-options "--z3rlimit 20"
 let extend #a #pcm x addr h =
     let r : ref a pcm = addr in
     let h' = update_addr h r (Ref a pcm x) in
@@ -813,3 +828,4 @@ let extend #a #pcm x addr h =
         ()
      in
      (| r, h' |)
+#pop-options

@@ -63,11 +63,8 @@ val join_associative (m0 m1 m2:heap)
 let heap_prop_is_affine (p:heap u#a -> prop) : prop =
   forall (h0 h1: heap u#a). p h0 /\ disjoint h0 h1 ==> p (join h0 h1)
 
-let a_heap_prop : Type u#(a + 1) = p:(heap u#a -> prop) { heap_prop_is_affine p }
-
 /// The type of heap assertions
-[@@erasable]
-val slprop : Type u#(a + 1)
+let slprop : Type u#(a + 1) = p:(heap u#a -> prop) { heap_prop_is_affine p }
 
 /// interpreting heap assertions as heapory predicates
 val interp (p:slprop u#a) (m:heap u#a) : prop
@@ -95,7 +92,7 @@ val star  (p1 p2:slprop u#a) : slprop u#a
 val wand  (p1 p2:slprop u#a) : slprop u#a
 val h_exists (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a
 val h_forall (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a
-val h_refine (p:slprop u#a) (r:a_heap_prop u#a) : slprop u#a
+val h_refine (p:slprop u#a) (r:slprop u#a) : slprop u#a
 
 ////////////////////////////////////////////////////////////////////////////////
 //Basic properties
@@ -168,10 +165,10 @@ val star_congruence (p1 p2 p3 p4:slprop)
 // refine
 ////////////////////////////////////////////////////////////////////////////////
 
-val refine_interp (p:slprop u#a) (q:a_heap_prop u#a) (h:heap u#a)
+val refine_interp (p:slprop u#a) (q:slprop u#a) (h:heap u#a)
     : Lemma (interp p h /\ q h <==> interp (h_refine p q) h)
 
-val refine_equiv (p0 p1:slprop u#a) (q0 q1:a_heap_prop u#a)
+val refine_equiv (p0 p1:slprop u#a) (q0 q1:slprop u#a)
     : Lemma (p0 `equiv` p1 /\ (forall h. q0 h <==> q1 h) ==>
              equiv (h_refine p0 q0) (h_refine p1 q1))
 
