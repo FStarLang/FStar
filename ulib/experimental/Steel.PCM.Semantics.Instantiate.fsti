@@ -40,4 +40,12 @@ let state0 (uses:inames) : S.st0 =
 val state_obeys_st_laws (uses:inames)
   : Lemma (S.st_laws (state0 uses))
 
-let state : S.st = state_obeys_st_laws Set.empty; state0 Set.empty
+let state_uses (uses:inames) : S.st = state_obeys_st_laws uses; state0 uses
+
+let state : S.st = state_uses Set.empty
+
+let test inames =
+  let s = state_uses inames in
+  assert_norm (s.S.hprop == slprop)  ;
+  assert_norm (s.S.mem == mem)  ;
+  assert_norm (s.S.interp == interp)
