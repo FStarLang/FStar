@@ -240,12 +240,17 @@ let join_associative2 (m0 m1 m2:heap)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+let slprop = a_heap_prop
+
 module W = FStar.WellFounded
 
 
 let interp (p:slprop u#a) (m:heap u#a)
   : Tot prop
   = p m
+
+let as_slprop p = p
+
 let emp : slprop u#a = fun h -> True
 
 let affine_hprop_intro
