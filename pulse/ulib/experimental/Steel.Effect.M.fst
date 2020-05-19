@@ -37,6 +37,9 @@ open Steel.Memory
  *
  * The state typeclass in the semantics is instantiated with
  * Steel.Semantics.Instantiate
+ *
+ * This module is for illustration, our examples rely on Steel.Effect.fst
+ * See the discussion towards the end of this file
  *)
 
 type pre_t = hprop u#1
