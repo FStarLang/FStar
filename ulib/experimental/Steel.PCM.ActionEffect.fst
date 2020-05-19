@@ -391,6 +391,7 @@ let read (#a:Type) (#pcm:_) (r:ref a pcm) (v0:G.erased a)
 //     mst_put m1;
 //     x)
 
+#push-options "--query_stats --max_fuel 0 --max_ifuel 0 --z3rlimit_factor 4"
 let write (#a:Type) (#pcm:_) (r:ref a pcm) 
           (v0:G.erased a) (v1:a{Steel.PCM.frame_preserving pcm v0 v1})
   : SteelT unit (pts_to r v0) (fun _ -> pts_to r v1)
@@ -404,7 +405,7 @@ open Steel.PCM
 let free (#a:Type) (#pcm:Steel.PCM.pcm a) (r:ref a pcm) (x:G.erased a{Steel.PCM.exclusive pcm x})
   : SteelT unit (pts_to r x) (fun _ -> pts_to r pcm.Steel.PCM.p.one)
   = Steel?.reflect (free_action FStar.Set.empty r x)
-  
+
 let ( || ) (#aL:Type) (#preL:pre_t) (#postL:post_t aL)
   ($f:unit -> SteelT aL preL postL)
   (#aR:Type) (#preR:pre_t) (#postR:post_t aR)
