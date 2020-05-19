@@ -35,8 +35,6 @@ let lift_pure_steel_atomic a op p wp f
   = FStar.Monotonic.Pure.wp_monotonic_pure ();
     fun _ -> let x = f () in x
 
-sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
-
 let lift_atomic_to_steelT f = Steel.PCM.Effect.add_action (reify (f()))
 let as_atomic_action f = SteelAtomic?.reflect f
 let new_invariant i p = SteelAtomic?.reflect (Steel.PCM.Memory.new_invariant i p)

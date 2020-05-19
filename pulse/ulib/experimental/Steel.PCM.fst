@@ -129,7 +129,7 @@ let frame_preserving (#a: Type u#a) (pcm:pcm a) (x y: a) =
 
 (** The PCM [p] is exclusive to element [x] if the only element composable with [x] is [p.one] *)
 let exclusive (#a:Type u#a) (p:pcm a) (x:a) =
-  forall (frame:a). composable p x frame ==> frame == Steel.PCM.(p.p.one)
+  forall (frame:a). composable p x frame ==> frame == p.p.one
 
 (** A mutation from [x] to [p.one] is frame preserving if [p] is exclusive to [x] *)
 let exclusive_is_frame_preserving (#a: Type u#a) (p:pcm a) (x:a)
