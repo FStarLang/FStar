@@ -819,3 +819,65 @@ let with_invariant (#a:Type)
     preserves_frame_invariant fp (fp' r) opened_invariants p i m0 m1;
     assert (preserves_frame opened_invariants fp (fp' r) m0 m1);
     r
+
+let rearrange_pqr_prq (p q r:slprop)
+      : Lemma (((p `star` q) `star` r) `equiv`
+               ((p `star` r) `star` q))
+      = calc (equiv)
+        {
+           (p `star` q) `star` r;
+             (equiv) { star_associative p q r }
+           p `star` (q `star` r);
+             (equiv) {
+                       star_commutative q r;
+                       star_congruence p (q `star` r) p (r `star` q)
+                     }
+           p `star` (r `star` q);
+             (equiv) { star_associative p r q }
+           (p `star` r) `star` q;
+        }
+
+let frame (#a:Type)
+          (#opened_invariants:inames)
+          (#pre:slprop)
+          (#post:a -> slprop)
+          (frame:slprop)
+          ($f:action_except a opened_invariants pre post)
+          ()
+  : MstTot a opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
+  = let m0 = NMSTTotal.get () in
+    assert (interp ((pre `star` frame) `star` linv opened_invariants m0) m0);
+    rearrange_pqr_prq pre frame (linv opened_invariants m0);
+    assert (interp ((pre `star` linv opened_invariants m0) `star` frame) m0);
+    let x = f () in
+    let m1 = NMSTTotal.get () in
+    assert (interp ((post x `star` frame) `star` (linv opened_invariants m1)) m1);
+    assert (preserves_frame opened_invariants pre (post x) m0 m1);
+    let aux (p q r s:slprop)
+      : Lemma ((((p `star` q) `star` r) `star` s) `equiv`
+               ((p `star` (q `star` r)) `star` s))
+      = star_associative p q r;
+        star_congruence ((p `star` q) `star` r) s
+                        (p `star` (q `star` r)) s
+    in
+    let aux (frame':slprop)
+      : Lemma
+        (requires interp (((pre `star` frame) `star` frame') `star` locks_invariant opened_invariants m0) m0)
+        (ensures  interp (((post x `star` frame) `star` frame') `star` locks_invariant opened_invariants m1) m1 /\
+                  (forall (f_frame:mprop frame'). f_frame (core_mem m0) == f_frame (core_mem m1)))
+        [SMTPat ()]
+      = aux pre frame frame' (locks_invariant opened_invariants m0);
+        aux (post x) frame frame' (locks_invariant opened_invariants m1)
+    in
+    assert (preserves_frame opened_invariants (pre `star` frame) (post x `star` frame) m0 m1);
+    x
+
+let change_slprop (#opened_invariants:inames)
+                  (p q:slprop)
+                  (proof: (m:mem -> Lemma (requires interp p m) (ensures interp q m)))
+  = let proof (h:H.heap)
+      : Lemma (requires H.interp p h)
+              (ensures H.interp q h)
+      = proof (mem_of_heap h)
+    in
+    lift_tot_action (lift_heap_action opened_invariants (Steel.PCM.Heap.change_slprop p q proof))
