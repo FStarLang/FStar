@@ -245,3 +245,17 @@ val with_invariant (#a:Type)
                    (i:inv p{not (i `Set.mem` opened_invariants)})
                    (f:action_except a (Set.union (Set.singleton i) opened_invariants) (p `star` fp) (fun x -> p `star` fp' x))
   : action_except a opened_invariants fp fp'
+
+
+val frame (#a:Type)
+          (#opened_invariants:inames)
+          (#pre:slprop)
+          (#post:a -> slprop)
+          (frame:slprop)
+          ($f:action_except a opened_invariants pre post)
+  : action_except a opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
+
+val change_slprop (#opened_invariants:inames)
+                  (p q:slprop)
+                  (proof: (m:mem -> Lemma (requires interp p m) (ensures interp q m)))
+  : action_except unit opened_invariants p (fun _ -> q)

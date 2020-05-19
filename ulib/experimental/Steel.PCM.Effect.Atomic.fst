@@ -141,13 +141,6 @@ let with_invariant (#a:Type)
   : SteelAtomic a opened_invariants o fp fp'
   = SteelAtomic?.reflect (Steel.PCM.Memory.with_invariant i (reify (f())))
 
-assume
-val frame_action_except (#a:Type) (#opened_invariants:inames)
-                        (#pre:slprop) (#post:a -> slprop)
-                        (frame:slprop)
-                        ($f:action_except a opened_invariants pre post)
-    : action_except a opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
-
 let frame (#a:Type) (#opened_invariants:inames) (#o:observability)
           (#pre:slprop) (#post:a -> slprop)
           (frame:slprop)
@@ -155,16 +148,10 @@ let frame (#a:Type) (#opened_invariants:inames) (#o:observability)
   : SteelAtomic a opened_invariants o
                 (pre `star` frame)
                 (fun x -> post x `star` frame)
-  = SteelAtomic?.reflect (frame_action_except frame (reify (f ())))
-
-assume
-val change_slprop_action_except (#opened_invariants:inames)
-                                (p q:slprop)
-                                (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
-  : action_except unit opened_invariants p (fun _ -> q)
+  = SteelAtomic?.reflect (Steel.PCM.Memory.frame frame (reify (f ())))
 
 let change_slprop (#opened_invariants:inames)
                   (p q:slprop)
                   (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
   : SteelAtomic unit opened_invariants unobservable p (fun _ -> q)
-  = SteelAtomic?.reflect (change_slprop_action_except p q proof)
+  = SteelAtomic?.reflect (Steel.PCM.Memory.change_slprop p q proof)

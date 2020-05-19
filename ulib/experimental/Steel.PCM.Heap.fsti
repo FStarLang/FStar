@@ -270,3 +270,14 @@ val extend (#a:_) (#pcm:_) (x:a{compatible pcm x x}) (addr:nat)
      & h':heap{ (forall frame. frame_related_heaps h h' emp (pts_to r x) frame (true)) /\
                  h' `free_above_addr` (addr + 1) /\
                  heap_evolves h h'})
+
+val frame (#a:Type)
+          (#pre:slprop)
+          (#post:a -> slprop)
+          (frame:slprop)
+          ($f:action pre a post)
+  : action (pre `star` frame) a (fun x -> post x `star` frame)
+
+val change_slprop (p q:slprop)
+                  (proof: (h:heap -> Lemma (requires interp p h) (ensures interp q h)))
+  : action p unit (fun _ -> q)
