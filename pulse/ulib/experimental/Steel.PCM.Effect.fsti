@@ -60,7 +60,7 @@ val repr (a:Type u#a)
          (post:a -> slprop u#1)
          (req:fp_mprop pre)
          (ens:fp_binary_mprop pre post)
-  : Type u#a
+  : Type0 //Note, we leak the universe of the representation, which currently must be universe 0
 
 unfold
 let return_req (p:slprop) : fp_mprop p = fun _ -> True
@@ -156,7 +156,6 @@ let if_then_else (a:Type)
   = repr a pre post
          (if_then_else_req req_then req_else p)
          (if_then_else_ens ens_then ens_else p)
-
 
 reifiable reflectable
 layered_effect {
@@ -257,15 +256,15 @@ val bind_steel_pure (a:Type)
 
 polymonadic_bind (Steel, PURE) |> Steel = bind_steel_pure
 
-val par (#aL:Type)
-        (#preL:slprop)
-        (#postL:aL -> slprop)
+val par (#aL:Type u#a)
+        (#preL:slprop u#1)
+        (#postL:aL -> slprop u#1)
         (#lpreL:fp_mprop preL)
         (#lpostL:fp_binary_mprop preL postL)
         ($f:unit -> Steel aL preL postL lpreL lpostL)
-        (#aR:Type)
-        (#preR:slprop)
-        (#postR:aR -> slprop)
+        (#aR:Type u#a)
+        (#preR:slprop u#1)
+        (#postR:aR -> slprop u#1)
         (#lpreR:fp_mprop preR)
         (#lpostR:fp_binary_mprop preR postR)
         ($g:unit -> Steel aR preR postR lpreR lpostR)
@@ -275,11 +274,11 @@ val par (#aL:Type)
     (fun h -> lpreL h /\ lpreR h)
     (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
 
-val ( || ) (#aL:Type)
+val ( || ) (#aL:Type u#a)
           (#preL:slprop)
           (#postL:aL -> slprop)
           ($f:unit -> SteelT aL preL postL)
-          (#aR:Type)
+          (#aR:Type u#a)
           (#preR:slprop)
           (#postR:aR -> slprop)
           ($g:unit -> SteelT aR preR postR)

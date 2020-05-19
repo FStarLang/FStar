@@ -170,9 +170,13 @@ val equiv_symmetric (p1 p2:slprop)
 val equiv_extensional_on_star (p1 p2 p3:slprop)
   : squash (p1 `equiv` p2 ==> (p1 `star` p3) `equiv` (p2 `star` p3))
 
-(** [p ~ p * emp] *)
+(** [p ~~ p * emp] *)
 val emp_unit (p:slprop)
   : Lemma (p `equiv` (p `star` emp))
+
+(** [emp] is trivial *)
+val intro_emp (h:heap)
+  : Lemma (interp emp h)
 
 (** Introduction rule for equivalence of [h_exists] propositions *)
 val h_exists_cong (#a:Type) (p q : a -> slprop)
