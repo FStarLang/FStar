@@ -18,19 +18,6 @@ module Steel.PCM.Effect.Atomic
 open Steel.PCM
 open Steel.PCM.Memory
 
-//just for fun
-let obs_pcm : pcm observability = {
-  p = {
-    composable = (fun x y -> ~(x==true /\ y==true));
-    op = join_obs;
-    one = unobservable;
-  };
-  comm = (fun _ _ -> ());
-  assoc = (fun _ _ _ -> ());
-  assoc_r = (fun _ _ _ -> ());
-  is_unit = (fun _ -> ())
-}
-
 let atomic_repr a opened_invariants f pre post =
     action_except a opened_invariants pre post
 
@@ -50,6 +37,7 @@ let lift_pure_steel_atomic a op p wp f
 
 sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
 
+let lift_atomic_to_steelT f = Steel.PCM.Effect.add_action (reify (f()))
 let as_atomic_action f = SteelAtomic?.reflect f
 let new_invariant i p = SteelAtomic?.reflect (Steel.PCM.Memory.new_invariant i p)
 let with_invariant i f = SteelAtomic?.reflect (Steel.PCM.Memory.with_invariant i (reify (f())))
