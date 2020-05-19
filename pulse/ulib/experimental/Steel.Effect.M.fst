@@ -63,10 +63,31 @@ let lift_ens #pre #a #post (ens:ens_t u#a pre a post)
 : ens_t u#(max a b) pre (U.raise_t a) (lift_post post)
 = fun m0 x m1 -> ens m0 (U.downgrade_val x) m1
 
-assume val lift_m (#a:_) (#pre:_) (#post:_) (#req:_) (#ens:_)
+module T = FStar.Tactics
+
+let rec lift_m (#a:Type u#a) (#pre:pre_t) (#post:post_t u#a a)
+  (#req:req_t pre) (#ens:ens_t pre a post)
   (f:repr u#a a pre post req ens)
 : repr u#(max a b) (FStar.Universe.raise_t a) pre (lift_post post) req (lift_ens ens)
-//AR: proof by induction on m?
+= match f with
+  | Sem.Ret #_ #_ post x lpost ->
+
+    assert ((Sem.return_lpre #_ #_ #(lift_post post) (U.raise_val u#a u#b x) (lift_ens lpost)) ==
+             Sem.return_lpre #_ #_ #post x lpost) by
+      (T.norm [delta_only [`%Sem.return_lpre; `%lift_post; `%lift_ens]];
+       FStar.Tactics.Derived.l_to_r [
+         `U.downgrade_val_raise_val;
+         `U.raise_val_downgrade_val]);
+
+    Sem.Ret #_ #(U.raise_t a) (lift_post post) (U.raise_val x) (lift_ens lpost)
+
+  | Sem.Bind #_ #a #pre_f #post_f #req_f #ens_f #b #post_g #req_g #ens_g f g ->
+
+
+    
+
+
+  | _ -> admit ()
 
 let lift_req_x (#a:Type u#a) (#pre:a -> hprop) (req:(x:a -> req_t (pre x)))
 : x:U.raise_t u#a u#b a -> req_t ((lift_post pre) x)
