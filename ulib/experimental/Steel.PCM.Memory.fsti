@@ -236,3 +236,12 @@ val ( >--> ) (i:iname) (p:slprop u#1) : prop
 let inv (p:slprop) = i:iname{i >--> p}
 val new_invariant (e:inames) (p:slprop)
   : action_except (inv p) e p (fun _ -> emp)
+
+val with_invariant (#a:Type)
+                   (#fp:slprop)
+                   (#fp':a -> slprop)
+                   (#opened_invariants:inames)
+                   (#p:slprop)
+                   (i:inv p{not (i `Set.mem` opened_invariants)})
+                   (f:action_except a (Set.union (Set.singleton i) opened_invariants) (p `star` fp) (fun x -> p `star` fp' x))
+  : action_except a opened_invariants fp fp'
