@@ -353,6 +353,8 @@ let emp_unit p
     in
     ()
 
+let intro_emp h = ()
+
 let h_exists_cong (#a:Type) (p q : a -> slprop) = ()
 
 let interp_depends_only_on (hp:slprop u#a) = emp_unit hp

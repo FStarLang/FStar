@@ -56,3 +56,11 @@ let state_obeys_st_laws uses =
   in
   ()
 #pop-options
+
+let state_correspondence inames =
+    let s = state_uses inames in
+    assert_norm (s.S.hprop == slprop)  ;
+    assert_norm (s.S.mem == mem)  ;
+    assert_norm (s.S.interp == interp);
+    assert_norm (s.S.star == star);
+    assert_norm (s.S.locks_invariant == locks_invariant inames)

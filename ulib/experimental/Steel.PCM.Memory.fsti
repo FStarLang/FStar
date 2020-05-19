@@ -113,6 +113,9 @@ val equiv_extensional_on_star (p1 p2 p3:slprop)
 val emp_unit (p:slprop)
   : Lemma (p `equiv` (p `star` emp))
 
+val intro_emp (m:mem)
+  : Lemma (interp emp m)
+
 (***** Properties of [pts_to] *)
 
 (** [ptr r] asserts that the reference [r] points to a value *)
