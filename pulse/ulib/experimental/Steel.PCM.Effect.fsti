@@ -337,3 +337,9 @@ val cond (#a:Type)
          (then_: (unit -> SteelT a (p true) (q true)))
          (else_: (unit -> SteelT a (p false) (q false)))
   : SteelT a (p b) (q b)
+
+val add_action (#a:Type)
+               (#p:slprop)
+               (#q:a -> slprop)
+               (f:action_except a Set.empty p q)
+  : SteelT a p q
