@@ -66,4 +66,4 @@ type e_nat_4 = | ENat4 of nat
 [@@erasable ]
 val e_unit_5 : Type0
 //and instantiating that declaration with a erasable type is okay
-let e_unit_5 = unit
+let e_unit_5 = t
