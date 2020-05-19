@@ -178,7 +178,6 @@ val interp_depends_only_on (hp:slprop u#a)
 
 
 (***** [pts_to] properties *)
-//////////////////////////////////////////////////////////////////////////////////////////
 
 (**
   [ptr r] is a separation logic proposition asserting the existence of an allocated cell at
