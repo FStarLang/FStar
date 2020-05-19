@@ -210,7 +210,6 @@ val bind_pure_steel (a:Type)
 
 polymonadic_bind (PURE, Steel) |> Steel = bind_pure_steel
 
-#push-options "--warn_error -271"
 unfold
 let polymonadic_bind_steel_pure_pre (#a:Type)
                                     (#b:Type)
@@ -226,10 +225,9 @@ let polymonadic_bind_steel_pure_pre (#a:Type)
           forall (x:a) (h1:hmem post_f). ens_f (join m0 m1) x h1 ==> (wp_g x) (fun _ -> True))
         (ensures
           forall (x:a) (h1:hmem post_f). ens_f m0 x h1 ==> (wp_g x) (fun _ -> True))
-        [SMTPat ()]
+        [SMTPat (disjoint m0 m1)]
       = assert (forall (x:a) (h1:hmem post_f). ens_f m0 x h1 <==> ens_f (join m0 m1) x h1) in
     fun h -> req_f h /\ (forall (x:a) (h1:hmem post_f). ens_f h x h1 ==> (wp_g x) (fun _ -> True))
-#pop-options
 
 unfold
 let polymonadic_bind_steel_pure_post (#a:Type)
