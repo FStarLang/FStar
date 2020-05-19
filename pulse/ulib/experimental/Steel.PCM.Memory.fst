@@ -66,6 +66,8 @@ let disjoint_join m0 m1 m2 =
 let join_associative m0 m1 m2 =
   H.join_associative m0.heap m1.heap m2.heap
 
+let slprop = H.slprop
+
 let interp p m = H.interp p m.heap
 
 let ref = H.ref

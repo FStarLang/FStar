@@ -19,7 +19,7 @@ module Steel.PCM.Effect
 module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.PCM.Memory
 module Ins = Steel.PCM.Semantics.Instantiate
-open Mem
+open Steel.PCM.Memory
 
 val join_preserves_interp (hp:slprop) (m0 m1:mem)
   : Lemma
@@ -55,14 +55,12 @@ val reveal_respects_binary_fp (#a:Type) (#pre:slprop) (#post:a -> slprop)
 let fp_binary_mprop #a (pre:slprop) (post: a -> slprop) =
   p:(hmem pre -> x:a -> hmem (post x) -> prop){ respects_binary_fp p }
 
-val dummy : Type
-
-let repr (a:Type u#a)
+val repr (a:Type u#a)
          (pre:slprop u#1)
          (post:a -> slprop u#1)
          (req:fp_mprop pre)
          (ens:fp_binary_mprop pre post)
-  = unit -> dummy u#a
+  : Type u#a
 
 unfold
 let return_req (p:slprop) : fp_mprop p = fun _ -> True

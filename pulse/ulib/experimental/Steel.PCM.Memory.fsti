@@ -76,13 +76,8 @@ val join_associative (m0 m1 m2:mem)
 (**** Separation logic *)
 
 (** The type of separation logic propositions. Based on Steel.PCM.Heap.slprop *)
-//[@@erasable]
-(*
-  NS: I would like this to be abstract, but I can't define an abstract abbreviation of an erasable
-  type and have it be erasable too. Need to fix that after which this interface should not expose
-  its dependence on Heap
-*)
-let slprop = Steel.PCM.Heap.slprop
+[@@erasable]
+val slprop : Type u#(a + 1)
 
 (** Interpreting mem assertions as memory predicates *)
 val interp (p:slprop u#a) (m:mem u#a) : prop

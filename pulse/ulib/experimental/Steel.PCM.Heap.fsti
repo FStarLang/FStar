@@ -93,21 +93,34 @@ let heap_prop_is_affine (p:heap u#a -> prop) : prop =
   forall (h0 h1: heap u#a). p h0 /\ disjoint h0 h1 ==> p (join h0 h1)
 
 (**
-  [slprop] stands for "separation logic proposition", and is precisely an affine heap
-  proposition.
-*)
-let slprop : Type u#(a + 1) = p:(heap u#a -> prop) { heap_prop_is_affine p }
+  An affine heap proposition
+  *)
+let a_heap_prop = p:(heap -> prop) { heap_prop_is_affine p }
 
 (**
-  Because they are heap predicates, [slprop]s can be "interpreted" over any heap, yielding a
-  [prop]
+  [slprop] is an abstract "separation logic proposition"
+
+  The [erasable] attribute says that it is computationally irrelevant
+  and will be extracted to [()]
+*)
+[@@erasable]
+val slprop : Type u#(a + 1)
+
+(**
+  [slprop]s can be "interpreted" over any heap, yielding a [prop]
 *)
 val interp (p:slprop u#a) (m:heap u#a) : prop
 
 (**
-  An [hprop] is a weaker form of affine heap predicate, since it is only affine for heaps
-  that already satisfy the separation logic proposition [fp]. [fp] stands for the "footprint" of
-  the [hprop]
+  Promoting an affine heap proposition to an slprop
+  *)
+val as_slprop (f:a_heap_prop) : p:slprop{forall h.interp p h <==> f h}
+
+(**
+  An [hprop] is heap predicate indexed by a footprint [fp:slprop].
+  Its validity depends only on the fragment of the heap that satisfies [fp].
+  Note, it is unrelated to affinity, since the forward implication only applies
+  to heaps [h0] that validate [fp]
 *)
 let hprop (fp:slprop u#a) =
   q:(heap u#a -> prop){
@@ -141,7 +154,7 @@ val h_forall (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a
   [h_refine] consists of refining a separation logic proposition [p] with an affine heap predicate
   [r]. Since both types are equal, this is equivalent to [h_and].
 *)
-val h_refine (p:slprop u#a) (r:slprop u#a) : slprop u#a
+val h_refine (p:slprop u#a) (r:a_heap_prop u#a) : slprop u#a
 
 (***** Basic properties of separation logic *)
 
@@ -238,14 +251,14 @@ val star_congruence (p1 p2 p3 p4:slprop)
 (***** Properties of the refinement *)
 
 (** [h_refine p q] is just interpreting the affine heap prop [q] when [p] is valid *)
-val refine_interp (p:slprop u#a) (q:slprop u#a) (h:heap u#a)
+val refine_interp (p:slprop u#a) (q:a_heap_prop u#a) (h:heap u#a)
     : Lemma (interp p h /\ q h <==> interp (h_refine p q) h)
 
 (**
   Equivalence on [h_refine] propositions is define by logical equivalence of the refinements
   on all heaps
 *)
-val refine_equiv (p0 p1:slprop u#a) (q0 q1:slprop u#a)
+val refine_equiv (p0 p1:slprop u#a) (q0 q1:a_heap_prop u#a)
     : Lemma (p0 `equiv` p1 /\ (forall h. q0 h <==> q1 h) ==>
              equiv (h_refine p0 q0) (h_refine p1 q1))
 
