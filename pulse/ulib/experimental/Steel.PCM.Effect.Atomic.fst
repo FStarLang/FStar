@@ -130,17 +130,6 @@ let new_invariant (opened_invariants:inames) (p:slprop)
   : SteelAtomic (inv p) opened_invariants unobservable p (fun _ -> emp)
   = SteelAtomic?.reflect (Steel.PCM.Memory.new_invariant opened_invariants p)
 
-assume
-val with_invariant_mem (#a:Type)
-                       (#fp:slprop)
-                       (#fp':a -> slprop)
-                       (#opened_invariants:inames)
-                       (#p:slprop)
-                       (i:inv p{not (i `Set.mem` opened_invariants)})
-                       (f:action_except a (Set.union (Set.singleton i) opened_invariants) (p `star` fp) (fun x -> p `star` fp' x))
-  : action_except a opened_invariants fp fp'
-
-
 let with_invariant (#a:Type)
                    (#fp:slprop)
                    (#fp':a -> slprop)
@@ -150,7 +139,7 @@ let with_invariant (#a:Type)
                    (i:inv p{not (i `Set.mem` opened_invariants)})
                    (f:unit -> SteelAtomic a (Set.union (Set.singleton i) opened_invariants) o (p `star` fp) (fun x -> p `star` fp' x))
   : SteelAtomic a opened_invariants o fp fp'
-  = SteelAtomic?.reflect (with_invariant_mem i (reify (f())))
+  = SteelAtomic?.reflect (Steel.PCM.Memory.with_invariant i (reify (f())))
 
 assume
 val frame_action_except (#a:Type) (#opened_invariants:inames)
