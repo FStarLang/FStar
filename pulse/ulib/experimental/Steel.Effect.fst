@@ -26,6 +26,16 @@ module Ins = Steel.Semantics.Instantiate
 
 open Steel.Memory
 
+(*
+ * This module defines an effect over the CSL semantics in
+ * Steel.Semantics.Hoare.MST
+ *
+ * It chooses NMST computations as the underlying representation of the effect
+ *
+ * Also see Steel.Effect.M.fst for an alternate attempt that chooses the
+ * action trees as the underlying representation
+ *)
+
 let join_preserves_interp (hp:hprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
 : Lemma
   (interp hp (join m0 m1))
@@ -33,7 +43,6 @@ let join_preserves_interp (hp:hprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
 = intro_emp m1;
   intro_star hp emp m0 m1;
   affine_star hp emp (join m0 m1)
-
 
 let ens_depends_only_on (#a:Type) (pre:Mem.hprop) (post:a -> Mem.hprop)
   (q:(hmem pre -> x:a -> hmem (post x) -> prop))
@@ -246,6 +255,16 @@ polymonadic_bind (Steel, PURE) |> Steel = bind_steel_pure
 
 (*
  * This proof relies on core_mem_interp lemma from Steel.Memory
+ *
+ * Notice that the implementation of this combinator is *not* fine-grained
+ * interleaving of f and g
+ *
+ * This is not a problem practically, since we don't intend to run Steel
+ * programs using this implementation
+ *
+ * Rather we are working on a native extraction pipeline to OCaml and C
+ *
+ * See Steel.Effect.M.fst for more discussions around this
  *)
 let par0 (#aL:Type) (#preL:pre_t) (#postL:post_t aL) (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
   (f:repr aL preL postL lpreL lpostL)
