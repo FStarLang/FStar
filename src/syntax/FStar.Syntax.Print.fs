@@ -653,15 +653,13 @@ let layered_eff_combinators_to_string combs =
       (tscheme_to_string ts_t) (tscheme_to_string ts_ty) in
 
   U.format "{\n\
-    l_base_effect = %s\n\
   ; l_repr = %s\n\
   ; l_return = %s\n\
   ; l_bind = %s\n\
   ; l_subcomp = %s\n\
   ; l_if_then_else = %s\n
   }\n"
-    [ Ident.string_of_lid combs.l_base_effect;
-      to_str combs.l_repr;
+    [ to_str combs.l_repr;
       to_str combs.l_return;
       to_str combs.l_bind;
       to_str combs.l_subcomp;
