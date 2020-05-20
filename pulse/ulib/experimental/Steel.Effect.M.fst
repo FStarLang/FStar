@@ -101,7 +101,6 @@ let frame (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a 
 = Sem.Frame f frame f_frame
 
 
-
 (*
  * However, the effect defined this way is not immediately usable from F*
  *
@@ -119,50 +118,59 @@ let bind_explicit_univs (a:Type u#a) (b:Type u#a)
 
 
 (*
- * In the combinator, both the computations return types are in the same universe,
+ * In the combinator, both the computation return types are in the same universe,
  * and the combinator itself is polymorphic in that single universe
  *
- * On the other hand, F*'s existing effect system requires the effect bind
- * to be polymorphic in two universes (the universes of the two computations)
- * This comes in handy, for example,
- * when writing code that performs an (erasable) `get` to
- * get its hands on the ghost memory and use it in assertions etc. The ghost memory
- * typically lives in one universe higher than the computational types (e.g. int)
+ * However, composing computations whose result types are in different universes
+ * is useful. For example, composition of a computation returning an existential
+ * (p:Type0 & x:int{p}) that lives in u#1 with a continuation that projects and returns
+ * the int that lives in u#0.
  *
- * So there are two issues with the bind:
- * (a) both the computations have the same universe
- * (b) the bind itself is polymorphic in a single universe
+ * Hence, as with other F* effects, we would like to support a bind that is doubly
+ * polymorphic in the result type of both the computations, e.g. something like
  *
- * To solve the first one, we can explicitly raise the two universes to max(a b)
- * (F* does not have universe cumulativity yet)
- * This will support two computations in different universes, but in the absence of
- * cumulativity, this will be hard to work with at the level of source programs,
- * since the programmers (or some heuristic) will have to insert the universe
- * lifts/downgrades
- * (see a sketch below about how this lift might look like)
+ * let bind_double_univs (a:Type u#a) (b:Type u#b)
+ *   (pre_f:pre_t) (post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+ *   (post_g:post_t b)
+ *   (req_g:(x:a -> req_t (post_f x))) (ens_g:(x:a -> ens_t (post_f x) b post_g))
+ *   (f:repr a pre_f post_f req_f ens_f)
+ *   (g:(x:a -> repr b (post_f x) post_g (req_g x) (ens_g x)))
+ * : repr u#(max a b) b pre_f post_g
+ *   (Sem.bind_lpre req_f ens_f req_g)
+ *   (Sem.bind_lpost req_f ens_f ens_g) = ...
  *
- * For the second problem, even if F* had cumulativity,
- * we still need F* to support single universe polymorphic binds
+ * But F*, like Lean and Agda, and unlike Coq, lacks cumulativity of universes.
+ * So the result type (repr u#(max a b) b ...) is not well-formed, since b has
+ * universe u#b and not u#(max a b)
  *
- * With all this in mind, we choose to define the effect using an alternate
- * representation -- as NMST computations
+ * We could explicitly lift the universes to get the following type:
  *
- * The effect definition with this representation is in Steel.Effect.fst
+ * let bind_double_univs_raise (a:Type u#a) (b:Type u#b)
+ *   (pre_f:pre_t) (post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+ *   (post_g:post_t b)
+ *   (req_g:(x:a -> req_t (post_f x))) (ens_g:(x:a -> ens_t (post_f x) b post_g))
+ *   (f:repr a pre_f post_f req_f ens_f)
+ *   (g:(x:a -> repr b (post_f x) post_g (req_g x) (ens_g x)))
+ * : repr u#(max a b) (raise_t b) ...
  *
- * The resulting effect does not have these drawbacks, and is immediately
- * usable for F* programs (see our examples written using this effect)
+ * (In the file below, we sketch this in actual code.)
  *
- * However, the implementation of par combinator using this representation
- * does not allow fine-grained interleaving that our semantics supports
+ * But this results in other complications:
+ * 1. The user programs now have to explicitly eliminate raise_t (by downgrading)
+ * 2. F* effect system will reject this bind definition, since it is unaware of the
+ *    universe lifting
  *
- * In practical terms, this is not a problem because we don't intend to run
- * Steel programs using the effect combinators directly
- * Rather, in ongoing work, we are working on an extraction pipeline to extract
- * Steel concurrency natively to OCaml or C, and run there
+ * To get around this, we chose a different, more restrictive representation for the
+ * Steel effect in Steel.Effect.fst. That definition is suitably doubly universe 
+ * polymorphic, at the expense of hiding the structure of the computation trees
+ * needed for a full fidelity interleaving semantics.
  *
- * However, this is still unsatisfactory from the modeling perspective,
- * we plan to extend F* on the lines above and switch to the action trees
- * representation for the effect
+ * Please see that file for further discussions on the limitations of that 
+ * representation.
+ *
+ * In the meantime, we are working on adding universe cumulativity to F* that will
+ * allow bind_double_univs to be defined and then we can switch to the action trees
+ * based representation for the effect.
  *)
 
 
