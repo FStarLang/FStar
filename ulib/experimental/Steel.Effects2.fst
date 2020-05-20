@@ -424,6 +424,14 @@ assume WP_monotonic :
     (forall p q. (forall x. p x ==>  q x) ==>  (wp p ==>  wp q))
 
 
+(*
+ * The indices of the second computation need not be dependent on a,
+ * the result of the first computation, I think ...
+ *
+ * Since before bind is called, the typechecker has already substituted them
+ * with the pure f computation
+ *)
+
 unfold
 let bind_pure_steel__req (#a:Type) (wp:pure_wp a)
   (#pre:pre_t) (req:a -> req_t pre)
@@ -454,6 +462,24 @@ let bind_pure_steel_ (a:Type) (b:Type)
 polymonadic_bind (PURE, SteelF) |> SteelF = bind_pure_steel_
 
 polymonadic_bind (PURE, Steel) |> Steel = bind_pure_steel_
+
+
+(*
+ * How we would like to see the Steel(F)/PURE bind
+ *)
+
+unfold
+let bind_steel__pure_req (#a:Type) (#pre:pre_t) (#post:post_t a) (req:req_t pre) (ens:ens_t pre a post)
+  (#b:Type) (wp:a -> pure_wp b)
+: req_t pre
+= fun m0 -> req m0 /\ (forall (x:a) (m1:hmem (post x)). ens m0 x m1 ==> as_requires (wp x))
+
+// unfold
+// let bind_steel__pure_ens (#a:Type) (#pre:pre_t) (#post:post_t a) (req:req_t pre) (ens:ens_t pre a post)
+//   (#b:Type) (wp:a -> pure_wp b) (f:(x:a -> unit -> PURE b (wp x)))
+// : ens_t pre b (fun _ -> post)
+// = fun m0 r m1 ->
+
 
 
 (*
