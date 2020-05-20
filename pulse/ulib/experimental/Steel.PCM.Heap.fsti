@@ -148,8 +148,8 @@ val h_and (p1 p2:slprop u#a) : slprop u#a
 val h_or  (p1 p2:slprop u#a) : slprop u#a
 val star  (p1 p2:slprop u#a) : slprop u#a
 val wand  (p1 p2:slprop u#a) : slprop u#a
-val h_exists (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a
-val h_forall (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a
+val h_exists (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a
+val h_forall (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a
 (**
   [h_refine] consists of refining a separation logic proposition [p] with an affine heap predicate
   [r]. Since both types are equal, this is equivalent to [h_and].

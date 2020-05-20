@@ -99,8 +99,8 @@ val h_and (p1 p2:slprop u#a) : slprop u#a
 val h_or  (p1 p2:slprop u#a) : slprop u#a
 val star  (p1 p2:slprop u#a) : slprop u#a
 val wand  (p1 p2:slprop u#a) : slprop u#a
-val h_exists (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a
-val h_forall (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a
+val h_exists (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a
+val h_forall (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a
 
 (***** Properties of separation logic equivalence *)
 

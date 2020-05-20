@@ -315,18 +315,17 @@ let wand (p1 p2: slprop u#a) : slprop u#a =
         interp p1 h1 ==>
         interp p2 (join h h1)
 
-let h_exists  (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a =
+let h_exists  (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a =
   fun (h: heap) ->
    exists x. (W.axiom1 f x; interp (f x) h)
 
-let h_forall (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a =
+let h_forall (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a =
   fun (h: heap) ->
    forall x. (W.axiom1 f x; interp (f x) h)
 
-let h_refine (p:slprop u#a) (r:slprop u#a) : slprop u#a =
-  h_and p r
+let h_refine p r = h_and p r
 
-////////////////////////////////////////////////////////////////////////////////
+ ////////////////////////////////////////////////////////////////////////////////
 //properties of equiv
 ////////////////////////////////////////////////////////////////////////////////
 let affine_star p q h = ()
