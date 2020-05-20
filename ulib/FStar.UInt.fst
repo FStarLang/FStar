@@ -257,6 +257,10 @@ let lognot_self #n a = nth_lemma (lognot #n (lognot #n a)) a
 
 let lognot_lemma_1 #n = nth_lemma (lognot #n (zero n)) (ones n)
 
+val to_vec_mod_pow2: #n:nat -> a:uint_t n -> m:pos -> i:nat{n - m <= i /\ i < n} ->
+  Lemma (requires (a % pow2 m == 0))
+        (ensures  (index (to_vec a) i == false))
+        [SMTPat (index (to_vec #n a) i); SMTPat (pow2 m)]
 let rec to_vec_mod_pow2 #n a m i =
   if i = n - 1 then
     begin
@@ -271,6 +275,10 @@ let rec to_vec_mod_pow2 #n a m i =
     to_vec_mod_pow2 #(n - 1) (a / 2) (m - 1) i
     end
 
+val to_vec_lt_pow2: #n:nat -> a:uint_t n -> m:nat -> i:nat{i < n - m} ->
+  Lemma (requires (a < pow2 m))
+        (ensures  (index (to_vec a) i == false))
+        [SMTPat (index (to_vec #n a) i); SMTPat (pow2 m)]
 let rec to_vec_lt_pow2 #n a m i =
   if n = 0 then ()
   else
@@ -368,9 +376,11 @@ let shift_right_value_aux_1 #n a s =
 
 let shift_right_value_aux_2 #n a = assert_norm (pow2 0 == 1)
 
+#push-options "--z3rlimit 20"
 let shift_right_value_aux_3 #n a s =
   append_lemma #s #(n - s) (zero_vec #s) (slice (to_vec a) 0 (n - s));
   slice_left_lemma #n (to_vec a) (n - s)
+#pop-options
 
 let shift_right_value_lemma #n a s =
   if s >= n then shift_right_value_aux_1 #n a s
@@ -454,7 +464,7 @@ let lemma_one_extend #n a =
   from_vec_propriety #(n+1) eav 1;
   assert (r = pow2 n + a)
 
-#push-options "--fuel 1 --ifuel 0"
+#push-options "--fuel 1 --ifuel 0 --z3rlimit 40"
 let lemma_lognot_zero_ext #n a =
   let lhs = lognot #(n+1) a in
   let rhs = pow2 n + (lognot #n a) in
