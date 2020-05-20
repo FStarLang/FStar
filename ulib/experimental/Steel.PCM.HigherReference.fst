@@ -21,6 +21,7 @@ open Steel.PCM.Memory
 open FStar.Ghost
 open FStar.Real
 open Steel.PCM
+open Steel.PCM.FractionalPermission
 
 let fractional (a:Type u#1) = option (a & perm)
 let composable #a : symrel (fractional a) =

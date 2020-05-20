@@ -11,33 +11,15 @@
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
-   limitations under the License.
+   limitations under the License.o
 *)
 
 module Steel.PCM.HigherReference
 open Steel.PCM.Effect
 open Steel.PCM.Effect.Atomic
 open Steel.PCM.Memory
+open Steel.PCM.FractionalPermission
 open FStar.Ghost
-open FStar.Real
-
-[@@erasable]
-noeq type perm : Type0 =
-  | MkPerm: v:real{ v >. 0.0R } -> perm
-
-let writeable (p: perm) : GTot bool =
-  MkPerm?.v p = 1.0R
-
-let half_perm (p: perm) : GTot (perm) =
-  MkPerm ((MkPerm?.v p) /. two)
-
-let sum_perm (p1 p2: perm) : GTot perm =
-  MkPerm (MkPerm?.v p1 +.  MkPerm?.v p2)
-
-let lesser_equal_perm (p1 p2:perm) : GTot bool =
-  MkPerm?.v p1 <=.  MkPerm?.v p2
-
-let full_perm : perm = MkPerm 1.0R
 
 val ref (a:Type u#1) : Type u#0
 
