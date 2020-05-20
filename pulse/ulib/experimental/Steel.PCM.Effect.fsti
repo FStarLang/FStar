@@ -29,8 +29,6 @@ val join_preserves_interp (hp:slprop) (m0 m1:mem)
 
 val respects_fp (#fp:slprop) (p: hmem fp -> prop) : prop
 
-#push-options "--log_queries --query_stats"
-#restart-solver
 val reveal_respects_fp (#fp:_) (p:hmem fp -> prop)
   : Lemma (respects_fp p <==>
            (forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)))
