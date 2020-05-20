@@ -22,11 +22,9 @@ module DepMap = FStar.DependentMap
 open FStar.FunctionalExtensionality
 open Steel.PCM
 open Steel.PCM.Unitless
+module SizeT = Steel.SizeT
 
-type usize = U32.t
-let v_usize = U32.v
 
-//TODO: use Steel.SizeT
 
 #set-options "--fuel 1 --ifuel 1"
 
@@ -37,7 +35,7 @@ type field_id = string
 noeq
 type array_struct_descriptor : Type u#(a + 1) =
   | DBase : a: Type u#a -> array_struct_descriptor
-  | DArray : cell_descriptor: array_struct_descriptor u#a -> len: usize -> array_struct_descriptor
+  | DArray : cell_descriptor: array_struct_descriptor u#a -> len: SizeT.t -> array_struct_descriptor
   | DStruct : field_descriptors: (field_id ^-> array_struct_descriptor u#a)
     -> array_struct_descriptor
 
@@ -54,7 +52,7 @@ let struct_field_type'
   FStar.WellFounded.axiom1 field_descriptors field;
   array_struct_type descr
 
-let array_type (cell_type: Type u#a) (len: usize) : Type u#a = Seq.lseq cell_type (v_usize len)
+let array_type (cell_type: Type u#a) (len: SizeT.t) : Type u#a = Seq.lseq cell_type (SizeT.v len)
 
 let struct_type (field_typs: (field_id -> Type u#a)) : Type u#a = DepMap.t field_id field_typs
 
@@ -76,7 +74,7 @@ let struct_field_type
     : Tot (Type u#a) = struct_field_type' field_descriptors array_struct_type field
 noeq
 type array_struct : Type u#(a + 1) =
-  | ArrayStruct : 
+  | ArrayStruct :
       descriptor: array_struct_descriptor u#a ->
       pcm: unitless_pcm (array_struct_type descriptor) ->
       value: array_struct_type descriptor
@@ -127,19 +125,19 @@ let array_struct_pcm:pcm u#(a + 1) (option u#(a + 1) (array_struct u#a)) =
 // PCM builders
 ////////////////////////////////////////////////////////////////////
 
-let pointwise_array_pcm (cell_type: Type u#a) (len: usize) (base_pcm: unitless_pcm cell_type)
+let pointwise_array_pcm (cell_type: Type u#a) (len: SizeT.t) (base_pcm: unitless_pcm cell_type)
     : unitless_pcm (array_type cell_type len) =
-  let composable_cell (x y: array_type cell_type len) (i: nat{i < v_usize len}) : prop =
+  let composable_cell (x y: array_type cell_type len) (i: nat{i < SizeT.v len}) : prop =
     let xi = Seq.index x i in
     let yi = Seq.index y i in
     base_pcm.unitless_p.unitless_composable xi yi
   in
   let composable:symrel (array_type cell_type len) =
-    fun x y -> forall (i: nat{i < v_usize len}). composable_cell x y i
+    fun x y -> forall (i: nat{i < SizeT.v len}). composable_cell x y i
   in
   let compose (x: array_type cell_type len) (y: array_type cell_type len {composable x y})
       : array_type cell_type len =
-    Seq.init (v_usize len)
+    Seq.init (SizeT.v len)
       (fun i ->
           let xi = Seq.index x i in
           let yi = Seq.index y i in
@@ -155,7 +153,7 @@ let pointwise_array_pcm (cell_type: Type u#a) (len: usize) (base_pcm: unitless_p
     (fun x y ->
         let xy = pcm'.unitless_op x y in
         let yx = pcm'.unitless_op y x in
-        let aux (i: nat{i < v_usize len}) : Lemma (Seq.index xy i == Seq.index yx i) =
+        let aux (i: nat{i < SizeT.v len}) : Lemma (Seq.index xy i == Seq.index yx i) =
           base_pcm.unitless_comm (Seq.index x i) (Seq.index y i)
         in
         Classical.forall_intro aux;
@@ -164,7 +162,7 @@ let pointwise_array_pcm (cell_type: Type u#a) (len: usize) (base_pcm: unitless_p
     =
     (fun x y z ->
         let x_yz = pcm'.unitless_op x (pcm'.unitless_op y z) in
-        let aux (i: nat{i < v_usize len})
+        let aux (i: nat{i < SizeT.v len})
             : Lemma
             (let xi = Seq.index x i in
               let yi = Seq.index y i in
@@ -185,7 +183,7 @@ let pointwise_array_pcm (cell_type: Type u#a) (len: usize) (base_pcm: unitless_p
     =
     (fun x y z ->
         let xy_z = pcm'.unitless_op (pcm'.unitless_op x y) z in
-        let aux (i: nat{i < v_usize len})
+        let aux (i: nat{i < SizeT.v len})
             : Lemma
             (let xi = Seq.index x i in
               let yi = Seq.index y i in
@@ -294,15 +292,15 @@ let pointwise_struct_pcm
 open Steel.PCM.FractionalPermission
 open Steel.PCM.Unitless.Base
 
-let array_with_frac_perm_on_all_indexes (t: Type u#a) (len: usize) (v: t) : array_struct u#a =
+let array_with_frac_perm_on_all_indexes (t: Type u#a) (len: SizeT.t) (v: t) : array_struct u#a =
   ArrayStruct (DArray (DBase (with_perm u#a t)) len)
     (pointwise_array_pcm (with_perm t) len frac_perm_pcm)
-    (Seq.init u#a (v_usize len) (fun _ -> { value = v; perm = perm_one }))
+    (Seq.init u#a (SizeT.v len) (fun _ -> { value = v; perm = perm_one }))
 
-let immutable_splittable_array (t: Type u#a) (len: usize) (v: t) : array_struct u#a =
+let immutable_splittable_array (t: Type u#a) (len: SizeT.t) (v: t) : array_struct u#a =
   ArrayStruct (DArray (DBase t) len)
     (pointwise_array_pcm t len immutable_unitless_pcm)
-    (Seq.init u#a (v_usize len) (fun _ -> v))
+    (Seq.init u#a (SizeT.v len) (fun _ -> v))
 
 let two_fields_restricted_func
       (#a: Type u#a)
@@ -341,4 +339,3 @@ let point_2d:array_struct =
   ArrayStruct (DStruct field_descriptors)
     (pointwise_struct_pcm field_types field_pcms)
     (two_fields_dep_map field_types "x" "y" 0 1 (fun _ -> ()))
-

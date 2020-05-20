@@ -15,8 +15,6 @@
 *)
 module Steel.SizeT
 
-(**** THIS MODULE IS GENETATED AUTOMATICALLY USING [mk_int.sh], DO NOT EDIT DIRECTLY ****)
-
 val n: (n:nat{n % 8 = 0 /\ n >= 8})
 
 /// For FStar.UIntN.fstp: anything that you fix/update here should be
