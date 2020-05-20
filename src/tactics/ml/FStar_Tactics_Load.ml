@@ -5,21 +5,6 @@ module E = FStar_Errors
 
 let loaded_taclib = ref false
 
-(* We had weird failures, so don't trust in Dynlink.error_message *)
-let error_message : Dynlink.error -> string =
-    fun e ->
-    let s = match e with
-    | Not_a_bytecode_file _ -> "Not_a_bytecode_file"
-    | Inconsistent_import _ -> "Inconsistent_import"
-    | Unavailable_unit _ -> "Unavailable_unit"
-    | Unsafe_file -> "Unsafe_file"
-    | Linking_error _ -> "Linking_error"
-    | Corrupted_interface _ -> "Corrupted_interface"
-    | File_not_found _ -> "File_not_found"
-    | Cannot_open_dll _ -> "Cannot_open_dll"
-    | Inconsistent_implementation _ -> "Inconsistent_implementation"
-    in s ^ ": " ^ Dynlink.error_message e
-
 let find_taclib () =
   let r = Process.run "ocamlfind" [| "query"; "fstar-tactics-lib" |] in
   match r with
@@ -35,7 +20,7 @@ let load_tactic tac =
       print_string ("Loading plugin from " ^ fname ^ "\n");
       Dynlink.loadfile fname
     with Dynlink.Error e ->
-      failwith (U.format2 "Dynlinking %s failed: %s" fname (error_message e)) in
+      failwith (U.format2 "Dynlinking %s failed: %s" fname (Dynlink.error_message e)) in
 
   if not !loaded_taclib then begin
     dynlink (find_taclib () ^ "/fstartaclib.cmxs");
