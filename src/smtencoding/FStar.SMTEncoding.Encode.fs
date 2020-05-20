@@ -1001,7 +1001,13 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
     let g, env = encode_sigelt' env se in
     let g =
         match g with
-         | [] -> [Caption (BU.format1 "<Skipped %s/>" nm)] |> mk_decls_trivial
+         | [] ->
+            begin
+            if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+              BU.print1 "Skipped encoding of %s\n" nm;
+            [Caption (BU.format1 "<Skipped %s/>" nm)] |> mk_decls_trivial
+            end
+
          | _ -> ([Caption (BU.format1 "<Start encoding %s>" nm)] |> mk_decls_trivial)
                 @g
                 @([Caption (BU.format1 "</end encoding %s>" nm)] |> mk_decls_trivial) in
@@ -1147,11 +1153,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_let(_, _) when (se.sigquals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->
       //Discriminators are encoded directly via (our encoding of) theory of datatypes
+      if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+        BU.print1 "Not encoding discriminator '%s'\n" (Print.sigelt_to_string_short se);
       [], env
 
     | Sig_let(_, lids) when (lids |> BU.for_some (fun (l:lident) -> string_of_id (List.hd (ns_of_lid l)) = "Prims")
                              && se.sigquals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
+      if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+        BU.print1 "Not encoding unfold let from Prims '%s'\n" (Print.sigelt_to_string_short se);
       [], env
 
     | Sig_let((false, [lb]), _)

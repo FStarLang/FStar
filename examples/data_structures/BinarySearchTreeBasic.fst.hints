@@ -95,6 +95,7 @@
         "disc_equation_BinarySearchTreeBasic.Leaf",
         "disc_equation_BinarySearchTreeBasic.Node",
         "equality_tok_BinarySearchTreeBasic.Leaf@tok",
+        "equality_tok_Prims.LexTop@tok",
         "equation_with_fuel_BinarySearchTreeBasic.in_tree.fuel_instrumented",
         "fuel_guarded_inversion_BinarySearchTreeBasic.tree",
         "function_token_typing_Prims.__cache_version_number__",
@@ -104,7 +105,7 @@
         "projection_inverse_BinarySearchTreeBasic.Node__2",
         "projection_inverse_BinarySearchTreeBasic.Node_n",
         "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_4e4fb2343c8264b776e97506afee34b8",
+        "refinement_interpretation_Tm_refine_2a1e386a6a8c8526a794bcbf5b28f1ae",
         "refinement_interpretation_Tm_refine_bc0d60c0495319ff2c9dffd7b65cdf7c",
         "subterm_ordering_BinarySearchTreeBasic.Node",
         "typing_BinarySearchTreeBasic.all",
@@ -112,7 +113,7 @@
         "typing_tok_BinarySearchTreeBasic.Leaf@tok"
       ],
       0,
-      "387acc4a6542dcf10bbce5c8b60b1332"
+      "18f08643bc6f747fbce66383bc1eb111"
     ],
     [
       "BinarySearchTreeBasic.is_bst",
@@ -131,7 +132,7 @@
         "typing_tok_BinarySearchTreeBasic.Leaf@tok"
       ],
       0,
-      "3bb446732d95872644ad2af3e076ac1a"
+      "4321715e9455ca50c8fea04079df0fe6"
     ],
     [
       "BinarySearchTreeBasic.search",
@@ -436,7 +437,7 @@
         "typing_BinarySearchTreeBasic.in_tree"
       ],
       0,
-      "b76b8cc950928e5ebc3e0ff7e624662e"
+      "3894e560aa8f18ef83aaa5d36a4b1f1d"
     ],
     [
       "BinarySearchTreeBasic.find_max'",
@@ -455,7 +456,7 @@
         "subterm_ordering_BinarySearchTreeBasic.Node"
       ],
       0,
-      "c1b6d4be246d0a3eb5e4b0ec3c73d3d9"
+      "77fd3920e90d3e70abaafc762e016692"
     ],
     [
       "BinarySearchTreeBasic.find_max_lemma",
@@ -473,7 +474,7 @@
       1,
       [ "@query" ],
       0,
-      "dbf544e75d26664cc7d5457e4c8cf19e"
+      "0490d6e2d1d7d1ba42cef32c8c82ee46"
     ],
     [
       "BinarySearchTreeBasic.find_max_lemma",
@@ -533,7 +534,7 @@
         "typing_BinarySearchTreeBasic.in_tree"
       ],
       0,
-      "caea99815b3d312771009d655f08c9d8"
+      "31fa8cc36f9b80bd8d69d6a302163363"
     ],
     [
       "BinarySearchTreeBasic.find_max_eq",

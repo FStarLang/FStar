@@ -19,8 +19,9 @@ USE_EXTRACTED_INTERFACES=--use_extracted_interfaces true
 
 CACHE_DIR=--cache_dir .cache --hint_dir .cache
 
+#271 -> pattern uses theory symbols
 #332 -> `abstract` keyword is fatal error
-OTHERFLAGS+=$(USE_EXTRACTED_INTERFACES) --warn_error @332
+OTHERFLAGS+=$(USE_EXTRACTED_INTERFACES) --warn_error @271@332
 
 include $(FSTAR_HOME)/.common.mk
 include gmake/z3.mk
@@ -34,6 +35,15 @@ include gmake/Makefile.tmpl
 # bumping the rlimit for these files
 %FStar.ModifiesGen.fst.checked: OTHERFLAGS+=--z3rlimit_factor 8
 %LowStar.Monotonic.Buffer.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4
+
+#turn off 271 (pattern uses theory symbols warning), to be fixed soon
+%FStar.UInt.fsti.checked: OTHERFLAGS+=--warn_error -271
+%FStar.UInt.fst.checked: OTHERFLAGS+=--warn_error -271
+
+#these are legacy files that should go away soon
+%FStar.Buffer.fst.checked: OTHERFLAGS+=--warn_error -271
+%FStar.Buffer.Quantifiers.fst.checked: OTHERFLAGS+=--warn_error -271
+
 
 # disabling USE_EXTRACTED_INTERFACES for these files
 # Something's wrong with how the normalization attributes are propagated when this
