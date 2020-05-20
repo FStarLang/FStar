@@ -81,20 +81,17 @@ let bind a b pre_f post_f req_f ens_f post_g req_g ens_g f g
 
 let subcomp a pre post req_f ens_f req_g ens_g f = f
 
-#push-options "--z3rlimit 40 --fuel 2 --ifuel 1"
+#push-options "--z3rlimit 100 --fuel 0 --ifuel 0"
 let bind_pure_steel a b wp pre_g post_b req_g ens_g f g
-  = admit();
-    FStar.Monotonic.Pure.wp_monotonic_pure ();
+  = FStar.Monotonic.Pure.wp_monotonic_pure ();
     fun m0 ->
       let x = f () in
       g x m0
 #pop-options
 
-
-#push-options "--z3rlimit 100 --fuel 0 --ifuel 0"
+#push-options "--z3rlimit 200 --fuel 0 --ifuel 0"
 let bind_steel_pure a b pre_f post_f req_f ens_f wp_g f g
-  = admit();
-    FStar.Monotonic.Pure.wp_monotonic_pure ();
+  = FStar.Monotonic.Pure.wp_monotonic_pure ();
     fun _ ->
     let x = f () in
     g x ()
