@@ -108,7 +108,7 @@
         "typing_Tm_abs_ffaf4a9727175bbc0400abb3f8770c92"
       ],
       0,
-      "d0dd83baaa6981896d717fee544ca27c"
+      "a3651cf74cb97ffba2f5edbd1f05f29b"
     ],
     [
       "MiniParse.Impl.TSum.serialize_tagged_union_impl",
@@ -210,7 +210,7 @@
         "typing_MiniParse.Spec.TSum.refine_with_tag"
       ],
       0,
-      "0ab4d718b27dbba9eb015a46fabd50ed"
+      "8d4c14c52e490fef6ee4041a85182fad"
     ]
   ]
 ]
