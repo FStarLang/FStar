@@ -96,10 +96,7 @@ let mst_put (m:mem)
 
 let steel_admit (a:Type) (uses:Set.set lock_addr) (p:hprop) (q:a -> hprop)
   : SteelAtomic a uses true p q
-  = SteelAtomic?.reflect (fun _ ->
-      let m0 = NMSTTotal.nmst_tot_admit() in
-      mst_put m0
-    )
+  = SteelAtomic?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
 
 let steel_assert (uses:Set.set lock_addr) (p:hprop)
   : SteelAtomic unit uses true p (fun _ -> p)
