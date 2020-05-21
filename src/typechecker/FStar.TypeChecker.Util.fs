@@ -1287,7 +1287,19 @@ let weaken_guard g1 g2 = match g1, g2 with
       NonTrivial g
     | _ -> g2
 
-let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
+(*
+ * e has type lc, and lc is either pure or ghost
+ * This function inserts a return (x==e) in lc
+ *
+ * Optionally, callers can provide an effect M that they would like to return
+ * into
+ *
+ * If lc is PURE, the return happens in M
+ * else if it is GHOST, the return happens in PURE
+ *
+ * If caller does not provide the m effect, return happens in PURE
+ *)
+let maybe_assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (lc:lcomp) : lcomp =
   let should_return =
        not (env.lax)
     && Env.lid_exists env C.effect_GTot_lid //we're not too early in prims
@@ -1308,32 +1320,38 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
           | Some u_t -> u_t
           | None -> env.universe_of env (U.comp_result c)
       in
+      let m =
+        if m_opt |> is_none then C.effect_PURE_lid  //caller did not provide an M
+        else if c |> U.comp_effect_name |> is_pure_effect env then m_opt |> must
+        else C.effect_PURE_lid in  //c is GHOST, ignore M
       if U.is_tot_or_gtot_comp c
-      then //AR: insert a PURE.return, we are in Tot or GTot c
-           let retc, g_retc = return_value env C.effect_PURE_lid
-             (Some u_t) (U.comp_result c) e in
+      then //AR: insert an M.return
+           let retc, g_retc = return_value env m (Some u_t) (U.comp_result c) e in
            let g_c = Env.conj_guard g_c g_retc in
            if not (U.is_pure_comp c) //it started in GTot, so it should end up in Ghost
            then let retc = U.comp_to_comp_typ retc in
                 let retc = {retc with effect_name=C.effect_GHOST_lid; flags=flags} in
                 S.mk_Comp retc, g_c
            else U.comp_set_flags retc flags, g_c
-       else //AR: augment c's post-condition with a M.return, where M is c's effect
+       else //AR: augment c's post-condition with a M.return
             let c = Env.unfold_effect_abbrev env c in
             let t = c.result_typ in
             let c = mk_Comp c in
             let x = S.new_bv (Some t.pos) t in
             let xexp = S.bv_to_name x in
-            let ret, g_ret = return_value env (c |> U.comp_effect_name) (Some u_t) t xexp in
+            let env_x = Env.push_bv env x in
+            let ret, g_ret = return_value env_x m (Some u_t) t xexp in
             let ret = TcComm.lcomp_of_comp <| U.comp_set_flags ret [PARTIAL_RETURN] in
             let eq = U.mk_eq2 u_t t xexp e in
-            let eq_ret = weaken_precondition env ret (NonTrivial eq) in
-            //AR: this bind is now an M_M bind
+            let eq_ret = weaken_precondition env_x ret (NonTrivial eq) in
             let bind_c, g_bind = TcComm.lcomp_comp (bind e.pos env None (TcComm.lcomp_of_comp c) (Some x, eq_ret)) in
             U.comp_set_flags bind_c flags, Env.conj_guards [g_c; g_ret; g_bind]
   in
   if not should_return then lc
   else TcComm.mk_lcomp lc.eff_name lc.res_typ flags refine
+
+let maybe_assume_result_eq_pure_term env e lc =
+  maybe_assume_result_eq_pure_term_in_m env None e lc
 
 let maybe_return_e2_and_bind
         (r:Range.range)
@@ -1349,7 +1367,13 @@ let maybe_return_e2_and_bind
         if (not (is_pure_or_ghost_effect env eff1)
             || should_not_inline_lc lc1)
         && is_pure_or_ghost_effect env eff2
-        then maybe_assume_result_eq_pure_term env e2 lc2
+        then
+          let env_x =
+            match x with
+            | None -> env
+            | Some x -> Env.push_bv env x in
+          //AR: use c1's effect to return c2 into
+          maybe_assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
         else lc2 in //the resulting computation is still pure/ghost and inlineable; no need to insert a return
    bind r env e1opt lc1 (x, lc2)
 
