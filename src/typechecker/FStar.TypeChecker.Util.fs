@@ -290,13 +290,28 @@ let effect_args_from_repr (repr:term) (is_layered:bool) (r:Range.range) : list<t
  *)
 let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
 : comp
-= let ret_wp = ed |> U.get_return_vc_combinator in
-  let wp = mk_Tm_app
-    (inst_effect_fun_with [u_a] env ed ret_wp)
-    [S.as_arg a; S.as_arg e]
-    r in
-  mk_comp ed u_a a wp [RETURN]
-
+= let c =
+    if not <| Env.lid_exists env C.effect_GTot_lid //we're still in prims, not yet having fully defined the primitive effects
+    then mk_Total a
+    else if U.is_unit a
+    then S.mk_Total' a (Some U_zero)
+    else let wp =
+           if env.lax
+           && Options.ml_ish() //NS: Disabling this optimization temporarily
+           then S.tun
+           else let ret_wp = ed |> U.get_return_vc_combinator in
+                N.normalize [Env.Beta; Env.NoFullNorm] env
+                            (mk_Tm_app (inst_effect_fun_with [u_a] env ed ret_wp)
+                                       [S.as_arg a; S.as_arg e]
+                                       e.pos) in
+         mk_comp ed u_a a wp [RETURN]
+  in
+  if debug env <| Options.Other "Return"
+  then BU.print3 "(%s) returning %s at comp type %s\n"
+                    (Range.string_of_range e.pos)
+                    (P.term_to_string e)
+                    (N.comp_to_string env c);
+  c
 
 (*
  * Build the M.return comp for an indexed effect
@@ -582,36 +597,15 @@ let should_return env eopt lc =
        | _ -> true)                              &&
      not (should_not_inline_lc lc)                   //condition (d)
 
-let return_value env u_t_opt t v =
-  let c =
-    if not <| Env.lid_exists env C.effect_GTot_lid //we're still in prims, not yet having fully defined the primitive effects
-    then mk_Total t
-    else if U.is_unit t
-    then S.mk_Total' t (Some U_zero)
-    else let m = Env.get_effect_decl env C.effect_PURE_lid in //if Tot isn't fully defined in prims yet, then just return (Total t)
-         let u_t =
-             match u_t_opt with
-             | None -> env.universe_of env t
-             | Some u_t -> u_t
-         in
-         let wp =
-            if env.lax
-            && Options.ml_ish() //NS: Disabling this optimization temporarily
-            then S.tun
-            else let ret_wp = m |> U.get_return_vc_combinator in
-                 N.normalize [Env.Beta; Env.NoFullNorm]
-                            env
-                            (mk_Tm_app (inst_effect_fun_with [u_t] env m ret_wp)
-                                       [S.as_arg t; S.as_arg v]
-                                       v.pos) in
-         mk_comp m u_t t wp [RETURN]
-  in
-  if debug env <| Options.Other "Return"
-  then BU.print3 "(%s) returning %s at comp type %s\n"
-                    (Range.string_of_range v.pos)
-                    (P.term_to_string v)
-                    (N.comp_to_string env c);
-  c
+(*
+ * Return a value in eff_lid
+ *)
+let return_value env eff_lid u_t_opt t v =
+  let u =
+    match u_t_opt with
+    | None -> env.universe_of env t
+    | Some u -> u in
+  mk_return env (Env.get_effect_decl env eff_lid) u t v v.pos
 
 (* private *)
 
@@ -1315,26 +1309,28 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
           | None -> env.universe_of env (U.comp_result c)
       in
       if U.is_tot_or_gtot_comp c
-      then //insert a return
-           let retc = return_value env (Some u_t) (U.comp_result c) e in
+      then //AR: insert a PURE.return, we are in Tot or GTot c
+           let retc, g_retc = return_value env C.effect_PURE_lid
+             (Some u_t) (U.comp_result c) e in
+           let g_c = Env.conj_guard g_c g_retc in
            if not (U.is_pure_comp c) //it started in GTot, so it should end up in Ghost
            then let retc = U.comp_to_comp_typ retc in
                 let retc = {retc with effect_name=C.effect_GHOST_lid; flags=flags} in
                 S.mk_Comp retc, g_c
            else U.comp_set_flags retc flags, g_c
-       else //augment c's post-condition with a return
+       else //AR: augment c's post-condition with a M.return, where M is c's effect
             let c = Env.unfold_effect_abbrev env c in
             let t = c.result_typ in
             let c = mk_Comp c in
             let x = S.new_bv (Some t.pos) t in
             let xexp = S.bv_to_name x in
-            let ret =
-                TcComm.lcomp_of_comp
-                <| U.comp_set_flags (return_value env (Some u_t) t xexp) [PARTIAL_RETURN] in
+            let ret, g_ret = return_value env (c |> U.comp_effect_name) (Some u_t) t xexp in
+            let ret = TcComm.lcomp_of_comp <| U.comp_set_flags ret [PARTIAL_RETURN] in
             let eq = U.mk_eq2 u_t t xexp e in
             let eq_ret = weaken_precondition env ret (NonTrivial eq) in
+            //AR: this bind is now an M_M bind
             let bind_c, g_bind = TcComm.lcomp_comp (bind e.pos env None (TcComm.lcomp_of_comp c) (Some x, eq_ret)) in
-            U.comp_set_flags bind_c flags, Env.conj_guard g_c g_bind
+            U.comp_set_flags bind_c flags, Env.conj_guards [g_c; g_ret; g_bind]
   in
   if not should_return then lc
   else TcComm.mk_lcomp lc.eff_name lc.res_typ flags refine
@@ -1916,13 +1912,16 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
               //we are not inlining e, rather just adding (fun (x:res_t) -> p x) at the end
               if is_res_t_refinement then
                 let x = S.new_bv (Some res_t.pos) res_t in
-                let cret = return_value env (comp_univ_opt c) res_t (S.bv_to_name x) in
+                //AR: build M.return, where M is c's effect
+                let cret, gret = return_value env (c |> U.comp_effect_name |> Env.norm_eff_name env)
+                  (comp_univ_opt c) res_t (S.bv_to_name x) in
+                  //AR: an M_M bind
                 let lc = bind e.pos env (Some e) (TcComm.lcomp_of_comp c) (Some x, TcComm.lcomp_of_comp cret) in
                 if Env.debug env <| Options.Extreme
                 then BU.print4 "weaken_result_type::strengthen_trivial: inserting a return for e: %s, c: %s, t: %s, and then post return lc: %s\n"
                                (Print.term_to_string e) (Print.comp_to_string c) (Print.term_to_string t) (TcComm.lcomp_to_string lc);
                 let c, g_lc = TcComm.lcomp_comp lc in
-                set_result_typ c, Env.conj_guard g_c g_lc
+                set_result_typ c, Env.conj_guards [g_c; gret; g_lc]
               else begin
                 if Env.debug env <| Options.Extreme
                 then BU.print2 "weaken_result_type::strengthen_trivial: res_t:%s is not a refinement, leaving c:%s as is\n"
@@ -1961,24 +1960,28 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                           let u_t_opt = comp_univ_opt c in
                           let x = S.new_bv (Some t.pos) t in
                           let xexp = S.bv_to_name x in
-                          let cret = return_value env u_t_opt t xexp in
+                          //AR: M.return
+                          let cret, gret = return_value env
+                            (c |> U.comp_effect_name |> Env.norm_eff_name env)
+                            u_t_opt t xexp in
                           let guard = if apply_guard
                                       then mk_Tm_app f [S.as_arg xexp] f.pos
                                       else f
                           in
                           let eq_ret, _trivial_so_ok_to_discard =
                               strengthen_precondition (Some <| Err.subtyping_failed env lc.res_typ t)
-                                                      (Env.set_range env e.pos)
+                                                      (Env.set_range (Env.push_bvs env [x]) e.pos)
                                                       e  //use e for debugging only
                                                       (TcComm.lcomp_of_comp cret)
                                                       (guard_of_guard_formula <| NonTrivial guard)
                           in
                           let x = {x with sort=lc.res_typ} in
+                          //AR: M_M bind
                           let c = bind e.pos env (Some e) (TcComm.lcomp_of_comp c) (Some x, eq_ret) in
                           let c, g_lc = TcComm.lcomp_comp c in
                           if Env.debug env <| Options.Extreme
                           then BU.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
-                          c, Env.conj_guard g_c g_lc
+                          c, Env.conj_guards [g_c; gret; g_lc]
                 end
           in
           let flags = lc.cflags |> List.collect (function
