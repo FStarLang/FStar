@@ -2681,9 +2681,8 @@ let (assume_result_eq_pure_term_in_m :
         fun lc ->
           let m =
             let uu____7084 =
-              ((FStar_All.pipe_right m_opt FStar_Util.is_none) ||
-                 (FStar_Options.ml_ish ()))
-                || (is_ghost_effect env lc.FStar_TypeChecker_Common.eff_name) in
+              (FStar_All.pipe_right m_opt FStar_Util.is_none) ||
+                (is_ghost_effect env lc.FStar_TypeChecker_Common.eff_name) in
             if uu____7084
             then FStar_Parser_Const.effect_PURE_lid
             else FStar_All.pipe_right m_opt FStar_Util.must in

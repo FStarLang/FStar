@@ -1255,7 +1255,7 @@ let assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (lc:lcom
    * AR: m is the effect that we are going to do return in
    *)
   let m =
-    if m_opt |> is_none || Options.ml_ish () || is_ghost_effect env lc.eff_name
+    if m_opt |> is_none || is_ghost_effect env lc.eff_name
     then C.effect_PURE_lid
     else m_opt |> must in
 
