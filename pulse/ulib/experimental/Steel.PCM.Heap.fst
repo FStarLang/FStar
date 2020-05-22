@@ -36,6 +36,8 @@ let addr = nat
 /// with a freshness counter, a lock store etc.
 let heap : Type u#(a + 1) = addr ^-> option (cell u#a)
 
+let empty_heap : heap = F.on _ (fun _ -> None)
+
 let contains_addr (m:heap) (a:addr)
   : bool
   = Some? (m a)
@@ -375,11 +377,11 @@ let intro_pts_to (#a:_) (#pcm:pcm a) (x:ref a pcm) (v:a) (m:heap)
   = ()
 
 
-let pts_to_compatible (#a:Type u#a)
-                      (#pcm:_)
-                      (x:ref a pcm)
-                      (v0 v1:a)
-                      (m:heap u#a)
+let pts_to_compatible_fwd (#a:Type u#a)
+                          (#pcm:_)
+                          (x:ref a pcm)
+                          (v0 v1:a)
+                          (m:heap u#a)
   : Lemma
     (requires
       interp (pts_to x v0 `star` pts_to x v1) m)
@@ -439,6 +441,71 @@ let pts_to_compatible (#a:Type u#a)
               pts_to_cell pcm v0 c0 /\
               pts_to_cell pcm v1 c1 /\
               c == join_cells c0 c1)
+
+let pts_to_compatible_bk (#a:Type u#a)
+                          (#pcm:_)
+                          (x:ref a pcm)
+                          (v0 v1:a)
+                          (m:heap u#a)
+  : Lemma
+    (requires
+      composable pcm v0 v1 /\
+      interp (pts_to x (op pcm v0 v1)) m)
+    (ensures
+      interp (pts_to x v0 `star` pts_to x v1) m)
+  = let c = select_addr m x in
+    let Ref _ _ v = select_addr m x in
+    let v01 = (op pcm v0 v1) in
+    assert (pts_to_cell pcm v01 c);
+    let Ref _ _ v = c in
+    assert (compatible pcm v01 v);
+    let aux frame
+      : Lemma
+        (requires
+           composable pcm v01 frame /\
+           op pcm frame v01 == v)
+        (ensures
+           exists m0 m1.
+             interp (pts_to x v0) m0 /\
+             interp (pts_to x v1) m1 /\
+             disjoint m0 m1 /\
+             m `mem_equiv` join m0 m1)
+        [SMTPat (composable pcm v01 frame)]
+      = let c0 = Ref a pcm v0 in
+        pcm.Steel.PCM.assoc_r v0 v1 frame;
+        let c1 : cell = Ref a pcm (op pcm v1 frame) in
+        compatible_refl pcm v0;
+        assert (pts_to_cell pcm v0 c0);
+        pcm.Steel.PCM.comm v1 frame;
+        assert (compatible pcm v1 (op pcm v1 frame));
+        assert (pts_to_cell pcm v1 c1);
+        assert (disjoint_cells c0 c1);
+        calc (==) {
+          (v0 `op pcm` (v1 `op pcm` frame));
+            (==) {
+                   pcm.Steel.PCM.assoc v0 v1 frame;
+                   pcm.Steel.PCM.comm v01 frame
+                 }
+          (frame `op pcm` v01);
+        };
+        assert (c == join_cells c0 c1);
+        let m0 = update_addr empty_heap x c0 in
+        let m1 = update_addr m x c1 in
+        assert (disjoint m0 m1) //fire the existential
+    in
+    ()
+
+let pts_to_compatible (#a:Type u#a)
+                      (#pcm:_)
+                      (x:ref a pcm)
+                      (v0 v1:a)
+                      (m:heap u#a) =
+    FStar.Classical.forall_intro (FStar.Classical.move_requires (pts_to_compatible_fwd x v0 v1));
+    FStar.Classical.forall_intro (FStar.Classical.move_requires (pts_to_compatible_bk x v0 v1))
+
+let pts_to_compatible_equiv (#a:Type) (#pcm:_) (x:ref a pcm) (v0:a) (v1:a{composable pcm v0 v1})
+  = FStar.Classical.forall_intro (pts_to_compatible x v0 v1)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
@@ -792,6 +859,31 @@ let free_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a{exclusive
   : action (pts_to r v0) unit (fun _ -> pts_to r pcm.Steel.PCM.p.one)
   = Steel.PCM.exclusive_is_frame_preserving pcm v0;
     upd_action r v0 pcm.Steel.PCM.p.one
+
+////////////////////////////////////////////////////////////////////////////////
+let split_action #a #pcm r v0 v1
+  = let g : refined_pre_action (pts_to r (v0 `op pcm` v1))
+                               unit
+                               (fun _ -> pts_to r v0 `star` pts_to r v1)
+      = fun m ->
+          pts_to_compatible_bk r v0 v1 m;
+          pts_to_compatible_equiv r v0 v1;
+          (| (), m |)
+    in
+    refined_pre_action_as_action g
+
+////////////////////////////////////////////////////////////////////////////////
+let gather_action #a #pcm r v0 v1
+  = let g : refined_pre_action (pts_to r v0 `star` pts_to r v1)
+                               (_:unit{composable pcm v0 v1})
+                               (fun _ -> pts_to r (v0 `op pcm` v1))
+
+      = fun m ->
+          pts_to_compatible_fwd r v0 v1 m;
+          pts_to_compatible_equiv r v0 v1;
+          (| (), m |)
+    in
+    refined_pre_action_as_action g
 
 ////////////////////////////////////////////////////////////////////////////////
 #push-options "--z3rlimit 20"
