@@ -75,15 +75,6 @@ let read r =
   let x = H.read r in
   Basics.return (U.downgrade_val x)
 
-// let h_exists #a (p:a -> slprop) =
-//   h_forall #slprop (fun (q:slprop) ->
-//   h_forall (fun (x:a) -> p x `wand` q) `wand` q)
-
-// val elim_h_exists (#a:_) (p:a -> slprop) (q:slprop)
-//   : SteelT unit (h_exists p)
-//                 (fun _ -> h_forall (fun (x:a) -> p x `wand` q) `wand` q)
-
-
 let read_refine #a #p q r =
   Basics.h_assert (h_exists (fun (v:a) -> pts_to r p v `star` q v));
   lift_h_exists (fun (v:a) -> pts_to r p v `star` q v);
@@ -102,7 +93,19 @@ let free x = H.free x
 
 let share r = H.share r
 
-let gather r = H.gather r
+let hide_raise_reveal (#a:Type) (v0:erased a) (v1:erased a)
+  : Lemma (hide (U.raise_val (reveal v0)) == hide (U.raise_val (reveal v1)) <==>
+           v0 == v1)
+           [SMTPat (hide (U.raise_val (reveal v0)));
+            SMTPat (hide (U.raise_val (reveal v1)))]
+  = let u0 = hide (U.raise_val (reveal v0)) in
+    let u1 = hide (U.raise_val (reveal v1)) in
+    assert (U.downgrade_val (U.raise_val (reveal v0)) == U.downgrade_val (U.raise_val (reveal v1)) <==>
+            v0 == v1)
+
+let gather #a #uses #p0 #p1 #v0 #v1 r = 
+  let x = H.gather r in
+  A.return_atomic x
 
 let ghost_read_refine #a #uses #p r q =
   A.h_assert_atomic (h_exists (fun (v:a) -> pts_to r p v `star` q v));
