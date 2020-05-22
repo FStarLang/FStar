@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <!-- Path where extracted fs files should be written by default -->
+        <FSTAR_EXTRACTED_PATH Condition=" '$(FSTAR_EXTRACTED_PATH)' == '' ">$(IntermediateOutputPath)extracted</FSTAR_EXTRACTED_PATH>
+        <!-- # 271: theory symbols in smt patters -->
+        <FSTAR_WARN_ERROR Condition=" '$(FSTAR_WARN_ERROR)' == '' ">--warn_error -271</FSTAR_WARN_ERROR>
+        <FSTAR_EXTRACTION_FLAGS Condition=" '$(FSTAR_EXTRACTION_FLAGS)' == '' ">--odir $(FSTAR_EXTRACTED_PATH) --codegen FSharp</FSTAR_EXTRACTION_FLAGS>
+        <!-- If FSTAR_HOME is not defined then assume that fstar.exe is available on the path -->
+        <FSTAR_EXE Condition="'$(FSTAR_HOME)' == ''">fstar.exe</FSTAR_EXE>
+        <FSTAR_EXE>$(FSTAR_HOME)\bin\fstar.exe</FSTAR_EXE>
+    </PropertyGroup>
+
+    <Target Name="GenerateFSharpSources" BeforeTargets="BeforeBuild;BeforeRebuild">
+        <!--
+            Assumptions:
+                - FSTAR property is defined
+
+            Entry points:
+                - FStarSourceFile items will be used to pass top-level fst files to FSTAR during extraction
+                - FSTAR_FLAGS property will be used to pass non-standard flags to FSTAR during extraction
+                
+            Outputs:
+                - Generated *.fs files will be stored in EXTRACTED_PATH and added to Compile item
+                - Generated *.fs files will also be added to the list of files removed by Clean target
+        -->
+
+        <!-- Make sure the FSTAR_EXTRACTED_PATH directory exists before extraction -->
+        <MakeDir Directories="$(FSTAR_EXTRACTED_PATH)" Condition="!Exists('$(FSTAR_EXTRACTED_PATH)')" />
+        <Exec Command="$(FSTAR_EXE) $(FSTAR_WARN_ERROR) $(FSTAR_EXTRACTION_FLAGS) $(FSTAR_FLAGS) @(FStarSourceFile, ' ')"></Exec>
+
+        <ItemGroup>
+            <GeneratedFiles Include="$(FSTAR_EXTRACTED_PATH)\*.fs" />
+        </ItemGroup>
+
+        <Message Text="Extracted fs files: @(GeneratedFiles)" />
+
+        <ItemGroup>
+            <Compile Include="@(GeneratedFiles)" />
+            <!-- To make Clean target work -->
+            <FileWrites Include="@(GeneratedFiles)" />
+        </ItemGroup>
+
+        <Message Text="Extracted files included in the compilation: @(Compile)" />
+    </Target>
+
+    <Target Name="FStarDependencyAnalysis" BeforeTargets="GenerateFSharpSources">
+        <!--
+            Assumptions:
+                - FSTAR property is defined
+
+            Entry points:
+                - FStarSourceFile items followed by FStarInterfaceFile items will be used for dependency analysis
+                - FSTAR_FLAGS property will be used to pass non-standard flags to FSTAR during dependency analysis
+                - FSTAR_EXTRACT property will be used to pass a list of modules to extract option
+                
+            Outputs:
+                - Generates .depend.extract file with a list of *.fs files to be generated in the order in which they should be compiled
+                - TODO: Add note on .cache and .cache.lax directories ...
+        -->
+
+        <PropertyGroup>
+            <FSTAR_DEPENDENCY_OUTPUT_PATH Condition=" '$(FSTAR_DEPENDENCY_OUTPUT_PATH)' == '' ">$(IntermediateOutputPath).depend.extract</FSTAR_DEPENDENCY_OUTPUT_PATH>
+            <FSTAR_DEPENDENCY_ANALYSIS_FLAGS Condition=" '$(FSTAR_DEPENDENCY_ANALYSIS_FLAGS)' == '' ">--odir $(FSTAR_EXTRACTED_PATH) --dep full</FSTAR_DEPENDENCY_ANALYSIS_FLAGS>
+        </PropertyGroup>
+
+        <!-- Make sure the FSTAR_EXTRACTED_PATH directory exists before dependency analysis -->
+        <MakeDir Directories="$(FSTAR_EXTRACTED_PATH)" Condition="!Exists('$(FSTAR_EXTRACTED_PATH)')" />
+        <Exec Command="$(FSTAR_EXE) $(FSTAR_WARN_ERROR) $(FSTAR_DEPENDENCY_ANALYSIS_FLAGS) $(FSTAR_FLAGS) $(FSTAR_EXTRACT) @(FStarSourceFile, ' ') @(FStarInterfaceFile, ' ') > $(FSTAR_DEPENDENCY_OUTPUT_PATH)"></Exec>
+
+        <ItemGroup>
+            <FilesToCleanUp Include="$(FSTAR_DEPENDENCY_OUTPUT_PATH)" />
+            <FilesToCleanUp Condition="!Exists('$(FSTAR_LAX_CACHE_PATH)')" Include="$(FSTAR_LAX_CACHE_PATH)\*.checked.lax" />
+        </ItemGroup>
+
+        <ItemGroup>
+            <!-- To make Clean target work -->
+            <FileWrites Include="@(FilesToCleanUp)" />
+        </ItemGroup>
+    </Target>
+</Project>

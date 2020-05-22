@@ -1,5 +1,5 @@
 #light "off"
-module FStar.ST
+module FStar_ST
   type 'a __ref = 'a ref
   type 'a ref = 'a __ref
   let read x = !x

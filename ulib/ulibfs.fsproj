@@ -41,18 +41,39 @@
     <FSharpTargetsPath>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets</FSharpTargetsPath>
   </PropertyGroup>
   <Import Project="$(FSharpTargetsPath)" />
+  <PropertyGroup>
+    <FSTAR_HOME>..</FSTAR_HOME>
+    <!-- TODO: Should we exclude FStar.Pervasives here? We don't want to rely on copying an already extracted module available from compiler compilation as compiler code was extracted to ocaml -->
+    <FSTAR_EXTRACT>--extract "-Prims +FStar +LowStar +Steel -FStar.Tactics -FStar.Reflection -Steel.Tactics -FStar.All -FStar.BaseTypes -FStar.Buffer -FStar.Bytes -FStar.Char -FStar.CommonST -FStar.Constructive -FStar.Dyn -FStar.Float -FStar.Ghost -FStar.Heap -FStar.Monotonic.Heap -FStar.HyperStack.All -FStar.HyperStack.ST -FStar.HyperStack.IO -FStar.Int16 -FStar.Int32 -FStar.Int64 -FStar.Int8 -FStar.IO -FStar.List -FStar.List.Tot.Base -FStar.Mul -FStar.Option -FStar.Pervasives.Native -FStar.Set -FStar.ST -FStar.Exn -FStar.String -FStar.UInt16 -FStar.UInt32 -FStar.UInt64 -FStar.UInt8 -FStar.Pointer.Derived1 -FStar.Pointer.Derived2 -FStar.Pointer.Derived3 -FStar.BufferNG -FStar.Tactics.Builtins -FStar.TaggedUnion -FStar.Reflection.Types -FStar.Reflection.Builtins -FStar.Reflection.Data -FStar.Tactics.Result -FStar.Tactics.Types -FStar.Bytes -FStar.Util -FStar.Pervasives -FStar.Order -FStar.Range -FStar.Vector.Base -FStar.Vector.Properties -FStar.Vector -FStar.TSet -FStar.Printf -LowStar.Printf +FStar.List.Tot.Properties +FStar.Int.Cast.Full -Steel.Memory -Steel.Actions -Steel.Semantics"</FSTAR_EXTRACT>
+    <!-- Path where cached lax files should be written by default -->
+    <FSTAR_LAX_CACHE_PATH Condition=" '$(FSTAR_LAX_CACHE_PATH)' == '' ">$(IntermediateOutputPath).cache.lax</FSTAR_LAX_CACHE_PATH>
+    <!-- Custom FStar flags used in this project -->
+    <FSTAR_FLAGS>--use_hints --lax --cache_checked_modules --use_extracted_interfaces false --cache_dir $(FSTAR_LAX_CACHE_PATH)</FSTAR_FLAGS>
+  </PropertyGroup>
+  <Import Project="$(FSTAR_HOME)\fsharp.extraction.targets" />
   <ItemGroup>
-    <Compile Include="prims.fs" />
-    <Compile Include="st.fs" />
-    <Compile Include="all.fs" />
-    <Compile Include="io.fs" />
+    <!-- NOTE: Those realized files do not rely on extracted files from ulib library, so
+               it doesn't matter if we include them before or after the generated files. 
+               Currently, they will be added at the beginning of the list.
+               
+               However, we might need to reconsider this in case we run into a realized file
+               that has a dependency on extracted file. Then we should make sure that realized files
+               are added at the end. -->
+    <Compile Include="fs\prims.fs" />
+    <Compile Include="fs\FStar_ST.fs" />
+    <Compile Include="fs\FStar_All.fs" />
+    <Compile Include="fs\FStar_IO.fs" />
+
+    <FStarSourceFile Include="FStar.Pervasives.fst" />
+    <FStarInterfaceFile Include="FStar.Pervasives.fsti" />
+
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Compatibility.OCaml">
-      <HintPath>..\..\src\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
+      <HintPath>..\src\VS\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
     </Reference>
     <Reference Include="FSharp.Core">
-      <HintPath>..\..\src\VS\packages\FSharp.Core.4.1.18\lib\net45\FSharp.Core.dll</HintPath>
+      <HintPath>..\src\VS\packages\FSharp.Core.4.1.18\lib\net45\FSharp.Core.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />

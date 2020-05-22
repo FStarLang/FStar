@@ -320,15 +320,9 @@ let resugar_mlty t = match t with
         | _ -> t
       end
     | _ -> t
-
-let flatten_ns ns =
-    if codegen_fsharp()
-    then String.concat "." ns
-    else String.concat "_" ns
-let flatten_mlpath (ns, n) =
-    if codegen_fsharp()
-    then String.concat "." (ns@[n])
-    else String.concat "_" (ns@[n])
+    
+let flatten_ns ns = String.concat "_" ns
+let flatten_mlpath (ns, n) = String.concat "_" (ns@[n])
 let ml_module_name_of_lid (l:lident) =
   let mlp = l |> ns_of_lid |> List.map string_of_id,  string_of_id (ident_of_lid l) in
   flatten_mlpath mlp
