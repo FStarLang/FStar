@@ -79,7 +79,7 @@ val cas_frame
   : SteelAtomic
     (b:bool{b <==> (Ghost.reveal v == v_old)})
     uses
-    false
+    observable
     (pts_to r full_perm v `star` frame)
     (fun b -> (if b then pts_to r full_perm v_new else pts_to r full_perm v) `star` frame)
 let cas_frame #t #uses r v v_old v_new frame =
