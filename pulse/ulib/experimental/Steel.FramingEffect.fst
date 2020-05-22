@@ -1,4 +1,24 @@
-module Steel.Effects2
+(*
+   Copyright 2020 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+
+/// An experimental effect for Steel that does framing in binds
+
+
+module Steel.FramingEffect
 
 module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.Memory
@@ -8,6 +28,8 @@ open Steel.Memory
 open Steel.Semantics.Instantiate
 
 module Ins = Steel.Semantics.Instantiate
+
+#set-options "--warn_error -330"  //turn off the experimental feature warning
 
 let join_preserves_interp (hp:hprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
 : Lemma
@@ -110,10 +132,7 @@ unfold
 let return_ens (a:Type) (x:a) (p:a -> hprop u#1) : ens_t (p x) a p = fun _ r _ -> r == x
 
 (*
- * Return is parametric in post
- * We rarely (never?) use M.return, but we will use it to define a ret
- *   function in the effect, that will be used to get around the scoping issues
- *   (cf. return-scoping.txt)
+ * Return is parametric in post (cf. return-scoping.txt)
  *)
 let return (a:Type) (x:a) (#[@@ framing_implicit] p:a -> hprop)
 : repr a (p x) p (return_req (p x)) (return_ens a x p)
@@ -465,36 +484,6 @@ polymonadic_bind (PURE, Steel) |> Steel = bind_pure_steel_
 
 
 (*
- * How we would like to see the Steel(F)/PURE bind
- *)
-
-unfold
-let bind_steel__pure_req (#a:Type) (#pre:pre_t) (#post:post_t a) (req:req_t pre) (ens:ens_t pre a post)
-  (#b:Type) (wp:a -> pure_wp b)
-: req_t pre
-= fun m0 -> req m0 /\ (forall (x:a) (m1:hmem (post x)). ens m0 x m1 ==> as_requires (wp x))
-
-// unfold
-// let bind_steel__pure_ens (#a:Type) (#pre:pre_t) (#post:post_t a) (req:req_t pre) (ens:ens_t pre a post)
-//   (#b:Type) (wp:a -> pure_wp b) (f:(x:a -> unit -> PURE b (wp x)))
-// : ens_t pre b (fun _ -> post)
-// = fun m0 r m1 ->
-
-
-
-(*
-//  * No Steel(F), PURE bind
-//  *
-//  * Use the steel_ret function below to return the PURE computation
-//  *
-//  * Note it is in SteelF (i.e. framed already)
-//  *)
-let steel_ret (#a:Type) (#[@@ framing_implicit] p:a -> hprop u#1) (x:a)
-: SteelF a (p x) p (fun _ -> True) (fun _ r _ -> r == x)
-= SteelF?.reflect (fun _ -> x)
-
-
-(*
 //  * subcomp relation from SteelF to Steel
 //  *)
 
@@ -507,3 +496,36 @@ polymonadic_subcomp SteelF <: Steel = subcomp
 
 effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
   Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
+
+
+//scratch space
+
+
+// (*
+//  * How we would like to see the Steel(F)/PURE bind
+//  *)
+
+// unfold
+// let bind_steel__pure_req (#a:Type) (#pre:pre_t) (#post:post_t a) (req:req_t pre) (ens:ens_t pre a post)
+//   (#b:Type) (wp:a -> pure_wp b)
+// : req_t pre
+// = fun m0 -> req m0 /\ (forall (x:a) (m1:hmem (post x)). ens m0 x m1 ==> as_requires (wp x))
+
+// // unfold
+// // let bind_steel__pure_ens (#a:Type) (#pre:pre_t) (#post:post_t a) (req:req_t pre) (ens:ens_t pre a post)
+// //   (#b:Type) (wp:a -> pure_wp b) (f:(x:a -> unit -> PURE b (wp x)))
+// // : ens_t pre b (fun _ -> post)
+// // = fun m0 r m1 ->
+
+
+
+// (*
+// //  * No Steel(F), PURE bind
+// //  *
+// //  * Use the steel_ret function below to return the PURE computation
+// //  *
+// //  * Note it is in SteelF (i.e. framed already)
+// //  *)
+// let steel_ret (#a:Type) (#[@@ framing_implicit] p:a -> hprop u#1) (x:a)
+// : SteelF a (p x) p (fun _ -> True) (fun _ r _ -> r == x)
+// = SteelF?.reflect (fun _ -> x)
