@@ -65,16 +65,22 @@ let lift_h_exists (#a:_) (p:a -> slprop)
                 (fun _ -> h_exists #(U.raise_t a) (lift_q p))
   = sl_admit _
 
+let h_exists_cong (#a:_) (p:a -> slprop) (q:a -> slprop {forall x. equiv (p x) (q x) })
+  : SteelT unit (h_exists p)
+                (fun _ -> h_exists q)
+  = sl_admit _
+
 let read_refine #a #p q r =
   Basics.h_assert (h_exists (fun (v:a) -> pts_to r p v `star` q v));
   lift_h_exists (fun (v:a) -> pts_to r p v `star` q v);
   Basics.h_assert (h_exists (fun (v:U.raise_t a) -> pts_to r p (U.downgrade_val v) `star` q (U.downgrade_val v)));
-  sl_admit (fun _ -> h_exists (fun (v:U.raise_t a) -> H.pts_to r p v `star` lift_q q v));
+  h_exists_cong (fun (v:U.raise_t a) -> pts_to r p (U.downgrade_val v) `star` q (U.downgrade_val v))
+                (fun (v:U.raise_t a) -> H.pts_to r p v `star` lift_q q v);
+  Basics.h_assert (h_exists (fun (v:U.raise_t a) -> H.pts_to r p v `star` lift_q q v));
   let x = H.read_refine (lift_q q) r in
   Basics.h_assert (H.pts_to r p x `star` lift_q q x);
   Basics.h_assert (pts_to r p (U.downgrade_val x) `star` q (U.downgrade_val x));
   Basics.return (U.downgrade_val x)
-
 
 let write r x = H.write r (U.raise_val x)
 

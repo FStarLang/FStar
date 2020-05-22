@@ -18,6 +18,14 @@ module Steel.PCM.Effect.Atomic
 open Steel.PCM
 open Steel.PCM.Memory
 
+let observability = bool
+
+#push-options "--query_stats" //crappy workaround
+let has_eq_observability () = ()
+#pop-options
+let observable = true
+let unobservable = false
+
 let atomic_repr a opened_invariants f pre post =
     action_except a opened_invariants pre post
 

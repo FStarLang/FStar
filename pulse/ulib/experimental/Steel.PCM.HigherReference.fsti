@@ -52,7 +52,7 @@ val gather (#a:Type) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
     (fun _ -> pts_to r (sum_perm p0 p1) v0)
 
 val ghost_read_refine (#a:Type) (#uses:inames) (#p:perm) (r:ref a) (q:a -> slprop)
-  : SteelAtomic a uses true
+  : SteelAtomic a uses unobservable
     (h_exists (fun (v:a) -> pts_to r p v `star` q v))
     (fun v -> pts_to r p v `star` q v)
 

@@ -24,12 +24,14 @@ open Steel.PCM
 open Steel.PCM.FractionalPermission
 
 let fractional (a:Type u#1) = option (a & perm)
+#push-options "--query_stats"
 let composable #a : symrel (fractional a) =
   fun (f0 f1:fractional a) ->
     match f0, f1 with
     | None, _
     | _, None -> True
     | Some (x0, p0), Some (x1, p1) -> x0==x1 /\ (sum_perm p0 p1).v <=. 1.0R
+#pop-options
 let compose #a (f0:fractional a) (f1:fractional a{composable f0 f1}) : fractional a =
   match f0, f1 with
   | None, f
@@ -126,6 +128,6 @@ let gather (#a:Type) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a) =
 
 assume
 val atomic_admit (#a:_) (#uses:_) (#p:_) (q:a -> slprop)
-  : SteelAtomic a uses true p q
+  : SteelAtomic a uses unobservable p q
 
 let ghost_read_refine (#a:Type) (#uses:inames) (#p:perm) (r:ref a) (q:a -> slprop) = atomic_admit _

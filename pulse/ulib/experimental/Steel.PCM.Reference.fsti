@@ -57,7 +57,7 @@ val gather (#a:Type0) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
 
 val ghost_read_refine (#a:Type0) (#uses:inames) (#p:perm) (r:ref a)
                       (q:a -> slprop)
-  : SteelAtomic a uses true
+  : SteelAtomic a uses unobservable
     (h_exists (fun (v:a) -> pts_to r p v `star` q v))
     (fun v -> pts_to r p v `star` q v)
 
@@ -70,7 +70,7 @@ val cas (#t:eqtype)
   : SteelAtomic
         (b:bool{b <==> (Ghost.reveal v == v_old)})
         uses
-        false
+        observable
         (pts_to r full_perm v)
         (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
 
