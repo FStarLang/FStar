@@ -1235,6 +1235,7 @@ let weaken_guard g1 g2 = match g1, g2 with
       NonTrivial g
     | _ -> g2
 
+
 (*
  * e has type lc, and lc is either pure or ghost
  * This function inserts a return (x==e) in lc
@@ -1249,13 +1250,7 @@ let weaken_guard g1 g2 = match g1, g2 with
  *
  * This forces the lcomp thunk and recreates it to keep the callers same
  *)
-let maybe_assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (lc:lcomp) : lcomp =
-  let should_return =
-      not (env.lax)
-   && Env.lid_exists env C.effect_GTot_lid //we're not too early in prims
-   && should_return env (Some e) lc
-   && not (TcComm.is_lcomp_partial_return lc)
-  in
+let assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (lc:lcomp) : lcomp =
   (*
    * AR: m is the effect that we are going to do return in
    *)
@@ -1263,13 +1258,10 @@ let maybe_assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (l
     if m_opt |> is_none || Options.ml_ish () || is_ghost_effect env lc.eff_name
     then C.effect_PURE_lid
     else m_opt |> must in
+
   let flags =
-    if should_return
-    then if TcComm.is_total_lcomp lc
-         then RETURN::lc.cflags
-         else PARTIAL_RETURN::lc.cflags
-    else lc.cflags
-  in
+    if TcComm.is_total_lcomp lc then RETURN::lc.cflags else PARTIAL_RETURN::lc.cflags in
+
   let refine () : comp * guard_t =
       let c, g_c = TcComm.lcomp_comp lc in
       let u_t =
@@ -1300,9 +1292,23 @@ let maybe_assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (l
             let bind_c, g_bind = TcComm.lcomp_comp (bind e.pos env None (TcComm.lcomp_of_comp c) (Some x, eq_ret)) in
             U.comp_set_flags bind_c flags, Env.conj_guards [g_c; g_ret; g_bind]
   in
-  if not should_return then lc
+
+  if should_not_inline_lc lc
+  then raise_error (Errors.Fatal_UnexpectedTerm,
+         BU.format1 "assume_result_eq_pure_term cannot inline an non-inlineable lc : %s"
+           (Print.term_to_string e)) e.pos
   else let c, g = refine () in
        TcComm.lcomp_of_comp_guard c g
+
+let maybe_assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (lc:lcomp) : lcomp =
+  let should_return =
+      not (env.lax)
+   && Env.lid_exists env C.effect_GTot_lid //we're not too early in prims
+   && should_return env (Some e) lc
+   && not (TcComm.is_lcomp_partial_return lc)
+  in
+  if not should_return then lc
+  else assume_result_eq_pure_term_in_m env m_opt e lc
 
 let maybe_assume_result_eq_pure_term env e lc =
   maybe_assume_result_eq_pure_term_in_m env None e lc
@@ -1315,19 +1321,24 @@ let maybe_return_e2_and_bind
         (e2:term)
         (x, lc2)
    : lcomp =
+   let env_x =
+     match x with
+     | None -> env
+     | Some x -> Env.push_bv env x in
+
+   //AR: use c1's effect to return c2 into
    let lc2 =
         let eff1 = Env.norm_eff_name env lc1.eff_name in
         let eff2 = Env.norm_eff_name env lc2.eff_name in
-        if (not (is_pure_or_ghost_effect env eff1)
-            || should_not_inline_lc lc1)
-        && is_pure_or_ghost_effect env eff2
-        then
-          let env_x =
-            match x with
-            | None -> env
-            | Some x -> Env.push_bv env x in
-          //AR: use c1's effect to return c2 into
-          maybe_assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
+
+        if lid_equals eff2 C.effect_PURE_lid &&
+           Env.join_opt env eff1 eff2 |> is_none &&
+           Env.exists_polymonadic_bind env eff1 eff2 |> is_none
+        then assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
+        else if (not (is_pure_or_ghost_effect env eff1)
+             ||  should_not_inline_lc lc1)
+             && is_pure_or_ghost_effect env eff2
+        then maybe_assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
         else lc2 in //the resulting computation is still pure/ghost and inlineable; no need to insert a return
    bind r env e1opt lc1 (x, lc2)
 
