@@ -1331,6 +1331,10 @@ let maybe_return_e2_and_bind
         let eff1 = Env.norm_eff_name env lc1.eff_name in
         let eff2 = Env.norm_eff_name env lc2.eff_name in
 
+        (*
+         * AR: If eff1 and eff2 cannot be composed, and eff2 is PURE,
+         *     we must return eff2 into eff1,
+         *)
         if lid_equals eff2 C.effect_PURE_lid &&
            Env.join_opt env eff1 eff2 |> is_none &&
            Env.exists_polymonadic_bind env eff1 eff2 |> is_none
