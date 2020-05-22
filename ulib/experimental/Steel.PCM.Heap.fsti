@@ -224,7 +224,11 @@ val pts_to_compatible
        (composable pcm v0 v1 /\
         interp (pts_to x (op pcm v0 v1)) h))
 
-val pts_to_compatible_equiv (#a:Type) (#pcm:_) (x:ref a pcm) (v0:a) (v1:a{composable pcm v0 v1})
+val pts_to_compatible_equiv (#a:Type)
+                            (#pcm:_)
+                            (x:ref a pcm)
+                            (v0:a)
+                            (v1:a{composable pcm v0 v1})
   : Lemma (equiv (pts_to x v0 `star` pts_to x v1)
                  (pts_to x (op pcm v0 v1)))
 
