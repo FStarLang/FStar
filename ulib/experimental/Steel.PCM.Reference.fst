@@ -104,7 +104,6 @@ let share r = H.share r
 
 let gather r = H.gather r
 
-
 let ghost_read_refine #a #uses #p r q =
   A.h_assert_atomic (h_exists (fun (v:a) -> pts_to r p v `star` q v));
   lift_h_exists_atomic (fun (v:a) -> pts_to r p v `star` q v);
