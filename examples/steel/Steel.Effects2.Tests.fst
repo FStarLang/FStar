@@ -1,13 +1,13 @@
 module Steel.Effects2.Tests
 
 open Steel.Memory
-open Steel.Effects2
+open Steel.FramingEffect
 
 open FStar.Tactics
 
 [@@ resolve_implicits; framing_implicit]
 let resolve_tac () : Tac unit =
-  dump "All goals:";
+  //dump "All goals:";
   admit_all ()
 
 
@@ -19,7 +19,7 @@ assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 
 // #set-options "--debug Steel.Effects2.Tests --debug_level ResolveImplicitsHook --ugly // --print_implicits"
 // #set-options "--debug Steel.Effects2.Tests --debug_level LayeredEffectsEqns --ugly // --debug_level ResolveImplicitsHook --print_implicits --debug_level Extreme // --debug_level Rel --debug_level TwoPhases"
-// let test1 (x:int) : SteelT ref emp ptr = alloc x
+let test1 (x:int) : SteelT ref emp ptr = alloc x
 
 // #set-options "--debug Steel.Effects2.Tests --debug_level Extreme --debug_level Rel --debug_level LayeredEffectsEqns --print_implicits --ugly --debug_level TwoPhases --print_bound_var_types"
 let test2 (r:ref) : SteelT int (ptr r) (fun _ -> ptr r) =
