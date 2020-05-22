@@ -51,7 +51,7 @@ noeq
 type array_struct_descriptor : Type u#(a + 1) =
   | DBase : a: Type u#a -> array_struct_descriptor
   | DArray : cell_descriptor: array_struct_descriptor u#a -> len: SizeT.t -> array_struct_descriptor
-  | DStruct : field_descriptors: (field_id ^-> array_struct_descriptor u#a)
+  | DStruct : field_descriptors: (field_id ^-> option (array_struct_descriptor u#a))
     -> array_struct_descriptor
 
 (**** [arraystruct] values type *)
@@ -65,7 +65,7 @@ let struct_type (field_typs: (field_id -> Type u#a)) : Type u#a = DepMap.t field
 (** Helper function to prove that the recursive call of the next function is decreasing *)
 unfold
 let struct_field_type'
-      (field_descriptors: (field_id ^-> array_struct_descriptor u#a))
+      (field_descriptors: (field_id ^-> option (array_struct_descriptor u#a)))
       (array_struct_type:
           (descriptor: array_struct_descriptor u#a {descriptor << field_descriptors}
               -> Tot (Type u#a)))
@@ -73,7 +73,9 @@ let struct_field_type'
     : Tot (Type u#a) =
   let descr = field_descriptors field in
   FStar.WellFounded.axiom1 field_descriptors field;
-  array_struct_type descr
+  match descr with
+  | None -> Universe.raise_t u#0 u#a unit
+  | Some descr -> array_struct_type descr
 
 (** This functions achives the [descriptor -> Type] correspondence *)
 let rec array_struct_type (descriptor: array_struct_descriptor u#a)
@@ -90,16 +92,18 @@ let rec array_struct_type (descriptor: array_struct_descriptor u#a)
 (** Gets the type of values of the field of a struct *)
 unfold
 let struct_field_type
-      (field_descriptors: (field_id ^-> (array_struct_descriptor u#a)))
+      (field_descriptors: (field_id ^-> option (array_struct_descriptor u#a)))
       (field: field_id)
     : Tot (Type u#a) = struct_field_type' field_descriptors array_struct_type field
 
 (** The type of a struct value is a dependent map *)
-val struct_field_type_unroll_lemma (field_descriptors: (field_id ^-> array_struct_descriptor u#a))
+val struct_field_type_unroll_lemma
+  (field_descriptors: (field_id ^-> option (array_struct_descriptor u#a)))
     : Lemma
       (DependentMap.t u#a field_id (struct_field_type u#a field_descriptors) ==
         array_struct_type u#a (DStruct u#a field_descriptors))
-      [SMTPat (array_struct_type u#a (DStruct u#a field_descriptors))]
+      [SMTPat (DependentMap.t u#a field_id (struct_field_type u#a field_descriptors));
+       SMTPat (array_struct_type u#a (DStruct u#a field_descriptors))]
 
 (**** The main [array_struct] type *)
 
@@ -113,7 +117,7 @@ val struct_field_type_unroll_lemma (field_descriptors: (field_id ^-> array_struc
 *)
 noeq
 type array_struct : Type u#(a + 1) =
-  | ArrayStruct : 
+  | ArrayStruct :
       descriptor: array_struct_descriptor u#a ->
       pcm: unitless_pcm (array_struct_type descriptor) ->
       value: array_struct_type descriptor
@@ -280,10 +284,15 @@ let two_fields_restricted_func
       (#a: Type u#a)
       (field1: string)
       (field2: string{field2 <> field1})
-      (value1 value2 by_default: a)
-    : (field_id ^-> a) =
+      (value1 value2: a)
+    : (field_id ^-> option a) =
   on _
-    (fun field -> if field = field1 then value1 else if field = field2 then value2 else by_default)
+    (fun field -> if field = field1 then
+        Some value1
+      else if field = field2 then
+        Some value2
+      else
+        None)
 
 #push-options "--fuel 2 --ifuel 2"
 let two_fields_dep_map
@@ -299,8 +308,9 @@ let two_fields_dep_map
     (fun field ->
         if field = field1 then value1 else if field = field2 then value2 else by_default field)
 
+#push-options "--ifuel 2 --fuel 2"
 let point_2d:array_struct =
-  let field_descriptors = two_fields_restricted_func "x" "y" (DBase int) (DBase int) (DBase unit) in
+  let field_descriptors = two_fields_restricted_func "x" "y" (DBase int) (DBase int) in
   let field_types:(field_id -> Type0) = struct_field_type field_descriptors in
   let field_pcms:(field: field_id -> unitless_pcm (field_types field)) =
     fun field ->
@@ -311,5 +321,5 @@ let point_2d:array_struct =
   struct_field_type_unroll_lemma field_descriptors;
   ArrayStruct (DStruct field_descriptors)
     (pointwise_struct_pcm field_types field_pcms)
-    (two_fields_dep_map field_types "x" "y" 0 1 (fun _ -> ()))
-
+    (two_fields_dep_map field_types "x" "y" 0 1 (fun _ -> Universe.raise_val u#0 u#0 ()))
+#pop-options

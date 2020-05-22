@@ -121,3 +121,31 @@ let to_full_pcm_with_unit
     );
     is_unit = (fun _ -> ())
   }
+
+(**
+  Two elements [x] and [y] are compatible with respect to a PCM if their substraction
+  is well-defined, e.g. if there exists an element [frame] such that [x * z = y]
+*)
+let compatible (#a: Type u#a) (pcm:unitless_pcm a) (x y:a) =
+  (exists (frame:a).
+    pcm.unitless_p.unitless_composable x frame /\ pcm.unitless_p.unitless_op frame x == y
+  )
+
+(**
+  Helper function to get access to the existentially quantified frame between two compatible
+  elements
+*)
+let compatible_elim
+  (#a: Type u#a) (pcm:unitless_pcm a) (x y:a)
+  (goal: Type)
+  (lemma: (frame: a{
+      pcm.unitless_p.unitless_composable x frame /\ pcm.unitless_p.unitless_op frame x == y
+    }) ->
+    Lemma (goal)
+  )
+    : Lemma (requires (compatible pcm x y)) (ensures (goal))
+  =
+  Classical.exists_elim
+    goal #a #(fun frame ->
+      pcm.unitless_p.unitless_composable x frame /\ pcm.unitless_p.unitless_op frame x == y
+    ) () (fun frame -> lemma frame)

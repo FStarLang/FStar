@@ -26,7 +26,8 @@ module SizeT = Steel.SizeT
 
 #set-options "--fuel 1 --ifuel 1"
 
-let struct_field_type_unroll_lemma (field_descriptors: (field_id ^-> array_struct_descriptor u#a))
+let struct_field_type_unroll_lemma
+  (field_descriptors: (field_id ^-> option (array_struct_descriptor u#a)))
     : Lemma
     (DependentMap.t u#a field_id (struct_field_type u#a field_descriptors) ==
       array_struct_type u#a (DStruct u#a field_descriptors)) =
@@ -181,4 +182,3 @@ let reveal_pointwise_struct_pcm
     (let pcm = pointwise_struct_pcm field_types base_pcms in
       pcm.unitless_p.unitless_composable == composable_struct base_pcms /\
       pcm.unitless_p.unitless_op == compose_struct base_pcms) = ()
-
