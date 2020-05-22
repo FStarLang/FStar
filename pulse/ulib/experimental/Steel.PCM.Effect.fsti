@@ -28,12 +28,12 @@ val join_preserves_interp (hp:slprop) (m0 m1:mem)
     [SMTPat (interp hp (join m0 m1))]
 
 val respects_fp (#fp:slprop) (p: hmem fp -> prop) : prop
-
+#push-options "--query_stats"
 val reveal_respects_fp (#fp:_) (p:hmem fp -> prop)
   : Lemma (respects_fp p <==>
            (forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)))
           [SMTPat (respects_fp #fp p)]
-
+#pop-options
 let fp_mprop (fp:slprop) = p:(hmem fp -> prop) { respects_fp p }
 
 val respects_binary_fp (#a:Type) (#pre:slprop) (#post:a -> slprop)
@@ -325,6 +325,23 @@ val free (#a:Type)
          (r:ref a p)
          (x:Ghost.erased a{Steel.PCM.exclusive p x})
   : SteelT unit (pts_to r x) (fun _ -> pts_to r Steel.PCM.(p.p.one))
+
+val split (#a:Type)
+          (#p:Steel.PCM.pcm a)
+          (r:ref a p)
+          (v0:Ghost.erased a)
+          (v1:Ghost.erased a{Steel.PCM.composable p v0 v1})
+  : SteelT unit (pts_to r (Steel.PCM.op p v0 v1))
+                (fun _ -> pts_to r v0 `star` pts_to r v1)
+
+val gather (#a:Type)
+           (#p:Steel.PCM.pcm a)
+           (r:ref a p)
+           (v0:Ghost.erased a)
+           (v1:Ghost.erased a)
+  : SteelT (_:unit{Steel.PCM.composable p v0 v1})
+           (pts_to r v0 `star` pts_to r v1)
+           (fun _ -> pts_to r (Steel.PCM.op p v0 v1))
 
 val cond (#a:Type)
          (b:bool)

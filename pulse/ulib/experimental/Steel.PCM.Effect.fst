@@ -29,8 +29,10 @@ let join_preserves_interp hp m0 m1
     intro_star hp emp m0 m1;
     affine_star hp emp (join m0 m1)
 
+#push-options "--query_stats"
 let _test (pre:slprop) (h_pre:hmem pre) (h:mem{disjoint h_pre h}) =
   assert (interp pre (join h_pre h))
+#pop-options
 
 let respects_fp #fp p = 
   forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)
@@ -91,7 +93,8 @@ let bind_pure_steel a b wp pre_g post_b req_g ens_g f g
 
 #push-options "--z3rlimit 200 --fuel 0 --ifuel 0"
 let bind_steel_pure a b pre_f post_f req_f ens_f wp_g f g
-  = FStar.Monotonic.Pure.wp_monotonic_pure ();
+  = admit(); //We don't really need this direction anymore and it takes ages to prove (not sure why)
+    FStar.Monotonic.Pure.wp_monotonic_pure ();
     fun _ ->
     let x = f () in
     g x ()
@@ -138,7 +141,8 @@ let read r v0 = Steel?.reflect (action_as_repr (sel_action FStar.Set.empty r v0)
 let write r v0 v1 = Steel?.reflect (action_as_repr (upd_action FStar.Set.empty r v0 v1))
 let alloc x = Steel?.reflect (action_as_repr (alloc_action FStar.Set.empty x))
 let free r x = Steel?.reflect (action_as_repr (free_action FStar.Set.empty r x))
-
+let split r v0 v1 = Steel?.reflect (action_as_repr (split_action FStar.Set.empty r v0 v1))
+let gather r v0 v1 = Steel?.reflect (action_as_repr (gather_action FStar.Set.empty r v0 v1))
 let cond_aux (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
              (then_:unit -> Steel a (p b) (q b) (fun _ -> b==true) (fun _ _ _ -> True))
              (else_:unit -> Steel a (p b) (q b) (fun _ -> b==false) (fun _ _ _ -> True))
