@@ -73,6 +73,10 @@ assume
 val sl_return (#a:_) (p:a -> slprop) (x:a)
   : SteelT a (p x) p
 
+assume
+val drop (p:slprop)
+  : SteelT unit p (fun _ -> emp)
+
 let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   : SteelT a (pts_to r p v) (fun x -> pts_to r p x)
   = let v1 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
@@ -91,10 +95,6 @@ let write (#a:Type) (#v:erased a) (r:ref a) (x:a)
     let v_new : fractional a = Some (x, full_perm) in
     Steel.PCM.Effect.write r v_old v_new
 
-assume
-val drop (p:slprop)
-  : SteelT unit p (fun _ -> emp)
-
 let free (#a:Type) (#v:erased a) (r:ref a)
   : SteelT unit (pts_to r full_perm v) (fun _ -> emp)
   = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
@@ -102,32 +102,29 @@ let free (#a:Type) (#v:erased a) (r:ref a)
     drop _
 
 (* move these to Mem *)
-assume
-val mem_share (#a:Type) (#p:pcm a) (r:Mem.ref a p) (v0:erased a) (v1:erased a{Steel.PCM.composable p v0 v1})
-  : SteelT unit (Mem.pts_to r (Steel.PCM.op p v0 v1))
-                (fun _ -> Mem.pts_to r v0 `star` Mem.pts_to r v1)
+let mem_share_atomic (#a:Type) (#uses:_) (#p:perm) (r:ref a)
+                     (v0:erased a)
+  : action_except unit uses (pts_to r p v0)
+                            (fun _ -> pts_to r (half_perm p) v0 `star` pts_to r (half_perm p) v0)
+  = assume (p.v <=. 1.0R);
+    let v = Ghost.hide (Some (Ghost.reveal v0, half_perm p)) in
+    Mem.split_action uses r v v
 
+let mem_gather_atomic (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a) (v1:erased a)
+  : action_except (_:unit{v0 == v1}) uses
+                  (pts_to r p0 v0 `star` pts_to r p1 v1)
+                  (fun _ -> pts_to r (sum_perm p0 p1) v0)
+  = let v0 = Ghost.hide (Some (Ghost.reveal v0, p0)) in
+    let v1 = Ghost.hide (Some (Ghost.reveal v1, p1)) in
+    Mem.gather_action uses r v0 v1
 
-assume
-val mem_gather (#a:Type) (#p:pcm a) (r:Mem.ref a p) (v0:erased a) (v1:erased a)
-  : SteelT (_:unit{Steel.PCM.composable p v0 v1})
-           (Mem.pts_to r v0 `star` Mem.pts_to r v1)
-           (fun _ -> Mem.pts_to r (Steel.PCM.op p v0 v1))
+let share (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
+  : SteelAtomic unit uses unobservable
+               (pts_to r p v)
+               (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
+  = as_atomic_action (mem_share_atomic r v)
 
-let share (#a:Type) (#p:perm) (#v:erased a) (r:ref a) =
-  let v0 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, half_perm p)) in
-  assume (p.v <=. 1.0R); //probably change the representation to have a `star` pure (p.v <= 1.0R)
-  assert (composable v0 v0);
-  mem_share r v0 v0
+let gather (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
+  = as_atomic_action (mem_gather_atomic r v0 v1)
 
-let gather (#a:Type) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a) =
-  let v0 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v0, p0)) in
-  let v1 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v1, p1)) in
-  let _ = mem_gather r v0 v1 in
-  sl_return #unit (fun _ -> Mem.pts_to r (compose v0 v1)) ()
-
-assume
-val atomic_admit (#a:_) (#uses:_) (#p:_) (q:a -> slprop)
-  : SteelAtomic a uses unobservable p q
-
-let ghost_read_refine (#a:Type) (#uses:inames) (#p:perm) (r:ref a) (q:a -> slprop) = atomic_admit _
+let ghost_read_refine = admit()

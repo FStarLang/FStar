@@ -41,13 +41,13 @@ val write (#a:Type) (#v:erased a) (r:ref a) (x:a)
 val free (#a:Type) (#v:erased a) (r:ref a)
   : SteelT unit (pts_to r full_perm v) (fun _ -> emp)
 
-val share (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelT unit
+val share (#a:Type) (#uses:_) (#p:perm) (#v:erased a) (r:ref a)
+  : SteelAtomic unit uses unobservable
     (pts_to r p v)
     (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
 
-val gather (#a:Type) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
-  : SteelT unit
+val gather (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
+  : SteelAtomic (_:unit{v0==v1}) uses unobservable
     (pts_to r p0 v0 `star` pts_to r p1 v1)
     (fun _ -> pts_to r (sum_perm p0 p1) v0)
 
