@@ -499,6 +499,10 @@ let is_pure_effect env l =
   let l = norm_eff_name env l in
   lid_equals l C.effect_PURE_lid
 
+let is_ghost_effect env l =
+  let l = norm_eff_name env l in
+  lid_equals l C.effect_GHOST_lid
+
 let is_pure_or_ghost_effect env l =
   let l = norm_eff_name env l in
   lid_equals l C.effect_PURE_lid
@@ -1298,14 +1302,23 @@ let weaken_guard g1 g2 = match g1, g2 with
  * else if it is GHOST, the return happens in PURE
  *
  * If caller does not provide the m effect, return happens in PURE
+ *
+ * This forces the lcomp thunk and recreates it to keep the callers same
  *)
 let maybe_assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (lc:lcomp) : lcomp =
   let should_return =
-       not (env.lax)
-    && Env.lid_exists env C.effect_GTot_lid //we're not too early in prims
-    && should_return env (Some e) lc
-    && not (TcComm.is_lcomp_partial_return lc)
+      not (env.lax)
+   && Env.lid_exists env C.effect_GTot_lid //we're not too early in prims
+   && should_return env (Some e) lc
+   && not (TcComm.is_lcomp_partial_return lc)
   in
+  (*
+   * AR: m is the effect that we are going to do return in
+   *)
+  let m =
+    if m_opt |> is_none || Options.ml_ish () || is_ghost_effect env lc.eff_name
+    then C.effect_PURE_lid
+    else m_opt |> must in
   let flags =
     if should_return
     then if TcComm.is_total_lcomp lc
@@ -1313,17 +1326,13 @@ let maybe_assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (l
          else PARTIAL_RETURN::lc.cflags
     else lc.cflags
   in
-  let refine () =
+  let refine () : comp * guard_t =
       let c, g_c = TcComm.lcomp_comp lc in
       let u_t =
           match comp_univ_opt c with
           | Some u_t -> u_t
           | None -> env.universe_of env (U.comp_result c)
       in
-      let m =
-        if m_opt |> is_none then C.effect_PURE_lid  //caller did not provide an M
-        else if c |> U.comp_effect_name |> is_pure_effect env then m_opt |> must
-        else C.effect_PURE_lid in  //c is GHOST, ignore M
       if U.is_tot_or_gtot_comp c
       then //AR: insert an M.return
            let retc, g_retc = return_value env m (Some u_t) (U.comp_result c) e in
@@ -1348,7 +1357,8 @@ let maybe_assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (l
             U.comp_set_flags bind_c flags, Env.conj_guards [g_c; g_ret; g_bind]
   in
   if not should_return then lc
-  else TcComm.mk_lcomp lc.eff_name lc.res_typ flags refine
+  else let c, g = refine () in
+       TcComm.lcomp_of_comp_guard c g
 
 let maybe_assume_result_eq_pure_term env e lc =
   maybe_assume_result_eq_pure_term_in_m env None e lc
