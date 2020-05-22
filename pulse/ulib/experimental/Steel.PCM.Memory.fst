@@ -142,12 +142,8 @@ let intro_emp m = H.intro_emp (heap_of_mem m)
 //pts_to
 ////////////////////////////////////////////////////////////////////////////////
 
-let pts_to_compatible (#a:Type u#a)
-                      (#pcm:_)
-                      (x:ref a pcm)
-                      (v0 v1:a)
-                      (m:mem u#a)
-  = H.pts_to_compatible x v0 v1 (heap_of_mem m)
+let pts_to_compatible x v0 v1 m = H.pts_to_compatible x v0 v1 (heap_of_mem m)
+let pts_to_compatible_equiv #a #pcm v0 v1 = H.pts_to_compatible_equiv v0 v1
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
@@ -482,6 +478,12 @@ let upd_action e r v0 v1
 
 let free_action e r v0
   = lift_tot_action (lift_heap_action e (H.free_action r v0))
+
+let split_action e r v0 v1
+  = lift_tot_action (lift_heap_action e (H.split_action r v0 v1))
+
+let gather_action e r v0 v1
+  = lift_tot_action (lift_heap_action e (H.gather_action r v0 v1))
 
 let weaken (p q r:slprop) (h:H.hheap (p `star` q) { H.stronger q r })
   : H.hheap (p `star` r)
