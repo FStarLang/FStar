@@ -1206,7 +1206,7 @@ let (tc_layered_eff_decl :
                  | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta
                      uu____3487) ->
                      FStar_Pervasives_Native.Some
-                       (FStar_Syntax_Syntax.Implicit true)
+                       (FStar_Syntax_Syntax.Implicit false)
                  | uu____3489 -> FStar_Pervasives_Native.None in
                let uu____3492 = if_then_else in
                match uu____3492 with
