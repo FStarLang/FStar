@@ -19,9 +19,12 @@ assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 
 // #set-options "--debug Steel.Effects2.Tests --debug_level ResolveImplicitsHook --ugly // --print_implicits"
 // #set-options "--debug Steel.Effects2.Tests --debug_level LayeredEffectsEqns --ugly // --debug_level ResolveImplicitsHook --print_implicits --debug_level Extreme // --debug_level Rel --debug_level TwoPhases"
-let test1 (x:int) : SteelT ref emp ptr = alloc x
+[@@expect_failure]
+let test1 (x:int) : SteelT ref emp ptr = 
+  alloc x
 
 // #set-options "--debug Steel.Effects2.Tests --debug_level Extreme --debug_level Rel --debug_level LayeredEffectsEqns --print_implicits --ugly --debug_level TwoPhases --print_bound_var_types"
+[@@expect_failure]
 let test2 (r:ref) : SteelT int (ptr r) (fun _ -> ptr r) =
   let x = read r in
   x
