@@ -140,34 +140,34 @@ assume val alloc (x:int)  : SteelT ref emp ptr
 assume val free (r:ref) : SteelT unit (ptr r) (fun _ -> ptr r)
 assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 
+// AF: Reuse this for now
+assume val steel_ret (#a:Type) (#[@@ framing_implicit] p:a -> hprop u#1) (x:a)
+: SteelF a (p x) p (fun _ -> True) (fun _ r _ -> r == x)
 
-// AF: Tests 1 to 6 were previously working with steel_ret.
-// To debug
 let test1 (x:int) : SteelT ref emp ptr =
-  let y = alloc x in y
+  let y = alloc x in steel_ret y
 
 // #set-options "--debug Steel.Effects2.Tests --debug_level Extreme --debug_level Rel --debug_level LayeredEffectsEqns --print_implicits --ugly --debug_level TwoPhases --print_bound_var_types"
 let test2 (r:ref) : SteelT int (ptr r) (fun _ -> ptr r) =
   let x = read r in
-  x
-  //steel_ret x
+  steel_ret x
 
 let test3 (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
   = let x = read r in
     let y = read r in
-    x
+    steel_ret x
 
 let test4 (r:ref) : SteelT ref (ptr r) (fun y -> ptr r `star` ptr y)
   = let y = alloc 0 in
-    y
+    steel_ret y
 
 let test5 (r1 r2:ref) : SteelT ref (ptr r1 `star` ptr r2) (fun y -> ptr r1 `star` ptr r2 `star` ptr y)
   = let y = alloc 0 in
-    y
+    steel_ret y
 
 let test6 (r1 r2:ref) : SteelT unit (ptr r1 `star` ptr r2) (fun _ -> ptr r2 `star` ptr r1)
   = let _ = read r1 in
-    ()
+    steel_ret ()
 
 
 // Scoping issue to debug
