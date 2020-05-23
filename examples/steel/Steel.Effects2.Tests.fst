@@ -3,28 +3,12 @@ module Steel.Effects2.Tests
 open Steel.Memory
 open Steel.Effects2
 
+let equiv_sl_implies (p1 p2:hprop) : Lemma
+  (requires p1 `equiv` p2)
+  (ensures p1 `sl_implies` p2)
+  = admit()
+
 open FStar.Tactics
-open FStar.Algebra.CommMonoid.Equiv
-open FStar.Tactics.CanonCommMonoidSimple.Equiv
-
-// Does not form a monoid, but ok for now in our setting where sl_implies should be solved as equiv
-inline_for_extraction noextract let req : equiv hprop =
-  EQ sl_implies
-     (fun _ -> admit())
-     (fun _ _ -> admit())
-     (fun _ _ _ -> admit())
-
-inline_for_extraction noextract let rm : cm hprop req =
-  CM emp
-     star
-     (fun _ -> admit())
-     (fun _ _ _ -> admit())
-     (fun _ _ -> admit())
-     (fun _ _ -> admit())
-
-inline_for_extraction noextract let canon () : Tac unit =
-  canon_monoid (`req) (`rm)
-
 
 let rec slterm_nbr_uvars (t:term) : Tac int =
   match inspect t with
@@ -44,7 +28,8 @@ let solve_can_be_split (args:list argv) : Tac bool =
       if lnbr + rnbr <= 1 then (
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ -> norm [delta_only [`%can_be_split]];
-                     canon ());
+                     apply_lemma (`equiv_sl_implies);
+                     Steel.Memory.Tactics.canon ());
         true
       ) else false
 
@@ -59,13 +44,15 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ -> ignore (forall_intro());
                      norm [delta_only [`%can_be_split_forall]];
+                     apply_lemma (`equiv_sl_implies);
+                     or_else (fun _ ->  flip()) (fun _ -> ());
                      norm [delta_only [
                             `%__proj__CM__item__unit;
                             `%__proj__CM__item__mult;
                             `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
                             `%fst; `%snd];
                           primops; iota; zeta];
-                     canon ());
+                     Steel.Memory.Tactics.canon ());
         true
       ) else false
 
@@ -78,7 +65,7 @@ let solve_or_delay (g:goal) : Tac bool =
   match f with
   | App _ t ->
       let hd, args = collect_app t in
-      if term_eq hd (quote delay) then (focus (fun () -> dump "delay"); false)
+      if term_eq hd (quote delay) then false
       else if term_eq hd (quote can_be_split) then solve_can_be_split args
       else if term_eq hd (quote can_be_split_forall) then solve_can_be_split_forall args
       else false
@@ -117,7 +104,7 @@ assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 
 // #set-options "--debug Steel.Effects2.Tests --debug_level ResolveImplicitsHook --ugly // --print_implicits"
 // #set-options "--debug Steel.Effects2.Tests --debug_level LayeredEffectsEqns --ugly // --debug_level ResolveImplicitsHook --print_implicits --debug_level Extreme // --debug_level Rel --debug_level TwoPhases"
-// let test1 (x:int) : SteelT ref emp ptr = alloc x
+let test1 (x:int) : SteelT ref emp ptr = alloc x
 
 // #set-options "--debug Steel.Effects2.Tests --debug_level Extreme --debug_level Rel --debug_level LayeredEffectsEqns --print_implicits --ugly --debug_level TwoPhases --print_bound_var_types"
 let test2 (r:ref) : SteelT int (ptr r) (fun _ -> ptr r) =
