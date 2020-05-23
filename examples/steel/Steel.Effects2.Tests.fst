@@ -19,8 +19,6 @@ let canon' (_:unit) : Tac unit =
   or_else (fun _ -> Steel.Memory.Tactics.canon())
           (fun _ -> fail "Could not prove slprop equivalence")
 
-
-
 let rec slterm_nbr_uvars (t:term) : Tac int =
   match inspect t with
   | Tv_Uvar _ _ -> 1
@@ -82,6 +80,19 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
 
   | _ -> false // Ill-formed can_be_split, should not happen
 
+let rec solve_triv_eqs (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let f = term_as_formula' (goal_type hd) in
+    match f with
+    | Comp (Eq _) l r ->
+      let lnbr = slterm_nbr_uvars l in
+      let rnbr = slterm_nbr_uvars r in
+      // Only solve equality if there is only one uvar
+      if lnbr + rnbr <= 1 then trefl () else later();
+      solve_triv_eqs tl
+    | _ -> later(); solve_triv_eqs tl
 
 // Returns true if the goal has been solved, false if it should be delayed
 let solve_or_delay (g:goal) : Tac bool =
@@ -111,6 +122,8 @@ let rec pick_next (l:list goal) : Tac bool =
 
 [@@ resolve_implicits; framing_implicit]
 let rec resolve_tac () : Tac unit =
+  solve_triv_eqs (goals());
+  dump "all goals";
   match goals () with
   | [] -> ()
   | g ->
@@ -124,10 +137,12 @@ assume val ref : Type0
 assume val ptr (_:ref) : hprop u#1
 
 assume val alloc (x:int)  : SteelT ref emp ptr
+assume val free (r:ref) : SteelT unit (ptr r) (fun _ -> ptr r)
 assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 
-// #set-options "--debug Steel.Effects2.Tests --debug_level ResolveImplicitsHook --ugly // --print_implicits"
-// #set-options "--debug Steel.Effects2.Tests --debug_level LayeredEffectsEqns --ugly // --debug_level ResolveImplicitsHook --print_implicits --debug_level Extreme // --debug_level Rel --debug_level TwoPhases"
+
+// AF: Tests 1 to 6 were previously working with steel_ret.
+// To debug
 let test1 (x:int) : SteelT ref emp ptr =
   let y = alloc x in y
 
@@ -153,6 +168,13 @@ let test5 (r1 r2:ref) : SteelT ref (ptr r1 `star` ptr r2) (fun y -> ptr r1 `star
 let test6 (r1 r2:ref) : SteelT unit (ptr r1 `star` ptr r2) (fun _ -> ptr r2 `star` ptr r1)
   = let _ = read r1 in
     ()
+
+
+// Scoping issue to debug
+let test7 (a:unit) : SteelT ref emp (fun y -> ptr y) =
+  let x = alloc 0 in
+  let _ = read x in
+  steel_ret x
 
 
 
