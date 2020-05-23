@@ -466,12 +466,12 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
      *
      * Implicits remain implicits, but meta_attr or meta_arg just become implicits
      *
-     * Don't think the boolean true below matters
+     * Don't think the boolean false below matters, but is perhaps safer (see Syntax.fsi)
      *)
     let binder_aq_to_arg_aq aq =
       match aq with
       | Some (Implicit _) -> aq
-      | Some (Meta _) -> Some (Implicit true)
+      | Some (Meta _) -> Some (Implicit false)
       | _ -> None in
 
     let ite_us, ite_t, _ = if_then_else in
