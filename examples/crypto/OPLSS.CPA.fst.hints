@@ -384,7 +384,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "b8b66419e96a4e2231a0cf13e959a54a"
+      "0d8866f7abd247e05e19f88f667c2644"
     ],
     [
       "OPLSS.CPA.keygen",
@@ -395,10 +395,9 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.Seq.Properties.count.fuel_instrumented",
         "@fuel_correspondence_OPLSS.CPA.pairwise_distinct_ivs.fuel_instrumented",
-        "@query",
-        "FStar.Seq.Base_pretyping_7efa52b424e80c83ad68a652aa3561e4",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_OPLSS.CPA.log_entry__uu___haseq", "bool_inversion",
+        "data_typing_intro_OPLSS.CPA.Key@tok",
         "equation_FStar.HyperStack.ST.mref",
         "equation_FStar.HyperStack.ST.mreference",
         "equation_FStar.HyperStack.ST.ralloc_post",
@@ -408,7 +407,7 @@
         "equation_FStar.Monotonic.HyperStack.live_region",
         "equation_FStar.Monotonic.HyperStack.mem",
         "equation_FStar.Monotonic.HyperStack.mref",
-        "equation_FStar.Seq.Properties.mem",
+        "equation_FStar.Seq.Properties.mem", "equation_OPLSS.AES.key",
         "equation_OPLSS.CPA.cipher_functional_correctness",
         "equation_OPLSS.CPA.invariant", "equation_OPLSS.CPA.log",
         "equation_OPLSS.Log.fp", "equation_OPLSS.Log.grows",
@@ -418,7 +417,6 @@
         "fuel_guarded_inversion_OPLSS.CPA.log_entry",
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_Prims.__cache_version_number__",
-        "kinding_OPLSS.CPA.log_entry@tok",
         "lemma_FStar.Monotonic.Heap.lemma_contains_implies_used",
         "lemma_LowStar.Monotonic.Buffer.modifies_ralloc_post",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_Equality",
@@ -446,7 +444,7 @@
         "typing_OPLSS.Log.grows"
       ],
       0,
-      "8566718cf848e76211a2dc9831baba89"
+      "e3c79a7260a3beaa5a879e993f55b306"
     ],
     [
       "OPLSS.CPA.encrypt",
@@ -546,7 +544,7 @@
         "typing_OPLSS.Plain.reveal", "typing_Prims.pow2"
       ],
       0,
-      "0d7a03371296c179ffcf82ad5435269d"
+      "79d769a3390a3c79d27fcac9cdf67596"
     ],
     [
       "OPLSS.CPA.decrypt",
@@ -624,7 +622,7 @@
         "typing_OPLSS.Log.has", "typing_OPLSS.Plain.repr"
       ],
       0,
-      "cf692a9520e421d6027235399132401f"
+      "d19ba4683b460b598bc1df4d3fed1a4b"
     ]
   ]
 ]

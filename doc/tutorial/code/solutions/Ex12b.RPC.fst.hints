@@ -31,7 +31,7 @@
         "token_correspondence_FStar.Heap.trivial_preorder", "true_interp"
       ],
       0,
-      "cdc5970e8e82f95080b22ea85f7198cf"
+      "141a6466fdd7421c460d7bf0eaf1c9cc"
     ],
     [
       "Ex12b.RPC.__proj__Request__item___0",
@@ -116,24 +116,23 @@
         "@fuel_irrelevance_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@query", "assumption_Ex12b.RPC.log_entry__uu___haseq",
         "bool_inversion", "constructor_distinct_Prims.Cons",
-        "equation_Ex12b.RPC.lref", "equation_Ex12b.RPC.subset",
-        "equation_Ex12b.RPC.subset_", "equation_FStar.ST.mref",
-        "equation_Prims.eqtype",
+        "data_typing_intro_Prims.Cons@tok", "equation_Ex12b.RPC.lref",
+        "equation_Ex12b.RPC.subset", "equation_Ex12b.RPC.subset_",
+        "equation_FStar.ST.mref", "equation_Prims.eqtype",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
-        "function_token_typing_Ex12b.RPC.subset",
-        "kinding_Ex12b.RPC.log_entry@tok", "kinding_Prims.list@tok",
+        "function_token_typing_Ex12b.RPC.subset", "kinding_Prims.list@tok",
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_a317e522b61ddbfc7a4e89db4bf26ff2",
+        "refinement_interpretation_Tm_refine_52254809e30d072a9ecaf5931055b3b3",
         "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
         "token_correspondence_Ex12b.RPC.subset_",
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "f0639d49c2105a7b671d6c2d10ac4ea7"
+      "8a634fc1102db8109122c92ffae156c1"
     ],
     [
       "Ex12b.RPC.req",

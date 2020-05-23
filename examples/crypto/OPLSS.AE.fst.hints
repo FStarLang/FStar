@@ -590,7 +590,7 @@
         "typing_OPLSS.MAC.__proj__Key__item__log", "typing_OPLSS.MAC.log"
       ],
       0,
-      "9de11437809c38cafe40f74dcaa1f321"
+      "41819156264a876a00abf05c15f358e5"
     ],
     [
       "OPLSS.AE.encrypt",
@@ -621,7 +621,9 @@
         "OPLSS.MAC_pretyping_25be147a026894aec249ead6169193df",
         "assumption_OPLSS.CPA.log_entry__uu___haseq",
         "assumption_OPLSS.MAC.log_entry__uu___haseq", "b2t_def",
-        "bool_inversion", "data_typing_intro_OPLSS.CPA.Entry@tok",
+        "bool_inversion",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_OPLSS.CPA.Entry@tok",
         "data_typing_intro_OPLSS.MAC.Entry@tok",
         "equation_FStar.HyperStack.ST.equal_stack_domains",
         "equation_FStar.HyperStack.ST.mref",
@@ -630,17 +632,20 @@
         "equation_FStar.Monotonic.HyperStack.contains",
         "equation_FStar.Monotonic.HyperStack.frameOf",
         "equation_FStar.Monotonic.HyperStack.mref",
-        "equation_OPLSS.AE.ae_log", "equation_OPLSS.AE.composite_log_entry",
-        "equation_OPLSS.AE.cpa_log", "equation_OPLSS.AE.footprint",
-        "equation_OPLSS.AE.invariant", "equation_OPLSS.AE.mac_cpa_related",
-        "equation_OPLSS.AE.mac_log", "equation_OPLSS.AES.iv_cipher",
-        "equation_OPLSS.CPA.invariant", "equation_OPLSS.CPA.log",
-        "equation_OPLSS.HMACSHA1.msg", "equation_OPLSS.Log.entries",
+        "equation_OPLSS.AE.ae_cipher", "equation_OPLSS.AE.ae_log",
+        "equation_OPLSS.AE.composite_log_entry", "equation_OPLSS.AE.cpa_log",
+        "equation_OPLSS.AE.footprint", "equation_OPLSS.AE.invariant",
+        "equation_OPLSS.AE.mac_cpa_related", "equation_OPLSS.AE.mac_log",
+        "equation_OPLSS.AES.iv_cipher", "equation_OPLSS.CPA.invariant",
+        "equation_OPLSS.CPA.log", "equation_OPLSS.HMACSHA1.msg",
+        "equation_OPLSS.HMACSHA1.tag", "equation_OPLSS.Log.entries",
         "equation_OPLSS.Log.fp", "equation_OPLSS.Log.grows",
         "equation_OPLSS.Log.t", "equation_OPLSS.MAC.invariant",
         "equation_OPLSS.MAC.log", "equation_OPLSS.lbytes",
         "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
         "fuel_guarded_inversion_OPLSS.AE.key",
+        "function_token_typing_OPLSS.AES.iv_cipher",
+        "function_token_typing_OPLSS.HMACSHA1.tag",
         "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "kinding_OPLSS.CPA.log_entry@tok", "kinding_OPLSS.MAC.log_entry@tok",
@@ -700,7 +705,7 @@
         "typing_OPLSS.MAC.__proj__Key__item__log", "typing_OPLSS.MAC.log"
       ],
       0,
-      "2f77514f9feea300c2cbef50515c80cb"
+      "85506911a6678f3f0594e43f9dde71b1"
     ],
     [
       "OPLSS.AE.decrypt",
@@ -772,7 +777,7 @@
         "typing_OPLSS.Ideal.pre_ind_cpa", "typing_OPLSS.Plain.plain"
       ],
       0,
-      "e1899264d0ff1c9da7eb525d7e557217"
+      "128e7b330e939fc90f15a443be614e24"
     ]
   ]
 ]

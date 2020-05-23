@@ -72,7 +72,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "aa98ba8a7e708d96a36c32ccdef41c97"
+      "d538cdd6a835162551600033201e7117"
     ],
     [
       "Ex10a.test_acls",
@@ -85,16 +85,17 @@
         "@query",
         "Ex10a_interpretation_Tm_arrow_874ea41fef5db3d0b79dc4f1f9eea4a2",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "assumption_Ex10a.entry__uu___haseq",
         "constructor_distinct_Ex10a.Readable",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Ex10a.canRead", "equation_Ex10a.canRead_t",
-        "equation_Ex10a.db",
+        "equation_Ex10a.db", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.ST.mref", "equation_FStar.ST.ref",
         "equation_with_fuel_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.result",
+        "function_token_typing_Ex10a.db",
         "interpretation_Tm_abs_93700a44318bb4193871b2dacb8d41d6",
         "kinding_Ex10a.entry@tok", "primitive_Prims.op_Equality",
         "projection_inverse_Ex10a.Readable__0",
@@ -103,10 +104,13 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
-        "typing_Tm_abs_93700a44318bb4193871b2dacb8d41d6", "unit_typing"
+        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "typing_Ex10a.acls", "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.sel",
+        "typing_Tm_abs_93700a44318bb4193871b2dacb8d41d6"
       ],
       0,
-      "77380b6fc0b601a1d2609848e02ef522"
+      "7ed205192527ebcb4067e1095b69aea9"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -154,7 +158,7 @@
       1,
       [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
       0,
-      "237bf83fbcab3e3086e67e406b7f5924"
+      "ce5bbef3a3e41c73946e5695417c7123"
     ]
   ]
 ]
