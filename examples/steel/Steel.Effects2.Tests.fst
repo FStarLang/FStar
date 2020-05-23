@@ -8,7 +8,18 @@ let equiv_sl_implies (p1 p2:hprop) : Lemma
   (ensures p1 `sl_implies` p2)
   = admit()
 
+let lemma_sl_implies_refl (p:hprop) : Lemma
+  (ensures p `sl_implies` p)
+  = equiv_sl_implies p p
+
+
 open FStar.Tactics
+
+let canon' (_:unit) : Tac unit =
+  or_else (fun _ -> Steel.Memory.Tactics.canon())
+          (fun _ -> fail "Could not prove slprop equivalence")
+
+
 
 let rec slterm_nbr_uvars (t:term) : Tac int =
   match inspect t with
@@ -28,8 +39,18 @@ let solve_can_be_split (args:list argv) : Tac bool =
       if lnbr + rnbr <= 1 then (
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ -> norm [delta_only [`%can_be_split]];
-                     apply_lemma (`equiv_sl_implies);
-                     Steel.Memory.Tactics.canon ());
+                     // If we have exactly the same term on both side,
+                     // equiv_sl_implies would solve the goal immediately
+                     or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
+                      (fun _ -> apply_lemma (`equiv_sl_implies);
+                       norm [delta_only [
+                              `%__proj__CM__item__unit;
+                              `%__proj__CM__item__mult;
+                              `%Steel.Memory.Tactics.rm;
+                              `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                              `%fst; `%snd];
+                            primops; iota; zeta];
+                       canon' ()));
         true
       ) else false
 
@@ -44,15 +65,18 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ -> ignore (forall_intro());
                      norm [delta_only [`%can_be_split_forall]];
-                     apply_lemma (`equiv_sl_implies);
-                     or_else (fun _ ->  flip()) (fun _ -> ());
-                     norm [delta_only [
-                            `%__proj__CM__item__unit;
-                            `%__proj__CM__item__mult;
-                            `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
-                            `%fst; `%snd];
-                          primops; iota; zeta];
-                     Steel.Memory.Tactics.canon ());
+                     or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
+                       (fun _ ->
+                       apply_lemma (`equiv_sl_implies);
+                       or_else (fun _ ->  flip()) (fun _ -> ());
+                       norm [delta_only [
+                              `%__proj__CM__item__unit;
+                              `%__proj__CM__item__mult;
+                              `%Steel.Memory.Tactics.rm;
+                              `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                              `%fst; `%snd];
+                            primops; iota; zeta];
+                       canon' ()));
         true
       ) else false
 
@@ -104,13 +128,33 @@ assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 
 // #set-options "--debug Steel.Effects2.Tests --debug_level ResolveImplicitsHook --ugly // --print_implicits"
 // #set-options "--debug Steel.Effects2.Tests --debug_level LayeredEffectsEqns --ugly // --debug_level ResolveImplicitsHook --print_implicits --debug_level Extreme // --debug_level Rel --debug_level TwoPhases"
-let test1 (x:int) : SteelT ref emp ptr = alloc x
+
+let test1 (x:int) : SteelT ref emp ptr =
+  let y = alloc x in steel_ret y
 
 // #set-options "--debug Steel.Effects2.Tests --debug_level Extreme --debug_level Rel --debug_level LayeredEffectsEqns --print_implicits --ugly --debug_level TwoPhases --print_bound_var_types"
 let test2 (r:ref) : SteelT int (ptr r) (fun _ -> ptr r) =
   let x = read r in
   steel_ret x
   //steel_ret x
+
+let test3 (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
+  = let x = read r in
+    let y = read r in
+    steel_ret x
+
+let test4 (r:ref) : SteelT ref (ptr r) (fun y -> ptr r `star` ptr y)
+  = let y = alloc 0 in
+    steel_ret y
+
+let test5 (r1 r2:ref) : SteelT ref (ptr r1 `star` ptr r2) (fun y -> ptr r1 `star` ptr r2 `star` ptr y)
+  = let y = alloc 0 in
+    steel_ret y
+
+let test6 (r1 r2:ref) : SteelT unit (ptr r1 `star` ptr r2) (fun _ -> ptr r2 `star` ptr r1)
+  = let _ = read r1 in
+    steel_ret ()
+
 
 
 // [@@expect_failure]
