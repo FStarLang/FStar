@@ -1503,10 +1503,15 @@ let is_flex_pat = function
 (** If the head uvar of the flex term is tagged with a `Ctx_uvar_meta_attr a`
     and if a term tagged with attribute `a` is in scope,
     then this problem should be deferred to a tactic *)
-let should_defer_flex_to_user_tac (wl:worklist) (f:flex_t) =
+let should_defer_flex_to_user_tac env (wl:worklist) (f:flex_t) =
   let (Flex (_, u, _)) = f in
-  DeferredImplicits.should_defer_uvar_to_user_tac wl.tcenv u
+  let b = DeferredImplicits.should_defer_uvar_to_user_tac wl.tcenv u in
 
+  if Env.debug env <| Options.Other "ResolveImplicitsHook"
+  then BU.print2 "Rel.should_defer_flex_to_user_tac for %s returning %s\n"
+         (Print.ctx_uvar_to_string_no_reason u) (string_of_bool b);
+
+  b
 
 (* <quasi_pattern>:
         Given a term (?u_(bs;t) e1..en)
@@ -2120,7 +2125,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                               (rhs:term)
     : solution =
 
-    if should_defer_flex_to_user_tac wl lhs
+    if should_defer_flex_to_user_tac env wl lhs
     then defer_to_user_tac env orig (flex_reason lhs) wl
     else
 
@@ -2289,7 +2294,7 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       else solve_t_flex_flex env (make_prob_eq orig) wl lhs rhs
 
     | EQ ->
-      if should_defer_flex_to_user_tac wl lhs || should_defer_flex_to_user_tac wl rhs
+      if should_defer_flex_to_user_tac env wl lhs || should_defer_flex_to_user_tac env wl rhs
       then defer_to_user_tac env orig (flex_reason lhs ^", "^flex_reason rhs)wl
       else
 
@@ -3896,36 +3901,40 @@ let teq_nosmt (env:env) (t1:typ) (t2:typ) : option<guard_t> =
  *   for inductives, this may later include implicits for pattern variables
  *)
  
-let try_solve_single_valued_implicits env (imps:Env.implicits) : Env.implicits * bool =
+let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.implicits * bool =
   (*
    * Get the value of the implicit imp
    * Going forward, it can also return new implicits for the pattern variables
    *   (cf. the comment above about extending it to inductives)
    *)
-  let imp_value imp : option<term> =
-    let ctx_u, r = imp.imp_uvar, imp.imp_range in
-
-    let t_norm = N.normalize N.whnf_steps env ctx_u.ctx_uvar_typ in
-    
-    match (SS.compress t_norm).n with
-    | Tm_fvar fv when S.fv_eq_lid fv Const.unit_lid ->
-      r |> S.unit_const_with_range |> Some
-    | Tm_refine (b, _) when U.is_unit b.sort ->
-      r |> S.unit_const_with_range |> Some
-    | _ -> None
-
-  in
-
-  let b = List.fold_left (fun b imp ->  //check that the imp is still unsolved
-    if UF.find imp.imp_uvar.ctx_uvar_head |> is_none
-    then match imp_value imp with
-         | Some tm -> commit ([TERM (imp.imp_uvar, tm)]); true
-         | None -> b
-    else b) false imps in
-
-  imps, b
+  if is_tac then imps, false
+  else
+    let imp_value imp : option<term> =
+      let ctx_u, r = imp.imp_uvar, imp.imp_range in
   
-let resolve_implicits' env must_total forcelax g =
+     let t_norm = N.normalize N.whnf_steps env ctx_u.ctx_uvar_typ in
+    
+      match (SS.compress t_norm).n with
+      | Tm_fvar fv when S.fv_eq_lid fv Const.unit_lid ->
+        r |> S.unit_const_with_range |> Some
+     | Tm_refine (b, _) when U.is_unit b.sort ->
+        r |> S.unit_const_with_range |> Some
+     | _ -> None in
+
+    let b = List.fold_left (fun b imp ->  //check that the imp is still unsolved
+      if UF.find imp.imp_uvar.ctx_uvar_head |> is_none
+      then match imp_value imp with
+           | Some tm -> commit ([TERM (imp.imp_uvar, tm)]); true
+           | None -> b
+      else b) false imps in
+
+    imps, b
+  
+let resolve_implicits' env is_tac g =
+  let must_total, forcelax =
+    if is_tac then false, true
+    else (not env.phase1 && not env.lax), false in
+
   let rec unresolved ctx_u =
     match (Unionfind.find ctx_u.ctx_uvar_head) with
     | Some r ->
@@ -3949,7 +3958,7 @@ let resolve_implicits' env must_total forcelax g =
     match implicits with
     | [] ->
       if not changed
-      then let out, changed = try_solve_single_valued_implicits env out in
+      then let out, changed = try_solve_single_valued_implicits env is_tac out in
            if changed then until_fixpoint ([], false) out
            else out
       else until_fixpoint ([], false) out
@@ -4018,9 +4027,9 @@ let resolve_implicits env g =
     then BU.print1 "//////////////////////////ResolveImplicitsHook: resolve_implicits////////////\n\
                     guard = %s\n"
                     (guard_to_string env g);
-    resolve_implicits' env (not env.phase1 && not env.lax) false g
+    resolve_implicits' env false g
 
-let resolve_implicits_tac env g = resolve_implicits' env false true  g
+let resolve_implicits_tac env g = resolve_implicits' env true  g
 
 let force_trivial_guard env g =
     if Env.debug env <| Options.Other "ResolveImplicitsHook"
