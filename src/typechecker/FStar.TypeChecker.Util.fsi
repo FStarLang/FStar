@@ -56,8 +56,6 @@ val lcomp_univ_opt: lcomp -> (option<universe> * guard_t)
 val is_pure_effect: env -> lident -> bool
 val is_pure_or_ghost_effect: env -> lident -> bool
 val should_not_inline_lc: lcomp -> bool
-val should_return: env -> option<term> -> lcomp -> bool
-val return_value: env -> option<universe> -> typ -> term -> comp
 val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
 val maybe_return_e2_and_bind: Range.range -> env -> option<term> -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
 //the bv is the scrutinee binder, that bind_cases uses to close the guard (from lifting the computations)

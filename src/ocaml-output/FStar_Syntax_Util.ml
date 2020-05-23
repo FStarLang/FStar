@@ -4305,8 +4305,6 @@ let (apply_layered_eff_combinators :
       let uu____20038 = map_tuple combs.FStar_Syntax_Syntax.l_subcomp in
       let uu____20043 = map_tuple combs.FStar_Syntax_Syntax.l_if_then_else in
       {
-        FStar_Syntax_Syntax.l_base_effect =
-          (combs.FStar_Syntax_Syntax.l_base_effect);
         FStar_Syntax_Syntax.l_repr = uu____20023;
         FStar_Syntax_Syntax.l_return = uu____20028;
         FStar_Syntax_Syntax.l_bind = uu____20033;
@@ -4487,13 +4485,3 @@ let (get_stronger_repr :
             FStar_Pervasives_Native.fst in
         FStar_All.pipe_right uu____20277
           (fun uu____20284 -> FStar_Pervasives_Native.Some uu____20284)
-let (get_layered_effect_base :
-  FStar_Syntax_Syntax.eff_decl ->
-    FStar_Ident.lident FStar_Pervasives_Native.option)
-  =
-  fun ed ->
-    match ed.FStar_Syntax_Syntax.combinators with
-    | FStar_Syntax_Syntax.Layered_eff combs ->
-        FStar_All.pipe_right combs.FStar_Syntax_Syntax.l_base_effect
-          (fun uu____20298 -> FStar_Pervasives_Native.Some uu____20298)
-    | uu____20299 -> FStar_Pervasives_Native.None

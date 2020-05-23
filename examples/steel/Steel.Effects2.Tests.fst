@@ -1,7 +1,7 @@
 module Steel.Effects2.Tests
 
 open Steel.Memory
-open Steel.Effects2
+open Steel.FramingEffect
 
 let equiv_sl_implies (p1 p2:hprop) : Lemma
   (requires p1 `equiv` p2)
@@ -128,32 +128,31 @@ assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 
 // #set-options "--debug Steel.Effects2.Tests --debug_level ResolveImplicitsHook --ugly // --print_implicits"
 // #set-options "--debug Steel.Effects2.Tests --debug_level LayeredEffectsEqns --ugly // --debug_level ResolveImplicitsHook --print_implicits --debug_level Extreme // --debug_level Rel --debug_level TwoPhases"
-
 let test1 (x:int) : SteelT ref emp ptr =
-  let y = alloc x in steel_ret y
+  let y = alloc x in y
 
 // #set-options "--debug Steel.Effects2.Tests --debug_level Extreme --debug_level Rel --debug_level LayeredEffectsEqns --print_implicits --ugly --debug_level TwoPhases --print_bound_var_types"
 let test2 (r:ref) : SteelT int (ptr r) (fun _ -> ptr r) =
   let x = read r in
-  steel_ret x
+  x
   //steel_ret x
 
 let test3 (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
   = let x = read r in
     let y = read r in
-    steel_ret x
+    x
 
 let test4 (r:ref) : SteelT ref (ptr r) (fun y -> ptr r `star` ptr y)
   = let y = alloc 0 in
-    steel_ret y
+    y
 
 let test5 (r1 r2:ref) : SteelT ref (ptr r1 `star` ptr r2) (fun y -> ptr r1 `star` ptr r2 `star` ptr y)
   = let y = alloc 0 in
-    steel_ret y
+    y
 
 let test6 (r1 r2:ref) : SteelT unit (ptr r1 `star` ptr r2) (fun _ -> ptr r2 `star` ptr r1)
   = let _ = read r1 in
-    steel_ret ()
+    ()
 
 
 

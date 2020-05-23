@@ -381,13 +381,15 @@ let residual_comp_of_lcomp lc = {
     residual_flags=lc.cflags
   }
 
-let lcomp_of_comp c0 =
+let lcomp_of_comp_guard c0 g =
     let eff_name, flags =
         match c0.n with
         | Total _ -> PC.effect_Tot_lid, [TOTAL]
         | GTotal _ -> PC.effect_GTot_lid, [SOMETRIVIAL]
         | Comp c -> c.effect_name, c.flags in
-    mk_lcomp eff_name (U.comp_result c0) flags (fun () -> c0, trivial_guard)
+    mk_lcomp eff_name (U.comp_result c0) flags (fun () -> c0, g)
+
+let lcomp_of_comp c0 = lcomp_of_comp_guard c0 trivial_guard
 
 ////////////////////////////////////////////////////////////////////////////////
 // Core logical simplification of terms

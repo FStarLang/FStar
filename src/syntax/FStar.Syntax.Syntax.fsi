@@ -398,7 +398,6 @@ type wp_eff_combinators = {
  * Similarly the base effect name is also "" after desugaring, and is set by the typechecker
  *)
 type layered_eff_combinators = {
-  l_base_effect  : lident;
   l_repr         : (tscheme * tscheme);
   l_return       : (tscheme * tscheme);
   l_bind         : (tscheme * tscheme);
