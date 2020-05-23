@@ -286,7 +286,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "d99d635b8913daa98c9292d7aabbae77"
+      "7324caf3e8c14bbd83a809f7dd6d0794"
     ],
     [
       "Ex11a.new_arm",
@@ -367,7 +367,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "e06d8379da143a79eb91b900aa7df22e"
+      "a9239489db878b3103d032a97b078cb1"
     ],
     [
       "Ex11a.new_robot",
@@ -447,7 +447,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "55b297fca777db30458d6fab6350e81e"
+      "b6d04df7dbb15461baa856778e7ed0e4"
     ],
     [
       "Ex11a.walk_robot_to",

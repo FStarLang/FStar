@@ -250,7 +250,7 @@
         "typing_FStar.Set.mem", "typing_FStar.Set.union"
       ],
       0,
-      "a7168088020fc05f59911023572561b3"
+      "b4b158e0f5313d126327e95171b4e7b2"
     ],
     [
       "CntProtocol.update_cnt",
@@ -467,7 +467,7 @@
         "typing_FStar.UInt.fits", "typing_Prims.pow2"
       ],
       0,
-      "50f63faad4b1d73fa2481d94830049b0"
+      "8079acb7f1b352fbff214540f0703370"
     ],
     [
       "CntProtocol.req",
@@ -541,12 +541,12 @@
         "constructor_distinct_MAC.entry", "constructor_distinct_Prims.int",
         "constructor_distinct_Prims.list",
         "data_elim_FStar.Pervasives.Native.Some", "data_elim_Prims.Cons",
+        "data_typing_intro_FStar.Pervasives.Native.None@tok",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_CntFormat.message", "equation_CntFormat.signal_size",
         "equation_CntFormat.uint16", "equation_CntFormat.uint32",
         "equation_CntProtocol.invariant", "equation_CntProtocol.req",
         "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Monotonic.Heap.equal_dom",
         "equation_FStar.Monotonic.Heap.modifies",
         "equation_FStar.Monotonic.Heap.modifies_t",
         "equation_FStar.Monotonic.Heap.only",
@@ -559,16 +559,16 @@
         "function_token_typing_MAC.key_prop",
         "function_token_typing_Platform.Bytes.bytes",
         "function_token_typing_Prims.int",
+        "function_token_typing_Prims.string",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
-        "int_typing", "kinding_CntProtocol.event@tok",
-        "kinding_MAC.entry@tok", "kinding_Prims.list@tok",
+        "kinding_CntProtocol.event@tok", "kinding_MAC.entry@tok",
+        "kinding_Prims.list@tok",
         "lemma_FStar.Monotonic.Heap.lemma_distinct_addrs_distinct_types",
-        "lemma_FStar.Monotonic.Heap.lemma_modifies_and_equal_dom_sel_diff_addr",
         "lemma_FStar.Set.mem_empty", "lemma_FStar.Set.mem_singleton",
         "lemma_FStar.Set.mem_union",
         "lemma_FStar.TSet.lemma_mem_tset_of_set",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_111c05b3fc005798dafc09f25c3a8e61",
         "refinement_interpretation_Tm_refine_3b1cb9ec3355fed185c658f53954b3fa",
@@ -595,7 +595,7 @@
         "typing_Tm_abs_a2e9f695669e1cfac185e9f9ad9ae2a7"
       ],
       0,
-      "c460004c3d1b1a1ef59053f49679a919"
+      "dd6e79a3485047ba606c6826ec11c5d7"
     ],
     [
       "CntProtocol.server",
@@ -691,7 +691,7 @@
         "typing_SHA1.keysize"
       ],
       0,
-      "9412cddac552ffed1da349ee95722e4d"
+      "db0bc2f801cb548dfc958e4fc1a3d687"
     ],
     [
       "CntProtocol.main",

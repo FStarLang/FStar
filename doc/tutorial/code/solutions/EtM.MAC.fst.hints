@@ -158,7 +158,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "f5ad4ec1ab048fd558996485701c0b74"
+      "7e515d9c1675a052931ac6980dcdaa40"
     ],
     [
       "EtM.MAC.mac",
@@ -189,12 +189,13 @@
         "refinement_interpretation_Tm_refine_f596a1e23d65ebe54b463345ece4e00f",
         "refinement_kinding_Tm_refine_7de8468e4c8be42394c70da6b10033dd",
         "typing_EtM.MAC.__proj__Key__item__log",
+        "typing_EtM.MAC.__proj__Key__item__raw", "typing_EtM.MAC.hmac_sha1",
         "typing_FStar.Monotonic.HyperStack.sel",
         "typing_FStar.Monotonic.Seq.grows", "typing_FStar.Seq.Base.create",
         "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "b1591c9c7211bc001edcde7a9b0ca000"
+      "ced8ad245deaaa1a4fd7e848c954d8d7"
     ],
     [
       "EtM.MAC.verify",
@@ -283,7 +284,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.empty"
       ],
       0,
-      "398996d5dd92f4af61f2fd80d3f3d43c"
+      "f035713b4d457402f32e36dfe2f7739a"
     ],
     [
       "EtM.MAC.sha1_key",

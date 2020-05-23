@@ -367,7 +367,7 @@
         "disc_equation_While.AOp", "disc_equation_While.AVar",
         "equation_FStar.Heap.trivial_preorder", "equation_FStar.ST.mref",
         "equation_FStar.ST.ref", "equation_Prims.eqtype",
-        "equation_While.id",
+        "equation_While.id", "equation_While.interpret_binop",
         "equation_with_fuel_While.interpret_exp.fuel_instrumented",
         "fuel_guarded_inversion_While.exp",
         "function_token_typing_Prims.__cache_version_number__",
@@ -380,10 +380,10 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
         "typing_FStar.Heap.trivial_preorder",
-        "typing_FStar.Monotonic.Heap.sel"
+        "typing_FStar.Monotonic.Heap.sel", "typing_While.interpret_binop"
       ],
       0,
-      "544948b7fd17ed29eb9b5a8228f230a1"
+      "e0118e841ad1f019bb8b3e5740f3da9e"
     ],
     [
       "While.interpret_com_st",

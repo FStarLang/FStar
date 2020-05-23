@@ -121,16 +121,24 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_GC.mem_addr",
-        "equation_GC.mutator_inv", "equation_GC.obj_inv",
-        "equation_GC.ptr_lifts_to", "equation_GC.trigger",
-        "equation_GC.valid", "fuel_guarded_inversion_GC.gc_state",
-        "int_inversion",
-        "refinement_interpretation_GC_Tm_refine_e46d229b93cb6c2384a9a7b31bf0aa27",
-        "true_interp"
+        "@MaxIFuel_assumption", "@query",
+        "GC_interpretation_Tm_arrow_5d846e8dc8d50e58c30aadcda1836791",
+        "GC_pretyping_ab0ffb7fae1c8ce581a4f6505251cb9c",
+        "data_elim_GC.Mkgc_state",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_GC.F2@tok", "equation_GC.field_map",
+        "equation_GC.mem_addr", "equation_GC.mutator_inv",
+        "equation_GC.obj_inv", "equation_GC.ptr_lifts_to",
+        "equation_GC.trigger", "equation_GC.valid",
+        "fuel_guarded_inversion_GC.gc_state", "int_inversion",
+        "kinding_GC.field@tok", "proj_equation_GC.Mkgc_state_fields",
+        "proj_equation_GC.Mkgc_state_to_abs",
+        "refinement_interpretation_Tm_refine_5248130f0b0d7223b3b6331b13742bec",
+        "refinement_kinding_Tm_refine_5248130f0b0d7223b3b6331b13742bec",
+        "token_correspondence_GC.__proj__Mkgc_state__item__fields"
       ],
       0,
-      "269ceea9b6d37a03eef228ca6f2768d9"
+      "328c08a294de04125bd7849145732067"
     ],
     [
       "GC.write_field",
@@ -456,7 +464,7 @@
         "typing_GC.mem_hi", "typing_GC.mem_lo", "typing_GC.valid"
       ],
       0,
-      "7be8e0fa842176f06f472e3dac6ff577"
+      "3b4cb0d33531776d61cdb72cea1667fc"
     ]
   ]
 ]

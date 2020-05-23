@@ -102,15 +102,6 @@
       ],
       0,
       "153551c63a3a7c5150918c132c544735"
-    ],
-    [
-      "FStar.DM4F.IntStoreExcFixed.read",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "63f3cb383bee43dd971e9c9d8574fef7"
     ]
   ]
 ]
