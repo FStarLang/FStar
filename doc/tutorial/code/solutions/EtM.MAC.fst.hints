@@ -11,7 +11,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "be27c92f978e6d833f0f882e72baf6ec"
+      "ae3d7fd6e602578d64cf05bbf48b75d9"
     ],
     [
       "EtM.MAC.tag",
@@ -24,7 +24,7 @@
         "equation_EtM.MAC.macsize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "230f3b504c5987344328fff8e6d8b65e"
+      "e1049e95e4019cc482dec10fa006460b"
     ],
     [
       "EtM.MAC.sha1",
@@ -33,7 +33,7 @@
       1,
       [ "@query", "equation_EtM.MAC.macsize" ],
       0,
-      "84d4f1ed8491b02772b4d77a5b080ba6"
+      "61b68ca85fa02363ff322347fe06c7f3"
     ],
     [
       "EtM.MAC.hmac_sha1",
@@ -53,7 +53,7 @@
         "typing_EtM.MAC.sha1", "typing_Platform.Bytes.op_At_Bar"
       ],
       0,
-      "c3ab405aaf588726a21cb5905a00d2d6"
+      "f7cfce59bb0513bc0b5d7edbbfa73793"
     ],
     [
       "EtM.MAC.__proj__Key__item__log",
@@ -65,7 +65,7 @@
         "projection_inverse_EtM.MAC.Key_region"
       ],
       0,
-      "998ffdb5ad354033647dd97112f6af09"
+      "9159e8444f2ca5f43b96d2691ed70eb4"
     ],
     [
       "EtM.MAC.keygen",
@@ -158,7 +158,7 @@
         "typing_FStar.Set.union"
       ],
       0,
-      "604d4ec5c04852e17634db92077561d5"
+      "7e515d9c1675a052931ac6980dcdaa40"
     ],
     [
       "EtM.MAC.mac",
@@ -189,12 +189,13 @@
         "refinement_interpretation_Tm_refine_f596a1e23d65ebe54b463345ece4e00f",
         "refinement_kinding_Tm_refine_7de8468e4c8be42394c70da6b10033dd",
         "typing_EtM.MAC.__proj__Key__item__log",
+        "typing_EtM.MAC.__proj__Key__item__raw", "typing_EtM.MAC.hmac_sha1",
         "typing_FStar.Monotonic.HyperStack.sel",
         "typing_FStar.Monotonic.Seq.grows", "typing_FStar.Seq.Base.create",
         "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "18688a427fb97125b5efba4c4a929708"
+      "ced8ad245deaaa1a4fd7e848c954d8d7"
     ],
     [
       "EtM.MAC.verify",
@@ -212,7 +213,7 @@
         "refinement_kinding_Tm_refine_7de8468e4c8be42394c70da6b10033dd"
       ],
       0,
-      "8095cf53eb4b3ca93f9fd0824ecb83bd"
+      "683628e52b7b043ac1756bdfa72738d1"
     ],
     [
       "EtM.MAC.verify",
@@ -283,7 +284,7 @@
         "typing_FStar.Set.complement", "typing_FStar.Set.empty"
       ],
       0,
-      "847c5e480114f6da153957fbaf625091"
+      "f035713b4d457402f32e36dfe2f7739a"
     ],
     [
       "EtM.MAC.sha1_key",
@@ -295,7 +296,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "db854fa2a3e49c1c628d57bd8963f37a"
+      "c31f8de11045c5695f32de6adbfa2de8"
     ],
     [
       "EtM.MAC.tag",
@@ -308,7 +309,7 @@
         "equation_EtM.MAC.macsize", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "562b4c04b3df96d6b695edc08dd553c1"
+      "9499e8fedd85d4920590d9c81c49d5c8"
     ],
     [
       "EtM.MAC.sha1",
@@ -317,7 +318,7 @@
       1,
       [ "@query", "equation_EtM.MAC.macsize" ],
       0,
-      "7109e8f3f2def724b2769a9eedfeaa93"
+      "c0fb0a1d07f2c80d2dc00764a9fb0a0f"
     ],
     [
       "EtM.MAC.hmac_sha1",
@@ -329,7 +330,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "e84dffdfc7f5f67b9fb7563ddee307b8"
+      "3a78b42ac84ded282813728b2f417f6c"
     ],
     [
       "EtM.MAC.__proj__Key__item__log",
@@ -341,7 +342,7 @@
         "projection_inverse_EtM.MAC.Key_region"
       ],
       0,
-      "e1070f1f247872959d19e5c35ee671b8"
+      "37d786e040756f1855eefa765eba005b"
     ],
     [
       "EtM.MAC.verify",
@@ -359,7 +360,7 @@
         "refinement_kinding_Tm_refine_7de8468e4c8be42394c70da6b10033dd"
       ],
       0,
-      "5a1f15ce83fdbfc457c89637392da184"
+      "0a7f929dd8c6890c200b0a8f56992cf9"
     ]
   ]
 ]

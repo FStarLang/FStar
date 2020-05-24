@@ -21,7 +21,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "aab2e86daa32cac9bd892eef7a59a041"
+      "579d292402cfd73e5fbc9b3c103e3b11"
     ],
     [
       "Loops.sum_up_eq",
@@ -191,7 +191,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "73901627bffe4e6bdb1ba77195e15ae9"
+      "053a5f7b546b5f8bd2311edc037c2625"
     ],
     [
       "Loops.sum_dn_eq",
