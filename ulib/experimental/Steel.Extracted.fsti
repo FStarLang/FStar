@@ -30,6 +30,7 @@ module UPCMBase = Steel.PCM.Unitless.Base
 /// Abstraction boundary for Steel programs. Every function here gets a special treatment in Kremlin
 /// and is extracted to a C primitive.
 
+#set-options "--fuel 1 --ifuel 1"
 
 (*** Types stored in memory *)
 
@@ -48,8 +49,14 @@ val to_mem_typ (a: Type u#a) (pcm: UPCM.unitless_pcm a) : mem_typ u#a
 (** [ghost_mem_typ a pcm] will store [Ghost.erased a] into memory, it will not be extracted *)
 val ghost_mem_typ (a: Type u#a)  (pcm: UPCM.unitless_pcm (Ghost.erased a)) : mem_typ u#a
 
-(** If [t] is extracted to [tau] in C, then [mem_array t len] will be extracted to [*tau] *)
-val mem_array (t: mem_typ u#a) (len: SizeT.t) : mem_typ u#a
+type array_info : Type u#0 = {
+  max_len: SizeT.t;
+  len: (len:SizeT.t{SizeT.v len <= SizeT.v max_len});
+  offset: (offset:SizeT.t{SizeT.v offset + SizeT.v len <= SizeT.v max_len})
+}
+
+(** If [t] is extracted to [tau] in C, then [mem_array t info] will be extracted to [*tau] *)
+val mem_array (t: mem_typ u#a) (info: array_info) : mem_typ u#a
 
 (**
   Tactic that examines a type to check if it is an inductive type with one constructor and
@@ -77,9 +84,9 @@ val base_view_ghost (a: Type u#a) (pcm: UPCM.unitless_pcm (Ghost.erased a))
     : Lemma (mem_typ_view (ghost_mem_typ a pcm) == Ghost.erased a)
     [SMTPat (mem_typ_view (ghost_mem_typ a pcm))]
 
-val array_view (t: mem_typ u#a) (len: SizeT.t)
-    : Lemma (mem_typ_view (mem_array t len) == Seq.lseq (mem_typ_view t) (SizeT.v len))
-    [SMTPat (mem_typ_view (mem_array t len))]
+val array_view (t: mem_typ u#a) (info: array_info)
+    : Lemma (mem_typ_view (mem_array t info) == Seq.lseq (mem_typ_view t) (SizeT.v info.len))
+    [SMTPat (mem_typ_view (mem_array t info))]
 
 (**
   To a [mem_record], we can associate another inductive type [view_record] which has the same
@@ -121,11 +128,11 @@ val base_pcm_ghost (a: Type u#a) (pcm: UPCM.unitless_pcm (Ghost.erased a))
     : Lemma (mem_typ_pcm (ghost_mem_typ a pcm) == pcm)
     [SMTPat (mem_typ_pcm (ghost_mem_typ a pcm))]
 
-val array_pcm (t: mem_typ u#a) (len: SizeT.t)
-    : Lemma (mem_typ_pcm (mem_array t len) ==
-      AS.pointwise_array_pcm (mem_typ_view t) len (mem_typ_pcm t)
+val array_pcm (t: mem_typ u#a) (info: array_info)
+    : Lemma (mem_typ_pcm (mem_array t info) ==
+      AS.pointwise_array_pcm (mem_typ_view t) info.len (mem_typ_pcm t)
     )
-    [SMTPat (mem_typ_pcm (mem_array t len))]
+    [SMTPat (mem_typ_pcm (mem_array t info))]
 
 (**
   To a [mem_record], we can associate another inductive type [pcm_record] which has the same
@@ -169,4 +176,77 @@ val struct_pcm
 
 (*** Pointers *)
 
+(**
+  The [reference] type are the pointer values that your program will manipulate.
+  They are in universe 0.
+*)
 val reference (t: mem_typ u#a) : Type u#0
+
+(**** Subreferences *)
+
+(** Allows you to effectively to point to the contents of a single cell *)
+val cell_reference
+  (#t: mem_typ u#a)
+  (#info: array_info)
+  (r: reference (mem_array t info))
+  (i: SizeT.t{SizeT.v i < SizeT.v info.len})
+  : reference t
+
+val subarray_reference
+  (#t: mem_typ u#a)
+  (#info: array_info)
+  (r: reference (mem_array t info))
+  (offset: SizeT.t)
+  (len: SizeT.t{
+    SizeT.v len <= SizeT.v info.len /\
+    SizeT.v info.offset + SizeT.v offset + SizeT.v len <= SizeT.v info.max_len
+  })
+  : reference (mem_array t ({ info with offset = info.offset `SizeT.add` offset; len = len }))
+
+(** Tactic that checks if [name] is an argument of the [mem_record]'s unique constructor *)
+let is_field_of
+   (name: string)
+   (mem_record: Type u#a{is_mem_typ_record mem_record})
+   : prop
+   = admit()
+
+(** Tactic that retrives the [mem_typ] or a [mem_record]'s argument *)
+let get_field_mem_typ
+   (name: string)
+   (mem_record: Type u#a{is_mem_typ_record mem_record})
+   : mem_typ u#a
+   = admit()
+
+
+val field_reference
+  (#mem_record: Type u#a{is_mem_typ_record mem_record})
+  (r: reference (mem_struct mem_record))
+  (name: string{name `is_field_of` mem_record})
+  : reference (get_field_mem_typ name mem_record)
+
+(**
+  You could do a "substruct" with a tactic on inductive types that check whether an inductive
+  type is a "suffix" of another.
+*)
+
+(*** Memory *)
+
+val mem : Type u#(a+1)
+
+(**** Reading memory *)
+
+val sel (#t: mem_typ u#a) (r: reference t) (m :mem u#(max a b)) : (mem_typ_view t)
+
+#push-options "--fuel 2 --ifuel 2 --z3rlimit 20"
+val sel_cell
+  (#t: mem_typ u#a)
+  (#info: array_info)
+  (r: reference (mem_array t info))
+  (i: SizeT.t{SizeT.v i < SizeT.v info.len})
+  (m :mem u#(max a b))
+  : Lemma (
+    array_view t info;
+    let seq : Seq.lseq (mem_typ_view t) (SizeT.v info.len) = sel r m in
+    sel (cell_reference r i) m == Seq.index seq (SizeT.v i)
+  )
+#pop-options
