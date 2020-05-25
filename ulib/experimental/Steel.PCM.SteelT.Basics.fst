@@ -14,73 +14,71 @@
    limitations under the License.
 *)
 
-module Steel.SteelT.Basics
-open Steel.Effect
-open Steel.Memory
-open Steel.HigherReference
-module AB = Steel.SteelAtomic.Basics
+module Steel.PCM.SteelT.Basics
+open Steel.PCM.Effect
+open Steel.PCM.Memory
+module AB = Steel.PCM.Effect.Atomic
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit 20"
-let return (#a:Type) (#p:a -> hprop) (x:a)
+let return (#a:Type) (#p:a -> slprop) (x:a)
   : SteelT a (p x) p
   = AB.lift_atomic_to_steelT (fun _ -> AB.return_atomic #_ #Set.empty #p x)
 
-let intro_h_exists (#a:Type) (x:a) (p:(a -> hprop))
+let intro_h_exists (#a:Type) (x:a) (p:(a -> slprop))
   : SteelT unit (p x) (fun _ -> h_exists p)
   = AB.lift_atomic_to_steelT (fun _ -> AB.intro_h_exists x p)
 
-let h_assert (p:hprop)
+let h_assert (p:slprop)
   : SteelT unit p (fun _ -> p)
   = AB.lift_atomic_to_steelT (fun _ -> AB.h_assert_atomic p)
 
-let h_intro_emp_l (p:hprop)
+let h_intro_emp_l (p:slprop)
   : SteelT unit p (fun _ -> emp `star` p)
   = AB.lift_atomic_to_steelT (fun _ -> AB.h_intro_emp_l p)
 
-let h_commute (p q:hprop)
+let h_commute (p q:slprop)
   : SteelT unit (p `star` q) (fun _ -> q `star` p)
   = AB.lift_atomic_to_steelT (fun _ -> AB.h_commute p q)
 
-let h_affine (p q:hprop)
+let h_affine (p q:slprop)
   : SteelT unit (p `star` q) (fun _ -> p)
   = AB.lift_atomic_to_steelT (fun _ -> AB.h_affine p q)
 
-let par' (#preL:pre_t) (#postL:post_t unit)
-        ($f:unit -> SteelT unit preL postL)
-        (#preR:pre_t) (#postR:post_t unit)
-        ($g:unit -> SteelT unit preR postR)
+let par' (#preL:slprop) (#postL:unit -> slprop)
+         ($f:unit -> SteelT unit preL postL)
+         (#preR:slprop) (#postR:unit -> slprop)
+         ($g:unit -> SteelT unit preR postR)
   : SteelT (unit & unit)
     (preL `star` preR)
     (fun x -> postL (fst x) `star` postR (snd x))
-  = par f g
+  = par f g 
 
-let par (#preL:pre_t) (#postL:post_t unit)
+let par (#preL:slprop) (#postL:unit -> slprop)
         ($f:unit -> SteelT unit preL postL)
-        (#preR:pre_t) (#postR:post_t unit)
+        (#preR:slprop) (#postR:unit -> slprop)
         ($g:unit -> SteelT unit preR postR)
   : SteelT unit
     (preL `star` preR)
     (fun x -> postL () `star` postR ())
   = let x = par' f g in return ()
 
-let h_elim_emp_l (p:hprop)
+let h_elim_emp_l (p:slprop)
   : SteelT unit (emp `star` p) (fun _ -> p)
   = AB.lift_atomic_to_steelT (fun _ -> AB.h_elim_emp_l p)
 
-let frame (#a:Type) (#pre:pre_t) (#post:post_t a)
+let frame (#a:Type) (#pre:slprop) (#post:a -> slprop)
           ($f:unit -> SteelT a pre post)
-          (frame:hprop)
+          (frame:slprop)
   : SteelT a
     (pre `star` frame)
     (fun x -> post x `star` frame)
-  = steel_frame f frame (fun _ -> True)
+  = Steel.PCM.Effect.frame f frame (fun _ -> True)
 
-let noop (#p:hprop) (u:unit) : SteelT unit p (fun _ -> p)
+let noop (#p:slprop) (u:unit) : SteelT unit p (fun _ -> p)
   = return ()
 
-let change_hprop
-  (p q:hprop)
+let change_slprop
+  (p q:slprop)
   (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
   : SteelT unit p (fun _ -> q)
-  = Steel.SteelAtomic.Basics.lift_atomic_to_steelT
-      (fun () -> Steel.Effect.Atomic.change_hprop p q proof)
+  = AB.lift_atomic_to_steelT (fun () -> AB.change_slprop p q proof)

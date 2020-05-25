@@ -76,13 +76,8 @@ val join_associative (m0 m1 m2:mem)
 (**** Separation logic *)
 
 (** The type of separation logic propositions. Based on Steel.PCM.Heap.slprop *)
-//[@@erasable]
-(*
-  NS: I would like this to be abstract, but I can't define an abstract abbreviation of an erasable
-  type and have it be erasable too. Need to fix that after which this interface should not expose
-  its dependence on Heap
-*)
-let slprop = Steel.PCM.Heap.slprop
+[@@erasable]
+val slprop : Type u#(a + 1)
 
 (** Interpreting mem assertions as memory predicates *)
 val interp (p:slprop u#a) (m:mem u#a) : prop
@@ -104,8 +99,8 @@ val h_and (p1 p2:slprop u#a) : slprop u#a
 val h_or  (p1 p2:slprop u#a) : slprop u#a
 val star  (p1 p2:slprop u#a) : slprop u#a
 val wand  (p1 p2:slprop u#a) : slprop u#a
-val h_exists (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a
-val h_forall (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a
+val h_exists (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a
+val h_forall (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a
 
 (***** Properties of separation logic equivalence *)
 
@@ -117,6 +112,9 @@ val equiv_extensional_on_star (p1 p2 p3:slprop)
 
 val emp_unit (p:slprop)
   : Lemma (p `equiv` (p `star` emp))
+
+val intro_emp (m:mem)
+  : Lemma (interp emp m)
 
 (***** Properties of [pts_to] *)
 
@@ -292,3 +290,26 @@ let inv (p:slprop) = i:iname{i >--> p}
 (** Creates a new invariant from a separation logic predicate [p] owned at the time of the call *)
 val new_invariant (e:inames) (p:slprop)
   : action_except (inv p) e p (fun _ -> emp)
+
+val with_invariant (#a:Type)
+                   (#fp:slprop)
+                   (#fp':a -> slprop)
+                   (#opened_invariants:inames)
+                   (#p:slprop)
+                   (i:inv p{not (i `Set.mem` opened_invariants)})
+                   (f:action_except a (Set.union (Set.singleton i) opened_invariants) (p `star` fp) (fun x -> p `star` fp' x))
+  : action_except a opened_invariants fp fp'
+
+
+val frame (#a:Type)
+          (#opened_invariants:inames)
+          (#pre:slprop)
+          (#post:a -> slprop)
+          (frame:slprop)
+          ($f:action_except a opened_invariants pre post)
+  : action_except a opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
+
+val change_slprop (#opened_invariants:inames)
+                  (p q:slprop)
+                  (proof: (m:mem -> Lemma (requires interp p m) (ensures interp q m)))
+  : action_except unit opened_invariants p (fun _ -> q)

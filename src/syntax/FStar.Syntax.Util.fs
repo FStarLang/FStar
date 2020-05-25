@@ -2143,8 +2143,7 @@ let apply_wp_eff_combinators (f:tscheme -> tscheme) (combs:wp_eff_combinators)
 let apply_layered_eff_combinators (f:tscheme -> tscheme) (combs:layered_eff_combinators)
 : layered_eff_combinators
 = let map_tuple (ts1, ts2) = (f ts1, f ts2) in
-  { l_base_effect = combs.l_base_effect;
-    l_repr = map_tuple combs.l_repr;
+  { l_repr = map_tuple combs.l_repr;
     l_return = map_tuple combs.l_return;
     l_bind = map_tuple combs.l_bind;
     l_subcomp = map_tuple combs.l_subcomp;
@@ -2226,8 +2225,3 @@ let get_stronger_repr (ed:eff_decl) : option<tscheme> =
   | Primitive_eff _
   | DM4F_eff _ -> None
   | Layered_eff combs -> combs.l_subcomp |> fst |> Some
-
-let get_layered_effect_base (ed:eff_decl) : option<lident> =
-  match ed.combinators with
-  | Layered_eff combs -> combs.l_base_effect |> Some
-  | _ -> None

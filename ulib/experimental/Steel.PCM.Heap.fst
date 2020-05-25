@@ -240,12 +240,17 @@ let join_associative2 (m0 m1 m2:heap)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+let slprop = a_heap_prop
+
 module W = FStar.WellFounded
 
 
 let interp (p:slprop u#a) (m:heap u#a)
   : Tot prop
   = p m
+
+let as_slprop p = p
+
 let emp : slprop u#a = fun h -> True
 
 let affine_hprop_intro
@@ -310,18 +315,17 @@ let wand (p1 p2: slprop u#a) : slprop u#a =
         interp p1 h1 ==>
         interp p2 (join h h1)
 
-let h_exists  (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a =
+let h_exists  (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a =
   fun (h: heap) ->
    exists x. (W.axiom1 f x; interp (f x) h)
 
-let h_forall (#a:Type u#a) (f: (a -> slprop u#a)) : slprop u#a =
+let h_forall (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a =
   fun (h: heap) ->
    forall x. (W.axiom1 f x; interp (f x) h)
 
-let h_refine (p:slprop u#a) (r:slprop u#a) : slprop u#a =
-  h_and p r
+let h_refine p r = h_and p r
 
-////////////////////////////////////////////////////////////////////////////////
+ ////////////////////////////////////////////////////////////////////////////////
 //properties of equiv
 ////////////////////////////////////////////////////////////////////////////////
 let affine_star p q h = ()
@@ -347,6 +351,8 @@ let emp_unit p
       = affine_star p emp m
     in
     ()
+
+let intro_emp h = ()
 
 let h_exists_cong (#a:Type) (p q : a -> slprop) = ()
 
@@ -829,3 +835,50 @@ let extend #a #pcm x addr h =
      in
      (| r, h' |)
 #pop-options
+
+
+let frame (#a:Type)
+          (#pre:slprop)
+          (#post:a -> slprop)
+          (frame:slprop)
+          ($f:action pre a post)
+  = let g : refined_pre_action (pre `star` frame) a (fun x -> post x `star` frame)
+        = fun h0 ->
+              assert (interp (pre `star` frame) h0);
+              affine_star pre frame h0;
+              let (| x, h1 |) = f h0 in
+              assert (interp (post x) h1);
+              assert (interp (post x `star` frame) h1);
+              assert (forall frame'. frame_related_heaps h0 h1 pre (post x) frame' false);
+              let aux (frame':slprop)
+                : Lemma (requires
+                            interp ((pre `star` frame) `star` frame') h0)
+                        (ensures
+                            interp ((post x `star` frame) `star` frame') h1)
+                        [SMTPat ()]
+                = star_associative pre frame frame';
+                  star_associative (post x) frame frame'
+              in
+              assert (forall frame'. frame_related_heaps h0 h1 (pre `star` frame) (post x `star` frame) frame' false);
+              (| x, h1 |)
+    in
+    refined_pre_action_as_action g
+
+let change_slprop (p q:slprop)
+                  (proof: (h:heap -> Lemma (requires interp p h) (ensures interp q h)))
+  : action p unit (fun _ -> q)
+  = let g
+      : refined_pre_action p unit (fun _ -> q)
+      = fun h ->
+          proof h;
+          let aux (frame:slprop)
+            : Lemma (requires
+                        interp (p `star` frame) h)
+                    (ensures
+                        interp (q `star` frame) h)
+                    [SMTPat ()]
+            = FStar.Classical.forall_intro (FStar.Classical.move_requires proof)
+          in
+          (| (), h |)
+    in
+    refined_pre_action_as_action g

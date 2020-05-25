@@ -20,7 +20,8 @@ module S = Steel.Semantics.Hoare.MST
 open Steel.PCM.Memory
 
 let state0 (uses:inames) : S.st0 =
-  { S.mem = mem;
+  {
+    S.mem = mem;
     S.core = core_mem;
     S.locks_preorder = mem_evolves;
     S.hprop = slprop;
@@ -40,4 +41,18 @@ let state0 (uses:inames) : S.st0 =
 val state_obeys_st_laws (uses:inames)
   : Lemma (S.st_laws (state0 uses))
 
-let state : S.st = state_obeys_st_laws Set.empty; state0 Set.empty
+let state_uses (uses:inames) : S.st = state_obeys_st_laws uses; state0 uses
+
+let state : S.st = state_uses Set.empty
+
+val state_correspondence (inames:inames)
+  : Lemma
+    (let s = state_uses inames in
+     s.S.hprop == slprop /\
+     s.S.mem == mem /\
+     s.S.interp == interp /\
+     s.S.star == star /\
+     s.S.locks_invariant == locks_invariant inames /\
+     (forall (p q:slprop) (m0 m1:mem).
+       preserves_frame inames p q m0 m1 ==>
+       S.preserves_frame #s p q m0 m1))
