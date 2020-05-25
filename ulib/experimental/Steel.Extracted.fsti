@@ -233,20 +233,15 @@ val field_reference
 
 val mem : Type u#(a+1)
 
-(**** Reading memory *)
+(**
+  Here, we copy all the actions from Steel.PCM.Memory with sub-lemmas for ensuring view
+  consistency with subreferences.
+*)
 
-val sel (#t: mem_typ u#a) (r: reference t) (m :mem u#(max a b)) : (mem_typ_view t)
-
-#push-options "--fuel 2 --ifuel 2 --z3rlimit 20"
-val sel_cell
-  (#t: mem_typ u#a)
-  (#info: array_info)
-  (r: reference (mem_array t info))
-  (i: SizeT.t{SizeT.v i < SizeT.v info.len})
-  (m :mem u#(max a b))
-  : Lemma (
-    array_view t info;
-    let seq : Seq.lseq (mem_typ_view t) (SizeT.v info.len) = sel r m in
-    sel (cell_reference r i) m == Seq.index seq (SizeT.v i)
-  )
-#pop-options
+(**
+  We also include new actions:
+  - access to a cell/subarray/field in a scoped fashion while forgetting the rest of
+    the array/struct
+  - split an array in two halves, recombine them
+  - split a struct into all of its fields (for that create mem_ref_record)
+*)
