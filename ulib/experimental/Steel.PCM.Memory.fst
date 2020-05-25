@@ -73,6 +73,7 @@ let interp p m = H.interp p m.heap
 let ref = H.ref
 
 let emp : slprop u#a = H.emp
+let pure = H.pure
 let pts_to = H.pts_to
 let h_and = H.h_and
 let h_or = H.h_or
@@ -137,6 +138,10 @@ let equiv_extensional_on_star (p1 p2 p3:slprop u#a) =
 let emp_unit p = H.emp_unit p
 
 let intro_emp m = H.intro_emp (heap_of_mem m)
+
+let pure_equiv p q = H.pure_equiv p q
+let pure_interp q m = H.pure_interp q (heap_of_mem m)
+let pure_star_interp p q m = H.pure_star_interp p q (heap_of_mem m)
 
 ////////////////////////////////////////////////////////////////////////////////
 //pts_to
