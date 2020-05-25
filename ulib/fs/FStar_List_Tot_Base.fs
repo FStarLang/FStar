@@ -1,4 +1,4 @@
-module List.Tot.Base
+module FStar_List_Tot_Base
 open Prims
 module OCamlList = FSharp.Compatibility.OCaml.List
 
@@ -7,10 +7,10 @@ let hd = List.head
 let tail = List.tail
 let tl = List.tail
 let length l : int = List.length l |> System.Numerics.BigInteger.op_Implicit
-let nth l i = try Some (List.nth l (Microsoft.FSharp.Core.Operators.int i)) with _ -> None
-let index l i = List.nth l (Microsoft.FSharp.Core.Operators.int i)
+let nth l (i : Prims.nat) = try Some (List.nth l (Microsoft.FSharp.Core.Operators.int i)) with _ -> None
+let index l (i : Prims.nat) = List.nth l (Microsoft.FSharp.Core.Operators.int i)
 let count _ _ = failwith "FStar_List.Tot.Base.fs: Not implemented: count"
-let rev_acc l r = List.fold_left (fun x xs -> x :: xs) r l
+let rev_acc l r = List.fold (fun xs x -> x :: xs) r l
 let rev = List.rev
 let append = List.append
 let op_Append = append

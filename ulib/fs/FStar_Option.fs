@@ -1,4 +1,4 @@
-module FStar.Option
+module FStar_Option
 let isSome = function
   | Some _ -> true
   | None -> false

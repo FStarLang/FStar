@@ -1,8 +1,7 @@
-module FStar.Char
+module FStar_Char
 open Prims
-//open FStar.Pervasives
 
-type char = Prims.char
+type char = FSharp.Core.char
 
 let lowercase = System.Char.ToLower
 let uppercase = System.Char.ToUpper
