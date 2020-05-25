@@ -1,5 +1,5 @@
 #light "off"
-module FStar.Pervasives.Native
+module FStar_Pervasives_Native
 open Prims
 type 'Aa option =
 | None

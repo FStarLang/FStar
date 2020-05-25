@@ -44,7 +44,7 @@
   <PropertyGroup>
     <FSTAR_HOME>..</FSTAR_HOME>
     <!-- TODO: Should we exclude FStar.Pervasives here? We don't want to rely on copying an already extracted module available from compiler compilation as compiler code was extracted to ocaml -->
-    <FSTAR_EXTRACT>--extract "-Prims +FStar +LowStar +Steel -FStar.Tactics -FStar.Reflection -Steel.Tactics -FStar.All -FStar.BaseTypes -FStar.Buffer -FStar.Bytes -FStar.Char -FStar.CommonST -FStar.Constructive -FStar.Dyn -FStar.Float -FStar.Ghost -FStar.Heap -FStar.Monotonic.Heap -FStar.HyperStack.All -FStar.HyperStack.ST -FStar.HyperStack.IO -FStar.Int16 -FStar.Int32 -FStar.Int64 -FStar.Int8 -FStar.IO -FStar.List -FStar.List.Tot.Base -FStar.Mul -FStar.Option -FStar.Pervasives.Native -FStar.Set -FStar.ST -FStar.Exn -FStar.String -FStar.UInt16 -FStar.UInt32 -FStar.UInt64 -FStar.UInt8 -FStar.Pointer.Derived1 -FStar.Pointer.Derived2 -FStar.Pointer.Derived3 -FStar.BufferNG -FStar.Tactics.Builtins -FStar.TaggedUnion -FStar.Reflection.Types -FStar.Reflection.Builtins -FStar.Reflection.Data -FStar.Tactics.Result -FStar.Tactics.Types -FStar.Bytes -FStar.Util -FStar.Pervasives -FStar.Order -FStar.Range -FStar.Vector.Base -FStar.Vector.Properties -FStar.Vector -FStar.TSet -FStar.Printf -LowStar.Printf +FStar.List.Tot.Properties +FStar.Int.Cast.Full -Steel.Memory -Steel.Actions -Steel.Semantics"</FSTAR_EXTRACT>
+    <FSTAR_EXTRACT>--extract "-Prims +FStar +LowStar +Steel -FStar.Tactics -FStar.Reflection -Steel.Tactics -FStar.All -FStar.BaseTypes -FStar.Buffer -FStar.Bytes -FStar.Char -FStar.CommonST -FStar.Constructive -FStar.Dyn -FStar.Float -FStar.Ghost -FStar.Heap -FStar.Monotonic.Heap -FStar.HyperStack.All -FStar.HyperStack.ST -FStar.HyperStack.IO -FStar.Int16 -FStar.Int32 -FStar.Int64 -FStar.Int8 -FStar.IO -FStar.List -FStar.List.Tot.Base -FStar.Mul -FStar.Option -FStar.Pervasives.Native -FStar.Set -FStar.ST -FStar.Exn -FStar.String -FStar.UInt16 -FStar.UInt32 -FStar.UInt64 -FStar.UInt8 -FStar.Pointer.Derived1 -FStar.Pointer.Derived2 -FStar.Pointer.Derived3 -FStar.BufferNG -FStar.Tactics.Builtins -FStar.TaggedUnion -FStar.Reflection.Types -FStar.Reflection.Builtins -FStar.Reflection.Data -FStar.Tactics.Result -FStar.Tactics.Types -FStar.Bytes -FStar.Util +FStar.Pervasives -FStar.Order -FStar.Range -FStar.Vector.Base -FStar.Vector.Properties -FStar.Vector -FStar.TSet -FStar.Printf -LowStar.Printf +FStar.List.Tot.Properties +FStar.Int.Cast.Full -Steel.Memory -Steel.Actions -Steel.Semantics"</FSTAR_EXTRACT>
     <!-- Path where cached lax files should be written by default -->
     <FSTAR_LAX_CACHE_PATH Condition=" '$(FSTAR_LAX_CACHE_PATH)' == '' ">$(IntermediateOutputPath).cache.lax</FSTAR_LAX_CACHE_PATH>
     <!-- Custom FStar flags used in this project -->
@@ -63,9 +63,15 @@
     <Compile Include="fs\FStar_ST.fs" />
     <Compile Include="fs\FStar_All.fs" />
     <Compile Include="fs\FStar_IO.fs" />
+    <Compile Include="fs\FStar_Pervasives_Native.fs" />
 
     <FStarSourceFile Include="FStar.Pervasives.fst" />
     <FStarInterfaceFile Include="FStar.Pervasives.fsti" />
+
+    <FStarSourceFile Include="FStar.List.Tot.Base.fst" />
+
+    <FStarSourceFile Include="FStar.Seq.Base.fst" />
+    <FStarInterfaceFile Include="FStar.Seq.Base.fsti" />
 
   </ItemGroup>
   <ItemGroup>

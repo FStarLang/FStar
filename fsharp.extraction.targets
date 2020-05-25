@@ -27,12 +27,17 @@
 
         <!-- Make sure the FSTAR_EXTRACTED_PATH directory exists before extraction -->
         <MakeDir Directories="$(FSTAR_EXTRACTED_PATH)" Condition="!Exists('$(FSTAR_EXTRACTED_PATH)')" />
-        <Exec Command="$(FSTAR_EXE) $(FSTAR_WARN_ERROR) $(FSTAR_EXTRACTION_FLAGS) $(FSTAR_FLAGS) @(FStarSourceFile, ' ')"></Exec>
+        <!-- <Exec Command="$(FSTAR_EXE) $(FSTAR_WARN_ERROR) $(FSTAR_EXTRACTION_FLAGS) $(FSTAR_FLAGS) @(FStarSourceFile, ' ')"></Exec> -->
+        <Exec Command="$(FSTAR_EXE) $(FSTAR_WARN_ERROR) $(FSTAR_EXTRACTION_FLAGS) $(FSTAR_FLAGS) %(FStarSourceFile.Identity) --extract &quot;+%(FStarSourceFile.Filename)&quot;"></Exec>
 
         <ItemGroup>
-            <GeneratedFiles Include="$(FSTAR_EXTRACTED_PATH)\*.fs" />
+            <GeneratedFileNames Include="@(FStarSourceFile -> '%(Filename)')" />
+            <GeneratedFileNamesWithUnderscores Include="@(GeneratedFileNames->Replace('.','_'))" />
+            <GeneratedFiles Include="$(FSTAR_EXTRACTED_PATH)\%(GeneratedFileNamesWithUnderscores.Identity).fs" />
         </ItemGroup>
 
+        <!-- <Message Text="GeneratedFileNames: @(GeneratedFileNames)" /> -->
+        <!-- <Message Text="GeneratedFileNamesWithUnderscores: @(GeneratedFileNamesWithUnderscores)" /> -->
         <Message Text="Extracted fs files: @(GeneratedFiles)" />
 
         <ItemGroup>

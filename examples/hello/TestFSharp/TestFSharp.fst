@@ -15,6 +15,10 @@
 *)
 module TestFSharp
 
+open FStar.IO
+
 let t (a:Type) (b:Type) = list a
 
 let test #a #b (f:t a b) : list a = f
+
+let main = print_string "Unused type variables are removed in extracted type abbreviations!\n"
