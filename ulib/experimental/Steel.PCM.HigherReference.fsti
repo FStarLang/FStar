@@ -26,7 +26,7 @@ val ref (a:Type u#1) : Type u#0
 val pts_to (#a:Type u#1) (r:ref a) (p:perm) (v:erased a) : slprop u#1
 
 val alloc (#a:Type) (x:a)
-  : SteelT (ref a) emp (fun r -> pts_to r full_perm x)
+  : SteelT (ref a) emp (fun r -> pts_to r perm_one x)
 
 val read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   : SteelT a (pts_to r p v) (fun x -> pts_to r p x)
@@ -36,10 +36,10 @@ val read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
              (fun v -> pts_to r p v `star` q v)
 
 val write (#a:Type) (#v:erased a) (r:ref a) (x:a)
-  : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
+  : SteelT unit (pts_to r perm_one v) (fun _ -> pts_to r perm_one x)
 
 val free (#a:Type) (#v:erased a) (r:ref a)
-  : SteelT unit (pts_to r full_perm v) (fun _ -> emp)
+  : SteelT unit (pts_to r perm_one v) (fun _ -> emp)
 
 val share (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   : SteelT unit

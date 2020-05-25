@@ -54,7 +54,7 @@ let ref a = Mem.ref (fractional a) pcm_frac
 let pts_to #a r p v = Mem.pts_to r (Some (Ghost.reveal v, p))
 
 let alloc #a x =
-  let v = Some (x, full_perm) in
+  let v = Some (x, perm_one) in
   assert (Steel.PCM.composable pcm_frac v None);
   assert (compatible pcm_frac v v);
   Steel.PCM.Effect.alloc v
@@ -84,9 +84,9 @@ let read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
   = sl_admit _
 
 let write (#a:Type) (#v:erased a) (r:ref a) (x:a)
-  : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
-  = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
-    let v_new : fractional a = Some (x, full_perm) in
+  : SteelT unit (pts_to r perm_one v) (fun _ -> pts_to r perm_one x)
+  = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, perm_one)) in
+    let v_new : fractional a = Some (x, perm_one) in
     Steel.PCM.Effect.write r v_old v_new
 
 assume
@@ -94,8 +94,8 @@ val drop (p:slprop)
   : SteelT unit p (fun _ -> emp)
 
 let free (#a:Type) (#v:erased a) (r:ref a)
-  : SteelT unit (pts_to r full_perm v) (fun _ -> emp)
-  = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
+  : SteelT unit (pts_to r perm_one v) (fun _ -> emp)
+  = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, perm_one)) in
     Steel.PCM.Effect.free r v_old;
     drop _
 

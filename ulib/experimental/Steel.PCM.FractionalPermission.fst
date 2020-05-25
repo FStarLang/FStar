@@ -7,7 +7,7 @@ open Steel.PCM.Unitless
 #set-options "--fuel 0 --ifuel 1"
 
 [@erasable]
-noeq type perm : Type u#a =
+noeq type perm : Type u#0 =
   | MkPerm: v:real{v >. 0.0R} -> perm
 
 let perm_one : perm = MkPerm 1.0R
@@ -18,10 +18,10 @@ let writeable (p: perm) : GTot bool =
 let half_perm (p: perm) : GTot (perm) =
   MkPerm ((MkPerm?.v p) /. two)
 
-let sum_perm (p1 p2: perm u#a) : GTot (perm u#a) =
+let sum_perm (p1 p2: perm) : GTot (perm) =
   MkPerm (MkPerm?.v p1 +.  MkPerm?.v p2)
 
-let lesser_equal_perm (p1 p2:perm u#a) : GTot bool =
+let lesser_equal_perm (p1 p2:perm) : GTot bool =
   MkPerm?.v p1 <=.  MkPerm?.v p2
 
 noeq type with_perm (a: Type u#a) = {
@@ -29,11 +29,11 @@ noeq type with_perm (a: Type u#a) = {
   perm: perm
 }
 
-let composable_with_perm' (#a: Type u#a) (x y: with_perm a) : prop =
+let composable_with_perm' (#a: Type) (x y: with_perm a) : prop =
   x.value == y.value /\
   lesser_equal_perm (sum_perm x.perm y.perm) perm_one
 
-let composable_with_perm (#a: Type u#a) : symrel (with_perm a) =
+let composable_with_perm (#a: Type) : symrel (with_perm a) =
   fun (x y: with_perm a) -> composable_with_perm' x y
 
 

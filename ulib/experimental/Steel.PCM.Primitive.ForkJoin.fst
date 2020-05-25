@@ -27,12 +27,12 @@ open Steel.PCM.SteelT.Basics
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let full = full_perm
+let full = perm_one
 
 let maybe_p (p:slprop) (v:bool) = if v then p else emp
 
 let lock_inv_pred (r:ref bool) (p:slprop) (v:bool) : slprop =
-  pts_to r full_perm v `star` maybe_p p v
+  pts_to r perm_one v `star` maybe_p p v
 
 let lock_inv (r:ref bool) (p:slprop)
   : slprop
@@ -59,7 +59,7 @@ let new_thread (p:slprop)
   = intro_maybe_p_false p;
     h_assert (maybe_p p false);
     h_intro_emp_l (maybe_p p false);
-    let r = frame #(ref bool) #emp #(fun r -> pts_to r full_perm false)
+    let r = frame #(ref bool) #emp #(fun r -> pts_to r perm_one false)
                   (fun () -> alloc false)
                   (maybe_p p false) in
     intro_h_exists false (lock_inv_pred r p);

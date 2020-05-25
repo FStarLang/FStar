@@ -30,7 +30,7 @@ val ref (a:Type u#0) : Type u#0
 val pts_to (#a:Type u#0) (r:ref a) (p:perm) (v:erased a) : slprop u#1
 
 val alloc (#a:Type) (x:a)
-  : SteelT (ref a) emp (fun r -> pts_to r full_perm x)
+  : SteelT (ref a) emp (fun r -> pts_to r perm_one x)
 
 val read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   : SteelT a (pts_to r p v) (fun x -> pts_to r p x)
@@ -40,10 +40,10 @@ val read_refine (#a:Type0) (#p:perm) (q:a -> slprop) (r:ref a)
              (fun v -> pts_to r p v `star` q v)
 
 val write (#a:Type0) (#v:erased a) (r:ref a) (x:a)
-  : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
+  : SteelT unit (pts_to r perm_one v) (fun _ -> pts_to r perm_one x)
 
 val free (#a:Type0) (#v:erased a) (r:ref a)
-  : SteelT unit (pts_to r full_perm v) (fun _ -> emp)
+  : SteelT unit (pts_to r perm_one v) (fun _ -> emp)
 
 val share (#a:Type0) (#p:perm) (#v:erased a) (r:ref a)
   : SteelT unit
@@ -71,8 +71,8 @@ val cas (#t:eqtype)
         (b:bool{b <==> (Ghost.reveal v == v_old)})
         uses
         false
-        (pts_to r full_perm v)
-        (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
+        (pts_to r perm_one v)
+        (fun b -> if b then pts_to r perm_one v_new else pts_to r perm_one v)
 
 val raise_ref (#a:Type u#0) (r:ref a) (p:perm) (v:erased a)
   : SteelT (H.ref (U.raise_t a))
