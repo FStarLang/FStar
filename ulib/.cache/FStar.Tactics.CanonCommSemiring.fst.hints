@@ -14,7 +14,7 @@
         "token_correspondence_FStar.Tactics.CanonCommSemiring.__proj__CR__item__opp"
       ],
       0,
-      "47d0f4870bfc838c7007652c59677ec2"
+      "14273cc7718dbe4bf275e0f6feced332"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__CR__item__distribute",
@@ -28,7 +28,7 @@
         "projection_inverse_FStar.Tactics.CanonCommSemiring.CR_cm_mult"
       ],
       0,
-      "f0766a2d39c7819235b1a7b43777642a"
+      "be8554905173401e5769543fdff8aba2"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__CR__item__mult_zero_l",
@@ -42,7 +42,7 @@
         "projection_inverse_FStar.Tactics.CanonCommSemiring.CR_cm_mult"
       ],
       0,
-      "b85813413a7fd87541214f2ddbef6e02"
+      "15071f10f012eaf4cc29461d9f5e9c42"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.distribute_right",
@@ -51,7 +51,7 @@
       1,
       [ "@query" ],
       0,
-      "3db7e7ee4a6cabd01fafca004e66ada7"
+      "e9034bbb7ac6283b8fd8052467b9eca0"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.index",
@@ -65,7 +65,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5a0f4d61e7b5feef95ae8dc658637af3"
+      "0eea32237b680e23898eaf41b3ccacd2"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.varlist",
@@ -81,7 +81,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9cf7971669bc085628e98b1154c39e00"
+      "b01381fadc4a8db376e9cb31c4afa52c"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Cons_var__item___0",
@@ -95,7 +95,7 @@
         "refinement_interpretation_Tm_refine_3f11486d50cf063e56549ed050db404b"
       ],
       0,
-      "d843baea0fc345ccff064ca278d9b150"
+      "f5ea6ef338a1b6ecdbeef683663ba11b"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Cons_var__item___1",
@@ -109,7 +109,7 @@
         "refinement_interpretation_Tm_refine_3f11486d50cf063e56549ed050db404b"
       ],
       0,
-      "99b4c14be1c3c3018c8798680d9ebde7"
+      "9984647fc63d5af0799eb5ddc2d794c9"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum",
@@ -121,7 +121,7 @@
         "assumption_FStar.Tactics.CanonCommSemiring.varlist__uu___haseq"
       ],
       0,
-      "8bb1458fb671e95df51a40896a4b12df"
+      "2d231326f0e7999af7eaff8067233bf0"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Cons_monom__item___0",
@@ -135,7 +135,7 @@
         "refinement_interpretation_Tm_refine_4e3c46a202a1bb75f3e9a96fde0f8728"
       ],
       0,
-      "4b73909568d6aac2636f60419f5d2bcc"
+      "c5f50598bcf09d28962afae02ee883f8"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Cons_monom__item___1",
@@ -149,7 +149,7 @@
         "refinement_interpretation_Tm_refine_4e3c46a202a1bb75f3e9a96fde0f8728"
       ],
       0,
-      "dd1faf8054a0def87339a8aa36597cda"
+      "442578338d0157c4b4977f3c200099a7"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Cons_monom__item___2",
@@ -163,7 +163,7 @@
         "refinement_interpretation_Tm_refine_4e3c46a202a1bb75f3e9a96fde0f8728"
       ],
       0,
-      "594bbffdc19f60ba7fc7401c30613349"
+      "40ee4e9295383dda79332ea30ecfab9e"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Cons_varlist__item___0",
@@ -177,7 +177,7 @@
         "refinement_interpretation_Tm_refine_e45f3dddedd9214cee4011b1a0aaab83"
       ],
       0,
-      "7e26141c82b6285b10ece6e25534dd96"
+      "a8bc8d60bc7ffc605e4de0a538073c83"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Cons_varlist__item___1",
@@ -191,7 +191,7 @@
         "refinement_interpretation_Tm_refine_e45f3dddedd9214cee4011b1a0aaab83"
       ],
       0,
-      "331f0a379075608500f36a904c07c200"
+      "d0a8b7c3bb0fd001b85d8100e79793f4"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.varlist_lt",
@@ -205,7 +205,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_var"
       ],
       0,
-      "3a41c4b7893a35f2f31853e3acd84379"
+      "403ada70872796ea938fc73dd4f01b55"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.varlist_merge",
@@ -226,7 +226,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_var"
       ],
       0,
-      "8978745a86a39963687a867557e765a6"
+      "45b16cf4860d27a02150e4be73f2f3ae"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.varlist_merge",
@@ -247,7 +247,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "18e81545403be0c3a79681aa6c752a25"
+      "2eb4b7313a9d311cf2fb91c30b64bc24"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_merge",
@@ -267,7 +267,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_varlist"
       ],
       0,
-      "b76348e655b9e558042d995ef6eaf3b3"
+      "7e72f935f6eadfff3101fe2303471579"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_merge",
@@ -295,7 +295,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0dfd481bb1f1bd27ee1bdacd82f08ebb"
+      "774294bacfa72ffe2314a2c0978a1f99"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.monom_insert",
@@ -320,7 +320,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "7a02708b655c2fce933ace80ab698ee4"
+      "566c3193ecf0276f0c848e58b35efc1b"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_scalar",
@@ -341,7 +341,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_varlist"
       ],
       0,
-      "a13ca5532fb770b76985975fc961cf33"
+      "b114430ede83f97951fdf57f45cb3d85"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_scalar2",
@@ -365,7 +365,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "eee35c7f18ef624260783a56a2f963ca"
+      "565974693d153b533bcbe938e70cfec4"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_scalar3",
@@ -389,7 +389,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "c454839ccef0c4688d883aae40be9441"
+      "64cdf50fb3008498795ef1c6148fe308"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_prod",
@@ -410,7 +410,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_varlist"
       ],
       0,
-      "9d19590156c670d52f285757c1c9c287"
+      "1245c397346b7d9cc780bbfd16ebe732"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.spolynomial",
@@ -426,7 +426,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "85568971a64253fed24b3c6001b33fd2"
+      "0d4bfb13a7a85d1b03adbdd1854567ab"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__SPvar__item___0",
@@ -440,7 +440,7 @@
         "refinement_interpretation_Tm_refine_f9e5f2439b5e434e1a8ea1d2b7837d87"
       ],
       0,
-      "197fd24834d1591bb4a929143e560fbc"
+      "fa0cae3bf6bd5a58e1dbad4087a902eb"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__SPconst__item___0",
@@ -454,7 +454,7 @@
         "refinement_interpretation_Tm_refine_a590e9dcc633ebd71f900e2d1db364e1"
       ],
       0,
-      "0515cec8ade684df2899e61013f2ac2a"
+      "206d210a670f51f23bbda203645f875b"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__SPplus__item___0",
@@ -468,7 +468,7 @@
         "refinement_interpretation_Tm_refine_1c374edad2b0d61272252237882abe75"
       ],
       0,
-      "3b772538a94ec09a48075f59905cf216"
+      "e4dae7fac630cb79fa9eadc5afb2fe57"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__SPplus__item___1",
@@ -482,7 +482,7 @@
         "refinement_interpretation_Tm_refine_1c374edad2b0d61272252237882abe75"
       ],
       0,
-      "a6bd4cb1229a6745d8988adcba69fe7d"
+      "d923cf7c676df954a9871bac88273954"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__SPmult__item___0",
@@ -496,7 +496,7 @@
         "refinement_interpretation_Tm_refine_2799c6a8977e9d108cbf6b4a1c48b018"
       ],
       0,
-      "2e3f8329c0e76aef65bf4723cd398236"
+      "520f7d7c2d17d6f48ec25013827474e9"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__SPmult__item___1",
@@ -510,7 +510,7 @@
         "refinement_interpretation_Tm_refine_2799c6a8977e9d108cbf6b4a1c48b018"
       ],
       0,
-      "b5d228021cc78e50a2910774d4d69d31"
+      "6123dded07644297db86aa879d9ea022"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.spolynomial_normalize",
@@ -536,7 +536,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.SPplus"
       ],
       0,
-      "9d8da1e1bb2411da92f34f6f87a47449"
+      "f0eb5ae41f19f6c9c91cae2253133cb5"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_simplify",
@@ -558,7 +558,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_varlist"
       ],
       0,
-      "4375f6a6a8d8b405a244ca4c24af880f"
+      "01effd6110339a296473c479ee952e85"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.quote_list",
@@ -570,7 +570,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "5ac737ea3d9c7b6c4a4c65a73c382f61"
+      "126b866b9da97b531ffabfae58dd5414"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.ivl_aux",
@@ -590,7 +590,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "ddb39088ebf8517d3b5ab04f78c4554a"
+      "8950c15f7fc956af04eff1e430ac5056"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.interp_vl",
@@ -604,7 +604,7 @@
         "fuel_guarded_inversion_FStar.Tactics.CanonCommSemiring.varlist"
       ],
       0,
-      "b93b44ccd8ac162246825fdecb592856"
+      "535463bcc17a0f4eb80ac990a11273f3"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.interp_m",
@@ -619,7 +619,7 @@
         "fuel_guarded_inversion_FStar.Tactics.CanonCommSemiring.varlist"
       ],
       0,
-      "990a0aa2eaed78053c7a7291648b7ed7"
+      "ab4f76b00159269b7c2ecc9ae9687c60"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.ics_aux",
@@ -640,7 +640,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_varlist"
       ],
       0,
-      "381ac3f09d453f6414355ea69ec3bed4"
+      "cf336064071a3f9253dfaf5a07d4dcdc"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.interp_cs",
@@ -655,7 +655,7 @@
         "fuel_guarded_inversion_FStar.Tactics.CanonCommSemiring.canonical_sum"
       ],
       0,
-      "fe567583a030c89d36a12b71404aaf6a"
+      "3178664ab8592081997888a84fc4ebd9"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.interp_sp",
@@ -684,7 +684,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.SPplus"
       ],
       0,
-      "c031dc964e39439eb474919d54d5f33b"
+      "66a45f646c3ca14985de7c4e562cd850"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.mult_one_r",
@@ -693,7 +693,7 @@
       1,
       [ "@query", "lemma_FStar.Tactics.CanonCommSemiring.mult_one_l" ],
       0,
-      "b54099a2ac43f8e6768b5a19db6c8dc4"
+      "95e70997964ae5ed17037c742318f8c8"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.mult_zero_r",
@@ -702,7 +702,7 @@
       1,
       [ "@query", "lemma_FStar.Tactics.CanonCommSemiring.mult_zero_l" ],
       0,
-      "9e135a31d78e98a30c810c916526757d"
+      "78b768bbcd2840c502c7818ae5e29abc"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.add_zero_r",
@@ -711,7 +711,7 @@
       1,
       [ "@query", "lemma_FStar.Tactics.CanonCommSemiring.add_zero_l" ],
       0,
-      "0c0adab463b188f60ae956a3984496f5"
+      "da8901bb58ac2a63ca43ca88012c79af"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.opp_unique",
@@ -729,7 +729,7 @@
         "token_correspondence_FStar.Tactics.CanonCommSemiring.__proj__CR__item__opp"
       ],
       0,
-      "b023cd60fad932848ecfa826f2e9559f"
+      "1445d4f96207ffb3e1e7c312b3a26928"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.add_mult_opp",
@@ -743,7 +743,7 @@
         "lemma_FStar.Tactics.CanonCommSemiring.mult_zero_l"
       ],
       0,
-      "3d753e7319e4c54930c5880c44f84df9"
+      "55414590418f20eaee1482e17fc3b19d"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.ivl_aux_ok",
@@ -764,7 +764,7 @@
         "typing_FStar.Tactics.CanonCommSemiring.ivl_aux"
       ],
       0,
-      "8aac53551d94748f2012a74a09da482e"
+      "fd97875e1d92572b3934f4559900b2ff"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.varlist_merge_ok",
@@ -819,7 +819,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "a00c50f23f4df210a2ce4b9138795c7c"
+      "73ef2e1ca5fee53e36768893336c3253"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.varlist_merge_ok",
@@ -875,7 +875,7 @@
         "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "6feff6a2fa8801db95f97b2e9a5c59cf"
+      "ee547bc0f3857379b38c401fb035d165"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.ics_aux_ok",
@@ -921,7 +921,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_varlist"
       ],
       0,
-      "36ef58e29f6470ebda1764c8f5fa38b3"
+      "1f0c33098140c7346d997b2430546407"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.interp_m_ok",
@@ -940,7 +940,7 @@
         "typing_FStar.Tactics.CanonCommSemiring.interp_m"
       ],
       0,
-      "c5d77484960339f9d215fa260153851f"
+      "0e1ea4bb12f7c651850ae8ccb04e5f8e"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.aplus_assoc_4",
@@ -949,7 +949,7 @@
       1,
       [ "@query" ],
       0,
-      "dba90bb3d06e5055bfecbab9ba164b29"
+      "77eea8b63317019dfbb67d0905f6dff7"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_merge_ok",
@@ -1002,7 +1002,7 @@
         "typing_tok_Prims.LexTop@tok"
       ],
       0,
-      "c4cec02affa73285b4dc1750efd81d8b"
+      "b21636780501e3994647094aad24dc2e"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_merge_ok",
@@ -1085,7 +1085,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a9ba8e4580334f1a19d99a18dc023a4c"
+      "7ea5a24ca4552c4945e82a059f78018c"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.monom_insert_ok",
@@ -1165,7 +1165,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "dbcde07c5e41125fa2a20c1bac9929fe"
+      "f290d14eddccf1617bb8e369ca4795a2"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.varlist_insert_ok",
@@ -1181,7 +1181,7 @@
         "typing_FStar.Tactics.CanonCommSemiring.interp_vl"
       ],
       0,
-      "7214afed701929e4a6f338d79ba7e047"
+      "ee531c050eeab2b8345720f8e7721b0e"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_scalar_ok",
@@ -1247,7 +1247,7 @@
         "typing_FStar.Tactics.CanonCommSemiring.interp_vl"
       ],
       0,
-      "7af02c99114472d57def6208be982b02"
+      "c8938b68884ed6fbbbde358ebbcba886"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_scalar2_ok",
@@ -1316,7 +1316,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "fe55ffea58bc450d00f73b2125953eda"
+      "287ed6775618765b6efd81b707c271d5"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_scalar3_ok",
@@ -1386,7 +1386,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "e20bc2448f321f4d0e32679eb900db56"
+      "11b2d890c42632c11dfdd879f8a2ac47"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_prod_ok",
@@ -1452,7 +1452,7 @@
         "typing_FStar.Tactics.CanonCommSemiring.interp_vl"
       ],
       0,
-      "c883e13e4ae55acf9224e079a7cb78fe"
+      "3d7f09875e9dec40e7af122ba46bf780"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.spolynomial_normalize_ok",
@@ -1530,7 +1530,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "dc9d569a2e529008ac2880f3cd389bb6"
+      "94ea6152eab0481e4aaaf49e5cff0232"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_simplify_ok",
@@ -1598,7 +1598,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "f75f0da8e3292ff6ccc8d28b0f5c60f3"
+      "cd01fa7d27f0a60001d9a4ab9c04df75"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.spolynomial_simplify_ok",
@@ -1610,7 +1610,7 @@
         "equation_FStar.Tactics.CanonCommSemiring.spolynomial_simplify"
       ],
       0,
-      "a64b8356f485c6ef755709725b876287"
+      "48d40b3af99902b3c6ab868c72ddac13"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.polynomial",
@@ -1626,7 +1626,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3c191cd3d92404abbea005a3b86bf226"
+      "08452d9cbe4d1b35f5f6377d9d1be877"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Pvar__item___0",
@@ -1640,7 +1640,7 @@
         "refinement_interpretation_Tm_refine_17fea77d614c00fac8a0a1b40c807c81"
       ],
       0,
-      "af32079023b381cb97248b982e2cd07b"
+      "d7953e53ad7a75ff6cde4e7f03499cba"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Pconst__item___0",
@@ -1654,7 +1654,7 @@
         "refinement_interpretation_Tm_refine_28c5bf10111eca12cd4dc9a0725c6ee5"
       ],
       0,
-      "8f6967992b84c25862a5d046104dc2b1"
+      "dbc469eeec2b0b0dcd956a55c7f19cbe"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Pplus__item___0",
@@ -1668,7 +1668,7 @@
         "refinement_interpretation_Tm_refine_368d27eb43dd0c42ebd3c4be6530a9ce"
       ],
       0,
-      "7a460aec5400d345a6488597b42a35cd"
+      "5042ccc6450c2d461a87701476fcc6f6"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Pplus__item___1",
@@ -1682,7 +1682,7 @@
         "refinement_interpretation_Tm_refine_368d27eb43dd0c42ebd3c4be6530a9ce"
       ],
       0,
-      "6defb87d742157dee8e2f881be65ccf3"
+      "870af375ba8667e25ebdcc3deda61efd"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Pmult__item___0",
@@ -1696,7 +1696,7 @@
         "refinement_interpretation_Tm_refine_ff961f4f77aa0b30ace470677a20fa68"
       ],
       0,
-      "1ceac56917329e5120211cc3fb5a8b2c"
+      "7851b64ecb1a16f54846dac6e100b237"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Pmult__item___1",
@@ -1710,7 +1710,7 @@
         "refinement_interpretation_Tm_refine_ff961f4f77aa0b30ace470677a20fa68"
       ],
       0,
-      "b4789b36f0e5e948af2978155fdee30a"
+      "ade14f821a8ae6b1cfa15c0d7d6a4dac"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Popp__item___0",
@@ -1724,7 +1724,7 @@
         "refinement_interpretation_Tm_refine_724e30ae0646f59a40c172bafa15d164"
       ],
       0,
-      "cdea3ef6aa71dc8394354f950ce0d567"
+      "e596f4d080a15729e337dcbde2b7b68e"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.polynomial_normalize",
@@ -1752,7 +1752,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Pplus"
       ],
       0,
-      "85762fb46ac7dbd35cb88468883329b4"
+      "83eb7b73aeac2e35041cc860b86263d4"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.spolynomial_of",
@@ -1780,7 +1780,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Pplus"
       ],
       0,
-      "57e9cbad6ea0841c221a608bde827a12"
+      "84779dd34ea8c08fe556ba8560c272e2"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.interp_p",
@@ -1811,7 +1811,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Pplus"
       ],
       0,
-      "c972a51017545493915bed59cd32e1d1"
+      "962b9c5f2aaac1ae9d3fbf0fae983aed"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.spolynomial_of_ok",
@@ -1883,7 +1883,7 @@
         "typing_FStar.Tactics.CanonCommSemiring.spolynomial_of"
       ],
       0,
-      "d2e0e0916f94876edadae62f01bf03aa"
+      "e1a72f2124d416f6d1e76f9fe51d7bd7"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.polynomial_normalize_ok",
@@ -1986,7 +1986,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "db36780d10f53cc3e26503559cd3cc47"
+      "f74009d5858c070fd8e203834262f512"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.polynomial_simplify_ok",
@@ -1999,7 +1999,7 @@
         "fuel_guarded_inversion_FStar.Tactics.CanonCommSemiring.cr"
       ],
       0,
-      "fb6ae017addb4ff6f413ca79fc61f5f9"
+      "7b80a32e682955e2a7c299657faf813e"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.find_aux",
@@ -2018,7 +2018,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "442d82270b4412ea151cb70ff0b8e769"
+      "859566c6b5599faee8594e9ec2025ab5"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.make_fvar",
@@ -2037,7 +2037,7 @@
         "typing_FStar.Tactics.CanonCommSemiring.find"
       ],
       0,
-      "08cf3b21b311182480adbb8d3d9bb5e1"
+      "a86a5829284273094ff33aea86513ba8"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.quote_polynomial",
@@ -2054,7 +2054,7 @@
         "fuel_guarded_inversion_FStar.Tactics.CanonCommSemiring.polynomial"
       ],
       0,
-      "6e118a7905805cad29f08f9c7e58c13f"
+      "734433c6eafbcada3fed6c6a66df88af"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.semiring_reflect",
@@ -2067,7 +2067,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "ef7cc1f49212b7c874c17d63ce9d7d0d"
+      "5a46c0a8e0bf0312746623349f58f178"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.int_cr",
@@ -2092,7 +2092,7 @@
         "token_correspondence_Prims.op_Multiply"
       ],
       0,
-      "e80ef7e0dc12eb5db17093df201e2ff5"
+      "0771ed3e39b6d3c1bfed428192cbbab1"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.eq_nat_via_int",
@@ -2105,7 +2105,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a707748693f0552f3d45d499375aa64b"
+      "009af2f43f084693396f03cddfc10d50"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__CR__item__add_opp",
@@ -2120,7 +2120,7 @@
         "token_correspondence_FStar.Tactics.CanonCommSemiring.__proj__CR__item__opp"
       ],
       0,
-      "36c622d33dbae367753bf588d8af1dd4"
+      "4dbd175328603b6410e0ccca41a77832"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__CR__item__distribute",
@@ -2134,7 +2134,7 @@
         "projection_inverse_FStar.Tactics.CanonCommSemiring.CR_cm_mult"
       ],
       0,
-      "c402860cac641421a0c4d7b016cb54f8"
+      "725333ef7487241bf80c2e588702f002"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__CR__item__mult_zero_l",
@@ -2148,7 +2148,7 @@
         "projection_inverse_FStar.Tactics.CanonCommSemiring.CR_cm_mult"
       ],
       0,
-      "a82f97c6293601b95e65ed0985256dd5"
+      "79f2d5d6bbbacdddf5a2a04891e469af"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.distribute_right",
@@ -2157,7 +2157,7 @@
       1,
       [ "@query" ],
       0,
-      "604cf8ef24da576c94041b5cb37f4cda"
+      "1398c145ba31dd257da082f59c6b9e9a"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.index",
@@ -2171,7 +2171,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4e7e8a7fbb77c2900664fa5d8c3941cb"
+      "8edb85f767e703ce9a9b0ee9d650fa3f"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.varlist",
@@ -2187,7 +2187,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8a9a9223af6a2b983aebd59943baac5c"
+      "388bc1174025c50f5d97bc0d0276eb53"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Cons_var__item___0",
@@ -2201,7 +2201,7 @@
         "refinement_interpretation_Tm_refine_3f11486d50cf063e56549ed050db404b"
       ],
       0,
-      "e00cadfdc2ddf7d334592d34fa518c22"
+      "6f1f96c4c985e14476c5627d58ccde4f"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Cons_var__item___1",
@@ -2215,7 +2215,7 @@
         "refinement_interpretation_Tm_refine_3f11486d50cf063e56549ed050db404b"
       ],
       0,
-      "0ff225c709c2c4b74236211cdf6a1937"
+      "6ca29e0eb92af6cd1b7f6a0ddacb2732"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum",
@@ -2227,7 +2227,7 @@
         "assumption_FStar.Tactics.CanonCommSemiring.varlist__uu___haseq"
       ],
       0,
-      "cbf2d25733ef842eac02e6a4009e9126"
+      "96a9be1341b1ec955ea0b4b247ac071d"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Cons_monom__item___0",
@@ -2241,7 +2241,7 @@
         "refinement_interpretation_Tm_refine_4e3c46a202a1bb75f3e9a96fde0f8728"
       ],
       0,
-      "516af97a5d1b041c0d6810b1602f5871"
+      "9897e4ad93429ad656ba381fbbd043bf"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Cons_monom__item___1",
@@ -2255,7 +2255,7 @@
         "refinement_interpretation_Tm_refine_4e3c46a202a1bb75f3e9a96fde0f8728"
       ],
       0,
-      "067850261501ef4fe2456b777376549a"
+      "e49d330d05a53054701b6b205e6f825e"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Cons_monom__item___2",
@@ -2269,7 +2269,7 @@
         "refinement_interpretation_Tm_refine_4e3c46a202a1bb75f3e9a96fde0f8728"
       ],
       0,
-      "f30ce50bd7384e94ab8f1d892e79699e"
+      "74a1403013fd04f3c27b48717c6f2af5"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Cons_varlist__item___0",
@@ -2283,7 +2283,7 @@
         "refinement_interpretation_Tm_refine_e45f3dddedd9214cee4011b1a0aaab83"
       ],
       0,
-      "1a717b18414501ee6e95403756a3366d"
+      "d7620288f4d904f17c41bf6c618c12d8"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Cons_varlist__item___1",
@@ -2297,7 +2297,7 @@
         "refinement_interpretation_Tm_refine_e45f3dddedd9214cee4011b1a0aaab83"
       ],
       0,
-      "d5ac27b1dba3bdb7c1a8a5105896dc89"
+      "6dbc6aafedd1ba84ceb43e34b27d9a8a"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.varlist_lt",
@@ -2311,7 +2311,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_var"
       ],
       0,
-      "1e5f8a3c19e00baec34296246c4022d0"
+      "290a1be6e5aed4081adbee42e8e5cab2"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.varlist_merge",
@@ -2332,7 +2332,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_var"
       ],
       0,
-      "85b65f02592e5def4c213dbabc5230dd"
+      "6f41baaaef2cd55abb50ad6f89af252a"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.varlist_merge",
@@ -2353,7 +2353,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0e351bfd9957ca38c7d55f7b7022f1f3"
+      "cff5932f6fe0f9cc7f8aa6b55d858fa1"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_merge",
@@ -2373,7 +2373,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_varlist"
       ],
       0,
-      "76fe270513a8715eebd3f366dd55cdfa"
+      "fc28013b678cb9f73a43260f77818e5d"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_merge",
@@ -2401,7 +2401,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ad44f4a91a3a11eb81e14538f764c194"
+      "25c4afc525b4937ed39aaeeb49109a56"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.monom_insert",
@@ -2426,7 +2426,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "3226ebb57857d13f684ed6b79c01f56e"
+      "7b243f14eeae42586a24b09bdb228596"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_scalar",
@@ -2447,7 +2447,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_varlist"
       ],
       0,
-      "7b041f9c75e24374010de1a452c1b55a"
+      "b8291cdd0c0a464b314a6866c9ec3f1f"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_scalar2",
@@ -2471,7 +2471,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "b0a6e359027ff81da392cf66e853f8bd"
+      "74080aab0c674eb9b6814667decd6679"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_scalar3",
@@ -2495,7 +2495,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "86f66c31b13bcb7a86239e56207d7a77"
+      "daee55888b2e64702d5f4b25c9a69af1"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_prod",
@@ -2516,7 +2516,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_varlist"
       ],
       0,
-      "2bd51720f69ec684c7bc356bbfe57c83"
+      "c6dbe89d0b082ef15aeba9411843f792"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.spolynomial",
@@ -2532,7 +2532,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "76f5ce3715e7ced256306d2f5b515e13"
+      "93726e922d62c31d90ee0dc823fdbb2e"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__SPvar__item___0",
@@ -2546,7 +2546,7 @@
         "refinement_interpretation_Tm_refine_f9e5f2439b5e434e1a8ea1d2b7837d87"
       ],
       0,
-      "7163020163e205d24418b4ff82d6fb53"
+      "c192895c1de701958f9d7a85da47d3af"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__SPconst__item___0",
@@ -2560,7 +2560,7 @@
         "refinement_interpretation_Tm_refine_a590e9dcc633ebd71f900e2d1db364e1"
       ],
       0,
-      "4021f29ecea17b67f6da7729ba925a09"
+      "3b80a827f20039cd749b80255b899036"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__SPplus__item___0",
@@ -2574,7 +2574,7 @@
         "refinement_interpretation_Tm_refine_1c374edad2b0d61272252237882abe75"
       ],
       0,
-      "01184ab4fcce2a78b93750234134acc1"
+      "1da9ae98cc10feb2e6da271167a5c2dc"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__SPplus__item___1",
@@ -2588,7 +2588,7 @@
         "refinement_interpretation_Tm_refine_1c374edad2b0d61272252237882abe75"
       ],
       0,
-      "db3fd27b0388a2df6018caab7807ab39"
+      "c7d45f56d6fb79b192ba9aecac19379f"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__SPmult__item___0",
@@ -2602,7 +2602,7 @@
         "refinement_interpretation_Tm_refine_2799c6a8977e9d108cbf6b4a1c48b018"
       ],
       0,
-      "df8f2d9cb1da8ad3d84ed69ac286daf4"
+      "3a9a959896e0dde689d6b8ae226b25ef"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__SPmult__item___1",
@@ -2616,7 +2616,7 @@
         "refinement_interpretation_Tm_refine_2799c6a8977e9d108cbf6b4a1c48b018"
       ],
       0,
-      "3f7b215510f81a54c5d830cbffd2ad3d"
+      "38c9611d83049e3bf38aad4e94c2fea0"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.spolynomial_normalize",
@@ -2642,7 +2642,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.SPplus"
       ],
       0,
-      "ddc61a328208bcf273a69c73fd99e95a"
+      "43e3996e4fbd429cf41427285fcfe8f4"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.canonical_sum_simplify",
@@ -2664,7 +2664,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_varlist"
       ],
       0,
-      "9ab7dfafb8a44390c7833da70c603bae"
+      "fd70b1cdc958253b641c2985cdfef58b"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.quote_list",
@@ -2676,7 +2676,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "9b8bbe33a5cce31090be74abf1f0a3e2"
+      "43ee080821843c7f60d847385510cf39"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.ivl_aux",
@@ -2696,7 +2696,7 @@
         "typing_tok_FStar.Tactics.CanonCommSemiring.Nil_var@tok"
       ],
       0,
-      "4c9b8c5b30342ff2bd071048138bba3d"
+      "b22202bc83b19e0a0cf481a6b690654b"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.interp_vl",
@@ -2710,7 +2710,7 @@
         "fuel_guarded_inversion_FStar.Tactics.CanonCommSemiring.varlist"
       ],
       0,
-      "98ca4b5a337c72e6543244b3e92f0c71"
+      "83b280143983ba29920d4b4c503ba869"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.interp_m",
@@ -2725,7 +2725,7 @@
         "fuel_guarded_inversion_FStar.Tactics.CanonCommSemiring.varlist"
       ],
       0,
-      "05fba29d3ac8a830b3c81ee9b4844f36"
+      "720653f45d08b212d0abe2e5e386795a"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.ics_aux",
@@ -2746,7 +2746,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Cons_varlist"
       ],
       0,
-      "7d1929149ecaa90cba31ea3a1aaed1e5"
+      "2b77e178a71b5335b60c7bdcd9b3d1f8"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.interp_cs",
@@ -2761,7 +2761,7 @@
         "fuel_guarded_inversion_FStar.Tactics.CanonCommSemiring.canonical_sum"
       ],
       0,
-      "406546d4c94b1958d4074e8084006cfb"
+      "3716950db84dc474d8d421febcfac85c"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.interp_sp",
@@ -2790,7 +2790,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.SPplus"
       ],
       0,
-      "34607a88cf22e0e7ffd2012d9f2b2cb5"
+      "fda349c0cc2f853edd0d45d0a49e369c"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.polynomial",
@@ -2806,7 +2806,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6a951b8c7cddaf1c9dd95efc3a06fef5"
+      "8ad0dba0400f275c7b42654c3b97c328"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Pvar__item___0",
@@ -2820,7 +2820,7 @@
         "refinement_interpretation_Tm_refine_17fea77d614c00fac8a0a1b40c807c81"
       ],
       0,
-      "2d8e3900de6ad745e76c6ba41d2e050b"
+      "9b1a26bc5a2dc54a8550a705d5a54ae2"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Pconst__item___0",
@@ -2834,7 +2834,7 @@
         "refinement_interpretation_Tm_refine_28c5bf10111eca12cd4dc9a0725c6ee5"
       ],
       0,
-      "98334053796350dac1a4bac4224b834e"
+      "d754af031c4527c4c51ab50c6987095e"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Pplus__item___0",
@@ -2848,7 +2848,7 @@
         "refinement_interpretation_Tm_refine_368d27eb43dd0c42ebd3c4be6530a9ce"
       ],
       0,
-      "ce85650a9cfc9577698e20e1dbeab003"
+      "6850bc24a635ca07bf8822cfea2b5068"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Pplus__item___1",
@@ -2862,7 +2862,7 @@
         "refinement_interpretation_Tm_refine_368d27eb43dd0c42ebd3c4be6530a9ce"
       ],
       0,
-      "00124707a852ace5f9f63509c31d751e"
+      "a68cec4673ec30941abfae4525a6ee22"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Pmult__item___0",
@@ -2876,7 +2876,7 @@
         "refinement_interpretation_Tm_refine_ff961f4f77aa0b30ace470677a20fa68"
       ],
       0,
-      "4f4169ac534b41f6ea087883d2eebe80"
+      "572a5f1d294b7095491cff1d7911f9cc"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Pmult__item___1",
@@ -2890,7 +2890,7 @@
         "refinement_interpretation_Tm_refine_ff961f4f77aa0b30ace470677a20fa68"
       ],
       0,
-      "abd07abbe4f1271bcb0dae0e157e1f1b"
+      "7473859b2db380c46a142f0ae8850869"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.__proj__Popp__item___0",
@@ -2904,7 +2904,7 @@
         "refinement_interpretation_Tm_refine_724e30ae0646f59a40c172bafa15d164"
       ],
       0,
-      "6b35202b09ff091d643a11e9d6fe36d5"
+      "a7c43a4dab4d5ee0ed68f26ec9839686"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.polynomial_normalize",
@@ -2932,7 +2932,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Pplus"
       ],
       0,
-      "4d6c4e0929b0e0143a1f3652c9d32000"
+      "17390f5e2a90cbb38e0df1f10a4ac3e3"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.spolynomial_of",
@@ -2960,7 +2960,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Pplus"
       ],
       0,
-      "77c3c1d2be97ae3a03a66877b15f8733"
+      "871b8f36a2b86aec00fe49406b8f1fad"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.interp_p",
@@ -2991,7 +2991,7 @@
         "subterm_ordering_FStar.Tactics.CanonCommSemiring.Pplus"
       ],
       0,
-      "143891bda5d7af1053596a4678f9019a"
+      "03cce084e165a4519128fc02a9edacb4"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.ddump",
@@ -3008,7 +3008,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "4f76f5c94ec30b67c05e02744ebc088f"
+      "cd4098f8458191aafa4abac3aae0fa9e"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.find_aux",
@@ -3027,7 +3027,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c36843708dcc18d9118524cf8a123af3"
+      "de7fe0ec527b44018bcaa67c54fa4a5c"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.make_fvar",
@@ -3046,7 +3046,7 @@
         "typing_FStar.Tactics.CanonCommSemiring.find"
       ],
       0,
-      "e97a4a4dd4c63f23e5f4cf0907f4d848"
+      "bd676ec1a2215e899582b20da44ad841"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.quote_polynomial",
@@ -3063,7 +3063,7 @@
         "fuel_guarded_inversion_FStar.Tactics.CanonCommSemiring.polynomial"
       ],
       0,
-      "d9a45795055ebf6aff3d0097cf2848c4"
+      "b34a5c4acce6efa0c1ea062151df0234"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.semiring_reflect",
@@ -3076,7 +3076,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "e1910a294b5a1da128ee3235802dd151"
+      "3b33889ac8b61782eb8cf26f241c5abc"
     ],
     [
       "FStar.Tactics.CanonCommSemiring.int_cr",
@@ -3101,7 +3101,7 @@
         "token_correspondence_Prims.op_Multiply"
       ],
       0,
-      "85c7aef4b603248a925137c0fead39b6"
+      "19aa7098def1a02b7721e780aa65602c"
     ]
   ]
 ]

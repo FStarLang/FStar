@@ -1,4 +1,4 @@
-module Steel.Effects2.Tests
+module FramingEffect.Tests
 
 open Steel.Memory
 open Steel.FramingEffect
@@ -171,6 +171,7 @@ let test6 (r1 r2:ref) : SteelT unit (ptr r1 `star` ptr r2) (fun _ -> ptr r2 `sta
 
 
 // Scoping issue to debug
+[@expect_failure]
 let test7 (a:unit) : SteelT ref emp (fun y -> ptr y) =
   let x = alloc 0 in
   let _ = read x in

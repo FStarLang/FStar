@@ -256,6 +256,10 @@ let comp_to_comp_typ (c:comp) : comp_typ =
  * For wp effects, given a (unit -> M a wp), return wp
  *
  * The pattern matching is very syntactic inside this function
+ * It is called from the computation types in the layered effect combinators
+ *   e.g. f and g in bind
+ * Layered effects typechecking code already makes sure that those types
+ *   have this exact shape
  *)
 let effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.range) (err:string)
 : list<term> =

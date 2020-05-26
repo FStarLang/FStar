@@ -121,15 +121,20 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.Heap.trivial_preorder",
-        "equation_FStar.Heap.trivial_rel", "equation_Prims.nat",
+        "equation_FStar.Heap.trivial_rel", "equation_FStar.ST.mref",
+        "equation_FStar.ST.ref", "equation_Prims.nat",
         "function_token_typing_FStar.Heap.trivial_preorder",
         "interpretation_Tm_abs_568747eb5009c1dec504311dee989dc2",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "true_interp"
+        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "true_interp", "typing_Encrypt_SymEnc.c",
+        "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "ff746cd7715a887a5d8f0931b42951a3"
+      "6c1afe07196b8f1081c1153505f23f0b"
     ],
     [
       "Encrypt_SymEnc.__proj__Entry__item__c",
@@ -150,7 +155,7 @@
       1,
       [ "@query", "equation_FStar.ST.ref" ],
       0,
-      "0fe61afc6c1bbc09fbc0d24b20316d50"
+      "b32dce7121def1fcfe87d600ee6db3ec"
     ],
     [
       "Encrypt_SymEnc.encrypt",

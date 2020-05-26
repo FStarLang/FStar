@@ -392,7 +392,7 @@
         "typing_Slice.buffer_split_at", "typing_Slice.u32_add_overflows"
       ],
       0,
-      "59ff44e6f0dfd027aea1138e0ea82267"
+      "ff551afcd1b7288ae18a7ccc4f345473"
     ],
     [
       "Serializing.ser_copy",
@@ -522,7 +522,7 @@
         "typing_Slice.__proj__BSlice__item__p"
       ],
       0,
-      "6f850d1af60fd71125dd883ff50fded2"
+      "77f96b47c098f029d36d7afde5cb4a86"
     ]
   ]
 ]

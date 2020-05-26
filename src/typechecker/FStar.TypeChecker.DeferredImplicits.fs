@@ -126,6 +126,7 @@ let solve_deferred_to_tactic_goals env g =
       : implicit * sigelt =
       match prob with
       | TProb tp when tp.relation=EQ ->
+        let env, _ = Env.clear_expected_typ env in
         let env = {env with gamma=tp.logical_guard_uvar.ctx_uvar_gamma} in
         let env_lax = {env with lax=true; use_bv_sorts=true} in
         let _, t_eq, _ =
@@ -136,7 +137,7 @@ let solve_deferred_to_tactic_goals env g =
         in
         let goal_ty = U.mk_eq2 (env.universe_of env_lax t_eq) t_eq tp.lhs tp.rhs in
         let goal, ctx_uvar, _ =
-            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Allow_untyped None
+            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Strict None
         in
         let imp =
             { imp_reason = "";

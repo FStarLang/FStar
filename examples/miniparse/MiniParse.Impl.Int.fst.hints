@@ -112,7 +112,7 @@
         "typing_MiniParse.Spec.Int.serialize_u8"
       ],
       0,
-      "18292f74d7b0929d1a3c752aea656496"
+      "56eb93b2fd9910888ec8dd330774a6f6"
     ],
     [
       "MiniParse.Impl.Int.parse_u16_impl",
@@ -121,18 +121,21 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "equation_MiniParse.Spec.Base.byte",
-        "equation_MiniParse.Spec.Int.parse_u16_aux",
+        "equation_MiniParse.Spec.Int.parse_u16_aux", "equation_Prims.eqtype",
         "function_token_typing_MiniParse.Spec.Int.parse_u16_aux",
         "lemma_LowStar.Monotonic.Buffer.modifies_refl",
         "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_182efe239776588e16adcd3300cba56d",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_88e6b228c6827e1647d7d72b7b8f008b",
         "refinement_interpretation_Tm_refine_bd728aff4ebc05f8d05f83729df2b4af",
-        "typing_LowStar.Monotonic.Buffer.loc_none"
+        "typing_FStar.UInt8.t", "typing_LowStar.Monotonic.Buffer.loc_none",
+        "typing_MiniParse.Spec.Int.Aux.decode_u16"
       ],
       0,
-      "03e2dd9168280ab50e868f38c50d571c"
+      "62105e1757434cfe741d4f055e9cd777"
     ],
     [
       "MiniParse.Impl.Int.serialize_u16_impl",
@@ -248,7 +251,7 @@
         "typing_MiniParse.Spec.Int.serialize_u16"
       ],
       0,
-      "c7270a47850637c6b352bdc8b33fcc2c"
+      "0c6bd64bbbb1e963eee908ce30ce506b"
     ],
     [
       "MiniParse.Impl.Int.parse_bounded_u16_impl",
