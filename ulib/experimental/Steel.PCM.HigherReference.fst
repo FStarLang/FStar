@@ -186,7 +186,7 @@ let share_atomic_raw #a #uses (#p:perm) (r:ref a{perm_ok p}) (v0:erased a)
                 (fun _ -> pts_to_raw r (half_perm p) v0 `star` pts_to_raw r (half_perm p) v0)
   = as_atomic_action (mem_share_atomic_raw r v0)
 
-let share (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
+let share_atomic (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
   : SteelAtomic unit uses unobservable
                (pts_to r p v)
                (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
@@ -204,6 +204,8 @@ let share (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
                                   (pts_to r (half_perm p) v)
                                   (intro_pts_to (half_perm p) r)
 
+let share = admit()
+
 let mem_gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a) (v1:erased a)
   : action_except (_:unit{v0==v1 /\ perm_ok (sum_perm p0 p1)}) uses
                   (pts_to_raw r p0 v0 `star` pts_to_raw r p1 v1)
@@ -218,7 +220,7 @@ let gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a)
                  (fun _ -> pts_to_raw r (sum_perm p0 p1) v0)
   = as_atomic_action (mem_gather_atomic_raw r v0 v1)
 
-let gather (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
+let gather_atomic (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
   = let p0 = Steel.PCM.Effect.Atomic.frame _ (fun _ -> elim_pure_atomic p0) in
     comm();
     let p1 = Steel.PCM.Effect.Atomic.frame _ (fun _ -> elim_pure_atomic p1) in
@@ -226,5 +228,7 @@ let gather (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a
     h_assert_atomic (pts_to_raw r p0 v0 `star` pts_to_raw r p1 v1);
     let _ = gather_atomic_raw r v0 v1 in
     intro_pts_to (sum_perm p0 p1) r ()
+
+let gather = admit()
 
 let ghost_read_refine = admit()
