@@ -91,7 +91,7 @@ let write r x = H.write r (U.raise_val x)
 
 let free x = H.free x
 
-let share r = H.share r
+let share_atomic r = H.share_atomic r
 
 let hide_raise_reveal (#a:Type) (v0:erased a) (v1:erased a)
   : Lemma (hide (U.raise_val (reveal v0)) == hide (U.raise_val (reveal v1)) <==>
@@ -103,8 +103,8 @@ let hide_raise_reveal (#a:Type) (v0:erased a) (v1:erased a)
     assert (U.downgrade_val (U.raise_val (reveal v0)) == U.downgrade_val (U.raise_val (reveal v1)) <==>
             v0 == v1)
 
-let gather #a #uses #p0 #p1 #v0 #v1 r = 
-  let x = H.gather r in
+let gather_atomic #a #uses #p0 #p1 #v0 #v1 r = 
+  let x = H.gather_atomic r in
   A.return_atomic x
 
 let ghost_read_refine #a #uses #p r q =
