@@ -10,7 +10,7 @@ module Preorder = FStar.Preorder
 val ref (a:Type u#1) (p:Preorder.preorder a)
   : Type u#0
 
-val pts_to (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:a)
+val pts_to (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:Ghost.erased a)
   : slprop u#1
 
 val alloc (#a:Type) (p:Preorder.preorder a) (v:a)

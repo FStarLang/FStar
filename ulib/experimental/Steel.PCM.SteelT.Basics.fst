@@ -24,6 +24,10 @@ let return (#a:Type) (#p:a -> slprop) (x:a)
   : SteelT a (p x) p
   = AB.lift_atomic_to_steelT (fun _ -> AB.return_atomic #_ #Set.empty #p x)
 
+assume
+val h_admit (#a:Type) (p:slprop) (q: a -> slprop)
+  : SteelT a p q
+  
 let intro_h_exists (#a:Type) (x:a) (p:(a -> slprop))
   : SteelT unit (p x) (fun _ -> h_exists p)
   = AB.lift_atomic_to_steelT (fun _ -> AB.intro_h_exists x p)

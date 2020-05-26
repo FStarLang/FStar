@@ -232,3 +232,7 @@ let frame_preserving_extends2 (#a: Type u#a) (q:preorder a) (x y:hist q)
 let pcm_of_preorder_induces_extends (#a: Type u#a) (q:preorder a)
   : Lemma (induces_preorder (pcm_of_preorder q) (flip extends))
   = ()
+
+let extend_history (#a:Type u#a) (#q:preorder a) (h0:vhist q) (v:a{q (curval h0) v})
+  : h1:vhist q{h1 `extends` h0}
+  = v :: h0
