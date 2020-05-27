@@ -99,7 +99,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-      "daf4ce1941beafbe8e289ae4b94a7025"
+      "9c374fbd48309096621c0f826ebf5383"
     ],
     [
       "Point.move_point",
@@ -181,7 +181,7 @@
         "typing_Point.get_point", "typing_Point.move_point"
       ],
       0,
-      "d01cc0ef4768f58108a0321a86d9711b"
+      "fbbf3fd8b36abf6830e95cbbeb3ed8fe"
     ],
     [
       "Point.inv_colored_point",
@@ -269,7 +269,7 @@
         "typing_FStar.DM4F.Heap.ref"
       ],
       0,
-      "4aabaabe41e8445903fcdedf9ab3ed8f"
+      "360c6e4db718a489e45cf6cdcf5784f5"
     ],
     [
       "Point.init_colored_point",
@@ -321,7 +321,7 @@
         "typing_Point.get_colored_point", "typing_Point.move_colored_point"
       ],
       0,
-      "6371e6f469ad68956f761350385295ee"
+      "55fb39cb6054ecb655fa102375a594c4"
     ],
     [
       "Point.ref_not_in_fp",
