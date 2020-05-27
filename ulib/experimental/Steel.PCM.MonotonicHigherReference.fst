@@ -135,13 +135,6 @@ let alloc (#a:Type) (p:Preorder.preorder a) (v:a)
     SB.h_assert (pts_to x full_perm v);
     SB.return x
 
-let read_raw (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#frame:a -> slprop) (#v0:Ghost.erased a)
-             (r:ref a p)
-  : SteelT (x:a{v0 == Ghost.hide x})
-           (pts_to r q v0)
-           (fun v -> pts_to r q v0)
-  = SB.h_admit _ _
-
 assume
 val get_witness (#a:Type) (#p:a -> slprop) (_:unit)
   : SteelT (erased a) (h_exists p) (fun x -> p (Ghost.reveal x))
@@ -149,6 +142,8 @@ val get_witness (#a:Type) (#p:a -> slprop) (_:unit)
 assume
 val h_assoc_r (#p #q #r:slprop) (_:unit)
   : SteelT unit ((p `star` q) `star` r) (fun _ -> p `star` (q `star` r))
+
+module ST = Steel.PCM.Memory.Tactics
 
 let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> slprop)
                 (r:ref a p)
