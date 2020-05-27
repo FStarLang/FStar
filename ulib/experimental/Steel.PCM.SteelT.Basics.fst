@@ -32,6 +32,10 @@ let intro_h_exists (#a:Type) (x:a) (p:(a -> slprop))
   : SteelT unit (p x) (fun _ -> h_exists p)
   = AB.lift_atomic_to_steelT (fun _ -> AB.intro_h_exists x p)
 
+let intro_h_exists_erased (#a:Type) (x:Ghost.erased a) (p:(a -> slprop))
+  : SteelT unit (p x) (fun _ -> h_exists p)
+  = AB.lift_atomic_to_steelT (fun _ -> AB.intro_h_exists_erased x p)
+
 let h_assert (p:slprop)
   : SteelT unit p (fun _ -> p)
   = AB.lift_atomic_to_steelT (fun _ -> AB.h_assert_atomic p)
