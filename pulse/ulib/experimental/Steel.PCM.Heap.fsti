@@ -429,7 +429,7 @@ val upd_action
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
   (v1:a {Steel.PCM.frame_preserving pcm v0 v1})
-    : action (pts_to r v0) unit (fun _ -> pts_to r v1)
+  : action (pts_to r v0) unit (fun _ -> pts_to r v1)
 
 (** Deallocating a reference, by actually replacing its value by the unit of the PCM *)
 val free_action
