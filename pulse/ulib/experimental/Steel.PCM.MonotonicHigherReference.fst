@@ -337,4 +337,25 @@ let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
     SB.h_assert (pts_to_body r q v h `star` pure (witnessed r fact));
     SB.frame (fun _ -> SB.intro_h_exists_erased h (pts_to_body r q v)) _
 
-let recall = admit()
+let weaken_pure (f:slprop) (p:prop) (q:prop{p ==> q})
+  : SteelT unit (f `star` pure p) (fun _ -> f `star` pure q)
+  = SB.h_admit _ _
+
+let recall (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
+           (r:ref a p) (v:(Ghost.erased a))
+  : SteelT unit (pts_to r q v `star` pure (witnessed r fact))
+                (fun _ -> pts_to r q v `star` pure (fact v))
+  = let h = SB.frame (get_witness #_ #(pts_to_body r q v)) (pure (witnessed r fact)) in
+    SB.frame (fun _ -> extract_pure r v h) _;
+    assert ((Current?h /\ hval h == v /\ hperm h == q));
+    rearrange_pqr_prq _ _ _;
+    let h1 = SB.frame (fun _ -> Steel.PCM.Effect.recall r h) _ in
+    assert (compatible pcm_history h h1);
+    assert (hval h == hval h1);
+    assert (hval h == v);
+    rearrange_pqr_prq _ _ _;
+    SB.h_assert (pts_to_body r q v h `star` pure (lift_fact fact h1));
+    SB.frame (fun _ -> SB.intro_h_exists_erased h (pts_to_body r q v)) _;
+    SB.h_assert (pts_to r q v `star` pure (lift_fact fact h1));
+    assert (lift_fact fact h1 ==> fact v);
+    weaken_pure _ _ _
