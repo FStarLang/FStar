@@ -14,7 +14,11 @@ let lemma_sl_implies_refl (p:hprop) : Lemma
 
 let emp_unit_variant (#a:Type) (p:a -> hprop) : Lemma
    (ensures can_be_split_forall (fun x -> p x `star` emp) p)
-  = admit()
+  = let aux (x:a) : Lemma 
+      ((fun x -> p x `star` emp) x `sl_implies` p x)
+      = Classical.forall_intro emp_unit;
+        equiv_sl_implies ((fun x -> p x `star` emp) x) (p x)
+    in Classical.forall_intro aux
 
 open FStar.Tactics
 
