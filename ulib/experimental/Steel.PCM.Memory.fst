@@ -609,6 +609,74 @@ let alloc_action #a #pcm e x
     in
     lift_tot_action (refined_pre_action_as_action f)
 
+////////////////////////////////////////////////////////////////////////////////
+// witness / recall
+////////////////////////////////////////////////////////////////////////////////
+
+let witnessed_ref #a #pcm (r:ref a pcm) (fact:property a) (m:mem)
+  = H.witnessed_ref r fact (heap_of_mem m)
+
+let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:property a)
+  : Lemma
+    (requires FStar.Preorder.stable fact (Steel.PCM.Preorder.preorder_of_pcm pcm))
+    (ensures FStar.Preorder.stable (witnessed_ref r fact) mem_evolves)
+  = H.witnessed_ref_stability r fact
+
+let witnessed (#a:Type u#1)
+              (#pcm:pcm a)
+              (r:ref a pcm)
+              (fact:property a)
+  = NMSTTotal.witnessed _ mem_evolves (witnessed_ref r fact)
+
+let witness (#a:Type) (#pcm:pcm a)
+            (e:inames)
+            (r:ref a pcm)
+            (fact:stable_property pcm)
+            (v:Ghost.erased a)
+            (_:squash (forall z. compatible pcm v z ==> fact z))
+            (_:unit)
+  : MstTot unit e
+           (pts_to r v)
+           (fun _ -> pts_to r v `star` pure (witnessed r fact))
+  = let m0 = NMSTTotal.get () in
+    let (| v', _|) = H.sel_action r v (heap_of_mem m0) in
+    assume (interp (H.ptr r) m0 /\ H.sel r (heap_of_mem m0) == v');
+    assert (compatible pcm v v');
+    assert (fact v');
+    assert (witnessed_ref r fact m0);
+    witnessed_ref_stability r fact;
+    assert (FStar.Preorder.stable (witnessed_ref r fact) mem_evolves);
+    NMSTTotal.witness _ mem_evolves (witnessed_ref r fact);
+    assert (witnessed r fact);
+    emp_unit (pts_to r v);
+    pure_star_interp (pts_to r v) (witnessed r fact) m0;
+    assert (interp (pts_to r v `star` pure (witnessed r fact)) m0);
+    assume (interp ((pts_to r v `star` pure (witnessed r fact)) `star` locks_invariant e m0) m0);
+    assert (preserves_frame e (pts_to r v) (pts_to r v) m0 m0);
+    assume (preserves_frame e (pts_to r v) (pts_to r v `star` pure (witnessed r fact)) m0 m0)
+
+let recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
+           (e:inames)
+           (r:ref a pcm)
+           (v:Ghost.erased a)
+           (_:unit)
+  = let m0 = NMSTTotal.get () in
+    pure_star_interp (pts_to r v) (witnessed r fact) m0;
+    assert (witnessed r fact);
+    NMSTTotal.recall _ mem_evolves (witnessed_ref r fact);
+    assert (witnessed_ref r fact m0);
+    affine_star (pts_to r v) (pure (witnessed r fact)) m0;
+    let (| v1, _ |) = H.sel_action r v (heap_of_mem m0) in
+    assert (compatible pcm v v1);
+    assume (H.sel r (heap_of_mem m0) == v1);
+    assert (fact v1);
+    emp_unit (pts_to r v);
+    pure_star_interp (pts_to r v) (fact v1) m0;
+    assert (interp (pts_to r v `star` pure (fact v1)) m0);
+    assume (interp ((pts_to r v `star` pure (fact v1)) `star` locks_invariant e m0) m0);
+    assume (preserves_frame e (pts_to r v `star` pure (witnessed r fact)) (pts_to r v `star` pure (fact v1)) m0 m0);
+    Ghost.hide v1
+
 let iname_for_p_mem (i:iname) (p:slprop) : NMSTTotal.s_predicate mem =
   fun m -> iname_for_p i p m.locks
 
