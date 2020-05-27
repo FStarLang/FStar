@@ -209,6 +209,8 @@ let subcomp_pre (#a:Type)
   (forall (m0:hmem pre_g) (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 ==> ens_g m0 x m1)
 
 let delay (p:Type0) : Type0 = p
+let annot_sub_post (p:Type0) : Type0 = p
+
 
 let subcomp (a:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
@@ -216,7 +218,7 @@ let subcomp (a:Type)
   (#[@@ framing_implicit] pre_g:pre_t) (#[@@ framing_implicit] post_g:post_t a)
   (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
   (#[@@ framing_implicit] p1:squash (delay (can_be_split pre_g pre_f)))
-  (#[@@ framing_implicit] p2:squash (can_be_split_forall post_f post_g))
+  (#[@@ framing_implicit] p2:squash (annot_sub_post (can_be_split_forall post_f post_g)))
   (f:repr a pre_f post_f req_f ens_f)
 : Pure (repr a pre_g post_g req_g ens_g)
   (requires subcomp_pre req_f ens_f req_g ens_g p1 p2)
