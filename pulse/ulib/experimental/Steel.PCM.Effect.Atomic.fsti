@@ -194,6 +194,10 @@ let intro_h_exists (#a:Type) (#opened_invariants:_) (x:a) (p:a -> slprop)
   : SteelAtomic unit opened_invariants unobservable (p x) (fun _ -> h_exists p)
   = change_slprop (p x) (h_exists p) (fun m -> intro_exists x p m)
 
+let intro_h_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p:a -> slprop)
+  : SteelAtomic unit opened_invariants unobservable (p x) (fun _ -> h_exists p)
+  = change_slprop (p x) (h_exists p) (fun m -> intro_exists (Ghost.reveal x) p m)
+
 let h_affine (#opened_invariants:_) (p q:slprop)
   : SteelAtomic unit opened_invariants unobservable (p `star` q) (fun _ -> p)
   = change_slprop (p `star` q) p (fun m -> affine_star p q m)
