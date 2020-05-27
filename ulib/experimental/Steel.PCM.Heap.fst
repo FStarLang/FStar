@@ -625,21 +625,13 @@ let sel #a #pcm (r:ref a pcm) (m:hheap (ptr r))
   = let Ref _ _ v = select_addr m r in
     v
 
+let sel_v #a #pcm r v m = sel r m
+
 let sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:hheap (ptr r))
   : Lemma (interp (pts_to r (sel r m)) m)
   = let Ref _ _ v = select_addr m r in
     assert (sel r m == v);
     compatible_refl pcm v
-
-let sel_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a)
-  : action (pts_to r v0) (v:a{compatible pcm v0 v}) (fun _ -> pts_to r v0)
-  = let f
-      : pre_action (pts_to r v0)
-                   (v:a{compatible pcm v0 v})
-                   (fun _ -> pts_to r v0)
-      = fun m0 -> (| sel r m0, m0 |)
-    in
-    f
 
 let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:a -> prop)
   = let fact_h = witnessed_ref r fact in
@@ -663,6 +655,16 @@ let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:a -> prop)
     ()
 
 #set-options "--fuel 2 --ifuel 2"
+
+let sel_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a)
+  : action (pts_to r v0) (v:a{compatible pcm v0 v}) (fun _ -> pts_to r v0)
+  = let f
+      : pre_action (pts_to r v0)
+                   (v:a{compatible pcm v0 v})
+                   (fun _ -> pts_to r v0)
+      = fun m0 -> (| sel r m0, m0 |)
+    in
+    f
 
 let upd' (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a) (v1:a {frame_preserving pcm v0 v1})
   : pre_action (pts_to r v0) unit (fun _ -> pts_to r v1)

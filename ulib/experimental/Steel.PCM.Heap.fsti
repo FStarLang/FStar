@@ -391,6 +391,12 @@ let action_framing
 (** [sel] is a ghost read of the value contained in a heap reference *)
 val sel (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (m:hheap (ptr r)) : a
 
+(** [sel_v] is a ghost read of the value contained in a heap reference *)
+val sel_v (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:hheap (pts_to r v))
+  : v':a{ compatible pcm v v' /\
+          interp (ptr r) m /\
+          v' == sel r m }
+
 (** [sel] respect [pts_to] *)
 val sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:hheap (ptr r))
   : Lemma (interp (pts_to r (sel r m)) m)
