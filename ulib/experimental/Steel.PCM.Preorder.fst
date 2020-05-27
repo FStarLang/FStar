@@ -58,15 +58,17 @@ let frame_preserving_is_preorder_respecting (#a: Type u#a) (p:pcm a) (x y:a)
           (ensures (forall z. compatible p x z ==> preorder_of_pcm p z y))
   = ()
 
-let stable_compatiblity (#a:Type u#a) (fact: a -> prop) (p:pcm a) (v0 v1:a)
+let stable_compatiblity (#a:Type u#a) (fact: a -> prop) (p:pcm a) (v v0 v1:a)
   : Lemma
     (requires
       stable fact (preorder_of_pcm p) /\
       fact v0 /\
-      compatible p v0 v1)
+      frame_preserving p v v1 /\
+      compatible p v v0)
     (ensures
       fact v1)
-  = ()
+  = assert (preorder_of_pcm p v0 v1)
+
 
 
 (**** Preorder to PCM *)
