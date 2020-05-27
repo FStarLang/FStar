@@ -164,3 +164,29 @@ let steel_frame_t
   rassert (pre `Mem.star` frame);
   Steel.PCM.SteelT.Basics.frame f frame
 #pop-options
+
+(* Some helpers *)
+private
+val reshuffle0 (#p #q : slprop)
+              (_ : squash (p `equiv` q))
+   : SteelT unit p (fun _ -> q)
+
+private
+let reshuffle0 #p #q peq =
+  Steel.PCM.Effect.Atomic.lift_atomic_to_steelT
+    (fun () -> Steel.PCM.Effect.Atomic.change_slprop p q (fun m -> ()))
+
+module T = FStar.Tactics
+
+val reshuffle (#p #q : slprop)
+              (_ : squash (T.with_tactic canon
+                                         (squash (p `equiv` q))))
+   : SteelT unit p (fun _ -> q)
+
+#push-options "--no_tactics" (* GM: This should not be needed *)
+
+let reshuffle #p #q peq =
+  T.by_tactic_seman canon (squash (p `equiv` q));
+  reshuffle0 ()
+
+#pop-options
