@@ -17,6 +17,6 @@ let test (p q:slprop)
   : SteelT int (p `star` q) (fun x -> pp x `star` q)
   = ST.reshuffle();
     let x = act q p in
-    ST.reshuffle #_ #_// (pp x `star` q)
+    ST.reshuffle #_ #_// (pp x `star` q) //needs this annotation
   ();
     SB.return x

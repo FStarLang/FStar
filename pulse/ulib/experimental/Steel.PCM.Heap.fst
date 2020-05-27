@@ -641,6 +641,27 @@ let sel_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a)
     in
     f
 
+let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:a -> prop)
+  = let fact_h = witnessed_ref r fact in
+    let aux (h0 h1:heap)
+      : Lemma
+        (requires
+          fact_h h0 /\
+          heap_evolves h0 h1)
+        (ensures
+          fact_h h1)
+        [SMTPat ()]
+      = assert (interp (ptr r) h0);
+        assert (fact (sel r h0));
+        assert (contains_addr h1 r);
+        compatible_refl pcm (select_addr h1 r).v;
+        assert (compatible pcm (select_addr h1 r).v (select_addr h1 r).v);
+        assert (interp (pts_to r (select_addr h1 r).v) h1);
+        assert (interp (ptr r) h1);
+        assert (fact (sel r h1))
+    in
+    ()
+
 #set-options "--fuel 2 --ifuel 2"
 
 let upd' (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a) (v1:a {frame_preserving pcm v0 v1})

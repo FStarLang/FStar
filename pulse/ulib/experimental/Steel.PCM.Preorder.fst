@@ -58,6 +58,17 @@ let frame_preserving_is_preorder_respecting (#a: Type u#a) (p:pcm a) (x y:a)
           (ensures (forall z. compatible p x z ==> preorder_of_pcm p z y))
   = ()
 
+let stable_compatiblity (#a:Type u#a) (fact: a -> prop) (p:pcm a) (v0 v1:a)
+  : Lemma
+    (requires
+      stable fact (preorder_of_pcm p) /\
+      fact v0 /\
+      compatible p v0 v1)
+    (ensures
+      fact v1)
+  = ()
+
+
 (**** Preorder to PCM *)
 
 (***** Building the preorder *)
