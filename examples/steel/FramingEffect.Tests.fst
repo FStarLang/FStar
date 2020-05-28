@@ -181,33 +181,33 @@ assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 // through trefl
 // This seems related to PR 2041
 
-[@expect_failure]
+// [@expect_failure]
 let test1 (x:int) : SteelT ref emp ptr =
   let y = alloc x in y
 
 // #set-options "--debug Steel.Effects2.Tests --debug_level Extreme --debug_level Rel --debug_level LayeredEffectsEqns --print_implicits --ugly --debug_level TwoPhases --print_bound_var_types"
-[@expect_failure]
+// [@expect_failure]
 let test2 (r:ref) : SteelT int (ptr r) (fun _ -> ptr r) =
   let x = read r in
   x
 
-[@expect_failure]
+// [@expect_failure]
 let test3 (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
   = let x = read r in
     let y = read r in
     x
 
-[@expect_failure]
+// [@expect_failure]
 let test4 (r:ref) : SteelT ref (ptr r) (fun y -> ptr r `star` ptr y)
   = let y = alloc 0 in
     y
 
-[@expect_failure]
+// [@expect_failure]
 let test5 (r1 r2:ref) : SteelT ref (ptr r1 `star` ptr r2) (fun y -> ptr r1 `star` ptr r2 `star` ptr y)
   = let y = alloc 0 in
     y
 
-[@expect_failure]
+// [@expect_failure]
 let test6 (r1 r2:ref) : SteelT unit (ptr r1 `star` ptr r2) (fun _ -> ptr r2 `star` ptr r1)
   = let _ = read r1 in
     ()
