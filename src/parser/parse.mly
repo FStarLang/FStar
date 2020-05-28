@@ -532,10 +532,24 @@ binder:
        let (q, lid) = aqualified_lid in
        mk_binder (Variable lid) (rhs parseState 1) Type_level q
      }
+
   | tv=tvar  { mk_binder (TVariable tv) (rhs parseState 1) Kind None  }
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
 multiBinder:
+  | LBRACK_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACK
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        let r = rhs2 parseState 1 5 in
+        [mk_binder (Annotated (id, t)) r Type_level (Some (mk_meta_tac mt))]
+      }
+
+  | LBRACK_BAR t=simpleArrow BAR_RBRACK
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
+        let r = rhs2 parseState 1 3 in
+        let id = gen r in
+        [mk_binder (Annotated (id, t)) r Type_level (Some (mk_meta_tac mt))]
+      }
+
   | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
@@ -812,11 +826,22 @@ simpleArrow:
   | e=tmEqNoRefinement { e }
 
 simpleArrowDomain:
+  | LBRACK_BAR t=tmEqNoRefinement BAR_RBRACK
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        (Some (mk_meta_tac mt), t)
+      }
+
   | aq_opt=ioption(aqual) dom_tm=tmEqNoRefinement { aq_opt, dom_tm }
 
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
 %inline tmArrowDomain(Tm):
+  | LBRACK_BAR t=Tm BAR_RBRACK
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        (Some (mk_meta_tac mt), t)
+      }
+
   | LPAREN q=aqual dom_tm=Tm RPAREN { Some q, dom_tm }
+
   | aq_opt=ioption(aqual) dom_tm=Tm { aq_opt, dom_tm }
 
 tmFormula:
