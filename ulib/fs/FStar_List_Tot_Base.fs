@@ -13,7 +13,8 @@ let count _ _ = failwith "FStar_List.Tot.Base.fs: Not implemented: count"
 let rev_acc l r = List.fold (fun xs x -> x :: xs) r l
 let rev = List.rev
 let append = List.append
-let op_Append = append
+let op_At = append
+let snoc (x, y) = append x [y]
 let flatten = List.concat
 let map = List.map
 let mapi_init _ _ _ = failwith "FStar.List.Tot.Base.fs: Not implemented: mapi_init"
@@ -27,6 +28,7 @@ let mem = List.contains
 let contains x l = List.exists (fun y -> x = y) l
 let existsb f l = List.exists f l
 let find f l = List.tryFind f l
+let filter = List.filter
 let for_all = List.forall
 let collect f l = List.collect f l
 let tryFind = find

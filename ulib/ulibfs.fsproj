@@ -20,7 +20,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
-    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <OutputPath>..\bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\$(Configuration)\$(AssemblyName).XML</DocumentationFile>
@@ -29,7 +29,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <OutputPath>..\bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\$(Configuration)\$(AssemblyName).XML</DocumentationFile>
@@ -69,8 +69,9 @@
     <Compile Include="fs\FStar_Constructive.fs" />
     <Compile Include="fs\FStar_Dyn.fs" /> -->
     <Compile Include="fs\FStar_Float.fs" />
-    <!-- <Compile Include="fs\FStar_Ghost.fs" />
-    <Compile Include="fs\FStar_Heap.fs" />
+    <!-- <Compile Include="fs\FStar_Ghost.fs" /> -->
+    <!-- TODO: How to deal with erased? Should this be a 'realized module' for F#? -->
+    <!-- <Compile Include="fs\FStar_Heap.fs" />
     <Compile Include="fs\FStar_Monotonic_Heap.fs" />
     <Compile Include="fs\FStar_HyperStack_All.fs" />
     <Compile Include="fs\FStar_HyperStack_ST.fs" />
@@ -112,11 +113,11 @@
     <Compile Include="fs\FStar_Vector_Properties.fs" />
     <Compile Include="fs\FStar_Vector_fs" />
     <Compile Include="fs\FStar_TSet.fs" /> -->
-
     <FStarSourceFile Include="FStar.Pervasives.fst" />
-    <!-- <FStarSourceFile Include="FStar.Preorder.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.ErasedLogic.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Squash.fst" /> -->
+    <FStarSourceFile Include="FStar.Preorder.fst" />
+    <!-- <FStarSourceFile Include="legacy\FStar.ErasedLogic.fst" /> -->
+    <!-- TODO: Depends on FStar.Ghost -->
+    <FStarSourceFile Include="FStar.Squash.fst" />
     <!-- <FStarSourceFile Include="FStar.Classical.fst" /> -->
     <!-- <FStarSourceFile Include="FStar.FunctionalExtensionality.fst" /> -->
     <!-- <FStarSourceFile Include="FStar.StrongExcludedMiddle.fst" /> -->
@@ -205,7 +206,6 @@
     <!-- <FStarSourceFile Include="FStar.Int.Cast.Full.fst" /> -->
     <!-- <FStarSourceFile Include="FStar.ConstantTime.Integers.fst" /> -->
     <!-- <FStarSourceFile Include="FStar.Array.fst" /> -->
-
     <!-- <FStarInterfaceFile Include="FStar.BV.fsti" />
     <FStarInterfaceFile Include="FStar.BaseTypes.fsti" />
     <FStarInterfaceFile Include="FStar.BigOps.fsti" />
@@ -246,9 +246,9 @@
     <FStarInterfaceFile Include="FStar.ReflexiveTransitiveClosure.fsti" /> -->
     <FStarInterfaceFile Include="FStar.Seq.Base.fsti" />
     <!-- <FStarInterfaceFile Include="FStar.Seq.Properties.fsti" />
-    <FStarInterfaceFile Include="FStar.Set.fsti" />
+    <FStarInterfaceFile Include="FStar.Set.fsti" /> -->
     <FStarInterfaceFile Include="FStar.Squash.fsti" />
-    <FStarInterfaceFile Include="FStar.String.fsti" />
+    <!-- <FStarInterfaceFile Include="FStar.String.fsti" />
     <FStarInterfaceFile Include="FStar.TSet.fsti" />
     <FStarInterfaceFile Include="FStar.Tactics.Effect.fsti" />
     <FStarInterfaceFile Include="FStar.Tactics.Types.fsti" />
@@ -282,7 +282,6 @@
     <FStarInterfaceFile Include="legacy/FStar.Pointer.Derived2.fsti" />
     <FStarInterfaceFile Include="legacy/FStar.Pointer.Derived3.fsti" />
     <FStarInterfaceFile Include="legacy/FStar.TaggedUnion.fsti" /> -->
-
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Compatibility.OCaml">

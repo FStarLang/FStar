@@ -67,9 +67,8 @@
       <HintPath>..\packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <!-- TODO: Load ulibfs from a more standard place, e.g. $(FSTAR_HOME)/bin -->
     <Reference Include="ulibfs">
-      <HintPath>..\..\..\ulib\bin\Release\ulibfs.dll</HintPath>
+      <HintPath>$(FSTAR_HOME)\bin\ulibfs.dll</HintPath>
     </Reference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

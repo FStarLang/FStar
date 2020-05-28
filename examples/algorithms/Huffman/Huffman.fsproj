@@ -5,14 +5,14 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>cdac1ea7-8fe4-4e86-b1ff-052647ce1dd4</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>TestFSharp</RootNamespace>
-    <AssemblyName>TestFSharp</AssemblyName>
+    <ProjectGuid>e6b8d1db-2661-4d48-ab82-40022cc2433c</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Huffman</RootNamespace>
+    <AssemblyName>Huffman</AssemblyName>
+    <UseStandardResourceNames>true</UseStandardResourceNames>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <UseStandardResourceNames>true</UseStandardResourceNames>
-    <Name>TestFSharp</Name>
+    <Name>Huffman</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,9 +22,7 @@
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\$(Configuration)\$(AssemblyName).XML</DocumentationFile>
-    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,9 +31,7 @@
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\$(Configuration)\$(AssemblyName).XML</DocumentationFile>
-    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -46,13 +42,13 @@
   <Import Project="$(FSharpTargetsPath)" />
   <PropertyGroup>
     <FSTAR_HOME>..\..\..</FSTAR_HOME>
-    <!-- Custom FStar flags used in this project - only extract "TestFSharp" module. -->
-    <FSTAR_FLAGS>--warn_error @332 --use_hints --record_hints --extract "TestFSharp"</FSTAR_FLAGS>
+    <!-- Custom FStar flags used in this project . -->
+    <FSTAR_FLAGS>--warn_error @332 --use_hints --record_hints --extract "Huffman"</FSTAR_FLAGS>
   </PropertyGroup>
   <Import Project="$(FSTAR_HOME)\fsharp.extraction.targets" />
   <ItemGroup>
-    <None Include="App.config" />
-    <FStarSourceFile Include="TestFSharp.fst" />
+    <FStarSourceFile Include="..\Huffman.fst" />
+    <None Include="Huffman.repl.fsx" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
