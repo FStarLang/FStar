@@ -19,14 +19,19 @@ module Steel.PCM.Effect.Atomic
 open Steel.PCM
 open Steel.PCM.Memory
 
-let observability : Type = bool
-let observable = true
-let unobservable = false
+val observability : Type0
+val has_eq_observability (_:unit) : Lemma (hasEq observability)
+val observable : observability
+val unobservable : observability
 
-let obs_at_most_one o1 o2 : bool =
-  not (o1 && o2)
+let obs_at_most_one o1 o2 =
+  o1==unobservable \/ o2==unobservable
 
-let join_obs (o1:observability) (o2:observability{obs_at_most_one o1 o2}) = o1 || o2
+let join_obs (o1:observability) (o2:observability{obs_at_most_one o1 o2}) =
+  has_eq_observability();
+  if observable = o1 || observable = o2
+  then observable
+  else unobservable
 
 val atomic_repr (a:Type u#a)
                 (opened_invariants:inames)
@@ -155,9 +160,11 @@ let return_atomic #a #opened_invariants #p (x:a)
   : SteelAtomic a opened_invariants unobservable (p x) p
   = SteelAtomic?.reflect (return a x opened_invariants p)
 
+#push-options "--query_stats" //working around some flakiness
 let h_assert_atomic (#opened_invariants:_) (p:slprop)
   : SteelAtomic unit opened_invariants unobservable p (fun _ -> p)
   = change_slprop p p (fun m -> ())
+#pop-options
 
 let h_intro_emp_l (#opened_invariants:_) (p:slprop)
   : SteelAtomic unit opened_invariants unobservable p (fun _ -> emp `star` p)

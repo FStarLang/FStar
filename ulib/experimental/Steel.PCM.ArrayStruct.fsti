@@ -273,7 +273,7 @@ open Steel.PCM.Unitless.Base
 let array_with_frac_perm_on_all_indexes (t: Type u#a) (len: SizeT.t) (v: t) : array_struct u#a =
   ArrayStruct (DArray (DBase (with_perm u#a t)) len)
     (pointwise_array_pcm (with_perm t) len frac_perm_pcm)
-    (Seq.init u#a (SizeT.v len) (fun _ -> { value = v; perm = perm_one }))
+    (Seq.init u#a (SizeT.v len) (fun _ -> { value = v; perm = full_perm }))
 
 let immutable_splittable_array (t: Type u#a) (len: SizeT.t) (v: t) : array_struct u#a =
   ArrayStruct (DArray (DBase t) len)

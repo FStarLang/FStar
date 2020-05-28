@@ -26,29 +26,29 @@ let available = false
 let locked = true
 
 let lockinv (p:slprop) (r:ref bool) : slprop =
-  h_exists (fun b -> pts_to r perm_one (Ghost.hide b) `star` (if b then emp else p))
+  h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
 
 let lock (p:slprop u#1) = (r:ref bool & inv (lockinv p r))
 
 val intro_lockinv_available (#uses:inames) (p:slprop) (r:ref bool)
-  : SteelAtomic unit uses unobservable (pts_to r perm_one available `star` p) (fun _ -> lockinv p r)
+  : SteelAtomic unit uses unobservable (pts_to r full_perm available `star` p) (fun _ -> lockinv p r)
 
 val intro_lockinv_locked (#uses:inames) (p:slprop) (r:ref bool)
-  : SteelAtomic unit uses unobservable (pts_to r perm_one locked) (fun _ -> lockinv p r)
+  : SteelAtomic unit uses unobservable (pts_to r full_perm locked) (fun _ -> lockinv p r)
 
 let intro_lockinv_available #uses p r =
   Atomic.intro_h_exists false
     (fun (b: bool) ->
-      pts_to r perm_one (Ghost.hide b) `star`
+      pts_to r full_perm (Ghost.hide b) `star`
         (if b then emp else p)
     )
 
 let intro_lockinv_locked #uses p r =
   let open Atomic in
-  h_intro_emp_l (pts_to r perm_one locked);
-  h_commute emp (pts_to r perm_one locked);
+  h_intro_emp_l (pts_to r full_perm locked);
+  h_commute emp (pts_to r full_perm locked);
   intro_h_exists true
-    (fun b -> pts_to r perm_one (Ghost.hide b) `star`
+    (fun b -> pts_to r full_perm (Ghost.hide b) `star`
           (if b then emp else p))
 
 val new_inv (p:slprop) : SteelT (inv p) p (fun _ -> emp)
@@ -79,9 +79,9 @@ val cas_frame
   : SteelAtomic
     (b:bool{b <==> (Ghost.reveal v == v_old)})
     uses
-    false
-    (pts_to r perm_one v `star` frame)
-    (fun b -> (if b then pts_to r perm_one v_new else pts_to r perm_one v) `star` frame)
+    observable
+    (pts_to r full_perm v `star` frame)
+    (fun b -> (if b then pts_to r full_perm v_new else pts_to r full_perm v) `star` frame)
 let cas_frame #t #uses r v v_old v_new frame =
   Atomic.frame frame (fun _ ->
     let x = Steel.PCM.Reference.cas r v v_old v_new in
@@ -124,17 +124,17 @@ val release_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
 
 let release_core #p #u r i =
   let open Atomic in
-  h_assert_atomic (h_exists (fun b -> pts_to r perm_one (Ghost.hide b) `star` (if b then emp else p))
+  h_assert_atomic (h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
     `star` p);
   let v:bool = frame p (fun _ ->  ghost_read_refine r (fun b -> if b then emp else p)) in
-  h_assert_atomic ((pts_to r perm_one (Ghost.hide v) `star` (if v then emp else p)) `star` p);
-  h_assoc_left (pts_to r perm_one (Ghost.hide v)) (if v then emp else p) p;
+  h_assert_atomic ((pts_to r full_perm (Ghost.hide v) `star` (if v then emp else p)) `star` p);
+  h_assoc_left (pts_to r full_perm (Ghost.hide v)) (if v then emp else p) p;
   let res = cas_frame r v locked available ((if v then emp else p) `star` p) in
-  h_assert_atomic (pts_to r perm_one available `star` ((if res then emp else p) `star` p));
-  h_commute (pts_to r perm_one available) ((if res then emp else p) `star` p);
-  frame (pts_to r perm_one available) (fun _ -> h_commute (if res then emp else p) p);
-  h_commute (p `star` (if res then emp else p)) (pts_to r perm_one available);
-  h_assoc_right (pts_to r perm_one available) p (if res then emp else p);
+  h_assert_atomic (pts_to r full_perm available `star` ((if res then emp else p) `star` p));
+  h_commute (pts_to r full_perm available) ((if res then emp else p) `star` p);
+  frame (pts_to r full_perm available) (fun _ -> h_commute (if res then emp else p) p);
+  h_commute (p `star` (if res then emp else p)) (pts_to r full_perm available);
+  h_assoc_right (pts_to r full_perm available) p (if res then emp else p);
   frame (if res then emp else p) (fun _ -> intro_lockinv_available p r);
   return_atomic #_ #_ #_ res
 

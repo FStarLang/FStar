@@ -94,6 +94,7 @@ val ref (a:Type u#a) (pcm:pcm a) : Type u#0
 
 (** All the standard connectives of separation logic, based on [Steel.PCM.Heap] *)
 val emp : slprop u#a
+val pure (p:prop) : slprop u#a
 val pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
 val h_and (p1 p2:slprop u#a) : slprop u#a
 val h_or  (p1 p2:slprop u#a) : slprop u#a
@@ -116,6 +117,19 @@ val emp_unit (p:slprop)
 val intro_emp (m:mem)
   : Lemma (interp emp m)
 
+(** Equivalence of pure propositions is the equivalence of the underlying propositions *)
+val pure_equiv (p q:prop)
+  : Lemma ((p <==> q) ==> (pure p `equiv` pure q))
+
+(** And the interpretation of pure propositions is their underlying propositions *)
+val pure_interp (q:prop) (m:mem)
+   : Lemma (interp (pure q) m <==> q)
+
+(** A helper lemma for interpreting a pure proposition with another [slprop] *)
+val pure_star_interp (p:slprop u#a) (q:prop) (m:mem)
+   : Lemma (interp (p `star` pure q) m <==>
+            interp (p `star` emp) m /\ q)
+
 (***** Properties of [pts_to] *)
 
 (** [ptr r] asserts that the reference [r] points to a value *)
@@ -130,8 +144,16 @@ val pts_to_compatible
   (v0 v1:a)
   (m:mem u#a)
     : Lemma
-      (requires interp (pts_to x v0 `star` pts_to x v1) m)
-      (ensures composable pcm v0 v1 /\ interp (pts_to x (op pcm v0 v1)) m)
+      (interp (pts_to x v0 `star` pts_to x v1) m <==>
+       composable pcm v0 v1 /\ interp (pts_to x (op pcm v0 v1)) m)
+
+val pts_to_compatible_equiv (#a:Type)
+                            (#pcm:_)
+                            (x:ref a pcm)
+                            (v0:a)
+                            (v1:a{composable pcm v0 v1})
+  : Lemma (equiv (pts_to x v0 `star` pts_to x v1)
+                 (pts_to x (op pcm v0 v1)))
 
 (***** Properties of the separating conjunction *)
 
@@ -272,6 +294,26 @@ val upd_action (#a:Type u#1) (#pcm:_) (e:inames)
 val free_action (#a:Type u#1) (#pcm:pcm a) (e:inames)
                 (r:ref a pcm) (x:FStar.Ghost.erased a{Steel.PCM.exclusive pcm x})
   : action_except unit e (pts_to r x) (fun _ -> pts_to r pcm.Steel.PCM.p.one)
+
+(** Splitting a permission on a composite resource into two separate permissions *)
+val split_action
+  (#a:Type u#1)
+  (#pcm:pcm a)
+  (e:inames)
+  (r:ref a pcm)
+  (v0:FStar.Ghost.erased a)
+  (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+  : action_except unit e (pts_to r (v0 `op pcm` v1)) (fun _ -> pts_to r v0 `star` pts_to r v1)
+
+(** Combining separate permissions into a single composite permission *)
+val gather_action
+  (#a:Type u#1)
+  (#pcm:pcm a)
+  (e:inames)
+  (r:ref a pcm)
+  (v0:FStar.Ghost.erased a)
+  (v1:FStar.Ghost.erased a)
+  : action_except (_:unit{composable pcm v0 v1}) e (pts_to r v0 `star` pts_to r v1) (fun _ -> pts_to r (op pcm v0 v1))
 
 val alloc_action (#a:Type u#1) (#pcm:pcm a) (e:inames) (x:a{compatible pcm x x})
   : action_except (ref a pcm) e emp (fun r -> pts_to r x)
