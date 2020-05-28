@@ -375,7 +375,7 @@ let mkDTuple args r =
   let cons = C.mk_dtuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
-let mkRefinedBinder id t should_bind_var refopt m implicit =
+let mkRefinedBinder id t should_bind_var refopt m implicit : binder =
   let b = mk_binder (Annotated(id, t)) m Type_level implicit in
   match refopt with
     | None -> b
