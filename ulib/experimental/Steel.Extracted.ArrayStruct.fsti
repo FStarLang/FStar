@@ -27,8 +27,13 @@ module PCM = Steel.PCM
 module UPCM = Steel.PCM.Unitless
 module UPCMBase = Steel.PCM.Unitless.Base
 
+open Steel.PCM.Effect
+open Steel.PCM.Memory
+
 /// This module defines a mechanism for extracting arraystructs compatible with separation logic
 /// into C arraystructs via Kremlin
+
+#set-options "--fuel 0 --ifuel 0"
 
 (* foo is the view of what you're storing *)
 type foo =
@@ -66,31 +71,40 @@ instance low_level_foo : low_level_type foo = {
 open FStar.Tactics.Typeclasses
 
 (* Raise a GitHub issue for a typeclass syntax withing val signatures *)
-val ref (a: Type u#a) (#[tcresolve ()] ca:low_level_type a) : Type u#0
+let ref (a: Type u#a) (#[tcresolve ()] ca:low_level_type a) : Type u#0  = ref a ca.pcm
+
+val ref_hprop (#a: Type u#a) (#[tcresolve ()] ca:low_level_type a) (r: ref a) : slprop u#b
+
+(* Buggy, use selectors here*)
+val sel (#a: Type) (#[tcresolve ()] ca:low_level_type a) (h: mem) (r: ref a)  : Tot a
+
+#set-options "--print_implicits --print_universes --z3rlimit 20 --prn"
 
 val alloc
   (#a: Type u#a) (#[FStar.Tactics.Typeclasses.tcresolve ()] ca: low_level_type a)
   (v: a) (#[FStar.Tactics.exact (quote (ca.a_to_low_a v))] v_low: ca.low_a)
-    : ref a #ca
+    : Steel (ref a #ca) emp (fun r -> ref_hprop r) (fun _ -> True) (fun _ r h1 -> (* sel h1 r == v*) True)
 
 let main () =
   alloc #foo (MkFoo 0ul 0ul 1UL)
 
-(* You have to give update_z because you have to justify this with regards to [foo_pcm]
 
-  [@@ update low_foo.z] (* What checks for this attribute ?
+(* You have to give update_z because you have to justify this with regards to [foo_pcm] *)
+
+(*  [@@ update low_foo.z] (* What checks for this attribute ?
     - number of arguments: 2
     - first argument is ref to type that has low_level_type typeclass
     - [low_foo] is [low_a] for that typeclass
     - z is a field of low_foo (low_foo has to be a record)
     - postcondition implies that (a_to_low_a (sel h1 r))  == { a_to_low_a (sel h0 r) with z = new_val }
-  *)
-  val update_z (r: ref foo) (new_val: UInt64.t) : Steel unit (ref r) (fun _ -> ref r) (fun h0 ->
-    new_val >= (sel h0 r).x + (sel h0 r).y
-  ) (fun h0 _ h1 ->
-    (sel h1 r) = MkFoo (sel h0 r).x (sel h0 r).y new_val
-  )
-*)
+  *) *)
+  val update_z (r: ref foo) (new_val: UInt64.t)
+    : Steel unit (admit(); ref_hprop r) (fun _ -> ref_hprop r)
+    (fun h0 ->
+      UInt64.v new_val >= UInt32.v (sel h0 r).x + UInt32.v (sel h0 r).y
+    ) (fun h0 _ h1 ->
+      (sel h1 r) = MkFoo (sel h0 r).x (sel h0 r).y new_val
+    )
 
 (* Language of attributes :
    [@@ update low_struct.field]
