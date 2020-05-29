@@ -174,6 +174,10 @@ let h_elim_emp_l (#opened_invariants:_) (p:slprop)
   : SteelAtomic unit opened_invariants unobservable (emp `star` p) (fun _ -> p)
   = change_slprop (emp `star` p) p (fun m -> emp_unit p; star_commutative p emp)
 
+let intro_pure #opened_invariants (#p:slprop) (q:prop { q })
+  : SteelAtomic unit opened_invariants unobservable p (fun _ -> p `star` pure q)
+  = change_slprop p (p `star` pure q) (fun m -> emp_unit p; pure_star_interp p q m)
+
 let h_commute (#opened_invariants:_) (p q:slprop)
   : SteelAtomic unit opened_invariants unobservable (p `star` q) (fun _ -> q `star` p)
   = change_slprop (p `star` q) (q `star` p) (fun m -> star_commutative p q)
@@ -186,18 +190,20 @@ let h_assoc_right (#opened_invariants:_) (p q r:slprop)
   : SteelAtomic unit opened_invariants unobservable (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
   = change_slprop (p `star` (q `star` r)) ((p `star` q) `star` r) (fun m -> star_associative p q r)
 
-let intro_exists (#a:_) (x:a) (p:a -> slprop) (m:mem)
-  : Lemma (interp (p x) m ==> interp (h_exists p) m)
-  = admit() //TODO, move to mem
-
 let intro_h_exists (#a:Type) (#opened_invariants:_) (x:a) (p:a -> slprop)
   : SteelAtomic unit opened_invariants unobservable (p x) (fun _ -> h_exists p)
-  = change_slprop (p x) (h_exists p) (fun m -> intro_exists x p m)
+  = change_slprop (p x) (h_exists p) (fun m -> intro_h_exists x p m)
 
 let intro_h_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p:a -> slprop)
   : SteelAtomic unit opened_invariants unobservable (p x) (fun _ -> h_exists p)
-  = change_slprop (p x) (h_exists p) (fun m -> intro_exists (Ghost.reveal x) p m)
+  = change_slprop (p x) (h_exists p) (fun m -> Steel.PCM.Memory.intro_h_exists (Ghost.reveal x) p m)
 
 let h_affine (#opened_invariants:_) (p q:slprop)
   : SteelAtomic unit opened_invariants unobservable (p `star` q) (fun _ -> p)
   = change_slprop (p `star` q) p (fun m -> affine_star p q m)
+
+(** We assume this action for now. See the discussion in Steel.PCM.Heap.fst for
+    how we plan to derive this action with an enhancement to the semantics *)
+val witness_h_exists (#opened_invariants:_) (#a:Type) (#p:a -> slprop) (_:unit)
+  : SteelAtomic (Ghost.erased a) opened_invariants unobservable
+                (h_exists p) (fun x -> p x)

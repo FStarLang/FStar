@@ -184,6 +184,10 @@ val h_exists_cong (#a:Type) (p q : a -> slprop)
       (requires (forall x. p x `equiv` q x))
       (ensures (h_exists p `equiv` h_exists q))
 
+(** Introducing [h_exists] by presenting a witness *)
+val intro_h_exists (#a:_) (x:a) (p:a -> slprop) (h:heap)
+  : Lemma (interp (p x) h ==> interp (h_exists p) h)
+
 (**
   The interpretation of a separation logic proposition [hp] is itself an [hprop] of footprint
   [hp]

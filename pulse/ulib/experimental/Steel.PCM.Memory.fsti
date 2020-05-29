@@ -239,6 +239,11 @@ val h_exists_cong (#a:Type) (p q : a -> slprop)
       (requires (forall x. p x `equiv` q x))
       (ensures (h_exists p `equiv` h_exists q))
 
+(** Introducing [h_exists] by presenting a witness *)
+val intro_h_exists (#a:_) (x:a) (p:a -> slprop) (m:mem)
+  : Lemma (interp (p x) m ==> interp (h_exists p) m)
+
+
 (**** Actions *)
 
 /// Note, at this point, using the NMSTTotal effect constrains the mem to be

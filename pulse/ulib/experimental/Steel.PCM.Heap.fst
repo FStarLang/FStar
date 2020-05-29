@@ -317,13 +317,17 @@ let wand (p1 p2: slprop u#a) : slprop u#a =
         interp p1 h1 ==>
         interp p2 (join h h1)
 
+let h_exists_body (#a:Type u#b) (f: (a -> slprop u#a)) (h:heap) (x:a) : prop =
+  interp (f x) h
+
 let h_exists  (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a =
-  fun (h: heap) ->
-   exists x. (W.axiom1 f x; interp (f x) h)
+  fun (h: heap) -> exists x. h_exists_body f h x
+
+let h_forall_body (#a:Type u#b) (f: (a -> slprop u#a)) (h:heap) (x:a) : prop =
+  interp (f x) h
 
 let h_forall (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a =
-  fun (h: heap) ->
-   forall x. (W.axiom1 f x; interp (f x) h)
+  fun (h: heap) -> forall x. h_forall_body f h x
 
 let h_refine p r = h_and p r
 
@@ -357,6 +361,8 @@ let emp_unit p
 let intro_emp h = ()
 
 let h_exists_cong (#a:Type) (p q : a -> slprop) = ()
+
+let intro_h_exists #a x p h = ()
 
 let interp_depends_only_on (hp:slprop u#a) = emp_unit hp
 
@@ -997,3 +1003,53 @@ let change_slprop (p q:slprop)
           (| (), h |)
     in
     refined_pre_action_as_action g
+
+(** [_witness_h_exists]
+
+    This is an action that is frame-preserving and allows
+    extracting a witness for an existential (using indefinite description).
+
+    However, the API provided by the semantics does not yet allow
+    reflecting this as an action, since the way in which it defines
+    frame preservation is different (it doesn't take the frame as an
+    explicit argument).
+
+    We have been discussing revising the signature of actions in
+    semantics to be more like this:
+
+    https://github.com/FStarLang/FStar/blob/nik_steel_locks/examples/steel_wip/ParDiv.fst#L74-L82
+
+    There, frame-preservation of actions is done differently.
+
+    Rather than having a quantified refinement in the postcondition
+    that we have now, i.e.,
+
+```
+    forall (frame:st.hprop).
+      st.interp ((pre `st.star` frame) `st.star` (st.locks_invariant m0)) m0 ==>
+      (st.interp ((post `st.star` frame) `st.star` (st.locks_invariant m1)) m1
+```
+
+    every action takes a frame as an argument and the interpreter
+    carries the current frame as an explicit argument and instantiates
+    it when reaching a leaf action node.
+
+    if that were the style we used for actions, then witness_h_exists
+    would be easy to add as an action.
+
+    The trouble with the current formulation is that in get_witness,
+    we have to pick a witness for h_exists p and then show that
+    whatever witness we picked is good for any frame ... and that
+    seems to be impossible to prove.
+*)
+let _witness_h_exists (a:Type) (p: a -> slprop) (frame:slprop)
+                      (h0:hheap (h_exists p `star` frame))
+    : ( x:erased a & h1:hheap (p x `star` frame) {
+        heap_evolves h0 h1 /\
+        (forall (hp:hprop frame). hp h0 == hp h1) /\
+        (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr)
+      })
+    = assert (equiv (h_exists p `star` frame) (h_exists (fun x -> p x `star` frame)));
+      let w = FStar.IndefiniteDescription.indefinite_description_tot a (fun x -> interp (p x `star` frame) h0) in
+      assert (interp (p w `star` frame) h0);
+      (| w, h0 |)
