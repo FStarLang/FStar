@@ -59,6 +59,50 @@ let perm_ok p : prop = (p.v <=. 1.0R == true) /\ True
 let pts_to_raw (#a:Type) (r:ref a) (p:perm) (v:erased a) = Mem.pts_to r (Some (Ghost.reveal v, p))
 let pts_to #a r p v = pts_to_raw r p v `star` pure (perm_ok p)
 
+let abcd_acbd (a b c d:slprop)
+  : Lemma (((a `star` b) `star` (c `star` d)) `equiv`
+           ((a `star` c) `star` (b `star` d)))
+  = calc (equiv) {
+    ((a `star` b) `star` (c `star` d));
+      (equiv) { star_associative a b (c `star` d) }
+    ((a `star` (b `star` (c `star` d))));
+      (equiv) { star_associative b c d;
+                star_congruence a (b `star` (c `star` d))
+                                a ((b `star` c) `star` d) }
+    (a `star` ((b `star` c) `star` d));
+      (equiv) { star_commutative  b c;
+                star_congruence (b `star` c) d (c `star` b) d;
+                star_congruence a ((b `star` c) `star` d)
+                                a ((c `star` b) `star` d) }
+    (a `star` ((c `star` b) `star` d));
+      (equiv) { star_associative c b d;
+                star_congruence a ((c `star` b) `star` d)
+                                a (c `star` (b `star` d)) }
+    (a `star` (c `star` (b `star` d)));
+      (equiv) { star_associative a c (b `star` d) }
+    ((a `star` c) `star` (b `star` d));
+   }
+
+let pts_to_ref_injective
+      (#a: Type u#1)
+      (r: ref a)
+      (p0 p1:perm)
+      (v0 v1: erased a)
+      (m:mem)
+    : Lemma
+      (requires
+        interp (pts_to r p0 v0 `star` pts_to r p1 v1) m)
+      (ensures v0 == v1)
+    = abcd_acbd (pts_to_raw r p0 v0)
+                (pure (perm_ok p0))
+                (pts_to_raw r p1 v1)
+                (pure (perm_ok p1));
+      Mem.affine_star (pts_to_raw r p0 v0 `star` pts_to_raw r p1 v1)
+                      (pure (perm_ok p0) `star` pure (perm_ok p1)) m;
+      Mem.pts_to_compatible r (Some (Ghost.reveal v0, p0))
+                              (Some (Ghost.reveal v1, p1))
+                              m
+
 let drop (p:slprop)
   : SteelT unit p (fun _ -> emp)
   = lift_atomic_to_steelT (fun _ ->
