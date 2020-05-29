@@ -56,6 +56,16 @@ let h_commute (p q:slprop)
   : SteelT unit (p `star` q) (fun _ -> q `star` p)
   = AB.lift_atomic_to_steelT (fun _ -> AB.h_commute p q)
 
+let h_assoc_r (#p #q #r:slprop) (_:unit)
+  : SteelT unit ((p `star` q) `star` r) (fun _ -> p `star` (q `star` r))
+  = AB.lift_atomic_to_steelT (fun _ -> 
+    AB.change_slprop _ _ (fun m -> star_associative p q r))
+
+let h_assoc_l (#p #q #r:slprop) (_:unit)
+  : SteelT unit (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
+  = AB.lift_atomic_to_steelT (fun _ -> 
+    AB.change_slprop _ _ (fun m -> star_associative p q r))
+
 let h_affine (p q:slprop)
   : SteelT unit (p `star` q) (fun _ -> p)
   = AB.lift_atomic_to_steelT (fun _ -> AB.h_affine p q)
@@ -113,6 +123,15 @@ let weaken_pure (f:slprop) (p:prop) (q:prop{p ==> q})
   : SteelT unit (f `star` pure p) (fun _ -> f `star` pure q)
   = AB.lift_atomic_to_steelT (fun _ ->
     AB.change_slprop _ _ (fun m -> pure_star_interp f p m; pure_star_interp f q m))
+
+let extract_pure (p:prop)
+  : SteelT (_:unit{p}) (pure p) (fun _ -> pure p)
+  = let u = AB.lift_atomic_to_steelT (fun _ -> AB.elim_pure p) in
+    intro_pure p;
+    h_assert (emp `star` pure p);
+    h_commute _ _;
+    drop_r _ _;
+    return u
 
 module U = FStar.Universe
 let lift_h_exists (#a:_) (p:a -> slprop)

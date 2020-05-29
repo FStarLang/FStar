@@ -188,7 +188,6 @@ let pcm_history_induces_preorder #a #p
          ()
     in
     ()
-
 #pop-options
 
 let extend_history #a #p (h0:history a p{Current? h0})
@@ -205,11 +204,13 @@ let extend_history_is_frame_preserving #a #p
 
 let ref a p = M.ref (history a p) pcm_history
 
+let history_val #a #p (h:history a p) (v:Ghost.erased a) (f:perm)
+  : prop
+  = Current? h /\ hval h == v /\ hperm h == f
+
 let pts_to_body #a #p (r:ref a p) (f:perm) (v:Ghost.erased a) (h:history a p) =
       M.pts_to r h `star`
-      pure (Current? h /\
-            hval h == v /\
-            hperm h == f)
+      pure (history_val h v f)
 
 let pts_to (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:Ghost.erased a) =
     h_exists (pts_to_body r f v)
@@ -227,48 +228,55 @@ let alloc (#a:Type) (p:Preorder.preorder a) (v:a)
     SB.h_assert (pts_to x full_perm v);
     SB.return x
 
-
-assume
-val h_assoc_r (#p #q #r:slprop) (_:unit)
-  : SteelT unit ((p `star` q) `star` r) (fun _ -> p `star` (q `star` r))
-assume
-val h_assoc_l (#p #q #r:slprop) (_:unit)
-  : SteelT unit (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
-assume
-val rearrange_pqr_prq (p q r:slprop)
-  : SteelT unit ((p `star` q) `star` r)
-                (fun _ -> (p `star` r) `star` q)
-
-let extract_pure #a #p #f
-                 (r:ref a p)
-                 (v:Ghost.erased a)
-                 (h:Ghost.erased (history a p))
-  : SteelT (_:unit{(Current?h /\ hval h == v /\ hperm h == f)})
-           (pts_to_body r f v h)
-           (fun _ -> pts_to_body r f v h)
-  = SB.h_admit _ _
-
-let elim_pure #a #p #f
-                 (r:ref a p)
-                 (v:Ghost.erased a)
-                 (h:Ghost.erased (history a p))
-  : SteelT (_:unit{(Current?h /\ hval h == v /\ hperm h == f)})
-           (pts_to_body r f v h)
-           (fun _ ->  M.pts_to r h)
-  = extract_pure r v h;
-    SB.drop_r _ _
-
 let intro_pure #a #p #f
                  (r:ref a p)
                  (v:a)
-                 (h:history a p { (Current?h /\ hval h == Ghost.hide v /\ hperm h == f) })
+                 (h:history a p { history_val h v f })
   : SteelT unit
            (M.pts_to r h)
            (fun _ -> pts_to_body r f v h)
   = Atomic.lift_atomic_to_steelT (fun _ ->
     Atomic.change_slprop _ _ (fun m ->
       emp_unit (M.pts_to r h);
-      pure_star_interp (M.pts_to r h) (Current?h /\ hval h == Ghost.hide v /\ hperm h == f) m))
+      pure_star_interp (M.pts_to r h) (history_val h v f) m))
+
+let frame_l (#a:Type) (#pre:slprop) (#post:a -> slprop)
+          ($f:unit -> SteelT a pre post)
+          (frame:slprop)
+  : SteelT a
+    (frame `star` pre)
+    (fun x -> frame `star` post x)
+  = SB.h_commute _ _;
+    let x = SB.frame f _ in
+    SB.h_commute _ _;
+    SB.return x
+
+let rearrange_pqr_prq (p q r:slprop)
+  : SteelT unit ((p `star` q) `star` r)
+                (fun _ -> (p `star` r) `star` q)
+  = h_assoc_r ();
+    frame_l (fun _ -> SB.h_commute _ _) _;
+    h_assoc_l ()
+
+let extract_pure #a #p #f
+                 (r:ref a p)
+                 (v:Ghost.erased a)
+                 (h:Ghost.erased (history a p))
+  : SteelT (_:unit{history_val h v f})
+           (pts_to_body r f v h)
+           (fun _ -> pts_to_body r f v h)
+  = let x = frame_l (fun _ -> SB.extract_pure _) _ in
+    SB.return x
+
+let elim_pure #a #p #f
+                 (r:ref a p)
+                 (v:Ghost.erased a)
+                 (h:Ghost.erased (history a p))
+  : SteelT (_:unit{history_val h v f})
+           (pts_to_body r f v h)
+           (fun _ ->  M.pts_to r h)
+  = extract_pure r v h;
+    SB.drop_r _ _
 
 
 module ST = Steel.PCM.Memory.Tactics
@@ -281,16 +289,6 @@ let rewrite_reveal_hide #a (x:a) (p:a -> slprop) ()
   : SteelT unit (p (Ghost.reveal (Ghost.hide x))) (fun _ -> p x)
   = SB.return ()
 
-let frame_l (#a:Type) (#pre:slprop) (#post:a -> slprop)
-          ($f:unit -> SteelT a pre post)
-          (frame:slprop)
-  : SteelT a
-    (frame `star` pre)
-    (fun x -> frame `star` post x)
-  = SB.h_commute _ _;
-    let x = SB.frame f _ in
-    SB.h_commute _ _;
-    SB.return x
 
 let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> slprop)
                 (r:ref a p)
@@ -417,4 +415,4 @@ let recall (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
     SB.frame (fun _ -> SB.intro_h_exists_erased h (pts_to_body r q v)) _;
     SB.h_assert (pts_to r q v `star` pure (lift_fact fact h1));
     assert (lift_fact fact h1 ==> fact v);
-    weaken_pure _ _ _
+    SB.weaken_pure _ _ _
