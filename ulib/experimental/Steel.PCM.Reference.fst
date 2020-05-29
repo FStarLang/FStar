@@ -31,10 +31,6 @@ let pts_to r p v = H.pts_to r p (hide (U.raise_val (reveal v)))
 
 let alloc x = H.alloc (U.raise_val x)
 
-assume
-val sl_admit_atomic (#a:_) (#uses:_) (#p:_) (o:_) (q:a -> slprop)
-  : SteelAtomic a uses o p q
-
 let read r =
   let x = H.read r in
   Basics.return (U.downgrade_val x)
