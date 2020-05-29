@@ -1975,7 +1975,7 @@ and desugar_binder env b : option<ident> * S.term = match b.b with
   | Variable x      -> Some x, tun_r (range_of_id x)
 
 and as_binder env imp = function
-  | (None, k) -> null_binder k, env
+  | (None, k) -> (null_bv k, trans_aqual env imp), env
   | (Some a, k) ->
     let env, a = Env.push_bv env a in
     ({a with sort=k}, trans_aqual env imp), env
