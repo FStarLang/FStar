@@ -1053,3 +1053,28 @@ let _witness_h_exists (a:Type) (p: a -> slprop) (frame:slprop)
       let w = FStar.IndefiniteDescription.indefinite_description_tot a (fun x -> interp (p x `star` frame) h0) in
       assert (interp (p w `star` frame) h0);
       (| w, h0 |)
+
+
+let lift_h_exists (#a:_) (p:a -> slprop)
+  : action (h_exists p) unit
+           (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+  = let g : refined_pre_action (h_exists p) unit (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+          = fun h ->
+              let aux (x:a) (h:heap)
+                : Lemma
+                  (requires interp (p x) h)
+                  (ensures interp (h_exists (U.lift_dom p)) h)
+                  [SMTPat (interp (p x) h)]
+                = assert (interp (U.lift_dom p (U.raise_val x)) h)
+              in
+              (| (), h |)
+    in
+    refined_pre_action_as_action g
+
+let elim_pure (p:prop)
+  : action (pure p) (u:unit{p}) (fun _ -> emp)
+  = let f
+      : refined_pre_action (pure p) (_:unit{p}) (fun _ -> emp)
+      = fun h -> (| (), h |)
+    in
+    refined_pre_action_as_action f

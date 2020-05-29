@@ -390,3 +390,13 @@ val change_slprop (#opened_invariants:inames)
                   (p q:slprop)
                   (proof: (m:mem -> Lemma (requires interp p m) (ensures interp q m)))
   : action_except unit opened_invariants p (fun _ -> q)
+
+module U = FStar.Universe
+
+val lift_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
+  : action_except unit opened_invariants
+           (h_exists p)
+           (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+
+val elim_pure (#opened_invariants:_) (p:prop)
+  : action_except (u:unit{p}) opened_invariants (pure p) (fun _ -> emp)

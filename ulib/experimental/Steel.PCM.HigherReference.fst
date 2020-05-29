@@ -23,6 +23,7 @@ open FStar.Real
 open Steel.PCM
 open Steel.PCM.FractionalPermission
 module Atomic = Steel.PCM.Effect.Atomic
+module SB = Steel.PCM.SteelT.Basics
 
 let fractional (a:Type u#1) = option (a & perm)
 #push-options "--query_stats"
@@ -58,28 +59,6 @@ let perm_ok p : prop = (p.v <=. 1.0R == true) /\ True
 let pts_to_raw (#a:Type) (r:ref a) (p:perm) (v:erased a) = Mem.pts_to r (Some (Ghost.reveal v, p))
 let pts_to #a r p v = pts_to_raw r p v `star` pure (perm_ok p)
 
-assume
-val sl_admit (#a:_) (#p:_) (q:a -> slprop)
-  : SteelT a p q
-
-assume
-val sl_admit_atomic (#a:_) (#uses:_) (#p:_) (q:a -> slprop)
-  : SteelAtomic a uses unobservable p q
-
-assume
-val sl_assert (p:slprop)
-  : SteelT unit p (fun _ -> p)
-
-assume
-val sl_return (#a:_) (p:a -> slprop) (x:a)
-  : SteelT a (p x) p
-
-assume
-val elim_pure (#uses:_) (p:prop)
-  : SteelAtomic (_:unit{p}) uses unobservable
-                (pure p)
-                (fun _ -> emp)
-
 let drop (p:slprop)
   : SteelT unit p (fun _ -> emp)
   = lift_atomic_to_steelT (fun _ ->
@@ -103,7 +82,7 @@ let elim_perm_ok #uses (p:perm)
   : SteelAtomic (q:perm{perm_ok q /\ q == p}) uses unobservable
                 (pure (perm_ok p))
                 (fun _ -> emp)
-  = let _ = elim_pure (perm_ok p) in
+  = let _ = Atomic.elim_pure (perm_ok p) in
     Atomic.return_atomic p
 
 let intro_pts_to (p:perm{perm_ok p}) #a #uses (#v:erased a) (r:ref a) (_:unit)
@@ -115,7 +94,7 @@ let intro_pts_to (p:perm{perm_ok p}) #a #uses (#v:erased a) (r:ref a) (_:unit)
 let intro_pure (#a:_) (#p:a -> slprop) (q:perm { perm_ok q }) (x:a)
   : SteelT a (p x) (fun y -> p y `star` pure (perm_ok q))
   = Atomic.lift_atomic_to_steelT (fun _ -> intro_perm_ok q _);
-    sl_return _ x
+    SB.return x
 
 let drop_l_atomic #uses (#p #q:slprop)  ()
   : SteelAtomic unit uses unobservable (p `star` q) (fun _ -> q)
@@ -135,7 +114,7 @@ let elim_perm_ok_star (#p:slprop) (q:perm)
   : SteelT (_:unit{perm_ok q}) (p `star` pure (perm_ok q))
            (fun _ -> p)
   = let _ = Atomic.lift_atomic_to_steelT (fun () -> elim_pure_atomic #Set.empty #(fun _ -> p) q) in
-    sl_return _ ()
+    SB.return ()
 
 let alloc #a x =
   let v = Some (x, full_perm) in
@@ -155,7 +134,7 @@ let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
 let read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
              (fun v -> pts_to r p v `star` q v)
-  = sl_admit _
+  = SB.h_admit _ _
 
 let write (#a:Type) (#v:erased a) (r:ref a) (x:a)
   : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
@@ -204,7 +183,7 @@ let share_atomic (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
                                   (pts_to r (half_perm p) v)
                                   (intro_pts_to (half_perm p) r)
 
-let share = admit()
+let share r = Atomic.lift_atomic_to_steelT (fun _ -> share_atomic r)
 
 let mem_gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a) (v1:erased a)
   : action_except (_:unit{v0==v1 /\ perm_ok (sum_perm p0 p1)}) uses
@@ -229,6 +208,6 @@ let gather_atomic (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (
     let _ = gather_atomic_raw r v0 v1 in
     intro_pts_to (sum_perm p0 p1) r ()
 
-let gather = admit()
+let gather r = Atomic.lift_atomic_to_steelT (fun _ -> gather_atomic r)
 
 let ghost_read_refine = admit()

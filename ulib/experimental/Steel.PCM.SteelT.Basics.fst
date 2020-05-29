@@ -98,3 +98,30 @@ let change_slprop
   (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
   : SteelT unit p (fun _ -> q)
   = AB.lift_atomic_to_steelT (fun () -> AB.change_slprop p q proof)
+
+let drop (p:slprop)
+  : SteelT unit p (fun _ -> emp)
+  = AB.lift_atomic_to_steelT (fun _ ->
+    AB.change_slprop _ _ (fun m -> emp_unit p; affine_star p emp m))
+
+let drop_r (p q:slprop)
+  : SteelT unit (p `star` q) (fun _ -> p)
+  = AB.lift_atomic_to_steelT (fun _ ->
+    AB.change_slprop _ _ (fun m -> affine_star p q m))
+
+let weaken_pure (f:slprop) (p:prop) (q:prop{p ==> q})
+  : SteelT unit (f `star` pure p) (fun _ -> f `star` pure q)
+  = AB.lift_atomic_to_steelT (fun _ ->
+    AB.change_slprop _ _ (fun m -> pure_star_interp f p m; pure_star_interp f q m))
+
+module U = FStar.Universe
+let lift_h_exists (#a:_) (p:a -> slprop)
+  : SteelT unit (h_exists p)
+                (fun _ -> h_exists #(U.raise_t a) (U.lift_dom p))
+  = AB.lift_atomic_to_steelT (fun _ -> AB.lift_h_exists_atomic p)
+
+let h_exists_cong (#a:_) (p:a -> slprop) (q:a -> slprop {forall x. equiv (p x) (q x) })
+  : SteelT unit (h_exists p)
+                (fun _ -> h_exists q)
+  = AB.lift_atomic_to_steelT (fun _ -> AB.h_exists_cong_atomic p q)
+
