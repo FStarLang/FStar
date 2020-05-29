@@ -67,7 +67,7 @@ let pts_to_injective #a #p #q (r:ref a) (v0 v1:Ghost.erased a) (rest:Ghost.erase
                 (fun _ -> pts_to r p v0 `star` pts_to r q v0 `star` rest v0)
   = Steel.PCM.Effect.Atomic.lift_atomic_to_steelT
       (fun () -> Steel.PCM.Effect.Atomic.change_slprop _ _
-                (fun m -> admit(); //pts_to_ref_injective r p q v0 v1 m;
+                (fun m -> pts_to_ref_injective r p q v0 v1 m;
                        assert (v0 == v1)))
 open Steel.PCM.FractionalPermission
 let ghost_read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
@@ -79,12 +79,7 @@ let ghost_read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
 
 val intro_pure_p (#p:prop) (s:squash p) (h:slprop)
   : SteelT unit h (fun _ -> pure p `star` h)
-let intro_pure_p #p s h =
-  let s : squash (h `equiv` (pure p `star` h)) =
-    admit(); //lem_star_pure h p;
-    star_commutative h (pure p)
-  in
-  reshuffle0 s
+let intro_pure_p #p s h = intro_pure p; h_commute _ _
 
 val elim_pure (#p:prop)
   : SteelT (squash p) (pure p) (fun _ -> emp)
@@ -375,9 +370,6 @@ let mk_chan_t (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
     let c' : chan_t_sr p send recv = c in
     return #(chan_t_sr p send recv) #(fun c -> chan_inv c) c'
 
-assume
-val h_admit (#a:_) (#q:slprop) (#p:a -> slprop) (_:unit)
-  : SteelT a q p
 
 let new_chan (p:prot)
   : SteelT (chan p) emp (fun c -> sender c p `star` receiver c p)
