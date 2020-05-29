@@ -65,33 +65,3 @@ val ghost_read_refine (#a:Type) (#uses:inames) (#p:perm) (r:ref a) (q:a -> slpro
   : SteelAtomic a uses unobservable
     (h_exists (fun (v:a) -> pts_to r p v `star` q v))
     (fun v -> pts_to r p v `star` q v)
-
-
-// val pure (p:prop) : hprop
-
-// val lem_star_pure (p : hprop) (f: prop)
-//   : Lemma (requires f)
-//           (ensures (p `equiv` (p `star` pure f)))
-
-// val lem_interp_star_pure (p: hprop) (f: prop) (m: mem)
-//   : Lemma (requires (interp (p `star` pure f)) m)
-//           (ensures f)
-
-// let property (a:Type) = a -> prop
-
-// val witnessed (#a:Type u#1) (#p:Preorder.preorder a) (r:reference a p)
-//               (fact:property a) : prop
-
-// let stable_property (#a:Type) (p:Preorder.preorder a) = fact:property a { Preorder.stable fact p }
-
-// val witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:reference a p)
-//             (fact:stable_property p)
-//             (v:(Ghost.erased a))
-//             (_:squash (fact v))
-//   : SteelT unit (pts_to_ref r q v)
-//                 (fun _ -> pts_to_ref r q v `star` pure (witnessed r fact))
-
-// val recall (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
-//            (r:reference a p) (v:(Ghost.erased a))
-//   : SteelT unit (pts_to_ref r q v `star` pure (witnessed r fact))
-//                 (fun _ -> pts_to_ref r q v `star` pure (fact v))
