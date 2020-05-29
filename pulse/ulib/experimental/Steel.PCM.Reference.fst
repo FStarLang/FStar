@@ -83,7 +83,52 @@ let ghost_read_refine #a #uses #p r q =
   A.h_assert_atomic (pts_to r p (U.downgrade_val x) `star` q (U.downgrade_val x));
   A.return_atomic (U.downgrade_val x)
 
-let cas r v v_old v_new = sl_admit_atomic observable _
+let raise_equiv (#t:Type) (x y:t)
+  : Lemma (U.raise_val x == U.raise_val y <==>
+           x == y)
+  = assert (U.downgrade_val (U.raise_val x) == x);
+    assert (U.downgrade_val (U.raise_val y) == y)
+
+
+let downgrade_equiv (#t:Type) (x y:U.raise_t t)
+  : Lemma (U.downgrade_val x == U.downgrade_val y <==>
+           x == y)
+  = assert (U.raise_val (U.downgrade_val x) == x);
+    assert (U.raise_val (U.downgrade_val y) == y)
+
+let lift_eq (#t:eqtype) (x y:U.raise_t t) 
+  : b:bool{b <==> x==y}
+  = downgrade_equiv x y; U.downgrade_val x = U.downgrade_val y
+
+
+let cas_action (#t:eqtype)
+               (#uses:inames)
+               (r:ref t)
+               (v:Ghost.erased t)
+               (v_old:t)
+               (v_new:t)
+               (_:unit)
+   : MstTot (b:bool{b <==> (Ghost.reveal v == v_old)})
+             uses
+            (pts_to r full_perm v)
+            (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
+   = let hv =     (Ghost.hide (U.raise_val (Ghost.reveal v))) in
+     let b = H.cas_action #(U.raise_t t) 
+                  (lift_eq #t)
+                  #uses
+                  r
+                  hv
+                  (U.raise_val v_old)
+                  (U.raise_val v_new)
+                  ()
+     in
+     assert (b <==> (Ghost.reveal hv == U.raise_val v_old));
+     assert (b <==> U.raise_val (Ghost.reveal v) == U.raise_val v_old);
+     raise_equiv (Ghost.reveal v) v_old;
+     b
+
+
+let cas #t #uses r v v_old v_new = A.as_atomic_action (cas_action #t #uses r v v_old v_new)
 
 let raise_ref r p v = Basics.return r
 
