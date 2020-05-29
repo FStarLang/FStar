@@ -69,11 +69,10 @@
     <Compile Include="fs\FStar_Constructive.fs" />
     <Compile Include="fs\FStar_Dyn.fs" /> -->
     <Compile Include="fs\FStar_Float.fs" />
-    <!-- <Compile Include="fs\FStar_Ghost.fs" /> -->
-    <!-- TODO: How to deal with erased? Should this be a 'realized module' for F#? -->
-    <!-- <Compile Include="fs\FStar_Heap.fs" />
+    <!-- <Compile Include="fs\FStar_Ghost.fs" /> --> <!-- TODO: How to deal with erased? Should this be a 'realized module' for F#? -->
     <Compile Include="fs\FStar_Monotonic_Heap.fs" />
-    <Compile Include="fs\FStar_HyperStack_All.fs" />
+    <Compile Include="fs\FStar_Heap.fs" />
+    <!-- <Compile Include="fs\FStar_HyperStack_All.fs" />
     <Compile Include="fs\FStar_HyperStack_ST.fs" />
     <Compile Include="fs\FStar_HyperStack_IO.fs" />
     <Compile Include="fs\FStar_Int16.fs" />
@@ -186,7 +185,7 @@
     <!-- <FStarSourceFile Include="FStar.Relational.Comp.fst" /> -->
     <!-- <FStarSourceFile Include="LowStar.BufferView.Down.fst" /> -->
     <!-- <FStarSourceFile Include="LowStar.BufferView.Up.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Ref.fst" /> -->
+    <FStarSourceFile Include="FStar.Ref.fst" />
     <!-- <FStarSourceFile Include="FStar.Pointer.fst" /> -->
     <!-- <FStarSourceFile Include="LowStar.Regional.Instances.fst" /> -->
     <!-- <FStarSourceFile Include="FStar.Error.fst" /> -->
@@ -234,9 +233,9 @@
     <FStarInterfaceFile Include="FStar.Math.Fermat.fsti" />
     <FStarInterfaceFile Include="FStar.Modifies.fsti" />
     <FStarInterfaceFile Include="FStar.ModifiesGen.fsti" />
-    <FStarInterfaceFile Include="FStar.Monotonic.DependentMap.fsti" />
+    <FStarInterfaceFile Include="FStar.Monotonic.DependentMap.fsti" /> -->
     <FStarInterfaceFile Include="FStar.Monotonic.Heap.fsti" />
-    <FStarInterfaceFile Include="FStar.Monotonic.HyperHeap.fsti" />
+    <!--  <FStarInterfaceFile Include="FStar.Monotonic.HyperHeap.fsti" />
     <FStarInterfaceFile Include="FStar.Monotonic.HyperStack.fsti" />
     <FStarInterfaceFile Include="FStar.Monotonic.Witnessed.fsti" /> -->
     <FStarInterfaceFile Include="FStar.Pervasives.fsti" />
