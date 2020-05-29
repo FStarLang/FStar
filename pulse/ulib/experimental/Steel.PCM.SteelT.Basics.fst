@@ -24,7 +24,7 @@ let return (#a:Type) (#p:a -> slprop) (x:a)
   : SteelT a (p x) p
   = AB.lift_atomic_to_steelT (fun _ -> AB.return_atomic #_ #Set.empty #p x)
 
-assume
+assume //ok, h_admit
 val h_admit (#a:Type) (p:slprop) (q: a -> slprop)
   : SteelT a p q
   
