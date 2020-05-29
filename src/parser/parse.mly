@@ -499,6 +499,9 @@ patternOrMultibinder:
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
       }
 
+  (* GM: I would rather use lidentOrUnderscore and delete the rule above,
+   * but I need to produce a PatWild above, and a PatVar here. However
+   * why does PatWild even exist..? *)
   | LBRACK_BAR i=lident COLON t=simpleArrow BAR_RBRACK
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
         let w = mk_pattern (PatVar (i, Some (mk_meta_tac mt)))
