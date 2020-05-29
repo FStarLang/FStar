@@ -674,7 +674,9 @@ and binder_to_string x =
 and aqual_to_string = function
   | Some Equality -> "$"
   | Some Implicit -> "#"
-  | _ -> ""
+  | Some (Meta (Arg_qualifier_meta_tac t)) -> "#[" ^ term_to_string t ^ "]"
+  | Some (Meta (Arg_qualifier_meta_attr t)) -> "[@@" ^ term_to_string t ^ "]"
+  | None -> ""
 
 and pat_to_string x = match x.pat with
   | PatWild None -> "_"
