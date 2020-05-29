@@ -9,6 +9,7 @@ module Preorder = FStar.Preorder
 module Q = Steel.PCM.Preorder
 module M = Steel.PCM.Memory
 module SB = Steel.PCM.SteelT.Basics
+module Atomic = Steel.PCM.Effect.Atomic
 open FStar.Real
 
 noeq
@@ -226,9 +227,6 @@ let alloc (#a:Type) (p:Preorder.preorder a) (v:a)
     SB.h_assert (pts_to x full_perm v);
     SB.return x
 
-// assume
-// val get_witness (#a:Type) (#p:a -> slprop) (_:unit)
-//   : SteelT (erased a) (h_exists p) (fun x -> p (Ghost.reveal x))
 
 assume
 val h_assoc_r (#p #q #r:slprop) (_:unit)
@@ -236,6 +234,10 @@ val h_assoc_r (#p #q #r:slprop) (_:unit)
 assume
 val h_assoc_l (#p #q #r:slprop) (_:unit)
   : SteelT unit (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
+assume
+val rearrange_pqr_prq (p q r:slprop)
+  : SteelT unit ((p `star` q) `star` r)
+                (fun _ -> (p `star` r) `star` q)
 
 let extract_pure #a #p #f
                  (r:ref a p)
@@ -245,6 +247,29 @@ let extract_pure #a #p #f
            (pts_to_body r f v h)
            (fun _ -> pts_to_body r f v h)
   = SB.h_admit _ _
+
+let elim_pure #a #p #f
+                 (r:ref a p)
+                 (v:Ghost.erased a)
+                 (h:Ghost.erased (history a p))
+  : SteelT (_:unit{(Current?h /\ hval h == v /\ hperm h == f)})
+           (pts_to_body r f v h)
+           (fun _ ->  M.pts_to r h)
+  = extract_pure r v h;
+    SB.drop_r _ _
+
+let intro_pure #a #p #f
+                 (r:ref a p)
+                 (v:a)
+                 (h:history a p { (Current?h /\ hval h == Ghost.hide v /\ hperm h == f) })
+  : SteelT unit
+           (M.pts_to r h)
+           (fun _ -> pts_to_body r f v h)
+  = Atomic.lift_atomic_to_steelT (fun _ ->
+    Atomic.change_slprop _ _ (fun m ->
+      emp_unit (M.pts_to r h);
+      pure_star_interp (M.pts_to r h) (Current?h /\ hval h == Ghost.hide v /\ hperm h == f) m))
+
 
 module ST = Steel.PCM.Memory.Tactics
 
@@ -262,7 +287,10 @@ let frame_l (#a:Type) (#pre:slprop) (#post:a -> slprop)
   : SteelT a
     (frame `star` pre)
     (fun x -> frame `star` post x)
-  = SB.h_admit _ _
+  = SB.h_commute _ _;
+    let x = SB.frame f _ in
+    SB.h_commute _ _;
+    SB.return x
 
 let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> slprop)
                 (r:ref a p)
@@ -300,8 +328,15 @@ let write (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
   = let h_old_e = SB.witness_h_exists #_ #(pts_to_body r full_perm v) () in
     SB.h_assert (pts_to_body r full_perm v (Ghost.reveal h_old_e));
     let h_old = SB.frame (fun _ -> read r h_old_e) _ in
+    elim_pure r v h_old_e;
     assert (compatible pcm_history h_old_e h_old);
-    SB.h_admit _ _
+    assert (h_old_e == Ghost.hide h_old);
+    assert (Current? h_old /\ hval h_old == v);
+    let h : history a p = extend_history h_old x in
+    write r h_old_e h;
+    SB.h_assert (M.pts_to r h);
+    intro_pure #a #p #full_perm r x h;
+    SB.intro_h_exists h _
 
 let lift_fact #a #p (f:property a)
   : property (history a p)
@@ -333,10 +368,6 @@ let witness_thunk (#a:Type) (#pcm:Steel.PCM.pcm a)
                 (fun _ -> M.pts_to r v `star` pure (M.witnessed r fact))
   = Steel.PCM.Effect.witness r fact v ()
 
-assume
-val rearrange_pqr_prq (p q r:slprop)
-  : SteelT unit ((p `star` q) `star` r)
-                (fun _ -> (p `star` r) `star` q)
 
 let frame_witness (#a:Type) (#pcm:Steel.PCM.pcm a)
                   (r:M.ref a pcm)
@@ -368,9 +399,6 @@ let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
     SB.h_assert (pts_to_body r q v h `star` pure (witnessed r fact));
     SB.frame (fun _ -> SB.intro_h_exists_erased h (pts_to_body r q v)) _
 
-let weaken_pure (f:slprop) (p:prop) (q:prop{p ==> q})
-  : SteelT unit (f `star` pure p) (fun _ -> f `star` pure q)
-  = SB.h_admit _ _
 
 let recall (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
            (r:ref a p) (v:(Ghost.erased a))

@@ -50,3 +50,5 @@ let with_invariant i f = SteelAtomic?.reflect (Steel.PCM.Memory.with_invariant i
 let frame frame f = SteelAtomic?.reflect (Steel.PCM.Memory.frame frame (reify (f ())))
 let change_slprop p q proof = SteelAtomic?.reflect (Steel.PCM.Memory.change_slprop p q proof)
 let witness_h_exists = admit()
+let lift_h_exists_atomic #a #u p = SteelAtomic?.reflect (Steel.PCM.Memory.lift_h_exists #u p)
+let elim_pure #uses p = SteelAtomic?.reflect (Steel.PCM.Memory.elim_pure #uses p)

@@ -207,3 +207,22 @@ let h_affine (#opened_invariants:_) (p q:slprop)
 val witness_h_exists (#opened_invariants:_) (#a:Type) (#p:a -> slprop) (_:unit)
   : SteelAtomic (Ghost.erased a) opened_invariants unobservable
                 (h_exists p) (fun x -> p x)
+
+module U = FStar.Universe
+
+val lift_h_exists_atomic (#a:_) (#u:_) (p:a -> slprop)
+  : SteelAtomic unit u unobservable
+                (h_exists p)
+                (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+
+let h_exists_cong_atomic (#a:_) #u (p:a -> slprop) (q:a -> slprop {forall x. equiv (p x) (q x) })
+  : SteelAtomic unit u unobservable
+                (h_exists p)
+                (fun _ -> h_exists q)
+  = change_slprop _ _ (fun m -> h_exists_cong p q)
+
+
+val elim_pure (#uses:_) (p:prop)
+  : SteelAtomic (_:unit{p}) uses unobservable
+                (pure p)
+                (fun _ -> emp)

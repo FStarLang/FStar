@@ -495,3 +495,12 @@ val frame (#a:Type)
 val change_slprop (p q:slprop)
                   (proof: (h:heap -> Lemma (requires interp p h) (ensures interp q h)))
   : action p unit (fun _ -> q)
+
+module U = FStar.Universe
+
+val lift_h_exists (#a:_) (p:a -> slprop)
+  : action (h_exists p) unit
+           (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+
+val elim_pure (p:prop)
+  : action (pure p) (u:unit{p}) (fun _ -> emp)

@@ -1050,3 +1050,8 @@ let change_slprop (#opened_invariants:inames)
       = proof (mem_of_heap h)
     in
     lift_tot_action (lift_heap_action opened_invariants (Steel.PCM.Heap.change_slprop p q proof))
+
+
+let lift_h_exists #opened_invariants p = lift_tot_action (lift_heap_action opened_invariants (H.lift_h_exists p))
+
+let elim_pure #opened_invariants p = lift_tot_action (lift_heap_action opened_invariants (H.elim_pure p))
