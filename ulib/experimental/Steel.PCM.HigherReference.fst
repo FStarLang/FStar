@@ -255,3 +255,39 @@ let gather_atomic (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (
 let gather r = Atomic.lift_atomic_to_steelT (fun _ -> gather_atomic r)
 
 let ghost_read_refine = admit()
+
+let cas_provides #t (r:ref t) (v:Ghost.erased t) (v_new:t) (b:bool) =
+    if b then pts_to r full_perm v_new else pts_to r full_perm v
+
+let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
+               (#uses:inames)
+               (r:ref t)
+               (v:Ghost.erased t)
+               (v_old:t)
+               (v_new:t)
+               (_:unit)
+   : MstTot
+        (b:bool{b <==> (Ghost.reveal v == v_old)})
+        uses
+        (pts_to r full_perm v)
+        (cas_provides r v v_new)
+   = let m0 = NMSTTotal.get () in
+     let fv = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
+     let fv' = Some (v_new, full_perm) in
+     assert (interp ((Mem.pts_to r fv `star` pure (perm_ok full_perm)) `star` locks_invariant uses m0) m0);
+     let fv_actual = frame (pure (perm_ok full_perm)) (sel_action uses r fv) () in
+     assert (compatible pcm_frac fv fv_actual);
+     let Some (v', p) = fv_actual in
+     assert (v == Ghost.hide v');
+     assert (p == full_perm);
+     let b =
+       if eq v' v_old
+       then (frame (pure (perm_ok full_perm)) (upd_action uses r fv fv') (); true)
+       else false
+     in
+     let m1 = NMSTTotal.get () in
+     assert (interp (cas_provides r v v_new b `star` locks_invariant uses m1) m1);
+     assert (preserves_frame uses (pts_to r full_perm v)
+                                  (cas_provides r v v_new b)
+                                  m0 m1);
+     b

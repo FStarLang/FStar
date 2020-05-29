@@ -76,3 +76,14 @@ val ghost_read_refine (#a:Type) (#uses:inames) (#p:perm) (r:ref a) (q:a -> slpro
   : SteelAtomic a uses unobservable
     (h_exists (fun (v:a) -> pts_to r p v `star` q v))
     (fun v -> pts_to r p v `star` q v)
+
+val cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
+               (#uses:inames)
+               (r:ref t)
+               (v:Ghost.erased t)
+               (v_old:t)
+               (v_new:t)
+   : action_except (b:bool{b <==> (Ghost.reveal v == v_old)})
+                   uses
+                   (pts_to r full_perm v)
+                   (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
