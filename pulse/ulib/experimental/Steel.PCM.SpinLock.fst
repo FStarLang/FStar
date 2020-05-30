@@ -88,14 +88,6 @@ let cas_frame #t #uses r v v_old v_new frame =
     return_atomic x
   )
 
-assume
-val h_admit_atomic (#a:_) (#uses:_) (p:slprop) (q:a -> slprop)
-  : SteelAtomic a uses unobservable p q
-
-assume
-val h_admit_atomic_obs (#a:_) (#uses:_) (p:slprop) (q:a -> slprop)
-  : SteelAtomic a uses observable p q
-
 val acquire_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
   : SteelAtomic bool u observable
     (lockinv p r `star` emp)
