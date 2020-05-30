@@ -107,7 +107,7 @@ let pcm_history_preorder #a #p : Preorder.preorder (history a p) =
     | Current vh0 _, Current vh1 _ ->
       vh1 `Q.extends` vh0
 
-#push-options "--max_fuel 1 --initial_fuel 4 --max_ifuel 4 --z3rlimit_factor 4"
+#push-options "--max_fuel 1 --initial_fuel 1 --max_ifuel 1 --z3rlimit_factor 4 --query_stats --z3cliopt smt.qi.eager_threshold=100"
 let pcm_history_induces_preorder #a #p
   : Lemma (Q.induces_preorder (pcm_history #a #p)
                               (pcm_history_preorder #a #p))
