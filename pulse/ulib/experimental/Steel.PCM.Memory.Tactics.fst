@@ -129,42 +129,6 @@ open Steel.PCM.Memory
 module Mem = Steel.PCM.Memory
 open Steel.PCM.Effect
 
-assume
-val rassert
-  (#h_in:slprop)
-  (h_out:slprop{
-    FStar.Tactics.with_tactic
-    reprove_frame
-    (can_be_split_into h_in h_out emp /\ True)})
-  : SteelT unit h_in (fun _ -> h_out)
-  // = Steel?.reflect (fun _ ->
-  //     let m0 = mst_get () in
-  //     FStar.Tactics.by_tactic_seman reprove_frame (can_be_split_into h_in h_out emp /\ True);
-  //     let (| _, m1 |) = rewrite_slprop h_in h_out m0 in
-  //     act_preserves_frame_and_preorder (rewrite_slprop h_in h_out) m0;
-  //     mst_put m1)
-
-let steel_frame_t
-  (#outer:slprop)
-  (#a:Type) (#pre:slprop) (#post:a -> slprop)
-  (#[resolve_frame()]
-    frame:slprop{
-      FStar.Tactics.with_tactic
-      reprove_frame
-      (can_be_split_into outer pre frame /\ True)}
-  )
-  ($f:unit -> Steel a pre post (fun _ -> True) (fun _ _ _ -> True))
-: SteelT a
-  outer
-  (fun x -> post x `Mem.star` frame)
-= FStar.Tactics.by_tactic_seman reprove_frame (can_be_split_into outer pre frame /\ True);
-  Mem.emp_unit (pre `Mem.star` frame);
-  FStar.Tactics.unfold_with_tactic reprove_frame
-    (can_be_split_into outer (pre `Mem.star` frame) emp /\ True);
-  rassert (pre `Mem.star` frame);
-  Steel.PCM.SteelT.Basics.frame f frame
-#pop-options
-
 (* Some helpers *)
 private
 val reshuffle0 (#p #q : slprop)
