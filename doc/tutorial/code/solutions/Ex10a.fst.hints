@@ -56,7 +56,7 @@
       1,
       [ "@query" ],
       0,
-      "d96cb3fb1e94df77dbdd9a09b6cabd0e"
+      "e2c9eb7e15f66d840d1dbf41ba3b5463"
     ],
     [
       "Ex10a.revoke",
@@ -88,7 +88,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "1cf7ce253c2326348b6278bc6b627955"
+      "291369a8ca915ee9acfc6e2c5ec95e80"
     ],
     [
       "Ex10a.safe_delete",
@@ -109,7 +109,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "0133e1a096569bbdd51b6b651adf3ffc"
+      "1da2acdea35acebd2742a7f3cc1f9edc"
     ],
     [
       "Ex10a.test_acls",
@@ -158,7 +158,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "87e4d442d78f4d4a861e0599158ea764"
+      "5f2ca2a997e6a1b2d83dac2d285d6bdb"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -171,7 +171,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "c54f5afb09a9e678c84a86197e1baaa2"
+      "a7084275741a16c04dfa9a10a9b89e77"
     ],
     [
       "Ex10a.canRead",
@@ -184,7 +184,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "d0191789f4f703465422ec03526b8d85"
+      "31d21694ff3f469e344244fb6cc118e0"
     ],
     [
       "Ex10a.revoke",
@@ -193,7 +193,7 @@
       1,
       [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
       0,
-      "53c1b64bc0f698e9e36b8317b27cc0e9"
+      "da2e6f21c3e8660bf95e3ddb713f5153"
     ]
   ]
 ]

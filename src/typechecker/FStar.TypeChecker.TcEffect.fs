@@ -111,7 +111,7 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
  *   what they are used at
  *)
 let check_no_subtyping_for_layered_combinator env (t:term) (k:option<typ>) =
-  if Env.debug env <| Options.Other "LayeredEffects"
+  if Env.debug env <| Options.Other "LayeredEffectsTc"
   then BU.print2 "Checking that %s is well typed with no subtyping (k:%s)\n"
          (Print.term_to_string t)
          (match k with
@@ -128,7 +128,7 @@ let check_no_subtyping_for_layered_combinator env (t:term) (k:option<typ>) =
  * Typechecking of layered effects
  *)
 let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
-  if Env.debug env0 <| Options.Other "LayeredEffects" then
+  if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
     BU.print1 "Typechecking layered effect: \n\t%s\n" (Print.eff_decl_to_string false ed);
 
   //we don't support effect binders in layered effects yet
@@ -138,7 +138,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
       (range_of_lid ed.mname);
 
   let log_combinator s (us, t, ty) =
-    if Env.debug env0 <| Options.Other "LayeredEffects" then
+    if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
       BU.print4 "Typechecked %s:%s = %s:%s\n"
         (string_of_lid ed.mname) s
         (Print.tscheme_to_string (us, t)) (Print.tscheme_to_string (us, ty)) in
@@ -341,7 +341,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
     let stronger_us, stronger_t, stronger_ty = check_and_gen "stronger_repr" 1 stronger_repr in
 
-    if Env.debug env0 <| Options.Other "LayeredEffects" then
+    if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
       BU.print2 "stronger combinator typechecked with term: %s and type: %s\n"
         (Print.tscheme_to_string (stronger_us, stronger_t))
         (Print.tscheme_to_string (stronger_us, stronger_ty));
@@ -377,8 +377,8 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
     let k = U.arrow (bs@[f]) c in
 
-    if Env.debug env <| Options.Other "LayeredEffects" then
-      BU.print1 "Expected type before unification: %s\n"
+    if Env.debug env <| Options.Other "LayeredEffectsTc" then
+      BU.print1 "Expected type of subcomp before unification: %s\n"
         (Print.term_to_string k);
 
     let guard_eq = Rel.teq env ty k in
@@ -460,6 +460,20 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
   let _if_then_else_is_sound =
     let r = (ed |> U.get_layered_if_then_else_combinator |> must |> snd).pos in
 
+    (*
+     * In constructing the application nodes for subcomp and if_then_else,
+     *   we need to adjust the qualifiers
+     *
+     * Implicits remain implicits, but meta_attr or meta_arg just become implicits
+     *
+     * Don't think the boolean false below matters, but is perhaps safer (see Syntax.fsi)
+     *)
+    let binder_aq_to_arg_aq aq =
+      match aq with
+      | Some (Implicit _) -> aq
+      | Some (Meta _) -> Some (Implicit false)
+      | _ -> None in
+
     let ite_us, ite_t, _ = if_then_else in
 
     let us, ite_t = SS.open_univ_vars ite_us ite_t in
@@ -476,7 +490,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
           |> (fun l -> let (f::g::p::[]) = l in f, g, p) in
         Env.push_binders (Env.push_univ_vars env0 us) bs,
         S.mk_Tm_app ite_t
-          (bs |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg)
+          (bs |> List.map (fun (b, qual) -> S.bv_to_name b, binder_aq_to_arg_aq qual))
           r,
         f, g, p
       | _ -> failwith "Impossible! ite_t must have been an abstraction with at least 3 binders" in
@@ -493,8 +507,13 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
           bs_except_last |> List.map snd, last_b |> List.hd |> snd
         | _ -> failwith "Impossible! subcomp_ty must have been an arrow with at lease 1 binder" in
 
+     let aqs_except_last, last_aq =
+       aqs_except_last |> List.map binder_aq_to_arg_aq,
+       last_aq |> binder_aq_to_arg_aq in
+
      let aux t =
       let tun_args = aqs_except_last |> List.map (fun aq -> S.tun, aq) in
+
       S.mk_Tm_app
         subcomp_t
         (tun_args@[t, last_aq])
@@ -510,7 +529,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
       aux subcomp_f, aux subcomp_g in
 
-    if Env.debug env <| Options.Other "LayeredEffects"
+    if Env.debug env <| Options.Other "LayeredEffectsTc"
     then BU.print2 "Checking the soundness of the if_then_else combinators, f: %s, g: %s\n"
            (Print.term_to_string tm_subcomp_ascribed_f)
            (Print.term_to_string tm_subcomp_ascribed_g);
@@ -580,7 +599,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
       ({ Env.set_expected_typ env act_typ with instantiate_imp = false })
       act.action_defn in
     
-    if Env.debug env <| Options.Other "LayeredEffects" then
+    if Env.debug env <| Options.Other "LayeredEffectsTc" then
       BU.print2 "Typechecked action definition: %s and action type: %s\n"
         (Print.term_to_string act_defn) (Print.term_to_string act_typ);
 
@@ -600,13 +619,13 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
         BU.format3 "Unexpected non-function type for action %s:%s (%s)"
           (string_of_lid ed.mname) (string_of_lid act.action_name) (Print.term_to_string act_typ)) r in
 
-    if Env.debug env <| Options.Other "LayeredEffects" then
+    if Env.debug env <| Options.Other "LayeredEffectsTc" then
       BU.print1 "Expected action type: %s\n" (Print.term_to_string k);
 
     let g = Rel.teq env act_typ k in
     List.iter (Rel.force_trivial_guard env) [g_t; g_d; g_k; g];
 
-    if Env.debug env <| Options.Other "LayeredEffects" then
+    if Env.debug env <| Options.Other "LayeredEffectsTc" then
       BU.print1 "Expected action type after unification: %s\n" (Print.term_to_string k);
     
     let act_typ =
@@ -635,7 +654,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
         U.arrow bs (S.mk_Comp ct)
       | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType, err_msg k) r in
 
-    if Env.debug env <| Options.Other "LayeredEffects" then
+    if Env.debug env <| Options.Other "LayeredEffectsTc" then
       BU.print1 "Action type after injecting it into the monad: %s\n" (Print.term_to_string act_typ);
     
     let act =
@@ -1112,7 +1131,7 @@ let monad_signature env m s =
  *
  *)
 let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
-  if Env.debug env0 <| Options.Other "LayeredEffects" then
+  if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
     BU.print1 "Typechecking sub_effect: %s\n" (Print.sub_eff_to_string sub);
 
   let lift_ts = sub.lift |> must in
@@ -1120,7 +1139,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   let us, lift, lift_ty = check_and_gen env0 "" "lift" 1 lift_ts in
 
-  if Env.debug env0 <| Options.Other "LayeredEffects" then
+  if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
     BU.print2 "Typechecked lift: %s and lift_ty: %s\n"
       (Print.tscheme_to_string (us, lift)) (Print.tscheme_to_string ((us, lift_ty)));
 
@@ -1189,20 +1208,20 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
     U.arrow bs c, Env.conj_guard (Env.conj_guard g_f_b g_repr) guard_wp in
 
-  if Env.debug env <| Options.Other "LayeredEffects" then
+  if Env.debug env <| Options.Other "LayeredEffectsTc" then
     BU.print1 "tc_layered_lift: before unification k: %s\n" (Print.term_to_string k);
 
   let g = Rel.teq env lift_ty k in
   Rel.force_trivial_guard env g_k; Rel.force_trivial_guard env g;
 
-  if Env.debug env0 <| Options.Other "LayeredEffects" then
+  if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
     BU.print1 "After unification k: %s\n" (Print.term_to_string k);
        
   let sub = { sub with
     lift = Some (us, lift);
     lift_wp = Some (us, k |> N.remove_uvar_solutions env |> SS.close_univ_vars us) } in
 
-  if Env.debug env0 <| Options.Other "LayeredEffects" then
+  if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
     BU.print1 "Final sub_effect: %s\n" (Print.sub_eff_to_string sub);
 
   sub
@@ -1365,7 +1384,9 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
 
 let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
   let eff_name = BU.format3 "(%s, %s) |> %s)"
-    (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p) in
+    (m |> ident_of_lid |> string_of_id)
+    (n |> ident_of_lid |> string_of_id)
+    (p |> ident_of_lid |> string_of_id) in
   let r = (snd ts).pos in
 
   //p should be non-reifiable, reification of polymonadic binds is not yet implemented
@@ -1440,8 +1461,85 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
                   (Print.tscheme_to_string (us, k));
 
   log_issue r (Errors.Warning_BleedingEdge_Feature,
-    BU.format1 "Polymonadic binds (%s in this case) is a bleeding edge F* feature;\
+    BU.format1 "Polymonadic binds (%s in this case) is an experimental feature;\
       it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
       eff_name);
 
   (us, t), (us, k |> N.remove_uvar_solutions env |> SS.close_univ_vars us)
+
+
+let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
+  let r = (snd ts).pos in
+
+  let combinator_name =
+    (m |> ident_of_lid |> string_of_id) ^ " <: " ^
+    (n |> ident_of_lid |> string_of_id) in
+
+  let us, t, ty = check_and_gen env0 combinator_name "polymonadic_subcomp" 1 ts in
+
+  //make sure that the combinator has the right shape
+
+  let us, ty = SS.open_univ_vars us ty in
+  let env = Env.push_univ_vars env0 us in
+
+  check_no_subtyping_for_layered_combinator env ty None;
+
+  //construct the expected type k to be:
+  //a:Type -> <some binders> -> m_repr a is -> PURE (n_repr a js) wp
+
+  let a, u = U.type_u () |> (fun (t, u) -> S.gen_bv "a" None t |> S.mk_binder, u) in
+  let rest_bs =
+    match (SS.compress ty).n with
+    | Tm_arrow (bs, _) when List.length bs >= 2 ->
+      let ((a', _)::bs) = SS.open_binders bs in
+      bs |> List.splitAt (List.length bs - 1) |> fst
+         |> SS.subst_binders [NT (a', bv_to_name (fst a))]
+    | _ -> 
+      raise_error (Errors.Fatal_UnexpectedEffect,
+        BU.format3 "Type of polymonadic subcomp %s is not an arrow with >= 2 binders (%s::%s)"
+          combinator_name
+          (Print.tag_of_term t) (Print.term_to_string t)) r in
+    
+  let bs = a::rest_bs in
+  let f, guard_f =
+    let repr, g = TcUtil.fresh_effect_repr_en (Env.push_binders env bs) r m u
+      (a |> fst |> S.bv_to_name) in
+    S.gen_bv "f" None repr |> S.mk_binder, g in
+    
+  let ret_t, guard_ret_t = TcUtil.fresh_effect_repr_en (Env.push_binders env bs)
+    r n u (a |> fst |> S.bv_to_name) in
+
+  let pure_wp_uvar, guard_wp = pure_wp_uvar (Env.push_binders env bs) ret_t 
+    (BU.format1 "implicit for pure_wp in checking polymonadic subcomp %s" combinator_name)
+    r in
+  let c = S.mk_Comp ({
+    comp_univs = [ Env.new_u_univ () ];
+    effect_name = PC.effect_PURE_lid;
+    result_typ = ret_t;
+    effect_args = [ pure_wp_uvar |> S.as_arg ];
+    flags = [] }) in
+
+  let k = U.arrow (bs@[f]) c in
+
+  if Env.debug env <| Options.Other "LayeredEffectsTc" then
+    BU.print2 "Expected type of polymonadic subcomp %s before unification: %s\n"
+      combinator_name
+      (Print.term_to_string k);
+
+  let guard_eq = Rel.teq env ty k in
+  List.iter (Rel.force_trivial_guard env) [guard_f; guard_ret_t; guard_wp; guard_eq];
+  let k = k
+    |> N.remove_uvar_solutions env
+    |> N.normalize [Env.Beta; Env.Eager_unfolding] env
+    |> SS.close_univ_vars us in
+
+  if Env.debug env <| Options.Other "LayeredEffectsTc" then
+    BU.print2 "Polymonadic subcomp %s type after unification : %s\n"
+      combinator_name (Print.tscheme_to_string (us, k));
+
+  log_issue r (Errors.Warning_BleedingEdge_Feature,
+    BU.format1 "Polymonadic subcomp (%s in this case) is an experimental feature;\
+      it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
+      combinator_name);
+
+  (us, t), (us, k)

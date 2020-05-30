@@ -176,6 +176,7 @@ let keywords =
     ALWAYS, "new_effect" ,NEW_EFFECT;
     ALWAYS, "layered_effect"            ,LAYERED_EFFECT;
     ALWAYS, "polymonadic_bind"          ,POLYMONADIC_BIND;
+    ALWAYS, "polymonadic_subcomp"       ,POLYMONADIC_SUBCOMP;
     ALWAYS, "noextract",  NOEXTRACT;
     ALWAYS, "of"         ,OF;
     ALWAYS, "open"       ,OPEN;

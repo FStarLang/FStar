@@ -218,17 +218,20 @@
       [
         "@MaxIFuel_assumption", "@query",
         "equation_FStar.HyperStack.ST.erid",
+        "equation_FStar.HyperStack.ST.m_rref",
         "equation_FStar.HyperStack.ST.ralloc_post",
         "equation_FStar.Monotonic.DependentMap.empty",
         "equation_FStar.Monotonic.DependentMap.grows",
         "equation_FStar.Monotonic.DependentMap.imap",
+        "equation_FStar.Monotonic.DependentMap.t",
         "refinement_interpretation_Tm_refine_161e04719814801d293219f408210f95",
         "refinement_interpretation_Tm_refine_6c5072d4c9562dd38fd2703ecfb013df",
         "refinement_interpretation_Tm_refine_6fbd4d82bb3e7e5b2939e88df41fcbe3",
-        "refinement_interpretation_Tm_refine_80c1a9e9a59b1f3e9fe89cca8db03bac"
+        "refinement_interpretation_Tm_refine_80c1a9e9a59b1f3e9fe89cca8db03bac",
+        "refinement_interpretation_Tm_refine_f596a1e23d65ebe54b463345ece4e00f"
       ],
       0,
-      "c76e02f8bb1e6f95a0de805bdf0693d8"
+      "752fd0aa97478c0c4fcb3f28a89245d9"
     ],
     [
       "FStar.Monotonic.DependentMap.extend",
@@ -436,7 +439,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "7e3d022116c09fff427ca73a9e4d1a66"
+      "1d11112a2ba1bdba7ae4994ced945d19"
     ],
     [
       "FStar.Monotonic.DependentMap.forall_t",
@@ -578,7 +581,7 @@
         "typing_FStar.Monotonic.HyperStack.is_mm"
       ],
       0,
-      "9368c5a3edf486e339800f3e00f125f5"
+      "e75255e6d55a9bd72f05af7985710387"
     ]
   ]
 ]
