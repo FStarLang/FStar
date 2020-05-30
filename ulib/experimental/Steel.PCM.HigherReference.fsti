@@ -40,7 +40,7 @@ val alloc (#a:Type) (x:a)
   : SteelT (ref a) emp (fun r -> pts_to r full_perm x)
 
 val read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelT a (pts_to r p v) (fun x -> pts_to r p x)
+  : SteelT (x:a{x==Ghost.reveal v}) (pts_to r p v) (fun x -> pts_to r p x)
 
 val read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
@@ -71,11 +71,6 @@ val gather (#a:Type) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
   : SteelT (_:unit{v0==v1})
     (pts_to r p0 v0 `star` pts_to r p1 v1)
     (fun _ -> pts_to r (sum_perm p0 p1) v0)
-
-val ghost_read_refine (#a:Type) (#uses:inames) (#p:perm) (r:ref a) (q:a -> slprop)
-  : SteelAtomic a uses unobservable
-    (h_exists (fun (v:a) -> pts_to r p v `star` q v))
-    (fun v -> pts_to r p v `star` q v)
 
 val cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
                (#uses:inames)

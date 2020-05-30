@@ -254,9 +254,9 @@ let frame_l (#a:Type) (#pre:slprop) (#post:a -> slprop)
 let rearrange_pqr_prq (p q r:slprop)
   : SteelT unit ((p `star` q) `star` r)
                 (fun _ -> (p `star` r) `star` q)
-  = h_assoc_r ();
+  = SB.h_assoc_r ();
     frame_l (fun _ -> SB.h_commute _ _) _;
-    h_assoc_l ()
+    SB.h_assoc_l ()
 
 let extract_pure #a #p #f
                  (r:ref a p)
@@ -298,9 +298,9 @@ let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> slprop)
     SB.h_assert (pts_to r q v `star` f (Ghost.reveal v));
     let h : Ghost.erased _ = SB.frame (fun _ -> SB.witness_h_exists #_ #(pts_to_body r q v) ()) _ in
     SB.h_assert (pts_to_body r q v h `star` f (Ghost.reveal v));
-    h_assoc_r ();
+    SB.h_assoc_r ();
     let hv = SB.frame (fun _ -> read r h) _ in
-    h_assoc_l ();
+    SB.h_assoc_l ();
     assert (compatible pcm_history h hv);
     SB.h_assert (pts_to_body r q v h `star` f (Ghost.reveal v));
     SB.frame (fun _ -> extract_pure r v h) _;

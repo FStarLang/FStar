@@ -67,18 +67,6 @@ let gather_atomic #a #uses #p0 #p1 #v0 #v1 r =
   let x = H.gather_atomic r in
   A.return_atomic x
 
-let ghost_read_refine #a #uses #p r q =
-  A.h_assert_atomic (h_exists (fun (v:a) -> pts_to r p v `star` q v));
-  lift_h_exists_atomic (fun (v:a) -> pts_to r p v `star` q v);
-  A.h_assert_atomic (h_exists (fun (v:U.raise_t a) -> pts_to r p (U.downgrade_val v) `star` q (U.downgrade_val v)));
-  h_exists_cong_atomic (fun (v:U.raise_t a) -> pts_to r p (U.downgrade_val v) `star` q (U.downgrade_val v))
-                       (fun (v:U.raise_t a) -> H.pts_to r p v `star` U.lift_dom q v);
-  A.h_assert_atomic (h_exists (fun (v:U.raise_t a) -> H.pts_to r p v `star` U.lift_dom q v));
-  let x = H.ghost_read_refine r (U.lift_dom q) in
-  A.h_assert_atomic (H.pts_to r p x `star` U.lift_dom q x);
-  A.h_assert_atomic (pts_to r p (U.downgrade_val x) `star` q (U.downgrade_val x));
-  A.return_atomic (U.downgrade_val x)
-
 let raise_equiv (#t:Type) (x y:t)
   : Lemma (U.raise_val x == U.raise_val y <==>
            x == y)

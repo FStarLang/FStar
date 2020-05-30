@@ -73,9 +73,7 @@ open Steel.PCM.FractionalPermission
 let ghost_read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
   : SteelT (Ghost.erased a) (h_exists (fun (v:a) -> pts_to r p v `star` q v))
              (fun v -> pts_to r p v `star` q v)
-  = let x = read_refine q r in
-    return (Ghost.hide x)
-
+  = witness_h_exists ()
 
 val intro_pure_p (#p:prop) (s:squash p) (h:slprop)
   : SteelT unit h (fun _ -> pure p `star` h)

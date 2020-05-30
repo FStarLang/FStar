@@ -168,17 +168,21 @@ let alloc #a x =
   intro_pure full_perm x
 
 let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelT a (pts_to r p v) (fun x -> pts_to r p x)
   = let v1 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
     elim_perm_ok_star p;
     let v2 = Steel.PCM.Effect.read r v1 in
+    assert (compatible pcm_frac v1 v2);
     let Some (x, _) = v2 in
     intro_pure p x
 
 let read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
              (fun v -> pts_to r p v `star` q v)
-  = SB.h_admit _ _
+  = let vs = SB.witness_h_exists () in
+    SB.h_assert (pts_to r p vs `star` q vs);
+    let v = SB.frame (fun _ -> read #a #p #vs r) _ in
+    SB.h_assert (pts_to r p v `star` q v);
+    SB.return v
 
 let write (#a:Type) (#v:erased a) (r:ref a) (x:a)
   : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
@@ -253,8 +257,6 @@ let gather_atomic (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (
     intro_pts_to (sum_perm p0 p1) r ()
 
 let gather r = Atomic.lift_atomic_to_steelT (fun _ -> gather_atomic r)
-
-let ghost_read_refine = admit()
 
 let cas_provides #t (r:ref t) (v:Ghost.erased t) (v_new:t) (b:bool) =
     if b then pts_to r full_perm v_new else pts_to r full_perm v
