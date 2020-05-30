@@ -88,6 +88,14 @@ let cas_frame #t #uses r v v_old v_new frame =
     return_atomic x
   )
 
+assume
+val h_admit_atomic (#a:_) (#uses:_) (p:slprop) (q:a -> slprop)
+  : SteelAtomic a uses unobservable p q
+
+assume
+val h_admit_atomic_obs (#a:_) (#uses:_) (p:slprop) (q:a -> slprop)
+  : SteelAtomic a uses observable p q
+
 val acquire_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
   : SteelAtomic bool u observable
     (lockinv p r `star` emp)
@@ -96,13 +104,12 @@ val acquire_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
 let acquire_core #p #u r i =
   Atomic.h_commute (lockinv p r) emp;
   Atomic.h_elim_emp_l (lockinv p r);
-  let ghost = ghost_read_refine r (fun b -> if b then emp else p) in
-
-  let frame = if ghost then emp else p in
+  let ghost = Atomic.witness_h_exists () in
+  let frame : slprop = if Ghost.reveal ghost then emp else p in
 
   let res = cas_frame r ghost available locked frame in
 
-  Atomic.frame (if ghost then emp else p) (fun _ -> intro_lockinv_locked p r);
+  Atomic.frame (if Ghost.reveal ghost then emp else p) (fun _ -> intro_lockinv_locked p r);
 
   return_atomic #_ #_ #(fun b -> lockinv p r `star` (if b then p else emp)) res
 
@@ -126,15 +133,15 @@ let release_core #p #u r i =
   let open Atomic in
   h_assert_atomic (h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
     `star` p);
-  let v:bool = frame p (fun _ ->  ghost_read_refine r (fun b -> if b then emp else p)) in
-  h_assert_atomic ((pts_to r full_perm (Ghost.hide v) `star` (if v then emp else p)) `star` p);
-  h_assoc_left (pts_to r full_perm (Ghost.hide v)) (if v then emp else p) p;
-  let res = cas_frame r v locked available ((if v then emp else p) `star` p) in
+  let v:Ghost.erased bool = frame p (fun _ ->  Atomic.witness_h_exists #u #_ #(fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)) ()) in
+  h_assert_atomic ((pts_to r full_perm v `star` (if Ghost.reveal v then emp else p)) `star` p);
+  h_assoc_left _ _ _;
+  let res = cas_frame r v locked available ((if Ghost.reveal v then emp else p) `star` p) in
   h_assert_atomic (pts_to r full_perm available `star` ((if res then emp else p) `star` p));
-  h_commute (pts_to r full_perm available) ((if res then emp else p) `star` p);
+  h_commute _ _;
   frame (pts_to r full_perm available) (fun _ -> h_commute (if res then emp else p) p);
-  h_commute (p `star` (if res then emp else p)) (pts_to r full_perm available);
-  h_assoc_right (pts_to r full_perm available) p (if res then emp else p);
+  h_commute _ _;
+  h_assoc_right _ _ _;
   frame (if res then emp else p) (fun _ -> intro_lockinv_available p r);
   return_atomic #_ #_ #_ res
 
