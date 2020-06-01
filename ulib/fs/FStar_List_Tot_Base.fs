@@ -45,5 +45,5 @@ let unzip = List.unzip
 let unzip3 = List.unzip3
 let bool_of_compare _ _ _ = failwith "FStar.List.Tot.Base.fs: Not implemented: bool_of_compare"
 let compare_of_bool _ _ _ = failwith "FStar.List.Tot.Base.fs: Not implemented: compare_of_bool"
-let sortWith f l = List.sortWith (fun x y -> Microsoft.FSharp.Core.Operators.int (f x y)) l
+let sortWith (f : 'a -> 'a -> Prims.int) l = List.sortWith (fun x y -> Microsoft.FSharp.Core.Operators.int (f x y)) l
 let list_unref l = l

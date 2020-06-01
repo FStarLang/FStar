@@ -5,14 +5,14 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>4791189a-f361-40cf-8790-7fa8b1ed7f13</ProjectGuid>
+    <ProjectGuid>cb4ed8b8-74f8-4d3c-8569-87ee15540f1c</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Lens</RootNamespace>
-    <AssemblyName>Lens</AssemblyName>
+    <RootNamespace>TestFSharp2</RootNamespace>
+    <AssemblyName>TestFSharp2</AssemblyName>
     <UseStandardResourceNames>true</UseStandardResourceNames>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Name>Lens</Name>
+    <Name>TestFSharp2</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -42,13 +42,16 @@
   <Import Project="$(FSharpTargetsPath)" />
   <PropertyGroup>
     <FSTAR_HOME>..\..\..</FSTAR_HOME>
-    <!-- Custom FStar flags used in this project . -->
+    <!-- Custom FStar flags used in this project -->
+    <!-- NOTE: Add - -extract "+BitVectorEx" to FSTAR_FLAGS to make it work -->
     <FSTAR_FLAGS>--warn_error @332 --use_hints --record_hints</FSTAR_FLAGS>
   </PropertyGroup>
   <Import Project="$(FSTAR_HOME)\fsharp.extraction.targets" />
   <ItemGroup>
-    <FStarSourceFile Include="..\Lens.fst" />
-    <None Include="Lens.repl.fsx" />
+    <None Include="App.config" />
+    <FStarSourceFile Include="BitVectorEx.fst" />
+    <FStarSourceFile Include="TestFSharp2.fst" />
+    <None Include="TestFSharp2.fsx" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -62,6 +65,9 @@
     <Reference Include="System.ValueTuple">
       <HintPath>..\packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.Compatibility.OCaml">
+      <HintPath>..\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
     </Reference>
     <Reference Include="ulibfs">
       <HintPath>$(FSTAR_HOME)\bin\ulibfs.dll</HintPath>

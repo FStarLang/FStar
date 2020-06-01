@@ -5,14 +5,14 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>4791189a-f361-40cf-8790-7fa8b1ed7f13</ProjectGuid>
+    <ProjectGuid>61d3430c-b6c9-451a-9a16-890a3ea012c2</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Lens</RootNamespace>
-    <AssemblyName>Lens</AssemblyName>
+    <RootNamespace>BinarySearch</RootNamespace>
+    <AssemblyName>BinarySearch</AssemblyName>
     <UseStandardResourceNames>true</UseStandardResourceNames>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Name>Lens</Name>
+    <Name>BinarySearch</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -47,8 +47,8 @@
   </PropertyGroup>
   <Import Project="$(FSTAR_HOME)\fsharp.extraction.targets" />
   <ItemGroup>
-    <FStarSourceFile Include="..\Lens.fst" />
-    <None Include="Lens.repl.fsx" />
+    <FStarSourceFile Include="..\BinarySearch.fst" />
+    <None Include="BinarySearch.repl.fsx" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -62,6 +62,9 @@
     <Reference Include="System.ValueTuple">
       <HintPath>..\packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.Compatibility.OCaml">
+      <HintPath>..\packages\FSharp.Compatibility.OCaml.0.1.10\lib\net40\FSharp.Compatibility.OCaml.dll</HintPath>
     </Reference>
     <Reference Include="ulibfs">
       <HintPath>$(FSTAR_HOME)\bin\ulibfs.dll</HintPath>

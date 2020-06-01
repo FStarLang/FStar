@@ -13,26 +13,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module TestFSharp
+module TestFSharp2
 
-open FStar.IO
+open BitVectorEx
 
-let t (a:Type) (b:Type) = list a
-
-let test #a #b (f:t a b) : list a = f
-
-(* 
-	Examples from issue #1087
-*)
-
-val pass: #a:Type -> #b:Type -> #c:Type -> a -> b -> (a -> b -> c) -> c
-let pass #a #b #c x y f = f x y
-
-(* TODO: Only implicit arguments at the start of a function are erased, whereas the others are extracted to unit and obj 
-         which makes extracted function unusable.
-*)
-val fail: #a:Type -> a -> #b:Type -> b -> #c:Type -> (a -> b -> c) -> c
-let fail #a x #b y #c f = f x y
-
-type fs0035 (a:Type) (n:nat) = a
-
+let rec createVect (#n : nat) : Tot (bitVector_t n) = 
+	if n = 0 then Seq.empty #bool
+	else Seq.append (createVect #(n - 1)) (Seq.create 1 true)

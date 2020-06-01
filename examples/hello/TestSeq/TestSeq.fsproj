@@ -46,8 +46,8 @@
   <Import Project="$(FSharpTargetsPath)" />
   <PropertyGroup>
     <FSTAR_HOME>..\..\..</FSTAR_HOME>
-    <!-- Custom FStar flags used in this project - only extract "TestSeq" module. -->
-    <FSTAR_FLAGS>--warn_error @332 --use_hints --record_hints --extract "TestSeq"</FSTAR_FLAGS>
+    <!-- Custom FStar flags used in this project -->
+    <FSTAR_FLAGS>--warn_error @332 --use_hints --record_hints</FSTAR_FLAGS>
   </PropertyGroup>
   <Import Project="$(FSTAR_HOME)\fsharp.extraction.targets" />
   <ItemGroup>
