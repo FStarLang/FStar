@@ -124,16 +124,49 @@ let param_id = #a:Type -> a -> a
 
 let id (#a:Type0) (x:a) : a = x
 
-[@@(preprocess_with param)]
-let id_is_param = (fun (#a:Type) (x:a) -> x)
-
 let id_is_unique (f : (#a:Type -> a -> a)) (f_parametric : param_id f f) : Lemma (forall a (x:a). f x == x) =
   let aux a x : Lemma (f x == x) =
     f_parametric a unit (fun y () -> squash (x == y)) x () ()
   in
   Classical.forall_intro_2 aux
 
+[@@preprocess_with param]
+let id_is_param = (fun (#a:Type) (x:a) -> x)
+
 let test () = id_is_unique id id_is_param
+
+[@@preprocess_with param]
+let binop_param = #a:Type -> a -> a -> a
+
+let binop_is_fst_or_snd_pointwise (f : (#a:Type -> a -> a -> a)) (f_param : binop_param f f)
+  : Lemma (forall a (x y : a). f x y == x \/ f x y == y)
+  =
+  let aux a (x y : a) : Lemma (f x y == x \/ f x y == y) =
+   f_param a unit (fun z () -> squash (z == x \/ z == y)) x () () y () ()
+  in
+  Classical.forall_intro_3 aux
+
+let binop_is_fst_or_snd_extensional (f : (#a:Type -> a -> a -> a)) (f_param : binop_param f f)
+  : Lemma ((forall a (x y : a). f x y == x) \/ (forall a (x y : a). f x y == y))
+  =
+  binop_is_fst_or_snd_pointwise f f_param;
+  assert (f 1 2 == 1 \/ f 1 2 == 2);
+  let aux1 (_ : squash (f 1 2 == 1))
+           a (x y : a) : Lemma (f x y == x) =
+   f_param a int (fun z i -> squash (i == 1 ==> z == x)) x 1 () y 2 ()
+  in
+  let aux2 (_ : squash (f 1 2 == 2))
+           a (x y : a) : Lemma (f x y == y) =
+   f_param a int (fun z i -> squash (i == 2 ==> z == y)) x 1 () y 2 ()
+  in
+  let aux1' () : Lemma (requires (f 1 2 == 1)) (ensures (forall a (x y : a). f x y == x)) =
+    Classical.forall_intro_3 (aux1 ())
+  in
+  let aux2' () : Lemma (requires (f 1 2 == 2)) (ensures (forall a (x y : a). f x y == y)) =
+    Classical.forall_intro_3 (aux2 ())
+  in
+  Classical.move_requires aux1' ();
+  Classical.move_requires aux2' ()
 
 [@@(preprocess_with param)]
 let test_int_to_int = int -> int
