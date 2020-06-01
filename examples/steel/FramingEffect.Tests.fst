@@ -157,8 +157,20 @@ let rec resolve_tac () : Tac unit =
       (norm [delta_only [`%delay]];
       resolve_tac ())
 
+let rec filter_goals (l:list goal) : Tac (list goal) = 
+  match l with
+  | [] -> []
+  | hd::tl ->
+      match term_as_formula' (goal_type hd) with
+      | Comp (Eq _) _ _ -> hd::filter_goals tl
+      | App t _ -> if term_eq t (`squash) then hd::filter_goals tl else filter_goals tl
+      | _ -> filter_goals tl
+
 [@@ resolve_implicits; framing_implicit]
 let init_resolve_tac () : Tac unit =
+  let gs = filter_goals (goals()) in
+  set_goals gs;
+  dump "filtered";
   solve_triv_eqs (goals ());
   solve_subcomp_post (goals ());
   resolve_tac ()
@@ -170,15 +182,7 @@ assume val alloc (x:int)  : SteelT ref emp (fun y -> ptr y)
 assume val free (r:ref) : SteelT unit (ptr r) (fun _ -> ptr r)
 assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 
-// AF: Tests 1 to 6 correctly solve all goals using the tactic
-// They only fail because of errors such as
-// Expected expression of type "star (ptr r) emp == star (ptr r) emp"; got expression "()" of type "unit"
-// Failed while checking implicit ?434 set to () of expected type star (ptr r) emp == star (ptr r) emp
-// Note that the equalities hold here, as one of the two terms always has been obtained
-// through trefl
-// This seems related to PR 2041
-
-// [@expect_failure]t
+// [@expect_failure]
 let test1 (x:int) : SteelT ref emp ptr =
   let y = alloc x in y
 
