@@ -400,7 +400,7 @@
         "unit_typing"
       ],
       0,
-      "8cc47d48ac38ba20663f358d4352d54f"
+      "ad0c74bfecbc2da98ac37bab483d5f8e"
     ],
     [
       "FStar.HyperStack.ST.salloc_post",
@@ -568,7 +568,7 @@
         "refinement_interpretation_Tm_refine_3415ed6c7abc7d0c55726285f3ae5f3f"
       ],
       0,
-      "9c3e341e43d69b3b39ec35eeb1a3f377"
+      "c74c3a0f0dcba2cc1f5f79274d2356c8"
     ],
     [
       "FStar.HyperStack.ST.salloc_mm",
@@ -596,7 +596,7 @@
         "refinement_interpretation_Tm_refine_1fe4ea9449b44f071a0ba69c564508a4"
       ],
       0,
-      "1d6a32e8dc0dc68b1836c49b4d23c5c4"
+      "26f2ec22bf1d3f66893912da047cb5bc"
     ],
     [
       "FStar.HyperStack.ST.sfree",
@@ -1132,7 +1132,7 @@
         "typing_FStar.Monotonic.HyperStack.is_heap_color"
       ],
       0,
-      "951ac9bd504180ab5a3eba15033d75e5"
+      "2119b36577c3838fca70ba851b1e39e4"
     ],
     [
       "FStar.HyperStack.ST.ralloc_mm",
@@ -1183,7 +1183,7 @@
         "typing_FStar.Monotonic.HyperStack.is_heap_color"
       ],
       0,
-      "6874e41da5c9a53ee523be5c2eb30c5b"
+      "25dbbfee4f80aeb70a276fda2f7d3381"
     ],
     [
       "FStar.HyperStack.ST.rfree",

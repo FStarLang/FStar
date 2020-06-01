@@ -135,7 +135,7 @@
         "typing_MiniParse.Spec.Int.Aux.decode_u16"
       ],
       0,
-      "62105e1757434cfe741d4f055e9cd777"
+      "304f98001824fb755cca73329cd2eebf"
     ],
     [
       "MiniParse.Impl.Int.serialize_u16_impl",

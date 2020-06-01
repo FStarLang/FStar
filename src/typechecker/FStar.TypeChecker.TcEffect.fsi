@@ -36,3 +36,5 @@ val tc_lift : Env.env -> S.sub_eff -> Range.range -> S.sub_eff
 val tc_effect_abbrev : Env.env -> (lident * S.univ_names * S.binders * S.comp) -> Range.range -> (lident * S.univ_names * S.binders * S.comp)
 
 val tc_polymonadic_bind : Env.env -> m:lident -> n:lident -> p:lident -> bind_t:S.tscheme -> S.tscheme * S.tscheme
+
+val tc_polymonadic_subcomp : Env.env -> m:lident -> n:lident -> subcomp_t:S.tscheme -> S.tscheme * S.tscheme

@@ -427,68 +427,9 @@ let lift_comps_sep_guards env c1 c2 (b:option<bv>) (for_bind:bool)
         c2, Env.close_guard env [x_a] g2 in
     m, c1, c2, g1, g2
   | None ->
-
-    (*
-     * AR: we could not lift the comps using the wp lattice
-     *     try using the polymonadic binds
-     *     if there exists a polymonadic bind (M1, M2) |> M2,
-     *       then lift using, lift_M1_M2 e = bind_M1_M2 e (fun x -> M2.return x)
-     *
-     *     (and similarly if exists (M2, M1) |> M1
-     *
-     *     we could also try to find a P such that (M1, P) |> P and (M2, P) |> P exist
-     *       but leaving that for later
-     *)
-
-    let rng = env.range in
-    let err () =
-      raise_error (Errors.Fatal_EffectsCannotBeComposed,
-        (BU.format2 "Effects %s and %s cannot be composed" 
-          (Print.lid_to_string c1.effect_name) (Print.lid_to_string c2.effect_name))) rng in
-
-    if Env.debug env <| Options.Other "LayeredEffects"
-    then BU.print3 "Lifting comps %s and %s with for_bind %s{\n"
-           (c1 |> S.mk_Comp |> Print.comp_to_string)
-           (c2 |> S.mk_Comp |> Print.comp_to_string)
-           (string_of_bool for_bind);
-
-    if for_bind then err ()
-    else
-
-      let bind_with_return (ct:comp_typ) (ret_eff:lident) (f_bind:Env.polymonadic_bind_t)
-      : comp * guard_t =
-        let x_bv = S.gen_bv "x" None ct.result_typ in
-        let c_ret, g_ret = mk_return
-          (Env.push_bv env x_bv)
-          (Env.get_effect_decl env ret_eff)
-          (List.hd ct.comp_univs)
-          ct.result_typ (S.bv_to_name x_bv) rng in
-        let c, g_bind = f_bind env ct (Some x_bv) (U.comp_to_comp_typ c_ret) [] rng in
-        c, Env.conj_guard g_ret g_bind in
-
-      let try_lift c1 c2 : option<(lident * comp * comp * guard_t)> =
-        let p_bind_opt = Env.exists_polymonadic_bind env c1.effect_name c2.effect_name in
-        if p_bind_opt |> is_some
-        then let p, f_bind = p_bind_opt |> must in
-             if lid_equals p c2.effect_name
-             then (let c1, g = bind_with_return c1 p f_bind in
-                   Some (c2.effect_name, c1, S.mk_Comp c2, g))
-             else None
-        else None in
-  
-      let p, c1, c2, g1, g2 =
-        match try_lift c1 c2 with
-        | Some (p, c1, c2, g) -> p, c1, c2, g, Env.trivial_guard
-        | None ->
-          match try_lift c2 c1 with
-          | Some (p, c2, c1, g) -> p, c1, c2, Env.trivial_guard, g
-          | None -> err () in
-
-      if Env.debug env <| Options.Other "LayeredEffects"
-      then BU.print3 "} Returning p %s, c1 %s, and c2 %s\n"
-             (Ident.string_of_lid p) (Print.comp_to_string c1) (Print.comp_to_string c2);
-
-      p, c1, c2, g1, g2
+    raise_error (Errors.Fatal_EffectsCannotBeComposed,
+      (BU.format2 "Effects %s and %s cannot be composed" 
+        (Print.lid_to_string c1.effect_name) (Print.lid_to_string c2.effect_name))) env.range
 
 let lift_comps env c1 c2 (b:option<bv>) (for_bind:bool)
 : lident * comp * comp * guard_t
@@ -652,9 +593,14 @@ let mk_indexed_bind env
   (ct1:comp_typ) (b:option<bv>) (ct2:comp_typ)
   (flags:list<cflag>) (r1:Range.range) : comp * guard_t =
 
-  if Env.debug env <| Options.Other "LayeredEffects"
-  then BU.print2 "Binding c1:%s and c2:%s {\n"
-       (Print.comp_to_string (S.mk_Comp ct1)) (Print.comp_to_string (S.mk_Comp ct2));
+  let bind_name = BU.format3 "(%s, %s) |> %s"
+    (m |> Ident.ident_of_lid |> string_of_id)
+    (n |> Ident.ident_of_lid |> string_of_id)
+    (p |> Ident.ident_of_lid |> string_of_id) in
+
+  if Env.debug env <| Options.Other "LayeredEffects" then
+    BU.print2 "Binding c1:%s and c2:%s {\n"
+      (Print.comp_to_string (S.mk_Comp ct1)) (Print.comp_to_string (S.mk_Comp ct2));
 
   if Env.debug env <| Options.Other "ResolveImplicitsHook"
   then BU.print2 "///////////////////////////////Bind at %s/////////////////////\n\
@@ -670,9 +616,9 @@ let mk_indexed_bind env
   let _, bind_t = Env.inst_tscheme_with bind_t [u1; u2] in
 
   let bind_t_shape_error (s:string) =
-    (Errors.Fatal_UnexpectedEffect, BU.format2
-       "bind %s does not have proper shape (reason:%s)"
-       (Print.term_to_string bind_t) s) in
+    (Errors.Fatal_UnexpectedEffect, BU.format3
+       "bind %s (%s) does not have proper shape (reason:%s)"
+       (Print.term_to_string bind_t) bind_name s) in
 
   let a_b, b_b, rest_bs, f_b, g_b, bind_c =
     match (SS.compress bind_t).n with
@@ -688,9 +634,7 @@ let mk_indexed_bind env
     env rest_bs [NT (a_b |> fst, t1); NT (b_b |> fst, t2)]
     (fun b -> BU.format3
       "implicit var for binder %s of %s at %s"
-      (Print.binder_to_string b)
-      (BU.format3 "(%s, %s) |> %s" (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p))
-      (Range.string_of_range r1)) r1 in
+      (Print.binder_to_string b) bind_name (Range.string_of_range r1)) r1 in
 
   if Env.debug env <| Options.Other "ResolveImplicitsHook"
   then rest_bs_uvars |>
@@ -717,7 +661,7 @@ let mk_indexed_bind env
         then BU.print2 "Generating constraint %s = %s\n"
                                    (Print.term_to_string i1)
                                    (Print.term_to_string f_i1);
-        Env.conj_guard g (Rel.teq env i1 f_i1))
+        Env.conj_guard g (Rel.layered_effect_teq env i1 f_i1 (Some bind_name)))
       Env.trivial_guard is1 f_sort_is
   in 
 
@@ -735,7 +679,7 @@ let mk_indexed_bind env
         let c = SS.subst_comp [bs_subst] c in
         effect_args_from_repr (SS.compress (U.comp_result c)) (U.is_layered n_ed) r1
         |> List.map (SS.subst subst)
-      | _ -> failwith "imspossible: mk_indexed_bind"
+      | _ -> failwith "impossible: mk_indexed_bind"
     in
 
     let env_g = Env.push_binders env [x_a] in
@@ -745,7 +689,7 @@ let mk_indexed_bind env
         then BU.print2 "Generating constraint %s = %s\n"
                                    (Print.term_to_string i1)
                                    (Print.term_to_string g_i1);
-         Env.conj_guard g (Rel.teq env_g i1 g_i1))
+         Env.conj_guard g (Rel.layered_effect_teq env_g i1 g_i1 (Some bind_name)))
       Env.trivial_guard is2 g_sort_is
     |> Env.close_guard env [x_a]
   in
@@ -1291,6 +1235,7 @@ let weaken_guard g1 g2 = match g1, g2 with
       NonTrivial g
     | _ -> g2
 
+
 (*
  * e has type lc, and lc is either pure or ghost
  * This function inserts a return (x==e) in lc
@@ -1305,27 +1250,18 @@ let weaken_guard g1 g2 = match g1, g2 with
  *
  * This forces the lcomp thunk and recreates it to keep the callers same
  *)
-let maybe_assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (lc:lcomp) : lcomp =
-  let should_return =
-      not (env.lax)
-   && Env.lid_exists env C.effect_GTot_lid //we're not too early in prims
-   && should_return env (Some e) lc
-   && not (TcComm.is_lcomp_partial_return lc)
-  in
+let assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (lc:lcomp) : lcomp =
   (*
    * AR: m is the effect that we are going to do return in
    *)
   let m =
-    if m_opt |> is_none || Options.ml_ish () || is_ghost_effect env lc.eff_name
+    if m_opt |> is_none || is_ghost_effect env lc.eff_name
     then C.effect_PURE_lid
     else m_opt |> must in
+
   let flags =
-    if should_return
-    then if TcComm.is_total_lcomp lc
-         then RETURN::lc.cflags
-         else PARTIAL_RETURN::lc.cflags
-    else lc.cflags
-  in
+    if TcComm.is_total_lcomp lc then RETURN::lc.cflags else PARTIAL_RETURN::lc.cflags in
+
   let refine () : comp * guard_t =
       let c, g_c = TcComm.lcomp_comp lc in
       let u_t =
@@ -1356,9 +1292,23 @@ let maybe_assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (l
             let bind_c, g_bind = TcComm.lcomp_comp (bind e.pos env None (TcComm.lcomp_of_comp c) (Some x, eq_ret)) in
             U.comp_set_flags bind_c flags, Env.conj_guards [g_c; g_ret; g_bind]
   in
-  if not should_return then lc
+
+  if should_not_inline_lc lc
+  then raise_error (Errors.Fatal_UnexpectedTerm,
+         BU.format1 "assume_result_eq_pure_term cannot inline an non-inlineable lc : %s"
+           (Print.term_to_string e)) e.pos
   else let c, g = refine () in
        TcComm.lcomp_of_comp_guard c g
+
+let maybe_assume_result_eq_pure_term_in_m env (m_opt:option<lident>) (e:term) (lc:lcomp) : lcomp =
+  let should_return =
+      not (env.lax)
+   && Env.lid_exists env C.effect_GTot_lid //we're not too early in prims
+   && should_return env (Some e) lc
+   && not (TcComm.is_lcomp_partial_return lc)
+  in
+  if not should_return then lc
+  else assume_result_eq_pure_term_in_m env m_opt e lc
 
 let maybe_assume_result_eq_pure_term env e lc =
   maybe_assume_result_eq_pure_term_in_m env None e lc
@@ -1371,19 +1321,28 @@ let maybe_return_e2_and_bind
         (e2:term)
         (x, lc2)
    : lcomp =
+   let env_x =
+     match x with
+     | None -> env
+     | Some x -> Env.push_bv env x in
+
+   //AR: use c1's effect to return c2 into
    let lc2 =
         let eff1 = Env.norm_eff_name env lc1.eff_name in
         let eff2 = Env.norm_eff_name env lc2.eff_name in
-        if (not (is_pure_or_ghost_effect env eff1)
-            || should_not_inline_lc lc1)
-        && is_pure_or_ghost_effect env eff2
-        then
-          let env_x =
-            match x with
-            | None -> env
-            | Some x -> Env.push_bv env x in
-          //AR: use c1's effect to return c2 into
-          maybe_assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
+
+        (*
+         * AR: If eff1 and eff2 cannot be composed, and eff2 is PURE,
+         *     we must return eff2 into eff1,
+         *)
+        if lid_equals eff2 C.effect_PURE_lid &&
+           Env.join_opt env eff1 eff2 |> is_none &&
+           Env.exists_polymonadic_bind env eff1 eff2 |> is_none
+        then assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
+        else if (not (is_pure_or_ghost_effect env eff1)
+             ||  should_not_inline_lc lc1)
+             && is_pure_or_ghost_effect env eff2
+        then maybe_assume_result_eq_pure_term_in_m env_x (eff1 |> Some) e2 lc2
         else lc2 in //the resulting computation is still pure/ghost and inlineable; no need to insert a return
    bind r env e1opt lc1 (x, lc2)
 
@@ -1417,14 +1376,16 @@ let fvar_const env lid =  S.fvar (Ident.set_lid_range lid (Env.get_range env)) d
 let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.range)
 : comp * guard_t =
 
+  let conjunction_name = BU.format1 "%s.conjunction" (string_of_lid ed.mname) in
+
   let _, conjunction =
     Env.inst_tscheme_with (ed |> U.get_layered_if_then_else_combinator |> must) [u_a] in
   let is1, is2 = List.map fst ct1.effect_args, List.map fst ct2.effect_args in
 
   let conjunction_t_error (s:string) =
-    (Errors.Fatal_UnexpectedEffect, BU.format2
-      "conjunction %s does not have proper shape (reason:%s)"
-      (Print.term_to_string conjunction) s) in
+    (Errors.Fatal_UnexpectedEffect, BU.format3
+      "conjunction %s (%s) does not have proper shape (reason:%s)"
+      (Print.term_to_string conjunction) conjunction_name s) in
 
   let a_b, rest_bs, f_b, g_b, p_b, body =
     match (SS.compress conjunction).n with
@@ -1452,7 +1413,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
         is |> List.map fst |> List.map (SS.subst substs)
       | _ -> raise_error (conjunction_t_error "f's type is not a repr type") r in
     List.fold_left2
-      (fun g i1 f_i -> Env.conj_guard g (Rel.teq env i1 f_i))
+      (fun g i1 f_i -> Env.conj_guard g (Rel.layered_effect_teq env i1 f_i (Some conjunction_name)))
       Env.trivial_guard is1 f_sort_is in
 
   let g_guard =
@@ -1462,7 +1423,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
         is |> List.map fst |> List.map (SS.subst substs)
       | _ -> raise_error (conjunction_t_error "g's type is not a repr type") r in
     List.fold_left2
-      (fun g i2 g_i -> Env.conj_guard g (Rel.teq env i2 g_i))
+      (fun g i2 g_i -> Env.conj_guard g (Rel.layered_effect_teq env i2 g_i (Some conjunction_name)))
       Env.trivial_guard is2 g_sort_is in
 
   let body = SS.subst substs body in
@@ -2930,6 +2891,8 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
 
   let ct = U.comp_to_comp_typ c in
 
+  let lift_name = BU.format2 "%s ~> %s" (string_of_lid ct.effect_name) (string_of_lid tgt) in
+
   let u, a, c_is = List.hd ct.comp_univs, ct.result_typ, ct.effect_args |> List.map fst in
 
   //lift_ts has the arrow type: <u>a:Type -> ..bs.. -> f -> repr a is
@@ -2969,7 +2932,7 @@ let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) env (c:comp) : comp * 
     let f_sort = (fst f_b).sort |> SS.subst substs |> SS.compress in
     let f_sort_is = effect_args_from_repr f_sort (Env.is_layered_effect env ct.effect_name) r in
     List.fold_left2
-      (fun g i1 i2 -> Env.conj_guard g (Rel.teq env i1 i2))
+      (fun g i1 i2 -> Env.conj_guard g (Rel.layered_effect_teq env i1 i2 (Some lift_name)))
       Env.trivial_guard c_is f_sort_is in
 
   let lift_ct = lift_c |> SS.subst_comp substs |> U.comp_to_comp_typ in

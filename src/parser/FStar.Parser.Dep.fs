@@ -754,7 +754,10 @@ let collect_one
         | NewEffect ed
         | LayeredEffect ed ->
              collect_effect_decl ed
-        | Polymonadic_bind (_, _, _, bind) -> collect_term bind  //collect deps from the effect lids?
+
+        | Polymonadic_bind (_, _, _, t)
+        | Polymonadic_subcomp (_, _, t) -> collect_term t  //collect deps from the effect lids?
+
         | Pragma _ ->
             ()
         | TopLevelModule lid ->

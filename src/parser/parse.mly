@@ -80,7 +80,7 @@ let old_attribute_syntax_warning =
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
-%token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND SPLICE SQUIGGLY_RARROW TOTAL
+%token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND POLYMONADIC_SUBCOMP SPLICE SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
 %token BACKTICK UNIV_HASH
@@ -255,6 +255,8 @@ rawDecl:
       { SubEffect se }
   | POLYMONADIC_BIND b=polymonadic_bind
       { Polymonadic_bind b }
+  | POLYMONADIC_SUBCOMP c=polymonadic_subcomp
+      { Polymonadic_subcomp c }
 
 typeDecl:
   (* TODO : change to lident with stratify *)
@@ -365,6 +367,10 @@ subEffect:
 polymonadic_bind:
   | LPAREN m_eff=quident COMMA n_eff=quident RPAREN PIPE_RIGHT p_eff=quident EQUALS bind=simpleTerm
       { (m_eff, n_eff, p_eff, bind) }
+
+polymonadic_subcomp:
+  | m_eff=quident SUBTYPE n_eff=quident EQUALS subcomp=simpleTerm
+    { (m_eff, n_eff, subcomp) }
 
 
 /******************************************************************************/
