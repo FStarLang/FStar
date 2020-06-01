@@ -168,6 +168,38 @@ let lift_pure_nmst
 
 sub_effect PURE ~> NMSTATE = lift_pure_nmst
 
+
+(*
+ * A polymonadic bind between DIV and NMSTATE
+ *
+ * This is ultimately used when defining par and frame in Steel.Effect.fst
+ * par and frame try to compose reified Steel with Steel, since Steel is non total, its reification
+ *   incurs a Div effect, and so, we need a way to compose Div and Steel
+ *
+ * To do so, we have to go all the way down and have a story for MST and NMST too
+ *
+ * This polymonadic bind gives us bare minimum to realize that
+ * It is quite imprecise, in that it doesn't say anything about the post of the Div computation
+ * That's because, the as_ensures combinator is not encoded for Div effect in the SMT,
+ *   the way it is done for PURE and GHOST
+ *
+ * However, since the reification usecase gives us Dv anyway, this is fine for now
+ *)
+let bind_div_nmst (a:Type) (b:Type)
+  (wp:pure_wp a)
+  (state:Type u#2) (rel:P.preorder state) (req:a -> M.pre_t state) (ens:a -> M.post_t state b)
+  (f:unit -> DIV a wp) (g:(x:a -> repr b state rel (req x) (ens x)))
+: repr b state rel
+    (fun s0 -> wp (fun _ -> True) /\ (forall x. req x s0))
+    (fun s0 y s1 -> exists x. (ens x) s0 y s1)
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun s0 ->
+  let x = f () in
+  (g x) s0
+
+polymonadic_bind (DIV, NMSTATE) |> NMSTATE = bind_div_nmst
+
+
 let nmst_assume (#state:Type u#2) (#rel:P.preorder state) (p:Type)
     : NMSTATE unit state rel (fun _ -> True) (fun m0 _ m1 -> p /\ m0 == m1)
     =
