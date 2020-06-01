@@ -149,7 +149,6 @@ let rec pick_next (l:list goal) : Tac bool =
   | a::q -> if solve_or_delay a then true else (later (); pick_next q)
 
 let rec resolve_tac () : Tac unit =
-  dump "all goals";
   match goals () with
   | [] -> ()
   | g ->
@@ -160,9 +159,7 @@ let rec resolve_tac () : Tac unit =
 
 [@@ resolve_implicits; framing_implicit]
 let init_resolve_tac () : Tac unit =
-  dump "initial goals";
   solve_triv_eqs (goals ());
-  dump "post trivs";
   solve_subcomp_post (goals ());
   resolve_tac ()
 
@@ -181,7 +178,7 @@ assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 // through trefl
 // This seems related to PR 2041
 
-// [@expect_failure]
+// [@expect_failure]t
 let test1 (x:int) : SteelT ref emp ptr =
   let y = alloc x in y
 
