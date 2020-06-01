@@ -607,7 +607,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
             then [U.inline_let_attr]
             else []
           in
-          let e = mk (Tm_let((false, [mk_lb (x, [], c1.eff_name, t_unit, e1, attrs, e1.pos)]), e2)) e.pos in
+          let e = mk (Tm_let((false, [mk_lb (x, [], c.eff_name, t_unit, e1, attrs, e1.pos)]), e2)) e.pos in
           let e = TcUtil.maybe_monadic env e c.eff_name c.res_typ in
           let e = mk (Tm_meta(e, Meta_desugared Sequence)) top.pos in
           e, c, Env.conj_guard g1 g2
