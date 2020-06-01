@@ -44,16 +44,24 @@ let join_preserves_interp (hp:hprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
   intro_star hp emp m0 m1;
   affine_star hp emp (join m0 m1)
 
+#push-options "--warn_error -271"
 let ens_depends_only_on (#a:Type) (pre:Mem.hprop) (post:a -> Mem.hprop)
   (q:(hmem pre -> x:a -> hmem (post x) -> prop))
 
-= //can join any disjoint heap to the pre-heap and q is still valid
+= let join_preserves_interp (hp:hprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
+    : Lemma (interp hp (join m0 m1))
+      [SMTPat ()] = join_preserves_interp hp m0 m1 in
+  (
+  //can join any disjoint heap to the pre-heap and q is still valid
   (forall x (h_pre:hmem pre) h_post (h:mem{disjoint h_pre h}).
      q h_pre x h_post <==> q (join h_pre h) x h_post) /\  //at this point we need to know interp pre (join h_pre h) -- use join_preserves_interp for that
 
   //can join any disjoint heap to the post-heap and q is still valid
   (forall x h_pre (h_post:hmem (post x)) (h:mem{disjoint h_post h}).
      q h_pre x h_post <==> q h_pre x (join h_post h))
+
+  )
+#pop-options
 
 type pre_t = hprop u#1
 type post_t (a:Type) = a -> hprop u#1
@@ -252,6 +260,52 @@ let bind_steel_pure (a:Type) (b:Type)
 #pop-options
 
 polymonadic_bind (Steel, PURE) |> Steel = bind_steel_pure
+
+
+unfold
+let bind_div_steel_req (#a:Type) (wp:pure_wp a)
+  (#pre_g:pre_t) (req_g:a -> req_t pre_g)
+: req_t pre_g
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun h -> wp (fun _ -> True) /\ (forall x. (req_g x) h)
+
+unfold
+let bind_div_steel_ens (#a:Type) (#b:Type)
+  (wp:pure_wp a)
+  (#pre_g:pre_t) (#post_g:post_t b) (ens_g:a -> ens_t pre_g b post_g)
+: ens_t pre_g b post_g
+= fun h0 r h1 -> wp (fun _ -> True) /\ (exists x. ens_g x h0 r h1)
+
+(*
+ * A polymonadic bind between DIV and NMSTATE
+ *
+ * This is ultimately used when defining par and frame
+ * par and frame try to compose reified Steel with Steel, since Steel is non total, its reification
+ *   incurs a Div effect, and so, we need a way to compose Div and Steel
+ *
+ * This polymonadic bind gives us bare minimum to realize that
+ * It is quite imprecise, in that it doesn't say anything about the post of the Div computation
+ * That's because, the as_ensures combinator is not encoded for Div effect in the SMT,
+ *   the way it is done for PURE and GHOST
+ *
+ * However, since the reification usecase gives us Dv anyway, this is fine for now
+ *)
+#push-options "--z3rlimit 20 --fuel 2 --ifuel 1"
+let bind_div_steel (a:Type) (b:Type)
+  (wp:pure_wp a)
+  (pre_g:pre_t) (post_g:post_t b) (req_g:a -> req_t pre_g) (ens_g:a -> ens_t pre_g b post_g)
+  (f:unit -> DIV a wp) (g:(x:a -> repr b pre_g post_g (req_g x) (ens_g x)))
+: repr b pre_g post_g
+    (bind_div_steel_req wp req_g)
+    (bind_div_steel_ens wp ens_g)
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun m0 ->
+  let x = f () in
+  g x m0
+#pop-options
+
+polymonadic_bind (DIV, Steel) |> Steel = bind_div_steel
+
 
 (*
  * This proof relies on core_mem_interp lemma from Steel.Memory
