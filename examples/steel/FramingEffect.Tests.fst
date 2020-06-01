@@ -170,7 +170,6 @@ let rec filter_goals (l:list goal) : Tac (list goal) =
 let init_resolve_tac () : Tac unit =
   let gs = filter_goals (goals()) in
   set_goals gs;
-  dump "filtered";
   solve_triv_eqs (goals ());
   solve_subcomp_post (goals ());
   resolve_tac ()
@@ -179,7 +178,7 @@ assume val ref : Type0
 assume val ptr (_:ref) : hprop u#1
 
 assume val alloc (x:int)  : SteelT ref emp (fun y -> ptr y)
-assume val free (r:ref) : SteelT unit (ptr r) (fun _ -> ptr r)
+assume val free (r:ref) : SteelT unit (ptr r) (fun _ -> emp)
 assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 
 // [@expect_failure]
@@ -264,5 +263,13 @@ uvars:
 17: preresource of (return) x when typechecking let v = read x in x
 18: preresource of read when typechecking let v = read x in x
 20: preresource of (let v = read x in x) when typechecking let x = alloc 0 in (let ..)
+*)
 
-
+let test8 (x:ref) : SteelT int (ptr x) (fun _ -> ptr x)
+  = let v = read x in
+    let y = alloc v in
+    let v = read y in
+    free y;
+    // Can mix assertions
+    assert (1 == 1);
+    v
