@@ -184,6 +184,10 @@ val h_exists_cong (#a:Type) (p q : a -> slprop)
       (requires (forall x. p x `equiv` q x))
       (ensures (h_exists p `equiv` h_exists q))
 
+(** Introducing [h_exists] by presenting a witness *)
+val intro_h_exists (#a:_) (x:a) (p:a -> slprop) (h:heap)
+  : Lemma (interp (p x) h ==> interp (h_exists p) h)
+
 (**
   The interpretation of a separation logic proposition [hp] is itself an [hprop] of footprint
   [hp]
@@ -391,9 +395,28 @@ let action_framing
 (** [sel] is a ghost read of the value contained in a heap reference *)
 val sel (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (m:hheap (ptr r)) : a
 
+(** [sel_v] is a ghost read of the value contained in a heap reference *)
+val sel_v (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:hheap (pts_to r v))
+  : v':a{ compatible pcm v v' /\
+          interp (ptr r) m /\
+          v' == sel r m }
+
 (** [sel] respect [pts_to] *)
 val sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:hheap (ptr r))
   : Lemma (interp (pts_to r (sel r m)) m)
+
+let witnessed_ref (#a:Type u#a)
+                  (#pcm:pcm a)
+                  (r:ref a pcm)
+                  (fact:a -> prop)
+                  (h:heap)
+  = interp (ptr r) h /\
+    fact (sel r h)
+
+val witnessed_ref_stability (#a:Type) (#pcm:pcm a) (r:ref a pcm) (fact:a -> prop)
+  : Lemma
+    (requires FStar.Preorder.stable fact (Steel.PCM.Preorder.preorder_of_pcm pcm))
+    (ensures FStar.Preorder.stable (witnessed_ref r fact) heap_evolves)
 
 (**
   The action variant of [sel], returning the "true" value inside the heap. This "true" value
@@ -416,7 +439,7 @@ val upd_action
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
   (v1:a {Steel.PCM.frame_preserving pcm v0 v1})
-    : action (pts_to r v0) unit (fun _ -> pts_to r v1)
+  : action (pts_to r v0) unit (fun _ -> pts_to r v1)
 
 (** Deallocating a reference, by actually replacing its value by the unit of the PCM *)
 val free_action
@@ -472,3 +495,12 @@ val frame (#a:Type)
 val change_slprop (p q:slprop)
                   (proof: (h:heap -> Lemma (requires interp p h) (ensures interp q h)))
   : action p unit (fun _ -> q)
+
+module U = FStar.Universe
+
+val lift_h_exists (#a:_) (p:a -> slprop)
+  : action (h_exists p) unit
+           (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+
+val elim_pure (p:prop)
+  : action (pure p) (u:unit{p}) (fun _ -> emp)

@@ -120,11 +120,18 @@ let test2 = bd1:Type -> bd2:Type -> bd1
 [@@(preprocess_with param)]
 let param_id = a:Type -> a -> a
 
+let id (a:Type0) (x:a) : a = x
+
+[@@(preprocess_with param)]
+let id_is_param = (fun (a:Type) (x:a) -> x)
+
 let id_is_unique (f : (a:Type -> a -> a)) (f_parametric : param_id f f) : Lemma (forall a (x:a). f a x == x) =
   let aux a x : Lemma (f a x == x) =
     f_parametric a unit (fun y () -> squash (x == y)) x () ()
   in
   Classical.forall_intro_2 aux
+
+let test () = id_is_unique id id_is_param
 
 [@@(preprocess_with param)]
 let test_int_to_int = int -> int

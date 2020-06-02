@@ -23,6 +23,7 @@ open FStar.Real
 open Steel.PCM
 open Steel.PCM.FractionalPermission
 module Atomic = Steel.PCM.Effect.Atomic
+module SB = Steel.PCM.SteelT.Basics
 
 let fractional (a:Type u#1) = option (a & perm)
 #push-options "--query_stats"
@@ -58,27 +59,49 @@ let perm_ok p : prop = (p.v <=. 1.0R == true) /\ True
 let pts_to_raw (#a:Type) (r:ref a) (p:perm) (v:erased a) = Mem.pts_to r (Some (Ghost.reveal v, p))
 let pts_to #a r p v = pts_to_raw r p v `star` pure (perm_ok p)
 
-assume
-val sl_admit (#a:_) (#p:_) (q:a -> slprop)
-  : SteelT a p q
+let abcd_acbd (a b c d:slprop)
+  : Lemma (((a `star` b) `star` (c `star` d)) `equiv`
+           ((a `star` c) `star` (b `star` d)))
+  = calc (equiv) {
+    ((a `star` b) `star` (c `star` d));
+      (equiv) { star_associative a b (c `star` d) }
+    ((a `star` (b `star` (c `star` d))));
+      (equiv) { star_associative b c d;
+                star_congruence a (b `star` (c `star` d))
+                                a ((b `star` c) `star` d) }
+    (a `star` ((b `star` c) `star` d));
+      (equiv) { star_commutative  b c;
+                star_congruence (b `star` c) d (c `star` b) d;
+                star_congruence a ((b `star` c) `star` d)
+                                a ((c `star` b) `star` d) }
+    (a `star` ((c `star` b) `star` d));
+      (equiv) { star_associative c b d;
+                star_congruence a ((c `star` b) `star` d)
+                                a (c `star` (b `star` d)) }
+    (a `star` (c `star` (b `star` d)));
+      (equiv) { star_associative a c (b `star` d) }
+    ((a `star` c) `star` (b `star` d));
+   }
 
-assume
-val sl_admit_atomic (#a:_) (#uses:_) (#p:_) (q:a -> slprop)
-  : SteelAtomic a uses unobservable p q
-
-assume
-val sl_assert (p:slprop)
-  : SteelT unit p (fun _ -> p)
-
-assume
-val sl_return (#a:_) (p:a -> slprop) (x:a)
-  : SteelT a (p x) p
-
-assume
-val elim_pure (#uses:_) (p:prop)
-  : SteelAtomic (_:unit{p}) uses unobservable
-                (pure p)
-                (fun _ -> emp)
+let pts_to_ref_injective
+      (#a: Type u#1)
+      (r: ref a)
+      (p0 p1:perm)
+      (v0 v1: erased a)
+      (m:mem)
+    : Lemma
+      (requires
+        interp (pts_to r p0 v0 `star` pts_to r p1 v1) m)
+      (ensures v0 == v1)
+    = abcd_acbd (pts_to_raw r p0 v0)
+                (pure (perm_ok p0))
+                (pts_to_raw r p1 v1)
+                (pure (perm_ok p1));
+      Mem.affine_star (pts_to_raw r p0 v0 `star` pts_to_raw r p1 v1)
+                      (pure (perm_ok p0) `star` pure (perm_ok p1)) m;
+      Mem.pts_to_compatible r (Some (Ghost.reveal v0, p0))
+                              (Some (Ghost.reveal v1, p1))
+                              m
 
 let drop (p:slprop)
   : SteelT unit p (fun _ -> emp)
@@ -103,7 +126,7 @@ let elim_perm_ok #uses (p:perm)
   : SteelAtomic (q:perm{perm_ok q /\ q == p}) uses unobservable
                 (pure (perm_ok p))
                 (fun _ -> emp)
-  = let _ = elim_pure (perm_ok p) in
+  = let _ = Atomic.elim_pure (perm_ok p) in
     Atomic.return_atomic p
 
 let intro_pts_to (p:perm{perm_ok p}) #a #uses (#v:erased a) (r:ref a) (_:unit)
@@ -115,7 +138,7 @@ let intro_pts_to (p:perm{perm_ok p}) #a #uses (#v:erased a) (r:ref a) (_:unit)
 let intro_pure (#a:_) (#p:a -> slprop) (q:perm { perm_ok q }) (x:a)
   : SteelT a (p x) (fun y -> p y `star` pure (perm_ok q))
   = Atomic.lift_atomic_to_steelT (fun _ -> intro_perm_ok q _);
-    sl_return _ x
+    SB.return x
 
 let drop_l_atomic #uses (#p #q:slprop)  ()
   : SteelAtomic unit uses unobservable (p `star` q) (fun _ -> q)
@@ -135,7 +158,7 @@ let elim_perm_ok_star (#p:slprop) (q:perm)
   : SteelT (_:unit{perm_ok q}) (p `star` pure (perm_ok q))
            (fun _ -> p)
   = let _ = Atomic.lift_atomic_to_steelT (fun () -> elim_pure_atomic #Set.empty #(fun _ -> p) q) in
-    sl_return _ ()
+    SB.return ()
 
 let alloc #a x =
   let v = Some (x, full_perm) in
@@ -145,17 +168,21 @@ let alloc #a x =
   intro_pure full_perm x
 
 let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelT a (pts_to r p v) (fun x -> pts_to r p x)
   = let v1 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
     elim_perm_ok_star p;
     let v2 = Steel.PCM.Effect.read r v1 in
+    assert (compatible pcm_frac v1 v2);
     let Some (x, _) = v2 in
     intro_pure p x
 
 let read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
              (fun v -> pts_to r p v `star` q v)
-  = sl_admit _
+  = let vs = SB.witness_h_exists () in
+    SB.h_assert (pts_to r p vs `star` q vs);
+    let v = SB.frame (fun _ -> read #a #p #vs r) _ in
+    SB.h_assert (pts_to r p v `star` q v);
+    SB.return v
 
 let write (#a:Type) (#v:erased a) (r:ref a) (x:a)
   : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
@@ -186,7 +213,7 @@ let share_atomic_raw #a #uses (#p:perm) (r:ref a{perm_ok p}) (v0:erased a)
                 (fun _ -> pts_to_raw r (half_perm p) v0 `star` pts_to_raw r (half_perm p) v0)
   = as_atomic_action (mem_share_atomic_raw r v0)
 
-let share (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
+let share_atomic (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
   : SteelAtomic unit uses unobservable
                (pts_to r p v)
                (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
@@ -204,6 +231,8 @@ let share (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
                                   (pts_to r (half_perm p) v)
                                   (intro_pts_to (half_perm p) r)
 
+let share r = Atomic.lift_atomic_to_steelT (fun _ -> share_atomic r)
+
 let mem_gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a) (v1:erased a)
   : action_except (_:unit{v0==v1 /\ perm_ok (sum_perm p0 p1)}) uses
                   (pts_to_raw r p0 v0 `star` pts_to_raw r p1 v1)
@@ -218,7 +247,7 @@ let gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a)
                  (fun _ -> pts_to_raw r (sum_perm p0 p1) v0)
   = as_atomic_action (mem_gather_atomic_raw r v0 v1)
 
-let gather (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
+let gather_atomic (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
   = let p0 = Steel.PCM.Effect.Atomic.frame _ (fun _ -> elim_pure_atomic p0) in
     comm();
     let p1 = Steel.PCM.Effect.Atomic.frame _ (fun _ -> elim_pure_atomic p1) in
@@ -227,4 +256,40 @@ let gather (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a
     let _ = gather_atomic_raw r v0 v1 in
     intro_pts_to (sum_perm p0 p1) r ()
 
-let ghost_read_refine = admit()
+let gather r = Atomic.lift_atomic_to_steelT (fun _ -> gather_atomic r)
+
+let cas_provides #t (r:ref t) (v:Ghost.erased t) (v_new:t) (b:bool) =
+    if b then pts_to r full_perm v_new else pts_to r full_perm v
+
+let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
+               (#uses:inames)
+               (r:ref t)
+               (v:Ghost.erased t)
+               (v_old:t)
+               (v_new:t)
+               (_:unit)
+   : MstTot
+        (b:bool{b <==> (Ghost.reveal v == v_old)})
+        uses
+        (pts_to r full_perm v)
+        (cas_provides r v v_new)
+   = let m0 = NMSTTotal.get () in
+     let fv = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
+     let fv' = Some (v_new, full_perm) in
+     assert (interp ((Mem.pts_to r fv `star` pure (perm_ok full_perm)) `star` locks_invariant uses m0) m0);
+     let fv_actual = frame (pure (perm_ok full_perm)) (sel_action uses r fv) () in
+     assert (compatible pcm_frac fv fv_actual);
+     let Some (v', p) = fv_actual in
+     assert (v == Ghost.hide v');
+     assert (p == full_perm);
+     let b =
+       if eq v' v_old
+       then (frame (pure (perm_ok full_perm)) (upd_action uses r fv fv') (); true)
+       else false
+     in
+     let m1 = NMSTTotal.get () in
+     assert (interp (cas_provides r v v_new b `star` locks_invariant uses m1) m1);
+     assert (preserves_frame uses (pts_to r full_perm v)
+                                  (cas_provides r v v_new b)
+                                  m0 m1);
+     b

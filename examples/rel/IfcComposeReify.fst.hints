@@ -2,15 +2,6 @@
   "%\u0018g≈æ\u001f8TØ\u0017sŸX†\f\u0010",
   [
     [
-      "IfcComposeReify.is_x",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_int" ],
-      0,
-      "7374c4f379af78f4c036e13ad6a73072"
-    ],
-    [
       "IfcComposeReify.ni_p1",
       1,
       2,
@@ -56,7 +47,7 @@
         "unit_typing"
       ],
       0,
-      "7be692bdd4bf33e5a3a52dc6569e57b4"
+      "1ab52614885f41b608541a51609b0838"
     ],
     [
       "IfcComposeReify.ni_p2",
@@ -104,7 +95,7 @@
         "unit_typing"
       ],
       0,
-      "74b18dcec2f2e434ff640abccaf0f34b"
+      "a85088b96789dbdd702c2d9fd1cf8397"
     ],
     [
       "IfcComposeReify.ni_p3",
@@ -155,7 +146,7 @@
         "unit_typing"
       ],
       0,
-      "b97acf36c4ab7466f93face9e9a6eb0a"
+      "8b4d0cfd63d44355d87a67147535e542"
     ]
   ]
 ]

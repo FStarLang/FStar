@@ -58,6 +58,19 @@ let frame_preserving_is_preorder_respecting (#a: Type u#a) (p:pcm a) (x y:a)
           (ensures (forall z. compatible p x z ==> preorder_of_pcm p z y))
   = ()
 
+let stable_compatiblity (#a:Type u#a) (fact: a -> prop) (p:pcm a) (v v0 v1:a)
+  : Lemma
+    (requires
+      stable fact (preorder_of_pcm p) /\
+      fact v0 /\
+      frame_preserving p v v1 /\
+      compatible p v v0)
+    (ensures
+      fact v1)
+  = assert (preorder_of_pcm p v0 v1)
+
+
+
 (**** Preorder to PCM *)
 
 (***** Building the preorder *)
@@ -232,3 +245,7 @@ let frame_preserving_extends2 (#a: Type u#a) (q:preorder a) (x y:hist q)
 let pcm_of_preorder_induces_extends (#a: Type u#a) (q:preorder a)
   : Lemma (induces_preorder (pcm_of_preorder q) (flip extends))
   = ()
+
+let extend_history (#a:Type u#a) (#q:preorder a) (h0:vhist q) (v:a{q (curval h0) v})
+  : h1:vhist q{h1 `extends` h0}
+  = v :: h0

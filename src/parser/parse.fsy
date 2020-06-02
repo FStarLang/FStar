@@ -25,7 +25,6 @@ open FStar.String
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
-
 let mk_meta_tac m = Meta (Arg_qualifier_meta_tac m)
 let mk_meta_attr m = Meta (Arg_qualifier_meta_attr m)
 
@@ -141,6 +140,7 @@ let old_attribute_syntax_warning =
 %token PERCENT_LBRACK
 %token PIPE_RIGHT
 %token POLYMONADIC_BIND
+%token POLYMONADIC_SUBCOMP
 %token PRAGMALIGHT
 %token PRAGMA_POP_OPTIONS
 %token PRAGMA_PUSH_OPTIONS
@@ -768,6 +768,9 @@ let ids =     ( xs ) in
 | POLYMONADIC_BIND polymonadic_bind
     {let (_1, b) = ((), $2) in
       ( Polymonadic_bind b )}
+| POLYMONADIC_SUBCOMP polymonadic_subcomp
+    {let (_1, c) = ((), $2) in
+      ( Polymonadic_subcomp c )}
 
 typeDecl:
   ident typars option_ascribeKind_ typeDefinition
@@ -934,6 +937,11 @@ polymonadic_bind:
   LPAREN quident COMMA quident RPAREN PIPE_RIGHT quident EQUALS simpleTerm
     {let (_1, m_eff, _3, n_eff, _5, _6, p_eff, _8, bind) = ((), $2, (), $4, (), (), $7, (), $9) in
       ( (m_eff, n_eff, p_eff, bind) )}
+
+polymonadic_subcomp:
+  quident SUBTYPE quident EQUALS simpleTerm
+    {let (m_eff, _2, n_eff, _4, subcomp) = ($1, (), $3, (), $5) in
+    ( (m_eff, n_eff, subcomp) )}
 
 qualifier:
   ASSUME
@@ -2506,5 +2514,4 @@ in
    ( x :: xs )}
 
 %%
-
 

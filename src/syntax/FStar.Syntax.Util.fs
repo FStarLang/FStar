@@ -250,6 +250,29 @@ let comp_to_comp_typ (c:comp) : comp_typ =
        flags=comp_flags c}
     | _ -> failwith "Assertion failed: Computation type without universe"
 
+
+(*
+ * For layered effects, given a (repr a is), return is
+ * For wp effects, given a (unit -> M a wp), return wp
+ *
+ * The pattern matching is very syntactic inside this function
+ * It is called from the computation types in the layered effect combinators
+ *   e.g. f and g in bind
+ * Layered effects typechecking code already makes sure that those types
+ *   have this exact shape
+ *)
+let effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.range) (err:string)
+: list<term> =
+  let err () = Errors.raise_error (Errors.Fatal_UnexpectedEffect, err) r in
+  let repr = compress repr in
+  if is_layered
+  then match repr.n with
+       | Tm_app (_, _::is) -> is |> List.map fst
+       | _ -> err ()
+  else match repr.n with 
+       | Tm_arrow (_, c) -> c |> comp_to_comp_typ |> (fun ct -> ct.effect_args |> List.map fst)
+       | _ -> err ()
+
 let destruct_comp c : (universe * typ * typ) =
   let wp = match c.effect_args with
     | [(wp, _)] -> wp
@@ -732,6 +755,7 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_pragma _
   | Sig_fail _
   | Sig_polymonadic_bind _ -> []
+  | Sig_polymonadic_subcomp _ -> []
 
 let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l

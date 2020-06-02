@@ -239,6 +239,11 @@ val h_exists_cong (#a:Type) (p q : a -> slprop)
       (requires (forall x. p x `equiv` q x))
       (ensures (h_exists p `equiv` h_exists q))
 
+(** Introducing [h_exists] by presenting a witness *)
+val intro_h_exists (#a:_) (x:a) (p:a -> slprop) (m:mem)
+  : Lemma (interp (p x) m ==> interp (h_exists p) m)
+
+
 (**** Actions *)
 
 /// Note, at this point, using the NMSTTotal effect constrains the mem to be
@@ -318,6 +323,36 @@ val gather_action
 val alloc_action (#a:Type u#1) (#pcm:pcm a) (e:inames) (x:a{compatible pcm x x})
   : action_except (ref a pcm) e emp (fun r -> pts_to r x)
 
+let property (a:Type)
+  = a -> prop
+
+val witnessed (#a:Type u#1)
+              (#pcm:pcm a)
+              (r:ref a pcm)
+              (fact:property a)
+  : prop
+
+let stable_property (#a:Type) (pcm:pcm a)
+  = fact:property a {
+       FStar.Preorder.stable fact (Steel.PCM.Preorder.preorder_of_pcm pcm)
+    }
+
+val witness (#a:Type) (#pcm:pcm a)
+            (e:inames)
+            (r:ref a pcm)
+            (fact:stable_property pcm)
+            (v:Ghost.erased a)
+            (_:squash (forall z. compatible pcm v z ==> fact z))
+  : action_except unit e (pts_to r v) (fun _ -> pts_to r v `star` pure (witnessed r fact))
+
+val recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
+           (e:inames)
+           (r:ref a pcm)
+           (v:Ghost.erased a)
+  : action_except (v1:Ghost.erased a{compatible pcm v v1}) e
+                  (pts_to r v `star` pure (witnessed r fact))
+                  (fun v1 -> pts_to r v `star` pure (fact v1))
+
 (**** Invariants *)
 
 (**
@@ -355,3 +390,13 @@ val change_slprop (#opened_invariants:inames)
                   (p q:slprop)
                   (proof: (m:mem -> Lemma (requires interp p m) (ensures interp q m)))
   : action_except unit opened_invariants p (fun _ -> q)
+
+module U = FStar.Universe
+
+val lift_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
+  : action_except unit opened_invariants
+           (h_exists p)
+           (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+
+val elim_pure (#opened_invariants:_) (p:prop)
+  : action_except (u:unit{p}) opened_invariants (pure p) (fun _ -> emp)

@@ -232,8 +232,10 @@
         "@MaxIFuel_assumption", "@query",
         "Ariadne_pretyping_aa7fb1e4d4d9e1f5c4d43327f007a8ad", "b2t_def",
         "constructor_distinct_Ariadne.Ok",
+        "data_typing_intro_Ariadne.Protect@tok",
         "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
         "equation_Ariadne.ctr", "equation_Ariadne.index",
+        "equation_Ariadne.key", "equation_Ariadne.log",
         "equation_Ariadne.preorder_", "equation_Ariadne.record",
         "equation_Ariadne.saved", "equation_Ariadne.saved_backup",
         "equation_Ariadne.state", "equation_FStar.Monotonic.Heap.fresh",
@@ -268,7 +270,7 @@
         "typing_FStar.Monotonic.Heap.sel", "typing_FStar.Set.empty"
       ],
       0,
-      "dd56ed4c83d36beda657a4aacc92bfd9"
+      "e8691471c31efa1f724d9a895ec26331"
     ],
     [
       "Ariadne.pre0",
@@ -516,8 +518,7 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "b2t_def",
+        "@MaxIFuel_assumption", "@query", "b2t_def",
         "constructor_distinct_Ariadne.Crash",
         "constructor_distinct_Ariadne.Ok",
         "constructor_distinct_Ariadne.Recover",
@@ -527,12 +528,14 @@
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_FStar.Pervasives.V",
-        "data_elim_Ariadne.Writing", "data_elim_FStar.Pervasives.E",
-        "data_elim_FStar.Pervasives.Err",
+        "data_elim_FStar.Pervasives.E", "data_elim_FStar.Pervasives.Err",
         "data_typing_intro_FStar.Pervasives.E@tok",
         "data_typing_intro_FStar.Pervasives.Err@tok",
+        "data_typing_intro_FStar.Pervasives.Native.Some@tok",
         "data_typing_intro_FStar.Pervasives.V@tok",
         "disc_equation_Ariadne.Crash", "disc_equation_Ariadne.Writing",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Ariadne.backup", "equation_Ariadne.index",
         "equation_Ariadne.pre0", "equation_Ariadne.pre1",
         "equation_Ariadne.saved", "equation_Ariadne.saved_backup",
@@ -547,14 +550,12 @@
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "interpretation_Tm_abs_a5ca6fe12225dcddc723177173d17b3f",
         "kinding_FStar.Pervasives.Native.option@tok", "l_and-interp",
-        "l_or-interp", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThan",
-        "proj_equation_Ariadne.Protect_c",
+        "l_or-interp", "lemma_FStar.Pervasives.invertOption",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
+        "primitive_Prims.op_LessThan", "proj_equation_Ariadne.Protect_c",
         "projection_inverse_Ariadne.Counter_c",
         "projection_inverse_Ariadne.Counter_n",
-        "projection_inverse_Ariadne.Crash_other",
         "projection_inverse_Ariadne.Crash_read",
-        "projection_inverse_Ariadne.Ok_saved",
         "projection_inverse_Ariadne.Protect_c",
         "projection_inverse_Ariadne.Recover_other",
         "projection_inverse_Ariadne.Recover_read",
@@ -563,9 +564,8 @@
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Native.None_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "projection_inverse_FStar.Pervasives.V_a",
         "projection_inverse_FStar.Pervasives.V_v",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_4187e98250438914a336576d12992752",
@@ -574,10 +574,10 @@
         "refinement_interpretation_Tm_refine_e55319c085bf178a09f5c6b692f5d239",
         "refinement_interpretation_Tm_refine_f67d546da9881cfa74376ca29779f011",
         "string_inversion", "string_typing", "typing_Ariadne.saved_backup",
-        "typing_Ariadne.step0", "typing_Ariadne.step1", "unit_typing"
+        "typing_Ariadne.step0", "typing_Ariadne.step1"
       ],
       0,
-      "13e8866bf3b3f5d8c92345d35ab7aa93"
+      "df34f45cbe611adbbafbc3f85bf52dd1"
     ],
     [
       "Ariadne.example",

@@ -317,13 +317,17 @@ let wand (p1 p2: slprop u#a) : slprop u#a =
         interp p1 h1 ==>
         interp p2 (join h h1)
 
+let h_exists_body (#a:Type u#b) (f: (a -> slprop u#a)) (h:heap) (x:a) : prop =
+  interp (f x) h
+
 let h_exists  (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a =
-  fun (h: heap) ->
-   exists x. (W.axiom1 f x; interp (f x) h)
+  fun (h: heap) -> exists x. h_exists_body f h x
+
+let h_forall_body (#a:Type u#b) (f: (a -> slprop u#a)) (h:heap) (x:a) : prop =
+  interp (f x) h
 
 let h_forall (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a =
-  fun (h: heap) ->
-   forall x. (W.axiom1 f x; interp (f x) h)
+  fun (h: heap) -> forall x. h_forall_body f h x
 
 let h_refine p r = h_and p r
 
@@ -357,6 +361,8 @@ let emp_unit p
 let intro_emp h = ()
 
 let h_exists_cong (#a:Type) (p q : a -> slprop) = ()
+
+let intro_h_exists #a x p h = ()
 
 let interp_depends_only_on (hp:slprop u#a) = emp_unit hp
 
@@ -625,11 +631,36 @@ let sel #a #pcm (r:ref a pcm) (m:hheap (ptr r))
   = let Ref _ _ v = select_addr m r in
     v
 
+let sel_v #a #pcm r v m = sel r m
+
 let sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:hheap (ptr r))
   : Lemma (interp (pts_to r (sel r m)) m)
   = let Ref _ _ v = select_addr m r in
     assert (sel r m == v);
     compatible_refl pcm v
+
+let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:a -> prop)
+  = let fact_h = witnessed_ref r fact in
+    let aux (h0 h1:heap)
+      : Lemma
+        (requires
+          fact_h h0 /\
+          heap_evolves h0 h1)
+        (ensures
+          fact_h h1)
+        [SMTPat ()]
+      = assert (interp (ptr r) h0);
+        assert (fact (sel r h0));
+        assert (contains_addr h1 r);
+        compatible_refl pcm (select_addr h1 r).v;
+        assert (compatible pcm (select_addr h1 r).v (select_addr h1 r).v);
+        assert (interp (pts_to r (select_addr h1 r).v) h1);
+        assert (interp (ptr r) h1);
+        assert (fact (sel r h1))
+    in
+    ()
+
+#set-options "--fuel 2 --ifuel 2"
 
 let sel_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a)
   : action (pts_to r v0) (v:a{compatible pcm v0 v}) (fun _ -> pts_to r v0)
@@ -640,8 +671,6 @@ let sel_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a)
       = fun m0 -> (| sel r m0, m0 |)
     in
     f
-
-#set-options "--fuel 2 --ifuel 2"
 
 let upd' (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a) (v1:a {frame_preserving pcm v0 v1})
   : pre_action (pts_to r v0) unit (fun _ -> pts_to r v1)
@@ -974,3 +1003,78 @@ let change_slprop (p q:slprop)
           (| (), h |)
     in
     refined_pre_action_as_action g
+
+(** [_witness_h_exists]
+
+    This is an action that is frame-preserving and allows
+    extracting a witness for an existential (using indefinite description).
+
+    However, the API provided by the semantics does not yet allow
+    reflecting this as an action, since the way in which it defines
+    frame preservation is different (it doesn't take the frame as an
+    explicit argument).
+
+    We have been discussing revising the signature of actions in
+    semantics to be more like this:
+
+    https://github.com/FStarLang/FStar/blob/nik_steel_locks/examples/steel_wip/ParDiv.fst#L74-L82
+
+    There, frame-preservation of actions is done differently.
+
+    Rather than having a quantified refinement in the postcondition
+    that we have now, i.e.,
+
+```
+    forall (frame:st.hprop).
+      st.interp ((pre `st.star` frame) `st.star` (st.locks_invariant m0)) m0 ==>
+      (st.interp ((post `st.star` frame) `st.star` (st.locks_invariant m1)) m1
+```
+
+    every action takes a frame as an argument and the interpreter
+    carries the current frame as an explicit argument and instantiates
+    it when reaching a leaf action node.
+
+    if that were the style we used for actions, then witness_h_exists
+    would be easy to add as an action.
+
+    The trouble with the current formulation is that in get_witness,
+    we have to pick a witness for h_exists p and then show that
+    whatever witness we picked is good for any frame ... and that
+    seems to be impossible to prove.
+*)
+let _witness_h_exists (a:Type) (p: a -> slprop) (frame:slprop)
+                      (h0:hheap (h_exists p `star` frame))
+    : ( x:erased a & h1:hheap (p x `star` frame) {
+        heap_evolves h0 h1 /\
+        (forall (hp:hprop frame). hp h0 == hp h1) /\
+        (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr)
+      })
+    = assert (equiv (h_exists p `star` frame) (h_exists (fun x -> p x `star` frame)));
+      let w = FStar.IndefiniteDescription.indefinite_description_tot a (fun x -> interp (p x `star` frame) h0) in
+      assert (interp (p w `star` frame) h0);
+      (| w, h0 |)
+
+
+let lift_h_exists (#a:_) (p:a -> slprop)
+  : action (h_exists p) unit
+           (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+  = let g : refined_pre_action (h_exists p) unit (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+          = fun h ->
+              let aux (x:a) (h:heap)
+                : Lemma
+                  (requires interp (p x) h)
+                  (ensures interp (h_exists (U.lift_dom p)) h)
+                  [SMTPat (interp (p x) h)]
+                = assert (interp (U.lift_dom p (U.raise_val x)) h)
+              in
+              (| (), h |)
+    in
+    refined_pre_action_as_action g
+
+let elim_pure (p:prop)
+  : action (pure p) (u:unit{p}) (fun _ -> emp)
+  = let f
+      : refined_pre_action (pure p) (_:unit{p}) (fun _ -> emp)
+      = fun h -> (| (), h |)
+    in
+    refined_pre_action_as_action f
