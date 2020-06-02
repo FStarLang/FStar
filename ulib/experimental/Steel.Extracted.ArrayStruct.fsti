@@ -37,11 +37,11 @@ open Steel.PCM.Memory
 #set-options "--fuel 0 --ifuel 0"
 
 (* foo is the view of what you're storing *)
-type foo =
+type foo : Type u#1 =
   | MkFoo : x: UInt32.t -> y: UInt32.t -> z: UInt64.t -> foo
 
 (* low_foo is the low-level representation of [foo] *)
-type low_foo = {
+type low_foo : Type u#1 = {
   xy: Seq.lseq UInt32.t 2;
   z: UInt64.t
 }
@@ -78,15 +78,16 @@ open FStar.Tactics.Typeclasses
 (* Raise a GitHub issue for a typeclass syntax withing val signatures *)
 let ref (a: Type u#a) (#[tcresolve ()] ca:low_level_type a) : Type u#0  = ref a ca.pcm
 
-val ref_hprop (#a: Type u#a) (#[tcresolve ()] ca:low_level_type a) (r: ref a) : slprop u#b
+let ref_hprop (#a: Type u#a) (#[tcresolve ()] ca:low_level_type a) (r: ref a) : slprop u#a =
+  h_exists (pts_to r)
 
 (* Buggy, use selectors here*)
-val sel (#a: Type) (#[tcresolve ()] ca:low_level_type a) (h: mem) (r: ref a)  : Tot a
+val sel (#a: Type) (#[tcresolve ()] ca:low_level_type a) (r: ref a) (h: hmem (ref_hprop r))  : GTot a
 
 #set-options "--print_implicits --print_universes --z3rlimit 20 --prn"
 
 val alloc
-  (#a: Type u#a) (#[FStar.Tactics.Typeclasses.tcresolve ()] ca: low_level_type a)
+  (#a: Type u#1) (#[FStar.Tactics.Typeclasses.tcresolve ()] ca: low_level_type a)
   (v: a) (#[FStar.Tactics.exact (quote (ca.a_to_low_a v))] v_low: ca.low_a)
     : Steel (ref a #ca) emp (fun r -> ref_hprop r) (fun _ -> True) (fun _ r h1 -> (* sel h1 r == v*) True)
 
@@ -118,11 +119,19 @@ let check (src: string) : Tac unit =
   *)
 [@@ update low_foo.z]
 val update_z (r: ref foo) (new_val: UInt64.t)
-    : Steel unit (admit(); ref_hprop r) (fun _ -> ref_hprop r)
-    (fun h0 ->
-      UInt64.v new_val >= UInt32.v (sel h0 r).x + UInt32.v (sel h0 r).y
-    ) (fun h0 _ h1 ->
-      (sel h1 r) = MkFoo (sel h0 r).x (sel h0 r).y new_val
+    : Steel unit (ref_hprop r) (fun _ -> ref_hprop r) (
+      let pre : hmem (ref_hprop r) -> prop = fun h0 ->
+        if UInt64.v new_val >= UInt32.v (sel r h0).x + UInt32.v (sel r h0).y then
+          True else False
+      in
+      assume(respects_fp pre);
+      pre
+    ) (
+      let post : hmem (ref_hprop r) -> unit -> hmem (ref_hprop r) -> prop  =
+        fun h0 _ h1 -> (sel r h1) == MkFoo (sel r h0).x (sel r h0).y new_val
+      in
+      assume(respects_binary_fp post);
+      post
     )
 
 let _ : unit  = _ by (check (`%update_z))
@@ -137,10 +146,15 @@ let _ : unit  = _ by (check (`%update_z))
       x == a_to_low_a (sel h1 r).x.[0]
      )
 *)
+
 [@@get low_foo.x.[0]]
-val get_x (r: ref foo) : Steel (UInt32.t) (admit(); ref_hprop r) (fun _ -> ref_hprop r)
-  (fun _ -> True) (fun h0 x h1 ->
-    sel h0 r == sel h1 r /\ x == (sel h1 r).x
+val get_x (r: ref foo)
+  : Steel UInt32.t (ref_hprop r) (fun _ -> ref_hprop r) (fun _ -> True) (
+    let post : hmem (ref_hprop r) -> UInt32.t -> hmem (ref_hprop r) -> prop =
+      fun h0 x h1 -> (sel r h0 == sel r h1 /\ x == (sel r h1).x)
+    in
+    assume(respects_binary_fp post);
+    post
   )
 
 (* Language of attributes :
@@ -152,14 +166,15 @@ val get_x (r: ref foo) : Steel (UInt32.t) (admit(); ref_hprop r) (fun _ -> ref_h
    [@@ explode low_struct -> [field1_low; field2_low]]
 *)
 
-val u32_pcm : PCM.pcm UInt32.t
+val u32_pcm : PCM.pcm (Universe.raise_t u#0 u#1 UInt32.t)
 
-instance low_level_x : low_level_type UInt32.t = {
+instance low_level_x : low_level_type (Universe.raise_t u#0 u#1 UInt32.t) = {
   pcm = u32_pcm;
-  low_a = UInt32.t;
-  a_to_low_a = (fun (x: UInt32.t) -> x);
+  low_a = (Universe.raise_t u#0 u#1 UInt32.t);
+  a_to_low_a = (fun x -> x);
 }
 
+val wand_lemma (p1 p2:slprop u#a) : Lemma ((p1 `star` (wand p1 p2)) `equiv` p2)
 
 /// Ok we have getters and setters. But what about addresses ? We need:
 /// - a type for the sub-object that you want to take address
@@ -177,38 +192,87 @@ instance low_level_x : low_level_type UInt32.t = {
     - postcondition implies
       a_to_low_a (sel h0 r) == a_to_low_a (sel h1 r) /\ (sel h1 r') == (sel h0 r).x
 *)
+
 [@@focus low_foo.x.[0] -> low_level_x]
-val focus_x (r: ref foo) : Steel (ref UInt32.t) (admit();ref_hprop r) (fun r' ->
+val focus_x (r: ref foo)
+  : Steel (ref (Universe.raise_t UInt32.t)) (ref_hprop r) (fun r' ->
    ref_hprop r' `star`
    wand (ref_hprop r') (ref_hprop r)
- ) (fun _ -> True) (fun h0 r' h1 ->
-   (sel h0 r) == (sel h1 r) /\ (sel h1 r') == (sel h0 r).x
+ ) (fun _ -> True) (
+   let post :
+     hmem (ref_hprop r) ->
+     (r': ref (Universe.raise_t UInt32.t) #low_level_x) ->
+     hmem ((ref_hprop r') `star`  wand (ref_hprop r') (ref_hprop r)) ->
+     prop
+   =
+     fun h0 r' h1 ->
+       wand_lemma (ref_hprop r') (ref_hprop r);
+       (sel r h0) == (sel r h1) /\ Universe.downgrade_val (sel r' h0) == (sel r h0).x
+   in
+   assume(respects_binary_fp post);
+   post
  )
 
-val u64_pcm : PCM.pcm UInt64.t
+val u64_pcm : PCM.pcm (Universe.raise_t u#0 u#1 UInt64.t)
 
-instance low_level_z : low_level_type UInt64.t = {
+instance low_level_z : low_level_type (Universe.raise_t u#0 u#1 UInt64.t) = {
   pcm = u64_pcm;
-  low_a = UInt64.t;
+  low_a = Universe.raise_t u#0 u#1 UInt64.t;
   a_to_low_a = (fun x -> x);
 }
 
-val xy_pcm : PCM.pcm (Seq.lseq UInt32.t 2)
+val xy_pcm : PCM.pcm (Seq.lseq (Universe.raise_t UInt32.t) 2)
 
-instance low_level_xy : low_level_type (Seq.lseq UInt32.t 2) = {
+instance low_level_xy : low_level_type (Seq.lseq u#1 (Universe.raise_t UInt32.t) 2) = {
   pcm = xy_pcm;
-  low_a = (Seq.lseq UInt32.t 2);
+  low_a = (Seq.lseq (Universe.raise_t UInt32.t) 2);
   a_to_low_a = (fun x -> x);
 }
 
-(* This yields the totality of the parent object but exploded in slprops *)
-[@@explode low_foo -> (low_level_xy, low_level_z)]
+let foo_to_xy_z (x: foo)
+  : Tot (Seq.lseq (Universe.raise_t UInt32.t) 2 & Universe.raise_t UInt64.t)
+  =
+  let s = Seq.init 2 (fun i -> Universe.raise_val (if i = 0 then x.x else x.y)) in
+  (s, Universe.raise_val (MkFoo?.z x))
+
+(* This yields the totality of the parent object but exploded in slprops.
+  Things checked by the attribute:
+    - number of arguments: 1
+    - first argument is ref to type that has low_level_type typeclass
+    - [low_foo] is [low_a] for that typeclass
+    - possibly check for a path of low_foo
+    - return type is tupleof refs to the right typeclasses
+    - postcondition implies
+       a_to_low_a (sel h0 r) == a_to_low_a (sel h1 r) /\
+       (sel h1 r1', sel h1 r2') == foo_to_xy_z (sel h0 r)
+*)
+[@@explode low_foo -> (low_level_xy, low_level_z) -> foo_to_xy_z]
 val explode_xy_z (r: ref foo)
-  : Steel (admit();(ref (Seq.lseq UInt32.t 2) #low_level_xy & ref UInt64.t))
-  (ref_hprop r) (fun (r1, r2) -> ref_hprop r1 `star` ref_hprop r2)
-  (fun _ -> True)
-  (fun h0 (r1, r2) h1 ->
-    Seq.index (sel h1 r1) 0 == MkFoo?.x (sel h0 r) /\
-    Seq.index (sel h1 r1) 1 == (sel h0 r).y /\
-    sel h1 r2 == MkFoo?.z (sel h0 r)
+  : Steel (
+    ref (Seq.lseq (Universe.raise_t UInt32.t) 2) #low_level_xy &
+    ref (Universe.raise_t UInt64.t)
+  )
+  (ref_hprop r) (fun (r1, r2) ->
+    ref_hprop r1 `star` ref_hprop r2 `star`
+    wand (ref_hprop r1 `star` ref_hprop r2) (ref_hprop r)
+  )
+  (fun _ -> True) (
+    let post:
+      hmem (ref_hprop r) ->
+      (r': (ref (Seq.lseq (Universe.raise_t UInt32.t) 2) #low_level_xy &
+           ref (Universe.raise_t UInt64.t))) ->
+      hmem (ref_hprop (fst r') `star` ref_hprop (snd r') `star`
+        wand (ref_hprop (fst r') `star` ref_hprop (snd r')) (ref_hprop r)
+      ) ->
+      prop
+    =
+     fun h0 (r1, r2) h1 ->
+       wand_lemma (ref_hprop r1 `star` ref_hprop r2) (ref_hprop r);
+       Universe.downgrade_val (Seq.index (sel r1 h1) 0) == MkFoo?.x (sel r h0) /\
+       Universe.downgrade_val (Seq.index (sel r1 h1) 1) == (sel r h0).y /\
+       Universe.downgrade_val (sel r2 h1) == MkFoo?.z (sel r h0) /\
+       sel r h0 == sel r h1
+    in
+    assume(respects_binary_fp post);
+    post
   )
