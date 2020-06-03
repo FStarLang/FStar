@@ -1,5 +1,5 @@
 [
-  "ıàH\u0013†@;j\u0014ıüöB—≥m",
+  "„ﬂ\f˘#ù«™∫ò\u0015DëËN÷",
   [
     [
       "NMST.return",
@@ -11,7 +11,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "04751680bfca5830299403af06cc8be5"
+      "d7af21770034ddfc6d64130246fcce9e"
     ],
     [
       "NMST.bind",
@@ -25,7 +25,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "8cb7395ac61e08960a6e2fc3aef381e7"
+      "8b35c5df78b124c6c7cad1634b89cda5"
     ],
     [
       "NMST.subcomp",
@@ -39,7 +39,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2"
       ],
       0,
-      "a1e30427a3cbaf952cdcb6bc31b7e481"
+      "273104ac0c0409c834484dfc196c77db"
     ],
     [
       "NMST.NMSTATE",
@@ -48,7 +48,7 @@
       1,
       [ "@query" ],
       0,
-      "89427a68c92ea587cf4800acede1bcfb"
+      "52056afc0c75860e49735382180b0a4c"
     ],
     [
       "NMST.NMSTATE",
@@ -57,7 +57,7 @@
       1,
       [ "@query" ],
       0,
-      "f9e1e5a83966369dcb0953416d986de0"
+      "b3bf9183c8d5e175514d93c082ce4829"
     ],
     [
       "NMST.get",
@@ -69,7 +69,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "984629f9d398f8d5accb1256c0926658"
+      "63a4e6ba419245a8f5c292f8a3da3be1"
     ],
     [
       "NMST.put",
@@ -78,7 +78,7 @@
       1,
       [ "@query" ],
       0,
-      "007c16a808d9c18a0318680b77a0630c"
+      "63e4d1cf387d112519273b1a825e5525"
     ],
     [
       "NMST.witness",
@@ -90,7 +90,7 @@
         "equation_NMST.witnessed"
       ],
       0,
-      "e0b2656023fdada3506f6ae33c4ded01"
+      "b37b9b9718f698a640656fa1cf6cce04"
     ],
     [
       "NMST.recall",
@@ -99,7 +99,7 @@
       1,
       [ "@query", "equation_NMST.witnessed" ],
       0,
-      "23c023d43b4c370a8afbdaf75101a7e8"
+      "8156595f5efef1f410c83edf68f75786"
     ],
     [
       "NMST.sample",
@@ -112,7 +112,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "9438b98618ea8ba3d78ffc3bf3c2c200"
+      "e579a6e7f7175a382982429698c09f79"
     ],
     [
       "NMST.lift_pure_nmst",
@@ -142,7 +142,16 @@
         "typing_Tm_abs_dc670feaee5a9cdeefefb04a5984b858"
       ],
       0,
-      "39af23234f22cc822e366c77370c881d"
+      "9dfdb525463ff0e20b401cd16f5ea5bb"
+    ],
+    [
+      "NMST.bind_div_nmst",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "3d3138f7ef50917e6e7cdfabd59c3701"
     ],
     [
       "NMST.nmst_assume",
@@ -151,7 +160,7 @@
       1,
       [ "@query" ],
       0,
-      "f73670787686e1698fa9c1f7864b4fd6"
+      "02485f40860e62aa828ed0aa1c47d98b"
     ],
     [
       "NMST.nmst_assert",
@@ -160,7 +169,7 @@
       1,
       [ "@query" ],
       0,
-      "d0a272e6b4f10a95da53678bfd73df7f"
+      "be16511aa47a53dc5695ae6a76da1f05"
     ],
     [
       "NMST.lift_nmst_total_nmst",
@@ -169,7 +178,7 @@
       1,
       [ "@query" ],
       0,
-      "1ed5307f999ab1bf377256e5500fda36"
+      "ffa46d0418408a44a4eae0fc0fa3d994"
     ],
     [
       "NMST.return",
@@ -181,7 +190,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "9debe698c1a4063acfe4b2a3bf85a9b5"
+      "6dfcd8a2bbf66d25f452b89559898f4f"
     ],
     [
       "NMST.bind",
@@ -195,7 +204,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "ffb3db2da412b7d562bba6f04618aac8"
+      "46c277634c8d7d1698562ad71b453515"
     ],
     [
       "NMST.subcomp",
@@ -209,7 +218,7 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2"
       ],
       0,
-      "c334a32106d87bd18638fe2ccc875a8e"
+      "84ef9ee1c48df2fdb5693276dd0e3c6f"
     ],
     [
       "NMST.NMSTATE",
@@ -218,7 +227,7 @@
       1,
       [ "@query" ],
       0,
-      "eaff851dc182fde821009bab7769ef0f"
+      "b6f983d99545d6b280feca2f916c5688"
     ],
     [
       "NMST.NMSTATE",
@@ -227,7 +236,7 @@
       1,
       [ "@query" ],
       0,
-      "82622263a9daa308622d3d11a16ec580"
+      "225c2f00978b8bea2e36bc2df1d5c80a"
     ],
     [
       "NMST.get",
@@ -239,7 +248,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "6782c6084b3a39aedb97e587794b85d6"
+      "7b999a15c1633f6fe55a6e47bfdf8874"
     ],
     [
       "NMST.put",
@@ -248,7 +257,7 @@
       1,
       [ "@query" ],
       0,
-      "93f7be42b5ef8f330684ff4625f046de"
+      "b07d65ba96edda221dccd1cab09b752a"
     ],
     [
       "NMST.witness",
@@ -260,7 +269,7 @@
         "equation_NMST.witnessed"
       ],
       0,
-      "5e0e42781f303c02f494db3d470d8679"
+      "a4503873d189796804d9515e3ce63925"
     ],
     [
       "NMST.recall",
@@ -269,7 +278,7 @@
       1,
       [ "@query", "equation_NMST.witnessed" ],
       0,
-      "5158cb97152bb444764a0d55d18782c8"
+      "e08603edabdb360d2c870a180fd9a028"
     ],
     [
       "NMST.sample",
@@ -282,7 +291,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "29afcd74fa15ef706a5ff4f4c4447055"
+      "139d15328fca0c8b400dd3002e096cd8"
     ],
     [
       "NMST.lift_pure_nmst",
@@ -312,7 +321,16 @@
         "typing_Tm_abs_dc670feaee5a9cdeefefb04a5984b858"
       ],
       0,
-      "d08b4de0383fe1a299af7ab845b5ee11"
+      "b36f39d38dcd5e30e63c48a36f0aabbf"
+    ],
+    [
+      "NMST.bind_div_nmst",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "75d77442c6afbb52a8747ab662c3d2cf"
     ],
     [
       "NMST.nmst_assume",
@@ -321,7 +339,7 @@
       1,
       [ "@query" ],
       0,
-      "09f2e7bdeafc0631b75b052419deafb1"
+      "e324a0eb0f3de7ae52422468b04d9d90"
     ],
     [
       "NMST.nmst_assert",
@@ -330,7 +348,7 @@
       1,
       [ "@query" ],
       0,
-      "103bca53785647ff23cbe5b3ccb9e74a"
+      "c047d5be443a3d10d1f202909aaa7f9f"
     ],
     [
       "NMST.lift_nmst_total_nmst",
@@ -339,7 +357,7 @@
       1,
       [ "@query" ],
       0,
-      "756141042e6b1125e635ee07ba4e9b36"
+      "dd811f4530397cd269662aa2d35f392e"
     ]
   ]
 ]
