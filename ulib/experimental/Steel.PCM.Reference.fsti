@@ -33,7 +33,7 @@ val alloc (#a:Type) (x:a)
   : SteelT (ref a) emp (fun r -> pts_to r full_perm x)
 
 val read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelT a (pts_to r p v) (fun x -> pts_to r p x)
+  : SteelT (x:a{x==Ghost.reveal v}) (pts_to r p v) (fun x -> pts_to r p x)
 
 val read_refine (#a:Type0) (#p:perm) (q:a -> slprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
