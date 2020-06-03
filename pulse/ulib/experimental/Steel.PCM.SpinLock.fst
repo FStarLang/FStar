@@ -28,7 +28,10 @@ let locked = true
 let lockinv (p:slprop) (r:ref bool) : slprop =
   h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
 
-let lock (p:slprop u#1) = (r:ref bool & inv (lockinv p r))
+let lock_t = ref bool & iname
+
+let protects (l:lock_t) (p:slprop) : prop = snd l >--> lockinv p (fst l)
+let lock p = l:lock_t {protects l p}
 
 val intro_lockinv_available (#uses:inames) (p:slprop) (r:ref bool)
   : SteelAtomic unit uses unobservable (pts_to r full_perm available `star` p) (fun _ -> lockinv p r)
@@ -64,7 +67,7 @@ let new_lock (p:slprop)
   in
   lift_atomic_to_steelT (fun _ -> intro_lockinv_available p r);
   let i:inv (lockinv p r) = new_inv (lockinv p r) in
-  let l:lock p = (| r, i |) in
+  let l:lock p = ( r, i ) in
   l
 
 #set-options "--fuel 0 --ifuel 0"
@@ -107,8 +110,8 @@ let acquire_core #p #u r i =
 
 let acquire' (#p:slprop) (l:lock p)
   : SteelAtomic bool Set.empty observable emp (fun b -> if b then p else emp)
-  = let r:ref bool = dfst l in
-    let i: inv (lockinv p r) = dsnd l in
+  = let r:ref bool = fst l in
+    let i: inv (lockinv p r) = snd l in
     let b = with_invariant i (fun _ -> acquire_core r i) in
     return_atomic #_ #_ #_ b
 
@@ -138,8 +141,8 @@ let release_core #p #u r i =
   return_atomic #_ #_ #_ res
 
 let release #p l =
-  let r:ref bool = dfst l in
-  let i: inv (lockinv p r) = dsnd l in
+  let r:ref bool = fst l in
+  let i: inv (lockinv p r) = snd l in
   let b = lift_atomic_to_steelT (fun _ -> with_invariant i (fun _ -> release_core r i)) in
   h_intro_emp_l (if b then emp else p);
   h_affine emp (if b then emp else p)
