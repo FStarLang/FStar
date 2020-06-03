@@ -295,83 +295,116 @@ val get_xy_i (r: ref foo_view foo_pcm) (i: SizeT.t)
 ///  v == Seq.index (foo_view_to_low (sel r h1)).low_xy i
 /// ```
 
-(* Language of attributes :
-   [@@ update low_struct.field]
-   [@@ update low_array.index] and paths thereof
-   [@@ read low_struct.field]
-   [@@ read low_array.index] and paths thereof
-   [@@ focus low_struct.field -> field_low]
-   [@@ explode low_struct -> [field1_low; field2_low]]
-*)
+(*** Address taking *)
 
-val u32_pcm : PCM.pcm (Universe.raise_t u#0 u#1 UInt32.t)
+///////////////////////////////////////////////////////////////////////////////
+// Warning : not ready for review yet from this point on
+///////////////////////////////////////////////////////////////////////////////
 
-instance low_level_x : low_level_type (Universe.raise_t u#0 u#1 UInt32.t) = {
-  pcm = u32_pcm;
-  low_a = (Universe.raise_t u#0 u#1 UInt32.t);
-  a_to_low_a = (fun x -> x);
+/// Let us now tackle an important feature requested for our extraction and object manipulation
+/// language: first-class pointers to parts of a arraystruct.
+///
+/// For that, we have to define instances of the `low_level` typeclass for all the parts of our
+/// arraystructs that we want to have first-class references to.
+
+(* Ongoing example : typeclass instance to the [x] and [y] fields of [foo_view] *)
+instance low_level_xy : low_level (Seq.lseq u#1 (Universe.raise_t UInt32.t) 2) = {
+  low = (Seq.lseq (Universe.raise_t UInt32.t) 2);
+  view_to_low = (fun x -> x);
+  low_to_view = (fun x -> x);
+  bijection_one = (fun _ -> ());
+  bijection_two = (fun _ -> ());
 }
 
-val wand_lemma (p1 p2:slprop u#a) : Lemma ((p1 `star` (wand p1 p2)) `equiv` p2)
-
-/// Ok we have getters and setters. But what about addresses ? We need:
-/// - a type for the sub-object that you want to take address
-/// - a PCM governing the values of the sub-object
-/// - a magic_wand to focus on the sub-object
-/// - an explode operation that explodes a parent object into multiple sub-objects
-
-
-(* This yields a magic wand in the function's signature. Things checked by the attribute:
-    - number of arguments: 1
-    - first argument is ref to type that has low_level_type typeclass
-    - [low_foo] is [low_a] for that typeclass
-    - x.[0] is a subpath of low_foo
-    - return type is ref to type that has the second low_level_type typeclass
-    - postcondition implies
-      a_to_low_a (sel h0 r) == a_to_low_a (sel h1 r) /\ (sel h1 r') == (sel h0 r).x
-*)
-
-[@@focus low_foo.x.[0] -> low_level_x]
-val focus_x (r: ref foo)
-  : Steel (ref (Universe.raise_t UInt32.t)) (ref_hprop r) (fun r' ->
-   ref_hprop r' `star`
-   wand (ref_hprop r') (ref_hprop r)
- ) (fun _ -> True) (
-   let post :
-     hmem (ref_hprop r) ->
-     (r': ref (Universe.raise_t UInt32.t) #low_level_x) ->
-     hmem ((ref_hprop r') `star`  wand (ref_hprop r') (ref_hprop r)) ->
-     prop
-   =
-     fun h0 r' h1 ->
-       wand_lemma (ref_hprop r') (ref_hprop r);
-       (sel r h0) == (sel r h1) /\ Universe.downgrade_val (sel r' h0) == (sel r h0).x
-   in
-   assume(respects_binary_fp post);
-   post
- )
-
-val u64_pcm : PCM.pcm (Universe.raise_t u#0 u#1 UInt64.t)
-
-instance low_level_z : low_level_type (Universe.raise_t u#0 u#1 UInt64.t) = {
-  pcm = u64_pcm;
-  low_a = Universe.raise_t u#0 u#1 UInt64.t;
-  a_to_low_a = (fun x -> x);
+(* Ongoing example : typeclass instance to the [z] field of [foo_view] *)
+instance low_level_z : low_level (Universe.raise_t u#0 u#1 UInt64.t) = {
+  low = (Universe.raise_t u#0 u#1 UInt64.t);
+  view_to_low = (fun x -> x);
+  low_to_view = (fun x -> x);
+  bijection_one = (fun _ -> ());
+  bijection_two = (fun _ -> ());
 }
 
-val xy_pcm : PCM.pcm (Seq.lseq (Universe.raise_t UInt32.t) 2)
+val u32_pcm : pcm (Universe.raise_t u#0 u#1 UInt32.t)
+val u64_pcm : pcm (Universe.raise_t u#0 u#1 UInt64.t)
 
-instance low_level_xy : low_level_type (Seq.lseq u#1 (Universe.raise_t UInt32.t) 2) = {
-  pcm = xy_pcm;
-  low_a = (Seq.lseq (Universe.raise_t UInt32.t) 2);
-  a_to_low_a = (fun x -> x);
+/// Now, we need functions that will be extracted to a low-level address taking of a part of an array
+/// struct. These functions should also be compatible with separation logic mechanisms, in the
+/// following sense: what happens with the big object once you've taken the address and ownership to
+/// a sub-object ? We'll see two patterns, `explode` and `focus`.
+
+(**** explode *)
+
+/// For explode, we want to decompose a arraystruct into multiple parts. This decomposition should
+/// be total, meaning that you can recompose the parts to get your arraystruct later. To qualify the
+/// totalness of this decomposition, we instantiante the same `low_level` typeclass which qualifies
+/// a bijection.
+
+/// Let us see what it gives with our ongoing example. Let's suppose our decomposition is simply
+
+let exploded_foo =
+  Seq.lseq u#1 (Universe.raise_t UInt32.t) 2 & (Universe.raise_t u#0 u#1 UInt64.t)
+
+/// Tuples would receive special treatment by Kremlin, as they would be extracted to multiple pointer
+/// values.
+
+(* [exploded_foo] is a view so it should also have a low_level version *)
+instance low_level_exploded_foo : low_level exploded_foo =
+  {
+    low = exploded_foo;
+    view_to_low = (fun x -> x);
+    low_to_view = (fun x -> x);
+    bijection_one = (fun _ -> ());
+    bijection_two = (fun _ -> ());
+  }
+
+(* Here is the bijection of the decomposition *)
+instance low_level_decomposition_foo : low_level foo_view  =
+  let view_to_low : foo_view -> exploded_foo = fun v ->
+    (
+      Seq.init 2 (fun i ->
+        if i = 0 then Universe.raise_val v.view_x else Universe.raise_val v.view_y
+      ),
+      Universe.raise_val v.view_z
+    )
+  in
+  let low_to_view : exploded_foo -> foo_view = fun (v1, v2) ->
+    {
+      view_x = Universe.downgrade_val (Seq.index v1 0);
+      view_y = Universe.downgrade_val (Seq.index v1 1);
+      view_z = Universe.downgrade_val v2;
+    }
+  in
+  {
+  low = exploded_foo;
+  view_to_low = view_to_low;
+  low_to_view = low_to_view;
+  bijection_one = (fun _ -> ());
+  bijection_two = (fun l ->
+    let new_l = view_to_low (low_to_view l) in
+    assert((fst new_l) `Seq.equal` (fst l));
+    assert((snd new_l) == (snd l));
+    assert(new_l == l)
+  );
 }
 
-let foo_to_xy_z (x: foo)
-  : Tot (Seq.lseq (Universe.raise_t UInt32.t) 2 & Universe.raise_t UInt64.t)
-  =
-  let s = Seq.init 2 (fun i -> Universe.raise_val (if i = 0 then x.x else x.y)) in
-  (s, Universe.raise_val (MkFoo?.z x))
+/// Now that we have specified how our view should be decomposed, we can write a completely generic
+/// explode function.
+
+val explode
+   (#a: Type) (#[FStar.Tactics.Typeclasses.tcresolve ()] ca: low_level a)
+   (#b: Type)
+
+   (r: ref a)
+  : Steel (
+    ref (Seq.lseq (Universe.raise_t UInt32.t) 2) #low_level_xy &
+    ref (Universe.raise_t UInt64.t)
+  )
+  (ref_hprop r) (fun (r1, r2) ->
+    ref_hprop r1 `star` ref_hprop r2 `star`
+    wand (ref_hprop r1 `star` ref_hprop r2) (ref_hprop r)
+  )
+  (fun _ -> True) (fun _ _ _ -> True)
 
 (* This yields the totality of the parent object but exploded in slprops.
   Things checked by the attribute:
@@ -383,33 +416,47 @@ let foo_to_xy_z (x: foo)
        a_to_low_a (sel h0 r) == a_to_low_a (sel h1 r) /\
        (sel h1 r1', sel h1 r2') == foo_to_xy_z (sel h0 r)
 *)
-[@@explode low_foo -> foo_to_xy_z -> (low_level_xy, low_level_z) ]
-val explode_xy_z (r: ref foo)
-  : Steel (
-    ref (Seq.lseq (Universe.raise_t UInt32.t) 2) #low_level_xy &
-    ref (Universe.raise_t UInt64.t)
-  )
-  (ref_hprop r) (fun (r1, r2) ->
-    ref_hprop r1 `star` ref_hprop r2 `star`
-    wand (ref_hprop r1 `star` ref_hprop r2) (ref_hprop r)
-  )
-  (fun _ -> True) (
-    let post:
-      hmem (ref_hprop r) ->
-      (r': (ref (Seq.lseq (Universe.raise_t UInt32.t) 2) #low_level_xy &
-           ref (Universe.raise_t UInt64.t))) ->
-      hmem (ref_hprop (fst r') `star` ref_hprop (snd r') `star`
-        wand (ref_hprop (fst r') `star` ref_hprop (snd r')) (ref_hprop r)
-      ) ->
-      prop
-    =
-     fun h0 (r1, r2) h1 ->
-       wand_lemma (ref_hprop r1 `star` ref_hprop r2) (ref_hprop r);
-       Universe.downgrade_val (Seq.index (sel r1 h1) 0) == MkFoo?.x (sel r h0) /\
-       Universe.downgrade_val (Seq.index (sel r1 h1) 1) == (sel r h0).y /\
-       Universe.downgrade_val (sel r2 h1) == MkFoo?.z (sel r h0) /\
-       sel r h0 == sel r h1
-    in
-    assume(respects_binary_fp post);
-    post
-  )
+
+
+/// For the specifications of these patterns we would rely on a "linear wand". The linear wand
+/// behaves as a magic wand, except that it takes avantage of the affinity of the memory model
+/// to "forget" the left-hand side of the implication when it is applied to get the conclusion.
+///
+/// In other terms, if `linear_wand p1 p2` is valid over `h`, then it is impossible to get both `p1`
+/// and `p2` interpreted valid at the same time over `h`.
+///
+/// This meta-argument is a little weak, maybe we could have a better solution?
+val linear_wand  (p1 p2:slprop u#a) : slprop u#a
+
+val linear_wand_lemma (p1 p2:slprop u#a) : Lemma ((p1 `star` (linear_wand p1 p2)) `equiv` p2)
+
+(**** focus *)
+
+/// Focusing is the action of "forgetting" the big arraystruct when you are manipulating one of its
+/// parts.
+
+[@@focus foo_low.low_xy.[0] -> low_level_x]
+val focus_x (r: ref foo_view foo_pcm)
+  : Steel (ref (Universe.raise_t UInt32.t) x_pcm)
+  (slref r) (fun r' -> slref r' `star` linear_wand (slref r') (slref r))
+  (fun _ -> True) (admitted_post (
+    fun h0 r' (h1: hmem (slref r' `star` linear_wand (slref r') (slref r))) ->
+      linear_wand_lemma (slref r') (slref r);
+      (sel r h0) == (sel r h1) /\ Universe.downgrade_val (sel r' h0) == (sel r h0).view_x
+  ))
+
+/// Let's comment the signature of the function. We use the linear wand in the return resource to
+/// say that "while you're manipulating the part of the arraystruct, you can't access the global
+/// object any more".
+///
+/// The post-condition says two things: that the
+
+(* This yields a magic wand in the function's signature. Things checked by the attribute:
+    - number of arguments: 1
+    - first argument is ref to type that has low_level_type typeclass
+    - [low_foo] is [low_a] for that typeclass
+    - x.[0] is a subpath of low_foo
+    - return type is ref to type that has the second low_level_type typeclass
+    - postcondition implies
+      a_to_low_a (sel h0 r) == a_to_low_a (sel h1 r) /\ (sel h1 r') == (sel h0 r).x
+*)
