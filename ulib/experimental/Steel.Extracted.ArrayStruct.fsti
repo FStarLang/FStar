@@ -154,8 +154,8 @@ val admitted_pre
 
 val extract_update: unit -> Tot unit
 val extract_get: unit -> Tot unit
-val extract_focus: unit -> Tot unit
 val extract_explode: unit -> Tot unit
+val extract_recombine: unit -> Tot unit
 val op_String_Access : unit -> Tot unit
 val generic_index: unit -> Tot unit
 
@@ -297,10 +297,6 @@ val get_xy_i (r: ref foo_view foo_pcm) (i: SizeT.t)
 
 (*** Address taking *)
 
-///////////////////////////////////////////////////////////////////////////////
-// Warning : not ready for review yet from this point on
-///////////////////////////////////////////////////////////////////////////////
-
 /// Let us now tackle an important feature requested for our extraction and object manipulation
 /// language: first-class pointers to parts of a arraystruct.
 ///
@@ -325,7 +321,7 @@ instance low_level_z : low_level (Universe.raise_t u#0 u#1 UInt64.t) = {
   bijection_two = (fun _ -> ());
 }
 
-val u32_pcm : pcm (Universe.raise_t u#0 u#1 UInt32.t)
+val xy_pcm : pcm (Seq.lseq u#1 (Universe.raise_t UInt32.t) 2)
 val u64_pcm : pcm (Universe.raise_t u#0 u#1 UInt64.t)
 
 /// Now, we need functions that will be extracted to a low-level address taking of a part of an array
@@ -347,16 +343,6 @@ let exploded_foo =
 
 /// Tuples would receive special treatment by Kremlin, as they would be extracted to multiple pointer
 /// values.
-
-(* [exploded_foo] is a view so it should also have a low_level version *)
-instance low_level_exploded_foo : low_level exploded_foo =
-  {
-    low = exploded_foo;
-    view_to_low = (fun x -> x);
-    low_to_view = (fun x -> x);
-    bijection_one = (fun _ -> ());
-    bijection_two = (fun _ -> ());
-  }
 
 (* Here is the bijection of the decomposition *)
 instance low_level_decomposition_foo : low_level foo_view  =
@@ -388,75 +374,36 @@ instance low_level_decomposition_foo : low_level foo_view  =
   );
 }
 
-/// Now that we have specified how our view should be decomposed, we can write a completely generic
-/// explode function.
+/// Now that we have specified how our view should be decomposed, we can write our explode function,
+/// with an attribute.
 
-val explode
-   (#a: Type) (#[FStar.Tactics.Typeclasses.tcresolve ()] ca: low_level a)
-   (#b: Type)
-
-   (r: ref a)
+[@@ extract_explode foo_low -> low_level_decomposition_foo -> (low_level_xy, low_level_z)]
+val explode_foo (r: ref foo_view foo_pcm)
   : Steel (
-    ref (Seq.lseq (Universe.raise_t UInt32.t) 2) #low_level_xy &
-    ref (Universe.raise_t UInt64.t)
+    ref (Seq.lseq (Universe.raise_t UInt32.t) 2) xy_pcm &
+    ref (Universe.raise_t UInt64.t) u64_pcm
   )
-  (ref_hprop r) (fun (r1, r2) ->
-    ref_hprop r1 `star` ref_hprop r2 `star`
-    wand (ref_hprop r1 `star` ref_hprop r2) (ref_hprop r)
+  (slref r) (fun (r1, r2) ->
+    slref r1 `star` slref r2
   )
-  (fun _ -> True) (fun _ _ _ -> True)
-
-(* This yields the totality of the parent object but exploded in slprops.
-  Things checked by the attribute:
-    - number of arguments: 1
-    - first argument is ref to type that has low_level_type typeclass
-    - [low_foo] is [low_a] for that typeclass
-    - return type is tupleof refs to the right typeclasses
-    - postcondition implies
-       a_to_low_a (sel h0 r) == a_to_low_a (sel h1 r) /\
-       (sel h1 r1', sel h1 r2') == foo_to_xy_z (sel h0 r)
-*)
-
-
-/// For the specifications of these patterns we would rely on a "linear wand". The linear wand
-/// behaves as a magic wand, except that it takes avantage of the affinity of the memory model
-/// to "forget" the left-hand side of the implication when it is applied to get the conclusion.
-///
-/// In other terms, if `linear_wand p1 p2` is valid over `h`, then it is impossible to get both `p1`
-/// and `p2` interpreted valid at the same time over `h`.
-///
-/// This meta-argument is a little weak, maybe we could have a better solution?
-val linear_wand  (p1 p2:slprop u#a) : slprop u#a
-
-val linear_wand_lemma (p1 p2:slprop u#a) : Lemma ((p1 `star` (linear_wand p1 p2)) `equiv` p2)
-
-(**** focus *)
-
-/// Focusing is the action of "forgetting" the big arraystruct when you are manipulating one of its
-/// parts.
-
-[@@focus foo_low.low_xy.[0] -> low_level_x]
-val focus_x (r: ref foo_view foo_pcm)
-  : Steel (ref (Universe.raise_t UInt32.t) x_pcm)
-  (slref r) (fun r' -> slref r' `star` linear_wand (slref r') (slref r))
-  (fun _ -> True) (admitted_post (
-    fun h0 r' (h1: hmem (slref r' `star` linear_wand (slref r') (slref r))) ->
-      linear_wand_lemma (slref r') (slref r);
-      (sel r h0) == (sel r h1) /\ Universe.downgrade_val (sel r' h0) == (sel r h0).view_x
+  (fun _ -> True) (admitted_post (fun h0 (r1, r2) h1 ->
+    sel r h0 == low_level_decomposition_foo.low_to_view (sel r1 h1, sel r2 h1)
   ))
 
-/// Let's comment the signature of the function. We use the linear wand in the return resource to
-/// say that "while you're manipulating the part of the arraystruct, you can't access the global
-/// object any more".
+/// How can this function be implemented? Simply by allocating two new references inside the memory
+/// model corresponding to r1 and r2, then copying the contents of r into r1 and r2. But then
+/// we still have `slref r` in the post-resource, whereas the function only talks about `r1` and `r2`.
 ///
-/// The post-condition says two things: that the
+/// The solution is that we simply drop `slref r` by affinity of the memory model. There again we
+/// need a meta-argument to justify that this can safely be extracted to an address taking
+/// instruction, whereas this is implemented in F* by allocating and dropping memory.
 
-(* This yields a magic wand in the function's signature. Things checked by the attribute:
-    - number of arguments: 1
-    - first argument is ref to type that has low_level_type typeclass
-    - [low_foo] is [low_a] for that typeclass
-    - x.[0] is a subpath of low_foo
-    - return type is ref to type that has the second low_level_type typeclass
-    - postcondition implies
-      a_to_low_a (sel h0 r) == a_to_low_a (sel h1 r) /\ (sel h1 r') == (sel h0 r).x
-*)
+[@@ extract_recombine (low_level_xy, low_level_z) -> low_level_decomposition_foo -> foo_low]
+val recombine_foo
+  (r1: ref (Seq.lseq (Universe.raise_t UInt32.t) 2) xy_pcm)
+  (r2: ref (Universe.raise_t UInt64.t) u64_pcm)
+  : Steel (ref foo_view foo_pcm)
+  (slref r1 `star` slref r2) (fun r -> slref r)
+  (fun _ -> True) (admitted_post (fun (h0 : hmem (slref r1 `star` slref r2)) r h1 ->
+    sel r h1 == low_level_decomposition_foo.low_to_view (sel r1 h0, sel r2 h0)
+  ))
