@@ -1,5 +1,5 @@
 module Steel.PCM.MonotonicHigherReference
-open Steel.PCM
+open FStar.PCM
 open Steel.PCM.Effect
 open Steel.PCM.Effect.Atomic
 open Steel.PCM.Memory
@@ -356,7 +356,7 @@ let witnessed #a #p r fact =
 
 let get_squash (#p:prop) (_:unit{p}) : squash p = ()
 
-let witness_thunk (#a:Type) (#pcm:Steel.PCM.pcm a)
+let witness_thunk (#a:Type) (#pcm:FStar.PCM.pcm a)
                   (r:M.ref a pcm)
                   (fact:M.stable_property pcm)
                   (v:Ghost.erased a)
@@ -367,7 +367,7 @@ let witness_thunk (#a:Type) (#pcm:Steel.PCM.pcm a)
   = Steel.PCM.Effect.witness r fact v ()
 
 
-let frame_witness (#a:Type) (#pcm:Steel.PCM.pcm a)
+let frame_witness (#a:Type) (#pcm:FStar.PCM.pcm a)
                   (r:M.ref a pcm)
                   (fact:M.stable_property pcm)
                   (v:Ghost.erased a)

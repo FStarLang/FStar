@@ -15,7 +15,7 @@
 *)
 
 module Steel.PCM.Effect.Atomic
-open Steel.PCM
+open FStar.PCM
 open Steel.PCM.Memory
 
 let observability = bool

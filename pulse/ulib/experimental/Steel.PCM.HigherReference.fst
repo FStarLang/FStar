@@ -20,7 +20,7 @@ open Steel.PCM.Effect.Atomic
 open Steel.PCM.Memory
 open FStar.Ghost
 open FStar.Real
-open Steel.PCM
+open FStar.PCM
 open Steel.PCM.FractionalPermission
 module Atomic = Steel.PCM.Effect.Atomic
 module SB = Steel.PCM.SteelT.Basics
@@ -162,7 +162,7 @@ let elim_perm_ok_star (#p:slprop) (q:perm)
 
 let alloc #a x =
   let v = Some (x, full_perm) in
-  assert (Steel.PCM.composable pcm_frac v None);
+  assert (FStar.PCM.composable pcm_frac v None);
   assert (compatible pcm_frac v v);
   let x = Steel.PCM.Effect.alloc v in
   intro_pure full_perm x

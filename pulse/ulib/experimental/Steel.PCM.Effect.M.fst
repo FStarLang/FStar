@@ -14,17 +14,16 @@
    limitations under the License.
 *)
 
-module Steel.Effect.M
+module Steel.PCM.Effect.M
 
 module Sem = Steel.Semantics.Hoare.MST
-module Mem = Steel.Memory
-module Act = Steel.Actions
+module Mem = Steel.PCM.Memory
 
-open Steel.Semantics.Instantiate
+open Steel.PCM.Semantics.Instantiate
 
-module Ins = Steel.Semantics.Instantiate
+module Ins = Steel.PCM.Semantics.Instantiate
 
-open Steel.Memory
+open Steel.PCM.Memory
 
 (*
  * This module defines a layered effect over the CSL semantics
@@ -42,8 +41,8 @@ open Steel.Memory
  * See the discussion towards the end of this file
  *)
 
-type pre_t = hprop u#1
-type post_t (a:Type) = a -> hprop u#1
+type pre_t = slprop u#1
+type post_t (a:Type) = a -> slprop u#1
 type req_t (pre:pre_t) = Sem.l_pre #state pre
 type ens_t (pre:pre_t) (a:Type) (post:post_t a) = Sem.l_post #state #a pre post
 
@@ -56,7 +55,7 @@ type repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a 
 
 /// Effect return
 
-let return (a:Type) (x:a) (p:a -> hprop) (post:ens_t (p x) a p)
+let return (a:Type) (x:a) (p:a -> slprop) (post:ens_t (p x) a p)
 : repr a (p x) p (Sem.return_lpre #state #a #p x post)  post
 = Sem.Ret p x post
 
@@ -92,7 +91,7 @@ let par
 
 let frame (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post)
   (f:repr a pre post req ens)
-  (frame:hprop) (f_frame:Sem.fp_prop frame)
+  (frame:slprop) (f_frame:Sem.fp_prop frame)
 : repr a
   (pre `star` frame)
   (fun x -> post x `star` frame)
@@ -190,11 +189,11 @@ let lift_ens #pre #a #post (ens:ens_t u#a pre a post)
 : ens_t u#(max a b) pre (U.raise_t a) (lift_post post)
 = fun m0 x m1 -> ens m0 (U.downgrade_val x) m1
 
-let lift_req_x (#a:Type u#a) (#pre:a -> hprop) (req:(x:a -> req_t (pre x)))
+let lift_req_x (#a:Type u#a) (#pre:a -> slprop) (req:(x:a -> req_t (pre x)))
 : x:U.raise_t u#a u#b a -> req_t ((lift_post pre) x)
 = fun x -> req (U.downgrade_val x)
 
-let lift_ens_x (#a:Type u#a) (#pre:a -> hprop)
+let lift_ens_x (#a:Type u#a) (#pre:a -> slprop)
   (#b:Type u#b) (#post:_)
   (ens:(x:a -> ens_t u#b (pre x) b post))
 : x:U.raise_t u#a u#b a ->
@@ -223,7 +222,7 @@ let lift_m (#a:Type u#a) (#pre:pre_t) (#post:post_t u#a a)
   | _ -> admit ()
 
 
-let lift_m_x (#a:Type u#a) (#pre:a -> hprop)
+let lift_m_x (#a:Type u#a) (#pre:a -> slprop)
   (#b:Type u#b) (#post:post_t b) (#req:(x:a -> req_t (pre x))) (#ens:(x:a -> ens_t (pre x) b post))
   (f:(x:a -> repr u#b b (pre x) post (req x) (ens x)))
 : x:U.raise_t u#a u#b a ->
