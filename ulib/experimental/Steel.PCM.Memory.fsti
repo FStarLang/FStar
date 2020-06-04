@@ -15,7 +15,7 @@
 *)
 module Steel.PCM.Memory
 open FStar.Ghost
-open Steel.PCM
+open FStar.PCM
 
 /// Building up on `Steel.PCM.Heap`, this module adds memory invariants to the heap to expose the
 /// final interface for Steel's PCM-based memory model.
@@ -293,12 +293,12 @@ val sel_action (#a:Type u#1) (#pcm:_) (e:inames) (r:ref a pcm) (v0:erased a)
 val upd_action (#a:Type u#1) (#pcm:_) (e:inames)
                (r:ref a pcm)
                (v0:FStar.Ghost.erased a)
-               (v1:a {Steel.PCM.frame_preserving pcm v0 v1})
+               (v1:a {FStar.PCM.frame_preserving pcm v0 v1})
   : action_except unit e (pts_to r v0) (fun _ -> pts_to r v1)
 
 val free_action (#a:Type u#1) (#pcm:pcm a) (e:inames)
-                (r:ref a pcm) (x:FStar.Ghost.erased a{Steel.PCM.exclusive pcm x})
-  : action_except unit e (pts_to r x) (fun _ -> pts_to r pcm.Steel.PCM.p.one)
+                (r:ref a pcm) (x:FStar.Ghost.erased a{FStar.PCM.exclusive pcm x})
+  : action_except unit e (pts_to r x) (fun _ -> pts_to r pcm.FStar.PCM.p.one)
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val split_action

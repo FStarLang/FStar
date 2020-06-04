@@ -16,7 +16,7 @@
 module Steel.PCM.Heap
 module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
-open Steel.PCM
+open FStar.PCM
 
 #set-options "--fuel 1 --ifuel 1"
 
@@ -478,19 +478,19 @@ let pts_to_compatible_bk (#a:Type u#a)
              m `mem_equiv` join m0 m1)
         [SMTPat (composable pcm v01 frame)]
       = let c0 = Ref a pcm v0 in
-        pcm.Steel.PCM.assoc_r v0 v1 frame;
+        pcm.FStar.PCM.assoc_r v0 v1 frame;
         let c1 : cell = Ref a pcm (op pcm v1 frame) in
         compatible_refl pcm v0;
         assert (pts_to_cell pcm v0 c0);
-        pcm.Steel.PCM.comm v1 frame;
+        pcm.FStar.PCM.comm v1 frame;
         assert (compatible pcm v1 (op pcm v1 frame));
         assert (pts_to_cell pcm v1 c1);
         assert (disjoint_cells c0 c1);
         calc (==) {
           (v0 `op pcm` (v1 `op pcm` frame));
             (==) {
-                   pcm.Steel.PCM.assoc v0 v1 frame;
-                   pcm.Steel.PCM.comm v01 frame
+                   pcm.FStar.PCM.assoc v0 v1 frame;
+                   pcm.FStar.PCM.comm v01 frame
                  }
           (frame `op pcm` v01);
         };
@@ -885,9 +885,9 @@ let upd_action (#a:_) (#pcm:_) (r:ref a pcm)
 ////////////////////////////////////////////////////////////////////////////////
 
 let free_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a{exclusive pcm v0})
-  : action (pts_to r v0) unit (fun _ -> pts_to r pcm.Steel.PCM.p.one)
-  = Steel.PCM.exclusive_is_frame_preserving pcm v0;
-    upd_action r v0 pcm.Steel.PCM.p.one
+  : action (pts_to r v0) unit (fun _ -> pts_to r pcm.FStar.PCM.p.one)
+  = FStar.PCM.exclusive_is_frame_preserving pcm v0;
+    upd_action r v0 pcm.FStar.PCM.p.one
 
 ////////////////////////////////////////////////////////////////////////////////
 let split_action #a #pcm r v0 v1

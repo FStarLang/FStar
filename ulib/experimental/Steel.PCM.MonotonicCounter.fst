@@ -15,7 +15,7 @@
 *)
 
 module Steel.PCM.MonotonicCounter
-open Steel.PCM
+open FStar.PCM
 open Steel.PCM.Preorder
 open FStar.Preorder
 

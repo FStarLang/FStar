@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Steel.PCM
+module FStar.PCM
 
 /// This module defines the partial commutative monoid (PCM) algebraic structure, as well as helper
 /// predicates and functions to manipulate PCMs.

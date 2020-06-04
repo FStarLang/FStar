@@ -1,5 +1,5 @@
 module Steel.PCM.ReshuffleFailure
-open Steel.PCM
+open FStar.PCM
 open Steel.PCM.Effect
 open Steel.PCM.Memory
 module SB = Steel.PCM.SteelT.Basics

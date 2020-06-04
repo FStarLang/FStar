@@ -16,7 +16,7 @@
 module Steel.PCM.Memory
 module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
-open Steel.PCM
+open FStar.PCM
 module H = Steel.PCM.Heap
 
 noeq

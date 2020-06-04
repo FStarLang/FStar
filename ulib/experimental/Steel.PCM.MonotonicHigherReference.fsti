@@ -1,5 +1,5 @@
 module Steel.PCM.MonotonicHigherReference
-open Steel.PCM
+open FStar.PCM
 open Steel.PCM.Effect
 open Steel.PCM.Effect.Atomic
 open Steel.PCM.Memory

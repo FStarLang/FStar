@@ -15,7 +15,7 @@
 *)
 module Steel.PCM.Heap
 open FStar.Ghost
-open Steel.PCM
+open FStar.PCM
 
 /// This module defines the behavior of a structured heap where each memory cell is governed by
 /// a partial commutative monoid. This PCM structure is reused for the entire heap as it is possible
@@ -431,14 +431,14 @@ val sel_action
 
 (**
   The update action needs you to prove that the mutation from [v0] to [v1] is frame-preserving
-  with respect to the individual PCM governing the reference [r]. See [Steel.PCM.frame_preserving]
+  with respect to the individual PCM governing the reference [r]. See [FStar.PCM.frame_preserving]
 *)
 val upd_action
   (#a:Type u#a)
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
-  (v1:a {Steel.PCM.frame_preserving pcm v0 v1})
+  (v1:a {FStar.PCM.frame_preserving pcm v0 v1})
   : action (pts_to r v0) unit (fun _ -> pts_to r v1)
 
 (** Deallocating a reference, by actually replacing its value by the unit of the PCM *)
@@ -447,7 +447,7 @@ val free_action
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a {exclusive pcm v0})
-  : action (pts_to r v0) unit (fun _ -> pts_to r pcm.Steel.PCM.p.one)
+  : action (pts_to r v0) unit (fun _ -> pts_to r pcm.FStar.PCM.p.one)
 
 
 (** Splitting a permission on a composite resource into two separate permissions *)
