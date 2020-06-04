@@ -3,7 +3,9 @@ module Obj = FSharp.Compatibility.OCaml.Obj
 
 type heap = unit
 
-(* https://www.lexifi.com/blog/references-physical-equality *)
+(* Following OCaml implementation we want reference (physical) equality for ref.  
+   https://www.lexifi.com/blog/references-physical-equality *)
+[<ReferenceEquality>]
 type 'a ref = {
   mutable contents: 'a;
   id: int

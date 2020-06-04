@@ -52,29 +52,28 @@
   </PropertyGroup>
   <Import Project="$(FSTAR_HOME)\fsharp.extraction.targets" />
   <ItemGroup>
-    <!-- NOTE: Those realized files do not rely on extracted files from ulib library, so
-               it doesn't matter if we include them before or after the generated files. 
-               Currently, they will be added at the beginning of the list.
-               
-               However, we might need to reconsider this in case we run into a realized file
-               that has a dependency on extracted file. Then we should make sure that realized files
-               are added at the end. -->
+    <!-- TODO: Currently, realised modules will be added at the beginning of the @Compile list.
+               However, some of the realised modules (namely FStar_HyperStack_ST) have a 
+               dependency on extracted modules. 
+
+               We need to change how the @Compile list is ordered by using dependency analysis 
+               available in F*. 
+
+               Note, for now we just ignore some modules and or comment out some code in them. 
+    -->
     <Compile Include="fs\prims.fs" />
     <Compile Include="fs\FStar_All.fs" />
     <!-- <Compile Include="fs\FStar_BaseTypes.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
     <!-- <Compile Include="fs\FStar_Buffer.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
     <!-- <Compile Include="fs\FStar_Bytes.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
     <Compile Include="fs\FStar_Char.fs" />
-    <!-- <Compile Include="fs\FStar_CommonST.fs" /> --> <!-- TODO: Not sure if this is needed -->
     <!-- <Compile Include="fs\FStar_Constructive.fs" /> --> <!-- NOTE: Legacy -->
     <Compile Include="fs\FStar_Dyn.fs" /> 
     <Compile Include="fs\FStar_Float.fs" />
     <Compile Include="fs\FStar_Ghost.fs" />
     <Compile Include="fs\FStar_Monotonic_Heap.fs" />
+    <Compile Include="fs\FStar_CommonST.fs" />
     <Compile Include="fs\FStar_Heap.fs" />
-    <!-- <Compile Include="fs\FStar_HyperStack_All.fs" /> -->
-    <!-- <Compile Include="fs\FStar_HyperStack_ST.fs" /> -->
-    <!-- <Compile Include="fs\FStar_HyperStack_IO.fs" /> -->
     <!-- <Compile Include="fs\FStar_Int16.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
     <!-- <Compile Include="fs\FStar_Int32.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
     <!-- <Compile Include="fs\FStar_Int64.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
@@ -85,10 +84,22 @@
     <Compile Include="fs\FStar_Mul.fs" />
     <Compile Include="fs\FStar_Option.fs" />
     <Compile Include="fs\FStar_Pervasives_Native.fs" />
-    <Compile Include="fs\FStar_Set.fs" />
+    <!-- TODO: Set is implemented with extra 'comparison' constraint on key. 
+               Extracted modules that depend on Set (e.g. Map) don't respect this (i.e. constraint is not emitted). 
+               Moreover, both Set and Map modules restrict key with 'eqtype' which only gives decidable equality, 
+               but we should require ordering. 
+               
+               So there are two points to address:
+               1. Emitting constraints for type parameters when extracting F# code (e.g. for eqtype or 'ordered')
+               2. Add 'type ordered = Type{hasOrder 'a}' or similar and use it instead of 'eqtype' in Set/Map interface.
+    -->
+    <Compile Include="fs\FStar_Set.fs" /> 
     <Compile Include="fs\FStar_ST.fs" />
     <Compile Include="fs\FStar_Exn.fs" />
     <Compile Include="fs\FStar_String.fs" />
+    <Compile Include="fs\FStar_HyperStack_All.fs" />
+    <Compile Include="fs\FStar_HyperStack_ST.fs" />
+    <Compile Include="fs\FStar_HyperStack_IO.fs" />
     <!-- <Compile Include="fs\FStar_UInt16.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
     <!-- <Compile Include="fs\FStar_UInt32.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
     <!-- <Compile Include="fs\FStar_UInt64.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
@@ -121,7 +132,7 @@
     <FStarSourceFile Include="FStar.StrongExcludedMiddle.fst" />
     <FStarSourceFile Include="FStar.PropositionalExtensionality.fst" />
     <!-- <FStarSourceFile Include="FStar.PredicateExtensionality.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Map.fst" /> -->
+    <!-- <FStarSourceFile Include="FStar.Map.fst" /> --> <!-- TODO: Doesn't work with current implementation of Set (see TODO note on Set) -->
     <!-- <FStarSourceFile Include="FStar.Monotonic.Witnessed.fst" /> -->
     <FStarSourceFile Include="FStar.List.Tot.Properties.fst" />
     <!-- <FStarSourceFile Include="FStar.Monotonic.HyperHeap.fst" /> -->
@@ -227,7 +238,7 @@
     <!-- <FStarInterfaceFile Include="FStar.Int64.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
     <!-- <FStarInterfaceFile Include="FStar.Int8.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
     <!-- <FStarInterfaceFile Include="FStar.MRef.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.Map.fsti" /> -->
+    <!-- <FStarInterfaceFile Include="FStar.Map.fsti" />  --> <!-- TODO: Doesn't work with current implementation of Set (see TODO note on Set) -->
     <!-- <FStarInterfaceFile Include="FStar.Math.Euclid.fsti" /> -->
     <!-- <FStarInterfaceFile Include="FStar.Math.Fermat.fsti" /> -->
     <!-- <FStarInterfaceFile Include="FStar.Modifies.fsti" /> -->
