@@ -324,7 +324,7 @@ val free (#a:Type)
          (#p:FStar.PCM.pcm a)
          (r:ref a p)
          (x:Ghost.erased a{FStar.PCM.exclusive p x})
-  : SteelT unit (pts_to r x) (fun _ -> pts_to r Steel.(p.p.one))
+  : SteelT unit (pts_to r x) (fun _ -> pts_to r FStar.PCM.(p.p.one))
 
 val split (#a:Type)
           (#p:FStar.PCM.pcm a)
