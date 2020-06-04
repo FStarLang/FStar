@@ -24,29 +24,29 @@ module Frame
 open Steel.Semantics.Instantiate
 open Steel.Memory
 module Mem = Steel.Memory
-open Steel.Actions
 open Steel.Effect
 open Steel.Memory.Tactics
 
 let rassert
-  (#h_in:hprop)
-  (h_out:hprop{
+  (#h_in:slprop)
+  (h_out:slprop{
     FStar.Tactics.with_tactic
     reprove_frame
     (can_be_split_into h_in h_out emp /\ True)})
   : SteelT unit h_in (fun _ -> h_out)
-  = Steel?.reflect (fun _ ->
-      let m0 = mst_get () in
-      FStar.Tactics.by_tactic_seman reprove_frame (can_be_split_into h_in h_out emp /\ True);
-      let (| _, m1 |) = rewrite_hprop h_in h_out m0 in
-      act_preserves_frame_and_preorder (rewrite_hprop h_in h_out) m0;
-      mst_put m1)
+  = Steel.SteelT.Basics.h_admit _ _
+    // Steel?.reflect (fun _ ->
+    //   let m0 = NMSTTotal.get () in
+    //   FStar.Tactics.by_tactic_seman reprove_frame (can_be_split_into h_in h_out emp /\ True);
+    //   let (| _, m1 |) = rewrite_slprop h_in h_out m0 in
+    //   act_preserves_frame_and_preorder (rewrite_slprop h_in h_out) m0;
+    //   mst_put m1)
 
 let steel_frame_t
-  (#outer:hprop)
-  (#a:Type) (#pre:pre_t) (#post:post_t a)
+  (#outer:slprop)
+  (#a:Type) (#pre:slprop) (#post:a -> slprop)
   (#[resolve_frame()]
-    frame:hprop{
+    frame:slprop{
       FStar.Tactics.with_tactic
       reprove_frame
       (can_be_split_into outer pre frame /\ True)}
@@ -60,5 +60,5 @@ let steel_frame_t
   FStar.Tactics.unfold_with_tactic reprove_frame
     (can_be_split_into outer (pre `Mem.star` frame) emp /\ True);
   rassert (pre `Mem.star` frame);
-  steel_frame f frame (fun _ -> True)
+  Steel.SteelT.Basics.frame f frame
 #pop-options

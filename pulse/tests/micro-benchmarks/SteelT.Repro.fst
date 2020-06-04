@@ -8,22 +8,22 @@ assume
 val myref : Type0
 
 assume
-val myref_hprop (x:myref) : hprop
+val myref_slprop (x:myref) : slprop
 
 assume
 val dependent_provides (_:unit)
-  : SteelT myref emp myref_hprop
+  : SteelT myref emp myref_slprop
 
 assume
 val nop (_:unit) : SteelT unit emp (fun c -> emp)
 
 assume
-val h_admit (#a:Type) (#[@@resolve_framing] p:hprop) (q:a -> hprop) : SteelT a p q
+val h_admit (#a:Type) (#[@@resolve_framing] p:slprop) (q:a -> slprop) : SteelT a p q
 
 assume
 val my_frame_t
-  (outer:hprop)
-  (#[@@resolve_framing] frame:hprop)
+  (outer:slprop)
+  (#[@@resolve_framing] frame:slprop)
   (#[@@resolve_framing] _:squash (can_be_split_into outer emp frame))
   (_:unit)
   : SteelT unit outer (fun _ -> frame)
@@ -57,5 +57,5 @@ val test_ok1 (_:unit)
 [@@expect_failure [228]]
 let test_ok1 _
   = let tr = dependent_provides () in
-    let c = my_frame_t (myref_hprop tr) (*#(myref_hprop tr)*) () in
-    h_admit #unit (*(myref_hprop tr)*) (fun _ -> emp)
+    let c = my_frame_t (myref_slprop tr) (*#(myref_slprop tr)*) () in
+    h_admit #unit (*(myref_slprop tr)*) (fun _ -> emp)
