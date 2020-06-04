@@ -3,12 +3,12 @@ open Steel.Memory
 irreducible
 let resolve_framing : unit = ()
 
-type pre_t = hprop u#1
-type post_t (a:Type) = a -> hprop u#1
+type pre_t = slprop u#1
+type post_t (a:Type) = a -> slprop u#1
 
 type repr (a:Type u#a) (pre:pre_t) (post:post_t a) = unit -> unit
 
-let returnc (a:Type u#a) (x:a) (p:a -> hprop)
+let returnc (a:Type u#a) (x:a) (p:a -> slprop)
 : repr a (p x) p
 = admit()
 
@@ -57,7 +57,7 @@ let bind_pure_steel (a:Type) (b:Type)
 polymonadic_bind (PURE, SteelT) |> SteelT = bind_pure_steel
 
 let bind_steel_pure (a:Type) (b:Type)
-    (pre_f:pre_t) (post_f:hprop)
+    (pre_f:pre_t) (post_f:slprop)
     (wp_g:a -> pure_wp b)
     (f:repr a pre_f (fun _ -> post_f))
     (g:(x:a -> unit -> PURE b (wp_g x)))
