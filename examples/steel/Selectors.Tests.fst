@@ -31,8 +31,16 @@ let rec solve_next (l:list goal) : Tac bool =
     | Comp (Eq _) l r ->
       let lnbr = slterm_nbr_uvars l in
       let rnbr = slterm_nbr_uvars r in
-      if lnbr = 0 || rnbr = 0 then (focus (fun _ -> dump "this"; trefl ()); true) else (later(); solve_next tl)
-    | _ -> tadmit(); true
+      if lnbr = 0 || rnbr = 0 then (focus trefl; true) else (later(); solve_next tl)
+    | App _ t -> begin
+      match term_as_formula' t with
+      | Comp (Eq _) l r ->
+      let lnbr = slterm_nbr_uvars l in
+      let rnbr = slterm_nbr_uvars r in
+      if lnbr = 0 || rnbr = 0 then (focus trefl; true) else (later(); solve_next tl)
+      | _ -> false
+      end
+    | _ -> fail "test"; false
 
 
 let rec resolve_sel_rec () : Tac unit =
