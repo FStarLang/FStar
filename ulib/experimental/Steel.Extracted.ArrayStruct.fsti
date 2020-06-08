@@ -407,6 +407,7 @@ val recombine_foo
   (fun _ -> True) (admitted_post (fun (h0 : hmem (slref r1 `star` slref r2)) r h1 ->
     sel r h1 == low_level_decomposition_foo.low_to_view (sel r1 h0, sel r2 h0)
   ))
+(*
 
 (*
 1. Drop the foo_view, do everything with the foo_low, foo_view can later be user-defined
@@ -450,3 +451,4 @@ instance _ : pointer_like UInt32.t = {
 
 
 val incr (r: pointer_like UInt32) : Steel
+*)
