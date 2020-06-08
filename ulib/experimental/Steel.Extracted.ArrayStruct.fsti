@@ -407,3 +407,46 @@ val recombine_foo
   (fun _ -> True) (admitted_post (fun (h0 : hmem (slref r1 `star` slref r2)) r h1 ->
     sel r h1 == low_level_decomposition_foo.low_to_view (sel r1 h0, sel r2 h0)
   ))
+
+(*
+1. Drop the foo_view, do everything with the foo_low, foo_view can later be user-defined
+2. we need a pointer type for exploded objects ->
+  a) having a subref type that is defined with a ref and then a path inside a ref, depending on the struct
+  b) then, the subref type should implement a "pointer-like" typeclass
+*)
+
+type foo : Type u#1 = {
+  x: UInt32.t;
+  y: UInt32.t;
+}
+
+class pointer_like (a: Type u#a) = {
+  ref: Type u#0;
+  slprop: slprop;
+  deref: ref -> Steel a (slprop) (fun _ -> slprop) (fun _ -> True) (fun _ _ _ -> True); (* here put sel specs *)
+  upd: ref -> (new_val: a) -> Steel unit (slprop) (fun _ -> slprop) (fun _ -> True) (fun _ _ _ -> True); (* here put sel specs *)
+}
+
+type foo_path = option bool
+
+val type_inside_foo (path:foo_path) : Type u#a
+
+instance _ : pointer_like (type_inside_foo None) = {
+  ref: (r:ref (foo & foo_path))
+  slprop: h_refine (slref foo) (fun h -> snd (sel r h) == None)
+  deref: deref_foo;
+  upd: upd_foo;
+}
+
+type subref_foo = ref (foo, foo_path)  (* the int is here to encode which field of foo you want to choose, there are 3 fields in foo *)
+
+val explode_foo (r: ref subref_foo) :
+  Steel (r1: subref_foo & r2: subref_foo)
+
+instance _ : pointer_like UInt32.t = {
+  ref: ref (foo,;
+  slprop:
+}
+
+
+val incr (r: pointer_like UInt32) : Steel
