@@ -1,15 +1,15 @@
-module Steel.PCM.MonotonicHigherReference
-open Steel.PCM
-open Steel.PCM.Effect
-open Steel.PCM.Effect.Atomic
-open Steel.PCM.Memory
-open Steel.PCM.FractionalPermission
+module Steel.MonotonicHigherReference
+open FStar.PCM
+open Steel.Effect
+open Steel.Effect.Atomic
+open Steel.Memory
+open Steel.FractionalPermission
 open FStar.Ghost
 module Preorder = FStar.Preorder
-module Q = Steel.PCM.Preorder
-module M = Steel.PCM.Memory
-module SB = Steel.PCM.SteelT.Basics
-module Atomic = Steel.PCM.Effect.Atomic
+module Q = Steel.Preorder
+module M = Steel.Memory
+module SB = Steel.SteelT.Basics
+module Atomic = Steel.Effect.Atomic
 open FStar.Real
 
 noeq
@@ -218,7 +218,7 @@ let pts_to (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:Ghost.eras
 let alloc (#a:Type) (p:Preorder.preorder a) (v:a)
   = let h = Current [v] full_perm in
     assert (compatible pcm_history h h);
-    let x : ref a p = Steel.PCM.Effect.alloc h in
+    let x : ref a p = Steel.Effect.alloc h in
     SB.h_assert (M.pts_to x h);
     SB.intro_pure (Current? h /\
                    hval h == Ghost.hide v /\
@@ -279,7 +279,7 @@ let elim_pure #a #p #f
     SB.drop_r _ _
 
 
-module ST = Steel.PCM.Memory.Tactics
+module ST = Steel.Memory.Tactics
 
 let rewrite_erased #a (p:erased a -> slprop) (x:erased a) (y:a { Ghost.reveal x == y})
   : SteelT unit (p x) (fun _ -> p (Ghost.hide y))
@@ -346,7 +346,7 @@ let lift_fact #a #p (f:property a)
 let lift_fact_is_stable #a #p (f:property a{FStar.Preorder.stable f p})
   : Lemma (FStar.Preorder.stable #(history a p)
                                  (lift_fact f)
-                                 (Steel.PCM.Preorder.preorder_of_pcm pcm_history))
+                                 (Steel.Preorder.preorder_of_pcm pcm_history))
   = assert (FStar.Preorder.stable #(history a p) (lift_fact f) pcm_history_preorder);
     pcm_history_induces_preorder #a #p;
     Q.stability #(history a p) (lift_fact f) pcm_history_preorder pcm_history
@@ -356,7 +356,7 @@ let witnessed #a #p r fact =
 
 let get_squash (#p:prop) (_:unit{p}) : squash p = ()
 
-let witness_thunk (#a:Type) (#pcm:Steel.PCM.pcm a)
+let witness_thunk (#a:Type) (#pcm:FStar.PCM.pcm a)
                   (r:M.ref a pcm)
                   (fact:M.stable_property pcm)
                   (v:Ghost.erased a)
@@ -364,10 +364,10 @@ let witness_thunk (#a:Type) (#pcm:Steel.PCM.pcm a)
                   (_:unit)
   : SteelT unit (M.pts_to r v)
                 (fun _ -> M.pts_to r v `star` pure (M.witnessed r fact))
-  = Steel.PCM.Effect.witness r fact v ()
+  = Steel.Effect.witness r fact v ()
 
 
-let frame_witness (#a:Type) (#pcm:Steel.PCM.pcm a)
+let frame_witness (#a:Type) (#pcm:FStar.PCM.pcm a)
                   (r:M.ref a pcm)
                   (fact:M.stable_property pcm)
                   (v:Ghost.erased a)
@@ -406,7 +406,7 @@ let recall (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
     SB.frame (fun _ -> extract_pure r v h) _;
     assert ((Current?h /\ hval h == v /\ hperm h == q));
     rearrange_pqr_prq _ _ _;
-    let h1 = SB.frame (fun _ -> Steel.PCM.Effect.recall r h) _ in
+    let h1 = SB.frame (fun _ -> Steel.Effect.recall r h) _ in
     assert (compatible pcm_history h h1);
     assert (hval h == hval h1);
     assert (hval h == v);

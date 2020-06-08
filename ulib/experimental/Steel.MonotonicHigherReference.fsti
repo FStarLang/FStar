@@ -1,9 +1,9 @@
-module Steel.PCM.MonotonicHigherReference
-open Steel.PCM
-open Steel.PCM.Effect
-open Steel.PCM.Effect.Atomic
-open Steel.PCM.Memory
-open Steel.PCM.FractionalPermission
+module Steel.MonotonicHigherReference
+open FStar.PCM
+open Steel.Effect
+open Steel.Effect.Atomic
+open Steel.Memory
+open Steel.FractionalPermission
 open FStar.Ghost
 module Preorder = FStar.Preorder
 

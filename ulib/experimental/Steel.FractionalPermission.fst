@@ -1,8 +1,6 @@
-module Steel.PCM.FractionalPermission
-
+module Steel.FractionalPermission
 open FStar.Real
 open Steel.PCM
-open Steel.PCM.Unitless
 
 #set-options "--fuel 0 --ifuel 1"
 

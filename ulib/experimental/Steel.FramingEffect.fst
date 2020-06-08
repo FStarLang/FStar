@@ -22,8 +22,6 @@ module Steel.FramingEffect
 
 module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.Memory
-module Act = Steel.Actions
-
 open Steel.Memory
 open Steel.Semantics.Instantiate
 
@@ -31,7 +29,7 @@ module Ins = Steel.Semantics.Instantiate
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
-let join_preserves_interp (hp:hprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
+let join_preserves_interp (hp:slprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
 : Lemma
   (interp hp (join m0 m1))
   [SMTPat (interp hp (join m0 m1))]
@@ -39,7 +37,7 @@ let join_preserves_interp (hp:hprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
   intro_star hp emp m0 m1;
   affine_star hp emp (join m0 m1)
 
-let ens_depends_only_on (#a:Type) (pre:hprop) (post:a -> hprop)
+let ens_depends_only_on (#a:Type) (pre:slprop) (post:a -> slprop)
   (q:(hmem pre -> x:a -> hmem (post x) -> prop))
 
 = //can join any disjoint mem to the pre-mem and q is still valid
@@ -50,8 +48,8 @@ let ens_depends_only_on (#a:Type) (pre:hprop) (post:a -> hprop)
   (forall x m_pre (m_post:hmem (post x)) (m:mem{disjoint m_post m}).
      q m_pre x m_post <==> q m_pre x (join m_post m))
 
-type pre_t = hprop u#1
-type post_t (a:Type) = a -> hprop u#1
+type pre_t = slprop u#1
+type post_t (a:Type) = a -> slprop u#1
 type req_t (pre:pre_t) = q:(hmem pre -> prop){  //inlining depends only on
   forall (m0:hmem pre) (m1:mem{disjoint m0 m1}). q m0 <==> q (join m0 m1)
 }
@@ -61,7 +59,7 @@ type ens_t (pre:pre_t) (a:Type u#a) (post:post_t u#a a) : Type u#(max 2 a) =
   }
 
 #push-options "--warn_error -271"
-let interp_depends_only_on_post (#a:Type) (hp:a -> hprop)
+let interp_depends_only_on_post (#a:Type) (hp:a -> slprop)
 : Lemma
   (forall (x:a).
      (forall (m0:hmem (hp x)) (m1:mem{disjoint m0 m1}). interp (hp x) m0 <==> interp (hp x) (join m0 m1)))
@@ -86,38 +84,38 @@ let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post
 type repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
   Sem.action_t #state #a pre post (req_to_act_req req) (ens_to_act_ens ens)
 
-assume val sl_implies (p q:hprop u#1) : Type0
+assume val sl_implies (p q:slprop u#1) : Type0
 
-assume val sl_implies_reflexive (p:hprop u#1)
+assume val sl_implies_reflexive (p:slprop u#1)
 : Lemma (p `sl_implies` p)
   [SMTPat (p `sl_implies` p)]
 
-assume val sl_implies_interp (p q:hprop u#1)
+assume val sl_implies_interp (p q:slprop u#1)
 : Lemma
   (requires p `sl_implies` q)
-  (ensures forall (m:mem) (f:hprop). interp (p `star` f) m ==>  interp (q `star` f) m)
+  (ensures forall (m:mem) (f:slprop). interp (p `star` f) m ==>  interp (q `star` f) m)
   [SMTPat (p `sl_implies` q)]
 
-assume val sl_implies_interp_emp (p q:hprop u#1)
+assume val sl_implies_interp_emp (p q:slprop u#1)
 : Lemma
   (requires p `sl_implies` q)
   (ensures forall (m:mem). interp p m ==>  interp q m)
   [SMTPat (p `sl_implies` q)]
 
-assume val sl_implies_preserves_frame (p q:hprop u#1)
+assume val sl_implies_preserves_frame (p q:slprop u#1)
 : Lemma
   (requires p `sl_implies` q)
   (ensures
-    forall (m1 m2:mem) (r:hprop).
+    forall (m1 m2:mem) (r:slprop).
       Sem.preserves_frame #state q r m1 m2 ==>
       Sem.preserves_frame #state p r m1 m2)
   [SMTPat (p `sl_implies` q)]
 
-assume val sl_implies_preserves_frame_right (p q:hprop u#1)
+assume val sl_implies_preserves_frame_right (p q:slprop u#1)
 : Lemma
   (requires p `sl_implies` q)
   (ensures
-    forall (m1 m2:mem) (r:hprop).
+    forall (m1 m2:mem) (r:slprop).
       Sem.preserves_frame #state r p m1 m2 ==>
       Sem.preserves_frame #state r q m1 m2)
   [SMTPat (p `sl_implies` q)]
@@ -126,15 +124,15 @@ assume val sl_implies_preserves_frame_right (p q:hprop u#1)
 irreducible let framing_implicit : unit = ()
 
 unfold
-let return_req (p:hprop u#1) : req_t p = fun _ -> True
+let return_req (p:slprop u#1) : req_t p = fun _ -> True
 
 unfold
-let return_ens (a:Type) (x:a) (p:a -> hprop u#1) : ens_t (p x) a p = fun _ r _ -> r == x
+let return_ens (a:Type) (x:a) (p:a -> slprop u#1) : ens_t (p x) a p = fun _ r _ -> r == x
 
 (*
  * Return is parametric in post (cf. return-scoping.txt)
  *)
-let return (a:Type) (x:a) (#[@@ framing_implicit] p:a -> hprop)
+let return (a:Type) (x:a) (#[@@ framing_implicit] p:a -> slprop)
 : repr a (p x) p (return_req (p x)) (return_ens a x p)
 = fun _ -> x
 
@@ -258,7 +256,7 @@ new_effect Steel = SteelF
  *)
 let frame_aux (#a:Type)
   (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:repr a pre post req ens) (frame:hprop)
+  ($f:repr a pre post req ens) (frame:slprop)
 : repr a (pre `star` frame) (fun x -> post x `star` frame) req ens
 = fun _ ->
   Sem.run #state #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame (fun _ -> True))
@@ -280,7 +278,7 @@ let bind_steel_steel_req (#a:Type)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
   (#pre_g:a -> pre_t)
   (req_g:(x:a -> req_t (pre_g x)))
-  (frame_f:hprop) (frame_g:hprop)
+  (frame_f:slprop) (frame_g:slprop)
   (_:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` (pre_g x `star` frame_g)))
 : req_t (pre_f `star` frame_f)
 = fun m0 ->
@@ -293,7 +291,7 @@ let bind_steel_steel_ens (#a:Type) (#b:Type)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
   (#pre_g:a -> pre_t) (#post_g:post_t b)
   (ens_g:(x:a -> ens_t (pre_g x) b post_g))
-  (frame_f:hprop) (frame_g:hprop)
+  (frame_f:slprop) (frame_g:slprop)
   (_:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` (pre_g x `star` frame_g)))
 : ens_t (pre_f `star` frame_f) b (fun y -> post_g y `star` frame_g)
 = fun m0 y m2 ->
@@ -305,7 +303,7 @@ let bind_steel_steel (a:Type) (b:Type)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
   (req_g:(x:a -> req_t (pre_g x))) (ens_g:(x:a -> ens_t (pre_g x) b post_g))
-  (#[@@ framing_implicit] frame_f:hprop) (#[@@ framing_implicit] frame_g:hprop)
+  (#[@@ framing_implicit] frame_f:slprop) (#[@@ framing_implicit] frame_g:slprop)
   (#[@@ framing_implicit] p:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` (pre_g x `star` frame_g)))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) post_g (req_g x) (ens_g x)))
@@ -336,7 +334,7 @@ let bind_steel_steelf_req (#a:Type)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
   (#pre_g:a -> pre_t)
   (req_g:(x:a -> req_t (pre_g x)))
-  (frame_f:hprop)
+  (frame_f:slprop)
   (_:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` pre_g x))
 : req_t (pre_f `star` frame_f)
 = fun m0 ->
@@ -349,7 +347,7 @@ let bind_steel_steelf_ens (#a:Type) (#b:Type)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
   (#pre_g:a -> pre_t) (#post_g:post_t b)
   (ens_g:(x:a -> ens_t (pre_g x) b post_g))
-  (frame_f:hprop)
+  (frame_f:slprop)
   (_:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` pre_g x))
 : ens_t (pre_f `star` frame_f) b post_g
 = fun m0 y m2 ->
@@ -361,7 +359,7 @@ let bind_steel_steelf (a:Type) (b:Type)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
   (req_g:(x:a -> req_t (pre_g x))) (ens_g:(x:a -> ens_t (pre_g x) b post_g))
-  (#[@@ framing_implicit] frame_f:hprop)
+  (#[@@ framing_implicit] frame_f:slprop)
   (#[@@ framing_implicit] p:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` pre_g x))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) post_g (req_g x) (ens_g x)))
@@ -388,7 +386,7 @@ let bind_steelf_steel_req (#a:Type)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
   (#pre_g:a -> pre_t)
   (req_g:(x:a -> req_t (pre_g x)))
-  (frame_g:hprop)
+  (frame_g:slprop)
   (_:squash (forall (x:a). post_f x `sl_implies` (pre_g x `star` frame_g)))
 : req_t pre_f
 = fun m0 ->
@@ -401,7 +399,7 @@ let bind_steelf_steel_ens (#a:Type) (#b:Type)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
   (#pre_g:a -> pre_t) (#post_g:post_t b)
   (ens_g:(x:a -> ens_t (pre_g x) b post_g))
-  (frame_g:hprop)
+  (frame_g:slprop)
   (_:squash (forall (x:a). post_f x `sl_implies` (pre_g x `star` frame_g)))
 : ens_t pre_f b (fun y -> post_g y `star` frame_g)
 = fun m0 y m2 ->
@@ -413,7 +411,7 @@ let bind_steelf_steel (a:Type) (b:Type)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
   (req_g:(x:a -> req_t (pre_g x))) (ens_g:(x:a -> ens_t (pre_g x) b post_g))
-  (#[@@ framing_implicit] frame_g:hprop)
+  (#[@@ framing_implicit] frame_g:slprop)
   (#[@@ framing_implicit] p:squash (forall (x:a). post_f x `sl_implies` (pre_g x `star` frame_g)))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) post_g (req_g x) (ens_g x)))
@@ -526,6 +524,6 @@ effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
 // //  *
 // //  * Note it is in SteelF (i.e. framed already)
 // //  *)
-// let steel_ret (#a:Type) (#[@@ framing_implicit] p:a -> hprop u#1) (x:a)
+// let steel_ret (#a:Type) (#[@@ framing_implicit] p:a -> slprop u#1) (x:a)
 // : SteelF a (p x) p (fun _ -> True) (fun _ r _ -> r == x)
 // = SteelF?.reflect (fun _ -> x)

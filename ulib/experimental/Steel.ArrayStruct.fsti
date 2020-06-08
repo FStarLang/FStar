@@ -14,14 +14,13 @@
    limitations under the License.
 *)
 
-module Steel.PCM.ArrayStruct
+module Steel.ArrayStruct
 
 module SizeT = Steel.SizeT
 module DepMap = FStar.DependentMap
 
 open FStar.FunctionalExtensionality
 open Steel.PCM
-open Steel.PCM.Unitless
 
 /// The C language allows the definition of flat data structure composed of nested struts and arrays.
 /// These flat data structures are used everywhere in systems programming, as their size can be
@@ -267,8 +266,8 @@ val reveal_pointwise_struct_pcm
 
 (*** Examples *)
 
-open Steel.PCM.FractionalPermission
-open Steel.PCM.Unitless.Base
+open Steel.FractionalPermission
+open Steel.PCM.Base
 
 let array_with_frac_perm_on_all_indexes (t: Type u#a) (len: SizeT.t) (v: t) : array_struct u#a =
   ArrayStruct (DArray (DBase (with_perm u#a t)) len)

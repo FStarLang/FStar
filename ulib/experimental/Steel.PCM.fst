@@ -13,127 +13,139 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+
 module Steel.PCM
 
-/// This module defines the partial commutative monoid (PCM) algebraic structure, as well as helper
-/// predicates and functions to manipulate PCMs.
+include FStar.PCM
 
-(**** Base definitions *)
-
-(** A symmetric relation *)
-let symrel (a: Type u#a) = c:(a -> a -> prop) { (forall x y. c x y <==> c y x) }
-
-(** [pcm'] is a magma, the base for the partial commutative monoid *)
-noeq
-type pcm' (a:Type u#a) = {
-  composable: symrel a;
-  op: x:a -> y:a{composable x y} -> a;
-  one:a
+noeq type unitless_pcm' (a: Type) = {
+  unitless_composable: symrel a;
+  unitless_op: x:a -> y:a{unitless_composable x y} -> a;
 }
 
-(** The type of a commutativity property *)
-let lem_commutative (#a: Type u#a) (p:pcm' a) =
+let unitless_lem_commutative #a (p:unitless_pcm' a) =
   x:a ->
-  y:a{p.composable x y} ->
-    Lemma (p.op x y == p.op y x)
+  y:a{p.unitless_composable x y} ->
+  Lemma (p.unitless_op x y == p.unitless_op y x)
 
-(** The type of a left-associativity property *)
-let lem_assoc_l (#a: Type u#a) (p:pcm' a) =
+let unitless_lem_assoc_l #a (p:unitless_pcm' a) =
   x:a ->
   y:a ->
-  z:a{p.composable y z /\ p.composable x (p.op y z)} ->
-  Lemma (p.composable x y /\
-         p.composable (p.op x y) z /\
-         p.op x (p.op y z) == p.op (p.op x y) z)
+  z:a{p.unitless_composable y z /\ p.unitless_composable x (p.unitless_op y z)} ->
+  Lemma (p.unitless_composable x y /\
+         p.unitless_composable (p.unitless_op x y) z /\
+         p.unitless_op x (p.unitless_op y z) == p.unitless_op (p.unitless_op x y) z)
 
-
-(** The type of a right-associativity property *)
-let lem_assoc_r (#a: Type u#a) (p:pcm' a) =
+let unitless_lem_assoc_r #a (p:unitless_pcm' a) =
   x:a ->
   y:a ->
-  z:a {p.composable x y /\
-       p.composable (p.op x y) z} ->
+  z:a {p.unitless_composable x y /\
+       p.unitless_composable (p.unitless_op x y) z} ->
   Lemma
-      (p.composable y z /\
-       p.composable x (p.op y z) /\
-       p.op x (p.op y z) == p.op (p.op x y) z)
+      (p.unitless_composable y z /\
+       p.unitless_composable x (p.unitless_op y z) /\
+       p.unitless_op x (p.unitless_op y z) == p.unitless_op (p.unitless_op x y) z)
 
-(** The type of the property characterizing the unit element of the monoid *)
-let lem_is_unit (#a: Type u#a) (p:pcm' a) =
-  x:a ->
-  Lemma (p.composable x p.one /\
-         p.op x p.one == x)
 
-(** Main type describing partial commutative monoids *)
-noeq
-type pcm (a:Type u#a) = {
-  p:pcm' a;
-  comm:lem_commutative p;
-  assoc: lem_assoc_l p;
-  assoc_r: lem_assoc_r p;
-  is_unit: lem_is_unit p
+noeq type unitless_pcm (a: Type) = {
+  unitless_p: unitless_pcm' a;
+  unitless_comm:unitless_lem_commutative unitless_p;
+  unitless_assoc: unitless_lem_assoc_l unitless_p;
+  unitless_assoc_r: unitless_lem_assoc_r unitless_p;
 }
 
-(**** Derived predicates *)
+let add_unit_to_pcm
+  (#a: Type)
+  (p: unitless_pcm a)
+  (one: a)
+  (is_unit: (
+    x:a ->
+    Lemma (p.unitless_p.unitless_composable x one /\
+         p.unitless_p.unitless_op x one == x)
+  ))
+    : pcm a
+  =
+  let pcm' : pcm' a = {
+    composable = p.unitless_p.unitless_composable;
+    op = p.unitless_p.unitless_op;
+    one = one
+    }
+  in
+  {
+    p = pcm';
+    comm = p.unitless_comm;
+    assoc = p.unitless_assoc;
+    assoc_r = p.unitless_assoc_r;
+    is_unit = is_unit;
+  }
 
-
-(** Returns the composable predicate of the PCM *)
-let composable (#a: Type u#a) (p:pcm a) (x y:a) = p.p.composable x y
-
-(** Calls the operation of the PCM *)
-let op (#a: Type u#a) (p:pcm a) (x:a) (y:a{composable p x y}) = p.p.op x y
+let to_full_pcm_with_unit
+  (#a: Type)
+  (p: unitless_pcm a)
+  : pcm (option a)
+  =
+  let composable : symrel (option a) = fun x y ->
+    match x, y with
+    | Some x, Some y -> x `p.unitless_p.unitless_composable` y
+    | _ -> True
+  in
+  let compose (x: option a) (y: option a{x `composable` y}) : option a =
+    match x, y with
+    | Some x, Some y -> Some (x `p.unitless_p.unitless_op` y)
+    | Some x, None -> Some x
+    | None, Some y -> Some y
+    | None, None -> None
+  in
+  let one = None in
+  let pcm' = {
+    composable;
+    op = compose;
+    one
+  } in
+  {
+    p = pcm';
+    comm = (fun x y ->
+      match x, y with
+      | Some x, Some y -> p.unitless_comm x y
+      | _ -> ()
+    );
+    assoc = (fun x y z ->
+      match x, y, z with
+      | Some x, Some y, Some z -> p.unitless_assoc x y z
+      | _ -> ()
+    );
+    assoc_r = (fun x y z ->
+       match x, y, z with
+      | Some x, Some y, Some z -> p.unitless_assoc_r x y z
+      | _ -> ()
+    );
+    is_unit = (fun _ -> ())
+  }
 
 (**
   Two elements [x] and [y] are compatible with respect to a PCM if their substraction
   is well-defined, e.g. if there exists an element [frame] such that [x * z = y]
 *)
-let compatible (#a: Type u#a) (pcm:pcm a) (x y:a) =
+let unitless_compatible (#a: Type u#a) (pcm:unitless_pcm a) (x y:a) =
   (exists (frame:a).
-    composable pcm x frame /\ op pcm frame x == y
+    pcm.unitless_p.unitless_composable x frame /\ pcm.unitless_p.unitless_op frame x == y
   )
-
-(** Compatibility is reflexive *)
-let compatible_refl
-  (#a: Type u#a) (pcm:pcm a) (x:a)
-    : Lemma (compatible pcm x x)
-  =
-  pcm.is_unit x;
-  pcm.comm x pcm.p.one;
-  assert (op pcm pcm.p.one x == x)
 
 (**
   Helper function to get access to the existentially quantified frame between two compatible
   elements
 *)
-let compatible_elim
-  (#a: Type u#a) (pcm:pcm a) (x y:a)
+let unitless_compatible_elim
+  (#a: Type u#a) (pcm:unitless_pcm a) (x y:a)
   (goal: Type)
-  (lemma: (frame: a{composable pcm x frame /\ op pcm frame x == y}) ->
+  (lemma: (frame: a{
+      pcm.unitless_p.unitless_composable x frame /\ pcm.unitless_p.unitless_op frame x == y
+    }) ->
     Lemma (goal)
   )
-    : Lemma (requires (compatible pcm x y)) (ensures (goal))
+    : Lemma (requires (unitless_compatible pcm x y)) (ensures (goal))
   =
   Classical.exists_elim
-    goal #a #(fun frame -> composable pcm x frame /\ op pcm frame x == y)
-    () (fun frame -> lemma frame)
-
-(**
-  To understand this predicate, one must consider the context of mutating the element [x] to
-  element [y] under the rules of [pcm]. This mutation operation is frame-preserving if:
-  1. every element that is composable with [x] is also composable with [y];
-  2. the composition of [x] with a frame is unchanged with [y]
-*)
-let frame_preserving (#a: Type u#a) (pcm:pcm a) (x y: a) =
-    (forall frame. composable pcm frame x ==> composable pcm frame y) /\
-    (forall frame.{:pattern (composable pcm frame x)} composable pcm frame x ==> op pcm frame y == y)
-
-(** The PCM [p] is exclusive to element [x] if the only element composable with [x] is [p.one] *)
-let exclusive (#a:Type u#a) (p:pcm a) (x:a) =
-  forall (frame:a). composable p x frame ==> frame == p.p.one
-
-(** A mutation from [x] to [p.one] is frame preserving if [p] is exclusive to [x] *)
-let exclusive_is_frame_preserving (#a: Type u#a) (p:pcm a) (x:a)
-  : Lemma (requires exclusive p x)
-          (ensures frame_preserving p x p.p.one)
-  = p.is_unit x;
-    p.is_unit p.p.one
+    goal #a #(fun frame ->
+      pcm.unitless_p.unitless_composable x frame /\ pcm.unitless_p.unitless_op frame x == y
+    ) () (fun frame -> lemma frame)

@@ -15,9 +15,9 @@
 *)
 
 
-module Steel.PCM.Effect.Atomic
-open Steel.PCM
-open Steel.PCM.Memory
+module Steel.Effect.Atomic
+open FStar.PCM
+open Steel.Memory
 
 val observability : Type0
 val has_eq_observability (_:unit) : Lemma (hasEq observability)
@@ -112,7 +112,7 @@ val lift_atomic_to_steelT (#a:Type)
                           (#fp:slprop)
                           (#fp':a -> slprop)
                           ($f:unit -> SteelAtomic a Set.empty o fp fp')
-  : Steel.PCM.Effect.SteelT a fp fp'
+  : Steel.Effect.SteelT a fp fp'
 
 [@@warn_on_use "as_atomic_action is a trusted primitive"]
 val as_atomic_action (#a:Type u#a)
@@ -196,13 +196,13 @@ let intro_h_exists (#a:Type) (#opened_invariants:_) (x:a) (p:a -> slprop)
 
 let intro_h_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p:a -> slprop)
   : SteelAtomic unit opened_invariants unobservable (p x) (fun _ -> h_exists p)
-  = change_slprop (p x) (h_exists p) (fun m -> Steel.PCM.Memory.intro_h_exists (Ghost.reveal x) p m)
+  = change_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists (Ghost.reveal x) p m)
 
 let h_affine (#opened_invariants:_) (p q:slprop)
   : SteelAtomic unit opened_invariants unobservable (p `star` q) (fun _ -> p)
   = change_slprop (p `star` q) p (fun m -> affine_star p q m)
 
-(** We assume this action for now. See the discussion in Steel.PCM.Heap.fst for
+(** We assume this action for now. See the discussion in Steel.Heap.fst for
     how we plan to derive this action with an enhancement to the semantics *)
 val witness_h_exists (#opened_invariants:_) (#a:Type) (#p:a -> slprop) (_:unit)
   : SteelAtomic (Ghost.erased a) opened_invariants unobservable

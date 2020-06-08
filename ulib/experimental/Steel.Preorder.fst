@@ -14,8 +14,8 @@
    limitations under the License.
 *)
 
-module Steel.PCM.Preorder
-open Steel.PCM
+module Steel.Preorder
+open FStar.PCM
 open FStar.Preorder
 
 /// This module explores the connexion between PCM and preorders. More specifically, we show here

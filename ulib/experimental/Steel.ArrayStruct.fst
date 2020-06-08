@@ -14,14 +14,13 @@
    limitations under the License.
 *)
 
-module Steel.PCM.ArrayStruct
+module Steel.ArrayStruct
 module U32 = FStar.UInt32
 module Univ = FStar.Universe
 module DepMap = FStar.DependentMap
 
 open FStar.FunctionalExtensionality
 open Steel.PCM
-open Steel.PCM.Unitless
 module SizeT = Steel.SizeT
 
 #set-options "--fuel 1 --ifuel 1"

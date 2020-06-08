@@ -14,12 +14,12 @@
    limitations under the License.
 *)
 
-module Steel.PCM.MonotonicCounter
-open Steel.PCM
-open Steel.PCM.Preorder
+module Steel.MonotonicCounter
+open FStar.PCM
+open Steel.Preorder
 open FStar.Preorder
 
-/// This small module is an experiment that demonstrate how to use [Steel.PCM.Preorder] to define
+/// This small module is an experiment that demonstrate how to use [Steel.Preorder] to define
 /// a monotonically increasing counter.
 
 

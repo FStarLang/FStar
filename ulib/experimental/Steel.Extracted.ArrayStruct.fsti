@@ -16,20 +16,17 @@
 
 module Steel.Extracted.ArrayStruct
 
-module AS = Steel.PCM.ArrayStruct
-module Mem = Steel.PCM.Memory
+module AS = Steel.ArrayStruct
 module SizeT = Steel.SizeT
 module Map = FStar.Map
 
 
 open FStar.FunctionalExtensionality
 open Steel.PCM
-module UPCM = Steel.PCM.Unitless
-module UPCMBase = Steel.PCM.Unitless.Base
 module PCMBase = Steel.PCM.Base
 
-open Steel.PCM.Effect
-open Steel.PCM.Memory
+open Steel.Effect
+open Steel.Memory
 
 /// This module defines a mechanism for extracting arraystructs compatible with separation logic
 /// into C arraystructs via Kremlin. This is a rough sketch of Proposal 5 as described here

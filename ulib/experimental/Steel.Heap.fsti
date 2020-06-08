@@ -13,9 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Steel.PCM.Heap
+module Steel.Heap
 open FStar.Ghost
-open Steel.PCM
+open FStar.PCM
 
 /// This module defines the behavior of a structured heap where each memory cell is governed by
 /// a partial commutative monoid. This PCM structure is reused for the entire heap as it is possible
@@ -314,7 +314,7 @@ val weaken (p q r:slprop) (h:heap u#a)
   This modules exposes a preorder that is respected for every well-formed update of the heap.
   The preorder represents the fact that once a reference is allocated, its type and PCM cannot
   change and the trace of values contained in the PCM respects the preorder induced by the
-  PCM (see Steel.PCM.Preorder).
+  PCM (see Steel.Preorder).
 *)
 val heap_evolves : FStar.Preorder.preorder heap
 
@@ -415,7 +415,7 @@ let witnessed_ref (#a:Type u#a)
 
 val witnessed_ref_stability (#a:Type) (#pcm:pcm a) (r:ref a pcm) (fact:a -> prop)
   : Lemma
-    (requires FStar.Preorder.stable fact (Steel.PCM.Preorder.preorder_of_pcm pcm))
+    (requires FStar.Preorder.stable fact (Steel.Preorder.preorder_of_pcm pcm))
     (ensures FStar.Preorder.stable (witnessed_ref r fact) heap_evolves)
 
 (**
@@ -431,14 +431,14 @@ val sel_action
 
 (**
   The update action needs you to prove that the mutation from [v0] to [v1] is frame-preserving
-  with respect to the individual PCM governing the reference [r]. See [Steel.PCM.frame_preserving]
+  with respect to the individual PCM governing the reference [r]. See [FStar.PCM.frame_preserving]
 *)
 val upd_action
   (#a:Type u#a)
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
-  (v1:a {Steel.PCM.frame_preserving pcm v0 v1})
+  (v1:a {FStar.PCM.frame_preserving pcm v0 v1})
   : action (pts_to r v0) unit (fun _ -> pts_to r v1)
 
 (** Deallocating a reference, by actually replacing its value by the unit of the PCM *)
@@ -447,7 +447,7 @@ val free_action
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a {exclusive pcm v0})
-  : action (pts_to r v0) unit (fun _ -> pts_to r pcm.Steel.PCM.p.one)
+  : action (pts_to r v0) unit (fun _ -> pts_to r pcm.FStar.PCM.p.one)
 
 
 (** Splitting a permission on a composite resource into two separate permissions *)

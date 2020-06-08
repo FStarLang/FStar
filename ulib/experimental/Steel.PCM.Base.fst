@@ -110,3 +110,67 @@ let unit_pcm : pcm u#a (Univ.raise_t u#0 u#a unit)  = {
   assoc_r = (fun _ _ _ -> ());
   is_unit = (fun x -> higher_unit x)
 }
+
+
+let composable_unitless_exclusive' (#a: Type u#a) (x y: a) : prop =
+  False
+
+let composable_unitless_exclusive (#a: Type u#a) : symrel a =
+  fun (x y: a) -> composable_unitless_exclusive' x y
+
+let compose_unitless_exclusive
+  (#a: Type u#a)
+  (x: a)
+  (y: a{x `composable_unitless_exclusive` y}) =
+  x
+
+let exclusive_unitless_pcm' (#a: Type u#a) : unitless_pcm' a = {
+  unitless_composable = composable_unitless_exclusive;
+  unitless_op = compose_unitless_exclusive
+}
+
+let exclusive_unitless_pcm (#a: Type u#a) : unitless_pcm a = {
+  unitless_p = exclusive_unitless_pcm';
+  unitless_comm = (fun _ _ -> ());
+  unitless_assoc = (fun _ _ _ -> ());
+  unitless_assoc_r = (fun _ _ _ -> ())
+}
+
+let composable_unitless_immutable' (#a: Type u#a) (x y: a) : prop =
+   x == y
+
+let composable_unitless_immutable (#a: Type u#a) : symrel a =
+  fun (x y: a) -> composable_unitless_immutable' x y
+
+
+let compose_unitless_immutable
+  (#a: Type u#a)
+  (x: a)
+  (y: a{x `composable_unitless_immutable` y}) : a  =
+  x
+
+let immutable_unitless_pcm' (#a: Type u#a) : unitless_pcm' a = {
+  unitless_composable = composable_unitless_immutable;
+  unitless_op = compose_unitless_immutable;
+}
+
+let immutable_unitless_pcm (#a: Type u#a) : unitless_pcm a = {
+  unitless_p = immutable_unitless_pcm';
+  unitless_comm = (fun _ _ -> ());
+  unitless_assoc = (fun _ _ _ -> ());
+  unitless_assoc_r = (fun _ _ _ -> ());
+}
+
+module Univ = FStar.Universe
+
+let unitless_unit_pcm' : unitless_pcm' u#a (Univ.raise_t u#0 u#a unit) = {
+    unitless_composable = (fun _ _ -> True);
+    unitless_op = (fun _ _ -> Univ.raise_val u#0 u#a () )
+  }
+
+let unitless_unit_pcm : unitless_pcm u#a (Univ.raise_t u#0 u#a unit)  = {
+  unitless_p = unitless_unit_pcm' u#a;
+  unitless_comm = (fun _ _  -> ());
+  unitless_assoc = (fun _ _ _ -> ());
+  unitless_assoc_r = (fun _ _ _ -> ())
+}
