@@ -38,15 +38,6 @@
       "3b7c8e9aaa85d32580b7bb4549ca128e"
     ],
     [
-      "FStar.DM4F.IntStoreFixed.read",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f8240740456a15ff10300d30888f1d10"
-    ],
-    [
       "FStar.DM4F.IntStoreFixed.refine_st",
       1,
       2,
@@ -59,7 +50,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "426517167713a279e82feb9cc6bbdaeb"
+      "ef1d5f310482e54e12b1cd5bb3b59670"
     ]
   ]
 ]

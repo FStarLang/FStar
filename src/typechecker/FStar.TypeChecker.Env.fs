@@ -141,6 +141,7 @@ and effects = {
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
   polymonadic_binds :list<(lident * lident * lident * polymonadic_bind_t)>;
+  polymonadic_subcomps :list<(lident * lident * tscheme)>;  (* m <: n *)
 }
 
 and env = {
@@ -272,7 +273,7 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     sigtab=new_sigtab();
     attrtab=new_sigtab();
     instantiate_imp=true;
-    effects={decls=[]; order=[]; joins=[]; polymonadic_binds=[]};
+    effects={decls=[]; order=[]; joins=[]; polymonadic_binds=[]; polymonadic_subcomps=[]};
     generalize=true;
     letrecs=[];
     top_level=false;
@@ -1298,8 +1299,15 @@ let push_new_effect env (ed, quals) =
   {env with effects=effects}
 
 let exists_polymonadic_bind env m n =
-  match env.effects.polymonadic_binds |> BU.find_opt (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
+  match env.effects.polymonadic_binds
+        |> BU.find_opt (fun (m1, n1, _, _) -> lid_equals m m1 && lid_equals n n1) with
   | Some (_, _, p, t) -> Some (p, t)
+  | _ -> None
+
+let exists_polymonadic_subcomp env m n =
+  match env.effects.polymonadic_subcomps
+        |> BU.find_opt (fun (m1, n1, _) -> lid_equals m m1 && lid_equals n n1) with
+  | Some (_, _, ts) -> Some ts
   | _ -> None
 
 let update_effect_lattice env src tgt st_mlift =
@@ -1439,10 +1447,27 @@ let add_polymonadic_bind env m n p ty =
   if exists_polymonadic_bind env m n |> is_some
   then raise_error (Errors.Fatal_PolymonadicBind_conflict, (err_msg true)) env.range
   else if join_opt env m n |> is_some
+       && not (lid_equals m n)
   then raise_error (Errors.Fatal_PolymonadicBind_conflict, (err_msg false)) env.range
   else { env with
          effects = ({ env.effects with polymonadic_binds = (m, n, p, ty)::env.effects.polymonadic_binds }) }
-  
+
+let add_polymonadic_subcomp env m n ts =
+  let err_msg (poly:bool) =
+    BU.format3 "Polymonadic subcomp %s <: %s conflicts with \
+      an already existing %s"
+      (Ident.string_of_lid m) (Ident.string_of_lid n)
+      (if poly then "polymonadic subcomp"
+       else "path in the effect lattice") in
+
+  if exists_polymonadic_subcomp env m n |> is_some
+  then raise_error (Errors.Fatal_PolymonadicBind_conflict, (err_msg true)) env.range
+  else if join_opt env m n |> is_some
+  then raise_error (Errors.Fatal_PolymonadicBind_conflict, (err_msg false)) env.range
+  else { env with
+         effects = ({ env.effects with
+                      polymonadic_subcomps = (m, n, ts)::env.effects.polymonadic_subcomps }) }
+
 let push_local_binding env b =
   {env with gamma=b::env.gamma}
 
@@ -1792,16 +1817,22 @@ let new_implicit_var_aux reason r env k should_check meta =
 let uvars_for_binders env (bs:S.binders) substs reason r =
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs (fst b).sort in
+
     let ctx_uvar_meta_t =
       match snd b with
       | Some (Meta (Arg_qualifier_meta_tac t)) ->
         Some (Ctx_uvar_meta_tac (FStar.Dyn.mkdyn env, t))
       | Some (Meta (Arg_qualifier_meta_attr t)) ->
         Some (Ctx_uvar_meta_attr t)
-      | _ ->
-        None
-    in
-    let t, _, g_t = new_implicit_var_aux (reason b) r env sort Allow_untyped ctx_uvar_meta_t in
+      | _ -> None in
+
+    let t, l_ctx_uvars, g_t = new_implicit_var_aux
+      (reason b) r env sort Allow_untyped ctx_uvar_meta_t in
+
+    if debug env <| Options.Other "LayeredEffectsEqns"
+    then List.iter (fun (ctx_uvar, _) -> BU.print1 "Layered Effect uvar : %s\n"
+      (Print.ctx_uvar_to_string_no_reason ctx_uvar)) l_ctx_uvars;
+
     substs@[NT (b |> fst, t)], uvars@[t], conj_guard g g_t
   ) (substs, [], trivial_guard) |> (fun (_, uvars, g) -> uvars, g)
 

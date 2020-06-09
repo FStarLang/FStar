@@ -88,11 +88,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "equation_FStar.Monotonic.Heap.only",
-        "equation_Lens.op_String_Access", "fuel_guarded_inversion_Lens.lens"
+        "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.Monotonic.Heap.only", "equation_FStar.ST.mref",
+        "equation_FStar.ST.ref", "equation_Lens.op_String_Access",
+        "fuel_guarded_inversion_Lens.lens",
+        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.sel", "typing_Lens.op_String_Access"
       ],
       0,
-      "2de724da44429bfa19c6314661ffb355"
+      "8312f9a6a04a993cb6d08220b784d417"
     ],
     [
       "Lens.op_Bar_Colon_Dot_Dot",
@@ -114,10 +119,11 @@
         "projection_inverse_Lens.Mklens_put",
         "token_correspondence_Lens.__proj__Mklens__item__get",
         "token_correspondence_Lens.__proj__Mklens__item__put",
-        "token_correspondence_Lens.op_Bar_Colon_Equals"
+        "token_correspondence_Lens.op_Bar_Colon_Equals",
+        "typing_Lens.op_String_Access"
       ],
       0,
-      "fac32fd5a0993b7693f88a270fed5a10"
+      "e740c26d627ae3e9a61b6fcdef99192a"
     ]
   ]
 ]
