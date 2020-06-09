@@ -297,6 +297,20 @@ let mem_evolves =
     m0.ctr <= m1.ctr /\
     lock_store_evolves m0.locks m1.locks
 
+let sel (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (m:hmem (ptr r)) : a =
+  let h : H.hheap (ptr r) = m.heap in
+  H.sel r h
+
+let sel_v (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:hmem (pts_to r v))
+  : v':a{ compatible pcm v v' /\
+          interp (ptr r) m /\
+          v' == sel r m }
+  =
+  let h : H.hheap (pts_to r v) = m.heap in
+  let v'  = H.sel_v r v h in
+  H.intro_h_exists (Ghost.reveal v) (pts_to r) h;
+  v'
+
 ////////////////////////////////////////////////////////////////////////////////
 // Lifting heap actions
 ////////////////////////////////////////////////////////////////////////////////

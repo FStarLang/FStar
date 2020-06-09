@@ -77,12 +77,6 @@ open FStar.Tactics.Typeclasses
 let uref (#a: Type u#a) (#pcm: pcm a) (r: ref a pcm) : slprop u#a =
   h_exists (pts_to r)
 
-(**
-  Also this helper [sel] function will allow use to retrieve the values of references witout
-  while we don't have selectors.
-*)
-val selref (#a: Type) (#pcm: pcm a) (r: ref a pcm) (h: hmem (uref r)) : GTot a
-
 (** Let us give a simple PCM for the pair *)
 let u32_pair_pcm : pcm (option u32_pair) = PCMBase.exclusive_pcm
 
@@ -116,9 +110,9 @@ val generic_index: unit -> Tot unit
 [@@ extract_update u32_pair.x]
 val update_x (r: ref (option u32_pair) u32_pair_pcm) (new_val: UInt32.t)
     : Steel unit (uref r) (fun _ -> uref r)
-    (admitted_pre (fun h0 -> if Some? (selref r h0) then True else False)) (admitted_post (fun h0 _ h1 ->
-     Some? (selref r h1) /\ Some? (selref r h0) /\
-     Some?.v (selref r h1) == { Some?.v (selref r h0) with x = new_val }
+    (admitted_pre (fun h0 -> if Some? (sel r h0) then True else False)) (admitted_post (fun h0 _ h1 ->
+     Some? (sel r h1) /\ Some? (sel r h0) /\
+     Some?.v (sel r h1) == { Some?.v (sel r h0) with x = new_val }
     ))
 
 /// What should the attribute `[@@extract_update u32_pair]` checks for the signature of
@@ -170,9 +164,9 @@ let _ : unit  = _ by (check_extract_update (`%update_x))
 val get_x (r: ref (option u32_pair) u32_pair_pcm)
   : Steel UInt32.t
   (uref r) (fun _ -> uref r)
-  (admitted_pre (fun h0 -> if Some? (selref r h0) then True else False)) (admitted_post (fun h0 v h1 ->
-    Some? (selref r h0) /\ Some? (selref r h1) /\
-    selref r h0 == selref r h1 /\ v == (Some?.v (selref r h1)).y
+  (admitted_pre (fun h0 -> if Some? (sel r h0) then True else False)) (admitted_post (fun h0 v h1 ->
+    Some? (sel r h0) /\ Some? (sel r h1) /\
+    sel r h0 == sel r h1 /\ v == (Some?.v (sel r h1)).y
   ))
 
 /// The attribute `[@@extract_get u32_pair.x]` still has to check syntactically that the
@@ -204,40 +198,64 @@ let pointer_get_sig
   (ref: Type u#0)
   (slref: ref -> slprop)
   (sel: (r:ref) -> hmem (slref r) -> GTot a)
+  (get_post: (r: ref) -> (hmem (slref r)) -> a -> (hmem (slref r)) -> GTot prop)
   =
   r:ref ->
     Steel a
       (slref r)
       (fun _ -> slref r)
-      (fun _ -> True)
-      (admitted_post (fun h0 x h1 -> sel r h0 == sel r h1 /\ sel r h0 == x))
+      (fun h0 -> True)
+      (admitted_post (fun h0 x h1 -> get_post r h0 x h1))
 
 let pointer_upd_sig
   (a: Type u#a)
   (ref: Type u#0)
   (slref: ref -> slprop)
   (sel: (r:ref) -> hmem (slref r) -> GTot a)
-  (upd_pre: (r:ref) -> hmem (slref r) -> GTot prop)
+  (upd_post: (r: ref) -> (new_val:a) -> (hmem (slref r)) -> (hmem (slref r)) -> GTot prop)
   =
   r: ref ->
   new_val: a -> (* This has to be a Low* type because this upd *)
     Steel unit
       (slref r)
       (fun _ -> slref r)
-      (admitted_pre (fun h0 -> upd_pre r h0))
-      (admitted_post (fun h0 _ h1 -> sel r h1 == new_val))
+      (fun h0 -> True)
+      (admitted_post (fun h0 _ h1 -> upd_post r new_val h0 h1))
 
 #push-options "--admit_smt_queries true" (* fails, points to subcomp_pre? *)
-class pointer (a: Type u#a) = {
-  ref:  Type u#0;
-  slref: ref -> slprop;
-  sel: (r:ref) -> hmem (slref r) -> GTot a;
-  get: pointer_get_sig a ref slref sel; (* this get should have been annotated with the attribute*)
-  upd_pre: (r:ref) -> hmem (slref r) -> GTot prop;
-  upd: pointer_upd_sig a ref slref sel upd_pre;
+class rw_pointer (a: Type u#a) = {
+  pointer_ref:  Type u#0;
+  pointer_slref: pointer_ref -> slprop;
+  pointer_sel: (r:pointer_ref) -> hmem (pointer_slref r) -> GTot a;
+  pointer_get_post:
+    (post: ((r:pointer_ref) ->
+    hmem (pointer_slref r) ->
+    x: a ->
+    hmem (pointer_slref r) ->
+    GTot prop){
+      forall r h0 x h1. post r h0 x h1 ==> (
+        pointer_sel r h0 == pointer_sel r h1 /\
+        x == pointer_sel r h0
+      )
+    });
+  pointer_get: pointer_get_sig a pointer_ref pointer_slref pointer_sel pointer_get_post;
+  (* this get should have been annotated with the attribute*)
+  pointer_upd_post:
+    (post: ((r:pointer_ref) ->
+    (new_val: a) ->
+    hmem (pointer_slref r) ->
+    hmem (pointer_slref r) ->
+    GTot prop){
+      forall r new_val h0 h1. post r new_val h0 h1 ==> (
+        pointer_sel r h1 == new_val
+      )
+    });
+  pointer_upd: pointer_upd_sig a pointer_ref pointer_slref pointer_sel pointer_upd_post;
    (* this upd should have been annotated with the attribute*)
 }
 #pop-options
+
+(**** Instantiating the pointer typeclass *)
 
 /// Lets us now instantiate this typeclass of the fields of of our u32_pair. What will be the ref
 /// type ? We have to introduce a new piece of information inside the memory reference, to allow us
@@ -300,37 +318,75 @@ let u32_pair_ref = Steel.Memory.ref u32_pair_stored u32_pair_stored_pcm
 let slu32_pair (r: u32_pair_ref) =
   h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == Full))
 
-#push-options "--admit_smt_queries false"
-instance u32_pair_pointer : pointer u32_pair = {
-  ref = u32_pair_ref;
-  slref = slu32_pair;
-  sel = (fun r h ->
-    fst (Some?.v (selref r h))
-  );
-  get = admit();
-  upd_pre = admit();
-  upd = admit();
+val slu32_pair_elim (r: u32_pair_ref) (h: hmem (slu32_pair r)) :
+  Lemma (interp (ptr r) h /\ begin let v = sel r h in
+    Some? v /\ snd (Some?.v v) == Full
+  end)
+
+let u32_pair_sel (r: u32_pair_ref) (h: hmem (slu32_pair r)) : GTot u32_pair =
+    slu32_pair_elim r h;
+    fst (Some?.v (sel r h))
+
+let u32_pair_get_post
+  (r: u32_pair_ref)
+  (h0: hmem (slu32_pair r))
+  (x: u32_pair)
+  (h1: hmem (slu32_pair r))
+  : GTot prop =
+    slu32_pair_elim r h0; slu32_pair_elim r h1;
+    sel r h0 == sel r h1 /\ u32_pair_sel r h0 == x
+
+val u32_pair_get (r: u32_pair_ref) : Steel u32_pair
+  (slu32_pair r) (fun _ -> slu32_pair r)
+  (fun _ -> True) (admitted_post (fun h0 x h1 -> u32_pair_get_post r h0 x h1))
+
+let u32_pair_upd_post
+  (r: u32_pair_ref)
+  (new_val: u32_pair)
+  (h0: hmem (slu32_pair r))
+  (h1: hmem (slu32_pair r))
+  : GTot prop =
+    slu32_pair_elim r h0; slu32_pair_elim r h1;
+    u32_pair_sel r h1 == new_val
+
+val u32_pair_post (r: u32_pair_ref) (new_val: u32_pair) : Steel unit
+  (slu32_pair r) (fun _ -> slu32_pair r)
+  (fun _ -> True) (admitted_post (fun h0 _ h1 -> u32_pair_upd_post r new_val h0 h1))
+
+instance u32_pair_pointer : rw_pointer u32_pair = {
+  pointer_ref = u32_pair_ref;
+  pointer_slref = slu32_pair;
+  pointer_sel = u32_pair_sel;
+  pointer_get_post = u32_pair_get_post;
+  pointer_get = u32_pair_get;
+  pointer_upd_post = u32_pair_upd_post;
+  pointer_upd = u32_pair_post;
 }
-#pop-options
 
 /// But we can also instantiate it for the leaves of our structure
 
-#push-options "--admit_smt_queries true"
-instance u32_pair_x_pointer : pointer UInt32.t = {
-  ref = u32_pair_ref;
-  slref = (fun r ->
-    (* h_refine (fun h -> Some? (sel r h) /\ snd (Some?.v (sel r h)) == XField *)
-    h_exists (pts_to r)
-  );
-  sel = (fun r h ->
-    assume(Some? (selref r h) /\ snd (Some?.v (selref r h)) == XField);
-    (fst (Some?.v (selref r h))).x
-  );
-  get = admit();
-  upd_pre = admit();
-  upd = admit();
+let slu32_pair_x_field (r: u32_pair_ref) =
+  h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == XField))
+
+val slu32_pair_x_field_elim (r: u32_pair_ref) (h: hmem (slu32_pair_x_field r)) :
+  Lemma (interp (ptr r) h /\ begin let v = sel r h in
+    Some? v /\ snd (Some?.v v) == XField
+  end)
+
+let u32_pair_x_field_sel (r: u32_pair_ref) (h: hmem (slu32_pair_x_field r)) : GTot UInt32.t =
+    slu32_pair_x_field_elim r h;
+    (fst (Some?.v (sel r h))).x
+
+instance u32_pair_x_pointer : rw_pointer UInt32.t = {
+  pointer_ref = u32_pair_ref;
+  pointer_slref = slu32_pair_x_field;
+  pointer_sel = u32_pair_x_field_sel;
+  pointer_get_post = admit();
+  pointer_get = admit();
+  pointer_upd_post = admit();
+  pointer_upd = admit();
 }
-#pop-options
+
 
 (* Note for explode/recombine:
   - no magic wand in explode, have to encode it with a recombinable predicate
@@ -338,6 +394,7 @@ instance u32_pair_x_pointer : pointer UInt32.t = {
   - focus encapsulates an explode with a magic wand signature
 *)
 
+(*
 (**** explode *)
 
 /// For explode, we want to decompose a arraystruct into multiple parts. This decomposition should
@@ -386,7 +443,6 @@ instance low_level_decomposition_foo : low_level foo_view  =
 /// Now that we have specified how our view should be decomposed, we can write our explode function,
 /// with an attribute.
 
-
 (*TODO: use magic wands for the signature *)
 [@@ extract_explode foo_low -> low_level_decomposition_foo -> (low_level_xy, low_level_z)]
 val explode_foo (r: ref foo_view foo_pcm)
@@ -418,6 +474,8 @@ val recombine_foo
   (fun _ -> True) (admitted_post (fun (h0 : hmem (slref r1 `star` slref r2)) r h1 ->
     sel r h1 == low_level_decomposition_foo.low_to_view (sel r1 h0, sel r2 h0)
   ))
+
+*)
 (*
 
 (*
