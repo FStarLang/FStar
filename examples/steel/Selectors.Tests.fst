@@ -256,15 +256,19 @@ assume val h_admit (#a:Type)
   (#[@@framing_implicit_sel] pre:viewables) (#[@@framing_implicit_sel] post:post_t a)
   (#ens:ens_t pre a post) (_:unit) : Steel_Sel a pre post (fun _ -> True) ens
 
+#push-options "--log_queries --fuel 1 --ifuel 1 --query_stats"
+
+#restart-solver
+
 let test0 (r:ref) : Steel_Sel int (vptr r) (fun _ -> vptr r) (fun _ -> True)
   // (fun _ _ _ -> True) =
-  // (fun h0 x h1 -> h0 (vptr r) == h1 (vptr r)) =
   (fun h0 x h1 -> x == h1 (vptr r)) =
   let x = read r in
-//  h_assert (vptr r) (fun h -> h (vptr r) == x);
-  /// assert (1 == 1);
-  ret x (fun _ -> vptr r) (fun h -> h (vptr r) == x)
+  x
+  // ret x (fun _ -> vptr r) (fun h -> h (vptr r) == x)
 
+
+(*
 let test1 (x:int) : Steel_Sel ref vemp vptr (fun _ -> True)// (fun _ _ _ -> True) =
  (fun _ r h1 -> h1 (vptr r) == x) =
   let y = alloc x in
@@ -279,3 +283,4 @@ let test8 (x:ref) : Steel_Sel int (vptr x) (fun _ -> vptr x) (fun _ -> True) (fu
     // Can mix assertions
     assert (1 == 1);
     v
+*)

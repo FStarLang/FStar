@@ -64,7 +64,7 @@ unfold
 let return_req (p:viewables) : req_t p = fun _ -> True
 
 unfold
-let return_ens (a:Type) (x:a) (p:a -> viewables) : ens_t (p x) a p = fun _ r _ -> r == x
+let return_ens (a:Type) (x:a) (p:a -> viewables) : ens_t (p x) a p = fun h0 r h1 -> r == x /\ h0 == h1
 
 let return (a:Type) (x:a) (#[@@ framing_implicit_sel] p:post_t a)
   : repr a (p x) p (return_req (p x)) (return_ens a x p)
@@ -366,7 +366,8 @@ let bind_pure_steel_ (a:Type) (b:Type)
   (wp:pure_wp a)
   // (pre:pre_t) (post:post_t b)
   (#[@@ framing_implicit_sel] pre:pre_t) (#[@@ framing_implicit_sel] post:post_t b)
-  (req:a -> req_t pre) (ens:a -> ens_t pre b post)
+  (#[@@ framing_implicit_sel] req:a -> req_t pre)
+  (#[@@ framing_implicit_sel] ens:a -> ens_t pre b post)
   (f:unit -> PURE a wp) (g:(x:a -> repr b pre post (req x) (ens x)))
 : repr b
     pre
