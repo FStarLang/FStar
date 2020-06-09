@@ -136,16 +136,22 @@ let return (a:Type) (x:a) (#[@@ framing_implicit] p:a -> slprop)
 : repr a (p x) p (return_req (p x)) (return_ens a x p)
 = fun _ -> x
 
+let can_be_split (t1 t2:pre_t) = t1 `sl_implies` t2
+
+let can_be_split_forall (#a:Type) (t1 t2:post_t a) =
+  forall (x:a). t1 x `sl_implies` t2 x
+
+
 (*
  * We allow weakening of post resource of f to pre resource of g
  *)
 unfold
 let bind_req (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:a -> pre_t)
   (req_g:(x:a -> req_t (pre_g x)))
-  (_:squash (forall (x:a). post_f x `sl_implies` pre_g x))
+  (_:squash (can_be_split_forall post_f pre_g))
 : req_t pre_f
 = fun m0 ->
   req_f m0 /\
@@ -154,10 +160,10 @@ let bind_req (#a:Type)
 unfold
 let bind_ens (#a:Type) (#b:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:a -> pre_t) (#post_g:post_t b)
   (ens_g:(x:a -> ens_t (pre_g x) b post_g))
-  (_:squash (forall (x:a). post_f x `sl_implies` pre_g x))
+  (_:squash (can_be_split_forall post_f pre_g))
 : ens_t pre_f b post_g
 = fun m0 y m2 ->
   req_f m0 /\
@@ -165,10 +171,10 @@ let bind_ens (#a:Type) (#b:Type)
 
 let bind (a:Type) (b:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
   (req_g:(x:a -> req_t (pre_g x))) (ens_g:(x:a -> ens_t (pre_g x) b post_g))
-  (#[@@ framing_implicit] p:squash (forall (x:a). post_f x `sl_implies` pre_g x))
+  (#[@@ framing_implicit] p:squash (can_be_split_forall post_f pre_g))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) post_g (req_g x) (ens_g x)))
 : repr b
@@ -194,19 +200,22 @@ unfold
 let subcomp_pre (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
-  (_:squash (pre_g `sl_implies` pre_f))
-  (_:squash (forall (x:a). post_f x `sl_implies` post_g x))
+  (_:squash (can_be_split pre_g pre_f))
+  (_:squash (can_be_split_forall post_f post_g))
 : pure_pre
 = (forall (m0:hmem pre_g). req_g m0 ==> req_f m0) /\
   (forall (m0:hmem pre_g) (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 ==> ens_g m0 x m1)
+
+let delay (p:Type0) : Type0 = p
+let annot_sub_post (p:Type0) : Type0 = p
 
 let subcomp (a:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#[@@ framing_implicit] pre_g:pre_t) (#[@@ framing_implicit] post_g:post_t a)
   (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
-  (#[@@ framing_implicit] p1:squash (pre_g `sl_implies` pre_f))
-  (#[@@ framing_implicit] p2:squash (forall (x:a). post_f x `sl_implies` post_g x))
+  (#[@@ framing_implicit] p1:squash (delay (can_be_split pre_g pre_f)))
+  (#[@@ framing_implicit] p2:squash (annot_sub_post (can_be_split_forall post_f post_g)))
   (f:repr a pre_f post_f req_f ens_f)
 : Pure (repr a pre_g post_g req_g ens_g)
   (requires subcomp_pre req_f ens_f req_g ens_g p1 p2)
@@ -275,11 +284,11 @@ let frame_aux (#a:Type)
 unfold
 let bind_steel_steel_req (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:a -> pre_t)
   (req_g:(x:a -> req_t (pre_g x)))
   (frame_f:slprop) (frame_g:slprop)
-  (_:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` (pre_g x `star` frame_g)))
+  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g)))
 : req_t (pre_f `star` frame_f)
 = fun m0 ->
   req_f m0 /\
@@ -288,11 +297,11 @@ let bind_steel_steel_req (#a:Type)
 unfold
 let bind_steel_steel_ens (#a:Type) (#b:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:a -> pre_t) (#post_g:post_t b)
   (ens_g:(x:a -> ens_t (pre_g x) b post_g))
   (frame_f:slprop) (frame_g:slprop)
-  (_:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` (pre_g x `star` frame_g)))
+  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g)))
 : ens_t (pre_f `star` frame_f) b (fun y -> post_g y `star` frame_g)
 = fun m0 y m2 ->
   req_f m0 /\
@@ -300,11 +309,12 @@ let bind_steel_steel_ens (#a:Type) (#b:Type)
 
 let bind_steel_steel (a:Type) (b:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
   (req_g:(x:a -> req_t (pre_g x))) (ens_g:(x:a -> ens_t (pre_g x) b post_g))
   (#[@@ framing_implicit] frame_f:slprop) (#[@@ framing_implicit] frame_g:slprop)
-  (#[@@ framing_implicit] p:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` (pre_g x `star` frame_g)))
+  (#[@@ framing_implicit] p:squash (can_be_split_forall
+    (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g)))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) post_g (req_g x) (ens_g x)))
 : repr b
@@ -331,11 +341,11 @@ polymonadic_bind (Steel, Steel) |> SteelF = bind_steel_steel
 unfold
 let bind_steel_steelf_req (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:a -> pre_t)
   (req_g:(x:a -> req_t (pre_g x)))
   (frame_f:slprop)
-  (_:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` pre_g x))
+  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
 : req_t (pre_f `star` frame_f)
 = fun m0 ->
   req_f m0 /\
@@ -344,11 +354,11 @@ let bind_steel_steelf_req (#a:Type)
 unfold
 let bind_steel_steelf_ens (#a:Type) (#b:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:a -> pre_t) (#post_g:post_t b)
   (ens_g:(x:a -> ens_t (pre_g x) b post_g))
   (frame_f:slprop)
-  (_:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` pre_g x))
+  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
 : ens_t (pre_f `star` frame_f) b post_g
 = fun m0 y m2 ->
   req_f m0 /\
@@ -356,11 +366,11 @@ let bind_steel_steelf_ens (#a:Type) (#b:Type)
 
 let bind_steel_steelf (a:Type) (b:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
   (req_g:(x:a -> req_t (pre_g x))) (ens_g:(x:a -> ens_t (pre_g x) b post_g))
   (#[@@ framing_implicit] frame_f:slprop)
-  (#[@@ framing_implicit] p:squash (forall (x:a). (post_f x `star` frame_f) `sl_implies` pre_g x))
+  (#[@@ framing_implicit] p:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) post_g (req_g x) (ens_g x)))
 : repr b
@@ -383,11 +393,11 @@ polymonadic_bind (Steel, SteelF) |> SteelF = bind_steel_steelf
 unfold
 let bind_steelf_steel_req (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:a -> pre_t)
   (req_g:(x:a -> req_t (pre_g x)))
   (frame_g:slprop)
-  (_:squash (forall (x:a). post_f x `sl_implies` (pre_g x `star` frame_g)))
+  (_:squash (can_be_split_forall post_f (fun x -> pre_g x `star` frame_g)))
 : req_t pre_f
 = fun m0 ->
   req_f m0 /\
@@ -396,11 +406,11 @@ let bind_steelf_steel_req (#a:Type)
 unfold
 let bind_steelf_steel_ens (#a:Type) (#b:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:a -> pre_t) (#post_g:post_t b)
   (ens_g:(x:a -> ens_t (pre_g x) b post_g))
   (frame_g:slprop)
-  (_:squash (forall (x:a). post_f x `sl_implies` (pre_g x `star` frame_g)))
+  (_:squash (can_be_split_forall post_f (fun x -> pre_g x `star` frame_g)))
 : ens_t pre_f b (fun y -> post_g y `star` frame_g)
 = fun m0 y m2 ->
   req_f m0 /\
@@ -408,11 +418,11 @@ let bind_steelf_steel_ens (#a:Type) (#b:Type)
 
 let bind_steelf_steel (a:Type) (b:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)  
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
   (req_g:(x:a -> req_t (pre_g x))) (ens_g:(x:a -> ens_t (pre_g x) b post_g))
   (#[@@ framing_implicit] frame_g:slprop)
-  (#[@@ framing_implicit] p:squash (forall (x:a). post_f x `sl_implies` (pre_g x `star` frame_g)))
+  (#[@@ framing_implicit] p:squash (can_be_split_forall post_f (fun x -> pre_g x `star` frame_g)))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) post_g (req_g x) (ens_g x)))
 : repr b
@@ -527,3 +537,177 @@ effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
 // let steel_ret (#a:Type) (#[@@ framing_implicit] p:a -> slprop u#1) (x:a)
 // : SteelF a (p x) p (fun _ -> True) (fun _ r _ -> r == x)
 // = SteelF?.reflect (fun _ -> x)
+
+/// Tactic for inferring frame automatically
+
+
+let equiv_sl_implies (p1 p2:slprop) : Lemma
+  (requires p1 `equiv` p2)
+  (ensures p1 `sl_implies` p2)
+  = admit()
+
+let lemma_sl_implies_refl (p:slprop) : Lemma
+  (ensures p `sl_implies` p)
+  = equiv_sl_implies p p
+
+let emp_unit_variant (#a:Type) (p:a -> slprop) : Lemma
+   (ensures can_be_split_forall (fun x -> p x `star` emp) p)
+  = let aux (x:a) : Lemma
+      ((fun x -> p x `star` emp) x `sl_implies` p x)
+      = Classical.forall_intro emp_unit;
+        equiv_sl_implies ((fun x -> p x `star` emp) x) (p x)
+    in Classical.forall_intro aux
+
+open FStar.Tactics
+
+let canon' (_:unit) : Tac unit =
+  or_else (fun _ -> Steel.Memory.Tactics.canon())
+          (fun _ -> fail "Could not prove slprop equivalence")
+
+let rec slterm_nbr_uvars (t:term) : Tac int =
+  match inspect t with
+  | Tv_Uvar _ _ -> 1
+  | Tv_App _ _ ->
+    let hd, args = collect_app t in
+    slterm_nbr_uvars hd + fold_left (fun n (x, _) -> n + slterm_nbr_uvars x) 0 args
+  | Tv_Abs _ t -> slterm_nbr_uvars t
+  // TODO: Probably need to check that...
+  | _ -> 0
+
+let solve_can_be_split (args:list argv) : Tac bool =
+  match args with
+  | [(t1, _); (t2, _)] ->
+      let lnbr = slterm_nbr_uvars t1 in
+      let rnbr = slterm_nbr_uvars t2 in
+      if lnbr + rnbr <= 1 then (
+        let open FStar.Algebra.CommMonoid.Equiv in
+        focus (fun _ -> norm [delta_only [`%can_be_split]];
+                     // If we have exactly the same term on both side,
+                     // equiv_sl_implies would solve the goal immediately
+                     or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
+                      (fun _ -> apply_lemma (`equiv_sl_implies);
+                       norm [delta_only [
+                              `%__proj__CM__item__unit;
+                              `%__proj__CM__item__mult;
+                              `%Steel.Memory.Tactics.rm;
+                              `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                              `%fst; `%snd];
+                            primops; iota; zeta];
+                       canon' ()));
+        true
+      ) else false
+
+  | _ -> false // Ill-formed can_be_split, should not happen
+
+let solve_can_be_split_forall (args:list argv) : Tac bool =
+  match args with
+  | [_; (t1, _); (t2, _)] ->
+      let lnbr = slterm_nbr_uvars t1 in
+      let rnbr = slterm_nbr_uvars t2 in
+      if lnbr + rnbr <= 1 then (
+        let open FStar.Algebra.CommMonoid.Equiv in
+        focus (fun _ -> ignore (forall_intro());
+                     norm [delta_only [`%can_be_split_forall]];
+                     or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
+                       (fun _ ->
+                       apply_lemma (`equiv_sl_implies);
+                       or_else (fun _ ->  flip()) (fun _ -> ());
+                       norm [delta_only [
+                              `%__proj__CM__item__unit;
+                              `%__proj__CM__item__mult;
+                              `%Steel.Memory.Tactics.rm;
+                              `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                              `%fst; `%snd];
+                            primops; iota; zeta];
+                       canon' ()));
+        true
+      ) else false
+
+  | _ -> false // Ill-formed can_be_split, should not happen
+
+let rec solve_subcomp_post (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let f = term_as_formula' (goal_type hd) in
+    match f with
+    | App _ t ->
+        let hd, args = collect_app t in
+        if term_eq hd (quote annot_sub_post) then (focus (fun _ ->
+          norm [delta_only [`%annot_sub_post]];
+          // Assuming for now that the body will always be Steel
+          // instead of SteelF, as we'll lift pure to Steel by
+          // a polymonadic bind with Steel alloc/read/...
+          // That means the postcondition of return will be ?u_ret * ?u_emp
+          apply_lemma (`emp_unit_variant)
+          ))
+        else (later());
+        solve_subcomp_post tl
+    | _ -> later(); solve_subcomp_post tl
+
+
+let rec solve_triv_eqs (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let f = term_as_formula' (goal_type hd) in
+    match f with
+    | Comp (Eq _) l r ->
+      let lnbr = slterm_nbr_uvars l in
+      let rnbr = slterm_nbr_uvars r in
+      // Only solve equality if there is only one uvar
+      if lnbr = 0 || rnbr = 0 then trefl () else later();
+      solve_triv_eqs tl
+    | _ -> later(); solve_triv_eqs tl
+
+// Returns true if the goal has been solved, false if it should be delayed
+let solve_or_delay (g:goal) : Tac bool =
+  let f = term_as_formula' (goal_type g) in
+  match f with
+  | App _ t ->
+      let hd, args = collect_app t in
+      if term_eq hd (quote delay) then false
+      else if term_eq hd (quote can_be_split) then solve_can_be_split args
+      else if term_eq hd (quote can_be_split_forall) then solve_can_be_split_forall args
+      else false
+  | Comp (Eq _) l r ->
+    let lnbr = slterm_nbr_uvars l in
+    let rnbr = slterm_nbr_uvars r in
+    // Only solve equality if one of the terms is completely determined
+    if lnbr = 0 || rnbr = 0 then (trefl (); true) else false
+  | _ -> false
+
+
+// Returns true if it successfully solved a goal
+// If it returns false, it means it didn't find any solvable goal,
+// which should mean only delayed goals are left
+let rec pick_next (l:list goal) : Tac bool =
+  match l with
+  | [] -> false
+  | a::q -> if solve_or_delay a then true else (later (); pick_next q)
+
+let rec resolve_tac () : Tac unit =
+  match goals () with
+  | [] -> ()
+  | g ->
+    if pick_next g then resolve_tac ()
+    else
+      (norm [delta_only [`%delay]];
+      resolve_tac ())
+
+let rec filter_goals (l:list goal) : Tac (list goal) =
+  match l with
+  | [] -> []
+  | hd::tl ->
+      match term_as_formula' (goal_type hd) with
+      | Comp (Eq _) _ _ -> hd::filter_goals tl
+      | App t _ -> if term_eq t (`squash) then hd::filter_goals tl else filter_goals tl
+      | _ -> filter_goals tl
+
+[@@ resolve_implicits; framing_implicit]
+let init_resolve_tac () : Tac unit =
+  let gs = filter_goals (goals()) in
+  set_goals gs;
+  solve_triv_eqs (goals ());
+  solve_subcomp_post (goals ());
+  resolve_tac ()
