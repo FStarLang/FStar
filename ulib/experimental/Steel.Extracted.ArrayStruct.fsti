@@ -438,6 +438,27 @@ val explose_u32_pair_into_x_y (r: u32_pair_ref)
     y = u32_pair_y_field_sel r2 h1;
   }))
 
+/// How to implement this function? We should not have to allocate a new ref, instead we're going
+/// to use the same address in memory but in /two different memories/, that we will later join
+/// together to produce the `star` in the postressource. Each one of these memory will contain
+/// a different value at the same address; memoryX will contain the value of field X along with
+/// FieldX path and memoryY will contain the value of the field Y along with FieldY path.
+/// These two memory are composable thanks to the PCM that we've defined for `u32_pair_stored`.
+
+[@@ extract_recombine u32_pair_x_field_pointer -> u32_pair_y_field_pointer -> u32_pair_pointer]
+val recombine_u32_pair_from_x_y
+  (r1: u32_pair_x_field_ref)
+  (r2: u32_pair_y_field_ref)
+  : Steel (u32_pair_ref)
+  (slu32_pair_x_field r1 `star` slu32_pair_y_field r2)
+  (fun r -> slu32_pair r)
+  (fun _ -> True)
+  (admitted_post (fun (h0: hmem (slu32_pair_x_field r1 `star` slu32_pair_y_field r2)) r h1 ->
+    u32_pair_sel r h1 == {
+    x = u32_pair_x_field_sel r1 h0;
+    y = u32_pair_y_field_sel r2 h0;
+  }))
+
 (* Note for explode/recombine:
   - no magic wand in explode, have to encode it with a recombinable predicate
   - no ties to parent object after explode, recombine stitches back views together like array split
