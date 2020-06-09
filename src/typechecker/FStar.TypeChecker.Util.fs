@@ -2712,11 +2712,25 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
             ()
           | Sig_fail _ ->
             () (* just ignore it, the member ses have the attribute too *)
+            
+          | Sig_let((false, [lb]), _) ->
+            let _, body, _ = U.abs_formals lb.lbdef in
+            if not (N.non_info_norm env body)
+            then raise_error
+                   (Errors.Fatal_QulifierListNotPermitted,
+                    BU.format1
+                    "Illegal attribute: \
+                     the `erasable` attribute is only permitted on inductive type definitions \
+                     and abbreviations for non-informative types. %s is considered informative."
+                     (Print.term_to_string body))
+                    body.pos
+          
           | _ ->
             raise_error
               (Errors.Fatal_QulifierListNotPermitted,
                "Illegal attribute: \
-                the `erasable` attribute is only permitted on inductive type definitions")
+                the `erasable` attribute is only permitted on inductive type definitions \
+                and abbreviations for non-informative types")
                r
         end
     in
