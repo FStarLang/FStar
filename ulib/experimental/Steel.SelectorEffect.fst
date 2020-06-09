@@ -75,10 +75,6 @@ let can_be_split (t1 t2:pre_t) = t1 `sl_implies` t2
 let can_be_split_forall (#a:Type) (t1 t2:post_t a) =
   forall (x:a). t1 x `sl_implies` t2 x
 
-
-
-// Use equalities for now on post_f/pre_g
-// TODO: Should be a can_be_split_into_forall
 unfold
 let bind_req (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a)

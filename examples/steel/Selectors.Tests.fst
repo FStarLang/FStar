@@ -242,25 +242,34 @@ assume val alloc (x:int) : Steel_Sel ref vemp (fun r -> vptr r)
 assume val free (r:ref) : Steel_Sel unit (vptr r) (fun _ -> vemp) (fun _ -> True) (fun _ _ _ -> True)
 assume val read (r:ref) : Steel_Sel int (vptr r) (fun _ -> vptr r)
   (fun _ -> True)
-  (fun h0 x h1 -> h0 == h1 /\ x == h1 (vptr r))
+  (fun h0 x h1 -> h0 (vptr r) == h1 (vptr r) /\ x == h1 (vptr r))
 
-assume val ret (#a:Type) (x:a) (p:a -> viewables)
-  : Steel_Sel a (p x) p (fun _ -> True) (fun _ _ _ -> True)
+assume val ret (#a:Type) (x:a) (p:a -> viewables) (pre:selector (p x) -> GTot prop)
+  : Steel_Sel a (p x) p (fun h0 -> pre h0) (fun h0 v h1 -> x == v /\ h0 == h1 /\ pre h1)
 
 assume val h_assert (pre:viewables) (req:req_t pre) :
   Steel_Sel unit pre (fun _ -> pre)
-    (fun _ -> True) // wrong
+    (fun h -> req h)
     (fun _ _ h1 -> req h1)
 
 assume val h_admit (#a:Type)
   (#[@@framing_implicit_sel] pre:viewables) (#[@@framing_implicit_sel] post:post_t a)
   (#ens:ens_t pre a post) (_:unit) : Steel_Sel a pre post (fun _ -> True) ens
 
-let test1 (x:int) : Steel_Sel ref vemp vptr (fun _ -> True) (fun _ _ _ -> True) =
-  //(fun _ r h1 -> h1 (vptr r) == x) =
+let test0 (r:ref) : Steel_Sel int (vptr r) (fun _ -> vptr r) (fun _ -> True)
+  // (fun _ _ _ -> True) =
+  // (fun h0 x h1 -> h0 (vptr r) == h1 (vptr r)) =
+  (fun h0 x h1 -> x == h1 (vptr r)) =
+  let x = read r in
+//  h_assert (vptr r) (fun h -> h (vptr r) == x);
+  /// assert (1 == 1);
+  ret x (fun _ -> vptr r) (fun h -> h (vptr r) == x)
+
+let test1 (x:int) : Steel_Sel ref vemp vptr (fun _ -> True)// (fun _ _ _ -> True) =
+ (fun _ r h1 -> h1 (vptr r) == x) =
   let y = alloc x in
-  h_assert (vptr y) (fun _ -> True);
-  ret y vptr
+//  h_assert (vptr y) (fun _ -> True);
+  ret y vptr (fun h -> h (vptr y) == x)
 
 let test8 (x:ref) : Steel_Sel int (vptr x) (fun _ -> vptr x) (fun _ -> True) (fun _ _ _ -> True)
   = let v = read x in
