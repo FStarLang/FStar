@@ -197,8 +197,7 @@ let pointer_get_sig
   (a: Type u#a)
   (ref: Type u#0)
   (slref: ref -> slprop)
-  (sel: (r:ref) -> hmem (slref r) -> GTot a)
-  (get_post: (r: ref) -> (hmem (slref r)) -> a -> (hmem (slref r)) -> GTot prop)
+  ($get_post: (r: ref) -> (hmem (slref r)) -> a -> (hmem (slref r)) -> GTot prop)
   =
   r:ref ->
     Steel a
@@ -211,8 +210,7 @@ let pointer_upd_sig
   (a: Type u#a)
   (ref: Type u#0)
   (slref: ref -> slprop)
-  (sel: (r:ref) -> hmem (slref r) -> GTot a)
-  (upd_post: (r: ref) -> (new_val:a) -> (hmem (slref r)) -> (hmem (slref r)) -> GTot prop)
+  ($upd_post: (r: ref) -> (new_val:a) -> (hmem (slref r)) -> (hmem (slref r)) -> GTot prop)
   =
   r: ref ->
   new_val: a -> (* This has to be a Low* type because this upd *)
@@ -222,7 +220,7 @@ let pointer_upd_sig
       (fun h0 -> True)
       (admitted_post (fun h0 _ h1 -> upd_post r new_val h0 h1))
 
-#push-options "--admit_smt_queries true" (* fails, points to subcomp_pre? *)
+#push-options "--admit_smt_queries true" (* fails, points to subcomp_pre in Steel.Effect.fsti? *)
 class rw_pointer (a: Type u#a) = {
   pointer_ref:  Type u#0;
   pointer_slref: pointer_ref -> slprop;
@@ -238,7 +236,7 @@ class rw_pointer (a: Type u#a) = {
         x == pointer_sel r h0
       )
     });
-  pointer_get: pointer_get_sig a pointer_ref pointer_slref pointer_sel pointer_get_post;
+  pointer_get: pointer_get_sig a pointer_ref pointer_slref pointer_get_post;
   (* this get should have been annotated with the attribute*)
   pointer_upd_post:
     (post: ((r:pointer_ref) ->
@@ -250,7 +248,7 @@ class rw_pointer (a: Type u#a) = {
         pointer_sel r h1 == new_val
       )
     });
-  pointer_upd: pointer_upd_sig a pointer_ref pointer_slref pointer_sel pointer_upd_post;
+  pointer_upd: pointer_upd_sig a pointer_ref pointer_slref pointer_upd_post;
    (* this upd should have been annotated with the attribute*)
 }
 #pop-options
@@ -283,6 +281,9 @@ let u32_pair_composable : symrel (u32_pair_stored) = fun a b -> match a, b with
   | _ -> True
 #pop-options
 
+/// The compose operation "recombines" the values owned in different memories. Even though each memory
+/// contain a full pair, only the part of the pair designated by the path matters.
+
 let u32_pair_compose
   (a: u32_pair_stored)
   (b: u32_pair_stored{a `u32_pair_composable` b})
@@ -313,7 +314,7 @@ let u32_pair_stored_pcm : pcm u32_pair_stored = {
 
 let u32_pair_ref = Steel.Memory.ref u32_pair_stored u32_pair_stored_pcm
 
-/// We can now instantiate the pointer typeclass!
+/// We can now instantiate the pointer typeclass! Let's begin by a pointer to
 
 let slu32_pair (r: u32_pair_ref) =
   h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == Full))
@@ -365,20 +366,26 @@ instance u32_pair_pointer : rw_pointer u32_pair = {
 
 /// But we can also instantiate it for the leaves of our structure
 
-let slu32_pair_x_field (r: u32_pair_ref) =
+let u32_pair_x_field_ref = u32_pair_ref
+
+let slu32_pair_x_field (r: u32_pair_x_field_ref) =
   h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == XField))
 
-val slu32_pair_x_field_elim (r: u32_pair_ref) (h: hmem (slu32_pair_x_field r)) :
+val slu32_pair_x_field_elim (r: u32_pair_x_field_ref) (h: hmem (slu32_pair_x_field r)) :
   Lemma (interp (ptr r) h /\ begin let v = sel r h in
     Some? v /\ snd (Some?.v v) == XField
   end)
 
-let u32_pair_x_field_sel (r: u32_pair_ref) (h: hmem (slu32_pair_x_field r)) : GTot UInt32.t =
-    slu32_pair_x_field_elim r h;
-    (fst (Some?.v (sel r h))).x
+let u32_pair_x_field_sel
+  (r: u32_pair_x_field_ref)
+  (h: hmem (slu32_pair_x_field r))
+    : GTot UInt32.t
+  =
+  slu32_pair_x_field_elim r h;
+  (fst (Some?.v (sel r h))).x
 
-instance u32_pair_x_pointer : rw_pointer UInt32.t = {
-  pointer_ref = u32_pair_ref;
+instance u32_pair_x_field_pointer : rw_pointer UInt32.t = {
+  pointer_ref = u32_pair_x_field_ref;
   pointer_slref = slu32_pair_x_field;
   pointer_sel = u32_pair_x_field_sel;
   pointer_get_post = admit();
@@ -387,6 +394,49 @@ instance u32_pair_x_pointer : rw_pointer UInt32.t = {
   pointer_upd = admit();
 }
 
+let u32_pair_y_field_ref = u32_pair_ref
+
+let slu32_pair_y_field (r: u32_pair_y_field_ref) =
+  h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == YField))
+
+val slu32_pair_y_field_elim (r: u32_pair_y_field_ref) (h: hmem (slu32_pair_y_field r)) :
+  Lemma (interp (ptr r) h /\ begin let v = sel r h in
+    Some? v /\ snd (Some?.v v) == YField
+  end)
+
+let u32_pair_y_field_sel
+  (r: u32_pair_y_field_ref)
+  (h: hmem (slu32_pair_y_field r))
+    : GTot UInt32.t
+  =
+  slu32_pair_y_field_elim r h;
+  (fst (Some?.v (sel r h))).y
+
+instance u32_pair_y_field_pointer : rw_pointer UInt32.t = {
+  pointer_ref = u32_pair_y_field_ref;
+  pointer_slref = slu32_pair_y_field;
+  pointer_sel = u32_pair_y_field_sel;
+  pointer_get_post = admit();
+  pointer_get = admit();
+  pointer_upd_post = admit();
+  pointer_upd = admit();
+}
+
+(**** explode/recombine *)
+
+/// The explode/recombine functions are specialized to each struct, and to each pattern of struct
+/// explosion that is allowed by the PCM. We'll show here an example for our pair of integers.
+
+[@@ extract_explode u32_pair_pointer -> (u32_pair_x_field_pointer, u32_pair_y_field_pointer)]
+val explose_u32_pair_into_x_y (r: u32_pair_ref)
+  : Steel (u32_pair_x_field_ref & u32_pair_y_field_ref)
+  (slu32_pair r)
+  (fun (r1, r2) -> slu32_pair_x_field r1 `star` slu32_pair_y_field r2)
+  (fun _ -> True)
+  (admitted_post (fun h0 (r1, r2) h1 -> u32_pair_sel r h0 == {
+    x = u32_pair_x_field_sel r1 h1;
+    y = u32_pair_y_field_sel r2 h1;
+  }))
 
 (* Note for explode/recombine:
   - no magic wand in explode, have to encode it with a recombinable predicate
