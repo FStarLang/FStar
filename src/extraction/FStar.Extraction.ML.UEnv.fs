@@ -252,13 +252,18 @@ let is_fv_type g fv =
     g.tydefs |> BU.for_some (fun tydef -> fv_eq fv tydef.tydef_fv)
 
 (** Find the ML counterpart of an F* record field identifier
-    - Record field names are pairs of a fully qualified *type* name
+
+    - F* Record field names are pairs of a fully qualified *type* name
       and the short field name
 
     - In ML, the record field name is unique for a given namespace
-      (i.e., unique per F* module) *)
+      (i.e., unique per F* module)
+
+    In extend_record_field_name we associate a module-level unique ML
+    fieldname with the [(type_name, fn)] pair.
+ *)
 let lookup_record_field_name g (type_name, fn) =
-    let key = Ident.lid_of_ids (ns_of_lid type_name @ [fn]) in
+    let key = Ident.lid_of_ids (ids_of_lid type_name @ [fn]) in
     match BU.psmap_try_find g.mlpath_of_fieldname (string_of_lid key) with
     | None -> failwith ("Field name not found: " ^ string_of_lid key)
     | Some mlp -> mlp
@@ -539,16 +544,29 @@ let extend_with_action_name g (ed:Syntax.eff_decl) (a:Syntax.action) ts =
 (** Record field names are in a separate namespace in ML and cannot
     clash with type names, top-level names, local identifiers etc.
 
-    So, we maintain then in a separate map *)
+    So, we maintain then in a separate map.
+
+    We generate a unique field name associated with just the
+    [fn]---the generated [name] is a unique field name for the current
+    module.
+
+    However, we associate this generated name with the [(type_name,
+    fn)] pair, and retrieve the unique ML fieldname [name] using this
+    pair as a key.
+
+    This is important to avoid name clashes among record in the same
+    module whose fields have overlapping names. See Bug 2058 and
+    tests/Bug2058.fst
+ *)
 let extend_record_field_name g (type_name, fn) =
-    let key = Ident.lid_of_ids (ns_of_lid type_name @ [fn]) in
+    let key = Ident.lid_of_ids (ids_of_lid type_name @ [fn]) in
     let name, fieldname_map = find_uniq g.env_fieldname_map (string_of_id fn) false in
-    let ns = mlns_of_lid key in
+    let ns = mlns_of_lid type_name in
     let mlp = ns, name in
     let g = { g with env_fieldname_map = fieldname_map;
                      mlpath_of_fieldname = BU.psmap_add g.mlpath_of_fieldname (string_of_lid key) mlp }
     in
-    mlp, g
+    name, g
 
 
 (** Module names are in a different namespace in OCaml
