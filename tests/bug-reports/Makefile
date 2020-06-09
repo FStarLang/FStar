@@ -150,6 +150,10 @@ Bug310.extract:
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug310 --codegen OCaml Bug310.fst
 	diff -u --strip-trailing-cr Bug310.ml Bug310.ml.expected
 
+Bug2058.extract:
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug2058 --codegen OCaml Bug2058.fst
+	diff -u --strip-trailing-cr Bug2058.ml Bug2058.ml.expected
+
 %.extract: %.fst
 	mkdir -p out_$*
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out_$* --codegen OCaml $^
