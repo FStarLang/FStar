@@ -84,12 +84,15 @@ let repr_impl (a:Type u#x) (r_in: parser) (r_out:a -> parser) (b: B.buffer U8.t)
     ))
 
 (* FIXME: WHY WHY WHY can't I index `repr` with the buffer when I define the WRITE effect below? *)
-assume val buf: B.buffer U8.t
+// assume val buf: B.buffer U8.t
+
+type u8 : Type0 = U8.t
 
 inline_for_extraction
 let repr
   (a: Type u#x)
   (r_in: parser) (r_out:a -> parser)
+  (buf:B.buffer u8)
 : Tot (Type u#x)
 = dtuple2 (repr_spec a r_in r_out) (repr_impl a r_in r_out buf)
 
@@ -101,14 +104,14 @@ let return_spec
 inline_for_extraction
 let return_impl
   (a:Type) (x:a) (r: a -> parser)
-  (b: B.buffer U8.t)
+  (b: B.buffer u8)
 : Tot (repr_impl a (r x) r b (return_spec a x r))
 = fun pos1 -> (x, pos1)
 
 inline_for_extraction
 let returnc
-  (a:Type) (x:a) (r: a -> parser)
-: Tot (repr a (r x) r)
+  (a:Type) (x:a) (r: a -> parser) (buf:B.buffer u8)
+: Tot (repr a (r x) r buf)
 = (| return_spec a x r, return_impl a x r buf |)
 
 let bind_spec (a:Type) (b:Type)
@@ -146,7 +149,7 @@ let bind_impl
   (r_out_g:b -> parser)
   (f:repr_spec a r_in_f r_out_f)
   (g:(x:a -> repr_spec b (r_out_f x) r_out_g))
-  (buf: B.buffer U8.t)
+  (buf: B.buffer u8)
   (f' : repr_impl a r_in_f r_out_f buf f)
   (g' : (x: a -> repr_impl b (r_out_f x) r_out_g buf (g x)))
 : Tot (repr_impl b r_in_f r_out_g buf (bind_spec a b r_in_f r_out_f r_out_g f g))
@@ -157,30 +160,30 @@ let bind_impl
 inline_for_extraction
 let bind (a:Type) (b:Type)
   (r_in_f: parser) (r_out_f:a -> parser)
-  (r_out_g:b -> parser)
-  (f:repr a r_in_f r_out_f) (g:(x:a -> repr b (r_out_f x) r_out_g))
-: Tot (repr b r_in_f r_out_g)
+  (r_out_g:b -> parser) (buf:B.buffer u8)
+  (f:repr a r_in_f r_out_f buf) (g:(x:a -> repr b (r_out_f x) r_out_g buf))
+: Tot (repr b r_in_f r_out_g buf)
 = (| bind_spec a b r_in_f r_out_f r_out_g (dfst f) (fun x -> dfst (g x)), bind_impl a b r_in_f r_out_f r_out_g (dfst f) (fun x -> dfst (g x)) buf (dsnd f) (fun x -> dsnd (g x)) |)
 
 inline_for_extraction
 let subcomp (a:Type)
-  (r_in:parser) (r_out:a -> parser)
-  (f:repr a r_in r_out)
-: (repr a r_in r_out)
+  (r_in:parser) (r_out:a -> parser) (buf:B.buffer u8)
+  (f:repr a r_in r_out buf)
+: (repr a r_in r_out buf)
 = f
 
 let if_then_else (a:Type)
-  (r_in:parser) (r_out:a -> parser)
-  (f:repr a r_in r_out) (g:repr a r_in r_out)
+  (r_in:parser) (r_out:a -> parser) (buf:B.buffer u8)
+  (f:repr a r_in r_out buf) (g:repr a r_in r_out buf)
   (p:Type0)
 : Type
-= repr a r_in r_out
+= repr a r_in r_out buf
 
 #push-options "--print_universes"
 
 reifiable reflectable
 layered_effect {
-  WRITE : a:Type -> parser -> (a -> parser) -> Effect
+  WRITE : a:Type -> parser -> (a -> parser) -> B.buffer u8 -> Effect
   with
   repr = repr;
   return = returnc;
