@@ -189,33 +189,34 @@ layered_effect {
   if_then_else = if_then_else
 }
 
+let wp_true (a: Type) (wp: pure_wp a) : GTot Type0 = wp (fun _ -> True)
 
+let lift_pure_rst_spec
+  (a:Type) (wp:pure_wp a { wp_true a wp }) (r:parser) (f:unit -> PURE a wp)
+: Tot (repr_spec a r (fun _ -> r))
+= fun v -> (| f (), v |)
 
-(*
-(FStar.Tactics.synth_by_tactic (fun _ -> FStar.Tactics.fail "abc"));
+let lift_pure_rst_impl
+  (a:Type) (wp:pure_wp a { wp_true a wp }) (r:parser) (f:unit -> PURE a wp)
+: Tot (repr_impl a r (fun _ -> r) buf (lift_pure_rst_spec a wp r f))
+= fun pos ->
+    FStar.Monotonic.Pure.wp_monotonic_pure ();
+    (f (), pos)
 
-assume
-val emp' : parser' unit
+let lift_pure_rst (a:Type) (wp:pure_wp a) (r:parser) (f:unit -> PURE a wp)
+: Pure (repr a r (fun _ -> r))
+  (requires wp (fun _ -> True))
+  (ensures fun _ -> True)
+= (| lift_pure_rst_spec a wp r f, lift_pure_rst_impl a wp r f |)
 
-let emp : parser = (| unit, emp' |)
-
-assume
-val valid_pos_emp
-  (h: HS.mem)
-  (b: B.buffer U8.t)
-  (pos: U32.t)
-  (pos' : U32.t)
-: Lemma
-  (valid_pos emp h b pos pos' <==> (B.live h b /\ pos' == pos /\ U32.v pos <= B.length b))
-  [SMTPat (valid_pos emp h b pos pos')]
-
-
+sub_effect PURE ~> WRITE = lift_pure_rst
 
 assume
 val star' (#t1 #t2: Type) (p1: parser' t1) (p2: parser' t2) : Tot (parser' (t1 & t2))
 
 let star (p1 p2: parser) : Tot parser = (| (dfst p1 & dfst p2), star' (dsnd p1) (dsnd p2) |)
 
+(*
 assume
 val valid_star
   (p1 p2: parser)
@@ -259,6 +260,27 @@ val valid_frame
     [SMTPat (valid_pos p h b pos pos'); SMTPat (B.modifies l h h')];
     [SMTPat (valid_pos p h' b pos pos'); SMTPat (B.modifies l h h')];
   ]]
+  
+
+(*
+
+assume
+val emp' : parser' unit
+
+let emp : parser = (| unit, emp' |)
+
+assume
+val valid_pos_emp
+  (h: HS.mem)
+  (b: B.buffer U8.t)
+  (pos: U32.t)
+  (pos' : U32.t)
+: Lemma
+  (valid_pos emp h b pos pos' <==> (B.live h b /\ pos' == pos /\ U32.v pos <= B.length b))
+  [SMTPat (valid_pos emp h b pos pos')]
+
+
+
 
 let push'
 
