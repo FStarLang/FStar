@@ -193,67 +193,42 @@ val get_x (r: ref (option u32_pair) u32_pair_pcm)
 /// reference or just part of a reference, we create a "pointer" typeclass that will define the
 /// interface that our pointers should implement.
 
-let pointer_get_sig
+let rw_pointer_get_sig
   (a: Type u#a)
   (ref: Type u#0)
   (slref: ref -> slprop)
-  (* replace get_post by pointer_sel *)
-  ($get_post: (r: ref) -> (hmem (slref r)) -> a -> (hmem (slref r)) -> GTot prop)
+  (sel: (r:ref) -> hmem (slref r) -> GTot a)
   =
   r:ref ->
     Steel a
       (slref r)
       (fun _ -> slref r)
       (fun h0 -> True)
-      (admitted_post (fun h0 x h1 -> get_post r h0 x h1))
+      (admitted_post (fun h0 x h1 -> sel r h0 == sel r h1 /\ x == sel r h0))
 
-let pointer_upd_sig
+let rw_pointer_upd_sig
   (a: Type u#a)
   (ref: Type u#0)
   (slref: ref -> slprop)
-  (* replace get_post by pointer_sel *)
-  ($upd_post: (r: ref) -> (new_val:a) -> (hmem (slref r)) -> (hmem (slref r)) -> GTot prop)
+  (sel: (r:ref) -> hmem (slref r) -> GTot a)
   =
   r: ref ->
-  new_val: a -> (* This has to be a Low* type because this upd *)
+  new_val: a ->
     Steel unit
       (slref r)
       (fun _ -> slref r)
       (fun h0 -> True)
-      (admitted_post (fun h0 _ h1 -> upd_post r new_val h0 h1))
+      (admitted_post (fun h0 _ h1 -> sel r h1 == new_val))
 
+/// The `a` parameter to the typeclass has to be a Low*-compatible value, something that can be
+/// assigned atomically in an update statement.
 #push-options "--admit_smt_queries true" (* fails, points to subcomp_pre in Steel.Effect.fsti? *)
 class rw_pointer (a: Type u#a) = {
   pointer_ref:  Type u#0;
   pointer_slref: pointer_ref -> slprop;
   pointer_sel: (r:pointer_ref) -> hmem (pointer_slref r) -> GTot a;
-  (* we shouldn't need that *)
-  pointer_get_post:
-    (post: ((r:pointer_ref) ->
-    hmem (pointer_slref r) ->
-    x: a ->
-    hmem (pointer_slref r) ->
-    GTot prop){
-      forall r h0 x h1. post r h0 x h1 ==> (
-        pointer_sel r h0 == pointer_sel r h1 /\
-        x == pointer_sel r h0
-      )
-    });
-  pointer_get: pointer_get_sig a pointer_ref pointer_slref pointer_get_post;
-  (* this get should have been annotated with the attribute*)
-  (* we shouldn't need that *)
-  pointer_upd_post:
-    (post: ((r:pointer_ref) ->
-    (new_val: a) ->
-    hmem (pointer_slref r) ->
-    hmem (pointer_slref r) ->
-    GTot prop){
-      forall r new_val h0 h1. post r new_val h0 h1 ==> (
-        pointer_sel r h1 == new_val
-      )
-    });
-  pointer_upd: pointer_upd_sig a pointer_ref pointer_slref pointer_upd_post;
-   (* this upd should have been annotated with the attribute*)
+  pointer_get: rw_pointer_get_sig a pointer_ref pointer_slref pointer_sel;
+  pointer_upd: rw_pointer_upd_sig a pointer_ref pointer_slref pointer_sel;
 }
 #pop-options
 
@@ -341,39 +316,15 @@ let u32_pair_sel (r: u32_pair_ref) (h: hmem (slu32_pair r)) : GTot u32_pair =
     slu32_pair_elim r h;
     fst (Some?.v (sel r h))
 
-let u32_pair_get_post
-  (r: u32_pair_ref)
-  (h0: hmem (slu32_pair r))
-  (x: u32_pair)
-  (h1: hmem (slu32_pair r))
-  : GTot prop =
-    slu32_pair_elim r h0; slu32_pair_elim r h1;
-    sel r h0 == sel r h1 /\ u32_pair_sel r h0 == x
+val u32_pair_get : rw_pointer_get_sig u32_pair u32_pair_ref slu32_pair u32_pair_sel
 
-val u32_pair_get (r: u32_pair_ref) : Steel u32_pair
-  (slu32_pair r) (fun _ -> slu32_pair r)
-  (fun _ -> True) (admitted_post (fun h0 x h1 -> u32_pair_get_post r h0 x h1))
-
-let u32_pair_upd_post
-  (r: u32_pair_ref)
-  (new_val: u32_pair)
-  (h0: hmem (slu32_pair r))
-  (h1: hmem (slu32_pair r))
-  : GTot prop =
-    slu32_pair_elim r h0; slu32_pair_elim r h1;
-    u32_pair_sel r h1 == new_val
-
-val u32_pair_post (r: u32_pair_ref) (new_val: u32_pair) : Steel unit
-  (slu32_pair r) (fun _ -> slu32_pair r)
-  (fun _ -> True) (admitted_post (fun h0 _ h1 -> u32_pair_upd_post r new_val h0 h1))
+val u32_pair_post: rw_pointer_upd_sig u32_pair u32_pair_ref slu32_pair u32_pair_sel
 
 instance u32_pair_pointer : rw_pointer u32_pair = {
   pointer_ref = u32_pair_ref;
   pointer_slref = slu32_pair;
   pointer_sel = u32_pair_sel;
-  pointer_get_post = u32_pair_get_post;
   pointer_get = u32_pair_get;
-  pointer_upd_post = u32_pair_upd_post;
   pointer_upd = u32_pair_post;
 }
 
@@ -397,14 +348,18 @@ let u32_pair_x_field_sel
   slu32_pair_x_field_elim r h;
   (fst (Some?.v (sel r h))).x
 
+val u32_pair_x_field_get
+  : rw_pointer_get_sig UInt32.t u32_pair_x_field_ref slu32_pair_x_field u32_pair_x_field_sel
+
+val u32_pair_x_field_upd
+  : rw_pointer_upd_sig UInt32.t u32_pair_x_field_ref slu32_pair_x_field u32_pair_x_field_sel
+
 instance u32_pair_x_field_pointer : rw_pointer UInt32.t = {
   pointer_ref = u32_pair_x_field_ref;
   pointer_slref = slu32_pair_x_field;
   pointer_sel = u32_pair_x_field_sel;
-  pointer_get_post = admit();
-  pointer_get = admit();
-  pointer_upd_post = admit();
-  pointer_upd = admit();
+  pointer_get = u32_pair_x_field_get;
+  pointer_upd = u32_pair_x_field_upd;
 }
 
 let u32_pair_y_field_ref = u32_pair_ref
@@ -425,24 +380,31 @@ let u32_pair_y_field_sel
   slu32_pair_y_field_elim r h;
   (fst (Some?.v (sel r h))).y
 
+val u32_pair_y_field_get
+  : rw_pointer_get_sig UInt32.t u32_pair_y_field_ref slu32_pair_y_field u32_pair_y_field_sel
+
+val u32_pair_y_field_upd
+  : rw_pointer_upd_sig UInt32.t u32_pair_y_field_ref slu32_pair_y_field u32_pair_y_field_sel
+
+
 instance u32_pair_y_field_pointer : rw_pointer UInt32.t = {
   pointer_ref = u32_pair_y_field_ref;
   pointer_slref = slu32_pair_y_field;
   pointer_sel = u32_pair_y_field_sel;
-  pointer_get_post = admit();
-  pointer_get = admit();
-  pointer_upd_post = admit();
-  pointer_upd = admit();
+  pointer_get = u32_pair_y_field_get;
+  pointer_upd = u32_pair_y_field_upd;
 }
-
-val recombinable (r: u32_pair_ref) (r12: u32_pair_x_field_ref & u32_pair_y_field_ref) : prop
 
 (**** explode/recombine *)
 
 /// The explode/recombine functions are specialized to each struct, and to each pattern of struct
 /// explosion that is allowed by the PCM. We'll show here an example for our pair of integers.
 
-[@@ extract_explode u32_pair_pointer -> (u32_pair_x_field_pointer, u32_pair_y_field_pointer)]
+val recombinable (r: u32_pair_ref) (r12: u32_pair_x_field_ref & u32_pair_y_field_ref) : prop
+[@@ extract_explode u32_pair_pointer ->
+  (u32_pair_x_field_pointer, u32_pair_y_field_pointer) ->
+  recombinable
+]
 val explose_u32_pair_into_x_y (r: u32_pair_ref)
   : Steel (u32_pair_x_field_ref & u32_pair_y_field_ref)
   (slu32_pair r)
@@ -457,7 +419,6 @@ val explose_u32_pair_into_x_y (r: u32_pair_ref)
     } /\ recombinable r (r1,r2))
   ))
 
-
 /// How to implement this function? We should not have to allocate a new ref, instead we're going
 /// to use the same address in memory but in /two different memories/, that we will later join
 /// together to produce the `star` in the postressource. Each one of these memory will contain
@@ -465,7 +426,7 @@ val explose_u32_pair_into_x_y (r: u32_pair_ref)
 /// FieldX path and memoryY will contain the value of the field Y along with FieldY path.
 /// These two memory are composable thanks to the PCM that we've defined for `u32_pair_stored`.
 
-[@@ extract_recombine u32_pair_x_field_pointer -> u32_pair_y_field_pointer -> u32_pair_pointer]
+[@@ extract_recombine u32_pair_pointer -> u32_pair_x_field_pointer -> u32_pair_y_field_pointer ]
 val recombine_u32_pair_from_x_y
   (r: u32_pair_ref)
   (r1: u32_pair_x_field_ref)
