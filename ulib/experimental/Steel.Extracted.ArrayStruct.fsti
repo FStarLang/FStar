@@ -197,6 +197,7 @@ let pointer_get_sig
   (a: Type u#a)
   (ref: Type u#0)
   (slref: ref -> slprop)
+  (* replace get_post by pointer_sel *)
   ($get_post: (r: ref) -> (hmem (slref r)) -> a -> (hmem (slref r)) -> GTot prop)
   =
   r:ref ->
@@ -210,6 +211,7 @@ let pointer_upd_sig
   (a: Type u#a)
   (ref: Type u#0)
   (slref: ref -> slprop)
+  (* replace get_post by pointer_sel *)
   ($upd_post: (r: ref) -> (new_val:a) -> (hmem (slref r)) -> (hmem (slref r)) -> GTot prop)
   =
   r: ref ->
@@ -225,6 +227,7 @@ class rw_pointer (a: Type u#a) = {
   pointer_ref:  Type u#0;
   pointer_slref: pointer_ref -> slprop;
   pointer_sel: (r:pointer_ref) -> hmem (pointer_slref r) -> GTot a;
+  (* we shouldn't need that *)
   pointer_get_post:
     (post: ((r:pointer_ref) ->
     hmem (pointer_slref r) ->
@@ -238,6 +241,7 @@ class rw_pointer (a: Type u#a) = {
     });
   pointer_get: pointer_get_sig a pointer_ref pointer_slref pointer_get_post;
   (* this get should have been annotated with the attribute*)
+  (* we shouldn't need that *)
   pointer_upd_post:
     (post: ((r:pointer_ref) ->
     (new_val: a) ->
@@ -252,6 +256,15 @@ class rw_pointer (a: Type u#a) = {
    (* this upd should have been annotated with the attribute*)
 }
 #pop-options
+
+/// The goal of this typeclass is to be able to write generic functions like
+
+val increment_generic (#cls: rw_pointer UInt32.t) (r: cls.pointer_ref) : Steel unit
+  (cls.pointer_slref r) (fun _ -> cls.pointer_slref r)
+  (fun _ -> True)
+  (admitted_post (fun h0 _ h1 ->
+    UInt32.v (cls.pointer_sel r h1) == UInt32.v (cls.pointer_sel r h0) + 1
+  ))
 
 (**** Instantiating the pointer typeclass *)
 
@@ -316,7 +329,7 @@ let u32_pair_ref = Steel.Memory.ref u32_pair_stored u32_pair_stored_pcm
 
 /// We can now instantiate the pointer typeclass! Let's begin by a pointer to
 
-let slu32_pair (r: u32_pair_ref) =
+let slu32_pair (r: u32_pair_ref) : slprop =
   h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == Full))
 
 val slu32_pair_elim (r: u32_pair_ref) (h: hmem (slu32_pair r)) :
@@ -368,7 +381,7 @@ instance u32_pair_pointer : rw_pointer u32_pair = {
 
 let u32_pair_x_field_ref = u32_pair_ref
 
-let slu32_pair_x_field (r: u32_pair_x_field_ref) =
+let slu32_pair_x_field (r: u32_pair_x_field_ref) : slprop =
   h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == XField))
 
 val slu32_pair_x_field_elim (r: u32_pair_x_field_ref) (h: hmem (slu32_pair_x_field r)) :
@@ -422,6 +435,8 @@ instance u32_pair_y_field_pointer : rw_pointer UInt32.t = {
   pointer_upd = admit();
 }
 
+val recombinable (r: u32_pair_ref) (r12: u32_pair_x_field_ref & u32_pair_y_field_ref) : prop
+
 (**** explode/recombine *)
 
 /// The explode/recombine functions are specialized to each struct, and to each pattern of struct
@@ -431,12 +446,17 @@ instance u32_pair_y_field_pointer : rw_pointer UInt32.t = {
 val explose_u32_pair_into_x_y (r: u32_pair_ref)
   : Steel (u32_pair_x_field_ref & u32_pair_y_field_ref)
   (slu32_pair r)
-  (fun (r1, r2) -> slu32_pair_x_field r1 `star` slu32_pair_y_field r2)
+  (fun (r1, r2) ->
+    slu32_pair_x_field r1 `star`
+    slu32_pair_y_field r2)
   (fun _ -> True)
-  (admitted_post (fun h0 (r1, r2) h1 -> u32_pair_sel r h0 == {
-    x = u32_pair_x_field_sel r1 h1;
-    y = u32_pair_y_field_sel r2 h1;
-  }))
+  (admitted_post (fun h0 (r1, r2) h1 ->
+    (u32_pair_sel r h0 == {
+      x = u32_pair_x_field_sel r1 h1;
+      y = u32_pair_y_field_sel r2 h1;
+    } /\ recombinable r (r1,r2))
+  ))
+
 
 /// How to implement this function? We should not have to allocate a new ref, instead we're going
 /// to use the same address in memory but in /two different memories/, that we will later join
@@ -447,17 +467,33 @@ val explose_u32_pair_into_x_y (r: u32_pair_ref)
 
 [@@ extract_recombine u32_pair_x_field_pointer -> u32_pair_y_field_pointer -> u32_pair_pointer]
 val recombine_u32_pair_from_x_y
+  (r: u32_pair_ref)
   (r1: u32_pair_x_field_ref)
   (r2: u32_pair_y_field_ref)
-  : Steel (u32_pair_ref)
+  : Steel unit
   (slu32_pair_x_field r1 `star` slu32_pair_y_field r2)
-  (fun r -> slu32_pair r)
-  (fun _ -> True)
-  (admitted_post (fun (h0: hmem (slu32_pair_x_field r1 `star` slu32_pair_y_field r2)) r h1 ->
+  (fun _ -> slu32_pair r)
+  (fun _ -> recombinable r (r1, r2))
+  (admitted_post (fun (h0: hmem (slu32_pair_x_field r1 `star` slu32_pair_y_field r2)) _ h1 ->
     u32_pair_sel r h1 == {
     x = u32_pair_x_field_sel r1 h0;
     y = u32_pair_y_field_sel r2 h0;
   }))
+
+(**** focus *)
+
+/// From explode and recombine, we can also derive a `focus` operation that "forgets" the rest of
+/// the fields for a given time.
+
+val focus_u32_pair_x_field
+  (r: u32_pair_ref)
+  : Steel (u32_pair_x_field_ref)
+  (slu32_pair r)
+  (fun r1 -> slu32_pair_x_field r1)
+  (fun _ -> True)
+  (admitted_post (fun h0 r h1 ->
+   True // ??
+  ))
 
 (* Note for explode/recombine:
   - no magic wand in explode, have to encode it with a recombinable predicate
