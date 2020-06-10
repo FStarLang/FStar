@@ -201,16 +201,19 @@ let lift_pure_rst_spec
 
 let lift_pure_rst_impl
   (a:Type) (wp:pure_wp a { wp_true a wp }) (r:parser) (f:unit -> PURE a wp)
+  (buf: B.buffer u8)
 : Tot (repr_impl a r (fun _ -> r) buf (lift_pure_rst_spec a wp r f))
 = fun pos ->
     FStar.Monotonic.Pure.wp_monotonic_pure ();
     (f (), pos)
 
-let lift_pure_rst (a:Type) (wp:pure_wp a) (r:parser) (f:unit -> PURE a wp)
-: Pure (repr a r (fun _ -> r))
+let lift_pure_rst (a:Type) (wp:pure_wp a) (r:parser)
+  (buf: B.buffer u8)
+  (f:unit -> PURE a wp)
+: Pure (repr a r (fun _ -> r) buf)
   (requires wp (fun _ -> True))
   (ensures fun _ -> True)
-= (| lift_pure_rst_spec a wp r f, lift_pure_rst_impl a wp r f |)
+= (| lift_pure_rst_spec a wp r f, lift_pure_rst_impl a wp r f buf |)
 
 sub_effect PURE ~> WRITE = lift_pure_rst
 
