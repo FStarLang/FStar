@@ -83,13 +83,15 @@ let repr_impl (a:Type u#x) (r_in: parser) (r_out:a -> parser) (b: B.buffer U8.t)
         (| v, contents (r_out v) h' b 0ul pos2 |)
     ))
 
+(* FIXME: WHY WHY WHY can't I index `repr` with the buffer when I define the WRITE effect below? *)
+assume val buf: B.buffer U8.t
+
 inline_for_extraction
 let repr
   (a: Type u#x)
   (r_in: parser) (r_out:a -> parser)
-  (b: B.buffer U8.t)
 : Tot (Type u#x)
-= dtuple2 (repr_spec a r_in r_out) (repr_impl a r_in r_out b)
+= dtuple2 (repr_spec a r_in r_out) (repr_impl a r_in r_out buf)
 
 let return_spec
   (a:Type) (x:a) (r: a -> parser)
@@ -106,9 +108,8 @@ let return_impl
 inline_for_extraction
 let returnc
   (a:Type) (x:a) (r: a -> parser)
-  (b: B.buffer U8.t) 
-: Tot (repr a (r x) r b)
-= (| return_spec a x r, return_impl a x r b |)
+: Tot (repr a (r x) r)
+= (| return_spec a x r, return_impl a x r buf |)
 
 let bind_spec (a:Type) (b:Type)
   (r_in_f:parser) (r_out_f:a -> parser)
@@ -157,32 +158,29 @@ inline_for_extraction
 let bind (a:Type) (b:Type)
   (r_in_f: parser) (r_out_f:a -> parser)
   (r_out_g:b -> parser)
-  (buf: B.buffer U8.t)
-  (f:repr a r_in_f r_out_f buf) (g:(x:a -> repr b (r_out_f x) r_out_g buf))
-: Tot (repr b r_in_f r_out_g buf)
+  (f:repr a r_in_f r_out_f) (g:(x:a -> repr b (r_out_f x) r_out_g))
+: Tot (repr b r_in_f r_out_g)
 = (| bind_spec a b r_in_f r_out_f r_out_g (dfst f) (fun x -> dfst (g x)), bind_impl a b r_in_f r_out_f r_out_g (dfst f) (fun x -> dfst (g x)) buf (dsnd f) (fun x -> dsnd (g x)) |)
 
 inline_for_extraction
 let subcomp (a:Type)
   (r_in:parser) (r_out:a -> parser)
-  (buf: B.buffer U8.t)
-  (f:repr a r_in r_out buf)
-: (repr a r_in r_out buf)
+  (f:repr a r_in r_out)
+: (repr a r_in r_out)
 = f
 
 let if_then_else (a:Type)
   (r_in:parser) (r_out:a -> parser)
-  (buf: B.buffer U8.t)
-  (f:repr a r_in r_out buf) (g:repr a r_in r_out buf)
+  (f:repr a r_in r_out) (g:repr a r_in r_out)
   (p:Type0)
 : Type
-= repr a r_in r_out buf
+= repr a r_in r_out
 
 #push-options "--print_universes"
 
 reifiable reflectable
 layered_effect {
-  WRITE : a:Type -> parser -> (a -> parser) -> B.buffer U8.t -> Effect
+  WRITE : a:Type -> parser -> (a -> parser) -> Effect
   with
   repr = repr;
   return = returnc;
