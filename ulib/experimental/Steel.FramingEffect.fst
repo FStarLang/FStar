@@ -123,6 +123,8 @@ assume val sl_implies_preserves_frame_right (p q:slprop u#1)
 
 irreducible let framing_implicit : unit = ()
 
+let tag (#a:Type) (p:a) : a = p
+
 unfold
 let return_req (p:slprop u#1) : req_t p = fun _ -> True
 
@@ -195,7 +197,6 @@ let bind (a:Type) (b:Type)
 (*
  * f <: g
  *)
-
 unfold
 let subcomp_pre (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
@@ -211,7 +212,7 @@ let annot_sub_post (p:Type0) : Type0 = p
 
 let subcomp (a:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (#[@@ framing_implicit] req_f:req_t pre_f) (#[@@ framing_implicit] ens_f:ens_t pre_f a post_f)
   (#[@@ framing_implicit] pre_g:pre_t) (#[@@ framing_implicit] post_g:post_t a)
   (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
   (#[@@ framing_implicit] p1:squash (delay (can_be_split pre_g pre_f)))
@@ -281,7 +282,6 @@ let frame_aux (#a:Type)
  * Add a frame to each
  *)
 
-unfold
 let bind_steel_steel_req (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
@@ -294,7 +294,6 @@ let bind_steel_steel_req (#a:Type)
   req_f m0 /\
   (forall (x:a) (m1:hmem (post_f x `star` frame_f)). ens_f m0 x m1 ==> (req_g x) m1)
 
-unfold
 let bind_steel_steel_ens (#a:Type) (#b:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
@@ -315,7 +314,7 @@ let bind_steel_steel (a:Type) (b:Type)
   (#[@@ framing_implicit] frame_f:slprop) (#[@@ framing_implicit] frame_g:slprop)
   (#[@@ framing_implicit] p:squash (can_be_split_forall
     (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g)))
-  (f:repr a pre_f post_f req_f ens_f)
+  (f:repr a pre_f post_f (tag req_f) ens_f)
   (g:(x:a -> repr b (pre_g x) post_g (req_g x) (ens_g x)))
 : repr b
     (pre_f `star` frame_f)
@@ -338,7 +337,6 @@ polymonadic_bind (Steel, Steel) |> SteelF = bind_steel_steel
  * Steel, SteelF: frame the first computation
  *)
 
-unfold
 let bind_steel_steelf_req (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
@@ -351,7 +349,6 @@ let bind_steel_steelf_req (#a:Type)
   req_f m0 /\
   (forall (x:a) (m1:hmem (post_f x `star` frame_f)). ens_f m0 x m1 ==> (req_g x) m1)
 
-unfold
 let bind_steel_steelf_ens (#a:Type) (#b:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
@@ -390,7 +387,6 @@ polymonadic_bind (Steel, SteelF) |> SteelF = bind_steel_steelf
  * SteelF, Steel: frame the second computation
  *)
 
-unfold
 let bind_steelf_steel_req (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
@@ -403,7 +399,6 @@ let bind_steelf_steel_req (#a:Type)
   req_f m0 /\
   (forall (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 ==> (req_g x) m1)
 
-unfold
 let bind_steelf_steel_ens (#a:Type) (#b:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
@@ -706,8 +701,12 @@ let rec filter_goals (l:list goal) : Tac (list goal) =
 
 [@@ resolve_implicits; framing_implicit]
 let init_resolve_tac () : Tac unit =
+//  dump "start";
   let gs = filter_goals (goals()) in
   set_goals gs;
+  dump "initial goals";
   solve_triv_eqs (goals ());
+//  dump "post triv";
   solve_subcomp_post (goals ());
+//  dump "goals";
   resolve_tac ()

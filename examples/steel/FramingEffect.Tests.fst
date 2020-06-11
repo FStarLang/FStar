@@ -102,3 +102,27 @@ let test8 (x:ref) : SteelT int (ptr x) (fun _ -> ptr x)
     // Can mix assertions
     assert (1 == 1);
     v
+
+open Steel.FractionalPermission
+open FStar.Ghost
+assume val reference (a:Type0) : Type0
+assume val pts_to (#a:Type0) (r:reference a) (p:perm) (v:erased a) : slprop u#1
+assume val rread (#a:Type) (#p:perm) (#v:erased a) (r:reference a) : SteelT (x:a{x==reveal v}) (pts_to r p v) (fun _ -> pts_to r p v)
+assume val rwrite (#a:Type) (#v:erased a) (r:reference a) (v':a) : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm (hide v'))
+
+assume val rwrite_alt (#a:Type) (#v:erased a) (r:reference a) (v'':erased a) (v':a{v'==Ghost.reveal v''})
+  : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm v'')
+
+let read_write (#a:Type) (r0:reference a) (v0:erased a)
+  : SteelT unit (pts_to r0 full_perm v0)
+                (fun _ -> pts_to r0 full_perm v0)
+  = let u0 = rread #_ #full_perm #v0 r0 in
+    rwrite_alt #_ #v0 r0 v0 u0
+
+let swap (#a:Type) (r0 r1:reference a) (v0 v1:erased a)
+  : SteelT unit (pts_to r0 full_perm v0 `star` pts_to r1 full_perm v1)
+                (fun _ -> pts_to r0 full_perm v1 `star` pts_to r1 full_perm v0)
+  = let u0 = rread #_ #full_perm #v0 r0 in
+    let u1 = rread #_ #full_perm #v1 r1 in
+    rwrite_alt #_ #v0 r0 v1 u1;
+    rwrite_alt #_ #v1 r1 v0 u0
