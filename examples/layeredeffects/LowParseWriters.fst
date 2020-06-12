@@ -63,28 +63,51 @@ val contents
   (requires (valid_pos p h b pos pos'))
   (ensures (fun _ -> True))
 
+unfold
+let pure_wp_mono
+  (a: Type)
+  (wp: pure_wp a)
+: GTot Type0
+= (forall (p q:pure_post a).
+     (forall (x:a). p x ==> q x) ==> (wp p ==> wp q))
+
+let wp_t
+  (a: Type u#x)
+  (r_in: parser)
+  (r_out: a -> parser)
+: Tot Type
+= (wp: ((dfst r_in) -> Tot (pure_wp (v: a & dfst (r_out v)))) {
+    forall x . pure_wp_mono _ (wp x)
+  })
+
 inline_for_extraction
-let repr_spec (a:Type u#x) (r_in: parser) (r_out:a -> parser) : Tot (Type u#x) =
+let repr_spec (a:Type u#x) (r_in: parser) (r_out:a -> parser) (wp: wp_t a r_in r_out) : Tot (Type u#x) =
   (v_in: dfst r_in) ->
-  GTot (v: a & dfst (r_out v))
+  GHOST (v: a & dfst (r_out v)) (wp v_in)
+
+unfold
+let repr_impl_wp
+  (a:Type u#x) (r_in: parser) (r_out:a -> parser) (wp: wp_t a r_in r_out) (b: B.buffer U8.t) (spec: repr_spec a r_in r_out wp)
+  (pos1: U32.t { U32.v pos1 <= B.length b })
+: Tot (st_wp_h HS.mem (a & U32.t))
+= fun (k: st_post_h HS.mem (a & U32.t)) (h: HS.mem) ->
+  valid_pos r_in h b 0ul pos1 /\
+  wp (contents r_in h b 0ul pos1) (fun y' ->
+  forall (v: a) (pos2: U32.t) (h': HS.mem) .
+  (
+    U32.v pos1 <= U32.v pos2 /\
+    valid_pos (r_out v) h' b 0ul pos2 /\
+    B.modifies (B.loc_buffer_from_to b 0ul pos2) h h' /\
+    y' == (| v, contents (r_out v) h' b 0ul pos2 |) /\
+    HST.equal_domains h h'
+  ) ==> (
+    k (v, pos2) h'
+  ))
 
 inline_for_extraction
-let repr_impl (a:Type u#x) (r_in: parser) (r_out:a -> parser) (b: B.buffer U8.t) (spec: repr_spec a r_in r_out) : Tot Type0 =
+let repr_impl (a:Type u#x) (r_in: parser) (r_out:a -> parser) (wp: wp_t a r_in r_out) (b: B.buffer U8.t) (spec: repr_spec a r_in r_out wp) : Tot Type0 =
   (pos1: U32.t { U32.v pos1 <= B.length b }) ->
-  HST.Stack (a & U32.t)
-    (requires (fun h ->
-      valid_pos r_in h b 0ul pos1
-    ))
-    (ensures (fun h (v, pos2) h' ->
-      U32.v pos1 <= U32.v pos2 /\
-      valid_pos (r_out v) h' b 0ul pos2 /\
-      B.modifies (B.loc_buffer_from_to b 0ul pos2) h h' /\
-      spec (contents r_in h b 0ul pos1) ==
-        (| v, contents (r_out v) h' b 0ul pos2 |)
-    ))
-
-(* FIXME: WHY WHY WHY can't I index `repr` with the buffer when I define the WRITE effect below? *)
-// assume val buf: B.buffer U8.t
+  HST.STATE (a & U32.t) (repr_impl_wp a r_in r_out wp b spec pos1)
 
 type u8 : Type0 = U8.t
 
@@ -92,36 +115,55 @@ inline_for_extraction
 let repr
   (a: Type u#x)
   (r_in: parser) (r_out:a -> parser)
+  (wp: wp_t a r_in r_out)
   (buf:B.buffer u8)
 : Tot (Type u#x)
-= dtuple2 (repr_spec a r_in r_out) (repr_impl a r_in r_out buf)
+= dtuple2 (repr_spec a r_in r_out wp) (repr_impl a r_in r_out wp buf)
+
+unfold
+let return_wp
+  (a:Type) (x:a) (r: a -> parser)
+: Tot (wp_t a (r x) r)
+= fun c p -> p (| x, c |)
 
 let return_spec
   (a:Type) (x:a) (r: a -> parser)
-: Tot (repr_spec a (r x) r)
+: Tot (repr_spec a (r x) r (return_wp a x r))
 = fun c -> (| x, c |)
 
 inline_for_extraction
 let return_impl
   (a:Type) (x:a) (r: a -> parser)
   (b: B.buffer u8)
-: Tot (repr_impl a (r x) r b (return_spec a x r))
+: Tot (repr_impl a (r x) r (return_wp a x r) b (return_spec a x r))
 = fun pos1 -> (x, pos1)
 
 inline_for_extraction
 let returnc
   (a:Type) (x:a) (r: a -> parser) (buf:B.buffer u8)
-: Tot (repr a (r x) r buf)
+: Tot (repr a (r x) r (return_wp a x r) buf)
 = (| return_spec a x r, return_impl a x r buf |)
 
-let bind_spec (a:Type) (b:Type)
-  (r_in_f:parser) (r_out_f:a -> parser)
+unfold
+let bind_wp
+  (a:Type) (b:Type)
+  (r_in_f:parser) (r_out_f:a -> parser) (r_wp_f: wp_t a r_in_f r_out_f)
   (r_out_g:b -> parser)
-  (f:repr_spec a r_in_f r_out_f) (g:(x:a -> repr_spec b (r_out_f x) r_out_g))
-: Tot (repr_spec b r_in_f r_out_g)
+  (r_wp_g: (x:a -> wp_t b (r_out_f x) r_out_g))
+: Tot (wp_t b r_in_f r_out_g)
+=
+  fun r0 p -> r_wp_f r0 (fun xr1 -> match xr1 with (| x, r1 |) -> r_wp_g x r1 p)
+
+let bind_spec (a:Type) (b:Type)
+  (r_in_f:parser) (r_out_f:a -> parser) (r_wp_f: wp_t a r_in_f r_out_f)
+  (r_out_g:b -> parser)
+  (r_wp_g: (x:a -> wp_t b (r_out_f x) r_out_g))
+  (f:repr_spec a r_in_f r_out_f r_wp_f) (g:(x:a -> repr_spec b (r_out_f x) r_out_g (r_wp_g x)))
+: Tot (repr_spec b r_in_f r_out_g (bind_wp a b r_in_f r_out_f r_wp_f r_out_g r_wp_g))
 = fun c ->
-  let (| x, cf |) = f c in
-  g x cf
+  match f c with
+  | (| x, cf |) ->
+    g x cf
 
 let loc_includes_loc_buffer_loc_buffer_from_to
   (#a: _) (#rrel #rel: _)
@@ -145,45 +187,64 @@ let loc_includes_loc_buffer_from_to
 inline_for_extraction
 let bind_impl
   (a:Type) (b:Type)
-  (r_in_f:parser) (r_out_f:a -> parser)
+  (r_in_f:parser) (r_out_f:a -> parser) (r_wp_f: wp_t a r_in_f r_out_f)
   (r_out_g:b -> parser)
-  (f:repr_spec a r_in_f r_out_f)
-  (g:(x:a -> repr_spec b (r_out_f x) r_out_g))
+  (r_wp_g: (x:a -> wp_t b (r_out_f x) r_out_g))
+  (f:repr_spec a r_in_f r_out_f r_wp_f)
+  (g:(x:a -> repr_spec b (r_out_f x) r_out_g (r_wp_g x)))
   (buf: B.buffer u8)
-  (f' : repr_impl a r_in_f r_out_f buf f)
-  (g' : (x: a -> repr_impl b (r_out_f x) r_out_g buf (g x)))
-: Tot (repr_impl b r_in_f r_out_g buf (bind_spec a b r_in_f r_out_f r_out_g f g))
+  (f' : repr_impl a r_in_f r_out_f r_wp_f  buf f)
+  (g' : (x: a -> repr_impl b (r_out_f x) r_out_g (r_wp_g x) buf (g x)))
+: Tot (repr_impl b r_in_f r_out_g (bind_wp a b r_in_f r_out_f r_wp_f r_out_g r_wp_g) buf (bind_spec a b r_in_f r_out_f r_wp_f r_out_g r_wp_g f g))
 = fun pos ->
   match f' pos with
   | (x, posf) -> g' x posf
 
 inline_for_extraction
 let bind (a:Type) (b:Type)
-  (r_in_f: parser) (r_out_f:a -> parser)
-  (r_out_g:b -> parser) (buf:B.buffer u8)
-  (f:repr a r_in_f r_out_f buf) (g:(x:a -> repr b (r_out_f x) r_out_g buf))
-: Tot (repr b r_in_f r_out_g buf)
-= (| bind_spec a b r_in_f r_out_f r_out_g (dfst f) (fun x -> dfst (g x)), bind_impl a b r_in_f r_out_f r_out_g (dfst f) (fun x -> dfst (g x)) buf (dsnd f) (fun x -> dsnd (g x)) |)
+  (r_in_f:parser) (r_out_f:a -> parser) (r_wp_f: wp_t a r_in_f r_out_f)
+  (r_out_g:b -> parser)
+  (r_wp_g: (x:a -> wp_t b (r_out_f x) r_out_g))
+  (buf:B.buffer u8)
+  (f:repr a r_in_f r_out_f r_wp_f buf) (g:(x:a -> repr b (r_out_f x) r_out_g (r_wp_g x) buf))
+: Tot (repr b r_in_f r_out_g (bind_wp a b r_in_f r_out_f r_wp_f r_out_g r_wp_g) buf)
+= (| bind_spec a b r_in_f r_out_f r_wp_f r_out_g r_wp_g (dfst f) (fun x -> dfst (g x)), bind_impl a b r_in_f r_out_f r_wp_f r_out_g r_wp_g (dfst f) (fun x -> dfst (g x)) buf (dsnd f) (fun x -> dsnd (g x)) |)
 
 inline_for_extraction
 let subcomp (a:Type)
-  (r_in:parser) (r_out:a -> parser) (buf:B.buffer u8)
-  (f:repr a r_in r_out buf)
-: (repr a r_in r_out buf)
-= f
+  (r_in:parser) (r_out:a -> parser) (r_wp: wp_t a r_in r_out)
+  (r_wp': wp_t a r_in r_out)
+  (buf:B.buffer u8)
+  (f:repr a r_in r_out r_wp buf)
+: Pure (repr a r_in r_out r_wp' buf)
+  (requires (forall x p . r_wp' x p ==> r_wp x p))
+  (ensures (fun _ -> True))
+= (| (fun x -> dfst f x), (fun pos -> dsnd f pos) |)
+
+unfold
+let if_then_else_wp
+  (a:Type)
+  (r_in:parser) (r_out:a -> parser) (r_wp_f r_wp_g: wp_t a r_in r_out) 
+  (buf:B.buffer u8)
+  (p:Type0)
+: Tot (wp_t a r_in r_out)
+= fun s k ->
+  (p ==> r_wp_f s k) /\
+  ((~ p) ==> r_wp_g s k)
 
 let if_then_else (a:Type)
-  (r_in:parser) (r_out:a -> parser) (buf:B.buffer u8)
-  (f:repr a r_in r_out buf) (g:repr a r_in r_out buf)
+  (r_in:parser) (r_out:a -> parser) (r_wp_f r_wp_g: wp_t a r_in r_out) 
+  (buf:B.buffer u8)
+  (f:repr a r_in r_out r_wp_f buf) (g:repr a r_in r_out r_wp_g buf)
   (p:Type0)
-: Type
-= repr a r_in r_out buf
+: Tot Type
+= repr a r_in r_out (if_then_else_wp a r_in r_out r_wp_f r_wp_g buf p) buf
 
 #push-options "--print_universes"
 
 reifiable reflectable
 layered_effect {
-  WRITE : a:Type -> parser -> (a -> parser) -> B.buffer u8 -> Effect
+  WRITE : a:Type -> (pin: parser) -> (pout: (a -> parser)) -> (wp: wp_t a pin pout) -> (B.buffer u8) -> Effect
   with
   repr = repr;
   return = returnc;
@@ -192,30 +253,62 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-let wp_true (a: Type) (wp: pure_wp a) : GTot Type0 = wp (fun _ -> True)
+#pop-options
 
-let lift_pure_rst_spec
-  (a:Type) (wp:pure_wp a { wp_true a wp }) (r:parser) (f:unit -> PURE a wp)
-: Tot (repr_spec a r (fun _ -> r))
+unfold
+let lift_pure_wp
+  (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f:unit -> PURE a wp)
+: Tot (wp_t a r (fun _ -> r))
+= fun st p -> wp (fun res -> p (| res, st |))
+
+let lift_pure_spec
+  (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f:unit -> PURE a wp)
+: Tot (repr_spec a r (fun _ -> r) (lift_pure_wp a wp r f))
 = fun v -> (| f (), v |)
 
-let lift_pure_rst_impl
-  (a:Type) (wp:pure_wp a { wp_true a wp }) (r:parser) (f:unit -> PURE a wp)
+let lift_pure_impl
+  (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f:unit -> PURE a wp)
   (buf: B.buffer u8)
-: Tot (repr_impl a r (fun _ -> r) buf (lift_pure_rst_spec a wp r f))
-= fun pos ->
-    FStar.Monotonic.Pure.wp_monotonic_pure ();
-    (f (), pos)
+: Tot (repr_impl a r (fun _ -> r) (lift_pure_wp a wp r f) buf (lift_pure_spec a wp r f))
+= fun pos -> (f (), pos)
 
-let lift_pure_rst (a:Type) (wp:pure_wp a) (r:parser)
+let lift_pure (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser)
   (buf: B.buffer u8)
   (f:unit -> PURE a wp)
-: Pure (repr a r (fun _ -> r) buf)
+: Pure (repr a r (fun _ -> r) (lift_pure_wp a wp r f) buf)
   (requires wp (fun _ -> True))
   (ensures fun _ -> True)
-= (| lift_pure_rst_spec a wp r f, lift_pure_rst_impl a wp r f buf |)
+= (| lift_pure_spec a wp r f, lift_pure_impl a wp r f buf |)
 
-sub_effect PURE ~> WRITE = lift_pure_rst
+sub_effect PURE ~> WRITE = lift_pure
+
+let pre_t
+  (rin: parser)
+: Tot Type
+= dfst rin -> GTot Type0
+
+let post_t
+  (a: Type)
+  (rin: parser)
+  (rout: a -> Tot parser)
+  (pre: pre_t rin)
+: Tot Type
+= (x: dfst rin { pre x }) -> (res: a) -> dfst (rout res) -> GTot Type0
+
+unfold
+let hoare_to_wp
+  (a: Type)
+  (rin: parser)
+  (rout: a -> Tot parser)
+  (pre: pre_t rin)
+  (post: post_t a rin rout pre)
+: Tot (wp_t a rin rout)
+= fun x p ->
+  pre x /\
+  (forall (res: a) x' . post x res x' ==> p (| res, x' |))
+
+effect Write (a: Type) (rin: parser) (rout: a -> Tot parser) (buf: B.buffer u8) (pre: pre_t rin) (post: post_t a rin rout pre) =
+  WRITE a rin rout (hoare_to_wp a rin rout pre post) buf 
 
 assume
 val star' (#t1 #t2: Type) (p1: parser' t1) (p2: parser' t2) : Tot (parser' (t1 & t2))
