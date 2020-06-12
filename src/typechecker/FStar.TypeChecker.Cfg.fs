@@ -768,6 +768,46 @@ let built_in_primitive_steps : prim_step_set =
                  NBETerm.binary_op
                    NBETerm.arg_as_bounded_int
                    (fun (int_to_t, x) (_, y) -> NBETerm.int_as_bounded int_to_t (Z.mult_big_int x y)));
+             (PC.p2l ["FStar"; m; "lt"],
+                 2,
+                 0,
+                 (fun res _ args ->
+                   let r = res.psc_range in
+                   match args with
+                   | [ { n = Tm_name x }, _; { n = Tm_name y }, _ ] when S.bv_eq x y ->
+                       Some (mk (Tm_constant (Const_bool false)) r)
+                   | _ -> None),
+                (fun _ -> None));
+             (PC.p2l ["FStar"; m; "gt"],
+                 2,
+                 0,
+                 (fun res _ args ->
+                   let r = res.psc_range in
+                   match args with
+                   | [ { n = Tm_name x }, _; { n = Tm_name y }, _ ] when S.bv_eq x y ->
+                       Some (mk (Tm_constant (Const_bool false)) r)
+                   | _ -> None),
+                (fun _ -> None));
+             (PC.p2l ["FStar"; m; "lte"],
+                 2,
+                 0,
+                 (fun res _ args ->
+                   let r = res.psc_range in
+                   match args with
+                   | [ { n = Tm_name x }, _; { n = Tm_name y }, _ ] when S.bv_eq x y ->
+                       Some (mk (Tm_constant (Const_bool true)) r)
+                   | _ -> None),
+                (fun _ -> None));
+             (PC.p2l ["FStar"; m; "gte"],
+                 2,
+                 0,
+                 (fun res _ args ->
+                   let r = res.psc_range in
+                   match args with
+                   | [ { n = Tm_name x }, _; { n = Tm_name y }, _ ] when S.bv_eq x y ->
+                       Some (mk (Tm_constant (Const_bool true)) r)
+                   | _ -> None),
+                (fun _ -> None));
               (PC.p2l ["FStar"; m; "v"],
                   1,
                   0,
