@@ -56,6 +56,7 @@ val whnf_steps: list<step>
 val unfold_whnf':         steps -> Env.env -> term -> term
 val unfold_whnf:          Env.env -> term -> term
 val reduce_uvar_solutions:Env.env -> term -> term
+val non_info_norm: Env.env -> term -> bool
 val ghost_to_pure:        Env.env -> comp -> comp
 val ghost_to_pure_lcomp:  Env.env -> lcomp -> lcomp
 val normalize_with_primitive_steps : list<primitive_step> -> steps -> Env.env -> term -> term

@@ -411,7 +411,7 @@ let extract_bundle_iface env se
            let g =
             List.fold_right
                 (fun id g ->
-                   let mlp, g = UEnv.extend_record_field_name g (ind.iname, id) in
+                   let _, g = UEnv.extend_record_field_name g (ind.iname, id) in
                    g)
                 ids
                 env
@@ -700,8 +700,8 @@ let extract_bundle env se =
              let fields, g =
                 List.fold_right2
                   (fun id (_, ty) (fields, g) ->
-                     let mlp, g = UEnv.extend_record_field_name g (ind.iname, id) in
-                     (snd mlp, ty)::fields, g)
+                     let mlid, g = UEnv.extend_record_field_name g (ind.iname, id) in
+                     (mlid, ty)::fields, g)
                    ids
                    c_ty
                    ([], env)

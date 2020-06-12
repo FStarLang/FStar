@@ -8,7 +8,7 @@ Erasable.fst(18,2-20,15): (Error 34) Computed type "Prims.int" and effect "GHOST
 Erasable.fst(28,42-28,52): (Error 34) Computed type "Prims.int" and effect "GTot" is not compatible with the annotated type "Prims.int" effect "Tot"
 >>]
 >> Got issues: [
-Erasable.fst(41,0-41,15): (Error 162) Illegal attribute: the `erasable` attribute is only permitted on inductive type definitions
+Erasable.fst(41,12-41,15): (Error 162) Illegal attribute: the `erasable` attribute is only permitted on inductive type definitions and abbreviations for non-informative types. Prims.nat is considered informative.
 >>]
 >> Got issues: [
 Erasable.fst(52,0-52,17): (Error 162) Mismatch of attributes between declaration and definition: Declaration is marked `erasable` but the definition is not
