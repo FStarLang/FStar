@@ -695,19 +695,32 @@ let rec resolve_tac () : Tac unit =
       (norm [delta_only [`%delay]];
       resolve_tac ())
 
-let rec filter_goals (l:list goal) : Tac (list goal) =
+let typ_contains_req_ens (t:term) : Tac bool =
+  let name, _ = collect_app t in
+  if term_eq name (`req_t) || term_eq name (`ens_t) then true
+  else false
+
+let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
   match l with
-  | [] -> []
+  | [] -> [], []
   | hd::tl ->
+      let slgoals, loggoals = filter_goals tl in
       match term_as_formula' (goal_type hd) with
-      | Comp (Eq _) _ _ -> hd::filter_goals tl
-      | App t _ -> if term_eq t (`squash) then hd::filter_goals tl else filter_goals tl
-      | _ -> filter_goals tl
+      | Comp (Eq t) _ _ ->
+        if Some? t then
+          let b = typ_contains_req_ens (Some?.v t) in
+          if b then slgoals, hd::loggoals
+          else hd::slgoals, loggoals
+        else hd::slgoals, loggoals
+      | App t _ -> if term_eq t (`squash) then hd::slgoals, loggoals else slgoals, loggoals
+      | _ -> slgoals, loggoals
 
 [@@ resolve_implicits; framing_implicit]
 let init_resolve_tac () : Tac unit =
-  let gs = filter_goals (goals()) in
-  set_goals gs;
+  let slgs, loggs = filter_goals (goals()) in
+  set_goals slgs;
   solve_triv_eqs (goals ());
   solve_subcomp_post (goals ());
+  resolve_tac ();
+  set_goals loggs;
   resolve_tac ()
