@@ -1,6 +1,7 @@
 module GT
 
 open FStar.Tactics
+open FStar.Universe
 
 // GM: Originally wanted to include Dv too: that is not so easy,
 //     the [unit -> Dv a] type lives in universe level 0, differently
@@ -9,7 +10,7 @@ open FStar.Tactics
 type idx =
  | T
  | G
- //| D
+ | D
 
 // GM: Force a type equality by SMT
 let coerce #a #b (x:a{a == b}) : b = x
@@ -18,28 +19,28 @@ let m (a:Type u#aa) (i:idx) : Type u#aa =
   match i with
   | T -> unit -> Tot  a
   | G -> unit -> GTot a
-  //| D -> unit -> Dv   a
+  | D -> raise_t (unit -> Dv a)
 
 let t_return #a (x:a) : m a T = (fun () -> x)
 let g_return #a (x:a) : m a G = (fun () -> x)
-//let d_return #a (x:a) : m a D = (fun () -> x)
+let d_return #a (x:a) : m a D = raise_val (fun () -> x)
 
 let return (a:Type) (x:a) (i:idx) : m a i =
   match i with
   | T -> t_return x
   | G -> g_return x
-  //| D -> d_return x
+  | D -> d_return x
 
 let t_bind #a #b (c : m a T) (f : a -> m b T) : m b T = fun () -> f (c ()) ()
 let g_bind #a #b (c : m a G) (f : a -> m b G) : m b G = fun () -> f (c ()) ()
-//let d_bind #a #b (c : m D a) (f : a -> m D b) : m D b = fun () -> f (c ()) ()
+let d_bind #a #b (c : m a D) (f : a -> m b D) : m b D =
+  raise_val (fun () -> downgrade_val (f (downgrade_val c ())) ())
 
 let bind (a b : Type) (i:idx) (c : m a i) (f : a -> m b i) : m b i =
   match i with
   | T -> t_bind #a #b c f
+  | D -> coerce (d_bind #a #b c f) // GM: wow... still needs a coerce, how can that be?
   | G -> g_bind #a #b c f
-  //| D -> coerce (d_bind #a #b c f <: m D b)
-  // ^ needed a coerce too
 
 // Already somewhat usable
 let rec r_map #i #a #b (f : a -> m b i) (xs : list a) : m (list b) i =
@@ -52,7 +53,7 @@ let rec r_map #i #a #b (f : a -> m b i) (xs : list a) : m (list b) i =
 
 let t1_t () : Tot (list int) = r_map #T (fun x -> fun () -> x + 1) [1;2;3;4] ()
 let t1_g () : GTot (list int) = r_map #G (fun x -> fun () -> x + 1) [1;2;3;4] ()
-//let t1_d () : Dv (list int) = map #D (fun x -> fun () -> x + 1) [1;2;3;4] ()
+let t1_d () : Dv (list int) = downgrade_val (r_map #D (fun x -> raise_val (fun () -> x + 1)) [1;2;3;4]) ()
 
 let subcomp (a:Type) (i:idx) (f : m a i) : m a i = f
 
@@ -80,9 +81,14 @@ let lift_pure_gtd (a:Type) (wp : pure_wp a) (i : idx)
                  : Pure (m a i)
                         (requires (wp (fun _ -> True) /\ (forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2)))
                         (ensures (fun _ -> True))
- = f
+ = //f
  // GM: Surprised that this works actually... I expected that I would need to
  //     case analyze [i].
+ // GM: ok not anymore
+ match i with
+ | T -> f
+ | G -> f
+ | D -> coerce (raise_val (fun () -> f () <: Dv a))
 
 sub_effect PURE ~> GTD = lift_pure_gtd
 
@@ -95,7 +101,7 @@ let app #a #b #i (f : a -> GTD b i) (x : a) : GTD b i = f x
 
 #set-options "--debug GT --debug_level SMTQuery"
 
-// GM: This fails, but I'm not sure why. With tactica (after compute) I see
+// GM: This fails, but I'm not sure why. With tactics (after compute) I see
 // the failing goal is
 //
 //  … @ …ido/r/fstar/layef/GT.fst(106,80-106,86)  Wed Jun 10 22:26:42 2020
