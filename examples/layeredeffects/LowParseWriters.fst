@@ -44,13 +44,23 @@ val valid_pos
   (b: B.buffer U8.t)
   (pos: U32.t)
   (pos' : U32.t)
-: Ghost Type0
-  (requires True)
-  (ensures (fun _ ->
+: GTot Type0
+
+assume
+val valid_pos_post
+  (p: parser)
+  (h: HS.mem)
+  (b: B.buffer U8.t)
+  (pos: U32.t)
+  (pos' : U32.t)
+: Lemma
+  (requires (valid_pos p h b pos pos'))
+  (ensures (
     B.live h b /\
     U32.v pos <= U32.v pos' /\
     U32.v pos' <= B.length b
   ))
+  [SMTPat (valid_pos p h b pos pos')]
 
 assume
 val contents
@@ -255,6 +265,18 @@ layered_effect {
 
 #pop-options
 
+inline_for_extraction
+let mk_repr
+  (a:Type u#x)
+  (r_in: parser)
+  (r_out:a -> parser)
+  (wp: wp_t a r_in r_out)
+  (b: B.buffer u8)
+  (spec: repr_spec a r_in r_out wp)
+  (impl: repr_impl a r_in r_out wp b spec)
+: WRITE a r_in r_out wp b
+= WRITE?.reflect (| spec, impl |)
+
 unfold
 let lift_pure_wp
   (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f:unit -> PURE a wp)
@@ -281,6 +303,20 @@ let lift_pure (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser)
 = (| lift_pure_spec a wp r f, lift_pure_impl a wp r f buf |)
 
 sub_effect PURE ~> WRITE = lift_pure
+
+(* FIXME: WHY WHY WHY can't I reify in Tot/GTot here? (St will work)
+
+inline_for_extraction
+let destr_repr_spec
+  (a:Type u#x)
+  (r_in: parser)
+  (r_out:a -> parser)
+  (wp: wp_t a r_in r_out)
+  (b: B.buffer u8)
+  (f: unit -> WRITE a r_in r_out wp b)
+: Tot (repr_spec a r_in r_out wp)
+= dfst (reify (f ()))
+*)
 
 let pre_t
   (rin: parser)
@@ -310,12 +346,164 @@ let hoare_to_wp
 effect Write (a: Type) (rin: parser) (rout: a -> Tot parser) (buf: B.buffer u8) (pre: pre_t rin) (post: post_t a rin rout pre) =
   WRITE a rin rout (hoare_to_wp a rin rout pre post) buf 
 
+inline_for_extraction
+unfold
+let repr_hoare_spec
+  (a:Type u#x)
+  (r_in: parser)
+  (r_out:a -> parser)
+  (pre: pre_t r_in)
+  (post: post_t a r_in r_out pre)
+: Tot (Type u#x)
+=
+  (v_in: dfst r_in) ->
+  Ghost (v: a & dfst (r_out v))
+  (requires (pre v_in))
+  (ensures (fun (| v, v_out |) -> post v_in v v_out))
+
+unfold
+let repr_spec_of_repr_hoare_spec
+  (a:Type u#x)
+  (r_in: parser)
+  (r_out:a -> parser)
+  (pre: pre_t r_in)
+  (post: post_t a r_in r_out pre)
+  (f: repr_hoare_spec a r_in r_out pre post)
+: Tot (repr_spec a r_in r_out (hoare_to_wp a r_in r_out pre post))
+= fun v_in -> f v_in
+
+unfold
+let repr_hoare_impl_post
+  (a:Type u#x)
+  (r_in: parser)
+  (r_out:a -> parser)
+  (pre: pre_t r_in)
+  (post: post_t a r_in r_out pre)
+  (b: B.buffer U8.t)
+  (spec: repr_hoare_spec a r_in r_out pre post)
+  (pos1: U32.t { U32.v pos1 <= B.length b })
+  (h: HS.mem)
+  (v: a)
+  (pos2: U32.t)
+  (h' : HS.mem)
+: GTot Type0
+= 
+    valid_pos r_in h b 0ul pos1 /\ (
+    let v_in = contents r_in h b 0ul pos1 in
+    pre v_in /\
+    U32.v pos1 <= U32.v pos2 /\
+    valid_pos (r_out v) h' b 0ul pos2 /\ (
+    let v_out = contents (r_out v) h' b 0ul pos2 in
+    B.modifies (B.loc_buffer_from_to b 0ul pos2) h h' /\
+    spec v_in == (| v, v_out |)
+  ))
+
+let buffer_offset
+  (#t: Type)
+  (b: B.buffer t)
+: Tot Type0
+= pos1: U32.t { U32.v pos1 <= B.length b }
+
+inline_for_extraction
+unfold
+let repr_hoare_impl
+  (a:Type u#x)
+  (r_in: parser)
+  (r_out:a -> parser)
+  (pre: pre_t r_in)
+  (post: post_t a r_in r_out pre)
+  (b: B.buffer U8.t)
+  (spec: repr_hoare_spec a r_in r_out pre post)
+: Tot Type0 =
+  (pos1: buffer_offset b) ->
+  HST.Stack (a & U32.t)
+  (requires (fun h ->
+    valid_pos r_in h b 0ul pos1 /\
+    pre (contents r_in h b 0ul pos1)
+  ))
+  (ensures (fun h (v, pos2) h' ->
+    repr_hoare_impl_post a r_in r_out pre post b spec pos1 h v pos2 h'
+  ))
+
+inline_for_extraction
+let repr_impl_of_repr_hoare_impl
+  (a:Type u#x)
+  (r_in: parser)
+  (r_out:a -> parser)
+  (pre: pre_t r_in)
+  (post: post_t a r_in r_out pre)
+  (b: B.buffer U8.t)
+  (spec: repr_hoare_spec a r_in r_out pre post)
+  (impl: repr_hoare_impl a r_in r_out pre post b spec)
+: Tot (repr_impl a r_in r_out (hoare_to_wp a r_in r_out pre post) b (repr_spec_of_repr_hoare_spec a r_in r_out pre post spec))
+= fun pos1 -> impl pos1
+
+inline_for_extraction
+let mk_repr_hoare
+  (a:Type u#x)
+  (r_in: parser)
+  (r_out:a -> parser)
+  (pre: pre_t r_in)
+  (post: post_t a r_in r_out pre)
+  (b: B.buffer U8.t)
+  (spec: repr_hoare_spec a r_in r_out pre post)
+  (impl: repr_hoare_impl a r_in r_out pre post b spec)
+: Write a r_in r_out b pre post
+= mk_repr a r_in r_out (hoare_to_wp a r_in r_out pre post) b (repr_spec_of_repr_hoare_spec a r_in r_out pre post spec) (repr_impl_of_repr_hoare_impl a r_in r_out pre post b spec impl)
+
+inline_for_extraction
+let reify_repr_hoare
+  (a:Type u#x)
+  (r_in: parser)
+  (r_out:a -> parser)
+  (pre: pre_t r_in)
+  (post: post_t a r_in r_out pre)
+  (b: B.buffer U8.t)
+  (w: unit -> Write a r_in r_out b pre post)
+  (pos1: U32.t)
+: HST.Stack (a & U32.t)
+  (requires (fun h ->
+    valid_pos r_in h b 0ul pos1 /\
+    pre (contents r_in h b 0ul pos1)
+  ))
+  (ensures (fun h (v, pos2) h' ->
+    valid_pos r_in h b 0ul pos1 /\ (
+    let v_in = contents r_in h b 0ul pos1 in
+    pre v_in /\
+    U32.v pos1 <= U32.v pos2 /\
+    valid_pos (r_out v) h' b 0ul pos2 /\ (
+    let v_out = contents (r_out v) h' b 0ul pos2 in
+    B.modifies (B.loc_buffer_from_to b 0ul pos2) h h' /\
+    post v_in v v_out
+  ))))
+= let f = reify (w ()) in // FIXME: inline at extraction
+  dsnd f pos1
+
+assume
+val emp' : parser' unit
+
+let emp : parser = (| unit, emp' |)
+
+assume
+val valid_emp
+  (h: HS.mem)
+  (b: B.buffer u8)
+  (pos: U32.t)
+  (pos' : U32.t)
+: Lemma
+  (
+    valid_pos emp h b pos pos' <==> (
+    B.live h b /\
+    U32.v pos <= B.length b /\
+    U32.v pos' == U32.v pos
+  ))
+  [SMTPat (valid_pos emp h b pos pos')]
+
 assume
 val star' (#t1 #t2: Type) (p1: parser' t1) (p2: parser' t2) : Tot (parser' (t1 & t2))
 
 let star (p1 p2: parser) : Tot parser = (| (dfst p1 & dfst p2), star' (dsnd p1) (dsnd p2) |)
 
-(*
 assume
 val valid_star
   (p1 p2: parser)
@@ -333,7 +521,6 @@ val valid_star
     valid_pos (p1 `star` p2) h b pos1 pos3 /\
     contents (p1 `star` p2) h b pos1 pos3 == (contents p1 h b pos1 pos2, contents p2 h b pos2 pos3)
   ))
-  [SMTPat (valid_pos p1 h b pos1 pos2); SMTPat (valid_pos p2 h b pos2 pos3)]
 
 assume
 val valid_frame
@@ -355,18 +542,160 @@ val valid_frame
     valid_pos p h' b pos pos' /\
     contents p h' b pos pos' == contents p h b pos pos'
   ))
-  [SMTPatOr [
-    [SMTPat (valid_pos p h b pos pos'); SMTPat (B.modifies l h h')];
-    [SMTPat (valid_pos p h' b pos pos'); SMTPat (B.modifies l h h')];
-  ]]
+
+assume
+val valid_gsub
+  (p: parser)
+  (h: HS.mem)
+  (b: B.buffer U8.t)
+  (pos0 pos1 pos2: U32.t)
+  (len: U32.t)
+: Lemma
+  (requires (
+    U32.v pos0 + U32.v len <= B.length b /\
+    valid_pos p h (B.gsub b pos0 len) pos1 pos2
+  ))
+  (ensures (
+    U32.v pos0 + U32.v pos2 <= B.length b /\
+    valid_pos p h (B.gsub b pos0 len) pos1 pos2 /\
+    valid_pos p h b (pos0 `U32.add` pos1) (pos0 `U32.add` pos2) /\
+    contents p h b (pos0 `U32.add` pos1) (pos0 `U32.add` pos2) == contents p h (B.gsub b pos0 len) pos1 pos2
+  ))
+  [SMTPat (valid_pos p h (B.gsub b pos0 len) pos1 pos2)]
+
+let frame_out
+  (a: Type)
+  (frame: parser)
+  (p: (a -> Tot parser))
+  (x: a)
+: Tot parser
+= frame `star` (p x)
+
+(*
+unfold
+let frame_wp
+  (a: Type)
+  (frame: parser)
+  (p: (a -> Tot parser))
+  (wp: wp_t a emp p)
+: Tot (wp_t a frame (frame_out a frame p))
+= fun fr post -> wp () (fun (| x, w |) -> post (| x, (fr, w) |))
+
+let frame_spec
+  (a: Type)
+  (frame: parser)
+  (p: (a -> Tot parser))
+  (wp: wp_t a emp p)
+  (inner: repr_spec a emp p wp)
+: Tot (repr_spec a frame (frame_out a frame p) (frame_wp a frame p wp))
+= fun fr ->
+  let (| v, w |) = inner () in
+  (| v, (fr, w) |)
+
+let frame_impl
+  (a: Type)
+  (frame: parser)
+  (p: (a -> Tot parser))
+  (wp: wp_t a emp p)
+  (inner: repr_spec a emp p wp)
+  (buf: B.buffer u8)
+  (inner_impl: (buf' : B.buffer u8 { B.loc_includes (B.loc_buffer buf) (B.loc_buffer buf') }) -> Tot (repr_impl a emp p wp buf' inner))
+: Tot (repr_impl a frame (frame_out a frame p) (frame_wp a frame p wp) buf (frame_spec a frame p wp inner))
+=
+  fun pos ->
+  let h = HST.get () in
+  let buf' = B.offset buf pos in
+  assume (repr_impl_wp a emp p wp buf' (frame_spec a frame p wp inner) 0ul (fun _ _ -> True));
+  let (x, len) = inner_impl buf' 0ul in
+  assume False;
+  let h' = HST.get () in
+  (x, pos `U32.add` len)
+*)
+
+unfold
+let frame_pre
+  (a: Type)
+  (frame: parser)
+  (pre: pre_t emp)
+: Tot (pre_t frame)
+= fun _ -> pre ()
+
+unfold
+let frame_post
+  (a: Type)
+  (frame: parser)
+  (pre: pre_t emp)
+  (p: a -> parser)
+  (post: post_t a emp p pre)
+: Tot (post_t a frame (frame_out a frame p) (frame_pre a frame pre))
+= fun _ v (_, v_out) -> post () v v_out
+
+let frame_spec
+  (a: Type)
+  (frame: parser)
+  (pre: pre_t emp)
+  (p: a -> parser)
+  (post: post_t a emp p pre)
+  (inner: repr_hoare_spec a emp p pre post)
+: Tot (repr_hoare_spec a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post))
+= fun fr ->
+  let (| v, w |) = inner () in
+  (| v, (fr, w) |)
+
+inline_for_extraction
+let sum
+  (#t: Type)
+  (b: B.buffer t)
+  (pos: U32.t)
+  (len: U32.t { U32.v pos + U32.v len <= B.length b })
+: Tot (res: U32.t { U32.v res == U32.v pos + U32.v len })
+= pos `U32.add` len
+
+let frame_impl
+  (a: Type)
+  (frame: parser)
+  (pre: pre_t emp)
+  (p: a -> parser)
+  (post: post_t a emp p pre)
+  (buf: B.buffer u8)
+  (inner: repr_hoare_spec a emp p pre post)
+  (inner_impl: (buf' : B.buffer u8 { B.loc_includes (B.loc_buffer buf) (B.loc_buffer buf') }) -> Tot (repr_hoare_impl a emp p pre post buf' inner))
+: Tot (repr_hoare_impl a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) buf (frame_spec a frame pre p post inner))
+= fun pos ->
+  let h = HST.get () in
+  let buf' = B.offset buf pos in
+  let (x, len) = inner_impl buf' 0ul in
+  let h' = HST.get () in
+  let pos' = sum buf pos len in
+  B.loc_disjoint_loc_buffer_from_to buf 0ul pos pos len;
+  valid_frame frame h buf 0ul pos (B.loc_buffer_from_to buf' 0ul len) h';
+  valid_star frame (p x) h' buf 0ul pos pos' ;
+  assert (
+    repr_hoare_impl_post
+    a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) buf (frame_spec a frame pre p post inner) pos h x pos' h'
+  );
+  (x, pos')
+
+inline_for_extraction
+let frame
+  (a: Type)
+  (frame: parser)
+  (pre: pre_t emp)
+  (p: a -> parser)
+  (post: post_t a emp p pre)
+  (buf: B.buffer u8)
+  (inner: (buf' : B.buffer u8 { B.loc_includes (B.loc_buffer buf) (B.loc_buffer buf') }) -> Write a emp p buf' pre post)
+: Write a frame (frame_out a frame p) buf (frame_pre a frame pre) (frame_post a frame pre p post)
+= let (| spec, impl |) = reify (inner buf) in
+  mk_repr_hoare
+    a frame p pre post buf
+    (frame_spec a frame pre p post spec)
+    (frame_impl a frame pre p post buf spec (fun _ -> impl))
+
+(*
   
 
 (*
-
-assume
-val emp' : parser' unit
-
-let emp : parser = (| unit, emp' |)
 
 assume
 val valid_pos_emp
