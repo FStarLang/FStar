@@ -655,6 +655,7 @@ let frame'
     (frame_spec a frame pre p post l inner)
     (frame_impl a frame pre p post l inner)
 
+(* FIXME: WHY WHY WHY does this fail?
 inline_for_extraction
 let frame
   (a: Type)
@@ -667,122 +668,54 @@ let frame
 : Write a frame (frame_out a frame p) l (frame_pre a frame pre) (frame_post a frame pre p post)
 = let h = frame' a frame pre p post l inner in
   h ()
-
-// let (| spec, impl |) = reify (inner ()) in
-
-(*
-  mk_repr_hoare
-    a frame p pre post l
-    (frame_spec a frame pre p post spec)
-    (frame_impl a frame pre p post l spec impl)
-
-(*
-  
-
-(*
+*)
 
 assume
-val valid_pos_emp
-  (h: HS.mem)
-  (b: B.buffer U8.t)
-  (pos: U32.t)
-  (pos' : U32.t)
-: Lemma
-  (valid_pos emp h b pos pos' <==> (B.live h b /\ pos' == pos /\ U32.v pos <= B.length b))
-  [SMTPat (valid_pos emp h b pos pos')]
+val frame
+  (a: Type)
+  (frame: parser)
+  (pre: pre_t emp)
+  (p: a -> parser)
+  (post: post_t a emp p pre)
+  (l: B.loc)
+  (inner: unit -> Write a emp p l pre post)
+: Write a frame (frame_out a frame p) l (frame_pre a frame pre) (frame_post a frame pre p post)
 
+assume
+val parse_u32' : parser' U32.t
 
+let parse_u32 : parser = (| U32.t , parse_u32' |)
 
+assume
+val write_u32
+  (#l: B.loc)
+  (x: U32.t)
+: Write unit emp (fun _ -> parse_u32) l (fun _ -> True) (fun _ _ y -> y == x)  
 
-let push'
+assume
+val frame_write_u32
+  (#fr: parser)
+  (#l: B.loc)
+  (x: U32.t)
+: Write unit fr (fun _ -> fr `star` parse_u32) l (fun _ -> True) (fun w _ (w', x') -> w' == w /\ x' == x)
+(* FIXME: WHY WHY WHY does this fail?
+= frame unit fr (fun _ -> True) (fun _ -> parse_u32) (fun _ _ x' -> x' == x) l (fun _ -> write_u32 l x)
+*)
 
+let write_two_ints
+  (l: B.loc)
+  (x y: U32.t)
+: Write unit emp (fun _ -> parse_u32 `star` parse_u32) l (fun _ -> True) (fun _ _ (x', y') -> x' == x /\ y' == y)
+= write_u32 x;
+  frame_write_u32 y
 
-let if_then_else (a:Type)
-  (r_in:resource) (r_out:a -> resource) (b:Type0)
-  (f:repr a r_in r_out b) (g:repr a r_in r_out b)
-  (p:Type0)
-: Type
-= repr a r_in r_out b
-
-
-let return (#a:Type) (#r:a -> resource) (x:a)
-: RSTATE a (r x) r True
-= RSTATE?.reflect (returnc a x r)
-
-assume val wp_monotonic_pure (_:unit)
-  : Lemma
-    (forall (a:Type) (wp:pure_wp a).
-       (forall (p q:pure_post a).
-          (forall (x:a). p x ==> q x) ==>
-          (wp p ==> wp q)))
-
-let lift_pure_rst (a:Type) (wp:pure_wp a) (r:resource) (f:unit -> PURE a wp)
-: Pure (repr a r (fun _ -> r) True)
-  (requires wp (fun _ -> True))
-  (ensures fun _ -> True)
-= wp_monotonic_pure ();
-  fun _ -> f ()
-
-sub_effect PURE ~> RSTATE = lift_pure_rst
-
-
-assume val emp : resource
-
-assume val array : Type0
-assume val array_resource (a:array) : resource
-
-assume val alloc (_:unit) : RSTATE array emp array_resource True
-
-let test ()
-: RSTATE array emp array_resource True
-= let ptr = alloc () in
-  return ptr
-
-type t =
-  | C : t
-  | D : t
-
-assume val rst_unit (_:unit) : RSTATE unit emp (fun _ -> emp) True
-
-let test_match (x:t) : RSTATE unit emp (fun _ -> emp) True =
-  match x with
-  | C -> rst_unit ()
-  | D -> rst_unit ()
-
-
-(*
- * Following example showcases a bug in checking match terms for layered effects
- *
- * When typechecking the pattern `C a x`, we generate a term with projectors and discriminators
- *   for each of the pattern bvs, a and x in this case, and those terms are then lax checked
- * Crucially when lax checking pat_bv_tm for `x`, `a` must be in the environement,
- *   earlier it wasn't
- *)
-
-noeq
-type m : Type -> Type =
-| C1 : a:Type -> x:a -> m a
-| D1 : a:Type -> x:a -> m a
-
-let test_match2 (a:Type) (f:m a) : RSTATE unit emp (fun _ -> emp) True
-= match f with
-  | C1 a x -> rst_unit ()
-  | D1 a x -> rst_unit ()
-
-
-assume val false_pre (_:squash False) : RSTATE unit emp (fun _ -> emp) True
-
-[@@expect_failure]
-let test_false_pre () : RSTATE unit emp (fun _ -> emp) True
-= false_pre ()
-
-
-/// Test that bind precondition is checked
-
-assume val f_test_bind (_:unit) : RSTATE unit emp (fun _ -> emp) True
-assume val g_test_bind (_:unit) : RSTATE unit emp (fun _ -> emp) False
-
-[@@expect_failure]
-let test_bind () : RSTATE unit emp (fun _ -> emp) True
-= f_test_bind ();
-  g_test_bind ()
+let write_two_ints_ifthenelse
+  (l: B.loc)
+  (x y: U32.t)
+: Write unit emp (fun _ -> parse_u32 `star` parse_u32) l (fun _ -> True) (fun _ _ (x', y') -> x' == x /\ y' == (if U32.v x < U32.v y then x else y))
+= write_u32 x;
+  if x `U32.lt` y
+  then
+    frame_write_u32 x
+  else
+    frame_write_u32 y
