@@ -3,10 +3,6 @@ module GT
 open FStar.Tactics
 open FStar.Universe
 
-// GM: Originally wanted to include Dv too: that is not so easy,
-//     the [unit -> Dv a] type lives in universe level 0, differently
-//     from the others, which prevents us from writing a universe-polymorphic
-//     [m] type. Cumulativity would solve this. Leaving it out for now.
 type idx =
  | T
  | G
@@ -94,10 +90,12 @@ sub_effect PURE ~> GTD = lift_pure_gtd
 
 let rec map #a #b #i (f : a -> GTD b i) (xs : list a) : GTD (list b) i =
   match xs with
-  | [] -> []
+  | []   -> []
   | x::xs -> (f x)::(map f xs)
 
 let app #a #b #i (f : a -> GTD b i) (x : a) : GTD b i = f x
+
+// todo: use map/app from tot context and prove that it does what it's meant to do
 
 #set-options "--debug GT --debug_level SMTQuery"
 
@@ -125,7 +123,6 @@ let app #a #b #i (f : a -> GTD b i) (x : a) : GTD b i = f x
 
 open FStar.Tactics
 
-[@@expect_failure [19]]
 let rec appn #a #i (n:nat) (f : a -> GTD a i) (x : a) : GTD a i =
   match n with 
   | 0 -> x
@@ -152,7 +149,6 @@ let labs #i (n:int) : GTD nat i =
 
 // GM: This fails, which I think makes sense since the effect
 //     doesn't carry any logical payload, so the assume gets lost?
-[@@expect_failure]
 let test #a #i (n:int) : GTD nat i =
   let r = labs0 n in
   assume (r >= 0);

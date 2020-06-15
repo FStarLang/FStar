@@ -111,7 +111,6 @@ let rec map #a #b #i (f : a -> Gtd b i) (xs : list a) : Gtd (list b) i (* by (ex
   | [] -> []
   | x::xs -> (f x)::(map f xs)
 
-
 let app #a #b #i #wp (f : a -> GTD b i wp) (x : a) : GTD b i wp = f x
 
 // GM: This fails, but I'm not sure why. With tactica (after compute) I see
