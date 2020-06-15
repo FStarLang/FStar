@@ -95,9 +95,12 @@ let repr_spec (a:Type u#x) (r_in: parser) (r_out:a -> parser) (wp: wp_t a r_in r
   (v_in: dfst r_in) ->
   GHOST (v: a & dfst (r_out v)) (wp v_in)
 
+type u8 : Type0 = U8.t
+
 unfold
 let repr_impl_wp
-  (a:Type u#x) (r_in: parser) (r_out:a -> parser) (wp: wp_t a r_in r_out) (b: B.buffer U8.t) (spec: repr_spec a r_in r_out wp)
+  (a:Type u#x) (r_in: parser) (r_out:a -> parser) (wp: wp_t a r_in r_out) (l: B.loc) (spec: repr_spec a r_in r_out wp)
+  (b: B.buffer u8 { l `B.loc_includes` B.loc_buffer b })
   (pos1: U32.t { U32.v pos1 <= B.length b })
 : Tot (st_wp_h HS.mem (a & U32.t))
 = fun (k: st_post_h HS.mem (a & U32.t)) (h: HS.mem) ->
@@ -115,20 +118,19 @@ let repr_impl_wp
   ))
 
 inline_for_extraction
-let repr_impl (a:Type u#x) (r_in: parser) (r_out:a -> parser) (wp: wp_t a r_in r_out) (b: B.buffer U8.t) (spec: repr_spec a r_in r_out wp) : Tot Type0 =
+let repr_impl (a:Type u#x) (r_in: parser) (r_out:a -> parser) (wp: wp_t a r_in r_out) (l: B.loc) (spec: repr_spec a r_in r_out wp) : Tot Type0 =
+  (b: B.buffer u8 { l `B.loc_includes` B.loc_buffer b }) ->
   (pos1: U32.t { U32.v pos1 <= B.length b }) ->
-  HST.STATE (a & U32.t) (repr_impl_wp a r_in r_out wp b spec pos1)
-
-type u8 : Type0 = U8.t
+  HST.STATE (a & U32.t) (repr_impl_wp a r_in r_out wp l spec b pos1)
 
 inline_for_extraction
 let repr
   (a: Type u#x)
   (r_in: parser) (r_out:a -> parser)
   (wp: wp_t a r_in r_out)
-  (buf:B.buffer u8)
+  (l: B.loc)
 : Tot (Type u#x)
-= dtuple2 (repr_spec a r_in r_out wp) (repr_impl a r_in r_out wp buf)
+= dtuple2 (repr_spec a r_in r_out wp) (repr_impl a r_in r_out wp l)
 
 unfold
 let return_wp
@@ -144,15 +146,15 @@ let return_spec
 inline_for_extraction
 let return_impl
   (a:Type) (x:a) (r: a -> parser)
-  (b: B.buffer u8)
-: Tot (repr_impl a (r x) r (return_wp a x r) b (return_spec a x r))
-= fun pos1 -> (x, pos1)
+  (l: B.loc)
+: Tot (repr_impl a (r x) r (return_wp a x r) l (return_spec a x r))
+= fun b pos1 -> (x, pos1)
 
 inline_for_extraction
 let returnc
-  (a:Type) (x:a) (r: a -> parser) (buf:B.buffer u8)
-: Tot (repr a (r x) r (return_wp a x r) buf)
-= (| return_spec a x r, return_impl a x r buf |)
+  (a:Type) (x:a) (r: a -> parser) (l: B.loc)
+: Tot (repr a (r x) r (return_wp a x r) l)
+= (| return_spec a x r, return_impl a x r l |)
 
 unfold
 let bind_wp
@@ -202,32 +204,33 @@ let bind_impl
   (r_wp_g: (x:a -> wp_t b (r_out_f x) r_out_g))
   (f:repr_spec a r_in_f r_out_f r_wp_f)
   (g:(x:a -> repr_spec b (r_out_f x) r_out_g (r_wp_g x)))
-  (buf: B.buffer u8)
-  (f' : repr_impl a r_in_f r_out_f r_wp_f  buf f)
-  (g' : (x: a -> repr_impl b (r_out_f x) r_out_g (r_wp_g x) buf (g x)))
-: Tot (repr_impl b r_in_f r_out_g (bind_wp a b r_in_f r_out_f r_wp_f r_out_g r_wp_g) buf (bind_spec a b r_in_f r_out_f r_wp_f r_out_g r_wp_g f g))
-= fun pos ->
-  match f' pos with
-  | (x, posf) -> g' x posf
+  (l: B.loc)
+  (f' : repr_impl a r_in_f r_out_f r_wp_f l f)
+  (g' : (x: a -> repr_impl b (r_out_f x) r_out_g (r_wp_g x) l (g x)))
+: Tot (repr_impl b r_in_f r_out_g (bind_wp a b r_in_f r_out_f r_wp_f r_out_g r_wp_g) l (bind_spec a b r_in_f r_out_f r_wp_f r_out_g r_wp_g f g))
+= fun buf pos ->
+  match f' buf pos with
+  | (x, posf) -> g' x buf posf
 
 inline_for_extraction
 let bind (a:Type) (b:Type)
   (r_in_f:parser) (r_out_f:a -> parser) (r_wp_f: wp_t a r_in_f r_out_f)
   (r_out_g:b -> parser)
   (r_wp_g: (x:a -> wp_t b (r_out_f x) r_out_g))
-  (buf:B.buffer u8)
-  (f:repr a r_in_f r_out_f r_wp_f buf) (g:(x:a -> repr b (r_out_f x) r_out_g (r_wp_g x) buf))
-: Tot (repr b r_in_f r_out_g (bind_wp a b r_in_f r_out_f r_wp_f r_out_g r_wp_g) buf)
-= (| bind_spec a b r_in_f r_out_f r_wp_f r_out_g r_wp_g (dfst f) (fun x -> dfst (g x)), bind_impl a b r_in_f r_out_f r_wp_f r_out_g r_wp_g (dfst f) (fun x -> dfst (g x)) buf (dsnd f) (fun x -> dsnd (g x)) |)
+  (l: B.loc)
+  (f:repr a r_in_f r_out_f r_wp_f l) (g:(x:a -> repr b (r_out_f x) r_out_g (r_wp_g x) l))
+: Tot (repr b r_in_f r_out_g (bind_wp a b r_in_f r_out_f r_wp_f r_out_g r_wp_g) l)
+= (| bind_spec a b r_in_f r_out_f r_wp_f r_out_g r_wp_g (dfst f) (fun x -> dfst (g x)), bind_impl a b r_in_f r_out_f r_wp_f r_out_g r_wp_g (dfst f) (fun x -> dfst (g x)) l (dsnd f) (fun x -> dsnd (g x)) |)
 
 inline_for_extraction
 let subcomp (a:Type)
   (r_in:parser) (r_out:a -> parser) (r_wp: wp_t a r_in r_out)
   (r_wp': wp_t a r_in r_out)
-  (buf:B.buffer u8)
-  (f:repr a r_in r_out r_wp buf)
-: Pure (repr a r_in r_out r_wp' buf)
-  (requires (forall x p . r_wp' x p ==> r_wp x p))
+  (l:B.loc)
+  (l' : B.loc)
+  (f:repr a r_in r_out r_wp l)
+: Pure (repr a r_in r_out r_wp' l')
+  (requires (l `B.loc_includes` l' /\ (forall x p . r_wp' x p ==> r_wp x p)))
   (ensures (fun _ -> True))
 = (| (fun x -> dfst f x), (fun pos -> dsnd f pos) |)
 
@@ -235,7 +238,6 @@ unfold
 let if_then_else_wp
   (a:Type)
   (r_in:parser) (r_out:a -> parser) (r_wp_f r_wp_g: wp_t a r_in r_out) 
-  (buf:B.buffer u8)
   (p:Type0)
 : Tot (wp_t a r_in r_out)
 = fun s k ->
@@ -244,17 +246,17 @@ let if_then_else_wp
 
 let if_then_else (a:Type)
   (r_in:parser) (r_out:a -> parser) (r_wp_f r_wp_g: wp_t a r_in r_out) 
-  (buf:B.buffer u8)
-  (f:repr a r_in r_out r_wp_f buf) (g:repr a r_in r_out r_wp_g buf)
+  (l:B.loc)
+  (f:repr a r_in r_out r_wp_f l) (g:repr a r_in r_out r_wp_g l)
   (p:Type0)
 : Tot Type
-= repr a r_in r_out (if_then_else_wp a r_in r_out r_wp_f r_wp_g buf p) buf
+= repr a r_in r_out (if_then_else_wp a r_in r_out r_wp_f r_wp_g p) l
 
 #push-options "--print_universes"
 
-reifiable reflectable
+reifiable reflectable total
 layered_effect {
-  WRITE : a:Type -> (pin: parser) -> (pout: (a -> parser)) -> (wp: wp_t a pin pout) -> (B.buffer u8) -> Effect
+  WRITE : a:Type -> (pin: parser) -> (pout: (a -> parser)) -> (wp: wp_t a pin pout) -> (B.loc) -> Effect
   with
   repr = repr;
   return = returnc;
@@ -271,10 +273,10 @@ let mk_repr
   (r_in: parser)
   (r_out:a -> parser)
   (wp: wp_t a r_in r_out)
-  (b: B.buffer u8)
+  (l: B.loc)
   (spec: repr_spec a r_in r_out wp)
-  (impl: repr_impl a r_in r_out wp b spec)
-: WRITE a r_in r_out wp b
+  (impl: repr_impl a r_in r_out wp l spec)
+: WRITE a r_in r_out wp l
 = WRITE?.reflect (| spec, impl |)
 
 unfold
@@ -290,21 +292,19 @@ let lift_pure_spec
 
 let lift_pure_impl
   (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f:unit -> PURE a wp)
-  (buf: B.buffer u8)
-: Tot (repr_impl a r (fun _ -> r) (lift_pure_wp a wp r f) buf (lift_pure_spec a wp r f))
-= fun pos -> (f (), pos)
+  (l: B.loc)
+: Tot (repr_impl a r (fun _ -> r) (lift_pure_wp a wp r f) l (lift_pure_spec a wp r f))
+= fun buf pos -> (f (), pos)
 
 let lift_pure (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser)
-  (buf: B.buffer u8)
+  (l: B.loc)
   (f:unit -> PURE a wp)
-: Pure (repr a r (fun _ -> r) (lift_pure_wp a wp r f) buf)
+: Pure (repr a r (fun _ -> r) (lift_pure_wp a wp r f) l)
   (requires wp (fun _ -> True))
   (ensures fun _ -> True)
-= (| lift_pure_spec a wp r f, lift_pure_impl a wp r f buf |)
+= (| lift_pure_spec a wp r f, lift_pure_impl a wp r f l |)
 
 sub_effect PURE ~> WRITE = lift_pure
-
-(* FIXME: WHY WHY WHY can't I reify in Tot/GTot here? (St will work)
 
 inline_for_extraction
 let destr_repr_spec
@@ -312,11 +312,21 @@ let destr_repr_spec
   (r_in: parser)
   (r_out:a -> parser)
   (wp: wp_t a r_in r_out)
-  (b: B.buffer u8)
-  (f: unit -> WRITE a r_in r_out wp b)
+  (l: B.loc)
+  (f: unit -> WRITE a r_in r_out wp l)
 : Tot (repr_spec a r_in r_out wp)
 = dfst (reify (f ()))
-*)
+
+inline_for_extraction
+let destr_repr_impl
+  (a:Type u#x)
+  (r_in: parser)
+  (r_out:a -> parser)
+  (wp: wp_t a r_in r_out)
+  (l: B.loc)
+  (f: unit -> WRITE a r_in r_out wp l)
+: Tot (repr_impl a r_in r_out wp l (destr_repr_spec a r_in r_out wp l f))
+= dsnd (reify (f ()))
 
 let pre_t
   (rin: parser)
@@ -343,8 +353,8 @@ let hoare_to_wp
   pre x /\
   (forall (res: a) x' . post x res x' ==> p (| res, x' |))
 
-effect Write (a: Type) (rin: parser) (rout: a -> Tot parser) (buf: B.buffer u8) (pre: pre_t rin) (post: post_t a rin rout pre) =
-  WRITE a rin rout (hoare_to_wp a rin rout pre post) buf 
+effect Write (a: Type) (rin: parser) (rout: a -> Tot parser) (l: B.loc) (pre: pre_t rin) (post: post_t a rin rout pre) =
+  WRITE a rin rout (hoare_to_wp a rin rout pre post) l
 
 inline_for_extraction
 unfold
@@ -379,8 +389,9 @@ let repr_hoare_impl_post
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (b: B.buffer U8.t)
+  (l: B.loc)
   (spec: repr_hoare_spec a r_in r_out pre post)
+  (b: B.buffer u8 { l `B.loc_includes` B.loc_buffer b })
   (pos1: U32.t { U32.v pos1 <= B.length b })
   (h: HS.mem)
   (v: a)
@@ -412,9 +423,10 @@ let repr_hoare_impl
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (b: B.buffer U8.t)
+  (l: B.loc)
   (spec: repr_hoare_spec a r_in r_out pre post)
 : Tot Type0 =
+  (b: B.buffer u8 { l `B.loc_includes` B.loc_buffer b }) ->
   (pos1: buffer_offset b) ->
   HST.Stack (a & U32.t)
   (requires (fun h ->
@@ -422,7 +434,7 @@ let repr_hoare_impl
     pre (contents r_in h b 0ul pos1)
   ))
   (ensures (fun h (v, pos2) h' ->
-    repr_hoare_impl_post a r_in r_out pre post b spec pos1 h v pos2 h'
+    repr_hoare_impl_post a r_in r_out pre post l spec b pos1 h v pos2 h'
   ))
 
 inline_for_extraction
@@ -432,11 +444,11 @@ let repr_impl_of_repr_hoare_impl
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (b: B.buffer U8.t)
+  (l: B.loc)
   (spec: repr_hoare_spec a r_in r_out pre post)
-  (impl: repr_hoare_impl a r_in r_out pre post b spec)
-: Tot (repr_impl a r_in r_out (hoare_to_wp a r_in r_out pre post) b (repr_spec_of_repr_hoare_spec a r_in r_out pre post spec))
-= fun pos1 -> impl pos1
+  (impl: repr_hoare_impl a r_in r_out pre post l spec)
+: Tot (repr_impl a r_in r_out (hoare_to_wp a r_in r_out pre post) l (repr_spec_of_repr_hoare_spec a r_in r_out pre post spec))
+= fun b pos1 -> impl b pos1
 
 inline_for_extraction
 let mk_repr_hoare
@@ -445,39 +457,44 @@ let mk_repr_hoare
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (b: B.buffer U8.t)
+  (l: B.loc)
   (spec: repr_hoare_spec a r_in r_out pre post)
-  (impl: repr_hoare_impl a r_in r_out pre post b spec)
-: Write a r_in r_out b pre post
-= mk_repr a r_in r_out (hoare_to_wp a r_in r_out pre post) b (repr_spec_of_repr_hoare_spec a r_in r_out pre post spec) (repr_impl_of_repr_hoare_impl a r_in r_out pre post b spec impl)
+  (impl: repr_hoare_impl a r_in r_out pre post l spec)
+  ()
+: Write a r_in r_out l pre post
+= mk_repr a r_in r_out (hoare_to_wp a r_in r_out pre post) l (repr_spec_of_repr_hoare_spec a r_in r_out pre post spec) (repr_impl_of_repr_hoare_impl a r_in r_out pre post l spec impl)
 
-inline_for_extraction
-let reify_repr_hoare
+let reify_repr_hoare_spec
   (a:Type u#x)
   (r_in: parser)
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (b: B.buffer U8.t)
-  (w: unit -> Write a r_in r_out b pre post)
-  (pos1: U32.t)
-: HST.Stack (a & U32.t)
-  (requires (fun h ->
-    valid_pos r_in h b 0ul pos1 /\
-    pre (contents r_in h b 0ul pos1)
-  ))
-  (ensures (fun h (v, pos2) h' ->
-    valid_pos r_in h b 0ul pos1 /\ (
-    let v_in = contents r_in h b 0ul pos1 in
-    pre v_in /\
-    U32.v pos1 <= U32.v pos2 /\
-    valid_pos (r_out v) h' b 0ul pos2 /\ (
-    let v_out = contents (r_out v) h' b 0ul pos2 in
-    B.modifies (B.loc_buffer_from_to b 0ul pos2) h h' /\
-    post v_in v v_out
-  ))))
-= let f = reify (w ()) in // FIXME: inline at extraction
-  dsnd f pos1
+  (l: B.loc)
+  (w: unit -> Write a r_in r_out l pre post)
+: Tot (repr_hoare_spec a r_in r_out pre post)
+= fun v_in -> dfst (reify (w ())) v_in
+
+inline_for_extraction
+let reify_repr_hoare_impl
+  (a:Type u#x)
+  (r_in: parser)
+  (r_out:a -> parser)
+  (pre: pre_t r_in)
+  (post: post_t a r_in r_out pre)
+  (l: B.loc)
+  (w: unit -> Write a r_in r_out l pre post)
+: Tot (repr_hoare_impl a r_in r_out pre post l (reify_repr_hoare_spec a r_in r_out pre post l w))
+= fun b pos ->
+  // [@inline_let]
+  let (| spec, impl |) = reify (w ()) in
+  let h = HST.get () in
+  let (v, pos') = impl b pos in
+  let h' = HST.get () in
+  let v_in = Ghost.hide (contents r_in h b 0ul pos) in
+  let v_out = Ghost.hide (contents (r_out v) h' b 0ul pos') in
+  assume (spec v_in == (| v, Ghost.reveal v_out |)); // by (FStar.Tactics.fail "abc"); // FIXME: WHY WHY WHY can't I derive that from the wp?
+  (v, pos')
 
 assume
 val emp' : parser' unit
@@ -571,47 +588,6 @@ let frame_out
 : Tot parser
 = frame `star` (p x)
 
-(*
-unfold
-let frame_wp
-  (a: Type)
-  (frame: parser)
-  (p: (a -> Tot parser))
-  (wp: wp_t a emp p)
-: Tot (wp_t a frame (frame_out a frame p))
-= fun fr post -> wp () (fun (| x, w |) -> post (| x, (fr, w) |))
-
-let frame_spec
-  (a: Type)
-  (frame: parser)
-  (p: (a -> Tot parser))
-  (wp: wp_t a emp p)
-  (inner: repr_spec a emp p wp)
-: Tot (repr_spec a frame (frame_out a frame p) (frame_wp a frame p wp))
-= fun fr ->
-  let (| v, w |) = inner () in
-  (| v, (fr, w) |)
-
-let frame_impl
-  (a: Type)
-  (frame: parser)
-  (p: (a -> Tot parser))
-  (wp: wp_t a emp p)
-  (inner: repr_spec a emp p wp)
-  (buf: B.buffer u8)
-  (inner_impl: (buf' : B.buffer u8 { B.loc_includes (B.loc_buffer buf) (B.loc_buffer buf') }) -> Tot (repr_impl a emp p wp buf' inner))
-: Tot (repr_impl a frame (frame_out a frame p) (frame_wp a frame p wp) buf (frame_spec a frame p wp inner))
-=
-  fun pos ->
-  let h = HST.get () in
-  let buf' = B.offset buf pos in
-  assume (repr_impl_wp a emp p wp buf' (frame_spec a frame p wp inner) 0ul (fun _ _ -> True));
-  let (x, len) = inner_impl buf' 0ul in
-  assume False;
-  let h' = HST.get () in
-  (x, pos `U32.add` len)
-*)
-
 unfold
 let frame_pre
   (a: Type)
@@ -636,45 +612,48 @@ let frame_spec
   (pre: pre_t emp)
   (p: a -> parser)
   (post: post_t a emp p pre)
-  (inner: repr_hoare_spec a emp p pre post)
+  (l: B.loc)
+  (inner: unit -> Write a emp p l pre post)
 : Tot (repr_hoare_spec a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post))
 = fun fr ->
-  let (| v, w |) = inner () in
+  let (| v, w |) = reify_repr_hoare_spec a emp p pre post l inner () in
   (| v, (fr, w) |)
 
 inline_for_extraction
-let sum
-  (#t: Type)
-  (b: B.buffer t)
-  (pos: U32.t)
-  (len: U32.t { U32.v pos + U32.v len <= B.length b })
-: Tot (res: U32.t { U32.v res == U32.v pos + U32.v len })
-= pos `U32.add` len
-
 let frame_impl
   (a: Type)
   (frame: parser)
   (pre: pre_t emp)
   (p: a -> parser)
   (post: post_t a emp p pre)
-  (buf: B.buffer u8)
-  (inner: repr_hoare_spec a emp p pre post)
-  (inner_impl: (buf' : B.buffer u8 { B.loc_includes (B.loc_buffer buf) (B.loc_buffer buf') }) -> Tot (repr_hoare_impl a emp p pre post buf' inner))
-: Tot (repr_hoare_impl a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) buf (frame_spec a frame pre p post inner))
-= fun pos ->
+  (l: B.loc)
+  (inner: unit -> Write a emp p l pre post)
+: Tot (repr_hoare_impl a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l (frame_spec a frame pre p post l inner))
+= fun buf pos ->
   let h = HST.get () in
   let buf' = B.offset buf pos in
-  let (x, len) = inner_impl buf' 0ul in
+  let (x, len) = reify_repr_hoare_impl a emp p pre post l inner buf' 0ul in
   let h' = HST.get () in
-  let pos' = sum buf pos len in
+  let pos' = pos `U32.add` len in
   B.loc_disjoint_loc_buffer_from_to buf 0ul pos pos len;
   valid_frame frame h buf 0ul pos (B.loc_buffer_from_to buf' 0ul len) h';
   valid_star frame (p x) h' buf 0ul pos pos' ;
-  assert (
-    repr_hoare_impl_post
-    a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) buf (frame_spec a frame pre p post inner) pos h x pos' h'
-  );
   (x, pos')
+
+inline_for_extraction
+let frame'
+  (a: Type)
+  (frame: parser)
+  (pre: pre_t emp)
+  (p: a -> parser)
+  (post: post_t a emp p pre)
+  (l: B.loc)
+  (inner: unit -> Write a emp p l pre post)
+: Tot (unit -> Write a frame (frame_out a frame p) l (frame_pre a frame pre) (frame_post a frame pre p post))
+= mk_repr_hoare
+    a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l
+    (frame_spec a frame pre p post l inner)
+    (frame_impl a frame pre p post l inner)
 
 inline_for_extraction
 let frame
@@ -683,14 +662,19 @@ let frame
   (pre: pre_t emp)
   (p: a -> parser)
   (post: post_t a emp p pre)
-  (buf: B.buffer u8)
-  (inner: (buf' : B.buffer u8 { B.loc_includes (B.loc_buffer buf) (B.loc_buffer buf') }) -> Write a emp p buf' pre post)
-: Write a frame (frame_out a frame p) buf (frame_pre a frame pre) (frame_post a frame pre p post)
-= let (| spec, impl |) = reify (inner buf) in
+  (l: B.loc)
+  (inner: unit -> Write a emp p l pre post)
+: Write a frame (frame_out a frame p) l (frame_pre a frame pre) (frame_post a frame pre p post)
+= let h = frame' a frame pre p post l inner in
+  h ()
+
+// let (| spec, impl |) = reify (inner ()) in
+
+(*
   mk_repr_hoare
-    a frame p pre post buf
+    a frame p pre post l
     (frame_spec a frame pre p post spec)
-    (frame_impl a frame pre p post buf spec (fun _ -> impl))
+    (frame_impl a frame pre p post l spec impl)
 
 (*
   
