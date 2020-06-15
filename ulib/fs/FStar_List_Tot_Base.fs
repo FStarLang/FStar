@@ -1,6 +1,5 @@
 module FStar_List_Tot_Base
 open Prims
-module OCamlList = FSharp.Compatibility.OCaml.List
 
 let isEmpty l = List.isEmpty l
 let hd = List.head
@@ -37,7 +36,7 @@ let choose = List.choose
 let partition = List.partition
 let subset _ _ = failwith "FStar.List.Tot.Base.fs: Not implemented: subset"
 let noRepeats _ = failwith "FStar.List.Tot.Base.fs: Not implemented: noRepeats"
-let assoc x l = OCamlList.try_assoc x l
+let rec assoc x l = l |> List.tryFind (fun (h, _) -> h = x) |> Option.map snd
 let split = List.unzip
 let splitAt = List.splitAt
 let unzip = List.unzip
