@@ -576,7 +576,7 @@ let frame'
   (p: a -> parser)
   (post: post_t a emp p pre)
   (l: B.loc)
-  ($inner: unit -> Write a emp p pre post l)
+  (inner: unit -> Write a emp p pre post l)
 : Tot (unit -> Write a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l)
 = mk_repr
     a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l
@@ -591,7 +591,7 @@ let frame
   (p: a -> parser)
   (post: post_t a emp p pre)
   (l: B.loc)
-  ($inner: unit -> Write a emp p pre post l)
+  (inner: unit -> Write a emp p pre post l)
 : Write a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l
 = frame' a frame pre p post l inner ()
 
