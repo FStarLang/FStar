@@ -660,6 +660,14 @@ let extract_iface (g:env_t) modul =
              (fun () -> extract_iface' g modul)
       else extract_iface' g modul)
   in
+  let g, _ = UEnv.with_typars_env g (fun e ->
+    let iface_tydefs =
+      List.map (fun td -> snd (UEnv.tydef_mlpath td), UEnv.tydef_def td) iface.iface_tydefs
+    in
+    let module_name, _ = UEnv.extend_with_module_name g modul.name in
+    let e = RemoveUnusedParameters.set_current_module e module_name in
+    RemoveUnusedParameters.elim_tydefs e iface_tydefs)
+  in
   UEnv.exit_module g, iface
 
 (********************************************************************************************)
@@ -988,6 +996,14 @@ let extract (g:uenv) (m:modul) =
       then let msg = BU.format1 "Extracting module %s" (Print.lid_to_string m.name) in
            BU.measure_execution_time msg (fun () -> extract' g m)
       else extract' g m)
+  in
+  let g, mllib =
+    match mllib with
+    | None ->
+      g, mllib
+    | Some mllib ->
+      let g, mllib = UEnv.with_typars_env g (fun e -> RemoveUnusedParameters.elim_mllib e mllib) in
+      g, Some mllib
   in
   ignore <| Options.restore_cmd_line_options true;
   exit_module g, mllib

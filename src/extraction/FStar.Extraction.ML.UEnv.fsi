@@ -63,6 +63,7 @@ val tcenv_of_uenv : u:uenv -> TypeChecker.Env.env
 val set_tcenv : u:uenv -> t:TypeChecker.Env.env -> uenv
 val current_module_of_uenv : u:uenv -> mlpath
 val set_current_module : u:uenv -> p:mlpath -> uenv
+val with_typars_env : uenv -> (RemoveUnusedParameters.env_t -> RemoveUnusedParameters.env_t * 'a) -> uenv * 'a
 
 (** Debugging only *)
 val bindings_of_uenv : uenv -> list<binding>

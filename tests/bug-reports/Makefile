@@ -100,7 +100,8 @@ SHOULD_NOT_VERIFY_NOT_WORKING=Bug186.fst Bug397b.fst
 
 # These will be checked as part of the F* regressions.
 SHOULD_EXTRACT_CLOSED=Bug086.fst Bug314.fst Bug540.fst Bug541.fst Bug589.fst \
-	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst
+	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst \
+	Bug2058.fst RemoveUnusedTypars.B.fst
 #ExtractionBug03.fst
 
 # Bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
@@ -153,6 +154,14 @@ Bug310.extract:
 Bug2058.extract:
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug2058 --codegen OCaml Bug2058.fst
 	diff -u --strip-trailing-cr Bug2058.ml Bug2058.ml.expected
+
+RemoveUnusedTypars.B.extract: RemoveUnusedTypars.A.fst RemoveUnusedTypars.B.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTypars.A.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTypars.B.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTypars.A --codegen FSharp RemoveUnusedTypars.A.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTypars.B --codegen FSharp RemoveUnusedTypars.B.fst
+	diff -u --strip-trailing-cr RemoveUnusedTypars_A.fs RemoveUnusedTypars_A.fs.expected
+	diff -u --strip-trailing-cr RemoveUnusedTypars_B.fs RemoveUnusedTypars_B.fs.expected
 
 %.extract: %.fst
 	mkdir -p out_$*

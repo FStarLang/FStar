@@ -134,6 +134,7 @@ type uenv = {
   env_tcenv:TypeChecker.Env.env;
   env_bindings:list<binding>;
   env_mlident_map:psmap<mlident>;
+  env_remove_typars:RemoveUnusedParameters.env_t;
   mlpath_of_lid:psmap<mlpath>;
   env_fieldname_map:psmap<mlident>;
   mlpath_of_fieldname:psmap<mlpath>;
@@ -148,6 +149,9 @@ let tcenv_of_uenv (u:uenv) : TypeChecker.Env.env = u.env_tcenv
 let set_tcenv (u:uenv) (t:TypeChecker.Env.env) = { u with env_tcenv=t}
 let current_module_of_uenv (u:uenv) : mlpath = u.currentModule
 let set_current_module (u:uenv) (m:mlpath) : uenv = { u with currentModule = m }
+let with_typars_env (u:uenv) (f:_) =
+  let e, x = f u.env_remove_typars in
+  {u with env_remove_typars=e}, x
 
 (**** Debugging *)
 
@@ -597,6 +601,7 @@ let new_uenv (e:TypeChecker.Env.env)
       env_tcenv = e;
       env_bindings =[];
       env_mlident_map=initial_mlident_map ();
+      env_remove_typars=RemoveUnusedParameters.initial_env;
       mlpath_of_lid = BU.psmap_empty();
       env_fieldname_map=initial_mlident_map ();
       mlpath_of_fieldname = BU.psmap_empty();

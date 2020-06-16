@@ -163,6 +163,37 @@ and elim_branch env (pat, wopt, e) =
 and elim_mlexpr (env:env_t) (e:mlexpr) =
   { e with expr = elim_mlexpr' env e.expr; mlty = elim_mlty env e.mlty }
 
+type tydef = mlsymbol * mltyscheme
+
+(** This is a key helper function:
+
+    It is called from elim_one_mltydecl when encountering a type
+    definition (MLTD_Abbrev), and also when processing type
+    definitions when extracting interfaces for dependences.
+
+    it computes the variables that are used and marks the unused ones
+    as Omit in the environment and removes them from the type scheme.
+*)
+let elim_tydef (env:env_t) (td:tydef)
+  : env_t * tydef
+  = let name, (parameters, mlty) = td in
+    let mlty = elim_mlty env mlty in
+    let freevars = freevars_of_mlty mlty in
+    let parameters, entry =
+        List.fold_right
+          (fun p (params, entry) ->
+             if BU.set_mem p freevars
+             then p::params, Retain::entry
+             else params, Omit::entry)
+          parameters
+          ([], [])
+    in
+    extend_env env name entry,
+    (name, (parameters, mlty))
+
+let elim_tydefs (env:env_t) (tds:list<tydef>) : env_t * list<tydef> =
+  BU.fold_map elim_tydef env tds
+
 (** This is the main function that actually extends the environment:
     When encountering a type definition (MLTD_Abbrev), it
     computes the variables that are used and marks the unused ones as Omit
@@ -174,18 +205,8 @@ let elim_one_mltydecl (env:env_t) (td:one_mltydecl)
     let elim_td td =
       match td with
       | MLTD_Abbrev mlty ->
-        let mlty = elim_mlty env mlty in
-        let freevars = freevars_of_mlty mlty in
-        let parameters, entry =
-          List.fold_right
-              (fun p (params, entry) ->
-                if BU.set_mem p freevars
-                then p::params, Retain::entry
-                else params, Omit::entry)
-                parameters
-              ([], [])
-        in
-        extend_env env name entry,
+        let env, (name, (parameters, mlty)) = elim_tydef env (name, (parameters, mlty)) in
+        env,
         parameters,
         MLTD_Abbrev mlty
 
@@ -232,11 +253,15 @@ let elim_module env m =
   in
   BU.fold_map elim_module1 env m
 
+let set_current_module (e:env_t) (n:mlpath) =
+  let curmod = fst n @ [snd n] in
+  { e with current_module = curmod }
+
 let elim_mllib (env:env_t) (m:mllib) =
   let (MLLib libs) = m in
   let elim_one_lib env lib =
     let name, sig_mod, _libs = lib in
-    let env = {env with current_module = fst name @ [snd name]} in
+    let env = set_current_module env name in
     let sig_mod, env =
         match sig_mod with
         | Some (sig_, mod_)  ->
