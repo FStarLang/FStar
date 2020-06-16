@@ -648,14 +648,13 @@ let frame'
   (p: a -> parser)
   (post: post_t a emp p pre)
   (l: B.loc)
-  (inner: unit -> Write a emp p l pre post)
+  ($inner: unit -> Write a emp p l pre post)
 : Tot (unit -> Write a frame (frame_out a frame p) l (frame_pre a frame pre) (frame_post a frame pre p post))
 = mk_repr_hoare
     a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l
     (frame_spec a frame pre p post l inner)
     (frame_impl a frame pre p post l inner)
 
-(* FIXME: WHY WHY WHY does this fail?
 inline_for_extraction
 let frame
   (a: Type)
@@ -664,22 +663,9 @@ let frame
   (p: a -> parser)
   (post: post_t a emp p pre)
   (l: B.loc)
-  (inner: unit -> Write a emp p l pre post)
+  ($inner: unit -> Write a emp p l pre post)
 : Write a frame (frame_out a frame p) l (frame_pre a frame pre) (frame_post a frame pre p post)
-= let h = frame' a frame pre p post l inner in
-  h ()
-*)
-
-assume
-val frame
-  (a: Type)
-  (frame: parser)
-  (pre: pre_t emp)
-  (p: a -> parser)
-  (post: post_t a emp p pre)
-  (l: B.loc)
-  (inner: unit -> Write a emp p l pre post)
-: Write a frame (frame_out a frame p) l (frame_pre a frame pre) (frame_post a frame pre p post)
+= frame' a frame pre p post l inner ()
 
 assume
 val parse_u32' : parser' U32.t
