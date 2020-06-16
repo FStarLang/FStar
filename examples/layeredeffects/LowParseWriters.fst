@@ -170,10 +170,10 @@ let bind_spec (a:Type) (b:Type)
   (r_in_f:parser) (r_out_f:a -> parser) (r_wp_f: wp_t a r_in_f r_out_f)
   (r_out_g:b -> parser)
   (r_wp_g: (x:a -> wp_t b (r_out_f x) r_out_g))
-  (f:repr_spec a r_in_f r_out_f r_wp_f) (g:(x:a -> repr_spec b (r_out_f x) r_out_g (r_wp_g x)))
+  (f_bind_spec:repr_spec a r_in_f r_out_f r_wp_f) (g:(x:a -> repr_spec b (r_out_f x) r_out_g (r_wp_g x)))
 : Tot (repr_spec b r_in_f r_out_g (bind_wp a b r_in_f r_out_f r_wp_f r_out_g r_wp_g))
 = fun c ->
-  match f c with
+  match f_bind_spec c with
   | (| x, cf |) ->
     g x cf
 
@@ -202,12 +202,12 @@ let bind_impl
   (r_in_f:parser) (r_out_f:a -> parser) (r_wp_f: wp_t a r_in_f r_out_f)
   (r_out_g:b -> parser)
   (r_wp_g: (x:a -> wp_t b (r_out_f x) r_out_g))
-  (f:repr_spec a r_in_f r_out_f r_wp_f)
+  (f_bind_impl:repr_spec a r_in_f r_out_f r_wp_f)
   (g:(x:a -> repr_spec b (r_out_f x) r_out_g (r_wp_g x)))
   (l: B.loc)
-  (f' : repr_impl a r_in_f r_out_f r_wp_f l f)
+  (f' : repr_impl a r_in_f r_out_f r_wp_f l f_bind_impl)
   (g' : (x: a -> repr_impl b (r_out_f x) r_out_g (r_wp_g x) l (g x)))
-: Tot (repr_impl b r_in_f r_out_g (bind_wp a b r_in_f r_out_f r_wp_f r_out_g r_wp_g) l (bind_spec a b r_in_f r_out_f r_wp_f r_out_g r_wp_g f g))
+: Tot (repr_impl b r_in_f r_out_g (bind_wp a b r_in_f r_out_f r_wp_f r_out_g r_wp_g) l (bind_spec a b r_in_f r_out_f r_wp_f r_out_g r_wp_g f_bind_impl g))
 = fun buf pos ->
   match f' buf pos with
   | (x, posf) -> g' x buf posf
@@ -218,9 +218,9 @@ let bind (a:Type) (b:Type)
   (r_out_g:b -> parser)
   (r_wp_g: (x:a -> wp_t b (r_out_f x) r_out_g))
   (l: B.loc)
-  (f:repr a r_in_f r_out_f r_wp_f l) (g:(x:a -> repr b (r_out_f x) r_out_g (r_wp_g x) l))
+  (f_bind:repr a r_in_f r_out_f r_wp_f l) (g:(x:a -> repr b (r_out_f x) r_out_g (r_wp_g x) l))
 : Tot (repr b r_in_f r_out_g (bind_wp a b r_in_f r_out_f r_wp_f r_out_g r_wp_g) l)
-= (| bind_spec a b r_in_f r_out_f r_wp_f r_out_g r_wp_g (dfst f) (fun x -> dfst (g x)), bind_impl a b r_in_f r_out_f r_wp_f r_out_g r_wp_g (dfst f) (fun x -> dfst (g x)) l (dsnd f) (fun x -> dsnd (g x)) |)
+= (| bind_spec a b r_in_f r_out_f r_wp_f r_out_g r_wp_g (dfst f_bind) (fun x -> dfst (g x)), bind_impl a b r_in_f r_out_f r_wp_f r_out_g r_wp_g (dfst f_bind) (fun x -> dfst (g x)) l (dsnd f_bind) (fun x -> dsnd (g x)) |)
 
 inline_for_extraction
 let subcomp (a:Type)
@@ -228,11 +228,11 @@ let subcomp (a:Type)
   (r_wp': wp_t a r_in r_out)
   (l:B.loc)
   (l' : B.loc)
-  (f:repr a r_in r_out r_wp l)
+  (f_subcomp:repr a r_in r_out r_wp l)
 : Pure (repr a r_in r_out r_wp' l')
   (requires (l `B.loc_includes` l' /\ (forall x p . r_wp' x p ==> r_wp x p)))
   (ensures (fun _ -> True))
-= (| (fun x -> dfst f x), (fun pos -> dsnd f pos) |)
+= (| (fun x -> dfst f_subcomp x), (fun pos -> dsnd f_subcomp pos) |)
 
 unfold
 let if_then_else_wp
@@ -247,7 +247,7 @@ let if_then_else_wp
 let if_then_else (a:Type)
   (r_in:parser) (r_out:a -> parser) (r_wp_f r_wp_g: wp_t a r_in r_out) 
   (l:B.loc)
-  (f:repr a r_in r_out r_wp_f l) (g:repr a r_in r_out r_wp_g l)
+  (f_ifthenelse:repr a r_in r_out r_wp_f l) (g:repr a r_in r_out r_wp_g l)
   (p:Type0)
 : Tot Type
 = repr a r_in r_out (if_then_else_wp a r_in r_out r_wp_f r_wp_g p) l
@@ -281,28 +281,28 @@ let mk_repr
 
 unfold
 let lift_pure_wp
-  (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f:unit -> PURE a wp)
+  (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser)
 : Tot (wp_t a r (fun _ -> r))
 = fun st p -> wp (fun res -> p (| res, st |))
 
 let lift_pure_spec
-  (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f:unit -> PURE a wp)
-: Tot (repr_spec a r (fun _ -> r) (lift_pure_wp a wp r f))
-= fun v -> (| f (), v |)
+  (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f_pure_spec:unit -> PURE a wp)
+: Tot (repr_spec a r (fun _ -> r) (lift_pure_wp a wp r))
+= fun v -> (| f_pure_spec (), v |)
 
 let lift_pure_impl
-  (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f:unit -> PURE a wp)
+  (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f_pure_spec_for_impl:unit -> PURE a wp)
   (l: B.loc)
-: Tot (repr_impl a r (fun _ -> r) (lift_pure_wp a wp r f) l (lift_pure_spec a wp r f))
-= fun buf pos -> (f (), pos)
+: Tot (repr_impl a r (fun _ -> r) (lift_pure_wp a wp r) l (lift_pure_spec a wp r f_pure_spec_for_impl))
+= fun buf pos -> (f_pure_spec_for_impl (), pos)
 
 let lift_pure (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser)
   (l: B.loc)
-  (f:unit -> PURE a wp)
-: Pure (repr a r (fun _ -> r) (lift_pure_wp a wp r f) l)
+  (f_pure:unit -> PURE a wp)
+: Pure (repr a r (fun _ -> r) (lift_pure_wp a wp r) l)
   (requires wp (fun _ -> True))
   (ensures fun _ -> True)
-= (| lift_pure_spec a wp r f, lift_pure_impl a wp r f l |)
+= (| lift_pure_spec a wp r f_pure, lift_pure_impl a wp r f_pure l |)
 
 sub_effect PURE ~> WRITE = lift_pure
 
@@ -313,9 +313,9 @@ let destr_repr_spec
   (r_out:a -> parser)
   (wp: wp_t a r_in r_out)
   (l: B.loc)
-  (f: unit -> WRITE a r_in r_out wp l)
+  (f_destr_spec: unit -> WRITE a r_in r_out wp l)
 : Tot (repr_spec a r_in r_out wp)
-= dfst (reify (f ()))
+= dfst (reify (f_destr_spec ()))
 
 inline_for_extraction
 let destr_repr_impl
@@ -324,9 +324,9 @@ let destr_repr_impl
   (r_out:a -> parser)
   (wp: wp_t a r_in r_out)
   (l: B.loc)
-  (f: unit -> WRITE a r_in r_out wp l)
-: Tot (repr_impl a r_in r_out wp l (destr_repr_spec a r_in r_out wp l f))
-= dsnd (reify (f ()))
+  (f_destr_impl: unit -> WRITE a r_in r_out wp l)
+: Tot (repr_impl a r_in r_out wp l (destr_repr_spec a r_in r_out wp l f_destr_impl))
+= dsnd (reify (f_destr_impl ()))
 
 let pre_t
   (rin: parser)
@@ -378,9 +378,9 @@ let repr_spec_of_repr_hoare_spec
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (f: repr_hoare_spec a r_in r_out pre post)
+  (f_hoare: repr_hoare_spec a r_in r_out pre post)
 : Tot (repr_spec a r_in r_out (hoare_to_wp a r_in r_out pre post))
-= fun v_in -> f v_in
+= fun v_in -> f_hoare v_in
 
 unfold
 let repr_hoare_impl_post
@@ -678,15 +678,12 @@ val write_u32
   (x: U32.t)
 : Write unit emp (fun _ -> parse_u32) l (fun _ -> True) (fun _ _ y -> y == x)  
 
-assume
-val frame_write_u32
+let frame_write_u32
   (#fr: parser)
   (#l: B.loc)
   (x: U32.t)
 : Write unit fr (fun _ -> fr `star` parse_u32) l (fun _ -> True) (fun w _ (w', x') -> w' == w /\ x' == x)
-(* FIXME: WHY WHY WHY does this fail?
-= frame unit fr (fun _ -> True) (fun _ -> parse_u32) (fun _ _ x' -> x' == x) l (fun _ -> write_u32 l x)
-*)
+= frame unit fr (fun _ -> True) (fun _ -> parse_u32) (fun _ _ x' -> x' == x) l (fun _ -> write_u32 x)
 
 let write_two_ints
   (l: B.loc)
