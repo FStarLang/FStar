@@ -12,7 +12,7 @@
         "fuel_guarded_inversion_Closure.state"
       ],
       0,
-      "be2a5f4ab0a460ff77c0b0ff8969ac1c"
+      "d87e31ac4b8b79460e2d004060737878"
     ],
     [
       "Closure.reachable_from_B",
@@ -34,7 +34,7 @@
         "typing_tok_Closure.B@tok"
       ],
       0,
-      "6985c33807c85245c2969b214c04c910"
+      "8228639116badce7d312f53d93d4cfdc"
     ],
     [
       "Closure.__proj__Start__item__retried",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_9b8feac8e67696762ba27b558e40f256"
       ],
       0,
-      "5845f4c605146dd2c7c18df1dea865a0"
+      "25b563f53b875f2d2090e1b1153154f0"
     ],
     [
       "Closure.__proj__Hello__item__retried",
@@ -60,7 +60,7 @@
         "refinement_interpretation_Tm_refine_8abf72c04d002ce86c7c7f261e811ec5"
       ],
       0,
-      "cf1e5c9b57f03ec2fcf02a9118fcf3c8"
+      "8f9d8453e8ff3378a30149657024628e"
     ],
     [
       "Closure.__proj__Hello__item__ch",
@@ -73,7 +73,7 @@
         "refinement_interpretation_Tm_refine_8abf72c04d002ce86c7c7f261e811ec5"
       ],
       0,
-      "d33751cfd965393bbe77ca4ba13b881d"
+      "568b1e60b6a15287e679a1cc25227dd2"
     ],
     [
       "Closure.__proj__Transcript12__item__ch",
@@ -87,7 +87,7 @@
         "refinement_interpretation_Tm_refine_8be6d7d0f86d71af96581ee9ae09ad53"
       ],
       0,
-      "1c654d1365713570f48feaf03ce83ee7"
+      "a38409f2d7eab2bad43efb50c164a863"
     ],
     [
       "Closure.__proj__Transcript12__item__sh",
@@ -101,7 +101,7 @@
         "refinement_interpretation_Tm_refine_8be6d7d0f86d71af96581ee9ae09ad53"
       ],
       0,
-      "9c1ba06dbd60aaffb79d809dc3ac77bd"
+      "52f39e27ecc8414a8ca6aa8a8aeec316"
     ],
     [
       "Closure.__proj__Transcript12__item__rest",
@@ -115,7 +115,7 @@
         "refinement_interpretation_Tm_refine_8be6d7d0f86d71af96581ee9ae09ad53"
       ],
       0,
-      "7d60c5bd143279ab78745ae5db5b4983"
+      "2829bd33f07e0c8699592e3ff5c83fcc"
     ],
     [
       "Closure.__proj__Transcript13__item__retried",
@@ -129,7 +129,7 @@
         "refinement_interpretation_Tm_refine_c3bb8422e22464cd744542b84591ff3f"
       ],
       0,
-      "678bcbf4c2a8145cc7af050c5f5e6be7"
+      "f7397c84e38b48368384b84813e195e5"
     ],
     [
       "Closure.__proj__Transcript13__item__ch",
@@ -143,7 +143,7 @@
         "refinement_interpretation_Tm_refine_c3bb8422e22464cd744542b84591ff3f"
       ],
       0,
-      "608e8f374501ea57c069621b0e11e3c4"
+      "bd4825d13130f968d130c413f4f56a58"
     ],
     [
       "Closure.__proj__Transcript13__item__sh",
@@ -157,7 +157,7 @@
         "refinement_interpretation_Tm_refine_c3bb8422e22464cd744542b84591ff3f"
       ],
       0,
-      "a1abcac2204ad0f77e47ce0236cf391f"
+      "96bfccb231c4d603bf0811b66695b34f"
     ],
     [
       "Closure.__proj__Transcript13__item__rest",
@@ -171,7 +171,7 @@
         "refinement_interpretation_Tm_refine_c3bb8422e22464cd744542b84591ff3f"
       ],
       0,
-      "f0b060bcadce9b1418ee3c01a76d4035"
+      "28f7af6bd32da683b782428f0557af26"
     ],
     [
       "Closure.transcript_size",
@@ -185,7 +185,7 @@
         "fuel_guarded_inversion_Closure.transcript_t"
       ],
       0,
-      "b65f3182bdd635969aba5dc0aa4d2832"
+      "05e84ea04a3c8efbcf1e95eb447b089a"
     ],
     [
       "Closure.client_state",
@@ -204,7 +204,7 @@
         "typing_Closure.max_transcript_size"
       ],
       0,
-      "4b46e7e9f373b98e1ed06c047c2210ce"
+      "9023c6e612c85f52da825da5b2260504"
     ],
     [
       "Closure.__proj__C_truncated_ClientHello__item__transcript",
@@ -218,7 +218,7 @@
         "refinement_interpretation_Tm_refine_ee2d48a428eec18a9bf958fc9b3867d8"
       ],
       0,
-      "16242f5ce9d2029e4c3648a855e7eddd"
+      "232e11186d299b646d57ae9bbbb20396"
     ],
     [
       "Closure.__proj__C_truncated_ClientHello__item__offer",
@@ -234,7 +234,7 @@
         "refinement_interpretation_Tm_refine_ee2d48a428eec18a9bf958fc9b3867d8"
       ],
       0,
-      "ec2cc875633860690b2c28b1e36e6d09"
+      "f3ca651a12f7e7718c5c7f6af38390e6"
     ],
     [
       "Closure.__proj__C_wait_ServerHello__item__transcript",
@@ -248,7 +248,7 @@
         "refinement_interpretation_Tm_refine_ba03bb475e226de884d5d34396eaf785"
       ],
       0,
-      "545f1162e2840eac0bcd4dffc9963e48"
+      "42dfdd3c0fe0a9af99a2b5937d7689fe"
     ],
     [
       "Closure.__proj__C_wait_ServerHello__item__offer",
@@ -264,7 +264,7 @@
         "refinement_interpretation_Tm_refine_ba03bb475e226de884d5d34396eaf785"
       ],
       0,
-      "2c49369d3eb5158859a925ea3f3d0882"
+      "dbb0a4b5d72799538e04f18c04388dc4"
     ],
     [
       "Closure.__proj__C13_wait_Finished1__item__transcript",
@@ -278,7 +278,7 @@
         "refinement_interpretation_Tm_refine_d027e86d743ce1c67ee5fe0ba7862796"
       ],
       0,
-      "f7609aba4ffa2ffc99ad09d797203c6e"
+      "9bacc3349239e199b457cf940d80e5d9"
     ],
     [
       "Closure.__proj__C13_wait_Finished1__item__mode",
@@ -301,7 +301,7 @@
         "typing_Closure.max_transcript_size"
       ],
       0,
-      "21a00ab6637264a0e43ed607a0db1586"
+      "4b55a98320139991a84d1aa0ef4f70cf"
     ],
     [
       "Closure.__proj__C13_wait_Finished1__item__mode",
@@ -325,7 +325,7 @@
         "typing_Closure.max_transcript_size"
       ],
       0,
-      "9da8dcaffdb030735d225f20ead36291"
+      "0425010bd306a16b39ee1ef948a961a8"
     ],
     [
       "Closure.witness_offer",
@@ -361,12 +361,14 @@
         "projection_inverse_FStar.Pervasives.Native.Some_v",
         "refinement_interpretation_Tm_refine_003cbb363565c5358e7ed8a8d7dba6d4",
         "refinement_interpretation_Tm_refine_58b493790886f0a649f1c9027d6253f0",
+        "refinement_interpretation_Tm_refine_eb9a13cc726cbb4e9bfc9f80fc2e3938",
         "refinement_kinding_Tm_refine_9671101e782c461842cbbd186393c79e",
-        "typing_Closure.mrel", "typing_FStar.Monotonic.HyperStack.sel",
+        "typing_Closure.mrel", "typing_Closure.st_offer",
+        "typing_FStar.Monotonic.HyperStack.sel",
         "typing_tok_Closure.C_init@tok"
       ],
       0,
-      "c127cd378a0e537e8f25ca4d68f783b5"
+      "d0d75afc477857e42a6b847cbf7fb085"
     ]
   ]
 ]

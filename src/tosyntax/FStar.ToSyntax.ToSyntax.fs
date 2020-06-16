@@ -498,6 +498,7 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
   | Sig_new_effect _
   | Sig_sub_effect _
   | Sig_polymonadic_bind _
+  | Sig_polymonadic_subcomp _
   | Sig_splice _
   | Sig_pragma _ ->
     s
@@ -1982,7 +1983,14 @@ and as_binder env imp = function
 and trans_aqual env = function
   | Some AST.Implicit -> Some S.imp_tag
   | Some AST.Equality -> Some S.Equality
-  | Some (AST.Meta t) -> Some (S.Meta (desugar_term env t))
+  | Some (AST.Meta (AST.Arg_qualifier_meta_tac t)) ->
+    Some (S.Meta (S.Arg_qualifier_meta_tac (desugar_term env t)))
+  | Some (AST.Meta (AST.Arg_qualifier_meta_attr t)) ->
+    let t = desugar_term env t in
+    FStar.Errors.log_issue t.pos
+      (Errors.Warning_BleedingEdge_Feature,
+       "Associating attributes with a binder is an experimental feature---expect its behavior to change");
+    Some (S.Meta (S.Arg_qualifier_meta_attr t))
   | None -> None
 
 let typars_of_binders env bs =
@@ -2593,7 +2601,6 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
         //setting the second component to dummy_ts, typechecker fills them in
         let to_comb (us, t) = (us, t), dummy_tscheme in
         Layered_eff ({
-          l_base_effect = Ident.lid_of_str "";
           l_repr = lookup "repr" |> to_comb;
           l_return = lookup "return" |> to_comb;
           l_bind = lookup "bind" |> to_comb;
@@ -3180,6 +3187,20 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       sigel = Sig_polymonadic_bind (
         m.mname, n.mname, p.mname,
         ([], desugar_term env bind),
+        ([], S.tun));
+      sigquals = [];
+      sigrng = d.drange;
+      sigmeta = default_sigmeta;
+      sigattrs = [];
+      sigopts = None }]
+
+  | Polymonadic_subcomp (m_eff, n_eff, subcomp) ->
+    let m = lookup_effect_lid env m_eff d.drange in
+    let n = lookup_effect_lid env n_eff d.drange in
+    env, [{
+      sigel = Sig_polymonadic_subcomp (
+        m.mname, n.mname,
+        ([], desugar_term env subcomp),
         ([], S.tun));
       sigquals = [];
       sigrng = d.drange;

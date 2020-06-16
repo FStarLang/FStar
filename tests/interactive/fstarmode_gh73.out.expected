@@ -1,5 +1,5 @@
 {"kind": "protocol-info", "rest": "[...]"}
-{"kind": "response", "query-id": "1", "response": [{"level": "warning", "message": "Pattern uses these theory symbols or terms that should not be in an smt pattern:  Prims.eq2 Prims.eq2", "number": 271, "ranges": [{"beg": [1010, 2], "end": [1010, 136], "fname": "FStar.List.Tot.Properties.fst"}]}], "status": "success"}
+{"kind": "response", "query-id": "1", "response": [], "status": "success"}
 {"kind": "response", "query-id": "2", "response": [{"level": "error", "message": "Expected expression of type \"int\"; got expression \"\"A\"\" of type \"string\"", "number": 189, "ranges": [{"beg": [4, 48], "end": [4, 51], "fname": "<input>"}]}], "status": "success"}
 {"kind": "response", "query-id": "3", "response": [{"level": "error", "message": "Expected expression of type \"int\"; got expression \"\"A\"\" of type \"string\"", "number": 189, "ranges": [{"beg": [4, 48], "end": [4, 51], "fname": "<input>"}]}], "status": "failure"}
 {"kind": "response", "query-id": "4", "response": [], "status": "success"}

@@ -138,11 +138,11 @@ let e_proofstate_nbe =
                  ; ltyp = fstar_tactics_proofstate.t
                  ; rng = Range.dummyRange }
         in
-        let thunk = Thunk.mk (fun () -> NBETerm.Constant (NBETerm.String ("(((proofstate.nbe)))", Range.dummyRange))) in
-        NBETerm.Lazy (BU.Inl li, thunk)
+        let thunk = Thunk.mk (fun () -> NBETerm.mk_t <| NBETerm.Constant (NBETerm.String ("(((proofstate.nbe)))", Range.dummyRange))) in
+        NBETerm.mk_t (NBETerm.Lazy (BU.Inl li, thunk))
     in
     let unembed_proofstate _cb (t:NBETerm.t) : option<proofstate> =
-        match t with
+        match NBETerm.nbe_t_of_t t with
         | NBETerm.Lazy (BU.Inl {blob=b; lkind = Lazy_proofstate}, _) ->
             Some <| FStar.Dyn.undyn b
         | _ ->
@@ -183,11 +183,11 @@ let e_goal_nbe =
                  ; ltyp = fstar_tactics_goal.t
                  ; rng = Range.dummyRange }
         in
-        let thunk = Thunk.mk (fun () -> NBETerm.Constant (NBETerm.String ("(((goal.nbe)))", Range.dummyRange))) in
-        NBETerm.Lazy (BU.Inl li, thunk)
+        let thunk = Thunk.mk (fun () -> NBETerm.mk_t <| NBETerm.Constant (NBETerm.String ("(((goal.nbe)))", Range.dummyRange))) in
+        NBETerm.mk_t <| NBETerm.Lazy (BU.Inl li, thunk)
     in
     let unembed_goal _cb (t:NBETerm.t) : option<goal> =
-        match t with
+        match NBETerm.nbe_t_of_t t with
         | NBETerm.Lazy (BU.Inl {blob=b; lkind = Lazy_goal}, _) ->
             Some <| FStar.Dyn.undyn b
         | _ ->
@@ -244,7 +244,7 @@ let e_exn_nbe =
             failwith (BU.format1 "cannot embed exn (NBE) : %s" (BU.message_of_exn e))
     in
     let unembed_exn cb (t:NBET.t) : option<exn> =
-        match t with
+        match NBETerm.nbe_t_of_t t with
         | NBETerm.Construct (fv, _, [(s, _)]) when S.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
             BU.bind_opt (NBETerm.unembed NBETerm.e_string cb s) (fun s ->
             Some (TacticFailure s))
@@ -315,7 +315,7 @@ let e_result_nbe (ea : NBET.embedding<'a>)  =
               ; NBETerm.as_arg (NBETerm.embed e_proofstate_nbe cb ps) ]
     in
     let unembed_result cb (t:NBET.t) : option<__result<'a>> =
-        match t with
+        match NBETerm.nbe_t_of_t t with
         | NBETerm.Construct (fv, _, [(ps, _); (a, _); _t]) when S.fv_eq_lid fv fstar_tactics_Success.lid ->
             BU.bind_opt (NBETerm.unembed ea cb a) (fun a ->
             BU.bind_opt (NBETerm.unembed e_proofstate_nbe cb ps) (fun ps ->
@@ -358,7 +358,7 @@ let e_direction_nbe  =
         | BottomUp -> mkConstruct fstar_tactics_bottomup.fv [] []
     in
     let unembed_direction cb (t:NBET.t) : option<direction> =
-        match t with
+        match NBETerm.nbe_t_of_t t with
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_topdown.lid -> Some TopDown
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_bottomup.lid -> Some BottomUp
         | _ ->
@@ -398,7 +398,7 @@ let e_ctrl_flag_nbe  =
         | Abort    -> mkConstruct fstar_tactics_Abort.fv [] []
     in
     let unembed_ctrl_flag cb (t:NBET.t) : option<ctrl_flag> =
-        match t with
+        match NBETerm.nbe_t_of_t t with
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Continue.lid  -> Some Continue
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Skip.lid  -> Some Skip
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Abort.lid -> Some Abort
@@ -442,7 +442,7 @@ let e_guard_policy_nbe  =
         | Drop  -> mkConstruct fstar_tactics_Drop.fv [] []
     in
     let unembed_guard_policy cb (t:NBET.t) : option<guard_policy> =
-        match t with
+        match NBETerm.nbe_t_of_t t with
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_SMT.lid   -> Some SMT
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Goal.lid  -> Some Goal
         | NBETerm.Construct (fv, _, []) when S.fv_eq_lid fv fstar_tactics_Force.lid -> Some Force

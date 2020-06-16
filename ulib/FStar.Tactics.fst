@@ -30,3 +30,4 @@ include FStar.Tactics.Derived
 include FStar.Tactics.Logic
 include FStar.Tactics.Util
 include FStar.Tactics.SyntaxHelpers
+include FStar.Tactics.Print

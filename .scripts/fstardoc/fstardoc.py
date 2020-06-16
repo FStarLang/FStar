@@ -89,16 +89,20 @@ class fst_parsed:
 
     def _get_code_name(self):
         code = ' '.join(self.current_code)
-        splitters = ('val', 'let', 'type', 'effect', 'new_effect', 'layered_effect')
+        splitters = ('val', 'let rec', 'let', 'type',
+                     'effect', 'new_effect', 'layered_effect')
+
+        def check_subseq(needles, haystack):
+            n = len(needles)
+            return any(haystack[i:i + n] == needles
+                       for i in range(len(haystack)))
+
         r = None
         for s in splitters:
-            if s in code.split():
-                if s == 'let' and 'rec' in code.split():
-                    s = 'let rec '
-                else:
-                    s = s + ' '
+            if check_subseq(s.split(), code.split()):
+                s = s + ' '
                 r = [x for x in code[code.index(s) + len(s):].split(' ')
-                     if x not in ('','{')][0]
+                     if x not in ('', '{')][0]
                 r = r.rstrip(':')
                 break
         if r is not None:
@@ -120,14 +124,16 @@ class fst_parsed:
             if name is not None:
                 self.output.extend(['#### ' + name, ''])
             cmt1, cmt2 = split_array_at_empty(self.current_comment)
-            self.output.extend(fsdoc_code_conv([cmt1[0]] + cleanup_array(cmt1[1:])))
+            self.output.extend(fsdoc_code_conv([cmt1[0]]
+                                               + cleanup_array(cmt1[1:])))
             if len(cmt2) > 0:
                 self.output.append('')
                 self._flush_code()
                 self.output.append('')
                 self.output.extend(fsdoc_code_conv(cleanup_array(cmt2)))
         elif self.current_comment_type == 'fslit':
-            self.output.extend(('> ' + x) for x in self.current_comment)
+            self.output.extend(('> ' + x)
+                               for x in fsdoc_code_conv(self.current_comment))
         elif self.current_comment_type == 'h1':
             self.output.extend(
                 '# ' + x for x in
@@ -141,7 +147,7 @@ class fst_parsed:
                 '### ' + x for x in
                 fsdoc_code_conv(self.current_comment))
         elif self.current_comment_type == 'normal':
-            self.output.extend(self.current_comment)
+            self.output.extend(fsdoc_code_conv(self.current_comment))
         else:
             self.error("Unknown comment type.")
         self.output.append('\n')
@@ -299,8 +305,8 @@ class fst_parsed:
 def fst2md(fst):
     import re
     fst = re.sub(
-        r'\(\*[ \n\t]*Copyright 2008[-,.()":;/A-Za-z0-9 \t\n]*' +
-        r'License.[ \n\t]*\*\)', '', fst)
+        r'\(\*[ \n\t]*Copyright 2008[-,.()":;/A-Za-z0-9 \t\n]*'
+        + r'License.[ \n\t]*\*\)', '', fst)
     fst = fst.split('\n')
     fstp = fst_parsed()
 

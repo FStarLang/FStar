@@ -1,0 +1,177 @@
+[
+  "\b¬N≥9'ÇdÕ»/©Ïd¡≠",
+  [
+    [
+      "Steel.Effect.M.lift_ens",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Steel.Effect.M.ens_t",
+        "equation_Steel.Effect.M.lift_post",
+        "equation_Steel.Semantics.Hoare.MST.depends_only_on2",
+        "equation_Steel.Semantics.Hoare.MST.depends_only_on_0_2",
+        "equation_Steel.Semantics.Hoare.MST.fp_prop2",
+        "equation_Steel.Semantics.Hoare.MST.l_post",
+        "equation_Steel.Semantics.Instantiate.state",
+        "interpretation_Tm_abs_634afe31c74121e38f4ae4133e22221f",
+        "interpretation_Tm_abs_b7e40424a70ef8ace2be46fda719360e",
+        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_hprop",
+        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_mem",
+        "refinement_interpretation_Tm_refine_11278f97612c1fcf2fe3e7f800944a87",
+        "typing_FStar.Universe.downgrade_val"
+      ],
+      0,
+      "8f8a90ced6f410e4b79234908441593c"
+    ],
+    [
+      "Steel.Effect.M.lift_ens_x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Steel.Effect.M_interpretation_Tm_arrow_b8453e05b8bd18b29b8a99432311d6b5",
+        "equation_Steel.Effect.M.ens_t", "equation_Steel.Effect.M.lift_post",
+        "equation_Steel.Semantics.Hoare.MST.depends_only_on2",
+        "equation_Steel.Semantics.Hoare.MST.depends_only_on_0_2",
+        "equation_Steel.Semantics.Hoare.MST.fp_prop2",
+        "equation_Steel.Semantics.Hoare.MST.l_post",
+        "equation_Steel.Semantics.Instantiate.state",
+        "interpretation_Tm_abs_1193ae479a734c8e49b55792736518ec",
+        "interpretation_Tm_abs_b7e40424a70ef8ace2be46fda719360e",
+        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_hprop",
+        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_mem",
+        "refinement_interpretation_Tm_refine_11278f97612c1fcf2fe3e7f800944a87",
+        "token_correspondence_Steel.Effect.M.lift_post",
+        "typing_FStar.Universe.downgrade_val"
+      ],
+      0,
+      "5def02de287d89c45670d9fc7a0a1b02"
+    ],
+    [
+      "Steel.Effect.M.lift_m",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Ret",
+        "equation_Steel.Effect.M.lift_post", "equation_Steel.Effect.M.repr",
+        "equation_Steel.Semantics.Hoare.MST.fp_prop2",
+        "equation_Steel.Semantics.Hoare.MST.l_post",
+        "function_token_typing_Steel.Effect.M.lift_post",
+        "interpretation_Tm_abs_b7e40424a70ef8ace2be46fda719360e",
+        "lemma_FStar.Universe.downgrade_val_raise_val",
+        "refinement_interpretation_Tm_refine_11278f97612c1fcf2fe3e7f800944a87",
+        "true_interp"
+      ],
+      0,
+      "2c359470940dd1e7f305d27d32da4e62"
+    ],
+    [
+      "Steel.Effect.M.lift_m",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "013db7290577610c5ef079df53d6396a"
+    ],
+    [
+      "Steel.Effect.M.bind_lift",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e67ecafef09b7670ae37c53574386ffb"
+    ],
+    [
+      "Steel.Effect.M.lift_ens",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Steel.Effect.M.ens_t",
+        "equation_Steel.Effect.M.lift_post",
+        "equation_Steel.Semantics.Hoare.MST.depends_only_on2",
+        "equation_Steel.Semantics.Hoare.MST.depends_only_on_0_2",
+        "equation_Steel.Semantics.Hoare.MST.fp_prop2",
+        "equation_Steel.Semantics.Hoare.MST.l_post",
+        "equation_Steel.Semantics.Instantiate.state",
+        "interpretation_Tm_abs_634afe31c74121e38f4ae4133e22221f",
+        "interpretation_Tm_abs_b7e40424a70ef8ace2be46fda719360e",
+        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_hprop",
+        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_mem",
+        "refinement_interpretation_Tm_refine_11278f97612c1fcf2fe3e7f800944a87",
+        "typing_FStar.Universe.downgrade_val"
+      ],
+      0,
+      "805bb9c62e1931ebbcacb2692046da26"
+    ],
+    [
+      "Steel.Effect.M.lift_ens_x",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Steel.Effect.M_interpretation_Tm_arrow_b8453e05b8bd18b29b8a99432311d6b5",
+        "equation_Steel.Effect.M.ens_t", "equation_Steel.Effect.M.lift_post",
+        "equation_Steel.Semantics.Hoare.MST.depends_only_on2",
+        "equation_Steel.Semantics.Hoare.MST.depends_only_on_0_2",
+        "equation_Steel.Semantics.Hoare.MST.fp_prop2",
+        "equation_Steel.Semantics.Hoare.MST.l_post",
+        "equation_Steel.Semantics.Instantiate.state",
+        "interpretation_Tm_abs_1193ae479a734c8e49b55792736518ec",
+        "interpretation_Tm_abs_b7e40424a70ef8ace2be46fda719360e",
+        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_hprop",
+        "proj_equation_Steel.Semantics.Hoare.MST.Mkst0_mem",
+        "refinement_interpretation_Tm_refine_11278f97612c1fcf2fe3e7f800944a87",
+        "token_correspondence_Steel.Effect.M.lift_post",
+        "typing_FStar.Universe.downgrade_val"
+      ],
+      0,
+      "e84233bb1b68c81156623763577fe02f"
+    ],
+    [
+      "Steel.Effect.M.lift_m",
+      3,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_Steel.Semantics.Hoare.MST.Ret",
+        "equation_Steel.Effect.M.lift_post", "equation_Steel.Effect.M.repr",
+        "equation_Steel.Semantics.Hoare.MST.fp_prop2",
+        "equation_Steel.Semantics.Hoare.MST.l_post",
+        "function_token_typing_Steel.Effect.M.lift_post",
+        "interpretation_Tm_abs_b7e40424a70ef8ace2be46fda719360e",
+        "lemma_FStar.Universe.downgrade_val_raise_val",
+        "refinement_interpretation_Tm_refine_11278f97612c1fcf2fe3e7f800944a87",
+        "true_interp"
+      ],
+      0,
+      "95c62d66e2d9d3f1d4018f44e33b6879"
+    ],
+    [
+      "Steel.Effect.M.lift_m",
+      4,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2b166596526b338929379f3684738ad7"
+    ],
+    [
+      "Steel.Effect.M.bind_lift",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "cf1befc0d37fdec37bd4fdc3a7e12bbe"
+    ]
+  ]
+]

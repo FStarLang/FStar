@@ -411,7 +411,7 @@ let extract_bundle_iface env se
            let g =
             List.fold_right
                 (fun id g ->
-                   let mlp, g = UEnv.extend_record_field_name g (ind.iname, id) in
+                   let _, g = UEnv.extend_record_field_name g (ind.iname, id) in
                    g)
                 ids
                 env
@@ -615,7 +615,8 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
     | Sig_assume _
     | Sig_sub_effect  _
     | Sig_effect_abbrev _
-    | Sig_polymonadic_bind _ ->
+    | Sig_polymonadic_bind _
+    | Sig_polymonadic_subcomp _ ->
       g, empty_iface
 
     | Sig_pragma (p) ->
@@ -699,8 +700,8 @@ let extract_bundle env se =
              let fields, g =
                 List.fold_right2
                   (fun id (_, ty) (fields, g) ->
-                     let mlp, g = UEnv.extend_record_field_name g (ind.iname, id) in
-                     (snd mlp, ty)::fields, g)
+                     let mlid, g = UEnv.extend_record_field_name g (ind.iname, id) in
+                     (mlid, ty)::fields, g)
                    ids
                    c_ty
                    ([], env)
@@ -943,7 +944,8 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_assume _ //not needed; purely logical
        | Sig_sub_effect  _
        | Sig_effect_abbrev _ //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
-       | Sig_polymonadic_bind _ ->
+       | Sig_polymonadic_bind _
+       | Sig_polymonadic_subcomp _ ->
          g, []
        | Sig_pragma (p) ->
          U.process_pragma p se.sigrng;

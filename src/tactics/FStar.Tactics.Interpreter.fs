@@ -161,7 +161,7 @@ let e_tactic_nbe_thunk (er : NBET.embedding<'r>) : NBET.embedding<tac<'r>>
     NBET.mk_emb
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (thunk)?")
            (fun cb t -> Some (unembed_tactic_nbe_1 NBET.e_unit er cb t ()))
-           (NBET.Constant NBET.Unit)
+           (NBET.mk_t (NBET.Constant NBET.Unit))
            (emb_typ_of e_unit)
 
 let e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<'r>)>
@@ -175,7 +175,7 @@ let e_tactic_nbe_1 (ea : NBET.embedding<'a>) (er : NBET.embedding<'r>) : NBET.em
     NBET.mk_emb
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (1)?")
            (fun cb t -> Some (unembed_tactic_nbe_1 ea er cb t))
-           (NBET.Constant NBET.Unit)
+           (NBET.mk_t (NBET.Constant NBET.Unit))
            (emb_typ_of e_unit)
 
 

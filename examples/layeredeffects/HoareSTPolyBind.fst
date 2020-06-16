@@ -45,10 +45,13 @@ let returnc (a:Type) (x:a)
 : repr a (fun _ -> True) (fun h0 r h1 -> r == x /\ h0 == h1)
 = fun _ -> x
 
+
+irreducible let an_attr : unit = ()
+
 /// bind bakes in the weakening of f's post to compose it with g's pre
 
 let bind (a:Type) (b:Type)
-  (pre_f:pre_t) (post_f:post_t a) (pre_g:a -> pre_t) (post_g:a -> post_t b)
+  (#pre_f:pre_t) (#post_f:post_t a) (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
   (f:repr a pre_f post_f) (g:(x:a -> repr b (pre_g x) (post_g x)))
 : repr b
   (fun h0 -> pre_f h0 /\ (forall (x:a) (h1:heap). post_f h0 x h1 ==> pre_g x h1))
@@ -61,8 +64,8 @@ let bind (a:Type) (b:Type)
 /// sub comp rule
 
 let subcomp (a:Type)
-  (pre_f:pre_t) (post_f:post_t a)
-  (pre_g:pre_t) (post_g:post_t a)
+  (#[@@ an_attr] pre_f:pre_t) (#post_f:post_t a)
+  (#pre_g:pre_t) (#post_g:post_t a)
   (f:repr a pre_f post_f)
 : Pure (repr a pre_g post_g)
   (requires
@@ -72,8 +75,8 @@ let subcomp (a:Type)
 = f
 
 let if_then_else (a:Type)
-  (pre_f:pre_t) (post_f:post_t a)
-  (pre_g:pre_t) (post_g:post_t a)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (#pre_g:pre_t) (#post_g:post_t a)
   (f:repr a pre_f post_f)
   (g:repr a pre_g post_g)
   (p:Type0)
@@ -175,6 +178,31 @@ let bind_hoarest_pure (a:Type) (b:Type) (req:pre_t) (ens:post_t a) (wp:a -> pure
 
 polymonadic_bind (HoareST, PURE) |> HoareST = bind_hoarest_pure
 
+(*
+//  * PURE a wp <: HoareST a req ens
+//  *)
+
+let subcomp_pure_hoarest (a:Type) (wp:pure_wp a) (req:pre_t) (ens:post_t a)
+  (f:unit -> PURE a wp)
+: Pure (repr a req ens)
+  (requires
+    (forall h. req h ==>  wp (fun _ -> True)) /\
+    (forall h0 r h1. (~ (wp (fun x -> x =!= r \/ h0 =!= h1))) ==>  ens h0 r h1))
+  (ensures fun _ -> True)
+= wp_monotonic_pure ();
+  fun _ -> f ()
+
+polymonadic_subcomp PURE <: HoareST = subcomp_pure_hoarest
+
+let test_subcomp () : HoareST int (fun _ -> True) (fun _ r _ -> r == 0) = 0
+
+assume val f_test_subcomp (n:int) : Pure int (n > 0) (fun r -> r > 0)
+
+[@expect_failure]
+let test_subcomp2 (n:int) : HoareST int (fun _ -> True) (fun _ _ _ -> True) = f_test_subcomp n
+
+let test_subcomp3 (n:int) : HoareST int (fun _ -> n > 2) (fun _ _ _ -> True) = f_test_subcomp n
+
 
 assume val f : x:int -> HoareST int (fun _ -> True) (fun _ r _ -> r == x + 1)
 
@@ -186,6 +214,53 @@ assume val g : int -> int -> PURE int (fun p -> forall x. p x)
 
 let test2 () : HoareST int (fun _ -> True) (fun _ _ _ -> True)
 = g 2 (f 0)
+
+
+(*
+//  * In the polymonadic bind (PURE, HoareST) |> HoareST, the return type of
+//  *   g is not allowed to depend on x, the return value of f
+//  *
+//  * So then what happens when a function f whose return type depends on its argument
+//  *   is applied to a PURE term
+//  *   NOTE: PURE and not Tot, since Tot will just be substituted,
+//  *   without even invoking the bind
+//  *
+//  * When typechecking f e, the comp type is roughly
+//  *   bind C_e C_ret_f, where C_ret_f is the comp type of f (below the arrow binder)
+//  *   This is where bind comes in
+//  *)
+
+assume type t_int (x:int) : Type0
+assume val dep_f (x:int) : HoareST (t_int x) (fun _ -> True) (fun _ _ _ -> True)
+assume val pure_g (_:unit) : PURE int (fun p -> forall (x:int). x >= 2 ==> p x)
+
+let test_dep_f () : HoareST (t_int (pure_g ())) (fun _ -> True) (fun _ _ _ -> True) =
+  dep_f (pure_g ())
+
+(*
+//  * This works!
+//  *
+//  * The reason is that, before bind is called, the typechecker has already
+//  *   substituted the pure term (pure_g ()) into the comp type of dep_f
+//  *   (below the binder)
+//  *)
+
+
+(*
+//  * But what happens when this is an explicit let binding?
+//  *   as opposed to a function application
+//  *)
+
+let test_dep_f2 () : HoareST (t_int (pure_g ())) (fun _ -> True) (fun _ _ _ -> True) =
+  let x = pure_g () in
+  dep_f x
+
+
+(*
+//  * This also works because weakening the type using the annotation saves us!
+//  *)
+
+
 
 
 module Seq = FStar.Seq

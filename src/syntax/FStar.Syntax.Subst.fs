@@ -233,7 +233,8 @@ let subst_flags' s flags =
 
 let subst_imp' s i =
   match i with
-  | Some (Meta t) -> Some (Meta (subst' s t))
+  | Some (Meta (Arg_qualifier_meta_tac t)) -> Some (Meta (Arg_qualifier_meta_tac (subst' s t)))
+  | Some (Meta (Arg_qualifier_meta_attr t)) -> Some (Meta (Arg_qualifier_meta_attr (subst' s t)))
   | i -> i
 
 let subst_comp_typ' s t =

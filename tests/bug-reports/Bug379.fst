@@ -20,6 +20,7 @@ val test1 : nat -> nat -> Tot nat
 let rec test1 x y = if x = 0 then y else test1 0 y
 
 (* Still fails *)
+(* Update: now works too, recursion happening at arity 2 *)
 val test2 : nat -> Tot (nat -> Tot nat)
 let rec test2 x y = if x = 0 then y else test2 0 y
 

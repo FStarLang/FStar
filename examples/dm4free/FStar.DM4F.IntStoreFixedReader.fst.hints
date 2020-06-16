@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "a3434e1af5c0a538fbfc94eb22ddd973"
+      "00dd065b4b14ae3beca46ed229cf5a86"
     ],
     [
       "FStar.DM4F.IntStoreFixedReader.INT_STORE_READER",
@@ -17,16 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "928d37cad6510c47eaca4a09fd43eb39"
-    ],
-    [
-      "FStar.DM4F.IntStoreFixedReader.read",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "11abd8fa6e0b382200ea8ea54927cb9b"
+      "483597bc5323e688a0aaa8bfa663db54"
     ]
   ]
 ]

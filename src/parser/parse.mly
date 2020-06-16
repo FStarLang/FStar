@@ -24,13 +24,16 @@ open FStar_String
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
+
+let mk_meta_tac m = Meta (Arg_qualifier_meta_tac m)
+let mk_meta_attr m = Meta (Arg_qualifier_meta_attr m)
+
 let abstract_qualifier_warning =
   "abstract qualifier will soon be removed from F*, use interfaces instead"
 
 let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
-
 %}
 
 %token <bytes> BYTEARRAY
@@ -77,7 +80,7 @@ let old_attribute_syntax_warning =
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
-%token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND SPLICE SQUIGGLY_RARROW TOTAL
+%token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND POLYMONADIC_SUBCOMP SPLICE SQUIGGLY_RARROW TOTAL
 %token REQUIRES ENSURES
 %token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
 %token BACKTICK UNIV_HASH
@@ -252,6 +255,8 @@ rawDecl:
       { SubEffect se }
   | POLYMONADIC_BIND b=polymonadic_bind
       { Polymonadic_bind b }
+  | POLYMONADIC_SUBCOMP c=polymonadic_subcomp
+      { Polymonadic_subcomp c }
 
 typeDecl:
   (* TODO : change to lident with stratify *)
@@ -363,6 +368,10 @@ polymonadic_bind:
   | LPAREN m_eff=quident COMMA n_eff=quident RPAREN PIPE_RIGHT p_eff=quident EQUALS bind=simpleTerm
       { (m_eff, n_eff, p_eff, bind) }
 
+polymonadic_subcomp:
+  | m_eff=quident SUBTYPE n_eff=quident EQUALS subcomp=simpleTerm
+    { (m_eff, n_eff, subcomp) }
+
 
 /******************************************************************************/
 /*                        Qualifiers, tags, ...                               */
@@ -416,7 +425,8 @@ aqual:
   | q=aqualUniverses { q }
 
 aqualUniverses:
-  | HASH LBRACK t=thunk(tmNoEq) RBRACK { Meta t }
+  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t }
+  | HASH LBRACK_AT_AT t=tmNoEq RBRACK { mk_meta_attr t }
   | HASH      { Implicit }
   | DOLLAR    { Equality }
 
@@ -483,7 +493,7 @@ fieldPattern:
 patternOrMultibinder:
   | LBRACK_BAR UNDERSCORE COLON t=simpleArrow BAR_RBRACK
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        let w = mk_pattern (PatWild (Some (Meta mt)))
+        let w = mk_pattern (PatWild (Some (mk_meta_tac mt)))
                                  (rhs2 parseState 1 5) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
@@ -491,7 +501,7 @@ patternOrMultibinder:
 
   | LBRACK_BAR i=lident COLON t=simpleArrow BAR_RBRACK
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        let w = mk_pattern (PatVar (i, Some (Meta mt)))
+        let w = mk_pattern (PatVar (i, Some (mk_meta_tac mt)))
                                  (rhs2 parseState 1 5) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
@@ -499,7 +509,7 @@ patternOrMultibinder:
 
   | LBRACK_BAR t=simpleArrow BAR_RBRACK
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
-        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (Meta mt)))
+        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (mk_meta_tac mt)))
                                  (rhs2 parseState 1 3) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 3)]

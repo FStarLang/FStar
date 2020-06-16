@@ -17,7 +17,7 @@
         "refinement_interpretation_Tm_refine_c7f248c50d182c40aac9022fc9a66edc"
       ],
       0,
-      "d42d1d4221784ec62a65cea208ada1de"
+      "7ac5c63c8ec057315186cad8e5f7f667"
     ],
     [
       "QuickSort.Array.partition_post",
@@ -36,7 +36,7 @@
         "refinement_interpretation_Tm_refine_c7f248c50d182c40aac9022fc9a66edc"
       ],
       0,
-      "315c06fba36d67f8f356ecab4b39557b"
+      "3d7f4bb0198b2bfdeb290a58444cf35c"
     ],
     [
       "QuickSort.Array.partition",
@@ -93,7 +93,7 @@
         "typing_FStar.Seq.Base.upd", "typing_FStar.Seq.Properties.mem"
       ],
       0,
-      "2c220e391f432a9f9cb68c7a4f853b4d"
+      "0afba974f45eb857d7d56c9f03e31e94"
     ],
     [
       "QuickSort.Array.lemma_slice_cons_pv",
@@ -112,7 +112,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "ee3f230676d63da7be939fe0235ebc8a"
+      "47e5692d3c64da6e85535dc8368a429f"
     ],
     [
       "QuickSort.Array.lemma_slice_cons_pv",
@@ -144,11 +144,12 @@
         "refinement_interpretation_Tm_refine_b138bd5848d4184f7632587e6e4bcf9f",
         "refinement_interpretation_Tm_refine_d3d07693cd71377864ef84dc97d10ec1",
         "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
+        "refinement_interpretation_Tm_refine_ddd44b85040d1947cca83550b7e21966",
         "typing_FStar.Seq.Base.append", "typing_FStar.Seq.Base.length",
         "typing_FStar.Seq.Properties.cons"
       ],
       0,
-      "0999cf02fe67bb6b3c3d1218c264855d"
+      "2863b6bd0059590e6bd2c6ee749ac0f1"
     ],
     [
       "QuickSort.Array.sort",
@@ -168,7 +169,7 @@
         "typing_FStar.Array.sel", "typing_FStar.Seq.Base.length"
       ],
       0,
-      "7d76399136dbfc5e17a3b9565114e8b2"
+      "2556dac4a7be8157f37685258f367a78"
     ],
     [
       "QuickSort.Array.sort",
@@ -219,7 +220,7 @@
         "typing_FStar.Seq.Properties.mem"
       ],
       0,
-      "097e70a8b2dd49a42bef7ea0c5604060"
+      "b6e87582714869bffa4d88ebcf59c65d"
     ],
     [
       "QuickSort.Array.qsort",
@@ -241,7 +242,7 @@
         "typing_FStar.Array.sel", "typing_FStar.Seq.Properties.sorted"
       ],
       0,
-      "0758e351c8bb13403337baa06483e985"
+      "8bc6d95736c4930bebbefda7463ab806"
     ]
   ]
 ]

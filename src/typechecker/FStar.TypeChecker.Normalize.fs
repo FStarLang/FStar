@@ -496,7 +496,8 @@ and rebuild_closure cfg env stack t =
 
 and close_imp cfg env imp =
     match imp with
-    | Some (S.Meta t) -> Some (S.Meta (inline_closure_env cfg env [] t))
+    | Some (S.Meta (S.Arg_qualifier_meta_tac t)) -> Some (S.Meta (S.Arg_qualifier_meta_tac(inline_closure_env cfg env [] t)))
+    | Some (S.Meta (S.Arg_qualifier_meta_attr t)) -> Some (S.Meta (S.Arg_qualifier_meta_attr (inline_closure_env cfg env [] t)))
     | i -> i
 
 and close_binders cfg env bs =
@@ -1949,7 +1950,8 @@ and norm_binder (cfg:Cfg.cfg) (env:env) (b:binder) : binder =
     let (x, imp) = b in
     let x = { x with sort = norm cfg env [] x.sort } in
     let imp = match imp with
-              | Some (S.Meta t) -> Some (S.Meta (closure_as_term cfg env t))
+              | Some (S.Meta (S.Arg_qualifier_meta_tac t)) -> Some (S.Meta (S.Arg_qualifier_meta_tac (closure_as_term cfg env t)))
+              | Some (S.Meta (S.Arg_qualifier_meta_attr t)) -> Some (S.Meta (S.Arg_qualifier_meta_attr (closure_as_term cfg env t)))
               | i -> i
     in
     (x, imp)
@@ -3079,7 +3081,12 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let us_t, _, t = elim_uvars_aux_t env us_t [] t in
       let us_ty, _, ty = elim_uvars_aux_t env us_ty [] ty in
       { s with sigel = Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty)) }
-       
+
+    | Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty)) ->
+      let us_t, _, t = elim_uvars_aux_t env us_t [] t in
+      let us_ty, _, ty = elim_uvars_aux_t env us_ty [] ty in
+      { s with sigel = Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty)) }
+
 
 let erase_universes env t =
     normalize [EraseUniverses; AllowUnboundUniverses] env t
@@ -3099,3 +3106,36 @@ let unfold_head_once env t =
   | Tm_fvar fv -> aux fv [] args
   | Tm_uinst({n=Tm_fvar fv}, us) -> aux fv us args
   | _ -> None
+
+let get_n_binders (env:Env.env) (n:int) (t:term) : list<binder> * comp =
+  let rec aux (retry:bool) (n:int) (t:term) : list<binder> * comp =
+    let bs, c = U.arrow_formals_comp t in
+    let len = List.length bs in
+    match bs, c with
+    (* Got no binders, maybe retry after normalizing *)
+    | [], _ when retry ->
+      aux false n (unfold_whnf env t)
+
+    (* Can't retry, stop *)
+    | [], _ when not retry ->
+      (bs, c)
+
+    (* Exactly what we wanted, return *)
+    | bs, c when len = n ->
+      (bs, c)
+
+    (* Plenty of binders, grab as many as needed and finish *)
+    | bs, c when len > n ->
+      let bs_l, bs_r = List.splitAt n bs in
+      (bs_l, S.mk_Total (U.arrow bs_r c))
+
+    (* We need more, descend if `c` is total *)
+    | bs, c when len < n && U.is_total_comp c && not (U.has_decreases c) ->
+      let (bs', c') = aux true (n-len) (U.comp_result c) in
+      (bs@bs', c')
+
+    (* Not enough, but we can't descend, just return *)
+    | bs, c ->
+      (bs, c)
+  in
+  aux true n t

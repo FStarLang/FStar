@@ -250,6 +250,29 @@ let comp_to_comp_typ (c:comp) : comp_typ =
        flags=comp_flags c}
     | _ -> failwith "Assertion failed: Computation type without universe"
 
+
+(*
+ * For layered effects, given a (repr a is), return is
+ * For wp effects, given a (unit -> M a wp), return wp
+ *
+ * The pattern matching is very syntactic inside this function
+ * It is called from the computation types in the layered effect combinators
+ *   e.g. f and g in bind
+ * Layered effects typechecking code already makes sure that those types
+ *   have this exact shape
+ *)
+let effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.range) (err:string)
+: list<term> =
+  let err () = Errors.raise_error (Errors.Fatal_UnexpectedEffect, err) r in
+  let repr = compress repr in
+  if is_layered
+  then match repr.n with
+       | Tm_app (_, _::is) -> is |> List.map fst
+       | _ -> err ()
+  else match repr.n with 
+       | Tm_arrow (_, c) -> c |> comp_to_comp_typ |> (fun ct -> ct.effect_args |> List.map fst)
+       | _ -> err ()
+
 let destruct_comp c : (universe * typ * typ) =
   let wp = match c.effect_args with
     | [(wp, _)] -> wp
@@ -656,7 +679,8 @@ let eq_aqual a1 a2 =
     | None, _
     | _, None -> NotEqual
     | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> Equal
-    | Some (Meta t1), Some (Meta t2) -> eq_tm t1 t2
+    | Some (Meta (Arg_qualifier_meta_tac t1)), Some (Meta (Arg_qualifier_meta_tac t2))
+    | Some (Meta (Arg_qualifier_meta_attr t1)), Some (Meta (Arg_qualifier_meta_attr t2)) -> eq_tm t1 t2
     | Some Equality, Some Equality -> Equal
     | _ -> NotEqual
 
@@ -731,6 +755,7 @@ let lids_of_sigelt (se: sigelt) = match se.sigel with
   | Sig_pragma _
   | Sig_fail _
   | Sig_polymonadic_bind _ -> []
+  | Sig_polymonadic_subcomp _ -> []
 
 let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l
@@ -881,6 +906,15 @@ let rec canon_arrow t =
 let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
 
+let has_decreases (c:comp) : bool =
+  match c.n with
+  | Comp ct ->
+    begin match ct.flags |> U.find_opt (function DECREASES _ -> true | _ -> false) with
+    | Some (DECREASES d) -> true
+    | _ -> false
+    end
+  | _ -> false
+
 (*
  * AR: this function returns the binders and comp result type of an arrow type,
  *     flattening arrows of the form t -> Tot (t1 -> C), so that it returns two binders in this example
@@ -890,7 +924,7 @@ let rec arrow_formals_comp_ln k =
     let k = Subst.compress k in
     match k.n with
         | Tm_arrow(bs, c) ->
-            if is_total_comp c
+            if is_total_comp c && not (has_decreases c)
             then let bs', k = arrow_formals_comp_ln (comp_result c) in
                  bs@bs', k
             else bs, c
@@ -1740,7 +1774,6 @@ and comp_eq_dbg (dbg : bool) c1 c2 =
     (check "comp result typ"  (term_eq_dbg dbg c1.result_typ c2.result_typ)) &&
     (* (check "comp args"  (eqlist arg_eq_dbg dbg c1.effect_args c2.effect_args)) && *)
     true //eq_flags c1.flags c2.flags
-and eq_flags_dbg (dbg : bool) (f1 : cflag) (f2 : cflag) = true // TODO? Or just ignore?
 and branch_eq_dbg (dbg : bool) (p1,w1,t1) (p2,w2,t2) =
     (check "branch pat"  (eq_pat p1 p2)) &&
     (check "branch body"  (term_eq_dbg dbg t1 t2))
@@ -2134,8 +2167,7 @@ let apply_wp_eff_combinators (f:tscheme -> tscheme) (combs:wp_eff_combinators)
 let apply_layered_eff_combinators (f:tscheme -> tscheme) (combs:layered_eff_combinators)
 : layered_eff_combinators
 = let map_tuple (ts1, ts2) = (f ts1, f ts2) in
-  { l_base_effect = combs.l_base_effect;
-    l_repr = map_tuple combs.l_repr;
+  { l_repr = map_tuple combs.l_repr;
     l_return = map_tuple combs.l_return;
     l_bind = map_tuple combs.l_bind;
     l_subcomp = map_tuple combs.l_subcomp;
@@ -2217,8 +2249,3 @@ let get_stronger_repr (ed:eff_decl) : option<tscheme> =
   | Primitive_eff _
   | DM4F_eff _ -> None
   | Layered_eff combs -> combs.l_subcomp |> fst |> Some
-
-let get_layered_effect_base (ed:eff_decl) : option<lident> =
-  match ed.combinators with
-  | Layered_eff combs -> combs.l_base_effect |> Some
-  | _ -> None

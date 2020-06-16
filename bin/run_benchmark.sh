@@ -122,7 +122,8 @@ function write_csv_and_summary() {
 # and remove useless info
 function cat_benches_into () {
     if hash jq 2>/dev/null; then
-        find "$1" -name '*.bench' -exec cat {} \; | jq -s ".[] | del(.ocaml)"> $2
+        find "$1" -name '*.bench' -exec cat {} \; >$2
+        cat $2 | jq -s ".[] | del(.ocaml)" >$2.pretty
     else
         echo "Unable to find jq to create csv and summary (https://stedolan.github.io/jq/)"
     fi
@@ -203,8 +204,8 @@ function compare_bench_output () {
     COMPARE_RDIR=$2
 
     mkdir -p ${BENCH_OUTDIR}
-    rm -r ${BENCH_OUTDIR}/left
-    rm -r ${BENCH_OUTDIR}/right
+    rm -rf ${BENCH_OUTDIR}/left
+    rm -rf ${BENCH_OUTDIR}/right
     cp -r ${COMPARE_LDIR}/${BENCH_OUTDIR} ${BENCH_OUTDIR}/left
     cp -r ${COMPARE_RDIR}/${BENCH_OUTDIR} ${BENCH_OUTDIR}/right
 

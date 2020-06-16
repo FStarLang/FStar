@@ -789,6 +789,26 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       else t in
     let t, ty = TcEff.tc_polymonadic_bind env m n p t in
     let se = ({ se with sigel = Sig_polymonadic_bind (m, n, p, t, ty) }) in
+    [se], [], env0
+
+  | Sig_polymonadic_subcomp (m, n, t, _) ->  //desugaring does not set the last field, tc does
+    let t =
+      if Options.use_two_phase_tc () && Env.should_verify env then
+        let t, ty =
+          TcEff.tc_polymonadic_subcomp ({ env with phase1 = true; lax = true }) m n t
+          |> (fun (t, ty) -> { se with sigel = Sig_polymonadic_subcomp (m, n, t, ty) })
+          |> N.elim_uvars env
+          |> (fun se ->
+             match se.sigel with
+             | Sig_polymonadic_subcomp (_, _, t, ty) -> t, ty
+             | _ -> failwith "Impossible! tc for Sig_polymonadic_subcomp must be a Sig_polymonadic_subcomp") in
+        if Env.debug env <| Options.Other "TwoPhases"
+          then BU.print1 "Polymonadic subcomp after phase 1: %s\n"
+                 (Print.sigelt_to_string ({ se with sigel = Sig_polymonadic_subcomp (m, n, t, ty) }));
+        t
+      else t in
+    let t, ty = TcEff.tc_polymonadic_subcomp env m n t in
+    let se = ({ se with sigel = Sig_polymonadic_subcomp (m, n, t, ty) }) in
     [se], [], env0)
 
 
@@ -892,7 +912,8 @@ let for_export env hidden se : list<sigelt> * list<lident> =
   | Sig_new_effect     _
   | Sig_sub_effect     _
   | Sig_effect_abbrev  _
-  | Sig_polymonadic_bind _ -> [se], hidden
+  | Sig_polymonadic_bind _
+  | Sig_polymonadic_subcomp _ -> [se], hidden
 
   | Sig_let((false, [lb]), _)
         when se.sigquals |> BU.for_some is_hidden_proj_or_disc ->
@@ -963,6 +984,8 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
     | Sig_sub_effect sub -> TcUtil.update_env_sub_eff env sub
 
     | Sig_polymonadic_bind (m, n, p, _, ty) -> TcUtil.update_env_polymonadic_bind env m n p ty
+
+    | Sig_polymonadic_subcomp (m, n, _, ty) -> Env.add_polymonadic_subcomp env m n ty
 
     | _ -> env
 
@@ -1106,7 +1129,8 @@ let check_exports env (modul:modul) exports : unit =
         | Sig_new_effect _
         | Sig_sub_effect _
         | Sig_pragma _
-        | Sig_polymonadic_bind _ -> ()
+        | Sig_polymonadic_bind _
+        | Sig_polymonadic_subcomp _ -> ()
 
         | Sig_fail _
         | Sig_splice _ -> failwith "Impossible (Already handled)"
@@ -1249,7 +1273,8 @@ let extract_interface (en:env) (m:modul) :modul =
     | Sig_sub_effect _
     | Sig_effect_abbrev _
     | Sig_pragma _
-    | Sig_polymonadic_bind _ -> [s]
+    | Sig_polymonadic_bind _
+    | Sig_polymonadic_subcomp _ -> [s]
   in
 
   { m with declarations = m.declarations |> List.map extract_sigelt |> List.flatten; is_interface = true }

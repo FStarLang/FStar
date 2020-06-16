@@ -39,7 +39,8 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug1130.fst Bug1170.fst Bug1191.fst Bug1799.fst Bug1900.fst Bug1908.fst Bug1913.fst BugLexTop.fst Bug1940a.fst \
   Bug1940b.fst Bug1940c.fst Bug1936.fst Bug1952a.fst Bug1952b.fst Bug1953.fst Bug1074.fst Bug442.fst Bug1954.fst \
   Bug1903.fst Bug1121a.fst Bug1121b.fst Bug1956.fst Bug1228.fst Bug829.fst Bug451.fst Bug1966a.fst Bug1966b.fst Bug1976.fst \
-  Bug1986.fst Bug1995.fst Bug1507.fst Bug2001.fst Bug2004.fst Bug855a.fst Bug855b.fst Bug1097.fst Bug1918.fst Bug1390.fst Bug2031.fst
+  Bug1986.fst Bug1995.fst Bug1507.fst Bug2001.fst Bug2004.fst Bug855a.fst Bug855b.fst Bug1097.fst Bug1918.fst Bug1390.fst Bug2031.fst \
+  Bug379.fst Bug1182a.fst Bug1182b.fst Bug1901.fst Bug1902.fst Bug258.fst Bug2055.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
@@ -49,7 +50,7 @@ SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
 SHOULD_VERIFY_BROKEN=Bug092.fst Bug170b.fst Bug192.fst Bug210.fst Bug210b.fst Bug210c.fst Bug312.fst\
   Bug818.fst Bug818b.fst
 SHOULD_VERIFY_OPEN=Bug045.fst Bug057.fst Bug064.fst Bug065.fst Bug071.fst Bug121.fst Bug131.fst Bug171.fst\
-  Bug171b.fst Bug171c.fst Bug258.fst Bug259.fst Bug282.fst Bug291.fst Bug419.fst \
+  Bug171b.fst Bug171c.fst Bug259.fst Bug282.fst Bug291.fst Bug419.fst \
   Bug442b.fst Bug484.fst Bug542.fst Bug543.fst Bug554.fst Bug604.fst Bug606.fst\
   Bug626.fst Bug682.fst Bug715.fst Bug739.fst Bug815.fst Bug815b.fst Bug851.fst Bug933.fst Bug933b.fst\
   Bug1038.fst Bug1091.fst Bug807d.fst Bug1486.fst Bug1392.fst Bug1867.fst
@@ -73,7 +74,7 @@ SHOULD_VERIFY_NOT_WORKING=Bug015.fst Bug021.fst Bug023.fst  Bug060.fst Bug062.fs
 # These will be checked as part of the F* regressions.
 SHOULD_NOT_VERIFY_CLOSED=Bug035.fst Bug043.fst Bug044.fst Bug063.fst Bug120.fst Bug154.fst Bug154b.fst Bug154c.fst\
   Bug156.fst Bug163.fst Bug176.fst Bug177.fst Bug183.fst Bug250.fst Bug253.fst Bug253b.fst Bug262.fst Bug284.fst\
-  Bug319.fst Bug320.fst Bug362.fst Bug379.fst Bug406.fst Bug446.fst Bug612.fst Bug623.fst Bug655.fst\
+  Bug319.fst Bug320.fst Bug362.fst Bug406.fst Bug446.fst Bug612.fst Bug623.fst Bug655.fst\
   Bug769.fst Bug769b.fst Bug769d.fst Bug1017.fst Bug1043.fst Bug1043b.fst Bug1106.fst Bug1106b.fst Bug174.fst\
   Bug193.fst Bug208.fst Bug208.fst Bug378.fst Bug696.fst Bug1090.fst Bug1187.fst Bug380_1.fst Bug380_2.fst \
   Bug1404.fst Bug367.fst Bug1389a.fst Bug1389b.fst Bug1389c.fst Bug1441.fst Bug1029.fst Bug1029b.fst \
@@ -147,7 +148,11 @@ not-verify: $(subst .fst,.not-verify,$(SHOULD_NOT_VERIFY_CLOSED))
 
 Bug310.extract:
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug310 --codegen OCaml Bug310.fst
-	cmp Bug310.ml Bug310.ml.expected
+	diff -u --strip-trailing-cr Bug310.ml Bug310.ml.expected
+
+Bug2058.extract:
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug2058 --codegen OCaml Bug2058.fst
+	diff -u --strip-trailing-cr Bug2058.ml Bug2058.ml.expected
 
 %.extract: %.fst
 	mkdir -p out_$*

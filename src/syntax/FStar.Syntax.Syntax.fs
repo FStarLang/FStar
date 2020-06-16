@@ -145,8 +145,11 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_reason:string;
     ctx_uvar_should_check:should_check_uvar;
     ctx_uvar_range:Range.range;
-    ctx_uvar_meta: option<(dyn * term)>; (* the dyn is an FStar.TypeChecker.Env.env *)
+    ctx_uvar_meta: option<ctx_uvar_meta_t>;
 }
+and ctx_uvar_meta_t =
+  | Ctx_uvar_meta_tac of dyn * term (* the dyn is an FStar.TypeChecker.Env.env *)
+  | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@...] notation *)
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
 and uvar = Unionfind.p_uvar<option<term>> * version * Range.range
 and uvars = set<ctx_uvar>
@@ -294,8 +297,11 @@ and tscheme = list<univ_name> * typ
 and gamma = list<binding>
 and arg_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
-  | Meta of term
+  | Meta of arg_qualifier_meta_t
   | Equality
+and arg_qualifier_meta_t =
+  | Arg_qualifier_meta_tac of term
+  | Arg_qualifier_meta_attr of term
 and aqual = option<arg_qualifier>
 
 // This is set in FStar.Main.main, where all modules are in-scope.
@@ -371,7 +377,6 @@ type wp_eff_combinators = {
 }
 
 type layered_eff_combinators = {
-  l_base_effect  : lident;
   l_repr         : (tscheme * tscheme);
   l_return       : (tscheme * tscheme);
   l_bind         : (tscheme * tscheme);
@@ -409,18 +414,18 @@ type sig_metadata = {
 }
 
 type sigelt' =
-  | Sig_inductive_typ     of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
-                          * univ_names                //u1..un
-                          * binders                   //(x1:t1) ... (xn:tn)
-                          * typ                       //t
-                          * list<lident>              //mutually defined types
-                          * list<lident>              //data constructors for this type
+  | Sig_inductive_typ       of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
+                            * univ_names                //u1..un
+                            * binders                   //(x1:t1) ... (xn:tn)
+                            * typ                       //t
+                            * list<lident>              //mutually defined types
+                            * list<lident>              //data constructors for this type
 (* a datatype definition is a Sig_bundle of all mutually defined `Sig_inductive_typ`s and `Sig_datacon`s.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
    where each higher level list represents one of the inductive types and its constructors.
    However, the current order is convenient as it matches the type-checking order for the mutuals;
    i.e., all the type constructors first; then all the data which may refer to the type constructors *)
-  | Sig_bundle            of list<sigelt>              //the set of mutually defined type and data constructors
+  | Sig_bundle              of list<sigelt>              //the set of mutually defined type and data constructors
                           * list<lident>               //all the inductive types and data constructor names in this bundle
   | Sig_datacon           of lident                    //name of the datacon
                           * univ_names                 //universe variables of the inductive type it belongs to
@@ -447,6 +452,7 @@ type sigelt' =
   | Sig_splice            of list<lident> * term
 
   | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme
+  | Sig_polymonadic_subcomp of lident * lident * tscheme * tscheme  //m <: n, the polymonadic subcomp term, and its type
   | Sig_fail              of list<int>         (* Expected errors *)
                           * bool               (* true if should fail in --lax *)
                           * list<sigelt>       (* The sigelts to be checked *)
@@ -741,4 +747,6 @@ let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg
 let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] Range.dummyRange
 let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero;U_zero]) [as_arg t1; as_arg t2] Range.dummyRange
 let t_either_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.either_lid) [U_zero;U_zero]) [as_arg t1; as_arg t2] Range.dummyRange
-let unit_const = mk (Tm_constant FStar.Const.Const_unit) Range.dummyRange
+
+let unit_const_with_range r = mk (Tm_constant FStar.Const.Const_unit) r
+let unit_const = unit_const_with_range Range.dummyRange

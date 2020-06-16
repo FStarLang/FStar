@@ -1,5 +1,5 @@
 >> Got issues: [
-NegativeTests.Termination.fst(21,26-21,27): (Error 19) Could not prove termination of this recursive call; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also NegativeTests.Termination.fst(21,20-21,29))
+NegativeTests.Termination.fst(21,28-21,29): (Error 19) Could not prove termination of this recursive call; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also NegativeTests.Termination.fst(21,20-21,29))
 >>]
 >> Got issues: [
 NegativeTests.Termination.fst(28,26-28,35): (Error 19) Could not prove termination of this recursive call; The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel (see also NegativeTests.Termination.fst(26,2-28,35))

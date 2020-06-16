@@ -17,7 +17,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "88a22e0c6969897e346a2dfa4eca7e2b"
+      "a74fdab3592ad71d52f52038c91f36d7"
     ],
     [
       "OPLSS.MAC.key",
@@ -26,7 +26,7 @@
       1,
       [ "@query", "assumption_OPLSS.MAC.log_entry__uu___haseq" ],
       0,
-      "e0670a37232b2e76e9ce0e35f66d21b6"
+      "45cad6188727ebaffaaa6b59a53a744f"
     ],
     [
       "OPLSS.MAC.__proj__Key__item__log",
@@ -35,7 +35,7 @@
       1,
       [ "@query", "assumption_OPLSS.MAC.log_entry__uu___haseq" ],
       0,
-      "e13ef93b3e485aecd28c1ef3dd11e787"
+      "2518aa071329af1125aa8f344ba15c7a"
     ],
     [
       "OPLSS.MAC.__proj__Key__item__log",
@@ -44,7 +44,7 @@
       1,
       [ "@query", "assumption_OPLSS.MAC.log_entry__uu___haseq" ],
       0,
-      "6867443589d0c760b16c4654914a02ea"
+      "8ef95863f01959dbe1b0f98fb5728597"
     ],
     [
       "OPLSS.MAC.log",
@@ -53,7 +53,7 @@
       1,
       [ "@query", "assumption_OPLSS.MAC.log_entry__uu___haseq" ],
       0,
-      "2fd357365c617ba98a11e354353be951"
+      "00860ddc5f2a51817c27d240b37c8ba6"
     ],
     [
       "OPLSS.MAC.keygen",
@@ -62,24 +62,23 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "FStar.Seq.Base_pretyping_7efa52b424e80c83ad68a652aa3561e4",
-        "assumption_OPLSS.MAC.log_entry__uu___haseq", "b2t_def",
-        "bool_inversion", "equation_FStar.HyperStack.ST.mref",
+        "assumption_OPLSS.MAC.log_entry__uu___haseq",
+        "data_typing_intro_OPLSS.MAC.Key@tok",
+        "equation_FStar.HyperStack.ST.mref",
         "equation_FStar.HyperStack.ST.mreference",
         "equation_FStar.HyperStack.ST.ralloc_post",
-        "equation_FStar.Monotonic.HyperHeap.hmap",
         "equation_FStar.Monotonic.HyperStack.contains",
-        "equation_FStar.Monotonic.HyperStack.is_tip",
-        "equation_FStar.Monotonic.HyperStack.is_wf_with_ctr_and_tip",
-        "equation_FStar.Monotonic.HyperStack.mem",
         "equation_FStar.Monotonic.HyperStack.mref",
-        "equation_OPLSS.HMACSHA1.keysize", "equation_OPLSS.Log.entries",
+        "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_OPLSS.HMACSHA1.keysize",
+        "equation_OPLSS.HMACSHA1.sha1_key", "equation_OPLSS.Log.entries",
         "equation_OPLSS.Log.fp", "equation_OPLSS.Log.grows",
         "equation_OPLSS.Log.t", "equation_OPLSS.MAC.invariant",
         "equation_OPLSS.MAC.log",
-        "function_token_typing_FStar.Monotonic.Heap.heap",
-        "kinding_OPLSS.MAC.log_entry@tok",
-        "lemma_FStar.Map.lemma_ContainsDom",
+        "interpretation_Tm_abs_2b34c3921953c0a53b122a0054a0f2bb",
+        "l_and-interp",
         "lemma_LowStar.Monotonic.Buffer.modifies_ralloc_post",
         "primitive_Prims.op_AmpAmp", "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_OPLSS.MAC.Key_log",
@@ -87,20 +86,17 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_OPLSS.MAC.Key_log",
         "refinement_interpretation_Tm_refine_003cbb363565c5358e7ed8a8d7dba6d4",
-        "refinement_interpretation_Tm_refine_05e15190c946858f68c69156f585f95a",
         "refinement_interpretation_Tm_refine_1a1278f1aecd37594ba20d888b7fd230",
         "refinement_interpretation_Tm_refine_365abba901205a01d0ef28ebf2198c47",
         "refinement_interpretation_Tm_refine_4deaad73cd92bc948bb28924e869c4ab",
         "refinement_interpretation_Tm_refine_b913a3f691ca99086652e0a655e72f17",
-        "typing_FStar.Map.contains", "typing_FStar.Monotonic.HyperHeap.rid",
+        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "typing_FStar.Monotonic.HyperHeap.root",
-        "typing_FStar.Monotonic.HyperStack.get_hmap",
-        "typing_FStar.Monotonic.HyperStack.get_tip",
         "typing_FStar.Seq.Base.empty", "typing_FStar.Seq.Base.seq",
         "typing_OPLSS.Log.grows"
       ],
       0,
-      "00435c54a2b495f664506d455ab89535"
+      "64a58689497640d845c0cd55c2408664"
     ],
     [
       "OPLSS.MAC.mac",
@@ -146,11 +142,13 @@
         "typing_FStar.Monotonic.HyperStack.frameOf",
         "typing_FStar.Seq.Base.seq", "typing_FStar.Set.singleton",
         "typing_LowStar.Monotonic.Buffer.loc_addresses",
-        "typing_OPLSS.Flag.idealizing", "typing_OPLSS.Ideal.uf_cma",
-        "typing_OPLSS.Log.grows", "typing_OPLSS.MAC.__proj__Key__item__log"
+        "typing_OPLSS.Flag.idealizing", "typing_OPLSS.HMACSHA1.hmac_sha1",
+        "typing_OPLSS.Ideal.uf_cma", "typing_OPLSS.Log.grows",
+        "typing_OPLSS.MAC.__proj__Key__item__log",
+        "typing_OPLSS.MAC.__proj__Key__item__raw"
       ],
       0,
-      "270447b410fe169b59efafeb2845ce7f"
+      "9ae5146ece282d3a94672d4fbdc9b225"
     ],
     [
       "OPLSS.MAC.verify",
@@ -219,7 +217,7 @@
         "typing_OPLSS.MAC.__proj__Key__item__raw"
       ],
       0,
-      "46287f4b63533762763c63902b01cbac"
+      "47592e0c51250397d988ee71085f2281"
     ]
   ]
 ]
