@@ -595,30 +595,34 @@ let frame
 : Write a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l
 = frame' a frame pre p post l inner ()
 
+let elem_writer
+  (p: parser)
+: Tot Type
+= (#l: B.loc) -> (x: dfst p) -> Write unit emp (fun _ -> p) (fun _ -> True) (fun _ _ y -> y == x) l
+
+let append
+  (#fr: parser)
+  (#p: parser)
+  (w: elem_writer p)
+  (#l: B.loc)
+  (x: dfst p)
+: Write unit fr (fun _ -> fr `star` p) (fun _ -> True) (fun w _ (w', x') -> w' == w /\ x' == x) l
+= frame unit fr (fun _ -> True) (fun _ -> p) (fun _ _ x' -> x' == x) l (fun _ -> w x)
+
 assume
 val parse_u32' : parser' U32.t
 
 let parse_u32 : parser = (| U32.t , parse_u32' |)
 
 assume
-val write_u32
-  (#l: B.loc)
-  (x: U32.t)
-: Write unit emp (fun _ -> parse_u32) (fun _ -> True) (fun _ _ y -> y == x) l
-
-let frame_write_u32
-  (#fr: parser)
-  (#l: B.loc)
-  (x: U32.t)
-: Write unit fr (fun _ -> fr `star` parse_u32) (fun _ -> True) (fun w _ (w', x') -> w' == w /\ x' == x) l
-= frame unit fr (fun _ -> True) (fun _ -> parse_u32) (fun _ _ x' -> x' == x) l (fun _ -> write_u32 x)
+val write_u32 : elem_writer parse_u32
 
 let write_two_ints
   (l: B.loc)
   (x y: U32.t)
 : Write unit emp (fun _ -> parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ (x', y') -> x' == x /\ y' == y) l
 = write_u32 x;
-  frame_write_u32 y
+  append write_u32 y
 
 let write_two_ints_ifthenelse
   (l: B.loc)
@@ -627,6 +631,6 @@ let write_two_ints_ifthenelse
 = write_u32 x;
   if x `U32.lt` y
   then
-    frame_write_u32 x
+    append write_u32 x
   else
-    frame_write_u32 y
+    append write_u32 y
