@@ -281,25 +281,25 @@ let mk_repr
 
 unfold
 let lift_pure_wp
-  (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f:unit -> PURE a wp)
+  (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser)
 : Tot (wp_t a r (fun _ -> r))
 = fun st p -> wp (fun res -> p (| res, st |))
 
 let lift_pure_spec
   (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f:unit -> PURE a wp)
-: Tot (repr_spec a r (fun _ -> r) (lift_pure_wp a wp r f))
+: Tot (repr_spec a r (fun _ -> r) (lift_pure_wp a wp r))
 = fun v -> (| f (), v |)
 
 let lift_pure_impl
   (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f:unit -> PURE a wp)
   (l: B.loc)
-: Tot (repr_impl a r (fun _ -> r) (lift_pure_wp a wp r f) l (lift_pure_spec a wp r f))
+: Tot (repr_impl a r (fun _ -> r) (lift_pure_wp a wp r) l (lift_pure_spec a wp r f))
 = fun buf pos -> (f (), pos)
 
 let lift_pure (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser)
   (l: B.loc)
   (f:unit -> PURE a wp)
-: Pure (repr a r (fun _ -> r) (lift_pure_wp a wp r f) l)
+: Pure (repr a r (fun _ -> r) (lift_pure_wp a wp r) l)
   (requires wp (fun _ -> True))
   (ensures fun _ -> True)
 = (| lift_pure_spec a wp r f, lift_pure_impl a wp r f l |)
@@ -648,7 +648,7 @@ let frame'
   (p: a -> parser)
   (post: post_t a emp p pre)
   (l: B.loc)
-  ($inner: unit -> Write a emp p l pre post)
+  (inner: unit -> Write a emp p l pre post)
 : Tot (unit -> Write a frame (frame_out a frame p) l (frame_pre a frame pre) (frame_post a frame pre p post))
 = mk_repr_hoare
     a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l
@@ -663,7 +663,7 @@ let frame
   (p: a -> parser)
   (post: post_t a emp p pre)
   (l: B.loc)
-  ($inner: unit -> Write a emp p l pre post)
+  (inner: unit -> Write a emp p l pre post)
 : Write a frame (frame_out a frame p) l (frame_pre a frame pre) (frame_post a frame pre p post)
 = frame' a frame pre p post l inner ()
 
@@ -678,15 +678,14 @@ val write_u32
   (x: U32.t)
 : Write unit emp (fun _ -> parse_u32) l (fun _ -> True) (fun _ _ y -> y == x)  
 
-assume
-val frame_write_u32
+#push-options "--admit_smt_queries true"
+let frame_write_u32
   (#fr: parser)
   (#l: B.loc)
   (x: U32.t)
 : Write unit fr (fun _ -> fr `star` parse_u32) l (fun _ -> True) (fun w _ (w', x') -> w' == w /\ x' == x)
-(* FIXME: WHY WHY WHY does this fail?
-= frame unit fr (fun _ -> True) (fun _ -> parse_u32) (fun _ _ x' -> x' == x) l (fun _ -> write_u32 l x)
-*)
+= frame unit fr (fun _ -> True) (fun _ -> parse_u32) (fun _ _ x' -> x' == x) l (fun _ -> write_u32 #l x)
+#pop-options
 
 let write_two_ints
   (l: B.loc)
