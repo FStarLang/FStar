@@ -18,8 +18,8 @@ module PingPong
 open Steel.Effect
 open Steel.Memory
 open Steel.Channel.Protocol
-open Steel.Channel.Duplex
-module P = Steel.Channel.Protocol
+module Duplex = Steel.Channel.Duplex
+module Protocol = Steel.Channel.Protocol
 open Steel.SteelT.Basics
 
 (** Specification and implementation of a pingpong protocol *)
@@ -29,10 +29,10 @@ open Steel.SteelT.Basics
 /// A client first sends an integer on a channel.
 /// It then receives an integer that is ensured to be strictly greater than the one she sent
 /// The protocol then terminates by returning unit (done)
-let pingpong : prot =
-  x <-- P.send int;
-  y <-- P.recv (y:int{y > x});
-  P.done
+let pingpong : Duplex.prot =
+  x <-- Protocol.send int;
+  y <-- Protocol.recv (y:int{y > x});
+  Protocol.done
 
 /// An implementation of the pingpong protocol specified above.
 /// The client takes as an argument a channel that satisfies the pingpong protocol
@@ -41,13 +41,13 @@ let pingpong : prot =
 /// start yet.
 /// After execution, the postcondition specifies ownership of an endpoint for channel c,
 /// but no action in the protocol remains.
-let client (c:chan pingpong)
+let client (c:Duplex.chan pingpong)
   : SteelT unit
-           (endpoint c pingpong)
-           (fun _ -> endpoint c P.done)
+           (Duplex.endpoint c pingpong)
+           (fun _ -> Duplex.endpoint c Protocol.done)
   = // In this implementation, the client first sends the (arbitrarily chosen) integer 17
-    send c 17;
-    let y = recv c in
+    Duplex.send c 17;
+    let y = Duplex.recv c in
     // The protocol specifies that the integer received is greater than the one sent.
     // This fact is available in the context and can be asserted.
     assert (y > 17);
@@ -61,27 +61,27 @@ let client (c:chan pingpong)
 /// where `dual pingpong` is the pingpong protocol where receives and sends are flipped.
 /// After execution, the postcondition `endpoint c P.done` again specifies that the protocol
 /// is done on channel c
-let server (c:chan pingpong)
+let server (c:Duplex.chan pingpong)
   : SteelT unit
-           (endpoint c (P.dual pingpong))
-           (fun _ -> endpoint c P.done)
-  = let y = recv c in
+           (Duplex.endpoint c (Protocol.dual pingpong))
+           (fun _ -> Duplex.endpoint c Protocol.done)
+  = let y = Duplex.recv c in
     // The dual protocol specifies that an integer is received, and that a greater integer
     // must be sent. We arbitrarily choose y + 42
-    send c (y + 42);
+    Duplex.send c (y + 42);
     return ()
 
 /// A wrong implementation of the server side of the protocol.
 /// If the `expect_failure` attribute is commented out, this function does not typecheck
 [@expect_failure]
-let failed_server (c:chan pingpong)
+let failed_server (c:Duplex.chan pingpong)
   : SteelT unit
-           (endpoint c (P.dual pingpong))
-           (fun _ -> endpoint c P.done)
-  = let y = recv c in
+           (Duplex.endpoint c (Protocol.dual pingpong))
+           (fun _ -> Duplex.endpoint c Protocol.done)
+  = let y = Duplex.recv c in
     // This send does not satisfy the protocol, as the integer should be greater than y
     // The error message points to the value sent not satisfying the protocol
-    send c (y - 42);
+    Duplex.send c (y - 42);
     return ()
 
 
@@ -92,7 +92,7 @@ let client_server (_:unit)
   = // Creates a new channel `c` for the pingpong protocol.
     // After creation, an endpoint for the pingpong protocol and
     // for the dual protocol are available
-    let c = new_chan pingpong in
+    let c = Duplex.new_chan pingpong in
     // The separation logic assertion `endpoint c pingpong <*> endpoint c (dual pingpong)`
     // is in the context. We can execute both the clients in the server in parallel,
     // as they both operate on separated resources
