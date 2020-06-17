@@ -70,6 +70,25 @@ val contents
   (requires (valid_pos p h b pos pos'))
   (ensures (fun _ -> True))
 
+val size
+  (p: parser)
+  (x: dfst p)
+: GTot nat
+
+val contents_size
+  (p: parser)
+  (h: HS.mem)
+  (b: B.buffer U8.t)
+  (pos: U32.t)
+  (pos' : U32.t)
+: Lemma
+  (requires (valid_pos p h b pos pos'))
+  (ensures (
+    valid_pos p h b pos pos' /\
+    size p (contents p h b pos pos') == U32.v pos' - U32.v pos
+  ))
+  [SMTPat (contents p h b pos pos')]
+
 unfold
 let pure_wp_mono
   (a: Type)
@@ -96,7 +115,7 @@ let repr_spec (a:Type u#x) (r_in: parser) (r_out:a -> parser) (pre: pre_t r_in) 
   (v_in: dfst r_in) ->
   Ghost (v: a & dfst (r_out v))
   (requires (pre v_in))
-  (ensures (fun (| v, v_out |) -> post v_in v v_out))
+  (ensures (fun (| v, v_out |) -> post v_in v v_out /\ size r_in v_in <= size (r_out v) v_out))
 
 type u8 : Type0 = U8.t
 
@@ -398,6 +417,8 @@ val valid_emp
   ))
   [SMTPat (valid_pos emp h b pos pos')]
 
+val size_emp : squash (size emp () == 0)
+
 val star' (#t1 #t2: Type) (p1: parser' t1) (p2: parser' t2) : Tot (parser' (t1 & t2))
 
 let star (p1 p2: parser) : Tot parser = (| (dfst p1 & dfst p2), star' (dsnd p1) (dsnd p2) |)
@@ -418,6 +439,14 @@ val valid_star
     valid_pos (p1 `star` p2) h b pos1 pos3 /\
     contents (p1 `star` p2) h b pos1 pos3 == (contents p1 h b pos1 pos2, contents p2 h b pos2 pos3)
   ))
+
+val size_star
+  (p1 p2: parser)
+  (x1: dfst p1)
+  (x2: dfst p2)
+: Lemma
+  (size (p1 `star` p2) (x1, x2) == size p1 x1 + size p2 x2)
+  [SMTPat (size (p1 `star` p2) (x1, x2))]
 
 val valid_frame
   (p: parser)

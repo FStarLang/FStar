@@ -33,6 +33,10 @@ let valid_pos_post = admit ()
 
 let contents = admit ()
 
+let size = admit ()
+
+let contents_size = admit ()
+
 unfold
 let repr_impl_post
   (a:Type u#x)
@@ -153,9 +157,13 @@ let emp' = admit ()
 
 let valid_emp = admit ()
 
+let size_emp = admit ()
+
 let star' = admit ()
 
 let valid_star = admit ()
+
+let size_star = admit ()
 
 let valid_frame = admit ()
 
