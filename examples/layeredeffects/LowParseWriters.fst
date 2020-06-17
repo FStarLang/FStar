@@ -49,19 +49,25 @@ let repr_impl_post
   (b: B.buffer u8 { l `B.loc_includes` B.loc_buffer b })
   (pos1: U32.t { U32.v pos1 <= B.length b })
   (h: HS.mem)
-  (v: a)
-  (pos2: U32.t)
+  (res: option (a & U32.t))
   (h' : HS.mem)
 : GTot Type0
 = 
     valid_pos r_in h b 0ul pos1 /\ (
     let v_in = contents r_in h b 0ul pos1 in
-    pre v_in /\
-    U32.v pos1 <= U32.v pos2 /\
-    valid_pos (r_out v) h' b 0ul pos2 /\ (
-    let v_out = contents (r_out v) h' b 0ul pos2 in
-    B.modifies (B.loc_buffer_from_to b 0ul pos2) h h' /\
-    spec v_in == (| v, v_out |)
+    pre v_in /\ (
+    let (| v, v_out |) = spec v_in in
+    begin match res with
+    | None ->
+      size (r_out v) v_out > B.length b /\
+      B.modifies (B.loc_buffer b) h h'
+    | Some (v', pos2) ->
+      U32.v pos1 <= U32.v pos2 /\
+      valid_pos (r_out v) h' b 0ul pos2 /\
+      v' == v /\
+      v_out == contents (r_out v) h' b 0ul pos2 /\
+      B.modifies (B.loc_buffer_from_to b 0ul pos2) h h'
+    end
   ))
 
 let buffer_offset
@@ -80,14 +86,15 @@ let repr_impl
   (spec: repr_spec a r_in r_out pre post)
 : Tot Type0 =
   (b: B.buffer u8 { l `B.loc_includes` B.loc_buffer b }) ->
+  (len: U32.t { len == B.len b }) ->
   (pos1: buffer_offset b) ->
-  HST.Stack (a & U32.t)
+  HST.Stack (option (a & U32.t))
   (requires (fun h ->
     valid_pos r_in h b 0ul pos1 /\
     pre (contents r_in h b 0ul pos1)
   ))
-  (ensures (fun h (v, pos2) h' ->
-    repr_impl_post a r_in r_out pre post l spec b pos1 h v pos2 h'
+  (ensures (fun h res h' ->
+    repr_impl_post a r_in r_out pre post l spec b pos1 h res h'
   ))
 
 inline_for_extraction
@@ -95,7 +102,7 @@ let return_impl
   (a:Type) (x:a) (r: a -> parser)
   (l: B.loc)
 : Tot (repr_impl a (r x) r (return_pre a x r) (return_post a x r) l (return_spec a x r))
-= fun b pos1 -> (x, pos1)
+= fun b len pos1 -> Some (x, pos1)
 
 let loc_includes_loc_buffer_loc_buffer_from_to
   (#a: _) (#rrel #rel: _)
@@ -129,9 +136,10 @@ let bind_impl
   (f' : repr_impl a r_in_f r_out_f pre_f post_f l f_bind_impl)
   (g' : (x: a -> repr_impl b (r_out_f x) r_out_g (pre_g x) (post_g x) l (g x)))
 : Tot (repr_impl b r_in_f r_out_g (bind_pre a b r_in_f r_out_f pre_f post_f pre_g) (bind_post a b r_in_f r_out_f pre_f post_f r_out_g pre_g post_g) l (bind_spec a b r_in_f r_out_f pre_f post_f r_out_g pre_g post_g f_bind_impl g))
-= fun buf pos ->
-  match f' buf pos with
-  | (x, posf) -> g' x buf posf
+= fun buf len pos ->
+  match f' buf len pos with
+  | None -> None
+  | Some (x, posf) -> g' x buf len posf
 
 inline_for_extraction
 let subcomp_impl (a:Type)
@@ -144,14 +152,14 @@ let subcomp_impl (a:Type)
   (f_subcomp:repr_impl a r_in r_out pre post l f_subcomp_spec)
   (sq: squash (subcomp_cond a r_in r_out pre post pre' post' l l'))
 : Tot (repr_impl a r_in r_out pre' post' l' (subcomp_spec a r_in r_out pre post pre' post' f_subcomp_spec))
-= (fun b pos -> f_subcomp b pos)
+= (fun b len pos -> f_subcomp b len pos)
 
 inline_for_extraction
 let lift_pure_impl
   (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f_pure_spec_for_impl:unit -> PURE a wp)
   (l: B.loc)
 : Tot (repr_impl a r (fun _ -> r) (lift_pure_pre a wp r) (lift_pure_post a wp r) l (lift_pure_spec a wp r f_pure_spec_for_impl))
-= fun buf pos -> (f_pure_spec_for_impl (), pos)
+= fun buf len pos -> Some (f_pure_spec_for_impl (), pos)
 
 let emp' = admit ()
 
@@ -179,16 +187,18 @@ let frame_impl
   (l: B.loc)
   (inner: unit -> Write a emp p pre post l)
 : Tot (repr_impl a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l (frame_spec a frame pre p post l inner))
-= fun buf pos ->
+= fun buf len pos ->
   let h = HST.get () in
   let buf' = B.offset buf pos in
-  let (x, len) = destr_repr_impl a emp p pre post l inner buf' 0ul in
-  let h' = HST.get () in
-  let pos' = pos `U32.add` len in
-  B.loc_disjoint_loc_buffer_from_to buf 0ul pos pos len;
-  valid_frame frame h buf 0ul pos (B.loc_buffer_from_to buf' 0ul len) h';
-  valid_star frame (p x) h' buf 0ul pos pos' ;
-  (x, pos')
+  match destr_repr_impl a emp p pre post l inner buf' (len `U32.sub` pos) 0ul with
+  | None -> None
+  | Some (x, wlen) ->
+    let h' = HST.get () in
+    let pos' = pos `U32.add` wlen in
+    B.loc_disjoint_loc_buffer_from_to buf 0ul pos pos wlen;
+    valid_frame frame h buf 0ul pos (B.loc_buffer_from_to buf' 0ul wlen) h';
+    valid_star frame (p x) h' buf 0ul pos pos' ;
+    Some (x, pos')
 
 let parse_u32' = admit ()
 
@@ -204,4 +214,4 @@ let recast_writer_impl
   (l: B.loc)
   (f: unit -> Write a r_in r_out pre post l)
 : Tot (repr_impl a r_in r_out pre (recast_writer_post a r_in r_out pre post l f) l (recast_writer_spec a r_in r_out pre post l f))
-= fun b pos -> destr_repr_impl a r_in r_out pre post l f b pos
+= fun b len pos -> destr_repr_impl a r_in r_out pre post l f b len pos
