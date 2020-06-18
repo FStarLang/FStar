@@ -15,7 +15,7 @@
 *)
 
 module LowParseWriters
-
+include LowParseWriters.LowParse
 
 open FStar.HyperStack.ST
 
@@ -43,10 +43,6 @@ let memory_invariant_includes_trans (l1 l2 l3: memory_invariant) : Lemma
   (ensures (l1 `memory_invariant_includes` l3))
 = ()
 
-val parser' (t: Type0) : Type0
-
-let parser : Type u#1 = (t: Type0 & parser' t)
-
 inline_for_extraction
 let dsnd
   (#u: Type)
@@ -54,58 +50,6 @@ let dsnd
   (p: dtuple2 u v)
 : Tot (v (dfst p))
 = match p with (| _, x |) -> x
-
-val valid_pos
-  (p: parser)
-  (h: HS.mem)
-  (b: B.buffer U8.t)
-  (pos: U32.t)
-  (pos' : U32.t)
-: GTot Type0
-
-val valid_pos_post
-  (p: parser)
-  (h: HS.mem)
-  (b: B.buffer U8.t)
-  (pos: U32.t)
-  (pos' : U32.t)
-: Lemma
-  (requires (valid_pos p h b pos pos'))
-  (ensures (
-    B.live h b /\
-    U32.v pos <= U32.v pos' /\
-    U32.v pos' <= B.length b
-  ))
-  [SMTPat (valid_pos p h b pos pos')]
-
-val contents
-  (p: parser)
-  (h: HS.mem)
-  (b: B.buffer U8.t)
-  (pos: U32.t)
-  (pos' : U32.t)
-: Ghost (dfst p)
-  (requires (valid_pos p h b pos pos'))
-  (ensures (fun _ -> True))
-
-val size
-  (p: parser)
-  (x: dfst p)
-: GTot nat
-
-val contents_size
-  (p: parser)
-  (h: HS.mem)
-  (b: B.buffer U8.t)
-  (pos: U32.t)
-  (pos' : U32.t)
-: Lemma
-  (requires (valid_pos p h b pos pos'))
-  (ensures (
-    valid_pos p h b pos pos' /\
-    size p (contents p h b pos pos') == U32.v pos' - U32.v pos
-  ))
-  [SMTPat (contents p h b pos pos')]
 
 unfold
 let pure_wp_mono
@@ -134,8 +78,6 @@ let repr_spec (a:Type u#x) (r_in: parser) (r_out:a -> parser) (pre: pre_t r_in) 
   Ghost (v: a & dfst (r_out v))
   (requires (pre v_in))
   (ensures (fun (| v, v_out |) -> post v_in v v_out /\ size r_in v_in <= size (r_out v) v_out))
-
-type u8 : Type0 = U8.t
 
 inline_for_extraction
 val repr_impl
@@ -417,94 +359,6 @@ let mk_repr
 : Write a r_in r_out pre post l
 = Write?.reflect (| spec, impl |)
 
-val emp' : parser' unit
-
-let emp : parser = (| unit, emp' |)
-
-val valid_emp
-  (h: HS.mem)
-  (b: B.buffer u8)
-  (pos: U32.t)
-  (pos' : U32.t)
-: Lemma
-  (
-    valid_pos emp h b pos pos' <==> (
-    B.live h b /\
-    U32.v pos <= B.length b /\
-    U32.v pos' == U32.v pos
-  ))
-  [SMTPat (valid_pos emp h b pos pos')]
-
-val size_emp : squash (size emp () == 0)
-
-val star' (#t1 #t2: Type) (p1: parser' t1) (p2: parser' t2) : Tot (parser' (t1 & t2))
-
-let star (p1 p2: parser) : Tot parser = (| (dfst p1 & dfst p2), star' (dsnd p1) (dsnd p2) |)
-
-val valid_star
-  (p1 p2: parser)
-  (h: HS.mem)
-  (b: B.buffer U8.t)
-  (pos1 pos2 pos3: U32.t)
-: Lemma
-  (requires (
-    valid_pos p1 h b pos1 pos2 /\
-    valid_pos p2 h b pos2 pos3
-  ))
-  (ensures (
-    valid_pos p1 h b pos1 pos2 /\
-    valid_pos p2 h b pos2 pos3 /\
-    valid_pos (p1 `star` p2) h b pos1 pos3 /\
-    contents (p1 `star` p2) h b pos1 pos3 == (contents p1 h b pos1 pos2, contents p2 h b pos2 pos3)
-  ))
-
-val size_star
-  (p1 p2: parser)
-  (x1: dfst p1)
-  (x2: dfst p2)
-: Lemma
-  (size (p1 `star` p2) (x1, x2) == size p1 x1 + size p2 x2)
-  [SMTPat (size (p1 `star` p2) (x1, x2))]
-
-val valid_frame
-  (p: parser)
-  (h: HS.mem)
-  (b: B.buffer U8.t)
-  (pos: U32.t)
-  (pos' : U32.t)
-  (l: B.loc)
-  (h' : HS.mem)
-: Lemma
-  (requires (
-    valid_pos p h b pos pos' /\
-    B.modifies l h h' /\
-    B.loc_disjoint l (B.loc_buffer_from_to b pos pos')
-  ))
-  (ensures (
-    valid_pos p h b pos pos' /\
-    valid_pos p h' b pos pos' /\
-    contents p h' b pos pos' == contents p h b pos pos'
-  ))
-
-val valid_gsub
-  (p: parser)
-  (h: HS.mem)
-  (b: B.buffer U8.t)
-  (pos0 pos1 pos2: U32.t)
-  (len: U32.t)
-: Lemma
-  (requires (
-    U32.v pos0 + U32.v len <= B.length b /\
-    valid_pos p h (B.gsub b pos0 len) pos1 pos2
-  ))
-  (ensures (
-    U32.v pos0 + U32.v pos2 <= B.length b /\
-    valid_pos p h (B.gsub b pos0 len) pos1 pos2 /\
-    valid_pos p h b (pos0 `U32.add` pos1) (pos0 `U32.add` pos2) /\
-    contents p h b (pos0 `U32.add` pos1) (pos0 `U32.add` pos2) == contents p h (B.gsub b pos0 len) pos1 pos2
-  ))
-  [SMTPat (valid_pos p h (B.gsub b pos0 len) pos1 pos2)]
-
 let frame_out
   (a: Type)
   (frame: parser)
@@ -586,38 +440,35 @@ let elem_writer_spec
 : Tot (repr_spec unit emp (fun _ -> p) (fun _ -> True) (fun _ _ y -> y == x))
 = fun _ -> (| (), x |)
 
-let elem_writer_impl_t
-  (p: parser)
-: Tot Type
-= (#l: memory_invariant) -> (x: dfst p) -> repr_impl unit emp (fun _ -> p) (fun _ -> True) (fun _ _ y -> y == x) l (elem_writer_spec p x)
+inline_for_extraction
+val elem_writer_impl
+  (#p: parser)
+  (w: leaf_writer p)
+  (l: memory_invariant)
+  (x: dfst p)
+: Tot (repr_impl unit emp (fun _ -> p) (fun _ -> True) (fun _ _ y -> y == x) l (elem_writer_spec p x))
 
 inline_for_extraction
 let start
   (#p: parser)
-  (w: elem_writer_impl_t p)
+  (w: leaf_writer p)
   (#l: memory_invariant)
   (x: dfst p)
 : Write unit emp (fun _ -> p) (fun _ -> True) (fun _ _ y -> y == x) l
 = mk_repr
     unit emp (fun _ -> p) (fun _ -> True) (fun _ _ y -> y == x) l
     (elem_writer_spec p x)
-    (w x)
+    (elem_writer_impl w l x)
     ()
 
 let append
   (#fr: parser)
   (#p: parser)
-  (w: elem_writer_impl_t p)
+  (w: leaf_writer p)
   (#l: memory_invariant)
   (x: dfst p)
 : Write unit fr (fun _ -> fr `star` p) (fun _ -> True) (fun w _ (w', x') -> w' == w /\ x' == x) l
 = frame unit fr (fun _ -> True) (fun _ -> p) (fun _ _ x' -> x' == x) l (fun _ -> start w x)
-
-val parse_u32' : parser' U32.t
-
-let parse_u32 : parser = (| U32.t , parse_u32' |)
-
-val write_u32 : elem_writer_impl_t parse_u32
 
 let write_two_ints
   (l: memory_invariant)

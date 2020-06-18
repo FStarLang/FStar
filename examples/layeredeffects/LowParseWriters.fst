@@ -25,18 +25,6 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 module HST = FStar.HyperStack.ST
 
-let parser' = admit ()
-
-let valid_pos = admit ()
-
-let valid_pos_post = admit ()
-
-let contents = admit ()
-
-let size = admit ()
-
-let contents_size = admit ()
-
 unfold
 let repr_impl_post
   (a:Type u#x)
@@ -162,22 +150,6 @@ let lift_pure_impl
 : Tot (repr_impl a r (fun _ -> r) (lift_pure_pre a wp r) (lift_pure_post a wp r) l (lift_pure_spec a wp r f_pure_spec_for_impl))
 = fun buf len pos -> Some (f_pure_spec_for_impl (), pos)
 
-let emp' = admit ()
-
-let valid_emp = admit ()
-
-let size_emp = admit ()
-
-let star' = admit ()
-
-let valid_star = admit ()
-
-let size_star = admit ()
-
-let valid_frame = admit ()
-
-let valid_gsub = admit ()
-
 inline_for_extraction
 let frame_impl
   (a: Type)
@@ -201,9 +173,14 @@ let frame_impl
     valid_star frame (p x) h' buf 0ul pos pos' ;
     Some (x, pos')
 
-let parse_u32' = admit ()
-
-let write_u32 = admit ()
+let elem_writer_impl
+  #p w l x
+=
+  fun b len pos ->
+  let b' = B.offset b pos in
+  match w b' (len `U32.sub` pos) x with
+  | None -> None
+  | Some xlen -> Some ((), pos `U32.add` xlen)
 
 inline_for_extraction
 let recast_writer_impl
