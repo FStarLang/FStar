@@ -43,8 +43,6 @@
   <Import Project="$(FSharpTargetsPath)" />
   <PropertyGroup>
     <FSTAR_HOME>..</FSTAR_HOME>
-    <!-- TODO: Should we exclude FStar.Pervasives here? We don't want to rely on copying an already extracted module available from compiler compilation as compiler code was extracted to ocaml -->
-    <FSTAR_EXTRACT>--extract "-Prims +FStar +LowStar +Steel -FStar.Tactics -FStar.Reflection -Steel.Tactics -FStar.All -FStar.BaseTypes -FStar.Buffer -FStar.Bytes -FStar.Char -FStar.CommonST -FStar.Constructive -FStar.Dyn -FStar.Float -FStar.Ghost -FStar.Heap -FStar.Monotonic.Heap -FStar.HyperStack.All -FStar.HyperStack.ST -FStar.HyperStack.IO -FStar.Int16 -FStar.Int32 -FStar.Int64 -FStar.Int8 -FStar.IO -FStar.List -FStar.List.Tot.Base -FStar.Mul -FStar.Option -FStar.Pervasives.Native -FStar.Set -FStar.ST -FStar.Exn -FStar.String -FStar.UInt16 -FStar.UInt32 -FStar.UInt64 -FStar.UInt8 -FStar.Pointer.Derived1 -FStar.Pointer.Derived2 -FStar.Pointer.Derived3 -FStar.BufferNG -FStar.Tactics.Builtins -FStar.TaggedUnion -FStar.Reflection.Types -FStar.Reflection.Builtins -FStar.Reflection.Data -FStar.Tactics.Result -FStar.Tactics.Types -FStar.Bytes -FStar.Util +FStar.Pervasives -FStar.Order -FStar.Range -FStar.Vector.Base -FStar.Vector.Properties -FStar.Vector -FStar.TSet -FStar.Printf -LowStar.Printf +FStar.List.Tot.Properties +FStar.Int.Cast.Full -Steel.Memory -Steel.Actions -Steel.Semantics"</FSTAR_EXTRACT>
     <!-- Path where cached lax files should be written by default -->
     <FSTAR_LAX_CACHE_PATH Condition=" '$(FSTAR_LAX_CACHE_PATH)' == '' ">$(IntermediateOutputPath).cache.lax</FSTAR_LAX_CACHE_PATH>
     <!-- Custom FStar flags used in this project -->
@@ -61,29 +59,29 @@
 
                Note, for now we just ignore some modules and or comment out some code in them. 
     -->
-    <Compile Include="fs\prims.fs" />
-    <Compile Include="fs\FStar_All.fs" />
-    <!-- <Compile Include="fs\FStar_BaseTypes.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_Buffer.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_Bytes.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <Compile Include="fs\FStar_Char.fs" />
-    <!-- <Compile Include="fs\FStar_Constructive.fs" /> --> <!-- NOTE: Legacy -->
-    <Compile Include="fs\FStar_Dyn.fs" /> 
-    <Compile Include="fs\FStar_Float.fs" />
-    <Compile Include="fs\FStar_Ghost.fs" />
-    <Compile Include="fs\FStar_Monotonic_Heap.fs" />
-    <Compile Include="fs\FStar_CommonST.fs" />
-    <Compile Include="fs\FStar_Heap.fs" />
-    <!-- <Compile Include="fs\FStar_Int16.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_Int32.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_Int64.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_Int8.fs" /> -->  <!-- TODO: Depends on UInt.fsti -->
-    <Compile Include="fs\FStar_IO.fs" />
-    <Compile Include="fs\FStar_List.fs" />
-    <Compile Include="fs\FStar_List_Tot_Base.fs" />
-    <Compile Include="fs\FStar_Mul.fs" />
-    <Compile Include="fs\FStar_Option.fs" />
-    <Compile Include="fs\FStar_Pervasives_Native.fs" />
+    <Compile Include="fs\prims.fs" Link="prims.fs" />
+    <Compile Include="fs\FStar_All.fs" Link="FStar_All.fs" />
+    <!-- <Compile Include="fs\FStar_BaseTypes.fs" Link="FStar_BaseTypes.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="fs\FStar_Buffer.fs" Link="FStar_Buffer.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="fs\FStar_Bytes.fs" Link="FStar_Bytes.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <Compile Include="fs\FStar_Char.fs" Link="FStar_Char.fs" />
+    <!-- <Compile Include="fs\FStar_Constructive.fs" Link="FStar_Constructive.fs" /> --> <!-- NOTE: Legacy -->
+    <Compile Include="fs\FStar_Dyn.fs" Link="FStar_Dyn.fs" /> 
+    <Compile Include="fs\FStar_Float.fs" Link="FStar_Float.fs" />
+    <Compile Include="fs\FStar_Ghost.fs" Link="FStar_Ghost.fs" />
+    <Compile Include="fs\FStar_Monotonic_Heap.fs" Link="FStar_Monotonic_Heap.fs" />
+    <Compile Include="fs\FStar_CommonST.fs" Link="FStar_CommonST.fs" />
+    <Compile Include="fs\FStar_Heap.fs" Link="FStar_Heap.fs" />
+    <!-- <Compile Include="fs\FStar_Int16.fs" Link="FStar_Int16.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="fs\FStar_Int32.fs" Link="FStar_Int32.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="fs\FStar_Int64.fs" Link="FStar_Int64.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="fs\FStar_Int8.fs" Link="FStar_Int8.fs" /> -->  <!-- TODO: Depends on UInt.fsti -->
+    <Compile Include="fs\FStar_IO.fs" Link="FStar_IO.fs" />
+    <Compile Include="fs\FStar_List.fs" Link="FStar_List.fs" />
+    <Compile Include="fs\FStar_List_Tot_Base.fs" Link="FStar_List_Tot_Base.fs" />
+    <Compile Include="fs\FStar_Mul.fs" Link="FStar_Mul.fs" />
+    <Compile Include="fs\FStar_Option.fs" Link="FStar_Option.fs" />
+    <Compile Include="fs\FStar_Pervasives_Native.fs" Link="FStar_Pervasives_Native.fs" />
     <!-- TODO: Set is implemented with extra 'comparison' constraint on key. 
                Extracted modules that depend on Set (e.g. Map) don't respect this (i.e. constraint is not emitted). 
                Moreover, both Set and Map modules restrict key with 'eqtype' which only gives decidable equality, 
@@ -93,204 +91,204 @@
                1. Emitting constraints for type parameters when extracting F# code (e.g. for eqtype or 'ordered')
                2. Add 'type ordered = Type{hasOrder 'a}' or similar and use it instead of 'eqtype' in Set/Map interface.
     -->
-    <Compile Include="fs\FStar_Set.fs" /> 
-    <Compile Include="fs\FStar_ST.fs" />
-    <Compile Include="fs\FStar_Exn.fs" />
-    <Compile Include="fs\FStar_String.fs" />
-    <Compile Include="fs\FStar_HyperStack_All.fs" />
-    <Compile Include="fs\FStar_HyperStack_ST.fs" />
-    <Compile Include="fs\FStar_HyperStack_IO.fs" />
-    <!-- <Compile Include="fs\FStar_UInt16.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_UInt32.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_UInt64.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_UInt8.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_Pointer_Derived1.fs" /> --> <!-- NOTE: Legacy -->
-    <!-- <Compile Include="fs\FStar_Pointer_Derived2.fs" /> --> <!-- NOTE: Legacy -->
-    <!-- <Compile Include="fs\FStar_Pointer_Derived3.fs" /> --> <!-- NOTE: Legacy -->
-    <!-- <Compile Include="fs\FStar_BufferNG.fs" /> --> <!-- NOTE: Legacy -->
-    <!-- <Compile Include="fs\FStar_Tactics_Builtins.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
-    <!-- <Compile Include="fs\FStar_TaggedUnion.fs" /> --> <!-- NOTE: Legacy -->
-    <!-- <Compile Include="fs\FStar_Reflection_Types.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
-    <!-- <Compile Include="fs\FStar_Reflection_Builtins.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
-    <!-- <Compile Include="fs\FStar_Reflection_Data.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
-    <!-- <Compile Include="fs\FStar_Tactics_Result.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
-    <!-- <Compile Include="fs\FStar_Tactics_Types.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
-    <!-- <Compile Include="fs\FStar_Bytes.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_Util.fs" /> --> <!-- TODO: Depends on Heap and HyperStack -->
-    <!-- <Compile Include="fs\FStar_Order.fs" /> --> <!-- TODO: FStar_Order.ml is missing in ulib/ms? -->
-    <!-- <Compile Include="fs\FStar_Range.fs" /> --> <!-- TODO: FStar_Range.ml is missing in ulib/ms? -->
-    <!-- <Compile Include="fs\FStar_Vector_Base.fs" /> --> <!-- TODO: FStar_Vector_Base.ml is missing in ulib/ms? -->
-    <!-- <Compile Include="fs\FStar_Vector_Properties.fs" /> --> <!-- TODO: FStar_Vector_Properties.ml is missing in ulib/ms? -->
-    <!-- <Compile Include="fs\FStar_Vector_fs" /> --> <!-- TODO: FStar_Vector.ml is missing in ulib/ms? -->
-    <!-- <Compile Include="fs\FStar_TSet.fs" />  --> <!-- TODO: FStar_TSet.ml is missing in ulib/ml? -->
-    <FStarSourceFile Include="FStar.Pervasives.fst" />
-    <FStarSourceFile Include="FStar.Preorder.fst" />
-    <!-- <FStarSourceFile Include="legacy\FStar.ErasedLogic.fst" /> --> <!-- NOTE: Legacy -->
-    <FStarSourceFile Include="FStar.Squash.fst" />
-    <FStarSourceFile Include="FStar.Classical.fst" />
-    <FStarSourceFile Include="FStar.FunctionalExtensionality.fst" />
-    <FStarSourceFile Include="FStar.StrongExcludedMiddle.fst" />
-    <FStarSourceFile Include="FStar.PropositionalExtensionality.fst" />
-    <!-- <FStarSourceFile Include="FStar.PredicateExtensionality.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Map.fst" /> --> <!-- TODO: Doesn't work with current implementation of Set (see TODO note on Set) -->
-    <!-- <FStarSourceFile Include="FStar.Monotonic.Witnessed.fst" /> -->
-    <FStarSourceFile Include="FStar.List.Tot.Properties.fst" />
-    <!-- <FStarSourceFile Include="FStar.Monotonic.HyperHeap.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Monotonic.HyperStack.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.HyperStack.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Monotonic.Map.fst" /> -->
-    <FStarSourceFile Include="FStar.Seq.Base.fst" />
-    <FStarSourceFile Include="FStar.Seq.Properties.fst" />
-    <FStarSourceFile Include="FStar.Seq.fst" />
-    <FStarSourceFile Include="FStar.Calc.fst" />
-    <FStarSourceFile Include="FStar.Math.Lib.fst" />
-    <FStarSourceFile Include="FStar.Math.Lemmas.fst" />
-    <FStarSourceFile Include="FStar.BitVector.fst" />
-    <!-- <FStarSourceFile Include="FStar.UInt.fst" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <FStarSourceFile Include="FStar.Int.fst" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <FStarSourceFile Include="FStar.Int.Cast.fst" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <FStarSourceFile Include="FStar.UInt128.fst" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <FStarSourceFile Include="FStar.Universe.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.GSet.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.ModifiesGen.fst" /> -->
-    <FStarSourceFile Include="FStar.BigOps.fst" />
-    <!-- <FStarSourceFile Include="LowStar.Monotonic.Buffer.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.Buffer.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.BufferOps.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Endianness.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.Endianness.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.PrefixFreezableBuffer.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.OrdSet.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.OrdMap.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.OrdMapProps.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Algebra.CommMonoid.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Monotonic.Pure.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.BufferCompat.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.Modifies.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Modifies.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.ToFStarBuffer.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Monotonic.Seq.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Crypto.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.ModifiesPat.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Int128.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Integers.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.Vector.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.Regional.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.RVector.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Seq.Sorted.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.OrdSetProps.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.BufferView.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Reader.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.DependentMap.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Monotonic.DependentMap.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.Comment.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.UninitializedBuffer.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Pointer.Base.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Algebra.CommMonoid.Equiv.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.IFC.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Algebra.Monoid.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.MarkovsPrinciple.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Math.Euclid.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Relational.Relational.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Relational.Comp.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.BufferView.Down.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.BufferView.Up.fst" /> -->
-    <FStarSourceFile Include="FStar.Ref.fst" />
-    <!-- <FStarSourceFile Include="FStar.Pointer.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.Regional.Instances.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Error.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.BV.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.IndefiniteDescription.fst" /> -->
-    <!-- <FStarSourceFile Include="legacy/FStar.WellFounded.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Axiomatic.Array.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Relational.State.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Fin.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.SquashProperties.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.ReflexiveTransitiveClosure.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.MRef.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.TwoLevelHeap.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Math.Fermat.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.ImmutableBuffer.fst" /> -->
-    <!-- <FStarSourceFile Include="LowStar.ConstBuffer.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.Int.Cast.Full.fst" /> -->
-    <!-- <FStarSourceFile Include="FStar.ConstantTime.Integers.fst" /> -->
-    <!-- <FStarSourceFile Include="legacy/FStar.Array.fst" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.BV.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.BaseTypes.fsti" /> -->
-    <FStarInterfaceFile Include="FStar.BigOps.fsti" />
-    <!-- <FStarInterfaceFile Include="FStar.Bytes.fsti" /> -->
-    <FStarInterfaceFile Include="FStar.Char.fsti" />
-    <FStarInterfaceFile Include="FStar.Classical.fsti" />
-    <!-- <FStarInterfaceFile Include="FStar.Date.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.DependentMap.fsti" /> -->
-    <FStarInterfaceFile Include="FStar.Dyn.fsti" />
-    <!-- <FStarInterfaceFile Include="FStar.Endianness.fsti" /> -->
-    <FStarInterfaceFile Include="FStar.Float.fsti" />
-    <FStarInterfaceFile Include="FStar.FunctionalExtensionality.fsti" />
-    <!-- <FStarInterfaceFile Include="FStar.GSet.fsti" /> -->
-    <FStarInterfaceFile Include="FStar.Ghost.fsti" />
-    <!-- <FStarInterfaceFile Include="FStar.HyperStack.ST.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.IFC.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.Int.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <FStarInterfaceFile Include="FStar.Int128.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <FStarInterfaceFile Include="FStar.Int16.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <FStarInterfaceFile Include="FStar.Int32.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <FStarInterfaceFile Include="FStar.Int64.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <FStarInterfaceFile Include="FStar.Int8.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <FStarInterfaceFile Include="FStar.MRef.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.Map.fsti" />  --> <!-- TODO: Doesn't work with current implementation of Set (see TODO note on Set) -->
-    <!-- <FStarInterfaceFile Include="FStar.Math.Euclid.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.Math.Fermat.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.Modifies.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.ModifiesGen.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.Monotonic.DependentMap.fsti" /> -->
-    <FStarInterfaceFile Include="FStar.Monotonic.Heap.fsti" />
-    <!--  <FStarInterfaceFile Include="FStar.Monotonic.HyperHeap.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.Monotonic.HyperStack.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.Monotonic.Witnessed.fsti" /> -->
-    <FStarInterfaceFile Include="FStar.Pervasives.fsti" />
-    <FStarInterfaceFile Include="FStar.Range.fsti" />
-    <!-- <FStarInterfaceFile Include="FStar.Real.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.Reflection.Types.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.ReflexiveTransitiveClosure.fsti" /> -->
-    <FStarInterfaceFile Include="FStar.Seq.Base.fsti" />
-    <FStarInterfaceFile Include="FStar.Seq.Properties.fsti" />
-    <FStarInterfaceFile Include="FStar.Set.fsti" />
-    <FStarInterfaceFile Include="FStar.Squash.fsti" />
-    <FStarInterfaceFile Include="FStar.String.fsti" />
-    <FStarInterfaceFile Include="FStar.TSet.fsti" />
-    <!-- <FStarInterfaceFile Include="FStar.Tactics.Effect.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.Tactics.Types.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.Tcp.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.UInt.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.UInt128.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.UInt16.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.UInt32.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.UInt64.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.UInt8.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.Udp.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="FStar.Universe.fsti" /> -->
-    <FStarInterfaceFile Include="FStar.Vector.Base.fsti" />
-    <!-- <FStarInterfaceFile Include="LowStar.BufferView.Down.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="LowStar.BufferView.Up.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="LowStar.BufferView.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="LowStar.Comment.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="LowStar.ConstBuffer.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="LowStar.Failure.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="LowStar.Literal.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="LowStar.Monotonic.Buffer.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="LowStar.PrefixFreezableBuffer.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="experimental/FStar.ConstantTime.Integers.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="experimental/FStar.OrdMap.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="experimental/FStar.OrdSet.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="experimental/FStar.Unsound.UniverseLowering.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="legacy/FStar.Array.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="legacy/FStar.Matrix2.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="legacy/FStar.Pointer.Base.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="legacy/FStar.Pointer.Derived1.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="legacy/FStar.Pointer.Derived2.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="legacy/FStar.Pointer.Derived3.fsti" /> -->
-    <!-- <FStarInterfaceFile Include="legacy/FStar.TaggedUnion.fsti" /> -->
+    <Compile Include="fs\FStar_Set.fs" Link="FStar_Set.fs" /> 
+    <Compile Include="fs\FStar_ST.fs" Link="FStar_ST.fs" />
+    <Compile Include="fs\FStar_Exn.fs" Link="FStar_Exn.fs" />
+    <Compile Include="fs\FStar_String.fs" Link="FStar_String.fs" />
+    <!-- <Compile Include="fs\FStar_UInt16.fs" Link="FStar_UInt16.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="fs\FStar_UInt32.fs" Link="FStar_UInt32.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="fs\FStar_UInt64.fs" Link="FStar_UInt64.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="fs\FStar_UInt8.fs" Link="FStar_UInt8.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="fs\FStar_Pointer_Derived1.fs" Link="FStar_Pointer_Derived1.fs" /> --> <!-- NOTE: Legacy -->
+    <!-- <Compile Include="fs\FStar_Pointer_Derived2.fs" Link="FStar_Pointer_Derived2.fs" /> --> <!-- NOTE: Legacy -->
+    <!-- <Compile Include="fs\FStar_Pointer_Derived3.fs" Link="FStar_Pointer_Derived3.fs" /> --> <!-- NOTE: Legacy -->
+    <!-- <Compile Include="fs\FStar_BufferNG.fs" Link="FStar_BufferNG.fs" /> --> <!-- NOTE: Legacy -->
+    <!-- <Compile Include="fs\FStar_Tactics_Builtins.fs" Link="FStar_Tactics_Builtins.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
+    <!-- <Compile Include="fs\FStar_TaggedUnion.fs" Link="FStar_TaggedUnion.fs" /> --> <!-- NOTE: Legacy -->
+    <!-- <Compile Include="fs\FStar_Reflection_Types.fs" Link="FStar_Reflection_Types.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
+    <!-- <Compile Include="fs\FStar_Reflection_Builtins.fs" Link="FStar_Reflection_Builtins.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
+    <!-- <Compile Include="fs\FStar_Reflection_Data.fs" Link="FStar_Reflection_Data.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
+    <!-- <Compile Include="fs\FStar_Tactics_Result.fs" Link="FStar_Tactics_Result.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
+    <!-- <Compile Include="fs\FStar_Tactics_Types.fs" Link="FStar_Tactics_Types.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
+    <!-- <Compile Include="fs\FStar_Bytes.fs" Link="FStar_Bytes.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="fs\FStar_Util.fs" Link="FStar_Util.fs" /> --> <!-- TODO: Depends on Heap and HyperStack -->
+    <!-- <Compile Include="fs\FStar_Order.fs" Link="FStar_Order.fs" /> --> <!-- TODO: FStar_Order.ml is missing in ulib/ms? -->
+    <!-- <Compile Include="fs\FStar_Range.fs" Link="FStar_Range.fs" /> --> <!-- TODO: FStar_Range.ml is missing in ulib/ms? -->
+    <!-- <Compile Include="fs\FStar_Vector_Base.fs" Link="FStar_Vector_Base.fs" /> --> <!-- TODO: FStar_Vector_Base.ml is missing in ulib/ms? -->
+    <!-- <Compile Include="fs\FStar_Vector_Properties.fs" Link="FStar_Vector_Properties.fs" /> --> <!-- TODO: FStar_Vector_Properties.ml is missing in ulib/ms? -->
+    <!-- <Compile Include="fs\FStar_Vector.fs" Link="FStar_Vector.fs" /> --> <!-- TODO: FStar_Vector.ml is missing in ulib/ms? -->
+    <!-- <Compile Include="fs\FStar_TSet.fs" Link="FStar_TSet.fs" />  --> <!-- TODO: FStar_TSet.ml is missing in ulib/ml? -->
+    <Compile Include="FStar.Pervasives.fst" />
+    <Compile Include="FStar.Preorder.fst" />
+    <!-- <Compile Include="legacy\FStar.ErasedLogic.fst" /> --> <!-- NOTE: Legacy -->
+    <Compile Include="FStar.Squash.fst" />
+    <Compile Include="FStar.Classical.fst" />
+    <Compile Include="FStar.FunctionalExtensionality.fst" />
+    <Compile Include="FStar.StrongExcludedMiddle.fst" />
+    <Compile Include="FStar.PropositionalExtensionality.fst" />
+    <!-- <Compile Include="FStar.PredicateExtensionality.fst" /> -->
+    <!-- <Compile Include="FStar.Map.fst" /> --> <!-- TODO: Doesn't work with current implementation of Set (see TODO note on Set) -->
+    <!-- <Compile Include="FStar.Monotonic.Witnessed.fst" /> -->
+    <Compile Include="FStar.List.Tot.Properties.fst" />
+    <!-- <Compile Include="FStar.Monotonic.HyperHeap.fst" /> -->
+    <!-- <Compile Include="FStar.Monotonic.HyperStack.fst" /> -->
+    <!-- <Compile Include="FStar.HyperStack.fst" /> -->
+    <Compile Include="fs\FStar_HyperStack_All.fs" Link="FStar_HyperStack_All.fs" />
+    <Compile Include="fs\FStar_HyperStack_ST.fs" Link="FStar_HyperStack_ST.fs" />
+    <Compile Include="fs\FStar_HyperStack_IO.fs" Link="FStar_HyperStack_IO.fs" />
+    <!-- <Compile Include="FStar.Monotonic.Map.fst" /> -->
+    <Compile Include="FStar.Seq.Base.fst" />
+    <Compile Include="FStar.Seq.Properties.fst" />
+    <Compile Include="FStar.Seq.fst" />
+    <Compile Include="FStar.Calc.fst" />
+    <Compile Include="FStar.Math.Lib.fst" />
+    <Compile Include="FStar.Math.Lemmas.fst" />
+    <Compile Include="FStar.BitVector.fst" />
+    <!-- <Compile Include="FStar.UInt.fst" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="FStar.Int.fst" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="FStar.Int.Cast.fst" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="FStar.UInt128.fst" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="FStar.Universe.fst" /> -->
+    <!-- <Compile Include="FStar.GSet.fst" /> -->
+    <!-- <Compile Include="FStar.ModifiesGen.fst" /> -->
+    <Compile Include="FStar.BigOps.fst" />
+    <!-- <Compile Include="LowStar.Monotonic.Buffer.fst" /> -->
+    <!-- <Compile Include="LowStar.Buffer.fst" /> -->
+    <!-- <Compile Include="LowStar.BufferOps.fst" /> -->
+    <!-- <Compile Include="FStar.Endianness.fst" /> -->
+    <!-- <Compile Include="LowStar.Endianness.fst" /> -->
+    <!-- <Compile Include="LowStar.PrefixFreezableBuffer.fst" /> -->
+    <!-- <Compile Include="FStar.OrdSet.fst" /> -->
+    <!-- <Compile Include="FStar.OrdMap.fst" /> -->
+    <!-- <Compile Include="FStar.OrdMapProps.fst" /> -->
+    <!-- <Compile Include="FStar.Algebra.CommMonoid.fst" /> -->
+    <!-- <Compile Include="FStar.Monotonic.Pure.fst" /> -->
+    <!-- <Compile Include="LowStar.BufferCompat.fst" /> -->
+    <!-- <Compile Include="LowStar.Modifies.fst" /> -->
+    <!-- <Compile Include="FStar.Modifies.fst" /> -->
+    <!-- <Compile Include="LowStar.ToFStarBuffer.fst" /> -->
+    <!-- <Compile Include="FStar.Monotonic.Seq.fst" /> -->
+    <!-- <Compile Include="FStar.Crypto.fst" /> -->
+    <!-- <Compile Include="LowStar.ModifiesPat.fst" /> -->
+    <!-- <Compile Include="FStar.Int128.fst" /> -->
+    <!-- <Compile Include="FStar.Integers.fst" /> -->
+    <!-- <Compile Include="LowStar.Vector.fst" /> -->
+    <!-- <Compile Include="LowStar.Regional.fst" /> -->
+    <!-- <Compile Include="LowStar.RVector.fst" /> -->
+    <!-- <Compile Include="FStar.Seq.Sorted.fst" /> -->
+    <!-- <Compile Include="FStar.OrdSetProps.fst" /> -->
+    <!-- <Compile Include="LowStar.BufferView.fst" /> -->
+    <!-- <Compile Include="FStar.Reader.fst" /> -->
+    <!-- <Compile Include="FStar.DependentMap.fst" /> -->
+    <!-- <Compile Include="FStar.Monotonic.DependentMap.fst" /> -->
+    <!-- <Compile Include="LowStar.Comment.fst" /> -->
+    <!-- <Compile Include="LowStar.UninitializedBuffer.fst" /> -->
+    <!-- <Compile Include="FStar.Pointer.Base.fst" /> -->
+    <!-- <Compile Include="FStar.Algebra.CommMonoid.Equiv.fst" /> -->
+    <!-- <Compile Include="FStar.IFC.fst" /> -->
+    <!-- <Compile Include="FStar.Algebra.Monoid.fst" /> -->
+    <!-- <Compile Include="FStar.MarkovsPrinciple.fst" /> -->
+    <!-- <Compile Include="FStar.Math.Euclid.fst" /> -->
+    <!-- <Compile Include="FStar.Relational.Relational.fst" /> -->
+    <!-- <Compile Include="FStar.Relational.Comp.fst" /> -->
+    <!-- <Compile Include="LowStar.BufferView.Down.fst" /> -->
+    <!-- <Compile Include="LowStar.BufferView.Up.fst" /> -->
+    <Compile Include="FStar.Ref.fst" />
+    <!-- <Compile Include="FStar.Pointer.fst" /> -->
+    <!-- <Compile Include="LowStar.Regional.Instances.fst" /> -->
+    <!-- <Compile Include="FStar.Error.fst" /> -->
+    <!-- <Compile Include="FStar.BV.fst" /> -->
+    <!-- <Compile Include="FStar.IndefiniteDescription.fst" /> -->
+    <!-- <Compile Include="legacy/FStar.WellFounded.fst" /> -->
+    <!-- <Compile Include="FStar.Axiomatic.Array.fst" /> -->
+    <!-- <Compile Include="FStar.Relational.State.fst" /> -->
+    <!-- <Compile Include="FStar.Fin.fst" /> -->
+    <!-- <Compile Include="FStar.SquashProperties.fst" /> -->
+    <!-- <Compile Include="FStar.ReflexiveTransitiveClosure.fst" /> -->
+    <!-- <Compile Include="FStar.MRef.fst" /> -->
+    <!-- <Compile Include="FStar.TwoLevelHeap.fst" /> -->
+    <!-- <Compile Include="FStar.Math.Fermat.fst" /> -->
+    <!-- <Compile Include="LowStar.ImmutableBuffer.fst" /> -->
+    <!-- <Compile Include="LowStar.ConstBuffer.fst" /> -->
+    <!-- <Compile Include="FStar.Int.Cast.Full.fst" /> -->
+    <!-- <Compile Include="FStar.ConstantTime.Integers.fst" /> -->
+    <!-- <Compile Include="legacy/FStar.Array.fst" /> -->
+    <!-- <Compile Include="FStar.BV.fsti" /> -->
+    <!-- <Compile Include="FStar.BaseTypes.fsti" /> -->
+    <Compile Include="FStar.BigOps.fsti" />
+    <!-- <Compile Include="FStar.Bytes.fsti" /> -->
+    <Compile Include="FStar.Char.fsti" />
+    <Compile Include="FStar.Classical.fsti" />
+    <!-- <Compile Include="FStar.Date.fsti" /> -->
+    <!-- <Compile Include="FStar.DependentMap.fsti" /> -->
+    <Compile Include="FStar.Dyn.fsti" />
+    <!-- <Compile Include="FStar.Endianness.fsti" /> -->
+    <Compile Include="FStar.Float.fsti" />
+    <Compile Include="FStar.FunctionalExtensionality.fsti" />
+    <!-- <Compile Include="FStar.GSet.fsti" /> -->
+    <Compile Include="FStar.Ghost.fsti" />
+    <!-- <Compile Include="FStar.HyperStack.ST.fsti" /> -->
+    <!-- <Compile Include="FStar.IFC.fsti" /> -->
+    <!-- <Compile Include="FStar.Int.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="FStar.Int128.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="FStar.Int16.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="FStar.Int32.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="FStar.Int64.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="FStar.Int8.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <!-- <Compile Include="FStar.MRef.fsti" /> -->
+    <!-- <Compile Include="FStar.Map.fsti" />  --> <!-- TODO: Doesn't work with current implementation of Set (see TODO note on Set) -->
+    <!-- <Compile Include="FStar.Math.Euclid.fsti" /> -->
+    <!-- <Compile Include="FStar.Math.Fermat.fsti" /> -->
+    <!-- <Compile Include="FStar.Modifies.fsti" /> -->
+    <!-- <Compile Include="FStar.ModifiesGen.fsti" /> -->
+    <!-- <Compile Include="FStar.Monotonic.DependentMap.fsti" /> -->
+    <Compile Include="FStar.Monotonic.Heap.fsti" />
+    <!--  <Compile Include="FStar.Monotonic.HyperHeap.fsti" /> -->
+    <!-- <Compile Include="FStar.Monotonic.HyperStack.fsti" /> -->
+    <!-- <Compile Include="FStar.Monotonic.Witnessed.fsti" /> -->
+    <Compile Include="FStar.Pervasives.fsti" />
+    <Compile Include="FStar.Range.fsti" />
+    <!-- <Compile Include="FStar.Real.fsti" /> -->
+    <!-- <Compile Include="FStar.Reflection.Types.fsti" /> -->
+    <!-- <Compile Include="FStar.ReflexiveTransitiveClosure.fsti" /> -->
+    <Compile Include="FStar.Seq.Base.fsti" />
+    <Compile Include="FStar.Seq.Properties.fsti" />
+    <Compile Include="FStar.Set.fsti" />
+    <Compile Include="FStar.Squash.fsti" />
+    <Compile Include="FStar.String.fsti" />
+    <Compile Include="FStar.TSet.fsti" />
+    <!-- <Compile Include="FStar.Tactics.Effect.fsti" /> -->
+    <!-- <Compile Include="FStar.Tactics.Types.fsti" /> -->
+    <!-- <Compile Include="FStar.Tcp.fsti" /> -->
+    <!-- <Compile Include="FStar.UInt.fsti" /> -->
+    <!-- <Compile Include="FStar.UInt128.fsti" /> -->
+    <!-- <Compile Include="FStar.UInt16.fsti" /> -->
+    <!-- <Compile Include="FStar.UInt32.fsti" /> -->
+    <!-- <Compile Include="FStar.UInt64.fsti" /> -->
+    <!-- <Compile Include="FStar.UInt8.fsti" /> -->
+    <!-- <Compile Include="FStar.Udp.fsti" /> -->
+    <!-- <Compile Include="FStar.Universe.fsti" /> -->
+    <Compile Include="FStar.Vector.Base.fsti" />
+    <!-- <Compile Include="LowStar.BufferView.Down.fsti" /> -->
+    <!-- <Compile Include="LowStar.BufferView.Up.fsti" /> -->
+    <!-- <Compile Include="LowStar.BufferView.fsti" /> -->
+    <!-- <Compile Include="LowStar.Comment.fsti" /> -->
+    <!-- <Compile Include="LowStar.ConstBuffer.fsti" /> -->
+    <!-- <Compile Include="LowStar.Failure.fsti" /> -->
+    <!-- <Compile Include="LowStar.Literal.fsti" /> -->
+    <!-- <Compile Include="LowStar.Monotonic.Buffer.fsti" /> -->
+    <!-- <Compile Include="LowStar.PrefixFreezableBuffer.fsti" /> -->
+    <!-- <Compile Include="experimental/FStar.ConstantTime.Integers.fsti" /> -->
+    <!-- <Compile Include="experimental/FStar.OrdMap.fsti" /> -->
+    <!-- <Compile Include="experimental/FStar.OrdSet.fsti" /> -->
+    <!-- <Compile Include="experimental/FStar.Unsound.UniverseLowering.fsti" /> -->
+    <!-- <Compile Include="legacy/FStar.Array.fsti" /> -->
+    <!-- <Compile Include="legacy/FStar.Matrix2.fsti" /> -->
+    <!-- <Compile Include="legacy/FStar.Pointer.Base.fsti" /> -->
+    <!-- <Compile Include="legacy/FStar.Pointer.Derived1.fsti" /> -->
+    <!-- <Compile Include="legacy/FStar.Pointer.Derived2.fsti" /> -->
+    <!-- <Compile Include="legacy/FStar.Pointer.Derived3.fsti" /> -->
+    <!-- <Compile Include="legacy/FStar.TaggedUnion.fsti" /> -->
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
