@@ -25,6 +25,24 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 module HST = FStar.HyperStack.ST
 
+noeq
+type memory_invariant = {
+  h0: Ghost.erased HS.mem;
+  lread: Ghost.erased B.loc;
+  lwrite: (lwrite: Ghost.erased B.loc { lread `B.loc_disjoint` lwrite });
+}
+
+unfold
+let memory_invariant_includes (ol ne: memory_invariant) =
+  B.modifies ol.lwrite ol.h0 ne.h0 /\
+  ol.lwrite `B.loc_includes` ne.lwrite /\
+  ne.lread `B.loc_includes` ol.lread
+
+let memory_invariant_includes_trans (l1 l2 l3: memory_invariant) : Lemma
+  (requires (l1 `memory_invariant_includes` l2 /\ l2 `memory_invariant_includes` l3))
+  (ensures (l1 `memory_invariant_includes` l3))
+= ()
+
 val parser' (t: Type0) : Type0
 
 let parser : Type u#1 = (t: Type0 & parser' t)
@@ -126,7 +144,7 @@ val repr_impl
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (l: B.loc)
+  (l: memory_invariant)
   (spec: repr_spec a r_in r_out pre post)
 : Tot Type0
 
@@ -136,7 +154,7 @@ let repr
   (r_in: parser) (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (l: B.loc)
+  (l: memory_invariant)
 : Tot (Type u#x)
 = dtuple2 (repr_spec a r_in r_out pre post) (repr_impl a r_in r_out pre post l)
 
@@ -160,12 +178,12 @@ let return_spec
 inline_for_extraction
 val return_impl
   (a:Type) (x:a) (r: a -> parser)
-  (l: B.loc)
+  (l: memory_invariant)
 : Tot (repr_impl a (r x) r (return_pre a x r) (return_post a x r) l (return_spec a x r))
 
 inline_for_extraction
 let returnc
-  (a:Type) (x:a) (r: a -> parser) (l: B.loc)
+  (a:Type) (x:a) (r: a -> parser) (l: memory_invariant)
 : Tot (repr a (r x) r (return_pre a x r) (return_post a x r) l)
 = (| return_spec a x r, return_impl a x r l |)
 
@@ -210,7 +228,7 @@ val bind_impl
   (pre_g: (x:a) -> pre_t (r_out_f x)) (post_g: (x:a) -> post_t b (r_out_f x) r_out_g (pre_g x))
   (f_bind_impl:repr_spec a r_in_f r_out_f pre_f post_f)
   (g:(x:a -> repr_spec b (r_out_f x) r_out_g (pre_g x) (post_g x)))
-  (l: B.loc)
+  (l: memory_invariant)
   (f' : repr_impl a r_in_f r_out_f pre_f post_f l f_bind_impl)
   (g' : (x: a -> repr_impl b (r_out_f x) r_out_g (pre_g x) (post_g x) l (g x)))
 : Tot (repr_impl b r_in_f r_out_g (bind_pre a b r_in_f r_out_f pre_f post_f pre_g) (bind_post a b r_in_f r_out_f pre_f post_f r_out_g pre_g post_g) l (bind_spec a b r_in_f r_out_f pre_f post_f r_out_g pre_g post_g f_bind_impl g))
@@ -221,7 +239,7 @@ let bind (a:Type) (b:Type)
   (pre_f: pre_t r_in_f) (post_f: post_t a r_in_f r_out_f pre_f)
   (r_out_g:b -> parser)
   (pre_g: (x:a) -> pre_t (r_out_f x)) (post_g: (x:a) -> post_t b (r_out_f x) r_out_g (pre_g x))
-  (l: B.loc)
+  (l: memory_invariant)
   (f_bind : repr a r_in_f r_out_f pre_f post_f l)
   (g : (x: a -> repr b (r_out_f x) r_out_g (pre_g x) (post_g x) l))
 : Tot (repr b r_in_f r_out_g (bind_pre a b r_in_f r_out_f pre_f post_f pre_g) (bind_post a b r_in_f r_out_f pre_f post_f r_out_g pre_g post_g) l)
@@ -243,10 +261,10 @@ let subcomp_cond
   (r_in:parser) (r_out:a -> parser)
   (pre: pre_t r_in) (post: post_t a r_in r_out pre)
   (pre': pre_t r_in) (post': post_t a r_in r_out pre')
-  (l:B.loc)
-  (l' : B.loc)
+  (l: memory_invariant)
+  (l' : memory_invariant)
 : GTot Type0
-= l `B.loc_includes` l' /\
+= l `memory_invariant_includes` l' /\
   subcomp_spec_cond a r_in r_out pre post pre' post'
 
 let subcomp_spec (a:Type)
@@ -264,8 +282,8 @@ val subcomp_impl (a:Type)
   (r_in:parser) (r_out:a -> parser)
   (pre: pre_t r_in) (post: post_t a r_in r_out pre)
   (pre': pre_t r_in) (post': post_t a r_in r_out pre')
-  (l:B.loc)
-  (l' : B.loc)
+  (l:memory_invariant)
+  (l' : memory_invariant)
   (f_subcomp_spec:repr_spec a r_in r_out pre post)
   (f_subcomp:repr_impl a r_in r_out pre post l f_subcomp_spec)
   (sq: squash (subcomp_cond a r_in r_out pre post pre' post' l l'))
@@ -276,8 +294,8 @@ let subcomp (a:Type)
   (r_in:parser) (r_out:a -> parser)
   (pre: pre_t r_in) (post: post_t a r_in r_out pre)
   (pre': pre_t r_in) (post': post_t a r_in r_out pre')
-  (l:B.loc)
-  (l' : B.loc)
+  (l:memory_invariant)
+  (l' : memory_invariant)
   (f_subcomp:repr a r_in r_out pre post l)
 : Pure (repr a r_in r_out pre' post' l')
   (requires (subcomp_cond a r_in r_out pre post pre' post' l l'))
@@ -310,7 +328,7 @@ let if_then_else (a:Type)
   (pre_f pre_g: pre_t r_in)
   (post_f: post_t a r_in r_out pre_f)
   (post_g: post_t a r_in r_out pre_g)
-  (l:B.loc)
+  (l:memory_invariant)
   (f_ifthenelse:repr a r_in r_out pre_f post_f l)
   (g:repr a r_in r_out pre_g post_g l)
   (p:Type0)
@@ -319,7 +337,7 @@ let if_then_else (a:Type)
 
 reifiable reflectable total
 layered_effect {
-  Write : a:Type -> (pin: parser) -> (pout: (a -> parser)) -> (pre: pre_t pin) -> (post: post_t a pin pout pre) -> (B.loc) -> Effect
+  Write : a:Type -> (pin: parser) -> (pout: (a -> parser)) -> (pre: pre_t pin) -> (post: post_t a pin pout pre) -> (memory_invariant) -> Effect
   with
   repr = repr;
   return = returnc;
@@ -348,12 +366,12 @@ let lift_pure_spec
 inline_for_extraction
 val lift_pure_impl
   (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f_pure_spec_for_impl:unit -> PURE a wp)
-  (l: B.loc)
+  (l: memory_invariant)
 : Tot (repr_impl a r (fun _ -> r)  (fun v_in -> lift_pure_pre a wp r v_in) (fun v_in x v_out -> lift_pure_post a wp r v_in x v_out) l (lift_pure_spec a wp r f_pure_spec_for_impl))
 
 inline_for_extraction
 let lift_pure (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser)
-  (l: B.loc)
+  (l: memory_invariant)
   (f_pure:unit -> PURE a wp)
 : Tot (repr a r (fun _ -> r) (fun v_in -> lift_pure_pre a wp r v_in) (fun v_in x v_out -> lift_pure_post a wp r v_in x v_out) l)
 = (| lift_pure_spec a wp r f_pure, lift_pure_impl a wp r f_pure l |)
@@ -367,7 +385,7 @@ let destr_repr_spec
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (l: B.loc)
+  (l: memory_invariant)
   ($f_destr_spec: unit -> Write a r_in r_out pre post l)
 : Tot (repr_spec a r_in r_out pre post)
 = dfst (reify (f_destr_spec ()))
@@ -379,7 +397,7 @@ let destr_repr_impl
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (l: B.loc)
+  (l: memory_invariant)
   (f_destr_spec: unit -> Write a r_in r_out pre post l)
 : Tot (repr_impl a r_in r_out pre post l (destr_repr_spec a r_in r_out pre post l f_destr_spec))
 = dsnd (reify (f_destr_spec ()))
@@ -392,7 +410,7 @@ let mk_repr
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (l: B.loc)
+  (l: memory_invariant)
   (spec: repr_spec a r_in r_out pre post)
   (impl: repr_impl a r_in r_out pre post l spec)
   ()
@@ -517,7 +535,7 @@ let frame_spec
   (pre: pre_t emp)
   (p: a -> parser)
   (post: post_t a emp p pre)
-  (l: B.loc)
+  (l: memory_invariant)
   (inner: unit -> Write a emp p pre post l)
 : Tot (repr_spec a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post))
 = fun fr ->
@@ -531,7 +549,7 @@ val frame_impl
   (pre: pre_t emp)
   (p: a -> parser)
   (post: post_t a emp p pre)
-  (l: B.loc)
+  (l: memory_invariant)
   (inner: unit -> Write a emp p pre post l)
 : Tot (repr_impl a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l (frame_spec a frame pre p post l inner))
 
@@ -542,7 +560,7 @@ let frame'
   (pre: pre_t emp)
   (p: a -> parser)
   (post: post_t a emp p pre)
-  (l: B.loc)
+  (l: memory_invariant)
   (inner: unit -> Write a emp p pre post l)
 : Tot (unit -> Write a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l)
 = mk_repr
@@ -557,7 +575,7 @@ let frame
   (pre: pre_t emp)
   (p: a -> parser)
   (post: post_t a emp p pre)
-  (l: B.loc)
+  (l: memory_invariant)
   (inner: unit -> Write a emp p pre post l)
 : Write a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l
 = frame' a frame pre p post l inner ()
@@ -571,13 +589,13 @@ let elem_writer_spec
 let elem_writer_impl_t
   (p: parser)
 : Tot Type
-= (#l: B.loc) -> (x: dfst p) -> repr_impl unit emp (fun _ -> p) (fun _ -> True) (fun _ _ y -> y == x) l (elem_writer_spec p x)
+= (#l: memory_invariant) -> (x: dfst p) -> repr_impl unit emp (fun _ -> p) (fun _ -> True) (fun _ _ y -> y == x) l (elem_writer_spec p x)
 
 inline_for_extraction
 let start
   (#p: parser)
   (w: elem_writer_impl_t p)
-  (#l: B.loc)
+  (#l: memory_invariant)
   (x: dfst p)
 : Write unit emp (fun _ -> p) (fun _ -> True) (fun _ _ y -> y == x) l
 = mk_repr
@@ -590,7 +608,7 @@ let append
   (#fr: parser)
   (#p: parser)
   (w: elem_writer_impl_t p)
-  (#l: B.loc)
+  (#l: memory_invariant)
   (x: dfst p)
 : Write unit fr (fun _ -> fr `star` p) (fun _ -> True) (fun w _ (w', x') -> w' == w /\ x' == x) l
 = frame unit fr (fun _ -> True) (fun _ -> p) (fun _ _ x' -> x' == x) l (fun _ -> start w x)
@@ -602,14 +620,14 @@ let parse_u32 : parser = (| U32.t , parse_u32' |)
 val write_u32 : elem_writer_impl_t parse_u32
 
 let write_two_ints
-  (l: B.loc)
+  (l: memory_invariant)
   (x y: U32.t)
 : Write unit emp (fun _ -> parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ (x', y') -> x' == x /\ y' == y) l
 = start write_u32 x;
   append write_u32 y
 
 let write_two_ints_2
-  (l: B.loc)
+  (l: memory_invariant)
   (x y: U32.t)
   ()
 : Write unit emp (fun _ -> parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ _ -> True) l
@@ -618,7 +636,7 @@ let write_two_ints_2
 
 [@@ expect_failure ] // FIXME: WHY WHY WHY?
 let write_two_ints_2_lemma_1
-  (l: B.loc)
+  (l: memory_invariant)
   (x y: U32.t)
 : Lemma
   (destr_repr_spec unit emp (fun _ -> parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ _ -> True) l (write_two_ints_2 l x y) () == (| (), (x, y) |) )
@@ -626,14 +644,14 @@ let write_two_ints_2_lemma_1
 
 [@@ expect_failure ] // FIXME: WHY WHY WHY?
 let write_two_ints_2_lemma_2
-  (l: B.loc)
+  (l: memory_invariant)
   (x y: U32.t)
 : Lemma
   (True)
 = assert (dfst (reify (write_two_ints_2 l x y ())) () == (| (), (x, y) |))
 
 let write_two_ints_ifthenelse
-  (l: B.loc)
+  (l: memory_invariant)
   (x y: U32.t)
 : Write unit emp (fun _ -> parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ (x', y') -> x' == x /\ y' == (if U32.v x < U32.v y then x else y)) l
 = start write_u32 x;
@@ -644,7 +662,7 @@ let write_two_ints_ifthenelse
     append write_u32 y
 
 let write_two_ints_ifthenelse_2_aux
-  (l: B.loc)
+  (l: memory_invariant)
   (x y: U32.t)
   ()
 : Write unit emp (fun _ -> parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ _ -> True) l
@@ -656,7 +674,7 @@ let write_two_ints_ifthenelse_2_aux
     append write_u32 y
 
 let write_two_ints_ifthenelse_2_aux_lemma
-  (l: B.loc)
+  (l: memory_invariant)
   (x y: U32.t)
 : Lemma
   (destr_repr_spec unit emp (fun _ -> parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ _ -> True) l (write_two_ints_ifthenelse_2_aux l x y) () == (| (), (x, (if U32.v x < U32.v y then x else y)) |) )
@@ -669,7 +687,7 @@ let recast_writer_post
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (l: B.loc)
+  (l: memory_invariant)
   (f: unit -> Write a r_in r_out pre post l)
 : Tot (post_t a r_in r_out pre)
 =
@@ -681,7 +699,7 @@ let recast_writer_spec
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (l: B.loc)
+  (l: memory_invariant)
   (f: unit -> Write a r_in r_out pre post l)
 : Tot (repr_spec a r_in r_out pre (recast_writer_post a r_in r_out pre post l f))
 = fun v_in -> destr_repr_spec a r_in r_out pre post l f v_in
@@ -693,7 +711,7 @@ val recast_writer_impl
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (l: B.loc)
+  (l: memory_invariant)
   (f: unit -> Write a r_in r_out pre post l)
 : Tot (repr_impl a r_in r_out pre (recast_writer_post a r_in r_out pre post l f) l (recast_writer_spec a r_in r_out pre post l f))
 
@@ -704,7 +722,7 @@ let recast_writer'
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (l: B.loc)
+  (l: memory_invariant)
   (f: unit -> Write a r_in r_out pre post l)
 : Tot (unit -> Write a r_in r_out pre (recast_writer_post a r_in r_out pre post l f) l)
 = mk_repr a r_in r_out pre (recast_writer_post a r_in r_out pre post l f) l
@@ -718,13 +736,13 @@ let recast_writer
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (l: B.loc)
+  (l: memory_invariant)
   ($f: unit -> Write a r_in r_out pre post l)
 : Write a r_in r_out pre (recast_writer_post a r_in r_out pre post l f) l
 = recast_writer' a r_in r_out pre post l f ()
 
 let write_two_ints_ifthenelse_2
-  (l: B.loc)
+  (l: memory_invariant)
   (x y: U32.t)
 : Write unit emp (fun _ -> parse_u32 `star` parse_u32)
     (fun _ -> True)

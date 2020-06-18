@@ -44,9 +44,9 @@ let repr_impl_post
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (l: B.loc)
+  (l: memory_invariant)
   (spec: repr_spec a r_in r_out pre post)
-  (b: B.buffer u8 { l `B.loc_includes` B.loc_buffer b })
+  (b: B.buffer u8 { l.lwrite `B.loc_includes` B.loc_buffer b })
   (pos1: U32.t { U32.v pos1 <= B.length b })
   (h: HS.mem)
   (res: option (a & U32.t))
@@ -82,14 +82,15 @@ let repr_impl
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (l: B.loc)
+  (l: memory_invariant)
   (spec: repr_spec a r_in r_out pre post)
 : Tot Type0 =
-  (b: B.buffer u8 { l `B.loc_includes` B.loc_buffer b }) ->
+  (b: B.buffer u8 { l.lwrite `B.loc_includes` B.loc_buffer b }) ->
   (len: U32.t { len == B.len b }) ->
   (pos1: buffer_offset b) ->
   HST.Stack (option (a & U32.t))
   (requires (fun h ->
+    B.modifies l.lwrite l.h0 h /\
     valid_pos r_in h b 0ul pos1 /\
     pre (contents r_in h b 0ul pos1)
   ))
@@ -100,7 +101,7 @@ let repr_impl
 inline_for_extraction
 let return_impl
   (a:Type) (x:a) (r: a -> parser)
-  (l: B.loc)
+  (l: memory_invariant)
 : Tot (repr_impl a (r x) r (return_pre a x r) (return_post a x r) l (return_spec a x r))
 = fun b len pos1 -> Some (x, pos1)
 
@@ -132,7 +133,7 @@ let bind_impl
   (pre_g: (x:a) -> pre_t (r_out_f x)) (post_g: (x:a) -> post_t b (r_out_f x) r_out_g (pre_g x))
   (f_bind_impl:repr_spec a r_in_f r_out_f pre_f post_f)
   (g:(x:a -> repr_spec b (r_out_f x) r_out_g (pre_g x) (post_g x)))
-  (l: B.loc)
+  (l: memory_invariant)
   (f' : repr_impl a r_in_f r_out_f pre_f post_f l f_bind_impl)
   (g' : (x: a -> repr_impl b (r_out_f x) r_out_g (pre_g x) (post_g x) l (g x)))
 : Tot (repr_impl b r_in_f r_out_g (bind_pre a b r_in_f r_out_f pre_f post_f pre_g) (bind_post a b r_in_f r_out_f pre_f post_f r_out_g pre_g post_g) l (bind_spec a b r_in_f r_out_f pre_f post_f r_out_g pre_g post_g f_bind_impl g))
@@ -146,8 +147,8 @@ let subcomp_impl (a:Type)
   (r_in:parser) (r_out:a -> parser)
   (pre: pre_t r_in) (post: post_t a r_in r_out pre)
   (pre': pre_t r_in) (post': post_t a r_in r_out pre')
-  (l:B.loc)
-  (l' : B.loc)
+  (l:memory_invariant)
+  (l' : memory_invariant)
   (f_subcomp_spec:repr_spec a r_in r_out pre post)
   (f_subcomp:repr_impl a r_in r_out pre post l f_subcomp_spec)
   (sq: squash (subcomp_cond a r_in r_out pre post pre' post' l l'))
@@ -157,7 +158,7 @@ let subcomp_impl (a:Type)
 inline_for_extraction
 let lift_pure_impl
   (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f_pure_spec_for_impl:unit -> PURE a wp)
-  (l: B.loc)
+  (l: memory_invariant)
 : Tot (repr_impl a r (fun _ -> r) (lift_pure_pre a wp r) (lift_pure_post a wp r) l (lift_pure_spec a wp r f_pure_spec_for_impl))
 = fun buf len pos -> Some (f_pure_spec_for_impl (), pos)
 
@@ -184,7 +185,7 @@ let frame_impl
   (pre: pre_t emp)
   (p: a -> parser)
   (post: post_t a emp p pre)
-  (l: B.loc)
+  (l: memory_invariant)
   (inner: unit -> Write a emp p pre post l)
 : Tot (repr_impl a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l (frame_spec a frame pre p post l inner))
 = fun buf len pos ->
@@ -211,7 +212,7 @@ let recast_writer_impl
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
-  (l: B.loc)
+  (l: memory_invariant)
   (f: unit -> Write a r_in r_out pre post l)
 : Tot (repr_impl a r_in r_out pre (recast_writer_post a r_in r_out pre post l f) l (recast_writer_spec a r_in r_out pre post l f))
 = fun b len pos -> destr_repr_impl a r_in r_out pre post l f b len pos
