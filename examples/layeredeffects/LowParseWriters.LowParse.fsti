@@ -6,6 +6,14 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 module HST = FStar.HyperStack.ST
 
+inline_for_extraction
+let dsnd
+  (#u: Type)
+  (#v: ((x: u) -> Type))
+  (p: dtuple2 u v)
+: Tot (v (dfst p))
+= match p with (| _, x |) -> x
+
 type u8 : Type0 = U8.t
 
 val parser' (t: Type0) : Type0
@@ -204,6 +212,7 @@ inline_for_extraction
 val valid_star_inv
   (p1 p2: parser)
   (b: B.buffer U8.t)
+  (len: U32.t { len == B.len b })
   (pos1 pos3: U32.t)
 : HST.Stack U32.t
   (requires (fun h ->

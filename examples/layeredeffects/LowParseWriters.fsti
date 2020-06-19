@@ -43,14 +43,6 @@ let memory_invariant_includes_trans (l1 l2 l3: memory_invariant) : Lemma
   (ensures (l1 `memory_invariant_includes` l3))
 = ()
 
-inline_for_extraction
-let dsnd
-  (#u: Type)
-  (#v: ((x: u) -> Type))
-  (p: dtuple2 u v)
-: Tot (v (dfst p))
-= match p with (| _, x |) -> x
-
 unfold
 let pure_wp_mono
   (a: Type)

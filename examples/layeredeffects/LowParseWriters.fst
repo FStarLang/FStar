@@ -199,7 +199,7 @@ let frame2_impl
   a frame ppre pre p post l inner
 = fun buf len pos ->
   let h = HST.get () in
-  let pos2 = valid_star_inv frame ppre buf 0ul pos in
+  let pos2 = valid_star_inv frame ppre buf len 0ul pos in
   let buf' = B.offset buf pos2 in
   assert (valid_pos ppre h buf pos2 pos);
   assert (valid_pos ppre h buf' 0ul (pos `U32.sub` pos2));
