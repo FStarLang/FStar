@@ -639,12 +639,54 @@ let rec solve_subcomp_post (l:list goal) : Tac unit =
           // instead of SteelF, as we'll lift pure to Steel by
           // a polymonadic bind with Steel alloc/read/...
           // That means the postcondition of return will be ?u_ret * ?u_emp
-          apply_lemma (`emp_unit_variant)
+          or_else (fun _ -> apply_lemma (`emp_unit_variant))
+                  (fun _ -> ignore (forall_intro());
+                     norm [delta_only [`%can_be_split_forall]];
+                     or_else
+                       (fun _ -> apply_lemma (`lemma_sl_implies_refl))
+                       (fun _ ->
+                       let open FStar.Algebra.CommMonoid.Equiv in
+                       apply_lemma (`equiv_sl_implies);
+                       or_else (fun _ ->  flip()) (fun _ -> ());
+                       norm [delta_only [
+                              `%__proj__CM__item__unit;
+                              `%__proj__CM__item__mult;
+                              `%Steel.Memory.Tactics.rm;
+                              `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                              `%fst; `%snd];
+                            primops; iota; zeta];
+                       canon' ()))
           ))
         else (later());
         solve_subcomp_post tl
     | _ -> later(); solve_subcomp_post tl
 
+let is_uvar (t:term) : Tac bool = match t with
+  | Tv_Uvar _ _ -> true
+  | _ -> false
+
+let is_return_eq (l r:term) : Tac bool =
+  let nl, al = collect_app l in
+  let nr, ar = collect_app r in
+  match al, ar with
+  | [(t1, _)], [(t2, _)] ->
+    let b1 = is_uvar nl in
+    let b2 = is_uvar nr in
+    let b3 = not (is_uvar t1) in
+    let b4 = not (is_uvar t2) in
+    b1 && b2 && b3 && b4
+  | _ -> false
+
+let rec solve_indirection_eqs (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let f = term_as_formula' (goal_type hd) in
+    match f with
+    | Comp (Eq _) l r ->
+        if is_return_eq l r then later() else trefl();
+        solve_indirection_eqs tl
+    | _ -> later(); solve_indirection_eqs tl
 
 let rec solve_triv_eqs (l:list goal) : Tac unit =
   match l with
@@ -656,7 +698,8 @@ let rec solve_triv_eqs (l:list goal) : Tac unit =
       let lnbr = slterm_nbr_uvars l in
       let rnbr = slterm_nbr_uvars r in
       // Only solve equality if there is only one uvar
-      if lnbr = 0 || rnbr = 0 then trefl () else later();
+      // trefl();
+     if lnbr = 0 || rnbr = 0 then trefl () else later();
       solve_triv_eqs tl
     | _ -> later(); solve_triv_eqs tl
 
@@ -719,7 +762,10 @@ let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
 let init_resolve_tac () : Tac unit =
   let slgs, loggs = filter_goals (goals()) in
   set_goals slgs;
+  // We first need to solve the trivial equalities to ensure we're not restricting
+  // scopes for annotated slprops
   solve_triv_eqs (goals ());
+  solve_indirection_eqs (goals());
   solve_subcomp_post (goals ());
   resolve_tac ();
   set_goals loggs;
