@@ -50,15 +50,7 @@
   </PropertyGroup>
   <Import Project="$(FSTAR_HOME)\fsharp.extraction.targets" />
   <ItemGroup>
-    <!-- TODO: Currently, realised modules will be added at the beginning of the @Compile list.
-               However, some of the realised modules (namely FStar_HyperStack_ST) have a 
-               dependency on extracted modules. 
-
-               We need to change how the @Compile list is ordered by using dependency analysis 
-               available in F*. 
-
-               Note, for now we just ignore some modules and or comment out some code in them. 
-    -->
+    <!-- Note, for now we just ignore some modules and or comment out some code in them. -->
     <Compile Include="fs\prims.fs" Link="prims.fs" />
     <Compile Include="fs\FStar_All.fs" Link="FStar_All.fs" />
     <!-- <Compile Include="fs\FStar_BaseTypes.fs" Link="FStar_BaseTypes.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
@@ -127,12 +119,16 @@
     <Compile Include="FStar.StrongExcludedMiddle.fst" />
     <Compile Include="FStar.PropositionalExtensionality.fst" />
     <!-- <Compile Include="FStar.PredicateExtensionality.fst" /> -->
+    <Compile Include="fs/FStar_Map.fs" Link="FStar_Map.fs" /> <!-- TODO: Map is 'almost' extracted. 
+                                                                         It lacks only the constraint on the key and there's an issue 
+                                                                         with erasure of 'key:eqtype implicit parameter on map_val 
+                                                              -->
     <!-- <Compile Include="FStar.Map.fst" /> --> <!-- TODO: Doesn't work with current implementation of Set (see TODO note on Set) -->
     <!-- <Compile Include="FStar.Monotonic.Witnessed.fst" /> -->
     <Compile Include="FStar.List.Tot.Properties.fst" />
-    <!-- <Compile Include="FStar.Monotonic.HyperHeap.fst" /> -->
-    <!-- <Compile Include="FStar.Monotonic.HyperStack.fst" /> -->
-    <!-- <Compile Include="FStar.HyperStack.fst" /> -->
+    <Compile Include="FStar.Monotonic.HyperHeap.fst" />
+    <!-- <Compile Include="FStar.Monotonic.HyperStack.fst" /> --> <!-- TODO: Problem with erasing of unused type parameters across modules -->
+    <!-- <Compile Include="FStar.HyperStack.fst" /> --> <!-- TODO: Problem with erasing of unused type parameters across modules -->
     <Compile Include="fs\FStar_HyperStack_All.fs" Link="FStar_HyperStack_All.fs" />
     <Compile Include="fs\FStar_HyperStack_ST.fs" Link="FStar_HyperStack_ST.fs" />
     <Compile Include="fs\FStar_HyperStack_IO.fs" Link="FStar_HyperStack_IO.fs" />
@@ -227,7 +223,7 @@
     <Compile Include="FStar.FunctionalExtensionality.fsti" />
     <!-- <Compile Include="FStar.GSet.fsti" /> -->
     <Compile Include="FStar.Ghost.fsti" />
-    <!-- <Compile Include="FStar.HyperStack.ST.fsti" /> -->
+    <Compile Include="FStar.HyperStack.ST.fsti" />
     <!-- <Compile Include="FStar.IFC.fsti" /> -->
     <!-- <Compile Include="FStar.Int.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
     <!-- <Compile Include="FStar.Int128.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
@@ -236,15 +232,15 @@
     <!-- <Compile Include="FStar.Int64.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
     <!-- <Compile Include="FStar.Int8.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
     <!-- <Compile Include="FStar.MRef.fsti" /> -->
-    <!-- <Compile Include="FStar.Map.fsti" />  --> <!-- TODO: Doesn't work with current implementation of Set (see TODO note on Set) -->
+    <Compile Include="FStar.Map.fsti" />  <!-- TODO: Doesn't work with current implementation of Set (see TODO note on Set) -->
     <!-- <Compile Include="FStar.Math.Euclid.fsti" /> -->
     <!-- <Compile Include="FStar.Math.Fermat.fsti" /> -->
     <!-- <Compile Include="FStar.Modifies.fsti" /> -->
     <!-- <Compile Include="FStar.ModifiesGen.fsti" /> -->
     <!-- <Compile Include="FStar.Monotonic.DependentMap.fsti" /> -->
     <Compile Include="FStar.Monotonic.Heap.fsti" />
-    <!--  <Compile Include="FStar.Monotonic.HyperHeap.fsti" /> -->
-    <!-- <Compile Include="FStar.Monotonic.HyperStack.fsti" /> -->
+     <Compile Include="FStar.Monotonic.HyperHeap.fsti" />
+    <Compile Include="FStar.Monotonic.HyperStack.fsti" />
     <!-- <Compile Include="FStar.Monotonic.Witnessed.fsti" /> -->
     <Compile Include="FStar.Pervasives.fsti" />
     <Compile Include="FStar.Range.fsti" />
