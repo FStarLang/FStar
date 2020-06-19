@@ -87,7 +87,7 @@
         
         <!-- Run extraction for .fst files -->
         <!-- TODO: What about interfaces? Should we at least run verification for them? -->
-        <Exec Condition="'%(Compile.Extension)' == '.fst'" Command="$(FSTAR_EXE) $(FSTAR_WARN_ERROR) $(FSTAR_EXTRACTION_FLAGS) $(FSTAR_FLAGS) %(Compile.Identity) --extract &quot;+%(Compile.Filename)&quot;" />
+        <Exec ConsoleToMsBuild="true" Condition="'%(Compile.Extension)' == '.fst'" Command="$(FSTAR_EXE) $(FSTAR_WARN_ERROR) $(FSTAR_EXTRACTION_FLAGS) $(FSTAR_FLAGS) %(Compile.Identity) --extract &quot;+%(Compile.Filename)&quot;" />
 
         <TransformFStarSourceFiles Odir="$(FSTAR_EXTRACTED_PATH)" Files="@(Compile)">
             <Output ItemName="FsFilesToCompile" TaskParameter="Result" />
