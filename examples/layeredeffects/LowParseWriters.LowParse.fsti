@@ -132,7 +132,7 @@ val valid_frame
     contents p h' b pos pos' == contents p h b pos pos'
   ))
 
-val valid_gsub
+val valid_gsub_elim
   (p: parser)
   (h: HS.mem)
   (b: B.buffer U8.t)
@@ -148,6 +148,25 @@ val valid_gsub
     U32.v pos0 + U32.v pos2 <= B.length b /\
     valid_pos p h (B.gsub b pos0 len) pos1 pos2 /\
     valid_pos p h b (pos0 `U32.add` pos1) (pos0 `U32.add` pos2) /\
+    contents p h b (pos0 `U32.add` pos1) (pos0 `U32.add` pos2) == contents p h (B.gsub b pos0 len) pos1 pos2
+  ))
+  [SMTPat (valid_pos p h (B.gsub b pos0 len) pos1 pos2)]
+
+val valid_gsub_intro
+  (p: parser)
+  (h: HS.mem)
+  (b: B.buffer U8.t)
+  (pos0 pos1 pos2: U32.t)
+  (len: U32.t)
+: Lemma
+  (requires (
+    U32.v pos0 + U32.v len <= B.length b /\
+    U32.v pos1 <= U32.v pos2 /\
+    U32.v pos2 <= U32.v len /\
+    valid_pos p h b (pos0 `U32.add` pos1) (pos0 `U32.add` pos2)
+  ))
+  (ensures (
+    valid_pos p h (B.gsub b pos0 len) pos1 pos2 /\
     contents p h b (pos0 `U32.add` pos1) (pos0 `U32.add` pos2) == contents p h (B.gsub b pos0 len) pos1 pos2
   ))
   [SMTPat (valid_pos p h (B.gsub b pos0 len) pos1 pos2)]
@@ -180,3 +199,20 @@ let leaf_writer
   ))  
 
 val write_u32 : leaf_writer parse_u32
+
+inline_for_extraction
+val valid_star_inv
+  (p1 p2: parser)
+  (b: B.buffer U8.t)
+  (pos1 pos3: U32.t)
+: HST.Stack U32.t
+  (requires (fun h ->
+    valid_pos (p1 `star` p2) h b pos1 pos3
+  ))
+  (ensures (fun h pos2 h' ->
+    B.modifies B.loc_none h h' /\
+    valid_pos p1 h b pos1 pos2 /\
+    valid_pos p2 h b pos2 pos3 /\
+    contents (p1 `star` p2) h b pos1 pos3 == (contents p1 h b pos1 pos2, contents p2 h b pos2 pos3)
+  ))
+

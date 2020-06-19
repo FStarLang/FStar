@@ -368,7 +368,6 @@ let frame_out
 = frame `star` (p x)
 
 let frame_pre
-  (a: Type)
   (frame: parser)
   (pre: pre_t emp)
 : Tot (pre_t frame)
@@ -380,7 +379,7 @@ let frame_post
   (pre: pre_t emp)
   (p: a -> parser)
   (post: post_t a emp p pre)
-: Tot (post_t a frame (frame_out a frame p) (frame_pre a frame pre))
+: Tot (post_t a frame (frame_out a frame p) (frame_pre frame pre))
 = fun v_in v (v_in', v_out) -> v_in == v_in' /\ post () v v_out
 
 let frame_spec
@@ -391,7 +390,7 @@ let frame_spec
   (post: post_t a emp p pre)
   (l: memory_invariant)
   (inner: unit -> Write a emp p pre post l)
-: Tot (repr_spec a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post))
+: Tot (repr_spec a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post))
 = fun fr ->
   let (| v, w |) = destr_repr_spec a emp p pre post l inner () in
   (| v, (fr, w) |)
@@ -405,7 +404,7 @@ val frame_impl
   (post: post_t a emp p pre)
   (l: memory_invariant)
   (inner: unit -> Write a emp p pre post l)
-: Tot (repr_impl a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l (frame_spec a frame pre p post l inner))
+: Tot (repr_impl a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) l (frame_spec a frame pre p post l inner))
 
 inline_for_extraction
 let frame'
@@ -416,9 +415,9 @@ let frame'
   (post: post_t a emp p pre)
   (l: memory_invariant)
   (inner: unit -> Write a emp p pre post l)
-: Tot (unit -> Write a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l)
+: Tot (unit -> Write a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) l)
 = mk_repr
-    a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l
+    a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) l
     (frame_spec a frame pre p post l inner)
     (frame_impl a frame pre p post l inner)
 
@@ -431,7 +430,7 @@ let frame
   (post: post_t a emp p pre)
   (l: memory_invariant)
   (inner: unit -> Write a emp p pre post l)
-: Write a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l
+: Write a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) l
 = frame' a frame pre p post l inner ()
 
 let elem_writer_spec
@@ -601,3 +600,75 @@ let write_two_ints_ifthenelse_2
     l
 = write_two_ints_ifthenelse_2_aux_lemma l x y;
   recast_writer _ _ _ _ _ _ (write_two_ints_ifthenelse_2_aux l x y)
+
+let frame2_pre
+  (frame: parser)
+  (ppre: parser)
+  (pre: pre_t ppre)
+: Tot (pre_t (frame `star` ppre))
+= fun (_, x) -> pre x
+
+let frame2_post
+  (a: Type)
+  (frame: parser)
+  (ppre: parser)
+  (pre: pre_t ppre)
+  (p: a -> parser)
+  (post: post_t a ppre p pre)
+: Tot (post_t a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre))
+= fun (v_frame, v_in) v (v_frame', v_out) -> v_frame == v_frame' /\ post v_in v v_out
+
+let frame2_spec
+  (a: Type)
+  (frame: parser)
+  (ppre: parser)
+  (pre: pre_t ppre)
+  (p: a -> parser)
+  (post: post_t a ppre p pre)
+  (l: memory_invariant)
+  (inner: unit -> Write a ppre p pre post l)
+: Tot (repr_spec a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post))
+= fun (fr, w_in) ->
+  let (| v, w |) = destr_repr_spec a ppre p pre post l inner w_in in
+  (| v, (fr, w) |)
+
+inline_for_extraction
+val frame2_impl
+  (a: Type)
+  (frame: parser)
+  (ppre: parser)
+  (pre: pre_t ppre)
+  (p: a -> parser)
+  (post: post_t a ppre p pre)
+  (l: memory_invariant)
+  (inner: unit -> Write a ppre p pre post l)
+: Tot (repr_impl a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) l (frame2_spec a frame ppre pre p post l inner))
+
+inline_for_extraction
+let frame2'
+  (a: Type)
+  (frame: parser)
+  (ppre: parser)
+  (pre: pre_t ppre)
+  (p: a -> parser)
+  (post: post_t a ppre p pre)
+  (l: memory_invariant)
+  (inner: unit -> Write a ppre p pre post l)
+: Tot (unit -> Write a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) l)
+= mk_repr
+    a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) l
+    (frame2_spec a frame ppre pre p post l inner)
+    (frame2_impl a frame ppre pre p post l inner)
+
+inline_for_extraction
+let frame2
+  (a: Type)
+  (frame: parser)
+  (ppre: parser)
+  (pre: pre_t ppre)
+  (p: a -> parser)
+  (post: post_t a ppre p pre)
+  (l: memory_invariant)
+  (inner: unit -> Write a ppre p pre post l)
+: Write a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) l
+= frame2' a frame ppre pre p post l inner ()

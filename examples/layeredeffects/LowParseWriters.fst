@@ -159,7 +159,7 @@ let frame_impl
   (post: post_t a emp p pre)
   (l: memory_invariant)
   (inner: unit -> Write a emp p pre post l)
-: Tot (repr_impl a frame (frame_out a frame p) (frame_pre a frame pre) (frame_post a frame pre p post) l (frame_spec a frame pre p post l inner))
+: Tot (repr_impl a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) l (frame_spec a frame pre p post l inner))
 = fun buf len pos ->
   let h = HST.get () in
   let buf' = B.offset buf pos in
@@ -193,3 +193,24 @@ let recast_writer_impl
   (f: unit -> Write a r_in r_out pre post l)
 : Tot (repr_impl a r_in r_out pre (recast_writer_post a r_in r_out pre post l f) l (recast_writer_spec a r_in r_out pre post l f))
 = fun b len pos -> destr_repr_impl a r_in r_out pre post l f b len pos
+
+inline_for_extraction
+let frame2_impl
+  a frame ppre pre p post l inner
+= fun buf len pos ->
+  let h = HST.get () in
+  let pos2 = valid_star_inv frame ppre buf 0ul pos in
+  let buf' = B.offset buf pos2 in
+  assert (valid_pos ppre h buf pos2 pos);
+  assert (valid_pos ppre h buf' 0ul (pos `U32.sub` pos2));
+  let h1 = HST.get () in
+  valid_frame ppre h buf' 0ul (pos `U32.sub` pos2) B.loc_none h1;
+  match destr_repr_impl a ppre p pre post l inner buf' (len `U32.sub` pos2) (pos `U32.sub` pos2) with
+  | None -> None
+  | Some (x, wlen) ->
+    let h' = HST.get () in
+    let pos' = pos2 `U32.add` wlen in
+    B.loc_disjoint_loc_buffer_from_to buf 0ul pos2 pos2 wlen;
+    valid_frame frame h buf 0ul pos2 (B.loc_buffer_from_to buf' 0ul wlen) h';
+    valid_star frame (p x) h' buf 0ul pos2 pos' ;
+    Some (x, pos')
