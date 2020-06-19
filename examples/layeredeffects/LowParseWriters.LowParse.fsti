@@ -141,7 +141,8 @@ val valid_gsub
 : Lemma
   (requires (
     U32.v pos0 + U32.v len <= B.length b /\
-    valid_pos p h (B.gsub b pos0 len) pos1 pos2
+    valid_pos p h (B.gsub b pos0 len) pos1 pos2 /\
+    B.live h b
   ))
   (ensures (
     U32.v pos0 + U32.v pos2 <= B.length b /\
