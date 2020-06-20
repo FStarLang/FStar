@@ -51,6 +51,296 @@ let pure_wp_mono
 = (forall (p q:pure_post a).
      (forall (x:a). p x ==> q x) ==> (wp p ==> wp q))
 
+inline_for_extraction
+let read_repr_spec (a:Type u#x) (pre: pure_pre) (post: pure_post' a pre) : Tot (Type u#x) =
+  unit ->
+  Ghost a
+  (requires pre)
+  (ensures (fun v -> post v))
+
+inline_for_extraction
+val read_repr_impl
+  (a:Type u#x)
+  (pre: pure_pre)
+  (post: pure_post' a pre)
+  (l: memory_invariant)
+  (spec: read_repr_spec a pre post)
+: Tot Type0
+
+let read_repr
+  (a:Type u#x)
+  (pre: pure_pre)
+  (post: pure_post' a pre)
+  (l: memory_invariant)
+= dtuple2 _ (read_repr_impl a pre post l)
+
+let read_return_spec
+  (a:Type) (x:a)
+: Tot (read_repr_spec a True (fun res -> res == x))
+= fun _ -> x
+
+inline_for_extraction
+val read_return_impl
+  (a:Type) (x:a) (inv: memory_invariant)
+: Tot (read_repr_impl a True (fun res -> res == x) inv (read_return_spec a x))
+
+inline_for_extraction
+let read_return
+  (a:Type) (x:a) (inv: memory_invariant)
+: Tot (read_repr a True (fun res -> res == x) inv)
+= (| read_return_spec a x, read_return_impl a x inv |)
+
+let read_bind_pre
+  (a:Type)
+  (pre_f: pure_pre) (post_f: pure_post' a pre_f)
+  (pre_g: (x:a) -> pure_pre)
+: Tot pure_pre
+= pre_f /\ (forall (x: a) . post_f x ==> pre_g x)
+
+let read_bind_post
+  (a:Type) (b:Type)
+  (pre_f: pure_pre) (post_f: pure_post' a pre_f)
+  (pre_g: (x:a) -> pure_pre) (post_g: (x:a) -> pure_post' b (pre_g x))
+: Tot (pure_post' b (read_bind_pre a pre_f post_f pre_g))
+= fun y ->
+  exists x . pre_f /\ post_f x /\ post_g x y
+
+let read_bind_spec
+  (a:Type) (b:Type)
+  (pre_f: pure_pre) (post_f: pure_post' a pre_f)
+  (pre_g: (x:a) -> pure_pre) (post_g: (x:a) -> pure_post' b (pre_g x))
+  (f_bind_spec: read_repr_spec a pre_f post_f)
+  (g:(x:a -> read_repr_spec b (pre_g x) (post_g x)))
+: Tot (read_repr_spec b (read_bind_pre a pre_f post_f pre_g) (read_bind_post a b pre_f post_f pre_g post_g))
+= fun _ -> g (f_bind_spec ()) ()
+
+inline_for_extraction
+val read_bind_impl
+  (a:Type) (b:Type)
+  (pre_f: pure_pre) (post_f: pure_post' a pre_f)
+  (pre_g: (x:a) -> pure_pre) (post_g: (x:a) -> pure_post' b (pre_g x))
+  (f_bind_impl: read_repr_spec a pre_f post_f)
+  (g:(x:a -> read_repr_spec b (pre_g x) (post_g x)))
+  (l: memory_invariant)
+  (f' : read_repr_impl a pre_f post_f l f_bind_impl)
+  (g' : (x: a -> read_repr_impl b (pre_g x) (post_g x) l (g x)))
+: Tot (read_repr_impl b (read_bind_pre a pre_f post_f pre_g) (read_bind_post a b pre_f post_f pre_g post_g) l (read_bind_spec a b pre_f post_f pre_g post_g f_bind_impl g))
+
+inline_for_extraction
+let read_bind
+  (a:Type) (b:Type)
+  (pre_f: pure_pre) (post_f: pure_post' a pre_f)
+  (pre_g: (x:a) -> pure_pre) (post_g: (x:a) -> pure_post' b (pre_g x))
+  (l: memory_invariant)
+  (f_bind : read_repr a pre_f post_f l)
+  (g : (x: a -> read_repr b (pre_g x) (post_g x) l))
+: Tot (read_repr b (read_bind_pre a pre_f post_f pre_g) (read_bind_post a b pre_f post_f pre_g post_g) l)
+= (| _, read_bind_impl a b pre_f post_f pre_g post_g (dfst f_bind) (fun x -> dfst (g x)) l (dsnd f_bind) (fun x -> dsnd (g x)) |)
+
+unfold
+let read_subcomp_spec_cond
+  (a:Type)
+  (pre: pure_pre) (post: pure_post' a pre)
+  (pre': pure_pre) (post': pure_post' a pre')
+: GTot Type0
+= (pre' ==> pre) /\
+  (forall x . (pre' /\ post x) ==> post' x)
+
+unfold
+let read_subcomp_cond
+  (a:Type)
+  (pre: pure_pre) (post: pure_post' a pre)
+  (pre': pure_pre) (post': pure_post' a pre')
+  (l: memory_invariant)
+  (l' : memory_invariant)
+: GTot Type0
+= l `memory_invariant_includes` l' /\
+  read_subcomp_spec_cond a pre post pre' post'
+
+let read_subcomp_spec (a:Type)
+  (pre: pure_pre) (post: pure_post' a pre)
+  (pre': pure_pre) (post': pure_post' a pre')
+  (f_subcomp:read_repr_spec a pre post)
+: Pure (read_repr_spec a pre' post')
+  (requires (read_subcomp_spec_cond a pre post pre' post'))
+  (ensures (fun _ -> True))
+= (fun x -> f_subcomp x)
+
+inline_for_extraction
+val read_subcomp_impl (a:Type)
+  (pre: pure_pre) (post: pure_post' a pre)
+  (pre': pure_pre) (post': pure_post' a pre')
+  (l:memory_invariant)
+  (l' : memory_invariant)
+  (f_subcomp_spec:read_repr_spec a pre post)
+  (f_subcomp:read_repr_impl a pre post l f_subcomp_spec)
+  (sq: squash (read_subcomp_cond a pre post pre' post' l l'))
+: Tot (read_repr_impl a pre' post' l' (read_subcomp_spec a pre post pre' post' f_subcomp_spec))
+
+inline_for_extraction
+let read_subcomp (a:Type)
+  (pre: pure_pre) (post: pure_post' a pre)
+  (pre': pure_pre) (post': pure_post' a pre')
+  (l:memory_invariant)
+  (l' : memory_invariant)
+  (f_subcomp:read_repr a pre post l)
+: Pure (read_repr a pre' post' l')
+  (requires (read_subcomp_cond a pre post pre' post' l l'))
+  (ensures (fun _ -> True))
+= (| read_subcomp_spec a pre post pre' post' (dfst f_subcomp),
+     read_subcomp_impl a pre post pre' post' l l' (dfst f_subcomp) (dsnd f_subcomp) ()
+  |)
+
+let read_if_then_else_pre
+  (pre_f pre_g: pure_pre)
+  (p:Type0)
+: Tot pure_pre
+= (p ==> pre_f) /\ ((~ p) ==> pre_g)
+
+let read_if_then_else_post
+  (a:Type)
+  (pre_f pre_g: pure_pre)
+  (post_f: pure_post' a pre_f)
+  (post_g: pure_post' a pre_g)
+  (p:Type0)
+: Tot (pure_post' a (read_if_then_else_pre pre_f pre_g p))
+= fun x ->
+  (p ==> post_f x) /\
+  ((~ p) ==> post_g x)
+
+let read_if_then_else (a:Type)
+  (pre_f pre_g: pure_pre)
+  (post_f: pure_post' a pre_f)
+  (post_g: pure_post' a pre_g)
+  (l:memory_invariant)
+  (f_ifthenelse:read_repr a pre_f post_f l)
+  (g:read_repr a pre_g post_g l)
+  (p:Type0)
+: Tot Type
+= read_repr a (read_if_then_else_pre pre_f pre_g p) (read_if_then_else_post a pre_f pre_g post_f post_g p) l
+
+reifiable reflectable total
+layered_effect {
+  Read : a:Type -> (pre: pure_pre) -> (post: pure_post' a pre) -> (memory_invariant) -> Effect
+  with
+  repr = read_repr;
+  return = read_return;
+  bind = read_bind;
+  subcomp = read_subcomp;
+  if_then_else = read_if_then_else
+}
+
+unfold
+let lift_pure_read_pre
+  (a:Type) (wp:pure_wp a { pure_wp_mono a wp })
+: Tot pure_pre
+= wp (fun _ -> True)
+
+unfold
+let lift_pure_read_post
+  (a:Type) (wp:pure_wp a { pure_wp_mono a wp })
+: Tot (pure_post' a (lift_pure_read_pre a wp))
+= fun x -> ~ (wp (fun x' -> ~ (x == x')))
+
+let lift_pure_read_spec
+  (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (f_pure_spec:unit -> PURE a wp)
+: Tot (read_repr_spec a (lift_pure_read_pre a wp) (lift_pure_read_post a wp))
+= fun () -> f_pure_spec ()
+
+inline_for_extraction
+val lift_pure_read_impl
+  (a:Type) (wp:pure_wp a { pure_wp_mono a wp })
+  (f_pure_spec_for_impl:unit -> PURE a wp)
+  (l: memory_invariant)
+: Tot (read_repr_impl a (lift_pure_read_pre a wp) (fun x -> lift_pure_read_post a wp x) l (lift_pure_read_spec a wp f_pure_spec_for_impl))
+
+inline_for_extraction
+let lift_pure_read (a:Type) (wp:pure_wp a { pure_wp_mono a wp })
+  (l: memory_invariant)
+  (f_pure:unit -> PURE a wp)
+: Tot (read_repr a (lift_pure_read_pre a wp) (fun x -> lift_pure_read_post a wp x) l)
+= (| lift_pure_read_spec a wp f_pure, lift_pure_read_impl a wp f_pure l |)
+
+sub_effect PURE ~> Read = lift_pure_read
+
+inline_for_extraction
+val rptr: Type0
+val valid_rptr (p: parser) : memory_invariant -> rptr -> GTot Type0
+
+let ptr (p: parser) (inv: memory_invariant) =
+  (x: rptr { valid_rptr p inv x })
+
+val deref_spec (#p: parser) (#inv: memory_invariant) (x: ptr p inv) : GTot (dfst p)
+
+inline_for_extraction
+val deref_impl
+  (#p: parser)
+  (#inv: memory_invariant)
+  (r: leaf_reader p)
+  (x: ptr p inv)
+: Tot (read_repr_impl (dfst p) True (fun res -> res == deref_spec x) inv (fun _ -> deref_spec x))
+
+inline_for_extraction
+let deref_repr
+  (#p: parser)
+  (#inv: memory_invariant)
+  (r: leaf_reader p)
+  (x: ptr p inv)
+: Tot (read_repr (dfst p) True (fun res -> res == deref_spec x) inv)
+= (| (fun _ -> deref_spec x), deref_impl r x |)
+
+inline_for_extraction
+let deref
+  (#p: parser)
+  (#inv: memory_invariant)
+  (r: leaf_reader p)
+  (x: ptr p inv)
+: Read (dfst p) True (fun res -> res == deref_spec x) inv
+= Read?.reflect (deref_repr r x)
+
+val access_spec
+  (#p1 #p2: parser)
+  (#lens: clens (dfst p1) (dfst p2))
+  (#inv: memory_invariant)
+  (g: gaccessor p1 p2 lens)
+  (x: ptr p1 inv)
+: Ghost (ptr p2 inv)
+  (requires (lens.clens_cond (deref_spec x)))
+  (ensures (fun res -> deref_spec res == lens.clens_get (deref_spec x)))
+
+inline_for_extraction
+val access_impl
+  (#p1 #p2: parser)
+  (#lens: clens (dfst p1) (dfst p2))
+  (#inv: memory_invariant)
+  (#g: gaccessor p1 p2 lens)
+  (a: accessor g)
+  (x: ptr p1 inv)
+: Tot (read_repr_impl (ptr p2 inv) (lens.clens_cond (deref_spec x)) (fun res -> deref_spec res == lens.clens_get (deref_spec x)) inv (fun _ -> access_spec g x))
+
+inline_for_extraction
+let access_repr
+  (#p1 #p2: parser)
+  (#lens: clens (dfst p1) (dfst p2))
+  (#inv: memory_invariant)
+  (#g: gaccessor p1 p2 lens)
+  (a: accessor g)
+  (x: ptr p1 inv)
+: Tot (read_repr (ptr p2 inv) (lens.clens_cond (deref_spec x)) (fun res -> deref_spec res == lens.clens_get (deref_spec x)) inv)
+= (| (fun _ -> access_spec g x), access_impl a x |)
+
+inline_for_extraction
+let access
+  (#p1 #p2: parser)
+  (#lens: clens (dfst p1) (dfst p2))
+  (#inv: memory_invariant)
+  (#g: gaccessor p1 p2 lens)
+  (a: accessor g)
+  (x: ptr p1 inv)
+: Read (ptr p2 inv) (lens.clens_cond (deref_spec x)) (fun res -> deref_spec res == lens.clens_get (deref_spec x)) inv
+= Read?.reflect (access_repr a x)
+
+
 let pre_t
   (rin: parser)
 : Tot Type
@@ -280,6 +570,7 @@ layered_effect {
   if_then_else = if_then_else
 }
 
+(*
 unfold
 let lift_pure_pre
   (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser)
@@ -311,6 +602,52 @@ let lift_pure (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser)
 = (| lift_pure_spec a wp r f_pure, lift_pure_impl a wp r f_pure l |)
 
 sub_effect PURE ~> Write = lift_pure
+*)
+
+let lift_read_pre
+  (pre: pure_pre)
+  (r: parser)
+: Tot (pre_t r)
+= fun st -> pre
+
+let lift_read_post
+  (a: Type)
+  (pre: pure_pre)
+  (post: pure_post' a pre)
+  (r: parser)
+: Tot (post_t a r (fun _ -> r) (lift_read_pre pre r))
+= fun st x st' -> st == st' /\ post x
+
+let lift_read_spec
+  (a: Type)
+  (pre: pure_pre)
+  (post: pure_post' a pre)
+  (inv: memory_invariant)
+  (r: parser)
+  (f_read_spec: read_repr a pre post inv)
+: Tot (repr_spec a r (fun _ -> r) (lift_read_pre pre r) (lift_read_post a pre post r))
+= fun st -> (| dfst f_read_spec (), st |)
+
+val lift_read_impl
+  (a: Type)
+  (pre: pure_pre)
+  (post: pure_post' a pre)
+  (inv: memory_invariant)
+  (r: parser)
+  (f_read_spec: read_repr a pre post inv)
+: Tot (repr_impl a r (fun _ -> r) (lift_read_pre pre r) (lift_read_post a pre post r) inv (lift_read_spec a pre post inv r f_read_spec))
+
+let lift_read
+  (a: Type)
+  (pre: pure_pre)
+  (post: pure_post' a pre)
+  (inv: memory_invariant)
+  (r: parser)
+  (f_read_spec: read_repr a pre post inv)
+: Tot (repr a r (fun _ -> r) (lift_read_pre pre r) (lift_read_post a pre post r) inv)
+= (| lift_read_spec a pre post inv r f_read_spec, lift_read_impl a pre post inv r f_read_spec |)
+
+sub_effect Read ~> Write = lift_read
 
 unfold
 let destr_repr_spec

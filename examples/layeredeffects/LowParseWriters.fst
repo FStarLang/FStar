@@ -25,6 +25,95 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 module HST = FStar.HyperStack.ST
 
+let read_repr_impl
+  a pre post l spec
+=
+  unit ->
+  HST.Stack a
+  (requires (fun h ->
+    B.modifies l.lwrite l.h0 h /\
+    pre
+  ))
+  (ensures (fun h res h' ->
+    B.modifies B.loc_none h h' /\
+    res == spec ()
+  ))
+
+let read_return_impl
+  a x inv
+= fun _ -> x
+
+let read_bind_impl
+  a b pre_f post_f pre_g post_g f_bind_impl g l f' g'
+=
+  fun _ ->
+  let x = f' () in
+  g' x ()
+
+let read_subcomp_impl
+  a pre post pre' post' l l' f_subcomp_spec f_subcomp sq
+=
+  fun _ -> f_subcomp ()
+
+let lift_pure_read_impl
+  a wp f_pure_spec_for_impl l
+=
+  fun _ -> f_pure_spec_for_impl ()
+
+inline_for_extraction
+noeq
+type rptr' = {
+  rptr_base: B.buffer U8.t;
+  rptr_pos: U32.t;
+  rptr_pos' : (rptr_pos' : U32.t { U32.v rptr_pos <= U32.v rptr_pos' /\ U32.v rptr_pos' <= B.length rptr_base });
+}
+
+let rptr = rptr'
+
+let valid_rptr
+  p inv x
+=
+  inv.lread `B.loc_includes` B.loc_buffer x.rptr_base /\
+  valid_pos p inv.h0 x.rptr_base x.rptr_pos x.rptr_pos'
+
+let deref_spec
+  #p #inv x
+=
+  contents p inv.h0 x.rptr_base x.rptr_pos x.rptr_pos'
+
+let deref_impl
+  #p #inv r x _
+=
+  let h = HST.get () in
+  valid_frame p inv.h0 x.rptr_base x.rptr_pos x.rptr_pos' inv.lwrite h;
+  r x.rptr_base x.rptr_pos x.rptr_pos'
+
+let access_spec
+  #p1 #p2 #lens #inv g x
+=
+  let (pos2, pos2') = g inv.h0 x.rptr_base x.rptr_pos x.rptr_pos' in
+  {
+    rptr_base = x.rptr_base;
+    rptr_pos = pos2;
+    rptr_pos' = pos2';
+  }
+
+let access_impl
+  #p1 #p2 #lens #inv #g a x
+=
+  fun _ ->
+  let h = HST.get () in
+  valid_frame p1 inv.h0 x.rptr_base x.rptr_pos x.rptr_pos' inv.lwrite h;
+  let (pos2, pos2') = a x.rptr_base x.rptr_pos x.rptr_pos' in
+  let h' = HST.get () in
+  gaccessor_frame g inv.h0 x.rptr_base x.rptr_pos x.rptr_pos' inv.lwrite h;
+  gaccessor_frame g inv.h0 x.rptr_base x.rptr_pos x.rptr_pos' inv.lwrite h';
+  {
+    rptr_base = x.rptr_base;
+    rptr_pos = pos2;
+    rptr_pos' = pos2';
+  }
+
 unfold
 let repr_impl_post
   (a:Type u#x)
@@ -143,12 +232,24 @@ let subcomp_impl (a:Type)
 : Tot (repr_impl a r_in r_out pre' post' l' (subcomp_spec a r_in r_out pre post pre' post' f_subcomp_spec))
 = (fun b len pos -> f_subcomp b len pos)
 
+(*
 inline_for_extraction
 let lift_pure_impl
   (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (r:parser) (f_pure_spec_for_impl:unit -> PURE a wp)
   (l: memory_invariant)
 : Tot (repr_impl a r (fun _ -> r) (lift_pure_pre a wp r) (lift_pure_post a wp r) l (lift_pure_spec a wp r f_pure_spec_for_impl))
 = fun buf len pos -> Some (f_pure_spec_for_impl (), pos)
+*)
+
+let lift_read_impl
+  a pre post inv r f_read_spec
+=
+  fun b len pos ->
+    let h = HST.get () in
+    let res = dsnd f_read_spec () in
+    let h' = HST.get () in
+    valid_frame r h b 0ul pos B.loc_none h';
+    Some (res, pos)
 
 inline_for_extraction
 let frame_impl

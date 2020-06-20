@@ -225,3 +225,96 @@ val valid_star_inv
     contents (p1 `star` p2) h b pos1 pos3 == (contents p1 h b pos1 pos2, contents p2 h b pos2 pos3)
   ))
 
+inline_for_extraction
+let leaf_reader
+  (p: parser)
+: Tot Type
+=
+  (b: B.buffer U8.t) ->
+  (pos1: U32.t) ->
+  (pos2: U32.t) ->
+  HST.Stack (dfst p)
+  (requires (fun h ->
+    valid_pos p h b pos1 pos2
+  ))
+  (ensures (fun h res h' ->
+    B.modifies B.loc_none h h' /\
+    res == contents p h b pos1 pos2
+  ))  
+
+noeq
+type clens (t1: Type) (t2: Type) = {
+  clens_cond: t1 -> GTot Type0;
+  clens_get: (x1: t1) -> Ghost t2 (requires (clens_cond x1)) (ensures (fun _ -> True));
+}
+
+inline_for_extraction
+let gaccessor
+  (p1 p2: parser)
+  (lens: clens (dfst p1) (dfst p2))
+=
+  (h: HS.mem) ->
+  (b: B.buffer u8) ->
+  (pos1: U32.t) ->
+  (pos1': U32.t) ->
+  Ghost (U32.t & U32.t)
+  (requires (
+    valid_pos p1 h b pos1 pos1' /\
+    lens.clens_cond (contents p1 h b pos1 pos1')
+  ))
+  (ensures (fun (pos2, pos2') ->
+    valid_pos p2 h b pos2 pos2' /\
+    contents p2 h b pos2 pos2' == lens.clens_get (contents p1 h b pos1 pos1') /\
+    U32.v pos1 <= U32.v pos2 /\
+    U32.v pos2' <= U32.v pos1'
+  ))
+
+inline_for_extraction
+val gaccessor_frame
+  (#p1 #p2: parser)
+  (#lens: clens (dfst p1) (dfst p2))
+  (g: gaccessor p1 p2 lens)
+  (h: HS.mem)
+  (b: B.buffer u8)
+  (pos1: U32.t)
+  (pos1': U32.t)
+  (l: B.loc)
+  (h' : HS.mem)
+: Lemma
+  (requires (
+    B.modifies l h h' /\
+    B.loc_disjoint l (B.loc_buffer b) /\ (
+      (
+        valid_pos p1 h b pos1 pos1' /\
+        lens.clens_cond (contents p1 h b pos1 pos1')
+      ) \/ (
+        valid_pos p1 h' b pos1 pos1' /\
+        lens.clens_cond (contents p1 h' b pos1 pos1')
+  ))))
+  (ensures (
+    valid_pos p1 h b pos1 pos1' /\
+    valid_pos p1 h' b pos1 pos1' /\
+    contents p1 h b pos1 pos1' == contents p1 h' b pos1 pos1' /\
+    lens.clens_cond (contents p1 h b pos1 pos1') /\
+    lens.clens_cond (contents p1 h' b pos1 pos1') /\
+    g h' b pos1 pos1' == g h b pos1 pos1'
+  ))
+
+inline_for_extraction
+let accessor
+  (#p1 #p2: parser)
+  (#lens: clens (dfst p1) (dfst p2))
+  (g: gaccessor p1 p2 lens)
+=
+  (b: B.buffer u8) ->
+  (pos1: U32.t) ->
+  (pos1': U32.t) ->
+  HST.Stack (U32.t & U32.t)
+  (requires (fun h ->
+    valid_pos p1 h b pos1 pos1' /\
+    lens.clens_cond (contents p1 h b pos1 pos1')
+  ))
+  (ensures (fun h res h' ->
+    B.modifies B.loc_none h h' /\
+    res == g h b pos1 pos1'
+  ))
