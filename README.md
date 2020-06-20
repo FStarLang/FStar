@@ -33,12 +33,10 @@ and interactive development.  More details on [editor support] on the [F\* wiki]
 [editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
 
 You can also edit simple examples directly in your browser by using
-either the [online F\* editor] that's part of the [F\* tutorial] or our
-new [even cooler online editor] (experimental).
+either the [online F\* editor] that's part of the [F\* tutorial].
 
 [online F\* editor]: https://www.fstar-lang.org/run.php
 [F\* tutorial]: https://www.fstar-lang.org/tutorial
-[even cooler online editor]: http://fstar.ht.vc
 
 ### Extracting and executing F* code
 

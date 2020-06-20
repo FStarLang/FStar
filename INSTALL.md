@@ -19,12 +19,10 @@
 ## Online editor ##
 
 The easiest way to try out F\* quickly is directly in your browser by
-using either the [online F\* editor] that's part of the [F\* tutorial]
-or our new [even cooler online editor] (experimental).
+using either the [online F\* editor] that's part of the [F\* tutorial].
 
 [online F\* editor]: https://www.fstar-lang.org/run.php
 [F\* tutorial]: https://www.fstar-lang.org/tutorial
-[even cooler online editor]: http://fstar.ht.vc
 
 ## OPAM package ##
 
