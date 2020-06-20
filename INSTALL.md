@@ -39,6 +39,9 @@ Note: To install OCaml and OPAM on your platform please read the
 [Working OCaml setup](#prerequisite-for-steps-2-and-3-working-ocaml-setup)
 section further below, steps 0 to 3.
 
+Note: On MacOS you will additionally need to install `coreutils` via Homebrew or
+Macports for this to work (see [issue #469](https://github.com/FStarLang/FStar/issues/469)).
+
 ## Binary releases ##
 
 Every now and then we release [F\* binaries on GitHub] (for Windows, Mac, and Linux)
@@ -125,18 +128,6 @@ following commands. (On Windows this requires Cygwin and `make`)
    Note: On Linux if you get a file descriptor exhaustion error that looks
          like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`
          you can increase the limits with `ulimit -n 4000`.
-
-### Homebrew formula for Mac OS X ###
-
-On Macs you can build and install the latest F\* release using Homebrew.
-This will install F\* and all required dependencies (including Z3):
-
-        $ brew install fstar
-
-For building and installing the latest F\* development version from GitHub
-(the `master` branch) instead of the latest release you can do:
-
-        $ brew install --HEAD fstar
 
 ### Chocolatey Package on Windows ###
 
