@@ -247,6 +247,7 @@ let leaf_reader
 : Tot Type
 =
   (b: B.buffer U8.t) ->
+  (len: U32.t { B.len b == len }) ->
   HST.Stack (dfst p)
   (requires (fun h ->
     valid_buffer p h b
@@ -316,12 +317,14 @@ let accessor
   (g: gaccessor p1 p2 lens)
 =
   (b: B.buffer u8) ->
-  HST.Stack (B.buffer u8)
+  (len: U32.t { B.len b == len }) ->
+  HST.Stack (B.buffer u8 & U32.t)
   (requires (fun h ->
     valid_buffer p1 h b /\
     lens.clens_cond (buffer_contents p1 h b)
   ))
-  (ensures (fun h res h' ->
+  (ensures (fun h (res, res_len) h' ->
     B.modifies B.loc_none h h' /\
-    res == g h b
+    res == g h b /\
+    res_len == B.len res
   ))

@@ -60,42 +60,47 @@ let lift_pure_read_impl
 =
   fun _ -> f_pure_spec_for_impl ()
 
-let rptr = B.buffer U8.t
+noeq
+type rptr = {
+  rptr_base: B.buffer U8.t;
+  rptr_len: (rptr_len: U32.t { rptr_len == B.len rptr_base });
+}
 
 let valid_rptr
   p inv x
 =
-  inv.lread `B.loc_includes` B.loc_buffer x /\
-  valid_buffer p inv.h0 x
+  inv.lread `B.loc_includes` B.loc_buffer x.rptr_base /\
+  valid_buffer p inv.h0 x.rptr_base
 
 let deref_spec
   #p #inv x
 =
-  buffer_contents p inv.h0 x
+  buffer_contents p inv.h0 x.rptr_base
 
 let deref_impl
   #p #inv r x _
 =
   let h = HST.get () in
-  valid_frame p inv.h0 x 0ul (B.len x) inv.lwrite h;
-  r x
+  valid_frame p inv.h0 x.rptr_base 0ul (B.len x.rptr_base) inv.lwrite h;
+  r x.rptr_base x.rptr_len
 
 let access_spec
   #p1 #p2 #lens #inv g x
 =
-  g inv.h0 x
+  let y' = g inv.h0 x.rptr_base in
+  { rptr_base = y'; rptr_len = B.len y' }
 
 let access_impl
   #p1 #p2 #lens #inv #g a x
 =
   fun _ ->
   let h = HST.get () in
-  valid_frame p1 inv.h0 x 0ul (B.len x) inv.lwrite h;
-  let x' = a x in
+  valid_frame p1 inv.h0 x.rptr_base 0ul (B.len x.rptr_base) inv.lwrite h;
+  let (base', len') = a x.rptr_base x.rptr_len in
   let h' = HST.get () in
-  gaccessor_frame g inv.h0 x inv.lwrite h;
-  gaccessor_frame g inv.h0 x inv.lwrite h';
-  x'
+  gaccessor_frame g inv.h0 x.rptr_base inv.lwrite h;
+  gaccessor_frame g inv.h0 x.rptr_base inv.lwrite h';
+  { rptr_base = base'; rptr_len = len' }
 
 unfold
 let repr_impl_post
