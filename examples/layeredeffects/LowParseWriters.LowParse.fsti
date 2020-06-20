@@ -263,14 +263,19 @@ type clens (t1: Type) (t2: Type) = {
   clens_get: (x1: t1) -> Ghost t2 (requires (clens_cond x1)) (ensures (fun _ -> True));
 }
 
-inline_for_extraction
-let gaccessor
+val gaccessor
   (p1 p2: parser)
   (lens: clens (dfst p1) (dfst p2))
-=
-  (h: HS.mem) ->
-  (b: B.buffer u8) ->
-  Ghost (B.buffer u8)
+: Tot Type0
+
+inline_for_extraction
+val gaccess
+  (#p1 #p2: parser)
+  (#lens: clens (dfst p1) (dfst p2))
+  (g: gaccessor p1 p2 lens)
+  (h: HS.mem)
+  (b: B.buffer u8)
+: Ghost (B.buffer u8)
   (requires (
     valid_buffer p1 h b /\
     lens.clens_cond (buffer_contents p1 h b)
@@ -292,6 +297,7 @@ val gaccessor_frame
   (h' : HS.mem)
 : Lemma
   (requires (
+    B.live h b /\
     B.modifies l h h' /\
     B.loc_disjoint l (B.loc_buffer b) /\ (
       (
@@ -307,7 +313,7 @@ val gaccessor_frame
     buffer_contents p1 h b == buffer_contents p1 h' b /\
     lens.clens_cond (buffer_contents p1 h b) /\
     lens.clens_cond (buffer_contents p1 h' b) /\
-    g h' b == g h b
+    gaccess g h' b == gaccess g h b
   ))
 
 inline_for_extraction
@@ -325,6 +331,6 @@ let accessor
   ))
   (ensures (fun h (res, res_len) h' ->
     B.modifies B.loc_none h h' /\
-    res == g h b /\
+    res == gaccess g h b /\
     res_len == B.len res
   ))

@@ -87,7 +87,7 @@ let deref_impl
 let access_spec
   #p1 #p2 #lens #inv g x
 =
-  let y' = g inv.h0 x.rptr_base in
+  let y' = gaccess g inv.h0 x.rptr_base in
   { rptr_base = y'; rptr_len = B.len y' }
 
 let access_impl
