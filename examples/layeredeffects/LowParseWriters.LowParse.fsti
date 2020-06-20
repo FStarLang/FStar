@@ -317,14 +317,21 @@ val gaccessor_frame
   ))
 
 inline_for_extraction
-let accessor
+val accessor
   (#p1 #p2: parser)
   (#lens: clens (dfst p1) (dfst p2))
   (g: gaccessor p1 p2 lens)
-=
-  (b: B.buffer u8) ->
-  (len: U32.t { B.len b == len }) ->
-  HST.Stack (B.buffer u8 & U32.t)
+: Tot (Type u#1)
+
+inline_for_extraction
+val baccess
+  (#p1 #p2: parser)
+  (#lens: clens (dfst p1) (dfst p2))
+  (#g: gaccessor p1 p2 lens)
+  (a: accessor g)
+  (b: B.buffer u8)
+  (len: U32.t { B.len b == len })
+: HST.Stack (B.buffer u8 & U32.t)
   (requires (fun h ->
     valid_buffer p1 h b /\
     lens.clens_cond (buffer_contents p1 h b)

@@ -96,7 +96,7 @@ let access_impl
   fun _ ->
   let h = HST.get () in
   valid_frame p1 inv.h0 x.rptr_base 0ul (B.len x.rptr_base) inv.lwrite h;
-  let (base', len') = a x.rptr_base x.rptr_len in
+  let (base', len') = baccess a x.rptr_base x.rptr_len in
   let h' = HST.get () in
   gaccessor_frame g inv.h0 x.rptr_base inv.lwrite h;
   gaccessor_frame g inv.h0 x.rptr_base inv.lwrite h';
