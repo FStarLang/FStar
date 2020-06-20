@@ -60,59 +60,42 @@ let lift_pure_read_impl
 =
   fun _ -> f_pure_spec_for_impl ()
 
-inline_for_extraction
-noeq
-type rptr' = {
-  rptr_base: B.buffer U8.t;
-  rptr_pos: U32.t;
-  rptr_pos' : (rptr_pos' : U32.t { U32.v rptr_pos <= U32.v rptr_pos' /\ U32.v rptr_pos' <= B.length rptr_base });
-}
-
-let rptr = rptr'
+let rptr = B.buffer U8.t
 
 let valid_rptr
   p inv x
 =
-  inv.lread `B.loc_includes` B.loc_buffer x.rptr_base /\
-  valid_pos p inv.h0 x.rptr_base x.rptr_pos x.rptr_pos'
+  inv.lread `B.loc_includes` B.loc_buffer x /\
+  valid_buffer p inv.h0 x
 
 let deref_spec
   #p #inv x
 =
-  contents p inv.h0 x.rptr_base x.rptr_pos x.rptr_pos'
+  buffer_contents p inv.h0 x
 
 let deref_impl
   #p #inv r x _
 =
   let h = HST.get () in
-  valid_frame p inv.h0 x.rptr_base x.rptr_pos x.rptr_pos' inv.lwrite h;
-  r x.rptr_base x.rptr_pos x.rptr_pos'
+  valid_frame p inv.h0 x 0ul (B.len x) inv.lwrite h;
+  r x
 
 let access_spec
   #p1 #p2 #lens #inv g x
 =
-  let (pos2, pos2') = g inv.h0 x.rptr_base x.rptr_pos x.rptr_pos' in
-  {
-    rptr_base = x.rptr_base;
-    rptr_pos = pos2;
-    rptr_pos' = pos2';
-  }
+  g inv.h0 x
 
 let access_impl
   #p1 #p2 #lens #inv #g a x
 =
   fun _ ->
   let h = HST.get () in
-  valid_frame p1 inv.h0 x.rptr_base x.rptr_pos x.rptr_pos' inv.lwrite h;
-  let (pos2, pos2') = a x.rptr_base x.rptr_pos x.rptr_pos' in
+  valid_frame p1 inv.h0 x 0ul (B.len x) inv.lwrite h;
+  let x' = a x in
   let h' = HST.get () in
-  gaccessor_frame g inv.h0 x.rptr_base x.rptr_pos x.rptr_pos' inv.lwrite h;
-  gaccessor_frame g inv.h0 x.rptr_base x.rptr_pos x.rptr_pos' inv.lwrite h';
-  {
-    rptr_base = x.rptr_base;
-    rptr_pos = pos2;
-    rptr_pos' = pos2';
-  }
+  gaccessor_frame g inv.h0 x inv.lwrite h;
+  gaccessor_frame g inv.h0 x inv.lwrite h';
+  x'
 
 unfold
 let repr_impl_post

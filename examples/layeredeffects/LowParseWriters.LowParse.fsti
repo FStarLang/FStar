@@ -225,21 +225,35 @@ val valid_star_inv
     contents (p1 `star` p2) h b pos1 pos3 == (contents p1 h b pos1 pos2, contents p2 h b pos2 pos3)
   ))
 
+let valid_buffer
+  (p: parser)
+  (h: HS.mem)
+  (b: B.buffer U8.t)
+: GTot Type0
+= valid_pos p h b 0ul (B.len b)
+
+let buffer_contents
+  (p: parser)
+  (h: HS.mem)
+  (b: B.buffer U8.t)
+: Ghost (dfst p)
+  (requires (valid_buffer p h b))
+  (ensures (fun _ -> True))
+= contents p h b 0ul (B.len b)
+
 inline_for_extraction
 let leaf_reader
   (p: parser)
 : Tot Type
 =
   (b: B.buffer U8.t) ->
-  (pos1: U32.t) ->
-  (pos2: U32.t) ->
   HST.Stack (dfst p)
   (requires (fun h ->
-    valid_pos p h b pos1 pos2
+    valid_buffer p h b
   ))
   (ensures (fun h res h' ->
     B.modifies B.loc_none h h' /\
-    res == contents p h b pos1 pos2
+    res == buffer_contents p h b
   ))  
 
 noeq
@@ -255,18 +269,15 @@ let gaccessor
 =
   (h: HS.mem) ->
   (b: B.buffer u8) ->
-  (pos1: U32.t) ->
-  (pos1': U32.t) ->
-  Ghost (U32.t & U32.t)
+  Ghost (B.buffer u8)
   (requires (
-    valid_pos p1 h b pos1 pos1' /\
-    lens.clens_cond (contents p1 h b pos1 pos1')
+    valid_buffer p1 h b /\
+    lens.clens_cond (buffer_contents p1 h b)
   ))
-  (ensures (fun (pos2, pos2') ->
-    valid_pos p2 h b pos2 pos2' /\
-    contents p2 h b pos2 pos2' == lens.clens_get (contents p1 h b pos1 pos1') /\
-    U32.v pos1 <= U32.v pos2 /\
-    U32.v pos2' <= U32.v pos1'
+  (ensures (fun b' ->
+    B.loc_buffer b `B.loc_includes` B.loc_buffer b' /\
+    valid_buffer p2 h b' /\
+    buffer_contents p2 h b' == lens.clens_get (buffer_contents p1 h b)
   ))
 
 inline_for_extraction
@@ -276,8 +287,6 @@ val gaccessor_frame
   (g: gaccessor p1 p2 lens)
   (h: HS.mem)
   (b: B.buffer u8)
-  (pos1: U32.t)
-  (pos1': U32.t)
   (l: B.loc)
   (h' : HS.mem)
 : Lemma
@@ -285,19 +294,19 @@ val gaccessor_frame
     B.modifies l h h' /\
     B.loc_disjoint l (B.loc_buffer b) /\ (
       (
-        valid_pos p1 h b pos1 pos1' /\
-        lens.clens_cond (contents p1 h b pos1 pos1')
+        valid_buffer p1 h b /\
+        lens.clens_cond (buffer_contents p1 h b)
       ) \/ (
-        valid_pos p1 h' b pos1 pos1' /\
-        lens.clens_cond (contents p1 h' b pos1 pos1')
+        valid_buffer p1 h' b /\
+        lens.clens_cond (buffer_contents p1 h' b)
   ))))
   (ensures (
-    valid_pos p1 h b pos1 pos1' /\
-    valid_pos p1 h' b pos1 pos1' /\
-    contents p1 h b pos1 pos1' == contents p1 h' b pos1 pos1' /\
-    lens.clens_cond (contents p1 h b pos1 pos1') /\
-    lens.clens_cond (contents p1 h' b pos1 pos1') /\
-    g h' b pos1 pos1' == g h b pos1 pos1'
+    valid_buffer p1 h b /\
+    valid_buffer p1 h' b /\
+    buffer_contents p1 h b == buffer_contents p1 h' b /\
+    lens.clens_cond (buffer_contents p1 h b) /\
+    lens.clens_cond (buffer_contents p1 h' b) /\
+    g h' b == g h b
   ))
 
 inline_for_extraction
@@ -307,14 +316,12 @@ let accessor
   (g: gaccessor p1 p2 lens)
 =
   (b: B.buffer u8) ->
-  (pos1: U32.t) ->
-  (pos1': U32.t) ->
-  HST.Stack (U32.t & U32.t)
+  HST.Stack (B.buffer u8)
   (requires (fun h ->
-    valid_pos p1 h b pos1 pos1' /\
-    lens.clens_cond (contents p1 h b pos1 pos1')
+    valid_buffer p1 h b /\
+    lens.clens_cond (buffer_contents p1 h b)
   ))
   (ensures (fun h res h' ->
     B.modifies B.loc_none h h' /\
-    res == g h b pos1 pos1'
+    res == g h b
   ))
