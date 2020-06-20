@@ -16,8 +16,8 @@ let dsnd
 
 type u8 : Type0 = U8.t
 
-val parser' (t: Type0) : Type0
-let parser : Type u#1 = (t: Type0 & parser' t)
+val parser' (t: Type0) : Type u#1
+let parser : Type = (t: Type & parser' t)
 
 val valid_pos
   (p: parser)
