@@ -340,6 +340,64 @@ let access
 : Read (ptr p2 inv) (lens.clens_cond (deref_spec x)) (fun res -> deref_spec res == lens.clens_get (deref_spec x)) inv
 = Read?.reflect (access_repr a x)
 
+unfold
+let validate_pre
+  (inv: memory_invariant)
+  (b: B.buffer U8.t)
+: Tot pure_pre
+=
+  inv.lread `B.loc_includes` B.loc_buffer b /\
+  B.live inv.h0 b
+
+unfold
+let validate_post
+  (p: parser)
+  (inv: memory_invariant)
+  (b: B.buffer U8.t)
+: Tot (pure_post' (option (ptr p inv & U32.t)) (validate_pre inv b))
+= fun res ->
+  match res with
+  | None ->
+    forall pos . ~ (valid_pos p inv.h0 b 0ul pos)
+  | Some (x, pos) ->
+    valid_pos p inv.h0 b 0ul pos /\
+    deref_spec x == contents p inv.h0 b 0ul pos
+
+val validate_spec
+  (p: parser)
+  (inv: memory_invariant)
+  (b: B.buffer U8.t)
+: Tot (read_repr_spec (option (ptr p inv & U32.t)) (validate_pre inv b) (validate_post p inv b))
+
+inline_for_extraction
+val validate_impl
+  (#p: parser)
+  (v: validator p)
+  (inv: memory_invariant)
+  (b: B.buffer U8.t)
+  (len: U32.t { B.len b == len })
+: Tot (read_repr_impl _ _ _ inv (validate_spec p inv b))
+
+inline_for_extraction
+let validate_repr
+  (#p: parser)
+  (v: validator p)
+  (inv: memory_invariant)
+  (b: B.buffer U8.t)
+  (len: U32.t { B.len b == len })
+: Tot (read_repr (option (ptr p inv & U32.t)) (validate_pre inv b) (validate_post p inv b) inv)
+= (| _, validate_impl v inv b len |)
+
+inline_for_extraction
+let validate
+  (#p: parser)
+  (v: validator p)
+  (inv: memory_invariant)
+  (b: B.buffer U8.t)
+  (len: U32.t { B.len b == len })
+: Read (option (ptr p inv & U32.t)) (validate_pre inv b) (validate_post p inv b) inv
+= Read?.reflect (validate_repr v inv b len)
+
 
 let pre_t
   (rin: parser)

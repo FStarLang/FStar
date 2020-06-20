@@ -102,6 +102,55 @@ let access_impl
   gaccessor_frame g inv.h0 x.rptr_base inv.lwrite h';
   { rptr_base = base'; rptr_len = len' }
 
+let validate_spec
+  p inv b
+= fun _ ->
+  match gvalidate p inv.h0 b with
+  | None -> None
+  | Some pos ->
+    let b' = B.gsub b 0ul pos in
+    let x = { rptr_base = b' ; rptr_len = pos } in
+    Some (x, pos)
+
+let valid_frame'
+  (p: parser)
+  (h: HS.mem)
+  (b: B.buffer U8.t)
+  (pos: U32.t)
+  (l: B.loc)
+  (h' : HS.mem)
+  (pos' : U32.t)
+: Lemma
+  ((
+    B.live h b /\
+    (valid_pos p h b pos pos' \/ valid_pos p h' b pos pos') /\
+    B.modifies l h h' /\
+    B.loc_disjoint l (B.loc_buffer_from_to b pos pos')
+  ) ==> (
+    valid_pos p h b pos pos' /\
+    valid_pos p h' b pos pos' /\
+    contents p h' b pos pos' == contents p h b pos pos'
+  ))
+= Classical.move_requires (valid_frame p h b pos pos' l) h'
+
+let validate_impl
+  #p v inv b len
+= fun _ ->
+  let h1 = HST.get () in
+  Classical.forall_intro (valid_frame' p inv.h0 b 0ul inv.lwrite h1);
+  gvalidate_frame p inv.h0 b inv.lwrite h1;
+  let res = bvalidate v b len in
+  let h2 = HST.get () in
+  Classical.forall_intro (valid_frame' p inv.h0 b 0ul inv.lwrite h2);
+  gvalidate_frame p inv.h0 b inv.lwrite h2;
+  match res with
+  | None -> None
+  | Some pos ->
+    let b' = B.sub b 0ul pos in
+    let x = { rptr_base = b' ; rptr_len = pos } in
+    Some (x, pos)
+
+
 unfold
 let repr_impl_post
   (a:Type u#x)

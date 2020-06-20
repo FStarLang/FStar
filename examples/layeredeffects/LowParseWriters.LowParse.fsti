@@ -130,7 +130,8 @@ val valid_frame
   (h' : HS.mem)
 : Lemma
   (requires (
-    valid_pos p h b pos pos' /\
+    B.live h b /\
+    (valid_pos p h b pos pos' \/ valid_pos p h' b pos pos') /\
     B.modifies l h h' /\
     B.loc_disjoint l (B.loc_buffer_from_to b pos pos')
   ))
@@ -340,4 +341,50 @@ val baccess
     B.modifies B.loc_none h h' /\
     res == gaccess g h b /\
     res_len == B.len res
+  ))
+
+inline_for_extraction
+val validator
+  (p: parser)
+: Tot (Type u#1)
+
+val gvalidate
+  (p: parser)
+  (h: HS.mem)
+  (b: B.buffer U8.t)
+: Ghost (option U32.t)
+  (requires (B.live h b))
+  (ensures (fun res ->
+    match res with
+    | None -> forall pos . ~ (valid_pos p h b 0ul pos)
+    | Some pos -> valid_pos p h b 0ul pos
+  ))
+
+val gvalidate_frame
+  (p: parser)
+  (h: HS.mem)
+  (b: B.buffer U8.t)
+  (l: B.loc)
+  (h' : HS.mem)
+: Lemma
+  (requires (
+    B.live h b /\
+    l `B.loc_disjoint` B.loc_buffer b /\
+    B.modifies l h h'
+  ))
+  (ensures (
+    gvalidate p h b == gvalidate p h' b
+  ))
+
+inline_for_extraction
+val bvalidate
+  (#p: parser)
+  (v: validator p)
+  (b: B.buffer U8.t)
+  (len: U32.t { B.len b == len })
+: HST.Stack (option U32.t)
+  (requires (fun h -> B.live h b))
+  (ensures (fun h res h' ->
+    B.modifies B.loc_none h h' /\
+    res == gvalidate p h b
   ))
