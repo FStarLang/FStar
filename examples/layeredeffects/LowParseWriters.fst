@@ -61,6 +61,10 @@ let lift_pure_read_impl
 =
   fun _ -> Correct (f_pure_spec_for_impl ())
 
+let failwith_impl
+  a inv s
+= fun _ -> Error s
+
 noeq
 type rptr = {
   rptr_base: B.buffer U8.t;

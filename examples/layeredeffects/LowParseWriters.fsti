@@ -324,6 +324,35 @@ let lift_pure_read (a:Type) (wp:pure_wp a { pure_wp_mono a wp })
 
 sub_effect PURE ~> ERead = lift_pure_read
 
+let failwith_spec
+  (a: Type)
+  (s: string)
+: Tot (read_repr_spec a True (fun _ -> False) (fun _ -> True))
+= fun _ -> Error s
+
+inline_for_extraction
+val failwith_impl
+  (a: Type)
+  (inv: memory_invariant)
+  (s: string)
+: Tot (read_repr_impl a True (fun _ -> False) (fun _ -> True) inv (failwith_spec a s))
+
+inline_for_extraction
+let failwith_repr
+  (a: Type)
+  (inv: memory_invariant)
+  (s: string)
+: Tot (read_repr a True (fun _ -> False) (fun _ -> True) inv)
+= (| _, failwith_impl a inv s |)
+
+inline_for_extraction
+let failwith
+  (#a: Type)
+  (#inv: memory_invariant)
+  (s: string)
+: ERead a True (fun _ -> False) (fun _ -> True) inv
+= ERead?.reflect (failwith_repr a inv s)
+
 inline_for_extraction
 val rptr: Type0
 val valid_rptr (p: parser) : memory_invariant -> rptr -> GTot Type0
