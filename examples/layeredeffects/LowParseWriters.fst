@@ -150,6 +150,11 @@ let validate_impl
     let x = { rptr_base = b' ; rptr_len = pos } in
     Some (x, pos)
 
+noeq
+type iresult (a: Type u#x) : Type u#x =
+| ICorrect: (res: a) -> (pos' : U32.t) -> iresult a
+| IError of string
+| IOverflow
 
 unfold
 let repr_impl_post
@@ -158,31 +163,38 @@ let repr_impl_post
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
+  (post_err: post_err_t r_in pre)
   (l: memory_invariant)
-  (spec: repr_spec a r_in r_out pre post)
+  (spec: repr_spec a r_in r_out pre post post_err)
   (b: B.buffer u8 { l.lwrite `B.loc_includes` B.loc_buffer b })
   (pos1: U32.t { U32.v pos1 <= B.length b })
   (h: HS.mem)
-  (res: option (a & U32.t))
+  (res: iresult a)
   (h' : HS.mem)
 : GTot Type0
 = 
     valid_pos r_in h b 0ul pos1 /\ (
     let v_in = contents r_in h b 0ul pos1 in
-    pre v_in /\ (
-    let (| v, v_out |) = spec v_in in
-    begin match res with
-    | None ->
-      size (r_out v) v_out > B.length b /\
-      B.modifies (B.loc_buffer b) h h'
-    | Some (v', pos2) ->
+    pre v_in /\
+    begin match spec v_in, res with
+    | Correct (| v, v_out |), ICorrect v' pos2 ->
       U32.v pos1 <= U32.v pos2 /\
       valid_pos (r_out v) h' b 0ul pos2 /\
       v' == v /\
       v_out == contents (r_out v) h' b 0ul pos2 /\
       B.modifies (B.loc_buffer_from_to b 0ul pos2) h h'
+    | Correct (| v, v_out |), IOverflow ->
+      size (r_out v) v_out > B.length b /\
+      B.modifies (B.loc_buffer b) h h'
+    | Error s, IError s' ->
+      s == s' /\
+      B.modifies (B.loc_buffer b) h h'
+    | Error _, IOverflow ->
+      (* overflow happened in implementation before specification could reach error *)
+      B.modifies (B.loc_buffer b) h h'
+    | _ -> False
     end
-  ))
+  )
 
 let buffer_offset
   (#t: Type)
@@ -196,28 +208,29 @@ let repr_impl
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
+  (post_err: post_err_t r_in pre)
   (l: memory_invariant)
-  (spec: repr_spec a r_in r_out pre post)
+  (spec: repr_spec a r_in r_out pre post post_err)
 : Tot Type0 =
   (b: B.buffer u8 { l.lwrite `B.loc_includes` B.loc_buffer b }) ->
   (len: U32.t { len == B.len b }) ->
   (pos1: buffer_offset b) ->
-  HST.Stack (option (a & U32.t))
+  HST.Stack (iresult a)
   (requires (fun h ->
     B.modifies l.lwrite l.h0 h /\
     valid_pos r_in h b 0ul pos1 /\
     pre (contents r_in h b 0ul pos1)
   ))
   (ensures (fun h res h' ->
-    repr_impl_post a r_in r_out pre post l spec b pos1 h res h'
+    repr_impl_post a r_in r_out pre post post_err l spec b pos1 h res h'
   ))
 
 inline_for_extraction
 let return_impl
   (a:Type) (x:a) (r: a -> parser)
   (l: memory_invariant)
-: Tot (repr_impl a (r x) r (return_pre a x r) (return_post a x r) l (return_spec a x r))
-= fun b len pos1 -> Some (x, pos1)
+: Tot (repr_impl a (r x) r (return_pre a x r) (return_post a x r) (return_post_err a x r) l (return_spec a x r))
+= fun b len pos1 -> ICorrect x pos1
 
 let loc_includes_loc_buffer_loc_buffer_from_to
   (#a: _) (#rrel #rel: _)
@@ -243,30 +256,33 @@ let bind_impl
   (a:Type) (b:Type)
   (r_in_f:parser) (r_out_f:a -> parser)
   (pre_f: pre_t r_in_f) (post_f: post_t a r_in_f r_out_f pre_f)
+  (post_err_f: post_err_t r_in_f pre_f)
   (r_out_g:b -> parser)
   (pre_g: (x:a) -> pre_t (r_out_f x)) (post_g: (x:a) -> post_t b (r_out_f x) r_out_g (pre_g x))
-  (f_bind_impl:repr_spec a r_in_f r_out_f pre_f post_f)
-  (g:(x:a -> repr_spec b (r_out_f x) r_out_g (pre_g x) (post_g x)))
+  (post_err_g: (x:a) -> post_err_t (r_out_f x) (pre_g x))
+  (f_bind_impl:repr_spec a r_in_f r_out_f pre_f post_f post_err_f)
+  (g:(x:a -> repr_spec b (r_out_f x) r_out_g (pre_g x) (post_g x) (post_err_g x)))
   (l: memory_invariant)
-  (f' : repr_impl a r_in_f r_out_f pre_f post_f l f_bind_impl)
-  (g' : (x: a -> repr_impl b (r_out_f x) r_out_g (pre_g x) (post_g x) l (g x)))
-: Tot (repr_impl b r_in_f r_out_g (bind_pre a b r_in_f r_out_f pre_f post_f pre_g) (bind_post a b r_in_f r_out_f pre_f post_f r_out_g pre_g post_g) l (bind_spec a b r_in_f r_out_f pre_f post_f r_out_g pre_g post_g f_bind_impl g))
+  (f' : repr_impl a r_in_f r_out_f pre_f post_f post_err_f l f_bind_impl)
+  (g' : (x: a -> repr_impl b (r_out_f x) r_out_g (pre_g x) (post_g x) (post_err_g x) l (g x)))
+: Tot (repr_impl b r_in_f r_out_g (bind_pre a r_in_f r_out_f pre_f post_f pre_g) (bind_post a b r_in_f r_out_f pre_f post_f r_out_g pre_g post_g) (bind_post_err a r_in_f r_out_f pre_f post_f post_err_f pre_g post_err_g) l (bind_spec a b r_in_f r_out_f pre_f post_f post_err_f r_out_g pre_g post_g post_err_g f_bind_impl g))
 = fun buf len pos ->
   match f' buf len pos with
-  | None -> None
-  | Some (x, posf) -> g' x buf len posf
+  | IError e -> IError e
+  | IOverflow -> IOverflow
+  | ICorrect x posf -> g' x buf len posf
 
 inline_for_extraction
 let subcomp_impl (a:Type)
   (r_in:parser) (r_out:a -> parser)
-  (pre: pre_t r_in) (post: post_t a r_in r_out pre)
-  (pre': pre_t r_in) (post': post_t a r_in r_out pre')
+  (pre: pre_t r_in) (post: post_t a r_in r_out pre) (post_err: post_err_t r_in pre)
+  (pre': pre_t r_in) (post': post_t a r_in r_out pre') (post_err': post_err_t r_in pre')
   (l:memory_invariant)
   (l' : memory_invariant)
-  (f_subcomp_spec:repr_spec a r_in r_out pre post)
-  (f_subcomp:repr_impl a r_in r_out pre post l f_subcomp_spec)
-  (sq: squash (subcomp_cond a r_in r_out pre post pre' post' l l'))
-: Tot (repr_impl a r_in r_out pre' post' l' (subcomp_spec a r_in r_out pre post pre' post' f_subcomp_spec))
+  (f_subcomp_spec:repr_spec a r_in r_out pre post post_err)
+  (f_subcomp:repr_impl a r_in r_out pre post post_err l f_subcomp_spec)
+  (sq: squash (subcomp_cond a r_in r_out pre post post_err pre' post' post_err' l l'))
+: Tot (repr_impl a r_in r_out pre' post' post_err' l' (subcomp_spec a r_in r_out pre post post_err pre' post' post_err' f_subcomp_spec))
 = (fun b len pos -> f_subcomp b len pos)
 
 (*
@@ -286,7 +302,7 @@ let lift_read_impl
     let res = dsnd f_read_spec () in
     let h' = HST.get () in
     valid_frame r h b 0ul pos B.loc_none h';
-    Some (res, pos)
+    ICorrect res pos
 
 inline_for_extraction
 let frame_impl
@@ -295,21 +311,25 @@ let frame_impl
   (pre: pre_t emp)
   (p: a -> parser)
   (post: post_t a emp p pre)
+  (post_err: post_err_t emp pre)
   (l: memory_invariant)
-  (inner: unit -> Write a emp p pre post l)
-: Tot (repr_impl a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) l (frame_spec a frame pre p post l inner))
+  (inner: unit -> EWrite a emp p pre post post_err l)
+: Tot (repr_impl a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) (frame_post_err frame pre post_err) l (frame_spec a frame pre p post post_err l inner))
 = fun buf len pos ->
   let h = HST.get () in
   let buf' = B.offset buf pos in
-  match destr_repr_impl a emp p pre post l inner buf' (len `U32.sub` pos) 0ul with
-  | None -> None
-  | Some (x, wlen) ->
+  match destr_repr_impl a emp p pre post post_err l inner buf' (len `U32.sub` pos) 0ul with
+  | IError e -> IError e
+  | IOverflow -> IOverflow
+  | ICorrect x wlen ->
     let h' = HST.get () in
     let pos' = pos `U32.add` wlen in
     B.loc_disjoint_loc_buffer_from_to buf 0ul pos pos wlen;
     valid_frame frame h buf 0ul pos (B.loc_buffer_from_to buf' 0ul wlen) h';
     valid_star frame (p x) h' buf 0ul pos pos' ;
-    Some (x, pos')
+    ICorrect x pos'
+
+#push-options "--z3rlimit 64"
 
 let elem_writer_impl
   #p w l x
@@ -317,8 +337,8 @@ let elem_writer_impl
   fun b len pos ->
   let b' = B.offset b pos in
   match w b' (len `U32.sub` pos) x with
-  | None -> None
-  | Some xlen -> Some ((), pos `U32.add` xlen)
+  | None -> IOverflow
+  | Some xlen -> ICorrect () (pos `U32.add` xlen)
 
 inline_for_extraction
 let recast_writer_impl
@@ -327,14 +347,15 @@ let recast_writer_impl
   (r_out:a -> parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
+  (post_err: post_err_t r_in pre)
   (l: memory_invariant)
-  (f: unit -> Write a r_in r_out pre post l)
-: Tot (repr_impl a r_in r_out pre (recast_writer_post a r_in r_out pre post l f) l (recast_writer_spec a r_in r_out pre post l f))
-= fun b len pos -> destr_repr_impl a r_in r_out pre post l f b len pos
+  (f: unit -> EWrite a r_in r_out pre post post_err l)
+: Tot (repr_impl a r_in r_out pre (recast_writer_post a r_in r_out pre post post_err l f) (recast_writer_post_err a r_in r_out pre post post_err l f) l (recast_writer_spec a r_in r_out pre post post_err l f))
+= fun b len pos -> destr_repr_impl a r_in r_out pre post post_err l f b len pos
 
 inline_for_extraction
 let frame2_impl
-  a frame ppre pre p post l inner
+  a frame ppre pre p post post_err l inner
 = fun buf len pos ->
   let h = HST.get () in
   let pos2 = valid_star_inv frame ppre buf len 0ul pos in
@@ -343,12 +364,15 @@ let frame2_impl
   assert (valid_pos ppre h buf' 0ul (pos `U32.sub` pos2));
   let h1 = HST.get () in
   valid_frame ppre h buf' 0ul (pos `U32.sub` pos2) B.loc_none h1;
-  match destr_repr_impl a ppre p pre post l inner buf' (len `U32.sub` pos2) (pos `U32.sub` pos2) with
-  | None -> None
-  | Some (x, wlen) ->
+  match destr_repr_impl a ppre p pre post post_err l inner buf' (len `U32.sub` pos2) (pos `U32.sub` pos2) with
+  | IOverflow -> IOverflow
+  | IError e -> IError e
+  | ICorrect x wlen ->
     let h' = HST.get () in
     let pos' = pos2 `U32.add` wlen in
     B.loc_disjoint_loc_buffer_from_to buf 0ul pos2 pos2 wlen;
     valid_frame frame h buf 0ul pos2 (B.loc_buffer_from_to buf' 0ul wlen) h';
     valid_star frame (p x) h' buf 0ul pos2 pos' ;
-    Some (x, pos')
+    ICorrect x pos'
+
+#pop-options
