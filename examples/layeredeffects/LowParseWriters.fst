@@ -165,7 +165,7 @@ unfold
 let repr_impl_post
   (a:Type u#x)
   (r_in: parser)
-  (r_out:a -> parser)
+  (r_out: parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
   (post_err: post_err_t r_in pre)
@@ -182,14 +182,14 @@ let repr_impl_post
     let v_in = contents r_in h b 0ul pos1 in
     pre v_in /\
     begin match spec v_in, res with
-    | Correct (| v, v_out |), ICorrect v' pos2 ->
+    | Correct (v, v_out), ICorrect v' pos2 ->
       U32.v pos1 <= U32.v pos2 /\
-      valid_pos (r_out v) h' b 0ul pos2 /\
+      valid_pos (r_out) h' b 0ul pos2 /\
       v' == v /\
-      v_out == contents (r_out v) h' b 0ul pos2 /\
+      v_out == contents (r_out) h' b 0ul pos2 /\
       B.modifies (B.loc_buffer_from_to b 0ul pos2) h h'
-    | Correct (| v, v_out |), IOverflow ->
-      size (r_out v) v_out > B.length b /\
+    | Correct (v, v_out), IOverflow ->
+      size (r_out) v_out > B.length b /\
       B.modifies (B.loc_buffer b) h h'
     | Error s, IError s' ->
       s == s' /\
@@ -210,7 +210,7 @@ let buffer_offset
 let repr_impl
   (a:Type u#x)
   (r_in: parser)
-  (r_out:a -> parser)
+  (r_out: parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
   (post_err: post_err_t r_in pre)
@@ -232,9 +232,9 @@ let repr_impl
 
 inline_for_extraction
 let return_impl
-  (a:Type) (x:a) (r: a -> parser)
+  (a:Type) (x:a) (r: parser)
   (l: memory_invariant)
-: Tot (repr_impl a (r x) r (return_pre a x r) (return_post a x r) (return_post_err a x r) l (return_spec a x r))
+: Tot (repr_impl a (r) r (return_pre a x r) (return_post a x r) (return_post_err a x r) l (return_spec a x r))
 = fun b len pos1 -> ICorrect x pos1
 
 let loc_includes_loc_buffer_loc_buffer_from_to
@@ -259,17 +259,17 @@ let loc_includes_loc_buffer_from_to
 inline_for_extraction
 let bind_impl
   (a:Type) (b:Type)
-  (r_in_f:parser) (r_out_f:a -> parser)
+  (r_in_f:parser) (r_out_f: parser)
   (pre_f: pre_t r_in_f) (post_f: post_t a r_in_f r_out_f pre_f)
   (post_err_f: post_err_t r_in_f pre_f)
-  (r_out_g:b -> parser)
-  (pre_g: (x:a) -> pre_t (r_out_f x)) (post_g: (x:a) -> post_t b (r_out_f x) r_out_g (pre_g x))
-  (post_err_g: (x:a) -> post_err_t (r_out_f x) (pre_g x))
+  (r_out_g: parser)
+  (pre_g: (x:a) -> pre_t (r_out_f)) (post_g: (x:a) -> post_t b (r_out_f) r_out_g (pre_g x))
+  (post_err_g: (x:a) -> post_err_t (r_out_f) (pre_g x))
   (f_bind_impl:repr_spec a r_in_f r_out_f pre_f post_f post_err_f)
-  (g:(x:a -> repr_spec b (r_out_f x) r_out_g (pre_g x) (post_g x) (post_err_g x)))
+  (g:(x:a -> repr_spec b (r_out_f) r_out_g (pre_g x) (post_g x) (post_err_g x)))
   (l: memory_invariant)
   (f' : repr_impl a r_in_f r_out_f pre_f post_f post_err_f l f_bind_impl)
-  (g' : (x: a -> repr_impl b (r_out_f x) r_out_g (pre_g x) (post_g x) (post_err_g x) l (g x)))
+  (g' : (x: a -> repr_impl b (r_out_f) r_out_g (pre_g x) (post_g x) (post_err_g x) l (g x)))
 : Tot (repr_impl b r_in_f r_out_g (bind_pre a r_in_f r_out_f pre_f post_f pre_g) (bind_post a b r_in_f r_out_f pre_f post_f r_out_g pre_g post_g) (bind_post_err a r_in_f r_out_f pre_f post_f post_err_f pre_g post_err_g) l (bind_spec a b r_in_f r_out_f pre_f post_f post_err_f r_out_g pre_g post_g post_err_g f_bind_impl g))
 = fun buf len pos ->
   match f' buf len pos with
@@ -279,7 +279,7 @@ let bind_impl
 
 inline_for_extraction
 let subcomp_impl (a:Type)
-  (r_in:parser) (r_out:a -> parser)
+  (r_in:parser) (r_out: parser)
   (pre: pre_t r_in) (post: post_t a r_in r_out pre) (post_err: post_err_t r_in pre)
   (pre': pre_t r_in) (post': post_t a r_in r_out pre') (post_err': post_err_t r_in pre')
   (l:memory_invariant)
@@ -316,7 +316,7 @@ let frame_impl
   (a: Type)
   (frame: parser)
   (pre: pre_t emp)
-  (p: a -> parser)
+  (p: parser)
   (post: post_t a emp p pre)
   (post_err: post_err_t emp pre)
   (l: memory_invariant)
@@ -333,7 +333,7 @@ let frame_impl
     let pos' = pos `U32.add` wlen in
     B.loc_disjoint_loc_buffer_from_to buf 0ul pos pos wlen;
     valid_frame frame h buf 0ul pos (B.loc_buffer_from_to buf' 0ul wlen) h';
-    valid_star frame (p x) h' buf 0ul pos pos' ;
+    valid_star frame (p) h' buf 0ul pos pos' ;
     ICorrect x pos'
 
 #push-options "--z3rlimit 128"
@@ -351,7 +351,7 @@ inline_for_extraction
 let recast_writer_impl
   (a:Type u#x)
   (r_in: parser)
-  (r_out:a -> parser)
+  (r_out: parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
   (post_err: post_err_t r_in pre)
@@ -361,6 +361,8 @@ let recast_writer_impl
 = fun b len pos -> destr_repr_impl a r_in r_out pre post post_err l f b len pos
 
 #restart-solver
+
+#push-options "--ifuel 8"
 
 inline_for_extraction
 let frame2_impl
@@ -374,15 +376,18 @@ let frame2_impl
   let h1 = HST.get () in
   valid_frame ppre h buf' 0ul (pos `U32.sub` pos2) B.loc_none h1;
   match destr_repr_impl a ppre p pre post post_err l inner buf' (len `U32.sub` pos2) (pos `U32.sub` pos2) with
-  | IOverflow -> IOverflow
+  | IOverflow ->
+    IOverflow
   | IError e -> IError e
   | ICorrect x wlen ->
     let h' = HST.get () in
     let pos' = pos2 `U32.add` wlen in
     B.loc_disjoint_loc_buffer_from_to buf 0ul pos2 pos2 wlen;
     valid_frame frame h buf 0ul pos2 (B.loc_buffer_from_to buf' 0ul wlen) h';
-    valid_star frame (p x) h' buf 0ul pos2 pos' ;
+    valid_star frame (p) h' buf 0ul pos2 pos' ;
     ICorrect x pos'
+
+#pop-options
 
 #pop-options
 
@@ -397,10 +402,10 @@ let valid_synth_impl
 let check_precond_spec
   (p1: parser)
   (precond: pre_t p1)
-: Tot (repr_spec unit p1 (fun _ -> p1) precond (fun vin _ vout -> vin == vout /\ precond vin) (fun vin -> ~ (precond vin)))
+: Tot (repr_spec unit p1 (p1) precond (fun vin _ vout -> vin == vout /\ precond vin) (fun vin -> ~ (precond vin)))
 = fun vin ->
   if FStar.StrongExcludedMiddle.strong_excluded_middle (precond vin)
-  then Correct (| (), vin |)
+  then Correct ((), vin)
   else Error "check_precond failed"
 
 inline_for_extraction
@@ -409,7 +414,7 @@ let check_precond_impl
   (precond: pre_t p1)
   (c: check_precond_t p1 precond)
   (inv: memory_invariant)
-: Tot (repr_impl unit p1 (fun _ -> p1) precond (fun vin _ vout -> vin == vout /\ precond vin) (fun vin -> ~ (precond vin)) inv (check_precond_spec p1 precond))
+: Tot (repr_impl unit p1 (p1) precond (fun vin _ vout -> vin == vout /\ precond vin) (fun vin -> ~ (precond vin)) inv (check_precond_spec p1 precond))
 = fun b len pos ->
   let h = HST.get () in
   if c b len 0ul pos
