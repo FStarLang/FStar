@@ -385,3 +385,40 @@ let frame2_impl
     ICorrect x pos'
 
 #pop-options
+
+let valid_synth_impl
+  p1 p2 precond f v inv
+=
+  fun buf len pos ->
+    let h = HST.get () in
+    v.valid_synth_valid h buf 0ul pos;
+    ICorrect () pos
+
+let check_precond_spec
+  (p1: parser)
+  (precond: pre_t p1)
+: Tot (repr_spec unit p1 (fun _ -> p1) precond (fun vin _ vout -> vin == vout /\ precond vin) (fun vin -> ~ (precond vin)))
+= fun vin ->
+  if FStar.StrongExcludedMiddle.strong_excluded_middle (precond vin)
+  then Correct (| (), vin |)
+  else Error "check_precond failed"
+
+inline_for_extraction
+let check_precond_impl
+  (p1: parser)
+  (precond: pre_t p1)
+  (c: check_precond_t p1 precond)
+  (inv: memory_invariant)
+: Tot (repr_impl unit p1 (fun _ -> p1) precond (fun vin _ vout -> vin == vout /\ precond vin) (fun vin -> ~ (precond vin)) inv (check_precond_spec p1 precond))
+= fun b len pos ->
+  let h = HST.get () in
+  if c b len 0ul pos
+  then
+    let h' = HST.get () in
+    let _ = valid_frame p1 h b 0ul pos B.loc_none h' in
+    ICorrect () pos
+  else IError "check_precond failed"
+
+let check_precond_repr
+  p1 precond c inv
+= (| _, check_precond_impl p1 precond c inv |)

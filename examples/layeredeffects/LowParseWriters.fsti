@@ -1282,3 +1282,111 @@ let frame2
   (inner: unit -> EWrite a ppre p pre post post_err l)
 : EWrite a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) (frame2_post_err frame ppre pre post_err) l
 = frame2' a frame ppre pre p post post_err l inner ()
+
+noeq
+type valid_synth_t
+  (p1: parser)
+  (p2: parser)
+  (precond: pre_t p1)
+  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+= {
+    valid_synth_valid:
+      (h: HS.mem) ->
+      (b: B.buffer U8.t) ->
+      (pos: U32.t) ->
+      (pos' : U32.t) ->
+      Lemma
+      (requires (
+        valid_pos p1 h b pos pos' /\
+        precond (contents p1 h b pos pos')
+      ))
+      (ensures (
+        valid_pos p1 h b pos pos' /\ (
+        let x = contents p1 h b pos pos' in
+        precond x /\
+        valid_pos p2 h b pos pos' /\
+        contents p2 h b pos pos' == f x
+      )));
+    valid_synth_size:
+      (x: dfst p1 { precond x }) ->
+      Lemma
+      (size p1 x == size p2 (f x))
+  }
+
+let valid_synth_spec
+  (p1: parser)
+  (p2: parser)
+  (precond: pre_t p1)
+  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  (v: valid_synth_t p1 p2 precond f)
+: Tot (repr_spec unit p1 (fun _ -> p2) precond (fun vin _ vout -> f vin == vout) (fun _ -> False))
+= fun vin ->
+    v.valid_synth_size vin;
+    Correct (| (), f vin |)
+
+inline_for_extraction
+val valid_synth_impl
+  (p1: parser)
+  (p2: parser)
+  (precond: pre_t p1)
+  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  (v: valid_synth_t p1 p2 precond f)
+  (inv: memory_invariant)
+: Tot (repr_impl unit p1 (fun _ -> p2) precond (fun vin _ vout -> f vin == vout) (fun _ -> False) inv (valid_synth_spec p1 p2 precond f v))
+
+inline_for_extraction
+let valid_synth_repr
+  (p1: parser)
+  (p2: parser)
+  (precond: pre_t p1)
+  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  (v: valid_synth_t p1 p2 precond f)
+  (inv: memory_invariant)
+: Tot (repr unit p1 (fun _ -> p2) precond (fun vin _ vout -> f vin == vout) (fun _ -> False) inv)
+= (| _, valid_synth_impl p1 p2 precond f v inv |)
+
+inline_for_extraction
+let valid_synth
+  (p1: parser)
+  (p2: parser)
+  (precond: pre_t p1)
+  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  (inv: memory_invariant)
+  (v: valid_synth_t p1 p2 precond f)
+: Write unit p1 (fun _ -> p2) precond (fun vin _ vout -> f vin == vout) inv
+= EWrite?.reflect (valid_synth_repr p1 p2 precond f v inv)
+
+let check_precond_t
+  (p1: parser)
+  (precond: pre_t p1)
+: Tot Type
+=
+  (b: B.buffer U8.t) ->
+  (len: U32.t { B.len b == len }) ->
+  (pos: U32.t) ->
+  (pos' : U32.t) ->
+  HST.Stack bool
+  (requires (fun h ->
+    valid_pos p1 h b pos pos'
+  ))
+  (ensures (fun h res h' ->
+    B.modifies B.loc_none h h' /\
+    (res == true <==> precond (contents p1 h b pos pos'))
+  ))
+
+inline_for_extraction
+val check_precond_repr
+  (p1: parser)
+  (precond: pre_t p1)
+  (c: check_precond_t p1 precond)
+  (inv: memory_invariant)
+: Tot (repr unit p1 (fun _ -> p1) precond (fun vin _ vout -> vin == vout /\ precond vin) (fun vin -> ~ (precond vin)) inv)
+
+inline_for_extraction
+let check_precond
+  (p1: parser)
+  (precond: pre_t p1)
+  (c: check_precond_t p1 precond)
+  (inv: memory_invariant)
+: EWrite unit p1 (fun _ -> p1) precond (fun vin _ vout -> vin == vout /\ precond vin) (fun vin -> ~ (precond vin)) inv
+= EWrite?.reflect (check_precond_repr p1 precond c inv)
