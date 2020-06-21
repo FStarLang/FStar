@@ -51,43 +51,59 @@ let pure_wp_mono
 = (forall (p q:pure_post a).
      (forall (x:a). p x ==> q x) ==> (wp p ==> wp q))
 
+noeq
+type result (a: Type u#x) : Type u#x =
+| Correct of a
+| Error of string
+
+let pure_post_err
+  (pre: pure_pre)
+: Tot Type
+= squash pre -> GTot Type0
+
 inline_for_extraction
-let read_repr_spec (a:Type u#x) (pre: pure_pre) (post: pure_post' a pre) : Tot (Type u#x) =
+let read_repr_spec (a:Type u#x) (pre: pure_pre) (post: pure_post' a pre) (post_err: pure_post_err pre)  : Tot (Type u#x) =
   unit ->
-  Ghost a
+  Ghost (result a)
   (requires pre)
-  (ensures (fun v -> post v))
+  (ensures (fun res ->
+    match res with
+    | Correct v -> post v
+    | Error _ -> post_err ()
+  ))
 
 inline_for_extraction
 val read_repr_impl
   (a:Type u#x)
   (pre: pure_pre)
   (post: pure_post' a pre)
+  (post_err: pure_post_err pre)
   (l: memory_invariant)
-  (spec: read_repr_spec a pre post)
+  (spec: read_repr_spec a pre post post_err)
 : Tot Type0
 
 let read_repr
   (a:Type u#x)
   (pre: pure_pre)
   (post: pure_post' a pre)
+  (post_err: pure_post_err pre)
   (l: memory_invariant)
-= dtuple2 _ (read_repr_impl a pre post l)
+= dtuple2 _ (read_repr_impl a pre post post_err l)
 
 let read_return_spec
   (a:Type) (x:a)
-: Tot (read_repr_spec a True (fun res -> res == x))
-= fun _ -> x
+: Tot (read_repr_spec a True (fun res -> res == x) (fun _ -> False))
+= fun _ -> Correct x
 
 inline_for_extraction
 val read_return_impl
   (a:Type) (x:a) (inv: memory_invariant)
-: Tot (read_repr_impl a True (fun res -> res == x) inv (read_return_spec a x))
+: Tot (read_repr_impl a True (fun res -> res == x) (fun _ -> False) inv (read_return_spec a x))
 
 inline_for_extraction
 let read_return
   (a:Type) (x:a) (inv: memory_invariant)
-: Tot (read_repr a True (fun res -> res == x) inv)
+: Tot (read_repr a True (fun res -> res == x) (fun _ -> False) inv)
 = (| read_return_spec a x, read_return_impl a x inv |)
 
 let read_bind_pre
@@ -105,90 +121,110 @@ let read_bind_post
 = fun y ->
   exists x . pre_f /\ post_f x /\ post_g x y
 
+let read_bind_post_err
+  (a:Type)
+  (pre_f: pure_pre) (post_f: pure_post' a pre_f)
+  (post_err_f: pure_post_err pre_f)
+  (pre_g: (x:a) -> pure_pre)
+  (post_err_g: (x: a) -> pure_post_err (pre_g x))
+: Tot (pure_post_err (read_bind_pre a pre_f post_f pre_g))
+= fun _ ->
+  pre_f /\ (post_err_f () \/ (exists x . post_f x /\ post_err_g x ()))
+
 let read_bind_spec
   (a:Type) (b:Type)
   (pre_f: pure_pre) (post_f: pure_post' a pre_f)
+  (post_err_f: pure_post_err pre_f)
   (pre_g: (x:a) -> pure_pre) (post_g: (x:a) -> pure_post' b (pre_g x))
-  (f_bind_spec: read_repr_spec a pre_f post_f)
-  (g:(x:a -> read_repr_spec b (pre_g x) (post_g x)))
-: Tot (read_repr_spec b (read_bind_pre a pre_f post_f pre_g) (read_bind_post a b pre_f post_f pre_g post_g))
-= fun _ -> g (f_bind_spec ()) ()
+  (post_err_g: (x: a) -> pure_post_err (pre_g x))
+  (f_bind_spec: read_repr_spec a pre_f post_f post_err_f)
+  (g:(x:a -> read_repr_spec b (pre_g x) (post_g x) (post_err_g x)))
+: Tot (read_repr_spec b (read_bind_pre a pre_f post_f pre_g) (read_bind_post a b pre_f post_f pre_g post_g) (read_bind_post_err a pre_f post_f post_err_f pre_g post_err_g))
+= fun _ ->
+  match f_bind_spec () with
+  | Correct a -> g a ()
+  | Error e -> Error e
 
 inline_for_extraction
 val read_bind_impl
   (a:Type) (b:Type)
   (pre_f: pure_pre) (post_f: pure_post' a pre_f)
+  (post_err_f: pure_post_err pre_f)
   (pre_g: (x:a) -> pure_pre) (post_g: (x:a) -> pure_post' b (pre_g x))
-  (f_bind_impl: read_repr_spec a pre_f post_f)
-  (g:(x:a -> read_repr_spec b (pre_g x) (post_g x)))
+  (post_err_g: (x: a) -> pure_post_err (pre_g x))
+  (f_bind_impl: read_repr_spec a pre_f post_f post_err_f)
+  (g:(x:a -> read_repr_spec b (pre_g x) (post_g x) (post_err_g x)))
   (l: memory_invariant)
-  (f' : read_repr_impl a pre_f post_f l f_bind_impl)
-  (g' : (x: a -> read_repr_impl b (pre_g x) (post_g x) l (g x)))
-: Tot (read_repr_impl b (read_bind_pre a pre_f post_f pre_g) (read_bind_post a b pre_f post_f pre_g post_g) l (read_bind_spec a b pre_f post_f pre_g post_g f_bind_impl g))
+  (f' : read_repr_impl a pre_f post_f post_err_f l f_bind_impl)
+  (g' : (x: a -> read_repr_impl b (pre_g x) (post_g x) (post_err_g x) l (g x)))
+: Tot (read_repr_impl b (read_bind_pre a pre_f post_f pre_g) (read_bind_post a b pre_f post_f pre_g post_g) (read_bind_post_err a pre_f post_f post_err_f pre_g post_err_g) l (read_bind_spec a b pre_f post_f post_err_f pre_g post_g post_err_g f_bind_impl g))
 
 inline_for_extraction
 let read_bind
   (a:Type) (b:Type)
   (pre_f: pure_pre) (post_f: pure_post' a pre_f)
+  (post_err_f: pure_post_err pre_f)
   (pre_g: (x:a) -> pure_pre) (post_g: (x:a) -> pure_post' b (pre_g x))
+  (post_err_g: (x: a) -> pure_post_err (pre_g x))
   (l: memory_invariant)
-  (f_bind : read_repr a pre_f post_f l)
-  (g : (x: a -> read_repr b (pre_g x) (post_g x) l))
-: Tot (read_repr b (read_bind_pre a pre_f post_f pre_g) (read_bind_post a b pre_f post_f pre_g post_g) l)
-= (| _, read_bind_impl a b pre_f post_f pre_g post_g (dfst f_bind) (fun x -> dfst (g x)) l (dsnd f_bind) (fun x -> dsnd (g x)) |)
+  (f_bind : read_repr a pre_f post_f post_err_f l)
+  (g : (x: a -> read_repr b (pre_g x) (post_g x) (post_err_g x) l))
+: Tot (read_repr b (read_bind_pre a pre_f post_f pre_g) (read_bind_post a b pre_f post_f pre_g post_g) (read_bind_post_err a pre_f post_f post_err_f pre_g post_err_g) l)
+= (| _, read_bind_impl a b pre_f post_f post_err_f pre_g post_g post_err_g (dfst f_bind) (fun x -> dfst (g x)) l (dsnd f_bind) (fun x -> dsnd (g x)) |)
 
 unfold
 let read_subcomp_spec_cond
   (a:Type)
-  (pre: pure_pre) (post: pure_post' a pre)
-  (pre': pure_pre) (post': pure_post' a pre')
+  (pre: pure_pre) (post: pure_post' a pre) (post_err: pure_post_err pre)
+  (pre': pure_pre) (post': pure_post' a pre') (post_err': pure_post_err pre')
 : GTot Type0
 = (pre' ==> pre) /\
-  (forall x . (pre' /\ post x) ==> post' x)
+  (forall x . (pre' /\ post x) ==> post' x) /\
+  ((pre' /\ post_err ()) ==> post_err' ())
 
 unfold
 let read_subcomp_cond
   (a:Type)
-  (pre: pure_pre) (post: pure_post' a pre)
-  (pre': pure_pre) (post': pure_post' a pre')
+  (pre: pure_pre) (post: pure_post' a pre) (post_err: pure_post_err pre)
+  (pre': pure_pre) (post': pure_post' a pre') (post_err': pure_post_err pre')
   (l: memory_invariant)
   (l' : memory_invariant)
 : GTot Type0
 = l `memory_invariant_includes` l' /\
-  read_subcomp_spec_cond a pre post pre' post'
+  read_subcomp_spec_cond a pre post post_err pre' post' post_err'
 
 let read_subcomp_spec (a:Type)
-  (pre: pure_pre) (post: pure_post' a pre)
-  (pre': pure_pre) (post': pure_post' a pre')
-  (f_subcomp:read_repr_spec a pre post)
-: Pure (read_repr_spec a pre' post')
-  (requires (read_subcomp_spec_cond a pre post pre' post'))
+  (pre: pure_pre) (post: pure_post' a pre) (post_err: pure_post_err pre)
+  (pre': pure_pre) (post': pure_post' a pre') (post_err': pure_post_err pre')
+  (f_subcomp:read_repr_spec a pre post post_err)
+: Pure (read_repr_spec a pre' post' post_err')
+  (requires (read_subcomp_spec_cond a pre post post_err pre' post' post_err'))
   (ensures (fun _ -> True))
 = (fun x -> f_subcomp x)
 
 inline_for_extraction
 val read_subcomp_impl (a:Type)
-  (pre: pure_pre) (post: pure_post' a pre)
-  (pre': pure_pre) (post': pure_post' a pre')
+  (pre: pure_pre) (post: pure_post' a pre) (post_err: pure_post_err pre)
+  (pre': pure_pre) (post': pure_post' a pre') (post_err': pure_post_err pre')
   (l:memory_invariant)
   (l' : memory_invariant)
-  (f_subcomp_spec:read_repr_spec a pre post)
-  (f_subcomp:read_repr_impl a pre post l f_subcomp_spec)
-  (sq: squash (read_subcomp_cond a pre post pre' post' l l'))
-: Tot (read_repr_impl a pre' post' l' (read_subcomp_spec a pre post pre' post' f_subcomp_spec))
+  (f_subcomp_spec:read_repr_spec a pre post post_err)
+  (f_subcomp:read_repr_impl a pre post post_err l f_subcomp_spec)
+  (sq: squash (read_subcomp_cond a pre post post_err pre' post' post_err' l l'))
+: Tot (read_repr_impl a pre' post' post_err' l' (read_subcomp_spec a pre post post_err pre' post' post_err' f_subcomp_spec))
 
 inline_for_extraction
 let read_subcomp (a:Type)
-  (pre: pure_pre) (post: pure_post' a pre)
-  (pre': pure_pre) (post': pure_post' a pre')
+  (pre: pure_pre) (post: pure_post' a pre) (post_err: pure_post_err pre)
+  (pre': pure_pre) (post': pure_post' a pre') (post_err': pure_post_err pre')
   (l:memory_invariant)
   (l' : memory_invariant)
-  (f_subcomp:read_repr a pre post l)
-: Pure (read_repr a pre' post' l')
-  (requires (read_subcomp_cond a pre post pre' post' l l'))
+  (f_subcomp:read_repr a pre post post_err l)
+: Pure (read_repr a pre' post' post_err' l')
+  (requires (read_subcomp_cond a pre post post_err pre' post' post_err' l l'))
   (ensures (fun _ -> True))
-= (| read_subcomp_spec a pre post pre' post' (dfst f_subcomp),
-     read_subcomp_impl a pre post pre' post' l l' (dfst f_subcomp) (dsnd f_subcomp) ()
+= (| read_subcomp_spec a pre post post_err pre' post' post_err' (dfst f_subcomp),
+     read_subcomp_impl a pre post post_err pre' post' post_err' l l' (dfst f_subcomp) (dsnd f_subcomp) ()
   |)
 
 let read_if_then_else_pre
@@ -208,20 +244,32 @@ let read_if_then_else_post
   (p ==> post_f x) /\
   ((~ p) ==> post_g x)
 
+let read_if_then_else_post_err
+  (pre_f pre_g: pure_pre)
+  (post_err_f: pure_post_err pre_f)
+  (post_err_g: pure_post_err pre_g)
+  (p:Type0)
+: Tot (pure_post_err (read_if_then_else_pre pre_f pre_g p))
+= fun _ ->
+  (p ==> post_err_f ()) /\
+  ((~ p) ==> post_err_g ())
+
 let read_if_then_else (a:Type)
   (pre_f pre_g: pure_pre)
   (post_f: pure_post' a pre_f)
   (post_g: pure_post' a pre_g)
+  (post_err_f: pure_post_err pre_f)
+  (post_err_g: pure_post_err pre_g)
   (l:memory_invariant)
-  (f_ifthenelse:read_repr a pre_f post_f l)
-  (g:read_repr a pre_g post_g l)
+  (f_ifthenelse:read_repr a pre_f post_f post_err_f l)
+  (g:read_repr a pre_g post_g post_err_g l)
   (p:Type0)
 : Tot Type
-= read_repr a (read_if_then_else_pre pre_f pre_g p) (read_if_then_else_post a pre_f pre_g post_f post_g p) l
+= read_repr a (read_if_then_else_pre pre_f pre_g p) (read_if_then_else_post a pre_f pre_g post_f post_g p) (read_if_then_else_post_err pre_f pre_g post_err_f post_err_g p) l
 
 reifiable reflectable total
 layered_effect {
-  Read : a:Type -> (pre: pure_pre) -> (post: pure_post' a pre) -> (memory_invariant) -> Effect
+  ERead : a:Type -> (pre: pure_pre) -> (post: pure_post' a pre) -> (post_err: pure_post_err pre) -> (memory_invariant) -> Effect
   with
   repr = read_repr;
   return = read_return;
@@ -230,38 +278,51 @@ layered_effect {
   if_then_else = read_if_then_else
 }
 
+effect Read
+  (a:Type)
+  (pre: pure_pre)
+  (post: pure_post' a pre)
+  (inv: memory_invariant)
+= ERead a pre post (fun _ -> False) inv
+
 unfold
 let lift_pure_read_pre
   (a:Type) (wp:pure_wp a { pure_wp_mono a wp })
 : Tot pure_pre
 = wp (fun _ -> True)
 
-unfold
+// unfold
 let lift_pure_read_post
   (a:Type) (wp:pure_wp a { pure_wp_mono a wp })
 : Tot (pure_post' a (lift_pure_read_pre a wp))
 = fun x -> ~ (wp (fun x' -> ~ (x == x')))
 
+// unfold
+let lift_pure_read_post_err
+  (a:Type) (wp:pure_wp a { pure_wp_mono a wp })
+: Tot (pure_post_err (lift_pure_read_pre a wp))
+= fun x -> False
+
 let lift_pure_read_spec
   (a:Type) (wp:pure_wp a { pure_wp_mono a wp }) (f_pure_spec:unit -> PURE a wp)
-: Tot (read_repr_spec a (lift_pure_read_pre a wp) (lift_pure_read_post a wp))
-= fun () -> f_pure_spec ()
+: Tot (read_repr_spec a (lift_pure_read_pre a wp) (lift_pure_read_post a wp) (lift_pure_read_post_err a wp))
+= fun () -> Correct (f_pure_spec ())
 
 inline_for_extraction
 val lift_pure_read_impl
   (a:Type) (wp:pure_wp a { pure_wp_mono a wp })
   (f_pure_spec_for_impl:unit -> PURE a wp)
   (l: memory_invariant)
-: Tot (read_repr_impl a (lift_pure_read_pre a wp) (fun x -> lift_pure_read_post a wp x) l (lift_pure_read_spec a wp f_pure_spec_for_impl))
+: Tot (read_repr_impl a (lift_pure_read_pre a wp) (fun x -> lift_pure_read_post a wp x) (lift_pure_read_post_err a wp) l (lift_pure_read_spec a wp f_pure_spec_for_impl))
 
 inline_for_extraction
 let lift_pure_read (a:Type) (wp:pure_wp a { pure_wp_mono a wp })
   (l: memory_invariant)
   (f_pure:unit -> PURE a wp)
-: Tot (read_repr a (lift_pure_read_pre a wp) (fun x -> lift_pure_read_post a wp x) l)
+: Tot (read_repr a (lift_pure_read_pre a wp) (fun x -> lift_pure_read_post a wp x) (lift_pure_read_post_err a wp) l)
 = (| lift_pure_read_spec a wp f_pure, lift_pure_read_impl a wp f_pure l |)
 
-sub_effect PURE ~> Read = lift_pure_read
+sub_effect PURE ~> ERead = lift_pure_read
 
 inline_for_extraction
 val rptr: Type0
@@ -278,7 +339,7 @@ val deref_impl
   (#inv: memory_invariant)
   (r: leaf_reader p)
   (x: ptr p inv)
-: Tot (read_repr_impl (dfst p) True (fun res -> res == deref_spec x) inv (fun _ -> deref_spec x))
+: Tot (read_repr_impl (dfst p) True (fun res -> res == deref_spec x) (fun _ -> False) inv (fun _ -> Correct (deref_spec x)))
 
 inline_for_extraction
 let deref_repr
@@ -286,8 +347,8 @@ let deref_repr
   (#inv: memory_invariant)
   (r: leaf_reader p)
   (x: ptr p inv)
-: Tot (read_repr (dfst p) True (fun res -> res == deref_spec x) inv)
-= (| (fun _ -> deref_spec x), deref_impl r x |)
+: Tot (read_repr (dfst p) True (fun res -> res == deref_spec x) (fun _ -> False) inv)
+= (| (fun _ -> Correct (deref_spec x)), deref_impl r x |)
 
 inline_for_extraction
 let deref
@@ -316,7 +377,7 @@ val access_impl
   (#g: gaccessor p1 p2 lens)
   (a: accessor g)
   (x: ptr p1 inv)
-: Tot (read_repr_impl (ptr p2 inv) (lens.clens_cond (deref_spec x)) (fun res -> deref_spec res == lens.clens_get (deref_spec x)) inv (fun _ -> access_spec g x))
+: Tot (read_repr_impl (ptr p2 inv) (lens.clens_cond (deref_spec x)) (fun res -> deref_spec res == lens.clens_get (deref_spec x)) (fun _ -> False) inv (fun _ -> Correct (access_spec g x)))
 
 inline_for_extraction
 let access_repr
@@ -326,8 +387,8 @@ let access_repr
   (#g: gaccessor p1 p2 lens)
   (a: accessor g)
   (x: ptr p1 inv)
-: Tot (read_repr (ptr p2 inv) (lens.clens_cond (deref_spec x)) (fun res -> deref_spec res == lens.clens_get (deref_spec x)) inv)
-= (| (fun _ -> access_spec g x), access_impl a x |)
+: Tot (read_repr (ptr p2 inv) (lens.clens_cond (deref_spec x)) (fun res -> deref_spec res == lens.clens_get (deref_spec x)) (fun _ -> False) inv)
+= (| (fun _ -> Correct (access_spec g x)), access_impl a x |)
 
 inline_for_extraction
 let access
@@ -340,7 +401,7 @@ let access
 : Read (ptr p2 inv) (lens.clens_cond (deref_spec x)) (fun res -> deref_spec res == lens.clens_get (deref_spec x)) inv
 = Read?.reflect (access_repr a x)
 
-unfold
+// unfold
 let validate_pre
   (inv: memory_invariant)
   (b: B.buffer U8.t)
@@ -349,25 +410,29 @@ let validate_pre
   inv.lread `B.loc_includes` B.loc_buffer b /\
   B.live inv.h0 b
 
-unfold
+// unfold
 let validate_post
   (p: parser)
   (inv: memory_invariant)
   (b: B.buffer U8.t)
-: Tot (pure_post' (option (ptr p inv & U32.t)) (validate_pre inv b))
-= fun res ->
-  match res with
-  | None ->
-    forall pos . ~ (valid_pos p inv.h0 b 0ul pos)
-  | Some (x, pos) ->
+: Tot (pure_post' (ptr p inv & U32.t) (validate_pre inv b))
+= fun (x, pos) ->
     valid_pos p inv.h0 b 0ul pos /\
     deref_spec x == contents p inv.h0 b 0ul pos
+
+// unfold
+let validate_post_err
+  (p: parser)
+  (inv: memory_invariant)
+  (b: B.buffer U8.t)
+: Tot (pure_post_err (validate_pre inv b))
+= fun _ -> forall pos . ~ (valid_pos p inv.h0 b 0ul pos)
 
 val validate_spec
   (p: parser)
   (inv: memory_invariant)
   (b: B.buffer U8.t)
-: Tot (read_repr_spec (option (ptr p inv & U32.t)) (validate_pre inv b) (validate_post p inv b))
+: Tot (read_repr_spec (ptr p inv & U32.t) (validate_pre inv b) (validate_post p inv b) (validate_post_err p inv b))
 
 inline_for_extraction
 val validate_impl
@@ -376,7 +441,7 @@ val validate_impl
   (inv: memory_invariant)
   (b: B.buffer U8.t)
   (len: U32.t { B.len b == len })
-: Tot (read_repr_impl _ _ _ inv (validate_spec p inv b))
+: Tot (read_repr_impl _ _ _ _ inv (validate_spec p inv b))
 
 inline_for_extraction
 let validate_repr
@@ -385,7 +450,7 @@ let validate_repr
   (inv: memory_invariant)
   (b: B.buffer U8.t)
   (len: U32.t { B.len b == len })
-: Tot (read_repr (option (ptr p inv & U32.t)) (validate_pre inv b) (validate_post p inv b) inv)
+: Tot (read_repr (ptr p inv & U32.t) (validate_pre inv b) (validate_post p inv b) (validate_post_err p inv b) inv)
 = (| _, validate_impl v inv b len |)
 
 inline_for_extraction
@@ -395,8 +460,8 @@ let validate
   (inv: memory_invariant)
   (b: B.buffer U8.t)
   (len: U32.t { B.len b == len })
-: Read (option (ptr p inv & U32.t)) (validate_pre inv b) (validate_post p inv b) inv
-= Read?.reflect (validate_repr v inv b len)
+: ERead (ptr p inv & U32.t) (validate_pre inv b) (validate_post p inv b) (validate_post_err p inv b) inv
+= ERead?.reflect (validate_repr v inv b len)
 
 
 let pre_t
@@ -417,11 +482,6 @@ let post_err_t
   (pre: pre_t rin)
 : Tot Type
 = (x: dfst rin { pre x }) -> GTot Type0
-
-noeq
-type result (a: Type u#x) : Type u#x =
-| Correct of a
-| Error of string
 
 inline_for_extraction
 let repr_spec (a:Type u#x) (r_in: parser) (r_out:a -> parser) (pre: pre_t r_in) (post: post_t a r_in r_out pre) (post_err: post_err_t r_in pre) : Tot (Type u#x) =
@@ -744,40 +804,47 @@ let lift_read_post
 
 let lift_read_post_err
   (pre: pure_pre)
+  (post_err: pure_post_err pre)
   (r: parser)
 : Tot (post_err_t r (lift_read_pre pre r))
-= fun st -> False
+= fun st -> post_err ()
 
 let lift_read_spec
   (a: Type)
   (pre: pure_pre)
   (post: pure_post' a pre)
+  (post_err: pure_post_err pre)
   (inv: memory_invariant)
   (r: parser)
-  (f_read_spec: read_repr a pre post inv)
-: Tot (repr_spec a r (fun _ -> r) (lift_read_pre pre r) (lift_read_post a pre post r) (lift_read_post_err pre r))
-= fun st -> Correct (| dfst f_read_spec (), st |)
+  (f_read_spec: read_repr a pre post post_err inv)
+: Tot (repr_spec a r (fun _ -> r) (lift_read_pre pre r) (lift_read_post a pre post r) (lift_read_post_err pre post_err r))
+= fun st -> 
+  match dfst f_read_spec () with
+  | Correct res -> Correct (| res, st |)
+  | Error e -> Error e
 
 val lift_read_impl
   (a: Type)
   (pre: pure_pre)
   (post: pure_post' a pre)
+  (post_err: pure_post_err pre)
   (inv: memory_invariant)
   (r: parser)
-  (f_read_spec: read_repr a pre post inv)
-: Tot (repr_impl a r (fun _ -> r) (lift_read_pre pre r) (lift_read_post a pre post r) (lift_read_post_err pre r) inv (lift_read_spec a pre post inv r f_read_spec))
+  (f_read_spec: read_repr a pre post post_err inv)
+: Tot (repr_impl a r (fun _ -> r) (lift_read_pre pre r) (lift_read_post a pre post r) (lift_read_post_err pre post_err r) inv (lift_read_spec a pre post post_err inv r f_read_spec))
 
 let lift_read
   (a: Type)
   (pre: pure_pre)
   (post: pure_post' a pre)
+  (post_err: pure_post_err pre)
   (inv: memory_invariant)
   (r: parser)
-  (f_read_spec: read_repr a pre post inv)
-: Tot (repr a r (fun _ -> r) (lift_read_pre pre r) (lift_read_post a pre post r) (lift_read_post_err pre r) inv)
-= (| lift_read_spec a pre post inv r f_read_spec, lift_read_impl a pre post inv r f_read_spec |)
+  (f_read_spec: read_repr a pre post post_err inv)
+: Tot (repr a r (fun _ -> r) (lift_read_pre pre r) (lift_read_post a pre post r) (lift_read_post_err pre post_err r) inv)
+= (| lift_read_spec a pre post post_err inv r f_read_spec, lift_read_impl a pre post post_err inv r f_read_spec |)
 
-sub_effect Read ~> EWrite = lift_read
+sub_effect ERead ~> EWrite = lift_read
 
 unfold
 let destr_repr_spec
@@ -984,12 +1051,14 @@ let write_two_ints_ifthenelse
   (l: memory_invariant)
   (x y: U32.t)
 : Write unit emp (fun _ -> parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ (x', y') -> x' == x /\ y' == (if U32.v x < U32.v y then x else y)) l
-= start write_u32 x;
-  if x `U32.lt` y
-  then
+= if x `U32.lt` y
+  then begin
+    start write_u32 x;
     append write_u32 x
-  else
+  end else begin
+    start write_u32 x;
     append write_u32 y
+  end
 
 let write_two_ints_ifthenelse_2_aux
   (l: memory_invariant)

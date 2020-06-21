@@ -26,10 +26,10 @@ module U32 = FStar.UInt32
 module HST = FStar.HyperStack.ST
 
 let read_repr_impl
-  a pre post l spec
+  a pre post post_err l spec
 =
   unit ->
-  HST.Stack a
+  HST.Stack (result a)
   (requires (fun h ->
     B.modifies l.lwrite l.h0 h /\
     pre
@@ -41,24 +41,25 @@ let read_repr_impl
 
 let read_return_impl
   a x inv
-= fun _ -> x
+= fun _ -> Correct x
 
 let read_bind_impl
-  a b pre_f post_f pre_g post_g f_bind_impl g l f' g'
+  a b pre_f post_f post_err_f pre_g post_g post_err_g f_bind_impl g l f' g'
 =
   fun _ ->
-  let x = f' () in
-  g' x ()
+  match f' () with
+  | Correct x -> g' x ()
+  | Error e -> Error e
 
 let read_subcomp_impl
-  a pre post pre' post' l l' f_subcomp_spec f_subcomp sq
+  a pre post post_err pre' post' post_err' l l' f_subcomp_spec f_subcomp sq
 =
   fun _ -> f_subcomp ()
 
 let lift_pure_read_impl
   a wp f_pure_spec_for_impl l
 =
-  fun _ -> f_pure_spec_for_impl ()
+  fun _ -> Correct (f_pure_spec_for_impl ())
 
 noeq
 type rptr = {
@@ -82,7 +83,7 @@ let deref_impl
 =
   let h = HST.get () in
   valid_frame p inv.h0 x.rptr_base 0ul (B.len x.rptr_base) inv.lwrite h;
-  r x.rptr_base x.rptr_len
+  Correct (r x.rptr_base x.rptr_len)
 
 let access_spec
   #p1 #p2 #lens #inv g x
@@ -100,17 +101,17 @@ let access_impl
   let h' = HST.get () in
   gaccessor_frame g inv.h0 x.rptr_base inv.lwrite h;
   gaccessor_frame g inv.h0 x.rptr_base inv.lwrite h';
-  { rptr_base = base'; rptr_len = len' }
+  Correct ({ rptr_base = base'; rptr_len = len' })
 
 let validate_spec
   p inv b
 = fun _ ->
   match gvalidate p inv.h0 b with
-  | None -> None
+  | None -> Error "validation failed"
   | Some pos ->
     let b' = B.gsub b 0ul pos in
     let x = { rptr_base = b' ; rptr_len = pos } in
-    Some (x, pos)
+    Correct (x, pos)
 
 let valid_frame'
   (p: parser)
@@ -144,11 +145,11 @@ let validate_impl
   Classical.forall_intro (valid_frame' p inv.h0 b 0ul inv.lwrite h2);
   gvalidate_frame p inv.h0 b inv.lwrite h2;
   match res with
-  | None -> None
+  | None -> Error "validation failed"
   | Some pos ->
     let b' = B.sub b 0ul pos in
     let x = { rptr_base = b' ; rptr_len = pos } in
-    Some (x, pos)
+    Correct (x, pos)
 
 noeq
 type iresult (a: Type u#x) : Type u#x =
@@ -295,14 +296,16 @@ let lift_pure_impl
 *)
 
 let lift_read_impl
-  a pre post inv r f_read_spec
+  a pre post post_err inv r f_read_spec
 =
   fun b len pos ->
     let h = HST.get () in
-    let res = dsnd f_read_spec () in
+    let rres = dsnd f_read_spec () in
     let h' = HST.get () in
     valid_frame r h b 0ul pos B.loc_none h';
-    ICorrect res pos
+    match rres with
+    | Correct res -> ICorrect res pos
+    | Error e -> IError e
 
 inline_for_extraction
 let frame_impl
@@ -329,7 +332,7 @@ let frame_impl
     valid_star frame (p x) h' buf 0ul pos pos' ;
     ICorrect x pos'
 
-#push-options "--z3rlimit 64"
+#push-options "--z3rlimit 128"
 
 let elem_writer_impl
   #p w l x
@@ -352,6 +355,8 @@ let recast_writer_impl
   (f: unit -> EWrite a r_in r_out pre post post_err l)
 : Tot (repr_impl a r_in r_out pre (recast_writer_post a r_in r_out pre post post_err l f) (recast_writer_post_err a r_in r_out pre post post_err l f) l (recast_writer_spec a r_in r_out pre post post_err l f))
 = fun b len pos -> destr_repr_impl a r_in r_out pre post post_err l f b len pos
+
+#restart-solver
 
 inline_for_extraction
 let frame2_impl
