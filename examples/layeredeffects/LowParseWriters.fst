@@ -82,6 +82,10 @@ let deref_spec
 =
   buffer_contents p inv.h0 x.rptr_base
 
+let valid_rptr_frame
+  #p #inv x inv'
+= valid_frame p inv.h0 x.rptr_base 0ul (B.len x.rptr_base) inv.lwrite inv'.h0
+
 let deref_impl
   #p #inv r x _
 =

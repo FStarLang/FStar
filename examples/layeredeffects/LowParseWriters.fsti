@@ -362,6 +362,21 @@ let ptr (p: parser) (inv: memory_invariant) =
 
 val deref_spec (#p: parser) (#inv: memory_invariant) (x: ptr p inv) : GTot (dfst p)
 
+val valid_rptr_frame
+  (#p: parser) (#inv: memory_invariant) (x: ptr p inv) (inv' : memory_invariant)
+: Lemma
+  (requires (
+    inv `memory_invariant_includes` inv'
+  ))
+  (ensures (
+    valid_rptr p inv' x /\
+    deref_spec #p #inv' x == deref_spec #p #inv x
+  ))
+  [SMTPatOr [
+    [SMTPat (inv `memory_invariant_includes` inv'); SMTPat (valid_rptr p inv x)];
+    [SMTPat (inv `memory_invariant_includes` inv'); SMTPat (valid_rptr p inv' x)];
+  ]]
+
 inline_for_extraction
 val deref_impl
   (#p: parser)
