@@ -178,7 +178,8 @@ let repr_impl_post
   (h' : HS.mem)
 : GTot Type0
 = 
-    valid_pos r_in h b 0ul pos1 /\ (
+    valid_pos r_in h b 0ul pos1 /\
+    B.modifies (B.loc_buffer b) h h' /\ (
     let v_in = contents r_in h b 0ul pos1 in
     pre v_in /\
     begin match spec v_in, res with
@@ -186,17 +187,14 @@ let repr_impl_post
       U32.v pos1 <= U32.v pos2 /\
       valid_pos (r_out) h' b 0ul pos2 /\
       v' == v /\
-      v_out == contents (r_out) h' b 0ul pos2 /\
-      B.modifies (B.loc_buffer_from_to b 0ul pos2) h h'
+      v_out == contents (r_out) h' b 0ul pos2
     | Correct (v, v_out), IOverflow ->
-      size (r_out) v_out > B.length b /\
-      B.modifies (B.loc_buffer b) h h'
+      size (r_out) v_out > B.length b
     | Error s, IError s' ->
-      s == s' /\
-      B.modifies (B.loc_buffer b) h h'
+      s == s'
     | Error _, IOverflow ->
       (* overflow happened in implementation before specification could reach error *)
-      B.modifies (B.loc_buffer b) h h'
+      True
     | _ -> False
     end
   )
@@ -236,25 +234,6 @@ let return_impl
   (l: memory_invariant)
 : Tot (repr_impl a (r) r (return_pre a x r) (return_post a x r) (return_post_err a x r) l (return_spec a x r))
 = fun b len pos1 -> ICorrect x pos1
-
-let loc_includes_loc_buffer_loc_buffer_from_to
-  (#a: _) (#rrel #rel: _)
-  (b: B.mbuffer a rrel rel)
-  (from to: U32.t)
-: Lemma
-  (B.loc_includes (B.loc_buffer b) (B.loc_buffer_from_to b from to))
-  [SMTPat (B.loc_includes (B.loc_buffer b) (B.loc_buffer_from_to b from to))]
-= B.loc_includes_loc_buffer_loc_buffer_from_to b from to
-
-let loc_includes_loc_buffer_from_to
-  (#a: _) (#rrel #rel: _)
-  (b: B.mbuffer a rrel rel)
-  (from1 to1 from2 to2: U32.t)
-: Lemma
-  (requires (U32.v from1 <= U32.v from2 /\ U32.v to2 <= U32.v to1))
-  (ensures (B.loc_includes (B.loc_buffer_from_to b from1 to1) (B.loc_buffer_from_to b from2 to2)))
-  [SMTPat (B.loc_includes (B.loc_buffer_from_to b from1 to1) (B.loc_buffer_from_to b from2 to2))]
-= B.loc_includes_loc_buffer_from_to b from1 to1 from2 to2
 
 inline_for_extraction
 let bind_impl
@@ -331,8 +310,8 @@ let frame_impl
   | ICorrect x wlen ->
     let h' = HST.get () in
     let pos' = pos `U32.add` wlen in
-    B.loc_disjoint_loc_buffer_from_to buf 0ul pos pos wlen;
-    valid_frame frame h buf 0ul pos (B.loc_buffer_from_to buf' 0ul wlen) h';
+    B.loc_disjoint_loc_buffer_from_to buf 0ul pos pos (B.len buf');
+    valid_frame frame h buf 0ul pos (B.loc_buffer buf') h';
     valid_star frame (p) h' buf 0ul pos pos' ;
     ICorrect x pos'
 
@@ -382,8 +361,8 @@ let frame2_impl
   | ICorrect x wlen ->
     let h' = HST.get () in
     let pos' = pos2 `U32.add` wlen in
-    B.loc_disjoint_loc_buffer_from_to buf 0ul pos2 pos2 wlen;
-    valid_frame frame h buf 0ul pos2 (B.loc_buffer_from_to buf' 0ul wlen) h';
+    B.loc_disjoint_loc_buffer_from_to buf 0ul pos2 pos2 (B.len buf');
+    valid_frame frame h buf 0ul pos2 (B.loc_buffer buf') h';
     valid_star frame (p) h' buf 0ul pos2 pos' ;
     ICorrect x pos'
 
