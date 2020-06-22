@@ -82,6 +82,13 @@ let deref_spec
 =
   buffer_contents p inv.h0 x.rptr_base
 
+let mk_ptr
+  p inv b len
+= {
+  rptr_base = b;
+  rptr_len = len;
+}
+
 let valid_rptr_frame
   #p #inv x inv'
 = valid_frame p inv.h0 x.rptr_base 0ul (B.len x.rptr_base) inv.lwrite inv'.h0

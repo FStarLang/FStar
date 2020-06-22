@@ -379,6 +379,16 @@ let ptr (p: parser) (inv: memory_invariant) =
 
 val deref_spec (#p: parser) (#inv: memory_invariant) (x: ptr p inv) : GTot (dfst p)
 
+inline_for_extraction
+val mk_ptr
+  (p: parser)
+  (inv: memory_invariant)
+  (b: B.buffer u8)
+  (len: U32.t { len == B.len b })
+: Pure (ptr p inv)
+  (requires (valid_buffer p inv.h0 b /\ inv.lread `B.loc_includes` B.loc_buffer b))
+  (ensures (fun res -> deref_spec res == buffer_contents p inv.h0 b))
+
 val valid_rptr_frame
   (#p: parser) (#inv: memory_invariant) (x: ptr p inv) (inv' : memory_invariant)
 : Lemma
