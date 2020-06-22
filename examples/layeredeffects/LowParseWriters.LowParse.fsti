@@ -209,6 +209,21 @@ let leaf_writer
 
 val write_u32 : leaf_writer parse_u32
 
+val valid_star_inv_spec
+  (h: HS.mem)
+  (p1 p2: parser)
+  (b: B.buffer U8.t)
+  (pos1 pos3: U32.t)
+: Ghost U32.t
+  (requires (
+    valid_pos (p1 `star` p2) h b pos1 pos3
+  ))
+  (ensures (fun pos2 ->
+    valid_pos p1 h b pos1 pos2 /\
+    valid_pos p2 h b pos2 pos3 /\
+    contents (p1 `star` p2) h b pos1 pos3 == (contents p1 h b pos1 pos2, contents p2 h b pos2 pos3)
+  ))
+
 inline_for_extraction
 val valid_star_inv
   (p1 p2: parser)
@@ -221,6 +236,7 @@ val valid_star_inv
   ))
   (ensures (fun h pos2 h' ->
     B.modifies B.loc_none h h' /\
+    pos2 == valid_star_inv_spec h p1 p2 b pos1 pos3 /\
     valid_pos p1 h b pos1 pos2 /\
     valid_pos p2 h b pos2 pos3 /\
     contents (p1 `star` p2) h b pos1 pos3 == (contents p1 h b pos1 pos2, contents p2 h b pos2 pos3)

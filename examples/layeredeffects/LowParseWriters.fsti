@@ -1423,6 +1423,32 @@ let valid_synth
 : Write unit p1 (p2) precond (fun vin _ vout -> precond vin /\ f vin == vout) inv
 = EWrite?.reflect (valid_synth_repr p1 p2 precond f v inv)
 
+let valid_synth_star_assoc_1
+  (p1 p2 p3: parser)
+: Tot (valid_synth_t ((p1 `star` p2) `star` p3) (p1 `star` (p2 `star` p3)) (fun _ -> True) (fun ((x1, x2), x3) -> (x1, (x2, x3))))
+= {
+    valid_synth_valid = (fun h b pos pos' ->
+      let pos3 = valid_star_inv_spec h (p1 `star` p2) p3 b pos pos' in
+      let pos2 = valid_star_inv_spec h p1 p2 b pos pos3 in
+      valid_star p2 p3 h b pos2 pos3 pos';
+      valid_star p1 (p2 `star` p3) h b pos pos2 pos'
+    );
+    valid_synth_size = (fun _ -> ());
+  }
+
+let valid_synth_star_assoc_2
+  (p1 p2 p3: parser)
+: Tot (valid_synth_t (p1 `star` (p2 `star` p3)) ((p1 `star` p2) `star` p3) (fun _ -> True) (fun (x1, (x2, x3)) -> ((x1, x2), x3)))
+= {
+    valid_synth_valid = (fun h b pos pos' ->
+      let pos2 = valid_star_inv_spec h p1 (p2 `star` p3) b pos pos' in
+      let pos3 = valid_star_inv_spec h p2 p3 b pos2 pos' in
+      valid_star p1 p2 h b pos pos2 pos3;
+      valid_star (p1 `star` p2) p3 h b pos pos3 pos'
+    );
+    valid_synth_size = (fun _ -> ());
+  }
+
 let check_precond_t
   (p1: parser)
   (precond: pre_t p1)
