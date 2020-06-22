@@ -267,6 +267,7 @@ let read_if_then_else (a:Type)
 : Tot Type
 = read_repr a (read_if_then_else_pre pre_f pre_g p) (read_if_then_else_post a pre_f pre_g post_f post_g p) (read_if_then_else_post_err pre_f pre_g post_err_f post_err_g p) l
 
+[@@smt_reifiable_layered_effect]
 reifiable reflectable total
 layered_effect {
   ERead : a:Type -> (pre: pure_pre) -> (post: pure_post' a pre) -> (post_err: pure_post_err pre) -> (memory_invariant) -> Effect
@@ -854,6 +855,7 @@ let if_then_else (a:Type)
 : Tot Type
 = repr a r_in r_out (if_then_else_pre r_in pre_f pre_g p) (if_then_else_post a r_in r_out pre_f pre_g post_f post_g p) (if_then_else_post_err r_in pre_f pre_g post_err_f post_err_g p) l
 
+[@@smt_reifiable_layered_effect]
 reifiable reflectable total
 layered_effect {
   EWrite : a:Type -> (pin: parser) -> (pout: (parser)) -> (pre: pre_t pin) -> (post: post_t a pin pout pre) -> (post_err: post_err_t pin pre) -> (memory_invariant) -> Effect
@@ -1150,7 +1152,6 @@ let write_two_ints_2
 = start write_u32 x;
   append write_u32 y
 
-[@@ expect_failure ] // FIXME: WHY WHY WHY?
 let write_two_ints_2_lemma_1
   (l: memory_invariant)
   (x y: U32.t)
@@ -1158,7 +1159,6 @@ let write_two_ints_2_lemma_1
   (destr_repr_spec unit emp (parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ _ -> True) (fun _ -> False) l (write_two_ints_2 l x y) () == Correct ((), (x, y)) )
 = ()
 
-[@@ expect_failure ] // FIXME: WHY WHY WHY?
 let write_two_ints_2_lemma_2
   (l: memory_invariant)
   (x y: U32.t)
