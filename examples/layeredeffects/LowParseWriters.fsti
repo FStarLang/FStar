@@ -88,6 +88,28 @@ val read_repr_impl
   (spec: read_repr_spec a pre post post_err)
 : Tot Type0
 
+inline_for_extraction
+val mk_read_repr_impl
+  (a:Type u#x)
+  (pre: pure_pre)
+  (post: pure_post' a pre)
+  (post_err: pure_post_err pre)
+  (l: memory_invariant)
+  (spec: read_repr_spec a pre post post_err)
+  (impl: (
+    unit ->
+    HST.Stack (result a)
+    (requires (fun h ->
+      B.modifies l.lwrite l.h0 h /\
+      pre
+    ))
+    (ensures (fun h res h' ->
+      B.modifies B.loc_none h h' /\
+      res == spec ()
+    ))
+  ))
+: Tot (read_repr_impl a pre post post_err l spec)
+
 let read_repr
   (a:Type u#x)
   (pre: pure_pre)
