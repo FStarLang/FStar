@@ -296,6 +296,10 @@ val pure_star_interp (p:slprop u#a) (q:prop) (h:heap u#a)
 
 (***** Magic wand and implications properties *)
 
+
+val wand_elim (p q: slprop) (h: hheap (p `star` (p `wand` q)))
+  : Lemma (interp q h)
+
 (** We can define a [stronger] relation on [slprops], defined by interpretation implication *)
 let stronger (p q:slprop) =
   forall h. interp p h ==> interp q h

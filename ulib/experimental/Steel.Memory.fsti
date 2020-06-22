@@ -181,6 +181,12 @@ val star_congruence (p1 p2 p3 p4:slprop)
 val affine_star (p q:slprop) (m:mem)
   : Lemma ((interp (p `star` q) m ==> interp p m /\ interp q m))
 
+(***** Magic wand and implications properties *)
+
+
+val wand_elim (p q: slprop) (h: hmem (p `star` (p `wand` q)))
+  : Lemma (interp q h)
+
 (**** Memory invariants *)
 
 module S = FStar.Set

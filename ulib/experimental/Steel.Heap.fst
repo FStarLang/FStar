@@ -593,6 +593,7 @@ let pure_star_interp p q h = ()
 // wand & implications
 ////////////////////////////////////////////////////////////////////////////////
 
+let wand_elim p q h = ()
 let stronger_star p q r = ()
 let weaken (p q r:slprop) (h:heap u#a) = ()
 

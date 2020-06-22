@@ -17,308 +17,448 @@
 module Steel.ArrayStruct
 
 module SizeT = Steel.SizeT
-module DepMap = FStar.DependentMap
+module Map = FStar.Map
+
 
 open FStar.FunctionalExtensionality
 open Steel.PCM
+module PCMBase = Steel.PCM.Base
 
-/// The C language allows the definition of flat data structure composed of nested struts and arrays.
-/// These flat data structures are used everywhere in systems programming, as their size can be
-/// computed at compile time and they can be statically or stack-allocated. In the following, we will
-/// refer to these data structures as arraystructs.
+open Steel.Effect
+open Steel.Memory
+
+/// This module defines a mechanism for extracting arraystructs compatible with separation logic
+/// into C arraystructs via Kremlin. This is a rough sketch of Proposal 5 as described here
+/// https://github.com/FStarLang/FStar/wiki/Array-Structs-in-Steel
+
+#set-options "--fuel 0 --ifuel 0"
+
+
+(*** arraystruct types *)
+
+/// The core of proposal 5 is to define a grammar of attributes for memory actions that Kremlin can
+/// recognize and extract as C arraystruct manipulation primitives. As such, these extractable memory
+/// actions should operate on types that represent C arraystructs, like Seq.lseq for arrays or F* structs for structs.
+
+/// The types manipulated by extractable Steel programs have to be restrained to F* structs and Seq.lseq, because
+/// these translate to C structs and arrays. To let the user freely work on user-defined, high-level types while
+/// maintaining a connection to low-level extractable types, one can use the projection system that comes with Steel.
+
+(*
+  Ongoing example: foo_low is the low-level representation of [foo_view],
+  compatible with Kremlin extraction
+*)
+type u32_pair : Type u#1 = {
+  x: UInt32.t;
+  y: UInt32.t;
+}
+
+open FStar.Tactics
+
+(**
+  This tactics checks whether a declared type falls into the subset allowed by Kremlin.
+  Can also be done at extraction but less useful error messages
+*)
+let check_low (src: string) : Tac unit =
+  exact (`(()))
+
+(* Ongoing example : this check could be inserted via some metaprogramming or surface language *)
+let _ : unit  = _ by (check_low (`%u32_pair))
+
+(*** The attribute grammar in actions *)
+
+/// Let us now illustrate what the attribute language will look like by annotating memory actions,
+/// either generic for all low/view pairs or on our ongoing example [foo].
+
+open FStar.Tactics.Typeclasses
+
+(** We are going to use pre/post conditions for specifications in Steel, so we need this helper *)
+let href (#a: Type u#a) (#pcm: pcm a) (r: ref a pcm) : slprop u#a =
+  h_exists (pts_to r)
+
+(** Let us give a simple PCM for the pair *)
+let u32_pair_pcm : pcm (option u32_pair) = PCMBase.exclusive_pcm
+
+(** We don't bother proving the self-framedness of pre/postconditions in this sketch *)
+val admitted_post
+  (#a: Type) (#pre:slprop) (#post: a -> slprop)
+  (p:(hmem pre -> x:a -> hmem (post x) -> GTot prop))
+  : GTot (p:(hmem pre -> x:a -> hmem (post x) -> prop){respects_binary_fp p})
+
+val admitted_pre
+  (#pre:slprop)
+  (p:(hmem pre -> GTot prop))
+  : GTot (p:(hmem pre -> prop){respects_fp p})
+
+/// To ensure that the attribute grammar typechecks, we have to define dummy functions so that
+/// the names are recognized.
+
+val extract_update: unit -> Tot unit
+val extract_get: unit -> Tot unit
+val extract_explode: unit -> Tot unit
+val extract_recombine: unit -> Tot unit
+val op_String_Access : unit -> Tot unit
+val generic_index: unit -> Tot unit
+
+(**** update *)
+
+/// Let us also suppose that we want to update the [x] field of the pair, but the action actually
+/// takes the whole object. However, we only want
+/// this update to be extracted to an update of the [x] field in C. This is how we would write it:
+
+[@@ extract_update u32_pair.x]
+val update_x (r: ref (option u32_pair) u32_pair_pcm) (new_val: UInt32.t)
+    : Steel unit (href r) (fun _ -> href r)
+    (admitted_pre (fun h0 -> if Some? (sel r h0) then True else False)) (admitted_post (fun h0 _ h1 ->
+     Some? (sel r h1) /\ Some? (sel r h0) /\
+     Some?.v (sel r h1) == { Some?.v (sel r h0) with x = new_val }
+    ))
+
+/// What should the attribute `[@@extract_update u32_pair]` checks for the signature of
+/// `update_z` ?
+///  - `extract_update` means that `update_x` should have two arguments, the first being the
+///     reference and the second being the new value
+///  - `u32_pair` means that the reference should point to a option u32_pair
+///  - `x` can actually be a path into the low-level structs, a sequence of field accesses and
+///     array indexes. The type of the new value for update should correspond to the low-level type
+///     at the end of the path in the low-level structure
+///  -  pre and post-ressource should be `uref r`, return type unit
+///  -  finally, the postcondition of `update_x` should imply the following semantic definition
+///     of a low-level update:
+///     ```
+///     Some?.v (selref r h1) == { Some?.v (selref r h0) with x = new_val }
+///     ```
 ///
-/// This module defines the memory-model-compatible representation of arraystructs:
-/// - the `arraystruct` type that will be stored inside memory references
-/// - helper functions to build partial commutative monoids for arraystructs
-/// - examples of use
+/// While the first 4 checks are completely syntactic, the last one can be discharged to SMT. Please
+/// note that the bijection is important here because it will allow us to prove this last semantic
+/// obligation, by "lifting" the equality in the low-level world to the high-level views where
+/// the real postcondition of the function is specified.
 
-(*** The [arraystruct] type *)
+(* Ongoing example: sketch on how to use a tactic for checking what is described above *)
+let check_extract_update (src: string) : Tac unit =
+  exact (`(()))
 
-(**** Descriptors *)
+let _ : unit  = _ by (check_extract_update (`%update_x))
 
-/// Since an arraystruct can contain multiple levels of nested arrays and struct, we need to be able
-/// to describe precisely the nesting structure. That is what a descriptor achieves.
+/// Some comments about the meta-arguments that justify the soundness of extraction, given an
+/// update with attribute that respect all of the above conditions.
+///
+/// We now thanks to separation logic that `update_x` can only modify the memory location of
+/// reference [r], and nothing else.
+/// This meta-argument justifies the fact that it is admissible to compile `update_z` with a mere
+/// memory update. `update_z` can do other things such as allocating a new address and then ditching
+/// it, but this is not observable by another thread in our semantic. So we eliminate by extracting
+/// to Kremlin execution traces that are unobservable and didn't change the computation result.
+///
+/// What if [update_z] assigns first one value then another? Then we claim that it does not matter since this more complicated execution trace will be extracted by Kremlin to a simpler one. In F*
+/// you would still have to prove that the F* body of `update_x` is frame perserving, so if you do
+/// that then the frame preservedness still holds for the simpler version extracted by Kremlin.
 
-(** The field of structs are designated by a string (the name of the field) *)
-type field_id = string
 
-(**
-  The descriptor contains all the information necessary to derive the type of the values
-  corresponding to an arraystruct.
-*)
-noeq
-type array_struct_descriptor : Type u#(a + 1) =
-  | DBase : a: Type u#a -> array_struct_descriptor
-  | DArray : cell_descriptor: array_struct_descriptor u#a -> len: SizeT.t -> array_struct_descriptor
-  | DStruct : field_descriptors: (field_id ^-> option (array_struct_descriptor u#a))
-    -> array_struct_descriptor
+(**** get *)
 
-(**** [arraystruct] values type *)
+/// Let us now see what how to annotate a function corresponding to a low-level read.
 
-(** The type of an array value is an [lseq] *)
-let array_type (cell_type: Type u#a) (len: SizeT.t) : Type u#a = Seq.lseq cell_type (SizeT.v len)
+[@@extract_get u32_pair.y]
+val get_x (r: ref (option u32_pair) u32_pair_pcm)
+  : Steel UInt32.t
+  (href r) (fun _ -> href r)
+  (admitted_pre (fun h0 -> if Some? (sel r h0) then True else False)) (admitted_post (fun h0 v h1 ->
+    Some? (sel r h0) /\ Some? (sel r h1) /\
+    sel r h0 == sel r h1 /\ v == (Some?.v (sel r h1)).y
+  ))
 
-(** The type of a struct type is a dependent map *)
-let struct_type (field_typs: (field_id -> Type u#a)) : Type u#a = DepMap.t field_id field_typs
+/// The attribute `[@@extract_get u32_pair.x]` still has to check syntactically that the
+/// signature of `get_x` corresponds to a low-level get (one argument which is a ref, returns
+/// a value of the right type).
+///
+/// So what is the semantic post-condition implication check here ? Let's call `v` the returned value
+///
+/// ```
+/// selref r h0 == selref r h1 /\ v == (Some?.v (selref r h1)).y
+/// ```
+///
 
-(** Helper function to prove that the recursive call of the next function is decreasing *)
-unfold
-let struct_field_type'
-      (field_descriptors: (field_id ^-> option (array_struct_descriptor u#a)))
-      (array_struct_type:
-          (descriptor: array_struct_descriptor u#a {descriptor << field_descriptors}
-              -> Tot (Type u#a)))
-      (field: field_id)
-    : Tot (Type u#a) =
-  let descr = field_descriptors field in
-  FStar.WellFounded.axiom1 field_descriptors field;
-  match descr with
-  | None -> Universe.raise_t u#0 u#a unit
-  | Some descr -> array_struct_type descr
+(*** Address taking *)
 
-(** This functions achives the [descriptor -> Type] correspondence *)
-let rec array_struct_type (descriptor: array_struct_descriptor u#a)
-    : Tot (Type u#a) (decreases descriptor) =
-  match descriptor with
-  | DBase a -> a
-  | DArray descriptor' len ->
-    let typ' = array_struct_type descriptor' in
-    array_type typ' len
-  | DStruct field_descriptors ->
-    let typs' = struct_field_type' field_descriptors array_struct_type in
-    struct_type typs'
+/// Let us now tackle an important feature requested for our extraction and object manipulation
+/// language: first-class pointers to parts of a arraystruct.
 
-(** Gets the type of values of the field of a struct *)
-unfold
-let struct_field_type
-      (field_descriptors: (field_id ^-> option (array_struct_descriptor u#a)))
-      (field: field_id)
-    : Tot (Type u#a) = struct_field_type' field_descriptors array_struct_type field
+(**** The pointer typeclass *)
 
-(** The type of a struct value is a dependent map *)
-val struct_field_type_unroll_lemma
-  (field_descriptors: (field_id ^-> option (array_struct_descriptor u#a)))
-    : Lemma
-      (DependentMap.t u#a field_id (struct_field_type u#a field_descriptors) ==
-        array_struct_type u#a (DStruct u#a field_descriptors))
-      [SMTPat (DependentMap.t u#a field_id (struct_field_type u#a field_descriptors));
-       SMTPat (array_struct_type u#a (DStruct u#a field_descriptors))]
+/// This entails a switch from the good old `ref` type, because now the pointers that we manipulate
+/// are no longer only addresses inside the memory, we need to add the info of the path inside the
+/// reference. Because we want functions not to care whether they receive a pointer that is a full
+/// reference or just part of a reference, we create a "pointer" typeclass that will define the
+/// interface that our pointers should implement.
 
-(**** The main [array_struct] type *)
+let rw_pointer_get_sig
+  (a: Type u#a)
+  (ref: Type u#0)
+  (slref: ref -> slprop)
+  (sel: (r:ref) -> hmem (slref r) -> GTot a)
+  =
+  r:ref ->
+    Steel a
+      (slref r)
+      (fun _ -> slref r)
+      (fun h0 -> True)
+      (admitted_post (fun h0 x h1 -> sel r h0 == sel r h1 /\ x == sel r h0))
 
-(**
-  [arraystruct] encapsulates the descriptor, a value corresponding to the descriptor as well as
-  a sub-PCM to govern the values corresponding to the descriptor. Note that the sub-PCM is unitless,
-  meaning that we don't require a unit value with its corresponding lemma. Indeed, the unit value
-  always comes from the [None] case of a base [option] type. We need a full-fledged PCM with a unit
-  value to store in the memory model, which is going to govern values of type [option array_struct].
-  But for the sub-PCM inside the [array_struct], we don't need a unit value.
-*)
-noeq
-type array_struct : Type u#(a + 1) =
-  | ArrayStruct :
-      descriptor: array_struct_descriptor u#a ->
-      pcm: unitless_pcm (array_struct_type descriptor) ->
-      value: array_struct_type descriptor
-    -> array_struct
+let rw_pointer_upd_sig
+  (a: Type u#a)
+  (ref: Type u#0)
+  (slref: ref -> slprop)
+  (sel: (r:ref) -> hmem (slref r) -> GTot a)
+  =
+  r: ref ->
+  new_val: a ->
+    Steel unit
+      (slref r)
+      (fun _ -> slref r)
+      (fun h0 -> True)
+      (admitted_post (fun h0 _ h1 -> sel r h1 == new_val))
 
-/// Now, let's proceed to build the PCM that govern all arraystruct values stored inside the memory.
-
-(**
-  Composability is then based on the composability of the sub-PCM. Only arraystruct that have
-  the same descriptor and sub-PCM can be composed.
-*)
-let composable_array_struct:symrel u#(a + 1) (array_struct u#a) =
-  fun (s0: array_struct u#a) (s1: array_struct u#a) ->
-    s0.descriptor == s1.descriptor /\ s0.pcm == s1.pcm /\
-    s0.pcm.unitless_p.unitless_composable s0.value s1.value
-
-(** The composition also uses the sub-PCM's composition *)
-let compose_array_struct
-      (s0: array_struct u#a)
-      (s1: array_struct u#a {s0 `composable_array_struct` s1})
-    : array_struct u#a =
-  let new_val = s0.pcm.unitless_p.unitless_op s0.value s1.value in
-  ArrayStruct s0.descriptor s0.pcm new_val
-
-(** We can now define the unitless PCM for all [arraystruct] *)
-let array_struct_unitless_pcm:unitless_pcm u#(a + 1) (array_struct u#a) =
-  {
-    unitless_p
-    =
-    { unitless_composable = composable_array_struct u#a; unitless_op = compose_array_struct u#a };
-    unitless_comm = (fun s0 s1 -> s0.pcm.unitless_comm s0.value s1.value);
-    unitless_assoc = (fun s0 s1 s2 -> s0.pcm.unitless_assoc s0.value s1.value s2.value);
-    unitless_assoc_r = (fun s0 s1 s2 -> s0.pcm.unitless_assoc_r s0.value s1.value s2.value)
-  }
-
-(** To get a full-fledged PCM, we just add the [None] case *)
-let array_struct_pcm:pcm u#(a + 1) (option u#(a + 1) (array_struct u#a)) =
-  to_full_pcm_with_unit array_struct_unitless_pcm
-
-(*** Building a sub-PCM *)
-
-(**** For an array *)
-
-(**
-  This retrieves the composability for an array cell, given a base PCM governing the cells of
-  the array.
-*)
-let composable_array_cell
-      (#cell_type: Type u#a)
-      (#len: SizeT.t)
-      (base_pcm: unitless_pcm cell_type)
-      (x y: array_type cell_type len)
-      (i: nat{i < SizeT.v len})
-    : prop =
-  let xi = Seq.index x i in
-  let yi = Seq.index y i in
-  base_pcm.unitless_p.unitless_composable xi yi
-
-(** Composability for an array is pointwise composability of its cells *)
-let composable_array (#cell_type: Type u#a) (#len: SizeT.t) (base_pcm: unitless_pcm cell_type)
-    : symrel (array_type cell_type len) =
-  fun x y -> forall (i: nat{i < SizeT.v len}). composable_array_cell base_pcm x y i
-
-(** Composition for an array is pointwise composition of its cells*)
-let compose_array
-      (#cell_type: Type u#a)
-      (#len: SizeT.t)
-      (base_pcm: unitless_pcm cell_type)
-      (x: array_type cell_type len)
-      (y: array_type cell_type len {composable_array base_pcm x y})
-    : array_type cell_type len =
-  Seq.init (SizeT.v len)
-    (fun i ->
-        let xi = Seq.index x i in
-        let yi = Seq.index y i in
-        base_pcm.unitless_p.unitless_op xi yi)
-
-(**
-  From those composability and compose predicates we can build a sub-PCM for an array given the
-  sub-PCM governing its cells.
-*)
-val pointwise_array_pcm (cell_type: Type u#a) (len: SizeT.t) (base_pcm: unitless_pcm cell_type)
-    : unitless_pcm (array_type cell_type len)
-
-val reveal_pointwise_array_pcm
-      (cell_type: Type u#a)
-      (len: SizeT.t)
-      (base_pcm: unitless_pcm cell_type)
-    : Lemma
-      (let pcm = pointwise_array_pcm cell_type len base_pcm in
-        pcm.unitless_p.unitless_composable == composable_array base_pcm /\
-        pcm.unitless_p.unitless_op == compose_array base_pcm)
-      [SMTPat (pointwise_array_pcm cell_type len base_pcm)]
-
-(**** For a struct *)
-
-(**
-  This retrieves the composability for a struct field, given a base PCM governing the fields of
-  the struct.
-*)
-let composable_struct_field
-      (#field_types: (field_id -> Type u#a))
-      (base_pcms: (field: field_id -> unitless_pcm (field_types field)))
-      (field: field_id)
-      (x y: struct_type field_types)
-    : prop =
-  let xf = DepMap.sel x field in
-  let yf = DepMap.sel y field in
-  (base_pcms field).unitless_p.unitless_composable xf yf
-
-(** Composability for a struct is pointwise composability of its fields *)
-let composable_struct
-      (#field_types: (field_id -> Type u#a))
-      (base_pcms: (field: field_id -> unitless_pcm (field_types field)))
-    : symrel (struct_type field_types) =
-  fun x y -> forall (field: field_id). composable_struct_field base_pcms field x y
-
-(** Composition for a struct is pointwise composition of its fields *)
-let compose_struct
-      (#field_types: (field_id -> Type u#a))
-      (base_pcms: (field: field_id -> unitless_pcm (field_types field)))
-      (x: struct_type field_types)
-      (y: struct_type field_types {composable_struct base_pcms x y})
-    : struct_type field_types =
-  DepMap.create (fun field ->
-        let xf = DepMap.sel x field in
-        let yf = DepMap.sel y field in
-        (base_pcms field).unitless_p.unitless_op xf yf)
-
-(**
-  From those composability and compose predicates we can build a sub-PCM for a struct given the
-  sub-PCMs governing its fields.
-*)
-val pointwise_struct_pcm
-      (field_types: (field_id -> Type u#a))
-      (base_pcms: (field: field_id -> unitless_pcm (field_types field)))
-    : unitless_pcm (struct_type field_types)
-
-val reveal_pointwise_struct_pcm
-      (field_types: (field_id -> Type u#a))
-      (base_pcms: (field: field_id -> unitless_pcm (field_types field)))
-    : Lemma
-      (let pcm = pointwise_struct_pcm field_types base_pcms in
-        pcm.unitless_p.unitless_composable == composable_struct base_pcms /\
-        pcm.unitless_p.unitless_op == compose_struct base_pcms)
-      [SMTPat (pointwise_struct_pcm field_types base_pcms)]
-
-(*** Examples *)
-
-open Steel.FractionalPermission
-open Steel.PCM.Base
-
-let array_with_frac_perm_on_all_indexes (t: Type u#a) (len: SizeT.t) (v: t) : array_struct u#a =
-  ArrayStruct (DArray (DBase (with_perm u#a t)) len)
-    (pointwise_array_pcm (with_perm t) len frac_perm_pcm)
-    (Seq.init u#a (SizeT.v len) (fun _ -> { value = v; perm = full_perm }))
-
-let immutable_splittable_array (t: Type u#a) (len: SizeT.t) (v: t) : array_struct u#a =
-  ArrayStruct (DArray (DBase t) len)
-    (pointwise_array_pcm t len immutable_unitless_pcm)
-    (Seq.init u#a (SizeT.v len) (fun _ -> v))
-
-let two_fields_restricted_func
-      (#a: Type u#a)
-      (field1: string)
-      (field2: string{field2 <> field1})
-      (value1 value2: a)
-    : (field_id ^-> option a) =
-  on _
-    (fun field -> if field = field1 then
-        Some value1
-      else if field = field2 then
-        Some value2
-      else
-        None)
-
-#push-options "--fuel 2 --ifuel 2"
-let two_fields_dep_map
-      (a: (field_id -> Type u#a))
-      (field1: string)
-      (field2: string{field2 <> field1})
-      (value1: a field1)
-      (value2: a field2)
-      (by_default: (field: field_id{field <> field1 /\ field <> field2} -> a field))
-    : (DepMap.t field_id a) =
-  DepMap.create #field_id
-    #a
-    (fun field ->
-        if field = field1 then value1 else if field = field2 then value2 else by_default field)
-
-#push-options "--ifuel 2 --fuel 2"
-let point_2d:array_struct =
-  let field_descriptors = two_fields_restricted_func "x" "y" (DBase int) (DBase int) in
-  let field_types:(field_id -> Type0) = struct_field_type field_descriptors in
-  let field_pcms:(field: field_id -> unitless_pcm (field_types field)) =
-    fun field ->
-      if field = "x"
-      then exclusive_unitless_pcm
-      else if field = "y" then immutable_unitless_pcm else exclusive_unitless_pcm
-  in
-  struct_field_type_unroll_lemma field_descriptors;
-  ArrayStruct (DStruct field_descriptors)
-    (pointwise_struct_pcm field_types field_pcms)
-    (two_fields_dep_map field_types "x" "y" 0 1 (fun _ -> Universe.raise_val u#0 u#0 ()))
+/// The `a` parameter to the typeclass has to be a Low*-compatible value, something that can be
+/// assigned atomically in an update statement.
+#push-options "--admit_smt_queries true" (* fails, points to subcomp_pre in Steel.Effect.fsti? *)
+class rw_pointer (a: Type u#a) = {
+  pointer_ref:  Type u#0;
+  pointer_slref: pointer_ref -> slprop;
+  pointer_sel: (r:pointer_ref) -> hmem (pointer_slref r) -> GTot a;
+  pointer_get: rw_pointer_get_sig a pointer_ref pointer_slref pointer_sel;
+  pointer_upd: rw_pointer_upd_sig a pointer_ref pointer_slref pointer_sel;
+}
 #pop-options
+
+/// The goal of this typeclass is to be able to write generic functions like
+
+val increment_generic (#cls: rw_pointer UInt32.t) (r: cls.pointer_ref) : Steel unit
+  (cls.pointer_slref r) (fun _ -> cls.pointer_slref r)
+  (fun _ -> True)
+  (admitted_post (fun h0 _ h1 ->
+    UInt32.v (cls.pointer_sel r h1) == UInt32.v (cls.pointer_sel r h0) + 1
+  ))
+
+(**** Instantiating the pointer typeclass *)
+
+/// Lets us now instantiate this typeclass of the fields of of our u32_pair. What will be the ref
+/// type ? We have to introduce a new piece of information inside the memory reference, to allow us
+/// to distinguish which part of the reference we are owning inside a thread.
+
+
+type u32_pair_path =
+| Full
+| XField
+| YField
+
+let u32_pair_stored = option (u32_pair & u32_pair_path)
+
+/// Now, we have to define a PCM that will render possible the fact to share the ownership on the
+/// fields of the struct.
+
+#push-options "--ifuel 1"
+let u32_pair_composable : symrel (u32_pair_stored) = fun a b -> match a, b with
+  | Some (a, a_path), Some (b, b_path) -> begin
+    match a_path, b_path with
+    | XField, YField
+    | YField, XField -> True
+    | _ -> False
+  end
+  | _ -> True
+#pop-options
+
+/// The compose operation "recombines" the values owned in different memories. Even though each memory
+/// contain a full pair, only the part of the pair designated by the path matters.
+
+let u32_pair_compose
+  (a: u32_pair_stored)
+  (b: u32_pair_stored{a `u32_pair_composable` b})
+  : u32_pair_stored =
+  match a, b with
+  | Some (a, a_path), Some (b, b_path) -> begin
+    match a_path, b_path with
+    | XField, YField -> Some (({ x = a.x; y = b.y}), Full)
+    | YField, XField -> Some (({ x = b.x; y = a.y}), Full)
+  end
+  | None, Some _ -> b
+  | Some _, None -> a
+  | None, None -> None
+
+#push-options "--z3rlimit 15 --ifuel 1"
+let u32_pair_stored_pcm : pcm u32_pair_stored = {
+  p = {
+    composable = u32_pair_composable;
+    op = u32_pair_compose;
+    one = None;
+  };
+  comm = (fun _ _ -> ());
+  assoc = (fun _ _ _ -> ());
+  assoc_r = (fun _ _ _ -> ());
+  is_unit = (fun _ -> ());
+}
+#pop-options
+
+let u32_pair_ref = Steel.Memory.ref u32_pair_stored u32_pair_stored_pcm
+
+/// We can now instantiate the pointer typeclass! Let's begin by a pointer to
+
+let slu32_pair (r: u32_pair_ref) : slprop =
+  h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == Full))
+
+val slu32_pair_elim (r: u32_pair_ref) (h: hmem (slu32_pair r)) :
+  Lemma (interp (ptr r) h /\ begin let v = sel r h in
+    Some? v /\ snd (Some?.v v) == Full
+  end)
+
+let u32_pair_sel (r: u32_pair_ref) (h: hmem (slu32_pair r)) : GTot u32_pair =
+    slu32_pair_elim r h;
+    fst (Some?.v (sel r h))
+
+val u32_pair_get : rw_pointer_get_sig u32_pair u32_pair_ref slu32_pair u32_pair_sel
+
+val u32_pair_post: rw_pointer_upd_sig u32_pair u32_pair_ref slu32_pair u32_pair_sel
+
+instance u32_pair_pointer : rw_pointer u32_pair = {
+  pointer_ref = u32_pair_ref;
+  pointer_slref = slu32_pair;
+  pointer_sel = u32_pair_sel;
+  pointer_get = u32_pair_get;
+  pointer_upd = u32_pair_post;
+}
+
+/// But we can also instantiate it for the leaves of our structure
+
+let u32_pair_x_field_ref = u32_pair_ref
+
+let slu32_pair_x_field (r: u32_pair_x_field_ref) : slprop =
+  h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == XField))
+
+val slu32_pair_x_field_elim (r: u32_pair_x_field_ref) (h: hmem (slu32_pair_x_field r)) :
+  Lemma (interp (ptr r) h /\ begin let v = sel r h in
+    Some? v /\ snd (Some?.v v) == XField
+  end)
+
+let u32_pair_x_field_sel
+  (r: u32_pair_x_field_ref)
+  (h: hmem (slu32_pair_x_field r))
+    : GTot UInt32.t
+  =
+  slu32_pair_x_field_elim r h;
+  (fst (Some?.v (sel r h))).x
+
+val u32_pair_x_field_get
+  : rw_pointer_get_sig UInt32.t u32_pair_x_field_ref slu32_pair_x_field u32_pair_x_field_sel
+
+val u32_pair_x_field_upd
+  : rw_pointer_upd_sig UInt32.t u32_pair_x_field_ref slu32_pair_x_field u32_pair_x_field_sel
+
+instance u32_pair_x_field_pointer : rw_pointer UInt32.t = {
+  pointer_ref = u32_pair_x_field_ref;
+  pointer_slref = slu32_pair_x_field;
+  pointer_sel = u32_pair_x_field_sel;
+  pointer_get = u32_pair_x_field_get;
+  pointer_upd = u32_pair_x_field_upd;
+}
+
+let u32_pair_y_field_ref = u32_pair_ref
+
+let slu32_pair_y_field (r: u32_pair_y_field_ref) =
+  h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == YField))
+
+val slu32_pair_y_field_elim (r: u32_pair_y_field_ref) (h: hmem (slu32_pair_y_field r)) :
+  Lemma (interp (ptr r) h /\ begin let v = sel r h in
+    Some? v /\ snd (Some?.v v) == YField
+  end)
+
+let u32_pair_y_field_sel
+  (r: u32_pair_y_field_ref)
+  (h: hmem (slu32_pair_y_field r))
+    : GTot UInt32.t
+  =
+  slu32_pair_y_field_elim r h;
+  (fst (Some?.v (sel r h))).y
+
+val u32_pair_y_field_get
+  : rw_pointer_get_sig UInt32.t u32_pair_y_field_ref slu32_pair_y_field u32_pair_y_field_sel
+
+val u32_pair_y_field_upd
+  : rw_pointer_upd_sig UInt32.t u32_pair_y_field_ref slu32_pair_y_field u32_pair_y_field_sel
+
+
+instance u32_pair_y_field_pointer : rw_pointer UInt32.t = {
+  pointer_ref = u32_pair_y_field_ref;
+  pointer_slref = slu32_pair_y_field;
+  pointer_sel = u32_pair_y_field_sel;
+  pointer_get = u32_pair_y_field_get;
+  pointer_upd = u32_pair_y_field_upd;
+}
+
+(**** explode/recombine *)
+
+/// The explode/recombine functions are specialized to each struct, and to each pattern of struct
+/// explosion that is allowed by the PCM. We'll show here an example for our pair of integers.
+
+val recombinable (r: u32_pair_ref) (r12: u32_pair_x_field_ref & u32_pair_y_field_ref) : prop
+[@@ extract_explode u32_pair_pointer ->
+  (u32_pair_x_field_pointer, u32_pair_y_field_pointer) ->
+  recombinable
+]
+val explose_u32_pair_into_x_y (r: u32_pair_ref)
+  : Steel (u32_pair_x_field_ref & u32_pair_y_field_ref)
+  (slu32_pair r)
+  (fun (r1, r2) ->
+    slu32_pair_x_field r1 `star`
+    slu32_pair_y_field r2)
+  (fun _ -> True)
+  (admitted_post (fun h0 (r1, r2) h1 ->
+    (u32_pair_sel r h0 == {
+      x = u32_pair_x_field_sel r1 h1;
+      y = u32_pair_y_field_sel r2 h1;
+    } /\ recombinable r (r1,r2))
+  ))
+
+/// How to implement this function? We should not have to allocate a new ref, instead we're going
+/// to use the same address in memory but in /two different memories/, that we will later join
+/// together to produce the `star` in the postressource. Each one of these memory will contain
+/// a different value at the same address; memoryX will contain the value of field X along with
+/// FieldX path and memoryY will contain the value of the field Y along with FieldY path.
+/// These two memory are composable thanks to the PCM that we've defined for `u32_pair_stored`.
+
+[@@ extract_recombine u32_pair_pointer -> u32_pair_x_field_pointer -> u32_pair_y_field_pointer ]
+val recombine_u32_pair_from_x_y
+  (r: u32_pair_ref)
+  (r1: u32_pair_x_field_ref)
+  (r2: u32_pair_y_field_ref)
+  : Steel unit
+  (slu32_pair_x_field r1 `star` slu32_pair_y_field r2)
+  (fun _ -> slu32_pair r)
+  (fun _ -> recombinable r (r1, r2))
+  (admitted_post (fun (h0: hmem (slu32_pair_x_field r1 `star` slu32_pair_y_field r2)) _ h1 ->
+    u32_pair_sel r h1 == {
+    x = u32_pair_x_field_sel r1 h0;
+    y = u32_pair_y_field_sel r2 h0;
+  }))
+
+(**** focus *)
+
+/// We can also derive a `focus` operation that "forgets" the rest of
+/// the fields for a given time.
+
+val focus_u32_pair_x_field
+  (r: u32_pair_ref)
+  : Steel (u32_pair_x_field_ref)
+  (slu32_pair r)
+  (fun r1 -> slu32_pair_x_field r1 `star` (slu32_pair_x_field r1 `wand` slu32_pair r))
+  (fun _ -> True)
+  (admitted_post (fun h0 r1 h1 ->
+   wand_elim (slu32_pair_x_field r1) (slu32_pair r) h1;
+   u32_pair_sel r h0 == { u32_pair_sel r h1 with x = u32_pair_x_field_sel r1 h1 }
+  ))
+
+/// Things to talk with Nik :
+///  - (if Some? (selref r h0) then True else False) weird universe bug
+///  - we want custom paths for our structs because with a generic thing it'll have to be recursive
+///    and that will not play out well with the SMT
+///  - whole arrays cannot be updated at once in C, the checking tactic can make sure it is not
+///    the case

@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Steel.ArrayStruct
+module Steel.ArrayStruct.Proposal1
 module U32 = FStar.UInt32
 module Univ = FStar.Universe
 module DepMap = FStar.DependentMap
