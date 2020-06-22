@@ -321,6 +321,7 @@ let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
 let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
 let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Range.dummyRange
+let smt_reifiable_layered_effect = psconst "smt_reifiable_layered_effect"
 
 let gen_reset =
     let x = U.mk_ref 0 in

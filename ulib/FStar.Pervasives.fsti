@@ -676,6 +676,15 @@ val resolve_implicits : unit
     see https://github.com/FStarLang/FStar/issues/1844 *)
 val erasable : unit
 
+(** This attribute can be added to a layered effect definition
+    to enable smt proofs by reifying the effect computations.
+
+    By-default, layered effect are not reified to the smt encoding,
+    meaning that they can only be reasoned with their specs.
+    
+    see examples/layeredeffects/SMTReification.fst for an example.*)
+val smt_reifiable_layered_effect : unit
+
 ///  Controlling normalization
 
 (** In any invocation of the F* normalizer, every occurrence of

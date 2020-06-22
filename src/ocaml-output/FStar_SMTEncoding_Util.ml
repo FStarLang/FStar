@@ -222,16 +222,16 @@ let (is_smt_reifiable_effect :
   FStar_TypeChecker_Env.env -> FStar_Ident.lident -> Prims.bool) =
   fun en ->
     fun l ->
-      (FStar_TypeChecker_Env.is_reifiable_effect en l) &&
-        (let uu____851 =
-           let uu____853 =
-             let uu____854 =
-               FStar_All.pipe_right l
-                 (FStar_TypeChecker_Env.norm_eff_name en) in
-             FStar_All.pipe_right uu____854
+      let l1 = FStar_TypeChecker_Env.norm_eff_name en l in
+      (FStar_TypeChecker_Env.is_reifiable_effect en l1) &&
+        (let is_layered =
+           let uu____854 =
+             FStar_All.pipe_right l1
                (FStar_TypeChecker_Env.get_effect_decl en) in
-           FStar_All.pipe_right uu____853 FStar_Syntax_Util.is_layered in
-         Prims.op_Negation uu____851)
+           FStar_All.pipe_right uu____854 FStar_Syntax_Util.is_layered in
+         (Prims.op_Negation is_layered) ||
+           (FStar_TypeChecker_Env.fv_with_lid_has_attr en l1
+              FStar_Parser_Const.smt_reifiable_layered_effect))
 let (is_smt_reifiable_comp :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.comp -> Prims.bool) =
   fun en ->
