@@ -189,26 +189,12 @@ let mk_repr_impl
 
 inline_for_extraction
 let return_impl
-  (a:Type) (x:a) (r: parser)
-  (l: memory_invariant)
-: Tot (repr_impl a (r) r (return_pre a x r) (return_post a x r) (return_post_err a x r) l (return_spec a x r))
+  a x r l
 = fun b len pos1 -> ICorrect x pos1
 
 inline_for_extraction
 let bind_impl
-  (a:Type) (b:Type)
-  (r_in_f:parser) (r_out_f: parser)
-  (pre_f: pre_t r_in_f) (post_f: post_t a r_in_f r_out_f pre_f)
-  (post_err_f: post_err_t r_in_f pre_f)
-  (r_out_g: parser)
-  (pre_g: (x:a) -> pre_t (r_out_f)) (post_g: (x:a) -> post_t b (r_out_f) r_out_g (pre_g x))
-  (post_err_g: (x:a) -> post_err_t (r_out_f) (pre_g x))
-  (f_bind_impl:repr_spec a r_in_f r_out_f pre_f post_f post_err_f)
-  (g:(x:a -> repr_spec b (r_out_f) r_out_g (pre_g x) (post_g x) (post_err_g x)))
-  (l: memory_invariant)
-  (f' : repr_impl a r_in_f r_out_f pre_f post_f post_err_f l f_bind_impl)
-  (g' : (x: a -> repr_impl b (r_out_f) r_out_g (pre_g x) (post_g x) (post_err_g x) l (g x)))
-: Tot (repr_impl b r_in_f r_out_g (bind_pre a r_in_f r_out_f pre_f post_f pre_g) (bind_post a b r_in_f r_out_f pre_f post_f r_out_g pre_g post_g) (bind_post_err a r_in_f r_out_f pre_f post_f post_err_f pre_g post_err_g) l (bind_spec a b r_in_f r_out_f pre_f post_f post_err_f r_out_g pre_g post_g post_err_g f_bind_impl g))
+  a b r_in_f r_out_f pre_f post_f post_err_f r_out_g pre_g post_g post_err_g f_bind_impl g l f' g'
 = fun buf len pos ->
   match f' buf len pos with
   | IError e -> IError e
@@ -216,15 +202,8 @@ let bind_impl
   | ICorrect x posf -> g' x buf len posf
 
 inline_for_extraction
-let subcomp_impl (a:Type)
-  (r_in:parser) (r_out: parser)
-  (pre: pre_t r_in) (post: post_t a r_in r_out pre) (post_err: post_err_t r_in pre)
-  (pre': pre_t r_in) (post': post_t a r_in r_out pre') (post_err': post_err_t r_in pre')
-  (l:memory_invariant)
-  (l' : memory_invariant)
-  (f_subcomp_spec:repr_spec a r_in r_out pre post post_err)
-  (f_subcomp:repr_impl a r_in r_out pre post post_err l f_subcomp_spec)
-  (sq: squash (subcomp_cond a r_in r_out pre post post_err pre' post' post_err' l l'))
+let subcomp_impl
+  a r_in r_out pre post post_err pre' post' post_err' l l' f_subcomp_spec f_subcomp sq
 : Tot (repr_impl a r_in r_out pre' post' post_err' l' (subcomp_spec a r_in r_out pre post post_err pre' post' post_err' f_subcomp_spec))
 = (fun b len pos -> f_subcomp b len pos)
 
