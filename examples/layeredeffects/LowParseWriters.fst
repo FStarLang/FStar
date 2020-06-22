@@ -159,56 +159,6 @@ let validate_impl
     let x = { rptr_base = b' ; rptr_len = pos } in
     Correct (x, pos)
 
-noeq
-type iresult (a: Type u#x) : Type u#x =
-| ICorrect: (res: a) -> (pos' : U32.t) -> iresult a
-| IError of string
-| IOverflow
-
-unfold
-let repr_impl_post
-  (a:Type u#x)
-  (r_in: parser)
-  (r_out: parser)
-  (pre: pre_t r_in)
-  (post: post_t a r_in r_out pre)
-  (post_err: post_err_t r_in pre)
-  (l: memory_invariant)
-  (spec: repr_spec a r_in r_out pre post post_err)
-  (b: B.buffer u8 { l.lwrite `B.loc_includes` B.loc_buffer b })
-  (pos1: U32.t { U32.v pos1 <= B.length b })
-  (h: HS.mem)
-  (res: iresult a)
-  (h' : HS.mem)
-: GTot Type0
-= 
-    valid_pos r_in h b 0ul pos1 /\
-    B.modifies (B.loc_buffer b) h h' /\ (
-    let v_in = contents r_in h b 0ul pos1 in
-    pre v_in /\
-    begin match spec v_in, res with
-    | Correct (v, v_out), ICorrect v' pos2 ->
-      U32.v pos1 <= U32.v pos2 /\
-      valid_pos (r_out) h' b 0ul pos2 /\
-      v' == v /\
-      v_out == contents (r_out) h' b 0ul pos2
-    | Correct (v, v_out), IOverflow ->
-      size (r_out) v_out > B.length b
-    | Error s, IError s' ->
-      s == s'
-    | Error _, IOverflow ->
-      (* overflow happened in implementation before specification could reach error *)
-      True
-    | _ -> False
-    end
-  )
-
-let buffer_offset
-  (#t: Type)
-  (b: B.buffer t)
-: Tot Type0
-= pos1: U32.t { U32.v pos1 <= B.length b }
-
 let repr_impl
   (a:Type u#x)
   (r_in: parser)
@@ -231,6 +181,11 @@ let repr_impl
   (ensures (fun h res h' ->
     repr_impl_post a r_in r_out pre post post_err l spec b pos1 h res h'
   ))
+
+let mk_repr_impl
+  a r_in r_out pre post post_err l spec impl
+=
+  impl
 
 inline_for_extraction
 let return_impl
