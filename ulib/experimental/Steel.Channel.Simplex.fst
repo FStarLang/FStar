@@ -311,7 +311,7 @@ let mk_chan_t_val (#p:prot) (send recv:ref chan_val) (tr:trace_ref p)
   = let c = (Mkchan_t send recv tr) in
     return #_ #(fun c -> emp) c
 
-let msg t p = Msg unit (fun _ -> p)
+let msg t p = Msg Send unit (fun _ -> p)
 let init_chan_val (p:prot) = v:chan_val {v.chan_prot == msg unit p}
 
 let initial_trace (p:prot) : (q:partial_trace_of p {until q == p})
