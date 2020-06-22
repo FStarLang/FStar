@@ -200,19 +200,23 @@ let test_www #pre #post (b:bool) (f : unit -> RWI int RW pre post) (g : unit -> 
 //  : RWI (list b) RO (fun _ -> True) (fun _ _ _ -> True)
 //  = match xs with
 //    | [] -> []
-//    | x::xs -> (f x)::(map #_ #_ f xs)
+//    | x::xs -> (f x)::(map f xs)
 
 let app #a #b #i #pre #post (f : a -> RWI b i pre post) (x : a) : RWI b i pre post = f x
 
 // can't resolve an index, providing it explicitly with #i makes it explode too
-//let rec appn #a #i (n:nat) (f : a -> RWI a i (fun _ -> True) (fun _ _ _ -> True)) (x : a) : RWI a i (fun _ -> True)
-//(fun _ _ _ -> True) =
-//  match n with 
-//  | 0 -> x
-//  | _ -> begin
-//    //assume (n>0);
-//    appn #a #i (n-1) f (f x)
-//  end
+// update: actually, putting a dollar sign on f makes it work... why? I can see
+// why it helps to find the index but why doesn't it explode too?
+let rec appn #a #i
+  (n:nat)
+  ($f : a -> RWI a i (fun _ -> True) (fun _ _ _ -> True))
+  (x : a)
+  : RWI a i (fun _ -> True) (fun _ _ _ -> True)
+= match n with 
+  | 0 -> x
+  | _ -> begin
+    appn (n-1) f (f x)
+  end
 
 let labs0 (n:int) : RWI int RO (fun _ -> True) (fun h0 x h1 -> x >= 0 /\ h1 == h0) =
   if n < 0
@@ -309,3 +313,10 @@ let test_state_eq_www
   //assert (h0 == h1);
   //assert (h1 == h2);
   x + y
+
+
+let makero
+  #a #pre (#post : _ {is_ro_post post})
+  (f : unit -> RWI a RW pre post)
+  : RWI a RO pre post
+  = RWI?.reflect (fun () -> reify (f ()) ())
