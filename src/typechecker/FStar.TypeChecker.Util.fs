@@ -2853,9 +2853,10 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
           S.mk (Tm_arrow ([S.null_binder S.t_unit], eff_c)) r
         | Some repr_ts ->
           let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
+          let is_args = List.map2 (fun i (_, aqual) -> (i, aqual)) is bs in
           S.mk_Tm_app
             repr
-            (List.map S.as_arg (a_tm::is))
+            (S.as_arg a_tm::is_args)
             r), g
      | _ -> fail signature)
   | _ -> fail signature
