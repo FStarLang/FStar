@@ -1265,6 +1265,7 @@ let write_two_ints_ifthenelse_2
 = write_two_ints_ifthenelse_2_aux_lemma l x y;
   recast_writer _ _ _ _ _ _ _ (write_two_ints_ifthenelse_2_aux l x y)
 
+unfold
 let frame2_pre
   (frame: parser)
   (ppre: parser)
@@ -1272,6 +1273,7 @@ let frame2_pre
 : Tot (pre_t (frame `star` ppre))
 = fun (_, x) -> pre x
 
+unfold
 let frame2_post
   (a: Type)
   (frame: parser)
@@ -1282,6 +1284,7 @@ let frame2_post
 : Tot (post_t a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre))
 = fun (v_frame, v_in) v (v_frame', v_out) -> v_frame == v_frame' /\ post v_in v v_out
 
+unfold
 let frame2_post_err
   (frame: parser)
   (ppre: parser)
@@ -1346,7 +1349,7 @@ let frame2
   (post: post_t a ppre p pre)
   (post_err: post_err_t ppre pre)
   (l: memory_invariant)
-  (inner: unit -> EWrite a ppre p pre post post_err l)
+  ($inner: unit -> EWrite a ppre p pre post post_err l)
 : EWrite a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) (frame2_post_err frame ppre pre post_err) l
 = frame2' a frame ppre pre p post post_err l inner ()
 
