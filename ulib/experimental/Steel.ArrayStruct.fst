@@ -34,48 +34,97 @@ let extract_recombine: unit -> Tot unit = (fun () -> ())
 let op_String_Access : unit -> Tot unit = (fun () -> ())
 let generic_index: unit -> Tot unit = (fun () -> ())
 
-assume val witness_h_exists (#a:Type) (#p:a -> slprop) (_:unit)
-  : SteelT (Ghost.erased a) (h_exists p) (fun x -> p x)
+assume val h_admit (#a:Type) (#p:slprop) (#q:a -> slprop) (_:unit) : SteelT a p q
 
-assume val h_assert (p:slprop)
-  : SteelT unit p (fun _ -> p)
-
-assume val intro_h_exists (#a:Type) (x:a) (p:(a -> slprop))
-  : SteelT unit (p x) (fun _ -> h_exists p)
-
-assume val intro_h_exists_erased (#a:Type) (x:Ghost.erased a) (p:(a -> slprop))
-  : SteelT unit (p x) (fun _ -> h_exists p)
-
-assume val reveal_val (#a:Type u#1) (#pcm:pcm a) (r:ref a pcm)
-  : Steel (Ghost.erased a) (ptr r) (fun v -> pts_to r v) (fun _ -> True) (fun h0 v h1 ->
-    Steel.Memory.intro_h_exists (Ghost.reveal v) (pts_to r) h1;
-    sel r h0 == sel r h1 /\ sel r h1 == Ghost.reveal v
-  )
-
-#set-options "--fuel 1 --ifuel 0 --print_implicits"
+#set-options "--fuel 0 --ifuel 1"
 
 let update_x (r: ref (option u32_pair) u32_pair_pcm) (new_val: UInt32.t)
-    : Steel unit (href r) (fun _ -> href r)
+    : Steel unit (ptr r) (fun _ -> ptr r)
     (fun h0 -> if Some? (sel r h0) then True else False) (fun h0 _ h1 ->
      Some? (sel r h1) /\ Some? (sel r h0) /\
      Some?.v (sel r h1) == { Some?.v (sel r h0) with x = new_val }
     )
   =
-  let old_pair_ghost : Ghost.erased (option u32_pair) =
-    reveal_val r
-  in
-  let old_pair = read r old_pair_ghost in
-  assert(FStar.PCM.compatible u32_pair_pcm (Ghost.reveal old_pair_ghost) old_pair);
-  compatible_elim u32_pair_pcm (Ghost.reveal old_pair_ghost) (old_pair)
-    (Ghost.reveal old_pair_ghost == old_pair) (fun frame ->
-      assert(Some? old_pair_ghost);
-      assert(None? frame);
-      assert(Some? old_pair);
-      assert(Some?.v old_pair_ghost == Some?.v old_pair);
-      admit()
-    );
+  let old_pair = read r in
   let new_pair = (Some ({Some?.v old_pair with x = new_val })) in
-  //write r old_pair new_pair;
-  //intro_h_exists new_pair (pts_to r);
-  intro_h_exists_erased old_pair_ghost (pts_to r);
-  admit()
+  write r new_pair
+
+
+let get_x (r: ref (option u32_pair) u32_pair_pcm)
+  : Steel UInt32.t
+  (ptr r) (fun _ -> ptr r)
+  (fun h0 -> Some? (sel r h0)) (fun h0 v h1 ->
+    Some? (sel r h0) /\ Some? (sel r h1) /\
+    sel r h0 == sel r h1 /\ v == (Some?.v (sel r h1)).x
+  )
+  =
+  let pair = read r in
+  (Some?.v pair).x
+
+
+let increment_generic (#cls: rw_pointer UInt32.t) (r: cls.pointer_ref) : Steel unit
+  (cls.pointer_slref r) (fun _ -> cls.pointer_slref r)
+  (fun h0 -> UInt32.v (cls.pointer_sel r h0) + 1 <= UInt.max_int 32)
+  (fun h0 _ h1 ->
+    UInt32.v (cls.pointer_sel r h1) == UInt32.v (cls.pointer_sel r h0) + 1
+  )
+  =
+  let old_v = cls.pointer_get r in
+  cls.pointer_upd r (UInt32.add old_v 1ul)
+
+let slu32_pair_elim_mem (r: u32_pair_ref) (h: hmem (slu32_pair r)) :
+  Lemma (interp (ptr r) h /\ begin let v = sel r h in
+    Some? v /\ snd (Some?.v v) == Full
+  end)
+  [SMTPat (interp (slu32_pair r) h)]
+  =
+  elim_h_exists
+    (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == Full))
+    h
+    (interp (ptr r) h /\ begin let v = sel r h in
+      Some? v /\ snd (Some?.v v) == Full
+    end)
+    (fun v ->
+      intro_h_exists v (pts_to r) h;
+      pure_interp (Some? v /\ snd (Some?.v v) == Full) h;
+      assert(interp (pure (Some? v /\ snd (Some?.v v) == Full)) h);
+      assert(Some? v /\ snd (Some?.v v) == Full);
+      let v' = sel_v r v h in
+      assert(v' == v)
+    )
+
+assume val slu32_pair_elim_steel (r: u32_pair_ref) : Steel unit
+  (slu32_pair r)
+  (fun _ -> ptr r)
+  (fun _ -> True)
+  (fun h0 _ h1 ->
+    slu32_pair_elim_mem r h0;
+    let v = sel r h0 in
+    Some? v /\ snd (Some?.v v) == Full /\
+    v == sel r h1
+  )
+
+assume val slu32_pair_intro_steel (r: u32_pair_ref) : Steel unit
+  (ptr r)
+  (fun _ -> slu32_pair r)
+  (fun h0 -> let v = sel r h0 in
+    Some? v /\ snd (Some?.v v) == Full
+  )
+  (fun h0 _ h1 ->
+    slu32_pair_elim_mem r h1;
+    sel r h0 == sel r h1
+  )
+
+let u32_pair_get : rw_pointer_get_sig u32_pair u32_pair_ref slu32_pair u32_pair_sel =
+  fun r ->
+    slu32_pair_elim_steel r;
+    let pair = read r in
+    slu32_pair_intro_steel r;
+    fst (Some?.v pair)
+
+let u32_pair_upd: rw_pointer_upd_sig u32_pair u32_pair_ref slu32_pair u32_pair_sel =
+  fun r v ->
+    slu32_pair_elim_steel r;
+    let pair = read r in
+    write r (Some (v, snd (Some?.v pair)));
+    slu32_pair_intro_steel r

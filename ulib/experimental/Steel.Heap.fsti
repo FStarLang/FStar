@@ -188,6 +188,11 @@ val h_exists_cong (#a:Type) (p q : a -> slprop)
 val intro_h_exists (#a:_) (x:a) (p:a -> slprop) (h:heap)
   : Lemma (interp (p x) h ==> interp (h_exists p) h)
 
+val elim_h_exists (#a:_) (p:a -> slprop) (m:hheap (h_exists p)) (goal: Type)
+  (lemma: (x: a) -> Lemma (requires (interp (p x) m)) (ensures goal))
+  : Lemma (goal)
+
+
 (**
   The interpretation of a separation logic proposition [hp] is itself an [hprop] of footprint
   [hp]

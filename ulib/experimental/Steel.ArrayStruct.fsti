@@ -31,7 +31,7 @@ open Steel.Memory
 /// into C arraystructs via Kremlin. This is a rough sketch of Proposal 5 as described here
 /// https://github.com/FStarLang/FStar/wiki/Array-Structs-in-Steel
 
-#set-options "--fuel 0 --ifuel 0"
+#set-options "--fuel 0 --ifuel 1"
 
 
 (*** arraystruct types *)
@@ -72,10 +72,6 @@ let _ : unit  = _ by (check_low (`%u32_pair))
 
 open FStar.Tactics.Typeclasses
 
-(** We are going to use pre/post conditions for specifications in Steel, so we need this helper *)
-unfold let href (#a: Type u#a) (#pcm: pcm a) (r: ref a pcm) : slprop u#a =
-  h_exists (pts_to r)
-
 (** Let us give a simple PCM for the pair *)
 let u32_pair_pcm : pcm (option u32_pair) = PCMBase.exclusive_pcm
 
@@ -97,7 +93,7 @@ val generic_index: unit -> Tot unit
 
 [@@ extract_update u32_pair.x]
 val update_x (r: ref (option u32_pair) u32_pair_pcm) (new_val: UInt32.t)
-    : Steel unit (href r) (fun _ -> href r)
+    : Steel unit (ptr r) (fun _ -> ptr r)
     (fun h0 -> if Some? (sel r h0) then True else False) (fun h0 _ h1 ->
      Some? (sel r h1) /\ Some? (sel r h0) /\
      Some?.v (sel r h1) == { Some?.v (sel r h0) with x = new_val }
@@ -151,10 +147,10 @@ let _ : unit  = _ by (check_extract_update (`%update_x))
 [@@extract_get u32_pair.y]
 val get_x (r: ref (option u32_pair) u32_pair_pcm)
   : Steel UInt32.t
-  (href r) (fun _ -> href r)
+  (ptr r) (fun _ -> ptr r)
   (fun h0 -> if Some? (sel r h0) then True else False) (fun h0 v h1 ->
     Some? (sel r h0) /\ Some? (sel r h1) /\
-    sel r h0 == sel r h1 /\ v == (Some?.v (sel r h1)).y
+    sel r h0 == sel r h1 /\ v == (Some?.v (sel r h1)).x
   )
 
 /// The attribute `[@@extract_get u32_pair.x]` still has to check syntactically that the
@@ -224,7 +220,7 @@ class rw_pointer (a: Type u#a) = {
 
 val increment_generic (#cls: rw_pointer UInt32.t) (r: cls.pointer_ref) : Steel unit
   (cls.pointer_slref r) (fun _ -> cls.pointer_slref r)
-  (fun _ -> True)
+  (fun h0 -> UInt32.v (cls.pointer_sel r h0) + 1 <= UInt.max_int 32)
   (fun h0 _ h1 ->
     UInt32.v (cls.pointer_sel r h1) == UInt32.v (cls.pointer_sel r h0) + 1
   )
@@ -245,8 +241,6 @@ let u32_pair_stored = option (u32_pair & u32_pair_path)
 
 /// Now, we have to define a PCM that will render possible the fact to share the ownership on the
 /// fields of the struct.
-
-#push-options "--ifuel 1"
 let u32_pair_composable : symrel (u32_pair_stored) = fun a b -> match a, b with
   | Some (a, a_path), Some (b, b_path) -> begin
     match a_path, b_path with
@@ -255,7 +249,6 @@ let u32_pair_composable : symrel (u32_pair_stored) = fun a b -> match a, b with
     | _ -> False
   end
   | _ -> True
-#pop-options
 
 /// The compose operation "recombines" the values owned in different memories. Even though each memory
 /// contain a full pair, only the part of the pair designated by the path matters.
@@ -274,7 +267,6 @@ let u32_pair_compose
   | Some _, None -> a
   | None, None -> None
 
-#push-options "--z3rlimit 15 --ifuel 1"
 let u32_pair_stored_pcm : pcm u32_pair_stored = {
   p = {
     composable = u32_pair_composable;
@@ -286,7 +278,6 @@ let u32_pair_stored_pcm : pcm u32_pair_stored = {
   assoc_r = (fun _ _ _ -> ());
   is_unit = (fun _ -> ());
 }
-#pop-options
 
 let u32_pair_ref = Steel.Memory.ref u32_pair_stored u32_pair_stored_pcm
 
@@ -295,25 +286,25 @@ let u32_pair_ref = Steel.Memory.ref u32_pair_stored u32_pair_stored_pcm
 let slu32_pair (r: u32_pair_ref) : slprop =
   h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == Full))
 
-val slu32_pair_elim (r: u32_pair_ref) (h: hmem (slu32_pair r)) :
+val slu32_pair_elim_mem (r: u32_pair_ref) (h: hmem (slu32_pair r)) :
   Lemma (interp (ptr r) h /\ begin let v = sel r h in
     Some? v /\ snd (Some?.v v) == Full
   end)
 
 let u32_pair_sel (r: u32_pair_ref) (h: hmem (slu32_pair r)) : GTot u32_pair =
-    slu32_pair_elim r h;
+    slu32_pair_elim_mem r h;
     fst (Some?.v (sel r h))
 
 val u32_pair_get : rw_pointer_get_sig u32_pair u32_pair_ref slu32_pair u32_pair_sel
 
-val u32_pair_post: rw_pointer_upd_sig u32_pair u32_pair_ref slu32_pair u32_pair_sel
+val u32_pair_upd: rw_pointer_upd_sig u32_pair u32_pair_ref slu32_pair u32_pair_sel
 
 instance u32_pair_pointer : rw_pointer u32_pair = {
   pointer_ref = u32_pair_ref;
   pointer_slref = slu32_pair;
   pointer_sel = u32_pair_sel;
   pointer_get = u32_pair_get;
-  pointer_upd = u32_pair_post;
+  pointer_upd = u32_pair_upd;
 }
 
 /// But we can also instantiate it for the leaves of our structure
@@ -323,7 +314,7 @@ let u32_pair_x_field_ref = u32_pair_ref
 let slu32_pair_x_field (r: u32_pair_x_field_ref) : slprop =
   h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == XField))
 
-val slu32_pair_x_field_elim (r: u32_pair_x_field_ref) (h: hmem (slu32_pair_x_field r)) :
+val slu32_pair_x_field_elim_mem (r: u32_pair_x_field_ref) (h: hmem (slu32_pair_x_field r)) :
   Lemma (interp (ptr r) h /\ begin let v = sel r h in
     Some? v /\ snd (Some?.v v) == XField
   end)
@@ -333,7 +324,7 @@ let u32_pair_x_field_sel
   (h: hmem (slu32_pair_x_field r))
     : GTot UInt32.t
   =
-  slu32_pair_x_field_elim r h;
+  slu32_pair_x_field_elim_mem r h;
   (fst (Some?.v (sel r h))).x
 
 val u32_pair_x_field_get
@@ -355,7 +346,7 @@ let u32_pair_y_field_ref = u32_pair_ref
 let slu32_pair_y_field (r: u32_pair_y_field_ref) =
   h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == YField))
 
-val slu32_pair_y_field_elim (r: u32_pair_y_field_ref) (h: hmem (slu32_pair_y_field r)) :
+val slu32_pair_y_field_elim_mem (r: u32_pair_y_field_ref) (h: hmem (slu32_pair_y_field r)) :
   Lemma (interp (ptr r) h /\ begin let v = sel r h in
     Some? v /\ snd (Some?.v v) == YField
   end)
@@ -365,7 +356,7 @@ let u32_pair_y_field_sel
   (h: hmem (slu32_pair_y_field r))
     : GTot UInt32.t
   =
-  slu32_pair_y_field_elim r h;
+  slu32_pair_y_field_elim_mem r h;
   (fst (Some?.v (sel r h))).y
 
 val u32_pair_y_field_get

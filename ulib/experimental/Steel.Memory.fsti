@@ -249,6 +249,10 @@ val h_exists_cong (#a:Type) (p q : a -> slprop)
 val intro_h_exists (#a:_) (x:a) (p:a -> slprop) (m:mem)
   : Lemma (interp (p x) m ==> interp (h_exists p) m)
 
+val elim_h_exists (#a:_) (p:a -> slprop) (m:hmem (h_exists p)) (goal: Type)
+  (lemma: (x: a) -> Lemma (requires (interp (p x) m)) (ensures goal))
+  : Lemma (goal)
+
 
 (**** Actions *)
 

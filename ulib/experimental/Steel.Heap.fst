@@ -364,6 +364,11 @@ let h_exists_cong (#a:Type) (p q : a -> slprop) = ()
 
 let intro_h_exists #a x p h = ()
 
+let elim_h_exists #a p m goal lemma =
+  Classical.exists_elim goal #a #(fun x -> interp (p x) m) () (fun x ->
+    lemma x
+  )
+
 let interp_depends_only_on (hp:slprop u#a) = emp_unit hp
 
 ////////////////////////////////////////////////////////////////////////////////

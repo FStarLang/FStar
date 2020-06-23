@@ -87,7 +87,7 @@ let op (#a: Type u#a) (p:pcm a) (x:a) (y:a{composable p x y}) = p.p.op x y
   Two elements [x] and [y] are compatible with respect to a PCM if their substraction
   is well-defined, e.g. if there exists an element [frame] such that [x * z = y]
 *)
-let compatible (#a: Type u#a) (pcm:pcm a) (x y:a) =
+let compatible (#a: Type u#a) (pcm:pcm a) (x y:a) : prop =
   (exists (frame:a).
     composable pcm x frame /\ op pcm frame x == y
   )
@@ -123,7 +123,7 @@ let compatible_elim
   1. every element that is composable with [x] is also composable with [y];
   2. the composition of [x] with a frame is unchanged with [y]
 *)
-let frame_preserving (#a: Type u#a) (pcm:pcm a) (x y: a) =
+let frame_preserving (#a: Type u#a) (pcm:pcm a) (x y: a) : prop =
     (forall frame. composable pcm frame x ==> composable pcm frame y) /\
     (forall frame.{:pattern (composable pcm frame x)} composable pcm frame x ==> op pcm frame y == y)
 

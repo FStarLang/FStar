@@ -27,10 +27,10 @@ val join_preserves_interp (hp:slprop) (m0 m1:mem)
     (ensures (interp hp (join m0 m1)))
     [SMTPat (interp hp (join m0 m1))]
 
-let fp_mprop (fp:slprop) = p:(hmem fp -> prop)
+let fp_mprop (fp:slprop) = p:(hmem fp -> Type0)
 
 let fp_binary_mprop #a (pre:slprop) (post: a -> slprop) =
-  p:(hmem pre -> x:a -> hmem (post x) -> prop)
+  p:(hmem pre -> x:a -> hmem (post x) -> Type0)
 
 val repr (a:Type u#a)
          (pre:slprop u#1)
@@ -43,7 +43,8 @@ unfold
 let return_req (p:slprop) : fp_mprop p = fun _ -> True
 
 unfold
-let return_ens (#a:Type) (x:a) (p:a -> slprop) : fp_binary_mprop (p x) p = fun _ r _ -> r == x
+let return_ens (#a:Type) (x:a) (p:a -> slprop) : fp_binary_mprop (p x) p =
+  fun h0 r h1 -> r == x /\ h0 == h1
 
 val returnc (a:Type u#a) (x:a) (p:a -> slprop)
   : repr a (p x) p (return_req (p x)) (return_ens x p)
@@ -271,19 +272,26 @@ val frame (#a:Type)
 val read (#a:Type)
          (#pcm:_)
          (r:ref a pcm)
-         (v0:Ghost.erased a)
-  : SteelT (v:a { FStar.PCM.compatible pcm v0 v })
-           (pts_to r v0)
-           (fun _ -> pts_to r v0)
+  : Steel  a
+           (h_exists (pts_to r))
+           (fun _ -> h_exists (pts_to r))
+           (fun _ -> True)
+           (fun h0 v h1 ->
+             FStar.PCM.compatible pcm (sel r h0) v /\
+             sel r h0 == sel r h1
+           )
 
 val write (#a:Type)
           (#pcm:_)
           (r:ref a pcm)
-          (v0:Ghost.erased a)
-          (v1:a{FStar.PCM.frame_preserving pcm v0 v1})
-  : SteelT unit
-           (pts_to r v0)
-           (fun _ -> pts_to r v1)
+          (v:a)
+  : Steel unit
+           (h_exists (pts_to r))
+           (fun _ -> h_exists (pts_to r))
+           (fun h0 -> FStar.PCM.frame_preserving pcm (sel r h0) v)
+           (fun h0 _ h1 ->
+             sel r h1 == v
+           )
 
 val alloc (#a:Type)
           (#pcm:_)
