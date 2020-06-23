@@ -1215,10 +1215,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                       let c2 = SS.subst_comp [NT(x,e1)] c2 in
                       let x_eq_e = U.mk_eq2 u_res_t1 res_t1 e1 (bv_to_name x) in
                       let c2, g_w = weaken_comp (Env.push_binders env [S.mk_binder x]) c2 x_eq_e in
-                      let g = Env.conj_guard g_c1
-                        (Env.close_guard env [S.mk_binder x] (TcComm.weaken_guard_formula g_c2 x_eq_e)) in
-                      let c, g_bind = mk_bind c1 b c2 g in
-                      c, Env.conj_guard g_w g_bind
+                      let g = Env.conj_guards [
+                        g_c1;
+                        Env.close_guard env [S.mk_binder x] g_w;
+                        Env.close_guard env [S.mk_binder x] (TcComm.weaken_guard_formula g_c2 x_eq_e) ] in
+                      mk_bind c1 b c2 g
                 //Caution: here we keep the flags for c2 as is, these flags will be overwritten later when we do md.bind below
                 //If we decide to return c2 as is (after inlining), we should reset these flags else bad things will happen
             else mk_bind c1 b c2 trivial_guard
