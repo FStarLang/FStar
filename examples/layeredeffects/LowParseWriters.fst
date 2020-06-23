@@ -94,6 +94,11 @@ let mk_ptr
   rptr_len = len;
 }
 
+let buffer_of_ptr
+  #p #inv x
+=
+  (x.rptr_base, x.rptr_len)
+
 let valid_rptr_frame
   #p #inv x inv'
 = valid_frame p inv.h0 x.rptr_base 0ul (B.len x.rptr_base) inv.lwrite inv'.h0

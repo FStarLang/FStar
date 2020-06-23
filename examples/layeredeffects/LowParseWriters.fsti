@@ -411,6 +411,19 @@ val mk_ptr
   (requires (valid_buffer p inv.h0 b /\ inv.lread `B.loc_includes` B.loc_buffer b))
   (ensures (fun res -> deref_spec res == buffer_contents p inv.h0 b))
 
+inline_for_extraction
+val buffer_of_ptr
+  (#p: parser)
+  (#inv: memory_invariant)
+  (x: ptr p inv)
+: Tot (bl: (B.buffer u8 & U32.t) {
+    let (b, len) = bl in
+    B.len b == len /\
+    valid_buffer p inv.h0 b /\
+    inv.lread `B.loc_includes` B.loc_buffer b /\
+    deref_spec x == buffer_contents p inv.h0 b
+  })
+
 val valid_rptr_frame
   (#p: parser) (#inv: memory_invariant) (x: ptr p inv) (inv' : memory_invariant)
 : Lemma
