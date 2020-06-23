@@ -193,15 +193,8 @@ let test_wwr #pre #post (b:bool) (f : unit -> RWI int RW pre post) (g : unit -> 
 
 let test_www #pre #post (b:bool) (f : unit -> RWI int RW pre post) (g : unit -> RWI int RW pre post) : RWI int RW pre post = if b then f () else g ()
 
-// EXPLODES: bound term variable not found in env...
-
-(*
- * AR: 06/23: works with a $ on f
- *            sadly, with --debug_level Extreme, it works fine even without $, so hard to debug
- *             trying to reproduce it on some other example
- *)
 let rec map #a #b
- ($f : a -> RWI b RO (fun _ -> True) (fun _ _ _ -> True))
+ (f : a -> RWI b RO (fun _ -> True) (fun _ _ _ -> True))
  (xs : list a)
  : RWI (list b) RO (fun _ -> True) (fun _ _ _ -> True)
  = match xs with
@@ -213,15 +206,19 @@ let app #a #b #i #pre #post (f : a -> RWI b i pre post) (x : a) : RWI b i pre po
 // can't resolve an index, providing it explicitly with #i makes it explode too
 // update: actually, putting a dollar sign on f makes it work... why? I can see
 // why it helps to find the index but why doesn't it explode too?
+
+(*
+ * AR: Could not resolve #i in the recursive call
+ *)
 let rec appn #a #i
   (n:nat)
-  ($f : a -> RWI a i (fun _ -> True) (fun _ _ _ -> True))
+  (f : a -> RWI a i (fun _ -> True) (fun _ _ _ -> True))
   (x : a)
   : RWI a i (fun _ -> True) (fun _ _ _ -> True)
 = match n with 
   | 0 -> x
   | _ -> begin
-    appn (n-1) f (f x)
+    appn #_ #i (n-1) f (f x)
   end
 
 let labs0 (n:int) : RWI int RO (fun _ -> True) (fun h0 x h1 -> x >= 0 /\ h1 == h0) =
