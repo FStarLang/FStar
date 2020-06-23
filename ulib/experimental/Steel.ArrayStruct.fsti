@@ -312,11 +312,13 @@ instance u32_pair_pointer : rw_pointer u32_pair = {
 let u32_pair_x_field_ref = u32_pair_ref
 
 let slu32_pair_x_field (r: u32_pair_x_field_ref) : slprop =
-  h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == XField))
+  h_exists (fun (v: u32_pair_stored) ->
+    pts_to r v `star` pure (Some? v /\ (snd (Some?.v v) == XField \/ snd (Some?.v v) == Full)
+  ))
 
 val slu32_pair_x_field_elim_mem (r: u32_pair_x_field_ref) (h: hmem (slu32_pair_x_field r)) :
   Lemma (interp (ptr r) h /\ begin let v = sel r h in
-    Some? v /\ snd (Some?.v v) == XField
+    Some? v /\ (snd (Some?.v v) == XField \/ snd (Some?.v v) == Full)
   end)
 
 let u32_pair_x_field_sel
@@ -344,11 +346,13 @@ instance u32_pair_x_field_pointer : rw_pointer UInt32.t = {
 let u32_pair_y_field_ref = u32_pair_ref
 
 let slu32_pair_y_field (r: u32_pair_y_field_ref) =
-  h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == YField))
+  h_exists (fun (v: u32_pair_stored) ->
+    pts_to r v `star` pure (Some? v /\ (snd (Some?.v v) == YField \/ snd (Some?.v v) == Full)
+  ))
 
 val slu32_pair_y_field_elim_mem (r: u32_pair_y_field_ref) (h: hmem (slu32_pair_y_field r)) :
   Lemma (interp (ptr r) h /\ begin let v = sel r h in
-    Some? v /\ snd (Some?.v v) == YField
+    Some? v /\ (snd (Some?.v v) == YField \/ snd (Some?.v v) == Full)
   end)
 
 let u32_pair_y_field_sel

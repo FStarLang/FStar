@@ -127,6 +127,31 @@ let frame_preserving (#a: Type u#a) (pcm:pcm a) (x y: a) : prop =
     (forall frame. composable pcm frame x ==> composable pcm frame y) /\
     (forall frame.{:pattern (composable pcm frame x)} composable pcm frame x ==> op pcm frame y == y)
 
+let frame_preserving_intro (#a: Type u#a) (pcm:pcm a) (x y: a)
+  (lemma1: (frame: a) -> Lemma (requires composable pcm frame x) (ensures composable pcm frame y))
+  (lemma2: (frame: a) -> Lemma
+    (requires composable pcm frame x /\ composable pcm frame y)
+    (ensures op pcm frame y == y)
+  )
+  : Lemma (frame_preserving pcm x y)
+  =
+  let aux1 (frame: a) : Lemma (composable pcm frame x ==> composable pcm frame y) =
+    let aux2 (_: squash (composable pcm frame x)) : Lemma (composable pcm frame y) =
+      lemma1 frame
+    in
+    Classical.impl_intro aux2
+  in
+  Classical.forall_intro aux1;
+  let aux3 (frame: a): Lemma (composable pcm frame x ==> op pcm frame y == y) =
+    let aux4 (_: squash (composable pcm frame x)) : Lemma (
+      composable pcm frame x /\ (aux1 frame; op pcm frame y == y)
+    ) =
+      lemma2 frame
+    in
+    Classical.impl_intro aux4
+  in
+  Classical.forall_intro aux3
+
 (** The PCM [p] is exclusive to element [x] if the only element composable with [x] is [p.one] *)
 let exclusive (#a:Type u#a) (p:pcm a) (x:a) =
   forall (frame:a). composable p x frame ==> frame == p.p.one

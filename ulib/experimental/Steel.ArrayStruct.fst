@@ -76,7 +76,6 @@ let slu32_pair_elim_mem (r: u32_pair_ref) (h: hmem (slu32_pair r)) :
   Lemma (interp (ptr r) h /\ begin let v = sel r h in
     Some? v /\ snd (Some?.v v) == Full
   end)
-  [SMTPat (interp (slu32_pair r) h)]
   =
   elim_h_exists
     (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == Full))
@@ -128,3 +127,84 @@ let u32_pair_upd: rw_pointer_upd_sig u32_pair u32_pair_ref slu32_pair u32_pair_s
     let pair = read r in
     write r (Some (v, snd (Some?.v pair)));
     slu32_pair_intro_steel r
+
+let slu32_pair_x_field_elim_mem (r: u32_pair_x_field_ref) (h: hmem (slu32_pair_x_field r)) :
+  Lemma (interp (ptr r) h /\ begin let v = sel r h in
+    Some? v /\ (snd (Some?.v v) == XField \/ snd (Some?.v v) == Full)
+  end)
+  =
+  elim_h_exists
+    (fun (v: u32_pair_stored) ->
+      pts_to r v `star` pure (Some? v /\ (snd (Some?.v v) == XField \/ snd (Some?.v v) == Full))
+    )
+    h
+    (interp (ptr r) h /\ begin let v = sel r h in
+      Some? v /\ (snd (Some?.v v) == XField \/ snd (Some?.v v) == Full)
+    end)
+    (fun v ->
+      intro_h_exists v (pts_to r) h;
+      pure_interp (Some? v /\ (snd (Some?.v v) == XField \/ snd (Some?.v v) == Full)) h;
+      let v' = sel_v r v h in
+      ()
+    )
+
+assume val slu32_pair_x_field_elim_steel (r: u32_pair_ref) : Steel unit
+  (slu32_pair_x_field r)
+  (fun _ -> ptr r)
+  (fun _ -> True)
+  (fun h0 _ h1 ->
+    slu32_pair_x_field_elim_mem r h0;
+    let v = sel r h0 in
+    Some? v /\ (snd (Some?.v v) == XField \/ snd (Some?.v v) == Full) /\
+    v == sel r h1
+  )
+
+assume val slu32_pair_x_field_intro_steel (r: u32_pair_ref) : Steel unit
+  (ptr r)
+  (fun _ -> slu32_pair_x_field r)
+  (fun h0 -> let v = sel r h0 in
+    Some? v /\ (snd (Some?.v v) == XField \/ snd (Some?.v v) == Full)
+  )
+  (fun h0 _ h1 ->
+    slu32_pair_x_field_elim_mem r h1;
+    sel r h0 == sel r h1
+  )
+
+let u32_pair_x_field_get
+  : rw_pointer_get_sig UInt32.t u32_pair_x_field_ref slu32_pair_x_field u32_pair_x_field_sel
+  =
+  fun r ->
+    slu32_pair_x_field_elim_steel r;
+    let pair = read r in
+    slu32_pair_x_field_intro_steel r;
+    (fst (Some?.v pair)).x
+
+let u32_pair_x_field_upd
+  : rw_pointer_upd_sig UInt32.t u32_pair_x_field_ref slu32_pair_x_field u32_pair_x_field_sel
+  =
+  fun r v ->
+    slu32_pair_x_field_elim_steel r;
+    let pair = read r in
+    let new_pair = (Some (({ fst (Some?.v pair) with x = v }), snd (Some?.v pair))) in
+    frame_preserving_intro u32_pair_stored_pcm pair new_pair
+      (fun frame -> ())
+      (fun frame ->
+        let p = snd (Some?.v pair) in
+        match p with
+        | XField -> begin match frame with
+          | None -> ()
+          | Some frame' -> begin match snd frame' with
+            | YField ->
+              let new_full = op u32_pair_stored_pcm frame new_pair in
+              let old_full = op u32_pair_stored_pcm frame pair in
+              assume(new_full == new_pair) // We don't have that because the path is Full in new_paip
+            | _ -> ()
+          end
+        end
+        | _ -> ()
+      );
+    assert(FStar.PCM.frame_preserving u32_pair_stored_pcm pair new_pair);
+    admit(); // Here the problem is that the write spec uses sel r h0 instead of pair, so we have
+             // to prove that because sel r h0 `compatible` pair, the frame preservation still holds
+    write r new_pair;
+    slu32_pair_x_field_intro_steel r
