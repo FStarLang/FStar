@@ -24,7 +24,7 @@ open FStar.FunctionalExtensionality
 open Steel.PCM
 module PCMBase = Steel.PCM.Base
 
-open Steel.Effect
+open Steel.Effect.Fake
 open Steel.Memory
 
 /// This module defines a mechanism for extracting arraystructs compatible with separation logic
@@ -79,17 +79,6 @@ let href (#a: Type u#a) (#pcm: pcm a) (r: ref a pcm) : slprop u#a =
 (** Let us give a simple PCM for the pair *)
 let u32_pair_pcm : pcm (option u32_pair) = PCMBase.exclusive_pcm
 
-(** We don't bother proving the self-framedness of pre/postconditions in this sketch *)
-val admitted_post
-  (#a: Type) (#pre:slprop) (#post: a -> slprop)
-  (p:(hmem pre -> x:a -> hmem (post x) -> GTot prop))
-  : GTot (p:(hmem pre -> x:a -> hmem (post x) -> prop){respects_binary_fp p})
-
-val admitted_pre
-  (#pre:slprop)
-  (p:(hmem pre -> GTot prop))
-  : GTot (p:(hmem pre -> prop){respects_fp p})
-
 /// To ensure that the attribute grammar typechecks, we have to define dummy functions so that
 /// the names are recognized.
 
@@ -109,10 +98,10 @@ val generic_index: unit -> Tot unit
 [@@ extract_update u32_pair.x]
 val update_x (r: ref (option u32_pair) u32_pair_pcm) (new_val: UInt32.t)
     : Steel unit (href r) (fun _ -> href r)
-    (admitted_pre (fun h0 -> if Some? (sel r h0) then True else False)) (admitted_post (fun h0 _ h1 ->
+    (fun h0 -> if Some? (sel r h0) then True else False) (fun h0 _ h1 ->
      Some? (sel r h1) /\ Some? (sel r h0) /\
      Some?.v (sel r h1) == { Some?.v (sel r h0) with x = new_val }
-    ))
+    )
 
 /// What should the attribute `[@@extract_update u32_pair]` checks for the signature of
 /// `update_z` ?
@@ -163,10 +152,10 @@ let _ : unit  = _ by (check_extract_update (`%update_x))
 val get_x (r: ref (option u32_pair) u32_pair_pcm)
   : Steel UInt32.t
   (href r) (fun _ -> href r)
-  (admitted_pre (fun h0 -> if Some? (sel r h0) then True else False)) (admitted_post (fun h0 v h1 ->
+  (fun h0 -> if Some? (sel r h0) then True else False) (fun h0 v h1 ->
     Some? (sel r h0) /\ Some? (sel r h1) /\
     sel r h0 == sel r h1 /\ v == (Some?.v (sel r h1)).y
-  ))
+  )
 
 /// The attribute `[@@extract_get u32_pair.x]` still has to check syntactically that the
 /// signature of `get_x` corresponds to a low-level get (one argument which is a ref, returns
@@ -203,7 +192,7 @@ let rw_pointer_get_sig
       (slref r)
       (fun _ -> slref r)
       (fun h0 -> True)
-      (admitted_post (fun h0 x h1 -> sel r h0 == sel r h1 /\ x == sel r h0))
+      (fun h0 x h1 -> sel r h0 == sel r h1 /\ x == sel r h0)
 
 let rw_pointer_upd_sig
   (a: Type u#a)
@@ -217,7 +206,7 @@ let rw_pointer_upd_sig
       (slref r)
       (fun _ -> slref r)
       (fun h0 -> True)
-      (admitted_post (fun h0 _ h1 -> sel r h1 == new_val))
+      (fun h0 _ h1 -> sel r h1 == new_val)
 
 /// The `a` parameter to the typeclass has to be a Low*-compatible value, something that can be
 /// assigned atomically in an update statement.
@@ -236,9 +225,9 @@ class rw_pointer (a: Type u#a) = {
 val increment_generic (#cls: rw_pointer UInt32.t) (r: cls.pointer_ref) : Steel unit
   (cls.pointer_slref r) (fun _ -> cls.pointer_slref r)
   (fun _ -> True)
-  (admitted_post (fun h0 _ h1 ->
+  (fun h0 _ h1 ->
     UInt32.v (cls.pointer_sel r h1) == UInt32.v (cls.pointer_sel r h0) + 1
-  ))
+  )
 
 (**** Instantiating the pointer typeclass *)
 
@@ -411,12 +400,12 @@ val explose_u32_pair_into_x_y (r: u32_pair_ref)
     slu32_pair_x_field r1 `star`
     slu32_pair_y_field r2)
   (fun _ -> True)
-  (admitted_post (fun h0 (r1, r2) h1 ->
+  (fun h0 (r1, r2) h1 ->
     (u32_pair_sel r h0 == {
       x = u32_pair_x_field_sel r1 h1;
       y = u32_pair_y_field_sel r2 h1;
     } /\ recombinable r (r1,r2))
-  ))
+  )
 
 /// How to implement this function? We should not have to allocate a new ref, instead we're going
 /// to use the same address in memory but in /two different memories/, that we will later join
@@ -434,11 +423,11 @@ val recombine_u32_pair_from_x_y
   (slu32_pair_x_field r1 `star` slu32_pair_y_field r2)
   (fun _ -> slu32_pair r)
   (fun _ -> recombinable r (r1, r2))
-  (admitted_post (fun (h0: hmem (slu32_pair_x_field r1 `star` slu32_pair_y_field r2)) _ h1 ->
+  (fun (h0: hmem (slu32_pair_x_field r1 `star` slu32_pair_y_field r2)) _ h1 ->
     u32_pair_sel r h1 == {
     x = u32_pair_x_field_sel r1 h0;
     y = u32_pair_y_field_sel r2 h0;
-  }))
+  })
 
 (**** focus *)
 
@@ -451,10 +440,10 @@ val focus_u32_pair_x_field
   (slu32_pair r)
   (fun r1 -> slu32_pair_x_field r1 `star` (slu32_pair_x_field r1 `wand` slu32_pair r))
   (fun _ -> True)
-  (admitted_post (fun h0 r1 h1 ->
+  (fun h0 r1 h1 ->
    wand_elim (slu32_pair_x_field r1) (slu32_pair r) h1;
    u32_pair_sel r h0 == { u32_pair_sel r h1 with x = u32_pair_x_field_sel r1 h1 }
-  ))
+  )
 
 /// Things to talk with Nik :
 ///  - (if Some? (selref r h0) then True else False) weird universe bug
