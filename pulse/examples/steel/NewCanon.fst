@@ -55,30 +55,49 @@ let rec remove_from_list (t:term) (l:list term) : Tac (list term) =
       if unify t hd then tl else hd::remove_from_list t tl
 
 (* Check if two lists of slprops are equivalent by recursively calling
-   try_candidates *)
-let rec equivalent_lists' (l1 l2:list term) : Tac unit =
+   try_candidates.
+   Assumes that only l2 contains terms with the head symbol unresolved.
+   It returns all elements that were not resolved during this iteration *)
+let rec equivalent_lists_once (l1 l2:list term) : Tac (list term * list term) =
   match l1 with
-  | [] -> begin match l2 with
-    | [] -> dump "equiv"
-    | _ -> dump "not equiv"
-    end
+  | [] -> [], l2
   | hd::tl ->
     let t, n = try_candidates hd l2 in
     if n = 0 then
       fail ("not equiv: no candidate found for scrutinee " ^ term_to_string hd)
     else if n = 1 then (
       let l2 = remove_from_list t l2 in
-      equivalent_lists' tl l2
+      equivalent_lists_once tl l2
     ) else
-      // TODO: Should try the full list if not successful instead of failing here.
-      // It could be the case that another term is more restricted, leading to
-      // a solution
-      fail "too many candidates"
+      // Too many candidates for this scrutinee
+      let rem1, rem2 = equivalent_lists_once tl l2 in
+      hd::rem1, rem2
+
+(* Recursively calls equivalent_lists_once.
+   Stops when we're done with unification, or when we didn't make any progress
+   If we didn't make any progress, we have too many candidates for some terms *)
+let rec equivalent_lists' (n:nat) (l1 l2:list term) : Tac unit =
+  match l1 with
+  | [] -> begin match l2 with
+    | [] -> dump "equiv"
+    | _ ->
+      // TODO: This should succeed if l2 only contains uvars or emp,
+      //as it can be unified with emp
+      dump "not equiv"
+    end
+  | _ ->
+    let rem1, rem2 = equivalent_lists_once l1 l2 in
+    let n' = List.Tot.length rem1 in
+    if n' >= n then
+      // Should always be smaller or equal to n
+      fail ("too many candidates for scrutinee")
+    else equivalent_lists' n' rem1 rem2
 
 (* First remove all trivially equal terms, then try to decide equivalence *)
 let equivalent_lists (l1 l2:list term) : Tac unit =
   let l1, l2 = trivial_cancels l1 l2 in
-  equivalent_lists' l1 l2
+  let n = List.Tot.length l1 in
+  equivalent_lists' n l1 l2
 
 #set-options "--print_implicits"
 
@@ -87,16 +106,14 @@ assume val q (#n:int) (#n':int) (n2:int) : Type
 
 let _ =
   let terms:list term =
-    // TODO: This is already supported, but the version with the two `q` swapped is not.
-    // We need to implement the TODO above, trying the rest of the terms and their
-    // candidates before giving up (q #_ #3 1 here has two candidates)
-    [(`p #0 1); (`p #2 1); (`p #1 0); (`q #1 #2 1); (`q #_ #3 1)] in
-//    [(`p #0 1); (`p #2 1); (`p #1 0); (`q #_ #3 1); (`q #1 #2 1)] in
+//    [(`p #0 1); (`p #2 1); (`p #1 0); (`q #1 #2 1); (`q #_ #3 1)] in
+    [(`p #0 1); (`p #2 1); (`p #1 0); (`q #_ #3 1); (`q #1 #2 1)] in
   let p_terms:list term =
     [(`p #2 1); (`p #_ 0); (`p #_ 1); (`q #_ #3 1); (`q #_ #_ 1)] in
   // The assertion fails because implicits are not unified in this case,
   // but the important part is the result of equivalent_lists, given as
   // a dump in the tactic.
   assert (True) by (
+//    let u = fresh_uvar None in
     equivalent_lists terms p_terms);
   ()
