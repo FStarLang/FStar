@@ -73,7 +73,7 @@ let _ : unit  = _ by (check_low (`%u32_pair))
 open FStar.Tactics.Typeclasses
 
 (** We are going to use pre/post conditions for specifications in Steel, so we need this helper *)
-let href (#a: Type u#a) (#pcm: pcm a) (r: ref a pcm) : slprop u#a =
+unfold let href (#a: Type u#a) (#pcm: pcm a) (r: ref a pcm) : slprop u#a =
   h_exists (pts_to r)
 
 (** Let us give a simple PCM for the pair *)
