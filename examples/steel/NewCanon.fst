@@ -37,12 +37,17 @@ let rec dump_terms (l:list term) : Tac unit =
   | [] -> dump "end"; ()
   | hd::tl -> dump (term_to_string hd); dump_terms tl
 
+exception Failed
+exception Success
+
 (* For a list of candidates l, count the number that can unify with t *)
 let rec try_candidates (t:term) (l:list term) : Tac (term * int) =
   match l with
   | [] -> t, 0
   | hd::tl ->
-      let res = unify t hd in
+      // Encapsulate unify in a try/with to ensure unification is not actually performed
+      let res = try if unify t hd then raise Success else raise Failed
+                with | Success -> true | _ -> false in
       let t', n' = try_candidates t tl in
       if res then hd, 1 + n'  else t', n'
 
@@ -73,6 +78,10 @@ let rec equivalent_lists_once (l1 l2:list term) : Tac (list term * list term) =
       let rem1, rem2 = equivalent_lists_once tl l2 in
       hd::rem1, rem2
 
+let get_head (l:list term) : term = match l with
+  | [] -> `()
+  | hd::_ -> hd
+
 (* Recursively calls equivalent_lists_once.
    Stops when we're done with unification, or when we didn't make any progress
    If we didn't make any progress, we have too many candidates for some terms *)
@@ -90,7 +99,8 @@ let rec equivalent_lists' (n:nat) (l1 l2:list term) : Tac unit =
     let n' = List.Tot.length rem1 in
     if n' >= n then
       // Should always be smaller or equal to n
-      fail ("too many candidates for scrutinee")
+      // If it is equal, no progress was made.
+      fail ("too many candidates for scrutinee " ^ term_to_string (get_head rem1))
     else equivalent_lists' n' rem1 rem2
 
 (* First remove all trivially equal terms, then try to decide equivalence *)
@@ -107,13 +117,14 @@ assume val q (#n:int) (#n':int) (n2:int) : Type
 let _ =
   let terms:list term =
 //    [(`p #0 1); (`p #2 1); (`p #1 0); (`q #1 #2 1); (`q #_ #3 1)] in
-    [(`p #0 1); (`p #2 1); (`p #1 0); (`q #_ #3 1); (`q #1 #2 1)] in
+    [(`p #0 1); (`p #2 1); (`p #1 0); (`q #_ #3 1); (`q #1 #2 1); (`p #2 2)] in
   let p_terms:list term =
+    // A uvar is also added at the head in the assert .. by
     [(`p #2 1); (`p #_ 0); (`p #_ 1); (`q #_ #3 1); (`q #_ #_ 1)] in
   // The assertion fails because implicits are not unified in this case,
   // but the important part is the result of equivalent_lists, given as
   // a dump in the tactic.
   assert (True) by (
-//    let u = fresh_uvar None in
-    equivalent_lists terms p_terms);
+    let u = fresh_uvar None in
+    equivalent_lists terms (u::p_terms));
   ()
