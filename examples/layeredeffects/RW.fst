@@ -194,13 +194,19 @@ let test_wwr #pre #post (b:bool) (f : unit -> RWI int RW pre post) (g : unit -> 
 let test_www #pre #post (b:bool) (f : unit -> RWI int RW pre post) (g : unit -> RWI int RW pre post) : RWI int RW pre post = if b then f () else g ()
 
 // EXPLODES: bound term variable not found in env...
-//let rec map #a #b
-//  (f : a -> RWI b RO (fun _ -> True) (fun _ _ _ -> True))
-//  (xs : list a)
-//  : RWI (list b) RO (fun _ -> True) (fun _ _ _ -> True)
-//  = match xs with
-//    | [] -> []
-//    | x::xs -> (f x)::(map f xs)
+
+(*
+ * AR: 06/23: works with a $ on f
+ *            sadly, with --debug_level Extreme, it works fine even without $, so hard to debug
+ *             trying to reproduce it on some other example
+ *)
+let rec map #a #b
+ ($f : a -> RWI b RO (fun _ -> True) (fun _ _ _ -> True))
+ (xs : list a)
+ : RWI (list b) RO (fun _ -> True) (fun _ _ _ -> True)
+ = match xs with
+   | [] -> []
+   | x::xs -> (f x)::(map f xs)
 
 let app #a #b #i #pre #post (f : a -> RWI b i pre post) (x : a) : RWI b i pre post = f x
 
