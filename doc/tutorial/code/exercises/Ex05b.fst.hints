@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "779ee163c97bfa8e637ac304f66f3582"
+      "7028a5a9f447713f121de978d850776c"
     ],
     [
       "Ex05b.fib",
@@ -36,7 +36,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0150882d9c4e7234a755a3dd2091e1f1"
+      "bff1eff86c2a4f25d8c21cb17820b566"
     ],
     [
       "Ex05b.fib_is_ok",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "13241baffba0667b20d44b59ff3ec80e"
+      "6579d7cad74018369de61d8c5b6055a9"
     ],
     [
       "Ex05b.fibonacci",
@@ -67,7 +67,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "163d607d066b9d2fec4a5a58b4aa27e5"
+      "f753450fd73555a088185d1d4f285c01"
     ],
     [
       "Ex05b.fib",
@@ -87,7 +87,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "273e75e3359356c93bf451fda94d2d48"
+      "c17a88ce0da6ff5afbf96441e3f7e6d6"
     ],
     [
       "Ex05b.fib_is_ok",
@@ -101,7 +101,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "988ef02e643652dc1bc366e9abb7fc9d"
+      "aaebaee3270abd12203602b15f070b20"
     ]
   ]
 ]
