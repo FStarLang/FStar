@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "136fa59c7492ed19ed564fc1de4030ca"
+      "07247a2d2e5a37b4e62689b53941b5b1"
     ],
     [
       "Steel.SteelAtomic.Basics.h_elim_emp_l",
@@ -20,7 +20,7 @@
         "typing_Steel.Memory.emp"
       ],
       0,
-      "21225404a12b7dd94f8c6add54e284af"
+      "779779de119af92e4d516141ba045ab8"
     ],
     [
       "Steel.SteelAtomic.Basics.h_commute",
@@ -29,7 +29,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "19c5dfd34b60926fa56486693acb18ba"
+      "9fd78e5acacbab115a5c89652473e68b"
     ],
     [
       "Steel.SteelAtomic.Basics.h_assoc_left",
@@ -38,7 +38,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "6beb371bc2f9a4b47aa51fbed3340011"
+      "a2a390c5447ab589a095e3c203446871"
     ],
     [
       "Steel.SteelAtomic.Basics.h_assoc_right",
@@ -47,7 +47,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "c6b13fde0af980902a0297f6985c3936"
+      "5152fc5ad661d125265bf7b10941c650"
     ],
     [
       "Steel.SteelAtomic.Basics.intro_h_exists",
@@ -56,7 +56,7 @@
       1,
       [ "@query" ],
       0,
-      "4b0b94c0b9b31865e99bc56bab805b47"
+      "c5871b3e0e0bb2491ffda42162d91c52"
     ],
     [
       "Steel.SteelAtomic.Basics.h_affine",
@@ -65,7 +65,7 @@
       1,
       [ "@query" ],
       0,
-      "63750d434f89cdda32e19850eefbf17c"
+      "b3ab2e9113318ff0b0f8775b1845363f"
     ],
     [
       "Steel.SteelAtomic.Basics.lift_atomic_repr_to_steel_repr",
@@ -85,7 +85,7 @@
         "true_interp", "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "eaf3b67c8cce0b43f58f0672ae9dcee7"
+      "7fe5cd599cc983d79f1ff3a5a5abcf65"
     ],
     [
       "Steel.SteelAtomic.Basics.lift_atomic_repr_to_steel_repr",
@@ -94,13 +94,13 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Steel.Memory_interpretation_Tm_arrow_807255d14f3eb16a8e169f1b55b6143d",
+        "FStar.List.Tot.Base_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "Steel.Memory_interpretation_Tm_arrow_c4bec6c9cf41f6a53b3325f10ef9468d",
+        "data_elim_Steel.Semantics.Hoare.MST.Mkst0",
         "equation_Steel.Effect.Atomic.state_uses",
         "equation_Steel.Effect.ens_to_act_ens",
         "equation_Steel.Semantics.Instantiate.state",
         "equation_Steel.Semantics.Instantiate.state0",
-        "function_token_typing_Steel.Memory.locks_invariant",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__interp",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star",
         "interpretation_Tm_abs_b92c112c1c88bd2669076189f8498e84",
@@ -126,10 +126,11 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__core",
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__locks_invariant",
         "true_interp", "typing_FStar.Set.empty",
-        "typing_Steel.Memory.lock_addr"
+        "typing_Steel.Memory.lock_addr",
+        "typing_Steel.Semantics.Instantiate.state0"
       ],
       0,
-      "371d816348e63d6a1157c06414916302"
+      "f6a1c490b09c6a739d6a1ab64a75870e"
     ],
     [
       "Steel.SteelAtomic.Basics.lift_atomic_to_steelT",
@@ -148,7 +149,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "252f8d78643f245efdb28a1263aba7de"
+      "4e85c641af783edbc44274b386e66284"
     ],
     [
       "Steel.SteelAtomic.Basics.h_intro_emp_l",
@@ -157,7 +158,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "a8e82e94980e0eec2c3b25921abf2b77"
+      "fd8541e4f2a42100be15bbe4184beb7a"
     ],
     [
       "Steel.SteelAtomic.Basics.h_elim_emp_l",
@@ -169,7 +170,7 @@
         "typing_Steel.Memory.emp"
       ],
       0,
-      "4a018cb1063494fd2c4704252ad51ca9"
+      "ef0f7744d626adb3cd4e430009d557a5"
     ],
     [
       "Steel.SteelAtomic.Basics.h_commute",
@@ -178,7 +179,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "41cb2f2abd3f4b6cdc10da0796ecc276"
+      "e2acfce1dcc1f82d01d874125315ca39"
     ],
     [
       "Steel.SteelAtomic.Basics.h_assoc_left",
@@ -187,7 +188,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "57e29a27362af1b7930a02bb72ff59ea"
+      "c512bd2e6c82bd96d2fc2f47c91df492"
     ],
     [
       "Steel.SteelAtomic.Basics.h_assoc_right",
@@ -196,7 +197,7 @@
       1,
       [ "@query", "equation_Steel.Memory.equiv" ],
       0,
-      "ed9e07c0eb752e91fb3535c40054f632"
+      "d564980f2f38934e37465b568d1d91ed"
     ],
     [
       "Steel.SteelAtomic.Basics.intro_h_exists",
@@ -205,7 +206,7 @@
       1,
       [ "@query" ],
       0,
-      "45bbaeaf22ac4984b57706527671b92b"
+      "dfc8a56b479d62d18fd61f53c01c816a"
     ],
     [
       "Steel.SteelAtomic.Basics.h_affine",
@@ -214,7 +215,7 @@
       1,
       [ "@query" ],
       0,
-      "16ce0a7b172df7073f01392dba75722e"
+      "cb42a6970f1ff47ce49c81e378bf6268"
     ],
     [
       "Steel.SteelAtomic.Basics.lift_atomic_repr_to_steel_repr",
@@ -277,7 +278,7 @@
         "true_interp", "typing_tok_Prims.T@tok"
       ],
       0,
-      "b0ca1642a4c6a8203e0d604280585890"
+      "aed12e210b3e4255d23d15f282f37f96"
     ]
   ]
 ]
