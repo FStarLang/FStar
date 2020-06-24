@@ -70,6 +70,11 @@ let failwith_impl
   a inv s
 = fun _ -> Error s
 
+let buffer_index_impl
+  #t inv b i
+=
+  fun _ -> Correct (B.index b i)
+
 noeq
 type rptr = {
   rptr_base: B.buffer U8.t;

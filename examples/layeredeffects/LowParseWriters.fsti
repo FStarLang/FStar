@@ -28,7 +28,7 @@ module HST = FStar.HyperStack.ST
 noeq
 type memory_invariant = {
   h0: Ghost.erased HS.mem;
-  lwrite: (lwrite: Ghost.erased B.loc);
+  lwrite: (Ghost.erased B.loc);
 }
 
 unfold
@@ -389,6 +389,55 @@ let failwith
   (s: string)
 : ERead a True (fun _ -> False) (fun _ -> True) inv
 = ERead?.reflect (failwith_repr a inv s)
+
+let buffer_index_spec
+  (#t: Type)
+  (inv: memory_invariant)
+  (b: B.buffer t)
+  (i: U32.t)
+: Tot (read_repr_spec t
+    (
+      B.live inv.h0 b /\
+      B.loc_buffer b `B.loc_disjoint` inv.lwrite /\
+      U32.v i < B.length b
+    )
+    (fun res ->
+       U32.v i < B.length b /\
+       res == Seq.index (B.as_seq inv.h0 b) (U32.v i)
+    )
+    (fun _ -> False)
+  )
+=
+  fun _ ->
+    let j = U32.v i in
+    Correct (Seq.index (B.as_seq inv.h0 b) j)
+
+inline_for_extraction
+val buffer_index_impl
+  (#t: Type)
+  (inv: memory_invariant)
+  (b: B.buffer t)
+  (i: U32.t)
+: Tot (read_repr_impl _ _ _ _ inv (buffer_index_spec inv b i))
+
+inline_for_extraction
+let buffer_index
+  (#t: Type)
+  (#inv: memory_invariant)
+  (b: B.buffer t)
+  (i: U32.t)
+: Read t
+    (
+      B.live inv.h0 b /\
+      B.loc_buffer b `B.loc_disjoint` inv.lwrite /\
+      U32.v i < B.length b
+    )
+    (fun res ->
+       U32.v i < B.length b /\
+       res == Seq.index (B.as_seq inv.h0 b) (U32.v i)
+    )
+    inv
+= ERead?.reflect (| _, buffer_index_impl inv b i |)
 
 inline_for_extraction
 val rptr: Type0
