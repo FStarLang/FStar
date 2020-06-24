@@ -1510,3 +1510,25 @@ let check_precond
   (inv: memory_invariant)
 : EWrite unit p1 (p1) precond (fun vin _ vout -> vin == vout /\ precond vin) (fun vin -> ~ (precond vin)) inv
 = EWrite?.reflect (check_precond_repr p1 precond c inv)
+
+let cat_spec
+  (#inv: memory_invariant)
+  (#p: parser)
+  (x: ptr p inv)
+: Tot (repr_spec  unit emp p (fun _ -> True) (fun _ _ vout -> vout == deref_spec x) (fun _ -> False))
+= fun _ -> Correct ((), deref_spec x)
+
+inline_for_extraction
+val cat_impl
+  (#inv: memory_invariant)
+  (#p: parser)
+  (x: ptr p inv)
+: Tot (repr_impl _ _ _ _ _ _ inv (cat_spec x))
+
+inline_for_extraction
+let cat
+  (#inv: memory_invariant)
+  (#p: parser)
+  (x: ptr p inv)
+: Write unit emp p (fun _ -> True) (fun _ _ vout -> vout == deref_spec x) inv
+= EWrite?.reflect (| _, cat_impl x |)

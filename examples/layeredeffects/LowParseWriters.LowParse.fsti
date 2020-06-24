@@ -120,7 +120,31 @@ val size_star
   (size (p1 `star` p2) (x1, x2) == size p1 x1 + size p2 x2)
   [SMTPat (size (p1 `star` p2) (x1, x2))]
 
-val valid_frame
+val valid_ext
+  (p: parser)
+  (h1: HS.mem)
+  (b1: B.buffer U8.t)
+  (pos1: U32.t)
+  (pos1' : U32.t)
+  (h2: HS.mem)
+  (b2: B.buffer U8.t)
+  (pos2: U32.t)
+  (pos2' : U32.t)
+: Lemma
+  (requires (
+    valid_pos p h1 b1 pos1 pos1' /\
+    U32.v pos2 <= U32.v pos2' /\
+    U32.v pos2' <= B.length b2 /\
+    B.live h2 b2 /\
+    B.as_seq h2 (B.gsub b2 pos2 (pos2' `U32.sub` pos2)) `Seq.equal` B.as_seq h1 (B.gsub b1 pos1 (pos1' `U32.sub` pos1))
+  ))
+  (ensures (
+    valid_pos p h1 b1 pos1 pos1' /\
+    valid_pos p h2 b2 pos2 pos2' /\
+    contents p h2 b2 pos2 pos2' == contents p h1 b1 pos1 pos1'
+  ))
+
+let valid_frame
   (p: parser)
   (h: HS.mem)
   (b: B.buffer U8.t)
@@ -140,8 +164,11 @@ val valid_frame
     valid_pos p h' b pos pos' /\
     contents p h' b pos pos' == contents p h b pos pos'
   ))
+= B.loc_buffer_mgsub_eq (B.trivial_preorder _) b pos (pos' `U32.sub` pos);
+  Classical.move_requires (valid_ext p h b pos pos' h' b pos) pos';
+  Classical.move_requires (valid_ext p h' b pos pos' h b pos) pos'
 
-val valid_gsub_elim
+let valid_gsub_elim
   (p: parser)
   (h: HS.mem)
   (b: B.buffer U8.t)
@@ -160,8 +187,10 @@ val valid_gsub_elim
     contents p h b (pos0 `U32.add` pos1) (pos0 `U32.add` pos2) == contents p h (B.gsub b pos0 len) pos1 pos2
   ))
   [SMTPat (valid_pos p h (B.gsub b pos0 len) pos1 pos2)]
+=
+  valid_ext p h (B.gsub b pos0 len) pos1 pos2 h b (pos0 `U32.add` pos1) (pos0 `U32.add` pos2)
 
-val valid_gsub_intro
+let valid_gsub_intro
   (p: parser)
   (h: HS.mem)
   (b: B.buffer U8.t)
@@ -179,6 +208,8 @@ val valid_gsub_intro
     contents p h b (pos0 `U32.add` pos1) (pos0 `U32.add` pos2) == contents p h (B.gsub b pos0 len) pos1 pos2
   ))
   [SMTPat (valid_pos p h (B.gsub b pos0 len) pos1 pos2)]
+=
+  valid_ext p h b (pos0 `U32.add` pos1) (pos0 `U32.add` pos2) h (B.gsub b pos0 len) pos1 pos2
 
 val parse_u32' : parser' U32.t
 

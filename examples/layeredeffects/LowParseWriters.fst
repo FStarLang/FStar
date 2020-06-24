@@ -367,3 +367,17 @@ let check_precond_impl
 let check_precond_repr
   p1 precond c inv
 = (| _, check_precond_impl p1 precond c inv |)
+
+let cat_impl
+  #inv #p x
+=
+  fun b len _ ->
+  if len `U32.lt` x.rptr_len
+  then
+    IOverflow
+  else begin
+    B.blit x.rptr_base 0ul b 0ul x.rptr_len;
+    let h' = HST.get () in
+    valid_ext p inv.h0 x.rptr_base 0ul x.rptr_len h' b 0ul x.rptr_len;
+    ICorrect () x.rptr_len
+  end
