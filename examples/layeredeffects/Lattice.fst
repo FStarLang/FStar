@@ -8,10 +8,18 @@ open FStar.List.Tot
 // GM: Force a type equality by SMT
 let coerce #a #b (x:a{a == b}) : b = x
 
+let unreachable #a () : Pure a (requires False) (ensures (fun _ -> False)) = coerce "whatever"
+
 type eff_label =
-  | ST
+  | RD
+  | WR
   //| DIV
   | EXN
+
+// TOBEDONE: split ST into READ/WRITE with relational prop on abides
+//           ^ this was incredibly easy
+
+// TODO: add specs
 
 type annot = eff_label -> bool
 
@@ -21,7 +29,8 @@ type repr0 (a:Type u#aa) : Type u#aa =
   state -> Tot (option a & state)
 
 let abides #a (f : repr0 a) (ann:annot) : prop =
-    (ann ST  = false ==> (forall s0. snd (f s0) == s0))
+    (ann RD  = false ==> (forall s0 s1. fst (f s0) == fst (f s1)))
+  /\ (ann WR  = false ==> (forall s0. snd (f s0) == s0))
   /\ (ann EXN = false ==> (forall s0. Some? (fst (f s0))))
 
 let interp (l : list eff_label) : annot =
@@ -62,6 +71,7 @@ let rec sublist_at
 
 type repr (a:Type u#aa)
           (labs : list u#0 eff_label) // GM: why do I need this annot...? seems we get an ill-formed type if not
+                                      // somehow it's about `type` instead of `let`
   : Type u#aa
   =
   r:(repr0 a){abides r (interp labs)}
@@ -93,7 +103,7 @@ let subcomp (a:Type)
          (requires (sublist labs1 labs2))
          (ensures (fun _ -> True))
   = f
-  
+
 let ite (p q r : Type0) = (p ==> q) /\ (~p ==> r)
 
 let if_then_else
@@ -105,6 +115,8 @@ let if_then_else
   : Type
   = repr a (labs1@labs2)
 
+[@@smt_reifiable_layered_effect]
+total // need this for catch!!
 reifiable
 reflectable
 layered_effect {
@@ -121,9 +133,9 @@ unfold
 let pure_monotonic #a (wp : pure_wp a) : Type =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2
 
-unfold
-let sp #a (wp : pure_wp a) : pure_post a =
-  fun x -> ~ (wp (fun y -> ~(x == y)))
+//unfold
+//let sp #a (wp : pure_wp a) : pure_post a =
+//  fun x -> ~ (wp (fun y -> ~(x == y)))
 
 let lift_pure_eff
  (a:Type)
@@ -136,23 +148,61 @@ let lift_pure_eff
  
 sub_effect PURE ~> EFF = lift_pure_eff
 
-let get () : EFF int [] =
+let get () : EFF int [RD] =
   EFF?.reflect (fun s0 -> (Some s0, s0))
   
-let put (s:state) : EFF unit [ST] =
+let put (s:state) : EFF unit [WR] =
   EFF?.reflect (fun _ -> (Some (), s))
 
 let raise #a () : EFF a [EXN] =
   EFF?.reflect (fun s0 -> (None, s0))
 
-let test0 (x y : int) : EFF int [EXN] =
+let test0 (x y : int) : EFF int [RD; EXN] =
   let z = get () in
   if x + z > 0
   then raise ()
   else y - z
 
-let test1 (x y : int) : EFF int [EXN; ST] =
+let test1 (x y : int) : EFF int [EXN; RD; WR] =
   let z = get () in
   if x + z > 0
   then raise ()
   else (put 42; y - z)
+
+let sublist_at_self (l1 : list eff_label)
+  : Lemma (sublist (l1@l1) l1)
+          [SMTPat (l1@l1)]
+  = Classical.forall_intro (List.Tot.Properties.append_mem l1 l1)
+
+let labpoly #labs (f g : unit -> EFF int labs) : EFF int labs =
+  f () + g ()
+
+(* no rollback *)
+let catch #a #labs
+  (f : unit -> EFF a (EXN::labs))
+  (g : unit -> EFF a labs)
+  : EFF a labs
+= EFF?.reflect begin
+  let reif : repr a labs =
+    fun s0 ->
+      let reif_r : repr a (EXN::labs) = reify (f ()) in
+      let r0 : option a & state = reif_r s0 in
+      let r1 : option a & state =
+        match r0 with
+        | (Some v, s1) -> (Some v, s1)
+        | (None, s1) -> reify (g ()) s1
+        | _ -> unreachable ()
+      in
+      r1
+  in
+  reif
+  end
+
+// TODO: haskell-like runST.
+// strong update with index on state type(s)?
+
+let test_catch #labs (f : unit -> EFF int [EXN;WR]) : EFF int [WR] =
+  catch f (fun () -> 42)
+
+let test_catch2 (f : unit -> EFF int [EXN;EXN;WR]) : EFF int [EXN;WR] =
+  catch f (fun () -> 42)

@@ -10,8 +10,10 @@ module H = FStar.Heap
 // GM: Force a type equality by SMT
 let coerce #a #b (x:a{a == b}) : b = x
 
+let unreachable #a () : Pure a (requires False) (ensures (fun _ -> False)) = coerce "whatever"
+
 type eff_label =
-  | ST
+  | WR
   //| DIV
   | EXN
 
@@ -23,29 +25,30 @@ let interp (l : list eff_label) : annot =
 type state = H.heap
 type wp a = all_wp_h H.heap a
 
-let wpof1 #a (l : list eff_label) : all_wp_h H.heap a =
-  let i = interp l in
-  match i ST, i EXN with
-  | false, false ->
-    fun p s0 -> forall x. p (V x) s0
-  | true , false ->
-    fun p s0 -> forall x s1. p (V x) s1
-  | false, true ->
-    fun p s0 -> forall r. p r s0
-  | true,  true ->
-    fun p s0 -> forall r s1. p r s1
+// boring, exponential
+//let wpof1 #a (l : list eff_label) : all_wp_h H.heap a =
+//  let i = interp l in
+//  match i ST, i EXN with
+//  | false, false ->
+//    fun p s0 -> forall x. p (V x) s0
+//  | true , false ->
+//    fun p s0 -> forall x s1. p (V x) s1
+//  | false, true ->
+//    fun p s0 -> forall r. p r s0
+//  | true,  true ->
+//    fun p s0 -> forall r s1. p r s1
 
 (* more generic *)
 let wpof2 #a (l : list eff_label) : wp a =
   let i = interp l in
   let wp : wp a = fun p s0 ->
     (forall r s1.
-       (i ST  \/ s1 == s0) ==>
+       (i WR  \/ s1 == s0) ==>
        (i EXN \/ V? r) ==>
        p r s1)
   in
   wp
-  
+
 type repr (a:Type u#aa)
           (labs : list u#0 eff_label) // GM: why do I need this annot...? seems we get an ill-formed type if not
   : Type u#0
@@ -118,6 +121,8 @@ let if_then_else
   : Type
   = repr a (labs1@labs2)
 
+[@@smt_reifiable_layered_effect]
+total
 reifiable
 reflectable
 layered_effect {
@@ -134,9 +139,9 @@ unfold
 let pure_monotonic #a (wp : pure_wp a) : Type =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2
 
-unfold
-let sp #a (wp : pure_wp a) : pure_post a =
-  fun x -> ~ (wp (fun y -> ~(x == y)))
+//unfold
+//let sp #a (wp : pure_wp a) : pure_post a =
+//  fun x -> ~ (wp (fun y -> ~(x == y)))
 
 let lift_pure_eff
  (a:Type)
@@ -155,12 +160,12 @@ let get () : EFF H.heap [] =
 let (!) #a (r:ref a) : EFF a [] =
   EFF?.reflect (fun () -> !r)
   
-let (:=) #a (r:ref a) (v:a) : EFF unit [ST] =
+let (:=) #a (r:ref a) (v:a) : EFF unit [WR] =
   EFF?.reflect (fun () -> r := v)
 
 (* GM: The refinement is clearly crap, just trying to get a typeable
 put-like thing here. *)
-let put (s:state{forall s1. heap_rel s1 s}) : EFF unit [ST] =
+let put (s:state{forall s1. heap_rel s1 s}) : EFF unit [WR] =
   EFF?.reflect (fun () -> gst_put s)
 
 let raise #a (e:exn) : EFF a [EXN] =
@@ -172,8 +177,42 @@ let test0 (r:ref int) (x y : int) : EFF int [EXN] =
   then raise (Failure "nope")
   else y - z
 
-let test1 (r:ref int) (x y : int) : EFF int [EXN; ST] =
+let test1 (r:ref int) (x y : int) : EFF int [EXN; WR] =
   let z = !r in
   if x + z > 0
   then raise (Failure "nope")
   else (r := 42; y - z)
+
+
+let sublist_at_self (l1 : list eff_label)
+  : Lemma (sublist (l1@l1) l1)
+          [SMTPat (l1@l1)]
+  = Classical.forall_intro (List.Tot.Properties.append_mem l1 l1)
+    
+let labpoly #labs (f g : unit -> EFF int labs) : EFF int labs =
+  f () + g ()
+
+assume val try_with
+  (#a:_) (#wpf:_) (#wpg:_)
+  (f : unit -> ALL a wpf)
+  (g : (e:exn -> ALL a (wpg e)))
+  : ALL a (fun p s0 -> wpf (fun r s1 -> match r with
+                                  | E e -> wpg e p s1
+                                  | _ -> p r s1) s0)
+
+(* no rollback *)
+let catch #a #labs (f : unit -> EFF a (EXN::labs)) (g : unit -> EFF a labs) : EFF a labs by (dump "") =
+  EFF?.reflect begin
+  let reif : repr a labs =
+    fun () ->
+      try_with #a
+               #(wpof2 (EXN::labs))
+               #(fun _ -> wpof2 labs)
+               (fun () -> reify (f ()) ())
+               (fun _e -> reify (g ()) ())
+  in
+  reif
+  end
+
+let test_catch (f : unit -> EFF int [EXN;ST]) : EFF int [ST] =
+  catch f (fun () -> 42)
