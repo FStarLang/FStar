@@ -28,15 +28,13 @@ module HST = FStar.HyperStack.ST
 noeq
 type memory_invariant = {
   h0: Ghost.erased HS.mem;
-  lread: Ghost.erased B.loc;
-  lwrite: (lwrite: Ghost.erased B.loc { lread `B.loc_disjoint` lwrite });
+  lwrite: (lwrite: Ghost.erased B.loc);
 }
 
 unfold
 let memory_invariant_includes (ol ne: memory_invariant) =
   B.modifies ol.lwrite ol.h0 ne.h0 /\
-  ol.lwrite `B.loc_includes` ne.lwrite /\
-  ne.lread `B.loc_includes` ol.lread
+  ol.lwrite `B.loc_includes` ne.lwrite
 
 let memory_invariant_includes_trans (l1 l2 l3: memory_invariant) : Lemma
   (requires (l1 `memory_invariant_includes` l2 /\ l2 `memory_invariant_includes` l3))
@@ -408,7 +406,7 @@ val mk_ptr
   (b: B.buffer u8)
   (len: U32.t { len == B.len b })
 : Pure (ptr p inv)
-  (requires (valid_buffer p inv.h0 b /\ inv.lread `B.loc_includes` B.loc_buffer b))
+  (requires (valid_buffer p inv.h0 b /\ inv.lwrite `B.loc_disjoint` B.loc_buffer b))
   (ensures (fun res -> deref_spec res == buffer_contents p inv.h0 b))
 
 inline_for_extraction
@@ -420,7 +418,7 @@ val buffer_of_ptr
     let (b, len) = bl in
     B.len b == len /\
     valid_buffer p inv.h0 b /\
-    inv.lread `B.loc_includes` B.loc_buffer b /\
+    inv.lwrite `B.loc_disjoint` B.loc_buffer b /\
     deref_spec x == buffer_contents p inv.h0 b
   })
 
@@ -513,7 +511,7 @@ let validate_pre
   (b: B.buffer U8.t)
 : Tot pure_pre
 =
-  inv.lread `B.loc_includes` B.loc_buffer b /\
+  inv.lwrite `B.loc_disjoint` B.loc_buffer b /\
   B.live inv.h0 b
 
 // unfold

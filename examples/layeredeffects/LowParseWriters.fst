@@ -79,7 +79,7 @@ type rptr = {
 let valid_rptr
   p inv x
 =
-  inv.lread `B.loc_includes` B.loc_buffer x.rptr_base /\
+  inv.lwrite `B.loc_disjoint` B.loc_buffer x.rptr_base /\
   valid_buffer p inv.h0 x.rptr_base
 
 let deref_spec
