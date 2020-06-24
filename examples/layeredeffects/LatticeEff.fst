@@ -13,6 +13,9 @@ let coerce #a #b (x:a{a == b}) : b = x
 let unreachable #a () : Pure a (requires False) (ensures (fun _ -> False)) = coerce "whatever"
 
 type eff_label =
+  // GM: Can we do this one? ALL's WPs are unary and this is a
+  // relational property.
+  // | RD
   | WR
   //| DIV
   | EXN
@@ -43,8 +46,8 @@ let wpof2 #a (l : list eff_label) : wp a =
   let i = interp l in
   let wp : wp a = fun p s0 ->
     (forall r s1.
-       (i WR  \/ s1 == s0) ==>
-       (i EXN \/ V? r) ==>
+       (i WR  == false ==> s1 == s0) ==>
+       (i EXN == false ==> V? r) ==>
        p r s1)
   in
   wp
@@ -194,25 +197,19 @@ let labpoly #labs (f g : unit -> EFF int labs) : EFF int labs =
 
 assume val try_with
   (#a:_) (#wpf:_) (#wpg:_)
-  (f : unit -> ALL a wpf)
-  (g : (e:exn -> ALL a (wpg e)))
+  ($f : unit -> ALL a wpf)
+  ($g : unit -> ALL a wpg)
   : ALL a (fun p s0 -> wpf (fun r s1 -> match r with
-                                  | E e -> wpg e p s1
-                                  | _ -> p r s1) s0)
+                                  | V _ -> p r s1
+                                  | _ -> wpg p s1) s0)
 
 (* no rollback *)
-let catch #a #labs (f : unit -> EFF a (EXN::labs)) (g : unit -> EFF a labs) : EFF a labs by (dump "") =
+(* GM: NB: this looks incredibly simple, but took like an hour to get right
+ * when the WP of try_with wasn't exactly what was expected :-) *)
+let catch #a #labs (f : unit -> EFF a (EXN::labs)) (g : unit -> EFF a labs) : EFF a labs =
   EFF?.reflect begin
-  let reif : repr a labs =
-    fun () ->
-      try_with #a
-               #(wpof2 (EXN::labs))
-               #(fun _ -> wpof2 labs)
-               (fun () -> reify (f ()) ())
-               (fun _e -> reify (g ()) ())
-  in
-  reif
+  fun () -> try_with (reify (f ())) (reify (g ()))
   end
 
-let test_catch (f : unit -> EFF int [EXN;ST]) : EFF int [ST] =
+let test_catch (f : unit -> EFF int [EXN;WR]) : EFF int [WR] =
   catch f (fun () -> 42)
