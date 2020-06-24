@@ -439,6 +439,59 @@ let buffer_index
     inv
 = ERead?.reflect (| _, buffer_index_impl inv b i |)
 
+let buffer_sub_spec
+  (#t: Type)
+  (inv: memory_invariant)
+  (b: B.buffer t)
+  (i: U32.t)
+  (len: Ghost.erased U32.t)
+: Tot (read_repr_spec (B.buffer t)
+    (
+      B.live inv.h0 b /\
+      B.loc_buffer b `B.loc_disjoint` inv.lwrite /\
+      U32.v i + U32.v len <= B.length b
+    )
+    (fun res ->
+       U32.v i + U32.v len <= B.length b /\
+       res == B.gsub b i len /\
+       B.loc_buffer res `B.loc_disjoint` inv.lwrite
+    )
+    (fun _ -> False)
+  )
+=
+  fun _ ->
+    Correct (B.gsub b i len)
+
+inline_for_extraction
+val buffer_sub_impl
+  (#t: Type)
+  (inv: memory_invariant)
+  (b: B.buffer t)
+  (i: U32.t)
+  (len: Ghost.erased U32.t)
+: Tot (read_repr_impl _ _ _ _ inv (buffer_sub_spec inv b i len))
+
+inline_for_extraction
+let buffer_sub
+  (#t: Type)
+  (#inv: memory_invariant)
+  (b: B.buffer t)
+  (i: U32.t)
+  (len: Ghost.erased U32.t)
+: Read (B.buffer t)
+    (
+      B.live inv.h0 b /\
+      B.loc_buffer b `B.loc_disjoint` inv.lwrite /\
+      U32.v i + U32.v len <= B.length b
+    )
+    (fun res ->
+       U32.v i + U32.v len <= B.length b /\
+       res == B.gsub b i len /\
+       B.loc_buffer res `B.loc_disjoint` inv.lwrite
+    )
+    inv
+= ERead?.reflect (| _, buffer_sub_impl inv b i len |)
+
 inline_for_extraction
 val rptr: Type0
 val valid_rptr (p: parser) : memory_invariant -> rptr -> GTot Type0

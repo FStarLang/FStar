@@ -75,6 +75,11 @@ let buffer_index_impl
 =
   fun _ -> Correct (B.index b i)
 
+let buffer_sub_impl
+  #t inv b i len
+=
+  fun _ -> Correct (B.sub b i len)
+
 noeq
 type rptr = {
   rptr_base: B.buffer U8.t;
