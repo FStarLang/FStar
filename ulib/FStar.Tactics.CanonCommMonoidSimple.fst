@@ -178,7 +178,7 @@ let sort_via_swaps (#a:Type) (am : amap a)  (xs:list atom)
   : Lemma (exists ss. sort xs == apply_swaps xs ss)
   =
   List.Tot.Properties.sortWith_permutation #nat (compare_of_bool (<)) xs;
-  let ss = equal_counts_implies_swaps_ref #nat xs (sort xs) in
+  let ss = equal_counts_implies_swaps #nat xs (sort xs) in
   ()
 
 let sort_correct_aux (#a:Type) (m:cm a) (am:amap a) (xs:list atom) :
