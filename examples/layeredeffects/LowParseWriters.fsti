@@ -1184,7 +1184,7 @@ let write_two_ints_ifthenelse_2_aux_lemma
   (x y: U32.t)
 : Lemma
   (destr_repr_spec unit emp (parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ _ -> True) (fun _ -> False) l (write_two_ints_ifthenelse_2_aux l x y) () == Correct ((), (x, (if U32.v x < U32.v y then x else y))) )
-= admit () // FIXME: WHY WHY WHY?
+= ()
 
 unfold
 let recast_writer_post
