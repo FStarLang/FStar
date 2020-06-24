@@ -32,7 +32,7 @@ type action : Type0 -> Type0 -> Type u#1 =
 noeq
 type repr0 (a:Type u#aa) : Type u#(max 1 aa) =
   | Return : a -> repr0 a
-  | Act    : #i:_ -> #o:_ -> action i o -> i -> (o -> repr0 a) -> repr0 a
+  | Act    : #i:_ -> #o:_ -> act:(action i o) -> i -> k:(o -> repr0 a) -> repr0 a
   
 let abides_act #i #o (ann:annot) (a : action i o) : prop =
     (Read? a ==> ann RD)
@@ -267,3 +267,44 @@ let test_catch #labs (f : unit -> EFF int [EXN;WR]) : EFF int [WR] =
 
 let test_catch2 (f : unit -> EFF int [EXN;EXN;WR]) : EFF int [EXN;WR] =
   catch f (fun () -> 42)
+
+let interp_pure_tree #a (t : repr a []) : Tot a =
+  match t with
+  | Return x -> x
+
+let interp_pure #a (f : unit -> EFF a []) : Tot a = interp_pure_tree (reify (f ()))
+
+let rec interp_rd_tree #a (t : repr a [RD]) (s:state) : Tot a =
+  match t with
+  | Return x -> x
+  | Act Read _ k ->
+    FStar.WellFounded.axiom1 k s;
+    interp_rd_tree (k s) s
+
+let interp_rd #a (f : unit -> EFF a [RD]) (s:state) : Tot a = interp_rd_tree (reify (f ())) s
+
+let rec interp_rdwr_tree #a (t : repr a [RD;WR]) (s:state) : Tot (a & state) =
+  match t with
+  | Return x -> (x, s)
+  | Act Read _ k ->
+    FStar.WellFounded.axiom1 k s;
+    interp_rdwr_tree (k s) s
+  | Act Write s k ->
+    FStar.WellFounded.axiom1 k ();
+    interp_rdwr_tree (k ()) s
+    
+let interp_rdwr #a (f : unit -> EFF a [RD;WR]) (s:state) : Tot (a & state) = interp_rdwr_tree (reify (f ())) s
+
+let rec interp_all_tree #a (t : repr a [RD;WR;EXN]) (s:state) : Tot (option a & state) =
+  match t with
+  | Return x -> (Some x, s)
+  | Act Read _ k ->
+    FStar.WellFounded.axiom1 k s;
+    interp_all_tree (k s) s
+  | Act Write s k ->
+    FStar.WellFounded.axiom1 k ();
+    interp_all_tree (k ()) s
+  | Act Raise e k ->
+    (None, s)
+    
+let interp_all #a (f : unit -> EFF a [RD;WR;EXN]) (s:state) : Tot (option a & state) = interp_all_tree (reify (f ())) s
