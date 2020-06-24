@@ -1439,6 +1439,19 @@ let valid_synth
 : Write unit p1 (p2) precond (fun vin _ vout -> precond vin /\ f vin == vout) inv
 = EWrite?.reflect (valid_synth_repr p1 p2 precond f v inv)
 
+inline_for_extraction
+val cast
+  (p1: parser)
+  (p2: parser)
+  (precond: pre_t p1)
+  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  (v: valid_synth_t p1 p2 precond f)
+  (inv: memory_invariant)
+  (x1: ptr p1 inv { precond (deref_spec x1) })
+: Tot (x2: ptr p2 inv {
+    deref_spec x2 == f (deref_spec x1)
+  })
+
 let valid_synth_star_assoc_1
   (p1 p2 p3: parser)
 : Tot (valid_synth_t ((p1 `star` p2) `star` p3) (p1 `star` (p2 `star` p3)) (fun _ -> True) (fun ((x1, x2), x3) -> (x1, (x2, x3))))

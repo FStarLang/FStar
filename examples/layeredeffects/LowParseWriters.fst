@@ -333,6 +333,12 @@ let valid_synth_impl
     v.valid_synth_valid h buf 0ul pos;
     ICorrect () pos
 
+let cast
+  p1 p2 precond f v inv x1
+=
+  v.valid_synth_valid inv.h0 x1.rptr_base 0ul x1.rptr_len;
+  x1
+
 let check_precond_spec
   (p1: parser)
   (precond: pre_t p1)
