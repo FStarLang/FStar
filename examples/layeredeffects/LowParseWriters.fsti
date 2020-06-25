@@ -524,6 +524,7 @@ inline_for_extraction
 val rptr: Type0
 val valid_rptr (p: parser) : memory_invariant -> rptr -> GTot Type0
 
+inline_for_extraction
 let ptr (p: parser) (inv: memory_invariant) =
   (x: rptr { valid_rptr p inv x })
 

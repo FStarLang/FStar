@@ -7,6 +7,14 @@ module U32 = FStar.UInt32
 module HST = FStar.HyperStack.ST
 
 inline_for_extraction
+let dfst
+  (#u: Type)
+  (#v: ((x: u) -> Type))
+  (p: dtuple2 u v)
+: Tot u
+= match p with (| x, _ |) -> x
+
+inline_for_extraction
 let dsnd
   (#u: Type)
   (#v: ((x: u) -> Type))
