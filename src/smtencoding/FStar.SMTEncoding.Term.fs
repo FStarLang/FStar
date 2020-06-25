@@ -986,7 +986,6 @@ and mkPrelude z3options =
                     (exists ((t Term)) (HasTypeZ x t)))\n\
                 (declare-fun ApplyTF (Term Fuel) Term)\n\
                 (declare-fun ApplyTT (Term Term) Term)\n\
-                (declare-fun Rank (Term) Int)\n\
                 (declare-fun Closure (Term) Term)\n\
                 (declare-fun ConsTerm (Term Term) Term)\n\
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
@@ -1025,14 +1024,18 @@ and mkPrelude z3options =
                                          (or (Valid (Prims.precedes t1 t2 x1 y1))\n\
                                              (and (= x1 y1)\n\
                                                   (Valid (Prims.precedes Prims.lex_t Prims.lex_t x2 y2)))))))\n\
-                      (assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
+                       (assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
                                                           (! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n\
                                                                   (Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n\
                                                           :pattern (Prims.precedes t1 t2 e1 e2))))\n\
-                      (assert (forall ((t1 Term) (t2 Term))\n\
-                                      (! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n\
-                                      (< (Rank t1) (Rank t2)))\n\
-                                      :pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
+                       (assert (forall ((ty1 Term) (t1 Term) (ty2 Term) (t2 Term) (ty3 Term) (t3 Term))\n\
+                                       (! (implies (and (Valid (Prims.precedes ty1 ty2 t1 t2)) \n\
+                                                        (Valid (Prims.precedes ty2 ty3 t2 t3)))\n\
+                                                   (Valid (Prims.precedes ty1 ty3 t1 t3)))\n\
+                                       :pattern ((Prims.precedes ty1 ty2 t1 t2)\n\
+                                                 (Prims.precedes ty2 ty3 t1 t3))\n\
+                                       :qid __precedes_trans)))\n"
+   in
    let valid_intro =
      "(assert (forall ((e Term) (t Term))\n\
                       (! (implies (HasType e t)\n\
@@ -1156,7 +1159,6 @@ let mk_HasTypeWithFuel f v t = match f with
     | Some f -> mk_HasTypeFuel f v t
 let mk_NoHoist dummy b = mkApp("NoHoist", [dummy;b]) b.rng
 let mk_Destruct v     = mkApp("Destruct", [v])
-let mk_Rank x         = mkApp("Rank", [x])
 let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
 let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r

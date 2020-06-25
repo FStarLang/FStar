@@ -1858,7 +1858,7 @@ and (mkPrelude : Prims.string -> Prims.string) =
   fun z3options ->
     let basic =
       Prims.op_Hat z3options
-        "(declare-sort FString)\n(declare-fun FString_constr_id (FString) Int)\n\n(declare-sort Term)\n(declare-fun Term_constr_id (Term) Int)\n(declare-sort Dummy_sort)\n(declare-fun Dummy_value () Dummy_sort)\n(declare-datatypes () ((Fuel \n(ZFuel) \n(SFuel (prec Fuel)))))\n(declare-fun MaxIFuel () Fuel)\n(declare-fun MaxFuel () Fuel)\n(declare-fun PreType (Term) Term)\n(declare-fun Valid (Term) Bool)\n(declare-fun HasTypeFuel (Fuel Term Term) Bool)\n(define-fun HasTypeZ ((x Term) (t Term)) Bool\n(HasTypeFuel ZFuel x t))\n(define-fun HasType ((x Term) (t Term)) Bool\n(HasTypeFuel MaxIFuel x t))\n(declare-fun IsTotFun (Term) Bool)\n\n                ;;fuel irrelevance\n(assert (forall ((f Fuel) (x Term) (t Term))\n(! (= (HasTypeFuel (SFuel f) x t)\n(HasTypeZ x t))\n:pattern ((HasTypeFuel (SFuel f) x t)))))\n(declare-fun NoHoist (Term Bool) Bool)\n;;no-hoist\n(assert (forall ((dummy Term) (b Bool))\n(! (= (NoHoist dummy b)\nb)\n:pattern ((NoHoist dummy b)))))\n(define-fun  IsTyped ((x Term)) Bool\n(exists ((t Term)) (HasTypeZ x t)))\n(declare-fun ApplyTF (Term Fuel) Term)\n(declare-fun ApplyTT (Term Term) Term)\n(declare-fun Rank (Term) Int)\n(declare-fun Closure (Term) Term)\n(declare-fun ConsTerm (Term Term) Term)\n(declare-fun ConsFuel (Fuel Term) Term)\n(declare-fun Tm_uvar (Int) Term)\n(define-fun Reify ((x Term)) Term x)\n(declare-fun Prims.precedes (Term Term Term Term) Term)\n(declare-fun Range_const (Int) Term)\n(declare-fun _mul (Int Int) Int)\n(declare-fun _div (Int Int) Int)\n(declare-fun _mod (Int Int) Int)\n(declare-fun __uu__PartialApp () Term)\n(assert (forall ((x Int) (y Int)) (! (= (_mul x y) (* x y)) :pattern ((_mul x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_div x y) (div x y)) :pattern ((_div x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_mod x y) (mod x y)) :pattern ((_mod x y)))))\n(declare-fun _rmul (Real Real) Real)\n(declare-fun _rdiv (Real Real) Real)\n(assert (forall ((x Real) (y Real)) (! (= (_rmul x y) (* x y)) :pattern ((_rmul x y)))))\n(assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))" in
+        "(declare-sort FString)\n(declare-fun FString_constr_id (FString) Int)\n\n(declare-sort Term)\n(declare-fun Term_constr_id (Term) Int)\n(declare-sort Dummy_sort)\n(declare-fun Dummy_value () Dummy_sort)\n(declare-datatypes () ((Fuel \n(ZFuel) \n(SFuel (prec Fuel)))))\n(declare-fun MaxIFuel () Fuel)\n(declare-fun MaxFuel () Fuel)\n(declare-fun PreType (Term) Term)\n(declare-fun Valid (Term) Bool)\n(declare-fun HasTypeFuel (Fuel Term Term) Bool)\n(define-fun HasTypeZ ((x Term) (t Term)) Bool\n(HasTypeFuel ZFuel x t))\n(define-fun HasType ((x Term) (t Term)) Bool\n(HasTypeFuel MaxIFuel x t))\n(declare-fun IsTotFun (Term) Bool)\n\n                ;;fuel irrelevance\n(assert (forall ((f Fuel) (x Term) (t Term))\n(! (= (HasTypeFuel (SFuel f) x t)\n(HasTypeZ x t))\n:pattern ((HasTypeFuel (SFuel f) x t)))))\n(declare-fun NoHoist (Term Bool) Bool)\n;;no-hoist\n(assert (forall ((dummy Term) (b Bool))\n(! (= (NoHoist dummy b)\nb)\n:pattern ((NoHoist dummy b)))))\n(define-fun  IsTyped ((x Term)) Bool\n(exists ((t Term)) (HasTypeZ x t)))\n(declare-fun ApplyTF (Term Fuel) Term)\n(declare-fun ApplyTT (Term Term) Term)\n(declare-fun Closure (Term) Term)\n(declare-fun ConsTerm (Term Term) Term)\n(declare-fun ConsFuel (Fuel Term) Term)\n(declare-fun Tm_uvar (Int) Term)\n(define-fun Reify ((x Term)) Term x)\n(declare-fun Prims.precedes (Term Term Term Term) Term)\n(declare-fun Range_const (Int) Term)\n(declare-fun _mul (Int Int) Int)\n(declare-fun _div (Int Int) Int)\n(declare-fun _mod (Int Int) Int)\n(declare-fun __uu__PartialApp () Term)\n(assert (forall ((x Int) (y Int)) (! (= (_mul x y) (* x y)) :pattern ((_mul x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_div x y) (div x y)) :pattern ((_div x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_mod x y) (mod x y)) :pattern ((_mod x y)))))\n(declare-fun _rmul (Real Real) Real)\n(declare-fun _rdiv (Real Real) Real)\n(assert (forall ((x Real) (y Real)) (! (= (_rmul x y) (* x y)) :pattern ((_rmul x y)))))\n(assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))" in
     let constrs =
       [("FString_const", [("FString_const_proj_0", Int_sort, true)],
          String_sort, Prims.int_zero, true);
@@ -1892,7 +1892,7 @@ and (mkPrelude : Prims.string -> Prims.string) =
           (FStar_List.map (declToSmt z3options)) in
       FStar_All.pipe_right uu____8417 (FStar_String.concat "\n") in
     let lex_ordering =
-      "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n(is-LexCons t))\n(declare-fun Prims.lex_t () Term)\n(assert (forall ((t1 Term) (t2 Term) (x1 Term) (x2 Term) (y1 Term) (y2 Term))\n(iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t (LexCons t1 x1 x2) (LexCons t2 y1 y2)))\n(or (Valid (Prims.precedes t1 t2 x1 y1))\n(and (= x1 y1)\n(Valid (Prims.precedes Prims.lex_t Prims.lex_t x2 y2)))))))\n(assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n(! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n(Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n:pattern (Prims.precedes t1 t2 e1 e2))))\n(assert (forall ((t1 Term) (t2 Term))\n(! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n(< (Rank t1) (Rank t2)))\n:pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
+      "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n(is-LexCons t))\n(declare-fun Prims.lex_t () Term)\n(assert (forall ((t1 Term) (t2 Term) (x1 Term) (x2 Term) (y1 Term) (y2 Term))\n(iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t (LexCons t1 x1 x2) (LexCons t2 y1 y2)))\n(or (Valid (Prims.precedes t1 t2 x1 y1))\n(and (= x1 y1)\n(Valid (Prims.precedes Prims.lex_t Prims.lex_t x2 y2)))))))\n(assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n(! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n(Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n:pattern (Prims.precedes t1 t2 e1 e2))))\n(assert (forall ((ty1 Term) (t1 Term) (ty2 Term) (t2 Term) (ty3 Term) (t3 Term))\n(! (implies (and (Valid (Prims.precedes ty1 ty2 t1 t2)) \n(Valid (Prims.precedes ty2 ty3 t2 t3)))\n(Valid (Prims.precedes ty1 ty3 t1 t3)))\n:pattern ((Prims.precedes ty1 ty2 t1 t2)\n(Prims.precedes ty2 ty3 t1 t3))\n:qid __precedes_trans)))\n" in
     let valid_intro =
       "(assert (forall ((e Term) (t Term))\n(! (implies (HasType e t)\n(Valid t))\n:pattern ((HasType e t)\n(Valid t))\n:qid __prelude_valid_intro)))\n" in
     let valid_elim =
@@ -2190,8 +2190,6 @@ let (mk_NoHoist : term -> term -> term) =
   fun dummy -> fun b -> mkApp ("NoHoist", [dummy; b]) b.rng
 let (mk_Destruct : term -> FStar_Range.range -> term) =
   fun v -> mkApp ("Destruct", [v])
-let (mk_Rank : term -> FStar_Range.range -> term) =
-  fun x -> mkApp ("Rank", [x])
 let (mk_tester : Prims.string -> term -> term) =
   fun n -> fun t -> mkApp ((Prims.op_Hat "is-" n), [t]) t.rng
 let (mk_ApplyTF : term -> term -> term) =
@@ -2200,17 +2198,17 @@ let (mk_ApplyTT : term -> term -> FStar_Range.range -> term) =
   fun t -> fun t' -> fun r -> mkApp ("ApplyTT", [t; t']) r
 let (kick_partial_app : term -> term) =
   fun t ->
-    let uu____9567 =
-      let uu____9568 = mkApp ("__uu__PartialApp", []) t.rng in
-      mk_ApplyTT uu____9568 t t.rng in
-    FStar_All.pipe_right uu____9567 mk_Valid
+    let uu____9552 =
+      let uu____9553 = mkApp ("__uu__PartialApp", []) t.rng in
+      mk_ApplyTT uu____9553 t t.rng in
+    FStar_All.pipe_right uu____9552 mk_Valid
 let (mk_String_const : Prims.string -> FStar_Range.range -> term) =
   fun s ->
     fun r ->
-      let uu____9586 =
-        let uu____9594 = let uu____9597 = mk (String s) r in [uu____9597] in
-        ("FString_const", uu____9594) in
-      mkApp uu____9586 r
+      let uu____9571 =
+        let uu____9579 = let uu____9582 = mk (String s) r in [uu____9582] in
+        ("FString_const", uu____9579) in
+      mkApp uu____9571 r
 let (mk_Precedes : term -> term -> term -> term -> FStar_Range.range -> term)
   =
   fun x1 ->
@@ -2218,8 +2216,8 @@ let (mk_Precedes : term -> term -> term -> term -> FStar_Range.range -> term)
       fun x3 ->
         fun x4 ->
           fun r ->
-            let uu____9628 = mkApp ("Prims.precedes", [x1; x2; x3; x4]) r in
-            FStar_All.pipe_right uu____9628 mk_Valid
+            let uu____9613 = mkApp ("Prims.precedes", [x1; x2; x3; x4]) r in
+            FStar_All.pipe_right uu____9613 mk_Valid
 let (mk_LexCons : term -> term -> term -> FStar_Range.range -> term) =
   fun x1 -> fun x2 -> fun x3 -> fun r -> mkApp ("LexCons", [x1; x2; x3]) r
 let rec (n_fuel : Prims.int -> term) =
@@ -2227,11 +2225,11 @@ let rec (n_fuel : Prims.int -> term) =
     if n = Prims.int_zero
     then mkApp ("ZFuel", []) norng
     else
-      (let uu____9675 =
-         let uu____9683 =
-           let uu____9686 = n_fuel (n - Prims.int_one) in [uu____9686] in
-         ("SFuel", uu____9683) in
-       mkApp uu____9675 norng)
+      (let uu____9660 =
+         let uu____9668 =
+           let uu____9671 = n_fuel (n - Prims.int_one) in [uu____9671] in
+         ("SFuel", uu____9668) in
+       mkApp uu____9660 norng)
 let (fuel_2 : term) = n_fuel (Prims.of_int (2))
 let (fuel_100 : term) = n_fuel (Prims.of_int (100))
 let (mk_and_opt :
@@ -2245,8 +2243,8 @@ let (mk_and_opt :
         match (p1, p2) with
         | (FStar_Pervasives_Native.Some p11, FStar_Pervasives_Native.Some
            p21) ->
-            let uu____9734 = mkAnd (p11, p21) r in
-            FStar_Pervasives_Native.Some uu____9734
+            let uu____9719 = mkAnd (p11, p21) r in
+            FStar_Pervasives_Native.Some uu____9719
         | (FStar_Pervasives_Native.Some p, FStar_Pervasives_Native.None) ->
             FStar_Pervasives_Native.Some p
         | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some p) ->
@@ -2264,16 +2262,16 @@ let (mk_and_opt_l :
 let (mk_and_l : term Prims.list -> FStar_Range.range -> term) =
   fun l ->
     fun r ->
-      let uu____9797 = mkTrue r in
+      let uu____9782 = mkTrue r in
       FStar_List.fold_right (fun p1 -> fun p2 -> mkAnd (p1, p2) r) l
-        uu____9797
+        uu____9782
 let (mk_or_l : term Prims.list -> FStar_Range.range -> term) =
   fun l ->
     fun r ->
-      let uu____9817 = mkFalse r in
+      let uu____9802 = mkFalse r in
       FStar_List.fold_right (fun p1 -> fun p2 -> mkOr (p1, p2) r) l
-        uu____9817
+        uu____9802
 let (mk_haseq : term -> term) =
   fun t ->
-    let uu____9828 = mkApp ("Prims.hasEq", [t]) t.rng in mk_Valid uu____9828
+    let uu____9813 = mkApp ("Prims.hasEq", [t]) t.rng in mk_Valid uu____9813
 let (dummy_sort : sort) = Sort "Dummy_sort"
