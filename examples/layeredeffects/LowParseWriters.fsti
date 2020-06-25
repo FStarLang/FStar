@@ -363,6 +363,7 @@ let test_read_if
   then false
   else false
 
+inline_for_extraction
 let test_read1
   (inv: memory_invariant)
   (f: unit -> Read bool (True) (fun _ -> True) inv)
