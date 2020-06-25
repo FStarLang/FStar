@@ -329,6 +329,24 @@ let lift_pure_read (a:Type) (wp:pure_wp a { pure_wp_mono a wp })
 
 sub_effect PURE ~> ERead = lift_pure_read
 
+inline_for_extraction
+val reify_read
+  (a:Type u#x)
+  (pre: pure_pre)
+  (post: pure_post' a pre)
+  (post_err: pure_post_err pre)
+  (l: memory_invariant)
+  (r: unit -> ERead a pre post post_err l)
+: HST.Stack (result a)
+    (requires (fun h ->
+      B.modifies l.lwrite l.h0 h /\
+      pre
+    ))
+    (ensures (fun h res h' ->
+      B.modifies B.loc_none h h' /\
+      res == dfst (reify (r ())) ()
+    ))
+
 let test_read_if
   (inv: memory_invariant)
   (f: unit -> Read bool (True) (fun _ -> True) inv)

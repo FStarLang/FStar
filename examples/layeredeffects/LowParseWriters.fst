@@ -66,6 +66,10 @@ let lift_pure_read_impl
 =
   fun _ -> Correct (f_pure_spec_for_impl ())
 
+let reify_read
+  a pre post post_err l r
+= dsnd (reify (r ())) ()
+
 let failwith_impl
   a inv s
 = fun _ -> Error s
