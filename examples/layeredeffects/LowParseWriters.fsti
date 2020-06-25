@@ -1467,6 +1467,7 @@ let frame2
 = frame2' a frame ppre pre p post post_err l inner ()
 
 noeq
+[@erasable] // very important, otherwise KReMLin will fail with argument typing
 type valid_synth_t
   (p1: parser)
   (p2: parser)
