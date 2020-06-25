@@ -1528,6 +1528,47 @@ type valid_synth_t
       (size p1 x == size p2 (f x))
   }
 
+let valid_synth_implies
+  (p1: parser)
+  (p2: parser)
+  (precond: pre_t p1)
+  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  (v: valid_synth_t p1 p2 precond f)
+  (precond' : pre_t p1)
+  (f' : (x: dfst p1 { precond' x }) -> GTot (dfst p2))
+: Pure (valid_synth_t p1 p2 precond' f')
+  (requires (
+    (forall (x: dfst p1) . precond' x ==> precond x) /\
+    (forall (x: dfst p1 { precond' x }) . f' x == f x)
+  ))
+  (ensures (fun _ -> True))
+= {
+  valid_synth_valid = (fun h b pos pos' -> v.valid_synth_valid h b pos pos');
+  valid_synth_size = (fun x -> v.valid_synth_size x);
+}
+
+let valid_synth_compose
+  (p1: parser)
+  (p2: parser)
+  (precond12: pre_t p1)
+  (f12: (x: dfst p1 { precond12 x }) -> GTot (dfst p2))
+  (v12: valid_synth_t p1 p2 precond12 f12)
+  (p3: parser)
+  (precond23: pre_t p2)
+  (f23: (x: dfst p2 { precond23 x }) -> GTot (dfst p3))
+  (v23: valid_synth_t p2 p3 precond23 f23)
+: Tot (valid_synth_t p1 p3 (fun x -> precond12 x /\ precond23 (f12 x)) (fun x -> f23 (f12 x)))
+= {
+  valid_synth_valid = (fun h b pos pos' ->
+    v12.valid_synth_valid h b pos pos';
+    v23.valid_synth_valid h b pos pos'
+  );
+  valid_synth_size = (fun x ->
+    v12.valid_synth_size x;
+    v23.valid_synth_size (f12 x)
+  );
+}
+
 let valid_synth_spec
   (p1: parser)
   (p2: parser)
