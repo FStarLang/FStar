@@ -26,6 +26,7 @@ module U32 = FStar.UInt32
 module HST = FStar.HyperStack.ST
 
 noeq
+[@erasable]
 type memory_invariant = {
   h0: Ghost.erased HS.mem;
   lwrite: (Ghost.erased B.loc);
