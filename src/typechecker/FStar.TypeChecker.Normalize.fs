@@ -1661,21 +1661,6 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
               let rng = top.pos in
 
               let head = U.mk_reify <| lb.lbdef in
-              let lb_head, head_bv, head =
-                let bv = S.new_bv None x.sort in
-                let lb =
-                    { lbname = Inl bv;
-                      lbunivs = [];
-                      lbtyp = U.mk_app repr [S.as_arg x.sort];
-                      lbeff = if is_total_effect cfg.tcenv eff_name then PC.effect_Tot_lid
-                                                                    else PC.effect_Dv_lid;
-                      lbdef = head;
-                      lbattrs = [];
-                      lbpos = head.pos;
-                    }
-                in
-                lb, bv, S.bv_to_name bv
-              in
 
               let body = U.mk_reify <| body in
               (* TODO : Check that there is no sensible cflags to pass in the residual_comp *)
@@ -1685,53 +1670,90 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                 residual_typ=Some t
               } in
               let body = S.mk (Tm_abs([S.mk_binder x], body, Some body_rc)) body.pos in
+
+              //the bind term for the effect
               let close = closure_as_term cfg env in
               let bind_inst = match (SS.compress bind_repr).n with
                 | Tm_uinst (bind, [_ ; _]) ->
                     S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv (close lb.lbtyp)
                                           ; cfg.tcenv.universe_of cfg.tcenv (close t)]))
                     rng
-                | _ -> failwith "NIY : Reification of indexed effects"
-              in
-              let maybe_range_arg =
-                if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
-                then [as_arg (embed_simple EMB.e_range lb.lbpos lb.lbpos);
-                      as_arg (embed_simple EMB.e_range body.pos body.pos)]
-                else []
-              in
-              let reified =
+                | _ -> failwith "NIY : Reification of indexed effects" in
+
+              //arguments to the bind term, f_arg is the argument for first computation f
+              let bind_inst_args f_arg =
                 (*
                  * Arguments to bind_repr for layered effects are:
-                 *   a b ..units for binders that compute indices.. head body
+                 *   a b ..units for binders that compute indices.. f_arg g_arg
                  *
                  * For non-layered effects, as before
                  *)
-                let args =
-                  if U.is_layered ed then
-                    let unit_args =
-                      match (ed |> U.get_bind_vc_combinator |> snd |> SS.compress).n with
-                      | Tm_arrow (_::_::bs, _) when List.length bs >= 2 ->
-                        bs
-                        |> List.splitAt (List.length bs - 2)
-                        |> fst
-                        |> List.map (fun _ -> S.as_arg S.unit_const)
-                      | _ ->
-                        raise_error (Errors.Fatal_UnexpectedEffect,
-                          BU.format2 "bind_wp for layered effect %s is not an arrow with >= 4 arguments (%s)"
-                            (Ident.string_of_lid ed.mname) (ed |> U.get_bind_vc_combinator |> snd |> Print.term_to_string)) rng in
-                    (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@[S.as_arg head; S.as_arg body])
-                  else
-                    [ (* a, b *)
-                      as_arg lb.lbtyp; as_arg t] @
-                      maybe_range_arg @ [
-                      (* wp_head, head--the term shouldn't depend on wp_head *)
-                      as_arg S.tun; as_arg head;
-                      (* wp_body, body--the term shouldn't depend on wp_body *)
-                      as_arg S.tun; as_arg body]
-                in
-                S.mk (Tm_let ((false, [lb_head]),
-                   SS.close [S.mk_binder head_bv] <|
-                   S.mk (Tm_app(bind_inst, args)) rng)) rng in
+                if U.is_layered ed then
+                  let unit_args =
+                    match (ed |> U.get_bind_vc_combinator |> snd |> SS.compress).n with
+                    | Tm_arrow (_::_::bs, _) when List.length bs >= 2 ->
+                      bs
+                      |> List.splitAt (List.length bs - 2)
+                      |> fst
+                      |> List.map (fun _ -> S.as_arg S.unit_const)
+                    | _ ->
+                      raise_error (Errors.Fatal_UnexpectedEffect,
+                        BU.format2 "bind_wp for layered effect %s is not an arrow with >= 4 arguments (%s)"
+                          (Ident.string_of_lid ed.mname) (ed |> U.get_bind_vc_combinator |> snd |> Print.term_to_string)) rng in
+                  (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@[S.as_arg f_arg; S.as_arg body])
+                else
+                  let maybe_range_arg =
+                    if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
+                    then [as_arg (embed_simple EMB.e_range lb.lbpos lb.lbpos);
+                          as_arg (embed_simple EMB.e_range body.pos body.pos)]
+                    else []
+                  in
+                  [ (* a, b *)
+                    as_arg lb.lbtyp; as_arg t] @
+                    maybe_range_arg @ [
+                    (* wp_f, f_arg--the term shouldn't depend on wp_f *)
+                    as_arg S.tun; as_arg f_arg;
+                    (* wp_body, body--the term shouldn't depend on wp_body *)
+                    as_arg S.tun; as_arg body] in
+
+              (*
+               * Construct the reified term
+               *
+               * if M is total, then its reification is also Tot, in that case we construct:
+               *
+               * bind (reify f) (fun x -> reify g)
+               *
+               * however, if M is not total, then (reify f) is Dv, and then we construct:
+               *
+               * let uu__ = reify f in
+               * bind uu_ (fun x -> reify g)
+               *
+               * We don't introduce the let-binding in the first case,
+               *   since in some examples, it blocks reductions
+               *)
+              let reified =
+                let is_total_effect = Env.is_total_effect cfg.tcenv eff_name in
+                if is_total_effect
+                then S.mk (Tm_app (bind_inst, bind_inst_args head)) rng
+                else
+                  let lb_head, head_bv, head =
+                    let bv = S.new_bv None x.sort in
+                    let lb =
+                        { lbname = Inl bv;
+                          lbunivs = [];
+                          lbtyp = U.mk_app repr [S.as_arg x.sort];
+                          lbeff = if is_total_effect then PC.effect_Tot_lid
+                                                     else PC.effect_Dv_lid;
+                          lbdef = head;
+                          lbattrs = [];
+                          lbpos = head.pos;
+                        }
+                    in
+                    lb, bv, S.bv_to_name bv in
+                  S.mk (Tm_let ((false, [lb_head]),
+                     SS.close [S.mk_binder head_bv] <|
+                     S.mk (Tm_app(bind_inst, bind_inst_args head)) rng)) rng in
+
               log cfg (fun () -> BU.print2 "Reified (1) <%s> to %s\n" (Print.term_to_string top0) (Print.term_to_string reified));
               norm cfg env (List.tl stack) reified
             )

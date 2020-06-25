@@ -1356,7 +1356,8 @@ let (extract_bundle :
           FStar_TypeChecker_Env.UnfoldUntil
             FStar_Syntax_Syntax.delta_constant;
           FStar_TypeChecker_Env.EraseUniverses;
-          FStar_TypeChecker_Env.AllowUnboundUniverses] in
+          FStar_TypeChecker_Env.AllowUnboundUniverses;
+          FStar_TypeChecker_Env.ForExtraction] in
         let names =
           let uu____4325 =
             let uu____4326 =
