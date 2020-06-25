@@ -68,7 +68,7 @@ let lift_pure_read_impl
 
 let reify_read
   a pre post post_err l r
-= dsnd (reify (r ())) ()
+= ReadRepr?.impl (reify (r ())) ()
 
 let failwith_impl
   a inv s
@@ -252,12 +252,13 @@ let lift_read_impl
 =
   fun b len pos ->
     let h = HST.get () in
-    let rres = dsnd f_read_spec () in
-    let h' = HST.get () in
-    valid_frame r h b 0ul pos B.loc_none h';
-    match rres with
-    | Correct res -> ICorrect res pos
-    | Error e -> IError e
+    match ReadRepr?.impl f_read_spec () with
+    | Correct res -> 
+      let h' = HST.get () in
+      valid_frame r h b 0ul pos B.loc_none h';
+      ICorrect res pos
+    | Error e ->
+      IError e
 
 inline_for_extraction
 let frame_impl
