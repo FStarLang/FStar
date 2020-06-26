@@ -261,6 +261,13 @@ let lift_read_impl
     | Error e ->
       IError e
 
+let get_state_impl
+  inv p
+=
+  fun b len pos ->
+    let h = HST.get () in
+    ICorrect (Ghost.hide (contents p h b 0ul pos)) pos
+
 inline_for_extraction
 let frame_impl
   (a: Type)

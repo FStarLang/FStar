@@ -1131,6 +1131,25 @@ let mk_repr
 : EWrite a r_in r_out pre post post_err l
 = EWrite?.reflect (| spec, impl |)
 
+let get_state_spec
+  (p: parser)
+: Tot (repr_spec (Ghost.erased (dfst p)) p p (fun _ -> True) (fun x y z -> x == Ghost.reveal y /\ x == z) (fun _ -> False))
+= fun x -> Correct (Ghost.hide x, x)
+
+inline_for_extraction
+val get_state_impl
+  (inv: memory_invariant)
+  (p: parser)
+: Tot (repr_impl _ _ _ _ _ _ inv (get_state_spec p))
+
+inline_for_extraction
+let get_state
+  (#inv: memory_invariant)
+  (#p: parser)
+  ()
+: Write (Ghost.erased (dfst p)) p p (fun _ -> True) (fun x y z -> x == Ghost.reveal y /\ x == z) inv
+= EWrite?.reflect (| _, get_state_impl inv p |)
+
 let frame_out
   (a: Type)
   (frame: parser)
