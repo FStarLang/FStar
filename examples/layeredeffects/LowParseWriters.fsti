@@ -1157,12 +1157,14 @@ let frame_out
 : Tot parser
 = frame `star` p
 
+unfold
 let frame_pre
   (frame: parser)
   (pre: pre_t emp)
 : Tot (pre_t frame)
 = fun _ -> pre ()
 
+unfold
 let frame_post
   (a: Type)
   (frame: parser)
@@ -1172,6 +1174,7 @@ let frame_post
 : Tot (post_t a frame (frame_out a frame p) (frame_pre frame pre))
 = fun v_in v (v_in', v_out) -> v_in == v_in' /\ post () v v_out
 
+unfold
 let frame_post_err
   (frame: parser)
   (pre: pre_t emp)
@@ -1231,7 +1234,7 @@ let frame
   (post: post_t a emp p pre)
   (post_err: post_err_t emp pre)
   (l: memory_invariant)
-  (inner: unit -> EWrite a emp p pre post post_err l)
+  ($inner: unit -> EWrite a emp p pre post post_err l)
 : EWrite a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) (frame_post_err frame pre post_err) l
 = frame' a frame pre p post post_err l inner ()
 
