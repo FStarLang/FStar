@@ -100,6 +100,7 @@ let head_redex env t =
       || Ident.lid_equals rc.residual_effect Const.effect_GTot_lid
       || List.existsb (function TOTAL -> true | _ -> false) rc.residual_flags
 
+    | Tm_uinst({n=Tm_fvar fv}, _)
     | Tm_fvar fv ->
       Env.lookup_definition [Env.Eager_unfolding_only] env.tcenv fv.fv_name.v |> Option.isSome
 
@@ -120,9 +121,9 @@ let normalize_refinement steps env t =
 let whnf env t =
     if head_normal env t then t
     else norm_with_steps [Env.Beta; Env.Weak; Env.HNF; Env.Exclude Env.Zeta;  //we don't know if it will terminate, so no recursion
-                          Env.Eager_unfolding; Env.EraseUniverses] env.tcenv t
+                          Env.Eager_unfolding] env.tcenv t
 let norm env t = norm_with_steps [Env.Beta; Env.Exclude Env.Zeta;  //we don't know if it will terminate, so no recursion
-                                  Env.Eager_unfolding; Env.EraseUniverses] env.tcenv t
+                                  Env.Eager_unfolding] env.tcenv t
 
 (* `maybe_whnf env t` attempts to reduce t to weak-head normal form.
  *  It is called when `t` is a head redex, e.g., if its head symbol is marked for unfolding.
@@ -223,7 +224,7 @@ let is_app = function
 let check_pattern_vars env vars pats =
     let pats =
         pats |> List.map (fun (x, _) ->
-        norm_with_steps [Env.Beta;Env.AllowUnboundUniverses;Env.EraseUniverses] env.tcenv x)
+        norm_with_steps [Env.Beta] env.tcenv x)
     in
     match pats with
     | [] -> ()
@@ -353,6 +354,28 @@ let is_BitVector_primitive head args =
 
     | _ -> false
 
+let encode_univ_name (u:univ_name) = 
+    let u = mk_U_name (FStar.Ident.string_of_id u) in
+    match u.tm with
+    | FreeV fv -> fv, u
+    | _ -> failwith "Impossible"
+    
+let rec encode_universe u = 
+  match u with
+  | U_bvar _ -> failwith "Impossible: Locally nameless universes only"
+  | U_zero -> 
+    mk_U_zero
+  | U_succ u -> 
+    mk_U_succ (encode_universe u)
+  | U_max (u::us) -> 
+    List.fold_right (fun u out -> mk_U_max out (encode_universe u)) us (encode_universe u)
+  | U_name univ_name -> 
+    mk_U_name (FStar.Ident.string_of_id univ_name)
+  | U_unif uv ->
+    mk_U_unif (mkInteger' (FStar.Syntax.Unionfind.univ_uvar_id uv))
+  | U_unknown ->
+    mk_U_unknown
+
 let rec encode_const c env =
   Errors.with_ctx "While encoding a constant to SMT" (fun () ->
     match c with
@@ -366,7 +389,7 @@ let rec encode_const c env =
       encode_term syntax_term env
     | Const_string(s, _) -> Term.boxString <| mk_String_const s, []
     | Const_range _ -> mk_Range_const (), []
-    | Const_effect -> mk_Term_type, []
+    | Const_effect -> mk_Term_type mk_U_zero, []
     | Const_real r -> boxReal (mkReal r), []
     | c -> failwith (BU.format1 "Unhandled constant: %s" (show c))
   )
@@ -671,25 +694,42 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let t = lookup_term_var env x in
         t, []
 
-      | Tm_fvar v ->
+      | Tm_type u ->
+        mk_Term_type (encode_universe u), []
+
+      | Tm_fvar _ ->
+        encode_term (S.mk (Tm_uinst(t, [])) t.pos) env
+        
+      | Tm_uinst({n=Tm_fvar v}, us) ->
         let encode_freev () =
+          let us = List.map encode_universe us in
           let fvb = lookup_free_var_name env v.fv_name in
           let tok = lookup_free_var env v.fv_name in
+          let is_nullary, tok =
+            match tok.tm, us with
+            | FreeV _, _::_ -> 
+              failwith "Impossible: Universe applications on nullary symbol"
+            | App(op, _::_), _::_ ->
+              failwith "Impossible: Universe applications cannot be curried"
+            | FreeV _, [] -> 
+              true, tok
+            | App(op, []), us ->
+              true, {tok with tm=App(op, us)}
+            | App(op, ts), [] -> 
+              false, tok
+          in
           let tkey_hash = Term.hash_of_term tok in
           let aux_decls, sym_name =
-               if fvb.smt_arity > 0
+               if fvb.smt_arity > 0 && is_nullary
                then //kick partial application axioms if arity > 0; see #613
                     //and if the head symbol is just a variable
                     //rather than maybe a fuel-instrumented name (cf. #1433)
-                   match tok.tm with
-                   | FreeV _
-                   | App(_, []) ->
-                     let sym_name = "@kick_partial_app_" ^ (BU.digest_of_string tkey_hash) in  //the '@' retains this for hints
-                     [Util.mkAssume(kick_partial_app tok,
-                                    Some "kick_partial_app",
-                                    sym_name)], sym_name
-                   | _ -> [], ""
-               else [], "" in
+                    let sym_name = "@kick_partial_app_" ^ (BU.digest_of_string tkey_hash) in  //the '@' retains this for hints
+                    [Util.mkAssume(kick_partial_app tok,
+                                   Some "kick_partial_app",
+                                   sym_name)], sym_name
+               else [], "" 
+          in
           tok, (if aux_decls = []
                 then ([] |> mk_decls_trivial)
                 else mk_decls sym_name tkey_hash aux_decls [])
@@ -699,12 +739,6 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              | None -> encode_freev()
              | Some t -> encode_term t env
         else encode_freev ()
-
-      | Tm_type _ ->
-        mk_Term_type, []
-
-      | Tm_uinst(t, _) ->
-        encode_term t env
 
       | Tm_constant c ->
         encode_const c env
@@ -787,7 +821,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, caption) in
 
              let t = mkApp(tsym, List.map mkFreeV cvars) in //arity ok
-             let t_has_kind = mk_HasType t mk_Term_type in
+             let t_has_kind = mk_HasType t (mk_Term_type mk_U_unknown) in //NS: REVIEW! Can we give it a more precise universe
 
              let k_assumption =
              let a_name = "kinding_"^tsym in
@@ -796,11 +830,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let f_has_t = mk_HasType f t in
              let f_has_t_z = mk_HasTypeZ f t in
              let pre_typing =
-             let a_name = "pre_typing_"^tsym in
-             Util.mkAssume(mkForall_fuel module_name t0.pos ([[f_has_t]], fsym::cvars,
-                           mkImp(f_has_t, mk_tester "Tm_arrow" (mk_PreType f))),
-                           Some "pre-typing for functions",
-                           module_name ^ "_" ^ a_name) in
+               let a_name = "pre_typing_"^tsym in
+               Util.mkAssume(mkForall_fuel module_name t0.pos ([[f_has_t]], fsym::cvars,
+                             mkImp(f_has_t, mk_tester "Tm_arrow" (mk_PreType f))),
+                             Some "pre-typing for functions",
+                             module_name ^ "_" ^ a_name)
+             in
              let t_interp =
                  let a_name = "interpretation_"^tsym in
                  Util.mkAssume(mkForall t0.pos ([[f_has_t_z]],
@@ -876,8 +911,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                      forall v1 .. vn, (v1 hasType t1 /\ ... vn hasType tn) ==> tapp hasType Type *)
                   (* NB: we use the conlusion (HasType tapp Type) as the pattern. Though Z3
                   will probably pick the same one if left empty. *)
-                  mkForall t0.pos ([[mk_HasType tapp mk_Term_type]], fv_vars,
-                    mkImp (mk_and_l fv_guards, mk_HasType tapp mk_Term_type))
+                  mkForall t0.pos ([[mk_HasType tapp (mk_Term_type mk_U_unknown)]], fv_vars, //NS: REVIEW! Can we give it a more precise universe
+                    mkImp (mk_and_l fv_guards, mk_HasType tapp (mk_Term_type mk_U_unknown)))
                 in
                 (* We furthermore must close over any variable that is
                 still free in the axiom. This can happen since the types
@@ -900,8 +935,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let x, f =
           let steps = [
             Env.Weak;
-            Env.HNF;
-            Env.EraseUniverses
+            Env.HNF
           ] in
           match normalize_refinement steps env.tcenv t0 with
           | {n=Tm_refine {b=x; phi=f}} ->
@@ -945,7 +979,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
         let x_has_base_t = mk_HasType xtm base_t in
         let x_has_t = mk_HasTypeWithFuel (Some fterm) xtm t in
-        let t_has_kind = mk_HasType t mk_Term_type in
+        let t_has_kind = mk_HasType t (mk_Term_type mk_U_unknown) in //NS: REVIEW! Can we give it a more precise universe
 
         //add hasEq axiom for this refinement type
         let t_haseq_base = mk_haseq base_t in
@@ -1144,9 +1178,17 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | None -> failwith "impossible"
             in
 
-            let encode_full_app fv =
+            let encode_full_app fv univs =
                 let fname, fuel_args, arity = lookup_free_var_sym env fv in
-                let tm = maybe_curry_app t0.pos fname arity (fuel_args@args) in
+                BU.print5 "Encoding %s with arity %s applied to %s fuel args, %s univs, and %s args\n"
+                          (match fname with
+                           | BU.Inl (Var s) -> s
+                           | BU.Inr tm -> Term.print_smt_term tm)
+                          (string_of_int arity)
+                          (string_of_int (List.length fuel_args))
+                          (string_of_int (List.length univs))
+                          (string_of_int (List.length args));
+                let tm = maybe_curry_app t0.pos fname (arity+List.length univs) (fuel_args@univs@args) in
                 tm, decls
             in
 
@@ -1167,13 +1209,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             | None -> encode_partial_app None
             | Some head_type ->
                 let head_type, formals, c =
-                  let head_type = U.unrefine <| normalize_refinement [Env.Weak; Env.HNF; Env.EraseUniverses] env.tcenv head_type in
+                  let head_type = U.unrefine <| normalize_refinement [Env.Weak; Env.HNF] env.tcenv head_type in
                   let formals, c = curried_arrow_formals_comp head_type in
                   if List.length formals < List.length args
                   then let head_type =
                            U.unrefine
                            <| normalize_refinement
-                                    [Env.Weak; Env.HNF; Env.EraseUniverses; Env.UnfoldUntil delta_constant]
+                                    [Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant]
                                     env.tcenv
                                     head_type
                        in
@@ -1189,8 +1231,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
                 begin
                 match head.n with
-                | Tm_uinst({n=Tm_fvar fv}, _)
-                | Tm_fvar fv when (List.length formals = List.length args) -> encode_full_app fv.fv_name
+                | Tm_uinst({n=Tm_fvar fv}, us) when (List.length formals = List.length args) ->
+                  encode_full_app fv.fv_name (List.map encode_universe us)
+                | Tm_fvar fv when (List.length formals = List.length args) ->
+                  encode_full_app fv.fv_name []
                 | _ ->
                     if List.length formals > List.length args
                     then encode_partial_app (Some (head_type, formals, c))
@@ -1579,8 +1623,8 @@ and encode_formula (phi:typ) (env:env_t) : (term & decls_t)  = (* expects phi to
            t, decls
 
         | Tm_app {hd=head; args} ->
-          let head = U.un_uinst head in
-          begin match head.n, args with
+//          let head' = U.un_uinst head in //NS:TODO ... fixme!
+          begin match (U.un_uinst head).n, args with
             | Tm_fvar fv, [_; (x, _); (t, _)] when S.fv_eq_lid fv Const.has_type_lid -> //interpret Prims.has_type as HasType
               let x, decls = encode_term x env in
               let t, decls' = encode_term t env in
@@ -1621,6 +1665,7 @@ and encode_formula (phi:typ) (env:env_t) : (term & decls_t)  = (* expects phi to
 
             | _ ->
               let encode_valid () =
+                debug "(encode valid)" phi;
                 let tt, decls = encode_term phi env in
                 let tt =
                     if Range.rng_included (Range.use_range tt.rng) (Range.use_range phi.pos)
@@ -1652,7 +1697,7 @@ and encode_formula (phi:typ) (env:env_t) : (term & decls_t)  = (* expects phi to
           | _ -> guards in
         vars, pats, mk_and_l guards, body, decls@decls'@decls'' in
 
-    debug phi;
+    debug "(top-level encode formula)" phi;
 
     let phi = U.unascribe phi in
     let open FStarC.Syntax.Formula in

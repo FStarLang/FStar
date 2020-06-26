@@ -46,6 +46,8 @@ val curried_arrow_formals_comp : k:Syntax.term -> Syntax.binders & comp
 
 val raise_arity_mismatch : head:string -> arity:int -> n_args:int -> rng:Range.range -> 'a
 
+val encode_univ_name : Syntax.univ_name -> fv * term
+
 val encode_term : t:typ       (* expects t to be in normal form already *)
                -> env:env_t
                -> term & decls_t
