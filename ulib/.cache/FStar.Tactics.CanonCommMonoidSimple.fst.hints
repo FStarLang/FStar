@@ -325,7 +325,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "8c78b4cc8a484a67618fe3d6c045f5e2"
+      "2b4bb6fb646704bb0d8fdf7778fbffea"
     ],
     [
       "FStar.Tactics.CanonCommMonoidSimple.apply_swap_correct",
@@ -346,7 +346,7 @@
         "token_correspondence_FStar.Tactics.CanonCommSwaps.apply_swap"
       ],
       0,
-      "b5149eff0c8584bc74a35f36153bb84e"
+      "9b5178f773635f34b4184d369928a9b1"
     ],
     [
       "FStar.Tactics.CanonCommMonoidSimple.apply_swaps_correct",
@@ -379,7 +379,7 @@
         "token_correspondence_FStar.Tactics.CanonCommSwaps.apply_swap_aux"
       ],
       0,
-      "8f70a4e886ed49708bfc33a58df1b66a"
+      "381742f5678fc8d1f978b18809b836ef"
     ],
     [
       "FStar.Tactics.CanonCommMonoidSimple.permute_via_swaps_correct_aux",
@@ -391,7 +391,7 @@
         "refinement_interpretation_Tm_refine_b70aa22271f726818977e2cb5df5feb6"
       ],
       0,
-      "2a9b6a8dbfd9f048612b971aaabc66c6"
+      "3d58699638a69ed8d20d752947281a55"
     ],
     [
       "FStar.Tactics.CanonCommMonoidSimple.sort_via_swaps",
