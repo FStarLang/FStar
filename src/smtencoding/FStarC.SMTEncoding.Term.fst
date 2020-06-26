@@ -571,11 +571,17 @@ let mkLet' (bindings, body) r =
 let norng = Range.dummyRange
 let mkDefineFun (nm, vars, s, tm, c) = DefineFun(nm, List.map fv_sort vars, s, abstr vars tm, c)
 let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)
-let fresh_token (tok_name, sort) id =
+let fresh_token (tok, univ_fvs, sort) id =
+    let tok_name =
+      match tok.tm with
+      | App(Var name, _) -> name
+      | _ -> failwith "Unexpected fresh token"
+    in
     let a_name = "fresh_token_" ^tok_name in
     let tm = mkEq(mkInteger' id norng,
                                   mkApp(constr_id_of_sort sort,
                                         [mkApp (tok_name,[]) norng]) norng) norng in
+    let tm = mkForall norng ([[tok]], univ_fvs, tm) in
     let a = {assumption_name=escape a_name;
              assumption_caption=Some "fresh token";
              assumption_term=tm;
@@ -900,6 +906,17 @@ and mkPrelude z3options =
                 (declare-fun FString_constr_id (FString) Int)\n\
                 \n\
                 (declare-sort Term)\n\
+                (declare-datatypes () ((Universe \n\
+                                        (Univ (ulevel Int)))))\n\
+                (define-fun imax ((i Int) (j Int)) Int \n\
+                  (ite (>= i j) i i))\n\
+                (define-fun U_zero () Universe (Univ 0))\n\
+                (define-fun U_succ ((u Universe)) Universe\n\
+                  (Univ (+ (ulevel u) 1)))\n\
+                (define-fun U_max ((u0 Universe) (u1 Universe)) Universe \n\
+                  (Univ (imax (ulevel u0) (ulevel u1))))\n\
+                (declare-fun U_unif (Int) Universe)\n\
+                (declare-fun U_unknown () Universe)\n\
                 (declare-fun Term_constr_id (Term) Int)\n\
                 (declare-sort Dummy_sort)\n\
                 (declare-fun Dummy_value () Dummy_sort)\n\
@@ -1058,7 +1075,14 @@ let mk_Range_const () =
     __range_c := !__range_c + 1;
     mkApp("Range_const", [mkInteger' i norng]) norng
 
-let mk_Term_type        = mkApp("Tm_type", []) norng
+let univ_sort           = Sort "Universe"
+let mk_U_zero           = mkApp("U_zero", []) norng
+let mk_U_succ u         = mkApp("U_succ", [u]) norng
+let mk_U_max t0 t1      = mkApp("U_max", [t0;t1]) norng
+let mk_U_name s         = mkFreeV (mk_fv (s, univ_sort)) norng
+let mk_U_unif i         = mkApp("U_unif", [i]) norng
+let mk_U_unknown        = mkApp("U_unknown", []) norng
+let mk_Term_type u      = mkApp("Tm_type", [u]) norng
 let mk_Term_app t1 t2 r = mkApp("Tm_app", [t1;t2]) r
 let mk_Term_uvar i    r = mkApp("Tm_uvar", [mkInteger' i norng]) r
 let mk_Term_unit        = mkApp("Tm_unit", []) norng
