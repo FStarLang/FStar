@@ -25,8 +25,22 @@ module Atomic = Steel.Effect.Atomic
 let available = false
 let locked = true
 
+let lockprop (p:slprop) (r:ref bool) (b:bool) : slprop =
+  pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)
+
 let lockinv (p:slprop) (r:ref bool) : slprop =
-  h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
+  h_exists (lockprop p r)
+
+let lockprop_witinv (p:slprop) (r:ref bool)
+  : Lemma (witness_invariant (lockprop p r))
+          [SMTPat (witness_invariant (lockprop p r))]
+  =
+  let aux (x y : bool) (m:mem)
+    : Lemma (requires (interp (lockprop p r x) m /\ interp (lockprop p r y) m))
+            (ensures  (x == y))
+    = pts_to_witinv r full_perm
+  in
+  Classical.forall_intro_3 (fun x y m -> Classical.move_requires (aux x y) m)
 
 let lock_t = ref bool & iname
 
@@ -127,7 +141,7 @@ let release_core #p #u r i =
   let open Atomic in
   h_assert_atomic (h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
     `star` p);
-  let v:Ghost.erased bool = frame p (fun _ ->  Atomic.witness_h_exists #u #_ #(fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)) ()) in
+  let v:Ghost.erased bool = frame p (fun _ ->  Atomic.witness_h_exists #_ #u #(lockprop p r) ()) in
   h_assert_atomic ((pts_to r full_perm v `star` (if Ghost.reveal v then emp else p)) `star` p);
   h_assoc_left _ _ _;
   let res = cas_frame r v locked available ((if Ghost.reveal v then emp else p) `star` p) in

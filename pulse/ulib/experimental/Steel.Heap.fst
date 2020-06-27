@@ -277,6 +277,10 @@ let pts_to_cell (#a:Type u#a) (pcm:pcm a) (v:a) (c:cell u#a) =
   pcm == pcm' /\
   compatible pcm v v'
 
+let pts_to_cell_join (#a:Type u#a) (pcm:pcm a) (v1 v2:a) (c:cell u#a)
+  : Lemma (requires (pts_to_cell pcm v1 c /\ pts_to_cell pcm v2 c))
+          (ensures joinable pcm v1 v2)
+          = ()
 
 let pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a =
   let hprop  (h: heap) : Tot prop =
@@ -297,6 +301,7 @@ let pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a =
   | None, None, _ -> ()
   );
   hprop
+
 
 let h_and (p1 p2:slprop u#a) : slprop u#a =
   fun (h: heap) -> p1 h /\ p2 h
@@ -363,6 +368,8 @@ let intro_emp h = ()
 let h_exists_cong (#a:Type) (p q : a -> slprop) = ()
 
 let intro_h_exists #a x p h = ()
+
+let elim_h_exists #a p h = ()
 
 let interp_depends_only_on (hp:slprop u#a) = emp_unit hp
 
@@ -509,6 +516,18 @@ let pts_to_compatible (#a:Type u#a)
     FStar.Classical.forall_intro (FStar.Classical.move_requires (pts_to_compatible_fwd x v0 v1));
     FStar.Classical.forall_intro (FStar.Classical.move_requires (pts_to_compatible_bk x v0 v1))
 
+let pts_to_join (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v1 v2:a) (m:heap)
+  : Lemma (requires (interp (pts_to r v1) m /\ interp (pts_to r v2) m))
+          (ensures joinable pcm v1 v2)
+  = ()
+
+let pts_to_join' (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v1 v2:a) (m:heap)
+  : Lemma (requires (interp (pts_to r v1) m /\ interp (pts_to r v2) m))
+          (ensures (exists z. compatible pcm v1 z /\ compatible pcm v2 z /\
+                         interp (pts_to r z) m))
+  = let Ref a' pcm' v' = (select_addr m r) in
+    compatible_refl pcm v'
+
 let pts_to_compatible_equiv (#a:Type) (#pcm:_) (x:ref a pcm) (v0:a) (v1:a{composable pcm v0 v1})
   = FStar.Classical.forall_intro (pts_to_compatible x v0 v1)
 
@@ -525,6 +544,17 @@ let intro_star (p q:slprop) (mp:hheap p) (mq:hheap q)
       interp (p `star` q) (join mp mq))
   = ()
 
+let elim_star (p q:slprop) (h:hheap (p `star` q))
+  : Lemma
+    (requires
+      interp (p `star` q) h)
+    (ensures exists hl hr.
+      disjoint hl hr /\
+      h == join hl hr /\
+      interp p hl /\
+      interp q hr)
+  =
+  ()
 
 (* Properties of star *)
 
@@ -1004,56 +1034,44 @@ let change_slprop (p q:slprop)
     in
     refined_pre_action_as_action g
 
-(** [_witness_h_exists]
+let id_elim_star p q m =
+  let starprop (ml:heap) (mr:heap) =
+      disjoint ml mr
+    /\ m == join ml mr
+    /\ interp p ml
+    /\ interp q mr
+  in
+  elim_star p q m;
+  let p1 : heap -> prop = fun ml -> (exists mr. starprop ml mr) in
+  let ml = IndefiniteDescription.indefinite_description_tot _ p1 in
+  let starpropml mr : prop = starprop ml mr in // this prop annotation seems needed
+  let mr = IndefiniteDescription.indefinite_description_tot _ starpropml in
+  (ml, mr)
 
-    This is an action that is frame-preserving and allows
-    extracting a witness for an existential (using indefinite description).
+let id_elim_exists #a p m =
+  let existsprop (x:a) = interp (p x) m in
+  elim_h_exists p m;
+  let x = IndefiniteDescription.indefinite_description_tot _ existsprop in
+  x
 
-    However, the API provided by the semantics does not yet allow
-    reflecting this as an action, since the way in which it defines
-    frame preservation is different (it doesn't take the frame as an
-    explicit argument).
-
-    We have been discussing revising the signature of actions in
-    semantics to be more like this:
-
-    https://github.com/FStarLang/FStar/blob/nik_steel_locks/examples/steel_wip/ParDiv.fst#L74-L82
-
-    There, frame-preservation of actions is done differently.
-
-    Rather than having a quantified refinement in the postcondition
-    that we have now, i.e.,
-
-```
-    forall (frame:st.hprop).
-      st.interp ((pre `st.star` frame) `st.star` (st.locks_invariant m0)) m0 ==>
-      (st.interp ((post `st.star` frame) `st.star` (st.locks_invariant m1)) m1
-```
-
-    every action takes a frame as an argument and the interpreter
-    carries the current frame as an explicit argument and instantiates
-    it when reaching a leaf action node.
-
-    if that were the style we used for actions, then witness_h_exists
-    would be easy to add as an action.
-
-    The trouble with the current formulation is that in get_witness,
-    we have to pick a witness for h_exists p and then show that
-    whatever witness we picked is good for any frame ... and that
-    seems to be impossible to prove.
-*)
-let _witness_h_exists (a:Type) (p: a -> slprop) (frame:slprop)
-                      (h0:hheap (h_exists p `star` frame))
-    : ( x:erased a & h1:hheap (p x `star` frame) {
-        heap_evolves h0 h1 /\
-        (forall (hp:hprop frame). hp h0 == hp h1) /\
-        (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr)
-      })
-    = assert (equiv (h_exists p `star` frame) (h_exists (fun x -> p x `star` frame)));
-      let w = FStar.IndefiniteDescription.indefinite_description_tot a (fun x -> interp (p x `star` frame) h0) in
-      assert (interp (p w `star` frame) h0);
-      (| w, h0 |)
-
+let witness_h_exists #a p
+  : action (h_exists p) (erased a) (fun x -> p x)
+  = assert (is_frame_monotonic p);
+    let pre : refined_pre_action (h_exists p) (erased a) (fun x -> p x) =
+      fun h0 -> let w = IndefiniteDescription.indefinite_description_tot a (fun x -> interp (p x) h0) in
+             let aux (frame:slprop) : Lemma (requires (interp (h_exists p `star` frame) h0))
+                                            (ensures  (interp (p w `star` frame) h0)) =
+               (* This is the main trick of using frame-monotonic properties, `w` is
+                * good for anything. *)
+                let (hl, hr) = id_elim_star (h_exists p) frame h0 in
+                let w' = id_elim_exists p hl in
+                assert (interp (p w') hl);
+                intro_star (p w') frame hl hr
+             in
+             Classical.forall_intro (Classical.move_requires aux);
+             (| w, h0 |)
+    in
+    refined_pre_action_as_action pre
 
 let lift_h_exists (#a:_) (p:a -> slprop)
   : action (h_exists p) unit
@@ -1078,3 +1096,9 @@ let elim_pure (p:prop)
       = fun h -> (| (), h |)
     in
     refined_pre_action_as_action f
+
+let pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
+  : Lemma (requires (interp (pts_to r x) h /\ compatible pcm y x))
+          (ensures  (interp (pts_to r y) h))
+  = let Ref a' pcm' v' = (select_addr h r) in
+    compatible_trans pcm y x v'
