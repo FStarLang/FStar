@@ -89,6 +89,10 @@ let hmem (p:slprop u#a) = m:mem u#a {interp p m}
 let equiv (p1 p2:slprop) : prop =
   forall m. interp p1 m <==> interp p2 m
 
+(** Implication of slprops *)
+let slimp (p1 p2 : slprop) : prop =
+  forall m. interp p1 m ==> interp p2 m
+
 (** A memory maps a [ref]erence to its associated value *)
 val ref (a:Type u#a) (pcm:pcm a) : Type u#0
 
@@ -165,6 +169,14 @@ val intro_star (p q:slprop) (mp:hmem p) (mq:hmem q)
       disjoint mp mq)
     (ensures
       interp (p `star` q) (join mp mq))
+
+val elim_star (p q:slprop) (m:hmem (p `star` q))
+  : Lemma
+    (requires
+      interp (p `star` q) m)
+    (ensures exists ml mr.
+      disjoint ml mr /\ m == join ml mr /\ interp p ml /\ interp q mr)
+
 
 val star_commutative (p1 p2:slprop)
   : Lemma ((p1 `star` p2) `equiv` (p2 `star` p1))
@@ -243,6 +255,8 @@ val h_exists_cong (#a:Type) (p q : a -> slprop)
 val intro_h_exists (#a:_) (x:a) (p:a -> slprop) (m:mem)
   : Lemma (interp (p x) m ==> interp (h_exists p) m)
 
+val elim_h_exists (#a:_) (p:a -> slprop) (m:mem)
+  : Lemma (interp (h_exists p) m ==> (exists x. interp (p x) m))
 
 (**** Actions *)
 
@@ -393,6 +407,17 @@ val change_slprop (#opened_invariants:inames)
 
 module U = FStar.Universe
 
+let is_frame_monotonic #a (p : a -> slprop) : prop =
+  forall x y m frame. interp (p x `star` frame) m /\ interp (p y) m ==> slimp (p x) (p y)
+
+let witness_invariant #a (p : a -> slprop) =
+  forall x y m. interp (p x) m /\ interp (p y) m ==> x == y
+
+val witness_h_exists (#opened_invariants:_) (#a:_) (p:(a -> slprop){is_frame_monotonic p})
+  : action_except (erased a) opened_invariants
+           (h_exists p)
+           (fun v -> p v)
+
 val lift_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
   : action_except unit opened_invariants
            (h_exists p)
@@ -400,3 +425,55 @@ val lift_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
 
 val elim_pure (#opened_invariants:_) (p:prop)
   : action_except (u:unit{p}) opened_invariants (pure p) (fun _ -> emp)
+
+val pts_to_join (#a:Type) (#pcm:pcm a) (r:ref a pcm) (x y : a) (m:mem) :
+  Lemma (requires (interp (pts_to r x) m /\ interp (pts_to r y) m))
+        (ensures (joinable pcm x y))
+
+val pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (m:mem) :
+  Lemma (requires (interp (pts_to r x) m /\ compatible pcm y x))
+        (ensures  (interp (pts_to r y) m))
+
+val id_elim_star (p q:slprop) (m:mem)
+  : Pure (erased mem & erased mem)
+         (requires (interp (p `star` q) m))
+         (ensures (fun (ml, mr) -> disjoint ml mr
+                              /\ m == join ml mr
+                              /\ interp p ml
+                              /\ interp q mr))
+
+val id_elim_exists (#a:Type) (p : a -> slprop) (m:mem)
+  : Pure (erased a)
+         (requires (interp (h_exists p) m))
+         (ensures (fun x -> interp (p x) m))
+
+
+val slimp_star (p q r s : slprop)
+  : Lemma (requires (slimp p q /\ slimp r s))
+          (ensures (slimp (p `star` r) (q `star` s)))
+
+val elim_wi (#a:Type) (p : a -> slprop{witness_invariant p}) (x y : a) (m : mem)
+  : Lemma (requires (interp (p x) m /\ interp (p y) m))
+          (ensures (x == y))
+
+val witinv_framon (#a:Type) (p : a -> slprop)
+  : Lemma (witness_invariant p ==> is_frame_monotonic p)
+          [SMTPatOr [[SMTPat (witness_invariant p)]; [SMTPat (is_frame_monotonic p)]]]
+
+val star_is_frame_monotonic (#a:Type)
+    (f g : a -> slprop)
+  : Lemma (requires (is_frame_monotonic f /\ is_frame_monotonic g))
+          (ensures (is_frame_monotonic (fun x -> f x `star` g x)))
+          //[SMTPat (is_frame_monotonic (fun x -> f x `star` g x))]
+
+val star_is_witinv_left (#a:Type)
+    (f g : a -> slprop)
+  : Lemma (requires (witness_invariant f))
+          (ensures  (witness_invariant (fun x -> f x `star` g x)))
+          //[SMTPat   (witness_invariant (fun x -> f x `star` g x))]
+
+val star_is_witinv_right (#a:Type)
+    (f g : a -> slprop)
+  : Lemma (requires (witness_invariant g))
+          (ensures  (witness_invariant (fun x -> f x `star` g x)))
+          //[SMTPat   (witness_invariant (fun x -> f x `star` g x))]

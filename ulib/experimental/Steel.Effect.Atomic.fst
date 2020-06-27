@@ -49,6 +49,10 @@ let new_invariant i p = SteelAtomic?.reflect (Steel.Memory.new_invariant i p)
 let with_invariant i f = SteelAtomic?.reflect (Steel.Memory.with_invariant i (reify (f())))
 let frame frame f = SteelAtomic?.reflect (Steel.Memory.frame frame (reify (f ())))
 let change_slprop p q proof = SteelAtomic?.reflect (Steel.Memory.change_slprop p q proof)
-let witness_h_exists = admit()
+
+open NMSTTotal
+open MSTTotal
+
+let witness_h_exists #a #u #p () = SteelAtomic?.reflect (Steel.Memory.witness_h_exists p)
 let lift_h_exists_atomic #a #u p = SteelAtomic?.reflect (Steel.Memory.lift_h_exists #u p)
 let elim_pure #uses p = SteelAtomic?.reflect (Steel.Memory.elim_pure #uses p)

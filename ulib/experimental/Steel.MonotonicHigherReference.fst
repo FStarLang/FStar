@@ -107,7 +107,8 @@ let pcm_history_preorder #a #p : Preorder.preorder (history a p) =
     | Current vh0 _, Current vh1 _ ->
       vh1 `Q.extends` vh0
 
-#push-options "--max_fuel 1 --initial_fuel 1 --max_ifuel 1 --z3rlimit_factor 4 --query_stats --z3cliopt smt.qi.eager_threshold=100"
+// This proof is known to be very brittle.
+#push-options "--retry 10 --max_fuel 1 --initial_fuel 1 --max_ifuel 1 --query_stats --z3cliopt smt.qi.eager_threshold=100 --z3rlimit_factor 8"
 let pcm_history_induces_preorder #a #p
   : Lemma (Q.induces_preorder (pcm_history #a #p)
                               (pcm_history_preorder #a #p))
@@ -212,6 +213,28 @@ let pts_to_body #a #p (r:ref a p) (f:perm) (v:Ghost.erased a) (h:history a p) =
       M.pts_to r h `star`
       pure (history_val h v f)
 
+let pts_to_body_witness_invariant #a #p (r:ref a p) (f:perm) (v:Ghost.erased a)
+  : Lemma (witness_invariant (pts_to_body r f v))
+          [SMTPat (pts_to_body r f v)]
+  = let aux (x y : history a p) (m:mem)
+       : Lemma (requires interp (pts_to_body r f v x) m
+                       /\ interp (pts_to_body r f v y) m)
+               (ensures  x == y)
+       =
+       assert (interp (pts_to_body r f v x) m);
+       assert (interp (pts_to_body r f v y) m);
+       M.pure_interp (history_val x v f) m;
+       M.pure_interp (history_val y v f) m;
+       (* They are joinable, so their values match *)
+       M.pts_to_join r x y m
+    in
+    Classical.forall_intro (fun x ->
+    Classical.forall_intro (fun y ->
+    Classical.forall_intro (fun m ->
+    Classical.move_requires (aux x y) m)))
+
+
+
 let pts_to (#a:Type) (#p:Preorder.preorder a) (r:ref a p) (f:perm) (v:Ghost.erased a) =
     h_exists (pts_to_body r f v)
 
@@ -289,14 +312,48 @@ let rewrite_reveal_hide #a (x:a) (p:a -> slprop) ()
   : SteelT unit (p (Ghost.reveal (Ghost.hide x))) (fun _ -> p x)
   = SB.return ()
 
+let pts_to_is_witness_invariant (#a:Type) (#p:Preorder.preorder a)
+    (r:ref a p) (q:perm)
+  : Lemma (witness_invariant (pts_to r q))
+          [SMTPat (witness_invariant (pts_to r q))]
+  = let aux (x y : erased a) (m:mem)
+       : Lemma (requires interp (pts_to r q x) m
+                       /\ interp (pts_to r q y) m)
+               (ensures  x == y)
+       =
+       assert (interp (h_exists (pts_to_body r q x)) m);
+       assert (interp (h_exists (pts_to_body r q y)) m);
+       let h1 : erased (history a p) = id_elim_exists (pts_to_body r q x) m in
+       let h2 : erased (history a p) = id_elim_exists (pts_to_body r q y) m in
+       assert (interp (pts_to_body r q x h1) m);
+       assert (interp (pts_to_body r q y h2) m);
+       M.pure_interp (history_val h1 x q) m;
+       M.pure_interp (history_val h2 y q) m;
+       (* They are joinable, so their values match *)
+       M.pts_to_join r h1 h2 m
+    in
+    Classical.forall_intro (fun x ->
+    Classical.forall_intro (fun y ->
+    Classical.forall_intro (fun m ->
+    Classical.move_requires (aux x y) m)))
 
 let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> slprop)
                 (r:ref a p)
   : SteelT a (h_exists (fun (v:a) -> pts_to r q v `star` f v))
              (fun v -> pts_to r q v `star` f v)
-  = let v = SB.witness_h_exists () in
+
+  = pts_to_is_witness_invariant r q;
+    star_is_witinv_left (fun (v:a) -> pts_to r q v) f;
+    let v = SB.witness_h_exists () in
     SB.h_assert (pts_to r q v `star` f (Ghost.reveal v));
-    let h : Ghost.erased _ = SB.frame (fun _ -> SB.witness_h_exists #_ #(pts_to_body r q v) ()) _ in
+    let h : Ghost.erased (history a p) =
+     let sub () : SteelT (Ghost.erased (history a p))
+                         (h_exists (pts_to_body r q v))
+                         (fun h -> pts_to_body r q v h) =
+       SB.witness_h_exists #_ #(pts_to_body r q v) ()
+     in
+     SB.frame sub _
+    in
     SB.h_assert (pts_to_body r q v h `star` f (Ghost.reveal v));
     SB.h_assoc_r ();
     let hv = SB.frame (fun _ -> read r h) _ in

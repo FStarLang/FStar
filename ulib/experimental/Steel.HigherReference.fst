@@ -103,6 +103,18 @@ let pts_to_ref_injective
                               (Some (Ghost.reveal v1, p1))
                               m
 
+let pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (witness_invariant  (pts_to r p)) =
+  let aux (x y : erased a) (m:mem)
+    : Lemma (requires (interp (pts_to r p x) m /\ interp (pts_to r p y) m))
+            (ensures  (x == y))
+    =
+    Mem.pts_to_join r (Some (Ghost.reveal x, p)) (Some (Ghost.reveal y, p)) m
+  in
+  Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
+
+let pts_to_framon (#a:Type) (r:ref a) (p:perm) : Lemma (is_frame_monotonic (pts_to r p)) =
+  pts_to_witinv r p
+
 let drop (p:slprop)
   : SteelT unit p (fun _ -> emp)
   = lift_atomic_to_steelT (fun _ ->
@@ -177,8 +189,10 @@ let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
 
 let read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
-             (fun v -> pts_to r p v `star` q v)
-  = let vs = SB.witness_h_exists () in
+             (fun (v:a) -> pts_to r p v `star` q v)
+  = pts_to_witinv r p;
+    star_is_witinv_left (fun (v:a) -> pts_to r p v) q;
+    let vs = SB.witness_h_exists () in
     SB.h_assert (pts_to r p vs `star` q vs);
     let v = SB.frame (fun _ -> read #a #p #vs r) _ in
     SB.h_assert (pts_to r p v `star` q v);
