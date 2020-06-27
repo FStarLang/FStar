@@ -243,7 +243,7 @@ fexport = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ |\
           tar -x -C $(PREFIX)
 
 # Similar, but exports every file instead of only those in version control.
-fexport-all = cp -a ../../$(1) $(PREFIX)/$(1)
+fexport-all = cp -T -a ../../$(1)/ $(PREFIX)/$(1)/
 
 ifeq ($(OS),Windows_NT)
   Z3_NAME=z3.exe
@@ -276,6 +276,8 @@ package: all
 	$(call fexport,tests)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
+	@#export checked files:
+	$(call fexport-all,ulib/.cache/)
 ifeq ($(MADOKO),Madoko)
 	@# Build the tutorial
 	+$(MAKE) -C fstar/doc/tutorial
