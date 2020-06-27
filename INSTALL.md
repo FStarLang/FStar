@@ -28,9 +28,12 @@ using either the [online F\* editor] that's part of the [F\* tutorial].
 
 If the OCaml package manager (OPAM) is present on your platform, you can
 install the latest development version of F\* (`master` branch) and
-required dependencies (except for Z3) using the following commands:
+required dependencies (except for Z3) using the following command:
 
         $ opam pin add fstar --dev-repo
+
+To install the latest released version use this instead:
+
         $ opam install fstar
 
 Note: To install OCaml and OPAM on your platform please read the
