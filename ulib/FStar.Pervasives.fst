@@ -70,6 +70,8 @@ let resolve_implicits = ()
 
 let erasable = ()
 
+let smt_reifiable_layered_effect = ()
+
 let normalize_term #_ x = x
 
 let normalize a = a

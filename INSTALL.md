@@ -19,12 +19,10 @@
 ## Online editor ##
 
 The easiest way to try out F\* quickly is directly in your browser by
-using either the [online F\* editor] that's part of the [F\* tutorial]
-or our new [even cooler online editor] (experimental).
+using either the [online F\* editor] that's part of the [F\* tutorial].
 
 [online F\* editor]: https://www.fstar-lang.org/run.php
 [F\* tutorial]: https://www.fstar-lang.org/tutorial
-[even cooler online editor]: http://fstar.ht.vc
 
 ## OPAM package ##
 
@@ -38,6 +36,9 @@ required dependencies (except for Z3) using the following commands:
 Note: To install OCaml and OPAM on your platform please read the
 [Working OCaml setup](#prerequisite-for-steps-2-and-3-working-ocaml-setup)
 section further below, steps 0 to 3.
+
+Note: On MacOS you will additionally need to install `coreutils` via Homebrew or
+Macports for this to work (see [issue #469](https://github.com/FStarLang/FStar/issues/469)).
 
 ## Binary releases ##
 
@@ -126,18 +127,6 @@ following commands. (On Windows this requires Cygwin and `make`)
          like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`
          you can increase the limits with `ulimit -n 4000`.
 
-### Homebrew formula for Mac OS X ###
-
-On Macs you can build and install the latest F\* release using Homebrew.
-This will install F\* and all required dependencies (including Z3):
-
-        $ brew install fstar
-
-For building and installing the latest F\* development version from GitHub
-(the `master` branch) instead of the latest release you can do:
-
-        $ brew install --HEAD fstar
-
 ### Chocolatey Package on Windows ###
 
 On windows you can use chocolatey package manager to install and update fstar
@@ -162,11 +151,12 @@ See [Running F\* from a docker image](https://github.com/FStarLang/FStar/wiki/Ru
 
 ## Building F\* from sources ##
 
-Short version: Simply run `make -j 6` from the `master` branch of the clone.
-
 If you have a serious interest in F\* or want to report bugs then we recommend that you build F\* from the sources on GitHub (the `master` branch).
 
-F* is written in a subset of F* itself and can generate OCaml or F# code from its own sources.
+**Short version**: Simply run `make -j 6` from the `master` branch of the clone.
+If it fails, check the "Working OCaml setup" prerequisite below.
+
+**Long version**: F* is written in a subset of F* itself and can generate OCaml or F# code from its own sources.
 Therefore, the standard bootstrap build process of F\* involves the following three steps:
 
   **Step 1.** Build F\* using the OCaml compiler from the (possibly outdated) checked-in generated OCaml code.
@@ -185,7 +175,7 @@ Some convenience Makefile targets are available:
 
 ### Prerequisites: Working OCaml setup  ###
 
-The steps require a working OCaml setup. OCaml version from 4.05.X to 4.08.1 should work.
+The steps require a working OCaml setup. OCaml version from 4.05.X to 4.09.1 should work.
 
 #### Instructions for Windows ####
 
@@ -196,17 +186,17 @@ The steps require a working OCaml setup. OCaml version from 4.05.X to 4.08.1 sho
   ```sh
   $ opam update
   $ opam switch list-available
-  $ opam switch create ocaml-variants.4.07.1+mingw64c
+  $ opam switch create ocaml-variants.4.09.1+mingw64c
   ```
 
 3. Afterwards you can install the `depext` and `depext-cygwinports` packages,
   to be able to install some binary dependencies below more easily.
+  ([More documentation on depext-cygwin here](https://fdopen.github.io/opam-repository-mingw/depext-cygwin/).)
   ```sh
   $ opam install depext depext-cygwinports
   ```
-  [More documentation on depext-cygwin here](https://fdopen.github.io/opam-repository-mingw/depext-cygwin/).
-  
-  Then follow step 4 in "Instructions for all OSes" below.
+
+Then follow step 4 in "Instructions for all OSes" below.
 
 #### Instructions for Linux and Mac OS X ####
 
@@ -214,7 +204,7 @@ The steps require a working OCaml setup. OCaml version from 4.05.X to 4.08.1 sho
    - Can be installed using either your package manager or using OPAM
      (see below).
 
-1. Install OPAM (version 1.2.x or later).
+1. Install OPAM (version 2.0 or later).
 
    - Installation instructions are available at various places
      (e.g., https://dev.realworldocaml.org/install.html

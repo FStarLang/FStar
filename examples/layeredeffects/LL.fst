@@ -100,7 +100,7 @@ let eif_then_else (a:Type)
 
 /// The effect definition
 
-reifiable reflectable
+total reifiable reflectable
 layered_effect {
   EXN : a:Type -> ewp_t a -> Effect
   with
@@ -290,7 +290,7 @@ let if_then_else (a:Type)
     (p ==> wp_f post n) /\
     ((~ p) ==> wp_g post n))
 
-reifiable reflectable
+total reifiable reflectable
 layered_effect {
   STEXN : a:Type -> wp:wp_t a -> Effect
   with

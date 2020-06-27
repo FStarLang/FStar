@@ -2335,7 +2335,10 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                                           ^"\tlhs="  ^u_lhs.ctx_uvar_reason
                                           ^ "\trhs=" ^u_rhs.ctx_uvar_reason)
                                          wl range gamma_w ctx_w (U.arrow zs (S.mk_Total t_res_lhs))
-                                         Strict
+                                         (if u_lhs.ctx_uvar_should_check = Allow_untyped &&
+                                             u_rhs.ctx_uvar_should_check = Allow_untyped
+                                          then Allow_untyped
+                                          else Strict)
                                          None in
                  let w_app = S.mk_Tm_app w (List.map (fun (z, _) -> S.as_arg (S.bv_to_name z)) zs) w.pos in
                  let _ =

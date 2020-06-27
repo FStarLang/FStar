@@ -13,3 +13,9 @@ python3 fstardoc.py {path to fst/fsti file}
 ```
 make
 ```
+
+## Getting latest version of the tool
+
+```
+make update-to-latest
+```

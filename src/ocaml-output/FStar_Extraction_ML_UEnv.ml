@@ -344,7 +344,7 @@ let (lookup_record_field_name :
       | (type_name, fn) ->
           let key =
             let uu____1128 =
-              let uu____1129 = FStar_Ident.ns_of_lid type_name in
+              let uu____1129 = FStar_Ident.ids_of_lid type_name in
               FStar_List.append uu____1129 [fn] in
             FStar_Ident.lid_of_ids uu____1128 in
           let uu____1132 =
@@ -852,80 +852,80 @@ let (extend_with_action_name :
 let (extend_record_field_name :
   uenv ->
     (FStar_Ident.lident * FStar_Ident.ident) ->
-      (FStar_Extraction_ML_Syntax.mlpath * uenv))
+      (FStar_Extraction_ML_Syntax.mlident * uenv))
   =
   fun g ->
-    fun uu____2438 ->
-      match uu____2438 with
+    fun uu____2439 ->
+      match uu____2439 with
       | (type_name, fn) ->
           let key =
-            let uu____2450 =
-              let uu____2451 = FStar_Ident.ns_of_lid type_name in
-              FStar_List.append uu____2451 [fn] in
-            FStar_Ident.lid_of_ids uu____2450 in
-          let uu____2454 =
-            let uu____2463 = FStar_Ident.string_of_id fn in
-            find_uniq g.env_fieldname_map uu____2463 false in
-          (match uu____2454 with
+            let uu____2452 =
+              let uu____2453 = FStar_Ident.ids_of_lid type_name in
+              FStar_List.append uu____2453 [fn] in
+            FStar_Ident.lid_of_ids uu____2452 in
+          let uu____2456 =
+            let uu____2465 = FStar_Ident.string_of_id fn in
+            find_uniq g.env_fieldname_map uu____2465 false in
+          (match uu____2456 with
            | (name, fieldname_map) ->
-               let ns = mlns_of_lid key in
+               let ns = mlns_of_lid type_name in
                let mlp = (ns, name) in
                let g1 =
-                 let uu___410_2498 = g in
-                 let uu____2499 =
-                   let uu____2502 = FStar_Ident.string_of_lid key in
-                   FStar_Util.psmap_add g.mlpath_of_fieldname uu____2502 mlp in
+                 let uu___410_2501 = g in
+                 let uu____2502 =
+                   let uu____2505 = FStar_Ident.string_of_lid key in
+                   FStar_Util.psmap_add g.mlpath_of_fieldname uu____2505 mlp in
                  {
-                   env_tcenv = (uu___410_2498.env_tcenv);
-                   env_bindings = (uu___410_2498.env_bindings);
-                   env_mlident_map = (uu___410_2498.env_mlident_map);
-                   mlpath_of_lid = (uu___410_2498.mlpath_of_lid);
+                   env_tcenv = (uu___410_2501.env_tcenv);
+                   env_bindings = (uu___410_2501.env_bindings);
+                   env_mlident_map = (uu___410_2501.env_mlident_map);
+                   mlpath_of_lid = (uu___410_2501.mlpath_of_lid);
                    env_fieldname_map = fieldname_map;
-                   mlpath_of_fieldname = uu____2499;
-                   tydefs = (uu___410_2498.tydefs);
-                   type_names = (uu___410_2498.type_names);
-                   currentModule = (uu___410_2498.currentModule)
+                   mlpath_of_fieldname = uu____2502;
+                   tydefs = (uu___410_2501.tydefs);
+                   type_names = (uu___410_2501.type_names);
+                   currentModule = (uu___410_2501.currentModule)
                  } in
-               (mlp, g1))
+               (name, g1))
 let (extend_with_module_name :
   uenv -> FStar_Ident.lident -> (FStar_Extraction_ML_Syntax.mlpath * uenv)) =
   fun g ->
     fun m ->
       let ns = mlns_of_lid m in
       let p =
-        let uu____2525 = FStar_Ident.ident_of_lid m in
-        FStar_Ident.string_of_id uu____2525 in
+        let uu____2529 = FStar_Ident.ident_of_lid m in
+        FStar_Ident.string_of_id uu____2529 in
       ((ns, p), g)
 let (exit_module : uenv -> uenv) =
   fun g ->
-    let uu___418_2536 = g in
-    let uu____2537 = initial_mlident_map () in
+    let uu___418_2540 = g in
     let uu____2541 = initial_mlident_map () in
+    let uu____2545 = initial_mlident_map () in
     {
-      env_tcenv = (uu___418_2536.env_tcenv);
-      env_bindings = (uu___418_2536.env_bindings);
-      env_mlident_map = uu____2537;
-      mlpath_of_lid = (uu___418_2536.mlpath_of_lid);
-      env_fieldname_map = uu____2541;
-      mlpath_of_fieldname = (uu___418_2536.mlpath_of_fieldname);
-      tydefs = (uu___418_2536.tydefs);
-      type_names = (uu___418_2536.type_names);
-      currentModule = (uu___418_2536.currentModule)
+      env_tcenv = (uu___418_2540.env_tcenv);
+      env_bindings = (uu___418_2540.env_bindings);
+      env_mlident_map = uu____2541;
+      mlpath_of_lid = (uu___418_2540.mlpath_of_lid);
+      env_fieldname_map = uu____2545;
+      mlpath_of_fieldname = (uu___418_2540.mlpath_of_fieldname);
+      tydefs = (uu___418_2540.tydefs);
+      type_names = (uu___418_2540.type_names);
+      currentModule = (uu___418_2540.currentModule)
     }
 let (new_uenv : FStar_TypeChecker_Env.env -> uenv) =
   fun e ->
     let env =
-      let uu____2552 = initial_mlident_map () in
-      let uu____2556 = FStar_Util.psmap_empty () in
-      let uu____2559 = initial_mlident_map () in
-      let uu____2563 = FStar_Util.psmap_empty () in
+      let uu____2556 = initial_mlident_map () in
+      let uu____2560 = FStar_Util.psmap_empty () in
+      let uu____2563 = initial_mlident_map () in
+      let uu____2567 = FStar_Util.psmap_empty () in
       {
         env_tcenv = e;
         env_bindings = [];
-        env_mlident_map = uu____2552;
-        mlpath_of_lid = uu____2556;
-        env_fieldname_map = uu____2559;
-        mlpath_of_fieldname = uu____2563;
+        env_mlident_map = uu____2556;
+        mlpath_of_lid = uu____2560;
+        env_fieldname_map = uu____2563;
+        mlpath_of_fieldname = uu____2567;
         tydefs = [];
         type_names = [];
         currentModule = ([], "")
@@ -938,11 +938,11 @@ let (new_uenv : FStar_TypeChecker_Env.env -> uenv) =
                ([], (["Prims"], "string"))),
              FStar_Extraction_ML_Syntax.E_IMPURE,
              (FStar_Extraction_ML_Syntax.MLTY_Var a)))) in
-    let uu____2596 =
-      let uu____2604 =
-        let uu____2605 =
+    let uu____2600 =
+      let uu____2608 =
+        let uu____2609 =
           FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.failwith_lid
             FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
-        FStar_Util.Inr uu____2605 in
-      extend_lb env uu____2604 FStar_Syntax_Syntax.tun failwith_ty false in
-    match uu____2596 with | (g, uu____2608, uu____2609) -> g
+        FStar_Util.Inr uu____2609 in
+      extend_lb env uu____2608 FStar_Syntax_Syntax.tun failwith_ty false in
+    match uu____2600 with | (g, uu____2612, uu____2613) -> g
