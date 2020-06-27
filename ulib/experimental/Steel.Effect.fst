@@ -76,6 +76,8 @@ type ens_t (pre:pre_t) (a:Type u#a) (post:post_t u#a a) : Type u#(max 2 a) =
     ens_depends_only_on pre post q
   }
 
+
+
 #push-options "--warn_error -271"
 let interp_depends_only_on_post (#a:Type) (hp:a -> slprop)
 : Lemma
@@ -121,14 +123,12 @@ let bind_pure_steel a b wp pre_g post_b req_g ens_g f g
       g x m0
 #pop-options
 
-#push-options "--z3rlimit 200 --fuel 0 --ifuel 0"
 let bind_steel_pure a b pre_f post_f req_f ens_f wp_g f g
-  = admit(); //We don't really need this direction anymore and it takes ages to prove (not sure why)
+  = 
     FStar.Monotonic.Pure.wp_monotonic_pure ();
     fun _ ->
     let x = f () in
     g x ()
-#pop-options
 
 
 unfold
