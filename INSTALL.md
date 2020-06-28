@@ -6,7 +6,7 @@
   * [Binary releases](#binary-releases)
     * [Testing a binary package](#testing-a-binary-package)
     * [Chocolatey Package on Windows](#chocolatey-package-on-windows)
-    * [Running F* from a docker image](#running-f-from-a-docker-image)
+  * [Running F* from a docker image](#running-f-from-a-docker-image)
   * [Building F* from the OCaml sources](#building-f-from-the-ocaml-sources)
     * [Prerequisites: Working OCaml setup](#prerequisites-working-ocaml-setup)
       * [Instructions for Windows](#instructions-for-windows)
@@ -18,7 +18,7 @@
     * [Step 1. Build an F* binary from OCaml snapshot](#step-1-build-an-f-binary-from-ocaml-snapshot)
     * [Step 2b. Extract the sources of F* itself to OCaml](#step-2b-extract-the-sources-of-f-itself-to-ocaml)
     * [Repeat Step 1](#repeat-step-1)
-  * [Runtime dependency: Z3 SMT solver](#runtime-dependency-z3-smt-solver)
+  * [Runtime dependency: Particular version of Z3 SMT solver](#runtime-dependency-particular-version-of-z3)
 
 ## Online editor ##
 
@@ -30,34 +30,38 @@ using either the [online F\* editor] that's part of the [F\* tutorial].
 
 ## OPAM package ##
 
-If the OCaml package manager (OPAM) is present on your platform, you can
-install the latest development version of F\* (`master` branch) and
-required dependencies ([except for Z3](#runtime-dependency-z3-smt-solver))
+If the OCaml package manager (OPAM version 2.0 or later) is present on your platform,
+you can install the latest development version of F\* (`master` branch) and
+required dependencies ([except for Z3](#runtime-dependency-particular-version-of-z3))
 using the following command:
 
-        $ opam pin add fstar --dev-repo
+    $ opam pin add fstar --dev-repo
 
-To install the latest released version use this instead:
+To instead install the latest released version you can use the following command
+(keeping in mind that you will often get a very old version of F\* this way,
+so we don't really recommend it):
 
-        $ opam install fstar
+    $ opam install fstar
 
 Note: To install OCaml and OPAM on your platform please read the
 [Working OCaml setup](#prerequisites-working-ocaml-setup)
 section further below, steps 0 to 3.
 
-Note: On MacOS you will additionally need to install `coreutils` via Homebrew or
-Macports for this to work (see [issue #469](https://github.com/FStarLang/FStar/issues/469)).
+Note: On MacOS you will additionally need to install `coreutils`
+via Homebrew or Macports for the OPAM package of F\* to work
+(see [issue #469](https://github.com/FStarLang/FStar/issues/469)).
 
 ## Binary releases ##
 
 Every now and then we release [F\* binaries on GitHub] (for Windows, Mac, and Linux)
 and for Windows and Linux we also try to provide [automatic weekly builds].
-This an easy way to get F\* quickly running on your machine,
+This is a way to get F\* quickly running on your machine,
 but if the build you use is old you might be missing out on new
 features and bug fixes. Please do not report bugs in old releases
 until making sure they still exist in the `master` branch (see
+[OPAM package](#opam-package) above and
 [Building F\* from sources](#building-f-from-sources) below)
-or at least in the latest [automatic weekly builds].
+or in some recent [automatic weekly builds].
 
 [F\* binaries on GitHub]: https://github.com/FStarLang/FStar/releases
 [automatic weekly builds]: https://github.com/FStarLang/binaries/tree/master/weekly
@@ -70,7 +74,7 @@ following commands. (Note: On Windows this requires Cygwin and `make`)
 1. Add `fstar.exe` and `z3` to your `PATH`, either permanently
    or temporarily, for instance by running this:
 
-        $ export PATH=/path/to/z3/bin:/path/to/fstar/bin:$PATH
+        $ export PATH=/path/to/fstar/bin:$PATH
         $ fstar.exe --version
         F* 0.9.7.0~dev
         platform=Linux_x86_64
@@ -80,16 +84,27 @@ following commands. (Note: On Windows this requires Cygwin and `make`)
         $ z3 --version
         Z3 version 4.8.5 - 64 bit
 
-   Note: if you are using the binary package and extracted it to,
-   say, the `fstar` directory, then both `fstar.exe` and `z3` are in
+   Note: if you are using the binary package and extracted it to, say, the
+   `fstar` directory, then both `fstar.exe` and the right version of `z3` are in
    the `fstar/bin` directory.
 
 2. Run the micro benchmarks:
 
         $ make -C tests/micro-benchmarks
 
-3. If you have OCaml installed and intend to extract and compile OCaml code
-   against the F\* library, please build it with:
+3. Verify the F\* standard library, producing `.checked` files that cache
+   definitions to speed up subsequent usage:
+
+        $ make -C ulib -j6
+        $ echo $?    # non-zero means build failed! scroll up for error message!
+
+   Note: The option `-j6` controls the number of cores to be used in parallel build.
+         Using more cores results in greater RAM usage. This can make builds slow
+         if you do not have enough RAM to support all parallel builds. Consider monitoring
+         RAM usage when building, and use fewer cores if you are using 100% of your RAM.
+
+4. If you have a working OCaml setup and intend to extract and compile OCaml code
+   against the F\* OCaml support library, please build it with:
 
         $ make -C ulib install-fstarlib
 
@@ -100,35 +115,26 @@ following commands. (Note: On Windows this requires Cygwin and `make`)
    For more on extracting to OCaml, check out
    [the documentation on extracting and executing F\* code](https://github.com/FStarLang/FStar/wiki/Executing-F*-code).
 
-   Note: If you still need to obtain a working OCaml install, please read the
+   Note: If you still need to obtain a working OCaml setup, please read the
    [Working OCaml setup](#prerequisites-working-ocaml-setup) section
-   further below, especially steps 0 to 3 to first install OCaml on
+   further below, especially steps 0 to 3 to first install OCaml and OPAM on
    your OS; then use the following command to install the packages
    required to compile OCaml programs extracted from F\* code:
 
         $ opam install ocamlfind batteries stdint zarith ppx_deriving ppx_deriving_yojson ocaml-migrate-parsetree process
 
-4. (Optional) You can verify the F\* library and all the examples,
-   keeping in mind that this will take a long time.
+5. (Optional) You can also verify all the examples, keeping in mind that this
+   will take a long time, use a lot of resources, and that there are some quirks
+   explained in the notes below.
 
-        $ make -C ulib -j6
-        $ echo $?    # non-zero means build failed! scroll up for error message!
         $ make -C examples -j6
         $ echo $?    # non-zero means build failed! scroll up for error message!
 
-   Note: Some of the examples require having OCaml installed (as for step 3 above).
-
-   Note: Some of the examples require our
-         [OCaml support library](https://github.com/FStarLang/FStar/wiki/Executing-F*-code)
-         (as for step 3 above)
+   Note: As for step 4 above some of the examples require having OCaml installed
+         and some additionally our [OCaml support library](https://github.com/FStarLang/FStar/wiki/Executing-F*-code).
 
    Note: Some of the examples currently require having [KreMLin](https://github.com/FStarLang/kremlin)
          installed and the `KREMLIN_HOME` variable pointing to its location.
-
-   Note: The option `-j6` controls the number of cores to be used in parallel build.
-         Using more cores results in greater RAM usage. This can make builds slow
-         if you do not have enough RAM to support all parallel builds. Consider monitoring
-         RAM usage when building, and use fewer cores if you are using 100% of your RAM.
 
    Note: On Linux if you get a file descriptor exhaustion error that looks
          like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`
@@ -146,7 +152,7 @@ or
 
 you can find the package description [here](https://chocolatey.org/packages/FStar)
 
-### Running F\* from a docker image ###
+## Running F\* from a docker image ##
 
 An alternative to installing binaries is to install a docker image.
 We currently provide the following two on docker hub: `fstarlang/fstar-emacs`
@@ -160,12 +166,13 @@ See [Running F\* from a docker image](https://github.com/FStarLang/FStar/wiki/Ru
 
 If you have a serious interest in F\* then we recommend that you build F\* from the sources on GitHub (the `master` branch).
 
-**Short version**: Simply run `make -j 6` from the `master` branch of the clone.
-If it fails, check the [Working OCaml setup](#prerequisites-working-ocaml-setup) prerequisite below.
-This process is explained in smaller steps below.
+**Short version**:
+Once you have a [working OCaml setup](#prerequisites-working-ocaml-setup),
+simply run `make -j 6` from the `master` branch of the clone.
+This build process is explained in smaller steps [below](#step-1-building-f-from-the-ocaml-snapshot),
+but first we explain how to get OCaml working on your machine.
 
-**Note:** If you build F\* from sources you will also need to get a Z3 binary.
-          This is further explained [at the end of this document](#runtime-dependency-z3-smt-solver).
+**Note:** To use F\* you will also need to [get a particular version of Z3](#runtime-dependency-particular-version-of-z3).
 
 ### Prerequisites: Working OCaml setup  ###
 
@@ -327,7 +334,7 @@ A convenience Makefile target is available to run all three steps:
 
 ### Repeat [Step 1](#step-1-build-an-f-binary-from-ocaml-snapshot)
 
-## Runtime dependency: Z3 SMT solver ##
+## Runtime dependency: Particular version of Z3 SMT solver ##
 
 To use F\* for verification you need a Z3 binary.
 Our binary packages include that already in `bin`, but if you compile
