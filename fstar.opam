@@ -13,9 +13,9 @@ depends: [
   "yojson"
   "ocamlbuild" {build}
   "fileutils"
-  "menhir" {>= "20161115"}
-  "pprint"
-  "ulex"
+  "menhir" {>= "20161115" build}
+  "pprint" {build}
+  "ulex" {build}
   "ppx_deriving"
   "ppx_deriving_yojson"
   "process"
