@@ -1,18 +1,23 @@
 ## Table of Contents ##
 
+  * [Table of Contents](#table-of-contents)
   * [Online editor](#online-editor)
   * [OPAM package](#opam-package)
   * [Binary releases](#binary-releases)
     * [Testing a binary package](#testing-a-binary-package)
     * [Chocolatey Package on Windows](#chocolatey-package-on-windows)
-    * [Running F\* from a docker image](#running-f-from-a-docker-image)
-  * [Building F\* from sources](#building-f-from-sources)
+    * [Running F* from a docker image](#running-f-from-a-docker-image)
+  * [Building F* from the OCaml sources](#building-f-from-the-ocaml-sources)
     * [Prerequisites: Working OCaml setup](#prerequisites-working-ocaml-setup)
       * [Instructions for Windows](#instructions-for-windows)
       * [Instructions for Linux and Mac OS X](#instructions-for-linux-and-mac-os-x)
       * [Instructions for all OSes](#instructions-for-all-oses)
-    * [Step 1. Building F\* from the OCaml snapshot](#step-3-building-f-from-the-ocaml-snapshot)
-    * [Step 2. Extracting the sources of F\* itself to OCaml](#step-2-extracting-the-sources-of-f-itself-to-ocaml)
+    * [Step 1. Building F* from the OCaml snapshot](#step-1-building-f-from-the-ocaml-snapshot)
+    * [Step 2l. Building the F* libraries](#step-2l-building-the-f-libraries)
+  * [Bootstrapping F* in OCaml](#bootstrapping-f-in-ocaml)
+    * [Step 1. Build an F* binary from OCaml snapshot](#step-1-build-an-f-binary-from-ocaml-snapshot)
+    * [Step 2b. Extract the sources of F* itself to OCaml](#step-2b-extract-the-sources-of-f-itself-to-ocaml)
+    * [Repeat Step 1](#repeat-step-1)
   * [Runtime dependency: Z3 SMT solver](#runtime-dependency-z3-smt-solver)
 
 ## Online editor ##
@@ -106,9 +111,9 @@ following commands. (Note: On Windows this requires Cygwin and `make`)
 4. (Optional) You can verify the F\* library and all the examples,
    keeping in mind that this will take a long time.
 
-        $ make -j6 -C ulib
+        $ make -C ulib -j6
         $ echo $?    # non-zero means build failed! scroll up for error message!
-        $ make -j6 -C examples
+        $ make -C examples -j6
         $ echo $?    # non-zero means build failed! scroll up for error message!
 
    Note: Some of the examples require having OCaml installed (as for step 3 above).
@@ -151,26 +156,13 @@ The image is automatically kept up to date through a cloud build.
 You only have to install docker and an X server for your platform and you are good to go.
 See [Running F\* from a docker image](https://github.com/FStarLang/FStar/wiki/Running-F%2A-from-a-docker-image) for the details on how to use docker.
 
-## Building F\* from sources ##
+## Building F\* from the OCaml sources ##
 
 If you have a serious interest in F\* then we recommend that you build F\* from the sources on GitHub (the `master` branch).
 
 **Short version**: Simply run `make -j 6` from the `master` branch of the clone.
 If it fails, check the [Working OCaml setup](#prerequisites-working-ocaml-setup) prerequisite below.
-
-**Long version**: F\* is written in a subset of F\* itself and can generate OCaml code from its own sources.
-Therefore, the standard bootstrap build process of F\* involves the following three steps:
-
-  **Step 1.** Build F\* using the OCaml compiler from the (possibly outdated) checked-in generated OCaml code.
-
-  **Step 2.** Extract the sources of F\* itself to OCaml using the F\* binary produced at step 1.
-
-  **Step 3.** Repeat step 1: rebuild F\* from the newly generated OCaml code in the previous step.
-
-Some convenience Makefile targets are available:
-
-- To run steps 2 and 1, do `make -C src -j6 fstar-ocaml`.
-- To run steps 1, 2 and 1 again (step 3), do: `make -C src -j6 ocaml-fstar-ocaml`.
+This process is explained in smaller steps below.
 
 **Note:** If you build F\* from sources you will also need to get a Z3 binary.
           This is further explained [at the end of this document](#runtime-dependency-z3-smt-solver).
@@ -266,10 +258,13 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
 
 ### Step 1. Building F\* from the OCaml snapshot ###
 
-Once you have a working OCaml setup (see above)
-just run the following command:
+Once you have a working OCaml setup (see above) just run the following command:
 
-        $ make 1 -j6
+    $ make 1 -j6
+
+As explained [below](#bootstrapping-f-in-ocaml), a snapshot of the F\* sources
+extracted to OCaml is checked-in the F\* repo and regularly updated, and the
+command above will simply build an F\* binary out of that snapshot.
 
 **Note:** On Windows this generates a *native* F\* binary, that is, a binary
 that does *not* depend on `cygwin1.dll`, since
@@ -281,16 +276,56 @@ needs to use the *correct* mingw libraries and *not* the Cygwin ones. OCaml uses
 special `flexlink` technology for this. See `examples/crypto` and
 `contrib/CoreCrypto/ml` for examples.
 
-### Step 2. Extracting the sources of F\* itself to OCaml ###
+### Step 2l. Building the F\* libraries ###
 
-0. Get an F\* binary using the the OCaml build process (step 1 above).
+A convenience make target exists for this:
 
-1. Make sure you follow the instructions above to get a working OCaml setup.
+    $ make libs -j6
+
+It does two things:
+
+1. It verifies the F\* standard library, producing `.checked` files that cache
+   definitions to speed up subsequent usage. You can build this part separately with:
+
+      $ make -C ulib -j6
+
+2. It builds the various OCaml libraries (`fstar-compiler-lib`, `fstarlib`,
+   `fstartaclib`), needed for building OCaml code extracted from F\*, native
+   tactics, etc. You can build this part separately with:
+
+      $ make -C ulib/ml -j6
+
+## Bootstrapping F\* in OCaml
+
+F\* is written in a subset of F\* itself and can generate OCaml code from its own sources.
+Therefore, the standard bootstrap build process of F\* involves the following three steps:
+
+  **Step 1.** Build F\* using the OCaml compiler from the (possibly outdated) checked-in generated OCaml snapshot.
+
+  **Step 2b.** Extract the sources of F\* itself to OCaml using the F\* binary produced at step 1.
+
+  **Repeat step 1**: Rebuild F\* from the newly generated OCaml code in the previous step.
+
+A convenience Makefile target is available to run all three steps:
+
+    $ make boot -j6
+
+### Step 1. Build an F\* binary from OCaml snapshot ###
+
+[Get an F\* binary using the the OCaml build process](#step-1-building-f-from-the-ocaml-snapshot):
+
+    $ make 1 -j6
+
+### Step 2b. Extract the sources of F\* itself to OCaml ###
+
+1. Make sure you follow the instructions above to get a [working OCaml setup]().
 
 2. Once you satisfy the prerequisites for your platform,
    translate the F\* sources to OCaml using F\* by running:
 
         $ make ocaml -C src -j6
+
+### Repeat [Step 1](#step-1-build-an-f-binary-from-ocaml-snapshot)
 
 ## Runtime dependency: Z3 SMT solver ##
 
