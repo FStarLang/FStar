@@ -1673,6 +1673,44 @@ let valid_synth_star_assoc_2
     valid_synth_size = (fun _ -> ());
   }
 
+let valid_synth_star_compat_l
+  (p: parser)
+  (p1 p2: parser)
+  (precond: pre_t p1)
+  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  ($v: valid_synth_t p1 p2 precond f)
+: Tot (valid_synth_t (p `star` p1) (p `star` p2) (fun (_, x) -> precond x) (fun (x, y) -> (x, f y)))
+= {
+  valid_synth_valid = (fun h b pos pos' ->
+    let posq = valid_star_inv_spec h p p1 b pos pos' in
+    v.valid_synth_valid h b posq pos';
+    valid_star p p2 h b pos posq pos'
+  );
+  valid_synth_size = (fun xy ->
+    let (_, x) = (xy <: dfst (p `star` p1)) in
+    v.valid_synth_size x
+  );
+}
+
+let valid_synth_star_compat_r
+  (p: parser)
+  (p1 p2: parser)
+  (precond: pre_t p1)
+  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  ($v: valid_synth_t p1 p2 precond f)
+: Tot (valid_synth_t (p1 `star` p) (p2 `star` p) (fun (x, _) -> precond x) (fun (x, y) -> (f x, y)))
+= {
+  valid_synth_valid = (fun h b pos pos' ->
+    let posp = valid_star_inv_spec h p1 p b pos pos' in
+    v.valid_synth_valid h b pos posp;
+    valid_star p2 p h b pos posp pos'
+  );
+  valid_synth_size = (fun xy ->
+    let (x, _) = (xy <: dfst (p1 `star` p)) in
+    v.valid_synth_size x
+  );
+}
+
 let check_precond_t
   (p1: parser)
   (precond: pre_t p1)
