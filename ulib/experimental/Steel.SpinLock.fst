@@ -32,8 +32,8 @@ let lockinv (p:slprop) (r:ref bool) : slprop =
   h_exists (lockprop p r)
 
 let lockprop_witinv (p:slprop) (r:ref bool)
-  : Lemma (witness_invariant (lockprop p r))
-          [SMTPat (witness_invariant (lockprop p r))]
+  : Lemma (is_witness_invariant (lockprop p r))
+          [SMTPat (is_witness_invariant (lockprop p r))]
   =
   let aux (x y : bool) (m:mem)
     : Lemma (requires (interp (lockprop p r x) m /\ interp (lockprop p r y) m))

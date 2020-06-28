@@ -119,7 +119,7 @@ let raise_ref r p v = Basics.return r
 let lower_ref r p v = Basics.return r
 
 let pts_to_witinv (#a:Type u#0) (r:ref a) (p:perm)
-  : Lemma (witness_invariant  (pts_to r p))
+  : Lemma (is_witness_invariant (pts_to r p))
   = let aux (x y : erased a) (m : mem)
       : Lemma (requires (interp (pts_to r p x) m
                        /\ interp (pts_to r p y) m))

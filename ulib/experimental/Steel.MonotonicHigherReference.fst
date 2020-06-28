@@ -214,7 +214,7 @@ let pts_to_body #a #p (r:ref a p) (f:perm) (v:Ghost.erased a) (h:history a p) =
       pure (history_val h v f)
 
 let pts_to_body_witness_invariant #a #p (r:ref a p) (f:perm) (v:Ghost.erased a)
-  : Lemma (witness_invariant (pts_to_body r f v))
+  : Lemma (is_witness_invariant (pts_to_body r f v))
           [SMTPat (pts_to_body r f v)]
   = let aux (x y : history a p) (m:mem)
        : Lemma (requires interp (pts_to_body r f v x) m
@@ -314,8 +314,8 @@ let rewrite_reveal_hide #a (x:a) (p:a -> slprop) ()
 
 let pts_to_is_witness_invariant (#a:Type) (#p:Preorder.preorder a)
     (r:ref a p) (q:perm)
-  : Lemma (witness_invariant (pts_to r q))
-          [SMTPat (witness_invariant (pts_to r q))]
+  : Lemma (is_witness_invariant (pts_to r q))
+          [SMTPat (is_witness_invariant (pts_to r q))]
   = let aux (x y : erased a) (m:mem)
        : Lemma (requires interp (pts_to r q x) m
                        /\ interp (pts_to r q y) m)

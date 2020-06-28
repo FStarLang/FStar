@@ -1054,15 +1054,29 @@ let id_elim_exists #a p m =
   let x = IndefiniteDescription.indefinite_description_tot _ existsprop in
   x
 
+let witinv_framon #a (p : a -> slprop)
+  : Lemma (requires (is_witness_invariant p))
+          (ensures (is_frame_monotonic p))
+    =
+    let aux x y h frame : Lemma (requires (interp (p x `star` frame) h /\ interp (p y) h))
+                                (ensures (interp (p y `star` frame) h)) =
+      assert (interp (p x `star` frame) h);
+      let (hl, hr) = id_elim_star (p x) frame h in
+      affine_star (p x) frame h;
+      assert (interp (p x) h);
+      assert (x == y);
+      ()
+    in
+    Classical.forall_intro_4 (fun x y m frame -> Classical.move_requires (aux x y m) frame)
+
 let witness_h_exists #a p
   : action (h_exists p) (erased a) (fun x -> p x)
-  = assert (is_frame_monotonic p);
-    let pre : refined_pre_action (h_exists p) (erased a) (fun x -> p x) =
+  = let pre : refined_pre_action (h_exists p) (erased a) (fun x -> p x) =
       fun h0 -> let w = IndefiniteDescription.indefinite_description_tot a (fun x -> interp (p x) h0) in
              let aux (frame:slprop) : Lemma (requires (interp (h_exists p `star` frame) h0))
                                             (ensures  (interp (p w `star` frame) h0)) =
                (* This is the main trick of using frame-monotonic properties, `w` is
-                * good for anything. *)
+                * good for any frame. *)
                 let (hl, hr) = id_elim_star (h_exists p) frame h0 in
                 let w' = id_elim_exists p hl in
                 assert (interp (p w') hl);
