@@ -1087,19 +1087,12 @@ let relate_frame_monotonic_2 #a p
           (ensures (H.is_frame_monotonic p))
   =  let aux (x y : a) (h : H.heap) (f : H.slprop) :
       Lemma (requires (H.interp (p x `H.star` f) h /\ H.interp (p y) h))
-            (ensures (H.slimp (p x) (p y)))
+            (ensures (H.interp (p y `H.star` f) h))
       =
         let m = mem_of_heap h in
         assert (interp (p x `star` f) m);
         assert (interp (p y)          m);
-        assert (slimp (p x) (p y));
-        let aux2 (h:H.heap) : Lemma (requires H.interp (p x) h) (ensures H.interp (p y) h) =
-          let m = mem_of_heap h in
-          assert (interp (p x) m);
-          assert (interp (p y) m);
-          ()
-        in
-        Classical.forall_intro (Classical.move_requires aux2)
+        assert (interp (p y `star` f) m)
     in
     Classical.forall_intro_4 (fun x y h f -> Classical.move_requires (aux x y h) f)
 
@@ -1155,30 +1148,47 @@ let slimp_star (p q r s : slprop)
    in
    Classical.forall_intro (Classical.move_requires aux)
 
-let elim_wi #a (p : a -> slprop{witness_invariant p}) (x y : a) (m : mem)
+let elim_wi #a (p : a -> slprop{is_witness_invariant p}) (x y : a) (m : mem)
   : Lemma (requires (interp (p x) m /\ interp (p y) m))
           (ensures (x == y))
   = ()
 
 let witinv_framon (#a:Type) (p : a -> slprop)
-  : Lemma (witness_invariant p ==> is_frame_monotonic p)
-          [SMTPatOr [[SMTPat (witness_invariant p)]; [SMTPat (is_frame_monotonic p)]]]
+  : Lemma (is_witness_invariant p ==> is_frame_monotonic p)
+          [SMTPatOr [[SMTPat (is_witness_invariant p)]; [SMTPat (is_frame_monotonic p)]]]
   = ()
 
 let star_is_frame_monotonic (#a:Type)
     (f g : a -> slprop)
   : Lemma (requires (is_frame_monotonic f /\ is_frame_monotonic g))
           (ensures (is_frame_monotonic (fun x -> f x `star` g x)))
-          //[SMTPat (is_frame_monotonic (fun x -> f x `star` g x))]
   = let aux (x y : a) (m:mem) (frame : slprop)
        : Lemma (requires interp ((f x `star` g x) `star` frame) m
                         /\ interp (f y `star` g y) m)
-               (ensures (slimp (f x `star` g x) (f y `star` g y)))
-       = assert (slimp (f x) (f y));
-         star_associative (f x) (g x) frame;
-         Classical.forall_intro (affine_star (g x) frame);
-         assert (slimp (g x) (g y));
-         slimp_star (f x) (f y) (g x) (g y);
+               (ensures (interp ((f y `star` g y) `star` frame) m))
+       = star_associative (f x) (g x) frame;
+         let (m1, m23) = id_elim_star (f x) (g x `star` frame) m in
+         let (m2, m3)  = id_elim_star (g x) frame m23 in
+         affine_star (f y) (g y) m;
+         assert (interp (f y) m);
+         assert (interp (g y) m);
+         assert (interp (f x `star` (g x `star` frame)) m);
+         assert (interp (f y `star` (g x `star` frame)) m);
+
+         (* flip and do the same reasoning *)
+         star_associative (f y) (g x) frame;
+         star_commutative (f y) (g x);
+         star_congruence (f y `star` g x) frame (g x `star` f y) frame;
+         star_associative (g x) (f y) frame;
+         assert (interp (g x `star` (f y `star` frame)) m);
+         assert (interp (g y `star` (f y `star` frame)) m);
+
+         (* get back in shape *)
+         star_associative (f y) (g y) frame;
+         star_commutative (f y) (g y);
+         star_congruence (f y `star` g y) frame (g y `star` f y) frame;
+         star_associative (g y) (f y) frame;
+         assert (interp (f y `star` (g y `star` frame)) m);
          ()
     in
     Classical.forall_intro_4 (fun x y m -> Classical.move_requires (aux x y m));
@@ -1186,12 +1196,12 @@ let star_is_frame_monotonic (#a:Type)
 
 let star_is_witinv_left (#a:Type)
     (f g : a -> slprop)
-  : Lemma (requires (witness_invariant f))
-          (ensures  (witness_invariant (fun x -> f x `star` g x)))
+  : Lemma (requires (is_witness_invariant f))
+          (ensures  (is_witness_invariant (fun x -> f x `star` g x)))
   = ()
 
 let star_is_witinv_right (#a:Type)
     (f g : a -> slprop)
-  : Lemma (requires (witness_invariant g))
-          (ensures  (witness_invariant (fun x -> f x `star` g x)))
+  : Lemma (requires (is_witness_invariant g))
+          (ensures  (is_witness_invariant (fun x -> f x `star` g x)))
   = ()

@@ -523,16 +523,6 @@ val change_slprop (p q:slprop)
 
 module U = FStar.Universe
 
-(** Implication of slprops *)
-let slimp (p1 p2:slprop) : prop =
-  forall m. interp p1 m ==> interp p2 m
-
-let is_frame_monotonic #a (p : a -> slprop) : prop =
-  forall x y m frame. interp (p x `star` frame) m /\ interp (p y) m ==> slimp (p x) (p y)
-
-let witness_invariant #a (p : a -> slprop) =
-  forall x y m. interp (p x) m /\ interp (p y) m ==> x == y
-
 val id_elim_star (p q:slprop) (h:heap)
   : Pure (erased heap & erased heap )
          (requires (interp (p `star` q) h))
@@ -546,6 +536,16 @@ val id_elim_exists (#a:Type) (p : a -> slprop) (h:heap)
          (requires (interp (h_exists p) h))
          (ensures (fun x -> interp (p x) h))
 
+
+let is_frame_monotonic #a (p : a -> slprop) : prop =
+  forall x y m frame. interp (p x `star` frame) m /\ interp (p y) m ==> interp (p y `star` frame) m
+
+let is_witness_invariant #a (p : a -> slprop) =
+  forall x y m. interp (p x) m /\ interp (p y) m ==> x == y
+
+val witinv_framon (#a:_) (p : a -> slprop)
+  : Lemma (requires (is_witness_invariant p))
+          (ensures (is_frame_monotonic p))
 
 val witness_h_exists (#a:_) (p:a -> slprop{is_frame_monotonic p})
   : action (h_exists p) (erased a) (fun x -> p x)

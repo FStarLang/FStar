@@ -103,7 +103,7 @@ let pts_to_ref_injective
                               (Some (Ghost.reveal v1, p1))
                               m
 
-let pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (witness_invariant  (pts_to r p)) =
+let pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to r p)) =
   let aux (x y : erased a) (m:mem)
     : Lemma (requires (interp (pts_to r p x) m /\ interp (pts_to r p y) m))
             (ensures  (x == y))

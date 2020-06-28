@@ -36,7 +36,7 @@ val pts_to_ref_injective
         interp (pts_to r p0 v0 `star` pts_to r p1 v1) m)
       (ensures v0 == v1)
 
-val pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (witness_invariant  (pts_to r p))
+val pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to r p))
 val pts_to_framon (#a:Type) (r:ref a) (p:perm) : Lemma (is_frame_monotonic (pts_to r p))
 
 val alloc (#a:Type) (x:a)

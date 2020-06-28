@@ -408,9 +408,9 @@ val change_slprop (#opened_invariants:inames)
 module U = FStar.Universe
 
 let is_frame_monotonic #a (p : a -> slprop) : prop =
-  forall x y m frame. interp (p x `star` frame) m /\ interp (p y) m ==> slimp (p x) (p y)
+  forall x y m frame. interp (p x `star` frame) m /\ interp (p y) m ==> interp (p y `star` frame) m
 
-let witness_invariant #a (p : a -> slprop) =
+let is_witness_invariant #a (p : a -> slprop) =
   forall x y m. interp (p x) m /\ interp (p y) m ==> x == y
 
 val witness_h_exists (#opened_invariants:_) (#a:_) (p:(a -> slprop){is_frame_monotonic p})
@@ -452,13 +452,13 @@ val slimp_star (p q r s : slprop)
   : Lemma (requires (slimp p q /\ slimp r s))
           (ensures (slimp (p `star` r) (q `star` s)))
 
-val elim_wi (#a:Type) (p : a -> slprop{witness_invariant p}) (x y : a) (m : mem)
+val elim_wi (#a:Type) (p : a -> slprop{is_witness_invariant p}) (x y : a) (m : mem)
   : Lemma (requires (interp (p x) m /\ interp (p y) m))
           (ensures (x == y))
 
 val witinv_framon (#a:Type) (p : a -> slprop)
-  : Lemma (witness_invariant p ==> is_frame_monotonic p)
-          [SMTPatOr [[SMTPat (witness_invariant p)]; [SMTPat (is_frame_monotonic p)]]]
+  : Lemma (is_witness_invariant p ==> is_frame_monotonic p)
+          [SMTPatOr [[SMTPat (is_witness_invariant p)]; [SMTPat (is_frame_monotonic p)]]]
 
 val star_is_frame_monotonic (#a:Type)
     (f g : a -> slprop)
@@ -468,12 +468,12 @@ val star_is_frame_monotonic (#a:Type)
 
 val star_is_witinv_left (#a:Type)
     (f g : a -> slprop)
-  : Lemma (requires (witness_invariant f))
-          (ensures  (witness_invariant (fun x -> f x `star` g x)))
-          //[SMTPat   (witness_invariant (fun x -> f x `star` g x))]
+  : Lemma (requires (is_witness_invariant f))
+          (ensures  (is_witness_invariant (fun x -> f x `star` g x)))
+          //[SMTPat   (is_witness_invariant (fun x -> f x `star` g x))]
 
 val star_is_witinv_right (#a:Type)
     (f g : a -> slprop)
-  : Lemma (requires (witness_invariant g))
-          (ensures  (witness_invariant (fun x -> f x `star` g x)))
-          //[SMTPat   (witness_invariant (fun x -> f x `star` g x))]
+  : Lemma (requires (is_witness_invariant g))
+          (ensures  (is_witness_invariant (fun x -> f x `star` g x)))
+          //[SMTPat   (is_witness_invariant (fun x -> f x `star` g x))]
