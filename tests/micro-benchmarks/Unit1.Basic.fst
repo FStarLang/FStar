@@ -371,3 +371,6 @@ before b835eb6e4fa031d41302482ac47ae00bd91a9211 ("tc: term: make sure
 to kind-check types in top-level lets"). *)
 let  repr1 : (a:Type u#aa) -> (labs : list int) -> Type u#aa = fun a _ -> a
 type repr2 (a:Type u#aa) (labs : list int) : Type u#aa = a
+
+type repr3 (a:Type u#aa) (s0 s1 : Type) : Type u#aa =
+  s0 -> Tot (option a & s1)
