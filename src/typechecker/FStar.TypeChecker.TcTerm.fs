@@ -3331,7 +3331,9 @@ and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, 
           && not (env.generalize) //clearly, x has an annotated type ... could env.generalize ever be true here?
                                   //yes. x may not have a val declaration, only an inline annotation
                                   //so, not (env.generalize) signals that x has been declared as val x : t, and t has already been checked
-          then Some t, Env.trivial_guard, univ_vars, univ_opening, Env.set_expected_typ env1 t //t has already been kind-checked
+          then let k, _ = U.type_u () in
+               let t, _, g = tc_check_tot_or_gtot_term env1 t k "" in // need to kind-check the type
+               Some t, g, univ_vars, univ_opening, Env.set_expected_typ env1 t //t has already been kind-checked
           else //we have an inline annotation
                let k, _ = U.type_u () in
                let t, _, g = tc_check_tot_or_gtot_term env1 t k "" in
