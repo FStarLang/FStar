@@ -1234,7 +1234,7 @@ val frame_impl
 : Tot (repr_impl a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) (frame_post_err frame pre post_err) l (frame_spec a frame pre p post post_err l inner))
 
 inline_for_extraction
-let frame'
+let frame_repr
   (a: Type)
   (frame: parser)
   (pre: pre_t emp)
@@ -1260,7 +1260,7 @@ let frame
   (l: memory_invariant)
   ($inner: unit -> EWrite a emp p pre post post_err l)
 : EWrite a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) (frame_post_err frame pre post_err) l
-= frame' a frame pre p post post_err l inner ()
+= frame_repr a frame pre p post post_err l inner ()
 
 let elem_writer_spec
   (p: parser)
@@ -1418,7 +1418,7 @@ val recast_writer_impl
 : Tot (repr_impl a r_in r_out pre (recast_writer_post a r_in r_out pre post post_err l f) (recast_writer_post_err a r_in r_out pre post post_err l f) l (recast_writer_spec a r_in r_out pre post post_err l f))
 
 inline_for_extraction
-let recast_writer'
+let recast_writer_repr
   (a:Type u#x)
   (r_in: parser)
   (r_out: parser)
@@ -1443,7 +1443,29 @@ let recast_writer
   (l: memory_invariant)
   ($f: unit -> EWrite a r_in r_out pre post post_err l)
 : EWrite a r_in r_out pre (recast_writer_post a r_in r_out pre post post_err l f) (recast_writer_post_err a r_in r_out pre post post_err l f) l
-= recast_writer' a r_in r_out pre post post_err l f ()
+= recast_writer_repr a r_in r_out pre post post_err l f ()
+
+inline_for_extraction
+let frame'
+  (a: Type)
+  (fr: parser)
+  (p: parser)
+  (l: memory_invariant)
+  (f: unit ->
+    EWrite a emp p (fun _ -> True) (fun _ _ _ -> True) (fun _ -> True) l
+  )
+: EWrite a fr (fr `star` p)
+    (fun _ -> True)
+    (fun vin v (vin', vout) ->
+      vin' == vin /\
+      destr_repr_spec _ _ _ _ _ _ _ f () == Correct (v, vout)
+    )
+    (fun vin ->
+      Error? (destr_repr_spec _ _ _ _ _ _ _ f ())
+    )
+    l
+=
+  frame _ _ _ _ _ _ _ (fun _ -> recast_writer _ _ _ _ _ _ _ f)
 
 let write_two_ints_ifthenelse_2
   (l: memory_invariant)
@@ -1513,7 +1535,7 @@ val frame2_impl
 : Tot (repr_impl a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) (frame2_post_err frame ppre pre post_err) l (frame2_spec a frame ppre pre p post post_err l inner))
 
 inline_for_extraction
-let frame2'
+let frame2_repr
   (a: Type)
   (frame: parser)
   (ppre: parser)
@@ -1541,7 +1563,7 @@ let frame2
   (l: memory_invariant)
   ($inner: unit -> EWrite a ppre p pre post post_err l)
 : EWrite a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) (frame2_post_err frame ppre pre post_err) l
-= frame2' a frame ppre pre p post post_err l inner ()
+= frame2_repr a frame ppre pre p post post_err l inner ()
 
 noeq
 [@erasable] // very important, otherwise KReMLin will fail with argument typing
