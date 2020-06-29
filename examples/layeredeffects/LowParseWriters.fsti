@@ -1089,6 +1089,30 @@ let lift_read
 
 sub_effect ERead ~> EWrite = lift_read
 
+let wfailwith_spec
+  (a: Type)
+  (rin rout: parser)
+  (s: string)
+: Tot (repr_spec a rin rout (fun _ -> True) (fun _ _ _ -> False) (fun _ -> True))
+= fun _ -> Error s
+
+inline_for_extraction
+val wfailwith_impl
+  (a: Type)
+  (inv: memory_invariant)
+  (rin rout: parser)
+  (s: string)
+: Tot (repr_impl a rin rout (fun _ -> True) (fun _ _ _ -> False) (fun _ -> True) inv (wfailwith_spec a rin rout s))
+
+inline_for_extraction
+let wfailwith
+  (#a: Type)
+  (#inv: memory_invariant)
+  (#rin #rout: parser)  
+  (s: string)
+: EWrite a rin rout (fun _ -> True) (fun _ _ _ -> False) (fun _ -> True) inv
+= EWrite?.reflect (| _, wfailwith_impl a inv rin rout s |)
+
 // unfold
 let destr_repr_spec
   (a:Type u#x)

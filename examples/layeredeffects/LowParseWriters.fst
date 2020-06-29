@@ -261,6 +261,12 @@ let lift_read_impl
     | Error e ->
       IError e
 
+let wfailwith_impl
+  a inv rin rout s
+=
+  fun b len pos ->
+  IError s
+
 let get_state_impl
   inv p
 =
