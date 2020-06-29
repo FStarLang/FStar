@@ -73,10 +73,12 @@ effect Id (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
 effect IdT (a:Type) = Id a True (fun _ -> True)
 
 // Can't lift because of the strengthening, I believe. But can't we
-//prove it on the spot?
+// prove it on the spot?
 [@@expect_failure [19]]
 let rec sum (l : list int) : IdT int
  =
   match l with
   | [] -> 0
-  | x::xs -> x + sum xs
+  | x::xs ->
+    assert (xs << l); // this succeeds!!
+    x + sum xs
