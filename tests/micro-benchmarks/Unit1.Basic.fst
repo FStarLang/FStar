@@ -363,3 +363,11 @@ let bind_test3 () :Lemma bind_test_p = let x = lemma_bind_test_p () in x
 let p0 : Type     = 1 = 1
 let p1 : Type0    = 1 = 1
 let p2 : prop     = 1 = 1
+
+
+(* Tests about kind-checking the type of the letbinding. Used to give
+a mysterious error about `list int` not being equal to `list u#0 int`
+before b835eb6e4fa031d41302482ac47ae00bd91a9211 ("tc: term: make sure
+to kind-check types in top-level lets"). *)
+let  repr1 : (a:Type u#aa) -> (labs : list int) -> Type u#aa = fun a _ -> a
+type repr2 (a:Type u#aa) (labs : list int) : Type u#aa = a
