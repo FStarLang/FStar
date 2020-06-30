@@ -118,30 +118,47 @@ let finish (#p:slprop) (t:thread p) (v:bool)
 assume
 val drop (p:slprop) : SteelT unit p (fun _ -> emp)
 
+assume
+val drop_refine (p:slprop) (f:slprop) : SteelT unit (p `star` f) (fun _ -> emp `star` f)
+
 let acquire (#p:slprop) (t:thread p)
-  : SteelT bool emp (fun b -> pts_to t.r full_perm (hide b) `star` maybe_p p b)
-//  : SteelT bool emp (fun b -> pts_to t.r full_perm b)
+//  : SteelT bool emp (fun b -> pts_to t.r full_perm (hide b) `star` maybe_p p b)
+  : SteelT bool emp (fun b -> pts_to t.r full_perm b)
   = l_acquire t.l;
     elim_lock_inv t.r p;
     let b = read_refine #_ #full_perm (maybe_p p) t.r in
+    // TODO: This is a limitation of the current constraint solving
+    // strategy... The equalities for the frame of drop with the outer
+    // uvar are solved first... which restricts the context to remove
+    // b and prevents inferring `pts_to t.r full_perm b` as a frame
+    // Solution: trefl_with_eta is needed here. Or a more clever solving
+    // strategy but... trefl_with_eta might be easier
     // drop (maybe_p p b);
+    drop_refine (maybe_p p b) (pts_to t.r full_perm b);
     b
     // h_affine (pts_to t.r full b) (maybe_p p b);
     // return b
 
-(*
-let spawn (#p #q:slprop)
+assume
+val spawn (#p #q:slprop)
           ($f: (unit -> SteelT unit p (fun _ -> q)))
           (t:thread q)
           (_:unit)
   : SteelT unit p (fun _ -> emp)
-  = h_intro_emp_l p;
-    let b  = frame (fun () -> acquire t) p in
-    h_commute (pts_to t.r full b) p;
-    let _ = frame f (pts_to t.r full b) in
-    h_commute q (pts_to t.r full b);
-    finish t b
+  // TODO: Same problem as previously when framing something depending
+  // on the local, bound value b
+  // = let b = acquire t in
+  //   f ();
+  //   finish t b
 
+  // h_intro_emp_l p;
+  //   let b  = frame (fun () -> acquire t) p in
+  //   h_commute (pts_to t.r full b) p;
+  //   let _ = frame f (pts_to t.r full b) in
+  //   h_commute q (pts_to t.r full b);
+  //   finish t b
+
+(*
 let fork (#a:Type) (#p #q #r #s:slprop)
       (f: (unit -> SteelT unit p (fun _ -> q)))
       (g: (thread q -> unit -> SteelT unit r (fun _ -> s)))
