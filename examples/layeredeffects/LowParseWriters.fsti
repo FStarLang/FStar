@@ -110,6 +110,25 @@ val mk_read_repr_impl
 : Tot (read_repr_impl a pre post post_err l spec)
 
 inline_for_extraction
+val extract_read_repr_impl
+  (a:Type u#x)
+  (pre: pure_pre)
+  (post: pure_post' a pre)
+  (post_err: pure_post_err pre)
+  (l: memory_invariant)
+  (spec: read_repr_spec a pre post post_err)
+  (impl: read_repr_impl a pre post post_err l spec)
+: HST.Stack (result a)
+  (requires (fun h ->
+    B.modifies l.lwrite l.h0 h /\
+    pre
+  ))
+  (ensures (fun h res h' ->
+    B.modifies B.loc_none h h' /\
+    res == spec ()
+  ))
+
+inline_for_extraction
 noeq
 type read_repr
   (a:Type u#x)
@@ -816,6 +835,30 @@ val mk_repr_impl
     ))
   ))
 : Tot (repr_impl a r_in r_out pre post post_err l spec)
+
+inline_for_extraction
+val extract_repr_impl
+  (a:Type u#x)
+  (r_in: parser)
+  (r_out: parser)
+  (pre: pre_t r_in)
+  (post: post_t a r_in r_out pre)
+  (post_err: post_err_t r_in pre)
+  (l: memory_invariant)
+  (spec: repr_spec a r_in r_out pre post post_err)
+  (impl: repr_impl a r_in r_out pre post post_err l spec)
+  (b: B.buffer u8 { l.lwrite `B.loc_includes` B.loc_buffer b })
+  (len: U32.t { len == B.len b })
+  (pos1: buffer_offset b)
+: HST.Stack (iresult a)
+  (requires (fun h ->
+    B.modifies l.lwrite l.h0 h /\
+    valid_pos r_in h b 0ul pos1 /\
+    pre (contents r_in h b 0ul pos1)
+  ))
+  (ensures (fun h res h' ->
+    repr_impl_post a r_in r_out pre post post_err l spec b pos1 h res h'
+  ))
 
 inline_for_extraction
 let repr

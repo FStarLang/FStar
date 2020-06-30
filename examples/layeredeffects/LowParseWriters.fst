@@ -44,6 +44,11 @@ let mk_read_repr_impl
 =
   impl
 
+let extract_read_repr_impl
+  a pre post post_err l spec impl
+=
+  impl ()
+
 let read_return_impl
   a x inv
 = fun _ -> Correct x
@@ -215,6 +220,11 @@ let repr_impl
   ))
 
 let mk_repr_impl
+  a r_in r_out pre post post_err l spec impl
+=
+  impl
+
+let extract_repr_impl
   a r_in r_out pre post post_err l spec impl
 =
   impl
