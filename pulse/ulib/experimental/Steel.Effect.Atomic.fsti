@@ -58,25 +58,6 @@ val bind (a:Type u#a)
          (g:(x:a -> atomic_repr b opened_invariants o2 (post_f x) post_g))
   : atomic_repr b opened_invariants (join_obs o1 o2) pre_f post_g
 
-val subcomp (a:Type)
-            (opened_invariants:inames)
-            (o:observability)
-            (pre:slprop)
-            (post:a -> slprop)
-            (f:atomic_repr a opened_invariants o pre post)
-  : atomic_repr a opened_invariants o pre post
-
-let if_then_else (a:Type)
-                 (opened_invariants:inames)
-                 (o:observability)
-                 (pre:slprop)
-                 (post:a -> slprop)
-                 (f:atomic_repr a opened_invariants o pre post)
-                 (g:atomic_repr a opened_invariants o pre post)
-                 (p:Type0)
-  : Type
-  = atomic_repr a opened_invariants o pre post
-
 total
 reifiable reflectable
 layered_effect {
@@ -89,9 +70,7 @@ layered_effect {
   with
   repr = atomic_repr;
   return = return;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+  bind = bind
 }
 
 inline_for_extraction
