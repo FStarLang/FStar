@@ -83,21 +83,6 @@ let bind (a:Type) (b:Type)
   | None -> None
   | Some x -> (g x) ()
 
-inline_for_extraction
-let subcomp (a:Type)
-  (f:repr a ())
-: Pure (repr a ())
-  (requires True)
-  (ensures fun _ -> True)
-= f
-
-inline_for_extraction
-let if_then_else (a:Type)
-  (f:repr a ()) (g:repr a ())
-  (p:Type0)
-: Type
-= repr a ()
-
 
 /// The effect definition
 
@@ -107,9 +92,7 @@ layered_effect {
   with
   repr = repr;
   return = return;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+  bind = bind
 }
 
 
@@ -158,22 +141,6 @@ let stbind (a:Type) (b:Type)
   let (x, st) = f st in
   g x st
 
-inline_for_extraction noextract
-let stsubcomp (a:Type)
-  (state:Type0)
-  (f:mrepr a state)
-: Pure (mrepr a state)
-  (requires True)
-  (ensures fun _ -> True)
-= f
-
-inline_for_extraction noextract
-let stif_then_else (a:Type)
-  (state:Type0)
-  (f:mrepr a state) (g:mrepr a state)
-  (p:Type0)
-: Type
-= mrepr a state
 
 reifiable reflectable
 layered_effect {
@@ -181,9 +148,7 @@ layered_effect {
   with
   repr = mrepr;
   return = streturn;
-  bind = stbind;
-  subcomp = stsubcomp;
-  if_then_else = stif_then_else
+  bind = stbind
 }
 
 

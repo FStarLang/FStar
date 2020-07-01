@@ -137,13 +137,13 @@ let ibind (a : Type) (b : Type) (wp_v : w a) (wp_f: a ^-> w b) (v : irepr a wp_v
 let isubcomp (a:Type) (wp1 wp2: w a) (f : irepr a wp1) : Pure (irepr a wp2) (requires w_ord a wp2 wp1) (ensures fun _ -> True) =
   fun () -> w_ord_trans a wp2 wp1 (interp (f ())) ; f () 
 
-let wp_if_then_else (a:Type) (wp1 wp2:w a) (p:Type0) : w a=
+let wp_if_then_else (a:Type) (wp1 wp2:w a) (p:bool) : w a=
   w_conj a (w_act_prop a p wp1) (w_act_prop a (~p) wp2)
 
-let i_if_then_else (a : Type) (wp1 wp2 : w a) (f : irepr a wp1) (g : irepr a wp2) (p : Type0) : Type =
+let i_if_then_else (a : Type) (wp1 wp2 : w a) (f : irepr a wp1) (g : irepr a wp2) (p : bool) : Type =
   irepr a (wp_if_then_else a wp1 wp2 p)
 
-let lem_if_1 (a:Type) (wp1 wp2 : w a) (p:Type0) (f : irepr a wp1) (g : irepr a wp2)
+let lem_if_1 (a:Type) (wp1 wp2 : w a) (p:bool) (f : irepr a wp1) (g : irepr a wp2)
   : Lemma (p ==> w_ord a (wp_if_then_else a wp1 wp2 p) wp1)
           [SMTPat ()]
   = 
@@ -166,7 +166,7 @@ let lem_if_1 (a:Type) (wp1 wp2 : w a) (p:Type0) (f : irepr a wp1) (g : irepr a w
   in
   Classical.forall_intro (Classical.move_requires aux)
   
-let lem_if_2 (a:Type) (wp1 wp2 : w a) (p:Type0) (f : irepr a wp1) (g : irepr a wp2)
+let lem_if_2 (a:Type) (wp1 wp2 : w a) (p:bool) (f : irepr a wp1) (g : irepr a wp2)
   : Lemma ((~p) ==> w_ord a (wp_if_then_else a wp1 wp2 p) wp2)
           [SMTPat ()]
   = 

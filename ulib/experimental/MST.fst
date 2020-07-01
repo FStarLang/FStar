@@ -92,7 +92,7 @@ let if_then_else
       (ens_else:post_t state a)
       (f:repr a state rel req_then ens_then)
       (g:repr a state rel req_else ens_else)
-      (p:Type0)
+      (p:bool)
     : Type
     =
   repr a state rel

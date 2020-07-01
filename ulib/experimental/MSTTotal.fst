@@ -92,12 +92,12 @@ let if_then_else
       (ens_else:post_t state a)
       (f:repr a state rel req_then ens_then)
       (g:repr a state rel req_else ens_else)
-      (p:Type0)
+      (p:bool)
     : Type
     =
   repr a state rel
-    (fun s -> (p ==> req_then s) /\ ((~ p) ==> req_else s))
-    (fun s0 x s1 -> (p ==> ens_then s0 x s1) /\ ((~ p) ==> ens_else s0 x s1))
+    (fun s -> (b2t p ==> req_then s) /\ ((~ (b2t p)) ==> req_else s))
+    (fun s0 x s1 -> (b2t p ==> ens_then s0 x s1) /\ ((~ (b2t p)) ==> ens_else s0 x s1))
 
 total
 reifiable reflectable

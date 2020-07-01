@@ -54,7 +54,7 @@ let if_then_else (a:Type)
   (req_then:Type0) (ens_then:a -> Type0)
   (req_else:Type0) (ens_else:a -> Type0)
   (f:repr a req_then ens_then) (g:repr a req_else ens_else)
-  (p:Type0)
+  (p:bool)
 : Type
 = repr a
   ((p ==> req_then) /\ ((~ p) ==> req_else))

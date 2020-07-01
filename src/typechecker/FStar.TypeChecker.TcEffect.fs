@@ -334,9 +334,32 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
    *   where i, j are terms of effect indices types (as in the signature)
    *
    * The binders have arbitrary sorts
+   *
+   * The combinator is optional, indicated by a Tm_unknown
+   * If so, we add a default combinator as: fun (a:Type) (signature_bs) (f:repr a signature_bs) -> f
+   * 
    *)
   let stronger_repr =
-    let stronger_repr = ed |> U.get_stronger_repr |> must in
+    let stronger_repr =
+      let ts = ed |> U.get_stronger_repr |> must in
+      match (ts |> snd |> SS.compress).n with
+      | Tm_unknown ->
+        let signature_ts = let (us, t, _) = signature in (us, t) in
+        let _, signature_t = Env.inst_tscheme_with signature_ts [U_unknown] in
+        (match (SS.compress signature_t).n with
+         | Tm_arrow (bs, _) ->
+           let bs = SS.open_binders bs in
+           let repr_t =
+             let repr_ts = let (us, t, _) = repr in (us, t) in
+             Env.inst_tscheme_with repr_ts [U_unknown] |> snd in
+           let repr_t_applied = mk
+             (Tm_app (repr_t, bs |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg))
+             Range.dummyRange in
+           let f_b = S.null_binder repr_t_applied in
+           [], U.abs (bs@[f_b]) (f_b |> fst |> S.bv_to_name) None
+         | _ -> failwith "Impossible!")
+      | _ -> ts in
+        
     let r = (snd stronger_repr).pos in
 
     let stronger_us, stronger_t, stronger_ty = check_and_gen "stronger_repr" 1 stronger_repr in
@@ -390,8 +413,34 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
   log_combinator "stronger_repr" stronger_repr;
 
+  (*
+   * This combinator is also optional
+   * If so, we add a default:
+   * fun (a:Type) (signature_bs) (f:repr a signature_bs) (g:repr a signature_bs) (b:bool) -> repr a signature_bs
+   *)
   let if_then_else =
-    let if_then_else_ts = ed |> U.get_layered_if_then_else_combinator |> must in
+    let if_then_else_ts =
+      let ts = ed |> U.get_layered_if_then_else_combinator |> must in
+      match (ts |> snd |> SS.compress).n with
+      | Tm_unknown ->
+        let signature_ts = let (us, t, _) = signature in (us, t) in
+        let _, signature_t = Env.inst_tscheme_with signature_ts [U_unknown] in
+        (match (SS.compress signature_t).n with
+         | Tm_arrow (bs, _) ->
+           let bs = SS.open_binders bs in
+           let repr_t =
+             let repr_ts = let (us, t, _) = repr in (us, t) in
+             Env.inst_tscheme_with repr_ts [U_unknown] |> snd in
+           let repr_t_applied = mk
+             (Tm_app (repr_t, bs |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg))
+             Range.dummyRange in
+           let f_b = S.null_binder repr_t_applied in
+           let g_b = S.null_binder repr_t_applied in
+           let b_b = S.null_binder U.t_bool in
+           [], U.abs (bs@[f_b; g_b; b_b]) repr_t_applied None
+         | _ -> failwith "Impossible!")
+      | _ -> ts in
+
     let r = (snd if_then_else_ts).pos in
     let if_then_else_us, if_then_else_t, if_then_else_ty = check_and_gen "if_then_else" 1 if_then_else_ts in
 
@@ -416,7 +465,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let g_bs, guard_g =
       let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a |> fst |> S.bv_to_name) in
       S.gen_bv "g" None repr |> S.mk_binder, g in
-    let p_b = S.gen_bv "p" None U.ktype0 |> S.mk_binder in
+    let p_b = S.gen_bv "p" None U.t_bool |> S.mk_binder in
     let t_body, guard_body = fresh_repr r (Env.push_binders env (bs@[p_b])) u_a (a |> fst |> S.bv_to_name) in
     let k = U.abs (bs@[f_bs; g_bs; p_b]) t_body None in
     let guard_eq = Rel.teq env t k in
@@ -536,7 +585,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
 
     let _, _, g_f = tc_tot_or_gtot_term env tm_subcomp_ascribed_f in
-    let g_f = Env.imp_guard (Env.guard_of_guard_formula (NonTrivial p_t)) g_f in
+    let g_f = Env.imp_guard (Env.guard_of_guard_formula (p_t |> U.b2t |> NonTrivial)) g_f in
     Rel.force_trivial_guard env g_f;
 
 
@@ -544,7 +593,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let g_g =
       let not_p = S.mk_Tm_app
         (S.lid_as_fv PC.not_lid S.delta_constant None |> S.fv_to_tm)
-        [p_t |> S.as_arg]
+        [p_t |> U.b2t |> S.as_arg]
         r in
       Env.imp_guard (Env.guard_of_guard_formula (NonTrivial not_p)) g_g in
     Rel.force_trivial_guard env g_g in

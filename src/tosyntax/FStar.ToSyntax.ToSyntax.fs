@@ -2510,6 +2510,10 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
     let mandatory_members =
       let rr_members = ["repr" ; "return" ; "bind"] in
       if for_free then rr_members
+        (*
+         * AR: subcomp and if_then_else are optional
+         *     but adding here so as not to count them as actions
+         *)
       else if is_layered then rr_members @ [ "subcomp"; "if_then_else" ]
         (* the first 3 are optional but must not be counted as actions *)
       else rr_members @ [
@@ -2598,14 +2602,26 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
           bind_repr = Some (lookup "bind");
         })
       else if is_layered then
+        let has_subcomp = List.existsb (fun decl -> name_of_eff_decl decl = "subcomp") eff_decls in
+        let has_if_then_else = List.existsb (fun decl -> name_of_eff_decl decl = "if_then_else") eff_decls in
+
         //setting the second component to dummy_ts, typechecker fills them in
         let to_comb (us, t) = (us, t), dummy_tscheme in
+
+        (*
+         * AR: if subcomp or if_then_else are not specified, then fill in dummy_tscheme
+         *     typechecker will fill in an appropriate default
+         *)
         Layered_eff ({
           l_repr = lookup "repr" |> to_comb;
           l_return = lookup "return" |> to_comb;
           l_bind = lookup "bind" |> to_comb;
-          l_subcomp = lookup "subcomp" |> to_comb;
-          l_if_then_else = lookup "if_then_else" |> to_comb;
+          l_subcomp =
+            if has_subcomp then lookup "subcomp" |> to_comb
+            else dummy_tscheme, dummy_tscheme;
+          l_if_then_else =
+            if has_if_then_else then lookup "if_then_else" |> to_comb
+            else dummy_tscheme, dummy_tscheme;            
         })
       else
         let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in

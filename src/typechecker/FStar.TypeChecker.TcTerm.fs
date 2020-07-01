@@ -2331,7 +2331,18 @@ and tc_pat env (pat_t:typ) (p0:pat) :
           Env.trivial_guard,
           false
 
-        | Pat_constant _ ->
+        | Pat_constant c ->
+          (*
+           * AR: enforcing decidable equality, since the branch guards are in boolean now
+           *     so whereas earlier we did scrutinee == c,
+           *     we now have scrutinee = c, so we need decidable equality on c
+           *)
+          (match c with
+           | Const_unit | Const_bool _ | Const_int _ | Const_char _ | Const_float _ | Const_string _ -> ()
+           | _ ->
+             fail (BU.format1
+                     "Pattern matching a constant that does not have decidable equality: %s"
+                     (Print.const_to_string c)));
           let _, e_c, _, _ = PatternUtils.pat_as_exp false env p in
           let e_c, lc, g = tc_tot_or_gtot_term env e_c in
           Rel.force_trivial_guard env g;
@@ -2533,9 +2544,11 @@ and tc_eqn scrutinee env branch
   (* TODO: this seems very similar to constructing the terms for pattern variables in terms of scrutinee *)
   (*       and projectors. Can this be done in tc_pat too? That should save us repeated iterations on the pattern *)
 
+  (* The branch guard is a boolean expression *)
+
   let branch_guard =
       if not (Env.should_verify env)
-      then U.t_true
+      then U.exp_true_bool
       else (* 5 (a) *)
           let rec build_branch_guard (scrutinee_tm:option<term>) (pattern:pat) pat_exp : list<typ> =
             let discriminate scrutinee_tm f =
@@ -2548,8 +2561,7 @@ and tc_eqn scrutinee env branch
                         | None -> []  // We don't use the discriminator if we are typechecking it
                         | _ ->
                             let disc = S.fvar discriminator (Delta_equational_at_level 1) None in
-                            let disc = mk_Tm_app disc [as_arg scrutinee_tm] scrutinee_tm.pos in
-                            [U.mk_eq2 U_zero U.t_bool disc U.exp_true_bool]
+                            [mk_Tm_app disc [as_arg scrutinee_tm] scrutinee_tm.pos]
                 else []
             in
 
@@ -2581,7 +2593,7 @@ and tc_eqn scrutinee env branch
 
             | Pat_constant _c, Tm_constant c ->
 
-              [U.mk_eq2 U_zero (tc_constant env pat_exp.pos c) (force_scrutinee()) pat_exp]
+              [U.mk_decidable_eq (tc_constant env pat_exp.pos c) (force_scrutinee ()) pat_exp]
 
             | Pat_constant (FStar.Const.Const_int(_, Some _)), _ ->
               //machine integer pattern, cf. #1572
@@ -2589,7 +2601,7 @@ and tc_eqn scrutinee env branch
                 let env, _ = Env.clear_expected_typ env in
                 env.type_of env pat_exp
               in
-              [U.mk_eq2 U_zero t (force_scrutinee()) pat_exp]
+              [U.mk_decidable_eq t (force_scrutinee ()) pat_exp]
 
             | Pat_cons (_, []), Tm_uinst _
             | Pat_cons (_, []), Tm_fvar _ ->
@@ -2634,10 +2646,9 @@ and tc_eqn scrutinee env branch
           (* 5 (b) *)
           let build_and_check_branch_guard scrutinee_tm pattern pat =
              if not (Env.should_verify env)
-             then TcUtil.fvar_const env Const.true_lid //if we're not verifying, then don't even bother building it
-             else let t = U.mk_conj_l <| build_branch_guard scrutinee_tm pattern pat in
-                  let k, _ = U.type_u() in
-                  let t, _, _ = tc_check_tot_or_gtot_term scrutinee_env t k "" in
+             then U.exp_true_bool //if we're not verifying, then don't even bother building it
+             else let t = U.mk_and_l <| build_branch_guard scrutinee_tm pattern pat in
+                  let t, _, _ = tc_check_tot_or_gtot_term scrutinee_env t U.t_bool "" in
                   //NS: discarding the guard here means that the VC is not fully type-checked
                   //    and may contain unresolved unification variables, e.g. FIXME!
                   t in
@@ -2649,11 +2660,14 @@ and tc_eqn scrutinee env branch
          let branch_guard =
             match when_condition with
             | None -> branch_guard
-            | Some w -> U.mk_conj branch_guard w in
+            | Some w -> U.mk_and branch_guard w in
 
           branch_guard
   in
-  
+
+  if Env.debug env <| Options.Extreme then
+  BU.print1 "tc_eqn: branch guard : %s\n" (Print.term_to_string branch_guard);
+
   (* 6 (a). Build equality conditions between the pattern and the scrutinee                                    *)
   (*   (b). Weaken the VCs of the branch and when clause with the equalities from 6 (a) and the when condition *)
   (*        For layered effects, we weaken with the branch guard instead                                       *)
@@ -2682,7 +2696,8 @@ and tc_eqn scrutinee env branch
      let env = Env.push_binders scrutinee_env (pat_bvs |> List.map S.mk_binder) in
      if branch_has_layered_effect
      then
-       let c = TcUtil.weaken_precondition env c (NonTrivial branch_guard) in
+       //branch_guard is a boolean, so b2t it
+       let c = TcUtil.weaken_precondition env c (NonTrivial (U.b2t branch_guard)) in
        c, Env.trivial_guard  //use branch guard for weakening
      else
        match eqs, when_condition with

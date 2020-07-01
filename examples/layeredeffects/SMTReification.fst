@@ -25,10 +25,6 @@ let bind (a:Type) (b:Type) (f:repr a ()) (g:a -> repr b ()) : repr b () =
   let y, m = g x in
   y, n + m
 
-let subcomp (a:Type) (f:repr a ()) : repr a () = f
-
-let if_then_else (a:Type) (f:repr a ()) (g:repr a ()) (p:Type0) : Type = repr a ()
-
 [@@smt_reifiable_layered_effect]
 reifiable reflectable total
 layered_effect {
@@ -36,9 +32,7 @@ layered_effect {
   with
   repr = repr;
   return = return;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+  bind = bind
 }
 
 assume val pure_wp_monotonic (#a:Type) (wp:pure_wp a)

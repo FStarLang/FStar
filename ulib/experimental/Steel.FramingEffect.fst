@@ -233,7 +233,7 @@ let if_then_else (a:Type)
   (req_else:req_t pre) (ens_else:ens_t pre a post)
   (f:repr a pre post req_then ens_then)
   (g:repr a pre post req_else ens_else)
-  (p:Type0)
+  (p:bool)
 : Type
 = repr a pre post
     (if_then_else_req req_then req_else p)

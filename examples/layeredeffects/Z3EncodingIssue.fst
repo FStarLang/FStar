@@ -100,7 +100,7 @@ inline_for_extraction
 let if_then_else (a:Type)
   (wp_f:wp_t a) (wp_g:wp_t a)
   (f:repr a wp_f) (g:repr a wp_g)
-  (p:Type0)
+  (p:bool)
 : Type
 = repr a
   (fun post s ->
@@ -262,7 +262,7 @@ let hsubcomp (a:Type)
 let hif_then_else (a:Type)
   (wp_then:hwp_t a) (wp_else:hwp_t a)
   (f:hrepr a wp_then) (g:hrepr a wp_else)
-  (p:Type0)
+  (p:bool)
 : Type
 = hrepr a
   (fun post n ->
