@@ -2,7 +2,7 @@ FSTAR_HOME=../..
 OTHERFLAGS+=--already_cached 'Prims FStar LowStar' --include parsing --record_hints
 include ../Makefile.include
 
-NO_VERIFY=Buffers.fst GT.fst DM4F.fst LatticeSpec.fst
+NO_VERIFY=Buffers.fst
 
 ROOTS=$(wildcard *.fst)
 

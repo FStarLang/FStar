@@ -97,32 +97,10 @@ let app #a #b #i (f : a -> GTD b i) (x : a) : GTD b i = f x
 
 // todo: use map/app from tot context and prove that it does what it's meant to do
 
-#set-options "--debug GT --debug_level SMTQuery"
-
-// GM: This fails, but I'm not sure why. With tactics (after compute) I see
-// the failing goal is
-//
-//  … @ …ido/r/fstar/layef/GT.fst(106,80-106,86)  Wed Jun 10 22:26:42 2020
-//  Goal 1/26
-//  a: Type
-//  i: idx
-//  n: nat
-//  f: _: a -> GT.GTD a i
-//  x: a
-//  x'0: nat
-//  uu___: l_True /\ l_True /\ ~(x'0 == 0)
-//  x'1: nat
-//  x'2: x'0 == x'1
-//  x'3: unit
-//  x'4: a
-//  --------------------------------------------------------------------------------
-//  squash (n - 1 >= 0)
-//  (*?u509*) _
-//
-// which seems odd, since [n] and [x'0] are disconnected.
-
 open FStar.Tactics
 
+// no logical content
+[@@expect_failure [19]]
 let rec appn #a #i (n:nat) (f : a -> GTD a i) (x : a) : GTD a i =
   match n with 
   | 0 -> x
@@ -149,6 +127,7 @@ let labs #i (n:int) : GTD nat i =
 
 // GM: This fails, which I think makes sense since the effect
 //     doesn't carry any logical payload, so the assume gets lost?
+[@@expect_failure [19]]
 let test #a #i (n:int) : GTD nat i =
   let r = labs0 n in
   assume (r >= 0);
