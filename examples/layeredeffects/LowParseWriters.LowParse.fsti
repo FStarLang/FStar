@@ -6,26 +6,18 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 module HST = FStar.HyperStack.ST
 
-inline_for_extraction
-let dfst
-  (#u: Type)
-  (#v: ((x: u) -> Type))
-  (p: dtuple2 u v)
-: Tot u
-= match p with (| x, _ |) -> x
-
-inline_for_extraction
-let dsnd
-  (#u: Type)
-  (#v: ((x: u) -> Type))
-  (p: dtuple2 u v)
-: Tot (v (dfst p))
-= match p with (| _, x |) -> x
-
 type u8 : Type0 = U8.t
 
 val parser' (t: Type0) : Type u#1
-let parser : Type = (t: Type & parser' t)
+
+inline_for_extraction
+noextract
+noeq
+type parser =
+| Parser:
+  t: Type ->
+  p: parser' t ->
+  parser
 
 val valid_pos
   (p: parser)
@@ -56,13 +48,13 @@ val contents
   (b: B.buffer U8.t)
   (pos: U32.t)
   (pos' : U32.t)
-: Ghost (dfst p)
+: Ghost (Parser?.t p)
   (requires (valid_pos p h b pos pos'))
   (ensures (fun _ -> True))
 
 val size
   (p: parser)
-  (x: dfst p)
+  (x: Parser?.t p)
 : GTot nat
 
 val contents_size
@@ -79,9 +71,11 @@ val contents_size
   ))
   [SMTPat (contents p h b pos pos')]
 
+inline_for_extraction
 val emp' : parser' unit
 
-let emp : parser = (| unit, emp' |)
+inline_for_extraction
+let emp : parser = Parser unit emp'
 
 val valid_emp
   (h: HS.mem)
@@ -99,9 +93,11 @@ val valid_emp
 
 val size_emp : squash (size emp () == 0)
 
+inline_for_extraction
 val star' (#t1 #t2: Type) (p1: parser' t1) (p2: parser' t2) : Tot (parser' (t1 & t2))
 
-let star (p1 p2: parser) : Tot parser = (| (dfst p1 & dfst p2), star' (dsnd p1) (dsnd p2) |)
+inline_for_extraction
+let star (p1 p2: parser) : Tot parser = Parser (Parser?.t p1 & Parser?.t p2) (star' (Parser?.p p1) (Parser?.p p2))
 
 val valid_star
   (p1 p2: parser)
@@ -122,8 +118,8 @@ val valid_star
 
 val size_star
   (p1 p2: parser)
-  (x1: dfst p1)
-  (x2: dfst p2)
+  (x1: Parser?.t p1)
+  (x2: Parser?.t p2)
 : Lemma
   (size (p1 `star` p2) (x1, x2) == size p1 x1 + size p2 x2)
   [SMTPat (size (p1 `star` p2) (x1, x2))]
@@ -219,9 +215,11 @@ let valid_gsub_intro
 =
   valid_ext p h b (pos0 `U32.add` pos1) (pos0 `U32.add` pos2) h (B.gsub b pos0 len) pos1 pos2
 
+inline_for_extraction
 val parse_u32' : parser' U32.t
 
-let parse_u32 : parser = (| U32.t , parse_u32' |)
+inline_for_extraction
+let parse_u32 : parser = Parser U32.t (parse_u32')
 
 inline_for_extraction
 let leaf_writer
@@ -230,7 +228,7 @@ let leaf_writer
 =
   (b: B.buffer U8.t) ->
   (len: U32.t { len == B.len b }) ->
-  (x: dfst p) ->
+  (x: Parser?.t p) ->
   HST.Stack (option U32.t)
   (requires (fun h -> B.live h b))
   (ensures (fun h res h' ->
@@ -292,7 +290,7 @@ let buffer_contents
   (p: parser)
   (h: HS.mem)
   (b: B.buffer U8.t)
-: Ghost (dfst p)
+: Ghost (Parser?.t p)
   (requires (valid_buffer p h b))
   (ensures (fun _ -> True))
 = contents p h b 0ul (B.len b)
@@ -304,7 +302,7 @@ let leaf_reader
 =
   (b: B.buffer U8.t) ->
   (len: U32.t { B.len b == len }) ->
-  HST.Stack (dfst p)
+  HST.Stack (Parser?.t p)
   (requires (fun h ->
     valid_buffer p h b
   ))
@@ -321,13 +319,13 @@ type clens (t1: Type) (t2: Type) = {
 
 val gaccessor
   (p1 p2: parser)
-  (lens: clens (dfst p1) (dfst p2))
+  (lens: clens (Parser?.t p1) (Parser?.t p2))
 : Tot Type0
 
 inline_for_extraction
 val gaccess
   (#p1 #p2: parser)
-  (#lens: clens (dfst p1) (dfst p2))
+  (#lens: clens (Parser?.t p1) (Parser?.t p2))
   (g: gaccessor p1 p2 lens)
   (h: HS.mem)
   (b: B.buffer u8)
@@ -345,7 +343,7 @@ val gaccess
 inline_for_extraction
 val gaccessor_frame
   (#p1 #p2: parser)
-  (#lens: clens (dfst p1) (dfst p2))
+  (#lens: clens (Parser?.t p1) (Parser?.t p2))
   (g: gaccessor p1 p2 lens)
   (h: HS.mem)
   (b: B.buffer u8)
@@ -375,14 +373,14 @@ val gaccessor_frame
 inline_for_extraction
 val accessor
   (#p1 #p2: parser)
-  (#lens: clens (dfst p1) (dfst p2))
+  (#lens: clens (Parser?.t p1) (Parser?.t p2))
   (g: gaccessor p1 p2 lens)
 : Tot (Type u#1)
 
 inline_for_extraction
 val baccess
   (#p1 #p2: parser)
-  (#lens: clens (dfst p1) (dfst p2))
+  (#lens: clens (Parser?.t p1) (Parser?.t p2))
   (#g: gaccessor p1 p2 lens)
   (a: accessor g)
   (b: B.buffer u8)

@@ -548,7 +548,7 @@ inline_for_extraction
 let ptr (p: parser) (inv: memory_invariant) =
   (x: rptr { valid_rptr p inv x })
 
-val deref_spec (#p: parser) (#inv: memory_invariant) (x: ptr p inv) : GTot (dfst p)
+val deref_spec (#p: parser) (#inv: memory_invariant) (x: ptr p inv) : GTot (Parser?.t p)
 
 inline_for_extraction
 val mk_ptr
@@ -594,7 +594,7 @@ val deref_impl
   (#inv: memory_invariant)
   (r: leaf_reader p)
   (x: ptr p inv)
-: Tot (read_repr_impl (dfst p) True (fun res -> res == deref_spec x) (fun _ -> False) inv (fun _ -> Correct (deref_spec x)))
+: Tot (read_repr_impl (Parser?.t p) True (fun res -> res == deref_spec x) (fun _ -> False) inv (fun _ -> Correct (deref_spec x)))
 
 inline_for_extraction
 let deref_repr
@@ -602,7 +602,7 @@ let deref_repr
   (#inv: memory_invariant)
   (r: leaf_reader p)
   (x: ptr p inv)
-: Tot (read_repr (dfst p) True (fun res -> res == deref_spec x) (fun _ -> False) inv)
+: Tot (read_repr (Parser?.t p) True (fun res -> res == deref_spec x) (fun _ -> False) inv)
 = ReadRepr (fun _ -> Correct (deref_spec x)) (deref_impl r x)
 
 inline_for_extraction
@@ -611,12 +611,12 @@ let deref
   (#inv: memory_invariant)
   (r: leaf_reader p)
   (x: ptr p inv)
-: Read (dfst p) True (fun res -> res == deref_spec x) inv
+: Read (Parser?.t p) True (fun res -> res == deref_spec x) inv
 = Read?.reflect (deref_repr r x)
 
 val access_spec
   (#p1 #p2: parser)
-  (#lens: clens (dfst p1) (dfst p2))
+  (#lens: clens (Parser?.t p1) (Parser?.t p2))
   (#inv: memory_invariant)
   (g: gaccessor p1 p2 lens)
   (x: ptr p1 inv)
@@ -627,7 +627,7 @@ val access_spec
 inline_for_extraction
 val access_impl
   (#p1 #p2: parser)
-  (#lens: clens (dfst p1) (dfst p2))
+  (#lens: clens (Parser?.t p1) (Parser?.t p2))
   (#inv: memory_invariant)
   (#g: gaccessor p1 p2 lens)
   (a: accessor g)
@@ -637,7 +637,7 @@ val access_impl
 inline_for_extraction
 let access_repr
   (#p1 #p2: parser)
-  (#lens: clens (dfst p1) (dfst p2))
+  (#lens: clens (Parser?.t p1) (Parser?.t p2))
   (#inv: memory_invariant)
   (#g: gaccessor p1 p2 lens)
   (a: accessor g)
@@ -648,7 +648,7 @@ let access_repr
 inline_for_extraction
 let access
   (#p1 #p2: parser)
-  (#lens: clens (dfst p1) (dfst p2))
+  (#lens: clens (Parser?.t p1) (Parser?.t p2))
   (#inv: memory_invariant)
   (#g: gaccessor p1 p2 lens)
   (a: accessor g)
@@ -722,7 +722,7 @@ let validate
 let pre_t
   (rin: parser)
 : Tot Type
-= dfst rin -> GTot Type0
+= Parser?.t rin -> GTot Type0
 
 let post_t
   (a: Type)
@@ -730,18 +730,18 @@ let post_t
   (rout: parser)
   (pre: pre_t rin)
 : Tot Type
-= (x: dfst rin (* { pre x } *) ) -> (res: a) -> dfst rout -> GTot Type0
+= (x: Parser?.t rin (* { pre x } *) ) -> (res: a) -> Parser?.t rout -> GTot Type0
 
 let post_err_t
   (rin: parser)
   (pre: pre_t rin)
 : Tot Type
-= (x: dfst rin (* { pre x } *) ) -> GTot Type0
+= (x: Parser?.t rin (* { pre x } *) ) -> GTot Type0
 
 inline_for_extraction
 let repr_spec (a:Type u#x) (r_in: parser) (r_out: parser) (pre: pre_t r_in) (post: post_t a r_in r_out pre) (post_err: post_err_t r_in pre) : Tot (Type u#x) =
-  (v_in: dfst r_in) ->
-  Ghost (result (a & dfst r_out))
+  (v_in: Parser?.t r_in) ->
+  Ghost (result (a & Parser?.t r_out))
   (requires (pre v_in))
   (ensures (fun res ->
     match res with
@@ -861,16 +861,20 @@ val extract_repr_impl
     repr_impl_post a r_in r_out pre post post_err l spec b pos1 h res h'
   ))
 
+[@@ commute_nested_matches ]
 inline_for_extraction
-let repr
+noeq
+type repr
   (a: Type u#x)
   (r_in: parser) (r_out: parser)
   (pre: pre_t r_in)
   (post: post_t a r_in r_out pre)
   (post_err: post_err_t r_in pre)
   (l: memory_invariant)
-: Tot (Type u#x)
-= dtuple2 (repr_spec a r_in r_out pre post post_err) (repr_impl a r_in r_out pre post post_err l)
+= | Repr:
+    spec: repr_spec a r_in r_out pre post post_err ->
+    impl: repr_impl a r_in r_out pre post post_err l spec ->
+    repr a r_in r_out pre post post_err l
 
 let return_spec
   (a:Type) (x:a) (r: parser)
@@ -887,7 +891,7 @@ inline_for_extraction
 let returnc
   (a:Type) (x:a) (r: parser) (l: memory_invariant)
 : Tot (repr a (r) r (fun _ -> True) (fun v_in x' v_out -> x' == x /\ v_out == v_in) (fun _ -> False) l)
-= (| return_spec a x r, return_impl a x r l |)
+= Repr (return_spec a x r) (return_impl a x r l)
 
 let bind_spec (a:Type) (b:Type)
   (r_in_f:parser) (r_out_f: parser)
@@ -950,7 +954,7 @@ let bind (a:Type) (b:Type)
     ))) // (bind_post_err a r_in_f r_out_f pre_f post_f post_err_f pre_g post_err_g))
     l
   )
-= (| bind_spec a b r_in_f r_out_f pre_f post_f post_err_f r_out_g pre_g post_g post_err_g (dfst f_bind) (fun x -> dfst (g x)), bind_impl a b r_in_f r_out_f pre_f post_f post_err_f r_out_g pre_g post_g post_err_g (dfst f_bind) (fun x -> dfst (g x)) l (dsnd f_bind) (fun x -> dsnd (g x)) |)
+= Repr (bind_spec a b r_in_f r_out_f pre_f post_f post_err_f r_out_g pre_g post_g post_err_g (Repr?.spec f_bind) (fun x -> Repr?.spec (g x))) (bind_impl a b r_in_f r_out_f pre_f post_f post_err_f r_out_g pre_g post_g post_err_g (Repr?.spec f_bind) (fun x -> Repr?.spec (g x)) l (Repr?.impl f_bind) (fun x -> Repr?.impl (g x)))
 
 unfold
 let subcomp_spec_cond
@@ -1008,9 +1012,9 @@ let subcomp (a:Type)
 : Pure (repr a r_in r_out pre' post' post_err' l')
   (requires (subcomp_cond a r_in r_out pre post post_err pre' post' post_err' l l'))
   (ensures (fun _ -> True))
-= (| subcomp_spec a r_in r_out pre post post_err pre' post' post_err' (dfst f_subcomp),
-     subcomp_impl a r_in r_out pre post post_err pre' post' post_err' l l' (dfst f_subcomp) (dsnd f_subcomp) ()
-  |)
+= Repr (subcomp_spec a r_in r_out pre post post_err pre' post' post_err' (Repr?.spec f_subcomp))
+     (subcomp_impl a r_in r_out pre post post_err pre' post' post_err' l l' (Repr?.spec f_subcomp) (Repr?.impl f_subcomp) ()
+  )
 
 let if_then_else (a:Type)
   (r_in:parser) (r_out: parser)
@@ -1129,7 +1133,7 @@ let lift_read
     (fun _ -> post_err ()) // (lift_read_post_err pre post_err r))
     inv
   )
-= (| lift_read_spec a pre post post_err inv r f_read_spec, lift_read_impl a pre post post_err inv r f_read_spec |)
+= Repr (lift_read_spec a pre post post_err inv r f_read_spec) (lift_read_impl a pre post post_err inv r f_read_spec)
 
 sub_effect ERead ~> EWrite = lift_read
 
@@ -1155,7 +1159,7 @@ let wfailwith
   (#rin #rout: parser)  
   (s: string)
 : EWrite a rin rout (fun _ -> True) (fun _ _ _ -> False) (fun _ -> True) inv
-= EWrite?.reflect (| _, wfailwith_impl a inv rin rout s |)
+= EWrite?.reflect (Repr _ (wfailwith_impl a inv rin rout s))
 
 // unfold
 let destr_repr_spec
@@ -1168,7 +1172,7 @@ let destr_repr_spec
   (l: memory_invariant)
   ($f_destr_spec: unit -> EWrite a r_in r_out pre post post_err l)
 : Tot (repr_spec a r_in r_out pre post post_err)
-= dfst (reify (f_destr_spec ()))
+= Repr?.spec (reify (f_destr_spec ()))
 
 inline_for_extraction
 let destr_repr_impl
@@ -1181,7 +1185,7 @@ let destr_repr_impl
   (l: memory_invariant)
   (f_destr_spec: unit -> EWrite a r_in r_out pre post post_err l)
 : Tot (repr_impl a r_in r_out pre post post_err l (destr_repr_spec a r_in r_out pre post post_err l f_destr_spec))
-= dsnd (reify (f_destr_spec ()))
+= Repr?.impl (reify (f_destr_spec ()))
 
 inline_for_extraction
 unfold
@@ -1197,11 +1201,11 @@ let mk_repr
   (impl: repr_impl a r_in r_out pre post post_err l spec)
   ()
 : EWrite a r_in r_out pre post post_err l
-= EWrite?.reflect (| spec, impl |)
+= EWrite?.reflect (Repr spec impl)
 
 let get_state_spec
   (p: parser)
-: Tot (repr_spec (Ghost.erased (dfst p)) p p (fun _ -> True) (fun x y z -> x == Ghost.reveal y /\ x == z) (fun _ -> False))
+: Tot (repr_spec (Ghost.erased (Parser?.t p)) p p (fun _ -> True) (fun x y z -> x == Ghost.reveal y /\ x == z) (fun _ -> False))
 = fun x -> Correct (Ghost.hide x, x)
 
 inline_for_extraction
@@ -1215,8 +1219,8 @@ let get_state
   (#inv: memory_invariant)
   (#p: parser)
   ()
-: Write (Ghost.erased (dfst p)) p p (fun _ -> True) (fun x y z -> x == Ghost.reveal y /\ x == z) inv
-= EWrite?.reflect (| _, get_state_impl inv p |)
+: Write (Ghost.erased (Parser?.t p)) p p (fun _ -> True) (fun x y z -> x == Ghost.reveal y /\ x == z) inv
+= EWrite?.reflect (Repr _ (get_state_impl inv p))
 
 let frame_out
   (a: Type)
@@ -1308,7 +1312,7 @@ let frame
 
 let elem_writer_spec
   (p: parser)
-  (x: dfst p)
+  (x: Parser?.t p)
 : Tot (repr_spec unit emp (p) (fun _ -> True) (fun _ _ y -> y == x) (fun _ -> False))
 = fun _ -> Correct ((), x)
 
@@ -1317,7 +1321,7 @@ val elem_writer_impl
   (#p: parser)
   (w: leaf_writer p)
   (l: memory_invariant)
-  (x: dfst p)
+  (x: Parser?.t p)
 : Tot (repr_impl unit emp (p) (fun _ -> True) (fun _ _ y -> y == x) (fun _ -> False) l (elem_writer_spec p x))
 
 inline_for_extraction
@@ -1325,7 +1329,7 @@ let start
   (#p: parser)
   (w: leaf_writer p)
   (#l: memory_invariant)
-  (x: dfst p)
+  (x: Parser?.t p)
 : Write unit emp (p) (fun _ -> True) (fun _ _ y -> y == x) l
 = mk_repr
     unit emp (p) (fun _ -> True) (fun _ _ y -> y == x) (fun _ -> False) l
@@ -1342,7 +1346,7 @@ let append
   (#p: parser)
   (w: leaf_writer p)
   (#l: memory_invariant)
-  (x: dfst p)
+  (x: Parser?.t p)
 : Write unit fr (fr `star` p) (fun _ -> True) (fun w _ (w', x') -> w' == w /\ x' == x) l
 = frame unit fr (fun _ -> True) (p) (fun _ _ x' -> x' == x) (fun _ -> False) l (fun _ -> start w x)
 
@@ -1375,7 +1379,7 @@ let write_two_ints_2_lemma_2
   (x y: U32.t)
 : Lemma
   (True)
-= assert (dfst (reify (write_two_ints_2 l x y ())) () == Correct ((), (x, y)))
+= assert (Repr?.spec (reify (write_two_ints_2 l x y ())) () == Correct ((), (x, y)))
 
 let write_two_ints_ifthenelse
   (l: memory_invariant)
@@ -1615,7 +1619,7 @@ type valid_synth_t
   (p1: parser)
   (p2: parser)
   (precond: pre_t p1)
-  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
 = {
     valid_synth_valid:
       (h: HS.mem) ->
@@ -1635,7 +1639,7 @@ type valid_synth_t
         contents p2 h b pos pos' == f x
       )));
     valid_synth_size:
-      (x: dfst p1 { precond x }) ->
+      (x: Parser?.t p1 { precond x }) ->
       Lemma
       (size p1 x == size p2 (f x))
   }
@@ -1644,14 +1648,14 @@ let valid_synth_implies
   (p1: parser)
   (p2: parser)
   (precond: pre_t p1)
-  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
   (v: valid_synth_t p1 p2 precond f)
   (precond' : pre_t p1)
-  (f' : (x: dfst p1 { precond' x }) -> GTot (dfst p2))
+  (f' : (x: Parser?.t p1 { precond' x }) -> GTot (Parser?.t p2))
 : Pure (valid_synth_t p1 p2 precond' f')
   (requires (
-    (forall (x: dfst p1) . precond' x ==> precond x) /\
-    (forall (x: dfst p1 { precond' x }) . f' x == f x)
+    (forall (x: Parser?.t p1) . precond' x ==> precond x) /\
+    (forall (x: Parser?.t p1 { precond' x }) . f' x == f x)
   ))
   (ensures (fun _ -> True))
 = {
@@ -1663,11 +1667,11 @@ let valid_synth_compose
   (p1: parser)
   (p2: parser)
   (precond12: pre_t p1)
-  (f12: (x: dfst p1 { precond12 x }) -> GTot (dfst p2))
+  (f12: (x: Parser?.t p1 { precond12 x }) -> GTot (Parser?.t p2))
   (v12: valid_synth_t p1 p2 precond12 f12)
   (p3: parser)
   (precond23: pre_t p2)
-  (f23: (x: dfst p2 { precond23 x }) -> GTot (dfst p3))
+  (f23: (x: Parser?.t p2 { precond23 x }) -> GTot (Parser?.t p3))
   (v23: valid_synth_t p2 p3 precond23 f23)
 : Tot (valid_synth_t p1 p3 (fun x -> precond12 x /\ precond23 (f12 x)) (fun x -> f23 (f12 x)))
 = {
@@ -1685,7 +1689,7 @@ let valid_synth_spec
   (p1: parser)
   (p2: parser)
   (precond: pre_t p1)
-  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
   (v: valid_synth_t p1 p2 precond f)
 : Tot (repr_spec unit p1 (p2) precond (fun vin _ vout -> precond vin /\ f vin == vout) (fun _ -> False))
 = fun vin ->
@@ -1697,7 +1701,7 @@ val valid_synth_impl
   (p1: parser)
   (p2: parser)
   (precond: pre_t p1)
-  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
   (v: valid_synth_t p1 p2 precond f)
   (inv: memory_invariant)
 : Tot (repr_impl unit p1 (p2) precond (fun vin _ vout -> precond vin /\ f vin == vout) (fun _ -> False) inv (valid_synth_spec p1 p2 precond f v))
@@ -1707,18 +1711,18 @@ let valid_synth_repr
   (p1: parser)
   (p2: parser)
   (precond: pre_t p1)
-  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
   (v: valid_synth_t p1 p2 precond f)
   (inv: memory_invariant)
 : Tot (repr unit p1 (p2) precond (fun vin _ vout -> precond vin /\ f vin == vout) (fun _ -> False) inv)
-= (| _, valid_synth_impl p1 p2 precond f v inv |)
+= Repr _ (valid_synth_impl p1 p2 precond f v inv)
 
 inline_for_extraction
 let valid_synth
   (p1: parser)
   (p2: parser)
   (precond: pre_t p1)
-  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
   (inv: memory_invariant)
   (v: valid_synth_t p1 p2 precond f)
 : Write unit p1 (p2) precond (fun vin _ vout -> precond vin /\ f vin == vout) inv
@@ -1729,7 +1733,7 @@ val cast
   (p1: parser)
   (p2: parser)
   (precond: pre_t p1)
-  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
   (v: valid_synth_t p1 p2 precond f)
   (inv: memory_invariant)
   (x1: ptr p1 inv { precond (deref_spec x1) })
@@ -1767,7 +1771,7 @@ let valid_synth_star_compat_l
   (p: parser)
   (p1 p2: parser)
   (precond: pre_t p1)
-  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
   ($v: valid_synth_t p1 p2 precond f)
 : Tot (valid_synth_t (p `star` p1) (p `star` p2) (fun (_, x) -> precond x) (fun (x, y) -> (x, f y)))
 = {
@@ -1777,7 +1781,7 @@ let valid_synth_star_compat_l
     valid_star p p2 h b pos posq pos'
   );
   valid_synth_size = (fun xy ->
-    let (_, x) = (xy <: dfst (p `star` p1)) in
+    let (_, x) = (xy <: Parser?.t (p `star` p1)) in
     v.valid_synth_size x
   );
 }
@@ -1786,7 +1790,7 @@ let valid_synth_star_compat_r
   (p: parser)
   (p1 p2: parser)
   (precond: pre_t p1)
-  (f: (x: dfst p1 { precond x }) -> GTot (dfst p2))
+  (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
   ($v: valid_synth_t p1 p2 precond f)
 : Tot (valid_synth_t (p1 `star` p) (p2 `star` p) (fun (x, _) -> precond x) (fun (x, y) -> (f x, y)))
 = {
@@ -1796,7 +1800,7 @@ let valid_synth_star_compat_r
     valid_star p2 p h b pos posp pos'
   );
   valid_synth_size = (fun xy ->
-    let (x, _) = (xy <: dfst (p1 `star` p)) in
+    let (x, _) = (xy <: Parser?.t (p1 `star` p)) in
     v.valid_synth_size x
   );
 }
@@ -1856,4 +1860,4 @@ let cat
   (#p: parser)
   (x: ptr p inv)
 : Write unit emp p (fun _ -> True) (fun _ _ vout -> vout == deref_spec x) inv
-= EWrite?.reflect (| _, cat_impl x |)
+= EWrite?.reflect (Repr _ (cat_impl x))

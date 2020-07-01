@@ -405,7 +405,7 @@ let check_precond_impl
 
 let check_precond_repr
   p1 precond c inv
-= (| _, check_precond_impl p1 precond c inv |)
+= Repr _ (check_precond_impl p1 precond c inv)
 
 let cat_impl
   #inv #p x
