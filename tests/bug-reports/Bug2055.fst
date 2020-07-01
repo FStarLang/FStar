@@ -6,20 +6,13 @@ let return a (x:a) : repr a () = x
 
 let bind a b (x: repr a _) (f:a-> repr b _) : repr b () = f x
 
-let subcomp a (x : repr a _) : repr a () = x
-
-let if_then_else (a:Type) (d1 d2 : unit) (f : repr a d1) (g : repr a d2) (p : Type0) : Type =
-  repr a ()
-
 reifiable
 reflectable
 layered_effect {
   ND : a:Type -> dummy:unit -> Effect
   with repr         = repr;
        return       = return;
-       bind         = bind;
-       subcomp      = subcomp; 
-       if_then_else = if_then_else
+       bind         = bind
 }
 
 let monotonic #a (wp : pure_wp a) =
