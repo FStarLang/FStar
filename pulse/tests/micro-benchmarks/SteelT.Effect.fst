@@ -21,20 +21,6 @@ let bind (a:Type) (b:Type)
 : repr b pre_f post_g
 = admit()
 
-let subcomp (a:Type) (pre:pre_t) (post:post_t a)
-  (f:repr a pre post)
-: Pure (repr a pre post)
-  (requires True)
-  (ensures fun _ -> True)
-= f
-
-
-let if_then_else (a:Type) (pre:pre_t) (post:post_t a)
-  (f:repr a pre post)
-  (g:repr a pre post)
-  (p:Type0)
-: Type
-= repr a pre post
 
 reifiable reflectable
 layered_effect {
@@ -42,9 +28,7 @@ layered_effect {
   with
   repr = repr;
   return = returnc;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+  bind = bind
 }
 
 let bind_pure_steel (a:Type) (b:Type)
