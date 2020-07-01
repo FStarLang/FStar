@@ -1,7 +1,7 @@
 module FStar_Set
 
 type set<'a when 'a : comparison> = Set<'a>
-let empty = Set.empty
+let empty () = Set.empty
 let singleton = Set.singleton
 let union = Set.union
 let intersect = Set.intersect

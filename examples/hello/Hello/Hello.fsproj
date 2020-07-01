@@ -52,7 +52,7 @@
   <Import Project="$(FSTAR_HOME)\fsharp.extraction.targets" />
   <ItemGroup>
     <None Include="App.config" />
-    <FStarSourceFile Include="Hello.fst" />
+    <Compile Include="Hello.fst" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
