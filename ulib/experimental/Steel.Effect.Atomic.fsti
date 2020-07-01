@@ -24,7 +24,7 @@ val has_eq_observability (_:unit) : Lemma (hasEq observability)
 val observable : observability
 val unobservable : observability
 
-let obs_at_most_one o1 o2 =
+let obs_at_most_one (o1 o2 :observability) =
   o1==unobservable \/ o2==unobservable
 
 let join_obs (o1:observability) (o2:observability{obs_at_most_one o1 o2}) =
@@ -46,11 +46,19 @@ val return (a:Type u#a)
            (p:a -> slprop u#1)
   : atomic_repr a opened_invariants unobservable (p x) p
 
+let obs_compat : unit = ()
+
+module T = FStar.Tactics
+
+[@@resolve_implicits; obs_compat]
+let handle_obs_compat () = T.smt()
+
 val bind (a:Type u#a)
          (b:Type u#b)
          (opened_invariants:inames)
          (o1:observability)
-         (o2:observability{obs_at_most_one o1 o2})
+         (o2:observability)
+         (#[@@ obs_compat ]_:squash (obs_at_most_one o1 o2))
          (pre_f:slprop)
          (post_f:a -> slprop)
          (post_g:b -> slprop)
@@ -94,6 +102,7 @@ layered_effect {
   if_then_else = if_then_else
 }
 
+
 inline_for_extraction
 val lift_pure_steel_atomic (a:Type)
                            (opened_invariants:inames)
@@ -105,7 +114,6 @@ val lift_pure_steel_atomic (a:Type)
          (ensures fun _ -> True)
 
 sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
-
 
 val lift_atomic_to_steelT (#a:Type)
                           (#o:observability)
