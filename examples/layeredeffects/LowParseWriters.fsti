@@ -128,6 +128,7 @@ val extract_read_repr_impl
     res == spec ()
   ))
 
+[@@ commute_nested_matches ]
 inline_for_extraction
 noeq
 type read_repr
