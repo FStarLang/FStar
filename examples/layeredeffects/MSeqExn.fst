@@ -101,7 +101,7 @@ let subcomp (a:Type)
 let if_then_else (a:Type)
   (wp_then:wp_t a) (wp_else:wp_t a)
   (f:repr a wp_then) (g:repr a wp_else)
-  (p:Type0)
+  (p:bool)
 : Type
 = repr a
   (fun post s0 ->
