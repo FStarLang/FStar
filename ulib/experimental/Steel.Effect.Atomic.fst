@@ -36,19 +36,6 @@ let bind a b o o1 o2 pre_f post_f post_g f g =
     let x = f () in
     g x ()
 
-total
-reifiable reflectable
-layered_effect {
-  SteelAtomic : a:Type -> uses:Set.set lock_addr -> is_ghost:bool -> pre:pre_t -> post:post_t a
-    -> Effect
-  with
-  repr = atomic_repr;
-  return = return;
-  bind = bind
-}
-
-#push-options "--z3rlimit 20 --fuel 0 --ifuel 0"
->>>>>>> aseem_misc2
 inline_for_extraction
 let lift_pure_steel_atomic a op p wp f
   = FStar.Monotonic.Pure.wp_monotonic_pure ();

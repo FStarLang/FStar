@@ -68,7 +68,7 @@ let subcomp (a:Type) (i:idx) (wp1 : wp a)
 
 let if_then_else (a:Type) (i:idx) (w1 w2 : wp a)
                           (f : m a i w1)
-                          (g : m a i w2) (q : Type0)
+                          (g : m a i w2) (q : bool)
     : Type
     = m a i (fun p -> (q ==> w1 p) /\ ((~q) ==> w2 p))
 

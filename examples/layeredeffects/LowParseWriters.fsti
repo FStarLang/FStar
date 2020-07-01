@@ -299,7 +299,7 @@ let read_if_then_else (a:Type)
   (l:memory_invariant)
   (f_ifthenelse:read_repr a pre_f post_f post_err_f l)
   (g:read_repr a pre_g post_g post_err_g l)
-  (p:Type0)
+  (p:bool)
 : Tot Type
 = read_repr a
     ((p ==> pre_f) /\ ((~ p) ==> pre_g)) // (read_if_then_else_pre pre_f pre_g p)
@@ -1026,7 +1026,7 @@ let if_then_else (a:Type)
   (l:memory_invariant)
   (f_ifthenelse:repr a r_in r_out pre_f post_f post_err_f l)
   (g:repr a r_in r_out pre_g post_g post_err_g l)
-  (p:Type0)
+  (p:bool)
 : Tot Type
 = repr a r_in r_out
     (fun v_in -> (p ==> pre_f v_in) /\ ((~ p) ==> pre_g v_in)) // (if_then_else_pre r_in pre_f pre_g p)

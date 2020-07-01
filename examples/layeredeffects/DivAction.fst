@@ -9,10 +9,6 @@ let return (a : Type) (x : a) : repr a () =
 let bind (a b : Type) (v : repr a ()) (f : (a -> repr b ())) : repr b () =
   fun () -> f (v ()) ()
 
-let subcomp (a:Type) (f : repr a ()) : repr a () = f
-
-let if_then_else (a : Type) (f : repr a ()) (g : repr a ()) (p : Type0) : Type = repr a ()
-
 total
 reifiable
 reflectable
@@ -20,9 +16,7 @@ layered_effect {
   ID : a:Type -> unit -> Effect
   with repr         = repr;
        return       = return;
-       bind         = bind;
-       subcomp      = subcomp; 
-       if_then_else = if_then_else
+       bind         = bind
 }
 
 let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(unit -> PURE a wp)) :

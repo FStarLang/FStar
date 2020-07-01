@@ -135,7 +135,7 @@ let if_then_else
   (post1 : st_bpost a)
   (post2 : st_bpost a)
   (f : m a i1 pre1 post1) (g : m a i2 pre2 post2)
-  (p : Type0)
+  (p : bool)
   : Type
   = m a (join i1 i2)
         (fun h0 -> ite p (pre1 h0) (pre2 h0))

@@ -159,7 +159,7 @@ let if_then_else
   (st0 st1 : Type)
   (f : repr a st0 st1 labs1)
   (g : repr a st0 st1 labs2)
-  (p : Type0)
+  (p : bool)
   : Type
   = repr a st0 st1 (labs1@labs2)
 

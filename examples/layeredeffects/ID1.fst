@@ -34,7 +34,7 @@ let subcomp (a:Type) (wp1 wp2: w a)
        (ensures fun _ -> True)
 = f
 
-let if_then_else (a : Type) (wp1 wp2 : w a) (f : repr a wp1) (g : repr a wp2) (p : Type0) : Type =
+let if_then_else (a : Type) (wp1 wp2 : w a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
   repr a (fun post -> (p ==> wp1 post) /\ ((~p) ==> wp2 post))
 
 // requires to prove that

@@ -155,7 +155,7 @@ let if_then_else
   (labs1 labs2 : list eff_label)
   (f : repr a labs1)
   (g : repr a labs2)
-  (p : Type0)
+  (p : bool)
   : Type
   = repr a (labs1@labs2)
 
