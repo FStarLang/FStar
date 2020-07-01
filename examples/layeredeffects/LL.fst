@@ -90,7 +90,7 @@ inline_for_extraction
 let eif_then_else (a:Type)
   (wp_f:ewp_t a) (wp_g:ewp_t a)
   (f:erepr a wp_f) (g:erepr a wp_g)
-  (p:Type0)
+  (p:bool)
 : Type
 = erepr a
   (fun post ->
@@ -283,7 +283,7 @@ inline_for_extraction
 let if_then_else (a:Type)
   (wp_f:wp_t a) (wp_g:wp_t a)
   (f:repr a wp_f) (g:repr a wp_g)
-  (p:Type0)
+  (p:bool)
 : Type
 = repr a
   (fun post n ->
