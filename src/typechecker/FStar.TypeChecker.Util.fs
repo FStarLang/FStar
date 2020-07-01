@@ -1442,12 +1442,13 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
     flags = []
   }), Env.conj_guard (Env.conj_guard g_uvars f_guard) g_guard
 
-
 (*
  * For non-layered effects, just apply the if_then_else combinator
  *)
 let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (_:Range.range)
 : comp * guard_t =
+  //p is a boolean guard, so b2t it
+  let p = U.b2t p in
   let if_then_else = ed |> U.get_wp_if_then_else_combinator |> must in
   let _, _, wp_t = destruct_wp_comp ct1 in
   let _, _, wp_e = destruct_wp_comp ct2 in
@@ -1471,6 +1472,9 @@ let comp_pure_wp_false env (u:universe) (t:typ) =
   let md     = Env.get_effect_decl env C.effect_PURE_lid in
   mk_comp md u t wp []
 
+(*
+ * The formula in lcases is the individual branch guard, a boolean
+ *)
 let bind_cases env0 (res_t:typ)
   (lcases:list<(formula * lident * list<cflag> * (bool -> lcomp))>)
   (scrutinee:bv) : lcomp =
@@ -1524,7 +1528,7 @@ let bind_cases env0 (res_t:typ)
               lcases
               |> List.map (fun (g, _, _, _) -> g)
               |> List.fold_left (fun (conds, acc) g ->
-                  let cond = U.mk_conj acc (U.mk_neg g) in
+                  let cond = U.mk_conj acc (g |> U.b2t |> U.mk_neg) in
                   (conds@[cond]), cond) ([U.t_true], U.t_true)
               |> fst
               |> (fun l -> List.splitAt (List.length l - 1) l)  //the length of the list is at least 1
@@ -1556,7 +1560,7 @@ let bind_cases env0 (res_t:typ)
                   let c, g =
                     let lc = maybe_return eff_last c_last in
                     let c, g = TcComm.lcomp_comp lc in
-                    c, TcComm.weaken_guard_formula g (U.mk_conj g_last neg_last) in
+                    c, TcComm.weaken_guard_formula g (U.mk_conj (U.b2t g_last) neg_last) in
 
                   lcases,
                   neg_branch_conds,
@@ -1584,12 +1588,14 @@ let bind_cases env0 (res_t:typ)
 
                   //weaken the then and else guards
                   //neg_cond is the negated branch condition upto this branch
-                  let g_then = TcComm.weaken_guard_formula
-                    (Env.conj_guard g_then g_lift_then)
-                    (U.mk_conj neg_cond g) in
-                  let g_else = TcComm.weaken_guard_formula
-                    g_lift_else
-                    (U.mk_conj neg_cond (U.mk_neg g)) in                
+                  let g_then, g_else =
+                    let g = U.b2t g in
+                    TcComm.weaken_guard_formula
+                      (Env.conj_guard g_then g_lift_then)
+                      (U.mk_conj neg_cond g),
+                    TcComm.weaken_guard_formula
+                      g_lift_else
+                      (U.mk_conj neg_cond (U.mk_neg g)) in
 
                   Some md,
                   c,
