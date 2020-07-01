@@ -157,23 +157,23 @@ let subcomp (a:Type) (pre:pre_t) (post:post_t a)
 unfold
 let if_then_else_req (#pre:pre_t)
   (req_then:req_t pre) (req_else:req_t pre)
-  (p:Type0)
+  (p:bool)
 : req_t pre
-= fun h -> (p ==> req_then h) /\ ((~ p) ==> req_else h)
+= fun h -> ((b2t p) ==> req_then h) /\ ((~ (b2t p)) ==> req_else h)
 
 unfold
 let if_then_else_ens (#a:Type) (#pre:pre_t) (#post:post_t a)
   (ens_then:ens_t pre a post) (ens_else:ens_t pre a post)
-  (p:Type0)
+  (p:bool)
 : ens_t pre a post
-= fun h0 x h1 -> (p ==> ens_then h0 x h1) /\ ((~ p) ==> ens_else h0 x h1)
+= fun h0 x h1 -> ((b2t p) ==> ens_then h0 x h1) /\ ((~ (b2t p)) ==> ens_else h0 x h1)
 
 let if_then_else (a:Type) (pre:pre_t) (post:post_t a)
   (req_then:req_t pre) (ens_then:ens_t pre a post)
   (req_else:req_t pre) (ens_else:ens_t pre a post)
   (f:repr a pre post req_then ens_then)
   (g:repr a pre post req_else ens_else)
-  (p:Type0)
+  (p:bool)
 : Type
 = repr a pre post
     (if_then_else_req req_then req_else p)

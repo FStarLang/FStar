@@ -54,7 +54,7 @@ let subcomp (a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:
 let if_then_else (a:Type) (uses:Set.set lock_addr) (pre:pre_t) (post:post_t a)
   (f:atomic_repr a uses true pre post)
   (g:atomic_repr a uses true pre post)
-  (p:Type0)
+  (p:bool)
   : Type
   = atomic_repr a uses true pre post
 
