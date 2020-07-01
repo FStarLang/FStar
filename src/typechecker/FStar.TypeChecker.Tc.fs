@@ -1354,8 +1354,16 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
       else en0
     in
 
-    //AR: the third flag 'true' is for iface_exists for the current file, since it's an iface already, pass true
+    let _ = Errors.message_prefix.push_prefix
+            (BU.format1 "Error raised while checking the extracted interface of %s"
+                    (string_of_lid modul_iface.name)) in
+
+    // AR: the third flag 'true' is for iface_exists for the current
+    //     file, since it's an iface already, pass true
     let modul_iface, env = tc_modul en0 modul_iface true in
+
+    ignore (Errors.message_prefix.pop_prefix ());
+
     { m with exports = modul_iface.exports }, env  //note: setting the exports for m, once extracted_interfaces is default, exports should just go away
   end
   else
