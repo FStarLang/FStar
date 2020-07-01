@@ -617,9 +617,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
           let lbname = right lb.lbname in //this is definitely not a local let binding
           let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
             | None ->
-                if lb.lbunivs <> []
-                then false, lb, quals_opt // we already have generalized universes (e.g. elaborated term)
-                else gen, lb, quals_opt //no annotation found; use whatever was in the let binding
+                gen, lb, quals_opt
 
             | Some ((uvs,tval), quals) ->
               let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
