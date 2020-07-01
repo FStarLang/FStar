@@ -104,6 +104,26 @@ let test8 (x:ref) : SteelT int (ptr x) (fun _ -> ptr x)
     assert (1 == 1);
     v
 
+assume val noop (_:unit) : SteelT unit emp (fun _ -> emp)
+
+(*
+  Fails because of the context restriction when solving equalities.
+  In particular, we solve ?u36 r == star emp ?u21
+  ?u36 is the uvar created for the preresource of (noop(); r) when binding
+  it with `let r = alloc 0`.
+  `star emp ?u21` is the actual precondition inferred when binding noop with r
+  ?u36 does not contain r in the context, but ?u21, the frame of noop, does:
+  ?u21 should be inferred to be ptr r
+  After solving this equality, the new ?u21 (?u172) does not contain r anymore.
+  Hence we cannot solve emp * ?u172 <==> (ptr r) * emp
+*)
+[@expect_failure]
+let test_dep_frame () : SteelT ref emp (fun r -> ptr r)
+  = let r = alloc 0 in
+    noop ();
+    r
+
+
 open Steel.FractionalPermission
 open FStar.Ghost
 assume val reference (a:Type0) : Type0
