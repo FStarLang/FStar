@@ -41,7 +41,8 @@
         "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxInt_proj_0",
+        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
@@ -51,7 +52,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "400bdbd2bce2202f01ffaecc2215f776"
+      "eca8d46bbcdb3dcd5098dc53f7e13908"
     ],
     [
       "FStar.Tactics.CanonCommSwaps.apply_swaps",
@@ -75,7 +76,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "29a4522b7406f0e5fabb4a5414b8f1a1"
+      "1155cd057f7fe32cd89d85dfbbc4faba"
     ],
     [
       "FStar.Tactics.CanonCommSwaps.extend_equal_counts",
@@ -176,7 +177,7 @@
         "typing_FStar.Tactics.CanonCommSwaps.swap"
       ],
       0,
-      "fb4f620a5df569931e0bddb9e6fbbc49"
+      "fb67f291186bdaf445d0bbf19bb46abe"
     ],
     [
       "FStar.Tactics.CanonCommSwaps.lift_swap_cons",
@@ -251,7 +252,7 @@
         "subterm_ordering_Prims.Cons", "unit_inversion", "unit_typing"
       ],
       0,
-      "de858c8cac2cd8c9faf9b35f9d8a091a"
+      "ca10d52ace3e6b2886e1acde9f0c2b55"
     ],
     [
       "FStar.Tactics.CanonCommSwaps.lift_swaps_cons",
@@ -290,7 +291,7 @@
         "token_correspondence_FStar.Tactics.CanonCommSwaps.apply_swap"
       ],
       0,
-      "7b7bf632a403e43b0f97befc7733a300"
+      "c96e0228d1211df97b144e3d54a5ad87"
     ],
     [
       "FStar.Tactics.CanonCommSwaps.swap_to_front",
@@ -353,7 +354,7 @@
         "typing_FStar.Tactics.CanonCommSwaps.swap"
       ],
       0,
-      "20e1aa395a26fd8752a1efa3c33fa6c8"
+      "312dd2e3db59c320ec37bf7b883cd58c"
     ],
     [
       "FStar.Tactics.CanonCommSwaps.equal_counts_implies_swaps",
@@ -389,7 +390,7 @@
         "token_correspondence_FStar.List.Tot.Base.count.fuel_instrumented"
       ],
       0,
-      "b69fe3f2d0737b95140dc711d0e172c0"
+      "597962b291d9a5070a236c7ca0460969"
     ],
     [
       "FStar.Tactics.CanonCommSwaps.apply_swap_aux",
@@ -431,7 +432,8 @@
         "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Subtraction",
-        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxInt_proj_0",
+        "proj_equation_Prims.Cons_tl", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
@@ -441,7 +443,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7c2299692e584fea860049b250a1b5d1"
+      "ed0dc5e67647ec2ae0905d459f49e168"
     ],
     [
       "FStar.Tactics.CanonCommSwaps.apply_swaps",
@@ -465,7 +467,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f647763de393e15cdc2fc140d1b76640"
+      "d32e77d2c260f95963a56fe23163f178"
     ],
     [
       "FStar.Tactics.CanonCommSwaps.append_swaps",
@@ -545,7 +547,7 @@
         "token_correspondence_FStar.Tactics.CanonCommSwaps.apply_swap"
       ],
       0,
-      "19a1a5cadd69d5750aeed4606fe6eab4"
+      "51c66d528551216b53d927a8957afde4"
     ],
     [
       "FStar.Tactics.CanonCommSwaps.swap_to_front",
@@ -608,7 +610,7 @@
         "typing_FStar.Tactics.CanonCommSwaps.swap"
       ],
       0,
-      "b09e9e159fdf422a28de172773a0dae5"
+      "c18a1e08792d3b75a7b409422c2a9bdf"
     ],
     [
       "FStar.Tactics.CanonCommSwaps.equal_counts_implies_swaps",
@@ -644,7 +646,7 @@
         "token_correspondence_FStar.List.Tot.Base.count.fuel_instrumented"
       ],
       0,
-      "fddf89905065f53152e0afa502574167"
+      "57071d7870185434df52f4c6612205fc"
     ]
   ]
 ]

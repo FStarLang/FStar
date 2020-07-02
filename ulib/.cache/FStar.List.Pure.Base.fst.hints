@@ -34,7 +34,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "9a192892e366510ed77a1764ab2f4963"
+      "f04a6994dfe53d0b8de2848f62ad507b"
     ],
     [
       "FStar.List.Pure.Base.map3",
@@ -56,7 +56,7 @@
         "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "int_inversion",
-        "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__3",
@@ -73,7 +73,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "5a4c2b144ee6a64a096aaa5a96751a52"
+      "b06b288d5f9b42186b259a782f424ae3"
     ],
     [
       "FStar.List.Pure.Base.zip",
@@ -126,7 +126,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "e89c4d0ca820af7bf7ad2096204435ff"
+      "8a157872d1930fca2d881af4c2cba85a"
     ],
     [
       "FStar.List.Pure.Base.map3",
@@ -148,7 +148,7 @@
         "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "int_inversion",
-        "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__3",
@@ -165,7 +165,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "5f893a1882ac8373776cab3aa90b471b"
+      "eeecec5f7d3b7bdbaad06baf83400c1f"
     ],
     [
       "FStar.List.Pure.Base.zip",
