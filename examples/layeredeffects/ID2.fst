@@ -4,15 +4,45 @@ module ID2
 val w0 (a : Type u#a) : Type u#(max 1 a)
 let w0 a = (a -> Type0) -> Type0
 
+open FStar.Calc
+module T = FStar.Tactics
+
 // We require monotonicity of them
+unfold
 let monotonic (w:w0 'a) =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
 
+// And conjunctivity (in one direction: the way back is implied by monotonicity)
+unfold
+let conjunctive (w:w0 'a) =
+  forall p1 p2. w p1 ==> w p2 ==> w (fun x -> p1 x /\ p2 x)
+
 val w (a : Type u#a) : Type u#(max 1 a)
-let w a = w:(w0 a)  //{monotonic w}
+let w a = w:(w0 a){monotonic w /\ conjunctive w}
+
+let sat_e (w : w 'a) : Type0 = exists p. w p
+
+let sat (w : w 'a) : Type0 = w (fun _ -> True)
+
+let lem_conj #a (w : w a) (p1 p2 : a -> Type0)
+  : Lemma (requires (w p1 /\ w p2))
+          (ensures (w (fun x -> p1 x /\ p2 x)))
+  = ()
+
+let satlem (w: w 'a) : Lemma (sat_e w <==> sat w) [SMTPat (sat w); SMTPat (sat_e w)] = ()
 
 let repr (a : Type) (wp : w a) : Type =
   squash (exists p. wp p) -> v:a{forall p. wp p ==> p v}
+
+// useful to trigger `sat w`
+let run (#a:Type) (#w : w a) (c : repr a w{sat w})
+  : Tot (v:a{forall p. w p ==> p v})
+  = c ()
+
+let test (t : repr int (fun p -> p 42)) =
+  let x1 = run t in
+  let x2 = run t in
+  assert (x1 == x2)
 
 unfold let return_wp (#a:Type) (x:a) : w a = fun p -> p x
 
@@ -20,7 +50,23 @@ let return (a : Type) (x : a) : repr a (return_wp x) =
   fun () -> x
 
 unfold let bind_wp (#a:Type) (#b:Type) (wp_f:w a) (wp_g:a -> w b) : w b =
-  fun p -> wp_f (fun x -> wp_g x p)
+  let r = fun p -> wp_f (fun x -> wp_g x p) in
+  assert (monotonic r);
+  let aux (p1 p2 : b->Type0) : Lemma (requires (r p1 /\ r p2))
+                                   (ensures (r (fun x -> p1 x /\ p2 x))) =
+    calc (==>) {
+      r p1 /\ r p2;
+      ==> {}
+      wp_f (fun x -> wp_g x p1) /\ wp_f (fun x -> wp_g x p2);
+      ==> { lem_conj wp_f (fun x -> wp_g x p1) (fun x -> wp_g x p2) } // the step the SMT can't see apparently
+      wp_f (fun x -> wp_g x p1 /\ wp_g x p2);
+      ==> { () }
+      r (fun x -> p1 x /\ p2 x);
+    }
+  in
+  Classical.forall_intro_2 (fun x y -> Classical.move_requires (aux x) y);
+  assert (conjunctive r);
+  r
 
 let bind (a b : Type) (wp_v : w a) (wp_f: a -> w b)
     (v : repr a wp_v)
@@ -62,8 +108,10 @@ layered_effect {
        if_then_else = if_then_else
 }
 
-let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
-  Pure (repr a wp) (requires (monotonic wp))
+let nomon #a (w : w a) : pure_wp a = fun p -> w p
+
+let lift_pure_nd (a:Type) (wp:w a) (f:(eqtype_as_type unit -> PURE a (nomon wp))) :
+  Pure (repr a wp) (requires True)
                    (ensures (fun _ -> True))
   = fun _ ->
     let r = f () in
@@ -74,9 +122,14 @@ sub_effect PURE ~> ID = lift_pure_nd
 (* Checking that it's kind of usable *)
 
 val test_f : unit -> ID int (fun p -> p 5 /\ p 3)
-let test_f () = 3
+let test_f () = 5
 
-module T = FStar.Tactics
+val test_2 : unit -> ID int (fun p -> p 5)
+
+// somehow needs to prove that (forall p. nomon (fun p -> p 5) p) ??
+[@@expect_failure]
+let test_2 () = admit () // 5
+
 
 let l () : int =
   assert (exists p. p 5 /\ p 3) by (T.witness (`(fun _ -> True))); // sigh
