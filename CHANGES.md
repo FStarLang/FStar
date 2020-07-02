@@ -18,6 +18,17 @@ Guidelines for the changelog:
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * The expected type of the `if_then_else` combinator for layered effects is now
+    `a:Type -> bs -> f:repr a is -> g:repr a js -> p:bool -> Type`
+    Previously, the `p` parameter used to have type `Type0`. It only needs
+    change in the definition of the combinator, no changes are required in
+    the client code using the effect. For example, see:
+    https://github.com/FStarLang/FStar/commit/731b353aa3bb6c32f4da97170284a1f301b242e1
+
+    The types of the combinators are also subject to stricter typing (no smt and no subtyping).
+    See this commit: https://github.com/FStarLang/FStar/commit/a5b2d8818e386b2be1058061a913ffcef4bfb8ea
+    for the kind of fixes this change required.
+
   * Cf. issue https://github.com/FStarLang/FStar/issues/1055,
     F* now enforces that unannotated, effectful functions have a
     trivial precondition (this is already the case for pure functions).

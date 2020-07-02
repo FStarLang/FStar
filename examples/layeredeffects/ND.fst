@@ -127,7 +127,8 @@ let dm (a : Type) (wp : w a) : Type = v:m a{w_ord a wp (interp v)}
 let irepr (a : Type) (wp: w a) = unit -> dm a wp
 let ireturn (a : Type) (x : a) : irepr a (w_return a x) = fun () -> interp_ret a x ; m_return a x
 
-let ibind (a : Type) (b : Type) (wp_v : w a) (wp_f: a ^-> w b) (v : irepr a wp_v) (f : (x:a -> irepr b (wp_f x))) : irepr b (w_bind a b wp_v wp_f) =
+let ibind (a : Type) (b : Type) (wp_v : w a) (wp_f: a -> w b) (v : irepr a wp_v) (f : (x:a -> irepr b (wp_f x))) : irepr b (w_bind a b wp_v 
+wp_f) =
   fun () ->
   interp_bind a b (v ()) (fun x -> f x ()) ;
   w_bind_monotonic a b wp_v (interp (v ())) wp_f (fun a -> interp (f a ()));
@@ -216,8 +217,20 @@ let lemhh (a:Type) (wp:pure_wp a) p (_ : squash p) :
     Lemma (requires (wp (fun _ -> True)))
           (ensures (wp (fun _ -> p))) = ()
 
-let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(unit -> PURE a wp)) :
-  Pure (irepr a wp) (requires (wp (fun _ -> True)))
+(*
+ * AR: With the stricter check on the types of layered effects combinators,
+ *     lift_pure_nd no longer typechecks, since irepr expects a (w a),
+ *     which is not definitionally (pure_wp a)
+ *
+ *     Working aroung with this coercion
+ *)
+
+#push-options "--admit_smt_queries true"
+let coerce_pure_wp (#a:Type) (wp:pure_wp a) : w a = wp
+#pop-options
+
+let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
+  Pure (irepr a (coerce_pure_wp wp)) (requires (wp (fun _ -> True)))
                     (ensures (fun _ -> True))
   = fun () -> admit (); [f ()] // GM : not sure why this fails
 

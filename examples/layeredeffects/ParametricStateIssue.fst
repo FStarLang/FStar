@@ -63,7 +63,7 @@ module B = LowStar.Buffer
 
 
 inline_for_extraction
-type repr (a:Type) (_:unit) =
+type repr (a:Type) (_:eqtype_as_type unit) =
   unit ->
   St (option a)
 
@@ -88,7 +88,7 @@ let bind (a:Type) (b:Type)
 
 reifiable reflectable
 layered_effect {
-  EXN : a:Type -> unit -> Effect
+  EXN : a:Type -> eqtype_as_type unit -> Effect
   with
   repr = repr;
   return = return;
@@ -97,7 +97,7 @@ layered_effect {
 
 
 inline_for_extraction
-let lift_div_exn (a:Type) (wp:pure_wp a) (f:unit -> DIV a wp)
+let lift_div_exn (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> DIV a wp)
 : repr a ()
 = fun _ -> Some (f ())
 
@@ -153,7 +153,7 @@ layered_effect {
 
 
 inline_for_extraction noextract
-let lift_div_stexn (a:Type) (wp:pure_wp a) (state:Type0) (f:unit -> DIV a wp)
+let lift_div_stexn (a:Type) (wp:pure_wp a) (state:Type0) (f:eqtype_as_type unit -> DIV a wp)
 : mrepr a state
 = fun st -> (f (), st)
 

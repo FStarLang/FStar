@@ -28,7 +28,7 @@ let bind (a:Type) (b:Type) (f:repr a ()) (g:a -> repr b ()) : repr b () =
 [@@smt_reifiable_layered_effect]
 reifiable reflectable total
 layered_effect {
-  MST : a:Type -> unit -> Effect
+  MST : a:Type -> eqtype_as_type unit -> Effect
   with
   repr = repr;
   return = return;
@@ -38,7 +38,7 @@ layered_effect {
 assume val pure_wp_monotonic (#a:Type) (wp:pure_wp a)
 : Lemma (forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q))
 
-let lift_pure_mst (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
+let lift_pure_mst (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
 : Pure (repr a ()) (requires wp (fun _ -> True)) (ensures fun _ -> True)
 = pure_wp_monotonic wp;
   f (), 0

@@ -11,7 +11,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "201071b8eeeb58e808ea5b094cc06fa1"
+      "01fb3fdba9806a75b945da26c53e5d62"
     ],
     [
       "FStar.Tactics.Typeclasses.mk_abs",
@@ -23,7 +23,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "244beeb9b153e837ef5acf946965ba7c"
+      "00fef9c5399256b5aaa29d15ad80a791"
     ],
     [
       "FStar.Tactics.Typeclasses.last",
@@ -35,7 +35,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "3b95ec64827d0d806f8051e32d5f784e"
+      "d58d3fb74d26aec05a0ab269838c5058"
     ],
     [
       "FStar.Tactics.Typeclasses.mk_class",
@@ -57,6 +57,8 @@
         "data_typing_intro_FStar.Reflection.Data.Tv_Unknown@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Tactics.Result.Failed",
         "disc_equation_FStar.Tactics.Result.Success",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
@@ -81,17 +83,18 @@
         "projection_inverse_FStar.Tactics.Result.Success_v",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "string_typing",
+        "string_inversion", "string_typing",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "typing_FStar.List.Tot.Base.append",
         "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some",
+        "typing_FStar.Reflection.Builtins.explode_qn",
         "typing_FStar.Reflection.Builtins.lookup_typ",
         "typing_FStar.Reflection.Derived.name_of_binder",
         "typing_Prims.strcat"
       ],
       0,
-      "1d23384cb23632c47590eb6f0ace05a1"
+      "6249a8828c5937c81481b7c3463378a9"
     ],
     [
       "FStar.Tactics.Typeclasses.first",
@@ -103,7 +106,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "b7e983438d00d9756d2ebfc7f834f8dd"
+      "df2816fd3e11468a5d5259c62fa83309"
     ],
     [
       "FStar.Tactics.Typeclasses.mk_abs",
@@ -115,7 +118,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "abd98c3c0d9b167f111e126267667e6f"
+      "9bc81f9e96bf5ed639166c8adac644fe"
     ],
     [
       "FStar.Tactics.Typeclasses.last",
@@ -127,7 +130,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "4d04a527dd0c71b1b75fe79e5253a88a"
+      "95c1125a1c8c46e639b102a0c42a959a"
     ],
     [
       "FStar.Tactics.Typeclasses.mk_class",
@@ -149,6 +152,8 @@
         "data_typing_intro_FStar.Reflection.Data.Tv_Unknown@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Tactics.Result.Failed",
         "disc_equation_FStar.Tactics.Result.Success",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
@@ -173,17 +178,18 @@
         "projection_inverse_FStar.Tactics.Result.Success_v",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "string_typing",
+        "string_inversion", "string_typing",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "typing_FStar.List.Tot.Base.append",
         "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Pervasives.Native.uu___is_Some",
+        "typing_FStar.Reflection.Builtins.explode_qn",
         "typing_FStar.Reflection.Builtins.lookup_typ",
         "typing_FStar.Reflection.Derived.name_of_binder",
         "typing_Prims.strcat"
       ],
       0,
-      "82826a48a291d874e3902552881580bb"
+      "80e9a3da1758a3a3f9d32e5a3583e3de"
     ]
   ]
 ]

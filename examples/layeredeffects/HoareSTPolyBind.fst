@@ -46,8 +46,6 @@ let returnc (a:Type) (x:a)
 = fun _ -> x
 
 
-irreducible let an_attr : unit = ()
-
 /// bind bakes in the weakening of f's post to compose it with g's pre
 
 let bind (a:Type) (b:Type)
@@ -64,7 +62,7 @@ let bind (a:Type) (b:Type)
 /// sub comp rule
 
 let subcomp (a:Type)
-  (#[@@ an_attr] pre_f:pre_t) (#post_f:post_t a)
+  (#pre_f:pre_t) (#post_f:post_t a)
   (#pre_g:pre_t) (#post_g:post_t a)
   (f:repr a pre_f post_f)
 : Pure (repr a pre_g post_g)
@@ -152,7 +150,7 @@ assume val wp_monotonic_pure (_:unit)
 
 
 let bind_pure_hoarest (a:Type) (b:Type) (wp:pure_wp a) (req:a -> pre_t) (ens:a -> post_t b)
-  (f:unit -> PURE a wp) (g:(x:a -> repr b (req x) (ens x)))
+  (f:eqtype_as_type unit -> PURE a wp) (g:(x:a -> repr b (req x) (ens x)))
 : repr b
   (fun h -> wp (fun x -> req x h))
   (fun h0 r h1 -> exists x. (~ (wp (fun r -> r =!= x))) /\ ens x h0 r h1)
@@ -166,7 +164,7 @@ polymonadic_bind (PURE, HoareST) |> HoareST = bind_pure_hoarest
 
 
 let bind_hoarest_pure (a:Type) (b:Type) (req:pre_t) (ens:post_t a) (wp:a -> pure_wp b)
-  (f:repr a req ens) (g:(x:a -> unit -> PURE b (wp x)))
+  (f:repr a req ens) (g:(x:a -> eqtype_as_type unit -> PURE b (wp x)))
 : repr b
   (fun h -> req h /\ (forall x h1. ens h x h1 ==> (wp x) (fun _ -> True)))
   (fun h0 r h1 -> exists x. ens h0 x h1 /\ (~ ((wp x) (fun y -> y =!= r))))
@@ -183,7 +181,7 @@ polymonadic_bind (HoareST, PURE) |> HoareST = bind_hoarest_pure
 //  *)
 
 let subcomp_pure_hoarest (a:Type) (wp:pure_wp a) (req:pre_t) (ens:post_t a)
-  (f:unit -> PURE a wp)
+  (f:eqtype_as_type unit -> PURE a wp)
 : Pure (repr a req ens)
   (requires
     (forall h. req h ==>  wp (fun _ -> True)) /\

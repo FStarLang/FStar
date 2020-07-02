@@ -125,6 +125,62 @@ let check_no_subtyping_for_layered_combinator env (t:term) (k:option<typ>) =
 
 
 (*
+ * Check that the layered effect binders that will be solved by unification,
+ *   appear in the repr indices in the combinator type in a head position
+ *
+ * For example, appearing in an argument position in an index does not count
+ *)
+let validate_layered_effect_binders env (bs:binders) (repr_terms:list<term>) (r:Range.range)
+: unit
+= //repr can be (repr a is) or unit -> M a wp for wp effects
+  let repr_args repr =
+    match (SS.compress repr).n with
+    | Tm_app (_, args) -> args
+    | Tm_arrow ([_], c) -> c |> U.comp_effect_args
+    | _ ->
+      raise_error (Errors.Fatal_UnexpectedEffect,
+        BU.format1 "Unexpected repr term %s when validating layered effect combinator binders"
+          (Print.term_to_string repr)) r in
+
+  let rec head_names_in_term arg =
+    match (SS.compress arg).n with
+    | Tm_name _ -> [arg]
+    | Tm_app (head, _) ->
+      (match (SS.compress head).n with
+       | Tm_name _ -> [head]
+       | _-> [])
+    | Tm_abs (_, body, _) -> head_names_in_term body
+    | _ -> [] in
+
+  let head_names_in_args args =
+    args
+    |> List.map fst
+    |> List.collect head_names_in_term in
+
+  let repr_names_args = List.collect (fun repr -> repr |> repr_args |> head_names_in_args) repr_terms in
+
+  if Env.debug env <| Options.Other "LayeredEffectsTc" then
+    BU.print2 "Checking layered effect combinator binders validity, names: %s, binders: %s\n\n"
+      (List.fold_left (fun s t -> s ^ "; " ^ (Print.term_to_string t)) "" repr_names_args)
+      (Print.binders_to_string "; " bs);
+
+  let valid_binder b =
+    //it appears in a repr index in a head position
+    List.existsb (fun t -> U.eq_tm (b |> fst |> S.bv_to_name) t = U.Equal) repr_names_args
+    ||
+    (match snd b with  //or has a tactic associated
+     | Some (Meta (Arg_qualifier_meta_attr _)) -> true
+     | _ -> false) in
+
+  let invalid_binders = List.filter (fun b -> not (valid_binder b)) bs in
+  if List.length invalid_binders <> 0 then
+    raise_error (Errors.Fatal_UnexpectedEffect,
+      BU.format1 "Binders %s neither appear as repr indices nor have an associated tactic"
+        (Print.binders_to_string "; " invalid_binders)) r
+  else ()
+
+
+(*
  * Typechecking of layered effects
  *)
 let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
@@ -265,7 +321,18 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let k = U.arrow bs (S.mk_Total' repr (Some u_a)) in
     let g_eq = Rel.teq env ty k in
     Rel.force_trivial_guard env (Env.conj_guard g g_eq);
-    ret_us, ret_t, k |> N.remove_uvar_solutions env |> SS.close_univ_vars us in
+
+    let k = k |> N.remove_uvar_solutions env in
+
+    let _check_valid_binders =
+      match (SS.compress k).n with
+      | Tm_arrow (bs, c) ->
+        let bs, c = SS.open_comp bs c in
+        let res_t = U.comp_result c in
+        let bs = List.splitAt 2 bs |> snd in
+        validate_layered_effect_binders env bs [res_t] r in
+
+    ret_us, ret_t, k |> SS.close_univ_vars us in
 
   log_combinator "return_repr" return_repr;
 
@@ -322,7 +389,24 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
     let guard_eq = Rel.teq env ty k in
     List.iter (Rel.force_trivial_guard env) [guard_f; guard_g; guard_repr; g_pure_wp_uvar; guard_eq];
-    bind_us, bind_t, k |> N.remove_uvar_solutions env |> SS.close_univ_vars bind_us in
+
+    let k = k |> N.remove_uvar_solutions env in
+
+    let _check_valid_binders =
+      match (SS.compress k).n with
+      | Tm_arrow (bs, c) ->
+        let bs, c = SS.open_comp bs c in
+        let res_t = U.comp_result c in
+        let bs, f_b, g_b =
+          List.splitAt (List.length bs - 2) bs
+          |> (fun (l1, l2) -> l1 |> List.tl |> List.tl,
+                          l2 |> List.hd, l2 |> List.tl |> List.hd) in
+        let g_sort =
+          match (SS.compress (fst g_b).sort).n with
+          | Tm_arrow (_, c) -> U.comp_result c in
+        validate_layered_effect_binders env bs [(fst f_b).sort; g_sort; res_t] r in
+
+    bind_us, bind_t, k |> SS.close_univ_vars bind_us in
 
   log_combinator "bind_repr" bind_repr;
 
@@ -406,10 +490,20 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
 
     let guard_eq = Rel.teq env ty k in
     List.iter (Rel.force_trivial_guard env) [guard_f; guard_ret_t; guard_wp; guard_eq];
-    stronger_us, stronger_t,
-    k |> N.remove_uvar_solutions env
-      |> N.normalize [Env.Beta; Env.Eager_unfolding] env
-      |> SS.close_univ_vars stronger_us in
+
+    let k = k |> N.remove_uvar_solutions env |> N.normalize [Env.Beta; Env.Eager_unfolding] env in
+
+    let _check_valid_binders =
+      match (SS.compress k).n with
+      | Tm_arrow (bs, c) ->
+        let bs,c = SS.open_comp bs c in
+        let res_t = U.comp_result c in
+        let bs, f_b =
+          List.splitAt (List.length bs - 1) bs
+          |> (fun (l1, l2) -> List.tl l1, List.hd l2) in
+        validate_layered_effect_binders env bs [(fst f_b).sort; res_t] r in
+
+    stronger_us, stronger_t, k |> SS.close_univ_vars stronger_us in
 
   log_combinator "stronger_repr" stronger_repr;
 
@@ -471,8 +565,20 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) =
     let guard_eq = Rel.teq env t k in
     [guard_f; guard_g; guard_body; guard_eq] |> List.iter (Rel.force_trivial_guard env);
 
+    let k = k |> N.remove_uvar_solutions env in
+
+    let _check_valid_binders =
+      match (SS.compress k).n with
+      | Tm_abs (bs, body, _) ->
+        let bs, body = SS.open_term bs body in
+        let bs, f_b, g_b =
+          List.splitAt (List.length bs - 3) bs
+          |> (fun (l1, l2) -> l1 |> List.tl,
+                          l2 |> List.hd, l2 |> List.tl |> List.hd) in
+        validate_layered_effect_binders env bs [(fst f_b).sort; (fst g_b).sort; body] r in
+
     if_then_else_us,
-    k |> N.remove_uvar_solutions env |> SS.close_univ_vars if_then_else_us,
+    k |> SS.close_univ_vars if_then_else_us,
     if_then_else_ty in
 
   log_combinator "if_then_else" if_then_else;
@@ -1265,10 +1371,22 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
     BU.print1 "After unification k: %s\n" (Print.term_to_string k);
-       
+
+  let k = k |> N.remove_uvar_solutions env in
+
+  let _check_valid_binders =
+    match (SS.compress k).n with
+    | Tm_arrow (bs, c) ->
+      let bs, c = SS.open_comp bs c in
+      let res_t = U.comp_result c in
+      let bs, f_b =
+        List.splitAt (List.length bs - 1) bs
+        |> (fun (l1, l2) -> List.tl l1, List.hd l2) in
+      validate_layered_effect_binders env bs [(fst f_b).sort; res_t] r in
+
   let sub = { sub with
     lift = Some (us, lift);
-    lift_wp = Some (us, k |> N.remove_uvar_solutions env |> SS.close_univ_vars us) } in
+    lift_wp = Some (us, k |> SS.close_univ_vars us) } in
 
   if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
     BU.print1 "Final sub_effect: %s\n" (Print.sub_eff_to_string sub);
@@ -1509,12 +1627,29 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
          eff_name (Print.tscheme_to_string (us, t))
                   (Print.tscheme_to_string (us, k));
 
+  let k = k |> N.remove_uvar_solutions env in
+
+  let _check_valid_binders =
+    match (SS.compress k).n with
+    | Tm_arrow (bs, c) ->
+      let bs, c = SS.open_comp bs c in
+      let res_t = U.comp_result c in
+      let bs, f_b, g_b =
+        List.splitAt (List.length bs - 2) bs
+        |> (fun (l1, l2) -> l1 |> List.tl |> List.tl,
+                        l2 |> List.hd, l2 |> List.tl |> List.hd) in
+      let g_sort =
+        match (SS.compress (fst g_b).sort).n with
+        | Tm_arrow (_, c) -> U.comp_result c in
+      validate_layered_effect_binders env bs [(fst f_b).sort; g_sort; res_t] r in
+
+
   log_issue r (Errors.Warning_BleedingEdge_Feature,
     BU.format1 "Polymonadic binds (%s in this case) is an experimental feature;\
       it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
       eff_name);
 
-  (us, t), (us, k |> N.remove_uvar_solutions env |> SS.close_univ_vars us)
+  (us, t), (us, k |> SS.close_univ_vars us)
 
 
 let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tscheme * S.tscheme) =
@@ -1577,18 +1712,29 @@ let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tschem
 
   let guard_eq = Rel.teq env ty k in
   List.iter (Rel.force_trivial_guard env) [guard_f; guard_ret_t; guard_wp; guard_eq];
+
   let k = k
     |> N.remove_uvar_solutions env
-    |> N.normalize [Env.Beta; Env.Eager_unfolding] env
-    |> SS.close_univ_vars us in
+    |> N.normalize [Env.Beta; Env.Eager_unfolding] env in
 
   if Env.debug env <| Options.Other "LayeredEffectsTc" then
     BU.print2 "Polymonadic subcomp %s type after unification : %s\n"
       combinator_name (Print.tscheme_to_string (us, k));
+
+  let _check_valid_binders =
+    match (SS.compress k).n with
+    | Tm_arrow (bs, c) ->
+      let bs,c = SS.open_comp bs c in
+      let res_t = U.comp_result c in
+      let bs, f_b =
+        List.splitAt (List.length bs - 1) bs
+        |> (fun (l1, l2) -> List.tl l1, List.hd l2) in
+      validate_layered_effect_binders env bs [(fst f_b).sort; res_t] r in
+
 
   log_issue r (Errors.Warning_BleedingEdge_Feature,
     BU.format1 "Polymonadic subcomp (%s in this case) is an experimental feature;\
       it is subject to some redesign in the future. Please keep us informed (on github etc.) about how you are using it"
       combinator_name);
 
-  (us, t), (us, k)
+  (us, t), (us, k |> SS.close_univ_vars us)

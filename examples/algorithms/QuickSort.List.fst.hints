@@ -32,7 +32,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e2db04114f9758b227af2755958f8c4f"
+      "0c12acf30f3957a60b64113da43451bd"
     ],
     [
       "QuickSort.List.mem_count",
@@ -64,7 +64,7 @@
         "subterm_ordering_Prims.Cons", "typing_QuickSort.List.count"
       ],
       0,
-      "63cf860ea2d8de428d450a29a2bbd0dd"
+      "89642ca850fc78f5d76eb49a7bf432a0"
     ],
     [
       "QuickSort.List.partition",
@@ -78,7 +78,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "473fc5384f1fc7d9e325eb729501e534"
+      "7a7e460f8a9c7accaf6dce0962059b6c"
     ],
     [
       "QuickSort.List.partition_lemma",
@@ -133,7 +133,7 @@
         "typing_QuickSort.List.partition"
       ],
       0,
-      "17220a1d553907c5ce929afb6e0b0c8c"
+      "07a1eacf908ec32c7f9d44d8330729f0"
     ],
     [
       "QuickSort.List.sorted_app_lemma",
@@ -180,7 +180,7 @@
         "typing_QuickSort.List.sorted", "unit_typing"
       ],
       0,
-      "c7df0746851b59e942aab007e3534d35"
+      "179c23a31e867ed870679dc023840fb8"
     ],
     [
       "QuickSort.List.is_permutation",
@@ -230,7 +230,7 @@
         "typing_FStar.List.Tot.Base.append", "typing_QuickSort.List.count"
       ],
       0,
-      "86131887df1824871537f76153c711a2"
+      "173f880968b4f1e78b758850db553bd9"
     ],
     [
       "QuickSort.List.permutation_app_lemma",
@@ -315,7 +315,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d9d58195c161439263e964c9d673fb88"
+      "eebef88ee595e24390d342b5720e5791"
     ]
   ]
 ]
