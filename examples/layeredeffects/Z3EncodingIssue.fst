@@ -127,7 +127,7 @@ assume PURE_wp_monotonic:
     (forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q))
 
 let lift_div_chacha (a:Type)
-  (wp:pure_wp a) (f:unit -> DIV a wp)
+  (wp:pure_wp a) (f:eqtype_as_type unit -> DIV a wp)
 : repr a (fun p s -> wp (fun x -> p x s))
 = fun _ -> f ()
 
@@ -281,9 +281,10 @@ layered_effect {
   if_then_else = hif_then_else
 }
 
-let lift_div_ref (a:Type) (wp:pure_wp a{forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q)}) (f:unit -> DIV a wp)
+let lift_div_ref (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> DIV a wp)
 : hrepr a (fun p n -> wp (fun x -> p x n))
-= fun _ -> f ()
+= assume (forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q));
+  fun _ -> f ()
 
 sub_effect DIV ~> REF = lift_div_ref
 

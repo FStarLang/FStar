@@ -34,7 +34,7 @@ layered_effect {
 let bind_pure_steel (a:Type) (b:Type)
   (wp:pure_wp a)
   (pre_g:pre_t) (post_g:post_t b)
-  (f:unit -> PURE a wp) (g:(x:a -> repr b pre_g post_g))
+  (f:eqtype_as_type unit -> PURE a wp) (g:(x:a -> repr b pre_g post_g))
 : repr b pre_g post_g
 = admit()
 
@@ -44,7 +44,7 @@ let bind_steel_pure (a:Type) (b:Type)
     (pre_f:pre_t) (post_f:hprop)
     (wp_g:a -> pure_wp b)
     (f:repr a pre_f (fun _ -> post_f))
-    (g:(x:a -> unit -> PURE b (wp_g x)))
+    (g:(x:a -> eqtype_as_type unit -> PURE b (wp_g x)))
 : repr b pre_f (fun _ -> post_f)
 = admit()
 

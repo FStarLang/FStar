@@ -27,7 +27,7 @@ type post_t (a:Type) = a -> hprop u#1
 
 let state_uses (uses:Set.set lock_addr) : Sem.st = state_obeys_st_laws uses; state0 uses
 
-type atomic_repr (a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:post_t a) =
+type atomic_repr (a:Type) (uses:Set.set lock_addr) (is_ghost:eqtype_as_type bool) (pre:pre_t) (post:post_t a) =
   Sem.action_t_tot #(state_uses uses) pre post (fun _ -> True) (fun _ _ _ -> True)
 
 let return (a:Type u#a) (x:a) (uses:Set.set lock_addr) (p:a -> hprop u#1)
@@ -35,45 +35,31 @@ let return (a:Type u#a) (x:a) (uses:Set.set lock_addr) (p:a -> hprop u#1)
 = fun _ -> x
 
 let bind (a:Type) (b:Type) (uses:Set.set lock_addr)
-  (is_ghost1:bool) (is_ghost2:bool{is_ghost1 \/ is_ghost2})
+  (is_ghost1:eqtype_as_type bool) (is_ghost2:eqtype_as_type bool)
   (pre_f:pre_t) (post_f:post_t a) (post_g:post_t b)
   (f:atomic_repr a uses is_ghost1 pre_f post_f)
   (g:(x:a -> atomic_repr b uses is_ghost2 (post_f x) post_g))
-  : (atomic_repr b uses (is_ghost1 && is_ghost2) pre_f post_g)
+  : Pure (atomic_repr b uses (is_ghost1 && is_ghost2) pre_f post_g)
+      (requires b2t is_ghost1 \/ b2t is_ghost2)
+      (ensures fun _ -> True)
   = fun m0 ->
     let x = f () in
     g x ()
 
-let subcomp (a:Type) (uses:Set.set lock_addr) (is_ghost:bool) (pre:pre_t) (post:post_t a)
-  (f:atomic_repr a uses is_ghost pre post)
-  : Pure (atomic_repr a uses is_ghost pre post)
-    (requires True)
-    (ensures fun _ -> True)
-  = f
-
-let if_then_else (a:Type) (uses:Set.set lock_addr) (pre:pre_t) (post:post_t a)
-  (f:atomic_repr a uses true pre post)
-  (g:atomic_repr a uses true pre post)
-  (p:bool)
-  : Type
-  = atomic_repr a uses true pre post
-
 total
 reifiable reflectable
 layered_effect {
-  SteelAtomic : a:Type -> uses:Set.set lock_addr -> is_ghost:bool -> pre:pre_t -> post:post_t a
+  SteelAtomic : a:Type -> uses:Set.set lock_addr -> is_ghost:eqtype_as_type bool -> pre:pre_t -> post:post_t a
     -> Effect
   with
   repr = atomic_repr;
   return = return;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+  bind = bind
 }
 
 #push-options "--z3rlimit 20 --fuel 0 --ifuel 0"
 inline_for_extraction
-let lift_pure_steel_atomic (a:Type) (uses:Set.set lock_addr) (p:pre_t) (wp:pure_wp a) (f:unit -> PURE a wp)
+let lift_pure_steel_atomic (a:Type) (uses:Set.set lock_addr) (p:pre_t) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
 : Pure (atomic_repr a uses true p (fun _ -> p))
   (requires wp (fun _ -> True))
   (ensures fun _ -> True)

@@ -288,7 +288,7 @@ let lift_pure_ifst
     (a:Type)
     (s:Type0)
     (wp:pure_wp a)
-    (f:unit -> PURE a wp)
+    (f:eqtype_as_type unit -> PURE a wp)
   : irepr a s (lift_wp a s wp)
   = admit();
     let x = f() in
