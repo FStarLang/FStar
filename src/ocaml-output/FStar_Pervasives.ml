@@ -273,3 +273,4 @@ let (norm : norm_step Prims.list -> unit -> Obj.t -> Obj.t) =
 
 let singleton : 'uuuuuu2200 . 'uuuuuu2200 -> 'uuuuuu2200 = fun x -> x
 let with_type : 'uuuuuu2211 . 'uuuuuu2211 -> 'uuuuuu2211 = fun e -> e
+type 'a eqtype_as_type = 'a
