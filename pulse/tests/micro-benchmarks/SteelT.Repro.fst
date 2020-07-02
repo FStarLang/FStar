@@ -54,7 +54,9 @@ let resolve () : Tac unit =
 #push-options "--print_implicits"
 val test_ok1 (_:unit)
   : SteelT unit emp (fun c -> emp)
-[@@expect_failure [228; 189]] // FIXME: 189 appeared during reshuffle in layered effects
+[@@expect_failure [287; 189]]
+// FIXME: 189 and 287 appeared during reshuffle in layered effects
+//        used to be only 228
 let test_ok1 _
   = let tr = dependent_provides () in
     let c = my_frame_t (myref_slprop tr) (*#(myref_slprop tr)*) () in
