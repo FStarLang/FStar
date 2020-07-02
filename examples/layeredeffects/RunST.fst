@@ -189,7 +189,7 @@ let lift_pure_eff
  (a:Type)
  (s:Type)
  (wp : pure_wp a)
- (f : unit -> PURE a wp)
+ (f : eqtype_as_type unit -> PURE a wp)
  : Pure (repr a s s [])
         (requires (wp (fun _ -> True) /\ pure_monotonic wp))
         (ensures (fun _ -> True))

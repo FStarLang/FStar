@@ -14,13 +14,18 @@ let w a = w:(w0 a){monotonic w}
 let repr (a : Type) (wp : w a) : Type =
   squash (exists p. wp p) -> v:a{forall p. wp p ==> p v}
 
-let return (a : Type) (x : a) : repr a (fun p -> p x) =
+unfold let return_wp (#a:Type) (x:a) : w a = fun p -> p x
+
+let return (a : Type) (x : a) : repr a (return_wp x) =
   fun () -> x
+
+unfold let bind_wp (#a:Type) (#b:Type) (wp_f:w a) (wp_g:a -> w b) : w b =
+  fun p -> wp_f (fun x -> wp_g x p)
 
 let bind (a b : Type) (wp_v : w a) (wp_f: a -> w b)
     (v : repr a wp_v)
     (f : (x:a -> repr b (wp_f x)))
-: repr b (fun p -> wp_v (fun x -> wp_f x p))
+: repr b (bind_wp wp_v wp_f)
  // Fun fact: using () instead of _ below makes us
  // lose the refinement and then this proof fails.
  // Keep that in mind all ye who enter here.
@@ -33,8 +38,12 @@ let subcomp (a:Type) (wp1 wp2: w a)
        (ensures fun _ -> True)
 = f
 
+unfold let if_then_else_wp (#a:Type) (wp1 wp2:w a) (p:bool) : w a =
+  fun post -> (p ==> wp1 post) /\ ((~p) ==> wp2 post)
+
+
 let if_then_else (a : Type) (wp1 wp2 : w a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
-  repr a (fun post -> (p ==> wp1 post) /\ ((~p) ==> wp2 post))
+  repr a (if_then_else_wp wp1 wp2 p)
 
 // requires to prove that
 // p  ==> f <: (if_then_else p f g)
@@ -53,10 +62,14 @@ layered_effect {
        if_then_else = if_then_else
 }
 
-let lift_pure_nd (a:Type) (wp:pure_wp a{monotonic wp}) (f:(unit -> PURE a wp)) :
-  Pure (repr a wp) (requires True)
+#push-options "--admit_smt_queries true"
+unfold let coerce (#a:Type) (wp:pure_wp a) : w a =  wp
+
+let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
+  Pure (repr a (coerce wp)) (requires True)
                    (ensures (fun _ -> True))
   = fun _ -> f ()
+#pop-options
   
 sub_effect PURE ~> ID = lift_pure_nd
 

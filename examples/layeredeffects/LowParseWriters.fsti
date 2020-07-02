@@ -342,17 +342,20 @@ val lift_pure_read_impl
   (l: memory_invariant)
 : Tot (read_repr_impl a _ _ _ l (lift_pure_read_spec a wp f_pure_spec_for_impl))
 
+open FStar.Monotonic.Pure
+
 inline_for_extraction
-let lift_pure_read (a:Type) (wp:pure_wp a { pure_wp_mono a wp })
+let lift_pure_read (a:Type) (wp:pure_wp a)
   (l: memory_invariant)
-  (f_pure:unit -> PURE a wp)
+  (f_pure:eqtype_as_type unit -> PURE a wp)
 : Tot (read_repr a
     (wp (fun _ -> True)) // (lift_pure_read_pre a wp)
     (fun x -> ~ (wp (fun x' -> ~ (x == x')))) // (lift_pure_read_post a wp)
     (fun _ -> False) // (lift_pure_read_post_err a wp))
     l
   )
-= ReadRepr _ (lift_pure_read_impl a wp f_pure l)
+= wp_monotonic_pure ();
+  ReadRepr _ (lift_pure_read_impl a wp f_pure l)
 
 sub_effect PURE ~> ERead = lift_pure_read
 

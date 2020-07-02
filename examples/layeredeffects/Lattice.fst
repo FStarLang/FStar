@@ -140,7 +140,7 @@ let pure_monotonic #a (wp : pure_wp a) : Type =
 let lift_pure_eff
  (a:Type)
  (wp : pure_wp a)
- (f : unit -> PURE a wp)
+ (f : eqtype_as_type unit -> PURE a wp)
  : Pure (repr a [])
         (requires (wp (fun _ -> True) /\ pure_monotonic wp))
         (ensures (fun _ -> True))

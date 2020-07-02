@@ -206,7 +206,7 @@ let lift_pure_read_spec
 
 let lift_pure_read (a:Type) (wp:pure_wp a)
   (l: memory_invariant)
-  (f_pure:unit -> PURE a wp)
+  (f_pure:eqtype_as_type unit -> PURE a wp)
 : Pure (read_repr a
     (wp (fun _ -> True)) // (lift_pure_read_pre a wp)
     (fun x -> ~ (wp (fun x' -> ~ (x == x')))) // (lift_pure_read_post a wp)

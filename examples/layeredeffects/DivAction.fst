@@ -13,13 +13,13 @@ total
 reifiable
 reflectable
 layered_effect {
-  ID : a:Type -> unit -> Effect
+  ID : a:Type -> eqtype_as_type unit -> Effect
   with repr         = repr;
        return       = return;
        bind         = bind
 }
 
-let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(unit -> PURE a wp)) :
+let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
   Pure (repr a ()) (requires (wp (fun _ -> True) /\ (forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2)))
                    (ensures (fun _ -> True))
   = fun _ ->

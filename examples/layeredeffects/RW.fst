@@ -164,7 +164,7 @@ let sp #a (wp : pure_wp a) : pure_post a =
 let lift_pure_rwi
  (a:Type)
  (wp : pure_wp a)
- (f : unit -> PURE a wp)
+ (f : eqtype_as_type unit -> PURE a wp)
  // with the index-polymorphic bind above, this has to be in RO,
  // or unification will usually not find the index here
  : Pure (m a RO (fun _ -> wp (fun _ -> True)) (fun h0 x h1 -> sp wp x /\ h1 == h0))

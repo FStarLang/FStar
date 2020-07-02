@@ -27,7 +27,11 @@ val unobservable : observability
 let obs_at_most_one o1 o2 =
   o1==unobservable \/ o2==unobservable
 
-let join_obs (o1:observability) (o2:observability{obs_at_most_one o1 o2}) =
+(*
+ * AR: removing the refinement obs_at_most_one,
+ *     instead adding it to precondition of bind, see below
+ *)
+let join_obs (o1:observability) (o2:observability) =
   has_eq_observability();
   if observable = o1 || observable = o2
   then observable
@@ -50,13 +54,15 @@ val bind (a:Type u#a)
          (b:Type u#b)
          (opened_invariants:inames)
          (o1:observability)
-         (o2:observability{obs_at_most_one o1 o2})
+         (o2:observability)
          (pre_f:slprop)
          (post_f:a -> slprop)
          (post_g:b -> slprop)
          (f:atomic_repr a opened_invariants o1 pre_f post_f)
          (g:(x:a -> atomic_repr b opened_invariants o2 (post_f x) post_g))
-  : atomic_repr b opened_invariants (join_obs o1 o2) pre_f post_g
+  : Pure (atomic_repr b opened_invariants (join_obs o1 o2) pre_f post_g)
+      (requires obs_at_most_one o1 o2)
+      (ensures fun _ -> True)
 
 total
 reifiable reflectable
@@ -78,7 +84,7 @@ val lift_pure_steel_atomic (a:Type)
                            (opened_invariants:inames)
                            (p:slprop)
                            (wp:pure_wp a)
-                           (f:unit -> PURE a wp)
+                           (f:eqtype_as_type unit -> PURE a wp)
   : Pure (atomic_repr a opened_invariants unobservable p (fun _ -> p))
          (requires wp (fun _ -> True))
          (ensures fun _ -> True)
