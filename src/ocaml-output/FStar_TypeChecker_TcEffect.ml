@@ -358,7 +358,7 @@ let (validate_layered_effect_binders :
                  let uu____800 =
                    FStar_Syntax_Print.binders_to_string "; " invalid_binders in
                  FStar_Util.format1
-                   "Binders %s do not appear as repr indices or have an associated tactic"
+                   "Binders %s neither appear as repr indices nor have an associated tactic"
                    uu____800 in
                (FStar_Errors.Fatal_UnexpectedEffect, uu____798) in
              FStar_Errors.raise_error uu____792 r
