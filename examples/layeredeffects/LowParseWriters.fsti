@@ -754,7 +754,7 @@ let repr_spec (a:Type u#x) (r_in: parser) (r_out: parser) (pre: pre_t r_in) (pos
 
 noeq
 type iresult (a: Type u#x) : Type u#x =
-| ICorrect: (res: a) -> (pos' : U32.t) -> iresult a
+| ICorrect: (res: a) -> (new_pos : U32.t) -> iresult a
 | IError of string
 | IOverflow
 
