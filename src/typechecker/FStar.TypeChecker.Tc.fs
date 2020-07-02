@@ -1102,12 +1102,12 @@ let check_exports env (modul:modul) exports : unit =
         TcTerm.tc_trivial_guard env t |> ignore
     in
     let check_term lid univs t =
-        let _ = Errors.message_prefix.set_prefix
+        let _ = Errors.message_prefix.push_prefix
                 (BU.format2 "Interface of %s violates its abstraction (add a 'private' qualifier to '%s'?)"
                         (string_of_lid modul.name)
                         (string_of_lid lid)) in
         check_term lid univs t;
-        Errors.message_prefix.clear_prefix()
+        ignore (Errors.message_prefix.pop_prefix())
     in
     let rec check_sigelt = fun se -> match se.sigel with
         | Sig_bundle(ses, _) ->
