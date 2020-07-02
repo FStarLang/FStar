@@ -34,7 +34,10 @@ let t_return #a (x:a) : m a T (fun p -> p x) = (fun () -> x)
 let g_return #a (x:a) : m a G (fun p -> p x) = (fun () -> x)
 let d_return #a (x:a) : m a D (fun p -> p x) = raise_val (fun () -> x)
 
-let return (a:Type) (x:a) (i:idx) : m a i (fun p -> p x) =
+let return_wp #a (x:a) : wp a =
+ fun p -> p x
+
+let return (a:Type) (x:a) (i:idx) : m a i (return_wp x) =
   match i with
   | T -> t_return x
   | G -> g_return x
@@ -66,11 +69,14 @@ let subcomp (a:Type) (i:idx) (wp1 : wp a)
      | G -> f
      | D -> coerce f
 
+let ite_wp #a (w1 w2 : wp a) (b:bool) : wp a =
+  fun p -> if b then w1 p else w2 p
+
 let if_then_else (a:Type) (i:idx) (w1 w2 : wp a)
                           (f : m a i w1)
-                          (g : m a i w2) (q : bool)
+                          (g : m a i w2) (b : bool)
     : Type
-    = m a i (fun p -> (q ==> w1 p) /\ ((~q) ==> w2 p))
+    = m a i (ite_wp w1 w2 b)
 
 // GM: Would be nice to not have to use all explicit args everywhere,
 //     and to get better errors especially when args are out of order,
@@ -89,8 +95,10 @@ layered_effect {
   if_then_else = if_then_else
 }
 
+let unmon #a (w:wp a) : pure_wp a = fun p -> w p
+
 let lift_pure_gtd (a:Type) (w : wp a) (i : idx)
-                  (f : unit -> PURE a w)
+                  (f : eqtype_as_type unit -> PURE a (unmon w))
                  : Pure (m a i w)
                         (requires True)
                         (ensures (fun _ -> True))
@@ -100,7 +108,7 @@ let lift_pure_gtd (a:Type) (w : wp a) (i : idx)
    | D -> let f' () : DIV a w = f () in
          let f'' : m a D w = raise_val f' in
          f''
-         
+
  // GM: Surprised that this works actually... I expected that I would need to
  //     case analyze [i].
  // GM: not anymore whe Div is involved, also need a lot of scaffolding
@@ -118,7 +126,7 @@ unfold
 let null_wp0 (a:Type) : pure_wp a = fun p -> forall x. p x
 
 unfold
-let null_wp  (a:Type) : wp a = 
+let null_wp  (a:Type) : wp a =
   assert_norm (monotonic (null_wp0 a));
   null_wp0 a
 
@@ -134,7 +142,7 @@ let app #a #b #i #wp (f : a -> GTD b i wp) (x : a) : GTD b i wp = f x
 open FStar.Tactics
 
 let rec appn #a #i (n:nat) (f : a -> Gtd a i) (x : a) : Gtd a i =
-  match n with 
+  match n with
   | 0 -> x
   | _ -> begin
     appn (n-1) f (f x)
@@ -150,7 +158,7 @@ let labs0 #i (n:int) : Gtd int i =
   if n < 0
   then -n
   else n
-  
+
 let labs #i (n:int) : Gtd nat i =
   if n < 0
   then -n

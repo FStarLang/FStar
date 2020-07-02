@@ -9,7 +9,7 @@ let monotonic (w:w0 'a) =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
 
 val w (a : Type u#a) : Type u#(max 1 a)
-let w a = w:(w0 a){monotonic w}
+let w a = w:(w0 a) //{monotonic w}
 
 let repr (a : Type) (wp : w a) : Type =
   v:a{forall p. wp p ==> p v}
@@ -50,8 +50,8 @@ layered_effect {
        if_then_else = if_then_else
 }
 
-let lift_pure_nd (a:Type) (wp:pure_wp a{monotonic wp}) (f:(unit -> PURE a wp)) :
-  Pure (repr a wp) (requires (wp (fun _ -> True))) // Can only lift from `Tot`
+let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
+  Pure (repr a wp) (requires (monotonic wp /\ wp (fun _ -> True))) // Can only lift from `Tot`
                    (ensures (fun _ -> True))
   = f ()
   

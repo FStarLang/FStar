@@ -25,7 +25,10 @@ type pre_t    = state -> Type0
 type post_t a = state -> option a -> state -> Type0
 
 // this repr doesn't seem to work too well
-type repr0 (a:Type u#aa) (pre : pre_t) (post : post_t a) : Type u#aa =
+type repr0 (a:Type u#aa)
+           (pre : pre_t)
+           (post : post_t u#aa a) // #2074
+           : Type u#aa =
   s0:state{pre s0} -> Tot (r:(option a & state){post s0 (fst r) (snd r)})
 
 let abides #a #pre #post (f : repr0 a pre post) (ann:annot) : Type0 =
@@ -71,7 +74,7 @@ let rec sublist_at
 
 type repr (a:Type u#aa)
           (pre : pre_t)
-          (post : post_t a)
+          (post : post_t u#aa a) // #2074
           (labs : list u#0 eff_label) // GM: why do I need this annot...? seems we get an ill-formed type if not
                                       // somehow it's about `type` instead of `let`
   : Type u#aa
@@ -142,10 +145,10 @@ let if_then_else
   (labs1 labs2 : list eff_label)
   (f : repr a pre1 post1 labs1)
   (g : repr a pre2 post2 labs2)
-  (p : Type0)
+  (b : bool)
   : Type
-  = repr a (fun s0 -> ite p (pre1 s0) (pre2 s0))
-           (fun s0 y s1 -> ite p (post1 s0 y s1) (post2 s0 y s1))
+  = repr a (fun s0 -> ite b (pre1 s0) (pre2 s0))
+           (fun s0 y s1 -> ite b (post1 s0 y s1) (post2 s0 y s1))
            (labs1@labs2)
 
 [@@smt_reifiable_layered_effect]
@@ -170,11 +173,14 @@ unfold
 let sp #a (wp : pure_wp a) : pure_post a =
   fun x -> ~ (wp (fun y -> ~(x == y)))
 
+let post_of_wp #a (wp : pure_wp a) : post_t a =
+  fun s0 r s1 -> s0 == s1 /\ Some? r /\ sp wp (Some?.v r)
+
 let lift_pure_eff
  (a:Type)
  (wp : pure_wp a)
- (f : unit -> PURE a wp)
- : Pure (repr a (fun _ -> wp (fun _ -> True)) (fun s0 r s1 -> s0 == s1 /\ Some? r /\ sp wp (Some?.v r)) [])
+ (f : eqtype_as_type unit -> PURE a wp)
+ : Pure (repr a (fun _ -> wp (fun _ -> True)) (post_of_wp wp) [])
         (requires pure_monotonic wp)
         (ensures (fun _ -> True))
  = let r (s0:state{wp (fun _ -> True)})

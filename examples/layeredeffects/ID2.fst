@@ -9,7 +9,7 @@ let monotonic (w:w0 'a) =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
 
 val w (a : Type u#a) : Type u#(max 1 a)
-let w a = w:(w0 a){monotonic w}
+let w a = w:(w0 a)  //{monotonic w}
 
 let repr (a : Type) (wp : w a) : Type =
   squash (exists p. wp p) -> v:a{forall p. wp p ==> p v}
@@ -62,15 +62,13 @@ layered_effect {
        if_then_else = if_then_else
 }
 
-#push-options "--admit_smt_queries true"
-unfold let coerce (#a:Type) (wp:pure_wp a) : w a =  wp
-
 let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
-  Pure (repr a (coerce wp)) (requires True)
+  Pure (repr a wp) (requires (monotonic wp))
                    (ensures (fun _ -> True))
-  = fun _ -> f ()
-#pop-options
-  
+  = fun _ ->
+    let r = f () in
+    r
+
 sub_effect PURE ~> ID = lift_pure_nd
 
 (* Checking that it's kind of usable *)
@@ -89,6 +87,7 @@ effect Id (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
 
 effect IdT (a:Type) = Id a True (fun _ -> True)
 
+[@@expect_failure]
 let rec sum (l : list int) : IdT int
  =
   match l with

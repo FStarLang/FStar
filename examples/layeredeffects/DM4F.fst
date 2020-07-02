@@ -12,9 +12,9 @@ let st_monotonic #st #a (w : wp0 st a) : Type0 =
   // ^ this version seems to be less SMT-friendly
   forall s0 p1 p2. (forall x s1. p1 (x, s1) ==> p2 (x, s1)) ==> w s0 p1 ==> w s0 p2
 
-type wp st a = w:(wp0 st a){st_monotonic w}
+type wp st a = w:(wp0 st a)//{st_monotonic w}
 
-type repr (a:Type u#ua) (st:Type) (wp : wp st a) : Type u#ua = 
+type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#ua =
   s0:st -> PURE (a & st) (wp s0)
 
 type return (a:Type) (x:a) (st:Type0) : repr a st (fun s0 p -> p (x, s0)) =
@@ -26,7 +26,9 @@ type bind (a:Type) (b:Type) (st:Type0)
   (c : repr a st wp_c)
   (f : (x:a -> repr b st (wp_f x)))
 : repr b st  (fun s0 p -> wp_c s0 (fun (y, s1) -> wp_f y s1 p))
-= fun s0 -> let (y, s1) = c s0 in
+= fun s0 -> assume (st_monotonic wp_c);
+         assume (forall x. st_monotonic (wp_f x));
+         let (y, s1) = c s0 in
          f y s1
 
 let if_then_else
@@ -35,9 +37,9 @@ let if_then_else
   (wpf wpg : wp st a)
   (f : repr a st wpf)
   (g : repr a st wpg)
-  (p : Type0)
+  (b : bool)
   : Type
-  = repr a st (fun s0 post -> (p ==> wpf s0 post) /\ ((~p) ==> wpg s0 post))
+  = repr a st (fun s0 p -> (b ==> wpf s0 p) /\ ((~b) ==> wpg s0 p))
 
 let stronger
   (#a:Type) (#st:Type0)

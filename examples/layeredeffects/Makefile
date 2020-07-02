@@ -2,8 +2,7 @@ FSTAR_HOME=../..
 OTHERFLAGS+=--already_cached 'Prims FStar LowStar' --include parsing --record_hints
 include ../Makefile.include
 
-#AR: 07/02: adding IDi.fst and GTWP after implementing stricter typing
-NO_VERIFY=Buffers.fst GT.fst DM4F.fst LatticeSpec.fst ID1.fst ID2.fst ID3.fst GTWP.fst
+NO_VERIFY=Buffers.fst
 
 ROOTS=$(wildcard *.fst)
 
