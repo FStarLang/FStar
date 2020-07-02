@@ -1,21 +1,20 @@
 module ID1
 
 // The base type of WPs
-val w0 (a : Type u#a) : Type u#(max 1 a)
-let w0 a = (a -> Type0) -> Type0
+val wp0 (a : Type u#a) : Type u#(max 1 a)
+let wp0 a = (a -> Type0) -> Type0
 
 // We require monotonicity of them
-let monotonic (w:w0 'a) =
+let monotonic (w:wp0 'a) =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
 
-val w (a : Type u#a) : Type u#(max 1 a)
-let w a = w:(w0 a) // {monotonic w}
+val wp (a : Type u#a) : Type u#(max 1 a)
+let wp a = w:(wp0 a){monotonic w}
 
-let repr (a : Type) (wp : w a) : Type =
-  p:(pure_post a) -> squash (wp p) -> v:a{p v}
-  //squash (exists p. wp p) -> v:a{forall p. wp p ==> p v}
+let repr (a : Type) (w : wp a) : Type =
+  p:_ -> squash (w p) -> v:a{p v}
 
-let return_wp #a (x:a) : w a =
+let return_wp #a (x:a) : wp a =
   fun p -> p x
 
 let return (a : Type) (x : a) : repr a (return_wp x) =
@@ -25,28 +24,28 @@ let return (a : Type) (x : a) : repr a (return_wp x) =
   fun p _ -> x
 
 let bind_wp #a #b
-  (wp_v : w a)
-  (wp_f : (x:a -> w b))
-  : w b
+  (wp_v : wp a)
+  (wp_f : (x:a -> wp b))
+  : wp b
   = fun p -> wp_v (fun x -> wp_f x p)
 
-let bind (a b : Type) (wp_v : w a) (wp_f: a -> w b)
+let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
     (v : repr a wp_v)
     (f : (x:a -> repr b (wp_f x)))
 : repr b (bind_wp wp_v wp_f)
 = fun p _ -> f (v (fun x -> wp_f x p) ()) p () // explicit post is annoying
 
-let subcomp (a:Type) (wp1 wp2: w a)
-    (f : repr a wp1)
-: Pure (repr a wp2)
-       (requires (forall p. wp2 p ==> wp1 p))
+let subcomp (a:Type) (w1 w2: wp a)
+    (f : repr a w1)
+: Pure (repr a w2)
+       (requires (forall p. w2 p ==> w1 p))
        (ensures fun _ -> True)
 = f
 
-let ite_wp #a (wp1 wp2 : w a) (b : bool) : w a =
-  (fun p -> (b ==> wp1 p) /\ ((~b) ==> wp2 p))
+let ite_wp #a (wp1 wp2 : wp a) (b : bool) : wp a =
+  (fun (p:a -> Type) -> (b ==> wp1 p) /\ ((~b) ==> wp2 p))
 
-let if_then_else (a : Type) (wp1 wp2 : w a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
+let if_then_else (a : Type) (wp1 wp2 : wp a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
   repr a (ite_wp wp1 wp2 p)
 
 // requires to prove that
@@ -58,16 +57,17 @@ total
 reifiable
 reflectable
 layered_effect {
-  ID : a:Type -> wp : w a -> Effect
+  ID : a:Type -> wp a -> Effect
   with repr         = repr;
        return       = return;
        bind         = bind;
-       subcomp      = subcomp;
-       if_then_else = if_then_else
+       subcomp      = subcomp
 }
 
-let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
-  Pure (repr a wp) (requires (monotonic wp))
+let nomon #a (w : wp a) : pure_wp a = fun p -> w p
+
+let lift_pure_nd (a:Type) (wp:wp a) (f:(eqtype_as_type unit -> PURE a (nomon wp))) :
+  Pure (repr a wp) (requires True)
                    (ensures (fun _ -> True))
   = fun p _ ->
     let r = f () in
