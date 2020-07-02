@@ -1,0 +1,111 @@
+[
+  "Û˙Ç^∏Ap¥ÿ·\u000e4è\u0014\u0010D",
+  [
+    [
+      "ID2.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Exists",
+        "equation_Prims.squash",
+        "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
+        "interpretation_Tm_abs_e5476ac46e95297dc051aced930fc670",
+        "l_quant_interp_29967893474f202303e00954658f8e6f",
+        "l_quant_interp_cef313f397d8edad26eef077c02bf887",
+        "refinement_interpretation_Tm_refine_134584ea4bdb9bfdebfec754be7787e9",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
+      ],
+      0,
+      "65d2587057b3b9490ba4f7b6e64ac4a3"
+    ],
+    [
+      "ID2.subcomp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "889457412387d1a5babdc84d6b837280"
+    ],
+    [
+      "ID2.ID",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "adfb412c2a22d3f81b7214a62a554962"
+    ],
+    [
+      "ID2.ID",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2c9e65c3c8247e5e330efa3994ec6001"
+    ],
+    [
+      "ID2.lift_pure_nd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "ID2_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "eq2-interp", "equation_ID2.monotonic", "equation_Prims.l_Exists",
+        "equation_Prims.l_Forall", "equation_Prims.logical",
+        "equation_Prims.squash",
+        "interpretation_Tm_abs_927a276ce23d88dbe79a87bbe56dc445",
+        "l_imp-interp", "l_quant_interp_baea33a345b303ab420ed75b1e4a600f",
+        "l_quant_interp_cef313f397d8edad26eef077c02bf887",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_Tm_abs_927a276ce23d88dbe79a87bbe56dc445"
+      ],
+      0,
+      "e40e0648d74520ca8adb024a31098099"
+    ],
+    [
+      "ID2.test_f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_ID2.monotonic",
+        "function_token_typing_Prims.__cache_version_number__",
+        "interpretation_Tm_abs_f6e54fd66a19cedd96fb8905b50a563d",
+        "l_quant_interp_8eca2b28427a2893fd99e154beceaa7e"
+      ],
+      0,
+      "6008863404ca785ea13108502b00eb58"
+    ],
+    [
+      "ID2.l",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "ID2_interpretation_Tm_arrow_18523044355bf6a573deed3112c71d2b",
+        "ID2_interpretation_Tm_arrow_fce5e26d6599fbb4e26956c05e4721d2",
+        "equation_Prims.logical"
+      ],
+      0,
+      "3d799346c607803337bf3300a3463f42"
+    ],
+    [
+      "ID2.Id",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d93e54ef70ddaeb3078ed7ec6a7e7e0b"
+    ]
+  ]
+]

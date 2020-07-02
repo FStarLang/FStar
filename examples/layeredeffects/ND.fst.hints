@@ -312,7 +312,7 @@
       1,
       [ "@query", "lemma_ND.lem_if_1" ],
       0,
-      "0efd1cceb8a961b272bccb74af973056"
+      "4003469711c2296394645195bea9b32d"
     ],
     [
       "ND.ND",
@@ -321,7 +321,7 @@
       1,
       [ "@query", "lemma_ND.lem_if_2" ],
       0,
-      "3f76ccab3bd46a6ab7b987aa768a0467"
+      "19fa190a9bf4b7da7acd56cf3bae7353"
     ],
     [
       "ND.Pure_wp_corr",

@@ -1,0 +1,95 @@
+[
+  "ÍWh„tqj£ëe®ªè]F‰",
+  [
+    [
+      "ID3.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_ID3.repr",
+        "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
+        "refinement_interpretation_Tm_refine_134584ea4bdb9bfdebfec754be7787e9",
+        "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
+      ],
+      0,
+      "bfc3b617891fc60e11c6f8984dd9c378"
+    ],
+    [
+      "ID3.subcomp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_ID3.repr",
+        "refinement_interpretation_Tm_refine_134584ea4bdb9bfdebfec754be7787e9"
+      ],
+      0,
+      "2893e5cb1b4062e67a1eaaf94f0c9669"
+    ],
+    [
+      "ID3.ID",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d5c92866ace48dfb3e4f0c30007067c6"
+    ],
+    [
+      "ID3.ID",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "268c0213940fb281a8e9b59ec9d7f326"
+    ],
+    [
+      "ID3.lift_pure_nd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "ID3_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "eq2-interp", "equation_ID3.monotonic", "equation_Prims.l_and",
+        "equation_Prims.logical",
+        "interpretation_Tm_abs_7449511e63cff31881fe505864197781",
+        "l_and-interp", "l_imp-interp",
+        "l_quant_interp_92031d4b4ada6921a62c0ea84c6168a0",
+        "l_quant_interp_baea33a345b303ab420ed75b1e4a600f",
+        "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "typing_Tm_abs_7449511e63cff31881fe505864197781"
+      ],
+      0,
+      "6f1acb8e53251b62c29feba4bb8caa00"
+    ],
+    [
+      "ID3.test_f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_ID3.monotonic",
+        "function_token_typing_Prims.__cache_version_number__",
+        "interpretation_Tm_abs_f6e54fd66a19cedd96fb8905b50a563d",
+        "l_quant_interp_8eca2b28427a2893fd99e154beceaa7e"
+      ],
+      0,
+      "98fdc2ae09b31478a3907e63aca60eea"
+    ],
+    [
+      "ID3.Id",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c489831666f3852ad121eb2e1cb8177f"
+    ]
+  ]
+]
