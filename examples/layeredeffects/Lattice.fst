@@ -16,10 +16,10 @@ type eff_label =
   //| DIV
   | EXN
 
-// TOBEDONE: split ST into READ/WRITE with relational prop on abides
-//           ^ this was incredibly easy
+// DONE: split ST into READ/WRITE with relational prop on abides
+//       ^ this was incredibly easy
 
-// TODO: add specs
+// DONE  add specs (see LatticeSpec.fst)
 
 type annot = eff_label -> bool
 
@@ -70,8 +70,7 @@ let rec sublist_at
     | _::l1 -> sublist_at l1 l2
 
 type repr (a:Type u#aa)
-          (labs : list u#0 eff_label) // GM: why do I need this annot...? seems we get an ill-formed type if not
-                                      // somehow it's about `type` instead of `let`
+          (labs : list u#0 eff_label) // #2074
   : Type u#aa
   =
   r:(repr0 a){abides r (interp labs)}

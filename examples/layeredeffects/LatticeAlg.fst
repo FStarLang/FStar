@@ -112,8 +112,7 @@ let rec abides_app #a (l1 l2 : list eff_label) (c : repr0 a)
 
 
 type repr (a:Type u#aa)
-          (labs : list u#0 eff_label) // GM: why do I need this annot...? seems we get an ill-formed type if not
-                                      // somehow it's about `type` instead of `let`
+          (labs : list u#0 eff_label) // #2074
   : Type u#(max 1 aa)
   =
   r:(repr0 a){abides (interp labs) r}

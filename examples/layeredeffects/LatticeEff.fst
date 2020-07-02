@@ -53,7 +53,7 @@ let wpof2 #a (l : list eff_label) : wp a =
   wp
 
 type repr (a:Type u#aa)
-          (labs : list u#0 eff_label) // GM: why do I need this annot...? seems we get an ill-formed type if not
+          (labs : list u#0 eff_label) // #2074
   : Type u#0
   = unit -> ALL a (wpof2 labs)
 

@@ -75,8 +75,7 @@ let rec sublist_at
 type repr (a:Type u#aa)
           (pre : pre_t)
           (post : post_t u#aa a) // #2074
-          (labs : list u#0 eff_label) // GM: why do I need this annot...? seems we get an ill-formed type if not
-                                      // somehow it's about `type` instead of `let`
+          (labs : list u#0 eff_label) // #2074
   : Type u#aa
   =
   r:(repr0 a pre post){abides r (interp labs)}
