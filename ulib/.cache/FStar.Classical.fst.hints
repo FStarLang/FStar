@@ -66,7 +66,7 @@
         "fuel_guarded_inversion_Prims.c_or"
       ],
       0,
-      "a0f15e1ec7a72bc91ee330a6716bf76e"
+      "46427a78f93e765af737de3de18781ac"
     ],
     [
       "FStar.Classical.impl_intro_gen",
@@ -166,7 +166,7 @@
         "fuel_guarded_inversion_Prims.c_or", "unit_inversion"
       ],
       0,
-      "0541c58a397c9a26ef593097f36b66a4"
+      "7d4a917287354a000b7712579de01e34"
     ],
     [
       "FStar.Classical.exists_intro",
