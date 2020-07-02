@@ -127,7 +127,7 @@
         "typing_tok_Prims.T@tok", "unit_typing"
       ],
       0,
-      "40d0274577485e433c61f4ac3cb7454a"
+      "de18f8c18557a9bc9f5ce0b25d1812bd"
     ],
     [
       "Steel.PCM.Memory.disjoint",
@@ -177,7 +177,7 @@
         "true_interp"
       ],
       0,
-      "8717e36a1deec8c1991f287abcf2cdb4"
+      "febb3938c898ec48ee7f6f9ef557bf65"
     ],
     [
       "Steel.PCM.Memory.join_cells",
@@ -228,7 +228,7 @@
         "typing_FStar.Pervasives.Native.uu___is_None"
       ],
       0,
-      "d3f19305718ad780c4b25c60734dbf5a"
+      "6af9e489e68f24fb8348febde0ef5963"
     ],
     [
       "Steel.PCM.Memory.disjoint_join_cells_assoc",
@@ -266,33 +266,24 @@
         "Steel.PCM.Memory_interpretation_Tm_arrow_d9dd409a6769ef68fc93dfc045485587",
         "Steel.PCM.Memory_interpretation_Tm_arrow_faf103b2627bc5fe3b9980ebc8963d25",
         "Steel.PCM.Memory_pretyping_1c5b5da8ee53723479c8cceb25b4b3c2",
-        "Steel.PCM_interpretation_Tm_arrow_55fcafe892c05c589e04d8fa314686e4",
-        "Steel.PCM_pretyping_d5e41dccd26cf38a842ecfa790604926",
         "constructor_distinct_FStar.Pervasives.Native.Some",
-        "data_elim_FStar.Pervasives.Native.Some",
-        "data_elim_Steel.PCM.Memory.Ref",
         "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some", "eq2-interp",
+        "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.FunctionalExtensionality.feq",
         "equation_FStar.FunctionalExtensionality.restricted_t",
         "equation_Prims.nat", "equation_Steel.PCM.Memory.addr",
         "equation_Steel.PCM.Memory.disjoint",
         "equation_Steel.PCM.Memory.disjoint_addr",
-        "equation_Steel.PCM.Memory.disjoint_cells",
         "equation_Steel.PCM.Memory.heap", "equation_Steel.PCM.Memory.join",
         "equation_Steel.PCM.Memory.join_cells",
-        "equation_Steel.PCM.composable", "equation_Steel.PCM.symrel",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
-        "fuel_guarded_inversion_Steel.PCM.Memory.cell",
-        "fuel_guarded_inversion_Steel.PCM.pcm",
-        "function_token_typing_Steel.PCM.__proj__Mkpcm___item__composable",
         "int_inversion",
         "interpretation_Tm_abs_afaecbaf8c9e7008e752c4a12be08805",
         "interpretation_Tm_abs_d52da12272ca1ff42857a4728c3469d5",
-        "kinding_Steel.PCM.Memory.cell@tok", "l_and-interp",
+        "kinding_Steel.PCM.Memory.cell@tok",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "lemma_FStar.Pervasives.invertOption",
-        "lemma_Steel.PCM.Memory.disjoint_sym",
+        "lemma_Steel.PCM.Memory.disjoint_sym", "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__3",
@@ -304,22 +295,16 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple3__3",
         "projection_inverse_FStar.Pervasives.Native.Some_a",
         "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "projection_inverse_Steel.PCM.Memory.Ref_a",
-        "projection_inverse_Steel.PCM.Memory.Ref_v",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_5df2cf368832c3fa1c76b73b9f45010e",
-        "refinement_interpretation_Tm_refine_604dd158e1c0cba9f6db12e5a242552c",
         "refinement_interpretation_Tm_refine_7e4a6c5999db731b5d17d0418dfeea3e",
-        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "token_correspondence_Steel.PCM.__proj__Mkpcm___item__composable",
         "true_interp", "typing_Steel.PCM.Memory.join",
-        "typing_Steel.PCM.__proj__Mkpcm__item__p", "typing_Steel.PCM.op",
         "typing_Tm_abs_afaecbaf8c9e7008e752c4a12be08805",
         "typing_Tm_abs_d52da12272ca1ff42857a4728c3469d5"
       ],
       0,
-      "9c18dc86ee60a8f6b74ace9d0db5c0a5"
+      "8305ec2b40c4adef05445d6861d23873"
     ],
     [
       "Steel.PCM.Memory.mem_equiv_eq",
@@ -463,10 +448,9 @@
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "Steel.PCM.Memory_interpretation_Tm_arrow_d9dd409a6769ef68fc93dfc045485587",
         "Steel.PCM.Memory_interpretation_Tm_arrow_faf103b2627bc5fe3b9980ebc8963d25",
-        "Steel.PCM.Memory_pretyping_1c5b5da8ee53723479c8cceb25b4b3c2",
+        "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "data_elim_FStar.Pervasives.Native.Mktuple3",
-        "data_elim_FStar.Pervasives.Native.Some",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_FStar.FunctionalExtensionality.feq",
@@ -482,12 +466,13 @@
         "function_token_typing_Steel.PCM.Memory.join", "int_inversion",
         "interpretation_Tm_abs_afaecbaf8c9e7008e752c4a12be08805",
         "interpretation_Tm_abs_d52da12272ca1ff42857a4728c3469d5",
+        "kinding_FStar.Pervasives.Native.option@tok",
         "kinding_Steel.PCM.Memory.cell@tok", "l_and-interp",
         "lemma_FStar.FunctionalExtensionality.feq_on_domain",
         "lemma_FStar.Pervasives.invertOption",
         "lemma_Steel.PCM.Memory.disjoint_sym",
         "lemma_Steel.PCM.Memory.join_commutative_",
-        "lemma_Steel.PCM.Memory.mem_equiv_eq",
+        "lemma_Steel.PCM.Memory.mem_equiv_eq", "primitive_Prims.op_AmpAmp",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__2",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__3",
@@ -504,12 +489,14 @@
         "refinement_interpretation_Tm_refine_5df2cf368832c3fa1c76b73b9f45010e",
         "refinement_interpretation_Tm_refine_7e4a6c5999db731b5d17d0418dfeea3e",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FStar.Pervasives.Native.__proj__Mktuple3__item___1",
+        "typing_FStar.Pervasives.Native.uu___is_Some",
         "typing_Steel.PCM.Memory.join",
         "typing_Tm_abs_afaecbaf8c9e7008e752c4a12be08805",
         "typing_Tm_abs_d52da12272ca1ff42857a4728c3469d5"
       ],
       0,
-      "781823e7bb3c7fcfc7dc2e96391fe0af"
+      "cb4f7c8afa18a8ad148f10db790c92c8"
     ],
     [
       "Steel.PCM.Memory.join_associative",
@@ -585,7 +572,7 @@
         "refinement_interpretation_Tm_refine_45cba043fd44b218cbac106c3955de32"
       ],
       0,
-      "f1cd282a92004d5cda943bc8dc0e6f28"
+      "4ac06cf2301d447f7353a1ee6a55c1df"
     ],
     [
       "Steel.PCM.Memory.__proj__Pts_to__item__pcm",
@@ -601,7 +588,7 @@
         "refinement_interpretation_Tm_refine_45cba043fd44b218cbac106c3955de32"
       ],
       0,
-      "bbf1e5f8ff9f08f62018b859f160b133"
+      "c25f6e9bf4de230fa9bb5acd4f8d8acf"
     ],
     [
       "Steel.PCM.Memory.__proj__Pts_to__item__r",
@@ -615,7 +602,7 @@
         "refinement_interpretation_Tm_refine_45cba043fd44b218cbac106c3955de32"
       ],
       0,
-      "0364a4086bc06426e0c0e2b51497ea53"
+      "0c923d4bcbc70873975f5b81c1f23b97"
     ],
     [
       "Steel.PCM.Memory.__proj__Pts_to__item__v",
@@ -631,7 +618,7 @@
         "refinement_interpretation_Tm_refine_45cba043fd44b218cbac106c3955de32"
       ],
       0,
-      "509734c5f73cee999e65ae6c3777264d"
+      "3c47f3af023936382f33ff0353fafe71"
     ],
     [
       "Steel.PCM.Memory.__proj__Refine__item___0",
@@ -645,7 +632,7 @@
         "refinement_interpretation_Tm_refine_5056f10fd3aec5136e4a69e6b759beb8"
       ],
       0,
-      "dbac6b1b4ee5d5c3ec08eb1761ab5782"
+      "a542cd218192b86d88c172c2567e1cbe"
     ],
     [
       "Steel.PCM.Memory.__proj__Refine__item___1",
@@ -659,7 +646,7 @@
         "refinement_interpretation_Tm_refine_5056f10fd3aec5136e4a69e6b759beb8"
       ],
       0,
-      "92e1331e994380b89135d1c10188bca7"
+      "75e0342d28315e3c6aaae957fe234d94"
     ],
     [
       "Steel.PCM.Memory.__proj__And__item___0",
@@ -673,7 +660,7 @@
         "refinement_interpretation_Tm_refine_f4b5a302032123db8a97acafbeb01d7a"
       ],
       0,
-      "2555674fa93b9414334813b5ad7b6c7b"
+      "66dda0c2564864b239d295cfad7d8679"
     ],
     [
       "Steel.PCM.Memory.__proj__And__item___1",
@@ -687,7 +674,7 @@
         "refinement_interpretation_Tm_refine_f4b5a302032123db8a97acafbeb01d7a"
       ],
       0,
-      "87bab5a195877945e8f4652774107464"
+      "364d45568cdeb2ce24a5dd53f9ecc959"
     ],
     [
       "Steel.PCM.Memory.__proj__Or__item___0",
@@ -701,7 +688,7 @@
         "refinement_interpretation_Tm_refine_e875deccba25db0220f9774795871ebb"
       ],
       0,
-      "5c92eab8be19b9e6f80dc7320af6dcc8"
+      "9b16661f1bc0683f5d914e951d9e66bf"
     ],
     [
       "Steel.PCM.Memory.__proj__Or__item___1",
@@ -715,7 +702,7 @@
         "refinement_interpretation_Tm_refine_e875deccba25db0220f9774795871ebb"
       ],
       0,
-      "374edfe74d54b06446e5f3cabe973898"
+      "0114bc4c9e7e8e535c40a34db2772a7b"
     ],
     [
       "Steel.PCM.Memory.__proj__Star__item___0",
@@ -729,7 +716,7 @@
         "refinement_interpretation_Tm_refine_b51b138a7c9db813977f68eca00c653d"
       ],
       0,
-      "c65165fd8874b3a5fd247f19cd90847b"
+      "d4c6533d36111ad86dcb0cf672de483c"
     ],
     [
       "Steel.PCM.Memory.__proj__Star__item___1",
@@ -743,7 +730,7 @@
         "refinement_interpretation_Tm_refine_b51b138a7c9db813977f68eca00c653d"
       ],
       0,
-      "208353b6cc1f8bdb975fc5e49a719d02"
+      "d9e824321103a58432c5c8db5dc57ac4"
     ],
     [
       "Steel.PCM.Memory.__proj__Wand__item___0",
@@ -757,7 +744,7 @@
         "refinement_interpretation_Tm_refine_6b7955d8f037c0acd69955f02a151e10"
       ],
       0,
-      "2fbd4335e44439ab1c86498bd56680c2"
+      "5a910b8a5f04228646a83756c8d4d3da"
     ],
     [
       "Steel.PCM.Memory.__proj__Wand__item___1",
@@ -771,7 +758,7 @@
         "refinement_interpretation_Tm_refine_6b7955d8f037c0acd69955f02a151e10"
       ],
       0,
-      "49126f8e6123da52e0e99b9ec8ea3d91"
+      "cd03fa69e93099abf897bfde7977a253"
     ],
     [
       "Steel.PCM.Memory.__proj__Ex__item__a",
@@ -785,7 +772,7 @@
         "refinement_interpretation_Tm_refine_da2191b94297f77620ff6e32c8e7e61b"
       ],
       0,
-      "1e424a9e8a79a9a4bdebc76d1b340b4b"
+      "3196409b0e0c18165d6db2a19a0a106c"
     ],
     [
       "Steel.PCM.Memory.__proj__Ex__item___1",
@@ -801,7 +788,7 @@
         "refinement_interpretation_Tm_refine_da2191b94297f77620ff6e32c8e7e61b"
       ],
       0,
-      "06b43f167ca1ff49636004f5a8207b6c"
+      "0a9caf3ca0f2fe1eeed76b5b66c5cbca"
     ],
     [
       "Steel.PCM.Memory.__proj__All__item__a",
@@ -815,7 +802,7 @@
         "refinement_interpretation_Tm_refine_99ca016a2c0d6dd58eda6041d72b52a1"
       ],
       0,
-      "c0871bc0c6fa7bc3e02211bba1019a41"
+      "128b2e8a2221cdb47cbec583dbd56dc8"
     ],
     [
       "Steel.PCM.Memory.__proj__All__item___1",
@@ -831,7 +818,7 @@
         "refinement_interpretation_Tm_refine_99ca016a2c0d6dd58eda6041d72b52a1"
       ],
       0,
-      "8b8e7a00a4d37f37e399cb993611cca6"
+      "745b88984bb665962a9a4bb6bda6a2e8"
     ],
     [
       "Steel.PCM.Memory.interp_cell",
@@ -878,7 +865,7 @@
         "typing_tok_Steel.PCM.Memory.Emp@tok", "unit_typing"
       ],
       0,
-      "f031e5620b46916486c9a9c28fae95e2"
+      "942586b4773464969fc819e4b7154920"
     ],
     [
       "Steel.PCM.Memory.equiv_symmetric",
@@ -1381,22 +1368,25 @@
         "@fuel_correspondence_Steel.PCM.Memory.interp.fuel_instrumented",
         "@fuel_irrelevance_Steel.PCM.Memory.interp.fuel_instrumented",
         "@query",
+        "FStar.Pervasives.Native_pretyping_b53dbd183c526bc5d0f20d7b966ae125",
         "FStar.WellFounded_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "Steel.PCM.Memory_interpretation_Tm_arrow_2089b23a094f6d0f696050528eb7380b",
-        "Steel.PCM.Memory_interpretation_Tm_arrow_79beb56e95c1856d6c616b110df858b8",
+        "Steel.PCM.Memory_interpretation_Tm_arrow_a3114b521d23d2865bb6ecf9b278458d",
         "Steel.PCM.Memory_interpretation_Tm_arrow_d9dd409a6769ef68fc93dfc045485587",
-        "Steel.PCM.Memory_interpretation_Tm_arrow_da96ad353e15f73ef90fee2646a61b51",
         "Steel.PCM.Memory_interpretation_Tm_arrow_faf103b2627bc5fe3b9980ebc8963d25",
         "Steel.PCM.Memory_pretyping_8bbc98290845f79103a7031e5396cf6b",
         "Steel.PCM_interpretation_Tm_arrow_55fcafe892c05c589e04d8fa314686e4",
         "b2t_def", "bool_inversion",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_FStar.Pervasives.Native.option",
+        "constructor_distinct_Prims.unit",
         "constructor_distinct_Steel.PCM.Memory.Pts_to",
         "constructor_distinct_Steel.PCM.Memory.Star",
-        "constructor_distinct_Tm_unit", "data_elim_Prims.Mkdtuple2",
+        "data_elim_FStar.Pervasives.Native.Some",
+        "data_elim_Prims.Mkdtuple2", "data_elim_Steel.PCM.Memory.Ref",
         "data_typing_intro_Steel.PCM.Memory.Ref@tok",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some", "eq2-interp",
@@ -1414,19 +1404,18 @@
         "equation_Steel.PCM.Memory.join",
         "equation_Steel.PCM.Memory.join_cells",
         "equation_Steel.PCM.Memory.mem_equiv",
-        "equation_Steel.PCM.Memory.pre_action",
         "equation_Steel.PCM.Memory.pts_to", "equation_Steel.PCM.Memory.ref",
         "equation_Steel.PCM.Memory.select_addr",
         "equation_Steel.PCM.Memory.star", "equation_Steel.PCM.Memory.upd_",
         "equation_Steel.PCM.Memory.update_addr",
-        "equation_Steel.PCM.compatible", "equation_Steel.PCM.composable",
+        "equation_Steel.PCM.composable",
         "equation_Steel.PCM.frame_preserving", "equation_Steel.PCM.op",
         "equation_Steel.PCM.symrel",
         "equation_with_fuel_Steel.PCM.Memory.interp.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "fuel_guarded_inversion_Steel.PCM.Memory.cell",
         "function_token_typing_Prims.int",
         "function_token_typing_Steel.PCM.Memory.join",
-        "function_token_typing_Steel.PCM.Memory.upd_",
         "function_token_typing_Steel.PCM.Memory.update_addr",
         "function_token_typing_Steel.PCM.__proj__Mkpcm___item__composable",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
@@ -1441,8 +1430,8 @@
         "lemma_FStar.Pervasives.invertOption",
         "lemma_Steel.PCM.Memory.disjoint_sym",
         "lemma_Steel.PCM.Memory.join_commutative_",
-        "lemma_Steel.PCM.Memory.mem_equiv_eq", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_disEquality",
+        "lemma_Steel.PCM.Memory.mem_equiv_eq", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_disEquality",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_FStar.Pervasives.Native.Mktuple3__1",
@@ -1472,7 +1461,6 @@
         "refinement_interpretation_Tm_refine_49b3db72f0862165ce2e07142ed397bd",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_5df2cf368832c3fa1c76b73b9f45010e",
-        "refinement_interpretation_Tm_refine_604dd158e1c0cba9f6db12e5a242552c",
         "refinement_interpretation_Tm_refine_7aa0b1b73f9ad69dbfbab362a711c68d",
         "refinement_interpretation_Tm_refine_7e4a6c5999db731b5d17d0418dfeea3e",
         "refinement_interpretation_Tm_refine_89788174c17c66e999f0fc7b24ed0973",
@@ -1484,22 +1472,20 @@
         "token_correspondence_Steel.PCM.Memory.upd_",
         "token_correspondence_Steel.PCM.__proj__Mkpcm___item__composable",
         "true_interp", "typing_FStar.FunctionalExtensionality.on_domain",
-        "typing_FStar.Ghost.reveal",
-        "typing_FStar.Pervasives.Native.uu___is_None",
-        "typing_FStar.Pervasives.Native.uu___is_Some",
-        "typing_Steel.PCM.Memory.contains_addr",
+        "typing_FStar.Ghost.reveal", "typing_Steel.PCM.Memory.contains_addr",
         "typing_Steel.PCM.Memory.join", "typing_Steel.PCM.Memory.pts_to",
         "typing_Steel.PCM.Memory.star",
         "typing_Steel.PCM.Memory.update_addr",
-        "typing_Steel.PCM.__proj__Mkpcm__item__p", "typing_Steel.PCM.op",
+        "typing_Steel.PCM.__proj__Mkpcm__item__p",
         "typing_Tm_abs_335234e475735187de34aecdee76fc5b",
         "typing_Tm_abs_afaecbaf8c9e7008e752c4a12be08805",
+        "typing_Tm_abs_b8d9fdf396c24ef2f95599131f342666",
         "typing_Tm_abs_d52da12272ca1ff42857a4728c3469d5",
         "typing_tok_Steel.PCM.Memory.Emp@tok", "unit_inversion",
         "unit_typing"
       ],
       0,
-      "180231dab2a9ddc6ccb96e358c2ae6cb"
+      "e46b0d5f6248a12f90f37b5ea2bf47a4"
     ],
     [
       "Steel.PCM.Memory.upd_action",
