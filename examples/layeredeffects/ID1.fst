@@ -33,7 +33,10 @@ let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
     (v : repr a wp_v)
     (f : (x:a -> repr b (wp_f x)))
 : repr b (bind_wp wp_v wp_f)
-= fun p _ -> f (v (fun x -> wp_f x p) ()) p () // explicit post is annoying
+//= fun p _ -> f (v (fun x -> wp_f x p) ()) p ()
+  // explicit post is annoying
+= fun p _ -> let x = v (fun x -> wp_f x p) () in
+          f x p ()
 
 let subcomp (a:Type) (w1 w2: wp a)
     (f : repr a w1)
@@ -47,6 +50,18 @@ let ite_wp #a (wp1 wp2 : wp a) (b : bool) : wp a =
 
 let if_then_else (a : Type) (wp1 wp2 : wp a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
   repr a (ite_wp wp1 wp2 p)
+
+let strengthen #a #w (p:Type0) (f : squash p -> repr a w) : repr a (fun post -> p /\ w post) =
+  fun post _ -> f () post ()
+  
+let weaken #a #w (p:Type0) (f : repr a w) : Pure (repr a (fun post -> p ==> w post))
+                                                 (requires p)
+                                                 (ensures (fun _ -> True))
+  = fun post _ -> f post ()
+
+let cut #a #w (p:Type0) (f : repr a w) : repr a (fun post -> p /\ (p ==> w post)) =
+  strengthen p (fun _ -> weaken p f)
+  
 
 // requires to prove that
 // p  ==> f <: (if_then_else p f g)
@@ -74,7 +89,7 @@ let lift_pure_nd (a:Type) (wp:wp a) (f:(eqtype_as_type unit -> PURE a (nomon wp)
     assert (p r); // GM: needed to guide z3 apparently?
     r
 
-sub_effect PURE ~> ID = lift_pure_nd
+//sub_effect PURE ~> ID = lift_pure_nd
 
 (* Checking that it's kind of usable *)
 

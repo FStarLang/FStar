@@ -22,6 +22,7 @@ let unreachable (#a:Type u#aa) () : Pure a (requires False) (ensures (fun _ -> F
 type eff_label =
   | RD
   | WR
+  | EXN
 
 type annot = eff_label -> bool
 
@@ -29,6 +30,7 @@ noeq
 type action : inp:Type0 -> out:Type0 -> st0:Type0 -> st1:Type0 -> Type u#1 =
   | Read  : #st0:Type0 -> action unit st0 st0 st0
   | Write : #st0:Type0 -> #st1:Type0 -> action st1 unit st0 st1
+  | Raise : #a:Type -> #st0:Type -> #st1:Type0 -> action exn a st0 st1
 
 noeq
 type repr0 (a:Type u#aa) : st0:Type0 -> st1:Type0 -> Type u#(max 1 aa) =
@@ -39,6 +41,7 @@ type repr0 (a:Type u#aa) : st0:Type0 -> st1:Type0 -> Type u#(max 1 aa) =
 let abides_act #i #o (ann:annot) (a : action i o 'st0 'st1) : prop =
     (Read? a ==> ann RD)
   /\ (Write ? a ==> ann WR)
+  /\ (Raise ? a ==> ann EXN)
 
 let rec abides #a (ann:annot) (f : repr0 a 'st0 'st1) : prop =
   begin match f with
@@ -164,7 +167,7 @@ let if_then_else
   = repr a st0 st1 (labs1@labs2)
 
 [@@allow_informative_binders]
-total // need this for catch!!
+total
 reifiable
 reflectable
 layered_effect {
@@ -225,15 +228,42 @@ let sublist_at_self (l1 : list eff_label)
 let labpoly #s0 #labs (f g : unit -> EFF int s0 s0 labs) : EFF int s0 s0 labs =
   f () + g ()
 
+
+let termination_hack (i:int) : y:int{y<<i} = admit(); i-1
+
+let rec aux (i:int) : EFF unit int int [RD;WR] (decreases i) =
+  if i = 0
+  then ()
+  else 
+    (put (get () + i);
+     aux (termination_hack i))
+
+let sumn #st (n:nat) : EFF int st int [RD;WR] =
+  put 0;
+  aux n;
+  get ()
+
 // is this really similar to the haskell one?
-let runST #a #labs (c : (s:Type0 -> repr a s s labs)) : Tot a =
-  let rec aux #st0 #st1 (s:st0) (c : repr a st0 st1 labs) : Tot a (decreases c) =
+let _runST #a #labs #sf (c : (s:Type0 -> repr a s sf labs)) : Tot (option a) =
+  let rec aux #st0 #st1 (s:st0) (c : repr a st0 st1 labs) : Tot (option a) (decreases c) =
     match c with
-    | Return x -> x
+    | Return x -> Some x
     | Act Read  _ k -> axiom1 k s; aux s (k s)
     | Act Write s k -> axiom1 k (); aux s (k ())
+    | Act Raise e k -> None
   in
   aux () (c unit)
+
+let runST #a #labs #sf (c : (#s:Type0 -> unit -> EFF a s sf labs)) : Tot (option a) =
+  _runST (fun st -> reify (c ()))
+
+// GM: doesn't really reduce
+let test_run_st : option int = 
+  //runST (fun st -> sumn #st 42)
+  let c #st () : EFF int st int [RD;WR] =
+    sumn #st 5
+  in
+  runST #int #[RD;WR] c
 
 let pure_tree_invariant_state #a #st0 #st1 (t : repr a st0 st1 []) : Lemma (st0 == st1) = ()
 
