@@ -143,19 +143,43 @@ let has_flow_append (from to:loc) (fs fs':flows)
 let elim_has_flow_seq (from to:loc)
                       (r0 r1 w1:label)
                       (fs0 fs1:flows)
-  : Lemma (requires (~(has_flow from to (fs0 @ add_source r0 ((r1, w1)::fs1)))))
+  : Lemma (requires (~(has_flow from to (fs0 @ add_source r0 ((bot, w1)::fs1)))))
           (ensures  (~(has_flow from to fs0) /\
-                    (~(Set.mem from (r0 `union` r1)) \/
-                     ~(Set.mem to w1))))
-  = assert (add_source r0 ((r1, w1)::fs1) ==
-            (Set.union r0 r1, w1)::add_source r0 fs1);
-    has_flow_append from to fs0 ((Set.union r0 r1, w1)::add_source r0 fs1);
+                      (~(Set.mem from r0) \/ ~(Set.mem to w1)) /\
+                     ~(has_flow from to (add_source r0 fs1))))
+  = assert (add_source r0 ((bot, w1)::fs1) ==
+            (Set.union r0 bot, w1)::add_source r0 fs1);
+    assert (Set.union r0 bot `Set.equal` r0);
+    has_flow_append from to fs0 ((r0, w1)::add_source r0 fs1);
     assert (~(has_flow from to fs0));
-    has_flow_append from to ((Set.union r0 r1, w1)::add_source r0 fs1) fs0;
-    assert (~(has_flow from to (((Set.union r0 r1, w1)::add_source r0 fs1))));
-    assert ((Set.union r0 r1, w1)::add_source r0 fs1 ==
-            [Set.union r0 r1, w1] @ add_source r0 fs1);
-    has_flow_append from from [Set.union r0 r1, w1] (add_source r0 fs1)
+    has_flow_append from to ((r0, w1)::add_source r0 fs1) fs0;
+    assert (~(has_flow from to (((r0, w1)::add_source r0 fs1))));
+    assert ((r0, w1)::add_source r0 fs1 ==
+            [r0, w1] @ add_source r0 fs1);
+    has_flow_append from from [r0, w1] (add_source r0 fs1)
+
+let rec add_source_monotonic (from to:loc) (r:label) (fs:flows)
+  : Lemma (has_flow from to fs ==> has_flow from to (add_source r fs))
+  = match fs with
+    | [] -> ()
+    | _::tl -> add_source_monotonic from to r tl
+
+let has_flow_soundness #a #r #w #fs (f:ist a r w fs)
+                       (from to:loc) (s:store) (k:int)
+    : Lemma (requires
+              (let x, s1 = f s in
+               let _, s1' = f (havoc s from k) in
+               from <> to /\
+               sel s1 to <> sel s1' to))
+            (ensures has_flow from to fs)
+    = let aux ()
+       : Lemma (requires (~(has_flow from to fs)))
+               (ensures False)
+               [SMTPat ()]
+       = assert (respects_flows f fs);
+         assert (no_leakage f from to)
+      in
+      ()
 
 let bind_comp_no_leakage (#a #b:Type)
                          (#w0 #r0 #w1 #r1:label)
@@ -165,7 +189,7 @@ let bind_comp_no_leakage (#a #b:Type)
                          (from to:loc)
                          (s0:store) (k:_)
     : Lemma
-      (requires from <> to /\ ~(has_flow from to (fs0 @ add_source r0 ((r1, w1)::fs1))))
+      (requires from <> to /\ ~(has_flow from to (fs0 @ add_source r0 ((bot, w1)::fs1))))
       (ensures (let f = bind_comp x y in
                 let s0' = havoc s0 from k in
                 let _, s2 = f s0 in
@@ -197,7 +221,7 @@ let bind_comp_no_leakage (#a #b:Type)
            //     s2 to = s2' to
       if Set.mem to w1
       then begin
-        assert (~(Set.mem from r0) /\ ~(Set.mem from r1));
+        assert (~(Set.mem from r0));
         assert (reads_ok x r0 w0);
         assert (does_not_read_loc x r0 w0 from s0);
         assert (does_not_read_loc_v x r0 w0 from s0 k);
@@ -211,22 +235,29 @@ let bind_comp_no_leakage (#a #b:Type)
         else begin
           assert (Map.equal s1' (havoc s1 from k));
           assert (reads_ok (y v0) r1 w1);
-          assert (does_not_read_loc (y v0) r1 w1 from s1);
-          assert (does_not_read_loc_v (y v0) r1 w1 from s1 k)
+          if (sel s2 to = sel s2' to)
+          then ()
+          else begin
+            assert (sel s2 to <> sel s1 to \/ sel s2' to <> sel s1' to);
+            has_flow_soundness (y v0) from to s1 k;
+            assert (has_flow from to fs1);
+            add_source_monotonic from to r0 fs1
+            //y reads from and writes to, so (from, to) should be in fs1
+            //so, we should get a contradiction
+          end
         end
       end
       else //to is not in w1, so y does not write it
         ()
-
 
 let bind_comp_flows_ok (#a #b:Type)
                        (#w0 #r0 #w1 #r1:label)
                        (#fs0 #fs1:flows)
                        (x:ist a w0 r0 fs0)
                        (y: a -> ist b w1 r1 fs1)
-  : Lemma (respects_flows (bind_comp x y) (fs0 @ add_source r0 ((r1, w1)::fs1)))
+  : Lemma (respects_flows (bind_comp x y) (fs0 @ add_source r0 ((bot, w1)::fs1)))
   = let f = bind_comp x y in
-    let flows = (fs0 @ add_source r0 ((r1, w1)::fs1)) in
+    let flows = (fs0 @ add_source r0 ((bot, w1)::fs1)) in
     let respects_flows_lemma (from to:loc)
       : Lemma (requires from <> to /\ ~(has_flow from to flows))
               (ensures no_leakage f from to)
@@ -251,43 +282,44 @@ let left_unit (w, r, f) =
   assert (Set.equal (union bot w) w);
   assert (comp_triple unit_triple (w, r, f) ==
           (w, r, (r, w)::add_source bot f))
-open FStar.Calc
-let non_assoc_comp (w0, r0, fs0) (w1, r1, fs1) (w2, r2, fs2) =
-  calc (==) {
-    comp_triple (w0, r0, fs0) (comp_triple (w1, r1, fs1) (w2, r2, fs2)) ;
-    (==) { }
-    comp_triple (w0, r0, fs0) (union w1 w2, union r1 r2, (fs1 @ add_source r1 ((r2, w2)::fs2)));
-    (==) { }
-    (union w0 (union w1 w2), union r0 (union r1 r2), fs0 @ (add_source r0 ((union r1 r2, union w1 w2) :: (fs1 @ add_source r1 ((r2, w2)::fs2)))));
-    (==) { assert (forall w0 w1 w2. Set.equal (union w0 (union w1 w2)) (union (union w0 w1) w2)) }
-    (union (union w0 w1) w2,
-     union (union r0 r1) r2,
-     fs0 @ (add_source r0 ((union r1 r2, union w1 w2) :: (fs1 @ add_source r1 ((r2, w2)::fs2)))));
-    (==) { }
-    (union (union w0 w1) w2,
-     union (union r0 r1) r2,
-     (fs0 @ ((union r0 (union r1 r2), union w1 w2) :: add_source r0 (fs1 @ add_source r1 ((r2, w2)::fs2)))));
-  };
 
-// -  fs0
-// -  r0 ~> fs1
-// -  {r0, r1, r2} ~> {w1, w2}
-// -  {r0, r1, r2} ~> w2
-// -  {r0, r1, r2} ~> fs2
+// open FStar.Calc
+// let non_assoc_comp (w0, r0, fs0) (w1, r1, fs1) (w2, r2, fs2) =
+//   calc (==) {
+//     comp_triple (w0, r0, fs0) (comp_triple (w1, r1, fs1) (w2, r2, fs2)) ;
+//     (==) { }
+//     comp_triple (w0, r0, fs0) (union w1 w2, union r1 r2, (fs1 @ add_source r1 ((r2, w2)::fs2)));
+//     (==) { }
+//     (union w0 (union w1 w2), union r0 (union r1 r2), fs0 @ (add_source r0 ((union r1 r2, union w1 w2) :: (fs1 @ add_source r1 ((r2, w2)::fs2)))));
+//     (==) { assert (forall w0 w1 w2. Set.equal (union w0 (union w1 w2)) (union (union w0 w1) w2)) }
+//     (union (union w0 w1) w2,
+//      union (union r0 r1) r2,
+//      fs0 @ (add_source r0 ((union r1 r2, union w1 w2) :: (fs1 @ add_source r1 ((r2, w2)::fs2)))));
+//     (==) { }
+//     (union (union w0 w1) w2,
+//      union (union r0 r1) r2,
+//      (fs0 @ ((union r0 (union r1 r2), union w1 w2) :: add_source r0 (fs1 @ add_source r1 ((r2, w2)::fs2)))));
+//   };
 
-  calc (==) {
-    comp_triple (comp_triple (w0, r0, fs0) (w1, r1, fs1)) (w2, r2, fs2);
-    (==) { }
-    comp_triple (union w0 w1, union r0 r1, (fs0 @ add_source r0 ((r1, w1)::fs1))) (w2, r2, fs2);
-    (==) { }
-    (union (union w0 w1) w2,
-     union (union r0 r1) r2,
-    ((fs0 @ add_source r0 ((r1, w1)::fs1)) @ (add_source (union r0 r1) ((r2, w2) :: fs2))));
-    (==) { }
-    (union (union w0 w1) w2,
-     union (union r0 r1) r2,
-     ((fs0 @ ((union r0 r1, w1)::add_source r0 fs1)) @ ((union (union r0 r1) r2, w2) :: add_source (union r0 r1) fs2)));
-  }
+// // -  fs0
+// // -  r0 ~> fs1
+// // -  {r0, r1, r2} ~> {w1, w2}
+// // -  {r0, r1, r2} ~> w2
+// // -  {r0, r1, r2} ~> fs2
+
+//   calc (==) {
+//     comp_triple (comp_triple (w0, r0, fs0) (w1, r1, fs1)) (w2, r2, fs2);
+//     (==) { }
+//     comp_triple (union w0 w1, union r0 r1, (fs0 @ add_source r0 ((r1, w1)::fs1))) (w2, r2, fs2);
+//     (==) { }
+//     (union (union w0 w1) w2,
+//      union (union r0 r1) r2,
+//     ((fs0 @ add_source r0 ((r1, w1)::fs1)) @ (add_source (union r0 r1) ((r2, w2) :: fs2))));
+//     (==) { }
+//     (union (union w0 w1) w2,
+//      union (union r0 r1) r2,
+//      ((fs0 @ ((union r0 r1, w1)::add_source r0 fs1)) @ ((union (union r0 r1) r2, w2) :: add_source (union r0 r1) fs2)));
+//   }
 
 // - fs0
 // - r0 ~> fs1
@@ -299,7 +331,7 @@ let bind (a b:Type)
          (w0 r0 w1 r1:label) (fs0 fs1:flows)
          (x:ist a w0 r0 fs0)
          (y: a -> ist b w1 r1 fs1)
-  : ist b (union w0 w1) (union r0 r1) (fs0 @ add_source r0 ((r1, w1)::fs1))
+  : ist b (union w0 w1) (union r0 r1) (fs0 @ add_source r0 ((bot, w1)::fs1))
   = let f = fun s0 -> let v, s1 = x s0 in y v s1 in
     bind_comp_reads_ok x y;
     bind_comp_reads_ok x y;
@@ -457,28 +489,28 @@ let test10 ()
   : IST unit (union cw0 (union cw1 cw2))
              (union cr0 (union cr1 cr2))
              (add_source cr0
-               ((union cr1 cr2, union cw1 cw2)::
-                (add_source cr1 [cr2, cw2])))
+               ((bot, union cw1 cw2)::
+                (add_source cr1 [bot, cw2])))
   = c0 (); (c1();c2())
 
 let test12 ()
   : IST unit (union cw0 (union cw1 cw2))
              (union cr0 (union cr1 cr2))
-             [(union cr0 (union cr1 cr2), union cw1 cw2);
-              union cr0 (union cr1 cr2), cw2]
+             [(cr0, union cw1 cw2);
+              (union cr0 cr1, cw2)]
   = c0 (); (c1();c2())
 
 
 let test13 ()
   : IST unit (union (union cw0 cw1) cw2)
              (union (union cr0 cr1) cr2)
-             (add_source cr0 [cr1, cw1] @
-              add_source (union cr0 cr1) [cr2, cw2])
+             (add_source cr0 [bot, cw1] @
+              add_source (union cr0 cr1) [bot, cw2])
   = (c0 (); c1());c2()
 
 let test14 ()
   : IST unit (union (union cw0 cw1) cw2)
              (union (union cr0 cr1) cr2)
-             ([union cr0 cr1, cw1;
-               union (union cr0 cr1) cr2, cw2])
+             ([cr0, cw1;
+               union cr0 cr1, cw2])
   = (c0 (); c1()); c2()
