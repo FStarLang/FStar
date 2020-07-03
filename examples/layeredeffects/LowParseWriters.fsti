@@ -364,14 +364,35 @@ let lift_pure_read (a:Type) (wp:pure_wp a)
 
 sub_effect PURE ~> ERead = lift_pure_read
 
-inline_for_extraction
-val reify_read
+let destr_read_repr_spec
   (a:Type u#x)
   (pre: pure_pre)
   (post: pure_post' a pre)
   (post_err: pure_post_err pre)
   (l: memory_invariant)
-  (r: unit -> ERead a pre post post_err l)
+  ($r: unit -> ERead a pre post post_err l)
+: Tot (read_repr_spec a pre post post_err)
+= ReadRepr?.spec (reify (r ()))
+
+inline_for_extraction
+let destr_read_repr_impl
+  (a:Type u#x)
+  (pre: pure_pre)
+  (post: pure_post' a pre)
+  (post_err: pure_post_err pre)
+  (l: memory_invariant)
+  ($r: unit -> ERead a pre post post_err l)
+: Tot (read_repr_impl a pre post post_err l (destr_read_repr_spec a pre post post_err l r))
+= ReadRepr?.impl (reify (r ()))
+
+inline_for_extraction
+let reify_read
+  (a:Type u#x)
+  (pre: pure_pre)
+  (post: pure_post' a pre)
+  (post_err: pure_post_err pre)
+  (l: memory_invariant)
+  ($r: unit -> ERead a pre post post_err l)
 : HST.Stack (result a)
     (requires (fun h ->
       B.modifies l.lwrite l.h0 h /\
@@ -380,8 +401,10 @@ val reify_read
     ))
     (ensures (fun h res h' ->
       B.modifies B.loc_none h h' /\
-      res == ReadRepr?.spec (reify (r ())) ()
+      res == destr_read_repr_spec _ _ _ _ _ r ()
     ))
+=
+  extract_read_repr_impl _ _ _ _ _ _ (destr_read_repr_impl _ _ _ _ _ r)
 
 inline_for_extraction
 let test_read_if
