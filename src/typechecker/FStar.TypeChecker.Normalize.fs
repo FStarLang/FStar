@@ -1958,8 +1958,13 @@ and norm_comp : cfg -> env -> comp -> comp =
               { comp with n = GTotal (t, uopt) }
 
             | Comp ct ->
-              let norm_args = List.mapi (fun idx (a, i) -> (norm cfg env [] a, i)) in
-              let effect_args = norm_args ct.effect_args in
+              //if for extraction then erase effect args to unit
+              //this should later preseve args that must be retained for layered effects
+              let effect_args =
+                ct.effect_args |>
+                (if cfg.steps.for_extraction
+                 then List.map (fun _ -> S.unit_const |> S.as_arg)
+                 else List.mapi (fun idx (a, i) -> (norm cfg env [] a, i))) in
               let flags = ct.flags |> List.map (function DECREASES t -> DECREASES (norm cfg env [] t) | f -> f) in
               let comp_univs = List.map (norm_universe cfg env) ct.comp_univs in
               let result_typ = norm cfg env [] ct.result_typ in
