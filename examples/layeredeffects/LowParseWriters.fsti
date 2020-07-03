@@ -1344,6 +1344,7 @@ let start
 
 #restart-solver
 
+inline_for_extraction
 let append
   (#fr: parser)
   (#p: parser)
