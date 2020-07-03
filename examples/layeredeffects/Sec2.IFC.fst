@@ -306,12 +306,22 @@ let left_unit (w, r, f) =
   add_source_bot f;
   assert (comp_triple unit_triple (w, r, f) `triple_equiv` (w, r, f))
 let flows_included_append (f0 f1 g0 g1:flows)
-  : Lemma (flows_included_in f0 g0 /\ flows_included_in f1 g1 ==>
-           flows_included_in (f0@f1) (g0@g1))
-  = admit()
+  : Lemma (requires flows_included_in f0 g0 /\
+                    flows_included_in f1 g1)
+          (ensures  flows_included_in (f0@f1) (g0@g1))
+  = let aux (f:_) (from to:_)
+    : Lemma (requires List.Tot.memP f (f0@f1) /\
+                      has_flow_1 from to f)
+            (ensures (exists g. g `List.Tot.memP` (g0@g1) /\ has_flow_1 from to g))
+            [SMTPat (has_flow_1 from to f)]
+    = memP_append_or f f0 f1;
+      assert (exists g. g `List.Tot.memP` g0 \/ g `List.Tot.memP` g1 /\ has_flow_1 from to g);
+      FStar.Classical.forall_intro (fun g -> memP_append_or g g0 g1)
+    in
+    ()
 let flows_equiv_append (f0 f1 g0 g1:flows)
-  : Lemma (flows_equiv f0 g0 /\ flows_equiv f1 g1 ==>
-           flows_equiv (f0@f1) (g0@g1))
+  : Lemma (requires flows_equiv f0 g0 /\ flows_equiv f1 g1)
+          (ensures  flows_equiv (f0@f1) (g0@g1))
   = flows_included_append f0 f1 g0 g1;
     flows_included_append g0 g1 f0 f1
 let rec append_nil_r #a (l:list a)
