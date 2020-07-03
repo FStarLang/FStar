@@ -117,7 +117,7 @@ assume val noop (_:unit) : SteelT unit emp (fun _ -> emp)
   After solving this equality, the new ?u21 (?u172) does not contain r anymore.
   Hence we cannot solve emp * ?u172 <==> (ptr r) * emp
 *)
-[@expect_failure]
+//[@expect_failure]
 let test_dep_frame () : SteelT ref emp (fun r -> ptr r)
   = let r = alloc 0 in
     noop ();

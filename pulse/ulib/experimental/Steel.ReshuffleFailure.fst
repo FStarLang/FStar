@@ -12,7 +12,7 @@ assume
 val act (a b:slprop)
   : SteelT int (a `star` b) (fun x -> a `star` pp x)
 
-[@@expect_lax_failure]
+//[@@expect_lax_failure]
 let test (p q:slprop)
   : SteelT int (p `star` q) (fun x -> pp x `star` q)
   = ST.reshuffle();
