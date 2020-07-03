@@ -118,38 +118,24 @@ let finish (#p:slprop) (t:thread p) (v:bool)
 assume
 val drop (p:slprop) : SteelT unit p (fun _ -> emp)
 
-assume
-val drop_refine (p:slprop) (f:slprop) : SteelT unit (p `star` f) (fun _ -> emp `star` f)
-
 let acquire (#p:slprop) (t:thread p)
-//  : SteelT bool emp (fun b -> pts_to t.r full_perm (hide b) `star` maybe_p p b)
   : SteelT bool emp (fun b -> pts_to t.r full_perm b)
   = l_acquire t.l;
     elim_lock_inv t.r p;
     let b = read_refine #_ #full_perm (maybe_p p) t.r in
-    // TODO: This is a limitation of the current constraint solving
-    // strategy... The equalities for the frame of drop with the outer
-    // uvar are solved first... which restricts the context to remove
-    // b and prevents inferring `pts_to t.r full_perm b` as a frame
-    // Solution: trefl_with_eta is needed here. Or a more clever solving
-    // strategy but... trefl_with_eta might be easier
-    // drop (maybe_p p b);
-    drop_refine (maybe_p p b) (pts_to t.r full_perm b);
+    drop (maybe_p p b);
     b
     // h_affine (pts_to t.r full b) (maybe_p p b);
     // return b
 
-assume
-val spawn (#p #q:slprop)
+let spawn (#p #q:slprop)
           ($f: (unit -> SteelT unit p (fun _ -> q)))
           (t:thread q)
           (_:unit)
   : SteelT unit p (fun _ -> emp)
-  // TODO: Same problem as previously when framing something depending
-  // on the local, bound value b
-  // = let b = acquire t in
-  //   f ();
-  //   finish t b
+  = let b = acquire t in
+    f ();
+    finish t b
 
   // h_intro_emp_l p;
   //   let b  = frame (fun () -> acquire t) p in
@@ -158,39 +144,64 @@ val spawn (#p #q:slprop)
   //   h_commute q (pts_to t.r full b);
   //   finish t b
 
-(*
-let fork (#a:Type) (#p #q #r #s:slprop)
+assume
+val par (#preL:slprop) (#postL:unit -> slprop)
+        ($f:unit -> SteelT unit preL postL)
+        (#preR:slprop) (#postR:unit -> slprop)
+        ($g:unit -> SteelT unit preR postR)
+  : SteelT unit
+    (preL `star` preR)
+    (fun x -> postL () `star` postR ())
+
+//#set-options "--ugly --debug_level Extreme"
+//#set-options "--tactic_trace_d 1"
+// AF: Why is this working with a different name than in the fsti
+// but not in the names coincide? The types are the same
+let fork' (#a:Type) (#p #q #r #s:slprop)
       (f: (unit -> SteelT unit p (fun _ -> q)))
       (g: (thread q -> unit -> SteelT unit r (fun _ -> s)))
   : SteelT unit (p `star` r) (fun _ -> s)
-  = h_intro_emp_l (p `star` r);
-    let t : thread q = frame (fun _ -> new_thread q) (p `star` r) in
-    h_assert (emp `star` (p `star` r));
-    h_elim_emp_l (p `star` r);
-    par (spawn f t) (g t);
-    h_elim_emp_l s
+  = let t : thread q = new_thread q in
+    par (spawn f t) (g t)
+
+  //   h_intro_emp_l (p `star` r);
+  //   let t : thread q = frame (fun _ -> new_thread q) (p `star` r) in
+  //   h_assert (emp `star` (p `star` r));
+  //   h_elim_emp_l (p `star` r);
+  //   par (spawn f t) (g t);
+  //   h_elim_emp_l s
+
+
 
 let pre (#p:slprop) (t:thread p) (b:bool) : slprop = lock_inv_pred t.r p b
 let post (p:slprop) (b:bool) (_:unit) : slprop = p
 
-let join_case_true (#p:slprop) (t:thread p) (_:unit)
-  : SteelT unit (pre t true) (post p true)
-  = h_commute _ (maybe_p p true);
-    h_assert (maybe_p p true `star` pts_to t.r full true);
-    h_affine (maybe_p p true) (pts_to t.r full true);
-    h_assert (maybe_p p true)
+assume
+val join_case_true (#p:slprop) (t:thread p) (_:unit)
+  : SteelT unit (lock_inv_pred t.r p true) (fun _ -> p)
+  // = h_commute _ (maybe_p p true);
+  //   h_assert (maybe_p p true `star` pts_to t.r full true);
+  //   h_affine (maybe_p p true) (pts_to t.r full true);
+  //   h_assert (maybe_p p true)
 
-let join_case_false (#p:slprop) (t:thread p) (loop: (t:thread p -> SteelT unit emp (fun _ -> p))) (_:unit)
-  : SteelT unit (pre t false) (post p false)
-  = intro_h_exists false (lock_inv_pred t.r p);
-    L.release t.l;
-    loop t
+assume
+val join_case_false (#p:slprop) (t:thread p)
+  //(loop: (t:thread p -> SteelT unit emp (fun _ -> p))) (_:unit)
+  : SteelT unit (lock_inv_pred t.r p false) (fun _ -> p)
+  // = intro_h_exists false (lock_inv_pred t.r p);
+  //   L.release t.l;
+  //   loop t
 
-let rec join (#p:slprop) (t:thread p)
+let rec join' (#p:slprop) (t:thread p) (b:bool)
+  : SteelT unit (lock_inv_pred t.r p b) (fun _ -> p)
+    = if b then join_case_true t () else join_case_false t// (join' #p) ()
+
+assume
+val join (#p:slprop) (t:thread p)
   : SteelT unit emp (fun _ -> p)
-  = L.acquire t.l;
-    let b = read_refine (maybe_p p) t.r in
-    h_assert (pts_to t.r full b `star` maybe_p p b);
-    h_assert (pre t b);
-    cond b (pre t) (post p) (join_case_true t) (join_case_false t (join #p))
-*)
+//  = let _ = l_acquire t.l in ()
+
+    // let b = read_refine (maybe_p p) t.r in
+    // h_assert (pts_to t.r full b `star` maybe_p p b);
+    // h_assert (pre t b);
+    // cond b (pre t) (post p) (join_case_true t) (join_case_false t (join #p))
