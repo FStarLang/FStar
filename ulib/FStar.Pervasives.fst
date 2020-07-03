@@ -70,7 +70,7 @@ let resolve_implicits = ()
 
 let erasable = ()
 
-let smt_reifiable_layered_effect = ()
+let allow_informative_binders = ()
 
 let commute_nested_matches = ()
 

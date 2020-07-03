@@ -308,7 +308,7 @@ let extract_typ_abbrev env quals attrs lb
         in
         tcenv, as_pair def_typ
     in
-    let lbtyp = FStar.TypeChecker.Normalize.normalize [Env.Beta;Env.UnfoldUntil delta_constant] tcenv lbtyp in
+    let lbtyp = FStar.TypeChecker.Normalize.normalize [Env.Beta;Env.UnfoldUntil delta_constant; Env.ForExtraction] tcenv lbtyp in
     //eta expansion is important; see issue #490
     let lbdef = FStar.TypeChecker.Normalize.eta_expand_with_type tcenv lbdef lbtyp in
     let fv = right lb.lbname in
@@ -352,7 +352,8 @@ let extract_let_rec_type env quals attrs lb
         [Env.Beta;
          Env.AllowUnboundUniverses;
          Env.EraseUniverses;
-         Env.UnfoldUntil delta_constant]
+         Env.UnfoldUntil delta_constant;
+         Env.ForExtraction]
         (tcenv_of_uenv env)
         lb.lbtyp
     in

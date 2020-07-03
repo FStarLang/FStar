@@ -646,7 +646,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
         else
             let formals, _ =
                 let (_, fvty), _ = FStar.TypeChecker.Env.lookup_lid (tcenv_of_uenv g) fv.fv_name.v in
-                let fvty = N.normalize [Env.UnfoldUntil delta_constant] (tcenv_of_uenv g) fvty in
+                let fvty = N.normalize [Env.UnfoldUntil delta_constant; Env.ForExtraction] (tcenv_of_uenv g) fvty in
                 U.arrow_formals fvty in
             let mlargs = List.map (arg_as_mlty g) args in
             let mlargs =
@@ -1344,7 +1344,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
              *)
             | Tm_abs(bs, _, _rc) (* when is_total _rc *) -> //this is a beta_redex --- also reduce it before extraction
               t
-              |> N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses] (tcenv_of_uenv g)
+              |> N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction] (tcenv_of_uenv g)
               |> term_as_mlexpr g
 
             | Tm_constant Const_reify ->
