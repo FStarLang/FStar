@@ -89,7 +89,7 @@ let lift_pure_nd (a:Type) (wp:wp a) (f:(eqtype_as_type unit -> PURE a (nomon wp)
     assert (p r); // GM: needed to guide z3 apparently?
     r
 
-//sub_effect PURE ~> ID = lift_pure_nd
+sub_effect PURE ~> ID = lift_pure_nd
 
 (* Checking that it's kind of usable *)
 
