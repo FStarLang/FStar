@@ -31,7 +31,10 @@ noeq
 type action : inp:Type0 -> out:Type0 -> st0:Type0 -> st1:Type0 -> Type u#1 =
   | Read  : #st0:Type0 -> action unit st0 st0 st0
   | Write : #st0:Type0 -> #st1:Type0 -> action st1 unit st0 st1
-  | Raise : #a:Type -> #st0:Type -> action exn a st0 st0 // exceptions do not change state type
+  | Raise : #a:Type -> #st0:Type -> #st1:Type -> action exn a st0 st1
+
+// alternative: exceptions do not change state
+//  | Raise : #a:Type -> #st0:Type -> action exn a st0 st0
 
 noeq
 type repr0 (a:Type u#aa) : st0:Type0 -> st1:Type0 -> Type u#(max 1 aa) =
@@ -216,6 +219,9 @@ let get #s () : EFF s s s [RD] =
 
 let put #si #so (x:so) : EFF unit si so [WR] =
   EFF?.reflect (Act Write x Return)
+  
+let raise #a #si #so (e:exn) : EFF a si so [EXN] =
+  EFF?.reflect (Act Raise e Return)
 
 // GM: something is up with unfolding. Try only [dump ""] here
 // and see an explosion. I had filed it as #2039.
@@ -288,11 +294,16 @@ let rec _catchST (#a:Type0) #labs #si #sf
   | Act Read _i k -> axiom1 k s0; _catchST #a #labs stt (k s0) s0
   | Act Write s k -> axiom1 k (); _catchST #a #labs stt (k ()) s
   | Act Raise e k ->
-    let k' o : repr (a & sf) _ _ labs =
-      axiom1 k o;
-      _catchST #a #labs stt (k o) s0
+    let k' (o : squash False) : repr (a & sf) stt stt labs =
+      unreachable ()
     in
     Act Raise e k'
+
+// if exceptions did not change the state type, we could in theory
+// handle its continuation as well, though it would never be called.
+//  let k' o : repr (a & sf) _ _ labs =
+//    axiom1 k o;
+//    _catchST #a #labs stt (k o) s0
 
 (* I would hope to write a general case like this:
 
@@ -319,6 +330,58 @@ val act_keeps_state (a:action 'in 'out 'st0 'st1) : Lemma ('st0 == 'st1)
 let catchST #a #labs #st #si #sf ($c : (unit -> EFF a si sf (RD::WR::labs))) (s0:si)
 : EFF (a & sf) st st labs
 = EFF?.reflect (_catchST st (reify (c ())) s0)
+
+let rec _catchE (#a:Type0) #labs #si #sf
+  (c : repr  a         si sf (EXN::labs))
+  (h : (si':Type -> repr  a si' sf labs))
+  // the handler needs to be initial-state polymorphic, and end in the final state
+  // (perhaps by unconditionally calling put). I don't think we can ever
+  // type this without this (or a similar) requirement since it can be invoked
+  // after changing the state.
+: (repr a si sf labs)
+= match c with
+  | Return x -> Return x
+  | Act Raise e k -> h si
+  | Act act i k ->
+    let k' o : repr a _ _ labs =
+      axiom1 k o;
+      _catchE (k o) h
+    in
+    Act act i k'
+
+let catchE (#a:Type0) #labs #si #sf
+  ($c : unit -> EFF a si sf (EXN::labs))
+  ($h : (#si':Type -> unit -> EFF a si' sf labs))
+  : EFF a si sf labs
+  = EFF?.reflect (_catchE (reify (c ())) (fun _ -> reify (h ())))
+
+exception EE
+
+let coerce_st_to (t:Type) : EFF unit t t [] = ()
+
+// internal definitions don't seem to work well, this is only
+// for test_catch
+
+let __c1 () : EFF int unit bool [EXN;RD;WR] =
+  put "hello";
+  raise EE;
+  coerce_st_to unit;// funny, but needed; or 'get ();'
+  put true;
+  42
+
+let __h1 #si () : EFF int si bool [RD;WR] =
+  put false;
+  42
+
+let test_catch0 () : EFF int unit bool [RD;WR] =
+  catchE __c1 __h1
+  
+let test_catch #a () : EFF int a a [RD;WR] =
+  let old = get () in
+  put ();
+  let r = catchE __c1 __h1 in
+  put old;
+  r
 
 let puresum (n:nat)
   : EFF int bool bool []

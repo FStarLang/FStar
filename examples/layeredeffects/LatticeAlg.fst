@@ -256,6 +256,27 @@ let catch #a #labs
    catch0 (reify (f ())) (reify (g ()))
  end
 
+let rec _catchST #a #labs (t1 : repr a (RD::WR::labs)) (s0:state) : repr (a & int) labs =
+  match t1 with
+  | Return v -> Return (v, s0)
+  | Act Write s k -> WF.axiom1 k (); _catchST (k ()) s
+  | Act Read  _ k -> WF.axiom1 k s0; _catchST (k s0) s0
+  | Act act i k ->
+     let k' o : repr (a & int) labs =
+       WF.axiom1 k o;
+       _catchST #a #labs (k o) s0
+     in
+     Act act i k'
+
+let catchST #a #labs
+  (f : unit -> EFF a (RD::WR::labs))
+  (s0 : state)
+  : EFF (a & state) labs
+=
+ EFF?.reflect begin
+   _catchST (reify (f ())) s0
+ end
+
 // TODO: haskell-like runST.
 // strong update with index on state type(s)?
 
