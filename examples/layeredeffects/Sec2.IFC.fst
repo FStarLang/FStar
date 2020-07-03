@@ -243,6 +243,46 @@ let bind_comp_flows_ok (#a #b:Type)
     in
     ()
 
+let triple = label & label & flows
+let unit_triple = bot, bot, []
+let comp_triple (w0, r0, fs0) (w1, r1, fs1) = (union w0 w1, union r0 r1, (fs0 @ add_source r0 ((r1, w1)::fs1)))
+let left_unit (w, r, f) =
+  assert (Set.equal (union bot r) r);
+  assert (Set.equal (union bot w) w);
+  assert (comp_triple unit_triple (w, r, f) ==
+          (w, r, (r, w)::add_source bot f))
+open FStar.Calc
+let non_assoc_comp (w0, r0, fs0) (w1, r1, fs1) (w2, r2, fs2) =
+  calc (==) {
+    comp_triple (w0, r0, fs0) (comp_triple (w1, r1, fs1) (w2, r2, fs2)) ;
+    (==) { }
+    comp_triple (w0, r0, fs0) (union w1 w2, union r1 r2, (fs1 @ add_source r1 ((r2, w2)::fs2)));
+    (==) { }
+    (union w0 (union w1 w2), union r0 (union r1 r2), fs0 @ (add_source r0 ((union r1 r2, union w1 w2) :: (fs1 @ add_source r1 ((r2, w2)::fs2)))));
+    (==) { assert (forall w0 w1 w2. Set.equal (union w0 (union w1 w2)) (union (union w0 w1) w2)) }
+    (union (union w0 w1) w2,
+     union (union r0 r1) r2,
+     fs0 @ (add_source r0 ((union r1 r2, union w1 w2) :: (fs1 @ add_source r1 ((r2, w2)::fs2)))));
+    (==) { }
+    (union (union w0 w1) w2,
+     union (union r0 r1) r2,
+     (fs0 @ ((union r0 (union r1 r2), union w1 w2) :: add_source r0 (fs1 @ add_source r1 ((r2, w2)::fs2)))));
+  };
+
+  calc (==) {
+    comp_triple (comp_triple (w0, r0, fs0) (w1, r1, fs1)) (w2, r2, fs2);
+    (==) { }
+    comp_triple (union w0 w1, union r0 r1, (fs0 @ add_source r0 ((r1, w1)::fs1))) (w2, r2, fs2);
+    (==) { }
+    (union (union w0 w1) w2,
+     union (union r0 r1) r2,
+    ((fs0 @ add_source r0 ((r1, w1)::fs1)) @ (add_source (union r0 r1) ((r2, w2) :: fs2))));
+    (==) { }
+    (union (union w0 w1) w2,
+     union (union r0 r1) r2,
+     ((fs0 @ ((union r0 r1, w1)::add_source r0 fs1)) @ ((union (union r0 r1) r2, w2) :: add_source (union r0 r1) fs2)));
+  }
+
 let bind (a b:Type)
          (w0 r0 w1 r1:label) (fs0 fs1:flows)
          (x:ist a w0 r0 fs0)
