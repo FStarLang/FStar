@@ -640,8 +640,9 @@ let rec solve_subcomp_post (l:list goal) : Tac unit =
           // a polymonadic bind with Steel alloc/read/...
           // That means the postcondition of return will be ?u_ret * ?u_emp
           or_else (fun _ -> apply_lemma (`emp_unit_variant))
-                  (fun _ -> ignore (forall_intro());
+                  (fun _ ->
                      norm [delta_only [`%can_be_split_forall]];
+                     ignore (forall_intro());
                      or_else
                        (fun _ -> apply_lemma (`lemma_sl_implies_refl))
                        (fun _ ->
