@@ -163,7 +163,7 @@ let if_then_else
   : Type
   = repr a st0 st1 (labs1@labs2)
 
-[@@smt_reifiable_layered_effect]
+[@@allow_informative_binders]
 total // need this for catch!!
 reifiable
 reflectable

@@ -150,7 +150,7 @@ let if_then_else
            (fun s0 y s1 -> ite b (post1 s0 y s1) (post2 s0 y s1))
            (labs1@labs2)
 
-[@@smt_reifiable_layered_effect]
+[@@allow_informative_binders]
 total // need this for catch!!
 reifiable
 reflectable
@@ -263,8 +263,10 @@ let catch #a #labs
   reif
   end
 
-let test_catch #labs (f : unit -> EFFT int [EXN;WR]) : EFFT int [WR] by (compute ()) =
-  catch f (fun () -> 42)
+let g #labs () : EFFT int labs = 42
 
-let test_catch2 (f : unit -> EFFT int [EXN;EXN;WR]) : EFFT int [EXN;WR] by (compute ()) =
-  catch f (fun () -> 42)
+let test_catch #labs (f : unit -> EFFT int [EXN;WR]) : EFFT int [WR] =
+  catch f g
+
+let test_catch2 (f : unit -> EFFT int [EXN;EXN;WR]) : EFFT int [EXN;WR] =
+  catch f g

@@ -158,7 +158,7 @@ let if_then_else
   : Type
   = repr a (labs1@labs2)
 
-[@@smt_reifiable_layered_effect]
+[@@allow_informative_binders]
 total // need this for catch!!
 reifiable
 reflectable
@@ -261,11 +261,13 @@ let catch #a #labs
 // TODO: haskell-like runST.
 // strong update with index on state type(s)?
 
+let g #labs () : EFF int labs = 42  //AR: 07/03: had to hoist after removing smt_reifiablep
+
 let test_catch #labs (f : unit -> EFF int [EXN;WR]) : EFF int [WR] =
-  catch f (fun () -> 42)
+  catch f g
 
 let test_catch2 (f : unit -> EFF int [EXN;EXN;WR]) : EFF int [EXN;WR] =
-  catch f (fun () -> 42)
+  catch f g
 
 let interp_pure_tree #a (t : repr a []) : Tot a =
   match t with

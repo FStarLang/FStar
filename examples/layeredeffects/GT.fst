@@ -60,6 +60,7 @@ let if_then_else (a:Type) (i:idx) (f : m a i) (g : m a i) (b : bool) : Type = m 
 //     e.g. the [idx] in [return] needs to come after [x], otherwise
 //     we get an assertion failure trying to prove [forall (a: Type). idx == a].
 
+[@@allow_informative_binders]
 reifiable
 reflectable
 layered_effect {

@@ -83,6 +83,7 @@ let if_then_else (a:Type) (i:idx) (w1 w2 : wp a)
 //     e.g. the [idx] in [return] needs to come after [x], otherwise
 //     we get an assertion failure trying to prove [forall (a: Type). idx == a].
 
+[@@allow_informative_binders]
 reifiable
 reflectable
 layered_effect {
