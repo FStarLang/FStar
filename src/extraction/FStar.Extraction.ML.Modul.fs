@@ -831,6 +831,18 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
           in
           env, impl
 
+        | Sig_let ((_, lbs), _)
+          when BU.for_some (function S.NoExtract -> true | _ -> false) se.sigquals ->
+          //extract only the declaration
+          let decl_of_lb lb =
+            let fv = BU.right lb.lbname in
+            { se with sigel = Sig_declare_typ(lid_of_fv fv, lb.lbunivs, lb.lbtyp);
+                      sigquals = Assumption :: se.sigquals }
+          in
+          let decls = List.map decl_of_lb lbs in
+          let g, out = BU.fold_map extract_sig g decls in
+          g, List.flatten out
+
         | Sig_let (lbs, _) ->
           let attrs = se.sigattrs in
           let quals = se.sigquals in
