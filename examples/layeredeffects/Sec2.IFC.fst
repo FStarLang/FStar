@@ -276,56 +276,84 @@ let bind_comp_flows_ok (#a #b:Type)
 
 let triple = label & label & flows
 let unit_triple = bot, bot, []
-let comp_triple (w0, r0, fs0) (w1, r1, fs1) = (union w0 w1, union r0 r1, (fs0 @ add_source r0 ((r1, w1)::fs1)))
+let comp_triple (w0, r0, fs0) (w1, r1, fs1) = (union w0 w1, union r0 r1, (fs0 @ add_source r0 ((bot, w1)::fs1)))
+let flows_equiv (fs0 fs1:flows) = fs0 `flows_included_in` fs1 /\ fs1 `flows_included_in` fs0
+let label_equiv (s0 s1:label) = Set.equal s0 s1
+let triple_equiv (w0, r0, f0) (w1, r1, f1) = label_equiv w0 w1 /\ label_equiv r0 r1 /\ flows_equiv f0 f1
+let triple_equiv_refl t0
+  : Lemma (triple_equiv t0 t0)
+  = ()
+let rec add_source_bot (f:flows)
+    : Lemma (add_source bot f `flows_equiv` f)
+    = match f with
+      | [] -> ()
+      | _::tl -> add_source_bot tl
 let left_unit (w, r, f) =
-  assert (Set.equal (union bot r) r);
-  assert (Set.equal (union bot w) w);
-  assert (comp_triple unit_triple (w, r, f) ==
-          (w, r, (r, w)::add_source bot f))
-
-// open FStar.Calc
-// let non_assoc_comp (w0, r0, fs0) (w1, r1, fs1) (w2, r2, fs2) =
-//   calc (==) {
-//     comp_triple (w0, r0, fs0) (comp_triple (w1, r1, fs1) (w2, r2, fs2)) ;
-//     (==) { }
-//     comp_triple (w0, r0, fs0) (union w1 w2, union r1 r2, (fs1 @ add_source r1 ((r2, w2)::fs2)));
-//     (==) { }
-//     (union w0 (union w1 w2), union r0 (union r1 r2), fs0 @ (add_source r0 ((union r1 r2, union w1 w2) :: (fs1 @ add_source r1 ((r2, w2)::fs2)))));
-//     (==) { assert (forall w0 w1 w2. Set.equal (union w0 (union w1 w2)) (union (union w0 w1) w2)) }
-//     (union (union w0 w1) w2,
-//      union (union r0 r1) r2,
-//      fs0 @ (add_source r0 ((union r1 r2, union w1 w2) :: (fs1 @ add_source r1 ((r2, w2)::fs2)))));
-//     (==) { }
-//     (union (union w0 w1) w2,
-//      union (union r0 r1) r2,
-//      (fs0 @ ((union r0 (union r1 r2), union w1 w2) :: add_source r0 (fs1 @ add_source r1 ((r2, w2)::fs2)))));
-//   };
-
-// // -  fs0
-// // -  r0 ~> fs1
-// // -  {r0, r1, r2} ~> {w1, w2}
-// // -  {r0, r1, r2} ~> w2
-// // -  {r0, r1, r2} ~> fs2
-
-//   calc (==) {
-//     comp_triple (comp_triple (w0, r0, fs0) (w1, r1, fs1)) (w2, r2, fs2);
-//     (==) { }
-//     comp_triple (union w0 w1, union r0 r1, (fs0 @ add_source r0 ((r1, w1)::fs1))) (w2, r2, fs2);
-//     (==) { }
-//     (union (union w0 w1) w2,
-//      union (union r0 r1) r2,
-//     ((fs0 @ add_source r0 ((r1, w1)::fs1)) @ (add_source (union r0 r1) ((r2, w2) :: fs2))));
-//     (==) { }
-//     (union (union w0 w1) w2,
-//      union (union r0 r1) r2,
-//      ((fs0 @ ((union r0 r1, w1)::add_source r0 fs1)) @ ((union (union r0 r1) r2, w2) :: add_source (union r0 r1) fs2)));
-//   }
-
-// - fs0
-// - r0 ~> fs1
-// - {r0, r1} ~> w1
-// - {r0, r1, r2} ~> w2
-// ~ {r0, r1} ~> fs2
+  assert (Set.equal (union bot bot) bot);
+  add_source_bot f;
+  assert (comp_triple unit_triple (w, r, f) `triple_equiv` (w, r, f))
+let flows_included_append (f0 f1 g0 g1:flows)
+  : Lemma (flows_included_in f0 g0 /\ flows_included_in f1 g1 ==>
+           flows_included_in (f0@f1) (g0@g1))
+  = admit()
+let flows_equiv_append (f0 f1 g0 g1:flows)
+  : Lemma (flows_equiv f0 g0 /\ flows_equiv f1 g1 ==>
+           flows_equiv (f0@f1) (g0@g1))
+  = flows_included_append f0 f1 g0 g1;
+    flows_included_append g0 g1 f0 f1
+let rec append_nil_r #a (l:list a)
+  : Lemma (l @ [] == l)
+  = match l with
+    | [] -> ()
+    | _::tl -> append_nil_r tl
+let right_unit (w, r, f) =
+  calc (==) {
+    comp_triple (w, r, f) unit_triple;
+    (==) { }
+    (w `union` bot, r `union` bot, f @ add_source r ((bot, bot)::[]));
+  };
+  assert (flows_equiv (add_source r [(bot, bot)]) []);
+  flows_equiv_append f (add_source r [(bot, bot)]) f [];
+  append_nil_r f;
+  assert (comp_triple (w, r, f) unit_triple  `triple_equiv` (w, r, f))
+open FStar.Calc
+let assoc_comp (w0, r0, fs0) (w1, r1, fs1) (w2, r2, fs2) =
+  calc (==) {
+    comp_triple (w0, r0, fs0) (comp_triple (w1, r1, fs1) (w2, r2, fs2)) ;
+    (==) { }
+    comp_triple (w0, r0, fs0) (union w1 w2, union r1 r2, (fs1 @ add_source r1 ((bot, w2)::fs2)));
+    (==) { }
+    (union w0 (union w1 w2), union r0 (union r1 r2), fs0 @ (add_source r0 ((bot, union w1 w2) :: (fs1 @ add_source r1 ((bot, w2)::fs2)))));
+    (==) { assert (forall w0 w1 w2. Set.equal (union w0 (union w1 w2)) (union (union w0 w1) w2)) }
+    (union (union w0 w1) w2,
+     union (union r0 r1) r2,
+     fs0 @ (add_source r0 ((bot, union w1 w2) :: (fs1 @ add_source r1 ((bot, w2)::fs2)))));
+    (==) { }
+    (union (union w0 w1) w2,
+     union (union r0 r1) r2,
+     (fs0 @ ((union r0 bot, union w1 w2) :: add_source r0 (fs1 @ add_source r1 ((bot, w2)::fs2)))));
+    (==) { assert (forall s. Set.equal (union s bot) s) }
+    (union (union w0 w1) w2,
+     union (union r0 r1) r2,
+     (fs0 @ ((r0, union w1 w2) :: add_source r0 (fs1 @ (r1, w2) ::add_source r1 fs2))));
+  };
+  calc (==) {
+    comp_triple (comp_triple (w0, r0, fs0) (w1, r1, fs1)) (w2, r2, fs2);
+    (==) { }
+    comp_triple (union w0 w1, union r0 r1, (fs0 @ add_source r0 ((bot, w1)::fs1))) (w2, r2, fs2);
+    (==) { }
+    (union (union w0 w1) w2,
+     union (union r0 r1) r2,
+    ((fs0 @ add_source r0 ((bot, w1)::fs1)) @ (add_source (union r0 r1) ((bot, w2) :: fs2))));
+    (==) { }
+    (union (union w0 w1) w2,
+     union (union r0 r1) r2,
+     ((fs0 @ ((union r0 bot, w1)::add_source r0 fs1)) @ ((union (union r0 r1) bot, w2) :: add_source (union r0 r1) fs2)));
+    (==) { assert (forall s. Set.equal (union s bot) s) }
+    (union (union w0 w1) w2,
+     union (union r0 r1) r2,
+     ((fs0 @ ((r0, w1)::add_source r0 fs1)) @ ((union r0 r1, w2) :: add_source (union r0 r1) fs2)));
+  }
 
 let bind (a b:Type)
          (w0 r0 w1 r1:label) (fs0 fs1:flows)
@@ -484,7 +512,6 @@ val cr2 : label
 assume
 val c2 (_:unit) : IST unit cw2 cr2 []
 
-(* Notice, from test12 and 14, that this indexing structure is not associative *)
 let test10 ()
   : IST unit (union cw0 (union cw1 cw2))
              (union cr0 (union cr1 cr2))
@@ -493,10 +520,24 @@ let test10 ()
                 (add_source cr1 [bot, cw2])))
   = c0 (); (c1();c2())
 
+
 let test12 ()
   : IST unit (union cw0 (union cw1 cw2))
              (union cr0 (union cr1 cr2))
              [(cr0, union cw1 cw2);
+              (union cr0 cr1, cw2)]
+  = c0 (); (c1();c2())
+
+let flows_included_in_union (a b c:label)
+  : Lemma (flows_equiv ([a, union b c; union a b, c])
+                       ([a, b; union a b, c]))
+          [SMTPat (a, union b c)]
+  = admit()
+
+let test12_1 ()
+  : IST unit (union cw0 (union cw1 cw2))
+             (union cr0 (union cr1 cr2))
+             [(cr0, cw1);
               (union cr0 cr1, cw2)]
   = c0 (); (c1();c2())
 
