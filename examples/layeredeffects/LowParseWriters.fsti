@@ -1221,6 +1221,80 @@ let destr_repr_impl
 = Repr?.impl (reify (f_destr_spec ()))
 
 inline_for_extraction
+let extract_t
+  (#a:Type u#x)
+  (#r_in: parser)
+  (#r_out: parser)
+  (#pre: pre_t r_in)
+  (#post: post_t a r_in r_out pre)
+  (#post_err: post_err_t r_in pre)
+  (l: memory_invariant)
+  ($f_destr_spec: unit -> EWrite a r_in r_out pre post post_err l)
+: Tot Type
+=  
+  (b: B.buffer u8 { l.lwrite `B.loc_includes` B.loc_buffer b }) ->
+  (len: U32.t { len == B.len b }) ->
+  (pos1: buffer_offset b) ->
+  HST.Stack (iresult a)
+  (requires (fun h ->
+    B.modifies l.lwrite l.h0 h /\
+    HS.get_tip l.h0 `HS.includes` HS.get_tip h /\
+    valid_pos r_in h b 0ul pos1 /\
+    pre (contents r_in h b 0ul pos1)
+  ))
+  (ensures (fun h res h' ->
+    valid_pos r_in h b 0ul pos1 /\
+    B.modifies (B.loc_buffer b) h h' /\ (
+    let v_in = contents r_in h b 0ul pos1 in
+    pre v_in /\
+    begin match destr_repr_spec _ _ _ _ _ _ _ f_destr_spec v_in, res with
+    | Correct (v, v_out), ICorrect v' pos2 ->
+      U32.v pos1 <= U32.v pos2 /\
+      valid_pos (r_out) h' b 0ul pos2 /\
+      v' == v /\
+      v_out == contents (r_out) h' b 0ul pos2
+    | Correct (v, v_out), IOverflow ->
+      size (r_out) v_out > B.length b
+    | Error s, IError s' ->
+      s == s'
+    | Error _, IOverflow ->
+      (* overflow happened in implementation before specification could reach error *)
+      True
+    | _ -> False
+    end
+  )))
+
+inline_for_extraction
+let extract
+  (#a:Type u#x)
+  (#r_in: parser)
+  (#r_out: parser)
+  (#pre: pre_t r_in)
+  (#post: post_t a r_in r_out pre)
+  (#post_err: post_err_t r_in pre)
+  (l: memory_invariant)
+  ($f_destr_spec: unit -> EWrite a r_in r_out pre post post_err l)
+: Tot (extract_t l f_destr_spec)
+= extract_repr_impl _ _ _ _ _ _ _ _ (destr_repr_impl _ _ _ _ _ _ _ f_destr_spec)
+
+inline_for_extraction
+let wrap_extracted_impl
+  (#a:Type u#x)
+  (#r_in: parser)
+  (#r_out: parser)
+  (#pre: pre_t r_in)
+  (#post: post_t a r_in r_out pre)
+  (#post_err: post_err_t r_in pre)
+  (l: memory_invariant)
+  ($f_destr_spec: unit -> EWrite a r_in r_out pre post post_err l)
+  (e: extract_t l f_destr_spec)
+: EWrite a r_in r_out pre post post_err l
+= EWrite?.reflect (Repr (destr_repr_spec _ _ _ _ _ _ _ f_destr_spec) (
+    mk_repr_impl
+      a r_in r_out _ _ _ _ (destr_repr_spec _ _ _ _ _ _ _ f_destr_spec) (fun b len pos1 -> e b len pos1)
+  ))
+
+inline_for_extraction
 unfold
 let mk_repr
   (a:Type u#x)
