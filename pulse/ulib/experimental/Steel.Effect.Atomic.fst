@@ -46,6 +46,7 @@ let bind (a:Type) (b:Type) (uses:Set.set lock_addr)
     let x = f () in
     g x ()
 
+[@@allow_informative_binders]
 total
 reifiable reflectable
 layered_effect {
