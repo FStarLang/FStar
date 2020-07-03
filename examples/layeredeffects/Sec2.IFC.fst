@@ -39,15 +39,28 @@ let flow = label & label //from, to
 let flows = list flow
 let add_source (r:label) (fs:flows) : flows = List.Tot.map (fun (r0, w0) -> union r r0, w0) fs
 let add_sink (w:label) (fs:flows) : flows = List.Tot.map (fun (r0, w0) -> r0, union w w0) fs
-let has_flow (from to:loc) (fs:flows) = (exists rs. rs `List.Tot.memP` fs /\ from `Set.mem` fst rs /\ to `Set.mem` snd rs)
-let flow_included_in (f0 f1:flow) = fst f0 `Set.subset` fst f1 /\ snd f0 `Set.subset` snd f1
+let has_flow_1 (from to:loc) (f:flow) = from `Set.mem` fst f /\ to `Set.mem` snd f
+let has_flow (from to:loc) (fs:flows) = (exists rs. rs `List.Tot.memP` fs /\ has_flow_1 from to rs)
+let flow_included_in (f0 f1:flow) = forall from to. has_flow_1 from to f0 ==> has_flow_1 from to f1
 let flows_included_in (fs0 fs1:flows) =
   forall f0. f0 `List.Tot.memP` fs0 ==>
-        (fst f0 == bot \/
-         snd f0 == bot \/
-         (exists f1. f1 `List.Tot.memP` fs1 /\ f0 `flow_included_in` f1))
-let flows_includes_in_refl fs
-  : Lemma (fs `flows_included_in` fs)
+        (forall from to. has_flow_1 from to f0 ==> (exists f1. f1 `List.Tot.memP` fs1 /\ has_flow_1 from to f1))
+let flows_equiv (fs0 fs1:flows) = fs0 `flows_included_in` fs1 /\ fs1 `flows_included_in` fs0
+let flows_equiv_refl fs
+  : Lemma (fs `flows_equiv` fs)
+  = ()
+let flows_equiv_trans fs0 fs1 fs2
+  : Lemma (fs0 `flows_equiv` fs1 /\ fs1 `flows_equiv` fs2 ==> fs0 `flows_equiv` fs2)
+  = ()
+let flows_included_in_union_distr_dest (a b c:label)
+  : Lemma (flows_equiv [a, union b c] [a, b; a, c])
+  = ()
+let flows_included_in_union_distr_src (a b c:label)
+  : Lemma (flows_equiv [union a b, c] [a, c; b, c])
+  = ()
+let flows_included_in_union (a b c:label)
+  : Lemma (flows_equiv ([a, union b c; union a b, c])
+                       ([a, b; union a b, c]))
   = ()
 let no_leakage_k #a (f:comp a) (from to:loc) (k:int) =
   forall s0.{:pattern (havoc s0 from k)} sel (snd (f s0)) to == (sel (snd (f (havoc s0 from k))) to)
@@ -277,7 +290,7 @@ let bind_comp_flows_ok (#a #b:Type)
 let triple = label & label & flows
 let unit_triple = bot, bot, []
 let comp_triple (w0, r0, fs0) (w1, r1, fs1) = (union w0 w1, union r0 r1, (fs0 @ add_source r0 ((bot, w1)::fs1)))
-let flows_equiv (fs0 fs1:flows) = fs0 `flows_included_in` fs1 /\ fs1 `flows_included_in` fs0
+
 let label_equiv (s0 s1:label) = Set.equal s0 s1
 let triple_equiv (w0, r0, f0) (w1, r1, f1) = label_equiv w0 w1 /\ label_equiv r0 r1 /\ flows_equiv f0 f1
 let triple_equiv_refl t0
@@ -527,12 +540,6 @@ let test12 ()
              [(cr0, union cw1 cw2);
               (union cr0 cr1, cw2)]
   = c0 (); (c1();c2())
-
-let flows_included_in_union (a b c:label)
-  : Lemma (flows_equiv ([a, union b c; union a b, c])
-                       ([a, b; union a b, c]))
-          [SMTPat (a, union b c)]
-  = admit()
 
 let test12_1 ()
   : IST unit (union cw0 (union cw1 cw2))
