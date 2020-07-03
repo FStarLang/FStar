@@ -32,6 +32,7 @@ let read_repr_impl
   HST.Stack (result a)
   (requires (fun h ->
     B.modifies l.lwrite l.h0 h /\
+    HS.get_tip l.h0 `HS.includes` HS.get_tip h /\
     pre
   ))
   (ensures (fun h res h' ->
@@ -212,6 +213,7 @@ let repr_impl
   HST.Stack (iresult a)
   (requires (fun h ->
     B.modifies l.lwrite l.h0 h /\
+    HS.get_tip l.h0 `HS.includes` HS.get_tip h /\
     valid_pos r_in h b 0ul pos1 /\
     pre (contents r_in h b 0ul pos1)
   ))

@@ -29,12 +29,15 @@ noeq
 [@erasable]
 type memory_invariant = {
   h0: Ghost.erased HS.mem;
-  lwrite: (Ghost.erased B.loc);
+  lwrite: (lwrite: (Ghost.erased B.loc) {
+    B.loc_disjoint lwrite (B.loc_all_regions_from false (HS.get_tip h0))
+  });
 }
 
 unfold
 let memory_invariant_includes (ol ne: memory_invariant) =
   B.modifies ol.lwrite ol.h0 ne.h0 /\
+  HS.get_tip ol.h0 `HS.includes` HS.get_tip ne.h0 /\
   ol.lwrite `B.loc_includes` ne.lwrite
 
 let memory_invariant_includes_trans (l1 l2 l3: memory_invariant) : Lemma
@@ -100,6 +103,7 @@ val mk_read_repr_impl
     HST.Stack (result a)
     (requires (fun h ->
       B.modifies l.lwrite l.h0 h /\
+      HS.get_tip l.h0 `HS.includes` HS.get_tip h /\
       pre
     ))
     (ensures (fun h res h' ->
@@ -121,6 +125,7 @@ val extract_read_repr_impl
 : HST.Stack (result a)
   (requires (fun h ->
     B.modifies l.lwrite l.h0 h /\
+    HS.get_tip l.h0 `HS.includes` HS.get_tip h /\
     pre
   ))
   (ensures (fun h res h' ->
@@ -370,6 +375,7 @@ val reify_read
 : HST.Stack (result a)
     (requires (fun h ->
       B.modifies l.lwrite l.h0 h /\
+      HS.get_tip l.h0 `HS.includes` HS.get_tip h /\
       pre
     ))
     (ensures (fun h res h' ->
@@ -831,6 +837,7 @@ val mk_repr_impl
     HST.Stack (iresult a)
     (requires (fun h ->
       B.modifies l.lwrite l.h0 h /\
+      HS.get_tip l.h0 `HS.includes` HS.get_tip h /\
       valid_pos r_in h b 0ul pos1 /\
       pre (contents r_in h b 0ul pos1)
     ))
@@ -857,6 +864,7 @@ val extract_repr_impl
 : HST.Stack (iresult a)
   (requires (fun h ->
     B.modifies l.lwrite l.h0 h /\
+    HS.get_tip l.h0 `HS.includes` HS.get_tip h /\
     valid_pos r_in h b 0ul pos1 /\
     pre (contents r_in h b 0ul pos1)
   ))
