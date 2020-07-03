@@ -44,30 +44,35 @@ type thread (p:slprop u#1) = {
   l:L.lock (lock_inv r p)
 }
 
+// From basics
 assume
-val intro_maybe_p_false (p:slprop)
-  : SteelT unit emp (fun _ -> maybe_p p false)
-//  = admit() // h_assert (maybe_p p false)
-
-assume val intro_maybe_p_true (p:slprop)
-  : SteelT unit p (fun _ -> maybe_p p true)
-//  = h_assert (maybe_p p true)
-
-assume val intro_lock_inv_pred (r:ref bool) (p:slprop) (v:bool)
-  : SteelT unit
-      (pts_to r full_perm v `star` maybe_p p v)
-      (fun _ -> lock_inv_pred r p v)
-
-assume val elim_lock_inv (r:ref bool) (p:slprop)
-  : SteelT unit
-      (lock_inv r p)
-      (fun _ -> h_exists (fun (v:bool) -> pts_to r full_perm (hide v) `star` maybe_p p v
-))
-
+val drop (p:slprop) : SteelT unit p (fun _ -> emp)
 
 assume val intro_exists (#a:Type) (x:a) (p:a -> slprop)
   : SteelT unit (p x) (fun _ -> h_exists p)
 
+assume
+val change_slprop
+  (p q:slprop)
+  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
+  : SteelT unit p (fun _ -> q)
+
+assume
+val par (#preL:slprop) (#postL:unit -> slprop)
+        ($f:unit -> SteelT unit preL postL)
+        (#preR:slprop) (#postR:unit -> slprop)
+        ($g:unit -> SteelT unit preR postR)
+  : SteelT unit
+    (preL `star` preR)
+    (fun x -> postL () `star` postR ())
+
+assume
+val cond (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
+         (then_: (unit -> SteelT a (p true) (q true)))
+         (else_: (unit -> SteelT a (p false) (q false)))
+  : SteelT a (p b) (q b)
+
+// Would be provided by SpinLock
 assume
 val new_lock (p:slprop)
   : SteelT (L.lock p) p (fun _ -> emp)
@@ -80,9 +85,25 @@ assume
 val release (#p:slprop) (l:L.lock p)
   : SteelT unit p (fun _ -> emp)
 
+
+let intro_maybe_p_false (p:slprop)
+  : SteelT unit emp (fun _ -> maybe_p p false)
+  = change_slprop emp (maybe_p p false) (fun _ -> ())
+
+let intro_maybe_p_true (p:slprop)
+  : SteelT unit p (fun _ -> maybe_p p true)
+  = change_slprop p (maybe_p p true) (fun _ -> ())
+
+let intro_lock_inv_pred (r:ref bool) (p:slprop) (v:bool)
+  : SteelT unit
+      (pts_to r full_perm v `star` maybe_p p v)
+      (fun _ -> lock_inv_pred r p v)
+  = change_slprop (pts_to r full_perm v `star` maybe_p p v) (lock_inv_pred r p v) (fun _ -> ())
+
+
 let new_thread (p:slprop)
   : SteelT (thread p) emp (fun _ -> emp)
-  = intro_maybe_p_false p;
+  = //intro_maybe_p_false p;
     //h_assert (maybe_p p false);
     //h_intro_emp_l (maybe_p p false);
     let r = alloc false in
@@ -102,8 +123,8 @@ let new_thread (p:slprop)
 let finish (#p:slprop) (t:thread p) (v:bool)
   : SteelT unit (pts_to t.r full_perm v `star` p) (fun _ -> emp)
   = write t.r true;
-    intro_maybe_p_true p;
-    intro_lock_inv_pred t.r p true;
+//    intro_maybe_p_true p;
+//    intro_lock_inv_pred t.r p true;
     intro_exists true (lock_inv_pred t.r p);
     release t.l
 
@@ -115,13 +136,11 @@ let finish (#p:slprop) (t:thread p) (v:bool)
   //   intro_h_exists true (lock_inv_pred t.r p);
   //   L.release t.l
 
-assume
-val drop (p:slprop) : SteelT unit p (fun _ -> emp)
 
 let acquire (#p:slprop) (t:thread p)
   : SteelT bool emp (fun b -> pts_to t.r full_perm b)
   = l_acquire t.l;
-    elim_lock_inv t.r p;
+//    elim_lock_inv t.r p;
     let b = read_refine #_ #full_perm (maybe_p p) t.r in
     drop (maybe_p p b);
     b
@@ -144,20 +163,7 @@ let spawn (#p #q:slprop)
   //   h_commute q (pts_to t.r full b);
   //   finish t b
 
-assume
-val par (#preL:slprop) (#postL:unit -> slprop)
-        ($f:unit -> SteelT unit preL postL)
-        (#preR:slprop) (#postR:unit -> slprop)
-        ($g:unit -> SteelT unit preR postR)
-  : SteelT unit
-    (preL `star` preR)
-    (fun x -> postL () `star` postR ())
-
-//#set-options "--ugly --debug_level Extreme"
-//#set-options "--tactic_trace_d 1"
-// AF: Why is this working with a different name than in the fsti
-// but not in the names coincide? The types are the same
-let fork' (#a:Type) (#p #q #r #s:slprop)
+let fork (#a:Type) (#p #q #r #s:slprop)
       (f: (unit -> SteelT unit p (fun _ -> q)))
       (g: (thread q -> unit -> SteelT unit r (fun _ -> s)))
   : SteelT unit (p `star` r) (fun _ -> s)
@@ -171,35 +177,26 @@ let fork' (#a:Type) (#p #q #r #s:slprop)
   //   par (spawn f t) (g t);
   //   h_elim_emp_l s
 
-
-
-let pre (#p:slprop) (t:thread p) (b:bool) : slprop = lock_inv_pred t.r p b
-let post (p:slprop) (b:bool) (_:unit) : slprop = p
-
-assume
-val join_case_true (#p:slprop) (t:thread p) (_:unit)
+let join_case_true (#p:slprop) (t:thread p) (_:unit)
   : SteelT unit (lock_inv_pred t.r p true) (fun _ -> p)
+  = change_slprop (lock_inv_pred t.r p true) p (fun _ -> ())
   // = h_commute _ (maybe_p p true);
   //   h_assert (maybe_p p true `star` pts_to t.r full true);
   //   h_affine (maybe_p p true) (pts_to t.r full true);
   //   h_assert (maybe_p p true)
 
-assume
-val join_case_false (#p:slprop) (t:thread p)
-  //(loop: (t:thread p -> SteelT unit emp (fun _ -> p))) (_:unit)
+let join_case_false (#p:slprop) (t:thread p)
+  (loop: (t:thread p -> SteelT unit emp (fun _ -> p))) (_:unit)
   : SteelT unit (lock_inv_pred t.r p false) (fun _ -> p)
-  // = intro_h_exists false (lock_inv_pred t.r p);
-  //   L.release t.l;
-  //   loop t
+  = intro_exists false (lock_inv_pred t.r p);
+    release t.l;
+    loop t
 
-let rec join' (#p:slprop) (t:thread p) (b:bool)
-  : SteelT unit (lock_inv_pred t.r p b) (fun _ -> p)
-    = if b then join_case_true t () else join_case_false t// (join' #p) ()
-
-assume
-val join (#p:slprop) (t:thread p)
+let rec join (#p:slprop) (t:thread p)
   : SteelT unit emp (fun _ -> p)
-//  = let _ = l_acquire t.l in ()
+  = let _ = l_acquire t.l in
+    let b = read_refine #_ #full_perm (maybe_p p) t.r in
+    cond b (lock_inv_pred t.r p) (fun _ _ -> p) (join_case_true t) (join_case_false t join)
 
     // let b = read_refine (maybe_p p) t.r in
     // h_assert (pts_to t.r full b `star` maybe_p p b);
