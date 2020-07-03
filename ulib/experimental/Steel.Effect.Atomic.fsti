@@ -64,6 +64,7 @@ val bind (a:Type u#a)
       (requires obs_at_most_one o1 o2)
       (ensures fun _ -> True)
 
+[@@allow_informative_binders]
 total
 reifiable reflectable
 layered_effect {

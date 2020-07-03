@@ -124,7 +124,7 @@ let if_then_else
   : Type
   = repr a (labs1@labs2)
 
-[@@smt_reifiable_layered_effect]
+[@@allow_informative_binders]
 total
 reifiable
 reflectable
@@ -211,5 +211,7 @@ let catch #a #labs (f : unit -> EFF a (EXN::labs)) (g : unit -> EFF a labs) : EF
   fun () -> try_with (reify (f ())) (reify (g ()))
   end
 
+let g #labs () : EFF int labs = 42
+
 let test_catch (f : unit -> EFF int [EXN;WR]) : EFF int [WR] =
-  catch f (fun () -> 42)
+  catch f g

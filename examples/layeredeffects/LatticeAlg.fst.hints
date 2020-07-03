@@ -1,5 +1,5 @@
 [
-  "®æÈà‹Ge\u0019æDœ„®ÉÏŒ",
+  "^\nâKëKŸw≤±”ù^\u0019Àı",
   [
     [
       "LatticeAlg.coerce",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
       ],
       0,
-      "24d984da2993b385a37bf10d5bb3a909"
+      "c35c972d137c1a268f9bc4c9ce281a1e"
     ],
     [
       "LatticeAlg.__proj__Raise__item__a",
@@ -23,7 +23,7 @@
         "refinement_interpretation_Tm_refine_55fc3c246ddf0029776264c09c6e58e2"
       ],
       0,
-      "a415e4f3ca7afa0e4cf4aa63c707e522"
+      "d3ed278f29a6fcccc99bdb01c0b77b91"
     ],
     [
       "LatticeAlg.__proj__Return__item___0",
@@ -35,7 +35,7 @@
         "refinement_interpretation_Tm_refine_1b4da4b8ec5c32abea72319feafc06d4"
       ],
       0,
-      "e8c8826862e10c93dbe11e4eca63aea1"
+      "fec0f89bdf39524333cd5bcd6edcb359"
     ],
     [
       "LatticeAlg.__proj__Act__item__i",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_aa6c28d662386755b687c891d40d0c4b"
       ],
       0,
-      "ee7d8fb246499b98acb9435a152b3f30"
+      "3a7bf39234e96c8cd96f1baa56d2f0bc"
     ],
     [
       "LatticeAlg.__proj__Act__item__o",
@@ -59,7 +59,7 @@
         "refinement_interpretation_Tm_refine_aa6c28d662386755b687c891d40d0c4b"
       ],
       0,
-      "29220d7d980db9ab4d02ec8e2c262728"
+      "464b953a8faa3090203a0e08fe8fcb17"
     ],
     [
       "LatticeAlg.__proj__Act__item__act",
@@ -74,7 +74,7 @@
         "refinement_interpretation_Tm_refine_aa6c28d662386755b687c891d40d0c4b"
       ],
       0,
-      "38d0a990f9aef669a61407303a50f9f5"
+      "5701468101fb037d507043f6ddbe8b3c"
     ],
     [
       "LatticeAlg.__proj__Act__item___3",
@@ -87,7 +87,7 @@
         "refinement_interpretation_Tm_refine_aa6c28d662386755b687c891d40d0c4b"
       ],
       0,
-      "b21bf133a9c65208bd198106347f331f"
+      "515069be01bb1e53aa62da2837c340e9"
     ],
     [
       "LatticeAlg.__proj__Act__item__k",
@@ -100,7 +100,7 @@
         "refinement_interpretation_Tm_refine_aa6c28d662386755b687c891d40d0c4b"
       ],
       0,
-      "44e6333af27d2b6d5c78fa9b38dff25e"
+      "a95e63263f148e2142fc7a96c3fda77d"
     ],
     [
       "LatticeAlg.abides_act",
@@ -115,7 +115,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b73787a1ff5e651a6a0d19af4cbedf8d"
+      "e4dcd62f509164e6d02b34ece4933872"
     ],
     [
       "LatticeAlg.abides",
@@ -138,7 +138,7 @@
         "subterm_ordering_LatticeAlg.Act", "typing_tok_Prims.T@tok"
       ],
       0,
-      "1658b99b9a318dc4c1475aa586d0c57b"
+      "a939acaff14a70ae3eb16c467bb38089"
     ],
     [
       "LatticeAlg.interp",
@@ -147,7 +147,7 @@
       1,
       [ "@query", "assumption_LatticeAlg.eff_label__uu___haseq" ],
       0,
-      "80b675135c7201c9c86081cb506e2fcb"
+      "03441ea5998c5c9127c7e1b2bbef1683"
     ],
     [
       "LatticeAlg.interp_at",
@@ -192,7 +192,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "59859860015159c42a8374f76763a068"
+      "afe72cc4116b41cc2286075190352b87"
     ],
     [
       "LatticeAlg.sublist",
@@ -201,7 +201,7 @@
       1,
       [ "@query", "assumption_LatticeAlg.eff_label__uu___haseq" ],
       0,
-      "06e686e7e3e30f72a9921bcaad697191"
+      "35a809b9e522e87c13f46d26a5ee3c38"
     ],
     [
       "LatticeAlg.sublist_refl",
@@ -210,7 +210,7 @@
       1,
       [ "@query", "equation_LatticeAlg.sublist" ],
       0,
-      "318c93ce60ca749e038dab99624f107c"
+      "0ad960ca841fab9329f0a3472e3bb17c"
     ],
     [
       "LatticeAlg.interp_sublist",
@@ -244,7 +244,7 @@
         "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "8b929a729ed318033b728c3c007be2b4"
+      "607b97100d888c8e0eb0f6b4779270fc"
     ],
     [
       "LatticeAlg.sublist_at",
@@ -280,7 +280,7 @@
         "typing_FStar.List.Tot.Base.mem", "typing_FStar.List.Tot.Base.op_At"
       ],
       0,
-      "e6493393e2949be1b84bc880708ab6ac"
+      "f1e1b5afcec4e12394589e710f99e2e7"
     ],
     [
       "LatticeAlg.abides_sublist",
@@ -320,7 +320,7 @@
         "typing_tok_LatticeAlg.WR@tok"
       ],
       0,
-      "a2d01ac07aa643fc53b75bc7d8ee050f"
+      "c36538cc9821a1c5565352ca60a80617"
     ],
     [
       "LatticeAlg.abides_app",
@@ -375,7 +375,7 @@
         "typing_tok_LatticeAlg.WR@tok"
       ],
       0,
-      "42c5ee73a8b6dd76cfc2d20ff58ff8af"
+      "58f1b0bed4264fd8488c3ff957a9d4e9"
     ],
     [
       "LatticeAlg.ann_le",
@@ -389,7 +389,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b802fe358d72108773e2d35327d7e595"
+      "58f333b46033c8550ccfea6f48267405"
     ],
     [
       "LatticeAlg.return",
@@ -408,7 +408,7 @@
         "typing_Tm_abs_650f21af07bfc2616c8cdc830817e489"
       ],
       0,
-      "c9f75504b66c560a23d266cfd9a8c43e"
+      "d1812843705a87d2a0c4b8fb86fa0e63"
     ],
     [
       "LatticeAlg.bind",
@@ -469,7 +469,7 @@
         "typing_tok_LatticeAlg.WR@tok"
       ],
       0,
-      "450a91543ed20d654384ad4c98b86918"
+      "50ae4e1f7d2b640e0525ead9cc0b79ac"
     ],
     [
       "LatticeAlg.subcomp",
@@ -484,7 +484,7 @@
         "refinement_interpretation_Tm_refine_261d39ed691dadd491e30c7b5aa2392c"
       ],
       0,
-      "8c6910bf82a05f1a9a71e0f90dbde3dd"
+      "4464eaa9a248a64ae5deba0d933ad933"
     ],
     [
       "LatticeAlg.EFF",
@@ -493,7 +493,7 @@
       1,
       [ "@query", "lemma_LatticeAlg.sublist_at" ],
       0,
-      "8a74338951f105f5e4d4079073071a65"
+      "e433596ddfd616385a6ecd7c90467d17"
     ],
     [
       "LatticeAlg.EFF",
@@ -502,7 +502,7 @@
       1,
       [ "@query", "lemma_LatticeAlg.sublist_at" ],
       0,
-      "d3b6528c772e9abeeb90b0d343bf6e69"
+      "3c63f65a55135bf1d4b030766ae1140a"
     ],
     [
       "LatticeAlg.lift_pure_eff",
@@ -527,7 +527,7 @@
         "typing_Tm_abs_a59edc6131f71d234dee66a92cbd96bd"
       ],
       0,
-      "0043779d4e5cfe76f4bb5625ce835170"
+      "8468c9df483931964e02b3fc3fa31c2c"
     ],
     [
       "LatticeAlg.get",
@@ -581,7 +581,7 @@
         "unit_typing"
       ],
       0,
-      "f0f8aeee0677caf0299d56c416e23287"
+      "ad0f2b9333aa6d58cf253b4b42557382"
     ],
     [
       "LatticeAlg.put",
@@ -635,7 +635,7 @@
         "typing_tok_LatticeAlg.Return@tok", "typing_tok_LatticeAlg.WR@tok"
       ],
       0,
-      "354b294d79d043c2b979986e546c77dc"
+      "c6684837127993aac3bcc1fe2c8595bd"
     ],
     [
       "LatticeAlg.raise",
@@ -686,7 +686,7 @@
         "typing_tok_LatticeAlg.EXN@tok", "typing_tok_LatticeAlg.Return@tok"
       ],
       0,
-      "c9cb5ea8e94236d4d23e682a5be88e77"
+      "776d75652418aefffdc06d3bacdfe061"
     ],
     [
       "LatticeAlg.__proj__Failure__item__uu___",
@@ -698,7 +698,7 @@
         "refinement_interpretation_Tm_refine_fdf0169238332ad5441e079b7f6b93ec"
       ],
       0,
-      "1bd49bd6c9e754a1dc55d35f2aeccfb3"
+      "964b6e992c22b8fb3a76905af8fe9607"
     ],
     [
       "LatticeAlg.test0",
@@ -726,7 +726,7 @@
         "typing_tok_LatticeAlg.RD@tok", "unit_typing"
       ],
       0,
-      "f6f60045a2b2720e339d6b5ce7d47d57"
+      "cf72e26d064794fd3944f6d9d9ee1bb3"
     ],
     [
       "LatticeAlg.test1",
@@ -760,7 +760,7 @@
         "typing_tok_LatticeAlg.WR@tok", "unit_typing"
       ],
       0,
-      "9d095f65662418de538d62492df2bbca"
+      "0356782c2b9fdc7a4990e26947adf2dd"
     ],
     [
       "LatticeAlg.sublist_at_self",
@@ -773,7 +773,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "e245444781b4ed6522b4bbb1bf94d9fe"
+      "7ad22ff48656bdaee21053b7c9145a7b"
     ],
     [
       "LatticeAlg.labpoly",
@@ -786,7 +786,7 @@
         "lemma_LatticeAlg.sublist_at_self"
       ],
       0,
-      "db4e46b15011c276e60cb804d65d7264"
+      "ad95c56789f3f777953334a1cbd1bae4"
     ],
     [
       "LatticeAlg.catch0",
@@ -849,7 +849,30 @@
         "typing_tok_LatticeAlg.WR@tok"
       ],
       0,
-      "6cea1abea3bb45af82011fa36236d99d"
+      "24655c4f8f054ddca9d8c291dc096014"
+    ],
+    [
+      "LatticeAlg.g",
+      1,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "@query", "LatticeAlg_pretyping_cd00b13e43e1112e1c77a5af2906cf19",
+        "assumption_LatticeAlg.eff_label__uu___haseq",
+        "constructor_distinct_Prims.Nil",
+        "data_typing_intro_LatticeAlg.WR@tok",
+        "data_typing_intro_Prims.Nil@tok", "equation_LatticeAlg.sublist",
+        "equation_Prims.eqtype",
+        "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
+        "kinding_LatticeAlg.eff_label@tok",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_Prims.Nil_a",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "f8bc38241e8bce6196263cbb50211fed"
     ],
     [
       "LatticeAlg.test_catch",
@@ -878,7 +901,7 @@
         "unit_typing"
       ],
       0,
-      "c1fe3a8b5657176918300299398d29c5"
+      "c9a96c86177328e64c3afad381c443c9"
     ],
     [
       "LatticeAlg.test_catch2",
@@ -908,7 +931,7 @@
         "typing_tok_LatticeAlg.WR@tok", "unit_typing"
       ],
       0,
-      "6ea007705255173b31f906c276e90caf"
+      "f795ba1f89c9b62e4ceddb662126eece"
     ],
     [
       "LatticeAlg.interp_pure_tree",
@@ -943,7 +966,7 @@
         "typing_tok_LatticeAlg.WR@tok"
       ],
       0,
-      "9e68cf56100258aeadd6cc17b68cc510"
+      "1e2bbba35b5aefb29b1f3819a4558322"
     ],
     [
       "LatticeAlg.interp_rd_tree",
@@ -1006,7 +1029,7 @@
         "typing_tok_LatticeAlg.Read@tok", "typing_tok_LatticeAlg.WR@tok"
       ],
       0,
-      "b8b42f1da9954c03497288e9c410440c"
+      "0e13f164662bcdc857736b99a9eec8f8"
     ],
     [
       "LatticeAlg.interp_rdwr_tree",
@@ -1066,7 +1089,7 @@
         "typing_tok_LatticeAlg.WR@tok", "unit_typing"
       ],
       0,
-      "90b2061f98ad7f3bc250b1bd546803b9"
+      "92badea9140c93c3e34b38937ce8cb22"
     ],
     [
       "LatticeAlg.interp_all_tree",
@@ -1106,7 +1129,7 @@
         "typing_Tm_abs_650f21af07bfc2616c8cdc830817e489", "unit_typing"
       ],
       0,
-      "c4d5c8c60950eddde73747cd8e11561f"
+      "aba986a1c9b58f87e1a88c8417237c07"
     ]
   ]
 ]

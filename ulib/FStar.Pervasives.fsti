@@ -676,14 +676,15 @@ val resolve_implicits : unit
     see https://github.com/FStarLang/FStar/issues/1844 *)
 val erasable : unit
 
-(** This attribute can be added to a layered effect definition
-    to enable smt proofs by reifying the effect computations.
+(** THIS ATTRIBUTE CAN BREAK EXTRACTION SOUNDNESS, USE WITH CARE
 
-    By-default, layered effect are not reified to the smt encoding,
-    meaning that they can only be reasoned with their specs.
-
-    see examples/layeredeffects/SMTReification.fst for an example.*)
-val smt_reifiable_layered_effect : unit
+    Combinators for reifiable layered effects must have binders with
+    non-informative types, since at extraction time, those binders are
+    substituted with ().
+    This attribute can be added to a layered effect definition to skip this
+    check, i.e. adding it will allow informative binder types, but then
+    the code should not be extracted *)
+val allow_informative_binders : unit
 
 (** [commute_nested_matches]
     This attribute can be used to decorate an inductive type [t]
