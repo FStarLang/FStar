@@ -73,7 +73,7 @@ let bind (a:Type) (b:Type)
 // : Type
 // = repr a r_in r_out b
 
-
+[@@allow_informative_binders]
 reifiable reflectable
 layered_effect {
   RSTATE : a:Type -> resource -> (a -> resource) -> Type0 -> Effect

@@ -25,7 +25,6 @@ let bind (a:Type) (b:Type) (f:repr a ()) (g:a -> repr b ()) : repr b () =
   let y, m = g x in
   y, n + m
 
-[@@smt_reifiable_layered_effect]
 reifiable reflectable total
 layered_effect {
   MST : a:Type -> eqtype_as_type unit -> Effect
@@ -49,4 +48,5 @@ let set (n:int) : MST unit () = MST?.reflect ((), n)
 
 let incr_and_set (n:int) : MST unit () = set (n+1)
 
-let reify_incr_and_set () = assert (snd (reify (incr_and_set 0)) == 1)
+//AR: 07/03: backtracking on smt reification for layered effects
+//let reify_incr_and_set () = assert (snd (reify (incr_and_set 0)) == 1)
