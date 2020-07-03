@@ -25,7 +25,6 @@ let bind (a:Type) (b:Type) (f:repr a ()) (g:a -> repr b ()) : repr b () =
   let y, m = g x in
   y, n + m
 
-[@@smt_reifiable_layered_effect]
 reifiable reflectable total
 layered_effect {
   MST : a:Type -> eqtype_as_type unit -> Effect

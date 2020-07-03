@@ -312,7 +312,6 @@ let read_if_then_else (a:Type)
     (fun _ -> (p ==> post_err_f ()) /\ ((~ p) ==> post_err_g ())) // (read_if_then_else_post_err pre_f pre_g post_err_f post_err_g p)
     l
 
-[@@smt_reifiable_layered_effect]
 reifiable reflectable total
 layered_effect {
   ERead : a:Type -> (pre: pure_pre) -> (post: pure_post' a pre) -> (post_err: pure_post_err pre) -> (memory_invariant) -> Effect
@@ -1068,7 +1067,7 @@ let if_then_else (a:Type)
     (fun v_in -> (p ==> post_err_f v_in) /\ ((~ p) ==> post_err_g v_in)) // (if_then_else_post_err r_in pre_f pre_g post_err_f post_err_g p)
     l
 
-[@@smt_reifiable_layered_effect]
+[@@allow_informative_binders]
 reifiable reflectable total
 layered_effect {
   EWrite : a:Type -> (pin: parser) -> (pout: (parser)) -> (pre: pre_t pin) -> (post: post_t a pin pout pre) -> (post_err: post_err_t pin pre) -> (memory_invariant) -> Effect
@@ -1407,14 +1406,15 @@ let write_two_ints_2_lemma_1
   (x y: U32.t)
 : Lemma
   (destr_repr_spec unit emp (parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ _ -> True) (fun _ -> False) l (write_two_ints_2 l x y) () == Correct ((), (x, y)) )
-= ()
+= admit ()  //AR: 07/03: no smt reification for layered effects
 
 let write_two_ints_2_lemma_2
   (l: memory_invariant)
   (x y: U32.t)
 : Lemma
   (True)
-= assert (Repr?.spec (reify (write_two_ints_2 l x y ())) () == Correct ((), (x, y)))
+= //assert (Repr?.spec (reify (write_two_ints_2 l x y ())) () == Correct ((), (x, y)))
+  admit ()  //AR: 07/03: no smt reification for layered effects
 
 let write_two_ints_ifthenelse
   (l: memory_invariant)
@@ -1446,7 +1446,7 @@ let write_two_ints_ifthenelse_2_aux_lemma
   (x y: U32.t)
 : Lemma
   (destr_repr_spec unit emp (parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ _ -> True) (fun _ -> False) l (write_two_ints_ifthenelse_2_aux l x y) () == Correct ((), (x, (if U32.v x < U32.v y then x else y))) )
-= ()
+= admit ()  //AR: 07/03: no smt reification for layered effects
 
 unfold
 let recast_writer_post
