@@ -95,13 +95,13 @@ let mk_LexCons = norng3 mk_LexCons
  *     Could revisit
  *
  *     06/22: reifying if the effect has the smt_reifiable_layered_effect attribute
+ *     07/02: reverting, until we preserve the indices, no smt reification
  *)
 
 let is_smt_reifiable_effect (en:TcEnv.env) (l:lident) : bool =
   let l = TcEnv.norm_eff_name en l in
   TcEnv.is_reifiable_effect en l &&
-  (let is_layered = l |> TcEnv.get_effect_decl en |> U.is_layered in
-   not is_layered || Env.fv_with_lid_has_attr en l C.smt_reifiable_layered_effect)
+  not (l |> TcEnv.get_effect_decl en |> U.is_layered)
 
 let is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : bool =
   match c.n with
