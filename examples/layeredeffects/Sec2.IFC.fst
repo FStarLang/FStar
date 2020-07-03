@@ -269,6 +269,12 @@ let non_assoc_comp (w0, r0, fs0) (w1, r1, fs1) (w2, r2, fs2) =
      (fs0 @ ((union r0 (union r1 r2), union w1 w2) :: add_source r0 (fs1 @ add_source r1 ((r2, w2)::fs2)))));
   };
 
+// -  fs0
+// -  r0 ~> fs1
+// -  {r0, r1, r2} ~> {w1, w2}
+// -  {r0, r1, r2} ~> w2
+// -  {r0, r1, r2} ~> fs2
+
   calc (==) {
     comp_triple (comp_triple (w0, r0, fs0) (w1, r1, fs1)) (w2, r2, fs2);
     (==) { }
@@ -282,6 +288,12 @@ let non_assoc_comp (w0, r0, fs0) (w1, r1, fs1) (w2, r2, fs2) =
      union (union r0 r1) r2,
      ((fs0 @ ((union r0 r1, w1)::add_source r0 fs1)) @ ((union (union r0 r1) r2, w2) :: add_source (union r0 r1) fs2)));
   }
+
+// - fs0
+// - r0 ~> fs1
+// - {r0, r1} ~> w1
+// - {r0, r1, r2} ~> w2
+// ~ {r0, r1} ~> fs2
 
 let bind (a b:Type)
          (w0 r0 w1 r1:label) (fs0 fs1:flows)
@@ -406,3 +418,67 @@ let test8 (l:lref) (h:href)
   = let x0 = read h in
     let x = read l in
     write l x
+
+//But, label-based IFC is inherently imprecise
+//This one still reports a leakage, even though it doesn't really leak h
+let test9 (l:lref) (h:href)
+  : IST unit (single l)
+             (union (single h) (single l))
+             [(single l `union` single h, single l)]
+  = let x= (let x0 = read h in
+            read l)
+    in
+    write l x
+
+assume
+val cw0 : label
+assume
+val cr0 : label
+assume
+val c0 (_:unit) : IST unit cw0 cr0 []
+
+
+assume
+val cw1 : label
+assume
+val cr1 : label
+assume
+val c1 (_:unit) : IST unit cw1 cr1 []
+
+assume
+val cw2 : label
+assume
+val cr2 : label
+assume
+val c2 (_:unit) : IST unit cw2 cr2 []
+
+(* Notice, from test12 and 14, that this indexing structure is not associative *)
+let test10 ()
+  : IST unit (union cw0 (union cw1 cw2))
+             (union cr0 (union cr1 cr2))
+             (add_source cr0
+               ((union cr1 cr2, union cw1 cw2)::
+                (add_source cr1 [cr2, cw2])))
+  = c0 (); (c1();c2())
+
+let test12 ()
+  : IST unit (union cw0 (union cw1 cw2))
+             (union cr0 (union cr1 cr2))
+             [(union cr0 (union cr1 cr2), union cw1 cw2);
+              union cr0 (union cr1 cr2), cw2]
+  = c0 (); (c1();c2())
+
+
+let test13 ()
+  : IST unit (union (union cw0 cw1) cw2)
+             (union (union cr0 cr1) cr2)
+             (add_source cr0 [cr1, cw1] @
+              add_source (union cr0 cr1) [cr2, cw2])
+  = (c0 (); c1());c2()
+
+let test14 ()
+  : IST unit (union (union cw0 cw1) cw2)
+             (union (union cr0 cr1) cr2)
+             ([union cr0 cr1, cw1;
+               union (union cr0 cr1) cr2, cw2])
+  = (c0 (); c1()); c2()
