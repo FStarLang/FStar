@@ -176,7 +176,7 @@ let read_if_then_else (a:Type)
     (fun _ -> (p ==> post_err_f ()) /\ ((~ p) ==> post_err_g ())) // (read_if_then_else_post_err pre_f pre_g post_err_f post_err_g p)
     l
 
-[@@smt_reifiable_layered_effect]
+[@@allow_informative_binders]
 reifiable reflectable total
 layered_effect {
   ERead : a:Type -> (pre: pure_pre) -> (post: pure_post' a pre) -> (post_err: pure_post_err pre) -> (memory_invariant) -> Effect
@@ -248,6 +248,7 @@ let read_bind_impl'
 : Read b True (fun _ -> True) inv
 = let x = f () in g x ()
 
+[@@expect_failure]
 let read_bind_correct
   (inv: memory_invariant)
   (a b: Type)
