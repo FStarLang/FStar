@@ -93,6 +93,9 @@ layered_effect {
   if_then_else = if_then_else
 }
 
+total
+reifiable
+reflectable
 new_effect SteelK = SteelKF
 
 private
@@ -190,10 +193,9 @@ let bind_steelkf_steelk (a:Type) (b:Type)
 
 polymonadic_bind (SteelKF, SteelK) |> SteelKF = bind_steelkf_steelk
 
-//assume val ksorry : #a:Type -> #p:_ -> #q:_ -> unit -> SteelK a p q
-
+// We would need requires/ensures in SteelK to have a binding with Pure.
+// But for our example, Tot is here sufficient
 let bind_tot_steelK_ (a:Type) (b:Type)
-  (wp:pure_wp a)
   (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t b)
   (f:unit -> PURE a (fun _ -> True)) (g:(x:a -> steelK b pre post))
 : steelK b
@@ -217,70 +219,31 @@ let test_lift #p #q (f : unit -> SteelK unit p (fun _ -> q)) : SteelK unit p (fu
   ()
 
 (* Identity cont with frame, to eliminate a SteelK *)
-assume
-val idk (#frame:slprop) (#a:Type) (x:a) : SteelT a frame (fun x -> frame)
-//  Steel.SteelT.Basics.return x
 
-assume
-val kfork : #p:slprop -> #q:slprop -> (unit -> SteelK unit p (fun _ -> q)) -> SteelK (thread q) p (fun _ -> emp)
+let idk (#frame:slprop) (#a:Type) (x:a) : SteelT a frame (fun x -> frame)
+  = (SteelF?.reflect (Steel.FramingEffect.return a x)) <:
+    SteelF a frame (fun _ -> frame) (return_req frame) (return_ens a x (fun _ -> frame))
 
-// let kfork (#p:slprop) (#q:slprop) (f : unit -> SteelK unit p (fun _ -> q))
-// : SteelK (thread q) p (fun _ -> emp)
-// =
-//   SteelK?.reflect (
-//   l_id ();
-//   fun (#frame:slprop) (#postf:slprop)
-//     (k : (x:(thread q) -> SteelT unit (frame `star` emp) (fun _ -> postf))) ->
-//     let t1 () : SteelT unit p (fun _ -> q) =
-//       let k : (unit -> SteelT unit q (fun _ -> q)) = fun () -> idk #q () in
-//       let r : steelK _ _ _ = reify (f ()) in
-//       reshuffle0 ();
-//       r #emp #q (fun x -> reshuffle0 (); k x)
-//     in
-//     let t2 (t:thread q) () : SteelT unit frame (fun _ -> postf) = reshuffle0 (); k t in
-//     let ff () : SteelT unit (p `star` frame) (fun _ -> postf)
-//               = fork #p #q #frame #postf t1 t2
-//     in
-//     l_comm ();
-//     let ff2 : unit -> SteelT unit (star frame p) (fun _ -> postf) = change_pre ff in
-//     ff2 ())
+let kfork (#p:slprop) (#q:slprop) (f : unit -> SteelK unit p (fun _ -> q))
+: SteelK (thread q) p (fun _ -> emp)
+=
+  SteelK?.reflect (
+  fun (#frame:slprop) (#postf:slprop)
+    (k : (x:(thread q) -> SteelT unit (frame `star` emp) (fun _ -> postf))) ->
+      let t1 () : SteelT unit p (fun _ -> q) =
+        let r : steelK unit p (fun _ -> q) = reify (f ()) in
+        r #emp #q (fun () -> idk ())
+      in
+      let t2 (t:thread q) () : SteelT unit frame (fun _ -> postf) = k t in
+      let ff () : SteelT unit (p `star` frame) (fun _ -> postf) =
+        fork #p #q #frame #postf t1 t2
+      in
+      ff())
 
-(* just a flip of the usual frame *)
-// assume val frame' : #a:_ -> #pre:_ -> #post:_ ->
-//                     (f: unit -> SteelT a pre post) ->
-//                     (frame : slprop) ->
-//                     SteelT a (frame `star` pre) (fun x -> frame `star` (post x))
+let kjoin (#p:slprop) (t : thread p) : SteelK unit emp (fun _ -> p)
+ = SteelK?.reflect (fun #f k -> join t; k ())
 
-assume
-val kjoin (#p:slprop) (t : thread p) : SteelK unit emp (fun _ -> p)
-// SteelK?.reflect (fun #f k -> frame' (fun () -> join t) f; k ())
-
-// assume
-// val kframe : #a:Type -> #p:slprop -> #q:(a->slprop) ->
-//              (f : slprop) ->
-//              ($c : (unit -> SteelK a p q)) ->
-//              SteelK a (f `star` p) (fun x -> f `star` q x)
-
-// let kframe #a #p #q (f : slprop) ($c : (unit -> SteelK a p q))
-//   : SteelK a (f `star` p) (fun x -> f `star` q x)
-//   = SteelK?.reflect (fun #f0 #postf
-//       (k : (x:a -> SteelT unit (f0 `star` (f `star` q x)) (fun _ -> postf))) ->
-//       l_assoc ();
-//       l_comm (); (* blasting with AC.. seems to work fine *)
-//       let k' (x:a) : SteelT unit ((f0 `star` f) `star` q x) (fun _ -> postf) =
-//           change_pre (fun () -> k x) ()
-//       in
-//       let cc0 () : SteelT unit ((f0 `star` f) `star` p) (fun _ -> postf) =
-//         reify (c ()) #(f0 `star` f) #postf k'
-//       in
-//       let cc () : SteelT unit (f0 `star` (f `star` p)) (fun _ -> postf) =
-//         change_pre cc0 ()
-//       in
-//       cc ())
-
-// let cancel #p #q (c : steelK unit (p `star` emp) q) : steelK unit p q =
-//   l_id ();
-//   subcomp _ _ _ _ _ c
+(* Example *)
 
 assume val q : int -> slprop
 assume val f : unit -> SteelK unit emp (fun _ -> emp)

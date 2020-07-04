@@ -163,7 +163,7 @@ let spawn (#p #q:slprop)
   //   h_commute q (pts_to t.r full b);
   //   finish t b
 
-let fork (#a:Type) (#p #q #r #s:slprop)
+let fork (#p #q #r #s:slprop)
       (f: (unit -> SteelT unit p (fun _ -> q)))
       (g: (thread q -> unit -> SteelT unit r (fun _ -> s)))
   : SteelT unit (p `star` r) (fun _ -> s)
