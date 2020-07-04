@@ -8,7 +8,6 @@ open FStar.Universe
 
 module WF = FStar.WellFounded
 
-open Lattice
 
 #set-options "--print_universes --print_implicits --print_effect_args"
 
@@ -29,7 +28,7 @@ noeq
 type action : Type0 -> Type0 -> Type u#1 =
   | Read : action unit state
   | Write : action state unit
-  | Raise : #a:Type0 -> action exn a
+  | Raise : action exn c_False
   
 noeq
 type repr0 (a:Type u#aa) : Type u#(max 1 aa) =
@@ -41,11 +40,33 @@ type annot = eff_label -> bool
 let interp (l : list eff_label) : annot =
   fun lab -> mem lab l
 
-let abides_act #i #o (ann:annot) (a : action i o) : prop =
-    (Read? a ==> ann RD)
-  /\ (Write ? a ==> ann WR)
-  /\ (Raise ? a ==> ann EXN)
+let label_of #ii #oo (a:action ii oo) : eff_label =
+ match a with
+ | Read -> RD
+ | Write -> WR
+ | Raise -> EXN
+ 
+let label_ii (l:eff_label) : Type =
+ match l with
+ | RD -> unit
+ | WR -> state
+ | EXN -> exn
+ 
+let label_oo (l:eff_label) : Type =
+ match l with
+ | RD -> state
+ | WR -> unit
+ | EXN -> c_False
 
+let action_of (l:eff_label) : action (label_ii l) (label_oo l) =
+  match l with
+  | RD ->  Read
+  | WR ->  Write
+  | EXN -> Raise
+
+let abides_act #i #o (ann:annot) (a : action i o) : prop =
+  ann (label_of a) == true
+  
 let rec abides #a (ann:annot) (f : repr0 a) : prop =
   begin match f with
   | Act a i k ->
@@ -340,11 +361,60 @@ let rec interp_all_tree #a (t : repr a [RD;WR;EXN]) (s:state) : Tot (option a & 
     
 let interp_all #a (f : unit -> EFF a [RD;WR;EXN]) (s:state) : Tot (option a & state) = interp_all_tree (reify (f ())) s
 
+//let action_input (a:action 'i 'o) = 'i
+//let action_output (a:action 'i 'o) = 'o
+//
+//let handler_ty (a:action _ _) (b:Type) (labs:list eff_label) =
+//    action_input a ->
+//    (action_output a -> repr b labs) -> repr b labs
+//
+//let dpi31 (#a:Type) (#b:a->Type) (#c:(x:a->b x->Type)) (t : (x:a & y:b x & c x y)) : a =
+//  let (| x, y, z |) = t in x
+//
+//let dpi32 (#a:Type) (#b:a->Type) (#c:(x:a->b x->Type)) (t : (x:a & y:b x & c x y)) : b (dpi31 t) =
+//  let (| x, y, z |) = t in y
+//  
+//let dpi33 (#a:Type) (#b:a->Type) (#c:(x:a->b x->Type)) (t : (x:a & y:b x & c x y)) : c (dpi31 t) (dpi32 t) =
+//  let (| x, y, z |) = t in z
+  
+let handler_ty_l (l:eff_label) (b:Type) (labs:list eff_label) =
+  label_ii l -> (label_oo l -> repr b labs) -> repr b labs
+
+  //handler_ty (dpi33 (action_of l)) b labs
+  //F* complains this is not a function
+  //let (| _, _, a |) = action_of l in
+  //handler_ty a b labs
+
+val handle (#a:_) (#labs:_) (l:eff_label)
+           (f:repr a (l::labs))
+           (h:handler_ty_l l a labs)
+           : repr a labs
+let rec handle #a #labs l f h =
+  match f with
+  | Return x -> Return x
+  | Act act i k ->
+    if label_of act = l
+    then h i (fun o -> WF.axiom1 k o; handle l (k o) h)
+    else begin
+      let k' o : repr a labs =
+         WF.axiom1 k o;
+         handle l (k o) h
+      in
+      Act act i k'
+    end
+    
+let catch0' #a #labs (t1 : repr a (EXN::labs))
+                         (t2 : repr a labs)
+  : repr a labs
+  = handle EXN t1 (fun i k -> t2)
+  
+open Lattice
+
 let trlab = function
   | RD  -> Lattice.RD
   | WR  -> Lattice.WR
   | EXN -> Lattice.EXN
-  
+
 let trlabs = List.Tot.map trlab
 
 [@@expect_failure] // todo this should work
@@ -380,14 +450,14 @@ type sem (a:Type u#aa) (labs : list u#0 eff_label) // #2074 : Type u#aa
   =
   r:(sem0 a){abides' r (interp labs)}
 
-let rec interp_sem #a #labs (t : repr a labs) : sem a labs =
-  let r (s0:state) : Tot (option a & state) =
-    match t with
-    | Return x -> (Some x, s0)
-    | Act Read _ k -> WF.axiom1 k s0; interp_sem #a #labs (k s0) s0
-    | Act Write s k -> WF.axiom1 k (); interp_sem #a #labs (k ()) s
-    | Act Raise e k -> (None, s0)
-  in
-  assume (not (mem RD labs));
-  assume (mem EXN labs);
-  r
+//let rec interp_sem #a #labs (t : repr a labs) : sem a labs =
+//  let r (s0:state) : Tot (option a & state) =
+//    match t with
+//    | Return x -> (Some x, s0)
+//    | Act Read _ k -> WF.axiom1 k s0; interp_sem #a #labs (k s0) s0
+//    | Act Write s k -> WF.axiom1 k (); interp_sem #a #labs (k ()) s
+//    | Act Raise e k -> (None, s0)
+//  in
+//  assume (not (mem RD labs));
+//  assume (mem EXN labs);
+//  r
