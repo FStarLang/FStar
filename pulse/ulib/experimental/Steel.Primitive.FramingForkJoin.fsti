@@ -19,7 +19,7 @@ open Steel.Memory
 
 val thread (p:slprop u#1) : Type u#0
 
-val fork (#a:Type) (#p #q #r #s:slprop)
+val fork (#p #q #r #s:slprop)
          (f: (unit -> SteelT unit p (fun _ -> q)))
          (g: (thread q -> unit -> SteelT unit r (fun _ -> s)))
   : SteelT unit (p `star` r) (fun _ -> s)
