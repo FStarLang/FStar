@@ -1,5 +1,7 @@
 module ID1
 
+open FStar.Ghost
+
 // The base type of WPs
 val wp0 (a : Type u#a) : Type u#(max 1 a)
 let wp0 a = (a -> Type0) -> Type0
@@ -12,8 +14,9 @@ val wp (a : Type u#a) : Type u#(max 1 a)
 let wp a = w:(wp0 a){monotonic w}
 
 let repr (a : Type) (w : wp a) : Type =
-  p:_ -> squash (w p) -> v:a{p v}
+  p:erased (a -> Type0) -> squash (w p) -> v:a{reveal p v}
 
+unfold
 let return_wp #a (x:a) : wp a =
   fun p -> p x
 
@@ -22,7 +25,8 @@ let return (a : Type) (x : a) : repr a (return_wp x) =
  // lose the refinement and then this proof fails.
  // Keep that in mind all ye who enter here.
   fun p _ -> x
-
+  
+unfold
 let bind_wp #a #b
   (wp_v : wp a)
   (wp_f : (x:a -> wp b))
@@ -33,8 +37,6 @@ let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
     (v : repr a wp_v)
     (f : (x:a -> repr b (wp_f x)))
 : repr b (bind_wp wp_v wp_f)
-//= fun p _ -> f (v (fun x -> wp_f x p) ()) p ()
-  // explicit post is annoying
 = fun p _ -> let x = v (fun x -> wp_f x p) () in
           f x p ()
 
@@ -86,7 +88,7 @@ let lift_pure_nd (a:Type) (wp:wp a) (f:(eqtype_as_type unit -> PURE a (nomon wp)
                    (ensures (fun _ -> True))
   = fun p _ ->
     let r = f () in
-    assert (p r); // GM: needed to guide z3 apparently?
+    assert (reveal p r); // GM: needed to guide z3 apparently?
     r
 
 sub_effect PURE ~> ID = lift_pure_nd
@@ -103,9 +105,12 @@ effect Id (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
 
 effect IdT (a:Type) = Id a True (fun _ -> True)
 
-[@@expect_failure] // why?
+[@@expect_failure [189]] // why? some Prims.unit pops up?
+let rec count (n:nat) : IdT int
+ = if n = 0 then 0 else count (n-1)
+ 
+[@@expect_failure [189]] // same
 let rec sum (l : list int) : IdT int
- =
-  match l with
-  | [] -> 0
-  | x::xs -> x + sum xs
+ = match l with
+   | [] -> 0
+   | x::xs -> sum xs
