@@ -18,7 +18,7 @@ module U = FStar.Universe
 // (* Some helpers *)
 assume val can_be_split_forall_frame (#a:Type) (p q:post_t a) (frame:slprop u#1) (x:a)
  : Lemma (requires can_be_split_forall p q)
-         (ensures (frame `star` p x)  `equiv` (frame `star` q x))
+         (ensures (frame `star` p x)  `sl_implies` (frame `star` q x))
 
 assume
 val change_slprop (p q : slprop)
@@ -54,8 +54,7 @@ let bind (a:Type) (b:Type)
   = fun #frame #postf (k:(x:b -> SteelT unit (frame `star` post' x) (fun _ -> postf))) ->
       f
       ((fun (x:a) -> change_slprop (frame `star` post x) (frame `star` pre' x)
-                  (can_be_split_forall_frame post pre' frame x;
-                  equiv_sl_implies (frame `star` post x) (frame `star` pre' x));
+                  (can_be_split_forall_frame post pre' frame x);
         g x k) <: (x:a -> SteelT unit (frame `star` post x) (fun _ -> postf)))
 
 let subcomp (a:Type)
@@ -68,9 +67,8 @@ let subcomp (a:Type)
 = fun #frame #postf (k:(x:a -> SteelT unit (frame `star` post_g x) (fun _ -> postf))) ->
     change_slprop pre_g pre_f (); f
       ((fun x -> change_slprop (frame `star` post_f x) (frame `star` post_g x)
-                            (can_be_split_forall_frame post_f post_g frame x;
-                             equiv_sl_implies (frame `star` post_f x) (frame `star` post_g x));
-              k x) <: (x:a -> SteelT unit (frame `star` post_f x) (fun _ -> postf)))
+                            (can_be_split_forall_frame post_f post_g frame x);
+               k x) <: (x:a -> SteelT unit (frame `star` post_f x) (fun _ -> postf)))
 
 let if_then_else (a:Type u#aa)
                  (#[@@ framing_implicit] pre1:pre_t)
@@ -121,7 +119,7 @@ let bind_steelk_steelk (a:Type) (b:Type)
     f #(frame `star` frame_f) #post
       ((fun (x:a) ->
         // Need SteelT unit ((frame `star` frame_f) `star` post_f x) (fun _ -> post)
-        change_slprop_equiv
+        change_slprop
           (frame `star` (post_f x `star` frame_f))
           (frame `star` (pre_g x `star` frame_g))
           (can_be_split_forall_frame (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g) frame x);
@@ -152,7 +150,7 @@ let bind_steelk_steelkf (a:Type) (b:Type)
         equiv_symmetric ((frame `star` frame_f) `star` pre_f) (frame `star` (pre_f `star` frame_f)) );
     f #(frame `star` frame_f) #post
       ((fun (x:a) ->
-          change_slprop_equiv
+          change_slprop
             (frame `star` (post_f x `star` frame_f))
             (frame `star` pre_g x)
             (can_be_split_forall_frame (fun x -> post_f x `star` frame_f) pre_g frame x);
@@ -179,7 +177,7 @@ let bind_steelkf_steelk (a:Type) (b:Type)
     f #frame #post
       ((fun (x:a) ->
         // Need SteelT unit (frame `star` post_f x) (fun _ -> post)
-        change_slprop_equiv
+        change_slprop
           (frame `star` post_f x)
           (frame `star` (pre_g x `star` frame_g))
           (can_be_split_forall_frame post_f (fun x -> pre_g x `star` frame_g) frame x);
