@@ -54,6 +54,10 @@ let ite_wp #a (wp1 wp2 : wp a) (b : bool) : wp a =
 let if_then_else (a : Type) (wp1 wp2 : wp a) (f : repr a wp1) (g : repr a wp2) (p : bool) : Type =
   repr a (ite_wp wp1 wp2 p)
 
+let default_if_then_else (a:Type) (wp:wp a) (f:repr a wp) (g:repr a wp) (p:bool)
+: Type
+= repr a  wp
+
 let strengthen #a #w (p:Type0) (f : squash p -> repr a w) : repr a (fun post -> p /\ w post) =
   fun post _ -> f () post ()
   
@@ -79,7 +83,8 @@ layered_effect {
   with repr         = repr;
        return       = return;
        bind         = bind;
-       subcomp      = subcomp
+       subcomp      = subcomp;
+       if_then_else = default_if_then_else
 }
 
 let nomon #a (w : wp a) : pure_wp a = fun p -> w p
