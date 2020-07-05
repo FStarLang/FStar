@@ -61,7 +61,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "2fc359f4007b1ef7c0908a43c4ee7985"
+      "76a1d956744fbae93cf8f8cce3cb516b"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex2",
@@ -121,7 +121,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "c15cf929e94918a65a5a52189dfbcfcb"
+      "ffab35f04779cb2aea365164330ed925"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex3",
@@ -153,7 +153,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "b62a4df7287c4cbe8be2cf955a427350"
+      "b31000b5424ee880ef924efffd24994d"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex4",
@@ -186,7 +186,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "17933ee41d8862a3bbc055ded1fb7255"
+      "c40e3592595ab29fc6d66061074bf7dd"
     ],
     [
       "Benton2004.RHL.Examples.sec42_ex5",
@@ -219,7 +219,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "e55f9674f5b593ebf14d0f1fc00507d4"
+      "724050cd917bcfb90d07e5614192a725"
     ],
     [
       "Benton2004.RHL.Examples.r_ass",
@@ -236,7 +236,7 @@
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908"
       ],
       0,
-      "10b4105eece1e182d6df62e18fd2ebd4"
+      "5a9cdc1450c95e87077431b90c7e0e79"
     ],
     [
       "Benton2004.RHL.Examples.r_dassl",
@@ -253,7 +253,7 @@
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908"
       ],
       0,
-      "ecebdd0415c9b3012a837ceed106c8bd"
+      "46021bcb754040d96b356dd8829fe2ed"
     ],
     [
       "Benton2004.RHL.Examples.flip_flip",
@@ -266,7 +266,7 @@
         "token_correspondence_Benton2004.RHL.flip"
       ],
       0,
-      "41ca227e531f3fb6a343bec31a9ee8a7"
+      "32413f72fcab3364600d20965c0d4510"
     ],
     [
       "Benton2004.RHL.Examples.r_dassr",
@@ -293,7 +293,7 @@
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908"
       ],
       0,
-      "998a6ab5657d16e6f95a5e7af9a6f40c"
+      "52cb46ac126c31102da23ad75f0bced5"
     ],
     [
       "Benton2004.RHL.Examples.d_su1'_flip",
@@ -306,7 +306,7 @@
         "typing_Benton2004.skip"
       ],
       0,
-      "458112b38420f2c7a341485b5bd6d1f5"
+      "c9f9b984e1fe3c13bcaec87eb6f44d4a"
     ],
     [
       "Benton2004.RHL.Examples.sec43",
@@ -413,7 +413,7 @@
         "typing_tok_Benton2004.RHL.Right@tok"
       ],
       0,
-      "628bbb21dd12636ffbe06fc4787594b0"
+      "ec28a812145b29ba21aaf8c03652b446"
     ],
     [
       "Benton2004.RHL.Examples.sec43'",
