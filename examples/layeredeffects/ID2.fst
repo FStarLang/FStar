@@ -117,6 +117,11 @@ let lift_pure_nd (a:Type) (wp:w a) (f:(eqtype_as_type unit -> PURE a (nomon wp))
 
 sub_effect PURE ~> ID = lift_pure_nd
 
+
+// this requires using a good if_then_else, but why?
+let rec count (n:nat) : ID int (fun p -> forall r. p r)
+ = if n = 0 then 0 else count (n-1)
+
 (* Checking that it's kind of usable *)
 
 val test_f : unit -> ID int (fun p -> p 5 /\ p 3)

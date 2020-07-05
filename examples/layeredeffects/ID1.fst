@@ -84,7 +84,7 @@ layered_effect {
        return       = return;
        bind         = bind;
        subcomp      = subcomp;
-       if_then_else = default_if_then_else
+       if_then_else = if_then_else
 }
 
 let nomon #a (w : wp a) : pure_wp a = fun p -> w p
@@ -109,14 +109,38 @@ let l () : int = reify (test_f ()) (fun _ -> True) ()
 effect Id (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
         ID a (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result))
 
-effect IdT (a:Type) = Id a True (fun _ -> True)
+effect I (a:Type) = Id a True (fun _ -> True)
 
-[@@expect_failure [189]]
-let rec count (n:nat) : IdT int
+#set-options "--debug ID1 --debug_level SMTQuery"
+
+open FStar.Tactics
+
+[@@expect_failure [19]]
+let rec fib (i:nat) : I nat =
+  if i = 0 || i = 1
+  then 1
+  else fib (i-1) + fib (i-2)
+
+[@@expect_failure [66]]
+let rec idiv (a b : nat) : Id int (requires (a >= 0 /\ b > 0))
+                              (ensures (fun r -> r >= 0)) 
+                              (decreases a)
+  =
+  if a < b
+  then 0
+  else begin
+   assume (a-b << a);
+   let r = idiv (a-b) b in
+   1 + r
+  end
+  
+let add1 (x:int) : Id int (requires (x > 0)) (ensures (fun r -> r == x+1)) = x + 1
+
+let rec count (n:nat) : I int
  = if n = 0 then 0 else count (n-1)
  
-[@@expect_failure [189]] // same
-let rec sum (l : list int) : IdT int
+[@@expect_failure [19]] // same
+let rec sum (l : list int) : I int
  = match l with
    | [] -> 0
    | x::xs -> sum xs
