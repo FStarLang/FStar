@@ -1,6 +1,7 @@
 module ID5
 
 open FStar.Ghost
+open Common
 
 // The base type of WPs
 val wp0 (a : Type u#a) : Type u#(max 1 a)
@@ -102,13 +103,6 @@ effect Id (a:Type) (pre:Type0) (post:a->Type0) =
 effect I (a:Type) = Id a True (fun _ -> True)
 
 open FStar.Tactics
-
-let elim_pure #a #wp ($f : unit -> PURE a wp) p
- : Pure a (requires (wp p)) (ensures (fun r -> p r))
- //: PURE a (fun p' -> wp p /\ (forall r. p r ==> p' r))
- // ^ basically this, requires monotonicity
- = FStar.Monotonic.Pure.wp_monotonic_pure ();
-   f ()
 
 let lift_pure_nd (a:Type) (wp:wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
   Pure (repr a wp) (requires True)
