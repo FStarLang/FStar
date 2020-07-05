@@ -13,7 +13,8 @@ let monotonic (w:wp0 'a) =
 val wp (a : Type u#a) : Type u#(max 1 a)
 let wp a = w:(wp0 a){monotonic w}
 
-let repr (a : Type) (w : wp a) : Type =
+let repr (a : Type u#aa) (w : wp a) : Type u#(max 1 aa) =
+  // Hmmm, the explicit post bumps the universe level
   p:erased (a -> Type0) -> squash (w p) -> v:a{reveal p v}
 
 unfold
@@ -88,7 +89,7 @@ let lift_pure_nd (a:Type) (wp:wp a) (f:(eqtype_as_type unit -> PURE a (nomon wp)
                    (ensures (fun _ -> True))
   = fun p _ ->
     let r = f () in
-    assert (reveal p r); // GM: needed to guide z3 apparently?
+    assert (reveal p r);
     r
 
 sub_effect PURE ~> ID = lift_pure_nd
@@ -105,7 +106,7 @@ effect Id (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
 
 effect IdT (a:Type) = Id a True (fun _ -> True)
 
-[@@expect_failure [189]] // why? some Prims.unit pops up?
+[@@expect_failure [189]]
 let rec count (n:nat) : IdT int
  = if n = 0 then 0 else count (n-1)
  
