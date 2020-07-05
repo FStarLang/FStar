@@ -13,7 +13,7 @@ let union (l0 l1:label) = Set.union l0 l1
 let is_empty #a (s:Set.set a) = forall (x:a). ~ (Set.mem x s)
 let comp a = store -> a & store
 let havoc s l x = upd s l x
-let does_not_read_loc_v #a (f:comp a) (reads:label) (writes:label) (l:loc) (s0:store) v =
+let does_not_read_loc_v #a (f:comp a) (reads:label) (l:loc) (s0:store) v =
     let s0' = havoc s0 l v in
     let x1, s1 = f s0 in
     let x1', s1' = f s0' in
@@ -25,11 +25,11 @@ let does_not_read_loc_v #a (f:comp a) (reads:label) (writes:label) (l:loc) (s0:s
     (sel s1 l == sel s0 l /\
      sel s1' l == sel s0' l))
 
-let does_not_read_loc #a (f:comp a) (reads:label) (writes:label) (l:loc) (s0:store) =
+let does_not_read_loc #a (f:comp a) (reads:label) (l:loc) (s0:store) =
   forall v.
-    does_not_read_loc_v f reads writes l s0 v
-let reads_ok #a (f:comp a) (reads:label) (writes:label) =
-    (forall (l:loc) (s:store). ~(Set.mem l reads) ==> does_not_read_loc f reads writes l s)
+    does_not_read_loc_v f reads l s0 v
+let reads_ok #a (f:comp a) (reads:label) =
+    (forall (l:loc) (s:store). ~(Set.mem l reads) ==> does_not_read_loc f reads l s)
 let writes_ok #a (f:comp a) (writes:Set.set loc) =
     (forall (l:loc). ~(Set.mem l writes) ==>
                (forall (s0:store).
@@ -69,7 +69,7 @@ let respects_flows #a (f:comp a) (fs:flows) =
     (forall from to. {:pattern (no_leakage f from to)} ~(has_flow from to fs) /\ from<>to ==> no_leakage f from to)
 let ist a (writes:label) (reads:label) (fs:flows) =
   f:(store -> (a * store)) {
-    reads_ok f reads writes /\
+    reads_ok f reads /\
     writes_ok f writes  /\
     respects_flows f fs
   }
@@ -90,23 +90,22 @@ let bind_comp_reads_ok (#a #b:Type)
                        (#fs0 #fs1:flows)
                        (x:ist a w0 r0 fs0)
                        (y: a -> ist b w1 r1 fs1)
-  : Lemma (reads_ok (bind_comp x y) (union r0 r1) (union w0 w1))
+  : Lemma (reads_ok (bind_comp x y) (union r0 r1))
   = let f = bind_comp x y in
     let reads = union r0 r1 in
-    let writes = union w0 w1 in
     let f_reads_ok (l:loc) (s0:store)
       : Lemma (requires (~(Set.mem l reads)))
-              (ensures (does_not_read_loc f reads writes l s0))
-              [SMTPat (does_not_read_loc f reads writes l s0)]
+              (ensures (does_not_read_loc f reads l s0))
+              [SMTPat (does_not_read_loc f reads l s0)]
       = let aux (k:_)
-          : Lemma (ensures (does_not_read_loc_v f reads writes l s0 k))
-                  [SMTPat (does_not_read_loc_v f reads writes l s0 k)]
+          : Lemma (ensures (does_not_read_loc_v f reads l s0 k))
+                  [SMTPat (does_not_read_loc_v f reads l s0 k)]
           = let v, s1 = x s0 in
             let v', s1' = x (havoc s0 l k) in
-            assert (does_not_read_loc x r0 w0 l s0);
-            assert (does_not_read_loc_v x r0 w0 l s0 k);
+            assert (does_not_read_loc x r0 l s0);
+            assert (does_not_read_loc_v x r0 l s0 k);
             assert (v == v');
-            assert (does_not_read_loc (y v) r1 w1 l s1);
+            assert (does_not_read_loc (y v) r1 l s1);
             let u, s2 = y v s1 in
             let u', s2' = y v s1' in
             assert (forall l'. l' <> l ==> sel s1 l' == sel s1' l');
@@ -209,7 +208,7 @@ let bind_comp_no_leakage (#a #b:Type)
                 let _, s2' = f s0' in
                 sel s2 to == sel s2' to))
     = let f = bind_comp x y in
-      assert (reads_ok x r0 w0);
+      assert (reads_ok x r0);
       let s0' = havoc s0 from k in
       let _, s2f = f s0 in
       let _, s2f' = f s0' in
@@ -235,9 +234,9 @@ let bind_comp_no_leakage (#a #b:Type)
       if Set.mem to w1
       then begin
         assert (~(Set.mem from r0));
-        assert (reads_ok x r0 w0);
-        assert (does_not_read_loc x r0 w0 from s0);
-        assert (does_not_read_loc_v x r0 w0 from s0 k);
+        assert (reads_ok x r0);
+        assert (does_not_read_loc x r0 from s0);
+        assert (does_not_read_loc_v x r0 from s0 k);
         assert (v0 == v0');
         assert (forall l. l <> from ==> sel s1 l == sel s1' l);
         assert (Map.equal s1' (havoc s1 from k) \/ Map.equal s1' s1);
@@ -247,7 +246,7 @@ let bind_comp_no_leakage (#a #b:Type)
           end
         else begin
           assert (Map.equal s1' (havoc s1 from k));
-          assert (reads_ok (y v0) r1 w1);
+          assert (reads_ok (y v0) r1);
           if (sel s2 to = sel s2' to)
           then ()
           else begin
@@ -397,14 +396,14 @@ let subcomp (a:Type) (w0 r0 w1 r1:label) (fs0 fs1:flows) (f:ist a w0 r0 fs0)
     (fun _ -> True)
   = let f_reads_ok (l:loc) (s0:store)
       : Lemma (requires (~(Set.mem l r1)))
-              (ensures (does_not_read_loc f r1 w1 l s0))
-              [SMTPat (does_not_read_loc f r1 w1 l s0)]
+              (ensures (does_not_read_loc f r1 l s0))
+              [SMTPat (does_not_read_loc f r1 l s0)]
       = let aux (k :_)
-          : Lemma (ensures (does_not_read_loc_v f r1 w1 l s0 k))
-                  [SMTPat  (does_not_read_loc_v f r1 w1 l s0 k)]
+          : Lemma (ensures (does_not_read_loc_v f r1 l s0 k))
+                  [SMTPat  (does_not_read_loc_v f r1 l s0 k)]
           = let v, s1 = f s0 in
             let v', s1' = f (havoc s0 l k) in
-            assert (does_not_read_loc f r0 w0 l s0);
+            assert (does_not_read_loc f r0 l s0);
             assert (v == v');
             assert (not (Set.mem l w0) ==> sel s1' l = k);
             assert (not (Set.mem l w1) ==> sel s1' l = k);
