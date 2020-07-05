@@ -437,7 +437,6 @@ let bind_steelf_steel (a:Type) (b:Type)
 
 polymonadic_bind (SteelF, Steel) |> SteelF = bind_steelf_steel
 
-
 (*
 //  * SteelF, SteelF: no framing, use the effect bind
 //  *)
@@ -489,7 +488,6 @@ let bind_pure_steel_ (a:Type) (b:Type)
 polymonadic_bind (PURE, SteelF) |> SteelF = bind_pure_steel_
 
 polymonadic_bind (PURE, Steel) |> Steel = bind_pure_steel_
-
 
 (*
 //  * subcomp relation from SteelF to Steel

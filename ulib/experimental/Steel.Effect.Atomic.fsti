@@ -104,7 +104,7 @@ val lift_pure_steel_atomic (a:Type)
          (requires wp (fun _ -> True))
          (ensures fun _ -> True)
 
-sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
+// sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
 
 
 val lift_atomic_to_steelT (#a:Type)
@@ -113,6 +113,33 @@ val lift_atomic_to_steelT (#a:Type)
                           (#fp':a -> slprop)
                           ($f:unit -> SteelAtomic a Set.empty o fp fp')
   : Steel.Effect.SteelT a fp fp'
+
+
+val bind_pure_steel (a:Type)
+                    (b:Type)
+                    (wp:pure_wp a)
+                    (opened_invariants:inames)
+                    (o:observability)
+                    (pre_g:slprop)
+                    (post_g:b -> slprop)
+                    (f:unit -> PURE a wp)
+                    (g:(x:a -> atomic_repr b opened_invariants o pre_g post_g))
+  : atomic_repr b opened_invariants o pre_g post_g
+
+polymonadic_bind (PURE, SteelAtomic) |> SteelAtomic = bind_pure_steel
+
+let triv_pre (p:slprop) : Steel.Effect.fp_mprop p = fun _ -> True
+let triv_post (#a:Type) (pre:slprop) (post:a -> slprop) : Steel.Effect.fp_binary_mprop #a pre post
+  = fun _ _ _ -> True
+
+val lift_atomic_to_steel (a:Type)
+                          (o:observability)
+                          (fp:slprop)
+                          (fp':a -> slprop)
+                          (f:atomic_repr a Set.empty o fp fp')// unit -> SteelAtomic a Set.empty o fp fp')
+  : Steel.Effect.repr a fp fp' (triv_pre fp) (triv_post fp fp')
+
+sub_effect SteelAtomic ~> Steel.Effect.Steel = lift_atomic_to_steel
 
 [@@warn_on_use "as_atomic_action is a trusted primitive"]
 val as_atomic_action (#a:Type u#a)
