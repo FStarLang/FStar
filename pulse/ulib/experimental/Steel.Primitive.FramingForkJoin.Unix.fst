@@ -254,3 +254,25 @@ let example () : SteelK unit emp (fun _ -> q 1 `star` q 2) =
   kjoin p1;
   h();
   kjoin p2
+
+let as_steelk_repr (#a:Type) (#pre:slprop) (#post:post_t a) (f:unit -> SteelT a pre post)
+  : steelK a pre post
+  = fun #frame #postf (k:(x:a -> SteelT unit (frame `star` post x) (fun _ -> postf))) ->
+      let x = f () in
+      k x
+
+let as_steelk (#a:Type) (#pre:slprop) (#post:post_t a) ($f:unit -> SteelT a pre post)
+  : SteelK a pre post
+  = SteelK?.reflect (as_steelk_repr f)
+
+open Steel.FractionalPermission
+
+let example2 () : SteelK (ref int) emp (fun r -> pts_to r full_perm 2) =
+  let x = as_steelk (fun _ -> alloc 0) in
+  let y = as_steelk (fun _ -> alloc 1) in
+  let p1:thread (pts_to x full_perm 1) = kfork (fun _ -> as_steelk (fun _ -> write #_ #0 x 1)) in
+  let p2:thread emp = kfork (fun _ -> as_steelk (fun _ -> free #_ #1 y)) in
+  kjoin p1;
+  as_steelk (fun _ -> write #_ #1 x 2);
+  kjoin p2;
+  x
