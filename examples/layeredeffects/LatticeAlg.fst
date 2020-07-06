@@ -379,52 +379,93 @@ let handler_ty_l (l:eff_label) (b:Type) (labs:list eff_label) =
 (* A generic handler for a (single) label l, relies on the fact that
 we can compare actions for equality, or equivalently map them to their
 labels. *)
-val handle (#a:_) (#labs:_) (l:eff_label)
+val handle (#a #b:_) (#labs:_) (l:eff_label)
            (f:repr a (l::labs))
-           (h:handler_ty_l l a labs)
-           : repr a labs
-let rec handle #a #labs l f h =
+           (h:handler_ty_l l b labs)
+           (v: a -> repr b labs)
+           : repr b labs
+let rec handle #a #b #labs l f h v =
   match f with
-  | Return x -> Return x
+  | Return x -> v x
   | Act act i k ->
     if label_of act = l
-    then h i (fun o -> WF.axiom1 k o; handle l (k o) h)
+    then h i (fun o -> WF.axiom1 k o; handle l (k o) h v)
     else begin
-      let k' o : repr a labs =
+      let k' o : repr b labs =
          WF.axiom1 k o;
-         handle l (k o) h
+         handle l (k o) h v
       in
       Act act i k'
     end
 
-
 (* Easy enough to handle 2 labels at once *)
-val handle2 (#a:_) (#labs:_) (l1 l2 :eff_label)
+val handle2 (#a #b:_) (#labs:_) (l1 l2 :eff_label)
            (f:repr a (l1::l2::labs))
-           (h1:handler_ty_l l1 a labs)
-           (h2:handler_ty_l l2 a labs)
-           : repr a labs
-let rec handle2 #a #labs l1 l2 f h1 h2 =
+           (h1:handler_ty_l l1 b labs)
+           (h2:handler_ty_l l2 b labs)
+           (v : a -> repr b labs)
+           : repr b labs
+let rec handle2 #a #b #labs l1 l2 f h1 h2 v =
   match f with
-  | Return x -> Return x
+  | Return x -> v x
   | Act act i k ->
     if label_of act = l1
-    then h1 i (fun o -> WF.axiom1 k o; handle2 l1 l2 (k o) h1 h2)
+    then h1 i (fun o -> WF.axiom1 k o; handle2 l1 l2 (k o) h1 h2 v)
     else if label_of act = l2
-    then h2 i (fun o -> WF.axiom1 k o; handle2 l1 l2 (k o) h1 h2)
+    then h2 i (fun o -> WF.axiom1 k o; handle2 l1 l2 (k o) h1 h2 v)
     else begin
-      let k' o : repr a labs =
+      let k' o : repr b labs =
          WF.axiom1 k o;
-         handle2 l1 l2 (k o) h1 h2
+         handle2 l1 l2 (k o) h1 h2 v
       in
       Act act i k'
     end
 
 let catch0' #a #labs (t1 : repr a (EXN::labs))
-                      (t2 : repr a labs)
+                     (t2 : repr a labs)
   : repr a labs
-  = handle EXN t1 (fun i k -> t2)
-  
+  = handle EXN t1 (fun i k -> t2) (fun x -> Return x)
+    
+let fmap #a #b #labs (f : a -> b) (t : repr a labs) : repr b labs =
+  bind _ _ _ labs t (fun x -> Return (f x))
+
+let join #a #labs (t : repr (repr a labs) labs) : repr a labs =
+  bind _ _ _ _ t (fun x -> x)
+
+let app #a #b #labs (t : repr (a -> b) labs) (x:a) : repr b labs =
+  fmap (fun f -> f x) t
+
+let frompure #a (t : repr a []) : a =
+  match t with
+  | Return x -> x
+
+// akin to "push_squash" can't be done I think
+// val push #a #b #labs (t : a -> repr b labs) : repr (a -> b) labs
+
+#set-options "--print_implicits"
+
+let catchST2_emp #a
+  (f : repr a (RD::WR::[]))
+  : repr (state -> a & state) []
+  = handle2 #a #(state -> a & state)
+            #[]
+            RD WR f
+            (fun _  k ->  Return (fun s -> frompure (k s) s))
+            (fun s' k ->  Return (fun s -> frompure (k ()) s'))
+            (fun x -> Return (fun s -> (x,s)))
+
+// not sure if this definable as-is
+// should read https://www.fceia.unr.edu.ar/~mauro/pubs/haskell2019.pdf
+let catchST2 #a #labs
+  (f : repr a (RD::WR::labs))
+  : repr (state -> a & state) labs
+  = handle2 #a #(state -> a & state)
+            #labs
+            RD WR f
+            (fun _  k -> admit ()) // what to do here?
+            (fun s' k -> bind _ _ _ labs (k ()) (fun f -> Return (fun _ -> f s')))
+            (fun x -> Return (fun s0 -> (x, s0)))
+
 module L = Lattice
 
 let trlab = function
