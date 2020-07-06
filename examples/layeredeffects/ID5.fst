@@ -42,11 +42,11 @@ let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
 = fun p _ -> let x = v (fun x -> wp_f x p) () in
           f x p ()
 
-let subcomp (a:Type u#uu) (w1 w2:wp a)
+irreducible let refine : unit = ()
+
+let subcomp (a:Type u#uu) (w1 w2:wp a) (#[@@ refine] u:squash (forall p. w2 p ==> w1 p))
     (f : repr a w1)
-: Pure (repr a w2)
-       (requires (forall p. w2 p ==> w1 p))
-       (ensures fun _ -> True)
+: repr a w2
 = f
 
 // useful?
@@ -110,6 +110,15 @@ let lift_pure_nd (a:Type) (wp:wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
   = fun p _ -> elim_pure f p
 
 sub_effect PURE ~> ID = lift_pure_nd
+
+//tests to make sure we are actually checking subcomp even now
+let apply (f:unit -> Id int True (fun x -> x > 3)) : Id int True (fun x -> x > 2) = f ()
+
+[@@expect_failure]
+let incorrect_apply (f:unit -> Id int True (fun x -> x > 3)) : Id int True (fun x -> x > 5) = f ()
+
+[@@expect_failure]
+let another_one (n:int) (f:(x:int -> Id int (x > 0) (fun _ -> True))) : Id int True (fun _ -> True) = f n
 
 let iassert (q:Type0) : ID unit (fun p -> q /\ (q ==> p ())) = ()
 
