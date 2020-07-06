@@ -56,17 +56,22 @@ val bind (a:Type u#a) (b:Type u#b)
    (#[@@ framing_implicit] p:squash (can_be_split_forall post_f pre_g))
    (f:atomic_repr a opened_invariants o1 pre_f post_f)
    (g:(x:a -> atomic_repr b opened_invariants o2 (pre_g x) post_g))
-  : atomic_repr b opened_invariants (join_obs o1 o2) pre_f post_g
+  : Pure (atomic_repr b opened_invariants (join_obs o1 o2) pre_f post_g)
+         (requires obs_at_most_one o1 o2)
+         (ensures fun _ -> True)
 
 val subcomp (a:Type)
   (opened_invariants:inames)
-  (o:observability)
+  (o1:observability)
+  (o2:observability)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
   (#[@@ framing_implicit] pre_g:pre_t) (#[@@ framing_implicit] post_g:post_t a)
   (#[@@ framing_implicit] p1:squash (delay (can_be_split pre_g pre_f)))
   (#[@@ framing_implicit] p2:squash (annot_sub_post (can_be_split_forall post_f post_g)))
-  (f:atomic_repr a opened_invariants o pre_f post_f)
-: atomic_repr a opened_invariants o pre_g post_g
+  (f:atomic_repr a opened_invariants o1 pre_f post_f)
+: Pure (atomic_repr a opened_invariants o2 pre_g post_g)
+       (requires o1 == observable ==> o2 == observable)
+       (ensures fun _ -> True)
 
 let if_then_else (a:Type)
   (opened_invariants:inames)
@@ -110,9 +115,11 @@ val bind_steela_steela (a:Type) (b:Type)
     (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g)))
   (f:atomic_repr a opened_invariants o1 pre_f post_f)
   (g:(x:a -> atomic_repr b opened_invariants o2 (pre_g x) post_g))
-: atomic_repr b opened_invariants (join_obs o1 o2)
+: Pure (atomic_repr b opened_invariants (join_obs o1 o2)
     (pre_f `star` frame_f)
-    (fun y -> post_g y `star` frame_g)
+    (fun y -> post_g y `star` frame_g))
+    (requires obs_at_most_one o1 o2)
+    (ensures fun _ -> True)
 
 polymonadic_bind (SteelAtomic, SteelAtomic) |> SteelAtomicF = bind_steela_steela
 
@@ -126,9 +133,11 @@ val bind_steela_steelaf (a:Type) (b:Type)
   (#[@@ framing_implicit] p:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
   (f:atomic_repr a opened_invariants o1 pre_f post_f)
   (g:(x:a -> atomic_repr b opened_invariants o2 (pre_g x) post_g))
-: atomic_repr b opened_invariants (join_obs o1 o2)
-    (pre_f `star` frame_f)
-    post_g
+: Pure (atomic_repr b opened_invariants (join_obs o1 o2)
+         (pre_f `star` frame_f)
+         post_g)
+       (requires obs_at_most_one o1 o2)
+       (ensures fun _ -> True)
 
 polymonadic_bind (SteelAtomic, SteelAtomicF) |> SteelAtomicF = bind_steela_steelaf
 
@@ -142,9 +151,11 @@ val bind_steelaf_steela (a:Type) (b:Type)
   (#[@@ framing_implicit] p:squash (can_be_split_forall post_f (fun x -> pre_g x `star` frame_g)))
   (f:atomic_repr a opened_invariants o1 pre_f post_f)
   (g:(x:a -> atomic_repr b opened_invariants o2 (pre_g x) post_g))
-: atomic_repr b opened_invariants (join_obs o1 o2)
-    pre_f
-    (fun y -> post_g y `star` frame_g)
+: Pure (atomic_repr b opened_invariants (join_obs o1 o2)
+        pre_f
+        (fun y -> post_g y `star` frame_g))
+    (requires obs_at_most_one o1 o2)
+    (ensures fun _ -> True)
 
 polymonadic_bind (SteelAtomicF, SteelAtomic) |> SteelAtomicF = bind_steelaf_steela
 
@@ -164,6 +175,7 @@ polymonadic_bind (PURE, SteelAtomic) |> SteelAtomic = bind_pure_steela_
 
 polymonadic_subcomp SteelAtomicF <: SteelAtomic = subcomp
 
+// AF: Why is this failing?
 // val lift_atomic_to_steelT (a:Type)
 //                           (o:observability)
 //                           (fp:slprop)
