@@ -29,9 +29,9 @@ type annot = eff_label -> Type0
 
 noeq
 type action : inp:Type0 -> out:Type0 -> st0:Type0 -> st1:Type0 -> Type u#1 =
-  | Read  : #st0:Type0 -> action unit st0 st0 st0
-  | Write : #st0:Type0 -> #st1:Type0 -> action st1 unit st0 st1
-  | Raise : #a:Type -> #st0:Type -> #st1:Type -> action exn a st0 st1
+  | Read  : #st0:Type -> action unit st0 st0 st0
+  | Write : #st0:Type -> #st1:Type -> action st1 unit st0 st1
+  | Raise : #st0:Type -> #st1:Type -> action exn c_False st0 st1
 
 // alternative: exceptions do not change state
 //  | Raise : #a:Type -> #st0:Type -> action exn a st0 st0
@@ -247,17 +247,24 @@ let labpoly #s0 #labs (f g : unit -> EFF int s0 s0 labs) : EFF int s0 s0 labs =
 
 let termination_hack (i:int) : y:int{y<<i} = admit(); i-1
 
+// TODO: putting this inside sumn makes it explode.
 let rec aux (i:int) : EFF unit int int [RD;WR] (decreases i) =
-  if i = 0
-  then ()
-  else
-    (put (get () + i);
-     aux (termination_hack i))
+  if i > 0
+  then (put (get () + i);
+        aux (termination_hack i))
 
 let sumn #st (n:nat) : EFF int st int [RD;WR] =
   put 0;
   aux n;
   get ()
+
+let sumst #st (n:nat) : EFF int st st [RD; WR] =
+  let old = get () in
+  put 0;
+  aux n;
+  let res = get () in
+  put old;
+  res
 
 let _runST (#a:Type0) #labs #si #sf ($c : repr a si sf labs) (s0:si) : Tot (option (a & sf)) =
   let rec aux #st0 (s:st0) (c : repr a st0 sf labs) : Tot (option (a & sf)) (decreases c) =
@@ -294,7 +301,7 @@ let rec _catchST (#a:Type0) #labs #si #sf
   | Act Read _i k -> axiom1 k s0; _catchST #a #labs stt (k s0) s0
   | Act Write s k -> axiom1 k (); _catchST #a #labs stt (k ()) s
   | Act Raise e k ->
-    let k' (o : squash False) : repr (a & sf) stt stt labs =
+    let k' (o : c_False) : repr (a & sf) stt stt labs =
       unreachable ()
     in
     Act Raise e k'
@@ -383,8 +390,8 @@ let test_catch #a () : EFF int a a [RD;WR] =
   put old;
   r
 
-let puresum (n:nat)
-  : EFF int bool bool []
+let puresum #st (n:nat)
+  : EFF int st st []
   = let (x, _) = catchST (fun () -> sumn 42) 0 in x
 
 let pure_tree_invariant_state #a #st0 #st1 (t : repr a st0 st1 []) : Lemma (st0 == st1) = ()
@@ -398,7 +405,7 @@ let interp_pure #a #st0 #st1 ($f : unit -> EFF a st0 st1 []) : Tot a = interp_pu
 
 
 inline_for_extraction
-let xxx = interp_pure (fun () -> puresum 10)
+let xxx = interp_pure (fun () -> puresum #unit 10)
 
 let rec interp_rd_tree #a #st0 #st1 (t : repr a st0 st1 [RD]) (s:st0) : Tot a =
   match t with
