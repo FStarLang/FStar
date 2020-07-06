@@ -8,7 +8,6 @@ open FStar.Universe
 
 module WF = FStar.WellFounded
 
-
 // GM: Force a type equality by SMT
 let coerce #a #b (x:a{a == b}) : b = x
 
@@ -394,6 +393,29 @@ let rec handle #a #labs l f h =
       let k' o : repr a labs =
          WF.axiom1 k o;
          handle l (k o) h
+      in
+      Act act i k'
+    end
+
+
+(* Easy enough to handle 2 labels at once *)
+val handle2 (#a:_) (#labs:_) (l1 l2 :eff_label)
+           (f:repr a (l1::l2::labs))
+           (h1:handler_ty_l l1 a labs)
+           (h2:handler_ty_l l2 a labs)
+           : repr a labs
+let rec handle2 #a #labs l1 l2 f h1 h2 =
+  match f with
+  | Return x -> Return x
+  | Act act i k ->
+    if label_of act = l1
+    then h1 i (fun o -> WF.axiom1 k o; handle2 l1 l2 (k o) h1 h2)
+    else if label_of act = l2
+    then h2 i (fun o -> WF.axiom1 k o; handle2 l1 l2 (k o) h1 h2)
+    else begin
+      let k' o : repr a labs =
+         WF.axiom1 k o;
+         handle2 l1 l2 (k o) h1 h2
       in
       Act act i k'
     end
