@@ -450,8 +450,8 @@ let catchST2_emp #a
   = handle2 #a #(state -> a & state)
             #[]
             RD WR f
-            (fun _  k ->  Return (fun s -> frompure (k s) s))
-            (fun s' k ->  Return (fun s -> frompure (k ()) s'))
+            (fun _  k -> Return (fun s -> frompure (k s) s))
+            (fun s' k -> Return (fun s -> frompure (k ()) s'))
             (fun x -> Return (fun s -> (x,s)))
 
 // not sure if this definable as-is
@@ -544,7 +544,7 @@ let rec interp_sem #a #labs (t : repr a labs) : sem a labs =
     fun s0 -> interp_sem #a #labs (k ()) s
   | Act Raise e k -> fun s0 -> (None, s0)
 
-(* Way back: from the pure ALG into the free one, necessarilly given
+(* Way back: from the pure ALG into the free one, necessarilly giving
 a fully normalized tree *)
 
 let interp_from_lattice_repr #a #labs
@@ -555,3 +555,43 @@ let interp_from_lattice_repr #a #labs
      match r with
      | Some x -> Act Write s1 (fun _ -> Return x)
      | None   -> Act Write s1 (fun _ -> Act Raise (Failure "") (fun _ -> unreachable ())))
+
+
+
+let read_handler (b:Type) 
+                 (labs:list eff_label)
+                 (s0:state)
+   : handler_ty_l RD b labs
+   = fun _ k -> k s0
+
+
+let handle_read (a:Type) 
+                (labs:list eff_label)
+                (f:repr a (RD::labs))
+                (h:handler_ty_l RD a labs)
+   : repr a labs
+   = handle RD f h (fun x -> Return x)
+
+
+let weaken #a #labs l (f:repr a labs) : repr a (l::labs) = 
+  assert(l::labs == [l]@labs);
+  f
+
+let write_handler (a:Type)
+                  (labs:list eff_label)
+  : handler_ty_l WR a labs                 
+  = fun s k -> handle_read a labs (weaken RD (k())) (read_handler a labs s)
+
+
+let handle_write (a:Type) 
+                (labs:list eff_label)
+                (f:repr a (WR::labs))
+   : repr a labs                
+   = handle WR f (write_handler a labs) (fun x -> Return x)
+
+let handle_st (a:Type)
+              (labs: list eff_label)
+              (f:repr a (WR::RD::labs))
+              (s0:state)
+   : repr a labs
+   = handle_read _ _ (handle_write _ _ f) (fun _ k -> k s0)
