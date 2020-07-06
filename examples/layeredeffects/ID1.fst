@@ -133,7 +133,7 @@ let l () : int = reify (test_f ()) (fun _ -> True) ()
 
 open FStar.List.Tot
 
-let rec map #a #b #pre
+let rec pmap #a #b #pre
   (f : (x:a -> Id b (requires (pre x)) (ensures (fun _ -> True))))
   (l : list a)
   : Id (list b)
@@ -146,7 +146,7 @@ let rec map #a #b #pre
       // not even assuming the precedes helps. tactics show an `l` unrelated
       // to `x` and `xs`.
       let xs () = xs in
-      f x :: map #_ #_ #pre f (xs ())
+      f x :: pmap #_ #_ #pre f (xs ())
 
 let even x = x % 2 == 0
 
@@ -159,7 +159,7 @@ let fmap (x:nat) : Id nat (requires (even x)) (ensures (fun r -> True)) =
 
 let callmap () : Id (list nat) True (fun _ -> True) =
  let lmap : list nat = [2;4;6;8] in
- ID1.map #_ #_ #even fmap lmap
+ ID1.pmap #_ #_ #even fmap lmap
 
 let rec count (n:nat) : I int
  = if n = 0 then 0 else count (n-1)
