@@ -66,11 +66,12 @@ let rec concatmaplemma #a #b l f x =
     concatlemma (f h) (concatMap f t) x;
     concatmaplemma t f x
 
-let irepr (a : Type) (wp: w a) =
-  //p:(a -> Type0) -> squash (wp p) -> l:(m a){wp `w_ord` interp l}
-  unit -> PURE (list a) (fun p -> forall l. (wp `w_ord` interp l) ==>  p l)
+let dm (a : Type) (wp : w a) : Type = 
+  p:(a -> Type0) -> squash (wp p) -> l:(m a){forall x. memP x l ==> p x}
   
-let ireturn (a : Type) (x : a) : irepr a (w_return x) = fun _ -> [x]
+let irepr (a : Type) (wp: w a) = dm a wp
+
+let ireturn (a : Type) (x : a) : irepr a (w_return x) = fun _ _ -> [x]
 
 let rec pmap #a #b #pre (#post:b->Type0)
   (f : (x:a -> Pure b (requires (pre x)) (ensures post)))
@@ -112,10 +113,11 @@ let rec flatten_mem_lem #a (l : list (list a)) (x:a)
     | l1::ls -> (append_memP l1 (flatten ls) x; flatten_mem_lem ls x)
 
 let ibind (a : Type) (b : Type) (wp_v : w a) (wp_f: a -> w b) (v : irepr a wp_v) (f : (x:a -> irepr b (wp_f x))) : irepr b (w_bind wp_v wp_f) =
-  fun _ -> let l1 = v () in
-        let l2 = List.Tot.Base.map (fun x -> f x ()) l1 in
-        let l2f = List.Tot.flatten l2 in
-        l2f
+  fun p _ -> let l1 = v (fun x -> wp_f x p) () in
+          let l2 = pmap #_ #(list b) #(fun x -> wp_f x p) #(fun l -> forall x. memP x l ==> p x) (fun x -> f x p ()) l1 in
+          let l2 = unref l2 in
+          let l2f = List.Tot.flatten l2 in
+          l2f
  
 let isubcomp (a:Type) (wp1 wp2: w a) (f : irepr a wp1) : Pure (irepr a wp2) (requires w_ord wp2 wp1) (ensures fun _ -> True) = f
 
@@ -137,28 +139,16 @@ layered_effect {
        if_then_else = i_if_then_else
 }
 
-
-// surprised that this works just like that
-let test #a #wp (f : unit -> PURE a wp) : Tot unit by (explode (); dump "") =
-  assume (wp (fun _ -> True));
-  let x = Common.elim_pure f (fun _ -> True) in
-  FStar.Monotonic.Pure.wp_monotonic_pure ();
-  assert (forall p. wp p ==> p x)
-
 let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
-  Pure (irepr a wp) (requires (wp (fun _ -> True)))
+  Pure (irepr a wp) (requires True)
                     (ensures (fun _ -> True))
-  = fun _ -> let r = Common.elim_pure f (fun _ -> True) in
-          assert (forall p. interp [r] p <==> p r);
-          FStar.Monotonic.Pure.wp_monotonic_pure ();
-          //assume (forall p. wp p ==> p r);
-          [r]
+  = fun p _ -> let r = Common.elim_pure f p in [r]
 
 sub_effect PURE ~> ND = lift_pure_nd
 
 val test_f : unit -> ND int (fun p -> p 5 /\ p 3)
 let test_f () =
-  ND?.reflect (fun _ -> [3; 5])
+  ND?.reflect (fun _ _ -> [3; 5])
 
 //let l () : (l:(list int){forall p. p 5 /\ p 3 ==> interp l p}) = reify (test_f ())
 // ^ This one doesn't work... datatype subtyping to blame?
