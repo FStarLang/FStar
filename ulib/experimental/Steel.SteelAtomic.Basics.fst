@@ -63,16 +63,3 @@ val h_affine (#uses:Set.set lock_addr) (p q:hprop)
   : SteelAtomic unit uses true (p `star` q) (fun _ -> p)
 let h_affine #uses p q =
   change_hprop (p `star` q) p (fun m -> affine_star p q m)
-
-val lift_atomic_repr_to_steel_repr
-  (#a:Type) (#is_ghost:bool) (#fp:hprop) (#fp':a -> hprop)
-  (f:atomic_repr a Set.empty is_ghost fp fp')
-  : repr a fp fp' (fun _ -> True) (fun _ _ _ -> True)
-let lift_atomic_repr_to_steel_repr #a #is_ghost #fp #fp' f = fun _ -> f ()
-
-val lift_atomic_to_steelT
-  (#a:Type) (#is_ghost:bool) (#fp:hprop) (#fp':a -> hprop)
-  ($f:unit -> SteelAtomic a Set.empty is_ghost fp fp')
-  : SteelT a fp fp'
-let lift_atomic_to_steelT #a #is_ghost #fp #fp' f =
-  Steel?.reflect (lift_atomic_repr_to_steel_repr (reify (f ())))

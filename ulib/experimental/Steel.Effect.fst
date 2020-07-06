@@ -179,6 +179,7 @@ let if_then_else (a:Type) (pre:pre_t) (post:post_t a)
     (if_then_else_req req_then req_else p)
     (if_then_else_ens ens_then ens_else p)
 
+[@@allow_informative_binders]
 reifiable reflectable
 layered_effect {
   Steel : a:Type -> pre:pre_t -> post:post_t a -> req:req_t pre -> ens:ens_t pre a post -> Effect
@@ -537,3 +538,49 @@ let cond (#a:Type) (b:bool) (p: bool -> hprop) (q: bool -> a -> hprop)
 = let a1 = aux2 b p q then_ in
   let a2 = aux4 b p q else_ in
   cond_aux b p q a1 a2
+
+
+(***** Bind and Subcomp relation with Steel.Atomic *****)
+
+open Steel.Effect.Atomic
+
+unfold
+let bind_req_atomic_steel (#a:Type) (#pre_f:pre_t) (#post_f:post_t a) (req_g:(x:a -> req_t (post_f x)))
+: req_t pre_f
+= fun _ -> forall (x:a) h1. req_g x h1
+
+unfold
+let bind_ens_atomic_steel (#a:Type) (#b:Type)
+  (#pre_f:pre_t) (#post_f:post_t a) (#post_g:post_t b) (ens_g:(x:a -> ens_t (post_f x) b post_g))
+: ens_t pre_f b post_g
+= fun _ y h2 -> exists x h1. (ens_g x) h1 y h2
+
+let bind_atomic_steel (a:Type) (b:Type)
+  (pre_f:pre_t) (post_f:post_t a) (is_ghost:eqtype_as_type bool)
+  (post_g:post_t b) (req_g:(x:a -> req_t (post_f x))) (ens_g:(x:a -> ens_t (post_f x) b post_g))
+  (f:atomic_repr a Set.empty is_ghost pre_f post_f) (g:(x:a -> repr b (post_f x) post_g (req_g x) (ens_g x)))
+: repr b pre_f post_g
+    (bind_req_atomic_steel req_g)
+    (bind_ens_atomic_steel ens_g)
+= fun m0 ->
+  let x = f () in
+  g x ()
+
+polymonadic_bind (SteelAtomic, Steel) |> Steel = bind_atomic_steel
+
+unfold
+let subcomp_req_atomic_steel (a:Type) (pre_f:pre_t) : req_t pre_f = fun _ -> True
+
+unfold
+let subcomp_ens_atomic_steel (#a:Type) (pre_f:pre_t) (post_f:post_t a)
+: ens_t pre_f a post_f
+= fun _ _ _ -> True
+
+
+let subcomp_atomic_steel (a:Type)
+  (pre_f:pre_t) (post_f:post_t a) (is_ghost:eqtype_as_type bool)
+  (f:atomic_repr a Set.empty is_ghost pre_f post_f)
+: repr a pre_f post_f (subcomp_req_atomic_steel a pre_f) (subcomp_ens_atomic_steel pre_f post_f)
+= fun m0 -> f m0
+
+polymonadic_subcomp SteelAtomic <: Steel = subcomp_atomic_steel
