@@ -54,7 +54,7 @@ let intro_lockinv_locked #uses p r =
       (if (U.downgrade_val b) then emp else p))
 
 val new_inv (p:hprop) : SteelT (ival p) p (fun _ -> emp)
-let new_inv p = lift_atomic_to_steelT (fun _ -> Steel.Effect.Atomic.new_inv p)
+let new_inv p = Steel.Effect.Atomic.new_inv p
 
 #set-options "--fuel 0 --ifuel 0"
 
@@ -64,7 +64,7 @@ let new_lock (p:hprop)
   let r:ref bool =
     frame (fun _ -> alloc available) p
   in
-  lift_atomic_to_steelT (fun _ -> intro_lockinv_available p r);
+  intro_lockinv_available p r;
   let i:ival (lockinv p r) = new_inv (lockinv p r) in
   let l:lock p = (| r, i |) in
   l
@@ -116,7 +116,7 @@ let acquire' (#p:hprop) (l:lock p)
     return_atomic #_ #_ #_ b
 
 let rec acquire #p l =
-  let b = lift_atomic_to_steelT (fun _ -> acquire' l) in
+  let b = acquire' l in
   cond b (fun b -> if b then p else emp) (fun _ _ -> p) noop (fun _ -> acquire l)
 
 val release_core (#p:hprop) (#u:Set.set lock_addr) (r:ref bool) (i:ival (lockinv p r))
@@ -142,8 +142,8 @@ let release_core #p #u r i =
 let release #p l =
   let r:ref bool = dfst l in
   let i: ival (lockinv p r) = dsnd l in
-  let b = lift_atomic_to_steelT (fun _ -> with_invariant_frame i
-    (fun _ -> release_core r i))
+  let b = with_invariant_frame i
+    (fun _ -> release_core r i)
   in
   Steel.SteelT.Basics.h_intro_emp_l (if b then emp else p);
   Steel.SteelT.Basics.h_affine emp (if b then emp else p)

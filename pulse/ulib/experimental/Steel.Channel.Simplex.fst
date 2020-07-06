@@ -32,9 +32,7 @@ val reshuffle0 (#p #q : hprop)
    : SteelT unit p (fun _ -> q)
 
 private
-let reshuffle0 #p #q peq =
-  Steel.SteelAtomic.Basics.lift_atomic_to_steelT
-    (fun () -> Steel.Effect.Atomic.change_hprop p q (fun m -> ()))
+let reshuffle0 #p #q peq = Steel.Effect.Atomic.change_hprop p q (fun m -> ())
 
 private
 val reshuffle (#p #q : hprop)
@@ -65,10 +63,9 @@ let assoc_l (p q r:hprop)
 let pts_to_injective #a #p #q (r:ref a) (v0 v1:Ghost.erased a) (rest:Ghost.erased a -> hprop)
   : SteelT unit (pts_to r p v0 `star` pts_to r q v1 `star` rest v1)
                 (fun _ -> pts_to r p v0 `star` pts_to r q v0 `star` rest v0)
-  = Steel.SteelAtomic.Basics.lift_atomic_to_steelT
-      (fun () -> Steel.Effect.Atomic.change_hprop _ _
-                (fun m -> pts_to_ref_injective r p q v0 v1 m;
-                       assert (v0 == v1)))
+  = Steel.Effect.Atomic.change_hprop _ _
+      (fun m -> pts_to_ref_injective r p q v0 v1 m;
+             assert (v0 == v1))
 
 let ghost_read_refine (#a:Type) (#p:perm) (q:a -> hprop) (r:ref a)
   : SteelT (Ghost.erased a) (h_exists (fun (v:a) -> pts_to r p v `star` q v))
