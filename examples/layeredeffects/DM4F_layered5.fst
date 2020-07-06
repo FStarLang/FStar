@@ -28,25 +28,27 @@ let return (a:Type) (x:a) (st:Type0) : repr a st (return_wp x) =
 unfold
 let bind_wp (#a:Type) (#b:Type) (#st:Type0)
   (w1 : wp st a) (w2 : a -> wp st b) : wp st b =
-  fun s0 p -> w1 s0 (fun y s1 -> squash (w2 y s1 p))
-  // this squash is so bind works, because for some reason an
-  // auto_squash pops up. Perhaps an alternative is to work
-  // on the repr of ID
+  fun s0 p -> w1 s0 (fun y s1 -> w2 y s1 p)
 
+[@@ resolve_implicits; refine]
+let resolve_tac () : Tac unit =
+  compute ();
+  explode ();
+  ()
+  
 let bind (a:Type) (b:Type) (st:Type0)
   (wp_c : wp st a)
   (wp_f : a -> wp st b)
   (c : repr a st wp_c)
   (f : (x:a -> repr b st (wp_f x)))
 : repr b st (bind_wp wp_c wp_f)
-   by (explode ();
-       compute ();
-       let b = nth_binder (-1) in
-       squash_intro ();
-       exact b)
 = fun s0 ->
-      let (y, s1) = c s0 in
-      f y s1
+      //let (y, s1) = c s0 in
+      //f y s1
+      // GM: argh! using the match above introduces noise in the VC, a true precondition
+      // that becomes a pain since we don't have monotonicity nor even extensionality
+      let r = c s0 in
+      f (fst r) (snd r)
 
 let ite_wp #a #st (b:bool) (w1 w2 : wp st a) : wp st a =
   fun s0 p -> (b ==> w1 s0 p) /\ ((~b) ==> w2 s0 p)
@@ -71,10 +73,9 @@ let subcomp
   (a:Type)
   (st:Type0)
   (wpf wpg : wp st a)
+  (#[@@refine] u : squash (stronger wpg wpf))
   (f : repr a st wpf)
-  : Pure (repr a st wpg)
-         (requires (stronger wpg wpf))
-         (ensures (fun _ -> True))
+  : repr a st wpg
   = f
 
 total
@@ -110,7 +111,7 @@ let get #st () : ST st st (fun s0 p -> p s0 s0) =
 let put #st (s:st) : ST unit st (fun _ p -> p () s) =
   ST?.reflect (fun _ -> ((), s))
 
-[@@expect_failure [19]] // monotonicity?
+// this now works!!!
 let test () : ST int int null =
   let x = get () in
   put (x + x);
