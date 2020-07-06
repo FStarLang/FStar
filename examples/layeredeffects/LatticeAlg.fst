@@ -480,3 +480,15 @@ let rec interp_sem #a #labs (t : repr a labs) : sem a labs =
     WF.axiom1 k ();
     fun s0 -> interp_sem #a #labs (k ()) s
   | Act Raise e k -> fun s0 -> (None, s0)
+
+(* Way back: from the pure ALG into the free one, necessarilly given
+a fully normalized tree *)
+
+let interp_from_lattice_repr #a #labs
+  (t : L.repr a labs)
+  : repr a [RD;EXN;WR] // conservative
+  = Act Read () (fun s0 ->
+     let (r, s1) = t s0 in
+     match r with
+     | Some x -> Act Write s1 (fun _ -> Return x)
+     | None   -> Act Write s1 (fun _ -> Act Raise (Failure "") (fun _ -> unreachable ())))
