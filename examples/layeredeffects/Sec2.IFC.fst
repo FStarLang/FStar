@@ -41,7 +41,6 @@ let add_source (r:label) (fs:flows) : flows = List.Tot.map (fun (r0, w0) -> unio
 let add_sink (w:label) (fs:flows) : flows = List.Tot.map (fun (r0, w0) -> r0, union w w0) fs
 let has_flow_1 (from to:loc) (f:flow) = from `Set.mem` fst f /\ to `Set.mem` snd f
 let has_flow (from to:loc) (fs:flows) = (exists rs. rs `List.Tot.memP` fs /\ has_flow_1 from to rs)
-let flow_included_in (f0 f1:flow) = forall from to. has_flow_1 from to f0 ==> has_flow_1 from to f1
 let flows_included_in (fs0 fs1:flows) =
   forall f0. f0 `List.Tot.memP` fs0 ==>
         (forall from to. has_flow_1 from to f0 ==> (exists f1. f1 `List.Tot.memP` fs1 /\ has_flow_1 from to f1))
@@ -460,9 +459,20 @@ let test2 (l:lref) (h:href)
 let test3 (l:lref) (h:href)
   : IST unit (single h)
              (single l)
-             [low, high]
-  = let x = read l in
-    write h x
+             [single l, single h]
+  = write h (read l)
+
+let test3_lab (l:lref) (h:href)
+  : IST unit high low [low, high]
+  = write h (read l)
+
+
+let test3_1 (l:lref) (h:href) (x:int)
+  : IST int (single h)
+          (single l)
+          []
+  = write h 0;
+    read l
 
 let test4 (l:lref) (h:href) (x:int)
   : IST int (single l)
