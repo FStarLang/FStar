@@ -1,6 +1,7 @@
-module ID1
+module ID5
 
 open FStar.Ghost
+open Common
 
 // The base type of WPs
 val wp0 (a : Type u#a) : Type u#(max 1 a)
@@ -11,7 +12,7 @@ let monotonic (w:wp0 'a) =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
 
 val wp (a : Type u#a) : Type u#(max 1 a)
-let wp a = w:(wp0 a){monotonic w}
+let wp a = w:(wp0 a)//{monotonic w}
 
 let repr (a : Type u#aa) (w : wp a) : Type u#(max 1 aa) =
   // Hmmm, the explicit post bumps the universe level
@@ -41,11 +42,11 @@ let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
 = fun p _ -> let x = v (fun x -> wp_f x p) () in
           f x p ()
 
-let subcomp (a:Type u#uu) (w1 w2:wp a)
+irreducible let refine : unit = ()
+
+let subcomp (a:Type u#uu) (w1 w2:wp a) (#[@@ refine] u:squash (forall p. w2 p ==> w1 p))
     (f : repr a w1)
-: Pure (repr a w2)
-       (requires (forall p. w2 p ==> w1 p))
-       (ensures fun _ -> True)
+: repr a w2
 = f
 
 // useful?
@@ -103,20 +104,21 @@ effect I (a:Type) = Id a True (fun _ -> True)
 
 open FStar.Tactics
 
-let elim_pure #a #wp ($f : unit -> PURE a wp) p
- : Pure a (requires (wp p)) (ensures (fun r -> p r)) by (dump "")
- = FStar.Monotonic.Pure.wp_monotonic_pure ();
-   f ()
-
-unfold
-let nomon #a (w:wp a) : pure_wp a = fun p -> w p
-
-let lift_pure_nd (a:Type) (wp:wp a) (f:(eqtype_as_type unit -> PURE a (nomon wp))) :
+let lift_pure_nd (a:Type) (wp:wp a) (f:(eqtype_as_type unit -> PURE a wp)) :
   Pure (repr a wp) (requires True)
                    (ensures (fun _ -> True))
   = fun p _ -> elim_pure f p
 
 sub_effect PURE ~> ID = lift_pure_nd
+
+//tests to make sure we are actually checking subcomp even now
+let apply (f:unit -> Id int True (fun x -> x > 3)) : Id int True (fun x -> x > 2) = f ()
+
+[@@expect_failure]
+let incorrect_apply (f:unit -> Id int True (fun x -> x > 3)) : Id int True (fun x -> x > 5) = f ()
+
+[@@expect_failure]
+let another_one (n:int) (f:(x:int -> Id int (x > 0) (fun _ -> True))) : Id int True (fun _ -> True) = f n
 
 let iassert (q:Type0) : ID unit (fun p -> q /\ (q ==> p ())) = ()
 
@@ -130,10 +132,9 @@ let test_f () = 3
 
 let l () : int = reify (test_f ()) (fun _ -> True) ()
 
-
 open FStar.List.Tot
 
-let rec pmap #a #b #pre
+let rec map #a #b #pre
   (f : (x:a -> Id b (requires (pre x)) (ensures (fun _ -> True))))
   (l : list a)
   : Id (list b)
@@ -141,25 +142,17 @@ let rec pmap #a #b #pre
        (ensures (fun _ -> True))
   = match l with
     | [] -> []
-    | x::xs ->
-      // ha... without a trick like this one, we fail to prove termination.
-      // not even assuming the precedes helps. tactics show an `l` unrelated
-      // to `x` and `xs`.
-      let xs () = xs in
-      f x :: pmap #_ #_ #pre f (xs ())
+    | x::xs -> f x :: map #_ #_ #pre f xs
 
 let even x = x % 2 == 0
 
 //let fmap (x:nat) : Id nat (requires (even x)) (ensures (fun r -> r > x)) =
 // I cannot have a stronger post, subeffecting doesn't kick in in callmap?
-let fmap (x:nat) : Id nat (requires (even x)) (ensures (fun r -> True)) =
-  let r = x / 2 in
-  (* need the binding *)
-  r
+let fmap (x:nat) : Id nat (requires (even x)) (ensures (fun r -> r <= x)) = x/2
 
 let callmap () : Id (list nat) True (fun _ -> True) =
  let lmap : list nat = [2;4;6;8] in
- ID1.pmap #_ #_ #even fmap lmap
+ ID5.map #_ #_ #even fmap lmap
 
 let rec count (n:nat) : I int
  = if n = 0 then 0 else count (n-1)
@@ -194,7 +187,6 @@ let test_assert () : ID unit (fun p -> p ()) =
   iassert False;
   ()
 
-[@@expect_failure [19]]
 let rec idiv (a b : nat) : Id int (requires (a >= 0 /\ b > 0))
                               (ensures (fun r -> r >= 0)) 
                               (decreases a)
@@ -202,8 +194,7 @@ let rec idiv (a b : nat) : Id int (requires (a >= 0 /\ b > 0))
   if a < b
   then 0
   else 1 + idiv (a-b) b
-  
-[@@expect_failure [19]]
+
 let rec ack (m n : nat) : I nat =
   match m, n with
   | 0, n -> n+1
@@ -218,7 +209,6 @@ let tot_i #a (f : unit -> Tot a) : I a =
 let i_tot #a (f : unit -> I a) : Tot a =
   reify (f ()) (fun _ -> True) ()
 
-[@@expect_failure [19]]
 let rec sum (l : list int) : I int
  = match l with
    | [] -> 0

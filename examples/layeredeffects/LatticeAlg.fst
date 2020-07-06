@@ -8,10 +8,6 @@ open FStar.Universe
 
 module WF = FStar.WellFounded
 
-open Lattice
-
-#set-options "--print_universes --print_implicits --print_effect_args"
-
 // GM: Force a type equality by SMT
 let coerce #a #b (x:a{a == b}) : b = x
 
@@ -29,7 +25,7 @@ noeq
 type action : Type0 -> Type0 -> Type u#1 =
   | Read : action unit state
   | Write : action state unit
-  | Raise : #a:Type0 -> action exn a
+  | Raise : action exn c_False
   
 noeq
 type repr0 (a:Type u#aa) : Type u#(max 1 aa) =
@@ -41,11 +37,33 @@ type annot = eff_label -> bool
 let interp (l : list eff_label) : annot =
   fun lab -> mem lab l
 
-let abides_act #i #o (ann:annot) (a : action i o) : prop =
-    (Read? a ==> ann RD)
-  /\ (Write ? a ==> ann WR)
-  /\ (Raise ? a ==> ann EXN)
+let label_of #ii #oo (a:action ii oo) : eff_label =
+ match a with
+ | Read -> RD
+ | Write -> WR
+ | Raise -> EXN
+ 
+let label_ii (l:eff_label) : Type =
+ match l with
+ | RD -> unit
+ | WR -> state
+ | EXN -> exn
+ 
+let label_oo (l:eff_label) : Type =
+ match l with
+ | RD -> state
+ | WR -> unit
+ | EXN -> c_False
 
+let action_of (l:eff_label) : action (label_ii l) (label_oo l) =
+  match l with
+  | RD ->  Read
+  | WR ->  Write
+  | EXN -> Raise
+
+let abides_act #i #o (ann:annot) (a : action i o) : prop =
+  ann (label_of a) == true
+  
 let rec abides #a (ann:annot) (f : repr0 a) : prop =
   begin match f with
   | Act a i k ->
@@ -92,33 +110,30 @@ let rec sublist_at
     | [] -> ()
     | _::l1 -> sublist_at l1 l2
 
-let rec abides_sublist #a (l1 l2 : list eff_label) (c : repr0 a)
+let rec abides_sublist_nopat #a (l1 l2 : list eff_label) (c : repr0 a)
   : Lemma (requires (abides (interp l1) c) /\ sublist l1 l2)
           (ensures (abides (interp l2) c))
-          [SMTPat (abides (interp l2) c); SMTPat (sublist l1 l2)]
   = match c with
     | Return _ -> ()
     | Act a i k -> 
       let sub o : Lemma (abides (interp l2) (k o)) =
         FStar.WellFounded.axiom1 k o;
-        abides_sublist l1 l2 (k o)
+        abides_sublist_nopat l1 l2 (k o)
       in
       Classical.forall_intro sub
+      
+let abides_sublist #a (l1 l2 : list eff_label) (c : repr0 a)
+  : Lemma (requires (abides (interp l1) c) /\ sublist l1 l2)
+          (ensures (abides (interp l2) c))
+          [SMTPat (abides (interp l2) c); SMTPat (sublist l1 l2)]
+  = abides_sublist_nopat l1 l2 c
 
-let rec abides_app #a (l1 l2 : list eff_label) (c : repr0 a)
+let abides_app #a (l1 l2 : list eff_label) (c : repr0 a)
   : Lemma (requires (abides (interp l1) c \/ abides (interp l2) c))
           (ensures (abides (interp (l1@l2)) c))
           [SMTPat (abides (interp (l1@l2)) c)]
-  = // GM: Just copied the proof from above since it ought to work,
-    //     do something smarter later.
-    match c with
-    | Return _ -> ()
-    | Act a i k -> 
-      let sub o : Lemma (abides (interp (l1@l2)) (k o)) =
-        FStar.WellFounded.axiom1 k o;
-        abides_app l1 l2 (k o)
-      in
-      Classical.forall_intro sub
+  = Classical.move_requires (abides_sublist_nopat l1 (l1@l2)) c;
+    Classical.move_requires (abides_sublist_nopat l2 (l1@l2)) c
 
 let return (a:Type) (x:a)
   : repr a []
@@ -277,9 +292,6 @@ let catchST #a #labs
    _catchST (reify (f ())) s0
  end
 
-// TODO: haskell-like runST.
-// strong update with index on state type(s)?
-
 let g #labs () : EFF int labs = 42  //AR: 07/03: had to hoist after removing smt_reifiablep
 
 let test_catch #labs (f : unit -> EFF int [EXN;WR]) : EFF int [WR] =
@@ -340,54 +352,165 @@ let rec interp_all_tree #a (t : repr a [RD;WR;EXN]) (s:state) : Tot (option a & 
     
 let interp_all #a (f : unit -> EFF a [RD;WR;EXN]) (s:state) : Tot (option a & state) = interp_all_tree (reify (f ())) s
 
-let trlab = function
-  | RD  -> Lattice.RD
-  | WR  -> Lattice.WR
-  | EXN -> Lattice.EXN
+//let action_input (a:action 'i 'o) = 'i
+//let action_output (a:action 'i 'o) = 'o
+//
+//let handler_ty (a:action _ _) (b:Type) (labs:list eff_label) =
+//    action_input a ->
+//    (action_output a -> repr b labs) -> repr b labs
+//
+//let dpi31 (#a:Type) (#b:a->Type) (#c:(x:a->b x->Type)) (t : (x:a & y:b x & c x y)) : a =
+//  let (| x, y, z |) = t in x
+//
+//let dpi32 (#a:Type) (#b:a->Type) (#c:(x:a->b x->Type)) (t : (x:a & y:b x & c x y)) : b (dpi31 t) =
+//  let (| x, y, z |) = t in y
+//  
+//let dpi33 (#a:Type) (#b:a->Type) (#c:(x:a->b x->Type)) (t : (x:a & y:b x & c x y)) : c (dpi31 t) (dpi32 t) =
+//  let (| x, y, z |) = t in z
   
-let trlabs = List.Tot.map trlab
+let handler_ty_l (l:eff_label) (b:Type) (labs:list eff_label) =
+  label_ii l -> (label_oo l -> repr b labs) -> repr b labs
 
-[@@expect_failure] // todo this should work
+  //handler_ty (dpi33 (action_of l)) b labs
+  //F* complains this is not a function
+  //let (| _, _, a |) = action_of l in
+  //handler_ty a b labs
+
+(* A generic handler for a (single) label l, relies on the fact that
+we can compare actions for equality, or equivalently map them to their
+labels. *)
+val handle (#a:_) (#labs:_) (l:eff_label)
+           (f:repr a (l::labs))
+           (h:handler_ty_l l a labs)
+           : repr a labs
+let rec handle #a #labs l f h =
+  match f with
+  | Return x -> Return x
+  | Act act i k ->
+    if label_of act = l
+    then h i (fun o -> WF.axiom1 k o; handle l (k o) h)
+    else begin
+      let k' o : repr a labs =
+         WF.axiom1 k o;
+         handle l (k o) h
+      in
+      Act act i k'
+    end
+
+
+(* Easy enough to handle 2 labels at once *)
+val handle2 (#a:_) (#labs:_) (l1 l2 :eff_label)
+           (f:repr a (l1::l2::labs))
+           (h1:handler_ty_l l1 a labs)
+           (h2:handler_ty_l l2 a labs)
+           : repr a labs
+let rec handle2 #a #labs l1 l2 f h1 h2 =
+  match f with
+  | Return x -> Return x
+  | Act act i k ->
+    if label_of act = l1
+    then h1 i (fun o -> WF.axiom1 k o; handle2 l1 l2 (k o) h1 h2)
+    else if label_of act = l2
+    then h2 i (fun o -> WF.axiom1 k o; handle2 l1 l2 (k o) h1 h2)
+    else begin
+      let k' o : repr a labs =
+         WF.axiom1 k o;
+         handle2 l1 l2 (k o) h1 h2
+      in
+      Act act i k'
+    end
+
+let catch0' #a #labs (t1 : repr a (EXN::labs))
+                      (t2 : repr a labs)
+  : repr a labs
+  = handle EXN t1 (fun i k -> t2)
+  
+module L = Lattice
+
+let trlab = function
+  | RD  -> L.RD
+  | WR  -> L.WR
+  | EXN -> L.EXN
+  
+let trlab' = function
+  | L.RD  -> RD
+  | L.WR  -> WR
+  | L.EXN -> EXN
+
+let trlabs  = List.Tot.map trlab
+let trlabs' = List.Tot.map trlab'
+
+let rec lab_corr (l:eff_label) (ls:list eff_label)
+  : Lemma (mem l ls <==> mem (trlab l) (trlabs ls))
+          [SMTPat (mem l ls)] // needed for interp_into_lattice_repr below
+  = match ls with
+    | [] -> ()
+    | l1::ls -> lab_corr l ls
+
+(* Tied to the particular repr of Lattice.fst *)
+
 let rec interp_into_lattice_repr #a #labs
   (t : repr a labs)
-  : Lattice.repr a (trlabs labs)
+  : L.repr a (trlabs labs)
   = match t with
-    | Return x -> Lattice.return _ x
-    | Act Read _ k -> (fun s0 -> WF.axiom1 k s0; interp_into_lattice_repr #a #labs (k s0) s0)
-    | Act Write s k -> (fun s0 -> WF.axiom1 k (); interp_into_lattice_repr #a #labs (k ()) s)
-    | Act Raise e k -> (fun s0 -> (None, s0))
+    | Return x -> L.return _ x
+    | Act Read i k -> 
+      L.bind _ _ _ _ (reify (L.get i))
+       (fun x -> WF.axiom1 k x;
+              interp_into_lattice_repr #a #labs (k x))
+    | Act Write i k -> 
+      L.bind _ _ _ _ (reify (L.put i))
+       (fun x -> WF.axiom1 k x;
+              interp_into_lattice_repr #a #labs (k x))
+    | Act Raise i k -> 
+      L.bind _ _ _ _ (reify (L.raise ()))
+       (fun x -> WF.axiom1 k x;
+              interp_into_lattice_repr #a #labs (k x))
 
-//let interp_into_lattice #a #labs
-//  (f : unit -> EFF a labs)
-//  : Lattice.EFF a (trlabs labs)
-//  = Lattice.EFF?.reflect (interp_into_lattice_repr (reify (f ())))
-//
-//let interp_full #a #labs
-//  (f : unit -> EFF a labs)
-//  : Tot (f:(state -> Tot (option a & state)){Lattice.abides f (Lattice.interp (trlabs labs))})
-//  = reify (interp_into_lattice #a #labs f)
+let interp_into_lattice #a #labs
+  (f : unit -> EFF a labs)
+  : Lattice.EFF a (trlabs labs)
+  = Lattice.EFF?.reflect (interp_into_lattice_repr (reify (f ())))
+
+let interp_full #a #labs
+  (f : unit -> EFF a labs)
+  : Tot (f:(state -> Tot (option a & state)){Lattice.abides f (Lattice.interp (trlabs labs))})
+  = reify (interp_into_lattice #a #labs f)
 
 
-type sem0 (a:Type u#aa) : Type u#aa =
-  state -> Tot (option a & state)
+(* Doing it directly. *)
 
-let abides' #a (f : sem0 a) (ann:annot) : prop =
+type sem0 (a:Type) : Type = state -> Tot (option a & state)
+
+let abides' (f : sem0 'a) (ann:annot) : prop =
     (ann RD  = false ==> (forall s0 s1. fst (f s0) == fst (f s1)))
   /\ (ann WR  = false ==> (forall s0. snd (f s0) == s0))
   /\ (ann EXN = false ==> (forall s0. Some? (fst (f s0))))
 
-type sem (a:Type u#aa) (labs : list u#0 eff_label) // #2074 : Type u#aa
-  =
-  r:(sem0 a){abides' r (interp labs)}
+type sem (a:Type) (labs : list eff_label) = r:(sem0 a){abides' r (interp labs)}
 
 let rec interp_sem #a #labs (t : repr a labs) : sem a labs =
-  let r (s0:state) : Tot (option a & state) =
-    match t with
-    | Return x -> (Some x, s0)
-    | Act Read _ k -> WF.axiom1 k s0; interp_sem #a #labs (k s0) s0
-    | Act Write s k -> WF.axiom1 k (); interp_sem #a #labs (k ()) s
-    | Act Raise e k -> (None, s0)
-  in
-  assume (not (mem RD labs));
-  assume (mem EXN labs);
-  r
+  match t with
+  | Return x -> fun s0 -> (Some x, s0)
+  | Act Read _ k -> 
+    (* Needs this trick for termination. Trying to call axiom1 within
+     * `r` messes up the refinement about RD. *)
+    let k : (s:state -> (r:repr0 a{r << k})) = fun s -> WF.axiom1 k s; k s in
+    let r : sem a labs = fun s0 -> interp_sem #a #labs (k s0) s0 in
+    r
+  | Act Write s k ->
+    WF.axiom1 k ();
+    fun s0 -> interp_sem #a #labs (k ()) s
+  | Act Raise e k -> fun s0 -> (None, s0)
+
+(* Way back: from the pure ALG into the free one, necessarilly given
+a fully normalized tree *)
+
+let interp_from_lattice_repr #a #labs
+  (t : L.repr a labs)
+  : repr a [RD;EXN;WR] // conservative
+  = Act Read () (fun s0 ->
+     let (r, s1) = t s0 in
+     match r with
+     | Some x -> Act Write s1 (fun _ -> Return x)
+     | None   -> Act Write s1 (fun _ -> Act Raise (Failure "") (fun _ -> unreachable ())))
