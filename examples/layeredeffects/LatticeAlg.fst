@@ -8,7 +8,6 @@ open FStar.Universe
 
 module WF = FStar.WellFounded
 
-#set-options "--print_universes --print_implicits --print_effect_args"
 
 // GM: Force a type equality by SMT
 let coerce #a #b (x:a{a == b}) : b = x
@@ -455,3 +454,29 @@ let interp_full #a #labs
   (f : unit -> EFF a labs)
   : Tot (f:(state -> Tot (option a & state)){Lattice.abides f (Lattice.interp (trlabs labs))})
   = reify (interp_into_lattice #a #labs f)
+
+
+(* Doing it directly. *)
+
+type sem0 (a:Type) : Type = state -> Tot (option a & state)
+
+let abides' (f : sem0 'a) (ann:annot) : prop =
+    (ann RD  = false ==> (forall s0 s1. fst (f s0) == fst (f s1)))
+  /\ (ann WR  = false ==> (forall s0. snd (f s0) == s0))
+  /\ (ann EXN = false ==> (forall s0. Some? (fst (f s0))))
+
+type sem (a:Type) (labs : list eff_label) = r:(sem0 a){abides' r (interp labs)}
+
+let rec interp_sem #a #labs (t : repr a labs) : sem a labs =
+  match t with
+  | Return x -> fun s0 -> (Some x, s0)
+  | Act Read _ k -> 
+    (* Needs this trick for termination. Trying to call axiom1 within
+     * `r` messes up the refinement about RD. *)
+    let k : (s:state -> (r:repr0 a{r << k})) = fun s -> WF.axiom1 k s; k s in
+    let r : sem a labs = fun s0 -> interp_sem #a #labs (k s0) s0 in
+    r
+  | Act Write s k ->
+    WF.axiom1 k ();
+    fun s0 -> interp_sem #a #labs (k ()) s
+  | Act Raise e k -> fun s0 -> (None, s0)
