@@ -1,5 +1,5 @@
 [
-  "F3Å\f\u0010õ$7ÚÅ#ú óu\u001c",
+  "»ô'ìµ\u0003êld\u000bÅEfÚ¨F",
   [
     [
       "DM4F_layered5.return",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_DM4F_layered5.curry" ],
       0,
-      "eb967b386c8dc523258322be87cb4e3a"
+      "89add99bbdbca20502114f0fb36250dd"
     ],
     [
       "DM4F_layered5.subcomp",
@@ -27,7 +27,7 @@
         "function_token_typing_Prims.logical"
       ],
       0,
-      "3b597576eb1eb4b301abe1d0cfa407f7"
+      "6c0a22403f4669f2456881df6d1587b6"
     ],
     [
       "DM4F_layered5.ST",
@@ -35,13 +35,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
-        "equation_DM4F_layered5.ite_wp", "equation_DM4F_layered5.stronger",
+        "@MaxIFuel_assumption", "@query", "equation_DM4F_layered5.ite_wp",
+        "equation_DM4F_layered5.stronger", "equation_Prims.squash",
         "interpretation_Tm_abs_62377756deaa227ab4a4f20a8fdb66c9",
-        "l_and-interp", "l_imp-interp"
+        "l_and-interp", "l_imp-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "8531c5c759e950779f00760c2491636a"
+      "8f1d27edd4ad9bc7db845e9cd5cd0929"
     ],
     [
       "DM4F_layered5.ST",
@@ -52,10 +53,11 @@
         "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
         "equation_DM4F_layered5.ite_wp", "equation_DM4F_layered5.stronger",
         "interpretation_Tm_abs_62377756deaa227ab4a4f20a8fdb66c9",
-        "l_and-interp", "l_imp-interp", "l_not-interp"
+        "l_and-interp", "l_imp-interp", "l_not-interp",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "36d719c9da235cf6c7bdad3aefc88cbb"
+      "a0b434d4598e614c271658425c9c4afd"
     ],
     [
       "DM4F_layered5.get",
@@ -64,7 +66,7 @@
       1,
       [ "@query", "equation_DM4F_layered5.curry" ],
       0,
-      "c212287d18d76122158f52162e05b3be"
+      "be91f3f226698ef09d85e651e8c77e83"
     ],
     [
       "DM4F_layered5.put",
@@ -73,7 +75,7 @@
       1,
       [ "@query", "equation_DM4F_layered5.curry" ],
       0,
-      "99428b9ef2cd5c7283075297897548d9"
+      "4a753984e80a0178784964b3bdb5537d"
     ]
   ]
 ]

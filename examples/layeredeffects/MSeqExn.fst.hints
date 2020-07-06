@@ -189,18 +189,24 @@
       4,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
       0,
-      "6217696ba5216c67b0522750ab82c420"
+      "630d8e64624546465b6bf853034f0ea3"
     ],
     [
       "MSeqExn.MSeqEXN",
       5,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
       0,
-      "7b4f67e2c052f3664053a1301e10e73f"
+      "40cad3237d03b6f6c1ae1d0e4483ac00"
     ],
     [
       "MSeqExn.lift_pure_mseqexn",

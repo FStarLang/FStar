@@ -396,18 +396,24 @@
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
       0,
-      "e6bc39b55ddb46eafc3557cd71dcf5ad"
+      "4c6f627daa8c924902280e1adf006bdf"
     ],
     [
       "DijkstraStateMonad.IFST",
       2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
       0,
-      "48e10911ac9feb7c29fcbb422093f9ee"
+      "60c37df579523ac29fa3bee2b4e0536c"
     ],
     [
       "DijkstraStateMonad.iincr",

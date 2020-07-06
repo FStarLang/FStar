@@ -303,11 +303,12 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
-        "equation_LatticeSpec.ite", "lemma_LatticeSpec.sublist_at"
+        "@MaxIFuel_assumption", "@query", "equation_LatticeSpec.ite",
+        "equation_Prims.squash", "lemma_LatticeSpec.sublist_at",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "92d635af1bb26876c556fbcee4e70a0e"
+      "61d1f24cc8c82c027dc0c79961d77d36"
     ],
     [
       "LatticeSpec.EFF",
@@ -316,10 +317,11 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
-        "equation_LatticeSpec.ite", "lemma_LatticeSpec.sublist_at"
+        "equation_LatticeSpec.ite", "lemma_LatticeSpec.sublist_at",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "ddc87ac06e5f20e683ae98b48c83e30a"
+      "ef2c4fd23200a99a21c57e56a37fab2e"
     ],
     [
       "LatticeSpec.post_of_wp",
@@ -656,7 +658,7 @@
         "typing_Tm_abs_62749f6b821b0a143d92cc70a7e3bbe9"
       ],
       0,
-      "352e8ccf7be18329230356d74cba747e"
+      "0c8b488a437b2d72cbfaa38aaf01d6a2"
     ],
     [
       "LatticeSpec.g",

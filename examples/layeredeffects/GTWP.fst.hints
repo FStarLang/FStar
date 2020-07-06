@@ -261,13 +261,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "equation_GTWP.ite_wp",
+        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
+        "equation_GTWP.ite_wp", "equation_Prims.squash",
         "interpretation_Tm_abs_de90303e49287ef2769db147a3f5e666",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "token_correspondence_GTWP.ite_wp"
       ],
       0,
-      "6e1c47d00b868ccedfddee122186424c"
+      "95c630118fecee81f233b9cdb9e11c06"
     ],
     [
       "GTWP.GTD",
@@ -279,10 +280,11 @@
         "equation_GTWP.ite_wp",
         "interpretation_Tm_abs_de90303e49287ef2769db147a3f5e666",
         "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4",
         "token_correspondence_GTWP.ite_wp"
       ],
       0,
-      "1903beb127c1ef6cfa1259905a6fefcf"
+      "7f76cd2701f185beef707b6b8156fd44"
     ],
     [
       "GTWP.lift_pure_gtd",
@@ -327,7 +329,7 @@
       1,
       [ "@query" ],
       0,
-      "6396cf6ca9f4c9d19e2c5fd8db2bfbe0"
+      "1f39dd2c8fed87555afb24fc59ba9752"
     ],
     [
       "GTWP.map",
@@ -352,7 +354,7 @@
         "typing_Prims.uu___is_Nil"
       ],
       0,
-      "8dd54bad8006636a1d37775674d4f28a"
+      "6c3a8857e166c92641cde067902c4191"
     ],
     [
       "GTWP.appn",
@@ -375,7 +377,7 @@
         "token_correspondence_GTWP.ite_wp", "true_interp"
       ],
       0,
-      "03cc84e1e48e8f4c8156073a551cdebb"
+      "ca3619d2ef42017e8bc705a7e1c483d3"
     ],
     [
       "GTWP.labs",
@@ -389,7 +391,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "0f8889ffe252e07f500b307932bbdb80"
+      "395c7d28576ee9a7a30f10f35cdbfd23"
     ],
     [
       "GTWP.test",
@@ -403,7 +405,7 @@
         "token_correspondence_GTWP.return_wp", "true_interp"
       ],
       0,
-      "eb338feb1d56b18d4b3c356ab08dd7ad"
+      "4f35f41dc3435ca166818665ab57998e"
     ]
   ]
 ]

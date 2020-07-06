@@ -62,13 +62,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
-        "equation_DM4F.stronger",
+        "@MaxIFuel_assumption", "@query", "equation_DM4F.stronger",
+        "equation_Prims.squash",
         "interpretation_Tm_abs_a514b052d648bc2c04889651aca94b4a",
-        "l_and-interp", "l_imp-interp"
+        "l_and-interp", "l_imp-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "75f3caa73f696d128aa496a229e65bba"
+      "14f79ca3c8280d90d3dfc6d387e3e88f"
     ],
     [
       "DM4F.ST",
@@ -79,10 +80,11 @@
         "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
         "equation_DM4F.stronger",
         "interpretation_Tm_abs_a514b052d648bc2c04889651aca94b4a",
-        "l_and-interp", "l_imp-interp", "l_not-interp"
+        "l_and-interp", "l_imp-interp", "l_not-interp",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "db7ac2cd786491fbb1cdb35fe92f03b9"
+      "af74588635b8082eaa4b159cdce09c18"
     ],
     [
       "DM4F.lift_pure_st",

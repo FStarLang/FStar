@@ -33,18 +33,24 @@
       1,
       0,
       0,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
       0,
-      "6c6cf6d9eb11a4281edf20bca0152c81"
+      "f529ea84552d270b120efcc6787fd221"
     ],
     [
       "HoareST.HoareST",
       2,
       0,
       0,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
       0,
-      "3cc668ae10483d59e9d0974aaac433b7"
+      "a86a0e836fe1a4c7737171582c3da52c"
     ],
     [
       "HoareST.recall",
@@ -134,7 +140,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3dae3ff302924da78efae6fda9dbb9d1"
+      "ec443103b9d1ef92998dec7c889e503d"
     ],
     [
       "HoareST.index",
@@ -143,7 +149,7 @@
       0,
       [ "@query" ],
       0,
-      "a0d13ccf29bb87d6911ed3d89d015bd7"
+      "8b0ac5f9e3cc0d05c3b5caca875eb136"
     ],
     [
       "HoareST.upd",
@@ -164,7 +170,7 @@
         "true_interp"
       ],
       0,
-      "ce21ee7b1eeb7f047fe4f4ca8d8c3cd3"
+      "f0697622b5add05ad3aa0e527d4f6291"
     ],
     [
       "HoareST.length",
@@ -173,7 +179,7 @@
       0,
       [ "@query" ],
       0,
-      "a5897728c624e3a8d3ce5da9b3cf8a99"
+      "d69db647d0d7300c56ff3052b04fc365"
     ],
     [
       "HoareST.swap",
@@ -199,7 +205,7 @@
         "typing_FStar.Monotonic.Heap.sel", "typing_FStar.Seq.Base.seq"
       ],
       0,
-      "aae6130910bb85435ab712501bb73aaa"
+      "88d8172f319c50aea4a22ad19e88e4e1"
     ],
     [
       "HoareST.copy_aux",
@@ -241,7 +247,7 @@
         "typing_FStar.Set.singleton"
       ],
       0,
-      "dcf2883c4339a8c63351dbd63fc22f0c"
+      "4b5bf6533740da9b299d944b4305ccf4"
     ],
     [
       "HoareST.copy",
@@ -280,7 +286,7 @@
         "typing_FStar.Seq.Base.seq", "typing_FStar.Set.empty"
       ],
       0,
-      "9748837f34854837ab9cdc2bb0947cf9"
+      "156e97d46875b4df3ecc12112ade9068"
     ]
   ]
 ]

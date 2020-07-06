@@ -58,16 +58,17 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
         "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.reflexive", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "token_correspondence_GenericTotalDM4A.stronger",
         "typing_GenericTotalDM4A.stronger"
       ],
       0,
-      "dbc6130759f9f7e64cb6c9dd4b92d20a"
+      "3c86c6d13d559e44401afa9a589ee472"
     ],
     [
       "GenericTotalDM4A.DM4A",
@@ -80,11 +81,12 @@
         "equation_FStar.Preorder.reflexive",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4",
         "token_correspondence_GenericTotalDM4A.stronger",
         "typing_GenericTotalDM4A.stronger"
       ],
       0,
-      "c09fd3cb498fc3da1cc261a1da4741d2"
+      "1073b202f216a9fc1ca65da342cf4f13"
     ]
   ]
 ]

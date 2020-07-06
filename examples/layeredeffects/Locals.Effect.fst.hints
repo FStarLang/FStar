@@ -122,18 +122,24 @@
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
       0,
-      "451ab58b80b815c6001747d225847620"
+      "5b3339aae28ffd722c1ac939b0d1370d"
     ],
     [
       "Locals.Effect.LVARS",
       2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
       0,
-      "961ddf1bd675fd063960331f68e9bd4a"
+      "848a0e34a16f59d52e32b6e26ebbf43f"
     ],
     [
       "Locals.Effect.lift_pure_lvars",

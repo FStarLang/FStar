@@ -152,7 +152,7 @@
       [
         "@MaxIFuel_assumption", "@query",
         "GenericPartialDM4A_interpretation_Tm_arrow_9165e6f983a2e43ea52e30756e4b00f0",
-        "bool_inversion", "equation_FStar.Preorder.preorder",
+        "b2t_def", "bool_inversion", "equation_FStar.Preorder.preorder",
         "equation_FStar.Preorder.preorder_rel",
         "equation_FStar.Preorder.reflexive",
         "equation_GenericPartialDM4A.weaken", "equation_Prims.squash",
@@ -164,7 +164,7 @@
         "typing_GenericPartialDM4A.weaken", "unit_inversion"
       ],
       0,
-      "3b25a201792cd76ce2839877726d445c"
+      "0335ae41ecd1f54488db07a0479b361e"
     ],
     [
       "GenericPartialDM4A.DM4A",
@@ -182,12 +182,13 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "refinement_interpretation_Tm_refine_7fdd091adbcfc3810a61ff266cf2272b",
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4",
         "token_correspondence_GenericPartialDM4A.stronger",
         "typing_GenericPartialDM4A.stronger",
         "typing_GenericPartialDM4A.weaken", "unit_inversion"
       ],
       0,
-      "1d3e9c8e0cb4fe6fe154ff0011d1e49f"
+      "88e0e3cd5e75795b44f4243c9515829d"
     ],
     [
       "GenericPartialDM4A.lift_pure_dm4a",
@@ -214,7 +215,7 @@
       "e1d7ada9f8b3e0702cbcb785b44f3b5b"
     ],
     [
-      "GenericPartialDM4A.20692",
+      "GenericPartialDM4A.20704",
       1,
       2,
       1,
@@ -223,10 +224,10 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "b188e282b8a3e8875c37469cf8000af2"
+      "8f25cb9972f4f905cdfd4046bbf642f5"
     ],
     [
-      "GenericPartialDM4A.20692",
+      "GenericPartialDM4A.20704",
       2,
       2,
       1,
@@ -235,10 +236,10 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "1e9518dd2c1a029269bf22d7c6d25923"
+      "08896345eddd0a7255e69ea9610a157a"
     ],
     [
-      "GenericPartialDM4A.20692",
+      "GenericPartialDM4A.20704",
       3,
       2,
       1,
@@ -247,7 +248,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "fa13bf40f74dd8aca6944797e76c8996"
+      "903fec71e8b924adf70a9f531692b959"
     ]
   ]
 ]

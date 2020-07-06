@@ -254,13 +254,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
-        "equation_ND.w_ord", "equation_ND.wp_if_then_else",
+        "@MaxIFuel_assumption", "@query", "equation_ND.w_ord",
+        "equation_ND.wp_if_then_else", "equation_Prims.squash",
         "interpretation_Tm_abs_af266f1aba538e620689d0f453e00fed",
-        "l_and-interp", "l_imp-interp"
+        "l_and-interp", "l_imp-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c82a5a056579bc37c96f0c699c800416"
+      "bb00be4952c7ed1610d4b68535e7ecf6"
     ],
     [
       "ND.ND",
@@ -271,10 +272,11 @@
         "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
         "equation_ND.w_ord", "equation_ND.wp_if_then_else",
         "interpretation_Tm_abs_af266f1aba538e620689d0f453e00fed",
-        "l_and-interp", "l_imp-interp", "l_not-interp"
+        "l_and-interp", "l_imp-interp", "l_not-interp",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "1fb258d8feb4e4d9c06274b184dcaf74"
+      "8f08ffce9a629ab040f0c42e1702ff8e"
     ],
     [
       "ND.lift_pure_nd",

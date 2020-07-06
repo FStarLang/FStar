@@ -24,18 +24,24 @@
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
       0,
-      "46a4a22b0c17dc2f9b691c5a7c0003cb"
+      "6b15a2359ab7aee7fb71c3a1b7248d6b"
     ],
     [
       "HoareDiv.HoareDiv",
       2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
       0,
-      "9c898bddb64fbed3697d4dcd9a73dd09"
+      "b9ba9a8bd3b1ee056efd9b722f4cdfa4"
     ],
     [
       "HoareDiv.lift_pure_meff",

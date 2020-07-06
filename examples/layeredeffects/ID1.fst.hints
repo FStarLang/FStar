@@ -148,13 +148,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
-        "equation_ID1.ite_wp",
-        "interpretation_Tm_abs_a6ee1c021adb00e81afa60efbee75872",
-        "l_and-interp", "l_imp-interp", "token_correspondence_ID1.ite_wp"
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "e24918cd13bfe221dd8f14e9eae63a82"
+      "3e2211ad178c49278940f03e1b18c502"
     ],
     [
       "ID1.ID",
@@ -162,14 +160,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
-        "equation_ID1.ite_wp",
-        "interpretation_Tm_abs_a6ee1c021adb00e81afa60efbee75872",
-        "l_and-interp", "l_imp-interp", "l_not-interp",
-        "token_correspondence_ID1.ite_wp"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "9c5fe6ca8bfaa194f8f348206a5c6dfc"
+      "4fec2e666329d95b397ff9ca70298807"
     ],
     [
       "ID1.Id",

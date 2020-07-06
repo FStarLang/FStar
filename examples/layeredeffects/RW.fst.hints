@@ -123,20 +123,21 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63", "b2t_def",
-        "bool_inversion", "constructor_distinct_RW.RO",
-        "constructor_distinct_RW.RW", "data_typing_intro_RW.RW@tok",
-        "equality_tok_RW.RW@tok", "equation_RW.flows", "equation_RW.ite",
+        "RW_pretyping_fd3570324fcfa9ce675e4b3ac31dbd63", "bool_inversion",
+        "constructor_distinct_RW.RO", "constructor_distinct_RW.RW",
+        "data_typing_intro_RW.RW@tok", "equality_tok_RW.RW@tok",
+        "equation_Prims.squash", "equation_RW.flows", "equation_RW.ite",
         "equation_RW.join", "equation_RW.post_leq", "equation_RW.pre_leq",
         "fuel_guarded_inversion_RW.idx",
         "interpretation_Tm_abs_6ffe1d7f26ddf74123e393b8b7d06717",
         "interpretation_Tm_abs_7b642842c117ceefe58ab59f312266e8",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
         "true_interp"
       ],
       0,
-      "4eb7f6fd4e6d46ad632a56386fb29eda"
+      "b6b471b0e35d9574a3a023aff75a401d"
     ],
     [
       "RW.RWI",
@@ -155,10 +156,11 @@
         "interpretation_Tm_abs_7b642842c117ceefe58ab59f312266e8",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4",
         "true_interp"
       ],
       0,
-      "c109c8a852307eb962a2bb0e6a6c5893"
+      "8bfb94b8461e3567934db6046e87a237"
     ],
     [
       "RW.lift_pure_rwi",
@@ -193,7 +195,7 @@
         "typing_Tm_abs_e5f9da69b4e622fc8b88c80c57775066", "unit_typing"
       ],
       0,
-      "a0a804b5ad077f6495a38c1882e6b7e7"
+      "9ee29f4a727c5430af17e24b4fcaed80"
     ],
     [
       "RW.test_rrr",
@@ -230,7 +232,7 @@
         "unit_typing"
       ],
       0,
-      "14ca591beb80e29dda9e32db9490ac4c"
+      "a3e1abeb9b540bed002a50fd555cb62a"
     ],
     [
       "RW.test_rrw",
@@ -267,7 +269,7 @@
         "typing_tok_RW.RO@tok", "unit_inversion", "unit_typing"
       ],
       0,
-      "24b3fc4d4d0362006ed31e1006f37a20"
+      "9ce0db155f266c2751d8706a0d59a3e3"
     ],
     [
       "RW.test_rww",
@@ -305,7 +307,7 @@
         "unit_typing"
       ],
       0,
-      "cd932d0ab45604c85b623ae6699c3b11"
+      "7614fab8400bbecaf504cb9db1444ed5"
     ],
     [
       "RW.test_wrw",
@@ -343,7 +345,7 @@
         "unit_typing"
       ],
       0,
-      "c49ce58523673887119f11bb44187dbc"
+      "ad6ff734094b414e2afa82b51bd338d9"
     ],
     [
       "RW.test_www",
@@ -381,7 +383,7 @@
         "unit_typing"
       ],
       0,
-      "365ac63f1e9b3c6a38910047cd74f2a7"
+      "21419e4af4e745a45755bd23b513b969"
     ],
     [
       "RW.map",
@@ -408,7 +410,7 @@
         "true_interp", "unit_typing"
       ],
       0,
-      "09a8d5467c7842960251a3f957c272ff"
+      "d68c5e88c25111c6347e62cd0ba98cc5"
     ],
     [
       "RW.app",
@@ -427,7 +429,7 @@
         "true_interp"
       ],
       0,
-      "55b974de9d6faf05acdd5680c00a4807"
+      "3e79a792779bd06fc629538b06f8a0d3"
     ],
     [
       "RW.appn",
@@ -460,7 +462,7 @@
         "unit_typing"
       ],
       0,
-      "6dbb8fd9bbd70e626798f51c4a79d47c"
+      "842285d6d8ea83789278512afe51c86b"
     ],
     [
       "RW.labs0",
@@ -488,7 +490,7 @@
         "true_interp"
       ],
       0,
-      "9a9fc6fa3a36764775f8d00d39d7626c"
+      "657ad59eb951b1209e409503f135e9c4"
     ],
     [
       "RW.labs",
@@ -516,7 +518,7 @@
         "true_interp"
       ],
       0,
-      "51b9a04088ce530c843a3c62cffc6f70"
+      "2e09f39e3049edb2b63b74df114f22b2"
     ],
     [
       "RW.rwi_assert",
@@ -533,7 +535,7 @@
         "token_correspondence_RW.real_post", "unit_inversion"
       ],
       0,
-      "aefcb5806b73b43f72f4004a38103070"
+      "98080de6fef87e1a28b42739b941080f"
     ],
     [
       "RW.rwi_assume",
@@ -549,7 +551,7 @@
         "l_and-interp", "token_correspondence_RW.real_post", "unit_inversion"
       ],
       0,
-      "98e47b58672005d5c27179f9bb579154"
+      "993745473c02d158fe5c1deeb1f86ac8"
     ],
     [
       "RW.test_abs0",
@@ -579,7 +581,7 @@
         "token_correspondence_RW.real_post", "true_interp"
       ],
       0,
-      "1c2980c99d41f060eeb73f86f71b7f7c"
+      "082f322ba8b71dc25b9b09e119acb348"
     ],
     [
       "RW.test_abs0'",
@@ -609,7 +611,7 @@
         "token_correspondence_RW.real_post", "true_interp", "unit_typing"
       ],
       0,
-      "7f1a44233d310589632663c31201b1e5"
+      "f7785cea90fcbf37ed5757b636b783d2"
     ],
     [
       "RW.test_abs",
@@ -628,7 +630,7 @@
         "true_interp"
       ],
       0,
-      "50dfd21b41c5f8c72ef66f8b9cb16d11"
+      "8ffb64683e53d2f8b0bcae7c0982aaef"
     ],
     [
       "RW.get_indexed",
@@ -643,7 +645,7 @@
         "l_and-interp", "token_correspondence_RW.real_post"
       ],
       0,
-      "200ca4a71e997d94afd92b2e6bdeb1e9"
+      "a44d8fe987598f125b46b836a934a35c"
     ],
     [
       "RW.get_r",
@@ -659,7 +661,7 @@
         "l_and-interp", "token_correspondence_RW.real_post"
       ],
       0,
-      "dd89981d3f3718a663a1c57680903df8"
+      "4ade53f3fff6405f57d964bfc9621a3b"
     ],
     [
       "RW.test_state_eq_rrr",
@@ -687,7 +689,7 @@
         "token_correspondence_RW.real_post", "true_interp", "unit_typing"
       ],
       0,
-      "a4608a819e4587fc37bc8aa8956575a0"
+      "d56b8d71499aba60f0d19c94a1ac7ca8"
     ],
     [
       "RW.test_state_eq_rrw",
@@ -715,7 +717,7 @@
         "token_correspondence_RW.real_post", "true_interp", "unit_typing"
       ],
       0,
-      "db99e5315964fba41d2e657732021215"
+      "41b5d40d32234d3310f84277f8a831bb"
     ],
     [
       "RW.test_state_eq_rww",
@@ -743,7 +745,7 @@
         "token_correspondence_RW.real_post", "true_interp", "unit_typing"
       ],
       0,
-      "465e8c150b4ed880abdf4e4e1600cdfa"
+      "61b8225658a0888bdd264f5329a86322"
     ],
     [
       "RW.test_state_eq_www",
@@ -764,7 +766,7 @@
         "true_interp"
       ],
       0,
-      "a5b478cd7449fec1db2a724b693f47d3"
+      "87d2ccbed7787f9f996292ebc2b8f7b1"
     ],
     [
       "RW.makero",
@@ -783,7 +785,7 @@
         "token_correspondence_RW.real_post"
       ],
       0,
-      "5809c1612be58019dd64ae26b134e756"
+      "640d3a26aa3def666ec51695e1a29e66"
     ]
   ]
 ]

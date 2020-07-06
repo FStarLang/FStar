@@ -170,13 +170,14 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
-        "equation_DM4F_layered.ite_wp", "equation_DM4F_layered.stronger",
+        "@MaxIFuel_assumption", "@query", "equation_DM4F_layered.ite_wp",
+        "equation_DM4F_layered.stronger", "equation_Prims.squash",
         "interpretation_Tm_abs_09c40b24c768e24b4ac5a9413aa5317a",
-        "l_and-interp", "l_imp-interp"
+        "l_and-interp", "l_imp-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "2dff1e3458d430f38b55c76f4cc25e37"
+      "0002a058d8408f66a0cfda76e2444804"
     ],
     [
       "DM4F_layered.ST",
@@ -187,10 +188,11 @@
         "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
         "equation_DM4F_layered.ite_wp", "equation_DM4F_layered.stronger",
         "interpretation_Tm_abs_09c40b24c768e24b4ac5a9413aa5317a",
-        "l_and-interp", "l_imp-interp", "l_not-interp"
+        "l_and-interp", "l_imp-interp", "l_not-interp",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "93d7b5b83dc95f421682dd45d0b88ff5"
+      "83d9873e7c9a66fb046db98b3413dc03"
     ],
     [
       "DM4F_layered.lift_pure_st_wp",
@@ -264,7 +266,7 @@
         "l_quant_interp_f81d9a4c4cebdec92f518240e9101497"
       ],
       0,
-      "b2d94dab369ac5fb07596b3d4af8caf1"
+      "7c62019435b6dd26257dfb663d6721d3"
     ],
     [
       "DM4F_layered.get",
@@ -277,7 +279,7 @@
         "interpretation_Tm_abs_5c8e14a399ca3ce69db1e89844177863"
       ],
       0,
-      "b76a286f4226a0d2b79b9e45d0a62c41"
+      "f975919780643c959ef70ecab1a236e5"
     ],
     [
       "DM4F_layered.put",
@@ -291,7 +293,7 @@
         "unit_typing"
       ],
       0,
-      "1b4019dcaff0e9a4b056150b133ea289"
+      "26a2a891f0be18c3743b491bf60bac63"
     ],
     [
       "DM4F_layered.test",
@@ -309,7 +311,7 @@
         "primitive_Prims.op_Addition"
       ],
       0,
-      "4fab9e76358e130d20eeaa003e70fc16"
+      "96255651d6b60dda5564eefd67c50ace"
     ]
   ]
 ]
