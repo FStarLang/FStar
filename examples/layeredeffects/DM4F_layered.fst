@@ -6,7 +6,6 @@ let uncurry f (a, b) = f a b
 (* Same as DM4F, but layered over a layered PURE *)
 open ID2
 open FStar.Tactics
-open Common
 
 
 (* Simulating state effect in DM4F, hopefully doable by a tactic. *)
@@ -22,10 +21,10 @@ let st_monotonic #st #a (w : wp0 st a) : Type0 =
   // ^ this version seems to be less SMT-friendly
   forall s0 p1 p2. (forall x s1. p1 x s1 ==> p2 x s1) ==> w s0 p1 ==> w s0 p2
 
-type wp st a = w:(wp0 st a)//{st_monotonic w}
+type wp st a = w:(wp0 st a){st_monotonic w}
 
 type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#ua =
-  s0:st -> PURE (a & st) (fun p -> wp s0 (curry p))
+  s0:st -> ID (a & st) (fun p -> wp s0 (curry p))
 
 unfold
 let return_wp (#a:Type) (#st:Type0) (x:a) : wp st a =
@@ -41,21 +40,21 @@ let bind_wp (#a:Type) (#b:Type) (#st:Type0)
 
 let squash_lem a : Lemma (a ==> squash a) = ()
 
-//let elim_mon #a #st (w : wp st a) (p1 p2 : post_t st a) (s0:st)
-// : Lemma (requires (forall x s1. p1 x s1 ==> p2 x s1))
-//         (ensures w s0 p1 ==> w s0 p2) = ()
+let elim_mon #a #st (w : wp st a) (p1 p2 : post_t st a) (s0:st)
+ : Lemma (requires (forall x s1. p1 x s1 ==> p2 x s1))
+         (ensures w s0 p1 ==> w s0 p2) = ()
 
 (* All of this is needed due to an auto_squash popping up in the VC *)
 
-//let wp_squash_lem #a #st (w : wp st a) (p : post_t st a) (s0:st)
-//  : Lemma (requires w s0 p) (ensures w s0 (fun x y -> squash (p x y)))
-//  = calc (==>) {
-//      w s0 p;
-//      ==> {}
-//      w s0 (fun x y -> p x y);
-//      ==> { elim_mon w (fun x y -> p x y) (fun x y -> squash (p x y)) s0 } // grr
-//      w s0 (fun x y -> squash (p x y));
-//    }
+let wp_squash_lem #a #st (w : wp st a) (p : post_t st a) (s0:st)
+  : Lemma (requires w s0 p) (ensures w s0 (fun x y -> squash (p x y)))
+  = calc (==>) {
+      w s0 p;
+      ==> {}
+      w s0 (fun x y -> p x y);
+      ==> { elim_mon w (fun x y -> p x y) (fun x y -> squash (p x y)) s0 } // grr
+      w s0 (fun x y -> squash (p x y));
+    }
     
 let bind (a:Type) (b:Type) (st:Type0)
   (wp_c : wp st a)
@@ -63,10 +62,13 @@ let bind (a:Type) (b:Type) (st:Type0)
   (c : repr a st wp_c)
   (f : (x:a -> repr b st (wp_f x)))
 : repr b st (bind_wp wp_c wp_f)
-= fun s0 -> 
-    FStar.Monotonic.Pure.wp_monotonic_pure ();
-    let (y, s1) = c s0 in
-    f y s1
+   by (explode ();
+       let w = nth_binder 3 in
+       apply_lemma (`(wp_squash_lem (`#w)));
+       dump "")
+= fun s0 ->
+      let (y, s1) = c s0 in
+      f y s1
 
 let ite_wp #a #st (b:bool) (w1 w2 : wp st a) : wp st a =
   fun s0 p -> (b ==> w1 s0 p) /\ ((~b) ==> w2 s0 p)
