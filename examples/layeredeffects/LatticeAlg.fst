@@ -142,7 +142,8 @@ let if_then_else
   : Type
   = repr a (labs1@labs2)
 
-let _get () : repr int [Read] = Act Read () Return
+let _get : repr int [Read] = Act Read () Return
+let _put (s:state) : repr unit [Write] = Act Write s Return
 
 [@@allow_informative_binders]
 total // need this for catch!!
@@ -159,7 +160,7 @@ layered_effect {
 }
 
 let get () : EFF int [Read] =
-  EFF?.reflect (_get ())
+  EFF?.reflect _get
 
 unfold
 let pure_monotonic #a (wp : pure_wp a) : Type =

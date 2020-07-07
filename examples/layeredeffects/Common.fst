@@ -1,12 +1,13 @@
 module Common
 
+open FStar.Universe
+
 (* Common lemmas and constructions for layered effects examples. *)
 
 let coerce #a #b (x:a{a == b}) : b = x
 
 let unreachable (#a:Type u#aa) () : Pure a (requires False) (ensures (fun _ -> False)) =
   coerce #(raise_t string) #a (raise_val "whatever")
-
 
 let elim_pure #a #wp ($f : unit -> PURE a wp) p
  : Pure a (requires (wp p)) (ensures (fun r -> p r))
