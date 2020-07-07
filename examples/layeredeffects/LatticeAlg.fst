@@ -61,6 +61,16 @@ let action_of (l:eff_label) : action (label_ii l) (label_oo l) =
   | WR ->  Write
   | EXN -> Raise
 
+let iso1 (l:eff_label)
+  : Lemma (label_of (action_of l) == l)
+          [SMTPat (action_of l)]
+  = ()
+  
+let iso2 (a:action 'i 'o)
+  : Lemma (action_of (label_of a) == a)
+          [SMTPat (label_of a)]
+  = ()
+
 let abides_act #i #o (ann:annot) (a : action i o) : prop =
   ann (label_of a) == true
 
@@ -421,11 +431,34 @@ let rec handle2 #a #b #labs l1 l2 f h1 h2 v =
       Act act i k'
     end
 
+(* All the way *)
+val handle_with (#a #b:_) (#labs0 #labs1 : list eff_label)
+           (f:repr a labs0)
+           (h: (l:eff_label{mem l labs0} -> handler_ty_l l b labs1))
+           (v : a -> repr b labs1)
+           : repr b labs1
+let rec handle_with #a #b #labs0 #labs1 f h v =
+  match f with
+  | Return x -> v x
+  | Act act i k ->
+    let k' o : repr b labs1 =
+        WF.axiom1 k o;
+       handle_with #a #b #labs0 #labs1 (k o) h v
+    in
+    h (label_of act) i k'
+
 let catch0' #a #labs (t1 : repr a (EXN::labs))
                      (t2 : repr a labs)
   : repr a labs
   = handle EXN t1 (fun i k -> t2) (fun x -> Return x)
 
+let catch0'' #a #labs (t1 : repr a (EXN::labs))
+                      (t2 : repr a labs)
+  : repr a labs
+  = handle_with t1 (function EXN -> (fun i k -> t2)
+                           | act -> (fun i k -> Act (action_of act) i k))
+                   (fun x -> Return x)
+  
 let fmap #a #b #labs (f : a -> b) (t : repr a labs) : repr b labs =
   bind _ _ _ labs t (fun x -> Return (f x))
 
