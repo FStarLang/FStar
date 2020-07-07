@@ -267,7 +267,15 @@ let as_steelk (#a:Type) (#pre:slprop) (#post:post_t a) ($f:unit -> SteelT a pre 
 
 open Steel.FractionalPermission
 
-let example2 () : SteelK (ref int) emp (fun r -> pts_to r full_perm 2) =
+
+let example2 (r:ref int) : SteelK (ref int) (pts_to r full_perm 0) (fun x -> pts_to r full_perm 1 `star` pts_to x full_perm 2) =
+  let p1 = kfork (fun _ -> as_steelk (fun _ -> write #_ #0 r 1)) in
+  let x = as_steelk (fun _ -> alloc 2) in
+  kjoin p1;
+  x
+
+
+let example3 () : SteelK (ref int) emp (fun r -> pts_to r full_perm 2) =
   let x = as_steelk (fun _ -> alloc 0) in
   let y = as_steelk (fun _ -> alloc 1) in
   let p1:thread (pts_to x full_perm 1) = kfork (fun _ -> as_steelk (fun _ -> write #_ #0 x 1)) in

@@ -175,6 +175,130 @@ polymonadic_bind (PURE, SteelAtomic) |> SteelAtomic = bind_pure_steela_
 
 polymonadic_subcomp SteelAtomicF <: SteelAtomic = subcomp
 
+(***** Bind and Subcomp relation with Steel.Atomic *****)
+
+unfold
+let bind_req_atomicf_steelf (#a:Type) (#pre_f:pre_t) (#post_f:post_t a) (req_g:(x:a -> req_t (post_f x)))
+: req_t pre_f
+= fun _ -> forall (x:a) h1. req_g x h1
+
+unfold
+let bind_ens_atomicf_steelf (#a:Type) (#b:Type)
+  (#pre_f:pre_t) (#post_f:post_t a) (#post_g:post_t b) (ens_g:(x:a -> ens_t (post_f x) b post_g))
+: ens_t pre_f b post_g
+= fun _ y h2 -> exists x h1. (ens_g x) h1 y h2
+
+val bind_atomic_steel (a:Type) (b:Type)
+  (pre_f:pre_t) (post_f:post_t a) (is_ghost:observability)
+  (post_g:post_t b) (req_g:(x:a -> req_t (post_f x))) (ens_g:(x:a -> ens_t (post_f x) b post_g))
+  (f:atomic_repr a Set.empty is_ghost pre_f post_f) (g:(x:a -> Steel.FramingEffect.repr b (post_f x) post_g (req_g x) (ens_g x)))
+: Steel.FramingEffect.repr b pre_f post_g
+    (bind_req_atomicf_steelf req_g)
+    (bind_ens_atomicf_steelf ens_g)
+
+polymonadic_bind (SteelAtomicF, Steel.FramingEffect.SteelF) |> Steel.FramingEffect.SteelF = bind_atomic_steel
+
+
+unfold
+let bind_steelatomic_steelf_req (#a:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (#pre_g:a -> pre_t)
+  (req_g:(x:a -> req_t (pre_g x)))
+  (frame_f:slprop)
+  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
+: req_t (pre_f `star` frame_f)
+= fun m0 ->
+  (forall (x:a) (m1:hmem (post_f x `star` frame_f)). (req_g x) m1)
+
+unfold
+let bind_steelatomic_steelf_ens (#a:Type) (#b:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (#pre_g:a -> pre_t) (#post_g:post_t b)
+  (ens_g:(x:a -> ens_t (pre_g x) b post_g))
+  (frame_f:slprop)
+  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
+: ens_t (pre_f `star` frame_f) b post_g
+= fun m0 y m2 ->
+  (exists (x:a) (m1:hmem (post_f x `star` frame_f)). (ens_g x) m1 y m2)
+
+val bind_steelatomic_steelf (a:Type) (b:Type)
+  (o:observability)
+  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
+  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
+  (#[@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b post_g))
+  (#[@@ framing_implicit] frame_f:slprop)
+  (#[@@ framing_implicit] p:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
+  (f:atomic_repr a Set.empty o pre_f post_f)
+  (g:(x:a -> Steel.FramingEffect.repr b (pre_g x) post_g (req_g x) (ens_g x)))
+: Steel.FramingEffect.repr b
+    (pre_f `star` frame_f)
+    post_g
+    (bind_steelatomic_steelf_req req_g frame_f p)
+    (bind_steelatomic_steelf_ens ens_g frame_f p)
+
+
+polymonadic_bind (SteelAtomic, Steel.FramingEffect.SteelF) |> Steel.FramingEffect.SteelF = bind_steelatomic_steelf
+
+
+unfold
+let bind_steelatomic_steel_req (#a:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (#pre_g:a -> pre_t)
+  (req_g:(x:a -> req_t (pre_g x)))
+  (frame_f:slprop) (frame_g:slprop)
+  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g)))
+: req_t (pre_f `star` frame_f)
+= fun m0 ->
+  (forall (x:a) (m1:hmem (post_f x `star` frame_f)). (req_g x) m1)
+
+unfold
+let bind_steelatomic_steel_ens (#a:Type) (#b:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (#pre_g:a -> pre_t) (#post_g:post_t b)
+  (ens_g:(x:a -> ens_t (pre_g x) b post_g))
+  (frame_f:slprop) (frame_g:slprop)
+  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g)))
+: ens_t (pre_f `star` frame_f) b (fun y -> post_g y `star` frame_g)
+= fun m0 y m2 ->
+  (exists (x:a) (m1:hmem (post_f x `star` frame_f)).  (ens_g x) m1 y m2)
+
+val bind_steelatomic_steel (a:Type) (b:Type)
+  (o:observability)
+  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
+  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
+  (#[@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b post_g))
+  (#[@@ framing_implicit] frame_f:slprop) (#[@@ framing_implicit] frame_g:slprop)
+  (#[@@ framing_implicit] p:squash (can_be_split_forall
+    (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g)))
+  (f:atomic_repr a Set.empty o pre_f post_f)
+  (g:(x:a -> Steel.FramingEffect.repr b (pre_g x) post_g (req_g x) (ens_g x)))
+: Steel.FramingEffect.repr b
+    (pre_f `star` frame_f)
+    (fun y -> post_g y `star` frame_g)
+    (bind_steelatomic_steel_req req_g frame_f frame_g p)
+    (bind_steelatomic_steel_ens ens_g frame_f frame_g p)
+
+polymonadic_bind (SteelAtomic, Steel.FramingEffect.Steel) |> Steel.FramingEffect.SteelF =
+  bind_steelatomic_steel
+
+
+unfold
+let subcomp_req_atomic_steel (a:Type) (pre_f:pre_t) : req_t pre_f = fun _ -> True
+
+unfold
+let subcomp_ens_atomic_steel (#a:Type) (pre_f:pre_t) (post_f:post_t a)
+: ens_t pre_f a post_f
+= fun _ _ _ -> True
+
+
+val subcomp_atomic_steel (a:Type)
+  (#[@@framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a) (is_ghost:observability)
+  (f:atomic_repr a Set.empty is_ghost pre_f post_f)
+: Steel.FramingEffect.repr a pre_f post_f (subcomp_req_atomic_steel a pre_f) (subcomp_ens_atomic_steel pre_f post_f)
+
+polymonadic_subcomp SteelAtomic <: Steel.FramingEffect.Steel = subcomp_atomic_steel
+polymonadic_subcomp SteelAtomicF <: Steel.FramingEffect.Steel = subcomp_atomic_steel
+
 // AF: Why is this failing?
 // val lift_atomic_to_steelT (a:Type)
 //                           (o:observability)
@@ -213,7 +337,7 @@ val with_invariant (#a:Type)
                    (#o:observability)
                    (#p:slprop)
                    (i:inv p{not (i `Set.mem` opened_invariants)})
-                   (f:unit -> SteelAtomic a (set_add i opened_invariants) o
+                   ($f:unit -> SteelAtomic a (set_add i opened_invariants) o
                                          (p `star` fp)
                                          (fun x -> p `star` fp' x))
   : SteelAtomic a opened_invariants o fp fp'
