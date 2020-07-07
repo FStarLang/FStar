@@ -26,12 +26,12 @@ type action : Type0 -> Type0 -> Type u#1 =
   | Read : action unit state
   | Write : action state unit
   | Raise : action exn c_False
-  
+
 noeq
 type repr0 (a:Type u#aa) : Type u#(max 1 aa) =
   | Return : a -> repr0 a
   | Act    : #i:_ -> #o:_ -> act:(action i o) -> i -> k:(o -> repr0 a) -> repr0 a
-  
+
 type annot = eff_label -> bool
 
 let interp (l : list eff_label) : annot =
@@ -42,13 +42,13 @@ let label_of #ii #oo (a:action ii oo) : eff_label =
  | Read -> RD
  | Write -> WR
  | Raise -> EXN
- 
+
 let label_ii (l:eff_label) : Type =
  match l with
  | RD -> unit
  | WR -> state
  | EXN -> exn
- 
+
 let label_oo (l:eff_label) : Type =
  match l with
  | RD -> state
@@ -63,7 +63,7 @@ let action_of (l:eff_label) : action (label_ii l) (label_oo l) =
 
 let abides_act #i #o (ann:annot) (a : action i o) : prop =
   ann (label_of a) == true
-  
+
 let rec abides #a (ann:annot) (f : repr0 a) : prop =
   begin match f with
   | Act a i k ->
@@ -83,7 +83,7 @@ let rec interp_at (l1 l2 : list eff_label) (l : eff_label)
   = match l1 with
     | [] -> ()
     | _::l1 -> interp_at l1 l2 l
-    
+
 let sublist (l1 l2 : list eff_label) =
   forall x. mem x l1 ==> mem x l2
 
@@ -115,13 +115,13 @@ let rec abides_sublist_nopat #a (l1 l2 : list eff_label) (c : repr0 a)
           (ensures (abides (interp l2) c))
   = match c with
     | Return _ -> ()
-    | Act a i k -> 
+    | Act a i k ->
       let sub o : Lemma (abides (interp l2) (k o)) =
         FStar.WellFounded.axiom1 k o;
         abides_sublist_nopat l1 l2 (k o)
       in
       Classical.forall_intro sub
-      
+
 let abides_sublist #a (l1 l2 : list eff_label) (c : repr0 a)
   : Lemma (requires (abides (interp l1) c) /\ sublist l1 l2)
           (ensures (abides (interp l2) c))
@@ -147,7 +147,7 @@ let rec bind (a b : Type)
   : Tot (repr b (labs1@labs2))
   = match c with
     | Return x -> f x
-    | Act act i k -> 
+    | Act act i k ->
       let k' o : repr b (labs1@labs2) =
         FStar.WellFounded.axiom1 k o;
         bind _ _ _ _ (k o) f
@@ -172,7 +172,7 @@ let if_then_else
   = repr a (labs1@labs2)
 
 let _get () : repr int [RD] = Act Read () Return
-  
+
 [@@allow_informative_binders]
 total // need this for catch!!
 reifiable
@@ -189,7 +189,7 @@ layered_effect {
 
 let get () : EFF int [RD] =
   EFF?.reflect (_get ())
-  
+
 unfold
 let pure_monotonic #a (wp : pure_wp a) : Type =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2
@@ -206,7 +206,7 @@ let lift_pure_eff
         (requires (wp (fun _ -> True) /\ pure_monotonic wp))
         (ensures (fun _ -> True))
  = Return (f ())
- 
+
 sub_effect PURE ~> EFF = lift_pure_eff
 
 let put (s:state) : EFF unit [WR] =
@@ -324,7 +324,7 @@ let rec interp_rdwr_tree #a (t : repr a [RD;WR]) (s:state) : Tot (a & state) =
   | Act Write s k ->
     FStar.WellFounded.axiom1 k ();
     interp_rdwr_tree (k ()) s
-    
+
 let interp_rdwr #a (f : unit -> EFF a [RD;WR]) (s:state) : Tot (a & state) = interp_rdwr_tree (reify (f ())) s
 
 let rec interp_rdexn_tree #a (t : repr a [RD;EXN]) (s:state) : Tot (option a) =
@@ -349,7 +349,7 @@ let rec interp_all_tree #a (t : repr a [RD;WR;EXN]) (s:state) : Tot (option a & 
     interp_all_tree (k ()) s
   | Act Raise e k ->
     (None, s)
-    
+
 let interp_all #a (f : unit -> EFF a [RD;WR;EXN]) (s:state) : Tot (option a & state) = interp_all_tree (reify (f ())) s
 
 //let action_input (a:action 'i 'o) = 'i
@@ -364,10 +364,10 @@ let interp_all #a (f : unit -> EFF a [RD;WR;EXN]) (s:state) : Tot (option a & st
 //
 //let dpi32 (#a:Type) (#b:a->Type) (#c:(x:a->b x->Type)) (t : (x:a & y:b x & c x y)) : b (dpi31 t) =
 //  let (| x, y, z |) = t in y
-//  
+//
 //let dpi33 (#a:Type) (#b:a->Type) (#c:(x:a->b x->Type)) (t : (x:a & y:b x & c x y)) : c (dpi31 t) (dpi32 t) =
 //  let (| x, y, z |) = t in z
-  
+
 let handler_ty_l (l:eff_label) (b:Type) (labs:list eff_label) =
   label_ii l -> (label_oo l -> repr b labs) -> repr b labs
 
@@ -425,7 +425,7 @@ let catch0' #a #labs (t1 : repr a (EXN::labs))
                      (t2 : repr a labs)
   : repr a labs
   = handle EXN t1 (fun i k -> t2) (fun x -> Return x)
-    
+
 let fmap #a #b #labs (f : a -> b) (t : repr a labs) : repr b labs =
   bind _ _ _ labs t (fun x -> Return (f x))
 
@@ -454,17 +454,30 @@ let catchST2_emp #a
             (fun s' k -> Return (fun s -> frompure (k ()) s'))
             (fun x -> Return (fun s -> (x,s)))
 
-// not sure if this definable as-is
-// should read https://www.fceia.unr.edu.ar/~mauro/pubs/haskell2019.pdf
-let catchST2 #a #labs
+(* The mysterious version without annotations *)
+let catchST2 #a #labs (f : repr a (RD::WR::labs))
+  : repr (state -> repr (a & state) labs) labs
+  = handle2 RD WR f
+            (fun _ k -> Return (fun s -> join (app #state (k s) s)))
+            (fun s k -> Return (fun _ -> join (app #state (k ()) s)))
+            (fun x ->   Return (fun s0 -> Return (x, s0)))
+
+(* Fully annotated *)
+let catchST2_sensible #a #labs
   (f : repr a (RD::WR::labs))
-  : repr (state -> a & state) labs
-  = handle2 #a #(state -> a & state)
+  : repr (state -> repr (a & state) labs) labs
+  = handle2 #a #(state -> repr (a & state) labs)
             #labs
             RD WR f
-            (fun _  k -> admit ()) // what to do here?
+            (fun _  (k : (state -> repr (state -> repr (a & state) labs) labs)) ->
+                       let ff : state -> repr (a & state) labs =
+                         fun s0 -> let f : repr (state -> repr (a&state) labs) labs = k s0 in
+                                let ff : repr (repr (a&state) labs) labs = app #state #(repr (a&state) labs) #labs f s0 in
+                                join ff
+                       in
+                       Return ff)
             (fun s' k -> bind _ _ _ labs (k ()) (fun f -> Return (fun _ -> f s')))
-            (fun x -> Return (fun s0 -> (x, s0)))
+            (fun x -> Return (fun s0 -> Return (x, s0)))
 
 module L = Lattice
 
@@ -472,7 +485,7 @@ let trlab = function
   | RD  -> L.RD
   | WR  -> L.WR
   | EXN -> L.EXN
-  
+
 let trlab' = function
   | L.RD  -> RD
   | L.WR  -> WR
@@ -495,15 +508,15 @@ let rec interp_into_lattice_repr #a #labs
   : L.repr a (trlabs labs)
   = match t with
     | Return x -> L.return _ x
-    | Act Read i k -> 
+    | Act Read i k ->
       L.bind _ _ _ _ (reify (L.get i))
        (fun x -> WF.axiom1 k x;
               interp_into_lattice_repr #a #labs (k x))
-    | Act Write i k -> 
+    | Act Write i k ->
       L.bind _ _ _ _ (reify (L.put i))
        (fun x -> WF.axiom1 k x;
               interp_into_lattice_repr #a #labs (k x))
-    | Act Raise i k -> 
+    | Act Raise i k ->
       L.bind _ _ _ _ (reify (L.raise ()))
        (fun x -> WF.axiom1 k x;
               interp_into_lattice_repr #a #labs (k x))
@@ -533,7 +546,7 @@ type sem (a:Type) (labs : list eff_label) = r:(sem0 a){abides' r (interp labs)}
 let rec interp_sem #a #labs (t : repr a labs) : sem a labs =
   match t with
   | Return x -> fun s0 -> (Some x, s0)
-  | Act Read _ k -> 
+  | Act Read _ k ->
     (* Needs this trick for termination. Trying to call axiom1 within
      * `r` messes up the refinement about RD. *)
     let k : (s:state -> (r:repr0 a{r << k})) = fun s -> WF.axiom1 k s; k s in
@@ -558,14 +571,14 @@ let interp_from_lattice_repr #a #labs
 
 
 
-let read_handler (b:Type) 
+let read_handler (b:Type)
                  (labs:list eff_label)
                  (s0:state)
    : handler_ty_l RD b labs
    = fun _ k -> k s0
 
 
-let handle_read (a:Type) 
+let handle_read (a:Type)
                 (labs:list eff_label)
                 (f:repr a (RD::labs))
                 (h:handler_ty_l RD a labs)
@@ -573,20 +586,20 @@ let handle_read (a:Type)
    = handle RD f h (fun x -> Return x)
 
 
-let weaken #a #labs l (f:repr a labs) : repr a (l::labs) = 
+let weaken #a #labs l (f:repr a labs) : repr a (l::labs) =
   assert(l::labs == [l]@labs);
   f
 
 let write_handler (a:Type)
                   (labs:list eff_label)
-  : handler_ty_l WR a labs                 
+  : handler_ty_l WR a labs
   = fun s k -> handle_read a labs (weaken RD (k())) (read_handler a labs s)
 
 
-let handle_write (a:Type) 
+let handle_write (a:Type)
                 (labs:list eff_label)
                 (f:repr a (WR::labs))
-   : repr a labs                
+   : repr a labs
    = handle WR f (write_handler a labs) (fun x -> Return x)
 
 let handle_st (a:Type)
