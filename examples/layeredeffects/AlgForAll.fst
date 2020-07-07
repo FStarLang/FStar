@@ -13,14 +13,18 @@ let pre = state -> Type0
 let post (a:Type) = a -> state -> Type0
 let st_wp (a:Type) : Type = post a -> pre
 
+unfold
 let return_wp #a x : st_wp a = fun p s -> p x s
 
+unfold
 let bind_wp #a #b (w : st_wp a) (wf : a -> st_wp b)
   : st_wp b
   = fun p s0 -> w (fun y s1 -> wf y p s1) s0
 
+unfold
 let read_wp : st_wp state = fun p s0 -> p s0 s0
 
+unfold
 let write_wp : state -> st_wp unit = fun s p _ -> p () s
 
 (* Also doable with handlers *)
@@ -45,10 +49,14 @@ let m_bind c f = bind _ _ _ _ c f
 val w (a : Type u#a) : Type u#(max 1 a)
 let w = st_wp
 
+unfold
 val w_return (#a : Type) : a -> w a
+unfold
 let w_return = return_wp
 
+unfold
 val w_bind (#a #b : Type) : w a -> (a -> w b) -> w b
+unfold
 let w_bind = bind_wp
 
 (* Bug: defining this as a FStar.Preorder.preorder
@@ -196,6 +204,7 @@ let _put (s:state) : repr unit (write_wp s) =
 let put (s:state) : DM4A unit (write_wp s) =
   DM4A?.reflect (_put s)
 
+unfold
 let lift_pure_wp (#a:Type) (wp : pure_wp a) : st_wp a =
   fun p s0 -> wp (fun x -> p x s0)
 
