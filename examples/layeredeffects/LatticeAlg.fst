@@ -389,6 +389,8 @@ let rec handle2 #a #b #labs l1 l2 f h1 h2 v =
     end
 
 (* All the way *)
+(* can this be the **single** operation provided for repr? It can
+even be used to define bind, it seems? *)
 val handle_with (#a #b:_) (#labs0 #labs1 : list op)
            (f:repr a labs0)
            (v : a -> repr b labs1)

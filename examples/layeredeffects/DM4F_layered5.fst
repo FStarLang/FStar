@@ -7,6 +7,10 @@ let uncurry f (a, b) = f a b
 open ID5
 open FStar.Tactics
 
+unfold
+let pure_bind_wp (#a #b : Type) (w1 : ID5.wp a) (w2 : a -> ID5.wp b) : ID5.wp b =
+  ID5.bind_wp w1 w2
+
 (* Simulating state effect in DM4F, hopefully doable by a tactic. *)
 
 type post_t st a =
@@ -14,6 +18,12 @@ type post_t st a =
 
 type wp (st:Type u#0) (a:Type u#ua) : Type u#(max 1 ua) =
   st -> post_t st a -> Type0
+  
+let iso1 #a #s (w : wp s a) : s -> (a & s -> Type0) -> Type0 =
+  fun s p -> w s (curry p)
+  
+let iso2 #a #s (w : s -> (a & s -> Type0) -> Type0) : wp s a=
+  fun s p -> w s (uncurry p)
 
 type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#(max 1 ua) =
   s0:st -> ID (a & st) (fun p -> wp s0 (curry p))
@@ -21,6 +31,8 @@ type repr (a:Type u#ua) (st:Type0) (wp : wp u#ua st a) : Type u#(max 1 ua) =
 unfold
 let return_wp (#a:Type) (#st:Type0) (x:a) : wp st a =
   fun s0 p -> p x s0
+  //iso2 (fun s0 -> ID5.return_wp (x, s0))
+     // ^ reusing pure return
 
 let return (a:Type) (x:a) (st:Type0) : repr a st (return_wp x) =
   fun s0 -> (x, s0)
@@ -29,6 +41,8 @@ unfold
 let bind_wp (#a:Type) (#b:Type) (#st:Type0)
   (w1 : wp st a) (w2 : a -> wp st b) : wp st b =
   fun s0 p -> w1 s0 (fun y s1 -> w2 y s1 p)
+  //iso2 (fun s0 -> pure_bind_wp (iso1 w1 s0) (fun (y, s1) -> iso1 (w2 y) s1))
+    // ^ reusing pure bind
 
 [@@ resolve_implicits; refine]
 let resolve_tac () : Tac unit =
