@@ -8,11 +8,6 @@ open FStar.Universe
 module WF = FStar.WellFounded
 module L = Lattice
 
-let coerce #a #b (x:a{a == b}) : b = x
-
-let unreachable (#a:Type u#aa) () : Pure a (requires False) (ensures (fun _ -> False)) =
-  coerce #(raise_t string) #a (raise_val "whatever")
-
 type state = int
 
 type op =
@@ -395,16 +390,16 @@ let rec handle2 #a #b #labs l1 l2 f h1 h2 v =
 (* All the way *)
 val handle_with (#a #b:_) (#labs0 #labs1 : list op)
            (f:repr a labs0)
-           (h: (l:op{mem l labs0} -> handler_ty_l l b labs1))
            (v : a -> repr b labs1)
+           (h: (l:op{mem l labs0} -> handler_ty_l l b labs1))
            : repr b labs1
-let rec handle_with #a #b #labs0 #labs1 f h v =
+let rec handle_with #a #b #labs0 #labs1 f v h =
   match f with
   | Return x -> v x
   | Act act i k ->
     let k' o : repr b labs1 =
         WF.axiom1 k o;
-       handle_with #a #b #labs0 #labs1 (k o) h v
+       handle_with #a #b #labs0 #labs1 (k o) v h
     in
     h act i k'
 
@@ -416,9 +411,10 @@ let catch0' #a #labs (t1 : repr a (Raise::labs))
 let catch0'' #a #labs (t1 : repr a (Raise::labs))
                       (t2 : repr a labs)
   : repr a labs
-  = handle_with t1 (function Raise -> (fun i k -> t2)
-                           | act -> (fun i k -> Act act i k))
-                   (fun x -> Return x)
+  = handle_with t1
+                (fun x -> Return x)
+                (function Raise -> (fun i k -> t2)
+                        | act -> (fun i k -> Act act i k))
 
 let fmap #a #b #labs (f : a -> b) (t : repr a labs) : repr b labs =
   bind _ _ _ labs t (fun x -> Return (f x))
@@ -433,22 +429,10 @@ let frompure #a (t : repr a []) : a =
   match t with
   | Return x -> x
 
-// akin to "push_squash" can't be done I think
-// val push #a #b #labs (t : a -> repr b labs) : repr (a -> b) labs
-
-#set-options "--print_implicits"
-
-let catchST2_emp #a
-  (f : repr a (Read::Write::[]))
-  : repr (state -> a & state) []
-  = handle2 #a #(state -> a & state)
-            #[]
-            Read Write f
-            (fun _  k -> Return (fun s -> frompure (k s) s))
-            (fun s' k -> Return (fun s -> frompure (k ()) s'))
-            (fun x -> Return (fun s -> (x,s)))
-
-(* The mysterious version without annotations *)
+(* Handling Read/Write into the state monad. There is some noise in the
+handler, but it's basically interpreting [Read () k] as [\s -> k s s]
+and similarly for Write. The only tricky thing is the stacking of [repr]
+involved. *)
 let catchST2 #a #labs (f : repr a (Read::Write::labs))
   : repr (state -> repr (a & state) labs) labs
   = handle2 Read Write f
@@ -456,22 +440,17 @@ let catchST2 #a #labs (f : repr a (Read::Write::labs))
             (fun s k -> Return (fun _ -> bind _ _ _ _ (k ()) (fun f -> f s)))
             (fun x ->   Return (fun s0 -> Return (x, s0)))
 
-(* Fully annotated *)
-let catchST2_sensible #a #labs
-  (f : repr a (Read::Write::labs))
-  : repr (state -> repr (a & state) labs) labs
-  = handle2 #a #(state -> repr (a & state) labs)
-            #labs
-            Read Write f
-            (fun _  (k : (state -> repr (state -> repr (a & state) labs) labs)) ->
-                       let ff : state -> repr (a & state) labs =
-                         fun s0 -> let f : repr (state -> repr (a&state) labs) labs = k s0 in
-                                let ff : repr (repr (a&state) labs) labs = app #state #(repr (a&state) labs) #labs f s0 in
-                                join ff
-                       in
-                       Return ff)
-            (fun s' k -> bind _ _ _ labs (k ()) (fun f -> Return (fun _ -> f s')))
-            (fun x -> Return (fun s0 -> Return (x, s0)))
+(* Since this is a monad, we can apply the internal function and
+then collapse the computations to get a more familiar looking catchST *)
+let catchST2' #a #labs (f : repr a (Read::Write::labs)) (s0:state)
+  : repr (a & state) labs
+  = join (app (catchST2 f) s0)
+
+(* And of course into a pure repr if no labels remain *)
+let catchST2_emp #a
+  (f : repr a (Read::Write::[]))
+  : state -> a & state
+  = fun s0 -> frompure (catchST2' f s0)
 
 let baseop = o:op{not (Other? o)}
 
@@ -514,6 +493,8 @@ let rec fixup_no_other (l:op{Other? l}) (ls:list baseop)
     | [] -> ()
     | l1::ls -> fixup_no_other l ls
 
+// This would be a lot nicer if it was done in L.EFF itself,
+// but the termination proof fails since it has no logical payload.
 let rec interp_into_lattice_repr #a (#labs:list baseop)
   (t : repr a (fixup labs))
   : L.repr a (trlabs labs)
@@ -580,9 +561,7 @@ let interp_from_lattice_repr #a #labs
      let (r, s1) = t s0 in
      match r with
      | Some x -> Act Write s1 (fun _ -> Return x)
-     | None   -> Act Write s1 (fun _ -> Act Raise (Failure "") (fun _ -> unreachable ())))
-
-
+     | None   -> Act Write s1 (fun _ -> Act Raise (Failure "") (fun x -> match x with))) // empty match
 
 let read_handler (b:Type)
                  (labs:list op)
