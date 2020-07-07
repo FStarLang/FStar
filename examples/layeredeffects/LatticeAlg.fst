@@ -10,6 +10,8 @@ module L = Lattice
 
 type state = int
 
+type empty =
+
 type op =
   | Read
   | Write
@@ -29,7 +31,7 @@ let op_out : op -> Type =
  function
  | Read -> state
  | Write -> unit
- | Raise -> c_False
+ | Raise -> empty
  | Other i -> other_inp i
 
 noeq
@@ -37,7 +39,9 @@ type repr0 (a:Type u#aa) : Type u#aa =
   | Return : a -> repr0 a
   | Act    : op:op -> i:(op_inp op) -> k:(op_out op -> repr0 a) -> repr0 a
 
-let rec abides #a (labs:list op) (f : repr0 a) : prop =
+type ops = list op
+
+let rec abides #a (labs:ops) (f : repr0 a) : prop =
   begin match f with
   | Act a i k ->
     mem a labs /\ (forall o. (FStar.WellFounded.axiom1 k o; abides labs (k o)))
@@ -50,17 +54,17 @@ type repr (a:Type u#aa)
   =
   r:(repr0 a){abides labs r}
 
-let rec interp_at (l1 l2 : list op) (l : op)
+let rec interp_at (l1 l2 : ops) (l : op)
   : Lemma (mem l (l1@l2) == (mem l l1 || mem l l2))
           [SMTPat (mem l (l1@l2))]
   = match l1 with
     | [] -> ()
     | _::l1 -> interp_at l1 l2 l
 
-let sublist (l1 l2 : list op) = forall x. mem x l1 ==> mem x l2
+let sublist (l1 l2 : ops) = forall x. mem x l1 ==> mem x l2
 
 let rec sublist_at
-  (l1 l2 : list op)
+  (l1 l2 : ops)
   : Lemma (sublist l1 (l1@l2) /\ sublist l2 (l1@l2))
           [SMTPatOr [[SMTPat (sublist l1 (l1@l2))];
                      [SMTPat (sublist l2 (l1@l2))]]]
@@ -69,12 +73,12 @@ let rec sublist_at
     | _::l1 -> sublist_at l1 l2
 
 let sublist_at_self
-  (l : list op)
+  (l : ops)
   : Lemma (sublist l (l@l))
           [SMTPat (sublist l (l@l))]
   = ()
   
-let rec abides_sublist_nopat #a (l1 l2 : list op) (c : repr0 a)
+let rec abides_sublist_nopat #a (l1 l2 : ops) (c : repr0 a)
   : Lemma (requires (abides l1 c) /\ sublist l1 l2)
           (ensures (abides l2) c)
   = match c with
@@ -86,14 +90,14 @@ let rec abides_sublist_nopat #a (l1 l2 : list op) (c : repr0 a)
       in
       Classical.forall_intro sub
 
-let abides_sublist #a (l1 l2 : list op) (c : repr0 a)
+let abides_sublist #a (l1 l2 : ops) (c : repr0 a)
   : Lemma (requires (abides l1 c) /\ sublist l1 l2)
           (ensures (abides l2 c))
           [SMTPat (abides l2 c); SMTPat (sublist l1 l2)]
   = abides_sublist_nopat l1 l2 c
   
 let abides_at_self #a
-  (l : list op)
+  (l : ops)
   (c : repr0 a)
   : Lemma (abides (l@l) c <==>  abides l c)
           [SMTPat (abides (l@l) c)]
@@ -101,32 +105,44 @@ let abides_at_self #a
     assert (sublist l (l@l));
     assert (sublist (l@l) l)
 
-let abides_app #a (l1 l2 : list op) (c : repr0 a)
+let abides_app #a (l1 l2 : ops) (c : repr0 a)
   : Lemma (requires (abides l1 c \/ abides l2 c))
           (ensures (abides (l1@l2) c))
           [SMTPat (abides (l1@l2) c)]
   = sublist_at l1 l2
 
+let handler_ty_l (o:op) (b:Type) (labs:ops) =
+  op_inp o -> (op_out o -> repr b labs) -> repr b labs
+
+(* The most generic handling construct, we use it to implement bind *)
+val handle_with (#a #b:_) (#labs0 #labs1 : ops)
+           (f:repr a labs0)
+           (v : a -> repr b labs1)
+           (h: (l:op{mem l labs0} -> handler_ty_l l b labs1))
+           : repr b labs1
+let rec handle_with #a #b #labs0 #labs1 f v h =
+  match f with
+  | Return x -> v x
+  | Act act i k ->
+    let k' o : repr b labs1 =
+        WF.axiom1 k o;
+       handle_with #a #b #labs0 #labs1 (k o) v h
+    in
+    h act i k'
+
 let return (a:Type) (x:a)
   : repr a []
   = Return x
 
-let rec bind (a b : Type)
-  (labs1 labs2 : list op)
+let bind (a b : Type)
+  (labs1 labs2 : ops)
   (c : repr a labs1)
   (f : (x:a -> repr b labs2))
   : Tot (repr b (labs1@labs2))
-  = match c with
-    | Return x -> f x
-    | Act act i k ->
-      let k' o : repr b (labs1@labs2) =
-        FStar.WellFounded.axiom1 k o;
-        bind _ _ _ _ (k o) f
-      in
-      Act act i k'
-
+  = handle_with #_ #_ #labs1 #(labs1@labs2) c f (fun act i k -> Act act i k)
+  
 let subcomp (a:Type)
-  (labs1 labs2 : list op)
+  (labs1 labs2 : ops)
   (f : repr a labs1)
   : Pure (repr a labs2)
          (requires (sublist labs1 labs2))
@@ -135,7 +151,7 @@ let subcomp (a:Type)
 
 let if_then_else
   (a : Type)
-  (labs1 labs2 : list op)
+  (labs1 labs2 : ops)
   (f : repr a labs1)
   (g : repr a labs2)
   (p : bool)
@@ -150,7 +166,7 @@ total // need this for catch!!
 reifiable
 reflectable
 layered_effect {
-  EFF : a:Type -> list op  -> Effect
+  EFF : a:Type -> ops  -> Effect
   with
   repr         = repr;
   return       = return;
@@ -335,9 +351,6 @@ let interp_all #a (f : unit -> EFF a [Read;Write;Raise]) (s:state) : Tot (option
 //let dpi33 (#a:Type) (#b:a->Type) (#c:(x:a->b x->Type)) (t : (x:a & y:b x & c x y)) : c (dpi31 t) (dpi32 t) =
 //  let (| x, y, z |) = t in z
 
-let handler_ty_l (o:op) (b:Type) (labs:list op) =
-  op_inp o -> (op_out o -> repr b labs) -> repr b labs
-
   //handler_ty (dpi33 (action_of l)) b labs
   //F* complains this is not a function
   //let (| _, _, a |) = action_of l in
@@ -387,24 +400,6 @@ let rec handle2 #a #b #labs l1 l2 f h1 h2 v =
       in
       Act act i k'
     end
-
-(* All the way *)
-(* can this be the **single** operation provided for repr? It can
-even be used to define bind, it seems? *)
-val handle_with (#a #b:_) (#labs0 #labs1 : list op)
-           (f:repr a labs0)
-           (v : a -> repr b labs1)
-           (h: (l:op{mem l labs0} -> handler_ty_l l b labs1))
-           : repr b labs1
-let rec handle_with #a #b #labs0 #labs1 f v h =
-  match f with
-  | Return x -> v x
-  | Act act i k ->
-    let k' o : repr b labs1 =
-        WF.axiom1 k o;
-       handle_with #a #b #labs0 #labs1 (k o) v h
-    in
-    h act i k'
 
 let catch0' #a #labs (t1 : repr a (Raise::labs))
                      (t2 : repr a labs)
@@ -480,7 +475,7 @@ let rec lab_corr (l:baseop) (ls:list baseop)
 (* Tied to the particular repr of Lattice.fst *)
 
 (* no datatype subtyping *)
-let fixup : list baseop -> list op = List.Tot.map #baseop #op (fun x -> x)
+let fixup : list baseop -> ops = List.Tot.map #baseop #op (fun x -> x)
 
 let rec fixup_corr (l:baseop) (ls:list baseop)
   : Lemma (mem l (fixup ls) <==> mem l ls)
@@ -567,14 +562,13 @@ let interp_from_lattice_repr #a #labs
      | None   -> Act Write s1 (fun _ -> Act Raise (Failure "") (fun x -> match x with))) // empty match
 
 let read_handler (b:Type)
-                 (labs:list op)
+                 (labs:ops)
                  (s0:state)
    : handler_ty_l Read b labs
    = fun _ k -> k s0
 
-
 let handle_read (a:Type)
-                (labs:list op)
+                (labs:ops)
                 (f:repr a (Read::labs))
                 (h:handler_ty_l Read a labs)
    : repr a labs
@@ -586,19 +580,19 @@ let weaken #a #labs l (f:repr a labs) : repr a (l::labs) =
   f
 
 let write_handler (a:Type)
-                  (labs:list op)
+                  (labs:ops)
   : handler_ty_l Write a labs
   = fun s k -> handle_read a labs (weaken Read (k())) (read_handler a labs s)
 
 
 let handle_write (a:Type)
-                (labs:list op)
+                (labs:ops)
                 (f:repr a (Write::labs))
    : repr a labs
    = handle Write f (write_handler a labs) (fun x -> Return x)
 
 let handle_st (a:Type)
-              (labs: list op)
+              (labs: ops)
               (f:repr a (Write::Read::labs))
               (s0:state)
    : repr a labs

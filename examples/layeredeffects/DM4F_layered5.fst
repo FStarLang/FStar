@@ -130,3 +130,15 @@ let test () : ST int int null =
   let x = get () in
   put (x + x);
   get () + get ()
+
+let addx (x:int) : ST unit int (fun s0 p -> p () (s0+x)) =
+  let y = get () in
+  put (x+y)
+
+let add_via_state (x y : int) : ST int int (fun s0 p -> p (x+y) s0) =
+  let o = get () in
+  put x;
+  addx y;
+  let r = get () in
+  put o;
+  r
