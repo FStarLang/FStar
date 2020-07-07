@@ -458,8 +458,8 @@ let catchST2_emp #a
 let catchST2 #a #labs (f : repr a (RD::WR::labs))
   : repr (state -> repr (a & state) labs) labs
   = handle2 RD WR f
-            (fun _ k -> Return (fun s -> join (app #state (k s) s)))
-            (fun s k -> Return (fun _ -> join (app #state (k ()) s)))
+            (fun _ k -> Return (fun s -> bind _ _ _ _ (k s)  (fun f -> f s)))
+            (fun s k -> Return (fun _ -> bind _ _ _ _ (k ()) (fun f -> f s)))
             (fun x ->   Return (fun s0 -> Return (x, s0)))
 
 (* Fully annotated *)
