@@ -24,7 +24,7 @@ open FStar.FunctionalExtensionality
 open Steel.PCM
 module PCMBase = Steel.PCM.Base
 
-open Steel.Effect.Fake
+open Steel.Effect
 open Steel.Memory
 
 /// This module defines a mechanism for extracting arraystructs compatible with separation logic
@@ -32,7 +32,6 @@ open Steel.Memory
 /// https://github.com/FStarLang/FStar/wiki/Array-Structs-in-Steel
 
 #set-options "--fuel 0 --ifuel 1"
-
 
 (*** arraystruct types *)
 
@@ -220,20 +219,20 @@ val increment_generic
 /// to distinguish which part of the reference we are owning inside a thread.
 
 
-type u32_pair_path =
-| Full
-| XField
-| YField
+type u32_pair_shared =
+| Full of u32_pair
+| XField of UInt32.t
+| YField of UInt32.t
 
-let u32_pair_stored = option (u32_pair & u32_pair_path)
+let u32_pair_stored = option u32_pair_shared
 
 /// Now, we have to define a PCM that will render possible the fact to share the ownership on the
 /// fields of the struct.
 let u32_pair_composable : symrel (u32_pair_stored) = fun a b -> match a, b with
-  | Some (a, a_path), Some (b, b_path) -> begin
-    match a_path, b_path with
-    | XField, YField
-    | YField, XField -> True
+  | Some a, Some b -> begin
+    match a, b with
+    | XField _, YField _
+    | YField _, XField _ -> True
     | _ -> False
   end
   | _ -> True
@@ -246,10 +245,10 @@ let u32_pair_compose
   (b: u32_pair_stored{a `u32_pair_composable` b})
   : u32_pair_stored =
   match a, b with
-  | Some (a, a_path), Some (b, b_path) -> begin
-    match a_path, b_path with
-    | XField, YField -> Some (({ x = a.x; y = b.y}), Full)
-    | YField, XField -> Some (({ x = b.x; y = a.y}), Full)
+  | Some a, Some b -> begin
+    match a, b with
+    | XField x, YField y -> Some (Full ({ x = x; y = y}))
+    | YField y, XField x -> Some (Full ({ x = x; y = y}))
   end
   | None, Some _ -> b
   | Some _, None -> a
@@ -272,7 +271,7 @@ let u32_pair_ref = Steel.Memory.ref u32_pair_stored u32_pair_stored_pcm
 /// We can now instantiate the pointer typeclass! Let's begin by a pointer to
 
 let slu32_pair (r: u32_pair_ref) (v: u32_pair) : slprop =
-  pts_to r (Some (v, Full))
+  pts_to r (Some (Full v))
 
 val u32_pair_get : rw_pointer_get_sig u32_pair u32_pair_ref slu32_pair
 
@@ -290,10 +289,8 @@ instance u32_pair_pointer : rw_pointer u32_pair = {
 let u32_pair_x_field_ref = u32_pair_ref
 
 let slu32_pair_x_field (r: u32_pair_x_field_ref) (v: UInt32.t) : slprop =
-  h_exists (fun (y_and_path: (UInt32.t & u32_pair_path){let (y, path) = y_and_path in path == XField \/ path == Full}) ->
-    let (y, path) = y_and_path in
-    pts_to r (Some ({x = v; y}, path)
-  ))
+   pts_to r (Some (XField v))
+
 
 val u32_pair_x_field_get
   : rw_pointer_get_sig UInt32.t u32_pair_x_field_ref slu32_pair_x_field
@@ -311,10 +308,7 @@ instance u32_pair_x_field_pointer : rw_pointer UInt32.t = {
 let u32_pair_y_field_ref = u32_pair_ref
 
 let slu32_pair_y_field (r: u32_pair_y_field_ref) (v: UInt32.t) =
- h_exists (fun (x_and_path: (UInt32.t & u32_pair_path){let (x, path) = x_and_path in path == YField \/ path == Full}) ->
-    let (x, path) = x_and_path in
-    pts_to r (Some ({x; y = v}, path)
-  ))
+  pts_to r (Some (YField v))
 
 val u32_pair_y_field_get
   : rw_pointer_get_sig UInt32.t u32_pair_y_field_ref slu32_pair_y_field
