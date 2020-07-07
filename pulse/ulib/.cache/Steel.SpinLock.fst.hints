@@ -1,5 +1,5 @@
 [
-  "(\u0006}#€\u0003†!Ë›#>a_“­",
+  "g<\u0018LPa,Ò\u001fCÉÇæQ",
   [
     [
       "Steel.SpinLock.lockinv",
@@ -16,7 +16,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "a1a170839bc4d3f52c1990de1bcb5f5c"
+      "6527c12788dbbf76192ecabcf28dfb06"
     ],
     [
       "Steel.SpinLock.intro_lockinv_available",
@@ -33,7 +33,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "5089196735e89f8afb69eb7d54829421"
+      "456e7b13386b07a9333d9c64ddeb83f7"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -50,7 +50,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "e4c7dedd875ba9812d4cbaf87ec0f1da"
+      "f8cd6c8501b5f91f900e19003e57e4f6"
     ],
     [
       "Steel.SpinLock.intro_lockinv_available",
@@ -74,7 +74,7 @@
         "typing_Steel.Memory.full_perm", "typing_Steel.Memory.readable"
       ],
       0,
-      "8512b61c88aabfe4fa3344a232c35458"
+      "8d912ac102c54f41c9844fbc092da495"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -97,21 +97,7 @@
         "typing_Steel.Memory.full_perm", "typing_Steel.Memory.readable"
       ],
       0,
-      "bd2a56e8288e46ee48d4873d56cb69ab"
-    ],
-    [
-      "Steel.SpinLock.new_lock",
-      1,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Steel.Reference.full",
-        "equation_Steel.Reference.perm",
-        "refinement_interpretation_Tm_refine_5b679cb12fe0d76753aeceb1be12da8a",
-        "typing_Steel.Reference.full"
-      ],
-      0,
-      "bd9abf336d0d158012116098c297a73a"
+      "234ce935909c1e63f2c2793d95371dc8"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -128,7 +114,7 @@
         "projection_inverse_Steel.Memory.MkPerm_v"
       ],
       0,
-      "51d0ac31350a5bc6aed5219a1facf9cd"
+      "ddc2aa3f7ca5b6dbacd35bd75491bb71"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -149,7 +135,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "05be24d3fcab6f1bf83fb65c3e5b5782"
+      "a1d249c06d6f6795f638fd8779575231"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -174,7 +160,7 @@
         "typing_Steel.Memory.full_perm", "typing_Steel.Memory.readable"
       ],
       0,
-      "cdac0cb8f058f79cc22461811f5e875a"
+      "8d99ea5dfb298a42f07e4d59bff8b680"
     ],
     [
       "Steel.SpinLock.acquire'",
@@ -201,7 +187,7 @@
         "typing_Tm_abs_f7fb94acbd752e9fce013da6030bb14a"
       ],
       0,
-      "1e07b6e24170632870e502c009652862"
+      "3d547fea1d454bed666dde1f9bfa9624"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -226,7 +212,7 @@
         "typing_Steel.Memory.full_perm", "typing_Steel.Memory.readable"
       ],
       0,
-      "5159c9acc21a88962478ef99fa5c35c1"
+      "af222d619200bd3d1a0c0e238769492d"
     ],
     [
       "Steel.SpinLock.release",
@@ -234,16 +220,26 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Pervasives.dfst",
-        "equation_Steel.Actions.inv", "equation_Steel.Effect.Atomic.ival",
-        "equation_Steel.Reference.ref", "equation_Steel.SpinLock.lock",
-        "equation_Steel.SpinLock.lockinv",
-        "fuel_guarded_inversion_Prims.dtuple2", "lemma_FStar.Set.mem_empty",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Steel.SpinLock_interpretation_Tm_arrow_2f6d7f199328630cc9b9736fc0032d14",
+        "equation_FStar.Pervasives.dfst", "equation_FStar.Pervasives.dsnd",
+        "equation_Prims.eqtype", "equation_Steel.Actions.inv",
+        "equation_Steel.Effect.Atomic.ival", "equation_Steel.Reference.ref",
+        "equation_Steel.SpinLock.lock", "equation_Steel.SpinLock.lockinv",
+        "fuel_guarded_inversion_Prims.dtuple2",
+        "function_token_typing_Prims.bool",
+        "interpretation_Tm_abs_f7fb94acbd752e9fce013da6030bb14a",
+        "lemma_FStar.Set.mem_empty",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_f47046930c2c749c9799c9e0c126941b",
-        "typing_Steel.Memory.lock_addr"
+        "typing_FStar.Pervasives.dsnd", "typing_FStar.Universe.raise_t",
+        "typing_Steel.HigherReference.trivial_preorder",
+        "typing_Steel.Memory.lock_addr", "typing_Steel.Memory.reference",
+        "typing_Tm_abs_f7fb94acbd752e9fce013da6030bb14a"
       ],
       0,
-      "6aff4d02fa235243698bce79ba96ec95"
+      "3697790d5392986aa6a18d4aee60a451"
     ]
   ]
 ]
