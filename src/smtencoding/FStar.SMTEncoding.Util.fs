@@ -13,6 +13,7 @@ open FStar.TypeChecker
 open FStar.SMTEncoding.Term
 open FStar.Ident
 open FStar.Const
+module C = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst
@@ -92,13 +93,15 @@ let mk_LexCons = norng3 mk_LexCons
  *     So adding these utils, that are then used in Encode.fs and EncodeTerm.fs
  *
  *     Could revisit
+ *
+ *     06/22: reifying if the effect has the smt_reifiable_layered_effect attribute
  *)
 
 let is_smt_reifiable_effect (en:TcEnv.env) (l:lident) : bool =
+  let l = TcEnv.norm_eff_name en l in
   TcEnv.is_reifiable_effect en l &&
-  not (l |> TcEnv.norm_eff_name en
-         |> TcEnv.get_effect_decl en
-         |> U.is_layered)
+  (let is_layered = l |> TcEnv.get_effect_decl en |> U.is_layered in
+   not is_layered || Env.fv_with_lid_has_attr en l C.smt_reifiable_layered_effect)
 
 let is_smt_reifiable_comp (en:TcEnv.env) (c:S.comp) : bool =
   match c.n with

@@ -101,6 +101,13 @@ let compatible_refl
   pcm.comm x pcm.p.one;
   assert (op pcm pcm.p.one x == x)
 
+(** Compatibility is transitive *)
+let compatible_trans
+  (#a: Type u#a) (pcm:pcm a) (x y z:a)
+  : Lemma (requires (compatible pcm x y /\ compatible pcm y z))
+          (ensures (compatible pcm x z))
+  = Classical.forall_intro_3 pcm.assoc
+
 (**
   Helper function to get access to the existentially quantified frame between two compatible
   elements
@@ -162,3 +169,8 @@ let exclusive_is_frame_preserving (#a: Type u#a) (p:pcm a) (x:a)
           (ensures frame_preserving p x p.p.one)
   = p.is_unit x;
     p.is_unit p.p.one
+
+
+(** Two elements are joinable when they can evolve to a common point. *)
+let joinable #a (p:pcm a) (x y : a) : prop =
+  exists z. compatible p x z /\ compatible p y z

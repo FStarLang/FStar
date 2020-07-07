@@ -170,7 +170,7 @@ val extend_with_action_name:
 val extend_record_field_name :
     uenv ->
     (lident * ident) ->
-    mlpath * uenv
+    mlident * uenv
 
 (** ML module identifier for an F* module name *)
 val extend_with_module_name : 

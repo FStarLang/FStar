@@ -1,0 +1,43 @@
+[
+  "ú-Ì#‚ì×½kÁ«\u007fÌX¢º",
+  [
+    [
+      "SMTReification.lift_pure_mst",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "SMTReification_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
+        "equation_Prims.logical", "equation_SMTReification.repr",
+        "interpretation_Tm_abs_0440b40fda586f913f1f6239db03c87d",
+        "l_imp-interp", "l_quant_interp_ab05e3c754ab5e03643811be07ced908",
+        "typing_Tm_abs_0440b40fda586f913f1f6239db03c87d",
+        "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
+      ],
+      0,
+      "a5ceee541d42c47cef67ab1285db0790"
+    ],
+    [
+      "SMTReification.reify_incr_and_set",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_FStar.Pervasives.Native.snd",
+        "equation_SMTReification.incr_and_set",
+        "equation_SMTReification.set",
+        "function_token_typing_Prims.__cache_version_number__",
+        "primitive_Prims.op_Addition",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_BoxInt_proj_0",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
+      ],
+      0,
+      "58bd394cb03948b1c6469e52e8cd25ab"
+    ]
+  ]
+]

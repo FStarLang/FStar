@@ -411,7 +411,7 @@ let extract_bundle_iface env se
            let g =
             List.fold_right
                 (fun id g ->
-                   let mlp, g = UEnv.extend_record_field_name g (ind.iname, id) in
+                   let _, g = UEnv.extend_record_field_name g (ind.iname, id) in
                    g)
                 ids
                 env
@@ -674,7 +674,7 @@ let extract_bundle env se =
         env_t * (mlsymbol * list<(mlsymbol * mlty)>)
         =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env_iparams) (Term.term_as_mlty env_iparams ctor.dtyp) in
-        let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses ] in
+        let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction ] in
         let names = match (SS.compress (N.normalize steps (tcenv_of_uenv env_iparams) ctor.dtyp)).n with
           | Tm_arrow (bs, _) ->
               List.map (fun ({ ppname = ppname }, _) -> (string_of_id ppname)) bs
@@ -700,8 +700,8 @@ let extract_bundle env se =
              let fields, g =
                 List.fold_right2
                   (fun id (_, ty) (fields, g) ->
-                     let mlp, g = UEnv.extend_record_field_name g (ind.iname, id) in
-                     (snd mlp, ty)::fields, g)
+                     let mlid, g = UEnv.extend_record_field_name g (ind.iname, id) in
+                     (mlid, ty)::fields, g)
                    ids
                    c_ty
                    ([], env)

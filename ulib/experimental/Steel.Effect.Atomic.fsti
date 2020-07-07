@@ -202,9 +202,10 @@ let h_affine (#opened_invariants:_) (p q:slprop)
   : SteelAtomic unit opened_invariants unobservable (p `star` q) (fun _ -> p)
   = change_slprop (p `star` q) p (fun m -> affine_star p q m)
 
-(** We assume this action for now. See the discussion in Steel.Heap.fst for
-    how we plan to derive this action with an enhancement to the semantics *)
-val witness_h_exists (#opened_invariants:_) (#a:Type) (#p:a -> slprop) (_:unit)
+(* Witnessing an existential can only be done for frame-monotonic properties.
+ * Most PCMs we use have a witness-invariant pts_to, which means this
+ * condition is usually trivial and can be hidden from programs. *)
+val witness_h_exists (#a:Type) (#opened_invariants:_) (#p:(a -> slprop){is_frame_monotonic p}) (_:unit)
   : SteelAtomic (Ghost.erased a) opened_invariants unobservable
                 (h_exists p) (fun x -> p x)
 
