@@ -92,12 +92,11 @@ val generic_index: unit -> Tot unit
 /// this update to be extracted to an update of the [x] field in C. This is how we would write it:
 
 [@@ extract_update u32_pair.x]
-val update_x (r: ref (option u32_pair) u32_pair_pcm) (new_val: UInt32.t)
-    : Steel unit (ptr r) (fun _ -> ptr r)
-    (fun h0 -> if Some? (sel r h0) then True else False) (fun h0 _ h1 ->
-     Some? (sel r h1) /\ Some? (sel r h0) /\
-     Some?.v (sel r h1) == { Some?.v (sel r h0) with x = new_val }
-    )
+val update_x (r: ref (option u32_pair) u32_pair_pcm) (old_pair: Ghost.erased u32_pair) (new_val: UInt32.t)
+    : SteelT unit
+    (pts_to r (Some (Ghost.reveal old_pair)))
+    (fun _ -> pts_to r (Some ({ old_pair with x = new_val})))
+
 
 /// What should the attribute `[@@extract_update u32_pair]` checks for the signature of
 /// `update_z` ?
@@ -145,13 +144,9 @@ let _ : unit  = _ by (check_extract_update (`%update_x))
 /// Let us now see what how to annotate a function corresponding to a low-level read.
 
 [@@extract_get u32_pair.y]
-val get_x (r: ref (option u32_pair) u32_pair_pcm)
-  : Steel UInt32.t
-  (ptr r) (fun _ -> ptr r)
-  (fun h0 -> if Some? (sel r h0) then True else False) (fun h0 v h1 ->
-    Some? (sel r h0) /\ Some? (sel r h1) /\
-    sel r h0 == sel r h1 /\ v == (Some?.v (sel r h1)).x
-  )
+val get_x (r: ref (option u32_pair) u32_pair_pcm) (pair: Ghost.erased u32_pair)
+  : SteelT (x:UInt32.t{pair.x == x})
+  (pts_to r (Some (Ghost.reveal pair))) (fun x -> (pts_to r (Some (Ghost.reveal pair))))
 
 /// The attribute `[@@extract_get u32_pair.x]` still has to check syntactically that the
 /// signature of `get_x` corresponds to a low-level get (one argument which is a ref, returns
@@ -180,50 +175,43 @@ val get_x (r: ref (option u32_pair) u32_pair_pcm)
 let rw_pointer_get_sig
   (a: Type u#a)
   (ref: Type u#0)
-  (slref: ref -> slprop)
-  (sel: (r:ref) -> hmem (slref r) -> GTot a)
+  (slref: ref -> a -> slprop)
   =
-  r:ref ->
-    Steel a
-      (slref r)
-      (fun _ -> slref r)
-      (fun h0 -> True)
-      (fun h0 x h1 -> sel r h0 == sel r h1 /\ x == sel r h0)
+  r:ref -> x:Ghost.erased a ->
+    SteelT (y:a{Ghost.reveal x == y})
+      (slref r x)
+      (fun _ -> slref r x)
 
 let rw_pointer_upd_sig
   (a: Type u#a)
   (ref: Type u#0)
-  (slref: ref -> slprop)
-  (sel: (r:ref) -> hmem (slref r) -> GTot a)
+  (slref: ref -> a -> slprop)
   =
   r: ref ->
+  old_val: Ghost.erased a ->
   new_val: a ->
-    Steel unit
-      (slref r)
-      (fun _ -> slref r)
-      (fun h0 -> True)
-      (fun h0 _ h1 -> sel r h1 == new_val)
+    SteelT unit
+      (slref r old_val)
+      (fun _ -> slref r new_val)
 
 /// The `a` parameter to the typeclass has to be a Low*-compatible value, something that can be
 /// assigned atomically in an update statement.
-#push-options "--admit_smt_queries true" (* fails, points to subcomp_pre in Steel.Effect.fsti? *)
 class rw_pointer (a: Type u#a) = {
   pointer_ref:  Type u#0;
-  pointer_slref: pointer_ref -> slprop;
-  pointer_sel: (r:pointer_ref) -> hmem (pointer_slref r) -> GTot a;
-  pointer_get: rw_pointer_get_sig a pointer_ref pointer_slref pointer_sel;
-  pointer_upd: rw_pointer_upd_sig a pointer_ref pointer_slref pointer_sel;
+  pointer_slref: pointer_ref -> a -> slprop;
+  pointer_get: rw_pointer_get_sig a pointer_ref pointer_slref;
+  pointer_upd: rw_pointer_upd_sig a pointer_ref pointer_slref;
 }
-#pop-options
 
 /// The goal of this typeclass is to be able to write generic functions like
 
-val increment_generic (#cls: rw_pointer UInt32.t) (r: cls.pointer_ref) : Steel unit
-  (cls.pointer_slref r) (fun _ -> cls.pointer_slref r)
-  (fun h0 -> UInt32.v (cls.pointer_sel r h0) + 1 <= UInt.max_int 32)
-  (fun h0 _ h1 ->
-    UInt32.v (cls.pointer_sel r h1) == UInt32.v (cls.pointer_sel r h0) + 1
-  )
+val increment_generic
+  (#cls: rw_pointer UInt32.t)
+  (r: cls.pointer_ref)
+  (v: Ghost.erased UInt32.t{UInt32.v v + 1 <= UInt.max_int 32})
+    : SteelT unit
+      (cls.pointer_slref r v)
+      (fun _ -> cls.pointer_slref r (UInt32.add v 1ul))
 
 (**** Instantiating the pointer typeclass *)
 
@@ -283,26 +271,16 @@ let u32_pair_ref = Steel.Memory.ref u32_pair_stored u32_pair_stored_pcm
 
 /// We can now instantiate the pointer typeclass! Let's begin by a pointer to
 
-let slu32_pair (r: u32_pair_ref) : slprop =
-  h_exists (fun (v: u32_pair_stored) -> pts_to r v `star` pure (Some? v /\ snd (Some?.v v) == Full))
+let slu32_pair (r: u32_pair_ref) (v: u32_pair) : slprop =
+  pts_to r (Some (v, Full))
 
-val slu32_pair_elim_mem (r: u32_pair_ref) (h: hmem (slu32_pair r)) :
-  Lemma (interp (ptr r) h /\ begin let v = sel r h in
-    Some? v /\ snd (Some?.v v) == Full
-  end)
+val u32_pair_get : rw_pointer_get_sig u32_pair u32_pair_ref slu32_pair
 
-let u32_pair_sel (r: u32_pair_ref) (h: hmem (slu32_pair r)) : GTot u32_pair =
-    slu32_pair_elim_mem r h;
-    fst (Some?.v (sel r h))
-
-val u32_pair_get : rw_pointer_get_sig u32_pair u32_pair_ref slu32_pair u32_pair_sel
-
-val u32_pair_upd: rw_pointer_upd_sig u32_pair u32_pair_ref slu32_pair u32_pair_sel
+val u32_pair_upd: rw_pointer_upd_sig u32_pair u32_pair_ref slu32_pair
 
 instance u32_pair_pointer : rw_pointer u32_pair = {
   pointer_ref = u32_pair_ref;
   pointer_slref = slu32_pair;
-  pointer_sel = u32_pair_sel;
   pointer_get = u32_pair_get;
   pointer_upd = u32_pair_upd;
 }
@@ -311,69 +289,43 @@ instance u32_pair_pointer : rw_pointer u32_pair = {
 
 let u32_pair_x_field_ref = u32_pair_ref
 
-let slu32_pair_x_field (r: u32_pair_x_field_ref) : slprop =
-  h_exists (fun (v: u32_pair_stored) ->
-    pts_to r v `star` pure (Some? v /\ (snd (Some?.v v) == XField \/ snd (Some?.v v) == Full)
+let slu32_pair_x_field (r: u32_pair_x_field_ref) (v: UInt32.t) : slprop =
+  h_exists (fun (y_and_path: (UInt32.t & u32_pair_path){let (y, path) = y_and_path in path == XField \/ path == Full}) ->
+    let (y, path) = y_and_path in
+    pts_to r (Some ({x = v; y}, path)
   ))
 
-val slu32_pair_x_field_elim_mem (r: u32_pair_x_field_ref) (h: hmem (slu32_pair_x_field r)) :
-  Lemma (interp (ptr r) h /\ begin let v = sel r h in
-    Some? v /\ (snd (Some?.v v) == XField \/ snd (Some?.v v) == Full)
-  end)
-
-let u32_pair_x_field_sel
-  (r: u32_pair_x_field_ref)
-  (h: hmem (slu32_pair_x_field r))
-    : GTot UInt32.t
-  =
-  slu32_pair_x_field_elim_mem r h;
-  (fst (Some?.v (sel r h))).x
-
 val u32_pair_x_field_get
-  : rw_pointer_get_sig UInt32.t u32_pair_x_field_ref slu32_pair_x_field u32_pair_x_field_sel
+  : rw_pointer_get_sig UInt32.t u32_pair_x_field_ref slu32_pair_x_field
 
 val u32_pair_x_field_upd
-  : rw_pointer_upd_sig UInt32.t u32_pair_x_field_ref slu32_pair_x_field u32_pair_x_field_sel
+  : rw_pointer_upd_sig UInt32.t u32_pair_x_field_ref slu32_pair_x_field
 
 instance u32_pair_x_field_pointer : rw_pointer UInt32.t = {
   pointer_ref = u32_pair_x_field_ref;
   pointer_slref = slu32_pair_x_field;
-  pointer_sel = u32_pair_x_field_sel;
   pointer_get = u32_pair_x_field_get;
   pointer_upd = u32_pair_x_field_upd;
 }
 
 let u32_pair_y_field_ref = u32_pair_ref
 
-let slu32_pair_y_field (r: u32_pair_y_field_ref) =
-  h_exists (fun (v: u32_pair_stored) ->
-    pts_to r v `star` pure (Some? v /\ (snd (Some?.v v) == YField \/ snd (Some?.v v) == Full)
+let slu32_pair_y_field (r: u32_pair_y_field_ref) (v: UInt32.t) =
+ h_exists (fun (x_and_path: (UInt32.t & u32_pair_path){let (x, path) = x_and_path in path == YField \/ path == Full}) ->
+    let (x, path) = x_and_path in
+    pts_to r (Some ({x; y = v}, path)
   ))
 
-val slu32_pair_y_field_elim_mem (r: u32_pair_y_field_ref) (h: hmem (slu32_pair_y_field r)) :
-  Lemma (interp (ptr r) h /\ begin let v = sel r h in
-    Some? v /\ (snd (Some?.v v) == YField \/ snd (Some?.v v) == Full)
-  end)
-
-let u32_pair_y_field_sel
-  (r: u32_pair_y_field_ref)
-  (h: hmem (slu32_pair_y_field r))
-    : GTot UInt32.t
-  =
-  slu32_pair_y_field_elim_mem r h;
-  (fst (Some?.v (sel r h))).y
-
 val u32_pair_y_field_get
-  : rw_pointer_get_sig UInt32.t u32_pair_y_field_ref slu32_pair_y_field u32_pair_y_field_sel
+  : rw_pointer_get_sig UInt32.t u32_pair_y_field_ref slu32_pair_y_field
 
 val u32_pair_y_field_upd
-  : rw_pointer_upd_sig UInt32.t u32_pair_y_field_ref slu32_pair_y_field u32_pair_y_field_sel
+  : rw_pointer_upd_sig UInt32.t u32_pair_y_field_ref slu32_pair_y_field
 
 
 instance u32_pair_y_field_pointer : rw_pointer UInt32.t = {
   pointer_ref = u32_pair_y_field_ref;
   pointer_slref = slu32_pair_y_field;
-  pointer_sel = u32_pair_y_field_sel;
   pointer_get = u32_pair_y_field_get;
   pointer_upd = u32_pair_y_field_upd;
 }
@@ -388,19 +340,12 @@ val recombinable (r: u32_pair_ref) (r12: u32_pair_x_field_ref & u32_pair_y_field
   (u32_pair_x_field_pointer, u32_pair_y_field_pointer) ->
   recombinable
 ]
-val explose_u32_pair_into_x_y (r: u32_pair_ref)
-  : Steel (u32_pair_x_field_ref & u32_pair_y_field_ref)
-  (slu32_pair r)
+val explose_u32_pair_into_x_y (r: u32_pair_ref) (pair: u32_pair)
+  : SteelT (r12:(u32_pair_x_field_ref & u32_pair_y_field_ref){recombinable r r12})
+  (slu32_pair r pair)
   (fun (r1, r2) ->
-    slu32_pair_x_field r1 `star`
-    slu32_pair_y_field r2)
-  (fun _ -> True)
-  (fun h0 (r1, r2) h1 ->
-    (u32_pair_sel r h0 == {
-      x = u32_pair_x_field_sel r1 h1;
-      y = u32_pair_y_field_sel r2 h1;
-    } /\ recombinable r (r1,r2))
-  )
+    slu32_pair_x_field r1 pair.x `star`
+    slu32_pair_y_field r2 pair.y)
 
 /// How to implement this function? We should not have to allocate a new ref, instead we're going
 /// to use the same address in memory but in /two different memories/, that we will later join
@@ -413,36 +358,9 @@ val explose_u32_pair_into_x_y (r: u32_pair_ref)
 val recombine_u32_pair_from_x_y
   (r: u32_pair_ref)
   (r1: u32_pair_x_field_ref)
+  (v1: UInt32.t)
   (r2: u32_pair_y_field_ref)
-  : Steel unit
-  (slu32_pair_x_field r1 `star` slu32_pair_y_field r2)
-  (fun _ -> slu32_pair r)
-  (fun _ -> recombinable r (r1, r2))
-  (fun (h0: hmem (slu32_pair_x_field r1 `star` slu32_pair_y_field r2)) _ h1 ->
-    u32_pair_sel r h1 == {
-    x = u32_pair_x_field_sel r1 h0;
-    y = u32_pair_y_field_sel r2 h0;
-  })
-
-(**** focus *)
-
-/// We can also derive a `focus` operation that "forgets" the rest of
-/// the fields for a given time.
-
-val focus_u32_pair_x_field
-  (r: u32_pair_ref)
-  : Steel (u32_pair_x_field_ref)
-  (slu32_pair r)
-  (fun r1 -> slu32_pair_x_field r1 `star` (slu32_pair_x_field r1 `wand` slu32_pair r))
-  (fun _ -> True)
-  (fun h0 r1 h1 ->
-   wand_elim (slu32_pair_x_field r1) (slu32_pair r) h1;
-   u32_pair_sel r h0 == { u32_pair_sel r h1 with x = u32_pair_x_field_sel r1 h1 }
-  )
-
-/// Things to talk with Nik :
-///  - (if Some? (selref r h0) then True else False) weird universe bug
-///  - we want custom paths for our structs because with a generic thing it'll have to be recursive
-///    and that will not play out well with the SMT
-///  - whole arrays cannot be updated at once in C, the checking tactic can make sure it is not
-///    the case
+  (v2: UInt32.t)
+  : SteelT unit
+    (slu32_pair_x_field r1 v1 `star` slu32_pair_y_field r2 v2)
+    (fun _ -> slu32_pair r ({ x = v1; y = v2}))
