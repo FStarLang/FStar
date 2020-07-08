@@ -1,12 +1,9 @@
 module DM4F_layered
 
-let curry f a b = f (a, b)
-let uncurry f (a, b) = f a b
-
 (* Same as DM4F, but layered over a layered PURE *)
 open ID2
 open FStar.Tactics
-
+open Common
 
 (* Simulating state effect in DM4F, hopefully doable by a tactic. *)
 

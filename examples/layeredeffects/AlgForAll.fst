@@ -7,25 +7,25 @@ module FE = FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 module W = FStar.WellFounded
 module T = FStar.Tactics
+module ID5 = ID5
 open Alg
 
-let pre = state -> Type0
 let post (a:Type) = a -> state -> Type0
-let st_wp (a:Type) : Type = post a -> pre
+let st_wp (a:Type) : Type = state -> post a -> Type0
 
 unfold
-let return_wp #a x : st_wp a = fun p s -> p x s
+let return_wp #a x : st_wp a = fun s0 p -> p x s0
 
 unfold
 let bind_wp #a #b (w : st_wp a) (wf : a -> st_wp b)
   : st_wp b
-  = fun p s0 -> w (fun y s1 -> wf y p s1) s0
+  = fun s0 p -> w s0 (fun y s1 -> wf y s1 p)
 
 unfold
-let read_wp : st_wp state = fun p s0 -> p s0 s0
+let read_wp : st_wp state = fun s0 p -> p s0 s0
 
 unfold
-let write_wp : state -> st_wp unit = fun s p _ -> p () s
+let write_wp : state -> st_wp unit = fun s _ p -> p () s
 
 (* Also doable with handlers *)
 let rec interp_as_wp #a (t : repr a [Read;Write]) : st_wp a =
@@ -35,6 +35,9 @@ let rec interp_as_wp #a (t : repr a [Read;Write]) : st_wp a =
     bind_wp read_wp (fun s -> WF.axiom1 k s; interp_as_wp (k s))
   | Act Write s k ->
     bind_wp (write_wp s) (fun (o:unit) -> WF.axiom1 k o; interp_as_wp (k o))
+    
+let interp_as_fun #a (t : repr a [Read;Write]) : (state -> a & state) =
+  Alg.interp_rdwr_tree t
 
 // m is a monad.
 val m (a : Type u#a) : Type u#a
@@ -46,40 +49,26 @@ let m_return x = Return x
 val m_bind (#a #b : Type) : m a -> (a -> m b) -> m b
 let m_bind c f = bind _ _ _ _ c f
 
-val w (a : Type u#a) : Type u#(max 1 a)
-let w = st_wp
-
-unfold
-val w_return (#a : Type) : a -> w a
-unfold
-let w_return = return_wp
-
-unfold
-val w_bind (#a #b : Type) : w a -> (a -> w b) -> w b
-unfold
-let w_bind = bind_wp
-
 (* Bug: defining this as a FStar.Preorder.preorder
 causes stupid failures ahead *)
-val stronger : (#a:Type) -> w a -> w a -> Type0
+val stronger : (#a:Type) -> st_wp a -> st_wp a -> Type0
 let stronger w1 w2 = forall p s. w1 p s ==> w2 p s
 
-let equiv #a (w1 w2 : w a) = w1 `stronger` w2 /\ w2 `stronger` w1
+let equiv #a (w1 w2 : st_wp a) = w1 `stronger` w2 /\ w2 `stronger` w1
 
 let (<<=) = stronger
 
 // a morphism between them, satisfying appropriate laws
-val interp (#a : Type) : m a -> w a
+val interp (#a : Type) : m a -> st_wp a
 let interp = interp_as_wp
 
-val interp_ret (#a:Type) (x:a)
-  : Lemma (interp (m_return x) `equiv` w_return x)
-let interp_ret x = assert (interp (m_return x) `equiv` w_return x) by (T.compute ())
+val interp_ret (#a:Type) (x:a) : Lemma (return_wp x `stronger` interp (m_return x))
+let interp_ret x = ()
 
-let wp_is_monotonic #a (wp : w a) : Type0 =
-  forall p1 p2 s0. (forall x s1. p1 x s1 ==> p2 x s1) ==> wp p1 s0 ==> wp p2 s0
+let wp_is_monotonic #a (wp : st_wp a) : Type0 =
+  forall p1 p2 s0. (forall x s1. p1 x s1 ==> p2 x s1) ==> wp s0 p1 ==> wp s0 p2
 
-let bind_preserves_mon #a #b (wp : w a) (f : a -> w b)
+let bind_preserves_mon #a #b (wp : st_wp a) (f : a -> st_wp b)
   : Lemma (requires (wp_is_monotonic wp /\ (forall x. wp_is_monotonic (f x))))
           (ensures (wp_is_monotonic (bind_wp wp f)))
   = ()
@@ -102,26 +91,27 @@ let rec interp_monotonic #a (c:m a) : Lemma (wp_is_monotonic (interp c)) =
     Classical.forall_intro aux;
     bind_preserves_mon (write_wp s) (fun x -> interp (k x))
 
-let elim_str #a (w1 w2 : w a) (p : post a) (s0:state)
+let elim_str #a (w1 w2 : st_wp a) (p : post a) (s0:state)
   : Lemma (requires (w1 <<= w2))
-          (ensures w1 p s0 ==> w2 p s0)
+          (ensures w1 s0 p ==> w2 s0 p)
   = ()
 
+(* Takes a while *)
 let rec interp_morph #a #b (c : m a) (f : a -> m b) (p:_) (s0:_)
-  : Lemma (interp c (fun y s1 -> interp (f y) p s1) s0 == interp (m_bind c f) p s0)
+  : Lemma (interp c s0 (fun y s1 -> interp (f y) s1 p) == interp (m_bind c f) s0 p)
   = match c with
     | Return x -> ()
     | Act Read _ k ->
-      let aux (o:state) : Lemma (interp (k o) (fun y s1 -> interp (f y) p s1) s0
-                                        == interp (m_bind (k o) f) p s0) =
+      let aux (o:state) : Lemma (interp (k o) s0 (fun y s1 -> interp (f y) s1 p)
+                                        == interp (m_bind (k o) f) s0 p) =
         WF.axiom1 k o;
         interp_morph (k o) f p s0
       in
       Classical.forall_intro aux
 
     | Act Write s k ->
-      let aux (o:unit) : Lemma (interp (k o) (fun y s1 -> interp (f y) p s1) s
-                                        == interp (m_bind (k o) f) p s) =
+      let aux (o:unit) : Lemma (interp (k o) s (fun y s1 -> interp (f y) s1 p)
+                                        == interp (m_bind (k o) f) s p) =
         WF.axiom1 k o;
         interp_morph (k o) f p s
       in
@@ -132,53 +122,53 @@ let rec interp_morph #a #b (c : m a) (f : a -> m b) (p:_) (s0:_)
 
 val interp_bind (#a #b:Type)
   (c : m a) (f : a -> m b)
-  (w1 : w a) (w2 : a -> w b)
+  (w1 : st_wp a) (w2 : a -> st_wp b)
   : Lemma (requires w1 <<= interp c /\ (forall x. w2 x <<= interp (f x)))
-          (ensures w_bind w1 w2 `stronger` interp (m_bind c f))
+          (ensures bind_wp w1 w2 `stronger` interp (m_bind c f))
 let interp_bind #a #b c f w1 w2 =
-  let aux (p:post b) (s0:state) : Lemma (w_bind w1 w2 p s0 ==> interp (m_bind c f) p s0) =
+  let aux (p:post b) (s0:state) : Lemma (bind_wp w1 w2 s0 p ==> interp (m_bind c f) s0 p) =
     calc (==>) {
-      w_bind w1 w2 p s0;
+      bind_wp w1 w2 s0 p;
       ==> {}
-      w1 (fun y s1 -> w2 y p s1) s0;
+      w1 s0 (fun y s1 -> w2 y s1 p);
       ==> { (* hyp *)}
-      interp c (fun y s1 -> w2 y p s1) s0;
+      interp c s0 (fun y s1 -> w2 y s1 p);
       ==> { interp_monotonic c }
-      interp c (fun y s1 -> interp (f y) p s1) s0;
+      interp c s0 (fun y s1 -> interp (f y) s1 p);
       ==> { interp_morph c f p s0 }
-      interp (m_bind c f) p s0;
+      interp (m_bind c f) s0 p;
     }
   in
   Classical.forall_intro_2 aux
 
-let repr (a : Type) (w: w a) = c:(m a){w `stronger` interp c}
+let repr (a : Type) (w: st_wp a) = c:(m a){w `stronger` interp c}
 
-let return (a:Type) (x:a) : repr a (w_return x) =
+let return (a:Type) (x:a) : repr a (return_wp x) =
   interp_ret x;
   m_return x
 
 let bind (a : Type) (b : Type)
-  (wp_v : w a) (wp_f: a -> w b)
+  (wp_v : st_wp a) (wp_f: a -> st_wp b)
   (v : repr a wp_v) (f : (x:a -> repr b (wp_f x)))
-  : repr b (w_bind wp_v wp_f) =
+  : repr b (bind_wp wp_v wp_f) =
   interp_bind v f wp_v wp_f;
   m_bind v f
 
-let subcomp (a:Type) (w1 w2: w a)
+let subcomp (a:Type) (w1 w2: st_wp a)
   (f : repr a w1)
   : Pure (repr a w2)
          (requires w2 `stronger` w1)
          (ensures fun _ -> True)
   = f
 
-let if_then_else (a : Type) (w1 w2 : w a) (f : repr a w1) (g : repr a w2) (b : bool) : Type =
+let if_then_else (a : Type) (w1 w2 : st_wp a) (f : repr a w1) (g : repr a w2) (b : bool) : Type =
   repr a (if b then w1 else w2)
 
 total
 reifiable
 reflectable
 layered_effect {
-  DM4A : a:Type -> w a -> Effect
+  DM4A : a:Type -> st_wp a -> Effect
   with repr         = repr;
        return       = return;
        bind         = bind;
@@ -206,7 +196,7 @@ let put (s:state) : DM4A unit (write_wp s) =
 
 unfold
 let lift_pure_wp (#a:Type) (wp : pure_wp a) : st_wp a =
-  fun p s0 -> wp (fun x -> p x s0)
+  fun s0 p -> wp (fun x -> p x s0)
 
 let lift_pure_dm4a (a:Type) wp (f:(eqtype_as_type unit -> PURE a wp))
   : Pure (repr a (lift_pure_wp wp)) // can't call f() here, so lift its wp instead
@@ -216,19 +206,45 @@ let lift_pure_dm4a (a:Type) wp (f:(eqtype_as_type unit -> PURE a wp))
     let v : a = elim_pure f (fun _ -> True) in
     FStar.Monotonic.Pure.wp_monotonic_pure ();
     assert (forall p. wp p ==> p v); // this is key fact needed for the proof
-    assert_norm (stronger (lift_pure_wp wp) (w_return v));
+    assert_norm (stronger (lift_pure_wp wp) (return_wp v));
     Return v
 
 sub_effect PURE ~> DM4A = lift_pure_dm4a
 
-let addx (x:int) : DM4A unit (fun p s0 -> p () (s0+x)) by (T.norm [delta]) =
+let addx (x:int) : DM4A unit (fun s0 p -> p () (s0+x)) by (T.norm [delta]) =
   let y = get () in
   put (x+y)
 
-let add_via_state (x y : int) : DM4A int (fun p s0 -> p (x+y) s0) by (T.norm [delta]) =
+let add_via_state (x y : int) : DM4A int (fun s0 p -> p (x+y) s0) by (T.norm [delta]) =
   let o = get () in
   put x;
   addx y;
   let r = get () in
   put o;
   r
+
+
+// Why does this admit fail? Only with the 'rec'...
+//
+//let rec interp_sem #a #wp (t : repr a wp) (s0:state)
+//  : PURE (a & state) (fun p -> wp s0 (curry p))
+//  = admit ()
+//
+// literally zero difference in the VC a tactic sees. Also, seems only
+// for the builtin Pure???
+
+let rec interp_sem #a (t : m a) (s0:state)
+  : ID5.ID (a & state) (fun p -> interp_as_wp t s0 (curry p))
+  = match t with
+    | Return x -> (x, s0)
+    | Act Read i k -> 
+      WF.axiom1 k s0;
+      interp_sem (k s0) s0
+    | Act Write i k ->
+      WF.axiom1 k ();
+      interp_sem (k ()) i
+    
+let soundness #a #wp (t : unit -> DM4A a wp)
+  : Tot (s0:state -> ID5.ID (a & state) (fun p -> wp s0 (curry p)))
+  = let c = reify (t ()) in
+    interp_sem #_ c

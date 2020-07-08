@@ -1,11 +1,9 @@
 module DM4F_layered5
 
-let curry f a b = f (a, b)
-let uncurry f (a, b) = f a b
-
 (* Same as DM4F, but layered over a layered PURE without monotonicity *)
 open ID5
 open FStar.Tactics
+open Common
 
 unfold
 let pure_bind_wp (#a #b : Type) (w1 : ID5.wp a) (w2 : a -> ID5.wp b) : ID5.wp b =

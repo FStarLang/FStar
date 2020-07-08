@@ -4,6 +4,9 @@ open FStar.Universe
 
 (* Common lemmas and constructions for layered effects examples. *)
 
+let curry f a b = f (a, b)
+let uncurry f (a, b) = f a b
+
 let coerce #a #b (x:a{a == b}) : b = x
 
 let unreachable (#a:Type u#aa) () : Pure a (requires False) (ensures (fun _ -> False)) =
