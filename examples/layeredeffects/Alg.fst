@@ -44,7 +44,7 @@ type ops = list op
 let rec abides #a (labs:ops) (f : tree0 a) : prop =
   begin match f with
   | Act a i k ->
-    mem a labs /\ (forall o. (FStar.WellFounded.axiom1 k o; abides labs (k o)))
+    mem a labs /\ (forall o. (WF.axiom1 k o; abides labs (k o)))
   | Return _ -> True
   end
 
@@ -111,27 +111,36 @@ let abides_app #a (l1 l2 : ops) (c : tree0 a)
           [SMTPat (abides (l1@l2) c)]
   = sublist_at l1 l2
 
+(* Folding a computation tree *)
+val fold_with (#a #b:_) (#labs : ops)
+           (f:tree a labs)
+           (v : a -> b)
+           (h: (o:op{mem o labs} -> op_inp o -> (op_out o -> b) -> b))
+           : b
+let rec fold_with #a #b #labs f v h =
+  match f with
+  | Return x -> v x
+  | Act act i k ->
+    let k' (o : op_out act) : b =
+        WF.axiom1 k o;
+       fold_with #_ #_ #labs (k o) v h
+    in
+    h act i k'
+
 let handler_ty_l (o:op) (b:Type) (labs:ops) =
   op_inp o -> (op_out o -> tree b labs) -> tree b labs
 
 let handler_ty (labs0 : ops) (b:Type) (labs1 : ops) : Type =
   o:op{mem o labs0} -> handler_ty_l o b labs1
 
-(* The most generic handling construct, we use it to implement bind *)
+(* The most generic handling construct, we use it to implement bind.
+It is actually just a special case of folding. *)
 val handle_with (#a #b:_) (#labs0 #labs1 : ops)
            (f:tree a labs0)
            (v : a -> tree b labs1)
            (h: handler_ty labs0 b labs1)
            : tree b labs1
-let rec handle_with #a #b #labs0 #labs1 f v h =
-  match f with
-  | Return x -> v x
-  | Act act i k ->
-    let k' o : tree b labs1 =
-        WF.axiom1 k o;
-       handle_with #a #b #labs0 #labs1 (k o) v h
-    in
-    h act i k'
+let handle_with f v h = fold_with f v h
 
 let return (a:Type) (x:a)
   : tree a []
@@ -239,6 +248,8 @@ let labpoly #labs (f g : unit -> Alg int labs) : Alg int labs =
 // Called from file "src/ocaml-output/FStar_TypeChecker_TcTerm.ml", line 2048, characters 30-68
 // Called from file "src/basic/ml/FStar_Util.ml", line 24, characters 14-18
 // ....
+
+(* Explicit definition of catch *)
 let rec catch0 #a #labs (t1 : tree a (Raise::labs))
                         (t2 : tree a labs)
   : tree a labs
@@ -246,7 +257,7 @@ let rec catch0 #a #labs (t1 : tree a (Raise::labs))
     | Act Raise e _ -> t2
     | Act act i k ->
       let k' o : tree a labs =
-        FStar.WellFounded.axiom1 k o;
+        WF.axiom1 k o;
         catch0 (k o) t2
       in
       Act act i k'
@@ -262,6 +273,7 @@ let catch #a #labs
    catch0 (reify (f ())) (reify (g ()))
  end
 
+(* Explcitly catching state *)
 let rec _catchST #a #labs (t1 : tree a (Read::Write::labs)) (s0:state) : tree (a & int) labs =
   match t1 with
   | Return v -> Return (v, s0)
@@ -365,9 +377,8 @@ let interp_all #a (f : unit -> Alg a [Read;Write;Raise]) (s:state) : Tot (option
   //let (| _, _, a |) = action_of l in
   //handler_ty a b labs
 
-(* A generic handler for a (single) label l, relies on the fact that
-we can compare actions for equality, or equivalently map them to their
-labels. *)
+(* A generic handler for a (single) label l. Anyway a special case of
+handle_with. *)
 val handle (#a #b:_) (#labs:_) (o:op)
            (f:tree a (o::labs))
            (h:handler_ty_l o b labs)
@@ -387,7 +398,8 @@ let rec handle #a #b #labs l f h v =
       Act act i k'
     end
 
-(* Easy enough to handle 2 labels at once *)
+(* Easy enough to handle 2 labels at once. Again a special case of
+handle_with too. *)
 val handle2 (#a #b:_) (#labs:_) (l1 l2 : op)
            (f:tree a (l1::l2::labs))
            (h1:handler_ty_l l1 b labs)
