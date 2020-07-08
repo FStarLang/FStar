@@ -183,6 +183,7 @@ layered_effect {
        if_then_else = if_then_else
 }
 
+reflectable
 new_effect Steel = SteelF
 
 (*
