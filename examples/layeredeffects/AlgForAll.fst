@@ -11,7 +11,7 @@ module ID5 = ID5
 open Alg
 
 type rwtree a = Alg.tree a [Read;Write]
-let tbind : #a:_ -> #b:_ -> rwtree a -> (a -> rwtree b) -> rwtree b = fun c f -> Alg.bind _ _ _ _ c f
+let tbind : #a:_ -> #b:_ -> rwtree a -> (a -> rwtree b) -> rwtree b = fun c f -> Alg.bind _ _ c f
 
 let st_wp (a:Type) : Type = state -> (a & state -> Type0) -> Type0
 
@@ -136,7 +136,7 @@ let return (a:Type) (x:a) : repr a (return_wp x) =
   Return x
 
 let bind (a : Type) (b : Type)
-  (wp_v : st_wp a) (wp_f: a -> st_wp b)
+  (#wp_v : st_wp a) (#wp_f: a -> st_wp b)
   (v : repr a wp_v) (f : (x:a -> repr b (wp_f x)))
   : repr b (bind_wp wp_v wp_f) =
   interp_bind v f wp_v wp_f;

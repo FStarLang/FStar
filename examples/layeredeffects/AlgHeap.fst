@@ -152,7 +152,7 @@ let return (a:Type) (x:a)
   = Return x
 
 let bind (a b : Type)
-  (labs1 labs2 : ops)
+  (#labs1 #labs2 : ops)
   (c : tree a labs1)
   (f : (x:a -> tree b labs2))
   : Tot (tree b (labs1@labs2))
@@ -226,7 +226,7 @@ let raise #a (e:exn) : Alg a [Raise] =
 
 type rwtree a = tree a [Read;Write]
 
-let tbind : #a:_ -> #b:_ -> rwtree a -> (a -> rwtree b) -> rwtree b = fun c f -> bind _ _ _ _ c f
+let tbind : #a:_ -> #b:_ -> rwtree a -> (a -> rwtree b) -> rwtree b = fun c f -> bind _ _ c f
 
 let st_wp (a:Type) : Type = state -> (a & state -> Type0) -> Type0
 

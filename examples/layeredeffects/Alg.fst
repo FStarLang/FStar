@@ -147,7 +147,7 @@ let return (a:Type) (x:a)
   = Return x
 
 let bind (a b : Type)
-  (labs1 labs2 : ops)
+  (#labs1 #labs2 : ops)
   (c : tree a labs1)
   (f : (x:a -> tree b labs2))
   : Tot (tree b (labs1@labs2))
@@ -187,8 +187,6 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-let get () : Alg int [Read] =
-  Alg?.reflect _get
 
 unfold
 let pure_monotonic #a (wp : pure_wp a) : Type =
@@ -209,16 +207,16 @@ let lift_pure_eff
 
 sub_effect PURE ~> Alg = lift_pure_eff
 
-let put (s:state) : Alg unit [Write] =
-  Alg?.reflect (Act Write s Return)
+let geneff (o : op) (i : op_inp o) : Alg (op_out o) [o] = Alg?.reflect (Act o i Return)
+let get () : Alg int [Read] = geneff Read ()
+let put (s:state) : Alg unit [Write] = geneff Write s
+let raise #a (e:exn) : Alg a [Raise] = match geneff Raise e with
 
-#set-options "--print_implicits"
-
-let raise #a (e:exn) : Alg a [Raise] =  
-  Alg?.reflect (Act Raise e (fun e -> match e with))
-  // funnily enough, the version below also succeeds from concluding
-  // a==empty under the lambda since the context becomes inconsistent
-  //Alg?.reflect (Act Raise e Return
+let _other_raise #a (e:exn) : Alg a [Raise] =  
+  // Funnily enough, the version below succeeds from concluding
+  // a==empty under the lambda since the context becomes inconsistent.
+  // All good, just surprising.
+  Alg?.reflect (Act Raise e Return)
 
 exception Failure of string
 
@@ -436,10 +434,10 @@ let catch0'' #a #labs (t1 : tree a (Raise::labs))
                         | act -> (fun i k -> Act act i k))
 
 let fmap #a #b #labs (f : a -> b) (t : tree a labs) : tree b labs =
-  bind _ _ _ labs t (fun x -> Return (f x))
+  bind _ _ #_ #labs t (fun x -> Return (f x))
 
 let join #a #labs (t : tree (tree a labs) labs) : tree a labs =
-  bind _ _ _ _ t (fun x -> x)
+  bind _ _ t (fun x -> x)
 
 let app #a #b #labs (t : tree (a -> b) labs) (x:a) : tree b labs =
   fmap (fun f -> f x) t
@@ -455,8 +453,8 @@ involved. *)
 let catchST2 #a #labs (f : tree a (Read::Write::labs))
   : tree (state -> tree (a & state) labs) labs
   = handle2 Read Write f
-            (fun _ k -> Return (fun s -> bind _ _ _ _ (k s)  (fun f -> f s)))
-            (fun s k -> Return (fun _ -> bind _ _ _ _ (k ()) (fun f -> f s)))
+            (fun _ k -> Return (fun s -> bind _ _ (k s)  (fun f -> f s)))
+            (fun s k -> Return (fun _ -> bind _ _ (k ()) (fun f -> f s)))
             (fun x ->   Return (fun s0 -> Return (x, s0)))
 
 (* Since this is a monad, we can apply the internal function and
