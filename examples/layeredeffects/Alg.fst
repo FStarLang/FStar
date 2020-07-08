@@ -1,4 +1,4 @@
-module LatticeAlg
+module Alg
 
 (* An algebraic presentation of ALL using action trees. *)
 
@@ -114,11 +114,14 @@ let abides_app #a (l1 l2 : ops) (c : repr0 a)
 let handler_ty_l (o:op) (b:Type) (labs:ops) =
   op_inp o -> (op_out o -> repr b labs) -> repr b labs
 
+let handler_ty (labs0 : ops) (b:Type) (labs1 : ops) : Type =
+  o:op{mem o labs0} -> handler_ty_l o b labs1
+
 (* The most generic handling construct, we use it to implement bind *)
 val handle_with (#a #b:_) (#labs0 #labs1 : ops)
            (f:repr a labs0)
            (v : a -> repr b labs1)
-           (h: (l:op{mem l labs0} -> handler_ty_l l b labs1))
+           (h: handler_ty labs0 b labs1)
            : repr b labs1
 let rec handle_with #a #b #labs0 #labs1 f v h =
   match f with
@@ -166,7 +169,7 @@ total // need this for catch!!
 reifiable
 reflectable
 layered_effect {
-  EFF : a:Type -> ops  -> Effect
+  Alg : a:Type -> ops  -> Effect
   with
   repr         = repr;
   return       = return;
@@ -175,8 +178,8 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-let get () : EFF int [Read] =
-  EFF?.reflect _get
+let get () : Alg int [Read] =
+  Alg?.reflect _get
 
 unfold
 let pure_monotonic #a (wp : pure_wp a) : Type =
@@ -195,28 +198,33 @@ let lift_pure_eff
         (ensures (fun _ -> True))
  = Return (f ())
 
-sub_effect PURE ~> EFF = lift_pure_eff
+sub_effect PURE ~> Alg = lift_pure_eff
 
-let put (s:state) : EFF unit [Write] =
-  EFF?.reflect (Act Write s Return)
+let put (s:state) : Alg unit [Write] =
+  Alg?.reflect (Act Write s Return)
 
-let raise #a (e:exn) : EFF a [Raise] =
-  EFF?.reflect (Act Raise e Return)
+#set-options "--print_implicits"
+
+let raise #a (e:exn) : Alg a [Raise] =  
+  Alg?.reflect (Act Raise e (fun e -> match e with))
+  // funnily enough, the version below also succeeds from concluding
+  // a==empty under the lambda since the context becomes inconsistent
+  //Alg?.reflect (Act Raise e Return
 
 exception Failure of string
 
-let test0 (x y : int) : EFF int [Read; Raise] =
+let test0 (x y : int) : Alg int [Read; Raise] =
   let z = get () in
   if z < 0 then raise (Failure "error");
   x + y + z
 
-let test1 (x y : int) : EFF int [Raise; Read; Write] =
+let test1 (x y : int) : Alg int [Raise; Read; Write] =
   let z = get () in
   if x + z > 0
   then raise (Failure "asd")
   else (put 42; y - z)
 
-let labpoly #labs (f g : unit -> EFF int labs) : EFF int labs =
+let labpoly #labs (f g : unit -> Alg int labs) : Alg int labs =
   f () + g ()
 
 // FIXME: putting this definition inside catch causes a blowup:
@@ -246,11 +254,11 @@ let rec catch0 #a #labs (t1 : repr a (Raise::labs))
 
 (* no rollback *)
 let catch #a #labs
-  (f : unit -> EFF a (Raise::labs))
-  (g : unit -> EFF a labs)
-  : EFF a labs
+  (f : unit -> Alg a (Raise::labs))
+  (g : unit -> Alg a labs)
+  : Alg a labs
 =
- EFF?.reflect begin
+ Alg?.reflect begin
    catch0 (reify (f ())) (reify (g ()))
  end
 
@@ -267,27 +275,27 @@ let rec _catchST #a #labs (t1 : repr a (Read::Write::labs)) (s0:state) : repr (a
      Act act i k'
 
 let catchST #a #labs
-  (f : unit -> EFF a (Read::Write::labs))
+  (f : unit -> Alg a (Read::Write::labs))
   (s0 : state)
-  : EFF (a & state) labs
+  : Alg (a & state) labs
 =
- EFF?.reflect begin
+ Alg?.reflect begin
    _catchST (reify (f ())) s0
  end
 
-let g #labs () : EFF int labs = 42  //AR: 07/03: had to hoist after removing smt_reifiablep
+let g #labs () : Alg int labs = 42  //AR: 07/03: had to hoist after removing smt_reifiablep
 
-let test_catch #labs (f : unit -> EFF int [Raise;Write]) : EFF int [Write] =
+let test_catch #labs (f : unit -> Alg int [Raise;Write]) : Alg int [Write] =
   catch f g
 
-let test_catch2 (f : unit -> EFF int [Raise;Raise;Write]) : EFF int [Raise;Write] =
+let test_catch2 (f : unit -> Alg int [Raise;Raise;Write]) : Alg int [Raise;Write] =
   catch f g
 
 let interp_pure_tree #a (t : repr a []) : Tot a =
   match t with
   | Return x -> x
 
-let interp_pure #a (f : unit -> EFF a []) : Tot a = interp_pure_tree (reify (f ()))
+let interp_pure #a (f : unit -> Alg a []) : Tot a = interp_pure_tree (reify (f ()))
 
 let rec interp_rd_tree #a (t : repr a [Read]) (s:state) : Tot a =
   match t with
@@ -296,7 +304,7 @@ let rec interp_rd_tree #a (t : repr a [Read]) (s:state) : Tot a =
     FStar.WellFounded.axiom1 k s;
     interp_rd_tree (k s) s
 
-let interp_rd #a (f : unit -> EFF a [Read]) (s:state) : Tot a = interp_rd_tree (reify (f ())) s
+let interp_rd #a (f : unit -> Alg a [Read]) (s:state) : Tot a = interp_rd_tree (reify (f ())) s
 
 let rec interp_rdwr_tree #a (t : repr a [Read;Write]) (s:state) : Tot (a & state) =
   match t with
@@ -308,18 +316,19 @@ let rec interp_rdwr_tree #a (t : repr a [Read;Write]) (s:state) : Tot (a & state
     FStar.WellFounded.axiom1 k ();
     interp_rdwr_tree (k ()) s
 
-let interp_rdwr #a (f : unit -> EFF a [Read;Write]) (s:state) : Tot (a & state) = interp_rdwr_tree (reify (f ())) s
+let interp_rdwr #a (f : unit -> Alg a [Read;Write]) (s:state) : Tot (a & state) = interp_rdwr_tree (reify (f ())) s
 
-let rec interp_rdexn_tree #a (t : repr a [Read;Raise]) (s:state) : Tot (option a) =
+let rec interp_read_raise_tree #a (t : repr a [Read;Raise]) (s:state) : either exn a =
   match t with
-  | Return x -> Some x
+  | Return x -> Inr x
   | Act Read _ k ->
     FStar.WellFounded.axiom1 k s;
-    interp_rdexn_tree (k s) s
+    interp_read_raise_tree (k s) s
   | Act Raise e k ->
-    None
+    Inl e
 
-let interp_rdexn #a (f : unit -> EFF a [Read;Raise]) (s:state) : Tot (option a) = interp_rdexn_tree (reify (f ())) s
+let interp_read_raise_exn #a (f : unit -> Alg a [Read;Raise]) (s:state) : either exn a =
+  interp_read_raise_tree (reify (f ())) s
 
 let rec interp_all_tree #a (t : repr a [Read;Write;Raise]) (s:state) : Tot (option a & state) =
   match t with
@@ -333,7 +342,7 @@ let rec interp_all_tree #a (t : repr a [Read;Write;Raise]) (s:state) : Tot (opti
   | Act Raise e k ->
     (None, s)
 
-let interp_all #a (f : unit -> EFF a [Read;Write;Raise]) (s:state) : Tot (option a & state) = interp_all_tree (reify (f ())) s
+let interp_all #a (f : unit -> Alg a [Read;Write;Raise]) (s:state) : Tot (option a & state) = interp_all_tree (reify (f ())) s
 
 //let action_input (a:action 'i 'o) = 'i
 //let action_output (a:action 'i 'o) = 'o
@@ -512,32 +521,32 @@ let rec interp_into_lattice_repr #a (#labs:list baseop)
               interp_into_lattice_repr #a #labs (k x))
 
 let interp_into_lattice #a (#labs:list baseop)
-  (f : unit -> EFF a (fixup labs))
+  (f : unit -> Alg a (fixup labs))
   : Lattice.EFF a (trlabs labs)
   = Lattice.EFF?.reflect (interp_into_lattice_repr (reify (f ())))
 
 // This is rather silly: we reflect and then reify. Maybe define interp_into_lattice
 // directly?
 let interp_full #a (#labs:list baseop)
-  (f : unit -> EFF a (fixup labs))
+  (f : unit -> Alg a (fixup labs))
   : Tot (f:(state -> Tot (option a & state)){Lattice.abides f (Lattice.interp (trlabs labs))})
   = reify (interp_into_lattice #a #labs f)
 
 
 (* Doing it directly. *)
 
-type sem0 (a:Type) : Type = state -> Tot (option a & state)
+type sem0 (a:Type) : Type = state -> Tot (either exn a & state)
 
 let abides' (f : sem0 'a) (labs:list baseop) : prop =
-    (not (mem Read  labs) ==> (forall s0 s1. fst (f s0) == fst (f s1)))
-  /\ (not (mem Write labs) ==> (forall s0. snd (f s0) == s0))
-  /\ (not (mem Raise labs) ==> (forall s0. Some? (fst (f s0))))
+    (mem Read  labs \/ (forall s0 s1. fst (f s0) == fst (f s1)))
+  /\ (mem Write labs \/ (forall s0. snd (f s0) == s0))
+  /\ (mem Raise labs \/ (forall s0. Inr? (fst (f s0))))
 
 type sem (a:Type) (labs : list baseop) = r:(sem0 a){abides' r labs}
 
 let rec interp_sem #a (#labs:list baseop) (t : repr a (fixup labs)) : sem a labs =
   match t with
-  | Return x -> fun s0 -> (Some x, s0)
+  | Return x -> fun s0 -> (Inr x, s0)
   | Act Read _ k ->
     (* Needs this trick for termination. Trying to call axiom1 within
      * `r` messes up the refinement about Read. *)
@@ -547,7 +556,7 @@ let rec interp_sem #a (#labs:list baseop) (t : repr a (fixup labs)) : sem a labs
   | Act Write s k ->
     WF.axiom1 k ();
     fun s0 -> interp_sem #a #labs (k ()) s
-  | Act Raise e k -> fun s0 -> (None, s0)
+  | Act Raise e k -> fun s0 -> (Inl e, s0)
 
 (* Way back: from the pure ALG into the free one, necessarilly giving
 a fully normalized tree *)

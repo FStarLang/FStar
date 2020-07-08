@@ -7,7 +7,7 @@ module FE = FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 module W = FStar.WellFounded
 module T = FStar.Tactics
-open LatticeAlg
+open Alg
 
 let pre = state -> Type0
 let post (a:Type) = a -> state -> Type0
@@ -187,7 +187,7 @@ layered_effect {
 }
 
 let _get : repr state read_wp =
-  let c0 : LatticeAlg.repr state [Read;Write] = LatticeAlg._get in
+  let c0 : Alg.repr state [Read;Write] = Alg._get in
   let w = interp_as_wp c0 in
   assert_norm (read_wp `stronger` w);
   c0
@@ -196,7 +196,7 @@ let get () : DM4A state read_wp =
   DM4A?.reflect _get
 
 let _put (s:state) : repr unit (write_wp s) =
-  let c0 : LatticeAlg.repr unit [Read;Write] = LatticeAlg._put s in
+  let c0 : Alg.repr unit [Read;Write] = Alg._put s in
   let w = interp_as_wp c0 in
   assert_norm (write_wp s `stronger` w);
   c0
