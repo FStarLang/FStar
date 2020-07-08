@@ -35,24 +35,24 @@ let op_out : op -> Type =
  | Other i -> other_inp i
 
 noeq
-type repr0 (a:Type u#aa) : Type u#aa =
-  | Return : a -> repr0 a
-  | Act    : op:op -> i:(op_inp op) -> k:(op_out op -> repr0 a) -> repr0 a
+type tree0 (a:Type u#aa) : Type u#aa =
+  | Return : a -> tree0 a
+  | Act    : op:op -> i:(op_inp op) -> k:(op_out op -> tree0 a) -> tree0 a
 
 type ops = list op
 
-let rec abides #a (labs:ops) (f : repr0 a) : prop =
+let rec abides #a (labs:ops) (f : tree0 a) : prop =
   begin match f with
   | Act a i k ->
     mem a labs /\ (forall o. (FStar.WellFounded.axiom1 k o; abides labs (k o)))
   | Return _ -> True
   end
 
-type repr (a:Type u#aa)
+type tree (a:Type u#aa)
           (labs : list u#0 op)
   : Type u#aa
   =
-  r:(repr0 a){abides labs r}
+  r:(tree0 a){abides labs r}
 
 let rec interp_at (l1 l2 : ops) (l : op)
   : Lemma (mem l (l1@l2) == (mem l l1 || mem l l2))
@@ -78,7 +78,7 @@ let sublist_at_self
           [SMTPat (sublist l (l@l))]
   = ()
   
-let rec abides_sublist_nopat #a (l1 l2 : ops) (c : repr0 a)
+let rec abides_sublist_nopat #a (l1 l2 : ops) (c : tree0 a)
   : Lemma (requires (abides l1 c) /\ sublist l1 l2)
           (ensures (abides l2) c)
   = match c with
@@ -90,7 +90,7 @@ let rec abides_sublist_nopat #a (l1 l2 : ops) (c : repr0 a)
       in
       Classical.forall_intro sub
 
-let abides_sublist #a (l1 l2 : ops) (c : repr0 a)
+let abides_sublist #a (l1 l2 : ops) (c : tree0 a)
   : Lemma (requires (abides l1 c) /\ sublist l1 l2)
           (ensures (abides l2 c))
           [SMTPat (abides l2 c); SMTPat (sublist l1 l2)]
@@ -98,56 +98,56 @@ let abides_sublist #a (l1 l2 : ops) (c : repr0 a)
   
 let abides_at_self #a
   (l : ops)
-  (c : repr0 a)
+  (c : tree0 a)
   : Lemma (abides (l@l) c <==>  abides l c)
           [SMTPat (abides (l@l) c)]
   = (* Trigger some patterns *)
     assert (sublist l (l@l));
     assert (sublist (l@l) l)
 
-let abides_app #a (l1 l2 : ops) (c : repr0 a)
+let abides_app #a (l1 l2 : ops) (c : tree0 a)
   : Lemma (requires (abides l1 c \/ abides l2 c))
           (ensures (abides (l1@l2) c))
           [SMTPat (abides (l1@l2) c)]
   = sublist_at l1 l2
 
 let handler_ty_l (o:op) (b:Type) (labs:ops) =
-  op_inp o -> (op_out o -> repr b labs) -> repr b labs
+  op_inp o -> (op_out o -> tree b labs) -> tree b labs
 
 let handler_ty (labs0 : ops) (b:Type) (labs1 : ops) : Type =
   o:op{mem o labs0} -> handler_ty_l o b labs1
 
 (* The most generic handling construct, we use it to implement bind *)
 val handle_with (#a #b:_) (#labs0 #labs1 : ops)
-           (f:repr a labs0)
-           (v : a -> repr b labs1)
+           (f:tree a labs0)
+           (v : a -> tree b labs1)
            (h: handler_ty labs0 b labs1)
-           : repr b labs1
+           : tree b labs1
 let rec handle_with #a #b #labs0 #labs1 f v h =
   match f with
   | Return x -> v x
   | Act act i k ->
-    let k' o : repr b labs1 =
+    let k' o : tree b labs1 =
         WF.axiom1 k o;
        handle_with #a #b #labs0 #labs1 (k o) v h
     in
     h act i k'
 
 let return (a:Type) (x:a)
-  : repr a []
+  : tree a []
   = Return x
 
 let bind (a b : Type)
   (labs1 labs2 : ops)
-  (c : repr a labs1)
-  (f : (x:a -> repr b labs2))
-  : Tot (repr b (labs1@labs2))
+  (c : tree a labs1)
+  (f : (x:a -> tree b labs2))
+  : Tot (tree b (labs1@labs2))
   = handle_with #_ #_ #labs1 #(labs1@labs2) c f (fun act i k -> Act act i k)
   
 let subcomp (a:Type)
   (labs1 labs2 : ops)
-  (f : repr a labs1)
-  : Pure (repr a labs2)
+  (f : tree a labs1)
+  : Pure (tree a labs2)
          (requires (sublist labs1 labs2))
          (ensures (fun _ -> True))
   = f
@@ -155,14 +155,14 @@ let subcomp (a:Type)
 let if_then_else
   (a : Type)
   (labs1 labs2 : ops)
-  (f : repr a labs1)
-  (g : repr a labs2)
+  (f : tree a labs1)
+  (g : tree a labs2)
   (p : bool)
   : Type
-  = repr a (labs1@labs2)
+  = tree a (labs1@labs2)
 
-let _get : repr int [Read] = Act Read () Return
-let _put (s:state) : repr unit [Write] = Act Write s Return
+let _get : tree int [Read] = Act Read () Return
+let _put (s:state) : tree unit [Write] = Act Write s Return
 
 [@@allow_informative_binders]
 total // need this for catch!!
@@ -171,7 +171,7 @@ reflectable
 layered_effect {
   Alg : a:Type -> ops  -> Effect
   with
-  repr         = repr;
+  repr         = tree;
   return       = return;
   bind         = bind;
   subcomp      = subcomp;
@@ -193,7 +193,7 @@ let lift_pure_eff
  (a:Type)
  (wp : pure_wp a)
  (f : eqtype_as_type unit -> PURE a wp)
- : Pure (repr a [])
+ : Pure (tree a [])
         (requires (wp (fun _ -> True) /\ pure_monotonic wp))
         (ensures (fun _ -> True))
  = Return (f ())
@@ -239,13 +239,13 @@ let labpoly #labs (f g : unit -> Alg int labs) : Alg int labs =
 // Called from file "src/ocaml-output/FStar_TypeChecker_TcTerm.ml", line 2048, characters 30-68
 // Called from file "src/basic/ml/FStar_Util.ml", line 24, characters 14-18
 // ....
-let rec catch0 #a #labs (t1 : repr a (Raise::labs))
-                        (t2 : repr a labs)
-  : repr a labs
+let rec catch0 #a #labs (t1 : tree a (Raise::labs))
+                        (t2 : tree a labs)
+  : tree a labs
   = match t1 with
     | Act Raise e _ -> t2
     | Act act i k ->
-      let k' o : repr a labs =
+      let k' o : tree a labs =
         FStar.WellFounded.axiom1 k o;
         catch0 (k o) t2
       in
@@ -262,13 +262,13 @@ let catch #a #labs
    catch0 (reify (f ())) (reify (g ()))
  end
 
-let rec _catchST #a #labs (t1 : repr a (Read::Write::labs)) (s0:state) : repr (a & int) labs =
+let rec _catchST #a #labs (t1 : tree a (Read::Write::labs)) (s0:state) : tree (a & int) labs =
   match t1 with
   | Return v -> Return (v, s0)
   | Act Write s k -> WF.axiom1 k (); _catchST (k ()) s
   | Act Read  _ k -> WF.axiom1 k s0; _catchST (k s0) s0
   | Act act i k ->
-     let k' o : repr (a & int) labs =
+     let k' o : tree (a & int) labs =
        WF.axiom1 k o;
        _catchST #a #labs (k o) s0
      in
@@ -291,13 +291,13 @@ let test_catch #labs (f : unit -> Alg int [Raise;Write]) : Alg int [Write] =
 let test_catch2 (f : unit -> Alg int [Raise;Raise;Write]) : Alg int [Raise;Write] =
   catch f g
 
-let interp_pure_tree #a (t : repr a []) : Tot a =
+let interp_pure_tree #a (t : tree a []) : Tot a =
   match t with
   | Return x -> x
 
 let interp_pure #a (f : unit -> Alg a []) : Tot a = interp_pure_tree (reify (f ()))
 
-let rec interp_rd_tree #a (t : repr a [Read]) (s:state) : Tot a =
+let rec interp_rd_tree #a (t : tree a [Read]) (s:state) : Tot a =
   match t with
   | Return x -> x
   | Act Read _ k ->
@@ -306,7 +306,7 @@ let rec interp_rd_tree #a (t : repr a [Read]) (s:state) : Tot a =
 
 let interp_rd #a (f : unit -> Alg a [Read]) (s:state) : Tot a = interp_rd_tree (reify (f ())) s
 
-let rec interp_rdwr_tree #a (t : repr a [Read;Write]) (s:state) : Tot (a & state) =
+let rec interp_rdwr_tree #a (t : tree a [Read;Write]) (s:state) : Tot (a & state) =
   match t with
   | Return x -> (x, s)
   | Act Read _ k ->
@@ -318,7 +318,7 @@ let rec interp_rdwr_tree #a (t : repr a [Read;Write]) (s:state) : Tot (a & state
 
 let interp_rdwr #a (f : unit -> Alg a [Read;Write]) (s:state) : Tot (a & state) = interp_rdwr_tree (reify (f ())) s
 
-let rec interp_read_raise_tree #a (t : repr a [Read;Raise]) (s:state) : either exn a =
+let rec interp_read_raise_tree #a (t : tree a [Read;Raise]) (s:state) : either exn a =
   match t with
   | Return x -> Inr x
   | Act Read _ k ->
@@ -330,7 +330,7 @@ let rec interp_read_raise_tree #a (t : repr a [Read;Raise]) (s:state) : either e
 let interp_read_raise_exn #a (f : unit -> Alg a [Read;Raise]) (s:state) : either exn a =
   interp_read_raise_tree (reify (f ())) s
 
-let rec interp_all_tree #a (t : repr a [Read;Write;Raise]) (s:state) : Tot (option a & state) =
+let rec interp_all_tree #a (t : tree a [Read;Write;Raise]) (s:state) : Tot (option a & state) =
   match t with
   | Return x -> (Some x, s)
   | Act Read _ k ->
@@ -349,7 +349,7 @@ let interp_all #a (f : unit -> Alg a [Read;Write;Raise]) (s:state) : Tot (option
 //
 //let handler_ty (a:action _ _) (b:Type) (labs:list eff_label) =
 //    action_input a ->
-//    (action_output a -> repr b labs) -> repr b labs
+//    (action_output a -> tree b labs) -> tree b labs
 //
 //let dpi31 (#a:Type) (#b:a->Type) (#c:(x:a->b x->Type)) (t : (x:a & y:b x & c x y)) : a =
 //  let (| x, y, z |) = t in x
@@ -369,10 +369,10 @@ let interp_all #a (f : unit -> Alg a [Read;Write;Raise]) (s:state) : Tot (option
 we can compare actions for equality, or equivalently map them to their
 labels. *)
 val handle (#a #b:_) (#labs:_) (o:op)
-           (f:repr a (o::labs))
+           (f:tree a (o::labs))
            (h:handler_ty_l o b labs)
-           (v: a -> repr b labs)
-           : repr b labs
+           (v: a -> tree b labs)
+           : tree b labs
 let rec handle #a #b #labs l f h v =
   match f with
   | Return x -> v x
@@ -380,7 +380,7 @@ let rec handle #a #b #labs l f h v =
     if act = l
     then h i (fun o -> WF.axiom1 k o; handle l (k o) h v)
     else begin
-      let k' o : repr b labs =
+      let k' o : tree b labs =
          WF.axiom1 k o;
          handle l (k o) h v
       in
@@ -389,11 +389,11 @@ let rec handle #a #b #labs l f h v =
 
 (* Easy enough to handle 2 labels at once *)
 val handle2 (#a #b:_) (#labs:_) (l1 l2 : op)
-           (f:repr a (l1::l2::labs))
+           (f:tree a (l1::l2::labs))
            (h1:handler_ty_l l1 b labs)
            (h2:handler_ty_l l2 b labs)
-           (v : a -> repr b labs)
-           : repr b labs
+           (v : a -> tree b labs)
+           : tree b labs
 let rec handle2 #a #b #labs l1 l2 f h1 h2 v =
   match f with
   | Return x -> v x
@@ -403,45 +403,45 @@ let rec handle2 #a #b #labs l1 l2 f h1 h2 v =
     else if act = l2
     then h2 i (fun o -> WF.axiom1 k o; handle2 l1 l2 (k o) h1 h2 v)
     else begin
-      let k' o : repr b labs =
+      let k' o : tree b labs =
          WF.axiom1 k o;
          handle2 l1 l2 (k o) h1 h2 v
       in
       Act act i k'
     end
 
-let catch0' #a #labs (t1 : repr a (Raise::labs))
-                     (t2 : repr a labs)
-  : repr a labs
+let catch0' #a #labs (t1 : tree a (Raise::labs))
+                     (t2 : tree a labs)
+  : tree a labs
   = handle Raise t1 (fun i k -> t2) (fun x -> Return x)
 
-let catch0'' #a #labs (t1 : repr a (Raise::labs))
-                      (t2 : repr a labs)
-  : repr a labs
+let catch0'' #a #labs (t1 : tree a (Raise::labs))
+                      (t2 : tree a labs)
+  : tree a labs
   = handle_with t1
                 (fun x -> Return x)
                 (function Raise -> (fun i k -> t2)
                         | act -> (fun i k -> Act act i k))
 
-let fmap #a #b #labs (f : a -> b) (t : repr a labs) : repr b labs =
+let fmap #a #b #labs (f : a -> b) (t : tree a labs) : tree b labs =
   bind _ _ _ labs t (fun x -> Return (f x))
 
-let join #a #labs (t : repr (repr a labs) labs) : repr a labs =
+let join #a #labs (t : tree (tree a labs) labs) : tree a labs =
   bind _ _ _ _ t (fun x -> x)
 
-let app #a #b #labs (t : repr (a -> b) labs) (x:a) : repr b labs =
+let app #a #b #labs (t : tree (a -> b) labs) (x:a) : tree b labs =
   fmap (fun f -> f x) t
 
-let frompure #a (t : repr a []) : a =
+let frompure #a (t : tree a []) : a =
   match t with
   | Return x -> x
 
 (* Handling Read/Write into the state monad. There is some noise in the
 handler, but it's basically interpreting [Read () k] as [\s -> k s s]
-and similarly for Write. The only tricky thing is the stacking of [repr]
+and similarly for Write. The only tricky thing is the stacking of [tree]
 involved. *)
-let catchST2 #a #labs (f : repr a (Read::Write::labs))
-  : repr (state -> repr (a & state) labs) labs
+let catchST2 #a #labs (f : tree a (Read::Write::labs))
+  : tree (state -> tree (a & state) labs) labs
   = handle2 Read Write f
             (fun _ k -> Return (fun s -> bind _ _ _ _ (k s)  (fun f -> f s)))
             (fun s k -> Return (fun _ -> bind _ _ _ _ (k ()) (fun f -> f s)))
@@ -449,13 +449,13 @@ let catchST2 #a #labs (f : repr a (Read::Write::labs))
 
 (* Since this is a monad, we can apply the internal function and
 then collapse the computations to get a more familiar looking catchST *)
-let catchST2' #a #labs (f : repr a (Read::Write::labs)) (s0:state)
-  : repr (a & state) labs
+let catchST2' #a #labs (f : tree a (Read::Write::labs)) (s0:state)
+  : tree (a & state) labs
   = join (app (catchST2 f) s0)
 
-(* And of course into a pure repr if no labels remain *)
+(* And of course into a pure tree if no labels remain *)
 let catchST2_emp #a
-  (f : repr a (Read::Write::[]))
+  (f : tree a (Read::Write::[]))
   : state -> a & state
   = fun s0 -> frompure (catchST2' f s0)
 
@@ -476,12 +476,12 @@ let trlabs' = List.Tot.map trlab'
 
 let rec lab_corr (l:baseop) (ls:list baseop)
   : Lemma (mem l ls <==> mem (trlab l) (trlabs ls))
-          [SMTPat (mem l ls)] // needed for interp_into_lattice_repr below
+          [SMTPat (mem l ls)] // needed for interp_into_lattice_tree below
   = match ls with
     | [] -> ()
     | l1::ls -> lab_corr l ls
 
-(* Tied to the particular repr of Lattice.fst *)
+(* Tied to the particular tree of Lattice.fst *)
 
 (* no datatype subtyping *)
 let fixup : list baseop -> ops = List.Tot.map #baseop #op (fun x -> x)
@@ -502,28 +502,28 @@ let rec fixup_no_other (l:op{Other? l}) (ls:list baseop)
 
 // This would be a lot nicer if it was done in L.EFF itself,
 // but the termination proof fails since it has no logical payload.
-let rec interp_into_lattice_repr #a (#labs:list baseop)
-  (t : repr a (fixup labs))
+let rec interp_into_lattice_tree #a (#labs:list baseop)
+  (t : tree a (fixup labs))
   : L.repr a (trlabs labs)
   = match t with
     | Return x -> L.return _ x
     | Act Read i k ->
       L.bind _ _ _ _ (reify (L.get i))
        (fun x -> WF.axiom1 k x;
-              interp_into_lattice_repr #a #labs (k x))
+              interp_into_lattice_tree #a #labs (k x))
     | Act Write i k ->
       L.bind _ _ _ _ (reify (L.put i))
        (fun x -> WF.axiom1 k x;
-              interp_into_lattice_repr #a #labs (k x))
+              interp_into_lattice_tree #a #labs (k x))
     | Act Raise i k ->
       L.bind _ _ _ _ (reify (L.raise ()))
        (fun x -> WF.axiom1 k x;
-              interp_into_lattice_repr #a #labs (k x))
+              interp_into_lattice_tree #a #labs (k x))
 
 let interp_into_lattice #a (#labs:list baseop)
   (f : unit -> Alg a (fixup labs))
   : Lattice.EFF a (trlabs labs)
-  = Lattice.EFF?.reflect (interp_into_lattice_repr (reify (f ())))
+  = Lattice.EFF?.reflect (interp_into_lattice_tree (reify (f ())))
 
 // This is rather silly: we reflect and then reify. Maybe define interp_into_lattice
 // directly?
@@ -544,13 +544,13 @@ let abides' (f : sem0 'a) (labs:list baseop) : prop =
 
 type sem (a:Type) (labs : list baseop) = r:(sem0 a){abides' r labs}
 
-let rec interp_sem #a (#labs:list baseop) (t : repr a (fixup labs)) : sem a labs =
+let rec interp_sem #a (#labs:list baseop) (t : tree a (fixup labs)) : sem a labs =
   match t with
   | Return x -> fun s0 -> (Inr x, s0)
   | Act Read _ k ->
     (* Needs this trick for termination. Trying to call axiom1 within
      * `r` messes up the refinement about Read. *)
-    let k : (s:state -> (r:(repr a (fixup labs)){r << k})) = fun s -> WF.axiom1 k s; k s in
+    let k : (s:state -> (r:(tree a (fixup labs)){r << k})) = fun s -> WF.axiom1 k s; k s in
     let r : sem a labs = fun s0 -> interp_sem #a #labs (k s0) s0 in
     r
   | Act Write s k ->
@@ -561,9 +561,9 @@ let rec interp_sem #a (#labs:list baseop) (t : repr a (fixup labs)) : sem a labs
 (* Way back: from the pure ALG into the free one, necessarilly giving
 a fully normalized tree *)
 
-let interp_from_lattice_repr #a #labs
+let interp_from_lattice_tree #a #labs
   (t : L.repr a labs)
-  : repr a [Read;Raise;Write] // conservative
+  : tree a [Read;Raise;Write] // conservative
   = Act Read () (fun s0 ->
      let (r, s1) = t s0 in
      match r with
@@ -578,13 +578,13 @@ let read_handler (b:Type)
 
 let handle_read (a:Type)
                 (labs:ops)
-                (f:repr a (Read::labs))
+                (f:tree a (Read::labs))
                 (h:handler_ty_l Read a labs)
-   : repr a labs
+   : tree a labs
    = handle Read f h (fun x -> Return x)
 
 
-let weaken #a #labs l (f:repr a labs) : repr a (l::labs) =
+let weaken #a #labs l (f:tree a labs) : tree a (l::labs) =
   assert(l::labs == [l]@labs);
   f
 
@@ -596,13 +596,13 @@ let write_handler (a:Type)
 
 let handle_write (a:Type)
                 (labs:ops)
-                (f:repr a (Write::labs))
-   : repr a labs
+                (f:tree a (Write::labs))
+   : tree a labs
    = handle Write f (write_handler a labs) (fun x -> Return x)
 
 let handle_st (a:Type)
               (labs: ops)
-              (f:repr a (Write::Read::labs))
+              (f:tree a (Write::Read::labs))
               (s0:state)
-   : repr a labs
+   : tree a labs
    = handle_read _ _ (handle_write _ _ f) (fun _ k -> k s0)
