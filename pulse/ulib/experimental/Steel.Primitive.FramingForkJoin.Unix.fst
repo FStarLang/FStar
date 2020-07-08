@@ -255,32 +255,79 @@ let example () : SteelK unit emp (fun _ -> q 1 `star` q 2) =
   h();
   kjoin p2
 
-let as_steelk_repr (#a:Type) (#pre:slprop) (#post:post_t a) (f:unit -> SteelT a pre post)
+let as_steelk_repr' (a:Type) (pre:slprop) (post:post_t a) (f:unit -> SteelT a pre post)
   : steelK a pre post
   = fun #frame #postf (k:(x:a -> SteelT unit (frame `star` post x) (fun _ -> postf))) ->
       let x = f () in
       k x
 
-let as_steelk (#a:Type) (#pre:slprop) (#post:post_t a) ($f:unit -> SteelT a pre post)
-  : SteelK a pre post
-  = SteelK?.reflect (as_steelk_repr f)
+
+let as_steelk_repr (a:Type) (pre:slprop) (post:post_t a) (f:repr a pre post (fun _ -> True) (fun _ _ _ -> True))// unit -> SteelT a pre post)
+  : steelK a pre post
+  = as_steelk_repr' a pre post (fun _ -> Steel?.reflect f)
+
+// let as_steelk_repr' (a:Type) (pre:slprop) (post:post_t a) (f:unit -> SteelT a pre post)
+//   : steelK a pre post
+//   = fun #frame #postf (k:(x:a -> SteelT unit (frame `star` post x) (fun _ -> postf))) ->
+//       let x = f () in
+//       k x
+
+// let as_steelk (#a:Type) (#pre:slprop) (#post:post_t a) ($f:unit -> SteelT a pre post)
+//   : SteelK a pre post
+//   = SteelK?.reflect (as_steelk_repr a pre post f)
 
 open Steel.FractionalPermission
 
+polymonadic_subcomp Steel <: SteelK = as_steelk_repr
 
-let example2 (r:ref int) : SteelK (ref int) (pts_to r full_perm 0) (fun x -> pts_to r full_perm 1 `star` pts_to x full_perm 2) =
-  let p1 = kfork (fun _ -> as_steelk (fun _ -> write #_ #0 r 1)) in
-  let x = as_steelk (fun _ -> alloc 2) in
+let bind_steel_steelk (a:Type) (b:Type)
+  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
+  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
+  (#[@@ framing_implicit] frame_f:slprop) (#[@@ framing_implicit] frame_g:slprop)
+  (#[@@ framing_implicit] p:squash (can_be_split_forall
+    (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g)))
+  (f:repr a pre_f post_f (fun _ -> True) (fun _ _ _ -> True))
+  (g:(x:a -> steelK b (pre_g x) post_g))
+: steelK b
+    (pre_f `star` frame_f)
+    (fun y -> post_g y `star` frame_g)
+= bind_steelk_steelk a b #pre_f #post_f #pre_g #post_g #frame_f #frame_g #p (as_steelk_repr a pre_f post_f f) g
+
+polymonadic_bind (Steel, SteelK) |> SteelKF = bind_steel_steelk
+
+
+let bind_steel_steelkf (a:Type) (b:Type)
+  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
+  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
+  (#[@@ framing_implicit] frame_f:slprop)
+  (#[@@ framing_implicit] p:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
+  (f:repr a pre_f post_f (fun _ -> True) (fun _ _ _ -> True))
+  (g:(x:a -> steelK b (pre_g x) post_g))
+: steelK b
+    (pre_f `star` frame_f)
+    post_g
+  = bind_steelk_steelkf a b #pre_f #post_f #pre_g #post_g #frame_f #p (as_steelk_repr a pre_f post_f f) g
+
+polymonadic_bind (Steel, SteelKF) |> SteelKF = bind_steel_steelkf
+
+let example2 (r:ref int) : SteelK (thread (pts_to r full_perm 1)) (pts_to r full_perm 0) (fun _ -> emp) =
+  let p1 = kfork (fun _ -> write #_ #0 r 1) in
+  p1
+
+
+let example3 (r:ref int) : SteelK (ref int) (pts_to r full_perm 0) (fun x -> pts_to r full_perm 1 `star` pts_to x full_perm 2) =
+  let p1 = kfork (fun _ -> write #_ #0 r 1) in
+  let x = alloc 2 in
   kjoin p1;
   x
 
 
-let example3 () : SteelK (ref int) emp (fun r -> pts_to r full_perm 2) =
-  let x = as_steelk (fun _ -> alloc 0) in
-  let y = as_steelk (fun _ -> alloc 1) in
-  let p1:thread (pts_to x full_perm 1) = kfork (fun _ -> as_steelk (fun _ -> write #_ #0 x 1)) in
-  let p2:thread emp = kfork (fun _ -> as_steelk (fun _ -> free #_ #1 y)) in
+let example4 () : SteelK (ref int) emp (fun r -> pts_to r full_perm 2) =
+  let x = alloc 0 in
+  let y = alloc 1 in
+  let p1:thread (pts_to x full_perm 1) = kfork (fun _ -> write #_ #0 x 1) in
+  let p2:thread emp = kfork (fun _ -> free #_ #1 y) in
   kjoin p1;
-  as_steelk (fun _ -> write #_ #1 x 2);
+  write #_ #1 x 2;
   kjoin p2;
   x
