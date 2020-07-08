@@ -618,3 +618,74 @@ let handle_st (a:Type)
               (s0:state)
    : tree a labs
    = handle_read _ _ (handle_write _ _ f) (fun _ k -> k s0)
+
+
+let widen_handler (#b:_) (#labs0 #labs1:_)
+                  (h:handler_ty labs0 b labs1)
+    : handler_ty (labs0@labs1) b labs1
+    = fun op i k ->
+       if mem op labs0 then h op i k
+       else Act op i k
+                  
+let handle_sub (#a #b:_) (#labs0 #labs1:_)
+               (f:tree a (labs0@labs1))
+               (v: a -> tree b labs1)
+               (h:handler_ty labs0 b labs1)
+    : tree b labs1
+    = handle_with f v (widen_handler h)
+
+
+let widen_handler_1 (#b:_) (#o:op) (#labs1:_)
+                       (h:handler_ty_l o b labs1)
+    : handler_ty (o::labs1) b labs1
+    = fun op' i k ->
+       if op'=o then h i k
+       else Act op' i k
+
+let handle_one (#a:_) (#o:op) (#labs1:_)
+               (f:tree a (o::labs1))
+               (h:handler_ty_l o a labs1)
+    : tree a labs1
+    = handle_with f (fun x -> Return x) (widen_handler_1 h)
+
+let append_single (a:Type) (x:a) (l:list a)
+  : Lemma (x::l == [x]@l)
+          [SMTPat (x::l)]
+  = ()
+let handle_raise #a #labs (f : tree a (Raise::labs)) (g : tree a labs)
+   : tree a labs
+   = handle_one f (fun _ _ -> g)
+let handle_read' (#a:Type)  (#labs:ops) (f:tree a (Read::labs)) (s:state)
+   : tree a labs
+   = handle_one f (fun _ k -> k s)
+let handle_write' (#a:Type)  (#labs:ops) (f:tree a (Write::labs))
+   : tree a labs
+   = handle_one f (fun s k -> handle_read' (k()) s)
+
+let try_catch #a #labs (f:unit -> Alg a (Raise::labs)) (g:unit -> Alg a labs)
+  : Alg a labs
+  = Alg?.reflect (handle_raise (reify (f())) (reify (g())))
+
+let handle_raise_none #a () : Alg (option a & state) [Read] = let s = get () in None, s
+
+let handle_return #a (x:a) : tree (option a & state) [Write;Read] =
+   Act Read () (fun s -> Return (Some x, s))
+
+let handler_raise #a : handler_ty ([Raise]@[Write;Read]) (option a & state) ([Write]@[Read]) =
+  fun o i k -> 
+    match o with
+    | Raise -> Act Read () (fun s -> Return (None, s))
+    | _ -> Act o i k
+    
+let handler_raise_write #a : handler_ty [Raise; Write] (option a & state) ([Write]@[Read]) =
+  fun o i k -> 
+    match o with
+    | Raise -> Act Read () (fun s -> Return (None, s))
+    | Write -> handle_write' (k())
+
+let run_tree #a (f:tree a ([Raise;Write;Read])) (s0:state) : option a & state =
+  match handle_read'  (handle_write' (handle_with f handle_return handler_raise)) s0 with 
+  | Return x -> x
+let run #a #labs (f:unit -> Alg a ([Raise;Write;Read])) (s0:state) : option a & state =
+  run_tree (reify (f())) s0
+  
