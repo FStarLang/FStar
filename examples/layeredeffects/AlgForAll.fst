@@ -10,22 +10,22 @@ module T = FStar.Tactics
 module ID5 = ID5
 open Alg
 
-let post (a:Type) = a -> state -> Type0
+let post (a:Type) = (a & state) -> Type0
 let st_wp (a:Type) : Type = state -> post a -> Type0
 
 unfold
-let return_wp #a x : st_wp a = fun s0 p -> p x s0
+let return_wp #a x : st_wp a = fun s0 p -> p (x, s0)
 
 unfold
 let bind_wp #a #b (w : st_wp a) (wf : a -> st_wp b)
   : st_wp b
-  = fun s0 p -> w s0 (fun y s1 -> wf y s1 p)
+  = fun s0 p -> w s0 (fun (y, s1) -> wf y s1 p)
 
 unfold
-let read_wp : st_wp state = fun s0 p -> p s0 s0
+let read_wp : st_wp state = fun s0 p -> p (s0, s0)
 
 unfold
-let write_wp : state -> st_wp unit = fun s _ p -> p () s
+let write_wp : state -> st_wp unit = fun s _ p -> p ((), s)
 
 (* Also doable with handlers *)
 let rec interp_as_wp #a (t : repr a [Read;Write]) : st_wp a =
@@ -66,7 +66,7 @@ val interp_ret (#a:Type) (x:a) : Lemma (return_wp x `stronger` interp (m_return 
 let interp_ret x = ()
 
 let wp_is_monotonic #a (wp : st_wp a) : Type0 =
-  forall p1 p2 s0. (forall x s1. p1 x s1 ==> p2 x s1) ==> wp s0 p1 ==> wp s0 p2
+  forall p1 p2 s0. (forall x s1. p1 (x, s1) ==> p2 (x, s1)) ==> wp s0 p1 ==> wp s0 p2
 
 let bind_preserves_mon #a #b (wp : st_wp a) (f : a -> st_wp b)
   : Lemma (requires (wp_is_monotonic wp /\ (forall x. wp_is_monotonic (f x))))
@@ -98,11 +98,11 @@ let elim_str #a (w1 w2 : st_wp a) (p : post a) (s0:state)
 
 (* Takes a while *)
 let rec interp_morph #a #b (c : m a) (f : a -> m b) (p:_) (s0:_)
-  : Lemma (interp c s0 (fun y s1 -> interp (f y) s1 p) == interp (m_bind c f) s0 p)
+  : Lemma (interp c s0 (fun (y, s1) -> interp (f y) s1 p) == interp (m_bind c f) s0 p)
   = match c with
     | Return x -> ()
     | Act Read _ k ->
-      let aux (o:state) : Lemma (interp (k o) s0 (fun y s1 -> interp (f y) s1 p)
+      let aux (o:state) : Lemma (interp (k o) s0 (fun (y, s1) -> interp (f y) s1 p)
                                         == interp (m_bind (k o) f) s0 p) =
         WF.axiom1 k o;
         interp_morph (k o) f p s0
@@ -110,7 +110,7 @@ let rec interp_morph #a #b (c : m a) (f : a -> m b) (p:_) (s0:_)
       Classical.forall_intro aux
 
     | Act Write s k ->
-      let aux (o:unit) : Lemma (interp (k o) s (fun y s1 -> interp (f y) s1 p)
+      let aux (o:unit) : Lemma (interp (k o) s (fun (y, s1) -> interp (f y) s1 p)
                                         == interp (m_bind (k o) f) s p) =
         WF.axiom1 k o;
         interp_morph (k o) f p s
@@ -130,11 +130,11 @@ let interp_bind #a #b c f w1 w2 =
     calc (==>) {
       bind_wp w1 w2 s0 p;
       ==> {}
-      w1 s0 (fun y s1 -> w2 y s1 p);
+      w1 s0 (fun (y, s1) -> w2 y s1 p);
       ==> { (* hyp *)}
-      interp c s0 (fun y s1 -> w2 y s1 p);
+      interp c s0 (fun (y, s1) -> w2 y s1 p);
       ==> { interp_monotonic c }
-      interp c s0 (fun y s1 -> interp (f y) s1 p);
+      interp c s0 (fun (y, s1) -> interp (f y) s1 p);
       ==> { interp_morph c f p s0 }
       interp (m_bind c f) s0 p;
     }
@@ -196,7 +196,7 @@ let put (s:state) : DM4A unit (write_wp s) =
 
 unfold
 let lift_pure_wp (#a:Type) (wp : pure_wp a) : st_wp a =
-  fun s0 p -> wp (fun x -> p x s0)
+  fun s0 p -> wp (fun x -> p (x, s0))
 
 let lift_pure_dm4a (a:Type) wp (f:(eqtype_as_type unit -> PURE a wp))
   : Pure (repr a (lift_pure_wp wp)) // can't call f() here, so lift its wp instead
@@ -211,11 +211,14 @@ let lift_pure_dm4a (a:Type) wp (f:(eqtype_as_type unit -> PURE a wp))
 
 sub_effect PURE ~> DM4A = lift_pure_dm4a
 
-let addx (x:int) : DM4A unit (fun s0 p -> p () (s0+x)) by (T.norm [delta]) =
+let addx (x:int) : DM4A unit (fun s0 p -> p ((), (s0+x))) =
   let y = get () in
   put (x+y)
 
-let add_via_state (x y : int) : DM4A int (fun s0 p -> p (x+y) s0) by (T.norm [delta]) =
+(* GM: this used to require a call to T.norm [delta] when I had curry/uncurry going on.
+I now realize they were not marked unfold, but that is pretty tricky... we should try
+to find some general solution for these things. *)
+let add_via_state (x y : int) : DM4A int (fun s0 p -> p ((x+y), s0)) =
   let o = get () in
   put x;
   addx y;
@@ -234,7 +237,7 @@ let add_via_state (x y : int) : DM4A int (fun s0 p -> p (x+y) s0) by (T.norm [de
 // for the builtin Pure???
 
 let rec interp_sem #a (t : m a) (s0:state)
-  : ID5.ID (a & state) (fun p -> interp_as_wp t s0 (curry p))
+  : ID5.ID (a & state) (interp_as_wp t s0)
   = match t with
     | Return x -> (x, s0)
     | Act Read i k -> 
@@ -245,6 +248,6 @@ let rec interp_sem #a (t : m a) (s0:state)
       interp_sem (k ()) i
     
 let soundness #a #wp (t : unit -> DM4A a wp)
-  : Tot (s0:state -> ID5.ID (a & state) (fun p -> wp s0 (curry p)))
+  : Tot (s0:state -> ID5.ID (a & state) (wp s0))
   = let c = reify (t ()) in
     interp_sem #_ c
