@@ -1460,68 +1460,6 @@ let append
 
 #pop-options
 
-let write_two_ints
-  (l: memory_invariant)
-  (x y: U32.t)
-: Write unit parse_empty (parse_u32 `parse_pair` parse_u32) (fun _ -> True) (fun _ _ (x', y') -> x' == x /\ y' == y) l
-= start write_u32 x;
-  append write_u32 y
-
-let write_two_ints_2
-  (l: memory_invariant)
-  (x y: U32.t)
-  ()
-: Write unit parse_empty (parse_u32 `parse_pair` parse_u32) (fun _ -> True) (fun _ _ _ -> True) l
-= start write_u32 x;
-  append write_u32 y
-
-let write_two_ints_2_lemma_1
-  (l: memory_invariant)
-  (x y: U32.t)
-: Lemma
-  (destr_repr_spec unit parse_empty (parse_u32 `parse_pair` parse_u32) (fun _ -> True) (fun _ _ _ -> True) (fun _ -> False) l (write_two_ints_2 l x y) () == Correct ((), (x, y)) )
-= admit ()  //AR: 07/03: no smt reification for layered effects
-
-let write_two_ints_2_lemma_2
-  (l: memory_invariant)
-  (x y: U32.t)
-: Lemma
-  (True)
-= //assert (Repr?.spec (reify (write_two_ints_2 l x y ())) () == Correct ((), (x, y)))
-  admit ()  //AR: 07/03: no smt reification for layered effects
-
-let write_two_ints_ifthenelse
-  (l: memory_invariant)
-  (x y: U32.t)
-: Write unit parse_empty (parse_u32 `parse_pair` parse_u32) (fun _ -> True) (fun _ _ (x', y') -> x' == x /\ y' == (if U32.v x < U32.v y then x else y)) l
-= if x `U32.lt` y
-  then begin
-    start write_u32 x;
-    append write_u32 x
-  end else begin
-    start write_u32 x;
-    append write_u32 y
-  end
-
-let write_two_ints_ifthenelse_2_aux
-  (l: memory_invariant)
-  (x y: U32.t)
-  ()
-: Write unit parse_empty (parse_u32 `parse_pair` parse_u32) (fun _ -> True) (fun _ _ _ -> True) l
-= start write_u32 x;
-  if x `U32.lt` y
-  then
-    append write_u32 x
-  else
-    append write_u32 y
-
-let write_two_ints_ifthenelse_2_aux_lemma
-  (l: memory_invariant)
-  (x y: U32.t)
-: Lemma
-  (destr_repr_spec unit parse_empty (parse_u32 `parse_pair` parse_u32) (fun _ -> True) (fun _ _ _ -> True) (fun _ -> False) l (write_two_ints_ifthenelse_2_aux l x y) () == Correct ((), (x, (if U32.v x < U32.v y then x else y))) )
-= admit ()  //AR: 07/03: no smt reification for layered effects
-
 unfold
 let recast_writer_post
   (a:Type u#x)
@@ -1623,16 +1561,6 @@ let frame'
     l
 =
   frame _ _ _ _ _ _ _ (fun _ -> recast_writer _ _ _ _ _ _ _ f)
-
-let write_two_ints_ifthenelse_2
-  (l: memory_invariant)
-  (x y: U32.t)
-: Write unit parse_empty (parse_u32 `parse_pair` parse_u32)
-    (fun _ -> True)
-    (fun _ _ (x', y') -> x' == x /\ y' == (if U32.v x < U32.v y then x else y))
-    l
-= write_two_ints_ifthenelse_2_aux_lemma l x y;
-  recast_writer _ _ _ _ _ _ _ (write_two_ints_ifthenelse_2_aux l x y)
 
 unfold
 let frame2_pre

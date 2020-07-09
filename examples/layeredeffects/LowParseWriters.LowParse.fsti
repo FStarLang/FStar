@@ -216,12 +216,6 @@ let valid_gsub_intro
   valid_ext p h b (pos0 `U32.add` pos1) (pos0 `U32.add` pos2) h (B.gsub b pos0 len) pos1 pos2
 
 inline_for_extraction
-val parse_u32' : parser' U32.t
-
-inline_for_extraction
-let parse_u32 : parser = Parser U32.t (parse_u32')
-
-inline_for_extraction
 let leaf_writer
   (p: parser)
 : Tot Type
@@ -243,8 +237,6 @@ let leaf_writer
       contents p h' b 0ul xlen == x /\
       size p x == U32.v xlen
   ))  
-
-val write_u32 : leaf_writer parse_u32
 
 val valid_parse_pair_inv_spec
   (h: HS.mem)
