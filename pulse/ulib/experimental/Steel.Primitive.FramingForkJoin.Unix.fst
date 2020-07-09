@@ -78,7 +78,6 @@ let if_then_else (a:Type u#aa)
                  (p:Type0) : Type =
                  steelK a pre1 post1
 
-total
 reifiable
 reflectable
 layered_effect {
@@ -91,7 +90,6 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-total
 reifiable
 reflectable
 new_effect SteelK = SteelKF
