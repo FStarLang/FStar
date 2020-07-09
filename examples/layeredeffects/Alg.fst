@@ -1,7 +1,8 @@
 module Alg
 
-(* An algebraic presentation of ALL using action trees. *)
+(*** Algebraic effects. ***)
 
+open Common
 open FStar.Tactics
 open FStar.List.Tot
 open FStar.Universe
@@ -12,6 +13,8 @@ type state = int
 
 type empty =
 
+(* The set of operations. We keep an uninterpreted infinite set
+of `Other` so we never rely on knowing all operations. *)
 type op =
   | Read
   | Write
@@ -34,34 +37,35 @@ let op_out : op -> Type =
  | Raise -> empty
  | Other i -> other_inp i
 
+(* Free monad over `op` *)
 noeq
 type tree0 (a:Type u#aa) : Type u#aa =
   | Return : a -> tree0 a
   | Op     : op:op -> i:(op_inp op) -> k:(op_out op -> tree0 a) -> tree0 a
 
 type ops = list op
+let sublist (l1 l2 : ops) = forall x. memP x l1 ==> memP x l2
 
+(* Limiting the operations allowed in a tree *)
 let rec abides #a (labs:ops) (f : tree0 a) : prop =
   begin match f with
-  | Op a i k ->
-    mem a labs /\ (forall o. (WF.axiom1 k o; abides labs (k o)))
+  | Op a i k -> a `memP` labs /\ (forall o. (WF.axiom1 k o; abides labs (k o)))
   | Return _ -> True
   end
 
-type tree (a:Type u#aa)
-          (labs : list u#0 op)
+(* Refined free monad *)
+type tree (a:Type u#aa) (labs : list u#0 op)
   : Type u#aa
-  =
-  r:(tree0 a){abides labs r}
+  = r:(tree0 a){abides labs r}
 
-let rec interp_at (l1 l2 : ops) (l : op)
-  : Lemma (mem l (l1@l2) == (mem l l1 || mem l l2))
-          [SMTPat (mem l (l1@l2))]
+(***** Some boring list lemmas *****)
+
+let rec memP_at (l1 l2 : ops) (l : op)
+  : Lemma (memP l (l1@l2) <==> (memP l l1 \/ memP l l2))
+          [SMTPat (memP l (l1@l2))]
   = match l1 with
     | [] -> ()
-    | _::l1 -> interp_at l1 l2 l
-
-let sublist (l1 l2 : ops) = forall x. mem x l1 ==> mem x l2
+    | _::l1 -> memP_at l1 l2 l
 
 let rec sublist_at
   (l1 l2 : ops)
@@ -72,8 +76,7 @@ let rec sublist_at
     | [] -> ()
     | _::l1 -> sublist_at l1 l2
 
-let sublist_at_self
-  (l : ops)
+let sublist_at_self (l : ops)
   : Lemma (sublist l (l@l))
           [SMTPat (sublist l (l@l))]
   = ()
@@ -96,8 +99,6 @@ let abides_sublist #a (l1 l2 : ops) (c : tree0 a)
           [SMTPat (abides l2 c); SMTPat (sublist l1 l2)]
   = abides_sublist_nopat l1 l2 c
 
-let trigger (p:Type0) : Lemma (p <==> p) = ()
-
 let abides_at_self #a
   (l : ops)
   (c : tree0 a)
@@ -113,11 +114,15 @@ let abides_app #a (l1 l2 : ops) (c : tree0 a)
           [SMTPat (abides (l1@l2) c)]
   = sublist_at l1 l2
 
-(* Folding a computation tree *)
+(***** / boring list lemmas *****)
+
+(* Folding a computation tree. The folding operation `h` need only be
+defined for the operations in the tree. We also take a value case
+so this essentially has a builtin 'map' as well. *)
 val fold_with (#a #b:_) (#labs : ops)
            (f:tree a labs)
            (v : a -> b)
-           (h: (o:op{mem o labs} -> op_inp o -> (op_out o -> b) -> b))
+           (h: (o:op{o `memP` labs} -> op_inp o -> (op_out o -> b) -> b))
            : b
 let rec fold_with #a #b #labs f v h =
   match f with
@@ -129,20 +134,22 @@ let rec fold_with #a #b #labs f v h =
     in
     h act i k'
 
-let handler_ty_l (o:op) (b:Type) (labs:ops) =
+(* A (tree) handler for a single operation *)
+let handler_tree_op (o:op) (b:Type) (labs:ops) =
   op_inp o -> (op_out o -> tree b labs) -> tree b labs
 
-let handler_ty (labs0 : ops) (b:Type) (labs1 : ops) : Type =
-  o:op{mem o labs0} -> handler_ty_l o b labs1
+(* A (tree) handler for an operation set *)
+let handler_tree_set (labs0 : ops) (b:Type) (labs1 : ops) : Type =
+  o:op{o `memP` labs0} -> handler_tree_op o b labs1
 
 (* The most generic handling construct, we use it to implement bind.
 It is actually just a special case of folding. *)
-val handle_with (#a #b:_) (#labs0 #labs1 : ops)
-           (f:tree a labs0)
+val handle_tree (#a #b:_) (#labs0 #labs1 : ops)
+           ($f : tree a labs0)
            (v : a -> tree b labs1)
-           (h: handler_ty labs0 b labs1)
+           (h : handler_tree_set labs0 b labs1)
            : tree b labs1
-let handle_with f v h = fold_with f v h
+let handle_tree f v h = fold_with f v h
 
 let return (a:Type) (x:a)
   : tree a []
@@ -153,10 +160,10 @@ let bind (a b : Type)
   (c : tree a labs1)
   (f : (x:a -> tree b labs2))
   : Tot (tree b (labs1@labs2))
-  = handle_with #_ #_ #labs1 #(labs1@labs2) c f (fun act i k -> Op act i k)
+  = handle_tree #_ #_ #_ #(labs1@labs2) c f (fun act i k -> Op act i k)
   
 let subcomp (a:Type)
-  (labs1 labs2 : ops)
+  (#labs1 #labs2 : ops)
   (f : tree a labs1)
   : Pure (tree a labs2)
          (requires (sublist labs1 labs2))
@@ -165,18 +172,15 @@ let subcomp (a:Type)
 
 let if_then_else
   (a : Type)
-  (labs1 labs2 : ops)
+  (#labs1 #labs2 : ops)
   (f : tree a labs1)
   (g : tree a labs2)
   (p : bool)
   : Type
   = tree a (labs1@labs2)
 
-let _get : tree int [Read] = Op Read () Return
-let _put (s:state) : tree unit [Write] = Op Write s Return
-
 [@@allow_informative_binders]
-total // need this for catch!!
+total
 reifiable
 reflectable
 layered_effect {
@@ -189,37 +193,38 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-
-unfold
-let pure_monotonic #a (wp : pure_wp a) : Type =
-  forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2
-
-//unfold
-//let sp #a (wp : pure_wp a) : pure_post a =
-//  fun x -> ~ (wp (fun y -> ~(x == y)))
-
-let lift_pure_eff
+let lift_pure_alg
  (a:Type)
  (wp : pure_wp a)
  (f : eqtype_as_type unit -> PURE a wp)
  : Pure (tree a [])
-        (requires (wp (fun _ -> True) /\ pure_monotonic wp))
+        (requires (wp (fun _ -> True)))
         (ensures (fun _ -> True))
- = Return (f ())
+ = let v = elim_pure f (fun _ -> True) in
+   Return v
 
-sub_effect PURE ~> Alg = lift_pure_eff
+sub_effect PURE ~> Alg = lift_pure_alg
 
-let geneff (o : op) (i : op_inp o) : Alg (op_out o) [o] = Alg?.reflect (Op o i Return)
+(* Mapping an algebraic operation into an effectful computation. *)
+let geneff (o : op) (i : op_inp o)
+  : Alg (op_out o) [o]
+  = Alg?.reflect (Op o i Return)
 
-let get   : unit -> Alg int [Read] = geneff Read
-let put   : state -> Alg unit [Write] = geneff Write
-let raise : #a:_ -> exn -> Alg a [Raise] = fun e -> match geneff Raise e with
+let get   : unit    ->    Alg int [Read]     = geneff Read
+let put   : state   ->    Alg unit [Write] = geneff Write
+let raise : #a:_ -> exn -> Alg a [Raise]    = fun e -> match geneff Raise e with
 
-let _other_raise #a (e:exn) : Alg a [Raise] =  
-  // Funnily enough, the version below succeeds from concluding
-  // a==empty under the lambda since the context becomes inconsistent.
-  // All good, just surprising.
+let another_raise #a (e:exn) : Alg a [Raise] =  
+  // Funnily enough, the version below succeeds from concluding `a ==
+  // empty` under the lambda since the context becomes inconsistent. All
+  // good, just surprising.
   Alg?.reflect (Op Raise e Return)
+
+(* Running pure trees *)
+let frompure #a (t : tree a []) : a = match t with | Return x -> x
+
+(* Running pure computations *)
+let run #a (f : unit -> Alg a []) : a = frompure (reify (f ()))
 
 exception Failure of string
 
@@ -234,8 +239,8 @@ let test1 (x y : int) : Alg int [Raise; Read; Write] =
   then raise (Failure "asd")
   else (put 42; y - z)
 
-let labpoly #labs (f g : unit -> Alg int labs) : Alg int labs =
-  f () + g ()
+(* A simple operation-polymorphic add in direct style *)
+let labpoly #labs (f g : unit -> Alg int labs) : Alg int labs = f () + g ()
 
 // FIXME: putting this definition inside catch causes a blowup:
 //
@@ -250,59 +255,309 @@ let labpoly #labs (f g : unit -> Alg int labs) : Alg int labs =
 // Called from file "src/basic/ml/FStar_Util.ml", line 24, characters 14-18
 // ....
 
-(* Explicit definition of catch *)
-let rec catch0 #a #labs (t1 : tree a (Raise::labs))
-                        (t2 : tree a labs)
+(* Explicitly defining catch on trees *)
+let rec __catch0 #a #labs (t1 : tree a (Raise::labs)) (t2 : tree a labs)
   : tree a labs
   = match t1 with
     | Op Raise e _ -> t2
     | Op act i k ->
       let k' o : tree a labs =
         WF.axiom1 k o;
-        catch0 (k o) t2
+        __catch0 (k o) t2
       in
       Op act i k'
     | Return v -> Return v
 
-(* no rollback *)
-let catch #a #labs
-  (f : unit -> Alg a (Raise::labs))
-  (g : unit -> Alg a labs)
+(* Equivalently via handle_tree *)
+let __catch1 #a #labs (t1 : tree a (Raise::labs)) (t2 : tree a labs)
+  : tree a labs
+  = handle_tree t1 (fun x -> Return x) 
+                   (function Raise -> fun i k -> t2
+                           | op -> fun i k -> Op op i k)
+
+(* Lifting it into the effect *)
+let catch #a #labs (f : unit -> Alg a (Raise::labs)) (g : unit -> Alg a labs)
   : Alg a labs
-=
- Alg?.reflect begin
-   catch0 (reify (f ())) (reify (g ()))
- end
+  = Alg?.reflect (__catch1 (reify (f ())) (reify (g ())))
+
+(* Example: get rid of the Raise *)
+let test_catch #labs (f : unit -> Alg int [Raise;Write]) : Alg int [Write] =
+  let g () : Alg int [] = 42 in
+  catch f g
+
+(* Or keep it... Koka-style *)
+let test_catch2 (f : unit -> Alg int [Raise;Write]) : Alg int [Raise;Write] =
+  let g () : Alg int [] = 42 in
+  catch f g
+
+(* But of course, we have to handle if it is not in the output. *)
+[@@expect_failure [19]]
+let test_catch3 (f : unit -> Alg int [Raise;Write]) : Alg int [Write] =
+  let g () : Alg int [Raise] = raise (Failure "hmm") in
+  catch f g
+
+(***** Now for the effectful version *****)
+
+(* An (effectful) handler for a single operation *)
+let handler_op (o:op) (b:Type) (labs:ops) = op_inp o -> (op_out o -> Alg b labs) -> Alg b labs
+
+(* An (effectful) handler for an operation set *)
+let handler (labs0 : ops) (b:Type) (labs1 : ops) : Type = o:op{o `memP` labs0} -> handler_op o b labs1
+
+(* The generic effectful handling operation, defined simply by massaging
+handle_tree into the Alg effect. *)
+let handle_with (#a #b:_) (#labs0 #labs1 : ops)
+           ($f : unit -> Alg a labs0)
+           (v : a -> Alg b labs1)
+           (h : handler labs0 b labs1)
+           (* Looking at v and h together, they basically represent
+            * a handler type [ a<labs0> ->> b<labs1> ] from other
+            * languages. *)
+   : Alg b labs1
+  = Alg?.reflect (handle_tree (reify (f ()))
+                              (fun x -> reify (v x))
+                              (fun a i k -> reify (h a i (fun o -> Alg?.reflect (k o)))))
+
+(* A default case for handlers. With the side condition that the
+operation we're defaulting will remain in the tree, so it has to be in
+`labs`. All arguments are implicit, F* can usually figure `op` out. *)
+let defh #b #labs (#o:op{o `memP` labs})
+  : handler_op o b labs
+  = fun i k -> k (geneff o i)
+
+(* Another version of catch, but directly in the effect. Note that we do
+not build Op nor Return nodes, but work in a more direct style. For the
+default case, we just call the operation op with the input it received
+and then call the continuation with the result. *)
+let try_with #a #labs (f : (unit -> Alg a (Raise::labs))) (g:unit -> Alg a labs)
+  : Alg a labs
+  = handle_with f
+                (fun x -> x)
+                (function Raise -> fun _ k -> g ()
+                        | _     -> defh)
+
+(* Repeating the examples above *)
+let test_try_with #labs (f : unit -> Alg int [Raise;Write]) : Alg int [Write] =
+  let g () : Alg int [] = 42 in
+  try_with f g
+let test_try_with2 (f : unit -> Alg int [Raise;Write]) : Alg int [Raise;Write] =
+  let g () : Alg int [] = 42 in
+  try_with f g
+[@@expect_failure [19]]
+let test_try_with3 (f : unit -> Alg int [Raise;Write]) : Alg int [Write] =
+  let g () : Alg int [Raise] = raise (Failure "hmm") in
+  try_with f g
+
+(***** The payoff is best seen with handling state *****)
 
 (* Explcitly catching state *)
-let rec _catchST #a #labs (t1 : tree a (Read::Write::labs)) (s0:state) : tree (a & int) labs =
+let rec __catchST0 #a #labs (t1 : tree a (Read::Write::labs)) (s0:state) : tree (a & int) labs =
   match t1 with
   | Return v -> Return (v, s0)
-  | Op Write s k -> WF.axiom1 k (); _catchST (k ()) s
-  | Op Read  _ k -> WF.axiom1 k s0; _catchST (k s0) s0
+  | Op Write s k -> WF.axiom1 k (); __catchST0 (k ()) s
+  | Op Read  _ k -> WF.axiom1 k s0; __catchST0 (k s0) s0
   | Op act i k ->
+     (* default case *)
      let k' o : tree (a & int) labs =
        WF.axiom1 k o;
-       _catchST #a #labs (k o) s0
+       __catchST0 #a #labs (k o) s0
      in
      Op act i k'
 
-let catchST #a #labs
+(* An alternative: handling Read/Write into the state monad. The handler
+is basically interpreting [Read () k] as [\s -> k s s] and similarly for
+Write. Note the stacking of effects: we return a labs-tree that
+contains a function which returns a labs-tree. *)
+let __catchST1_aux #a #labs (f : tree a (Read::Write::labs))
+  : tree (state -> tree (a & state) labs) labs
+  = handle_tree #_ #(state -> tree (a & state) labs)
+                f
+                (fun x ->   Return (fun s0 -> Return (x, s0)))
+                (function Read  -> fun _ k -> Return (fun s -> bind _ _ (k s)  (fun f -> f s))
+                        | Write -> fun s k -> Return (fun _ -> bind _ _ (k ()) (fun f -> f s))
+                        | act   -> fun i k -> Op act i k)
+
+(* Since tree is a monad, however, we can apply the internal function
+join the two layers via the multiplication, and recover a more sane
+shape. *)
+let __catchST1 #a #labs (f : tree a (Read::Write::labs)) (s0:state)
+  : tree (a & state) labs
+  = bind _ _ (__catchST1_aux f) (fun f -> f s0)
+    // = join (fmap (fun f -> f s0) (__catchST1_aux f))
+
+(* Reflecting it into the effect *)
+let _catchST #a #labs
   (f : unit -> Alg a (Read::Write::labs))
   (s0 : state)
   : Alg (a & state) labs
-=
- Alg?.reflect begin
-   _catchST (reify (f ())) s0
- end
+  = Alg?.reflect (__catchST1 (reify (f ())) s0)
 
-let g #labs () : Alg int labs = 42  //AR: 07/03: had to hoist after removing smt_reifiablep
+(* Instead of that cumbersome encoding with the explicitly monadic
+handler, we can leverage handle_with and it in direct style. The version
+below is essentially the same, but without any need to write binds,
+returns, and Op nodes. Note how the layering of the effects is seamlessly
+handled except for the need of a small annotation. To apply the handled
+stacked computation to the initial state, there is no bind or fmap+join,
+just application to s0. *)
+let catchST #a #labs (f: unit -> Alg a (Read::Write::labs)) (s0:state)
+  : Alg (a & state) labs
+  = handle_with #_ #(state -> Alg _ labs) #_ #labs
+                f (fun x s -> (x, s))
+                  (function Read  -> fun _ k s -> k s s
+                          | Write -> fun s k _ -> k () s
+                          | _     -> defh) s0
 
-let test_catch #labs (f : unit -> Alg int [Raise;Write]) : Alg int [Write] =
-  catch f g
+(* Of course, we can also fully run computations into pure functions if
+no labels remain *)
+let runST #a
+  (f : unit -> Alg a (Read::Write::[]))
+  : state -> a & state
+  = fun s0 -> run (fun () -> catchST f s0)
 
-let test_catch2 (f : unit -> Alg int [Raise;Raise;Write]) : Alg int [Raise;Write] =
-  catch f g
+(* We could also handle it directly if no labels remain, without
+providing a default case. F* can prove the match is complete. Note the
+minimal superficial differences to catchST. *)
+let runST2 #a #labs (f: unit -> Alg a (Read::Write::[])) (s0:state)
+  : Alg (a & state) []
+  = handle_with #_ #(state -> Alg _ []) #_ #[]
+                f (fun x s -> (x, s))
+                  (function Read  -> fun _ k s -> k s s
+                          | Write -> fun s k _ -> k () s) s0
+
+(***** There are many other ways in which to program with
+handlers, we show a few in what follows. *)
+
+(* Unary read handler which just provides s0 *)
+let read_handler (#b:Type)
+                 (#labs:ops)
+                 (s0:state)
+  : handler_op Read b labs
+  = fun _ k -> k s0
+
+(* Handling only Read *)
+let handle_read (#a:Type)
+                (#labs:ops)
+                (f : unit -> Alg a (Read::labs))
+                (h : handler_op Read a labs)
+ : Alg a labs
+ = handle_with f (fun x -> x) (function Read -> h
+                                   | _ -> defh)
+
+(* A handler for write which handles Reads in the continuation with the
+state at hand. Note that `k` is automatically subcomped to ignore a
+label. *)
+let write_handler (#a:Type)
+                  (#labs:ops)
+  : handler_op Write a labs
+  = fun s k -> handle_read k (read_handler s)
+
+(* Handling writes with the handler above *)
+let handle_write (#a:Type)
+                 (#labs:ops)
+                 (f : unit -> Alg a (Write::labs))
+   : Alg a labs
+   = handle_with f (fun x -> x)
+                   (function Write -> write_handler
+                           | _ -> defh)
+
+(* Handling state by 1) handling writes and all the reads
+under them via the write handler above 2) handling the initial
+Reads. *)
+let handle_st (a:Type)
+              (labs: ops)
+              (f : unit -> Alg a (Write::Read::labs))
+              (s0:state)
+   : Alg a labs
+   = handle_read (fun () -> handle_write f) (fun _ k -> k s0)
+
+(* Widening the domain of a handler by leaving some operations in labs0)
+(untouched. Requires being able to compare labels. *)
+let widen_handler (#b:_) (#labs0 #labs1:_)
+                  (h:handler labs0 b labs1)
+  : handler (labs0@labs1) b labs1
+  = fun op ->
+      (* This relies on decidable equality of operation labels,
+       * or at least on being able to decide whether `op` is in `labs0`
+       * or not. Since currently they are an `eqtype`, `mem` will do it. *)
+      mem_memP op labs0; // "mem decides memP"
+      if op `mem` labs0
+       then h op
+       else defh
+
+(* Partial handling *)
+let handle_sub (#a #b:_) (#labs0 #labs1:_)
+               (f : unit -> Alg a (labs0@labs1))
+               (v : a -> Alg b labs1)
+               (h : handler labs0 b labs1)
+  : Alg b labs1
+  = handle_with f v (widen_handler h)
+
+let widen_handler_1 (#b:_) (#o:op) (#labs1:_)
+                       (h:handler_op o b labs1)
+  : handler (o::labs1) b labs1
+  = widen_handler #_ #[o] (fun _ -> h)
+
+let handle_one (#a:_) (#o:op) (#labs1:_)
+               ($f : unit -> Alg a (o::labs1))
+               (h : handler_op o a labs1)
+  : Alg a labs1
+  = handle_with f (fun x -> x) (widen_handler_1 h)
+
+let append_single (a:Type) (x:a) (l:list a)
+  : Lemma (x::l == [x]@l)
+          [SMTPat (x::l)]
+  = ()
+  
+let handle_raise #a #labs (f : unit -> Alg a (Raise::labs)) (g : unit -> Alg a labs)
+  : Alg a labs
+  = handle_one f (fun _ _ -> g ())
+   
+let handle_read' #a #labs (f : unit -> Alg a (Read::labs)) (s:state)
+  : Alg a labs
+  = handle_one f (fun _ k -> k s)
+   
+let handle_write' #a #labs (f : unit -> Alg a (Write::labs))
+  : Alg a labs
+  = handle_one f (fun s k -> handle_read' k s)
+
+let handle_return #a (x:a)
+  : Alg (option a & state) [Write;Read]
+  = (Some x, get ())
+
+let handler_raise #a
+  : handler [Raise; Write; Read] (option a & state) [Write; Read]
+  = function
+    | Raise -> (fun i k -> (None, get ()))
+    | _ -> defh
+
+let handler_raise_write #a
+  : handler [Raise; Write] (option a & state) [Write; Read]
+  = function
+    | Raise -> (fun i k -> (None, get ()))
+    | Write -> (fun i k -> handle_write' k)
+
+(* Running by handling one operation at a time *)
+let run_tree #a (f : unit -> Alg a [Raise;Write;Read]) (s0:state)
+  : option a & state
+  = run (fun () ->
+     handle_read' (fun () ->
+      handle_write' (fun () ->
+       handle_with f handle_return handler_raise)) s0)
+
+(* Running state+exceptions *)
+let runSTE #a (f: unit -> Alg a [Raise; Write; Read]) (s0:state) : Alg (option a & state) [] =
+  handle_with #_ #(state -> Alg (option a & state) []) #[Raise;Write;Read] #[]
+               f (fun x s -> (Some x, s))
+                 (function Read  -> fun _ k s -> k s s
+                         | Write -> fun s k _ -> k () s
+                         | Raise -> fun e k s -> (None, s)) s0
+
+(* And into pure *)
+let runSTE_pure #a (f: unit -> Alg a [Raise; Write; Read]) (s0:state) : option a & state =
+  run (fun () -> runSTE f s0)
+
+
+(*** Interps into other effects *)
 
 let interp_pure_tree #a (t : tree a []) : Tot a =
   match t with
@@ -378,11 +633,16 @@ let interp_all #a (f : unit -> Alg a [Read;Write;Raise]) (s:state) : Tot (option
   //let (| _, _, a |) = action_of l in
   //handler_ty a b labs
 
+
+
+
+(*** Other ways to define handlers *)
+
 (* A generic handler for a (single) label l. Anyway a special case of
-handle_with. *)
+handle_tree. *)
 val handle (#a #b:_) (#labs:_) (o:op)
            (f:tree a (o::labs))
-           (h:handler_ty_l o b labs)
+           (h:handler_tree_op o b labs)
            (v: a -> tree b labs)
            : tree b labs
 let rec handle #a #b #labs l f h v =
@@ -400,11 +660,11 @@ let rec handle #a #b #labs l f h v =
     end
 
 (* Easy enough to handle 2 labels at once. Again a special case of
-handle_with too. *)
+handle_tree too. *)
 val handle2 (#a #b:_) (#labs:_) (l1 l2 : op)
            (f:tree a (l1::l2::labs))
-           (h1:handler_ty_l l1 b labs)
-           (h2:handler_ty_l l2 b labs)
+           (h1:handler_tree_op l1 b labs)
+           (h2:handler_tree_op l2 b labs)
            (v : a -> tree b labs)
            : tree b labs
 let rec handle2 #a #b #labs l1 l2 f h1 h2 v =
@@ -431,46 +691,14 @@ let catch0' #a #labs (t1 : tree a (Raise::labs))
 let catch0'' #a #labs (t1 : tree a (Raise::labs))
                       (t2 : tree a labs)
   : tree a labs
-  = handle_with t1
+  = handle_tree t1
                 (fun x -> Return x)
                 (function Raise -> (fun i k -> t2)
                         | act -> (fun i k -> Op act i k))
 
-let fmap #a #b #labs (f : a -> b) (t : tree a labs) : tree b labs =
-  bind _ _ #_ #labs t (fun x -> Return (f x))
 
-let join #a #labs (t : tree (tree a labs) labs) : tree a labs =
-  bind _ _ t (fun x -> x)
 
-let app #a #b #labs (t : tree (a -> b) labs) (x:a) : tree b labs =
-  fmap (fun f -> f x) t
-
-let frompure #a (t : tree a []) : a =
-  match t with
-  | Return x -> x
-
-(* Handling Read/Write into the state monad. There is some noise in the
-handler, but it's basically interpreting [Read () k] as [\s -> k s s]
-and similarly for Write. The only tricky thing is the stacking of [tree]
-involved. *)
-let catchST2 #a #labs (f : tree a (Read::Write::labs))
-  : tree (state -> tree (a & state) labs) labs
-  = handle2 Read Write f
-            (fun _ k -> Return (fun s -> bind _ _ (k s)  (fun f -> f s)))
-            (fun s k -> Return (fun _ -> bind _ _ (k ()) (fun f -> f s)))
-            (fun x ->   Return (fun s0 -> Return (x, s0)))
-
-(* Since this is a monad, we can apply the internal function and
-then collapse the computations to get a more familiar looking catchST *)
-let catchST2' #a #labs (f : tree a (Read::Write::labs)) (s0:state)
-  : tree (a & state) labs
-  = join (app (catchST2 f) s0)
-
-(* And of course into a pure tree if no labels remain *)
-let catchST2_emp #a
-  (f : tree a (Read::Write::[]))
-  : state -> a & state
-  = fun s0 -> frompure (catchST2' f s0)
+(*** Connection to Lattice *)
 
 let baseop = o:op{not (Other? o)}
 
@@ -488,8 +716,8 @@ let trlabs  = List.Tot.map trlab
 let trlabs' = List.Tot.map trlab'
 
 let rec lab_corr (l:baseop) (ls:list baseop)
-  : Lemma (mem l ls <==> mem (trlab l) (trlabs ls))
-          [SMTPat (mem l ls)] // needed for interp_into_lattice_tree below
+  : Lemma (l `memP` ls <==> (trlab l) `mem` (trlabs ls))
+          [SMTPat (l `memP` ls)] // needed for interp_into_lattice_tree below
   = match ls with
     | [] -> ()
     | l1::ls -> lab_corr l ls
@@ -500,15 +728,15 @@ let rec lab_corr (l:baseop) (ls:list baseop)
 let fixup : list baseop -> ops = List.Tot.map #baseop #op (fun x -> x)
 
 let rec fixup_corr (l:baseop) (ls:list baseop)
-  : Lemma (mem l (fixup ls) <==> mem l ls)
-          [SMTPat (mem l (fixup ls))]
+  : Lemma (l `memP` (fixup ls) <==> l `memP` ls)
+          [SMTPat (l `memP` (fixup ls))]
   = match ls with
     | [] -> ()
     | l1::ls -> fixup_corr l ls
     
 let rec fixup_no_other (l:op{Other? l}) (ls:list baseop)
-  : Lemma (mem l (fixup ls) <==> False)
-          [SMTPat (mem l (fixup ls))]
+  : Lemma (l `memP` (fixup ls) <==> False)
+          [SMTPat (l `memP` (fixup ls))]
   = match ls with
     | [] -> ()
     | l1::ls -> fixup_no_other l ls
@@ -551,9 +779,9 @@ let interp_full #a (#labs:list baseop)
 type sem0 (a:Type) : Type = state -> Tot (either exn a & state)
 
 let abides' (f : sem0 'a) (labs:list baseop) : prop =
-    (mem Read  labs \/ (forall s0 s1. fst (f s0) == fst (f s1)))
-  /\ (mem Write labs \/ (forall s0. snd (f s0) == s0))
-  /\ (mem Raise labs \/ (forall s0. Inr? (fst (f s0))))
+    (Read  `memP` labs \/ (forall s0 s1. fst (f s0) == fst (f s1)))
+  /\ (Write `memP` labs \/ (forall s0. snd (f s0) == s0))
+  /\ (Raise `memP` labs \/ (forall s0. Inr? (fst (f s0))))
 
 type sem (a:Type) (labs : list baseop) = r:(sem0 a){abides' r labs}
 
@@ -582,260 +810,3 @@ let interp_from_lattice_tree #a #labs
      match r with
      | Some x -> Op Write s1 (fun _ -> Return x)
      | None   -> Op Write s1 (fun _ -> Op Raise (Failure "") (fun x -> match x with))) // empty match
-
-let read_handler (b:Type)
-                 (labs:ops)
-                 (s0:state)
-   : handler_ty_l Read b labs
-   = fun _ k -> k s0
-
-let handle_read (a:Type)
-                (labs:ops)
-                (f:tree a (Read::labs))
-                (h:handler_ty_l Read a labs)
-   : tree a labs
-   = handle Read f h (fun x -> Return x)
-
-
-let weaken #a #labs l (f:tree a labs) : tree a (l::labs) =
-  assert(l::labs == [l]@labs);
-  f
-
-let write_handler (a:Type)
-                  (labs:ops)
-  : handler_ty_l Write a labs
-  = fun s k -> handle_read a labs (weaken Read (k())) (read_handler a labs s)
-
-
-let handle_write (a:Type)
-                (labs:ops)
-                (f:tree a (Write::labs))
-   : tree a labs
-   = handle Write f (write_handler a labs) (fun x -> Return x)
-
-let handle_st (a:Type)
-              (labs: ops)
-              (f:tree a (Write::Read::labs))
-              (s0:state)
-   : tree a labs
-   = handle_read _ _ (handle_write _ _ f) (fun _ k -> k s0)
-
-
-let widen_handler (#b:_) (#labs0 #labs1:_)
-                  (h:handler_ty labs0 b labs1)
-    : handler_ty (labs0@labs1) b labs1
-    = fun op i k ->
-       if mem op labs0 then h op i k
-       else Op op i k
-                  
-let handle_sub (#a #b:_) (#labs0 #labs1:_)
-               (f:tree a (labs0@labs1))
-               (v: a -> tree b labs1)
-               (h:handler_ty labs0 b labs1)
-    : tree b labs1
-    = handle_with f v (widen_handler h)
-
-
-let widen_handler_1 (#b:_) (#o:op) (#labs1:_)
-                       (h:handler_ty_l o b labs1)
-    : handler_ty (o::labs1) b labs1
-    = fun op' i k ->
-       if op'=o then h i k
-       else Op op' i k
-
-let handle_one (#a:_) (#o:op) (#labs1:_)
-               (f:tree a (o::labs1))
-               (h:handler_ty_l o a labs1)
-    : tree a labs1
-    = handle_with f (fun x -> Return x) (widen_handler_1 h)
-
-let append_single (a:Type) (x:a) (l:list a)
-  : Lemma (x::l == [x]@l)
-          [SMTPat (x::l)]
-  = ()
-let handle_raise #a #labs (f : tree a (Raise::labs)) (g : tree a labs)
-   : tree a labs
-   = handle_one f (fun _ _ -> g)
-let handle_read' (#a:Type)  (#labs:ops) (f:tree a (Read::labs)) (s:state)
-   : tree a labs
-   = handle_one f (fun _ k -> k s)
-let handle_write' (#a:Type)  (#labs:ops) (f:tree a (Write::labs))
-   : tree a labs
-   = handle_one f (fun s k -> handle_read' (k()) s)
-
-let try_catch #a #labs (f:unit -> Alg a (Raise::labs)) (g:unit -> Alg a labs)
-  : Alg a labs
-  = Alg?.reflect (handle_raise (reify (f())) (reify (g())))
-
-let handle_raise_none #a () : Alg (option a & state) [Read] = let s = get () in None, s
-
-let handle_return #a (x:a) : tree (option a & state) [Write;Read] =
-   Op Read () (fun s -> Return (Some x, s))
-
-let handler_raise #a : handler_ty ([Raise]@[Write;Read]) (option a & state) ([Write]@[Read]) =
-  fun o i k -> 
-    match o with
-    | Raise -> Op Read () (fun s -> Return (None, s))
-    | _ -> Op o i k
-    
-let handler_raise_write #a : handler_ty [Raise; Write] (option a & state) ([Write]@[Read]) =
-  fun o i k -> 
-    match o with
-    | Raise -> Op Read () (fun s -> Return (None, s))
-    | Write -> handle_write' (k())
-
-let run_tree #a (f:tree a ([Raise;Write;Read])) (s0:state) : option a & state =
-  match handle_read'  (handle_write' (handle_with f handle_return handler_raise)) s0 with 
-  | Return x -> x
-  
-let run #a #labs (f:unit -> Alg a ([Raise;Write;Read])) (s0:state) : option a & state =
-  run_tree (reify (f())) s0
-  
-
-let run_tree2 #a (f:tree a ([Raise;Write;Read])) (s0:state) : option a & state =
-  let t' =
-    (* Inference bug? *)
-    handle_with #_ #(state -> tree _ _) #_ #_
-              f (fun x -> Return (fun s0 -> Return (Some x, s0)))
-                (function Read  -> fun _ k -> Return (fun s -> bind _ _ (k s)  (fun f -> f s))
-                        | Write -> fun s k -> Return (fun _ -> bind _ _ (k ()) (fun f -> f s))
-                        | Raise -> fun e k -> Return (fun s -> Return (None, s)))
-  in
-  frompure (frompure t' s0)
-
-let run_tree2' #a (f:tree a ([Raise;Write;Read])) (s0:state) : option a & state =
-  fold_with #_ #(state -> option a & state) #_
-            f (fun x s0 -> (Some x, s0))
-              (function Read -> fun () k s0 -> k s0 s0
-                      | Write -> fun s k _ -> k () s
-                      | Raise -> fun e k s0 -> (None, s0)) s0
-  
-let run2 #a #labs (f:unit -> Alg a ([Raise;Write;Read])) (s0:state) : option a & state =
-  run_tree2 (reify (f())) s0
-
-let hty_l (o:op) (b:Type) (labs:ops) =
-  op_inp o -> (op_out o -> Alg b labs) -> Alg b labs
-
-let hty (labs0 : ops) (b:Type) (labs1 : ops) : Type =
-  o:op{mem o labs0} -> hty_l o b labs1
-
-
-
-
-
-
-
-
-
-
-#set-options "--debug Alg --debug_level High"
-
-
-let min (a:Type) : hty_l Raise (state -> Alg (option a & state) []) []
-  = fun s k ->
-     //let r =
-       fun s -> (None, s)
-     //in
-     //r
-
-(*****
-
-
-
-let reflect_k #a #b #labs1 (k : op_out a -> tree b labs1)
-  : op_out a -> Alg b labs1
-  = fun o -> Alg?.reflect (k o)
-  
-let reify_k #a #b #labs1 (k : op_out a -> Alg b labs1)
-  : op_out a -> tree b labs1
-  = fun o -> reify (k o)
-  
-let hty_to_handler_ty #labs0 #b #labs1 (h:hty labs0 b labs1) : handler_ty labs0 b labs1=
-  fun a i k -> reify (h a i (reflect_k k))
-  
-let handler_ty_to_hty #labs0 #b #labs1 (h:handler_ty labs0 b labs1) : hty labs0 b labs1=
-  fun a i k -> Alg?.reflect (h a i (reify_k k))
-  
-let ehandle_with (#a #b:_) (#labs0 #labs1 : ops)
-           (f : unit -> Alg a labs0)
-           (v : a -> Alg b labs1)
-           (h: hty labs0 b labs1)
-  : Alg b labs1
-  =
-  let t : tree a labs0 = reify (f ()) in
-  let v : a -> tree b labs1 = fun x -> reify (v x) in
-  let h : handler_ty labs0 b labs1 = hty_to_handler_ty h in
-  Alg?.reflect (handle_with t v h)
-
-let hh #a #labs (g : unit -> Alg a labs) : hty (Raise::labs) a labs =
-    (function Raise -> fun _ k -> g ()
-            | op   -> fun i k -> k (geneff op i))
-
-    let exnvc #a #labs (x:a) : Alg a labs =
-      x
-      
-let try_catch' : (#a:_) -> (#labs:_) -> 
-                 (f : (unit -> Alg a (Raise::labs))) ->
-                 (g:unit -> Alg a labs) -> Alg a labs
-                 by (dump "")
-  = fun #a #labs f g ->
-    ehandle_with #a #a #(Raise::labs) #labs
-                 f
-                 (exnvc #a #labs)
-                 (hh #a #labs g)
-
-let vc #a : a -> Alg (state -> Alg (option a & state) []) [] =
-  fun x -> let f = fun s -> (Some x, s) in f
-
-let stexn_tree_handler (a:Type) : handler_ty [Write;Read;Raise] (state -> tree (option a & state) []) [] =
-  (function Read  -> (fun _ k -> Return (fun s -> bind _ _ (k s)  (fun f -> f s)))
-          | Write -> (fun s k -> Return (fun _ -> bind _ _ (k ()) (fun f -> f s)))
-          | Raise -> (fun s k -> Return (fun s -> Return (None, s))))
-          
-let stexn_alg_handler (a:Type)
-  : hty [Raise; Write] (state -> Alg (option a & state) []) []
-  =
-  (function
-          | Raise -> (fun s k -> let r = (fun s -> (None, s)) in r))
-
-let stexn_value_case (a:Type) : a -> tree (state -> tree (option a & state) []) [] =
-  (fun x -> Return (fun s0 -> Return (Some x, s0)))
-
-let refl_value_case (#a #b #labs : _) (v : (a -> tree b labs)) : a -> Alg b labs =
-  fun x -> Alg?.reflect (v x)
-
-let cheating0 #a (f: unit -> Alg a [Raise; Write; Read]) : Alg (state -> tree (option a & state) []) [] =
-  ehandle_with #_ #_ #[Raise;Write;Read] #_
-               f
-               (refl_value_case (stexn_value_case a))
-               (handler_ty_to_hty (stexn_tree_handler a))
-                 
-let cheating1 #a (f: unit -> Alg a [Raise; Write; Read]) : Alg (state -> tree (option a & state) []) [] =
-  ehandle_with f
-               (fun (x:a) -> _)
-               (handler_ty_to_hty (stexn_tree_handler a))
-
-
-let hh #a (o:op{mem o [Raise; Read]}) (i:op_inp o) (k : op_out o -> Alg (state -> Alg (option a & state) []) [])
-  : Alg (state -> Alg (option a & state) []) []
-  = match o with
-    | Raise -> let f = fun s -> (None, s) in f
-    | Read  -> let r (s:state)
-                : Alg (option a & state) []
-                = let f = k s in f s
-              in r
-
-
-    | Write -> fun _ -> let f = k () in f i
-
-let run_tree2'' #a (f: unit -> Alg a [Raise; Write; Read]) : Alg (state -> Alg (option a & state) []) [] =
-  ehandle_with #a #(state -> Alg (option a & state) []) #[Raise; Write; Read] #[]
-    f vc hh
-
-
-
-  ehandle_with f (fun x s -> (Some x, s))
-                 (function Read () k s -> k s s
-                         | Write s k _ -> k () s
-                         | Raise e k s -> (None, s))
-                
