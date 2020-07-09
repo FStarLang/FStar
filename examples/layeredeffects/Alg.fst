@@ -441,10 +441,10 @@ let runST2 #a #labs (f: unit -> Alg a (Read::Write::[])) (s0:state)
 
 (* We can interpret state+exceptions as monadic computations in the two usual ways: *)
 
-let run_stexn #a (f : unit -> Alg a [Raise; Write; Read]) (s_0:state) : option (a & state) =
+let run_stexn #a (f : unit -> Alg a [Write; Raise; Read]) (s_0:state) : option (a & state) =
   run (fun () -> catchE (fun () -> catchST f s_0))
 
-let run_exnst #a (f : unit -> Alg a [Raise; Write; Read]) (s_0:state) : option a & state =
+let run_exnst #a (f : unit -> Alg a [Write; Raise; Read]) (s_0:state) : option a & state =
   run (fun () -> catchST (fun () -> catchE f) s_0)
 
 (***** There are many other ways in which to program with
