@@ -357,7 +357,7 @@ type raw_error =
   | Error_IllSMTPat 
   | Error_IllScopedTerm 
   | Warning_UnusedLetRec 
-  | Fatal_PolymonadicBind_conflict 
+  | Fatal_Effects_Ordering_Coherence 
   | Warning_BleedingEdge_Feature 
   | Warning_IgnoredBinding 
   | Warning_AbstractQualifier 
@@ -1951,10 +1951,10 @@ let (uu___is_Error_IllScopedTerm : raw_error -> Prims.bool) =
 let (uu___is_Warning_UnusedLetRec : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with | Warning_UnusedLetRec -> true | uu____2031 -> false
-let (uu___is_Fatal_PolymonadicBind_conflict : raw_error -> Prims.bool) =
+let (uu___is_Fatal_Effects_Ordering_Coherence : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | Fatal_PolymonadicBind_conflict -> true
+    | Fatal_Effects_Ordering_Coherence -> true
     | uu____2037 -> false
 let (uu___is_Warning_BleedingEdge_Feature : raw_error -> Prims.bool) =
   fun projectee ->
@@ -2330,7 +2330,7 @@ let (default_settings : error_setting Prims.list) =
   (Error_IllSMTPat, CError, (Prims.of_int (326)));
   (Error_IllScopedTerm, CError, (Prims.of_int (327)));
   (Warning_UnusedLetRec, CWarning, (Prims.of_int (328)));
-  (Fatal_PolymonadicBind_conflict, CError, (Prims.of_int (329)));
+  (Fatal_Effects_Ordering_Coherence, CError, (Prims.of_int (329)));
   (Warning_BleedingEdge_Feature, CWarning, (Prims.of_int (330)));
   (Warning_IgnoredBinding, CWarning, (Prims.of_int (331)));
   (Warning_AbstractQualifier, CWarning, (Prims.of_int (332)));

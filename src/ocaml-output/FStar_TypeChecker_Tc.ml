@@ -4116,6 +4116,7 @@ let (add_sigelt_to_env :
                        env2)
               | FStar_Syntax_Syntax.Sig_sub_effect sub ->
                   FStar_TypeChecker_Util.update_env_sub_eff env1 sub
+                    se.FStar_Syntax_Syntax.sigrng
               | FStar_Syntax_Syntax.Sig_polymonadic_bind
                   (m, n, p, uu____4716, ty) ->
                   FStar_TypeChecker_Util.update_env_polymonadic_bind env1 m n
