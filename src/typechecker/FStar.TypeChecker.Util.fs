@@ -3067,7 +3067,10 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
 
 
 let update_env_sub_eff env sub r =
-  Env.update_effect_lattice ({ env with range = r }) sub.source sub.target (get_mlift_for_subeff env sub)
+  let r0 = env.range in
+  let env = Env.update_effect_lattice
+    ({ env with range = r }) sub.source sub.target (get_mlift_for_subeff env sub) in
+  { env with range = r0 }
 
 let update_env_polymonadic_bind env m n p ty =
   Env.add_polymonadic_bind env m n p
