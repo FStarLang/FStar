@@ -10,7 +10,7 @@ module T = FStar.Tactics
 module ID5 = ID5
 open Alg
 
-type rwtree a = Alg.tree a [Read;Write]
+type rwtree a = Alg.tree a [Read; Write]
 let tbind : #a:_ -> #b:_ -> rwtree a -> (a -> rwtree b) -> rwtree b = fun c f -> Alg.bind _ _ c f
 
 let st_wp (a:Type) : Type = state -> (a & state -> Type0) -> Type0
@@ -37,9 +37,14 @@ let rec interp_as_wp #a (t : rwtree a) : st_wp a =
     bind_wp read_wp (fun s -> WF.axiom1 k s; interp_as_wp (k s))
   | Op Write s k ->
     bind_wp (write_wp s) (fun (o:unit) -> WF.axiom1 k o; interp_as_wp (k o))
-    
-let interp_as_fun #a (t : rwtree a) : (state -> a & state) =
-  Alg.interp_rdwr_tree t
+
+(* With handlers. Can only be done into []? See the use of `run`. *)
+let interp_as_wp2 #a (t : rwtree a) : Alg (st_wp a) [] =
+  handle_with #a #(st_wp a) #[Read; Write] #[]
+              (fun () -> Alg?.reflect t)
+              (fun x -> return_wp x)
+              (function Read  -> (fun i k -> bind_wp read_wp (fun s -> run (fun () -> k s)))
+                      | Write -> (fun i k -> bind_wp (write_wp i) (fun _ -> run k)))
 
 (* Bug: defining this as a FStar.Preorder.preorder
 causes stupid failures ahead *)

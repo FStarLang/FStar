@@ -1,6 +1,6 @@
 module AlgHeap
 
-(* An algebraic presentation of ALL using action trees. *)
+(* Essentially a copy of AlgForAll but using a heap for the state *)
 
 open Common
 open FStar.Tactics
@@ -462,3 +462,10 @@ let soundness #a #wp (t : unit -> AlgWP a wp)
   : Tot (s0:state -> ID5.ID (a & state) (wp s0))
   = let c = reify (t ()) in
     interp_sem c
+
+(* Same as above, but one doesn't have to think about WPs *)
+let soundnessPP #a #pre #post (t : unit -> AlgPP a pre post)
+  : s0:state{pre s0} -> r:(a & state){post s0 (fst r) (snd r)}
+  = fun s0 -> reify (soundness #a #(fun h0 p -> pre h0 /\ (forall y h1. post h0 y h1 ==> p (y, h1))) t s0)
+                 (fun r -> post s0 (fst r) (snd r))
+                 ()
