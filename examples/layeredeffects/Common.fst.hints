@@ -1,6 +1,18 @@
 [
-  "γ\u0013\u0015L+χ\u001c«σω/VU) ω",
+  "\u0012²2λ!<\u0017°_\f@\u0010\u0002»»",
   [
+    [
+      "Common.coerce",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
+      ],
+      0,
+      "31284a7dc6dc5515ea94c3c62c6b4077"
+    ],
     [
       "Common.elim_pure",
       1,
@@ -18,7 +30,7 @@
         "typing_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec"
       ],
       0,
-      "d8e575c228781f4475bd1fe6e64ad406"
+      "bde79624b402bc1d3d66c9b8e9a1aff9"
     ],
     [
       "Common.bind_pure",
@@ -42,7 +54,7 @@
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "681be8d826d1f561830afc9a2b57ae98"
+      "f4f43e77b7ec99b03ef4d552266ae55b"
     ],
     [
       "Common.return_pure",
@@ -51,7 +63,7 @@
       1,
       [ "@query" ],
       0,
-      "c7a2b52325b1b86dcbc02c1cd6e3dcef"
+      "5cdf49ee49cb62fd2430ca7b98ed5a96"
     ]
   ]
 ]
