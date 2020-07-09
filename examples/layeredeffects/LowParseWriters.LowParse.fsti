@@ -72,34 +72,34 @@ val contents_size
   [SMTPat (contents p h b pos pos')]
 
 inline_for_extraction
-val emp' : parser' unit
+val parse_empty' : parser' unit
 
 inline_for_extraction
-let emp : parser = Parser unit emp'
+let parse_empty : parser = Parser unit parse_empty'
 
-val valid_emp
+val valid_parse_empty
   (h: HS.mem)
   (b: B.buffer u8)
   (pos: U32.t)
   (pos' : U32.t)
 : Lemma
   (
-    valid_pos emp h b pos pos' <==> (
+    valid_pos parse_empty h b pos pos' <==> (
     B.live h b /\
     U32.v pos <= B.length b /\
     U32.v pos' == U32.v pos
   ))
-  [SMTPat (valid_pos emp h b pos pos')]
+  [SMTPat (valid_pos parse_empty h b pos pos')]
 
-val size_emp : squash (size emp () == 0)
-
-inline_for_extraction
-val star' (#t1 #t2: Type) (p1: parser' t1) (p2: parser' t2) : Tot (parser' (t1 & t2))
+val size_parse_empty : squash (size parse_empty () == 0)
 
 inline_for_extraction
-let star (p1 p2: parser) : Tot parser = Parser (Parser?.t p1 & Parser?.t p2) (star' (Parser?.p p1) (Parser?.p p2))
+val parse_pair' (#t1 #t2: Type) (p1: parser' t1) (p2: parser' t2) : Tot (parser' (t1 & t2))
 
-val valid_star
+inline_for_extraction
+let parse_pair (p1 p2: parser) : Tot parser = Parser (Parser?.t p1 & Parser?.t p2) (parse_pair' (Parser?.p p1) (Parser?.p p2))
+
+val valid_parse_pair
   (p1 p2: parser)
   (h: HS.mem)
   (b: B.buffer U8.t)
@@ -112,17 +112,17 @@ val valid_star
   (ensures (
     valid_pos p1 h b pos1 pos2 /\
     valid_pos p2 h b pos2 pos3 /\
-    valid_pos (p1 `star` p2) h b pos1 pos3 /\
-    contents (p1 `star` p2) h b pos1 pos3 == (contents p1 h b pos1 pos2, contents p2 h b pos2 pos3)
+    valid_pos (p1 `parse_pair` p2) h b pos1 pos3 /\
+    contents (p1 `parse_pair` p2) h b pos1 pos3 == (contents p1 h b pos1 pos2, contents p2 h b pos2 pos3)
   ))
 
-val size_star
+val size_parse_pair
   (p1 p2: parser)
   (x1: Parser?.t p1)
   (x2: Parser?.t p2)
 : Lemma
-  (size (p1 `star` p2) (x1, x2) == size p1 x1 + size p2 x2)
-  [SMTPat (size (p1 `star` p2) (x1, x2))]
+  (size (p1 `parse_pair` p2) (x1, x2) == size p1 x1 + size p2 x2)
+  [SMTPat (size (p1 `parse_pair` p2) (x1, x2))]
 
 val valid_ext
   (p: parser)
@@ -246,37 +246,37 @@ let leaf_writer
 
 val write_u32 : leaf_writer parse_u32
 
-val valid_star_inv_spec
+val valid_parse_pair_inv_spec
   (h: HS.mem)
   (p1 p2: parser)
   (b: B.buffer U8.t)
   (pos1 pos3: U32.t)
 : Ghost U32.t
   (requires (
-    valid_pos (p1 `star` p2) h b pos1 pos3
+    valid_pos (p1 `parse_pair` p2) h b pos1 pos3
   ))
   (ensures (fun pos2 ->
     valid_pos p1 h b pos1 pos2 /\
     valid_pos p2 h b pos2 pos3 /\
-    contents (p1 `star` p2) h b pos1 pos3 == (contents p1 h b pos1 pos2, contents p2 h b pos2 pos3)
+    contents (p1 `parse_pair` p2) h b pos1 pos3 == (contents p1 h b pos1 pos2, contents p2 h b pos2 pos3)
   ))
 
 inline_for_extraction
-val valid_star_inv
+val valid_parse_pair_inv
   (p1 p2: parser)
   (b: B.buffer U8.t)
   (len: U32.t { len == B.len b })
   (pos1 pos3: U32.t)
 : HST.Stack U32.t
   (requires (fun h ->
-    valid_pos (p1 `star` p2) h b pos1 pos3
+    valid_pos (p1 `parse_pair` p2) h b pos1 pos3
   ))
   (ensures (fun h pos2 h' ->
     B.modifies B.loc_none h h' /\
-    pos2 == valid_star_inv_spec h p1 p2 b pos1 pos3 /\
+    pos2 == valid_parse_pair_inv_spec h p1 p2 b pos1 pos3 /\
     valid_pos p1 h b pos1 pos2 /\
     valid_pos p2 h b pos2 pos3 /\
-    contents (p1 `star` p2) h b pos1 pos3 == (contents p1 h b pos1 pos2, contents p2 h b pos2 pos3)
+    contents (p1 `parse_pair` p2) h b pos1 pos3 == (contents p1 h b pos1 pos2, contents p2 h b pos2 pos3)
   ))
 
 let valid_buffer

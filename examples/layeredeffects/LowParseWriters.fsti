@@ -1334,12 +1334,12 @@ let frame_out
   (frame: parser)
   (p: (parser))
 : Tot parser
-= frame `star` p
+= frame `parse_pair` p
 
 unfold
 let frame_pre
   (frame: parser)
-  (pre: pre_t emp)
+  (pre: pre_t parse_empty)
 : Tot (pre_t frame)
 = fun _ -> pre ()
 
@@ -1347,32 +1347,32 @@ unfold
 let frame_post
   (a: Type)
   (frame: parser)
-  (pre: pre_t emp)
+  (pre: pre_t parse_empty)
   (p: parser)
-  (post: post_t a emp p pre)
+  (post: post_t a parse_empty p pre)
 : Tot (post_t a frame (frame_out a frame p) (frame_pre frame pre))
 = fun v_in v (v_in', v_out) -> v_in == v_in' /\ post () v v_out
 
 unfold
 let frame_post_err
   (frame: parser)
-  (pre: pre_t emp)
-  (post_err: post_err_t emp pre)
+  (pre: pre_t parse_empty)
+  (post_err: post_err_t parse_empty pre)
 : Tot (post_err_t frame (frame_pre frame pre))
 = fun _ -> post_err ()
 
 let frame_spec
   (a: Type)
   (frame: parser)
-  (pre: pre_t emp)
+  (pre: pre_t parse_empty)
   (p: parser)
-  (post: post_t a emp p pre)
-  (post_err: post_err_t emp pre)
+  (post: post_t a parse_empty p pre)
+  (post_err: post_err_t parse_empty pre)
   (l: memory_invariant)
-  (inner: unit -> EWrite a emp p pre post post_err l)
+  (inner: unit -> EWrite a parse_empty p pre post post_err l)
 : Tot (repr_spec a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) (frame_post_err frame pre post_err))
 = fun fr ->
-  match destr_repr_spec a emp p pre post post_err l inner () with
+  match destr_repr_spec a parse_empty p pre post post_err l inner () with
   | Correct (v, w) -> Correct (v, (fr, w))
   | Error e -> Error e
 
@@ -1380,24 +1380,24 @@ inline_for_extraction
 val frame_impl
   (a: Type)
   (frame: parser)
-  (pre: pre_t emp)
+  (pre: pre_t parse_empty)
   (p: parser)
-  (post: post_t a emp p pre)
-  (post_err: post_err_t emp pre)
+  (post: post_t a parse_empty p pre)
+  (post_err: post_err_t parse_empty pre)
   (l: memory_invariant)
-  (inner: unit -> EWrite a emp p pre post post_err l)
+  (inner: unit -> EWrite a parse_empty p pre post post_err l)
 : Tot (repr_impl a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) (frame_post_err frame pre post_err) l (frame_spec a frame pre p post post_err l inner))
 
 inline_for_extraction
 let frame_repr
   (a: Type)
   (frame: parser)
-  (pre: pre_t emp)
+  (pre: pre_t parse_empty)
   (p: parser)
-  (post: post_t a emp p pre)
-  (post_err: post_err_t emp pre)
+  (post: post_t a parse_empty p pre)
+  (post_err: post_err_t parse_empty pre)
   (l: memory_invariant)
-  (inner: unit -> EWrite a emp p pre post post_err l)
+  (inner: unit -> EWrite a parse_empty p pre post post_err l)
 : Tot (unit -> EWrite a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) (frame_post_err frame pre post_err) l)
 = mk_repr
     a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) (frame_post_err frame pre post_err) l
@@ -1408,19 +1408,19 @@ inline_for_extraction
 let frame
   (a: Type)
   (frame: parser)
-  (pre: pre_t emp)
+  (pre: pre_t parse_empty)
   (p: parser)
-  (post: post_t a emp p pre)
-  (post_err: post_err_t emp pre)
+  (post: post_t a parse_empty p pre)
+  (post_err: post_err_t parse_empty pre)
   (l: memory_invariant)
-  ($inner: unit -> EWrite a emp p pre post post_err l)
+  ($inner: unit -> EWrite a parse_empty p pre post post_err l)
 : EWrite a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) (frame_post_err frame pre post_err) l
 = frame_repr a frame pre p post post_err l inner ()
 
 let elem_writer_spec
   (p: parser)
   (x: Parser?.t p)
-: Tot (repr_spec unit emp (p) (fun _ -> True) (fun _ _ y -> y == x) (fun _ -> False))
+: Tot (repr_spec unit parse_empty (p) (fun _ -> True) (fun _ _ y -> y == x) (fun _ -> False))
 = fun _ -> Correct ((), x)
 
 inline_for_extraction
@@ -1429,7 +1429,7 @@ val elem_writer_impl
   (w: leaf_writer p)
   (l: memory_invariant)
   (x: Parser?.t p)
-: Tot (repr_impl unit emp (p) (fun _ -> True) (fun _ _ y -> y == x) (fun _ -> False) l (elem_writer_spec p x))
+: Tot (repr_impl unit parse_empty (p) (fun _ -> True) (fun _ _ y -> y == x) (fun _ -> False) l (elem_writer_spec p x))
 
 inline_for_extraction
 let start
@@ -1437,9 +1437,9 @@ let start
   (w: leaf_writer p)
   (#l: memory_invariant)
   (x: Parser?.t p)
-: Write unit emp (p) (fun _ -> True) (fun _ _ y -> y == x) l
+: Write unit parse_empty (p) (fun _ -> True) (fun _ _ y -> y == x) l
 = mk_repr
-    unit emp (p) (fun _ -> True) (fun _ _ y -> y == x) (fun _ -> False) l
+    unit parse_empty (p) (fun _ -> True) (fun _ _ y -> y == x) (fun _ -> False) l
     (elem_writer_spec p x)
     (elem_writer_impl w l x)
     ()
@@ -1455,7 +1455,7 @@ let append
   (w: leaf_writer p)
   (#l: memory_invariant)
   (x: Parser?.t p)
-: Write unit fr (fr `star` p) (fun _ -> True) (fun w _ (w', x') -> w' == w /\ x' == x) l
+: Write unit fr (fr `parse_pair` p) (fun _ -> True) (fun w _ (w', x') -> w' == w /\ x' == x) l
 = frame unit fr (fun _ -> True) (p) (fun _ _ x' -> x' == x) (fun _ -> False) l (fun _ -> start w x)
 
 #pop-options
@@ -1463,7 +1463,7 @@ let append
 let write_two_ints
   (l: memory_invariant)
   (x y: U32.t)
-: Write unit emp (parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ (x', y') -> x' == x /\ y' == y) l
+: Write unit parse_empty (parse_u32 `parse_pair` parse_u32) (fun _ -> True) (fun _ _ (x', y') -> x' == x /\ y' == y) l
 = start write_u32 x;
   append write_u32 y
 
@@ -1471,7 +1471,7 @@ let write_two_ints_2
   (l: memory_invariant)
   (x y: U32.t)
   ()
-: Write unit emp (parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ _ -> True) l
+: Write unit parse_empty (parse_u32 `parse_pair` parse_u32) (fun _ -> True) (fun _ _ _ -> True) l
 = start write_u32 x;
   append write_u32 y
 
@@ -1479,7 +1479,7 @@ let write_two_ints_2_lemma_1
   (l: memory_invariant)
   (x y: U32.t)
 : Lemma
-  (destr_repr_spec unit emp (parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ _ -> True) (fun _ -> False) l (write_two_ints_2 l x y) () == Correct ((), (x, y)) )
+  (destr_repr_spec unit parse_empty (parse_u32 `parse_pair` parse_u32) (fun _ -> True) (fun _ _ _ -> True) (fun _ -> False) l (write_two_ints_2 l x y) () == Correct ((), (x, y)) )
 = admit ()  //AR: 07/03: no smt reification for layered effects
 
 let write_two_ints_2_lemma_2
@@ -1493,7 +1493,7 @@ let write_two_ints_2_lemma_2
 let write_two_ints_ifthenelse
   (l: memory_invariant)
   (x y: U32.t)
-: Write unit emp (parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ (x', y') -> x' == x /\ y' == (if U32.v x < U32.v y then x else y)) l
+: Write unit parse_empty (parse_u32 `parse_pair` parse_u32) (fun _ -> True) (fun _ _ (x', y') -> x' == x /\ y' == (if U32.v x < U32.v y then x else y)) l
 = if x `U32.lt` y
   then begin
     start write_u32 x;
@@ -1507,7 +1507,7 @@ let write_two_ints_ifthenelse_2_aux
   (l: memory_invariant)
   (x y: U32.t)
   ()
-: Write unit emp (parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ _ -> True) l
+: Write unit parse_empty (parse_u32 `parse_pair` parse_u32) (fun _ -> True) (fun _ _ _ -> True) l
 = start write_u32 x;
   if x `U32.lt` y
   then
@@ -1519,7 +1519,7 @@ let write_two_ints_ifthenelse_2_aux_lemma
   (l: memory_invariant)
   (x y: U32.t)
 : Lemma
-  (destr_repr_spec unit emp (parse_u32 `star` parse_u32) (fun _ -> True) (fun _ _ _ -> True) (fun _ -> False) l (write_two_ints_ifthenelse_2_aux l x y) () == Correct ((), (x, (if U32.v x < U32.v y then x else y))) )
+  (destr_repr_spec unit parse_empty (parse_u32 `parse_pair` parse_u32) (fun _ -> True) (fun _ _ _ -> True) (fun _ -> False) l (write_two_ints_ifthenelse_2_aux l x y) () == Correct ((), (x, (if U32.v x < U32.v y then x else y))) )
 = admit ()  //AR: 07/03: no smt reification for layered effects
 
 unfold
@@ -1609,9 +1609,9 @@ let frame'
   (p: parser)
   (l: memory_invariant)
   (f: unit ->
-    EWrite a emp p (fun _ -> True) (fun _ _ _ -> True) (fun _ -> True) l
+    EWrite a parse_empty p (fun _ -> True) (fun _ _ _ -> True) (fun _ -> True) l
   )
-: EWrite a fr (fr `star` p)
+: EWrite a fr (fr `parse_pair` p)
     (fun _ -> True)
     (fun vin v (vin', vout) ->
       vin' == vin /\
@@ -1627,7 +1627,7 @@ let frame'
 let write_two_ints_ifthenelse_2
   (l: memory_invariant)
   (x y: U32.t)
-: Write unit emp (parse_u32 `star` parse_u32)
+: Write unit parse_empty (parse_u32 `parse_pair` parse_u32)
     (fun _ -> True)
     (fun _ _ (x', y') -> x' == x /\ y' == (if U32.v x < U32.v y then x else y))
     l
@@ -1639,7 +1639,7 @@ let frame2_pre
   (frame: parser)
   (ppre: parser)
   (pre: pre_t ppre)
-: Tot (pre_t (frame `star` ppre))
+: Tot (pre_t (frame `parse_pair` ppre))
 = fun (_, x) -> pre x
 
 unfold
@@ -1650,7 +1650,7 @@ let frame2_post
   (pre: pre_t ppre)
   (p: parser)
   (post: post_t a ppre p pre)
-: Tot (post_t a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre))
+: Tot (post_t a (frame `parse_pair` ppre) (frame_out a frame p) (frame2_pre frame ppre pre))
 = fun (v_frame, v_in) v (v_frame', v_out) -> v_frame == v_frame' /\ post v_in v v_out
 
 unfold
@@ -1659,7 +1659,7 @@ let frame2_post_err
   (ppre: parser)
   (pre: pre_t ppre)
   (post_err: post_err_t ppre pre)
-: Tot (post_err_t (frame `star` ppre) (frame2_pre frame ppre pre))
+: Tot (post_err_t (frame `parse_pair` ppre) (frame2_pre frame ppre pre))
 = fun (_, x) -> post_err x
 
 let frame2_spec
@@ -1672,7 +1672,7 @@ let frame2_spec
   (post_err: post_err_t ppre pre)
   (l: memory_invariant)
   (inner: unit -> EWrite a ppre p pre post post_err l)
-: Tot (repr_spec a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) (frame2_post_err frame ppre pre post_err))
+: Tot (repr_spec a (frame `parse_pair` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) (frame2_post_err frame ppre pre post_err))
 = fun (fr, w_in) ->
   match destr_repr_spec a ppre p pre post post_err l inner w_in with
   | Correct (v, w) -> Correct (v, (fr, w))
@@ -1689,7 +1689,7 @@ val frame2_impl
   (post_err: post_err_t ppre pre)
   (l: memory_invariant)
   (inner: unit -> EWrite a ppre p pre post post_err l)
-: Tot (repr_impl a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) (frame2_post_err frame ppre pre post_err) l (frame2_spec a frame ppre pre p post post_err l inner))
+: Tot (repr_impl a (frame `parse_pair` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) (frame2_post_err frame ppre pre post_err) l (frame2_spec a frame ppre pre p post post_err l inner))
 
 inline_for_extraction
 let frame2_repr
@@ -1702,9 +1702,9 @@ let frame2_repr
   (post_err: post_err_t ppre pre)
   (l: memory_invariant)
   (inner: unit -> EWrite a ppre p pre post post_err l)
-: Tot (unit -> EWrite a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) (frame2_post_err frame ppre pre post_err) l)
+: Tot (unit -> EWrite a (frame `parse_pair` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) (frame2_post_err frame ppre pre post_err) l)
 = mk_repr
-    a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) (frame2_post_err frame ppre pre post_err) l
+    a (frame `parse_pair` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) (frame2_post_err frame ppre pre post_err) l
     (frame2_spec a frame ppre pre p post post_err l inner)
     (frame2_impl a frame ppre pre p post post_err l inner)
 
@@ -1719,18 +1719,18 @@ let frame2
   (post_err: post_err_t ppre pre)
   (l: memory_invariant)
   ($inner: unit -> EWrite a ppre p pre post post_err l)
-: EWrite a (frame `star` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) (frame2_post_err frame ppre pre post_err) l
+: EWrite a (frame `parse_pair` ppre) (frame_out a frame p) (frame2_pre frame ppre pre) (frame2_post a frame ppre pre p post) (frame2_post_err frame ppre pre post_err) l
 = frame2_repr a frame ppre pre p post post_err l inner ()
 
 noeq
 [@erasable] // very important, otherwise KReMLin will fail with argument typing
-type valid_synth_t
+type valid_rewrite_t
   (p1: parser)
   (p2: parser)
   (precond: pre_t p1)
   (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
 = {
-    valid_synth_valid:
+    valid_rewrite_valid:
       (h: HS.mem) ->
       (b: B.buffer U8.t) ->
       (pos: U32.t) ->
@@ -1747,95 +1747,95 @@ type valid_synth_t
         valid_pos p2 h b pos pos' /\
         contents p2 h b pos pos' == f x
       )));
-    valid_synth_size:
+    valid_rewrite_size:
       (x: Parser?.t p1 { precond x }) ->
       Lemma
       (size p1 x == size p2 (f x))
   }
 
-let valid_synth_implies
+let valid_rewrite_implies
   (p1: parser)
   (p2: parser)
   (precond: pre_t p1)
   (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
-  (v: valid_synth_t p1 p2 precond f)
+  (v: valid_rewrite_t p1 p2 precond f)
   (precond' : pre_t p1)
   (f' : (x: Parser?.t p1 { precond' x }) -> GTot (Parser?.t p2))
-: Pure (valid_synth_t p1 p2 precond' f')
+: Pure (valid_rewrite_t p1 p2 precond' f')
   (requires (
     (forall (x: Parser?.t p1) . precond' x ==> precond x) /\
     (forall (x: Parser?.t p1 { precond' x }) . f' x == f x)
   ))
   (ensures (fun _ -> True))
 = {
-  valid_synth_valid = (fun h b pos pos' -> v.valid_synth_valid h b pos pos');
-  valid_synth_size = (fun x -> v.valid_synth_size x);
+  valid_rewrite_valid = (fun h b pos pos' -> v.valid_rewrite_valid h b pos pos');
+  valid_rewrite_size = (fun x -> v.valid_rewrite_size x);
 }
 
-let valid_synth_compose
+let valid_rewrite_compose
   (p1: parser)
   (p2: parser)
   (precond12: pre_t p1)
   (f12: (x: Parser?.t p1 { precond12 x }) -> GTot (Parser?.t p2))
-  (v12: valid_synth_t p1 p2 precond12 f12)
+  (v12: valid_rewrite_t p1 p2 precond12 f12)
   (p3: parser)
   (precond23: pre_t p2)
   (f23: (x: Parser?.t p2 { precond23 x }) -> GTot (Parser?.t p3))
-  (v23: valid_synth_t p2 p3 precond23 f23)
-: Tot (valid_synth_t p1 p3 (fun x -> precond12 x /\ precond23 (f12 x)) (fun x -> f23 (f12 x)))
+  (v23: valid_rewrite_t p2 p3 precond23 f23)
+: Tot (valid_rewrite_t p1 p3 (fun x -> precond12 x /\ precond23 (f12 x)) (fun x -> f23 (f12 x)))
 = {
-  valid_synth_valid = (fun h b pos pos' ->
-    v12.valid_synth_valid h b pos pos';
-    v23.valid_synth_valid h b pos pos'
+  valid_rewrite_valid = (fun h b pos pos' ->
+    v12.valid_rewrite_valid h b pos pos';
+    v23.valid_rewrite_valid h b pos pos'
   );
-  valid_synth_size = (fun x ->
-    v12.valid_synth_size x;
-    v23.valid_synth_size (f12 x)
+  valid_rewrite_size = (fun x ->
+    v12.valid_rewrite_size x;
+    v23.valid_rewrite_size (f12 x)
   );
 }
 
-let valid_synth_spec
+let valid_rewrite_spec
   (p1: parser)
   (p2: parser)
   (precond: pre_t p1)
   (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
-  (v: valid_synth_t p1 p2 precond f)
+  (v: valid_rewrite_t p1 p2 precond f)
 : Tot (repr_spec unit p1 (p2) precond (fun vin _ vout -> precond vin /\ f vin == vout) (fun _ -> False))
 = fun vin ->
-    v.valid_synth_size vin;
+    v.valid_rewrite_size vin;
     Correct ((), f vin)
 
 inline_for_extraction
-val valid_synth_impl
+val valid_rewrite_impl
   (p1: parser)
   (p2: parser)
   (precond: pre_t p1)
   (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
-  (v: valid_synth_t p1 p2 precond f)
+  (v: valid_rewrite_t p1 p2 precond f)
   (inv: memory_invariant)
-: Tot (repr_impl unit p1 (p2) precond (fun vin _ vout -> precond vin /\ f vin == vout) (fun _ -> False) inv (valid_synth_spec p1 p2 precond f v))
+: Tot (repr_impl unit p1 (p2) precond (fun vin _ vout -> precond vin /\ f vin == vout) (fun _ -> False) inv (valid_rewrite_spec p1 p2 precond f v))
 
 inline_for_extraction
-let valid_synth_repr
+let valid_rewrite_repr
   (p1: parser)
   (p2: parser)
   (precond: pre_t p1)
   (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
-  (v: valid_synth_t p1 p2 precond f)
+  (v: valid_rewrite_t p1 p2 precond f)
   (inv: memory_invariant)
 : Tot (repr unit p1 (p2) precond (fun vin _ vout -> precond vin /\ f vin == vout) (fun _ -> False) inv)
-= Repr _ (valid_synth_impl p1 p2 precond f v inv)
+= Repr _ (valid_rewrite_impl p1 p2 precond f v inv)
 
 inline_for_extraction
-let valid_synth
+let valid_rewrite
   (p1: parser)
   (p2: parser)
   (precond: pre_t p1)
   (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
   (inv: memory_invariant)
-  (v: valid_synth_t p1 p2 precond f)
+  (v: valid_rewrite_t p1 p2 precond f)
 : Write unit p1 (p2) precond (fun vin _ vout -> precond vin /\ f vin == vout) inv
-= EWrite?.reflect (valid_synth_repr p1 p2 precond f v inv)
+= EWrite?.reflect (valid_rewrite_repr p1 p2 precond f v inv)
 
 inline_for_extraction
 val cast
@@ -1843,74 +1843,74 @@ val cast
   (p2: parser)
   (precond: pre_t p1)
   (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
-  (v: valid_synth_t p1 p2 precond f)
+  (v: valid_rewrite_t p1 p2 precond f)
   (inv: memory_invariant)
   (x1: ptr p1 inv { precond (deref_spec x1) })
 : Tot (x2: ptr p2 inv {
     deref_spec x2 == f (deref_spec x1)
   })
 
-let valid_synth_star_assoc_1
+let valid_rewrite_parse_pair_assoc_1
   (p1 p2 p3: parser)
-: Tot (valid_synth_t ((p1 `star` p2) `star` p3) (p1 `star` (p2 `star` p3)) (fun _ -> True) (fun ((x1, x2), x3) -> (x1, (x2, x3))))
+: Tot (valid_rewrite_t ((p1 `parse_pair` p2) `parse_pair` p3) (p1 `parse_pair` (p2 `parse_pair` p3)) (fun _ -> True) (fun ((x1, x2), x3) -> (x1, (x2, x3))))
 = {
-    valid_synth_valid = (fun h b pos pos' ->
-      let pos3 = valid_star_inv_spec h (p1 `star` p2) p3 b pos pos' in
-      let pos2 = valid_star_inv_spec h p1 p2 b pos pos3 in
-      valid_star p2 p3 h b pos2 pos3 pos';
-      valid_star p1 (p2 `star` p3) h b pos pos2 pos'
+    valid_rewrite_valid = (fun h b pos pos' ->
+      let pos3 = valid_parse_pair_inv_spec h (p1 `parse_pair` p2) p3 b pos pos' in
+      let pos2 = valid_parse_pair_inv_spec h p1 p2 b pos pos3 in
+      valid_parse_pair p2 p3 h b pos2 pos3 pos';
+      valid_parse_pair p1 (p2 `parse_pair` p3) h b pos pos2 pos'
     );
-    valid_synth_size = (fun _ -> ());
+    valid_rewrite_size = (fun _ -> ());
   }
 
-let valid_synth_star_assoc_2
+let valid_rewrite_parse_pair_assoc_2
   (p1 p2 p3: parser)
-: Tot (valid_synth_t (p1 `star` (p2 `star` p3)) ((p1 `star` p2) `star` p3) (fun _ -> True) (fun (x1, (x2, x3)) -> ((x1, x2), x3)))
+: Tot (valid_rewrite_t (p1 `parse_pair` (p2 `parse_pair` p3)) ((p1 `parse_pair` p2) `parse_pair` p3) (fun _ -> True) (fun (x1, (x2, x3)) -> ((x1, x2), x3)))
 = {
-    valid_synth_valid = (fun h b pos pos' ->
-      let pos2 = valid_star_inv_spec h p1 (p2 `star` p3) b pos pos' in
-      let pos3 = valid_star_inv_spec h p2 p3 b pos2 pos' in
-      valid_star p1 p2 h b pos pos2 pos3;
-      valid_star (p1 `star` p2) p3 h b pos pos3 pos'
+    valid_rewrite_valid = (fun h b pos pos' ->
+      let pos2 = valid_parse_pair_inv_spec h p1 (p2 `parse_pair` p3) b pos pos' in
+      let pos3 = valid_parse_pair_inv_spec h p2 p3 b pos2 pos' in
+      valid_parse_pair p1 p2 h b pos pos2 pos3;
+      valid_parse_pair (p1 `parse_pair` p2) p3 h b pos pos3 pos'
     );
-    valid_synth_size = (fun _ -> ());
+    valid_rewrite_size = (fun _ -> ());
   }
 
-let valid_synth_star_compat_l
+let valid_rewrite_parse_pair_compat_l
   (p: parser)
   (p1 p2: parser)
   (precond: pre_t p1)
   (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
-  ($v: valid_synth_t p1 p2 precond f)
-: Tot (valid_synth_t (p `star` p1) (p `star` p2) (fun (_, x) -> precond x) (fun (x, y) -> (x, f y)))
+  ($v: valid_rewrite_t p1 p2 precond f)
+: Tot (valid_rewrite_t (p `parse_pair` p1) (p `parse_pair` p2) (fun (_, x) -> precond x) (fun (x, y) -> (x, f y)))
 = {
-  valid_synth_valid = (fun h b pos pos' ->
-    let posq = valid_star_inv_spec h p p1 b pos pos' in
-    v.valid_synth_valid h b posq pos';
-    valid_star p p2 h b pos posq pos'
+  valid_rewrite_valid = (fun h b pos pos' ->
+    let posq = valid_parse_pair_inv_spec h p p1 b pos pos' in
+    v.valid_rewrite_valid h b posq pos';
+    valid_parse_pair p p2 h b pos posq pos'
   );
-  valid_synth_size = (fun xy ->
-    let (_, x) = (xy <: Parser?.t (p `star` p1)) in
-    v.valid_synth_size x
+  valid_rewrite_size = (fun xy ->
+    let (_, x) = (xy <: Parser?.t (p `parse_pair` p1)) in
+    v.valid_rewrite_size x
   );
 }
 
-let valid_synth_star_compat_r
+let valid_rewrite_parse_pair_compat_r
   (p: parser)
   (p1 p2: parser)
   (precond: pre_t p1)
   (f: (x: Parser?.t p1 { precond x }) -> GTot (Parser?.t p2))
-  ($v: valid_synth_t p1 p2 precond f)
-: Tot (valid_synth_t (p1 `star` p) (p2 `star` p) (fun (x, _) -> precond x) (fun (x, y) -> (f x, y)))
+  ($v: valid_rewrite_t p1 p2 precond f)
+: Tot (valid_rewrite_t (p1 `parse_pair` p) (p2 `parse_pair` p) (fun (x, _) -> precond x) (fun (x, y) -> (f x, y)))
 = {
-  valid_synth_valid = (fun h b pos pos' ->
-    let posp = valid_star_inv_spec h p1 p b pos pos' in
-    v.valid_synth_valid h b pos posp;
-    valid_star p2 p h b pos posp pos'
+  valid_rewrite_valid = (fun h b pos pos' ->
+    let posp = valid_parse_pair_inv_spec h p1 p b pos pos' in
+    v.valid_rewrite_valid h b pos posp;
+    valid_parse_pair p2 p h b pos posp pos'
   );
-  valid_synth_size = (fun xy ->
-    let (x, _) = (xy <: Parser?.t (p1 `star` p)) in
-    v.valid_synth_size x
+  valid_rewrite_size = (fun xy ->
+    let (x, _) = (xy <: Parser?.t (p1 `parse_pair` p)) in
+    v.valid_rewrite_size x
   );
 }
 
@@ -1953,7 +1953,7 @@ let cat_spec
   (#inv: memory_invariant)
   (#p: parser)
   (x: ptr p inv)
-: Tot (repr_spec  unit emp p (fun _ -> True) (fun _ _ vout -> vout == deref_spec x) (fun _ -> False))
+: Tot (repr_spec  unit parse_empty p (fun _ -> True) (fun _ _ vout -> vout == deref_spec x) (fun _ -> False))
 = fun _ -> Correct ((), deref_spec x)
 
 inline_for_extraction
@@ -1968,5 +1968,5 @@ let cat
   (#inv: memory_invariant)
   (#p: parser)
   (x: ptr p inv)
-: Write unit emp p (fun _ -> True) (fun _ _ vout -> vout == deref_spec x) inv
+: Write unit parse_empty p (fun _ -> True) (fun _ _ vout -> vout == deref_spec x) inv
 = EWrite?.reflect (Repr _ (cat_impl x))

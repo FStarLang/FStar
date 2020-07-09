@@ -285,17 +285,17 @@ inline_for_extraction
 let frame_impl
   (a: Type)
   (frame: parser)
-  (pre: pre_t emp)
+  (pre: pre_t parse_empty)
   (p: parser)
-  (post: post_t a emp p pre)
-  (post_err: post_err_t emp pre)
+  (post: post_t a parse_empty p pre)
+  (post_err: post_err_t parse_empty pre)
   (l: memory_invariant)
-  (inner: unit -> EWrite a emp p pre post post_err l)
+  (inner: unit -> EWrite a parse_empty p pre post post_err l)
 : Tot (repr_impl a frame (frame_out a frame p) (frame_pre frame pre) (frame_post a frame pre p post) (frame_post_err frame pre post_err) l (frame_spec a frame pre p post post_err l inner))
 = fun buf len pos ->
   let h = HST.get () in
   let buf' = B.offset buf pos in
-  match destr_repr_impl a emp p pre post post_err l inner buf' (len `U32.sub` pos) 0ul with
+  match destr_repr_impl a parse_empty p pre post post_err l inner buf' (len `U32.sub` pos) 0ul with
   | IError e -> IError e
   | IOverflow -> IOverflow
   | ICorrect x wlen ->
@@ -303,7 +303,7 @@ let frame_impl
     let pos' = pos `U32.add` wlen in
     B.loc_disjoint_loc_buffer_from_to buf 0ul pos pos (B.len buf');
     valid_frame frame h buf 0ul pos (B.loc_buffer buf') h';
-    valid_star frame (p) h' buf 0ul pos pos' ;
+    valid_parse_pair frame (p) h' buf 0ul pos pos' ;
     ICorrect x pos'
 
 #push-options "--z3rlimit 128"
@@ -339,7 +339,7 @@ let frame2_impl
   a frame ppre pre p post post_err l inner
 = fun buf len pos ->
   let h = HST.get () in
-  let pos2 = valid_star_inv frame ppre buf len 0ul pos in
+  let pos2 = valid_parse_pair_inv frame ppre buf len 0ul pos in
   let buf' = B.offset buf pos2 in
   assert (valid_pos ppre h buf pos2 pos);
   assert (valid_pos ppre h buf' 0ul (pos `U32.sub` pos2));
@@ -354,25 +354,25 @@ let frame2_impl
     let pos' = pos2 `U32.add` wlen in
     B.loc_disjoint_loc_buffer_from_to buf 0ul pos2 pos2 (B.len buf');
     valid_frame frame h buf 0ul pos2 (B.loc_buffer buf') h';
-    valid_star frame (p) h' buf 0ul pos2 pos' ;
+    valid_parse_pair frame (p) h' buf 0ul pos2 pos' ;
     ICorrect x pos'
 
 #pop-options
 
 #pop-options
 
-let valid_synth_impl
+let valid_rewrite_impl
   p1 p2 precond f v inv
 =
   fun buf len pos ->
     let h = HST.get () in
-    v.valid_synth_valid h buf 0ul pos;
+    v.valid_rewrite_valid h buf 0ul pos;
     ICorrect () pos
 
 let cast
   p1 p2 precond f v inv x1
 =
-  v.valid_synth_valid inv.h0 x1.rptr_base 0ul x1.rptr_len;
+  v.valid_rewrite_valid inv.h0 x1.rptr_base 0ul x1.rptr_len;
   x1
 
 let check_precond_spec
