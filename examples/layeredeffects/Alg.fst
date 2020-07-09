@@ -139,7 +139,7 @@ let handler_tree_op (o:op) (b:Type) (labs:ops) =
   op_inp o -> (op_out o -> tree b labs) -> tree b labs
 
 (* A (tree) handler for an operation set *)
-let handler_tree_set (labs0 : ops) (b:Type) (labs1 : ops) : Type =
+let handler_tree (labs0 : ops) (b:Type) (labs1 : ops) : Type =
   o:op{o `memP` labs0} -> handler_tree_op o b labs1
 
 (* The most generic handling construct, we use it to implement bind.
@@ -147,7 +147,7 @@ It is actually just a special case of folding. *)
 val handle_tree (#a #b:_) (#labs0 #labs1 : ops)
            ($f : tree a labs0)
            (v : a -> tree b labs1)
-           (h : handler_tree_set labs0 b labs1)
+           (h : handler_tree labs0 b labs1)
            : tree b labs1
 let handle_tree f v h = fold_with f v h
 
@@ -325,6 +325,11 @@ let defh #b #labs (#o:op{o `memP` labs})
   : handler_op o b labs
   = fun i k -> k (geneff o i)
 
+(* Of course this can also be done for trees *)
+let defh_tree #b #labs (#o:op{o `memP` labs})
+  : handler_tree_op o b labs
+  = fun i k -> Op o i k
+
 (* Another version of catch, but directly in the effect. Note that we do
 not build Op nor Return nodes, but work in a more direct style. For the
 default case, we just call the operation op with the input it received
@@ -333,8 +338,12 @@ let try_with #a #labs (f : (unit -> Alg a (Raise::labs))) (g:unit -> Alg a labs)
   : Alg a labs
   = handle_with f
                 (fun x -> x)
-                (function Raise -> fun _ k -> g ()
+                (function Raise -> fun _ _ -> g ()
                         | _     -> defh)
+
+let catchE #a #labs (f : unit -> Alg a (Raise::labs)) : Alg (option a) labs =
+  handle_with f Some (function Raise -> fun _ _ -> None
+                                   | _     -> defh)
 
 (* Repeating the examples above *)
 let test_try_with #labs (f : unit -> Alg int [Raise; Write]) : Alg int [Write] =
@@ -423,6 +432,14 @@ let runST2 #a #labs (f: unit -> Alg a (Read::Write::[])) (s0:state)
                 f (fun x s -> (x, s))
                   (function Read  -> fun _ k s -> k s s
                           | Write -> fun s k _ -> k () s) s0
+
+(* We can interpret state+exceptions as monadic computations in the two usual ways: *)
+
+let run_stexn #a (f : unit -> Alg a [Raise; Write; Read]) (s_0:state) : option (a & state) =
+  run (fun () -> catchE (fun () -> catchST f s_0))
+
+let run_exnst #a (f : unit -> Alg a [Raise; Write; Read]) (s_0:state) : option a & state =
+  run (fun () -> catchST (fun () -> catchE f) s_0)
 
 (***** There are many other ways in which to program with
 handlers, we show a few in what follows. *)
