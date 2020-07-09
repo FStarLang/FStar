@@ -281,18 +281,18 @@ let catch #a #labs (f : unit -> Alg a (Raise::labs)) (g : unit -> Alg a labs)
   = Alg?.reflect (__catch1 (reify (f ())) (reify (g ())))
 
 (* Example: get rid of the Raise *)
-let test_catch #labs (f : unit -> Alg int [Raise;Write]) : Alg int [Write] =
+let test_catch #labs (f : unit -> Alg int [Raise; Write]) : Alg int [Write] =
   let g () : Alg int [] = 42 in
   catch f g
 
 (* Or keep it... Koka-style *)
-let test_catch2 (f : unit -> Alg int [Raise;Write]) : Alg int [Raise;Write] =
+let test_catch2 (f : unit -> Alg int [Raise; Write]) : Alg int [Raise; Write] =
   let g () : Alg int [] = 42 in
   catch f g
 
 (* But of course, we have to handle if it is not in the output. *)
 [@@expect_failure [19]]
-let test_catch3 (f : unit -> Alg int [Raise;Write]) : Alg int [Write] =
+let test_catch3 (f : unit -> Alg int [Raise; Write]) : Alg int [Write] =
   let g () : Alg int [Raise] = raise (Failure "hmm") in
   catch f g
 
@@ -337,14 +337,14 @@ let try_with #a #labs (f : (unit -> Alg a (Raise::labs))) (g:unit -> Alg a labs)
                         | _     -> defh)
 
 (* Repeating the examples above *)
-let test_try_with #labs (f : unit -> Alg int [Raise;Write]) : Alg int [Write] =
+let test_try_with #labs (f : unit -> Alg int [Raise; Write]) : Alg int [Write] =
   let g () : Alg int [] = 42 in
   try_with f g
-let test_try_with2 (f : unit -> Alg int [Raise;Write]) : Alg int [Raise;Write] =
+let test_try_with2 (f : unit -> Alg int [Raise; Write]) : Alg int [Raise; Write] =
   let g () : Alg int [] = 42 in
   try_with f g
 [@@expect_failure [19]]
-let test_try_with3 (f : unit -> Alg int [Raise;Write]) : Alg int [Write] =
+let test_try_with3 (f : unit -> Alg int [Raise; Write]) : Alg int [Write] =
   let g () : Alg int [Raise] = raise (Failure "hmm") in
   try_with f g
 
@@ -521,7 +521,7 @@ let handle_write' #a #labs (f : unit -> Alg a (Write::labs))
   = handle_one f (fun s k -> handle_read' k s)
 
 let handle_return #a (x:a)
-  : Alg (option a & state) [Write;Read]
+  : Alg (option a & state) [Write; Read]
   = (Some x, get ())
 
 let handler_raise #a
@@ -537,7 +537,7 @@ let handler_raise_write #a
     | Write -> (fun i k -> handle_write' k)
 
 (* Running by handling one operation at a time *)
-let run_tree #a (f : unit -> Alg a [Raise;Write;Read]) (s0:state)
+let run_tree #a (f : unit -> Alg a [Raise; Write; Read]) (s0:state)
   : option a & state
   = run (fun () ->
      handle_read' (fun () ->
@@ -546,7 +546,7 @@ let run_tree #a (f : unit -> Alg a [Raise;Write;Read]) (s0:state)
 
 (* Running state+exceptions *)
 let runSTE #a (f: unit -> Alg a [Raise; Write; Read]) (s0:state) : Alg (option a & state) [] =
-  handle_with #_ #(state -> Alg (option a & state) []) #[Raise;Write;Read] #[]
+  handle_with #_ #(state -> Alg (option a & state) []) #[Raise; Write; Read] #[]
                f (fun x s -> (Some x, s))
                  (function Read  -> fun _ k s -> k s s
                          | Write -> fun s k _ -> k () s
@@ -574,7 +574,7 @@ let rec interp_rd_tree #a (t : tree a [Read]) (s:state) : Tot a =
 
 let interp_rd #a (f : unit -> Alg a [Read]) (s:state) : Tot a = interp_rd_tree (reify (f ())) s
 
-let rec interp_rdwr_tree #a (t : tree a [Read;Write]) (s:state) : Tot (a & state) =
+let rec interp_rdwr_tree #a (t : tree a [Read; Write]) (s:state) : Tot (a & state) =
   match t with
   | Return x -> (x, s)
   | Op Read _ k ->
@@ -584,9 +584,9 @@ let rec interp_rdwr_tree #a (t : tree a [Read;Write]) (s:state) : Tot (a & state
     FStar.WellFounded.axiom1 k ();
     interp_rdwr_tree (k ()) s
 
-let interp_rdwr #a (f : unit -> Alg a [Read;Write]) (s:state) : Tot (a & state) = interp_rdwr_tree (reify (f ())) s
+let interp_rdwr #a (f : unit -> Alg a [Read; Write]) (s:state) : Tot (a & state) = interp_rdwr_tree (reify (f ())) s
 
-let rec interp_read_raise_tree #a (t : tree a [Read;Raise]) (s:state) : either exn a =
+let rec interp_read_raise_tree #a (t : tree a [Read; Raise]) (s:state) : either exn a =
   match t with
   | Return x -> Inr x
   | Op Read _ k ->
@@ -595,10 +595,10 @@ let rec interp_read_raise_tree #a (t : tree a [Read;Raise]) (s:state) : either e
   | Op Raise e k ->
     Inl e
 
-let interp_read_raise_exn #a (f : unit -> Alg a [Read;Raise]) (s:state) : either exn a =
+let interp_read_raise_exn #a (f : unit -> Alg a [Read; Raise]) (s:state) : either exn a =
   interp_read_raise_tree (reify (f ())) s
 
-let rec interp_all_tree #a (t : tree a [Read;Write;Raise]) (s:state) : Tot (option a & state) =
+let rec interp_all_tree #a (t : tree a [Read; Write; Raise]) (s:state) : Tot (option a & state) =
   match t with
   | Return x -> (Some x, s)
   | Op Read _ k ->
@@ -610,7 +610,7 @@ let rec interp_all_tree #a (t : tree a [Read;Write;Raise]) (s:state) : Tot (opti
   | Op Raise e k ->
     (None, s)
 
-let interp_all #a (f : unit -> Alg a [Read;Write;Raise]) (s:state) : Tot (option a & state) = interp_all_tree (reify (f ())) s
+let interp_all #a (f : unit -> Alg a [Read; Write; Raise]) (s:state) : Tot (option a & state) = interp_all_tree (reify (f ())) s
 
 //let action_input (a:action 'i 'o) = 'i
 //let action_output (a:action 'i 'o) = 'o
@@ -804,7 +804,7 @@ a fully normalized tree *)
 
 let interp_from_lattice_tree #a #labs
   (t : L.repr a labs)
-  : tree a [Read;Raise;Write] // conservative
+  : tree a [Read; Raise; Write] // conservative
   = Op Read () (fun s0 ->
      let (r, s1) = t s0 in
      match r with
