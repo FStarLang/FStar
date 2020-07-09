@@ -687,6 +687,155 @@ let handler_raise_write #a : handler_ty [Raise; Write] (option a & state) ([Writ
 let run_tree #a (f:tree a ([Raise;Write;Read])) (s0:state) : option a & state =
   match handle_read'  (handle_write' (handle_with f handle_return handler_raise)) s0 with 
   | Return x -> x
+  
 let run #a #labs (f:unit -> Alg a ([Raise;Write;Read])) (s0:state) : option a & state =
   run_tree (reify (f())) s0
   
+
+let run_tree2 #a (f:tree a ([Raise;Write;Read])) (s0:state) : option a & state =
+  let t' =
+    (* Inference bug? *)
+    handle_with #_ #(state -> tree _ _) #_ #_
+              f (fun x -> Return (fun s0 -> Return (Some x, s0)))
+                (function Read  -> fun _ k -> Return (fun s -> bind _ _ (k s)  (fun f -> f s))
+                        | Write -> fun s k -> Return (fun _ -> bind _ _ (k ()) (fun f -> f s))
+                        | Raise -> fun e k -> Return (fun s -> Return (None, s)))
+  in
+  frompure (frompure t' s0)
+
+let run_tree2' #a (f:tree a ([Raise;Write;Read])) (s0:state) : option a & state =
+  fold_with #_ #(state -> option a & state) #_
+            f (fun x s0 -> (Some x, s0))
+              (function Read -> fun () k s0 -> k s0 s0
+                      | Write -> fun s k _ -> k () s
+                      | Raise -> fun e k s0 -> (None, s0)) s0
+  
+let run2 #a #labs (f:unit -> Alg a ([Raise;Write;Read])) (s0:state) : option a & state =
+  run_tree2 (reify (f())) s0
+
+let hty_l (o:op) (b:Type) (labs:ops) =
+  op_inp o -> (op_out o -> Alg b labs) -> Alg b labs
+
+let hty (labs0 : ops) (b:Type) (labs1 : ops) : Type =
+  o:op{mem o labs0} -> hty_l o b labs1
+
+
+
+
+
+
+
+
+
+
+#set-options "--debug Alg --debug_level High"
+
+
+let min (a:Type) : hty_l Raise (state -> Alg (option a & state) []) []
+  = fun s k ->
+     //let r =
+       fun s -> (None, s)
+     //in
+     //r
+
+(*****
+
+
+
+let reflect_k #a #b #labs1 (k : op_out a -> tree b labs1)
+  : op_out a -> Alg b labs1
+  = fun o -> Alg?.reflect (k o)
+  
+let reify_k #a #b #labs1 (k : op_out a -> Alg b labs1)
+  : op_out a -> tree b labs1
+  = fun o -> reify (k o)
+  
+let hty_to_handler_ty #labs0 #b #labs1 (h:hty labs0 b labs1) : handler_ty labs0 b labs1=
+  fun a i k -> reify (h a i (reflect_k k))
+  
+let handler_ty_to_hty #labs0 #b #labs1 (h:handler_ty labs0 b labs1) : hty labs0 b labs1=
+  fun a i k -> Alg?.reflect (h a i (reify_k k))
+  
+let ehandle_with (#a #b:_) (#labs0 #labs1 : ops)
+           (f : unit -> Alg a labs0)
+           (v : a -> Alg b labs1)
+           (h: hty labs0 b labs1)
+  : Alg b labs1
+  =
+  let t : tree a labs0 = reify (f ()) in
+  let v : a -> tree b labs1 = fun x -> reify (v x) in
+  let h : handler_ty labs0 b labs1 = hty_to_handler_ty h in
+  Alg?.reflect (handle_with t v h)
+
+let hh #a #labs (g : unit -> Alg a labs) : hty (Raise::labs) a labs =
+    (function Raise -> fun _ k -> g ()
+            | op   -> fun i k -> k (geneff op i))
+
+    let exnvc #a #labs (x:a) : Alg a labs =
+      x
+      
+let try_catch' : (#a:_) -> (#labs:_) -> 
+                 (f : (unit -> Alg a (Raise::labs))) ->
+                 (g:unit -> Alg a labs) -> Alg a labs
+                 by (dump "")
+  = fun #a #labs f g ->
+    ehandle_with #a #a #(Raise::labs) #labs
+                 f
+                 (exnvc #a #labs)
+                 (hh #a #labs g)
+
+let vc #a : a -> Alg (state -> Alg (option a & state) []) [] =
+  fun x -> let f = fun s -> (Some x, s) in f
+
+let stexn_tree_handler (a:Type) : handler_ty [Write;Read;Raise] (state -> tree (option a & state) []) [] =
+  (function Read  -> (fun _ k -> Return (fun s -> bind _ _ (k s)  (fun f -> f s)))
+          | Write -> (fun s k -> Return (fun _ -> bind _ _ (k ()) (fun f -> f s)))
+          | Raise -> (fun s k -> Return (fun s -> Return (None, s))))
+          
+let stexn_alg_handler (a:Type)
+  : hty [Raise; Write] (state -> Alg (option a & state) []) []
+  =
+  (function
+          | Raise -> (fun s k -> let r = (fun s -> (None, s)) in r))
+
+let stexn_value_case (a:Type) : a -> tree (state -> tree (option a & state) []) [] =
+  (fun x -> Return (fun s0 -> Return (Some x, s0)))
+
+let refl_value_case (#a #b #labs : _) (v : (a -> tree b labs)) : a -> Alg b labs =
+  fun x -> Alg?.reflect (v x)
+
+let cheating0 #a (f: unit -> Alg a [Raise; Write; Read]) : Alg (state -> tree (option a & state) []) [] =
+  ehandle_with #_ #_ #[Raise;Write;Read] #_
+               f
+               (refl_value_case (stexn_value_case a))
+               (handler_ty_to_hty (stexn_tree_handler a))
+                 
+let cheating1 #a (f: unit -> Alg a [Raise; Write; Read]) : Alg (state -> tree (option a & state) []) [] =
+  ehandle_with f
+               (fun (x:a) -> _)
+               (handler_ty_to_hty (stexn_tree_handler a))
+
+
+let hh #a (o:op{mem o [Raise; Read]}) (i:op_inp o) (k : op_out o -> Alg (state -> Alg (option a & state) []) [])
+  : Alg (state -> Alg (option a & state) []) []
+  = match o with
+    | Raise -> let f = fun s -> (None, s) in f
+    | Read  -> let r (s:state)
+                : Alg (option a & state) []
+                = let f = k s in f s
+              in r
+
+
+    | Write -> fun _ -> let f = k () in f i
+
+let run_tree2'' #a (f: unit -> Alg a [Raise; Write; Read]) : Alg (state -> Alg (option a & state) []) [] =
+  ehandle_with #a #(state -> Alg (option a & state) []) #[Raise; Write; Read] #[]
+    f vc hh
+
+
+
+  ehandle_with f (fun x s -> (Some x, s))
+                 (function Read () k s -> k s s
+                         | Write s k _ -> k () s
+                         | Raise e k s -> (None, s))
+                
