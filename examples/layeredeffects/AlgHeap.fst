@@ -42,13 +42,13 @@ let op_out : op -> Type =
 noeq
 type tree0 (a:Type u#aa) : Type u#aa =
   | Return : a -> tree0 a
-  | Act    : op:op -> i:(op_inp op) -> k:(op_out op -> tree0 a) -> tree0 a
+  | Op     : op:op -> i:(op_inp op) -> k:(op_out op -> tree0 a) -> tree0 a
 
 type ops = list op
 
 let rec abides #a (labs:ops) (f : tree0 a) : prop =
   begin match f with
-  | Act a i k ->
+  | Op a i k ->
     mem a labs /\ (forall o. (WF.axiom1 k o; abides labs (k o)))
   | Return _ -> True
   end
@@ -88,7 +88,7 @@ let rec abides_sublist_nopat #a (l1 l2 : ops) (c : tree0 a)
           (ensures (abides l2) c)
   = match c with
     | Return _ -> ()
-    | Act a i k ->
+    | Op a i k ->
       let sub o : Lemma (abides l2 (k o)) =
         FStar.WellFounded.axiom1 k o;
         abides_sublist_nopat l1 l2 (k o)
@@ -125,7 +125,7 @@ val fold_with (#a #b:_) (#labs : ops)
 let rec fold_with #a #b #labs f v h =
   match f with
   | Return x -> v x
-  | Act act i k ->
+  | Op act i k ->
     let k' (o : op_out act) : b =
         WF.axiom1 k o;
        fold_with #_ #_ #labs (k o) v h
@@ -156,7 +156,7 @@ let bind (a b : Type)
   (c : tree a labs1)
   (f : (x:a -> tree b labs2))
   : Tot (tree b (labs1@labs2))
-  = handle_with #_ #_ #labs1 #(labs1@labs2) c f (fun act i k -> Act act i k)
+  = handle_with #_ #_ #labs1 #(labs1@labs2) c f (fun act i k -> Op act i k)
   
 let subcomp (a:Type)
   (labs1 labs2 : ops)
@@ -175,9 +175,9 @@ let if_then_else
   : Type
   = tree a (labs1@labs2)
 
-let _get : tree state [Read] = Act Read () Return
+let _get : tree state [Read] = Op Read () Return
 
-let _put (s:state) : tree unit [Write] = Act Write s Return
+let _put (s:state) : tree unit [Write] = Op Write s Return
 
 [@@allow_informative_binders]
 total // need this for catch!!
@@ -219,10 +219,10 @@ let put (s:state) : Alg unit [Write] =
   Alg?.reflect (_put s)
 
 let raise #a (e:exn) : Alg a [Raise] =  
-  Alg?.reflect (Act Raise e (fun e -> match e with))
+  Alg?.reflect (Op Raise e (fun e -> match e with))
   // funnily enough, the version below also succeeds from concluding
   // a==empty under the lambda since the context becomes inconsistent
-  //Alg?.reflect (Act Raise e Return
+  //Alg?.reflect (Op Raise e Return
 
 type rwtree a = tree a [Read;Write]
 
@@ -248,18 +248,18 @@ let write_wp : state -> st_wp unit = fun s _ p -> p ((), s)
 let rec interp_as_wp #a (t : rwtree a) : st_wp a =
   match t with
   | Return x -> return_wp x
-  | Act Read _ k ->
+  | Op Read _ k ->
     bind_wp read_wp (fun s -> WF.axiom1 k s; interp_as_wp (k s))
-  | Act Write s k ->
+  | Op Write s k ->
     bind_wp (write_wp s) (fun (o:unit) -> WF.axiom1 k o; interp_as_wp (k o))
 
 let rec interp_rdwr_tree #a (t : tree a [Read;Write]) (s:state) : Tot (a & state) =
   match t with
   | Return x -> (x, s)
-  | Act Read _ k ->
+  | Op Read _ k ->
     FStar.WellFounded.axiom1 k s;
     interp_rdwr_tree (k s) s
-  | Act Write s k ->
+  | Op Write s k ->
     FStar.WellFounded.axiom1 k ();
     interp_rdwr_tree (k ()) s
 
@@ -289,14 +289,14 @@ let bind_preserves_mon #a #b (wp : st_wp a) (f : a -> st_wp b)
 let rec interp_monotonic #a (c:rwtree a) : Lemma (wp_is_monotonic (interp_as_wp c)) =
   match c with
   | Return x -> ()
-  | Act Read _ k ->
+  | Op Read _ k ->
     let aux (x:state) : Lemma (wp_is_monotonic (interp_as_wp (k x))) =
       WF.axiom1 k x;
       interp_monotonic (k x)
     in
     Classical.forall_intro aux;
     bind_preserves_mon read_wp (fun x -> interp_as_wp (k x))
-  | Act Write s k ->
+  | Op Write s k ->
     let aux (x:unit) : Lemma (wp_is_monotonic (interp_as_wp (k x))) =
       WF.axiom1 k x;
       interp_monotonic (k x)
@@ -314,7 +314,7 @@ let rec interp_morph #a #b (c : rwtree a) (f : a -> rwtree b) (p:_) (s0:_)
   : Lemma (interp_as_wp c s0 (fun (y, s1) -> interp_as_wp (f y) s1 p) == interp_as_wp (tbind c f) s0 p)
   = match c with
     | Return x -> ()
-    | Act Read _ k ->
+    | Op Read _ k ->
       let aux (o:state) : Lemma (interp_as_wp (k o) s0 (fun (y, s1) -> interp_as_wp (f y) s1 p)
                                         == interp_as_wp (tbind (k o) f) s0 p) =
         WF.axiom1 k o;
@@ -322,7 +322,7 @@ let rec interp_morph #a #b (c : rwtree a) (f : a -> rwtree b) (p:_) (s0:_)
       in
       Classical.forall_intro aux
 
-    | Act Write s k ->
+    | Op Write s k ->
       let aux (o:unit) : Lemma (interp_as_wp (k o) s (fun (y, s1) -> interp_as_wp (f y) s1 p)
                                         == interp_as_wp (tbind (k o) f) s p) =
         WF.axiom1 k o;
@@ -451,10 +451,10 @@ let rec interp_sem #a (t : rwtree a) (s0:state)
   : ID5.ID (a & state) (interp_as_wp t s0)
   = match t with
     | Return x -> (x, s0)
-    | Act Read i k -> 
+    | Op Read i k -> 
       WF.axiom1 k s0;
       interp_sem (k s0) s0
-    | Act Write i k ->
+    | Op Write i k ->
       WF.axiom1 k ();
       interp_sem (k ()) i
     

@@ -33,9 +33,9 @@ let write_wp : state -> st_wp unit = fun s _ p -> p ((), s)
 let rec interp_as_wp #a (t : rwtree a) : st_wp a =
   match t with
   | Return x -> return_wp x
-  | Act Read _ k ->
+  | Op Read _ k ->
     bind_wp read_wp (fun s -> WF.axiom1 k s; interp_as_wp (k s))
-  | Act Write s k ->
+  | Op Write s k ->
     bind_wp (write_wp s) (fun (o:unit) -> WF.axiom1 k o; interp_as_wp (k o))
     
 let interp_as_fun #a (t : rwtree a) : (state -> a & state) =
@@ -64,14 +64,14 @@ let bind_preserves_mon #a #b (wp : st_wp a) (f : a -> st_wp b)
 let rec interp_monotonic #a (c:rwtree a) : Lemma (wp_is_monotonic (interp_as_wp c)) =
   match c with
   | Return x -> ()
-  | Act Read _ k ->
+  | Op Read _ k ->
     let aux (x:state) : Lemma (wp_is_monotonic (interp_as_wp (k x))) =
       WF.axiom1 k x;
       interp_monotonic (k x)
     in
     Classical.forall_intro aux;
     bind_preserves_mon read_wp (fun x -> interp_as_wp (k x))
-  | Act Write s k ->
+  | Op Write s k ->
     let aux (x:unit) : Lemma (wp_is_monotonic (interp_as_wp (k x))) =
       WF.axiom1 k x;
       interp_monotonic (k x)
@@ -89,7 +89,7 @@ let rec interp_morph #a #b (c : rwtree a) (f : a -> rwtree b) (p:_) (s0:_)
   : Lemma (interp_as_wp c s0 (fun (y, s1) -> interp_as_wp (f y) s1 p) == interp_as_wp (tbind c f) s0 p)
   = match c with
     | Return x -> ()
-    | Act Read _ k ->
+    | Op Read _ k ->
       let aux (o:state) : Lemma (interp_as_wp (k o) s0 (fun (y, s1) -> interp_as_wp (f y) s1 p)
                                         == interp_as_wp (tbind (k o) f) s0 p) =
         WF.axiom1 k o;
@@ -97,7 +97,7 @@ let rec interp_morph #a #b (c : rwtree a) (f : a -> rwtree b) (p:_) (s0:_)
       in
       Classical.forall_intro aux
 
-    | Act Write s k ->
+    | Op Write s k ->
       let aux (o:unit) : Lemma (interp_as_wp (k o) s (fun (y, s1) -> interp_as_wp (f y) s1 p)
                                         == interp_as_wp (tbind (k o) f) s p) =
         WF.axiom1 k o;
@@ -165,10 +165,10 @@ layered_effect {
 }
 
 let get () : AlgWP state read_wp =
-  AlgWP?.reflect (Act Read () Return)
+  AlgWP?.reflect (Op Read () Return)
 
 let put (s:state) : AlgWP unit (write_wp s) =
-  AlgWP?.reflect (Act Write s Return)
+  AlgWP?.reflect (Op Write s Return)
 
 unfold
 let lift_pure_wp (#a:Type) (wp : pure_wp a) : st_wp a =
@@ -216,10 +216,10 @@ let rec interp_sem #a (t : rwtree a) (s0:state)
   : ID5.ID (a & state) (interp_as_wp t s0)
   = match t with
     | Return x -> (x, s0)
-    | Act Read i k -> 
+    | Op Read i k -> 
       WF.axiom1 k s0;
       interp_sem (k s0) s0
-    | Act Write i k ->
+    | Op Write i k ->
       WF.axiom1 k ();
       interp_sem (k ()) i
     

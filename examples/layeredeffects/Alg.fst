@@ -37,13 +37,13 @@ let op_out : op -> Type =
 noeq
 type tree0 (a:Type u#aa) : Type u#aa =
   | Return : a -> tree0 a
-  | Act    : op:op -> i:(op_inp op) -> k:(op_out op -> tree0 a) -> tree0 a
+  | Op     : op:op -> i:(op_inp op) -> k:(op_out op -> tree0 a) -> tree0 a
 
 type ops = list op
 
 let rec abides #a (labs:ops) (f : tree0 a) : prop =
   begin match f with
-  | Act a i k ->
+  | Op a i k ->
     mem a labs /\ (forall o. (WF.axiom1 k o; abides labs (k o)))
   | Return _ -> True
   end
@@ -83,7 +83,7 @@ let rec abides_sublist_nopat #a (l1 l2 : ops) (c : tree0 a)
           (ensures (abides l2) c)
   = match c with
     | Return _ -> ()
-    | Act a i k ->
+    | Op a i k ->
       let sub o : Lemma (abides l2 (k o)) =
         FStar.WellFounded.axiom1 k o;
         abides_sublist_nopat l1 l2 (k o)
@@ -95,7 +95,9 @@ let abides_sublist #a (l1 l2 : ops) (c : tree0 a)
           (ensures (abides l2 c))
           [SMTPat (abides l2 c); SMTPat (sublist l1 l2)]
   = abides_sublist_nopat l1 l2 c
-  
+
+let trigger (p:Type0) : Lemma (p <==> p) = ()
+
 let abides_at_self #a
   (l : ops)
   (c : tree0 a)
@@ -120,9 +122,9 @@ val fold_with (#a #b:_) (#labs : ops)
 let rec fold_with #a #b #labs f v h =
   match f with
   | Return x -> v x
-  | Act act i k ->
+  | Op act i k ->
     let k' (o : op_out act) : b =
-        WF.axiom1 k o;
+       WF.axiom1 k o;
        fold_with #_ #_ #labs (k o) v h
     in
     h act i k'
@@ -151,7 +153,7 @@ let bind (a b : Type)
   (c : tree a labs1)
   (f : (x:a -> tree b labs2))
   : Tot (tree b (labs1@labs2))
-  = handle_with #_ #_ #labs1 #(labs1@labs2) c f (fun act i k -> Act act i k)
+  = handle_with #_ #_ #labs1 #(labs1@labs2) c f (fun act i k -> Op act i k)
   
 let subcomp (a:Type)
   (labs1 labs2 : ops)
@@ -170,8 +172,8 @@ let if_then_else
   : Type
   = tree a (labs1@labs2)
 
-let _get : tree int [Read] = Act Read () Return
-let _put (s:state) : tree unit [Write] = Act Write s Return
+let _get : tree int [Read] = Op Read () Return
+let _put (s:state) : tree unit [Write] = Op Write s Return
 
 [@@allow_informative_binders]
 total // need this for catch!!
@@ -207,16 +209,17 @@ let lift_pure_eff
 
 sub_effect PURE ~> Alg = lift_pure_eff
 
-let geneff (o : op) (i : op_inp o) : Alg (op_out o) [o] = Alg?.reflect (Act o i Return)
-let get () : Alg int [Read] = geneff Read ()
-let put (s:state) : Alg unit [Write] = geneff Write s
-let raise #a (e:exn) : Alg a [Raise] = match geneff Raise e with
+let geneff (o : op) (i : op_inp o) : Alg (op_out o) [o] = Alg?.reflect (Op o i Return)
+
+let get   : unit -> Alg int [Read] = geneff Read
+let put   : state -> Alg unit [Write] = geneff Write
+let raise : #a:_ -> exn -> Alg a [Raise] = fun e -> match geneff Raise e with
 
 let _other_raise #a (e:exn) : Alg a [Raise] =  
   // Funnily enough, the version below succeeds from concluding
   // a==empty under the lambda since the context becomes inconsistent.
   // All good, just surprising.
-  Alg?.reflect (Act Raise e Return)
+  Alg?.reflect (Op Raise e Return)
 
 exception Failure of string
 
@@ -252,13 +255,13 @@ let rec catch0 #a #labs (t1 : tree a (Raise::labs))
                         (t2 : tree a labs)
   : tree a labs
   = match t1 with
-    | Act Raise e _ -> t2
-    | Act act i k ->
+    | Op Raise e _ -> t2
+    | Op act i k ->
       let k' o : tree a labs =
         WF.axiom1 k o;
         catch0 (k o) t2
       in
-      Act act i k'
+      Op act i k'
     | Return v -> Return v
 
 (* no rollback *)
@@ -275,14 +278,14 @@ let catch #a #labs
 let rec _catchST #a #labs (t1 : tree a (Read::Write::labs)) (s0:state) : tree (a & int) labs =
   match t1 with
   | Return v -> Return (v, s0)
-  | Act Write s k -> WF.axiom1 k (); _catchST (k ()) s
-  | Act Read  _ k -> WF.axiom1 k s0; _catchST (k s0) s0
-  | Act act i k ->
+  | Op Write s k -> WF.axiom1 k (); _catchST (k ()) s
+  | Op Read  _ k -> WF.axiom1 k s0; _catchST (k s0) s0
+  | Op act i k ->
      let k' o : tree (a & int) labs =
        WF.axiom1 k o;
        _catchST #a #labs (k o) s0
      in
-     Act act i k'
+     Op act i k'
 
 let catchST #a #labs
   (f : unit -> Alg a (Read::Write::labs))
@@ -310,7 +313,7 @@ let interp_pure #a (f : unit -> Alg a []) : Tot a = interp_pure_tree (reify (f (
 let rec interp_rd_tree #a (t : tree a [Read]) (s:state) : Tot a =
   match t with
   | Return x -> x
-  | Act Read _ k ->
+  | Op Read _ k ->
     FStar.WellFounded.axiom1 k s;
     interp_rd_tree (k s) s
 
@@ -319,10 +322,10 @@ let interp_rd #a (f : unit -> Alg a [Read]) (s:state) : Tot a = interp_rd_tree (
 let rec interp_rdwr_tree #a (t : tree a [Read;Write]) (s:state) : Tot (a & state) =
   match t with
   | Return x -> (x, s)
-  | Act Read _ k ->
+  | Op Read _ k ->
     FStar.WellFounded.axiom1 k s;
     interp_rdwr_tree (k s) s
-  | Act Write s k ->
+  | Op Write s k ->
     FStar.WellFounded.axiom1 k ();
     interp_rdwr_tree (k ()) s
 
@@ -331,10 +334,10 @@ let interp_rdwr #a (f : unit -> Alg a [Read;Write]) (s:state) : Tot (a & state) 
 let rec interp_read_raise_tree #a (t : tree a [Read;Raise]) (s:state) : either exn a =
   match t with
   | Return x -> Inr x
-  | Act Read _ k ->
+  | Op Read _ k ->
     FStar.WellFounded.axiom1 k s;
     interp_read_raise_tree (k s) s
-  | Act Raise e k ->
+  | Op Raise e k ->
     Inl e
 
 let interp_read_raise_exn #a (f : unit -> Alg a [Read;Raise]) (s:state) : either exn a =
@@ -343,13 +346,13 @@ let interp_read_raise_exn #a (f : unit -> Alg a [Read;Raise]) (s:state) : either
 let rec interp_all_tree #a (t : tree a [Read;Write;Raise]) (s:state) : Tot (option a & state) =
   match t with
   | Return x -> (Some x, s)
-  | Act Read _ k ->
+  | Op Read _ k ->
     FStar.WellFounded.axiom1 k s;
     interp_all_tree (k s) s
-  | Act Write s k ->
+  | Op Write s k ->
     FStar.WellFounded.axiom1 k ();
     interp_all_tree (k ()) s
-  | Act Raise e k ->
+  | Op Raise e k ->
     (None, s)
 
 let interp_all #a (f : unit -> Alg a [Read;Write;Raise]) (s:state) : Tot (option a & state) = interp_all_tree (reify (f ())) s
@@ -385,7 +388,7 @@ val handle (#a #b:_) (#labs:_) (o:op)
 let rec handle #a #b #labs l f h v =
   match f with
   | Return x -> v x
-  | Act act i k ->
+  | Op act i k ->
     if act = l
     then h i (fun o -> WF.axiom1 k o; handle l (k o) h v)
     else begin
@@ -393,7 +396,7 @@ let rec handle #a #b #labs l f h v =
          WF.axiom1 k o;
          handle l (k o) h v
       in
-      Act act i k'
+      Op act i k'
     end
 
 (* Easy enough to handle 2 labels at once. Again a special case of
@@ -407,7 +410,7 @@ val handle2 (#a #b:_) (#labs:_) (l1 l2 : op)
 let rec handle2 #a #b #labs l1 l2 f h1 h2 v =
   match f with
   | Return x -> v x
-  | Act act i k ->
+  | Op act i k ->
     if act = l1
     then h1 i (fun o -> WF.axiom1 k o; handle2 l1 l2 (k o) h1 h2 v)
     else if act = l2
@@ -417,7 +420,7 @@ let rec handle2 #a #b #labs l1 l2 f h1 h2 v =
          WF.axiom1 k o;
          handle2 l1 l2 (k o) h1 h2 v
       in
-      Act act i k'
+      Op act i k'
     end
 
 let catch0' #a #labs (t1 : tree a (Raise::labs))
@@ -431,7 +434,7 @@ let catch0'' #a #labs (t1 : tree a (Raise::labs))
   = handle_with t1
                 (fun x -> Return x)
                 (function Raise -> (fun i k -> t2)
-                        | act -> (fun i k -> Act act i k))
+                        | act -> (fun i k -> Op act i k))
 
 let fmap #a #b #labs (f : a -> b) (t : tree a labs) : tree b labs =
   bind _ _ #_ #labs t (fun x -> Return (f x))
@@ -517,15 +520,15 @@ let rec interp_into_lattice_tree #a (#labs:list baseop)
   : L.repr a (trlabs labs)
   = match t with
     | Return x -> L.return _ x
-    | Act Read i k ->
+    | Op Read i k ->
       L.bind _ _ _ _ (reify (L.get i))
        (fun x -> WF.axiom1 k x;
               interp_into_lattice_tree #a #labs (k x))
-    | Act Write i k ->
+    | Op Write i k ->
       L.bind _ _ _ _ (reify (L.put i))
        (fun x -> WF.axiom1 k x;
               interp_into_lattice_tree #a #labs (k x))
-    | Act Raise i k ->
+    | Op Raise i k ->
       L.bind _ _ _ _ (reify (L.raise ()))
        (fun x -> WF.axiom1 k x;
               interp_into_lattice_tree #a #labs (k x))
@@ -557,16 +560,16 @@ type sem (a:Type) (labs : list baseop) = r:(sem0 a){abides' r labs}
 let rec interp_sem #a (#labs:list baseop) (t : tree a (fixup labs)) : sem a labs =
   match t with
   | Return x -> fun s0 -> (Inr x, s0)
-  | Act Read _ k ->
+  | Op Read _ k ->
     (* Needs this trick for termination. Trying to call axiom1 within
      * `r` messes up the refinement about Read. *)
     let k : (s:state -> (r:(tree a (fixup labs)){r << k})) = fun s -> WF.axiom1 k s; k s in
     let r : sem a labs = fun s0 -> interp_sem #a #labs (k s0) s0 in
     r
-  | Act Write s k ->
+  | Op Write s k ->
     WF.axiom1 k ();
     fun s0 -> interp_sem #a #labs (k ()) s
-  | Act Raise e k -> fun s0 -> (Inl e, s0)
+  | Op Raise e k -> fun s0 -> (Inl e, s0)
 
 (* Way back: from the pure ALG into the free one, necessarilly giving
 a fully normalized tree *)
@@ -574,11 +577,11 @@ a fully normalized tree *)
 let interp_from_lattice_tree #a #labs
   (t : L.repr a labs)
   : tree a [Read;Raise;Write] // conservative
-  = Act Read () (fun s0 ->
+  = Op Read () (fun s0 ->
      let (r, s1) = t s0 in
      match r with
-     | Some x -> Act Write s1 (fun _ -> Return x)
-     | None   -> Act Write s1 (fun _ -> Act Raise (Failure "") (fun x -> match x with))) // empty match
+     | Some x -> Op Write s1 (fun _ -> Return x)
+     | None   -> Op Write s1 (fun _ -> Op Raise (Failure "") (fun x -> match x with))) // empty match
 
 let read_handler (b:Type)
                  (labs:ops)
@@ -623,7 +626,7 @@ let widen_handler (#b:_) (#labs0 #labs1:_)
     : handler_ty (labs0@labs1) b labs1
     = fun op i k ->
        if mem op labs0 then h op i k
-       else Act op i k
+       else Op op i k
                   
 let handle_sub (#a #b:_) (#labs0 #labs1:_)
                (f:tree a (labs0@labs1))
@@ -638,7 +641,7 @@ let widen_handler_1 (#b:_) (#o:op) (#labs1:_)
     : handler_ty (o::labs1) b labs1
     = fun op' i k ->
        if op'=o then h i k
-       else Act op' i k
+       else Op op' i k
 
 let handle_one (#a:_) (#o:op) (#labs1:_)
                (f:tree a (o::labs1))
@@ -667,18 +670,18 @@ let try_catch #a #labs (f:unit -> Alg a (Raise::labs)) (g:unit -> Alg a labs)
 let handle_raise_none #a () : Alg (option a & state) [Read] = let s = get () in None, s
 
 let handle_return #a (x:a) : tree (option a & state) [Write;Read] =
-   Act Read () (fun s -> Return (Some x, s))
+   Op Read () (fun s -> Return (Some x, s))
 
 let handler_raise #a : handler_ty ([Raise]@[Write;Read]) (option a & state) ([Write]@[Read]) =
   fun o i k -> 
     match o with
-    | Raise -> Act Read () (fun s -> Return (None, s))
-    | _ -> Act o i k
+    | Raise -> Op Read () (fun s -> Return (None, s))
+    | _ -> Op o i k
     
 let handler_raise_write #a : handler_ty [Raise; Write] (option a & state) ([Write]@[Read]) =
   fun o i k -> 
     match o with
-    | Raise -> Act Read () (fun s -> Return (None, s))
+    | Raise -> Op Read () (fun s -> Return (None, s))
     | Write -> handle_write' (k())
 
 let run_tree #a (f:tree a ([Raise;Write;Read])) (s0:state) : option a & state =

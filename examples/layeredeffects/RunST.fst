@@ -39,7 +39,7 @@ type action : inp:Type0 -> out:Type0 -> st0:Type0 -> st1:Type0 -> Type u#1 =
 noeq
 type repr0 (a:Type u#aa) : st0:Type0 -> st1:Type0 -> Type u#(max 1 aa) =
   | Return : #s:Type0 -> x:a -> repr0 a s s
-  | Act    : #i:_ -> #o:_ -> #st0:_ -> #st1:_ -> #st2:_ ->
+  | Op    : #i:_ -> #o:_ -> #st0:_ -> #st1:_ -> #st2:_ ->
              act:(action i o st0 st1) -> i -> k:(o -> repr0 a st1 st2) -> repr0 a st0 st2
 
 let abides_act #i #o (ann:annot) (a : action i o 'st0 'st1) : prop =
@@ -49,7 +49,7 @@ let abides_act #i #o (ann:annot) (a : action i o 'st0 'st1) : prop =
 
 let rec abides #a (ann:annot) (f : repr0 a 'st0 'st1) : prop =
   begin match f with
-  | Act a i k ->
+  | Op a i k ->
     abides_act ann a /\ (forall o. (axiom1 k o; abides ann (k o)))
   | Return _ -> True
   end
@@ -105,7 +105,7 @@ let rec abides_sublist #a (l1 l2 : list eff_label) (c : repr0 a 'st0 'st1)
           [SMTPat (abides (interp l2) c); SMTPat (sublist l1 l2)]
   = match c with
     | Return _ -> ()
-    | Act a i k ->
+    | Op a i k ->
       let sub o : Lemma (abides (interp l2) (k o)) =
         axiom1 k o;
         abides_sublist l1 l2 (k o)
@@ -120,7 +120,7 @@ let rec abides_app #a (l1 l2 : list eff_label) (c : repr0 a 'st0 'st1)
     //     do something smarter later.
     match c with
     | Return _ -> ()
-    | Act a i k ->
+    | Op a i k ->
       let sub o : Lemma (abides (interp (l1@l2)) (k o)) =
         axiom1 k o;
         abides_app l1 l2 (k o)
@@ -150,12 +150,12 @@ let rec bind (a b : Type)
   : Tot (repr b st0 st2 (labs1@labs2))
   = match c with
     | Return x -> f x
-    | Act a i k ->
+    | Op a i k ->
       let k' o : repr b _ _ (labs1@labs2) =
         axiom1 k o;
         bind _ _ _ _ _ _ _ (k o) f
       in
-      Act a i k'
+      Op a i k'
 
 let subcomp (a:Type)
   (labs1 labs2 : erased (list eff_label))
@@ -215,13 +215,13 @@ let lift_pure_eff
 sub_effect PURE ~> EFF = lift_pure_eff
 
 let get #s () : EFF s s s [RD] =
-  EFF?.reflect (Act Read () Return)
+  EFF?.reflect (Op Read () Return)
 
 let put #si #so (x:so) : EFF unit si so [WR] =
-  EFF?.reflect (Act Write x Return)
+  EFF?.reflect (Op Write x Return)
   
 let raise #a #si #so (e:exn) : EFF a si so [EXN] =
-  EFF?.reflect (Act Raise e Return)
+  EFF?.reflect (Op Raise e Return)
 
 // GM: something is up with unfolding. Try only [dump ""] here
 // and see an explosion. I had filed it as #2039.
@@ -270,9 +270,9 @@ let _runST (#a:Type0) #labs #si #sf ($c : repr a si sf labs) (s0:si) : Tot (opti
   let rec aux #st0 (s:st0) (c : repr a st0 sf labs) : Tot (option (a & sf)) (decreases c) =
     match c with
     | Return x -> Some (x, s)
-    | Act Read  _ k -> axiom1 k s; aux s (k s)
-    | Act Write s k -> axiom1 k (); aux s (k ())
-    | Act Raise e k -> None
+    | Op Read  _ k -> axiom1 k s; aux s (k s)
+    | Op Write s k -> axiom1 k (); aux s (k ())
+    | Op Raise e k -> None
   in
   aux s0 c
 
@@ -298,13 +298,13 @@ let rec _catchST (#a:Type0) #labs #si #sf
 : repr (a & sf) stt stt labs
 = match c with
   | Return x -> Return (x, s0)
-  | Act Read _i k -> axiom1 k s0; _catchST #a #labs stt (k s0) s0
-  | Act Write s k -> axiom1 k (); _catchST #a #labs stt (k ()) s
-  | Act Raise e k ->
+  | Op Read _i k -> axiom1 k s0; _catchST #a #labs stt (k s0) s0
+  | Op Write s k -> axiom1 k (); _catchST #a #labs stt (k ()) s
+  | Op Raise e k ->
     let k' (o : c_False) : repr (a & sf) stt stt labs =
       unreachable ()
     in
-    Act Raise e k'
+    Op Raise e k'
 
 // if exceptions did not change the state type, we could in theory
 // handle its continuation as well, though it would never be called.
@@ -317,7 +317,7 @@ let rec _catchST (#a:Type0) #labs #si #sf
 assume
 val act_keeps_state (a:action 'in 'out 'st0 'st1) : Lemma ('st0 == 'st1)
 
-  | Act #_ #ot #st0 #st1 #st2__
+  | Op #_ #ot #st0 #st1 #st2__
         act e k ->
     act_keeps_state act;
     assert (st1 == unit);
@@ -326,7 +326,7 @@ val act_keeps_state (a:action 'in 'out 'st0 'st1) : Lemma ('st0 == 'st1)
       axiom1 k o;
       _catchST #a #labs stt (k o) s0
     in
-    Act act e k'
+    Op act e k'
 
  It's required that all unhandled actions do not change the state. TBD how
  that's best encoded.
@@ -348,13 +348,13 @@ let rec _catchE (#a:Type0) #labs #si #sf
 : (repr a si sf labs)
 = match c with
   | Return x -> Return x
-  | Act Raise e k -> h si
-  | Act act i k ->
+  | Op Raise e k -> h si
+  | Op act i k ->
     let k' o : repr a _ _ labs =
       axiom1 k o;
       _catchE (k o) h
     in
-    Act act i k'
+    Op act i k'
 
 let catchE (#a:Type0) #labs #si #sf
   ($c : unit -> EFF a si sf (EXN::labs))
@@ -410,7 +410,7 @@ let xxx = interp_pure (fun () -> puresum #unit 10)
 let rec interp_rd_tree #a #st0 #st1 (t : repr a st0 st1 [RD]) (s:st0) : Tot a =
   match t with
   | Return x -> x
-  | Act Read _ k ->
+  | Op Read _ k ->
     axiom1 k s;
     interp_rd_tree (k s) s
 
@@ -420,10 +420,10 @@ let interp_rd #a #st0 #st1 (f : unit -> EFF a st0 st1 [RD]) (s:st0) : Tot a
 let rec interp_rdwr_tree #a #st0 #st1 (t : repr a st0 st1 [RD;WR]) (s:st0) : Tot (a & st1) =
   match t with
   | Return x -> (x, s)
-  | Act Read _ k ->
+  | Op Read _ k ->
     axiom1 k s;
     interp_rdwr_tree (k s) s
-  | Act Write s k ->
+  | Op Write s k ->
     axiom1 k ();
     interp_rdwr_tree (k ()) s
 
