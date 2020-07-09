@@ -325,6 +325,12 @@ let defh #b #labs (#o:op{o `memP` labs})
   : handler_op o b labs
   = fun i k -> k (geneff o i)
 
+(* The version taking the operation explicitly. *)
+let exp_defh #b #labs
+  : handler labs b labs
+  = fun o i k -> k (geneff o i)
+  // Or: = fun _ -> defh
+
 (* Of course this can also be done for trees *)
 let defh_tree #b #labs (#o:op{o `memP` labs})
   : handler_tree_op o b labs
