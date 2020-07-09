@@ -3066,8 +3066,8 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
          | Some ts -> Some (mk_mlift_term ts) })
 
 
-let update_env_sub_eff env sub =
-  Env.update_effect_lattice env sub.source sub.target (get_mlift_for_subeff env sub)
+let update_env_sub_eff env sub r =
+  Env.update_effect_lattice ({ env with range = r }) sub.source sub.target (get_mlift_for_subeff env sub)
 
 let update_env_polymonadic_bind env m n p ty =
   Env.add_polymonadic_bind env m n p
