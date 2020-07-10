@@ -19,7 +19,7 @@ let rwops = labs:ops{sublist labs [Read; Write]}
 
 let noops : rwops = []
 
-type rwtree a (l : rwops) = Alg.tree a l
+type rwtree a (l : ops{l `sublist` [Read;Write]}) = Alg.tree a l
 
 (* Somehow did not need this in Alg! *)
 let rec sublist_at_const (l1 l2 l3 : ops)
@@ -358,6 +358,17 @@ let quot_tree #a #wp (c : repr a [Read] wp)
   = ro_tree_wp c;
     c
 
+let quot #a #wp (f : unit -> AlgWP a [Read] wp)
+  : AlgWP a [Read] (quotient_ro wp)
+  = AlgWP?.reflect (quot_tree (reify (f ())))
+
+effect AlgPP (a:Type) (ll:rwops) (pre : state -> Type0) (post : state -> a -> state -> Type0) =
+  AlgWP a ll (fun h0 p -> pre h0 /\ (forall y h1. post h0 y h1 ==> p (y, h1)))
+  
+let quotPP #a #pre #post (f : unit -> AlgPP a [Read] pre post)
+  : AlgPP a [Read] pre (fun h0 x h1 -> post h0 x h1 /\ h0 == h1)
+  = quot #_ #(fun h0 p -> pre h0 /\ (forall y h1. post h0 y h1 ==> p (y, h1))) f
+
 let null #a : st_wp a = fun s0 p -> forall r. p r
 let null_ro #a : st_wp a = quotient_ro null
 let null_ro1 #a : st_wp a = fun s0 p -> forall x. p (x, s0)
@@ -393,10 +404,6 @@ let rec null_ro_tree_wp #a (t : tree a [Read])
       Classical.forall_intro aux;
       bind_null_ro read_wp (fun x -> interp_as_wp (k x))
 
-let quot #a #wp (f : unit -> AlgWP a [Read] wp)
-  : AlgWP a [Read] (quotient_ro wp)
-  = AlgWP?.reflect (quot_tree (reify (f ())))
-
   (* Could this work automatically too? *)
   //  ro_tree_wp (reify (f ()));
   //  f ()
@@ -418,3 +425,7 @@ let __tree_handle_into_ro #a (#l:rwops{~(List.Tot.memP Write l)}) #wp (f : repr 
 let handle_into_ro #a (#l:rwops{~(List.Tot.memP Write l)}) #wp (f : unit -> AlgWP a (Write::l) wp)
   : AlgWP a l null_ro
   = AlgWP?.reflect (__tree_handle_into_ro (reify (f ())))
+
+let ignore_writes #a (#l:rwops{~(List.Tot.memP Write l)}) #pre #post (f : unit -> AlgPP a (Write::l) pre post)
+  : AlgPP a l pre (fun h0 x h1 -> h0 == h1)
+  = handle_into_ro #a #l #(fun h0 p -> pre h0 /\ (forall y h1. post h0 y h1 ==> p (y, h1))) f
