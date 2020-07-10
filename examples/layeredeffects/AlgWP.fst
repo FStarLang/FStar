@@ -308,6 +308,11 @@ let ro_soundness #a #wp (t : unit -> AlgWP a [Read] wp)
   : Tot (s0:state -> ID5.ID (a & state) (quotient_ro wp s0))
   = let c = reify (t ()) in interp_ro c
 
+
+
+(****** Internalizing the relation between the labels
+and the WP. *)
+
 (* Relies on monotonicity sadly... If we were to carry the refinement
 that every wp in an AlgWP was monotonic, then this would be trivial.
 It's the old headache in a new effect. *)
@@ -316,11 +321,25 @@ let quotient_lemma #a (wp : st_wp a) (s0 : state) :
   = assume (is_mono wp);
     ()
 
+let ro_soundness_pre_post #a #wp (t : unit -> AlgWP a [Read] wp)
+  (s0:state)
+  : ID5.Id (a & state) (requires (wp s0 (fun _ -> True)))
+                       (ensures (fun (r, s1) -> s0 == s1))
+  = let reified = reify (ro_soundness #a #wp t s0) in
+    quotient_lemma wp s0;
+    let r = reified (fun (r, s1) -> s1 == s0) () in
+    r
+
 (* Same thing here sadly *)
 let bind_ro #a #b (w : st_wp a) (f : a -> st_wp b)
   : Lemma (requires is_ro w /\ (forall x. is_ro (f x)))
           (ensures is_ro (bind_wp w f))
   = assume (is_mono w)
+  
+let quot_mono #a #b (w1 w2 : st_wp a)
+  : Lemma (requires w1 `stronger` w2)
+          (ensures quotient_ro w1 `stronger` quotient_ro w2)
+  = ()
 
 let rec ro_tree_wp #a (t : tree a [Read])
   : Lemma (is_ro (interp_as_wp t))
@@ -339,19 +358,63 @@ let quot_tree #a #wp (c : repr a [Read] wp)
   = ro_tree_wp c;
     c
 
+let null #a : st_wp a = fun s0 p -> forall r. p r
+let null_ro #a : st_wp a = quotient_ro null
+let null_ro1 #a : st_wp a = fun s0 p -> forall x. p (x, s0)
+let null_equiv_sanity a = assert (null_ro #a `equiv` null_ro1 #a)
+
+//let null_ro_strongest_ro #a (w : st_wp a)
+//  : Lemma (requires (is_ro w))
+//          (ensures (null_ro `stronger` w))
+//  = assert (quotient_ro w `stronger` w);
+//    assert (quotient_ro w `stronger` quotient_ro w);
+//    admit ()
+//
+//
+//    assume (is_mono w);
+//    ()
+
+let bind_null_ro #a #b (w : st_wp a) (f : a -> st_wp b)
+  : Lemma (requires (null_ro `stronger` w) /\ (forall x. null_ro `stronger` f x))
+          (ensures null_ro `stronger` (bind_wp w f))
+  = ()
+  
+(* Similar to ro_tree_wp *)
+let rec null_ro_tree_wp #a (t : tree a [Read])
+  : Lemma (null_ro `stronger` (interp_as_wp t))
+    by (T.compute ()) // need this to trigger some unfoldings
+  = match t with
+    | Return x -> ()
+    | Op Read i k ->
+      let aux (x:state) : Lemma (null_ro `stronger` interp_as_wp (k x)) =
+        WF.axiom1 k x;
+        null_ro_tree_wp (k x)
+      in
+      Classical.forall_intro aux;
+      bind_null_ro read_wp (fun x -> interp_as_wp (k x))
+
 let quot #a #wp (f : unit -> AlgWP a [Read] wp)
   : AlgWP a [Read] (quotient_ro wp)
   = AlgWP?.reflect (quot_tree (reify (f ())))
 
-  (* This should work too? *)
+  (* Could this work automatically too? *)
   //  ro_tree_wp (reify (f ()));
   //  f ()
 
-let ro_soundness_pre_post #a #wp (t : unit -> AlgWP a [Read] wp)
-  (s0:state)
-  : ID5.Id (a & state) (requires (wp s0 (fun _ -> True)))
-                       (ensures (fun (r, s1) -> s0 == s1))
-  = let reified = reify (ro_soundness #a #wp t s0) in
-    quotient_lemma wp s0;
-    let r = reified (fun (r, s1) -> s1 == s0) () in
-    r
+let __tree_handle_into_ro #a (#l:rwops{~(List.Tot.memP Write l)}) #wp (f : repr a (Write::l) wp)
+  : repr a l null_ro
+  = let f' : tree a (Write::l) = f in
+    let h : tree a l =
+      handle_tree f' (fun x -> Return x)
+                     (function Write -> fun i k -> k ()
+                             | op -> fun i k -> Op op i k)
+    in
+    assert (sublist l [Read]);
+    let h : tree a [Read] = h in
+    null_ro_tree_wp h;
+    h
+
+(* Take any computation, ignore its Writes, you get a read only WP *)
+let handle_into_ro #a (#l:rwops{~(List.Tot.memP Write l)}) #wp (f : unit -> AlgWP a (Write::l) wp)
+  : AlgWP a l null_ro
+  = AlgWP?.reflect (__tree_handle_into_ro (reify (f ())))
