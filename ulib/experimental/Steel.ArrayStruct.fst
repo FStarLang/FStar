@@ -87,18 +87,27 @@ let u32_pair_x_field_get
     | Some (XField x) -> x
     | Some (Full pair) -> pair.x
 
-#push-options "--admit_smt_queries true"
 let u32_pair_x_field_upd
   : rw_pointer_upd_sig UInt32.t u32_pair_x_field_ref slu32_pair_x_field
   =
   fun r g_x v ->
-   let new_val = match read r (Some (XField g_x)) with
-   | Some (XField x) -> Some (XField v)
-   | Some (Full pair) -> Some (Full ({pair with x = v}))
-   in
-   assert(FStar.PCM.frame_preserving u32_pair_stored_pcm (Some (XField g_x)) new_val);
-   write r (Some (XField g_x)) new_val
-#pop-options
+   let fake_stored = Ghost.hide (Some (XField g_x)) in
+   let real_stored = read r fake_stored in
+   let new_val = Some (XField v) in
+   FStar.PCM.frame_preserving_intro u32_pair_stored_pcm fake_stored new_val
+     (fun frame -> match frame with
+       | Some (YField fy) ->
+         assert(composable u32_pair_stored_pcm frame new_val)
+       | _ -> ()
+     )
+     (fun frame ->
+       match frame with
+       | Some (YField fy) ->
+         assume(op u32_pair_stored_pcm frame new_val == frame)
+       | _ -> ()
+     );
+   write r (Some (XField g_x)) new_val;
+   SteelT.Basics.h_admit _ _
 
 let u32_pair_y_field_get
   : rw_pointer_get_sig UInt32.t u32_pair_y_field_ref slu32_pair_y_field
