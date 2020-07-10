@@ -132,35 +132,6 @@ let compatible_intro
     (ensures (compatible pcm x y))
   = ()
 
-let frame_preserving_weak (#a: Type u#a) (pcm:pcm a) (x y: a) : prop =
-    (forall frame. composable pcm frame x ==> composable pcm frame y) /\
-    (forall frame.{:pattern (composable pcm frame x)} composable pcm frame x ==> compatible pcm frame y)
-
-let frame_preserving_weak_intro (#a: Type u#a) (pcm:pcm a) (x y: a)
-  (lemma1: (frame: a) -> Lemma (requires composable pcm frame x) (ensures composable pcm frame y))
-  (lemma2: (frame: a) -> Lemma
-    (requires composable pcm frame x /\ composable pcm frame y)
-    (ensures compatible pcm frame y)
-  )
-  : Lemma (frame_preserving_weak pcm x y)
-  =
-  let aux1 (frame: a) : Lemma (composable pcm frame x ==> composable pcm frame y) =
-    let aux2 (_: squash (composable pcm frame x)) : Lemma (composable pcm frame y) =
-      lemma1 frame
-    in
-    Classical.impl_intro aux2
-  in
-  Classical.forall_intro aux1;
-  let aux3 (frame: a): Lemma (composable pcm frame x ==> compatible pcm frame y) =
-    let aux4 (_: squash (composable pcm frame x)) : Lemma (
-      composable pcm frame x /\ (aux1 frame; compatible pcm frame y)
-    ) =
-      lemma2 frame
-    in
-    Classical.impl_intro aux4
-  in
-
-  Classical.forall_intro aux3
 
 (**
   To understand this predicate, one must consider the context of mutating the element [x] to
@@ -196,43 +167,6 @@ let frame_preserving_intro (#a: Type u#a) (pcm:pcm a) (x y: a)
     Classical.impl_intro aux4
   in
   Classical.forall_intro aux3
-
-let frame_preserving_implies_weak
-  (#a: Type u#a)
-  (pcm:pcm a)
-  (x y: a)
-  : Lemma (frame_preserving pcm x y ==> frame_preserving_weak pcm x y)
-  =
-  let aux (_ : squash (frame_preserving pcm x y)) : Lemma (frame_preserving_weak pcm x y) =
-    frame_preserving_weak_intro pcm x y
-      (fun frame -> ())
-      (fun frame ->
-        pcm.comm y frame;
-        compatible_intro pcm frame y y
-      )
-  in
-  Classical.impl_intro aux
-
-let frame_preserving_weak_with_full_update
-  (#a: Type u#a)
-  (pcm:pcm a)
-  (x y: a)
-  (full_update: (frame: a) -> Lemma
-    (requires (composable pcm x frame))
-    (ensures (frame == pcm.p.one))
-  )
-  : Lemma (frame_preserving_weak pcm x y ==> frame_preserving pcm x y)
-  =
-  let aux (_: squash (frame_preserving_weak pcm x y)) : Lemma (frame_preserving pcm x y) =
-    frame_preserving_intro pcm x y
-      (fun frame -> ())
-      (fun frame ->
-       full_update frame;
-       pcm.comm y frame;
-       pcm.is_unit y
-      )
-  in
-  Classical.impl_intro aux
 
 (** The PCM [p] is exclusive to element [x] if the only element composable with [x] is [p.one] *)
 let exclusive (#a:Type u#a) (p:pcm a) (x:a) =
