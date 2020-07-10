@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module LowParseWriters2
+module BUGSLowParseWriters
 
 let memory_invariant : Type0 = nat
 
