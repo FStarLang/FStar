@@ -355,7 +355,7 @@ type raw_error =
   | Error_IllSMTPat
   | Error_IllScopedTerm
   | Warning_UnusedLetRec
-  | Fatal_PolymonadicBind_conflict
+  | Fatal_Effects_Ordering_Coherence
   | Warning_BleedingEdge_Feature
   | Warning_IgnoredBinding
   | Warning_AbstractQualifier
@@ -698,7 +698,7 @@ let default_settings : list<error_setting> =
     Error_IllSMTPat                                   , CError, 326;
     Error_IllScopedTerm                               , CError, 327;
     Warning_UnusedLetRec                              , CWarning, 328;
-    Fatal_PolymonadicBind_conflict                    , CError, 329;
+    Fatal_Effects_Ordering_Coherence                  , CError, 329;
     Warning_BleedingEdge_Feature                      , CWarning, 330;
     Warning_IgnoredBinding                            , CWarning, 331;
     Warning_AbstractQualifier                         , CWarning, 332;

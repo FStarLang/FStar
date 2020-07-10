@@ -4815,7 +4815,7 @@ the server has indeed sent the
 message in response to a matching request from the client.
 
 To this end, the protocol uses message authentication codes (MACs) computed as
-keyed hashes, such that each symmetric MAC key kab is associated with (and known
+keyed hashes, such that each symmetric MAC key `kab` is associated with (and known
 to) the pair of principals a and b. Our protocol may be informally described as follows.
 An Authenticated RPC Protocol:
 

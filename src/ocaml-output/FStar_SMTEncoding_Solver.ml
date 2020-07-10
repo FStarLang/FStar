@@ -547,7 +547,7 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
   fun settings ->
     let format_smt_error msg =
       FStar_Util.format1
-        "SMT solver says:\n\t%s;\n\tNote: 'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit;\n\t'incomplete quantifiers' means a (partial) counterexample was found, so try to spell your proof out in greater detail, increase fuel or ifuel\n\t'unknown' means Z3 provided no further reason for the proof failing"
+        "SMT solver says:\n\t%s;\n\tNote: 'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit;\n\t'incomplete quantifiers' means Z3 could not prove the query, so try to spell your proof out in greater detail, increase fuel or ifuel\n\t'unknown' means Z3 provided no further reason for the proof failing"
         msg in
     let basic_errors =
       let smt_error =
@@ -594,7 +594,7 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
                          (uu____1654 = Prims.int_zero))
                         && (incomplete_count > Prims.int_zero)
                       ->
-                      "The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel"
+                      "The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel"
                   | (uu____1656, uu____1655, uu____1657) when
                       ((uu____1656 = Prims.int_zero) &&
                          (uu____1657 = Prims.int_zero))

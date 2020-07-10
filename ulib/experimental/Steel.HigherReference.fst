@@ -49,7 +49,7 @@ let read_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#v:erased a) (r:r
 
 let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   : SteelT a (pts_to r p v) (fun x -> pts_to r p x)
-  = lift_atomic_to_steelT (fun _ -> read_atomic r)
+  = read_atomic r
 
 let read_refine_core_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#pre:Preorder.preorder a) (q:a -> hprop) (r:reference a pre)
   : SteelAtomic a uses false
@@ -81,7 +81,7 @@ let read_refine_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (q:a -> hpr
 let read_refine (#a:Type) (#p:perm) (q:a -> hprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
              (fun v -> pts_to r p v `star` q v)
-  = lift_atomic_to_steelT (fun _ -> read_refine_atomic q r)
+  = read_refine_atomic q r
 
 let write_atomic (#a:Type) (#uses:Set.set lock_addr) (#v:erased a) (r:ref a) (x:a)
   : SteelAtomic unit uses false (pts_to r full v) (fun _ -> pts_to r full x)
@@ -95,7 +95,7 @@ let write_atomic (#a:Type) (#uses:Set.set lock_addr) (#v:erased a) (r:ref a) (x:
 
 let write (#a:Type) (#v:erased a) (r:ref a) (x:a)
   : SteelT unit (pts_to r full v) (fun _ -> pts_to r full x)
-  = lift_atomic_to_steelT (fun _ -> write_atomic r x)
+  = write_atomic r x
 
 let free_core (#a:Type) (r:ref a)
   : SteelT unit (ref_perm r full) (fun _ -> emp)
@@ -109,7 +109,7 @@ let free_core (#a:Type) (r:ref a)
 
 let free (#a:Type) (#v:erased a) (r:ref a)
   : SteelT unit (pts_to r full v) (fun _ -> emp)
-  = lift_atomic_to_steelT (fun _ -> change_hprop (pts_to r full v) (ref_perm r full) (fun m -> intro_exists v (pts_to_ref r full) m));
+  = change_hprop (pts_to r full v) (ref_perm r full) (fun m -> intro_exists v (pts_to_ref r full) m);
     free_core r
 
 let share_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#v:erased a) (r:ref a)
@@ -127,7 +127,7 @@ let share (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   : SteelT unit
     (pts_to r p v)
     (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
-  = lift_atomic_to_steelT (fun _ -> share_atomic r)
+  = share_atomic r
 
 let gather_atomic
   (#a:Type) (#uses:Set.set lock_addr)
@@ -146,7 +146,7 @@ let gather (#a:Type) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
   : SteelT unit
     (pts_to r p0 v0 `star` pts_to r p1 v1)
     (fun _ -> pts_to r (sum_perm p0 p1) v0)
-  = lift_atomic_to_steelT (fun _ -> gather_atomic r)
+  = gather_atomic r
 
 let read_refine_core_atomic_ghost (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#pre:Preorder.preorder a) (q:a -> hprop) (r:reference a pre)
   : SteelAtomic a uses true
@@ -181,7 +181,7 @@ let read_monotonic_ref (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#frame:a ->
                        (r:reference a p)
   : SteelT a (h_exists (fun (v:a) -> pts_to_ref r q v `star` frame v))
              (fun v -> pts_to_ref r q v `star` frame v)
-  = lift_atomic_to_steelT (fun _ -> read_refine_core_atomic frame r)
+  = read_refine_core_atomic frame r
 
 let write_monotonic_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:Preorder.preorder a) (#v:erased a) (r:reference a p) (x:a{p v x})
   : SteelAtomic unit uses false (pts_to_ref r full v) (fun _ -> pts_to_ref r full x)
@@ -197,7 +197,7 @@ let write_monotonic_ref (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
                        (r:reference a p) (x:a{p v x})
   : SteelT unit (pts_to_ref r full v)
                 (fun v -> pts_to_ref r full x)
-  = lift_atomic_to_steelT (fun _ -> write_monotonic_atomic r x)
+  = write_monotonic_atomic r x
 
 let pure (p:prop) : hprop =
  refine emp (fun _ -> p)
@@ -358,8 +358,7 @@ let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:reference a p)
             (pf:squash (fact v))
   : SteelT unit (pts_to_ref r q v)
                 (fun _ -> pts_to_ref r q v `star` pure (witnessed r fact))
-  =
-  lift_atomic_to_steelT (fun _ -> witness_atomic r fact v pf)
+  = witness_atomic r fact v pf
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit 10"
 let recall_atomic
@@ -433,5 +432,4 @@ let recall (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
   : SteelT unit (pts_to_ref r q v `star` pure (witnessed r fact))
                 (fun _ -> pts_to_ref r q v `star` pure (fact v))
 
-  =
-  lift_atomic_to_steelT (fun _ -> recall_atomic r v)
+  = recall_atomic r v

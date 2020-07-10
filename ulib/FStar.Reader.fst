@@ -75,10 +75,10 @@ assume val read:  #a:Type -> r:ref a -> STRead a
 					 (requires (fun h -> True))
 					 (ensures (fun h x -> x == sel h r))
 
-unfold let lift_reader_state (a:Type) (wp:reader_wp_h heap a) (p:st_post a) (h:heap) = wp (fun a -> p a h) h
-sub_effect READER ~> STATE = lift_reader_state
 unfold let lift_div_reader (a:Type) (wp:pure_wp a) (p:reader_post_h a) (h:heap) = wp p
 sub_effect DIV ~> READER = lift_div_reader
+unfold let lift_reader_state (a:Type) (wp:reader_wp_h heap a) (p:st_post a) (h:heap) = wp (fun a -> p a h) h
+sub_effect READER ~> STATE = lift_reader_state
 
 (* Testing *)
 
