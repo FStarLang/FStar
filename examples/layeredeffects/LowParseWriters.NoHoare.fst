@@ -500,7 +500,7 @@ let extract
   (#r_in: parser)
   (#r_out: parser)
   (l: memory_invariant)
-  (f_destr_spec: unit -> TWrite a r_in r_out l)
+  ($f_destr_spec: unit -> TWrite a r_in r_out l)
 : Tot (extract_t l f_destr_spec)
 = extract_repr_impl _ _ _ _ _ _ _ _ (destr_repr_impl f_destr_spec)
 
@@ -587,7 +587,7 @@ let frame
   (#fr: parser)
   (#p: parser)
   (#l: memory_invariant)
-  (f: unit ->
+  ($f: unit ->
     TWrite a parse_empty p l
   )
 : TWrite a fr (fr `parse_pair` p)
