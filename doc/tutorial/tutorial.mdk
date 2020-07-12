@@ -3313,7 +3313,7 @@ primitive form of `ST`; `EXN` is the primitive form of `Exn`; etc.
 
 ~
 
-[Dijkstra monad]: http://research.microsoft.com/en-us/um/people/nswamy/papers/paper-pldi13.pdf
+[Dijkstra monad]: https://www.microsoft.com/en-us/research/publication/verifying-higher-order-programs-with-the-dijkstra-monad/
 
 
 
