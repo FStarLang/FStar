@@ -2215,9 +2215,9 @@ $\mathsf{bool} \to \mathsf{bool}$ in paper notation.
 We represent the expressions of STLC by the datatype `exp`.
 ```
 type exp =
-  | EVar   : v:var -> exp
+  | EVar   : v:int -> exp
   | EApp   : fn:exp -> arg:exp -> exp
-  | EAbs   : v:var -> vty:ty -> body:exp -> exp
+  | EAbs   : v:int -> vty:ty -> body:exp -> exp
   | ETrue  : exp
   | EFalse : exp
   | EIf    : test:exp -> btrue:exp -> bfalse:exp -> exp
