@@ -699,7 +699,7 @@ let rec fold_left (f : ('a -> 'b -> tac<'b>)) (e : 'b) (xs : list<'a>) : tac<'b>
     | [] -> ret e
     | x::xs -> bind (f x e) (fun e' -> fold_left f e' xs)
 
-let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
+let t_apply_lemma (noinst:bool) (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     bind get (fun ps ->
     mlog (fun () -> BU.print1 "apply_lemma: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     let is_unit_t t = match (SS.compress t).n with
@@ -732,7 +732,8 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     let pre  = SS.subst subst pre in
     let post = SS.subst subst post in
     let post_u = env.universe_of env post in
-    bind (do_unify env (U.mk_squash post_u post) (goal_type goal)) (fun b ->
+    let cmp_func = if noinst then do_match else do_unify in
+    bind (cmp_func env (goal_type goal) (U.mk_squash post_u post)) (fun b ->
     if not b
     then begin
         let post, goalt = TypeChecker.Err.print_discrepancy (tts env)

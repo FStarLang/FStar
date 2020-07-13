@@ -313,9 +313,9 @@ let () =
         t_apply e_bool e_bool RE.e_term e_unit
         t_apply NBET.e_bool NBET.e_bool NRE.e_term NBET.e_unit;
 
-      mk_tac_step_1 0 "apply_lemma"
-        apply_lemma RE.e_term e_unit
-        apply_lemma NRE.e_term NBET.e_unit;
+      mk_tac_step_2 0 "t_apply_lemma"
+        t_apply_lemma e_bool RE.e_term e_unit
+        t_apply_lemma NBET.e_bool NRE.e_term NBET.e_unit;
 
       mk_tac_step_1 0 "set_options"
         set_options e_string e_unit

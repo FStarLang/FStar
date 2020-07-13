@@ -140,6 +140,18 @@ let apply (t : term) : Tac unit =
 let apply_noinst (t : term) : Tac unit =
     t_apply true true t
 
+(** [apply_lemma l] will solve a goal of type [squash phi] when [l] is a
+Lemma ensuring [phi]. The arguments to [l] and its requires clause are
+introduced as new goals. As a small optimization, [unit] arguments are
+discharged by the engine. Just a thin wrapper around [t_apply_lemma]. *)
+let apply_lemma (t : term) : Tac unit =
+    t_apply_lemma false t
+
+(** Similar to [apply_lemma], but will not instantiate uvars in the
+goal while applying. *)
+let apply_lemma_noinst (t : term) : Tac unit =
+    t_apply_lemma true t
+
 (** [apply_raw f] is like [apply], but will ask for all arguments
 regardless of whether they appear free in further goals. See the
 explanation in [t_apply]. *)
