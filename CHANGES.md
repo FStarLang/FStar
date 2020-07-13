@@ -13,6 +13,12 @@ Guidelines for the changelog:
 
 # Version 0.9.7.0
 
+## Typeclass argument syntax
+
+  * The syntax for a typeclass argument (a.k.a. constraint) is now `{| ... |}`
+    instead of `[| ... |]`. They are also better supported, and be used in
+    `val` declarations and arrows which was not previously the case.
+
 ## Module system
 
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
