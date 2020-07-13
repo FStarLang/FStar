@@ -836,7 +836,7 @@ and (aqual_to_string' :
       | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta
           (FStar_Syntax_Syntax.Arg_qualifier_meta_tac t)) when
           FStar_Syntax_Util.is_fvar FStar_Parser_Const.tcresolve_lid t ->
-          Prims.op_Hat "[|" (Prims.op_Hat s "|]")
+          Prims.op_Hat "{|" (Prims.op_Hat s "|}")
       | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta
           (FStar_Syntax_Syntax.Arg_qualifier_meta_tac t)) ->
           let uu____2099 =
