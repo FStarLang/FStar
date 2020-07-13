@@ -51,6 +51,13 @@ let intro_lockinv_locked #uses p r =
     (fun b -> pts_to r full_perm (Ghost.hide b) `star`
           (if b then emp else p))
 
+val elim_lockinv (#uses:inames) (p:slprop) (r:ref bool)
+  : SteelAtomic unit uses unobservable (lockinv p r) (fun _ -> h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)))
+
+let elim_lockinv #uses p r =
+  let open Atomic in
+  change_slprop (lockinv p r) (h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))) (fun _ -> ())
+
 val new_inv (p:slprop) : SteelT (inv p) p (fun _ -> emp)
 let new_inv p = Atomic.new_invariant Set.empty p
 
@@ -83,28 +90,34 @@ let cas_frame #t #uses r v v_old v_new frame =
   let x = Steel.FramingReference.cas r v v_old v_new in
   x
 
+assume
+val h_assert (#u:inames) (p:slprop)
+  : SteelAtomic unit u unobservable p (fun _ -> p)
 
 assume
+val h_affine (#u:inames) (p q:slprop)
+  : SteelAtomic unit u unobservable (p `star` q) (fun _ -> p)
+
 val acquire_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
   : SteelAtomic bool u observable
     (lockinv p r `star` emp)
-    (fun b -> lockinv p r `star` (if b then p else emp))
+    (fun b -> lockinv p r  `star` (if b then p else emp))
 
-(*
 let acquire_core #p #u r i =
-  // Atomic.h_commute (lockinv p r) emp;
-  // Atomic.h_elim_emp_l (lockinv p r);
-  let ghost = Atomic.witness_h_exists () in
-  let frame : slprop = if Ghost.reveal ghost then emp else p in
+  let ghost = Atomic.witness_h_exists #_ #_ #(fun (b:bool) -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)) () in
+
+  (** AF: This should be done by an automatic rewriting in the tactic *)
+  Atomic.change_slprop (pts_to r full_perm (Ghost.hide (Ghost.reveal ghost))) (pts_to r full_perm ghost) (fun _ -> ());
 
   let res = cas r ghost available locked in
 
+  (* Not sure we can avoid calling an SMT here. Better force the manual call? *)
+  Atomic.change_slprop (if (Ghost.reveal ghost) then emp else p) (if res then p else emp)
+    (fun _ -> ());
+  Atomic.change_slprop (if res then pts_to r full_perm (Ghost.hide locked) else pts_to r full_perm ghost) (pts_to r full_perm locked) (fun _ -> ());
+
   intro_lockinv_locked p r;
   res
-  // Atomic.frame (if Ghost.reveal ghost then emp else p) (fun _ -> intro_lockinv_locked p r);
-
-  // return_atomic #_ #_ #(fun b -> lockinv p r `star` (if b then p else emp)) res
-*)
 
 
 let acquire' (#p:slprop) (l:lock p)
@@ -128,34 +141,34 @@ let rec acquire #p l =
   let b = acquire' l in
   cond b (fun b -> if b then p else emp) (fun _ _ -> p) noop (fun _ -> acquire l)
 
-assume
 val release_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
   : SteelAtomic bool u observable
     (lockinv p r `star` p)
     (fun b -> lockinv p r `star` (if b then emp else p))
 
-(*
 let release_core #p #u r i =
   let open Atomic in
-  h_assert_atomic (h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
-    `star` p);
-  let v:Ghost.erased bool = frame p (fun _ ->  Atomic.witness_h_exists #u #_ #(fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)) ()) in
-  h_assert_atomic ((pts_to r full_perm v `star` (if Ghost.reveal v then emp else p)) `star` p);
-  h_assoc_left _ _ _;
-  let res = cas_frame r v locked available ((if Ghost.reveal v then emp else p) `star` p) in
-  h_assert_atomic (pts_to r full_perm available `star` ((if res then emp else p) `star` p));
-  h_commute _ _;
-  frame (pts_to r full_perm available) (fun _ -> h_commute (if res then emp else p) p);
-  h_commute _ _;
-  h_assoc_right _ _ _;
-  frame (if res then emp else p) (fun _ -> intro_lockinv_available p r);
-  return_atomic #_ #_ #_ res
-*)
+  let v:Ghost.erased bool = Atomic.witness_h_exists #u #_ #(fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)) () in
 
-(*
-let release (#p:slprop) (l:lock p) : SteelT unit p (fun _ -> emp) =
+  Atomic.change_slprop (pts_to r full_perm (Ghost.hide (Ghost.reveal v))) (pts_to r full_perm v) (fun _ -> ());
+
+  let res = cas r v locked available in
+
+  (* Not sure we can avoid calling an SMT here. Better force the manual call? *)
+  Atomic.change_slprop (if (Ghost.reveal v) then emp else p) (if res then emp else p)
+    (fun _ -> ());
+  Atomic.change_slprop (if res then pts_to r full_perm (Ghost.hide available) else pts_to r full_perm v) (pts_to r full_perm available) (fun _ -> ());
+
+  intro_lockinv_available p r;
+  res
+
+let release' (#p:slprop) (l:lock p)
+  : SteelAtomic unit Set.empty observable p (fun _ -> emp)
+  =
   let r:ref bool = fst l in
   let i: inv (lockinv p r) = snd l in
   let b = with_invariant i (fun _ -> release_core r i) in
   h_affine emp (if b then emp else p)
-*)
+
+let release (#p:slprop) (l:lock p) : SteelT unit p (fun _ -> emp) =
+  release' #p l
