@@ -23,14 +23,19 @@ let rec trivial_cancel (t:term) (l:list term) =
         true, tl
       else (let b, res = trivial_cancel t tl in b, hd::res)
 
-(* Call trivial_cancel on all elements of l1 *)
-let rec trivial_cancels (l1 l2:list term) : Tac (list term * list term) =
+(* Call trivial_cancel on all elements of l1.
+   The first two lists returned are the remainders of l1 and l2.
+   The last two lists are the removed parts of l1 and l2, with
+   the additional invariant that they are equal *)
+let rec trivial_cancels (l1 l2:list term)
+  : Tac (list term * list term * list term * list term) =
   match l1 with
-  | [] -> [], l2
+  | [] -> [], l2, [], []
   | hd::tl ->
       let b, l2'   = trivial_cancel  hd l2 in
-      let l1', l2' = trivial_cancels tl l2' in
-      (if b then l1' else hd::l1'), l2'
+      let l1', l2', l1_del, l2_del = trivial_cancels tl l2' in
+      (if b then l1' else hd::l1'), l2',
+      (if b then hd::l1_del else l1_del), (if b then hd::l2_del else l2_del)
 
 let rec dump_terms (l:list term) : Tac unit =
   match l with
@@ -45,6 +50,7 @@ let rec try_candidates (t:term) (l:list term) : Tac (term * int) =
   match l with
   | [] -> t, 0
   | hd::tl ->
+      dump (term_to_string hd);
       // Encapsulate unify in a try/with to ensure unification is not actually performed
       let res = try if unify t hd then raise Success else raise Failed
                 with | Success -> true | _ -> false in
@@ -63,20 +69,21 @@ let rec remove_from_list (t:term) (l:list term) : Tac (list term) =
    try_candidates.
    Assumes that only l2 contains terms with the head symbol unresolved.
    It returns all elements that were not resolved during this iteration *)
-let rec equivalent_lists_once (l1 l2:list term) : Tac (list term * list term) =
+let rec equivalent_lists_once (l1 l2 l1_del l2_del:list term)
+  : Tac (list term * list term * list term * list term) =
   match l1 with
-  | [] -> [], l2
+  | [] -> [], l2, l1_del, l2_del
   | hd::tl ->
     let t, n = try_candidates hd l2 in
     if n = 0 then
       fail ("not equiv: no candidate found for scrutinee " ^ term_to_string hd)
     else if n = 1 then (
       let l2 = remove_from_list t l2 in
-      equivalent_lists_once tl l2
+      equivalent_lists_once tl l2 (hd::l1_del) (t::l2_del)
     ) else
       // Too many candidates for this scrutinee
-      let rem1, rem2 = equivalent_lists_once tl l2 in
-      hd::rem1, rem2
+      let rem1, rem2, l1'_del, l2'_del = equivalent_lists_once tl l2 l1_del l2_del in
+      hd::rem1, rem2, l1'_del, l2'_del
 
 let get_head (l:list term) : term = match l with
   | [] -> `()
@@ -84,35 +91,46 @@ let get_head (l:list term) : term = match l with
 
 (* Recursively calls equivalent_lists_once.
    Stops when we're done with unification, or when we didn't make any progress
-   If we didn't make any progress, we have too many candidates for some terms *)
-let rec equivalent_lists' (n:nat) (l1 l2:list term) : Tac unit =
+   If we didn't make any progress, we have too many candidates for some terms.
+   Accumulates rewritings of l1 and l2 in l1_del and l2_del, with the invariant
+   that the two lists are unifiable at any point
+   *)
+let rec equivalent_lists' (n:nat) (l1 l2 l1_del l2_del:list term)
+  : Tac (list term * list term) =
   match l1 with
   | [] -> begin match l2 with
-    | [] -> dump "equiv"
+    | [] -> dump "equiv"; (l1_del, l2_del)
     | _ ->
       // TODO: This should succeed if l2 only contains uvars or emp,
       //as it can be unified with emp
-      dump "not equiv"
+      dump "not equiv"; (l1_del, l2_del)
     end
   | _ ->
-    let rem1, rem2 = equivalent_lists_once l1 l2 in
+    let rem1, rem2, l1_del', l2_del' = equivalent_lists_once l1 l2 l1_del l2_del in
     let n' = List.Tot.length rem1 in
     if n' >= n then
       // Should always be smaller or equal to n
       // If it is equal, no progress was made.
       fail ("too many candidates for scrutinee " ^ term_to_string (get_head rem1))
-    else equivalent_lists' n' rem1 rem2
+    else equivalent_lists' n' rem1 rem2 l1_del' l2_del'
 
 (* First remove all trivially equal terms, then try to decide equivalence *)
-let equivalent_lists (l1 l2:list term) : Tac unit =
-  let l1, l2 = trivial_cancels l1 l2 in
+let equivalent_lists (l1 l2:list term) : Tac (list term * list term) =
+  let l1, l2, l1_del, l2_del = trivial_cancels l1 l2 in
   let n = List.Tot.length l1 in
-  equivalent_lists' n l1 l2
+  let l1_del, l2_del = equivalent_lists' n l1 l2 l1_del l2_del in
+  l1_del, l2_del
 
 #set-options "--print_implicits"
 
 assume val p (#n:int) (n2:int) : Type
 assume val q (#n:int) (#n':int) (n2:int) : Type
+
+let l:list int = [0; 1; 2]
+
+let rec string_of_list (l:list term) = match l with
+  | [] -> ""
+  | a::q -> term_to_string a ^ " " ^ string_of_list q
 
 let _ =
   let terms:list term =
@@ -126,5 +144,8 @@ let _ =
   // a dump in the tactic.
   assert (True) by (
     let u = fresh_uvar None in
-    equivalent_lists terms (u::p_terms));
+    let l1_del, l2_del = equivalent_lists terms (u::p_terms) in
+    dump (string_of_list l1_del);
+    dump (string_of_list l2_del)
+    );
   ()
