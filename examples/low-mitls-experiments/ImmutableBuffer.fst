@@ -98,7 +98,7 @@ let test_ub () :HST.St unit =
   //let j = UB.uindex b 4ul in --> this fails since the index 4ul is not initialized
   let b1 = B.gcmalloc HS.root 0 10ul in  //allocate a different regular buffer
   let h0 = HST.get () in
-  UB.ublit b1 2ul b 2ul 3ul;  //copy [2, 5) from regular buffer to [2, 5) of uninitialized buffer
+  UB.ublit_non_null b1 2ul b 2ul 3ul;  //copy [2, 5) from regular buffer to [2, 5) of uninitialized buffer
   let h1 = HST.get () in
   let j = UB.uindex b 4ul in  //now 4ul is indexable
   assert (j == 0);  //and we can check its value is 0 (from the source buffer)
