@@ -154,11 +154,11 @@ unfold private let ublit_post_j
     (forall (i:nat).{:pattern (dst `initialized_at` i)} (i >= U32.v idx_dst /\ i < U32.v idx_dst + U32.v j) ==>
 					          dst `initialized_at` i)
 
-let ublit (#a:Type0) (#rrel #rel:srel a)
+let ublit_non_null (#a:Type0) (#rrel #rel:srel a)
   (src:mbuffer a rrel rel) (idx_src:U32.t)
   (dst:ubuffer a{disjoint src dst}) (idx_dst:U32.t)
   (len:U32.t{valid_j_for_blit src idx_src dst idx_dst len})
-  :HST.Stack unit (requires (fun h0     -> live h0 src /\ live h0 dst))
+  :HST.Stack unit (requires (fun h0     -> live h0 src /\ live h0 dst /\ not (g_is_null src) /\ not (g_is_null dst)))
                   (ensures (fun h0 _ h1 -> ublit_post_j src idx_src dst idx_dst len h0 h1))
   = let rec aux (j:U32.t{valid_j_for_blit src idx_src dst idx_dst j})
       :HST.Stack unit

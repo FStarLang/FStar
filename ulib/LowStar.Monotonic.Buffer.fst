@@ -1268,13 +1268,13 @@ let pointer_distinct_sel_disjoint #a #_ #_ #_ #_ b1 b2 h =
 
 let is_null #_ #_ #_ b = Null? b
 
-let msub #a #rrel #rel sub_rel b i len =
+let msub_non_null #a #rrel #rel sub_rel b i len =
   match b with
   | Null -> Null
   | Buffer max_len content i0 len0 ->
     Buffer max_len content (U32.add i0 i) len
 
-let moffset #a #rrel #rel sub_rel b i =
+let moffset_non_null #a #rrel #rel sub_rel b i =
   match b with
   | Null -> Null
   | Buffer max_len content i0 len ->
@@ -1539,7 +1539,7 @@ let mmalloc_drgn_and_blit #a #rrel #_ #_ d src id_src len =
   Buffer len content 0ul len
 
 #push-options "--max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 64"
-let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
+let blit_non_null #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
   let open HST in
   match src, dst with
   | Buffer _ _ _ _, Buffer _ _ _ _ ->
@@ -1585,7 +1585,7 @@ let blit #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
       g_upd_seq_as_seq dst (Seq.slice s2' 0 (U32.v length2)) h  //for modifies clause
   | _, _ -> ()
 
-#push-options "--z3rlimit 128 --max_fuel 0 --max_ifuel 1 --initial_ifuel 1 --z3cliopt smt.qi.EAGER_THRESHOLD=4"
+#push-options "--z3rlimit 256 --max_fuel 0 --max_ifuel 1 --initial_ifuel 1 --z3cliopt smt.qi.EAGER_THRESHOLD=4"
 let fill' (#t:Type) (#rrel #rel: srel t)
   (b: mbuffer t rrel rel)
   (z:t)
@@ -1623,7 +1623,7 @@ let fill' (#t:Type) (#rrel #rel: srel t)
   end
 #pop-options
 
-let fill #t #rrel #rel b z len = fill' b z len
+let fill_non_null #t #rrel #rel b z len = fill' b z len
 
 module MG = FStar.ModifiesGen
 

@@ -811,8 +811,8 @@ and translate_expr env e: expr =
       EBufSub (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ])
-    when string_of_mlpath p = "LowStar.Monotonic.Buffer.msub"
-      || string_of_mlpath p = "LowStar.ConstBuffer.sub" ->
+    when string_of_mlpath p = "LowStar.Monotonic.Buffer.msub_non_null"
+      || string_of_mlpath p = "LowStar.ConstBuffer.sub_non_null" ->
       EBufSub (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.join") ->
@@ -821,7 +821,7 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when (string_of_mlpath p = "FStar.Buffer.offset") ->
       EBufSub (translate_expr env e1, translate_expr env e2)
 
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when string_of_mlpath p = "LowStar.Monotonic.Buffer.moffset" ->
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2 ]) when string_of_mlpath p = "LowStar.Monotonic.Buffer.moffset_non_null" ->
       EBufSub (translate_expr env e1, translate_expr env e2)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ])
@@ -838,12 +838,12 @@ and translate_expr env e: expr =
       EPopFrame
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3; e4; e5 ]) when (
       string_of_mlpath p = "FStar.Buffer.blit" ||
-      string_of_mlpath p = "LowStar.Monotonic.Buffer.blit" ||
-      string_of_mlpath p = "LowStar.UninitializedBuffer.ublit"
+      string_of_mlpath p = "LowStar.Monotonic.Buffer.blit_non_null" ||
+      string_of_mlpath p = "LowStar.UninitializedBuffer.ublit_non_null"
     ) ->
       EBufBlit (translate_expr env e1, translate_expr env e2, translate_expr env e3, translate_expr env e4, translate_expr env e5)
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; e3 ])
-    when (let s = string_of_mlpath p in (s = "FStar.Buffer.fill" || s = "LowStar.Monotonic.Buffer.fill" )) ->
+    when (let s = string_of_mlpath p in (s = "FStar.Buffer.fill" || s = "LowStar.Monotonic.Buffer.fill_non_null" )) ->
       EBufFill (translate_expr env e1, translate_expr env e2, translate_expr env e3)
   | MLE_App ({ expr = MLE_Name p }, [ _ ]) when string_of_mlpath p = "FStar.HyperStack.ST.get" ->
       // We need to reveal to Kremlin that FStar.HST.get is equivalent to
