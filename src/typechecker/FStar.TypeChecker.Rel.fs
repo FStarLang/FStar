@@ -1663,6 +1663,8 @@ and giveup_or_defer (env:Env.env) (orig:prob) (wl:worklist) (msg:lstring) : solu
     else giveup env msg orig
 
 and defer_to_user_tac (env:Env.env) (orig:prob) reason (wl:worklist) : solution =
+  if Env.debug env <| Options.Other "Rel" then
+    BU.print1 "\n\t\tDeferring %s to a tactic\n" (prob_to_string env orig);
   let wl = solve_prob orig None [] wl in
   let wl = {wl with wl_deferred_to_tac=(wl.ctr, Thunk.mkv reason, orig)::wl.wl_deferred_to_tac} in
   solve env wl
@@ -2124,6 +2126,8 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                               (lhs:flex_t)
                               (rhs:term)
     : solution =
+    if Env.debug env <| Options.Other "Rel" then
+      BU.print_string "solve_t_flex_rigid_eq\n";
 
     if should_defer_flex_to_user_tac env wl lhs
     then defer_to_user_tac env orig (flex_reason lhs) wl
@@ -2148,6 +2152,8 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
     let try_quasi_pattern (orig:prob) (env:Env.env) (wl:worklist)
                           (lhs:flex_t) (rhs:term)
         : either<string, list<uvi>> * worklist =
+        if Env.debug env <| Options.Other "Rel" then
+          BU.print_string "try_quasi_pattern\n";
         match quasi_pattern env lhs with
         | None ->
           Inl "Not a quasi-pattern", wl
@@ -2169,7 +2175,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                     (rhs:term)
         : solution =
         //if Env.debug env <| Options.Other "Rel"
-        //then printfn "imitate_app 1:\n\tlhs=%s\n\tbs_lhs=%s\n\tt_res_lhs=%s\n\trhs=%s\n"
+        //then BU.print4 "imitate_app 1:\n\tlhs=%s\n\tbs_lhs=%s\n\tt_res_lhs=%s\n\trhs=%s\n"
         //    (flex_t_to_string lhs)
         //    (Print.binders_to_string ", " bs_lhs)
         //    (Print.term_to_string t_res_lhs)
@@ -2178,7 +2184,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let args_rhs, last_arg_rhs = BU.prefix args in
         let rhs' = S.mk_Tm_app rhs_hd args_rhs rhs.pos in
         //if Env.debug env <| Options.Other "Rel"
-        //then printfn "imitate_app 2:\n\trhs'=%s\n\tlast_arg_rhs=%s\n"
+        //then BU.print2 "imitate_app 2:\n\trhs'=%s\n\tlast_arg_rhs=%s\n"
         //            (Print.term_to_string rhs')
         //            (Print.args_to_string [last_arg_rhs]);
         let (Flex (t_lhs, u_lhs, _lhs_args)) = lhs in
@@ -2190,7 +2196,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
               lhs', lhs'_last_arg, wl
         in
         //if Env.debug env <| Options.Other "Rel"
-        //then printfn "imitate_app 3:\n\tlhs'=%s\n\tlast_arg_lhs=%s\n"
+        //then BU.print2 "imitate_app 3:\n\tlhs'=%s\n\tlast_arg_lhs=%s\n"
         //            (Print.term_to_string lhs')
         //            (Print.term_to_string lhs'_last_arg);
         let sol = [TERM(u_lhs, U.abs bs_lhs (S.mk_Tm_app lhs' [S.as_arg lhs'_last_arg] t_lhs.pos)
@@ -2207,6 +2213,8 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
     let first_order (orig:prob) (env:Env.env) (wl:worklist)
                     (lhs:flex_t) (rhs:term)
         : solution =
+        if Env.debug env <| Options.Other "Rel" then
+          BU.print_string "first_order\n";
         let is_app rhs =
            let _, args = U.head_and_args rhs in
            match args with
@@ -2248,12 +2256,23 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
       let (Flex (_t1, ctx_uv, args_lhs)) = lhs in
       match pat_vars env ctx_uv.ctx_uvar_binders args_lhs with
       | Some lhs_binders -> //Pattern
+        if Env.debug env <| Options.Other "Rel" then
+          BU.print_string "it's a pattern\n";
         let rhs = sn env rhs in
         let names_to_string fvs =
             List.map Print.bv_to_string (BU.set_elements fvs) |> String.concat ", "
         in
         let fvs1 = binders_as_bv_set (ctx_uv.ctx_uvar_binders @ lhs_binders) in
         let fvs2 = Free.names rhs in
+        //if Env.debug env <| Options.Other "Rel" then
+        //  BU.print4 "lhs \t= %s\n\
+        //             FV(lhs) \t= %s\n\
+        //             rhs \t= %s\n\
+        //             FV(rhs) \t= %s\n"
+        //               (flex_t_to_string lhs)
+        //               (names_to_string fvs1)
+        //               (Print.term_to_string rhs)
+        //               (names_to_string fvs2);
         let uvars, occurs_ok, msg = occurs_check ctx_uv rhs in
         if not occurs_ok
         then giveup_or_defer env orig wl (Thunk.mkv <| "occurs-check failed: " ^ (Option.get msg))
