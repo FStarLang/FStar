@@ -174,11 +174,12 @@ let const_sub_buffer (i:U32.t) (len:U32.t) (csub c:const_buffer 'a) =
 
 /// `sub`: A sub-buffer of a const buffer points to a given
 /// within-bounds offset of its head
-val sub (#a:_) (c:const_buffer a) (i:U32.t) (len:Ghost.erased (U32.t))
+val sub_non_null (#a:_) (c:const_buffer a) (i:U32.t) (len:Ghost.erased (U32.t))
   : Stack (const_buffer a)
     (requires fun h ->
       live h c /\
-      U32.v i + U32.v len <= length c)
+      U32.v i + U32.v len <= length c /\
+      not (B.g_is_null (as_mbuf c)))
     (ensures fun h0 c' h1 ->
       let qc = as_qbuf c in
       let qc' = as_qbuf c' in
@@ -244,6 +245,24 @@ val cast (c:const_buffer 'a)
     (requires True)
     (ensures fun x ->
       x == as_mbuf c)
+
+inline_for_extraction noextract
+let sub (#a:_) (c:const_buffer a) (i:U32.t) (len:Ghost.erased (U32.t))
+  : Stack (const_buffer a)
+    (requires fun h ->
+      live h c /\
+      U32.v i + U32.v len <= length c)
+    (ensures fun h0 c' h1 ->
+      let qc = as_qbuf c in
+      let qc' = as_qbuf c' in
+      h0 == h1 /\
+      c' `const_sub_buffer i len` c)
+=
+  if B.is_null (cast c) then begin
+    B.null_unique (B.mgsub #a (qbuf_pre (as_qbuf c)) (as_mbuf c) i len);
+    of_qbuf (B.mnull #a #(qbuf_pre (as_qbuf c)) #(qbuf_pre (as_qbuf c)))
+  end else
+    sub_non_null c i len
 
 val to_buffer (c:const_buffer 'a)
   : Pure (B.buffer 'a)
