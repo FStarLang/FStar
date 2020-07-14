@@ -1992,9 +1992,9 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            e1::e2::_e3::[])
           when
           (let uu____5805 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu____5805 = "LowStar.Monotonic.Buffer.msub") ||
+           uu____5805 = "LowStar.Monotonic.Buffer.msub_non_null") ||
             (let uu____5807 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu____5807 = "LowStar.ConstBuffer.sub")
+             uu____5807 = "LowStar.ConstBuffer.sub_non_null")
           ->
           let uu____5808 =
             let uu____5813 = translate_expr env1 e1 in
@@ -2053,7 +2053,7 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            e1::e2::[])
           when
           let uu____5866 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu____5866 = "LowStar.Monotonic.Buffer.moffset" ->
+          uu____5866 = "LowStar.Monotonic.Buffer.moffset_non_null" ->
           let uu____5867 =
             let uu____5872 = translate_expr env1 e1 in
             let uu____5873 = translate_expr env1 e2 in
@@ -2148,10 +2148,10 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
           ((let uu____5965 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
             uu____5965 = "FStar.Buffer.blit") ||
              (let uu____5967 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-              uu____5967 = "LowStar.Monotonic.Buffer.blit"))
+              uu____5967 = "LowStar.Monotonic.Buffer.blit_non_null"))
             ||
             (let uu____5969 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu____5969 = "LowStar.UninitializedBuffer.ublit")
+             uu____5969 = "LowStar.UninitializedBuffer.ublit_non_null")
           ->
           let uu____5970 =
             let uu____5981 = translate_expr env1 e1 in
@@ -2176,7 +2176,8 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
            e1::e2::e3::[])
           when
           let s = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          (s = "FStar.Buffer.fill") || (s = "LowStar.Monotonic.Buffer.fill")
+          (s = "FStar.Buffer.fill") ||
+            (s = "LowStar.Monotonic.Buffer.fill_non_null")
           ->
           let uu____6002 =
             let uu____6009 = translate_expr env1 e1 in
