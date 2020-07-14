@@ -57,12 +57,14 @@ any type. This will fail at tactic runtime if the quoted term does not
 typecheck to type [a]. *)
 assume val unquote : #a:Type -> term -> Tac a
 
-(** [catch t] will attempt to run [t] and allow to recover from a failure.
-If [t] succeeds with return value [a], [catch t] returns [Inr a].
-On failure, it returns [Inl msg], where [msg] is the error [t]
-raised. See also [or_else].  *)
+(** [catch t] will attempt to run [t] and allow to recover from a
+failure. If [t] succeeds with return value [a], [catch t] returns [Inr
+a]. On failure, it returns [Inl msg], where [msg] is the error [t]
+raised, and all unionfind effects are reverted. See also [recover] and
+[or_else]. *)
 assume val catch : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 
+(** Like [catch t], but will not discard unionfind effects on failure. *)
 assume val recover : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 
 (** [trivial] will discharge the goal if it's exactly [True] after
@@ -259,7 +261,13 @@ assume val uvar_env : env -> option typ -> Tac term
 whether unification was possible. When the tactic returns true, the
 terms have been unified, instantiating uvars as needed. When false,
 unification was not possible and no change to uvars occurs. *)
-assume val unify_env : env -> term -> term -> Tac bool
+assume val unify_env : env -> t1:term -> t2:term -> Tac bool
+
+(** Check if [t1] matches [t2], i.e., whether [t2] can have its uvars
+instantiated into unifying with [t1]. When the tactic returns true, the
+terms have been unified, instantiating uvars as needed. When false,
+matching was not possible and no change to uvars occurs. *)
+assume val match_env : env -> t1:term -> t2:term -> Tac bool
 
 (** Launches an external process [prog] with arguments [args] and input
 [input] and returns the output. For security reasons, this can only be

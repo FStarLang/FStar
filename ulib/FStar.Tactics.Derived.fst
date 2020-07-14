@@ -232,10 +232,13 @@ let fresh_uvar (o : option typ) : Tac term =
     let e = cur_env () in
     uvar_env e o
 
-let unify t1 t2 : Tac bool =
+let unify (t1 t2 : term) : Tac bool =
     let e = cur_env () in
     unify_env e t1 t2
 
+let tmatch (t1 t2 : term) : Tac bool =
+    let e = cur_env () in
+    match_env e t1 t2
 
 (** [divide n t1 t2] will split the current set of goals into the [n]
 first ones, and the rest. It then runs [t1] on the first set, and [t2]

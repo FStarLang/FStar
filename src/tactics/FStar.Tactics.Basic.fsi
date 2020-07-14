@@ -71,6 +71,7 @@ val t_destruct             : term -> tac<list<(fv * Z.t)>>
 val set_options            : string -> tac<unit>
 val uvar_env               : env -> option<typ> -> tac<term>
 val unify_env              : env -> term -> term -> tac<bool>
+val match_env              : env -> term -> term -> tac<bool>
 val launch_process         : string -> list<string> -> string -> tac<string>
 val fresh_bv_named         : string -> typ -> tac<bv>
 val change                 : typ -> tac<unit>

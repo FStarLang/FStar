@@ -413,6 +413,10 @@ let () =
         unify_env RE.e_env RE.e_term RE.e_term e_bool
         unify_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
 
+      mk_tac_step_3 0 "match_env"
+        match_env RE.e_env RE.e_term RE.e_term e_bool
+        match_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
+
       mk_tac_step_3 0 "launch_process"
         launch_process e_string (e_list e_string) e_string e_string
         launch_process NBET.e_string (NBET.e_list NBET.e_string) NBET.e_string NBET.e_string;
