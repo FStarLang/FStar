@@ -154,17 +154,18 @@ let do_unify env t1 t2 : tac<bool> =
     ret r))
 
 (* Does t1 match t2? That is, do they unify without instantiating/changing t1? *)
-let do_match env t1 t2 : tac<bool> =
+let do_match (env:Env.env) (t1:term) (t2:term) : tac<bool> =
+    bind (mk_tac (fun ps -> let tx = UF.new_transaction ())) (fun tx ->
     let uvs1 = SF.uvars_uncached t1 in
     bind (do_unify env t1 t2) (fun r ->
     if r then begin
         let uvs2 = SF.uvars_uncached t1 in
         if not (set_eq uvs1 uvs2)
-        then ret false
+        then (UF.rollback tx; ret false)
         else ret true
     end
     else ret false
-    )
+    ))
 
 (*
    set_solution:
