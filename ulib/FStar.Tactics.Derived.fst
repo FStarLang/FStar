@@ -555,12 +555,13 @@ let unfold_def (t:term) : Tac unit =
         norm [delta_fully [n]]
     | _ -> fail "unfold_def: term is not a fv"
 
-(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities.
-The lemmas need to prove *propositional* equalities, that is, using [==]. *)
+(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating
+equalities. The lemmas need to prove *propositional* equalities, that
+is, using [==]. *)
 let l_to_r (lems:list term) : Tac unit =
     let first_or_trefl () : Tac unit =
         fold_left (fun k l () ->
-                    (fun () -> apply_lemma l)
+                    (fun () -> apply_lemma_rw l)
                     `or_else` k)
                   trefl lems () in
     pointwise first_or_trefl
@@ -878,8 +879,6 @@ and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
         C_Eff us eff res args
   in
   pack_comp cv'
-
-exception NotAListLiteral
 
 let rec destruct_list (t : term) : Tac (list term) =
     let head, args = collect_app t in
