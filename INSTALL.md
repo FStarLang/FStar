@@ -177,6 +177,7 @@ but first we explain how to get a working OCaml setup on your machine.
 ### Prerequisites: Working OCaml setup  ###
 
 The steps require a working OCaml setup. OCaml version from 4.04.0 to 4.09.X should work.
+Versions outside this range are known not to work.
 
 #### Instructions for Windows ####
 
@@ -339,7 +340,7 @@ A convenience Makefile target is available to run all three steps:
 To use F\* for verification you need a particular Z3 binary.
 Our binary packages include that already in `bin`, but if you compile
 F\* from sources you need to get the Z3 binary yourself and add it to
-your `PATH`. We strongly recommend you use the Everest binaries here:
+your `PATH`. We strongly recommend to use the corresponding binary here:
 https://github.com/FStarLang/binaries/tree/master/z3-tested
 
 Other versions of Z3 may well work, but the F* tests, standard library, and
