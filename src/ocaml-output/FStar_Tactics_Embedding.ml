@@ -47,7 +47,7 @@ let (fstar_tactics_proofstate : tac_constant) =
 let (fstar_tactics_goal : tac_constant) =
   fstar_tactics_const ["Types"; "goal"]
 let (fstar_tactics_TacticFailure : tac_constant) =
-  fstar_tactics_data ["Types"; "TacticFailure"]
+  fstar_tactics_data ["Common"; "TacticFailure"]
 let (fstar_tactics_result : tac_constant) =
   fstar_tactics_const ["Types"; "result"]
 let (fstar_tactics_Success : tac_constant) =
