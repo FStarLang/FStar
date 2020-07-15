@@ -150,9 +150,6 @@ type ctrl_flag =
     | Skip
     | Abort
 
-exception TacticFailure of string
-exception EExn of term
-
 let check_goal_solved' goal =
   match FStar.Syntax.Unionfind.find goal.goal_ctx_uvar.ctx_uvar_head with
   | Some t -> Some t

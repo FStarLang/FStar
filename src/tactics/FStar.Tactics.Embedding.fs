@@ -7,6 +7,7 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.Util
 
+open FStar.Tactics.Common
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module PC = FStar.Parser.Const

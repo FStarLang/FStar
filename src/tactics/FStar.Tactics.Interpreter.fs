@@ -17,6 +17,7 @@ open FStar.Tactics.Basic
 open FStar.Tactics.CtrlRewrite
 open FStar.Tactics.InterpFuns
 open FStar.Tactics.Native
+open FStar.Tactics.Common
 
 module BU      = FStar.Util
 module Cfg     = FStar.TypeChecker.Cfg

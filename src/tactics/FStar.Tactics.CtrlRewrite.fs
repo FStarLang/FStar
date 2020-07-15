@@ -12,6 +12,7 @@ open FStar.TypeChecker.Env
 open FStar.Tactics.Basic
 open FStar.Tactics.Types
 open FStar.Tactics.Monad
+open FStar.Tactics.Common
 
 module Print  = FStar.Syntax.Print
 module BU     = FStar.Util
