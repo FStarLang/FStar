@@ -59,7 +59,7 @@ val clear                  : binder -> tac<unit>
 val rewrite                : binder -> tac<unit>
 val t_exact                : bool -> bool -> term -> tac<unit>
 val t_apply                : bool -> bool -> term -> tac<unit>
-val t_apply_lemma          : bool -> term -> tac<unit>
+val t_apply_lemma          : bool -> bool -> term -> tac<unit>
 val print                  : string -> tac<unit>
 val debugging              : unit -> tac<bool>
 val dump                   : string -> tac<unit>

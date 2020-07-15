@@ -145,12 +145,15 @@ Lemma ensuring [phi]. The arguments to [l] and its requires clause are
 introduced as new goals. As a small optimization, [unit] arguments are
 discharged by the engine. Just a thin wrapper around [t_apply_lemma]. *)
 let apply_lemma (t : term) : Tac unit =
-    t_apply_lemma false t
+    t_apply_lemma false false t
 
 (** Similar to [apply_lemma], but will not instantiate uvars in the
 goal while applying. *)
 let apply_lemma_noinst (t : term) : Tac unit =
-    t_apply_lemma true t
+    t_apply_lemma true false t
+
+let apply_lemma_rw (t : term) : Tac unit =
+    t_apply_lemma false true t
 
 (** [apply_raw f] is like [apply], but will ask for all arguments
 regardless of whether they appear free in further goals. See the

@@ -168,12 +168,16 @@ the other user facing variants.
 *)
 assume val t_apply : uopt:bool -> noinst:bool -> term -> Tac unit
 
-(** [t_apply_lemma l] will solve a goal of type [squash phi] when [l] is
-a Lemma ensuring [phi]. The arguments to [l] and its requires clause are
-introduced as new goals. As a small optimization, [unit] arguments are
-discharged by the engine. For the meanining of the [noinst] boolean arg
-see [t_apply]. *)
-assume val t_apply_lemma : noinst:bool -> term -> Tac unit
+(** [t_apply_lemma ni nilhs l] will solve a goal of type [squash phi]
+when [l] is a Lemma ensuring [phi]. The arguments to [l] and its
+requires clause are introduced as new goals. As a small optimization,
+[unit] arguments are discharged by the engine. For the meanining of
+the [noinst] boolean arg see [t_apply], briefly, it does not allow to
+instantiate uvars in the goal. The [noinst_lhs] flag is similar, it
+forbids instantiating uvars *but only on the LHS of the goal*, provided
+the goal is an equality. It is meant to be useful for rewrite-goals, of
+the shape [X = ?u]. Setting [noinst] means [noinst_lhs] is ignored. *)
+assume val t_apply_lemma : noinst:bool -> noinst_lhs:bool -> term -> Tac unit
 // TODO: do the unit thing too for [apply].
 
 (** [print str] has no effect on the proofstate, but will have the side effect
