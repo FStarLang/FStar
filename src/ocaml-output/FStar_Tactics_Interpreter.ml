@@ -1800,9 +1800,9 @@ let run_tactic_on_ps :
                                       uu____2345 "at the time of failure");
                                    (let texn_to_string e1 =
                                       match e1 with
-                                      | FStar_Tactics_Types.TacticFailure s
+                                      | FStar_Tactics_Common.TacticFailure s
                                           -> s
-                                      | FStar_Tactics_Types.EExn t ->
+                                      | FStar_Tactics_Common.EExn t ->
                                           let uu____2355 =
                                             FStar_Syntax_Print.term_to_string
                                               t in
