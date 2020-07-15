@@ -3620,7 +3620,13 @@ let rec universe_of_aux env e =
    | Tm_match(_, []) ->
      level_of_type_fail env e "empty match cases"
 
-let universe_of env e = level_of_type env e (universe_of_aux env e)
+let universe_of env e =
+    if debug env Options.High then
+      BU.print1 "Calling universe_of_aux with %s\n" (Print.term_to_string e);
+    let r = universe_of_aux env e in
+    if debug env Options.High then
+      BU.print1 "Got result from universe_of_aux = %s\n" (Print.term_to_string r);
+    level_of_type env e r
 
 let tc_tparams env0 (tps:binders) : (binders * Env.env * universes) =
     let tps, env, g, us = tc_binders env0 tps in
