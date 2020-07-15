@@ -4,6 +4,7 @@ module FStar.Tactics.Types
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
+open FStar.Tactics.Common
 module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module Range = FStar.Range
@@ -89,9 +90,6 @@ type ctrl_flag =
 type direction =
     | TopDown
     | BottomUp
-
-exception TacticFailure of string
-exception EExn of term
 
 val check_goal_solved' : goal -> option<term>
 val check_goal_solved  : goal -> bool

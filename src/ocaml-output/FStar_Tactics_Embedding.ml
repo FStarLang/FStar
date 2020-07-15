@@ -47,7 +47,7 @@ let (fstar_tactics_proofstate : tac_constant) =
 let (fstar_tactics_goal : tac_constant) =
   fstar_tactics_const ["Types"; "goal"]
 let (fstar_tactics_TacticFailure : tac_constant) =
-  fstar_tactics_data ["Types"; "TacticFailure"]
+  fstar_tactics_data ["Common"; "TacticFailure"]
 let (fstar_tactics_result : tac_constant) =
   fstar_tactics_const ["Types"; "result"]
 let (fstar_tactics_Success : tac_constant) =
@@ -346,7 +346,7 @@ let (e_goal_nbe :
 let (e_exn : Prims.exn FStar_Syntax_Embeddings.embedding) =
   let embed_exn e rng uu____800 uu____801 =
     match e with
-    | FStar_Tactics_Types.TacticFailure s ->
+    | FStar_Tactics_Common.TacticFailure s ->
         let uu____804 =
           let uu____805 =
             let uu____814 = embed FStar_Syntax_Embeddings.e_string rng s in
@@ -354,7 +354,7 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings.embedding) =
           [uu____805] in
         FStar_Syntax_Syntax.mk_Tm_app fstar_tactics_TacticFailure.t uu____804
           rng
-    | FStar_Tactics_Types.EExn t ->
+    | FStar_Tactics_Common.EExn t ->
         let uu___131_832 = t in
         {
           FStar_Syntax_Syntax.n = (uu___131_832.FStar_Syntax_Syntax.n);
@@ -381,8 +381,8 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings.embedding) =
         FStar_Util.bind_opt uu____939
           (fun s1 ->
              FStar_Pervasives_Native.Some
-               (FStar_Tactics_Types.TacticFailure s1))
-    | uu____944 -> FStar_Pervasives_Native.Some (FStar_Tactics_Types.EExn t) in
+               (FStar_Tactics_Common.TacticFailure s1))
+    | uu____944 -> FStar_Pervasives_Native.Some (FStar_Tactics_Common.EExn t) in
   let uu____959 =
     let uu____960 =
       let uu____967 =
@@ -395,7 +395,7 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings.embedding) =
 let (e_exn_nbe : Prims.exn FStar_TypeChecker_NBETerm.embedding) =
   let embed_exn cb e =
     match e with
-    | FStar_Tactics_Types.TacticFailure s ->
+    | FStar_Tactics_Common.TacticFailure s ->
         let uu____986 =
           let uu____993 =
             let uu____998 =
@@ -421,7 +421,7 @@ let (e_exn_nbe : Prims.exn FStar_TypeChecker_NBETerm.embedding) =
         FStar_Util.bind_opt uu____1050
           (fun s1 ->
              FStar_Pervasives_Native.Some
-               (FStar_Tactics_Types.TacticFailure s1))
+               (FStar_Tactics_Common.TacticFailure s1))
     | uu____1055 -> FStar_Pervasives_Native.None in
   let fv_exn = FStar_Syntax_Syntax.fvconst FStar_Parser_Const.exn_lid in
   let uu____1057 = mkFV fv_exn [] [] in
