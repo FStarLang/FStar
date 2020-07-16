@@ -1811,7 +1811,7 @@ val msub_non_null (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a r
              (requires (fun h -> U32.v i + U32.v (Ghost.reveal len) <= length b /\ compatible_sub b i (Ghost.reveal len) sub_rel /\ live h b /\ not (g_is_null b)))
              (ensures  (fun h y h' -> h == h' /\ y == mgsub sub_rel b i (Ghost.reveal len)))
 
-let resolve_non_null x =
+let is_non_zero x =
   let open FStar.Tactics in
   match inspect (quote x) with
   | Tv_App f (x, Q_Explicit) ->
@@ -1848,7 +1848,7 @@ let msub_generic (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rr
 
 inline_for_extraction noextract
 let msub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
-  (i:U32.t) (#[resolve_non_null i] i_non_zero: bool) (len:Ghost.erased U32.t)
+  (i:U32.t) (#[is_non_zero i] i_non_zero: bool) (len:Ghost.erased U32.t)
   :HST.Stack (mbuffer a rrel sub_rel)
              (requires (fun h ->
                U32.v i + U32.v (Ghost.reveal len) <= length b /\ compatible_sub b i (Ghost.reveal len) sub_rel /\ live h b /\
