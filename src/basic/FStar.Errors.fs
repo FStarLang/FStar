@@ -1021,6 +1021,8 @@ let lookup err =
          | CWarning
          | CSilent -> CError
          | _ -> level)
+      | Some _ ->
+        level
     in
     with_level level'
 
