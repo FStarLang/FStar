@@ -1816,7 +1816,7 @@ and (tc_maybe_toplevel_term :
                                     let uu____4889 =
                                       FStar_Syntax_Syntax.mk_lb
                                         (x, [],
-                                          (c1.FStar_TypeChecker_Common.eff_name),
+                                          (c.FStar_TypeChecker_Common.eff_name),
                                           FStar_Syntax_Syntax.t_unit, e13,
                                           attrs,
                                           (e13.FStar_Syntax_Syntax.pos)) in
