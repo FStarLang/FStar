@@ -2858,8 +2858,13 @@ let rec elim_delayed_subst_term (t:term) : term =
     | Tm_uinst _
     | Tm_constant _
     | Tm_type _
-    | Tm_lazy _
     | Tm_unknown -> t
+
+    (* We also use this function to unfold lazy embeddings:
+     * they may contain arrows and cannot be written into
+     * .checked files. *)
+    | Tm_lazy li ->
+      elim_delayed_subst_term (U.unfold_lazy li)
 
     | Tm_abs(bs, t, rc_opt) ->
       let elim_rc rc =
