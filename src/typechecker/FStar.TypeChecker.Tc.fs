@@ -722,7 +722,12 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     in
     let se = { se with sigattrs = attrs } in (* to remove the postprocess_with *)
     let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
-        let lbdef = Env.postprocess env tau lb.lbtyp lb.lbdef in
+        let s, univnames = SS.univ_var_opening lb.lbunivs in
+        let lbdef = SS.subst s lb.lbdef in
+        let lbtyp = SS.subst s lb.lbtyp in
+        let env = Env.push_univ_vars env univnames in
+        let lbdef = Env.postprocess env tau lbtyp lbdef in
+        let lbdef = SS.close_univ_vars univnames lbdef in
         { lb with lbdef = lbdef }
     in
     let (r, ms) = BU.record_time (fun () -> tc_maybe_toplevel_term env' e) in
@@ -1097,12 +1102,12 @@ let check_exports env (modul:modul) exports : unit =
         TcTerm.tc_trivial_guard env t |> ignore
     in
     let check_term lid univs t =
-        let _ = Errors.message_prefix.set_prefix
+        let _ = Errors.message_prefix.push_prefix
                 (BU.format2 "Interface of %s violates its abstraction (add a 'private' qualifier to '%s'?)"
                         (string_of_lid modul.name)
                         (string_of_lid lid)) in
         check_term lid univs t;
-        Errors.message_prefix.clear_prefix()
+        ignore (Errors.message_prefix.pop_prefix())
     in
     let rec check_sigelt = fun se -> match se.sigel with
         | Sig_bundle(ses, _) ->
@@ -1349,8 +1354,16 @@ and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
       else en0
     in
 
-    //AR: the third flag 'true' is for iface_exists for the current file, since it's an iface already, pass true
+    let _ = Errors.message_prefix.push_prefix
+            (BU.format1 "Error raised while checking the extracted interface of %s"
+                    (string_of_lid modul_iface.name)) in
+
+    // AR: the third flag 'true' is for iface_exists for the current
+    //     file, since it's an iface already, pass true
     let modul_iface, env = tc_modul en0 modul_iface true in
+
+    ignore (Errors.message_prefix.pop_prefix ());
+
     { m with exports = modul_iface.exports }, env  //note: setting the exports for m, once extracted_interfaces is default, exports should just go away
   end
   else

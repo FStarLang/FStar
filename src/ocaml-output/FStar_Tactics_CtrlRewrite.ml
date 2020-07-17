@@ -188,8 +188,8 @@ let (do_rewrite :
           FStar_Tactics_Monad.bind uu____138
             (fun uu___0_153 ->
                match uu___0_153 with
-               | FStar_Util.Inl (FStar_Tactics_Types.TacticFailure "SKIP") ->
-                   FStar_Tactics_Monad.ret tm
+               | FStar_Util.Inl (FStar_Tactics_Common.TacticFailure "SKIP")
+                   -> FStar_Tactics_Monad.ret tm
                | FStar_Util.Inl e -> FStar_Tactics_Monad.traise e
                | FStar_Util.Inr tm' -> FStar_Tactics_Monad.ret tm')
 type 'a ctac =

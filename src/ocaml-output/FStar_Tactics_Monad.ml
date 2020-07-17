@@ -32,10 +32,10 @@ let run_safe :
          with
          | FStar_Errors.Err (uu____127, msg) ->
              FStar_Tactics_Result.Failed
-               ((FStar_Tactics_Types.TacticFailure msg), ps)
+               ((FStar_Tactics_Common.TacticFailure msg), ps)
          | FStar_Errors.Error (uu____129, msg, uu____131) ->
              FStar_Tactics_Result.Failed
-               ((FStar_Tactics_Types.TacticFailure msg), ps)
+               ((FStar_Tactics_Common.TacticFailure msg), ps)
          | e -> FStar_Tactics_Result.Failed (e, ps))
 let ret : 'a . 'a -> 'a tac =
   fun x -> mk_tac (fun ps -> FStar_Tactics_Result.Success (x, ps))
@@ -70,7 +70,7 @@ let fail : 'a . Prims.string -> 'a tac =
               (Prims.op_Hat "TACTIC FAILING: " msg)
           else ());
          FStar_Tactics_Result.Failed
-           ((FStar_Tactics_Types.TacticFailure msg), ps))
+           ((FStar_Tactics_Common.TacticFailure msg), ps))
 let rec mapM : 'a 'b . ('a -> 'b tac) -> 'a Prims.list -> 'b Prims.list tac =
   fun f ->
     fun l ->
@@ -540,9 +540,9 @@ let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
            | FStar_Tactics_Result.Success (a1, q) ->
                FStar_Tactics_Result.Success (a1, q)
            | FStar_Tactics_Result.Failed
-               (FStar_Tactics_Types.TacticFailure msg, q) ->
+               (FStar_Tactics_Common.TacticFailure msg, q) ->
                FStar_Tactics_Result.Failed
-                 ((FStar_Tactics_Types.TacticFailure
+                 ((FStar_Tactics_Common.TacticFailure
                      (Prims.op_Hat pref (Prims.op_Hat ": " msg))), q)
            | FStar_Tactics_Result.Failed (e, q) ->
                FStar_Tactics_Result.Failed (e, q))

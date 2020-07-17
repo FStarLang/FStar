@@ -730,8 +730,8 @@ let lookup_error_range settings (l, h) =
 
 let error_number (_, _, i) = i
 
-let warn_on_use_errno =
-  error_number (lookup_error default_settings Warning_WarnOnUse)
+let warn_on_use_errno = error_number (lookup_error default_settings Warning_WarnOnUse)
+let defensive_errno   = error_number (lookup_error default_settings Warning_Defensive)
 
 let update_flags (l:list<(error_flag * string)>)
   : list<error_setting>
@@ -847,6 +847,8 @@ let compare_issues i1 i2 =
 let mk_default_handler print =
     let issues : ref<list<issue>> = BU.mk_ref [] in
     let add_one (e: issue) =
+        if Options.defensive_abort () && e.issue_number = Some defensive_errno then
+          failwith "Aborting due to --defensive abort";
         match e.issue_level with
         | EInfo -> print_issue e
         | _ -> issues := e :: !issues
@@ -907,21 +909,32 @@ let set_handler handler =
 
 
 type error_message_prefix = {
-    set_prefix: string -> unit;
-    append_prefix: string -> string;
-    clear_prefix: unit -> unit;
+    push_prefix:    string -> unit;
+    pop_prefix:     unit -> string;
+    clear_prefixs:  unit -> unit;
+    append_prefixs: string -> string;
 }
 
 let message_prefix =
-    let pfx = BU.mk_ref None in
-    let set_prefix s = pfx := Some s in
-    let clear_prefix () = pfx := None in
-    let append_prefix s = match !pfx with
-        | None -> s
-        | Some p -> p ^ ": " ^ s in
-    {set_prefix=set_prefix;
-     clear_prefix=clear_prefix;
-     append_prefix=append_prefix}
+    let pfxs = BU.mk_ref [] in
+    let push_prefix s = pfxs := s :: !pfxs in
+    let pop_prefix s =
+        match !pfxs with
+        | h::t -> (pfxs := t; h)
+        | _ -> failwith "cannot pop error prefix..."
+    in
+    let clear_prefixs () = pfxs := [] in
+    let append_prefixs s =
+        List.fold_left (fun s p ->
+          p ^ ":\n\t" ^ s)
+          s
+          !pfxs
+    in
+    { push_prefix    = push_prefix
+    ; pop_prefix     = pop_prefix
+    ; clear_prefixs  = clear_prefixs
+    ; append_prefixs = append_prefixs
+    }
 
 
 let diag r msg =
@@ -1000,8 +1013,7 @@ let lookup err =
   let v, level, i = lookup_error flags err in
   let with_level level = v, level, i in
   match v with
-  | Warning_Defensive
-        when Options.defensive_fail() ->
+  | Warning_Defensive when Options.defensive_error () || Options.defensive_abort () ->
     with_level CAlwaysError
 
   | Warning_WarnOnUse ->
@@ -1020,6 +1032,8 @@ let lookup err =
          | CWarning
          | CSilent -> CError
          | _ -> level)
+      | Some _ ->
+        level
     in
     with_level level'
 
@@ -1042,15 +1056,15 @@ let log_issue r (e, msg) =
     else failwith ("don't use log_issue to report fatal error, should use raise_error: " ^format_issue i)
 
 let add_errors errs =
-    atomically (fun () -> List.iter (fun (e, msg, r) -> log_issue r (e, (message_prefix.append_prefix msg))) errs)
+    atomically (fun () -> List.iter (fun (e, msg, r) -> log_issue r (e, (message_prefix.append_prefixs msg))) errs)
 
 let issue_of_exn = function
     | Error(e, msg, r) ->
       let errno = error_number (lookup e) in
-      Some (mk_issue EError (Some r) (message_prefix.append_prefix msg) (Some errno))
+      Some (mk_issue EError (Some r) (message_prefix.append_prefixs msg) (Some errno))
     | Err (e, msg) ->
       let errno = error_number (lookup e) in
-      Some (mk_issue EError None (message_prefix.append_prefix msg) (Some errno))
+      Some (mk_issue EError None (message_prefix.append_prefixs msg) (Some errno))
     | _ -> None
 
 let err_exn exn =
