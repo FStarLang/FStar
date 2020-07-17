@@ -773,7 +773,7 @@
       1,
       [ "@query", "lemma_FStar.UInt64.uv_inv" ],
       0,
-      "6c33d195101679eb2d03db8446f2d3f0"
+      "d62e6b675999c30e9e66815eafca2113"
     ],
     [
       "BV.unfold_logand64",
@@ -786,7 +786,7 @@
         "typing_FStar.UInt64.logand"
       ],
       0,
-      "d0d3faa0326c676fd585375fd1b297ae"
+      "d8de71004f132c0a736afffcbbd48e27"
     ],
     [
       "BV.unfold_logor64",
@@ -799,7 +799,7 @@
         "typing_FStar.UInt64.logor"
       ],
       0,
-      "0b5363a0381d75ab5fc0cc0017526bf4"
+      "439d71d4b8138ced406a7d5db561152a"
     ],
     [
       "BV.unfold_logxor64",
@@ -812,7 +812,7 @@
         "typing_FStar.UInt64.logxor"
       ],
       0,
-      "73b6c32eff78de9f9ad61f62e5b27801"
+      "f5a9d7840d3c8c33154c7d50444f7e92"
     ]
   ]
 ]
