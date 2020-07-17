@@ -267,7 +267,6 @@ open Steel.Effect.Atomic
 #push-options "--z3rlimit 40"
 let bind_atomic_steel _ _ _ _ _ _ _ _ f g
 = fun m0 ->
-  assume (forall m0. inames_ok Set.empty m0);
   let x = f () in
   g x ()
 #pop-options
