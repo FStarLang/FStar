@@ -1036,13 +1036,11 @@ let tc_decls env ses =
     List.iter (fun se -> env.solver.encode_sig env se) ses';
 
     let exports, hidden =
-      if Options.use_extracted_interfaces () then List.rev_append ses' exports, []
-      else
-        let accum_exports_hidden (exports, hidden) se =
-          let se_exported, hidden = for_export env hidden se in
-          List.rev_append se_exported exports, hidden
-        in
-        List.fold_left accum_exports_hidden (exports, hidden) ses'
+      let accum_exports_hidden (exports, hidden) se =
+        let se_exported, hidden = for_export env hidden se in
+        List.rev_append se_exported exports, hidden
+      in
+      List.fold_left accum_exports_hidden (exports, hidden) ses'
     in
     (List.rev_append ses' ses, exports, env, hidden), ses_elaborated
     end
@@ -1321,71 +1319,24 @@ let rec tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul * env) =
 
 and finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) (m:modul) (exports:list<sigelt>) : (modul * env) =
   //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
-  let should_extract_interface =
-    (not loading_from_cache)            &&
-    (not iface_exists)                  &&
-    Options.use_extracted_interfaces () &&
-    (not m.is_interface)                &&
-    FStar.Errors.get_err_count() = 0
-  in
-  if should_extract_interface then begin //if we are using extracted interfaces and this is not already an interface
-    //extract the interface in the new environment, this helps us figure out things like if an effect is reifiable
-    let modul_iface = extract_interface en m in
-    if Env.debug en <| Options.Low then
-      BU.print4 "Extracting and type checking module %s interface%s%s%s\n" (string_of_lid m.name)
-                (if Options.should_verify (string_of_lid m.name) then "" else " (in lax mode) ")
-                (if Options.dump_module (string_of_lid m.name) then ("\nfrom: " ^ (Syntax.Print.modul_to_string m) ^ "\n") else "")
-                (if Options.dump_module (string_of_lid m.name) then ("\nto: " ^ (Syntax.Print.modul_to_string modul_iface) ^ "\n") else "");
+  let modul = { m with exports = exports } in
+  let env = Env.finish_module en modul in
 
-    //set up the environment to verify the interface
-    let en0 =
-      //pop to get the env before this module type checking...
-      let en0 = pop_context en ("Ending modul " ^ (string_of_lid m.name)) in
-      //.. but restore the dsenv, since typechecking `m` might have elaborated
-      // some %splices that we need to properly resolve further modules
-      let en0 = { en0 with dsenv = en.dsenv } in
-      //for hints, we want to use the same id counter as was used in typechecking the module itself, so use the tbl from latest env
-      let en0 = { en0 with qtbl_name_and_index = en.qtbl_name_and_index |> fst, None } in
-      //restore command line options ad restart z3 (to reset things like nl.arith options)
-      if not (Options.interactive ()) then begin  //we should not have this case actually since extracted interfaces are not supported in ide yet
-        Options.restore_cmd_line_options true |> ignore;
-        en0
-      end
-      else en0
-    in
+  //we can clear the lid to query index table
+  env.qtbl_name_and_index |> fst |> BU.smap_clear;
 
-    let _ = Errors.message_prefix.push_prefix
-            (BU.format1 "Error raised while checking the extracted interface of %s"
-                    (string_of_lid modul_iface.name)) in
+  if not (Options.lax())
+  && not loading_from_cache
+  then begin
+    UF.with_uf_enabled (fun () -> check_exports env modul exports)
+  end;
 
-    // AR: the third flag 'true' is for iface_exists for the current
-    //     file, since it's an iface already, pass true
-    let modul_iface, env = tc_modul en0 modul_iface true in
+  //pop BUT ignore the old env
+  pop_context env ("Ending modul " ^ string_of_lid modul.name) |> ignore;
 
-    ignore (Errors.message_prefix.pop_prefix ());
+  //moved the code for encoding the module to smt to Universal
 
-    { m with exports = modul_iface.exports }, env  //note: setting the exports for m, once extracted_interfaces is default, exports should just go away
-  end
-  else
-    let modul = { m with exports = exports } in
-    let env = Env.finish_module en modul in
-
-    //we can clear the lid to query index table
-    env.qtbl_name_and_index |> fst |> BU.smap_clear;
-
-    if not (Options.lax())
-    && not loading_from_cache
-    && not (Options.use_extracted_interfaces ())
-    then begin
-      UF.with_uf_enabled (fun () -> check_exports env modul exports)
-    end;
-
-    //pop BUT ignore the old env
-    pop_context env ("Ending modul " ^ string_of_lid modul.name) |> ignore;
-
-    //moved the code for encoding the module to smt to Universal
-
-    modul, env
+  modul, env
 
 let load_checked_module (en:env) (m:modul) :env =
   //This function tries to very carefully mimic the effect of the environment
