@@ -472,7 +472,7 @@ val free_action
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a {exclusive pcm v0})
-  : action (pts_to r v0) unit (fun _ -> pts_to r pcm.FStar.PCM.p.one)
+  : action (pts_to r v0) unit (fun _ -> emp)
 
 
 (** Splitting a permission on a composite resource into two separate permissions *)

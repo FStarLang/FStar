@@ -702,6 +702,14 @@ let sel_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a)
     in
     f
 
+let sel_action' (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a) (h:hheap (pts_to r v0))
+  : v:a{compatible pcm v0 v /\
+        (forall frame. composable pcm frame v0 /\
+                  interp (pts_to r frame) h ==>
+                  compatible pcm frame v)}
+  = sel_v r v0 h
+
+
 let upd' (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a) (v1:a {frame_preserving pcm v0 v1})
   : pre_action (pts_to r v0) unit (fun _ -> pts_to r v1)
   = fun h ->
@@ -911,6 +919,145 @@ let upd_action (#a:_) (#pcm:_) (r:ref a pcm)
           res
     in
     refined_pre_action_as_action g
+
+////////////////////////////////////////////////////////////////////////////////
+// Test, PairPCM
+
+
+type t (a:Type) (b:Type) =
+  | Both : a -> b -> t a b
+  | First : a -> t a b
+  | Second : b -> t a b
+  | Neither : t a b
+
+let comp #a #b (x y:t a b) : prop =
+  match x, y with
+  | Neither, _
+  | _, Neither
+  | First _, Second _
+  | Second _, First _ -> True
+  | _ -> False
+
+let combine #a #b (x: t a b) (y:t a b{comp x y}) : t a b =
+  match x, y with
+  | First a, Second b
+  | Second b, First a -> Both a b
+  | Neither, z
+  | z, Neither -> z
+
+let pcm_t #a #b : pcm (t a b) = FStar.PCM.({
+  p = {
+    composable=comp;
+    op=combine;
+    one=Neither
+  };
+  comm = (fun _ _ -> ());
+  assoc = (fun _ _ _ -> ());
+  assoc_r = (fun _ _ _ -> ());
+  is_unit = (fun _ -> ())
+})
+
+let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
+  : pre_action (pts_to r (First #a #b x))
+               unit
+               (fun _ -> pts_to r (First #a #b y))
+  = fun h ->
+     let old_v = sel_action' r (First #a #b x) h in
+     let new_v =
+       match old_v with
+       | First _ -> First y
+       | Both _ z -> Both y z
+     in
+     let cell = Ref (t a b) pcm_t new_v in
+     let h' = update_addr h r cell in
+     (| (), h' |)
+
+#push-options "--z3rlimit_factor 12 --query_stats --max_fuel 0"
+#restart-solver
+let upd_first_frame_preserving #a #b
+      (r:ref (t a b) pcm_t)
+      (x:Ghost.erased a)
+      (y:a)
+      (h:hheap (pts_to r (First #a #b x)))
+      (frame:slprop)
+ : Lemma
+   (requires interp (pts_to r (First #a #b x) `star` frame) h)
+   (ensures
+     (let (| _, h1 |) = upd_first #a #b r x y h in
+      interp (pts_to r (First #a #b y) `star` frame) h1))
+ = let old_v = sel_action' r (First #a #b x) h in
+   let new_v : t a b =
+       match old_v with
+       | First _ -> First y
+       | Both _ z -> Both y z
+   in
+   let (| _, h1 |) = upd_first #a #b r x y h in
+   assert (forall a. a<>r ==> h1 a == h a);
+   let aux (hl hr:heap)
+     : Lemma
+       (requires
+         disjoint hl hr /\
+         h == join hl hr /\
+         interp (pts_to r (First #a #b x)) hl /\
+         interp frame hr)
+       (ensures (
+         let (| _, hl' |) = upd_first #a #b r x y hl in
+         disjoint hl' hr /\
+         h1 == join hl' hr
+         ))
+        [SMTPat (disjoint hl hr)]
+     = assert (contains_addr hl r);
+       let Ref _ _ old_v_l = select_addr hl r in
+       let old_v_l : t a b = old_v_l in
+       let (| _, hl' |) = upd_first #a #b r x y hl in
+       let Ref _ _ new_v_l = select_addr hl' r in
+       let new_v_l : t a b = new_v_l in
+       if contains_addr hr r
+       then let Ref _ _ old_v_r = select_addr hr r in
+            let old_v_r : t a b = old_v_r in
+            assert (composable (pcm_t #a #b) old_v_l old_v_r);
+            match old_v_l, old_v_r with
+            | First _, Neither ->
+              assert (new_v_l == First y);
+              mem_equiv_eq h1 (join hl' hr)
+            | Both _ z, Neither ->
+              assert (new_v_l == Both y z);
+              assert (disjoint hl' hr);
+              assert (h1 r == hl' r);
+              mem_equiv_eq h1 (join hl' hr)
+            | First _, Second _ ->
+              assert (new_v_l == First y);
+              assert (old_v == op pcm_t old_v_l old_v_r);
+              assert (new_v == op pcm_t new_v_l old_v_r);
+              mem_equiv_eq h1 (join hl' hr)
+       else begin
+         assert (old_v_l == old_v);
+         assert (new_v == new_v_l);
+         assert (disjoint hl' hr);
+         assert (h1 r == hl' r);
+         assert (forall s. s<>r ==> hl s == hl' s);
+         mem_equiv_eq h1 (join hl' hr);
+         assert (h1 == join hl' hr);
+         ()
+       end
+   in
+   ()
+
+let compat_both #a #b (x:a) (y:t a b)
+  : Lemma
+    (requires compatible pcm_t (First x) y)
+    (ensures Both? y \/ First? y)
+  = ()
+
+let update_first #a #b (x:Ghost.erased a) (y : a)
+                       (curval: t a b {compatible (pcm_t #a #b) (First #a #b x) curval})
+  : (newval:t a b{(Both? curval ==> frame_preserving pcm_t curval newval) /\
+                  (First? curval ==> First? newval) /\
+                  compatible pcm_t (First y) newval})
+  = match curval with
+    | First z -> First y
+    | Both _ z -> Both y z
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
