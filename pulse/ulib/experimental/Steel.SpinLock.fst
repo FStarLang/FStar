@@ -129,7 +129,7 @@ let acquire' (#p:slprop) (l:lock p)
     return_atomic #_ #_ #_ b
 
 let rec acquire #p l =
-  let b = lift_atomic_to_steelT (fun _ -> acquire' l) in
+  let b = acquire' l in
   cond b (fun b -> if b then p else emp) (fun _ _ -> p) noop (fun _ -> acquire l)
 
 val release_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))

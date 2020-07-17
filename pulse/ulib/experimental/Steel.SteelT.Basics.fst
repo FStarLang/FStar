@@ -22,7 +22,7 @@ module AB = Steel.Effect.Atomic
 #push-options "--fuel 0 --ifuel 0 --z3rlimit 20"
 let return (#a:Type) (#p:a -> slprop) (x:a)
   : SteelT a (p x) p
-  = AB.lift_atomic_to_steelT (fun _ -> AB.return_atomic #_ #Set.empty #p x)
+  = AB.return_atomic #_ #Set.empty #p x
 
 assume //ok, h_admit
 val h_admit (#a:Type) (p:slprop) (q: a -> slprop)
@@ -30,7 +30,7 @@ val h_admit (#a:Type) (p:slprop) (q: a -> slprop)
   
 let intro_h_exists (#a:Type) (x:a) (p:(a -> slprop))
   : SteelT unit (p x) (fun _ -> h_exists p)
-  = AB.lift_atomic_to_steelT (fun _ -> AB.intro_h_exists x p)
+  = AB.intro_h_exists x p
 
 let intro_h_exists_erased (#a:Type) (x:Ghost.erased a) (p:(a -> slprop))
   : SteelT unit (p x) (fun _ -> h_exists p)
@@ -46,15 +46,15 @@ let intro_pure (#p:slprop) (q:prop { q })
 
 let h_assert (p:slprop)
   : SteelT unit p (fun _ -> p)
-  = AB.lift_atomic_to_steelT (fun _ -> AB.h_assert_atomic p)
+  = AB.h_assert_atomic p
 
 let h_intro_emp_l (p:slprop)
   : SteelT unit p (fun _ -> emp `star` p)
-  = AB.lift_atomic_to_steelT (fun _ -> AB.h_intro_emp_l p)
+  = AB.h_intro_emp_l p
 
 let h_commute (p q:slprop)
   : SteelT unit (p `star` q) (fun _ -> q `star` p)
-  = AB.lift_atomic_to_steelT (fun _ -> AB.h_commute p q)
+  = AB.h_commute p q
 
 let h_assoc_r (#p #q #r:slprop) (_:unit)
   : SteelT unit ((p `star` q) `star` r) (fun _ -> p `star` (q `star` r))
@@ -68,7 +68,7 @@ let h_assoc_l (#p #q #r:slprop) (_:unit)
 
 let h_affine (p q:slprop)
   : SteelT unit (p `star` q) (fun _ -> p)
-  = AB.lift_atomic_to_steelT (fun _ -> AB.h_affine p q)
+  = AB.h_affine p q
 
 let par' (#preL:slprop) (#postL:unit -> slprop)
          ($f:unit -> SteelT unit preL postL)
@@ -90,7 +90,7 @@ let par (#preL:slprop) (#postL:unit -> slprop)
 
 let h_elim_emp_l (p:slprop)
   : SteelT unit (emp `star` p) (fun _ -> p)
-  = AB.lift_atomic_to_steelT (fun _ -> AB.h_elim_emp_l p)
+  = AB.h_elim_emp_l p
 
 let frame (#a:Type) (#pre:slprop) (#post:a -> slprop)
           ($f:unit -> SteelT a pre post)

@@ -257,3 +257,25 @@ let cond (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
     cond_aux b p q a1 a2
 
 let add_action f = Steel?.reflect (action_as_repr f)
+
+
+(***** Bind and Subcomp relation with Steel.Atomic *****)
+
+open Steel.Effect.Atomic
+
+let bind_atomic_steel (a:Type) (b:Type)
+  (pre_f:pre_t) (post_f:post_t a) (is_ghost:eqtype_as_type bool)
+  (post_g:post_t b) (req_g:(x:a -> req_t (post_f x))) (ens_g:(x:a -> ens_t (post_f x) b post_g))
+  (f:atomic_repr a Set.empty is_ghost pre_f post_f) (g:(x:a -> repr b (post_f x) post_g (req_g x) (ens_g x)))
+: repr b pre_f post_g
+    (bind_req_atomic_steel req_g)
+    (bind_ens_atomic_steel ens_g)
+= fun m0 ->
+  let x = f () in
+  g x ()
+
+let subcomp_atomic_steel (a:Type)
+  (pre_f:pre_t) (post_f:post_t a) (is_ghost:eqtype_as_type bool)
+  (f:atomic_repr a Set.empty is_ghost pre_f post_f)
+: repr a pre_f post_f (subcomp_req_atomic_steel a pre_f) (subcomp_ens_atomic_steel pre_f post_f)
+= fun m0 -> f m0

@@ -69,6 +69,7 @@ let pts_to_injective #a #p #q (r:ref a) (v0 v1:Ghost.erased a) (rest:Ghost.erase
       (fun () -> Steel.Effect.Atomic.change_slprop _ _
                 (fun m -> pts_to_ref_injective r p q v0 v1 m;
                        assert (v0 == v1)))
+
 open Steel.FractionalPermission
 
 (* Since pts_to is witness-invariant, we can witness any `q` here. *)
