@@ -984,7 +984,8 @@ let upd_first_frame_preserving #a #b
    (requires interp (pts_to r (First #a #b x) `star` frame) h)
    (ensures
      (let (| _, h1 |) = upd_first #a #b r x y h in
-      interp (pts_to r (First #a #b y) `star` frame) h1))
+      interp (pts_to r (First #a #b y) `star` frame) h1 /\
+      (forall (hp:hprop frame). hp h == hp h1)))
  = let old_v = sel_action' r (First #a #b x) h in
    let new_v : t a b =
        match old_v with
@@ -1040,6 +1041,11 @@ let upd_first_frame_preserving #a #b
          assert (h1 == join hl' hr);
          ()
        end
+   in
+   let aux (hp:hprop frame)
+         : Lemma (ensures (hp h == hp h1))
+                 [SMTPat ()]
+         = FStar.PropositionalExtensionality.apply (hp h) (hp h1)
    in
    ()
 
