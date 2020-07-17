@@ -155,6 +155,7 @@ let if_then_else (a:Type)
          (if_then_else_req req_then req_else p)
          (if_then_else_ens ens_then ens_else p)
 
+[@@ allow_informative_binders]
 reifiable reflectable
 layered_effect {
   Steel : a:Type
@@ -383,20 +384,20 @@ val add_action (#a:Type)
 open Steel.Effect.Atomic
 
 unfold
-let bind_req_atomic_steel (#a:Type) (#pre_f:pre_t) (#post_f:post_t a) (req_g:(x:a -> req_t (post_f x)))
-: req_t pre_f
+let bind_req_atomic_steel (#a:Type) (#pre_f:slprop) (#post_f:a -> slprop) (req_g:(x:a -> fp_mprop (post_f x)))
+: fp_mprop pre_f
 = fun _ -> forall (x:a) h1. req_g x h1
 
 unfold
 let bind_ens_atomic_steel (#a:Type) (#b:Type)
-  (#pre_f:pre_t) (#post_f:post_t a) (#post_g:post_t b) (ens_g:(x:a -> ens_t (post_f x) b post_g))
-: ens_t pre_f b post_g
+  (#pre_f:slprop) (#post_f:a -> slprop) (#post_g:b -> slprop) (ens_g:(x:a -> fp_binary_mprop (post_f x) post_g))
+: fp_binary_mprop pre_f post_g
 = fun _ y h2 -> exists x h1. (ens_g x) h1 y h2
 
 val bind_atomic_steel (a:Type) (b:Type)
-  (pre_f:pre_t) (post_f:post_t a) (is_ghost:eqtype_as_type bool)
-  (post_g:post_t b) (req_g:(x:a -> req_t (post_f x))) (ens_g:(x:a -> ens_t (post_f x) b post_g))
-  (f:atomic_repr a Set.empty is_ghost pre_f post_f) (g:(x:a -> repr b (post_f x) post_g (req_g x) (ens_g x)))
+  (pre_f:slprop) (post_f:a -> slprop) (obs:observability)
+  (post_g:b -> slprop) (req_g:(x:a -> fp_mprop (post_f x))) (ens_g:(x:a -> fp_binary_mprop (post_f x) post_g))
+  (f:atomic_repr a Set.empty obs pre_f post_f) (g:(x:a -> repr b (post_f x) post_g (req_g x) (ens_g x)))
 : repr b pre_f post_g
     (bind_req_atomic_steel req_g)
     (bind_ens_atomic_steel ens_g)
@@ -404,16 +405,16 @@ val bind_atomic_steel (a:Type) (b:Type)
 polymonadic_bind (SteelAtomic, Steel) |> Steel = bind_atomic_steel
 
 unfold
-let subcomp_req_atomic_steel (a:Type) (pre_f:pre_t) : req_t pre_f = fun _ -> True
+let subcomp_req_atomic_steel (a:Type) (pre_f:slprop) : fp_mprop pre_f = fun _ -> True
 
 unfold
-let subcomp_ens_atomic_steel (#a:Type) (pre_f:pre_t) (post_f:post_t a)
-: ens_t pre_f a post_f
+let subcomp_ens_atomic_steel (#a:Type) (pre_f:slprop) (post_f:a -> slprop)
+: fp_binary_mprop pre_f post_f
 = fun _ _ _ -> True
 
 val subcomp_atomic_steel (a:Type)
-  (pre_f:pre_t) (post_f:post_t a) (is_ghost:eqtype_as_type bool)
-  (f:atomic_repr a Set.empty is_ghost pre_f post_f)
+  (pre_f:slprop) (post_f:a -> slprop) (obs:observability)
+  (f:atomic_repr a Set.empty obs pre_f post_f)
 : repr a pre_f post_f (subcomp_req_atomic_steel a pre_f) (subcomp_ens_atomic_steel pre_f post_f)
 
 polymonadic_subcomp SteelAtomic <: Steel = subcomp_atomic_steel

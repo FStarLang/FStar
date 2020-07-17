@@ -33,8 +33,7 @@ val reshuffle0 (#p #q : slprop)
 
 private
 let reshuffle0 #p #q peq =
-  Steel.Effect.Atomic.lift_atomic_to_steelT
-    (fun () -> Steel.Effect.Atomic.change_slprop p q (fun m -> ()))
+  Steel.Effect.Atomic.change_slprop p q (fun m -> ())
 
 private
 val reshuffle (#p #q : slprop)
@@ -65,10 +64,9 @@ let assoc_l (p q r:slprop)
 let pts_to_injective #a #p #q (r:ref a) (v0 v1:Ghost.erased a) (rest:Ghost.erased a -> slprop)
   : SteelT unit (pts_to r p v0 `star` pts_to r q v1 `star` rest v1)
                 (fun _ -> pts_to r p v0 `star` pts_to r q v0 `star` rest v0)
-  = Steel.Effect.Atomic.lift_atomic_to_steelT
-      (fun () -> Steel.Effect.Atomic.change_slprop _ _
+  = Steel.Effect.Atomic.change_slprop _ _
                 (fun m -> pts_to_ref_injective r p q v0 v1 m;
-                       assert (v0 == v1)))
+                       assert (v0 == v1))
 
 open Steel.FractionalPermission
 
