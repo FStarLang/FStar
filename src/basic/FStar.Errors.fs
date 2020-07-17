@@ -730,8 +730,8 @@ let lookup_error_range settings (l, h) =
 
 let error_number (_, _, i) = i
 
-let warn_on_use_errno =
-  error_number (lookup_error default_settings Warning_WarnOnUse)
+let warn_on_use_errno = error_number (lookup_error default_settings Warning_WarnOnUse)
+let defensive_errno   = error_number (lookup_error default_settings Warning_Defensive)
 
 let update_flags (l:list<(error_flag * string)>)
   : list<error_setting>
@@ -847,6 +847,8 @@ let compare_issues i1 i2 =
 let mk_default_handler print =
     let issues : ref<list<issue>> = BU.mk_ref [] in
     let add_one (e: issue) =
+        if Options.defensive_abort () && e.issue_number = Some defensive_errno then
+          failwith "Aborting due to --defensive abort";
         match e.issue_level with
         | EInfo -> print_issue e
         | _ -> issues := e :: !issues
@@ -1000,8 +1002,7 @@ let lookup err =
   let v, level, i = lookup_error flags err in
   let with_level level = v, level, i in
   match v with
-  | Warning_Defensive
-        when Options.defensive_fail() ->
+  | Warning_Defensive when Options.defensive_error () || Options.defensive_abort () ->
     with_level CAlwaysError
 
   | Warning_WarnOnUse ->
@@ -1020,6 +1021,8 @@ let lookup err =
          | CWarning
          | CSilent -> CError
          | _ -> level)
+      | Some _ ->
+        level
     in
     with_level level'
 

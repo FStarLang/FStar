@@ -16,6 +16,7 @@
 module FStar.Tactics.Types
 
 open FStar.Reflection.Types
+include FStar.Tactics.Common
 
 assume new type proofstate
 assume new type goal
@@ -54,5 +55,3 @@ type guard_policy =
     | Goal
     | Force
     | Drop // unsound! careful!
-
-exception TacticFailure of string

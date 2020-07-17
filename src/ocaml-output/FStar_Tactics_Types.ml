@@ -441,40 +441,25 @@ let (uu___is_Skip : ctrl_flag -> Prims.bool) =
   fun projectee -> match projectee with | Skip -> true | uu____921 -> false
 let (uu___is_Abort : ctrl_flag -> Prims.bool) =
   fun projectee -> match projectee with | Abort -> true | uu____927 -> false
-exception TacticFailure of Prims.string 
-let (uu___is_TacticFailure : Prims.exn -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | TacticFailure uu____937 -> true
-    | uu____938 -> false
-let (__proj__TacticFailure__item__uu___ : Prims.exn -> Prims.string) =
-  fun projectee ->
-    match projectee with | TacticFailure uu____944 -> uu____944
-exception EExn of FStar_Syntax_Syntax.term 
-let (uu___is_EExn : Prims.exn -> Prims.bool) =
-  fun projectee ->
-    match projectee with | EExn uu____954 -> true | uu____955 -> false
-let (__proj__EExn__item__uu___ : Prims.exn -> FStar_Syntax_Syntax.term) =
-  fun projectee -> match projectee with | EExn uu____961 -> uu____961
 let (check_goal_solved' :
   goal -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) =
   fun goal1 ->
-    let uu____969 =
+    let uu____935 =
       FStar_Syntax_Unionfind.find
         (goal1.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
-    match uu____969 with
+    match uu____935 with
     | FStar_Pervasives_Native.Some t -> FStar_Pervasives_Native.Some t
     | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let (check_goal_solved : goal -> Prims.bool) =
   fun goal1 ->
-    let uu____980 = check_goal_solved' goal1 in FStar_Option.isSome uu____980
+    let uu____946 = check_goal_solved' goal1 in FStar_Option.isSome uu____946
 let (get_phi :
   goal -> FStar_Syntax_Syntax.term FStar_Pervasives_Native.option) =
   fun g ->
-    let uu____992 =
-      let uu____993 = goal_env g in
-      let uu____994 = goal_type g in
-      FStar_TypeChecker_Normalize.unfold_whnf uu____993 uu____994 in
-    FStar_Syntax_Util.un_squash uu____992
+    let uu____958 =
+      let uu____959 = goal_env g in
+      let uu____960 = goal_type g in
+      FStar_TypeChecker_Normalize.unfold_whnf uu____959 uu____960 in
+    FStar_Syntax_Util.un_squash uu____958
 let (is_irrelevant : goal -> Prims.bool) =
-  fun g -> let uu____1000 = get_phi g in FStar_Option.isSome uu____1000
+  fun g -> let uu____966 = get_phi g in FStar_Option.isSome uu____966

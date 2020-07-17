@@ -722,7 +722,12 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     in
     let se = { se with sigattrs = attrs } in (* to remove the postprocess_with *)
     let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
-        let lbdef = Env.postprocess env tau lb.lbtyp lb.lbdef in
+        let s, univnames = SS.univ_var_opening lb.lbunivs in
+        let lbdef = SS.subst s lb.lbdef in
+        let lbtyp = SS.subst s lb.lbtyp in
+        let env = Env.push_univ_vars env univnames in
+        let lbdef = Env.postprocess env tau lbtyp lbdef in
+        let lbdef = SS.close_univ_vars univnames lbdef in
         { lb with lbdef = lbdef }
     in
     let (r, ms) = BU.record_time (fun () -> tc_maybe_toplevel_term env' e) in

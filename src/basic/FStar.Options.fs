@@ -697,11 +697,12 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
 
        (noshort,
         "defensive",
-        EnumStr ["no"; "warn"; "fail"],
+        EnumStr ["no"; "warn"; "error"; "abort"],
         "Enable several internal sanity checks, useful to track bugs and report issues.\n\t\t\
          if 'no', no checks are performed\n\t\t\
          if 'warn', checks are performed and raise a warning when they fail\n\t\t\
-         if 'fail', like 'warn', but the compiler aborts instead of issuing a warning\n\t\t\
+         if 'error, like 'warn', but the compiler raises a hard error instead \n\t\t\
+         if 'abort, like 'warn', but the compiler immediately aborts on an error\n\t\t\
          (default 'no')");
 
        ( noshort,
@@ -1644,7 +1645,8 @@ let debug_at_level      modul level = debug_module modul && debug_at_level_no_mo
 
 let profile_group_by_decls       () = get_profile_group_by_decl ()
 let defensive                    () = get_defensive () <> "no"
-let defensive_fail               () = get_defensive () = "fail"
+let defensive_error              () = get_defensive () = "error"
+let defensive_abort              () = get_defensive () = "abort"
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
