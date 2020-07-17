@@ -15,7 +15,7 @@ FSTAR_FILES := $(filter-out $(FLAKY), \
 	$(wildcard legacy/*fst legacy/*fsti) \
 	$(wildcard experimental/*fst experimental/*fsti))
 
-USE_EXTRACTED_INTERFACES=--use_extracted_interfaces true
+USE_EXTRACTED_INTERFACES=--use_extracted_interfaces false
 
 CACHE_DIR=--cache_dir .cache --hint_dir .cache
 
