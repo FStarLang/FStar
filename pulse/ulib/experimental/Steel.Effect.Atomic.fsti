@@ -92,14 +92,6 @@ val lift_pure_steel_atomic (a:Type)
 
 sub_effect PURE ~> SteelAtomic = lift_pure_steel_atomic
 
-
-val lift_atomic_to_steelT (#a:Type)
-                          (#o:observability)
-                          (#fp:slprop)
-                          (#fp':a -> slprop)
-                          ($f:unit -> SteelAtomic a Set.empty o fp fp')
-  : Steel.Effect.SteelT a fp fp'
-
 [@@warn_on_use "as_atomic_action is a trusted primitive"]
 val as_atomic_action (#a:Type u#a)
                      (#opened_invariants:inames)

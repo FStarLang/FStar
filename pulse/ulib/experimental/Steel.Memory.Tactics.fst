@@ -136,9 +136,7 @@ val reshuffle0 (#p #q : slprop)
    : SteelT unit p (fun _ -> q)
 
 private
-let reshuffle0 #p #q peq =
-  Steel.Effect.Atomic.lift_atomic_to_steelT
-    (fun () -> Steel.Effect.Atomic.change_slprop p q (fun m -> ()))
+let reshuffle0 #p #q peq = Steel.Effect.Atomic.change_slprop p q (fun m -> ())
 
 module T = FStar.Tactics
 
