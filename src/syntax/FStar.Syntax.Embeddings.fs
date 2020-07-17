@@ -97,11 +97,7 @@ let lazy_embed (pa:printer<'a>) (et:emb_typ) rng ta (x:'a) (f:unit -> term) =
     if !Options.eager_embedding
     then f()
     else let thunk = Thunk.mk f in
-         S.mk (Tm_lazy({blob=FStar.Dyn.mkdyn x;
-                        ltyp=S.tun;
-                        rng=rng;
-                        lkind=Lazy_embedding (et, thunk)}))
-               rng
+         U.mk_lazy x S.tun (Lazy_embedding (et, thunk)) (Some rng)
 
 let lazy_unembed (pa:printer<'a>) (et:emb_typ) (x:term) (ta:term) (f:term -> option<'a>) : option<'a> =
     let x = SS.compress x in
