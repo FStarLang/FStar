@@ -367,6 +367,7 @@ type raw_error =
   | Error_UnexpectedUnresolvedUvar
   | Warning_UnfoldPlugin
   | Error_LayeredMissingAnnot
+  | Error_CallToErased
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
@@ -713,6 +714,7 @@ let default_settings : list<error_setting> =
     Error_UnexpectedUnresolvedUvar                    , CAlwaysError, 339;
     Warning_UnfoldPlugin                              , CWarning, 340;
     Error_LayeredMissingAnnot                         , CAlwaysError, 341;
+    Error_CallToErased                                , CError, 342;
     ]
 module BU = FStar.Util
 
