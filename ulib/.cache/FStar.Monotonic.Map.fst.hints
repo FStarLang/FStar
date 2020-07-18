@@ -11,7 +11,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "903dc13bfa623424ec94b3a013524d39"
+      "807a3b6499aee8dfb87ace3b1a4c91d7"
     ],
     [
       "FStar.Monotonic.Map.grows_aux",
@@ -27,7 +27,7 @@
         "l_quant_interp_3439469e67c044de57ce8f8134ebf267"
       ],
       0,
-      "8f21776c0c4f918079054bf1045cec58"
+      "0493309ea2a7e591aa9a634e959bb8b1"
     ],
     [
       "FStar.Monotonic.Map.alloc",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_ff29b7a45b8f3430bb5eb44dab5f02d4"
       ],
       0,
-      "b2f979518f6a1c62bc5347d433820067"
+      "f1432364a52a65e82d591363578a5b72"
     ],
     [
       "FStar.Monotonic.Map.contains",
@@ -56,7 +56,7 @@
       1,
       [ "@query" ],
       0,
-      "9efadcd490e11cb480277c682faf1e0a"
+      "3fe2df62973305bfe84b6719cf7e7b23"
     ],
     [
       "FStar.Monotonic.Map.value",
@@ -75,7 +75,7 @@
         "refinement_interpretation_Tm_refine_f596a1e23d65ebe54b463345ece4e00f"
       ],
       0,
-      "6665cd3d7adcf5e66d197a16ce6416e9"
+      "05cbc43b271d4ac26276a298660521e5"
     ],
     [
       "FStar.Monotonic.Map.contains_stable",
@@ -94,7 +94,7 @@
         "token_correspondence_FStar.Monotonic.Map.grows"
       ],
       0,
-      "57cf39fd6468c0f90052ff1a6de935b4"
+      "8092039a5f28687ccf18259ff567f3bf"
     ],
     [
       "FStar.Monotonic.Map.extend",
@@ -191,7 +191,7 @@
         "typing_FStar.StrongExcludedMiddle.strong_excluded_middle"
       ],
       0,
-      "ed88ea6b452f61a97af51fcb7558cad4"
+      "aed390dc09d5b4f0f80ef9d9584ddc84"
     ],
     [
       "FStar.Monotonic.Map.lookup",
@@ -247,99 +247,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "42ba9fd7c3ad8df5c908e740538675f1"
-    ],
-    [
-      "FStar.Monotonic.Map.upd",
-      2,
-      2,
-      1,
-      [
-        "@query", "primitive_Prims.op_Equality",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "5a5f161ec8867dcefee2116a3067831c"
-    ],
-    [
-      "FStar.Monotonic.Map.grows_aux",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Monotonic.Map.map",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive",
-        "interpretation_Tm_abs_645907ef3744a746d7ff6113c290185b",
-        "l_quant_interp_3439469e67c044de57ce8f8134ebf267"
-      ],
-      0,
-      "3d9ab6e31384f732b48019c2de5783bd"
-    ],
-    [
-      "FStar.Monotonic.Map.alloc",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.HyperStack.ST.erid",
-        "equation_FStar.Monotonic.Map.rid",
-        "refinement_interpretation_Tm_refine_6c5072d4c9562dd38fd2703ecfb013df"
-      ],
-      0,
-      "000251571f516d82d69c99897e9a4bf5"
-    ],
-    [
-      "FStar.Monotonic.Map.contains",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e4884f93f9c106057e0bd6df5070bb24"
-    ],
-    [
-      "FStar.Monotonic.Map.value",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def",
-        "equation_FStar.HyperStack.ST.m_rref",
-        "equation_FStar.Monotonic.HyperStack.frameOf",
-        "equation_FStar.Monotonic.Map.contains",
-        "equation_FStar.Monotonic.Map.defined",
-        "equation_FStar.Monotonic.Map.map", "equation_FStar.Monotonic.Map.t",
-        "refinement_interpretation_Tm_refine_9b52d8df2db9a70aa4173c55ec4812eb",
-        "refinement_interpretation_Tm_refine_f596a1e23d65ebe54b463345ece4e00f"
-      ],
-      0,
-      "0811fefed3600f621d1856ea02a00b90"
-    ],
-    [
-      "FStar.Monotonic.Map.extend",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "e3d2c0a0087c9f69a01193a10e02ba68"
-    ],
-    [
-      "FStar.Monotonic.Map.lookup",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "43561c2a41a805d945826625d103acc2"
+      "c77c912b5b90ffe28becadc18885fbd2"
     ]
   ]
 ]
