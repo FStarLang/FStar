@@ -784,11 +784,40 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
            | _ -> []
            end
 
+let trbe =
+  function
+  | "OCaml"   -> Options.OCaml
+  | "FSharp"  -> Options.FSharp
+  | "Kremlin" -> Options.Kremlin
+  | "Plugin"  -> Options.Plugin
+  | _         -> failwith "Impossible"
+
+let get_noextract_to (se:sigelt) (backend:option<Options.codegen_t>) : bool =
+  let be = BU.must backend in
+  BU.for_some (function attr ->
+    let hd, args = U.head_and_args attr in
+    match (SS.compress hd).n, args with
+    | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv PC.noextract_to_attr ->
+        begin match EMB.unembed EMB.e_string a false EMB.id_norm_cb with
+        | Some s ->
+          trbe s = be
+        | None ->
+          false
+        end
+    | _ -> false
+  ) se.sigattrs
+
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
      debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string se));
+
+     if List.contains S.NoExtract se.sigquals && Options.codegen () <> Some Options.Kremlin
+        || (get_noextract_to se (Options.codegen ()))
+     then g, []
+     else
+
      match se.sigel with
         | Sig_bundle _
         | Sig_inductive_typ _

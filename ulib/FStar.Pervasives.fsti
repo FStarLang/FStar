@@ -868,3 +868,6 @@ val with_type (#t: Type) (e: t) : Tot t
     One of its uses is in types of layered effect combinators that
     are subjected to stricter typing discipline (no subtyping) *)
 unfold let eqtype_as_type (a:eqtype) : Type = a
+
+irreducible
+let noextract_to (s:string) : unit = ()
