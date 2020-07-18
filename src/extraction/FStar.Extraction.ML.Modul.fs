@@ -789,6 +789,11 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
 (*****************************************************************************)
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
      debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string se));
+
+     if List.contains S.NoExtract se.sigquals && Options.codegen () <> Some Options.Kremlin
+     then g, []
+     else
+
      match se.sigel with
         | Sig_bundle _
         | Sig_inductive_typ _
