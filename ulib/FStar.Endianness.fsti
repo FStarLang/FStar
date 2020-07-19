@@ -27,7 +27,6 @@ module U64 = FStar.UInt64
 module Math = FStar.Math.Lemmas
 module S = FStar.Seq
 
-noextract
 type bytes = S.seq U8.t
 
 open FStar.Mul
