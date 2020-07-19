@@ -19,8 +19,7 @@ FSTAR_FILES := $(filter-out $(FLAKY), \
 CACHE_DIR=--cache_dir .cache --hint_dir .cache
 
 #271 -> pattern uses theory symbols
-#332 -> `abstract` keyword is fatal error
-OTHERFLAGS+=--warn_error @271@332
+OTHERFLAGS+=--warn_error @271
 
 include $(FSTAR_HOME)/.common.mk
 include gmake/z3.mk

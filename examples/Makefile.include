@@ -6,10 +6,6 @@ endif
 include $(FSTAR_HOME)/ulib/gmake/z3.mk
 include $(FSTAR_HOME)/ulib/gmake/fstar.mk
 
-#332 -> `abstract` keyword is fatal error
-OTHERFLAGS+=--warn_error @332
-
-
 ifeq ($(OS),Windows_NT)
   MSBUILD = $(FSTAR_HOME)/src/msbuild.bat
 else

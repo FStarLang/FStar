@@ -53,7 +53,7 @@ type record_or_dc = {
   constrname: ident;
   parms: binders;
   fields: list<(ident * typ)>;
-  is_private_or_abstract: bool;
+  is_private: bool;
   is_record:bool
 }
 
@@ -521,9 +521,8 @@ let delta_depth_of_declaration (lid:lident) (quals:list<qualifier>) =
             || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
             then delta_equational
             else delta_constant in
-    if quals |> BU.for_some (function Abstract -> true | _ -> false)
-    || (quals |> BU.for_some (function Assumption -> true | _ -> false)
-    && not (quals |> BU.for_some (function New -> true | _ -> false)))
+    if quals |> BU.for_some (function Assumption -> true | _ -> false)
+    && not (quals |> BU.for_some (function New -> true | _ -> false))
     then Delta_abstract dd
     else dd
 
@@ -738,7 +737,7 @@ let record_cache_aux_with_filter =
     (* remove private/abstract records *)
     let filter () =
         let rc = peek () in
-        let filtered = List.filter (fun r -> not r.is_private_or_abstract) rc in
+        let filtered = List.filter (fun r -> not r.is_private) rc in
         record_cache := filtered :: List.tl !record_cache
     in
     let aux =
@@ -788,9 +787,7 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match
                               constrname=ident_of_lid constrname;
                               parms=parms;
                               fields=fields;
-                              is_private_or_abstract =
-                                List.contains Private typename_quals ||
-                                List.contains Abstract typename_quals;
+                              is_private = List.contains Private typename_quals;
                               is_record=is_rec} in
                 (* the record is added to the current list of
                 top-level definitions, to allow shadowing field names
@@ -1043,7 +1040,6 @@ let finish env modul =
     match se.sigel with
     | Sig_bundle(ses, _) ->
       if List.contains Private quals
-      || List.contains Abstract quals
       then ses |> List.iter (fun se -> match se.sigel with
                 | Sig_datacon(lid, _, _, _, _, _) ->
                   BU.smap_remove (sigmap env) (string_of_lid lid)
@@ -1062,18 +1058,9 @@ let finish env modul =
 
     | Sig_let((_,lbs), _) ->
       if List.contains Private quals
-      || List.contains Abstract quals
       then begin
            lbs |> List.iter (fun lb -> BU.smap_remove (sigmap env) (string_of_lid (right lb.lbname).fv_name.v))
-      end;
-      if List.contains Abstract quals
-      && not (List.contains Private quals)
-      then lbs |> List.iter (fun lb ->
-           let lid = (right lb.lbname).fv_name.v in
-           let quals = Assumption :: quals in
-           let decl = { se with sigel = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp);
-                                sigquals = quals } in
-           BU.smap_add (sigmap env) (string_of_lid lid) (decl, false))
+      end
 
     | _ -> ());
   (* update the sets of transitively exported names of this module by

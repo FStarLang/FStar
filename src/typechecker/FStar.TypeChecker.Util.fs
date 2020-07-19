@@ -2615,7 +2615,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
 let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
     let visibility = function Private -> true | _ -> false in
     let reducibility = function
-        | Abstract | Irreducible
+        | Irreducible
         | Unfold_for_unification_and_vcgen | Visible_default
         | Inline_for_extraction -> true
         | _ -> false in
@@ -2656,11 +2656,10 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         | Unfold_for_unification_and_vcgen
         | Visible_default
         | Irreducible
-        | Abstract
         | Noeq
         | Unopteq ->
           quals
-          |> List.for_all (fun x -> x=q || x=Logic || x=Abstract || x=Inline_for_extraction || x=NoExtract || has_eq x || inferred x || visibility x || reification x)
+          |> List.for_all (fun x -> x=q || x=Logic || x=Inline_for_extraction || x=NoExtract || has_eq x || inferred x || visibility x || reification x)
 
         | TotalEffect ->
           quals
@@ -2765,8 +2764,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         then err "definitions cannot be assumed or marked with equality qualifiers"
       | Sig_bundle _ ->
         if not (quals |> BU.for_all (fun x ->
-              x=Abstract
-              || x=Inline_for_extraction
+              x=Inline_for_extraction
               || x=NoExtract
               || inferred x
               || visibility x
