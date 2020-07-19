@@ -1811,6 +1811,7 @@ val msub_non_null (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a r
              (requires (fun h -> U32.v i + U32.v (Ghost.reveal len) <= length b /\ compatible_sub b i (Ghost.reveal len) sub_rel /\ live h b /\ not (g_is_null b)))
              (ensures  (fun h y h' -> h == h' /\ y == mgsub sub_rel b i (Ghost.reveal len)))
 
+noextract
 let is_non_zero x =
   let open FStar.Tactics in
   match inspect (quote x) with
