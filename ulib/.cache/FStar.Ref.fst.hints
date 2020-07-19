@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "f5ba654e7401702006ade74db0268329"
+      "7c62238f9aad6d43fc495bae174c52b7"
     ],
     [
       "FStar.Ref.only",
@@ -22,7 +22,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "b8cd4d11da65a0901e8905b0d6fa4f98"
+      "e0a24a5e9f16042a5ec67cbb37fa9270"
     ],
     [
       "FStar.Ref.alloc",
@@ -37,7 +37,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8752b3d211f8e6b980d6ba1371df09ed"
+      "bc2e93dbcff0dbf2352552763354d29f"
     ],
     [
       "FStar.Ref.alloc",
@@ -46,7 +46,7 @@
       1,
       [ "@query", "equation_FStar.ST.ref" ],
       0,
-      "4c14eb3ec5fcdd51beffae245c1bee6e"
+      "d1dea2db11d4fd7e792045d2d974de1d"
     ],
     [
       "FStar.Ref.write",
@@ -64,58 +64,7 @@
         "true_interp"
       ],
       0,
-      "d800ebbccd1b1487439d1c352d9c04a2"
-    ],
-    [
-      "FStar.Ref.addr_of",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "d581fe8b9b11834ba10212e08fec094d"
-    ],
-    [
-      "FStar.Ref.only",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "c8fd902beca957639b5796121a174a5d"
-    ],
-    [
-      "FStar.Ref.only",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "3d9bbcda6a3185e96087b554c6eaf6ea"
-    ],
-    [
-      "FStar.Ref.alloc",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "d04433f6ce7e3f63903af92ec6130052"
+      "ceae5a6c564876c3778e4bf09dd51059"
     ]
   ]
 ]

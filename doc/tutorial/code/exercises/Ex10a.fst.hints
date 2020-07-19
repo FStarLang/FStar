@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "66986923f937536f3a12277d7bfe8bc4"
+      "9399f0e03bcbc257e8eba3102900e216"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "023d3e11ba77227b319bb7ce2a215aff"
+      "c929d9426e01be458358a71f5f450034"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "3fd8d57ce3641669b4c7c15b720b742c"
+      "4cd0d6756b6906897808dfa46490ee98"
     ],
     [
       "Ex10a.revoke",
@@ -51,7 +51,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
       ],
       0,
-      "830a869ab787cf407055ab83dcdb0807"
+      "58ae0b781aa4a943e30b957325f2dc95"
     ],
     [
       "Ex10a.safe_delete",
@@ -72,7 +72,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "210186625ce0b2b47f9a17cd3642bd74"
+      "9fcd60bd705b2fb85dc7f3d573dee4fb"
     ],
     [
       "Ex10a.test_acls",
@@ -110,7 +110,7 @@
         "typing_Tm_abs_93700a44318bb4193871b2dacb8d41d6"
       ],
       0,
-      "1a1d6b9518edf23a1d50fa93305c26d4"
+      "481f57713d79d2d66ecaf43f0e78ac05"
     ],
     [
       "Ex10a.__proj__Readable__item___0",
@@ -123,7 +123,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "a6f76d0aaafce9f384edbfece146eb61"
+      "f6b7c238fa10af0210898eeaee933737"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -136,7 +136,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "54b665d5811334d3d3252c1ed39557e4"
+      "85baea78e7c4709fdd39733abe17afb8"
     ],
     [
       "Ex10a.canRead",
@@ -149,7 +149,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "a8bc9f74bad1e439a2c8f2efaf17dd11"
+      "ac2d01a7a48e84a6b02d94e513c20097"
     ],
     [
       "Ex10a.revoke",
@@ -158,7 +158,7 @@
       1,
       [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
       0,
-      "0804815ba63df9134ca1f252ce4ea6a1"
+      "08584a2b901cfca8eaaa56092793354d"
     ]
   ]
 ]
