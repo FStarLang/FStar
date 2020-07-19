@@ -2891,23 +2891,50 @@ let eta_expand (env:Env.env) (t:term) : term =
         eta_expand_with_type env t ty
       end
 
-//////////////////////////////////////////////////////////////////
-//Eliminating all unification variables and delayed substitutions in a sigelt
-//////////////////////////////////////////////////////////////////
+(* elim_delayed_subst_*: eliminating all unification variables and
+delayed substitutions in a sigelt. We traverse the entire syntactic
+structure to evaluate the explicit lazy substitutions (Tm_delayed) and
+to replace uvar nodes (Tm_uvar/U_unif) with their solutions.
 
+The return value of this function should *never* contain a lambda. This
+applies to every component of the term/sigelt: attributes, metadata, BV
+sorts, universes, memoized free variables, substitutions, etc.
+
+This is done to later dump the term/sigelt into a file (via
+OCaml's output_value, for instance). This marshalling does not handle
+closures[1] and we do not store the UF graph, so we cannot have any
+lambdas and every uvar node that must be replaced by its solution (and
+hence must have been resolved).
+
+Eliminating the substitutions and resolving uvars is all done by the
+`compress` call at the top, so this all looks like a big identity
+function.
+
+[1] OCaml's Marshal module can actually serialize closures, but this
+makes .checked files more brittle, so we don't do it.
+*)
 let rec elim_delayed_subst_term (t:term) : term =
     let mk x = S.mk x t.pos in
     let t = SS.compress t in
     let elim_bv x = {x with sort=elim_delayed_subst_term x.sort} in
     match t.n with
     | Tm_delayed _ -> failwith "Impossible"
+    | Tm_fvar _
+    | Tm_constant _
+    (* NOTE: the BVs here contain a sort, but it is not reached
+     * by substitutions, so we do not need to go into it. *)
     | Tm_bvar _
     | Tm_name _
-    | Tm_fvar _
-    | Tm_uinst _
-    | Tm_constant _
-    | Tm_type _
-    | Tm_unknown -> t
+    | Tm_unknown ->
+        { t with vars = BU.mk_ref None }
+
+    | Tm_uinst (f, us) ->
+      let us = List.map elim_delayed_subst_univ us in
+      mk (Tm_uinst (f, us))
+
+    | Tm_type u ->
+      let u = elim_delayed_subst_univ u in
+      mk (Tm_type u)
 
     (* We also use this function to unfold lazy embeddings:
      * they may contain lambdas and cannot be written into
@@ -2916,14 +2943,15 @@ let rec elim_delayed_subst_term (t:term) : term =
       elim_delayed_subst_term (U.unfold_lazy li)
 
     | Tm_abs(bs, t, rc_opt) ->
-      let elim_rc rc =
-        {rc with
-            residual_typ=BU.map_opt rc.residual_typ elim_delayed_subst_term;
-            residual_flags=elim_delayed_subst_cflags rc.residual_flags}
+      let elim_rc (rc:residual_comp) : residual_comp = {
+        residual_effect = rc.residual_effect;
+        residual_typ    = BU.map_opt rc.residual_typ elim_delayed_subst_term;
+        residual_flags  = elim_delayed_subst_cflags rc.residual_flags
+      }
       in
-      mk (Tm_abs(elim_delayed_subst_binders bs,
-                 elim_delayed_subst_term t,
-                 BU.map_opt rc_opt elim_rc))
+      mk (Tm_abs (elim_delayed_subst_binders bs,
+                  elim_delayed_subst_term t,
+                  BU.map_opt rc_opt elim_rc))
 
     | Tm_arrow(bs, c) ->
       mk (Tm_arrow(elim_delayed_subst_binders bs, elim_delayed_subst_comp c))
@@ -2945,7 +2973,10 @@ let rec elim_delayed_subst_term (t:term) : term =
           {p with v=Pat_dot_term(elim_bv x, elim_delayed_subst_term t0)}
         | Pat_cons (fv, pats) ->
           {p with v=Pat_cons(fv, List.map (fun (x, b) -> elim_pat x, b) pats)}
-        | _ -> p
+
+        (* Nothing to inline *)
+        | Pat_constant _ ->
+          p
       in
       let elim_branch (pat, wopt, t) =
           (elim_pat pat,
@@ -2964,15 +2995,24 @@ let rec elim_delayed_subst_term (t:term) : term =
       mk (Tm_ascribed(elim_delayed_subst_term t, elim_ascription a, lopt))
 
     | Tm_let(lbs, t) ->
-      let elim_lb lb =
-         {lb with
-             lbtyp = elim_delayed_subst_term lb.lbtyp;
-             lbdef = elim_delayed_subst_term lb.lbdef }
+      let elim_lb (lb:letbinding) : letbinding = {
+        lbname  = (match lb.lbname with
+                   | Inl bv -> Inl (elim_bv bv)
+                   | Inr fv -> Inr fv);
+        lbtyp   = elim_delayed_subst_term lb.lbtyp;
+        lbdef   = elim_delayed_subst_term lb.lbdef;
+
+        lbunivs = lb.lbunivs; // these are names, nothing to inline
+        lbeff   = lb.lbeff;
+        lbattrs = lb.lbattrs;
+        lbpos   = lb.lbpos;
+      }
       in
       mk (Tm_let((fst lbs, List.map elim_lb (snd lbs)),
                   elim_delayed_subst_term t))
 
     | Tm_uvar(u,s) ->
+      // GM: I think this case is impossible.
       mk (Tm_uvar(u,s)) //explicitly don't descend into (bs,t) to not break sharing there
 
     | Tm_quoted (tm, qi) ->
@@ -2984,34 +3024,79 @@ let rec elim_delayed_subst_term (t:term) : term =
 
 and elim_delayed_subst_cflags flags =
     List.map
-        (function
-        | DECREASES t -> DECREASES (elim_delayed_subst_term t)
-        | f -> f)
+        (fun f -> match f with
+        | DECREASES t ->
+          DECREASES (elim_delayed_subst_term t)
+
+        (* All of these do not have a subterm, so do nothing *)
+        | TOTAL
+        | MLEFFECT
+        | LEMMA
+        | RETURN
+        | PARTIAL_RETURN
+        | SOMETRIVIAL
+        | TRIVIAL_POSTCONDITION
+        | SHOULD_NOT_INLINE
+        | CPS ->
+            f)
         flags
 
 and elim_delayed_subst_comp (c:comp) : comp =
     let mk x = S.mk x c.pos in
     match c.n with
-    | Total(t, uopt) ->
-      mk (Total(elim_delayed_subst_term t, uopt))
-    | GTotal(t, uopt) ->
-      mk (GTotal(elim_delayed_subst_term t, uopt))
+    | Total (t, uopt) ->
+      let uopt = map_opt uopt elim_delayed_subst_univ in
+      mk (Total (elim_delayed_subst_term t, uopt))
+
+    | GTotal (t, uopt) ->
+      let uopt = map_opt uopt elim_delayed_subst_univ in
+      mk (GTotal (elim_delayed_subst_term t, uopt))
+
     | Comp ct ->
-      let ct =
-        {ct with
-            result_typ=elim_delayed_subst_term ct.result_typ;
-            effect_args=elim_delayed_subst_args ct.effect_args;
-            flags=elim_delayed_subst_cflags ct.flags} in
+      let ct = {
+        comp_univs  = List.map elim_delayed_subst_univ ct.comp_univs;
+        effect_name = ct.effect_name;
+        result_typ  = elim_delayed_subst_term ct.result_typ;
+        effect_args = elim_delayed_subst_args ct.effect_args;
+        flags       = elim_delayed_subst_cflags ct.flags
+      }
+      in
       mk (Comp ct)
 
+and elim_delayed_subst_univ (u:universe) : universe =
+  let u = SS.compress_univ u in
+  match u with
+  | U_max us ->
+    U_max (List.map elim_delayed_subst_univ us)
+
+  | U_succ u ->
+    U_succ (elim_delayed_subst_univ u)
+
+  | U_zero
+  | U_bvar _
+  | U_name _
+  | U_unif _ // should not happen?
+  | U_unknown ->
+    u
+
 and elim_delayed_subst_meta = function
-  | Meta_pattern (names, args) -> Meta_pattern(List.map elim_delayed_subst_term names, List.map elim_delayed_subst_args args)
-  | Meta_monadic(m, t) -> Meta_monadic(m, elim_delayed_subst_term t)
-  | Meta_monadic_lift(m1, m2, t) -> Meta_monadic_lift(m1, m2, elim_delayed_subst_term t)
+  | Meta_pattern (names, args) ->
+    Meta_pattern (List.map elim_delayed_subst_term names,
+                  List.map elim_delayed_subst_args args)
+
+  | Meta_monadic (m, t) ->
+    Meta_monadic (m, elim_delayed_subst_term t)
+
+  | Meta_monadic_lift (m1, m2, t) ->
+    Meta_monadic_lift (m1, m2, elim_delayed_subst_term t)
+
   | m -> m
 
 and elim_delayed_subst_args args =
-    List.map (fun (t, q) -> elim_delayed_subst_term t, q) args
+    List.map (fun (t, q) ->
+            let t = elim_delayed_subst_term t in
+            let q = elim_delayed_subst_aqual q in // this should be useless
+            t, q) args
 
 and elim_delayed_subst_aqual (q:aqual) : aqual =
   match q with
