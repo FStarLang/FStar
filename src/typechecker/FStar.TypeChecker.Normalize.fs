@@ -3013,8 +3013,21 @@ and elim_delayed_subst_meta = function
 and elim_delayed_subst_args args =
     List.map (fun (t, q) -> elim_delayed_subst_term t, q) args
 
+and elim_delayed_subst_aqual (q:aqual) : aqual =
+  match q with
+  | Some (S.Meta (Arg_qualifier_meta_tac t)) ->
+    Some (S.Meta (Arg_qualifier_meta_tac (elim_delayed_subst_term t)))
+
+  | Some (S.Meta (Arg_qualifier_meta_attr t)) ->
+    Some (S.Meta (Arg_qualifier_meta_attr (elim_delayed_subst_term t)))
+
+  | q -> q
+
 and elim_delayed_subst_binders bs =
-    List.map (fun (x, q) -> {x with sort=elim_delayed_subst_term x.sort}, q) bs
+    List.map (fun (x, q) ->
+                let x = {x with sort=elim_delayed_subst_term x.sort} in
+                let q = elim_delayed_subst_aqual q in
+                x, q) bs
 
 let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (tc:either<typ, comp>) =
     let t =
@@ -3049,6 +3062,7 @@ let elim_uvars_aux_c env univ_names binders c =
    let univ_names, binders, tc = elim_uvars_aux_tc env univ_names binders (Inr c) in
    univ_names, binders, BU.right tc
 
+// GM: Maybe this should take a pass over the attributes just to be safe?
 let rec elim_uvars (env:Env.env) (s:sigelt) =
     match s.sigel with
     | Sig_inductive_typ (lid, univ_names, binders, typ, lids, lids') ->
