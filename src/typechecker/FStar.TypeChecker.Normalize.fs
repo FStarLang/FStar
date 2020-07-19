@@ -2853,19 +2853,31 @@ let rec elim_delayed_subst_term (t:term) : term =
     let elim_bv x = {x with sort=elim_delayed_subst_term x.sort} in
     match t.n with
     | Tm_delayed _ -> failwith "Impossible"
-    | Tm_bvar _
-    | Tm_name _
     | Tm_fvar _
-    | Tm_uinst _
     | Tm_constant _
-    | Tm_type _
-    | Tm_unknown -> t
+    | Tm_unknown ->
+        { t with vars = BU.mk_ref None }
+
+    | Tm_uinst (f, us) ->
+      let us = List.map elim_delayed_subst_univ us in
+      mk (Tm_uinst (f, us))
+
+    | Tm_type u ->
+      let u = elim_delayed_subst_univ u in
+      mk (Tm_type u)
 
     (* We also use this function to unfold lazy embeddings:
      * they may contain arrows and cannot be written into
      * .checked files. *)
     | Tm_lazy li ->
       elim_delayed_subst_term (U.unfold_lazy li)
+
+    (* Likewise for the annotated sorts of variables *)
+    | Tm_bvar bv ->
+      mk (Tm_bvar (elim_bv bv))
+
+    | Tm_name bv ->
+      mk (Tm_name (elim_bv bv))
 
     | Tm_abs(bs, t, rc_opt) ->
       let elim_rc rc =
@@ -2918,6 +2930,9 @@ let rec elim_delayed_subst_term (t:term) : term =
     | Tm_let(lbs, t) ->
       let elim_lb lb =
          {lb with
+             lbname = (match lb.lbname with
+                       | Inl bv -> Inl (elim_bv bv)
+                       | Inr fv -> Inr fv);
              lbtyp = elim_delayed_subst_term lb.lbtyp;
              lbdef = elim_delayed_subst_term lb.lbdef }
       in
@@ -2936,34 +2951,79 @@ let rec elim_delayed_subst_term (t:term) : term =
 
 and elim_delayed_subst_cflags flags =
     List.map
-        (function
-        | DECREASES t -> DECREASES (elim_delayed_subst_term t)
-        | f -> f)
+        (fun f -> match f with
+        | DECREASES t ->
+          DECREASES (elim_delayed_subst_term t)
+
+        (* All of these do not have a subterm, so do nothing *)
+        | TOTAL
+        | MLEFFECT
+        | LEMMA
+        | RETURN
+        | PARTIAL_RETURN
+        | SOMETRIVIAL
+        | TRIVIAL_POSTCONDITION
+        | SHOULD_NOT_INLINE
+        | CPS ->
+            f)
         flags
 
 and elim_delayed_subst_comp (c:comp) : comp =
     let mk x = S.mk x c.pos in
     match c.n with
-    | Total(t, uopt) ->
-      mk (Total(elim_delayed_subst_term t, uopt))
-    | GTotal(t, uopt) ->
-      mk (GTotal(elim_delayed_subst_term t, uopt))
+    | Total (t, uopt) ->
+      let uopt = map_opt uopt elim_delayed_subst_univ in
+      mk (Total (elim_delayed_subst_term t, uopt))
+
+    | GTotal (t, uopt) ->
+      let uopt = map_opt uopt elim_delayed_subst_univ in
+      mk (GTotal (elim_delayed_subst_term t, uopt))
+
     | Comp ct ->
-      let ct =
-        {ct with
-            result_typ=elim_delayed_subst_term ct.result_typ;
-            effect_args=elim_delayed_subst_args ct.effect_args;
-            flags=elim_delayed_subst_cflags ct.flags} in
+      let ct = {
+        comp_univs  = List.map elim_delayed_subst_univ ct.comp_univs;
+        effect_name = ct.effect_name;
+        result_typ  = elim_delayed_subst_term ct.result_typ;
+        effect_args = elim_delayed_subst_args ct.effect_args;
+        flags       = elim_delayed_subst_cflags ct.flags
+      }
+      in
       mk (Comp ct)
 
+and elim_delayed_subst_univ (u:universe) : universe =
+  let u = SS.compress_univ u in
+  match u with
+  | U_max us ->
+    U_max (List.map elim_delayed_subst_univ us)
+
+  | U_succ u ->
+    U_succ (elim_delayed_subst_univ u)
+
+  | U_zero
+  | U_bvar _
+  | U_name _
+  | U_unif _ // should not happen?
+  | U_unknown ->
+    u
+
 and elim_delayed_subst_meta = function
-  | Meta_pattern (names, args) -> Meta_pattern(List.map elim_delayed_subst_term names, List.map elim_delayed_subst_args args)
-  | Meta_monadic(m, t) -> Meta_monadic(m, elim_delayed_subst_term t)
-  | Meta_monadic_lift(m1, m2, t) -> Meta_monadic_lift(m1, m2, elim_delayed_subst_term t)
+  | Meta_pattern (names, args) ->
+    Meta_pattern (List.map elim_delayed_subst_term names,
+                  List.map elim_delayed_subst_args args)
+
+  | Meta_monadic (m, t) ->
+    Meta_monadic (m, elim_delayed_subst_term t)
+
+  | Meta_monadic_lift (m1, m2, t) ->
+    Meta_monadic_lift (m1, m2, elim_delayed_subst_term t)
+
   | m -> m
 
 and elim_delayed_subst_args args =
-    List.map (fun (t, q) -> elim_delayed_subst_term t, q) args
+    List.map (fun (t, q) ->
+            let t = elim_delayed_subst_term t in
+            let q = elim_delayed_subst_aqual q in // this should be useless
+            t, q) args
 
 and elim_delayed_subst_aqual (q:aqual) : aqual =
   match q with
