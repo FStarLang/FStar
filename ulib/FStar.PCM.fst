@@ -71,7 +71,8 @@ type pcm (a:Type u#a) = {
   comm:lem_commutative p;
   assoc: lem_assoc_l p;
   assoc_r: lem_assoc_r p;
-  is_unit: lem_is_unit p
+  is_unit: lem_is_unit p;
+  refine: a -> prop
 }
 
 (**** Derived predicates *)
