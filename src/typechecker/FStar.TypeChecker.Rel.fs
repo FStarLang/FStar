@@ -914,10 +914,27 @@ let gamma_until (g:gamma) (bs:binders) =
       | None -> []
       | Some (_, bx, rest) -> bx::rest
 
+(*
+ * AR: 07/20: generalizing restrict
+ *
+ * Given G_s |- ?u_s bs : t_s and G_t |- ?u_t : t_t, this code restricts G_t to the
+ *   maximal prefix of G_s and G_t, creating a new uvar maximal_prefix(G_s, G_t) |- ?u : t_t,
+ *   and assigning ?u_t = ?u
+ *
+ * However simply doing this does not allow the solution of ?u to mention the binders bs
+ *
+ * Instead, we filter bs that also appear in G_t and allow the solution of G_t to contain them
+ * So the new uvar that's created is maximal_prefix(G_s, G_t) |- ?u : bs -> t_t
+ *   and assigning ?u_t = ?u bs
+ *
+ * This comes in handy for the flex-rigid case, where the arguments of the flex are a pattern
+ *)
 let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl =
   let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
   let g = gamma_until src.ctx_uvar_gamma pfx in
 
+  //t is the type at which new uvar ?u should be created
+  //f is a function that applied to the new uvar term should return the term that ?u_t should be solved to
   let aux (t:typ) (f:term -> term) =
     let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
       src.ctx_uvar_range g pfx t
@@ -928,11 +945,11 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl =
   let bs = bs |>
     List.filter (fun (bv1, _) -> List.existsb (fun (bv2, _) -> S.bv_eq bv1 bv2) src.ctx_uvar_binders) in
     
-  if List.length bs = 0 then aux src.ctx_uvar_typ (fun src' -> src')
+  if List.length bs = 0 then aux src.ctx_uvar_typ (fun src' -> src')  //no abstraction over bs
   else begin
     aux
-      (src.ctx_uvar_typ |> env.universe_of env |> Some |> S.mk_Total' src.ctx_uvar_typ |> U.arrow bs)
-      (fun src' -> S.mk_Tm_app
+      (src.ctx_uvar_typ |> env.universe_of env |> Some |> S.mk_Total' src.ctx_uvar_typ |> U.arrow bs)  //bs -> Tot t_t
+      (fun src' -> S.mk_Tm_app  //?u bs
         src'
         (bs |> S.binders_to_names |> List.map S.as_arg)
         src.ctx_uvar_range)
@@ -2205,6 +2222,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let lhs', lhs'_last_arg, wl =
               let _, t_last_arg, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
               //FIXME: this may be an implicit arg ... fix qualifier
+              //AR: 07/20: note the type of lhs' is t_last_arg -> t_res_lhs
               let _, lhs', wl =
                 let b = S.null_binder t_last_arg in
                 copy_uvar u_lhs (bs_lhs@[b])
