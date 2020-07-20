@@ -15,421 +15,294 @@
 *)
 
 module Steel.HigherReference
+open Steel.Effect
+open Steel.Effect.Atomic
+open Steel.Memory
+open FStar.Ghost
+open FStar.Real
+open FStar.PCM
+open Steel.FractionalPermission
+module Atomic = Steel.Effect.Atomic
+module SB = Steel.SteelT.Basics
 
-open Steel.Actions
-open Steel.SteelAtomic.Basics
-module Sem = Steel.Semantics.Hoare.MST
+let fractional (a:Type u#1) = option (a & perm)
+#push-options "--query_stats"
+let composable #a : symrel (fractional a) =
+  fun (f0 f1:fractional a) ->
+    match f0, f1 with
+    | None, _
+    | _, None -> True
+    | Some (x0, p0), Some (x1, p1) -> x0==x1 /\ (sum_perm p0 p1).v <=. 1.0R
+#pop-options
+let compose #a (f0:fractional a) (f1:fractional a{composable f0 f1}) : fractional a =
+  match f0, f1 with
+  | None, f
+  | f, None -> f
+  | Some (x0, p0), Some (_, p1) -> Some (x0, sum_perm p0 p1)
 
-#push-options "--fuel 0 --ifuel 1"
-let alloc (#a:Type) (x:a)
-  : SteelT (ref a) emp (fun r -> pts_to r full x)
-  = Steel?.reflect (fun _ ->
-      let m0 = mst_get () in
-      let act = alloc_ref x trivial_preorder in
-      let (| x, m1 |) = act m0 in
-      act_preserves_frame_and_preorder act m0;
-      mst_put m1;
-      x)
+let pcm_frac #a : pcm (fractional a) = {
+  p = {
+         composable = composable;
+         op = compose;
+         one = None
+      };
+  comm = (fun _ _ -> ());
+  assoc = (fun _ _ _ -> ());
+  assoc_r = (fun _ _ _ -> ());
+  is_unit = (fun _ -> ())
+}
 
-let read_core (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (r:ref a)
-  : SteelAtomic a uses false (ref_perm r p) (fun x -> pts_to r p x)
-  = SteelAtomic?.reflect (fun _ ->
-      let m0 = mst_get () in
-      let act = get_ref uses r p in
-      let (| x, m1 |) = act m0 in
-      atomic_preserves_frame_and_preorder act m0;
-      mst_put m1;
-      x)
+module Mem = Steel.Memory
 
+let ref a = Mem.ref (fractional a) pcm_frac
+let perm_ok p : prop = (p.v <=. 1.0R == true) /\ True
+let pts_to_raw (#a:Type) (r:ref a) (p:perm) (v:erased a) = Mem.pts_to r (Some (Ghost.reveal v, p))
+let pts_to #a r p v = pts_to_raw r p v `star` pure (perm_ok p)
 
-let read_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelAtomic a uses false (pts_to r p v) (fun x -> pts_to r p x)
-  = change_hprop (pts_to r p v) (ref_perm r p) (fun m -> intro_exists v (pts_to_ref r p) m);
-    read_core r
+let abcd_acbd (a b c d:slprop)
+  : Lemma (((a `star` b) `star` (c `star` d)) `equiv`
+           ((a `star` c) `star` (b `star` d)))
+  = calc (equiv) {
+    ((a `star` b) `star` (c `star` d));
+      (equiv) { star_associative a b (c `star` d) }
+    ((a `star` (b `star` (c `star` d))));
+      (equiv) { star_associative b c d;
+                star_congruence a (b `star` (c `star` d))
+                                a ((b `star` c) `star` d) }
+    (a `star` ((b `star` c) `star` d));
+      (equiv) { star_commutative  b c;
+                star_congruence (b `star` c) d (c `star` b) d;
+                star_congruence a ((b `star` c) `star` d)
+                                a ((c `star` b) `star` d) }
+    (a `star` ((c `star` b) `star` d));
+      (equiv) { star_associative c b d;
+                star_congruence a ((c `star` b) `star` d)
+                                a (c `star` (b `star` d)) }
+    (a `star` (c `star` (b `star` d)));
+      (equiv) { star_associative a c (b `star` d) }
+    ((a `star` c) `star` (b `star` d));
+   }
+
+let pts_to_ref_injective
+      (#a: Type u#1)
+      (r: ref a)
+      (p0 p1:perm)
+      (v0 v1: erased a)
+      (m:mem)
+    : Lemma
+      (requires
+        interp (pts_to r p0 v0 `star` pts_to r p1 v1) m)
+      (ensures v0 == v1)
+    = abcd_acbd (pts_to_raw r p0 v0)
+                (pure (perm_ok p0))
+                (pts_to_raw r p1 v1)
+                (pure (perm_ok p1));
+      Mem.affine_star (pts_to_raw r p0 v0 `star` pts_to_raw r p1 v1)
+                      (pure (perm_ok p0) `star` pure (perm_ok p1)) m;
+      Mem.pts_to_compatible r (Some (Ghost.reveal v0, p0))
+                              (Some (Ghost.reveal v1, p1))
+                              m
+
+let pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to r p)) =
+  let aux (x y : erased a) (m:mem)
+    : Lemma (requires (interp (pts_to r p x) m /\ interp (pts_to r p y) m))
+            (ensures  (x == y))
+    =
+    Mem.pts_to_join r (Some (Ghost.reveal x, p)) (Some (Ghost.reveal y, p)) m
+  in
+  Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
+
+let pts_to_framon (#a:Type) (r:ref a) (p:perm) : Lemma (is_frame_monotonic (pts_to r p)) =
+  pts_to_witinv r p
+
+let drop (p:slprop)
+  : SteelT unit p (fun _ -> emp)
+  = Atomic.change_slprop _ _ (fun m -> emp_unit p; affine_star p emp m)
+
+let comm (#opened_invariants:inames)
+         (#p #q:slprop) (_:unit)
+  : SteelAtomic unit opened_invariants unobservable
+                (p `star` q)
+                (fun x -> q `star` p)
+  = Atomic.change_slprop _ _ (fun m -> Mem.star_commutative p q)
+
+let intro_perm_ok #uses (p:perm{perm_ok p}) (q:slprop)
+  : SteelAtomic unit uses unobservable
+                q
+                (fun _ -> q `star` pure (perm_ok p))
+  = Atomic.change_slprop _ _
+    (fun m -> emp_unit q; pure_star_interp q (perm_ok p) m)
+
+let elim_perm_ok #uses (p:perm)
+  : SteelAtomic (q:perm{perm_ok q /\ q == p}) uses unobservable
+                (pure (perm_ok p))
+                (fun _ -> emp)
+  = let _ = Atomic.elim_pure (perm_ok p) in
+    Atomic.return_atomic p
+
+let intro_pts_to (p:perm{perm_ok p}) #a #uses (#v:erased a) (r:ref a) (_:unit)
+  : SteelAtomic unit uses unobservable
+                (pts_to_raw r p v)
+                (fun _ -> pts_to r p v)
+  = intro_perm_ok p _
+
+let intro_pure (#a:_) (#p:a -> slprop) (q:perm { perm_ok q }) (x:a)
+  : SteelT a (p x) (fun y -> p y `star` pure (perm_ok q))
+  = intro_perm_ok q _;
+    SB.return x
+
+let drop_l_atomic #uses (#p #q:slprop)  ()
+  : SteelAtomic unit uses unobservable (p `star` q) (fun _ -> q)
+  = Atomic.change_slprop _ _ (affine_star p q)
+
+let elim_pure_atomic #uses  (#p:perm -> slprop) (q:perm)
+  : SteelAtomic (q':perm{perm_ok q' /\ q == q'}) uses unobservable
+                (p q `star` pure (perm_ok q))
+                (fun q' -> p q')
+  = comm();
+    let q' = Atomic.frame _ (fun _ -> elim_perm_ok q) in
+    h_assert_atomic (emp `star` p q);
+    drop_l_atomic ();
+    Atomic.return_atomic q'
+
+let elim_perm_ok_star (#p:slprop) (q:perm)
+  : SteelT (_:unit{perm_ok q}) (p `star` pure (perm_ok q))
+           (fun _ -> p)
+  = let _ = elim_pure_atomic #Set.empty #(fun _ -> p) q in
+    SB.return ()
+
+let alloc #a x =
+  let v = Some (x, full_perm) in
+  assert (FStar.PCM.composable pcm_frac v None);
+  assert (compatible pcm_frac v v);
+  let x = Steel.Effect.alloc v in
+  intro_pure full_perm x
 
 let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelT a (pts_to r p v) (fun x -> pts_to r p x)
-  = read_atomic r
+  = let v1 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
+    elim_perm_ok_star p;
+    let v2 = Steel.Effect.read r v1 in
+    assert (compatible pcm_frac v1 v2);
+    let Some (x, _) = v2 in
+    intro_pure p x
 
-let read_refine_core_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#pre:Preorder.preorder a) (q:a -> hprop) (r:reference a pre)
-  : SteelAtomic a uses false
-    (h_exists (fun (v:a) -> pts_to_ref r p v `star` q v))
-    (fun x -> pts_to_ref r p x `star` q x)
-  = SteelAtomic?.reflect (fun _ ->
-      let m0 = mst_get () in
-      let act = get_ref_refine uses r p q in
-      let (| x, m1 |) = act m0 in
-      atomic_preserves_frame_and_preorder act m0;
-      mst_put m1;
-      x)
-
-let read_refine_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (q:a -> hprop) (r:ref a)
-  : SteelAtomic a uses false
-    (h_exists (fun (v:a) -> pts_to r p v `star` q v))
-    (fun x -> pts_to r p x `star` q x)
-  = change_hprop
-      (h_exists (fun (v:a) -> pts_to r p v `star` q v))
-      (h_exists (fun (v:a) -> pts_to_ref r p v `star` q v))
-      (fun m -> h_exists_extensionality
-        (fun (v:a) -> pts_to r p v `star` q v)
-        (fun (v:a) -> pts_to_ref r p v `star` q v)
-      );
-    let x = read_refine_core_atomic q r in
-    change_hprop (pts_to_ref r p x `star` q x) (pts_to r p x `star` q x) (fun m -> ());
-    return_atomic x
-
-let read_refine (#a:Type) (#p:perm) (q:a -> hprop) (r:ref a)
+let read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
-             (fun v -> pts_to r p v `star` q v)
-  = read_refine_atomic q r
-
-let write_atomic (#a:Type) (#uses:Set.set lock_addr) (#v:erased a) (r:ref a) (x:a)
-  : SteelAtomic unit uses false (pts_to r full v) (fun _ -> pts_to r full x)
-  = SteelAtomic?.reflect (fun _ ->
-      let m0 = mst_get () in
-      let act = set_ref uses r v x in
-      let (| x, m1 |) = act m0 in
-      atomic_preserves_frame_and_preorder act m0;
-      mst_put m1;
-      x)
+             (fun (v:a) -> pts_to r p v `star` q v)
+  = pts_to_witinv r p;
+    star_is_witinv_left (fun (v:a) -> pts_to r p v) q;
+    let vs = SB.witness_h_exists () in
+    SB.h_assert (pts_to r p vs `star` q vs);
+    let v = SB.frame (fun _ -> read #a #p #vs r) _ in
+    SB.h_assert (pts_to r p v `star` q v);
+    SB.return v
 
 let write (#a:Type) (#v:erased a) (r:ref a) (x:a)
-  : SteelT unit (pts_to r full v) (fun _ -> pts_to r full x)
-  = write_atomic r x
-
-let free_core (#a:Type) (r:ref a)
-  : SteelT unit (ref_perm r full) (fun _ -> emp)
-  = Steel?.reflect (fun _ ->
-      let m0 = mst_get () in
-      let act = free_ref r in
-      let (| x, m1 |) = act m0 in
-      act_preserves_frame_and_preorder act m0;
-      mst_put m1;
-      x)
+  : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
+  = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
+    let v_new : fractional a = Some (x, full_perm) in
+    elim_perm_ok_star full_perm;
+    Steel.Effect.write r v_old v_new;
+    intro_pure full_perm ()
 
 let free (#a:Type) (#v:erased a) (r:ref a)
-  : SteelT unit (pts_to r full v) (fun _ -> emp)
-  = change_hprop (pts_to r full v) (ref_perm r full) (fun m -> intro_exists v (pts_to_ref r full) m);
-    free_core r
+  : SteelT unit (pts_to r full_perm v) (fun _ -> emp)
+  = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
+    elim_perm_ok_star full_perm;
+    Steel.Effect.free r v_old;
+    drop _
 
-let share_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelAtomic unit
-    uses
-    true
-    (pts_to r p v)
-    (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
-  = change_hprop
-      (pts_to r p v)
-      (pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
-      (fun m -> share_pts_to_ref r p v m)
+(* move these to Mem *)
+let mem_share_atomic_raw (#a:Type) (#uses:_) (#p:perm{perm_ok p}) (r:ref a)
+                         (v0:erased a)
+  : action_except unit uses (pts_to_raw r p v0)
+                            (fun _ -> pts_to_raw r (half_perm p) v0 `star` pts_to_raw r (half_perm p) v0)
+  = let v = Ghost.hide (Some (Ghost.reveal v0, half_perm p)) in
+    Mem.split_action uses r v v
 
-let share (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelT unit
-    (pts_to r p v)
-    (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
-  = share_atomic r
+let share_atomic_raw #a #uses (#p:perm) (r:ref a{perm_ok p}) (v0:erased a)
+  : SteelAtomic unit uses unobservable
+                (pts_to_raw r p v0)
+                (fun _ -> pts_to_raw r (half_perm p) v0 `star` pts_to_raw r (half_perm p) v0)
+  = as_atomic_action (mem_share_atomic_raw r v0)
 
-let gather_atomic
-  (#a:Type) (#uses:Set.set lock_addr)
-  (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
-  : SteelAtomic unit
-    uses
-    true
-    (pts_to r p0 v0 `star` pts_to r p1 v1)
-    (fun _ -> pts_to r (sum_perm p0 p1) v0)
-  = change_hprop
-      (pts_to r p0 v0 `star` pts_to r p1 v1)
-      (pts_to r (sum_perm p0 p1) v0)
-      (fun m -> gather_pts_to_ref r p0 p1 v0 v1 m)
+let share_atomic (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
+  : SteelAtomic unit uses unobservable
+               (pts_to r p v)
+               (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
+  = let p = elim_pure_atomic #_ #(fun q -> pts_to_raw r q v) p in
+    share_atomic_raw r v;
+    h_assert_atomic (pts_to_raw r (half_perm p) v `star` pts_to_raw r (half_perm p) v);
+    Steel.Effect.Atomic.frame _
+                                  (intro_pts_to (half_perm p) r);
+    h_assert_atomic (pts_to r (half_perm p) v `star` pts_to_raw r (half_perm p) v);
+    comm ();
+    h_assert_atomic (pts_to_raw r (half_perm p) v `star` pts_to r (half_perm p) v);
+    Steel.Effect.Atomic.frame #unit #uses #unobservable
+                                  #(pts_to_raw r (half_perm p) v)
+                                  #(fun _ -> pts_to r (half_perm p) v)
+                                  (pts_to r (half_perm p) v)
+                                  (intro_pts_to (half_perm p) r)
 
-let gather (#a:Type) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
-  : SteelT unit
-    (pts_to r p0 v0 `star` pts_to r p1 v1)
-    (fun _ -> pts_to r (sum_perm p0 p1) v0)
-  = gather_atomic r
+let share r = share_atomic r
 
-let read_refine_core_atomic_ghost (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (#pre:Preorder.preorder a) (q:a -> hprop) (r:reference a pre)
-  : SteelAtomic a uses true
-    (h_exists (fun (v:a) -> pts_to_ref r p v `star` q v))
-    (fun x -> pts_to_ref r p x `star` q x)
-  = SteelAtomic?.reflect (fun _ ->
-      let m0 = mst_get () in
-      let act = get_ref_refine_ghost uses r p q in
-      let (| x, m1 |) = act m0 in
-      atomic_preserves_frame_and_preorder act m0;
-      mst_put m1;
-      x)
+let mem_gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a) (v1:erased a)
+  : action_except (_:unit{v0==v1 /\ perm_ok (sum_perm p0 p1)}) uses
+                  (pts_to_raw r p0 v0 `star` pts_to_raw r p1 v1)
+                  (fun _ -> pts_to_raw r (sum_perm p0 p1) v0)
+  = let v0 = Ghost.hide (Some (Ghost.reveal v0, p0)) in
+    let v1 = Ghost.hide (Some (Ghost.reveal v1, p1)) in
+    Mem.gather_action uses r v0 v1
 
-let ghost_read_refine (#a:Type) (#uses:Set.set lock_addr) (#p:perm) (r:ref a)
-  (q:a -> hprop)
-  : SteelAtomic a uses true
-    (h_exists (fun (v:a) -> pts_to r p v `star` q v))
-    (fun v -> pts_to r p v `star` q v)
-  = read_refine_core_atomic_ghost q r
+let gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a) (v1:erased a)
+  : SteelAtomic  (_:unit{v0==v1 /\ perm_ok (sum_perm p0 p1)}) uses unobservable
+                 (pts_to_raw r p0 v0 `star` pts_to_raw r p1 v1)
+                 (fun _ -> pts_to_raw r (sum_perm p0 p1) v0)
+  = as_atomic_action (mem_gather_atomic_raw r v0 v1)
 
-let alloc_monotonic_ref (#a:Type) (p:Preorder.preorder a) (x:a)
-  : SteelT (reference a p) emp (fun r -> pts_to_ref r full x)
-  = Steel?.reflect (fun _ ->
-      let m0 = mst_get () in
-      let act = alloc_ref x p in
-      let (| x, m1 |) = act m0 in
-      act_preserves_frame_and_preorder act m0;
-      mst_put m1;
-      x)
+let gather_atomic (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
+  = let p0 = Steel.Effect.Atomic.frame _ (fun _ -> elim_pure_atomic p0) in
+    comm();
+    let p1 = Steel.Effect.Atomic.frame _ (fun _ -> elim_pure_atomic p1) in
+    comm();
+    h_assert_atomic (pts_to_raw r p0 v0 `star` pts_to_raw r p1 v1);
+    let _ = gather_atomic_raw r v0 v1 in
+    intro_pts_to (sum_perm p0 p1) r ()
 
-let read_monotonic_ref (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#frame:a -> hprop)
-                       (r:reference a p)
-  : SteelT a (h_exists (fun (v:a) -> pts_to_ref r q v `star` frame v))
-             (fun v -> pts_to_ref r q v `star` frame v)
-  = read_refine_core_atomic frame r
+let gather r = gather_atomic r
 
-let write_monotonic_atomic (#a:Type) (#uses:Set.set lock_addr) (#p:Preorder.preorder a) (#v:erased a) (r:reference a p) (x:a{p v x})
-  : SteelAtomic unit uses false (pts_to_ref r full v) (fun _ -> pts_to_ref r full x)
-  = SteelAtomic?.reflect (fun _ ->
-      let m0 = mst_get () in
-      let act = set_ref uses r v x in
-      let (| x, m1 |) = act m0 in
-      atomic_preserves_frame_and_preorder act m0;
-      mst_put m1;
-      x)
+let cas_provides #t (r:ref t) (v:Ghost.erased t) (v_new:t) (b:bool) =
+    if b then pts_to r full_perm v_new else pts_to r full_perm v
 
-let write_monotonic_ref (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
-                       (r:reference a p) (x:a{p v x})
-  : SteelT unit (pts_to_ref r full v)
-                (fun v -> pts_to_ref r full x)
-  = write_monotonic_atomic r x
-
-let pure (p:prop) : hprop =
- refine emp (fun _ -> p)
-
-let lem_star_pure p f =
-  calc (equiv) {
-    p;
-    (equiv) {emp_unit p}
-    (p `star` emp);
-    (equiv) {star_commutative p emp}
-    (emp `star` p);
-    (equiv) {
-      let aux (h: mem) : Lemma (
-        (interp (emp `star` p) h /\ f) <==>
-        (interp (refine (emp `star` p) (fun _ -> f)) h)
-      ) =
-        refine_equiv (emp `star` p) (fun _ -> f) h
-      in
-      Classical.forall_intro aux
-    }
-    (refine (emp `star` p) (fun _ -> f));
-    (equiv) { refine_star emp p (fun _ -> f)}
-    (refine emp (fun _ -> f) `star` p);
-    (equiv) { () }
-    (pure f `star` p);
-    (equiv) { star_commutative (pure f) p }
-    (p `star` pure f);
-  }
-
-let lem_interp_star_pure p f m =
-  affine_star p (pure f) m;
-  refine_equiv emp (fun _ -> f) m
-
-let witnessed
-  (#t:Type u#1)
-  (#p:Preorder.preorder t)
-  (r:reference t p)
-  (fact:property t)
-              =
-  NMSTTotal.witnessed mem mem_evolves (fun (m: mem) ->
-    (interp (ref_or_dead r) m /\ fact (sel_ref_or_dead r m))
-  )
-
-#restart-solver
-
-let ac_reasoning_for_frame_on_noop
-  (p q r s: hprop)
-  (m :mem)
-  : Lemma
-    (requires ((p `equiv` q) /\
-      interp ((p `star` r) `star` s) m
-    ))
-    (ensures (interp ((q `star` r) `star` s)) m)
-  =
-  star_associative p r s;
-  equiv_extensional_on_star p q (r `star` s);
-  assert(interp (q `star` (r `star` s)) m);
-  star_associative q r s
-
-#push-options "--fuel 2 --ifuel 1"
-let preserves_frame_on_noop
-  (uses:Set.set lock_addr)
-  (#st: Sem.st{st == state_uses uses})
-  (pre post: st.Sem.hprop)
-  (m: st.Sem.mem)
-  : Lemma
-    (requires (forall (m: st.Sem.mem). st.Sem.interp pre m <==> st.Sem.interp post m))
-    (ensures (Sem.preserves_frame pre post m m))
-  =
-   let aux (frame:st.Sem.hprop) : Lemma (
-    st.Sem.interp ((pre `st.Sem.star` frame) `st.Sem.star` (st.Sem.locks_invariant m)) m ==>
-    (st.Sem.interp ((post `st.Sem.star` frame) `st.Sem.star` (st.Sem.locks_invariant m)) m /\
-     (forall (f_frame:Sem.fp_prop frame). f_frame (st.Sem.core m) == f_frame (st.Sem.core m))))
-   =
-     let aux (_ :squash (
-       st.Sem.interp ((pre `st.Sem.star` frame) `st.Sem.star` (st.Sem.locks_invariant m)) m
-     )) : Lemma (
-       (st.Sem.interp ((post `st.Sem.star` frame) `st.Sem.star` (st.Sem.locks_invariant m)) m /\
-       (forall (f_frame:Sem.fp_prop frame). f_frame (st.Sem.core m) == f_frame (st.Sem.core m)))
-     ) =
-       ac_reasoning_for_frame_on_noop pre post frame (st.Sem.locks_invariant m) m
+let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
+               (#uses:inames)
+               (r:ref t)
+               (v:Ghost.erased t)
+               (v_old:t)
+               (v_new:t)
+               (_:unit)
+   : MstTot
+        (b:bool{b <==> (Ghost.reveal v == v_old)})
+        uses
+        (pts_to r full_perm v)
+        (cas_provides r v v_new)
+   = let m0 = NMSTTotal.get () in
+     let fv = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
+     let fv' = Some (v_new, full_perm) in
+     assert (interp ((Mem.pts_to r fv `star` pure (perm_ok full_perm)) `star` locks_invariant uses m0) m0);
+     let fv_actual = frame (pure (perm_ok full_perm)) (sel_action uses r fv) () in
+     assert (compatible pcm_frac fv fv_actual);
+     let Some (v', p) = fv_actual in
+     assert (v == Ghost.hide v');
+     assert (p == full_perm);
+     let b =
+       if eq v' v_old
+       then (frame (pure (perm_ok full_perm)) (upd_action uses r fv fv') (); true)
+       else false
      in
-     Classical.impl_intro aux
-   in
-   Classical.forall_intro aux
-#pop-options
-
-#push-options "--fuel 0 --ifuel 0 --z3rlimit 10"
-let witness_atomic
-  (#a:Type)
-  (#uses:Set.set lock_addr)
-  (#q:perm)
-  (#p:Preorder.preorder a)
-  (r:reference a p)
-  (fact:stable_property p)
-  (v:(Ghost.erased a))
-  (_:squash (fact v))
-  : SteelAtomic unit uses true
-    (pts_to_ref r q v)
-    (fun _ -> pts_to_ref r q v `star` pure (witnessed r fact))
-  =
-  SteelAtomic?.reflect (fun _ ->
-   let m0 = mst_get () in
-   intro_exists v (pts_to_ref r q) m0;
-   sel_ref_lemma r q m0;
-   pts_to_ref_injective r q q v (sel_ref r m0) m0;
-   let fact_mem : NMSTTotal.s_predicate mem = (fun m ->
-    interp (ref_or_dead r) m /\ fact (sel_ref_or_dead r m)
-   ) in
-   let aux (m0 m1: mem) : Lemma ((fact_mem m0 /\ mem_evolves m0 m1) ==> fact_mem m1) =
-     let aux (_ :squash (fact_mem m0 /\ mem_evolves m0 m1)) : Lemma (fact_mem m1) =
-       reference_preorder_respected r m0 m1
-     in
-     Classical.impl_intro aux
-   in
-   Classical.forall_intro_2 aux;
-   assert(NMSTTotal.stable mem mem_evolves fact_mem);
-   sel_ref_or_dead_lemma r m0;
-   NMSTTotal.witness mem mem_evolves fact_mem;
-   let m1 = mst_get () in
-   assert(m0 == m1);
-   lem_star_pure
-     (pts_to_ref r q v)
-     (witnessed r fact);
-   equiv_extensional_on_star
-     (pts_to_ref r q v)
-     ((pts_to_ref r q v) `star` pure (witnessed r fact))
-     (locks_invariant uses m1);
-   let aux (m: mem) : Lemma(
-     interp (pts_to_ref r q v) m <==> interp (pts_to_ref r q v `star` pure (witnessed r fact)) m
-   ) =
-     let aux (_ : squash (interp (pts_to_ref r q v) m)) : Lemma (
-       interp (pts_to_ref r q v `star` pure (witnessed r fact)) m
-     ) =
-       lem_star_pure (pts_to_ref r q v) (witnessed r fact)
-     in
-     Classical.impl_intro aux;
-     let aux (_ : squash (interp (pts_to_ref r q v `star` pure (witnessed r fact)) m)) : Lemma (
-       interp (pts_to_ref r q v) m
-     ) =
-       affine_star (pts_to_ref r q v) (pure (witnessed r fact)) m
-     in
-     Classical.impl_intro aux
-   in
-   Classical.forall_intro aux;
-   preserves_frame_on_noop
-     uses
-     #(state_uses uses)
-     (pts_to_ref r q v)
-     (pts_to_ref r q v `star` pure (witnessed r fact))
-     m0
-  )
-#pop-options
-
-let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:reference a p)
-            (fact:stable_property p)
-            (v:(Ghost.erased a))
-            (pf:squash (fact v))
-  : SteelT unit (pts_to_ref r q v)
-                (fun _ -> pts_to_ref r q v `star` pure (witnessed r fact))
-  = witness_atomic r fact v pf
-
-#push-options "--fuel 0 --ifuel 0 --z3rlimit 10"
-let recall_atomic
-  (#a:Type)
-  (#uses:Set.set lock_addr)
-  (#q:perm)
-  (#p:Preorder.preorder a)
-  (#fact:property a)
-  (r:reference a p)
-  (v:(Ghost.erased a))
-  : SteelAtomic unit uses true
-    (pts_to_ref r q v `star` pure (witnessed r fact))
-    (fun _ -> pts_to_ref r q v `star` pure (fact v))
-  = SteelAtomic?.reflect (fun _ ->
-   let m0 = mst_get () in
-   intro_exists v (pts_to_ref r q) m0;
-   sel_ref_lemma r q m0;
-   pts_to_ref_injective r q q v (sel_ref r m0) m0;
-   lem_interp_star_pure (pts_to_ref r q v) (witnessed r fact) m0;
-   let fact_mem : NMSTTotal.s_predicate mem = (fun m ->
-    interp (ref_or_dead r) m /\ fact (sel_ref_or_dead r m)
-   ) in
-   NMSTTotal.recall mem mem_evolves fact_mem;
-   let m1 = mst_get () in
-   assert(m0 == m1);
-   sel_ref_or_dead_lemma r m1;
-   assert(Ghost.reveal v == sel_ref r m1);
-   assert(Ghost.reveal v == sel_ref_or_dead r m1);
-   assert(fact (Ghost.reveal v));
-   let aux (m: mem) : Lemma(
-     interp (pts_to_ref r q v `star` pure (witnessed r fact)) m <==>
-     interp (pts_to_ref r q v `star` pure (fact v)) m
-   ) =
-     let aux (_ : squash (interp (pts_to_ref r q v `star` pure (fact v)) m)) : Lemma (
-       interp (pts_to_ref r q v `star` pure (witnessed r fact)) m
-     ) =
-       affine_star (pts_to_ref r q v) (pure (fact v)) m1;
-       lem_star_pure (pts_to_ref r q v) (witnessed r fact)
-     in
-     Classical.impl_intro aux;
-     let aux (_ : squash (interp (pts_to_ref r q v `star` pure (witnessed r fact)) m)) : Lemma (
-       interp (pts_to_ref r q v `star` pure (fact v)) m
-     ) =
-       affine_star (pts_to_ref r q v) (pure (witnessed r fact)) m;
-       lem_star_pure (pts_to_ref r q v) (fact v)
-     in
-     Classical.impl_intro aux
-   in
-   Classical.forall_intro aux;
-   preserves_frame_on_noop
-     uses
-     #(state_uses uses)
-     (pts_to_ref r q v `star` pure (witnessed r fact))
-     (pts_to_ref r q v `star` pure (fact v))
-     m0;
-
-   assert (interp ((pts_to_ref r q v `star` pure (witnessed r fact)) `star` (locks_invariant uses m1)) m1);
-   assert (equiv (pts_to_ref r q v `star` pure (witnessed r fact))
-                 (pts_to_ref r q v `star` pure (fact v)));
-
-   equiv_extensional_on_star (pts_to_ref r q v `star` pure (witnessed r fact))
-                             (pts_to_ref r q v `star` pure (fact v))
-                             (locks_invariant uses m1);
-   assert (interp ((pts_to_ref r q v `star` pure (fact v)) `star` (locks_invariant uses m1)) m1)
- )
-#pop-options
-
-
-let recall (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
-           (r:reference a p) (v:(Ghost.erased a))
-  : SteelT unit (pts_to_ref r q v `star` pure (witnessed r fact))
-                (fun _ -> pts_to_ref r q v `star` pure (fact v))
-
-  = recall_atomic r v
+     let m1 = NMSTTotal.get () in
+     assert (interp (cas_provides r v v_new b `star` locks_invariant uses m1) m1);
+     assert (preserves_frame uses (pts_to r full_perm v)
+                                  (cas_provides r v v_new b)
+                                  m0 m1);
+     b

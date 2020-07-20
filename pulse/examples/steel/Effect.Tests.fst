@@ -5,9 +5,9 @@ open Steel.Memory
 
 open Frame
 
-assume val r1 : hprop
-assume val r2 : hprop
-assume val r3 : hprop
+assume val r1 : slprop
+assume val r2 : slprop
+assume val r3 : slprop
 
 assume val f1 (_:unit) : SteelT unit r1 (fun _ -> r1)
 assume val f12 (_:unit) : SteelT unit (r1 `star` r2) (fun _ -> r1 `star` r2)
@@ -28,14 +28,14 @@ let test_frame1 (_:unit)
  *)
 
 assume
-val crash_h_commute (p:hprop)
+val crash_h_commute (p:slprop)
   : SteelT unit emp (fun _ -> p)
 
 assume
 val crash_h_assert (_:unit)
   : SteelT unit emp (fun _ -> emp)
 
-assume val crash_get_prop : int -> hprop
+assume val crash_get_prop : int -> slprop
 
 [@@expect_failure]
 let crash_test (_:unit)

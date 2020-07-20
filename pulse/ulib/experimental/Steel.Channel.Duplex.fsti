@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Steel.Channel.Simplex
+module Steel.Channel.Duplex
 open Steel.Channel.Protocol
 open Steel.Effect
 open Steel.Memory
@@ -26,18 +26,25 @@ let prot : Type u#1 = protocol unit
 
 val chan (p:prot) : Type0
 
-val sender (#p:prot) (c:chan p) (next_action:prot) : slprop u#1
-
-val receiver (#p:prot) (c:chan p) (next_action:prot) : slprop u#1
+val endpoint (#p:prot) (c:chan p) (next_action:prot) : slprop u#1
 
 val new_chan (p:prot)
-  : SteelT (chan p) emp (fun c -> sender c p `star` receiver c p)
+  : SteelT (chan p) emp (fun c -> endpoint c p `star` endpoint c (dual p))
 
-val send (#p:prot) (c:chan p) (#next:prot{more next}) (x:msg_t next)
-  : SteelT unit (sender c next) (fun _ -> sender c (step next x))
+val send (#p:prot)
+         (c:chan p)
+         (#next:prot{more next /\ tag_of next = Send})
+         (x:msg_t next)
+  : SteelT unit
+           (endpoint c next)
+           (fun _ -> endpoint c (step next x))
 
-val recv (#p:prot) (#next:prot{more next}) (c:chan p)
-  : SteelT (msg_t next) (receiver c next) (fun x -> receiver c (step next x))
+val recv (#p:prot)
+         (#next:prot{more next /\ tag_of next = Recv})
+         (c:chan p)
+  : SteelT (msg_t next)
+           (endpoint c next)
+           (fun x -> endpoint c (step next x))
 
 val history (#p:prot) (c:chan p) (t:partial_trace_of p) : slprop
 
@@ -49,5 +56,5 @@ val trace (#q:prot) (cc:chan q)
 
 val extend_trace (#p:prot) (#next:prot) (c:chan p) (previous:partial_trace_of p)
   : SteelT (extension_of previous)
-           (receiver c next `star` history c previous)
-           (fun t -> receiver c next `star` history c t `star` pure (until t == next))
+           (endpoint c next `star` history c previous)
+           (fun t -> endpoint c next `star` history c t `star` pure (until t == next))

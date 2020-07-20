@@ -16,11 +16,13 @@
 
 module Steel.Channel.Protocol
 
+type tag = | Send | Recv
+
 [@@erasable]
 noeq
 type prot : Type -> Type =
 | Return  : #a:Type -> v:a -> prot a
-| Msg     : a:Type -> #b:Type -> k:(a -> prot b) -> prot b
+| Msg     : tag -> a:Type -> #b:Type -> k:(a -> prot b) -> prot b
 | DoWhile : prot bool -> #a:Type -> k:prot a -> prot a
 
 module WF = FStar.WellFounded
@@ -28,29 +30,51 @@ module WF = FStar.WellFounded
 let rec ok #a (p:prot a) =
   match p with
   | Return _ -> True
-  | Msg a k -> (forall x. (WF.axiom1 k x; ok (k x)))
+  | Msg _ a k -> (forall x. (WF.axiom1 k x; ok (k x)))
   | DoWhile p k -> Msg? p /\ ok p /\ ok k
 
 let protocol a = p:prot a { ok p }
+
+
+let flip_tag = function
+  | Send -> Recv
+  | Recv -> Send
+
+let rec dual #a (p:protocol a) : q:protocol a{Msg? p ==> Msg? q} =
+  match p with
+  | Return _ -> p
+  | Msg tag b #a k ->
+    let k : b -> protocol a =
+      fun (x:b) -> WF.axiom1 k x;
+                dual #a (k x)
+    in
+    Msg (flip_tag tag) b #a k
+  | DoWhile p #a k -> DoWhile (dual p) #a (dual k)
+
 
 let rec bind #a #b (p:protocol a) (q:(a -> protocol b))
   : protocol b
   = match p with
     | Return v -> q v
-    | Msg c #a' k ->
+    | Msg tag c #a' k ->
       let k : c -> protocol b =
         fun x -> WF.axiom1 k x;
               bind (k x) q
       in
-      Msg c k
+      Msg tag c k
     | DoWhile w k -> DoWhile w (bind k q)
 
 let return (#a:Type) (x:a) : protocol a = Return x
-let msg (t:Type) : protocol t = Msg t (fun x -> return x)
+let done = return ()
+let send (t:Type) : protocol t = Msg Send t (fun x -> return x)
+let recv (t:Type) : protocol t = Msg Recv t (fun x -> return x)
 
+(* Some simple protocols *)
+
+(* Send an int [x], recv a [y > x] *)
 let xy : prot unit =
-  x <-- msg int;
-  y <-- msg (y:int{y = x + 1});
+  x <-- send int;
+  y <-- recv (y:int{y > x});
   return ()
 
 let rec hnf (p:protocol 'a)
@@ -61,7 +85,7 @@ let rec hnf (p:protocol 'a)
 
 let finished (p:protocol 'a) : GTot bool = Return? (hnf p)
 let more_msgs (p:protocol 'a) : GTot bool = Msg? (hnf p)
-let next_msg_t (p:protocol 'a) : Type = match hnf p with | Msg a _ -> a | Return #a _ -> a
+let next_msg_t (p:protocol 'a) : Type = match hnf p with | Msg _ a _ -> a | Return #a _ -> a
 let step (p:protocol 'a{more_msgs p}) (x:next_msg_t p) : protocol 'a = Msg?.k (hnf p) x
 
 noeq
@@ -121,6 +145,7 @@ let extend_partial_trace (#p:protocol unit)
 
 
 let more (p:protocol unit) = more_msgs p
+let tag_of (p:protocol unit{more p}) : GTot tag = Msg?._0 (hnf p)
 let msg_t (p:protocol unit) = next_msg_t p
 let extension_of #p (tr:partial_trace_of p) = ts:partial_trace_of p{tr `extended_to` ts}
 let until #p (tr:partial_trace_of p) = tr.to

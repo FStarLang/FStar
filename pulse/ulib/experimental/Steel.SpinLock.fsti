@@ -2,13 +2,16 @@ module Steel.SpinLock
 open Steel.Effect
 open Steel.Memory
 
-val lock (p:hprop u#1) : Type u#0
+val lock_t : Type u#0
+val protects (l:lock_t) (p:slprop u#1) : prop
 
-val new_lock (p:hprop u#1)
+let lock (p:slprop u#1) = l:lock_t{l `protects` p}
+
+val new_lock (p:slprop)
   : SteelT (lock p) p (fun _ -> emp)
 
-val acquire (#p:hprop u#1) (l:lock p)
+val acquire (#p:slprop) (l:lock p)
   : SteelT unit emp (fun _ -> p)
 
-val release (#p:hprop u#1) (l:lock p)
+val release (#p:slprop) (l:lock p)
   : SteelT unit p (fun _ -> emp)
