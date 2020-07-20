@@ -929,11 +929,14 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl =
     List.filter (fun (bv1, _) -> List.existsb (fun (bv2, _) -> S.bv_eq bv1 bv2) src.ctx_uvar_binders) in
     
   if List.length bs = 0 then aux src.ctx_uvar_typ (fun src' -> src')
-  else aux
-    (src.ctx_uvar_typ |> env.universe_of env |> Some |> S.mk_Total' src.ctx_uvar_typ |> U.arrow bs)
-    (fun src' -> S.mk
-      (Tm_app (src', bs |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg))
-      src.ctx_uvar_range)
+  else begin
+    aux
+      (src.ctx_uvar_typ |> env.universe_of env |> Some |> S.mk_Total' src.ctx_uvar_typ |> U.arrow bs)
+      (fun src' -> S.mk_Tm_app
+        src'
+        (bs |> S.binders_to_names |> List.map S.as_arg)
+        src.ctx_uvar_range)
+  end
 
 let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list<ctx_uvar>) wl  =
     List.fold_right (restrict_ctx env tgt bs) sources wl
@@ -2202,7 +2205,10 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let lhs', lhs'_last_arg, wl =
               let _, t_last_arg, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
               //FIXME: this may be an implicit arg ... fix qualifier
-              let _, lhs', wl = copy_uvar u_lhs (bs_lhs@[S.null_binder t_last_arg]) t_res_lhs wl in
+              let _, lhs', wl =
+                let b = S.null_binder t_last_arg in
+                copy_uvar u_lhs (bs_lhs@[b])
+                (t_res_lhs |> env.universe_of env |> Some |> S.mk_Total' t_res_lhs |> U.arrow [b]) wl in
               let _, lhs'_last_arg, wl = copy_uvar u_lhs bs_lhs t_last_arg wl in
               lhs', lhs'_last_arg, wl
         in
