@@ -1087,26 +1087,23 @@ let upd_first_frame_preserving #a #b
       (r:ref (t a b) pcm_t)
       (x:Ghost.erased a)
       (y:a)
-      (h:full_hheap (pts_to r (First #a #b x)))
+      (h:hheap (pts_to r (First #a #b x)))
       (frame:slprop)
  : Lemma
    (requires interp (pts_to r (First #a #b x) `star` frame) h)
    (ensures
      (let (| _, h1 |) = upd_first #a #b r x y h in
       interp (pts_to r (First #a #b y) `star` frame) h1 /\
-      full_heap_pred h1 /\
-      heap_evolves h h1 /\
       (forall (hp:hprop frame). hp h == hp h1)))
- = let old_v = sel_action' r (First #a #b x) h in
+ = let Ref _ _ _ old_v = select_addr h r in
+   let old_v : t a b = old_v in
    let new_v : t a b =
        match old_v with
+       | First _ -> First y
        | Both _ z -> Both y z
    in
-   PP.frame_preserving_is_preorder_respecting pcm_t old_v new_v;
-   assert (PP.preorder_of_pcm pcm_t old_v new_v);
    let (| _, h1 |) = upd_first #a #b r x y h in
    assert (forall a. a<>r ==> h1 a == h a);
-   upd_first_full_evolution #a #b r x y h;
    let aux (hl hr:heap)
      : Lemma
        (requires
