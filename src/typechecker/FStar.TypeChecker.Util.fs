@@ -2316,7 +2316,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
              (BU.set_elements uvt) in
           let uvs = gen_uvars uvt in
           if Env.debug env <| Options.Other "Gen"
-          then BU.print2 "^^^^\n\tFree univs = %s\n\tgen_uvars =%s"
+          then BU.print2 "^^^^\n\tFree univs = %s\n\tgen_uvars =%s\n"
                 (BU.set_elements univs |> List.map (fun u -> Print.univ_to_string (U_unif u)) |> String.concat ", ")
                 (uvs |> List.map (fun u -> BU.format2 "(%s : %s)"
                                                         (Print.uvar_to_string u.ctx_uvar_head)
