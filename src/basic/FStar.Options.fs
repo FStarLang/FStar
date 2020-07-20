@@ -273,7 +273,6 @@ let defaults =
       ("__ml_no_eta_expand_coertions" , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
-      ("use_extracted_interfaces"     , Bool false);
       ("use_nbe"                      , Bool false);
       ("use_nbe_for_extraction"       , Bool false);
       ("trivial_pre_for_unannotated_effectful_fns"
@@ -1271,13 +1270,6 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
          - [-r] silences range [r]\n\t\t\
          - [+r] enables range [r]\n\t\t\
          - [@r] makes range [r] fatal.");
-
-        ( noshort,
-         "use_extracted_interfaces",
-         WithSideEffect
-            ((fun _ -> print_warning "Option `--use_extracted_interfaces` is deprecated, ignoring it.\n"),
-             BoolStr),
-         "This option is deprecated, it does nothing but warn when used.");
 
         ( noshort,
          "use_nbe",
