@@ -1668,6 +1668,7 @@ let goal_of_implicit env (i:Env.implicit) : goal =
   mk_goal ({env with gamma=i.imp_uvar.ctx_uvar_gamma}) i.imp_uvar (FStar.Options.peek()) false i.imp_reason
 
 let proofstate_of_all_implicits rng env imps =
+    let env = tac_env env in
     let goals = List.map (goal_of_implicit env) imps in
     let w = goal_witness (List.hd goals) in
     let ps = {

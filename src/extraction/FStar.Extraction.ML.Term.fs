@@ -1630,7 +1630,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                                           (BU.format1 "###(Time to normalize top-level let %s)"
                                             (Print.lbname_to_string lb.lbname))
                                           norm_call in
-//                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
+                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
                                   a
                              else norm_call ()
                     in

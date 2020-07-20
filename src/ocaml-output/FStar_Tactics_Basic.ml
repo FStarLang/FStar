@@ -5676,17 +5676,18 @@ let (proofstate_of_all_implicits :
   fun rng ->
     fun env1 ->
       fun imps ->
-        let goals = FStar_List.map (goal_of_implicit env1) imps in
+        let env2 = tac_env env1 in
+        let goals = FStar_List.map (goal_of_implicit env2) imps in
         let w =
-          let uu____11690 = FStar_List.hd goals in
-          FStar_Tactics_Types.goal_witness uu____11690 in
+          let uu____11691 = FStar_List.hd goals in
+          FStar_Tactics_Types.goal_witness uu____11691 in
         let ps =
-          let uu____11692 =
-            FStar_TypeChecker_Env.debug env1
+          let uu____11693 =
+            FStar_TypeChecker_Env.debug env2
               (FStar_Options.Other "TacVerbose") in
-          let uu____11693 = FStar_Util.psmap_empty () in
+          let uu____11694 = FStar_Util.psmap_empty () in
           {
-            FStar_Tactics_Types.main_context = env1;
+            FStar_Tactics_Types.main_context = env2;
             FStar_Tactics_Types.all_implicits = imps;
             FStar_Tactics_Types.goals = goals;
             FStar_Tactics_Types.smt_goals = [];
@@ -5698,7 +5699,7 @@ let (proofstate_of_all_implicits :
             FStar_Tactics_Types.entry_range = rng;
             FStar_Tactics_Types.guard_policy = FStar_Tactics_Types.SMT;
             FStar_Tactics_Types.freshness = Prims.int_zero;
-            FStar_Tactics_Types.tac_verb_dbg = uu____11692;
-            FStar_Tactics_Types.local_state = uu____11693
+            FStar_Tactics_Types.tac_verb_dbg = uu____11693;
+            FStar_Tactics_Types.local_state = uu____11694
           } in
         (ps, w)

@@ -17,133 +17,145 @@
 module Steel.SpinLock
 open Steel.Effect
 open Steel.Effect.Atomic
-open Steel.Permissions
 open Steel.Reference
-open Steel.Actions
+open Steel.FractionalPermission
 open Steel.SteelT.Basics
-open Steel.SteelAtomic.Basics
-
-module U = FStar.Universe
+module Atomic = Steel.Effect.Atomic
 
 let available = false
 let locked = true
 
-let lockinv (p:hprop) (r:ref bool) : hprop =
-  h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
+let lockprop (p:slprop) (r:ref bool) (b:bool) : slprop =
+  pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)
 
-let lock (p:hprop u#1) = (r:ref bool) & ival (lockinv p r)
+let lockinv (p:slprop) (r:ref bool) : slprop =
+  h_exists (lockprop p r)
 
-val intro_lockinv_available (#uses:Set.set lock_addr) (p:hprop) (r:ref bool)
-  : SteelAtomic unit uses true (pts_to r full_perm available `star` p) (fun _ -> lockinv p r)
+let lockprop_witinv (p:slprop) (r:ref bool)
+  : Lemma (is_witness_invariant (lockprop p r))
+          [SMTPat (is_witness_invariant (lockprop p r))]
+  =
+  let aux (x y : bool) (m:mem)
+    : Lemma (requires (interp (lockprop p r x) m /\ interp (lockprop p r y) m))
+            (ensures  (x == y))
+    = pts_to_witinv r full_perm
+  in
+  Classical.forall_intro_3 (fun x y m -> Classical.move_requires (aux x y) m)
 
-val intro_lockinv_locked (#uses:Set.set lock_addr) (p:hprop) (r:ref bool)
-  : SteelAtomic unit uses true (pts_to r full_perm locked) (fun _ -> lockinv p r)
+let lock_t = ref bool & iname
+
+let protects (l:lock_t) (p:slprop) : prop = snd l >--> lockinv p (fst l)
+
+val intro_lockinv_available (#uses:inames) (p:slprop) (r:ref bool)
+  : SteelAtomic unit uses unobservable (pts_to r full_perm available `star` p) (fun _ -> lockinv p r)
+
+val intro_lockinv_locked (#uses:inames) (p:slprop) (r:ref bool)
+  : SteelAtomic unit uses unobservable (pts_to r full_perm locked) (fun _ -> lockinv p r)
 
 let intro_lockinv_available #uses p r =
-  intro_h_exists (U.raise_val false)
-    (fun (b: U.raise_t bool) ->
-      pts_to r full_perm (Ghost.hide (U.downgrade_val  b)) `star`
-        (if (U.downgrade_val b) then emp else p)
+  Atomic.intro_h_exists false
+    (fun (b: bool) ->
+      pts_to r full_perm (Ghost.hide b) `star`
+        (if b then emp else p)
     )
 
 let intro_lockinv_locked #uses p r =
+  let open Atomic in
   h_intro_emp_l (pts_to r full_perm locked);
   h_commute emp (pts_to r full_perm locked);
-  intro_h_exists (U.raise_val true)
-    (fun b -> pts_to r full_perm (Ghost.hide (U.downgrade_val b)) `star`
-      (if (U.downgrade_val b) then emp else p))
+  intro_h_exists true
+    (fun b -> pts_to r full_perm (Ghost.hide b) `star`
+          (if b then emp else p))
 
-val new_inv (p:hprop) : SteelT (ival p) p (fun _ -> emp)
-let new_inv p = Steel.Effect.Atomic.new_inv p
+val new_inv (p:slprop) : SteelT (inv p) p (fun _ -> emp)
+let new_inv p = Atomic.new_invariant Set.empty p
 
 #set-options "--fuel 0 --ifuel 0"
 
-let new_lock (p:hprop)
+let new_lock (p:slprop)
   : SteelT (lock p) p (fun _ -> emp) =
   Steel.SteelT.Basics.h_intro_emp_l p;
   let r:ref bool =
     frame (fun _ -> alloc available) p
   in
   intro_lockinv_available p r;
-  let i:ival (lockinv p r) = new_inv (lockinv p r) in
-  let l:lock p = (| r, i |) in
+  let i:inv (lockinv p r) = new_inv (lockinv p r) in
+  let l:lock p = ( r, i ) in
   l
 
 #set-options "--fuel 0 --ifuel 0"
 val cas_frame
   (#t:eqtype)
-  (#uses:Set.set lock_addr)
+  (#uses:inames)
   (r:ref t)
   (v:Ghost.erased t)
   (v_old:t)
   (v_new:t)
-  (frame:hprop)
+  (frame:slprop)
   : SteelAtomic
     (b:bool{b <==> (Ghost.reveal v == v_old)})
     uses
-    false
+    observable
     (pts_to r full_perm v `star` frame)
     (fun b -> (if b then pts_to r full_perm v_new else pts_to r full_perm v) `star` frame)
 let cas_frame #t #uses r v v_old v_new frame =
-  atomic_frame frame (fun _ ->
-    let x = Steel.Effect.Atomic.cas r v v_old v_new in
+  Atomic.frame frame (fun _ ->
+    let x = Steel.Reference.cas r v v_old v_new in
     return_atomic x
   )
 
-val acquire_core (#p:hprop) (#u:Set.set lock_addr) (r:ref bool) (i:ival (lockinv p r))
-  : SteelAtomic bool u false
+val acquire_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
+  : SteelAtomic bool u observable
     (lockinv p r `star` emp)
     (fun b -> lockinv p r `star` (if b then p else emp))
 
 let acquire_core #p #u r i =
-  h_commute (lockinv p r) emp;
-  h_elim_emp_l (lockinv p r);
-  let ghost = ghost_read_refine r (fun b -> if b then emp else p) in
-
-  let frame = if ghost then emp else p in
+  Atomic.h_commute (lockinv p r) emp;
+  Atomic.h_elim_emp_l (lockinv p r);
+  let ghost = Atomic.witness_h_exists () in
+  let frame : slprop = if Ghost.reveal ghost then emp else p in
 
   let res = cas_frame r ghost available locked frame in
 
-  atomic_frame (if ghost then emp else p) (fun _ -> intro_lockinv_locked p r);
+  Atomic.frame (if Ghost.reveal ghost then emp else p) (fun _ -> intro_lockinv_locked p r);
 
   return_atomic #_ #_ #(fun b -> lockinv p r `star` (if b then p else emp)) res
 
-let acquire' (#p:hprop) (l:lock p)
-  : SteelAtomic bool Set.empty false emp (fun b -> if b then p else emp)
-  = let r:ref bool = dfst l in
-    let i: ival (lockinv p r) = dsnd l in
-    let b = with_invariant_frame i (fun _ -> acquire_core r i) in
+let acquire' (#p:slprop) (l:lock p)
+  : SteelAtomic bool Set.empty observable emp (fun b -> if b then p else emp)
+  = let r:ref bool = fst l in
+    let i: inv (lockinv p r) = snd l in
+    let b = with_invariant i (fun _ -> acquire_core r i) in
     return_atomic #_ #_ #_ b
 
 let rec acquire #p l =
   let b = acquire' l in
   cond b (fun b -> if b then p else emp) (fun _ _ -> p) noop (fun _ -> acquire l)
 
-val release_core (#p:hprop) (#u:Set.set lock_addr) (r:ref bool) (i:ival (lockinv p r))
-  : SteelAtomic bool u false
+val release_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
+  : SteelAtomic bool u observable
     (lockinv p r `star` p)
     (fun b -> lockinv p r `star` (if b then emp else p))
 
 let release_core #p #u r i =
+  let open Atomic in
   h_assert_atomic (h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))
     `star` p);
-  let v:bool = atomic_frame p (fun _ ->  ghost_read_refine r (fun b -> if b then emp else p)) in
-  h_assert_atomic ((pts_to r full_perm (Ghost.hide v) `star` (if v then emp else p)) `star` p);
-  h_assoc_left (pts_to r full_perm (Ghost.hide v)) (if v then emp else p) p;
-  let res = cas_frame r v locked available ((if v then emp else p) `star` p) in
+  let v:Ghost.erased bool = frame p (fun _ ->  Atomic.witness_h_exists #_ #u #(lockprop p r) ()) in
+  h_assert_atomic ((pts_to r full_perm v `star` (if Ghost.reveal v then emp else p)) `star` p);
+  h_assoc_left _ _ _;
+  let res = cas_frame r v locked available ((if Ghost.reveal v then emp else p) `star` p) in
   h_assert_atomic (pts_to r full_perm available `star` ((if res then emp else p) `star` p));
-  h_commute (pts_to r full_perm available) ((if res then emp else p) `star` p);
-  atomic_frame (pts_to r full_perm available) (fun _ -> h_commute (if res then emp else p) p);
-  h_commute (p `star` (if res then emp else p)) (pts_to r full_perm available);
-  h_assoc_right (pts_to r full_perm available) p (if res then emp else p);
-  atomic_frame (if res then emp else p) (fun _ -> intro_lockinv_available p r);
+  h_commute _ _;
+  frame (pts_to r full_perm available) (fun _ -> h_commute (if res then emp else p) p);
+  h_commute _ _;
+  h_assoc_right _ _ _;
+  frame (if res then emp else p) (fun _ -> intro_lockinv_available p r);
   return_atomic #_ #_ #_ res
 
 let release #p l =
-  let r:ref bool = dfst l in
-  let i: ival (lockinv p r) = dsnd l in
-  let b = with_invariant_frame i
-    (fun _ -> release_core r i)
-  in
-  Steel.SteelT.Basics.h_intro_emp_l (if b then emp else p);
-  Steel.SteelT.Basics.h_affine emp (if b then emp else p)
+  let r:ref bool = fst l in
+  let i: inv (lockinv p r) = snd l in
+  let b = with_invariant i (fun _ -> release_core r i) in
+  h_intro_emp_l (if b then emp else p);
+  h_affine emp (if b then emp else p)

@@ -11,7 +11,7 @@
         "data_typing_intro_FStar.Pervasives.Native.Some@tok"
       ],
       0,
-      "12df3c581ae88dc23dee523a6ac925fb"
+      "9c4139b40b021e6108d2c35e1f7be3ec"
     ],
     [
       "LL.ebind",
@@ -41,7 +41,7 @@
         "typing_Tm_abs_c9e63da5036540f922882d363c93ad59"
       ],
       0,
-      "ce917f851a1fdd4b85d1633c92803c90"
+      "996c74ff599bd1ee2f2ec1fe29addcc6"
     ],
     [
       "LL.esubcomp",
@@ -65,7 +65,7 @@
         "typing_Tm_abs_be11597b2d168a82e859ce42bbc6f504"
       ],
       0,
-      "7bce3c0e0ec7f4a5b35358113a959739"
+      "2c20a5b58dd146ffaf5887cd86164334"
     ],
     [
       "LL.EXN",
@@ -81,7 +81,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "366be02027f28da1f964fda8e4bf9b9e"
+      "7f1c27d86648bb2f8e23dd9b2ece6b67"
     ],
     [
       "LL.EXN",
@@ -97,7 +97,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "cade7356423c02c3fd9356dc09a04e27"
+      "da622de96c29f0e1dc9e1f853c10ae8f"
     ],
     [
       "LL.EXN",
@@ -113,25 +113,31 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "71d847b3846f1fe4b5548137f5f9ba7b"
+      "2e4abefc0be3596850fb2d863df02513"
     ],
     [
       "LL.EXN",
       4,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
       0,
-      "75642ec958ecdbda526eb6af1f5fd1b8"
+      "64a1a4db24fc5d689d07fd96bd16f417"
     ],
     [
       "LL.EXN",
       5,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
       0,
-      "e2283dc6bcc619a12ed18561e935f66a"
+      "c4d6d8e2ffa0cefba22f7d6e02179409"
     ],
     [
       "LL.lift_pure_exn",
@@ -151,7 +157,7 @@
         "typing_Tm_abs_f8b0b9e8f3a99f63623b5369b8cdb122"
       ],
       0,
-      "d06c5fac0f8c5727e05117e84c35c89a"
+      "be5ef3ed91dd63445914cba736a0e4e7"
     ],
     [
       "LL.get_n1",
@@ -168,7 +174,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "9606bef6ac1ad3a30ae33bf934c5cbc3"
+      "5014bd4b31736a213078c9a729044d6f"
     ],
     [
       "LL.flt",
@@ -182,7 +188,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0de6ebd49a173e4c4c1c1d2f37c60dbd"
+      "8d7489debf424600dbd83fb23cb62717"
     ],
     [
       "LL.__proj__Mkflt__item__n3",
@@ -194,7 +200,7 @@
         "projection_inverse_LL.Mkflt_n1", "projection_inverse_LL.Mkflt_n2"
       ],
       0,
-      "0f94a75fee2d2a3b8084af3b58643ad0"
+      "1b3fe0d9103bb37b2a396de035a1d9b8"
     ],
     [
       "LL.get_flt",
@@ -222,7 +228,7 @@
         "refinement_interpretation_Tm_refine_70804d23317f86fe387e3e5e5532e8f2"
       ],
       0,
-      "50a16ec92b97e34d7e3007b0bad7c747"
+      "3a30a2240b9a155152ea1c8da5a09187"
     ],
     [
       "LL.get_n1_exn",
@@ -240,7 +246,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "afc57536194a3f8611825c1727acab15"
+      "d482836e8d9bbaf822df924310a4fca2"
     ],
     [
       "LL.get_flt_exn",
@@ -272,7 +278,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "34096ccd5f9c98f3246b0b43f5dc6abb"
+      "2f229056437dff81dbdb27d9b94337b1"
     ],
     [
       "LL.return",
@@ -287,7 +293,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "c2a205db63073732e1dc76faa6681996"
+      "469c65fbd9b0726a4cee38abd3dad1a6"
     ],
     [
       "LL.post_a",
@@ -305,7 +311,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "691813f4879311b3dfa3fe536e33a255"
+      "460ec605ee8cb6f3e0f9468f570210a1"
     ],
     [
       "LL.lemma_monotonic2",
@@ -321,7 +327,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "1711c1a5710dbb3114cde4acdec954d1"
+      "419a2c1d1de80fd139c9db5d04c6b2d1"
     ],
     [
       "LL.subcomp",
@@ -336,7 +342,7 @@
         "equation_Prims.nat"
       ],
       0,
-      "357adc26eadc1e9dc422c9151718210f"
+      "1e1bffe37b6d64bc2e2653d841651b86"
     ],
     [
       "LL.STEXN",
@@ -344,14 +350,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
-        "data_typing_intro_FStar.Pervasives.Native.Some@tok",
-        "equation_Prims.nat", "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c8301a995b9856b8747c13593162d2df"
+      "678146897c21073378cc0490ce4a7a5b"
     ],
     [
       "LL.STEXN",
@@ -359,13 +362,11 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_LL.wp_t",
-        "equation_Prims.nat", "int_inversion",
-        "refinement_interpretation_Tm_refine_033b9cf2d1d1e656a87a2917723bbb90",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "c67715ce3a73a93c8bbccfa8b6246bce"
+      "a0f396baf527696c531a410f7f059e68"
     ],
     [
       "LL.lift_pure_stexn",
@@ -386,7 +387,7 @@
         "typing_Tm_abs_455ec25b3caead5c9e831a867e7622dc"
       ],
       0,
-      "eec7c4fc168e5bac98878cf2f47aeb04"
+      "606a213cf746870d2a59ce2dd9026c4f"
     ],
     [
       "LL.get_n1_stexn",
@@ -404,7 +405,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "9bf3bb9d8f3f14fa89168cbf16d70c79"
+      "19c3dafc4f9b0a11513a1bb993279aa7"
     ],
     [
       "LL.get_flt_stexn",
@@ -440,7 +441,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "6b7b5d38272c4ffdedd06a57a04dc874"
+      "8edaa6ad70cf3fab92e0a443a7b08b65"
     ],
     [
       "LL.get_flt_stexn_reified",
@@ -458,7 +459,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "2227f9a0a7f890ce176fb98a1feae8c3"
+      "02f8c0f2587a9e64b8b3df6253aa2cad"
     ]
   ]
 ]
