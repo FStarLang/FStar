@@ -358,12 +358,12 @@ type raw_error =
   | Fatal_Effects_Ordering_Coherence
   | Warning_BleedingEdge_Feature
   | Warning_IgnoredBinding
-  | Warning_AbstractQualifier
   | Warning_CouldNotReadHints
   | Fatal_BadUvar
   | Warning_WarnOnUse
   | Warning_DeprecatedAttributeSyntax
   | Warning_DeprecatedGeneric
+  | Warning_DeprecatedUseExtractedInterfaces
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
@@ -701,12 +701,12 @@ let default_settings : list<error_setting> =
     Fatal_Effects_Ordering_Coherence                  , CError, 329;
     Warning_BleedingEdge_Feature                      , CWarning, 330;
     Warning_IgnoredBinding                            , CWarning, 331;
-    Warning_AbstractQualifier                         , CWarning, 332;
     Warning_CouldNotReadHints                         , CWarning, 333;
     Fatal_BadUvar                                     , CFatal,   334;
     Warning_WarnOnUse                                 , CSilent,  335;
     Warning_DeprecatedAttributeSyntax                 , CSilent,  336;
-    Warning_DeprecatedGeneric                         , CWarning,  337
+    Warning_DeprecatedGeneric                         , CWarning, 337;
+    Warning_DeprecatedUseExtractedInterfaces          , CWarning, 338;
     ]
 module BU = FStar.Util
 

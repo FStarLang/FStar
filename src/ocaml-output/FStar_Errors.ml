@@ -360,12 +360,12 @@ type raw_error =
   | Fatal_Effects_Ordering_Coherence 
   | Warning_BleedingEdge_Feature 
   | Warning_IgnoredBinding 
-  | Warning_AbstractQualifier 
   | Warning_CouldNotReadHints 
   | Fatal_BadUvar 
   | Warning_WarnOnUse 
   | Warning_DeprecatedAttributeSyntax 
   | Warning_DeprecatedGeneric 
+  | Warning_DeprecatedUseExtractedInterfaces 
 let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -1966,31 +1966,32 @@ let (uu___is_Warning_IgnoredBinding : raw_error -> Prims.bool) =
     match projectee with
     | Warning_IgnoredBinding -> true
     | uu____2050 -> false
-let (uu___is_Warning_AbstractQualifier : raw_error -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | Warning_AbstractQualifier -> true
-    | uu____2056 -> false
 let (uu___is_Warning_CouldNotReadHints : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
     | Warning_CouldNotReadHints -> true
-    | uu____2062 -> false
+    | uu____2056 -> false
 let (uu___is_Fatal_BadUvar : raw_error -> Prims.bool) =
   fun projectee ->
-    match projectee with | Fatal_BadUvar -> true | uu____2068 -> false
+    match projectee with | Fatal_BadUvar -> true | uu____2062 -> false
 let (uu___is_Warning_WarnOnUse : raw_error -> Prims.bool) =
   fun projectee ->
-    match projectee with | Warning_WarnOnUse -> true | uu____2074 -> false
+    match projectee with | Warning_WarnOnUse -> true | uu____2068 -> false
 let (uu___is_Warning_DeprecatedAttributeSyntax : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
     | Warning_DeprecatedAttributeSyntax -> true
-    | uu____2080 -> false
+    | uu____2074 -> false
 let (uu___is_Warning_DeprecatedGeneric : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
     | Warning_DeprecatedGeneric -> true
+    | uu____2080 -> false
+let (uu___is_Warning_DeprecatedUseExtractedInterfaces :
+  raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Warning_DeprecatedUseExtractedInterfaces -> true
     | uu____2086 -> false
 type flag = error_flag
 type error_setting = (raw_error * error_flag * Prims.int)
@@ -2333,12 +2334,12 @@ let (default_settings : error_setting Prims.list) =
   (Fatal_Effects_Ordering_Coherence, CError, (Prims.of_int (329)));
   (Warning_BleedingEdge_Feature, CWarning, (Prims.of_int (330)));
   (Warning_IgnoredBinding, CWarning, (Prims.of_int (331)));
-  (Warning_AbstractQualifier, CWarning, (Prims.of_int (332)));
   (Warning_CouldNotReadHints, CWarning, (Prims.of_int (333)));
   (Fatal_BadUvar, CFatal, (Prims.of_int (334)));
   (Warning_WarnOnUse, CSilent, (Prims.of_int (335)));
   (Warning_DeprecatedAttributeSyntax, CSilent, (Prims.of_int (336)));
-  (Warning_DeprecatedGeneric, CWarning, (Prims.of_int (337)))]
+  (Warning_DeprecatedGeneric, CWarning, (Prims.of_int (337)));
+  (Warning_DeprecatedUseExtractedInterfaces, CWarning, (Prims.of_int (338)))]
 let lookup_error :
   'uuuuuu2105 'uuuuuu2106 'uuuuuu2107 .
     ('uuuuuu2105 * 'uuuuuu2106 * 'uuuuuu2107) Prims.list ->

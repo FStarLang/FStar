@@ -593,27 +593,25 @@ let (get_ml_no_eta_expand_coertions : unit -> Prims.bool) =
   fun uu____2109 -> lookup_opt "__ml_no_eta_expand_coertions" as_bool
 let (get_warn_error : unit -> Prims.string Prims.list) =
   fun uu____2116 -> lookup_opt "warn_error" (as_list as_string)
-let (get_use_extracted_interfaces : unit -> Prims.bool) =
-  fun uu____2123 -> lookup_opt "use_extracted_interfaces" as_bool
 let (get_use_nbe : unit -> Prims.bool) =
-  fun uu____2128 -> lookup_opt "use_nbe" as_bool
+  fun uu____2123 -> lookup_opt "use_nbe" as_bool
 let (get_use_nbe_for_extraction : unit -> Prims.bool) =
-  fun uu____2133 -> lookup_opt "use_nbe_for_extraction" as_bool
+  fun uu____2128 -> lookup_opt "use_nbe_for_extraction" as_bool
 let (get_trivial_pre_for_unannotated_effectful_fns : unit -> Prims.bool) =
-  fun uu____2138 ->
+  fun uu____2133 ->
     lookup_opt "trivial_pre_for_unannotated_effectful_fns" as_bool
 let (get_profile :
   unit -> Prims.string Prims.list FStar_Pervasives_Native.option) =
-  fun uu____2147 -> lookup_opt "profile" (as_option (as_list as_string))
+  fun uu____2142 -> lookup_opt "profile" (as_option (as_list as_string))
 let (get_profile_group_by_decl : unit -> Prims.bool) =
-  fun uu____2158 -> lookup_opt "profile_group_by_decl" as_bool
+  fun uu____2153 -> lookup_opt "profile_group_by_decl" as_bool
 let (get_profile_component :
   unit -> Prims.string Prims.list FStar_Pervasives_Native.option) =
-  fun uu____2167 ->
+  fun uu____2162 ->
     lookup_opt "profile_component" (as_option (as_list as_string))
 let (dlevel : Prims.string -> debug_level_t) =
-  fun uu___6_2178 ->
-    match uu___6_2178 with
+  fun uu___6_2173 ->
+    match uu___6_2173 with
     | "Low" -> Low
     | "Medium" -> Medium
     | "High" -> High
@@ -623,7 +621,7 @@ let (one_debug_level_geq : debug_level_t -> debug_level_t -> Prims.bool) =
   fun l1 ->
     fun l2 ->
       match l1 with
-      | Other uu____2190 -> l1 = l2
+      | Other uu____2185 -> l1 = l2
       | Low -> l1 = l2
       | Medium -> (l2 = Low) || (l2 = Medium)
       | High -> ((l2 = Low) || (l2 = Medium)) || (l2 = High)
@@ -631,121 +629,121 @@ let (one_debug_level_geq : debug_level_t -> debug_level_t -> Prims.bool) =
           (((l2 = Low) || (l2 = Medium)) || (l2 = High)) || (l2 = Extreme)
 let (debug_level_geq : debug_level_t -> Prims.bool) =
   fun l2 ->
-    let uu____2196 = get_debug_level () in
-    FStar_All.pipe_right uu____2196
+    let uu____2191 = get_debug_level () in
+    FStar_All.pipe_right uu____2191
       (FStar_Util.for_some (fun l1 -> one_debug_level_geq (dlevel l1) l2))
 let (universe_include_path_base_dirs : Prims.string Prims.list) =
   let sub_dirs = ["legacy"; "experimental"; ".cache"] in
   FStar_All.pipe_right ["/ulib"; "/lib/fstar"]
     (FStar_List.collect
        (fun d ->
-          let uu____2215 =
+          let uu____2210 =
             FStar_All.pipe_right sub_dirs
               (FStar_List.map
                  (fun s ->
-                    let uu____2225 = FStar_String.op_Hat "/" s in
-                    FStar_String.op_Hat d uu____2225)) in
-          d :: uu____2215))
+                    let uu____2220 = FStar_String.op_Hat "/" s in
+                    FStar_String.op_Hat d uu____2220)) in
+          d :: uu____2210))
 let (_version : Prims.string FStar_ST.ref) = FStar_Util.mk_ref ""
 let (_platform : Prims.string FStar_ST.ref) = FStar_Util.mk_ref ""
 let (_compiler : Prims.string FStar_ST.ref) = FStar_Util.mk_ref ""
 let (_date : Prims.string FStar_ST.ref) = FStar_Util.mk_ref "<not set>"
 let (_commit : Prims.string FStar_ST.ref) = FStar_Util.mk_ref ""
 let (display_version : unit -> unit) =
-  fun uu____2240 ->
-    let uu____2241 =
-      let uu____2242 = FStar_ST.op_Bang _version in
-      let uu____2249 = FStar_ST.op_Bang _platform in
-      let uu____2256 = FStar_ST.op_Bang _compiler in
-      let uu____2263 = FStar_ST.op_Bang _date in
-      let uu____2270 = FStar_ST.op_Bang _commit in
+  fun uu____2235 ->
+    let uu____2236 =
+      let uu____2237 = FStar_ST.op_Bang _version in
+      let uu____2244 = FStar_ST.op_Bang _platform in
+      let uu____2251 = FStar_ST.op_Bang _compiler in
+      let uu____2258 = FStar_ST.op_Bang _date in
+      let uu____2265 = FStar_ST.op_Bang _commit in
       FStar_Util.format5
-        "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n" uu____2242
-        uu____2249 uu____2256 uu____2263 uu____2270 in
-    FStar_Util.print_string uu____2241
+        "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n" uu____2237
+        uu____2244 uu____2251 uu____2258 uu____2265 in
+    FStar_Util.print_string uu____2236
 let display_usage_aux :
-  'uuuuuu2283 'uuuuuu2284 .
-    ('uuuuuu2283 * Prims.string * 'uuuuuu2284 FStar_Getopt.opt_variant *
+  'uuuuuu2278 'uuuuuu2279 .
+    ('uuuuuu2278 * Prims.string * 'uuuuuu2279 FStar_Getopt.opt_variant *
       Prims.string) Prims.list -> unit
   =
   fun specs ->
     FStar_Util.print_string "fstar.exe [options] file[s]\n";
     FStar_List.iter
-      (fun uu____2332 ->
-         match uu____2332 with
-         | (uu____2343, flag, p, doc) ->
+      (fun uu____2327 ->
+         match uu____2327 with
+         | (uu____2338, flag, p, doc) ->
              (match p with
               | FStar_Getopt.ZeroArgs ig ->
                   if doc = ""
                   then
-                    let uu____2355 =
-                      let uu____2356 = FStar_Util.colorize_bold flag in
-                      FStar_Util.format1 "  --%s\n" uu____2356 in
-                    FStar_Util.print_string uu____2355
+                    let uu____2350 =
+                      let uu____2351 = FStar_Util.colorize_bold flag in
+                      FStar_Util.format1 "  --%s\n" uu____2351 in
+                    FStar_Util.print_string uu____2350
                   else
-                    (let uu____2358 =
-                       let uu____2359 = FStar_Util.colorize_bold flag in
-                       FStar_Util.format2 "  --%s  %s\n" uu____2359 doc in
-                     FStar_Util.print_string uu____2358)
-              | FStar_Getopt.OneArg (uu____2360, argname) ->
+                    (let uu____2353 =
+                       let uu____2354 = FStar_Util.colorize_bold flag in
+                       FStar_Util.format2 "  --%s  %s\n" uu____2354 doc in
+                     FStar_Util.print_string uu____2353)
+              | FStar_Getopt.OneArg (uu____2355, argname) ->
                   if doc = ""
                   then
-                    let uu____2368 =
-                      let uu____2369 = FStar_Util.colorize_bold flag in
-                      let uu____2370 = FStar_Util.colorize_bold argname in
-                      FStar_Util.format2 "  --%s %s\n" uu____2369 uu____2370 in
-                    FStar_Util.print_string uu____2368
+                    let uu____2363 =
+                      let uu____2364 = FStar_Util.colorize_bold flag in
+                      let uu____2365 = FStar_Util.colorize_bold argname in
+                      FStar_Util.format2 "  --%s %s\n" uu____2364 uu____2365 in
+                    FStar_Util.print_string uu____2363
                   else
-                    (let uu____2372 =
-                       let uu____2373 = FStar_Util.colorize_bold flag in
-                       let uu____2374 = FStar_Util.colorize_bold argname in
-                       FStar_Util.format3 "  --%s %s  %s\n" uu____2373
-                         uu____2374 doc in
-                     FStar_Util.print_string uu____2372))) specs
+                    (let uu____2367 =
+                       let uu____2368 = FStar_Util.colorize_bold flag in
+                       let uu____2369 = FStar_Util.colorize_bold argname in
+                       FStar_Util.format3 "  --%s %s  %s\n" uu____2368
+                         uu____2369 doc in
+                     FStar_Util.print_string uu____2367))) specs
 let (mk_spec :
   (FStar_BaseTypes.char * Prims.string * option_val FStar_Getopt.opt_variant
     * Prims.string) -> FStar_Getopt.opt)
   =
   fun o ->
-    let uu____2400 = o in
-    match uu____2400 with
+    let uu____2395 = o in
+    match uu____2395 with
     | (ns, name, arg, desc) ->
         let arg1 =
           match arg with
           | FStar_Getopt.ZeroArgs f ->
-              let g uu____2433 =
-                let uu____2434 = f () in set_option name uu____2434 in
+              let g uu____2428 =
+                let uu____2429 = f () in set_option name uu____2429 in
               FStar_Getopt.ZeroArgs g
           | FStar_Getopt.OneArg (f, d) ->
-              let g x = let uu____2449 = f x in set_option name uu____2449 in
+              let g x = let uu____2444 = f x in set_option name uu____2444 in
               FStar_Getopt.OneArg (g, d) in
         (ns, name, arg1, desc)
 let (accumulated_option : Prims.string -> option_val -> option_val) =
   fun name ->
     fun value ->
       let prev_values =
-        let uu____2468 = lookup_opt name (as_option as_list') in
-        FStar_Util.dflt [] uu____2468 in
+        let uu____2463 = lookup_opt name (as_option as_list') in
+        FStar_Util.dflt [] uu____2463 in
       List (value :: prev_values)
 let (reverse_accumulated_option : Prims.string -> option_val -> option_val) =
   fun name ->
     fun value ->
       let prev_values =
-        let uu____2494 = lookup_opt name (as_option as_list') in
-        FStar_Util.dflt [] uu____2494 in
+        let uu____2489 = lookup_opt name (as_option as_list') in
+        FStar_Util.dflt [] uu____2489 in
       List (FStar_List.append prev_values [value])
 let accumulate_string :
-  'uuuuuu2515 .
-    Prims.string -> ('uuuuuu2515 -> Prims.string) -> 'uuuuuu2515 -> unit
+  'uuuuuu2510 .
+    Prims.string -> ('uuuuuu2510 -> Prims.string) -> 'uuuuuu2510 -> unit
   =
   fun name ->
     fun post_processor ->
       fun value ->
-        let uu____2536 =
-          let uu____2537 =
-            let uu____2538 = post_processor value in String uu____2538 in
-          accumulated_option name uu____2537 in
-        set_option name uu____2536
+        let uu____2531 =
+          let uu____2532 =
+            let uu____2533 = post_processor value in String uu____2533 in
+          accumulated_option name uu____2532 in
+        set_option name uu____2531
 let (add_extract_module : Prims.string -> unit) =
   fun s -> accumulate_string "extract_module" FStar_String.lowercase s
 let (add_extract_namespace : Prims.string -> unit) =
@@ -766,59 +764,59 @@ type opt_type =
   | WithSideEffect of ((unit -> unit) * opt_type) 
 let (uu___is_Const : opt_type -> Prims.bool) =
   fun projectee ->
-    match projectee with | Const _0 -> true | uu____2634 -> false
+    match projectee with | Const _0 -> true | uu____2629 -> false
 let (__proj__Const__item___0 : opt_type -> option_val) =
   fun projectee -> match projectee with | Const _0 -> _0
 let (uu___is_IntStr : opt_type -> Prims.bool) =
   fun projectee ->
-    match projectee with | IntStr _0 -> true | uu____2647 -> false
+    match projectee with | IntStr _0 -> true | uu____2642 -> false
 let (__proj__IntStr__item___0 : opt_type -> Prims.string) =
   fun projectee -> match projectee with | IntStr _0 -> _0
 let (uu___is_BoolStr : opt_type -> Prims.bool) =
   fun projectee ->
-    match projectee with | BoolStr -> true | uu____2659 -> false
+    match projectee with | BoolStr -> true | uu____2654 -> false
 let (uu___is_PathStr : opt_type -> Prims.bool) =
   fun projectee ->
-    match projectee with | PathStr _0 -> true | uu____2666 -> false
+    match projectee with | PathStr _0 -> true | uu____2661 -> false
 let (__proj__PathStr__item___0 : opt_type -> Prims.string) =
   fun projectee -> match projectee with | PathStr _0 -> _0
 let (uu___is_SimpleStr : opt_type -> Prims.bool) =
   fun projectee ->
-    match projectee with | SimpleStr _0 -> true | uu____2679 -> false
+    match projectee with | SimpleStr _0 -> true | uu____2674 -> false
 let (__proj__SimpleStr__item___0 : opt_type -> Prims.string) =
   fun projectee -> match projectee with | SimpleStr _0 -> _0
 let (uu___is_EnumStr : opt_type -> Prims.bool) =
   fun projectee ->
-    match projectee with | EnumStr _0 -> true | uu____2694 -> false
+    match projectee with | EnumStr _0 -> true | uu____2689 -> false
 let (__proj__EnumStr__item___0 : opt_type -> Prims.string Prims.list) =
   fun projectee -> match projectee with | EnumStr _0 -> _0
 let (uu___is_OpenEnumStr : opt_type -> Prims.bool) =
   fun projectee ->
-    match projectee with | OpenEnumStr _0 -> true | uu____2719 -> false
+    match projectee with | OpenEnumStr _0 -> true | uu____2714 -> false
 let (__proj__OpenEnumStr__item___0 :
   opt_type -> (Prims.string Prims.list * Prims.string)) =
   fun projectee -> match projectee with | OpenEnumStr _0 -> _0
 let (uu___is_PostProcessed : opt_type -> Prims.bool) =
   fun projectee ->
-    match projectee with | PostProcessed _0 -> true | uu____2757 -> false
+    match projectee with | PostProcessed _0 -> true | uu____2752 -> false
 let (__proj__PostProcessed__item___0 :
   opt_type -> ((option_val -> option_val) * opt_type)) =
   fun projectee -> match projectee with | PostProcessed _0 -> _0
 let (uu___is_Accumulated : opt_type -> Prims.bool) =
   fun projectee ->
-    match projectee with | Accumulated _0 -> true | uu____2791 -> false
+    match projectee with | Accumulated _0 -> true | uu____2786 -> false
 let (__proj__Accumulated__item___0 : opt_type -> opt_type) =
   fun projectee -> match projectee with | Accumulated _0 -> _0
 let (uu___is_ReverseAccumulated : opt_type -> Prims.bool) =
   fun projectee ->
     match projectee with
     | ReverseAccumulated _0 -> true
-    | uu____2804 -> false
+    | uu____2799 -> false
 let (__proj__ReverseAccumulated__item___0 : opt_type -> opt_type) =
   fun projectee -> match projectee with | ReverseAccumulated _0 -> _0
 let (uu___is_WithSideEffect : opt_type -> Prims.bool) =
   fun projectee ->
-    match projectee with | WithSideEffect _0 -> true | uu____2824 -> false
+    match projectee with | WithSideEffect _0 -> true | uu____2819 -> false
 let (__proj__WithSideEffect__item___0 :
   opt_type -> ((unit -> unit) * opt_type)) =
   fun projectee -> match projectee with | WithSideEffect _0 -> _0
@@ -826,48 +824,48 @@ exception InvalidArgument of Prims.string
 let (uu___is_InvalidArgument : Prims.exn -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | InvalidArgument uu____2861 -> true
-    | uu____2862 -> false
+    | InvalidArgument uu____2856 -> true
+    | uu____2857 -> false
 let (__proj__InvalidArgument__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee ->
-    match projectee with | InvalidArgument uu____2868 -> uu____2868
+    match projectee with | InvalidArgument uu____2863 -> uu____2863
 let rec (parse_opt_val :
   Prims.string -> opt_type -> Prims.string -> option_val) =
   fun opt_name ->
     fun typ ->
       fun str_val ->
         try
-          (fun uu___311_2886 ->
+          (fun uu___310_2881 ->
              match () with
              | () ->
                  (match typ with
                   | Const c -> c
-                  | IntStr uu____2888 ->
-                      let uu____2889 = FStar_Util.safe_int_of_string str_val in
-                      (match uu____2889 with
+                  | IntStr uu____2883 ->
+                      let uu____2884 = FStar_Util.safe_int_of_string str_val in
+                      (match uu____2884 with
                        | FStar_Pervasives_Native.Some v -> Int v
                        | FStar_Pervasives_Native.None ->
                            FStar_Exn.raise (InvalidArgument opt_name))
                   | BoolStr ->
-                      let uu____2893 =
+                      let uu____2888 =
                         if str_val = "true"
                         then true
                         else
                           if str_val = "false"
                           then false
                           else FStar_Exn.raise (InvalidArgument opt_name) in
-                      Bool uu____2893
-                  | PathStr uu____2896 -> Path str_val
-                  | SimpleStr uu____2897 -> String str_val
+                      Bool uu____2888
+                  | PathStr uu____2891 -> Path str_val
+                  | SimpleStr uu____2892 -> String str_val
                   | EnumStr strs ->
                       if FStar_List.mem str_val strs
                       then String str_val
                       else FStar_Exn.raise (InvalidArgument opt_name)
-                  | OpenEnumStr uu____2902 -> String str_val
+                  | OpenEnumStr uu____2897 -> String str_val
                   | PostProcessed (pp, elem_spec) ->
-                      let uu____2917 =
+                      let uu____2912 =
                         parse_opt_val opt_name elem_spec str_val in
-                      pp uu____2917
+                      pp uu____2912
                   | Accumulated elem_spec ->
                       let v = parse_opt_val opt_name elem_spec str_val in
                       accumulated_option opt_name v
@@ -879,18 +877,18 @@ let rec (parse_opt_val :
                        parse_opt_val opt_name elem_spec str_val))) ()
         with
         | InvalidArgument opt_name1 ->
-            let uu____2936 =
+            let uu____2931 =
               FStar_Util.format1 "Invalid argument to --%s" opt_name1 in
-            failwith uu____2936
+            failwith uu____2931
 let rec (desc_of_opt_type :
   opt_type -> Prims.string FStar_Pervasives_Native.option) =
   fun typ ->
     let desc_of_enum cases =
-      let uu____2958 =
-        let uu____2959 =
+      let uu____2953 =
+        let uu____2954 =
           FStar_String.op_Hat (FStar_String.concat "|" cases) "]" in
-        FStar_String.op_Hat "[" uu____2959 in
-      FStar_Pervasives_Native.Some uu____2958 in
+        FStar_String.op_Hat "[" uu____2954 in
+      FStar_Pervasives_Native.Some uu____2953 in
     match typ with
     | Const c -> FStar_Pervasives_Native.None
     | IntStr desc -> FStar_Pervasives_Native.Some desc
@@ -900,28 +898,28 @@ let rec (desc_of_opt_type :
     | EnumStr strs -> desc_of_enum strs
     | OpenEnumStr (strs, desc) ->
         desc_of_enum (FStar_List.append strs [desc])
-    | PostProcessed (uu____2975, elem_spec) -> desc_of_opt_type elem_spec
+    | PostProcessed (uu____2970, elem_spec) -> desc_of_opt_type elem_spec
     | Accumulated elem_spec -> desc_of_opt_type elem_spec
     | ReverseAccumulated elem_spec -> desc_of_opt_type elem_spec
-    | WithSideEffect (uu____2985, elem_spec) -> desc_of_opt_type elem_spec
+    | WithSideEffect (uu____2980, elem_spec) -> desc_of_opt_type elem_spec
 let (arg_spec_of_opt_type :
   Prims.string -> opt_type -> option_val FStar_Getopt.opt_variant) =
   fun opt_name ->
     fun typ ->
       let parser = parse_opt_val opt_name typ in
-      let uu____3012 = desc_of_opt_type typ in
-      match uu____3012 with
+      let uu____3007 = desc_of_opt_type typ in
+      match uu____3007 with
       | FStar_Pervasives_Native.None ->
-          FStar_Getopt.ZeroArgs ((fun uu____3018 -> parser ""))
+          FStar_Getopt.ZeroArgs ((fun uu____3013 -> parser ""))
       | FStar_Pervasives_Native.Some desc ->
           FStar_Getopt.OneArg (parser, desc)
 let (pp_validate_dir : option_val -> option_val) =
   fun p -> let pp = as_string p in FStar_Util.mkdir false pp; p
 let (pp_lowercase : option_val -> option_val) =
   fun s ->
-    let uu____3035 =
-      let uu____3036 = as_string s in FStar_String.lowercase uu____3036 in
-    String uu____3035
+    let uu____3030 =
+      let uu____3031 = as_string s in FStar_String.lowercase uu____3031 in
+    String uu____3030
 let (abort_counter : Prims.int FStar_ST.ref) =
   FStar_Util.mk_ref Prims.int_zero
 let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
@@ -930,39 +928,39 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
     let ios = FStar_Util.int_of_string in
     match FStar_Util.split s "/" with
     | f::[] ->
-        let uu____3070 = ios f in
-        let uu____3071 = ios f in (uu____3070, uu____3071, false)
+        let uu____3065 = ios f in
+        let uu____3066 = ios f in (uu____3065, uu____3066, false)
     | f1::f2::[] ->
         if f2 = "k"
         then
-          let uu____3080 = ios f1 in
-          let uu____3081 = ios f1 in (uu____3080, uu____3081, true)
+          let uu____3075 = ios f1 in
+          let uu____3076 = ios f1 in (uu____3075, uu____3076, true)
         else
-          (let uu____3083 = ios f1 in
-           let uu____3084 = ios f2 in (uu____3083, uu____3084, false))
+          (let uu____3078 = ios f1 in
+           let uu____3079 = ios f2 in (uu____3078, uu____3079, false))
     | f1::f2::k::[] ->
         if k = "k"
         then
-          let uu____3094 = ios f1 in
-          let uu____3095 = ios f2 in (uu____3094, uu____3095, true)
+          let uu____3089 = ios f1 in
+          let uu____3090 = ios f2 in (uu____3089, uu____3090, true)
         else failwith "unexpected value for --quake"
-    | uu____3103 -> failwith "unexpected value for --quake"
-let (uu___403 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+    | uu____3098 -> failwith "unexpected value for --quake"
+let (uu___402 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f = FStar_ST.op_Colon_Equals cb (FStar_Pervasives_Native.Some f) in
   let call msg =
-    let uu____3177 = FStar_ST.op_Bang cb in
-    match uu____3177 with
+    let uu____3172 = FStar_ST.op_Bang cb in
+    match uu____3172 with
     | FStar_Pervasives_Native.None -> ()
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___403 with
+  match uu___402 with
   | (set_option_warning_callback_aux, option_warning_callback) ->
       set_option_warning_callback_aux
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___403 with
+  match uu___402 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       option_warning_callback
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -975,21 +973,21 @@ let rec (specs_with_types :
   fun warn_unsafe ->
     [(FStar_Getopt.noshort, "abort_on",
        (PostProcessed
-          (((fun uu___7_3333 ->
-               match uu___7_3333 with
+          (((fun uu___7_3328 ->
+               match uu___7_3328 with
                | Int x -> (FStar_ST.op_Colon_Equals abort_counter x; Int x)
                | x -> failwith "?")), (IntStr "non-negative integer"))),
        "Abort on the n-th error or warning raised. Useful in combination with --trace_error. Count starts at 1, use 0 to disable. (default 0)");
     (FStar_Getopt.noshort, "admit_smt_queries",
       (WithSideEffect
-         (((fun uu____3355 ->
+         (((fun uu____3350 ->
               if warn_unsafe
               then option_warning_callback "admit_smt_queries"
               else ())), BoolStr)),
       "Admit SMT queries, unsafe! (default 'false')");
     (FStar_Getopt.noshort, "admit_except",
       (WithSideEffect
-         (((fun uu____3369 ->
+         (((fun uu____3364 ->
               if warn_unsafe
               then option_warning_callback "admit_except"
               else ())), (SimpleStr "[symbol|(symbol, id)]"))),
@@ -1073,48 +1071,48 @@ let rec (specs_with_types :
       "Force checking the files given as arguments even if they have valid checked files");
     (FStar_Getopt.noshort, "fuel",
       (PostProcessed
-         (((fun uu___8_3649 ->
-              match uu___8_3649 with
+         (((fun uu___8_3644 ->
+              match uu___8_3644 with
               | String s ->
                   let p f =
-                    let uu____3657 = FStar_Util.int_of_string f in
-                    Int uu____3657 in
-                  let uu____3658 =
+                    let uu____3652 = FStar_Util.int_of_string f in
+                    Int uu____3652 in
+                  let uu____3653 =
                     match FStar_Util.split s "," with
                     | f::[] -> (f, f)
                     | f1::f2::[] -> (f1, f2)
-                    | uu____3670 -> failwith "unexpected value for --fuel" in
-                  (match uu____3658 with
+                    | uu____3665 -> failwith "unexpected value for --fuel" in
+                  (match uu____3653 with
                    | (min, max) ->
-                       ((let uu____3680 = p min in
-                         set_option "initial_fuel" uu____3680);
-                        (let uu____3682 = p max in
-                         set_option "max_fuel" uu____3682);
+                       ((let uu____3675 = p min in
+                         set_option "initial_fuel" uu____3675);
+                        (let uu____3677 = p max in
+                         set_option "max_fuel" uu____3677);
                         String s))
-              | uu____3683 -> failwith "impos")),
+              | uu____3678 -> failwith "impos")),
            (SimpleStr "non-negative integer or pair of non-negative integers"))),
       "Set initial_fuel and max_fuel at once");
     (FStar_Getopt.noshort, "ifuel",
       (PostProcessed
-         (((fun uu___9_3703 ->
-              match uu___9_3703 with
+         (((fun uu___9_3698 ->
+              match uu___9_3698 with
               | String s ->
                   let p f =
-                    let uu____3711 = FStar_Util.int_of_string f in
-                    Int uu____3711 in
-                  let uu____3712 =
+                    let uu____3706 = FStar_Util.int_of_string f in
+                    Int uu____3706 in
+                  let uu____3707 =
                     match FStar_Util.split s "," with
                     | f::[] -> (f, f)
                     | f1::f2::[] -> (f1, f2)
-                    | uu____3724 -> failwith "unexpected value for --ifuel" in
-                  (match uu____3712 with
+                    | uu____3719 -> failwith "unexpected value for --ifuel" in
+                  (match uu____3707 with
                    | (min, max) ->
-                       ((let uu____3734 = p min in
-                         set_option "initial_ifuel" uu____3734);
-                        (let uu____3736 = p max in
-                         set_option "max_ifuel" uu____3736);
+                       ((let uu____3729 = p min in
+                         set_option "initial_ifuel" uu____3729);
+                        (let uu____3731 = p max in
+                         set_option "max_ifuel" uu____3731);
                         String s))
-              | uu____3737 -> failwith "impos")),
+              | uu____3732 -> failwith "impos")),
            (SimpleStr "non-negative integer or pair of non-negative integers"))),
       "Set initial_ifuel and max_ifuel at once");
     (FStar_Getopt.noshort, "initial_fuel", (IntStr "non-negative integer"),
@@ -1125,7 +1123,7 @@ let rec (specs_with_types :
       "Retain comments in the logged SMT queries (requires --log_queries; default true)");
     (FStar_Getopt.noshort, "lax",
       (WithSideEffect
-         (((fun uu____3774 ->
+         (((fun uu____3769 ->
               if warn_unsafe then option_warning_callback "lax" else ())),
            (Const (Bool true)))),
       "Run the lax-type checker only (admit all verification conditions)");
@@ -1179,18 +1177,18 @@ let rec (specs_with_types :
       "Print full names (deprecated; use --print_full_names instead)");
     (FStar_Getopt.noshort, "quake",
       (PostProcessed
-         (((fun uu___10_3984 ->
-              match uu___10_3984 with
+         (((fun uu___10_3979 ->
+              match uu___10_3979 with
               | String s ->
-                  let uu____3986 = interp_quake_arg s in
-                  (match uu____3986 with
+                  let uu____3981 = interp_quake_arg s in
+                  (match uu____3981 with
                    | (min, max, k) ->
                        (set_option "quake_lo" (Int min);
                         set_option "quake_hi" (Int max);
                         set_option "quake_keep" (Bool k);
                         set_option "retry" (Bool false);
                         String s))
-              | uu____4000 -> failwith "impos")),
+              | uu____3995 -> failwith "impos")),
            (SimpleStr "positive integer or pair of positive integers"))),
       "Repeats SMT queries to check for robustness\n\t\t--quake N/M repeats each query checks that it succeeds at least N out of M times, aborting early if possible\n\t\t--quake N/M/k works as above, except it will unconditionally run M times\n\t\t--quake N is an alias for --quake N/N\n\t\t--quake N/k is an alias for --quake N/N/k\n\tUsing --quake disables --retry.");
     (FStar_Getopt.noshort, "query_stats", (Const (Bool true)),
@@ -1201,15 +1199,15 @@ let rec (specs_with_types :
       "Record the state of options used to check each sigelt, useful for the `check_with` attribute and metaprogramming");
     (FStar_Getopt.noshort, "retry",
       (PostProcessed
-         (((fun uu___11_4042 ->
-              match uu___11_4042 with
+         (((fun uu___11_4037 ->
+              match uu___11_4037 with
               | Int i ->
                   (set_option "quake_lo" (Int Prims.int_one);
                    set_option "quake_hi" (Int i);
                    set_option "quake_keep" (Bool false);
                    set_option "retry" (Bool true);
                    Bool true)
-              | uu____4048 -> failwith "impos")),
+              | uu____4043 -> failwith "impos")),
            (IntStr "positive integer"))),
       "Retry each SMT query N times and succeed on the first try. Using --retry disables --quake.");
     (FStar_Getopt.noshort, "reuse_hint_for", (SimpleStr "toplevel_name"),
@@ -1283,7 +1281,7 @@ let rec (specs_with_types :
       "Don't use this option yet");
     (118, "version",
       (WithSideEffect
-         (((fun uu____4310 ->
+         (((fun uu____4305 ->
               display_version (); FStar_All.exit Prims.int_zero)),
            (Const (Bool true)))), "Display version number");
     (FStar_Getopt.noshort, "warn_default_effects", (Const (Bool true)),
@@ -1306,8 +1304,13 @@ let rec (specs_with_types :
       (Const (Bool true)), "Do not eta-expand coertions in generated OCaml");
     (FStar_Getopt.noshort, "warn_error", (Accumulated (SimpleStr "")),
       "The [-warn_error] option follows the OCaml syntax, namely:\n\t\t- [r] is a range of warnings (either a number [n], or a range [n..n])\n\t\t- [-r] silences range [r]\n\t\t- [+r] enables range [r]\n\t\t- [@r] makes range [r] fatal.");
-    (FStar_Getopt.noshort, "use_extracted_interfaces", BoolStr,
-      "Extract interfaces from the dependencies and use them for verification (default 'false')");
+    (FStar_Getopt.noshort, "use_extracted_interfaces",
+      (WithSideEffect
+         (((fun uu____4399 ->
+              FStar_Util.print_warning
+                "Option `--use_extracted_interfaces` is deprecated, ignoring it.\n")),
+           BoolStr)),
+      "This option is deprecated, it does nothing but warn when used.");
     (FStar_Getopt.noshort, "use_nbe", BoolStr,
       "Use normalization by evaluation as the default normalization strategy (default 'false')");
     (FStar_Getopt.noshort, "use_nbe_for_extraction", BoolStr,
@@ -2013,26 +2016,24 @@ let (no_positivity : unit -> Prims.bool) =
   fun uu____6294 -> get_no_positivity ()
 let (ml_no_eta_expand_coertions : unit -> Prims.bool) =
   fun uu____6299 -> get_ml_no_eta_expand_coertions ()
-let (use_extracted_interfaces : unit -> Prims.bool) =
-  fun uu____6304 -> get_use_extracted_interfaces ()
-let (use_nbe : unit -> Prims.bool) = fun uu____6309 -> get_use_nbe ()
+let (use_nbe : unit -> Prims.bool) = fun uu____6304 -> get_use_nbe ()
 let (use_nbe_for_extraction : unit -> Prims.bool) =
-  fun uu____6314 -> get_use_nbe_for_extraction ()
+  fun uu____6309 -> get_use_nbe_for_extraction ()
 let (trivial_pre_for_unannotated_effectful_fns : unit -> Prims.bool) =
-  fun uu____6319 -> get_trivial_pre_for_unannotated_effectful_fns ()
+  fun uu____6314 -> get_trivial_pre_for_unannotated_effectful_fns ()
 let with_saved_options : 'a . (unit -> 'a) -> 'a =
   fun f ->
-    let uu____6335 =
-      let uu____6336 = trace_error () in Prims.op_Negation uu____6336 in
-    if uu____6335
+    let uu____6330 =
+      let uu____6331 = trace_error () in Prims.op_Negation uu____6331 in
+    if uu____6330
     then
       (push ();
        (let r =
           try
-            (fun uu___859_6349 ->
+            (fun uu___858_6344 ->
                match () with
-               | () -> let uu____6354 = f () in FStar_Util.Inr uu____6354) ()
-          with | uu___858_6356 -> FStar_Util.Inl uu___858_6356 in
+               | () -> let uu____6349 = f () in FStar_Util.Inr uu____6349) ()
+          with | uu___857_6351 -> FStar_Util.Inl uu___857_6351 in
         pop ();
         (match r with
          | FStar_Util.Inr v -> v
@@ -2047,50 +2048,50 @@ let (module_matches_namespace_filter :
       let m_components = path_of_text m1 in
       let rec matches_path m_components1 path =
         match (m_components1, path) with
-        | (uu____6418, []) -> true
+        | (uu____6413, []) -> true
         | (m2::ms, p::ps) ->
             (m2 = (FStar_String.lowercase p)) && (matches_path ms ps)
-        | uu____6437 -> false in
-      let uu____6446 =
+        | uu____6432 -> false in
+      let uu____6441 =
         FStar_All.pipe_right setting
           (FStar_Util.try_find
-             (fun uu____6480 ->
-                match uu____6480 with
-                | (path, uu____6488) -> matches_path m_components path)) in
-      match uu____6446 with
+             (fun uu____6475 ->
+                match uu____6475 with
+                | (path, uu____6483) -> matches_path m_components path)) in
+      match uu____6441 with
       | FStar_Pervasives_Native.None -> false
-      | FStar_Pervasives_Native.Some (uu____6499, flag) -> flag
+      | FStar_Pervasives_Native.Some (uu____6494, flag) -> flag
 let (matches_namespace_filter_opt :
   Prims.string ->
     Prims.string Prims.list FStar_Pervasives_Native.option -> Prims.bool)
   =
   fun m ->
-    fun uu___14_6524 ->
-      match uu___14_6524 with
+    fun uu___14_6519 ->
+      match uu___14_6519 with
       | FStar_Pervasives_Native.None -> false
       | FStar_Pervasives_Native.Some filter ->
           module_matches_namespace_filter m filter
 let (should_extract : Prims.string -> Prims.bool) =
   fun m ->
     let m1 = FStar_String.lowercase m in
-    let uu____6542 = get_extract () in
-    match uu____6542 with
+    let uu____6537 = get_extract () in
+    match uu____6537 with
     | FStar_Pervasives_Native.Some extract_setting ->
-        ((let uu____6553 =
-            let uu____6566 = get_no_extract () in
-            let uu____6569 = get_extract_namespace () in
-            let uu____6572 = get_extract_module () in
-            (uu____6566, uu____6569, uu____6572) in
-          match uu____6553 with
+        ((let uu____6548 =
+            let uu____6561 = get_no_extract () in
+            let uu____6564 = get_extract_namespace () in
+            let uu____6567 = get_extract_module () in
+            (uu____6561, uu____6564, uu____6567) in
+          match uu____6548 with
           | ([], [], []) -> ()
-          | uu____6587 ->
+          | uu____6582 ->
               failwith
                 "Incompatible options: --extract cannot be used with --no_extract, --extract_namespace or --extract_module");
          module_matches_namespace_filter m1 extract_setting)
     | FStar_Pervasives_Native.None ->
         let should_extract_namespace m2 =
-          let uu____6608 = get_extract_namespace () in
-          match uu____6608 with
+          let uu____6603 = get_extract_namespace () in
+          match uu____6603 with
           | [] -> false
           | ns ->
               FStar_All.pipe_right ns
@@ -2098,26 +2099,26 @@ let (should_extract : Prims.string -> Prims.bool) =
                    (fun n ->
                       FStar_Util.starts_with m2 (FStar_String.lowercase n))) in
         let should_extract_module m2 =
-          let uu____6624 = get_extract_module () in
-          match uu____6624 with
+          let uu____6619 = get_extract_module () in
+          match uu____6619 with
           | [] -> false
           | l ->
               FStar_All.pipe_right l
                 (FStar_Util.for_some
                    (fun n -> (FStar_String.lowercase n) = m2)) in
-        (let uu____6636 = no_extract m1 in Prims.op_Negation uu____6636) &&
-          (let uu____6638 =
-             let uu____6647 = get_extract_namespace () in
-             let uu____6650 = get_extract_module () in
-             (uu____6647, uu____6650) in
-           (match uu____6638 with
+        (let uu____6631 = no_extract m1 in Prims.op_Negation uu____6631) &&
+          (let uu____6633 =
+             let uu____6642 = get_extract_namespace () in
+             let uu____6645 = get_extract_module () in
+             (uu____6642, uu____6645) in
+           (match uu____6633 with
             | ([], []) -> true
-            | uu____6661 ->
+            | uu____6656 ->
                 (should_extract_namespace m1) || (should_extract_module m1)))
 let (should_be_already_cached : Prims.string -> Prims.bool) =
   fun m ->
-    let uu____6675 = get_already_cached () in
-    match uu____6675 with
+    let uu____6670 = get_already_cached () in
+    match uu____6670 with
     | FStar_Pervasives_Native.None -> false
     | FStar_Pervasives_Native.Some already_cached_setting ->
         module_matches_namespace_filter m already_cached_setting
@@ -2128,26 +2129,26 @@ let (profile_enabled :
     fun phase ->
       match modul_opt with
       | FStar_Pervasives_Native.None ->
-          let uu____6701 = get_profile_component () in
-          matches_namespace_filter_opt phase uu____6701
+          let uu____6696 = get_profile_component () in
+          matches_namespace_filter_opt phase uu____6696
       | FStar_Pervasives_Native.Some modul ->
-          (let uu____6709 = get_profile () in
-           matches_namespace_filter_opt modul uu____6709) &&
-            (let uu____6715 = get_profile_component () in
-             matches_namespace_filter_opt phase uu____6715)
+          (let uu____6704 = get_profile () in
+           matches_namespace_filter_opt modul uu____6704) &&
+            (let uu____6710 = get_profile_component () in
+             matches_namespace_filter_opt phase uu____6710)
 exception File_argument of Prims.string 
 let (uu___is_File_argument : Prims.exn -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | File_argument uu____6729 -> true
-    | uu____6730 -> false
+    | File_argument uu____6724 -> true
+    | uu____6725 -> false
 let (__proj__File_argument__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee ->
-    match projectee with | File_argument uu____6736 -> uu____6736
+    match projectee with | File_argument uu____6731 -> uu____6731
 let (set_options : Prims.string -> FStar_Getopt.parse_cmdline_res) =
   fun s ->
     try
-      (fun uu___944_6743 ->
+      (fun uu___943_6738 ->
          match () with
          | () ->
              if s = ""
@@ -2161,6 +2162,6 @@ let (set_options : Prims.string -> FStar_Getopt.parse_cmdline_res) =
                 else res)) ()
     with
     | File_argument s1 ->
-        let uu____6756 =
+        let uu____6751 =
           FStar_Util.format1 "File %s is not a valid option" s1 in
-        FStar_Getopt.Error uu____6756
+        FStar_Getopt.Error uu____6751

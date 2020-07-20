@@ -5265,7 +5265,7 @@ let (finish_module : env -> FStar_Syntax_Syntax.modul -> env) =
             FStar_All.pipe_right env1.gamma_sig
               (FStar_List.map FStar_Pervasives_Native.snd) in
           FStar_All.pipe_right uu____24160 FStar_List.rev
-        else m.FStar_Syntax_Syntax.exports in
+        else m.FStar_Syntax_Syntax.declarations in
       add_sigelts env1 sigs;
       (let uu___1956_24187 = env1 in
        {

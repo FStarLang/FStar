@@ -747,7 +747,6 @@ let e_qualifier =
         | RD.Unfold_for_unification_and_vcgen -> ref_qual_Unfold_for_unification_and_vcgen.t
         | RD.Visible_default                  -> ref_qual_Visible_default.t
         | RD.Irreducible                      -> ref_qual_Irreducible.t
-        | RD.Abstract                         -> ref_qual_Abstract.t
         | RD.Inline_for_extraction            -> ref_qual_Inline_for_extraction.t
         | RD.NoExtract                        -> ref_qual_NoExtract.t
         | RD.Noeq                             -> ref_qual_Noeq.t
@@ -809,9 +808,6 @@ let e_qualifier =
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Irreducible.lid ->
               Some RD.Irreducible
-
-        | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Abstract.lid ->
-              Some RD.Abstract
 
         | Tm_fvar fv, [] when S.fv_eq_lid fv ref_qual_Inline_for_extraction.lid ->
               Some RD.Inline_for_extraction

@@ -305,7 +305,6 @@ let (qual_to_string : FStar_Syntax_Syntax.qualifier -> Prims.string) =
     | FStar_Syntax_Syntax.NoExtract -> "noextract"
     | FStar_Syntax_Syntax.Visible_default -> "visible"
     | FStar_Syntax_Syntax.Irreducible -> "irreducible"
-    | FStar_Syntax_Syntax.Abstract -> "abstract"
     | FStar_Syntax_Syntax.Noeq -> "noeq"
     | FStar_Syntax_Syntax.Unopteq -> "unopteq"
     | FStar_Syntax_Syntax.Logic -> "logic"
@@ -1600,7 +1599,7 @@ let (modul_to_string : FStar_Syntax_Syntax.modul -> Prims.string) =
       FStar_All.pipe_right uu____3310 (FStar_String.concat "\n") in
     let uu____3315 =
       let uu____3316 =
-        FStar_List.map sigelt_to_string m.FStar_Syntax_Syntax.exports in
+        FStar_List.map sigelt_to_string m.FStar_Syntax_Syntax.declarations in
       FStar_All.pipe_right uu____3316 (FStar_String.concat "\n") in
     FStar_Util.format3
       "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" uu____3308

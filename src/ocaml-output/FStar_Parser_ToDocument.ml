@@ -1749,7 +1749,6 @@ and (p_qualifier : FStar_Parser_AST.qualifier -> FStar_Pprint.document) =
   fun uu___8_4912 ->
     match uu___8_4912 with
     | FStar_Parser_AST.Private -> str "private"
-    | FStar_Parser_AST.Abstract -> str "abstract"
     | FStar_Parser_AST.Noeq -> str "noeq"
     | FStar_Parser_AST.Unopteq -> str "unopteq"
     | FStar_Parser_AST.Assumption -> str "assume"

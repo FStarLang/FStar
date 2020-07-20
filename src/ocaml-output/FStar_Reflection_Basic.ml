@@ -593,7 +593,6 @@ let (rd_to_syntax_qual :
     | FStar_Reflection_Data.Visible_default ->
         FStar_Syntax_Syntax.Visible_default
     | FStar_Reflection_Data.Irreducible -> FStar_Syntax_Syntax.Irreducible
-    | FStar_Reflection_Data.Abstract -> FStar_Syntax_Syntax.Abstract
     | FStar_Reflection_Data.Inline_for_extraction ->
         FStar_Syntax_Syntax.Inline_for_extraction
     | FStar_Reflection_Data.NoExtract -> FStar_Syntax_Syntax.NoExtract
@@ -631,7 +630,6 @@ let (syntax_to_rd_qual :
     | FStar_Syntax_Syntax.Visible_default ->
         FStar_Reflection_Data.Visible_default
     | FStar_Syntax_Syntax.Irreducible -> FStar_Reflection_Data.Irreducible
-    | FStar_Syntax_Syntax.Abstract -> FStar_Reflection_Data.Abstract
     | FStar_Syntax_Syntax.Inline_for_extraction ->
         FStar_Reflection_Data.Inline_for_extraction
     | FStar_Syntax_Syntax.NoExtract -> FStar_Reflection_Data.NoExtract
@@ -668,19 +666,19 @@ let (set_sigelt_quals :
   =
   fun quals ->
     fun se ->
-      let uu___502_1887 = se in
+      let uu___500_1887 = se in
       let uu____1888 = FStar_List.map rd_to_syntax_qual quals in
       {
-        FStar_Syntax_Syntax.sigel = (uu___502_1887.FStar_Syntax_Syntax.sigel);
+        FStar_Syntax_Syntax.sigel = (uu___500_1887.FStar_Syntax_Syntax.sigel);
         FStar_Syntax_Syntax.sigrng =
-          (uu___502_1887.FStar_Syntax_Syntax.sigrng);
+          (uu___500_1887.FStar_Syntax_Syntax.sigrng);
         FStar_Syntax_Syntax.sigquals = uu____1888;
         FStar_Syntax_Syntax.sigmeta =
-          (uu___502_1887.FStar_Syntax_Syntax.sigmeta);
+          (uu___500_1887.FStar_Syntax_Syntax.sigmeta);
         FStar_Syntax_Syntax.sigattrs =
-          (uu___502_1887.FStar_Syntax_Syntax.sigattrs);
+          (uu___500_1887.FStar_Syntax_Syntax.sigattrs);
         FStar_Syntax_Syntax.sigopts =
-          (uu___502_1887.FStar_Syntax_Syntax.sigopts)
+          (uu___500_1887.FStar_Syntax_Syntax.sigopts)
       }
 let (e_optionstate_hook :
   FStar_Options.optionstate FStar_Syntax_Embeddings.embedding

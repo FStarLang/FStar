@@ -705,7 +705,6 @@ let e_qualifier =
         | RD.Unfold_for_unification_and_vcgen -> mkConstruct ref_qual_Unfold_for_unification_and_vcgen.fv [] []
         | RD.Visible_default                  -> mkConstruct ref_qual_Visible_default.fv [] []
         | RD.Irreducible                      -> mkConstruct ref_qual_Irreducible.fv [] []
-        | RD.Abstract                         -> mkConstruct ref_qual_Abstract.fv [] []
         | RD.Inline_for_extraction            -> mkConstruct ref_qual_Inline_for_extraction.fv [] []
         | RD.NoExtract                        -> mkConstruct ref_qual_NoExtract.fv [] []
         | RD.Noeq                             -> mkConstruct ref_qual_Noeq.fv [] []
@@ -745,7 +744,6 @@ let e_qualifier =
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Unfold_for_unification_and_vcgen.lid -> Some RD.Unfold_for_unification_and_vcgen
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Visible_default.lid -> Some RD.Visible_default
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Irreducible.lid -> Some RD.Irreducible
-        | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Abstract.lid -> Some RD.Abstract
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Inline_for_extraction.lid -> Some RD.Inline_for_extraction
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_NoExtract.lid -> Some RD.NoExtract
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_qual_Noeq.lid -> Some RD.Noeq
