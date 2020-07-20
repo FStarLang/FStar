@@ -1026,40 +1026,87 @@ let pcm_t #a #b : pcm (t a b) = FStar.PCM.({
   refine = (fun x -> Both? x \/ Neither? x)
 })
 
+let partial_pre_action (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
+  hheap fp -> (x:a & hheap (fp' x))
+
 let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
-  : pre_action (pts_to r (First #a #b x))
-               unit
-               (fun _ -> pts_to r (First #a #b y))
+  : partial_pre_action (pts_to r (First #a #b x))
+                       unit
+                       (fun _ -> pts_to r (First #a #b y))
   = fun h ->
-     let Both _ z = sel_action' r (First #a #b x) h in
-     let new_v = Both y z in
-     let cell = Ref (t a b) pcm_t Frac.full_perm new_v in
-     let h' = update_addr_full_heap h r cell in
+     let Ref _ _ frac old_v = select_addr h r in
+     let old_v : t a b = old_v in
+     let new_v =
+       match old_v with
+       | First _ -> First y
+       | Both _ z -> Both y z
+     in
+     let cell = Ref (t a b) pcm_t frac new_v in
+     let h' = update_addr h r cell in
      (| (), h' |)
 
 #push-options "--z3rlimit_factor 12 --query_stats --max_fuel 0"
 #restart-solver
+
+let frame_preserving_is_preorder_respecting_pcm_t #a #b (x:t a b{Both? x}) (y:t a b{Both? y})
+  : Lemma (requires frame_preserving pcm_t x y)
+          (ensures (PP.preorder_of_pcm pcm_t x y))
+  = PP.frame_preserving_is_preorder_respecting pcm_t x y;
+    assert (forall z.{:pattern (compatible pcm_t x z)} compatible pcm_t x z ==> PP.preorder_of_pcm pcm_t z y);
+    assert (forall z. compatible pcm_t x z ==> x == z /\ PP.preorder_of_pcm pcm_t x y);
+    compatible_refl pcm_t x
+
+let upd_first_full_evolution #a #b
+      (r:ref (t a b) pcm_t)
+      (x:Ghost.erased a)
+      (y:a)
+      (h:full_hheap (pts_to r (First #a #b x)))
+  : Lemma
+    (ensures
+      (let (| _, h1 |) = upd_first #a #b r x y h in
+       full_heap_pred h1 /\
+       heap_evolves h h1))
+  = let old_v = sel_action' r (First #a #b x) h in
+    let new_v : t a b =
+       match old_v with
+       | Both _ z -> Both y z
+    in
+    assert (frame_preserving pcm_t old_v new_v);
+    assert (forall z. compatible pcm_t old_v z ==> old_v == z);
+    PP.frame_preserving_is_preorder_respecting pcm_t old_v new_v;
+    compatible_refl pcm_t old_v;
+    assert (PP.preorder_of_pcm pcm_t old_v new_v);
+    let (| _, h1 |) = upd_first #a #b r x y h in
+    assert (forall a. a<>r ==> h1 a == h a);
+    assert (forall (x:addr). contains_addr h1 x ==> x==r \/ contains_addr h x);
+    assert (full_heap_pred h1);
+    assert (heap_evolves h h1)
+
+
 let upd_first_frame_preserving #a #b
       (r:ref (t a b) pcm_t)
       (x:Ghost.erased a)
       (y:a)
-      (h:hheap (pts_to r (First #a #b x)))
+      (h:full_hheap (pts_to r (First #a #b x)))
       (frame:slprop)
  : Lemma
    (requires interp (pts_to r (First #a #b x) `star` frame) h)
    (ensures
      (let (| _, h1 |) = upd_first #a #b r x y h in
       interp (pts_to r (First #a #b y) `star` frame) h1 /\
+      full_heap_pred h1 /\
       heap_evolves h h1 /\
       (forall (hp:hprop frame). hp h == hp h1)))
  = let old_v = sel_action' r (First #a #b x) h in
    let new_v : t a b =
        match old_v with
-       | First _ -> First y
        | Both _ z -> Both y z
    in
+   PP.frame_preserving_is_preorder_respecting pcm_t old_v new_v;
+   assert (PP.preorder_of_pcm pcm_t old_v new_v);
    let (| _, h1 |) = upd_first #a #b r x y h in
    assert (forall a. a<>r ==> h1 a == h a);
+   upd_first_full_evolution #a #b r x y h;
    let aux (hl hr:heap)
      : Lemma
        (requires
@@ -1074,13 +1121,13 @@ let upd_first_frame_preserving #a #b
          ))
         [SMTPat (disjoint hl hr)]
      = assert (contains_addr hl r);
-       let Ref _ _ old_v_l = select_addr hl r in
+       let Ref _ _ _ old_v_l = select_addr hl r in
        let old_v_l : t a b = old_v_l in
        let (| _, hl' |) = upd_first #a #b r x y hl in
-       let Ref _ _ new_v_l = select_addr hl' r in
+       let Ref _ _ _ new_v_l = select_addr hl' r in
        let new_v_l : t a b = new_v_l in
        if contains_addr hr r
-       then let Ref _ _ old_v_r = select_addr hr r in
+       then let Ref _ _ _ old_v_r = select_addr hr r in
             let old_v_r : t a b = old_v_r in
             assert (composable (pcm_t #a #b) old_v_l old_v_r);
             match old_v_l, old_v_r with
@@ -1090,7 +1137,6 @@ let upd_first_frame_preserving #a #b
             | Both _ z, Neither ->
               assert (new_v_l == Both y z);
               assert (disjoint hl' hr);
-              assert (h1 r == hl' r);
               mem_equiv_eq h1 (join hl' hr)
             | First _, Second _ ->
               assert (new_v_l == First y);
