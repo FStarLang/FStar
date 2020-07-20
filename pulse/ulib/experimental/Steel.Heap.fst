@@ -1177,37 +1177,10 @@ let upd_first_action #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
     in
     refined_pre_action_as_action refined
 
-  fun h ->
-     let Ref _ _ frac old_v = select_addr h r in
-     let old_v : t a b = old_v in
-     let new_v =
-       match old_v with
-       | First _ -> First y
-       | Both _ z -> Both y z
-     in
-     let cell = Ref (t a b) pcm_t frac new_v in
-     let h' = update_addr h r cell in
-     (| (), h' |)
-
-let compat_both #a #b (x:a) (y:t a b)
-  : Lemma
-    (requires compatible pcm_t (First x) y)
-    (ensures Both? y \/ First? y)
-  = ()
-
-let update_first #a #b (x:Ghost.erased a) (y : a)
-                       (curval: t a b {compatible (pcm_t #a #b) (First #a #b x) curval})
-  : (newval:t a b{(Both? curval ==> frame_preserving pcm_t curval newval) /\
-                  (First? curval ==> First? newval) /\
-                  compatible pcm_t (First y) newval})
-  = match curval with
-    | First z -> First y
-    | Both _ z -> Both y z
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let free_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a{exclusive pcm v0})
+let free_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a{exclusive pcm v0 /\ pcm.refine pcm.FStar.PCM.p.one})
   : action (pts_to r v0) unit (fun _ -> pts_to r pcm.FStar.PCM.p.one)
   = FStar.PCM.exclusive_is_frame_preserving pcm v0;
     upd_action r v0 pcm.FStar.PCM.p.one
@@ -1241,7 +1214,7 @@ let gather_action #a #pcm r v0 v1
 #push-options "--z3rlimit 20"
 let extend #a #pcm x addr h =
     let r : ref a pcm = addr in
-    let h' = update_addr h r (Ref a pcm x) in
+    let h' = update_addr_full_heap h r (Ref a pcm Frac.full_perm x) in
     assert (h' `free_above_addr` (addr + 1));
     assert (h' `contains_addr` r);
     assert (interp (pts_to r x) h');
@@ -1253,7 +1226,7 @@ let extend #a #pcm x addr h =
           interp emp h0 /\
           interp frame hf)
        (ensures (
-          let h0' = update_addr h0 r (Ref a pcm x) in
+          let h0' = update_addr h0 r (Ref a pcm Frac.full_perm x) in
           disjoint h0' hf /\
           interp (pts_to r x) h0' /\
           h' == join h0' hf /\
@@ -1263,7 +1236,7 @@ let extend #a #pcm x addr h =
          ))
        [SMTPat (interp emp h0);
         SMTPat (interp frame hf)]
-      = let h0' = update_addr h0 r (Ref a pcm x) in
+      = let h0' = update_addr h0 r (Ref a pcm Frac.full_perm x) in
         // assert (disjoint h0' hf);
         // assert (interp (pts_to r x) h0');
         assert (mem_equiv h' (join h0' hf));
@@ -1407,5 +1380,5 @@ let elim_pure (p:prop)
 let pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
   : Lemma (requires (interp (pts_to r x) h /\ compatible pcm y x))
           (ensures  (interp (pts_to r y) h))
-  = let Ref a' pcm' v' = (select_addr h r) in
+  = let Ref a' pcm' _ v' = (select_addr h r) in
     compatible_trans pcm y x v'

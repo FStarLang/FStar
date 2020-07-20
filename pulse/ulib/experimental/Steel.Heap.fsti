@@ -480,8 +480,8 @@ val free_action
   (#a:Type u#a)
   (#pcm:pcm a)
   (r:ref a pcm)
-  (v0:FStar.Ghost.erased a {exclusive pcm v0 /\ pcm.refine pcm.p.one})
-  : action (pts_to r v0) unit (fun _ -> emp)
+  (v0:FStar.Ghost.erased a {exclusive pcm v0 /\ pcm.refine pcm.FStar.PCM.p.one})
+  : action (pts_to r v0) unit (fun _ -> pts_to r pcm.FStar.PCM.p.one)
 
 
 (** Splitting a permission on a composite resource into two separate permissions *)
@@ -506,7 +506,7 @@ val gather_action
 val extend
   (#a:Type u#a)
   (#pcm:pcm a)
-  (x:a{compatible pcm x x})
+  (x:a{compatible pcm x x /\ pcm.refine x})
   (addr:nat)
   (h:full_heap{h `free_above_addr` addr})
   : (
