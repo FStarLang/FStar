@@ -2091,8 +2091,8 @@ let maybe_instantiate (env:Env.env) e t =
            (* It's important to return t0 in these first two cases
             * to not unnecessarily reduce t *)
            | [] -> bs, S.mk_Total t0
-           | _ when not (U.is_total_comp c) ->
-                bs@(List.init bs'), S.mk_Total (U.arrow [(List.last bs' |> BU.must)] c)
+           (* | _ when not (U.is_total_comp c) -> *)
+           (*      bs@(List.init bs'), S.mk_Total (U.arrow [(List.last bs' |> BU.must)] c) *)
            | bs' -> aux (bs@bs') (U.comp_result c)
          in
          aux [] t
