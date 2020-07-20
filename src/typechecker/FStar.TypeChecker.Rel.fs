@@ -914,18 +914,29 @@ let gamma_until (g:gamma) (bs:binders) =
       | None -> []
       | Some (_, bx, rest) -> bx::rest
 
+let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl =
+  let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
+  let g = gamma_until src.ctx_uvar_gamma pfx in
 
-let restrict_ctx (tgt:ctx_uvar) (src:ctx_uvar) wl =
-    let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
-    let g = gamma_until src.ctx_uvar_gamma pfx in
+  let aux (t:typ) (f:term -> term) =
     let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
-      src.ctx_uvar_range g pfx src.ctx_uvar_typ
+      src.ctx_uvar_range g pfx t
       src.ctx_uvar_should_check src.ctx_uvar_meta in
-    U.set_uvar src.ctx_uvar_head src';
-    wl
+    U.set_uvar src.ctx_uvar_head (f src');
+    wl in
 
-let restrict_all_uvars (tgt:ctx_uvar) (sources:list<ctx_uvar>) wl  =
-    List.fold_right (restrict_ctx tgt) sources wl
+  let bs = bs |>
+    List.filter (fun (bv1, _) -> List.existsb (fun (bv2, _) -> S.bv_eq bv1 bv2) src.ctx_uvar_binders) in
+    
+  if List.length bs = 0 then aux src.ctx_uvar_typ (fun src' -> src')
+  else aux
+    (src.ctx_uvar_typ |> env.universe_of env |> Some |> S.mk_Total' src.ctx_uvar_typ |> U.arrow bs)
+    (fun src' -> S.mk
+      (Tm_app (src', bs |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg))
+      src.ctx_uvar_range)
+
+let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list<ctx_uvar>) wl  =
+    List.fold_right (restrict_ctx env tgt bs) sources wl
 
 let intersect_binders (g:gamma) (v1:binders) (v2:binders) : binders =
     let as_set v =
@@ -2167,7 +2178,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                let fvs_rhs = Free.names rhs in
                if not (BU.set_is_subset_of fvs_rhs fvs_lhs)
                then Inl ("quasi-pattern, free names on the RHS are not included in the LHS"), wl
-               else Inr (mk_solution env lhs bs rhs), restrict_all_uvars ctx_u uvars wl
+               else Inr (mk_solution env lhs bs rhs), restrict_all_uvars env ctx_u [] uvars wl
     in
 
     let imitate_app (orig:prob) (env:Env.env) (wl:worklist)
@@ -2278,7 +2289,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         then giveup_or_defer env orig wl (Thunk.mkv <| "occurs-check failed: " ^ (Option.get msg))
         else if BU.set_is_subset_of fvs2 fvs1
         then let sol = mk_solution env lhs lhs_binders rhs in
-             let wl = restrict_all_uvars ctx_uv uvars wl in
+             let wl = restrict_all_uvars env ctx_uv lhs_binders uvars wl in
              solve env (solve_prob orig None sol wl)
         else if wl.defer_ok
         then
