@@ -33,7 +33,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0f9bf6531ac2e89c6576942b6d0e31f6"
+      "c2ff2d01c60af260493ce8f150cf99a3"
     ],
     [
       "FStar.OrdSetProps.union_lemma",
@@ -81,7 +81,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1238a095a887995c89385ee146151e50"
+      "d559fbb628effa84407046a7acdf8e7c"
     ],
     [
       "FStar.OrdSetProps.union_lemma'",
@@ -90,7 +90,7 @@
       1,
       [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
       0,
-      "4f51772985970cf454415214b08dd19a"
+      "a08a615730add7447bf152e812db1b5a"
     ],
     [
       "FStar.OrdSetProps.union_lemma'",
@@ -99,50 +99,7 @@
       1,
       [ "@query", "equation_FStar.OrdSet.equal" ],
       0,
-      "27cdcc4c9d016f90108fc5d700e58ce6"
-    ],
-    [
-      "FStar.OrdSetProps.fold",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_34dc71006f0a069879a6d574d22d2a15_5",
-        "binder_x_9cd1733a5204f989dbb2f01d5984df93_1",
-        "binder_x_c5c25dca247d508510a7affacd974ee2_3", "bool_inversion",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.eqtype",
-        "equation_Prims.nat", "lemma_FStar.OrdSet.choose_s",
-        "lemma_FStar.OrdSet.eq_remove", "lemma_FStar.OrdSet.hasEq_ordset",
-        "lemma_FStar.OrdSet.mem_remove", "lemma_FStar.OrdSet.mem_singleton",
-        "lemma_FStar.OrdSet.mem_union", "lemma_FStar.OrdSet.size_remove",
-        "lemma_FStar.OrdSet.size_singleton", "lemma_FStar.OrdSet.size_union",
-        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
-        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_GreaterThanOrEqual",
-        "proj_equation_FStar.Pervasives.Native.Some_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Pervasives.Native.Some_v",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "typing_FStar.OrdSet.choose", "typing_FStar.OrdSet.remove",
-        "typing_FStar.OrdSet.singleton", "typing_FStar.OrdSet.size",
-        "typing_FStar.Pervasives.Native.uu___is_Some",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "803ac8d5a7187d4d76754c5b9b01bf18"
-    ],
-    [
-      "FStar.OrdSetProps.union_lemma'",
-      3,
-      2,
-      1,
-      [ "@query", "lemma_FStar.OrdSet.hasEq_ordset" ],
-      0,
-      "eea9f01646f85beb78fd9ee045813e2d"
+      "ba73deae23bf7ac373e5710043a50d75"
     ]
   ]
 ]
