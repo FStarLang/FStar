@@ -1161,6 +1161,34 @@ let upd_first_frame_preserving #a #b
    in
    ()
 
+let upd_first_action #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
+  : action (pts_to r (First #a #b x))
+           unit
+           (fun _ -> pts_to r (First #a #b y))
+  = let refined : refined_pre_action
+                    (pts_to r (First #a #b x))
+                    unit
+                    (fun _ -> pts_to r (First #a #b y))
+     = fun h ->
+         let (|u, h1|) = upd_first r x y h in
+         FStar.Classical.forall_intro (FStar.Classical.move_requires (upd_first_frame_preserving r x y h));
+         upd_first_full_evolution #a #b r x y h;
+         (| u, h1 |)
+    in
+    refined_pre_action_as_action refined
+
+  fun h ->
+     let Ref _ _ frac old_v = select_addr h r in
+     let old_v : t a b = old_v in
+     let new_v =
+       match old_v with
+       | First _ -> First y
+       | Both _ z -> Both y z
+     in
+     let cell = Ref (t a b) pcm_t frac new_v in
+     let h' = update_addr h r cell in
+     (| (), h' |)
+
 let compat_both #a #b (x:a) (y:t a b)
   : Lemma
     (requires compatible pcm_t (First x) y)
