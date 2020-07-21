@@ -1802,12 +1802,66 @@ val is_null (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
 /// ``sub b i len`` constructs the sub-buffer of ``b`` starting from
 /// offset ``i`` with length ``len``. KreMLin extracts this operation as
 /// ``b + i`` (or, equivalently, ``&b[i]``.)
+///
+/// Note that it's UB to perform pointer addition on the NULL pointer.
 
-val msub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
+val msub_non_null (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
+  (i:U32.t) (len:Ghost.erased U32.t)
+  :HST.Stack (mbuffer a rrel sub_rel)
+             (requires (fun h -> U32.v i + U32.v (Ghost.reveal len) <= length b /\ compatible_sub b i (Ghost.reveal len) sub_rel /\ live h b /\ not (g_is_null b)))
+             (ensures  (fun h y h' -> h == h' /\ y == mgsub sub_rel b i (Ghost.reveal len)))
+
+noextract
+let is_non_zero x =
+  let open FStar.Tactics in
+  match inspect (quote x) with
+  | Tv_App f (x, Q_Explicit) ->
+      begin match inspect f with
+      | Tv_FVar fv ->
+          begin match fv_to_string fv with
+          | "FStar.UInt32.__uint_to_t" ->
+              begin match inspect x with
+              | Tv_Const (C_Int x) ->
+                  if x <> 0 then
+                    exact (`true)
+                  else
+                    exact (`false)
+              | _ -> exact (`false)
+              end
+          | _ -> exact (`false)
+          end
+      | _ -> exact (`false)
+      end
+  | _ -> exact (`false)
+
+inline_for_extraction noextract
+let msub_generic (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
   (i:U32.t) (len:Ghost.erased U32.t)
   :HST.Stack (mbuffer a rrel sub_rel)
              (requires (fun h -> U32.v i + U32.v (Ghost.reveal len) <= length b /\ compatible_sub b i (Ghost.reveal len) sub_rel /\ live h b))
              (ensures  (fun h y h' -> h == h' /\ y == mgsub sub_rel b i (Ghost.reveal len)))
+=
+  if is_null b then begin
+    null_unique (mgsub sub_rel b i len);
+    mnull #a #rrel #sub_rel
+  end else
+    msub_non_null sub_rel b i len
+
+inline_for_extraction noextract
+let msub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
+  (i:U32.t) (#[is_non_zero i] i_non_zero: bool) (len:Ghost.erased U32.t)
+  :HST.Stack (mbuffer a rrel sub_rel)
+             (requires (fun h ->
+               U32.v i + U32.v (Ghost.reveal len) <= length b /\ compatible_sub b i (Ghost.reveal len) sub_rel /\ live h b /\
+               (if i_non_zero then not (g_is_null b) else True)))
+             (ensures  (fun h y h' -> h == h' /\ y == mgsub sub_rel b i (Ghost.reveal len)))
+
+=
+  if i_non_zero then
+    msub_non_null sub_rel b i len
+  else
+    msub_generic sub_rel b i len
+
 
 /// ``offset b i`` construct the tail of the buffer ``b`` starting from
 /// offset ``i``, i.e. the sub-buffer of ``b`` starting from offset ``i``
@@ -1817,11 +1871,25 @@ val msub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
 /// This stateful operation cannot be derived from ``sub``, because the
 /// length cannot be computed outside of proofs.
 
-val moffset (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
+val moffset_non_null (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
+  (i:U32.t)
+  :HST.Stack (mbuffer a rrel sub_rel)
+             (requires (fun h -> U32.v i <= length b /\ compatible_sub b i (U32.sub (len b) i) sub_rel /\ live h b /\ not (g_is_null b)))
+             (ensures  (fun h y h' -> h == h' /\ y == mgsub sub_rel b i (U32.sub (len b) i)))
+
+inline_for_extraction noextract
+let moffset (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
   (i:U32.t)
   :HST.Stack (mbuffer a rrel sub_rel)
              (requires (fun h -> U32.v i <= length b /\ compatible_sub b i (U32.sub (len b) i) sub_rel /\ live h b))
              (ensures  (fun h y h' -> h == h' /\ y == mgsub sub_rel b i (U32.sub (len b) i)))
+=
+  if is_null b then begin
+    null_unique (mgsub sub_rel b i (len b `U32.sub` i));
+    mnull #a #rrel #sub_rel
+  end else
+    moffset_non_null sub_rel b i
+
 // goffset
 
 
@@ -2305,7 +2373,35 @@ val mmalloc_drgn_and_blit (#a:Type0) (#rrel:srel a)
 
 /// Derived operations
 
-val blit (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:srel a)
+// Compiles to memcpy which is UB when either of the two arguments is NULL. See
+// https://www.imperialviolet.org/2016/06/26/nonnull.html
+val blit_non_null (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:srel a)
+  (src:mbuffer a rrel1 rel1)
+  (idx_src:U32.t)
+  (dst:mbuffer a rrel2 rel2)
+  (idx_dst:U32.t)
+  (len:U32.t)
+  :HST.Stack unit (requires (fun h -> live h src /\ live h dst /\
+                                    U32.v idx_src + U32.v len <= length src /\
+                                    U32.v idx_dst + U32.v len <= length dst /\
+                                    (* TODO: remove the rhs part of this disjunction once patterns on loc_buffer_from_to are introduced *)
+                                    (loc_disjoint (loc_buffer_from_to src idx_src (idx_src `U32.add` len)) (loc_buffer_from_to dst idx_dst (idx_dst `U32.add` len)) \/ disjoint src dst) /\
+				    rel2 (as_seq h dst)
+				         (Seq.replace_subseq (as_seq h dst) (U32.v idx_dst) (U32.v idx_dst + U32.v len)
+					                     (Seq.slice (as_seq h src) (U32.v idx_src) (U32.v idx_src + U32.v len))) /\
+                               not (g_is_null src) /\ not (g_is_null dst))
+                               )
+                  (ensures (fun h _ h' -> modifies (loc_buffer dst) h h' /\
+                                        live h' dst /\
+                                        Seq.slice (as_seq h' dst) (U32.v idx_dst) (U32.v idx_dst + U32.v len) ==
+                                        Seq.slice (as_seq h src) (U32.v idx_src) (U32.v idx_src + U32.v len) /\
+                                        Seq.slice (as_seq h' dst) 0 (U32.v idx_dst) ==
+                                        Seq.slice (as_seq h dst) 0 (U32.v idx_dst) /\
+                                        Seq.slice (as_seq h' dst) (U32.v idx_dst + U32.v len) (length dst) ==
+                                        Seq.slice (as_seq h dst) (U32.v idx_dst + U32.v len) (length dst)))
+
+inline_for_extraction noextract
+let blit (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:srel a)
   (src:mbuffer a rrel1 rel1)
   (idx_src:U32.t)
   (dst:mbuffer a rrel2 rel2)
@@ -2327,8 +2423,35 @@ val blit (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:srel a)
                                         Seq.slice (as_seq h dst) 0 (U32.v idx_dst) /\
                                         Seq.slice (as_seq h' dst) (U32.v idx_dst + U32.v len) (length dst) ==
                                         Seq.slice (as_seq h dst) (U32.v idx_dst + U32.v len) (length dst)))
+=
+  let uu__src_null = is_null src in
+  let uu__dst_null = is_null dst in
+  if uu__src_null || uu__dst_null then
+    ()
+  else
+    blit_non_null src idx_src dst idx_dst len
 
-val fill (#t:Type) (#rrel #rel: srel t)
+// Potentially compiles to memset when t == UInt8.t and memset is UB when the argument is NULL.
+val fill_non_null (#t:Type) (#rrel #rel: srel t)
+  (b: mbuffer t rrel rel)
+  (z:t)
+  (len:U32.t)
+: HST.Stack unit
+  (requires (fun h ->
+    live h b /\
+    U32.v len <= length b /\
+    rel (as_seq h b) (Seq.replace_subseq (as_seq h b) 0 (U32.v len) (Seq.create (U32.v len) z)) /\
+    not (g_is_null b)
+  ))
+  (ensures  (fun h0 _ h1 ->
+    modifies (loc_buffer b) h0 h1 /\
+    live h1 b /\
+    Seq.slice (as_seq h1 b) 0 (U32.v len) == Seq.create (U32.v len) z /\
+    Seq.slice (as_seq h1 b) (U32.v len) (length b) == Seq.slice (as_seq h0 b) (U32.v len) (length b)
+  ))
+
+inline_for_extraction noextract
+let fill (#t:Type) (#rrel #rel: srel t)
   (b: mbuffer t rrel rel)
   (z:t)
   (len:U32.t)
@@ -2344,6 +2467,14 @@ val fill (#t:Type) (#rrel #rel: srel t)
     Seq.slice (as_seq h1 b) 0 (U32.v len) == Seq.create (U32.v len) z /\
     Seq.slice (as_seq h1 b) (U32.v len) (length b) == Seq.slice (as_seq h0 b) (U32.v len) (length b)
   ))
+=
+  if is_null b then begin
+    let h1 = FStar.HyperStack.ST.get () in
+    Seq.lemma_eq_intro (Seq.slice (as_seq h1 b) 0 (U32.v len)) (Seq.create (U32.v len) z);
+    ()
+  end else
+    fill_non_null b z len
+
 
 /// Type class instantiation for compositionality with other kinds of memory locations than regions, references or buffers (just in case).
 /// No usage pattern has been found yet.
