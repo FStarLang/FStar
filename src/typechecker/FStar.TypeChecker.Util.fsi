@@ -130,5 +130,5 @@ val get_field_projector_name : env -> datacon:lident -> index:int -> lident
 
 
 (* update the env functions *)
-val update_env_sub_eff : env -> sub_eff -> env
+val update_env_sub_eff : env -> sub_eff -> Range.range -> env
 val update_env_polymonadic_bind : env -> lident -> lident -> lident -> tscheme -> env

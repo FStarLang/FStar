@@ -847,7 +847,7 @@ let run_with_parsed_and_tc_term st term line column continuation =
     fst (FStar.ToSyntax.ToSyntax.decls_to_sigelts decls env.dsenv) in
 
   let typecheck tcenv decls =
-    let ses, _, _ = FStar.TypeChecker.Tc.tc_decls tcenv decls in
+    let ses, _ = FStar.TypeChecker.Tc.tc_decls tcenv decls in
     ses in
 
   run_and_rewind st (QueryNOK, JsonStr "Computation interrupted") (fun st ->

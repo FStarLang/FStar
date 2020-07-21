@@ -41,7 +41,6 @@ let constructors = Hashtbl.create 0
 let operators = Hashtbl.create 0
 
 let () =
-  Hashtbl.add keywords "abstract"      ABSTRACT    ;
   Hashtbl.add keywords "attributes"    ATTRIBUTES  ;
   Hashtbl.add keywords "noeq"          NOEQUALITY  ;
   Hashtbl.add keywords "unopteq"       UNOPTEQUALITY  ;
@@ -80,6 +79,7 @@ let () =
   Hashtbl.add keywords "new_effect"    NEW_EFFECT  ;
   Hashtbl.add keywords "layered_effect"               LAYERED_EFFECT             ;
   Hashtbl.add keywords "polymonadic_bind"             POLYMONADIC_BIND           ;
+  Hashtbl.add keywords "polymonadic_subcomp"          POLYMONADIC_SUBCOMP        ;
   Hashtbl.add keywords "noextract"     NOEXTRACT   ;
   Hashtbl.add keywords "of"            OF          ;
   Hashtbl.add keywords "open"          OPEN        ;

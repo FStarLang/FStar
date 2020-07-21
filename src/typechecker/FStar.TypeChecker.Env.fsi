@@ -116,6 +116,7 @@ and effects = {
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
   polymonadic_binds :list<(lident * lident * lident * polymonadic_bind_t)>;  (* (m, n) |> p *)
+  polymonadic_subcomps :list<(lident * lident * tscheme)>;  (* m <: n *)
 }
 
 and env = {
@@ -139,7 +140,7 @@ and env = {
   use_eq_strict  :bool;                         (* this flag is a stricter version of use_eq *)
                                                 (* use_eq is not sticky, it is reset on set_expected_typ and clear_expected_typ *)
                                                 (* at least, whereas use_eq_strict does not change as we traverse the term *)
-                                                (* during typechecking *)
+                                                (* during typechecking, it also implies no smt *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
@@ -306,10 +307,12 @@ val push_new_effect       : env -> (eff_decl * list<qualifier>) -> env
 //client constructs the mlift and gives it to us
 
 val exists_polymonadic_bind: env -> lident -> lident -> option<(lident * polymonadic_bind_t)>
+val exists_polymonadic_subcomp: env -> lident -> lident -> option<tscheme>
 val update_effect_lattice  : env -> src:lident -> tgt:lident -> mlift -> env
 
 val join_opt               : env -> lident -> lident -> option<(lident * mlift * mlift)>
 val add_polymonadic_bind   : env -> m:lident -> n:lident -> p:lident -> polymonadic_bind_t -> env
+val add_polymonadic_subcomp: env -> m:lident -> n:lident -> tscheme -> env
 
 val push_bv               : env -> bv -> env
 val push_bvs              : env -> list<bv> -> env

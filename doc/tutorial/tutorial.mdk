@@ -2215,9 +2215,9 @@ $\mathsf{bool} \to \mathsf{bool}$ in paper notation.
 We represent the expressions of STLC by the datatype `exp`.
 ```
 type exp =
-  | EVar   : v:var -> exp
+  | EVar   : v:int -> exp
   | EApp   : fn:exp -> arg:exp -> exp
-  | EAbs   : v:var -> vty:ty -> body:exp -> exp
+  | EAbs   : v:int -> vty:ty -> body:exp -> exp
   | ETrue  : exp
   | EFalse : exp
   | EIf    : test:exp -> btrue:exp -> bfalse:exp -> exp
@@ -2591,8 +2591,7 @@ We can use these results to show the following substitution lemma:
 val substitution_preserves_typing : x:int -> e:exp -> v:exp -> g:env -> Lemma
   (requires (Some? (typing empty v) /\
              Some? (typing (extend g x (Some?.v (typing empty v))) e)))
-  (ensures (Some? (typing empty v) /\
-            typing g (subst x v e) ==
+  (ensures (typing g (subst x v e) ==
             typing (extend g x (Some?.v (typing empty v))) e))
 let rec substitution_preserves_typing x e v g =
   let Some t_x = typing empty v in
@@ -3314,7 +3313,7 @@ primitive form of `ST`; `EXN` is the primitive form of `Exn`; etc.
 
 ~
 
-[Dijkstra monad]: http://research.microsoft.com/en-us/um/people/nswamy/papers/paper-pldi13.pdf
+[Dijkstra monad]: https://www.microsoft.com/en-us/research/publication/verifying-higher-order-programs-with-the-dijkstra-monad/
 
 
 
@@ -4815,7 +4814,7 @@ the server has indeed sent the
 message in response to a matching request from the client.
 
 To this end, the protocol uses message authentication codes (MACs) computed as
-keyed hashes, such that each symmetric MAC key kab is associated with (and known
+keyed hashes, such that each symmetric MAC key `kab` is associated with (and known
 to) the pair of principals a and b. Our protocol may be informally described as follows.
 An Authenticated RPC Protocol:
 

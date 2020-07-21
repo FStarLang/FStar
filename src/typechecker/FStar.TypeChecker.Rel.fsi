@@ -61,6 +61,7 @@ val get_teq_predicate : env -> typ -> typ -> option<guard_t>
 val teq_force  : env -> typ -> typ -> unit
 val teq_nosmt        : env -> typ -> typ -> option<guard_t>
 val teq_nosmt_force  : env -> typ -> typ -> bool
+val layered_effect_teq : env -> typ -> typ -> reason:option<string> -> guard_t
 val get_subtyping_predicate: env -> typ -> typ -> option<guard_t>
 val get_subtyping_prop: env -> typ -> typ -> option<guard_t>
 val subtype_nosmt       : env -> typ -> typ -> option<guard_t>

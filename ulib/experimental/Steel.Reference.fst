@@ -15,160 +15,122 @@
 *)
 
 module Steel.Reference
-
-module E = Steel.Effect
-module AT = Steel.Effect.Atomic
-module M = Steel.Memory
-module G = FStar.Ghost
+open Steel.Effect
+open Steel.Effect.Atomic
+open Steel.Memory
+open Steel.FractionalPermission
+open FStar.Ghost
+module H = Steel.HigherReference
 module U = FStar.Universe
-module A = Steel.Actions
-module R = Steel.HigherReference
-module B = Steel.SteelT.Basics
-module AB = Steel.SteelAtomic.Basics
+module A = Steel.Effect.Atomic
+module Basics = Steel.SteelT.Basics
 
-#set-options "--print_universes --print_implicits --fuel 0 --ifuel 0"
+let ref a = H.ref (U.raise_t a)
 
-let alloc (#a:Type0) (x:a)
-  : SteelT (ref a) emp (fun r -> pts_to r full x)
-  =
-  R.alloc #(U.raise_t u#0 u#1 a) (U.raise_val x)
+let pts_to r p v = H.pts_to r p (hide (U.raise_val (reveal v)))
 
-let read (#a:Type0) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelT a (pts_to r p v) (fun x -> pts_to r p x)
-  =
-  let x = R.read r in
-  B.return (U.downgrade_val x)
+let alloc x = H.alloc (U.raise_val x)
 
-let read_refine (#a:Type0) (#p:perm) (q:a -> hprop) (r:ref a)
-  : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
-             (fun v -> pts_to r p v `star` q v)
-  =
-  let x = R.read_refine (fun x -> q (U.downgrade_val x)) r in
-  B.return (U.downgrade_val x)
+let read r =
+  let x = H.read r in
+  Basics.return (U.downgrade_val x)
 
+let read_refine #a #p q r =
+  Basics.h_assert (h_exists (fun (v:a) -> pts_to r p v `star` q v));
+  Basics.lift_h_exists (fun (v:a) -> pts_to r p v `star` q v);
+  Basics.h_assert (h_exists (fun (v:U.raise_t a) -> pts_to r p (U.downgrade_val v) `star` q (U.downgrade_val v)));
+  Basics.h_exists_cong (fun (v:U.raise_t a) -> pts_to r p (U.downgrade_val v) `star` q (U.downgrade_val v))
+                (fun (v:U.raise_t a) -> H.pts_to r p v `star` U.lift_dom q v);
+  Basics.h_assert (h_exists (fun (v:U.raise_t a) -> H.pts_to r p v `star` U.lift_dom q v));
+  let x = H.read_refine (U.lift_dom q) r in
+  Basics.h_assert (H.pts_to r p x `star` U.lift_dom q x);
+  Basics.h_assert (pts_to r p (U.downgrade_val x) `star` q (U.downgrade_val x));
+  Basics.return (U.downgrade_val x)
 
-let write (#a:Type0) (#v:erased a) (r:ref a) (x:a)
-  : SteelT unit (pts_to r full v) (fun _ -> pts_to r full x)
-  =
-  R.write r (U.raise_val x)
+let write r x = H.write r (U.raise_val x)
 
-let free (#a:Type0) (#v:erased a) (r:ref a)
-  : SteelT unit (pts_to r full v) (fun _ -> emp)
-  =
-  R.free r
+let free x = H.free x
 
-let share (#a:Type0) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelT unit
-    (pts_to r p v)
-    (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
-  =
-  R.share r
+let share_atomic r = H.share_atomic r
 
-let gather (#a:Type0) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
-  : SteelT unit
-    (pts_to r p0 v0 `star` pts_to r p1 v1)
-    (fun _ -> pts_to r (sum_perm p0 p1) v0)
-  =
-  R.gather r
+let hide_raise_reveal (#a:Type) (v0:erased a) (v1:erased a)
+  : Lemma (hide (U.raise_val (reveal v0)) == hide (U.raise_val (reveal v1)) <==>
+           v0 == v1)
+           [SMTPat (hide (U.raise_val (reveal v0)));
+            SMTPat (hide (U.raise_val (reveal v1)))]
+  = let u0 = hide (U.raise_val (reveal v0)) in
+    let u1 = hide (U.raise_val (reveal v1)) in
+    assert (U.downgrade_val (U.raise_val (reveal v0)) == U.downgrade_val (U.raise_val (reveal v1)) <==>
+            v0 == v1)
 
-let ghost_read_refine (#a:Type0) (#uses:Set.set lock_addr) (#p:perm) (r:ref a)
-    (q:a -> hprop)
-  : SteelAtomic a uses true
-    (h_exists (fun (v:a) -> pts_to r p v `star` q v))
-    (fun v -> pts_to r p v `star` q v)
-  =
-  let x = R.ghost_read_refine r (fun x -> q (U.downgrade_val x)) in
-  AB.return_atomic (U.downgrade_val x)
+let gather_atomic #a #uses #p0 #p1 #v0 #v1 r =
+  let x = H.gather_atomic r in
+  A.return_atomic x
 
-module U = FStar.Universe
-
-let cas
-  (#t:eqtype)
-  (#uses:Set.set lock_addr)
-  (r:ref t)
-  (v:Ghost.erased t)
-  (v_old:t)
-  (v_new:t)
-  : SteelAtomic
-    (b:bool{b <==> (Ghost.reveal v == v_old)})
-    uses
-    false
-    (pts_to r full_perm v)
-    (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
-  = SteelAtomic?.reflect (fun _ ->
-      let m0 = mst_get () in
-      //preorder_lifting_lemma t;
-      let act = A.cas u#1 uses r v v_old v_new in
-      let (| x, m1 |) = act m0 in
-      atomic_preserves_frame_and_preorder act m0;
-      mst_put m1;
-      x)
-
-////////////////////////////////////////////////////////////////////////////////
-
-let alloc_monotonic_ref (#a:Type0) (p:Preorder.preorder a) (v:a)
-  : SteelT (ref_pre a p) emp (fun r -> pts_to_pre r full v)
-  =
-  R.alloc_monotonic_ref (A.raise_preorder u#1 p) (U.raise_val v)
+let raise_equiv (#t:Type) (x y:t)
+  : Lemma (U.raise_val x == U.raise_val y <==>
+           x == y)
+  = assert (U.downgrade_val (U.raise_val x) == x);
+    assert (U.downgrade_val (U.raise_val y) == y)
 
 
-let read_monotonic_ref
-  (#a:Type0)
-  (#q:perm)
-  (#p:Preorder.preorder a)
-  (#frame:a -> hprop)
-  (r:ref_pre a p)
-  : SteelT a (h_exists (fun (v:a) ->
-                pts_to_pre r q v `star` frame v))
-             (fun v -> pts_to_pre r q v `star` frame v)
-  =
-  let x = R.read_monotonic_ref r in
-  B.return (U.downgrade_val x)
+let downgrade_equiv (#t:Type) (x y:U.raise_t t)
+  : Lemma (U.downgrade_val x == U.downgrade_val y <==>
+           x == y)
+  = assert (U.raise_val (U.downgrade_val x) == x);
+    assert (U.raise_val (U.downgrade_val y) == y)
 
-let write_monotonic_ref
-  (#a:Type0)
-  (#p:Preorder.preorder a)
-  (#v:erased a)
-  (r:ref_pre a p)
-  (x:a{p v x})
-  : SteelT unit
-    (pts_to_pre r full v)
-    (fun v -> pts_to_pre r full x)
-  =
-  R.write_monotonic_ref r (U.raise_val x)
+let lift_eq (#t:eqtype) (x y:U.raise_t t)
+  : b:bool{b <==> x==y}
+  = downgrade_equiv x y; U.downgrade_val x = U.downgrade_val y
 
-let pure (p:prop) : hprop =
-  R.pure p
 
-let witnessed
-  (#a:Type0)
-  (#p:Preorder.preorder a)
-  (r:ref_pre a p)
-  (fact:property a) : prop
-  =
-  R.witnessed r (fun x -> fact (U.downgrade_val x))
+let cas_action (#t:eqtype)
+               (#uses:inames)
+               (r:ref t)
+               (v:Ghost.erased t)
+               (v_old:t)
+               (v_new:t)
+               (_:unit)
+   : MstTot (b:bool{b <==> (Ghost.reveal v == v_old)})
+             uses
+            (pts_to r full_perm v)
+            (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
+   = let hv =     (Ghost.hide (U.raise_val (Ghost.reveal v))) in
+     let b = H.cas_action #(U.raise_t t)
+                  (lift_eq #t)
+                  #uses
+                  r
+                  hv
+                  (U.raise_val v_old)
+                  (U.raise_val v_new)
+                  ()
+     in
+     assert (b <==> (Ghost.reveal hv == U.raise_val v_old));
+     assert (b <==> U.raise_val (Ghost.reveal v) == U.raise_val v_old);
+     raise_equiv (Ghost.reveal v) v_old;
+     b
 
-let witness
-  (#a:Type0)
-  (#q:perm)
-  (#p:Preorder.preorder a)
-  (r:ref_pre a p)
-  (fact:stable_property p)
-  (v:(Ghost.erased a))
-  (pf:squash (fact v))
-  : SteelT unit
-    (pts_to_pre r q v)
-    (fun _ -> pts_to_pre r q v `star` pure (witnessed r fact))
-  =
-  R.witness
-    r
-    _
-    _
-    pf
 
-let recall (#a:Type u#0) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
-           (r:ref_pre a p) (v:(Ghost.erased a))
-  : SteelT unit (pts_to_pre r q v `star` pure (witnessed r fact))
-                (fun _ -> pts_to_pre r q v `star` pure (fact v))
-  =
-  R.recall r _
+let cas #t #uses r v v_old v_new = A.as_atomic_action (cas_action #t #uses r v v_old v_new)
+
+let raise_ref r p v = Basics.return r
+
+let lower_ref r p v = Basics.return r
+
+let pts_to_witinv (#a:Type u#0) (r:ref a) (p:perm)
+  : Lemma (is_witness_invariant (pts_to r p))
+  = let aux (x y : erased a) (m : mem)
+      : Lemma (requires (interp (pts_to r p x) m
+                       /\ interp (pts_to r p y) m))
+              (ensures x == y)
+      = H.pts_to_witinv r p
+    in
+    Classical.forall_intro (fun x ->
+    Classical.forall_intro (fun y ->
+    Classical.forall_intro (fun m ->
+    Classical.move_requires (aux x y) m)))
+
+let pts_to_framon (#a:Type u#0) (r:ref a) (p:perm)
+  : Lemma (is_frame_monotonic (pts_to r p))
+  = pts_to_witinv r p

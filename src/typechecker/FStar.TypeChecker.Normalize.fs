@@ -714,7 +714,7 @@ let is_nbe_request s = BU.for_some (eq_step NBE) s
 
 let tr_norm_step = function
     | EMB.Zeta ->    [Zeta]
-    | EMB.ZetaFull -> [ZetaFull]    
+    | EMB.ZetaFull -> [ZetaFull]
     | EMB.Iota ->    [Iota]
     | EMB.Delta ->   [UnfoldUntil delta_constant]
     | EMB.Simpl ->   [Simplify]
@@ -1160,7 +1160,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | Univ _ -> failwith "Impossible: term variable is bound to a universe"
                 | Dummy -> failwith "Term variable not found"
                 | Clos(env, t0, r, fix) ->
-                   if not fix 
+                   if not fix
                    || cfg.steps.zeta
                    || cfg.steps.zeta_full
                    then match !r with
@@ -1411,7 +1411,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_let((true, lbs), body)
                 when cfg.steps.compress_uvars
                   || (not cfg.steps.zeta &&
-                     not cfg.steps.zeta_full && 
+                     not cfg.steps.zeta_full &&
                      cfg.steps.pure_subterms_within_computations) -> //no fixpoint reduction allowed
             let lbs, body = Subst.open_let_rec lbs body in
             let lbs = List.map (fun lb ->
@@ -1583,8 +1583,8 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
                          Primops;
                          AllowUnboundUniverses;
                          EraseUniverses;
-      //we exclude Zeta; but if zeta_full is set, this will still unroll fixpoints                         
-                         Exclude Zeta; 
+      //we exclude Zeta; but if zeta_full is set, this will still unroll fixpoints
+                         Exclude Zeta;
                          Inlining]
         in
         let cfg' = { cfg with
@@ -1661,21 +1661,6 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
               let rng = top.pos in
 
               let head = U.mk_reify <| lb.lbdef in
-              let lb_head, head_bv, head =
-                let bv = S.new_bv None x.sort in
-                let lb =
-                    { lbname = Inl bv;
-                      lbunivs = [];
-                      lbtyp = U.mk_app repr [S.as_arg x.sort];
-                      lbeff = if is_total_effect cfg.tcenv eff_name then PC.effect_Tot_lid
-                                                                    else PC.effect_Dv_lid;
-                      lbdef = head;
-                      lbattrs = [];
-                      lbpos = head.pos;
-                    }
-                in
-                lb, bv, S.bv_to_name bv
-              in
 
               let body = U.mk_reify <| body in
               (* TODO : Check that there is no sensible cflags to pass in the residual_comp *)
@@ -1685,53 +1670,90 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                 residual_typ=Some t
               } in
               let body = S.mk (Tm_abs([S.mk_binder x], body, Some body_rc)) body.pos in
+
+              //the bind term for the effect
               let close = closure_as_term cfg env in
               let bind_inst = match (SS.compress bind_repr).n with
                 | Tm_uinst (bind, [_ ; _]) ->
                     S.mk (Tm_uinst (bind, [ cfg.tcenv.universe_of cfg.tcenv (close lb.lbtyp)
                                           ; cfg.tcenv.universe_of cfg.tcenv (close t)]))
                     rng
-                | _ -> failwith "NIY : Reification of indexed effects"
-              in
-              let maybe_range_arg =
-                if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
-                then [as_arg (embed_simple EMB.e_range lb.lbpos lb.lbpos);
-                      as_arg (embed_simple EMB.e_range body.pos body.pos)]
-                else []
-              in
-              let reified =
+                | _ -> failwith "NIY : Reification of indexed effects" in
+
+              //arguments to the bind term, f_arg is the argument for first computation f
+              let bind_inst_args f_arg =
                 (*
                  * Arguments to bind_repr for layered effects are:
-                 *   a b ..units for binders that compute indices.. head body
+                 *   a b ..units for binders that compute indices.. f_arg g_arg
                  *
                  * For non-layered effects, as before
                  *)
-                let args =
-                  if U.is_layered ed then
-                    let unit_args =
-                      match (ed |> U.get_bind_vc_combinator |> snd |> SS.compress).n with
-                      | Tm_arrow (_::_::bs, _) when List.length bs >= 2 ->
-                        bs
-                        |> List.splitAt (List.length bs - 2)
-                        |> fst
-                        |> List.map (fun _ -> S.as_arg S.unit_const)
-                      | _ ->
-                        raise_error (Errors.Fatal_UnexpectedEffect,
-                          BU.format2 "bind_wp for layered effect %s is not an arrow with >= 4 arguments (%s)"
-                            (Ident.string_of_lid ed.mname) (ed |> U.get_bind_vc_combinator |> snd |> Print.term_to_string)) rng in
-                    (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@[S.as_arg head; S.as_arg body])
-                  else
-                    [ (* a, b *)
-                      as_arg lb.lbtyp; as_arg t] @
-                      maybe_range_arg @ [
-                      (* wp_head, head--the term shouldn't depend on wp_head *)
-                      as_arg S.tun; as_arg head;
-                      (* wp_body, body--the term shouldn't depend on wp_body *)
-                      as_arg S.tun; as_arg body]
-                in
-                S.mk (Tm_let ((false, [lb_head]),
-                   SS.close [S.mk_binder head_bv] <|
-                   S.mk (Tm_app(bind_inst, args)) rng)) rng in
+                if U.is_layered ed then
+                  let unit_args =
+                    match (ed |> U.get_bind_vc_combinator |> snd |> SS.compress).n with
+                    | Tm_arrow (_::_::bs, _) when List.length bs >= 2 ->
+                      bs
+                      |> List.splitAt (List.length bs - 2)
+                      |> fst
+                      |> List.map (fun _ -> S.as_arg S.unit_const)
+                    | _ ->
+                      raise_error (Errors.Fatal_UnexpectedEffect,
+                        BU.format2 "bind_wp for layered effect %s is not an arrow with >= 4 arguments (%s)"
+                          (Ident.string_of_lid ed.mname) (ed |> U.get_bind_vc_combinator |> snd |> Print.term_to_string)) rng in
+                  (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@[S.as_arg f_arg; S.as_arg body])
+                else
+                  let maybe_range_arg =
+                    if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
+                    then [as_arg (embed_simple EMB.e_range lb.lbpos lb.lbpos);
+                          as_arg (embed_simple EMB.e_range body.pos body.pos)]
+                    else []
+                  in
+                  [ (* a, b *)
+                    as_arg lb.lbtyp; as_arg t] @
+                    maybe_range_arg @ [
+                    (* wp_f, f_arg--the term shouldn't depend on wp_f *)
+                    as_arg S.tun; as_arg f_arg;
+                    (* wp_body, body--the term shouldn't depend on wp_body *)
+                    as_arg S.tun; as_arg body] in
+
+              (*
+               * Construct the reified term
+               *
+               * if M is total, then its reification is also Tot, in that case we construct:
+               *
+               * bind (reify f) (fun x -> reify g)
+               *
+               * however, if M is not total, then (reify f) is Dv, and then we construct:
+               *
+               * let uu__ = reify f in
+               * bind uu_ (fun x -> reify g)
+               *
+               * We don't introduce the let-binding in the first case,
+               *   since in some examples, it blocks reductions
+               *)
+              let reified =
+                let is_total_effect = Env.is_total_effect cfg.tcenv eff_name in
+                if is_total_effect
+                then S.mk (Tm_app (bind_inst, bind_inst_args head)) rng
+                else
+                  let lb_head, head_bv, head =
+                    let bv = S.new_bv None x.sort in
+                    let lb =
+                        { lbname = Inl bv;
+                          lbunivs = [];
+                          lbtyp = U.mk_app repr [S.as_arg x.sort];
+                          lbeff = if is_total_effect then PC.effect_Tot_lid
+                                                     else PC.effect_Dv_lid;
+                          lbdef = head;
+                          lbattrs = [];
+                          lbpos = head.pos;
+                        }
+                    in
+                    lb, bv, S.bv_to_name bv in
+                  S.mk (Tm_let ((false, [lb_head]),
+                     SS.close [S.mk_binder head_bv] <|
+                     S.mk (Tm_app(bind_inst, bind_inst_args head)) rng)) rng in
+
               log cfg (fun () -> BU.print2 "Reified (1) <%s> to %s\n" (Print.term_to_string top0) (Print.term_to_string reified));
               norm cfg env (List.tl stack) reified
             )
@@ -1936,8 +1958,13 @@ and norm_comp : cfg -> env -> comp -> comp =
               { comp with n = GTotal (t, uopt) }
 
             | Comp ct ->
-              let norm_args = List.mapi (fun idx (a, i) -> (norm cfg env [] a, i)) in
-              let effect_args = norm_args ct.effect_args in
+              //if for extraction then erase effect args to unit
+              //this should later preseve args that must be retained for layered effects
+              let effect_args =
+                ct.effect_args |>
+                (if cfg.steps.for_extraction
+                 then List.map (fun _ -> S.unit_const |> S.as_arg)
+                 else List.mapi (fun idx (a, i) -> (norm cfg env [] a, i))) in
               let flags = ct.flags |> List.map (function DECREASES t -> DECREASES (norm cfg env [] t) | f -> f) in
               let comp_univs = List.map (norm_universe cfg env) ct.comp_univs in
               let result_typ = norm cfg env [] ct.result_typ in
@@ -2439,7 +2466,21 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
            let t = S.extend_app head (t, aq) r in
            rebuild cfg env stack' t
         in
+        //AR: no non-extraction reification for layered effects
+        let is_layered_effect m = m |> Env.norm_eff_name cfg.tcenv |> Env.is_layered_effect cfg.tcenv in
+        
         begin match (SS.compress t).n with
+        | Tm_meta (_, Meta_monadic (m, _))
+          when m |> is_layered_effect && not cfg.steps.for_extraction ->
+          fallback (BU.format1
+                      "Meta_monadic for a layered effect %s in non-extraction mode"
+                      (Ident.string_of_lid m)) ()
+        | Tm_meta (_, Meta_monadic_lift (msrc, mtgt, _))
+          when (is_layered_effect msrc || is_layered_effect mtgt) && not cfg.steps.for_extraction ->
+          fallback (BU.format2
+                    "Meta_monadic_lift for layered effect %s ~> %s in non extraction mode"
+                    (Ident.string_of_lid msrc) (Ident.string_of_lid mtgt)) ()
+
         | Tm_meta (t, Meta_monadic (m, ty)) ->
            do_reify_monadic (fallback " (1)") cfg env stack t m ty
 
@@ -2492,8 +2533,8 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           // If either Weak or HNF, then don't descend into branch
           let whnf = cfg.steps.weak || cfg.steps.hnf in
           let cfg_exclude_zeta =
-            if cfg.steps.zeta_full 
-            then cfg 
+            if cfg.steps.zeta_full
+            then cfg
             else
              let new_delta =
                cfg.delta_level |> List.filter (function
@@ -2535,7 +2576,8 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
               let t = norm_or_whnf env t in
               {p with v=Pat_dot_term(x, t)}, env
           in
-          let branches = match env with
+          let norm_branches () =
+            match env with
             | [] when whnf -> branches //nothing to close over
             | _ -> branches |> List.map (fun branch ->
               let p, wopt, e = SS.open_branch branch in
@@ -2547,19 +2589,62 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
               let e = norm_or_whnf env e in
               U.branch (p, wopt, e))
           in
-          let scrutinee =
-            if cfg.steps.iota
-            && (not cfg.steps.weak)
-            && (not cfg.steps.compress_uvars)
-            && cfg.steps.weakly_reduce_scrutinee
-            && maybe_weakly_reduced scrutinee
-            then norm ({cfg with steps={cfg.steps with weakly_reduce_scrutinee=false}})
-                      scrutinee_env
-                      []
-                      scrutinee //scrutinee was only reduced to wnf; reduce it fully
-            else scrutinee
+          let maybe_commute_matches () =
+            let can_commute =
+                match branches with
+                | ({v=Pat_cons(fv, _)}, _, _)::_ ->
+                  Env.fv_has_attr cfg.tcenv fv FStar.Parser.Const.commute_nested_matches_lid
+                | _ -> false
+            in
+            match (U.unascribe scrutinee).n with
+            | Tm_match (sc0, branches0) when can_commute ->
+              (* We have a blocked match, because of something like
+
+                  (match (match sc0 with P1 -> e1 | ... | Pn -> en) with
+                   | Q1 -> f1 ... | Qm -> fm)
+
+                  We'll reduce it as if it was instead
+
+                  (match sc0 with
+                    | P1 -> (match e1 with | Q1 -> f1 ... | Qm -> fm)
+                    ...
+                    | Pn -> (match en with | Q1 -> f1 ... | Qm -> fm))
+
+                  if the Qi are constructors from an inductive marked with the
+                  commute_nested_matches attribute
+             *)
+             let reduce_branch (b:S.branch) =
+               //reduce the inner branch `b` while setting the continuation
+               //stack to be the outer match
+               let stack = [Match(env', branches, cfg, r)] in
+               let p, wopt, e = SS.open_branch b in
+               //It's important to normalize all the sorts within the pat!
+               let p, branch_env = norm_pat scrutinee_env p in
+               let wopt = match wopt with
+                | None -> None
+                | Some w -> Some (norm_or_whnf branch_env w) in
+               let e = norm cfg branch_env stack e in
+               U.branch (p, wopt, e)
+             in
+             let branches0 = List.map reduce_branch branches0 in
+             rebuild cfg env stack (mk (Tm_match(sc0, branches0)) r)
+            | _ ->
+              let scrutinee =
+                if cfg.steps.iota
+                && (not cfg.steps.weak)
+                && (not cfg.steps.compress_uvars)
+                && cfg.steps.weakly_reduce_scrutinee
+                && maybe_weakly_reduced scrutinee
+                then norm ({cfg with steps={cfg.steps with weakly_reduce_scrutinee=false}})
+                          scrutinee_env
+                          []
+                          scrutinee //scrutinee was only reduced to wnf; reduce it fully
+                else scrutinee
+              in
+              let branches = norm_branches() in
+              rebuild cfg env stack (mk (Tm_match(scrutinee, branches)) r)
           in
-          rebuild cfg env stack (mk (Tm_match(scrutinee, branches)) r)
+          maybe_commute_matches()
         in
 
         let rec is_cons head = match (SS.compress head).n with
@@ -3081,7 +3166,12 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
       let us_t, _, t = elim_uvars_aux_t env us_t [] t in
       let us_ty, _, ty = elim_uvars_aux_t env us_ty [] ty in
       { s with sigel = Sig_polymonadic_bind (m, n, p, (us_t, t), (us_ty, ty)) }
-       
+
+    | Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty)) ->
+      let us_t, _, t = elim_uvars_aux_t env us_t [] t in
+      let us_ty, _, ty = elim_uvars_aux_t env us_ty [] ty in
+      { s with sigel = Sig_polymonadic_subcomp (m, n, (us_t, t), (us_ty, ty)) }
+
 
 let erase_universes env t =
     normalize [EraseUniverses; AllowUnboundUniverses] env t

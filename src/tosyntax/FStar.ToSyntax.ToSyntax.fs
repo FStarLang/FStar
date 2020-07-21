@@ -65,7 +65,6 @@ let trans_qual r maybe_effect_id = function
   | AST.TotalEffect ->   S.TotalEffect
   | AST.Effect_qual ->   S.Effect
   | AST.New  ->          S.New
-  | AST.Abstract ->      S.Abstract
   | AST.Opaque ->        Errors.log_issue r (Errors.Warning_DeprecatedOpaqueQualifier, "The 'opaque' qualifier is deprecated since its use was strangely schizophrenic. There were two overloaded uses: (1) Given 'opaque val f : t', the behavior was to exclude the definition of 'f' to the SMT solver. This corresponds roughly to the new 'irreducible' qualifier. (2) Given 'opaque type t = t'', the behavior was to provide the definition of 't' to the SMT solver, but not to inline it, unless absolutely required for unification. This corresponds roughly to the behavior of 'unfoldable' (which is currently the default)."); S.Visible_default
   | AST.Reflectable ->
     begin match maybe_effect_id with
@@ -498,6 +497,7 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
   | Sig_new_effect _
   | Sig_sub_effect _
   | Sig_polymonadic_bind _
+  | Sig_polymonadic_subcomp _
   | Sig_splice _
   | Sig_pragma _ ->
     s
@@ -1987,7 +1987,7 @@ and trans_aqual env = function
   | Some (AST.Meta (AST.Arg_qualifier_meta_attr t)) ->
     let t = desugar_term env t in
     FStar.Errors.log_issue t.pos
-      (Errors.Warning_DeprecatedGeneric,
+      (Errors.Warning_BleedingEdge_Feature,
        "Associating attributes with a binder is an experimental feature---expect its behavior to change");
     Some (S.Meta (S.Arg_qualifier_meta_attr t))
   | None -> None
@@ -2025,7 +2025,6 @@ let binder_idents (bs:list<binder>) : list<ident> =
 let mk_data_discriminators quals env datas =
     let quals = quals |> List.filter (function
         | S.NoExtract
-        | S.Abstract
         | S.Private -> true
         | _ -> false)
     in
@@ -2057,13 +2056,12 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
         let no_decl = Syntax.is_type x.sort in
         let quals q =
             if only_decl
-            then S.Assumption::List.filter (function S.Abstract -> false | _ -> true) q
+            then S.Assumption::q
             else q
         in
         let quals =
             let iquals = iquals |> List.filter (function
                 | S.NoExtract
-                | S.Abstract
                 | S.Private -> true
                 | _ -> false)
             in
@@ -2078,11 +2076,7 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
         if only_decl
         then [decl] //only the signature
         else
-            let dd =
-                if quals |> List.contains S.Abstract
-                then Delta_abstract (Delta_equational_at_level 1)
-                else (Delta_equational_at_level 1)
-            in
+            let dd = Delta_equational_at_level 1 in
             let lb = {
                 lbname=Inr (S.lid_as_fv field_name dd None);
                 lbunivs=[];
@@ -2117,11 +2111,6 @@ let mk_data_projector_names iquals env se : list<sigelt> =
                 | None -> Data_ctor
                 | Some q -> q
             in
-            let iquals =
-                if List.contains S.Abstract iquals && not (List.contains S.Private iquals)
-                then S.Private::iquals
-                else iquals
-            in
             (* ignoring parameters *)
             let _, rest = BU.first_N n formals in
             mk_indexed_projector_names iquals fv_qual env lid rest
@@ -2134,9 +2123,7 @@ let mk_typ_abbrev env d lid uvs typars kopt t lids quals rng =
      * TopLevelLet (see comment there) *)
     let attrs = List.map (desugar_term env) d.attrs in
     let val_attrs = Env.lookup_letbinding_quals_and_attrs env lid |> snd in
-    let dd = if quals |> List.contains S.Abstract
-             then Delta_abstract (incr_delta_qualifier t)
-             else incr_delta_qualifier t in
+    let dd = incr_delta_qualifier t in
     let lb = {
         lbname=Inr (S.lid_as_fv lid dd None);
         lbunivs=uvs;
@@ -2380,9 +2367,6 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       let discs = sigelts |> List.collect (fun se -> match se.sigel with
         | Sig_inductive_typ(tname, _, tps, k, _, constrs) ->
           let quals = se.sigquals in
-          let quals = if List.contains S.Abstract quals && not (List.contains S.Private quals)
-                      then S.Private::quals
-                      else quals in
           mk_data_discriminators quals env
             (constrs |> List.filter (fun data_lid ->  //AR: create data discriminators only for non-record data constructors
                                      let data_quals =
@@ -2509,6 +2493,10 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
     let mandatory_members =
       let rr_members = ["repr" ; "return" ; "bind"] in
       if for_free then rr_members
+        (*
+         * AR: subcomp and if_then_else are optional
+         *     but adding here so as not to count them as actions
+         *)
       else if is_layered then rr_members @ [ "subcomp"; "if_then_else" ]
         (* the first 3 are optional but must not be counted as actions *)
       else rr_members @ [
@@ -2597,14 +2585,26 @@ let rec desugar_effect env d (quals: qualifiers) (is_layered:bool) eff_name eff_
           bind_repr = Some (lookup "bind");
         })
       else if is_layered then
+        let has_subcomp = List.existsb (fun decl -> name_of_eff_decl decl = "subcomp") eff_decls in
+        let has_if_then_else = List.existsb (fun decl -> name_of_eff_decl decl = "if_then_else") eff_decls in
+
         //setting the second component to dummy_ts, typechecker fills them in
         let to_comb (us, t) = (us, t), dummy_tscheme in
+
+        (*
+         * AR: if subcomp or if_then_else are not specified, then fill in dummy_tscheme
+         *     typechecker will fill in an appropriate default
+         *)
         Layered_eff ({
           l_repr = lookup "repr" |> to_comb;
           l_return = lookup "return" |> to_comb;
           l_bind = lookup "bind" |> to_comb;
-          l_subcomp = lookup "subcomp" |> to_comb;
-          l_if_then_else = lookup "if_then_else" |> to_comb;
+          l_subcomp =
+            if has_subcomp then lookup "subcomp" |> to_comb
+            else dummy_tscheme, dummy_tscheme;
+          l_if_then_else =
+            if has_if_then_else then lookup "if_then_else" |> to_comb
+            else dummy_tscheme, dummy_tscheme;            
         })
       else
         let rr = BU.for_some (function S.Reifiable | S.Reflectable _ -> true | _ -> false) qualifiers in
@@ -2961,11 +2961,6 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
             if lets |> BU.for_some (fun (_, (_, t)) -> t.level=Formula)
             then S.Logic::quals
             else quals in
-          let lbs = if quals |> List.contains S.Abstract
-                    then fst lbs, snd lbs |> List.map (fun lb ->
-                            let fv = right lb.lbname in
-                            {lb with lbname=Inr ({fv with fv_delta=Delta_abstract fv.fv_delta})})
-                    else lbs in
           let names = fvs |> List.map (fun fv -> fv.fv_name.v) in
           (*
            * AR: we first desugar the term with no attributes and then add attributes in the end, see desugar_decl above
@@ -3193,6 +3188,20 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       sigattrs = [];
       sigopts = None }]
 
+  | Polymonadic_subcomp (m_eff, n_eff, subcomp) ->
+    let m = lookup_effect_lid env m_eff d.drange in
+    let n = lookup_effect_lid env n_eff d.drange in
+    env, [{
+      sigel = Sig_polymonadic_subcomp (
+        m.mname, n.mname,
+        ([], desugar_term env subcomp),
+        ([], S.tun));
+      sigquals = [];
+      sigrng = d.drange;
+      sigmeta = default_sigmeta;
+      sigattrs = [];
+      sigopts = None }]
+
   | Splice (ids, t) ->
     let t = desugar_term env t in
     let se = { sigel = Sig_splice(List.map (qualify env) ids, t);
@@ -3239,7 +3248,6 @@ let desugar_modul_common (curmod: option<S.modul>) env (m:AST.modul) : env_t * S
   let modul = {
     name = mname;
     declarations = sigelts;
-    exports=[];
     is_interface=intf
   } in
   env, modul, pop_when_done
@@ -3362,6 +3370,6 @@ let add_modul_to_env (m:Syntax.modul)
       let en = List.fold_left
                     push_sigelt
                     (Env.set_current_module en m.name)
-                    m.exports in
+                    m.declarations in
       let env = Env.finish en m in
       (), (if pop_when_done then export_interface m.name env else env)

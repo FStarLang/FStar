@@ -317,7 +317,6 @@ type qualifier =
   | Unfold_for_unification_and_vcgen       //a definition that *should* always be unfolded by the normalizer
   | Visible_default                        //a definition that may be unfolded by the normalizer, but only if necessary (default)
   | Irreducible                            //a definition that can never be unfolded by the normalizer
-  | Abstract                               //a symbol whose definition is only visible within the defining module
   | Inline_for_extraction                  //a symbol whose definition must be unfolded when compiling the program
   | NoExtract                              // a definition whose contents won't be extracted (currently, by KreMLin only)
   | Noeq                                   //for this type, don't generate HasEq
@@ -414,18 +413,18 @@ type sig_metadata = {
 }
 
 type sigelt' =
-  | Sig_inductive_typ     of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
-                          * univ_names                //u1..un
-                          * binders                   //(x1:t1) ... (xn:tn)
-                          * typ                       //t
-                          * list<lident>              //mutually defined types
-                          * list<lident>              //data constructors for this type
+  | Sig_inductive_typ       of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
+                            * univ_names                //u1..un
+                            * binders                   //(x1:t1) ... (xn:tn)
+                            * typ                       //t
+                            * list<lident>              //mutually defined types
+                            * list<lident>              //data constructors for this type
 (* a datatype definition is a Sig_bundle of all mutually defined `Sig_inductive_typ`s and `Sig_datacon`s.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
    where each higher level list represents one of the inductive types and its constructors.
    However, the current order is convenient as it matches the type-checking order for the mutuals;
    i.e., all the type constructors first; then all the data which may refer to the type constructors *)
-  | Sig_bundle            of list<sigelt>              //the set of mutually defined type and data constructors
+  | Sig_bundle              of list<sigelt>              //the set of mutually defined type and data constructors
                           * list<lident>               //all the inductive types and data constructor names in this bundle
   | Sig_datacon           of lident                    //name of the datacon
                           * univ_names                 //universe variables of the inductive type it belongs to
@@ -452,6 +451,7 @@ type sigelt' =
   | Sig_splice            of list<lident> * term
 
   | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme
+  | Sig_polymonadic_subcomp of lident * lident * tscheme * tscheme  //m <: n, the polymonadic subcomp term, and its type
   | Sig_fail              of list<int>         (* Expected errors *)
                           * bool               (* true if should fail in --lax *)
                           * list<sigelt>       (* The sigelts to be checked *)
@@ -470,7 +470,6 @@ type sigelts = list<sigelt>
 type modul = {
   name: lident;
   declarations: sigelts;
-  exports: sigelts;
   is_interface:bool
 }
 let mod_name (m: modul) = m.name
@@ -746,4 +745,6 @@ let t_list_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.list_lid) [U_zero]) [as_arg
 let t_option_of t = mk_Tm_app (mk_Tm_uinst (tabbrev PC.option_lid) [U_zero]) [as_arg t] Range.dummyRange
 let t_tuple2_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.lid_tuple2) [U_zero;U_zero]) [as_arg t1; as_arg t2] Range.dummyRange
 let t_either_of t1 t2 = mk_Tm_app (mk_Tm_uinst (tabbrev PC.either_lid) [U_zero;U_zero]) [as_arg t1; as_arg t2] Range.dummyRange
-let unit_const = mk (Tm_constant FStar.Const.Const_unit) Range.dummyRange
+
+let unit_const_with_range r = mk (Tm_constant FStar.Const.Const_unit) r
+let unit_const = unit_const_with_range Range.dummyRange

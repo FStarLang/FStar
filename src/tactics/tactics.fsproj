@@ -92,6 +92,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FStar.Tactics.Common.fs" />
     <Compile Include="FStar.Tactics.Types.fsi" />
     <Compile Include="FStar.Tactics.Types.fs" />
     <Compile Include="FStar.Tactics.Result.fs" />

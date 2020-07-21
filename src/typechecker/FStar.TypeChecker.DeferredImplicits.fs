@@ -116,16 +116,14 @@ let solve_goals_with_tac env g (deferred_goals:implicits) (tac:sigelt) =
 (** This functions is called in Rel.force_trivial_guard to solve all
     goals in a guard that were deferred to a tactic *)
 let solve_deferred_to_tactic_goals env g =
-  let deferred = g.deferred_to_tac in
-  match deferred with
-  | [] -> g
-  | _ ->
+    let deferred = g.deferred_to_tac in
     (** A unification problem between two terms is presented to
         a tactic as an equality goal between the terms. *)
     let prob_as_implicit (reason, prob)
       : implicit * sigelt =
       match prob with
       | TProb tp when tp.relation=EQ ->
+        let env, _ = Env.clear_expected_typ env in
         let env = {env with gamma=tp.logical_guard_uvar.ctx_uvar_gamma} in
         let env_lax = {env with lax=true; use_bv_sorts=true} in
         let _, t_eq, _ =

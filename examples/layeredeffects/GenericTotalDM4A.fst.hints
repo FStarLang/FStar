@@ -1,0 +1,92 @@
+[
+  "¤\u0018Vïx#¹íÄé‹\u0015\u007f­#\u007f",
+  [
+    [
+      "GenericTotalDM4A.return",
+      1,
+      2,
+      1,
+      [ "@query", "equation_GenericTotalDM4A.equiv" ],
+      0,
+      "72bed712aeb8ddad919d7f5cb4195ff0"
+    ],
+    [
+      "GenericTotalDM4A.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "GenericTotalDM4A_interpretation_Tm_arrow_5c9cc66cea0068d792133ce80dde53b7",
+        "GenericTotalDM4A_interpretation_Tm_arrow_bfe95889f79cc8ff9238e0682ad5f3d6",
+        "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.transitive",
+        "equation_GenericTotalDM4A.equiv",
+        "equation_GenericTotalDM4A.op_Less_Less_Equals",
+        "equation_GenericTotalDM4A.repr",
+        "function_token_typing_GenericTotalDM4A.op_Less_Less_Equals",
+        "refinement_interpretation_Tm_refine_04afcbc33d47d5319cf62bd55f2a0e2c",
+        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "token_correspondence_GenericTotalDM4A.op_Less_Less_Equals",
+        "token_correspondence_GenericTotalDM4A.stronger"
+      ],
+      0,
+      "f55bcdf39e7dd6d127b9a2c9842a43e6"
+    ],
+    [
+      "GenericTotalDM4A.subcomp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.transitive",
+        "equation_GenericTotalDM4A.repr",
+        "refinement_interpretation_Tm_refine_04afcbc33d47d5319cf62bd55f2a0e2c",
+        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "token_correspondence_GenericTotalDM4A.stronger",
+        "typing_GenericTotalDM4A.interp", "typing_GenericTotalDM4A.stronger"
+      ],
+      0,
+      "6197a095737cec53a203dc701be6e03f"
+    ],
+    [
+      "GenericTotalDM4A.DM4A",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
+        "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "token_correspondence_GenericTotalDM4A.stronger",
+        "typing_GenericTotalDM4A.stronger"
+      ],
+      0,
+      "0841316b07dc0d836d0b52953cc02ca0"
+    ],
+    [
+      "GenericTotalDM4A.DM4A",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.Preorder.preorder",
+        "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4",
+        "token_correspondence_GenericTotalDM4A.stronger",
+        "typing_GenericTotalDM4A.stronger"
+      ],
+      0,
+      "5418a3572faa5d1b954695dc715dc516"
+    ]
+  ]
+]

@@ -17,4 +17,15 @@ regression-tests: $(ALL_DIFF)
 %-diff: %.expect.md %.gen.md
 	@diff -u $^ && echo 'Test "$*" passed.'
 
+update-to-latest:
+	@echo "Cloning from base"
+	@git clone --depth=1 https://github.com/jaybosamiya/fstardoc
+	@echo "Copying over"
+	@cp -r fstardoc/* .
+	@echo "Cleaning up"
+	@rm -rf fstardoc
+	@git checkout -- README.md
+	@echo "Done. Updates in this directory:"
+	@git status .
+
 .PRECIOUS: $(ALL_GEN) $(ALL_EXPECT)

@@ -404,7 +404,6 @@ let rd_to_syntax_qual : RD.qualifier -> qualifier = function
   | RD.Unfold_for_unification_and_vcgen -> Unfold_for_unification_and_vcgen
   | RD.Visible_default -> Visible_default
   | RD.Irreducible -> Irreducible
-  | RD.Abstract -> Abstract
   | RD.Inline_for_extraction -> Inline_for_extraction
   | RD.NoExtract -> NoExtract
   | RD.Noeq -> Noeq
@@ -430,7 +429,6 @@ let syntax_to_rd_qual = function
   | Unfold_for_unification_and_vcgen -> RD.Unfold_for_unification_and_vcgen
   | Visible_default -> RD.Visible_default
   | Irreducible -> RD.Irreducible
-  | Abstract -> RD.Abstract
   | Inline_for_extraction -> RD.Inline_for_extraction
   | NoExtract -> RD.NoExtract
   | Noeq -> RD.Noeq
