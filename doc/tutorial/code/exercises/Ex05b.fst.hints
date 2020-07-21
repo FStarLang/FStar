@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ffd6a59c1f08eb8d65e63f72448f31d3"
+      "38eeb1f723130890a0a28a6a3a1dcc41"
     ],
     [
       "Ex05b.fib",
@@ -36,7 +36,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "39c11c427fbc56f3e44386b2c5e6ab49"
+      "b2d728142b563b8d30bd0e4a684edeca"
     ],
     [
       "Ex05b.fib_is_ok",
@@ -50,58 +50,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "14c03e04bf792e127cbf0983913d29a5"
-    ],
-    [
-      "Ex05b.fibonacci",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "e297213b2bec4aca3bf2643b02852366"
-    ],
-    [
-      "Ex05b.fib",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1",
-        "equality_tok_Prims.LexTop@tok", "equation_Prims.nat",
-        "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "f35f2534c4916e00c3748ab32d086d19"
-    ],
-    [
-      "Ex05b.fib_is_ok",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "939103de1ccd500fd71c8b37539eeaa7"
+      "d684eb2562767d8c69045606ac375582"
     ]
   ]
 ]
