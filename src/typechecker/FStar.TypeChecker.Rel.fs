@@ -923,7 +923,11 @@ let gamma_until (g:gamma) (bs:binders) =
  *
  * However simply doing this does not allow the solution of ?u to mention the binders bs
  *
- * Instead, we filter bs that also appear in G_t and allow the solution of G_t to contain them
+ * Instead, we filter bs that also appear in G_t but not in the maximal prefix and
+ *   allow the solution of G_t to contain them
+ *
+ * (The solution of ?u_t is already allowed to contain the ones appearing in the maximal prefix)
+ *
  * So the new uvar that's created is maximal_prefix(G_s, G_t) |- ?u : bs -> t_t
  *   and assigning ?u_t = ?u bs
  *
@@ -942,8 +946,9 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl =
     U.set_uvar src.ctx_uvar_head (f src');
     wl in
 
-  let bs = bs |>
-    List.filter (fun (bv1, _) -> List.existsb (fun (bv2, _) -> S.bv_eq bv1 bv2) src.ctx_uvar_binders) in
+  let bs = bs |> List.filter (fun (bv1, _) ->
+    src.ctx_uvar_binders |> List.existsb (fun (bv2, _) -> S.bv_eq bv1 bv2) &&  //binder exists in G_t
+    not (pfx |> List.existsb (fun (bv2, _) -> S.bv_eq bv1 bv2))) in  //but not in the maximal prefix
     
   if List.length bs = 0 then aux src.ctx_uvar_typ (fun src' -> src')  //no abstraction over bs
   else begin
