@@ -17,6 +17,7 @@ open FStar.Tactics.Basic
 open FStar.Tactics.CtrlRewrite
 open FStar.Tactics.InterpFuns
 open FStar.Tactics.Native
+open FStar.Tactics.Common
 
 module BU      = FStar.Util
 module Cfg     = FStar.TypeChecker.Cfg
@@ -313,9 +314,9 @@ let () =
         t_apply e_bool e_bool RE.e_term e_unit
         t_apply NBET.e_bool NBET.e_bool NRE.e_term NBET.e_unit;
 
-      mk_tac_step_1 0 "apply_lemma"
-        apply_lemma RE.e_term e_unit
-        apply_lemma NRE.e_term NBET.e_unit;
+      mk_tac_step_3 0 "t_apply_lemma"
+        t_apply_lemma e_bool e_bool RE.e_term e_unit
+        t_apply_lemma NBET.e_bool NBET.e_bool NRE.e_term NBET.e_unit;
 
       mk_tac_step_1 0 "set_options"
         set_options e_string e_unit
@@ -412,6 +413,10 @@ let () =
       mk_tac_step_3 0 "unify_env"
         unify_env RE.e_env RE.e_term RE.e_term e_bool
         unify_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
+
+      mk_tac_step_3 0 "match_env"
+        match_env RE.e_env RE.e_term RE.e_term e_bool
+        match_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
 
       mk_tac_step_3 0 "launch_process"
         launch_process e_string (e_list e_string) e_string e_string

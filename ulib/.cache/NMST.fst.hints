@@ -1,5 +1,5 @@
 [
-  "„ﬂ\f˘#ù«™∫ò\u0015DëËN÷",
+  "Ã´MŒ–§tÃµg\u0011Ë\u001aK˘î",
   [
     [
       "NMST.return",
@@ -11,7 +11,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "210c13c62832f98838c7bc819c949b29"
+      "b2ccd8cc3389eb2e55c6d38fd0833cc4"
     ],
     [
       "NMST.bind",
@@ -25,7 +25,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "3b930138ecf3a515f427b66a2874b194"
+      "d208bd9d0a9e304a580fa6507e650a97"
     ],
     [
       "NMST.subcomp",
@@ -39,25 +39,31 @@
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2"
       ],
       0,
-      "d31ed53f353786a4a40104ad8ad4809a"
+      "bf75e459e9e9f1b827ef852e0ee932ed"
     ],
     [
       "NMST.NMSTATE",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
       0,
-      "af174249c273a856a5f64352f2a808cc"
+      "827c9bf96b5d61675fc7d46777bf5a30"
     ],
     [
       "NMST.NMSTATE",
       2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
       0,
-      "cd137d8cb1ac1f3ab2ba00fd0cfd2d53"
+      "eee710e18ea212edff19905d4644f8b9"
     ],
     [
       "NMST.get",
@@ -69,7 +75,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
       ],
       0,
-      "9ae688dcd69fd0b2612c5eb2eee7ac62"
+      "5191b2be04e45c8c9394e7fdb3df038e"
     ],
     [
       "NMST.put",
@@ -78,7 +84,7 @@
       1,
       [ "@query" ],
       0,
-      "34700fd4ff4452ae76c35bfba0f6838c"
+      "8ca8ec7f6ed5b417b4e8f74db1b204cb"
     ],
     [
       "NMST.witness",
@@ -90,7 +96,7 @@
         "equation_NMST.witnessed"
       ],
       0,
-      "04281457deedc43a6f574525954498bd"
+      "2456b2055828da088620f68de8840b67"
     ],
     [
       "NMST.recall",
@@ -99,7 +105,7 @@
       1,
       [ "@query", "equation_NMST.witnessed" ],
       0,
-      "bbc31a67e21a395d5492f70ff185e212"
+      "040b61bd5aecde5f3ac23ac68baa9584"
     ],
     [
       "NMST.sample",
@@ -112,7 +118,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "a67f464feb56d64bf6fd9a04252493db"
+      "94dd245bcae939a8ba5a1684c4b8be8c"
     ],
     [
       "NMST.lift_pure_nmst",
@@ -142,7 +148,7 @@
         "typing_Tm_abs_dc670feaee5a9cdeefefb04a5984b858"
       ],
       0,
-      "df15e5b65ce2a0b523014bef9f867e78"
+      "4d05c3de708221496be78458980391cc"
     ],
     [
       "NMST.bind_div_nmst",
@@ -151,7 +157,7 @@
       1,
       [ "@query" ],
       0,
-      "3e0f8c1a92941222fcc63725b33d204c"
+      "cfdd04aac9ff00d15fb8861cfe239a56"
     ],
     [
       "NMST.nmst_assume",
@@ -160,7 +166,7 @@
       1,
       [ "@query" ],
       0,
-      "13bacfb91412fc9b100fed2e687bf142"
+      "c73662fd281b8694500fc558cb9074e5"
     ],
     [
       "NMST.nmst_assert",
@@ -169,7 +175,7 @@
       1,
       [ "@query" ],
       0,
-      "f873bb434f92c13202a220122312ad0c"
+      "16ccf14a0074692c0076b8d381fc7311"
     ],
     [
       "NMST.lift_nmst_total_nmst",
@@ -178,186 +184,7 @@
       1,
       [ "@query" ],
       0,
-      "a758cefb7606ec0f9c6c7a697372537d"
-    ],
-    [
-      "NMST.return",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_Prims.nat",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
-      ],
-      0,
-      "4779d9779f5bca2008a679f3a70527d6"
-    ],
-    [
-      "NMST.bind",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
-        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
-      ],
-      0,
-      "b871e59c90693dfd2522ed8e0efb9ca6"
-    ],
-    [
-      "NMST.subcomp",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "data_elim_FStar.Pervasives.Native.Mktuple2", "equation_NMST.repr",
-        "equation_Prims.nat",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2"
-      ],
-      0,
-      "fac20a22cd13905ccaff01bfde97fd5e"
-    ],
-    [
-      "NMST.NMSTATE",
-      3,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "543f5ed3696b8463d96c4e8d83f5937a"
-    ],
-    [
-      "NMST.NMSTATE",
-      4,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "392458d1fc48e663d195d0c63074feca"
-    ],
-    [
-      "NMST.get",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_Prims.nat",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1"
-      ],
-      0,
-      "4f1bc40322e4a86db18f7d7e1f1431fd"
-    ],
-    [
-      "NMST.put",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "eabe92ab6b299290b78af22eec710adf"
-    ],
-    [
-      "NMST.witness",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_MST.stable", "equation_NMST.stable",
-        "equation_NMST.witnessed"
-      ],
-      0,
-      "d822ff2e3d831ca0f0511fc2909d7b5f"
-    ],
-    [
-      "NMST.recall",
-      2,
-      2,
-      1,
-      [ "@query", "equation_NMST.witnessed" ],
-      0,
-      "c254db0e9206ddd1363b758b55229551"
-    ],
-    [
-      "NMST.sample",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
-      0,
-      "ff68d6c61bdcebb228c9c3b283910ac9"
-    ],
-    [
-      "NMST.lift_pure_nmst",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
-        "eq2-interp", "equation_NMST.tape", "equation_Prims.l_Forall",
-        "equation_Prims.l_True", "equation_Prims.logical",
-        "equation_Prims.nat", "equation_Prims.pure_post",
-        "equation_Prims.pure_post_",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "function_token_typing_Prims.l_True",
-        "interpretation_Tm_abs_24b6622be388b21bc8d055b037c4c6dd",
-        "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
-        "interpretation_Tm_abs_dc670feaee5a9cdeefefb04a5984b858",
-        "l_imp-interp", "l_not-interp", "l_or-interp",
-        "l_quant_interp_a6744653fb6eb4eeacca019834400768",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
-        "typing_Tm_abs_24b6622be388b21bc8d055b037c4c6dd",
-        "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
-        "typing_Tm_abs_dc670feaee5a9cdeefefb04a5984b858"
-      ],
-      0,
-      "8f17e4cd1c115144e35073cc3f79955e"
-    ],
-    [
-      "NMST.bind_div_nmst",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "81c1ca74664284d3bc6f02467cf1c860"
-    ],
-    [
-      "NMST.nmst_assume",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "fb50d1a49cf755ab6081e6a3e44535c2"
-    ],
-    [
-      "NMST.nmst_assert",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "fc474b42fcb6dbfa2b552f3be2cde56f"
-    ],
-    [
-      "NMST.lift_nmst_total_nmst",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "9f12107e33eb097abb921ef3d0e365a3"
+      "a188807f63e44e408c4465814308e25d"
     ]
   ]
 ]

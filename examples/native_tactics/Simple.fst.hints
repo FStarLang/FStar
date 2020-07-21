@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "137206442244e349ebb98a6736c484f7"
+      "05309063a9afd279f91caaf944353db9"
     ],
     [
       "Simple.poly_id",
@@ -35,7 +35,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "c692da0bf47752a0411c4a34d0278752"
+      "5fa19b587c986120c7dcaf035f2eef4f"
     ],
     [
       "Simple.mk_n_list",
@@ -50,7 +50,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1f2160779cad077c9c39841870bc7777"
+      "34371c04087695fac1d12511136866d9"
     ],
     [
       "Simple.poly_list_id",
@@ -63,7 +63,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0eb3f4e2f069e879a686f3bb40b84067"
+      "3d72313cd0ab2d2b3deef1979966241b"
     ],
     [
       "Simple.eq_int_list",
@@ -79,7 +79,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "15c7f85fb79f816dbb17faa28b0f004b"
+      "92a69d0243dc1991cecafd84f3124b6a"
     ]
   ]
 ]

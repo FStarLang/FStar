@@ -25,26 +25,19 @@ let bind (a:Type) (b:Type) (f:repr a ()) (g:a -> repr b ()) : repr b () =
   let y, m = g x in
   y, n + m
 
-let subcomp (a:Type) (f:repr a ()) : repr a () = f
-
-let if_then_else (a:Type) (f:repr a ()) (g:repr a ()) (p:Type0) : Type = repr a ()
-
-[@@smt_reifiable_layered_effect]
 reifiable reflectable total
 layered_effect {
-  MST : a:Type -> unit -> Effect
+  MST : a:Type -> eqtype_as_type unit -> Effect
   with
   repr = repr;
   return = return;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+  bind = bind
 }
 
 assume val pure_wp_monotonic (#a:Type) (wp:pure_wp a)
 : Lemma (forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q))
 
-let lift_pure_mst (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
+let lift_pure_mst (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
 : Pure (repr a ()) (requires wp (fun _ -> True)) (ensures fun _ -> True)
 = pure_wp_monotonic wp;
   f (), 0
@@ -55,4 +48,5 @@ let set (n:int) : MST unit () = MST?.reflect ((), n)
 
 let incr_and_set (n:int) : MST unit () = set (n+1)
 
-let reify_incr_and_set () = assert (snd (reify (incr_and_set 0)) == 1)
+//AR: 07/03: backtracking on smt reification for layered effects
+//let reify_incr_and_set () = assert (snd (reify (incr_and_set 0)) == 1)

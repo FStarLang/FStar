@@ -4,5 +4,3 @@ FSTAR_FILES=OPLSS.AE.fst
 
 include $(FSTAR_HOME)/ulib/gmake/fstar.mk
 include $(FSTAR_HOME)/ulib/gmake/Makefile.tmpl
-
-OTHERFLAGS+=--warn_error @332

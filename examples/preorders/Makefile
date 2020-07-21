@@ -8,7 +8,7 @@ uall: $(patsubst %.fst,%.uver,$(wildcard *.fst))
 # special casing this file since there is a weird interaction
 # between --verify_module and --use_hints
 MRefHeap.uver : MRefHeap.fst
-	$(FSTAR) --use_extracted_interfaces true $(OTHERFLAGS) $^
+	$(FSTAR) $(OTHERFLAGS) $^
 
 # Targets to get F* arguments in interactive mode
 %.fst-in: 

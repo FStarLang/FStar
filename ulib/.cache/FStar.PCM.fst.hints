@@ -1,0 +1,270 @@
+[
+  "qEûÉ3¸\u000brÕDc#À­+\u001b",
+  [
+    [
+      "FStar.PCM.__proj__Mkpcm'__item__op",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_FStar.PCM.Mkpcm__composable",
+        "projection_inverse_FStar.PCM.Mkpcm__composable",
+        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable"
+      ],
+      0,
+      "af2c7c55aa165d43f3759a2d1877af6f"
+    ],
+    [
+      "FStar.PCM.lem_commutative",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_FStar.PCM.Mkpcm_",
+        "equation_FStar.PCM.symrel", "fuel_guarded_inversion_FStar.PCM.pcm_",
+        "proj_equation_FStar.PCM.Mkpcm__composable",
+        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "refinement_interpretation_Tm_refine_e46526a995ec86069ab3699ffa611149",
+        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable"
+      ],
+      0,
+      "570484c22b516167ee78d2240f4a9757"
+    ],
+    [
+      "FStar.PCM.lem_assoc_l",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_e8a47103e2869a2d680d6754044718fe"
+      ],
+      0,
+      "da48d81b789d6d86803d85e4518c60f4"
+    ],
+    [
+      "FStar.PCM.lem_assoc_r",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3d4713c393f32d57b63b77183b22dc30"
+      ],
+      0,
+      "dd1464f64a6a4af10ff7de7630df3fb6"
+    ],
+    [
+      "FStar.PCM.lem_is_unit",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "87f557a29075ba3d08c1f9f6d994533b"
+    ],
+    [
+      "FStar.PCM.__proj__Mkpcm__item__comm",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_FStar.PCM.Mkpcm_p",
+        "projection_inverse_FStar.PCM.Mkpcm_p"
+      ],
+      0,
+      "c91b50679d098c0a33d0d7f20ac95404"
+    ],
+    [
+      "FStar.PCM.__proj__Mkpcm__item__assoc",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_FStar.PCM.Mkpcm_p",
+        "projection_inverse_FStar.PCM.Mkpcm_p"
+      ],
+      0,
+      "e9f318167bb85d8fe7a7b98e0291798d"
+    ],
+    [
+      "FStar.PCM.__proj__Mkpcm__item__assoc_r",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_FStar.PCM.Mkpcm_p",
+        "projection_inverse_FStar.PCM.Mkpcm_p"
+      ],
+      0,
+      "d4a82073e008ed7c7c0fde8f3111da71"
+    ],
+    [
+      "FStar.PCM.__proj__Mkpcm__item__is_unit",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "proj_equation_FStar.PCM.Mkpcm_p",
+        "projection_inverse_FStar.PCM.Mkpcm_p", "unit_inversion",
+        "unit_typing"
+      ],
+      0,
+      "34b2c6af5c6ee4f57b5044fca8c08b8e"
+    ],
+    [
+      "FStar.PCM.op",
+      1,
+      2,
+      1,
+      [ "@query", "equation_FStar.PCM.composable" ],
+      0,
+      "898097b85cdb1b3f3e2493f02764e148"
+    ],
+    [
+      "FStar.PCM.compatible",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.PCM.composable",
+        "equation_FStar.PCM.symrel", "fuel_guarded_inversion_FStar.PCM.pcm",
+        "proj_equation_FStar.PCM.Mkpcm_p",
+        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
+        "typing_FStar.PCM.__proj__Mkpcm___item__composable",
+        "typing_FStar.PCM.__proj__Mkpcm__item__p"
+      ],
+      0,
+      "508163d16d353373d04d692f544aebbb"
+    ],
+    [
+      "FStar.PCM.compatible_refl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_FStar.PCM.Mkpcm_",
+        "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
+        "equation_FStar.PCM.op", "equation_FStar.PCM.symrel",
+        "fuel_guarded_inversion_FStar.PCM.pcm",
+        "fuel_guarded_inversion_FStar.PCM.pcm_",
+        "proj_equation_FStar.PCM.Mkpcm__composable",
+        "proj_equation_FStar.PCM.Mkpcm__one",
+        "proj_equation_FStar.PCM.Mkpcm__op",
+        "proj_equation_FStar.PCM.Mkpcm_p",
+        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
+        "typing_FStar.PCM.__proj__Mkpcm___item__one",
+        "typing_FStar.PCM.__proj__Mkpcm__item__p"
+      ],
+      0,
+      "ec5b884e239d6e66b936ae427f9d55d1"
+    ],
+    [
+      "FStar.PCM.compatible_trans",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.PCM_interpretation_Tm_arrow_677363292cfea4bd15c69c7af2b6e247",
+        "equation_FStar.PCM.compatible", "equation_FStar.PCM.composable",
+        "equation_FStar.PCM.op", "equation_FStar.PCM.symrel",
+        "fuel_guarded_inversion_FStar.PCM.pcm",
+        "proj_equation_FStar.PCM.Mkpcm_p",
+        "refinement_interpretation_Tm_refine_087313dd188beec5aebe5344de9ff41f",
+        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "refinement_interpretation_Tm_refine_e46526a995ec86069ab3699ffa611149",
+        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
+        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__op",
+        "typing_FStar.PCM.__proj__Mkpcm___item__composable",
+        "typing_FStar.PCM.__proj__Mkpcm___item__op",
+        "typing_FStar.PCM.__proj__Mkpcm__item__p"
+      ],
+      0,
+      "e2fbf00e4b61c2bf992808a00ff35e4a"
+    ],
+    [
+      "FStar.PCM.compatible_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.PCM.composable",
+        "equation_FStar.PCM.symrel", "fuel_guarded_inversion_FStar.PCM.pcm",
+        "proj_equation_FStar.PCM.Mkpcm_p",
+        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
+        "typing_FStar.PCM.__proj__Mkpcm___item__composable",
+        "typing_FStar.PCM.__proj__Mkpcm__item__p"
+      ],
+      0,
+      "8329bac4bd25d1af4c301b3f3274f201"
+    ],
+    [
+      "FStar.PCM.compatible_elim",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_FStar.PCM.compatible",
+        "equation_FStar.PCM.composable", "equation_FStar.PCM.symrel",
+        "fuel_guarded_inversion_FStar.PCM.pcm",
+        "proj_equation_FStar.PCM.Mkpcm_p",
+        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
+        "typing_FStar.PCM.__proj__Mkpcm___item__composable",
+        "typing_FStar.PCM.__proj__Mkpcm__item__p"
+      ],
+      0,
+      "411d41dc47c21460f1744293830a1c2f"
+    ],
+    [
+      "FStar.PCM.frame_preserving",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "bd95d94f3cf7c17643d6ee3f015a1569"
+    ],
+    [
+      "FStar.PCM.exclusive_is_frame_preserving",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_FStar.PCM.Mkpcm_",
+        "equation_FStar.PCM.composable", "equation_FStar.PCM.exclusive",
+        "equation_FStar.PCM.frame_preserving", "equation_FStar.PCM.op",
+        "equation_FStar.PCM.symrel", "fuel_guarded_inversion_FStar.PCM.pcm",
+        "fuel_guarded_inversion_FStar.PCM.pcm_",
+        "proj_equation_FStar.PCM.Mkpcm__composable",
+        "proj_equation_FStar.PCM.Mkpcm__one",
+        "proj_equation_FStar.PCM.Mkpcm__op",
+        "proj_equation_FStar.PCM.Mkpcm_p",
+        "refinement_interpretation_Tm_refine_d231fcdc87ac931cd2eb3a8a90951676",
+        "token_correspondence_FStar.PCM.__proj__Mkpcm___item__composable",
+        "typing_FStar.PCM.__proj__Mkpcm___item__one",
+        "typing_FStar.PCM.__proj__Mkpcm__item__p"
+      ],
+      0,
+      "04b5c8fd3408844afd6c9fbc4e249c84"
+    ],
+    [
+      "FStar.PCM.joinable",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Exists",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "595baba444b0cd6ccd458109e9eac0a1"
+    ]
+  ]
+]

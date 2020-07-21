@@ -70,7 +70,7 @@ let if_then_else (a:Type)
   (pre_g:pre_t) (post_g:post_t a)
   (f:repr a pre_f post_f)
   (g:repr a pre_g post_g)
-  (p:Type0)
+  (p:bool)
   : Type
 = repr a
   (fun h -> (p ==> pre_f h) /\ ((~ p) ==> pre_g h))
@@ -138,7 +138,7 @@ assume val wp_monotonic_pure (_:unit)
 
 /// lift from PURE
 
-let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
+let lift_pure_hoarest (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
 : repr a
   (fun _ -> wp (fun _ -> True))
   (fun h0 r h1 -> ~ (wp (fun x -> x =!= r \/ h0 =!= h1)))

@@ -28,9 +28,6 @@ let logic_qualifier_deprecation_warning =
 let mk_meta_tac m = Meta (Arg_qualifier_meta_tac m)
 let mk_meta_attr m = Meta (Arg_qualifier_meta_attr m)
 
-let abstract_qualifier_warning =
-  "abstract qualifier will soon be removed from F*, use interfaces instead"
-
 let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
@@ -61,7 +58,7 @@ let old_attribute_syntax_warning =
 %token <bool> LET
 
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
-%token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
+%token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER
 %token TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND BY
@@ -396,10 +393,6 @@ qualifier:
   | DEFAULT       { DefaultEffect }
   | TOTAL         { TotalEffect }
   | PRIVATE       { Private }
-  
-  | ABSTRACT      { log_issue (lhs parseState) (Warning_AbstractQualifier,
-                                                abstract_qualifier_warning);
-		    Abstract }
   
   | NOEQUALITY    { Noeq }
   | UNOPTEQUALITY { Unopteq }

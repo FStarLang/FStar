@@ -112,8 +112,9 @@ val codegen                     : unit    -> option<codegen_t>
 val codegen_libs                : unit    -> list<list<string>>
 val profile_enabled             : module_name:option<string> -> profile_phase:string -> bool
 val profile_group_by_decls      : unit    -> bool
-val defensive                   : unit    -> bool // true if "warn" or "fail"
-val defensive_fail              : unit    -> bool // true if "fail"
+val defensive                   : unit    -> bool // true if checks should be performed
+val defensive_error             : unit    -> bool // true if "error"
+val defensive_abort             : unit    -> bool // true if "abort"
 val dep                         : unit    -> option<string>
 val detail_errors               : unit    -> bool
 val detail_hint_replay          : unit    -> bool
@@ -234,7 +235,6 @@ val no_positivity               : unit    -> bool
 val ml_no_eta_expand_coertions  : unit    -> bool
 val warn_error                  : unit    -> string
 val set_error_flags_callback    : ((unit  -> parse_cmdline_res) -> unit)
-val use_extracted_interfaces    : unit    -> bool
 val use_nbe                     : unit    -> bool
 val use_nbe_for_extraction      : unit    -> bool
 val trivial_pre_for_unannotated_effectful_fns

@@ -28,16 +28,35 @@ module FStar.IndefiniteDescription
 
 (** The main axiom:
 
+    Given a classical proof of [exists x. p x], we can exhibit an erased
+    (computationally irrelevant) a witness [x:erased a] validating
+    [p x].
+*)
+assume
+val indefinite_description_tot (a:Type) (p:(a -> prop) { exists x. p x })
+  : Tot (w:Ghost.erased a{ p w })
+
+
+(** A version in ghost is easily derivable *)
+let indefinite_description_ghost (a: Type) (p: (a -> prop) { exists x. p x })
+  : GTot (x: a { p x })
+  = let w = indefinite_description_tot a p in
+    let x = Ghost.reveal w in
+    x
+  
+(** An alternate formulation, mainly for legacy reasons.
+
     Given a classical proof of [exists x. p x], we can exhibit (ghostly) a
     witness [x:a] validating [p x].
 
-    TODO: we should take [p] to be [a -> prop]. However, see
+    We should take [p] to be [a -> prop]. However, see
     [Prims.prop] for a description of the ongoing work on more
     systematically using [prop] in the libraries *)
+[@@deprecated "Consider using indefinite_description_ghost instead"]
 assume
 val indefinite_description (a: Type) (p: (a -> GTot Type0))
-    : Ghost (x: a & p x) (requires (exists x. p x)) (ensures (fun _ -> True))
-
+  : Ghost (x: a & p x) (requires (exists x. p x)) (ensures (fun _ -> True))
+  
 open FStar.Classical
 open FStar.Squash
 
@@ -61,10 +80,7 @@ let strong_excluded_middle (p: Type0) : GTot (b: bool{b = true <==> p}) =
                       get_proof (exists b. b = true <==> p))))
   in
   aux p;
-  match indefinite_description bool (fun b -> b = true <==> p) with
-  | Mkdtuple2 b p ->
-    give_witness p;
-    b
+  indefinite_description_ghost bool (fun b -> b = true <==> p)
 
 (** We also can combine this with a the classical tautology converting
     with a [forall] and an [exists] to extract a witness of validity of [p] from
@@ -74,17 +90,10 @@ let strong_excluded_middle (p: Type0) : GTot (b: bool{b = true <==> p}) =
       [(~(forall n. ~(p n))) ==> (exists n. p n) ] *)
 let stronger_markovs_principle (p: (nat -> GTot bool))
     : Ghost nat (requires (~(forall (n: nat). ~(p n)))) (ensures (fun n -> p n)) =
-  match indefinite_description _ (fun n -> b2t (p n)) with
-  | Mkdtuple2 n p ->
-    give_witness p;
-    n
+    indefinite_description_ghost _ (fun n -> p n==true)
 
 (** A variant of the previous lemma, but for a [prop] rather than a
     boolean predicate *)
 let stronger_markovs_principle_prop (p: (nat -> GTot prop))
     : Ghost nat (requires (~(forall (n: nat). ~(p n)))) (ensures (fun n -> p n)) =
-  match indefinite_description _ p with
-  | Mkdtuple2 n p ->
-    give_witness p;
-    n
-
+    indefinite_description_ghost _ p

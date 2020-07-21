@@ -27,9 +27,6 @@ OUTPUT_DIRECTORY ?= _output
 # A place to put all the .checked files
 CACHE_DIR ?= _cache
 
-# Additionaly flags to pass to F*, 332 -> abstract usage
-OTHERFLAGS += --use_hints --warn_error @332
-
 # Set ADMIT=1 to admit queries
 ADMIT ?=
 MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)

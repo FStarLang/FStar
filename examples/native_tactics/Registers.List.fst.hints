@@ -26,7 +26,7 @@
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___1"
       ],
       0,
-      "b50a3bd3bef058323a9be8764b9dc6a9"
+      "6c7a72956771e77c4e879e84e49ffa63"
     ],
     [
       "Registers.List.const_map_n",
@@ -42,7 +42,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a4045b7e1c6e7b3734ca56fe6cb26e2c"
+      "c17b9afb0f71887f881d061d1ab3e2fb"
     ],
     [
       "Registers.List.identity_map",
@@ -58,7 +58,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8af95515d4e402d551bf534945761697"
+      "20b8a2e82cd089761b7179e2650bb0e2"
     ],
     [
       "Registers.List.eta_map",
@@ -73,7 +73,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "9cc274b9b91734a4cea404c1acabf17f"
+      "ecf08df0c15d0d092bd46f329965631d"
     ]
   ]
 ]

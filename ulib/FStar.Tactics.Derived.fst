@@ -140,6 +140,21 @@ let apply (t : term) : Tac unit =
 let apply_noinst (t : term) : Tac unit =
     t_apply true true t
 
+(** [apply_lemma l] will solve a goal of type [squash phi] when [l] is a
+Lemma ensuring [phi]. The arguments to [l] and its requires clause are
+introduced as new goals. As a small optimization, [unit] arguments are
+discharged by the engine. Just a thin wrapper around [t_apply_lemma]. *)
+let apply_lemma (t : term) : Tac unit =
+    t_apply_lemma false false t
+
+(** Similar to [apply_lemma], but will not instantiate uvars in the
+goal while applying. *)
+let apply_lemma_noinst (t : term) : Tac unit =
+    t_apply_lemma true false t
+
+let apply_lemma_rw (t : term) : Tac unit =
+    t_apply_lemma false true t
+
 (** [apply_raw f] is like [apply], but will ask for all arguments
 regardless of whether they appear free in further goals. See the
 explanation in [t_apply]. *)
@@ -220,10 +235,13 @@ let fresh_uvar (o : option typ) : Tac term =
     let e = cur_env () in
     uvar_env e o
 
-let unify t1 t2 : Tac bool =
+let unify (t1 t2 : term) : Tac bool =
     let e = cur_env () in
     unify_env e t1 t2
 
+let tmatch (t1 t2 : term) : Tac bool =
+    let e = cur_env () in
+    match_env e t1 t2
 
 (** [divide n t1 t2] will split the current set of goals into the [n]
 first ones, and the rest. It then runs [t1] on the first set, and [t2]
@@ -537,12 +555,13 @@ let unfold_def (t:term) : Tac unit =
         norm [delta_fully [n]]
     | _ -> fail "unfold_def: term is not a fv"
 
-(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities.
-The lemmas need to prove *propositional* equalities, that is, using [==]. *)
+(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating
+equalities. The lemmas need to prove *propositional* equalities, that
+is, using [==]. *)
 let l_to_r (lems:list term) : Tac unit =
     let first_or_trefl () : Tac unit =
         fold_left (fun k l () ->
-                    (fun () -> apply_lemma l)
+                    (fun () -> apply_lemma_rw l)
                     `or_else` k)
                   trefl lems () in
     pointwise first_or_trefl
@@ -860,8 +879,6 @@ and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
         C_Eff us eff res args
   in
   pack_comp cv'
-
-exception NotAListLiteral
 
 let rec destruct_list (t : term) : Tac (list term) =
     let head, args = collect_app t in

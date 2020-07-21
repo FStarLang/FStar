@@ -55,12 +55,13 @@ let __raise (a:Type0) (e:exn) : __tac a = fun (ps:proofstate) -> Failed #a e ps
 private
 let __tac_wp a = proofstate -> (__result a -> Tot Type0) -> Tot Type0
 
-(*
- * The DMFF-generated `bind_wp` doesn't the contain the "don't duplicate the post-condition"
- * optimization, which causes VCs (for well-formedness of tactics) to blow up.
+(* The DMFF-generated `bind_wp` doesn't the contain the "don't
+ * duplicate the post-condition" optimization, which causes VCs (for
+ * well-formedness of tactics) to blow up.
  *
- * Plus, we don't need to model the ranges and depths: they make no difference since the
- * proofstate type is abstract and the SMT never sees a concrete one.
+ * Plus, we don't need to model the ranges and depths: they make no
+ * difference since the proofstate type is abstract and the SMT never
+ * sees a concrete one.
  *
  * So, override `bind_wp` for the effect with an efficient one.
  *)
@@ -112,10 +113,12 @@ let raise (#a:Type) (e:exn) = TAC?.__raise a e
 
 val with_tactic (t : unit -> Tac unit) (p:Type u#a) : Type u#a
 
-// This will run the tactic in order to (try to) produce a term of type t
-// It should not lead to any inconsistency, as any time this term appears
-// during typechecking, it is forced to be fully applied and the tactic
-// is run. A failure of the tactic is a typechecking failure.
+(* This will run the tactic in order to (try to) produce a term of type
+ * t. Note that the type looks dangerous from a logical perspective. It
+ * should not lead to any inconsistency, however, as any time this term
+ * appears during typechecking, it is forced to be fully applied and the
+ * tactic is run. A failure of the tactic is a typechecking failure. It
+ * can be thought as a language construct, and not a real function. *)
 val synth_by_tactic : (#t:Type) -> (unit -> Tac unit) -> Tot t
 
 val assert_by_tactic (p:Type) (t:unit -> Tac unit)
@@ -123,37 +126,39 @@ val assert_by_tactic (p:Type) (t:unit -> Tac unit)
          (requires (set_range_of (with_tactic t (squash p)) (range_of t)))
          (ensures (fun _ -> p))
 
-(* We don't peel off all `with_tactic`s in negative positions, so give the SMT a way to reason about them *)
+(* We don't peel off all `with_tactic`s in negative positions, so give
+ * the SMT a way to reason about them *)
 val by_tactic_seman : tau:(unit -> Tac unit) -> phi:Type -> Lemma (with_tactic tau phi ==> phi)
                                                                   [SMTPat (with_tactic tau phi)]
 
-(* One can always bypass the well-formedness of metaprograms. It does not matter
- * as they are only run at typechecking time, and if they get stuck, the compiler
- * will simply raise an error. *)
+(* One can always bypass the well-formedness of metaprograms. It does
+ * not matter as they are only run at typechecking time, and if they get
+ * stuck, the compiler will simply raise an error. *)
 let assume_safe (#a:Type) (tau:unit -> TacF a) : Tac a = admit (); tau ()
 
 private let tac a b = a -> Tac b
 private let tactic a = tac unit a
 
-(* A hook to preprocess a definition before it is typechecked and elaborated. This
- * attribute should be used for top-level lets. The tactic [tau] will be called
- * on a quoting of the definition of the let (if many, once for each) and the result
- * of the tactic will replace the definition. There are no goals involved,
- * nor any proof obligation to be done by the tactic. *)
+(* A hook to preprocess a definition before it is typechecked and
+ * elaborated. This attribute should be used for top-level lets. The
+ * tactic [tau] will be called on a quoting of the definition of the let
+ * (if many, once for each) and the result of the tactic will replace
+ * the definition. There are no goals involved, nor any proof obligation
+ * to be done by the tactic. *)
 val preprocess_with (tau : term -> Tac term) : Tot unit
 
-(* A hook to postprocess a definition, after typechecking, and rewrite it
- * into a (provably equal) shape chosen by the user. This can be used to implement
- * custom transformations previous to extraction, such as selective inlining.
- * When ran added to a definition [let x = E], the [tau] metaprogram
- * is presented with a goal of the shape [E = ?u] for a fresh uvar [?u].
- * The metaprogram should then both instantiate [?u] and prove the equivalence
- * to [E]. *)
+(* A hook to postprocess a definition, after typechecking, and rewrite
+ * it into a (provably equal) shape chosen by the user. This can be used
+ * to implement custom transformations previous to extraction, such as
+ * selective inlining. When ran added to a definition [let x = E], the
+ * [tau] metaprogram is presented with a goal of the shape [E == ?u] for
+ * a fresh uvar [?u]. The metaprogram should then both instantiate [?u]
+ * and prove the equality. *)
 val postprocess_with (tau : unit -> Tac unit) : Tot unit
 
-(* Similar semantics to [postprocess_with], but the metaprogram only runs before
- * extraction, and hence typechecking and the logical environment should not be
- * affected at all. *)
+(* Similar semantics to [postprocess_with], but the metaprogram only
+ * runs before extraction, and hence typechecking and the logical
+ * environment should not be affected at all. *)
 val postprocess_for_extraction_with (tau : unit -> Tac unit) : Tot unit
 
 #set-options "--no_tactics"

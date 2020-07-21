@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "ed45ede37b54b2af789abbcca3824ded"
+      "2c36b48a604dc3c3d9eccccea6e9b39c"
     ],
     [
       "Ex12f.TMAC.mac",
@@ -28,7 +28,7 @@
         "token_correspondence_Ex12f.TMAC.bspec", "typing_FStar.UInt8.t"
       ],
       0,
-      "1c6f988b4efc006c3e52ef1cef5c9463"
+      "d38317d68f3985ac056c7eacab83dbd9"
     ],
     [
       "Ex12f.TMAC.verify",
@@ -49,57 +49,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "2efed74903ee5fb77a8e4a8cfb577f96"
-    ],
-    [
-      "Ex12f.TMAC.keygen",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "009a02d71456c414e3a39088115c8338"
-    ],
-    [
-      "Ex12f.TMAC.mac",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Ex12.Pad.bytes",
-        "equation_Ex12.Pad.encode", "equation_Ex12.Pad.text",
-        "equation_Ex12f.TMAC.bspec", "equation_Ex12f.TMAC.pkey",
-        "equation_Prims.eqtype", "function_token_typing_Ex12.BMAC.key_prop",
-        "lemma_Ex12.Pad.inj", "lemma_FStar.Seq.Base.lemma_eq_elim",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_71abb27e82b0c356f50fe92b2fe580a1",
-        "refinement_interpretation_Tm_refine_dededb70fb94e9a423bec802a85357ed",
-        "refinement_interpretation_Tm_refine_ee191569bd9f131505476eb9bb2f0dbe",
-        "token_correspondence_Ex12f.TMAC.bspec", "typing_FStar.UInt8.t"
-      ],
-      0,
-      "a1c57aa93b88cef8fbf413e249be9e62"
-    ],
-    [
-      "Ex12f.TMAC.verify",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Ex12.Pad.block",
-        "equation_Ex12.Pad.blocksize", "equation_Ex12.Pad.bytes",
-        "equation_Ex12.Pad.encode", "equation_Ex12.Pad.nbytes",
-        "equation_Ex12f.TMAC.bspec", "equation_Ex12f.TMAC.pkey",
-        "equation_Prims.eqtype", "function_token_typing_Ex12.BMAC.key_prop",
-        "lemma_FStar.Seq.Base.lemma_eq_refl",
-        "refinement_interpretation_Tm_refine_314facab926fb5ccee666fe97e081552",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_71abb27e82b0c356f50fe92b2fe580a1",
-        "token_correspondence_Ex12f.TMAC.bspec", "typing_Ex12.Pad.encode",
-        "typing_FStar.UInt8.t"
-      ],
-      0,
-      "8b72dcb648401f3be94f68cf46d736ef"
+      "093c18de207aa5411e20bbdeedb17986"
     ]
   ]
 ]
