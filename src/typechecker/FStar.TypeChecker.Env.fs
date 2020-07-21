@@ -1607,7 +1607,7 @@ let finish_module =
       let sigs =
         if lid_equals m.name Const.prims_lid
         then env.gamma_sig |> List.map snd |> List.rev
-        else m.exports  in
+        else m.declarations  in
       add_sigelts env sigs;
       {env with
         curmodule=empty_lid;

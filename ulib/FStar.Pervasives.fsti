@@ -686,6 +686,39 @@ val erasable : unit
     the code should not be extracted *)
 val allow_informative_binders : unit
 
+(** [commute_nested_matches]
+    This attribute can be used to decorate an inductive type [t]
+
+    During normalization, if reduction is blocked on matching the
+    constructors of [t] in the following sense:
+
+    [
+     match (match e0 with | P1 -> e1 | ... | Pn -> en) with
+     | Q1 -> f1 ... | Qm -> fm
+    ]
+
+    i.e., the outer match is stuck due to the inner match on [e0]
+    being stuck, and if the head constructor the outer [Qi] patterns
+    are the constructors of the decorated inductive type [t], then,
+    this is reduced to
+
+    [
+     match e0 with
+     | P1 -> (match e1 with | Q1 -> f1 ... | Qm -> fm)
+     | ...
+     | Pn -> (match en with | Q1 -> f1 ... | Qm -> fm)
+    ]
+
+    This is sometimes useful when partially evaluating code before
+    extraction, particularly when aiming to obtain first-order code
+    for KReMLin. However, this attribute should be used with care,
+    since if after the rewriting the inner matches do not reduce, then
+    this can cause an explosion in code size.
+
+    See tests/micro-benchmarks/CommuteNestedMatches.fst
+    and examples/layeredeffects/LowParseWriters.fsti
+  *)
+val commute_nested_matches : unit
 
 ///  Controlling normalization
 
@@ -730,7 +763,7 @@ val delta : norm_step
   *)
 val zeta : norm_step
 
-(** Unroll recursive calls 
+(** Unroll recursive calls
 
     Unlike [zeta], [zeta_full] has no looping prevention
     heuristics. F* will try to unroll recursive functions as much as
@@ -788,7 +821,7 @@ val delta_fully (s: list string) : Tot norm_step
       ]}
 
    {[norm [delta_attr [`%my_attr]] f1]}
-   
+
    will reduce to [0 + 1].
 
   *)

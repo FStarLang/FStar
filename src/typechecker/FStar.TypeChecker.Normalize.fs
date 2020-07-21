@@ -714,7 +714,7 @@ let is_nbe_request s = BU.for_some (eq_step NBE) s
 
 let tr_norm_step = function
     | EMB.Zeta ->    [Zeta]
-    | EMB.ZetaFull -> [ZetaFull]    
+    | EMB.ZetaFull -> [ZetaFull]
     | EMB.Iota ->    [Iota]
     | EMB.Delta ->   [UnfoldUntil delta_constant]
     | EMB.Simpl ->   [Simplify]
@@ -1160,7 +1160,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | Univ _ -> failwith "Impossible: term variable is bound to a universe"
                 | Dummy -> failwith "Term variable not found"
                 | Clos(env, t0, r, fix) ->
-                   if not fix 
+                   if not fix
                    || cfg.steps.zeta
                    || cfg.steps.zeta_full
                    then match !r with
@@ -1411,7 +1411,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_let((true, lbs), body)
                 when cfg.steps.compress_uvars
                   || (not cfg.steps.zeta &&
-                     not cfg.steps.zeta_full && 
+                     not cfg.steps.zeta_full &&
                      cfg.steps.pure_subterms_within_computations) -> //no fixpoint reduction allowed
             let lbs, body = Subst.open_let_rec lbs body in
             let lbs = List.map (fun lb ->
@@ -1583,8 +1583,8 @@ and reduce_impure_comp cfg env stack (head : term) // monadic term
                          Primops;
                          AllowUnboundUniverses;
                          EraseUniverses;
-      //we exclude Zeta; but if zeta_full is set, this will still unroll fixpoints                         
-                         Exclude Zeta; 
+      //we exclude Zeta; but if zeta_full is set, this will still unroll fixpoints
+                         Exclude Zeta;
                          Inlining]
         in
         let cfg' = { cfg with
@@ -2533,8 +2533,8 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           // If either Weak or HNF, then don't descend into branch
           let whnf = cfg.steps.weak || cfg.steps.hnf in
           let cfg_exclude_zeta =
-            if cfg.steps.zeta_full 
-            then cfg 
+            if cfg.steps.zeta_full
+            then cfg
             else
              let new_delta =
                cfg.delta_level |> List.filter (function
@@ -2576,7 +2576,8 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
               let t = norm_or_whnf env t in
               {p with v=Pat_dot_term(x, t)}, env
           in
-          let branches = match env with
+          let norm_branches () =
+            match env with
             | [] when whnf -> branches //nothing to close over
             | _ -> branches |> List.map (fun branch ->
               let p, wopt, e = SS.open_branch branch in
@@ -2588,19 +2589,62 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
               let e = norm_or_whnf env e in
               U.branch (p, wopt, e))
           in
-          let scrutinee =
-            if cfg.steps.iota
-            && (not cfg.steps.weak)
-            && (not cfg.steps.compress_uvars)
-            && cfg.steps.weakly_reduce_scrutinee
-            && maybe_weakly_reduced scrutinee
-            then norm ({cfg with steps={cfg.steps with weakly_reduce_scrutinee=false}})
-                      scrutinee_env
-                      []
-                      scrutinee //scrutinee was only reduced to wnf; reduce it fully
-            else scrutinee
+          let maybe_commute_matches () =
+            let can_commute =
+                match branches with
+                | ({v=Pat_cons(fv, _)}, _, _)::_ ->
+                  Env.fv_has_attr cfg.tcenv fv FStar.Parser.Const.commute_nested_matches_lid
+                | _ -> false
+            in
+            match (U.unascribe scrutinee).n with
+            | Tm_match (sc0, branches0) when can_commute ->
+              (* We have a blocked match, because of something like
+
+                  (match (match sc0 with P1 -> e1 | ... | Pn -> en) with
+                   | Q1 -> f1 ... | Qm -> fm)
+
+                  We'll reduce it as if it was instead
+
+                  (match sc0 with
+                    | P1 -> (match e1 with | Q1 -> f1 ... | Qm -> fm)
+                    ...
+                    | Pn -> (match en with | Q1 -> f1 ... | Qm -> fm))
+
+                  if the Qi are constructors from an inductive marked with the
+                  commute_nested_matches attribute
+             *)
+             let reduce_branch (b:S.branch) =
+               //reduce the inner branch `b` while setting the continuation
+               //stack to be the outer match
+               let stack = [Match(env', branches, cfg, r)] in
+               let p, wopt, e = SS.open_branch b in
+               //It's important to normalize all the sorts within the pat!
+               let p, branch_env = norm_pat scrutinee_env p in
+               let wopt = match wopt with
+                | None -> None
+                | Some w -> Some (norm_or_whnf branch_env w) in
+               let e = norm cfg branch_env stack e in
+               U.branch (p, wopt, e)
+             in
+             let branches0 = List.map reduce_branch branches0 in
+             rebuild cfg env stack (mk (Tm_match(sc0, branches0)) r)
+            | _ ->
+              let scrutinee =
+                if cfg.steps.iota
+                && (not cfg.steps.weak)
+                && (not cfg.steps.compress_uvars)
+                && cfg.steps.weakly_reduce_scrutinee
+                && maybe_weakly_reduced scrutinee
+                then norm ({cfg with steps={cfg.steps with weakly_reduce_scrutinee=false}})
+                          scrutinee_env
+                          []
+                          scrutinee //scrutinee was only reduced to wnf; reduce it fully
+                else scrutinee
+              in
+              let branches = norm_branches() in
+              rebuild cfg env stack (mk (Tm_match(scrutinee, branches)) r)
           in
-          rebuild cfg env stack (mk (Tm_match(scrutinee, branches)) r)
+          maybe_commute_matches()
         in
 
         let rec is_cons head = match (SS.compress head).n with

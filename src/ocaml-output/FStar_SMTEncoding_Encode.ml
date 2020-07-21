@@ -6788,10 +6788,11 @@ let (encode_modul :
                then
                  let uu____16509 =
                    FStar_All.pipe_right
-                     (FStar_List.length modul.FStar_Syntax_Syntax.exports)
+                     (FStar_List.length
+                        modul.FStar_Syntax_Syntax.declarations)
                      Prims.string_of_int in
                  FStar_Util.print2
-                   "+++++++++++Encoding externals for %s ... %s exports\n"
+                   "+++++++++++Encoding externals for %s ... %s declarations\n"
                    name uu____16509
                else ());
               (let env =
@@ -6837,7 +6838,7 @@ let (encode_modul :
                         (uu___1709_16603.FStar_SMTEncoding_Env.encoding_quantifier);
                       FStar_SMTEncoding_Env.global_cache =
                         (uu___1709_16603.FStar_SMTEncoding_Env.global_cache)
-                    }) modul.FStar_Syntax_Syntax.exports in
+                    }) modul.FStar_Syntax_Syntax.declarations in
                match uu____16594 with
                | (decls, env1) ->
                    (give_decls_to_z3_and_set_env env1 name decls;

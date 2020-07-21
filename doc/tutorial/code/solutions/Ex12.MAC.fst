@@ -53,7 +53,7 @@ let dec_ghost_to_pred (#a:Type) (p:a -> GTot bool)
 (* We make the MAC.key abstract so that it cannot be accessed by
     the adversary *)
 
-abstract type key : eqtype = SHA1.key
+(* abstract *) type key : eqtype = SHA1.key
 
 (* key log *)
 private

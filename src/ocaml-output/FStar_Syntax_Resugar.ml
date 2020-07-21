@@ -2101,8 +2101,6 @@ let (resugar_qualifier :
     | FStar_Syntax_Syntax.Visible_default -> FStar_Pervasives_Native.None
     | FStar_Syntax_Syntax.Irreducible ->
         FStar_Pervasives_Native.Some FStar_Parser_AST.Irreducible
-    | FStar_Syntax_Syntax.Abstract ->
-        FStar_Pervasives_Native.Some FStar_Parser_AST.Abstract
     | FStar_Syntax_Syntax.Inline_for_extraction ->
         FStar_Pervasives_Native.Some FStar_Parser_AST.Inline_for_extraction
     | FStar_Syntax_Syntax.NoExtract ->

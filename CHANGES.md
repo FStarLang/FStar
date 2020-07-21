@@ -99,6 +99,8 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+   * `abstract` qualifier and the related option `--use_extracted_interfaces`
+     are no longer supported. Use interfaces instead.
 
    * We now overload `&` to construct both dependent and non-dependent
      tuple types. `t1 & t2` is equivalent to `tuple2 t1 t2` whereas

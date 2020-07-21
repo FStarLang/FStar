@@ -14,7 +14,7 @@ FSTAR_FILES:=$(filter-out $(NOEXTRACT_FILES), \
 	$(wildcard experimental/*fst experimental/*fsti))
 
 CODEGEN ?= OCaml
-MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --use_extracted_interfaces false --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
+MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
 
 %.checked.lax:
 	$(MY_FSTAR) $< --already_cached "* -$(basename $(notdir $<))"

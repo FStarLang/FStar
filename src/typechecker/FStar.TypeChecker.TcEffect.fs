@@ -725,19 +725,20 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) (attrs 
            (Print.term_to_string tm_subcomp_ascribed_g);
 
 
-    let _, _, g_f = tc_tot_or_gtot_term env tm_subcomp_ascribed_f in
-    let g_f = Env.imp_guard (Env.guard_of_guard_formula (p_t |> U.b2t |> NonTrivial)) g_f in
-    Rel.force_trivial_guard env g_f;
+    let _check_then =
+      let env = Env.push_bv env (S.new_bv None (U.mk_squash S.U_zero (p_t |> U.b2t))) in
+      let _, _, g_f = tc_tot_or_gtot_term env tm_subcomp_ascribed_f in
+      Rel.force_trivial_guard env g_f in
 
-
-    let _, _, g_g = tc_tot_or_gtot_term env tm_subcomp_ascribed_g in
-    let g_g =
+    let _check_else =
       let not_p = S.mk_Tm_app
         (S.lid_as_fv PC.not_lid S.delta_constant None |> S.fv_to_tm)
         [p_t |> U.b2t |> S.as_arg]
         r in
-      Env.imp_guard (Env.guard_of_guard_formula (NonTrivial not_p)) g_g in
-    Rel.force_trivial_guard env g_g in
+      let env = Env.push_bv env (S.new_bv None not_p) in
+      let _, _, g_g = tc_tot_or_gtot_term env tm_subcomp_ascribed_g in
+      Rel.force_trivial_guard env g_g in
+    () in
 
 
   (*

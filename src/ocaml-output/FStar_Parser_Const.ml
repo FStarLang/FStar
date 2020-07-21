@@ -278,6 +278,8 @@ let (postprocess_extr_with : FStar_Ident.lident) =
 let (check_with_lid : FStar_Ident.lident) =
   FStar_Ident.lid_of_path ["FStar"; "Reflection"; "Builtins"; "check_with"]
     FStar_Range.dummyRange
+let (commute_nested_matches_lid : FStar_Ident.lident) =
+  psconst "commute_nested_matches"
 let (allow_informative_binders_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "allow_informative_binders"]
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
