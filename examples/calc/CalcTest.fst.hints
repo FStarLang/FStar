@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "8cf96ec210bb73feca7b4b8a41e6328d"
+      "663f50522bd9f991b3b3b873431dd4d4"
     ],
     [
       "CalcTest.calc0",
@@ -26,7 +26,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "c29f6cd52226d544ccd8354ea4c58533"
+      "357b55ad207315f1302551e5fade820a"
     ],
     [
       "CalcTest.calc0_desugared",
@@ -40,7 +40,7 @@
         "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
       ],
       0,
-      "007cd09d581b12434029426ef3accb99"
+      "baf97ce85c591042a7ab12c12f5c8dec"
     ],
     [
       "CalcTest.calc1",
@@ -86,7 +86,7 @@
         "typing_FStar.Preorder.relation", "unit_typing"
       ],
       0,
-      "3e3b9b2a6b4e5469903206a64c466c3e"
+      "d8bc2e8d6ebe615e81f45c1d71f28f2e"
     ],
     [
       "CalcTest.test_ge",
@@ -118,7 +118,7 @@
         "typing_FStar.Preorder.relation"
       ],
       0,
-      "40b591feaf78c9363e910e29c666601b"
+      "fa8b3004bb02e6356affa87966703a53"
     ],
     [
       "CalcTest.test_erase",
@@ -150,7 +150,7 @@
         "typing_FStar.Preorder.relation"
       ],
       0,
-      "a404c58b38c9cfb0326adc9bac43dd7e"
+      "36cbed4028615019d9c9116972b10dce"
     ],
     [
       "CalcTest.test_gt",
@@ -185,7 +185,7 @@
         "typing_FStar.Preorder.relation"
       ],
       0,
-      "b47f96a5dff25c0c8864753f24fa6445"
+      "235d6447c2c538da1e78a7543d97b5e4"
     ]
   ]
 ]

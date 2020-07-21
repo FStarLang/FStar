@@ -914,18 +914,54 @@ let gamma_until (g:gamma) (bs:binders) =
       | None -> []
       | Some (_, bx, rest) -> bx::rest
 
+(*
+ * AR: 07/20: generalizing restrict
+ *
+ * Given G_s |- ?u_s bs : t_s and G_t |- ?u_t : t_t, this code restricts G_t to the
+ *   maximal prefix of G_s and G_t, creating a new uvar maximal_prefix(G_s, G_t) |- ?u : t_t,
+ *   and assigning ?u_t = ?u
+ *
+ * However simply doing this does not allow the solution of ?u to mention the binders bs
+ *
+ * Instead, we filter bs that also appear in G_t but not in the maximal prefix and
+ *   allow the solution of G_t to contain them
+ *
+ * (The solution of ?u_t is already allowed to contain the ones appearing in the maximal prefix)
+ *
+ * So the new uvar that's created is maximal_prefix(G_s, G_t) |- ?u : bs -> t_t
+ *   and assigning ?u_t = ?u bs
+ *
+ * This comes in handy for the flex-rigid case, where the arguments of the flex are a pattern
+ *)
+let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl =
+  let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
+  let g = gamma_until src.ctx_uvar_gamma pfx in
 
-let restrict_ctx (tgt:ctx_uvar) (src:ctx_uvar) wl =
-    let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
-    let g = gamma_until src.ctx_uvar_gamma pfx in
+  //t is the type at which new uvar ?u should be created
+  //f is a function that applied to the new uvar term should return the term that ?u_t should be solved to
+  let aux (t:typ) (f:term -> term) =
     let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
-      src.ctx_uvar_range g pfx src.ctx_uvar_typ
+      src.ctx_uvar_range g pfx t
       src.ctx_uvar_should_check src.ctx_uvar_meta in
-    U.set_uvar src.ctx_uvar_head src';
-    wl
+    U.set_uvar src.ctx_uvar_head (f src');
+    wl in
 
-let restrict_all_uvars (tgt:ctx_uvar) (sources:list<ctx_uvar>) wl  =
-    List.fold_right (restrict_ctx tgt) sources wl
+  let bs = bs |> List.filter (fun (bv1, _) ->
+    src.ctx_uvar_binders |> List.existsb (fun (bv2, _) -> S.bv_eq bv1 bv2) &&  //binder exists in G_t
+    not (pfx |> List.existsb (fun (bv2, _) -> S.bv_eq bv1 bv2))) in  //but not in the maximal prefix
+    
+  if List.length bs = 0 then aux src.ctx_uvar_typ (fun src' -> src')  //no abstraction over bs
+  else begin
+    aux
+      (src.ctx_uvar_typ |> env.universe_of env |> Some |> S.mk_Total' src.ctx_uvar_typ |> U.arrow bs)  //bs -> Tot t_t
+      (fun src' -> S.mk_Tm_app  //?u bs
+        src'
+        (bs |> S.binders_to_names |> List.map S.as_arg)
+        src.ctx_uvar_range)
+  end
+
+let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list<ctx_uvar>) wl  =
+    List.fold_right (restrict_ctx env tgt bs) sources wl
 
 let intersect_binders (g:gamma) (v1:binders) (v2:binders) : binders =
     let as_set v =
@@ -2167,7 +2203,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                let fvs_rhs = Free.names rhs in
                if not (BU.set_is_subset_of fvs_rhs fvs_lhs)
                then Inl ("quasi-pattern, free names on the RHS are not included in the LHS"), wl
-               else Inr (mk_solution env lhs bs rhs), restrict_all_uvars ctx_u uvars wl
+               else Inr (mk_solution env lhs bs rhs), restrict_all_uvars env ctx_u [] uvars wl
     in
 
     let imitate_app (orig:prob) (env:Env.env) (wl:worklist)
@@ -2191,7 +2227,11 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let lhs', lhs'_last_arg, wl =
               let _, t_last_arg, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
               //FIXME: this may be an implicit arg ... fix qualifier
-              let _, lhs', wl = copy_uvar u_lhs (bs_lhs@[S.null_binder t_last_arg]) t_res_lhs wl in
+              //AR: 07/20: note the type of lhs' is t_last_arg -> t_res_lhs
+              let _, lhs', wl =
+                let b = S.null_binder t_last_arg in
+                copy_uvar u_lhs (bs_lhs@[b])
+                (t_res_lhs |> env.universe_of env |> Some |> S.mk_Total' t_res_lhs |> U.arrow [b]) wl in
               let _, lhs'_last_arg, wl = copy_uvar u_lhs bs_lhs t_last_arg wl in
               lhs', lhs'_last_arg, wl
         in
@@ -2278,7 +2318,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         then giveup_or_defer env orig wl (Thunk.mkv <| "occurs-check failed: " ^ (Option.get msg))
         else if BU.set_is_subset_of fvs2 fvs1
         then let sol = mk_solution env lhs lhs_binders rhs in
-             let wl = restrict_all_uvars ctx_uv uvars wl in
+             let wl = restrict_all_uvars env ctx_uv lhs_binders uvars wl in
              solve env (solve_prob orig None sol wl)
         else if wl.defer_ok
         then
