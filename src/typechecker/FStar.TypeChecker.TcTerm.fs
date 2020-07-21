@@ -889,8 +889,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                   else check_application_args env head chead g_head args (Env.expected_typ env0) in
     let e, c, implicits =
         if TcComm.is_tot_or_gtot_lcomp c
-        then let e, res_typ, implicits = TcUtil.maybe_instantiate env0 e c.res_typ in
-             e, TcComm.set_result_typ_lc c res_typ, implicits
+        then TcUtil.maybe_instantiate env0 e c
         else e, c, Env.trivial_guard
     in
     if Env.debug env Options.Extreme
@@ -1059,16 +1058,15 @@ and tc_value env (e:term) : term
                           * guard_t =
   let check_instantiated_fvar env v dc e t0 =
     let t = U.remove_inacc t0 in (* remove inaccesible pattern implicits, make them regular implicits *)
-    let e, t, implicits = TcUtil.maybe_instantiate env e t in
+    let e, lc, implicits = TcUtil.maybe_instantiate env e (S.mk_Total t |> TcComm.lcomp_of_comp) in
 //    printfn "Instantiated type of %s from %s to %s\n" (Print.term_to_string e) (Print.term_to_string t0) (Print.term_to_string t);
-    let tc = if Env.should_verify env then Inl t else Inr (TcComm.lcomp_of_comp <| mk_Total t) in
     let is_data_ctor = function
         | Some Data_ctor
         | Some (Record_ctor _) -> true
         | _ -> false in
     if is_data_ctor dc && not(Env.is_datacon env v.v)
     then raise_error (Errors.Fatal_MissingDataConstructor, (BU.format1 "Expected a data constructor; got %s" (string_of_lid v.v))) (Env.get_range env)
-    else value_check_expected_typ env e tc implicits in
+    else value_check_expected_typ env e (Inr lc) implicits in
 
   //As a general naming convention, we use e for the term being analyzed and its subterms as e1, e2, etc.
   //We use t and its variants for the type of the term being analyzed
@@ -1109,9 +1107,8 @@ and tc_value env (e:term) : term
     let x = S.set_range_of_bv ({x with sort=t}) rng in
     Env.insert_bv_info env x t;
     let e = S.bv_to_name x in
-    let e, t, implicits = TcUtil.maybe_instantiate env e t in
-    let tc = if Env.should_verify env then Inl t else Inr (TcComm.lcomp_of_comp <| mk_Total t) in
-    value_check_expected_typ env e tc implicits
+    let e, c, implicits = TcUtil.maybe_instantiate env e (S.mk_Total t |> TcComm.lcomp_of_comp) in
+    value_check_expected_typ env e (Inr c) implicits
 
   | Tm_uinst({n=Tm_fvar fv}, _)
   | Tm_fvar fv when S.fv_eq_lid fv Const.synth_lid && not env.phase1 ->

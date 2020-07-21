@@ -2071,14 +2071,16 @@ let remove_reify (t: S.term): S.term =
 (*********************************************************************************************)
 (* Instantiation and generalization *)
 (*********************************************************************************************)
-let maybe_instantiate (env:Env.env) e t =
-  let torig = SS.compress t in
+let maybe_instantiate (env:Env.env) (e:term) (corig:lcomp) =
   if not env.instantiate_imp
-  then e, torig, Env.trivial_guard
+  then e, corig, Env.trivial_guard
+  else if not (TcComm.is_tot_or_gtot_lcomp corig)
+  then e, corig, Env.trivial_guard
   else begin
+       let t = corig.res_typ in
        if Env.debug env Options.High then
          BU.print3 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
-                 (Print.term_to_string e) (Print.term_to_string t) (FStar.Common.string_of_option Print.term_to_string (Env.expected_typ env));
+                 (Print.term_to_string e) (TcComm.lcomp_to_string corig) (FStar.Common.string_of_option Print.term_to_string (Env.expected_typ env));
        (* Similar to U.arrow_formals, but makes sure to unfold
         * recursively to catch all the binders across type
         * definitions. TODO: Move to library? Revise other uses
@@ -2162,23 +2164,23 @@ let maybe_instantiate (env:Env.env) e t =
               let args, bs, subst, guard = aux [] (inst_n_binders t) bs in
               begin match args, bs with
                 | [], _ -> //no implicits were instantiated
-                  e, torig, guard
+                  e, corig, guard
 
-                | _, [] when not (U.is_total_comp c) ->
-                  //don't instantiate implicitly, if it has an effect
-                  e, torig, Env.trivial_guard
+                (* | _, [] when not (U.is_total_comp c) -> *)
+                (*   //don't instantiate implicitly, if it has an effect *)
+                (*   e, S.mk_Total torig, Env.trivial_guard *)
 
                 | _ ->
 
-                  let t = match bs with
-                    | [] -> U.comp_result c
-                    | _ -> U.arrow bs c in
-                  let t = SS.subst subst t in
+                  let c = match bs with
+                    | [] -> c
+                    | _ -> S.mk_Total (U.arrow bs c) in
+                  let c = SS.subst_comp subst c in
                   let e = S.mk_Tm_app e args e.pos in
-                  e, t, guard
+                  e, TcComm.lcomp_of_comp c, guard
               end
 
-            | _ -> e, torig, Env.trivial_guard
+            | _ -> e, corig, Env.trivial_guard
        end
   end
 
