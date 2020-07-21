@@ -178,11 +178,61 @@ let rec flatten (e:exp) : list atom =
   | Atom x -> [x]
   | Mult e1 e2 -> flatten e1 @ flatten e2
 
+let rec flatten_correct_aux (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (xs1 xs2:list atom)
+  : Lemma (xsdenote eq m am (xs1 @ xs2) `EQ?.eq eq` CM?.mult m (xsdenote eq m am xs1)
+                                                               (xsdenote eq m am xs2)) =
+  match xs1 with
+  | [] ->
+      CM?.identity m (xsdenote eq m am xs2);
+      EQ?.symmetry eq (CM?.mult m (CM?.unit m) (xsdenote eq m am xs2)) (xsdenote eq m am xs2)
+  | [x] -> (
+      if (Nil? xs2)
+      then (right_identity eq m (select x am);
+            EQ?.symmetry eq (CM?.mult m (select x am) (CM?.unit m)) (select x am))
+      else EQ?.reflexivity eq (CM?.mult m (xsdenote eq m am [x]) (xsdenote eq m am xs2)))
+  | x::xs1' ->
+      flatten_correct_aux eq m am xs1' xs2;
+      EQ?.reflexivity eq (select x am);
+      CM?.congruence m (select x am) (xsdenote eq m am (xs1' @ xs2))
+                       (select x am) (CM?.mult m (xsdenote eq m am xs1') (xsdenote eq m am xs2));
+      CM?.associativity m (select x am) (xsdenote eq m am xs1') (xsdenote eq m am xs2);
+      EQ?.symmetry eq (CM?.mult m (CM?.mult m (select x am) (xsdenote eq m am xs1')) (xsdenote eq m am xs2))
+                      (CM?.mult m (select x am) (CM?.mult m (xsdenote eq m am xs1') (xsdenote eq m am xs2)));
+      EQ?.transitivity eq (CM?.mult m (select x am) (xsdenote eq m am (xs1' @ xs2)))
+                          (CM?.mult m (select x am) (CM?.mult m (xsdenote eq m am xs1') (xsdenote eq m am xs2)))
+                          (CM?.mult m (CM?.mult m (select x am) (xsdenote eq m am xs1')) (xsdenote eq m am xs2))
+
+let rec flatten_correct (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (e:exp)
+  : Lemma (mdenote eq m am e `EQ?.eq eq` xsdenote eq m am (flatten e)) =
+  match e with
+  | Unit -> EQ?.reflexivity eq (CM?.unit m)
+  | Atom x -> EQ?.reflexivity eq (select x am)
+  | Mult e1 e2 ->
+      flatten_correct_aux eq m am (flatten e1) (flatten e2);
+      EQ?.symmetry eq (xsdenote eq m am (flatten e1 @ flatten e2))
+                      (CM?.mult m (xsdenote eq m am (flatten e1)) (xsdenote eq m am (flatten e2)));
+      flatten_correct eq m am e1;
+      flatten_correct eq m am e2;
+      CM?.congruence m (mdenote eq m am e1) (mdenote eq m am e2)
+                       (xsdenote eq m am (flatten e1)) (xsdenote eq m am (flatten e2));
+      EQ?.transitivity eq (CM?.mult m (mdenote eq m am e1) (mdenote eq m am e2))
+                          (CM?.mult m (xsdenote eq m am (flatten e1)) (xsdenote eq m am (flatten e2)))
+                          (xsdenote eq m am (flatten e1 @ flatten e2))
 
 let monoid_reflect (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (e1 e2:exp)
     (_ : squash (xsdenote eq m am (flatten e1) `EQ?.eq eq` xsdenote eq m am (flatten e2)))
        : squash (mdenote eq m am e1 `EQ?.eq eq` mdenote eq m am e2) =
-    admit()
+    flatten_correct eq m am e1;
+    flatten_correct eq m am e2;
+    EQ?.symmetry eq (mdenote eq m am e2) (xsdenote eq m am (flatten e2));
+    EQ?.transitivity eq
+      (xsdenote eq m am (flatten e1))
+      (xsdenote eq m am (flatten e2))
+      (mdenote eq m am e2);
+    EQ?.transitivity eq
+      (mdenote eq m am e1)
+      (xsdenote eq m am (flatten e1))
+      (mdenote eq m am e2)
 
 let lemma1(#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (l1 l2 l1' l2':list atom)
     : Lemma (requires xsdenote eq m am l1 `EQ?.eq eq` xsdenote eq m am l2)
