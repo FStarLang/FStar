@@ -1,0 +1,189 @@
+[
+  "§\u0017ñ×ååI†\u0018øÈG4 Æ®",
+  [
+    [
+      "Steel.Heap.join_commutative",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "7293376ca5a6806b841ed16079661032"
+    ],
+    [
+      "Steel.Heap.disjoint_join",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6b2aa536cbcc9bd1f8df401766c137d7"
+    ],
+    [
+      "Steel.Heap.join_associative",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "l_and-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "9d31ab38ef24f8d11f3afbcd695b212b"
+    ],
+    [
+      "Steel.Heap.heap_prop_is_affine",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "397d63777dc10590a922dd20b3571454"
+    ],
+    [
+      "Steel.Heap.pts_to_compatible",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "09aadbd006289979fe667f706dca508b"
+    ],
+    [
+      "Steel.Heap.intro_star",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "e7ed77f57ff311004aa79c363b924604"
+    ],
+    [
+      "Steel.Heap.pure",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Heap.heap_prop_is_affine",
+        "interpretation_Tm_abs_631a29915bf9a085ae2d714058f48fbf"
+      ],
+      0,
+      "3fa03ce61efeba616d101010b913623d"
+    ],
+    [
+      "Steel.Heap.is_frame_preserving",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a9db517f11914540ac1bb8c4c7e304a7"
+    ],
+    [
+      "Steel.Heap.action_framing",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Steel.Heap.action",
+        "equation_Steel.Heap.frame_related_heaps",
+        "equation_Steel.Heap.hheap",
+        "equation_Steel.Heap.is_frame_preserving",
+        "refinement_interpretation_Tm_refine_da7320b2dfec01e1d9eb5c40de6dbb67",
+        "refinement_interpretation_Tm_refine_edbdae9d6b6624a6ec3f6b429364c960"
+      ],
+      0,
+      "9abd73a8aa3bfedcdf602b70a2d553e4"
+    ],
+    [
+      "Steel.Heap.sel_v",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "17355e151fa7aa98aab6f0a15bb231ef"
+    ],
+    [
+      "Steel.Heap.witnessed_ref",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c1fa043552c2da7f7e958f9083710b2a"
+    ],
+    [
+      "Steel.Heap.split_action",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_782bbf7acd60ae0036bd61a1f4d3807b"
+      ],
+      0,
+      "4a558f58a562b3cb321743c232fc1a40"
+    ],
+    [
+      "Steel.Heap.gather_action",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_625413e9a3a548e616103efddf1886c4"
+      ],
+      0,
+      "51f429a77423c31d88dfcae5e36103fd"
+    ],
+    [
+      "Steel.Heap.extend",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "2816a39896a419643fac1d5b50b18f3e"
+    ],
+    [
+      "Steel.Heap.id_elim_star",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6e33a9779557bc1e02c7f22403817b7d"
+    ],
+    [
+      "Steel.Heap.is_frame_monotonic",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "21cfb2af2fcbcae1dbbf261f3b1ebcd4"
+    ]
+  ]
+]

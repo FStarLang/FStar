@@ -1,0 +1,20 @@
+[
+  "¢*AVõÖÂ‹¨UÐ‘8\u0004\u001aå",
+  [
+    [
+      "Steel.Closure.next",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
+        "function_token_typing_Prims.int", "lemma_FStar.Ghost.reveal_hide",
+        "refinement_interpretation_Tm_refine_05deae8075574da77b869b5d53096f10",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "typing_FStar.Ghost.reveal"
+      ],
+      0,
+      "875108fea54c0c5c26855076a4e4817c"
+    ]
+  ]
+]
