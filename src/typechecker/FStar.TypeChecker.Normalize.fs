@@ -2918,10 +2918,10 @@ let rec elim_delayed_subst_term (t:term) : term =
 
     (* Likewise for the annotated sorts of variables *)
     | Tm_bvar bv ->
-      mk (Tm_bvar (elim_bv bv))
+      mk (Tm_bvar ({ bv with sort = S.tun }))
 
     | Tm_name bv ->
-      mk (Tm_name (elim_bv bv))
+      mk (Tm_name ({ bv with sort = S.tun }))
 
     | Tm_abs(bs, t, rc_opt) ->
       let elim_rc rc =
