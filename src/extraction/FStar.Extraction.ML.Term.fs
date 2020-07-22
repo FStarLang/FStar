@@ -1240,6 +1240,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           let t = SS.compress t in
           begin match t.n with
             | Tm_let((false, [lb]), body) when (BU.is_left lb.lbname) ->
+              let m = TcEnv.norm_eff_name (tcenv_of_uenv g) m in
               let ed, qualifiers = must (TypeChecker.Env.effect_decl_opt (tcenv_of_uenv g) m) in
               if not (TcEnv.is_reifiable_effect (tcenv_of_uenv g) ed.mname)
               then term_as_mlexpr g t
