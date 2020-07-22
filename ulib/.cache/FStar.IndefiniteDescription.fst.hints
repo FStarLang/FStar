@@ -12,7 +12,7 @@
         "typing_FStar.IndefiniteDescription.indefinite_description_tot"
       ],
       0,
-      "345f0f5707caf27cea084b5704da4854"
+      "5f8327b8af200f13eda6672da780d064"
     ],
     [
       "FStar.IndefiniteDescription.strong_excluded_middle",
@@ -31,7 +31,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "10f76d42d574f1c07920d5bf0748aa5e"
+      "9786cc518cfb3c3a6d5e5a74efdcc580"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_f3db4b290bcde56fe0046b79b9c3a13f"
       ],
       0,
-      "248cad8ece54cdcc6d8d7a53824a208e"
+      "89fc03e041ef4d82518214960e44bb2b"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle_prop",
@@ -64,7 +64,7 @@
         "refinement_interpretation_Tm_refine_e76bd1e3fcd1369d7232ec3854a8c984"
       ],
       0,
-      "efcc5e23358ac595411c95fbd90912a4"
+      "9266ce82ca23575ba3eaee41d1e78cd6"
     ]
   ]
 ]
