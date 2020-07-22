@@ -46,7 +46,7 @@
     <!-- Path where cached lax files should be written by default -->
     <FSTAR_LAX_CACHE_PATH Condition=" '$(FSTAR_LAX_CACHE_PATH)' == '' ">$(IntermediateOutputPath).cache.lax</FSTAR_LAX_CACHE_PATH>
     <!-- Custom FStar flags used in this project -->
-    <FSTAR_FLAGS>--use_hints --lax --cache_checked_modules --use_extracted_interfaces false --cache_dir $(FSTAR_LAX_CACHE_PATH)</FSTAR_FLAGS>
+    <FSTAR_FLAGS>--use_hints --lax --cache_checked_modules --cache_dir $(FSTAR_LAX_CACHE_PATH)</FSTAR_FLAGS>
   </PropertyGroup>
   <Import Project="$(FSTAR_HOME)\fsharp.extraction.targets" />
   <ItemGroup>
