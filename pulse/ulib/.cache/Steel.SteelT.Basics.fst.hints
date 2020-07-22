@@ -11,7 +11,7 @@
         "equation_Steel.Memory.equiv"
       ],
       0,
-      "17a322b28b317415a8528bbdc5510107"
+      "a70c112255cd4133c196fe9ec7ae61c9"
     ],
     [
       "Steel.SteelT.Basics.h_assoc_l",
@@ -23,7 +23,7 @@
         "equation_Steel.Memory.equiv"
       ],
       0,
-      "03987be328613603bb9fb982118ec15c"
+      "954e5f6d61255431ca134ecdc8a7aebb"
     ],
     [
       "Steel.SteelT.Basics.par'",
@@ -55,7 +55,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "43b2b8c0c6c673dc67482997cab20157"
+      "f69099d828556bd43af5552fec5d374f"
     ],
     [
       "Steel.SteelT.Basics.par",
@@ -97,7 +97,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "654b0bb7b0a159b931c2535cc325edc4"
+      "34de05c9562e90dd0d2fff74dbc394b2"
     ],
     [
       "Steel.SteelT.Basics.drop",
@@ -109,7 +109,7 @@
         "equation_Steel.Memory.equiv"
       ],
       0,
-      "1dd2d9954486b64c6a1507786dc5449e"
+      "753853335aa1823e99b3575bc8d1f3c3"
     ],
     [
       "Steel.SteelT.Basics.drop_r",
@@ -118,7 +118,7 @@
       0,
       [ "@query", "equation_Steel.Effect.Atomic.obs_at_most_one" ],
       0,
-      "24a371acd1d1c12ebefed324b83d4c1c"
+      "2b8d7310a66d0906025c9a6759d28083"
     ],
     [
       "Steel.SteelT.Basics.weaken_pure",
@@ -131,7 +131,7 @@
         "refinement_interpretation_Tm_refine_cc2ee4dde1d04704d6555bd1fa7179a3"
       ],
       0,
-      "fd07a5df3f43abf754c20682a3c0c1a9"
+      "3a33d64212dfe088b35b9f7574484d2c"
     ],
     [
       "Steel.SteelT.Basics.extract_pure",
@@ -143,7 +143,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9e3154f5bf8c2cef24881c74df704b0e"
+      "c1610acd84a94e0278a2a9e695792eb9"
     ]
   ]
 ]
