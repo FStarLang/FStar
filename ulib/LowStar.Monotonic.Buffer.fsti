@@ -1811,10 +1811,11 @@ val msub_non_null (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a r
              (requires (fun h -> U32.v i + U32.v (Ghost.reveal len) <= length b /\ compatible_sub b i (Ghost.reveal len) sub_rel /\ live h b /\ not (g_is_null b)))
              (ensures  (fun h y h' -> h == h' /\ y == mgsub sub_rel b i (Ghost.reveal len)))
 
+module R = FStar.Reflection
 noextract
-let is_non_zero x =
+let is_non_zero (x:R.term) =
   let open FStar.Tactics in
-  match inspect (quote x) with
+  match inspect x with
   | Tv_App f (x, Q_Explicit) ->
       begin match inspect f with
       | Tv_FVar fv ->
@@ -1834,6 +1835,27 @@ let is_non_zero x =
       end
   | _ -> exact (`false)
 
+noextract
+let is_non_zero_ghost (x:R.term) =
+  let open FStar.Tactics in
+  match x with
+  | Tv_App f1 (x, Q_Explicit) ->
+    begin match f1 with
+    | Tv_App f0 (_, Q_Implicit) ->
+      begin match f0 with
+      | Tv_FVar fv ->
+        if inspect_fv fv = ["FStar"; "Ghost"; "hide"]
+        then is_non_zero x
+        else exact (`false)
+      | _ ->
+        exact (`false)
+      end
+    | _ ->
+      exact (`false)
+    end
+  | _ ->
+    exact (`false)
+
 inline_for_extraction noextract
 let msub_generic (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
   (i:U32.t) (len:Ghost.erased U32.t)
@@ -1849,11 +1871,12 @@ let msub_generic (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rr
 
 inline_for_extraction noextract
 let msub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
-  (i:U32.t) (#[is_non_zero i] i_non_zero: bool) (len:Ghost.erased U32.t)
+  (i:U32.t) (#[is_non_zero (quote i)] i_non_zero: bool)
+  (len:Ghost.erased U32.t) (#[is_non_zero_ghost (quote len)] len_non_zero: bool)
   :HST.Stack (mbuffer a rrel sub_rel)
              (requires (fun h ->
                U32.v i + U32.v (Ghost.reveal len) <= length b /\ compatible_sub b i (Ghost.reveal len) sub_rel /\ live h b /\
-               (if i_non_zero then not (g_is_null b) else True)))
+               (if i_non_zero || len_non_zero then not (g_is_null b) else True)))
              (ensures  (fun h y h' -> h == h' /\ y == mgsub sub_rel b i (Ghost.reveal len)))
 
 =

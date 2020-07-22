@@ -532,7 +532,7 @@ val fold_left_buffer:
     (decreases (B.length buf))
 let rec fold_left_buffer #a #b len buf f ib =
   if len = 0ul then ib
-  else (fold_left_buffer (len - 1ul) (B.sub buf 1ul (len - 1ul))
+  else (fold_left_buffer (len - 1ul) (B.sub buf 1ul (len - 1ul) #false)
                          f (f ib (B.index buf 0ul)))
 
 val fold_left:
