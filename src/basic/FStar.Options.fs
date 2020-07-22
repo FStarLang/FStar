@@ -273,7 +273,6 @@ let defaults =
       ("__ml_no_eta_expand_coertions" , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
-      ("use_extracted_interfaces"     , Bool false);
       ("use_nbe"                      , Bool false);
       ("use_nbe_for_extraction"       , Bool false);
       ("trivial_pre_for_unannotated_effectful_fns"
@@ -416,7 +415,6 @@ let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
-let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
 let get_use_nbe_for_extraction  ()      = lookup_opt "use_nbe_for_extraction"                  as_bool
 let get_trivial_pre_for_unannotated_effectful_fns
@@ -697,11 +695,12 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
 
        (noshort,
         "defensive",
-        EnumStr ["no"; "warn"; "fail"],
+        EnumStr ["no"; "warn"; "error"; "abort"],
         "Enable several internal sanity checks, useful to track bugs and report issues.\n\t\t\
          if 'no', no checks are performed\n\t\t\
          if 'warn', checks are performed and raise a warning when they fail\n\t\t\
-         if 'fail', like 'warn', but the compiler aborts instead of issuing a warning\n\t\t\
+         if 'error, like 'warn', but the compiler raises a hard error instead \n\t\t\
+         if 'abort, like 'warn', but the compiler immediately aborts on an error\n\t\t\
          (default 'no')");
 
        ( noshort,
@@ -1273,11 +1272,6 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
          - [@r] makes range [r] fatal.");
 
         ( noshort,
-         "use_extracted_interfaces",
-          BoolStr,
-         "Extract interfaces from the dependencies and use them for verification (default 'false')");
-
-        ( noshort,
          "use_nbe",
           BoolStr,
          "Use normalization by evaluation as the default normalization strategy (default 'false')");
@@ -1644,7 +1638,8 @@ let debug_at_level      modul level = debug_module modul && debug_at_level_no_mo
 
 let profile_group_by_decls       () = get_profile_group_by_decl ()
 let defensive                    () = get_defensive () <> "no"
-let defensive_fail               () = get_defensive () = "fail"
+let defensive_error              () = get_defensive () = "error"
+let defensive_abort              () = get_defensive () = "abort"
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
@@ -1762,7 +1757,6 @@ let use_two_phase_tc             () = get_use_two_phase_tc            ()
                                     && not (lax())
 let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
-let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
 let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
 let trivial_pre_for_unannotated_effectful_fns

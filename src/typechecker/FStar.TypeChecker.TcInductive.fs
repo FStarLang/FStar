@@ -1109,7 +1109,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                 S.Discriminator lid ::
                 (if only_decl then [S.Logic; S.Assumption] else []) @
                 //(if only_decl && (not <| env.is_iface || env.admit) then [S.Assumption] else []) @
-                List.filter (function S.Abstract -> not only_decl | S.Inline_for_extraction | S.NoExtract | S.Private -> true | _ -> false ) iquals
+                List.filter (function S.Inline_for_extraction | S.NoExtract | S.Private -> true | _ -> false ) iquals
             in
 
             (* Type of the discriminator *)
@@ -1150,11 +1150,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                         let arg_exp = S.bv_to_name (fst unrefined_arg_binder) in
                         mk (Tm_match(arg_exp, [U.branch pat_true ; U.branch pat_false])) p
                 in
-                let dd =
-                    if quals |> List.contains S.Abstract
-                    then Delta_abstract (Delta_equational_at_level 1)
-                    else (Delta_equational_at_level 1)
-                in
+                let dd = Delta_equational_at_level 1 in
                 let imp = U.abs binders body None in
                 let lbtyp = if no_decl then t else tun in
                 let lb = U.mk_letbinding
@@ -1213,14 +1209,13 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           let no_decl = false (* Syntax.is_type x.sort *) in
           let quals q =
               if only_decl
-              then S.Assumption::List.filter (function S.Abstract -> false | _ -> true) q
+              then S.Assumption::q
               else q
           in
           let quals =
               let iquals = iquals |> List.filter (function
                   | S.Inline_for_extraction
                   | S.NoExtract
-                  | S.Abstract
                   | S.Private -> true
                   | _ -> false)
               in
@@ -1249,11 +1244,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
               let pat = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, S.bv_to_name projection in
               let body = mk (Tm_match(arg_exp, [U.branch pat])) p in
               let imp = U.abs binders body None in
-              let dd =
-                  if quals |> List.contains S.Abstract
-                  then Delta_abstract (Delta_equational_at_level 1)
-                  else (Delta_equational_at_level 1)
-              in
+              let dd = Delta_equational_at_level 1 in
               let lbtyp = if no_decl then t else tun in
               let lb = {
                   lbname=Inr (S.lid_as_fv field_name dd None);
@@ -1319,12 +1310,6 @@ let mk_data_operations iquals attrs env tcs se =
         in match BU.find_map se.sigquals filter_records with
             | None -> Data_ctor
             | Some q -> q
-    in
-
-    let iquals =
-        if List.contains S.Abstract iquals && not (List.contains S.Private iquals)
-        then S.Private::iquals
-        else iquals
     in
 
     let fields =

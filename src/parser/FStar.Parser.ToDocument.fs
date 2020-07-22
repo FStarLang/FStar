@@ -932,7 +932,6 @@ and p_subEffect lift =
 
 and p_qualifier = function
   | Private -> str "private"
-  | Abstract -> str "abstract"
   | Noeq -> str "noeq"
   | Unopteq -> str "unopteq"
   | Assumption -> str "assume"

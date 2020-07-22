@@ -199,7 +199,6 @@ let qual_to_string = function
   | NoExtract             -> "noextract"
   | Visible_default       -> "visible"
   | Irreducible           -> "irreducible"
-  | Abstract              -> "abstract"
   | Noeq                  -> "noeq"
   | Unopteq               -> "unopteq"
   | Logic                 -> "logic"
@@ -813,10 +812,13 @@ let tag_of_sigelt (se:sigelt) : string =
   | Sig_polymonadic_subcomp _ -> "Sig_polymonadic_subcomp"
   | Sig_fail _             -> "Sig_fail"
 
+(*
+ * AR: 07/19: exports is redundant, keeping it here until vale is fixed to not parse it
+ *)
 let modul_to_string (m:modul) =
   U.format3 "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" (sli m.name)
                                                                      (List.map sigelt_to_string m.declarations |> String.concat "\n")
-                                                                     (List.map sigelt_to_string m.exports |> String.concat "\n")
+                                                                     (List.map sigelt_to_string m.declarations |> String.concat "\n")
 
 
 //let abs_ascription_to_string ascription =
