@@ -2423,6 +2423,7 @@ val blit_non_null (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:srel a)
                                         Seq.slice (as_seq h' dst) (U32.v idx_dst + U32.v len) (length dst) ==
                                         Seq.slice (as_seq h dst) (U32.v idx_dst + U32.v len) (length dst)))
 
+#push-options "--z3rlimit 40 --retry 3"
 inline_for_extraction noextract
 let blit (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:srel a)
   (src:mbuffer a rrel1 rel1)
@@ -2453,6 +2454,7 @@ let blit (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:srel a)
     ()
   else
     blit_non_null src idx_src dst idx_dst len
+#pop-options
 
 // Potentially compiles to memset when t == UInt8.t and memset is UB when the argument is NULL.
 val fill_non_null (#t:Type) (#rrel #rel: srel t)
