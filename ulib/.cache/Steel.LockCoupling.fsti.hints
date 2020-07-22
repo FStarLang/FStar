@@ -1,0 +1,20 @@
+[
+  "1ﬁVù∫l\u0013ˇõ{Ú™Y◊o\f",
+  [
+    [
+      "Steel.LockCoupling.llist_inv",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_390a188116e808b3393da7255d60ce19_1",
+        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
+        "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
+      ],
+      0,
+      "ebe743d7020d5b1c1b77257a0ec77d85"
+    ]
+  ]
+]

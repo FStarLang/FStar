@@ -113,6 +113,39 @@ let trytac_exn (t : tac<'a>) : tac<option<'a>> =
            log ps (fun () -> BU.print1 "trytac_exn error: (%s)" msg);
            Success (None, ps))
 
+let destruct_eq' (typ : typ) : option<(term * term)> =
+    match U.destruct_typ_as_formula typ with
+    | Some (U.BaseConn(l, [_; (e1, None); (e2, None)]))
+      when Ident.lid_equals l PC.eq2_lid
+      ||   Ident.lid_equals l PC.c_eq2_lid
+      ->
+        Some (e1, e2)
+    | Some (U.BaseConn(l, [_; _; (e1, _); (e2, _)]))
+      when Ident.lid_equals l PC.eq3_lid
+      ->
+        Some (e1, e2)
+    | _ ->
+      match U.unb2t typ with
+      | None -> None
+      | Some t ->
+        begin
+        let hd, args = U.head_and_args t in
+        match (SS.compress hd).n, args with
+        | Tm_fvar fv, [(_, Some (Implicit _)); (e1, None); (e2, None)] when S.fv_eq_lid fv PC.op_Eq ->
+            Some (e1, e2)
+        | _ -> None
+        end
+
+let destruct_eq (typ : typ) : option<(term * term)> =
+    match destruct_eq' typ with
+    | Some t -> Some t
+    | None ->
+        // Retry for a squashed one
+        begin match U.un_squash typ with
+        | Some typ -> destruct_eq' typ
+        | None -> None
+        end
+
 let __do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
     let _ = if Env.debug env (Options.Other "1346") then
                   BU.print2 "%%%%%%%%do_unify %s =? %s\n"
@@ -154,17 +187,40 @@ let do_unify env t1 t2 : tac<bool> =
     ret r))
 
 (* Does t1 match t2? That is, do they unify without instantiating/changing t1? *)
-let do_match env t1 t2 : tac<bool> =
+let do_match (env:Env.env) (t1:term) (t2:term) : tac<bool> =
+    bind (mk_tac (fun ps -> let tx = UF.new_transaction () in
+                            Success (tx, ps))) (fun tx ->
     let uvs1 = SF.uvars_uncached t1 in
     bind (do_unify env t1 t2) (fun r ->
     if r then begin
         let uvs2 = SF.uvars_uncached t1 in
         if not (set_eq uvs1 uvs2)
-        then ret false
+        then (UF.rollback tx; ret false)
         else ret true
     end
     else ret false
-    )
+    ))
+
+(* This is a bandaid. It's similar to do_match but checks that the
+LHS of the equality in [t1] is not instantiated, but the RHS might be.
+It is a pain to expose the whole logic to tactics, so we just do it
+here for now. *)
+let do_match_on_lhs (env:Env.env) (t1:term) (t2:term) : tac<bool> =
+    bind (mk_tac (fun ps -> let tx = UF.new_transaction () in
+                            Success (tx, ps))) (fun tx ->
+    match destruct_eq t1 with
+    | None -> fail "do_match_on_lhs: not an eq"
+    | Some (lhs, _) ->
+    let uvs1 = SF.uvars_uncached lhs in
+    bind (do_unify env t1 t2) (fun r ->
+    if r then begin
+        let uvs2 = SF.uvars_uncached lhs in
+        if not (set_eq uvs1 uvs2)
+        then (UF.rollback tx; ret false)
+        else ret true
+    end
+    else ret false
+    ))
 
 (*
    set_solution:
@@ -699,7 +755,8 @@ let rec fold_left (f : ('a -> 'b -> tac<'b>)) (e : 'b) (xs : list<'a>) : tac<'b>
     | [] -> ret e
     | x::xs -> bind (f x e) (fun e' -> fold_left f e' xs)
 
-let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
+let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
+                  (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     bind get (fun ps ->
     mlog (fun () -> BU.print1 "apply_lemma: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
     let is_unit_t t = match (SS.compress t).n with
@@ -732,7 +789,12 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
     let pre  = SS.subst subst pre in
     let post = SS.subst subst post in
     let post_u = env.universe_of env post in
-    bind (do_unify env (U.mk_squash post_u post) (goal_type goal)) (fun b ->
+    let cmp_func =
+        if noinst then do_match
+        else if noinst_lhs then do_match_on_lhs
+        else do_unify
+    in
+    bind (cmp_func env (goal_type goal) (U.mk_squash post_u post)) (fun b ->
     if not b
     then begin
         let post, goalt = TypeChecker.Err.print_discrepancy (tts env)
@@ -798,39 +860,6 @@ let apply_lemma (tm:term) : tac<unit> = wrap_err "apply_lemma" <| focus (
               else ret ()) (fun _ ->
         add_goals sub_goals))))
     )))))))
-
-let destruct_eq' (typ : typ) : option<(term * term)> =
-    match U.destruct_typ_as_formula typ with
-    | Some (U.BaseConn(l, [_; (e1, None); (e2, None)]))
-      when Ident.lid_equals l PC.eq2_lid
-      ||   Ident.lid_equals l PC.c_eq2_lid
-      ->
-        Some (e1, e2)
-    | Some (U.BaseConn(l, [_; _; (e1, _); (e2, _)]))
-      when Ident.lid_equals l PC.eq3_lid
-      ->
-        Some (e1, e2)
-    | _ ->
-      match U.unb2t typ with
-      | None -> None
-      | Some t ->
-        begin
-        let hd, args = U.head_and_args t in
-        match (SS.compress hd).n, args with
-        | Tm_fvar fv, [(_, Some (Implicit _)); (e1, None); (e2, None)] when S.fv_eq_lid fv PC.op_Eq ->
-            Some (e1, e2)
-        | _ -> None
-        end
-
-let destruct_eq (typ : typ) : option<(term * term)> =
-    match destruct_eq' typ with
-    | Some t -> Some t
-    | None ->
-        // Retry for a squashed one
-        begin match U.un_squash typ with
-        | Some typ -> destruct_eq' typ
-        | None -> None
-        end
 
 let split_env (bvar : bv) (e : env) : option<(env * bv * list<bv>)> =
     let rec aux e =
@@ -1198,6 +1227,14 @@ let tac_and (t1 : tac<bool>) (t2 : tac<bool>) : tac<bool> =
     | Some false -> failwith "impossible"
     | None -> ret false)
 
+
+let match_env (e:env) (t1 : term) (t2 : term) : tac<bool> = wrap_err "match_env" <|
+    bind get (fun ps ->
+    bind (__tc e t1) (fun (t1, ty1, g1) ->
+    bind (__tc e t2) (fun (t2, ty2, g2) ->
+    bind (proc_guard "match_env g1" e g1) (fun () ->
+    bind (proc_guard "match_env g2" e g2) (fun () ->
+    tac_and (do_match e ty1 ty2) (do_match e t1 t2))))))
 
 let unify_env (e:env) (t1 : term) (t2 : term) : tac<bool> = wrap_err "unify_env" <|
     bind get (fun ps ->
@@ -1631,6 +1668,7 @@ let goal_of_implicit env (i:Env.implicit) : goal =
   mk_goal ({env with gamma=i.imp_uvar.ctx_uvar_gamma}) i.imp_uvar (FStar.Options.peek()) false i.imp_reason
 
 let proofstate_of_all_implicits rng env imps =
+    let env = tac_env env in
     let goals = List.map (goal_of_implicit env) imps in
     let w = goal_witness (List.hd goals) in
     let ps = {

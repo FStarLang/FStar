@@ -127,7 +127,6 @@ type qualifier =
   | Unfold_for_unification_and_vcgen
   | Visible_default
   | Irreducible
-  | Abstract
   | Inline_for_extraction
   | NoExtract
   | Noeq

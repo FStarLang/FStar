@@ -49,8 +49,8 @@
   <Import Project="$(FSTAR_HOME)\fsharp.extraction.targets" />
   <ItemGroup>
     <None Include="App.config" />
-    <FStarSourceFile Include="BitVectorEx.fst" />
-    <FStarSourceFile Include="TestFSharp2.fst" />
+    <Compile Include="BitVectorEx.fst" />
+    <Compile Include="TestFSharp2.fst" />
     <None Include="TestFSharp2.fsx" />
     <Content Include="packages.config" />
   </ItemGroup>

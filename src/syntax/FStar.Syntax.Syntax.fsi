@@ -308,7 +308,6 @@ type qualifier =
   | Unfold_for_unification_and_vcgen       //a definition that *should* always be unfolded by the normalizer
   | Visible_default                        //a definition that may be unfolded by the normalizer, but only if necessary (default)
   | Irreducible                            //a definition that can never be unfolded by the normalizer
-  | Abstract                               //a symbol whose definition is only visible within the defining module
   | Inline_for_extraction                  //a symbol whose definition must be unfolded when compiling the program
   | NoExtract                              // a definition whose contents won't be extracted (currently, by KreMLin only)
   | Noeq                                   //for this type, don't generate HasEq
@@ -513,7 +512,6 @@ type sigelts = list<sigelt>
 type modul = {
   name: lident;
   declarations: sigelts;
-  exports: sigelts;
   is_interface:bool;
 }
 val mod_name: modul -> lident

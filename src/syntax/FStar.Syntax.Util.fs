@@ -1228,6 +1228,16 @@ let lex_pair = fvar PC.lexcons_lid delta_constant (Some Data_ctor) //NS delta: o
 let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
 let t_haseq   = fvar PC.haseq_lid delta_constant None //NS delta: wrong Delta_abstract (Delta_constant_at_level 0)?
 
+let decidable_eq = fvar_const PC.op_Eq
+let mk_decidable_eq t e1 e2 = 
+  mk (Tm_app (decidable_eq, [iarg t; as_arg e1; as_arg e2])) (Range.union_ranges e1.pos e2.pos)
+let b_and = fvar_const PC.op_And
+let mk_and e1 e2 =
+  mk (Tm_app (b_and, [as_arg e1; as_arg e2])) (Range.union_ranges e1.pos e2.pos)
+let mk_and_l l = match l with
+    | [] -> exp_true_bool
+    | hd::tl -> List.fold_left mk_and hd tl
+
 let mk_residual_comp l t f = {
     residual_effect=l;
     residual_typ=t;

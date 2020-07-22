@@ -47,7 +47,7 @@
   </PropertyGroup>
   <Import Project="$(FSTAR_HOME)\fsharp.extraction.targets" />
   <ItemGroup>
-    <FStarSourceFile Include="..\Lens.fst" />
+    <Compile Include="..\Lens.fst" Link="Lens.fst" />
     <None Include="Lens.repl.fsx" />
     <Content Include="packages.config" />
   </ItemGroup>

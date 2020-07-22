@@ -57,12 +57,14 @@ any type. This will fail at tactic runtime if the quoted term does not
 typecheck to type [a]. *)
 assume val unquote : #a:Type -> term -> Tac a
 
-(** [catch t] will attempt to run [t] and allow to recover from a failure.
-If [t] succeeds with return value [a], [catch t] returns [Inr a].
-On failure, it returns [Inl msg], where [msg] is the error [t]
-raised. See also [or_else].  *)
+(** [catch t] will attempt to run [t] and allow to recover from a
+failure. If [t] succeeds with return value [a], [catch t] returns [Inr
+a]. On failure, it returns [Inl msg], where [msg] is the error [t]
+raised, and all unionfind effects are reverted. See also [recover] and
+[or_else]. *)
 assume val catch : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 
+(** Like [catch t], but will not discard unionfind effects on failure. *)
 assume val recover : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 
 (** [trivial] will discharge the goal if it's exactly [True] after
@@ -147,22 +149,36 @@ with all this. *)
 assume val t_exact : bool -> bool -> term -> Tac unit
 
 (** Inner primitive for [apply], takes a boolean specifying whether
-to not ask for implicits that appear free in posterior goals. Example:
-when the boolean is true, applying transitivity to
-[|- a = c] will give two goals, [|- a = ?u] and [|- ?u = c] without
-asking to instantiate [?u] since it will most likely be constrained
-later by solving these goals. In any case, we track [?u] and will fail
-if it's not solved later.
+to not ask for implicits that appear free in posterior goals, and a
+boolean specifying whether it's forbidden to instantiate uvars in the
+goal.
 
-You probably want [apply] from FStar.Tactics.Derived.
+Example: when [uopt] is true, applying transitivity to [|- a = c]
+will give two goals, [|- a = ?u] and [|- ?u = c] without asking to
+instantiate [?u] since it will most likely be constrained later by
+solving these goals. In any case, we track [?u] and will fail if it's
+not solved later.
+
+Example: when [noinst] is true, applying a function returning
+[1 = 2] will fail on a goal of the shape [1 = ?u] since it must
+instantiate [?u]. We use this in typeclass resolution.
+
+You may want [apply] from FStar.Tactics.Derived, or one of
+the other user facing variants.
 *)
-assume val t_apply : bool -> bool -> term -> Tac unit
+assume val t_apply : uopt:bool -> noinst:bool -> term -> Tac unit
 
-(** [apply_lemma l] will solve a goal of type [squash phi] when [l] is a Lemma
-ensuring [phi]. The arguments to [l] and its requires clause are introduced as new goals.
-As a small optimization, [unit] arguments are discharged by the engine. *)
+(** [t_apply_lemma ni nilhs l] will solve a goal of type [squash phi]
+when [l] is a Lemma ensuring [phi]. The arguments to [l] and its
+requires clause are introduced as new goals. As a small optimization,
+[unit] arguments are discharged by the engine. For the meanining of
+the [noinst] boolean arg see [t_apply], briefly, it does not allow to
+instantiate uvars in the goal. The [noinst_lhs] flag is similar, it
+forbids instantiating uvars *but only on the LHS of the goal*, provided
+the goal is an equality. It is meant to be useful for rewrite-goals, of
+the shape [X = ?u]. Setting [noinst] means [noinst_lhs] is ignored. *)
+assume val t_apply_lemma : noinst:bool -> noinst_lhs:bool -> term -> Tac unit
 // TODO: do the unit thing too for [apply].
-assume val apply_lemma : term -> Tac unit
 
 (** [print str] has no effect on the proofstate, but will have the side effect
 of printing [str] on the compiler's standard output. *)
@@ -249,7 +265,13 @@ assume val uvar_env : env -> option typ -> Tac term
 whether unification was possible. When the tactic returns true, the
 terms have been unified, instantiating uvars as needed. When false,
 unification was not possible and no change to uvars occurs. *)
-assume val unify_env : env -> term -> term -> Tac bool
+assume val unify_env : env -> t1:term -> t2:term -> Tac bool
+
+(** Check if [t1] matches [t2], i.e., whether [t2] can have its uvars
+instantiated into unifying with [t1]. When the tactic returns true, the
+terms have been unified, instantiating uvars as needed. When false,
+matching was not possible and no change to uvars occurs. *)
+assume val match_env : env -> t1:term -> t2:term -> Tac bool
 
 (** Launches an external process [prog] with arguments [args] and input
 [input] and returns the output. For security reasons, this can only be
