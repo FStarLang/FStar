@@ -6,7 +6,7 @@ type 'p spinoff = 'p
 
 let id : 'a . 'a -> 'a = fun x -> x
 type trivial_pure_post = unit
-type ambient = unit
+type ('uuuuuu57, 'uuuuuu58) ambient = unit
 
 type st_pre_h = unit
 type st_post_h' = unit
@@ -59,7 +59,7 @@ type all_ite_wp = unit
 type all_stronger = unit
 type all_close_wp = unit
 type all_trivial = unit
-type inversion = unit
+type 'uuuuuu858 inversion = unit
 
 
 type ('a, 'b) either =

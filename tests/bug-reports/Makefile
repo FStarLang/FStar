@@ -101,7 +101,7 @@ SHOULD_NOT_VERIFY_NOT_WORKING=Bug186.fst Bug397b.fst
 # These will be checked as part of the F* regressions.
 SHOULD_EXTRACT_CLOSED=Bug086.fst Bug314.fst Bug540.fst Bug541.fst Bug589.fst \
 	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst \
-	Bug2058.fst RemoveUnusedTypars.B.fst
+	Bug2058.fst RemoveUnusedTypars.B.fst RemoveUnusedTyparsIFace.B.fst
 #ExtractionBug03.fst
 
 # Bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
