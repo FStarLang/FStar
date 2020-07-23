@@ -6,6 +6,10 @@ open Steel.Memory
 
 let atom : eqtype = int
 
+let rec atoms_to_string (l:list atom) = match l with
+  | [] -> ""
+  | hd::tl -> string_of_int hd ^ " " ^ atoms_to_string tl
+
 type exp : Type =
   | Unit : exp
   | Mult : exp -> exp -> exp
@@ -128,7 +132,7 @@ let rec equivalent_lists' (n:nat) (l1 l2 l1_del l2_del:list atom) (am:amap term)
       if is_uvar (select hd am) then (
         // -1 ensures that it's not any existing atom,
         // hence it's the default value in the amap: emp
-        ((-1)::l1_del, hd::l2_del))
+        (l1_del, l2_del `List.Tot.Base.append` [hd]))
       else (l1_del, l2_del)
     | _ -> (l1_del, l2_del)
     end
@@ -234,10 +238,285 @@ let monoid_reflect (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (e1 e2:exp)
       (xsdenote eq m am (flatten e1))
       (mdenote eq m am e2)
 
-let lemma1(#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (l1 l2 l1' l2':list atom)
-    : Lemma (requires xsdenote eq m am l1 `EQ?.eq eq` xsdenote eq m am l2)
+// Here we sort the variable numbers
+
+let permute = list atom -> list atom
+let sort : permute = List.Tot.Base.sortWith #int (List.Tot.Base.compare_of_bool (<))
+
+#push-options "--fuel 1 --ifuel 1"
+
+let lemma_xsdenote_aux (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (hd:atom) (tl:list atom)
+  : Lemma (xsdenote eq m am (hd::tl) `EQ?.eq eq`
+         (CM?.mult m (select hd am) (xsdenote eq m am tl)))
+  = match tl with
+    | [] ->
+      assert (xsdenote eq m am (hd::tl) == select hd am);
+      CM?.identity m (select hd am);
+      EQ?.symmetry eq (CM?.unit m `CM?.mult m` select hd am) (select hd am);
+      CM?.commutativity m (CM?.unit m) (select hd am);
+      EQ?.transitivity eq
+        (xsdenote eq m am (hd::tl))
+        (CM?.unit m `CM?.mult m` select hd am)
+        (CM?.mult m (select hd am) (xsdenote eq m am tl))
+    | _ -> EQ?.reflexivity eq (xsdenote eq m am (hd::tl))
+
+let rec partition_equiv (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (pivot:atom) (q:list atom)
+  : Lemma
+    (let open FStar.List.Tot.Base in
+     let hi, lo = partition (bool_of_compare (compare_of_bool (<)) pivot) q in
+     EQ?.eq eq
+      (xsdenote eq m am hi `CM?.mult m` xsdenote eq m am lo)
+      (xsdenote eq m am q))
+   = let open FStar.List.Tot.Base in
+     let f = bool_of_compare (compare_of_bool (<)) pivot in
+     let hi, lo = partition f q in
+     match q with
+     | [] -> CM?.identity m (xsdenote eq m am hi)
+     | hd::tl ->
+         let l1, l2 = partition f tl in
+         partition_equiv eq m am pivot tl;
+         assert (EQ?.eq eq
+           (xsdenote eq m am l1 `CM?.mult m` xsdenote eq m am l2)
+           (xsdenote eq m am tl));
+
+         EQ?.reflexivity eq (xsdenote eq m am l1);
+         EQ?.reflexivity eq (xsdenote eq m am l2);
+         EQ?.reflexivity eq (xsdenote eq m am hi);
+         EQ?.reflexivity eq (xsdenote eq m am lo);
+
+
+         if f hd then begin
+           assert (hi == hd::l1 /\ lo == l2);
+           lemma_xsdenote_aux eq m am hd l1;
+           CM?.congruence m
+             (xsdenote eq m am hi)
+             (xsdenote eq m am lo)
+             (select hd am `CM?.mult m` xsdenote eq m am l1)
+             (xsdenote eq m am l2);
+           CM?.associativity m
+             (select hd am)
+             (xsdenote eq m am l1)
+             (xsdenote eq m am l2);
+           EQ?.transitivity eq
+             (xsdenote eq m am hi `CM?.mult m` xsdenote eq m am lo)
+             ((select hd am `CM?.mult m` xsdenote eq m am l1) `CM?.mult m` xsdenote eq m am l2)
+             (select hd am `CM?.mult m` (xsdenote eq m am l1 `CM?.mult m` xsdenote eq m am l2));
+
+           EQ?.reflexivity eq (select hd am);
+           CM?.congruence m
+             (select hd am)
+             (xsdenote eq m am l1 `CM?.mult m` xsdenote eq m am l2)
+             (select hd am)
+             (xsdenote eq m am tl);
+           EQ?.transitivity eq
+             (xsdenote eq m am hi `CM?.mult m` xsdenote eq m am lo)
+             (select hd am `CM?.mult m` (xsdenote eq m am l1 `CM?.mult m` xsdenote eq m am l2))
+             (select hd am `CM?.mult m` xsdenote eq m am tl);
+
+           lemma_xsdenote_aux eq m am hd tl;
+           EQ?.symmetry eq
+             (xsdenote eq m am (hd::tl))
+             (select hd am `CM?.mult m` xsdenote eq m am tl);
+           EQ?.transitivity eq
+             (xsdenote eq m am hi `CM?.mult m` xsdenote eq m am lo)
+             (select hd am `CM?.mult m` xsdenote eq m am tl)
+             (xsdenote eq m am (hd::tl))
+
+         end else begin
+           assert (hi == l1 /\ lo == hd::l2);
+           lemma_xsdenote_aux eq m am hd l2;
+           CM?.congruence m
+             (xsdenote eq m am hi)
+             (xsdenote eq m am lo)
+             (xsdenote eq m am l1)
+             (select hd am `CM?.mult m` xsdenote eq m am l2);
+           CM?.commutativity m
+             (xsdenote eq m am l1)
+             (select hd am `CM?.mult m` xsdenote eq m am l2);
+           EQ?.transitivity eq
+             (xsdenote eq m am hi `CM?.mult m` xsdenote eq m am lo)
+             (xsdenote eq m am l1 `CM?.mult m` (select hd am `CM?.mult m` xsdenote eq m am l2))
+             ((select hd am `CM?.mult m` xsdenote eq m am l2) `CM?.mult m` xsdenote eq m am l1);
+
+           CM?.associativity m
+             (select hd am)
+             (xsdenote eq m am l2)
+             (xsdenote eq m am l1);
+           EQ?.transitivity eq
+             (xsdenote eq m am hi `CM?.mult m` xsdenote eq m am lo)
+             ((select hd am `CM?.mult m` xsdenote eq m am l2) `CM?.mult m` xsdenote eq m am l1)
+             (select hd am `CM?.mult m` (xsdenote eq m am l2 `CM?.mult m` xsdenote eq m am l1));
+
+           CM?.commutativity m (xsdenote eq m am l2) (xsdenote eq m am l1);
+           EQ?.reflexivity eq (select hd am);
+           CM?.congruence m
+             (select hd am)
+             (xsdenote eq m am l2 `CM?.mult m` xsdenote eq m am l1)
+             (select hd am)
+             (xsdenote eq m am l1 `CM?.mult m` xsdenote eq m am l2);
+           EQ?.transitivity eq
+             (xsdenote eq m am hi `CM?.mult m` xsdenote eq m am lo)
+             (select hd am `CM?.mult m` (xsdenote eq m am l2 `CM?.mult m` xsdenote eq m am l1))
+             (select hd am `CM?.mult m` (xsdenote eq m am l1 `CM?.mult m` xsdenote eq m am l2));
+
+           CM?.congruence m
+             (select hd am)
+             (xsdenote eq m am l1 `CM?.mult m` xsdenote eq m am l2)
+             (select hd am)
+             (xsdenote eq m am tl);
+           EQ?.transitivity eq
+             (xsdenote eq m am hi `CM?.mult m` xsdenote eq m am lo)
+             (select hd am `CM?.mult m` (xsdenote eq m am l1 `CM?.mult m` xsdenote eq m am l2))
+             (select hd am `CM?.mult m` xsdenote eq m am tl);
+
+           lemma_xsdenote_aux eq m am hd tl;
+           EQ?.symmetry eq
+             (xsdenote eq m am (hd::tl))
+             (select hd am `CM?.mult m` xsdenote eq m am tl);
+           EQ?.transitivity eq
+             (xsdenote eq m am hi `CM?.mult m` xsdenote eq m am lo)
+             (select hd am `CM?.mult m` xsdenote eq m am tl)
+             (xsdenote eq m am (hd::tl))
+         end
+
+let rec sort_correct_aux (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (xs:list atom)
+  : Lemma (requires True)
+          (ensures xsdenote eq m am xs `EQ?.eq eq` xsdenote eq m am (sort xs))
+          (decreases (FStar.List.Tot.Base.length xs))
+  = match xs with
+  | [] -> EQ?.reflexivity eq (xsdenote eq m am [])
+  | pivot::q ->
+      let open FStar.List.Tot.Base in
+      let f:int -> int -> int = compare_of_bool (<) in
+      let hi, lo = partition (bool_of_compare f pivot) q in
+      flatten_correct_aux eq m am (sort lo) (pivot::sort hi);
+      assert (xsdenote eq m am (sort xs) `EQ?.eq eq`
+        CM?.mult m (xsdenote eq m am (sort lo))
+                   (xsdenote eq m am (pivot::sort hi)));
+
+      lemma_xsdenote_aux eq m am pivot (sort hi);
+
+      EQ?.reflexivity eq (xsdenote eq m am (sort lo));
+      CM?.congruence m
+        (xsdenote eq m am (sort lo))
+        (xsdenote eq m am (pivot::sort hi))
+        (xsdenote eq m am (sort lo))
+        (select pivot am `CM?.mult m` xsdenote eq m am (sort hi));
+      EQ?.transitivity eq
+        (xsdenote eq m am (sort xs))
+        (xsdenote eq m am (sort lo) `CM?.mult m` xsdenote eq m am (pivot::sort hi))
+        (xsdenote eq m am (sort lo) `CM?.mult m` (select pivot am `CM?.mult m` xsdenote eq m am (sort hi)));
+      assert (EQ?.eq eq
+        (xsdenote eq m am (sort xs))
+        (xsdenote eq m am (sort lo) `CM?.mult m` (select pivot am `CM?.mult m` xsdenote eq m am (sort hi))));
+
+      CM?.commutativity m
+        (xsdenote eq m am (sort lo))
+        (select pivot am `CM?.mult m` xsdenote eq m am (sort hi));
+      CM?.associativity m
+        (select pivot am)
+        (xsdenote eq m am (sort hi))
+        (xsdenote eq m am (sort lo));
+      EQ?.transitivity eq
+         (xsdenote eq m am (sort lo) `CM?.mult m` (select pivot am `CM?.mult m` xsdenote eq m am (sort hi)))
+        ((select pivot am `CM?.mult m` xsdenote eq m am (sort hi)) `CM?.mult m` xsdenote eq m am (sort lo))
+        (select pivot am `CM?.mult m` (xsdenote eq m am (sort hi) `CM?.mult m` xsdenote eq m am (sort lo)));
+      EQ?.transitivity eq
+         (xsdenote eq m am (sort xs))
+         (xsdenote eq m am (sort lo) `CM?.mult m` (select pivot am `CM?.mult m` xsdenote eq m am (sort hi)))
+        (select pivot am `CM?.mult m` (xsdenote eq m am (sort hi) `CM?.mult m` xsdenote eq m am (sort lo)));
+      assert (EQ?.eq eq
+        (xsdenote eq m am (sort xs))
+        (select pivot am `CM?.mult m` (xsdenote eq m am (sort hi) `CM?.mult m` xsdenote eq m am (sort lo))));
+
+
+      partition_length (bool_of_compare f pivot) q;
+      sort_correct_aux eq m am hi;
+      sort_correct_aux eq m am lo;
+      EQ?.symmetry eq (xsdenote eq m am lo) (xsdenote eq m am (sort lo));
+      EQ?.symmetry eq (xsdenote eq m am hi) (xsdenote eq m am (sort hi));
+      CM?.congruence m
+        (xsdenote eq m am (sort hi))
+        (xsdenote eq m am (sort lo))
+        (xsdenote eq m am hi)
+        (xsdenote eq m am lo);
+      assert (EQ?.eq eq
+        (xsdenote eq m am (sort hi) `CM?.mult m` xsdenote eq m am (sort lo))
+        (xsdenote eq m am hi `CM?.mult m` xsdenote eq m am lo));
+
+      EQ?.reflexivity eq (select pivot am);
+      CM?.congruence m
+        (select pivot am)
+        (xsdenote eq m am (sort hi) `CM?.mult m` xsdenote eq m am (sort lo))
+        (select pivot am)
+        (xsdenote eq m am hi `CM?.mult m` xsdenote eq m am lo);
+      EQ?.transitivity eq
+        (xsdenote eq m am (sort xs))
+        (select pivot am `CM?.mult m` (xsdenote eq m am (sort hi) `CM?.mult m` xsdenote eq m am (sort lo)))
+        (select pivot am `CM?.mult m` (xsdenote eq m am hi `CM?.mult m` xsdenote eq m am lo));
+      assert (EQ?.eq eq
+        (xsdenote eq m am (sort xs))
+        (select pivot am `CM?.mult m` (xsdenote eq m am hi `CM?.mult m` xsdenote eq m am lo)));
+
+      partition_equiv eq m am pivot q;
+      CM?.congruence m
+        (select pivot am)
+        (xsdenote eq m am hi `CM?.mult m` xsdenote eq m am lo)
+        (select pivot am)
+        (xsdenote eq m am q);
+      EQ?.transitivity eq
+        (xsdenote eq m am (sort xs))
+        (select pivot am `CM?.mult m` (xsdenote eq m am hi `CM?.mult m` xsdenote eq m am lo))
+        (select pivot am `CM?.mult m` (xsdenote eq m am q));
+      assert (EQ?.eq eq
+        (xsdenote eq m am (sort xs))
+        (select pivot am `CM?.mult m` (xsdenote eq m am q)));
+
+      lemma_xsdenote_aux eq m am pivot q;
+      EQ?.symmetry eq
+        (xsdenote eq m am (pivot::q))
+        (select pivot am `CM?.mult m` (xsdenote eq m am q));
+      EQ?.transitivity eq
+        (xsdenote eq m am (sort xs))
+        (select pivot am `CM?.mult m` (xsdenote eq m am q))
+        (xsdenote eq m am xs);
+      EQ?.symmetry eq (xsdenote eq m am (sort xs)) (xsdenote eq m am xs)
+
+#pop-options
+
+#push-options "--fuel 0 --ifuel 0"
+
+
+let equivalent_sorted (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (l1 l2 l1' l2':list atom)
+    : Lemma (requires
+              sort l1 == sort l1' /\
+              sort l2 == sort l2' /\
+              xsdenote eq m am l1 `EQ?.eq eq` xsdenote eq m am l2)
            (ensures xsdenote eq m am l1' `EQ?.eq eq` xsdenote eq m am l2')
-  = admit()
+  = sort_correct_aux eq m am l1';
+    sort_correct_aux eq m am l1;
+    EQ?.symmetry eq (xsdenote eq m am l1) (xsdenote eq m am (sort l1));
+    EQ?.transitivity eq
+      (xsdenote eq m am l1')
+      (xsdenote eq m am (sort l1'))
+      (xsdenote eq m am l1);
+    EQ?.transitivity eq
+      (xsdenote eq m am l1')
+      (xsdenote eq m am l1)
+      (xsdenote eq m am l2);
+    sort_correct_aux eq m am l2;
+    EQ?.transitivity eq
+      (xsdenote eq m am l1')
+      (xsdenote eq m am l2)
+      (xsdenote eq m am (sort l2));
+    sort_correct_aux eq m am l2';
+    EQ?.symmetry eq (xsdenote eq m am l2') (xsdenote eq m am (sort l2'));
+    EQ?.transitivity eq
+      (xsdenote eq m am l1')
+      (xsdenote eq m am (sort l2))
+      (xsdenote eq m am l2')
+
+#pop-options
 
 (* Finds the position of first occurrence of x in xs.
    This is now specialized to terms and their funny term_eq. *)
@@ -279,32 +558,6 @@ let reification (eq: term) (m: term) (ts:list term) (am:amap term) (t:term) :
   let t    = norm_term [iota; zeta] t in
   reification_aux ts am mult unit t
 
-
-// let rec reification_aux (mult unit t:term) (am:amap) : Tac (exp * list term * amap) =
-//   let hd, tl = collect_app_ref t in
-//   match inspect hd, List.Tot.Base.list_unref tl with
-//   | Tv_FVar fv, [(t1, Q_Explicit) ; (t2, Q_Explicit)] ->
-//     if term_eq (pack (Tv_FVar fv)) mult
-//     then (let (e1, ts1, am) = reification_aux mult unit t1 am in
-//           let (e2, ts2, am) = reification_aux mult unit t2 am in
-//           (Mult e1 e2, ts1 `List.Tot.append` ts2, am))
-//     else Atom t, [t], update t (unquote t) am
-//   | _, _ ->
-//     if term_eq t unit
-//     // Do not add emps to the list of slprops
-//     then (Unit, [], am)
-//     else Atom t, [t], update t (unquote t) am
-
-
-// let reification (eq: term) (m: term) (am:amap) (t:term) :
-//     Tac (exp * list term * amap) =
-
-//   let mult = norm_term [iota; zeta; delta] (`CM?.mult (`#m)) in
-//   let unit = norm_term [iota; zeta; delta] (`CM?.unit (`#m)) in
-//   let t    = norm_term [iota; zeta] t in
-//   reification_aux mult unit t am
-
-
 let rec convert_map (m : list (atom * term)) : term =
   match m with
   | [] -> `[]
@@ -334,33 +587,33 @@ let rec quote_atoms (l:list atom) = match l with
   | hd::tl -> let nt = pack_ln (Tv_Const (C_Int hd)) in
               (`Cons (`#nt) (`#(quote_atoms tl)))
 
-// let rec atoms_to_string (l:list atom) = match l with
-//   | [] -> ""
-//   | hd::tl -> string_of_int hd ^ " " ^ atoms_to_string
-
 let canon_l_r (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   let m_unit = norm_term [iota; zeta; delta](`CM?.unit (`#m)) in
   let am = const m_unit in (* empty map *)
-  let (r1, ts, am) = reification eq m [] am lhs in
-  let (r2,  _, am) = reification eq m ts am rhs in
+  let (r1_raw, ts, am) = reification eq m [] am lhs in
+  let (r2_raw,  _, am) = reification eq m ts am rhs in
 
-  let l1, l2 = equivalent_lists (flatten r1) (flatten r2) am in
+  let l1_raw, l2_raw = equivalent_lists (flatten r1_raw) (flatten r2_raw) am in
+
   let am = convert_am am in
-  let r1 = quote_exp r1 in
-  let r2 = quote_exp r2 in
-  let l1 = quote_atoms l1 in
-  let l2 = quote_atoms l2 in
+  let r1 = quote_exp r1_raw in
+  let r2 = quote_exp r2_raw in
+  let l1 = quote_atoms l1_raw in
+  let l2 = quote_atoms l2_raw in
   change_sq (`(mdenote (`#eq) (`#m) (`#am) (`#r1)
                  `EQ?.eq (`#eq)`
                mdenote (`#eq) (`#m) (`#am) (`#r2)));
 
   apply (`monoid_reflect );
 
-  apply_lemma (`lemma1 (`#eq) (`#m) (`#am) (`#l1) (`#l2));
+
+  apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#am) (`#l1) (`#l2));
   or_else (fun _ ->
     norm [primops; iota; zeta; delta_only
       [`%xsdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
-        `%flatten;
+        `%flatten; `%sort;
+        `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
+        `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
         `%fst; `%__proj__Mktuple2__item___1;
         `%snd; `%__proj__Mktuple2__item___2;
         `%__proj__CM__item__unit;
@@ -368,6 +621,15 @@ let canon_l_r (eq: term) (m: term) (lhs rhs:term) : Tac unit =
         `%Steel.Memory.Tactics.rm
 
         ]];
+
+    split();
+    split();
+    // equivalent_lists should have built valid permutations.
+    // If that's not the case, it is a bug in equivalent_lists
+    or_else trefl (fun _ -> fail "equivalent_lists did not build a valid permutation");
+    or_else trefl (fun _ -> fail "equivalent_lists did not build a valid permutation");
+
+
 
     apply_lemma (`(EQ?.reflexivity (`#eq)))
   )
@@ -400,9 +662,6 @@ let canon_monoid (eq:term) (m:term) : Tac unit =
      )
    | _ -> fail "Goal should be squash applied to a binary relation")
 
-#set-options "--print_implicits"
-
-
 (* Try to integrate it into larger tactic *)
 
 open Steel.FramingEffect
@@ -420,7 +679,6 @@ let rec slterm_nbr_uvars (t:term) : Tac int =
       slterm_nbr_uvars hd + fold_left (fun n (x, _) -> n + slterm_nbr_uvars x) 0 args
     else 0
   | Tv_Abs _ t -> slterm_nbr_uvars t
-  // TODO: Probably need to check that...
   | _ -> 0
 
 let solve_can_be_split (args:list argv) : Tac bool =
