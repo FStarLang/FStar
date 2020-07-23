@@ -165,6 +165,8 @@ and elim_mlexpr (env:env_t) (e:mlexpr) =
 
 type tydef = mlsymbol * metadata * either<mltyscheme, int>
 
+exception Drop_tydef
+
 (** This is a key helper function:
 
     It is called from elim_one_mltydecl when encountering a type
@@ -230,11 +232,12 @@ let elim_tydef (env:env_t) name metadata parameters mlty
                       (FStar.Errors.Error_RemoveUnusedTypeParameter,
                         BU.format3
                         "Parameter %s of %s is unused and must be eliminated for F#; \
-                         add `[@@ remove_unused_type_parameters [%s; ...]]` to the interface signature"
+                         add `[@@ remove_unused_type_parameters [%s; ...]]` to the interface signature; \n\
+                         This type definition is being dropped"
                         (string_of_int i)
                         name
                         (string_of_int i));
-                    i+1, p::params, Retain::entry
+                    raise Drop_tydef
                else i+1, p::params, Retain::entry
              end)
           (0, [], [])
@@ -272,7 +275,18 @@ let elim_tydef_or_decl (env:env_t) (td:tydef)
       env, (name, meta, Inl (params, mlty))
 
 let elim_tydefs (env:env_t) (tds:list<tydef>) : env_t * list<tydef> =
-  BU.fold_map elim_tydef_or_decl env tds
+  let env, tds =
+    List.fold_left
+      (fun (env, out) td ->
+        try
+          let env, td = elim_tydef_or_decl env td in
+          env, td::out
+        with
+        | Drop_tydef ->
+          env, out)
+      (env, []) tds
+  in
+  env, List.rev tds
 
 (** This is the main function that actually extends the environment:
     When encountering a type definition (MLTD_Abbrev), it
@@ -332,7 +346,19 @@ let elim_module env m =
     | _ ->
       env, m
   in
-  BU.fold_map elim_module1 env m
+  let env, m =
+    List.fold_left
+      (fun (env, out) m ->
+        try
+          let env, m = elim_module1 env m in
+        env, m::out
+        with
+        | Drop_tydef ->
+          env, out)
+      (env, [])
+      m
+  in
+  env, List.rev m
 
 let set_current_module (e:env_t) (n:mlpath) =
   let curmod = fst n @ [snd n] in
