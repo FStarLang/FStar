@@ -163,6 +163,15 @@ RemoveUnusedTypars.B.extract: RemoveUnusedTypars.A.fst RemoveUnusedTypars.B.fst
 	diff -u --strip-trailing-cr RemoveUnusedTypars_A.fs RemoveUnusedTypars_A.fs.expected
 	diff -u --strip-trailing-cr RemoveUnusedTypars_B.fs RemoveUnusedTypars_B.fs.expected
 
+RemoveUnusedTyparsIFace.B.extract: RemoveUnusedTyparsIFace.A.fst RemoveUnusedTyparsIFace.B.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTyparsIFace.A.fsti --warn_error -333
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTyparsIFace.A.fst --warn_error -333
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTyparsIFace.B.fst --warn_error -333
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTyparsIFace.A --codegen FSharp RemoveUnusedTyparsIFace.A.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTyparsIFace.B --codegen FSharp RemoveUnusedTyparsIFace.B.fst
+	diff -u --strip-trailing-cr RemoveUnusedTyparsIFace_A.fs RemoveUnusedTyparsIFace_A.fs.expected
+	diff -u --strip-trailing-cr RemoveUnusedTyparsIFace_B.fs RemoveUnusedTyparsIFace_B.fs.expected
+
 %.extract: %.fst
 	mkdir -p out_$*
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out_$* --codegen OCaml $^

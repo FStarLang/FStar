@@ -419,7 +419,11 @@ let add_deriving_const (md: metadata) (ptype_manifest: core_type option): core_t
       BatOption.map (fun x -> {x with ptyp_attributes=[deriving_const]}) ptype_manifest
   | _ -> ptype_manifest
 
-let build_one_tydecl ((_, x, mangle_opt, tparams, attrs, body): one_mltydecl): type_declaration =
+let build_one_tydecl ({tydecl_name=x;
+                       tydecl_ignored=mangle_opt;
+                       tydecl_parameters=tparams;
+                       tydecl_meta=attrs;
+                       tydecl_defn=body}: one_mltydecl): type_declaration =
   let ptype_name = match mangle_opt with
     | Some y -> mk_sym y
     | None -> mk_sym x in

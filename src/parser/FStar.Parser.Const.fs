@@ -323,6 +323,7 @@ let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_
 let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Range.dummyRange
 let commute_nested_matches_lid = psconst "commute_nested_matches"
 let allow_informative_binders_attr = p2l ["FStar"; "Pervasives"; "allow_informative_binders"]
+let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 
 let gen_reset =
     let x = U.mk_ref 0 in

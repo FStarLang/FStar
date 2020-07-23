@@ -720,6 +720,20 @@ val allow_informative_binders : unit
   *)
 val commute_nested_matches : unit
 
+(** [remove_unused_type_parameters]
+
+    This attribute is used to decorate signatures in interfaces for
+    type abbreviations, indicating that the 0-based positional
+    parameters are unused in the definition and should be eliminated
+    for extraction.
+
+    This is important particularly for use with F# extraction, since
+    F# does not accept type abbreviations with unused type parameters.
+
+    See tests/bug-reports/RemoveUnusedTyparsIFace.A.fsti
+ *)
+val remove_unused_type_parameters : list int -> Tot unit
+
 ///  Controlling normalization
 
 (** In any invocation of the F* normalizer, every occurrence of
