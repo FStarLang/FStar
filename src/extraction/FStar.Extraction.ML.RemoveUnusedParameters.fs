@@ -204,18 +204,18 @@ let elim_tydef (env:env_t) name metadata parameters mlty
              if BU.set_mem p freevars
              then begin
                if must_eliminate i
-               then
-                 FStar.Errors.raise_error
+               then begin
+                 FStar.Errors.log_issue range_of_tydef
                    (FStar.Errors.Error_RemoveUnusedTypeParameter,
                     BU.format2
                     "Expected parameter %s of %s to be unused in its definition and eliminated"
                       p name)
-                    range_of_tydef;
-                i+1, p::params, Retain::entry
+               end;
+               i+1, p::params, Retain::entry
              end
              else begin
-               if can_eliminate i
-               || must_eliminate i
+               if can_eliminate i //there's no val
+               || must_eliminate i //or there's an attribute explicitly demanding elimination
                then i+1, params, Omit::entry
                else if Options.codegen() = Some Options.FSharp
                then //This is a hard error for F#
@@ -225,15 +225,16 @@ let elim_tydef (env:env_t) name metadata parameters mlty
                       | Some r -> r
                       | _ -> range_of_tydef
                     in
-                    FStar.Errors.raise_error
+                    FStar.Errors.log_issue
+                      range
                       (FStar.Errors.Error_RemoveUnusedTypeParameter,
                         BU.format3
                         "Parameter %s of %s is unused and must be eliminated for F#; \
                          add `[@@ remove_unused_type_parameters [%s; ...]]` to the interface signature"
                         (string_of_int i)
                         name
-                        (string_of_int i))
-                      range
+                        (string_of_int i));
+                    i+1, p::params, Retain::entry
                else i+1, p::params, Retain::entry
              end)
           (0, [], [])

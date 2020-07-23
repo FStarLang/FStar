@@ -2338,7 +2338,7 @@ let (default_settings : error_setting Prims.list) =
   (Warning_WarnOnUse, CSilent, (Prims.of_int (335)));
   (Warning_DeprecatedAttributeSyntax, CSilent, (Prims.of_int (336)));
   (Warning_DeprecatedGeneric, CWarning, (Prims.of_int (337)));
-  (Error_RemoveUnusedTypeParameter, CError, (Prims.of_int (338)))]
+  (Error_RemoveUnusedTypeParameter, CWarning, (Prims.of_int (338)))]
 let lookup_error :
   'uuuuuu2105 'uuuuuu2106 'uuuuuu2107 .
     ('uuuuuu2105 * 'uuuuuu2106 * 'uuuuuu2107) Prims.list ->

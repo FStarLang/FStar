@@ -324,8 +324,8 @@ let (elim_tydef :
                                      p name in
                                  (FStar_Errors.Error_RemoveUnusedTypeParameter,
                                    uu____1017) in
-                               FStar_Errors.raise_error uu____1012
-                                 range_of_tydef)
+                               FStar_Errors.log_issue range_of_tydef
+                                 uu____1012)
                             else ();
                             ((i + Prims.int_one), (p :: params), (Retain ::
                               entry1)))
@@ -345,26 +345,28 @@ let (elim_tydef :
                                   match val_decl_range with
                                   | FStar_Pervasives_Native.Some r -> r
                                   | uu____1057 -> range_of_tydef in
-                                let uu____1060 =
-                                  let uu____1065 =
+                                ((let uu____1061 =
                                     let uu____1066 =
-                                      FStar_Util.string_of_int i in
-                                    let uu____1067 =
-                                      FStar_Util.string_of_int i in
-                                    FStar_Util.format3
-                                      "Parameter %s of %s is unused and must be eliminated for F#; add `[@@ remove_unused_type_parameters [%s; ...]]` to the interface signature"
-                                      uu____1066 name uu____1067 in
-                                  (FStar_Errors.Error_RemoveUnusedTypeParameter,
-                                    uu____1065) in
-                                FStar_Errors.raise_error uu____1060 range
+                                      let uu____1067 =
+                                        FStar_Util.string_of_int i in
+                                      let uu____1068 =
+                                        FStar_Util.string_of_int i in
+                                      FStar_Util.format3
+                                        "Parameter %s of %s is unused and must be eliminated for F#; add `[@@ remove_unused_type_parameters [%s; ...]]` to the interface signature"
+                                        uu____1067 name uu____1068 in
+                                    (FStar_Errors.Error_RemoveUnusedTypeParameter,
+                                      uu____1066) in
+                                  FStar_Errors.log_issue range uu____1061);
+                                 ((i + Prims.int_one), (p :: params), (Retain
+                                   :: entry1)))
                               else
                                 ((i + Prims.int_one), (p :: params), (Retain
                                   :: entry1)))) (Prims.int_zero, [], [])
                 parameters in
             match uu____939 with
-            | (uu____1103, parameters1, entry1) ->
-                let uu____1114 = extend_env env name (FStar_List.rev entry1) in
-                (uu____1114,
+            | (uu____1098, parameters1, entry1) ->
+                let uu____1109 = extend_env env name (FStar_List.rev entry1) in
+                (uu____1109,
                   (name, metadata, (FStar_List.rev parameters1), mlty1))
 let (elim_tydef_or_decl : env_t -> tydef -> (env_t * tydef)) =
   fun env ->
@@ -373,11 +375,11 @@ let (elim_tydef_or_decl : env_t -> tydef -> (env_t * tydef)) =
       | (name, metadata, FStar_Util.Inr arity) ->
           let remove_typars_list =
             FStar_Util.try_find
-              (fun uu___2_1161 ->
-                 match uu___2_1161 with
+              (fun uu___2_1156 ->
+                 match uu___2_1156 with
                  | FStar_Extraction_ML_Syntax.RemoveUnusedTypeParameters
-                     uu____1162 -> true
-                 | uu____1169 -> false) metadata in
+                     uu____1157 -> true
+                 | uu____1164 -> false) metadata in
           (match remove_typars_list with
            | FStar_Pervasives_Native.None -> (env, td)
            | FStar_Pervasives_Native.Some
@@ -390,17 +392,17 @@ let (elim_tydef_or_decl : env_t -> tydef -> (env_t * tydef)) =
                  else
                    if must_eliminate i
                    then
-                     (let uu____1199 = aux (i + Prims.int_one) in Omit ::
-                        uu____1199)
+                     (let uu____1194 = aux (i + Prims.int_one) in Omit ::
+                        uu____1194)
                    else
-                     (let uu____1203 = aux (i + Prims.int_one) in Retain ::
-                        uu____1203) in
+                     (let uu____1198 = aux (i + Prims.int_one) in Retain ::
+                        uu____1198) in
                let entries = aux Prims.int_zero in
-               let uu____1209 = extend_env env name entries in
-               (uu____1209, td))
+               let uu____1204 = extend_env env name entries in
+               (uu____1204, td))
       | (name, metadata, FStar_Util.Inl (parameters, mlty)) ->
-          let uu____1218 = elim_tydef env name metadata parameters mlty in
-          (match uu____1218 with
+          let uu____1213 = elim_tydef env name metadata parameters mlty in
+          (match uu____1213 with
            | (env1, (name1, meta, params, mlty1)) ->
                (env1, (name1, meta, (FStar_Util.Inl (params, mlty1)))))
 let (elim_tydefs : env_t -> tydef Prims.list -> (env_t * tydef Prims.list)) =
@@ -412,73 +414,73 @@ let (elim_one_mltydecl :
   =
   fun env ->
     fun td ->
-      let uu____1312 = td in
-      match uu____1312 with
-      | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu____1317;
+      let uu____1307 = td in
+      match uu____1307 with
+      | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu____1312;
           FStar_Extraction_ML_Syntax.tydecl_name = name;
-          FStar_Extraction_ML_Syntax.tydecl_ignored = uu____1319;
+          FStar_Extraction_ML_Syntax.tydecl_ignored = uu____1314;
           FStar_Extraction_ML_Syntax.tydecl_parameters = parameters;
           FStar_Extraction_ML_Syntax.tydecl_meta = meta;
           FStar_Extraction_ML_Syntax.tydecl_defn = body;_} ->
           let elim_td td1 =
             match td1 with
             | FStar_Extraction_ML_Syntax.MLTD_Abbrev mlty ->
-                let uu____1350 = elim_tydef env name meta parameters mlty in
-                (match uu____1350 with
-                 | (env1, (name1, uu____1377, parameters1, mlty1)) ->
+                let uu____1345 = elim_tydef env name meta parameters mlty in
+                (match uu____1345 with
+                 | (env1, (name1, uu____1372, parameters1, mlty1)) ->
                      (env1, parameters1,
                        (FStar_Extraction_ML_Syntax.MLTD_Abbrev mlty1)))
             | FStar_Extraction_ML_Syntax.MLTD_Record fields ->
-                let uu____1409 =
-                  let uu____1410 =
+                let uu____1404 =
+                  let uu____1405 =
                     FStar_List.map
-                      (fun uu____1429 ->
-                         match uu____1429 with
+                      (fun uu____1424 ->
+                         match uu____1424 with
                          | (name1, ty) ->
-                             let uu____1440 = elim_mlty env ty in
-                             (name1, uu____1440)) fields in
-                  FStar_Extraction_ML_Syntax.MLTD_Record uu____1410 in
-                (env, parameters, uu____1409)
+                             let uu____1435 = elim_mlty env ty in
+                             (name1, uu____1435)) fields in
+                  FStar_Extraction_ML_Syntax.MLTD_Record uu____1405 in
+                (env, parameters, uu____1404)
             | FStar_Extraction_ML_Syntax.MLTD_DType inductive ->
-                let uu____1456 =
-                  let uu____1457 =
+                let uu____1451 =
+                  let uu____1452 =
                     FStar_List.map
-                      (fun uu____1494 ->
-                         match uu____1494 with
+                      (fun uu____1489 ->
+                         match uu____1489 with
                          | (i, constrs) ->
-                             let uu____1529 =
+                             let uu____1524 =
                                FStar_List.map
-                                 (fun uu____1548 ->
-                                    match uu____1548 with
+                                 (fun uu____1543 ->
+                                    match uu____1543 with
                                     | (constr, ty) ->
-                                        let uu____1559 = elim_mlty env ty in
-                                        (constr, uu____1559)) constrs in
-                             (i, uu____1529)) inductive in
-                  FStar_Extraction_ML_Syntax.MLTD_DType uu____1457 in
-                (env, parameters, uu____1456) in
-          let uu____1568 =
+                                        let uu____1554 = elim_mlty env ty in
+                                        (constr, uu____1554)) constrs in
+                             (i, uu____1524)) inductive in
+                  FStar_Extraction_ML_Syntax.MLTD_DType uu____1452 in
+                (env, parameters, uu____1451) in
+          let uu____1563 =
             match body with
             | FStar_Pervasives_Native.None -> (env, parameters, body)
             | FStar_Pervasives_Native.Some td1 ->
-                let uu____1588 = elim_td td1 in
-                (match uu____1588 with
+                let uu____1583 = elim_td td1 in
+                (match uu____1583 with
                  | (env1, parameters1, td2) ->
                      (env1, parameters1, (FStar_Pervasives_Native.Some td2))) in
-          (match uu____1568 with
+          (match uu____1563 with
            | (env1, parameters1, body1) ->
                (env1,
-                 (let uu___295_1626 = td in
+                 (let uu___296_1621 = td in
                   {
                     FStar_Extraction_ML_Syntax.tydecl_assumed =
-                      (uu___295_1626.FStar_Extraction_ML_Syntax.tydecl_assumed);
+                      (uu___296_1621.FStar_Extraction_ML_Syntax.tydecl_assumed);
                     FStar_Extraction_ML_Syntax.tydecl_name =
-                      (uu___295_1626.FStar_Extraction_ML_Syntax.tydecl_name);
+                      (uu___296_1621.FStar_Extraction_ML_Syntax.tydecl_name);
                     FStar_Extraction_ML_Syntax.tydecl_ignored =
-                      (uu___295_1626.FStar_Extraction_ML_Syntax.tydecl_ignored);
+                      (uu___296_1621.FStar_Extraction_ML_Syntax.tydecl_ignored);
                     FStar_Extraction_ML_Syntax.tydecl_parameters =
                       parameters1;
                     FStar_Extraction_ML_Syntax.tydecl_meta =
-                      (uu___295_1626.FStar_Extraction_ML_Syntax.tydecl_meta);
+                      (uu___296_1621.FStar_Extraction_ML_Syntax.tydecl_meta);
                     FStar_Extraction_ML_Syntax.tydecl_defn = body1
                   })))
 let (elim_module :
@@ -491,33 +493,33 @@ let (elim_module :
       let elim_module1 env1 m1 =
         match m1 with
         | FStar_Extraction_ML_Syntax.MLM_Ty td ->
-            let uu____1667 = FStar_Util.fold_map elim_one_mltydecl env1 td in
-            (match uu____1667 with
+            let uu____1662 = FStar_Util.fold_map elim_one_mltydecl env1 td in
+            (match uu____1662 with
              | (env2, td1) -> (env2, (FStar_Extraction_ML_Syntax.MLM_Ty td1)))
         | FStar_Extraction_ML_Syntax.MLM_Let lb ->
-            let uu____1685 =
-              let uu____1686 = elim_letbinding env1 lb in
-              FStar_Extraction_ML_Syntax.MLM_Let uu____1686 in
-            (env1, uu____1685)
+            let uu____1680 =
+              let uu____1681 = elim_letbinding env1 lb in
+              FStar_Extraction_ML_Syntax.MLM_Let uu____1681 in
+            (env1, uu____1680)
         | FStar_Extraction_ML_Syntax.MLM_Exn (name, sym_tys) ->
-            let uu____1701 =
-              let uu____1702 =
-                let uu____1713 =
+            let uu____1696 =
+              let uu____1697 =
+                let uu____1708 =
                   FStar_List.map
-                    (fun uu____1732 ->
-                       match uu____1732 with
+                    (fun uu____1727 ->
+                       match uu____1727 with
                        | (s, t) ->
-                           let uu____1743 = elim_mlty env1 t in
-                           (s, uu____1743)) sym_tys in
-                (name, uu____1713) in
-              FStar_Extraction_ML_Syntax.MLM_Exn uu____1702 in
-            (env1, uu____1701)
+                           let uu____1738 = elim_mlty env1 t in
+                           (s, uu____1738)) sym_tys in
+                (name, uu____1708) in
+              FStar_Extraction_ML_Syntax.MLM_Exn uu____1697 in
+            (env1, uu____1696)
         | FStar_Extraction_ML_Syntax.MLM_Top e ->
-            let uu____1751 =
-              let uu____1752 = elim_mlexpr env1 e in
-              FStar_Extraction_ML_Syntax.MLM_Top uu____1752 in
-            (env1, uu____1751)
-        | uu____1753 -> (env1, m1) in
+            let uu____1746 =
+              let uu____1747 = elim_mlexpr env1 e in
+              FStar_Extraction_ML_Syntax.MLM_Top uu____1747 in
+            (env1, uu____1746)
+        | uu____1748 -> (env1, m1) in
       FStar_Util.fold_map elim_module1 env m
 let (set_current_module :
   env_t -> FStar_Extraction_ML_Syntax.mlpath -> env_t) =
@@ -526,8 +528,8 @@ let (set_current_module :
       let curmod =
         FStar_List.append (FStar_Pervasives_Native.fst n)
           [FStar_Pervasives_Native.snd n] in
-      let uu___324_1771 = e in
-      { current_module = curmod; tydef_map = (uu___324_1771.tydef_map) }
+      let uu___325_1766 = e in
+      { current_module = curmod; tydef_map = (uu___325_1766.tydef_map) }
 let (elim_mllib :
   env_t ->
     FStar_Extraction_ML_Syntax.mllib ->
@@ -535,28 +537,28 @@ let (elim_mllib :
   =
   fun env ->
     fun m ->
-      let uu____1786 = m in
-      match uu____1786 with
+      let uu____1781 = m in
+      match uu____1781 with
       | FStar_Extraction_ML_Syntax.MLLib libs ->
           let elim_one_lib env1 lib =
-            let uu____1863 = lib in
-            match uu____1863 with
+            let uu____1858 = lib in
+            match uu____1858 with
             | (name, sig_mod, _libs) ->
                 let env2 = set_current_module env1 name in
-                let uu____1916 =
+                let uu____1911 =
                   match sig_mod with
                   | FStar_Pervasives_Native.Some (sig_, mod_) ->
-                      let uu____1953 = elim_module env2 mod_ in
-                      (match uu____1953 with
+                      let uu____1948 = elim_module env2 mod_ in
+                      (match uu____1948 with
                        | (env3, mod_1) ->
                            ((FStar_Pervasives_Native.Some (sig_, mod_1)),
                              env3))
                   | FStar_Pervasives_Native.None ->
                       (FStar_Pervasives_Native.None, env2) in
-                (match uu____1916 with
+                (match uu____1911 with
                  | (sig_mod1, env3) -> (env3, (name, sig_mod1, _libs))) in
-          let uu____2072 = FStar_Util.fold_map elim_one_lib env libs in
-          (match uu____2072 with
+          let uu____2067 = FStar_Util.fold_map elim_one_lib env libs in
+          (match uu____2067 with
            | (env1, libs1) ->
                (env1, (FStar_Extraction_ML_Syntax.MLLib libs1)))
 let (elim_mllibs :
@@ -564,5 +566,5 @@ let (elim_mllibs :
     FStar_Extraction_ML_Syntax.mllib Prims.list)
   =
   fun l ->
-    let uu____2170 = FStar_Util.fold_map elim_mllib initial_env l in
-    FStar_Pervasives_Native.snd uu____2170
+    let uu____2165 = FStar_Util.fold_map elim_mllib initial_env l in
+    FStar_Pervasives_Native.snd uu____2165
