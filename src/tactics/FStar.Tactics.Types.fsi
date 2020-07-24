@@ -82,6 +82,9 @@ val smt_goals_of : proofstate -> list<goal>
 
 val mk_goal: env -> ctx_uvar -> FStar.Options.optionstate -> bool -> string -> goal
 
+val goal_of_goal_ty : env -> typ -> goal * guard_t
+val goal_of_implicit : env -> implicit -> goal
+
 type ctrl_flag =
     | Continue
     | Skip

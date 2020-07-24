@@ -67,12 +67,25 @@ let debugging () : tac<bool> =
     bind get (fun ps ->
     ret (Env.debug ps.main_context (Options.Other "Tac")))
 
+let do_dump_ps (msg:string) (ps:proofstate) : unit =
+  let psc = ps.psc in
+  let subst = Cfg.psc_subst psc in
+  do_dump_proofstate (subst_proof_state subst ps) msg
+
 let dump (msg:string) : tac<unit> =
-    mk_tac (fun ps ->
-                   let psc = ps.psc in
-                   let subst = Cfg.psc_subst psc in
-                   do_dump_proofstate (subst_proof_state subst ps) msg;
-                   Success ((), ps))
+  mk_tac (fun ps ->
+    do_dump_ps msg ps;
+    Success ((), ps))
+
+let dump_all (msg:string) : tac<unit> =
+  mk_tac (fun ps ->
+    (* Make a new proofstate with goals for each implicit,
+     * print it, and return original proofstate unchanged. *)
+    let ps' = { ps with smt_goals = []
+                      ; goals = List.map (fun i -> goal_of_implicit ps.main_context i)
+                                         ps.all_implicits } in
+    do_dump_ps msg ps';
+    Success ((), ps))
 
 let fail1 msg x     = fail (BU.format1 msg x)
 let fail2 msg x y   = fail (BU.format2 msg x y)
@@ -1625,14 +1638,6 @@ let lset (_ty:term) (k:string) (t:term) : tac<unit> = wrap_err "lset" <|
     let ps = { ps with local_state = BU.psmap_add ps.local_state k t } in
     set ps)
 
-let goal_of_goal_ty env typ : goal * guard_t =
-    let u, ctx_uvars, g_u =
-        Env.new_implicit_var_aux "proofstate_of_goal_ty" typ.pos env typ Allow_untyped None
-    in
-    let ctx_uvar, _ = List.hd ctx_uvars in
-    let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
-    g, g_u
-
 let tac_env (env:Env.env) : Env.env =
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
@@ -1663,9 +1668,6 @@ let proofstate_of_goal_ty rng env typ =
     let g, g_u = goal_of_goal_ty env typ in
     let ps = proofstate_of_goals rng env [g] g_u.implicits in
     (ps, goal_witness g)
-
-let goal_of_implicit env (i:Env.implicit) : goal =
-  mk_goal ({env with gamma=i.imp_uvar.ctx_uvar_gamma}) i.imp_uvar (FStar.Options.peek()) false i.imp_reason
 
 let proofstate_of_all_implicits rng env imps =
     let env = tac_env env in
