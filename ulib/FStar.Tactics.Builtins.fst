@@ -176,6 +176,10 @@ assume val debugging : unit -> Tac bool
 along with the message. *)
 assume val dump : string -> Tac unit
 
+(** Similar to [dump], but will print *every* implicit in the proofstate,
+not only the visible/focused goals. Warning, these can be a *lot*. *)
+assume val dump_all : string -> Tac unit
+
 (** Solves a goal [Gamma |= squash (l == r)] by attempting to unify
 [l] with [r]. This currently only exists because of some universe problems
 when trying to [apply] a reflexivity lemma. *)

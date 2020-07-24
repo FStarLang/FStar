@@ -117,6 +117,7 @@ let apply_lemma             = from_tac_1 B.apply_lemma
 let print                   = from_tac_1 B.print
 let debugging               = from_tac_1 B.debugging
 let dump                    = from_tac_1 B.dump
+let dump_all                = from_tac_1 B.dump_all
 let trefl                   = from_tac_1 B.trefl
 let dup                     = from_tac_1 B.dup
 let prune                   = from_tac_1 B.prune

@@ -132,4 +132,3 @@ let do_dump_proofstate ps msg =
             print_generic "proof-state" ps_to_string ps_to_json (msg, ps);
             BU.flush_stdout () (* in case this is going to stdout, flush it immediately *)
         )
-
