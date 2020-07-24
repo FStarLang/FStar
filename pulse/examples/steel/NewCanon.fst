@@ -115,6 +115,10 @@ let get_head (l:list atom) (am:amap term) : term = match l with
   | [] -> `()
   | hd::_ -> select hd am
 
+let is_only_uvar (l:list atom) (am:amap term) : Tac bool =
+  if List.Tot.Base.length l = 1 then is_uvar (select (List.Tot.Base.hd l) am)
+  else false
+
 (* Recursively calls equivalent_lists_once.
    Stops when we're done with unification, or when we didn't make any progress
    If we didn't make any progress, we have too many candidates for some terms.
@@ -137,14 +141,18 @@ let rec equivalent_lists' (n:nat) (l1 l2 l1_del l2_del:list atom) (am:amap term)
     | _ -> (l1_del, l2_del)
     end
   | _ ->
-    // TODO: Handle case where there are some terms left in l1, and only a uvar in l2
-    let rem1, rem2, l1_del', l2_del' = equivalent_lists_once l1 l2 l1_del l2_del am in
-    let n' = List.Tot.length rem1 in
-    if n' >= n then
-      // Should always be smaller or equal to n
-      // If it is equal, no progress was made.
-      fail ("too many candidates for scrutinee " ^ term_to_string (get_head rem1 am))
-    else equivalent_lists' n' rem1 rem2 l1_del' l2_del' am
+    if is_only_uvar l2 am then
+      // Terms left in l1, but only a uvar left in l2.
+      // Put all terms left at the end of l1_rem, so that they can be unified
+      l1_del @ l1, l2_del @ l2
+    else
+      let rem1, rem2, l1_del', l2_del' = equivalent_lists_once l1 l2 l1_del l2_del am in
+      let n' = List.Tot.length rem1 in
+      if n' >= n then
+        // Should always be smaller or equal to n
+        // If it is equal, no progress was made.
+        fail ("too many candidates for scrutinee " ^ term_to_string (get_head rem1 am))
+      else equivalent_lists' n' rem1 rem2 l1_del' l2_del' am
 
 (* First remove all trivially equal terms, then try to decide equivalence.
    Assumes that l1 does not contain any program implicit
@@ -486,6 +494,12 @@ let rec sort_correct_aux (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (xs:list
 
 #push-options "--fuel 0 --ifuel 0"
 
+let identity_right (#a:Type) (eq:equiv a) (m:cm a eq) (x:a)
+  : Lemma (EQ?.eq eq x (CM?.mult m x (CM?.unit m)))
+  = CM?.identity m x;
+    EQ?.symmetry eq (CM?.mult m (CM?.unit m) x) x;
+    CM?.commutativity m (CM?.unit m) x;
+    EQ?.transitivity eq x (CM?.mult m (CM?.unit m) x) (CM?.mult m x (CM?.unit m))
 
 let equivalent_sorted (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (l1 l2 l1' l2':list atom)
     : Lemma (requires
@@ -629,9 +643,8 @@ let canon_l_r (eq: term) (m: term) (lhs rhs:term) : Tac unit =
     or_else trefl (fun _ -> fail "equivalent_lists did not build a valid permutation");
     or_else trefl (fun _ -> fail "equivalent_lists did not build a valid permutation");
 
-
-
-    apply_lemma (`(EQ?.reflexivity (`#eq)))
+    or_else (fun _ -> apply_lemma (`(EQ?.reflexivity (`#eq))))
+            (fun _ -> apply_lemma (`identity_right (`#eq) (`#m)))
   )
   (fun _ ->
     // The application of lemma1 seems to solve the goal directly when the result
@@ -898,7 +911,7 @@ let init_resolve_tac () : Tac unit =
   set_goals slgs;
   // We first need to solve the trivial equalities to ensure we're not restricting
   // scopes for annotated slprops
-  solve_triv_eqs (goals ());
+//  solve_triv_eqs (goals ());
   solve_indirection_eqs (goals());
   solve_subcomp_pre (goals ());
   resolve_tac ();
@@ -928,9 +941,83 @@ assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 
 
 
-let test1 (x:int) : SteelT unit emp (fun _ -> p #1 1)  =
+let test_imp (x:int) : SteelT unit emp (fun _ -> p #1 1)  =
   let _ = palloc 0 in
   pwrite 1
+
+let test1 (x:int) : SteelT ref emp ptr =
+  let y = alloc x in y
+
+let test2 (r:ref) : SteelT int (ptr r) (fun _ -> ptr r) =
+  let x = read r in
+  x
+
+let test3 (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
+  = let x = read r in
+    let y = read r in
+    x
+
+let test4 (r:ref) : SteelT ref (ptr r) (fun y -> ptr r `star` ptr y)
+  = let y = alloc 0 in
+    y
+
+let test5 (r1 r2:ref) : SteelT ref (ptr r1 `star` ptr r2) (fun y -> ptr r1 `star` ptr r2 `star` ptr y)
+  = let y = alloc 0 in
+    y
+
+let test6 (r1 r2:ref) : SteelT unit (ptr r1 `star` ptr r2) (fun _ -> ptr r2 `star` ptr r1)
+  = let _ = read r1 in
+    ()
+
+let test7 (a:unit) : SteelT ref emp (fun y -> ptr y) =
+  let x = alloc 0 in
+  let v = read x in
+  x
+
+let test8 (x:ref) : SteelT int (ptr x) (fun _ -> ptr x)
+  = let v = read x in
+    let y = alloc v in
+    let v = read y in
+    free y;
+    // Can mix assertions
+    assert (1 == 1);
+    v
+
+assume val noop (_:unit) : SteelT unit emp (fun _ -> emp)
+
+let test_dep_frame () : SteelT ref emp (fun r -> ptr r)
+  = let r = alloc 0 in
+    noop ();
+    r
+
+open Steel.FractionalPermission
+open FStar.Ghost
+assume val reference (a:Type0) : Type0
+assume val pts_to (#a:Type0) (r:reference a) (p:perm) (v:erased a) : slprop u#1
+assume val rread (#a:Type) (#p:perm) (#v:erased a) (r:reference a) : SteelT (x:a{x == Ghost.reveal v}) (pts_to r p v) (fun _ -> pts_to r p v)
+assume val rwrite (#a:Type) (#v:erased a) (r:reference a) (v':a) : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm (Ghost.hide v'))
+
+assume val rwrite_alt (#a:Type) (#v:erased a) (r:reference a) (v'':erased a) (v':a{v'==Ghost.reveal v''})
+  : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm v'')
+
+assume val r : slprop
+
+let read_write (#a:Type) (r0:reference a) (v0:erased a)
+  : SteelT unit (pts_to r0 full_perm v0 `star` r)
+                (fun _ -> r `star` pts_to r0 full_perm v0)
+  = let u0 = rread r0 in
+    rwrite_alt r0 v0 u0
+
+
+[@expect_failure]
+let swap (#a:Type) (r0 r1:reference a) (v0 v1:erased a)
+  : SteelT unit (pts_to r0 full_perm v0 `star` pts_to r1 full_perm v1)
+                (fun _ -> pts_to r0 full_perm v1 `star` pts_to r1 full_perm v0)
+  = let u0 = rread r0 in
+    let u1 = rread r1 in
+    rwrite_alt r0 v1 u1;
+    rwrite_alt r1 v0 u0
+
 
 
 // let f (#r:slprop) =

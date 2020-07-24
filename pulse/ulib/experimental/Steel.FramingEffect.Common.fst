@@ -310,7 +310,7 @@ let init_resolve_tac () : Tac unit =
   set_goals slgs;
   // We first need to solve the trivial equalities to ensure we're not restricting
   // scopes for annotated slprops
-  solve_triv_eqs (goals ());
+  // solve_triv_eqs (goals ());
   solve_indirection_eqs (goals());
   solve_subcomp_post (goals ());
   resolve_tac ();
