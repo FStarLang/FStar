@@ -101,13 +101,13 @@ let rec equivalent_lists_once (l1 l2 l1_del l2_del:list atom) (am:amap term)
   | [] -> [], l2, l1_del, l2_del
   | hd::tl ->
     let t, n = try_candidates hd l2 am in
-    if n = 0 then
-      fail ("not equiv: no candidate found for scrutinee " ^ term_to_string (select hd am))
-    else if n = 1 then (
+    // if n = 0 then
+    //   fail ("not equiv: no candidate found for scrutinee " ^ term_to_string (select hd am))
+    if n = 1 then (
       let l2 = remove_from_list t l2 am in
       equivalent_lists_once tl l2 (hd::l1_del) (t::l2_del) am
     ) else
-      // Too many candidates for this scrutinee
+      // Either too many candidates for this scrutinee, or no candidate but the uvar
       let rem1, rem2, l1'_del, l2'_del = equivalent_lists_once tl l2 l1_del l2_del am in
       hd::rem1, rem2, l1'_del, l2'_del
 
@@ -151,7 +151,7 @@ let rec equivalent_lists' (n:nat) (l1 l2 l1_del l2_del:list atom) (am:amap term)
       if n' >= n then
         // Should always be smaller or equal to n
         // If it is equal, no progress was made.
-        fail ("too many candidates for scrutinee " ^ term_to_string (get_head rem1 am))
+        fail ("could not find candidate for scrutinee " ^ term_to_string (get_head rem2 am))
       else equivalent_lists' n' rem1 rem2 l1_del' l2_del' am
 
 (* First remove all trivially equal terms, then try to decide equivalence.
@@ -644,7 +644,7 @@ let canon_l_r (eq: term) (m: term) (lhs rhs:term) : Tac unit =
     or_else trefl (fun _ -> fail "equivalent_lists did not build a valid permutation");
 
     or_else (fun _ -> apply_lemma (`(EQ?.reflexivity (`#eq))))
-            (fun _ -> apply_lemma (`identity_right (`#eq) (`#m)))
+            (fun _ -> dump "identity right"; apply_lemma (`identity_right (`#eq) (`#m)))
   )
   (fun _ ->
     // The application of lemma1 seems to solve the goal directly when the result
@@ -1009,7 +1009,6 @@ let read_write (#a:Type) (r0:reference a) (v0:erased a)
     rwrite_alt r0 v0 u0
 
 
-[@expect_failure]
 let swap (#a:Type) (r0 r1:reference a) (v0 v1:erased a)
   : SteelT unit (pts_to r0 full_perm v0 `star` pts_to r1 full_perm v1)
                 (fun _ -> pts_to r0 full_perm v1 `star` pts_to r1 full_perm v0)
@@ -1017,6 +1016,60 @@ let swap (#a:Type) (r0 r1:reference a) (v0 v1:erased a)
     let u1 = rread r1 in
     rwrite_alt r0 v1 u1;
     rwrite_alt r1 v0 u0
+
+assume
+val rewrite_eq (#a:Type) (p:erased a -> slprop) (v0:erased a) (v1:erased a{v0 == v1})
+  : SteelT unit (p v0) (fun _ -> p v1)
+
+// let swap2 (#a:Type) (r0 r1:reference a) (v0 v1:erased a)
+//   : SteelT unit (pts_to r0 full_perm v0 `star` pts_to r1 full_perm v1)
+//                 (fun _ -> pts_to r0 full_perm v1 `star` pts_to r1 full_perm v0)
+//   = let u0 = rread r0 in
+//     let u1 = rread r1 in
+//     rwrite r0 u1;
+//     rwrite r1 u0;
+//     rewrite_eq (pts_to r1 full_perm) (Ghost.hide u0) v0;
+//     rewrite_eq (pts_to r0 full_perm) (Ghost.hide u1) v1
+
+open Steel.FramingEffect.Atomic
+
+assume val alloc2 (x:int)  : SteelAtomic ref Set.empty observable emp (fun y -> ptr y)
+assume val free2 (r:ref) : SteelAtomic unit Set.empty observable (ptr r) (fun _ -> emp)
+assume val ghost_read (r:ref) : SteelAtomic int Set.empty unobservable (ptr r) (fun _ -> ptr r)
+
+let test21 (x:int) : SteelAtomic ref Set.empty observable emp ptr =
+  let y = alloc2 x in y
+
+[@expect_failure]
+// Cannot have two observable atomic computations
+let test22 (x:int) : SteelAtomic unit Set.empty observable emp (fun _ -> emp) =
+  let y = alloc2 x in
+  free2 y
+
+let test23 (r:ref) : SteelAtomic int Set.empty unobservable (ptr r) (fun _ -> ptr r)
+  = let x = ghost_read r in
+    let y = ghost_read r in
+    x
+
+let test24 (r:ref) : SteelAtomic ref Set.empty observable (ptr r) (fun y -> ptr r `star` ptr y)
+  = let y = alloc2 0 in
+    y
+
+let test25 (r1 r2:ref) : SteelAtomic ref Set.empty observable
+    (ptr r1 `star` ptr r2) (fun y -> ptr r1 `star` ptr r2 `star` ptr y)
+  = let y = alloc2 0 in
+    y
+
+// Exercising subcomp on observability
+let test26 (r1 r2:ref) : SteelAtomic unit Set.empty observable (ptr r1 `star` ptr r2) (fun _ -> ptr r2 `star` ptr r1)
+  = let _ = ghost_read r1 in
+    ()
+
+let test27 (a:unit) : SteelAtomic ref Set.empty observable emp (fun y -> ptr y) =
+  let x = alloc2 0 in
+  let v = ghost_read x in
+  x
+
 
 
 
