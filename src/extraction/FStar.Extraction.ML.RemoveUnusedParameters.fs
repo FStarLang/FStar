@@ -275,6 +275,7 @@ let elim_tydef_or_decl (env:env_t) (td:tydef)
       env, (name, meta, Inl (params, mlty))
 
 let elim_tydefs (env:env_t) (tds:list<tydef>) : env_t * list<tydef> =
+  if Options.codegen() <> Some Options.FSharp then env, tds else
   let env, tds =
     List.fold_left
       (fun (env, out) td ->
@@ -365,6 +366,7 @@ let set_current_module (e:env_t) (n:mlpath) =
   { e with current_module = curmod }
 
 let elim_mllib (env:env_t) (m:mllib) =
+  if Options.codegen() <> Some Options.FSharp then env, m else
   let (MLLib libs) = m in
   let elim_one_lib env lib =
     let name, sig_mod, _libs = lib in
