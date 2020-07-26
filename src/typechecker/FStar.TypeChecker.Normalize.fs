@@ -2729,8 +2729,11 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         then matches scrutinee branches
         else norm_and_rebuild_match ()
 
+let reflection_env_hook = BU.mk_ref None
+
 let normalize_with_primitive_steps ps s e t =
     let c = config' ps s e in
+    reflection_env_hook := Some e;
     log_cfg c (fun () -> BU.print1 "Cfg = %s\n" (cfg_to_string c));
     if is_nbe_request s then begin
       log_top c (fun () -> BU.print1 "Starting NBE for (%s) {\n" (Print.term_to_string t));
@@ -2753,6 +2756,7 @@ let normalize s e t =
 
 let normalize_comp s e c =
     let cfg = config s e in
+    reflection_env_hook := Some e;
     log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
     log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
     let (c, ms) = BU.record_time (fun () -> norm_comp cfg [] c) in

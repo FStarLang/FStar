@@ -43,7 +43,24 @@ open FStar.Dyn
   * We should really allow for some metaprogramming in F*. Oh wait....
   *)
 
-let env_hook = BU.mk_ref None
+
+(* This is a hack, but it allows to lookup the constructor sigelts when
+inspecting a Sig_inductive_typ.
+
+We need to be careful though. If we use this for, say, `lookup_attr` and
+remove its `env` argument, then the normalizer can reduce it eagerly.
+Trying to do this right now means calls to `lookup_attr` are evaluated
+at extraction time, and will not behave as expected. The root cause is
+that all of the reflection operators are taken to be pure and that't not
+the case if we remove the `env` in some, like `lookup_attr`.
+
+In the case of `inspect_sigelt`, however, I think it won't be
+noticeable since one obtain a concrete sigelt without running an impure
+metaprogram. *)
+let get_env () : Env.env =
+  match !N.reflection_env_hook with
+  | None -> failwith "impossible: env_hook unset in reflection"
+  | Some e -> e
 
 (* private *)
 let inspect_aqual (aq : aqual) : aqualv =
@@ -69,6 +86,7 @@ let pack_fv (ns:list<string>) : fv =
     let lid = PC.p2l ns in
     let fallback () =
         let quals =
+            (* This an awful hack *)
             if Ident.lid_equals lid PC.cons_lid then Some Data_ctor else
             if Ident.lid_equals lid PC.nil_lid  then Some Data_ctor else
             if Ident.lid_equals lid PC.some_lid then Some Data_ctor else
@@ -78,7 +96,7 @@ let pack_fv (ns:list<string>) : fv =
         // FIXME: Get a proper delta depth
         lid_as_fv (PC.p2l ns) (Delta_constant_at_level 999) quals
     in
-    match !env_hook with
+    match !N.reflection_env_hook with
     | None -> fallback ()
     | Some env ->
      let qninfo = Env.lookup_qname env lid in
@@ -455,6 +473,7 @@ let sigelt_quals (se : sigelt) : list<RD.qualifier> =
 let set_sigelt_quals (quals : list<RD.qualifier>) (se : sigelt) : sigelt =
     { se with sigquals = List.map rd_to_syntax_qual quals }
 
+(* Set by FStar.Reflection.Embeddings *)
 let e_optionstate_hook : ref<option<EMB.embedding<O.optionstate>>> = BU.mk_ref None
 
 let sigelt_opts (se : sigelt) : option<term> =
