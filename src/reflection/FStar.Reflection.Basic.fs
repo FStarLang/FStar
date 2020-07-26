@@ -494,19 +494,42 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
         let def = SS.subst s lb.lbdef in
         Sg_Let (r, fv, lb.lbunivs, lb.lbtyp, lb.lbdef)
 
-    | Sig_inductive_typ (lid, us, bs, ty, _, c_lids) ->
+    | Sig_inductive_typ (lid, us, param_bs, ty, _mutual, c_lids) ->
         let nm = Ident.path_of_lid lid in
         let s, us = SS.univ_var_opening us in
-        let bs = SS.subst_binders s bs in
+        let param_bs = SS.subst_binders s param_bs in
         let ty = SS.subst s ty in
-        Sg_Inductive (nm, us, bs, ty, List.map Ident.path_of_lid c_lids)
+        let inspect_ctor (c_lid:Ident.lid) : ctor =
+          match Env.lookup_sigelt (get_env ()) c_lid with
+          | Some ({sigel = Sig_datacon (lid, us, cty, _ty_lid_, nparam, _mutual)}) ->
+            let cty = SS.subst s cty in // open universes from above
 
-    | Sig_datacon (lid, us, ty, _, n, _) ->
-        let s, us = SS.univ_var_opening us in
-        let ty = SS.subst s ty in
-        let ty = U.remove_inacc ty in
-        (* TODO: return universes *)
-        Sg_Constructor (Ident.path_of_lid lid, ty)
+            let param_ctor_bs, c = N.get_n_binders (get_env ()) nparam cty in
+
+
+            if List.length param_ctor_bs <> nparam then
+              failwith "impossible: inspect_sigelt: could not obtain sufficient ctor param binders";
+
+            if not (U.is_total_comp c) then
+              failwith "impossible: inspect_sigelt: removed parameters and got an effectful comp";
+
+            let cty = U.comp_result c in
+
+            (* Substitute the parameters of the constructor to match
+             * those of the inductive opened above, and return the type
+             * of the constructor already instantiated. *)
+
+            let s' = List.map2 (fun b1 b2 -> NT (fst b1, S.bv_to_name (fst b2)))
+                               param_ctor_bs param_bs
+            in
+            let cty = SS.subst s' cty in
+
+            let cty = U.remove_inacc cty in
+            (Ident.path_of_lid lid, cty)
+          | _ ->
+            failwith "impossible"
+        in
+        Sg_Inductive (nm, us, param_bs, ty, List.map inspect_ctor c_lids)
 
     | _ ->
         Unk
@@ -520,10 +543,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
         let lb = U.mk_letbinding (BU.Inr fv) univs typ PC.effect_Tot_lid def [] def.pos in
         mk_sigelt <| Sig_let ((r, [lb]), [lid_of_fv fv])
 
-    | Sg_Constructor _ ->
-        failwith "packing Sg_Constructor, sorry"
-
-    | Sg_Inductive _ ->
+    | Sg_Inductive (nm, us, param_bs, ty, ctors) ->
         failwith "packing Sg_Inductive, sorry"
 
     | Unk ->

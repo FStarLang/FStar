@@ -636,6 +636,8 @@ let e_univ_name =
 
 let e_univ_names = e_list e_univ_name
 
+let e_ctor = e_tuple2 (e_string_list) e_term
+
 let e_sigelt_view =
     let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
         match sev with
@@ -648,19 +650,13 @@ let e_sigelt_view =
                             S.as_arg (embed e_term rng t)]
                         rng
 
-        | Sg_Constructor (nm, ty) ->
-            S.mk_Tm_app ref_Sg_Constructor.t
-                        [S.as_arg (embed e_string_list rng nm);
-                            S.as_arg (embed e_term rng ty)]
-                        rng
-
         | Sg_Inductive (nm, univs, bs, t, dcs) ->
             S.mk_Tm_app ref_Sg_Inductive.t
                         [S.as_arg (embed e_string_list rng nm);
                             S.as_arg (embed e_univ_names rng univs);
                             S.as_arg (embed e_binders rng bs);
                             S.as_arg (embed e_term rng t);
-                            S.as_arg (embed (e_list e_string_list)  rng dcs)]
+                            S.as_arg (embed (e_list e_ctor) rng dcs)]
                         rng
 
         | Unk ->
@@ -675,7 +671,7 @@ let e_sigelt_view =
             BU.bind_opt (unembed' w e_univ_names us) (fun us ->
             BU.bind_opt (unembed' w e_binders bs) (fun bs ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
-            BU.bind_opt (unembed' w (e_list e_string_list) dcs) (fun dcs ->
+            BU.bind_opt (unembed' w (e_list e_ctor) dcs) (fun dcs ->
             Some <| Sg_Inductive (nm, us, bs, t, dcs))))))
 
         | Tm_fvar fv, [(r, _); (fvar, _); (univs, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->

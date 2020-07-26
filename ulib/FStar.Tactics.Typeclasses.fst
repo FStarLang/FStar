@@ -90,14 +90,8 @@ let mk_class (nm:string) : Tac decls =
     let ctor_name = last name in
     // Must have a single constructor
     guard (List.Tot.Base.length ctors = 1);
-    let [ctor] = ctors in
-    let r = lookup_typ (top_env ()) ctor in
-    guard (Some? r);
-    let res = Some?.v r in
-    let r = inspect_sigelt res in
-    guard (Sg_Constructor? r);
-    let Sg_Constructor _ ty = r in
-    (* dump ("got ctor " ^ implode_qn ctor ^ " of type " ^ term_to_string ty); *)
+    let [(c_name, ty)] = ctors in
+    (* dump ("got ctor " ^ implode_qn c_name ^ " of type " ^ term_to_string ty); *)
     let bs, cod = collect_arr_bs ty in
     let r = inspect_comp cod in
     guard (C_Total? r);

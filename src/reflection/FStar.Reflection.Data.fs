@@ -95,10 +95,10 @@ type comp_view =
     | C_Lemma of term * term * term
     | C_Eff of list<unit> * name * term * list<argv>
 
+type ctor = name * typ
 type sigelt_view =
     | Sg_Let of bool * fv * list<univ_name> * typ * term
-    | Sg_Inductive of name * list<univ_name> * list<binder> * typ * list<name> // name, params, type, constructors
-    | Sg_Constructor of name * typ
+    | Sg_Inductive of name * list<univ_name> * list<binder> * typ * list<ctor> // name, params, type, constructors
     | Unk
 
 type var = Z.t
@@ -261,7 +261,6 @@ let ref_C_Eff     = fstar_refl_data_const "C_Eff"
 (* inductives & sigelts *)
 let ref_Sg_Let         = fstar_refl_data_const "Sg_Let"
 let ref_Sg_Inductive   = fstar_refl_data_const "Sg_Inductive"
-let ref_Sg_Constructor = fstar_refl_data_const "Sg_Constructor"
 let ref_Unk            = fstar_refl_data_const "Unk"
 
 (* qualifiers *)
