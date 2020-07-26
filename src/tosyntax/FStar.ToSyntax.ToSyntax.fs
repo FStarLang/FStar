@@ -1258,7 +1258,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
           aux (arg::args) (aq::aqs) e
         | _ ->
           let head, aq = desugar_term_aq env e in
-          mk (Tm_app(head, args)), join_aqs (aq::aqs) in
+          S.extend_app_n head args top.range, join_aqs (aq::aqs)
+      in
       aux [] [] top
 
     | Bind(x, t1, t2) ->
