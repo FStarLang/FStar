@@ -563,6 +563,10 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     ) lids;
     let dsenv = List.fold_left DsEnv.push_sigelt_force env.dsenv ses in
     let env = { env with dsenv = dsenv } in
+
+    if Env.debug env Options.Low then
+        BU.print1 "Splice returned sigelts {\n%s\n}\n" (String.concat "\n" <| List.map Print.sigelt_to_string ses);
+
     [], ses, env
 
   | Sig_let(lbs, lids) ->
