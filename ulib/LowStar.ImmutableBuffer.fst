@@ -41,6 +41,8 @@ type ipointer (a:Type0) = b:ibuffer a{length b == 1}
 inline_for_extraction
 type ipointer_or_null (a:Type0) = b:ibuffer a{if g_is_null b then True else length b == 1}
 
+inline_for_extraction let isub_non_null (#a:Type0) = msub_non_null #a #(immutable_preorder a) #(immutable_preorder a) (immutable_preorder a)
+
 inline_for_extraction let isub (#a:Type0) = msub #a #(immutable_preorder a) #(immutable_preorder a) (immutable_preorder a)
 
 inline_for_extraction let ioffset (#a:Type0) = moffset #a #(immutable_preorder a) #(immutable_preorder a) (immutable_preorder a)

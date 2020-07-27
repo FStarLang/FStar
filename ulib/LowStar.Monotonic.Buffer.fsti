@@ -1805,36 +1805,15 @@ val is_null (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
 ///
 /// Note that it's UB to perform pointer addition on the NULL pointer.
 
+inline_for_extraction noextract
 val msub_non_null (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
   (i:U32.t) (len:Ghost.erased U32.t)
   :HST.Stack (mbuffer a rrel sub_rel)
              (requires (fun h -> U32.v i + U32.v (Ghost.reveal len) <= length b /\ compatible_sub b i (Ghost.reveal len) sub_rel /\ live h b /\ not (g_is_null b)))
              (ensures  (fun h y h' -> h == h' /\ y == mgsub sub_rel b i (Ghost.reveal len)))
 
-let is_non_zero x =
-  let open FStar.Tactics in
-  match inspect (quote x) with
-  | Tv_App f (x, Q_Explicit) ->
-      begin match inspect f with
-      | Tv_FVar fv ->
-          begin match fv_to_string fv with
-          | "FStar.UInt32.__uint_to_t" ->
-              begin match inspect x with
-              | Tv_Const (C_Int x) ->
-                  if x <> 0 then
-                    exact (`true)
-                  else
-                    exact (`false)
-              | _ -> exact (`false)
-              end
-          | _ -> exact (`false)
-          end
-      | _ -> exact (`false)
-      end
-  | _ -> exact (`false)
-
 inline_for_extraction noextract
-let msub_generic (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
+let msub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
   (i:U32.t) (len:Ghost.erased U32.t)
   :HST.Stack (mbuffer a rrel sub_rel)
              (requires (fun h -> U32.v i + U32.v (Ghost.reveal len) <= length b /\ compatible_sub b i (Ghost.reveal len) sub_rel /\ live h b))
@@ -1845,22 +1824,6 @@ let msub_generic (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rr
     mnull #a #rrel #sub_rel
   end else
     msub_non_null sub_rel b i len
-
-inline_for_extraction noextract
-let msub (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
-  (i:U32.t) (#[is_non_zero i] i_non_zero: bool) (len:Ghost.erased U32.t)
-  :HST.Stack (mbuffer a rrel sub_rel)
-             (requires (fun h ->
-               U32.v i + U32.v (Ghost.reveal len) <= length b /\ compatible_sub b i (Ghost.reveal len) sub_rel /\ live h b /\
-               (if i_non_zero then not (g_is_null b) else True)))
-             (ensures  (fun h y h' -> h == h' /\ y == mgsub sub_rel b i (Ghost.reveal len)))
-
-=
-  if i_non_zero then
-    msub_non_null sub_rel b i len
-  else
-    msub_generic sub_rel b i len
-
 
 /// ``offset b i`` construct the tail of the buffer ``b`` starting from
 /// offset ``i``, i.e. the sub-buffer of ``b`` starting from offset ``i``

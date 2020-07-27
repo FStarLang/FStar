@@ -61,3 +61,6 @@ let ( *= ) (#a:Type0) (#rrel #rel:B.srel a) (p:B.mpointer a rrel rel) (v:a) : HS
 
 inline_for_extraction
 let blit (#a:Type0) (#rrel1 #rel1 #rrel2 #rel2:B.srel a) = B.blit #a #rrel1 #rel1 #rrel2 #rel2
+
+inline_for_extraction
+let blit_non_null (#a:Type0) (#rrel1 #rel1 #rrel2 #rel2:B.srel a) = B.blit_non_null #a #rrel1 #rel1 #rrel2 #rel2

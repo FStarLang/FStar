@@ -47,6 +47,8 @@ type pointer (a:Type0) = b:buffer a{length b == 1}
 inline_for_extraction
 type pointer_or_null (a:Type0) = b:buffer a{if g_is_null b then True else length b == 1}
 
+inline_for_extraction let sub_non_null (#a:Type0) = msub_non_null #a #(trivial_preorder a) #(trivial_preorder a) (trivial_preorder a)
+
 inline_for_extraction let sub (#a:Type0) = msub #a #(trivial_preorder a) #(trivial_preorder a) (trivial_preorder a)
 
 inline_for_extraction let offset (#a:Type0) = moffset #a #(trivial_preorder a) #(trivial_preorder a) (trivial_preorder a)
