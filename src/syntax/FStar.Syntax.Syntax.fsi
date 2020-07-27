@@ -470,7 +470,7 @@ type sigelt' =
                           * list<lident>               //all the inductive types and data constructor names in this bundle
   | Sig_datacon           of lident                    //name of the datacon
                           * univ_names                 //universe variables of the inductive type it belongs to
-                          * typ                        //the constructor's type as an arrow
+                          * typ                        //the constructor's type as an arrow (including parameters)
                           * lident                     //the inductive type of the value this constructs
                           * int                        //and the number of parameters of the inductive
                           * list<lident>               //mutually defined types

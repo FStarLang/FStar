@@ -499,6 +499,9 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
         let s, us = SS.univ_var_opening us in
         let param_bs = SS.subst_binders s param_bs in
         let ty = SS.subst s ty in
+
+        let param_bs, ty = SS.open_term param_bs ty in
+
         let inspect_ctor (c_lid:Ident.lid) : ctor =
           match Env.lookup_sigelt (get_env ()) c_lid with
           | Some ({sigel = Sig_datacon (lid, us, cty, _ty_lid_, nparam, _mutual)}) ->
@@ -506,19 +509,16 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
 
             let param_ctor_bs, c = N.get_n_binders (get_env ()) nparam cty in
 
-
             if List.length param_ctor_bs <> nparam then
               failwith "impossible: inspect_sigelt: could not obtain sufficient ctor param binders";
 
             if not (U.is_total_comp c) then
               failwith "impossible: inspect_sigelt: removed parameters and got an effectful comp";
-
             let cty = U.comp_result c in
 
             (* Substitute the parameters of the constructor to match
              * those of the inductive opened above, and return the type
              * of the constructor already instantiated. *)
-
             let s' = List.map2 (fun b1 b2 -> NT (fst b1, S.bv_to_name (fst b2)))
                                param_ctor_bs param_bs
             in
@@ -526,8 +526,9 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
 
             let cty = U.remove_inacc cty in
             (Ident.path_of_lid lid, cty)
+
           | _ ->
-            failwith "impossible"
+            failwith "impossible: inspect_sigelt: did not find ctor"
         in
         Sg_Inductive (nm, us, param_bs, ty, List.map inspect_ctor c_lids)
 
@@ -543,8 +544,34 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
         let lb = U.mk_letbinding (BU.Inr fv) univs typ PC.effect_Tot_lid def [] def.pos in
         mk_sigelt <| Sig_let ((r, [lb]), [lid_of_fv fv])
 
-    | Sg_Inductive (nm, us, param_bs, ty, ctors) ->
-        failwith "packing Sg_Inductive, sorry"
+    | Sg_Inductive (nm, us_names, param_bs, ty, ctors) ->
+      let ind_lid = Ident.lid_of_path nm Range.dummyRange in
+      let s = SS.univ_var_closing us_names in
+      let nparam = List.length param_bs in
+
+      let pack_ctor (c:ctor) : sigelt =
+        let (nm, ty) = c in
+        let lid = Ident.lid_of_path nm Range.dummyRange in
+        let ty = U.arrow param_bs (S.mk_Total ty) in
+        let ty = SS.subst s ty in (* close univs *)
+        mk_sigelt <| Sig_datacon (lid, us_names, ty, ind_lid, nparam, [])
+      in
+
+      let ctor_ses : list<sigelt> = List.map pack_ctor ctors in
+      let c_lids : list<Ident.lid> = List.map (fun se -> BU.must (U.lid_of_sigelt se)) ctor_ses in
+
+      let ind_se : sigelt =
+        let param_bs = SS.close_binders param_bs in
+        let ty = SS.close param_bs ty in
+
+        (* close univs *)
+        let param_bs = SS.subst_binders s param_bs in
+        let ty = SS.subst s ty in
+
+        mk_sigelt <| Sig_inductive_typ (ind_lid, us_names, param_bs, ty, [], c_lids)
+      in
+      let se = mk_sigelt <| Sig_bundle (ind_se::ctor_ses, ind_lid::c_lids) in
+      { se with sigquals = Noeq::se.sigquals }
 
     | Unk ->
         failwith "packing Unk, sorry"
