@@ -33,8 +33,7 @@ val reshuffle0 (#p #q : slprop)
 
 private
 let reshuffle0 #p #q peq =
-  Steel.Effect.Atomic.lift_atomic_to_steelT
-    (fun () -> Steel.Effect.Atomic.change_slprop p q (fun m -> ()))
+  Steel.Effect.Atomic.change_slprop p q (fun m -> ())
 
 private
 val reshuffle (#p #q : slprop)
@@ -65,15 +64,19 @@ let assoc_l (p q r:slprop)
 let pts_to_injective #a #p #q (r:ref a) (v0 v1:Ghost.erased a) (rest:Ghost.erased a -> slprop)
   : SteelT unit (pts_to r p v0 `star` pts_to r q v1 `star` rest v1)
                 (fun _ -> pts_to r p v0 `star` pts_to r q v0 `star` rest v0)
-  = Steel.Effect.Atomic.lift_atomic_to_steelT
-      (fun () -> Steel.Effect.Atomic.change_slprop _ _
+  = Steel.Effect.Atomic.change_slprop _ _
                 (fun m -> pts_to_ref_injective r p q v0 v1 m;
-                       assert (v0 == v1)))
+                       assert (v0 == v1))
+
 open Steel.FractionalPermission
+
+(* Since pts_to is witness-invariant, we can witness any `q` here. *)
 let ghost_read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
   : SteelT (Ghost.erased a) (h_exists (fun (v:a) -> pts_to r p v `star` q v))
              (fun v -> pts_to r p v `star` q v)
-  = witness_h_exists ()
+  = pts_to_witinv r p;
+    star_is_witinv_left (fun (v:a) -> pts_to r p v) q;
+    witness_h_exists ()
 
 val intro_pure_p (#p:prop) (s:squash p) (h:slprop)
   : SteelT unit h (fun _ -> pure p `star` h)
@@ -164,18 +167,20 @@ let chan_inv_step_p (vrecv vsend:chan_val) : prop =
   (vsend.chan_prot == step vrecv.chan_prot vrecv.chan_msg /\
    vsend.chan_ctr == vrecv.chan_ctr + 1)
 
-let chan_inv_step (vrecv vsend:chan_val) =
+let chan_inv_step (vrecv vsend:chan_val) : slprop =
   pure (chan_inv_step_p vrecv vsend)
 
-let chan_inv_cond (vsend:chan_val) (vrecv:chan_val) =
+let chan_inv_cond (vsend:chan_val) (vrecv:chan_val) : slprop =
     if vsend.chan_ctr = vrecv.chan_ctr
     then pure (vsend == vrecv)
     else chan_inv_step vrecv vsend
 
+let trace_until_prop #p (r:trace_ref p) (vr:chan_val) (tr: partial_trace_of p) : slprop =
+  MRef.pts_to r full_perm tr `star`
+  pure (until tr == step vr.chan_prot vr.chan_msg)
+
 let trace_until #p (r:trace_ref p) (vr:chan_val) =
-  h_exists (fun (tr:partial_trace_of p) ->
-                   MRef.pts_to r full_perm tr `star`
-                   pure (until tr == step vr.chan_prot vr.chan_msg))
+  h_exists (trace_until_prop r vr)
 
 let chan_inv_recv #p (c:chan_t p) (vsend:chan_val) =
   h_exists (fun (vrecv:chan_val) ->
@@ -483,7 +488,8 @@ let gather_r (#p:sprot) (r:ref chan_val) (v:chan_val)
     (fun _ -> pts_to r full_perm v `star` in_state_slprop p v)
   = h_commute _ _;
     h_assert (in_state r p `star` pts_to r half v);
-    let v' = frame (fun _ -> ghost_read_refine (in_state_slprop p) r) _ in
+    let sub () : SteelT _ _ _ = ghost_read_refine (in_state_slprop p) r in
+    let v' = frame sub _ in
     h_assert ((pts_to r half v' `star` in_state_slprop p v') `star` pts_to r half v);
     reshuffle #_ #(((pts_to r half v `star` pts_to r half v') `star` in_state_slprop p v')) ();
     h_assert ((pts_to r half v `star` pts_to r half v') `star` in_state_slprop p v');
@@ -594,6 +600,9 @@ let write_trace #p (r:trace_ref p)
   = let _ = MRef.write #_ #_ #old_tr r new_tr in
     return ()
 
+let trace_property #p (vr:chan_val) (tr:partial_trace_of p) : slprop =
+  pure (eq (until tr) (step vr.chan_prot vr.chan_msg))
+
 let update_trace #p (r:trace_ref p) (vr:chan_val) (vs:chan_val) (s:squash (chan_inv_step_p vr vs))
   : SteelT unit
            (trace_until r vr) // `star` chan_inv_step vr vs)
@@ -604,12 +613,13 @@ let update_trace #p (r:trace_ref p) (vr:chan_val) (vs:chan_val) (s:squash (chan_
                    MRef.pts_to r full_perm tr `star`
                    pure (until tr == step vr.chan_prot vr.chan_msg))) `star`
                chan_inv_step vr vs);
-    let tr =
-      frame (fun _ ->
+    let sub () : SteelT _ _ _
+       =
         MRef.read_refine #(partial_trace_of p) #full_perm #(extended_to)
-           #(fun (tr:partial_trace_of p) -> pure (eq (until tr) (step vr.chan_prot vr.chan_msg)))
-           r) _
+           #(trace_property vr)
+           r
     in
+    let tr = frame sub _ in
     h_assert ((MRef.pts_to r full_perm tr `star` pure (eq (until tr) (step vr.chan_prot vr.chan_msg))) `star` chan_inv_step vr vs);
     assoc_r _ _ _;
     frame_l (fun _ -> h_commute _ _) _;
@@ -714,7 +724,8 @@ let send_receive_prelude (#p:prot) (cc:chan p)
     h_assert (pts_to c.send half vs `star` chan_inv_recv c vs);
     h_commute _ _;
     frame (fun _ -> h_exists_assoc_r _ _ _) _;
-    let vr = frame (fun _ -> read_refine (fun vr -> trace_until c.trace vr `star` chan_inv_cond vs vr) c.recv) _ in
+    let sub () : SteelT _ _ _ = read_refine (fun vr -> trace_until c.trace vr `star` chan_inv_cond vs vr) c.recv in
+    let vr = frame sub _ in
     h_assert ((pts_to c.recv half vr `star` (trace_until c.trace vr `star` chan_inv_cond vs vr)) `star` pts_to c.send half vs);
     reshuffle #_ #((pts_to c.send half vs `star`
               pts_to c.recv half vr `star` trace_until c.trace vr `star` chan_inv_cond vs vr)) ();

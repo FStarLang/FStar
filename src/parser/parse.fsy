@@ -28,9 +28,6 @@ let logic_qualifier_deprecation_warning =
 let mk_meta_tac m = Meta (Arg_qualifier_meta_tac m)
 let mk_meta_attr m = Meta (Arg_qualifier_meta_attr m)
 
-let abstract_qualifier_warning =
-  "abstract qualifier will soon be removed from F*, use interfaces instead"
-
 let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
@@ -38,7 +35,6 @@ let old_attribute_syntax_warning =
 %start inputFragment
 %start term
 %start warn_error_list
-%token ABSTRACT
 %token AMP
 %token AND
 %token ASSERT
@@ -982,11 +978,6 @@ qualifier:
 | PRIVATE
     {let _1 = () in
                   ( Private )}
-| ABSTRACT
-    {let _1 = () in
-                  ( log_issue (lhs parseState) (Warning_AbstractQualifier,
-                                                abstract_qualifier_warning);
-		    Abstract )}
 | NOEQUALITY
     {let _1 = () in
                   ( Noeq )}

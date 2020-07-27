@@ -15,23 +15,7 @@
         "true_interp"
       ],
       0,
-      "a48c2c2f9b9f031db76e8c2994444e25"
-    ],
-    [
-      "FStar.Heap.trivial_preorder",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Heap.trivial_rel",
-        "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive",
-        "interpretation_Tm_abs_568747eb5009c1dec504311dee989dc2",
-        "true_interp"
-      ],
-      0,
-      "57627607c87563a976c2e3ba23a90f04"
+      "52eff5663f90ad0ab4c213bc77d989c6"
     ]
   ]
 ]

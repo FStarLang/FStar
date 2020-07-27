@@ -167,12 +167,13 @@ let if_then_else (a:Type)
   (req_else:req_t pre) (ens_else:ens_t pre a post)
   (f:repr a pre post req_then ens_then)
   (g:repr a pre post req_else ens_else)
-  (p:Type0)
+  (p:bool)
 : Type
 = repr a pre post
     (if_then_else_req req_then req_else p)
     (if_then_else_ens ens_then ens_else p)
 
+[@@allow_informative_binders]
 reifiable reflectable
 layered_effect {
   SteelF: a:Type -> pre:pre_t -> post:post_t a -> req_t pre -> ens_t pre a post -> Effect
@@ -183,6 +184,7 @@ layered_effect {
        if_then_else = if_then_else
 }
 
+[@@allow_informative_binders]
 reflectable
 new_effect Steel = SteelF
 
@@ -402,7 +404,7 @@ let bind_pure_steel_ (a:Type) (b:Type)
   (wp:pure_wp a)
   (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t b)
   (req:a -> req_t pre) (ens:a -> ens_t pre b post)
-  (f:unit -> PURE a wp) (g:(x:a -> repr b pre post (req x) (ens x)))
+  (f:eqtype_as_type unit -> PURE a wp) (g:(x:a -> repr b pre post (req x) (ens x)))
 : repr b
     pre
     post

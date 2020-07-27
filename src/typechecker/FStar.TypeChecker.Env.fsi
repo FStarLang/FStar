@@ -140,7 +140,7 @@ and env = {
   use_eq_strict  :bool;                         (* this flag is a stricter version of use_eq *)
                                                 (* use_eq is not sticky, it is reset on set_expected_typ and clear_expected_typ *)
                                                 (* at least, whereas use_eq_strict does not change as we traverse the term *)
-                                                (* during typechecking *)
+                                                (* during typechecking, it also implies no smt *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)

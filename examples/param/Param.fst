@@ -104,8 +104,8 @@ let rec param' (bvmap : bvmap) (t:term) : Tac term =
 
 let param t =
   let t = param' [] t in
-  //dump ("res = " ^ term_to_string t);
   let t = norm_term [] t in
+  //dump ("res = " ^ term_to_string t);
   t
 
 [@@(preprocess_with param)]
@@ -117,21 +117,56 @@ let test1 = Type -> Type
 [@@(preprocess_with param)]
 let test2 = bd1:Type -> bd2:Type -> bd1
 
+// GM: Using implicits here. The `param` metaprogram is meant to handle
+// them properly but take that with a grain of salt.
 [@@(preprocess_with param)]
-let param_id = a:Type -> a -> a
+let param_id = #a:Type -> a -> a
 
-let id (a:Type0) (x:a) : a = x
+let id (#a:Type0) (x:a) : a = x
 
-[@@(preprocess_with param)]
-let id_is_param = (fun (a:Type) (x:a) -> x)
-
-let id_is_unique (f : (a:Type -> a -> a)) (f_parametric : param_id f f) : Lemma (forall a (x:a). f a x == x) =
-  let aux a x : Lemma (f a x == x) =
+let id_is_unique (f : (#a:Type -> a -> a)) (f_parametric : param_id f f) : Lemma (forall a (x:a). f x == x) =
+  let aux a x : Lemma (f x == x) =
     f_parametric a unit (fun y () -> squash (x == y)) x () ()
   in
   Classical.forall_intro_2 aux
 
+[@@preprocess_with param]
+let id_is_param = (fun (#a:Type) (x:a) -> x)
+
 let test () = id_is_unique id id_is_param
+
+[@@preprocess_with param]
+let binop_param = #a:Type -> a -> a -> a
+
+let binop_is_fst_or_snd_pointwise (f : (#a:Type -> a -> a -> a)) (f_param : binop_param f f)
+  : Lemma (forall a (x y : a). f x y == x \/ f x y == y)
+  =
+  let aux a (x y : a) : Lemma (f x y == x \/ f x y == y) =
+   f_param a unit (fun z () -> squash (z == x \/ z == y)) x () () y () ()
+  in
+  Classical.forall_intro_3 aux
+
+let binop_is_fst_or_snd_extensional (f : (#a:Type -> a -> a -> a)) (f_param : binop_param f f)
+  : Lemma ((forall a (x y : a). f x y == x) \/ (forall a (x y : a). f x y == y))
+  =
+  binop_is_fst_or_snd_pointwise f f_param;
+  assert (f 1 2 == 1 \/ f 1 2 == 2);
+  let aux1 (_ : squash (f 1 2 == 1))
+           a (x y : a) : Lemma (f x y == x) =
+   f_param a int (fun z i -> squash (i == 1 ==> z == x)) x 1 () y 2 ()
+  in
+  let aux2 (_ : squash (f 1 2 == 2))
+           a (x y : a) : Lemma (f x y == y) =
+   f_param a int (fun z i -> squash (i == 2 ==> z == y)) x 1 () y 2 ()
+  in
+  let aux1' () : Lemma (requires (f 1 2 == 1)) (ensures (forall a (x y : a). f x y == x)) =
+    Classical.forall_intro_3 (aux1 ())
+  in
+  let aux2' () : Lemma (requires (f 1 2 == 2)) (ensures (forall a (x y : a). f x y == y)) =
+    Classical.forall_intro_3 (aux2 ())
+  in
+  Classical.move_requires aux1' ();
+  Classical.move_requires aux2' ()
 
 [@@(preprocess_with param)]
 let test_int_to_int = int -> int
@@ -156,7 +191,7 @@ let rec list_rec_of_function_is_map #a #b (f : a -> b) (l1 : list a) (l2 : list 
    | _ -> ()
 
 let reverse_commutes_with_map
-    (rev : (a:Type -> list a -> list a))
+    (rev : (a:Type -> list a -> list a)) // doesn't really have to be "reverse"...
     (rev_is_param : rev_param rev rev)
     : Lemma (forall a b (f : a -> b) l. rev b (List.Tot.map f l) == List.Tot.map f (rev a l))
     =
@@ -168,3 +203,34 @@ let reverse_commutes_with_map
     ()
   in
   Classical.forall_intro_4 aux
+
+let rec reverse (a:Type) (l : list a) : list a =
+  match l with
+  | [] -> []
+  | x::xs -> reverse _ xs @ [x]
+
+let rec lem_rel_app (a0 a1 : Type) (ra : a0 -> a1 -> Type)
+                (l0 r0 : list a0) (l1 r1 : list a1)
+                : Lemma (requires (list_rec ra l0 l1 /\ list_rec ra r0 r1))
+                        (ensures (list_rec ra (l0@r0) (l1@r1))) =
+   match l0, l1 with                       
+   | h0::t0, h1::t1 -> lem_rel_app a0 a1 ra t0 r0 t1 r1
+   | _ -> ()
+
+(* Doesn't work by SMT, and tactic above does not handle fixpoints.
+ * What to do about them? Is there a translation for general recursion?
+ * Should read https://openaccess.city.ac.uk/id/eprint/1072/1/PFF.pdf in
+ * more detail. *)
+let rev_is_param () : rev_param reverse reverse =
+  fun a0 a1 ra l0 l1 (sq : squash (list_rec ra l0 l1)) ->
+    let rec aux l0 l1 : Lemma (requires (list_rec ra l0 l1))
+                          (ensures list_rec ra (reverse _ l0) (reverse _ l1)) =
+      match l0, l1 with
+      | h0::t0, h1::t1 -> aux t0 t1; lem_rel_app _ _ ra (reverse _ t0) [h0] (reverse _ t1) [h1]
+      | _ -> ()
+    in
+    aux l0 l1
+
+let real_reverse_commutes_with_map ()
+  : Lemma (forall a b (f : a -> b) l. reverse b (List.Tot.map f l) == List.Tot.map f (reverse a l))
+  = reverse_commutes_with_map reverse (rev_is_param ())

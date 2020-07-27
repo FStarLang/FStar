@@ -894,8 +894,6 @@ let occurs_check (uk:ctx_uvar) t =
                         (Print.term_to_string t)) in
     uvars, not occurs, msg
 
-(* Returns the maximal common prefix of bs and bs', as well as a pair
-   containing the remainders of bs and bs' *)
 let rec maximal_prefix (bs:binders) (bs':binders) : binders * (binders * binders) =
   match bs, bs' with
   | (b, i)::bs_tail, (b', i')::bs'_tail ->
@@ -915,6 +913,55 @@ let gamma_until (g:gamma) (bs:binders) =
       match BU.prefix_until (function Binding_var x' -> S.bv_eq x x' | _  -> false) g with
       | None -> []
       | Some (_, bx, rest) -> bx::rest
+
+(*
+ * AR: 07/20: generalizing restrict
+ *
+ * Given G_s |- ?u_s bs : t_s and G_t |- ?u_t : t_t, this code restricts G_t to the
+ *   maximal prefix of G_s and G_t, creating a new uvar maximal_prefix(G_s, G_t) |- ?u : t_t,
+ *   and assigning ?u_t = ?u
+ *
+ * However simply doing this does not allow the solution of ?u to mention the binders bs
+ *
+ * Instead, we filter bs that also appear in G_t but not in the maximal prefix and
+ *   allow the solution of G_t to contain them
+ *
+ * (The solution of ?u_t is already allowed to contain the ones appearing in the maximal prefix)
+ *
+ * So the new uvar that's created is maximal_prefix(G_s, G_t) |- ?u : bs -> t_t
+ *   and assigning ?u_t = ?u bs
+ *
+ * This comes in handy for the flex-rigid case, where the arguments of the flex are a pattern
+ *)
+let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl =
+  let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
+  let g = gamma_until src.ctx_uvar_gamma pfx in
+
+  //t is the type at which new uvar ?u should be created
+  //f is a function that applied to the new uvar term should return the term that ?u_t should be solved to
+  let aux (t:typ) (f:term -> term) =
+    let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
+      src.ctx_uvar_range g pfx t
+      src.ctx_uvar_should_check src.ctx_uvar_meta in
+    U.set_uvar src.ctx_uvar_head (f src');
+    wl in
+
+  let bs = bs |> List.filter (fun (bv1, _) ->
+    src.ctx_uvar_binders |> List.existsb (fun (bv2, _) -> S.bv_eq bv1 bv2) &&  //binder exists in G_t
+    not (pfx |> List.existsb (fun (bv2, _) -> S.bv_eq bv1 bv2))) in  //but not in the maximal prefix
+    
+  if List.length bs = 0 then aux src.ctx_uvar_typ (fun src' -> src')  //no abstraction over bs
+  else begin
+    aux
+      (src.ctx_uvar_typ |> env.universe_of env |> Some |> S.mk_Total' src.ctx_uvar_typ |> U.arrow bs)  //bs -> Tot t_t
+      (fun src' -> S.mk_Tm_app  //?u bs
+        src'
+        (bs |> S.binders_to_names |> List.map S.as_arg)
+        src.ctx_uvar_range)
+  end
+
+let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list<ctx_uvar>) wl  =
+    List.fold_right (restrict_ctx env tgt bs) sources wl
 
 let intersect_binders (g:gamma) (v1:binders) (v2:binders) : binders =
     let as_set v =
@@ -937,49 +984,6 @@ let intersect_binders (g:gamma) (v1:binders) (v2:binders) : binders =
                  else isect, isect_set)
         ([], ctx_binders) in
     List.rev isect
-
-let restrict_ctx (tgt:ctx_uvar) (xs:binders) (src:ctx_uvar) wl =
-    let pfx, (tgt_sfx, src_sfx) = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
-    let g = gamma_until src.ctx_uvar_gamma pfx in
-
-    // Compute the list of binders from `xs` that is not in the maximal common prefix.
-    let xs_i = intersect_binders g src_sfx xs in
-
-    let new_typ = U.arrow xs_i (S.mk_Total src.ctx_uvar_typ) in
-
-    // Check that new_typ is well-typed in the new context: Some required binders might have been removed
-    // let ctx_binders =
-    //     List.fold_left (fun out b -> match b with Binding_var x -> BU.set_add x out | _ -> out)
-    //                    S.no_names
-    //                    g
-    // in
-    // let fvs = Free.names new_typ in
-
-    // if BU.set_is_subset_of fvs ctx_binders then ()
-    // else failwith (BU.format6 "Restricting the scope of a uvar with type %s in context %s led to an ill-typed term: %s is not well-typed in context %s:\n
-    //   Initial context was %s and binders %s were passed"
-    //                           (Print.term_to_string src.ctx_uvar_typ)
-    //     		      (print_gamma src.ctx_uvar_gamma)
-    //                           (Print.term_to_string new_typ)
-    //                           (print_gamma g)
-    //                           (print_gamma tgt.ctx_uvar_gamma)
-    //                           (Print.binders_to_string " " xs));
-    //                           // (Print.set_to_string Print.bv_to_string fvs)
-    //                           // (Print.set_to_string Print.bv_to_string ctx_binders));
-
-
-    let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
-      src.ctx_uvar_range g pfx new_typ
-      src.ctx_uvar_should_check src.ctx_uvar_meta in
-
-    // TODO: This should be built more carefully to handle implicit args
-    let xs_args:args = List.map S.as_arg (S.binders_to_names xs_i) in
-    let uvar_app:term = S.mk_Tm_app src' xs_args src.ctx_uvar_range in
-    U.set_uvar src.ctx_uvar_head uvar_app;
-    wl
-
-let restrict_all_uvars (tgt:ctx_uvar) (sources:list<ctx_uvar>) (xs:binders) wl  =
-    List.fold_right (restrict_ctx tgt xs) sources wl
 
 let binders_eq v1 v2 =
   List.length v1 = List.length v2
@@ -1695,6 +1699,8 @@ and giveup_or_defer (env:Env.env) (orig:prob) (wl:worklist) (msg:lstring) : solu
     else giveup env msg orig
 
 and defer_to_user_tac (env:Env.env) (orig:prob) reason (wl:worklist) : solution =
+  if Env.debug env <| Options.Other "Rel" then
+    BU.print1 "\n\t\tDeferring %s to a tactic\n" (prob_to_string env orig);
   let wl = solve_prob orig None [] wl in
   let wl = {wl with wl_deferred_to_tac=(wl.ctr, Thunk.mkv reason, orig)::wl.wl_deferred_to_tac} in
   solve env wl
@@ -2156,6 +2162,8 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                               (lhs:flex_t)
                               (rhs:term)
     : solution =
+    if Env.debug env <| Options.Other "Rel" then
+      BU.print_string "solve_t_flex_rigid_eq\n";
 
     if should_defer_flex_to_user_tac env wl lhs
     then defer_to_user_tac env orig (flex_reason lhs) wl
@@ -2180,6 +2188,8 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
     let try_quasi_pattern (orig:prob) (env:Env.env) (wl:worklist)
                           (lhs:flex_t) (rhs:term)
         : either<string, list<uvi>> * worklist =
+        if Env.debug env <| Options.Other "Rel" then
+          BU.print_string "try_quasi_pattern\n";
         match quasi_pattern env lhs with
         | None ->
           Inl "Not a quasi-pattern", wl
@@ -2193,7 +2203,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                let fvs_rhs = Free.names rhs in
                if not (BU.set_is_subset_of fvs_rhs fvs_lhs)
                then Inl ("quasi-pattern, free names on the RHS are not included in the LHS"), wl
-               else Inr (mk_solution env lhs bs rhs), restrict_all_uvars ctx_u uvars [] wl
+               else Inr (mk_solution env lhs bs rhs), restrict_all_uvars env ctx_u [] uvars wl
     in
 
     let imitate_app (orig:prob) (env:Env.env) (wl:worklist)
@@ -2201,7 +2211,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                     (rhs:term)
         : solution =
         //if Env.debug env <| Options.Other "Rel"
-        //then printfn "imitate_app 1:\n\tlhs=%s\n\tbs_lhs=%s\n\tt_res_lhs=%s\n\trhs=%s\n"
+        //then BU.print4 "imitate_app 1:\n\tlhs=%s\n\tbs_lhs=%s\n\tt_res_lhs=%s\n\trhs=%s\n"
         //    (flex_t_to_string lhs)
         //    (Print.binders_to_string ", " bs_lhs)
         //    (Print.term_to_string t_res_lhs)
@@ -2210,19 +2220,23 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         let args_rhs, last_arg_rhs = BU.prefix args in
         let rhs' = S.mk_Tm_app rhs_hd args_rhs rhs.pos in
         //if Env.debug env <| Options.Other "Rel"
-        //then printfn "imitate_app 2:\n\trhs'=%s\n\tlast_arg_rhs=%s\n"
+        //then BU.print2 "imitate_app 2:\n\trhs'=%s\n\tlast_arg_rhs=%s\n"
         //            (Print.term_to_string rhs')
         //            (Print.args_to_string [last_arg_rhs]);
         let (Flex (t_lhs, u_lhs, _lhs_args)) = lhs in
         let lhs', lhs'_last_arg, wl =
               let _, t_last_arg, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
               //FIXME: this may be an implicit arg ... fix qualifier
-              let _, lhs', wl = copy_uvar u_lhs (bs_lhs@[S.null_binder t_last_arg]) t_res_lhs wl in
+              //AR: 07/20: note the type of lhs' is t_last_arg -> t_res_lhs
+              let _, lhs', wl =
+                let b = S.null_binder t_last_arg in
+                copy_uvar u_lhs (bs_lhs@[b])
+                (t_res_lhs |> env.universe_of env |> Some |> S.mk_Total' t_res_lhs |> U.arrow [b]) wl in
               let _, lhs'_last_arg, wl = copy_uvar u_lhs bs_lhs t_last_arg wl in
               lhs', lhs'_last_arg, wl
         in
         //if Env.debug env <| Options.Other "Rel"
-        //then printfn "imitate_app 3:\n\tlhs'=%s\n\tlast_arg_lhs=%s\n"
+        //then BU.print2 "imitate_app 3:\n\tlhs'=%s\n\tlast_arg_lhs=%s\n"
         //            (Print.term_to_string lhs')
         //            (Print.term_to_string lhs'_last_arg);
         let sol = [TERM(u_lhs, U.abs bs_lhs (S.mk_Tm_app lhs' [S.as_arg lhs'_last_arg] t_lhs.pos)
@@ -2239,6 +2253,8 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
     let first_order (orig:prob) (env:Env.env) (wl:worklist)
                     (lhs:flex_t) (rhs:term)
         : solution =
+        if Env.debug env <| Options.Other "Rel" then
+          BU.print_string "first_order\n";
         let is_app rhs =
            let _, args = U.head_and_args rhs in
            match args with
@@ -2280,18 +2296,29 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
       let (Flex (_t1, ctx_uv, args_lhs)) = lhs in
       match pat_vars env ctx_uv.ctx_uvar_binders args_lhs with
       | Some lhs_binders -> //Pattern
+        if Env.debug env <| Options.Other "Rel" then
+          BU.print_string "it's a pattern\n";
         let rhs = sn env rhs in
         let names_to_string fvs =
             List.map Print.bv_to_string (BU.set_elements fvs) |> String.concat ", "
         in
         let fvs1 = binders_as_bv_set (ctx_uv.ctx_uvar_binders @ lhs_binders) in
         let fvs2 = Free.names rhs in
+        //if Env.debug env <| Options.Other "Rel" then
+        //  BU.print4 "lhs \t= %s\n\
+        //             FV(lhs) \t= %s\n\
+        //             rhs \t= %s\n\
+        //             FV(rhs) \t= %s\n"
+        //               (flex_t_to_string lhs)
+        //               (names_to_string fvs1)
+        //               (Print.term_to_string rhs)
+        //               (names_to_string fvs2);
         let uvars, occurs_ok, msg = occurs_check ctx_uv rhs in
         if not occurs_ok
         then giveup_or_defer env orig wl (Thunk.mkv <| "occurs-check failed: " ^ (Option.get msg))
         else if BU.set_is_subset_of fvs2 fvs1
         then let sol = mk_solution env lhs lhs_binders rhs in
-             let wl = restrict_all_uvars ctx_uv uvars lhs_binders wl in
+             let wl = restrict_all_uvars env ctx_uv lhs_binders uvars wl in
              solve env (solve_prob orig None sol wl)
         else if wl.defer_ok
         then
@@ -2367,7 +2394,10 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                                           ^"\tlhs="  ^u_lhs.ctx_uvar_reason
                                           ^ "\trhs=" ^u_rhs.ctx_uvar_reason)
                                          wl range gamma_w ctx_w (U.arrow zs (S.mk_Total t_res_lhs))
-                                         Strict
+                                         (if u_lhs.ctx_uvar_should_check = Allow_untyped &&
+                                             u_rhs.ctx_uvar_should_check = Allow_untyped
+                                          then Allow_untyped
+                                          else Strict)
                                          None in
                  let w_app = S.mk_Tm_app w (List.map (fun (z, _) -> S.as_arg (S.bv_to_name z)) zs) w.pos in
                  let _ =
@@ -3235,7 +3265,7 @@ and solve_c (env:Env.env) (problem:problem<comp>) (wl:worklist) : solution =
        *)
 
       if problem.relation = EQ
-      then solve_eq c1 c2 Env.trivial_guard
+      then solve_eq c1 c2 Env.trivial_guard        
       else
         let r = Env.get_range env in
 
@@ -3932,7 +3962,7 @@ let teq_nosmt (env:env) (t1:typ) (t2:typ) : option<guard_t> =
  *   and the set of new implicits, right now this set is same as imps,
  *   for inductives, this may later include implicits for pattern variables
  *)
-
+ 
 let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.implicits * bool =
   (*
    * Get the value of the implicit imp
@@ -3943,9 +3973,9 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
   else
     let imp_value imp : option<term> =
       let ctx_u, r = imp.imp_uvar, imp.imp_range in
-
+  
      let t_norm = N.normalize N.whnf_steps env ctx_u.ctx_uvar_typ in
-
+    
       match (SS.compress t_norm).n with
       | Tm_fvar fv when S.fv_eq_lid fv Const.unit_lid ->
         r |> S.unit_const_with_range |> Some
@@ -3961,7 +3991,7 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
       else b) false imps in
 
     imps, b
-
+  
 let resolve_implicits' env is_tac g =
   let must_total, forcelax =
     if is_tac then false, true
@@ -4091,7 +4121,7 @@ let teq_nosmt_force (env:env) (t1:typ) (t2:typ) :bool =
 let layered_effect_teq env (t1:term) (t2:term) (reason:option<string>) : guard_t =
   if Env.debug env <| Options.Other "LayeredEffectsEqns"
   then BU.print3 "Layered Effect (%s) %s = %s\n"
-         (if reason |> is_none then "_" else reason |> must)
+         (if reason |> is_none then "_" else reason |> must)              
          (Print.term_to_string t1) (Print.term_to_string t2);
   teq env t1 t2  //AR: teq_nosmt?
 

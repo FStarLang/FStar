@@ -308,7 +308,7 @@ let extract_typ_abbrev env quals attrs lb
         in
         tcenv, as_pair def_typ
     in
-    let lbtyp = FStar.TypeChecker.Normalize.normalize [Env.Beta;Env.UnfoldUntil delta_constant] tcenv lbtyp in
+    let lbtyp = FStar.TypeChecker.Normalize.normalize [Env.Beta;Env.UnfoldUntil delta_constant; Env.ForExtraction] tcenv lbtyp in
     //eta expansion is important; see issue #490
     let lbdef = FStar.TypeChecker.Normalize.eta_expand_with_type tcenv lbdef lbtyp in
     let fv = right lb.lbname in
@@ -352,7 +352,8 @@ let extract_let_rec_type env quals attrs lb
         [Env.Beta;
          Env.AllowUnboundUniverses;
          Env.EraseUniverses;
-         Env.UnfoldUntil delta_constant]
+         Env.UnfoldUntil delta_constant;
+         Env.ForExtraction]
         (tcenv_of_uenv env)
         lb.lbtyp
     in
@@ -411,7 +412,7 @@ let extract_bundle_iface env se
            let g =
             List.fold_right
                 (fun id g ->
-                   let mlp, g = UEnv.extend_record_field_name g (ind.iname, id) in
+                   let _, g = UEnv.extend_record_field_name g (ind.iname, id) in
                    g)
                 ids
                 env
@@ -674,7 +675,7 @@ let extract_bundle env se =
         env_t * (mlsymbol * list<(mlsymbol * mlty)>)
         =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env_iparams) (Term.term_as_mlty env_iparams ctor.dtyp) in
-        let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses ] in
+        let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction ] in
         let names = match (SS.compress (N.normalize steps (tcenv_of_uenv env_iparams) ctor.dtyp)).n with
           | Tm_arrow (bs, _) ->
               List.map (fun ({ ppname = ppname }, _) -> (string_of_id ppname)) bs
@@ -700,8 +701,8 @@ let extract_bundle env se =
              let fields, g =
                 List.fold_right2
                   (fun id (_, ty) (fields, g) ->
-                     let mlp, g = UEnv.extend_record_field_name g (ind.iname, id) in
-                     (snd mlp, ty)::fields, g)
+                     let mlid, g = UEnv.extend_record_field_name g (ind.iname, id) in
+                     (mlid, ty)::fields, g)
                    ids
                    c_ty
                    ([], env)

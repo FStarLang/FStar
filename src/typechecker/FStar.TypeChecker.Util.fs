@@ -1215,10 +1215,11 @@ let bind r1 env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                       let c2 = SS.subst_comp [NT(x,e1)] c2 in
                       let x_eq_e = U.mk_eq2 u_res_t1 res_t1 e1 (bv_to_name x) in
                       let c2, g_w = weaken_comp (Env.push_binders env [S.mk_binder x]) c2 x_eq_e in
-                      let g = Env.conj_guard g_c1
-                        (Env.close_guard env [S.mk_binder x] (TcComm.weaken_guard_formula g_c2 x_eq_e)) in
-                      let c, g_bind = mk_bind c1 b c2 g in
-                      c, Env.conj_guard g_w g_bind
+                      let g = Env.conj_guards [
+                        g_c1;
+                        Env.close_guard env [S.mk_binder x] g_w;
+                        Env.close_guard env [S.mk_binder x] (TcComm.weaken_guard_formula g_c2 x_eq_e) ] in
+                      mk_bind c1 b c2 g
                 //Caution: here we keep the flags for c2 as is, these flags will be overwritten later when we do md.bind below
                 //If we decide to return c2 as is (after inlining), we should reset these flags else bad things will happen
             else mk_bind c1 b c2 trivial_guard
@@ -1441,12 +1442,13 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
     flags = []
   }), Env.conj_guard (Env.conj_guard g_uvars f_guard) g_guard
 
-
 (*
  * For non-layered effects, just apply the if_then_else combinator
  *)
 let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (_:Range.range)
 : comp * guard_t =
+  //p is a boolean guard, so b2t it
+  let p = U.b2t p in
   let if_then_else = ed |> U.get_wp_if_then_else_combinator |> must in
   let _, _, wp_t = destruct_wp_comp ct1 in
   let _, _, wp_e = destruct_wp_comp ct2 in
@@ -1470,6 +1472,9 @@ let comp_pure_wp_false env (u:universe) (t:typ) =
   let md     = Env.get_effect_decl env C.effect_PURE_lid in
   mk_comp md u t wp []
 
+(*
+ * The formula in lcases is the individual branch guard, a boolean
+ *)
 let bind_cases env0 (res_t:typ)
   (lcases:list<(formula * lident * list<cflag> * (bool -> lcomp))>)
   (scrutinee:bv) : lcomp =
@@ -1523,7 +1528,7 @@ let bind_cases env0 (res_t:typ)
               lcases
               |> List.map (fun (g, _, _, _) -> g)
               |> List.fold_left (fun (conds, acc) g ->
-                  let cond = U.mk_conj acc (U.mk_neg g) in
+                  let cond = U.mk_conj acc (g |> U.b2t |> U.mk_neg) in
                   (conds@[cond]), cond) ([U.t_true], U.t_true)
               |> fst
               |> (fun l -> List.splitAt (List.length l - 1) l)  //the length of the list is at least 1
@@ -1555,7 +1560,7 @@ let bind_cases env0 (res_t:typ)
                   let c, g =
                     let lc = maybe_return eff_last c_last in
                     let c, g = TcComm.lcomp_comp lc in
-                    c, TcComm.weaken_guard_formula g (U.mk_conj g_last neg_last) in
+                    c, TcComm.weaken_guard_formula g (U.mk_conj (U.b2t g_last) neg_last) in
 
                   lcases,
                   neg_branch_conds,
@@ -1583,12 +1588,14 @@ let bind_cases env0 (res_t:typ)
 
                   //weaken the then and else guards
                   //neg_cond is the negated branch condition upto this branch
-                  let g_then = TcComm.weaken_guard_formula
-                    (Env.conj_guard g_then g_lift_then)
-                    (U.mk_conj neg_cond g) in
-                  let g_else = TcComm.weaken_guard_formula
-                    g_lift_else
-                    (U.mk_conj neg_cond (U.mk_neg g)) in                
+                  let g_then, g_else =
+                    let g = U.b2t g in
+                    TcComm.weaken_guard_formula
+                      (Env.conj_guard g_then g_lift_then)
+                      (U.mk_conj neg_cond g),
+                    TcComm.weaken_guard_formula
+                      g_lift_else
+                      (U.mk_conj neg_cond (U.mk_neg g)) in
 
                   Some md,
                   c,
@@ -2438,10 +2445,10 @@ let generalize env is_rec lecs =
 let check_has_type env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t =
   let env = Env.set_range env e.pos in
   let check env t1 t2 =
-    if env.use_eq_strict  //AR: note that we can do this even if env has just use_eq
-    then match Rel.get_teq_predicate env t1 t2 with
-         | None -> None
-         | Some f -> apply_guard f e |> Some
+    if env.use_eq_strict
+    then match Rel.teq_nosmt_force env t1 t2 with
+         | false -> None
+         | true -> Env.trivial_guard |> Some
     else if env.use_eq
     then Rel.try_teq true env t1 t2
     else match Rel.get_subtyping_predicate env t1 t2 with
@@ -2608,7 +2615,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
 let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
     let visibility = function Private -> true | _ -> false in
     let reducibility = function
-        | Abstract | Irreducible
+        | Irreducible
         | Unfold_for_unification_and_vcgen | Visible_default
         | Inline_for_extraction -> true
         | _ -> false in
@@ -2649,11 +2656,10 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         | Unfold_for_unification_and_vcgen
         | Visible_default
         | Irreducible
-        | Abstract
         | Noeq
         | Unopteq ->
           quals
-          |> List.for_all (fun x -> x=q || x=Logic || x=Abstract || x=Inline_for_extraction || x=NoExtract || has_eq x || inferred x || visibility x || reification x)
+          |> List.for_all (fun x -> x=q || x=Logic || x=Inline_for_extraction || x=NoExtract || has_eq x || inferred x || visibility x || reification x)
 
         | TotalEffect ->
           quals
@@ -2758,8 +2764,7 @@ let check_sigelt_quals (env:FStar.TypeChecker.Env.env) se =
         then err "definitions cannot be assumed or marked with equality qualifiers"
       | Sig_bundle _ ->
         if not (quals |> BU.for_all (fun x ->
-              x=Abstract
-              || x=Inline_for_extraction
+              x=Inline_for_extraction
               || x=NoExtract
               || inferred x
               || visibility x
@@ -2853,9 +2858,10 @@ let fresh_effect_repr env r eff_name signature_ts repr_ts_opt u a_tm =
           S.mk (Tm_arrow ([S.null_binder S.t_unit], eff_c)) r
         | Some repr_ts ->
           let repr = Env.inst_tscheme_with repr_ts [u] |> snd in
+          let is_args = List.map2 (fun i (_, aqual) -> (i, aqual)) is bs in
           S.mk_Tm_app
             repr
-            (List.map S.as_arg (a_tm::is))
+            (S.as_arg a_tm::is_args)
             r), g
      | _ -> fail signature)
   | _ -> fail signature
@@ -3058,8 +3064,11 @@ let get_mlift_for_subeff env (sub:S.sub_eff) : Env.mlift =
          | Some ts -> Some (mk_mlift_term ts) })
 
 
-let update_env_sub_eff env sub =
-  Env.update_effect_lattice env sub.source sub.target (get_mlift_for_subeff env sub)
+let update_env_sub_eff env sub r =
+  let r0 = env.range in
+  let env = Env.update_effect_lattice
+    ({ env with range = r }) sub.source sub.target (get_mlift_for_subeff env sub) in
+  { env with range = r0 }
 
 let update_env_polymonadic_bind env m n p ty =
   Env.add_polymonadic_bind env m n p

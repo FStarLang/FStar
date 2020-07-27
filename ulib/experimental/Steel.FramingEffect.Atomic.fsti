@@ -28,7 +28,7 @@ val unobservable : observability
 let obs_at_most_one o1 o2 =
   o1==unobservable \/ o2==unobservable
 
-let join_obs (o1:observability) (o2:observability{obs_at_most_one o1 o2}) =
+let join_obs (o1:observability) (o2:observability) =
   has_eq_observability();
   if observable = o1 || observable = o2
   then observable
@@ -50,7 +50,7 @@ val return (a:Type u#a)
 val bind (a:Type u#a) (b:Type u#b)
    (opened_invariants:inames)
    (o1:observability)
-   (o2:observability{obs_at_most_one o1 o2})
+   (o2:observability)
    (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
    (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
    (#[@@ framing_implicit] p:squash (can_be_split_forall post_f pre_g))
@@ -73,16 +73,17 @@ val subcomp (a:Type)
        (requires o1 == observable ==> o2 == observable)
        (ensures fun _ -> True)
 
-let if_then_else (a:Type)
-  (opened_invariants:inames)
-  (o:observability)
-  (#[@@framing_implicit] pre:pre_t) (#[@@framing_implicit] post:post_t a)
-  (f:atomic_repr a opened_invariants o pre post)
-  (g:atomic_repr a opened_invariants o pre post)
-  (p:Type0)
-  : Type
-  = atomic_repr a opened_invariants o pre post
+// let if_then_else (a:Type)
+//   (opened_invariants:inames)
+//   (o:observability)
+//   (#[@@framing_implicit] pre:pre_t) (#[@@framing_implicit] post:post_t a)
+//   (f:atomic_repr a opened_invariants o pre post)
+//   (g:atomic_repr a opened_invariants o pre post)
+//   (p:Type0)
+//   : Type
+//   = atomic_repr a opened_invariants o pre post
 
+[@@allow_informative_binders]
 total
 reifiable reflectable
 layered_effect {
@@ -96,10 +97,11 @@ layered_effect {
   repr = atomic_repr;
   return = return;
   bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+  subcomp = subcomp
+  // if_then_else = if_then_else
 }
 
+[@@allow_informative_binders]
 total
 reifiable reflectable
 new_effect SteelAtomic = SteelAtomicF
@@ -107,7 +109,7 @@ new_effect SteelAtomic = SteelAtomicF
 val bind_steela_steela (a:Type) (b:Type)
   (opened_invariants:inames)
   (o1:observability)
-  (o2:observability{obs_at_most_one o1 o2})
+  (o2:observability)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
   (#[@@ framing_implicit] frame_f:slprop) (#[@@ framing_implicit] frame_g:slprop)
@@ -126,7 +128,7 @@ polymonadic_bind (SteelAtomic, SteelAtomic) |> SteelAtomicF = bind_steela_steela
 val bind_steela_steelaf (a:Type) (b:Type)
   (opened_invariants:inames)
   (o1:observability)
-  (o2:observability{obs_at_most_one o1 o2})
+  (o2:observability)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
   (#[@@ framing_implicit] frame_f:slprop)
@@ -144,7 +146,7 @@ polymonadic_bind (SteelAtomic, SteelAtomicF) |> SteelAtomicF = bind_steela_steel
 val bind_steelaf_steela (a:Type) (b:Type)
   (opened_invariants:inames)
   (o1:observability)
-  (o2:observability{obs_at_most_one o1 o2})
+  (o2:observability)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
   (#[@@ framing_implicit] frame_g:slprop)
@@ -164,7 +166,7 @@ val bind_pure_steela_ (a:Type) (b:Type)
   (o:observability)
   (wp:pure_wp a)
   (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t b)
-  (f:unit -> PURE a wp) (g:(x:a -> atomic_repr b opened_invariants o pre post))
+  (f:eqtype_as_type unit -> PURE a wp) (g:(x:a -> atomic_repr b opened_invariants o pre post))
 : atomic_repr b opened_invariants o
     pre
     post

@@ -437,9 +437,10 @@ let assign #a vec i v =
 private val resize_ratio: uint32_t
 private let resize_ratio = 2ul
 
-private val new_capacity: cap:uint32_t{cap > 0ul} -> Tot uint32_t
+private val new_capacity: cap:uint32_t -> Tot uint32_t
 private let new_capacity cap =
   if cap >= max_uint32 / resize_ratio then max_uint32
+  else if cap = 0ul then 1ul
   else cap * resize_ratio
 
 val insert:

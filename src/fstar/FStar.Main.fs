@@ -130,18 +130,6 @@ let go _ =
              Parser.Dep.print deps;
              report_errors []
 
-        (* Input validation: should this go to process_args? *)
-        (*          don't verify anything *)
-        else if Options.use_extracted_interfaces ()
-             && (not (Options.expose_interfaces ()))
-             && List.length filenames > 1
-        then
-          Errors.raise_error (Errors.Error_TooManyFiles,
-                              "Only one command line file is allowed if \
-                               --use_extracted_interfaces is set, \
-                               found " ^ (string_of_int (List.length filenames)))
-                             Range.dummyRange
-
         (* --print: Emit files in canonical source syntax *)
         else if Options.print () || Options.print_in_place () then
           if FStar.Platform.is_fstar_compiler_using_ocaml

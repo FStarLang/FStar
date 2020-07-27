@@ -1,14 +1,23 @@
 [
-  "¾ƒ\u000e^ú4\u0001¶Q¶kË ’ðÛ",
+  "±€?<\u001b'b·éCXÍ¢‘s\n",
   [
     [
-      "Steel.Semantics.Instantiate.state",
+      "Steel.Semantics.Instantiate.state_uses",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "8c6bbb4f1f60f0244c84deeac011c7aa"
+      "e0d0d3ec855e4131267897d74e0cf303"
+    ],
+    [
+      "Steel.Semantics.Instantiate.state_correspondence",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "152b76ca7c01494269489ce1ad8fbfff"
     ]
   ]
 ]

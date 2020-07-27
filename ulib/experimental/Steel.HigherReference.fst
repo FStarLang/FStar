@@ -103,10 +103,21 @@ let pts_to_ref_injective
                               (Some (Ghost.reveal v1, p1))
                               m
 
+let pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to r p)) =
+  let aux (x y : erased a) (m:mem)
+    : Lemma (requires (interp (pts_to r p x) m /\ interp (pts_to r p y) m))
+            (ensures  (x == y))
+    =
+    Mem.pts_to_join r (Some (Ghost.reveal x, p)) (Some (Ghost.reveal y, p)) m
+  in
+  Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
+
+let pts_to_framon (#a:Type) (r:ref a) (p:perm) : Lemma (is_frame_monotonic (pts_to r p)) =
+  pts_to_witinv r p
+
 let drop (p:slprop)
   : SteelT unit p (fun _ -> emp)
-  = lift_atomic_to_steelT (fun _ ->
-    Atomic.change_slprop _ _ (fun m -> emp_unit p; affine_star p emp m))
+  = Atomic.change_slprop _ _ (fun m -> emp_unit p; affine_star p emp m)
 
 let comm (#opened_invariants:inames)
          (#p #q:slprop) (_:unit)
@@ -137,7 +148,7 @@ let intro_pts_to (p:perm{perm_ok p}) #a #uses (#v:erased a) (r:ref a) (_:unit)
 
 let intro_pure (#a:_) (#p:a -> slprop) (q:perm { perm_ok q }) (x:a)
   : SteelT a (p x) (fun y -> p y `star` pure (perm_ok q))
-  = Atomic.lift_atomic_to_steelT (fun _ -> intro_perm_ok q _);
+  = intro_perm_ok q _;
     SB.return x
 
 let drop_l_atomic #uses (#p #q:slprop)  ()
@@ -157,7 +168,7 @@ let elim_pure_atomic #uses  (#p:perm -> slprop) (q:perm)
 let elim_perm_ok_star (#p:slprop) (q:perm)
   : SteelT (_:unit{perm_ok q}) (p `star` pure (perm_ok q))
            (fun _ -> p)
-  = let _ = Atomic.lift_atomic_to_steelT (fun () -> elim_pure_atomic #Set.empty #(fun _ -> p) q) in
+  = let _ = elim_pure_atomic #Set.empty #(fun _ -> p) q in
     SB.return ()
 
 let alloc #a x =
@@ -177,8 +188,10 @@ let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
 
 let read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
-             (fun v -> pts_to r p v `star` q v)
-  = let vs = SB.witness_h_exists () in
+             (fun (v:a) -> pts_to r p v `star` q v)
+  = pts_to_witinv r p;
+    star_is_witinv_left (fun (v:a) -> pts_to r p v) q;
+    let vs = SB.witness_h_exists () in
     SB.h_assert (pts_to r p vs `star` q vs);
     let v = SB.frame (fun _ -> read #a #p #vs r) _ in
     SB.h_assert (pts_to r p v `star` q v);
@@ -231,7 +244,7 @@ let share_atomic (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
                                   (pts_to r (half_perm p) v)
                                   (intro_pts_to (half_perm p) r)
 
-let share r = Atomic.lift_atomic_to_steelT (fun _ -> share_atomic r)
+let share r = share_atomic r
 
 let mem_gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a) (v1:erased a)
   : action_except (_:unit{v0==v1 /\ perm_ok (sum_perm p0 p1)}) uses
@@ -256,7 +269,7 @@ let gather_atomic (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (
     let _ = gather_atomic_raw r v0 v1 in
     intro_pts_to (sum_perm p0 p1) r ()
 
-let gather r = Atomic.lift_atomic_to_steelT (fun _ -> gather_atomic r)
+let gather r = gather_atomic r
 
 let cas_provides #t (r:ref t) (v:Ghost.erased t) (v_new:t) (b:bool) =
     if b then pts_to r full_perm v_new else pts_to r full_perm v

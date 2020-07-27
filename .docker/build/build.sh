@@ -309,12 +309,6 @@ function fstar_default_build () {
                 echo "Error - Pkg.fst-ver (mitls verify)"
                 echo " - Pkg.fst-ver (mitls verify)" >>$ORANGE_FILE
             }
-
-        OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
-            {
-                echo "Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)"
-                echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >>$ORANGE_FILE
-            }
     } &
 
     wait

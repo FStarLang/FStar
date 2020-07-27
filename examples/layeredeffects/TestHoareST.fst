@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Test
+module TestHoareST
 
 /// Testing the HoareST layered effect from HoareST.fst
 

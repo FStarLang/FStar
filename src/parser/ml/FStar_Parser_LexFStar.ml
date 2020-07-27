@@ -41,7 +41,6 @@ let constructors = Hashtbl.create 0
 let operators = Hashtbl.create 0
 
 let () =
-  Hashtbl.add keywords "abstract"      ABSTRACT    ;
   Hashtbl.add keywords "attributes"    ATTRIBUTES  ;
   Hashtbl.add keywords "noeq"          NOEQUALITY  ;
   Hashtbl.add keywords "unopteq"       UNOPTEQUALITY  ;

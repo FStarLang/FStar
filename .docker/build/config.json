@@ -20,8 +20,8 @@
     "HasLogsToExtract" : true,
 
     "NotificationEnabled" : true,
-    "NotificationChannel" : "#steel-build",
-    "PublicBranches" : [ "steel" ],
+    "NotificationChannel" : "#fstar-build",
+    "PublicBranches" : [ "master" ],
 
     "CompressBuildFolder": true,
     "FolderToCompress" : "FStar",
