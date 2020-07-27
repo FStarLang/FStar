@@ -1000,13 +1000,15 @@ let (uu___143 : unit) =
                                                                     =
                                                                     let uu____1513
                                                                     =
-                                                                    FStar_Tactics_InterpFuns.mk_tac_step_1
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_2
                                                                     Prims.int_zero
                                                                     "dump_all"
                                                                     FStar_Tactics_Basic.dump_all
+                                                                    FStar_Syntax_Embeddings.e_bool
                                                                     FStar_Syntax_Embeddings.e_string
                                                                     FStar_Syntax_Embeddings.e_unit
                                                                     FStar_Tactics_Basic.dump_all
+                                                                    FStar_TypeChecker_NBETerm.e_bool
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_unit in
                                                                     let uu____1514
