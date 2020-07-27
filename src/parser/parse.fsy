@@ -328,10 +328,10 @@ loption_separated_nonempty_list_COMMA_appTerm__:
     {let x = $1 in
     ( x )}
 
-loption_separated_nonempty_list_SEMICOLON_lidentOrOperator__:
+loption_separated_nonempty_list_SEMICOLON_ident__:
   
     {    ( [] )}
-| separated_nonempty_list_SEMICOLON_lidentOrOperator_
+| separated_nonempty_list_SEMICOLON_ident_
     {let x = $1 in
     ( x )}
 
@@ -588,11 +588,11 @@ separated_nonempty_list_SEMICOLON_effectDecl_:
     {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
-separated_nonempty_list_SEMICOLON_lidentOrOperator_:
-  lidentOrOperator
+separated_nonempty_list_SEMICOLON_ident_:
+  ident
     {let x = $1 in
     ( [ x ] )}
-| lidentOrOperator SEMICOLON separated_nonempty_list_SEMICOLON_lidentOrOperator_
+| ident SEMICOLON separated_nonempty_list_SEMICOLON_ident_
     {let (x, _2, xs) = ($1, (), $3) in
     ( x :: xs )}
 
@@ -745,7 +745,7 @@ rawDecl:
           | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
         in Val(lid, t)
       )}
-| SPLICE LBRACK loption_separated_nonempty_list_SEMICOLON_lidentOrOperator__ RBRACK thunk_atomicTerm_
+| SPLICE LBRACK loption_separated_nonempty_list_SEMICOLON_ident__ RBRACK thunk_atomicTerm_
     {let (_1, _2, xs, _4, t) = ((), (), $3, (), $5) in
 let ids =     ( xs ) in
       ( Splice (ids, t) )}
