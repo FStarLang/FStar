@@ -192,9 +192,11 @@ assume val debugging : unit -> Tac bool
 along with the message. *)
 assume val dump : string -> Tac unit
 
-(** Similar to [dump], but will print *every* implicit in the proofstate,
-not only the visible/focused goals. Warning, these can be a *lot*. *)
-assume val dump_all : string -> Tac unit
+(** Similar to [dump], but will print *every* unsolved implicit
+in the proofstate, not only the visible/focused goals. When the
+[print_resolved] boolean is true, it will also print every solved goal.
+Warning, these can be a *lot*. *)
+assume val dump_all : print_resolved:bool -> string -> Tac unit
 
 (** Solves a goal [Gamma |= squash (l == r)] by attempting to unify
 [l] with [r]. This currently only exists because of some universe problems

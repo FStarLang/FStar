@@ -77,13 +77,17 @@ let dump (msg:string) : tac<unit> =
     do_dump_ps msg ps;
     Success ((), ps))
 
-let dump_all (msg:string) : tac<unit> =
+let dump_all (print_resolved:bool) (msg:string) : tac<unit> =
   mk_tac (fun ps ->
     (* Make a new proofstate with goals for each implicit,
      * print it, and return original proofstate unchanged. *)
-    let ps' = { ps with smt_goals = []
-                      ; goals = List.map (fun i -> goal_of_implicit ps.main_context i)
-                                         ps.all_implicits } in
+    let gs = List.map (fun i -> goal_of_implicit ps.main_context i) ps.all_implicits in
+    let gs =
+     if print_resolved
+     then gs
+     else List.filter (fun g -> not (check_goal_solved g)) gs
+    in
+    let ps' = { ps with smt_goals = [] ; goals = gs } in
     do_dump_ps msg ps';
     Success ((), ps))
 
