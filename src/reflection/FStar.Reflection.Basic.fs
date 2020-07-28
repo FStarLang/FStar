@@ -492,7 +492,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
         let s, us = SS.univ_var_opening lb.lbunivs in
         let typ = SS.subst s lb.lbtyp in
         let def = SS.subst s lb.lbdef in
-        Sg_Let (r, fv, lb.lbunivs, lb.lbtyp, lb.lbdef)
+        Sg_Let (r, fv, us, typ, def)
 
     | Sig_inductive_typ (lid, us, param_bs, ty, _mutual, c_lids) ->
         let nm = Ident.path_of_lid lid in
