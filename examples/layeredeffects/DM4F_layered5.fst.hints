@@ -1,0 +1,131 @@
+[
+  "¬J2ﬂçuFÅÒÒ‚\u0006ã\u0018aÛ",
+  [
+    [
+      "DM4F_layered5.return",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Common.curry" ],
+      0,
+      "b00ff4b3348871b20544f33c9200c72c"
+    ],
+    [
+      "DM4F_layered5.bind",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c7f388be9089750ad7596ef51fb4b51a"
+    ],
+    [
+      "DM4F_layered5.subcomp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_DM4F_layered5.post_t",
+        "equation_DM4F_layered5.stronger", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "typing_Tm_abs_7a3f8c14f25ee07abae45e44a29e66e3"
+      ],
+      0,
+      "cb5cc63a09f189152e6fbad8bb934af3"
+    ],
+    [
+      "DM4F_layered5.ST",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_DM4F_layered5.ite_wp",
+        "equation_DM4F_layered5.stronger", "equation_Prims.squash",
+        "interpretation_Tm_abs_62377756deaa227ab4a4f20a8fdb66c9",
+        "l_and-interp", "l_imp-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "50c202a73806954afd525f16a85c07d1"
+    ],
+    [
+      "DM4F_layered5.ST",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
+        "equation_DM4F_layered5.ite_wp", "equation_DM4F_layered5.stronger",
+        "interpretation_Tm_abs_62377756deaa227ab4a4f20a8fdb66c9",
+        "l_and-interp", "l_imp-interp", "l_not-interp",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
+      0,
+      "4cb1c209c29b58bf5a0bb310e6fa27b0"
+    ],
+    [
+      "DM4F_layered5.lift_id_st",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a4f899c6099ec7dd8ad1777f347e60ac"
+    ],
+    [
+      "DM4F_layered5.get",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_a176400c4b20ffed7191f23f3c1815a5"
+      ],
+      0,
+      "8a1ebded14b5b8af516eb501a16952ab"
+    ],
+    [
+      "DM4F_layered5.put",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_8292a684f9788e4fa63a8c9276a361bc"
+      ],
+      0,
+      "49c427c2545ded4d1da8751ab8037e47"
+    ],
+    [
+      "DM4F_layered5.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_typing",
+        "primitive_Prims.op_Addition",
+        "refinement_interpretation_Tm_refine_226717771801e984f2f4a6a20e2daf91"
+      ],
+      0,
+      "a617ad5fcb5357db68654cbe9d3ab370"
+    ],
+    [
+      "DM4F_layered5.addx",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Addition" ],
+      0,
+      "eb74e67533b95f2d2070cc0d624eee47"
+    ],
+    [
+      "DM4F_layered5.add_via_state",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e5bb1fc2f9507a401f9e3e877e4ecfb3"
+    ]
+  ]
+]

@@ -425,7 +425,8 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
     let t = N.normalize [
       Env.EraseUniverses;
       Env.AllowUnboundUniverses;
-      Env.UnfoldUntil S.delta_constant // unfold abbreviations such as nat
+      Env.UnfoldUntil S.delta_constant; // unfold abbreviations such as nat
+      Env.ForExtraction
     ] tcenv t in
     let w = with_ty MLTY_Top in
     let as_name mlp       = with_ty MLTY_Top <| MLE_Name mlp in
@@ -529,7 +530,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         where [[t]] is the ML denotation of the F* type t
     *)
     let rec mk_embedding l (env:list<(bv * string)>) (t: term): mlexpr =
-        let t = FStar.TypeChecker.Normalize.unfold_whnf tcenv t in
+        let t = FStar.TypeChecker.Normalize.unfold_whnf' [Env.ForExtraction] tcenv t in
         match (FStar.Syntax.Subst.compress t).n with
         | Tm_name bv
              when BU.for_some (find_env_entry bv) env ->

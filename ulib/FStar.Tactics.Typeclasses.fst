@@ -81,6 +81,7 @@ let mk_class (nm:string) : Tac decls =
     let r = lookup_typ (top_env ()) ns in
     guard (Some? r);
     let Some se = r in
+    let to_propagate = List.Tot.filter (function Inline_for_extraction | NoExtract -> true | _ -> false) (sigelt_quals se) in
     let sv = inspect_sigelt se in
     guard (Sg_Inductive? sv);
     let Sg_Inductive name us params ty ctors = sv in
@@ -153,6 +154,7 @@ let mk_class (nm:string) : Tac decls =
                   let def : term = def in
                   let sfv : fv = sfv in
                   let se = pack_sigelt (Sg_Let false sfv us ty def) in
+                  let se = set_sigelt_quals to_propagate se in
                   //let se = set_sigelt_attrs [`tcnorm] se in
                   //dump ("trying to return : " ^ term_to_string (quote se));
                   se

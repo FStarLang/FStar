@@ -145,7 +145,6 @@ type tycon =
 
 type qualifier =
   | Private
-  | Abstract
   | Noeq
   | Unopteq
   | Assumption

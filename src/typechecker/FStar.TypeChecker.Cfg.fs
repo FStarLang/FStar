@@ -86,6 +86,7 @@ let steps_to_string f =
     unascribe = %s;\n\
     in_full_norm_request = %s;\n\
     weakly_reduce_scrutinee = %s;\n\
+    for_extraction = %s;\n\
   }"
   [ f.beta |> b;
     f.iota |> b;
@@ -111,7 +112,9 @@ let steps_to_string f =
     f.unmeta |> b;
     f.unascribe |> b;
     f.in_full_norm_request |> b;
-    f.weakly_reduce_scrutinee |> b]
+    f.weakly_reduce_scrutinee |> b;
+    f.for_extraction |> b;
+   ]
 
 let default_steps : fsteps = {
     beta = true;

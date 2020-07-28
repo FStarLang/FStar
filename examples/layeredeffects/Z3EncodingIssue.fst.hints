@@ -1,5 +1,5 @@
 [
-  "‘è$äÛ8\u001aÊ'àC‹tU´X",
+  "\u001aﬂ\u001c=¬ËÂft`{óêä.",
   [
     [
       "Z3EncodingIssue.return",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "fecfd25d0b40ec0d27d37de4a42d6ef8"
+      "f10288be124cd21414b94d4f629dcc1e"
     ],
     [
       "Z3EncodingIssue.subcomp",
@@ -26,25 +26,31 @@
         "typing_Z3EncodingIssue.buf"
       ],
       0,
-      "3942d7eb9d61a43f44c1ea1b3f63c847"
+      "62cf93b8e460bac7553ae8bdc9bf99ab"
     ],
     [
       "Z3EncodingIssue.CHACHA",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
       0,
-      "8908f173c28b95365c6c1ffe35d12da6"
+      "fd15e53decf7263de5b468b31b80bed0"
     ],
     [
       "Z3EncodingIssue.CHACHA",
       2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
       0,
-      "fd1fa221fe170a8fddf5a2d6704bae30"
+      "6f1ef2d3e82501e8d41ba2c745d48174"
     ],
     [
       "Z3EncodingIssue.lift_div_chacha",
@@ -64,7 +70,7 @@
         "typing_Tm_abs_e8e7dd3fad251651880a411e491cc508"
       ],
       0,
-      "89f762901c44637b55a5bb7205fd82d5"
+      "67b7e9f2c84178f2657dfc7a0a077246"
     ],
     [
       "Z3EncodingIssue.chacha_fn_ok",
@@ -73,7 +79,7 @@
       1,
       [ "@query" ],
       0,
-      "fa0b2555b7b6b57eb20e307f82765061"
+      "855efbde85bd7e6cd8547be3bbdb4904"
     ],
     [
       "Z3EncodingIssue.hreturn",
@@ -82,7 +88,7 @@
       1,
       [ "@query" ],
       0,
-      "d61a60191f31e4de3ba0088e69f2bcee"
+      "f27052dfd05b4909edc67fcc78a60dbf"
     ],
     [
       "Z3EncodingIssue.hsubcomp",
@@ -103,25 +109,31 @@
         "typing_Z3EncodingIssue.state"
       ],
       0,
-      "625525000da21b374d4c04e448f6c19c"
+      "19484130f4be44254276a6c5704edbd4"
     ],
     [
       "Z3EncodingIssue.REF",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
       0,
-      "9650ab3c8fc42d0b5e7012f33dfe782e"
+      "96fc60c421c39b470577e05747eaeb66"
     ],
     [
       "Z3EncodingIssue.REF",
       2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
       0,
-      "59e2770b43a456c67523eb82c29dcc5c"
+      "85a6b58b04beee95274276389d9c74d6"
     ],
     [
       "Z3EncodingIssue.lift_div_ref",
@@ -141,19 +153,7 @@
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "13d1eb6e04ce69f55c8b88e417028e37"
-    ],
-    [
-      "Z3EncodingIssue.15070",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_9c79c4ef8bf28fdd5d01e604e0426830"
-      ],
-      0,
-      "28b05fb98db0df095e80a99c5ecb35a1"
+      "f54782bc702e7050809053dda514d367"
     ],
     [
       "Z3EncodingIssue.ref_hfn",
@@ -171,7 +171,7 @@
         "unit_typing"
       ],
       0,
-      "b756fbb27074658faeaf9e81a69ad3c0"
+      "692a20968d1553d022649b22ecccd619"
     ]
   ]
 ]

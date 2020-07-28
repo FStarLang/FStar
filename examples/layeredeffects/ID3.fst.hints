@@ -1,0 +1,101 @@
+[
+  "ÍWh„tqj£ëe®ªè]F‰",
+  [
+    [
+      "ID3.bind",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_ID3.repr",
+        "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
+        "refinement_interpretation_Tm_refine_134584ea4bdb9bfdebfec754be7787e9",
+        "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
+      ],
+      0,
+      "c2491f8d1846441ea2a2c27eb28aa84f"
+    ],
+    [
+      "ID3.subcomp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_ID3.repr",
+        "refinement_interpretation_Tm_refine_134584ea4bdb9bfdebfec754be7787e9"
+      ],
+      0,
+      "ee2c3f57a82719b4156b2c332e7903a6"
+    ],
+    [
+      "ID3.ID",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "fa99ea52cec1472cb76317ee327b8974"
+    ],
+    [
+      "ID3.ID",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
+      0,
+      "3eaf1ba9d3dafdf1cbfa8d69f9c07f73"
+    ],
+    [
+      "ID3.lift_pure_nd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "ID3_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "eq2-interp", "equation_ID3.monotonic", "equation_Prims.l_and",
+        "equation_Prims.logical",
+        "interpretation_Tm_abs_7449511e63cff31881fe505864197781",
+        "l_and-interp", "l_imp-interp",
+        "l_quant_interp_92031d4b4ada6921a62c0ea84c6168a0",
+        "l_quant_interp_baea33a345b303ab420ed75b1e4a600f",
+        "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "typing_Tm_abs_7449511e63cff31881fe505864197781"
+      ],
+      0,
+      "f114bf1da72df37a7d2595eedb910dc6"
+    ],
+    [
+      "ID3.test_f",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_ID3.monotonic",
+        "function_token_typing_Prims.__cache_version_number__",
+        "interpretation_Tm_abs_f6e54fd66a19cedd96fb8905b50a563d",
+        "l_quant_interp_8eca2b28427a2893fd99e154beceaa7e"
+      ],
+      0,
+      "6f3cadc7902d9acf8dbf2f39e3910c01"
+    ],
+    [
+      "ID3.Id",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d6bb5b1300f570193e627e78e6cbf7bd"
+    ]
+  ]
+]
