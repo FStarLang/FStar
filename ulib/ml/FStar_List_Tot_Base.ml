@@ -53,3 +53,6 @@ let sortWith f l = BatList.sort (fun x y -> Z.to_int (f x y)) l
 let list_unref l = l
 let list_ref _ l = l
 let list_refb _ l = l
+let rec init = function
+  | _ :: [] -> []
+  | hd :: tl -> hd :: init tl
