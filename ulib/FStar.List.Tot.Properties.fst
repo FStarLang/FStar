@@ -566,6 +566,7 @@ let rec mem_memP
   (x: a)
   (l: list a)
 : Lemma (ensures (mem x l <==> memP x l))
+        [SMTPat (mem x l); SMTPat (memP x l)]
 = match l with
   | [] -> ()
   | a :: q -> mem_memP x q
