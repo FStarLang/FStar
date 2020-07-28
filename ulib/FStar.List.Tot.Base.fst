@@ -15,7 +15,9 @@
 *)
 (**
 This module defines all pure and total operations on lists that can be
-used in specifications.
+used in specifications. It is implemented by FStar_List_Tot_Base.ml, any
+functional change and/or the addition of new functions MUST be reflected
+there.
 
 @summary Pure total operations on lists
 *)
