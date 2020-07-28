@@ -1805,7 +1805,6 @@ val is_null (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
 ///
 /// Note that it's UB to perform pointer addition on the NULL pointer.
 
-inline_for_extraction noextract
 val msub_non_null (#a:Type0) (#rrel #rel:srel a) (sub_rel:srel a) (b:mbuffer a rrel rel)
   (i:U32.t) (len:Ghost.erased U32.t)
   :HST.Stack (mbuffer a rrel sub_rel)
