@@ -131,6 +131,9 @@ let e_aqualv =
         | Data.Q_Meta t   ->
             S.mk_Tm_app ref_Q_Meta.t [S.as_arg (embed e_term rng t)]
                         Range.dummyRange
+        | Data.Q_Meta_attr t   ->
+            S.mk_Tm_app ref_Q_Meta_attr.t [S.as_arg (embed e_term rng t)]
+                        Range.dummyRange
         in { r with pos = rng }
     in
     let unembed_aqualv w (t : term) : option<aqualv> =
@@ -142,6 +145,9 @@ let e_aqualv =
         | Tm_fvar fv, [(t, _)] when S.fv_eq_lid fv ref_Q_Meta.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
             Some (Data.Q_Meta t))
+        | Tm_fvar fv, [(t, _)] when S.fv_eq_lid fv ref_Q_Meta_attr.lid ->
+            BU.bind_opt (unembed' w e_term t) (fun t ->
+            Some (Data.Q_Meta_attr t))
 
         | _ ->
             if w then

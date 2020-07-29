@@ -214,9 +214,10 @@ let ref_Mk_bv =
     }
 
 (* quals *)
-let ref_Q_Explicit = fstar_refl_data_const "Q_Explicit"
-let ref_Q_Implicit = fstar_refl_data_const "Q_Implicit"
-let ref_Q_Meta     = fstar_refl_data_const "Q_Meta"
+let ref_Q_Explicit  = fstar_refl_data_const "Q_Explicit"
+let ref_Q_Implicit  = fstar_refl_data_const "Q_Implicit"
+let ref_Q_Meta      = fstar_refl_data_const "Q_Meta"
+let ref_Q_Meta_attr = fstar_refl_data_const "Q_Meta_attr"
 
 (* const *)
 let ref_C_Unit      = fstar_refl_data_const "C_Unit"
