@@ -421,7 +421,7 @@ let assign #a vec i v =
   let hh0 = HST.get () in
   // NOTE: `B.upd (Vec?.vs vec) i v` makes more sense,
   //       but the `modifies` postcondition is coarse-grained.
-  B.upd (B.sub (Vec?.vs vec) i 1ul) 0ul v;
+  B.upd (B.sub_non_null (Vec?.vs vec) i 1ul) 0ul v;
   let hh1 = HST.get () in
   loc_vector_within_disjoint vec 0ul i i (i + 1ul);
   modifies_as_seq_within
