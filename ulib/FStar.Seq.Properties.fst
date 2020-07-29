@@ -266,6 +266,10 @@ let lemma_swap_permutes_slice #_ s start i j len =
   lemma_swap_slice_commute s start i j len;
   lemma_swap_permutes (slice s start len) (i - start) (j - start)
 
+let replace_subseq_len s i j sub = ()
+
+let replace_subseq_parts s i j sub = ()
+
 let splice_refl #_ s i j = cut (equal s (splice s i s j))
 
 let lemma_swap_splice #_ s start i j len = cut (equal (swap s i j) (splice s start (swap s i j) len))

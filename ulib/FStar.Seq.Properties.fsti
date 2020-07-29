@@ -254,6 +254,14 @@ let splice (#a:Type) (s1:seq a) (i:nat) (s2:seq a{length s1=length s2}) (j:nat{i
 let replace_subseq (#a:Type0) (s:Seq.seq a) (i:nat) (j:nat{i <= j /\ j <= length s}) (sub:Seq.seq a{length sub == j - i}) :Tot (Seq.seq a)
   = Seq.append (Seq.slice s 0 i) (Seq.append sub (Seq.slice s j (Seq.length s)))
 
+val replace_subseq_len (#a:Type0) (s:Seq.seq a) (i:nat) (j:nat{i <= j /\ j <= length s}) (sub:Seq.seq a{length sub == j - i}) : Lemma (Seq.length (replace_subseq s i j sub) == Seq.length s)
+
+val replace_subseq_parts (#a:Type0) (s:Seq.seq a) (i:nat) (j:nat{i <= j /\ j <= length s}) (sub:Seq.seq a{length sub == j - i})
+  : Lemma (let s' = replace_subseq s i j sub in
+           Seq.equal (Seq.slice s' 0 i) (Seq.slice s 0 i) /\
+           Seq.equal (Seq.slice s' i j) sub /\
+           Seq.equal (Seq.slice s' j (length s')) (Seq.slice s j (length s)))
+
 val splice_refl : #a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s}
   -> Lemma
   (ensures (s == splice s i s j))
