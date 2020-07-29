@@ -18,6 +18,7 @@ module FStar.TypeChecker.Generalize
 
 open FStar
 open FStar.All
+open FStar.Util
 open FStar.Errors
 open FStar.Syntax
 open FStar.Syntax.Syntax
@@ -238,7 +239,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                 if is_rec
                 then let tvar_args = List.map (fun (x, _) -> S.iarg (S.bv_to_name x)) gen_tvars in
                      let instantiate_lbname_with_app tm fv =
-                        if S.fv_eq fv (BU.right lbname)
+                        if S.fv_eq fv (right lbname)
                         then S.mk_Tm_app tm tvar_args tm.pos
                         else tm
                     in FStar.Syntax.InstFV.inst instantiate_lbname_with_app e
@@ -258,7 +259,7 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
      Some ecs
 
 let generalize' env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbname*univ_names*term*comp*list<binder>)>) =
-  assert (List.for_all (fun (l, _, _) -> BU.is_right l) lecs); //only generalize top-level lets
+  assert (List.for_all (fun (l, _, _) -> is_right l) lecs); //only generalize top-level lets
   if debug env Options.Low
   then BU.print1 "Generalizing: %s\n"
        (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
