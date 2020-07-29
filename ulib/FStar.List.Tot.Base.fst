@@ -442,7 +442,7 @@ let rec split l = match l with
 (** [unzip] takes a list of pairs [(x1, y1), ..., (xn, yn)] and
 returns the pair of lists ([x1, ..., xn], [y1, ..., yn]). Named as in:
 Haskell *)
-let unzip = split
+let unzip l = split l
 
 (** [unzip3] takes a list of triples [(x1, y1, z1), ..., (xn, yn, zn)]
 and returns the triple of lists ([x1, ..., xn], [y1, ..., yn], [z1,
