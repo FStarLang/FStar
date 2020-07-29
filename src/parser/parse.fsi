@@ -334,7 +334,7 @@ type nonTerminalId =
     | NONTERM_boption_SQUIGGLY_RARROW_
     | NONTERM_boption___anonymous_0_
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
-    | NONTERM_loption_separated_nonempty_list_SEMICOLON_lidentOrOperator__
+    | NONTERM_loption_separated_nonempty_list_SEMICOLON_ident__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
     | NONTERM_list___anonymous_10_
     | NONTERM_list___anonymous_4_
@@ -364,7 +364,7 @@ type nonTerminalId =
     | NONTERM_separated_nonempty_list_DISJUNCTION_conjunctivePat_
     | NONTERM_separated_nonempty_list_SEMICOLON_appTerm_
     | NONTERM_separated_nonempty_list_SEMICOLON_effectDecl_
-    | NONTERM_separated_nonempty_list_SEMICOLON_lidentOrOperator_
+    | NONTERM_separated_nonempty_list_SEMICOLON_ident_
     | NONTERM_separated_nonempty_list_SEMICOLON_tuplePattern_
     | NONTERM_inputFragment
     | NONTERM_pragma
