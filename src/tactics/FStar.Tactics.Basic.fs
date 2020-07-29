@@ -180,7 +180,7 @@ let do_unify env t1 t2 : tac<bool> =
         let _ = Options.set_options "--debug_level Rel --debug_level RelCheck" in
         ()
     );
-    bind (__do_unify env t1 t2) (fun r ->
+    bind (__do_unify ({env with enable_defer_to_tac=false}) t1 t2) (fun r ->
     if Env.debug env (Options.Other "1346") then
         Options.pop ();
     (* bind compress_implicits (fun _ -> *)
