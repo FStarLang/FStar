@@ -490,7 +490,8 @@ let (tc_type_common :
                    if uvs1 = []
                    then
                      let uu____440 =
-                       FStar_TypeChecker_Util.generalize_universes env1 t2 in
+                       FStar_TypeChecker_Generalize.generalize_universes env1
+                         t2 in
                      (match uu____440 with
                       | (uvs2, t3) ->
                           (FStar_TypeChecker_Util.check_uvars r t3;

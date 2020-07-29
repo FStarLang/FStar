@@ -8397,7 +8397,8 @@ and (check_top_level_let :
                           FStar_TypeChecker_Env.conj_guard g11 g_comp1 in
                         let uu____23141 =
                           let uu____23154 =
-                            FStar_TypeChecker_Util.generalize env1 false
+                            FStar_TypeChecker_Generalize.generalize env1
+                              false
                               [((lb.FStar_Syntax_Syntax.lbname), e1, comp1)] in
                           FStar_List.hd uu____23154 in
                         (match uu____23141 with
@@ -9062,8 +9063,8 @@ and (check_top_level_let_rec :
                                                ((lb.FStar_Syntax_Syntax.lbname),
                                                  (lb.FStar_Syntax_Syntax.lbdef),
                                                  uu____24334))) in
-                                     FStar_TypeChecker_Util.generalize env1
-                                       true uu____24300 in
+                                     FStar_TypeChecker_Generalize.generalize
+                                       env1 true uu____24300 in
                                    FStar_List.map2
                                      (fun uu____24368 ->
                                         fun lb ->

@@ -675,7 +675,8 @@ let (generalize_and_inst_within :
            FStar_Util.print1 "@@@@@@Trying to generalize universes in %s\n"
              uu____1566
          else ());
-        (let uu____1568 = FStar_TypeChecker_Util.generalize_universes env t in
+        (let uu____1568 =
+           FStar_TypeChecker_Generalize.generalize_universes env t in
          match uu____1568 with
          | (uvs, t1) ->
              ((let uu____1588 =

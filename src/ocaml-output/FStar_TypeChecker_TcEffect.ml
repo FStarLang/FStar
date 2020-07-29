@@ -37,8 +37,8 @@ let (check_and_gen :
                      (match uu____86 with
                       | (t2, ty) ->
                           let uu____115 =
-                            FStar_TypeChecker_Util.generalize_universes env
-                              t2 in
+                            FStar_TypeChecker_Generalize.generalize_universes
+                              env t2 in
                           (match uu____115 with
                            | (g_us, t3) ->
                                let ty1 =
@@ -2507,7 +2507,7 @@ let (tc_layered_eff_decl :
                                             else ());
                                            (let act2 =
                                               let uu____7357 =
-                                                FStar_TypeChecker_Util.generalize_universes
+                                                FStar_TypeChecker_Generalize.generalize_universes
                                                   env1 act_defn in
                                               match uu____7357 with
                                               | (us, act_defn1) ->
@@ -2691,8 +2691,8 @@ let (tc_non_layered_eff_decl :
                               FStar_Syntax_Syntax.t_unit uu____7615 in
                           FStar_Syntax_Util.arrow bs1 uu____7612 in
                         let uu____7621 =
-                          FStar_TypeChecker_Util.generalize_universes env0
-                            tmp_t in
+                          FStar_TypeChecker_Generalize.generalize_universes
+                            env0 tmp_t in
                         match uu____7621 with
                         | (us, tmp_t1) ->
                             let uu____7638 =
@@ -2897,7 +2897,7 @@ let (tc_non_layered_eff_decl :
                                                     env1 g;
                                                   t2)) in
                                       let uu____7902 =
-                                        FStar_TypeChecker_Util.generalize_universes
+                                        FStar_TypeChecker_Generalize.generalize_universes
                                           env1 t2 in
                                       (match uu____7902 with
                                        | (g_us, t3) ->
@@ -4461,7 +4461,7 @@ let (tc_non_layered_eff_decl :
                                                                     act1.FStar_Syntax_Syntax.action_univs
                                                                     = []
                                                                     then
-                                                                    FStar_TypeChecker_Util.generalize_universes
+                                                                    FStar_TypeChecker_Generalize.generalize_universes
                                                                     env1
                                                                     act_defn1
                                                                     else
@@ -5011,7 +5011,7 @@ let (tc_lift :
         let check_and_gen1 env1 t k =
           let uu____11687 =
             FStar_TypeChecker_TcTerm.tc_check_trivial_guard env1 t k in
-          FStar_TypeChecker_Util.generalize_universes env1 uu____11687 in
+          FStar_TypeChecker_Generalize.generalize_universes env1 uu____11687 in
         let ed_src =
           FStar_TypeChecker_Env.get_effect_decl env
             sub.FStar_Syntax_Syntax.source in
@@ -5202,12 +5202,12 @@ let (tc_lift :
                                           then
                                             let uu____12445 =
                                               let uu____12456 =
-                                                FStar_TypeChecker_Util.generalize_universes
+                                                FStar_TypeChecker_Generalize.generalize_universes
                                                   env lift_elab1 in
                                               FStar_Pervasives_Native.Some
                                                 uu____12456 in
                                             let uu____12473 =
-                                              FStar_TypeChecker_Util.generalize_universes
+                                              FStar_TypeChecker_Generalize.generalize_universes
                                                 env lift_wp1 in
                                             (uu____12445, uu____12473)
                                           else
@@ -5614,7 +5614,7 @@ let (tc_effect_abbrev :
                                       FStar_Syntax_Syntax.mk
                                         (FStar_Syntax_Syntax.Tm_arrow
                                            (tps4, c4)) r in
-                                    FStar_TypeChecker_Util.generalize_universes
+                                    FStar_TypeChecker_Generalize.generalize_universes
                                       env0 uu____13282 in
                                   match uu____13281 with
                                   | (uvs2, t) ->
