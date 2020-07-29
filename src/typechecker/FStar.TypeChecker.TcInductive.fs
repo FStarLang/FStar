@@ -39,6 +39,7 @@ module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
+module Gen = FStar.TypeChecker.Generalize
 module BU = FStar.Util //basic util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
@@ -232,7 +233,7 @@ let generalize_and_inst_within (env:env_t) (tcs:list<(sigelt * universe)>) (data
         let t = U.arrow (binders@binders') (S.mk_Total t_unit) in
         if Env.debug env <| Options.Other "GenUniverses"
         then BU.print1 "@@@@@@Trying to generalize universes in %s\n" (N.term_to_string env t);
-        let (uvs, t) = TcUtil.generalize_universes env t in
+        let (uvs, t) = Gen.generalize_universes env t in
         if Env.debug env <| Options.Other "GenUniverses"
         then BU.print2 "@@@@@@Generalized to (%s, %s)\n"
                             (uvs |> List.map (fun u -> (string_of_id u)) |> String.concat ", ")

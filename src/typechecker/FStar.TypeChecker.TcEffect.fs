@@ -39,6 +39,7 @@ module U = FStar.Syntax.Util
 module Env = FStar.TypeChecker.Env
 module N = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
+module Gen = FStar.TypeChecker.Generalize
 
 module BU = FStar.Util
 
@@ -62,7 +63,7 @@ let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_na
     let t, lc, g = tc_tot_or_gtot_term (Env.push_univ_vars env us) t in
     Rel.force_trivial_guard env g;
     t, lc.res_typ in
-  let g_us, t = TcUtil.generalize_universes env t in
+  let g_us, t = Gen.generalize_universes env t in
   let ty = SS.close_univ_vars g_us ty in
   //check that n = List.length g_us and that if us is set, it is same as g_us
   let univs_ok =
@@ -849,7 +850,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) (attrs 
       BU.print1 "Action type after injecting it into the monad: %s\n" (Print.term_to_string act_typ);
     
     let act =
-      let us, act_defn = TcUtil.generalize_universes env act_defn in
+      let us, act_defn = Gen.generalize_universes env act_defn in
       if act.action_univs = []
       then
         { act with
@@ -901,7 +902,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) (_at
     //bs are closed with us and closed
     let us, bs =
       let tmp_t = U.arrow bs (S.mk_Total' S.t_unit (U_zero |> Some)) in  //create a temporary bs -> Tot unit
-      let us, tmp_t = TcUtil.generalize_universes env0 tmp_t in
+      let us, tmp_t = Gen.generalize_universes env0 tmp_t in
       us, tmp_t |> U.arrow_formals |> fst |> SS.close_binders in
 
     match ed_univs with
@@ -961,7 +962,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) (_at
         let t, _, g = tc_tot_or_gtot_term (Env.push_univ_vars env us) t in
         Rel.force_trivial_guard env g;
         t in
-    let g_us, t = TcUtil.generalize_universes env t in
+    let g_us, t = Gen.generalize_universes env t in
     //check that n = List.length g_us and that if us is set, it is same as g_us
     begin
       if List.length g_us <> n then
@@ -1245,7 +1246,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) (_at
           //AR: if the action universes were already annotated, simply close, else generalize
           let univs, act_defn =
             if act.action_univs = []
-            then TcUtil.generalize_universes env act_defn
+            then Gen.generalize_universes env act_defn
             else act.action_univs, SS.close_univ_vars act.action_univs act_defn
           in
           let act_typ = N.normalize [Env.Beta] env act_typ in
@@ -1436,7 +1437,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 let tc_lift env sub r =
   let check_and_gen env t k =
     // BU.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
-    TcUtil.generalize_universes env (tc_check_trivial_guard env t k) in
+    Gen.generalize_universes env (tc_check_trivial_guard env t k) in
 
   let ed_src = Env.get_effect_decl env sub.source in
   let ed_tgt = Env.get_effect_decl env sub.target in
@@ -1491,7 +1492,7 @@ let tc_lift env sub r =
         let _, lift_wp, lift_elab = DMFF.star_expr dmff_env lift in
         let lift_wp = DMFF.recheck_debug "lift-wp" env lift_wp in
         let lift_elab = DMFF.recheck_debug "lift-elab" env lift_elab in
-        if List.length uvs = 0 then Some (TcUtil.generalize_universes env lift_elab), TcUtil.generalize_universes env lift_wp
+        if List.length uvs = 0 then Some (Gen.generalize_universes env lift_elab), Gen.generalize_universes env lift_wp
         else Some (uvs, SS.close_univ_vars uvs lift_elab), (uvs, SS.close_univ_vars uvs lift_wp)
     in
     (* we do not expect the lift to verify, *)
@@ -1573,7 +1574,7 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
   in
   let tps = SS.close_binders tps in
   let c = SS.close_comp tps c in
-  let uvs, t = TcUtil.generalize_universes env0 (mk (Tm_arrow(tps, c)) r) in
+  let uvs, t = Gen.generalize_universes env0 (mk (Tm_arrow(tps, c)) r) in
   let tps, c = match tps, (SS.compress t).n with
     | [], Tm_arrow(_, c) -> [], c
     | _,  Tm_arrow(tps, c) -> tps, c

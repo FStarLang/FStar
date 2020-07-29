@@ -43,6 +43,7 @@ module TcUtil = FStar.TypeChecker.Util
 module BU = FStar.Util //basic util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
+module Gen = FStar.TypeChecker.Generalize
 module TcInductive = FStar.TypeChecker.TcInductive
 module TcEff = FStar.TypeChecker.TcEffect
 module PC = FStar.Parser.Const
@@ -158,7 +159,7 @@ let tc_type_common (env:env) ((uvs, t):tscheme) (expected_typ:typ) (r:Range.rang
   let env = Env.push_univ_vars env uvs in
   let t = tc_check_trivial_guard env t expected_typ in
   if uvs = [] then
-    let uvs, t = TcUtil.generalize_universes env t in
+    let uvs, t = Gen.generalize_universes env t in
     //AR: generalize_universes only calls N.reduce_uvar_solutions, so make sure there are no uvars left
     TcUtil.check_uvars r t;
     uvs, t
