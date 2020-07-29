@@ -1538,51 +1538,56 @@ let mmalloc_drgn_and_blit #a #rrel #_ #_ d src id_src len =
   in
   Buffer len content 0ul len
 
-#push-options "--fuel 0 --ifuel 1  --z3rlimit 32 --retry 10"
+#push-options "--fuel 0 --ifuel 1  --z3rlimit 32"
+
+// This proof is pretty britle, consider using --retry if it fails.
 let blit_non_null #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
   let open HST in
+  if len = 0ul then ()
+  else
   match src, dst with
-  | Buffer _ _ _ _, Buffer _ _ _ _ ->
-    if len = 0ul then ()
-    else
+  | Buffer max_length1 content1 idx1 length1, Buffer max_length2 content2 idx2 length2 ->
       let h = get () in
-      let Buffer max_length1 content1 idx1 length1 = src in
-      let Buffer max_length2 content2 idx2 length2 = dst in
       let s_full1 = !content1 in
       let s_full2 = !content2 in
       let s1 = Seq.slice s_full1 (U32.v idx1) (U32.v max_length1) in
       let s2 = Seq.slice s_full2 (U32.v idx2) (U32.v max_length2) in
       let s_sub_src = Seq.slice s1 (U32.v idx_src) (U32.v idx_src + U32.v len) in
       let s2' = Seq.replace_subseq s2 (U32.v idx_dst) (U32.v idx_dst + U32.v len) s_sub_src in
+
+      Seq.replace_subseq_len s2 (U32.v idx_dst) (U32.v idx_dst + U32.v len) s_sub_src;
+
       let s_full2' = Seq.replace_subseq s_full2 (U32.v idx2) (U32.v max_length2) s2' in
 
+      Seq.replace_subseq_parts s2 (U32.v idx_dst) (U32.v idx_dst + U32.v len) s_sub_src;
       assert (Seq.equal (Seq.slice s2' (U32.v idx_dst) (U32.v idx_dst + U32.v len)) s_sub_src);
       assert (Seq.equal (Seq.slice s2' 0 (U32.v idx_dst)) (Seq.slice s2 0 (U32.v idx_dst)));
       assert (Seq.equal (Seq.slice s2' (U32.v idx_dst + U32.v len) (length dst))
                         (Seq.slice s2 (U32.v idx_dst + U32.v len) (length dst)));
-
-    // AF: Needed to trigger the preorder relation. A bit verbose because the second sequence
-    // has a ghost computation (U32.v (Ghost.reveal length))
-    assert (s_full2' `Seq.equal`
-            Seq.replace_subseq s_full2
-                               (U32.v idx2)
-                               (U32.v idx2 + U32.v length2)
-                               (Seq.replace_subseq (as_seq h dst)
-                                                   (U32.v idx_dst)
-                                                   (U32.v idx_dst + U32.v len)
-			                           (Seq.slice (as_seq h src)
-                                                              (U32.v idx_src)
-                                                              (U32.v idx_src + U32.v len)
-                                                   )
-                               )
-            );
+      // AF: Needed to trigger the preorder relation. A bit verbose because the second sequence
+      // has a ghost computation (U32.v (Ghost.reveal length))
+      assert (s_full2' `Seq.equal`
+              Seq.replace_subseq s_full2
+                                 (U32.v idx2)
+                                 (U32.v idx2 + U32.v length2)
+                                 (Seq.replace_subseq (as_seq h dst)
+                                                     (U32.v idx_dst)
+                                                     (U32.v idx_dst + U32.v len)
+                                                     (Seq.slice (as_seq h src)
+                                                                (U32.v idx_src)
+                                                                (U32.v idx_src + U32.v len)
+                                                     )
+                                 )
+              );
 
       content2 := s_full2';
 
       let h1 = get () in
+
       assert (s_full2' `Seq.equal` Seq.replace_subseq s_full2 (U32.v idx2) (U32.v idx2 + U32.v length2) (Seq.slice s2' 0 (U32.v length2)));
       assert (h1 == g_upd_seq dst (Seq.slice s2' 0 (U32.v length2)) h);
       g_upd_seq_as_seq dst (Seq.slice s2' 0 (U32.v length2)) h  //for modifies clause
+
   | _, _ -> ()
 
 #push-options "--z3rlimit 256 --max_fuel 0 --max_ifuel 1 --initial_ifuel 1 --z3cliopt smt.qi.EAGER_THRESHOLD=4"
