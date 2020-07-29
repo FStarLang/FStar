@@ -1538,7 +1538,7 @@ let mmalloc_drgn_and_blit #a #rrel #_ #_ d src id_src len =
   in
   Buffer len content 0ul len
 
-#push-options "--max_fuel 0 --initial_ifuel 1 --max_ifuel 1 --z3rlimit 64"
+#push-options "--fuel 0 --ifuel 1  --z3rlimit 32 --retry 10"
 let blit_non_null #a #rrel1 #rrel2 #rel1 #rel2 src idx_src dst idx_dst len =
   let open HST in
   match src, dst with
