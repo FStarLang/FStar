@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "11738be5446fdb5316379671b367002e"
+      "ec8baf0aee51cacd2f791c86c0b70688"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "ed3172a06af88a8a6a834aa704efa2d8"
+      "3f16454246ff9a5f6fca14cdd2598ddf"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "dbf20ed8903637fab0bbe187b95ddb93"
+      "1f0dccf0e0391983a97b03b7a4ea1a9a"
     ],
     [
       "Ex10a.revoke",
@@ -47,7 +47,7 @@
       1,
       [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
       0,
-      "438a1f4f399337d74c428a4c39bc5f0a"
+      "3b042f84e1c05b8f8e697f90539264a3"
     ],
     [
       "Ex10a.grant",
@@ -56,7 +56,7 @@
       1,
       [ "@query" ],
       0,
-      "56e1a0dcc7c5dfed39b19af8fd6fe52f"
+      "b5944709586af500c6033542eb9542ac"
     ],
     [
       "Ex10a.revoke",
@@ -88,7 +88,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "99d643c85fdb6bd2175560edcd0b9bd3"
+      "c0adaf4eef833cba76bf708de83ea91a"
     ],
     [
       "Ex10a.safe_delete",
@@ -109,7 +109,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "a4ece281a38da34a44ffa7ecbf807abd"
+      "0236c0687840d1bcf99308715d800dae"
     ],
     [
       "Ex10a.test_acls",
@@ -145,7 +145,7 @@
         "typing_Tm_abs_93700a44318bb4193871b2dacb8d41d6"
       ],
       0,
-      "d6936478bb6e84c5b265348f04d222d6"
+      "abe2645bed763d9a877c1d54fe40a65d"
     ]
   ]
 ]

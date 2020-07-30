@@ -20,7 +20,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "c70899f4ac55e851d274b0318fd379bd"
+      "a40c0f759888b1bf094c00a368e45745"
     ],
     [
       "IntSort.test_sorted",
@@ -29,7 +29,7 @@
       1,
       [ "@query" ],
       0,
-      "92e2000a963bea508f19238e767b8fdd"
+      "86476581cc8fccdeb02ea46135d0fff3"
     ],
     [
       "IntSort.test_sorted",
@@ -52,7 +52,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9ea0f606fa60803d245050d865f4f36a"
+      "29d40a54e54fc5f7fff92e479ff8084f"
     ],
     [
       "IntSort.test_sorted2",
@@ -71,7 +71,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9dd6b2a81dcf3e7ddd66603dfa910688"
+      "1c33f663ad3c785ecbb4aaa5d1e38eaf"
     ],
     [
       "IntSort.sorted_smaller",
@@ -108,7 +108,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "e0ae9c122659c80f8f76b4fd73e95e58"
+      "3364d66f7746eb578ef45d305e6c95c1"
     ],
     [
       "IntSort.permutation",
@@ -122,7 +122,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "e9f050d4ff5163a0f28ca8ca4145ebd1"
+      "0d37a261edf6a68fb8cdeb069642f4fd"
     ]
   ]
 ]
