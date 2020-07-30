@@ -8,7 +8,7 @@ let (string_of_univs :
         (FStar_List.map
            (fun u ->
               let uu____22 = FStar_Syntax_Unionfind.univ_uvar_id u in
-              FStar_All.pipe_right uu____22 Prims.string_of_int)) in
+              FStar_All.pipe_right uu____22 FStar_Util.string_of_int)) in
     FStar_All.pipe_right uu____9 (FStar_String.concat ", ")
 let (gen_univs :
   FStar_TypeChecker_Env.env ->
@@ -52,7 +52,8 @@ let (gen_univs :
                        let uu____136 =
                          let uu____137 =
                            FStar_Syntax_Unionfind.univ_uvar_id u in
-                         FStar_All.pipe_left Prims.string_of_int uu____137 in
+                         FStar_All.pipe_left FStar_Util.string_of_int
+                           uu____137 in
                        let uu____138 =
                          FStar_Syntax_Print.univ_to_string
                            (FStar_Syntax_Syntax.U_unif u) in
