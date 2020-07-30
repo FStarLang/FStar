@@ -641,12 +641,14 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
    *       a trivial precondition
    *)
 
-  | Tm_ascribed (_, (Inr expected_c, _tacopt), _)
+  | Tm_ascribed (_, (Inr expected_c, tacopt), _)
     when top |> is_comp_ascribed_reflect |> is_some ->
 
     let (effect_lid, e, aqual) = top |> is_comp_ascribed_reflect |> must in
 
     let env0, _ = Env.clear_expected_typ env in
+
+    let tacopt, gtac = tc_tactic_opt env0 tacopt in
     let expected_c, _, g_c = tc_comp env0 expected_c in
     let expected_ct = Env.unfold_effect_abbrev env0 expected_c in
 
@@ -681,12 +683,14 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       let r = top.pos in
       let tm = mk (Tm_constant (Const_reflect effect_lid)) r in
       let tm = mk (Tm_app (tm, [e, aqual])) r in
-      mk (Tm_ascribed (tm, (Inr expected_c, _tacopt), expected_c |> U.comp_effect_name |> Some)) r in
+      mk (Tm_ascribed (tm, (Inr expected_c, tacopt), expected_c |> U.comp_effect_name |> Some)) r in
 
     //check the expected type in the env, if present
     let top, c, g_env = comp_check_expected_typ env top (expected_c |> TcComm.lcomp_of_comp) in
 
-    top, c, Env.conj_guards [g_c; g_e; g_env]
+    let final_guard = wrap_guard_with_tactic_opt tacopt (Env.conj_guards [g_c; g_e; g_env]) in
+
+    top, c, Env.conj_guard final_guard gtac
 
   | Tm_ascribed (e, (Inr expected_c, topt), _) ->
     let env0, _ = Env.clear_expected_typ env in
