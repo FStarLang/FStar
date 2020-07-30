@@ -116,6 +116,7 @@ let solve_goals_with_tac env g (deferred_goals:implicits) (tac:sigelt) =
 (** This functions is called in Rel.force_trivial_guard to solve all
     goals in a guard that were deferred to a tactic *)
 let solve_deferred_to_tactic_goals env g =
+    if not env.enable_defer_to_tac then g else
     let deferred = g.deferred_to_tac in
     (** A unification problem between two terms is presented to
         a tactic as an equality goal between the terms. *)
