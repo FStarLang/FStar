@@ -629,6 +629,28 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let e = mk (Tm_meta(e, m)) top.pos in
     e, c, g
 
+  | Tm_ascribed (e, (asc, Some tac), labopt) ->
+    (* Ascription with an associated tactic for its guard. We typecheck
+     * the ascribed term without the tactic by recursively calling tc_term,
+     * and then we wrap the returned guard with the tactic. We must also return
+     * the guard for the well-typing of the tactic itself. *)
+
+    let tac, _, g_tac = tc_tactic t_unit t_unit env tac in
+
+    let t' = mk (Tm_ascribed (e, (asc, None), labopt)) top.pos in
+    let t', c, g = tc_term env t' in
+
+    (* Set the tac ascription on the elaborated term *)
+    let t' =
+      match (SS.compress t').n with
+      | Tm_ascribed (e, (asc, None), labopt) ->
+        mk (Tm_ascribed (e, (asc, Some tac), labopt)) t'.pos
+      | _ ->
+        failwith "impossible"
+    in
+    let g = wrap_guard_with_tactic_opt (Some tac) g in
+    t', c, Env.conj_guard g g_tac
+
   (*
    * AR: Special case for the typechecking of (M.reflect e) <: M a is
    *
@@ -641,14 +663,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
    *       a trivial precondition
    *)
 
-  | Tm_ascribed (_, (Inr expected_c, tacopt), _)
+  | Tm_ascribed (_, (Inr expected_c, None), _)
     when top |> is_comp_ascribed_reflect |> is_some ->
 
     let (effect_lid, e, aqual) = top |> is_comp_ascribed_reflect |> must in
 
     let env0, _ = Env.clear_expected_typ env in
 
-    let tacopt, gtac = tc_tactic_opt env0 tacopt in
     let expected_c, _, g_c = tc_comp env0 expected_c in
     let expected_ct = Env.unfold_effect_abbrev env0 expected_c in
 
@@ -683,16 +704,14 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       let r = top.pos in
       let tm = mk (Tm_constant (Const_reflect effect_lid)) r in
       let tm = mk (Tm_app (tm, [e, aqual])) r in
-      mk (Tm_ascribed (tm, (Inr expected_c, tacopt), expected_c |> U.comp_effect_name |> Some)) r in
+      mk (Tm_ascribed (tm, (Inr expected_c, None), expected_c |> U.comp_effect_name |> Some)) r in
 
     //check the expected type in the env, if present
     let top, c, g_env = comp_check_expected_typ env top (expected_c |> TcComm.lcomp_of_comp) in
 
-    let final_guard = wrap_guard_with_tactic_opt tacopt (Env.conj_guards [g_c; g_e; g_env]) in
+    top, c, Env.conj_guards [g_c; g_e; g_env]
 
-    top, c, Env.conj_guard final_guard gtac
-
-  | Tm_ascribed (e, (Inr expected_c, topt), _) ->
+  | Tm_ascribed (e, (Inr expected_c, None), _) ->
     let env0, _ = Env.clear_expected_typ env in
     let expected_c, _, g = tc_comp env0 expected_c in
     let e, c', g' = tc_term (U.comp_result expected_c |> Env.set_expected_typ env0) e in
@@ -700,25 +719,20 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       let c', g_c' = TcComm.lcomp_comp c' in
       let e, expected_c, g'' = check_expected_effect env0 (Some expected_c) (e, c') in
       e, expected_c, Env.conj_guard g_c' g'' in
-    let topt, gtac = tc_tactic_opt env0 topt in
-    let e = mk (Tm_ascribed(e, (Inr expected_c, topt), Some (U.comp_effect_name expected_c))) top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
+    let e = mk (Tm_ascribed(e, (Inr expected_c, None), Some (U.comp_effect_name expected_c))) top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
     let lc = TcComm.lcomp_of_comp expected_c in
     let f = Env.conj_guard g (Env.conj_guard g' g'') in
     let e, c, f2 = comp_check_expected_typ env e lc in
-    let final_guard = wrap_guard_with_tactic_opt topt (Env.conj_guard f f2) in
-    e, c, Env.conj_guard final_guard gtac
+    e, c, Env.conj_guard f f2
 
-  | Tm_ascribed (e, (Inl t, topt), _) ->
+  | Tm_ascribed (e, (Inl t, None), _) ->
     let k, u = U.type_u () in
     let t, _, f = tc_check_tot_or_gtot_term env t k "" in
-    let topt, gtac = tc_tactic_opt env topt in
     let e, c, g = tc_term (Env.set_expected_typ env t) e in
     //NS: Maybe redundant strengthen
     let c, f = TcUtil.strengthen_precondition (Some (fun () -> return_all Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
-    let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, topt), Some c.eff_name)) top.pos) c in
-    let final_guard = Env.conj_guard f (Env.conj_guard g f2) in
-    let final_guard = wrap_guard_with_tactic_opt topt final_guard in
-    e, c, Env.conj_guard final_guard gtac
+    let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed(e, (Inl t, None), Some c.eff_name)) top.pos) c in
+    e, c, Env.conj_guard f (Env.conj_guard g f2)
 
   (* Unary operators. Explicitly curry extra arguments *)
   | Tm_app({n=Tm_constant Const_range_of}, a::hd::rest)
