@@ -4061,15 +4061,11 @@ let resolve_implicits' env is_tac g =
                                reason
                                (Range.string_of_range r);
                let g =
-                 try
-                   env.check_type_of must_total env tm ctx_u.ctx_uvar_typ
-                 with e when Errors.handleable e ->
-                    Errors.add_errors [Error_BadImplicit,
-                                       BU.format3 "Failed while checking implicit %s set to %s of expected type %s"
+                 Errors.with_ctx (BU.format3 "While checking implicit %s set to %s of expected type %s"
                                                (Print.uvar_to_string ctx_u.ctx_uvar_head)
                                                (N.term_to_string env tm)
-                                               (N.term_to_string env ctx_u.ctx_uvar_typ), r];
-                    raise e
+                                               (N.term_to_string env ctx_u.ctx_uvar_typ))
+                                 (fun () -> env.check_type_of must_total env tm ctx_u.ctx_uvar_typ)
                in
                let g' =
                  match discharge_guard' (Some (fun () ->

@@ -984,7 +984,9 @@ let encode_top_level_let :
                     (if plural then "s" else "")
                     (List.map fst names |> String.concat ",")
                     (if plural then "their" else "its"),
-                  r)];
+                  r,
+                  Errors.get_ctx () // TODO: fix this, leaking abstraction
+                  )];
               decls, env_decls  //decls are type declarations for the lets, if there is an inner let rec, only those are encoded to the solver
 
     with Let_rec_unencodeable ->

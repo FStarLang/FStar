@@ -38,8 +38,8 @@ let run_safe t ps =
     if Options.tactics_failhard ()
     then run t ps
     else try run t ps
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) -> Failed (TacticFailure msg, ps)
+    with | Errors.Err (_, msg, _)
+         | Errors.Error (_, msg, _, _) -> Failed (TacticFailure msg, ps)
          | e -> Failed (e, ps)
 
 let ret (x:'a) : tac<'a> =
