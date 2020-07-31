@@ -709,6 +709,17 @@ let sub_eff_to_string se =
     (lid_to_string se.source) (lid_to_string se.target)
     (tsopt_to_string se.lift) (tsopt_to_string se.lift_wp)
 
+let pragma_to_string (p:pragma) : string =
+  match p with
+  | LightOff              -> "#light \"off\""
+  | ResetOptions None     -> "#reset-options"
+  | ResetOptions (Some s) -> U.format1 "#reset-options \"%s\"" s
+  | SetOptions s          -> U.format1 "#set-options \"%s\"" s
+  | PushOptions None      -> "#push-options"
+  | PushOptions (Some s)  -> U.format1 "#push-options \"%s\"" s
+  | RestartSolver         -> "#restart-solver"
+  | PopOptions            -> "#pop-options"
+
 let rec sigelt_to_string (x: sigelt) =
  // if not (Options.ugly()) then
  //    let e = Resugar.resugar_sigelt x in
@@ -721,14 +732,7 @@ let rec sigelt_to_string (x: sigelt) =
  // else
    let basic =
       match x.sigel with
-      | Sig_pragma(LightOff) -> "#light \"off\""
-      | Sig_pragma(ResetOptions None) -> "#reset-options"
-      | Sig_pragma(ResetOptions (Some s)) -> U.format1 "#reset-options \"%s\"" s
-      | Sig_pragma(SetOptions s) -> U.format1 "#set-options \"%s\"" s
-      | Sig_pragma(PushOptions None) -> "#push-options"
-      | Sig_pragma(PushOptions (Some s)) -> U.format1 "#push-options \"%s\"" s
-      | Sig_pragma(RestartSolver) -> "#restart-solver"
-      | Sig_pragma(PopOptions) -> "#pop-options"
+      | Sig_pragma p -> pragma_to_string p
       | Sig_inductive_typ(lid, univs, tps, k, _, _) ->
         let quals_str = quals_to_string' x.sigquals in
         let binders_str = binders_to_string " " tps in
@@ -748,8 +752,8 @@ let rec sigelt_to_string (x: sigelt) =
              else "")
             (term_to_string t)
       | Sig_assume(lid, us, f) ->
-        if Options.print_universes () then U.format3 "val %s<%s> : %s" (string_of_lid lid) (univ_names_to_string us) (term_to_string f)
-        else U.format2 "val %s : %s" (string_of_lid lid) (term_to_string f)
+        if Options.print_universes () then U.format3 "assume %s<%s> : %s" (string_of_lid lid) (univ_names_to_string us) (term_to_string f)
+        else U.format2 "assume %s : %s" (string_of_lid lid) (term_to_string f)
       | Sig_let(lbs, _) -> lbs_to_string x.sigquals lbs
       | Sig_bundle(ses, _) -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
       | Sig_fail (errs, lax, ses) ->
@@ -788,12 +792,69 @@ let rec sigelt_to_string (x: sigelt) =
       | [] -> "[@ ]" ^ "\n" ^ basic //It is important to keep this empty attribute marker since the Vale type extractor uses it as a delimiter
       | _ -> attrs_to_string x.sigattrs ^ "\n" ^ basic
 
-let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
+(* A "short" version of printing a sigelt. Meant to (usually) be a small string
+suitable to embed in an error message. No need to be fully faithful to
+printing universes, etc, it should just make it clear enough to which
+sigelt it refers to. *)
+let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
+  | Sig_pragma p ->
+    pragma_to_string p
 
-let sigelt_to_string_short (x: sigelt) = match x.sigel with
-  | Sig_let((_, [{lbname=lb; lbtyp=t}]), _) -> U.format2 "let %s : %s" (lbname_to_string lb) (term_to_string t)
-  | _ ->
-    SU.lids_of_sigelt x |> List.map (fun l -> string_of_lid l) |> String.concat ", "
+  | Sig_let((false, [{lbname=lb}]), _) ->
+    U.format1 "let %s" (lbname_to_string lb)
+
+  | Sig_let((true, [{lbname=lb}]), _) ->
+    U.format1 "let rec %s" (lbname_to_string lb)
+
+  | Sig_let((true, ({lbname=lb})::_), _) ->
+    U.format1 "let rec %s and ..." (lbname_to_string lb)
+
+  | Sig_let _ ->
+    failwith "Impossible: sigelt_to_string_short, ill-formed let"
+
+  | Sig_declare_typ(lid, _, t) ->
+    U.format1 "val %s" (string_of_lid lid)
+
+  | Sig_inductive_typ(lid, _, _, _, _, _) ->
+    U.format1 "type %s" (string_of_lid lid)
+
+  | Sig_datacon(lid, _, t, _, _, _) ->
+    U.format2 "datacon %s : %s" (string_of_lid lid) (term_to_string t)
+
+  | Sig_assume(lid, us, f) ->
+    U.format2 "assume %s : %s" (string_of_lid lid) (term_to_string f)
+
+  | Sig_bundle(ses, _) -> List.hd ses |> sigelt_to_string_short
+
+  | Sig_fail (errs, lax, ses) ->
+    U.format1 "[@@expect_failure] %s" (ses |> List.hd |> sigelt_to_string_short)
+
+  | Sig_new_effect ed ->
+    let kw =
+      if SU.is_layered ed then "layered_effect"
+      else if SU.is_dm4f ed then "new_effect_for_free"
+      else "new_effect"
+    in
+    U.format2 "%s { %s ... }" kw (lid_to_string ed.mname)
+
+  | Sig_sub_effect se ->
+    U.format2 "sub_effect %s ~> %s" (lid_to_string se.source) (lid_to_string se.target)
+
+  | Sig_effect_abbrev (l, univs, tps, c, flags) ->
+    U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
+
+  | Sig_splice (lids, t) ->
+    U.format3 "%splice[%s] (%s)"
+              "%s" // sigh, no escape for format
+              (String.concat "; " <| List.map Ident.string_of_lid lids)
+              (term_to_string t)
+
+  | Sig_polymonadic_bind (m, n, p, t, ty) ->
+    U.format3 "polymonadic_bind (%s, %s) |> %s"
+              (Ident.string_of_lid m) (Ident.string_of_lid n) (Ident.string_of_lid p)
+
+  | Sig_polymonadic_subcomp (m, n, t, ty) ->
+    U.format2 "polymonadic_subcomp %s <: %s" (Ident.string_of_lid m) (Ident.string_of_lid n)
 
 let tag_of_sigelt (se:sigelt) : string =
   match se.sigel with
