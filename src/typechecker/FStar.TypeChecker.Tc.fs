@@ -921,7 +921,11 @@ let tc_decls env ses =
                         (Print.tag_of_sigelt se)
                         (Print.sigelt_to_string se);
 
-    let ses', ses_elaborated, env = tc_decl env se in
+    let ses', ses_elaborated, env =
+            Errors.with_ctx (BU.format1 "In the top-level declaration for `%s`" (Print.sigelt_to_string_short se))
+                    (fun () -> tc_decl env se)
+    in
+
     let ses' = ses' |> List.map (fun se ->
         if Env.debug env (Options.Other "UF")
         then BU.print1 "About to elim vars from %s\n" (Print.sigelt_to_string se);
@@ -1023,11 +1027,13 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
   m, env
 
 let tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul * env) =
+Errors.with_ctx (BU.format1 "While checking module %s" (string_of_lid m.name)) (fun () ->
   let msg = "Internals for " ^ string_of_lid m.name in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
   let modul, env = tc_partial_modul env0 m in
   finish_partial_modul false iface_exists env modul
+)
 
 let load_checked_module (en:env) (m:modul) :env =
   //This function tries to very carefully mimic the effect of the environment

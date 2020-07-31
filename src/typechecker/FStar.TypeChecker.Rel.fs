@@ -4034,7 +4034,11 @@ let resolve_implicits' env is_tac g =
                     let env : Env.env = FStar.Dyn.undyn env_dyn in
                     if Env.debug env (Options.Other "Tac") then
                         BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
-                    let t = env.synth_hook env hd.imp_uvar.ctx_uvar_typ tau in
+
+                    let t =
+                      Errors.with_ctx "Running tactic for meta-arg"
+                        (fun () -> env.synth_hook env hd.imp_uvar.ctx_uvar_typ tau)
+                    in
                     // let the unifier handle setting the variable
                     let extra =
                         match teq_nosmt env t tm with

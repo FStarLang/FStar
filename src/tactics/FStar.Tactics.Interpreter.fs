@@ -563,5 +563,5 @@ let run_tactic_on_ps
                 raise e
         in
         Err.raise_error (Err.Fatal_UserTacticFailure,
-                            BU.format1 "user tactic failed: %s" (texn_to_string e))
+                            BU.format1 "user tactic failed: `%s`" (texn_to_string e))
                           ps.entry_range
