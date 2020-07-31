@@ -538,7 +538,7 @@
         "typing_MiniParse.Spec.List.parse_nlist"
       ],
       0,
-      "edb6dc949537c987785a21210526a2d2"
+      "c4cc70ed77c2dd0f1b46ba9a6d2dfc7c"
     ],
     [
       "MiniParse.Impl.List.serialize_nlist_impl_inv",
