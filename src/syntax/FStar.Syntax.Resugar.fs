@@ -381,7 +381,13 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       let body = resugar_term' env body in
       mk (A.Abs(patterns, body))
 
-    | Tm_arrow(xs, body) ->
+    | Tm_arrow _ ->
+      (* Flatten the arrow *)
+      let xs, body =
+        match (SS.compress (U.canon_arrow t)).n with
+        | Tm_arrow (xs, body) -> xs, body
+        | _ -> failwith "impossible: Tm_arrow in resugar_term"
+      in
       let xs, body = SS.open_comp xs body in
       let xs = if (Options.print_implicits()) then xs else filter_imp xs in
       let body = resugar_comp' env body in
