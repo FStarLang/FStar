@@ -2014,7 +2014,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                 | None, None
                 | Some Equality, None -> ()
                 | _ -> raise_error (Errors.Fatal_InconsistentImplicitQualifier,
-                                     (BU.format4 "Inconsistent implicit qualifier; %s vs %s\nfor bvar %s and term %s"
+                                     (BU.format4 "Inconsistent implicit qualifier; expected `%s` got `%s` for bvar %s and term %s"
                                                (Print.aqual_to_string aqual)
                                                (Print.aqual_to_string aq)
                                                (Print.bv_to_string x)
