@@ -739,3 +739,235 @@ let open_term_bv bv t =
     match open_term_bvs [bv] t with
     | [bv], t -> bv, t
     | _ -> failwith "impossible: open_term_bv"
+
+
+
+(* deep_compress_*: eliminating all unification variables and
+delayed substitutions in a sigelt. We traverse the entire syntactic
+structure to evaluate the explicit lazy substitutions (Tm_delayed) and
+to replace uvar nodes (Tm_uvar/U_unif) with their solutions.
+
+The return value of this function should *never* contain a lambda. This
+applies to every component of the term/sigelt: attributes, metadata, BV
+sorts, universes, memoized free variables, substitutions, etc.
+
+This is done to later dump the term/sigelt into a file (via
+OCaml's output_value, for instance). This marshalling does not handle
+closures[1] and we do not store the UF graph, so we cannot have any
+lambdas and every uvar node that must be replaced by its solution (and
+hence must have been resolved).
+
+Eliminating the substitutions and resolving uvars is all done by the
+`compress` call at the top, so this all looks like a big identity
+function.
+
+[1] OCaml's Marshal module can actually serialize closures, but this
+makes .checked files more brittle, so we don't do it.
+*)
+let rec deep_compress (t:term) : term =
+    let mk x = S.mk x t.pos in
+    let t = compress t in
+    let elim_bv x = {x with sort=deep_compress x.sort} in
+    match t.n with
+    | Tm_delayed _ -> failwith "Impossible"
+    | Tm_fvar _
+    | Tm_constant _
+    (* NOTE: the BVs here contain a sort, but it is not reached
+     * by substitutions, so we do not need to go into it. *)
+    | Tm_bvar _
+    | Tm_name _
+    | Tm_unknown ->
+        { t with vars = U.mk_ref None }
+
+    | Tm_uinst (f, us) ->
+      let us = List.map deep_compress_univ us in
+      mk (Tm_uinst (f, us))
+
+    | Tm_type u ->
+      let u = deep_compress_univ u in
+      mk (Tm_type u)
+
+    (* We also use this function to unfold lazy embeddings:
+     * they may contain lambdas and cannot be written into
+     * .checked files. *)
+    | Tm_lazy li ->
+      let t = must !lazy_chooser li.lkind li in // Can't call Syntax.Util from here
+      deep_compress t
+
+    | Tm_abs(bs, t, rc_opt) ->
+      let elim_rc (rc:residual_comp) : residual_comp = {
+        residual_effect = rc.residual_effect;
+        residual_typ    = map_opt rc.residual_typ deep_compress;
+        residual_flags  = deep_compress_cflags rc.residual_flags
+      }
+      in
+      mk (Tm_abs (deep_compress_binders bs,
+                  deep_compress t,
+                  map_opt rc_opt elim_rc))
+
+    | Tm_arrow(bs, c) ->
+      mk (Tm_arrow(deep_compress_binders bs, deep_compress_comp c))
+
+    | Tm_refine(bv, phi) ->
+      mk (Tm_refine(elim_bv bv, deep_compress phi))
+
+    | Tm_app(t, args) ->
+      mk (Tm_app(deep_compress t, deep_compress_args args))
+
+    | Tm_match(t, branches) ->
+      let rec elim_pat (p:pat) =
+        match p.v with
+        | Pat_var x ->
+          {p with v=Pat_var (elim_bv x)}
+        | Pat_wild x ->
+          {p with v=Pat_wild (elim_bv x)}
+        | Pat_dot_term(x, t0) ->
+          {p with v=Pat_dot_term(elim_bv x, deep_compress t0)}
+        | Pat_cons (fv, pats) ->
+          {p with v=Pat_cons(fv, List.map (fun (x, b) -> elim_pat x, b) pats)}
+
+        (* Nothing to inline *)
+        | Pat_constant _ ->
+          p
+      in
+      let elim_branch (pat, wopt, t) =
+          (elim_pat pat,
+           map_opt wopt deep_compress,
+           deep_compress t)
+      in
+      mk (Tm_match(deep_compress t, List.map elim_branch branches))
+
+    | Tm_ascribed(t, a, lopt) ->
+      let elim_ascription (tc, topt) =
+        (match tc with
+         | Inl t -> Inl (deep_compress t)
+         | Inr c -> Inr (deep_compress_comp c)),
+        map_opt topt deep_compress
+      in
+      mk (Tm_ascribed(deep_compress t, elim_ascription a, lopt))
+
+    | Tm_let(lbs, t) ->
+      let elim_lb (lb:letbinding) : letbinding = {
+        lbname  = (match lb.lbname with
+                   | Inl bv -> Inl (elim_bv bv)
+                   | Inr fv -> Inr fv);
+        lbtyp   = deep_compress lb.lbtyp;
+        lbdef   = deep_compress lb.lbdef;
+
+        lbunivs = lb.lbunivs; // these are names, nothing to inline
+        lbeff   = lb.lbeff;
+        lbattrs = lb.lbattrs;
+        lbpos   = lb.lbpos;
+      }
+      in
+      mk (Tm_let((fst lbs, List.map elim_lb (snd lbs)),
+                  deep_compress t))
+
+    | Tm_uvar(u,s) ->
+      // GM: Currently, this function is only called from the normalizer
+      // on a sigelt that has already been typechecked, so this case should
+      // be impossible (an unresolved uvar should be reason to abort). However
+      // this function could potentially be called elsewhere, so we handle
+      // this case gracefully. An option is to take a flag stating whether
+      // unresolved uvars are allowed or not.
+
+      mk (Tm_uvar(u,s)) //explicitly don't descend into (bs,t) to not break sharing there
+
+    | Tm_quoted (tm, qi) ->
+      let qi = S.on_antiquoted deep_compress qi in
+      mk (Tm_quoted (deep_compress tm, qi))
+
+    | Tm_meta(t, md) ->
+      mk (Tm_meta(deep_compress t, deep_compress_meta md))
+
+and deep_compress_cflags flags =
+    List.map
+        (fun f -> match f with
+        | DECREASES t ->
+          DECREASES (deep_compress t)
+
+        (* All of these do not have a subterm, so do nothing *)
+        | TOTAL
+        | MLEFFECT
+        | LEMMA
+        | RETURN
+        | PARTIAL_RETURN
+        | SOMETRIVIAL
+        | TRIVIAL_POSTCONDITION
+        | SHOULD_NOT_INLINE
+        | CPS ->
+            f)
+        flags
+
+and deep_compress_comp (c:comp) : comp =
+    let mk x = S.mk x c.pos in
+    match c.n with
+    | Total (t, uopt) ->
+      let uopt = map_opt uopt deep_compress_univ in
+      mk (Total (deep_compress t, uopt))
+
+    | GTotal (t, uopt) ->
+      let uopt = map_opt uopt deep_compress_univ in
+      mk (GTotal (deep_compress t, uopt))
+
+    | Comp ct ->
+      let ct = {
+        comp_univs  = List.map deep_compress_univ ct.comp_univs;
+        effect_name = ct.effect_name;
+        result_typ  = deep_compress ct.result_typ;
+        effect_args = deep_compress_args ct.effect_args;
+        flags       = deep_compress_cflags ct.flags
+      }
+      in
+      mk (Comp ct)
+
+and deep_compress_univ (u:universe) : universe =
+  let u = compress_univ u in
+  match u with
+  | U_max us ->
+    U_max (List.map deep_compress_univ us)
+
+  | U_succ u ->
+    U_succ (deep_compress_univ u)
+
+  | U_zero
+  | U_bvar _
+  | U_name _
+  | U_unif _ // should not happen?
+  | U_unknown ->
+    u
+
+and deep_compress_meta = function
+  | Meta_pattern (names, args) ->
+    Meta_pattern (List.map deep_compress names,
+                  List.map deep_compress_args args)
+
+  | Meta_monadic (m, t) ->
+    Meta_monadic (m, deep_compress t)
+
+  | Meta_monadic_lift (m1, m2, t) ->
+    Meta_monadic_lift (m1, m2, deep_compress t)
+
+  | m -> m
+
+and deep_compress_args args =
+    List.map (fun (t, q) ->
+            let t = deep_compress t in
+            let q = deep_compress_aqual q in // this should be useless
+            t, q) args
+
+and deep_compress_aqual (q:aqual) : aqual =
+  match q with
+  | Some (S.Meta (Arg_qualifier_meta_tac t)) ->
+    Some (S.Meta (Arg_qualifier_meta_tac (deep_compress t)))
+
+  | Some (S.Meta (Arg_qualifier_meta_attr t)) ->
+    Some (S.Meta (Arg_qualifier_meta_attr (deep_compress t)))
+
+  | q -> q
+
+and deep_compress_binders bs =
+    List.map (fun (x, q) ->
+                let x = {x with sort=deep_compress x.sort} in
+                let q = deep_compress_aqual q in
+                x, q) bs
