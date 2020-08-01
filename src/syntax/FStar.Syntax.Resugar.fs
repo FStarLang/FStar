@@ -232,8 +232,13 @@ let rec resugar_term_as_op (t:S.term) : option<(string*expected_arity)> =
       let length = String.length (nsstr fv.fv_name.v) in
       let str = if length=0 then (string_of_lid fv.fv_name.v)
           else BU.substring_from (string_of_lid fv.fv_name.v) (length+1) in
-      if BU.starts_with str "dtuple" then Some ("dtuple", None)
-      else if BU.starts_with str "tuple" then Some ("tuple", None)
+      (* Check that it is of the shape dtuple<int>, and return that arity *)
+      if BU.starts_with str "dtuple"
+         && Option.isSome (BU.safe_int_of_string (BU.substring_from str 6))
+      then Some ("dtuple", BU.safe_int_of_string (BU.substring_from str 6))
+      else if BU.starts_with str "tuple"
+         && Option.isSome (BU.safe_int_of_string (BU.substring_from str 5))
+      then Some ("tuple", BU.safe_int_of_string (BU.substring_from str 5))
       else if BU.starts_with str "try_with" then Some ("try_with", None)
       else if fv_eq_lid fv C.sread_lid then Some (string_of_lid fv.fv_name.v, None)
       else None
