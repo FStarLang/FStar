@@ -5884,7 +5884,7 @@ and (check_application_args :
                                     let uu____16822 =
                                       FStar_Syntax_Print.term_to_string e in
                                     FStar_Util.format4
-                                      "Inconsistent implicit qualifier; %s vs %s\nfor bvar %s and term %s"
+                                      "Inconsistent implicit qualifier; expected `%s` got `%s` for bvar %s and term %s"
                                       uu____16819 uu____16820 uu____16821
                                       uu____16822 in
                                   (FStar_Errors.Fatal_InconsistentImplicitQualifier,
