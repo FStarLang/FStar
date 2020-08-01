@@ -709,14 +709,22 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
         in
         let (e, ms) =
             BU.record_time (fun () ->
-              tc_maybe_toplevel_term ({ env' with phase1 = true; lax = true }) e |> (fun (e, _, _) -> e) |> N.remove_uvar_solutions env' |> drop_lbtyp
-            ) in
-        if Env.debug env <| Options.Other "TwoPhases" then
-          BU.print1 "Let binding after phase 1: %s\n"
-            (Print.term_to_string e);
+              let (e, _, _) = tc_maybe_toplevel_term ({ env' with phase1 = true; lax = true }) e in
+              e)
+        in
         if Env.debug env <| Options.Other "TCDeclTime" then
-          BU.print1 "Let binding elaborated (phase 1) in %s milliseconds\n"
+          BU.print1 "Let binding elaborated (phase 1) in %s milliseconds, now removing uvars\n"
             (string_of_int ms);
+
+        if Env.debug env <| Options.Other "TwoPhases" then
+          BU.print1 "Let binding after phase 1, before removing uvars: %s\n"
+            (Print.term_to_string e);
+
+        let e = N.remove_uvar_solutions env' e |> drop_lbtyp in
+
+        if Env.debug env <| Options.Other "TwoPhases" then
+          BU.print1 "Let binding after phase 1, uvars removed: %s\n"
+            (Print.term_to_string e);
         e
       end
       else e

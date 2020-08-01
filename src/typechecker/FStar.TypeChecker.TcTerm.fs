@@ -1069,6 +1069,32 @@ and tc_tactic_opt env topt : option<term> * guard_t =
         let tactic, _, g = tc_tactic t_unit t_unit env tactic
         in Some tactic, g
 
+and check_instantiated_fvar (env:Env.env) (v:S.var) (q:option<S.fv_qual>) (e:term) (t0:typ)
+  : term * lcomp * guard_t
+  =
+  let is_data_ctor = function
+      | Some Data_ctor
+      | Some (Record_ctor _) -> true
+      | _ -> false
+  in
+  if is_data_ctor q && not (Env.is_datacon env v.v) then
+    raise_error (Errors.Fatal_MissingDataConstructor,
+                 BU.format1 "Expected a data constructor; got %s" (string_of_lid v.v))
+                (Env.get_range env);
+
+  (* remove inaccesible pattern implicits, make them regular implicits *)
+  let t = U.remove_inacc t0 in
+
+  let e, t, implicits = TcUtil.maybe_instantiate env e t in
+//  BU.print3 "Instantiated type of %s from %s to %s\n" (Print.term_to_string e) (Print.term_to_string t0) (Print.term_to_string t);
+  let tc =
+    if Env.should_verify env
+    then Inl t
+    else Inr (TcComm.lcomp_of_comp <| mk_Total t)
+  in
+
+  value_check_expected_typ env e tc implicits
+
 (************************************************************************************************************)
 (* Type-checking values:                                                                                    *)
 (*   Values have no special status, except that we structure the code to promote a value type t to a Tot t  *)
@@ -1076,18 +1102,6 @@ and tc_tactic_opt env topt : option<term> * guard_t =
 and tc_value env (e:term) : term
                           * lcomp
                           * guard_t =
-  let check_instantiated_fvar env v dc e t0 =
-    let t = U.remove_inacc t0 in (* remove inaccesible pattern implicits, make them regular implicits *)
-    let e, t, implicits = TcUtil.maybe_instantiate env e t in
-//    printfn "Instantiated type of %s from %s to %s\n" (Print.term_to_string e) (Print.term_to_string t0) (Print.term_to_string t);
-    let tc = if Env.should_verify env then Inl t else Inr (TcComm.lcomp_of_comp <| mk_Total t) in
-    let is_data_ctor = function
-        | Some Data_ctor
-        | Some (Record_ctor _) -> true
-        | _ -> false in
-    if is_data_ctor dc && not(Env.is_datacon env v.v)
-    then raise_error (Errors.Fatal_MissingDataConstructor, (BU.format1 "Expected a data constructor; got %s" (string_of_lid v.v))) (Env.get_range env)
-    else value_check_expected_typ env e tc implicits in
 
   //As a general naming convention, we use e for the term being analyzed and its subterms as e1, e2, etc.
   //We use t and its variants for the type of the term being analyzed
@@ -1141,16 +1155,32 @@ and tc_value env (e:term) : term
     let (us', t), range = Env.lookup_lid env fv.fv_name.v in
     let fv = S.set_range_of_fv fv range in
     maybe_warn_on_use env fv;
-    if List.length us <> List.length us'
-    then raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
-                      BU.format3 "Unexpected number of universe instantiations for \"%s\" (%s vs %s)"
-                                    (Print.fv_to_string fv)
-                                    (string_of_int (List.length us))
-                                    (string_of_int (List.length us')))
-                      (Env.get_range env)
-    else List.iter2 (fun u' u -> match u' with
-            | U_unif u'' -> UF.univ_change u'' u
-            | _ -> failwith "Impossible") us' us;
+    if List.length us <> List.length us' then
+      raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
+                   BU.format3 "Unexpected number of universe instantiations for \"%s\" (%s vs %s)"
+                                  (Print.fv_to_string fv)
+                                  (string_of_int (List.length us))
+                                  (string_of_int (List.length us')))
+                    (Env.get_range env);
+
+    (* Make sure the instantiated universes match with the ones
+     * provided by the Tm_uinst. The universes in us' will usually
+     * be U_unif with unresolved uvars, but they could be U_names
+     * when the definition is recursive. *)
+    List.iter2
+      (fun ul ur -> match ul, ur with
+        | U_unif u'', _ -> UF.univ_change u'' ur
+        // TODO: more cases? we cannot get U_succ or U_max here I believe...
+        | U_name n1, U_name n2 when Ident.ident_equals n1 n2 -> ()
+        | _ ->
+          raise_error (Errors.Fatal_IncompatibleUniverse,
+                       BU.format3 "Incompatible universe application for %s, expected %s got %s\n"
+                                  (Print.fv_to_string fv)
+                                  (Print.univ_to_string ul)
+                                  (Print.univ_to_string ur))
+                      (Env.get_range env))
+      us' us;
+
     Env.insert_fv_info env fv t;
     let e = S.mk_Tm_uinst (mk (Tm_fvar fv) e.pos) us in
     check_instantiated_fvar env fv.fv_name fv.fv_qual e t
@@ -1166,7 +1196,7 @@ and tc_value env (e:term) : term
     let fv = S.set_range_of_fv fv range in
     maybe_warn_on_use env fv;
     if Env.debug env <| Options.Other "Range"
-    then BU.print5 "Lookup up fvar %s at location %s (lid range = defined at %s, used at %s); got universes type %s"
+    then BU.print5 "Lookup up fvar %s at location %s (lid range = defined at %s, used at %s); got universes type %s\n"
             (Print.lid_to_string (lid_of_fv fv))
             (Range.string_of_range e.pos)
             (Range.string_of_range range)
@@ -3561,12 +3591,24 @@ let rec universe_of_aux env e =
    //slightly subtle, since fv is a type-scheme; instantiate it with us
    | Tm_uinst({n=Tm_fvar fv}, us) ->
      let (us', t), _ = Env.lookup_lid env fv.fv_name.v in
-     if List.length us <> List.length us'
-     then raise_error (Errors.Fatal_UnexpectedNumberOfUniverse, "Unexpected number of universe instantiations") (Env.get_range env)
-     else List.iter2 (fun u' u -> match u' with
-        | U_unif u'' -> UF.univ_change u'' u
-        | _ -> failwith "Impossible") us' us;
+     if List.length us <> List.length us' then
+       raise_error (Errors.Fatal_UnexpectedNumberOfUniverse, "Unexpected number of universe instantiations") (Env.get_range env);
+     (* FIXME: this logic is repeated from the Tm_uinst case of tc_value *)
+     List.iter2
+       (fun ul ur -> match ul, ur with
+        | U_unif u'', _ -> UF.univ_change u'' ur
+        // TODO: more cases? we cannot get U_succ or U_max here I believe...
+        | U_name n1, U_name n2 when Ident.ident_equals n1 n2 -> ()
+        | _ ->
+          raise_error (Errors.Fatal_IncompatibleUniverse,
+                       BU.format3 "Incompatible universe application for %s, expected %s got %s\n"
+                                  (Print.fv_to_string fv)
+                                  (Print.univ_to_string ul)
+                                  (Print.univ_to_string ur))
+                      (Env.get_range env))
+       us' us;
      t
+
    | Tm_uinst _ ->
      failwith "Impossible: Tm_uinst's head must be an fvar"
    //the refinement formula plays no role in the universe computation; so skip it

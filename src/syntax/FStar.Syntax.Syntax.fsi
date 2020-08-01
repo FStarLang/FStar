@@ -273,7 +273,11 @@ and lazy_kind =
   | Lazy_embedding of emb_typ * Thunk.t<term>
 and binding =
   | Binding_var      of bv
-  | Binding_lid      of lident * tscheme
+  | Binding_lid      of lident * (univ_names * typ)
+  (* ^ Not a tscheme: the universe names must be taken
+   * as fixed (and opened in the type). This is important since
+   * we do not support universe-polymorphic recursion.
+   * See #2106. *)
   | Binding_univ     of univ_name
 and tscheme = list<univ_name> * typ
 and gamma = list<binding>
