@@ -262,8 +262,14 @@ let tc_inductive' env ses quals attrs lids =
 let tc_inductive env ses quals attrs lids =
   let env = Env.push env "tc_inductive" in
   let pop () = ignore (Env.pop env "tc_inductive") in  //OK to ignore: caller will reuse original env
-  try tc_inductive' env ses quals attrs lids |> (fun r -> pop (); r)
-  with e -> pop (); raise e
+
+  if Options.trace_error () then
+    let r = tc_inductive' env ses quals attrs lids in
+    pop ();
+    r
+  else
+    try tc_inductive' env ses quals attrs lids |> (fun r -> pop (); r)
+    with e -> pop (); raise e
 
 (*
  *  Given `val t : Type` in an interface
