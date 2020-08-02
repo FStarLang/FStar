@@ -27,14 +27,15 @@ open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.Const
 
-module U = FStar.Util
-module A = FStar.Parser.AST
-module Resugar = FStar.Syntax.Resugar
+module Errors     = FStar.Errors
+module U          = FStar.Util
+module A          = FStar.Parser.AST
+module Resugar    = FStar.Syntax.Resugar
 module ToDocument = FStar.Parser.ToDocument
-module Pp = FStar.Pprint
-module Unionfind = FStar.Syntax.Unionfind
-module C = FStar.Parser.Const
-module SU = FStar.Syntax.Util
+module Pp         = FStar.Pprint
+module Unionfind  = FStar.Syntax.Unionfind
+module C          = FStar.Parser.Const
+module SU         = FStar.Syntax.Util
 
 let rec delta_depth_to_string = function
     | Delta_constant_at_level i   -> "Delta_constant_at_level " ^ string_of_int i
@@ -167,6 +168,7 @@ let rec int_of_univ n u = match Subst.compress_univ u with
     | _ -> n, Some u
 
 let rec univ_to_string u =
+Errors.with_ctx "While printing universe" (fun () ->
   // VD: commented out for testing NBE
   // if not (Options.ugly()) then
   //   let e = Resugar.resugar_universe u Range.dummyRange in
@@ -185,6 +187,7 @@ let rec univ_to_string u =
         end
     | U_max us -> U.format1 "(max %s)" (List.map univ_to_string us |> String.concat ", ")
     | U_unknown -> "unknown"
+)
 
 let univs_to_string us = List.map univ_to_string us |> String.concat ", "
 
@@ -257,10 +260,11 @@ let rec tag_of_term (t:term) = match t.n with
 
 and term_to_string x =
   if not (Options.ugly()) then
-    let e = Resugar.resugar_term x in
+    let e = Errors.with_ctx "While resugaring a term" (fun () -> Resugar.resugar_term x) in
     let d = ToDocument.term_to_document e in
     Pp.pretty_string (float_of_string "1.0") 100 d
   else begin
+    Errors.with_ctx "While ugly-printing a term" (fun () ->
       let x = Subst.compress x in
       let x = if Options.print_implicits() then x else SU.unmeta x in
       match x.n with
@@ -353,6 +357,7 @@ and term_to_string x =
         else term_to_string t
 
       | Tm_unknown -> "_"
+    )
   end
 
 and branch_to_string (p, wopt, e) : string =
@@ -482,10 +487,11 @@ and args_to_string args =
 
 and comp_to_string c =
   if not (Options.ugly()) then
-    let e = Resugar.resugar_comp c in
+    let e = Errors.with_ctx "While resugaring a computation" (fun () -> Resugar.resugar_comp c) in
     let d = ToDocument.term_to_document e in
     Pp.pretty_string (float_of_string "1.0") 100 d
   else
+    Errors.with_ctx "While ugly-printing a computation" (fun () ->
     match c.n with
     | Total (t, uopt) ->
       begin match (compress t).n with
@@ -525,6 +531,7 @@ and comp_to_string c =
           else U.format2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
       let dec = c.flags |> List.collect (function DECREASES e -> [U.format1 " (decreases %s)" (term_to_string e)] | _ -> []) |> String.concat " " in
       U.format2 "%s%s" basic dec
+    )
 
 and cflag_to_string c =
     match c with
