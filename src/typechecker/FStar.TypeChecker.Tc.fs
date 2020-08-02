@@ -922,7 +922,7 @@ let tc_decls env ses =
                         (Print.sigelt_to_string se);
 
     let ses', ses_elaborated, env =
-            Errors.with_ctx (BU.format1 "In the top-level declaration for `%s`" (Print.sigelt_to_string_short se))
+            Errors.with_ctx (BU.format1 "While typechecking the top-level declaration `%s`" (Print.sigelt_to_string_short se))
                     (fun () -> tc_decl env se)
     in
 
