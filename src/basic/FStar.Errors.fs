@@ -1111,24 +1111,27 @@ let raise_err (e, msg) =
   raise (Err (e, msg, error_context.get ()))
 
 let with_ctx (s:string) (f : unit -> 'a) : 'a =
-  if Options.trace_error () then
+  error_context.push s;
+  let r =
     (* If we're debugging the failure, don't do anything,
      * since catching and rethrowing the exception will change
      * the stack trace. *)
-    f ()
-  else begin
-    error_context.push s;
-    let r = try Inr (f ())
-            with
-            (* Add the context manually to exceptions that are not errors *)
-            | Failure msg -> Inl (Failure (msg ^ "\n" ^ s))
-            | ex -> Inl ex
-    in
-    ignore (error_context.pop ());
-    match r with
-    | Inr r -> r
-    | Inl e -> raise e
-  end
+    if Options.trace_error ()
+    then Inr (f ())
+    else
+    try
+      Inr (f ())
+    with
+      (* Turning `failwith` into an actual error. *)
+      | Failure msg -> Inl (Err (Fatal_AssertionFailure,
+                                 "ASSERTION FAILURE: " ^ msg,
+                                 error_context.get()))
+      | ex -> Inl ex
+  in
+  ignore (error_context.pop ());
+  match r with
+  | Inr r -> r
+  | Inl e -> raise e
 
 let catch_errors (f : unit -> 'a) : list<issue> * option<'a> =
     let newh = mk_default_handler false in
