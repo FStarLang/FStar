@@ -999,8 +999,12 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
     let nm =
         match U.lid_of_sigelt se with
         | None -> ""
-        | Some l -> (string_of_lid l) in
-    let g, env = encode_sigelt' env se in
+        | Some l -> (string_of_lid l)
+    in
+    let g, env = Errors.with_ctx (BU.format1 "While encoding sigelt `%s`"
+                                             (Print.sigelt_to_string_short se))
+                   (fun () -> encode_sigelt' env se)
+    in
     let g =
         match g with
          | [] ->
