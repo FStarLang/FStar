@@ -1752,7 +1752,9 @@ let encode_query use_env_msg tcenv q
   * list<ErrorReporting.label> //labels in the query
   * decl        //the query itself
   * list<decl>  //suffix, evaluating labels in the model, etc.
-  = Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));
+  =
+  Errors.with_ctx "While encoding a query" (fun () ->
+    Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));
     let env = get_env (Env.current_module tcenv) tcenv in
     let q, bindings =
         let rec aux bindings = match bindings with
@@ -1803,3 +1805,4 @@ let encode_query use_env_msg tcenv q
     || debug tcenv <| Options.Other "Time"
     then BU.print1 "Encoding took %sms\n" (string_of_int ms);
     query_prelude, labels, qry, suffix
+  )

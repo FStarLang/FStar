@@ -980,15 +980,20 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
 
 let extract (g:uenv) (m:modul) =
   ignore <| Options.restore_cmd_line_options true;
-  if not (Options.should_extract (string_of_lid m.name))
-  then failwith (BU.format1 "Extract called on a module %s that should not be extracted" (Ident.string_of_lid m.name));
+  if not (Options.should_extract (string_of_lid m.name)) then
+    failwith (BU.format1 "Extract called on a module %s that should not be extracted" (Ident.string_of_lid m.name));
+
   if Options.interactive() then g, None else begin
+
+  let nm = Print.lid_to_string m.name in
   let g, mllib =
     UF.with_uf_enabled (fun () ->
-      if Options.debug_any ()
-      then let msg = BU.format1 "Extracting module %s" (Print.lid_to_string m.name) in
-           BU.measure_execution_time msg (fun () -> extract' g m)
-      else extract' g m)
+      Errors.with_ctx ("While extracting module " ^ nm) (fun () ->
+        if Options.debug_any () then
+          let msg = BU.format1 "Extracting module %s" nm in
+          BU.measure_execution_time msg (fun () -> extract' g m)
+        else
+          extract' g m))
   in
   ignore <| Options.restore_cmd_line_options true;
   exit_module g, mllib

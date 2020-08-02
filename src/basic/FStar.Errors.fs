@@ -1115,7 +1115,7 @@ let with_ctx (s:string) (f : unit -> 'a) : 'a =
   let r =
     (* If we're debugging the failure, don't do anything,
      * since catching and rethrowing the exception will change
-     * the stack trace. *)
+     * the stack trace. We still push the context though. *)
     if Options.trace_error ()
     then Inr (f ())
     else
