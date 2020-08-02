@@ -339,7 +339,7 @@ let proc_check_with (attrs:list<attribute>) (kont : unit -> 'a) : 'a =
     Options.with_saved_options (fun () ->
       Options.set (unembed_optionstate a |> BU.must);
       kont ())
-  | _ -> failwith "huh?"
+  | _ -> failwith "ill-formed `check_with`"
 
 (* Alternative to making a huge let rec... knot is set below in this file *)
 let tc_decls_knot : ref<option<(Env.env -> list<sigelt> -> list<sigelt> * Env.env)>> =
