@@ -624,7 +624,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
   (*
    * Checking the soundness of the if_then_else combinator
    *
-   * In all combinators, other than if_then_else, the soundess is ensured
+   * In all combinators, other than if_then_else, the soundness is ensured
    *   by extracting the application of those combinators to their definitions
    * For if_then_else, the combinator does not have an extraction equivalent
    *   It is only used in VC generation
@@ -649,7 +649,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    * 
    * Similarly for the g case
    *)
-  let _if_then_else_is_sound = Errors.with_ctx "While checking if-then-else soundess" (fun () ->
+  let _if_then_else_is_sound = Errors.with_ctx "While checking if-then-else soundness" (fun () ->
     let r = (ed |> U.get_layered_if_then_else_combinator |> must |> snd).pos in
 
     (*
