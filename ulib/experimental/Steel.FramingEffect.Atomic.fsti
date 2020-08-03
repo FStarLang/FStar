@@ -365,11 +365,9 @@ let return_atomic #a #opened_invariants #p (x:a)
   : SteelAtomic a opened_invariants unobservable (p x) p
   = SteelAtomic?.reflect (return a x opened_invariants #p)
 
-#push-options "--query_stats" //working around some flakiness
 let h_assert_atomic (#opened_invariants:_) (p:slprop)
   : SteelAtomic unit opened_invariants unobservable p (fun _ -> p)
   = change_slprop p p (fun m -> ())
-#pop-options
 
 let h_intro_emp_l (#opened_invariants:_) (p:slprop)
   : SteelAtomic unit opened_invariants unobservable p (fun _ -> emp `star` p)
