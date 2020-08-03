@@ -26,6 +26,8 @@ val e_optionstate_hook : ref<option<EMB.embedding<O.optionstate>>>
 val compare_bv            : bv -> bv -> order
 val lookup_typ            : Env.env -> list<string> -> option<sigelt>
 val is_free               : bv -> term -> bool
+val free_bvs              : term -> list<bv>
+val free_uvars            : term -> list<Z.t>
 val lookup_attr           : term -> Env.env -> list<fv>
 val all_defs_in_env       : Env.env -> list<fv>
 val defs_in_module        : Env.env -> name -> list<fv>
