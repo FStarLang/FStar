@@ -443,6 +443,9 @@ let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool)
     let tcenv = TypeChecker.Env.push_binders g.env_tcenv (binders_of_list [x]) in
     {g with env_bindings=gamma; env_mlident_map = mlident_map; env_tcenv=tcenv}, mlident, exp_binding
 
+let burn_name (g:uenv) (i:mlident) : uenv =
+  { g with env_mlident_map = BU.psmap_add g.env_mlident_map i "" }
+
 (** Generating a fresh local term variable *)
 let new_mlident (g:uenv)
   : uenv * mlident
