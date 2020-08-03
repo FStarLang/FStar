@@ -1122,10 +1122,16 @@ let with_ctx (s:string) (f : unit -> 'a) : 'a =
     try
       Inr (f ())
     with
-      (* Turning `failwith` into an actual error. *)
-      | Failure msg -> Inl (Err (Fatal_AssertionFailure,
-                                 "ASSERTION FAILURE: " ^ msg,
-                                 error_context.get()))
+      (* Adding context to `failwith`, though it will be printed badly.
+       * TODO: deprecate failwith and use F* exceptions, which we can
+       * then catch and print sensibly. *)
+      | Failure msg ->
+        let ctx_str =
+          error_context.get ()
+          |> List.map (fun s -> "\n> " ^ s)
+          |> String.concat ""
+        in
+        Inl (Failure (msg ^ ctx_str))
       | ex -> Inl ex
   in
   ignore (error_context.pop ());
