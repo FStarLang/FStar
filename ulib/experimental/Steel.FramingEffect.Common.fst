@@ -984,10 +984,22 @@ let rec solve_indirection_eqs (l:list goal) : Tac unit =
     let f = term_as_formula' (goal_type hd) in
     match f with
     | Comp (Eq _) l r ->
-        trefl();
-        // if is_return_eq l r then later() else trefl();
+        // trefl();
+        if is_return_eq l r then later() else trefl();
         solve_indirection_eqs tl
     | _ -> later(); solve_indirection_eqs tl
+
+let rec solve_all_eqs (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let f = term_as_formula' (goal_type hd) in
+    match f with
+    | Comp (Eq _) l r ->
+        trefl();
+        solve_all_eqs tl
+    | _ -> later(); solve_all_eqs tl
+
 
 let rec solve_triv_eqs (l:list goal) : Tac unit =
   match l with
@@ -1020,6 +1032,7 @@ let solve_or_delay (g:goal) : Tac bool =
     // Only solve equality if one of the terms is completely determined
     if lnbr = 0 || rnbr = 0 then (trefl (); true) else false
   | _ -> false
+
 
 
 // Returns true if it successfully solved a goal
@@ -1079,6 +1092,7 @@ let init_resolve_tac () : Tac unit =
   // TODO: If we had better handling of lifts from PURE, we might prove a true
   // sl_implies here, "losing" extra assertions"
   solve_subcomp_post (goals ());
+  solve_all_eqs(goals());
   resolve_tac ();
   set_goals loggs;
   resolve_tac ()
