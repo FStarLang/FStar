@@ -17,7 +17,7 @@
 module Steel.Primitive.FramingForkJoin
 open Steel.FramingEffect
 open Steel.Memory
-module L = Steel.SpinLock
+module L = Steel.FramingSpinLock
 open Steel.FractionalPermission
 open FStar.Ghost
 open Steel.FramingReference
@@ -72,19 +72,6 @@ val cond (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
          (else_: (unit -> SteelT a (p false) (q false)))
   : SteelT a (p b) (q b)
 
-// Would be provided by SpinLock
-assume
-val new_lock (p:slprop)
-  : SteelT (L.lock p) p (fun _ -> emp)
-
-assume
-val l_acquire (#p:slprop) (l:L.lock p)
-  : SteelT unit emp (fun _ -> p)
-
-assume
-val release (#p:slprop) (l:L.lock p)
-  : SteelT unit p (fun _ -> emp)
-
 
 let intro_maybe_p_false (p:slprop)
   : SteelT unit emp (fun _ -> maybe_p p false)
@@ -103,49 +90,27 @@ let intro_lock_inv_pred (r:ref bool) (p:slprop) (v:bool)
 
 let new_thread (p:slprop)
   : SteelT (thread p) emp (fun _ -> emp)
-  = //intro_maybe_p_false p;
-    //h_assert (maybe_p p false);
-    //h_intro_emp_l (maybe_p p false);
-    let r = alloc false in
+  = let r = alloc false in
+    change_slprop (pts_to r full_perm false `star` emp) (lock_inv_pred r p false) (fun _ -> ());
     intro_exists false (lock_inv_pred r p);
-    let l = new_lock (lock_inv r p) in
+    let l = L.new_lock (lock_inv r p) in
     let t = {r = r; l = l} in
     t
-
-    // let r = frame #(ref bool) #emp #(fun r -> pts_to r full_perm false)
-    //               (fun () -> alloc false)
-    //               (maybe_p p false) in
-    // intro_h_exists false (lock_inv_pred r p);
-    // let l  = L.new_lock (lock_inv r p) in
-    // let t  =  { r = r ; l = l } in
-    // return t
 
 let finish (#p:slprop) (t:thread p) (v:bool)
   : SteelT unit (pts_to t.r full_perm v `star` p) (fun _ -> emp)
   = write t.r true;
-//    intro_maybe_p_true p;
-//    intro_lock_inv_pred t.r p true;
+    change_slprop (pts_to t.r full_perm true `star` p) (lock_inv_pred t.r p true) (fun _ -> ());
     intro_exists true (lock_inv_pred t.r p);
-    release t.l
-
-  // frame (fun _ -> write t.r true) p;
-  //   h_assert (pts_to t.r full true `star` p);
-  //   h_commute (pts_to t.r full true) p;
-  //   frame (fun _ -> intro_maybe_p_true p) (pts_to t.r full true);
-  //   h_commute (maybe_p p true) (pts_to t.r full true);
-  //   intro_h_exists true (lock_inv_pred t.r p);
-  //   L.release t.l
+    L.release t.l
 
 
 let acquire (#p:slprop) (t:thread p)
   : SteelT bool emp (fun b -> pts_to t.r full_perm b)
-  = l_acquire t.l;
-//    elim_lock_inv t.r p;
+  = L.acquire t.l;
     let b = read_refine #_ #full_perm (maybe_p p) t.r in
     drop (maybe_p p b);
     b
-    // h_affine (pts_to t.r full b) (maybe_p p b);
-    // return b
 
 let spawn (#p #q:slprop)
           ($f: (unit -> SteelT unit p (fun _ -> q)))
@@ -156,13 +121,6 @@ let spawn (#p #q:slprop)
     f ();
     finish t b
 
-  // h_intro_emp_l p;
-  //   let b  = frame (fun () -> acquire t) p in
-  //   h_commute (pts_to t.r full b) p;
-  //   let _ = frame f (pts_to t.r full b) in
-  //   h_commute q (pts_to t.r full b);
-  //   finish t b
-
 let fork (#p #q #r #s:slprop)
       (f: (unit -> SteelT unit p (fun _ -> q)))
       (g: (thread q -> unit -> SteelT unit r (fun _ -> s)))
@@ -170,35 +128,19 @@ let fork (#p #q #r #s:slprop)
   = let t : thread q = new_thread q in
     par (spawn f t) (g t)
 
-  //   h_intro_emp_l (p `star` r);
-  //   let t : thread q = frame (fun _ -> new_thread q) (p `star` r) in
-  //   h_assert (emp `star` (p `star` r));
-  //   h_elim_emp_l (p `star` r);
-  //   par (spawn f t) (g t);
-  //   h_elim_emp_l s
-
 let join_case_true (#p:slprop) (t:thread p) (_:unit)
   : SteelT unit (lock_inv_pred t.r p true) (fun _ -> p)
   = change_slprop (lock_inv_pred t.r p true) p (fun _ -> ())
-  // = h_commute _ (maybe_p p true);
-  //   h_assert (maybe_p p true `star` pts_to t.r full true);
-  //   h_affine (maybe_p p true) (pts_to t.r full true);
-  //   h_assert (maybe_p p true)
 
 let join_case_false (#p:slprop) (t:thread p)
   (loop: (t:thread p -> SteelT unit emp (fun _ -> p))) (_:unit)
   : SteelT unit (lock_inv_pred t.r p false) (fun _ -> p)
   = intro_exists false (lock_inv_pred t.r p);
-    release t.l;
+    L.release t.l;
     loop t
 
 let rec join (#p:slprop) (t:thread p)
   : SteelT unit emp (fun _ -> p)
-  = let _ = l_acquire t.l in
+  = let _ = L.acquire t.l in
     let b = read_refine #_ #full_perm (maybe_p p) t.r in
     cond b (lock_inv_pred t.r p) (fun _ _ -> p) (join_case_true t) (join_case_false t join)
-
-    // let b = read_refine (maybe_p p) t.r in
-    // h_assert (pts_to t.r full b `star` maybe_p p b);
-    // h_assert (pre t b);
-    // cond b (pre t) (post p) (join_case_true t) (join_case_false t (join #p))
