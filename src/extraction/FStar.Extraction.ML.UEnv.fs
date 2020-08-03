@@ -338,7 +338,7 @@ let rename_conventional (s:string) (is_local_type_variable:bool) : string =
 let root_name_of_bv (x:bv): mlident =
   if BU.starts_with (string_of_id x.ppname) Ident.reserved_prefix
   || is_null_bv x
-  then (string_of_id x.ppname) ^ "_" ^ (string_of_int x.index)
+  then Ident.reserved_prefix
   else string_of_id x.ppname
 
 (** Given a candidate root_name, generate an ML identifier
