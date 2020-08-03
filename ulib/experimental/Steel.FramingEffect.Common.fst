@@ -861,7 +861,7 @@ let emp_unit_variant (p:slprop) : Lemma
     equiv_sl_implies p (p `star` emp)
 
 let emp_unit_variant_forall (#a:Type) (p:a -> slprop) : Lemma
-   (ensures can_be_split_forall (fun x -> p x `star` emp) p)
+   (ensures annot_sub_post (can_be_split_forall (fun x -> p x `star` emp) p))
   = let aux (x:a) : Lemma
       ((fun x -> p x `star` emp) x `sl_implies` p x)
       = Classical.forall_intro emp_unit;
@@ -939,9 +939,9 @@ let rec solve_subcomp_post (l:list goal) : Tac unit =
     | App _ t ->
         let hd, args = collect_app t in
         if term_eq hd (quote annot_sub_post) then (focus (fun _ ->
-          norm [delta_only [`%annot_sub_post]];
           or_else (fun _ -> apply_lemma (`emp_unit_variant_forall))
                   (fun _ ->
+                     norm [delta_only [`%annot_sub_post]];
                      norm [delta_only [`%can_be_split_forall]];
                      ignore (forall_intro());
                      or_else

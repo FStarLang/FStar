@@ -109,7 +109,7 @@ let acquire_core #p #u r i =
   (** AF: This should be done by an automatic rewriting in the tactic *)
   Atomic.change_slprop (pts_to r full_perm (Ghost.hide (Ghost.reveal ghost))) (pts_to r full_perm ghost) (fun _ -> ());
 
-  let res = cas r ghost available locked in
+  let res:bool = cas r ghost available locked in
 
   (* Not sure we can avoid calling an SMT here. Better force the manual call? *)
   Atomic.change_slprop (if (Ghost.reveal ghost) then emp else p) (if res then p else emp)
@@ -118,7 +118,6 @@ let acquire_core #p #u r i =
 
   intro_lockinv_locked p r;
   res
-
 
 let acquire' (#p:slprop) (l:lock p)
   : SteelAtomic bool Set.empty observable emp (fun b -> if b then p else emp)
@@ -152,7 +151,7 @@ let release_core #p #u r i =
 
   Atomic.change_slprop (pts_to r full_perm (Ghost.hide (Ghost.reveal v))) (pts_to r full_perm v) (fun _ -> ());
 
-  let res = cas r v locked available in
+  let res:bool = cas r v locked available in
 
   (* Not sure we can avoid calling an SMT here. Better force the manual call? *)
   Atomic.change_slprop (if (Ghost.reveal v) then emp else p) (if res then emp else p)
