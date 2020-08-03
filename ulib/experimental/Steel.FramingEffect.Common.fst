@@ -287,7 +287,7 @@ let rec most_restricted_at_top (l1 l2:list atom) (am:amap term) : Tac (list atom
     else hd::(most_restricted_at_top tl l2 am)
 
 (* First remove all trivially equal terms, then try to decide equivalence.
-   Assumes that l1 does not contain any program implicit.
+   Assumes that l1 does not contain any slprop uvar.
    If it succeeds, returns permutations of l1, l2, and a boolean indicating
    if l2 has a trailing empty frame to be unified
 *)
@@ -820,6 +820,7 @@ let rec slterm_nbr_uvars (t:term) : Tac int =
   | Tv_App _ _ ->
     let hd, args = collect_app t in
     if term_eq hd (`star) then
+
       // Only count the number of unresolved slprops, not program implicits
       fold_left (fun n (x, _) -> n + slterm_nbr_uvars x) 0 args
     else if is_uvar hd then 1
@@ -880,7 +881,8 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
                      or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
                        (fun _ ->
                        apply_lemma (`equiv_sl_implies);
-                       if rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
+                       // TODO: Do this count in a better way
+                       if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
                        or_else (fun _ ->  flip()) (fun _ -> ());
                        norm [delta_only [
                               `%__proj__CM__item__unit;
