@@ -85,10 +85,6 @@ assume
 val split (r:ref stepper p) (v_full v0 v1:stepper) (_:squash (composable v0 v1)) (_:squash (v_full == compose v0 v1))
   : SteelT unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)
 
-// assume
-// val split_v (r:ref stepper p) (n:erased even)
-//   : SteelT unit (pts_to r (V n)) (fun _ -> pts_to r (Even n) `star` pts_to r (Odd (n+1)))
-
 assume val h_admit (#a:Type) (p:slprop) (q:a -> slprop) : SteelT a p (fun x -> q x)
 
 assume
@@ -115,25 +111,32 @@ val change_slprop
   (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
   : SteelT unit p (fun _ -> q)
 
+val incr_send_write (r:ref stepper p) (x:stepper{V? x})
+  : Steel nat (pts_to r x) (fun n -> s_even r n) (fun _ -> squash (V?.n x % 2 <> 0)) (fun _ _ _ -> True)
+
+let incr_send_write r s =
+  let (x:nat{x > 0}) = V?.n s in
+  change_slprop (pts_to r s) (pts_to r (V x)) (fun _ -> ());
+
+  let y:nat = x-1 in
+
+  split r (V x) (Even y) (Odd x) () ();
+  drop (s_odd r x);
+  let y':nat = y+2 in
+  assume (frame_preserving p (Even y) (Even y'));
+  upd r (Even y) (Even y');
+  y'
 
 
-val incr_send_noop (r:ref stepper p) (x:stepper{V? x}) // (x:nat{x > 0 /\ x % 2 == 0})
-  : SteelT nat (pts_to r x) (fun x -> s_even r x)
-
-//#set-options "--debug_level Rel --debug Steel.Stepper"
+val incr_send_noop (r:ref stepper p) (x:stepper{V? x})
+  : Steel nat (pts_to r x) (fun x -> s_even r x) (fun _ -> squash (V?.n x % 2 = 0)) (fun _ _ _ -> True)
 
 let incr_send_noop r s =
   let (x:nat{x > 0}) = V?.n s in
   change_slprop (pts_to r s) (pts_to r (V x)) (fun _ -> ());
-  split r (V x) (Even x) (Odd (x-1)) (admit()) ();
+  split r (V x) (Even x) (Odd (x-1)) () ();
   drop (s_odd r (x-1));
   x
-
-
-// let incr_send r x
-assume
-val incr_send_write (r:ref stepper p) (x:stepper{V? x}): // (x:nat{x > 0}) :
-  SteelT nat (pts_to r x) (fun n -> s_even r n)
 
 val incr_send (r:ref stepper p) (n:nat) : SteelT nat (s_even r n) (fun n' -> s_even r n')
 
@@ -143,6 +146,7 @@ let incr_send r n =
   // Assumes we get the "full heap" value
   assume (V? x);
   let n' = V?.n x in
-  cond (n = n') (fun b -> pts_to r x) (fun _ n' -> s_even r n') (fun b -> squash (n' > 0))
+  cond (n = n') (fun b -> pts_to r x) (fun _ n' -> s_even r n')
+    (fun b -> if b then n' % 2 == 0 else squash (n' % 2 <> 0))
     (fun _ -> incr_send_noop r x)
     (fun _ -> incr_send_write r x)
