@@ -1027,12 +1027,11 @@ let solve_or_delay (g:goal) : Tac bool =
       else if term_eq hd (quote can_be_split_forall) then solve_can_be_split_forall args
       else false
   | Comp (Eq _) l r ->
-    let lnbr = slterm_nbr_uvars l in
-    let rnbr = slterm_nbr_uvars r in
+    let lnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars l) in
+    let rnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars r) in
     // Only solve equality if one of the terms is completely determined
     if lnbr = 0 || rnbr = 0 then (trefl (); true) else false
   | _ -> false
-
 
 
 // Returns true if it successfully solved a goal
