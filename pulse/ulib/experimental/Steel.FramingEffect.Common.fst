@@ -949,6 +949,8 @@ let rec solve_subcomp_post (l:list goal) : Tac unit =
                        (fun _ ->
                        let open FStar.Algebra.CommMonoid.Equiv in
                        apply_lemma (`equiv_sl_implies);
+                       // The term on the right should have the slprop uvars
+                       apply_lemma (`Steel.Memory.Tactics.equiv_sym);
                        or_else (fun _ ->  flip()) (fun _ -> ());
                        norm [delta_only [
                               `%__proj__CM__item__unit;
