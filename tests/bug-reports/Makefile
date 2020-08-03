@@ -146,13 +146,21 @@ verify-maybe-close: $(subst .fst,.verify,$(SHOULD_VERIFY_MAYBE_CLOSE))
 
 not-verify: $(subst .fst,.not-verify,$(SHOULD_NOT_VERIFY_CLOSED))
 
-Bug310.extract:
+Bug310.ml:
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug310 --codegen OCaml Bug310.fst
+
+Bug310.extract: Bug310.ml
 	diff -u --strip-trailing-cr Bug310.ml Bug310.ml.expected
 
-Bug2058.extract:
+Bug2058.ml:
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug2058 --codegen OCaml Bug2058.fst
+
+Bug2058.extract: Bug2058.ml
 	diff -u --strip-trailing-cr Bug2058.ml Bug2058.ml.expected
+
+output-accept: Bug310.ml Bug2058.ml
+	cp Bug310.ml Bug310.ml.expected
+	cp Bug2058.ml Bug2058.ml.expected
 
 %.extract: %.fst
 	mkdir -p out_$*
