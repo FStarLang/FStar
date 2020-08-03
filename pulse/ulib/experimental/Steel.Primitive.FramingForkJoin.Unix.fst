@@ -6,10 +6,9 @@ prototype for now. *)
 
 open Steel.FramingEffect
 open Steel.Memory
-module L = Steel.SpinLock
 open FStar.Ghost
 open Steel.FramingReference
-open Steel.SteelT.Basics
+//open Steel.SteelT.Basics
 open Steel.Primitive.FramingForkJoin
 
 module U = FStar.Universe
@@ -45,17 +44,18 @@ let return a (x:a) (#[@@ framing_implicit] p: a -> slprop) : steelK a (p x) p =
   fun k -> k x
 
 let bind (a:Type) (b:Type)
-  (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t a)
-  (#[@@ framing_implicit] pre':a -> pre_t) (#[@@ framing_implicit] post' : post_t b)
-  (#[@@ framing_implicit] p:squash (can_be_split_forall post pre'))
-  (f : steelK a pre post)
-  (g : (x:a -> steelK b (pre' x) post'))
-  : steelK b pre post'
-  = fun #frame #postf (k:(x:b -> SteelT unit (frame `star` post' x) (fun _ -> postf))) ->
+  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
+  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g : post_t b)
+  (#[@@ framing_implicit] p:squash (can_be_split_forall post_f pre_g))
+  (f : steelK a pre_f post_f)
+  (g : (x:a -> steelK b (pre_g x) post_g))
+  : steelK b pre_f post_g
+= fun #frame #post (k:(x:b -> SteelT unit (frame `star` post_g x) (fun _ -> post))) ->
       f
-      ((fun (x:a) -> change_slprop (frame `star` post x) (frame `star` pre' x)
-                  (can_be_split_forall_frame post pre' frame x);
-        g x k) <: (x:a -> SteelT unit (frame `star` post x) (fun _ -> postf)))
+      ((fun (x:a) -> change_slprop (frame `star` post_f x) (frame `star` pre_g x)
+                  (can_be_split_forall_frame post_f pre_g frame x);
+        g x k) <: (x:a -> SteelT unit (frame `star` post_f x) (fun _ -> post)));
+  ()
 
 let subcomp (a:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
@@ -70,14 +70,18 @@ let subcomp (a:Type)
                             (can_be_split_forall_frame post_f post_g frame x);
                k x) <: (x:a -> SteelT unit (frame `star` post_f x) (fun _ -> postf)))
 
-let if_then_else (a:Type u#aa)
-                 (#[@@ framing_implicit] pre1:pre_t)
-                 (#[@@ framing_implicit] post1:post_t a)
-                 (f : steelK a pre1 post1)
-                 (g : steelK a pre1 post1)
-                 (p:Type0) : Type =
-                 steelK a pre1 post1
+// let if_then_else (a:Type u#aa)
+//                  (#[@@ framing_implicit] pre1:pre_t)
+//                  (#[@@ framing_implicit] post1:post_t a)
+//                  (f : steelK a pre1 post1)
+//                  (g : steelK a pre1 post1)
+//                  (p:Type0) : Type =
+//                  steelK a pre1 post1
 
+// We did not define a bind between Div and Steel, so we indicate
+// SteelKF as total to be able to reify and compose it when implementing fork
+// This module is intended as proof of concept
+total
 reifiable
 reflectable
 layered_effect {
@@ -86,10 +90,11 @@ layered_effect {
   repr = steelK;
   return = return;
   bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+  subcomp = subcomp
+  // if_then_else = if_then_else
 }
 
+total
 reifiable
 reflectable
 new_effect SteelK = SteelKF
@@ -184,7 +189,8 @@ let bind_steelkf_steelk (a:Type) (b:Type)
           ((fun (y:b) ->
               k y
            ) <: (y:b -> SteelT unit ((frame `star` frame_g) `star` post_g y) (fun _ -> post)))
-       ) <: (x:a -> SteelT unit (frame `star` post_f x) (fun _ -> post)))
+       ) <: (x:a -> SteelT unit (frame `star` post_f x) (fun _ -> post)));
+    ()
 
 
 polymonadic_bind (SteelKF, SteelK) |> SteelKF = bind_steelkf_steelk
@@ -193,13 +199,13 @@ polymonadic_bind (SteelKF, SteelK) |> SteelKF = bind_steelkf_steelk
 // But for our example, Tot is here sufficient
 let bind_tot_steelK_ (a:Type) (b:Type)
   (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t b)
-  (f:unit -> PURE a (fun _ -> True)) (g:(x:a -> steelK b pre post))
+  (f:eqtype_as_type unit -> PURE a (fun _ -> True)) (g:(x:a -> steelK b pre post))
 : steelK b
     pre
     post
   = fun #frame #postf (k:(x:b -> SteelT unit (frame `star` post x) (fun _ -> postf))) ->
       let x = f () in
-      g k x
+      g x k
 
 polymonadic_bind (PURE, SteelK) |> SteelK = bind_tot_steelK_
 
@@ -232,7 +238,7 @@ let kfork (#p:slprop) (#q:slprop) (f : unit -> SteelK unit p (fun _ -> q))
       in
       let t2 (t:thread q) () : SteelT unit frame (fun _ -> postf) = k t in
       let ff () : SteelT unit (p `star` frame) (fun _ -> postf) =
-        fork #p #q #frame #postf t1 t2
+        fork #p #q #frame #postf t1 t2; ()
       in
       ff())
 
@@ -260,7 +266,11 @@ let as_steelk_repr' (a:Type) (pre:slprop) (post:post_t a) (f:unit -> SteelT a pr
       k x
 
 
-let as_steelk_repr (a:Type) (pre:slprop) (post:post_t a) (f:repr a pre post (fun _ -> True) (fun _ _ _ -> True))// unit -> SteelT a pre post)
+let triv_pre (req:slprop) : req_t req = fun _ -> True
+let triv_post (#a:Type) (req:slprop) (ens:post_t a) : ens_t req a ens = fun _ _ _ -> True
+
+let as_steelk_repr (a:Type) (pre:slprop) (post:post_t a)
+  (f:repr a pre post (triv_pre pre) (triv_post pre post))// unit -> SteelT a pre post)
   : steelK a pre post
   = as_steelk_repr' a pre post (fun _ -> Steel?.reflect f)
 
@@ -284,7 +294,7 @@ let bind_steel_steelk (a:Type) (b:Type)
   (#[@@ framing_implicit] frame_f:slprop) (#[@@ framing_implicit] frame_g:slprop)
   (#[@@ framing_implicit] p:squash (can_be_split_forall
     (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g)))
-  (f:repr a pre_f post_f (fun _ -> True) (fun _ _ _ -> True))
+  (f:repr a pre_f post_f (triv_pre pre_f) (triv_post pre_f post_f))
   (g:(x:a -> steelK b (pre_g x) post_g))
 : steelK b
     (pre_f `star` frame_f)
@@ -299,7 +309,7 @@ let bind_steel_steelkf (a:Type) (b:Type)
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
   (#[@@ framing_implicit] frame_f:slprop)
   (#[@@ framing_implicit] p:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
-  (f:repr a pre_f post_f (fun _ -> True) (fun _ _ _ -> True))
+  (f:repr a pre_f post_f (triv_pre pre_f) (triv_post pre_f post_f))
   (g:(x:a -> steelK b (pre_g x) post_g))
 : steelK b
     (pre_f `star` frame_f)
