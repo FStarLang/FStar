@@ -71,6 +71,7 @@ let s_even (r:ref stepper p) (n:nat) : slprop  = pts_to r (Even n)
 let s_odd (r:ref stepper p) (n:nat) : slprop  = pts_to r (Odd n)
 
 // TODO: Postcondition should be pts_to r v0
+// Should be done in conjunction with "fictional" SL to upd with only Even/Odd
 assume
 val get (r:ref stepper p) (v0:erased stepper)
   : SteelT (v:stepper{compatible p v0 v}) (pts_to r v0) (fun v -> pts_to r v)
@@ -138,10 +139,46 @@ val incr_even (r:ref stepper p) (n:nat) : SteelT nat (s_even r n) (fun n' -> s_e
 let incr_even r n =
   let x = get r (Even n) in
   assert (V? x \/ Even? x);
-  // Assumes we get the "full heap" value?
+  // Assumes we get the "full heap" value
+  // TODO: The PCM should be more complete to include "permissions"
   assume (V? x);
   let n' = V?.n x in
   cond (n = n') (fun b -> pts_to r x) (fun _ n' -> s_even r n')
     (fun b -> if b then n' % 2 == 0 else squash (n' % 2 <> 0))
     (fun _ -> incr_even_noop r x)
     (fun _ -> incr_even_write r x)
+
+val incr_odd_noop (r:ref stepper p) (x:stepper{V? x})
+  : Steel nat (pts_to r x) (fun n -> s_odd r n) (fun _ -> squash (V?.n x % 2 <> 0)) (fun _ _ _ -> True)
+
+let incr_odd_noop r s =
+  let (x:nat{x > 0}) = V?.n s in
+  change_slprop (pts_to r s) (pts_to r (V x)) (fun _ -> ());
+  split r (V x) (Even (x-1)) (Odd x) () ();
+  drop (s_even r (x-1));
+  x
+
+val incr_odd_write (r:ref stepper p) (x:stepper{V? x})
+  : Steel nat (pts_to r x) (fun x -> s_odd r x) (fun _ -> squash (V?.n x % 2 = 0)) (fun _ _ _ -> True)
+
+let incr_odd_write r s =
+  let (x:nat{x > 0}) = V?.n s in
+  change_slprop (pts_to r s) (pts_to r (V x)) (fun _ -> ());
+
+  let y':nat = x+1 in
+  upd r (V x) (Odd y');
+  y'
+
+val incr_odd (r:ref stepper p) (n:nat) : SteelT nat (s_odd r n) (fun n' -> s_odd r n')
+
+let incr_odd r n =
+  let x = get r (Odd n) in
+  assert (V? x \/ Odd? x);
+  // Assumes we get the "full heap" value
+  // TODO: The PCM should be more complete to include "permissions"
+  assume (V? x);
+  let n' = V?.n x in
+  cond (n = n') (fun b -> pts_to r x) (fun _ n' -> s_odd r n')
+    (fun b -> if b then squash (n' % 2 <> 0) else squash (n' % 2 = 0))
+    (fun _ -> incr_odd_noop r x)
+    (fun _ -> incr_odd_write r x)
