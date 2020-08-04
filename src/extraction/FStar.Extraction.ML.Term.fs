@@ -628,8 +628,9 @@ let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
    *)
   let c = comp_no_args c in
 
+  //AR: normalize the reified comp, to inline definitions that reification may have introduced
   if c |> U.comp_effect_name |> TcEnv.norm_eff_name env |> TcEnv.is_reifiable_effect env
-  then TcEnv.reify_comp env c S.U_unknown
+  then TcEnv.reify_comp env c S.U_unknown |> N.normalize extraction_norm_steps env
   else U.comp_result c
 
 
