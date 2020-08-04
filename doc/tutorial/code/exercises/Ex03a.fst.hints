@@ -17,25 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "09626de5103e5673e8519ec573b5a92a"
-    ],
-    [
-      "Ex03a.factorial",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_717cd45ee01469f780e77315120157cb_0",
-        "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "int_typing", "primitive_Prims.op_Equality",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "d8f8ed7484e54063c81cac99338da2e4"
+      "6f20a171923602fc7861fab303212aba"
     ]
   ]
 ]

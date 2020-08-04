@@ -43,3 +43,25 @@ let crash_test (_:unit)
   = let r = 0 in
     crash_h_commute (crash_get_prop r);
     crash_h_assert ()
+
+
+(**** moving the test case from Steel.ReshuffleFailure.ftst in ulib ****)
+
+open FStar.PCM
+module SB = Steel.SteelT.Basics
+module ST = Steel.Memory.Tactics
+
+assume
+val pp : int -> slprop u#1
+
+assume
+val act (a b:slprop)
+  : SteelT int (a `star` b) (fun x -> a `star` pp x)
+
+let test (p q:slprop)
+  : SteelT int (p `star` q) (fun x -> pp x `star` q)
+  = ST.reshuffle();
+    let x = act q p in
+    ST.reshuffle #_ #_// (pp x `star` q) //needs this annotation
+  ();
+    SB.return x

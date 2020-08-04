@@ -1,0 +1,173 @@
+[
+  "ÍJ».CÜ\u0014|m™\u0004[Ýü\fô",
+  [
+    [
+      "Steel.Effect.Atomic.join_obs",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "44982b8962e195cf4872dacb3b028831"
+    ],
+    [
+      "Steel.Effect.Atomic.h_assert_atomic",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "2a1e9adf3b628268e514a82ba6d1fa7d"
+    ],
+    [
+      "Steel.Effect.Atomic.h_intro_emp_l",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "equation_Steel.Memory.equiv", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "3219f3a2ec7330997641eedba8fdf77d"
+    ],
+    [
+      "Steel.Effect.Atomic.h_elim_emp_l",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "lemma_Steel.Memory.affine_star_smt", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "typing_Steel.Memory.emp"
+      ],
+      0,
+      "83030fa4c15faecd353bd00ea586fa1b"
+    ],
+    [
+      "Steel.Effect.Atomic.intro_pure",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "equation_Steel.Memory.equiv", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_ec8f072bd1b898db4252b56b0d22e79b"
+      ],
+      0,
+      "6f1402d9e252763bacab02f08d2e7532"
+    ],
+    [
+      "Steel.Effect.Atomic.h_commute",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "equation_Steel.Memory.equiv", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "80a5ef86f026ba4e0041eee01c529f33"
+    ],
+    [
+      "Steel.Effect.Atomic.h_assoc_left",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "equation_Steel.Memory.equiv", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "84101ad280eab4675efce582ab26b1de"
+    ],
+    [
+      "Steel.Effect.Atomic.h_assoc_right",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "equation_Steel.Memory.equiv", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "f8f5c2bf45eab721218d08c95e4717c2"
+    ],
+    [
+      "Steel.Effect.Atomic.intro_h_exists",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "ec2ac7bbc1a567f9737ccc0afbf3ceea"
+    ],
+    [
+      "Steel.Effect.Atomic.intro_h_exists_erased",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "608b17249a05b5d1340f7c73432d398a"
+    ],
+    [
+      "Steel.Effect.Atomic.h_affine",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "ebc87068722884eecc58ec778c0b08dd"
+    ],
+    [
+      "Steel.Effect.Atomic.h_exists_cong_atomic",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "equation_Steel.Memory.equiv", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_f6a9dcb8d1d92226714555770c75297b"
+      ],
+      0,
+      "27476c5d592cbefccec7ed4bfcd5a8c0"
+    ]
+  ]
+]

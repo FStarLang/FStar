@@ -44,7 +44,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "b62254f0e9c65f858372396260506766"
+      "9e6df8e94ba6bf04119b6d81ab7cb784"
     ],
     [
       "Demo.copy3",
@@ -123,7 +123,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "44b11b9ced53f82e3ba5427b7349b62e"
+      "91709b2e50e25d34bd4719e1e72b92c4"
     ],
     [
       "Demo.copy4",
@@ -195,20 +195,7 @@
         "typing_FStar.UInt8.t"
       ],
       0,
-      "3f35119a0138191ee60a4467a6a16b63"
-    ],
-    [
-      "Demo.copy4",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.UInt.lte", "equation_FStar.UInt32.lte",
-        "equation_FStar.UInt32.n", "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "3ade800615e03d408438a0b971c7956e"
+      "f391d905212b028af412962c6c6d22a1"
     ]
   ]
 ]

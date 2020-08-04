@@ -16,7 +16,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1784d9a6448223d0397ce13449ec0372"
+      "69ca43b7c899f0df82c71006861901e6"
     ],
     [
       "Ex04h.nth",
@@ -45,53 +45,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "fc7226a097a5f7ade53e735d45c7563a"
-    ],
-    [
-      "Ex04h.length",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims.nat", "fuel_guarded_inversion_Prims.list",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "aae6dd2591e927463d838e01d93a05ff"
-    ],
-    [
-      "Ex04h.nth",
-      2,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_Ex04h.length.fuel_instrumented",
-        "@fuel_irrelevance_Ex04h.length.fuel_instrumented", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
-        "binder_x_7a8711b2f75f153c9e9856dad6efeae4_3",
-        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
-        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
-        "equation_Prims.nat",
-        "equation_with_fuel_Ex04h.length.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_Prims.__cache_version_number__",
-        "int_inversion", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_Prims.Cons_tl",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_a5c1792947341a3bb9c31244ed4e999e",
-        "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "283d769bdc9570e4b4dd47b2d07b83ea"
+      "b7abeb3cd6a1d5115deddd783709f58c"
     ]
   ]
 ]

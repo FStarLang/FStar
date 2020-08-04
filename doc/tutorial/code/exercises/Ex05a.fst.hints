@@ -13,7 +13,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "aaa9eec51bad5118888b2842fe67a90f"
+      "9c8134da7b7f59d9215b6d4f60ea73fa"
     ],
     [
       "Ex05a.reverse",
@@ -27,7 +27,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5e4897c5fac3c6e6b0dfc1ff8c088070"
+      "7adbe20abfd703d15cac6fd2d6b2fac6"
     ],
     [
       "Ex05a.rev",
@@ -42,7 +42,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "cef4ccdb85dcd29d7e03db2ecf7017ba"
+      "467f81429676aa468f13b5f1a309c7c4"
     ],
     [
       "Ex05a.append_assoc",
@@ -67,50 +67,7 @@
         "subterm_ordering_Prims.Cons", "typing_Ex05a.append"
       ],
       0,
-      "d67df38ca9a626acbfeef91a070b6dcb"
-    ],
-    [
-      "Ex05a.append",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "0439168274680ad49bd909bab1572bdf"
-    ],
-    [
-      "Ex05a.reverse",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "7ef654c19f13b69468bff912dec7627e"
-    ],
-    [
-      "Ex05a.rev",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "fuel_guarded_inversion_Prims.list",
-        "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "d99951cad6c549858f7b4c93b5833b30"
+      "caac50810c59a7823c56a58fdc13d078"
     ]
   ]
 ]

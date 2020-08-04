@@ -504,7 +504,6 @@ let run_tactic_on_ps
     Err.stop_if_err ();
     let tau = unembed_tactic_1 e_arg e_res tactic FStar.Syntax.Embeddings.id_norm_cb in
 
-    Reflection.Basic.env_hook := Some env;
     (* if !tacdbg then *)
     (*     BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ); *)
     let res, ms = BU.record_time (fun () -> run_safe (tau arg) ps) in

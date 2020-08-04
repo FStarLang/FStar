@@ -257,7 +257,6 @@ assume val load128_be_i
 ///
 /// There is bunch of legacy code that wants these operators that operate on buffers of exactly the right size. This is actually more restrictive than the version above, which operates on monotonic buffers, so we offer specialized operators.
 
-inline_for_extraction noextract
 let store16_le
   (b:B.buffer UInt8.t{B.length b == 2})
   (z:UInt16.t):
@@ -268,7 +267,6 @@ let store16_le
 =
   store16_le_i b 0ul z
 
-inline_for_extraction noextract
 let load16_le
   (b:B.buffer UInt8.t{B.length b == 2}):
   Stack UInt16.t
@@ -279,7 +277,6 @@ let load16_le
   load16_le_i b 0ul
 
 
-inline_for_extraction noextract
 let store16_be
   (b:B.buffer UInt8.t{B.length b == 2})
   (z:UInt16.t):
@@ -290,7 +287,6 @@ let store16_be
 =
   store16_be_i b 0ul z
 
-inline_for_extraction noextract
 let load16_be
   (b:B.buffer UInt8.t{B.length b == 2}):
   Stack UInt16.t
@@ -301,7 +297,6 @@ let load16_be
   load16_be_i b 0ul
 
 
-inline_for_extraction noextract
 let store32_le
   (b:B.buffer UInt8.t{B.length b == 4})
   (z:UInt32.t):
@@ -312,7 +307,6 @@ let store32_le
 =
   store32_le_i b 0ul z
 
-inline_for_extraction noextract
 let load32_le
   (b:B.buffer UInt8.t{B.length b == 4}):
   Stack UInt32.t
@@ -323,7 +317,6 @@ let load32_le
   load32_le_i b 0ul
 
 
-inline_for_extraction noextract
 let store32_be
   (b:B.buffer UInt8.t{B.length b == 4})
   (z:UInt32.t):
@@ -334,7 +327,6 @@ let store32_be
 =
   store32_be_i b 0ul z
 
-inline_for_extraction noextract
 let load32_be
   (b:B.buffer UInt8.t{B.length b == 4}):
   Stack UInt32.t
@@ -345,7 +337,6 @@ let load32_be
   load32_be_i b 0ul
 
 
-inline_for_extraction noextract
 let store64_le
   (b:B.buffer UInt8.t{B.length b == 8})
   (z:UInt64.t):
@@ -356,7 +347,6 @@ let store64_le
 =
   store64_le_i b 0ul z
 
-inline_for_extraction noextract
 let load64_le
   (b:B.buffer UInt8.t{B.length b == 8}):
   Stack UInt64.t
@@ -367,7 +357,6 @@ let load64_le
   load64_le_i b 0ul
 
 
-inline_for_extraction noextract
 let load64_be
   (b:B.buffer UInt8.t{B.length b == 8}):
   Stack UInt64.t
@@ -377,7 +366,6 @@ let load64_be
 =
   load64_be_i b 0ul
 
-inline_for_extraction noextract
 let store64_be
   (b:B.buffer UInt8.t{B.length b == 8})
   (z:UInt64.t):
@@ -389,7 +377,6 @@ let store64_be
   store64_be_i b 0ul z
 
 
-inline_for_extraction noextract
 let load128_le
   (b:B.buffer UInt8.t{B.length b == 16}):
   Stack UInt128.t
@@ -399,7 +386,6 @@ let load128_le
 =
   load128_le_i b 0ul
 
-inline_for_extraction noextract
 let store128_le
   (b:B.buffer UInt8.t{B.length b == 16})
   (z:UInt128.t):
@@ -411,7 +397,6 @@ let store128_le
   store128_le_i b 0ul z
 
 
-inline_for_extraction noextract
 let load128_be
   (b:B.buffer UInt8.t{B.length b == 16}):
   Stack UInt128.t
@@ -421,7 +406,6 @@ let load128_be
 =
   load128_be_i b 0ul
 
-inline_for_extraction noextract
 let store128_be
   (b:B.buffer UInt8.t{B.length b = 16})
   (z:UInt128.t):

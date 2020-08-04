@@ -366,7 +366,17 @@ let splice (env:Env.env) (rng:Range.range) (tau:term) : list<sigelt> =
       BU.print1 "splice: got decls = %s\n"
                  (FStar.Common.string_of_list Print.sigelt_to_string sigelts);
 
-    let sigelts = List.map (fun se -> { se with sigrng = rng }) sigelts in
+    let sigelts = sigelts |> List.map (fun se ->
+        (* Check for bare Sig_datacon and Sig_inductive_typ, and abort if so. *)
+        begin match se.sigel with
+        | Sig_datacon _
+        | Sig_inductive_typ _ ->
+          Err.raise_error (Err.Error_BadSplice,
+                           (BU.format1 "Tactic returned bad sigelt: %s\nIf you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt." (Print.sigelt_to_string_short se))) rng
+        | _ -> ()
+        end;
+        { se with sigrng = rng })
+    in
     sigelts
     end
 
