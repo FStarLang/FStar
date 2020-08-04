@@ -43,8 +43,6 @@ val tc                     : env -> term -> tac<typ>
 val tcc                    : env -> term -> tac<comp>
 val unshelve               : term -> tac<unit>
 val unquote                : typ -> term -> tac<term>
-val catch                  : tac<'a> -> tac<BU.either<exn,'a>>
-val recover                : tac<'a> -> tac<BU.either<exn,'a>>
 val trivial                : unit -> tac<unit>
 val norm                   : list<EMB.norm_step> -> tac<unit>
 val norm_term_env          : env -> list<EMB.norm_step> -> term -> tac<term>
