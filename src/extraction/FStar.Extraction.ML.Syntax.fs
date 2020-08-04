@@ -141,6 +141,8 @@ type meta =
   | CIfDef
   | CMacro
   | Deprecated of string
+  | RemoveUnusedTypeParameters of list<int> * FStar.Range.range //positional
+  | HasValDecl of FStar.Range.range //this symbol appears in the interface of a module
 
 // rename
 type metadata = list<meta>
@@ -196,8 +198,16 @@ type mltybody =
         One could have instead used a mlty and tupled the argument types?
      *)
 
-// bool: this was assumed (C backend)
-type one_mltydecl = bool * mlsymbol * option<mlsymbol> * mlidents * metadata * option<mltybody>
+
+type one_mltydecl = {
+  tydecl_assumed : bool; // bool: this was assumed (C backend)
+  tydecl_name    : mlsymbol;
+  tydecl_ignored : option<mlsymbol>;
+  tydecl_parameters : mlidents;
+  tydecl_meta    : metadata;
+  tydecl_defn    : option<mltybody>
+}
+
 type mltydecl = list<one_mltydecl> // each element of this list is one among a collection of mutually defined types
 
 type mlmodule1 =

@@ -40,7 +40,7 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug1940b.fst Bug1940c.fst Bug1936.fst Bug1952a.fst Bug1952b.fst Bug1953.fst Bug1074.fst Bug442.fst Bug1954.fst \
   Bug1903.fst Bug1121a.fst Bug1121b.fst Bug1956.fst Bug1228.fst Bug829.fst Bug451.fst Bug1966a.fst Bug1966b.fst Bug1976.fst \
   Bug1986.fst Bug1995.fst Bug1507.fst Bug2001.fst Bug2004.fst Bug855a.fst Bug855b.fst Bug1097.fst Bug1918.fst Bug1390.fst Bug2031.fst \
-  Bug379.fst Bug1182a.fst Bug1182b.fst Bug1901.fst Bug1902.fst Bug258.fst Bug2055.fst
+  Bug379.fst Bug1182a.fst Bug1182b.fst Bug1901.fst Bug1902.fst Bug258.fst Bug2055.fst Bug2081.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
@@ -100,7 +100,8 @@ SHOULD_NOT_VERIFY_NOT_WORKING=Bug186.fst Bug397b.fst
 
 # These will be checked as part of the F* regressions.
 SHOULD_EXTRACT_CLOSED=Bug086.fst Bug314.fst Bug540.fst Bug541.fst Bug589.fst \
-	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst
+	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst \
+	Bug2058.fst RemoveUnusedTypars.B.fst RemoveUnusedTyparsIFace.B.fst
 #ExtractionBug03.fst
 
 # Bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
@@ -153,6 +154,23 @@ Bug310.extract:
 Bug2058.extract:
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug2058 --codegen OCaml Bug2058.fst
 	diff -u --strip-trailing-cr Bug2058.ml Bug2058.ml.expected
+
+RemoveUnusedTypars.B.extract: RemoveUnusedTypars.A.fst RemoveUnusedTypars.B.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTypars.A.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTypars.B.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTypars.A --codegen FSharp RemoveUnusedTypars.A.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTypars.B --codegen FSharp RemoveUnusedTypars.B.fst
+	diff -u --strip-trailing-cr RemoveUnusedTypars_A.fs RemoveUnusedTypars_A.fs.expected
+	diff -u --strip-trailing-cr RemoveUnusedTypars_B.fs RemoveUnusedTypars_B.fs.expected
+
+RemoveUnusedTyparsIFace.B.extract: RemoveUnusedTyparsIFace.A.fst RemoveUnusedTyparsIFace.B.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTyparsIFace.A.fsti --warn_error -333
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTyparsIFace.A.fst --warn_error -333
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTyparsIFace.B.fst --warn_error -333
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTyparsIFace.A --codegen FSharp RemoveUnusedTyparsIFace.A.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTyparsIFace.B --codegen FSharp RemoveUnusedTyparsIFace.B.fst
+	diff -u --strip-trailing-cr RemoveUnusedTyparsIFace_A.fs RemoveUnusedTyparsIFace_A.fs.expected
+	diff -u --strip-trailing-cr RemoveUnusedTyparsIFace_B.fs RemoveUnusedTyparsIFace_B.fs.expected
 
 %.extract: %.fst
 	mkdir -p out_$*

@@ -178,10 +178,9 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
        Errors.raise_error (Errors.Fatal_NonSingletonTopLevelModule, msg)
                              (range_of_first_mod_decl ast_modul)
     end;
-    let (modul, _), env =
-        if DsEnv.syntax_only env.dsenv then (modul, []), env
-        else let m, i, e = Tc.tc_partial_modul env modul in
-                (m, i), e
+    let modul, env =
+        if DsEnv.syntax_only env.dsenv then modul, env
+        else Tc.tc_partial_modul env modul
     in
     (Some modul, env)
   | Parser.Driver.Decls ast_decls ->
@@ -233,13 +232,6 @@ let emit (mllibs:list<FStar.Extraction.ML.Syntax.mllib>) =
       | Some Options.Plugin -> ".ml"
       | Some Options.Kremlin -> ".krml"
       | _ -> failwith "Unrecognized option"
-    in
-    let mllibs =
-      match opt with
-      | Some Options.FSharp ->
-        FStar.Extraction.ML.RemoveUnusedParameters.elim_mllibs mllibs
-      |  _ ->
-        mllibs
     in
     match opt with
     | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin ->

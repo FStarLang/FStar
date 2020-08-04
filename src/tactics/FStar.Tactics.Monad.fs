@@ -9,6 +9,7 @@ open FStar.TypeChecker.Env
 open FStar.Tactics.Types
 open FStar.Tactics.Result
 open FStar.Tactics.Printing
+open FStar.Tactics.Common
 
 module O       = FStar.Options
 module BU      = FStar.Util

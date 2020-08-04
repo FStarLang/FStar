@@ -387,7 +387,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
     // eq2 is squashed already, so it's in Type0
     let goal = U.mk_squash U_zero (U.mk_eq2 u typ tm uvtm) in
     let gs, w = run_tactic_on_typ tau.pos tm.pos tau env goal in
-    // see comment in`synthesize`
+    // see comment in `synthesize`
     List.iter (fun g ->
         match getprop (goal_env g) (goal_type g) with
         | Some vc ->

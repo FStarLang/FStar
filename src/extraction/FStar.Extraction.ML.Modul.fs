@@ -125,7 +125,19 @@ let rec extract_meta x =
   | { n = Tm_constant (Const_string ("c_inline", _)) } -> Some CInline
   | { n = Tm_constant (Const_string ("substitute", _)) } -> Some Substitute
   | { n = Tm_meta (x, _) } -> extract_meta x
-  | _ -> None
+  | _ ->
+    let head, args = U.head_and_args x in
+    match (SS.compress head).n, args with
+    | Tm_fvar fv, [_]
+       when S.fv_eq_lid fv FStar.Parser.Const.remove_unused_type_parameters_lid ->
+       begin
+       match fst (FStar.ToSyntax.ToSyntax.parse_attr_with_list
+                    false x FStar.Parser.Const.remove_unused_type_parameters_lid)
+       with
+       | None -> None
+       | Some l -> Some (RemoveUnusedTypeParameters (l, S.range_of_fv fv))
+       end
+    | _ -> None
 
 let extract_metadata metas =
   List.choose extract_meta metas
@@ -210,10 +222,12 @@ let bundle_as_inductive_families env ses quals
 (* Extract Interfaces *)
 (********************************************************************************************)
 
+type tydef_declaration = (mlsymbol * FStar.Extraction.ML.Syntax.metadata * int) //int is the arity
+
 type iface = {
     iface_module_name: mlpath;
     iface_bindings: list<(fv * exp_binding)>;
-    iface_tydefs: list<tydef>;
+    iface_tydefs: list<(either<tydef, tydef_declaration>)>;
     iface_type_names:list<(fv * mlpath)>;
 }
 
@@ -231,7 +245,7 @@ let iface_of_bindings fvs = {
 
 let iface_of_tydefs tds = {
     empty_iface with
-        iface_tydefs = tds;
+        iface_tydefs = List.map Inl tds;
         iface_type_names=List.map (fun td -> tydef_fv td, tydef_mlpath td) tds;
 }
 
@@ -266,9 +280,15 @@ let print_binding cm (fv, exp_binding) =
             (Print.fv_to_string fv)
             (print_exp_binding cm exp_binding)
 let print_tydef cm tydef =
-    BU.format2 "(%s, %s)"
-            (Print.fv_to_string (tydef_fv tydef))
-            (tscheme_to_string cm (tydef_def tydef))
+  let name, defn =
+      match tydef with
+      | Inl tydef ->
+        Print.fv_to_string (tydef_fv tydef),
+        tscheme_to_string cm (tydef_def tydef)
+      | Inr (p, _, _) ->
+        p, "None"
+  in
+  BU.format2 "(%s, %s)" name defn
 let iface_to_string iface =
     let cm = iface.iface_module_name in
     let print_type_name (tn, _) = Print.fv_to_string tn in
@@ -308,7 +328,7 @@ let extract_typ_abbrev env quals attrs lb
         in
         tcenv, as_pair def_typ
     in
-    let lbtyp = FStar.TypeChecker.Normalize.normalize [Env.Beta;Env.UnfoldUntil delta_constant] tcenv lbtyp in
+    let lbtyp = FStar.TypeChecker.Normalize.normalize [Env.Beta;Env.UnfoldUntil delta_constant; Env.ForExtraction] tcenv lbtyp in
     //eta expansion is important; see issue #490
     let lbdef = FStar.TypeChecker.Normalize.eta_expand_with_type tcenv lbdef lbtyp in
     let fv = right lb.lbname in
@@ -328,16 +348,31 @@ let extract_typ_abbrev env quals attrs lb
     let body =
       Term.term_as_mlty env1 body |> Util.eraseTypeDeep (Util.udelta_unfold env1)
     in
-    let metadata = extract_metadata attrs @ List.choose flag_of_qual quals in
+    let metadata =
+      let has_val_decl = UEnv.has_tydef_declaration env lid in
+      let meta = extract_metadata attrs @ List.choose flag_of_qual quals in
+      if has_val_decl
+      then (//BU.print1 "%s has val decl\n" (Ident.string_of_lid lid);
+            HasValDecl (Ident.range_of_lid lid) :: meta)
+      else (//BU.print1 "%s does not have val decl\n" (Ident.string_of_lid lid);
+            meta)
+    in
     let tyscheme = ml_bs, body in
     let mlpath, iface, env =
         if quals |> BU.for_some (function Assumption | New -> true | _ -> false)
         then let mlp, env = UEnv.extend_type_name env fv in
              mlp, iface_of_type_names [(fv, mlp)], env
-        else let td, mlp, env = UEnv.extend_tydef env fv tyscheme in
+        else let td, mlp, env = UEnv.extend_tydef env fv tyscheme metadata in
              mlp, iface_of_tydefs [td], env
     in
-    let td = assumed, snd mlpath, None, ml_bs, metadata, Some (MLTD_Abbrev body) in
+    let td = {
+      tydecl_assumed = assumed;
+      tydecl_name = snd mlpath;
+      tydecl_ignored = None;
+      tydecl_parameters = ml_bs;
+      tydecl_meta = metadata;
+      tydecl_defn = Some (MLTD_Abbrev body)
+    } in
     let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty [td]] in
     env,
     iface,
@@ -352,7 +387,8 @@ let extract_let_rec_type env quals attrs lb
         [Env.Beta;
          Env.AllowUnboundUniverses;
          Env.EraseUniverses;
-         Env.UnfoldUntil delta_constant]
+         Env.UnfoldUntil delta_constant;
+         Env.ForExtraction]
         (tcenv_of_uenv env)
         lb.lbtyp
     in
@@ -364,15 +400,15 @@ let extract_let_rec_type env quals attrs lb
     let metadata = extract_metadata attrs @ List.choose flag_of_qual quals in
     let assumed = false in
     let tscheme = ml_bs, body in
-    let tydef, mlp, env = UEnv.extend_tydef env fv tscheme in
-    let td =
-      assumed,
-      snd mlp,
-      None,
-      ml_bs,
-      metadata,
-      Some (MLTD_Abbrev body)
-    in
+    let tydef, mlp, env = UEnv.extend_tydef env fv tscheme metadata in
+    let td = {
+      tydecl_assumed = assumed;
+      tydecl_name = snd mlp;
+      tydecl_ignored = None;
+      tydecl_parameters = ml_bs;
+      tydecl_meta = metadata;
+      tydecl_defn = Some (MLTD_Abbrev body)
+    } in
     let def = [MLM_Loc (Util.mlloc_of_range (Ident.range_of_lid lid)); MLM_Ty [td]] in
     let iface = iface_of_tydefs [tydef] in
     env,
@@ -442,12 +478,13 @@ let extract_bundle_iface env se
 
     | _ -> failwith "Unexpected signature element"
 
-let extract_type_declaration (g:uenv) lid quals attrs univs t
+let extract_type_declaration (g:uenv) is_interface_val lid quals attrs univs t
     : env_t
     * iface
     * list<mlmodule1>
     = if not (quals |> BU.for_some (function Assumption -> true | _ -> false))
-      then g, empty_iface, []
+      then let g = UEnv.extend_with_tydef_declaration g lid in
+           g, empty_iface, []
       else let bs, _ = U.arrow_formals t in
            let fv = S.lid_as_fv lid delta_constant None in
            let lb = {
@@ -459,7 +496,15 @@ let extract_type_declaration (g:uenv) lid quals attrs univs t
                lbattrs = attrs;
                lbpos = t.pos
            } in
-           extract_typ_abbrev g quals attrs lb
+           let g, iface, mods = extract_typ_abbrev g quals attrs lb in
+           let iface =
+             if is_interface_val
+             then let mlp = UEnv.mlpath_of_lident g lid in
+                  let meta = extract_metadata attrs in
+                  { empty_iface with iface_tydefs = [Inr (snd mlp, meta, List.length bs)] }
+             else iface
+           in
+           g, iface, mods
 
 let extract_reifiable_effect g ed
     : uenv
@@ -581,8 +626,8 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       extract_bundle_iface g se
 
     | Sig_declare_typ(lid, univs, t)  when Term.is_arity g t -> //lid is a type
-      let env, iface, _ =
-          extract_type_declaration g lid se.sigquals se.sigattrs univs t
+       let env, iface, _ =
+          extract_type_declaration g true lid se.sigquals se.sigattrs univs t
       in
       env, iface
 
@@ -660,6 +705,18 @@ let extract_iface (g:env_t) modul =
              (fun () -> extract_iface' g modul)
       else extract_iface' g modul)
   in
+  let g, _ = UEnv.with_typars_env g (fun e ->
+    let iface_tydefs : list<RemoveUnusedParameters.tydef> =
+      List.map
+        (function
+          | Inl td -> snd (UEnv.tydef_mlpath td), UEnv.tydef_meta td, Inl (UEnv.tydef_def td)
+          | Inr (p, m, n) -> p, m, Inr n)
+        iface.iface_tydefs
+    in
+    let module_name, _ = UEnv.extend_with_module_name g modul.name in
+    let e = RemoveUnusedParameters.set_current_module e module_name in
+    RemoveUnusedParameters.elim_tydefs e iface_tydefs)
+  in
   UEnv.exit_module g, iface
 
 (********************************************************************************************)
@@ -674,7 +731,7 @@ let extract_bundle env se =
         env_t * (mlsymbol * list<(mlsymbol * mlty)>)
         =
         let mlt = Util.eraseTypeDeep (Util.udelta_unfold env_iparams) (Term.term_as_mlty env_iparams ctor.dtyp) in
-        let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses ] in
+        let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction ] in
         let names = match (SS.compress (N.normalize steps (tcenv_of_uenv env_iparams) ctor.dtyp)).n with
           | Tm_arrow (bs, _) ->
               List.map (fun ({ ppname = ppname }, _) -> (string_of_id ppname)) bs
@@ -712,8 +769,16 @@ let extract_bundle env se =
          | _ ->
              Some (MLTD_DType ctors), env
        in
+       let td = {
+         tydecl_assumed = false;
+         tydecl_name = snd (mlpath_of_lident env ind.iname);
+         tydecl_ignored = None;
+         tydecl_parameters = ml_params;
+         tydecl_meta = ind.imetadata;
+         tydecl_defn = tbody
+       } in
        env,
-       (false, snd (mlpath_of_lident env ind.iname), None, ml_params, ind.imetadata, tbody)
+       td
     in
 
     match se.sigel, se.sigquals with
@@ -810,7 +875,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
 
         | Sig_declare_typ(lid, univs, t)  when Term.is_arity g t -> //lid is a type
           //extracting `assume type t : k`
-          let env, _, impl = extract_type_declaration g lid se.sigquals se.sigattrs univs t in
+          let env, _, impl = extract_type_declaration g false lid se.sigquals se.sigattrs univs t in
           env, impl
 
         | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
@@ -988,6 +1053,14 @@ let extract (g:uenv) (m:modul) =
       then let msg = BU.format1 "Extracting module %s" (Print.lid_to_string m.name) in
            BU.measure_execution_time msg (fun () -> extract' g m)
       else extract' g m)
+  in
+  let g, mllib =
+    match mllib with
+    | None ->
+      g, mllib
+    | Some mllib ->
+      let g, mllib = UEnv.with_typars_env g (fun e -> RemoveUnusedParameters.elim_mllib e mllib) in
+      g, Some mllib
   in
   ignore <| Options.restore_cmd_line_options true;
   exit_module g, mllib

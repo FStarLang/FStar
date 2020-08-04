@@ -12,7 +12,7 @@ let resolve_tac () : Tac unit =
 
 
 assume val ref : Type0
-assume val ptr (_:ref) : hprop u#1
+assume val ptr (_:ref) : slprop u#1
 
 assume val alloc (x:int)  : SteelT ref emp ptr
 assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)

@@ -1116,7 +1116,6 @@ let resugar_qualifier : S.qualifier -> option<A.qualifier> = function
   (* TODO : Find the correct option to display this *)
   | Visible_default -> if true then None else Some A.Visible
   | S.Irreducible -> Some A.Irreducible
-  | S.Abstract -> Some A.Abstract
   | S.Inline_for_extraction -> Some A.Inline_for_extraction
   | S.NoExtract -> Some A.NoExtract
   | S.Noeq -> Some A.Noeq

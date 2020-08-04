@@ -163,6 +163,132 @@ and elim_branch env (pat, wopt, e) =
 and elim_mlexpr (env:env_t) (e:mlexpr) =
   { e with expr = elim_mlexpr' env e.expr; mlty = elim_mlty env e.mlty }
 
+type tydef = mlsymbol * metadata * either<mltyscheme, int>
+
+exception Drop_tydef
+
+(** This is a key helper function:
+
+    It is called from elim_one_mltydecl when encountering a type
+    definition (MLTD_Abbrev), and also when processing type
+    definitions when extracting interfaces for dependences.
+
+    it computes the variables that are used and marks the unused ones
+    as Omit in the environment and removes them from the type scheme.
+*)
+let elim_tydef (env:env_t) name metadata parameters mlty
+  = let val_decl_range =
+        BU.find_map metadata (function HasValDecl r -> Some r | _ -> None)
+    in
+    let remove_typars_list =
+      BU.try_find (function RemoveUnusedTypeParameters _ -> true | _ -> false) metadata
+    in
+    let range_of_tydef =
+      match remove_typars_list with
+      | None -> Range.dummyRange
+      | Some (RemoveUnusedTypeParameters(_, r)) -> r
+    in
+    let must_eliminate i =
+      match remove_typars_list with
+      | Some (RemoveUnusedTypeParameters (l, r)) -> List.contains i l
+      | _ -> false
+    in
+    let can_eliminate i =
+      match val_decl_range, remove_typars_list with
+      | None, None -> true
+      | _ -> false
+    in
+    let mlty = elim_mlty env mlty in
+    let freevars = freevars_of_mlty mlty in
+    let _, parameters, entry =
+        List.fold_left
+          (fun (i, params, entry) p ->
+             if BU.set_mem p freevars
+             then begin
+               if must_eliminate i
+               then begin
+                 FStar.Errors.log_issue range_of_tydef
+                   (FStar.Errors.Error_RemoveUnusedTypeParameter,
+                    BU.format2
+                    "Expected parameter %s of %s to be unused in its definition and eliminated"
+                      p name)
+               end;
+               i+1, p::params, Retain::entry
+             end
+             else begin
+               if can_eliminate i //there's no val
+               || must_eliminate i //or there's an attribute explicitly demanding elimination
+               then i+1, params, Omit::entry
+               else if Options.codegen() = Some Options.FSharp
+               then //This is a hard error for F#
+                    //unused type parameters have to be eliminated
+                    let range =
+                      match val_decl_range with
+                      | Some r -> r
+                      | _ -> range_of_tydef
+                    in
+                    FStar.Errors.log_issue
+                      range
+                      (FStar.Errors.Error_RemoveUnusedTypeParameter,
+                        BU.format3
+                        "Parameter %s of %s is unused and must be eliminated for F#; \
+                         add `[@@ remove_unused_type_parameters [%s; ...]]` to the interface signature; \n\
+                         This type definition is being dropped"
+                        (string_of_int i)
+                        name
+                        (string_of_int i));
+                    raise Drop_tydef
+               else i+1, p::params, Retain::entry
+             end)
+          (0, [], [])
+          parameters
+    in
+    extend_env env name (List.rev entry),
+    (name, metadata, List.rev parameters, mlty)
+
+let elim_tydef_or_decl (env:env_t) (td:tydef)
+  : env_t * tydef
+  = match td with
+    | name, metadata, Inr arity ->
+      let remove_typars_list =
+        BU.try_find (function RemoveUnusedTypeParameters _ -> true | _ -> false) metadata
+      in
+      begin
+      match remove_typars_list with
+      | None -> env, td
+      | Some (RemoveUnusedTypeParameters(l, r)) ->
+        let must_eliminate i = List.contains i l in
+        let rec aux i =
+          if i = arity then []
+          else if must_eliminate i then Omit :: aux (i + 1)
+          else Retain :: aux (i + 1)
+        in
+        let entries = aux 0 in
+        extend_env env name entries,
+        td
+      end
+
+    | name, metadata, Inl (parameters, mlty) ->
+      let env, (name, meta, params, mlty) =
+        elim_tydef env name metadata parameters mlty
+      in
+      env, (name, meta, Inl (params, mlty))
+
+let elim_tydefs (env:env_t) (tds:list<tydef>) : env_t * list<tydef> =
+  if Options.codegen() <> Some Options.FSharp then env, tds else
+  let env, tds =
+    List.fold_left
+      (fun (env, out) td ->
+        try
+          let env, td = elim_tydef_or_decl env td in
+          env, td::out
+        with
+        | Drop_tydef ->
+          env, out)
+      (env, []) tds
+  in
+  env, List.rev tds
+
 (** This is the main function that actually extends the environment:
     When encountering a type definition (MLTD_Abbrev), it
     computes the variables that are used and marks the unused ones as Omit
@@ -170,22 +296,12 @@ and elim_mlexpr (env:env_t) (e:mlexpr) =
 let elim_one_mltydecl (env:env_t) (td:one_mltydecl)
   : env_t
   * one_mltydecl
-  = let _assumed, name, _ignored, parameters, _metadata, body = td in
+  = let {tydecl_name=name; tydecl_meta=meta; tydecl_parameters=parameters; tydecl_defn=body} = td in
     let elim_td td =
       match td with
       | MLTD_Abbrev mlty ->
-        let mlty = elim_mlty env mlty in
-        let freevars = freevars_of_mlty mlty in
-        let parameters, entry =
-          List.fold_right
-              (fun p (params, entry) ->
-                if BU.set_mem p freevars
-                then p::params, Retain::entry
-                else params, Omit::entry)
-                parameters
-              ([], [])
-        in
-        extend_env env name entry,
+        let env, (name, _, parameters, mlty) = elim_tydef env name meta parameters mlty in
+        env,
         parameters,
         MLTD_Abbrev mlty
 
@@ -213,7 +329,8 @@ let elim_one_mltydecl (env:env_t) (td:one_mltydecl)
         env, parameters, Some td
     in
     env,
-    (_assumed, name, _ignored, parameters, _metadata, body)
+    { td with tydecl_parameters = parameters;
+              tydecl_defn = body }
 
 let elim_module env m =
   let elim_module1 env m =
@@ -230,13 +347,30 @@ let elim_module env m =
     | _ ->
       env, m
   in
-  BU.fold_map elim_module1 env m
+  let env, m =
+    List.fold_left
+      (fun (env, out) m ->
+        try
+          let env, m = elim_module1 env m in
+        env, m::out
+        with
+        | Drop_tydef ->
+          env, out)
+      (env, [])
+      m
+  in
+  env, List.rev m
+
+let set_current_module (e:env_t) (n:mlpath) =
+  let curmod = fst n @ [snd n] in
+  { e with current_module = curmod }
 
 let elim_mllib (env:env_t) (m:mllib) =
+  if Options.codegen() <> Some Options.FSharp then env, m else
   let (MLLib libs) = m in
   let elim_one_lib env lib =
     let name, sig_mod, _libs = lib in
-    let env = {env with current_module = fst name @ [snd name]} in
+    let env = set_current_module env name in
     let sig_mod, env =
         match sig_mod with
         | Some (sig_, mod_)  ->
