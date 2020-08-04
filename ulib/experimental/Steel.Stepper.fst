@@ -12,8 +12,8 @@ let max (n m:nat) : nat = if n >= m then n else m
 noeq
 type stepper =
   | V : n:nat{n > 0} -> stepper // the real value " whole value "
-  | Even : n:nat -> stepper
-  | Odd  : n:nat -> stepper
+  | Even : n:even -> stepper
+  | Odd  : n:odd -> stepper
   | None : stepper
 
 let composable' (s0 s1:stepper) : prop =
@@ -21,7 +21,7 @@ let composable' (s0 s1:stepper) : prop =
     | _, None
     | None, _ -> True
     | Even n, Odd m
-    | Odd m , Even n -> n % 2 == 0 /\ m % 2 <> 0 /\ abs (m-n) == 1
+    | Odd m , Even n -> abs (m-n) == 1
     | _ -> False
 
 let composable : symrel stepper = composable'
@@ -67,8 +67,8 @@ open FStar.Ghost
 assume val pts_to (r:ref stepper p) (v:erased stepper) : slprop u#1
 
 let v (r:ref stepper p) (n:nat{n > 0}) : slprop = pts_to r (V n)
-let s_even (r:ref stepper p) (n:nat) : slprop  = pts_to r (Even n)
-let s_odd (r:ref stepper p) (n:nat) : slprop  = pts_to r (Odd n)
+let s_even (r:ref stepper p) (n:nat) : Pure slprop (n % 2 == 0) (fun _ -> True)  = pts_to r (Even n)
+let s_odd (r:ref stepper p) (n:nat) : Pure slprop (n % 2 <> 0) (fun _ -> True)  = pts_to r (Odd n)
 
 // TODO: Postcondition should be pts_to r v0
 // Should be done in conjunction with "fictional" SL to upd with only Even/Odd
@@ -113,28 +113,29 @@ let new_stepper _ =
   r
 
 val incr_even_write (r:ref stepper p) (x:stepper{V? x})
-  : Steel nat (pts_to r x) (fun n -> s_even r n) (fun _ -> squash (V?.n x % 2 <> 0)) (fun _ _ _ -> True)
+  : Steel even (pts_to r x) (fun n -> s_even r n) (fun _ -> squash (V?.n x % 2 <> 0)) (fun _ _ _ -> True)
 
 let incr_even_write r s =
   let (x:nat{x > 0}) = V?.n s in
   change_slprop (pts_to r s) (pts_to r (V x)) (fun _ -> ());
 
-  let y':nat = x+1 in
+  let y':even = x+1 in
   upd r (V x) (Even y');
   y'
 
 
 val incr_even_noop (r:ref stepper p) (x:stepper{V? x})
-  : Steel nat (pts_to r x) (fun x -> s_even r x) (fun _ -> squash (V?.n x % 2 = 0)) (fun _ _ _ -> True)
+  : Steel even (pts_to r x) (fun x -> s_even r x) (fun _ -> squash (V?.n x % 2 = 0)) (fun _ _ _ -> True)
 
 let incr_even_noop r s =
-  let (x:nat{x > 0}) = V?.n s in
+  let (x:even) = V?.n s in
+  let y:odd = x-1 in
   change_slprop (pts_to r s) (pts_to r (V x)) (fun _ -> ());
-  split r (V x) (Even x) (Odd (x-1)) () ();
-  drop (s_odd r (x-1));
+  split r (V x) (Even x) (Odd y) () ();
+  drop (s_odd r y);
   x
 
-val incr_even (r:ref stepper p) (n:nat) : SteelT nat (s_even r n) (fun n' -> s_even r n')
+val incr_even (r:ref stepper p) (n:even) : SteelT even (s_even r n) (fun n' -> s_even r n')
 
 let incr_even r n =
   let x = get r (Even n) in
@@ -143,33 +144,34 @@ let incr_even r n =
   // TODO: The PCM should be more complete to include "permissions"
   assume (V? x);
   let n' = V?.n x in
-  cond (n = n') (fun b -> pts_to r x) (fun _ n' -> s_even r n')
+  cond (n = n') (fun b -> pts_to r x) (fun _ (n':even) -> s_even r n')
     (fun b -> if b then n' % 2 == 0 else squash (n' % 2 <> 0))
     (fun _ -> incr_even_noop r x)
     (fun _ -> incr_even_write r x)
 
 val incr_odd_noop (r:ref stepper p) (x:stepper{V? x})
-  : Steel nat (pts_to r x) (fun n -> s_odd r n) (fun _ -> squash (V?.n x % 2 <> 0)) (fun _ _ _ -> True)
+  : Steel odd (pts_to r x) (fun n -> s_odd r n) (fun _ -> squash (V?.n x % 2 <> 0)) (fun _ _ _ -> True)
 
 let incr_odd_noop r s =
-  let (x:nat{x > 0}) = V?.n s in
+  let x:odd = V?.n s in
+  let y:even = x-1 in
   change_slprop (pts_to r s) (pts_to r (V x)) (fun _ -> ());
-  split r (V x) (Even (x-1)) (Odd x) () ();
-  drop (s_even r (x-1));
+  split r (V x) (Even y) (Odd x) () ();
+  drop (s_even r y);
   x
 
 val incr_odd_write (r:ref stepper p) (x:stepper{V? x})
-  : Steel nat (pts_to r x) (fun x -> s_odd r x) (fun _ -> squash (V?.n x % 2 = 0)) (fun _ _ _ -> True)
+  : Steel odd (pts_to r x) (fun x -> s_odd r x) (fun _ -> squash (V?.n x % 2 = 0)) (fun _ _ _ -> True)
 
 let incr_odd_write r s =
   let (x:nat{x > 0}) = V?.n s in
   change_slprop (pts_to r s) (pts_to r (V x)) (fun _ -> ());
 
-  let y':nat = x+1 in
+  let y':odd = x+1 in
   upd r (V x) (Odd y');
   y'
 
-val incr_odd (r:ref stepper p) (n:nat) : SteelT nat (s_odd r n) (fun n' -> s_odd r n')
+val incr_odd (r:ref stepper p) (n:odd) : SteelT odd (s_odd r n) (fun n' -> s_odd r n')
 
 let incr_odd r n =
   let x = get r (Odd n) in
@@ -178,7 +180,7 @@ let incr_odd r n =
   // TODO: The PCM should be more complete to include "permissions"
   assume (V? x);
   let n' = V?.n x in
-  cond (n = n') (fun b -> pts_to r x) (fun _ n' -> s_odd r n')
+  cond (n = n') (fun b -> pts_to r x) (fun _ (n':odd) -> s_odd r n')
     (fun b -> if b then squash (n' % 2 <> 0) else squash (n' % 2 = 0))
     (fun _ -> incr_odd_noop r x)
     (fun _ -> incr_odd_write r x)
