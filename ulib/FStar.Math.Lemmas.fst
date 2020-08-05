@@ -194,6 +194,18 @@ let mul_ineq1 a b c d =
     ()
   end
 
+(* Zero is neutral for addition *)
+let add_zero_left_is_same (n : int) : Lemma(0 + n = n) = ()
+let add_zero_right_is_same (n : int) : Lemma(n + 0 = n) = ()
+
+(* One is neutral for multiplication *)
+let mul_one_left_is_same (n : int) : Lemma(1 * n = n) = ()
+let mul_one_right_is_same (n : int) : Lemma(n * 1 = n) = ()
+
+(* Multiplying by zero gives zero *)
+let mul_zero_left_is_zero (n : int) : Lemma(0 * n = 0) = ()
+let mul_zero_right_is_zero (n : int) : Lemma(n * 0 = 0) = ()
+
 val nat_times_nat_is_nat: a:nat -> b:nat -> Lemma (a * b >= 0)
 let nat_times_nat_is_nat a b = ()
 
