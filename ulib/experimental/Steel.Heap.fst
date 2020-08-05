@@ -1039,21 +1039,12 @@ let frame_preserving_pcm_update #a (p:pcm a) (x v:a) =
   f:frame_preserving_pcm_update_0 p x v {
      forall (y:a{compatible p x y}).
          let z = f y in
-         (// ~(p.refine y) ==>
-           (forall (frame:a). {:pattern (composable p y frame)}
+         (forall (frame:a). {:pattern (composable p y frame)}
              composable p y frame ==>
              composable p z frame /\
              (compatible p x (op p y frame) ==>
-             (op p z frame == f (op p y frame)))))
+             (op p z frame == f (op p y frame))))
   }
-  //   y:a{compatible p x y}
-  // -> Tot (z:a{compatible p v z /\
-  //            (p.refine y ==> p.refine z) /\
-  //            (p.refine y ==> frame_preserving p y z) /\w
-  //            (~(p.refine y) ==>
-  //              (forall (frame:a). {:pattern (composable p y frame)}
-  //                composable p y frame ==>
-  //                composable p z frame))})
 
 let upd_gen #a (#p:pcm a)
                (r:ref a p)
@@ -1106,7 +1097,6 @@ let upd_gen_full_evolution #a (#p:pcm a)
     assert (full_heap_pred h1);
     assert (heap_evolves h h1)
 
-#restart-solver
 #push-options "--query_stats --z3rlimit_factor 4"
 
 let upd_gen_frame_preserving #a (#p:pcm a)
@@ -1175,6 +1165,22 @@ let upd_gen_frame_preserving #a (#p:pcm a)
          = FStar.PropositionalExtensionality.apply (hp h) (hp h1)
    in
    ()
+
+let upd_gen_action #a (#p:pcm a) (r:ref a p) (x:Ghost.erased a) (y:a) (f:frame_preserving_pcm_update p x y)
+  : action (pts_to r x)
+           unit
+           (fun _ -> pts_to r y)
+  = let refined : refined_pre_action
+                    (pts_to r x)
+                    unit
+                    (fun _ -> pts_to r y)
+     = fun h ->
+         let (|u, h1|) = upd_gen r x y f h in
+         FStar.Classical.forall_intro (FStar.Classical.move_requires (upd_gen_frame_preserving r x y f h));
+         upd_gen_full_evolution #a r x y f h;
+         (| u, h1 |)
+    in
+    refined_pre_action_as_action refined
 
 
 let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
