@@ -1029,43 +1029,58 @@ let pcm_t #a #b : pcm (t a b) = FStar.PCM.({
 let partial_pre_action (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
   hheap fp -> (x:a & hheap (fp' x))
 
-let frame_preserving_pcm_update_0 #a (p:pcm a) (x v:a) =
+let frame_preserving_cas_0 #a (p:pcm a) (x v:a) =
     y:a{compatible p x y}
-  -> Tot (z:a{compatible p v z /\
+  -> Tot (zo:option a{
+          match zo with
+          | None -> True
+          | Some z ->
+            compatible p v z /\
              (p.refine y ==> p.refine z) /\
              (p.refine y ==> frame_preserving p y z)})
 
-let frame_preserving_pcm_update #a (p:pcm a) (x v:a) =
-  f:frame_preserving_pcm_update_0 p x v {
+let frame_preserving_cas #a (p:pcm a) (x v:a) =
+  f:frame_preserving_cas_0 p x v {
      forall (y:a{compatible p x y}).
          let z = f y in
-         (forall (frame:a). {:pattern (composable p y frame)}
-             composable p y frame ==>
-             composable p z frame /\
-             (compatible p x (op p y frame) ==>
-             (op p z frame == f (op p y frame))))
+         match f y with
+         | None ->
+           (forall (frame:a). {:pattern (composable p y frame)}
+              composable p y frame ==>
+              (compatible p x (op p y frame) ==>
+              (None == f (op p y frame))))
+         | Some z ->
+           (forall (frame:a). {:pattern (composable p y frame)}
+              composable p y frame ==>
+              composable p z frame /\
+              (compatible p x (op p y frame) ==>
+              (Some (op p z frame) == f (op p y frame))))
   }
 
-let upd_gen #a (#p:pcm a)
+let cond #a (b:bool) (x y:a) = if b then x else y
+
+let cas_gen #a (#p:pcm a)
                (r:ref a p)
                (x:Ghost.erased a)
                (v:a)
-               (f: frame_preserving_pcm_update p x v)
+               (f: frame_preserving_cas p x v)
   : partial_pre_action (pts_to r x)
-                       unit
-                       (fun _ -> pts_to r v)
+                       bool
+                       (fun b -> pts_to r (cond b v (Ghost.reveal x)))
   = fun h ->
      let Ref _ _ frac old_v = select_addr h r in
-     let new_v = f old_v in
-     let cell = Ref a p frac new_v in
-     let h' = update_addr h r cell in
-     (| (), h' |)
+     match f old_v with
+     | None -> (| false, h |)
+     | Some new_v ->
+       let cell = Ref a p frac new_v in
+       let h' = update_addr h r cell in
+       (| true, h' |)
 
-let upd_gen_updates_only_r #a (#p:pcm a) (r:ref a p)
+let cas_gen_updates_only_r #a (#p:pcm a) (r:ref a p)
                            (x:Ghost.erased a) (v:a)
-                           (f: frame_preserving_pcm_update p x v)
+                           (f: frame_preserving_cas p x v)
                            (h0:hheap (pts_to r x))
-  : Lemma (let (| _, h1 |) = upd_gen r x v f h0 in
+  : Lemma (let (| _, h1 |) = cas_gen r x v f h0 in
            forall s. s <> r ==> h0 s == h1 s)
   = ()
 
@@ -1075,98 +1090,123 @@ let frame_preserving_is_preorder_respecting_pcm_t #a (p:pcm a) (x y:a)
   = PP.frame_preserving_is_preorder_respecting p x y;
     compatible_refl p x
 
-let upd_gen_full_evolution #a (#p:pcm a)
+let cas_gen_full_evolution #a (#p:pcm a)
       (r:ref a p)
       (x:Ghost.erased a)
       (y:a)
-      (f:frame_preserving_pcm_update p x y)
+      (f:frame_preserving_cas p x y)
       (h:full_hheap (pts_to r x))
   : Lemma
     (ensures
-      (let (| _, h1 |) = upd_gen r x y f h in
+      (let (| _, h1 |) = cas_gen r x y f h in
        full_heap_pred h1 /\
        heap_evolves h h1))
   = let old_v = sel_action' r x h in
-    let new_v = f old_v in
-    assert (frame_preserving p old_v new_v);
-    frame_preserving_is_preorder_respecting_pcm_t p old_v new_v;
-    assert (PP.preorder_of_pcm p old_v new_v);
-    let (| _, h1 |) = upd_gen r x y f h in
-    assert (forall a. a<>r ==> h1 a == h a);
-    assert (forall (x:addr). contains_addr h1 x ==> x==r \/ contains_addr h x);
-    assert (full_heap_pred h1);
-    assert (heap_evolves h h1)
+    match f old_v with
+    | None -> ()
+    | Some new_v ->
+      assert (frame_preserving p old_v new_v);
+      frame_preserving_is_preorder_respecting_pcm_t p old_v new_v;
+      assert (PP.preorder_of_pcm p old_v new_v);
+      let (| _, h1 |) = cas_gen r x y f h in
+      assert (forall a. a<>r ==> h1 a == h a);
+      assert (forall (x:addr). contains_addr h1 x ==> x==r \/ contains_addr h x);
+      assert (full_heap_pred h1);
+      assert (heap_evolves h h1)
 
 #push-options "--query_stats --z3rlimit_factor 4"
 
-let upd_gen_frame_preserving #a (#p:pcm a)
+let cas_gen_frame_preserving #a (#p:pcm a)
       (r:ref a p)
       (x:Ghost.erased a)
       (y:a)
-      (f:frame_preserving_pcm_update p x y)
+      (f:frame_preserving_cas p x y)
       (h:hheap (pts_to r x))
       (frame:slprop)
  : Lemma
    (requires interp (pts_to r x `star` frame) h)
    (ensures
-     (let (| _, h1 |) = upd_gen r x y f h in
-      interp (pts_to r y `star` frame) h1 /\
+     (let (| b, h1 |) = cas_gen r x y f h in
+      interp (pts_to r (cond b y (Ghost.reveal x)) `star` frame) h1 /\
       (forall (hp:hprop frame). hp h == hp h1)))
  = let Ref _ _ frac old_v = select_addr h r in
    let old_v : a = old_v in
-   let new_v = f old_v in
-   let (| _, h1 |) = upd_gen r x y f h in
-   assert (forall a. a<>r ==> h1 a == h a);
-   let aux (hl hr:heap)
-     : Lemma
-       (requires
-         disjoint hl hr /\
-         h == join hl hr /\
-         interp (pts_to r x) hl /\
-         interp frame hr)
-       (ensures (
-         let (| _, hl' |) = upd_gen r x y f hl in
-         disjoint hl' hr /\
-         h1 == join hl' hr
-         ))
-        [SMTPat (disjoint hl hr)]
-     = assert (contains_addr hl r);
-       let Ref _ _ _ old_v_l = select_addr hl r in
-       let old_v_l : a = old_v_l in
-       let (| _, hl' |) = upd_gen r x y f hl in
-       upd_gen_updates_only_r r x y f hl;
-       assert (forall s. s<>r ==> hl s == hl' s);
-       let Ref _ _ _ new_v_l = select_addr hl' r in
-       let new_v_l : a = new_v_l in
-       assert (new_v_l == f old_v_l);
-       if contains_addr hr r
-       then let Ref _ _ _ old_v_r = select_addr hr r in
-            let old_v_r : a = old_v_r in
-            assert (composable p old_v_l old_v_r);
-            assert (op p old_v_l old_v_r == old_v); //old_v_l * old_v_r = old_v
-            assert (composable p new_v_l old_v_r);
-            assert (op p new_v_l old_v_r == new_v);
-            assert (disjoint hl' hr);
-            mem_equiv_eq h1 (join hl' hr)
-       else begin
-         assert (old_v_l == old_v);
-         assert (new_v == new_v_l);
-         assert (disjoint hl hr);
-         assert (disjoint hl' hr);
-         assert (h1 r == hl' r);
-         mem_equiv_eq h1 (join hl' hr);
-         assert (h1 == join hl' hr);
-         ()
-       end
-   in
-   let aux (hp:hprop frame)
-         : Lemma (ensures (hp h == hp h1))
-                 [SMTPat ()]
-         = FStar.PropositionalExtensionality.apply (hp h) (hp h1)
-   in
-   ()
+   let (| return_b, h1 |) = cas_gen r x y f h in
+   match f old_v with
+   | None -> ()
+   | Some new_v ->
+     assert (return_b == true);
+     assert (forall a. a<>r ==> h1 a == h a);
+     let aux (hl hr:heap)
+       : Lemma
+         (requires
+           disjoint hl hr /\
+           h == join hl hr /\
+           interp (pts_to r x) hl /\
+           interp frame hr)
+         (ensures (
+           let (| return_l, hl' |) = cas_gen r x y f hl in
+           disjoint hl' hr /\
+           h1 == join hl' hr /\
+           return_l == return_b
+           ))
+         [SMTPat (disjoint hl hr)]
+       = assert (contains_addr hl r);
+         let Ref _ _ _ old_v_l = select_addr hl r in
+         let old_v_l : a = old_v_l in
+         let (| _, hl' |) = cas_gen r x y f hl in
+         cas_gen_updates_only_r r x y f hl;
+         assert (forall s. s<>r ==> hl s == hl' s);
+         let Ref _ _ _ new_v_l = select_addr hl' r in
+         let new_v_l : a = new_v_l in
+         if contains_addr hr r
+         then let Ref _ _ _ old_v_r = select_addr hr r in
+              let old_v_r : a = old_v_r in
+              assert (composable p old_v_l old_v_r);
+              assert (op p old_v_l old_v_r == old_v); //old_v_l * old_v_r = old_v
+              match f old_v_l with
+              | None -> assert (f old_v == None)
+              | Some new_v_l' ->
+                assert (new_v_l == new_v_l');
+                assert (composable p new_v_l old_v_r);
+                assert (op p new_v_l old_v_r == new_v);
+                assert (disjoint hl' hr);
+                mem_equiv_eq h1 (join hl' hr)
+         else begin
+           assert (old_v_l == old_v);
+           assert (new_v == new_v_l);
+           assert (disjoint hl hr);
+           assert (disjoint hl' hr);
+           assert (h1 r == hl' r);
+           mem_equiv_eq h1 (join hl' hr);
+           assert (h1 == join hl' hr);
+           ()
+         end
+     in
+     let aux (hp:hprop frame)
+       : Lemma (ensures (hp h == hp h1))
+               [SMTPat ()]
+       = FStar.PropositionalExtensionality.apply (hp h) (hp h1)
+     in
+     ()
 
-let upd_gen_action #a (#p:pcm a) (r:ref a p) (x:Ghost.erased a) (y:a) (f:frame_preserving_pcm_update p x y)
+let cas_gen_action #a (#p:pcm a) (r:ref a p) (x:Ghost.erased a) (y:a) (f:frame_preserving_cas p x y)
+  : action (pts_to r x)
+           bool
+           (fun b -> pts_to r (cond b y (Ghost.reveal x)))
+  = let refined : refined_pre_action
+                    (pts_to r x)
+                    bool
+                    (fun b -> pts_to r (cond b y (Ghost.reveal x)))
+     = fun h ->
+         let (|u, h1|) = cas_gen r x y f h in
+         FStar.Classical.forall_intro (FStar.Classical.move_requires (cas_gen_frame_preserving r x y f h));
+         cas_gen_full_evolution #a r x y f h;
+         (| u, h1 |)
+    in
+    refined_pre_action_as_action refined
+
+let upd_gen_action #a (#p:pcm a) (r:ref a p) (x:Ghost.erased a) (y:a) (f:frame_preserving_cas p x y{forall x. Some? (f x)})
   : action (pts_to r x)
            unit
            (fun _ -> pts_to r y)
@@ -1175,29 +1215,29 @@ let upd_gen_action #a (#p:pcm a) (r:ref a p) (x:Ghost.erased a) (y:a) (f:frame_p
                     unit
                     (fun _ -> pts_to r y)
      = fun h ->
-         let (|u, h1|) = upd_gen r x y f h in
-         FStar.Classical.forall_intro (FStar.Classical.move_requires (upd_gen_frame_preserving r x y f h));
-         upd_gen_full_evolution #a r x y f h;
-         (| u, h1 |)
+         let (|u, h1|) = cas_gen r x y f h in
+         FStar.Classical.forall_intro (FStar.Classical.move_requires (cas_gen_frame_preserving r x y f h));
+         cas_gen_full_evolution #a r x y f h;
+         (| (), h1 |)
     in
     refined_pre_action_as_action refined
 
 
 let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
-  : partial_pre_action (pts_to r (First #a #b x))
+  : action (pts_to r (First #a #b x))
                        unit
-                       (fun _ -> pts_to r (First #a #b y))
+           (fun _ -> pts_to r (First #a #b y))
   = let f
-      : frame_preserving_pcm_update_0
+      : frame_preserving_cas_0
               pcm_t
               (Ghost.hide (First #a #b x))
               (First #a #b y)
       = fun old_v ->
           match old_v with
-          | First _ -> First y
-          | Both _ z -> Both y z
+          | First _ -> Some (First y)
+          | Both _ z -> Some (Both y z)
     in
-    upd_gen r (Ghost.hide (First #a #b x)) (First #a #b y) f
+    upd_gen_action r(Ghost.hide (First #a #b x)) (First #a #b y) f
 
 #push-options "--z3rlimit_factor 12 --query_stats --max_fuel 0"
 #restart-solver
