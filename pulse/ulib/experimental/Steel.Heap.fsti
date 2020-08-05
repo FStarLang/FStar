@@ -477,64 +477,43 @@ val upd_action
 
 (** A compare-and-set generator for user-defined PCMs *)
 
-(** A frame-preserving compare and set on a PCM p, specified in two
+(** A frame-preserving update set on a PCM p, specified in two
     parts:
 
     1. To update a share of a PCM from [x] to [y]:
         - Given a full value [v] compatible with [x] (i.e. exists f. op p x f = v)
 
-        + Optionally produce a value [z] compatible with [y] (i.e.,
+        + Produce a value [z] compatible with [y] (i.e.,
           the final heap satisfies [pts_to r y])
 
           - if v is a refined value then so is z,
             and respects the preorder of frame_preserving updates on refined values
 *)
-let frame_preserving_cas_0 #a (p:pcm a) (x y:a) =
+let frame_preserving_upd_0 #a (p:pcm a) (x y:a) =
     v:a{compatible p x v}
-  -> Tot (zo:option a{
-          match zo with
-          | None -> True
-          | Some z ->
+  -> Tot (z:a{
             compatible p y z /\
              (p.refine v ==> p.refine z) /\
              (p.refine v ==> frame_preserving p v z)})
 
 (** Further, the update respects PCM frames:
 
-    -- If it returns None on [v] compatible with [x] then it must
-       return None on any [op p frame v] also compatible with [x].
-
-         and [
-
-
+    For any [frame] composable with the value [v] being updated,
+    [f] only updates the [v] part of [op p v frame] to [z], obtaining
+    [op p z frame]
  *)
-let frame_preserving_cas #a (p:pcm a) (x y:a) =
-  f:frame_preserving_cas_0 p x y {
+let frame_preserving_upd #a (p:pcm a) (x y:a) =
+  f:frame_preserving_upd_0 p x y {
      forall (v:a{compatible p x v}).
-         match f v with
-         | None ->
-           (forall (frame:a). {:pattern (composable p y frame)}
-              composable p v frame ==>
-              (compatible p x (op p v frame) ==>
-              (None == f (op p v frame))))
-         | Some z ->
-           (forall (frame:a). {:pattern (composable p v frame)}
+         let z = f v in
+         (forall (frame:a). {:pattern (composable p v frame)}
               composable p v frame ==>
               composable p z frame /\
               (compatible p x (op p v frame) ==>
-              (Some (op p z frame) == f (op p v frame))))
+              (op p z frame == f (op p v frame))))
   }
 
-let econd #a (b:bool) (x y:Ghost.erased a)
-  : GTot a
-  = if b then Ghost.reveal x else Ghost.reveal y
-
-val cas_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a) (f:frame_preserving_cas p x y)
-  : action (pts_to r x)
-           bool
-           (fun b -> pts_to r (econd b y x))
-
-val upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a) (f:frame_preserving_cas p x y{forall x. Some? (f x)})
+val upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a) (f:frame_preserving_upd p x y)
   : action (pts_to r x)
            unit
            (fun _ -> pts_to r y)
