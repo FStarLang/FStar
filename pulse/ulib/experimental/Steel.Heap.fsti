@@ -475,6 +475,50 @@ val upd_action
   (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
   : action (pts_to r v0) unit (fun _ -> pts_to r v1)
 
+(** A compare-and-set generator for user-defined PCMs *)
+
+let frame_preserving_cas_0 #a (p:pcm a) (x v:a) =
+    y:a{compatible p x y}
+  -> Tot (zo:option a{
+          match zo with
+          | None -> True
+          | Some z ->
+            compatible p v z /\
+             (p.refine y ==> p.refine z) /\
+             (p.refine y ==> frame_preserving p y z)})
+
+let frame_preserving_cas #a (p:pcm a) (x v:a) =
+  f:frame_preserving_cas_0 p x v {
+     forall (y:a{compatible p x y}).
+         let z = f y in
+         match f y with
+         | None ->
+           (forall (frame:a). {:pattern (composable p y frame)}
+              composable p y frame ==>
+              (compatible p x (op p y frame) ==>
+              (None == f (op p y frame))))
+         | Some z ->
+           (forall (frame:a). {:pattern (composable p y frame)}
+              composable p y frame ==>
+              composable p z frame /\
+              (compatible p x (op p y frame) ==>
+              (Some (op p z frame) == f (op p y frame))))
+  }
+
+let econd #a (b:bool) (x y:Ghost.erased a)
+  : GTot a
+  = if b then Ghost.reveal x else Ghost.reveal y
+
+val cas_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a) (f:frame_preserving_cas p x y)
+  : action (pts_to r x)
+           bool
+           (fun b -> pts_to r (econd b y x))
+
+val upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a) (f:frame_preserving_cas p x y{forall x. Some? (f x)})
+  : action (pts_to r x)
+           unit
+           (fun _ -> pts_to r y)
+
 (** Deallocating a reference, by actually replacing its value by the unit of the PCM *)
 val free_action
   (#a:Type u#a)
