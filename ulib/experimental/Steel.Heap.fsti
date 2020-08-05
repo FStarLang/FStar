@@ -475,7 +475,7 @@ val upd_action
   (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
   : action (pts_to r v0) unit (fun _ -> pts_to r v1)
 
-(** A compare-and-set generator for user-defined PCMs *)
+(** Updating a ref cell for a user-defined PCM *)
 
 (** A frame-preserving update set on a PCM p, specified in two
     parts:
