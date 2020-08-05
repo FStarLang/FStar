@@ -464,6 +464,28 @@ val sel_action
     : action (pts_to r v0) (v:a{compatible pcm v0 v}) (fun _ -> pts_to r v0)
 
 (**
+  A version of select that incorporates a ghost update of local
+  knowledge of a ref cell based on the value that was read
+ *)
+let frame_compatible #a (p:pcm a) (x:erased a) (v y:a) =
+  (forall (frame:a). {:pattern (composable p x frame)}
+            composable p x frame /\
+            v == op p x frame ==>
+            composable p y frame /\
+            v == op p y frame)
+
+val select_refine (#a:_) (#p:_)
+                  (r:ref a p)
+                  (x:erased a)
+                  (f:(v:a{compatible p x v}
+                      -> GTot (y:a{compatible p y v /\
+                                  frame_compatible p x v y})))
+   : action (pts_to r x)
+            (v:a{compatible p x v /\ p.refine v})
+            (fun v -> pts_to r (f v))
+
+
+(**
   The update action needs you to prove that the mutation from [v0] to [v1] is frame-preserving
   with respect to the individual PCM governing the reference [r]. See [FStar.PCM.frame_preserving]
 *)
