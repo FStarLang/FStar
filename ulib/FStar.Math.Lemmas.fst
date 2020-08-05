@@ -522,42 +522,6 @@ val small_division_lemma_2 (a:int) (n:pos) : Lemma
   (ensures 0 <= a /\ a < n)
 let small_division_lemma_2 (a:int) (n:pos) = lemma_div_mod a n
 
-(* Another characterization of the modulo *)
-val modulo_sub_lemma (a : int) (b : nat) (c : pos) :
-  Lemma
-  (requires (b < c /\ (a - b) % c = 0))
-  (ensures (b = a % c))
-let modulo_sub_lemma a b c =
-  calc(==) {
-    (a - b) % c;
-  (==) { lemma_mod_add_distr (-b) a c }
-    ((a % c) - b) % c;
-  };
-  assert(- c < (a % c) - b);
-  assert((a % c) - b < c);
-  euclidean_division_definition ((a % c) - b) c;
-  assert(a % c - b = ((a % c - b) / c) * c);
-  assert(1 * c = c);
-  assert((-1) * c = - c);
-  let d = (a % c - b) / c in
-  if 1 <= d then
-    begin
-    lemma_mult_le_right c 1 d;
-    assert(d * c >= 1 * c);
-    assert(False)
-    end;
-  if d <= -1 then
-    begin
-    lemma_mult_le_right c d (-1);
-    assert(d * c <= (-1) * c);
-    assert(d * c <= - c);
-    assert(False)
-    end;
-  assert(d = 0);
-  assert(d * c = 0);
-  assert(a % c - b = 0);
-  assert(a % c = b)
-
 (* Lemma: Multiplication by a positive integer preserves order *)
 val multiplication_order_lemma: a:int -> b:int -> p:pos ->
   Lemma (a >= b <==> a * p >= b * p)
@@ -939,3 +903,23 @@ let lemma_mod_plus_injective (n:pos) (a:int) (b:nat) (c:nat) =
   small_mod b n;
   small_mod c n;
   mod_add_both (a + b) (a + c) (-a) n
+
+(* Another characterization of the modulo *)
+val modulo_sub_lemma (a : int) (b : nat) (c : pos) :
+  Lemma
+  (requires (b < c /\ (a - b) % c = 0))
+  (ensures (b = a % c))
+let modulo_sub_lemma a b c =
+  calc (==) {
+    b;
+    == { modulo_lemma b c }
+    b % c;
+    == { lemma_mod_twice b c }
+    (b%c) % c;
+    == { (* hyp *) }
+    (b%c  + (a-b)%c) % c;
+    == { modulo_distributivity b (a-b) c }
+    (b+(a-b)) % c;
+    == {}
+    a % c;
+  }
