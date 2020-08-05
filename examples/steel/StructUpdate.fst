@@ -43,14 +43,14 @@ let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
                        unit
            (fun _ -> pts_to r (First #a #b y))
   = let f
-      : frame_preserving_cas_0
+      : frame_preserving_upd_0
               pcm_t
               (Ghost.hide (First #a #b x))
               (First #a #b y)
       = fun old_v ->
           match old_v with
-          | First _ -> Some (First y)
-          | Both _ z -> Some (Both y z)
+          | First _ -> First y
+          | Both _ z -> Both y z
     in
     upd_gen_action r (Ghost.hide (First #a #b x)) (Ghost.hide (First #a #b y)) f
 
@@ -59,13 +59,13 @@ let upd_second #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased b) (y:b)
            unit
            (fun _ -> pts_to r (Second #a #b y))
   = let f
-      : frame_preserving_cas_0
+      : frame_preserving_upd_0
               pcm_t
               (Second #a #b x)
               (Second #a #b y)
       = fun old_v ->
           match old_v with
-          | Second _ -> Some (Second y)
-          | Both z _ -> Some (Both z y)
+          | Second _ -> Second y
+          | Both z _ -> Both z y
     in
     upd_gen_action r (Ghost.hide (Second #a #b x)) (Ghost.hide (Second #a #b y)) f
