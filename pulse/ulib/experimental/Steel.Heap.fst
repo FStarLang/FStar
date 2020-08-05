@@ -720,6 +720,143 @@ let sel_action' (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a) (h:full_hheap (pts_t
                   compatible pcm frame v)}
   = sel_v r v0 h
 
+let refined_pre_action (fp0:slprop) (a:Type) (fp1:a -> slprop) =
+  m0:full_hheap fp0 ->
+  Pure (x:a &
+        full_hheap (fp1 x))
+       (requires True)
+       (ensures fun  (| x, m1 |) ->
+         forall frame. frame_related_heaps m0 m1 fp0 (fp1 x) frame false)
+
+let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
+                                 ($f:refined_pre_action fp0 a fp1)
+  : action fp0 a fp1
+  = let g : pre_action fp0 a fp1 = fun m -> f m in
+    let aux (frame:slprop)
+            (m0:full_hheap (fp0 `star` frame))
+      : Lemma
+        (ensures
+          (affine_star fp0 frame m0;
+           let (| x, m1 |) = g m0 in
+           interp (fp1 x `star` frame) m1 /\
+          (forall (hp:hprop frame). hp m0 == hp m1) /\
+          heap_evolves m0 m1 /\
+          (forall ctr. m0 `free_above_addr` ctr ==> m1 `free_above_addr` ctr)))
+        [SMTPat ()]
+      = affine_star fp0 frame m0;
+        let (| x', m1' |) = g m0 in
+        let (| x, m1 |) = f m0 in
+        assert (x == x' /\ m1 == m1')
+    in
+    g
+
+// let frame_compatible #a (p:pcm a) (x:erased a) (v y:a) =
+//   (forall (frame:a). {:pattern (composable p x frame)}
+//             composable p x frame /\
+//             v == op p x frame ==>
+//             composable p y frame /\
+//             v == op p y frame)
+
+#push-options "--z3rlimit_factor 8 --max_fuel 0 --initial_ifuel 2 --max_ifuel 2"
+let select_refine_pre (#a:_) (#p:_)
+                      (r:ref a p)
+                      (x:erased a)
+                      (f:(v:a{compatible p x v}
+                        -> GTot (y:a{compatible p y v /\
+                                    frame_compatible p x v y})))
+   : refined_pre_action
+                (pts_to r x)
+                (v:a{compatible p x v /\ p.refine v})
+                (fun v -> pts_to r (f v))
+   = fun h0 ->
+       let v = sel_v r x h0 in
+       let aux (frame:slprop)
+         : Lemma (requires interp (pts_to r x `star` frame) h0)
+                 (ensures  interp (pts_to r (f v) `star` frame) h0)
+                 [SMTPat ()]
+         = let aux (hl hr:_)
+             : Lemma
+                 (requires disjoint hl hr /\
+                           h0 == join hl hr /\
+                           interp (pts_to r x) hl /\
+                           interp frame hr)
+                 (ensures
+                           exists hl'. {:pattern disjoint hl' hr}
+                             disjoint hl' hr /\
+                             h0 == join hl' hr /\
+                             interp (pts_to r (f v)) hl' /\
+                             interp frame hr)
+                 [SMTPat()]
+             = if contains_addr hr r
+               then begin
+                    let Ref _ _ frac_l v_l = select_addr hl r in
+                    let Ref _ _ _ v_r = select_addr hr r in
+                    assert (composable p v_l v_r);
+                    assert (op p v_l v_r == v);
+                    assert (compatible p x v_l);
+                    let aux (frame_l:a)
+                      : Lemma
+                        (requires
+                          composable p x frame_l /\
+                          op p frame_l x == v_l)
+                        (ensures
+                          exists hl'. {:pattern (disjoint hl' hr)}
+                            disjoint hl' hr /\
+                            h0 == join hl' hr /\
+                            interp (pts_to r (f v)) hl' /\
+                            interp frame hr)
+                        [SMTPat (composable p x frame_l)]
+                      = assert (op p (op p frame_l x) v_r == v);
+                        p.comm frame_l x;
+                        p.assoc_r x frame_l v_r;
+                        assert (op p x (op p frame_l v_r) == v);
+                        assert (composable p x (op p frame_l v_r));
+                        assert (frame_compatible p x v (f v));
+                        assert (composable p (f v) (op p frame_l v_r));
+                        assert (op p (f v) (op p frame_l v_r) == v);
+                        p.assoc (f v) frame_l v_r;
+                        p.comm (f v) frame_l;
+                        assert (op p (op p frame_l (f v)) v_r == v);
+                        let hl' = update_addr hl r (Ref a p frac_l (op p frame_l (f v))) in
+                        assert (disjoint hl' hr);
+                        assert (h0 == join hl hr);
+                        assert (forall a. a <> r ==> hl a == hl' a);
+                        assert (frac_l =!= Frac.full_perm);
+                        assert (hl' r == Some (Ref a p frac_l (op p frame_l (f v))));
+                        let aux (a:addr)
+                          : Lemma (h0 a == (join hl' hr) a)
+                            [SMTPat (h0 a)]
+                          = if (contains_addr hr a && contains_addr hl a)
+                            then if a <> r
+                                 then ()
+                                 else ()
+                            else ()
+                        in
+                        assert (forall a. h0 a == (join hl' hr) a);
+                        assert (mem_equiv h0 (join hl' hr));
+                        mem_equiv_eq h0 (join hl' hr);
+                        assert (h0 == join hl' hr)
+                    in
+                    ()
+               end
+               else ()
+           in
+           ()
+       in
+       (| v, h0 |)
+#pop-options
+
+let select_refine (#a:_) (#p:_)
+                  (r:ref a p)
+                  (x:erased a)
+                  (f:(v:a{compatible p x v}
+                      -> GTot (y:a{compatible p y v /\
+                                  frame_compatible p x v y})))
+   : action (pts_to r x)
+            (v:a{compatible p x v /\ p.refine v})
+            (fun v -> pts_to r (f v))
+   = refined_pre_action_as_action (select_refine_pre r x f)
+
 
 let update_addr_full_heap (h:full_heap) (a:addr) (c:cell{c.frac == Frac.full_perm}) : full_heap =
   let h' = update_addr h a c in
@@ -793,7 +930,7 @@ let heap_evolves_by_frame_preserving_update #a #pcm (r:ref a pcm)
     PP.frame_preserving_is_preorder_respecting pcm v0 v1;
     assert (PP.preorder_of_pcm pcm v v1)
 
-#push-options "--z3rlimit_factor 4 --query_stats --max_fuel 1 --initial_ifuel 1 --max_ifuel 2"
+#push-options "--z3rlimit_factor 4 --max_fuel 1 --initial_ifuel 1 --max_ifuel 2"
 #restart-solver
 let upd_lemma'_1 (#a:_) #pcm (r:ref a pcm)
                  (v0:Ghost.erased a) (v1:a {frame_preserving pcm v0 v1 /\ pcm.refine v1})
@@ -947,35 +1084,6 @@ let upd_lemma' (#a:_) #pcm (r:ref a pcm)
     ()
 #pop-options
 
-let refined_pre_action (fp0:slprop) (a:Type) (fp1:a -> slprop) =
-  m0:full_hheap fp0 ->
-  Pure (x:a &
-        full_hheap (fp1 x))
-       (requires True)
-       (ensures fun  (| x, m1 |) ->
-         forall frame. frame_related_heaps m0 m1 fp0 (fp1 x) frame false)
-
-let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
-                                 ($f:refined_pre_action fp0 a fp1)
-  : action fp0 a fp1
-  = let g : pre_action fp0 a fp1 = fun m -> f m in
-    let aux (frame:slprop)
-            (m0:full_hheap (fp0 `star` frame))
-      : Lemma
-        (ensures
-          (affine_star fp0 frame m0;
-           let (| x, m1 |) = g m0 in
-           interp (fp1 x `star` frame) m1 /\
-          (forall (hp:hprop frame). hp m0 == hp m1) /\
-          heap_evolves m0 m1 /\
-          (forall ctr. m0 `free_above_addr` ctr ==> m1 `free_above_addr` ctr)))
-        [SMTPat ()]
-      = affine_star fp0 frame m0;
-        let (| x', m1' |) = g m0 in
-        let (| x, m1 |) = f m0 in
-        assert (x == x' /\ m1 == m1')
-    in
-    g
 
 let upd_action (#a:_) (#pcm:_) (r:ref a pcm)
                (v0:FStar.Ghost.erased a) (v1:a {frame_preserving pcm v0 v1 /\ pcm.refine v1})
@@ -1040,7 +1148,7 @@ let upd_gen_full_evolution #a (#p:pcm a)
     assert (full_heap_pred h1);
     assert (heap_evolves h h1)
 
-#push-options "--query_stats --z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 4"
 
 let upd_gen_frame_preserving #a (#p:pcm a)
       (r:ref a p)
