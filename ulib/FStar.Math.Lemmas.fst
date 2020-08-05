@@ -215,6 +215,12 @@ let pos_times_pos_is_pos a b = ()
 val nat_over_pos_is_nat: a:nat -> b:pos -> Lemma (a / b >= 0)
 let nat_over_pos_is_nat a b = ()
 
+val nat_plus_nat_equal_zero_lemma: a:nat -> b:nat{a + b = 0} -> Lemma(a = 0 /\ b = 0)
+let nat_plus_nat_equal_zero_lemma a b = ()
+
+val int_times_int_equal_zero_lemma: a:int -> b:int{a * b = 0} -> Lemma(a = 0 \/ b = 0)
+let int_times_int_equal_zero_lemma a b = ()
+
 #push-options "--fuel 1"
 val pow2_double_sum: n:nat -> Lemma (pow2 n + pow2 n = pow2 (n + 1))
 let pow2_double_sum n = ()
