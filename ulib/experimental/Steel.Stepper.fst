@@ -65,10 +65,11 @@ let p : pcm stepper =
     assoc_r = lemma_assoc_r;
     is_unit = lemma_is_unit}
 
-
 open Steel.Memory
 open Steel.FramingEffect
 open FStar.Ghost
+
+
 
 assume val pts_to (r:ref stepper p) (v:erased stepper) : slprop u#1
 
@@ -76,35 +77,44 @@ let v (r:ref stepper p) (n:nat{n > 0}) : slprop = pts_to r (V n)
 let s_even (r:ref stepper p) (n:nat) : Pure slprop (n % 2 == 0) (fun _ -> True)  = pts_to r (Even n)
 let s_odd (r:ref stepper p) (n:nat) : Pure slprop (n % 2 <> 0) (fun _ -> True)  = pts_to r (Odd n)
 
-// Stateful version of actions
-// get_even/get_odd/upd_even/upd_odd should be done in
-// conjunction with "fictional" SL
-assume
-val get_even (r:ref stepper p) (n0:even)
-  : SteelT (n:nat{n > 0 /\ compatible p (Even n0) (V n)}) (pts_to r (Even n0))
-           (fun n -> if n = n0 then pts_to r (Even n0) else pts_to r (EvenWriteable n0))
+
+
+// Assuming select_refine from the nik_fictional branch for now
+
+let frame_compatible (x:erased stepper) (v y:stepper) =
+  (forall (frame:stepper). {:pattern (composable x frame)}
+            composable x frame /\
+            v == compose x frame ==>
+            composable y frame /\
+            v == compose y frame)
+
+let refine v = V? v \/ None? v
+
 
 assume
-val get_odd (r:ref stepper p) (n0:odd)
-  : SteelT (n:nat{n > 0 /\ compatible p (Odd n0) (V n)}) (pts_to r (Odd n0))
-           (fun n -> if n = n0 then pts_to r (Odd n0) else pts_to r (OddWriteable n0))
+val select_refine (r:ref stepper p)
+                  (x:erased stepper)
+                  (f:(v:stepper{compatible p x v}
+                      -> GTot (y:stepper{compatible p y v /\
+                                  frame_compatible x v y})))
+   : SteelT  (v:stepper{compatible p x v /\ refine v})
+             (pts_to r x)
+             (fun v -> pts_to r (f v))
 
-assume
-val upd_even (r:ref stepper p) (n:even) :
-  SteelT unit (pts_to r (EvenWriteable n)) (fun _ -> pts_to r (Even (n+2)))
 
-assume
-val upd_odd (r:ref stepper p) (n:odd) :
-  SteelT unit (pts_to r (OddWriteable n)) (fun _ -> pts_to r (Odd (n+2)))
+let f_even (n0:even) (v:stepper{compatible p (Even n0) v})
+  : GTot (y:stepper{compatible p y v /\ frame_compatible (Even n0) v y})
+  = match v with
+    | Even n0 -> Even n0
+    | EvenWriteable n0 -> EvenWriteable n0
+    | V n -> if n = n0 then Even n0 else EvenWriteable n0
 
-assume
-val alloc (x:stepper{compatible p x x})
-  : SteelT (ref stepper p) emp (fun r -> pts_to r x)
-
-assume
-val split (r:ref stepper p) (v_full v0 v1:stepper)  : Steel unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)
-      (fun _ -> composable v0 v1 /\ v_full == compose v0 v1)
-      (fun _ _ _ -> True)
+let f_odd (n0:odd) (v:stepper{compatible p (Odd n0) v})
+  : GTot (y:stepper{compatible p y v /\ frame_compatible (Odd n0) v y})
+  = match v with
+    | Odd n0 -> Odd n0
+    | OddWriteable n0 -> OddWriteable n0
+    | V n -> if n = n0 then Odd n0 else OddWriteable n0
 
 // Assumed from basics
 
@@ -124,6 +134,45 @@ val change_slprop
   (p q:slprop)
   (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
   : SteelT unit p (fun _ -> q)
+
+
+
+// Stateful version of actions
+// get_even/get_odd/upd_even/upd_odd should be done in
+// conjunction with "fictional" SL
+let get_even (r:ref stepper p) (n0:even)
+  : SteelT (n:nat{n > 0 /\ compatible p (Even n0) (V n)}) (pts_to r (Even n0))
+           (fun n -> if n = n0 then pts_to r (Even n0) else pts_to r (EvenWriteable n0))
+  = let v = select_refine r (Even n0) (f_even n0) in
+    let (n:nat{n > 0 /\ compatible p (Even n0) (V n)}) = V?.n v in
+    change_slprop (pts_to r (f_even n0 v)) (if n = n0 then pts_to r (Even n0) else pts_to r (EvenWriteable n0)) (fun _ -> ());
+    n
+
+let get_odd (r:ref stepper p) (n0:odd)
+  : SteelT (n:nat{n > 0 /\ compatible p (Odd n0) (V n)}) (pts_to r (Odd n0))
+           (fun n -> if n = n0 then pts_to r (Odd n0) else pts_to r (OddWriteable n0))
+  = let v = select_refine r (Odd n0) (f_odd n0) in
+    let (n:nat{n > 0 /\ compatible p (Odd n0) (V n)}) = V?.n v in
+    change_slprop (pts_to r (f_odd n0 v)) (if n = n0 then pts_to r (Odd n0) else pts_to r (OddWriteable n0)) (fun _ -> ());
+    n
+
+assume
+val upd_even (r:ref stepper p) (n:even) :
+  SteelT unit (pts_to r (EvenWriteable n)) (fun _ -> pts_to r (Even (n+2)))
+
+assume
+val upd_odd (r:ref stepper p) (n:odd) :
+  SteelT unit (pts_to r (OddWriteable n)) (fun _ -> pts_to r (Odd (n+2)))
+
+assume
+val alloc (x:stepper{compatible p x x})
+  : SteelT (ref stepper p) emp (fun r -> pts_to r x)
+
+assume
+val split (r:ref stepper p) (v_full v0 v1:stepper)  : Steel unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)
+      (fun _ -> composable v0 v1 /\ v_full == compose v0 v1)
+      (fun _ _ _ -> True)
+
 
 // Core functions of stepper
 
