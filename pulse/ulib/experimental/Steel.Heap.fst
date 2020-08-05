@@ -1029,32 +1029,173 @@ let pcm_t #a #b : pcm (t a b) = FStar.PCM.({
 let partial_pre_action (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
   hheap fp -> (x:a & hheap (fp' x))
 
+let frame_preserving_pcm_update_0 #a (p:pcm a) (x v:a) =
+    y:a{compatible p x y}
+  -> Tot (z:a{compatible p v z /\
+             (p.refine y ==> p.refine z) /\
+             (p.refine y ==> frame_preserving p y z)})
+
+let frame_preserving_pcm_update #a (p:pcm a) (x v:a) =
+  f:frame_preserving_pcm_update_0 p x v {
+     forall (y:a{compatible p x y}).
+         let z = f y in
+         (// ~(p.refine y) ==>
+           (forall (frame:a). {:pattern (composable p y frame)}
+             composable p y frame ==>
+             composable p z frame /\
+             (compatible p x (op p y frame) ==>
+             (op p z frame == f (op p y frame)))))
+  }
+  //   y:a{compatible p x y}
+  // -> Tot (z:a{compatible p v z /\
+  //            (p.refine y ==> p.refine z) /\
+  //            (p.refine y ==> frame_preserving p y z) /\w
+  //            (~(p.refine y) ==>
+  //              (forall (frame:a). {:pattern (composable p y frame)}
+  //                composable p y frame ==>
+  //                composable p z frame))})
+
+let upd_gen #a (#p:pcm a)
+               (r:ref a p)
+               (x:Ghost.erased a)
+               (v:a)
+               (f: frame_preserving_pcm_update p x v)
+  : partial_pre_action (pts_to r x)
+                       unit
+                       (fun _ -> pts_to r v)
+  = fun h ->
+     let Ref _ _ frac old_v = select_addr h r in
+     let new_v = f old_v in
+     let cell = Ref a p frac new_v in
+     let h' = update_addr h r cell in
+     (| (), h' |)
+
+let upd_gen_updates_only_r #a (#p:pcm a) (r:ref a p)
+                           (x:Ghost.erased a) (v:a)
+                           (f: frame_preserving_pcm_update p x v)
+                           (h0:hheap (pts_to r x))
+  : Lemma (let (| _, h1 |) = upd_gen r x v f h0 in
+           forall s. s <> r ==> h0 s == h1 s)
+  = ()
+
+let frame_preserving_is_preorder_respecting_pcm_t #a (p:pcm a) (x y:a)
+  : Lemma (requires frame_preserving p x y)
+          (ensures (PP.preorder_of_pcm p x y))
+  = PP.frame_preserving_is_preorder_respecting p x y;
+    compatible_refl p x
+
+let upd_gen_full_evolution #a (#p:pcm a)
+      (r:ref a p)
+      (x:Ghost.erased a)
+      (y:a)
+      (f:frame_preserving_pcm_update p x y)
+      (h:full_hheap (pts_to r x))
+  : Lemma
+    (ensures
+      (let (| _, h1 |) = upd_gen r x y f h in
+       full_heap_pred h1 /\
+       heap_evolves h h1))
+  = let old_v = sel_action' r x h in
+    let new_v = f old_v in
+    assert (frame_preserving p old_v new_v);
+    frame_preserving_is_preorder_respecting_pcm_t p old_v new_v;
+    assert (PP.preorder_of_pcm p old_v new_v);
+    let (| _, h1 |) = upd_gen r x y f h in
+    assert (forall a. a<>r ==> h1 a == h a);
+    assert (forall (x:addr). contains_addr h1 x ==> x==r \/ contains_addr h x);
+    assert (full_heap_pred h1);
+    assert (heap_evolves h h1)
+
+#restart-solver
+#push-options "--query_stats --z3rlimit_factor 4"
+
+let upd_gen_frame_preserving #a (#p:pcm a)
+      (r:ref a p)
+      (x:Ghost.erased a)
+      (y:a)
+      (f:frame_preserving_pcm_update p x y)
+      (h:hheap (pts_to r x))
+      (frame:slprop)
+ : Lemma
+   (requires interp (pts_to r x `star` frame) h)
+   (ensures
+     (let (| _, h1 |) = upd_gen r x y f h in
+      interp (pts_to r y `star` frame) h1 /\
+      (forall (hp:hprop frame). hp h == hp h1)))
+ = let Ref _ _ frac old_v = select_addr h r in
+   let old_v : a = old_v in
+   let new_v = f old_v in
+   let (| _, h1 |) = upd_gen r x y f h in
+   assert (forall a. a<>r ==> h1 a == h a);
+   let aux (hl hr:heap)
+     : Lemma
+       (requires
+         disjoint hl hr /\
+         h == join hl hr /\
+         interp (pts_to r x) hl /\
+         interp frame hr)
+       (ensures (
+         let (| _, hl' |) = upd_gen r x y f hl in
+         disjoint hl' hr /\
+         h1 == join hl' hr
+         ))
+        [SMTPat (disjoint hl hr)]
+     = assert (contains_addr hl r);
+       let Ref _ _ _ old_v_l = select_addr hl r in
+       let old_v_l : a = old_v_l in
+       let (| _, hl' |) = upd_gen r x y f hl in
+       upd_gen_updates_only_r r x y f hl;
+       assert (forall s. s<>r ==> hl s == hl' s);
+       let Ref _ _ _ new_v_l = select_addr hl' r in
+       let new_v_l : a = new_v_l in
+       assert (new_v_l == f old_v_l);
+       if contains_addr hr r
+       then let Ref _ _ _ old_v_r = select_addr hr r in
+            let old_v_r : a = old_v_r in
+            assert (composable p old_v_l old_v_r);
+            assert (op p old_v_l old_v_r == old_v); //old_v_l * old_v_r = old_v
+            assert (composable p new_v_l old_v_r);
+            assert (op p new_v_l old_v_r == new_v);
+            assert (disjoint hl' hr);
+            mem_equiv_eq h1 (join hl' hr)
+       else begin
+         assert (old_v_l == old_v);
+         assert (new_v == new_v_l);
+         assert (disjoint hl hr);
+         assert (disjoint hl' hr);
+         assert (h1 r == hl' r);
+         mem_equiv_eq h1 (join hl' hr);
+         assert (h1 == join hl' hr);
+         ()
+       end
+   in
+   let aux (hp:hprop frame)
+         : Lemma (ensures (hp h == hp h1))
+                 [SMTPat ()]
+         = FStar.PropositionalExtensionality.apply (hp h) (hp h1)
+   in
+   ()
+
+
 let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
   : partial_pre_action (pts_to r (First #a #b x))
                        unit
                        (fun _ -> pts_to r (First #a #b y))
-  = fun h ->
-     let Ref _ _ frac old_v = select_addr h r in
-     let old_v : t a b = old_v in
-     let new_v =
-       match old_v with
-       | First _ -> First y
-       | Both _ z -> Both y z
-     in
-     let cell = Ref (t a b) pcm_t frac new_v in
-     let h' = update_addr h r cell in
-     (| (), h' |)
+  = let f
+      : frame_preserving_pcm_update_0
+              pcm_t
+              (Ghost.hide (First #a #b x))
+              (First #a #b y)
+      = fun old_v ->
+          match old_v with
+          | First _ -> First y
+          | Both _ z -> Both y z
+    in
+    upd_gen r (Ghost.hide (First #a #b x)) (First #a #b y) f
 
 #push-options "--z3rlimit_factor 12 --query_stats --max_fuel 0"
 #restart-solver
 
-let frame_preserving_is_preorder_respecting_pcm_t #a #b (x:t a b{Both? x}) (y:t a b{Both? y})
-  : Lemma (requires frame_preserving pcm_t x y)
-          (ensures (PP.preorder_of_pcm pcm_t x y))
-  = PP.frame_preserving_is_preorder_respecting pcm_t x y;
-    assert (forall z.{:pattern (compatible pcm_t x z)} compatible pcm_t x z ==> PP.preorder_of_pcm pcm_t z y);
-    assert (forall z. compatible pcm_t x z ==> x == z /\ PP.preorder_of_pcm pcm_t x y);
-    compatible_refl pcm_t x
 
 let upd_first_full_evolution #a #b
       (r:ref (t a b) pcm_t)
