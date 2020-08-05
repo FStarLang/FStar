@@ -194,6 +194,18 @@ let mul_ineq1 a b c d =
     ()
   end
 
+(* Zero is neutral for addition *)
+let add_zero_left_is_same (n : int) : Lemma(0 + n = n) = ()
+let add_zero_right_is_same (n : int) : Lemma(n + 0 = n) = ()
+
+(* One is neutral for multiplication *)
+let mul_one_left_is_same (n : int) : Lemma(1 * n = n) = ()
+let mul_one_right_is_same (n : int) : Lemma(n * 1 = n) = ()
+
+(* Multiplying by zero gives zero *)
+let mul_zero_left_is_zero (n : int) : Lemma(0 * n = 0) = ()
+let mul_zero_right_is_zero (n : int) : Lemma(n * 0 = 0) = ()
+
 val nat_times_nat_is_nat: a:nat -> b:nat -> Lemma (a * b >= 0)
 let nat_times_nat_is_nat a b = ()
 
@@ -202,6 +214,12 @@ let pos_times_pos_is_pos a b = ()
 
 val nat_over_pos_is_nat: a:nat -> b:pos -> Lemma (a / b >= 0)
 let nat_over_pos_is_nat a b = ()
+
+val nat_plus_nat_equal_zero_lemma: a:nat -> b:nat{a + b = 0} -> Lemma(a = 0 /\ b = 0)
+let nat_plus_nat_equal_zero_lemma a b = ()
+
+val int_times_int_equal_zero_lemma: a:int -> b:int{a * b = 0} -> Lemma(a = 0 \/ b = 0)
+let int_times_int_equal_zero_lemma a b = ()
 
 #push-options "--fuel 1"
 val pow2_double_sum: n:nat -> Lemma (pow2 n + pow2 n = pow2 (n + 1))
@@ -477,7 +495,6 @@ val lemma_mod_mod: a:int -> b:int -> p:pos -> Lemma
 let lemma_mod_mod a b p =
   lemma_mod_lt b p;
   modulo_lemma (b % p) p
-
 
 (* * Lemmas about multiplication, division and modulo. **)
 (* * This part focuses on the situation where          **)
@@ -892,3 +909,23 @@ let lemma_mod_plus_injective (n:pos) (a:int) (b:nat) (c:nat) =
   small_mod b n;
   small_mod c n;
   mod_add_both (a + b) (a + c) (-a) n
+
+(* Another characterization of the modulo *)
+val modulo_sub_lemma (a : int) (b : nat) (c : pos) :
+  Lemma
+  (requires (b < c /\ (a - b) % c = 0))
+  (ensures (b = a % c))
+let modulo_sub_lemma a b c =
+  calc (==) {
+    b;
+    == { modulo_lemma b c }
+    b % c;
+    == { lemma_mod_twice b c }
+    (b%c) % c;
+    == { (* hyp *) }
+    (b%c  + (a-b)%c) % c;
+    == { modulo_distributivity b (a-b) c }
+    (b+(a-b)) % c;
+    == {}
+    a % c;
+  }
