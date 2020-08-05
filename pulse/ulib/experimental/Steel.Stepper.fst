@@ -14,6 +14,8 @@ type stepper =
   | V : n:nat{n > 0} -> stepper // the real value " whole value "
   | Even : n:even -> stepper
   | Odd  : n:odd -> stepper
+  | EvenWriteable : even -> stepper
+  | OddWriteable : odd -> stepper
   | None : stepper
 
 let composable' (s0 s1:stepper) : prop =
@@ -22,6 +24,8 @@ let composable' (s0 s1:stepper) : prop =
     | None, _ -> True
     | Even n, Odd m
     | Odd m , Even n -> abs (m-n) == 1
+    | EvenWriteable n, Odd m | Odd m, EvenWriteable n -> m - n == 1
+    | OddWriteable n, Even m | Even m, OddWriteable n -> m - n == 1
     | _ -> False
 
 let composable : symrel stepper = composable'
@@ -32,6 +36,8 @@ let compose (s0:stepper) (s1:stepper{composable s0 s1}) =
     | None, a -> a
     | Even n, Odd m
     | Odd m, Even n -> V (max n m)
+    | Odd m, EvenWriteable n | EvenWriteable n, Odd m -> V m
+    | Even m, OddWriteable n | OddWriteable n, Even m -> V m
 
 let p' : pcm' stepper = { composable = composable; op = compose; one = None }
 
@@ -70,31 +76,45 @@ let v (r:ref stepper p) (n:nat{n > 0}) : slprop = pts_to r (V n)
 let s_even (r:ref stepper p) (n:nat) : Pure slprop (n % 2 == 0) (fun _ -> True)  = pts_to r (Even n)
 let s_odd (r:ref stepper p) (n:nat) : Pure slprop (n % 2 <> 0) (fun _ -> True)  = pts_to r (Odd n)
 
-// TODO: Postcondition should be pts_to r v0
-// Should be done in conjunction with "fictional" SL to upd with only Even/Odd
+// Stateful version of actions
+// get_even/get_odd/upd_even/upd_odd should be done in
+// conjunction with "fictional" SL
 assume
-val get (r:ref stepper p) (v0:erased stepper)
-  : SteelT (v:stepper{compatible p v0 v}) (pts_to r v0) (fun v -> pts_to r v)
+val get_even (r:ref stepper p) (n0:even)
+  : SteelT (n:nat{n > 0 /\ compatible p (Even n0) (V n)}) (pts_to r (Even n0))
+           (fun n -> if n = n0 then pts_to r (Even n0) else pts_to r (EvenWriteable n0))
 
 assume
-val upd (r:ref stepper p) (v0:erased stepper) (v1:stepper { frame_preserving p v0 v1})
-  : SteelT unit (pts_to r v0) (fun _ -> pts_to r v1)
+val get_odd (r:ref stepper p) (n0:odd)
+  : SteelT (n:nat{n > 0 /\ compatible p (Odd n0) (V n)}) (pts_to r (Odd n0))
+           (fun n -> if n = n0 then pts_to r (Odd n0) else pts_to r (OddWriteable n0))
+
+assume
+val upd_even (r:ref stepper p) (n:even) :
+  SteelT unit (pts_to r (EvenWriteable n)) (fun _ -> pts_to r (Even (n+2)))
+
+assume
+val upd_odd (r:ref stepper p) (n:odd) :
+  SteelT unit (pts_to r (OddWriteable n)) (fun _ -> pts_to r (Odd (n+2)))
 
 assume
 val alloc (x:stepper{compatible p x x})
   : SteelT (ref stepper p) emp (fun r -> pts_to r x)
 
 assume
-val split (r:ref stepper p) (v_full v0 v1:stepper) (_:squash (composable v0 v1)) (_:squash (v_full == compose v0 v1))
-  : SteelT unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)
+val split (r:ref stepper p) (v_full v0 v1:stepper)  : Steel unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)
+      (fun _ -> composable v0 v1 /\ v_full == compose v0 v1)
+      (fun _ _ _ -> True)
+
+// Assumed from basics
 
 assume val h_admit (#a:Type) (p:slprop) (q:a -> slprop) : SteelT a p (fun x -> q x)
 
 assume
-val cond (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop) (pre:bool -> prop)
-         (then_: (unit -> Steel a (p true) (q true) (fun h -> pre true) (fun _ _ _ -> True)))
-         (else_: (unit -> Steel a (p false) (q false) (fun h -> pre false) (fun _ _ _ -> True)))
-  : Steel a (p b) (q b) (fun h ->  pre b) (fun _ _ _ -> True)
+val cond (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
+         (then_: (unit -> SteelT a (p true) (q true)))
+         (else_: (unit -> SteelT a (p false) (q false)))
+  : SteelT a (p b) (q b)
 
 assume
 val drop (p:slprop) : SteelT unit p (fun _ -> emp)
@@ -105,82 +125,63 @@ val change_slprop
   (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
   : SteelT unit p (fun _ -> q)
 
+// Core functions of stepper
+
 val new_stepper (u:unit) : SteelT (ref stepper p) emp (fun r -> s_odd r 1 `star` s_even r 0)
 
 let new_stepper _ =
   let r = alloc (V 1) in
-  split r (V 1) (Odd 1) (Even 0) () ();
+  split r (V 1) (Odd 1) (Even 0);
   r
 
-val incr_even_write (r:ref stepper p) (x:stepper{V? x})
-  : Steel even (pts_to r x) (fun n -> s_even r n) (fun _ -> squash (V?.n x % 2 <> 0)) (fun _ _ _ -> True)
+val incr_even (r:ref stepper p) (n:even) : SteelT unit (s_even r n) (fun _ -> s_even r (n + 2))
 
-let incr_even_write r s =
-  let (x:nat{x > 0}) = V?.n s in
-  change_slprop (pts_to r s) (pts_to r (V x)) (fun _ -> ());
+let rec incr_even r n =
+  let x = get_even r n in
+  cond (x = n)
+    (fun b -> if b then pts_to r (Even n) else pts_to r (EvenWriteable n)) (fun _ _ -> s_even r (n+2))
+    (fun _ -> incr_even r n)
+    (fun _ -> upd_even r n)
 
-  let y':even = x+1 in
-  upd r (V x) (Even y');
-  y'
+val incr_odd (r:ref stepper p) (n:odd) : SteelT unit (s_odd r n) (fun _ -> s_odd r (n + 2))
+
+let rec incr_odd r n =
+  let x = get_odd r n in
+  cond (x = n)
+    (fun b -> if b then pts_to r (Odd n) else pts_to r (OddWriteable n)) (fun _ _ -> s_odd r (n+2))
+    (fun _ -> incr_odd r n)
+    (fun _ -> upd_odd r n)
 
 
-val incr_even_noop (r:ref stepper p) (x:stepper{V? x})
-  : Steel even (pts_to r x) (fun x -> s_even r x) (fun _ -> squash (V?.n x % 2 = 0)) (fun _ _ _ -> True)
+// Main driver incrementing the stepper forever in parallel
 
-let incr_even_noop r s =
-  let (x:even) = V?.n s in
-  let y:odd = x-1 in
-  change_slprop (pts_to r s) (pts_to r (V x)) (fun _ -> ());
-  split r (V x) (Even x) (Odd y) () ();
-  drop (s_odd r y);
-  x
+// Par is assumed from basics
 
-val incr_even (r:ref stepper p) (n:even) : SteelT even (s_even r n) (fun n' -> s_even r n')
+assume
+val par (#preL:slprop) (#postL:unit -> slprop)
+        (f:unit -> SteelT unit preL postL)
+        (#preR:slprop) (#postR:unit -> slprop)
+        (g:unit -> SteelT unit preR postR)
+  : SteelT unit
+    (preL `star` preR)
+    (fun x -> postL () `star` postR ())
 
-let incr_even r n =
-  let x = get r (Even n) in
-  assert (V? x \/ Even? x);
-  // Assumes we get the "full heap" value
-  // TODO: The PCM should be more complete to include "permissions"
-  assume (V? x);
-  let n' = V?.n x in
-  cond (n = n') (fun b -> pts_to r x) (fun _ (n':even) -> s_even r n')
-    (fun b -> if b then n' % 2 == 0 else squash (n' % 2 <> 0))
-    (fun _ -> incr_even_noop r x)
-    (fun _ -> incr_even_write r x)
+val rec_incr_even (r:ref stepper p) (n:even)
+  : SteelT unit (s_even r n) (fun _ -> emp)
 
-val incr_odd_noop (r:ref stepper p) (x:stepper{V? x})
-  : Steel odd (pts_to r x) (fun n -> s_odd r n) (fun _ -> squash (V?.n x % 2 <> 0)) (fun _ _ _ -> True)
+let rec rec_incr_even r n =
+  incr_even r n;
+  rec_incr_even r (n+2)
 
-let incr_odd_noop r s =
-  let x:odd = V?.n s in
-  let y:even = x-1 in
-  change_slprop (pts_to r s) (pts_to r (V x)) (fun _ -> ());
-  split r (V x) (Even y) (Odd x) () ();
-  drop (s_even r y);
-  x
+val rec_incr_odd (r:ref stepper p) (n:odd)
+  : SteelT unit (s_odd r n) (fun _ -> emp)
 
-val incr_odd_write (r:ref stepper p) (x:stepper{V? x})
-  : Steel odd (pts_to r x) (fun x -> s_odd r x) (fun _ -> squash (V?.n x % 2 = 0)) (fun _ _ _ -> True)
+let rec rec_incr_odd r n =
+  incr_odd r n;
+  rec_incr_odd r (n+2)
 
-let incr_odd_write r s =
-  let (x:nat{x > 0}) = V?.n s in
-  change_slprop (pts_to r s) (pts_to r (V x)) (fun _ -> ());
+val main (_:unit) : SteelT unit emp (fun _ -> emp)
 
-  let y':odd = x+1 in
-  upd r (V x) (Odd y');
-  y'
-
-val incr_odd (r:ref stepper p) (n:odd) : SteelT odd (s_odd r n) (fun n' -> s_odd r n')
-
-let incr_odd r n =
-  let x = get r (Odd n) in
-  assert (V? x \/ Odd? x);
-  // Assumes we get the "full heap" value
-  // TODO: The PCM should be more complete to include "permissions"
-  assume (V? x);
-  let n' = V?.n x in
-  cond (n = n') (fun b -> pts_to r x) (fun _ (n':odd) -> s_odd r n')
-    (fun b -> if b then squash (n' % 2 <> 0) else squash (n' % 2 = 0))
-    (fun _ -> incr_odd_noop r x)
-    (fun _ -> incr_odd_write r x)
+let main () =
+  let r = new_stepper () in
+  par (fun _ -> rec_incr_even r 0) (fun _ -> rec_incr_odd r 1)
