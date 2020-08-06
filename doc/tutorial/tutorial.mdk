@@ -5330,7 +5330,7 @@ hide whether it was `m` or a string of `0z`s that was encrypted:
 [INCLUDE=code/solutions/EtM.CPA.fst:EtMCPADecrypt]
 ```
 
-Note that in the `match` statement, we did not define a '`| None`' branche. This is because the 
+Note that in the `match` statement, we did not define the '`| None`' branch. This is because the 
 precondition of `decrypt` requires for IND-CPA restricted adversaries (`ind_cpa_rest_adv=true`)
 that table lookup in `log` always succeeds.
 
@@ -5339,7 +5339,7 @@ This can be expressed as a stateful precondition for `decrypt`:
 ~ SolutionFragment {exname=EtM.CPA}
 [INCLUDE=code/solutions/EtM.CPA.fst:EtMCPADecryptRequires]
 ~
-where function `m_sel h0 k.log` retrives the content of `k.log` as stored in heap `h0`.
+where function `m_sel h0 k.log` retrieves the content of `k.log` as stored in heap `h0`.
 
 ~ Exercise
 Play with the type of `EtM.CPA.decrypt` above. What fails if you remove the precondition. What is the connection with chosen plaintext attacks?
