@@ -18,7 +18,8 @@ module Steel.Channel.Protocol
 
 type tag = | Send | Recv
 
-[@@erasable]
+// AF: Make it non eraseable for now to implement duplex.PCM
+//[@@erasable]
 noeq
 type prot : Type -> Type =
 | Return  : #a:Type -> v:a -> prot a
