@@ -12,6 +12,8 @@ let prefix_equal (#l:uint_32) (#a:Type) (h:HS.mem)
   forall (j:uint_32). j < i ==>
                  get h b1 (v j) == B.get h b2 (v j)
 
+(* This one is correctly extracted by Kremlin and the
+   additional unit arg in the thunk is also removed *)
 let copy1 (len:uint_32)
           (cur:uint_32{v cur < v len})
           (src dest:lbuffer uint_8 (v len))
@@ -24,6 +26,8 @@ let copy1 (len:uint_32)
          modifies (loc_buffer dest) h0 h1)
   = dest.(cur) <- src.(cur)
 
+(* This one fails to extract via Kremlin ...
+   some confusion about additional unit args *)
 let rec copy
         (len:uint_32)
         (cur:uint_32{v cur <= v len})
