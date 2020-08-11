@@ -141,6 +141,51 @@ val select_refine (#p:dprot)
              (pts_to r x)
              (fun v -> pts_to r (f v))
 
+let next_message (#p:dprot) (#q:dprot{more q}) (tr:trace p q)
+  (tr':partial_trace_of p{trace_length tr'.tr > trace_length tr})
+  : (x:msg_t q)
+  = admit()
+
+let extend_node_a_r (#p:dprot) (#q:dprot{more q /\ is_recv q}) (tr:trace p q)
+  (tr':partial_trace_of p{trace_length tr'.tr > trace_length tr})
+  : (y:t p)
+  = let x = next_message tr tr' in
+    let q' = step q x in
+    let tr' = extend tr x in
+    if is_send q' then A_W q' tr' else A_R q' tr'
+
+let f_a_r (#p:dprot) (q:dprot{is_recv q /\ more q}) (tr:trace p q)
+  (v:t p{compatible (pcm p) (A_R q tr) v})
+  : GTot (y:t p{compatible (pcm p) y v /\ frame_compatible (A_R q tr) v y})
+  = match v with
+    | A_R q tr -> A_R q tr
+    | V tr' ->
+        assume (trace_length tr'.tr >= trace_length tr);
+        if trace_length tr >= trace_length tr'.tr then
+          // No new message yet
+          A_R q tr
+        else
+          let y = extend_node_a_r tr tr' in
+          assume (frame_compatible (A_R q tr) v y);
+          y
+
+val get_a_r (#p:dprot) (c:chan p) (q:dprot{is_recv q /\ more q}) (tr:trace p q)
+  : SteelT (tr':partial_trace_of p{compatible (pcm p) (A_R q tr) (V tr')})
+           (pts_to c (A_R q tr))
+           (fun tr' ->
+             if trace_length tr >= trace_length tr'.tr then
+               pts_to c (A_R q tr)
+             else pts_to c (extend_node_a_r tr tr'))
+
+let get_a_r #p c q tr =
+  let v = select_refine c (A_R q tr) (f_a_r q tr) in
+  let (tr':partial_trace_of p{compatible (pcm p) (A_R q tr) (V tr')}) = V?._0 v in
+  change_slprop
+    (pts_to c (f_a_r q tr v))
+    (if trace_length tr >= trace_length tr'.tr then pts_to c (A_R q tr) else pts_to c (extend_node_a_r tr tr'))
+    (fun _ -> ());
+  tr'
+
 // TODO: Use select refine to implement getters
 // TODO: Only need A_R and B_R cases
 
@@ -190,15 +235,48 @@ let new_chan p =
     (admit()) ();
   r
 
-val send_a (#p:dprot)
-         (c:chan p)
-         (#next:dprot{more next /\ tag_of next = Send})
-         (x:msg_t next)
-         (tr:trace p next)
-    : SteelT unit
-             (endpoint_a c next tr)
-             (fun _ -> endpoint_a c (step next x) (extend tr x))
+val send_a
+  (#p:dprot)
+  (c:chan p)
+  (#next:dprot{more next /\ tag_of next = Send})
+  (x:msg_t next)
+  (tr:trace p next)
+  : SteelT unit
+           (endpoint_a c next tr)
+           (fun _ -> endpoint_a c (step next x) (extend tr x))
 
 let send_a #p c #next x tr =
   change_slprop (endpoint_a c next tr) (pts_to c (A_W next tr)) (fun _ -> ());
   write_a c tr x
+
+val recv_a
+  (#p:dprot)
+  (c:chan p)
+  (next:dprot{more next /\ tag_of next = Recv})
+  (tr:trace p next)
+  : SteelT (msg_t next)
+           (endpoint_a c next tr)
+           (fun x -> endpoint_a c (step next x) (extend tr x))
+
+let rec recv_a #p c next tr =
+  change_slprop (endpoint_a c next tr) (pts_to c (A_R next tr)) (fun _ -> ());
+  let tr' = get_a_r c next tr in
+  cond (trace_length tr >= trace_length tr'.tr)
+    // Problem: The second precondition requires (not b) to typecheck
+    (fun b ->
+      if b then pts_to c (A_R next tr)
+      else (assume (trace_length tr < trace_length tr'.tr); pts_to c (extend_node_a_r tr tr'))
+    )
+    (fun _ x -> endpoint_a c (step next x) (extend tr x))
+    (fun _ ->
+      change_slprop (pts_to c (A_R next tr)) (endpoint_a c next tr) (fun _ -> ());
+      recv_a c next tr)
+    (fun _ ->
+      assume (trace_length tr < trace_length tr'.tr);
+      let x = next_message tr tr' in
+      change_slprop
+        (pts_to c (extend_node_a_r tr tr'))
+        (endpoint_a c (step next x) (extend tr x))
+        (fun _ -> ());
+      x
+    )
