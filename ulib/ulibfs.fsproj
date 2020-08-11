@@ -157,7 +157,7 @@
     <!-- <Compile Include="FStar.Crypto.fst" /> -->
     <!-- <Compile Include="LowStar.ModifiesPat.fst" /> -->
     <Compile Include="FStar.Int128.fst" />
-    <!-- <Compile Include="FStar.Integers.fst" /> --> <!-- TODO: Issue with unsafe_coerce -->
+    <Compile Include="FStar.Integers.fst" /> <!-- TODO: Issue with unsafe_coerce -->
     <!-- <Compile Include="LowStar.Vector.fst" /> -->
     <!-- <Compile Include="LowStar.Regional.fst" /> -->
     <!-- <Compile Include="LowStar.RVector.fst" /> -->
