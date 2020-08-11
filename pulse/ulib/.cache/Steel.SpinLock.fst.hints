@@ -1,39 +1,30 @@
 [
-  "(\u0006}#€\u0003†!Ë›#>a_“­",
+  "ªµp­4\\}“ø¸5Ê\u0014ì#1",
   [
     [
-      "Steel.SpinLock.lockinv",
+      "Steel.SpinLock.lockprop_witinv",
       1,
       2,
       1,
       [
-        "@query", "equation_Steel.Memory.full_perm",
-        "equation_Steel.Memory.readable",
-        "primitive_FStar.Real.op_Greater_Dot",
-        "proj_equation_Steel.Memory.MkPerm_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxReal_proj_0",
-        "projection_inverse_Steel.Memory.MkPerm_v"
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_typing",
+        "equation_Prims.eqtype",
+        "equation_Steel.FractionalPermission.full_perm",
+        "equation_Steel.Memory.is_witness_invariant",
+        "equation_Steel.SpinLock.lockprop",
+        "function_token_typing_Prims.bool",
+        "function_token_typing_Steel.Reference.pts_to",
+        "lemma_FStar.Ghost.reveal_hide",
+        "lemma_Steel.Memory.affine_star_smt",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "token_correspondence_Steel.SpinLock.lockprop",
+        "typing_FStar.Ghost.hide",
+        "typing_Steel.FractionalPermission.full_perm",
+        "typing_Steel.Memory.emp", "typing_Steel.Reference.pts_to"
       ],
       0,
-      "11aea8e54eb4febf05f0519430be2644"
-    ],
-    [
-      "Steel.SpinLock.intro_lockinv_available",
-      1,
-      2,
-      1,
-      [
-        "@query", "equation_Steel.Memory.full_perm",
-        "equation_Steel.Memory.readable",
-        "primitive_FStar.Real.op_Greater_Dot",
-        "proj_equation_Steel.Memory.MkPerm_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxReal_proj_0",
-        "projection_inverse_Steel.Memory.MkPerm_v"
-      ],
-      0,
-      "94a68f90d289d5228f41a71c703fe462"
+      "70b0e7ab60f436ee54b2d74effaed842"
     ],
     [
       "Steel.SpinLock.intro_lockinv_locked",
@@ -41,63 +32,13 @@
       2,
       1,
       [
-        "@query", "equation_Steel.Memory.full_perm",
-        "equation_Steel.Memory.readable",
-        "primitive_FStar.Real.op_Greater_Dot",
-        "proj_equation_Steel.Memory.MkPerm_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxReal_proj_0",
-        "projection_inverse_Steel.Memory.MkPerm_v"
+        "@query", "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "04c27419c3f168d8cf035d5c57d95de8"
-    ],
-    [
-      "Steel.SpinLock.intro_lockinv_available",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
-        "bool_typing", "equation_Prims.eqtype",
-        "equation_Steel.Memory.full_perm", "equation_Steel.Memory.readable",
-        "equation_Steel.SpinLock.available",
-        "function_token_typing_Prims.bool",
-        "lemma_FStar.Universe.downgrade_val_raise_val",
-        "primitive_FStar.Real.op_Greater_Dot",
-        "proj_equation_Steel.Memory.MkPerm_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxReal_proj_0",
-        "projection_inverse_Steel.Memory.MkPerm_v",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_Steel.Memory.full_perm", "typing_Steel.Memory.readable"
-      ],
-      0,
-      "a547f66e162424d3307e0d0d81d334ca"
-    ],
-    [
-      "Steel.SpinLock.intro_lockinv_locked",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
-        "equation_Prims.eqtype", "equation_Steel.Memory.full_perm",
-        "equation_Steel.Memory.readable", "equation_Steel.SpinLock.locked",
-        "function_token_typing_Prims.bool",
-        "lemma_FStar.Universe.downgrade_val_raise_val",
-        "primitive_FStar.Real.op_Greater_Dot",
-        "proj_equation_Steel.Memory.MkPerm_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxReal_proj_0",
-        "projection_inverse_Steel.Memory.MkPerm_v",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_Steel.Memory.full_perm", "typing_Steel.Memory.readable"
-      ],
-      0,
-      "d4bb746f44738f69a817887855c506a9"
+      "f9c66771162cb5b61d13e2dff50aacfe"
     ],
     [
       "Steel.SpinLock.new_lock",
@@ -105,13 +46,19 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Steel.Reference.full",
-        "equation_Steel.Reference.perm",
-        "refinement_interpretation_Tm_refine_5b679cb12fe0d76753aeceb1be12da8a",
-        "typing_Steel.Reference.full"
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Pervasives.Native.fst",
+        "equation_FStar.Pervasives.Native.snd", "equation_Steel.Memory.inv",
+        "equation_Steel.SpinLock.lockinv",
+        "equation_Steel.SpinLock.protects",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
+        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_1deeb20268a5c4d4fffeebd3d94d85e9"
       ],
       0,
-      "811d724f2dbb25f7499abafe68a9be6d"
+      "cb30e983cade080e5bb44eab894f1e82"
     ],
     [
       "Steel.SpinLock.cas_frame",
@@ -119,37 +66,13 @@
       0,
       0,
       [
-        "@query", "equation_Steel.Memory.full_perm",
-        "equation_Steel.Memory.readable",
-        "primitive_FStar.Real.op_Greater_Dot",
-        "proj_equation_Steel.Memory.MkPerm_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxReal_proj_0",
-        "projection_inverse_Steel.Memory.MkPerm_v"
+        "@query", "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "cedafa0b5725d19c12da9aac3e4fada2"
-    ],
-    [
-      "Steel.SpinLock.cas_frame",
-      2,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Steel.HigherReference.trivial_preorder",
-        "equation_Steel.Memory.full_perm", "equation_Steel.Memory.readable",
-        "equation_Steel.Memory.trivial_preorder",
-        "equation_Steel.Reference.pts_to", "lemma_FStar.Ghost.reveal_hide",
-        "primitive_FStar.Real.op_Greater_Dot",
-        "proj_equation_Steel.Memory.MkPerm_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxReal_proj_0",
-        "projection_inverse_Steel.Memory.MkPerm_v",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "a55ac9b7511fc8a80bba136085a961f0"
+      "e21cd8563a08fb190f49edeb46323420"
     ],
     [
       "Steel.SpinLock.acquire_core",
@@ -158,23 +81,24 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
-        "equation_Prims.eqtype", "equation_Steel.Memory.full_perm",
-        "equation_Steel.Memory.readable",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Steel.Memory_interpretation_Tm_arrow_092b7b2c3ed80803e99e850db5fba991",
+        "Steel.SpinLock_interpretation_Tm_arrow_a80de2bf0a43de0b09bd29276cd57ed9",
+        "bool_inversion", "bool_typing", "equation_Prims.eqtype",
+        "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
         "equation_Steel.SpinLock.available",
         "equation_Steel.SpinLock.locked", "function_token_typing_Prims.bool",
-        "lemma_FStar.Ghost.reveal_hide",
-        "primitive_FStar.Real.op_Greater_Dot",
-        "proj_equation_Steel.Memory.MkPerm_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxReal_proj_0",
-        "projection_inverse_Steel.Memory.MkPerm_v",
-        "refinement_interpretation_Tm_refine_2374a7b0247e4791c1042fa06308ee4c",
+        "function_token_typing_Steel.SpinLock.lockprop",
+        "lemma_FStar.Ghost.hide_reveal", "lemma_Steel.Memory.witinv_framon",
+        "lemma_Steel.SpinLock.lockprop_witinv", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_1a6ee90a1d8e6101af07bd26982e0c4d",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "typing_Steel.Memory.full_perm", "typing_Steel.Memory.readable"
+        "typing_FStar.Ghost.reveal"
       ],
       0,
-      "2f69b15b43af7b698cf0e98ba94d2f00"
+      "69194f0775d5094af8c224d425474fa8"
     ],
     [
       "Steel.SpinLock.acquire'",
@@ -183,25 +107,22 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "Steel.SpinLock_interpretation_Tm_arrow_2f6d7f199328630cc9b9736fc0032d14",
-        "equation_FStar.Pervasives.dfst", "equation_FStar.Pervasives.dsnd",
-        "equation_Prims.eqtype", "equation_Steel.Actions.inv",
-        "equation_Steel.Effect.Atomic.ival", "equation_Steel.Reference.ref",
-        "equation_Steel.SpinLock.lock", "equation_Steel.SpinLock.lockinv",
-        "fuel_guarded_inversion_Prims.dtuple2",
-        "function_token_typing_Prims.bool",
-        "interpretation_Tm_abs_f7fb94acbd752e9fce013da6030bb14a",
-        "lemma_FStar.Set.mem_empty",
+        "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
+        "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "equation_Steel.SpinLock.lock", "equation_Steel.SpinLock.lock_t",
+        "equation_Steel.SpinLock.protects",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "function_token_typing_Prims.bool", "lemma_FStar.Set.mem_empty",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_f47046930c2c749c9799c9e0c126941b",
-        "typing_FStar.Pervasives.dsnd", "typing_FStar.Universe.raise_t",
-        "typing_Steel.HigherReference.trivial_preorder",
-        "typing_Steel.Memory.lock_addr", "typing_Steel.Memory.reference",
-        "typing_Tm_abs_f7fb94acbd752e9fce013da6030bb14a"
+        "refinement_interpretation_Tm_refine_55e9a1e20a0937d9a783b828f83347d7",
+        "typing_FStar.Pervasives.Native.snd", "typing_Steel.Memory.iname",
+        "typing_Steel.Reference.ref"
       ],
       0,
-      "d7bab7d6087372ec0d26a9b77b7f2b40"
+      "13536f52db4e2e00fb8a91f2205d7d73"
     ],
     [
       "Steel.SpinLock.release_core",
@@ -210,23 +131,24 @@
       0,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
-        "equation_Prims.eqtype", "equation_Steel.Memory.full_perm",
-        "equation_Steel.Memory.readable",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
+        "Steel.Memory_interpretation_Tm_arrow_092b7b2c3ed80803e99e850db5fba991",
+        "Steel.SpinLock_interpretation_Tm_arrow_a80de2bf0a43de0b09bd29276cd57ed9",
+        "bool_inversion", "bool_typing", "equation_Prims.eqtype",
+        "equation_Steel.Effect.Atomic.join_obs",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
         "equation_Steel.SpinLock.available",
         "equation_Steel.SpinLock.locked", "function_token_typing_Prims.bool",
-        "lemma_FStar.Ghost.reveal_hide",
-        "primitive_FStar.Real.op_Greater_Dot",
-        "proj_equation_Steel.Memory.MkPerm_v",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxReal_proj_0",
-        "projection_inverse_Steel.Memory.MkPerm_v",
+        "function_token_typing_Steel.SpinLock.lockprop",
+        "lemma_FStar.Ghost.hide_reveal", "lemma_Steel.Memory.witinv_framon",
+        "lemma_Steel.SpinLock.lockprop_witinv", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_803ec4475533e3164e2ac1cf18339619",
-        "typing_Steel.Memory.full_perm", "typing_Steel.Memory.readable"
+        "refinement_interpretation_Tm_refine_f316b444f0c777e2e328a66e246c57ac",
+        "typing_FStar.Ghost.reveal"
       ],
       0,
-      "61a5b1b9a775a71f08e1f90ebe6e092c"
+      "5782a86ef12a22126e4df30381e672d3"
     ],
     [
       "Steel.SpinLock.release",
@@ -234,16 +156,20 @@
       0,
       0,
       [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Pervasives.dfst",
-        "equation_Steel.Actions.inv", "equation_Steel.Effect.Atomic.ival",
-        "equation_Steel.Reference.ref", "equation_Steel.SpinLock.lock",
-        "equation_Steel.SpinLock.lockinv",
-        "fuel_guarded_inversion_Prims.dtuple2", "lemma_FStar.Set.mem_empty",
-        "refinement_interpretation_Tm_refine_f47046930c2c749c9799c9e0c126941b",
-        "typing_Steel.Memory.lock_addr"
+        "@MaxIFuel_assumption", "@query",
+        "equation_FStar.Pervasives.Native.snd", "equation_Prims.eqtype",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "equation_Steel.SpinLock.lock", "equation_Steel.SpinLock.lock_t",
+        "equation_Steel.SpinLock.protects",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
+        "function_token_typing_Prims.bool", "lemma_FStar.Set.mem_empty",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_55e9a1e20a0937d9a783b828f83347d7",
+        "typing_FStar.Pervasives.Native.snd", "typing_Steel.Memory.iname",
+        "typing_Steel.Reference.ref"
       ],
       0,
-      "a3d4a822999875c1f428c91e1f2db525"
+      "38cccd515a39bd11d0a4e3163ff26f7d"
     ]
   ]
 ]

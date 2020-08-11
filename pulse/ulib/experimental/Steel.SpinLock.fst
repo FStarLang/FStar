@@ -68,7 +68,7 @@ let intro_lockinv_locked #uses p r =
           (if b then emp else p))
 
 val new_inv (p:slprop) : SteelT (inv p) p (fun _ -> emp)
-let new_inv p = Atomic.lift_atomic_to_steelT (fun _ -> Atomic.new_invariant Set.empty p)
+let new_inv p = Atomic.new_invariant Set.empty p
 
 #set-options "--fuel 0 --ifuel 0"
 
@@ -78,7 +78,7 @@ let new_lock (p:slprop)
   let r:ref bool =
     frame (fun _ -> alloc available) p
   in
-  lift_atomic_to_steelT (fun _ -> intro_lockinv_available p r);
+  intro_lockinv_available p r;
   let i:inv (lockinv p r) = new_inv (lockinv p r) in
   let l:lock p = ( r, i ) in
   l
@@ -129,7 +129,7 @@ let acquire' (#p:slprop) (l:lock p)
     return_atomic #_ #_ #_ b
 
 let rec acquire #p l =
-  let b = lift_atomic_to_steelT (fun _ -> acquire' l) in
+  let b = acquire' l in
   cond b (fun b -> if b then p else emp) (fun _ _ -> p) noop (fun _ -> acquire l)
 
 val release_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
@@ -156,6 +156,6 @@ let release_core #p #u r i =
 let release #p l =
   let r:ref bool = fst l in
   let i: inv (lockinv p r) = snd l in
-  let b = lift_atomic_to_steelT (fun _ -> with_invariant i (fun _ -> release_core r i)) in
+  let b = with_invariant i (fun _ -> release_core r i) in
   h_intro_emp_l (if b then emp else p);
   h_affine emp (if b then emp else p)
