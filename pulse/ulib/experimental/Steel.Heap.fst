@@ -750,13 +750,6 @@ let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
     in
     g
 
-// let frame_compatible #a (p:pcm a) (x:erased a) (v y:a) =
-//   (forall (frame:a). {:pattern (composable p x frame)}
-//             composable p x frame /\
-//             v == op p x frame ==>
-//             composable p y frame /\
-//             v == op p y frame)
-
 #push-options "--z3rlimit_factor 8 --max_fuel 0 --initial_ifuel 2 --max_ifuel 2"
 let select_refine_pre (#a:_) (#p:_)
                       (r:ref a p)
