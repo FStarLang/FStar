@@ -185,7 +185,7 @@ let norm_universe cfg (env:env) u =
                           else failwith ("Universe variable not found: u@" ^ string_of_int x)
             end
           | U_unif _ when cfg.steps.check_no_uvars ->
-            [U_zero]
+            [U_zero] // GM: why?
 //            failwith (BU.format2 "(%s) CheckNoUvars: unexpected universes variable remains: %s"
 //                                       (Range.string_of_range (Env.get_range cfg.tcenv))
 //                                       (Print.univ_to_string u))
@@ -787,6 +787,7 @@ let should_reify cfg stack =
         cfg.steps.reify_
     | _ -> false
 
+// GM: What is this meant to decide?
 let rec maybe_weakly_reduced tm :  bool =
     let aux_comp c =
         match c.n with
@@ -2729,8 +2730,11 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         then matches scrutinee branches
         else norm_and_rebuild_match ()
 
+let reflection_env_hook = BU.mk_ref None
+
 let normalize_with_primitive_steps ps s e t =
     let c = config' ps s e in
+    reflection_env_hook := Some e;
     log_cfg c (fun () -> BU.print1 "Cfg = %s\n" (cfg_to_string c));
     if is_nbe_request s then begin
       log_top c (fun () -> BU.print1 "Starting NBE for (%s) {\n" (Print.term_to_string t));
@@ -2753,6 +2757,7 @@ let normalize s e t =
 
 let normalize_comp s e c =
     let cfg = config s e in
+    reflection_env_hook := Some e;
     log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
     log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
     let (c, ms) = BU.record_time (fun () -> norm_comp cfg [] c) in
@@ -2902,8 +2907,13 @@ let rec elim_delayed_subst_term (t:term) : term =
     | Tm_uinst _
     | Tm_constant _
     | Tm_type _
-    | Tm_lazy _
     | Tm_unknown -> t
+
+    (* We also use this function to unfold lazy embeddings:
+     * they may contain lambdas and cannot be written into
+     * .checked files. *)
+    | Tm_lazy li ->
+      elim_delayed_subst_term (U.unfold_lazy li)
 
     | Tm_abs(bs, t, rc_opt) ->
       let elim_rc rc =
@@ -3003,8 +3013,21 @@ and elim_delayed_subst_meta = function
 and elim_delayed_subst_args args =
     List.map (fun (t, q) -> elim_delayed_subst_term t, q) args
 
+and elim_delayed_subst_aqual (q:aqual) : aqual =
+  match q with
+  | Some (S.Meta (Arg_qualifier_meta_tac t)) ->
+    Some (S.Meta (Arg_qualifier_meta_tac (elim_delayed_subst_term t)))
+
+  | Some (S.Meta (Arg_qualifier_meta_attr t)) ->
+    Some (S.Meta (Arg_qualifier_meta_attr (elim_delayed_subst_term t)))
+
+  | q -> q
+
 and elim_delayed_subst_binders bs =
-    List.map (fun (x, q) -> {x with sort=elim_delayed_subst_term x.sort}, q) bs
+    List.map (fun (x, q) ->
+                let x = {x with sort=elim_delayed_subst_term x.sort} in
+                let q = elim_delayed_subst_aqual q in
+                x, q) bs
 
 let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (tc:either<typ, comp>) =
     let t =
@@ -3039,6 +3062,7 @@ let elim_uvars_aux_c env univ_names binders c =
    let univ_names, binders, tc = elim_uvars_aux_tc env univ_names binders (Inr c) in
    univ_names, binders, BU.right tc
 
+// GM: Maybe this should take a pass over the attributes just to be safe?
 let rec elim_uvars (env:Env.env) (s:sigelt) =
     match s.sigel with
     | Sig_inductive_typ (lid, univ_names, binders, typ, lids, lids') ->

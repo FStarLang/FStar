@@ -44,10 +44,8 @@ val extract_let_rec_annotation: env -> letbinding -> univ_names * typ * bool
 //val decorate_pattern: env -> pat -> term -> pat
 val decorated_pattern_as_term: pat -> list<bv> * term
 
-//instantiation and generalization
+//instantiation of implicits
 val maybe_instantiate : env -> term -> typ -> (term * typ * guard_t)
-val generalize: env -> bool -> list<(lbname*term*comp)> -> list<(lbname*univ_names*term*comp*list<binder>)>
-val generalize_universes: env -> term -> tscheme
 
 //operations on computation types
 (* most operations on computations are lazy *)

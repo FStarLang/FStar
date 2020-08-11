@@ -227,7 +227,7 @@ let open_modules () : Tac (list name) =
     env_open_modules (top_env ())
 
 let rec repeatn (#a:Type) (n : int) (t : unit -> Tac a) : Tac (list a) =
-    if n = 0
+    if n <= 0
     then []
     else t () :: repeatn (n - 1) t
 

@@ -61,6 +61,8 @@ assume val compare_bv            : bv -> bv -> order
 assume val binders_of_env        : env -> binders
 assume val moduleof              : env -> name
 assume val is_free               : bv -> term -> bool
+assume val free_bvs              : term -> list bv
+assume val free_uvars            : term -> list int
 assume val lookup_attr           : term -> env -> list fv
 assume val all_defs_in_env       : env -> list fv
 assume val defs_in_module        : env -> name -> list fv
