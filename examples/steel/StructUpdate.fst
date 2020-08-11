@@ -1,6 +1,6 @@
 module StructUpdate
 module P = FStar.PCM
-module H = Steel.Heap
+module M = Steel.Memory
 open FStar.PCM
 
 type t (a:Type) (b:Type) =
@@ -36,11 +36,12 @@ let pcm_t #a #b : pcm (t a b) = FStar.PCM.({
   is_unit = (fun _ -> ());
   refine = (fun x -> Both? x \/ Neither? x)
 })
-open Steel.Heap
+open Steel.Memory
+open Steel.Effect
 
 let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
-  : action (pts_to r (First #a #b x))
-                       unit
+  : SteelT unit
+           (pts_to r (First #a #b x))
            (fun _ -> pts_to r (First #a #b y))
   = let f
       : frame_preserving_upd_0
@@ -52,11 +53,11 @@ let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)
           | First _ -> First y
           | Both _ z -> Both y z
     in
-    upd_gen_action r (Ghost.hide (First #a #b x)) (Ghost.hide (First #a #b y)) f
+    Steel.Effect.add_action (upd_gen Set.empty r (Ghost.hide (First #a #b x)) (Ghost.hide (First #a #b y)) f)
 
 let upd_second #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased b) (y:b)
-  : action (pts_to r (Second #a #b x))
-           unit
+  : SteelT unit
+           (pts_to r (Second #a #b x))
            (fun _ -> pts_to r (Second #a #b y))
   = let f
       : frame_preserving_upd_0
@@ -68,4 +69,4 @@ let upd_second #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased b) (y:b)
           | Second _ -> Second y
           | Both z _ -> Both z y
     in
-    upd_gen_action r (Ghost.hide (Second #a #b x)) (Ghost.hide (Second #a #b y)) f
+    Steel.Effect.add_action (upd_gen Set.empty r (Ghost.hide (Second #a #b x)) (Ghost.hide (Second #a #b y)) f)
