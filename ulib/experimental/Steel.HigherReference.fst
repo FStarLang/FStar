@@ -49,7 +49,8 @@ let pcm_frac #a : pcm (fractional a) = {
   comm = (fun _ _ -> ());
   assoc = (fun _ _ _ -> ());
   assoc_r = (fun _ _ _ -> ());
-  is_unit = (fun _ -> ())
+  is_unit = (fun _ -> ());
+  refine = (fun _ -> True)
 }
 
 module Mem = Steel.Memory
@@ -287,7 +288,7 @@ let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
         uses
         (pts_to r full_perm v)
         (cas_provides r v v_new)
-   = let m0 = NMSTTotal.get () in
+   = let m0 : full_mem = NMSTTotal.get () in
      let fv = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
      let fv' = Some (v_new, full_perm) in
      assert (interp ((Mem.pts_to r fv `star` pure (perm_ok full_perm)) `star` locks_invariant uses m0) m0);
@@ -301,7 +302,7 @@ let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
        then (frame (pure (perm_ok full_perm)) (upd_action uses r fv fv') (); true)
        else false
      in
-     let m1 = NMSTTotal.get () in
+     let m1 : full_mem = NMSTTotal.get () in
      assert (interp (cas_provides r v v_new b `star` locks_invariant uses m1) m1);
      assert (preserves_frame uses (pts_to r full_perm v)
                                   (cas_provides r v v_new b)
