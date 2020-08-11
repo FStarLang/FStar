@@ -637,6 +637,13 @@ let alloc_action #a #pcm e x
     in
     lift_tot_action (refined_pre_action_as_action f)
 
+
+let select_refine #a #p e r x f
+  = lift_tot_action (lift_heap_action e (H.select_refine r x f))
+
+let upd_gen #a #p e r x y f
+  = lift_tot_action (lift_heap_action e (H.upd_gen_action r x y f))
+
 ////////////////////////////////////////////////////////////////////////////////
 // witness / recall
 ////////////////////////////////////////////////////////////////////////////////

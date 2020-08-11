@@ -340,6 +340,24 @@ val gather_action
 val alloc_action (#a:Type u#1) (#pcm:pcm a) (e:inames) (x:a{compatible pcm x x /\ pcm.refine x})
   : action_except (ref a pcm) e emp (fun r -> pts_to r x)
 
+
+val select_refine (#a:Type u#1) (#p:pcm a)
+                  (e:inames)
+                  (r:ref a p)
+                  (x:erased a)
+                  (f:(v:a{compatible p x v}
+                      -> GTot (y:a{compatible p y v /\
+                                  FStar.PCM.frame_compatible p x v y})))
+   : action_except (v:a{compatible p x v /\ p.refine v}) e
+                   (pts_to r x)
+                   (fun v -> pts_to r (f v))
+
+val upd_gen (#a:Type) (#p:pcm a) (e:inames) (r:ref a p) (x y:Ghost.erased a)
+            (f:FStar.PCM.frame_preserving_upd p x y)
+  : action_except unit e
+                  (pts_to r x)
+                  (fun _ -> pts_to r y)
+
 let property (a:Type)
   = a -> prop
 

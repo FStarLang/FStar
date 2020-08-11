@@ -467,19 +467,12 @@ val sel_action
   A version of select that incorporates a ghost update of local
   knowledge of a ref cell based on the value that was read
  *)
-let frame_compatible #a (p:pcm a) (x:erased a) (v y:a) =
-  (forall (frame:a). {:pattern (composable p x frame)}
-            composable p x frame /\
-            v == op p x frame ==>
-            composable p y frame /\
-            v == op p y frame)
-
 val select_refine (#a:_) (#p:_)
                   (r:ref a p)
                   (x:erased a)
                   (f:(v:a{compatible p x v}
                       -> GTot (y:a{compatible p y v /\
-                                  frame_compatible p x v y})))
+                                  FStar.PCM.frame_compatible p x v y})))
    : action (pts_to r x)
             (v:a{compatible p x v /\ p.refine v})
             (fun v -> pts_to r (f v))
@@ -498,44 +491,8 @@ val upd_action
   : action (pts_to r v0) unit (fun _ -> pts_to r v1)
 
 (** Updating a ref cell for a user-defined PCM *)
-
-(** A frame-preserving update set on a PCM p, specified in two
-    parts:
-
-    1. To update a share of a PCM from [x] to [y]:
-        - Given a full value [v] compatible with [x] (i.e. exists f. op p x f = v)
-
-        + Produce a value [z] compatible with [y] (i.e.,
-          the final heap satisfies [pts_to r y])
-
-          - if v is a refined value then so is z,
-            and respects the preorder of frame_preserving updates on refined values
-*)
-let frame_preserving_upd_0 #a (p:pcm a) (x y:a) =
-    v:a{compatible p x v}
-  -> Tot (z:a{
-            compatible p y z /\
-             (p.refine v ==> p.refine z) /\
-             (p.refine v ==> frame_preserving p v z)})
-
-(** Further, the update respects PCM frames:
-
-    For any [frame] composable with the value [v] being updated,
-    [f] only updates the [v] part of [op p v frame] to [z], obtaining
-    [op p z frame]
- *)
-let frame_preserving_upd #a (p:pcm a) (x y:a) =
-  f:frame_preserving_upd_0 p x y {
-     forall (v:a{compatible p x v}).
-         let z = f v in
-         (forall (frame:a). {:pattern (composable p v frame)}
-              composable p v frame ==>
-              composable p z frame /\
-              (compatible p x (op p v frame) ==>
-              (op p z frame == f (op p v frame))))
-  }
-
-val upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a) (f:frame_preserving_upd p x y)
+val upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
+                   (f:FStar.PCM.frame_preserving_upd p x y)
   : action (pts_to r x)
            unit
            (fun _ -> pts_to r y)
