@@ -1187,7 +1187,7 @@ and p_tvar lid =
  * to prevent swallowing semicolons or not. For instance, in a record field, we
  * do. *)
 
-and paren_if b =
+and paren_if (b:bool) =
   if b then
     soft_parens_with_nesting
   else

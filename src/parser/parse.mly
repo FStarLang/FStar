@@ -73,8 +73,8 @@ let old_attribute_syntax_warning =
 %token QMARK_DOT
 %token QMARK
 %token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT DOT_LBRACK
-%token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE BANG_LBRACE
-%token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
+%token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE_BAR LBRACE BANG_LBRACE
+%token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
 %token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND POLYMONADIC_SUBCOMP SPLICE SQUIGGLY_RARROW TOTAL
@@ -484,7 +484,7 @@ fieldPattern:
   (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
-  | LBRACK_BAR UNDERSCORE COLON t=simpleArrow BAR_RBRACK
+  | LBRACE_BAR UNDERSCORE COLON t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
         let w = mk_pattern (PatWild (Some (mk_meta_tac mt)))
                                  (rhs2 parseState 1 5) in
@@ -492,7 +492,10 @@ patternOrMultibinder:
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
       }
 
-  | LBRACK_BAR i=lident COLON t=simpleArrow BAR_RBRACK
+  (* GM: I would rather use lidentOrUnderscore and delete the rule above,
+   * but I need to produce a PatWild above, and a PatVar here. However
+   * why does PatWild even exist..? *)
+  | LBRACE_BAR i=lident COLON t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
         let w = mk_pattern (PatVar (i, Some (mk_meta_tac mt)))
                                  (rhs2 parseState 1 5) in
@@ -500,7 +503,7 @@ patternOrMultibinder:
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
       }
 
-  | LBRACK_BAR t=simpleArrow BAR_RBRACK
+  | LBRACE_BAR t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
         let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (mk_meta_tac mt)))
                                  (rhs2 parseState 1 3) in
@@ -522,10 +525,24 @@ binder:
        let (q, lid) = aqualified_lid in
        mk_binder (Variable lid) (rhs parseState 1) Type_level q
      }
+
   | tv=tvar  { mk_binder (TVariable tv) (rhs parseState 1) Kind None  }
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
 multiBinder:
+  | LBRACE_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACE
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        let r = rhs2 parseState 1 5 in
+        [mk_binder (Annotated (id, t)) r Type_level (Some (mk_meta_tac mt))]
+      }
+
+  | LBRACE_BAR t=simpleArrow BAR_RBRACE
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
+        let r = rhs2 parseState 1 3 in
+        let id = gen r in
+        [mk_binder (Annotated (id, t)) r Type_level (Some (mk_meta_tac mt))]
+      }
+
   | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
@@ -802,11 +819,22 @@ simpleArrow:
   | e=tmEqNoRefinement { e }
 
 simpleArrowDomain:
+  | LBRACE_BAR t=tmEqNoRefinement BAR_RBRACE
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        (Some (mk_meta_tac mt), t)
+      }
+
   | aq_opt=ioption(aqual) dom_tm=tmEqNoRefinement { aq_opt, dom_tm }
 
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
 %inline tmArrowDomain(Tm):
+  | LBRACE_BAR t=Tm BAR_RBRACE
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        (Some (mk_meta_tac mt), t)
+      }
+
   | LPAREN q=aqual dom_tm=Tm RPAREN { Some q, dom_tm }
+
   | aq_opt=ioption(aqual) dom_tm=Tm { aq_opt, dom_tm }
 
 tmFormula:
