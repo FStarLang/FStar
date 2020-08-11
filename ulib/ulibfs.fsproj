@@ -53,21 +53,17 @@
     <!-- Note, for now we just ignore some modules and or comment out some code in them. -->
     <Compile Include="fs\prims.fs" Link="prims.fs" />
     <Compile Include="fs\FStar_All.fs" Link="FStar_All.fs" />
-    <!-- <Compile Include="fs\FStar_BaseTypes.fs" Link="FStar_BaseTypes.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_Buffer.fs" Link="FStar_Buffer.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_Bytes.fs" Link="FStar_Bytes.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
     <Compile Include="fs\FStar_Char.fs" Link="FStar_Char.fs" />
-    <!-- <Compile Include="fs\FStar_Constructive.fs" Link="FStar_Constructive.fs" /> --> <!-- NOTE: Legacy -->
     <Compile Include="fs\FStar_Dyn.fs" Link="FStar_Dyn.fs" /> 
     <Compile Include="fs\FStar_Float.fs" Link="FStar_Float.fs" />
     <Compile Include="fs\FStar_Ghost.fs" Link="FStar_Ghost.fs" />
     <Compile Include="fs\FStar_Monotonic_Heap.fs" Link="FStar_Monotonic_Heap.fs" />
     <Compile Include="fs\FStar_CommonST.fs" Link="FStar_CommonST.fs" />
     <Compile Include="fs\FStar_Heap.fs" Link="FStar_Heap.fs" />
-    <!-- <Compile Include="fs\FStar_Int16.fs" Link="FStar_Int16.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_Int32.fs" Link="FStar_Int32.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_Int64.fs" Link="FStar_Int64.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_Int8.fs" Link="FStar_Int8.fs" /> -->  <!-- TODO: Depends on UInt.fsti -->
+    <Compile Include="fs\FStar_Int16.fs" Link="FStar_Int16.fs" /> 
+    <Compile Include="fs\FStar_Int32.fs" Link="FStar_Int32.fs" /> 
+    <Compile Include="fs\FStar_Int64.fs" Link="FStar_Int64.fs" /> 
+    <Compile Include="fs\FStar_Int8.fs" Link="FStar_Int8.fs" /> 
     <Compile Include="fs\FStar_IO.fs" Link="FStar_IO.fs" />
     <Compile Include="fs\FStar_List.fs" Link="FStar_List.fs" />
     <Compile Include="fs\FStar_List_Tot_Base.fs" Link="FStar_List_Tot_Base.fs" />
@@ -87,16 +83,11 @@
     <Compile Include="fs\FStar_ST.fs" Link="FStar_ST.fs" />
     <Compile Include="fs\FStar_Exn.fs" Link="FStar_Exn.fs" />
     <Compile Include="fs\FStar_String.fs" Link="FStar_String.fs" />
-    <!-- <Compile Include="fs\FStar_UInt16.fs" Link="FStar_UInt16.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_UInt32.fs" Link="FStar_UInt32.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_UInt64.fs" Link="FStar_UInt64.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_UInt8.fs" Link="FStar_UInt8.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="fs\FStar_Pointer_Derived1.fs" Link="FStar_Pointer_Derived1.fs" /> --> <!-- NOTE: Legacy -->
-    <!-- <Compile Include="fs\FStar_Pointer_Derived2.fs" Link="FStar_Pointer_Derived2.fs" /> --> <!-- NOTE: Legacy -->
-    <!-- <Compile Include="fs\FStar_Pointer_Derived3.fs" Link="FStar_Pointer_Derived3.fs" /> --> <!-- NOTE: Legacy -->
-    <!-- <Compile Include="fs\FStar_BufferNG.fs" Link="FStar_BufferNG.fs" /> --> <!-- NOTE: Legacy -->
+    <Compile Include="fs\FStar_UInt16.fs" Link="FStar_UInt16.fs" />
+    <Compile Include="fs\FStar_UInt32.fs" Link="FStar_UInt32.fs" />
+    <Compile Include="fs\FStar_UInt64.fs" Link="FStar_UInt64.fs" /> 
+    <Compile Include="fs\FStar_UInt8.fs" Link="FStar_UInt8.fs" />
     <!-- <Compile Include="fs\FStar_Tactics_Builtins.fs" Link="FStar_Tactics_Builtins.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
-    <!-- <Compile Include="fs\FStar_TaggedUnion.fs" Link="FStar_TaggedUnion.fs" /> --> <!-- NOTE: Legacy -->
     <!-- <Compile Include="fs\FStar_Reflection_Types.fs" Link="FStar_Reflection_Types.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
     <!-- <Compile Include="fs\FStar_Reflection_Builtins.fs" Link="FStar_Reflection_Builtins.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
     <!-- <Compile Include="fs\FStar_Reflection_Data.fs" Link="FStar_Reflection_Data.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
@@ -104,15 +95,14 @@
     <!-- <Compile Include="fs\FStar_Tactics_Types.fs" Link="FStar_Tactics_Types.fs" /> --> <!-- TODO: Should tactics be part of ulibfs? Separate lib? -->
     <!-- <Compile Include="fs\FStar_Bytes.fs" Link="FStar_Bytes.fs" /> --> <!-- TODO: Depends on UInt.fsti -->
     <!-- <Compile Include="fs\FStar_Util.fs" Link="FStar_Util.fs" /> --> <!-- TODO: Depends on Heap and HyperStack -->
-    <!-- <Compile Include="fs\FStar_Order.fs" Link="FStar_Order.fs" /> --> <!-- TODO: FStar_Order.ml is missing in ulib/ms? -->
-    <!-- <Compile Include="fs\FStar_Range.fs" Link="FStar_Range.fs" /> --> <!-- TODO: FStar_Range.ml is missing in ulib/ms? -->
-    <!-- <Compile Include="fs\FStar_Vector_Base.fs" Link="FStar_Vector_Base.fs" /> --> <!-- TODO: FStar_Vector_Base.ml is missing in ulib/ms? -->
-    <!-- <Compile Include="fs\FStar_Vector_Properties.fs" Link="FStar_Vector_Properties.fs" /> --> <!-- TODO: FStar_Vector_Properties.ml is missing in ulib/ms? -->
-    <!-- <Compile Include="fs\FStar_Vector.fs" Link="FStar_Vector.fs" /> --> <!-- TODO: FStar_Vector.ml is missing in ulib/ms? -->
+    <!-- <Compile Include="fs\FStar_Order.fs" Link="FStar_Order.fs" /> --> <!-- TODO: FStar_Order.ml is missing in ulib/ml? -->
+    <!-- <Compile Include="fs\FStar_Range.fs" Link="FStar_Range.fs" /> --> <!-- TODO: FStar_Range.ml is missing in ulib/ml? -->
+    <!-- <Compile Include="fs\FStar_Vector_Base.fs" Link="FStar_Vector_Base.fs" /> --> <!-- TODO: FStar_Vector_Base.ml is missing in ulib/ml? -->
+    <!-- <Compile Include="fs\FStar_Vector_Properties.fs" Link="FStar_Vector_Properties.fs" /> --> <!-- TODO: FStar_Vector_Properties.ml is missing in ulib/ml? -->
+    <!-- <Compile Include="fs\FStar_Vector.fs" Link="FStar_Vector.fs" /> --> <!-- TODO: FStar_Vector.ml is missing in ulib/ml? -->
     <!-- <Compile Include="fs\FStar_TSet.fs" Link="FStar_TSet.fs" />  --> <!-- TODO: FStar_TSet.ml is missing in ulib/ml? -->
     <Compile Include="FStar.Pervasives.fst" />
     <Compile Include="FStar.Preorder.fst" />
-    <!-- <Compile Include="legacy\FStar.ErasedLogic.fst" /> --> <!-- NOTE: Legacy -->
     <Compile Include="FStar.Squash.fst" />
     <Compile Include="FStar.Classical.fst" />
     <Compile Include="FStar.FunctionalExtensionality.fst" />
@@ -127,8 +117,8 @@
     <!-- <Compile Include="FStar.Monotonic.Witnessed.fst" /> -->
     <Compile Include="FStar.List.Tot.Properties.fst" />
     <Compile Include="FStar.Monotonic.HyperHeap.fst" />
-    <!-- <Compile Include="FStar.Monotonic.HyperStack.fst" /> --> <!-- TODO: Problem with erasing of unused type parameters across modules -->
-    <!-- <Compile Include="FStar.HyperStack.fst" /> --> <!-- TODO: Problem with erasing of unused type parameters across modules -->
+    <Compile Include="FStar.Monotonic.HyperStack.fst" /> 
+    <Compile Include="FStar.HyperStack.fst" /> 
     <Compile Include="fs\FStar_HyperStack_All.fs" Link="FStar_HyperStack_All.fs" />
     <Compile Include="fs\FStar_HyperStack_ST.fs" Link="FStar_HyperStack_ST.fs" />
     <Compile Include="fs\FStar_HyperStack_IO.fs" Link="FStar_HyperStack_IO.fs" />
@@ -140,10 +130,10 @@
     <Compile Include="FStar.Math.Lib.fst" />
     <Compile Include="FStar.Math.Lemmas.fst" />
     <Compile Include="FStar.BitVector.fst" />
-    <!-- <Compile Include="FStar.UInt.fst" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="FStar.Int.fst" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="FStar.Int.Cast.fst" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="FStar.UInt128.fst" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <Compile Include="FStar.UInt.fst" />
+    <Compile Include="FStar.Int.fst" />
+    <Compile Include="FStar.Int.Cast.fst" />
+    <Compile Include="FStar.UInt128.fst" />
     <!-- <Compile Include="FStar.Universe.fst" /> -->
     <!-- <Compile Include="FStar.GSet.fst" /> -->
     <!-- <Compile Include="FStar.ModifiesGen.fst" /> -->
@@ -166,8 +156,8 @@
     <!-- <Compile Include="FStar.Monotonic.Seq.fst" /> -->
     <!-- <Compile Include="FStar.Crypto.fst" /> -->
     <!-- <Compile Include="LowStar.ModifiesPat.fst" /> -->
-    <!-- <Compile Include="FStar.Int128.fst" /> -->
-    <!-- <Compile Include="FStar.Integers.fst" /> -->
+    <Compile Include="FStar.Int128.fst" />
+    <!-- <Compile Include="FStar.Integers.fst" /> --> <!-- TODO: Issue with unsafe_coerce -->
     <!-- <Compile Include="LowStar.Vector.fst" /> -->
     <!-- <Compile Include="LowStar.Regional.fst" /> -->
     <!-- <Compile Include="LowStar.RVector.fst" /> -->
@@ -225,12 +215,12 @@
     <Compile Include="FStar.Ghost.fsti" />
     <Compile Include="FStar.HyperStack.ST.fsti" />
     <!-- <Compile Include="FStar.IFC.fsti" /> -->
-    <!-- <Compile Include="FStar.Int.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="FStar.Int128.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="FStar.Int16.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="FStar.Int32.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="FStar.Int64.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
-    <!-- <Compile Include="FStar.Int8.fsti" /> --> <!-- TODO: Depends on UInt.fsti -->
+    <Compile Include="FStar.Int.fsti" /> 
+    <Compile Include="FStar.Int128.fsti" />
+    <Compile Include="FStar.Int16.fsti" />
+    <Compile Include="FStar.Int32.fsti" />
+    <Compile Include="FStar.Int64.fsti" />
+    <Compile Include="FStar.Int8.fsti" /> 
     <!-- <Compile Include="FStar.MRef.fsti" /> -->
     <Compile Include="FStar.Map.fsti" />  <!-- TODO: Doesn't work with current implementation of Set (see TODO note on Set) -->
     <!-- <Compile Include="FStar.Math.Euclid.fsti" /> -->
@@ -256,12 +246,12 @@
     <!-- <Compile Include="FStar.Tactics.Effect.fsti" /> -->
     <!-- <Compile Include="FStar.Tactics.Types.fsti" /> -->
     <!-- <Compile Include="FStar.Tcp.fsti" /> -->
-    <!-- <Compile Include="FStar.UInt.fsti" /> -->
-    <!-- <Compile Include="FStar.UInt128.fsti" /> -->
-    <!-- <Compile Include="FStar.UInt16.fsti" /> -->
-    <!-- <Compile Include="FStar.UInt32.fsti" /> -->
-    <!-- <Compile Include="FStar.UInt64.fsti" /> -->
-    <!-- <Compile Include="FStar.UInt8.fsti" /> -->
+    <Compile Include="FStar.UInt.fsti" />
+    <Compile Include="FStar.UInt128.fsti" />
+    <Compile Include="FStar.UInt16.fsti" />
+    <Compile Include="FStar.UInt32.fsti" />
+    <Compile Include="FStar.UInt64.fsti" /> 
+    <Compile Include="FStar.UInt8.fsti" />
     <!-- <Compile Include="FStar.Udp.fsti" /> -->
     <!-- <Compile Include="FStar.Universe.fsti" /> -->
     <Compile Include="FStar.Vector.Base.fsti" />

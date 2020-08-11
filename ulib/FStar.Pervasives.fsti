@@ -40,6 +40,20 @@ include FStar.Pervasives.Native
 ///   trigger various kinds of special treatments for those
 ///   definitions.
 
+(** [remove_unused_type_parameters]
+
+    This attribute is used to decorate signatures in interfaces for
+    type abbreviations, indicating that the 0-based positional
+    parameters are unused in the definition and should be eliminated
+    for extraction.
+
+    This is important particularly for use with F# extraction, since
+    F# does not accept type abbreviations with unused type parameters.
+
+    See tests/bug-reports/RemoveUnusedTyparsIFace.A.fsti
+ *)
+val remove_unused_type_parameters : list int -> Tot unit
+
 (** Values of type [pattern] are used to tag [Lemma]s with SMT
     quantifier triggers *)
 type pattern : Type0 = unit
@@ -110,6 +124,7 @@ let trivial_pure_post (a: Type) : pure_post a = fun _ -> True
 
     Use [intro_ambient t] for that.
     See, e.g., LowStar.Monotonic.Buffer.fst and its usage there for loc_none *)
+[@@ remove_unused_type_parameters [0; 1;]]
 val ambient (#a: Type) (x: a) : Type0
 
 (** cf. [ambient], above *)
@@ -434,6 +449,7 @@ new_effect {
  Be careful using this, since it explicitly subverts the [ifuel]
  setting. If used unwisely, this can lead to very poor SMT solver
  performance.  *)
+[@@ remove_unused_type_parameters [0]]
 val inversion (a: Type) : Type0
 
 (** To introduce [inversion t] in the SMT solver's context, call
@@ -719,20 +735,6 @@ val allow_informative_binders : unit
     and examples/layeredeffects/LowParseWriters.fsti
   *)
 val commute_nested_matches : unit
-
-(** [remove_unused_type_parameters]
-
-    This attribute is used to decorate signatures in interfaces for
-    type abbreviations, indicating that the 0-based positional
-    parameters are unused in the definition and should be eliminated
-    for extraction.
-
-    This is important particularly for use with F# extraction, since
-    F# does not accept type abbreviations with unused type parameters.
-
-    See tests/bug-reports/RemoveUnusedTyparsIFace.A.fsti
- *)
-val remove_unused_type_parameters : list int -> Tot unit
 
 ///  Controlling normalization
 

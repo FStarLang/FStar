@@ -161,6 +161,7 @@ let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
     | x::xs -> p x /\ forall_list p xs
 
 (* Comparison of a term_view to term. Allows to recurse while changing the view *)
+[@@ remove_unused_type_parameters [0; 1]]
 val smaller : term_view -> term -> Type0
 let smaller tv t =
     match tv with
@@ -194,6 +195,7 @@ let smaller tv t =
     | Tv_Uvar _ _
     | Tv_FVar _ -> True
 
+[@@ remove_unused_type_parameters [0; 1]]
 val smaller_comp : comp_view -> comp -> Type0
 let smaller_comp cv c =
     match cv with
@@ -206,10 +208,12 @@ let smaller_comp cv c =
     | C_Eff us eff res args ->
         res << c
 
+[@@ remove_unused_type_parameters [0; 1]]
 val smaller_bv : bv_view -> bv -> Type0
 let smaller_bv bvv bv =
     bvv.bv_sort << bv
 
+[@@ remove_unused_type_parameters [0; 1]]
 val smaller_binder : binder -> (bv * aqualv) -> Type0
 let smaller_binder b (bv, _) =
     bv << b
