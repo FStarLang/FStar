@@ -12,20 +12,7 @@
         "refinement_interpretation_Tm_refine_149c6719f34c408becdf9120a4ae2d59"
       ],
       0,
-      "ec8d98dd059694c4a2622a61adfa3222"
-    ],
-    [
-      "FStar.All.__proj__Failure__item__uu___",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_FStar.All.Failure",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_149c6719f34c408becdf9120a4ae2d59"
-      ],
-      0,
-      "028df89a904d1ce1b78b3afcfbd3ff2d"
+      "51434adfb28799b65e6be23a6bf847be"
     ]
   ]
 ]

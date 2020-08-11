@@ -16,7 +16,7 @@
         "projection_inverse_BoxReal_proj_0"
       ],
       0,
-      "98ae9c549efac698ae57e40f3abdfe44"
+      "67a8274b676dcf3eabb9cf2bc6c666f9"
     ],
     [
       "Steel.Permissions.full_permission",
@@ -33,7 +33,7 @@
         "projection_inverse_BoxReal_proj_0"
       ],
       0,
-      "10b96aaa9bc7a4f934d8374e2bc84472"
+      "55c2fc34c2f02e5416721b911a137b72"
     ],
     [
       "Steel.Permissions.half_permission",
@@ -54,7 +54,7 @@
         "typing_Steel.Permissions.__proj__Permission__item__r"
       ],
       0,
-      "c82fa296e005a2b76634792daaf2cc1f"
+      "0ada6232432d968a7414a1bba4659097"
     ],
     [
       "Steel.Permissions.sum_permissions",
@@ -78,7 +78,7 @@
         "typing_Steel.Permissions.__proj__Permission__item__r"
       ],
       0,
-      "36cf7fca97543fb8fc3d5fa122a83605"
+      "acdae1cadd894f941580535e387adb0f"
     ],
     [
       "Steel.Permissions.sub_permissions",
@@ -103,111 +103,7 @@
         "typing_Steel.Permissions.__proj__Permission__item__r"
       ],
       0,
-      "fdb1ca3813d24a6fd18644415b74b036"
-    ],
-    [
-      "Steel.Permissions.zero_permission",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Real.one", "equation_FStar.Real.zero",
-        "primitive_FStar.Real.of_int",
-        "primitive_FStar.Real.op_Greater_Equals_Dot",
-        "primitive_FStar.Real.op_Less_Equals_Dot",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_BoxReal_proj_0"
-      ],
-      0,
-      "51cd279dbdbb66cf4f63e1437904ec26"
-    ],
-    [
-      "Steel.Permissions.full_permission",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.Real.one", "equation_FStar.Real.zero",
-        "primitive_FStar.Real.of_int",
-        "primitive_FStar.Real.op_Greater_Equals_Dot",
-        "primitive_FStar.Real.op_Less_Equals_Dot",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_BoxReal_proj_0"
-      ],
-      0,
-      "2b407141747b9ecd2755d8cdc5957ef7"
-    ],
-    [
-      "Steel.Permissions.half_permission",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Real.one",
-        "equation_FStar.Real.two", "equation_FStar.Real.zero",
-        "primitive_FStar.Real.of_int",
-        "primitive_FStar.Real.op_Greater_Equals_Dot",
-        "primitive_FStar.Real.op_Less_Equals_Dot",
-        "primitive_FStar.Real.op_Slash_Dot",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_BoxReal_proj_0", "real_inversion",
-        "refinement_interpretation_Tm_refine_aaf7c00a8d6beeaf7f2c95b4f989546e",
-        "typing_Steel.Permissions.__proj__Permission__item__r"
-      ],
-      0,
-      "5646d4caa26688211c2197a2d7352ad4"
-    ],
-    [
-      "Steel.Permissions.sum_permissions",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Real.one",
-        "equation_FStar.Real.zero",
-        "equation_Steel.Permissions.summable_permissions",
-        "fuel_guarded_inversion_Steel.Permissions.permission",
-        "primitive_FStar.Real.of_int",
-        "primitive_FStar.Real.op_Greater_Equals_Dot",
-        "primitive_FStar.Real.op_Plus_Dot",
-        "proj_equation_Steel.Permissions.Permission_r",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_BoxReal_proj_0",
-        "refinement_interpretation_Tm_refine_62e3862454f1cfc7ee250a8eb6a75001",
-        "refinement_interpretation_Tm_refine_aaf7c00a8d6beeaf7f2c95b4f989546e",
-        "typing_Steel.Permissions.__proj__Permission__item__r"
-      ],
-      0,
-      "fef0c1d63c4d3020408e329de3be413e"
-    ],
-    [
-      "Steel.Permissions.sub_permissions",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.Real.one",
-        "equation_FStar.Real.zero",
-        "equation_Steel.Permissions.lesser_equal_permission",
-        "fuel_guarded_inversion_Steel.Permissions.permission",
-        "primitive_FStar.Real.of_int",
-        "primitive_FStar.Real.op_Greater_Equals_Dot",
-        "primitive_FStar.Real.op_Less_Equals_Dot",
-        "primitive_FStar.Real.op_Subtraction_Dot",
-        "proj_equation_Steel.Permissions.Permission_r",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_BoxReal_proj_0",
-        "refinement_interpretation_Tm_refine_aaf7c00a8d6beeaf7f2c95b4f989546e",
-        "refinement_interpretation_Tm_refine_d17c98f3ed0a9d4f60788f7c00d58b0a",
-        "typing_Steel.Permissions.__proj__Permission__item__r"
-      ],
-      0,
-      "7ddc3836fd8b373c04f9d24368cf1135"
+      "0616c70916262c77b4507b60390619dc"
     ]
   ]
 ]

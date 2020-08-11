@@ -163,7 +163,7 @@ let bind_div_steel_ens (#a:Type) (#b:Type)
 let bind_div_steel (a:Type) (b:Type)
   (wp:pure_wp a)
   (pre_g:pre_t) (post_g:post_t b) (req_g:a -> req_t pre_g) (ens_g:a -> ens_t pre_g b post_g)
-  (f:unit -> DIV a wp) (g:(x:a -> repr b pre_g post_g (req_g x) (ens_g x)))
+  (f:eqtype_as_type unit -> DIV a wp) (g:(x:a -> repr b pre_g post_g (req_g x) (ens_g x)))
 : repr b pre_g post_g
     (bind_div_steel_req wp req_g)
     (bind_div_steel_ens wp ens_g)
@@ -257,3 +257,18 @@ let cond (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
     cond_aux b p q a1 a2
 
 let add_action f = Steel?.reflect (action_as_repr f)
+
+
+(***** Bind and Subcomp relation with Steel.Atomic *****)
+
+friend Steel.Effect.Atomic
+open Steel.Effect.Atomic
+
+#push-options "--z3rlimit 40"
+let bind_atomic_steel _ _ _ _ _ _ _ _ f g
+= fun m0 ->
+  let x = f () in
+  g x ()
+#pop-options
+
+let subcomp_atomic_steel _ _ _ _ f = fun m0 -> f m0

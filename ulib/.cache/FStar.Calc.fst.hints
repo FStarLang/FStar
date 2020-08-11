@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_3b368c069648e8b27d83e18e9c122613"
       ],
       0,
-      "19140d8571a009ebad9dc9caa5a1856d"
+      "24bf39922fb9a8334806b6ca3414c26c"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item__rs",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "8fd09ba00abb61e36e3b1d0f67b40bb4"
+      "460c6fc04d1425895b2921b49b43d162"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item__p",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "a50c61c0fa63c9a4d099e5fa2e90d5d1"
+      "a37028951d1279c53adc18e40380c499"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item__x",
@@ -55,7 +55,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "7880948566a26d5f0d1e23a0df1e96e6"
+      "9c86323916c26d90b65ce58d42b0f68f"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item__y",
@@ -69,7 +69,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "31adfbb842b5ed63b98cc9cbd3bf725f"
+      "d7d5e4397807be12ebd3487e24ba201e"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item__z",
@@ -83,7 +83,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "350936f305c0b3ef445d2eeadca99cef"
+      "0c886aab625f34bf8492658596e4d45f"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item___5",
@@ -103,7 +103,7 @@
         "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
       ],
       0,
-      "5de49d30e735489b4b4760191b6d2464"
+      "8b39b227e3c600b77f7f01a05ca511f6"
     ],
     [
       "FStar.Calc.__proj__CalcStep__item___6",
@@ -124,7 +124,7 @@
         "token_correspondence_FStar.Calc.__proj__CalcStep__item__p"
       ],
       0,
-      "52bb189b52b148527541a1e915ddb759"
+      "6621fc89841a88f1c420110506cd2f14"
     ],
     [
       "FStar.Calc.__proj__Mkcalc_pack__item__proof",
@@ -136,7 +136,7 @@
         "projection_inverse_FStar.Calc.Mkcalc_pack_rels"
       ],
       0,
-      "d2fabf93f660aee87581fb1642f4fedc"
+      "06648e8fdbe758d3f2efc6edcf71c670"
     ],
     [
       "FStar.Calc.calc_chain_related",
@@ -151,7 +151,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f58afa9b8c762debcbabe501220bb13b"
+      "14fa5a6128ad602fb9127f2fbbd5ea16"
     ],
     [
       "FStar.Calc.elim_calc_proof",
@@ -181,7 +181,7 @@
         "subterm_ordering_FStar.Calc.CalcStep"
       ],
       0,
-      "c044a48820e446e569c9094f61fa97ba"
+      "adbb62e9a80c6a1298235f55240b98cb"
     ],
     [
       "FStar.Calc.calc_finish",
@@ -200,7 +200,7 @@
         "proj_equation_FStar.Calc.Mkcalc_pack_rels"
       ],
       0,
-      "574a5203f090998c353612a4fd60658a"
+      "bffb8bb15b2db8cb0435d0dbb47f903f"
     ],
     [
       "FStar.Calc.calc_push_impl",
@@ -209,168 +209,7 @@
       1,
       [ "@query", "equation_Prims.l_imp", "l_imp-interp" ],
       0,
-      "f750e09fc4f5eb97dd49c8451223f443"
-    ],
-    [
-      "FStar.Calc.__proj__CalcRefl__item__x",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Calc.CalcRefl",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_3b368c069648e8b27d83e18e9c122613"
-      ],
-      0,
-      "228948d09e1975f3540db4ddfda1288c"
-    ],
-    [
-      "FStar.Calc.__proj__CalcStep__item__rs",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Calc.CalcStep",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
-      ],
-      0,
-      "76d41a8b52fb438473251eb781300011"
-    ],
-    [
-      "FStar.Calc.__proj__CalcStep__item__p",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Calc.CalcStep",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
-      ],
-      0,
-      "902785374d187e589dd4540da5570bb0"
-    ],
-    [
-      "FStar.Calc.__proj__CalcStep__item__x",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Calc.CalcStep",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
-      ],
-      0,
-      "29ac9271d68d53e7c4c98bb561af5836"
-    ],
-    [
-      "FStar.Calc.__proj__CalcStep__item__y",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Calc.CalcStep",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
-      ],
-      0,
-      "6f94c0297926aada62c2d65871dbe5ed"
-    ],
-    [
-      "FStar.Calc.__proj__CalcStep__item__z",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Calc.CalcStep",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
-      ],
-      0,
-      "f1f3367536dcb72cd4e8b21fe5a851c7"
-    ],
-    [
-      "FStar.Calc.__proj__CalcStep__item___5",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Calc.CalcStep",
-        "proj_equation_FStar.Calc.CalcStep_rs",
-        "proj_equation_FStar.Calc.CalcStep_x",
-        "proj_equation_FStar.Calc.CalcStep_y",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Calc.CalcStep_rs",
-        "projection_inverse_FStar.Calc.CalcStep_x",
-        "projection_inverse_FStar.Calc.CalcStep_y",
-        "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a"
-      ],
-      0,
-      "a1b59fc549c58655dfddbb20d4252dac"
-    ],
-    [
-      "FStar.Calc.__proj__CalcStep__item___6",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "data_elim_FStar.Calc.CalcStep",
-        "disc_equation_FStar.Calc.CalcStep",
-        "proj_equation_FStar.Calc.CalcStep_p",
-        "proj_equation_FStar.Calc.CalcStep_y",
-        "proj_equation_FStar.Calc.CalcStep_z",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_FStar.Calc.CalcStep_p",
-        "projection_inverse_FStar.Calc.CalcStep_y",
-        "projection_inverse_FStar.Calc.CalcStep_z",
-        "refinement_interpretation_Tm_refine_4d2c352ec2a69453fd30fa2907779c8a",
-        "token_correspondence_FStar.Calc.__proj__CalcStep__item__p"
-      ],
-      0,
-      "04a404ffa3473c5cb459e9cde44a4ee1"
-    ],
-    [
-      "FStar.Calc.__proj__Mkcalc_pack__item__proof",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Calc.Mkcalc_pack_rels",
-        "projection_inverse_FStar.Calc.Mkcalc_pack_rels"
-      ],
-      0,
-      "be4292e23529aacf93b2db1f2cadc950"
-    ],
-    [
-      "FStar.Calc.calc_chain_related",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_df47a5e1036c31f5a72fe09ed5f79d16_2",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "equation_FStar.Preorder.relation",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "f7880f60ccbd95989ee13d2e22b59346"
-    ],
-    [
-      "FStar.Calc.calc_push_impl",
-      2,
-      2,
-      1,
-      [ "@query", "equation_Prims.l_imp", "l_imp-interp" ],
-      0,
-      "c14e7dc2c86de62e98955cf268bf746a"
+      "2845009057403b279e909a878eae0ab1"
     ]
   ]
 ]

@@ -259,10 +259,9 @@ let intro_pure #a #p #f
   : SteelT unit
            (M.pts_to r h)
            (fun _ -> pts_to_body r f v h)
-  = Atomic.lift_atomic_to_steelT (fun _ ->
-    Atomic.change_slprop _ _ (fun m ->
+  = Atomic.change_slprop _ _ (fun m ->
       emp_unit (M.pts_to r h);
-      pure_star_interp (M.pts_to r h) (history_val h v f) m))
+      pure_star_interp (M.pts_to r h) (history_val h v f) m)
 
 let frame_l (#a:Type) (#pre:slprop) (#post:a -> slprop)
           ($f:unit -> SteelT a pre post)

@@ -646,7 +646,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
         else
             let formals, _ =
                 let (_, fvty), _ = FStar.TypeChecker.Env.lookup_lid (tcenv_of_uenv g) fv.fv_name.v in
-                let fvty = N.normalize [Env.UnfoldUntil delta_constant] (tcenv_of_uenv g) fvty in
+                let fvty = N.normalize [Env.UnfoldUntil delta_constant; Env.ForExtraction] (tcenv_of_uenv g) fvty in
                 U.arrow_formals fvty in
             let mlargs = List.map (arg_as_mlty g) args in
             let mlargs =
@@ -1309,7 +1309,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             match rcopt with
             | Some rc ->
                 if TcEnv.is_reifiable_rc (tcenv_of_uenv env) rc
-                then TcUtil.reify_body (tcenv_of_uenv env) [TcEnv.Inlining; TcEnv.Unascribe] body
+                then TcUtil.reify_body (tcenv_of_uenv env) [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] body
                 else body
             | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (Print.term_to_string body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
@@ -1344,11 +1344,11 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
              *)
             | Tm_abs(bs, _, _rc) (* when is_total _rc *) -> //this is a beta_redex --- also reduce it before extraction
               t
-              |> N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses] (tcenv_of_uenv g)
+              |> N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction] (tcenv_of_uenv g)
               |> term_as_mlexpr g
 
             | Tm_constant Const_reify ->
-              let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining; TcEnv.Unascribe] head (List.hd args) in
+              let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] head (List.hd args) in
               let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos in
               term_as_mlexpr g tm
 
@@ -1630,7 +1630,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                                           (BU.format1 "###(Time to normalize top-level let %s)"
                                             (Print.lbname_to_string lb.lbname))
                                           norm_call in
-//                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
+                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
                                   a
                              else norm_call ()
                     in

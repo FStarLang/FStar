@@ -7,6 +7,7 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Embeddings
 open FStar.Util
 
+open FStar.Tactics.Common
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module PC = FStar.Parser.Const
@@ -63,7 +64,7 @@ let fstar_tactics_const ns =
 let fstar_tactics_proofstate    = fstar_tactics_const ["Types"; "proofstate"]
 let fstar_tactics_goal          = fstar_tactics_const ["Types"; "goal"]
 
-let fstar_tactics_TacticFailure = fstar_tactics_data  ["Types"; "TacticFailure"]
+let fstar_tactics_TacticFailure = fstar_tactics_data  ["Common"; "TacticFailure"]
 
 let fstar_tactics_result        = fstar_tactics_const ["Types"; "result"]
 let fstar_tactics_Success       = fstar_tactics_data  ["Result"; "Success"]

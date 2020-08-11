@@ -31,9 +31,8 @@ val push_context: env -> string -> env
 val snapshot_context: env -> string -> ((int * int * solver_depth_t * int) * env)
 val rollback_context: solver_t -> string -> option<(int * int * solver_depth_t * int)> -> env
 
-val tc_decls: env -> list<sigelt> -> list<sigelt> * list<sigelt> * env
-val tc_partial_modul: env -> modul -> modul * list<sigelt> * env
+val tc_decls: env -> list<sigelt> -> list<sigelt> * env
+val tc_partial_modul: env -> modul -> modul * env
 val tc_more_partial_modul: env -> modul -> list<sigelt> -> modul * list<sigelt> * env
-val extract_interface: env -> modul -> modul
 
 val unembed_optionstate_knot : ref<option<EMB.embedding<FStar.Options.optionstate>>>
