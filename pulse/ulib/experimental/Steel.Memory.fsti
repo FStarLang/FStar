@@ -216,9 +216,12 @@ val inames_ok_empty (m:mem)
 *)
 val locks_invariant (e:inames) (m:mem u#a) : slprop u#a
 
+val full_mem_pred: mem -> prop
+let full_mem = m:mem{full_mem_pred m}
+
 (** Memory refined with invariants and a footprint *)
 let hmem_with_inv_except (e:inames) (fp:slprop u#a) =
-  m:mem{inames_ok e m /\ interp (fp `star` locks_invariant e m) m}
+  m:full_mem{inames_ok e m /\ interp (fp `star` locks_invariant e m) m}
 
 (** Memory refined with just a footprint and no invariants  *)
 let hmem_with_inv (fp:slprop u#a) = hmem_with_inv_except S.empty fp
@@ -272,7 +275,7 @@ let mprop (fp:slprop u#a) =
 (**
   The preorder along wich the memory evolves with every update. See [Steel.Heap.heap_evolves]
 *)
-val mem_evolves : FStar.Preorder.preorder mem
+val mem_evolves : FStar.Preorder.preorder full_mem
 
 (** See [Steel.Heap.is_frame_preserving]. We add in [lock_invariants] now *)
 let preserves_frame (e:inames) (pre post:slprop) (m0 m1:mem) =
@@ -288,7 +291,7 @@ let preserves_frame (e:inames) (pre post:slprop) (m0 m1:mem) =
   are currently opened.
 *)
 effect MstTot (a:Type u#a) (except:inames) (expects:slprop u#1) (provides: a -> slprop u#1) =
-  NMSTTotal.NMSTATETOT a (mem u#1) mem_evolves
+  NMSTTotal.NMSTATETOT a (full_mem u#1) mem_evolves
     (requires fun m0 ->
         inames_ok except m0 /\
         interp (expects `star` locks_invariant except m0) m0)
@@ -307,11 +310,11 @@ val sel_action (#a:Type u#1) (#pcm:_) (e:inames) (r:ref a pcm) (v0:erased a)
 val upd_action (#a:Type u#1) (#pcm:_) (e:inames)
                (r:ref a pcm)
                (v0:FStar.Ghost.erased a)
-               (v1:a {FStar.PCM.frame_preserving pcm v0 v1})
+               (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
   : action_except unit e (pts_to r v0) (fun _ -> pts_to r v1)
 
 val free_action (#a:Type u#1) (#pcm:pcm a) (e:inames)
-                (r:ref a pcm) (x:FStar.Ghost.erased a{FStar.PCM.exclusive pcm x})
+                (r:ref a pcm) (x:FStar.Ghost.erased a{FStar.PCM.exclusive pcm x /\ pcm.refine pcm.FStar.PCM.p.one})
   : action_except unit e (pts_to r x) (fun _ -> pts_to r pcm.FStar.PCM.p.one)
 
 (** Splitting a permission on a composite resource into two separate permissions *)
@@ -334,7 +337,7 @@ val gather_action
   (v1:FStar.Ghost.erased a)
   : action_except (_:unit{composable pcm v0 v1}) e (pts_to r v0 `star` pts_to r v1) (fun _ -> pts_to r (op pcm v0 v1))
 
-val alloc_action (#a:Type u#1) (#pcm:pcm a) (e:inames) (x:a{compatible pcm x x})
+val alloc_action (#a:Type u#1) (#pcm:pcm a) (e:inames) (x:a{compatible pcm x x /\ pcm.refine x})
   : action_except (ref a pcm) e emp (fun r -> pts_to r x)
 
 let property (a:Type)
