@@ -7,6 +7,8 @@ open Steel.Channel.Protocol
 let dprot' = protocol unit
 
 module WF = FStar.WellFounded
+module P = FStar.Preorder
+module R = FStar.ReflexiveTransitiveClosure
 
 // Simplifying protocols for now
 let rec no_loop (p:dprot') = match p with
@@ -20,6 +22,19 @@ let is_send (p:dprot) = Msg? p && (Send? (Msg?._0 p))
 let is_recv (p:dprot) = Msg? p && (Recv? (Msg?._0 p))
 
 let empty_trace (p:dprot) : trace p p = Waiting p
+
+let partial_trace_of (p:dprot) = tr:partial_trace_of p{no_loop tr.to}
+
+let next (#p:dprot) : P.relation (partial_trace_of p) =
+  fun (t0 t1: partial_trace_of p) ->
+    more_msgs t0.to /\
+    (exists (msg:next_msg_t t0.to).
+      t1.to == step t0.to msg /\
+      t1.tr == extend t0.tr msg)
+
+let extended_to (#p:dprot) : P.preorder (partial_trace_of p) =
+  R.closure (next #p)
+
 
 noeq
 type t (p:dprot) =
@@ -146,7 +161,7 @@ val select_refine (#p:dprot)
              (fun v -> pts_to r (f v))
 
 let rec is_trace_prefix
-  (#from:protocol unit) (#to #to':protocol unit)
+  (#from:dprot) (#to #to':dprot)
   (tr:trace from to)
   (tr':trace from to')
   : Tot prop
@@ -159,7 +174,7 @@ let rec is_trace_prefix
       | Message _ x' _ tail' -> x == x' /\ is_trace_prefix tail tail'
 
 let rec lemma_is_trace_prefix_refl
-  (#from #to:protocol unit)
+  (#from #to:dprot)
   (tr:trace from to)
   : Lemma (ensures is_trace_prefix tr tr)
           (decreases tr)
@@ -167,7 +182,7 @@ let rec lemma_is_trace_prefix_refl
     | Waiting _ -> ()
     | Message _ _ _ tail -> lemma_is_trace_prefix_refl tail
 
-let rec lemma_is_trace_prefix_extend (#from #to #to':protocol unit)
+let rec lemma_is_trace_prefix_extend (#from #to #to':dprot)
   (tr:trace from to)
   (tr':trace from to')
   (x:msg_t to')
@@ -248,7 +263,7 @@ let next_message
   = lemma_ahead_implies_trace_prefix tr tr';
     next_message_aux tr tr'
 
-let rec extend_increase_length (#from #to:protocol unit) (t:trace from to{more_msgs to}) (m:next_msg_t to)
+let rec extend_increase_length (#from #to:dprot) (t:trace from to{more_msgs to}) (m:next_msg_t to)
   : Lemma (ensures trace_length (extend t m) == trace_length t + 1)
           (decreases t)
   = match t with
@@ -313,14 +328,57 @@ let lemma_compatible_a_greater_length (#p:dprot) (q:dprot{is_recv q}) (tr:trace 
   = compatible_a_r_v_is_ahead tr tr';
     lemma_ahead_is_longer tr'.to tr'.tr q tr
 
-let lemma_next_injectivity
-  (#p:dprot) (tr tr':partial_trace_of p)
-  (z1 z2:partial_trace_of p)
-  : Lemma (requires tr `extended_to` tr' /\
-            (next tr z1 /\ z1 `extended_to` tr') /\
-            (next tr z2 /\ z2 `extended_to` tr'))
-          (ensures z1 == z2)
-  = admit()
+let rec lemma_unique_next_common_prefix (#p:dprot)
+  (tr z tr':partial_trace_of p)
+  : Lemma (requires is_trace_prefix tr.tr tr'.tr /\ is_trace_prefix z.tr tr'.tr /\
+                    next tr z /\ trace_length tr'.tr > trace_length tr.tr)
+          (ensures (
+            let x = next_message_aux tr.tr tr'.tr in
+            let tr2 = extend tr.tr x in
+            z.to == step tr.to x /\
+            tr2 == z.tr)
+          )
+          (decreases tr.tr)
+  = let Message _ x_z _ tail_z = z.tr in
+    let Message _ x' _ tail' = tr'.tr in
+    match tr.tr with
+    | Waiting _ -> ()
+    | Message _ _ to tail -> lemma_unique_next_common_prefix
+      ({to = to; tr = tail}) ({to = z.to; tr = tail_z}) ({to = tr'.to; tr = tail'})
+
+let next_message_closure (#p:dprot) (tr tr':partial_trace_of p)
+  : Lemma (requires trace_length tr'.tr > trace_length tr.tr /\ tr `extended_to` tr')
+          (ensures (
+            let x = next_message tr.tr tr'.tr in
+            let q2 = step tr.to x in
+            let tr2 = extend tr.tr x in
+            ({to = q2; tr = tr2}) `extended_to` tr'))
+  = let x = next_message tr.tr tr'.tr in
+    let q2 = step tr.to x in
+    let tr2 = extend tr.tr x in
+    let z_new = {to = q2; tr = tr2} in
+    let open FStar.ReflexiveTransitiveClosure in
+    assert (exists z. next tr z /\ z `extended_to` tr');
+    let aux (z:partial_trace_of p)
+      : Lemma (requires next tr z /\ z `extended_to` tr')
+              (ensures z == z_new)
+      = lemma_ahead_implies_trace_prefix z.tr tr'.tr;
+        lemma_ahead_implies_trace_prefix tr.tr tr'.tr;
+        lemma_unique_next_common_prefix tr z tr'
+    in Classical.forall_intro (Classical.move_requires aux)
+
+
+let lemma_same_length_ahead_implies_eq (#p:dprot) (tr tr':partial_trace_of p)
+  : Lemma (requires trace_length tr.tr == trace_length tr'.tr /\ is_trace_prefix tr.tr tr'.tr)
+          (ensures tr == tr')
+  = let rec aux (#p #q1 #q2:dprot) (tr1:trace p q1) (tr2:trace p q2)
+        : Lemma (requires trace_length tr1 == trace_length tr2 /\ is_trace_prefix tr1 tr2)
+                (ensures q1 == q2 /\ tr1 == tr2)
+                (decreases tr1)
+        = match tr1 with
+          | Waiting _ -> ()
+          | Message _ _ _ tail -> aux tail (Message?._3 tr2)
+    in aux tr.tr tr'.tr
 
 let frame_compatible_a_extend (#p:dprot)
   (q:dprot{is_recv q /\ more q}) (tr:trace p q)
@@ -343,14 +401,24 @@ let frame_compatible_a_extend (#p:dprot)
           // Ahead should also say something like "the "additional suffix" only
           // contains writes, i.e. you cannot read the future
           assume (A_R? y);
-          let msg = next_message tr tr_w in
-          let q' = step q msg in
-          let tr_new = extend tr msg in
-          assert (y == A_R q' tr_new);
-          let z' = {to = q'; tr = tr_new} in
-          //assert (({to = q'; tr = tr_new}) `extended_to` ({to = q_w; tr = tr_w}));
-          admit()
-        ) else admit()
+          next_message_closure p_tr tr'
+        ) else (
+          let q_b = B_R?.q frame in
+          let tr_b = B_R?._1 frame in
+          assert (tr' == {to = q_b; tr = tr_b});
+          if A_W? y then (
+            // Missing an additional property on the pcm
+            assume (A_W?.q y == q_b /\ A_W?._1 y == tr_b);
+            ahead_refl q_b tr_b
+          ) else (
+            let A_R q_a tr_a = y in
+            Classical.move_requires (lemma_ahead_is_longer q tr q_b) tr_b;
+            next_message_closure p_tr tr';
+            lemma_ahead_is_longer q_b tr_b q_a tr_a;
+            lemma_ahead_implies_trace_prefix tr_a tr_b;
+            Classical.move_requires (lemma_same_length_ahead_implies_eq ({to = q_a; tr = tr_a})) tr'
+          )
+        )
     in Classical.forall_intro (Classical.move_requires aux)
 
 let f_a_r (#p:dprot) (q:dprot{is_recv q /\ more q}) (tr:trace p q)
