@@ -289,6 +289,13 @@ effect Mst (a:Type) (#st:st) (req:st.mem -> Type0) (ens:st.mem -> a -> st.mem ->
 effect MstTot (a:Type) (#st:st) (req:st.mem -> Type0) (ens:st.mem -> a -> st.mem -> Type0) =
   NMSTATETOT a (full_mem st) st.locks_preorder req ens
 
+let get (#st:st) ()
+  : MstTot (full_mem st)
+           (fun _ -> True)
+           (fun s0 s s1 -> s0 == s /\ s == s1)
+  = get ()
+
+
 
 (**** Begin interface of actions ****)
 
@@ -1207,7 +1214,7 @@ let step_bind
       fun x ->
       Weaken (lpre_b x) (lpost_b x) () (g x) in
 
-    let m1 : full_mem st = get () in
+    let m1 = get () in
 
     assert ((bind_lpre next_lpre next_lpost lpre_b) (st.core m1))
       by norm ([delta_only [`%bind_lpre]]);
@@ -1263,11 +1270,11 @@ let step_frame
   | Frame (Ret p x lp) frame f_frame -> step_frame_ret f
 
   | Frame #_ #_ #f_pre #_ #_ #_ f frame f_frame ->
-    let m0 : full_mem st = get () in
+    let m0 = get () in
 
     let Step next_fpre next_fpost next_flpre next_flpost f = step f in
 
-    let m1 : full_mem st = get () in
+    let m1 = get () in
 
     preserves_frame_star f_pre next_fpre m0 m1 frame;
 
@@ -1334,11 +1341,11 @@ let step_par
     let b = sample () in
 
     if b then begin
-      let m0 : full_mem st = get () in
+      let m0 = get () in
 
       let Step next_preL next_postL next_lpreL next_lpostL mL = step mL in
 
-      let m1 : full_mem st = get () in
+      let m1 = get () in
 
       preserves_frame_star preL next_preL m0 m1 preR;
       par_weaker_lpre_and_stronger_lpost_l lpreL lpostL next_lpreL next_lpostL lpreR lpostR m0 m1;
@@ -1354,11 +1361,11 @@ let step_par
 
     end
     else begin
-      let m0 : full_mem st = get () in
+      let m0 = get () in
 
       let Step next_preR next_postR next_lpreR next_lpostR mR = step mR in
 
-      let m1 : full_mem st = get () in
+      let m1 = get () in
 
       preserves_frame_star_left preR next_preR m0 m1 preL;
       par_weaker_lpre_and_stronger_lpost_r lpreL lpostL lpreR lpostR next_lpreR next_lpostR m0 m1;
@@ -1429,14 +1436,12 @@ let rec run
     =
   match f with
   | Ret _ x _ -> x
-
   | _ ->
-    let m0 : full_mem st = get () in
+    let m0 = get () in
     let Step new_pre new_post _ _ f = step f in
-    let m1 : full_mem st = get () in
+    let m1 = get () in
     let x = run f in
-    let m2 : full_mem st = get () in
-
+    let m2 = get () in
     preserves_frame_trans pre new_pre (new_post x) m0 m1 m2;
     preserves_frame_stronger_post pre post new_post x m0 m2;
     x
