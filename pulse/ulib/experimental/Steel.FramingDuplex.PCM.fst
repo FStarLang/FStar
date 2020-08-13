@@ -211,22 +211,6 @@ let lemma_ahead_msg_msg_inversion
     let r = ({to = to'; tr = tr'}) in
     let open FStar.ReflexiveTransitiveClosure in
     ()
-    // let aux1 (tag:party) (y z:partial_trace_of from)
-    //   : Lemma (requires stable1 y /\ next tag y z)
-    //           (ensures stable1 z)
-    //   = ()
-    // in Classical.forall_intro_2 (Classical.move_requires_2 (aux1 A));
-    // stable_on_closure (next A) stable1 ();
-    // assert (x == x');
-    // let stable2 (z:partial_trace_of (step from x)) : Type0 =
-    //   is_trace_prefix tail z.tr
-    // in
-    // let aux2 (tag:party) (y z:partial_trace_of (step from x))
-    //   : Lemma (requires stable2 y /\ next tag y z)
-    //           (ensures stable2 z)
-    //   = Classical.forall_intro (Classical.move_requires (lemma_is_trace_prefix_extend tail y.tr))
-    // in Classical.forall_intro_2 (Classical.move_requires_2 (aux2 A));
-    // stable_on_closure (next A) stable2 ()
 
 let rec next_message_aux
   (#from:dprot) (#to #to':dprot)
@@ -298,6 +282,7 @@ let rec lemma_ahead_is_longer (tag:party) (#p:dprot) (q:dprot) (s:trace p q) (q'
     in Classical.forall_intro_2 (fun x -> Classical.move_requires (aux x));
     stable_on_closure (next tag) stable_p ()
 
+
 let compatible_a_r_v_is_ahead
   (#p:dprot) (#q:dprot{is_recv q}) (tr:trace p q)
   (tr':partial_trace_of p)
@@ -318,6 +303,53 @@ let compatible_a_r_v_is_ahead
     in
     Classical.forall_intro (Classical.move_requires aux)
 
+let rec lemma_same_trace_length_ahead_refl' (#p:dprot) (#q #q':dprot)
+  (s:trace p q)
+  (s':trace p q')
+  : Lemma (requires is_trace_prefix s s' /\ trace_length s == trace_length s')
+          (ensures q == q' /\ s == s')
+          (decreases s)
+  =  match s with
+    | Waiting _ -> ()
+    | Message _ _ _ _ ->
+        lemma_same_trace_length_ahead_refl' (Message?._3 s) (Message?._3 s')
+
+let lemma_same_trace_length_ahead_refl (tag:party) (#p:dprot) (#q #q':dprot)
+  (s:trace p q)
+  (s':trace p q')
+  : Lemma (requires ahead tag q q' s s' /\ trace_length s == trace_length s')
+          (ensures q == q' /\ s == s')
+  = lemma_ahead_implies_trace_prefix tag s' s;
+    lemma_same_trace_length_ahead_refl' s' s
+
+let compatible_b_r_v_is_ahead
+  (#p:dprot) (#q:dprot{is_send q}) (tr:trace p q)
+  (tr':partial_trace_of p)
+  : Lemma (requires compatible (pcm p) (B_R q tr) (V tr'))
+          (ensures ahead A tr'.to q tr'.tr tr)
+  = let aux (frame:t p) : Lemma
+        (requires composable (B_R q tr) frame /\ compose frame (B_R q tr) == V tr')
+        (ensures ahead A tr'.to q tr'.tr tr)
+        = assert (A_R? frame \/ A_W? frame);
+          if A_W? frame then ()
+          else (
+            let q_a = A_R?.q frame in
+            let tr_a = A_R?._1 frame in
+            if trace_length tr_a > trace_length tr then (
+              Classical.move_requires (lemma_ahead_is_longer B q tr q_a) tr_a
+            ) else if trace_length tr_a < trace_length tr then ahead_refl A q tr
+              else (
+                assert (tr'.to == q_a /\ tr'.tr == tr_a);
+                // We need both sides, since there is a disjunction in the PCM in the A_R/B_R case
+                Classical.move_requires (lemma_same_trace_length_ahead_refl A tr_a) tr;
+                Classical.move_requires (lemma_same_trace_length_ahead_refl B tr) tr_a;
+                assert (q == q_a /\ tr == tr_a);
+                ahead_refl A q tr
+              )
+         )
+    in
+    Classical.forall_intro (Classical.move_requires aux)
+
 let extend_node_a_r (#p:dprot) (#q:dprot{more q /\ is_recv q}) (tr:trace p q)
   (tr':partial_trace_of p{trace_length tr'.tr > trace_length tr /\
     compatible (pcm p) (A_R q tr) (V tr')})
@@ -328,11 +360,28 @@ let extend_node_a_r (#p:dprot) (#q:dprot{more q /\ is_recv q}) (tr:trace p q)
     let tr' = extend tr x in
     if is_send q' then A_W q' tr' else A_R q' tr'
 
+let extend_node_b_r (#p:dprot) (#q:dprot{more q /\ is_send q}) (tr:trace p q)
+  (tr':partial_trace_of p{trace_length tr'.tr > trace_length tr /\
+    compatible (pcm p) (B_R q tr) (V tr')})
+  : (y:t p)
+  = compatible_b_r_v_is_ahead tr tr';
+    let x = next_message tr tr'.tr in
+    let q' = step q x in
+    let tr' = extend tr x in
+    if is_send q' then B_R q' tr' else B_W q' tr'
+
+
 let lemma_compatible_a_greater_length (#p:dprot) (q:dprot{is_recv q}) (tr:trace p q) (tr':partial_trace_of p)
   : Lemma (requires compatible (pcm p) (A_R q tr) (V tr'))
           (ensures trace_length tr'.tr >= trace_length tr)
   = compatible_a_r_v_is_ahead tr tr';
     lemma_ahead_is_longer B tr'.to tr'.tr q tr
+
+let lemma_compatible_b_greater_length (#p:dprot) (q:dprot{is_send q}) (tr:trace p q) (tr':partial_trace_of p)
+  : Lemma (requires compatible (pcm p) (B_R q tr) (V tr'))
+          (ensures trace_length tr'.tr >= trace_length tr)
+  = compatible_b_r_v_is_ahead tr tr';
+    lemma_ahead_is_longer A tr'.to tr'.tr q tr
 
 let rec lemma_unique_next_common_prefix
   (tag:party)
@@ -425,6 +474,44 @@ let frame_compatible_a_extend (#p:dprot)
         )
     in Classical.forall_intro (Classical.move_requires aux)
 
+let frame_compatible_b_extend (#p:dprot)
+  (q:dprot{is_send q /\ more q}) (tr:trace p q)
+  (tr':partial_trace_of p)
+  : Lemma (requires compatible (pcm p) (B_R q tr) (V tr') /\ trace_length tr'.tr > trace_length tr)
+          (ensures frame_compatible (B_R q tr) (V tr') (extend_node_b_r tr tr'))
+  = let x = B_R q tr in
+    let p_tr:partial_trace_of p = {to = q; tr = tr} in
+    let v = V tr' in
+    let y = extend_node_b_r tr tr' in
+    let aux (frame:t p)
+      : Lemma (requires composable x frame /\ v == compose x frame)
+              (ensures composable y frame /\ v == compose y frame)
+      = assert (A_R? frame \/ A_W? frame);
+        if A_W? frame then (
+          next_message_closure A p_tr tr'
+          // The PCM gives us here that y has to be B_R, it cannot be B_W
+          // because then there would be a A read in the trace ahead of x
+
+        ) else (
+          let q_a = A_R?.q frame in
+          let tr_a = A_R?._1 frame in
+          assert (tr' == {to = q_a; tr = tr_a});
+          Classical.move_requires (lemma_ahead_is_longer B q tr q_a) tr_a;
+          // Gives us the following assertion by contraposition
+          assert (p_tr `extended_to A` tr');
+          next_message_closure A p_tr tr';
+
+          if B_W? y then (
+            ahead_refl A q_a tr_a
+          ) else (
+            let B_R q_b tr_b = y in
+            lemma_ahead_is_longer A q_a tr_a q_b tr_b;
+            lemma_ahead_implies_trace_prefix A tr_b tr_a;
+            Classical.move_requires (lemma_same_length_ahead_implies_eq ({to = q_b; tr = tr_b})) tr'
+          )
+        )
+    in Classical.forall_intro (Classical.move_requires aux)
+
 let f_a_r (#p:dprot) (q:dprot{is_recv q /\ more q}) (tr:trace p q)
   (v:t p{compatible (pcm p) (A_R q tr) v})
   : GTot (y:t p{compatible (pcm p) y v /\ frame_compatible (A_R q tr) v y})
@@ -439,6 +526,22 @@ let f_a_r (#p:dprot) (q:dprot{is_recv q /\ more q}) (tr:trace p q)
           let y = extend_node_a_r tr tr' in
           frame_compatible_a_extend q tr tr';
           y
+
+let f_b_r (#p:dprot) (q:dprot{is_send q /\ more q}) (tr:trace p q)
+  (v:t p{compatible (pcm p) (B_R q tr) v})
+  : GTot (y:t p{compatible (pcm p) y v /\ frame_compatible (B_R q tr) v y})
+  = match v with
+    | B_R q tr -> B_R q tr
+    | V tr' ->
+        lemma_compatible_b_greater_length q tr tr';
+        if trace_length tr >= trace_length tr'.tr then
+          // No new message yet
+          B_R q tr
+        else
+          let y = extend_node_b_r tr tr' in
+          frame_compatible_b_extend q tr tr';
+          y
+
 
 val get_a_r (#p:dprot) (c:chan p) (q:dprot{is_recv q /\ more q}) (tr:trace p q)
   : SteelT (tr':partial_trace_of p{compatible (pcm p) (A_R q tr) (V tr')})
@@ -457,8 +560,22 @@ let get_a_r #p c q tr =
     (fun _ -> ());
   tr'
 
-// TODO: Use select refine to implement getters
-// TODO: Only need A_R and B_R cases
+val get_b_r (#p:dprot) (c:chan p) (q:dprot{is_send q /\ more q}) (tr:trace p q)
+  : SteelT (tr':partial_trace_of p{compatible (pcm p) (B_R q tr) (V tr')})
+           (pts_to c (B_R q tr))
+           (fun tr' ->
+             if trace_length tr >= trace_length tr'.tr then
+               pts_to c (B_R q tr)
+             else pts_to c (extend_node_b_r tr tr'))
+
+let get_b_r #p c q tr =
+  let v = select_refine c (B_R q tr) (f_b_r q tr) in
+  let (tr':partial_trace_of p{compatible (pcm p) (B_R q tr) (V tr')}) = V?._0 v in
+  change_slprop
+    (pts_to c (f_b_r q tr v))
+    (if trace_length tr >= trace_length tr'.tr then pts_to c (B_R q tr) else pts_to c (extend_node_b_r tr tr'))
+    (fun _ -> ());
+  tr'
 
 assume
 val write_a
@@ -468,6 +585,15 @@ val write_a
   (tr:trace p next)
   (x:msg_t next)
   :SteelT unit (pts_to r (A_W next tr)) (fun _ -> endpoint_a r (step next x) (extend tr x))
+
+assume
+val write_b
+  (#p:dprot)
+  (r:chan p)
+  (#next:dprot{more next /\ tag_of next = Recv})
+  (tr:trace p next)
+  (x:msg_t next)
+  :SteelT unit (pts_to r (B_W next tr)) (fun _ -> endpoint_b r (step next x) (extend tr x))
 
 assume
 val alloc (#p:dprot) (x:t p)
@@ -538,6 +664,52 @@ let rec recv_a #p c next tr =
       change_slprop
         (pts_to c (extend_node_a_r tr tr'))
         (endpoint_a c (step next x) (extend tr x))
+        (fun _ -> ());
+      x
+    )
+
+
+val send_b
+  (#p:dprot)
+  (c:chan p)
+  (#next:dprot{more next /\ tag_of next = Recv})
+  (x:msg_t next)
+  (tr:trace p next)
+  : SteelT unit
+           (endpoint_b c next tr)
+           (fun _ -> endpoint_b c (step next x) (extend tr x))
+
+let send_b #p c #next x tr =
+  change_slprop (endpoint_b c next tr) (pts_to c (B_W next tr)) (fun _ -> ());
+  write_b c tr x
+
+val recv_b
+  (#p:dprot)
+  (c:chan p)
+  (next:dprot{more next /\ tag_of next = Send})
+  (tr:trace p next)
+  : SteelT (msg_t next)
+           (endpoint_b c next tr)
+           (fun x -> endpoint_b c (step next x) (extend tr x))
+
+let rec recv_b #p c next tr =
+  change_slprop (endpoint_b c next tr) (pts_to c (B_R next tr)) (fun _ -> ());
+  let tr' = get_b_r c next tr in
+  cond (trace_length tr >= trace_length tr'.tr)
+    (fun b ->
+      if b then pts_to c (B_R next tr)
+      else (pts_to c (extend_node_b_r tr tr'))
+    )
+    (fun _ x -> endpoint_b c (step next x) (extend tr x))
+    (fun _ ->
+      change_slprop (pts_to c (B_R next tr)) (endpoint_b c next tr) (fun _ -> ());
+      recv_b c next tr)
+    (fun _ ->
+      compatible_b_r_v_is_ahead tr tr';
+      let x = next_message tr tr'.tr in
+      change_slprop
+        (pts_to c (extend_node_b_r tr tr'))
+        (endpoint_b c (step next x) (extend tr x))
         (fun _ -> ());
       x
     )
