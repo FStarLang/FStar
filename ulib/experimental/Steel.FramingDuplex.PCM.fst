@@ -401,26 +401,23 @@ let frame_compatible_a_extend (#p:dprot)
               (ensures composable y frame /\ v == compose y frame)
       = assert (B_R? frame \/ B_W? frame);
         if B_W? frame then (
-          let q_w = B_W?.q frame in
-          let tr_w = B_W?._1 frame in
-          assert (tr_w == tr'.tr);
-          // TODO: Likely need to strengthen the pcm
-          // Ahead should also say something like "the "additional suffix" only
-          // contains writes, i.e. you cannot read the future
-          assume (A_R? y);
           next_message_closure B p_tr tr'
+          // The PCM gives us here that y has to be A_R, it cannot be A_W
+          // because then there would be a B read in the trace ahead of x
+
         ) else (
           let q_b = B_R?.q frame in
           let tr_b = B_R?._1 frame in
           assert (tr' == {to = q_b; tr = tr_b});
+          Classical.move_requires (lemma_ahead_is_longer A q tr q_b) tr_b;
+          // Gives us the following assertion by contraposition
+          assert (p_tr `extended_to B` tr');
+          next_message_closure B p_tr tr';
+
           if A_W? y then (
-            // Missing an additional property on the pcm
-            assume (A_W?.q y == q_b /\ A_W?._1 y == tr_b);
             ahead_refl B q_b tr_b
           ) else (
             let A_R q_a tr_a = y in
-            Classical.move_requires (lemma_ahead_is_longer A q tr q_b) tr_b;
-            next_message_closure B p_tr tr';
             lemma_ahead_is_longer B q_b tr_b q_a tr_a;
             lemma_ahead_implies_trace_prefix B tr_a tr_b;
             Classical.move_requires (lemma_same_length_ahead_implies_eq ({to = q_a; tr = tr_a})) tr'
