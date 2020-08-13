@@ -25,15 +25,19 @@ let empty_trace (p:dprot) : trace p p = Waiting p
 
 let partial_trace_of (p:dprot) = tr:partial_trace_of p{no_loop tr.to}
 
-let next (#p:dprot) : P.relation (partial_trace_of p) =
+type party = | A | B
+
+let next (tag:party) (#p:dprot) : P.relation (partial_trace_of p) =
   fun (t0 t1: partial_trace_of p) ->
     more_msgs t0.to /\
+    // Ensuring that if we are ahead, we only have writes
+    (if A? tag then is_send t0.to else is_recv t0.to) /\
     (exists (msg:next_msg_t t0.to).
       t1.to == step t0.to msg /\
       t1.tr == extend t0.tr msg)
 
-let extended_to (#p:dprot) : P.preorder (partial_trace_of p) =
-  R.closure (next #p)
+let extended_to (tag:party) (#p:dprot) : P.preorder (partial_trace_of p) =
+  R.closure (next tag #p)
 
 
 noeq
@@ -45,11 +49,11 @@ type t (p:dprot) =
  | B_W : q:dprot {is_recv q} -> trace p q -> t p
  | Nil
 
-let ahead (#p:dprot) (q q':dprot) (s:trace p q) (s':trace p q') : prop
-  = ({ to = q'; tr = s'} `extended_to` { to = q; tr = s }) /\ True
+let ahead (tag:party) (#p:dprot) (q q':dprot) (s:trace p q) (s':trace p q') : prop
+  = ({ to = q'; tr = s'} `extended_to tag` { to = q; tr = s }) /\ True
 
-let ahead_refl (#p:dprot) (q:dprot) (s:trace p q)
-  : Lemma (ahead q q s s)
+let ahead_refl (tag:party) (#p:dprot) (q:dprot) (s:trace p q)
+  : Lemma (ahead tag q q s s)
   = ()
 
 let rec trace_length #p #q (s:trace p q) : Tot nat (decreases s) = match s with
@@ -61,11 +65,11 @@ let composable #p : symrel (t p) = fun t0 t1 ->
     | _, Nil
     | Nil, _ -> True
     | A_W q s, B_R q' s'
-    | B_R q' s', A_W q s -> ahead q q' s s'
+    | B_R q' s', A_W q s -> ahead A q q' s s'
     | B_W q s, A_R q' s'
-    | A_R q' s', B_W q s -> ahead q q' s s'
+    | A_R q' s', B_W q s -> ahead B q q' s s'
     | A_R q s, B_R q' s'
-    | B_R q' s', A_R q s -> ahead q q' s s' \/ ahead q' q s' s
+    | B_R q' s', A_R q s -> ahead A q q' s s' \/ ahead B q' q s' s
     | _, _ -> False
 
 let compose (#p:dprot) (s0:t p) (s1:t p{composable s0 s1}) =
@@ -206,23 +210,23 @@ let lemma_ahead_msg_msg_inversion
     let l = ({to = to; tr = tr}) in
     let r = ({to = to'; tr = tr'}) in
     let open FStar.ReflexiveTransitiveClosure in
-    let stable1 (z:partial_trace_of from) : Type0 = Message? z.tr /\ Message?.x z.tr == x in
-    let aux1 (y z:partial_trace_of from)
-      : Lemma (requires stable1 y /\ next y z)
-              (ensures stable1 z)
-      = ()
-    in Classical.forall_intro_2 (Classical.move_requires_2 aux1);
-    stable_on_closure next stable1 ();
-    assert (x == x');
-    let stable2 (z:partial_trace_of (step from x)) : Type0 =
-      is_trace_prefix tail z.tr
-    in
-    let aux2 (y z:partial_trace_of (step from x))
-      : Lemma (requires stable2 y /\ next y z)
-              (ensures stable2 z)
-      = Classical.forall_intro (Classical.move_requires (lemma_is_trace_prefix_extend tail y.tr))
-    in Classical.forall_intro_2 (Classical.move_requires_2 aux2);
-    stable_on_closure next stable2 ()
+    ()
+    // let aux1 (tag:party) (y z:partial_trace_of from)
+    //   : Lemma (requires stable1 y /\ next tag y z)
+    //           (ensures stable1 z)
+    //   = ()
+    // in Classical.forall_intro_2 (Classical.move_requires_2 (aux1 A));
+    // stable_on_closure (next A) stable1 ();
+    // assert (x == x');
+    // let stable2 (z:partial_trace_of (step from x)) : Type0 =
+    //   is_trace_prefix tail z.tr
+    // in
+    // let aux2 (tag:party) (y z:partial_trace_of (step from x))
+    //   : Lemma (requires stable2 y /\ next tag y z)
+    //           (ensures stable2 z)
+    //   = Classical.forall_intro (Classical.move_requires (lemma_is_trace_prefix_extend tail y.tr))
+    // in Classical.forall_intro_2 (Classical.move_requires_2 (aux2 A));
+    // stable_on_closure (next A) stable2 ()
 
 let rec next_message_aux
   (#from:dprot) (#to #to':dprot)
@@ -240,27 +244,28 @@ let rec next_message_aux
       next_message_aux tail tail'
 
 let lemma_ahead_implies_trace_prefix
+  (tag:party)
   (#from:dprot) (#to #to':dprot)
   (tr:trace from to)
   (tr':trace from to')
-  : Lemma (requires ahead to' to tr' tr)
+  : Lemma (requires ahead tag to' to tr' tr)
           (ensures is_trace_prefix tr tr')
   = let stable (z:partial_trace_of from) : Type0 = is_trace_prefix tr z.tr in
     let aux (y z:partial_trace_of from)
-      : Lemma (requires stable y /\ next y z)
+      : Lemma (requires stable y /\ next tag y z)
               (ensures stable z)
       = Classical.forall_intro (Classical.move_requires (lemma_is_trace_prefix_extend tr y.tr))
    in Classical.forall_intro_2 (Classical.move_requires_2 aux);
    let open FStar.ReflexiveTransitiveClosure in
-   stable_on_closure next stable ();
+   stable_on_closure (next tag) stable ();
    lemma_is_trace_prefix_refl tr
 
 let next_message
   (#from:dprot) (#to #to':dprot)
   (tr:trace from to)
   (tr':trace from to'{trace_length tr' > trace_length tr /\
-    ahead to' to tr' tr})
-  = lemma_ahead_implies_trace_prefix tr tr';
+    (exists tag. ahead tag to' to tr' tr)})
+  = Classical.forall_intro (fun tag -> Classical.move_requires (lemma_ahead_implies_trace_prefix tag tr) tr');
     next_message_aux tr tr'
 
 let rec extend_increase_length (#from #to:dprot) (t:trace from to{more_msgs to}) (m:next_msg_t to)
@@ -270,8 +275,8 @@ let rec extend_increase_length (#from #to:dprot) (t:trace from to{more_msgs to})
     | Waiting _ -> ()
     | Message _ _ _ tail -> extend_increase_length tail m
 
-let next_increase_length (#p:dprot) (x y:partial_trace_of p)
-  : Lemma (requires next x y)
+let next_increase_length (tag:party) (#p:dprot) (x y:partial_trace_of p)
+  : Lemma (requires next tag x y)
           (ensures trace_length y.tr == trace_length x.tr + 1)
   = let aux (msg:next_msg_t x.to)
         : Lemma (requires y.to == step x.to msg /\ y.tr == extend x.tr msg)
@@ -279,40 +284,41 @@ let next_increase_length (#p:dprot) (x y:partial_trace_of p)
         = extend_increase_length x.tr msg
     in Classical.forall_intro (Classical.move_requires aux)
 
-let rec lemma_ahead_is_longer (#p:dprot) (q:dprot) (s:trace p q) (q':dprot) (s':trace p q')
-  : Lemma (requires ahead q q' s s')
+let rec lemma_ahead_is_longer (tag:party) (#p:dprot) (q:dprot) (s:trace p q) (q':dprot) (s':trace p q')
+  : Lemma (requires ahead tag q q' s s')
           (ensures trace_length s >= trace_length s')
   = let open FStar.ReflexiveTransitiveClosure in
     let l = ({to = q'; tr = s'}) in
     let r = ({to = q; tr = s}) in
     let stable_p (x:partial_trace_of p) : Type0 = trace_length x.tr >= trace_length s' in
     let aux (x y:partial_trace_of p)
-      : Lemma (requires stable_p x /\ next x y)
+      : Lemma (requires stable_p x /\ next tag x y)
               (ensures stable_p y)
-      = next_increase_length x y
+      = next_increase_length tag x y
     in Classical.forall_intro_2 (fun x -> Classical.move_requires (aux x));
-    stable_on_closure next stable_p ()
+    stable_on_closure (next tag) stable_p ()
 
 let compatible_a_r_v_is_ahead
   (#p:dprot) (#q:dprot{is_recv q}) (tr:trace p q)
   (tr':partial_trace_of p)
   : Lemma (requires compatible (pcm p) (A_R q tr) (V tr'))
-          (ensures ahead tr'.to q tr'.tr tr)
+          (ensures ahead B tr'.to q tr'.tr tr)
   =  let aux (frame:t p) : Lemma
         (requires composable (A_R q tr) frame /\ compose frame (A_R q tr) == V tr')
-        (ensures ahead tr'.to q tr'.tr tr)
+        (ensures ahead B tr'.to q tr'.tr tr)
         = assert (B_R? frame \/ B_W? frame);
           if B_W? frame then ()
-          else
+          else (
             let q' = B_R?.q frame in
             let tr' = B_R?._1 frame in
             if trace_length tr' >= trace_length tr then
-              Classical.move_requires (lemma_ahead_is_longer q tr q') tr'
-            else ahead_refl q tr
+              Classical.move_requires (lemma_ahead_is_longer A q tr q') tr'
+            else ahead_refl B q tr
+         )
     in
     Classical.forall_intro (Classical.move_requires aux)
 
-  let extend_node_a_r (#p:dprot) (#q:dprot{more q /\ is_recv q}) (tr:trace p q)
+let extend_node_a_r (#p:dprot) (#q:dprot{more q /\ is_recv q}) (tr:trace p q)
   (tr':partial_trace_of p{trace_length tr'.tr > trace_length tr /\
     compatible (pcm p) (A_R q tr) (V tr')})
   : (y:t p)
@@ -326,12 +332,14 @@ let lemma_compatible_a_greater_length (#p:dprot) (q:dprot{is_recv q}) (tr:trace 
   : Lemma (requires compatible (pcm p) (A_R q tr) (V tr'))
           (ensures trace_length tr'.tr >= trace_length tr)
   = compatible_a_r_v_is_ahead tr tr';
-    lemma_ahead_is_longer tr'.to tr'.tr q tr
+    lemma_ahead_is_longer B tr'.to tr'.tr q tr
 
-let rec lemma_unique_next_common_prefix (#p:dprot)
+let rec lemma_unique_next_common_prefix
+  (tag:party)
+  (#p:dprot)
   (tr z tr':partial_trace_of p)
   : Lemma (requires is_trace_prefix tr.tr tr'.tr /\ is_trace_prefix z.tr tr'.tr /\
-                    next tr z /\ trace_length tr'.tr > trace_length tr.tr)
+                    next tag tr z /\ trace_length tr'.tr > trace_length tr.tr)
           (ensures (
             let x = next_message_aux tr.tr tr'.tr in
             let tr2 = extend tr.tr x in
@@ -343,30 +351,29 @@ let rec lemma_unique_next_common_prefix (#p:dprot)
     let Message _ x' _ tail' = tr'.tr in
     match tr.tr with
     | Waiting _ -> ()
-    | Message _ _ to tail -> lemma_unique_next_common_prefix
+    | Message _ _ to tail -> lemma_unique_next_common_prefix tag
       ({to = to; tr = tail}) ({to = z.to; tr = tail_z}) ({to = tr'.to; tr = tail'})
 
-let next_message_closure (#p:dprot) (tr tr':partial_trace_of p)
-  : Lemma (requires trace_length tr'.tr > trace_length tr.tr /\ tr `extended_to` tr')
+let next_message_closure (tag:party) (#p:dprot) (tr tr':partial_trace_of p)
+  : Lemma (requires trace_length tr'.tr > trace_length tr.tr /\ tr `extended_to tag` tr')
           (ensures (
             let x = next_message tr.tr tr'.tr in
             let q2 = step tr.to x in
             let tr2 = extend tr.tr x in
-            ({to = q2; tr = tr2}) `extended_to` tr'))
+            ({to = q2; tr = tr2}) `extended_to tag` tr'))
   = let x = next_message tr.tr tr'.tr in
     let q2 = step tr.to x in
     let tr2 = extend tr.tr x in
     let z_new = {to = q2; tr = tr2} in
     let open FStar.ReflexiveTransitiveClosure in
-    assert (exists z. next tr z /\ z `extended_to` tr');
+    assert (exists z. next tag tr z /\ z `extended_to tag` tr');
     let aux (z:partial_trace_of p)
-      : Lemma (requires next tr z /\ z `extended_to` tr')
+      : Lemma (requires next tag tr z /\ z `extended_to tag` tr')
               (ensures z == z_new)
-      = lemma_ahead_implies_trace_prefix z.tr tr'.tr;
-        lemma_ahead_implies_trace_prefix tr.tr tr'.tr;
-        lemma_unique_next_common_prefix tr z tr'
+      = lemma_ahead_implies_trace_prefix tag z.tr tr'.tr;
+        lemma_ahead_implies_trace_prefix tag tr.tr tr'.tr;
+        lemma_unique_next_common_prefix tag tr z tr'
     in Classical.forall_intro (Classical.move_requires aux)
-
 
 let lemma_same_length_ahead_implies_eq (#p:dprot) (tr tr':partial_trace_of p)
   : Lemma (requires trace_length tr.tr == trace_length tr'.tr /\ is_trace_prefix tr.tr tr'.tr)
@@ -401,7 +408,7 @@ let frame_compatible_a_extend (#p:dprot)
           // Ahead should also say something like "the "additional suffix" only
           // contains writes, i.e. you cannot read the future
           assume (A_R? y);
-          next_message_closure p_tr tr'
+          next_message_closure B p_tr tr'
         ) else (
           let q_b = B_R?.q frame in
           let tr_b = B_R?._1 frame in
@@ -409,13 +416,13 @@ let frame_compatible_a_extend (#p:dprot)
           if A_W? y then (
             // Missing an additional property on the pcm
             assume (A_W?.q y == q_b /\ A_W?._1 y == tr_b);
-            ahead_refl q_b tr_b
+            ahead_refl B q_b tr_b
           ) else (
             let A_R q_a tr_a = y in
-            Classical.move_requires (lemma_ahead_is_longer q tr q_b) tr_b;
-            next_message_closure p_tr tr';
-            lemma_ahead_is_longer q_b tr_b q_a tr_a;
-            lemma_ahead_implies_trace_prefix tr_a tr_b;
+            Classical.move_requires (lemma_ahead_is_longer A q tr q_b) tr_b;
+            next_message_closure B p_tr tr';
+            lemma_ahead_is_longer B q_b tr_b q_a tr_a;
+            lemma_ahead_implies_trace_prefix B tr_a tr_b;
             Classical.move_requires (lemma_same_length_ahead_implies_eq ({to = q_a; tr = tr_a})) tr'
           )
         )
@@ -490,7 +497,7 @@ let new_chan p =
   split r v
     (if is_send p then A_W p (empty_trace p) else A_R p (empty_trace p))
     (if is_send p then B_R p (empty_trace p) else B_W p (empty_trace p))
-    (ahead_refl p (empty_trace p)) ();
+    (ahead_refl A p (empty_trace p)) ();
   r
 
 val send_a
@@ -520,7 +527,6 @@ let rec recv_a #p c next tr =
   change_slprop (endpoint_a c next tr) (pts_to c (A_R next tr)) (fun _ -> ());
   let tr' = get_a_r c next tr in
   cond (trace_length tr >= trace_length tr'.tr)
-    // Problem: The second precondition requires (not b) to typecheck
     (fun b ->
       if b then pts_to c (A_R next tr)
       else (pts_to c (extend_node_a_r tr tr'))
@@ -530,7 +536,8 @@ let rec recv_a #p c next tr =
       change_slprop (pts_to c (A_R next tr)) (endpoint_a c next tr) (fun _ -> ());
       recv_a c next tr)
     (fun _ ->
-      let x = next_message tr tr' in
+      compatible_a_r_v_is_ahead tr tr';
+      let x = next_message tr tr'.tr in
       change_slprop
         (pts_to c (extend_node_a_r tr tr'))
         (endpoint_a c (step next x) (extend tr x))
