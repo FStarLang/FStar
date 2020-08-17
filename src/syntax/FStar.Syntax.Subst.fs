@@ -865,7 +865,7 @@ let rec deep_compress (t:term) : term =
       mk (Tm_let((fst lbs, List.map elim_lb (snd lbs)),
                   deep_compress t))
 
-    | Tm_uvar(u,s) ->
+    | Tm_uvar _ ->
       // GM: Currently, this function is only called from the normalizer
       // on a sigelt that has already been typechecked, so this case should
       // be impossible.
@@ -936,6 +936,7 @@ and deep_compress_univ (u:universe) : universe =
     u
 
   | U_unif _ ->
+      // GM: Same as for Tm_uvar
       Err.raise_err (Err.Error_UnexpectedUnresolvedUvar,
                      "Internal erorr: unexpected unresolved (universe) uvar in deep_compress")
 
