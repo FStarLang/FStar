@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "5e7347425b1e2972fa3656f3fe0203d2"
+      "d1ab18ae24da985c24bbb252b5d5fcdc"
     ],
     [
       "Ex03c.fibonacci_greater_than_arg",
@@ -41,24 +41,7 @@
         "typing_Ex03c.fibonacci", "well-founded-ordering-on-nat"
       ],
       0,
-      "c4893b7756268c3078220f685d3351bb"
-    ],
-    [
-      "Ex03c.fibonacci",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
-        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
-        "primitive_Prims.op_LessThanOrEqual",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "well-founded-ordering-on-nat"
-      ],
-      0,
-      "19c94fec20ff0a9b389a31c786800768"
+      "8cdc526dec519b03116a776af504fc80"
     ]
   ]
 ]

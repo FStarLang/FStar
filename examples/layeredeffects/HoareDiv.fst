@@ -54,7 +54,7 @@ let if_then_else (a:Type)
   (req_then:Type0) (ens_then:a -> Type0)
   (req_else:Type0) (ens_else:a -> Type0)
   (f:repr a req_then ens_then) (g:repr a req_else ens_else)
-  (p:Type0)
+  (p:bool)
 : Type
 = repr a
   ((p ==> req_then) /\ ((~ p) ==> req_else))
@@ -78,7 +78,7 @@ assume WP_pure_monotonic:
        (forall (x:a). p x ==> q x) ==>
        (wp p ==> wp q))
 
-let lift_pure_meff (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
+let lift_pure_meff (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
 : repr a
   (wp (fun _ -> True))
   (fun x -> ~ (wp (fun r -> r =!= x)))

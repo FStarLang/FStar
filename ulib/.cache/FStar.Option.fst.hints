@@ -15,7 +15,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "5fdd55147a98cd10edf20d6245eb7817"
+      "d3302710164067625615d637e8e69f83"
     ],
     [
       "FStar.Option.isSome",
@@ -31,7 +31,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "5f1173e4862b273f63c254b57142cb91"
+      "4407bc385501dfa23ed80ae3ae47d140"
     ],
     [
       "FStar.Option.map",
@@ -47,7 +47,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "1234a166ca219ee33d48532126660a3f"
+      "d71c6e6f3a0cb58a717da29dc019e4da"
     ],
     [
       "FStar.Option.mapTot",
@@ -63,7 +63,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "e433f957ee9a754a93d48133ce24626a"
+      "7220fad0fa2b299791a49d3686c61f78"
     ],
     [
       "FStar.Option.get",
@@ -79,55 +79,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "1e7899b9b91f5b2b7b5adad76a4a1236"
-    ],
-    [
-      "FStar.Option.isNone",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
-      ],
-      0,
-      "2be8f88e62435631116d1a3d04009d27"
-    ],
-    [
-      "FStar.Option.isSome",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
-      ],
-      0,
-      "a949a8c5b9e402d08efd428b7c7dc9fe"
-    ],
-    [
-      "FStar.Option.mapTot",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
-      ],
-      0,
-      "c386e42dee839230d5dc22af0276f5c4"
+      "548791efab590c9e20bf1812baea9c0c"
     ]
   ]
 ]

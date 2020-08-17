@@ -13,11 +13,28 @@ Guidelines for the changelog:
 
 # Version 0.9.7.0
 
+## Typeclass argument syntax
+
+  * The syntax for a typeclass argument (a.k.a. constraint) is now `{| ... |}`
+    instead of `[| ... |]`. They are also better supported, and be used in
+    `val` declarations and arrows which was not previously the case.
+
 ## Module system
 
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * The expected type of the `if_then_else` combinator for layered effects is now
+    `a:Type -> bs -> f:repr a is -> g:repr a js -> p:bool -> Type`
+    Previously, the `p` parameter used to have type `Type0`. It only needs
+    change in the definition of the combinator, no changes are required in
+    the client code using the effect. For example, see:
+    https://github.com/FStarLang/FStar/commit/731b353aa3bb6c32f4da97170284a1f301b242e1
+
+    The types of the combinators are also subject to stricter typing (no smt and no subtyping).
+    See this commit: https://github.com/FStarLang/FStar/commit/a5b2d8818e386b2be1058061a913ffcef4bfb8ea
+    for the kind of fixes this change required.
+
   * Cf. issue https://github.com/FStarLang/FStar/issues/1055,
     F* now enforces that unannotated, effectful functions have a
     trivial precondition (this is already the case for pure functions).
@@ -88,6 +105,8 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+   * `abstract` qualifier and the related option `--use_extracted_interfaces`
+     are no longer supported. Use interfaces instead.
 
    * We now overload `&` to construct both dependent and non-dependent
      tuple types. `t1 & t2` is equivalent to `tuple2 t1 t2` whereas

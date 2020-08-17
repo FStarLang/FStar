@@ -48,6 +48,7 @@ type aqualv =
     | Q_Implicit
     | Q_Explicit
     | Q_Meta of term
+    | Q_Meta_attr of term
 
 type argv = term * aqualv
 
@@ -89,6 +90,10 @@ type comp_view =
                     eff_args:(list argv) ->
                     comp_view
 
+(* Constructor for an inductive type. See explanation in
+[Sg_Inductive] below. *)
+type ctor = name & typ
+
 noeq
 type sigelt_view =
   | Sg_Let :
@@ -108,12 +113,7 @@ type sigelt_view =
       (univs:list univ_name) -> // universe variables
       (params:binders) ->       // parameters
       (typ:typ) ->              // the type annotation for the inductive, i.e., indices -> Type #u
-      (cts:list name) ->        // constructor names
-      sigelt_view
-
-  | Sg_Constructor :
-      (name:name) ->
-      (typ:typ) ->
+      (cts:list ctor) ->        // the constructors, opened with univs and applied to params already
       sigelt_view
 
   | Unk
@@ -127,7 +127,6 @@ type qualifier =
   | Unfold_for_unification_and_vcgen
   | Visible_default
   | Irreducible
-  | Abstract
   | Inline_for_extraction
   | NoExtract
   | Noeq

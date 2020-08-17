@@ -584,7 +584,8 @@ let bv_as_mlty (g:uenv) (bv:bv) =
         a bloated type is atleast as good as MLTY_Top?
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
-let extraction_norm_steps_core =
+let extraction_norm_steps =
+  let extraction_norm_steps_core =
     [Env.AllowUnboundUniverses;
      Env.EraseUniverses;
      Env.Inlining;
@@ -592,12 +593,11 @@ let extraction_norm_steps_core =
      Env.Exclude Env.Zeta;
      Env.Primops;
      Env.Unascribe;
-     Env.ForExtraction]
+     Env.ForExtraction] in
 
-let extraction_norm_steps_nbe =
-  Env.NBE::extraction_norm_steps_core
-
-let extraction_norm_steps () = 
+  let extraction_norm_steps_nbe =
+    Env.NBE::extraction_norm_steps_core in
+  
   if Options.use_nbe_for_extraction()
   then extraction_norm_steps_nbe
   else extraction_norm_steps_core
@@ -628,8 +628,9 @@ let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
    *)
   let c = comp_no_args c in
 
+  //AR: normalize the reified comp, to inline definitions that reification may have introduced
   if c |> U.comp_effect_name |> TcEnv.norm_eff_name env |> TcEnv.is_reifiable_effect env
-  then TcEnv.reify_comp env c S.U_unknown
+  then TcEnv.reify_comp env c S.U_unknown |> N.normalize extraction_norm_steps env
   else U.comp_result c
 
 
@@ -646,7 +647,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
         else
             let formals, _ =
                 let (_, fvty), _ = FStar.TypeChecker.Env.lookup_lid (tcenv_of_uenv g) fv.fv_name.v in
-                let fvty = N.normalize [Env.UnfoldUntil delta_constant] (tcenv_of_uenv g) fvty in
+                let fvty = N.normalize [Env.UnfoldUntil delta_constant; Env.ForExtraction] (tcenv_of_uenv g) fvty in
                 U.arrow_formals fvty in
             let mlargs = List.map (arg_as_mlty g) args in
             let mlargs =
@@ -761,7 +762,7 @@ and binders_as_ml_binders (g:uenv) (bs:binders) : list<(mlident * mlty)> * uenv 
     env
 
 let term_as_mlty g t0 =
-    let t = N.normalize (extraction_norm_steps()) (tcenv_of_uenv g) t0 in
+    let t = N.normalize extraction_norm_steps (tcenv_of_uenv g) t0 in
     translate_term_to_mlty g t
 
 
@@ -1309,7 +1310,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             match rcopt with
             | Some rc ->
                 if TcEnv.is_reifiable_rc (tcenv_of_uenv env) rc
-                then TcUtil.reify_body (tcenv_of_uenv env) [TcEnv.Inlining; TcEnv.Unascribe] body
+                then TcUtil.reify_body (tcenv_of_uenv env) [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] body
                 else body
             | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (Print.term_to_string body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
@@ -1344,11 +1345,11 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
              *)
             | Tm_abs(bs, _, _rc) (* when is_total _rc *) -> //this is a beta_redex --- also reduce it before extraction
               t
-              |> N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses] (tcenv_of_uenv g)
+              |> N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction] (tcenv_of_uenv g)
               |> term_as_mlexpr g
 
             | Tm_constant Const_reify ->
-              let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining; TcEnv.Unascribe] head (List.hd args) in
+              let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] head (List.hd args) in
               let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos in
               term_as_mlexpr g tm
 
@@ -1616,7 +1617,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                         if Options.ml_ish()
                         then lb.lbdef
                         else let norm_call () =
-                                 N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::(extraction_norm_steps())) tcenv lb.lbdef
+                                 N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::extraction_norm_steps) tcenv lb.lbdef
                              in
                              if TcEnv.debug tcenv <| Options.Other "Extraction"
                              || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
@@ -1630,7 +1631,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                                           (BU.format1 "###(Time to normalize top-level let %s)"
                                             (Print.lbname_to_string lb.lbname))
                                           norm_call in
-//                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
+                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
                                   a
                              else norm_call ()
                     in

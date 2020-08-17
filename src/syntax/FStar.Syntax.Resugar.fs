@@ -232,8 +232,13 @@ let rec resugar_term_as_op (t:S.term) : option<(string*expected_arity)> =
       let length = String.length (nsstr fv.fv_name.v) in
       let str = if length=0 then (string_of_lid fv.fv_name.v)
           else BU.substring_from (string_of_lid fv.fv_name.v) (length+1) in
-      if BU.starts_with str "dtuple" then Some ("dtuple", None)
-      else if BU.starts_with str "tuple" then Some ("tuple", None)
+      (* Check that it is of the shape dtuple<int>, and return that arity *)
+      if BU.starts_with str "dtuple"
+         && Option.isSome (BU.safe_int_of_string (BU.substring_from str 6))
+      then Some ("dtuple", BU.safe_int_of_string (BU.substring_from str 6))
+      else if BU.starts_with str "tuple"
+         && Option.isSome (BU.safe_int_of_string (BU.substring_from str 5))
+      then Some ("tuple", BU.safe_int_of_string (BU.substring_from str 5))
       else if BU.starts_with str "try_with" then Some ("try_with", None)
       else if fv_eq_lid fv C.sread_lid then Some (string_of_lid fv.fv_name.v, None)
       else None
@@ -381,7 +386,13 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       let body = resugar_term' env body in
       mk (A.Abs(patterns, body))
 
-    | Tm_arrow(xs, body) ->
+    | Tm_arrow _ ->
+      (* Flatten the arrow *)
+      let xs, body =
+        match (SS.compress (U.canon_arrow t)).n with
+        | Tm_arrow (xs, body) -> xs, body
+        | _ -> failwith "impossible: Tm_arrow in resugar_term"
+      in
       let xs, body = SS.open_comp xs body in
       let xs = if (Options.print_implicits()) then xs else filter_imp xs in
       let body = resugar_comp' env body in
@@ -1116,7 +1127,6 @@ let resugar_qualifier : S.qualifier -> option<A.qualifier> = function
   (* TODO : Find the correct option to display this *)
   | Visible_default -> if true then None else Some A.Visible
   | S.Irreducible -> Some A.Irreducible
-  | S.Abstract -> Some A.Abstract
   | S.Inline_for_extraction -> Some A.Inline_for_extraction
   | S.NoExtract -> Some A.NoExtract
   | S.Noeq -> Some A.Noeq

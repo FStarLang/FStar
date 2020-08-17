@@ -1,5 +1,5 @@
 [
-  "•^‘1)\u0014Ó#$ÃÑ\u0005[@±U",
+  "c^é_ÆÖÅ³¸d—’-é<",
   [
     [
       "Monad.__proj__Mkmonad__item__laws",
@@ -13,7 +13,7 @@
         "projection_inverse_Monad.Mkmonad_return"
       ],
       0,
-      "e3692918ee7965b10060eb7fe0e70727"
+      "3106a236f31b3f1132dd3fb9fa2c2847"
     ],
     [
       "Monad.g",
@@ -31,7 +31,7 @@
         "token_correspondence_Monad.return"
       ],
       0,
-      "3bb076a1597f47dc2c904e9178773251"
+      "324be3662392e2161f1c4546666728e9"
     ],
     [
       "Monad.g'",
@@ -49,7 +49,7 @@
         "token_correspondence_Monad.return"
       ],
       0,
-      "1110677dd649ab966ba822db817c3fc6"
+      "c5194c5bf2187f946d5f4dfdd35251a5"
     ]
   ]
 ]

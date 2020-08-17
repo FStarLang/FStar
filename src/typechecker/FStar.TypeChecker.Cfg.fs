@@ -86,6 +86,7 @@ let steps_to_string f =
     unascribe = %s;\n\
     in_full_norm_request = %s;\n\
     weakly_reduce_scrutinee = %s;\n\
+    for_extraction = %s;\n\
   }"
   [ f.beta |> b;
     f.iota |> b;
@@ -111,7 +112,9 @@ let steps_to_string f =
     f.unmeta |> b;
     f.unascribe |> b;
     f.in_full_norm_request |> b;
-    f.weakly_reduce_scrutinee |> b]
+    f.weakly_reduce_scrutinee |> b;
+    f.for_extraction |> b;
+   ]
 
 let default_steps : fsteps = {
     beta = true;
@@ -536,6 +539,21 @@ let built_in_primitive_steps : prim_step_set =
             end
         | _ -> failwith "Unexpected number of arguments"
     in
+    let division_op : psc -> EMB.norm_cb -> args -> option<term>
+      = fun psc _norm_cb args ->
+        match args with
+        | [(a1, None); (a2, None)] ->
+            begin match try_unembed_simple EMB.e_int a1,
+                        try_unembed_simple EMB.e_int a2 with
+            | Some m, Some n ->
+              if Z.to_int_fs n <> 0
+              then Some (embed_simple EMB.e_int psc.psc_range (Z.div_big_int m n))
+              else None
+
+            | _ -> None
+            end
+        | _ -> failwith "Unexpected number of arguments"
+    in
     let bogus_cbs = {
         NBE.iapp = (fun h _args -> h);
         NBE.translate = (fun _ -> failwith "bogus_cbs translate");
@@ -574,8 +592,8 @@ let built_in_primitive_steps : prim_step_set =
          (PC.op_Division,
              2,
              0,
-             binary_int_op (fun x y -> Z.div_big_int x y),
-             NBETerm.binary_int_op (fun x y -> Z.div_big_int x y));
+             division_op,
+             NBETerm.division_op);
          (PC.op_LT,
              2,
              0,

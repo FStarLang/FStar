@@ -397,11 +397,13 @@ rule token args = parse
  | "!{" { BANG_LBRACE }
  | "[" { LBRACK }
  | "[|" { LBRACK_BAR }
+ | "{|" { LBRACE_BAR }
  | "<" {  if is_typ_app args lexbuf then TYP_APP_LESS else OPINFIX0c("<")  }
  | ">" {  if is_typ_app_gt () then TYP_APP_GREATER else symbolchar_parser args lexbuf }
  | "|>" { PIPE_RIGHT }
  | "]"  { RBRACK }
  | "|]" { BAR_RBRACK }
+ | "|}" { BAR_RBRACE }
  | "{" { LBRACE }
  | "|" { BAR }
  | "}" { RBRACE }

@@ -366,7 +366,17 @@ let splice (env:Env.env) (rng:Range.range) (tau:term) : list<sigelt> =
       BU.print1 "splice: got decls = %s\n"
                  (FStar.Common.string_of_list Print.sigelt_to_string sigelts);
 
-    let sigelts = List.map (fun se -> { se with sigrng = rng }) sigelts in
+    let sigelts = sigelts |> List.map (fun se ->
+        (* Check for bare Sig_datacon and Sig_inductive_typ, and abort if so. *)
+        begin match se.sigel with
+        | Sig_datacon _
+        | Sig_inductive_typ _ ->
+          Err.raise_error (Err.Error_BadSplice,
+                           (BU.format1 "Tactic returned bad sigelt: %s\nIf you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt." (Print.sigelt_to_string_short se))) rng
+        | _ -> ()
+        end;
+        { se with sigrng = rng })
+    in
     sigelts
     end
 
@@ -387,7 +397,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
     // eq2 is squashed already, so it's in Type0
     let goal = U.mk_squash U_zero (U.mk_eq2 u typ tm uvtm) in
     let gs, w = run_tactic_on_typ tau.pos tm.pos tau env goal in
-    // see comment in`synthesize`
+    // see comment in `synthesize`
     List.iter (fun g ->
         match getprop (goal_env g) (goal_type g) with
         | Some vc ->

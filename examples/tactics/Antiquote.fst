@@ -34,9 +34,6 @@ let _ = assert True
                 debug ("ty3 = " ^ term_to_string ty3);
                 ())
 
-(* TODO: When --use_extracted_interfaces is given, if we do
- * ignore (tc (cur_env ()) tm), the tactics get stuck. Investigate. *)
-
 let _ = assert True
             by (let y = True in
                 let tm = `(False ==> `@y) in

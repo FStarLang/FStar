@@ -41,7 +41,6 @@ let constructors = Hashtbl.create 0
 let operators = Hashtbl.create 0
 
 let () =
-  Hashtbl.add keywords "abstract"      ABSTRACT    ;
   Hashtbl.add keywords "attributes"    ATTRIBUTES  ;
   Hashtbl.add keywords "noeq"          NOEQUALITY  ;
   Hashtbl.add keywords "unopteq"       UNOPTEQUALITY  ;
@@ -172,9 +171,11 @@ let () =
    "[@", LBRACK_AT;
    "[", LBRACK;
    "[|", LBRACK_BAR;
+   "{|", LBRACE_BAR;
    "|>", PIPE_RIGHT;
    "]", RBRACK;
    "|]", BAR_RBRACK;
+   "|}", BAR_RBRACE;
    "{", LBRACE;
    "|", BAR;
    "}", RBRACE;
@@ -381,7 +382,7 @@ let regexp op_token =
   "u#" | "&" | "()" | "(" | ")" | "," | "~>" | "->" | "<--" |
   "<-" | "<==>" | "==>" | "." | "?." | "?" | ".[|" | ".[" | ".(|" | ".(" |
   "$" | "{:pattern" | ":" | "::" | ":=" | ";;" | ";" | "=" | "%[" |
-  "!{" | "[@@" | "[@" | "[|" | "[" | "|>" | "]" | "|]" | "{" | "|" | "}"
+  "!{" | "[@@" | "[@" | "[|" | "{|" | "[" | "|>" | "]" | "|]" | "|}" | "{" | "|" | "}"
 
 (* -------------------------------------------------------------------- *)
 let regexp xinteger =

@@ -63,7 +63,6 @@ type qualifier =
   | Unfold_for_unification_and_vcgen
   | Visible_default
   | Irreducible
-  | Abstract
   | Inline_for_extraction
   | NoExtract
   | Noeq
@@ -96,10 +95,10 @@ type comp_view =
     | C_Lemma of term * term * term
     | C_Eff of list<unit> * name * term * list<argv>
 
+type ctor = name * typ
 type sigelt_view =
     | Sg_Let of bool * fv * list<univ_name> * typ * term
-    | Sg_Inductive of name * list<univ_name> * list<binder> * typ * list<name> // name, params, type, constructors
-    | Sg_Constructor of name * typ
+    | Sg_Inductive of name * list<univ_name> * list<binder> * typ * list<ctor> // name, params, type, constructors
     | Unk
 
 type var = Z.t
@@ -215,9 +214,10 @@ let ref_Mk_bv =
     }
 
 (* quals *)
-let ref_Q_Explicit = fstar_refl_data_const "Q_Explicit"
-let ref_Q_Implicit = fstar_refl_data_const "Q_Implicit"
-let ref_Q_Meta     = fstar_refl_data_const "Q_Meta"
+let ref_Q_Explicit  = fstar_refl_data_const "Q_Explicit"
+let ref_Q_Implicit  = fstar_refl_data_const "Q_Implicit"
+let ref_Q_Meta      = fstar_refl_data_const "Q_Meta"
+let ref_Q_Meta_attr = fstar_refl_data_const "Q_Meta_attr"
 
 (* const *)
 let ref_C_Unit      = fstar_refl_data_const "C_Unit"
@@ -262,7 +262,6 @@ let ref_C_Eff     = fstar_refl_data_const "C_Eff"
 (* inductives & sigelts *)
 let ref_Sg_Let         = fstar_refl_data_const "Sg_Let"
 let ref_Sg_Inductive   = fstar_refl_data_const "Sg_Inductive"
-let ref_Sg_Constructor = fstar_refl_data_const "Sg_Constructor"
 let ref_Unk            = fstar_refl_data_const "Unk"
 
 (* qualifiers *)
@@ -272,7 +271,6 @@ let ref_qual_Private                          = fstar_refl_data_const "Private"
 let ref_qual_Unfold_for_unification_and_vcgen = fstar_refl_data_const "Unfold_for_unification_and_vcgen"
 let ref_qual_Visible_default                  = fstar_refl_data_const "Visible_default"
 let ref_qual_Irreducible                      = fstar_refl_data_const "Irreducible"
-let ref_qual_Abstract                         = fstar_refl_data_const "Abstract"
 let ref_qual_Inline_for_extraction            = fstar_refl_data_const "Inline_for_extraction"
 let ref_qual_NoExtract                        = fstar_refl_data_const "NoExtract"
 let ref_qual_Noeq                             = fstar_refl_data_const "Noeq"

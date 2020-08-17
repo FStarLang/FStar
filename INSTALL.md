@@ -1,87 +1,110 @@
 ## Table of Contents ##
 
+  * [Table of Contents](#table-of-contents)
   * [Online editor](#online-editor)
   * [OPAM package](#opam-package)
   * [Binary releases](#binary-releases)
     * [Testing a binary package](#testing-a-binary-package)
-    * [Homebrew formula for Mac OS X](#homebrew-formula-for-mac-os-x)
     * [Chocolatey Package on Windows](#chocolatey-package-on-windows)
-    * [Running F\* from a docker image](#running-f-from-a-docker-image)
-  * [Building F\* from sources](#building-f-from-sources)
+  * [Running F* from a docker image](#running-f-from-a-docker-image)
+  * [Building F* from the OCaml sources](#building-f-from-the-ocaml-sources)
     * [Prerequisites: Working OCaml setup](#prerequisites-working-ocaml-setup)
       * [Instructions for Windows](#instructions-for-windows)
       * [Instructions for Linux and Mac OS X](#instructions-for-linux-and-mac-os-x)
       * [Instructions for all OSes](#instructions-for-all-oses)
-    * [Step 1. Building F\* from the OCaml snapshot](#step-3-building-f-from-the-ocaml-snapshot)
-    * [Step 2. Extracting the sources of F\* itself to OCaml](#step-2-extracting-the-sources-of-f-itself-to-ocaml)
-  * [Runtime dependency: Z3 SMT solver](#runtime-dependency-z3-smt-solver)
+    * [Step 1. Building F* from the OCaml snapshot](#step-1-building-f-from-the-ocaml-snapshot)
+    * [Step 2l. Building the F* libraries](#step-2l-building-the-f-libraries)
+  * [Bootstrapping F* in OCaml](#bootstrapping-f-in-ocaml)
+    * [Step 1. Build an F* binary from OCaml snapshot](#step-1-build-an-f-binary-from-ocaml-snapshot)
+    * [Step 2b. Extract the sources of F* itself to OCaml](#step-2b-extract-the-sources-of-f-itself-to-ocaml)
+    * [Repeat Step 1](#repeat-step-1)
+  * [Runtime dependency: Particular version of Z3](#runtime-dependency-particular-version-of-z3)
 
 ## Online editor ##
 
 The easiest way to try out F\* quickly is directly in your browser by
-using either the [online F\* editor] that's part of the [F\* tutorial].
+using the [online F\* editor] that's part of the [F\* tutorial].
 
 [online F\* editor]: https://www.fstar-lang.org/run.php
 [F\* tutorial]: https://www.fstar-lang.org/tutorial
 
 ## OPAM package ##
 
-If the OCaml package manager (OPAM) is present on your platform, you can
-install the latest development version of F\* (`master` branch) and
-required dependencies (except for Z3) using the following commands:
+If the OCaml package manager (OPAM version 2.0 or later) is present on your platform,
+you can install the latest development version of F\* (`master` branch) and
+required dependencies ([except for Z3](#runtime-dependency-particular-version-of-z3))
+using the following command:
 
-        $ opam pin add fstar --dev-repo
-        $ opam install fstar
+    $ opam pin add fstar --dev-repo
+
+To instead install the latest released version you can use the following command
+(keeping in mind that you will often get an old version of F\* this way,
+so unless a release happened recently we don't really recommend it):
+
+    $ opam install fstar
 
 Note: To install OCaml and OPAM on your platform please read the
-[Working OCaml setup](#prerequisite-for-steps-2-and-3-working-ocaml-setup)
+[Working OCaml setup](#prerequisites-working-ocaml-setup)
 section further below, steps 0 to 3.
 
-Note: On MacOS you will additionally need to install `coreutils` via Homebrew or
-Macports for this to work (see [issue #469](https://github.com/FStarLang/FStar/issues/469)).
+Note: On MacOS you will additionally need to install `coreutils`
+via Homebrew or Macports for the OPAM package of F\* to work
+(see [issue #469](https://github.com/FStarLang/FStar/issues/469)).
 
 ## Binary releases ##
 
-Every now and then we release [F\* binaries on GitHub] (for Windows, Mac, and Linux)
-and for Windows and Linux we also provide **experimental** [automatic weekly builds].
-This is the easiest way to get F\* quickly running on your machine,
+Every year or so we release [F\* binaries on GitHub] (for Windows, Mac, and Linux)
+and for Windows and Linux we also try to provide [automatic weekly builds].
+This is a way to get F\* quickly running on your machine,
 but if the build you use is old you might be missing out on new
 features and bug fixes. Please do not report bugs in old releases
 until making sure they still exist in the `master` branch (see
-Building F\* from sources section below) or at least in the latest
-[automatic weekly builds].
+[OPAM package](#opam-package) above and
+[Building F\* from sources](#building-f-from-the-ocaml-sources) below)
+or in one of the recent [automatic weekly builds].
 
 [F\* binaries on GitHub]: https://github.com/FStarLang/FStar/releases
 [automatic weekly builds]: https://github.com/FStarLang/binaries/tree/master/weekly
 
 ### Testing a binary package ###
 
-Test that the binary is good by expanding the archive and running the
-following commands. (On Windows this requires Cygwin and `make`)
+You can test that the binary is good if you wish, by expanding the archive and
+running the following commands. (Note: On Windows this requires Cygwin and `make`)
 
 1. Add `fstar.exe` and `z3` to your `PATH`, either permanently
    or temporarily, for instance by running this:
 
-        $ export PATH=/path/to/z3/bin:/path/to/fstar/bin:$PATH
+        $ export PATH=/path/to/fstar/bin:$PATH
         $ fstar.exe --version
         F* 0.9.7.0~dev
         platform=Linux_x86_64
-        compiler=OCaml 4.05.0
+        compiler=OCaml 4.09.1
         date=yyyy-mm-ddThh:nn:ss+02:00
         commit=xxxxxxxx
         $ z3 --version
         Z3 version 4.8.5 - 64 bit
 
-   Note: if you are using the binary package and extracted it to,
-   say, the `fstar` directory, then both `fstar.exe` and `z3` are in
+   Note: if you are using the binary package and extracted it to, say, the
+   `fstar` directory, then both `fstar.exe` and the right version of `z3` are in
    the `fstar/bin` directory.
 
 2. Run the micro benchmarks:
 
         $ make -C tests/micro-benchmarks
 
-3. If you have OCaml installed and intend to extract and compile OCaml code
-   against the F* library, please build it with:
+3. Verify the F\* standard library, producing `.checked` files that cache
+   definitions to speed up subsequent usage:
+
+        $ make -C ulib -j6
+        $ echo $?    # non-zero means build failed! scroll up for error message!
+
+   Note: The option `-j6` controls the number of cores to be used in parallel build.
+         Using more cores results in greater RAM usage. This can make builds slow
+         if you do not have enough RAM to support all parallel builds. Consider monitoring
+         RAM usage when building, and use fewer cores if you are using 100% of your RAM.
+
+4. If you have a working OCaml setup and intend to extract and compile OCaml code
+   against our OCaml support library, please build it first with:
 
         $ make -C ulib install-fstarlib
 
@@ -89,39 +112,29 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ make -C examples/hello hello
 
-   See [here](https://github.com/FStarLang/FStar/wiki/Executing-F*-code) for
-   further documentation on extracting and executing F* code.
+   For more on extracting to OCaml, check out
+   [the documentation on extracting and executing F\* code](https://github.com/FStarLang/FStar/wiki/Executing-F*-code).
 
-   Note: to have a working OCaml install, please first read the
-   [Working OCaml
-   setup](#prerequisite-for-steps-2-and-3-working-ocaml-setup) section
-   further below, especially steps 0 to 3 to first install OCaml on
+   Note: If you still need to obtain a working OCaml setup, please read
+   [the corresponding section below](#prerequisites-working-ocaml-setup),
+   especially steps 0 to 3 to first install OCaml and OPAM on
    your OS; then use the following command to install the packages
    required to compile OCaml programs extracted from F\* code:
 
-        $ opam install ocamlfind batteries stdint zarith ppx_deriving ppx_deriving_yojson ocaml-migrate-parsetree process
+        $ opam install ocamlfind batteries stdint zarith yojson ppx_deriving ppx_deriving_yojson ocaml-migrate-parsetree process
 
-4. You can verify the F* library and all the examples,
-   keeping in mind that this might take a long time.
+5. (Optional) You can also verify all the examples, keep in mind that this will
+   take a long time, use a lot of resources, and there are also some quirks
+   explained in the notes below.
 
-        $ make -j6 -C ulib
+        $ make -C examples -j6
         $ echo $?    # non-zero means build failed! scroll up for error message!
-        $ make -j6 -C examples
-        $ echo $?    # non-zero means build failed! scroll up for error message!
 
-   Note: Some of the examples require having OCaml installed (as for step 3 above).
-
-   Note: Some of the examples require our
-         [OCaml support library](https://github.com/FStarLang/FStar/wiki/Executing-F*-code)
-         (as for step 3 above)
+   Note: As for step 4 above some of the examples require having OCaml installed
+         and some additionally our [OCaml support library](https://github.com/FStarLang/FStar/wiki/Executing-F*-code).
 
    Note: Some of the examples currently require having [KreMLin](https://github.com/FStarLang/kremlin)
          installed and the `KREMLIN_HOME` variable pointing to its location.
-
-   Note: The option `-j6` controls the number of cores to be used in parallel build.
-         Using more cores results in greater RAM usage. This can make builds slow
-         if you do not have enough RAM to support all parallel builds. Consider monitoring
-         RAM usage when building, and use fewer cores if you are using 100% of your RAM.
 
    Note: On Linux if you get a file descriptor exhaustion error that looks
          like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`
@@ -139,7 +152,7 @@ or
 
 you can find the package description [here](https://chocolatey.org/packages/FStar)
 
-### Running F\* from a docker image ###
+## Running F\* from a docker image ##
 
 An alternative to installing binaries is to install a docker image.
 We currently provide the following two on docker hub: `fstarlang/fstar-emacs`
@@ -149,33 +162,22 @@ The image is automatically kept up to date through a cloud build.
 You only have to install docker and an X server for your platform and you are good to go.
 See [Running F\* from a docker image](https://github.com/FStarLang/FStar/wiki/Running-F%2A-from-a-docker-image) for the details on how to use docker.
 
-## Building F\* from sources ##
+## Building F\* from the OCaml sources ##
 
-If you have a serious interest in F\* or want to report bugs then we recommend that you build F\* from the sources on GitHub (the `master` branch).
+If you have a serious interest in F\* then we recommend that you build F\* from the sources on GitHub (the `master` branch).
 
-**Short version**: Simply run `make -j 6` from the `master` branch of the clone.
-If it fails, check the "Working OCaml setup" prerequisite below.
+**Short version**:
+Once you have a [working OCaml setup](#prerequisites-working-ocaml-setup),
+simply run `make -j 6` from the `master` branch of the clone.
+This build process is explained in smaller steps [below](#step-1-building-f-from-the-ocaml-snapshot),
+but first we explain how to get a working OCaml setup on your machine.
 
-**Long version**: F* is written in a subset of F* itself and can generate OCaml or F# code from its own sources.
-Therefore, the standard bootstrap build process of F\* involves the following three steps:
-
-  **Step 1.** Build F\* using the OCaml compiler from the (possibly outdated) checked-in generated OCaml code.
-
-  **Step 2.** Extract the sources of F\* itself to OCaml using the F\* binary produced at step 1.
-
-  **Step 3.** Repeat step 1: rebuild F\* from the newly generated OCaml code in the previous step.
-
-Some convenience Makefile targets are available:
-
-- To run steps 2 and 1, do `make -C src -j6 fstar-ocaml`.
-- To run steps 1, 2 and 1 again (step 3), do: `make -C src -j6 ocaml-fstar-ocaml`.
-
-**Note:** If you build F\* from sources you will also need to get a Z3 binary.
-          This is further explained towards the end of this document.
+**Note:** To use F\* you will also need to [get a particular version of Z3](#runtime-dependency-particular-version-of-z3).
 
 ### Prerequisites: Working OCaml setup  ###
 
-The steps require a working OCaml setup. OCaml version from 4.05.X to 4.09.1 should work.
+The steps require a working OCaml setup. OCaml version from 4.04.0 to 4.09.X should work.
+Versions outside this range are known not to work.
 
 #### Instructions for Windows ####
 
@@ -196,7 +198,7 @@ The steps require a working OCaml setup. OCaml version from 4.05.X to 4.09.1 sho
   $ opam install depext depext-cygwinports
   ```
 
-Then follow step 4 in "Instructions for all OSes" below.
+Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) below.
 
 #### Instructions for Linux and Mac OS X ####
 
@@ -206,9 +208,9 @@ Then follow step 4 in "Instructions for all OSes" below.
 
 1. Install OPAM (version 2.0 or later).
 
-   - Installation instructions are available at various places
-     (e.g., https://dev.realworldocaml.org/install.html
-     or http://opam.ocaml.org/doc/Install.html).
+   - Installation instructions are available at
+     [various](http://opam.ocaml.org/doc/Install.html)
+     [places](https://dev.realworldocaml.org/install.html).
 
 2. Initialize and configure OPAM
 
@@ -221,7 +223,8 @@ Then follow step 4 in "Instructions for all OSes" below.
 
    - Type `opam switch list`. The current OCaml version used by opam
      is identified by the letter C. If it is not within the version
-     range required by F\* (see above), type `opam switch list-available`
+     range required by F\* ([see above](#prerequisites-working-ocaml-setup)),
+     type `opam switch list-available`
      to see what versions are available and then `opam switch <version-number>`.
 
    - Afterwards you can also install the `depext` package,
@@ -230,16 +233,20 @@ Then follow step 4 in "Instructions for all OSes" below.
      $ opam install depext
      ```
 
-  Then follow step 4 below.
+  Then follow [step 4](#instructions-for-all-oses) below.
 
 #### Instructions for all OSes ####
 
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process ocaml-migrate-parsetree
   ```
-  
+
+  **Note:** This list of opam packages is longer than the list in the
+  [Testing a binary package](#testing-a-binary-package) section above,
+  because the additional packages here are necessary to compile F\*.
+
   **Note:** Some of these opam packages depend on binary packages that you need to install locally
   (eg, using your Linux package manager). So if the command above gives you errors like this:
   ```sh
@@ -256,42 +263,86 @@ Then follow step 4 in "Instructions for all OSes" below.
   ```sh
   The code execution cannot proceed because libgmp-10.dll was not found. Reinstall the program may fix this problem.
   ```
-  
-  **Note:** This list of opam packages is longer than the list in the
-  [Testing a binary package](#testing-a-binary-package) section above,
-  because the additional packages here are necessary to compile F\*.
 
 ### Step 1. Building F\* from the OCaml snapshot ###
 
-Once you have a working OCaml setup (see above)
-just run the following command:
+Once you have a working OCaml setup (see above) just run the following command:
 
-        $ make -C src/ocaml-output -j6
+    $ make 1 -j6
 
-**Note:** On Windows this generates a native F\* binary, that is, a binary that
-does *not* depend on `cygwin1.dll`, since the installer above uses a
+As explained in more detail [below](#bootstrapping-f-in-ocaml), a snapshot of
+the F\* sources extracted to OCaml is checked in the F\* repo and regularly
+updated, and the command above will simply build an F\* binary out of that snapshot.
+
+**Note:** On Windows this generates a *native* F\* binary, that is, a binary
+that does *not* depend on `cygwin1.dll`, since
+[the installer above](#instructions-for-windows) uses a
 *native* Windows port of OCaml.  Cygwin is just there to provide `make` and
 other utilities required for the build.
 This also means that when linking C libraries with OCaml compiled objects one
 needs to use the *correct* mingw libraries and *not* the Cygwin ones. OCaml uses
-special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
-`examples/crypto` for examples.
+special `flexlink` technology for this. See `examples/crypto` and
+`contrib/CoreCrypto/ml` for examples.
 
-### Step 2. Extracting the sources of F\* itself to OCaml ###
+### Step 2l. Building the F\* libraries ###
 
-0. Get an F\* binary using the the OCaml build process (step 1 above).
+A convenience make target exists for this:
 
-1. Make sure you follow the instructions above to get a working OCaml setup.
+    $ make libs -j6
+
+It does two things:
+
+1. It verifies the F\* standard library, producing `.checked` files that cache
+   definitions to speed up subsequent usage. You can do this part separately with:
+
+        $ make -C ulib -j6
+
+2. It builds the various OCaml libraries (`fstar-compiler-lib`, `fstarlib`,
+   `fstartaclib`), needed for building OCaml code extracted from F\*, native
+   tactics, etc. You can build this part separately with:
+
+        $ make -C ulib/ml -j6
+
+## Bootstrapping F\* in OCaml
+
+F\* is written in a subset of F\* itself and can generate OCaml code from its own sources.
+Therefore, the standard bootstrap build process of F\* involves the following three steps:
+
+  **Step 1.** Build F\* using the OCaml compiler from the (possibly outdated) checked-in generated OCaml snapshot.
+
+  **Step 2b.** Extract the sources of F\* itself to OCaml using the F\* binary produced at step 1.
+
+  **Repeat step 1**: Rebuild F\* from the newly generated OCaml code in the previous step.
+
+A convenience Makefile target is available to run all three steps:
+
+    $ make boot -j6
+
+### Step 1. Build an F\* binary from OCaml snapshot ###
+
+[Get an F\* binary using the the OCaml build process](#step-1-building-f-from-the-ocaml-snapshot):
+
+    $ make 1 -j6
+
+### Step 2b. Extract the sources of F\* itself to OCaml ###
+
+1. Make sure you follow the instructions above to get a [working OCaml setup]().
 
 2. Once you satisfy the prerequisites for your platform,
    translate the F\* sources to OCaml using F\* by running:
 
         $ make ocaml -C src -j6
 
-## Runtime dependency: Z3 SMT solver ##
+### Repeat [Step 1](#step-1-build-an-f-binary-from-ocaml-snapshot)
 
-To use F\* for verification you need a Z3 binary.
+## Runtime dependency: Particular version of Z3 ##
+
+To use F\* for verification you need a particular Z3 binary.
 Our binary packages include that already in `bin`, but if you compile
-F\* from sources you need to get a Z3 binary yourself and add it to
-your `PATH`. We recommend you use the Everest tested binaries here:
+F\* from sources you need to get the Z3 binary yourself and add it to
+your `PATH`. We strongly recommend to use the corresponding binary here:
 https://github.com/FStarLang/binaries/tree/master/z3-tested
+
+Other versions of Z3 may well work, but the F* tests, standard library, and
+examples take a strong dependency on the particular Z3 binary above.
+They will likely fail to verify with any other Z3 version.

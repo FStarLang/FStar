@@ -71,7 +71,8 @@ type pcm (a:Type u#a) = {
   comm:lem_commutative p;
   assoc: lem_assoc_l p;
   assoc_r: lem_assoc_r p;
-  is_unit: lem_is_unit p
+  is_unit: lem_is_unit p;
+  refine: a -> prop
 }
 
 (**** Derived predicates *)
@@ -183,3 +184,47 @@ let exclusive_is_frame_preserving (#a: Type u#a) (p:pcm a) (x:a)
 (** Two elements are joinable when they can evolve to a common point. *)
 let joinable #a (p:pcm a) (x y : a) : prop =
   exists z. compatible p x z /\ compatible p y z
+
+let frame_compatible #a (p:pcm a) (x:FStar.Ghost.erased a) (v y:a) =
+  (forall (frame:a). {:pattern (composable p x frame)}
+            composable p x frame /\
+            v == op p x frame ==>
+            composable p y frame /\
+            v == op p y frame)
+
+
+(** A frame-preserving update set on a PCM p, specified in two
+    parts:
+
+    1. To update a share of a PCM from [x] to [y]:
+        - Given a full value [v] compatible with [x] (i.e. exists f. op p x f = v)
+
+        + Produce a value [z] compatible with [y] (i.e.,
+          the final heap satisfies [pts_to r y])
+
+          - if v is a refined value then so is z,
+            and respects the preorder of frame_preserving updates on refined values
+*)
+let frame_preserving_upd_0 #a (p:pcm a) (x y:a) =
+    v:a{compatible p x v}
+  -> Tot (z:a{
+            compatible p y z /\
+             (p.refine v ==> p.refine z) /\
+             (p.refine v ==> frame_preserving p v z)})
+
+(** Further, the update respects PCM frames:
+
+    For any [frame] composable with the value [v] being updated,
+    [f] only updates the [v] part of [op p v frame] to [z], obtaining
+    [op p z frame]
+ *)
+let frame_preserving_upd #a (p:pcm a) (x y:a) =
+  f:frame_preserving_upd_0 p x y {
+     forall (v:a{compatible p x v}).
+         let z = f v in
+         (forall (frame:a). {:pattern (composable p v frame)}
+              composable p v frame ==>
+              composable p z frame /\
+              (compatible p x (op p v frame) ==>
+              (op p z frame == f (op p v frame))))
+  }

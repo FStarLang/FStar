@@ -292,6 +292,10 @@ and lazy_kind =
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * tscheme
+  (* ^ Not a tscheme: the universe names must be taken
+   * as fixed (and opened in the type). This is important since
+   * we do not support universe-polymorphic recursion.
+   * See #2106. *)
   | Binding_univ     of univ_name
 and tscheme = list<univ_name> * typ
 and gamma = list<binding>
@@ -317,7 +321,6 @@ type qualifier =
   | Unfold_for_unification_and_vcgen       //a definition that *should* always be unfolded by the normalizer
   | Visible_default                        //a definition that may be unfolded by the normalizer, but only if necessary (default)
   | Irreducible                            //a definition that can never be unfolded by the normalizer
-  | Abstract                               //a symbol whose definition is only visible within the defining module
   | Inline_for_extraction                  //a symbol whose definition must be unfolded when compiling the program
   | NoExtract                              // a definition whose contents won't be extracted (currently, by KreMLin only)
   | Noeq                                   //for this type, don't generate HasEq
@@ -429,7 +432,7 @@ type sigelt' =
                           * list<lident>               //all the inductive types and data constructor names in this bundle
   | Sig_datacon           of lident                    //name of the datacon
                           * univ_names                 //universe variables of the inductive type it belongs to
-                          * typ                        //the constructor's type as an arrow
+                          * typ                        //the constructor's type as an arrow (including parameters)
                           * lident                     //the inductive type of the value this constructs
                           * int                        //and the number of parameters of the inductive
                           * list<lident>               //mutually defined types
@@ -471,7 +474,6 @@ type sigelts = list<sigelt>
 type modul = {
   name: lident;
   declarations: sigelts;
-  exports: sigelts;
   is_interface:bool
 }
 let mod_name (m: modul) = m.name
