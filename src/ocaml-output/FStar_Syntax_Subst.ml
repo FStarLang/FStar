@@ -1793,7 +1793,7 @@ let rec (deep_compress :
             let uu___3 = deep_compress t2 in (uu___2, uu___3) in
           FStar_Syntax_Syntax.Tm_let uu___1 in
         mk uu___
-    | FStar_Syntax_Syntax.Tm_uvar (u, s) ->
+    | FStar_Syntax_Syntax.Tm_uvar uu___ ->
         FStar_Errors.raise_err
           (FStar_Errors.Error_UnexpectedUnresolvedUvar,
             "Internal erorr: unexpected unresolved uvar in deep_compress")
