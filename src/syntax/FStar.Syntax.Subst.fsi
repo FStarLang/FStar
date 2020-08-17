@@ -67,3 +67,6 @@ val set_use_range: Range.range -> term -> term
 val open_term_1   : binder   -> term -> binder * term
 val open_term_bvs : list<bv> -> term -> list<bv> * term
 val open_term_bv  : bv       -> term -> bv * term
+
+(* Removes all delayed substitutions and resolved uvar nodes in a term *)
+val deep_compress : term -> term
