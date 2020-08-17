@@ -1,0 +1,20 @@
+[
+  "\u0010to†¿àÃ>#9®¾Lëž\u000e",
+  [
+    [
+      "Monotonic.Map.grows_aux",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive", "equation_Monotonic.Map.map",
+        "interpretation_Tm_abs_eb9667aafe7626bbc595b00f3cf5d0fc",
+        "l_quant_interp_3439469e67c044de57ce8f8134ebf267"
+      ],
+      0,
+      "607ad4dc6d95d6d006500e31cbbf8046"
+    ]
+  ]
+]

@@ -108,13 +108,13 @@
     <Compile Include="FStar.FunctionalExtensionality.fst" />
     <Compile Include="FStar.StrongExcludedMiddle.fst" />
     <Compile Include="FStar.PropositionalExtensionality.fst" />
-    <!-- <Compile Include="FStar.PredicateExtensionality.fst" /> -->
+    <Compile Include="FStar.PredicateExtensionality.fst" />
     <Compile Include="fs/FStar_Map.fs" Link="FStar_Map.fs" /> <!-- TODO: Map is 'almost' extracted. 
                                                                          It lacks only the constraint on the key and there's an issue 
                                                                          with erasure of 'key:eqtype implicit parameter on map_val 
                                                               -->
     <!-- <Compile Include="FStar.Map.fst" /> --> <!-- TODO: Doesn't work with current implementation of Set (see TODO note on Set) -->
-    <!-- <Compile Include="FStar.Monotonic.Witnessed.fst" /> -->
+    <Compile Include="FStar.Monotonic.Witnessed.fst" />
     <Compile Include="FStar.List.Tot.Properties.fst" />
     <Compile Include="FStar.Monotonic.HyperHeap.fst" />
     <Compile Include="FStar.Monotonic.HyperStack.fst" /> 
@@ -122,7 +122,7 @@
     <Compile Include="fs\FStar_HyperStack_All.fs" Link="FStar_HyperStack_All.fs" />
     <Compile Include="fs\FStar_HyperStack_ST.fs" Link="FStar_HyperStack_ST.fs" />
     <Compile Include="fs\FStar_HyperStack_IO.fs" Link="FStar_HyperStack_IO.fs" />
-    <!-- <Compile Include="FStar.Monotonic.Map.fst" /> -->
+    <!--<Compile Include="FStar.Monotonic.Map.fst" /> --> <!-- TODO: Issues with unused parameters in type abbreviations related to FStar_HyperStack_ST.fs -->
     <Compile Include="FStar.Seq.Base.fst" />
     <Compile Include="FStar.Seq.Properties.fst" />
     <Compile Include="FStar.Seq.fst" />
@@ -157,7 +157,7 @@
     <!-- <Compile Include="FStar.Crypto.fst" /> -->
     <!-- <Compile Include="LowStar.ModifiesPat.fst" /> -->
     <Compile Include="FStar.Int128.fst" />
-    <Compile Include="FStar.Integers.fst" /> <!-- TODO: Issue with unsafe_coerce -->
+    <!-- <Compile Include="FStar.Integers.fst" /> --> <!-- TODO: Issue with unsafe_coerce -->
     <!-- <Compile Include="LowStar.Vector.fst" /> -->
     <!-- <Compile Include="LowStar.Regional.fst" /> -->
     <!-- <Compile Include="LowStar.RVector.fst" /> -->
@@ -231,7 +231,7 @@
     <Compile Include="FStar.Monotonic.Heap.fsti" />
      <Compile Include="FStar.Monotonic.HyperHeap.fsti" />
     <Compile Include="FStar.Monotonic.HyperStack.fsti" />
-    <!-- <Compile Include="FStar.Monotonic.Witnessed.fsti" /> -->
+    <Compile Include="FStar.Monotonic.Witnessed.fsti" />
     <Compile Include="FStar.Pervasives.fsti" />
     <Compile Include="FStar.Range.fsti" />
     <!-- <Compile Include="FStar.Real.fsti" /> -->
