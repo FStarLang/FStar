@@ -1,20 +1,35 @@
 >> Got issues: [
 Bug2021.fst(5,15-5,16): (Error 66) Failed to resolve implicit argument ?2 of type Type introduced for user-provided implicit term at Bug2021.fst(5,15-5,16)
+> While typechecking the top-level declaration `let test0`
+> While typechecking the top-level declaration `[@@expect_failure] let test0`
 >>]
 >> Got issues: [
 Bug2021.fst(10,8-10,9): (Error 66) Failed to resolve implicit argument ?2 of type Type introduced for user-provided implicit term at Bug2021.fst(10,8-10,9)
+> While typechecking the top-level declaration `let test1`
+> While typechecking the top-level declaration `[@@expect_failure] let test1`
 >>]
 >> Got issues: [
 Bug2021.fst(16,12-16,13): (Error 66) Failed to resolve implicit argument ?3 of type Type introduced for user-provided implicit term at Bug2021.fst(16,12-16,13)
+> While typechecking the top-level declaration `let test2`
+> While typechecking the top-level declaration `[@@expect_failure] let test2`
 >>]
 >> Got issues: [
-Bug2021.fst(24,13-24,14): (Error 66) Failed to resolve implicit argument ?9 of type Prims.int introduced for Instantiating implicit argument in application (see also Bug2021.fst(23,11-23,12))
+Bug2021.fst(24,13-24,14): (Error 66) Failed to resolve implicit argument ?9 of type Prims.int introduced for Instantiating implicit argument in application
+> While typechecking the top-level declaration `let test3`
+> While typechecking the top-level declaration `[@@expect_failure] let test3`
+  (see also Bug2021.fst(23,11-23,12))
 >>]
 >> Got issues: [
-Bug2021.fst(30,13-30,17): (Error 66) Failed to resolve implicit argument ?10 of type Prims.int introduced for Instantiating implicit argument in application (see also Bug2021.fst(29,11-29,12))
+Bug2021.fst(30,13-30,17): (Error 66) Failed to resolve implicit argument ?10 of type Prims.int introduced for Instantiating implicit argument in application
+> While typechecking the top-level declaration `let test4`
+> While typechecking the top-level declaration `[@@expect_failure] let test4`
+  (see also Bug2021.fst(29,11-29,12))
 >>]
 >> Got issues: [
-Bug2021.fst(38,13-38,17): (Error 66) Failed to resolve implicit argument ?13 of type Prims.int introduced for Instantiating implicit argument in application (see also Bug2021.fst(37,11-37,12))
+Bug2021.fst(38,13-38,17): (Error 66) Failed to resolve implicit argument ?13 of type Prims.int introduced for Instantiating implicit argument in application
+> While typechecking the top-level declaration `let test5`
+> While typechecking the top-level declaration `[@@expect_failure] let test5`
+  (see also Bug2021.fst(37,11-37,12))
 >>]
 Verified module: Bug2021
 All verification conditions discharged successfully

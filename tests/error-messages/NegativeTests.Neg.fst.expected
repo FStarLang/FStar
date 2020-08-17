@@ -1,35 +1,64 @@
 >> Got issues: [
-NegativeTests.Neg.fst(20,8-20,10): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(646,18-646,24))
+NegativeTests.Neg.fst(20,8-20,10): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let x`
+> While typechecking the top-level declaration `[@@expect_failure] let x`
+  (see also prims.fst(646,18-646,24))
 >>]
 >> Got issues: [
-NegativeTests.Neg.fst(24,8-24,10): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(646,18-646,24))
+NegativeTests.Neg.fst(24,8-24,10): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let y`
+> While typechecking the top-level declaration `[@@expect_failure] let y`
+  (see also prims.fst(646,18-646,24))
 >>]
 >> Got issues: [
 NegativeTests.Neg.fst(27,30-27,35): (Error 19) assertion failed; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let assert_0_eq_1`
+> While typechecking the top-level declaration `[@@expect_failure] let assert_0_eq_1`
 >>]
 >> Got issues: [
 NegativeTests.Neg.fst(30,28-31,15): (Error 19) Patterns are incomplete; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let hd_int_inexhaustive`
+> While typechecking the top-level declaration `[@@expect_failure] let hd_int_inexhaustive`
 >>]
 >> Got issues: [
-NegativeTests.Neg.fst(38,32-38,42): (Error 19) assertion failed; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also NegativeTests.Neg.fst(33,44-33,57))
+NegativeTests.Neg.fst(38,32-38,42): (Error 19) assertion failed; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let test_precondition_label`
+> While typechecking the top-level declaration `[@@expect_failure] let test_precondition_label`
+  (see also NegativeTests.Neg.fst(33,44-33,57))
 >>]
 >> Got issues: [
-NegativeTests.Neg.fst(42,33-42,34): (Error 19) could not prove post-condition; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also NegativeTests.Neg.fst(40,83-40,88))
+NegativeTests.Neg.fst(42,33-42,34): (Error 19) could not prove post-condition; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let test_postcondition_label`
+> While typechecking the top-level declaration `[@@expect_failure] let test_postcondition_label`
+  (see also NegativeTests.Neg.fst(40,83-40,88))
 >>]
 >> Got issues: [
-NegativeTests.Neg.fst(46,30-46,31): (Error 19) Subtyping check failed; expected type _: FStar.Pervasives.Native.option 'a {Some? _}; got type FStar.Pervasives.Native.option 'a; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also FStar.Pervasives.Native.fst(33,4-33,8))
+NegativeTests.Neg.fst(46,30-46,31): (Error 19) Subtyping check failed; expected type _: FStar.Pervasives.Native.option 'a {Some? _}; got type FStar.Pervasives.Native.option 'a; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let bad_projector`
+> While typechecking the top-level declaration `[@@expect_failure] let bad_projector`
+  (see also FStar.Pervasives.Native.fst(33,4-33,8))
 >>]
 >> Got issues: [
-NegativeTests.Neg.fst(50,45-50,47): (Error 19) Subtyping check failed; expected type _: FStar.Pervasives.result Prims.int {V? _}; got type FStar.Pervasives.result Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also FStar.Pervasives.fsti(239,4-239,5))
+NegativeTests.Neg.fst(50,45-50,47): (Error 19) Subtyping check failed; expected type _: FStar.Pervasives.result Prims.int {V? _}; got type FStar.Pervasives.result Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `val NegativeTests.Neg.test`
+> While typechecking the top-level declaration `[@@expect_failure] val NegativeTests.Neg.test`
+  (see also FStar.Pervasives.fsti(239,4-239,5))
 >>]
 >> Got issues: [
-NegativeTests.Neg.fst(55,25-55,26): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel (see also prims.fst(646,18-646,24))
+NegativeTests.Neg.fst(55,25-55,26): (Error 19) Subtyping check failed; expected type Prims.nat; got type Prims.int; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let h1`
+> While typechecking the top-level declaration `[@@expect_failure] let h1`
+  (see also prims.fst(646,18-646,24))
 >>]
 >> Got issues: [
 NegativeTests.Neg.fst(59,0-60,17): (Error 309) Type annotation _: Type0{NegativeTests.Neg.phi_1510} for inductive NegativeTests.Neg.t is not Type or eqtype, or it is eqtype but contains unopteq qualifier
+> While typechecking the top-level declaration `type NegativeTests.Neg.t`
+> While typechecking the top-level declaration `[@@expect_failure] type NegativeTests.Neg.t`
 >>]
 >> Got issues: [
 NegativeTests.Neg.fst(63,0-63,32): (Error 309) Type annotation _: Type{Prims.l_False} for inductive NegativeTests.Neg.t2 is not Type or eqtype, or it is eqtype but contains unopteq qualifier
+> While typechecking the top-level declaration `type NegativeTests.Neg.t2`
+> While typechecking the top-level declaration `[@@expect_failure] type NegativeTests.Neg.t2`
 >>]
 NegativeTests.Neg.fst(18,4-18,5): (Warning 240) Admitting NegativeTests.Neg.x without a definition
 NegativeTests.Neg.fst(22,4-22,5): (Warning 240) Admitting NegativeTests.Neg.y without a definition
