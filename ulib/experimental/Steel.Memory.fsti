@@ -290,16 +290,6 @@ let preserves_frame (e:inames) (pre post:slprop) (m0 m1:mem) =
     (interp ((post `star` frame) `star` locks_invariant e m1) m1 /\
      (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)))
 
-(** [sel] is a ghost read of the value contained in a heap reference *)
-val sel (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (m:hmem (ptr r)) : a
-
-(** [sel_v] is a ghost read of the value contained in a heap reference *)
-val sel_v (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:hmem (pts_to r v))
-  : v':a{ compatible pcm v v' /\
-          interp (ptr r) m /\
-          v' == sel r m }
-
-
 (**
   To guarantee that the memory always evolve according to frame-preserving updates,
   we encode it into the [MstTot] effect build on top of the non-deterministic state total

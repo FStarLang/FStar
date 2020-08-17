@@ -21,8 +21,7 @@ module Map = FStar.Map
 
 
 open FStar.FunctionalExtensionality
-open Steel.PCM
-module PCMBase = Steel.PCM.Base
+open FStar.PCM
 
 open Steel.Effect
 open Steel.Memory
@@ -37,26 +36,27 @@ let generic_index: unit -> Tot unit = (fun () -> ())
 #set-options "--fuel 0 --ifuel 1"
 
 let update_x
-  (r: ref (option u32_pair) u32_pair_pcm)
+  (r: ref u32_pair_stored u32_pair_stored_pcm)
   (old_pair: Ghost.erased u32_pair)
   (new_val: UInt32.t)
     : SteelT unit
-      (pts_to r (Some (Ghost.reveal old_pair)))
-      (fun _ -> pts_to r (Some ({ old_pair with x = new_val})))
+      (pts_to r (Full (Ghost.reveal old_pair)))
+      (fun _ -> pts_to r (Full ({ old_pair with x = new_val})))
   =
-  let real_old_pair =  read r (Some (Ghost.reveal old_pair)) in
-  let new_pair = (Some ({Some?.v real_old_pair with x = new_val })) in
-  write r (Some (Ghost.reveal old_pair)) new_pair
+  let Full real_old_pair =  read r (Full (Ghost.reveal old_pair)) in
+  let new_pair = (Full ({real_old_pair with x = new_val })) in
+  write r (Full (Ghost.reveal old_pair)) new_pair
 
 let get_x
-  (r: ref (option u32_pair) u32_pair_pcm)
+  (r: ref u32_pair_stored u32_pair_stored_pcm)
   (pair: Ghost.erased u32_pair)
     : SteelT (x:UInt32.t{pair.x == x})
-      (pts_to r (Some (Ghost.reveal pair)))
-      (fun x -> (pts_to r (Some (Ghost.reveal pair))))
+      (pts_to r (Full (Ghost.reveal pair)))
+      (fun x -> (pts_to r (Full (Ghost.reveal pair))))
   =
-  let real_pair = read r (Some (Ghost.reveal pair)) in
-  (Some?.v real_pair).x
+  let Full real_pair = read r (Full (Ghost.reveal pair)) in
+  real_pair.x
+
 
 let increment_generic
   (#cls: rw_pointer UInt32.t)
@@ -69,56 +69,61 @@ let increment_generic
   let old_v = cls.pointer_get r v in
   cls.pointer_upd r v (UInt32.add old_v 1ul)
 
-let u32_pair_get : rw_pointer_get_sig u32_pair u32_pair_ref slu32_pair =
-  fun r g_pair ->
-    let Some (Full pair) = read r (Some (Full (Ghost.reveal g_pair))) in
-    pair
-
-let u32_pair_upd: rw_pointer_upd_sig u32_pair u32_pair_ref slu32_pair =
-  fun r g_pair v ->
-    let Some (Full pair) = read r (Some (Full (Ghost.reveal g_pair))) in
-    write r (Some (Full (Ghost.reveal g_pair))) (Some (Full v))
 
 let u32_pair_x_field_get
   : rw_pointer_get_sig UInt32.t u32_pair_x_field_ref slu32_pair_x_field
   =
   fun r g_x ->
-    match read r (Some (XField g_x)) with
-    | Some (XField x) -> x
-    | Some (Full pair) -> pair.x
+    match read r (XField g_x) with
+    | XField x -> x
+    | Full pair -> pair.x
 
 let u32_pair_x_field_upd
   : rw_pointer_upd_sig UInt32.t u32_pair_x_field_ref slu32_pair_x_field
   =
   fun r g_x v ->
-   let fake_stored = Ghost.hide (Some (XField g_x)) in
-   let new_val = Some (XField v) in
-   frame_preserving_intro u32_pair_stored_pcm fake_stored new_val
-     (fun frame -> ())
-     (fun frame ->
-       match frame with
-       | Some (YField fy) ->
-         assert(op u32_pair_stored_pcm frame new_val == Some (Full ({y = fy; x = v})));
-         assume(op u32_pair_stored_pcm frame new_val == new_val)
-       | _ -> ()
-     );
-   write r (Some (XField g_x)) new_val
+   let fake_stored = Ghost.hide (XField g_x) in
+   let update_val : frame_preserving_upd_0 u32_pair_stored_pcm fake_stored (XField v) =
+     fun old_pair -> match old_pair with
+     | XField _ -> XField v
+     | Full old_pair -> Full ({old_pair with x = v})
+   in
+   Steel.Effect.add_action (upd_gen Set.empty r fake_stored (XField v) update_val)
 
 let u32_pair_y_field_get
   : rw_pointer_get_sig UInt32.t u32_pair_y_field_ref slu32_pair_y_field
   =
   fun r g_y ->
-    match read r (Some (YField g_y)) with
-    | Some (YField y) -> y
-    | Some (Full pair) -> pair.y
+    match read r (YField g_y) with
+    | YField y -> y
+    | Full pair -> pair.y
 
 let u32_pair_y_field_upd
   : rw_pointer_upd_sig UInt32.t u32_pair_y_field_ref slu32_pair_y_field
   =
-  admit()
+  fun r g_y v ->
+   let fake_stored = Ghost.hide (YField g_y) in
+   let update_val : frame_preserving_upd_0 u32_pair_stored_pcm fake_stored (YField v) =
+     fun old_pair -> match old_pair with
+     | YField _ -> YField v
+     | Full old_pair -> Full ({old_pair with y = v})
+   in
+   Steel.Effect.add_action (upd_gen Set.empty r fake_stored (YField v) update_val)
+
+let u32_pair_get : rw_pointer_get_sig u32_pair u32_pair_ref slu32_pair =
+  fun r g_pair ->
+    let Full pair = read r (Full (Ghost.reveal g_pair)) in
+    pair
+
+let u32_pair_upd: rw_pointer_upd_sig u32_pair u32_pair_ref slu32_pair =
+  fun r g_pair v ->
+    let Full pair = read r (Full (Ghost.reveal g_pair)) in
+    write r (Full (Ghost.reveal g_pair)) (Full v)
+
 
 let recombinable (r: u32_pair_ref) (r12: u32_pair_x_field_ref & u32_pair_y_field_ref) : prop
-  = admit()
+  =
+  let (r1, r2) = r12 in r == r1 /\ r == r2
 
 let explose_u32_pair_into_x_y (r: u32_pair_ref) (pair: u32_pair)
   : SteelT (r12:(u32_pair_x_field_ref & u32_pair_y_field_ref){recombinable r r12})
@@ -127,16 +132,17 @@ let explose_u32_pair_into_x_y (r: u32_pair_ref) (pair: u32_pair)
     slu32_pair_x_field r1 pair.x `star`
     slu32_pair_y_field r2 pair.y)
   =
-  Steel.SteelT.Basics.h_admit _ _
+  Steel.Effect.add_action (split_action Set.empty r (XField pair.x) (YField pair.y));
+  (r, r)
 
 let recombine_u32_pair_from_x_y
   (r: u32_pair_ref)
   (r1: u32_pair_x_field_ref)
   (v1: UInt32.t)
-  (r2: u32_pair_y_field_ref)
+  (r2: u32_pair_y_field_ref{recombinable r (r1, r2)})
   (v2: UInt32.t)
   : SteelT unit
     (slu32_pair_x_field r1 v1 `star` slu32_pair_y_field r2 v2)
     (fun _ -> slu32_pair r ({ x = v1; y = v2}))
   =
-  Steel.SteelT.Basics.h_admit _ _
+  Steel.Effect.add_action (gather_action Set.empty r (XField v1) (YField v2))
