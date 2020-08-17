@@ -25,6 +25,8 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Util
 open FStar.Ident
+
+module Err = FStar.Errors
 module U = FStar.Util
 module S = FStar.Syntax.Syntax
 
@@ -866,12 +868,9 @@ let rec deep_compress (t:term) : term =
     | Tm_uvar(u,s) ->
       // GM: Currently, this function is only called from the normalizer
       // on a sigelt that has already been typechecked, so this case should
-      // be impossible (an unresolved uvar should be reason to abort). However
-      // this function could potentially be called elsewhere, so we handle
-      // this case gracefully. An option is to take a flag stating whether
-      // unresolved uvars are allowed or not.
-
-      mk (Tm_uvar(u,s)) //explicitly don't descend into (bs,t) to not break sharing there
+      // be impossible.
+      Err.raise_err (Err.Error_UnexpectedUnresolvedUvar,
+                     "Internal erorr: unexpected unresolved uvar in deep_compress")
 
     | Tm_quoted (tm, qi) ->
       let qi = S.on_antiquoted deep_compress qi in
@@ -933,9 +932,12 @@ and deep_compress_univ (u:universe) : universe =
   | U_zero
   | U_bvar _
   | U_name _
-  | U_unif _ // should not happen?
   | U_unknown ->
     u
+
+  | U_unif _ ->
+      Err.raise_err (Err.Error_UnexpectedUnresolvedUvar,
+                     "Internal erorr: unexpected unresolved (universe) uvar in deep_compress")
 
 and deep_compress_meta = function
   | Meta_pattern (names, args) ->
