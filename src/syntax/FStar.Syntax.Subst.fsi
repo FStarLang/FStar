@@ -68,5 +68,6 @@ val open_term_1   : binder   -> term -> binder * term
 val open_term_bvs : list<bv> -> term -> list<bv> * term
 val open_term_bv  : bv       -> term -> bv * term
 
-(* Removes all delayed substitutions and resolved uvar nodes in a term *)
+(* Removes all delayed substitutions and resolved uvar nodes in a term.
+Raises a hard error if an *unresolved* uvar (term or universe) remains. *)
 val deep_compress : term -> term
