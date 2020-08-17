@@ -996,16 +996,18 @@ let pop_context env msg = rollback_context env.solver msg None
 
 let tc_partial_modul env modul =
   let verify = Options.should_verify (string_of_lid modul.name) in
-  let action = if verify then "Verifying" else "Lax-checking" in
+  let action = if verify then "verifying" else "lax-checking" in
   let label = if modul.is_interface then "interface" else "implementation" in
   if Options.debug_any () then
-    BU.print3 "%s %s of %s\n" action label (string_of_lid modul.name);
+    BU.print3 "Now %s %s of %s\n" action label (string_of_lid modul.name);
 
-  let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") (string_of_lid modul.name) in
+  let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module") (string_of_lid modul.name) in
   let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
   let env = Env.set_current_module env modul.name in
-  let ses, env = tc_decls env modul.declarations in
-  {modul with declarations=ses}, env
+  Errors.with_ctx (BU.format2 "While %s %s" action name) (fun () ->
+    let ses, env = tc_decls env modul.declarations in
+    {modul with declarations=ses}, env
+  )
 
 let tc_more_partial_modul env modul decls =
   let ses, env = tc_decls env decls in
@@ -1027,13 +1029,11 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
   m, env
 
 let tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul * env) =
-Errors.with_ctx (BU.format1 "While checking module %s" (string_of_lid m.name)) (fun () ->
   let msg = "Internals for " ^ string_of_lid m.name in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
   let modul, env = tc_partial_modul env0 m in
   finish_partial_modul false iface_exists env modul
-)
 
 let load_checked_module (en:env) (m:modul) :env =
   //This function tries to very carefully mimic the effect of the environment

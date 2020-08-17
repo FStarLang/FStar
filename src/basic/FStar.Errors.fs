@@ -1139,6 +1139,12 @@ let with_ctx (s:string) (f : unit -> 'a) : 'a =
   | Inr r -> r
   | Inl e -> raise e
 
+let with_ctx_if (b:bool) (s:string) (f : unit -> 'a) : 'a =
+  if b then
+    with_ctx s f
+  else
+    f ()
+
 let catch_errors (f : unit -> 'a) : list<issue> * option<'a> =
     let newh = mk_default_handler false in
     let old = !current_handler in
