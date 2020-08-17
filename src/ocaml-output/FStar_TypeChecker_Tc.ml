@@ -814,7 +814,7 @@ let proc_check_with :
                   FStar_All.pipe_right uu___4 FStar_Util.must in
                 FStar_Options.set uu___3);
                kont ())
-      | uu___1 -> failwith "huh?"
+      | uu___1 -> failwith "ill-formed `check_with`"
 let (tc_decls_knot :
   (FStar_TypeChecker_Env.env ->
      FStar_Syntax_Syntax.sigelt Prims.list ->
@@ -3929,7 +3929,14 @@ let (tc_decls :
                     ">>>>>>>>>>>>>>Checking top-level %s decl %s\n" uu___5
                     uu___6
                 else ());
-               (let uu___4 = tc_decl env1 se in
+               (let uu___4 =
+                  let uu___5 =
+                    let uu___6 = FStar_Syntax_Print.sigelt_to_string_short se in
+                    FStar_Util.format1
+                      "While typechecking the top-level declaration `%s`"
+                      uu___6 in
+                  FStar_Errors.with_ctx uu___5
+                    (fun uu___6 -> tc_decl env1 se) in
                 match uu___4 with
                 | (ses', ses_elaborated, env2) ->
                     let ses'1 =
@@ -4037,7 +4044,7 @@ let (tc_decls :
              FStar_Util.fold_flatten process_one_decl_timed ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_List.rev_append ses1 []), env1)
-let (uu___968 : unit) =
+let (uu___969 : unit) =
   FStar_ST.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :
@@ -4085,7 +4092,7 @@ let (tc_partial_modul :
       let verify =
         let uu___ = FStar_Ident.string_of_lid modul.FStar_Syntax_Syntax.name in
         FStar_Options.should_verify uu___ in
-      let action = if verify then "Verifying" else "Lax-checking" in
+      let action = if verify then "verifying" else "lax-checking" in
       let label =
         if modul.FStar_Syntax_Syntax.is_interface
         then "interface"
@@ -4095,7 +4102,7 @@ let (tc_partial_modul :
        then
          let uu___2 =
            FStar_Ident.string_of_lid modul.FStar_Syntax_Syntax.name in
-         FStar_Util.print3 "%s %s of %s\n" action label uu___2
+         FStar_Util.print3 "Now %s %s of %s\n" action label uu___2
        else ());
       (let name =
          let uu___1 =
@@ -4199,16 +4206,32 @@ let (tc_partial_modul :
        let env2 =
          FStar_TypeChecker_Env.set_current_module env1
            modul.FStar_Syntax_Syntax.name in
-       let uu___1 = tc_decls env2 modul.FStar_Syntax_Syntax.declarations in
-       match uu___1 with
-       | (ses, env3) ->
-           ((let uu___2 = modul in
-             {
-               FStar_Syntax_Syntax.name = (uu___2.FStar_Syntax_Syntax.name);
-               FStar_Syntax_Syntax.declarations = ses;
-               FStar_Syntax_Syntax.is_interface =
-                 (uu___2.FStar_Syntax_Syntax.is_interface)
-             }), env3))
+       let uu___1 =
+         let uu___2 =
+           let uu___3 =
+             FStar_Ident.string_of_lid modul.FStar_Syntax_Syntax.name in
+           FStar_Options.should_check uu___3 in
+         Prims.op_Negation uu___2 in
+       let uu___2 =
+         let uu___3 =
+           FStar_Ident.string_of_lid modul.FStar_Syntax_Syntax.name in
+         FStar_Util.format2 "While loading dependency %s%s" uu___3
+           (if modul.FStar_Syntax_Syntax.is_interface
+            then " (interface)"
+            else "") in
+       FStar_Errors.with_ctx_if uu___1 uu___2
+         (fun uu___3 ->
+            let uu___4 = tc_decls env2 modul.FStar_Syntax_Syntax.declarations in
+            match uu___4 with
+            | (ses, env3) ->
+                ((let uu___5 = modul in
+                  {
+                    FStar_Syntax_Syntax.name =
+                      (uu___5.FStar_Syntax_Syntax.name);
+                    FStar_Syntax_Syntax.declarations = ses;
+                    FStar_Syntax_Syntax.is_interface =
+                      (uu___5.FStar_Syntax_Syntax.is_interface)
+                  }), env3)))
 let (tc_more_partial_modul :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul ->

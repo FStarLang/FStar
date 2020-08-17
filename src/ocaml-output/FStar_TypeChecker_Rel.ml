@@ -11579,10 +11579,13 @@ let (resolve_implicits' :
                                            uu___7
                                        else ());
                                       (let t =
-                                         env1.FStar_TypeChecker_Env.synth_hook
-                                           env1
-                                           (hd.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_typ
-                                           tau in
+                                         FStar_Errors.with_ctx
+                                           "Running tactic for meta-arg"
+                                           (fun uu___6 ->
+                                              env1.FStar_TypeChecker_Env.synth_hook
+                                                env1
+                                                (hd.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_typ
+                                                tau) in
                                        let extra =
                                          let uu___6 = teq_nosmt env1 t tm in
                                          match uu___6 with
@@ -11891,37 +11894,25 @@ let (resolve_implicits' :
                                          uu___12
                                      else ());
                                     (let g1 =
-                                       try
-                                         (fun uu___8 ->
-                                            match () with
-                                            | () ->
-                                                env2.FStar_TypeChecker_Env.check_type_of
-                                                  must_total env2 tm1
-                                                  ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ)
-                                           ()
-                                       with
-                                       | e when FStar_Errors.handleable e ->
-                                           ((let uu___10 =
-                                               let uu___11 =
-                                                 let uu___12 =
-                                                   let uu___13 =
-                                                     FStar_Syntax_Print.uvar_to_string
-                                                       ctx_u.FStar_Syntax_Syntax.ctx_uvar_head in
-                                                   let uu___14 =
-                                                     FStar_TypeChecker_Normalize.term_to_string
-                                                       env2 tm1 in
-                                                   let uu___15 =
-                                                     FStar_TypeChecker_Normalize.term_to_string
-                                                       env2
-                                                       ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ in
-                                                   FStar_Util.format3
-                                                     "Failed while checking implicit %s set to %s of expected type %s"
-                                                     uu___13 uu___14 uu___15 in
-                                                 (FStar_Errors.Error_BadImplicit,
-                                                   uu___12, r) in
-                                               [uu___11] in
-                                             FStar_Errors.add_errors uu___10);
-                                            FStar_Exn.raise e) in
+                                       let uu___8 =
+                                         let uu___9 =
+                                           FStar_Syntax_Print.uvar_to_string
+                                             ctx_u.FStar_Syntax_Syntax.ctx_uvar_head in
+                                         let uu___10 =
+                                           FStar_TypeChecker_Normalize.term_to_string
+                                             env2 tm1 in
+                                         let uu___11 =
+                                           FStar_TypeChecker_Normalize.term_to_string
+                                             env2
+                                             ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ in
+                                         FStar_Util.format3
+                                           "While checking implicit %s set to %s of expected type %s"
+                                           uu___9 uu___10 uu___11 in
+                                       FStar_Errors.with_ctx uu___8
+                                         (fun uu___9 ->
+                                            env2.FStar_TypeChecker_Env.check_type_of
+                                              must_total env2 tm1
+                                              ctx_u.FStar_Syntax_Syntax.ctx_uvar_typ) in
                                      let g' =
                                        let uu___8 =
                                          discharge_guard'

@@ -7523,7 +7523,9 @@ let (normalize_with_primitive_steps :
                    let uu___6 = FStar_TypeChecker_Cfg.cfg_to_string c in
                    FStar_Util.print1 ">>> cfg = %s\n" uu___6);
               (let uu___5 =
-                 FStar_Util.record_time (fun uu___6 -> nbe_eval c s t) in
+                 FStar_Errors.with_ctx "While normalizing a term via NBE"
+                   (fun uu___6 ->
+                      FStar_Util.record_time (fun uu___7 -> nbe_eval c s t)) in
                match uu___5 with
                | (r, ms) ->
                    (FStar_TypeChecker_Cfg.log_top c
@@ -7545,7 +7547,9 @@ let (normalize_with_primitive_steps :
                    let uu___7 = FStar_TypeChecker_Cfg.cfg_to_string c in
                    FStar_Util.print1 ">>> cfg = %s\n" uu___7);
               (let uu___6 =
-                 FStar_Util.record_time (fun uu___7 -> norm c [] [] t) in
+                 FStar_Errors.with_ctx "While normalizing a term"
+                   (fun uu___7 ->
+                      FStar_Util.record_time (fun uu___8 -> norm c [] [] t)) in
                match uu___6 with
                | (r, ms) ->
                    (FStar_TypeChecker_Cfg.log_top c
@@ -7593,7 +7597,9 @@ let (normalize_comp :
              let uu___4 = FStar_TypeChecker_Cfg.cfg_to_string cfg in
              FStar_Util.print1 ">>> cfg = %s\n" uu___4);
         (let uu___3 =
-           FStar_Util.record_time (fun uu___4 -> norm_comp cfg [] c) in
+           FStar_Errors.with_ctx "While normalizing a computation type"
+             (fun uu___4 ->
+                FStar_Util.record_time (fun uu___5 -> norm_comp cfg [] c)) in
          match uu___3 with
          | (c1, ms) ->
              (FStar_TypeChecker_Cfg.log_top cfg

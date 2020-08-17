@@ -2452,10 +2452,10 @@ and (tc_maybe_toplevel_term :
                                        uu___14 in
                                    if uu___13
                                    then
-                                     FStar_TypeChecker_Err.add_errors env1
-                                       [(FStar_Errors.Error_UnexpectedGTotComputation,
-                                          "Expected Tot, got a GTot computation",
-                                          (e2.FStar_Syntax_Syntax.pos))]
+                                     FStar_Errors.log_issue
+                                       e2.FStar_Syntax_Syntax.pos
+                                       (FStar_Errors.Error_UnexpectedGTotComputation,
+                                         "Expected Tot, got a GTot computation")
                                    else ());
                                   (e2, c, g)) in
                            (match uu___10 with
@@ -10217,9 +10217,13 @@ let (type_of_tot_term :
            (fun uu___2 -> match () with | () -> tc_tot_or_gtot_term env1 e)
              ()
          with
-         | FStar_Errors.Error (e1, msg, uu___3) ->
-             let uu___4 = FStar_TypeChecker_Env.get_range env1 in
-             FStar_Errors.raise_error (e1, msg) uu___4 in
+         | FStar_Errors.Error (e1, msg, uu___3, ctx) ->
+             let uu___4 =
+               let uu___5 =
+                 let uu___6 = FStar_TypeChecker_Env.get_range env1 in
+                 (e1, msg, uu___6, ctx) in
+               FStar_Errors.Error uu___5 in
+             FStar_Exn.raise uu___4 in
        match uu___1 with
        | (t, c, g) ->
            let c1 = FStar_TypeChecker_Normalize.ghost_to_pure_lcomp env1 c in

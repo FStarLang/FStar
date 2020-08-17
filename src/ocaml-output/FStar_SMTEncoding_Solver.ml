@@ -235,8 +235,7 @@ type errors =
   error_fuel: Prims.int ;
   error_ifuel: Prims.int ;
   error_hint: Prims.string Prims.list FStar_Pervasives_Native.option ;
-  error_messages:
-    (FStar_Errors.raw_error * Prims.string * FStar_Range.range) Prims.list }
+  error_messages: FStar_Errors.error Prims.list }
 let (__proj__Mkerrors__item__error_reason : errors -> Prims.string) =
   fun projectee ->
     match projectee with
@@ -259,9 +258,7 @@ let (__proj__Mkerrors__item__error_hint :
     | { error_reason; error_fuel; error_ifuel; error_hint; error_messages;_}
         -> error_hint
 let (__proj__Mkerrors__item__error_messages :
-  errors ->
-    (FStar_Errors.raw_error * Prims.string * FStar_Range.range) Prims.list)
-  =
+  errors -> FStar_Errors.error Prims.list) =
   fun projectee ->
     match projectee with
     | { error_reason; error_fuel; error_ifuel; error_hint; error_messages;_}
@@ -497,7 +494,8 @@ let (query_errors :
                      (fun uu___3 ->
                         match uu___3 with
                         | (uu___4, x, y) ->
-                            (FStar_Errors.Error_Z3SolverError, x, y))
+                            let uu___5 = FStar_Errors.get_ctx () in
+                            (FStar_Errors.Error_Z3SolverError, x, y, uu___5))
                      error_labels in
                  {
                    error_reason = msg;
@@ -599,9 +597,14 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
           FStar_TypeChecker_Err.errors_smt_detail settings.query_env
             err.error_messages smt_error
       | FStar_Pervasives_Native.None ->
-          FStar_TypeChecker_Err.errors_smt_detail settings.query_env
-            [(FStar_Errors.Error_UnknownFatal_AssertionFailure,
-               "Unknown assertion failed", (settings.query_range))] smt_error in
+          let uu___1 =
+            let uu___2 =
+              let uu___3 = FStar_Errors.get_ctx () in
+              (FStar_Errors.Error_UnknownFatal_AssertionFailure,
+                "Unknown assertion failed", (settings.query_range), uu___3) in
+            [uu___2] in
+          FStar_TypeChecker_Err.errors_smt_detail settings.query_env uu___1
+            smt_error in
     (let uu___ = FStar_Options.detail_errors () in
      if uu___
      then
@@ -1351,7 +1354,7 @@ let (ask_and_report_errors :
                                  (FStar_List.map
                                     (fun uu___5 ->
                                        match uu___5 with
-                                       | ((e, m, r), n) ->
+                                       | ((e, m, r, ctx), n) ->
                                            if n > Prims.int_one
                                            then
                                              let uu___6 =
@@ -1361,8 +1364,8 @@ let (ask_and_report_errors :
                                                  FStar_Util.format1
                                                    " (%s times)" uu___8 in
                                                Prims.op_Hat m uu___7 in
-                                             (e, uu___6, r)
-                                           else (e, m, r))) in
+                                             (e, uu___6, r, ctx)
+                                           else (e, m, r, ctx))) in
                              (FStar_Errors.add_errors errs2;
                               (let rng =
                                  match FStar_Pervasives_Native.snd
@@ -1376,24 +1379,22 @@ let (ask_and_report_errors :
                                  let uu___6 =
                                    let uu___7 =
                                      let uu___8 =
-                                       let uu___9 =
-                                         FStar_Util.string_of_int nsuccess in
-                                       let uu___10 =
-                                         FStar_Util.string_of_int total_ran in
-                                       let uu___11 =
-                                         FStar_Util.string_of_int lo1 in
-                                       let uu___12 =
-                                         FStar_Util.string_of_int hi1 in
-                                       FStar_Util.format6
-                                         "Query %s failed the quake test, %s out of %s attempts succeded, but the threshold was %s out of %s%s"
-                                         name uu___9 uu___10 uu___11 uu___12
-                                         (if total_ran < hi1
-                                          then " (early abort)"
-                                          else "") in
-                                     (FStar_Errors.Error_QuakeFailed, uu___8,
-                                       rng) in
-                                   [uu___7] in
-                                 FStar_TypeChecker_Err.add_errors env uu___6
+                                       FStar_Util.string_of_int nsuccess in
+                                     let uu___9 =
+                                       FStar_Util.string_of_int total_ran in
+                                     let uu___10 =
+                                       FStar_Util.string_of_int lo1 in
+                                     let uu___11 =
+                                       FStar_Util.string_of_int hi1 in
+                                     FStar_Util.format6
+                                       "Query %s failed the quake test, %s out of %s attempts succeded, but the threshold was %s out of %s%s"
+                                       name uu___8 uu___9 uu___10 uu___11
+                                       (if total_ran < hi1
+                                        then " (early abort)"
+                                        else "") in
+                                   (FStar_Errors.Error_QuakeFailed, uu___7) in
+                                 FStar_TypeChecker_Err.log_issue env rng
+                                   uu___6
                                else ()))
                            else
                              (let report errs =
@@ -1561,16 +1562,15 @@ let (do_solve :
                  let uu___5 =
                    let uu___6 =
                      let uu___7 =
-                       let uu___8 =
-                         FStar_List.map FStar_Pervasives_Native.fst names in
-                       FStar_String.concat "," uu___8 in
-                     FStar_Util.format1
-                       "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-                       uu___7 in
-                   (FStar_Errors.Error_NonTopRecFunctionNotFullyEncoded,
-                     uu___6, (tcenv.FStar_TypeChecker_Env.range)) in
-                 [uu___5] in
-               FStar_TypeChecker_Err.add_errors tcenv uu___4)))
+                       FStar_List.map FStar_Pervasives_Native.fst names in
+                     FStar_String.concat "," uu___7 in
+                   FStar_Util.format1
+                     "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
+                     uu___6 in
+                 (FStar_Errors.Error_NonTopRecFunctionNotFullyEncoded,
+                   uu___5) in
+               FStar_TypeChecker_Err.log_issue tcenv
+                 tcenv.FStar_TypeChecker_Env.range uu___4)))
 let (solve :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> unit)
@@ -1583,15 +1583,13 @@ let (solve :
         then
           let uu___1 =
             let uu___2 =
-              let uu___3 =
-                let uu___4 = FStar_Syntax_Print.term_to_string q in
-                FStar_Util.format1
-                  "Q = %s\nA query could not be solved internally, and --no_smt was given"
-                  uu___4 in
-              (FStar_Errors.Error_NoSMTButNeeded, uu___3,
-                (tcenv.FStar_TypeChecker_Env.range)) in
-            [uu___2] in
-          FStar_TypeChecker_Err.add_errors tcenv uu___1
+              let uu___3 = FStar_Syntax_Print.term_to_string q in
+              FStar_Util.format1
+                "Q = %s\nA query could not be solved internally, and --no_smt was given"
+                uu___3 in
+            (FStar_Errors.Error_NoSMTButNeeded, uu___2) in
+          FStar_TypeChecker_Err.log_issue tcenv
+            tcenv.FStar_TypeChecker_Env.range uu___1
         else
           (let uu___2 =
              let uu___3 =
