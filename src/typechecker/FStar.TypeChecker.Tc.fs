@@ -1004,7 +1004,11 @@ let tc_partial_modul env modul =
   let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module") (string_of_lid modul.name) in
   let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
   let env = Env.set_current_module env modul.name in
-  Errors.with_ctx (BU.format2 "While %s %s" action name) (fun () ->
+  (* Only set a context for dependencies *)
+  Errors.with_ctx_if (not (Options.should_check (string_of_lid modul.name)))
+                     (BU.format2 "While loading dependency %s%s"
+                                    (string_of_lid modul.name)
+                                    (if modul.is_interface then " (interface)" else "")) (fun () ->
     let ses, env = tc_decls env modul.declarations in
     {modul with declarations=ses}, env
   )
