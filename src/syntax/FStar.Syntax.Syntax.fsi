@@ -273,7 +273,11 @@ and lazy_kind =
   | Lazy_embedding of emb_typ * Thunk.t<term>
 and binding =
   | Binding_var      of bv
-  | Binding_lid      of lident * tscheme
+  | Binding_lid      of lident * (univ_names * typ)
+  (* ^ Not a tscheme: the universe names must be taken
+   * as fixed (and opened in the type). This is important since
+   * we do not support universe-polymorphic recursion.
+   * See #2106. *)
   | Binding_univ     of univ_name
 and tscheme = list<univ_name> * typ
 and gamma = list<binding>
@@ -470,7 +474,7 @@ type sigelt' =
                           * list<lident>               //all the inductive types and data constructor names in this bundle
   | Sig_datacon           of lident                    //name of the datacon
                           * univ_names                 //universe variables of the inductive type it belongs to
-                          * typ                        //the constructor's type as an arrow
+                          * typ                        //the constructor's type as an arrow (including parameters)
                           * lident                     //the inductive type of the value this constructs
                           * int                        //and the number of parameters of the inductive
                           * list<lident>               //mutually defined types

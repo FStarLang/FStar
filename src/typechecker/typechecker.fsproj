@@ -71,6 +71,8 @@
     <Compile Include="FStar.TypeChecker.DeferredImplicits.fs" />
     <Compile Include="FStar.TypeChecker.Rel.fsi" />
     <Compile Include="FStar.TypeChecker.Rel.fs" />
+    <Compile Include="FStar.TypeChecker.Generalize.fsi" />
+    <Compile Include="FStar.TypeChecker.Generalize.fs" />
     <Compile Include="FStar.TypeChecker.Util.fsi" />
     <Compile Include="FStar.TypeChecker.Util.fs" />
     <Compile Include="FStar.TypeChecker.TcTerm.fsi" />
