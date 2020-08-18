@@ -4,6 +4,9 @@ open FStar.Universe
 
 (* Common lemmas and constructions for layered effects examples. *)
 
+let pure_monotonic #a (wp : pure_wp a) : Type =
+  forall p1 p2. (forall x. p1 x ==> p2 x) ==> wp p1 ==> wp p2
+
 let curry f a b = f (a, b)
 let uncurry f (a, b) = f a b
 
