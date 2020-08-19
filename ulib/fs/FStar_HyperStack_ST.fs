@@ -58,12 +58,18 @@ let witness_region _ = ()
 let witness_hsref _ = ()
 type erid = rid
 
-type 'a ref = 'a FStar_HyperStack.reference
-type 'a mreference = 'a ref
-type 'a reference = 'a ref
+type ('a, 'rel) mreference = ('a, 'rel) FStar_Monotonic_HyperStack.mreference
+type ('a, 'rel) mref = ('a, 'rel) FStar_Monotonic_HyperStack.mref
+type 'a reference = ('a, unit) mreference
+type 'a ref = ('a, unit) mref
+type ('a, 'b) m_rref = ('a, 'b) mref
+
+//type 'a ref = 'a FStar_HyperStack.reference
+//type 'a mreference = 'a ref
+//type 'a reference = 'a ref
 let alloc = salloc
-type 'a mref = 'a ref
-type 'b m_rref = 'b ref
+//type 'a mref = 'a ref
+//type 'b m_rref = 'b ref
 type stable_on_t = unit
 let mr_witness _ _ _ _ _ = ()
 let testify _ = ()

@@ -22,7 +22,5 @@ let grows_aux #a #b #inv :Preorder.preorder (map a b inv) =
 [@@"opaque_to_smt"]
 let grows #a #b #inv = grows_aux #a #b #inv
 
-// This line fails at extraction
-// TODO: Minimize
 (* Monotone, partial, dependent maps, with a whole-map invariant *)
-//type t r a b inv = m_rref r (map a b inv) grows  //maybe grows can include the inv?
+type t r a b inv = m_rref r (map a b inv) grows  //maybe grows can include the inv?
