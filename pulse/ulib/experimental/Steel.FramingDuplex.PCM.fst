@@ -89,6 +89,8 @@ let lemma_comm #p (x:t p) (y:t p{composable x y}) :
   Lemma (compose x y == compose y x)
   = ()
 
+#push-options "--z3rlimit 20"
+
 let lemma_assoc_l #p (x y:t p) (z:t p{composable y z /\ composable x (compose y z)})
   : Lemma (composable x y /\ composable (compose x y) z /\
            compose x (compose y z) == compose (compose x y) z)
@@ -102,12 +104,17 @@ let lemma_assoc_r #p (x y:t p) (z:t p{composable x y /\ composable (compose x y)
 let lemma_is_unit #p (x:t p) : Lemma (composable x Nil /\ compose x Nil == x)
   = ()
 
+#pop-options
+
+let refine (#prot:dprot) (x:t prot) : prop = V? x \/ Nil? x
+
 let pcm (prot:dprot) : pcm (t prot) =
   { p = p' prot;
     comm = lemma_comm;
     assoc = lemma_assoc_l;
     assoc_r = lemma_assoc_r;
-    is_unit = lemma_is_unit
+    is_unit = lemma_is_unit;
+    refine = refine
 }
 
 open Steel.Memory
@@ -149,9 +156,6 @@ let frame_compatible (#p:dprot) (x:t p) (v y:t p) =
             v == compose x frame ==>
             composable y frame /\
             v == compose y frame)
-
-let refine #p (v:t p) = V? v \/ Nil? v
-
 
 assume
 val select_refine (#p:dprot)
