@@ -52,7 +52,7 @@ val state_correspondence (inames:inames)
      s.S.mem == mem /\
      s.S.interp == interp /\
      s.S.star == star /\
-     s.S.locks_invariant == locks_invariant inames /\
-     (forall (p q:slprop) (m0 m1:mem).
-       preserves_frame inames p q m0 m1 ==>
-       S.preserves_frame #s p q m0 m1))
+     s.S.locks_invariant == locks_invariant inames) ///\
+     // (forall (p q:slprop) (m0 m1:mem).
+     //   preserves_frame inames p q m0 m1 ==>
+     //   S.preserves_frame #s p q m0 m1))

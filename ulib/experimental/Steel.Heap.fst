@@ -1069,6 +1069,23 @@ let witinv_framon #a (p : a -> slprop)
     in
     Classical.forall_intro_4 (fun x y m frame -> Classical.move_requires (aux x y m) frame)
 
+let refined_pre_action' (fp0:slprop) (a:Type) (fp1:a -> slprop) (frame:slprop) =
+  m0:hheap (fp0 `star` frame) ->
+  Pure (x:a & hheap (fp1 x))
+    (requires True)
+    (ensures fun (| x, m1 |) ->
+             interp (fp1 x `star` frame) m1 /\
+             heap_evolves m0 m1 /\
+             (forall (hp:hprop frame). hp m0 == hp m1))
+
+let witness_h_exists' (#a:Type) (p:a -> slprop) (frame:slprop)
+  : refined_pre_action' (h_exists p) (erased a) (fun x -> p x) frame
+  = fun m0 ->
+    let w = FStar.IndefiniteDescription.indefinite_description_tot
+      a
+      (fun x -> interp (p x `star` frame) m0) in
+    (| w, m0 |)
+
 let witness_h_exists #a p
   : action (h_exists p) (erased a) (fun x -> p x)
   = let pre : refined_pre_action (h_exists p) (erased a) (fun x -> p x) =

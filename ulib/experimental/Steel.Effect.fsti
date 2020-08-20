@@ -58,7 +58,7 @@ val repr (a:Type u#a)
          (post:a -> slprop u#1)
          (req:fp_mprop pre)
          (ens:fp_binary_mprop pre post)
-  : Type0 //Note, we leak the universe of the representation, which currently must be universe 0
+  : Type u#2 //Note, we leak the universe of the representation, which currently must be universe 0
 
 unfold
 let return_req (p:slprop) : fp_mprop p = fun _ -> True
