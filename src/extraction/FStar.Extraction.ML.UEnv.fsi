@@ -119,6 +119,17 @@ val extend_bv:
     mk_unit: bool ->
     uenv * mlident * exp_binding
 
+(** Make sure a given ML name is not used in an environment. The
+scope of the environment is not changed at all. This can be used to
+generate less confusing names, for instance, in `let x = E in F`, we can
+burn `x` in `E` to avoid generating code like `let x = let x = 1 in x in
+x`, which does not have any shadowing, but is hard to read. Of course,
+`x` is burnt in `F` since it is in-scope there. *)
+val burn_name:
+    uenv ->
+    mlident ->
+    uenv
+
 (** Extend with an top-level term identifier, maybe thunked *)
 val extend_fv: 
     uenv ->

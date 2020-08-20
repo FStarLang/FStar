@@ -338,7 +338,7 @@ let rename_conventional (s:string) (is_local_type_variable:bool) : string =
 let root_name_of_bv (x:bv): mlident =
   if BU.starts_with (string_of_id x.ppname) Ident.reserved_prefix
   || is_null_bv x
-  then (string_of_id x.ppname) ^ "_" ^ (string_of_int x.index)
+  then Ident.reserved_prefix
   else string_of_id x.ppname
 
 (** Given a candidate root_name, generate an ML identifier
@@ -442,6 +442,9 @@ let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool)
     let gamma = Bv(x, Inr exp_binding)::g.env_bindings in
     let tcenv = TypeChecker.Env.push_binders g.env_tcenv (binders_of_list [x]) in
     {g with env_bindings=gamma; env_mlident_map = mlident_map; env_tcenv=tcenv}, mlident, exp_binding
+
+let burn_name (g:uenv) (i:mlident) : uenv =
+  { g with env_mlident_map = BU.psmap_add g.env_mlident_map i "" }
 
 (** Generating a fresh local term variable *)
 let new_mlident (g:uenv)
