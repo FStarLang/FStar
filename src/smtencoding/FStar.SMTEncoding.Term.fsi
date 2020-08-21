@@ -305,7 +305,7 @@ val fuel_2: term
 val fuel_100:term
 val n_fuel: int -> term
 
-val mk_haseq: term -> term
+val mk_haseq: univ:term -> term -> term
 val kick_partial_app: term -> term
 
 val op_to_string: op -> string

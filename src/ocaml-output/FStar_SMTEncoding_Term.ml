@@ -1233,31 +1233,33 @@ let (mkDefineFun :
 let (constr_id_of_sort : sort -> Prims.string) =
   fun sort1 ->
     let uu___ = strSort sort1 in FStar_Util.format1 "%s_constr_id" uu___
-let (fresh_token : (Prims.string * sort) -> Prims.int -> decl) =
+let (fresh_token : (term * fvs * sort) -> Prims.int -> decl) =
   fun uu___ ->
     fun id ->
       match uu___ with
-      | (tok_name, sort1) ->
+      | (tok, univ_fvs, sort1) ->
+          let tok_name =
+            match tok.tm with
+            | App (Var name, uu___1) -> name
+            | uu___1 -> failwith "Unexpected fresh token" in
           let a_name = Prims.op_Hat "fresh_token_" tok_name in
-          let a =
+          let t =
             let uu___1 =
-              let uu___2 =
-                let uu___3 = mkInteger' id norng in
+              let uu___2 = mkInteger' id norng in
+              let uu___3 =
                 let uu___4 =
-                  let uu___5 =
-                    let uu___6 = constr_id_of_sort sort1 in
-                    let uu___7 =
-                      let uu___8 = mkApp (tok_name, []) norng in [uu___8] in
-                    (uu___6, uu___7) in
-                  mkApp uu___5 norng in
-                (uu___3, uu___4) in
-              mkEq uu___2 norng in
-            let uu___2 = escape a_name in
+                  let uu___5 = constr_id_of_sort sort1 in (uu___5, [tok]) in
+                mkApp uu___4 norng in
+              (uu___2, uu___3) in
+            mkEq uu___1 norng in
+          let t1 = mkForall norng ([[tok]], univ_fvs, t) in
+          let a =
+            let uu___1 = escape a_name in
             {
-              assumption_term = uu___1;
+              assumption_term = t1;
               assumption_caption =
                 (FStar_Pervasives_Native.Some "fresh token");
-              assumption_name = uu___2;
+              assumption_name = uu___1;
               assumption_fact_ids = []
             } in
           Assume a
@@ -1769,11 +1771,12 @@ and (mkPrelude : Prims.string -> Prims.string) =
   fun z3options ->
     let basic =
       Prims.op_Hat z3options
-        "(declare-sort FString)\n(declare-fun FString_constr_id (FString) Int)\n\n(declare-sort Term)\n(declare-fun Term_constr_id (Term) Int)\n(declare-sort Dummy_sort)\n(declare-fun Dummy_value () Dummy_sort)\n(declare-datatypes () ((Fuel \n(ZFuel) \n(SFuel (prec Fuel)))))\n(declare-fun MaxIFuel () Fuel)\n(declare-fun MaxFuel () Fuel)\n(declare-fun PreType (Term) Term)\n(declare-fun Valid (Term) Bool)\n(declare-fun HasTypeFuel (Fuel Term Term) Bool)\n(define-fun HasTypeZ ((x Term) (t Term)) Bool\n(HasTypeFuel ZFuel x t))\n(define-fun HasType ((x Term) (t Term)) Bool\n(HasTypeFuel MaxIFuel x t))\n(declare-fun IsTotFun (Term) Bool)\n\n                ;;fuel irrelevance\n(assert (forall ((f Fuel) (x Term) (t Term))\n(! (= (HasTypeFuel (SFuel f) x t)\n(HasTypeZ x t))\n:pattern ((HasTypeFuel (SFuel f) x t)))))\n(declare-fun NoHoist (Term Bool) Bool)\n;;no-hoist\n(assert (forall ((dummy Term) (b Bool))\n(! (= (NoHoist dummy b)\nb)\n:pattern ((NoHoist dummy b)))))\n(define-fun  IsTyped ((x Term)) Bool\n(exists ((t Term)) (HasTypeZ x t)))\n(declare-fun ApplyTF (Term Fuel) Term)\n(declare-fun ApplyTT (Term Term) Term)\n(declare-fun Rank (Term) Int)\n(declare-fun Closure (Term) Term)\n(declare-fun ConsTerm (Term Term) Term)\n(declare-fun ConsFuel (Fuel Term) Term)\n(declare-fun Tm_uvar (Int) Term)\n(define-fun Reify ((x Term)) Term x)\n(declare-fun Prims.precedes (Term Term Term Term) Term)\n(declare-fun Range_const (Int) Term)\n(declare-fun _mul (Int Int) Int)\n(declare-fun _div (Int Int) Int)\n(declare-fun _mod (Int Int) Int)\n(declare-fun __uu__PartialApp () Term)\n(assert (forall ((x Int) (y Int)) (! (= (_mul x y) (* x y)) :pattern ((_mul x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_div x y) (div x y)) :pattern ((_div x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_mod x y) (mod x y)) :pattern ((_mod x y)))))\n(declare-fun _rmul (Real Real) Real)\n(declare-fun _rdiv (Real Real) Real)\n(assert (forall ((x Real) (y Real)) (! (= (_rmul x y) (* x y)) :pattern ((_rmul x y)))))\n(assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))" in
+        "(declare-sort FString)\n(declare-fun FString_constr_id (FString) Int)\n\n(declare-sort Term)\n(declare-datatypes () ((Universe \n(Univ (ulevel Int)))))\n(define-fun imax ((i Int) (j Int)) Int \n(ite (>= i j) i i))\n(define-fun U_zero () Universe (Univ 0))\n(define-fun U_succ ((u Universe)) Universe\n(Univ (+ (ulevel u) 1)))\n(define-fun U_max ((u0 Universe) (u1 Universe)) Universe \n(Univ (imax (ulevel u0) (ulevel u1))))\n(declare-fun U_unif (Int) Universe)\n(declare-fun U_unknown () Universe)\n(declare-fun Term_constr_id (Term) Int)\n(declare-sort Dummy_sort)\n(declare-fun Dummy_value () Dummy_sort)\n(declare-datatypes () ((Fuel \n(ZFuel) \n(SFuel (prec Fuel)))))\n(declare-fun MaxIFuel () Fuel)\n(declare-fun MaxFuel () Fuel)\n(declare-fun PreType (Term) Term)\n(declare-fun Valid (Term) Bool)\n(declare-fun HasTypeFuel (Fuel Term Term) Bool)\n(define-fun HasTypeZ ((x Term) (t Term)) Bool\n(HasTypeFuel ZFuel x t))\n(define-fun HasType ((x Term) (t Term)) Bool\n(HasTypeFuel MaxIFuel x t))\n(declare-fun IsTotFun (Term) Bool)\n\n                ;;fuel irrelevance\n(assert (forall ((f Fuel) (x Term) (t Term))\n(! (= (HasTypeFuel (SFuel f) x t)\n(HasTypeZ x t))\n:pattern ((HasTypeFuel (SFuel f) x t)))))\n(declare-fun NoHoist (Term Bool) Bool)\n;;no-hoist\n(assert (forall ((dummy Term) (b Bool))\n(! (= (NoHoist dummy b)\nb)\n:pattern ((NoHoist dummy b)))))\n(define-fun  IsTyped ((x Term)) Bool\n(exists ((t Term)) (HasTypeZ x t)))\n(declare-fun ApplyTF (Term Fuel) Term)\n(declare-fun ApplyTT (Term Term) Term)\n(declare-fun Rank (Term) Int)\n(declare-fun Closure (Term) Term)\n(declare-fun ConsTerm (Term Term) Term)\n(declare-fun ConsFuel (Fuel Term) Term)\n(declare-fun Tm_uvar (Int) Term)\n(define-fun Reify ((x Term)) Term x)\n(declare-fun Prims.precedes (Term Term Term Term) Term)\n(declare-fun Range_const (Int) Term)\n(declare-fun _mul (Int Int) Int)\n(declare-fun _div (Int Int) Int)\n(declare-fun _mod (Int Int) Int)\n(declare-fun __uu__PartialApp () Term)\n(assert (forall ((x Int) (y Int)) (! (= (_mul x y) (* x y)) :pattern ((_mul x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_div x y) (div x y)) :pattern ((_div x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_mod x y) (mod x y)) :pattern ((_mod x y)))))\n(declare-fun _rmul (Real Real) Real)\n(declare-fun _rdiv (Real Real) Real)\n(assert (forall ((x Real) (y Real)) (! (= (_rmul x y) (* x y)) :pattern ((_rmul x y)))))\n(assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))" in
     let constrs =
       [("FString_const", [("FString_const_proj_0", Int_sort, true)],
          String_sort, Prims.int_zero, true);
-      ("Tm_type", [], Term_sort, (Prims.of_int (2)), true);
+      ("Tm_type", [("Tm_type_level", (Sort "Universe"), true)], Term_sort,
+        (Prims.of_int (2)), true);
       ("Tm_arrow", [("Tm_arrow_id", Int_sort, true)], Term_sort,
         (Prims.of_int (3)), false);
       ("Tm_unit", [], Term_sort, (Prims.of_int (6)), true);
@@ -1852,7 +1855,16 @@ let (mk_Range_const : unit -> term) =
        let uu___3 = let uu___4 = mkInteger' i norng in [uu___4] in
        ("Range_const", uu___3) in
      mkApp uu___2 norng)
-let (mk_Term_type : term) = mkApp ("Tm_type", []) norng
+let (univ_sort : sort) = Sort "Universe"
+let (mk_U_zero : term) = mkApp ("U_zero", []) norng
+let (mk_U_succ : term -> term) = fun u -> mkApp ("U_succ", [u]) norng
+let (mk_U_max : term -> term -> term) =
+  fun t0 -> fun t1 -> mkApp ("U_max", [t0; t1]) norng
+let (mk_U_name : Prims.string -> term) =
+  fun s -> let uu___ = mk_fv (s, univ_sort) in mkFreeV uu___ norng
+let (mk_U_unif : term -> term) = fun i -> mkApp ("U_unif", [i]) norng
+let (mk_U_unknown : term) = mkApp ("U_unknown", []) norng
+let (mk_Term_type : term -> term) = fun u -> mkApp ("Tm_type", [u]) norng
 let (mk_Term_app : term -> term -> FStar_Range.range -> term) =
   fun t1 -> fun t2 -> fun r -> mkApp ("Tm_app", [t1; t2]) r
 let (mk_Term_uvar : Prims.int -> FStar_Range.range -> term) =
@@ -2166,6 +2178,8 @@ let (mk_or_l : term Prims.list -> FStar_Range.range -> term) =
     fun r ->
       let uu___ = mkFalse r in
       FStar_List.fold_right (fun p1 -> fun p2 -> mkOr (p1, p2) r) l uu___
-let (mk_haseq : term -> term) =
-  fun t -> let uu___ = mkApp ("Prims.hasEq", [t]) t.rng in mk_Valid uu___
+let (mk_haseq : term -> term -> term) =
+  fun u ->
+    fun t ->
+      let uu___ = mkApp ("Prims.hasEq", [u; t]) t.rng in mk_Valid uu___
 let (dummy_sort : sort) = Sort "Dummy_sort"

@@ -904,7 +904,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              t, mk_decls tsym tkey_hash [tdecl; t_kinding; t_interp] []
 
       | Tm_refine _ ->
-        let x, f =
+        let x, f, universe =
           let steps = [
             Env.Weak;
             Env.HNF
@@ -912,14 +912,17 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           match normalize_refinement steps env.tcenv t0 with
           | {n=Tm_refine(x, f)} ->
             let b, f = SS.open_term [x, None] f in
-            fst (List.hd b), f
+            fst (List.hd b),
+            f, 
+            env.tcenv.universe_of ({ env.tcenv with use_bv_sorts = true}) t0 
           | _ -> failwith "impossible"
         in
 
         let base_t, decls = encode_term x.sort env in
         let x, xtm, env' = gen_term_var env x in
         let refinement, decls' = encode_formula f env' in
-
+        let universe = encode_universe universe in
+        
         let fsym, fterm = fresh_fvar env.current_module_name "f" Fuel_sort in
 
         let tm_has_type_with_fuel = mk_HasTypeWithFuel (Some fterm) xtm base_t in
@@ -951,16 +954,18 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
         let x_has_base_t = mk_HasType xtm base_t in
         let x_has_t = mk_HasTypeWithFuel (Some fterm) xtm t in
-        let t_has_kind = mk_HasType t (mk_Term_type mk_U_unknown) in //NS: REVIEW! Can we give it a more precise universe
+        let t_has_kind = mk_HasType t (mk_Term_type universe) in
 
         //add hasEq axiom for this refinement type
-        let t_haseq_base = mk_haseq base_t in
-        let t_haseq_ref = mk_haseq t in
+        let t_haseq_base = mk_haseq universe base_t in
+        let t_haseq_ref = mk_haseq universe t in
 
         let t_haseq =
-        Util.mkAssume(mkForall t0.pos ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
-                        Some ("haseq for " ^ tsym),
-                        "haseq" ^ tsym) in
+          Util.mkAssume(mkForall t0.pos 
+                                 ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
+                                 Some ("haseq for " ^ tsym),
+                                 "haseq" ^ tsym) 
+        in
         // let t_valid =
         //   let xx = (x, Term_sort) in
         //   let valid_t = mkApp ("Valid", [t]) in
@@ -1600,7 +1605,8 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
            t, decls
 
         | Tm_app(head, args) ->
-//          let head' = U.un_uinst head in //NS:TODO ... fixme!
+          //it's okay to do (un_uinst head) in this context
+          //since we are encoding primitives like has_type, labeled, and squash
           begin match (U.un_uinst head).n, args with
             | Tm_fvar fv, [_; (x, _); (t, _)] when S.fv_eq_lid fv Const.has_type_lid -> //interpret Prims.has_type as HasType
               let x, decls = encode_term x env in

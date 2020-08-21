@@ -287,27 +287,38 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let valid_b = mkApp("Valid", [b]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[l_or_a_b]], [aa;bb], mkIff(mkOr(valid_a, valid_b), valid)), Some "\/ interpretation", "l_or-interp")] in
     let mk_eq2_interp : env -> string -> term -> list<decl> = fun env eq2 tt ->
+        let uu = mk_fv ("u", univ_sort) in
         let aa = mk_fv ("a", Term_sort) in
         let xx = mk_fv ("x", Term_sort) in
         let yy = mk_fv ("y", Term_sort) in
+        let u = mkFreeV uu in
         let a = mkFreeV aa in
         let x = mkFreeV xx in
         let y = mkFreeV yy in
-        let eq2_x_y = mkApp(eq2, [a;x;y]) in
+        let eq2_x_y = mkApp(eq2, [u;a;x;y]) in
         let valid = mkApp("Valid", [eq2_x_y]) in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[eq2_x_y]], [aa;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq2 interpretation", "eq2-interp")] in
+        [Util.mkAssume(mkForall (Env.get_range env)
+                                ([[eq2_x_y]], [uu;aa;xx;yy], mkIff(mkEq(x, y), valid)),
+                       Some "Eq2 interpretation",
+                       "eq2-interp")]
+    in
     let mk_eq3_interp : env -> string -> term -> list<decl> = fun env eq3 tt ->
+        let uu = mk_fv ("u", univ_sort) in
         let aa = mk_fv ("a", Term_sort) in
         let bb = mk_fv ("b", Term_sort) in
         let xx = mk_fv ("x", Term_sort) in
         let yy = mk_fv ("y", Term_sort) in
+        let u = mkFreeV uu in
         let a = mkFreeV aa in
         let b = mkFreeV bb in
         let x = mkFreeV xx in
         let y = mkFreeV yy in
-        let eq3_x_y = mkApp(eq3, [a;b;x;y]) in
+        let eq3_x_y = mkApp(eq3, [u;a;b;x;y]) in
         let valid = mkApp("Valid", [eq3_x_y]) in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[eq3_x_y]], [aa;bb;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq3 interpretation", "eq3-interp")] in
+        [Util.mkAssume(mkForall (Env.get_range env) ([[eq3_x_y]], [uu;aa;bb;xx;yy], mkIff(mkEq(x, y), valid)),
+                       Some "Eq3 interpretation",
+                       "eq3-interp")]
+    in
     let mk_imp_interp : env -> string -> term -> list<decl> = fun env imp tt ->
         let aa = mk_fv ("a", Term_sort) in
         let bb = mk_fv ("b", Term_sort) in
@@ -415,6 +426,8 @@ let close_universes rng univ_fvs pat body = mkForall rng ([[pat]], univ_fvs, bod
 
 let encode_free_var uninterpreted env fv (us:list<univ_name>) tt t_norm quals :decls_t * env_t =
     let lid = fv.fv_name.v in
+    let univ_fvs, univs = List.map EncodeTerm.encode_univ_name us |> List.unzip in
+    let univ_sorts = univs |> List.map (fun _ -> univ_sort) in
     if not <| (U.is_pure_or_ghost_function t_norm || is_smt_reifiable_function env.tcenv t_norm)
     || U.is_lemma t_norm
     || uninterpreted
@@ -447,24 +460,31 @@ let encode_free_var uninterpreted env fv (us:list<univ_name>) tt t_norm quals :d
                 then args, TypeChecker.Util.pure_or_ghost_pre_and_post env.tcenv comp
                 else args, (None, U.comp_result comp)
               in
-              let mk_disc_proj_axioms guard encoded_res_t vapp (vars:fvs) = quals |> List.collect (function
-                | Discriminator d ->
+              let mk_disc_proj_axioms guard encoded_res_t vapp (vars:fvs) =
+                quals |> List.collect
+                (function
+                  | Discriminator d ->
                     let _, xxv = BU.prefix vars in
                     let xx = mkFreeV <| mk_fv (fv_name xxv, Term_sort) in
-                    [Util.mkAssume(mkForall (S.range_of_fv fv) ([[vapp]], vars,
-                                            mkEq(vapp, Term.boxBool <| mk_tester (escape (string_of_lid d)) xx)),
-                                          Some "Discriminator equation",
-                                          ("disc_equation_"^escape (string_of_lid d)))]
+                    [Util.mkAssume(mkForall (S.range_of_fv fv)
+                                            ([[vapp]],
+                                             univ_fvs@vars,
+                                             mkEq(vapp, Term.boxBool <| mk_tester (escape (string_of_lid d)) xx)),
+                                   Some "Discriminator equation",
+                                   "disc_equation_"^escape (string_of_lid d))]
 
-                | Projector(d, f) ->
+                  | Projector(d, f) ->
                     let _, xxv = BU.prefix vars in
                     let xx = mkFreeV <| mk_fv (fv_name xxv, Term_sort) in
                     let f = {ppname=f; index=0; sort=tun} in
                     let tp_name = mk_term_projector_name d f in //arity ok, primitive projector (#1383)
                     let prim_app = mkApp(tp_name, [xx]) in
-                    [Util.mkAssume(mkForall (S.range_of_fv fv) ([[vapp]], vars,
-                                            mkEq(vapp, prim_app)), Some "Projector equation", ("proj_equation_"^tp_name))]
-                | _ -> []) in
+                    [Util.mkAssume(mkForall (S.range_of_fv fv)
+                                            ([[vapp]], univ_fvs@vars, mkEq(vapp, prim_app)),
+                                   Some "Projector equation",
+                                   "proj_equation_"^tp_name)]
+                  | _ -> [])
+              in
               let vars, guards, env', decls1, _ = encode_binders None formals env in
               let guard, decls1 = match pre_opt with
                 | None -> mk_and_l guards, decls1
@@ -505,8 +525,6 @@ let encode_free_var uninterpreted env fv (us:list<univ_name>) tt t_norm quals :d
               let arity = List.length formals in
               let vname, vtok_opt, env = new_term_constant_and_tok_from_lid_maybe_thunked env lid arity thunked in
               let get_vtok () = Option.get vtok_opt in
-              let univ_fvs, univs = List.map EncodeTerm.encode_univ_name us |> List.unzip in
-              let univ_sorts = univs |> List.map (fun _ -> univ_sort) in
               let vtok_tm =
                     match formals with
                     | [] when thunked ->  //univ_vars must be []
@@ -787,16 +805,24 @@ let encode_top_level_let :
 
                 (* Open universes *)
                 let flid = fvb.fvar_lid in
-                let env', e, t_norm =
-                  let tcenv', _, e_t =
-                      Env.open_universes_in env.tcenv uvs [e; t_norm] in
+                let env', univ_names, e, t_norm =
+                  let tcenv', univ_names, e_t =
+                      Env.open_universes_in env.tcenv uvs [e; t_norm]
+                  in
                   let e, t_norm =
                       match e_t with
                       | [e; t_norm] -> e, t_norm
-                      | _ -> failwith "Impossible" in
-                  {env with tcenv=tcenv'}, e, t_norm
+                      | _ -> failwith "Impossible"
+                  in
+                  {env with tcenv=tcenv'},
+                  univ_names,
+                  e,
+                  t_norm
                 in
-
+                let univ_vars, univ_terms =
+                  List.map EncodeTerm.encode_univ_name univ_names
+                  |> List.unzip
+                in
                 (* Open binders *)
                 let (binders, body, t_body_comp) = destruct_bound_function t_norm e in
                 let t_body = U.comp_result t_body_comp in
@@ -807,12 +833,17 @@ let encode_top_level_let :
                 (* Encode binders *)
                 let vars, _guards, env', binder_decls, _ = encode_binders None binders env' in
                 let vars, app =
-                    if fvb.fvb_thunked && vars = []
+                    if fvb.fvb_thunked
+                    && vars = []
+                    && univ_vars = []
                     then let dummy_var = mk_fv ("@dummy", dummy_sort) in
                          let dummy_tm = Term.mkFreeV dummy_var Range.dummyRange in
                          let app = Term.mkApp (fvb.smt_id, [dummy_tm]) (FStar.Syntax.Util.range_of_lbname lbn) in
                          [dummy_var], app
-                    else vars, maybe_curry_fvb (FStar.Syntax.Util.range_of_lbname lbn) fvb (List.map mkFreeV vars)
+                    else univ_vars@vars,
+                         maybe_curry_fvb (FStar.Syntax.Util.range_of_lbname lbn)
+                                         ({fvb with smt_arity = List.length univ_terms + fvb.smt_arity})
+                                         (univ_terms @ List.map mkFreeV vars)
                 in
                 let pat, app, (body, decls2) =
                   let is_logical =
@@ -1244,6 +1275,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 SS.subst_binders usubst tps,
                 SS.subst (SS.shift_subst (List.length tps) usubst) k
          in
+         let univ_vars, univ_terms =
+           List.map EncodeTerm.encode_univ_name uvs
+           |> List.unzip
+         in
          let is_injective  =
              let env = tcenv in
              let tps, k = SS.open_term tps k in
@@ -1297,8 +1332,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let constructor_or_logic_type_decl (c:constructor_t) =
             if is_logical
             then let name, args, _, _, _ = c in
-                 [Term.DeclFun(name, args |> List.map (fun (_, sort, _) -> sort), Term_sort, None)]
-            else constructor_to_decl (Ident.range_of_lid t) c in
+                 [Term.DeclFun(name,
+                               args |> List.map (fun (_, sort, _) -> sort),
+                               Term_sort,
+                               None)]
+            else constructor_to_decl (Ident.range_of_lid t) c
+        in
         let inversion_axioms tapp vars =
             if datas |> BU.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone) //Q: Why would this happen?
             then []
@@ -1327,13 +1366,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         if List.length datas > 1
                         then mk_HasTypeFuel (mkApp("SFuel", [ff])) xx tapp
                         else mk_HasTypeFuel ff xx tapp in //no point requiring non-zero fuel if there are no disjunctions
-                    Util.mkAssume(mkForall (Ident.range_of_lid t) ([[xx_has_type_sfuel]], add_fuel (mk_fv (ffsym, Fuel_sort)) (mk_fv (xxsym, Term_sort)::vars),
-                                        mkImp(xx_has_type_sfuel, data_ax)),
-                                Some "inversion axiom", //this name matters! see Sig_bundle case near line 1493
-                                (varops.mk_unique ("fuel_guarded_inversion_"^(string_of_lid t)))) in
+                    Util.mkAssume(mkForall (Ident.range_of_lid t)
+                                           ([[xx_has_type_sfuel]], add_fuel (mk_fv (ffsym, Fuel_sort)) (mk_fv (xxsym, Term_sort)::univ_vars@vars),
+                                           mkImp(xx_has_type_sfuel, data_ax)),
+                                  Some "inversion axiom", //this name matters! see Sig_bundle case near line 1493
+                                  (varops.mk_unique ("fuel_guarded_inversion_"^(string_of_lid t))))
+                in
                 decls
-                @([fuel_guarded_inversion] |> mk_decls_trivial) in
-
+                @([fuel_guarded_inversion] |> mk_decls_trivial)
+        in
         let formals, res =
           let k =
             match tps with
@@ -1347,16 +1388,16 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let vars, guards, env', binder_decls, _ = encode_binders None formals env in
         let arity = List.length vars in
         let tname, ttok, env = new_term_constant_and_tok_from_lid env t arity in
-        let ttok_tm = mkApp(ttok, []) in
+        let ttok_tm = mkApp(ttok, univ_terms) in
         let guard = mk_and_l guards in
-        let tapp = mkApp(tname, List.map mkFreeV vars) in //arity ok
+        let tapp = mkApp(tname, univ_terms @ List.map mkFreeV vars) in //arity ok
         let decls, env =
             //See: https://github.com/FStarLang/FStar/commit/b75225bfbe427c8aef5b59f70ff6d79aa014f0b4
             //See: https://github.com/FStarLang/FStar/issues/349
             let tname_decl =
                 constructor_or_logic_type_decl
                     (tname,
-                     vars |> List.map (fun fv -> (tname^fv_name fv, fv_sort fv,false)),
+                     (univ_vars @ vars) |> List.map (fun fv -> (tname^fv_name fv, fv_sort fv, false)),
                      //The false above is extremely important; it makes sure that type-formers are not injective
                      Term_sort,
                      varops.next_id(),
@@ -1366,36 +1407,51 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 match vars with
                 | [] -> [], push_free_var env t arity tname (Some <| mkApp(tname, []))
                 | _ ->
-                        let ttok_decl = Term.DeclFun(ttok, [], Term_sort, Some "token") in
-                        let ttok_fresh = Term.fresh_token (ttok_tm, [], Term_sort) (varops.next_id()) in
-                        let ttok_app = mk_Apply ttok_tm vars in
-                        let pats = [[ttok_app]; [tapp]] in
+                  let univ_sorts = List.map (fun _ -> univ_sort) univ_vars in
+                  let ttok_decl = Term.DeclFun(ttok, univ_sorts, Term_sort, Some "token") in
+                  let ttok_fresh = Term.fresh_token (ttok_tm, univ_vars, Term_sort) (varops.next_id()) in
+                  let ttok_app = mk_Apply ttok_tm vars in
+                  let pats = [[ttok_app]; [tapp]] in
                         // These patterns allow rewriting (ApplyT T@tok args) to (T args) and vice versa
                         // This seems necessary for some proofs, but the bidirectional rewriting may be inefficient
-                        let name_tok_corr = Util.mkAssume(mkForall' (Ident.range_of_lid t) (pats, None, vars, mkEq(ttok_app, tapp)),
-                                                        Some "name-token correspondence",
-                                                        ("token_correspondence_"^ttok)) in
-                        [ttok_decl; ttok_fresh; name_tok_corr], env in
+                  let name_tok_corr =
+                    Util.mkAssume(mkForall' (Ident.range_of_lid t)
+                                            (pats, None, univ_vars@vars, mkEq(ttok_app, tapp)),
+                                  Some "name-token correspondence",
+                                  "token_correspondence_"^ttok)
+                  in
+                  [ttok_decl; ttok_fresh; name_tok_corr], env
+            in
             if lid_equals t Const.lex_t_lid then tok_decls, env  //AR: for lex_t, we add the declaration in the prelude itself
-            else tname_decl@tok_decls, env in
+            else tname_decl@tok_decls, env
+        in
         let kindingAx =
             let k, decls = encode_term_pred None res env' tapp in
             let karr =
                 if List.length formals > 0
-                then [Util.mkAssume(mk_tester "Tm_arrow" (mk_PreType ttok_tm), Some "kinding", ("pre_kinding_"^ttok))]
+                then [Util.mkAssume(mkForall' (Ident.range_of_lid t)
+                                              ([[ttok_tm]],
+                                                None,
+                                                univ_vars,
+                                                mk_tester "Tm_arrow" (mk_PreType ttok_tm)),
+                                    Some "kinding",
+                                    "pre_kinding_"^ttok)]
                 else []
             in
             let rng = Ident.range_of_lid t in
             let tot_fun_axioms =
-              EncodeTerm.isTotFun_axioms rng ttok_tm vars (List.map (fun _ -> mkTrue) vars) true
+                EncodeTerm.isTotFun_axioms rng ttok_tm vars (List.map (fun _ -> mkTrue) vars) true
             in
-
-            decls@(karr@[Util.mkAssume(mkAnd(tot_fun_axioms, mkForall rng ([[tapp]], vars, mkImp(guard, k))), None, ("kinding_"^ttok))]
-                   |> mk_decls_trivial) in
+            decls@(karr@[Util.mkAssume(mkAnd(mkForall' rng ([[ttok_tm]], None, univ_vars, tot_fun_axioms),
+                                             mkForall rng ([[tapp]], univ_vars@vars, mkImp(guard, k))),
+                                       None,
+                                       "kinding_"^ttok)]
+                   |> mk_decls_trivial)
+        in
         let aux =
             kindingAx
             @(inversion_axioms tapp vars)
-            @([pretype_axiom (Ident.range_of_lid t) env tapp vars] |> mk_decls_trivial) in
+            @([pretype_axiom (Ident.range_of_lid t) env tapp (univ_vars@vars)] |> mk_decls_trivial) in
 
         let g = (decls |> mk_decls_trivial)
                 @binder_decls
@@ -1469,7 +1525,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let vars', (ty_pred', decls_pred) =
              let xvars = List.map mkFreeV vars' in
              let dapp =  mkApp(ddconstrsym, univs@xvars) in //arity ok; |xvars| = |formals| = arity
-             univ_fvs@vars',
+             vars',
              encode_term_pred (Some fuel_tm) t_res env'' dapp
         in
         let guard' = mk_and_l guards' in
@@ -1515,7 +1571,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       (env', [], [], 0) (FStar.List.zip args encoded_args)
                   in
                   let arg_vars = List.rev arg_vars in
-                  let ty = maybe_curry_fvb fv.fv_name.p encoded_head_fvb arg_vars in
+                  let ty = maybe_curry_fvb fv.fv_name.p
+                                           ({encoded_head_fvb with smt_arity=List.length univ_fvs + encoded_head_fvb.smt_arity})
+                                           (univs @ arg_vars)
+                  in
                   let xvars = List.map mkFreeV vars in
                   let dapp =  mkApp(ddconstrsym, univs@xvars) in //arity ok; |xvars| = |formals| = arity
                   let ty_pred = mk_HasTypeWithFuel (Some s_fuel_tm) dapp ty in
