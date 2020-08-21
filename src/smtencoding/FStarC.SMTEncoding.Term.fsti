@@ -272,7 +272,7 @@ val mkExists: Range.range -> (list (list pat) & fvs & term) -> term
 val mkLet: (list term & term) -> Range.range -> term
 val mkLet': (list (fv & term) & term) -> Range.range -> term
 
-val fresh_token: (string & sort) -> int -> decl
+val fresh_token: (term & fvs & sort) -> int -> decl
 val fresh_constructor : Range.range -> (string & list sort & sort & int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
 val constructor_to_decl: Range.range -> constructor_t -> list decl
@@ -310,14 +310,21 @@ val mk_HasTypeFuel:  term -> term -> term -> term
 val mk_HasTypeWithFuel: option term -> term -> term -> term
 val mk_NoHoist:      term -> term -> term
 val mk_tester:       string -> term -> term
-val mk_Term_type:    term
+val univ_sort:       sort
+val mk_U_zero:       term
+val mk_U_succ:       term -> term
+val mk_U_max:        term -> term -> term
+val mk_U_name:       string -> term
+val mk_U_unif:       term -> term
+val mk_U_unknown:    term
+val mk_Term_type:    term -> term
 val mk_ApplyTF:      term -> term -> term
 val mk_ApplyTT:      term -> term -> Range.range -> term
 val mk_String_const: string -> Range.range -> term
 val mk_Precedes:     term -> term -> term -> term -> Range.range -> term
 val n_fuel: int -> term
 
-val mk_haseq: term -> term
+val mk_haseq: univ:term -> term -> term
 val kick_partial_app: term -> term
 
 val op_to_string: op -> string
