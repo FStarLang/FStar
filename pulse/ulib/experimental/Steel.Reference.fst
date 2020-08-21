@@ -91,11 +91,12 @@ let cas_action (#t:eqtype)
                (v:Ghost.erased t)
                (v_old:t)
                (v_new:t)
-               (_:unit)
+               (frame:slprop)
    : MstTot (b:bool{b <==> (Ghost.reveal v == v_old)})
              uses
             (pts_to r full_perm v)
             (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
+            frame
    = let hv =     (Ghost.hide (U.raise_val (Ghost.reveal v))) in
      let b = H.cas_action #(U.raise_t t)
                   (lift_eq #t)
@@ -104,7 +105,7 @@ let cas_action (#t:eqtype)
                   hv
                   (U.raise_val v_old)
                   (U.raise_val v_new)
-                  ()
+                  frame
      in
      assert (b <==> (Ghost.reveal hv == U.raise_val v_old));
      assert (b <==> U.raise_val (Ghost.reveal v) == U.raise_val v_old);
