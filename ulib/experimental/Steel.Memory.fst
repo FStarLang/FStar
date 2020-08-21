@@ -293,6 +293,8 @@ let locks_invariant (e:inames) (m:mem u#a) : slprop u#a =
    `star`
    ctr_validity m.ctr (heap_of_mem m)
 
+let full_mem_pred (m:mem) = H.full_heap_pred (heap_of_mem m)
+
 (***** Following lemmas are needed in Steel.Effect *****)
 
 let core_mem_interp (hp:slprop u#a) (m:mem u#a) = ()
@@ -316,7 +318,7 @@ let elim_h_exists (#a:_) (p:a -> slprop) (m:mem) = H.elim_h_exists p (heap_of_me
 module PP = Steel.Preorder
 
 let mem_evolves =
-  fun m0 m1 ->
+  fun (m0 m1:full_mem) ->
     H.heap_evolves (heap_of_mem m0) (heap_of_mem m1) /\
     m0.ctr <= m1.ctr /\
     lock_store_evolves m0.locks m1.locks
@@ -373,7 +375,7 @@ let hheap_of_hmem #fp #e (m:hmem_with_inv_except e fp)
     h
 
 let hmem_of_hheap #e (#fp0 #fp1:slprop) (m:hmem_with_inv_except e fp0)
-                  (h:H.hheap (fp1 `star` linv e m) {
+                  (h:H.full_hheap (fp1 `star` linv e m) {
                        h `Heap.free_above_addr` m.ctr
                   })
     : m1:hmem_with_inv_except e fp1{linv e m `equiv` linv e m1}
@@ -635,11 +637,18 @@ let alloc_action #a #pcm e x
     in
     lift_tot_action (refined_pre_action_as_action f)
 
+
+let select_refine #a #p e r x f
+  = lift_tot_action (lift_heap_action e (H.select_refine r x f))
+
+let upd_gen #a #p e r x y f
+  = lift_tot_action (lift_heap_action e (H.upd_gen_action r x y f))
+
 ////////////////////////////////////////////////////////////////////////////////
 // witness / recall
 ////////////////////////////////////////////////////////////////////////////////
 
-let witnessed_ref #a #pcm (r:ref a pcm) (fact:property a) (m:mem)
+let witnessed_ref #a #pcm (r:ref a pcm) (fact:property a) (m:full_mem)
   = H.witnessed_ref r fact (heap_of_mem m)
 
 let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:property a)
@@ -811,10 +820,10 @@ let iname_for_p_mem (i:iname) (p:slprop) : NMSTTotal.s_predicate mem =
   fun m -> iname_for_p i p m.locks
 
 let iname_for_p_stable (i:iname) (p:slprop)
-  : Lemma (NMSTTotal.stable mem mem_evolves (iname_for_p_mem i p))
+  : Lemma (NMSTTotal.stable full_mem mem_evolves (iname_for_p_mem i p))
   = ()
 
-let ( >--> ) i p : prop = NMSTTotal.witnessed mem mem_evolves (iname_for_p_mem i p)
+let ( >--> ) i p : prop = NMSTTotal.witnessed full_mem mem_evolves (iname_for_p_mem i p)
 
 let hmem_with_inv_equiv e (m:mem) (p:slprop)
   : Lemma (interp (p `star` linv e m) m <==>
@@ -912,9 +921,9 @@ let new_invariant (e:inames) (p:slprop) ()
     let r = new_invariant_tot_action e p m0 in
     let ( i, m1 ) = r in
     assert (mem_evolves m0 m1);
-    NMSTTotal.put #mem #mem_evolves m1;
+    NMSTTotal.put #full_mem #mem_evolves m1;
     iname_for_p_stable i p;
-    NMSTTotal.witness mem mem_evolves (iname_for_p_mem i p);
+    NMSTTotal.witness full_mem mem_evolves (iname_for_p_mem i p);
     i
 
 let rearrange_invariant (p q r : slprop) (q0 q1:slprop)
@@ -1013,7 +1022,7 @@ let with_invariant (#a:Type)
                         p (lock_store_invariant (set_add i opened_invariants) m0.locks);
     let m0 : hmem_with_inv_except (set_add i opened_invariants) (p `star` fp) = m0 in
     let r = f () in
-    let m1 = NMSTTotal.get () in
+    let m1 : full_mem = NMSTTotal.get () in
     assert (interp ((p `star` fp' r) `star`
                     (lock_store_invariant (set_add i opened_invariants) m1.locks `star` ctr_validity m1.ctr (heap_of_mem m1))) m1);
     NMSTTotal.recall _ mem_evolves (iname_for_p_mem i p);
@@ -1038,12 +1047,12 @@ let frame (#a:Type)
           ($f:action_except a opened_invariants pre post)
           ()
   : MstTot a opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
-  = let m0 = NMSTTotal.get () in
+  = let m0 : full_mem = NMSTTotal.get () in
     assert (interp ((pre `star` frame) `star` linv opened_invariants m0) m0);
     rearrange_pqr_prq pre frame (linv opened_invariants m0);
     assert (interp ((pre `star` linv opened_invariants m0) `star` frame) m0);
     let x = f () in
-    let m1 = NMSTTotal.get () in
+    let m1 : full_mem = NMSTTotal.get () in
     assert (interp ((post x `star` frame) `star` (linv opened_invariants m1)) m1);
     assert (preserves_frame opened_invariants pre (post x) m0 m1);
     let aux (p q r s:slprop)
