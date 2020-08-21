@@ -278,11 +278,10 @@ let mprop (fp:slprop u#a) =
 val mem_evolves : FStar.Preorder.preorder full_mem
 
 (** See [Steel.Heap.is_frame_preserving]. We add in [lock_invariants] now *)
-let preserves_frame (e:inames) (pre post:slprop) (m0 m1:mem) =
-  forall (frame:slprop).
-    interp ((pre `star` frame) `star` locks_invariant e m0) m0 ==>
-    (interp ((post `star` frame) `star` locks_invariant e m1) m1 /\
-     (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)))
+let post_preserves_frame_mprops (e:inames) (pre post:slprop) (frame:slprop)
+  (m0:mem{interp (pre `star` frame `star` locks_invariant e m0) m0})
+  (m1:mem{interp (post `star` frame `star` locks_invariant e m1) m1}) =
+  forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)
 
 (**
   To guarantee that the memory always evolve according to frame-preserving updates,
@@ -290,19 +289,25 @@ let preserves_frame (e:inames) (pre post:slprop) (m0 m1:mem) =
   effect NMSTATETOT. The effect is indexed by [except], which is the set of invariants that
   are currently opened.
 *)
-effect MstTot (a:Type u#a) (except:inames) (expects:slprop u#1) (provides: a -> slprop u#1) =
-  NMSTTotal.NMSTATETOT a (full_mem u#1) mem_evolves
+effect MstTot
+  (a:Type u#a)
+  (except:inames)
+  (expects:slprop u#1)
+  (provides: a -> slprop u#1)
+  (frame:slprop u#1)
+  = NMSTTotal.NMSTATETOT a (full_mem u#1) mem_evolves
     (requires fun m0 ->
         inames_ok except m0 /\
-        interp (expects `star` locks_invariant except m0) m0)
+        interp (expects `star` frame `star` locks_invariant except m0) m0)
     (ensures fun m0 x m1 ->
         inames_ok except m1 /\
-        interp (provides x `star` locks_invariant except m1) m1 /\
-        preserves_frame except expects (provides x) m0 m1)
+        interp (expects `star` frame `star` locks_invariant except m0) m0 /\  //TODO: repeating
+        interp (provides x `star` frame `star` locks_invariant except m1) m1 /\
+        post_preserves_frame_mprops except expects (provides x) frame m0 m1)
 
 (** An action is just a thunked computation in [MstTot] *)
 let action_except (a:Type u#a) (except:inames) (expects:slprop) (provides: a -> slprop) =
-  unit -> MstTot a except expects provides
+  frame:slprop -> MstTot a except expects provides frame
 
 val sel_action (#a:Type u#1) (#pcm:_) (e:inames) (r:ref a pcm) (v0:erased a)
   : action_except (v:a{compatible pcm v0 v}) e (pts_to r v0) (fun _ -> pts_to r v0)

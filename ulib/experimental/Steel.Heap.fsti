@@ -391,6 +391,37 @@ let is_frame_preserving
       (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr) /\
       (forall (hp:hprop frame). hp h0 == hp h1))
 
+(** Every action is frame-preserving *)
+let action (fp:slprop u#b) (a:Type u#a) (fp':a -> slprop u#b) =
+  f:pre_action fp a fp'{ is_frame_preserving f }
+
+let pre_action_with_frame
+  (fp:slprop u#a)
+  (a:Type u#b)
+  (fp':a -> slprop u#a)
+  (frame:slprop u#a)
+  = full_hheap (fp `star` frame) -> (x:a & full_hheap (fp' x `star` frame))
+
+let post_preserves_frame_props
+  (#a: Type u#a)
+  (#fp: slprop u#b)
+  (#fp': a -> slprop u#b)
+  (frame:slprop u#b)
+  (f:pre_action_with_frame fp a fp' frame)
+  =
+  forall (h0:full_hheap (fp `star` frame)).
+     (let (| x, h1 |) = f h0 in
+      heap_evolves h0 h1 /\
+      (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr) /\
+      (forall (hp:hprop frame). hp h0 == hp h1))
+
+let action_with_frame
+  (fp:slprop u#b)
+  (a:Type u#a)
+  (fp':a -> slprop u#b)
+  (frame:slprop u#b)
+  = f:pre_action_with_frame fp a fp' frame{post_preserves_frame_props frame f}
+
 (**
   Two heaps [h0] and [h1] are frame-related if you can get from [h0] to [h1] with a
   frame-preserving update.
@@ -402,9 +433,6 @@ let frame_related_heaps (h0 h1:full_heap) (fp0 fp1 frame:slprop) (allocates:bool
   (forall (hp:hprop frame). hp h0 == hp h1) /\
   (not allocates ==> (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr))
 
-(** Every action is frame-preserving *)
-let action (fp:slprop u#b) (a:Type u#a) (fp':a -> slprop u#b) =
-  f:pre_action fp a fp'{ is_frame_preserving f }
 
 (**
   A frame-preserving action applied on [h0] produces an [h1] such that [h0] and [h1] are
