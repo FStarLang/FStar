@@ -23,6 +23,7 @@ let state0 (uses:inames) : S.st0 =
   {
     S.mem = mem;
     S.core = core_mem;
+    S.full_mem_pred = full_mem_pred;
     S.locks_preorder = mem_evolves;
     S.hprop = slprop;
     S.locks_invariant = locks_invariant uses;

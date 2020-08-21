@@ -271,4 +271,6 @@ let bind_atomic_steel _ _ _ _ _ _ _ _ f g
   g x ()
 #pop-options
 
+#push-options "--z3rlimit 40"
 let subcomp_atomic_steel _ _ _ _ f = fun m0 -> f m0
+#pop-options
