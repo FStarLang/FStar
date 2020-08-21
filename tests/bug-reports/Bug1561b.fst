@@ -17,11 +17,11 @@ module Bug1561b
 
 class a = {x : bool}
 
-let t [| a |] : Tot Type = if x then ℤ else unit
+let t {| a |} : Tot Type = if x then ℤ else unit
 
 type u = | A | B
 
-let f_t [| _ : a |]  :  Tot Type = u → t → Tot t
+let f_t {| _ : a |}  :  Tot Type = u → t → Tot t
 
 instance ii : a = { x = true }
 

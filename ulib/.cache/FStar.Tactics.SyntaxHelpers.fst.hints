@@ -11,7 +11,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "e62837d3dfe6f41b79888727b6f5c50c"
+      "078df497bba9f714a38c85832dc81a29"
     ],
     [
       "FStar.Tactics.SyntaxHelpers.mk_tot_arr",
@@ -23,31 +23,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "0457092e52341e1a3f050d45a457544e"
-    ],
-    [
-      "FStar.Tactics.SyntaxHelpers.mk_arr",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
-      ],
-      0,
-      "ae510b8f0e1be4a27652e0e90087e01b"
-    ],
-    [
-      "FStar.Tactics.SyntaxHelpers.mk_tot_arr",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
-      ],
-      0,
-      "728cf8f8203e94073dcb7e39c0860ef1"
+      "3ea1cef52fba5128a5e474639d0af40c"
     ]
   ]
 ]

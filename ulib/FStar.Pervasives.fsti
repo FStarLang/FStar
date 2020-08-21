@@ -676,14 +676,49 @@ val resolve_implicits : unit
     see https://github.com/FStarLang/FStar/issues/1844 *)
 val erasable : unit
 
-(** This attribute can be added to a layered effect definition
-    to enable smt proofs by reifying the effect computations.
+(** THIS ATTRIBUTE CAN BREAK EXTRACTION SOUNDNESS, USE WITH CARE
 
-    By-default, layered effect are not reified to the smt encoding,
-    meaning that they can only be reasoned with their specs.
-    
-    see examples/layeredeffects/SMTReification.fst for an example.*)
-val smt_reifiable_layered_effect : unit
+    Combinators for reifiable layered effects must have binders with
+    non-informative types, since at extraction time, those binders are
+    substituted with ().
+    This attribute can be added to a layered effect definition to skip this
+    check, i.e. adding it will allow informative binder types, but then
+    the code should not be extracted *)
+val allow_informative_binders : unit
+
+(** [commute_nested_matches]
+    This attribute can be used to decorate an inductive type [t]
+
+    During normalization, if reduction is blocked on matching the
+    constructors of [t] in the following sense:
+
+    [
+     match (match e0 with | P1 -> e1 | ... | Pn -> en) with
+     | Q1 -> f1 ... | Qm -> fm
+    ]
+
+    i.e., the outer match is stuck due to the inner match on [e0]
+    being stuck, and if the head constructor the outer [Qi] patterns
+    are the constructors of the decorated inductive type [t], then,
+    this is reduced to
+
+    [
+     match e0 with
+     | P1 -> (match e1 with | Q1 -> f1 ... | Qm -> fm)
+     | ...
+     | Pn -> (match en with | Q1 -> f1 ... | Qm -> fm)
+    ]
+
+    This is sometimes useful when partially evaluating code before
+    extraction, particularly when aiming to obtain first-order code
+    for KReMLin. However, this attribute should be used with care,
+    since if after the rewriting the inner matches do not reduce, then
+    this can cause an explosion in code size.
+
+    See tests/micro-benchmarks/CommuteNestedMatches.fst
+    and examples/layeredeffects/LowParseWriters.fsti
+  *)
+val commute_nested_matches : unit
 
 ///  Controlling normalization
 
@@ -728,7 +763,7 @@ val delta : norm_step
   *)
 val zeta : norm_step
 
-(** Unroll recursive calls 
+(** Unroll recursive calls
 
     Unlike [zeta], [zeta_full] has no looping prevention
     heuristics. F* will try to unroll recursive functions as much as
@@ -786,7 +821,7 @@ val delta_fully (s: list string) : Tot norm_step
       ]}
 
    {[norm [delta_attr [`%my_attr]] f1]}
-   
+
    will reduce to [0 + 1].
 
   *)
@@ -827,3 +862,9 @@ val singleton (#a: Type) (x: a) : Tot (y: a{y == x})
     an identity function, we have an SMT axiom:
     [forall t e.{:pattern (with_type t e)} has_type (with_type t e) t] *)
 val with_type (#t: Type) (e: t) : Tot t
+
+(** A weakening coercion from eqtype to Type.
+
+    One of its uses is in types of layered effect combinators that
+    are subjected to stricter typing discipline (no subtyping) *)
+unfold let eqtype_as_type (a:eqtype) : Type = a

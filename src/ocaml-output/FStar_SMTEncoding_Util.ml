@@ -3,21 +3,21 @@ let (mkAssume :
   (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.caption *
     Prims.string) -> FStar_SMTEncoding_Term.decl)
   =
-  fun uu____11 ->
-    match uu____11 with
+  fun uu___ ->
+    match uu___ with
     | (tm, cap, nm) ->
-        let uu____24 =
-          let uu____25 = FStar_SMTEncoding_Term.escape nm in
+        let uu___1 =
+          let uu___2 = FStar_SMTEncoding_Term.escape nm in
           {
             FStar_SMTEncoding_Term.assumption_term = tm;
             FStar_SMTEncoding_Term.assumption_caption = cap;
-            FStar_SMTEncoding_Term.assumption_name = uu____25;
+            FStar_SMTEncoding_Term.assumption_name = uu___2;
             FStar_SMTEncoding_Term.assumption_fact_ids = []
           } in
-        FStar_SMTEncoding_Term.Assume uu____24
+        FStar_SMTEncoding_Term.Assume uu___1
 let norng :
-  'uuuuuu36 'uuuuuu37 .
-    ('uuuuuu36 -> FStar_Range.range -> 'uuuuuu37) -> 'uuuuuu36 -> 'uuuuuu37
+  'uuuuu 'uuuuu1 .
+    ('uuuuu -> FStar_Range.range -> 'uuuuu1) -> 'uuuuu -> 'uuuuu1
   = fun f -> fun x -> f x FStar_Range.dummyRange
 let (mkTrue : FStar_SMTEncoding_Term.term) =
   FStar_SMTEncoding_Term.mkTrue FStar_Range.dummyRange
@@ -170,22 +170,19 @@ let (mkCases :
   FStar_SMTEncoding_Term.term Prims.list -> FStar_SMTEncoding_Term.term) =
   norng FStar_SMTEncoding_Term.mkCases
 let norng2 :
-  'uuuuuu587 'uuuuuu588 'uuuuuu589 .
-    ('uuuuuu587 -> 'uuuuuu588 -> FStar_Range.range -> 'uuuuuu589) ->
-      'uuuuuu587 -> 'uuuuuu588 -> 'uuuuuu589
+  'uuuuu 'uuuuu1 'uuuuu2 .
+    ('uuuuu -> 'uuuuu1 -> FStar_Range.range -> 'uuuuu2) ->
+      'uuuuu -> 'uuuuu1 -> 'uuuuu2
   = fun f -> fun x -> fun y -> f x y FStar_Range.dummyRange
 let norng3 :
-  'uuuuuu637 'uuuuuu638 'uuuuuu639 'uuuuuu640 .
-    ('uuuuuu637 ->
-       'uuuuuu638 -> 'uuuuuu639 -> FStar_Range.range -> 'uuuuuu640)
-      -> 'uuuuuu637 -> 'uuuuuu638 -> 'uuuuuu639 -> 'uuuuuu640
+  'uuuuu 'uuuuu1 'uuuuu2 'uuuuu3 .
+    ('uuuuu -> 'uuuuu1 -> 'uuuuu2 -> FStar_Range.range -> 'uuuuu3) ->
+      'uuuuu -> 'uuuuu1 -> 'uuuuu2 -> 'uuuuu3
   = fun f -> fun x -> fun y -> fun z -> f x y z FStar_Range.dummyRange
 let norng4 :
-  'uuuuuu702 'uuuuuu703 'uuuuuu704 'uuuuuu705 'uuuuuu706 .
-    ('uuuuuu702 ->
-       'uuuuuu703 ->
-         'uuuuuu704 -> 'uuuuuu705 -> FStar_Range.range -> 'uuuuuu706)
-      -> 'uuuuuu702 -> 'uuuuuu703 -> 'uuuuuu704 -> 'uuuuuu705 -> 'uuuuuu706
+  'uuuuu 'uuuuu1 'uuuuu2 'uuuuu3 'uuuuu4 .
+    ('uuuuu -> 'uuuuu1 -> 'uuuuu2 -> 'uuuuu3 -> FStar_Range.range -> 'uuuuu4)
+      -> 'uuuuu -> 'uuuuu1 -> 'uuuuu2 -> 'uuuuu3 -> 'uuuuu4
   =
   fun f ->
     fun x -> fun y -> fun z -> fun w -> f x y z w FStar_Range.dummyRange
@@ -224,14 +221,12 @@ let (is_smt_reifiable_effect :
     fun l ->
       let l1 = FStar_TypeChecker_Env.norm_eff_name en l in
       (FStar_TypeChecker_Env.is_reifiable_effect en l1) &&
-        (let is_layered =
-           let uu____854 =
+        (let uu___ =
+           let uu___1 =
              FStar_All.pipe_right l1
                (FStar_TypeChecker_Env.get_effect_decl en) in
-           FStar_All.pipe_right uu____854 FStar_Syntax_Util.is_layered in
-         (Prims.op_Negation is_layered) ||
-           (FStar_TypeChecker_Env.fv_with_lid_has_attr en l1
-              FStar_Parser_Const.smt_reifiable_layered_effect))
+           FStar_All.pipe_right uu___1 FStar_Syntax_Util.is_layered in
+         Prims.op_Negation uu___)
 let (is_smt_reifiable_comp :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.comp -> Prims.bool) =
   fun en ->
@@ -239,7 +234,7 @@ let (is_smt_reifiable_comp :
       match c.FStar_Syntax_Syntax.n with
       | FStar_Syntax_Syntax.Comp ct ->
           is_smt_reifiable_effect en ct.FStar_Syntax_Syntax.effect_name
-      | uu____870 -> false
+      | uu___ -> false
 let (is_smt_reifiable_rc :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.residual_comp -> Prims.bool)
@@ -251,10 +246,10 @@ let (is_smt_reifiable_function :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun en ->
     fun t ->
-      let uu____898 =
-        let uu____899 = FStar_Syntax_Subst.compress t in
-        uu____899.FStar_Syntax_Syntax.n in
-      match uu____898 with
-      | FStar_Syntax_Syntax.Tm_arrow (uu____903, c) ->
+      let uu___ =
+        let uu___1 = FStar_Syntax_Subst.compress t in
+        uu___1.FStar_Syntax_Syntax.n in
+      match uu___ with
+      | FStar_Syntax_Syntax.Tm_arrow (uu___1, c) ->
           is_smt_reifiable_comp en c
-      | uu____925 -> false
+      | uu___1 -> false

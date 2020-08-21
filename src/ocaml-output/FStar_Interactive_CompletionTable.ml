@@ -5,16 +5,15 @@ type 'a heap =
   | EmptyHeap 
   | Heap of ('a * 'a heap Prims.list) 
 let uu___is_EmptyHeap : 'a . 'a heap -> Prims.bool =
-  fun projectee ->
-    match projectee with | EmptyHeap -> true | uu____69 -> false
+  fun projectee -> match projectee with | EmptyHeap -> true | uu___ -> false
 let uu___is_Heap : 'a . 'a heap -> Prims.bool =
-  fun projectee -> match projectee with | Heap _0 -> true | uu____99 -> false
+  fun projectee -> match projectee with | Heap _0 -> true | uu___ -> false
 let __proj__Heap__item___0 : 'a . 'a heap -> ('a * 'a heap Prims.list) =
   fun projectee -> match projectee with | Heap _0 -> _0
 let heap_merge :
-  'uuuuuu144 .
-    ('uuuuuu144 -> 'uuuuuu144 -> Prims.int) ->
-      'uuuuuu144 heap -> 'uuuuuu144 heap -> 'uuuuuu144 heap
+  'uuuuu .
+    ('uuuuu -> 'uuuuu -> Prims.int) ->
+      'uuuuu heap -> 'uuuuu heap -> 'uuuuu heap
   =
   fun cmp ->
     fun h1 ->
@@ -23,85 +22,76 @@ let heap_merge :
         | (EmptyHeap, h) -> h
         | (h, EmptyHeap) -> h
         | (Heap (v1, hh1), Heap (v2, hh2)) ->
-            let uu____224 =
-              let uu____226 = cmp v1 v2 in uu____226 < Prims.int_zero in
-            if uu____224
-            then Heap (v1, (h2 :: hh1))
-            else Heap (v2, (h1 :: hh2))
+            let uu___ = let uu___1 = cmp v1 v2 in uu___1 < Prims.int_zero in
+            if uu___ then Heap (v1, (h2 :: hh1)) else Heap (v2, (h1 :: hh2))
 let heap_insert :
-  'uuuuuu255 .
-    ('uuuuuu255 -> 'uuuuuu255 -> Prims.int) ->
-      'uuuuuu255 heap -> 'uuuuuu255 -> 'uuuuuu255 heap
+  'uuuuu .
+    ('uuuuu -> 'uuuuu -> Prims.int) -> 'uuuuu heap -> 'uuuuu -> 'uuuuu heap
   = fun cmp -> fun h -> fun v -> heap_merge cmp (Heap (v, [])) h
 let rec heap_merge_pairs :
-  'uuuuuu302 .
-    ('uuuuuu302 -> 'uuuuuu302 -> Prims.int) ->
-      'uuuuuu302 heap Prims.list -> 'uuuuuu302 heap
+  'uuuuu .
+    ('uuuuu -> 'uuuuu -> Prims.int) -> 'uuuuu heap Prims.list -> 'uuuuu heap
   =
   fun cmp ->
-    fun uu___0_325 ->
-      match uu___0_325 with
+    fun uu___ ->
+      match uu___ with
       | [] -> EmptyHeap
       | h::[] -> h
       | h1::h2::hh ->
-          let uu____359 = heap_merge cmp h1 h2 in
-          let uu____362 = heap_merge_pairs cmp hh in
-          heap_merge cmp uu____359 uu____362
-let heap_peek :
-  'uuuuuu370 . 'uuuuuu370 heap -> 'uuuuuu370 FStar_Pervasives_Native.option =
-  fun uu___1_379 ->
-    match uu___1_379 with
+          let uu___1 = heap_merge cmp h1 h2 in
+          let uu___2 = heap_merge_pairs cmp hh in
+          heap_merge cmp uu___1 uu___2
+let heap_peek : 'uuuuu . 'uuuuu heap -> 'uuuuu FStar_Pervasives_Native.option
+  =
+  fun uu___ ->
+    match uu___ with
     | EmptyHeap -> FStar_Pervasives_Native.None
-    | Heap (v, uu____383) -> FStar_Pervasives_Native.Some v
+    | Heap (v, uu___1) -> FStar_Pervasives_Native.Some v
 let heap_pop :
-  'uuuuuu399 .
-    ('uuuuuu399 -> 'uuuuuu399 -> Prims.int) ->
-      'uuuuuu399 heap ->
-        ('uuuuuu399 * 'uuuuuu399 heap) FStar_Pervasives_Native.option
+  'uuuuu .
+    ('uuuuu -> 'uuuuu -> Prims.int) ->
+      'uuuuu heap -> ('uuuuu * 'uuuuu heap) FStar_Pervasives_Native.option
   =
   fun cmp ->
-    fun uu___2_426 ->
-      match uu___2_426 with
+    fun uu___ ->
+      match uu___ with
       | EmptyHeap -> FStar_Pervasives_Native.None
       | Heap (v, hh) ->
-          let uu____450 =
-            let uu____457 = heap_merge_pairs cmp hh in (v, uu____457) in
-          FStar_Pervasives_Native.Some uu____450
+          let uu___1 = let uu___2 = heap_merge_pairs cmp hh in (v, uu___2) in
+          FStar_Pervasives_Native.Some uu___1
 let heap_from_list :
-  'uuuuuu475 .
-    ('uuuuuu475 -> 'uuuuuu475 -> Prims.int) ->
-      'uuuuuu475 Prims.list -> 'uuuuuu475 heap
+  'uuuuu .
+    ('uuuuu -> 'uuuuu -> Prims.int) -> 'uuuuu Prims.list -> 'uuuuu heap
   =
   fun cmp ->
     fun values -> FStar_List.fold_left (heap_insert cmp) EmptyHeap values
 let push_nodup :
-  'uuuuuu515 .
-    ('uuuuuu515 -> Prims.string) ->
-      'uuuuuu515 -> 'uuuuuu515 Prims.list -> 'uuuuuu515 Prims.list
+  'uuuuu .
+    ('uuuuu -> Prims.string) ->
+      'uuuuu -> 'uuuuu Prims.list -> 'uuuuu Prims.list
   =
   fun key_fn ->
     fun x ->
-      fun uu___3_538 ->
-        match uu___3_538 with
+      fun uu___ ->
+        match uu___ with
         | [] -> [x]
         | h::t ->
-            let uu____548 =
-              let uu____550 =
-                let uu____552 = key_fn x in
-                let uu____554 = key_fn h in
-                string_compare uu____552 uu____554 in
-              uu____550 = Prims.int_zero in
-            if uu____548 then h :: t else x :: h :: t
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = key_fn x in
+                let uu___4 = key_fn h in string_compare uu___3 uu___4 in
+              uu___2 = Prims.int_zero in
+            if uu___1 then h :: t else x :: h :: t
 let rec add_priorities :
-  'uuuuuu572 .
+  'uuuuu .
     Prims.int ->
-      (Prims.int * 'uuuuuu572) Prims.list ->
-        'uuuuuu572 Prims.list -> (Prims.int * 'uuuuuu572) Prims.list
+      (Prims.int * 'uuuuu) Prims.list ->
+        'uuuuu Prims.list -> (Prims.int * 'uuuuu) Prims.list
   =
   fun n ->
     fun acc ->
-      fun uu___4_604 ->
-        match uu___4_604 with
+      fun uu___ ->
+        match uu___ with
         | [] -> acc
         | h::t -> add_priorities (n + Prims.int_one) ((n, h) :: acc) t
 let merge_increasing_lists_rev :
@@ -110,64 +100,60 @@ let merge_increasing_lists_rev :
     fun lists ->
       let cmp v1 v2 =
         match (v1, v2) with
-        | ((uu____716, []), uu____717) -> failwith "impossible"
-        | (uu____745, (uu____746, [])) -> failwith "impossible"
-        | ((pr1, h1::uu____776), (pr2, h2::uu____779)) ->
+        | ((uu___, []), uu___1) -> failwith "impossible"
+        | (uu___, (uu___1, [])) -> failwith "impossible"
+        | ((pr1, h1::uu___), (pr2, h2::uu___1)) ->
             let cmp_h =
-              let uu____808 = key_fn h1 in
-              let uu____810 = key_fn h2 in string_compare uu____808 uu____810 in
+              let uu___2 = key_fn h1 in
+              let uu___3 = key_fn h2 in string_compare uu___2 uu___3 in
             if cmp_h <> Prims.int_zero then cmp_h else pr1 - pr2 in
       let rec aux lists1 acc =
-        let uu____853 = heap_pop cmp lists1 in
-        match uu____853 with
+        let uu___ = heap_pop cmp lists1 in
+        match uu___ with
         | FStar_Pervasives_Native.None -> acc
-        | FStar_Pervasives_Native.Some ((pr, []), uu____906) ->
+        | FStar_Pervasives_Native.Some ((pr, []), uu___1) ->
             failwith "impossible"
         | FStar_Pervasives_Native.Some ((pr, v::[]), lists2) ->
-            let uu____1011 = push_nodup key_fn v acc in aux lists2 uu____1011
+            let uu___1 = push_nodup key_fn v acc in aux lists2 uu___1
         | FStar_Pervasives_Native.Some ((pr, v::tl), lists2) ->
-            let uu____1069 = heap_insert cmp lists2 (pr, tl) in
-            let uu____1089 = push_nodup key_fn v acc in
-            aux uu____1069 uu____1089 in
+            let uu___1 = heap_insert cmp lists2 (pr, tl) in
+            let uu___2 = push_nodup key_fn v acc in aux uu___1 uu___2 in
       let lists1 = FStar_List.filter (fun x -> x <> []) lists in
       match lists1 with
       | [] -> []
       | l::[] -> FStar_List.rev l
-      | uu____1116 ->
+      | uu___ ->
           let lists2 = add_priorities Prims.int_zero [] lists1 in
-          let uu____1141 = heap_from_list cmp lists2 in aux uu____1141 []
+          let uu___1 = heap_from_list cmp lists2 in aux uu___1 []
 type 'a btree =
   | StrEmpty 
   | StrBranch of (Prims.string * 'a * 'a btree * 'a btree) 
 let uu___is_StrEmpty : 'a . 'a btree -> Prims.bool =
-  fun projectee ->
-    match projectee with | StrEmpty -> true | uu____1200 -> false
+  fun projectee -> match projectee with | StrEmpty -> true | uu___ -> false
 let uu___is_StrBranch : 'a . 'a btree -> Prims.bool =
   fun projectee ->
-    match projectee with | StrBranch _0 -> true | uu____1235 -> false
+    match projectee with | StrBranch _0 -> true | uu___ -> false
 let __proj__StrBranch__item___0 :
   'a . 'a btree -> (Prims.string * 'a * 'a btree * 'a btree) =
   fun projectee -> match projectee with | StrBranch _0 -> _0
 let rec btree_to_list_rev :
-  'uuuuuu1288 .
-    'uuuuuu1288 btree ->
-      (Prims.string * 'uuuuuu1288) Prims.list ->
-        (Prims.string * 'uuuuuu1288) Prims.list
+  'uuuuu .
+    'uuuuu btree ->
+      (Prims.string * 'uuuuu) Prims.list ->
+        (Prims.string * 'uuuuu) Prims.list
   =
   fun btree1 ->
     fun acc ->
       match btree1 with
       | StrEmpty -> acc
       | StrBranch (key, value, lbt, rbt) ->
-          let uu____1338 =
-            let uu____1346 = btree_to_list_rev lbt acc in (key, value) ::
-              uu____1346 in
-          btree_to_list_rev rbt uu____1338
+          let uu___ =
+            let uu___1 = btree_to_list_rev lbt acc in (key, value) :: uu___1 in
+          btree_to_list_rev rbt uu___
 let rec btree_from_list :
-  'uuuuuu1367 .
-    (Prims.string * 'uuuuuu1367) Prims.list ->
-      Prims.int ->
-        ('uuuuuu1367 btree * (Prims.string * 'uuuuuu1367) Prims.list)
+  'uuuuu .
+    (Prims.string * 'uuuuu) Prims.list ->
+      Prims.int -> ('uuuuu btree * (Prims.string * 'uuuuu) Prims.list)
   =
   fun nodes ->
     fun size ->
@@ -176,14 +162,14 @@ let rec btree_from_list :
       else
         (let lbt_size = size / (Prims.of_int (2)) in
          let rbt_size = (size - lbt_size) - Prims.int_one in
-         let uu____1427 = btree_from_list nodes lbt_size in
-         match uu____1427 with
+         let uu___1 = btree_from_list nodes lbt_size in
+         match uu___1 with
          | (lbt, nodes_left) ->
              (match nodes_left with
               | [] -> failwith "Invalid size passed to btree_from_list"
               | (k, v)::nodes_left1 ->
-                  let uu____1523 = btree_from_list nodes_left1 rbt_size in
-                  (match uu____1523 with
+                  let uu___2 = btree_from_list nodes_left1 rbt_size in
+                  (match uu___2 with
                    | (rbt, nodes_left2) ->
                        ((StrBranch (k, v, lbt, rbt)), nodes_left2))))
 let rec btree_insert_replace :
@@ -197,17 +183,17 @@ let rec btree_insert_replace :
             let cmp = string_compare k k' in
             if cmp < Prims.int_zero
             then
-              let uu____1643 =
-                let uu____1657 = btree_insert_replace lbt k v in
-                (k', v', uu____1657, rbt) in
-              StrBranch uu____1643
+              let uu___ =
+                let uu___1 = btree_insert_replace lbt k v in
+                (k', v', uu___1, rbt) in
+              StrBranch uu___
             else
               if cmp > Prims.int_zero
               then
-                (let uu____1671 =
-                   let uu____1685 = btree_insert_replace rbt k v in
-                   (k', v', lbt, uu____1685) in
-                 StrBranch uu____1671)
+                (let uu___1 =
+                   let uu___2 = btree_insert_replace rbt k v in
+                   (k', v', lbt, uu___2) in
+                 StrBranch uu___1)
               else StrBranch (k', v, lbt, rbt)
 let rec btree_find_exact :
   'a . 'a btree -> Prims.string -> 'a FStar_Pervasives_Native.option =
@@ -232,8 +218,7 @@ let rec btree_extract_min :
     | StrEmpty -> FStar_Pervasives_Native.None
     | StrBranch (k, v, StrEmpty, rbt) ->
         FStar_Pervasives_Native.Some (k, v, rbt)
-    | StrBranch (uu____1814, uu____1815, lbt, uu____1817) ->
-        btree_extract_min lbt
+    | StrBranch (uu___, uu___1, lbt, uu___2) -> btree_extract_min lbt
 let rec btree_remove : 'a . 'a btree -> Prims.string -> 'a btree =
   fun bt ->
     fun k ->
@@ -243,22 +228,21 @@ let rec btree_remove : 'a . 'a btree -> Prims.string -> 'a btree =
           let cmp = string_compare k k' in
           if cmp < Prims.int_zero
           then
-            let uu____1875 =
-              let uu____1889 = btree_remove lbt k in (k', v, uu____1889, rbt) in
-            StrBranch uu____1875
+            let uu___ =
+              let uu___1 = btree_remove lbt k in (k', v, uu___1, rbt) in
+            StrBranch uu___
           else
             if cmp > Prims.int_zero
             then
-              (let uu____1903 =
-                 let uu____1917 = btree_remove rbt k in
-                 (k', v, lbt, uu____1917) in
-               StrBranch uu____1903)
+              (let uu___1 =
+                 let uu___2 = btree_remove rbt k in (k', v, lbt, uu___2) in
+               StrBranch uu___1)
             else
               (match lbt with
                | StrEmpty -> bt
-               | uu____1929 ->
-                   let uu____1932 = btree_extract_min rbt in
-                   (match uu____1932 with
+               | uu___2 ->
+                   let uu___3 = btree_extract_min rbt in
+                   (match uu___3 with
                     | FStar_Pervasives_Native.None -> lbt
                     | FStar_Pervasives_Native.Some
                         (rbt_min_k, rbt_min_v, rbt') ->
@@ -321,9 +305,8 @@ let rec btree_fold :
         match bt with
         | StrEmpty -> acc
         | StrBranch (k, v, lbt, rbt) ->
-            let uu____2312 =
-              let uu____2313 = btree_fold rbt f acc in f k v uu____2313 in
-            btree_fold lbt f uu____2312
+            let uu___ = let uu___1 = btree_fold rbt f acc in f k v uu___1 in
+            btree_fold lbt f uu___
 type path = path_elem Prims.list
 type query = Prims.string Prims.list
 let (query_to_string : Prims.string Prims.list -> Prims.string) =
@@ -332,13 +315,12 @@ type 'a name_collection =
   | Names of 'a btree 
   | ImportedNames of (Prims.string * 'a name_collection Prims.list) 
 let uu___is_Names : 'a . 'a name_collection -> Prims.bool =
-  fun projectee ->
-    match projectee with | Names _0 -> true | uu____2381 -> false
+  fun projectee -> match projectee with | Names _0 -> true | uu___ -> false
 let __proj__Names__item___0 : 'a . 'a name_collection -> 'a btree =
   fun projectee -> match projectee with | Names _0 -> _0
 let uu___is_ImportedNames : 'a . 'a name_collection -> Prims.bool =
   fun projectee ->
-    match projectee with | ImportedNames _0 -> true | uu____2432 -> false
+    match projectee with | ImportedNames _0 -> true | uu___ -> false
 let __proj__ImportedNames__item___0 :
   'a . 'a name_collection -> (Prims.string * 'a name_collection Prims.list) =
   fun projectee -> match projectee with | ImportedNames _0 -> _0
@@ -352,27 +334,27 @@ let __proj__Mktrie__item__bindings : 'a . 'a trie -> 'a names =
 let __proj__Mktrie__item__namespaces : 'a . 'a trie -> 'a trie names =
   fun projectee ->
     match projectee with | { bindings; namespaces;_} -> namespaces
-let trie_empty : 'uuuuuu2553 . unit -> 'uuuuuu2553 trie =
-  fun uu____2557 -> { bindings = []; namespaces = [] }
+let trie_empty : 'uuuuu . unit -> 'uuuuu trie =
+  fun uu___ -> { bindings = []; namespaces = [] }
 let rec names_find_exact :
   'a . 'a names -> Prims.string -> 'a FStar_Pervasives_Native.option =
   fun names1 ->
     fun ns ->
-      let uu____2591 =
+      let uu___ =
         match names1 with
         | [] -> (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None)
         | (Names bt)::names2 ->
-            let uu____2632 = btree_find_exact bt ns in
-            (uu____2632, (FStar_Pervasives_Native.Some names2))
-        | (ImportedNames (uu____2643, names2))::more_names ->
-            let uu____2662 = names_find_exact names2 ns in
-            (uu____2662, (FStar_Pervasives_Native.Some more_names)) in
-      match uu____2591 with
+            let uu___1 = btree_find_exact bt ns in
+            (uu___1, (FStar_Pervasives_Native.Some names2))
+        | (ImportedNames (uu___1, names2))::more_names ->
+            let uu___2 = names_find_exact names2 ns in
+            (uu___2, (FStar_Pervasives_Native.Some more_names)) in
+      match uu___ with
       | (result, names2) ->
           (match (result, names2) with
            | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some
               scopes) -> names_find_exact scopes ns
-           | uu____2708 -> result)
+           | uu___1 -> result)
 let rec trie_descend_exact :
   'a . 'a trie -> query -> 'a trie FStar_Pervasives_Native.option =
   fun tr ->
@@ -380,8 +362,8 @@ let rec trie_descend_exact :
       match query1 with
       | [] -> FStar_Pervasives_Native.Some tr
       | ns::query2 ->
-          let uu____2756 = names_find_exact tr.namespaces ns in
-          FStar_Util.bind_opt uu____2756
+          let uu___ = names_find_exact tr.namespaces ns in
+          FStar_Util.bind_opt uu___
             (fun scope -> trie_descend_exact scope query2)
 let rec trie_find_exact :
   'a . 'a trie -> query -> 'a FStar_Pervasives_Native.option =
@@ -391,23 +373,22 @@ let rec trie_find_exact :
       | [] -> failwith "Empty query in trie_find_exact"
       | name::[] -> names_find_exact tr.bindings name
       | ns::query2 ->
-          let uu____2811 = names_find_exact tr.namespaces ns in
-          FStar_Util.bind_opt uu____2811
+          let uu___ = names_find_exact tr.namespaces ns in
+          FStar_Util.bind_opt uu___
             (fun scope -> trie_find_exact scope query2)
 let names_insert : 'a . 'a names -> Prims.string -> 'a -> 'a names =
   fun name_collections ->
     fun id ->
       fun v ->
-        let uu____2857 =
+        let uu___ =
           match name_collections with
           | (Names bt)::tl -> (bt, tl)
-          | uu____2894 -> (StrEmpty, name_collections) in
-        match uu____2857 with
+          | uu___1 -> (StrEmpty, name_collections) in
+        match uu___ with
         | (bt, name_collections1) ->
-            let uu____2919 =
-              let uu____2922 = btree_insert_replace bt id v in
-              Names uu____2922 in
-            uu____2919 :: name_collections1
+            let uu___1 =
+              let uu___2 = btree_insert_replace bt id v in Names uu___2 in
+            uu___1 :: name_collections1
 let rec namespaces_mutate :
   'a .
     'a trie names ->
@@ -425,10 +406,10 @@ let rec namespaces_mutate :
           fun mut_node ->
             fun mut_leaf ->
               let trie1 =
-                let uu____3122 = names_find_exact namespaces ns in
-                FStar_Util.dflt (trie_empty ()) uu____3122 in
-              let uu____3131 = trie_mutate trie1 q rev_acc mut_node mut_leaf in
-              names_insert namespaces ns uu____3131
+                let uu___ = names_find_exact namespaces ns in
+                FStar_Util.dflt (trie_empty ()) uu___ in
+              let uu___ = trie_mutate trie1 q rev_acc mut_node mut_leaf in
+              names_insert namespaces ns uu___
 and trie_mutate :
   'a .
     'a trie ->
@@ -456,12 +437,12 @@ let trie_mutate_leaf :
     fun query1 ->
       trie_mutate tr query1 []
         (fun tr1 ->
-           fun uu____3231 ->
-             fun uu____3232 ->
-               fun uu____3233 ->
+           fun uu___ ->
+             fun uu___1 ->
+               fun uu___2 ->
                  fun namespaces ->
-                   let uu___379_3242 = tr1 in
-                   { bindings = (uu___379_3242.bindings); namespaces })
+                   let uu___3 = tr1 in
+                   { bindings = (uu___3.bindings); namespaces })
 let trie_insert : 'a . 'a trie -> query -> Prims.string -> 'a -> 'a trie =
   fun tr ->
     fun ns_query ->
@@ -469,13 +450,10 @@ let trie_insert : 'a . 'a trie -> query -> Prims.string -> 'a -> 'a trie =
         fun v ->
           trie_mutate_leaf tr ns_query
             (fun tr1 ->
-               fun uu____3290 ->
-                 let uu___388_3293 = tr1 in
-                 let uu____3296 = names_insert tr1.bindings id v in
-                 {
-                   bindings = uu____3296;
-                   namespaces = (uu___388_3293.namespaces)
-                 })
+               fun uu___ ->
+                 let uu___1 = tr1 in
+                 let uu___2 = names_insert tr1.bindings id v in
+                 { bindings = uu___2; namespaces = (uu___1.namespaces) })
 let trie_import :
   'a .
     'a trie ->
@@ -488,10 +466,10 @@ let trie_import :
         fun mutator ->
           let label = query_to_string included_query in
           let included_trie =
-            let uu____3371 = trie_descend_exact tr included_query in
-            FStar_Util.dflt (trie_empty ()) uu____3371 in
+            let uu___ = trie_descend_exact tr included_query in
+            FStar_Util.dflt (trie_empty ()) uu___ in
           trie_mutate_leaf tr host_query
-            (fun tr1 -> fun uu____3381 -> mutator tr1 included_trie label)
+            (fun tr1 -> fun uu___ -> mutator tr1 included_trie label)
 let trie_include : 'a . 'a trie -> query -> query -> 'a trie =
   fun tr ->
     fun host_query ->
@@ -500,11 +478,11 @@ let trie_include : 'a . 'a trie -> query -> query -> 'a trie =
           (fun tr1 ->
              fun inc ->
                fun label ->
-                 let uu___406_3427 = tr1 in
+                 let uu___ = tr1 in
                  {
                    bindings = ((ImportedNames (label, (inc.bindings))) ::
                      (tr1.bindings));
-                   namespaces = (uu___406_3427.namespaces)
+                   namespaces = (uu___.namespaces)
                  })
 let trie_open_namespace : 'a . 'a trie -> query -> query -> 'a trie =
   fun tr ->
@@ -514,9 +492,9 @@ let trie_open_namespace : 'a . 'a trie -> query -> query -> 'a trie =
           (fun tr1 ->
              fun inc ->
                fun label ->
-                 let uu___415_3480 = tr1 in
+                 let uu___ = tr1 in
                  {
-                   bindings = (uu___415_3480.bindings);
+                   bindings = (uu___.bindings);
                    namespaces = ((ImportedNames (label, (inc.namespaces))) ::
                      (tr1.namespaces))
                  })
@@ -532,7 +510,7 @@ let trie_add_alias :
                  fun label ->
                    trie_mutate_leaf tr1 [key]
                      (fun _ignored_overwritten_trie ->
-                        fun uu____3552 ->
+                        fun uu___ ->
                           {
                             bindings =
                               [ImportedNames (label, (inc.bindings))];
@@ -547,12 +525,11 @@ let names_revmap :
       let rec aux acc imports name_collections1 =
         FStar_List.fold_left
           (fun acc1 ->
-             fun uu___5_3689 ->
-               match uu___5_3689 with
+             fun uu___ ->
+               match uu___ with
                | Names bt ->
-                   let uu____3713 =
-                     let uu____3721 = fn bt in (imports, uu____3721) in
-                   uu____3713 :: acc1
+                   let uu___1 = let uu___2 = fn bt in (imports, uu___2) in
+                   uu___1 :: acc1
                | ImportedNames (nm, name_collections2) ->
                    aux acc1 (nm :: imports) name_collections2) acc
           name_collections1 in
@@ -572,14 +549,12 @@ type name_search_term =
   | NSTNone 
   | NSTPrefix of Prims.string 
 let (uu___is_NSTAll : name_search_term -> Prims.bool) =
-  fun projectee ->
-    match projectee with | NSTAll -> true | uu____3829 -> false
+  fun projectee -> match projectee with | NSTAll -> true | uu___ -> false
 let (uu___is_NSTNone : name_search_term -> Prims.bool) =
-  fun projectee ->
-    match projectee with | NSTNone -> true | uu____3840 -> false
+  fun projectee -> match projectee with | NSTNone -> true | uu___ -> false
 let (uu___is_NSTPrefix : name_search_term -> Prims.bool) =
   fun projectee ->
-    match projectee with | NSTPrefix _0 -> true | uu____3853 -> false
+    match projectee with | NSTPrefix _0 -> true | uu___ -> false
 let (__proj__NSTPrefix__item___0 : name_search_term -> Prims.string) =
   fun projectee -> match projectee with | NSTPrefix _0 -> _0
 let names_find_rev :
@@ -598,18 +573,18 @@ let names_find_rev :
             names_revmap (fun bt -> btree_find_prefix bt id1) names1 in
       let matching_values_per_collection =
         FStar_List.map
-          (fun uu____3996 ->
-             match uu____3996 with
+          (fun uu___ ->
+             match uu___ with
              | (imports, matches) ->
                  FStar_List.map
-                   (fun uu____4047 ->
-                      match uu____4047 with
+                   (fun uu___1 ->
+                      match uu___1 with
                       | (segment, v) -> ((mk_path_el imports segment), v))
                    matches) matching_values_per_collection_with_imports in
       merge_increasing_lists_rev
-        (fun uu____4065 ->
-           match uu____4065 with
-           | (path_el, uu____4072) -> (path_el.segment).completion)
+        (fun uu___ ->
+           match uu___ with
+           | (path_el, uu___1) -> (path_el.segment).completion)
         matching_values_per_collection
 let rec trie_find_prefix' :
   'a .
@@ -620,28 +595,28 @@ let rec trie_find_prefix' :
     fun path_acc ->
       fun query1 ->
         fun acc ->
-          let uu____4127 =
+          let uu___ =
             match query1 with
             | [] -> (NSTAll, NSTAll, [])
             | id::[] -> ((NSTPrefix id), (NSTPrefix id), [])
             | ns::query2 -> ((NSTPrefix ns), NSTNone, query2) in
-          match uu____4127 with
+          match uu___ with
           | (ns_search_term, bindings_search_term, query2) ->
               let matching_namespaces_rev =
                 names_find_rev tr.namespaces ns_search_term in
               let acc_with_recursive_bindings =
                 FStar_List.fold_left
                   (fun acc1 ->
-                     fun uu____4198 ->
-                       match uu____4198 with
+                     fun uu___1 ->
+                       match uu___1 with
                        | (path_el, trie1) ->
                            trie_find_prefix' trie1 (path_el :: path_acc)
                              query2 acc1) acc matching_namespaces_rev in
               let matching_bindings_rev =
                 names_find_rev tr.bindings bindings_search_term in
               FStar_List.rev_map_onto
-                (fun uu____4243 ->
-                   match uu____4243 with
+                (fun uu___1 ->
+                   match uu___1 with
                    | (path_el, v) ->
                        ((FStar_List.rev (path_el :: path_acc)), v))
                 matching_bindings_rev acc_with_recursive_bindings
@@ -674,13 +649,12 @@ type mod_symbol =
   | Module of mod_info 
   | Namespace of ns_info 
 let (uu___is_Module : mod_symbol -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Module _0 -> true | uu____4413 -> false
+  fun projectee -> match projectee with | Module _0 -> true | uu___ -> false
 let (__proj__Module__item___0 : mod_symbol -> mod_info) =
   fun projectee -> match projectee with | Module _0 -> _0
 let (uu___is_Namespace : mod_symbol -> Prims.bool) =
   fun projectee ->
-    match projectee with | Namespace _0 -> true | uu____4432 -> false
+    match projectee with | Namespace _0 -> true | uu___ -> false
 let (__proj__Namespace__item___0 : mod_symbol -> ns_info) =
   fun projectee -> match projectee with | Namespace _0 -> _0
 type lid_symbol = FStar_Ident.lid
@@ -688,13 +662,11 @@ type symbol =
   | ModOrNs of mod_symbol 
   | Lid of lid_symbol 
 let (uu___is_ModOrNs : symbol -> Prims.bool) =
-  fun projectee ->
-    match projectee with | ModOrNs _0 -> true | uu____4461 -> false
+  fun projectee -> match projectee with | ModOrNs _0 -> true | uu___ -> false
 let (__proj__ModOrNs__item___0 : symbol -> mod_symbol) =
   fun projectee -> match projectee with | ModOrNs _0 -> _0
 let (uu___is_Lid : symbol -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Lid _0 -> true | uu____4480 -> false
+  fun projectee -> match projectee with | Lid _0 -> true | uu___ -> false
 let (__proj__Lid__item___0 : symbol -> lid_symbol) =
   fun projectee -> match projectee with | Lid _0 -> _0
 type table = {
@@ -711,25 +683,25 @@ let (insert : table -> query -> Prims.string -> lid_symbol -> table) =
     fun host_query ->
       fun id ->
         fun c ->
-          let uu___533_4559 = tbl in
-          let uu____4560 = trie_insert tbl.tbl_lids host_query id c in
-          { tbl_lids = uu____4560; tbl_mods = (uu___533_4559.tbl_mods) }
+          let uu___ = tbl in
+          let uu___1 = trie_insert tbl.tbl_lids host_query id c in
+          { tbl_lids = uu___1; tbl_mods = (uu___.tbl_mods) }
 let (register_alias : table -> Prims.string -> query -> query -> table) =
   fun tbl ->
     fun key ->
       fun host_query ->
         fun included_query ->
-          let uu___543_4586 = tbl in
-          let uu____4587 =
+          let uu___ = tbl in
+          let uu___1 =
             trie_add_alias tbl.tbl_lids key host_query included_query in
-          { tbl_lids = uu____4587; tbl_mods = (uu___543_4586.tbl_mods) }
+          { tbl_lids = uu___1; tbl_mods = (uu___.tbl_mods) }
 let (register_include : table -> query -> query -> table) =
   fun tbl ->
     fun host_query ->
       fun included_query ->
-        let uu___551_4606 = tbl in
-        let uu____4607 = trie_include tbl.tbl_lids host_query included_query in
-        { tbl_lids = uu____4607; tbl_mods = (uu___551_4606.tbl_mods) }
+        let uu___ = tbl in
+        let uu___1 = trie_include tbl.tbl_lids host_query included_query in
+        { tbl_lids = uu___1; tbl_mods = (uu___.tbl_mods) }
 let (register_open : table -> Prims.bool -> query -> query -> table) =
   fun tbl ->
     fun is_module ->
@@ -738,10 +710,10 @@ let (register_open : table -> Prims.bool -> query -> query -> table) =
           if is_module
           then register_include tbl host_query included_query
           else
-            (let uu___562_4636 = tbl in
-             let uu____4637 =
+            (let uu___1 = tbl in
+             let uu___2 =
                trie_open_namespace tbl.tbl_lids host_query included_query in
-             { tbl_lids = uu____4637; tbl_mods = (uu___562_4636.tbl_mods) })
+             { tbl_lids = uu___2; tbl_mods = (uu___1.tbl_mods) })
 let (register_module_path :
   table -> Prims.bool -> Prims.string -> query -> table) =
   fun tbl ->
@@ -749,19 +721,17 @@ let (register_module_path :
       fun path1 ->
         fun mod_query ->
           let ins_ns id bindings full_name loaded1 =
-            let uu____4698 =
-              let uu____4706 = names_find_exact bindings id in
-              (uu____4706, loaded1) in
-            match uu____4698 with
-            | (FStar_Pervasives_Native.None, uu____4714) ->
+            let uu___ =
+              let uu___1 = names_find_exact bindings id in (uu___1, loaded1) in
+            match uu___ with
+            | (FStar_Pervasives_Native.None, uu___1) ->
                 names_insert bindings id
                   (Namespace { ns_name = full_name; ns_loaded = loaded1 })
             | (FStar_Pervasives_Native.Some (Namespace
-               { ns_name = uu____4719; ns_loaded = false;_}), true) ->
+               { ns_name = uu___1; ns_loaded = false;_}), true) ->
                 names_insert bindings id
                   (Namespace { ns_name = full_name; ns_loaded = loaded1 })
-            | (FStar_Pervasives_Native.Some uu____4726, uu____4727) ->
-                bindings in
+            | (FStar_Pervasives_Native.Some uu___1, uu___2) -> bindings in
           let ins_mod id bindings full_name loaded1 =
             names_insert bindings id
               (Module
@@ -776,33 +746,33 @@ let (register_module_path :
             let name = name_of_revq (id :: revq) in
             match q with
             | [] -> ins_mod id bindings name loaded1
-            | uu____4834 -> ins_ns id bindings name loaded1 in
-          let uu___607_4838 = tbl in
-          let uu____4839 =
+            | uu___ -> ins_ns id bindings name loaded1 in
+          let uu___ = tbl in
+          let uu___1 =
             trie_mutate tbl.tbl_mods mod_query []
               (fun tr ->
                  fun id ->
                    fun q ->
                      fun revq ->
                        fun namespaces ->
-                         let uu___616_4862 = tr in
-                         let uu____4865 = ins id q revq tr.bindings loaded in
-                         { bindings = uu____4865; namespaces })
-              (fun tr -> fun uu____4871 -> tr) in
-          { tbl_lids = (uu___607_4838.tbl_lids); tbl_mods = uu____4839 }
+                         let uu___2 = tr in
+                         let uu___3 = ins id q revq tr.bindings loaded in
+                         { bindings = uu___3; namespaces })
+              (fun tr -> fun uu___2 -> tr) in
+          { tbl_lids = (uu___.tbl_lids); tbl_mods = uu___1 }
 let (string_of_path : path -> Prims.string) =
   fun path1 ->
-    let uu____4882 = FStar_List.map (fun el -> (el.segment).completion) path1 in
-    FStar_String.concat "." uu____4882
+    let uu___ = FStar_List.map (fun el -> (el.segment).completion) path1 in
+    FStar_String.concat "." uu___
 let (match_length_of_path : path -> Prims.int) =
   fun path1 ->
-    let uu____4898 =
+    let uu___ =
       FStar_List.fold_left
         (fun acc ->
            fun elem ->
-             let uu____4938 = acc in
-             match uu____4938 with
-             | (acc_len, uu____4960) ->
+             let uu___1 = acc in
+             match uu___1 with
+             | (acc_len, uu___2) ->
                  (match (elem.segment).prefix with
                   | FStar_Pervasives_Native.Some prefix ->
                       let completion_len =
@@ -811,7 +781,7 @@ let (match_length_of_path : path -> Prims.int) =
                         (prefix, completion_len))
                   | FStar_Pervasives_Native.None -> acc))
         (Prims.int_zero, ("", Prims.int_zero)) path1 in
-    match uu____4898 with
+    match uu___ with
     | (length, (last_prefix, last_completion_length)) ->
         ((length - Prims.int_one) - last_completion_length) +
           (FStar_String.length last_prefix)
@@ -820,8 +790,7 @@ let (first_import_of_path :
   fun path1 ->
     match path1 with
     | [] -> FStar_Pervasives_Native.None
-    | { imports; segment = uu____5034;_}::uu____5035 ->
-        FStar_List.last imports
+    | { imports; segment = uu___;_}::uu___1 -> FStar_List.last imports
 let (alist_of_ns_info :
   ns_info -> (Prims.string * FStar_Util.json) Prims.list) =
   fun ns_info1 ->
@@ -862,46 +831,45 @@ let (json_of_completion_result : completion_result -> FStar_Util.json) =
       [FStar_Util.JsonInt (result.completion_match_length);
       FStar_Util.JsonStr (result.completion_annotation);
       FStar_Util.JsonStr (result.completion_candidate)]
-let completion_result_of_lid :
-  'uuuuuu5184 . (path * 'uuuuuu5184) -> completion_result =
-  fun uu____5193 ->
-    match uu____5193 with
+let completion_result_of_lid : 'uuuuu . (path * 'uuuuu) -> completion_result
+  =
+  fun uu___ ->
+    match uu___ with
     | (path1, _lid) ->
-        let uu____5200 = match_length_of_path path1 in
-        let uu____5202 = string_of_path path1 in
-        let uu____5204 =
-          let uu____5206 = first_import_of_path path1 in
-          FStar_Util.dflt "" uu____5206 in
+        let uu___1 = match_length_of_path path1 in
+        let uu___2 = string_of_path path1 in
+        let uu___3 =
+          let uu___4 = first_import_of_path path1 in
+          FStar_Util.dflt "" uu___4 in
         {
-          completion_match_length = uu____5200;
-          completion_candidate = uu____5202;
-          completion_annotation = uu____5204
+          completion_match_length = uu___1;
+          completion_candidate = uu___2;
+          completion_annotation = uu___3
         }
 let (completion_result_of_mod :
   Prims.string -> Prims.bool -> path -> completion_result) =
   fun annot ->
     fun loaded ->
       fun path1 ->
-        let uu____5232 = match_length_of_path path1 in
-        let uu____5234 = string_of_path path1 in
-        let uu____5236 =
+        let uu___ = match_length_of_path path1 in
+        let uu___1 = string_of_path path1 in
+        let uu___2 =
           FStar_Util.format1 (if loaded then " %s " else "(%s)") annot in
         {
-          completion_match_length = uu____5232;
-          completion_candidate = uu____5234;
-          completion_annotation = uu____5236
+          completion_match_length = uu___;
+          completion_candidate = uu___1;
+          completion_annotation = uu___2
         }
 let (completion_result_of_ns_or_mod :
   (path * mod_symbol) -> completion_result) =
-  fun uu____5253 ->
-    match uu____5253 with
+  fun uu___ ->
+    match uu___ with
     | (path1, symb) ->
         (match symb with
          | Module
-             { mod_name = uu____5260; mod_path = uu____5261;
-               mod_loaded = loaded;_}
+             { mod_name = uu___1; mod_path = uu___2; mod_loaded = loaded;_}
              -> completion_result_of_mod "mod" loaded path1
-         | Namespace { ns_name = uu____5267; ns_loaded = loaded;_} ->
+         | Namespace { ns_name = uu___1; ns_loaded = loaded;_} ->
              completion_result_of_mod "ns" loaded path1)
 let (find_module_or_ns :
   table -> query -> mod_symbol FStar_Pervasives_Native.option) =
@@ -909,8 +877,8 @@ let (find_module_or_ns :
 let (autocomplete_lid : table -> query -> completion_result Prims.list) =
   fun tbl ->
     fun query1 ->
-      let uu____5298 = trie_find_prefix tbl.tbl_lids query1 in
-      FStar_List.map completion_result_of_lid uu____5298
+      let uu___ = trie_find_prefix tbl.tbl_lids query1 in
+      FStar_List.map completion_result_of_lid uu___
 let (autocomplete_mod_or_ns :
   table ->
     query ->
@@ -921,8 +889,8 @@ let (autocomplete_mod_or_ns :
   fun tbl ->
     fun query1 ->
       fun filter ->
-        let uu____5352 =
-          let uu____5359 = trie_find_prefix tbl.tbl_mods query1 in
-          FStar_All.pipe_right uu____5359 (FStar_List.filter_map filter) in
-        FStar_All.pipe_right uu____5352
+        let uu___ =
+          let uu___1 = trie_find_prefix tbl.tbl_mods query1 in
+          FStar_All.pipe_right uu___1 (FStar_List.filter_map filter) in
+        FStar_All.pipe_right uu___
           (FStar_List.map completion_result_of_ns_or_mod)

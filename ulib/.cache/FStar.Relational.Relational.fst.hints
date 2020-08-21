@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "000eb4b1f4739449458a35ff8a6943e9"
+      "1e29ed4fbe6cd21f8269e3006f8b36fb"
     ],
     [
       "FStar.Relational.Relational.tl_rel",
@@ -21,29 +21,7 @@
         "refinement_interpretation_Tm_refine_12775a49c16ac0863ce1a5e5a1a8be3f"
       ],
       0,
-      "3577deba53fccd94b59d6e6d86f79bb9"
-    ],
-    [
-      "FStar.Relational.Relational.rel",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f97289d838b8fae310c6129d4fe711d6"
-    ],
-    [
-      "FStar.Relational.Relational.tl_rel",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_12775a49c16ac0863ce1a5e5a1a8be3f"
-      ],
-      0,
-      "767ac51aa4299eac42347e35d6beb733"
+      "fb17ba0775872dc5854f6c175a86ca74"
     ]
   ]
 ]

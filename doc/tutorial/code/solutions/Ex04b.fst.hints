@@ -16,7 +16,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a3df9c3a35c7cfab1da9766cf2b2cd9b"
+      "1a82446baf42b5d2e5b610f96ff25b4d"
     ],
     [
       "Ex04b.append",
@@ -31,7 +31,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9ceca3d16a9669f831a6b0e10d2c64bb"
+      "16ba82a6f471dcd311c456724029ea4a"
     ],
     [
       "Ex04b.append_len",
@@ -64,38 +64,7 @@
         "typing_Ex04b.append", "typing_Ex04b.length"
       ],
       0,
-      "5cb28e6ea33a4813140e04fc9c09c747"
-    ],
-    [
-      "Ex04b.length",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims.nat", "fuel_guarded_inversion_Prims.list",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "c53b11c3d339ec3675979ad76264b0b0"
-    ],
-    [
-      "Ex04b.append",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_2",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "5c0d08e748ecfe72d0b63475777cc253"
+      "f8e8c0ac86ac64364bcc1e4e3329aade"
     ]
   ]
 ]

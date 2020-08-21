@@ -34,30 +34,16 @@ let bind (a:Type) (b:Type)
   let x, n, s = f (t, n, s) in
   (g x) (t, n, s)
 
-let subcomp (a:Type)
-  (f:repr a ())
-: repr a ()
-= f
-
-let if_then_else (a:Type)
-  (f:repr a ())
-  (g:repr a ())
-  (p:Type0)
-: Type
-= repr a ()
-
 total reifiable reflectable
 layered_effect {
-  EFF : a:Type -> unit -> Effect
+  EFF : a:Type -> eqtype_as_type unit -> Effect
   with
   repr = repr;
   return = return;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+  bind = bind
 }
 
-let lift_pure_eff (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
+let lift_pure_eff (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
 : Pure (repr a ())
   (requires wp (fun _ -> True))
   (ensures fun _ -> True)

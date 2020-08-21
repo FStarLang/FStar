@@ -58,29 +58,29 @@ let bind (a:Type) (b:Type)
   let x = f () in
   (g x) ()
 
-let subcomp (a:Type)
-  (r_in:resource) (r_out:a -> resource) (b:Type0)
-  (f:repr a r_in r_out b)
-: (repr a r_in r_out b)
-= f
+(* We now derive these default implementations of subcomp and if_then_else *)
 
-let if_then_else (a:Type)
-  (r_in:resource) (r_out:a -> resource) (b:Type0)
-  (f:repr a r_in r_out b) (g:repr a r_in r_out b)
-  (p:Type0)
-: Type
-= repr a r_in r_out b
+// let subcomp (a:Type)
+//   (r_in:resource) (r_out:a -> resource) (b:Type0)
+//   (f:repr a r_in r_out b)
+// : (repr a r_in r_out b)
+// = f
 
+// let if_then_else (a:Type)
+//   (r_in:resource) (r_out:a -> resource) (b:Type0)
+//   (f:repr a r_in r_out b) (g:repr a r_in r_out b)
+//   (p:Type0)
+// : Type
+// = repr a r_in r_out b
 
+[@@allow_informative_binders]
 reifiable reflectable
 layered_effect {
   RSTATE : a:Type -> resource -> (a -> resource) -> Type0 -> Effect
   with
   repr = repr;
   return = returnc;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+  bind = bind
 }
 
 let return (#a:Type) (#r:a -> resource) (x:a)
@@ -94,7 +94,7 @@ assume val wp_monotonic_pure (_:unit)
           (forall (x:a). p x ==> q x) ==>
           (wp p ==> wp q)))
 
-let lift_pure_rst (a:Type) (wp:pure_wp a) (r:resource) (f:unit -> PURE a wp)
+let lift_pure_rst (a:Type) (wp:pure_wp a) (r:resource) (f:eqtype_as_type unit -> PURE a wp)
 : Pure (repr a r (fun _ -> r) True)
   (requires wp (fun _ -> True))
   (ensures fun _ -> True)

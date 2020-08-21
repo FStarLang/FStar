@@ -150,6 +150,12 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk2 "is_free"               is_free               E.e_bv              E.e_term           e_bool
                                 is_free               NRE.e_bv            NRE.e_term         NBET.e_bool;
 
+    mk1 "free_bvs"              free_bvs              E.e_term            (e_list E.e_bv)
+                                free_bvs              NRE.e_term          (NBET.e_list NRE.e_bv);
+
+    mk1 "free_uvars"            free_uvars            E.e_term            (e_list e_int)
+                                free_uvars            NRE.e_term          (NBET.e_list NBET.e_int);
+
     mk2 "lookup_attr"           RB.lookup_attr        E.e_term            E.e_env            (e_list E.e_fv)
                                 RB.lookup_attr        NRE.e_term          NRE.e_env          (NBET.e_list NRE.e_fv);
 

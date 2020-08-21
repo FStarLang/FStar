@@ -1,18 +1,37 @@
 [
-  "÷ıÄ´Û\u0013á•ﬂM\u001f”zpÜ\u001b",
+  "øßœèº\u0012\u001dGuV®„}6ø\u0002",
   [
     [
+      "FStar.IndefiniteDescription.indefinite_description_ghost",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_4861ff30b18822886452f698558931e8",
+        "typing_FStar.IndefiniteDescription.indefinite_description_tot"
+      ],
+      0,
+      "5f8327b8af200f13eda6672da780d064"
+    ],
+    [
       "FStar.IndefiniteDescription.strong_excluded_middle",
       1,
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
-        "disc_equation_Prims.Right", "equation_Prims.l_not",
-        "fuel_guarded_inversion_Prims.c_or"
+        "@MaxIFuel_assumption", "@query", "bool_inversion", "bool_typing",
+        "disc_equation_Prims.Left", "disc_equation_Prims.Right",
+        "equation_Prims.l_and", "equation_Prims.l_iff",
+        "equation_Prims.l_imp", "equation_Prims.l_not",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "fuel_guarded_inversion_Prims.c_or",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "7ac00bb0ddc3c3c4f50b6768d28738aa"
+      "9786cc518cfb3c3a6d5e5a74efdcc580"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle",
@@ -20,12 +39,18 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion", "projection_inverse_Prims.Mkdtuple2__1",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+        "@MaxIFuel_assumption", "@query",
+        "FStar.IndefiniteDescription_interpretation_Tm_ghost_arrow_eaf0e881316979a10a835f9aef894ea3",
+        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
+        "equation_Prims.eq2", "equation_Prims.nat", "equation_Prims.squash",
+        "equation_Prims.subtype_of", "int_inversion",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_f3db4b290bcde56fe0046b79b9c3a13f"
       ],
       0,
-      "7a3ee8dc287b1e66f32759753ad4d1be"
+      "89fc03e041ef4d82518214960e44bb2b"
     ],
     [
       "FStar.IndefiniteDescription.stronger_markovs_principle_prop",
@@ -34,50 +59,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion", "projection_inverse_Prims.Mkdtuple2__1",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+        "int_inversion",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_e76bd1e3fcd1369d7232ec3854a8c984"
       ],
       0,
-      "e58fe5c81d8688266b8209449d917411"
-    ],
-    [
-      "FStar.IndefiniteDescription.strong_excluded_middle",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
-        "disc_equation_Prims.Right", "equation_Prims.l_not",
-        "fuel_guarded_inversion_Prims.c_or"
-      ],
-      0,
-      "6e72d203473c7347c3662cb2dbe48d4b"
-    ],
-    [
-      "FStar.IndefiniteDescription.stronger_markovs_principle",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion", "projection_inverse_Prims.Mkdtuple2__1",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
-      0,
-      "86c5905b78aef07e8870aedb78896559"
-    ],
-    [
-      "FStar.IndefiniteDescription.stronger_markovs_principle_prop",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion", "projection_inverse_Prims.Mkdtuple2__1",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
-      0,
-      "3717634e54886338a17a1b0a1651f92c"
+      "9266ce82ca23575ba3eaee41d1e78cd6"
     ]
   ]
 ]

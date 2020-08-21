@@ -145,7 +145,6 @@ type tycon =
 
 type qualifier =
   | Private
-  | Abstract
   | Noeq
   | Unopteq
   | Assumption
@@ -375,7 +374,7 @@ let mkDTuple args r =
   let cons = C.mk_dtuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
-let mkRefinedBinder id t should_bind_var refopt m implicit =
+let mkRefinedBinder id t should_bind_var refopt m implicit : binder =
   let b = mk_binder (Annotated(id, t)) m Type_level implicit in
   match refopt with
     | None -> b
@@ -674,7 +673,9 @@ and binder_to_string x =
 and aqual_to_string = function
   | Some Equality -> "$"
   | Some Implicit -> "#"
-  | _ -> ""
+  | Some (Meta (Arg_qualifier_meta_tac t)) -> "#[" ^ term_to_string t ^ "]"
+  | Some (Meta (Arg_qualifier_meta_attr t)) -> "[@@" ^ term_to_string t ^ "]"
+  | None -> ""
 
 and pat_to_string x = match x.pat with
   | PatWild None -> "_"

@@ -112,8 +112,9 @@ noeq
 type st0 = {
   mem:Type u#2;
   core:mem -> mem;
+  full_mem_pred: mem -> prop;
 
-  locks_preorder:P.preorder mem;
+  locks_preorder:P.preorder (m:mem{full_mem_pred m});
   hprop:Type u#2;
   locks_invariant: mem -> hprop;
 
@@ -280,12 +281,20 @@ let l_post (#st:st) (#a:Type) (pre:st.hprop) (post:post_t st a) = fp_prop2 pre p
       and ensures defns ****)
 
 open NMSTTotal
+let full_mem (st:st) = m:st.mem{st.full_mem_pred m}
 
 effect Mst (a:Type) (#st:st) (req:st.mem -> Type0) (ens:st.mem -> a -> st.mem -> Type0) =
-  NMSTATE a st.mem st.locks_preorder req ens
+  NMSTATE a (full_mem st) st.locks_preorder req ens
 
 effect MstTot (a:Type) (#st:st) (req:st.mem -> Type0) (ens:st.mem -> a -> st.mem -> Type0) =
-  NMSTATETOT a st.mem st.locks_preorder req ens
+  NMSTATETOT a (full_mem st) st.locks_preorder req ens
+
+let get (#st:st) ()
+  : MstTot (full_mem st)
+           (fun _ -> True)
+           (fun s0 s s1 -> s0 == s /\ s == s1)
+  = get ()
+
 
 
 (**** Begin interface of actions ****)
@@ -1152,7 +1161,7 @@ let step_bind_ret_aux
       (#lpre:l_pre pre)
       (#lpost:l_post pre post)
       (f:m st a pre post lpre lpost{Bind? f /\ Ret? (Bind?.f f)})
-    : M.MSTATE (step_result st a) st.mem st.locks_preorder (step_req f) (step_ens f)
+    : M.MSTATE (step_result st a) (full_mem st) st.locks_preorder (step_req f) (step_ens f)
     =
   M.MSTATE?.reflect (fun m0 ->
     match f with
@@ -1195,6 +1204,7 @@ let step_bind
       depends_only_on_commutes_with_weaker (lpre_b x) (post_a x) (next_post x);
       lpre_b x in
 
+
     let lpost_b : (x:b -> l_post (next_post x) post_b) =
       fun x ->
       depends_only_on2_commutes_with_weaker (lpost_b x) (post_a x) (next_post x) post_b;
@@ -1223,7 +1233,7 @@ let step_frame_ret_aux
       (#lpre:l_pre pre)
       (#lpost:l_post pre p)
       (f:m st a pre p lpre lpost{Frame? f /\ Ret? (Frame?.f f)})
-    : M.MSTATE (step_result st a) st.mem st.locks_preorder (step_req f) (step_ens f)
+    : M.MSTATE (step_result st a) (full_mem st) st.locks_preorder (step_req f) (step_ens f)
     =
   M.MSTATE?.reflect (fun m0 ->
     match f with
@@ -1284,7 +1294,7 @@ let step_par_ret_aux
       (#lpre:l_pre pre)
       (#lpost:l_post pre post)
       (f:m st a pre post lpre lpost{Par? f /\ Ret? (Par?.mL f) /\ Ret? (Par?.mR f)})
-    : M.MSTATE (step_result st a) st.mem st.locks_preorder (step_req f) (step_ens f)
+    : M.MSTATE (step_result st a) (full_mem st) st.locks_preorder (step_req f) (step_ens f)
     =
   M.MSTATE?.reflect (fun m0 ->
     match f with
@@ -1426,14 +1436,12 @@ let rec run
     =
   match f with
   | Ret _ x _ -> x
-
   | _ ->
     let m0 = get () in
     let Step new_pre new_post _ _ f = step f in
     let m1 = get () in
     let x = run f in
     let m2 = get () in
-
     preserves_frame_trans pre new_pre (new_post x) m0 m1 m2;
     preserves_frame_stronger_post pre post new_post x m0 m2;
     x

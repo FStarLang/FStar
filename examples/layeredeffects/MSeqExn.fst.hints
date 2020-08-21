@@ -1,5 +1,5 @@
 [
-  "≈!Äh˚µ4\u001d≥§p-~2å\u0014",
+  "ŸƒA∞§>>∏”4z÷ΩÒ*Â",
   [
     [
       "MSeqExn.result",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "2565682745e84bdae8aca337508c742f"
+      "bc9407918e7f4af2c599210b5149e59e"
     ],
     [
       "MSeqExn.__proj__Success__item___0",
@@ -21,7 +21,7 @@
         "refinement_interpretation_Tm_refine_bca7c46301f85d0bd6667ce2075a559f"
       ],
       0,
-      "2481c6be73fefce80f52e1e4ff23ae71"
+      "72fa2185ae4a3a531fb738bfca937f3b"
     ],
     [
       "MSeqExn.__proj__Error__item___0",
@@ -34,7 +34,7 @@
         "refinement_interpretation_Tm_refine_aa268dc3d9ba92bda2faef10efd31e86"
       ],
       0,
-      "50ac15f3780dd8636cce57e0c35c0967"
+      "98f0086f6874615e28b619250ca172b4"
     ],
     [
       "MSeqExn.grows",
@@ -52,7 +52,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "2239a79b0893a2f6a5cca9b743505d0a"
+      "f6873134079a696f63c042cc270e4383"
     ],
     [
       "MSeqExn.grows",
@@ -70,7 +70,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "adf44adb4f9192ffcab813587b8dbcbb"
+      "ead8c2422674eb23deb275f96f95f2c9"
     ],
     [
       "MSeqExn.return",
@@ -85,7 +85,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "6214b24bcd92c773988db4711604a917"
+      "16b0ea998f9c84f7b9a9a5aac46c6d6f"
     ],
     [
       "MSeqExn.bind",
@@ -99,7 +99,7 @@
         "MSeqExn_interpretation_Tm_arrow_63b58863b76ae4f8c36575d8588402dc",
         "MSeqExn_interpretation_Tm_arrow_6ce3436d8ce973a5c1342396862ad12e",
         "MSeqExn_pretyping_978e6bba207806d14f84dc028a7da380",
-        "assumption_MSeqExn.WP_t_monotonic",
+        "assumption_MSeqExn.WP_t_monotonic", "b2t_def",
         "constructor_distinct_MSeqExn.Error", "disc_equation_MSeqExn.Error",
         "disc_equation_MSeqExn.Success", "eq2-interp",
         "equation_FStar.Preorder.preorder",
@@ -108,21 +108,25 @@
         "equation_MSeqExn.post_t", "equation_MSeqExn.state",
         "fuel_guarded_inversion_MSeqExn.result",
         "interpretation_Tm_abs_129e01eefee35b85dba4d23a66214fef",
-        "interpretation_Tm_abs_30790cf35f214ed4633079b20ceefc9a",
         "interpretation_Tm_abs_98148b3d1f2c61bf8348c5a5348b7d10",
+        "interpretation_Tm_abs_a7fe70d6e05e83d2ee302446fa053670",
+        "interpretation_Tm_abs_f183f36abbb5ece27abd65f5f16b144c",
         "interpretation_Tm_abs_f204982ffe909431382436be40c36e56",
-        "l_imp-interp", "l_quant_interp_4eefc5f80473772c4d5afb76d0b4d2c3",
+        "l_and-interp", "l_imp-interp",
+        "l_quant_interp_6d6e97b0171ca0b56255b19c1c9444f5",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_MSeqExn.Success__0",
         "refinement_interpretation_Tm_refine_bd10f09297e0e7dc08314f7d9211801c",
         "typing_MSeqExn.grows",
         "typing_Tm_abs_129e01eefee35b85dba4d23a66214fef",
-        "typing_Tm_abs_30790cf35f214ed4633079b20ceefc9a",
-        "typing_Tm_abs_98148b3d1f2c61bf8348c5a5348b7d10"
+        "typing_Tm_abs_98148b3d1f2c61bf8348c5a5348b7d10",
+        "typing_Tm_abs_f183f36abbb5ece27abd65f5f16b144c"
       ],
       0,
-      "941796994d140b265ca23641d8cc70f1"
+      "ce5f91e8c391a5f29bdd76802c1414b9"
     ],
     [
       "MSeqExn.subcomp",
@@ -139,7 +143,7 @@
         "typing_Tm_abs_756d7262b543c7c6a48d481f61bc2bf2"
       ],
       0,
-      "9113c202d06357ec3749ea108917f8df"
+      "8ee9ffaf6d7f3f2f4f5d1af632272b26"
     ],
     [
       "MSeqExn.MSeqEXN",
@@ -152,7 +156,7 @@
         "fuel_guarded_inversion_MSeqExn.result"
       ],
       0,
-      "b6772698ec0bbf919ed61fac3659eee9"
+      "d0c75b302dd121c47a2827d67486cb1f"
     ],
     [
       "MSeqExn.MSeqEXN",
@@ -165,7 +169,7 @@
         "fuel_guarded_inversion_MSeqExn.result"
       ],
       0,
-      "ce480cceaaa52da59ad1cfc4964b48b6"
+      "b5e526a5dbb4df89953fbe802a1e2c5c"
     ],
     [
       "MSeqExn.MSeqEXN",
@@ -178,25 +182,31 @@
         "fuel_guarded_inversion_MSeqExn.result"
       ],
       0,
-      "2df793a49c08fbe5520fe2c2df20f542"
+      "4220026bc3cba58f30b345539d38e9ee"
     ],
     [
       "MSeqExn.MSeqEXN",
       4,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
       0,
-      "8c61d73ce9765bed42686ea0439385ad"
+      "7ad7b07b72dcf8d1698bc3577027fd08"
     ],
     [
       "MSeqExn.MSeqEXN",
       5,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
       0,
-      "7d7b73cd521205a77548daa38b187963"
+      "6d668a67398e46f7f6ee4e77f8435575"
     ],
     [
       "MSeqExn.lift_pure_mseqexn",
@@ -221,7 +231,7 @@
         "typing_Tm_abs_d85abeda43527ced4d79d6bbe0d33206"
       ],
       0,
-      "ea2ab78a74f89117a53ddd0d91c993b0"
+      "ead8171f89171a83027d0388e2600960"
     ],
     [
       "MSeqExn.MSeqExn",
@@ -230,7 +240,7 @@
       1,
       [ "@query" ],
       0,
-      "43e4a988cba06ab2289fdb15f0e0a1c1"
+      "cee0531c66090bfdce0361899cf7edf9"
     ],
     [
       "MSeqExn.witnessed_constant",
@@ -239,7 +249,7 @@
       1,
       [ "@query", "equation_MSeqExn.witnessed" ],
       0,
-      "dd8e712bd0124d8455973fa0c25988b0"
+      "986a982d1cbf0f27a6fab7de9dea9ef2"
     ],
     [
       "MSeqExn.witnessed_nested",
@@ -248,7 +258,7 @@
       1,
       [ "@query" ],
       0,
-      "db7610c80aa8c31d55059d22b3bd819e"
+      "5e3f2a20a7840397e2490ca374db0903"
     ],
     [
       "MSeqExn.witnessed_and",
@@ -257,7 +267,7 @@
       1,
       [ "@query", "equation_MSeqExn.witnessed" ],
       0,
-      "0d0aec5be069153c839d9d0f226e6cb2"
+      "8676746a3f73d874aa39cef24f5a3353"
     ],
     [
       "MSeqExn.witnessed_or",
@@ -266,7 +276,7 @@
       1,
       [ "@query", "equation_MSeqExn.witnessed" ],
       0,
-      "7a1f63a347cdd02d71ff25eb06553560"
+      "3a3b6d8454f838e390fd8466f72aa655"
     ],
     [
       "MSeqExn.witnessed_impl",
@@ -275,7 +285,7 @@
       1,
       [ "@query", "equation_MSeqExn.witnessed" ],
       0,
-      "a383dfb9919e3d2cfbf43b80155582e0"
+      "1486bfa9b404ad91d8c220be6959beed"
     ],
     [
       "MSeqExn.witnessed_forall",
@@ -284,7 +294,7 @@
       1,
       [ "@query", "equation_MSeqExn.witnessed" ],
       0,
-      "a7168a91acfd85d2c8f04fd2a5b3e270"
+      "dbd0c747cd5b10b15ad9a6306e1304e0"
     ],
     [
       "MSeqExn.witnessed_exists",
@@ -293,7 +303,7 @@
       1,
       [ "@query", "equation_MSeqExn.witnessed" ],
       0,
-      "fd87f12496af25dd2ad8b876c0ef0a46"
+      "f65452341836ba460f955e711c04bb6e"
     ],
     [
       "MSeqExn.get",
@@ -311,7 +321,7 @@
         "refinement_kinding_Tm_refine_39fc48d179c0612597a9a194407ba9c9"
       ],
       0,
-      "b37162a806790bf1b5b29294bc79c777"
+      "2c0683c7fb83db63270aabba5d29bb8e"
     ],
     [
       "MSeqExn.put",
@@ -324,7 +334,7 @@
         "equation_MSeqExn.state"
       ],
       0,
-      "f08632a1b258e25836861df71f0d480d"
+      "2bdeccdbd409586af79367d569bac1a8"
     ],
     [
       "MSeqExn.raise",
@@ -340,7 +350,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "58e7d804833ec72e2add57ab04a4e660"
+      "f3cb562cf0c6a0c08c441de22f6667fd"
     ],
     [
       "MSeqExn.size",
@@ -360,7 +370,7 @@
         "typing_FStar.Seq.Base.length"
       ],
       0,
-      "9f2b71751e21701e2b9486ebdec9a02e"
+      "96c8041325a4409439f01bb146068088"
     ],
     [
       "MSeqExn.write_at_end",
@@ -392,7 +402,7 @@
         "typing_FStar.Seq.Base.create"
       ],
       0,
-      "f08c866d2b0f830173ecd6ee0c1fd55b"
+      "01b0f9bbe4fbc6d56e43bc103f5f4233"
     ],
     [
       "MSeqExn.index",
@@ -414,7 +424,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "d775146cdb2281bf2b23255e08198714"
+      "68206df0da7820a0f164613792f336ce"
     ]
   ]
 ]

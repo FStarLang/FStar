@@ -26,9 +26,9 @@ let prot : Type u#1 = protocol unit
 
 val chan (p:prot) : Type0
 
-val sender (#p:prot) (c:chan p) (next_action:prot) : hprop u#1
+val sender (#p:prot) (c:chan p) (next_action:prot) : slprop u#1
 
-val receiver (#p:prot) (c:chan p) (next_action:prot) : hprop u#1
+val receiver (#p:prot) (c:chan p) (next_action:prot) : slprop u#1
 
 val new_chan (p:prot)
   : SteelT (chan p) emp (fun c -> sender c p `star` receiver c p)
@@ -39,7 +39,7 @@ val send (#p:prot) (c:chan p) (#next:prot{more next}) (x:msg_t next)
 val recv (#p:prot) (#next:prot{more next}) (c:chan p)
   : SteelT (msg_t next) (receiver c next) (fun x -> receiver c (step next x))
 
-val history (#p:prot) (c:chan p) (t:partial_trace_of p) : hprop
+val history (#p:prot) (c:chan p) (t:partial_trace_of p) : slprop
 
 val history_duplicable (#p:prot) (c:chan p) (t:partial_trace_of p)
   : SteelT unit (history c t) (fun _ -> history c t `star` history c t)
@@ -48,6 +48,6 @@ val trace (#q:prot) (cc:chan q)
   : SteelT (partial_trace_of q) emp (fun tr -> history cc tr)
 
 val extend_trace (#p:prot) (#next:prot) (c:chan p) (previous:partial_trace_of p)
-  : SteelT (t:extension_of previous)
+  : SteelT (extension_of previous)
            (receiver c next `star` history c previous)
-           (fun t -> receiver c next `star` history c t `star` Steel.HigherReference.pure (until t == next))
+           (fun t -> receiver c next `star` history c t `star` pure (until t == next))
