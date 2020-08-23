@@ -369,13 +369,23 @@ let pre_action (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
   full_hheap fp -> (x:a & full_hheap (fp' x))
 
 (**
+  This is how the heaps before and after the action relate:
+  - evolving the heap according to the heap preorder;
+  - not allocating any new references;
+  - preserving the validity of any heap proposition affecting any frame
+*)  
+unfold
+let action_related_heaps (frame:slprop) (h0 h1:full_heap) =
+  heap_evolves h0 h1 /\
+  (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr) /\
+  (forall (hp:hprop frame). hp h0 == hp h1)
+
+(**
   We only want to consider heap updates that are "frame-preserving", meaning that they only
   modify the portion of the heap that they're allowed to, without messing with any other
   partial view of the heap that is compatible with the one you own. This includes :
   - preserving correct interpretation in presence of a frame;
-  - evolving the heap according to the heap preorder;
-  - not allocating any new references;
-  - preserving the validity of any heap proposition affecting any frame
+  - heaps are related as defined above
 *)
 let is_frame_preserving
   (#a: Type u#a)
@@ -387,14 +397,19 @@ let is_frame_preserving
      (affine_star fp frame h0;
       let (| x, h1 |) = f h0 in
       interp (fp' x `star` frame) h1 /\
-      heap_evolves h0 h1 /\
-      (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr) /\
-      (forall (hp:hprop frame). hp h0 == hp h1))
+      action_related_heaps frame h0 h1)
 
 (** Every action is frame-preserving *)
 let action (fp:slprop u#b) (a:Type u#a) (fp':a -> slprop u#b) =
   f:pre_action fp a fp'{ is_frame_preserving f }
 
+(**
+  We define a second, but equivalent, type for actions that
+  instead of quantifying over the frame, are explicitly passed a frame
+  from outside
+
+  This notion of action is useful for defining actions like witness_h_exists, see comments at the declaration of witness_h_exists
+*)
 let action_with_frame
   (fp:slprop u#a)
   (a:Type u#b)
@@ -403,10 +418,7 @@ let action_with_frame
     h0:full_hheap (fp `star` frame) ->
     Pure (x:a & full_hheap (fp' x `star` frame))
       (requires True)
-      (ensures fun (| x, h1 |) ->
-        heap_evolves h0 h1 /\
-        (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr) /\
-        (forall (hp:hprop frame). hp h0 == hp h1))
+      (ensures fun (| x, h1 |) -> action_related_heaps frame h0 h1)
 
 (**
   Two heaps [h0] and [h1] are frame-related if you can get from [h0] to [h1] with a
@@ -592,10 +604,14 @@ val witinv_framon (#a:_) (p : a -> slprop)
   : Lemma (requires (is_witness_invariant p))
           (ensures (is_frame_monotonic p))
 
-val witness_h_exists (#a:_) (p:a -> slprop{is_frame_monotonic p})
-  : action (h_exists p) (erased a) (fun x -> p x)
 
-val witness_h_exists_with_frame (#a:_) (p:a -> slprop)
+(**
+  witness_h_exists is defined with action_with_frame as it allows us to define it with any p
+
+  With the quantified frame actions, it creates an issue, since we have to prove that the witness is ok for all frames
+    whereas with an explicit frame, we can pick the witness for that particular frame
+*)
+val witness_h_exists (#a:_) (p:a -> slprop)
   : action_with_frame (h_exists p) (erased a) (fun x -> p x)
 
 val lift_h_exists (#a:_) (p:a -> slprop)

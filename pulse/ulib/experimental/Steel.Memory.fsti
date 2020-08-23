@@ -277,12 +277,6 @@ let mprop (fp:slprop u#a) =
 *)
 val mem_evolves : FStar.Preorder.preorder full_mem
 
-(** See [Steel.Heap.is_frame_preserving]. We add in [lock_invariants] now *)
-let post_preserves_frame_mprops (e:inames) (pre post:slprop) (frame:slprop)
-  (m0:mem{interp (pre `star` frame `star` locks_invariant e m0) m0})
-  (m1:mem{interp (post `star` frame `star` locks_invariant e m1) m1}) =
-  forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)
-
 (**
   To guarantee that the memory always evolve according to frame-preserving updates,
   we encode it into the [MstTot] effect build on top of the non-deterministic state total
@@ -301,11 +295,11 @@ effect MstTot
         interp (expects `star` frame `star` locks_invariant except m0) m0)
     (ensures fun m0 x m1 ->
         inames_ok except m1 /\
-        interp (expects `star` frame `star` locks_invariant except m0) m0 /\  //TODO: repeating
+        interp (expects `star` frame `star` locks_invariant except m0) m0 /\  //TODO: fix the effect so as not to repeat this
         interp (provides x `star` frame `star` locks_invariant except m1) m1 /\
-        post_preserves_frame_mprops except expects (provides x) frame m0 m1)
+        (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)))
 
-(** An action is just a thunked computation in [MstTot] *)
+(** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
 let action_except (a:Type u#a) (except:inames) (expects:slprop) (provides: a -> slprop) =
   frame:slprop -> MstTot a except expects provides frame
 
@@ -439,15 +433,10 @@ let is_frame_monotonic #a (p : a -> slprop) : prop =
 let is_witness_invariant #a (p : a -> slprop) =
   forall x y m. interp (p x) m /\ interp (p y) m ==> x == y
 
-val witness_h_exists (#opened_invariants:_) (#a:_) (p:(a -> slprop){is_frame_monotonic p})
+val witness_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
   : action_except (erased a) opened_invariants
            (h_exists p)
-           (fun v -> p v)
-
-val witness_h_exists_with_frame (#opened_invariants:_) (#a:_) (p:a -> slprop)
-  : action_except (erased a) opened_invariants
-      (h_exists p)
-      (fun x -> p x)
+           (fun x -> p x)
 
 val lift_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
   : action_except unit opened_invariants
