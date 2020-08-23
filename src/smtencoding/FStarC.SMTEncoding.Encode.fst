@@ -1871,8 +1871,10 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : (decls_t & env_t
 
     *)
     let encode_binding b (i, decls, env) = match b with
-        | S.Binding_univ _ ->
-          i+1, decls, env
+        | S.Binding_univ u ->
+          let (u_fv, _, _), u_tm = EncodeTerm.encode_univ_name u in
+          let decls' = [Term.DeclFun(u_fv, [], univ_sort, Some "universe local constant")] |> mk_decls_trivial in
+          i+1, decls@decls', env
 
         | S.Binding_var x ->
             let t1 = norm_before_encoding env x.sort in
