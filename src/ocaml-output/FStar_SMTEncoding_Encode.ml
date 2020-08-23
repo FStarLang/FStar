@@ -6747,8 +6747,19 @@ let (encode_env_bindings :
         match uu___ with
         | (i, decls, env1) ->
             (match b with
-             | FStar_Syntax_Syntax.Binding_univ uu___1 ->
-                 ((i + Prims.int_one), decls, env1)
+             | FStar_Syntax_Syntax.Binding_univ u ->
+                 let uu___1 = FStar_SMTEncoding_EncodeTerm.encode_univ_name u in
+                 (match uu___1 with
+                  | ((u_fv, uu___2, uu___3), u_tm) ->
+                      let decls' =
+                        FStar_All.pipe_right
+                          [FStar_SMTEncoding_Term.DeclFun
+                             (u_fv, [], FStar_SMTEncoding_Term.univ_sort,
+                               (FStar_Pervasives_Native.Some
+                                  "universe local constant"))]
+                          FStar_SMTEncoding_Term.mk_decls_trivial in
+                      ((i + Prims.int_one), (FStar_List.append decls decls'),
+                        env1))
              | FStar_Syntax_Syntax.Binding_var x ->
                  let t1 =
                    norm_before_encoding env1 x.FStar_Syntax_Syntax.sort in
