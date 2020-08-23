@@ -1167,6 +1167,8 @@ let with_invariant (#a:Type)
     assert (interp (fp' r `star` linv opened_invariants m1) m1);
     assert (inames_ok opened_invariants m1);
     admit ();
+    //AR: Note: we don't need to prove preserves_frame anymore
+    //    see MstTot in Steel.Mempry.fsti
     assert (preserves_frame (set_add i opened_invariants) (p `star` fp) (p `star` fp' r) m0 m1);
     preserves_frame_invariant fp (fp' r) opened_invariants p i m0 m1;
     assert (preserves_frame opened_invariants fp (fp' r) m0 m1);
