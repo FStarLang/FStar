@@ -57,5 +57,5 @@ val state_correspondence (inames:inames)
      (forall (p q frame:slprop)
         (m0:mem{interp (p `star` frame `star` locks_invariant inames m0) m0})
         (m1:mem{interp (q `star` frame `star` locks_invariant inames m1) m1}).
-       post_preserves_frame_mprops inames p q frame m0 m1 ==>
+       (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)) ==> 
        S.post_preserves_frame #s q frame m0 m1))
