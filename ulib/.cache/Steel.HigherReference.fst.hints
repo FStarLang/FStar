@@ -133,7 +133,7 @@
         "unit_typing"
       ],
       0,
-      "a54c9c2877a635f4ef72fdb6097417dc"
+      "b9756d29ef42c0d08ad5bbeebe43e11b"
     ],
     [
       "Steel.HigherReference.perm_ok",
@@ -407,7 +407,7 @@
         "typing_Steel.FractionalPermission.full_perm"
       ],
       0,
-      "9cd3775be22a03e34e32d8eb514cf5bb"
+      "69fbe50aa425a56cccb833494b694a87"
     ],
     [
       "Steel.HigherReference.read",
@@ -547,7 +547,7 @@
         "typing_Steel.HigherReference.fractional"
       ],
       0,
-      "d488b3df254a47ff16b09a2453a4c04b"
+      "c94097129eb542c7b722429116456c99"
     ],
     [
       "Steel.HigherReference.free",
@@ -607,7 +607,7 @@
         "typing_Steel.HigherReference.fractional"
       ],
       0,
-      "2dea51d85f272c7195cfe1c8eef36bcc"
+      "f7cb82b53b2d99dc6eb50955f65a908e"
     ],
     [
       "Steel.HigherReference.mem_share_atomic_raw",
@@ -875,7 +875,7 @@
         "typing_Steel.HigherReference.fractional"
       ],
       0,
-      "bb14d8f8a8a65af3c614f9e5d875a81c"
+      "e089ac1ddf5b60cd3eaa3f47a1f661d2"
     ]
   ]
 ]
