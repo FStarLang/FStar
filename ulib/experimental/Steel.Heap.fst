@@ -1382,25 +1382,7 @@ let witinv_framon #a (p : a -> slprop)
     in
     Classical.forall_intro_4 (fun x y m frame -> Classical.move_requires (aux x y m) frame)
 
-let witness_h_exists #a p
-  : action (h_exists p) (erased a) (fun x -> p x)
-  = let pre : refined_pre_action (h_exists p) (erased a) (fun x -> p x) =
-      fun h0 -> let w = IndefiniteDescription.indefinite_description_tot a (fun x -> interp (p x) h0) in
-             let aux (frame:slprop) : Lemma (requires (interp (h_exists p `star` frame) h0))
-                                            (ensures  (interp (p w `star` frame) h0)) =
-               (* This is the main trick of using frame-monotonic properties, `w` is
-                * good for any frame. *)
-                let (hl, hr) = id_elim_star (h_exists p) frame h0 in
-                let w' = id_elim_exists p hl in
-                assert (interp (p w') hl);
-                intro_star (p w') frame hl hr
-             in
-             Classical.forall_intro (Classical.move_requires aux);
-             (| w, h0 |)
-    in
-    refined_pre_action_as_action pre
-
-let witness_h_exists_with_frame #a p =
+let witness_h_exists #a p =
   fun frame h0 ->
   let w = FStar.IndefiniteDescription.indefinite_description_tot
     a
