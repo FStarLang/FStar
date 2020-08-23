@@ -444,6 +444,11 @@ val witness_h_exists (#opened_invariants:_) (#a:_) (p:(a -> slprop){is_frame_mon
            (h_exists p)
            (fun v -> p v)
 
+val witness_h_exists_with_frame (#opened_invariants:_) (#a:_) (p:a -> slprop)
+  : action_except (erased a) opened_invariants
+      (h_exists p)
+      (fun x -> p x)
+
 val lift_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
   : action_except unit opened_invariants
            (h_exists p)

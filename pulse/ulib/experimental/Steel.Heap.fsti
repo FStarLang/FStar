@@ -601,6 +601,9 @@ val witinv_framon (#a:_) (p : a -> slprop)
 val witness_h_exists (#a:_) (p:a -> slprop{is_frame_monotonic p})
   : action (h_exists p) (erased a) (fun x -> p x)
 
+val witness_h_exists_with_frame (#a:_) (p:a -> slprop)
+  : action_with_frame (h_exists p) (erased a) (fun x -> p x)
+
 val lift_h_exists (#a:_) (p:a -> slprop)
   : action (h_exists p) unit
            (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))

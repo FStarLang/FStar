@@ -1227,6 +1227,9 @@ let witness_h_exists #opened_invariants #a p =
   relate_frame_monotonic_2 p;
   lift_tot_action (lift_heap_action opened_invariants (H.witness_h_exists p))
 
+let witness_h_exists_with_frame #opened_invariants #a p =
+  lift_tot_action_with_frame (lift_heap_action_with_frame opened_invariants (H.witness_h_exists_with_frame p))
+
 let lift_h_exists #opened_invariants p = lift_tot_action (lift_heap_action opened_invariants (H.lift_h_exists p))
 
 let elim_pure #opened_invariants p = lift_tot_action (lift_heap_action opened_invariants (H.elim_pure p))
