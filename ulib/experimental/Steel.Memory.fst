@@ -540,6 +540,79 @@ let lift_tot_action #a #e #fp #fp'
     lift_tot_action_nf f
 
 
+let tot_pre_action_with_frame_except (e:inames) (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
+  frame:slprop u#a ->
+  hmem_with_inv_except e (fp `star` frame) ->
+  (x:a & hmem_with_inv_except e (fp' x `star` frame))
+
+let tot_pre_action_with_frame = tot_pre_action_with_frame_except S.empty
+
+let is_mprops_preserving
+  (#e:inames)
+  (#a:Type u#b)
+  (#fp:slprop u#a)
+  (#fp':a -> slprop u#a)
+  (frame:slprop u#a)
+  (f:tot_pre_action_with_frame_except e fp a fp') =
+  forall (m0:hmem_with_inv_except e (fp `star` frame)).
+    (let (| x, m1 |) = f frame m0 in
+     mem_evolves m0 m1 /\
+     (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
+
+let tot_action_with_frame_except (e:inames) (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
+  f:(tot_pre_action_with_frame_except e fp a fp'){
+    forall (frame:slprop u#a)
+      (m0:hmem_with_inv_except e (fp `star` frame)).
+      (let (| x, m1 |) = f frame m0 in
+       mem_evolves m0 m1 /\
+       (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))}
+
+let tot_action_with_frame = tot_action_with_frame_except S.empty
+
+let lift_heap_action_with_frame_pre (#fp:slprop u#a) (#a:Type u#b) (#fp':a -> slprop u#a)
+  (e:inames)
+  ($f:H.action_with_frame fp a fp')
+  (frame:slprop u#a)
+  (m0:hmem_with_inv_except e (fp `star` frame))
+  : (r:(x:a & hmem_with_inv_except e (fp' x `star` frame))
+       {let (| x, m1 |) = r in
+        mem_evolves m0 m1 /\
+        (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1))})
+//  : tot_pre_action_with_frame_except e fp a fp'
+  = //fun frame m0 ->
+    let h0 = hheap_of_hmem m0 in
+    assert (H.interp (fp `star` frame `star` locks_invariant e m0) h0);
+    assume (H.interp (fp `star` (frame `star` locks_invariant e m0)) h0);
+    let (| x, h1 |) = f (frame `star` locks_invariant e m0) h0 in
+    assert (H.interp (fp' x `star` (frame `star` locks_invariant e m0)) h1);
+    assume (H.interp (fp' x `star` frame `star` locks_invariant e m0) h1);
+    let m1 = hmem_of_hheap m0 h1 in
+    assert (mem_evolves m0 m1);
+    mprop_preservation_of_hprop_preservation (frame `star` locks_invariant e m0) m0 m1;
+    assert (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1));
+    (| x, m1 |)
+
+let lift_heap_action_with_frame (#fp:slprop u#a) (#a:Type u#b) (#fp':a -> slprop u#a) (e:inames) ($f:H.action_with_frame fp a fp')
+  : tot_action_with_frame_except e fp a fp'
+  = lift_heap_action_with_frame_pre e f
+
+let lift_tot_action_with_frame #a #e #fp #fp'
+  ($f:tot_action_with_frame_except e fp a fp')
+  (frame:slprop)
+  : MstTot a e fp fp' frame
+  = let m0 = NMSTTotal.get () in
+    assert (inames_ok e m0);
+    assert (interp (fp `star` frame `star` locks_invariant e m0) m0);
+    assume (interp (fp `star` locks_invariant e m0) m0);
+    let m0' : hmem_with_inv_except e fp = m0 in
+    let r = f frame m0' in
+    let (| x, m1 |) = r in
+    assert (interp (fp' x `star` frame `star` locks_invariant e m1) m1);
+    assume (interp (fp' x `star` locks_invariant e m1) m1);
+    let m1' : hmem_with_inv_except e (fp' x) = m1 in
+    NMSTTotal.put #_ #(mem_evolves) m1;
+    x
+
 let sel_action e r v0
   = lift_tot_action (lift_heap_action e (H.sel_action r v0))
 
