@@ -293,6 +293,7 @@ let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
    = let m0 : full_mem = NMSTTotal.get () in
      let fv = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
      let fv' = Some (v_new, full_perm) in
+     assert (interp (pts_to r full_perm v `star` fr `star` locks_invariant uses m0) m0);
      assume (interp ((Mem.pts_to r fv `star` pure (perm_ok full_perm)) `star` locks_invariant uses m0) m0);
      let fv_actual = frame (pure (perm_ok full_perm)) (sel_action uses r fv) fr in
      assert (compatible pcm_frac fv fv_actual);
