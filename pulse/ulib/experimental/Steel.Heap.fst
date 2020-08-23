@@ -1400,20 +1400,12 @@ let witness_h_exists #a p
     in
     refined_pre_action_as_action pre
 
-let witness_h_exists_with_frame_pre (#a:Type u#a) (p:a -> slprop u#b)
-  (frame:slprop u#b) (h0:full_hheap (h_exists p `star` frame))
-  : (r:(x:erased a & full_hheap (p x `star` frame))
-       { let (| _, h1 |) = r in
-         heap_evolves h0 h1 /\
-         (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr) /\
-         (forall (hp:hprop frame). hp h0 == hp h1) })
-  = let w = FStar.IndefiniteDescription.indefinite_description_tot
-      a
-      (fun x -> interp (p x `star` frame) h0) in
-    (| w, h0 |)
-
 let witness_h_exists_with_frame #a p =
-  witness_h_exists_with_frame_pre p
+  fun frame h0 ->
+  let w = FStar.IndefiniteDescription.indefinite_description_tot
+    a
+    (fun x -> interp (p x `star` frame) h0) in
+  (| w, h0 |)
 
 let lift_h_exists (#a:_) (p:a -> slprop)
   : action (h_exists p) unit
