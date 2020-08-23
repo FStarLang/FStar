@@ -395,24 +395,18 @@ let is_frame_preserving
 let action (fp:slprop u#b) (a:Type u#a) (fp':a -> slprop u#b) =
   f:pre_action fp a fp'{ is_frame_preserving f }
 
-let pre_action_with_frame
+let action_with_frame
   (fp:slprop u#a)
   (a:Type u#b)
   (fp':a -> slprop u#a)
   = frame:slprop u#a ->
-    full_hheap (fp `star` frame) -> (x:a & full_hheap (fp' x `star` frame))
-
-let action_with_frame
-  (fp:slprop u#b)
-  (a:Type u#a)
-  (fp':a -> slprop u#b)
-  = f:(pre_action_with_frame fp a fp'){
-      forall (frame:slprop u#b)
-        (h0:full_hheap (fp `star` frame)).
-        (let (| x, h1 |) = f frame h0 in
-         heap_evolves h0 h1 /\
-         (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr) /\
-         (forall (hp:hprop frame). hp h0 == hp h1))}
+    h0:full_hheap (fp `star` frame) ->
+    Pure (x:a & full_hheap (fp' x `star` frame))
+      (requires True)
+      (ensures fun (| x, h1 |) ->
+        heap_evolves h0 h1 /\
+        (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr) /\
+        (forall (hp:hprop frame). hp h0 == hp h1))
 
 (**
   Two heaps [h0] and [h1] are frame-related if you can get from [h0] to [h1] with a
