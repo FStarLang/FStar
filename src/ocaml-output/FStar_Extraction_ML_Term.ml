@@ -3436,8 +3436,17 @@ and (term_as_mlexpr' :
                                   (match uu___8 with
                                    | (env1, nm, uu___9) ->
                                        let env_burn1 =
-                                         FStar_Extraction_ML_UEnv.burn_name
-                                           env_burn nm in
+                                         let uu___10 =
+                                           let uu___11 =
+                                             FStar_Options.codegen () in
+                                           uu___11 <>
+                                             (FStar_Pervasives_Native.Some
+                                                FStar_Options.Kremlin) in
+                                         if uu___10
+                                         then
+                                           FStar_Extraction_ML_UEnv.burn_name
+                                             env_burn nm
+                                         else env_burn in
                                        (env1, ((nm, lb) :: lbs4), env_burn1))))
                     lbs3 (g, [], g) in
                 (match uu___2 with
