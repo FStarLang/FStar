@@ -1136,20 +1136,6 @@ let preserves_frame_invariant (fp fp':slprop)
       in
       ()
 
-let equiv_ext_right (p q r:slprop)
-  : Lemma
-      (requires q `equiv` r)
-      (ensures (p `star` q) `equiv` (p `star` r))
-  = calc (equiv) {
-      p `star` q;
-         (equiv) { star_commutative p q }
-      q `star` p;
-         (equiv) { equiv_extensional_on_star q r p }
-      r `star` p;
-         (equiv) { star_commutative p r }
-      p `star` r;
-    }
-
 let with_inv_helper (fp frame ls1 ctr p ls2:slprop)
   : Lemma
       (requires ls1 `equiv` (p `star` ls2))
