@@ -277,6 +277,12 @@ let gather r = gather_atomic r
 let cas_provides #t (r:ref t) (v:Ghost.erased t) (v_new:t) (b:bool) =
     if b then pts_to r full_perm v_new else pts_to r full_perm v
 
+let cas_action_helper (p q r s:slprop) (m:mem)
+  : Lemma
+      (requires interp (p `star` q `star` r `star` s) m)
+      (ensures interp (p `star` q `star` s) m)
+  = admit ()
+
 let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
                (#uses:inames)
                (r:ref t)
@@ -294,7 +300,13 @@ let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
      let fv = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
      let fv' = Some (v_new, full_perm) in
      assert (interp (pts_to r full_perm v `star` fr `star` locks_invariant uses m0) m0);
-     assume (interp ((Mem.pts_to r fv `star` pure (perm_ok full_perm)) `star` locks_invariant uses m0) m0);
+     assert (interp (Mem.pts_to r fv `star` pure (perm_ok full_perm) `star` fr `star` locks_invariant uses m0) m0);
+     cas_action_helper (Mem.pts_to r fv)
+       (pure (perm_ok full_perm))
+       fr
+       (locks_invariant uses m0)
+       m0;
+     assert (interp ((Mem.pts_to r fv `star` pure (perm_ok full_perm)) `star` locks_invariant uses m0) m0);
      let fv_actual = frame (pure (perm_ok full_perm)) (sel_action uses r fv) fr in
      assert (compatible pcm_frac fv fv_actual);
      let Some (v', p) = fv_actual in
@@ -306,7 +318,7 @@ let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
        else false
      in
      let m1 : full_mem = NMSTTotal.get () in
-     assume (interp (cas_provides r v v_new b `star` locks_invariant uses m1) m1);
+     assert (interp (cas_provides r v v_new b `star` locks_invariant uses m1) m1);
      // assert (preserves_frame uses (pts_to r full_perm v)
      //                              (cas_provides r v v_new b)
      //                              m0 m1);
