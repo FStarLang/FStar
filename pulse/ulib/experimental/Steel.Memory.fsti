@@ -497,3 +497,17 @@ val star_is_witinv_right (#a:Type)
   : Lemma (requires (is_witness_invariant g))
           (ensures  (is_witness_invariant (fun x -> f x `star` g x)))
           //[SMTPat   (is_witness_invariant (fun x -> f x `star` g x))]
+
+let equiv_ext_right (p q r:slprop)
+  : Lemma
+      (requires q `equiv` r)
+      (ensures (p `star` q) `equiv` (p `star` r))
+  = calc (equiv) {
+      p `star` q;
+         (equiv) { star_commutative p q }
+      q `star` p;
+         (equiv) { equiv_extensional_on_star q r p }
+      r `star` p;
+         (equiv) { star_commutative p r }
+      p `star` r;
+    }

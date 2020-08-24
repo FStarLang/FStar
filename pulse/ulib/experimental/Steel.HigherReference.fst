@@ -281,7 +281,24 @@ let cas_action_helper (p q r s:slprop) (m:mem)
   : Lemma
       (requires interp (p `star` q `star` r `star` s) m)
       (ensures interp (p `star` q `star` s) m)
-  = admit ()
+  = calc (equiv) {
+      r `star` s;
+         (equiv) { star_commutative r s }
+      s `star` r;
+    };
+    calc (equiv) {
+      p `star` q `star` r `star` s;
+         (equiv) { Mem.star_associative (p `star` q) r s }
+      (p `star` q) `star` (r `star` s);
+         (equiv) { Mem.equiv_ext_right (p `star` q)
+                     (r `star` s)
+                     (s `star` r) }
+      (p `star` q) `star` (s `star` r);
+         (equiv) { star_associative (p `star` q) s r }
+      (p `star` q `star` s) `star` r;
+    };
+    assert (interp ((p `star` q `star` s) `star` r) m);
+    Mem.affine_star (p `star` q `star` s) r m
 
 let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
                (#uses:inames)
@@ -317,9 +334,4 @@ let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
        then (frame (pure (perm_ok full_perm)) (upd_action uses r fv fv') fr; true)
        else false
      in
-     let m1 : full_mem = NMSTTotal.get () in
-     assert (interp (cas_provides r v v_new b `star` locks_invariant uses m1) m1);
-     // assert (preserves_frame uses (pts_to r full_perm v)
-     //                              (cas_provides r v v_new b)
-     //                              m0 m1);
      b
