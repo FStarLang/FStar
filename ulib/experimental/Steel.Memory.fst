@@ -1136,6 +1136,7 @@ let preserves_frame_invariant (fp fp':slprop)
       in
       ()
 
+#set-options "--z3rlimit 50"
 let with_invariant (#a:Type)
                    (#fp:slprop)
                    (#fp':a -> slprop)
@@ -1151,13 +1152,32 @@ let with_invariant (#a:Type)
     move_invariant opened_invariants m0.locks p i;
     rearrange_invariant fp (lock_store_invariant opened_invariants m0.locks) (ctr_validity m0.ctr (heap_of_mem m0))
                         p (lock_store_invariant (set_add i opened_invariants) m0.locks);
-    assume (interp (p `star` fp `star` locks_invariant (set_add i opened_invariants) m0) m0);
+
+    assert (equiv (lock_store_invariant opened_invariants m0.locks)
+                  (p `star` lock_store_invariant (set_add i opened_invariants) m0.locks));
+    assert (equiv
+      (fp `star` (lock_store_invariant opened_invariants m0.locks `star`
+                  ctr_validity m0.ctr (heap_of_mem m0)))
+      ((p `star` fp) `star` (lock_store_invariant (set_add i opened_invariants) m0.locks
+                             `star` ctr_validity m0.ctr (heap_of_mem m0))));
+    assert (equiv
+      (fp `star` locks_invariant opened_invariants m0)
+      ((p `star` fp) `star` locks_invariant (set_add i opened_invariants) m0));
+
+    assert (interp (fp `star` frame `star` locks_invariant opened_invariants m0) m0);
+    assume (interp (fp `star` locks_invariant opened_invariants m0) m0);
+    assert (interp (p `star` fp `star` locks_invariant (set_add i opened_invariants) m0) m0);
+
     let m0 : hmem_with_inv_except (set_add i opened_invariants) (p `star` fp) = m0 in
     assume (interp (p `star` fp `star` frame `star` locks_invariant (set_add i opened_invariants) m0) m0);
     let r = f frame in
     let m1 : full_mem = NMSTTotal.get () in
+
+    assert (interp (p `star` fp' r `star` frame `star` locks_invariant (set_add i opened_invariants) m1) m1);
+
     assume (interp ((p `star` fp' r) `star`
                     (lock_store_invariant (set_add i opened_invariants) m1.locks `star` ctr_validity m1.ctr (heap_of_mem m1))) m1);
+
     NMSTTotal.recall _ mem_evolves (iname_for_p_mem i p);
     move_invariant opened_invariants m1.locks p i;
     rearrange_invariant (fp' r) (lock_store_invariant opened_invariants m1.locks) (ctr_validity m1.ctr (heap_of_mem m1))
@@ -1166,12 +1186,7 @@ let with_invariant (#a:Type)
                    (lock_store_invariant opened_invariants m1.locks `star` ctr_validity m1.ctr (heap_of_mem m1))) m1);
     assert (interp (fp' r `star` linv opened_invariants m1) m1);
     assert (inames_ok opened_invariants m1);
-    admit ();
-    //AR: Note: we don't need to prove preserves_frame anymore
-    //    see MstTot in Steel.Mempry.fsti
-    assert (preserves_frame (set_add i opened_invariants) (p `star` fp) (p `star` fp' r) m0 m1);
-    preserves_frame_invariant fp (fp' r) opened_invariants p i m0 m1;
-    assert (preserves_frame opened_invariants fp (fp' r) m0 m1);
+    assume (interp (fp' r `star` frame `star` linv opened_invariants m1) m1);
     r
 
 let equiv_pqrs_p_qr_s (p q r s:slprop)
