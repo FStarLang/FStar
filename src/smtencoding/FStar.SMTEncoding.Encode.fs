@@ -1166,7 +1166,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
              let decls, env =
                encode_top_level_val
                  (se.sigattrs |> BU.for_some is_uninterpreted_by_smt)
-                 env fv us t quals in
+                 env fv us t quals
+             in
              let tname = (string_of_lid lid) in
              let tsym = Option.get (try_lookup_free_var env lid) in
              decls
@@ -1178,6 +1179,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let env = { env with tcenv = Env.push_univ_vars env.tcenv uvs } in
         let f = norm_before_encoding env f in
         let f, decls = encode_formula f env in
+        let f =
+          let univ_fvs, univ_tms =
+            List.map EncodeTerm.encode_univ_name uvs
+            |> List.unzip
+          in
+          Term.mkForall (Ident.range_of_lid l) ([], univ_fvs, f) //NS: flatten quantifier for a pattern
+        in
         let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), (varops.mk_unique ("assumption_"^(string_of_lid l))))]
                 |> mk_decls_trivial in
         decls@g, env
@@ -1248,6 +1256,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       in
       let bindings, _ = SS.close_let_rec bindings FStar.Syntax.Util.exp_unit in
       encode_top_level_let env (is_rec, bindings) se.sigquals
+
+    | Sig_bundle(ses, lids)
+      when lids |> BU.for_some (Ident.lid_equals FStar.Parser.Const.lex_t_lid) ->
+      [], env
 
     | Sig_bundle(ses, _) ->
        let g, env = encode_sigelts env ses in
@@ -1596,7 +1608,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 (* it's a parameter, so it's inaccessible and no need for a sub-term ordering on it *)
                                 if i < n_tps
                                 then []
-                                else [mk_Precedes lex_t lex_t (mkFreeV v) dapp])
+                                else [mk_Valid (mk_Precedes lex_t lex_t (mkFreeV v) dapp)])
                           |> List.flatten
                      in
                      Util.mkAssume(mkForall (Ident.range_of_lid d)

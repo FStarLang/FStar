@@ -215,6 +215,10 @@ let (mk_LexCons :
     FStar_SMTEncoding_Term.term ->
       FStar_SMTEncoding_Term.term -> FStar_SMTEncoding_Term.term)
   = norng3 FStar_SMTEncoding_Term.mk_LexCons
+let (mk_lex_t : FStar_SMTEncoding_Term.term) =
+  FStar_SMTEncoding_Term.mk_lex_t FStar_Range.dummyRange
+let (mk_LexTop : FStar_SMTEncoding_Term.term) =
+  FStar_SMTEncoding_Term.mk_LexTop FStar_Range.dummyRange
 let (is_smt_reifiable_effect :
   FStar_TypeChecker_Env.env -> FStar_Ident.lident -> Prims.bool) =
   fun en ->

@@ -4439,6 +4439,18 @@ and (encode_sigelt' :
                   FStar_SMTEncoding_EncodeTerm.encode_formula f2 env1 in
                 (match uu___2 with
                  | (f3, decls) ->
+                     let f4 =
+                       let uu___3 =
+                         let uu___4 =
+                           FStar_List.map
+                             FStar_SMTEncoding_EncodeTerm.encode_univ_name
+                             uvs in
+                         FStar_All.pipe_right uu___4 FStar_List.unzip in
+                       match uu___3 with
+                       | (univ_fvs, univ_tms) ->
+                           let uu___4 = FStar_Ident.range_of_lid l in
+                           FStar_SMTEncoding_Term.mkForall uu___4
+                             ([], univ_fvs, f3) in
                      let g =
                        let uu___3 =
                          let uu___4 =
@@ -4455,7 +4467,7 @@ and (encode_sigelt' :
                                  Prims.op_Hat "assumption_" uu___9 in
                                FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.mk_unique
                                  uu___8 in
-                             (f3, uu___6, uu___7) in
+                             (f4, uu___6, uu___7) in
                            FStar_SMTEncoding_Util.mkAssume uu___5 in
                          [uu___4] in
                        FStar_All.pipe_right uu___3
@@ -4684,6 +4696,11 @@ and (encode_sigelt' :
                  | (bindings3, uu___5) ->
                      encode_top_level_let env (is_rec, bindings3)
                        se.FStar_Syntax_Syntax.sigquals))
+       | FStar_Syntax_Syntax.Sig_bundle (ses, lids) when
+           FStar_All.pipe_right lids
+             (FStar_Util.for_some
+                (FStar_Ident.lid_equals FStar_Parser_Const.lex_t_lid))
+           -> ([], env)
        | FStar_Syntax_Syntax.Sig_bundle (ses, uu___1) ->
            let uu___2 = encode_sigelts env ses in
            (match uu___2 with
@@ -6073,13 +6090,17 @@ and (encode_sigelt' :
                                                                     =
                                                                     let uu___26
                                                                     =
+                                                                    let uu___27
+                                                                    =
                                                                     FStar_SMTEncoding_Util.mkFreeV
                                                                     v in
                                                                     FStar_SMTEncoding_Util.mk_Precedes
                                                                     lex_t
                                                                     lex_t
-                                                                    uu___26
+                                                                    uu___27
                                                                     dapp1 in
+                                                                    FStar_SMTEncoding_Term.mk_Valid
+                                                                    uu___26 in
                                                                     [uu___25]))) in
                                                                     FStar_All.pipe_right
                                                                     uu___23
@@ -6442,13 +6463,17 @@ and (encode_sigelt' :
                                                                     =
                                                                     let uu___23
                                                                     =
+                                                                    let uu___24
+                                                                    =
                                                                     FStar_SMTEncoding_Util.mkFreeV
                                                                     v in
                                                                     FStar_SMTEncoding_Util.mk_Precedes
                                                                     lex_t
                                                                     lex_t
-                                                                    uu___23
+                                                                    uu___24
                                                                     dapp1 in
+                                                                    FStar_SMTEncoding_Term.mk_Valid
+                                                                    uu___23 in
                                                                     [uu___22]))) in
                                                                     FStar_All.pipe_right
                                                                     uu___20
