@@ -106,19 +106,19 @@ assume val sl_implies_preserves_frame (p q:slprop u#1)
 : Lemma
   (requires p `sl_implies` q)
   (ensures
-    forall (m1 m2:mem) (r:slprop).
-      Sem.preserves_frame #state q r m1 m2 ==>
-      Sem.preserves_frame #state p r m1 m2)
+    forall (m1 m2:mem) (r frame:slprop).
+      Sem.post_preserves_frame #state p frame m1 m2 ==>
+      Sem.post_preserves_frame #state q frame m1 m2)
   [SMTPat (p `sl_implies` q)]
 
-assume val sl_implies_preserves_frame_right (p q:slprop u#1)
-: Lemma
-  (requires p `sl_implies` q)
-  (ensures
-    forall (m1 m2:mem) (r:slprop).
-      Sem.preserves_frame #state r p m1 m2 ==>
-      Sem.preserves_frame #state r q m1 m2)
-  [SMTPat (p `sl_implies` q)]
+// assume val sl_implies_preserves_frame_right (p q:slprop u#1)
+// : Lemma
+//   (requires p `sl_implies` q)
+//   (ensures
+//     forall (m1 m2:mem) (r:slprop).
+//       Sem.preserves_frame #state r p m1 m2 ==>
+//       Sem.preserves_frame #state r q m1 m2)
+//   [SMTPat (p `sl_implies` q)]
 
 
 irreducible let framing_implicit : unit = ()
@@ -176,9 +176,9 @@ let bind (a:Type) (b:Type)
     post_g
     (bind_req req_f ens_f req_g p)
     (bind_ens req_f ens_f ens_g p)
-= fun _ ->
-  let x = f () in
-  (g x) ()
+= fun frame ->
+  let x = f frame in
+  (g x) frame
 
 
 (*
@@ -258,8 +258,8 @@ let frame_aux (#a:Type)
   (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
   ($f:repr a pre post req ens) (frame:slprop)
 : repr a (pre `star` frame) (fun x -> post x `star` frame) req ens
-= fun _ ->
-  Sem.run #state #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame (fun _ -> True))
+= fun frame' ->
+  Sem.run #state #_ #_ #_ #_ #_ frame' (Sem.Frame (Sem.Act f) frame (fun _ -> True))
 
 
 (*
@@ -312,9 +312,9 @@ let bind_steel_steel (a:Type) (b:Type)
     (fun y -> post_g y `star` frame_g)
     (bind_steel_steel_req req_f ens_f req_g frame_f frame_g p)
     (bind_steel_steel_ens req_f ens_f ens_g frame_f frame_g p)
-= fun _ ->
-  let x = frame_aux f frame_f () in
-  frame_aux (g x) frame_g ()
+= fun frame ->
+  let x = frame_aux f frame_f frame in
+  frame_aux (g x) frame_g frame
 
 
 (*
@@ -368,9 +368,9 @@ let bind_steel_steelf (a:Type) (b:Type)
     post_g
     (bind_steel_steelf_req req_f ens_f req_g frame_f p)
     (bind_steel_steelf_ens req_f ens_f ens_g frame_f p)
-= fun _ ->
-  let x = frame_aux f frame_f () in
-  (g x) ()
+= fun frame ->
+  let x = frame_aux f frame_f frame in
+  (g x) frame
 
 
 polymonadic_bind (Steel, SteelF) |> SteelF = bind_steel_steelf
@@ -420,9 +420,9 @@ let bind_steelf_steel (a:Type) (b:Type)
     (fun y -> post_g y `star` frame_g)
     (bind_steelf_steel_req req_f ens_f req_g frame_g p)
     (bind_steelf_steel_ens req_f ens_f ens_g frame_g p)
-= fun _ ->
-  let x = f () in
-  frame_aux (g x) frame_g ()
+= fun frame ->
+  let x = f frame in
+  frame_aux (g x) frame_g frame
 
 
 polymonadic_bind (SteelF, Steel) |> SteelF = bind_steelf_steel
@@ -472,9 +472,9 @@ let bind_pure_steel_ (a:Type) (b:Type)
     post
     (bind_pure_steel__req wp req)
     (bind_pure_steel__ens wp ens)
-= fun _ ->
+= fun frame ->
   let x = f () in
-  (g x) ()
+  (g x) frame
 
 polymonadic_bind (PURE, SteelF) |> SteelF = bind_pure_steel_
 
