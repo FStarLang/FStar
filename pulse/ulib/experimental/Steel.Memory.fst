@@ -323,14 +323,45 @@ let mem_evolves =
     m0.ctr <= m1.ctr /\
     lock_store_evolves m0.locks m1.locks
 
+(** See [Steel.Heap.is_frame_preserving]. We add in [lock_invariants] now *)
+let preserves_frame (e:inames) (pre post:slprop) (m0 m1:mem) =
+  forall (frame:slprop).
+    interp ((pre `star` frame) `star` locks_invariant e m0) m0 ==>
+    (interp ((post `star` frame) `star` locks_invariant e m1) m1 /\
+     (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)))
+
+(**
+  This is a version of MstTot with frame quantified, as part of preserves_frame
+*)
+effect MstTotNF (a:Type u#a) (except:inames) (expects:slprop u#1) (provides: a -> slprop u#1) =
+  NMSTTotal.NMSTATETOT a (full_mem u#1) mem_evolves
+    (requires fun m0 ->
+        inames_ok except m0 /\
+        interp (expects `star` locks_invariant except m0) m0)
+    (ensures fun m0 x m1 ->
+        inames_ok except m1 /\
+        interp (provides x `star` locks_invariant except m1) m1 /\
+        preserves_frame except expects (provides x) m0 m1)
+
 ////////////////////////////////////////////////////////////////////////////////
 // Lifting heap actions
 ////////////////////////////////////////////////////////////////////////////////
 
-let tot_pre_action_except (e:inames) (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
-  hmem_with_inv_except e fp -> (x:a & hmem_with_inv_except e (fp' x))
+(**
+  Heap actions come in two equivalent flavors:
+  - one that take an explicit frame as argument (action_with_frame)
+  - and one that quantify over all the frame
 
-let tot_pre_action = tot_pre_action_except S.empty
+  We therefore define two lift routes:
+  - a direct route for those with explicit frame
+  - via MstTotNF for the rest
+*)
+
+let tot_pre_action_nf_except (e:inames) (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
+  hmem_with_inv_except e fp ->
+  (x:a & hmem_with_inv_except e (fp' x))
+
+let tot_pre_action_nf = tot_pre_action_nf_except S.empty
 
 let ac_reasoning_for_m_frame_preserving
     (p q r:slprop u#a) (m:mem u#a)
@@ -353,7 +384,7 @@ let is_frame_preserving
   (#a:Type u#b)
   (#fp:slprop u#a)
   (#fp':a -> slprop u#a)
-  (f:tot_pre_action_except e fp a fp') =
+  (f:tot_pre_action_nf_except e fp a fp') =
   forall (frame:slprop u#a) (m0:hmem_with_inv_except e (fp `star` frame)).
     (ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
      let (| x, m1 |) = f m0 in
@@ -361,10 +392,10 @@ let is_frame_preserving
      mem_evolves m0 m1 /\
      (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
 
-let tot_action_except (e:inames) (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
-  f:tot_pre_action_except e fp a fp'{ is_frame_preserving f }
+let tot_action_nf_except (e:inames) (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
+  f:tot_pre_action_nf_except e fp a fp'{ is_frame_preserving f }
 
-let tot_action = tot_action_except S.empty
+let tot_action_nf = tot_action_nf_except S.empty
 
 let linv e (m:mem) = locks_invariant e m
 
@@ -420,7 +451,6 @@ let as_hprop (frame:slprop) (mp:mprop frame)
       in
       f
 
-
 let mprop_preservation_of_hprop_preservation
        (p:slprop) (m0 m1:mem)
     : Lemma
@@ -436,8 +466,8 @@ let mprop_preservation_of_hprop_preservation
 let lift_heap_action (#fp:slprop) (#a:Type) (#fp':a -> slprop)
                      (e:inames)
                      ($f:H.action fp a fp')
-  : tot_action_except e fp a fp'
-  = let g : tot_pre_action_except e fp a fp' = fun m ->
+  : tot_action_nf_except e fp a fp'
+  = let g : tot_pre_action_nf_except e fp a fp' = fun m ->
         let h0 = hheap_of_hmem m in
         let (| x, h' |) = f h0 in
         (| x, hmem_of_hheap m h' |)
@@ -472,7 +502,7 @@ let lift_heap_action (#fp:slprop) (#a:Type) (#fp':a -> slprop)
     assert (is_frame_preserving g);
     g
 
-let frame_preserving_respects_preorder #a #e #fp #fp' ($f:tot_action_except e fp a fp') (m0:hmem_with_inv_except e fp)
+let frame_preserving_respects_preorder #a #e #fp #fp' ($f:tot_action_nf_except e fp a fp') (m0:hmem_with_inv_except e fp)
   : Lemma (let (| x, m1 |) = f m0 in
            mem_evolves m0 m1)
   = let aux (frame:slprop) (m0:hmem_with_inv_except e (fp `star` frame))
@@ -489,9 +519,8 @@ let frame_preserving_respects_preorder #a #e #fp #fp' ($f:tot_action_except e fp
     assert (interp ((fp `star` emp) `star` linv e m0) m0);
     aux emp m0
 
-
-let lift_tot_action #a #e #fp #fp' ($f:tot_action_except e fp a fp') (_:unit)
-  : MstTot a e fp fp'
+let lift_tot_action_nf #a #e #fp #fp' ($f:tot_action_nf_except e fp a fp')
+  : MstTotNF a e fp fp'
   = let m0 = NMSTTotal.get () in
     let m0' : hmem_with_inv_except e fp = m0 in
     let r = f m0' in
@@ -500,6 +529,90 @@ let lift_tot_action #a #e #fp #fp' ($f:tot_action_except e fp a fp') (_:unit)
     assert (is_frame_preserving f);
     assert (m1 == dsnd (f m0));
     frame_preserving_respects_preorder f m0;
+    NMSTTotal.put #_ #(mem_evolves) m1;
+    x
+
+let lift_tot_action #a #e #fp #fp'
+  ($f:tot_action_nf_except e fp a fp')
+  (frame:slprop)
+  : MstTot a e fp fp' frame
+  = let m0 = NMSTTotal.get #(full_mem) #_ () in
+    ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
+    assert (interp (fp `star` frame `star` locks_invariant e m0) m0);
+    assert (interp (fp `star` locks_invariant e m0) m0);
+    lift_tot_action_nf f
+
+
+(**
+  Now defining the lift for heap actions with explicit frame
+*)
+
+let tot_action_with_frame_except
+  (e:inames)
+  (fp:slprop u#a)
+  (a:Type u#b)
+  (fp':a -> slprop u#a)
+  = frame:slprop u#a ->
+    m0:hmem_with_inv_except e (fp `star` frame) ->
+    Pure (x:a & hmem_with_inv_except e (fp' x `star` frame))
+      (requires True)
+      (ensures fun (| x, m1 |) ->
+        mem_evolves m0 m1 /\
+        (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
+    
+let tot_action_with_frame = tot_action_with_frame_except S.empty
+
+let lift_heap_action_with_frame
+  (#fp:slprop u#a)
+  (#a:Type u#b)
+  (#fp':a -> slprop u#a)
+  (e:inames)
+  ($f:H.action_with_frame fp a fp')
+  : tot_action_with_frame_except e fp a fp'
+  = fun frame m0 ->
+    let h0 = hheap_of_hmem m0 in
+    
+    calc (equiv) {
+      fp `star` frame `star` locks_invariant e m0;
+         (equiv) { star_associative fp frame (locks_invariant e m0) }
+      fp `star` (frame `star` locks_invariant e m0);
+    };
+    assert (H.interp (fp `star` frame `star` locks_invariant e m0) h0);
+    assert (H.interp (fp `star` (frame `star` locks_invariant e m0)) h0);
+    
+    //key: apply the heap action with frame * locks_invariant e m0
+    let (| x, h1 |) = f (frame `star` locks_invariant e m0) h0 in
+
+    calc (equiv) {
+      fp' x `star` (frame `star` locks_invariant e m0);
+         (equiv) { star_associative (fp' x) frame (locks_invariant e m0) }
+      fp' x `star` frame `star` locks_invariant e m0;
+    };
+    assert (H.interp (fp' x `star` (frame `star` locks_invariant e m0)) h1);
+    assert (H.interp (fp' x `star` frame `star` locks_invariant e m0) h1);
+
+    let m1 = hmem_of_hheap m0 h1 in
+    assert (mem_evolves m0 m1);
+    mprop_preservation_of_hprop_preservation (frame `star` locks_invariant e m0) m0 m1;
+    assert (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1));
+    (| x, m1 |)
+
+let lift_tot_action_with_frame #a #e #fp #fp'
+  ($f:tot_action_with_frame_except e fp a fp')
+  (frame:slprop)
+  : MstTot a e fp fp' frame
+  = let m0 = NMSTTotal.get () in
+    assert (inames_ok e m0);
+    ac_reasoning_for_m_frame_preserving fp frame (locks_invariant e m0) m0;
+    assert (interp (fp `star` frame `star` locks_invariant e m0) m0);
+    assert (interp (fp `star` locks_invariant e m0) m0);
+    let m0' : hmem_with_inv_except e fp = m0 in
+    let r = f frame m0' in
+    let (| x, m1 |) = r in
+    ac_reasoning_for_m_frame_preserving (fp' x) frame (locks_invariant e m1) m1;
+    assert (interp (fp' x `star` frame `star` locks_invariant e m1) m1);
+    assert (interp (fp' x `star` locks_invariant e m1) m1);
+    let m1' : hmem_with_inv_except e (fp' x) = m1 in
     NMSTTotal.put #_ #(mem_evolves) m1;
     x
 
@@ -581,8 +694,8 @@ let refined_pre_action e (fp0:slprop) (a:Type) (fp1:a -> slprop) =
 
 let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
                                  #e ($f:refined_pre_action e fp0 a fp1)
-  : tot_action_except e fp0 a fp1
-  = let g : tot_pre_action_except e fp0 a fp1 = fun m -> f m in
+  : tot_action_nf_except e fp0 a fp1
+  = let g : tot_pre_action_nf_except e fp0 a fp1 = fun m -> f m in
     let aux (frame:slprop)
             (m0:hmem_with_inv_except e (fp0 `star` frame))
       : Lemma
@@ -751,10 +864,10 @@ let witness (#a:Type) (#pcm:pcm a)
             (fact:stable_property pcm)
             (v:Ghost.erased a)
             (_:squash (forall z. compatible pcm v z ==> fact z))
-            (_:unit)
+            (frame:slprop)
   : MstTot unit e
            (pts_to r v)
-           (fun _ -> pts_to r v `star` pure (witnessed r fact))
+           (fun _ -> pts_to r v `star` pure (witnessed r fact)) frame
   = let m0 = NMSTTotal.get () in
     let v' = H.sel_v r v (heap_of_mem m0) in
     assert (interp (H.ptr r) m0 /\ H.sel r (heap_of_mem m0) == v');
@@ -767,6 +880,8 @@ let witness (#a:Type) (#pcm:pcm a)
     assert (witnessed r fact);
     emp_unit (pts_to r v `star` locks_invariant e m0);
     pure_star_interp (pts_to r v `star` locks_invariant e m0) (witnessed r fact) m0;
+    ac_reasoning_for_m_frame_preserving (pts_to r v) frame (locks_invariant e m0) m0;
+    assert (interp (pts_to r v `star` locks_invariant e m0) m0);
     assert (interp ((pts_to r v `star` locks_invariant e m0) `star` pure (witnessed r fact)) m0);
     rearrange_pqr_prq (pts_to r v) (locks_invariant e m0) (pure (witnessed r fact));
     assert (interp ((pts_to r v `star` pure (witnessed r fact)) `star` locks_invariant e m0) m0);
@@ -785,7 +900,7 @@ let recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
            (e:inames)
            (r:ref a pcm)
            (v:Ghost.erased a)
-           (_:unit)
+           (frame:slprop)
   = let m0 = NMSTTotal.get () in
     pure_star_interp (pts_to r v) (witnessed r fact) m0;
     assert (witnessed r fact);
@@ -798,6 +913,17 @@ let recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
     assert (fact v1);
     rearrange_pqr_prq (pts_to r v) (pure (witnessed r fact)) (locks_invariant e m0);
     affine_star (pts_to r v `star` locks_invariant e m0) (pure (witnessed r fact)) m0;
+    ac_reasoning_for_m_frame_preserving
+      (pts_to r v `star` pure (witnessed r fact))
+      frame
+      (locks_invariant e m0)
+      m0;
+    assert (interp (pts_to r v `star` pure (witnessed r fact) `star` locks_invariant e m0) m0);
+    ac_reasoning_for_m_frame_preserving
+      (pts_to r v)
+      (pure (witnessed r fact))
+      (locks_invariant e m0)
+      m0;      
     assert (interp (pts_to r v `star` locks_invariant e m0) m0);
     emp_unit (pts_to r v `star` locks_invariant e m0);
     pure_star_interp (pts_to r v `star` locks_invariant e m0) (fact v1) m0;
@@ -915,9 +1041,11 @@ let new_invariant_tot_action (e:inames) (p:slprop) (m0:hmem_with_inv_except e p{
     assert (frame_related_mems p emp e m0 m1);
     ( i, m1 )
 
-let new_invariant (e:inames) (p:slprop) ()
-  : MstTot (inv p) e p (fun _ -> emp)
+let new_invariant (e:inames) (p:slprop) (frame:slprop)
+  : MstTot (inv p) e p (fun _ -> emp) frame
   = let m0 = NMSTTotal.get () in
+    ac_reasoning_for_m_frame_preserving p frame (locks_invariant e m0) m0;
+    assert (interp (p `star` locks_invariant e m0) m0);
     let r = new_invariant_tot_action e p m0 in
     let ( i, m1 ) = r in
     assert (mem_evolves m0 m1);
@@ -1005,6 +1133,63 @@ let preserves_frame_invariant (fp fp':slprop)
       in
       ()
 
+
+let equiv_ext_right (p q r:slprop)
+  : Lemma
+      (requires q `equiv` r)
+      (ensures (p `star` q) `equiv` (p `star` r))
+  = calc (equiv) {
+      p `star` q;
+         (equiv) { star_commutative p q }
+      q `star` p;
+         (equiv) { equiv_extensional_on_star q r p }
+      r `star` p;
+         (equiv) { star_commutative p r }
+      p `star` r;
+    }
+
+let with_inv_helper (fp frame ls1 ctr p ls2:slprop)
+  : Lemma
+      (requires ls1 `equiv` (p `star` ls2))
+      (ensures
+        (fp `star` frame `star` (ls1 `star` ctr)) `equiv`
+        (p `star` fp `star` frame `star` (ls2 `star` ctr)))
+  = calc (equiv) {
+      ls1 `star` ctr;
+         (equiv) { equiv_extensional_on_star ls1 (p `star` ls2) ctr }
+      p `star` ls2 `star` ctr;
+    };
+    calc (equiv) {
+      p `star` ls2 `star` ctr;
+         (equiv) { star_associative p ls2 ctr }
+      p `star` (ls2 `star` ctr);
+    };
+    calc (equiv) {
+      fp `star` frame `star` p;
+         (equiv) { star_commutative (fp `star` frame) p }
+      p `star` (fp `star` frame);
+         (equiv) { star_associative p fp frame }
+      p `star` fp `star` frame;
+    };
+    calc (equiv) {
+      fp `star` frame `star` (ls1 `star` ctr);
+         (equiv) { equiv_ext_right (fp `star` frame)
+                     (ls1 `star` ctr)
+                     (p `star` ls2 `star` ctr) }
+      (fp `star` frame) `star` (p `star` ls2 `star` ctr);
+         (equiv) { equiv_ext_right (fp `star` frame)
+                     (p `star` ls2 `star` ctr)
+                     (p `star` (ls2 `star` ctr)) }
+      (fp `star` frame) `star` (p `star` (ls2 `star` ctr));
+         (equiv) { star_associative (fp `star` frame) p (ls2 `star` ctr) }
+      (fp `star` frame `star` p) `star` (ls2 `star` ctr);
+         (equiv) { equiv_extensional_on_star
+                     (fp `star` frame `star` p)
+                     (p `star` fp `star` frame)
+                     (ls2 `star` ctr) }
+      (p `star` fp `star` frame) `star` (ls2 `star` ctr);      
+    }
+
 let with_invariant (#a:Type)
                    (#fp:slprop)
                    (#fp':a -> slprop)
@@ -1012,32 +1197,66 @@ let with_invariant (#a:Type)
                    (#p:slprop)
                    (i:inv p{not (i `Set.mem` opened_invariants)})
                    (f:action_except a (set_add i opened_invariants) (p `star` fp) (fun x -> p `star` fp' x))
-                   ()
-  : MstTot a opened_invariants fp fp'
+                   (frame:slprop)
+  : MstTot a opened_invariants fp fp' frame
   = let m0 = NMSTTotal.get () in
     NMSTTotal.recall _ mem_evolves (iname_for_p_mem i p);
     assert (iname_for_p i p m0.locks);
+
+    assert (interp (fp `star` frame `star` locks_invariant opened_invariants m0) m0);
+    assert (interp (fp `star` frame `star`
+      (lock_store_invariant opened_invariants m0.locks `star`
+       ctr_validity m0.ctr (heap_of_mem m0))) m0);
+
     move_invariant opened_invariants m0.locks p i;
-    rearrange_invariant fp (lock_store_invariant opened_invariants m0.locks) (ctr_validity m0.ctr (heap_of_mem m0))
-                        p (lock_store_invariant (set_add i opened_invariants) m0.locks);
-    let m0 : hmem_with_inv_except (set_add i opened_invariants) (p `star` fp) = m0 in
-    let r = f () in
+    assert (lock_store_invariant opened_invariants m0.locks `equiv`
+            (p `star` lock_store_invariant (set_add i opened_invariants) m0.locks));
+
+    with_inv_helper
+      fp
+      frame
+      (lock_store_invariant opened_invariants m0.locks)
+      (ctr_validity m0.ctr (heap_of_mem m0))
+      p
+      (lock_store_invariant (set_add i opened_invariants) m0.locks);
+
+    assert (interp (p `star` fp `star` frame `star` locks_invariant (set_add i opened_invariants) m0) m0);
+
+    let r = f frame in
     let m1 : full_mem = NMSTTotal.get () in
-    assert (interp ((p `star` fp' r) `star`
-                    (lock_store_invariant (set_add i opened_invariants) m1.locks `star` ctr_validity m1.ctr (heap_of_mem m1))) m1);
+
+    assert (interp (p `star` fp' r `star` frame `star` locks_invariant (set_add i opened_invariants) m1) m1);
+    assert (interp (p `star` fp' r `star` frame `star`
+      (lock_store_invariant (set_add i opened_invariants) m1.locks `star`
+       ctr_validity m1.ctr (heap_of_mem m1))) m1);
+   
     NMSTTotal.recall _ mem_evolves (iname_for_p_mem i p);
+
     move_invariant opened_invariants m1.locks p i;
-    rearrange_invariant (fp' r) (lock_store_invariant opened_invariants m1.locks) (ctr_validity m1.ctr (heap_of_mem m1))
-                                p (lock_store_invariant (set_add i opened_invariants) m1.locks);
-    assert (interp (fp' r `star`
-                   (lock_store_invariant opened_invariants m1.locks `star` ctr_validity m1.ctr (heap_of_mem m1))) m1);
-    assert (interp (fp' r `star` linv opened_invariants m1) m1);
+    assert (lock_store_invariant opened_invariants m1.locks `equiv`
+            (p `star` lock_store_invariant (set_add i opened_invariants) m1.locks));
+
+    with_inv_helper
+      (fp' r)
+      frame
+      (lock_store_invariant opened_invariants m1.locks)
+      (ctr_validity m1.ctr (heap_of_mem m1))
+      p
+      (lock_store_invariant (set_add i opened_invariants) m1.locks);
+
+    assert (interp (fp' r `star` frame `star` locks_invariant opened_invariants m1) m1);
+
     assert (inames_ok opened_invariants m1);
-    assert (preserves_frame (set_add i opened_invariants) (p `star` fp) (p `star` fp' r) m0 m1);
-    preserves_frame_invariant fp (fp' r) opened_invariants p i m0 m1;
-    assert (preserves_frame opened_invariants fp (fp' r) m0 m1);
     r
 
+let equiv_pqrs_p_qr_s (p q r s:slprop)
+  : Lemma ((p `star` q `star` r `star` s) `equiv`
+           (p `star` (q `star` r) `star` s))
+  = star_associative p q r;
+    equiv_extensional_on_star
+      (p `star` q `star` r)
+      (p `star` (q `star` r))
+      s
 
 let frame (#a:Type)
           (#opened_invariants:inames)
@@ -1045,33 +1264,17 @@ let frame (#a:Type)
           (#post:a -> slprop)
           (frame:slprop)
           ($f:action_except a opened_invariants pre post)
-          ()
-  : MstTot a opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
+          (frame0:slprop)
+  : MstTot a opened_invariants (pre `star` frame) (fun x -> post x `star` frame) frame0
   = let m0 : full_mem = NMSTTotal.get () in
-    assert (interp ((pre `star` frame) `star` linv opened_invariants m0) m0);
-    rearrange_pqr_prq pre frame (linv opened_invariants m0);
-    assert (interp ((pre `star` linv opened_invariants m0) `star` frame) m0);
-    let x = f () in
+    equiv_pqrs_p_qr_s pre frame frame0 (linv opened_invariants m0);
+    assert (interp (pre `star` frame `star` frame0 `star` linv opened_invariants m0) m0);
+    assert (interp (pre `star` (frame `star` frame0) `star` linv opened_invariants m0) m0);
+    let x = f (frame `star` frame0) in
     let m1 : full_mem = NMSTTotal.get () in
-    assert (interp ((post x `star` frame) `star` (linv opened_invariants m1)) m1);
-    assert (preserves_frame opened_invariants pre (post x) m0 m1);
-    let aux (p q r s:slprop)
-      : Lemma ((((p `star` q) `star` r) `star` s) `equiv`
-               ((p `star` (q `star` r)) `star` s))
-      = star_associative p q r;
-        star_congruence ((p `star` q) `star` r) s
-                        (p `star` (q `star` r)) s
-    in
-    let aux (frame':slprop)
-      : Lemma
-        (requires interp (((pre `star` frame) `star` frame') `star` locks_invariant opened_invariants m0) m0)
-        (ensures  interp (((post x `star` frame) `star` frame') `star` locks_invariant opened_invariants m1) m1 /\
-                  (forall (f_frame:mprop frame'). f_frame (core_mem m0) == f_frame (core_mem m1)))
-        [SMTPat ()]
-      = aux pre frame frame' (locks_invariant opened_invariants m0);
-        aux (post x) frame frame' (locks_invariant opened_invariants m1)
-    in
-    assert (preserves_frame opened_invariants (pre `star` frame) (post x `star` frame) m0 m1);
+    equiv_pqrs_p_qr_s (post x) frame frame0 (linv opened_invariants m1);
+    assert (interp (post x `star` (frame `star` frame0) `star` linv opened_invariants m1) m1);
+    assert (interp (post x `star` frame `star` frame0 `star` linv opened_invariants m1) m1);
     x
 
 let change_slprop (#opened_invariants:inames)
@@ -1106,8 +1309,7 @@ let relate_frame_monotonic_2 #a p
     Classical.forall_intro_4 (fun x y h f -> Classical.move_requires (aux x y h) f)
 
 let witness_h_exists #opened_invariants #a p =
-  relate_frame_monotonic_2 p;
-  lift_tot_action (lift_heap_action opened_invariants (H.witness_h_exists p))
+  lift_tot_action_with_frame (lift_heap_action_with_frame opened_invariants (H.witness_h_exists p))
 
 let lift_h_exists #opened_invariants p = lift_tot_action (lift_heap_action opened_invariants (H.lift_h_exists p))
 

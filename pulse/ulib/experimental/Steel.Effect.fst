@@ -109,25 +109,25 @@ let repr a pre post req ens =
 let returnc (a:Type u#a) (x:a) (p:a -> slprop) = fun _ -> x
 
 let bind a b pre_f post_f req_f ens_f post_g req_g ens_g f g
-  = fun m0 ->
-      let x = f () in
-      g x ()
+  = fun frame ->
+      let x = f frame in
+      g x frame
 
 let subcomp a pre post req_f ens_f req_g ens_g f = f
 
 #push-options "--z3rlimit 100 --fuel 0 --ifuel 0"
 let bind_pure_steel a b wp pre_g post_b req_g ens_g f g
   = FStar.Monotonic.Pure.wp_monotonic_pure ();
-    fun m0 ->
+    fun frame ->
       let x = f () in
-      g x m0
+      g x frame
 #pop-options
 
 let bind_steel_pure a b pre_f post_f req_f ens_f wp_g f g
   = 
     FStar.Monotonic.Pure.wp_monotonic_pure ();
-    fun _ ->
-    let x = f () in
+    fun frame ->
+    let x = f frame in
     g x ()
 
 
@@ -168,9 +168,9 @@ let bind_div_steel (a:Type) (b:Type)
     (bind_div_steel_req wp req_g)
     (bind_div_steel_ens wp ens_g)
 = FStar.Monotonic.Pure.wp_monotonic_pure ();
-  fun m0 ->
+  fun frame ->
   let x = f () in
-  g x m0
+  g x frame
 #pop-options
 
 polymonadic_bind (DIV, Steel) |> Steel = bind_div_steel
@@ -190,7 +190,7 @@ let par0 (#aL:Type u#a) (#preL:slprop) (#postL:aL -> slprop)
           (fun (xL, xR) -> postL xL `Mem.star` postR xR)
           (fun h -> lpreL h /\ lpreR h)
           (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
-  = Steel?.reflect (fun _ -> Sem.run #state #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)))
+  = Steel?.reflect (fun frame -> Sem.run #state #_ #_ #_ #_ #_ frame (Sem.Par (Sem.Act f) (Sem.Act g)))
 
 let par f g = par0 (reify (f ())) (reify (g ()))
 
@@ -205,7 +205,7 @@ let frame0 (#a:Type) (#pre:slprop) (#post:a -> slprop) (#req:fp_mprop pre) (#ens
       (fun x -> post x `Mem.star` frame)
       (fun h -> req h /\ f_frame h)
       (fun h0 r h1 -> req h0 /\ ens h0 r h1 /\ f_frame h1)
-    = Steel?.reflect (fun _ -> Sem.run #state #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame f_frame))
+    = Steel?.reflect (fun frame' -> Sem.run #state #_ #_ #_ #_ #_ frame' (Sem.Frame (Sem.Act f) frame f_frame))
 
 let frame f frame f_frame = frame0 (reify (f ())) frame f_frame
 
@@ -266,9 +266,9 @@ open Steel.Effect.Atomic
 
 #push-options "--z3rlimit 40"
 let bind_atomic_steel _ _ _ _ _ _ _ _ f g
-= fun m0 ->
-  let x = f () in
-  g x ()
+= fun frame ->
+  let x = f frame in
+  g x frame
 #pop-options
 
 #push-options "--z3rlimit 40"
