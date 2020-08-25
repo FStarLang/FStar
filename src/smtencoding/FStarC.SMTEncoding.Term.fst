@@ -913,8 +913,11 @@ and mkPrelude z3options =
                 (define-fun U_zero () Universe (Univ 0))\n\
                 (define-fun U_succ ((u Universe)) Universe\n\
                   (Univ (+ (ulevel u) 1)))\n\
-                (define-fun U_max ((u0 Universe) (u1 Universe)) Universe \n\
-                  (Univ (imax (ulevel u0) (ulevel u1))))\n\
+                (declare-fun U_max (Universe Universe) Universe) \n\
+                (assert (forall ((u1 Universe) (u2 Universe)) \n\
+                                (! (= (U_max u1 u2)\n\
+                                      (Univ (imax (ulevel u1) (ulevel u2))))\n\
+                                 :pattern ((U_max u1 u2)))))\n\
                 (declare-fun U_unif (Int) Universe)\n\
                 (declare-fun U_unknown () Universe)\n\
                 (declare-fun Term_constr_id (Term) Int)\n\
@@ -993,7 +996,9 @@ and mkPrelude z3options =
         (fst boxIntFun,     [snd boxIntFun,  Int_sort, true],   Term_sort, 7, true);
         (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
         (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
-        (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true)] in
+        (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true);
+        ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true); ("LexCons_2", Term_sort, true)], Term_sort, 11, true);
+      ] in
    let bcons = constrs |> List.collect (constructor_to_decl norng)
                        |> List.map (declToSmt z3options) |> String.concat "\n" in
 
@@ -1014,7 +1019,15 @@ and mkPrelude z3options =
      @x2)\n\
      @x3)))))\n" in
 
-   let lex_ordering = "\n(declare-fun Prims.lex_t () Term)\n\
+   let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
+                                   (is-LexCons t))\n\
+                       (declare-fun Prims.lex_t () Term)\n\
+                       (declare-fun LexTop () Term)\n\
+                       (assert (forall ((t1 Term) (t2 Term) (x1 Term) (x2 Term) (y1 Term) (y2 Term))\n\
+                                    (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t (LexCons t1 x1 x2) (LexCons t2 y1 y2)))\n\
+                                         (or (Valid (Prims.precedes t1 t2 x1 y1))\n\
+                                             (and (= x1 y1)\n\
+                                                  (Valid (Prims.precedes Prims.lex_t Prims.lex_t x2 y2)))))))\n\
                       (assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
                                                           (! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n\
                                                                   (Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n\
@@ -1168,6 +1181,9 @@ let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
 let kick_partial_app t  = mk_ApplyTT (mkApp("__uu__PartialApp", []) t.rng) t t.rng |> mk_Valid
 let mk_String_const s r = mkApp ("FString_const", [mk (String s) r]) r
 let mk_Precedes x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4])  r|> mk_Valid
+let mk_lex_t r = mkApp("Prims.lex_t", []) r
+let mk_LexCons x1 x2 x3 r  = mkApp("LexCons", [x1;x2;x3]) r
+let mk_LexTop r  = mkApp("LexTop", []) r
 let rec n_fuel n =
     if n = 0 then mkApp("ZFuel", []) norng
     else mkApp("SFuel", [n_fuel (n - 1)]) norng

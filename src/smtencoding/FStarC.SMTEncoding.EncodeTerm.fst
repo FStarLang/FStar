@@ -699,7 +699,17 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
       | Tm_fvar _ ->
         encode_term (S.mk (Tm_uinst(t, [])) t.pos) env
-        
+
+      | Tm_uinst({n=Tm_fvar fv}, _)
+        when S.fv_eq_lid fv Const.lex_t_lid ->         
+        //lex_t is primitive        
+        mk_lex_t, []
+
+      | Tm_uinst({n=Tm_fvar fv}, _)
+        when S.fv_eq_lid fv Const.lextop_lid ->
+        //lex top is primitive
+        mk_LexTop, []
+
       | Tm_uinst({n=Tm_fvar v}, us) ->
         let encode_freev () =
           let us = List.map encode_universe us in
@@ -993,29 +1003,22 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                  Some ("haseq for " ^ tsym),
                                  "haseq" ^ tsym) 
         in
-        // let t_valid =
-        //   let xx = (x, Term_sort) in
-        //   let valid_t = mkApp ("Valid", [t]) in
-        //   Util.mkAssume(mkForall ([[valid_t]], cvars,
-        //       mkIff (mkExists ([], [xx], mkAnd (x_has_base_t, refinement)), valid_t)),
-        //                 Some ("validity axiom for refinement"),
-        //                 "ref_valid_" ^ tsym)
-        // in
-
         let t_kinding =
-        //TODO: guard by typing of cvars?; not necessary since we have pattern-guarded
-        Util.mkAssume(mkForall t0.pos ([[t_has_kind]], cvars, t_has_kind),
+          //TODO: guard by typing of cvars?; not necessary since we have pattern-guarded
+          Util.mkAssume(mkForall t0.pos ([[t_has_kind]], cvars, t_has_kind),
                         Some "refinement kinding",
                         "refinement_kinding_" ^tsym)
         in
         let t_interp =
-        Util.mkAssume(mkForall t0.pos ([[x_has_t]], ffv::xfv::cvars, mkIff(x_has_t, encoding)),
+          Util.mkAssume(mkForall t0.pos ([[x_has_t]], ffv::xfv::cvars, mkIff(x_has_t, encoding)),
                         Some "refinement_interpretation",
-                        "refinement_interpretation_"^tsym) in
-
+                        "refinement_interpretation_"^tsym)
+        in
         let t_decls = [tdecl;
-                       t_kinding; //t_valid;
-                       t_interp; t_haseq] in
+                       t_kinding;
+                       t_interp;
+                       t_haseq]
+        in
         t, decls@decls'@mk_decls tsym tkey_hash t_decls (decls@decls')
 
       | Tm_uvar (uv, _) ->
@@ -1064,6 +1067,25 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               && (S.fv_eq_lid fv Const.forall_lid
               ||  S.fv_eq_lid fv Const.exists_lid) ->
           encode_deeply_embedded_quantifier t0 env
+
+        | Tm_uinst({n=Tm_fvar fv}, _), [(v0, _) ; (v1, _); (v2, _)]
+        | Tm_fvar fv,  [(v0, _); (v1, _); (v2, _)]
+            when S.fv_eq_lid fv Const.lexcons_lid ->
+            //lex cons is primitive
+            let v0, decls0 = encode_term v0 env in
+            let v1, decls1 = encode_term v1 env in
+            let v2, decls2 = encode_term v2 env in
+            mk_LexCons v0 v1 v2, decls0@decls1@decls2
+
+        | Tm_uinst({n=Tm_fvar fv}, _), [(v0, _); (v1, _); (v2, _); (v3, _)]
+        | Tm_fvar fv, [(v0, _); (v1, _); (v2, _); (v3, _)]        
+            when S.fv_eq_lid fv Const.precedes_lid ->
+            //precedes is primitive
+            let v0, decls0 = encode_term v0 env in
+            let v1, decls1 = encode_term v1 env in
+            let v2, decls2 = encode_term v2 env in
+            let v3, decls3 = encode_term v3 env in            
+            mk_Precedes v0 v1 v2 v3, decls0@decls1@decls2@decls3
 
         | Tm_constant Const_range_of, [(arg, _)] ->
             encode_const (Const_range arg.pos) env
