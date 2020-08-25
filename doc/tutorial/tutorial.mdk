@@ -3138,7 +3138,7 @@ effects for illustration.
 On a first reading, you may wish to skip this section and proceed
 directly to the next chapter.
 
-
+<!-- obsolete, wlp's no longer around
 ## Background: Generating compact verification conditions
 
 Type inference in F\* is based on a weakest pre-condition calculus for
@@ -3264,37 +3264,32 @@ predicate transformers. As we will see shortly, computing both the WP
 and the WLP allows F\* to move between the two styles without a loss
 in precision (computing just the WP alone would not allow this).
 
+-->
 
 ## Computation types
 
 Expressions in F\* are given _computation types_ `C`.  In its most
 primitive form, each effect in F\* introduces a computation type of
-the form `M t_1..t_n t wp wlp`. The `M t_1..t_n` indicates the name of the
+the form `M t_1..t_n t wp`. The `M t_1..t_n` indicates the name of the
 effect `M` and several user-defined indexes `t_1..t_n`.  The type `t`
 indicates the type of the result of the computation; `wp` is a
 predicate transformer that is not weaker than the weakest
-pre-condition of `e`; and `wlp` is a predicate transformer not weaker
-than the weakest liberal pre-condition of `e`. For the sake of
-brevity, we call `wp` the weakest pre-condition and `wlp` the weakest
-liberal pre-condition.
+pre-condition of `e`. For the sake of brevity, we call `wp` the weakest pre-condition.
 
 For the purposes of the presentation here, we start by discussing a
 simplified form of these `C` types, i.e, we will consider computation
-types of the form `M t wp wlp`, those that have a non-parameterized
+types of the form `M t wp`, those that have a non-parameterized
 effect constructor `M` (and generalize to the full form towards the
 end of this chapter).
 
-A computation `e` has type `M t wp wlp` if when run in an initial
+A computation `e` has type `M t wp` if when run in an initial
 configuration satisfying `wp post`, it (either runs forever, if
 allowed, or) produces a result of type `t` in a final configuration
 `f` such that `post f` is true, all the while exhibiting no more
 effects than are allowed by `M`. In other words, `M` is an upper bound
 on the effects of `e`; `t` is its result type; and `wp` is a predicate
 transformer that for any post-condition of the final configuration of
-`e`, produces a sufficient condition on the initial configuration of
-`e`. The `wlp` is similar, except it is liberal with respect to the
-internal assertions of `e` in the sense described in the previous
-section.
+`e`, produces a sufficient condition on the initial configuration of `e`.
 
 These computation types (specifically their predicate transformers)
 form what is known as a [Dijkstra monad]. Some concrete examples
@@ -3326,13 +3321,13 @@ as it provides some insight into how F\* works under the covers. It
 also provides some guidance on how to define new effects. We discuss a
 fragment of it here.
 
-The type of pure computations is `PURE t wp wlp` where
-`wp, wlp : (t -> Type) -> Type`. This means that pure computations produce
+The type of pure computations is `PURE t wp` where
+`wp : (t -> Type) -> Type`. This means that pure computations produce
 `t`-typed results and are described by predicate transformers that
 transform result predicates (post-conditions of kind `t -> Type`) to
 pre-conditions, which are propositions of kind `Type`.
 
-Seen another way, the signatures of the `wp` and `wlp` have the
+Seen another way, the signatures of the `wp` has the
 following form---they transform pure post-conditions to pure
 pre-conditions.
 
@@ -3359,11 +3354,11 @@ type return_PURE (#a:Type) (x:a) = fun (post: pure_post a) -> post x
 
 When sequentially composing two pure computations using
 `let x = e1 in e2`, if
-`e1: PURE t1 wp1 wlp1` and
-`e2: (x:t1 -> PURE t2 (wp2 x) (wlp2 x))`,
+`e1: PURE t1 wp1` and
+`e2: (x:t1 -> PURE t2 (wp2 x))`,
 we type the composed computation as
 ```
-PURE t2 (bind_PURE wp1 wp2) (bind_PURE wlp1 wlp2)
+PURE t2 (bind_PURE wp1 wp2)
 ```
 where:
 ```
@@ -3402,11 +3397,13 @@ effect Tot (a:Type) =
 This means that a computation type `Tot a` only reveals that the
 computation always terminates with an `a`-typed result.
 
+<!-- relies on wlp's, which are long gone
+
 ### From predicate transformers to pre- and post-conditions
 
 We have just seen how the definition of `Pure a pre post` unfolds into
 the `PURE` effect. It is also possible to go in the other direction,
-turning a specification written in the `PURE a wp wlp` style into a
+turning a specification written in the `PURE a wp` style into a
 `Pure a pre post`. However, whereas F\* will always automatically
 unfold the definition of `Pure` in terms of `PURE` as needed, it will
 not automatically transform the more primitive `PURE` effect into the
@@ -3550,12 +3547,13 @@ Pure t (p)
 ~~
 ~
 
+-->
 
 ## The `STATE` effect
 
 Stateful programs operate on an input heap producing a result and an
-output heap. The computation type `STATE t wp wlp` describes such a
-computation, where `wp, wlp : state_wp t` has the signature below.
+output heap. The computation type `STATE t wp` describes such a
+computation, where `wp : state_wp t` has the signature below.
 
 ```
 let state_post t = t -> heap -> Type
@@ -3563,7 +3561,7 @@ let state_pre    = heap -> Type
 let state_wp t   = state_post t -> state_pre
 ```
 
-In other words, WPs and WLPs for stateful programs transform stateful
+In other words, WPs for stateful programs transform stateful
 post-conditions (relating the t-typed result of a computation to the
 final heap) into a pre-condition, a predicate on the input heap.
 
@@ -3672,10 +3670,9 @@ of predicate transformers. It is defined as shown below (in
 effect ST (a:Type) (pre:state_pre) (post: (heap -> state_post a)) = STATE a
   (fun (p:state_post a) (h:heap) ->
      pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
-  (fun (p:state_post a) (h:heap) ->
-     (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 ```
 
+<!-- relies on wlp, which is long gone
 As before, we can also define a coercion to move to `ST` from `STATE`.
 
 
@@ -3705,6 +3702,7 @@ let h f x = f x
 val g : x:ref int -> ST int (fun h -> True) (fun h0 y h1 -> h0=h1 /\ y >= 0)
 let g = h (as_ST f)
 ```
+-->
 
 ### The `St` effect
 
@@ -3743,7 +3741,7 @@ sub_effect
 ```
 
 This says that in order to lift a `PURE` computation to `STATE`, we
-lift its `wp:pure_wp a` (equivalently for its `wlp`) to a `state_wp a`
+lift its `wp:pure_wp a` to a `state_wp a`
 that says that that pure computation leaves the state unmodified.
 
 Note that the type of `PURE ~> STATE` is
@@ -3757,7 +3755,7 @@ let state_pre    = heap -> Type
 ## Indexed computation types
 
 Finally, as mentioned earlier, in its full form a computation type has
-the shape `M t_1..t_n t wp wlp`, where `t_1..t_n` are some user-chosen
+the shape `M t_1..t_n t wp`, where `t_1..t_n` are some user-chosen
 indices to the effect constructor `M`.
 
 This is convenient in that it allows effects to be defined
