@@ -1703,7 +1703,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
         let env = { env with tcenv = Env.push_univ_vars env.tcenv uvs } in
         let f = norm_before_encoding env f in
         let f, decls = encode_formula f env in
-        let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (show l)), (varops.mk_unique ("assumption_"^(string_of_lid l))))]
+        let f =
+          let univ_fvs, univ_tms =
+            List.map EncodeTerm.encode_univ_name uvs
+            |> List.unzip
+          in
+          Term.mkForall (Ident.range_of_lid l) ([], univ_fvs, f) //NS: flatten quantifier for a pattern
+        in
+        let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (string_of_lid l)), (varops.mk_unique ("assumption_"^(string_of_lid l))))]
                 |> mk_decls_trivial in
         decls@g, env
 
@@ -1786,6 +1793,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
       in
       let bindings, _ = SS.close_let_rec bindings Syntax.Util.exp_unit in
       encode_top_level_let env (is_rec, bindings) se.sigquals
+    
+    | Sig_bundle {ses; lids}
+      when lids |> BU.for_some (Ident.lid_equals Parser.Const.lex_t_lid) ->
+      [], env
 
     | Sig_bundle {ses} ->
       let g, env =
@@ -1872,8 +1883,8 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : (decls_t & env_t
     *)
     let encode_binding b (i, decls, env) = match b with
         | S.Binding_univ u ->
-          let (u_fv, _, _), u_tm = EncodeTerm.encode_univ_name u in
-          let decls' = [Term.DeclFun(u_fv, [], univ_sort, Some "universe local constant")] |> mk_decls_trivial in
+          let u_fv, u_tm = EncodeTerm.encode_univ_name u in
+          let decls' = [Term.DeclFun(fv_name u_fv, [], univ_sort, Some "universe local constant")] |> mk_decls_trivial in
           i+1, decls@decls', env
 
         | S.Binding_var x ->

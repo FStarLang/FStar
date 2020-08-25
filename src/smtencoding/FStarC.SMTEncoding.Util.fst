@@ -102,6 +102,9 @@ let mk_or_l = norng mk_or_l
 let mk_ApplyTT = norng2 mk_ApplyTT
 let mk_String_const = norng mk_String_const
 let mk_Precedes = norng4 mk_Precedes
+let mk_LexCons = norng3 mk_LexCons
+let mk_lex_t = mk_lex_t Range.dummyRange
+let mk_LexTop = mk_LexTop Range.dummyRange
 
 
 (*
