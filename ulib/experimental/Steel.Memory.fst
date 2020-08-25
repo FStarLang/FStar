@@ -343,9 +343,6 @@ effect MstTotNF (a:Type u#a) (except:inames) (expects:slprop u#1) (provides: a -
         interp (provides x `star` locks_invariant except m1) m1 /\
         preserves_frame except expects (provides x) m0 m1)
 
-let action_except_nf (a:Type u#a) (except:inames) (expects:slprop) (provides: a -> slprop) =
-  unit -> MstTotNF a except expects provides
-
 ////////////////////////////////////////////////////////////////////////////////
 // Lifting heap actions
 ////////////////////////////////////////////////////////////////////////////////
@@ -353,11 +350,11 @@ let action_except_nf (a:Type u#a) (except:inames) (expects:slprop) (provides: a 
 (**
   Heap actions come in two equivalent flavors:
   - one that take an explicit frame as argument (action_with_frame)
-  - and one that quantify over all the grame
+  - and one that quantify over all the frame
 
   We therefore define two lift routes:
   - a direct route for those with explicit frame
-  - via MstTotNF (and action_except_nf) for the rest
+  - via MstTotNF for the rest
 *)
 
 let tot_pre_action_nf_except (e:inames) (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
@@ -1135,6 +1132,21 @@ let preserves_frame_invariant (fp fp':slprop)
           ()
       in
       ()
+
+
+let equiv_ext_right (p q r:slprop)
+  : Lemma
+      (requires q `equiv` r)
+      (ensures (p `star` q) `equiv` (p `star` r))
+  = calc (equiv) {
+      p `star` q;
+         (equiv) { star_commutative p q }
+      q `star` p;
+         (equiv) { equiv_extensional_on_star q r p }
+      r `star` p;
+         (equiv) { star_commutative p r }
+      p `star` r;
+    }
 
 let with_inv_helper (fp frame ls1 ctr p ls2:slprop)
   : Lemma
