@@ -322,6 +322,9 @@ val mk_ApplyTF:      term -> term -> term
 val mk_ApplyTT:      term -> term -> Range.range -> term
 val mk_String_const: string -> Range.range -> term
 val mk_Precedes:     term -> term -> term -> term -> Range.range -> term
+val mk_lex_t:        Range.range -> term
+val mk_LexCons:      term -> term -> term -> Range.range -> term
+val mk_LexTop:       Range.range -> term
 val n_fuel: int -> term
 
 val mk_haseq: univ:term -> term -> term
