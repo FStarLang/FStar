@@ -277,6 +277,20 @@ let gather r = gather_atomic r
 let cas_provides #t (r:ref t) (v:Ghost.erased t) (v_new:t) (b:bool) =
     if b then pts_to r full_perm v_new else pts_to r full_perm v
 
+let equiv_ext_right (p q r:slprop)
+  : Lemma
+      (requires q `equiv` r)
+      (ensures (p `star` q) `equiv` (p `star` r))
+  = calc (equiv) {
+      p `star` q;
+         (equiv) { star_commutative p q }
+      q `star` p;
+         (equiv) { equiv_extensional_on_star q r p }
+      r `star` p;
+         (equiv) { star_commutative p r }
+      p `star` r;
+    }
+
 let cas_action_helper (p q r s:slprop) (m:mem)
   : Lemma
       (requires interp (p `star` q `star` r `star` s) m)
@@ -290,7 +304,7 @@ let cas_action_helper (p q r s:slprop) (m:mem)
       p `star` q `star` r `star` s;
          (equiv) { Mem.star_associative (p `star` q) r s }
       (p `star` q) `star` (r `star` s);
-         (equiv) { Mem.equiv_ext_right (p `star` q)
+         (equiv) { equiv_ext_right (p `star` q)
                      (r `star` s)
                      (s `star` r) }
       (p `star` q) `star` (s `star` r);
