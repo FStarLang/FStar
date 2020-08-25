@@ -27,4 +27,4 @@ instance functor_id : functor id = { fmap = fun #_ #_ f a -> f a }
 
 let _ = fmap (fun x -> x + 1) [1 ; 2 ; 3]
 
-let fmap' (#f:Type -> Type) [| functor f |] (#a:Type) (#b:Type) (g:a -> b) (x: f a) : f b = fmap g x
+let fmap' (#f:Type -> Type) {| functor f |} (#a:Type) (#b:Type) (g:a -> b) (x: f a) : f b = fmap g x

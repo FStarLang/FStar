@@ -13,12 +13,6 @@ module RD = FStar.Reflection.Data
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 
-(* Tying a knot into the environment which started execution.
- * Needed to inspect sigelts and the like without needing
- * to explicitly pass it in. This entire module should really be in
- * the TAC effect, and this crap is a symptom, let's move it. *)
-val env_hook : ref<option<Env.env>>
-
 (* Another hack to circumvent module recursion *)
 val e_optionstate_hook : ref<option<EMB.embedding<O.optionstate>>>
 
@@ -26,6 +20,8 @@ val e_optionstate_hook : ref<option<EMB.embedding<O.optionstate>>>
 val compare_bv            : bv -> bv -> order
 val lookup_typ            : Env.env -> list<string> -> option<sigelt>
 val is_free               : bv -> term -> bool
+val free_bvs              : term -> list<bv>
+val free_uvars            : term -> list<Z.t>
 val lookup_attr           : term -> Env.env -> list<fv>
 val all_defs_in_env       : Env.env -> list<fv>
 val defs_in_module        : Env.env -> name -> list<fv>

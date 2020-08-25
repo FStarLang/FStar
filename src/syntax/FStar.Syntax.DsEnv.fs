@@ -710,6 +710,7 @@ let try_lookup_datacon env (lid:lident) =
         if quals |> BU.for_some (function Assumption -> true | _ -> false)
         then Some (lid_as_fv lid delta_constant None)
         else None
+      | ({ sigel = Sig_splice _ }, _) (* A spliced datacon *)
       | ({ sigel = Sig_datacon _ }, _) ->
          let qual = fv_qual_of_se (fst se) in
          Some (lid_as_fv lid delta_constant qual)
