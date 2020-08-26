@@ -1,5 +1,5 @@
 [
-  "d›\u000bWî\"Ô\u001a}\u0019\u000fE\u000e¼ Y",
+  "JVUV\u000b8!Kó\u0005½\u0011ˆÀ¦™",
   [
     [
       "Steel.Semantics.Instantiate.state_uses",
@@ -8,16 +8,19 @@
       1,
       [ "@query" ],
       0,
-      "11acd4d3e1e6961c27752b0acf715cae"
+      "413aced6012ba9fc88a9d860e33ca871"
     ],
     [
       "Steel.Semantics.Instantiate.state_correspondence",
       1,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_83b7f74668e2de4073384eaaf24260ac"
+      ],
       0,
-      "ebba592b90d001098503e8ac8dc78353"
+      "6e2e772ce965f20663fb721da98ebcbb"
     ]
   ]
 ]
