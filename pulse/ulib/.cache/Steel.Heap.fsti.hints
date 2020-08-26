@@ -1,5 +1,5 @@
 [
-  "°U\u0001\u0006\\æ*±,\fJ\u0005Æõî«",
+  "ÄM›™{H(î%%}v©?äû",
   [
     [
       "Steel.Heap.join_commutative",
@@ -89,7 +89,16 @@
       1,
       [ "@query" ],
       0,
-      "7f357ba3343be4f93647fa0310f60012"
+      "ed86da5877c87b7fddda6f560da9da7d"
+    ],
+    [
+      "Steel.Heap.action_with_frame",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "bb2ddb62debacda853ecf089e47a8cf5"
     ],
     [
       "Steel.Heap.action_framing",
@@ -105,7 +114,7 @@
         "refinement_interpretation_Tm_refine_edbdae9d6b6624a6ec3f6b429364c960"
       ],
       0,
-      "97b99af09481462979ec435d5ed75107"
+      "056b94a817d613c3c001b031e7d065f4"
     ],
     [
       "Steel.Heap.sel_v",
@@ -114,7 +123,7 @@
       1,
       [ "@query" ],
       0,
-      "04f759bbdf4530ab332f35513f6de67c"
+      "5e96e74d99bf88395fa83324614eee50"
     ],
     [
       "Steel.Heap.witnessed_ref",
@@ -123,7 +132,7 @@
       1,
       [ "@query" ],
       0,
-      "ef0c8697bd4e782dc9d6d1cb5723ff06"
+      "e00cae1e8c747a85bcb9046732e4d53a"
     ],
     [
       "Steel.Heap.select_refine",
@@ -132,7 +141,7 @@
       1,
       [ "@query" ],
       0,
-      "6a28ec4fd6ad474aa78f5dbafab26c1d"
+      "8f14ee3589f691204c08e46437017eb5"
     ],
     [
       "Steel.Heap.split_action",
@@ -144,7 +153,7 @@
         "refinement_interpretation_Tm_refine_782bbf7acd60ae0036bd61a1f4d3807b"
       ],
       0,
-      "c37820e140f64f5910c96eff4972fd64"
+      "5edd6e41509a3d715ec0b56b178645c9"
     ],
     [
       "Steel.Heap.gather_action",
@@ -156,7 +165,7 @@
         "refinement_interpretation_Tm_refine_625413e9a3a548e616103efddf1886c4"
       ],
       0,
-      "910cebe5fcf7d852bae85358ad774cff"
+      "b2b80a45a82db1c1e6d73a38c08b3095"
     ],
     [
       "Steel.Heap.extend",
@@ -169,7 +178,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "9b3b9c1bc195f581cc5a7d9895acde3b"
+      "110a09417358f2561a50f073393e3830"
     ],
     [
       "Steel.Heap.id_elim_star",
@@ -178,7 +187,7 @@
       1,
       [ "@query" ],
       0,
-      "714ba9254558fa6fe4378931cf450b47"
+      "29ca5ce6d2b14a2d4cb478f3e4f6540e"
     ],
     [
       "Steel.Heap.is_frame_monotonic",
@@ -192,7 +201,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "57384caef2644c0c0a0fc57d7e4436aa"
+      "776e22bd625febac578dde3c7deed467"
     ]
   ]
 ]
