@@ -113,5 +113,9 @@ let lift_pure_dm4a (a:Type) (wp : pure_wp a) (f:(eqtype_as_type unit -> PURE a w
   
 sub_effect PURE ~> DM4A = lift_pure_dm4a
 
-[@@expect_failure [19]] // need monotonicity
+// needs monotonicity, plus the lemmas above to relate w_return to lift_wp (....)
+[@@expect_failure [19]]
 let test () : DM4A int (w_return 5) = 5
+
+// but works via this stupid trick
+let test_norm () : DM4A int (lift_wp (fun p -> forall rv. rv == 5 ==> p rv)) by (compute ()) = 5
