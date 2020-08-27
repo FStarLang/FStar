@@ -136,5 +136,5 @@ let lift_pure_dm4a (a:Type) (wp : pure_wp a) (f:(eqtype_as_type unit -> PURE a w
 
 sub_effect PURE ~> DM4A = lift_pure_dm4a
 
-[@@expect_failure [54]] // why?
+[@@expect_failure [54]] // need monotonicity
 let test () : DM4A int True (fun _ -> w_return 5) = 5
