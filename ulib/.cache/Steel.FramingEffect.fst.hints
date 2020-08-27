@@ -185,7 +185,7 @@
         "token_correspondence_Steel.FramingEffect.req_to_act_req"
       ],
       0,
-      "97b5ab226493704ef2d8c3f9a52c79c3"
+      "94edbdc2580427518693c2893d6be5ce"
     ],
     [
       "Steel.FramingEffect.bind_req",
@@ -304,7 +304,7 @@
         "typing_Steel.Semantics.Instantiate.state"
       ],
       0,
-      "2d040575f25b3d7600948d1e12bad6cf"
+      "b2908bc1644db87829c7194c658ec655"
     ],
     [
       "Steel.FramingEffect.subcomp_pre",
@@ -403,7 +403,7 @@
         "typing_Steel.Semantics.Instantiate.state"
       ],
       0,
-      "52b3abd63d081eb21ef5164b98e33572"
+      "620aa57b1cce8b48cf4a83cd1e5e99d4"
     ],
     [
       "Steel.FramingEffect.if_then_else_req",
@@ -604,7 +604,6 @@
         "Prims_pretyping_0da546199211a769a972571cdb3aec67",
         "Steel.Memory_interpretation_Tm_arrow_092b7b2c3ed80803e99e850db5fba991",
         "Steel.Memory_interpretation_Tm_arrow_6fb185710dd18900a6b7a54f61cc5f76",
-        "Steel.Memory_interpretation_Tm_arrow_f9780de8b5428905f0418761a5d7d407",
         "Steel.Semantics.Hoare.MST_interpretation_Tm_arrow_69502b18a9decf01266003970992a005",
         "Steel.Semantics.Hoare.MST_interpretation_Tm_arrow_fcd589b21e6efcf1e5d17b07c282a015",
         "data_elim_Steel.Semantics.Hoare.MST.Mkst0",
@@ -617,7 +616,7 @@
         "equation_Steel.FramingEffect.pre_t",
         "equation_Steel.FramingEffect.req_t",
         "equation_Steel.FramingEffect.req_to_act_req",
-        "equation_Steel.Memory.hmem", "equation_Steel.Memory.inames",
+        "equation_Steel.Memory.hmem",
         "equation_Steel.Semantics.Hoare.MST.depends_only_on_0",
         "equation_Steel.Semantics.Hoare.MST.frame_lpost",
         "equation_Steel.Semantics.Hoare.MST.frame_lpre",
@@ -627,7 +626,6 @@
         "equation_Steel.Semantics.Instantiate.state",
         "equation_Steel.Semantics.Instantiate.state0",
         "equation_Steel.Semantics.Instantiate.state_uses",
-        "function_token_typing_Steel.Memory.locks_invariant",
         "function_token_typing_Steel.Memory.star",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__interp",
         "function_token_typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star",
@@ -667,12 +665,12 @@
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__core",
         "token_correspondence_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__locks_invariant",
         "token_correspondence_Steel.Semantics.Hoare.MST.frame_lpost",
-        "true_interp", "typing_FStar.Set.empty", "typing_Steel.Memory.iname",
+        "true_interp",
         "typing_Steel.Semantics.Hoare.MST.__proj__Mkst0__item__star",
         "typing_Steel.Semantics.Instantiate.state", "typing_tok_Prims.T@tok"
       ],
       0,
-      "28d09486b1d1e758cb75c40e880ba0d4"
+      "4752d4bc73829e90f97e8d2bfd3013c2"
     ],
     [
       "Steel.FramingEffect.bind_steel_steel_req",
@@ -791,7 +789,7 @@
         "typing_Steel.Semantics.Instantiate.state"
       ],
       0,
-      "e4f888d499834310c531050d9a21ed65"
+      "2383ce2549f833c8053d555e23eb3749"
     ],
     [
       "Steel.FramingEffect.bind_steel_steelf_req",
@@ -913,7 +911,7 @@
         "typing_Steel.Semantics.Instantiate.state"
       ],
       0,
-      "3172e1d67a41ba55ea73e5835a0335c5"
+      "5dd10783d69adae442cfc814cc4086dc"
     ],
     [
       "Steel.FramingEffect.bind_steelf_steel_req",
@@ -1033,7 +1031,7 @@
         "typing_Steel.Semantics.Instantiate.state"
       ],
       0,
-      "82fa62074c21873aca6e4da8972ee9b8"
+      "38b62f6b1814d6423070e67f04789f5e"
     ],
     [
       "Steel.FramingEffect.bind_pure_steel__req",
