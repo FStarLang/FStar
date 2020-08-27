@@ -1,5 +1,8 @@
 module GenericPartialDM4A
 
+(* The problem with this attempt is that it adds an extra pre index to the dijkstra monad,
+   which seems to make things very painful *)
+
 open FStar.Tactics
 open FStar.Calc
 open FStar.FunctionalExtensionality
