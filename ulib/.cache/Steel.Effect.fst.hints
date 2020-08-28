@@ -1082,7 +1082,7 @@
         "typing_Steel.Semantics.Instantiate.state"
       ],
       0,
-      "da2c722ae7cff345ba05660058bac392"
+      "fea792d9b3ac99a89c28b584f88f27eb"
     ],
     [
       "Steel.Effect.frame",
@@ -1653,7 +1653,7 @@
         "typing_Steel.Semantics.Instantiate.state"
       ],
       0,
-      "c3fd9282303f33dc8435daced9c66500"
+      "ad0dc780149515e6110ae46d27e8e077"
     ],
     [
       "Steel.Effect.subcomp_req_atomic_steel",
