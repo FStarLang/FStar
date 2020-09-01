@@ -75,7 +75,7 @@ val check_trivial_precondition : env -> comp -> (comp_typ * formula * guard_t)
 
 //checking that e:t is convertible to t'
 val check_has_type : env -> term -> lcomp -> typ -> term * lcomp * guard_t
-val check_top_level: env -> guard_t -> lcomp -> bool*comp
+val check_top_level: env -> Range.range -> guard_t -> lcomp -> bool*comp
 
 val maybe_coerce_lc : env -> term -> lcomp -> typ -> term * lcomp * guard_t
 val coerce_views    : env -> term -> lcomp -> option<(term * lcomp)>

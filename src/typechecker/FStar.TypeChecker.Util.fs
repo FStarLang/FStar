@@ -2210,7 +2210,7 @@ let check_has_type env (e:term) (lc:lcomp) (t2:typ) : term * lcomp * guard_t =
     e, lc, (Env.conj_guard g g_c)
 
 /////////////////////////////////////////////////////////////////////////////////
-let check_top_level env g lc : (bool * comp) =
+let check_top_level env r g lc : (bool * comp) =
   if debug env Options.Medium then
     BU.print1 "check_top_level, lc = %s\n" (TcComm.lcomp_to_string lc);
   let discharge g =
@@ -2224,10 +2224,15 @@ let check_top_level env g lc : (bool * comp) =
        let c = Env.unfold_effect_abbrev env c
               |> S.mk_Comp
               |> Normalize.normalize_comp steps env in
-       let ct, vc, g_pre = check_trivial_precondition env c in
-       if Env.debug env <| Options.Other "Simplification"
-       then BU.print1 "top-level VC: %s\n" (Print.term_to_string vc);
-       discharge (Env.conj_guard g (Env.conj_guard g_c g_pre)), ct |> mk_Comp
+       //We don't yet have a way to check for trivial precondition
+       //for layered effects, so error out
+       if c |> U.comp_effect_name |> Env.is_layered_effect env
+       then raise_error (Errors.Fatal_UnexpectedEffect,
+                         "Top-level layered effect is not yet supported") r
+       else let ct, vc, g_pre = check_trivial_precondition env c in
+            if Env.debug env <| Options.Other "Simplification"
+            then BU.print1 "top-level VC: %s\n" (Print.term_to_string vc);
+            discharge (Env.conj_guard g (Env.conj_guard g_c g_pre)), ct |> mk_Comp
 
 (* Having already seen_args to head (from right to left),
    compute the guard, if any, for the next argument,

@@ -2893,7 +2893,7 @@ and check_top_level_let env e =
          let e2, c1 =
             if Env.should_verify env
             then
-                let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
+                let ok, c1 = TcUtil.check_top_level env (Env.get_range env) g1 c1 in //check that it has no effect and a trivial pre-condition
                 if ok
                 then e2, c1
                 else (Errors.log_issue (Env.get_range env) Err.top_level_effect;
