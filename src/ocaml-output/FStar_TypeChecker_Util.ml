@@ -4930,65 +4930,82 @@ let (check_has_type :
                      (e1, lc1, uu___3))))
 let (check_top_level :
   FStar_TypeChecker_Env.env ->
-    FStar_TypeChecker_Common.guard_t ->
-      FStar_TypeChecker_Common.lcomp ->
-        (Prims.bool * FStar_Syntax_Syntax.comp))
+    FStar_Range.range ->
+      FStar_TypeChecker_Common.guard_t ->
+        FStar_TypeChecker_Common.lcomp ->
+          (Prims.bool * FStar_Syntax_Syntax.comp))
   =
   fun env ->
-    fun g ->
-      fun lc ->
-        (let uu___1 = FStar_TypeChecker_Env.debug env FStar_Options.Medium in
-         if uu___1
-         then
-           let uu___2 = FStar_TypeChecker_Common.lcomp_to_string lc in
-           FStar_Util.print1 "check_top_level, lc = %s\n" uu___2
-         else ());
-        (let discharge g1 =
-           FStar_TypeChecker_Rel.force_trivial_guard env g1;
-           FStar_TypeChecker_Common.is_pure_lcomp lc in
-         let g1 = FStar_TypeChecker_Rel.solve_deferred_constraints env g in
-         let uu___1 = FStar_TypeChecker_Common.lcomp_comp lc in
-         match uu___1 with
-         | (c, g_c) ->
-             let uu___2 = FStar_TypeChecker_Common.is_total_lcomp lc in
-             if uu___2
-             then
-               let uu___3 =
-                 let uu___4 = FStar_TypeChecker_Env.conj_guard g1 g_c in
-                 discharge uu___4 in
-               (uu___3, c)
-             else
-               (let steps =
-                  [FStar_TypeChecker_Env.Beta;
-                  FStar_TypeChecker_Env.NoFullNorm;
-                  FStar_TypeChecker_Env.DoNotUnfoldPureLets] in
-                let c1 =
+    fun r ->
+      fun g ->
+        fun lc ->
+          (let uu___1 = FStar_TypeChecker_Env.debug env FStar_Options.Medium in
+           if uu___1
+           then
+             let uu___2 = FStar_TypeChecker_Common.lcomp_to_string lc in
+             FStar_Util.print1 "check_top_level, lc = %s\n" uu___2
+           else ());
+          (let discharge g1 =
+             FStar_TypeChecker_Rel.force_trivial_guard env g1;
+             FStar_TypeChecker_Common.is_pure_lcomp lc in
+           let g1 = FStar_TypeChecker_Rel.solve_deferred_constraints env g in
+           let uu___1 = FStar_TypeChecker_Common.lcomp_comp lc in
+           match uu___1 with
+           | (c, g_c) ->
+               let uu___2 = FStar_TypeChecker_Common.is_total_lcomp lc in
+               if uu___2
+               then
+                 let uu___3 =
+                   let uu___4 = FStar_TypeChecker_Env.conj_guard g1 g_c in
+                   discharge uu___4 in
+                 (uu___3, c)
+               else
+                 (let steps =
+                    [FStar_TypeChecker_Env.Beta;
+                    FStar_TypeChecker_Env.NoFullNorm;
+                    FStar_TypeChecker_Env.DoNotUnfoldPureLets] in
+                  let c1 =
+                    let uu___4 =
+                      let uu___5 =
+                        FStar_TypeChecker_Env.unfold_effect_abbrev env c in
+                      FStar_All.pipe_right uu___5 FStar_Syntax_Syntax.mk_Comp in
+                    FStar_All.pipe_right uu___4
+                      (FStar_TypeChecker_Normalize.normalize_comp steps env) in
                   let uu___4 =
                     let uu___5 =
-                      FStar_TypeChecker_Env.unfold_effect_abbrev env c in
-                    FStar_All.pipe_right uu___5 FStar_Syntax_Syntax.mk_Comp in
-                  FStar_All.pipe_right uu___4
-                    (FStar_TypeChecker_Normalize.normalize_comp steps env) in
-                let uu___4 = check_trivial_precondition env c1 in
-                match uu___4 with
-                | (ct, vc, g_pre) ->
-                    ((let uu___6 =
-                        FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-                          (FStar_Options.Other "Simplification") in
-                      if uu___6
-                      then
-                        let uu___7 = FStar_Syntax_Print.term_to_string vc in
-                        FStar_Util.print1 "top-level VC: %s\n" uu___7
-                      else ());
-                     (let uu___6 =
-                        let uu___7 =
-                          let uu___8 =
-                            FStar_TypeChecker_Env.conj_guard g_c g_pre in
-                          FStar_TypeChecker_Env.conj_guard g1 uu___8 in
-                        discharge uu___7 in
-                      let uu___7 =
-                        FStar_All.pipe_right ct FStar_Syntax_Syntax.mk_Comp in
-                      (uu___6, uu___7)))))
+                      FStar_All.pipe_right c1
+                        FStar_Syntax_Util.comp_effect_name in
+                    FStar_All.pipe_right uu___5
+                      (FStar_TypeChecker_Env.is_layered_effect env) in
+                  if uu___4
+                  then
+                    FStar_Errors.raise_error
+                      (FStar_Errors.Fatal_UnexpectedEffect,
+                        "Top-level layered effect is not yet supported") r
+                  else
+                    (let uu___6 = check_trivial_precondition env c1 in
+                     match uu___6 with
+                     | (ct, vc, g_pre) ->
+                         ((let uu___8 =
+                             FStar_All.pipe_left
+                               (FStar_TypeChecker_Env.debug env)
+                               (FStar_Options.Other "Simplification") in
+                           if uu___8
+                           then
+                             let uu___9 =
+                               FStar_Syntax_Print.term_to_string vc in
+                             FStar_Util.print1 "top-level VC: %s\n" uu___9
+                           else ());
+                          (let uu___8 =
+                             let uu___9 =
+                               let uu___10 =
+                                 FStar_TypeChecker_Env.conj_guard g_c g_pre in
+                               FStar_TypeChecker_Env.conj_guard g1 uu___10 in
+                             discharge uu___9 in
+                           let uu___9 =
+                             FStar_All.pipe_right ct
+                               FStar_Syntax_Syntax.mk_Comp in
+                           (uu___8, uu___9))))))
 let (short_circuit :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.args -> FStar_TypeChecker_Common.guard_formula)

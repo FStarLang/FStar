@@ -8277,7 +8277,9 @@ and (check_top_level_let :
                       if uu___3
                       then
                         let uu___4 =
-                          FStar_TypeChecker_Util.check_top_level env1 g11 c11 in
+                          let uu___5 = FStar_TypeChecker_Env.get_range env1 in
+                          FStar_TypeChecker_Util.check_top_level env1 uu___5
+                            g11 c11 in
                         match uu___4 with
                         | (ok, c12) ->
                             (if ok
