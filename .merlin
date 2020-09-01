@@ -6,6 +6,7 @@ PKG yojson
 PKG zarith
 PKG menhirLib
 PKG sedlex
+PKG sedlex.ppx
 PKG ocaml-migrate-parsetree
 
 S src/basic/ml
@@ -24,4 +25,3 @@ B src/ocaml-output/_build/src/ocaml-output
 B src/ocaml-output/_build/src/parser/ml
 B src/ocaml-output/_build/src/prettyprint/ml
 B src/ocaml-output/_build/ulib/ml
-
