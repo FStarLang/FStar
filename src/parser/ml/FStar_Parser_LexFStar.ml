@@ -379,12 +379,14 @@ let newline   = [%sedlex.regexp? "\r\n" | 10 | 13 | 0x2028 | 0x2029]
 (* -------------------------------------------------------------------- *)
 let op_char = [%sedlex.regexp? Chars "!$%&*+-./<=?^|~:"]
 let ignored_op_char = [%sedlex.regexp? Chars ".$"]
-let op_token = [%sedlex.regexp?
-  "~" | "-" | "/\\" | "\\/" | "<:" | "<@" | "(|" | "|)" | "#" |
-  "u#" | "&" | "()" | "(" | ")" | "," | "~>" | "->" | "<--" |
-  "<-" | "<==>" | "==>" | "." | "?." | "?" | ".[|" | ".[" | ".(|" | ".(" |
-  "$" | "{:pattern" | ":" | "::" | ":=" | ";;" | ";" | "=" | "%[" |
-  "!{" | "[@@" | "[@" | "[|" | "{|" | "[" | "|>" | "]" | "|]" | "|}" | "{" | "|" | "}"]
+
+(* op_token must be splt into seperate regular expressions to prevent
+   compliation from hanging *)
+let op_token_1 = [%sedlex.regexp? "~" | "-" | "/\\" | "\\/" | "<:" | "<@" | "(|" | "|)" | "#" ]
+let op_token_2 = [%sedlex.regexp? "u#" | "&" | "()" | "(" | ")" | "," | "~>" | "->" | "<--" ]
+let op_token_3 = [%sedlex.regexp? "<-" | "<==>" | "==>" | "." | "?." | "?" | ".[|" | ".[" | ".(|" | ".(" ]
+let op_token_4 = [%sedlex.regexp? "$" | "{:pattern" | ":" | "::" | ":=" | ";;" | ";" | "=" | "%[" ]
+let op_token_5 = [%sedlex.regexp? "!{" | "[@@" | "[@" | "[|" | "{|" | "[" | "|>" | "]" | "|]" | "|}" | "{" | "|" | "}" ]
 
 (* -------------------------------------------------------------------- *)
 let xinteger =
@@ -509,11 +511,15 @@ match%sedlex lexbuf with
  | '`', '`', (Plus (Compl ('`' | 10 | 13 | 0x2028 | 0x2029) | '`', Compl ('`' | 10 | 13 | 0x2028 | 0x2029))), '`', '`' ->
    IDENT (trim_both lexbuf 2 2)
 
- (*
- | op_token  -> L.lexeme lexbuf |> Hashtbl.find operators
- *)
+ | op_token_1
+ | op_token_2
+ | op_token_3
+ | op_token_4
+ | op_token_5 -> L.lexeme lexbuf |> Hashtbl.find operators
+
  | "<"       -> if is_typ_app lexbuf then TYP_APP_LESS else OPINFIX0c("<")
  | ">"       -> if is_typ_app_gt () then TYP_APP_GREATER else symbolchar_parser lexbuf
+
  (* Operators. *)
  | op_prefix,  Star symbolchar -> OPPREFIX (L.lexeme lexbuf)
  | op_infix0a, Star symbolchar -> OPINFIX0a (L.lexeme lexbuf)
