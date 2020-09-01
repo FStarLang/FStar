@@ -4,6 +4,7 @@ open FStar_Parser_Util
 module Option  = BatOption
 module String  = BatString
 module Hashtbl = BatHashtbl
+module Sedlexing = FStar_Sedlexing
 module L = Sedlexing
 module E = FStar_Errors
 
@@ -27,10 +28,10 @@ let unescape (a:int array) : int =
     | 102 (*f*) -> 12
     | 114 (*r*) -> 13
     | 117 (*u*) ->
-      let s = Utf8.from_int_array a 2 4 in
+      let s = FStar_Parser_Utf8.from_int_array a 2 4 in
       int_of_string ("0x"^s)
     | 120 (*x*) ->
-      let s = Utf8.from_int_array a 2 2 in
+      let s = FStar_Parser_Utf8.from_int_array a 2 2 in
       int_of_string ("0x"^s)
     | c -> c)
   | c -> c
@@ -503,7 +504,7 @@ match%sedlex lexbuf with
       * creates a lexing conflict with op_infix3 which is caught below. *)
      one_line_comment (L.lexeme lexbuf) lexbuf
 
- | '"' -> string (Buffer.create 0) lexbuf.Ulexing.start_p lexbuf
+ | '"' -> string (Buffer.create 0) lexbuf.Sedlexing.start_p lexbuf
 
  | '`', '`', (Plus (Compl ('`' | 10 | 13 | 0x2028 | 0x2029) | '`', Compl ('`' | 10 | 13 | 0x2028 | 0x2029))), '`', '`' ->
    IDENT (trim_both lexbuf 2 2)
@@ -566,11 +567,11 @@ match%sedlex lexbuf with
    string buffer start_pos lexbuf
  | '"' ->
    (* position info must be set since the start of the string *)
-   lexbuf.Ulexing.start_p <- start_pos;
+   lexbuf.Sedlexing.start_p <- start_pos;
    STRING (Buffer.contents buffer)
  | '"', 'B' ->
    (* as above *)
-   lexbuf.Ulexing.start_p <- start_pos;
+   lexbuf.Sedlexing.start_p <- start_pos;
    BYTEARRAY (ba_of_string (Buffer.contents buffer))
  | eof -> fail lexbuf (E.Fatal_SyntaxError, "unterminated string")
  | _ ->
