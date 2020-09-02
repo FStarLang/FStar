@@ -11,7 +11,6 @@ let subcomp (a:Type) (u:eqtype_as_type unit) (f : m a u) : m a () = f
 
 let if_then_else (a:Type) (f : m a ()) (g : m a ()) (b : bool) : Type = m a ()
 
-[@@allow_informative_binders]
 reifiable
 reflectable
 layered_effect {
@@ -35,4 +34,3 @@ let test () : M int () = M?.reflect (fun () -> 42)
 
 [@@expect_failure [187]]
 let test_call = test ()
-
