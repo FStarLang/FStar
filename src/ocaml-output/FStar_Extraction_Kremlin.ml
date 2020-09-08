@@ -1691,10 +1691,13 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            _e0::e1::e2::[])
           when
-          ((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___5 = "FStar.Buffer.rcreate") ||
+          (((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___5 = "FStar.Buffer.rcreate") ||
+              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___5 = "LowStar.Monotonic.Buffer.mgcmalloc"))
+             ||
              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-              uu___5 = "LowStar.Monotonic.Buffer.mgcmalloc"))
+              uu___5 = "LowStar.Monotonic.Buffer.mgcmalloc_partial"))
             ||
             (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
              uu___5 = "LowStar.ImmutableBuffer.igcmalloc")
@@ -1792,10 +1795,13 @@ and (translate_expr : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            _e0::e1::e2::[])
           when
-          (((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___5 = "FStar.Buffer.rcreate_mm") ||
+          ((((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___5 = "FStar.Buffer.rcreate_mm") ||
+               (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                uu___5 = "LowStar.Monotonic.Buffer.mmalloc"))
+              ||
               (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-               uu___5 = "LowStar.Monotonic.Buffer.mmalloc"))
+               uu___5 = "LowStar.Monotonic.Buffer.mmalloc_partial"))
              ||
              (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
               uu___5 = "LowStar.Monotonic.Buffer.mmalloc"))

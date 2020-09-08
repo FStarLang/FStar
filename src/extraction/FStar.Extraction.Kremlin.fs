@@ -762,7 +762,9 @@ and translate_expr env e: expr =
       EBufCreate (Eternal, translate_expr env init, EConstant (UInt32, "1"))
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
-    when (string_of_mlpath p = "FStar.Buffer.rcreate" || string_of_mlpath p = "LowStar.Monotonic.Buffer.mgcmalloc" ||
+    when (string_of_mlpath p = "FStar.Buffer.rcreate" ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.mgcmalloc" ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.mgcmalloc_partial" ||
           string_of_mlpath p = "LowStar.ImmutableBuffer.igcmalloc") ->
       EBufCreate (Eternal, translate_expr env e1, translate_expr env e2)
 
@@ -791,6 +793,7 @@ and translate_expr env e: expr =
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _e0; e1; e2 ])
     when (string_of_mlpath p = "FStar.Buffer.rcreate_mm" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc" ||
+          string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc_partial" ||
           string_of_mlpath p = "LowStar.Monotonic.Buffer.mmalloc" ||
           string_of_mlpath p = "LowStar.ImmutableBuffer.imalloc") ->
       EBufCreate (ManuallyManaged, translate_expr env e1, translate_expr env e2)
