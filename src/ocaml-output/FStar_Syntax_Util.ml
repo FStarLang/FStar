@@ -892,6 +892,13 @@ let rec (eq_tm :
                         let uu___4 = eq_tm a1 a2 in eq_inj acc uu___4) Equal)
             uu___2
         else NotEqual in
+      let qual_is_inj uu___ =
+        match uu___ with
+        | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Data_ctor) ->
+            true
+        | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Record_ctor
+            uu___1) -> true
+        | uu___1 -> false in
       let heads_and_args_in_case_both_data =
         let uu___ =
           let uu___1 = FStar_All.pipe_right t11 unmeta in
@@ -914,13 +921,8 @@ let rec (eq_tm :
                  (match uu___2 with
                   | (FStar_Syntax_Syntax.Tm_fvar f,
                      FStar_Syntax_Syntax.Tm_fvar g) when
-                      (f.FStar_Syntax_Syntax.fv_qual =
-                         (FStar_Pervasives_Native.Some
-                            FStar_Syntax_Syntax.Data_ctor))
-                        &&
-                        (g.FStar_Syntax_Syntax.fv_qual =
-                           (FStar_Pervasives_Native.Some
-                              FStar_Syntax_Syntax.Data_ctor))
+                      (qual_is_inj f.FStar_Syntax_Syntax.fv_qual) &&
+                        (qual_is_inj g.FStar_Syntax_Syntax.fv_qual)
                       -> FStar_Pervasives_Native.Some (f, args1, g, args2)
                   | uu___3 -> FStar_Pervasives_Native.None)) in
       let t12 = unmeta t11 in
