@@ -225,6 +225,30 @@ let handle_error e =
     cleanup();
     report_errors []
 
+let test_z3_process_ctrl (should_kill:bool) =
+  Util.print1 "Launching %s\n" (Options.z3_exe());
+  let p =
+    Util.start_process
+      "z3"
+      (Options.z3_exe())
+      ["-smt2"; "-in"]
+      (fun s -> s = "Done!")
+  in
+  let ask () =
+    let msg = Util.ask_process p "(echo \"Something\") (echo \"Done!\")\n" (fun _ -> "\nkilled\n") in
+    Util.print1 "Asked z3 ... got %s\n" msg
+  in
+  let finish () : ML unit =
+    let msg = Util.ask_process p "(exit)\n" (fun _ -> " ... exited") in
+    Util.print1 "Send z3 (exit) ... got %s\n" msg
+  in
+  let kill () =
+    Util.kill_process p;
+    Util.print_string "Killed z3\n"
+  in
+  ask();  ask();  ask();
+  if should_kill then kill () else finish()
+
 let main () =
   try
     setup_hooks ();

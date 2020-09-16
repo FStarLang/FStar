@@ -114,7 +114,16 @@ $(FSTAR_MAIN_NATIVE): $(GENERATED_FILES)
 	@echo "[OCAMLBUILD]"
 	$(Q)$(OCAMLBUILD) $(notdir $(FSTAR_MAIN_NATIVE)) FStar_Syntax_Syntax.inferred.mli
 
+FSTAR_TEST_PROC=_build/src/fstar/ml/testproc.native
+$(FSTAR_TEST_PROC): export OCAMLFIND_IGNORE_DUPS_IN = $(shell ocamlfind query compiler-libs)
+$(FSTAR_TEST_PROC): $(GENERATED_FILES)
+	@echo "[OCAMLBUILD]"
+	$(Q)$(OCAMLBUILD) $(notdir $(FSTAR_TEST_PROC)) FStar_Syntax_Syntax.inferred.mli
+
 ../../bin/fstar.exe: $(FSTAR_MAIN_NATIVE)
+	$(Q)cp $^ $@
+
+../../bin/testproc.exe: $(FSTAR_TEST_PROC)
 	$(Q)cp $^ $@
 
 ../../bin/fstar.ocaml: $(FSTAR_MAIN_NATIVE)
