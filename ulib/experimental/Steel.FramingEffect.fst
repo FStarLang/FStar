@@ -185,6 +185,7 @@ layered_effect {
 }
 
 [@@allow_informative_binders]
+reifiable
 reflectable
 new_effect Steel = SteelF
 
@@ -465,3 +466,57 @@ effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
 // let steel_ret (#a:Type) (#[@@ framing_implicit] p:a -> slprop u#1) (x:a)
 // : SteelF a (p x) p (fun _ -> True) (fun _ r _ -> r == x)
 // = SteelF?.reflect (fun _ -> x)
+
+
+
+unfold
+let bind_div_steelf_req (#a:Type) (wp:pure_wp a)
+  (#pre:pre_t) (req:a -> req_t pre)
+: req_t pre
+= fun m -> as_requires wp /\ (forall (x:a). (req x) m)
+
+unfold
+let bind_div_steelf_ens (#a:Type) (#b:Type)
+  (wp:pure_wp a)
+  (#pre:pre_t) (#post:post_t b) (ens:a -> ens_t pre b post)
+: ens_t pre b post
+= fun m0 r m1 -> as_requires wp /\ (exists (x:a). (ens x) m0 r m1)
+
+let bind_div_steelf (a:Type) (b:Type)
+  (wp:pure_wp a)
+  (pre:pre_t) (post:post_t b)
+  (req:a -> req_t pre) (ens:a -> ens_t pre b post)
+  (f:eqtype_as_type unit -> DIV a wp) (g:(x:a -> repr b pre post (req x) (ens x)))
+: repr b
+    pre
+    post
+    (bind_div_steelf_req wp req)
+    (bind_div_steelf_ens wp ens)
+= fun _ ->
+  let x = f () in
+  (g x) ()
+
+polymonadic_bind (DIV, SteelF) |> SteelF = bind_div_steelf
+
+
+
+
+let frame0 (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:repr a pre post req ens)
+  (frame:slprop)
+  : SteelF a
+      (pre `star` frame)
+      (fun x -> post x `star` frame)
+      req
+      ens
+  = SteelF?.reflect (frame_aux f frame)
+
+let frame (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> Steel a pre post req ens)
+  (frame:slprop)
+  : SteelF a
+      (pre `star` frame)
+      (fun x -> post x `star` frame)
+      req
+      ens
+  = frame0 (reify (f ())) frame
