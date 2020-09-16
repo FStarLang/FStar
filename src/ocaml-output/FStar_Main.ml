@@ -288,13 +288,23 @@ let (handle_error : Prims.exn -> unit) =
     report_errors []
 let (test_z3_process_ctrl : Prims.bool -> unit) =
   fun should_kill ->
-    (let uu___1 = FStar_Options.z3_exe () in
-     FStar_Util.print1 "Launching %s\n" uu___1);
-    (let p =
-       let uu___1 = FStar_Options.z3_exe () in
-       FStar_Util.start_process "z3" uu___1 ["-smt2"; "-in"]
-         (fun s -> s = "Done!") in
-     let ask uu___1 =
+    let fp uu___ =
+      (let uu___2 = FStar_Options.z3_exe () in
+       FStar_Util.print1 "Launching %s\n" uu___2);
+      (let uu___2 = FStar_Options.z3_exe () in
+       FStar_Util.start_process "z3" uu___2 ["-smt2"; "-in"]
+         (fun s -> s = "Done!")) in
+    let p = fp () in
+    let kill p_ =
+      FStar_Util.kill_process p_; FStar_Util.print_string "Killed z3\n" in
+    if should_kill
+    then
+      (let q = fp () in
+       kill q;
+       (let q1 = fp () in
+        kill q1; (let q2 = fp () in kill q2; (let uu___4 = fp () in ()))))
+    else ();
+    (let ask uu___1 =
        let msg =
          FStar_Util.ask_process p "(echo \"Something\") (echo \"Done!\")\n"
            (fun uu___2 -> "\nkilled\n") in
@@ -303,9 +313,7 @@ let (test_z3_process_ctrl : Prims.bool -> unit) =
        let msg =
          FStar_Util.ask_process p "(exit)\n" (fun uu___2 -> " ... exited") in
        FStar_Util.print1 "Send z3 (exit) ... got %s\n" msg in
-     let kill uu___1 =
-       FStar_Util.kill_process p; FStar_Util.print_string "Killed z3\n" in
-     ask (); ask (); ask (); if should_kill then kill () else finish ())
+     ask (); ask (); ask (); if should_kill then kill p else finish ())
 let main : 'uuuuu . unit -> 'uuuuu =
   fun uu___ ->
     try

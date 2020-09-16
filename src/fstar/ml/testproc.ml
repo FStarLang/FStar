@@ -5,4 +5,6 @@ let x =
       | [_; "-kill"] -> true
       | _ -> false
    in
-   FStar_Main.test_z3_process_ctrl should_kill
+   for i = 1 to 100 do
+     FStar_Main.test_z3_process_ctrl should_kill
+   done
