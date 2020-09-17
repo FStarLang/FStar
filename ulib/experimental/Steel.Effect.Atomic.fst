@@ -15,10 +15,10 @@
 *)
 
 
-module Steel.FramingEffect.Atomic
+module Steel.Effect.Atomic
 open FStar.PCM
 open Steel.Memory
-include Steel.FramingEffect.Common
+include Steel.Effect.Common
 
 val observability : Type0
 val has_eq_observability (_:unit) : Lemma (hasEq observability)
@@ -193,12 +193,12 @@ let bind_ens_atomicf_steelf (#a:Type) (#b:Type)
 val bind_atomic_steel (a:Type) (b:Type)
   (pre_f:pre_t) (post_f:post_t a) (is_ghost:observability)
   (post_g:post_t b) (req_g:(x:a -> req_t (post_f x))) (ens_g:(x:a -> ens_t (post_f x) b post_g))
-  (f:atomic_repr a Set.empty is_ghost pre_f post_f) (g:(x:a -> Steel.FramingEffect.repr b (post_f x) post_g (req_g x) (ens_g x)))
-: Steel.FramingEffect.repr b pre_f post_g
+  (f:atomic_repr a Set.empty is_ghost pre_f post_f) (g:(x:a -> Steel.Effect.repr b (post_f x) post_g (req_g x) (ens_g x)))
+: Steel.Effect.repr b pre_f post_g
     (bind_req_atomicf_steelf req_g)
     (bind_ens_atomicf_steelf ens_g)
 
-polymonadic_bind (SteelAtomicF, Steel.FramingEffect.SteelF) |> Steel.FramingEffect.SteelF = bind_atomic_steel
+polymonadic_bind (SteelAtomicF, Steel.Effect.SteelF) |> Steel.Effect.SteelF = bind_atomic_steel
 
 
 unfold
@@ -231,15 +231,15 @@ val bind_steelatomic_steelf (a:Type) (b:Type)
   (#[@@ framing_implicit] frame_f:slprop)
   (#[@@ framing_implicit] p:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
   (f:atomic_repr a Set.empty o pre_f post_f)
-  (g:(x:a -> Steel.FramingEffect.repr b (pre_g x) post_g (req_g x) (ens_g x)))
-: Steel.FramingEffect.repr b
+  (g:(x:a -> Steel.Effect.repr b (pre_g x) post_g (req_g x) (ens_g x)))
+: Steel.Effect.repr b
     (pre_f `star` frame_f)
     post_g
     (bind_steelatomic_steelf_req req_g frame_f p)
     (bind_steelatomic_steelf_ens ens_g frame_f p)
 
 
-polymonadic_bind (SteelAtomic, Steel.FramingEffect.SteelF) |> Steel.FramingEffect.SteelF = bind_steelatomic_steelf
+polymonadic_bind (SteelAtomic, Steel.Effect.SteelF) |> Steel.Effect.SteelF = bind_steelatomic_steelf
 
 
 unfold
@@ -273,14 +273,14 @@ val bind_steelatomic_steel (a:Type) (b:Type)
   (#[@@ framing_implicit] p:squash (can_be_split_forall
     (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g)))
   (f:atomic_repr a Set.empty o pre_f post_f)
-  (g:(x:a -> Steel.FramingEffect.repr b (pre_g x) post_g (req_g x) (ens_g x)))
-: Steel.FramingEffect.repr b
+  (g:(x:a -> Steel.Effect.repr b (pre_g x) post_g (req_g x) (ens_g x)))
+: Steel.Effect.repr b
     (pre_f `star` frame_f)
     (fun y -> post_g y `star` frame_g)
     (bind_steelatomic_steel_req req_g frame_f frame_g p)
     (bind_steelatomic_steel_ens ens_g frame_f frame_g p)
 
-polymonadic_bind (SteelAtomic, Steel.FramingEffect.Steel) |> Steel.FramingEffect.SteelF =
+polymonadic_bind (SteelAtomic, Steel.Effect.Steel) |> Steel.Effect.SteelF =
   bind_steelatomic_steel
 
 
@@ -296,20 +296,10 @@ let subcomp_ens_atomic_steel (#a:Type) (pre_f:pre_t) (post_f:post_t a)
 val subcomp_atomic_steel (a:Type)
   (#[@@framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a) (is_ghost:observability)
   (f:atomic_repr a Set.empty is_ghost pre_f post_f)
-: Steel.FramingEffect.repr a pre_f post_f (subcomp_req_atomic_steel a pre_f) (subcomp_ens_atomic_steel pre_f post_f)
+: Steel.Effect.repr a pre_f post_f (subcomp_req_atomic_steel a pre_f) (subcomp_ens_atomic_steel pre_f post_f)
 
-polymonadic_subcomp SteelAtomic <: Steel.FramingEffect.Steel = subcomp_atomic_steel
-polymonadic_subcomp SteelAtomicF <: Steel.FramingEffect.Steel = subcomp_atomic_steel
-
-// AF: Why is this failing?
-// val lift_atomic_to_steelT (a:Type)
-//                           (o:observability)
-//                           (fp:slprop)
-//                           (fp':a -> slprop)
-//                           (f:atomic_repr a Set.empty o fp fp')
-//   : Steel.FramingEffect.repr a fp fp' (fun _ -> True) (fun _ _ _ -> True)
-
-// sub_effect SteelAtomic ~> Steel.FramingEffect.Steel = lift_atomic_to_steelT
+polymonadic_subcomp SteelAtomic <: Steel.Effect.Steel = subcomp_atomic_steel
+polymonadic_subcomp SteelAtomicF <: Steel.Effect.Steel = subcomp_atomic_steel
 
 
 val lift_atomic_to_steelT (#a:Type)
@@ -317,7 +307,7 @@ val lift_atomic_to_steelT (#a:Type)
                           (#fp:slprop)
                           (#fp':a -> slprop)
                           ($f:unit -> SteelAtomic a Set.empty o fp fp')
-  : Steel.FramingEffect.SteelT a fp fp'
+  : Steel.Effect.SteelT a fp fp'
 
 [@@warn_on_use "as_atomic_action is a trusted primitive"]
 val as_atomic_action (#a:Type u#a)

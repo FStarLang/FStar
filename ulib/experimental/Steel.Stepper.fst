@@ -69,7 +69,7 @@ let p : pcm stepper =
     refine = refine }
 
 open Steel.Memory
-open Steel.FramingEffect
+open Steel.Effect
 open FStar.Ghost
 
 

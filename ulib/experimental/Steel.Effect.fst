@@ -18,13 +18,13 @@
 /// An experimental effect for Steel that does framing in binds
 
 
-module Steel.FramingEffect
+module Steel.Effect
 
 module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.Memory
 open Steel.Memory
 open Steel.Semantics.Instantiate
-include Steel.FramingEffect.Common
+include Steel.Effect.Common
 
 module Ins = Steel.Semantics.Instantiate
 

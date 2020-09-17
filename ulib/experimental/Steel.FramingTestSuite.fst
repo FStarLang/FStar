@@ -1,7 +1,7 @@
 module Steel.FramingTestSuite
 
 open Steel.Memory
-open Steel.FramingEffect
+open Steel.Effect
 
 assume val ref : Type0
 assume val ptr (_:ref) : slprop u#1

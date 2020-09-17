@@ -1,4 +1,4 @@
-module Steel.FramingEffect.Common
+module Steel.Effect.Common
 
 open Steel.Memory
 module Sem = Steel.Semantics.Hoare.MST
@@ -930,7 +930,7 @@ let rec solve_subcomp_pre (l:list goal) : Tac unit =
 // If we have a return (as a pure value lifted to Steel), the associated
 // dependent slprop will need to be unified.
 // TODO: Maybe we should have a more systematic way of handling lifts from Pure?
-// i.e. an annotation on return in FramingEffect that ensures associated slprops
+// i.e. an annotation on return in Effect that ensures associated slprops
 // always become the "maximal" one in the context?
 let rec solve_subcomp_post (l:list goal) : Tac unit =
   match l with

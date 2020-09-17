@@ -1,15 +1,15 @@
-module Steel.Primitive.FramingForkJoin.Unix
+module Steel.Primitive.ForkJoin.Unix
 
 (* This module shows that it's possible to layer continuations on top
 of SteelT to get a direct style (or Unix style) fork/join. Very much a
 prototype for now. *)
 
-open Steel.FramingEffect
+open Steel.Effect
 open Steel.Memory
 open FStar.Ghost
-open Steel.FramingReference
+open Steel.Reference
 //open Steel.SteelT.Basics
-open Steel.Primitive.FramingForkJoin
+open Steel.Primitive.ForkJoin
 
 module U = FStar.Universe
 
@@ -223,7 +223,7 @@ let test_lift #p #q (f : unit -> SteelK unit p (fun _ -> q)) : SteelK unit p (fu
 (* Identity cont with frame, to eliminate a SteelK *)
 
 let idk (#frame:slprop) (#a:Type) (x:a) : SteelT a frame (fun x -> frame)
-  = (SteelF?.reflect (Steel.FramingEffect.return a x)) <:
+  = (SteelF?.reflect (Steel.Effect.return a x)) <:
     SteelF a frame (fun _ -> frame) (return_req frame) (return_ens a x (fun _ -> frame))
 
 let kfork (#p:slprop) (#q:slprop) (f : unit -> SteelK unit p (fun _ -> q))
