@@ -214,7 +214,11 @@ let new_z3proc id cmd_and_args =
 let new_z3proc_with_id =
     let ctr = BU.mk_ref (-1) in
     (fun cmd_and_args ->
-      new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) cmd_and_args)
+      let p = new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) cmd_and_args in
+      let reply = BU.ask_process p "(echo \"Test\")\n(echo \"Done!\")\n" (fun _ -> "Killed") in
+      if reply = "Test\n"
+      then p
+      else failwith (BU.format1 "Failed to start and test Z3 process, expected output \"Test\" got \"%s\"" reply))
 
 type bgproc = {
     ask:      string -> string;

@@ -276,13 +276,25 @@ let (new_z3proc_with_id :
   (Prims.string * Prims.string Prims.list) -> FStar_Util.proc) =
   let ctr = FStar_Util.mk_ref (~- Prims.int_one) in
   fun cmd_and_args ->
-    let uu___ =
-      let uu___1 =
-        FStar_Util.incr ctr;
-        (let uu___3 = FStar_ST.op_Bang ctr in
-         FStar_All.pipe_right uu___3 FStar_Util.string_of_int) in
-      FStar_Util.format1 "bg-%s" uu___1 in
-    new_z3proc uu___ cmd_and_args
+    let p =
+      let uu___ =
+        let uu___1 =
+          FStar_Util.incr ctr;
+          (let uu___3 = FStar_ST.op_Bang ctr in
+           FStar_All.pipe_right uu___3 FStar_Util.string_of_int) in
+        FStar_Util.format1 "bg-%s" uu___1 in
+      new_z3proc uu___ cmd_and_args in
+    let reply =
+      FStar_Util.ask_process p "(echo \"Test\")\n(echo \"Done!\")\n"
+        (fun uu___ -> "Killed") in
+    if reply = "Test\n"
+    then p
+    else
+      (let uu___1 =
+         FStar_Util.format1
+           "Failed to start and test Z3 process, expected output \"Test\" got \"%s\""
+           reply in
+       failwith uu___1)
 type bgproc =
   {
   ask: Prims.string -> Prims.string ;
