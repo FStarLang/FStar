@@ -18,7 +18,7 @@ type stepper =
   | OddWriteable : odd -> stepper
   | None : stepper
 
-let refine (s:stepper) = V? s \/ None? s
+let refine (s:stepper) : Tot prop = V? s \/ None? s
 
 let composable' (s0 s1:stepper) : prop =
     match s0, s1 with
@@ -65,7 +65,8 @@ let p : pcm stepper =
     comm = lemma_comm;
     assoc = lemma_assoc_l;
     assoc_r = lemma_assoc_r;
-    is_unit = lemma_is_unit}
+    is_unit = lemma_is_unit;
+    refine = refine }
 
 open Steel.Memory
 open Steel.FramingEffect

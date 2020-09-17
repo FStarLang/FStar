@@ -147,7 +147,7 @@ val release_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
 
 let release_core #p #u r i =
   let open Atomic in
-  let v:Ghost.erased bool = Atomic.witness_h_exists #u #_ #(fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)) () in
+  let v:Ghost.erased bool = Atomic.witness_h_exists #_ #u #(fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)) () in
 
   Atomic.change_slprop (pts_to r full_perm (Ghost.hide (Ghost.reveal v))) (pts_to r full_perm v) (fun _ -> ());
 
