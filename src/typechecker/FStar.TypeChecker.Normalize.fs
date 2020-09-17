@@ -1204,15 +1204,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       end
                   end
 
-                // TODO: GM: This bit is shady, and it breaks unfold_fully across lambdas
-                | Cfg cfg :: stack ->
-                  norm cfg env stack t
-
                 | MemoLazy r :: stack ->
                   set_memo cfg r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
                   log cfg  (fun () -> BU.print1 "\tSet memo %s\n" (Print.term_to_string t));
                   norm cfg env stack t
 
+                | Cfg _ :: _
                 | Match _::_
                 | Debug _::_
                 | Meta _::_
