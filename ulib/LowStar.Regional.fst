@@ -127,7 +127,7 @@ noeq type regional (st:Type) (a:Type0) =
     // Destruction: note that it allows to `modify` all the regions, including
     // its subregions. It is fair when we want to `free` a vector and its
     // elements as well, assuming the elements belong to subregions.
-    r_free: (v:a ->
+    r_free: ((s:st { s == state }) -> v:a ->
       HST.ST unit
         (requires (fun h0 -> r_inv h0 v))
         (ensures (fun h0 _ h1 ->
@@ -162,4 +162,4 @@ let rg_free #a #rst (rg:regional rst a) (v:a)
  (requires (fun h0 -> rg_inv rg h0 v))
  (ensures (fun h0 _ h1 ->
           modifies (loc_all_regions_from false (Rgl?.region_of rg v)) h0 h1))
-= (Rgl?.r_free rg) v
+= (Rgl?.r_free rg) (Rgl?.state rg) v
