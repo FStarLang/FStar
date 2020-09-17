@@ -250,7 +250,7 @@ let test_z3_process_ctrl (should_kill:bool) =
     let msg = Util.ask_process p "(echo \"Something\") (echo \"Done!\")\n" (fun _ -> "\nkilled\n") in
     Util.print1 "Asked z3 ... got %s\n" msg
   in
-  let finish () : ML unit =
+  let finish () =
     let msg = Util.ask_process p "(exit)\n" (fun _ -> " ... exited") in
     Util.print1 "Send z3 (exit) ... got %s\n" msg
   in
