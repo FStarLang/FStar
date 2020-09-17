@@ -331,6 +331,17 @@ let (bg_z3_proc : bgproc FStar_ST.ref) =
     (let kill_handler uu___1 = "\nkilled\n" in
      let uu___1 = z3proc () in
      FStar_Util.ask_process uu___1 input kill_handler) in
+  let maybe_kill_z3proc uu___ =
+    let uu___1 =
+      let uu___2 = FStar_ST.op_Bang the_z3proc in
+      uu___2 <> FStar_Pervasives_Native.None in
+    if uu___1
+    then
+      ((let uu___3 =
+          let uu___4 = FStar_ST.op_Bang the_z3proc in FStar_Util.must uu___4 in
+        FStar_Util.kill_process uu___3);
+       FStar_ST.op_Colon_Equals the_z3proc FStar_Pervasives_Native.None)
+    else () in
   let refresh uu___ =
     let next_params = z3_cmd_and_args () in
     let old_params =
@@ -343,27 +354,23 @@ let (bg_z3_proc : bgproc FStar_ST.ref) =
          || (Prims.op_Negation (old_params = next_params)) in
      if uu___2
      then
-       ((let uu___4 =
-           (FStar_Options.query_stats ()) &&
-             (let uu___5 =
-                let uu___6 = FStar_ST.op_Bang the_z3proc in
-                uu___6 = FStar_Pervasives_Native.None in
-              Prims.op_Negation uu___5) in
-         if uu___4
+       (maybe_kill_z3proc ();
+        (let uu___5 = FStar_Options.query_stats () in
+         if uu___5
          then
-           let uu___5 =
-             let uu___6 = FStar_ST.op_Bang the_z3proc_ask_count in
-             FStar_Util.string_of_int uu___6 in
+           let uu___6 =
+             let uu___7 = FStar_ST.op_Bang the_z3proc_ask_count in
+             FStar_Util.string_of_int uu___7 in
            FStar_Util.print3
              "Refreshing the z3proc (ask_count=%s old=[%s] new=[%s]) \n"
-             uu___5 (cmd_and_args_to_string old_params)
+             uu___6 (cmd_and_args_to_string old_params)
              (cmd_and_args_to_string next_params)
          else ());
-        (let uu___5 = z3proc () in FStar_Util.kill_process uu___5);
         make_new_z3_proc next_params)
      else ());
     query_logging.close_log () in
   let restart uu___ =
+    maybe_kill_z3proc ();
     query_logging.close_log ();
     (let next_params = z3_cmd_and_args () in make_new_z3_proc next_params) in
   let x = [] in

@@ -213,7 +213,8 @@ let new_z3proc id cmd_and_args =
 
 let new_z3proc_with_id =
     let ctr = BU.mk_ref (-1) in
-    (fun cmd_and_args -> new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) cmd_and_args)
+    (fun cmd_and_args ->
+      new_z3proc (BU.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) cmd_and_args)
 
 type bgproc = {
     ask:      string -> string;
@@ -243,25 +244,44 @@ let bg_z3_proc =
       the_z3proc_ask_count := 0 in
     let z3proc () =
       if !the_z3proc = None then make_new_z3_proc (z3_cmd_and_args ());
-      must (!the_z3proc) in
+      must (!the_z3proc)
+    in
     let ask input =
         incr the_z3proc_ask_count;
         let kill_handler () = "\nkilled\n" in
-        BU.ask_process (z3proc ()) input kill_handler in
+        BU.ask_process (z3proc ()) input kill_handler
+    in
+    let maybe_kill_z3proc () =
+      if !the_z3proc <> None then begin
+         BU.kill_process (must (!the_z3proc));
+         the_z3proc := None
+      end
+    in
     let refresh () =
         let next_params = z3_cmd_and_args () in
         let old_params = must (!the_z3proc_params) in
-        if (Options.log_queries()) || (!the_z3proc_ask_count > 0) || (not (old_params = next_params)) then begin
-          if (Options.query_stats()) && (not (!the_z3proc = None)) then
-             BU.print3 "Refreshing the z3proc (ask_count=%s old=[%s] new=[%s]) \n" (BU.string_of_int !the_z3proc_ask_count) (cmd_and_args_to_string old_params) (cmd_and_args_to_string next_params);
-          BU.kill_process (z3proc ());
+        if Options.log_queries() ||
+           (!the_z3proc_ask_count > 0) ||
+           not (old_params = next_params)
+        then begin
+          maybe_kill_z3proc();
+          if Options.query_stats()
+          then begin
+             BU.print3 "Refreshing the z3proc (ask_count=%s old=[%s] new=[%s]) \n"
+               (BU.string_of_int !the_z3proc_ask_count)
+               (cmd_and_args_to_string old_params)
+               (cmd_and_args_to_string next_params)
+          end;
           make_new_z3_proc next_params
-        end ;
-        query_logging.close_log() in
+        end;
+        query_logging.close_log()
+    in
     let restart () =
+        maybe_kill_z3proc();
         query_logging.close_log();
         let next_params = z3_cmd_and_args () in
-        make_new_z3_proc next_params in
+        make_new_z3_proc next_params
+    in
     let x : list<unit> = [] in
     BU.mk_ref ({ask = BU.with_monitor x ask;
                 refresh = BU.with_monitor x refresh;

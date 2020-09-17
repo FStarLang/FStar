@@ -905,29 +905,31 @@ let (tc_one_file :
                      fmod.FStar_Syntax_Syntax.name in
                  let check_mod uu___3 =
                    let check env2 =
+                     (let uu___5 =
+                        let uu___6 = FStar_Options.lax () in
+                        Prims.op_Negation uu___6 in
+                      if uu___5 then FStar_SMTEncoding_Z3.refresh () else ());
                      with_tcenv_of_env env2
                        (fun tcenv ->
                           (match tcenv.FStar_TypeChecker_Env.gamma with
                            | [] -> ()
-                           | uu___5 ->
+                           | uu___6 ->
                                failwith
                                  "Impossible: gamma contains leaked names");
-                          (let uu___5 =
+                          (let uu___6 =
                              FStar_TypeChecker_Tc.check_module tcenv fmod
                                (FStar_Util.is_some pre_fn) in
-                           match uu___5 with
+                           match uu___6 with
                            | (modul, env3) ->
                                (maybe_restore_opts ();
                                 (let smt_decls =
-                                   let uu___7 =
-                                     let uu___8 = FStar_Options.lax () in
-                                     Prims.op_Negation uu___8 in
-                                   if uu___7
+                                   let uu___8 =
+                                     let uu___9 = FStar_Options.lax () in
+                                     Prims.op_Negation uu___9 in
+                                   if uu___8
                                    then
-                                     let smt_decls1 =
-                                       FStar_SMTEncoding_Encode.encode_modul
-                                         env3 modul in
-                                     (post_smt_encoding (); smt_decls1)
+                                     FStar_SMTEncoding_Encode.encode_modul
+                                       env3 modul
                                    else ([], []) in
                                  ((modul, smt_decls), env3))))) in
                    let uu___4 =
@@ -1038,28 +1040,33 @@ let (tc_one_file :
                        uu___4
                    else ());
                   (let extend_tcenv tcmod1 tcenv =
-                     let uu___3 =
-                       let uu___4 =
-                         FStar_ToSyntax_ToSyntax.add_modul_to_env tcmod1
-                           tc_result.FStar_CheckedFiles.mii
-                           (FStar_TypeChecker_Normalize.erase_universes tcenv) in
-                       FStar_All.pipe_left (with_dsenv_of_tcenv tcenv) uu___4 in
-                     match uu___3 with
-                     | (uu___4, tcenv1) ->
-                         let env1 =
-                           FStar_TypeChecker_Tc.load_checked_module tcenv1
-                             tcmod1 in
-                         (maybe_restore_opts ();
-                          (let uu___7 =
-                             let uu___8 = FStar_Options.lax () in
-                             Prims.op_Negation uu___8 in
-                           if uu___7
-                           then
-                             (FStar_SMTEncoding_Encode.encode_modul_from_cache
-                                env1 tcmod1 smt_decls;
-                              post_smt_encoding ())
-                           else ());
-                          ((), env1)) in
+                     (let uu___4 =
+                        let uu___5 = FStar_Options.lax () in
+                        Prims.op_Negation uu___5 in
+                      if uu___4 then FStar_SMTEncoding_Z3.refresh () else ());
+                     (let uu___4 =
+                        let uu___5 =
+                          FStar_ToSyntax_ToSyntax.add_modul_to_env tcmod1
+                            tc_result.FStar_CheckedFiles.mii
+                            (FStar_TypeChecker_Normalize.erase_universes
+                               tcenv) in
+                        FStar_All.pipe_left (with_dsenv_of_tcenv tcenv)
+                          uu___5 in
+                      match uu___4 with
+                      | (uu___5, tcenv1) ->
+                          let env1 =
+                            FStar_TypeChecker_Tc.load_checked_module tcenv1
+                              tcmod1 in
+                          (maybe_restore_opts ();
+                           (let uu___8 =
+                              let uu___9 = FStar_Options.lax () in
+                              Prims.op_Negation uu___9 in
+                            if uu___8
+                            then
+                              FStar_SMTEncoding_Encode.encode_modul_from_cache
+                                env1 tcmod1 smt_decls
+                            else ());
+                           ((), env1))) in
                    let env1 =
                      FStar_Profiling.profile
                        (fun uu___3 ->
