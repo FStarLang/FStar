@@ -1,4 +1,4 @@
-module Steel.FramingDuplex.PCM
+module Steel.Duplex.PCM
 
 open FStar.PCM
 
@@ -118,7 +118,7 @@ let pcm (prot:dprot) : pcm (t prot) =
 }
 
 open Steel.Memory
-open Steel.FramingEffect
+open Steel.Effect
 open FStar.Ghost
 
 let chan (p:dprot) = ref (t p) (pcm p)

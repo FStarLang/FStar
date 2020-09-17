@@ -14,9 +14,9 @@
    limitations under the License.
 *)
 
-module Steel.Channel.FramingSimplex
+module Steel.Channel.Simplex
 open Steel.Channel.Protocol
-open Steel.FramingEffect
+open Steel.Effect
 open Steel.Memory
 
 /// Msg int (fun x -> Msg (y:int { y > x }) (fun _ -> Ret unit))

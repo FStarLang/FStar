@@ -36,14 +36,13 @@ val pts_to_ref_injective
         interp (pts_to r p0 v0 `star` pts_to r p1 v1) m)
       (ensures v0 == v1)
 
-val pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to r p))
-val pts_to_framon (#a:Type) (r:ref a) (p:perm) : Lemma (is_frame_monotonic (pts_to r p))
-
 val alloc (#a:Type) (x:a)
   : SteelT (ref a) emp (fun r -> pts_to r full_perm x)
 
 val read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelT (x:a{x==Ghost.reveal v}) (pts_to r p v) (fun x -> pts_to r p x)
+  : Steel a (pts_to r p v) (fun x -> pts_to r p x)
+           (requires fun h -> True)
+           (ensures fun _ x _ -> x == Ghost.reveal v)
 
 val read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
