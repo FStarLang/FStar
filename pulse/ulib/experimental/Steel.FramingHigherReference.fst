@@ -147,13 +147,6 @@ let intro_pts_to (p:perm{perm_ok p}) #a #uses (#v:erased a) (r:ref a) (_:unit)
                 (fun _ -> pts_to r p v)
   = intro_perm_ok p _
 
-// let intro_pure (#a:_) (#p:a -> slprop) (q:perm { perm_ok q }) (x:a)
-//   : SteelT a (p x) (fun y -> p y `star` pure (perm_ok q))
-//   = Atomic.change_slprop (p x) (p x `star` pure (perm_ok q))
-//     (fun m -> emp_unit (p x); pure_star_interp (p x) (perm_ok q) m);
-//     x
-
-
 let drop_l_atomic #uses (p q:slprop)  ()
   : SteelAtomic unit uses unobservable (p `star` q) (fun _ -> q)
   = Atomic.change_slprop (p `star` q) q (affine_star p q)
@@ -165,13 +158,6 @@ let elim_pure_atomic #uses  (#p:perm -> slprop) (q:perm)
   = let (q':perm {perm_ok q' /\ q == q'}) = elim_perm_ok q in
     Atomic.change_slprop (p q) (p q') (fun _ -> ());
     q'
-
-// let elim_perm_ok_star (#p:slprop) (q:perm)
-//   : SteelT (_:unit{perm_ok q}) (p `star` pure (perm_ok q))
-//            (fun _ -> p)
-//   = let _ = elim_pure_atomic #Set.empty #(fun _ -> p) q in
-//     let (u:unit{perm_ok q}) = () in
-//     u
 
 let alloc #a x =
   let v = Some (x, full_perm) in
@@ -191,23 +177,12 @@ let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
         (fun m -> emp_unit (pts_to_raw r p v); pure_star_interp (pts_to_raw r p v) (perm_ok p) m);
     assert (compatible pcm_frac v1 v2);
     let Some (x, _) = v2 in
-    let (x:a{x == Ghost.reveal v}) = x in
     Steel.FramingEffect.change_slprop (pts_to r p v) (pts_to r p x) (fun _ -> ());
     x
 
 assume
 val witness_h_exists (#a:Type) (p:(a -> slprop){is_frame_monotonic p}) (_:unit)
   : SteelT (Ghost.erased a) (h_exists p) (fun x -> p x)
-
-assume
-val read2 (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
-  : Steel a (pts_to r p v) (fun x -> pts_to r p x)
-           (requires fun h -> True)
-           (ensures fun _ x _ -> x == Ghost.reveal v)
-
-assume
-val sl_admit (#a:Type) (p:slprop) (q:a -> slprop)
-  : SteelT a p q
 
 let read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
@@ -218,7 +193,7 @@ let read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
 
     Steel.FramingEffect.change_slprop (pts_to r p (Ghost.hide (Ghost.reveal vs)) `star` q vs) (pts_to r p vs `star` q vs) (fun _ -> ());
 
-    let v = read2 #a #p #vs r in
+    let v = read #a #p #vs r in
 
     Steel.FramingEffect.change_slprop (pts_to r p v `star` q vs) (pts_to r p v `star` q v) (fun _ -> ());
     v
@@ -259,12 +234,10 @@ let share_atomic_raw #a #uses (#p:perm) (r:ref a{perm_ok p}) (v0:erased a)
                 (fun _ -> pts_to_raw r (half_perm p) v0 `star` pts_to_raw r (half_perm p) v0)
   = as_atomic_action (mem_share_atomic_raw r v0)
 
-let share_atomic2 (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
+let share_atomic (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
   : SteelAtomic unit uses unobservable
                (pts_to r p v)
-                (fun _ -> pts_to_raw r (half_perm p) v `star` pts_to_raw r (half_perm p) v)
-
-               // (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
+               (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
   = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
     Atomic.change_slprop
       (pts_to r p v)
@@ -274,16 +247,6 @@ let share_atomic2 (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
     share_atomic_raw #_ #_ #p r v;
     intro_pts_to (half_perm p) r ();
     intro_pts_to (half_perm p) r ()
-    // Steel.Effect.Atomic.frame _
-    //                               (intro_pts_to (half_perm p) r);
-    // h_assert_atomic (pts_to r (half_perm p) v `star` pts_to_raw r (half_perm p) v);
-    // comm ();
-    // h_assert_atomic (pts_to_raw r (half_perm p) v `star` pts_to r (half_perm p) v);
-    // Steel.Effect.Atomic.frame #unit #uses #unobservable
-    //                               #(pts_to_raw r (half_perm p) v)
-    //                               #(fun _ -> pts_to r (half_perm p) v)
-    //                               (pts_to r (half_perm p) v)
-    //                               (intro_pts_to (half_perm p) r)
 
 let share r = share_atomic r
 
@@ -302,12 +265,19 @@ let gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a)
   = as_atomic_action (mem_gather_atomic_raw r v0 v1)
 
 let gather_atomic (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
-  = let p0 = Steel.Effect.Atomic.frame _ (fun _ -> elim_pure_atomic p0) in
-    comm();
-    let p1 = Steel.Effect.Atomic.frame _ (fun _ -> elim_pure_atomic p1) in
-    comm();
-    h_assert_atomic (pts_to_raw r p0 v0 `star` pts_to_raw r p1 v1);
-    let _ = gather_atomic_raw r v0 v1 in
+  = let v0_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v0, p0)) in
+    let v1_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v1, p1)) in
+    Atomic.change_slprop
+      (pts_to r p0 v0)
+      (pts_to_raw r p0 v0 `star` pure (perm_ok p0))
+      (fun _ -> ());
+    Atomic.change_slprop
+      (pts_to r p1 v1)
+      (pts_to_raw r p1 v1 `star` pure (perm_ok p1))
+      (fun _ -> ());
+    let _ = Atomic.elim_pure (perm_ok p0) in
+    let _ = Atomic.elim_pure (perm_ok p1) in
+    let _ = gather_atomic_raw #_ #_ #p0 #p1 r v0 v1 in
     intro_pts_to (sum_perm p0 p1) r ()
 
 let gather r = gather_atomic r
