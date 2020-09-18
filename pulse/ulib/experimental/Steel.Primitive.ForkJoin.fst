@@ -15,8 +15,8 @@
 *)
 
 module Steel.Primitive.ForkJoin
-open Steel.Effect
 open Steel.Memory
+open Steel.Effect
 module L = Steel.SpinLock
 open Steel.FractionalPermission
 open FStar.Ghost
@@ -43,35 +43,6 @@ type thread (p:slprop u#1) = {
   r:ref bool;
   l:L.lock (lock_inv r p)
 }
-
-// From basics
-assume
-val drop (p:slprop) : SteelT unit p (fun _ -> emp)
-
-assume val intro_exists (#a:Type) (x:a) (p:a -> slprop)
-  : SteelT unit (p x) (fun _ -> h_exists p)
-
-assume
-val change_slprop
-  (p q:slprop)
-  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
-  : SteelT unit p (fun _ -> q)
-
-assume
-val par (#preL:slprop) (#postL:unit -> slprop)
-        ($f:unit -> SteelT unit preL postL)
-        (#preR:slprop) (#postR:unit -> slprop)
-        ($g:unit -> SteelT unit preR postR)
-  : SteelT unit
-    (preL `star` preR)
-    (fun x -> postL () `star` postR ())
-
-assume
-val cond (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
-         (then_: (unit -> SteelT a (p true) (q true)))
-         (else_: (unit -> SteelT a (p false) (q false)))
-  : SteelT a (p b) (q b)
-
 
 let intro_maybe_p_false (p:slprop)
   : SteelT unit emp (fun _ -> maybe_p p false)
@@ -126,7 +97,8 @@ let fork (#p #q #r #s:slprop)
       (g: (thread q -> unit -> SteelT unit r (fun _ -> s)))
   : SteelT unit (p `star` r) (fun _ -> s)
   = let t : thread q = new_thread q in
-    par (spawn f t) (g t)
+    let _ = par (spawn f t) (g t) in
+    ()
 
 let join_case_true (#p:slprop) (t:thread p) (_:unit)
   : SteelT unit (lock_inv_pred t.r p true) (fun _ -> p)

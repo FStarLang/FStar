@@ -131,22 +131,6 @@ let endpoint_a (#p:dprot) (c:chan p) (next:dprot) (tr:trace p next) =
 let endpoint_b (#p:dprot) (c:chan p) (next:dprot) (tr:trace p next) =
   pts_to c (if is_send next then B_R next tr else B_W next tr)
 
-// From Basics
-
-assume
-val cond (#a:Type) (b:bool) (p: (b':bool{b == b'}) -> slprop) (q: bool -> a -> slprop)
-         (then_: (squash (b == true) -> SteelT a (p true) (q true)))
-         (else_: (squash (b == false) -> SteelT a (p false) (q false)))
-  : SteelT a (p b) (q b)
-
-assume
-val change_slprop
-  (p q:slprop)
-  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
-  : SteelT unit p (fun _ -> q)
-
-assume val sl_admit (#a:Type) (p:slprop) (q:a -> slprop) : SteelT a p (fun x -> q x)
-
 
 // From nik_fictional
 

@@ -90,14 +90,6 @@ let cas_frame #t #uses r v v_old v_new frame =
   let x = Steel.Reference.cas r v v_old v_new in
   x
 
-assume
-val h_assert (#u:inames) (p:slprop)
-  : SteelAtomic unit u unobservable p (fun _ -> p)
-
-assume
-val h_affine (#u:inames) (p q:slprop)
-  : SteelAtomic unit u unobservable (p `star` q) (fun _ -> p)
-
 val acquire_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
   : SteelAtomic bool u observable
     (lockinv p r `star` emp)
@@ -125,16 +117,6 @@ let acquire' (#p:slprop) (l:lock p)
     let i: inv (lockinv p r) = snd l in
     let b = with_invariant  i (fun _ -> acquire_core r i) in
     b
-//    return_atomic #_ #_ #_ b
-
-assume
-val cond (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
-         (then_: (unit -> SteelT a (p true) (q true)))
-         (else_: (unit -> SteelT a (p false) (q false)))
-  : SteelT a (p b) (q b)
-
-assume
-val noop (#p:slprop) (u:unit) : SteelT unit p (fun _ -> p)
 
 let rec acquire #p l =
   let b = acquire' l in

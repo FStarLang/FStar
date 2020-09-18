@@ -161,26 +161,6 @@ let f_odd (n0:odd) (v:stepper{compatible p (Odd n0) v})
     | OddWriteable n0 -> OddWriteable n0
     | V n -> if n = n0 then Odd n0 else OddWriteable n0
 
-// Assumed from basics
-
-assume val h_admit (#a:Type) (p:slprop) (q:a -> slprop) : SteelT a p (fun x -> q x)
-
-assume
-val cond (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
-         (then_: (unit -> SteelT a (p true) (q true)))
-         (else_: (unit -> SteelT a (p false) (q false)))
-  : SteelT a (p b) (q b)
-
-assume
-val drop (p:slprop) : SteelT unit p (fun _ -> emp)
-
-assume
-val change_slprop
-  (p q:slprop)
-  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
-  : SteelT unit p (fun _ -> q)
-
-
 
 // Stateful version of actions
 // get_even/get_odd/upd_even/upd_odd should be done in
@@ -257,7 +237,7 @@ let rec incr_even r n =
   let x = get_even r n in
   cond (x = n)
     (fun b -> if b then pts_to r (Even n) else pts_to r (EvenWriteable n)) (fun _ _ -> s_even r (n+2))
-    (fun _ -> incr_even r n)
+    (fun (_:squash ((x=n) == true)) -> incr_even r n)
     (fun _ -> upd_even r n)
 
 val incr_odd (r:ref stepper p) (n:odd) : SteelT unit (s_odd r n) (fun _ -> s_odd r (n + 2))
@@ -266,22 +246,11 @@ let rec incr_odd r n =
   let x = get_odd r n in
   cond (x = n)
     (fun b -> if b then pts_to r (Odd n) else pts_to r (OddWriteable n)) (fun _ _ -> s_odd r (n+2))
-    (fun _ -> incr_odd r n)
+    (fun (_:squash ((x=n) == true)) -> incr_odd r n)
     (fun _ -> upd_odd r n)
 
 
 // Main driver incrementing the stepper forever in parallel
-
-// Par is assumed from basics
-
-assume
-val par (#preL:slprop) (#postL:unit -> slprop)
-        (f:unit -> SteelT unit preL postL)
-        (#preR:slprop) (#postR:unit -> slprop)
-        (g:unit -> SteelT unit preR postR)
-  : SteelT unit
-    (preL `star` preR)
-    (fun x -> postL () `star` postR ())
 
 val rec_incr_even (r:ref stepper p) (n:even)
   : SteelT unit (s_even r n) (fun _ -> emp)
@@ -301,4 +270,5 @@ val main (_:unit) : SteelT unit emp (fun _ -> emp)
 
 let main () =
   let r = new_stepper () in
-  par (fun _ -> rec_incr_even r 0) (fun _ -> rec_incr_odd r 1)
+  let _ = par (fun _ -> rec_incr_even r 0) (fun _ -> rec_incr_odd r 1) in
+  ()

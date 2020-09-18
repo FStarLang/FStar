@@ -81,10 +81,11 @@ let can_be_split (t1 t2:pre_t) = t1 `sl_implies` t2
 let can_be_split_forall (#a:Type) (t1 t2:post_t a) =
   forall (x:a). t1 x `sl_implies` t2 x
 
-
+assume val can_be_split_forall_frame (#a:Type) (p q:post_t a) (frame:slprop u#1) (x:a)
+ : Lemma (requires can_be_split_forall p q)
+         (ensures (frame `star` p x)  `sl_implies` (frame `star` q x))
 
 /// Tactic for inferring frame automatically
-
 
 let equiv_sl_implies (p1 p2:slprop) : Lemma
   (requires p1 `equiv` p2)
