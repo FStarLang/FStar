@@ -180,16 +180,12 @@ let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
     Steel.Effect.change_slprop (pts_to r p v) (pts_to r p x) (fun _ -> ());
     x
 
-assume
-val witness_h_exists (#a:Type) (p:(a -> slprop){is_frame_monotonic p}) (_:unit)
-  : SteelT (Ghost.erased a) (h_exists p) (fun x -> p x)
-
 let read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
                 (fun v -> pts_to r p v `star` q v)
   = pts_to_witinv r p;
     star_is_witinv_left (fun (v:a) -> pts_to r p v) q;
-    let vs:erased a = witness_h_exists (fun (v:a) -> pts_to r p v `star` q v) () in
+    let vs:erased a = Atomic.witness_h_exists #_ #_ #(fun (v:a) -> pts_to r p v `star` q v) () in
 
     Steel.Effect.change_slprop (pts_to r p (Ghost.hide (Ghost.reveal vs)) `star` q vs) (pts_to r p vs `star` q vs) (fun _ -> ());
 

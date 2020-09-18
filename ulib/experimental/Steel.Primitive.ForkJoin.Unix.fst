@@ -4,8 +4,8 @@ module Steel.Primitive.ForkJoin.Unix
 of SteelT to get a direct style (or Unix style) fork/join. Very much a
 prototype for now. *)
 
-open Steel.Effect
 open Steel.Memory
+open Steel.Effect
 open FStar.Ghost
 open Steel.Reference
 //open Steel.SteelT.Basics
@@ -15,19 +15,10 @@ module U = FStar.Universe
 
 
 // (* Some helpers *)
-assume val can_be_split_forall_frame (#a:Type) (p q:post_t a) (frame:slprop u#1) (x:a)
- : Lemma (requires can_be_split_forall p q)
-         (ensures (frame `star` p x)  `sl_implies` (frame `star` q x))
-
-assume
-val change_slprop (p q : slprop)
-              (_ : squash (p `sl_implies` q))
-   : SteelT unit p (fun _ -> q)
-
 let change_slprop_equiv (p q : slprop)
               (proof : squash (p `equiv` q))
    : SteelT unit p (fun _ -> q)
-   = change_slprop p q (proof; equiv_sl_implies p q)
+   = change_slprop p q (fun _ -> proof; equiv_sl_implies p q)
 
 (* Continuations into unit, but parametrized by the final heap
  * proposition and with an implicit framing. I think ideally these would
@@ -53,7 +44,7 @@ let bind (a:Type) (b:Type)
 = fun #frame #post (k:(x:b -> SteelT unit (frame `star` post_g x) (fun _ -> post))) ->
       f
       ((fun (x:a) -> change_slprop (frame `star` post_f x) (frame `star` pre_g x)
-                  (can_be_split_forall_frame post_f pre_g frame x);
+                  (fun _ -> can_be_split_forall_frame post_f pre_g frame x);
         g x k) <: (x:a -> SteelT unit (frame `star` post_f x) (fun _ -> post)));
   ()
 
@@ -65,9 +56,9 @@ let subcomp (a:Type)
   (f:steelK a pre_f post_f)
 : Tot (steelK a pre_g post_g)
 = fun #frame #postf (k:(x:a -> SteelT unit (frame `star` post_g x) (fun _ -> postf))) ->
-    change_slprop pre_g pre_f (); f
+    change_slprop pre_g pre_f (fun _ -> ()); f
       ((fun x -> change_slprop (frame `star` post_f x) (frame `star` post_g x)
-                            (can_be_split_forall_frame post_f post_g frame x);
+                            (fun _ -> can_be_split_forall_frame post_f post_g frame x);
                k x) <: (x:a -> SteelT unit (frame `star` post_f x) (fun _ -> postf)))
 
 // let if_then_else (a:Type u#aa)
@@ -125,7 +116,7 @@ let bind_steelk_steelk (a:Type) (b:Type)
         change_slprop
           (frame `star` (post_f x `star` frame_f))
           (frame `star` (pre_g x `star` frame_g))
-          (can_be_split_forall_frame (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g) frame x);
+          (fun _ -> can_be_split_forall_frame (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g) frame x);
         g x #(frame `star` frame_g) #post
           ((fun (y:b) -> k y)
             <: (y:b -> SteelT unit ((frame `star` frame_g) `star` post_g y) (fun _ -> post)))
@@ -156,7 +147,7 @@ let bind_steelk_steelkf (a:Type) (b:Type)
           change_slprop
             (frame `star` (post_f x `star` frame_f))
             (frame `star` pre_g x)
-            (can_be_split_forall_frame (fun x -> post_f x `star` frame_f) pre_g frame x);
+            (fun _ -> can_be_split_forall_frame (fun x -> post_f x `star` frame_f) pre_g frame x);
 
           g x #frame #post k
        )
@@ -183,7 +174,7 @@ let bind_steelkf_steelk (a:Type) (b:Type)
         change_slprop
           (frame `star` post_f x)
           (frame `star` (pre_g x `star` frame_g))
-          (can_be_split_forall_frame post_f (fun x -> pre_g x `star` frame_g) frame x);
+          (fun _ -> can_be_split_forall_frame post_f (fun x -> pre_g x `star` frame_g) frame x);
 
         g x #(frame `star` frame_g) #post
           ((fun (y:b) ->
