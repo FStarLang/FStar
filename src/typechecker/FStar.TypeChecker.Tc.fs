@@ -337,7 +337,7 @@ let proc_check_with (attrs:list<attribute>) (kont : unit -> 'a) : 'a =
   | None -> kont ()
   | Some [(a, None)] ->
     Options.with_saved_options (fun () ->
-      Options.set (unembed_optionstate a |> BU.must);
+      Options.set_verification_options (unembed_optionstate a |> BU.must);
       kont ())
   | _ -> failwith "huh?"
 
