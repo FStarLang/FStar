@@ -272,9 +272,9 @@ let repl_tx st push_kind task =
     Some (js_diag st.repl_fname msg None), st
   | U.SigInt ->
     U.print_error "[E] Interrupt"; None, st
-  | Error (e, msg, r) ->
+  | Error (e, msg, r, _ctx) -> // TODO: display the error context somehow
     Some (js_diag st.repl_fname msg (Some r)), st
-  | Err (e, msg) ->
+  | Err (e, msg, _ctx) ->
     Some (js_diag st.repl_fname msg None), st
   | Stop ->
     U.print_error "[E] Stop"; None, st

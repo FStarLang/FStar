@@ -942,78 +942,128 @@ private let  uu___140  : _ = FStar.Pervasives.assert_norm (Bug1997.n3 == Bug1997
 
 >> Got issues: [
 Bug1997.fst(13,19-13,55): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___12`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___12`
 >>]
 >> Got issues: [
 Bug1997.fst(21,19-21,67): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___23`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___23`
 >>]
 >> Got issues: [
 Bug1997.fst(29,19-29,63): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___34`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___34`
 >>]
 >> Got issues: [
 Bug1997.fst(38,19-38,65): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___52`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___52`
 >>]
 >> Got issues: [
 Bug1997.fst(39,19-39,65): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___53`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___53`
 >>]
 >> Got issues: [
 Bug1997.fst(40,19-40,65): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___54`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___54`
 >>]
 >> Got issues: [
 Bug1997.fst(41,19-41,65): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___55`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___55`
 >>]
 >> Got issues: [
 Bug1997.fst(42,19-42,65): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___56`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___56`
 >>]
 >> Got issues: [
 Bug1997.fst(51,19-51,59): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___70`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___70`
 >>]
 >> Got issues: [
 Bug1997.fst(52,19-52,59): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___71`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___71`
 >>]
 >> Got issues: [
 Bug1997.fst(53,19-53,59): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___72`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___72`
 >>]
 >> Got issues: [
 Bug1997.fst(54,19-54,59): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___73`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___73`
 >>]
 >> Got issues: [
 Bug1997.fst(55,19-55,59): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___74`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___74`
 >>]
 >> Got issues: [
 Bug1997.fst(63,19-63,51): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___85`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___85`
 >>]
 >> Got issues: [
 Bug1997.fst(64,19-64,51): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___86`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___86`
 >>]
 >> Got issues: [
 Bug1997.fst(75,19-75,49): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___110`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___110`
 >>]
 >> Got issues: [
 Bug1997.fst(76,19-76,49): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___111`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___111`
 >>]
 >> Got issues: [
 Bug1997.fst(77,19-77,49): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___112`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___112`
 >>]
 >> Got issues: [
 Bug1997.fst(78,19-78,49): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___113`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___113`
 >>]
 >> Got issues: [
 Bug1997.fst(87,19-87,49): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___135`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___135`
 >>]
 >> Got issues: [
 Bug1997.fst(88,19-88,49): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___136`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___136`
 >>]
 >> Got issues: [
 Bug1997.fst(89,19-89,49): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___137`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___137`
 >>]
 >> Got issues: [
 Bug1997.fst(90,19-90,49): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___138`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___138`
 >>]
 >> Got issues: [
 Bug1997.fst(91,19-91,49): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___139`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___139`
 >>]
 >> Got issues: [
 Bug1997.fst(92,19-92,49): (Error 19) assertion failed (Also see: prims.fst(89,32-89,42)); The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let uu___140`
+> While typechecking the top-level declaration `[@@expect_failure] let uu___140`
 >>]
 Module after type checking:
 module Bug1997

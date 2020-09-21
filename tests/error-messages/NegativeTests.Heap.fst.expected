@@ -1,5 +1,7 @@
 >> Got issues: [
 NegativeTests.Heap.fst(26,21-26,54): (Error 19) assertion failed; The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel
+> While typechecking the top-level declaration `let test2`
+> While typechecking the top-level declaration `[@@expect_failure] let test2`
 >>]
 Verified module: NegativeTests.Heap
 All verification conditions discharged successfully
