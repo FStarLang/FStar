@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Steel.Effect.Atomic
+module Steel.EffectX.Atomic
 open FStar.PCM
 open Steel.Memory
 
@@ -41,15 +41,15 @@ let lift_pure_steel_atomic a op p wp f
   = FStar.Monotonic.Pure.wp_monotonic_pure ();
     fun _ -> let x = f () in x
 
-let as_atomic_action f = SteelAtomic?.reflect f
-let new_invariant i p = SteelAtomic?.reflect (Steel.Memory.new_invariant i p)
-let with_invariant i f = SteelAtomic?.reflect (Steel.Memory.with_invariant i (reify (f())))
-let frame frame f = SteelAtomic?.reflect (Steel.Memory.frame frame (reify (f ())))
-let change_slprop p q proof = SteelAtomic?.reflect (Steel.Memory.change_slprop p q proof)
+let as_atomic_action f = SteelAtomicX?.reflect f
+let new_invariant i p = SteelAtomicX?.reflect (Steel.Memory.new_invariant i p)
+let with_invariant i f = SteelAtomicX?.reflect (Steel.Memory.with_invariant i (reify (f())))
+let frame frame f = SteelAtomicX?.reflect (Steel.Memory.frame frame (reify (f ())))
+let change_slprop p q proof = SteelAtomicX?.reflect (Steel.Memory.change_slprop p q proof)
 
 open NMSTTotal
 open MSTTotal
 
-let witness_h_exists #a #u #p () = SteelAtomic?.reflect (Steel.Memory.witness_h_exists p)
-let lift_h_exists_atomic #a #u p = SteelAtomic?.reflect (Steel.Memory.lift_h_exists #u p)
-let elim_pure #uses p = SteelAtomic?.reflect (Steel.Memory.elim_pure #uses p)
+let witness_h_exists #a #u #p () = SteelAtomicX?.reflect (Steel.Memory.witness_h_exists p)
+let lift_h_exists_atomic #a #u p = SteelAtomicX?.reflect (Steel.Memory.lift_h_exists #u p)
+let elim_pure #uses p = SteelAtomicX?.reflect (Steel.Memory.elim_pure #uses p)
