@@ -477,7 +477,8 @@ let report_implicits rng (is : Env.implicits) : unit =
                              imp.imp_reason,
                  rng)) is in
     Err.add_errors errs;
-    Err.stop_if_err ()
+    (* Err.stop_if_err (); *)
+    ()
 
 let run_tactic_on_ps
   (rng_tac : Range.range)
@@ -501,7 +502,7 @@ let run_tactic_on_ps
         BU.print_string "}\n";
 
     TcRel.force_trivial_guard env g;
-    Err.stop_if_err ();
+    (* Err.stop_if_err (); *)
     let tau = unembed_tactic_1 e_arg e_res tactic FStar.Syntax.Embeddings.id_norm_cb in
 
     (* if !tacdbg then *)
