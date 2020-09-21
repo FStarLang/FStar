@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Steel.Effect
+module Steel.EffectX
 
 module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.Memory
@@ -158,7 +158,7 @@ let if_then_else (a:Type)
 [@@ allow_informative_binders]
 reifiable reflectable
 layered_effect {
-  Steel : a:Type
+  SteelX : a:Type
         -> pre:slprop u#1
         -> post:(a -> slprop u#1)
         -> req:fp_mprop pre
@@ -172,8 +172,8 @@ layered_effect {
   if_then_else = if_then_else
 }
 
-effect SteelT (a:Type) (pre:slprop) (post:a -> slprop) =
-  Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
+effect SteelXT (a:Type) (pre:slprop) (post:a -> slprop) =
+  SteelX a pre post (fun _ -> True) (fun _ _ _ -> True)
 
 unfold
 let bind_pure_steel_req (#a:Type)
@@ -207,7 +207,7 @@ val bind_pure_steel (a:Type)
          (bind_pure_steel_req wp req_g)
          (bind_pure_steel_ens wp ens_g)
 
-polymonadic_bind (PURE, Steel) |> Steel = bind_pure_steel
+polymonadic_bind (PURE, SteelX) |> SteelX = bind_pure_steel
 
 unfold
 let polymonadic_bind_steel_pure_pre (#a:Type)
@@ -251,21 +251,21 @@ val bind_steel_pure (a:Type)
          (polymonadic_bind_steel_pure_pre req_f ens_f wp_g)
          (polymonadic_bind_steel_pure_post ens_f wp_g)
 
-polymonadic_bind (Steel, PURE) |> Steel = bind_steel_pure
+polymonadic_bind (SteelX, PURE) |> SteelX = bind_steel_pure
 
 val par (#aL:Type u#a)
         (#preL:slprop u#1)
         (#postL:aL -> slprop u#1)
         (#lpreL:fp_mprop preL)
         (#lpostL:fp_binary_mprop preL postL)
-        ($f:unit -> Steel aL preL postL lpreL lpostL)
+        ($f:unit -> SteelX aL preL postL lpreL lpostL)
         (#aR:Type u#a)
         (#preR:slprop u#1)
         (#postR:aR -> slprop u#1)
         (#lpreR:fp_mprop preR)
         (#lpostR:fp_binary_mprop preR postR)
-        ($g:unit -> Steel aR preR postR lpreR lpostR)
-  : Steel (aL & aR)
+        ($g:unit -> SteelX aR preR postR lpreR lpostR)
+  : SteelX (aL & aR)
     (preL `Mem.star` preR)
     (fun (xL, xR) -> postL xL `Mem.star` postR xR)
     (fun h -> lpreL h /\ lpreR h)
@@ -274,12 +274,12 @@ val par (#aL:Type u#a)
 val ( || ) (#aL:Type u#a)
           (#preL:slprop)
           (#postL:aL -> slprop)
-          ($f:unit -> SteelT aL preL postL)
+          ($f:unit -> SteelXT aL preL postL)
           (#aR:Type u#a)
           (#preR:slprop)
           (#postR:aR -> slprop)
-          ($g:unit -> SteelT aR preR postR)
- : SteelT (aL & aR)
+          ($g:unit -> SteelXT aR preR postR)
+ : SteelXT (aL & aR)
           (preL `Mem.star` preR)
           (fun (xL, xR) -> postL xL `Mem.star` postR xR)
 
@@ -288,10 +288,10 @@ val frame (#a:Type)
           (#post:a -> slprop)
           (#req:fp_mprop pre)
           (#ens:fp_binary_mprop pre post)
-          ($f:unit -> Steel a pre post req ens)
+          ($f:unit -> SteelX a pre post req ens)
           (frame:slprop)
           (f_frame:mprop frame)
-  : Steel a
+  : SteelX a
     (pre `Mem.star` frame)
     (fun x -> post x `Mem.star` frame)
     (fun h -> req h /\ f_frame h)
@@ -301,7 +301,7 @@ val read (#a:Type)
          (#pcm:_)
          (r:ref a pcm)
          (v0:Ghost.erased a)
-  : SteelT (v:a { FStar.PCM.compatible pcm v0 v })
+  : SteelXT (v:a { FStar.PCM.compatible pcm v0 v })
            (pts_to r v0)
            (fun _ -> pts_to r v0)
 
@@ -310,14 +310,14 @@ val write (#a:Type)
           (r:ref a pcm)
           (v0:Ghost.erased a)
           (v1:a{FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.FStar.PCM.refine v1})
-  : SteelT unit
+  : SteelXT unit
            (pts_to r v0)
            (fun _ -> pts_to r v1)
 
 val alloc (#a:Type)
           (#pcm:_)
           (x:a{FStar.PCM.compatible pcm x x /\ pcm.FStar.PCM.refine x })
-  : SteelT (ref a pcm)
+  : SteelXT (ref a pcm)
            emp
            (fun r -> pts_to r x)
 
@@ -325,14 +325,14 @@ val free (#a:Type)
          (#p:FStar.PCM.pcm a)
          (r:ref a p)
          (x:Ghost.erased a{FStar.PCM.exclusive p x /\ FStar.PCM.(p.refine p.p.one)})
-  : SteelT unit (pts_to r x) (fun _ -> pts_to r FStar.PCM.(p.p.one))
+  : SteelXT unit (pts_to r x) (fun _ -> pts_to r FStar.PCM.(p.p.one))
 
 val split (#a:Type)
           (#p:FStar.PCM.pcm a)
           (r:ref a p)
           (v0:Ghost.erased a)
           (v1:Ghost.erased a{FStar.PCM.composable p v0 v1})
-  : SteelT unit (pts_to r (FStar.PCM.op p v0 v1))
+  : SteelXT unit (pts_to r (FStar.PCM.op p v0 v1))
                 (fun _ -> pts_to r v0 `star` pts_to r v1)
 
 val gather (#a:Type)
@@ -340,7 +340,7 @@ val gather (#a:Type)
            (r:ref a p)
            (v0:Ghost.erased a)
            (v1:Ghost.erased a)
-  : SteelT (_:unit{FStar.PCM.composable p v0 v1})
+  : SteelXT (_:unit{FStar.PCM.composable p v0 v1})
            (pts_to r v0 `star` pts_to r v1)
            (fun _ -> pts_to r (FStar.PCM.op p v0 v1))
 
@@ -354,13 +354,13 @@ val witness (#a:Type) (#pcm:FStar.PCM.pcm a)
             (fact:stable_property pcm)
             (v:Ghost.erased a)
             (_:fact_valid_compat fact v)
-  : SteelT unit (pts_to r v)
+  : SteelXT unit (pts_to r v)
                 (fun _ -> pts_to r v `star` pure (witnessed r fact))
 
 val recall (#a:Type u#1) (#pcm:FStar.PCM.pcm a) (#fact:property a)
            (r:ref a pcm)
            (v:Ghost.erased a)
-  : SteelT (v1:Ghost.erased a{FStar.PCM.compatible pcm v v1})
+  : SteelXT (v1:Ghost.erased a{FStar.PCM.compatible pcm v v1})
            (pts_to r v `star` pure (witnessed r fact))
            (fun v1 -> pts_to r v `star` pure (fact v1))
 
@@ -368,20 +368,20 @@ val cond (#a:Type)
          (b:bool)
          (p: bool -> slprop)
          (q: bool -> a -> slprop)
-         (then_: (unit -> SteelT a (p true) (q true)))
-         (else_: (unit -> SteelT a (p false) (q false)))
-  : SteelT a (p b) (q b)
+         (then_: (unit -> SteelXT a (p true) (q true)))
+         (else_: (unit -> SteelXT a (p false) (q false)))
+  : SteelXT a (p b) (q b)
 
 val add_action (#a:Type)
                (#p:slprop)
                (#q:a -> slprop)
                (f:action_except a Set.empty p q)
-  : SteelT a p q
+  : SteelXT a p q
 
 
 (***** Bind and Subcomp relation with Steel.Atomic *****)
 
-open Steel.Effect.Atomic
+open Steel.EffectX.Atomic
 
 unfold
 let bind_req_atomic_steel (#a:Type) (#pre_f:slprop) (#post_f:a -> slprop) (req_g:(x:a -> fp_mprop (post_f x)))
@@ -402,7 +402,7 @@ val bind_atomic_steel (a:Type) (b:Type)
     (bind_req_atomic_steel req_g)
     (bind_ens_atomic_steel ens_g)
 
-polymonadic_bind (SteelAtomic, Steel) |> Steel = bind_atomic_steel
+polymonadic_bind (SteelAtomicX, SteelX) |> SteelX = bind_atomic_steel
 
 unfold
 let subcomp_req_atomic_steel (a:Type) (pre_f:slprop) : fp_mprop pre_f = fun _ -> True
@@ -417,4 +417,4 @@ val subcomp_atomic_steel (a:Type)
   (f:atomic_repr a Set.empty obs pre_f post_f)
 : repr a pre_f post_f (subcomp_req_atomic_steel a pre_f) (subcomp_ens_atomic_steel pre_f post_f)
 
-polymonadic_subcomp SteelAtomic <: Steel = subcomp_atomic_steel
+polymonadic_subcomp SteelAtomicX <: SteelX = subcomp_atomic_steel

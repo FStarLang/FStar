@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Steel.Effect
+module Steel.EffectX
 
 module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.Memory
@@ -34,7 +34,7 @@ let _test (pre:slprop) (h_pre:hmem pre) (h:mem{disjoint h_pre h}) =
   assert (interp pre (join h_pre h))
 #pop-options
 
-let respects_fp #fp p = 
+let respects_fp #fp p =
   forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)
 let reveal_respects_fp p = ()
 
@@ -124,7 +124,7 @@ let bind_pure_steel a b wp pre_g post_b req_g ens_g f g
 #pop-options
 
 let bind_steel_pure a b pre_f post_f req_f ens_f wp_g f g
-  = 
+  =
     FStar.Monotonic.Pure.wp_monotonic_pure ();
     fun _ ->
     let x = f () in
@@ -173,24 +173,24 @@ let bind_div_steel (a:Type) (b:Type)
   g x m0
 #pop-options
 
-polymonadic_bind (DIV, Steel) |> Steel = bind_div_steel
+polymonadic_bind (DIV, SteelX) |> SteelX = bind_div_steel
 
 
 (*
  * This proof relies on core_mem_interp lemma from Steel.Memory
  *)
-let par0 (#aL:Type u#a) (#preL:slprop) (#postL:aL -> slprop) 
+let par0 (#aL:Type u#a) (#preL:slprop) (#postL:aL -> slprop)
          (#lpreL:fp_mprop preL) (#lpostL:fp_binary_mprop preL postL)
          (f:repr aL preL postL lpreL lpostL)
          (#aR:Type u#a) (#preR:slprop) (#postR:aR -> slprop)
          (#lpreR:fp_mprop preR) (#lpostR:fp_binary_mprop preR postR)
          (g:repr aR preR postR lpreR lpostR)
-  : Steel (aL & aR)
+  : SteelX (aL & aR)
           (preL `Mem.star` preR)
           (fun (xL, xR) -> postL xL `Mem.star` postR xR)
           (fun h -> lpreL h /\ lpreR h)
           (fun h0 (xL, xR) h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 xL h1 /\ lpostR h0 xR h1)
-  = Steel?.reflect (fun _ -> Sem.run #state #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)))
+  = SteelX?.reflect (fun _ -> Sem.run #state #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)))
 
 let par f g = par0 (reify (f ())) (reify (g ()))
 
@@ -200,12 +200,12 @@ let frame0 (#a:Type) (#pre:slprop) (#post:a -> slprop) (#req:fp_mprop pre) (#ens
            (f:repr a pre post req ens)
            (frame:Mem.slprop)
            (f_frame:mprop frame)
-    : Steel a
+    : SteelX a
       (pre `Mem.star` frame)
       (fun x -> post x `Mem.star` frame)
       (fun h -> req h /\ f_frame h)
       (fun h0 r h1 -> req h0 /\ ens h0 r h1 /\ f_frame h1)
-    = Steel?.reflect (fun _ -> Sem.run #state #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame f_frame))
+    = SteelX?.reflect (fun _ -> Sem.run #state #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame f_frame))
 
 let frame f frame f_frame = frame0 (reify (f ())) frame f_frame
 
@@ -213,56 +213,56 @@ let frame f frame f_frame = frame0 (reify (f ())) frame f_frame
 let action_as_repr (#a:Type) (#p:slprop) (#q:a -> slprop) (f:action_except a Set.empty p q)
   : repr a p q (fun _ -> True) (fun _ _ _ -> True)
   = Ins.state_correspondence Set.empty; f
-let read r v0 = Steel?.reflect (action_as_repr (sel_action FStar.Set.empty r v0))
-let write r v0 v1 = Steel?.reflect (action_as_repr (upd_action FStar.Set.empty r v0 v1))
-let alloc x = Steel?.reflect (action_as_repr (alloc_action FStar.Set.empty x))
-let free r x = Steel?.reflect (action_as_repr (free_action FStar.Set.empty r x))
-let split r v0 v1 = Steel?.reflect (action_as_repr (split_action FStar.Set.empty r v0 v1))
-let gather r v0 v1 = Steel?.reflect (action_as_repr (gather_action FStar.Set.empty r v0 v1))
-let witness r fact v _ = Steel?.reflect (action_as_repr (Steel.Memory.witness FStar.Set.empty r fact v ()))
-let recall r v = Steel?.reflect (action_as_repr (Steel.Memory.recall FStar.Set.empty r v))
+let read r v0 = SteelX?.reflect (action_as_repr (sel_action FStar.Set.empty r v0))
+let write r v0 v1 = SteelX?.reflect (action_as_repr (upd_action FStar.Set.empty r v0 v1))
+let alloc x = SteelX?.reflect (action_as_repr (alloc_action FStar.Set.empty x))
+let free r x = SteelX?.reflect (action_as_repr (free_action FStar.Set.empty r x))
+let split r v0 v1 = SteelX?.reflect (action_as_repr (split_action FStar.Set.empty r v0 v1))
+let gather r v0 v1 = SteelX?.reflect (action_as_repr (gather_action FStar.Set.empty r v0 v1))
+let witness r fact v _ = SteelX?.reflect (action_as_repr (Steel.Memory.witness FStar.Set.empty r fact v ()))
+let recall r v = SteelX?.reflect (action_as_repr (Steel.Memory.recall FStar.Set.empty r v))
 
 let cond_aux (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
-             (then_:unit -> Steel a (p b) (q b) (fun _ -> b==true) (fun _ _ _ -> True))
-             (else_:unit -> Steel a (p b) (q b) (fun _ -> b==false) (fun _ _ _ -> True))
-  : SteelT a (p b) (q b)
+             (then_:unit -> SteelX a (p b) (q b) (fun _ -> b==true) (fun _ _ _ -> True))
+             (else_:unit -> SteelX a (p b) (q b) (fun _ -> b==false) (fun _ _ _ -> True))
+  : SteelXT a (p b) (q b)
   = if b then then_ () else else_ ()
 
 let aux1 (#a:Type) (b:bool{b == true}) (p: bool -> slprop) (q: bool -> a -> slprop)
-         (then_: (unit -> SteelT a (p true) (q true)))
-  : unit -> SteelT a (p b) (q b)
+         (then_: (unit -> SteelXT a (p true) (q true)))
+  : unit -> SteelXT a (p b) (q b)
   = fun _ -> then_ ()
 
 let aux2 (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
-         (then_: (unit -> SteelT a (p true) (q true)))
-  : unit -> Steel a (p b) (q b) (fun _ -> b == true) (fun _ _ _ -> True)
+         (then_: (unit -> SteelXT a (p true) (q true)))
+  : unit -> SteelX a (p b) (q b) (fun _ -> b == true) (fun _ _ _ -> True)
   = fun _ -> (aux1 b p q then_) ()
 
 let aux3 (#a:Type) (b:bool{b == false}) (p: bool -> slprop) (q: bool -> a -> slprop)
-         (else_: (unit -> SteelT a (p false) (q false)))
-  : unit -> SteelT a (p b) (q b)
+         (else_: (unit -> SteelXT a (p false) (q false)))
+  : unit -> SteelXT a (p b) (q b)
   = fun _ -> else_ ()
 
 let aux4 (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
-         (else_: (unit -> SteelT a (p false) (q false)))
-  : unit -> Steel a (p b) (q b) (fun _ -> b == false) (fun _ _ _ -> True)
+         (else_: (unit -> SteelXT a (p false) (q false)))
+  : unit -> SteelX a (p b) (q b) (fun _ -> b == false) (fun _ _ _ -> True)
   = fun _ -> (aux3 b p q else_) ()
 
 let cond (#a:Type) (b:bool) (p: bool -> slprop) (q: bool -> a -> slprop)
-         (then_: (unit -> SteelT a (p true) (q true)))
-         (else_: (unit -> SteelT a (p false) (q false)))
-  : SteelT a (p b) (q b)
+         (then_: (unit -> SteelXT a (p true) (q true)))
+         (else_: (unit -> SteelXT a (p false) (q false)))
+  : SteelXT a (p b) (q b)
   = let a1 = aux2 b p q then_ in
     let a2 = aux4 b p q else_ in
     cond_aux b p q a1 a2
 
-let add_action f = Steel?.reflect (action_as_repr f)
+let add_action f = SteelX?.reflect (action_as_repr f)
 
 
 (***** Bind and Subcomp relation with Steel.Atomic *****)
 
-friend Steel.Effect.Atomic
-open Steel.Effect.Atomic
+friend Steel.EffectX.Atomic
+open Steel.EffectX.Atomic
 
 #push-options "--z3rlimit 40"
 let bind_atomic_steel _ _ _ _ _ _ _ _ f g
