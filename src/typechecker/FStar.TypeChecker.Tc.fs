@@ -337,7 +337,10 @@ let proc_check_with (attrs:list<attribute>) (kont : unit -> 'a) : 'a =
   | None -> kont ()
   | Some [(a, None)] ->
     Options.with_saved_options (fun () ->
-      Options.set (unembed_optionstate a |> BU.must);
+      let curopts = Options.peek () in
+      let opts = unembed_optionstate a |> BU.must in
+      BU.smap_add opts "verify_module" (BU.smap_try_find curopts "verify_module" |> BU.must);
+      Options.set opts;
       kont ())
   | _ -> failwith "huh?"
 
