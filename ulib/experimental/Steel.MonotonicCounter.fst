@@ -34,7 +34,8 @@ let mctr_pcm : pcm nat = {
   comm=(fun _ _ -> ());
   assoc=(fun _ _ _ -> ());
   assoc_r=(fun _ _ _ -> ());
-  is_unit=(fun _ -> ())
+  is_unit=(fun _ -> ());
+  refine=(fun _ -> True);
 }
 
 (** This is a classical preorder for monotonic increase *)

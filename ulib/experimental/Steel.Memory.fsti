@@ -216,9 +216,12 @@ val inames_ok_empty (m:mem)
 *)
 val locks_invariant (e:inames) (m:mem u#a) : slprop u#a
 
+val full_mem_pred: mem -> prop
+let full_mem = m:mem{full_mem_pred m}
+
 (** Memory refined with invariants and a footprint *)
 let hmem_with_inv_except (e:inames) (fp:slprop u#a) =
-  m:mem{inames_ok e m /\ interp (fp `star` locks_invariant e m) m}
+  m:full_mem{inames_ok e m /\ interp (fp `star` locks_invariant e m) m}
 
 (** Memory refined with just a footprint and no invariants  *)
 let hmem_with_inv (fp:slprop u#a) = hmem_with_inv_except S.empty fp
@@ -272,14 +275,7 @@ let mprop (fp:slprop u#a) =
 (**
   The preorder along wich the memory evolves with every update. See [Steel.Heap.heap_evolves]
 *)
-val mem_evolves : FStar.Preorder.preorder mem
-
-(** See [Steel.Heap.is_frame_preserving]. We add in [lock_invariants] now *)
-let preserves_frame (e:inames) (pre post:slprop) (m0 m1:mem) =
-  forall (frame:slprop).
-    interp ((pre `star` frame) `star` locks_invariant e m0) m0 ==>
-    (interp ((post `star` frame) `star` locks_invariant e m1) m1 /\
-     (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)))
+val mem_evolves : FStar.Preorder.preorder full_mem
 
 (**
   To guarantee that the memory always evolve according to frame-preserving updates,
@@ -287,19 +283,25 @@ let preserves_frame (e:inames) (pre post:slprop) (m0 m1:mem) =
   effect NMSTATETOT. The effect is indexed by [except], which is the set of invariants that
   are currently opened.
 *)
-effect MstTot (a:Type u#a) (except:inames) (expects:slprop u#1) (provides: a -> slprop u#1) =
-  NMSTTotal.NMSTATETOT a (mem u#1) mem_evolves
+effect MstTot
+  (a:Type u#a)
+  (except:inames)
+  (expects:slprop u#1)
+  (provides: a -> slprop u#1)
+  (frame:slprop u#1)
+  = NMSTTotal.NMSTATETOT a (full_mem u#1) mem_evolves
     (requires fun m0 ->
         inames_ok except m0 /\
-        interp (expects `star` locks_invariant except m0) m0)
+        interp (expects `star` frame `star` locks_invariant except m0) m0)
     (ensures fun m0 x m1 ->
         inames_ok except m1 /\
-        interp (provides x `star` locks_invariant except m1) m1 /\
-        preserves_frame except expects (provides x) m0 m1)
+        interp (expects `star` frame `star` locks_invariant except m0) m0 /\  //TODO: fix the effect so as not to repeat this
+        interp (provides x `star` frame `star` locks_invariant except m1) m1 /\
+        (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)))
 
-(** An action is just a thunked computation in [MstTot] *)
+(** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
 let action_except (a:Type u#a) (except:inames) (expects:slprop) (provides: a -> slprop) =
-  unit -> MstTot a except expects provides
+  frame:slprop -> MstTot a except expects provides frame
 
 val sel_action (#a:Type u#1) (#pcm:_) (e:inames) (r:ref a pcm) (v0:erased a)
   : action_except (v:a{compatible pcm v0 v}) e (pts_to r v0) (fun _ -> pts_to r v0)
@@ -307,11 +309,11 @@ val sel_action (#a:Type u#1) (#pcm:_) (e:inames) (r:ref a pcm) (v0:erased a)
 val upd_action (#a:Type u#1) (#pcm:_) (e:inames)
                (r:ref a pcm)
                (v0:FStar.Ghost.erased a)
-               (v1:a {FStar.PCM.frame_preserving pcm v0 v1})
+               (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
   : action_except unit e (pts_to r v0) (fun _ -> pts_to r v1)
 
 val free_action (#a:Type u#1) (#pcm:pcm a) (e:inames)
-                (r:ref a pcm) (x:FStar.Ghost.erased a{FStar.PCM.exclusive pcm x})
+                (r:ref a pcm) (x:FStar.Ghost.erased a{FStar.PCM.exclusive pcm x /\ pcm.refine pcm.FStar.PCM.p.one})
   : action_except unit e (pts_to r x) (fun _ -> pts_to r pcm.FStar.PCM.p.one)
 
 (** Splitting a permission on a composite resource into two separate permissions *)
@@ -334,8 +336,26 @@ val gather_action
   (v1:FStar.Ghost.erased a)
   : action_except (_:unit{composable pcm v0 v1}) e (pts_to r v0 `star` pts_to r v1) (fun _ -> pts_to r (op pcm v0 v1))
 
-val alloc_action (#a:Type u#1) (#pcm:pcm a) (e:inames) (x:a{compatible pcm x x})
+val alloc_action (#a:Type u#1) (#pcm:pcm a) (e:inames) (x:a{compatible pcm x x /\ pcm.refine x})
   : action_except (ref a pcm) e emp (fun r -> pts_to r x)
+
+
+val select_refine (#a:Type u#1) (#p:pcm a)
+                  (e:inames)
+                  (r:ref a p)
+                  (x:erased a)
+                  (f:(v:a{compatible p x v}
+                      -> GTot (y:a{compatible p y v /\
+                                  FStar.PCM.frame_compatible p x v y})))
+   : action_except (v:a{compatible p x v /\ p.refine v}) e
+                   (pts_to r x)
+                   (fun v -> pts_to r (f v))
+
+val upd_gen (#a:Type) (#p:pcm a) (e:inames) (r:ref a p) (x y:Ghost.erased a)
+            (f:FStar.PCM.frame_preserving_upd p x y)
+  : action_except unit e
+                  (pts_to r x)
+                  (fun _ -> pts_to r y)
 
 let property (a:Type)
   = a -> prop
@@ -413,10 +433,10 @@ let is_frame_monotonic #a (p : a -> slprop) : prop =
 let is_witness_invariant #a (p : a -> slprop) =
   forall x y m. interp (p x) m /\ interp (p y) m ==> x == y
 
-val witness_h_exists (#opened_invariants:_) (#a:_) (p:(a -> slprop){is_frame_monotonic p})
+val witness_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
   : action_except (erased a) opened_invariants
            (h_exists p)
-           (fun v -> p v)
+           (fun x -> p x)
 
 val lift_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
   : action_except unit opened_invariants

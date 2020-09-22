@@ -192,7 +192,8 @@ let pcm_of_preorder (#a: Type u#a) (q:preorder a) : pcm (hist q) = {
   comm = comm_op q;
   assoc = (fun _ _ _ -> ());
   assoc_r = (fun _ _ _ -> ());
-  is_unit = (fun _ -> ())
+  is_unit = (fun _ -> ());
+  refine = (fun _ -> True)
 }
 
 (***** Using the preorder *)

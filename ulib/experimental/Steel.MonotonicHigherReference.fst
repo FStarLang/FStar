@@ -96,6 +96,7 @@ let pcm_history #a #p : pcm (history a p) = {
   assoc = assoc_l;
   assoc_r = assoc_r;
   is_unit = lem_is_unit;
+  refine = (fun _ -> True);
 }
 
 let pcm_history_preorder #a #p : Preorder.preorder (history a p) =
