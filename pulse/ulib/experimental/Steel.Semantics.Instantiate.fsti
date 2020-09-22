@@ -23,6 +23,7 @@ let state0 (uses:inames) : S.st0 =
   {
     S.mem = mem;
     S.core = core_mem;
+    S.full_mem_pred = full_mem_pred;
     S.locks_preorder = mem_evolves;
     S.hprop = slprop;
     S.locks_invariant = locks_invariant uses;
@@ -53,6 +54,8 @@ val state_correspondence (inames:inames)
      s.S.interp == interp /\
      s.S.star == star /\
      s.S.locks_invariant == locks_invariant inames /\
-     (forall (p q:slprop) (m0 m1:mem).
-       preserves_frame inames p q m0 m1 ==>
-       S.preserves_frame #s p q m0 m1))
+     (forall (p q frame:slprop)
+        (m0:mem{interp (p `star` frame `star` locks_invariant inames m0) m0})
+        (m1:mem{interp (q `star` frame `star` locks_invariant inames m1) m1}).
+       (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)) ==> 
+       S.post_preserves_frame #s q frame m0 m1))

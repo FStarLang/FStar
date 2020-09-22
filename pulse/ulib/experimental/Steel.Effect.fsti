@@ -58,7 +58,7 @@ val repr (a:Type u#a)
          (post:a -> slprop u#1)
          (req:fp_mprop pre)
          (ens:fp_binary_mprop pre post)
-  : Type0 //Note, we leak the universe of the representation, which currently must be universe 0
+  : Type u#2 //Note, we leak the universe of the representation, which currently must be universe 0
 
 unfold
 let return_req (p:slprop) : fp_mprop p = fun _ -> True
@@ -309,14 +309,14 @@ val write (#a:Type)
           (#pcm:_)
           (r:ref a pcm)
           (v0:Ghost.erased a)
-          (v1:a{FStar.PCM.frame_preserving pcm v0 v1})
+          (v1:a{FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.FStar.PCM.refine v1})
   : SteelT unit
            (pts_to r v0)
            (fun _ -> pts_to r v1)
 
 val alloc (#a:Type)
           (#pcm:_)
-          (x:a{FStar.PCM.compatible pcm x x })
+          (x:a{FStar.PCM.compatible pcm x x /\ pcm.FStar.PCM.refine x })
   : SteelT (ref a pcm)
            emp
            (fun r -> pts_to r x)
@@ -324,7 +324,7 @@ val alloc (#a:Type)
 val free (#a:Type)
          (#p:FStar.PCM.pcm a)
          (r:ref a p)
-         (x:Ghost.erased a{FStar.PCM.exclusive p x})
+         (x:Ghost.erased a{FStar.PCM.exclusive p x /\ FStar.PCM.(p.refine p.p.one)})
   : SteelT unit (pts_to r x) (fun _ -> pts_to r FStar.PCM.(p.p.one))
 
 val split (#a:Type)

@@ -335,13 +335,21 @@ val weaken (p q r:slprop) (h:heap u#a)
 
 (**** Actions *)
 
+(** An abstract predicate classifying a "full" heap, i.e., the entire
+    heap of the executing program, not just a fragment of it *)
+val full_heap_pred : heap -> prop
+
+let full_heap = h:heap { full_heap_pred h }
+
+let full_hheap fp = h:hheap fp { full_heap_pred h }
+
 (**
   This modules exposes a preorder that is respected for every well-formed update of the heap.
   The preorder represents the fact that once a reference is allocated, its type and PCM cannot
   change and the trace of values contained in the PCM respects the preorder induced by the
   PCM (see Steel.Preorder).
 *)
-val heap_evolves : FStar.Preorder.preorder heap
+val heap_evolves : FStar.Preorder.preorder full_heap
 
 (**
   This predicate allows us to maintain an allocation counter, as all references above [a]
@@ -358,16 +366,26 @@ val weaken_free_above (h:heap) (a b:nat)
   the heap specification of the action before and after.
 *)
 let pre_action (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
-  hheap fp -> (x:a & hheap (fp' x))
+  full_hheap fp -> (x:a & full_hheap (fp' x))
+
+(**
+  This is how the heaps before and after the action relate:
+  - evolving the heap according to the heap preorder;
+  - not allocating any new references;
+  - preserving the validity of any heap proposition affecting any frame
+*)  
+unfold
+let action_related_heaps (frame:slprop) (h0 h1:full_heap) =
+  heap_evolves h0 h1 /\
+  (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr) /\
+  (forall (hp:hprop frame). hp h0 == hp h1)
 
 (**
   We only want to consider heap updates that are "frame-preserving", meaning that they only
   modify the portion of the heap that they're allowed to, without messing with any other
   partial view of the heap that is compatible with the one you own. This includes :
   - preserving correct interpretation in presence of a frame;
-  - evolving the heap according to the heap preorder;
-  - not allocating any new references;
-  - preserving the validity of any heap proposition affecting any frame
+  - heaps are related as defined above
 *)
 let is_frame_preserving
   (#a: Type u#a)
@@ -375,28 +393,44 @@ let is_frame_preserving
   (#fp': a -> slprop u#b)
   (f:pre_action fp a fp')
   =
-  forall (frame: slprop u#b) (h0:hheap (fp `star` frame)).
+  forall (frame: slprop u#b) (h0:full_hheap (fp `star` frame)).
      (affine_star fp frame h0;
       let (| x, h1 |) = f h0 in
       interp (fp' x `star` frame) h1 /\
-      heap_evolves h0 h1 /\
-      (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr) /\
-      (forall (hp:hprop frame). hp h0 == hp h1))
+      action_related_heaps frame h0 h1)
+
+(** Every action is frame-preserving *)
+let action (fp:slprop u#b) (a:Type u#a) (fp':a -> slprop u#b) =
+  f:pre_action fp a fp'{ is_frame_preserving f }
+
+(**
+  We define a second, but equivalent, type for actions that
+  instead of quantifying over the frame, are explicitly passed a frame
+  from outside
+
+  This notion of action is useful for defining actions like witness_h_exists, see comments at the declaration of witness_h_exists
+*)
+let action_with_frame
+  (fp:slprop u#a)
+  (a:Type u#b)
+  (fp':a -> slprop u#a)
+  = frame:slprop u#a ->
+    h0:full_hheap (fp `star` frame) ->
+    Pure (x:a & full_hheap (fp' x `star` frame))
+      (requires True)
+      (ensures fun (| x, h1 |) -> action_related_heaps frame h0 h1)
 
 (**
   Two heaps [h0] and [h1] are frame-related if you can get from [h0] to [h1] with a
   frame-preserving update.
 *)
-let frame_related_heaps (h0 h1:heap) (fp0 fp1 frame:slprop) (allocates:bool) =
+let frame_related_heaps (h0 h1:full_heap) (fp0 fp1 frame:slprop) (allocates:bool) =
   interp (fp0 `star` frame) h0 ==>
   interp (fp1 `star` frame) h1 /\
   heap_evolves h0 h1 /\
   (forall (hp:hprop frame). hp h0 == hp h1) /\
   (not allocates ==> (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr))
 
-(** Every action is frame-preserving *)
-let action (fp:slprop u#b) (a:Type u#a) (fp':a -> slprop u#b) =
-  f:pre_action fp a fp'{ is_frame_preserving f }
 
 (**
   A frame-preserving action applied on [h0] produces an [h1] such that [h0] and [h1] are
@@ -407,7 +441,7 @@ let action_framing
   (#fp: slprop u#b)
   (#fp': a -> slprop u#b)
   ($f:action fp a fp')
-  (frame:slprop) (h0:hheap (fp `star` frame))
+  (frame:slprop) (h0:full_hheap (fp `star` frame))
     : Lemma (
       affine_star fp frame h0;
       let (| x, h1 |) = f h0 in
@@ -418,23 +452,24 @@ let action_framing
   emp_unit fp
 
 (** [sel] is a ghost read of the value contained in a heap reference *)
-val sel (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (m:hheap (ptr r)) : a
+val sel (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (m:full_hheap (ptr r)) : a
 
 (** [sel_v] is a ghost read of the value contained in a heap reference *)
-val sel_v (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:hheap (pts_to r v))
+val sel_v (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:full_hheap (pts_to r v))
   : v':a{ compatible pcm v v' /\
+          pcm.refine v' /\
           interp (ptr r) m /\
           v' == sel r m }
 
 (** [sel] respect [pts_to] *)
-val sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:hheap (ptr r))
+val sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr r))
   : Lemma (interp (pts_to r (sel r m)) m)
 
 let witnessed_ref (#a:Type u#a)
                   (#pcm:pcm a)
                   (r:ref a pcm)
                   (fact:a -> prop)
-                  (h:heap)
+                  (h:full_heap)
   = interp (ptr r) h /\
     fact (sel r h)
 
@@ -455,6 +490,21 @@ val sel_action
     : action (pts_to r v0) (v:a{compatible pcm v0 v}) (fun _ -> pts_to r v0)
 
 (**
+  A version of select that incorporates a ghost update of local
+  knowledge of a ref cell based on the value that was read
+ *)
+val select_refine (#a:_) (#p:_)
+                  (r:ref a p)
+                  (x:erased a)
+                  (f:(v:a{compatible p x v}
+                      -> GTot (y:a{compatible p y v /\
+                                  FStar.PCM.frame_compatible p x v y})))
+   : action (pts_to r x)
+            (v:a{compatible p x v /\ p.refine v})
+            (fun v -> pts_to r (f v))
+
+
+(**
   The update action needs you to prove that the mutation from [v0] to [v1] is frame-preserving
   with respect to the individual PCM governing the reference [r]. See [FStar.PCM.frame_preserving]
 *)
@@ -463,15 +513,22 @@ val upd_action
   (#pcm:pcm a)
   (r:ref a pcm)
   (v0:FStar.Ghost.erased a)
-  (v1:a {FStar.PCM.frame_preserving pcm v0 v1})
+  (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
   : action (pts_to r v0) unit (fun _ -> pts_to r v1)
+
+(** Updating a ref cell for a user-defined PCM *)
+val upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
+                   (f:FStar.PCM.frame_preserving_upd p x y)
+  : action (pts_to r x)
+           unit
+           (fun _ -> pts_to r y)
 
 (** Deallocating a reference, by actually replacing its value by the unit of the PCM *)
 val free_action
   (#a:Type u#a)
   (#pcm:pcm a)
   (r:ref a pcm)
-  (v0:FStar.Ghost.erased a {exclusive pcm v0})
+  (v0:FStar.Ghost.erased a {exclusive pcm v0 /\ pcm.refine pcm.FStar.PCM.p.one})
   : action (pts_to r v0) unit (fun _ -> pts_to r pcm.FStar.PCM.p.one)
 
 
@@ -497,12 +554,12 @@ val gather_action
 val extend
   (#a:Type u#a)
   (#pcm:pcm a)
-  (x:a{compatible pcm x x})
+  (x:a{compatible pcm x x /\ pcm.refine x})
   (addr:nat)
-  (h:heap{h `free_above_addr` addr})
+  (h:full_heap{h `free_above_addr` addr})
   : (
     r:ref a pcm
-    & h':heap{
+    & h':full_heap{
       (forall (frame: slprop u#a).
         frame_related_heaps h h' emp (pts_to r x) frame (true)) /\
         h' `free_above_addr` (addr + 1) /\
@@ -547,8 +604,15 @@ val witinv_framon (#a:_) (p : a -> slprop)
   : Lemma (requires (is_witness_invariant p))
           (ensures (is_frame_monotonic p))
 
-val witness_h_exists (#a:_) (p:a -> slprop{is_frame_monotonic p})
-  : action (h_exists p) (erased a) (fun x -> p x)
+
+(**
+  witness_h_exists is defined with action_with_frame as it allows us to define it with any p
+
+  With the quantified frame actions, it creates an issue, since we have to prove that the witness is ok for all frames
+    whereas with an explicit frame, we can pick the witness for that particular frame
+*)
+val witness_h_exists (#a:_) (p:a -> slprop)
+  : action_with_frame (h_exists p) (erased a) (fun x -> p x)
 
 val lift_h_exists (#a:_) (p:a -> slprop)
   : action (h_exists p) unit
