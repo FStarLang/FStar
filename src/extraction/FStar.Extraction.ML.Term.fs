@@ -1658,12 +1658,18 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
 
           (* env_burn only matters for non-recursive lets and simply burns
            * the let bound variable in its own definition to generate
-           * code that is more understandable. *)
+           * code that is more understandable. We only do it for OCaml,
+           * to not affect Kremlin naming. *)
           let env_body, lbs, env_burn = List.fold_right (fun lb (env, lbs, env_burn) ->
               let (lbname, _, (t, (_, polytype)), add_unit, _) = lb in
               let env, nm, _ = UEnv.extend_lb env lbname t polytype add_unit in
-              let env_burn = UEnv.burn_name env_burn nm in
-              env, (nm,lb)::lbs, env_burn) lbs (g, [], g) in
+              let env_burn =
+                if Options.codegen () <> Some Options.Kremlin
+                then UEnv.burn_name env_burn nm
+                else env_burn
+              in
+              env, (nm,lb)::lbs, env_burn) lbs (g, [], g)
+          in
 
           let env_def = if is_rec then env_body else env_burn in
 
