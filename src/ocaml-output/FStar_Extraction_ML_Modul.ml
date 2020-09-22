@@ -1574,21 +1574,12 @@ let (maybe_register_plugin :
                   FStar_List.collect mk_registration
                     (FStar_Pervasives_Native.snd lbs)
               | uu___3 -> []))
-let (trbe : Prims.string -> FStar_Options.codegen_t) =
-  fun uu___ ->
-    match uu___ with
-    | "OCaml" -> FStar_Options.OCaml
-    | "FSharp" -> FStar_Options.FSharp
-    | "Kremlin" -> FStar_Options.Kremlin
-    | "Plugin" -> FStar_Options.Plugin
-    | uu___1 -> failwith "Impossible"
 let (get_noextract_to :
   FStar_Syntax_Syntax.sigelt ->
     FStar_Options.codegen_t FStar_Pervasives_Native.option -> Prims.bool)
   =
   fun se ->
     fun backend ->
-      let be = FStar_Util.must backend in
       FStar_Util.for_some
         (fun uu___ ->
            let uu___1 = FStar_Syntax_Util.head_and_args uu___ in
@@ -1611,7 +1602,9 @@ let (get_noextract_to :
                       uu___5 false FStar_Syntax_Embeddings.id_norm_cb in
                     (match uu___4 with
                      | FStar_Pervasives_Native.Some s ->
-                         let uu___5 = trbe s in uu___5 = be
+                         (FStar_Option.isSome backend) &&
+                           (let uu___5 = FStar_Options.parse_codegen s in
+                            uu___5 = backend)
                      | FStar_Pervasives_Native.None -> false)
                 | uu___3 -> false)) se.FStar_Syntax_Syntax.sigattrs
 let rec (extract_sig :
