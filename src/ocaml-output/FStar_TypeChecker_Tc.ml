@@ -815,6 +815,72 @@ let proc_check_with :
                 FStar_Options.set uu___3);
                kont ())
       | uu___1 -> failwith "ill-formed `check_with`"
+let (handle_postprocess_with_attr :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.attribute Prims.list ->
+      (FStar_Syntax_Syntax.attribute Prims.list * FStar_Syntax_Syntax.term
+        FStar_Pervasives_Native.option))
+  =
+  fun env ->
+    fun ats ->
+      let tc_and_elab_tactic env1 tau =
+        let uu___ =
+          FStar_TypeChecker_TcTerm.tc_tactic FStar_Syntax_Syntax.t_unit
+            FStar_Syntax_Syntax.t_unit env1 tau in
+        match uu___ with
+        | (tau1, uu___1, g_tau) ->
+            (FStar_TypeChecker_Rel.force_trivial_guard env1 g_tau; tau1) in
+      let ats1 =
+        let uu___ =
+          FStar_Syntax_Util.extract_attr'
+            FStar_Parser_Const.postprocess_extr_with ats in
+        match uu___ with
+        | FStar_Pervasives_Native.None -> ats
+        | FStar_Pervasives_Native.Some
+            (ats2, (tau, FStar_Pervasives_Native.None)::[]) ->
+            let tau1 = tc_and_elab_tactic env tau in
+            let tau2 = FStar_Syntax_Subst.deep_compress tau1 in
+            let uu___1 =
+              let uu___2 =
+                FStar_Syntax_Syntax.tabbrev
+                  FStar_Parser_Const.postprocess_extr_with in
+              FStar_Syntax_Util.mk_app uu___2
+                [(tau2, FStar_Pervasives_Native.None)] in
+            uu___1 :: ats2
+        | FStar_Pervasives_Native.Some
+            (ats2, (tau, FStar_Pervasives_Native.None)::[]) ->
+            ((let uu___2 = FStar_TypeChecker_Env.get_range env in
+              let uu___3 =
+                let uu___4 =
+                  let uu___5 =
+                    FStar_Ident.string_of_lid
+                      FStar_Parser_Const.postprocess_extr_with in
+                  FStar_Util.format1 "Ill-formed application of `%s`" uu___5 in
+                (FStar_Errors.Warning_UnrecognizedAttribute, uu___4) in
+              FStar_Errors.log_issue uu___2 uu___3);
+             ats2) in
+      let uu___ =
+        FStar_Syntax_Util.extract_attr' FStar_Parser_Const.postprocess_with
+          ats1 in
+      match uu___ with
+      | FStar_Pervasives_Native.None -> (ats1, FStar_Pervasives_Native.None)
+      | FStar_Pervasives_Native.Some
+          (ats2, (tau, FStar_Pervasives_Native.None)::[]) ->
+          let uu___1 =
+            let uu___2 = tc_and_elab_tactic env tau in
+            FStar_Pervasives_Native.Some uu___2 in
+          (ats2, uu___1)
+      | FStar_Pervasives_Native.Some (ats2, args) ->
+          ((let uu___2 = FStar_TypeChecker_Env.get_range env in
+            let uu___3 =
+              let uu___4 =
+                let uu___5 =
+                  FStar_Ident.string_of_lid
+                    FStar_Parser_Const.postprocess_with in
+                FStar_Util.format1 "Ill-formed application of `%s`" uu___5 in
+              (FStar_Errors.Warning_UnrecognizedAttribute, uu___4) in
+            FStar_Errors.log_issue uu___2 uu___3);
+           (ats2, FStar_Pervasives_Native.None))
 let (tc_decls_knot :
   (FStar_TypeChecker_Env.env ->
      FStar_Syntax_Syntax.sigelt Prims.list ->
@@ -2780,23 +2846,8 @@ let (tc_decl' :
                                    e3))
                            else e in
                          let uu___4 =
-                           let uu___5 =
-                             FStar_Syntax_Util.extract_attr'
-                               FStar_Parser_Const.postprocess_with
-                               se2.FStar_Syntax_Syntax.sigattrs in
-                           match uu___5 with
-                           | FStar_Pervasives_Native.None ->
-                               ((se2.FStar_Syntax_Syntax.sigattrs),
-                                 FStar_Pervasives_Native.None)
-                           | FStar_Pervasives_Native.Some
-                               (ats, (tau, FStar_Pervasives_Native.None)::[])
-                               -> (ats, (FStar_Pervasives_Native.Some tau))
-                           | FStar_Pervasives_Native.Some (ats, args) ->
-                               (FStar_Errors.log_issue r
-                                  (FStar_Errors.Warning_UnrecognizedAttribute,
-                                    "Ill-formed application of `postprocess_with`");
-                                ((se2.FStar_Syntax_Syntax.sigattrs),
-                                  FStar_Pervasives_Native.None)) in
+                           handle_postprocess_with_attr env1
+                             se2.FStar_Syntax_Syntax.sigattrs in
                          (match uu___4 with
                           | (attrs1, post_tau) ->
                               let se3 =
@@ -4044,7 +4095,7 @@ let (tc_decls :
              FStar_Util.fold_flatten process_one_decl_timed ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_List.rev_append ses1 []), env1)
-let (uu___969 : unit) =
+let (uu___998 : unit) =
   FStar_ST.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :
