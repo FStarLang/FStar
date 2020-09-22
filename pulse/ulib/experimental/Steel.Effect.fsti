@@ -587,3 +587,28 @@ val intro_exists (#a:Type) (x:a) (p:a -> slprop)
   : SteelT unit (p x) (fun _ -> h_exists p)
 
 val noop (#p:slprop) (u:unit) : SteelT unit p (fun _ -> p)
+
+module EffectX = Steel.EffectX
+
+let triv_pre (fp:pre_t) : EffectX.fp_mprop fp = fun _ -> True
+let triv_post (fp:pre_t) (#a:Type) (fp':post_t a) : EffectX.fp_binary_mprop fp fp'
+  = fun _ _ _ -> True
+
+let triv_pre' (fp:pre_t) : req_t fp = fun _ -> True
+let triv_post' (fp:pre_t) (#a:Type) (fp':post_t a) : ens_t fp a fp'
+  = fun _ _ _ -> True
+
+val subcomp_x (a:Type)
+  (pre:pre_t) (post:post_t a)
+  (f:EffectX.repr a pre post (triv_pre pre) (triv_post pre post))
+: Pure (repr a pre post (triv_pre' pre) (triv_post' pre post))
+  (requires True)
+  (ensures fun _ -> True)
+
+polymonadic_subcomp EffectX.SteelX <: Steel = subcomp_x
+
+val as_steelx (#a:Type)
+  (#pre:pre_t) (#post:post_t a)
+  (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> Steel a pre post req ens)
+: EffectX.SteelX a pre post req ens
