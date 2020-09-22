@@ -74,6 +74,8 @@ let allow_informative_binders = ()
 
 let commute_nested_matches = ()
 
+let noextract_to _ = ()
+
 let normalize_term #_ x = x
 
 let normalize a = a

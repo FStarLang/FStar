@@ -784,23 +784,14 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
            | _ -> []
            end
 
-let trbe =
-  function
-  | "OCaml"   -> Options.OCaml
-  | "FSharp"  -> Options.FSharp
-  | "Kremlin" -> Options.Kremlin
-  | "Plugin"  -> Options.Plugin
-  | _         -> failwith "Impossible"
-
 let get_noextract_to (se:sigelt) (backend:option<Options.codegen_t>) : bool =
-  let be = BU.must backend in
   BU.for_some (function attr ->
     let hd, args = U.head_and_args attr in
     match (SS.compress hd).n, args with
     | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv PC.noextract_to_attr ->
         begin match EMB.unembed EMB.e_string a false EMB.id_norm_cb with
         | Some s ->
-          trbe s = be
+          Option.isSome backend && Options.parse_codegen s = backend
         | None ->
           false
         end
@@ -813,7 +804,11 @@ let get_noextract_to (se:sigelt) (backend:option<Options.codegen_t>) : bool =
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
      debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string se));
 
-     if List.contains S.NoExtract se.sigquals && Options.codegen () <> Some Options.Kremlin
+     // Extract this definition, unless
+     // 1- it has the `noextract` qualifier, and we are not extracting for Kremlin
+     //    (kremlin needs the stub anyway, so we ignore the qualifier in that special case)
+     // 2- it has a noextract_to attribute matching the current backend.
+     if (List.contains S.NoExtract se.sigquals && Options.codegen () <> Some Options.Kremlin)
         || (get_noextract_to se (Options.codegen ()))
      then g, []
      else
