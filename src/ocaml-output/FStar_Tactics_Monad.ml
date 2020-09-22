@@ -30,10 +30,10 @@ let run_safe :
       else
         (try (fun uu___2 -> match () with | () -> run t ps) ()
          with
-         | FStar_Errors.Err (uu___3, msg) ->
+         | FStar_Errors.Err (uu___3, msg, uu___4) ->
              FStar_Tactics_Result.Failed
                ((FStar_Tactics_Common.TacticFailure msg), ps)
-         | FStar_Errors.Error (uu___3, msg, uu___4) ->
+         | FStar_Errors.Error (uu___3, msg, uu___4, uu___5) ->
              FStar_Tactics_Result.Failed
                ((FStar_Tactics_Common.TacticFailure msg), ps)
          | e -> FStar_Tactics_Result.Failed (e, ps))

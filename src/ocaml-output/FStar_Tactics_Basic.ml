@@ -206,13 +206,13 @@ let trytac_exn :
                   let uu___1 = trytac t in FStar_Tactics_Monad.run uu___1 ps)
              ()
          with
-         | FStar_Errors.Err (uu___1, msg) ->
-             (FStar_Tactics_Monad.log ps
-                (fun uu___3 -> FStar_Util.print1 "trytac_exn error: (%s)" msg);
-              FStar_Tactics_Result.Success (FStar_Pervasives_Native.None, ps))
-         | FStar_Errors.Error (uu___1, msg, uu___2) ->
+         | FStar_Errors.Err (uu___1, msg, uu___2) ->
              (FStar_Tactics_Monad.log ps
                 (fun uu___4 -> FStar_Util.print1 "trytac_exn error: (%s)" msg);
+              FStar_Tactics_Result.Success (FStar_Pervasives_Native.None, ps))
+         | FStar_Errors.Error (uu___1, msg, uu___2, uu___3) ->
+             (FStar_Tactics_Monad.log ps
+                (fun uu___5 -> FStar_Util.print1 "trytac_exn error: (%s)" msg);
               FStar_Tactics_Result.Success (FStar_Pervasives_Native.None, ps)))
 let (destruct_eq' :
   FStar_Reflection_Data.typ ->
@@ -316,17 +316,17 @@ let (__do_unify :
                         FStar_Tactics_Monad.bind uu___3
                           (fun uu___4 -> FStar_Tactics_Monad.ret true)))) ()
          with
-         | FStar_Errors.Err (uu___2, msg) ->
+         | FStar_Errors.Err (uu___2, msg, uu___3) ->
              FStar_Tactics_Monad.mlog
-               (fun uu___3 ->
+               (fun uu___4 ->
                   FStar_Util.print1 ">> do_unify error, (%s)\n" msg)
-               (fun uu___3 -> FStar_Tactics_Monad.ret false)
-         | FStar_Errors.Error (uu___2, msg, r) ->
+               (fun uu___4 -> FStar_Tactics_Monad.ret false)
+         | FStar_Errors.Error (uu___2, msg, r, uu___3) ->
              FStar_Tactics_Monad.mlog
-               (fun uu___3 ->
-                  let uu___4 = FStar_Range.string_of_range r in
+               (fun uu___4 ->
+                  let uu___5 = FStar_Range.string_of_range r in
                   FStar_Util.print2 ">> do_unify error, (%s) at (%s)\n" msg
-                    uu___4) (fun uu___3 -> FStar_Tactics_Monad.ret false))
+                    uu___5) (fun uu___4 -> FStar_Tactics_Monad.ret false))
 let (do_unify :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -708,22 +708,22 @@ let (__tc :
                            FStar_TypeChecker_TcTerm.type_of_tot_term e1 t in
                          FStar_Tactics_Monad.ret uu___2) ()
                 with
-                | FStar_Errors.Err (uu___2, msg) ->
-                    let uu___3 = tts e1 t in
-                    let uu___4 =
-                      let uu___5 = FStar_TypeChecker_Env.all_binders e1 in
-                      FStar_All.pipe_right uu___5
-                        (FStar_Syntax_Print.binders_to_string ", ") in
-                    fail3 "Cannot type %s in context (%s). Error = (%s)"
-                      uu___3 uu___4 msg
-                | FStar_Errors.Error (uu___2, msg, uu___3) ->
+                | FStar_Errors.Err (uu___2, msg, uu___3) ->
                     let uu___4 = tts e1 t in
                     let uu___5 =
                       let uu___6 = FStar_TypeChecker_Env.all_binders e1 in
                       FStar_All.pipe_right uu___6
                         (FStar_Syntax_Print.binders_to_string ", ") in
                     fail3 "Cannot type %s in context (%s). Error = (%s)"
-                      uu___4 uu___5 msg))
+                      uu___4 uu___5 msg
+                | FStar_Errors.Error (uu___2, msg, uu___3, uu___4) ->
+                    let uu___5 = tts e1 t in
+                    let uu___6 =
+                      let uu___7 = FStar_TypeChecker_Env.all_binders e1 in
+                      FStar_All.pipe_right uu___7
+                        (FStar_Syntax_Print.binders_to_string ", ") in
+                    fail3 "Cannot type %s in context (%s). Error = (%s)"
+                      uu___5 uu___6 msg))
 let (__tc_ghost :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -848,22 +848,22 @@ let (__tc_ghost :
                                 (t1, (lc.FStar_TypeChecker_Common.res_typ),
                                   g))) ()
                 with
-                | FStar_Errors.Err (uu___2, msg) ->
-                    let uu___3 = tts e1 t in
-                    let uu___4 =
-                      let uu___5 = FStar_TypeChecker_Env.all_binders e1 in
-                      FStar_All.pipe_right uu___5
-                        (FStar_Syntax_Print.binders_to_string ", ") in
-                    fail3 "Cannot type %s in context (%s). Error = (%s)"
-                      uu___3 uu___4 msg
-                | FStar_Errors.Error (uu___2, msg, uu___3) ->
+                | FStar_Errors.Err (uu___2, msg, uu___3) ->
                     let uu___4 = tts e1 t in
                     let uu___5 =
                       let uu___6 = FStar_TypeChecker_Env.all_binders e1 in
                       FStar_All.pipe_right uu___6
                         (FStar_Syntax_Print.binders_to_string ", ") in
                     fail3 "Cannot type %s in context (%s). Error = (%s)"
-                      uu___4 uu___5 msg))
+                      uu___4 uu___5 msg
+                | FStar_Errors.Error (uu___2, msg, uu___3, uu___4) ->
+                    let uu___5 = tts e1 t in
+                    let uu___6 =
+                      let uu___7 = FStar_TypeChecker_Env.all_binders e1 in
+                      FStar_All.pipe_right uu___7
+                        (FStar_Syntax_Print.binders_to_string ", ") in
+                    fail3 "Cannot type %s in context (%s). Error = (%s)"
+                      uu___5 uu___6 msg))
 let (__tc_lax :
   env ->
     FStar_Syntax_Syntax.term ->
@@ -1080,22 +1080,22 @@ let (__tc_lax :
                          let uu___2 = FStar_TypeChecker_TcTerm.tc_term e2 t in
                          FStar_Tactics_Monad.ret uu___2) ()
                 with
-                | FStar_Errors.Err (uu___2, msg) ->
-                    let uu___3 = tts e2 t in
-                    let uu___4 =
-                      let uu___5 = FStar_TypeChecker_Env.all_binders e2 in
-                      FStar_All.pipe_right uu___5
-                        (FStar_Syntax_Print.binders_to_string ", ") in
-                    fail3 "Cannot type %s in context (%s). Error = (%s)"
-                      uu___3 uu___4 msg
-                | FStar_Errors.Error (uu___2, msg, uu___3) ->
+                | FStar_Errors.Err (uu___2, msg, uu___3) ->
                     let uu___4 = tts e2 t in
                     let uu___5 =
                       let uu___6 = FStar_TypeChecker_Env.all_binders e2 in
                       FStar_All.pipe_right uu___6
                         (FStar_Syntax_Print.binders_to_string ", ") in
                     fail3 "Cannot type %s in context (%s). Error = (%s)"
-                      uu___4 uu___5 msg))
+                      uu___4 uu___5 msg
+                | FStar_Errors.Error (uu___2, msg, uu___3, uu___4) ->
+                    let uu___5 = tts e2 t in
+                    let uu___6 =
+                      let uu___7 = FStar_TypeChecker_Env.all_binders e2 in
+                      FStar_All.pipe_right uu___7
+                        (FStar_Syntax_Print.binders_to_string ", ") in
+                    fail3 "Cannot type %s in context (%s). Error = (%s)"
+                      uu___5 uu___6 msg))
 let (istrivial : env -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun e ->
     fun t ->
