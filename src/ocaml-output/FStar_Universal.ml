@@ -858,7 +858,6 @@ let (tc_one_file :
                let uu___3 = FStar_Options.restore_cmd_line_options true in
                FStar_All.pipe_right uu___3 (fun uu___4 -> ())
              else () in
-           let post_smt_encoding uu___1 = FStar_SMTEncoding_Z3.refresh () in
            let maybe_extract_mldefs tcmod env1 =
              let uu___1 =
                (let uu___2 = FStar_Options.codegen () in

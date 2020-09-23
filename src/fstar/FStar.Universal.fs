@@ -270,9 +270,6 @@ let tc_one_file
     if not (Options.interactive ()) then
       Options.restore_cmd_line_options true |> ignore
   in
-  let post_smt_encoding (_:unit) :unit =
-    FStar.SMTEncoding.Z3.refresh ()
-  in
   let maybe_extract_mldefs tcmod env =
       if Options.codegen() = None
       || not (Options.should_extract (string_of_lid tcmod.name))
