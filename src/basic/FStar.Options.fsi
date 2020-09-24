@@ -58,6 +58,7 @@ val snapshot                    : unit -> (int * unit)
 val rollback                    : option<int> -> unit
 val peek                        : unit -> optionstate
 val set                         : optionstate -> unit
+val set_verification_options    : optionstate -> unit
 
 val __unit_tests                : unit    -> bool
 val __set_unit_tests            : unit    -> unit

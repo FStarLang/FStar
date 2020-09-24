@@ -513,8 +513,13 @@ let lookup_qname env (lid:lident) : qninfo =
       | None ->
         BU.catch_opt
             (BU.find_map env.gamma (function
-              | Binding_lid(l,t) ->
-                if lid_equals lid l then Some (Inl (inst_tscheme t), Ident.range_of_lid l) else None
+              | Binding_lid(l, (us_names, t)) when lid_equals lid l->
+                (* A recursive definition.
+                 * We must return the exact set of universes on which
+                 * it is being defined, and not instantiate it.
+                 * TODO: could we cache this? *)
+                let us = List.map U_name us_names in
+                Some (Inl (us, t), Ident.range_of_lid l)
               | _ -> None))
             (fun () -> BU.find_map env.gamma_sig (function
               | (_, { sigel = Sig_bundle(ses, _) }) ->

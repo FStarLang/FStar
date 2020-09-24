@@ -3726,7 +3726,7 @@ let sub_comp env c1 c2 =
     BU.print4 "sub_comp of %s --and-- %s --with-- %s --- solved in %s ms\n" (Print.comp_to_string c1) (Print.comp_to_string c2) (if rel = EQ then "EQ" else "SUB") (string_of_int ms);
   r
 
-let solve_universe_inequalities' tx env (variables, ineqs) =
+let solve_universe_inequalities' tx env (variables, ineqs) : unit =
    //variables: ?u1, ..., ?un are the universes of the inductive types we're trying to compute
    //ineqs: u1 < v1, ..., un < vn are inequality constraints gathered from checking the inductive definition
    //The basic idea is to collect all lowerbounds of each variable ?ui,
@@ -3799,7 +3799,7 @@ let solve_universe_inequalities' tx env (variables, ineqs) =
                BU.print1 "Original solved inequality constraints are: %s\n" (ineqs_to_string (variables, ineqs)));
          raise_error (Errors.Fatal_FailToSolveUniverseInEquality, ("Failed to solve universe inequalities for inductives")) (Env.get_range env))
 
-let solve_universe_inequalities env ineqs =
+let solve_universe_inequalities env ineqs : unit =
     let tx = UF.new_transaction () in
     solve_universe_inequalities' tx env ineqs;
     UF.commit tx

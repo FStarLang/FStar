@@ -60,7 +60,7 @@ let get_inductive_constructors (t: T.term) : T.Tac (list T.name) =
     else begin
       let v : T.sigelt_view = T.inspect_sigelt (Some?.v s) in
       match v with
-      | T.Sg_Inductive _ _ _ _ cts -> cts
+      | T.Sg_Inductive _ _ _ _ cts -> T.map (fun ct -> fst ct) cts
       | _ -> T.fail "Not an inductive type"
     end
   | _ -> T.fail "Not a free variable"

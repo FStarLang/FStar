@@ -82,7 +82,7 @@ let create_and_set' : unit -> St unit =
 
 /// Static loop unrolling
 
-open U32
+open FStar.UInt32
 
 noextract
 let rec static_loop (i:U32.t) (f:U32.t -> St unit) : St unit =

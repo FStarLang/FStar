@@ -235,6 +235,7 @@ let defaults =
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
       ("report_assumes"               , Unset);
+      ("retry"                        , Bool false);
       ("reuse_hint_for"               , Unset);
       ("silent"                       , Bool false);
       ("smt"                          , Unset);
@@ -299,6 +300,43 @@ let get_option s =
   match Util.smap_try_find (internal_peek()) s with
   | None -> failwith ("Impossible: option " ^s^ " not found")
   | Some s -> s
+
+let set_verification_options o =
+  (* This are all the options restored when processing a check_with
+     attribute. All others are unchanged. We do this for two reasons:
+     1) It's unsafe to just set everything (e.g. verify_module would
+        cause lax verification, so we need to filter some stuff out).
+     2) So we don't propagate meaningless debugging options, which
+        is probably not intended.
+   *)
+  let verifopts = [
+    "initial_fuel";
+    "max_fuel";
+    "initial_ifuel";
+    "max_ifuel";
+    "detail_errors";
+    "detail_hint_replay";
+    "no_smt";
+    "quake";
+    "retry";
+    "smtencoding.elim_box";
+    "smtencoding.nl_arith_repr";
+    "smtencoding.l_arith_repr";
+    "smtencoding.valid_intro";
+    "smtencoding.valid_elim";
+    "tcnorm";
+    "no_plugins";
+    "no_tactics";
+    "vcgen.optimize_bind_as_seq";
+    "z3cliopt";
+    "z3refresh";
+    "z3rlimit";
+    "z3rlimit_factor";
+    "z3seed";
+    "use_two_phase_tc";
+    "trivial_pre_for_unannotated_effectful_fns";
+  ] in
+  List.iter (fun k -> set_option k (Util.smap_try_find o k |> Util.must)) verifopts
 
 let lookup_opt s c =
   c (get_option s)
