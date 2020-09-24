@@ -272,6 +272,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("record_hints", (Bool false));
   ("record_options", (Bool false));
   ("report_assumes", Unset);
+  ("retry", (Bool false));
   ("reuse_hint_for", Unset);
   ("silent", (Bool false));
   ("smt", Unset);
@@ -338,6 +339,40 @@ let (get_option : Prims.string -> option_val) =
           FStar_String.op_Hat "Impossible: option " uu___2 in
         failwith uu___1
     | FStar_Pervasives_Native.Some s1 -> s1
+let (set_verification_options : optionstate -> unit) =
+  fun o ->
+    let verifopts =
+      ["initial_fuel";
+      "max_fuel";
+      "initial_ifuel";
+      "max_ifuel";
+      "detail_errors";
+      "detail_hint_replay";
+      "no_smt";
+      "quake";
+      "retry";
+      "smtencoding.elim_box";
+      "smtencoding.nl_arith_repr";
+      "smtencoding.l_arith_repr";
+      "smtencoding.valid_intro";
+      "smtencoding.valid_elim";
+      "tcnorm";
+      "no_plugins";
+      "no_tactics";
+      "vcgen.optimize_bind_as_seq";
+      "z3cliopt";
+      "z3refresh";
+      "z3rlimit";
+      "z3rlimit_factor";
+      "z3seed";
+      "use_two_phase_tc";
+      "trivial_pre_for_unannotated_effectful_fns"] in
+    FStar_List.iter
+      (fun k ->
+         let uu___ =
+           let uu___1 = FStar_Util.smap_try_find o k in
+           FStar_All.pipe_right uu___1 FStar_Util.must in
+         set_option k uu___) verifopts
 let lookup_opt : 'uuuuu . Prims.string -> (option_val -> 'uuuuu) -> 'uuuuu =
   fun s -> fun c -> let uu___ = get_option s in c uu___
 let (get_abort_on : unit -> Prims.int) =
@@ -892,7 +927,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___402 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___405 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f = FStar_ST.op_Colon_Equals cb (FStar_Pervasives_Native.Some f) in
@@ -903,11 +938,11 @@ let (uu___402 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___402 with
+  match uu___405 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___402 with
+  match uu___405 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1386,7 +1421,7 @@ let (settable_specs :
     (FStar_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___582 :
+let (uu___585 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1402,11 +1437,11 @@ let (uu___582 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___582 with
+  match uu___585 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___582 with
+  match uu___585 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =

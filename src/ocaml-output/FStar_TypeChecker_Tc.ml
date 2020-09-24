@@ -812,7 +812,7 @@ let proc_check_with :
                (let uu___3 =
                   let uu___4 = unembed_optionstate a1 in
                   FStar_All.pipe_right uu___4 FStar_Util.must in
-                FStar_Options.set uu___3);
+                FStar_Options.set_verification_options uu___3);
                kont ())
       | uu___1 -> failwith "huh?"
 let (handle_postprocess_with_attr :
