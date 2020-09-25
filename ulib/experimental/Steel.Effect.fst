@@ -1,0 +1,267 @@
+(*
+   Copyright 2020 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+module Steel.Effect
+
+friend Steel.EffectX
+
+let repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
+  Sem.action_t #state #a pre post (req_to_act_req req) (ens_to_act_ens ens)
+
+let return (a:Type) (x:a) (#[@@ framing_implicit] p:a -> slprop)
+: repr a (p x) p (return_req (p x)) (return_ens a x p)
+  = fun _ -> x
+
+let bind a b f g = fun _ ->
+  let x = f () in
+  (g x) ()
+
+let subcomp a f = f
+
+(*
+ * Keeping f_frame aside for now
+ *)
+let frame_aux (#a:Type)
+  (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:repr a pre post req ens) (frame:slprop)
+: repr a (pre `star` frame) (fun x -> post x `star` frame) req ens
+= fun _ ->
+  Sem.run #state #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame (fun _ -> True))
+
+let bind_steel_steel a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g f g =
+  fun _ ->
+  let x = frame_aux f frame_f () in
+  frame_aux (g x) frame_g ()
+
+let bind_steel_steelf (a:Type) (b:Type)
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f
+  f g =
+  fun _ ->
+  let x = frame_aux f frame_f () in
+  (g x) ()
+
+let bind_steelf_steel (a:Type) (b:Type)
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_g
+  f g =
+  fun _ ->
+  let x = f () in
+  frame_aux (g x) frame_g ()
+
+let bind_pure_steel_ a b wp f g = fun _ ->
+  let x = f () in
+  (g x) ()
+
+
+
+// unfold
+let bind_div_steel_req (#a:Type) (wp:pure_wp a)
+  (#pre_g:pre_t) (req_g:a -> req_t pre_g)
+: req_t pre_g
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun h -> wp (fun _ -> True) /\ (forall x. (req_g x) h)
+
+// unfold
+let bind_div_steel_ens (#a:Type) (#b:Type)
+  (wp:pure_wp a)
+  (#pre_g:pre_t) (#post_g:post_t b) (ens_g:a -> ens_t pre_g b post_g)
+: ens_t pre_g b post_g
+= fun h0 r h1 -> wp (fun _ -> True) /\ (exists x. ens_g x h0 r h1)
+
+(*
+ * A polymonadic bind between DIV and NMSTATE
+ *
+ * This is ultimately used when defining par and frame
+ * par and frame try to compose reified Steel with Steel, since Steel is non total, its reification
+ *   incurs a Div effect, and so, we need a way to compose Div and Steel
+ *
+ * This polymonadic bind gives us bare minimum to realize that
+ * It is quite imprecise, in that it doesn't say anything about the post of the Div computation
+ * That's because, the as_ensures combinator is not encoded for Div effect in the SMT,
+ *   the way it is done for PURE and GHOST
+ *
+ * However, since the reification usecase gives us Dv anyway, this is fine for now
+ *)
+#push-options "--z3rlimit 20 --fuel 2 --ifuel 1"
+let bind_div_steel (a:Type) (b:Type)
+  (wp:pure_wp a)
+  (#[@@ framing_implicit] pre_g:pre_t) (#[@@ framing_implicit] post_g:post_t b)
+  (#[@@ framing_implicit] req_g:a -> req_t pre_g)
+  (#[@@ framing_implicit] ens_g:a -> ens_t pre_g b post_g)
+  (f:eqtype_as_type unit -> DIV a wp) (g:(x:a -> repr b pre_g post_g (req_g x) (ens_g x)))
+: repr b pre_g post_g
+    (bind_div_steel_req wp req_g)
+    (bind_div_steel_ens wp ens_g)
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun m0 ->
+  let x = f () in
+  g x m0
+#pop-options
+
+polymonadic_bind (DIV, Steel) |> Steel = bind_div_steel
+
+let subcomp_x (a:Type)
+  (pre:pre_t) (post:post_t a)
+  (f:EffectX.repr a pre post (triv_pre pre) (triv_post pre post))
+: Pure (repr a pre post (triv_pre' pre) (triv_post' pre post))
+  (requires True)
+  (ensures fun _ -> True)
+= f
+
+let as_steelx0 (#a:Type)
+  (#pre:pre_t) (#post:post_t a)
+  (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:repr a pre post req ens)
+: EffectX.SteelX a pre post req ens
+= EffectX.SteelX?.reflect f
+
+let as_steelx (#a:Type)
+  (#pre:pre_t) (#post:post_t a)
+  (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> Steel a pre post req ens)
+: EffectX.SteelX a pre post req ens
+  = as_steelx0 (reify (f()))
+
+let from_steelx0 (#a:Type)
+  (#pre:pre_t) (#post:post_t a)
+  (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:EffectX.repr a pre post req ens)
+: Steel a pre post req ens
+= Steel?.reflect f
+
+let from_steelx (#a:Type)
+  (#pre:pre_t) (#post:post_t a)
+  (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> EffectX.SteelX a pre post req ens)
+: Steel a pre post req ens
+  = from_steelx0 (reify (f()))
+
+
+let par0 (#aL:Type u#a) (#preL:slprop u#1) (#postL:aL -> slprop u#1)
+         (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
+         (f:repr aL preL postL lpreL lpostL)
+         (#aR:Type u#a) (#preR:slprop u#1) (#postR:aR -> slprop u#1)
+         (#lpreR:req_t preR) (#lpostR:ens_t preR aR postR)
+         (g:repr aR preR postR lpreR lpostR)
+  : Steel (aL & aR)
+    (preL `Mem.star` preR)
+    (fun y -> postL (fst y) `Mem.star` postR (snd y))
+    (fun h -> lpreL h /\ lpreR h)
+    (fun h0 y h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 (fst y) h1 /\ lpostR h0 (snd y) h1)
+  = Steel?.reflect (fun _ -> Sem.run #state #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)))
+
+assume
+val par' (#aL:Type u#a)
+        (#preL:slprop u#1)
+        (#postL:aL -> slprop u#1)
+        (#lpreL:req_t preL)
+        (#lpostL:ens_t preL aL postL)
+        ($f:unit -> Steel aL preL postL lpreL lpostL)
+        (#aR:Type u#a)
+        (#preR:slprop u#1)
+        (#postR:aR -> slprop u#1)
+        (#lpreR:req_t preR)
+        (#lpostR:ens_t preR aR postR)
+        ($g:unit -> Steel aR preR postR lpreR lpostR)
+  : Steel (aL & aR)
+    (preL `Mem.star` preR)
+    (fun y -> postL (fst y) `Mem.star` postR (snd y))
+    (fun h -> lpreL h /\ lpreR h)
+    (fun h0 y h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 (fst y) h1 /\ lpostR h0 (snd y) h1)
+  // = par0 (reify (f ())) (reify (g()))
+
+let par = par'
+
+let ( || ) f g = par f g
+
+let read #a #pcm r v0 = Steel.EffectX.read r v0
+
+let write #a #pcm r v0 v1 = Steel.EffectX.write r v0 v1
+
+let alloc #a #pcm x = Steel.EffectX.alloc x
+
+let free #a #p r x = Steel.EffectX.free r x
+
+let split #a #p r v0 v1 = Steel.EffectX.split r v0 v1
+
+let gather #a #p r v0 v1 = Steel.EffectX.gather r v0 v1
+
+let witness #a #pcm r fact v u = from_steelx (fun _ -> Steel.EffectX.witness #a #pcm r fact v u)
+
+let recall #a #pcm #fact r v = Steel.EffectX.recall r v
+
+let action_as_repr (#a:Type) (#p:slprop) (#q:a -> slprop) (f:action_except a Set.empty p q)
+  : repr a p q (fun _ -> True) (fun _ _ _ -> True)
+  = Ins.state_correspondence Set.empty; f
+
+let add_action f = Steel?.reflect (action_as_repr f)
+
+let change_slprop p q proof = add_action (Steel.Memory.change_slprop p q proof)
+
+let cond_aux (#a:Type) (b:bool) (p: (b':bool{b == b'}) -> slprop)
+             (q: bool -> a -> slprop)
+             ($then_:squash (b==true) -> Steel a (p b) (q b) (fun _ -> b==true) (fun _ _ _ -> True))
+             ($else_:squash (b==false) -> Steel a (p b) (q b) (fun _ -> b==false) (fun _ _ _ -> True))
+  : SteelT a (p b) (q b)
+  = if b then then_ () else else_ ()
+
+let aux1 (#a:Type) (b:bool{b == true})
+         (p: (b':bool{b == b'}) -> slprop)
+         (q: bool -> a -> slprop)
+         (then_: (squash (b==true) -> SteelT a (p true) (q true)))
+  : unit -> SteelT a (p b) (q b)
+  = fun _ ->
+      change_slprop (p b) (p true) (fun _ -> ());
+      let x = then_ () in change_slprop (q true x) (q b x) (fun _ -> ());
+      x
+
+let aux2 (#a:Type) (b:bool)
+         (p: (b':bool{b == b'}) -> slprop)
+         (q: bool -> a -> slprop)
+         (then_: (squash (b==true) -> SteelT a (p true) (q true)))
+  : squash (b==true) -> Steel a (p b) (q b) (fun _ -> b == true) (fun _ _ _ -> True)
+  = fun _ -> (aux1 b p q then_) ()
+
+let aux3 (#a:Type) (b:bool{b == false})
+         (p: (b':bool{b == b'}) -> slprop)
+         (q: bool -> a -> slprop)
+         (else_: (squash (b==false) -> SteelT a (p false) (q false)))
+  : squash (b==false) -> SteelT a (p b) (q b)
+  = fun _ ->
+      change_slprop (p b) (p false) (fun _ -> ());
+      let x = else_ () in change_slprop (q false x) (q b x) (fun _ -> ());
+      x
+
+let aux4 (#a:Type) (b:bool)
+         (p: (b':bool{b == b'}) -> slprop)
+         (q: bool -> a -> slprop)
+         (else_: (squash (b==false) -> SteelT a (p false) (q false)))
+  : squash (b==false) -> Steel a (p b) (q b) (fun _ -> b == false) (fun _ _ _ -> True)
+  = fun _ -> (aux3 b p q else_) ()
+
+let cond (#a:Type)
+         (b:bool)
+         (p: (b':bool{b == b'}) -> slprop)
+         (q: bool -> a -> slprop)
+         (then_: (squash (b == true) -> SteelT a (p true) (q true)))
+         (else_: (squash (b == false) -> SteelT a (p false) (q false)))
+  : SteelT a (p b) (q b)
+  = cond_aux b p q (aux2 b p q then_) (aux4 b p q else_)
+
+let drop p = change_slprop p emp (fun m -> emp_unit p; affine_star p emp m)
+
+let intro_exists #a x p = change_slprop (p x) (h_exists p) (fun m -> intro_h_exists x p m)
+
+let noop #p () = change_slprop p p (fun _ -> ())
