@@ -1522,6 +1522,9 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                    | Tm_fvar fv ->
                      (match try_lookup_fv g fv with
                       | None -> //erased head
+                        Errors.log_issue t.pos
+                          (Errors.Error_CallToErased,
+                           BU.format1 "Attempting to extract a call into erased function %s" (Print.fv_to_string fv));
                         ml_unit, E_PURE, MLTY_Erased
                       | _ ->
                         extract_app_with_instantiations ())
