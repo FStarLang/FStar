@@ -76,12 +76,7 @@ let mk_printer_fun (dom : term) : Tac term =
     | Sg_Let _ _ _ _ _ -> fail "cannot create printer for let"
     | Sg_Inductive _ _ bs t ctors ->
         let br1 ctor : Tac branch =
-            let se = match lookup_typ e ctor with
-                     | None -> fail "Constructor not found..?"
-                     | Some se -> se
-            in
-            begin match inspect_sigelt se with
-            | Sg_Constructor name t ->
+            let (name, t) = ctor in
             let pn = String.concat "." name in
             let t_args, _ = collect_arr t in
             let bv_pats = TU.map (fun ti -> let bv = fresh_bv_named "a" ti in (bv, (Pat_Var bv, false))) t_args in
@@ -90,9 +85,6 @@ let mk_printer_fun (dom : term) : Tac term =
             let bod = mk_concat (mk_stringlit " ") (head :: TU.map (mk_print_bv xt_ns fftm) bvs) in
             let bod = match t_args with | [] -> bod | _ -> paren bod in
             (Pat_Cons (pack_fv name) pats, bod)
-            | _ ->
-                fail "Not a constructor..?"
-            end
         in
         let branches = TU.map br1 ctors in
         let xi = fresh_binder_named "v_inner" dom in

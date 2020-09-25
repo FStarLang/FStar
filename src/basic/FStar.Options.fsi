@@ -58,6 +58,7 @@ val snapshot                    : unit -> (int * unit)
 val rollback                    : option<int> -> unit
 val peek                        : unit -> optionstate
 val set                         : optionstate -> unit
+val set_verification_options    : optionstate -> unit
 
 val __unit_tests                : unit    -> bool
 val __set_unit_tests            : unit    -> unit
@@ -149,7 +150,6 @@ val log_queries                 : unit    -> bool
 val log_types                   : unit    -> bool
 val max_fuel                    : unit    -> int
 val max_ifuel                   : unit    -> int
-val min_fuel                    : unit    -> int
 val ml_ish                      : unit    -> bool
 val set_ml_ish                  : unit    -> unit
 val no_default_includes         : unit    -> bool

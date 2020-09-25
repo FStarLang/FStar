@@ -55,6 +55,7 @@ type token =
   | PRAGMA_PUSH_OPTIONS
   | PRAGMA_POP_OPTIONS
   | PRAGMALIGHT
+  | POLYMONADIC_SUBCOMP
   | POLYMONADIC_BIND
   | PIPE_RIGHT
   | PERCENT_LBRACK
@@ -156,7 +157,6 @@ type token =
   | ASSERT
   | AND
   | AMP
-  | ABSTRACT
 type tokenId = 
     | TOKEN_WITH
     | TOKEN_WHEN
@@ -211,6 +211,7 @@ type tokenId =
     | TOKEN_PRAGMA_PUSH_OPTIONS
     | TOKEN_PRAGMA_POP_OPTIONS
     | TOKEN_PRAGMALIGHT
+    | TOKEN_POLYMONADIC_SUBCOMP
     | TOKEN_POLYMONADIC_BIND
     | TOKEN_PIPE_RIGHT
     | TOKEN_PERCENT_LBRACK
@@ -312,7 +313,6 @@ type tokenId =
     | TOKEN_ASSERT
     | TOKEN_AND
     | TOKEN_AMP
-    | TOKEN_ABSTRACT
     | TOKEN_end_of_input
     | TOKEN_error
 type nonTerminalId = 
@@ -334,7 +334,7 @@ type nonTerminalId =
     | NONTERM_boption_SQUIGGLY_RARROW_
     | NONTERM_boption___anonymous_0_
     | NONTERM_loption_separated_nonempty_list_COMMA_appTerm__
-    | NONTERM_loption_separated_nonempty_list_SEMICOLON_lidentOrOperator__
+    | NONTERM_loption_separated_nonempty_list_SEMICOLON_ident__
     | NONTERM_loption_separated_nonempty_list_SEMICOLON_tuplePattern__
     | NONTERM_list___anonymous_10_
     | NONTERM_list___anonymous_4_
@@ -364,7 +364,7 @@ type nonTerminalId =
     | NONTERM_separated_nonempty_list_DISJUNCTION_conjunctivePat_
     | NONTERM_separated_nonempty_list_SEMICOLON_appTerm_
     | NONTERM_separated_nonempty_list_SEMICOLON_effectDecl_
-    | NONTERM_separated_nonempty_list_SEMICOLON_lidentOrOperator_
+    | NONTERM_separated_nonempty_list_SEMICOLON_ident_
     | NONTERM_separated_nonempty_list_SEMICOLON_tuplePattern_
     | NONTERM_inputFragment
     | NONTERM_pragma
@@ -387,6 +387,7 @@ type nonTerminalId =
     | NONTERM_effectDecl
     | NONTERM_subEffect
     | NONTERM_polymonadic_bind
+    | NONTERM_polymonadic_subcomp
     | NONTERM_qualifier
     | NONTERM_maybeFocus
     | NONTERM_letqualifier

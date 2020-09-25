@@ -1637,6 +1637,7 @@ let tac_env (env:Env.env) : Env.env =
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
     let env = { env with failhard = true } in
+    let env = { env with enable_defer_to_tac = false } in
     env
 
 let proofstate_of_goals rng env goals imps =

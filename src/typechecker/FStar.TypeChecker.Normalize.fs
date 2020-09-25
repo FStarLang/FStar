@@ -185,7 +185,7 @@ let norm_universe cfg (env:env) u =
                           else failwith ("Universe variable not found: u@" ^ string_of_int x)
             end
           | U_unif _ when cfg.steps.check_no_uvars ->
-            [U_zero]
+            [U_zero] // GM: why?
 //            failwith (BU.format2 "(%s) CheckNoUvars: unexpected universes variable remains: %s"
 //                                       (Range.string_of_range (Env.get_range cfg.tcenv))
 //                                       (Print.univ_to_string u))
@@ -787,6 +787,7 @@ let should_reify cfg stack =
         cfg.steps.reify_
     | _ -> false
 
+// GM: What is this meant to decide?
 let rec maybe_weakly_reduced tm :  bool =
     let aux_comp c =
         match c.n with
@@ -1203,15 +1204,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       end
                   end
 
-                // TODO: GM: This bit is shady, and it breaks unfold_fully across lambdas
-                | Cfg cfg :: stack ->
-                  norm cfg env stack t
-
                 | MemoLazy r :: stack ->
                   set_memo cfg r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
                   log cfg  (fun () -> BU.print1 "\tSet memo %s\n" (Print.term_to_string t));
                   norm cfg env stack t
 
+                | Cfg _ :: _
                 | Match _::_
                 | Debug _::_
                 | Meta _::_
@@ -2729,8 +2727,11 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
         then matches scrutinee branches
         else norm_and_rebuild_match ()
 
+let reflection_env_hook = BU.mk_ref None
+
 let normalize_with_primitive_steps ps s e t =
     let c = config' ps s e in
+    reflection_env_hook := Some e;
     log_cfg c (fun () -> BU.print1 "Cfg = %s\n" (cfg_to_string c));
     if is_nbe_request s then begin
       log_top c (fun () -> BU.print1 "Starting NBE for (%s) {\n" (Print.term_to_string t));
@@ -2753,6 +2754,7 @@ let normalize s e t =
 
 let normalize_comp s e c =
     let cfg = config s e in
+    reflection_env_hook := Some e;
     log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
     log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
     let (c, ms) = BU.record_time (fun () -> norm_comp cfg [] c) in
@@ -2886,126 +2888,6 @@ let eta_expand (env:Env.env) (t:term) : term =
         eta_expand_with_type env t ty
       end
 
-//////////////////////////////////////////////////////////////////
-//Eliminating all unification variables and delayed substitutions in a sigelt
-//////////////////////////////////////////////////////////////////
-
-let rec elim_delayed_subst_term (t:term) : term =
-    let mk x = S.mk x t.pos in
-    let t = SS.compress t in
-    let elim_bv x = {x with sort=elim_delayed_subst_term x.sort} in
-    match t.n with
-    | Tm_delayed _ -> failwith "Impossible"
-    | Tm_bvar _
-    | Tm_name _
-    | Tm_fvar _
-    | Tm_uinst _
-    | Tm_constant _
-    | Tm_type _
-    | Tm_lazy _
-    | Tm_unknown -> t
-
-    | Tm_abs(bs, t, rc_opt) ->
-      let elim_rc rc =
-        {rc with
-            residual_typ=BU.map_opt rc.residual_typ elim_delayed_subst_term;
-            residual_flags=elim_delayed_subst_cflags rc.residual_flags}
-      in
-      mk (Tm_abs(elim_delayed_subst_binders bs,
-                 elim_delayed_subst_term t,
-                 BU.map_opt rc_opt elim_rc))
-
-    | Tm_arrow(bs, c) ->
-      mk (Tm_arrow(elim_delayed_subst_binders bs, elim_delayed_subst_comp c))
-
-    | Tm_refine(bv, phi) ->
-      mk (Tm_refine(elim_bv bv, elim_delayed_subst_term phi))
-
-    | Tm_app(t, args) ->
-      mk (Tm_app(elim_delayed_subst_term t, elim_delayed_subst_args args))
-
-    | Tm_match(t, branches) ->
-      let rec elim_pat (p:pat) =
-        match p.v with
-        | Pat_var x ->
-          {p with v=Pat_var (elim_bv x)}
-        | Pat_wild x ->
-          {p with v=Pat_wild (elim_bv x)}
-        | Pat_dot_term(x, t0) ->
-          {p with v=Pat_dot_term(elim_bv x, elim_delayed_subst_term t0)}
-        | Pat_cons (fv, pats) ->
-          {p with v=Pat_cons(fv, List.map (fun (x, b) -> elim_pat x, b) pats)}
-        | _ -> p
-      in
-      let elim_branch (pat, wopt, t) =
-          (elim_pat pat,
-           BU.map_opt wopt elim_delayed_subst_term,
-           elim_delayed_subst_term t)
-      in
-      mk (Tm_match(elim_delayed_subst_term t, List.map elim_branch branches))
-
-    | Tm_ascribed(t, a, lopt) ->
-      let elim_ascription (tc, topt) =
-        (match tc with
-         | Inl t -> Inl (elim_delayed_subst_term t)
-         | Inr c -> Inr (elim_delayed_subst_comp c)),
-        BU.map_opt topt elim_delayed_subst_term
-      in
-      mk (Tm_ascribed(elim_delayed_subst_term t, elim_ascription a, lopt))
-
-    | Tm_let(lbs, t) ->
-      let elim_lb lb =
-         {lb with
-             lbtyp = elim_delayed_subst_term lb.lbtyp;
-             lbdef = elim_delayed_subst_term lb.lbdef }
-      in
-      mk (Tm_let((fst lbs, List.map elim_lb (snd lbs)),
-                  elim_delayed_subst_term t))
-
-    | Tm_uvar(u,s) ->
-      mk (Tm_uvar(u,s)) //explicitly don't descend into (bs,t) to not break sharing there
-
-    | Tm_quoted (tm, qi) ->
-      let qi = S.on_antiquoted elim_delayed_subst_term qi in
-      mk (Tm_quoted (elim_delayed_subst_term tm, qi))
-
-    | Tm_meta(t, md) ->
-      mk (Tm_meta(elim_delayed_subst_term t, elim_delayed_subst_meta md))
-
-and elim_delayed_subst_cflags flags =
-    List.map
-        (function
-        | DECREASES t -> DECREASES (elim_delayed_subst_term t)
-        | f -> f)
-        flags
-
-and elim_delayed_subst_comp (c:comp) : comp =
-    let mk x = S.mk x c.pos in
-    match c.n with
-    | Total(t, uopt) ->
-      mk (Total(elim_delayed_subst_term t, uopt))
-    | GTotal(t, uopt) ->
-      mk (GTotal(elim_delayed_subst_term t, uopt))
-    | Comp ct ->
-      let ct =
-        {ct with
-            result_typ=elim_delayed_subst_term ct.result_typ;
-            effect_args=elim_delayed_subst_args ct.effect_args;
-            flags=elim_delayed_subst_cflags ct.flags} in
-      mk (Comp ct)
-
-and elim_delayed_subst_meta = function
-  | Meta_pattern (names, args) -> Meta_pattern(List.map elim_delayed_subst_term names, List.map elim_delayed_subst_args args)
-  | Meta_monadic(m, t) -> Meta_monadic(m, elim_delayed_subst_term t)
-  | Meta_monadic_lift(m1, m2, t) -> Meta_monadic_lift(m1, m2, elim_delayed_subst_term t)
-  | m -> m
-
-and elim_delayed_subst_args args =
-    List.map (fun (t, q) -> elim_delayed_subst_term t, q) args
-
-and elim_delayed_subst_binders bs =
-    List.map (fun (x, q) -> {x with sort=elim_delayed_subst_term x.sort}, q) bs
-
 let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (tc:either<typ, comp>) =
     let t =
       match binders, tc with
@@ -3017,7 +2899,7 @@ let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (t
     let univ_names, t = Subst.open_univ_vars univ_names t in
     let t = remove_uvar_solutions env t in
     let t = Subst.close_univ_vars univ_names t in
-    let t = elim_delayed_subst_term t in
+    let t = Subst.deep_compress t in
     let binders, tc =
         match binders with
         | [] -> [], Inl t
@@ -3039,6 +2921,7 @@ let elim_uvars_aux_c env univ_names binders c =
    let univ_names, binders, tc = elim_uvars_aux_tc env univ_names binders (Inr c) in
    univ_names, binders, BU.right tc
 
+// GM: Maybe this should take a pass over the attributes just to be safe?
 let rec elim_uvars (env:Env.env) (s:sigelt) =
     match s.sigel with
     | Sig_inductive_typ (lid, univ_names, binders, typ, lids, lids') ->
@@ -3059,7 +2942,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_let((b, lbs), lids) ->
       let lbs = lbs |> List.map (fun lb ->
         let opening, lbunivs = Subst.univ_var_opening lb.lbunivs in
-        let elim t = elim_delayed_subst_term (Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t))) in
+        let elim t = Subst.deep_compress (Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t))) in
         let lbtyp = elim lb.lbtyp in
         let lbdef = elim lb.lbdef in
         {lb with lbunivs = lbunivs;

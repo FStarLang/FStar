@@ -31,7 +31,7 @@ class inhab a = {
  * projector since the projector won't unfold (but it could..., maybe
  * we need an UnfoldAttrFully?) *)
 [@@tcnorm]
-let elem' #a [|d : inhab a|] =
+let elem' #a {|d : inhab a|} =
     match d with
     | Mkinhab elem -> elem
 

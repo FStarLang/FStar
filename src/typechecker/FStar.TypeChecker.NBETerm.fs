@@ -951,6 +951,18 @@ let mk_range args : option<t> =
     end
 | _ -> None
 
+let division_op (args:args) : option<t> =
+  match args with
+  | [a1; a2] -> begin
+    match arg_as_int a1, arg_as_int a2 with
+    | Some m, Some n ->
+      if Z.to_int_fs n <> 0
+      then Some (embed e_int bogus_cbs (Z.div_big_int m n))
+      else None
+    | _ -> None
+    end
+  | _ -> failwith "Unexpected number of arguments"
+
 // let e_arrow2 (ea:embedding<'a>) (eb:embedding<'b>) (ec:embedding<'c>) =
 //   let em (f : 'a -> 'b -> 'c) : t = Lam((fun (ta:t) -> match unembed ea ta with
 //                                            | Some a -> embed eb (f a)

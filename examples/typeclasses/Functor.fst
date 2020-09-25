@@ -34,5 +34,5 @@ let t1 = fmap #list (fun x -> x + 1) [1 ; 2 ; 3]
 
 let t2 = fmap #(compose list list) (fun x -> x + 1) [[1] ; [2 ; 3]]
 
-let fmap' (#f:Type -> Type) [| functor f |] (#a:Type) (#b:Type) (g:a -> b) (x: f a) : f b =
+let fmap' (#f:Type -> Type) {| functor f |} (#a:Type) (#b:Type) (g:a -> b) (x: f a) : f b =
   fmap #f g x

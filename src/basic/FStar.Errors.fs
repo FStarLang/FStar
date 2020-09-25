@@ -364,6 +364,8 @@ type raw_error =
   | Warning_DeprecatedAttributeSyntax
   | Warning_DeprecatedGeneric
   | Error_RemoveUnusedTypeParameter
+  | Error_BadSplice
+  | Error_UnexpectedUnresolvedUvar
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
@@ -706,7 +708,9 @@ let default_settings : list<error_setting> =
     Warning_WarnOnUse                                 , CSilent,  335;
     Warning_DeprecatedAttributeSyntax                 , CSilent,  336;
     Warning_DeprecatedGeneric                         , CWarning, 337;
-    Error_RemoveUnusedTypeParameter                   , CWarning,   338;
+    Error_BadSplice                                   , CError, 338;
+    Error_UnexpectedUnresolvedUvar                    , CAlwaysError, 339;
+    Error_RemoveUnusedTypeParameter                   , CWarning,   340;
     ]
 module BU = FStar.Util
 
