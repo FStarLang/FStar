@@ -137,6 +137,7 @@ let join                    = from_tac_1 B.join
 let inspect                 = from_tac_1 B.inspect
 let pack                    = from_tac_1 B.pack
 let curms                   = from_tac_1 B.curms
+let set_urgency             = from_tac_1 B.set_urgency
 
 (* sigh *)
 let fix_either (s : ('a, 'b) FStar_Util.either) : ('a, 'b) FStar_Pervasives.either =

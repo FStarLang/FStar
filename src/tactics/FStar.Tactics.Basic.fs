@@ -1583,6 +1583,11 @@ let lset (_ty:term) (k:string) (t:term) : tac<unit> = wrap_err "lset" <|
     let ps = { ps with local_state = BU.psmap_add ps.local_state k t } in
     set ps)
 
+let set_urgency (u:Z.t) : tac<unit> =
+    bind get (fun ps ->
+    let ps = { ps with urgency = Z.to_int_fs u } in
+    set ps)
+
 let goal_of_goal_ty env typ : goal * guard_t =
     let u, ctx_uvars, g_u =
         Env.new_implicit_var_aux "proofstate_of_goal_ty" typ.pos env typ Allow_untyped None
@@ -1613,6 +1618,7 @@ let proofstate_of_goals rng env goals imps =
         freshness = 0;
         tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
         local_state = BU.psmap_empty ();
+        urgency = 1;
     }
     in
     ps
@@ -1643,6 +1649,7 @@ let proofstate_of_all_implicits rng env imps =
         freshness = 0;
         tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
         local_state = BU.psmap_empty ();
+        urgency = 1;
     }
     in
     (ps, w)

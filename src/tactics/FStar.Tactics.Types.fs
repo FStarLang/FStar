@@ -107,6 +107,9 @@ type proofstate = {
     tac_verb_dbg : bool;         //whether to print verbose debugging messages
 
     local_state  : BU.psmap<term>; // local metaprogram state
+    urgency      : int;          // When printing a proofstate due to an error, this
+                                 // is used by emacs to decide whether it should pop
+                                 // open a buffer or not (default: 1).
 }
 
 let subst_proof_state subst ps =

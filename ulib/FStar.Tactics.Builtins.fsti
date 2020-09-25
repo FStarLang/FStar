@@ -333,3 +333,7 @@ val set_smt_goals : list goal -> Tac unit
 
 (** [curms ()] returns the current (wall) time in millseconds *)
 val curms : unit -> Tac int
+
+(** [set_urgency u] sets the urgency of error messages. Usually set just
+before raising an exception (see e.g. [fail_silently]). *)
+val set_urgency : int -> Tac unit

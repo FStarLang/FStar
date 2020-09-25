@@ -83,3 +83,4 @@ val join                   : unit -> tac<unit>
 val lget                   : typ -> string -> tac<term>
 val lset                   : typ -> string -> term -> tac<unit>
 val curms                  : unit -> tac<Z.t>
+val set_urgency            : Z.t -> tac<unit>

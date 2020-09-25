@@ -450,6 +450,10 @@ let () =
         lset e_any e_string e_any e_unit
         (fun _ _ _ -> fail "sorry, `lset` does not work in NBE") NBET.e_any NBET.e_string NBET.e_any NBET.e_unit;
 
+      mk_tac_step_1 1 "set_urgency"
+        set_urgency e_int e_unit
+        set_urgency NBET.e_int NBET.e_unit;
+
     ]
 
 let unembed_tactic_1_alt (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:norm_cb) : option<('a -> tac<'r>)> =
