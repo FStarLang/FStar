@@ -15,9 +15,6 @@
 *)
 
 
-/// An experimental effect for Steel that does framing in binds
-
-
 module Steel.Effect
 
 module Sem = Steel.Semantics.Hoare.MST
@@ -53,9 +50,7 @@ let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post
   interp_depends_only_on_post post;
   fun m0 x m1 -> interp pre m0 /\ interp (post x) m1 /\ ens m0 x m1
 
-type repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
-  Sem.action_t #state #a pre post (req_to_act_req req) (ens_to_act_ens ens)
-
+val repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) : Type0
 
 unfold
 let return_req (p:slprop u#1) : req_t p = fun _ -> True
@@ -66,9 +61,8 @@ let return_ens (a:Type) (x:a) (p:a -> slprop u#1) : ens_t (p x) a p = fun _ r _ 
 (*
  * Return is parametric in post (cf. return-scoping.txt)
  *)
-let return (a:Type) (x:a) (#[@@ framing_implicit] p:a -> slprop)
+val return (a:Type) (x:a) (#[@@ framing_implicit] p:a -> slprop)
 : repr a (p x) p (return_req (p x)) (return_ens a x p)
-= fun _ -> x
 
 (*
  * We allow weakening of post resource of f to pre resource of g
@@ -97,7 +91,7 @@ let bind_ens (#a:Type) (#b:Type)
   req_f m0 /\
   (exists (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 /\ (ens_g x) m1 y m2)
 
-let bind (a:Type) (b:Type)
+val bind (a:Type) (b:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
   (#[@@ framing_implicit] req_f:req_t pre_f) (#[@@ framing_implicit] ens_f:ens_t pre_f a post_f)
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
@@ -110,9 +104,6 @@ let bind (a:Type) (b:Type)
     post_g
     (bind_req req_f ens_f req_g p)
     (bind_ens req_f ens_f ens_g p)
-= fun _ ->
-  let x = f () in
-  (g x) ()
 
 
 (*
@@ -134,7 +125,7 @@ let subcomp_pre (#a:Type)
 = (forall (m0:hmem pre_g). req_g m0 ==> req_f m0) /\
   (forall (m0:hmem pre_g) (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 ==> ens_g m0 x m1)
 
-let subcomp (a:Type)
+val subcomp (a:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
   (#[@@ framing_implicit] req_f:req_t pre_f) (#[@@ framing_implicit] ens_f:ens_t pre_f a post_f)
   (#[@@ framing_implicit] pre_g:pre_t) (#[@@ framing_implicit] post_g:post_t a)
@@ -145,7 +136,6 @@ let subcomp (a:Type)
 : Pure (repr a pre_g post_g req_g ens_g)
   (requires subcomp_pre req_f ens_f req_g ens_g p1 p2)
   (ensures fun _ -> True)
-= f
 
 unfold
 let if_then_else_req (#pre:pre_t)
@@ -185,18 +175,8 @@ layered_effect {
 }
 
 [@@allow_informative_binders]
-reflectable
+reifiable reflectable
 new_effect Steel = SteelF
-
-(*
- * Keeping f_frame aside for now
- *)
-let frame_aux (#a:Type)
-  (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:repr a pre post req ens) (frame:slprop)
-: repr a (pre `star` frame) (fun x -> post x `star` frame) req ens
-= fun _ ->
-  Sem.run #state #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame (fun _ -> True))
 
 
 (*
@@ -235,7 +215,7 @@ let bind_steel_steel_ens (#a:Type) (#b:Type)
   req_f m0 /\
   (exists (x:a) (m1:hmem (post_f x `star` frame_f)). ens_f m0 x m1 /\ (ens_g x) m1 y m2)
 
-let bind_steel_steel (a:Type) (b:Type)
+val bind_steel_steel (a:Type) (b:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
   (#[@@ framing_implicit] req_f:req_t pre_f) (#[@@ framing_implicit] ens_f:ens_t pre_f a post_f)
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
@@ -250,10 +230,6 @@ let bind_steel_steel (a:Type) (b:Type)
     (fun y -> post_g y `star` frame_g)
     (bind_steel_steel_req req_f ens_f req_g frame_f frame_g p)
     (bind_steel_steel_ens req_f ens_f ens_g frame_f frame_g p)
-= fun _ ->
-  let x = frame_aux f frame_f () in
-  frame_aux (g x) frame_g ()
-
 
 (*
  * Note that the output is a framed computation, hence SteelF
@@ -292,7 +268,7 @@ let bind_steel_steelf_ens (#a:Type) (#b:Type)
   req_f m0 /\
   (exists (x:a) (m1:hmem (post_f x `star` frame_f)). ens_f m0 x m1 /\ (ens_g x) m1 y m2)
 
-let bind_steel_steelf (a:Type) (b:Type)
+val bind_steel_steelf (a:Type) (b:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
   (#[@@ framing_implicit] req_f:req_t pre_f) (#[@@ framing_implicit] ens_f:ens_t pre_f a post_f)
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
@@ -306,10 +282,6 @@ let bind_steel_steelf (a:Type) (b:Type)
     post_g
     (bind_steel_steelf_req req_f ens_f req_g frame_f p)
     (bind_steel_steelf_ens req_f ens_f ens_g frame_f p)
-= fun _ ->
-  let x = frame_aux f frame_f () in
-  (g x) ()
-
 
 polymonadic_bind (Steel, SteelF) |> SteelF = bind_steel_steelf
 
@@ -344,7 +316,7 @@ let bind_steelf_steel_ens (#a:Type) (#b:Type)
   req_f m0 /\
   (exists (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 /\ (ens_g x) m1 y m2)
 
-let bind_steelf_steel (a:Type) (b:Type)
+val bind_steelf_steel (a:Type) (b:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
   (#[@@ framing_implicit] req_f:req_t pre_f) (#[@@ framing_implicit] ens_f:ens_t pre_f a post_f)
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:post_t b)
@@ -358,9 +330,6 @@ let bind_steelf_steel (a:Type) (b:Type)
     (fun y -> post_g y `star` frame_g)
     (bind_steelf_steel_req req_f ens_f req_g frame_g p)
     (bind_steelf_steel_ens req_f ens_f ens_g frame_g p)
-= fun _ ->
-  let x = f () in
-  frame_aux (g x) frame_g ()
 
 
 polymonadic_bind (SteelF, Steel) |> SteelF = bind_steelf_steel
@@ -400,7 +369,7 @@ let bind_pure_steel__ens (#a:Type) (#b:Type)
 : ens_t pre b post
 = fun m0 r m1 -> as_requires wp /\ (exists (x:a). as_ensures wp x /\ (ens x) m0 r m1)
 
-let bind_pure_steel_ (a:Type) (b:Type)
+val bind_pure_steel_ (a:Type) (b:Type)
   (wp:pure_wp a)
   (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t b)
   (#[@@ framing_implicit] req:a -> req_t pre) (#[@@ framing_implicit] ens:a -> ens_t pre b post)
@@ -410,9 +379,6 @@ let bind_pure_steel_ (a:Type) (b:Type)
     post
     (bind_pure_steel__req wp req)
     (bind_pure_steel__ens wp ens)
-= fun _ ->
-  let x = f () in
-  (g x) ()
 
 polymonadic_bind (PURE, SteelF) |> SteelF = bind_pure_steel_
 
@@ -432,6 +398,33 @@ polymonadic_subcomp SteelF <: Steel = subcomp
 
 effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
   Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
+
+
+
+module EffectX = Steel.EffectX
+
+let triv_pre (fp:pre_t) : EffectX.fp_mprop fp = fun _ -> True
+let triv_post (fp:pre_t) (#a:Type) (fp':post_t a) : EffectX.fp_binary_mprop fp fp'
+  = fun _ _ _ -> True
+
+let triv_pre' (fp:pre_t) : req_t fp = fun _ -> True
+let triv_post' (fp:pre_t) (#a:Type) (fp':post_t a) : ens_t fp a fp'
+  = fun _ _ _ -> True
+
+val subcomp_x (a:Type)
+  (pre:pre_t) (post:post_t a)
+  (f:EffectX.repr a pre post (triv_pre pre) (triv_post pre post))
+: Pure (repr a pre post (triv_pre' pre) (triv_post' pre post))
+  (requires True)
+  (ensures fun _ -> True)
+
+polymonadic_subcomp EffectX.SteelX <: Steel = subcomp_x
+
+val as_steelx (#a:Type)
+  (#pre:pre_t) (#post:post_t a)
+  (#req:req_t pre) (#ens:ens_t pre a post)
+  ($f:unit -> Steel a pre post req ens)
+: EffectX.SteelX a pre post req ens
 
 
 //scratch space
@@ -466,6 +459,8 @@ effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
 // : SteelF a (p x) p (fun _ -> True) (fun _ r _ -> r == x)
 // = SteelF?.reflect (fun _ -> x)
 
+(* Exposing actions as Steel functions *)
+
 val par (#aL:Type u#a)
         (#preL:slprop u#1)
         (#postL:aL -> slprop u#1)
@@ -494,7 +489,7 @@ val ( || ) (#aL:Type u#a)
           ($g:unit -> SteelT aR preR postR)
  : SteelT (aL & aR)
           (preL `Mem.star` preR)
-          (fun (xL, xR) -> postL xL `Mem.star` postR xR)
+          (fun y -> postL (fst y) `Mem.star` postR (snd y))
 
 val read (#a:Type)
          (#pcm:_)
@@ -563,14 +558,6 @@ val recall (#a:Type u#1) (#pcm:FStar.PCM.pcm a) (#fact:property a)
            (pts_to r v `star` pure (witnessed r fact))
            (fun v1 -> pts_to r v `star` pure (fact v1))
 
-val cond (#a:Type)
-         (b:bool)
-         (p: (b':bool{b == b'}) -> slprop)
-         (q: bool -> a -> slprop)
-         (then_: (squash (b == true) -> SteelT a (p true) (q true)))
-         (else_: (squash (b == false) -> SteelT a (p false) (q false)))
-  : SteelT a (p b) (q b)
-
 val add_action (#a:Type)
                (#p:slprop)
                (#q:a -> slprop)
@@ -581,34 +568,18 @@ val change_slprop (p q:slprop)
                   (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
   : SteelT unit p (fun _ -> q)
 
+val cond (#a:Type)
+         (b:bool)
+         (p: (b':bool{b == b'}) -> slprop)
+         (q: bool -> a -> slprop)
+         (then_: (squash (b == true) -> SteelT a (p true) (q true)))
+         (else_: (squash (b == false) -> SteelT a (p false) (q false)))
+  : SteelT a (p b) (q b)
+
+
 val drop (p:slprop) : SteelT unit p (fun _ -> emp)
 
 val intro_exists (#a:Type) (x:a) (p:a -> slprop)
   : SteelT unit (p x) (fun _ -> h_exists p)
 
 val noop (#p:slprop) (u:unit) : SteelT unit p (fun _ -> p)
-
-module EffectX = Steel.EffectX
-
-let triv_pre (fp:pre_t) : EffectX.fp_mprop fp = fun _ -> True
-let triv_post (fp:pre_t) (#a:Type) (fp':post_t a) : EffectX.fp_binary_mprop fp fp'
-  = fun _ _ _ -> True
-
-let triv_pre' (fp:pre_t) : req_t fp = fun _ -> True
-let triv_post' (fp:pre_t) (#a:Type) (fp':post_t a) : ens_t fp a fp'
-  = fun _ _ _ -> True
-
-val subcomp_x (a:Type)
-  (pre:pre_t) (post:post_t a)
-  (f:EffectX.repr a pre post (triv_pre pre) (triv_post pre post))
-: Pure (repr a pre post (triv_pre' pre) (triv_post' pre post))
-  (requires True)
-  (ensures fun _ -> True)
-
-polymonadic_subcomp EffectX.SteelX <: Steel = subcomp_x
-
-val as_steelx (#a:Type)
-  (#pre:pre_t) (#post:post_t a)
-  (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:unit -> Steel a pre post req ens)
-: EffectX.SteelX a pre post req ens
