@@ -366,6 +366,7 @@ type raw_error =
   | Error_BadSplice
   | Error_UnexpectedUnresolvedUvar
   | Error_RemoveUnusedTypeParameter
+  | Error_CallToErased
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
@@ -710,7 +711,8 @@ let default_settings : list<error_setting> =
     Warning_DeprecatedGeneric                         , CWarning, 337;
     Error_BadSplice                                   , CError, 338;
     Error_UnexpectedUnresolvedUvar                    , CAlwaysError, 339;
-    Error_RemoveUnusedTypeParameter                   , CWarning,   340;
+    Error_CallToErased                                , CError, 340;
+    Error_RemoveUnusedTypeParameter                   , CWarning, 341;
     ]
 module BU = FStar.Util
 
