@@ -1128,33 +1128,6 @@ let (ask_and_report_errors :
                        } in
                      [uu___3]
                    else [] in
-                 let min_fuel =
-                   let uu___2 =
-                     let uu___3 = FStar_Options.min_fuel () in
-                     let uu___4 = FStar_Options.initial_fuel () in
-                     uu___3 < uu___4 in
-                   if uu___2
-                   then
-                     let uu___3 =
-                       let uu___4 = default_settings in
-                       let uu___5 = FStar_Options.min_fuel () in
-                       {
-                         query_env = (uu___4.query_env);
-                         query_decl = (uu___4.query_decl);
-                         query_name = (uu___4.query_name);
-                         query_index = (uu___4.query_index);
-                         query_range = (uu___4.query_range);
-                         query_fuel = uu___5;
-                         query_ifuel = Prims.int_one;
-                         query_rlimit = (uu___4.query_rlimit);
-                         query_hint = (uu___4.query_hint);
-                         query_errors = (uu___4.query_errors);
-                         query_all_labels = (uu___4.query_all_labels);
-                         query_suffix = (uu___4.query_suffix);
-                         query_hash = (uu___4.query_hash)
-                       } in
-                     [uu___3]
-                   else [] in
                  let all_configs =
                    FStar_List.append use_hints_setting
                      (FStar_List.append [default_settings]

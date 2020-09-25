@@ -1650,7 +1650,7 @@
       1,
       [ "@query" ],
       0,
-      "dfe26efa397db1bc9dd455aa1ee3954c"
+      "e0c6b03f6f78a9cd27a0b304aea3d6bc"
     ],
     [
       "Steel.Heap.action_framing",
@@ -1747,7 +1747,7 @@
         "typing_FStar.Ghost.reveal"
       ],
       0,
-      "61e706996fa444a57cc6c8b6bcd6353c"
+      "c5b499012f345d9dacc3e98d2303472f"
     ],
     [
       "Steel.Heap.sel_lemma",
@@ -3174,7 +3174,7 @@
         "typing_Steel.Heap.heap_evolves"
       ],
       0,
-      "441e4e1a4c367d69b93df5afec7a546c"
+      "355215264b4e9920ada3cf23111412d2"
     ],
     [
       "Steel.Heap.lift_h_exists",

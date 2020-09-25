@@ -551,12 +551,17 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
                                 eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
         ) else NotEqual
     in
+    let qual_is_inj = function
+      | Some Data_ctor
+      | Some (Record_ctor _) -> true
+      | _ -> false
+    in
     let heads_and_args_in_case_both_data :option<(fv * args * fv * args)> =
       let head1, args1 = t1 |> unmeta |> head_and_args in
       let head2, args2 = t2 |> unmeta |> head_and_args in
       match (un_uinst head1).n, (un_uinst head2).n with
-      | Tm_fvar f, Tm_fvar g when f.fv_qual = Some Data_ctor &&
-                                  g.fv_qual = Some Data_ctor -> Some (f, args1, g, args2)
+      | Tm_fvar f, Tm_fvar g when qual_is_inj f.fv_qual &&
+                                  qual_is_inj g.fv_qual -> Some (f, args1, g, args2)
       | _ -> None
     in
     let t1 = unmeta t1 in

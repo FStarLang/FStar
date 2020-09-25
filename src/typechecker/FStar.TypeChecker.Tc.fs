@@ -337,9 +337,50 @@ let proc_check_with (attrs:list<attribute>) (kont : unit -> 'a) : 'a =
   | None -> kont ()
   | Some [(a, None)] ->
     Options.with_saved_options (fun () ->
-      Options.set (unembed_optionstate a |> BU.must);
+      Options.set_verification_options (unembed_optionstate a |> BU.must);
       kont ())
   | _ -> failwith "huh?"
+
+let handle_postprocess_with_attr (env:Env.env) (ats:list<attribute>)
+    : (list<attribute> * option<term>)
+=
+    (* We find postprocess_for_extraction_with attrs, which we don't
+     * have to handle here, but we typecheck the tactic
+     * and elaborate it. *)
+    let tc_and_elab_tactic (env:Env.env) (tau:term) : term =
+        let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
+        Rel.force_trivial_guard env g_tau;
+        tau
+    in
+    let ats =
+      match U.extract_attr' PC.postprocess_extr_with ats with
+      | None -> ats
+      | Some (ats, [tau, None]) ->
+        let tau = tc_and_elab_tactic env tau in
+        (* Further, give it a spin through deep_compress to remove uvar nodes,
+         * since this term will be picked up at extraction time when
+         * the UF graph is blown away. *)
+        let tau = SS.deep_compress tau in
+        (U.mk_app (S.tabbrev PC.postprocess_extr_with) [tau, None])
+           :: ats
+      | Some (ats, [tau, None]) ->
+        Errors.log_issue (Env.get_range env)
+                         (Errors.Warning_UnrecognizedAttribute,
+                            BU.format1 "Ill-formed application of `%s`"
+                                       (string_of_lid PC.postprocess_extr_with));
+        ats
+    in
+    (* Now extract the postprocess_with, if any, and also check it *)
+    match U.extract_attr' PC.postprocess_with ats with
+    | None -> ats, None
+    | Some (ats, [tau, None]) ->
+        ats, Some (tc_and_elab_tactic env tau)
+    | Some (ats, args) ->
+        Errors.log_issue (Env.get_range env)
+                         (Errors.Warning_UnrecognizedAttribute,
+                            BU.format1 "Ill-formed application of `%s`"
+                                       (string_of_lid PC.postprocess_with));
+        ats, None
 
 (* Alternative to making a huge let rec... knot is set below in this file *)
 let tc_decls_knot : ref<option<(Env.env -> list<sigelt> -> list<sigelt> * Env.env)>> =
@@ -729,17 +770,10 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       end
       else e
     in
+    let attrs, post_tau = handle_postprocess_with_attr env se.sigattrs in
+    (* remove the postprocess_with, if any *)
+    let se = { se with sigattrs = attrs } in
 
-    let attrs, post_tau =
-        match U.extract_attr' PC.postprocess_with se.sigattrs with
-        | None -> se.sigattrs, None
-        | Some (ats, [tau, None]) -> ats, Some tau
-        | Some (ats, args) ->
-            Errors.log_issue r (Errors.Warning_UnrecognizedAttribute,
-                                   ("Ill-formed application of `postprocess_with`"));
-            se.sigattrs, None
-    in
-    let se = { se with sigattrs = attrs } in (* to remove the postprocess_with *)
     let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
         let s, univnames = SS.univ_var_opening lb.lbunivs in
         let lbdef = SS.subst s lb.lbdef in
