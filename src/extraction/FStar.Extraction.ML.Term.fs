@@ -1288,6 +1288,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           begin
                match try_lookup_fv g fv with
                | None -> //it's been erased
+                 Errors.log_issue t.pos (Errors.Error_CallToErased,
+                                         BU.format1 "Attempting to extract a call into erased function %s" (Print.fv_to_string fv));
                  ml_unit, E_PURE, MLTY_Erased
 
                | Some {exp_b_expr=x; exp_b_tscheme=mltys} ->

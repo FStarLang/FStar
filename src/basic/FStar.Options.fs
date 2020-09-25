@@ -1649,15 +1649,18 @@ let cache_off                    () = get_cache_off                   ()
 let print_cache_version          () = get_print_cache_version         ()
 let cmi                          () = get_cmi                         ()
 type codegen_t = | OCaml | FSharp | Kremlin | Plugin
+
+let parse_codegen =
+  function
+  | "OCaml" -> Some OCaml
+  | "FSharp" -> Some FSharp
+  | "Kremlin" -> Some Kremlin
+  | "Plugin" -> Some Plugin
+  | _ -> None
+
 let codegen                      () =
-    Util.map_opt
-           (get_codegen())
-           (function
-            | "OCaml" -> OCaml
-            | "FSharp" -> FSharp
-            | "Kremlin" -> Kremlin
-            | "Plugin" -> Plugin
-            | _ -> failwith "Impossible")
+    Util.map_opt (get_codegen())
+                 (fun s -> parse_codegen s |> must)
 
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
