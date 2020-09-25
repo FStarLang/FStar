@@ -102,7 +102,8 @@ SHOULD_NOT_VERIFY_NOT_WORKING=Bug186.fst Bug397b.fst
 # These will be checked as part of the F* regressions.
 SHOULD_EXTRACT_CLOSED=Bug086.fst Bug314.fst Bug540.fst Bug541.fst Bug589.fst \
 	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst \
-	Bug2058.fst RemoveUnusedTypars.B.fst RemoveUnusedTyparsIFace.B.fst
+	Bug2058.fst RemoveUnusedTypars.B.fst RemoveUnusedTyparsIFace.B.fst \
+	PushPopProjectors.fst
 #ExtractionBug03.fst
 
 # Bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
@@ -172,6 +173,9 @@ RemoveUnusedTyparsIFace.B.extract: RemoveUnusedTyparsIFace.A.fst RemoveUnusedTyp
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTyparsIFace.B --codegen FSharp RemoveUnusedTyparsIFace.B.fst
 	diff -u --strip-trailing-cr RemoveUnusedTyparsIFace_A.fs RemoveUnusedTyparsIFace_A.fs.expected
 	diff -u --strip-trailing-cr RemoveUnusedTyparsIFace_B.fs RemoveUnusedTyparsIFace_B.fs.expected
+
+PushPopProjectors.extract: PushPopProjectors.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out_$* --codegen FSharp $^
 
 %.extract: %.fst
 	mkdir -p out_$*
