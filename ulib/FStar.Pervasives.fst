@@ -74,7 +74,11 @@ let allow_informative_binders = ()
 
 let commute_nested_matches = ()
 
+
 let remove_unused_type_parameters _ = ()
+
+let noextract_to _ = ()
+
 
 let normalize_term #_ x = x
 

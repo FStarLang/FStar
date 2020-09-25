@@ -720,6 +720,7 @@ val allow_informative_binders : unit
   *)
 val commute_nested_matches : unit
 
+
 (** [remove_unused_type_parameters]
 
     This attribute is used to decorate signatures in interfaces for
@@ -733,6 +734,14 @@ val commute_nested_matches : unit
     See tests/bug-reports/RemoveUnusedTyparsIFace.A.fsti
  *)
 val remove_unused_type_parameters : list int -> Tot unit
+
+(** This attribute controls extraction: it can be used to disable
+    extraction of a given top-level definition into a specific backend,
+    such as "OCaml". If any extracted code must call into an erased
+    function, an error will be raised (code 340).
+  *)
+val noextract_to (backend:string) : Tot unit
+
 
 ///  Controlling normalization
 
