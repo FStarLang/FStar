@@ -2496,17 +2496,9 @@ and (term_as_mlexpr' :
              (let uu___3 = FStar_Extraction_ML_UEnv.try_lookup_fv g fv in
               match uu___3 with
               | FStar_Pervasives_Native.None ->
-                  ((let uu___5 =
-                      let uu___6 =
-                        let uu___7 = FStar_Syntax_Print.fv_to_string fv in
-                        FStar_Util.format1
-                          "Attempting to extract a call into erased function %s"
-                          uu___7 in
-                      (FStar_Errors.Error_CallToErased, uu___6) in
-                    FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___5);
-                   (FStar_Extraction_ML_Syntax.ml_unit,
-                     FStar_Extraction_ML_Syntax.E_PURE,
-                     FStar_Extraction_ML_Syntax.MLTY_Erased))
+                  (FStar_Extraction_ML_Syntax.ml_unit,
+                    FStar_Extraction_ML_Syntax.E_PURE,
+                    FStar_Extraction_ML_Syntax.MLTY_Erased)
               | FStar_Pervasives_Native.Some
                   { FStar_Extraction_ML_UEnv.exp_b_name = uu___4;
                     FStar_Extraction_ML_UEnv.exp_b_expr = x;
@@ -3118,19 +3110,9 @@ and (term_as_mlexpr' :
                          FStar_Extraction_ML_UEnv.try_lookup_fv g fv in
                        (match uu___6 with
                         | FStar_Pervasives_Native.None ->
-                            ((let uu___8 =
-                                let uu___9 =
-                                  let uu___10 =
-                                    FStar_Syntax_Print.fv_to_string fv in
-                                  FStar_Util.format1
-                                    "Attempting to extract a call into erased function %s"
-                                    uu___10 in
-                                (FStar_Errors.Error_CallToErased, uu___9) in
-                              FStar_Errors.log_issue
-                                t.FStar_Syntax_Syntax.pos uu___8);
-                             (FStar_Extraction_ML_Syntax.ml_unit,
-                               FStar_Extraction_ML_Syntax.E_PURE,
-                               FStar_Extraction_ML_Syntax.MLTY_Erased))
+                            (FStar_Extraction_ML_Syntax.ml_unit,
+                              FStar_Extraction_ML_Syntax.E_PURE,
+                              FStar_Extraction_ML_Syntax.MLTY_Erased)
                         | uu___7 -> extract_app_with_instantiations ())
                    | uu___6 -> extract_app_with_instantiations ()))
        | FStar_Syntax_Syntax.Tm_ascribed (e0, (tc, uu___1), f) ->
