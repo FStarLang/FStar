@@ -367,6 +367,7 @@ type raw_error =
   | Error_UnexpectedUnresolvedUvar
   | Error_RemoveUnusedTypeParameter
   | Error_CallToErased
+  | Warning_NoMagicInFSharp
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
@@ -713,6 +714,7 @@ let default_settings : list<error_setting> =
     Error_UnexpectedUnresolvedUvar                    , CAlwaysError, 339;
     Error_CallToErased                                , CError, 340;
     Error_RemoveUnusedTypeParameter                   , CWarning, 341;
+    Warning_NoMagicInFSharp                           , CWarning, 342
     ]
 module BU = FStar.Util
 

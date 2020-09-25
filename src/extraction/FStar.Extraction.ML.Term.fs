@@ -479,7 +479,15 @@ let maybe_eta_expand g expect e =
   Otherwise, we often end up with coercions like (Obj.magic (fun x -> e) : a -> b) : a -> c
   Whereas with this optimization we produce (fun x -> Obj.magic (e : b) : c)  : a -> c
 *)
-let apply_coercion (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
+let apply_coercion pos (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
+    if Options.codegen() = Some Options.FSharp
+    then //magics are not always sound in F#; warn
+        FStar.Errors.log_issue pos
+          (Errors.Warning_NoMagicInFSharp,
+           BU.format2 
+             "Inserted an unsafe type coercion in generated code from %s to %s; this may be unsound in F#"
+               (Code.string_of_mlty (current_module_of_uenv g) ty)
+               (Code.string_of_mlty (current_module_of_uenv g) expect));
     let mk_fun binder body =
         match body.expr with
         | MLE_Fun(binders, body) ->
@@ -559,7 +567,7 @@ let maybe_coerce pos (g:uenv) e ty (expect:mlty) : mlexpr =
                             (Code.string_of_mlexpr (current_module_of_uenv g) e)
                             (Code.string_of_mlty (current_module_of_uenv g) ty)
                             (Code.string_of_mlty (current_module_of_uenv g) expect)) in
-               maybe_eta_expand g expect (apply_coercion g e ty expect)
+               maybe_eta_expand g expect (apply_coercion pos g e ty expect)
 
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)
