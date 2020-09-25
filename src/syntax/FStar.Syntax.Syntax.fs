@@ -29,6 +29,7 @@ open FStar.Const
 open FStar.Dyn
 module O = FStar.Options
 module PC = FStar.Parser.Const
+open FStar.VConfig
 
 (* Objects with metadata *)
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
@@ -466,7 +467,7 @@ and sigelt = {
     sigquals: list<qualifier>;
     sigmeta:  sig_metadata;
     sigattrs: list<attribute>;
-    sigopts:  option<O.optionstate>; (* Saving the option context where this sigelt was checked in *)
+    sigopts:  option<vconfig>; (* Saving the option context where this sigelt was checked in *)
 }
 
 type sigelts = list<sigelt>
@@ -728,6 +729,7 @@ let t_real      = tconst PC.real_lid
 let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid
+let t_vconfig   = tconst PC.vconfig_lid
 let t_term      = tconst PC.term_lid
 let t_term_view = tabbrev PC.term_view_lid
 let t_order     = tconst PC.order_lid

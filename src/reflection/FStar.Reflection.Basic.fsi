@@ -8,13 +8,11 @@ open FStar.Order
 module Env = FStar.TypeChecker.Env
 open FStar.Reflection.Data
 open FStar.ST
-module O = FStar.Options
-module RD = FStar.Reflection.Data
+module O   = FStar.Options
+module RD  = FStar.Reflection.Data
 module EMB = FStar.Syntax.Embeddings
-module Z = FStar.BigInt
-
-(* Another hack to circumvent module recursion *)
-val e_optionstate_hook : ref<option<EMB.embedding<O.optionstate>>>
+module Z   = FStar.BigInt
+open FStar.VConfig
 
 (* Primitives *)
 val compare_bv            : bv -> bv -> order
@@ -31,7 +29,7 @@ val term_eq               : term -> term -> bool
 val term_to_string        : term -> string
 val comp_to_string        : comp -> string
 val env_open_modules      : Env.env -> list<name>
-val sigelt_opts           : sigelt -> option<term>
+val sigelt_opts           : sigelt -> option<vconfig>
 
 val sigelt_attrs     : sigelt -> list<attribute>
 val set_sigelt_attrs : list<attribute> -> sigelt -> sigelt

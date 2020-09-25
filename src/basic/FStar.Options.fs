@@ -25,6 +25,7 @@ open FStar
 open FStar.Util
 open FStar.Getopt
 open FStar.BaseTypes
+open FStar.VConfig
 
 module FC = FStar.Common
 
@@ -435,7 +436,7 @@ let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
 let get_use_hint_hashes         ()      = lookup_opt "use_hint_hashes"          as_bool
 let get_use_native_tactics      ()      = lookup_opt "use_native_tactics"       (as_option as_string)
-let get_use_tactics             ()      = not (lookup_opt "no_tactics"          as_bool)
+let get_no_tactics              ()      = lookup_opt "no_tactics"               as_bool
 let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
 let get_vcgen_optimize_bind_as_seq  ()  = lookup_opt "vcgen.optimize_bind_as_seq" (as_option as_string)
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
@@ -1763,7 +1764,7 @@ let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()
 let use_hint_hashes              () = get_use_hint_hashes             ()
 let use_native_tactics           () = get_use_native_tactics          ()
-let use_tactics                  () = get_use_tactics                 ()
+let use_tactics                  () = not (get_no_tactics             ())
 let using_facts_from             () =
     match get_using_facts_from () with
     | None -> [ [], true ] //if not set, then retain all facts
@@ -1891,3 +1892,74 @@ let set_options s =
              else res
     with
     | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
+
+
+let get_vconfig () =
+  let vcfg = {
+    initial_fuel                              = get_initial_fuel ();
+    max_fuel                                  = get_max_fuel ();
+    initial_ifuel                             = get_initial_ifuel ();
+    max_ifuel                                 = get_max_ifuel ();
+    detail_errors                             = get_detail_errors ();
+    detail_hint_replay                        = get_detail_hint_replay ();
+    no_smt                                    = get_no_smt ();
+    quake_lo                                  = get_quake_lo ();
+    quake_hi                                  = get_quake_hi ();
+    quake_keep                                = get_quake_keep ();
+    retry                                     = get_retry ();
+    smtencoding_elim_box                      = get_smtencoding_elim_box ();
+    smtencoding_nl_arith_repr                 = get_smtencoding_nl_arith_repr ();
+    smtencoding_l_arith_repr                  = get_smtencoding_l_arith_repr ();
+    smtencoding_valid_intro                   = get_smtencoding_valid_intro ();
+    smtencoding_valid_elim                    = get_smtencoding_valid_elim ();
+    tcnorm                                    = get_tcnorm ();
+    no_plugins                                = get_no_plugins ();
+    no_tactics                                = get_no_tactics ();
+    vcgen_optimize_bind_as_seq                = get_vcgen_optimize_bind_as_seq ();
+    z3cliopt                                  = get_z3cliopt ();
+    z3refresh                                 = get_z3refresh ();
+    z3rlimit                                  = get_z3rlimit ();
+    z3rlimit_factor                           = get_z3rlimit_factor ();
+    z3seed                                    = get_z3seed ();
+    use_two_phase_tc                          = get_use_two_phase_tc ();
+    trivial_pre_for_unannotated_effectful_fns = get_trivial_pre_for_unannotated_effectful_fns ();
+    reuse_hint_for                            = get_reuse_hint_for ();
+  }
+  in
+  vcfg
+
+let set_vconfig (vcfg:vconfig) : unit =
+  let option_as (tag : 'a -> option_val) (o : option<'a>) : option_val =
+    match o with
+    | None -> Unset
+    | Some s -> tag s
+  in
+  set_option "initial_fuel"                              (Int vcfg.initial_fuel);
+  set_option "max_fuel"                                  (Int vcfg.max_fuel);
+  set_option "initial_ifuel"                             (Int vcfg.initial_ifuel);
+  set_option "max_ifuel"                                 (Int vcfg.max_ifuel);
+  set_option "detail_errors"                             (Bool vcfg.detail_errors);
+  set_option "detail_hint_replay"                        (Bool vcfg.detail_hint_replay);
+  set_option "no_smt"                                    (Bool vcfg.no_smt);
+  set_option "quake_lo"                                  (Int vcfg.quake_lo);
+  set_option "quake_hi"                                  (Int vcfg.quake_hi);
+  set_option "quake_keep"                                (Bool vcfg.quake_keep);
+  set_option "retry"                                     (Bool vcfg.retry);
+  set_option "smtencoding.elim_box"                      (Bool vcfg.smtencoding_elim_box);
+  set_option "smtencoding.nl_arith_repr"                 (String vcfg.smtencoding_nl_arith_repr);
+  set_option "smtencoding.l_arith_repr"                  (String vcfg.smtencoding_l_arith_repr);
+  set_option "smtencoding.valid_intro"                   (Bool vcfg.smtencoding_valid_intro);
+  set_option "smtencoding.valid_elim"                    (Bool vcfg.smtencoding_valid_elim);
+  set_option "tcnorm"                                    (Bool vcfg.tcnorm);
+  set_option "no_plugins"                                (Bool vcfg.no_plugins);
+  set_option "no_tactics"                                (Bool vcfg.no_tactics);
+  set_option "vcgen.optimize_bind_as_seq"                (option_as String vcfg.vcgen_optimize_bind_as_seq);
+  set_option "z3cliopt"                                  (List (List.map String vcfg.z3cliopt));
+  set_option "z3refresh"                                 (Bool vcfg.z3refresh);
+  set_option "z3rlimit"                                  (Int vcfg.z3rlimit);
+  set_option "z3rlimit_factor"                           (Int vcfg.z3rlimit_factor);
+  set_option "z3seed"                                    (Int vcfg.z3seed);
+  set_option "use_two_phase_tc"                          (Bool vcfg.use_two_phase_tc);
+  set_option "trivial_pre_for_unannotated_effectful_fns" (Bool vcfg.trivial_pre_for_unannotated_effectful_fns);
+  set_option "reuse_hint_for"                            (option_as String vcfg.reuse_hint_for);
+  ()
