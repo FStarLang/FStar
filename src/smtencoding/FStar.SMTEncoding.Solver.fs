@@ -678,13 +678,6 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
       else []
     in
 
-    let min_fuel =
-        if Options.min_fuel() < Options.initial_fuel()
-        then [{default_settings with query_fuel=Options.min_fuel();
-                                     query_ifuel=1}]
-        else []
-    in
-
     let all_configs =
         use_hints_setting
         @ [default_settings]
