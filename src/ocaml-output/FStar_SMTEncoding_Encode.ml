@@ -6601,7 +6601,8 @@ let (encode_modul :
   =
   fun tcenv ->
     fun modul ->
-      let uu___ = (FStar_Options.lax ()) && (FStar_Options.ml_ish ()) in
+      let uu___ =
+        tcenv.FStar_TypeChecker_Env.lax && (FStar_Options.ml_ish ()) in
       if uu___
       then ([], [])
       else
@@ -6696,7 +6697,8 @@ let (encode_modul_from_cache :
       fun uu___ ->
         match uu___ with
         | (decls, fvbs) ->
-            let uu___1 = (FStar_Options.lax ()) && (FStar_Options.ml_ish ()) in
+            let uu___1 =
+              tcenv.FStar_TypeChecker_Env.lax && (FStar_Options.ml_ish ()) in
             if uu___1
             then ()
             else

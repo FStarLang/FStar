@@ -3655,9 +3655,8 @@ let (lax_on : unit -> Prims.bool FStar_Tactics_Monad.tac) =
     FStar_Tactics_Monad.bind FStar_Tactics_Monad.cur_goal
       (fun g ->
          let uu___1 =
-           (FStar_Options.lax ()) ||
-             (let uu___2 = FStar_Tactics_Types.goal_env g in
-              uu___2.FStar_TypeChecker_Env.lax) in
+           let uu___2 = FStar_Tactics_Types.goal_env g in
+           uu___2.FStar_TypeChecker_Env.lax in
          FStar_Tactics_Monad.ret uu___1)
 let (unquote :
   FStar_Reflection_Data.typ ->

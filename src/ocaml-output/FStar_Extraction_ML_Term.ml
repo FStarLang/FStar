@@ -2732,7 +2732,9 @@ and (term_as_mlexpr' :
                             let r = e0.FStar_Syntax_Syntax.pos in
                             let expected_effect =
                               let uu___7 =
-                                (FStar_Options.lax ()) &&
+                                (let uu___8 =
+                                   FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
+                                 uu___8.FStar_TypeChecker_Env.lax) &&
                                   (FStar_TypeChecker_Util.short_circuit_head
                                      head) in
                               if uu___7

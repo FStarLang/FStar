@@ -1391,7 +1391,7 @@ let (ask_and_report_errors :
                               FStar_List.iter report all_errs))
                         else ()) in
                  let skip =
-                   (FStar_Options.admit_smt_queries ()) ||
+                   env.FStar_TypeChecker_Env.admit ||
                      (let uu___2 = FStar_Options.admit_except () in
                       match uu___2 with
                       | FStar_Pervasives_Native.Some id ->

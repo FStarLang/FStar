@@ -2636,8 +2636,8 @@ and (tc_maybe_toplevel_term :
                         let uu___5 =
                           ((Prims.op_Negation env2.FStar_TypeChecker_Env.lax)
                              &&
-                             (let uu___6 = FStar_Options.lax () in
-                              Prims.op_Negation uu___6))
+                             (Prims.op_Negation
+                                env2.FStar_TypeChecker_Env.lax))
                             &&
                             (FStar_TypeChecker_Util.short_circuit_head head1) in
                         if uu___5

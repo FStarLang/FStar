@@ -1398,10 +1398,7 @@ let (dep_graph : env -> FStar_Parser_Dep.deps) =
 type env_t = env
 type sigtable = FStar_Syntax_Syntax.sigelt FStar_Util.smap
 let (should_verify : env -> Prims.bool) =
-  fun env1 ->
-    ((Prims.op_Negation env1.lax) && (Prims.op_Negation env1.admit)) &&
-      (let uu___ = FStar_Ident.string_of_lid env1.curmodule in
-       FStar_Options.should_verify uu___)
+  fun env1 -> Prims.op_Negation env1.lax
 let (visible_at : delta_level -> FStar_Syntax_Syntax.qualifier -> Prims.bool)
   =
   fun d ->
