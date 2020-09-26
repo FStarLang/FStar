@@ -626,16 +626,23 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       extract_bundle_iface g se
 
     | Sig_declare_typ(lid, univs, t)  when Term.is_arity g t -> //lid is a type
-       let env, iface, _ =
+      let env, iface, _ =
           extract_type_declaration g true lid se.sigquals se.sigattrs univs t
       in
       env, iface
 
     | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
-      let env, iface, _ =
+      if se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)
+      then (
+        //Don't extract projectors returning types---not useful for typing generated code and
+        //And can actually break F# extraction, in case there are unused type parameters
+        g, empty_iface
+      ) else (
+        let env, iface, _ =
           extract_typ_abbrev g se.sigquals se.sigattrs lb
-      in
-      env, iface
+        in
+        env, iface
+      )
 
     | Sig_let ((true, lbs), _)
       when BU.for_some (fun lb -> Term.is_arity g lb.lbtyp) lbs ->
@@ -905,10 +912,17 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
           //extracting `type t = e`
           //or         `let t = e` when e is a type
-          let env, _, impl =
-              extract_typ_abbrev g se.sigquals se.sigattrs lb
-          in
-          env, impl
+          if se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)
+          then (
+            //Don't extract projectors returning types---not useful for typing generated code and
+            //And can actually break F# extraction, in case there are unused type parameters
+            g, []
+          ) else (
+            let env, _, impl =
+                extract_typ_abbrev g se.sigquals se.sigattrs lb
+            in
+            env, impl
+          )
 
         | Sig_let((true, lbs), _)
           when BU.for_some (fun lb -> Term.is_arity g lb.lbtyp) lbs ->

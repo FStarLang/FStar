@@ -1304,9 +1304,19 @@ let (extract_sigelt_iface :
       | FStar_Syntax_Syntax.Sig_let ((false, lb::[]), uu___) when
           FStar_Extraction_ML_Term.is_arity g lb.FStar_Syntax_Syntax.lbtyp ->
           let uu___1 =
-            extract_typ_abbrev g se.FStar_Syntax_Syntax.sigquals
-              se.FStar_Syntax_Syntax.sigattrs lb in
-          (match uu___1 with | (env, iface1, uu___2) -> (env, iface1))
+            FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
+              (FStar_Util.for_some
+                 (fun uu___2 ->
+                    match uu___2 with
+                    | FStar_Syntax_Syntax.Projector uu___3 -> true
+                    | uu___3 -> false)) in
+          if uu___1
+          then (g, empty_iface)
+          else
+            (let uu___3 =
+               extract_typ_abbrev g se.FStar_Syntax_Syntax.sigquals
+                 se.FStar_Syntax_Syntax.sigattrs lb in
+             match uu___3 with | (env, iface1, uu___4) -> (env, iface1))
       | FStar_Syntax_Syntax.Sig_let ((true, lbs), uu___) when
           FStar_Util.for_some
             (fun lb ->
@@ -1813,9 +1823,19 @@ let rec (extract_sig :
                 lb.FStar_Syntax_Syntax.lbtyp
               ->
               let uu___4 =
-                extract_typ_abbrev g se.FStar_Syntax_Syntax.sigquals
-                  se.FStar_Syntax_Syntax.sigattrs lb in
-              (match uu___4 with | (env, uu___5, impl) -> (env, impl))
+                FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
+                  (FStar_Util.for_some
+                     (fun uu___5 ->
+                        match uu___5 with
+                        | FStar_Syntax_Syntax.Projector uu___6 -> true
+                        | uu___6 -> false)) in
+              if uu___4
+              then (g, [])
+              else
+                (let uu___6 =
+                   extract_typ_abbrev g se.FStar_Syntax_Syntax.sigquals
+                     se.FStar_Syntax_Syntax.sigattrs lb in
+                 match uu___6 with | (env, uu___7, impl) -> (env, impl))
           | FStar_Syntax_Syntax.Sig_let ((true, lbs), uu___3) when
               FStar_Util.for_some
                 (fun lb ->
