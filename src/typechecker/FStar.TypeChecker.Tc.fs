@@ -402,7 +402,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     failwith "Impossible bare data-constructor"
 
   (* If we're --laxing, and this is not an `expect_lax_failure`, then just ignore the definition *)
-  | Sig_fail (_, false, _) when not (Env.should_verify env) || Options.admit_smt_queries () ->
+  | Sig_fail (_, false, _) when env.lax || env.admit ->
     [], [], env
 
   | Sig_fail (expected_errors, lax, ses) ->
@@ -881,10 +881,8 @@ let tc_decl env se: list<sigelt> * list<sigelt> * Env.env =
      BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (Print.sigelt_to_string se);
    if se.sigmeta.sigmeta_admit
    then begin
-     let old = Options.admit_smt_queries () in
-     Options.set_admit_smt_queries true;  
+     let env = { env with admit = true } in
      let result = tc_decl' env se in
-     Options.set_admit_smt_queries old;
      result
    end
    else tc_decl' env se
@@ -1025,14 +1023,13 @@ let push_context env msg = snd (snapshot_context env msg)
 let pop_context env msg = rollback_context env.solver msg None
 
 let tc_partial_modul env modul =
-  let verify = Options.should_verify (string_of_lid modul.name) in
-  let action = if verify then "Verifying" else "Lax-checking" in
+  let action = if not env.lax then "Verifying" else "Lax-checking" in
   let label = if modul.is_interface then "interface" else "implementation" in
   if Options.debug_any () then
     BU.print3 "%s %s of %s\n" action label (string_of_lid modul.name);
 
   let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") (string_of_lid modul.name) in
-  let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
+  let env = { env with Env.is_iface=modul.is_interface } in
   let env = Env.set_current_module env modul.name in
   let ses, env = tc_decls env modul.declarations in
   {modul with declarations=ses}, env
@@ -1094,7 +1091,6 @@ let check_module env m b =
   if Options.dump_module (string_of_lid m.name)
   then BU.print1 "Module before type checking:\n%s\n" (Print.modul_to_string m);
 
-  let env = {env with lax=not (Options.should_verify (string_of_lid m.name))} in
   let m, env = tc_modul env m b in
 
   (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)

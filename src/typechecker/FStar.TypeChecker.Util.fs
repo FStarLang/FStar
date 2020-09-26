@@ -1769,7 +1769,6 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_
          not (Options.use_two_phase_tc ()) // always coerce without 2 phase TC
       || env.phase1 // otherwise only on phase1
       || env.lax
-      || Options.lax ()
     in
     if not should_coerce
     then (e, lc, Env.trivial_guard)

@@ -127,6 +127,9 @@ let init_env deps : TcEnv.env =
         (NBE.normalize
           (FStar.Tactics.Interpreter.primitive_steps ()))
   in
+  // .lax will be set for each file
+  let env = { env with admit = Options.admit_smt_queries () } in
+
   (* Set up some tactics callbacks *)
   let env = { env with synth_hook       = FStar.Tactics.Hooks.synthesize } in
   let env = { env with try_solve_implicits_hook = FStar.Tactics.Hooks.solve_implicits } in
@@ -178,6 +181,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
        Errors.raise_error (Errors.Fatal_NonSingletonTopLevelModule, msg)
                              (range_of_first_mod_decl ast_modul)
     end;
+    let env = { env with lax = not (Options.should_verify (string_of_lid modul.name)) } in
     let modul, env =
         if DsEnv.syntax_only env.dsenv then modul, env
         else Tc.tc_partial_modul env modul
@@ -302,6 +306,7 @@ let tc_one_file
                          | [] -> ()
                          | _ -> failwith "Impossible: gamma contains leaked names"
                  in
+                 let tcenv = { tcenv with lax = not (Options.should_verify (string_of_lid fmod.name)) } in
                  let modul, env = Tc.check_module tcenv fmod (is_some pre_fn) in
                  //AR: encode the module to to smt
                  maybe_restore_opts ();

@@ -244,10 +244,7 @@ type env_t = env
 
 type sigtable = BU.smap<sigelt>
 
-let should_verify env =
-    not env.lax
-    && not env.admit
-    && Options.should_verify (string_of_lid env.curmodule)
+let should_verify env = not env.lax
 
 let visible_at d q = match d, q with
   | NoDelta,    _

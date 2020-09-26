@@ -894,7 +894,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in
     let chead, g_head = TcComm.lcomp_comp chead |> (fun (c, g) -> c, Env.conj_guard g_head g) in
-    let e, c, g = if not env.lax && not (Options.lax()) && TcUtil.short_circuit_head head
+    let e, c, g = if not env.lax && not env.lax && TcUtil.short_circuit_head head
                   then let e, c, g = check_short_circuit_args env head chead g_head args (Env.expected_typ env0) in
                        // //TODO: this is not efficient:
                        // //      It is quadratic in the size of boolean terms

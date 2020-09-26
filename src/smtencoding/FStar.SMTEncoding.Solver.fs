@@ -854,7 +854,7 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
     in
 
     let skip =
-        Options.admit_smt_queries () ||
+        env.admit ||
         (match Options.admit_except () with
          | Some id ->
            if BU.starts_with id "("

@@ -1172,7 +1172,7 @@ let top_env     () : tac<env>  = bind get (fun ps -> ret <| ps.main_context)
 
 let lax_on () : tac<bool> =
     bind cur_goal (fun g ->
-    ret (Options.lax () || (goal_env g).lax))
+    ret (goal_env g).lax)
 
 let unquote (ty : term) (tm : term) : tac<term> = wrap_err "unquote" <|
     mlog (fun () -> BU.print1 "unquote: tm = %s\n" (Print.term_to_string tm)) (fun _ ->
