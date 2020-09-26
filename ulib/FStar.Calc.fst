@@ -2,9 +2,6 @@ module FStar.Calc
 
 open FStar.Preorder (* for `relation` *)
 
-// TODO: It doesn't seem to silence a warning. Push/pop options also don't work. 
-#set-options "--warn_error -338"
-
 noeq
 type calc_proof #t : list (relation t) -> t -> t -> Type =
   | CalcRefl : #x:t -> calc_proof [] x x
