@@ -52,7 +52,6 @@
   <Import Project="$(FSTAR_HOME)\fsharp.extraction.targets" />
   <ItemGroup>
     <None Include="App.config" />
-    <Compile Include="Integers.fst" />
     <Compile Include="Monotonic.Map.fst" />
     <None Include="TestFSharp3.fsx" />
     <Content Include="packages.config" />
