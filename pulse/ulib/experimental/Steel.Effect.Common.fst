@@ -1082,7 +1082,7 @@ let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
       | App t _ -> if term_eq t (`squash) then hd::slgoals, loggoals else slgoals, loggoals
       | _ -> slgoals, loggoals
 
-[@@ resolve_implicits; framing_implicit]
+[@@ resolve_implicits; framing_implicit; plugin]
 let init_resolve_tac () : Tac unit =
   let slgs, loggs = filter_goals (goals()) in
   set_goals slgs;
