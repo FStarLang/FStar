@@ -1344,14 +1344,11 @@ let (check_linear_pattern_variables :
             let aux out uu___1 =
               match uu___1 with
               | (p1, uu___2) ->
-                  let intersection =
-                    let uu___3 = pat_vars p1 in
-                    FStar_Util.set_intersect uu___3 out in
+                  let p_vars = pat_vars p1 in
+                  let intersection = FStar_Util.set_intersect p_vars out in
                   let uu___3 = FStar_Util.set_is_empty intersection in
                   if uu___3
-                  then
-                    let uu___4 = pat_vars p1 in
-                    FStar_Util.set_union out uu___4
+                  then FStar_Util.set_union out p_vars
                   else
                     (let duplicate_bv =
                        let uu___5 = FStar_Util.set_elements intersection in

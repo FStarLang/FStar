@@ -622,9 +622,10 @@ let check_linear_pattern_variables pats r =
     | Pat_var x -> BU.set_add x S.no_names
     | Pat_cons(_, pats) ->
       let aux out (p, _) =
-          let intersection = BU.set_intersect (pat_vars p) out in
+          let p_vars = pat_vars p in
+          let intersection = BU.set_intersect p_vars out in
           if BU.set_is_empty intersection
-          then BU.set_union out (pat_vars p)
+          then BU.set_union out p_vars
           else
             let duplicate_bv = List.hd (BU.set_elements intersection) in
             raise_error ( Errors.Fatal_NonLinearPatternNotPermitted,
