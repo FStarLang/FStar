@@ -709,14 +709,12 @@ let (mlp_lalloc : (Prims.string Prims.list * Prims.string)) =
 let (apply_obj_repr : mlexpr -> mlty -> mlexpr) =
   fun x ->
     fun t ->
-      let obj_ns =
+      let repr_name =
         let uu___ =
           let uu___1 = FStar_Options.codegen () in
           uu___1 = (FStar_Pervasives_Native.Some FStar_Options.FSharp) in
-        if uu___ then "FSharp.Compatibility.OCaml.Obj" else "Obj" in
-      let obj_repr =
-        with_ty (MLTY_Fun (t, E_PURE, MLTY_Top))
-          (MLE_Name ([obj_ns], "repr")) in
+        if uu___ then MLE_Name ([], "box") else MLE_Name (["Obj"], "repr") in
+      let obj_repr = with_ty (MLTY_Fun (t, E_PURE, MLTY_Top)) repr_name in
       with_ty_loc MLTY_Top (MLE_App (obj_repr, [x])) x.loc
 let (push_unit : mltyscheme -> mltyscheme) =
   fun ts ->
