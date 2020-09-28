@@ -1716,17 +1716,22 @@ let (uu___is_Kremlin : codegen_t -> Prims.bool) =
   fun projectee -> match projectee with | Kremlin -> true | uu___ -> false
 let (uu___is_Plugin : codegen_t -> Prims.bool) =
   fun projectee -> match projectee with | Plugin -> true | uu___ -> false
+let (parse_codegen :
+  Prims.string -> codegen_t FStar_Pervasives_Native.option) =
+  fun uu___ ->
+    match uu___ with
+    | "OCaml" -> FStar_Pervasives_Native.Some OCaml
+    | "FSharp" -> FStar_Pervasives_Native.Some FSharp
+    | "Kremlin" -> FStar_Pervasives_Native.Some Kremlin
+    | "Plugin" -> FStar_Pervasives_Native.Some Plugin
+    | uu___1 -> FStar_Pervasives_Native.None
 let (codegen : unit -> codegen_t FStar_Pervasives_Native.option) =
   fun uu___ ->
     let uu___1 = get_codegen () in
     FStar_Util.map_opt uu___1
-      (fun uu___2 ->
-         match uu___2 with
-         | "OCaml" -> OCaml
-         | "FSharp" -> FSharp
-         | "Kremlin" -> Kremlin
-         | "Plugin" -> Plugin
-         | uu___3 -> failwith "Impossible")
+      (fun s ->
+         let uu___2 = parse_codegen s in
+         FStar_All.pipe_right uu___2 FStar_Util.must)
 let (codegen_libs : unit -> Prims.string Prims.list Prims.list) =
   fun uu___ ->
     let uu___1 = get_codegen_lib () in

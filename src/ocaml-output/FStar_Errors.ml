@@ -367,6 +367,8 @@ type raw_error =
   | Error_BadSplice 
   | Error_UnexpectedUnresolvedUvar 
   | Error_RemoveUnusedTypeParameter 
+  | Error_CallToErased 
+  | Warning_NoMagicInFSharp 
 let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -1844,6 +1846,12 @@ let (uu___is_Error_RemoveUnusedTypeParameter : raw_error -> Prims.bool) =
     match projectee with
     | Error_RemoveUnusedTypeParameter -> true
     | uu___ -> false
+let (uu___is_Error_CallToErased : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Error_CallToErased -> true | uu___ -> false
+let (uu___is_Warning_NoMagicInFSharp : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Warning_NoMagicInFSharp -> true | uu___ -> false
 type flag = error_flag
 type error_setting = (raw_error * error_flag * Prims.int)
 let (default_settings : error_setting Prims.list) =
@@ -2192,7 +2200,9 @@ let (default_settings : error_setting Prims.list) =
   (Warning_DeprecatedGeneric, CWarning, (Prims.of_int (337)));
   (Error_BadSplice, CError, (Prims.of_int (338)));
   (Error_UnexpectedUnresolvedUvar, CAlwaysError, (Prims.of_int (339)));
-  (Error_RemoveUnusedTypeParameter, CWarning, (Prims.of_int (340)))]
+  (Error_CallToErased, CError, (Prims.of_int (340)));
+  (Error_RemoveUnusedTypeParameter, CWarning, (Prims.of_int (341)));
+  (Warning_NoMagicInFSharp, CWarning, (Prims.of_int (342)))]
 let lookup_error :
   'uuuuu 'uuuuu1 'uuuuu2 .
     ('uuuuu * 'uuuuu1 * 'uuuuu2) Prims.list ->

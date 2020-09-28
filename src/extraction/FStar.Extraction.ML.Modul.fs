@@ -626,16 +626,23 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       extract_bundle_iface g se
 
     | Sig_declare_typ(lid, univs, t)  when Term.is_arity g t -> //lid is a type
-       let env, iface, _ =
+      let env, iface, _ =
           extract_type_declaration g true lid se.sigquals se.sigattrs univs t
       in
       env, iface
 
     | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
-      let env, iface, _ =
+      if se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)
+      then (
+        //Don't extract projectors returning types---not useful for typing generated code and
+        //And can actually break F# extraction, in case there are unused type parameters
+        g, empty_iface
+      ) else (
+        let env, iface, _ =
           extract_typ_abbrev g se.sigquals se.sigattrs lb
-      in
-      env, iface
+        in
+        env, iface
+      )
 
     | Sig_let ((true, lbs), _)
       when BU.for_some (fun lb -> Term.is_arity g lb.lbtyp) lbs ->
@@ -848,11 +855,35 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
            | _ -> []
            end
 
+let get_noextract_to (se:sigelt) (backend:option<Options.codegen_t>) : bool =
+  BU.for_some (function attr ->
+    let hd, args = U.head_and_args attr in
+    match (SS.compress hd).n, args with
+    | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv PC.noextract_to_attr ->
+        begin match EMB.unembed EMB.e_string a false EMB.id_norm_cb with
+        | Some s ->
+          Option.isSome backend && Options.parse_codegen s = backend
+        | None ->
+          false
+        end
+    | _ -> false
+  ) se.sigattrs
+
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
      debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string se));
+
+     // Extract this definition, unless
+     // 1- it has the `noextract` qualifier, and we are not extracting for Kremlin
+     //    (kremlin needs the stub anyway, so we ignore the qualifier in that special case)
+     // 2- it has a noextract_to attribute matching the current backend.
+     if (List.contains S.NoExtract se.sigquals && Options.codegen () <> Some Options.Kremlin)
+        || (get_noextract_to se (Options.codegen ()))
+     then g, []
+     else
+
      match se.sigel with
         | Sig_bundle _
         | Sig_inductive_typ _
@@ -881,10 +912,17 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         | Sig_let((false, [lb]), _) when Term.is_arity g lb.lbtyp ->
           //extracting `type t = e`
           //or         `let t = e` when e is a type
-          let env, _, impl =
-              extract_typ_abbrev g se.sigquals se.sigattrs lb
-          in
-          env, impl
+          if se.sigquals |> BU.for_some (function Projector _ -> true | _ -> false)
+          then (
+            //Don't extract projectors returning types---not useful for typing generated code and
+            //And can actually break F# extraction, in case there are unused type parameters
+            g, []
+          ) else (
+            let env, _, impl =
+                extract_typ_abbrev g se.sigquals se.sigattrs lb
+            in
+            env, impl
+          )
 
         | Sig_let((true, lbs), _)
           when BU.for_some (fun lb -> Term.is_arity g lb.lbtyp) lbs ->

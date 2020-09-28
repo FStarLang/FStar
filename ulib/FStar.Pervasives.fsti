@@ -736,6 +736,14 @@ val allow_informative_binders : unit
   *)
 val commute_nested_matches : unit
 
+(** This attribute controls extraction: it can be used to disable
+    extraction of a given top-level definition into a specific backend,
+    such as "OCaml". If any extracted code must call into an erased
+    function, an error will be raised (code 340).
+  *)
+val noextract_to (backend:string) : Tot unit
+
+
 ///  Controlling normalization
 
 (** In any invocation of the F* normalizer, every occurrence of

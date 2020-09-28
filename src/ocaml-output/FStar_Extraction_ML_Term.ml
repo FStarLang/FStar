@@ -627,134 +627,161 @@ let (maybe_eta_expand :
              uu___1 = (FStar_Pervasives_Native.Some FStar_Options.Kremlin)) in
         if uu___ then e else eta_expand g expect e
 let (apply_coercion :
-  FStar_Extraction_ML_UEnv.uenv ->
-    FStar_Extraction_ML_Syntax.mlexpr ->
-      FStar_Extraction_ML_Syntax.mlty ->
-        FStar_Extraction_ML_Syntax.mlty -> FStar_Extraction_ML_Syntax.mlexpr)
-  =
-  fun g ->
-    fun e ->
-      fun ty ->
-        fun expect ->
-          let mk_fun binder body =
-            match body.FStar_Extraction_ML_Syntax.expr with
-            | FStar_Extraction_ML_Syntax.MLE_Fun (binders, body1) ->
-                FStar_Extraction_ML_Syntax.MLE_Fun
-                  ((binder :: binders), body1)
-            | uu___ -> FStar_Extraction_ML_Syntax.MLE_Fun ([binder], body) in
-          let rec aux e1 ty1 expect1 =
-            let coerce_branch uu___ =
-              match uu___ with
-              | (pat, w, b) ->
-                  let uu___1 = aux b ty1 expect1 in (pat, w, uu___1) in
-            match ((e1.FStar_Extraction_ML_Syntax.expr), ty1, expect1) with
-            | (FStar_Extraction_ML_Syntax.MLE_Fun (arg::rest, body),
-               FStar_Extraction_ML_Syntax.MLTY_Fun (t0, uu___, t1),
-               FStar_Extraction_ML_Syntax.MLTY_Fun (s0, uu___1, s1)) ->
-                let body1 =
-                  match rest with
-                  | [] -> body
-                  | uu___2 ->
-                      FStar_Extraction_ML_Syntax.with_ty t1
-                        (FStar_Extraction_ML_Syntax.MLE_Fun (rest, body)) in
-                let body2 = aux body1 t1 s1 in
-                let uu___2 = type_leq g s0 t0 in
-                if uu___2
-                then
-                  FStar_Extraction_ML_Syntax.with_ty expect1
-                    (mk_fun arg body2)
-                else
-                  (let lb =
-                     let uu___4 =
-                       let uu___5 =
-                         let uu___6 =
-                           let uu___7 =
-                             FStar_All.pipe_left
-                               (FStar_Extraction_ML_Syntax.with_ty s0)
-                               (FStar_Extraction_ML_Syntax.MLE_Var
-                                  (FStar_Pervasives_Native.fst arg)) in
-                           (uu___7, s0, t0) in
-                         FStar_Extraction_ML_Syntax.MLE_Coerce uu___6 in
-                       FStar_Extraction_ML_Syntax.with_ty t0 uu___5 in
-                     {
-                       FStar_Extraction_ML_Syntax.mllb_name =
-                         (FStar_Pervasives_Native.fst arg);
-                       FStar_Extraction_ML_Syntax.mllb_tysc =
-                         (FStar_Pervasives_Native.Some ([], t0));
-                       FStar_Extraction_ML_Syntax.mllb_add_unit = false;
-                       FStar_Extraction_ML_Syntax.mllb_def = uu___4;
-                       FStar_Extraction_ML_Syntax.mllb_meta = [];
-                       FStar_Extraction_ML_Syntax.print_typ = false
-                     } in
-                   let body3 =
-                     FStar_All.pipe_left
-                       (FStar_Extraction_ML_Syntax.with_ty s1)
-                       (FStar_Extraction_ML_Syntax.MLE_Let
-                          ((FStar_Extraction_ML_Syntax.NonRec, [lb]), body2)) in
-                   FStar_Extraction_ML_Syntax.with_ty expect1
-                     (mk_fun ((FStar_Pervasives_Native.fst arg), s0) body3))
-            | (FStar_Extraction_ML_Syntax.MLE_Let (lbs, body), uu___, uu___1)
-                ->
-                let uu___2 =
-                  let uu___3 =
-                    let uu___4 = aux body ty1 expect1 in (lbs, uu___4) in
-                  FStar_Extraction_ML_Syntax.MLE_Let uu___3 in
-                FStar_All.pipe_left
-                  (FStar_Extraction_ML_Syntax.with_ty expect1) uu___2
-            | (FStar_Extraction_ML_Syntax.MLE_Match (s, branches), uu___,
-               uu___1) ->
-                let uu___2 =
-                  let uu___3 =
-                    let uu___4 = FStar_List.map coerce_branch branches in
-                    (s, uu___4) in
-                  FStar_Extraction_ML_Syntax.MLE_Match uu___3 in
-                FStar_All.pipe_left
-                  (FStar_Extraction_ML_Syntax.with_ty expect1) uu___2
-            | (FStar_Extraction_ML_Syntax.MLE_If (s, b1, b2_opt), uu___,
-               uu___1) ->
-                let uu___2 =
-                  let uu___3 =
-                    let uu___4 = aux b1 ty1 expect1 in
-                    let uu___5 =
-                      FStar_Util.map_opt b2_opt
-                        (fun b2 -> aux b2 ty1 expect1) in
-                    (s, uu___4, uu___5) in
-                  FStar_Extraction_ML_Syntax.MLE_If uu___3 in
-                FStar_All.pipe_left
-                  (FStar_Extraction_ML_Syntax.with_ty expect1) uu___2
-            | (FStar_Extraction_ML_Syntax.MLE_Seq es, uu___, uu___1) ->
-                let uu___2 = FStar_Util.prefix es in
-                (match uu___2 with
-                 | (prefix, last) ->
-                     let uu___3 =
-                       let uu___4 =
-                         let uu___5 =
-                           let uu___6 = aux last ty1 expect1 in [uu___6] in
-                         FStar_List.append prefix uu___5 in
-                       FStar_Extraction_ML_Syntax.MLE_Seq uu___4 in
-                     FStar_All.pipe_left
-                       (FStar_Extraction_ML_Syntax.with_ty expect1) uu___3)
-            | (FStar_Extraction_ML_Syntax.MLE_Try (s, branches), uu___,
-               uu___1) ->
-                let uu___2 =
-                  let uu___3 =
-                    let uu___4 = FStar_List.map coerce_branch branches in
-                    (s, uu___4) in
-                  FStar_Extraction_ML_Syntax.MLE_Try uu___3 in
-                FStar_All.pipe_left
-                  (FStar_Extraction_ML_Syntax.with_ty expect1) uu___2
-            | uu___ ->
-                FStar_Extraction_ML_Syntax.with_ty expect1
-                  (FStar_Extraction_ML_Syntax.MLE_Coerce (e1, ty1, expect1)) in
-          aux e ty expect
-let maybe_coerce :
-  'uuuuu .
-    'uuuuu ->
-      FStar_Extraction_ML_UEnv.uenv ->
-        FStar_Extraction_ML_Syntax.mlexpr ->
+  FStar_Range.range ->
+    FStar_Extraction_ML_UEnv.uenv ->
+      FStar_Extraction_ML_Syntax.mlexpr ->
+        FStar_Extraction_ML_Syntax.mlty ->
           FStar_Extraction_ML_Syntax.mlty ->
-            FStar_Extraction_ML_Syntax.mlty ->
-              FStar_Extraction_ML_Syntax.mlexpr
+            FStar_Extraction_ML_Syntax.mlexpr)
+  =
+  fun pos ->
+    fun g ->
+      fun e ->
+        fun ty ->
+          fun expect ->
+            (let uu___1 =
+               let uu___2 = FStar_Options.codegen () in
+               uu___2 = (FStar_Pervasives_Native.Some FStar_Options.FSharp) in
+             if uu___1
+             then
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 =
+                     let uu___5 =
+                       FStar_Extraction_ML_UEnv.current_module_of_uenv g in
+                     FStar_Extraction_ML_Code.string_of_mlty uu___5 ty in
+                   let uu___5 =
+                     let uu___6 =
+                       FStar_Extraction_ML_UEnv.current_module_of_uenv g in
+                     FStar_Extraction_ML_Code.string_of_mlty uu___6 expect in
+                   FStar_Util.format2
+                     "Inserted an unsafe type coercion in generated code from %s to %s; this may be unsound in F#"
+                     uu___4 uu___5 in
+                 (FStar_Errors.Warning_NoMagicInFSharp, uu___3) in
+               FStar_Errors.log_issue pos uu___2
+             else ());
+            (let mk_fun binder body =
+               match body.FStar_Extraction_ML_Syntax.expr with
+               | FStar_Extraction_ML_Syntax.MLE_Fun (binders, body1) ->
+                   FStar_Extraction_ML_Syntax.MLE_Fun
+                     ((binder :: binders), body1)
+               | uu___1 ->
+                   FStar_Extraction_ML_Syntax.MLE_Fun ([binder], body) in
+             let rec aux e1 ty1 expect1 =
+               let coerce_branch uu___1 =
+                 match uu___1 with
+                 | (pat, w, b) ->
+                     let uu___2 = aux b ty1 expect1 in (pat, w, uu___2) in
+               match ((e1.FStar_Extraction_ML_Syntax.expr), ty1, expect1)
+               with
+               | (FStar_Extraction_ML_Syntax.MLE_Fun (arg::rest, body),
+                  FStar_Extraction_ML_Syntax.MLTY_Fun (t0, uu___1, t1),
+                  FStar_Extraction_ML_Syntax.MLTY_Fun (s0, uu___2, s1)) ->
+                   let body1 =
+                     match rest with
+                     | [] -> body
+                     | uu___3 ->
+                         FStar_Extraction_ML_Syntax.with_ty t1
+                           (FStar_Extraction_ML_Syntax.MLE_Fun (rest, body)) in
+                   let body2 = aux body1 t1 s1 in
+                   let uu___3 = type_leq g s0 t0 in
+                   if uu___3
+                   then
+                     FStar_Extraction_ML_Syntax.with_ty expect1
+                       (mk_fun arg body2)
+                   else
+                     (let lb =
+                        let uu___5 =
+                          let uu___6 =
+                            let uu___7 =
+                              let uu___8 =
+                                FStar_All.pipe_left
+                                  (FStar_Extraction_ML_Syntax.with_ty s0)
+                                  (FStar_Extraction_ML_Syntax.MLE_Var
+                                     (FStar_Pervasives_Native.fst arg)) in
+                              (uu___8, s0, t0) in
+                            FStar_Extraction_ML_Syntax.MLE_Coerce uu___7 in
+                          FStar_Extraction_ML_Syntax.with_ty t0 uu___6 in
+                        {
+                          FStar_Extraction_ML_Syntax.mllb_name =
+                            (FStar_Pervasives_Native.fst arg);
+                          FStar_Extraction_ML_Syntax.mllb_tysc =
+                            (FStar_Pervasives_Native.Some ([], t0));
+                          FStar_Extraction_ML_Syntax.mllb_add_unit = false;
+                          FStar_Extraction_ML_Syntax.mllb_def = uu___5;
+                          FStar_Extraction_ML_Syntax.mllb_meta = [];
+                          FStar_Extraction_ML_Syntax.print_typ = false
+                        } in
+                      let body3 =
+                        FStar_All.pipe_left
+                          (FStar_Extraction_ML_Syntax.with_ty s1)
+                          (FStar_Extraction_ML_Syntax.MLE_Let
+                             ((FStar_Extraction_ML_Syntax.NonRec, [lb]),
+                               body2)) in
+                      FStar_Extraction_ML_Syntax.with_ty expect1
+                        (mk_fun ((FStar_Pervasives_Native.fst arg), s0) body3))
+               | (FStar_Extraction_ML_Syntax.MLE_Let (lbs, body), uu___1,
+                  uu___2) ->
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 = aux body ty1 expect1 in (lbs, uu___5) in
+                     FStar_Extraction_ML_Syntax.MLE_Let uu___4 in
+                   FStar_All.pipe_left
+                     (FStar_Extraction_ML_Syntax.with_ty expect1) uu___3
+               | (FStar_Extraction_ML_Syntax.MLE_Match (s, branches), uu___1,
+                  uu___2) ->
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 = FStar_List.map coerce_branch branches in
+                       (s, uu___5) in
+                     FStar_Extraction_ML_Syntax.MLE_Match uu___4 in
+                   FStar_All.pipe_left
+                     (FStar_Extraction_ML_Syntax.with_ty expect1) uu___3
+               | (FStar_Extraction_ML_Syntax.MLE_If (s, b1, b2_opt), uu___1,
+                  uu___2) ->
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 = aux b1 ty1 expect1 in
+                       let uu___6 =
+                         FStar_Util.map_opt b2_opt
+                           (fun b2 -> aux b2 ty1 expect1) in
+                       (s, uu___5, uu___6) in
+                     FStar_Extraction_ML_Syntax.MLE_If uu___4 in
+                   FStar_All.pipe_left
+                     (FStar_Extraction_ML_Syntax.with_ty expect1) uu___3
+               | (FStar_Extraction_ML_Syntax.MLE_Seq es, uu___1, uu___2) ->
+                   let uu___3 = FStar_Util.prefix es in
+                   (match uu___3 with
+                    | (prefix, last) ->
+                        let uu___4 =
+                          let uu___5 =
+                            let uu___6 =
+                              let uu___7 = aux last ty1 expect1 in [uu___7] in
+                            FStar_List.append prefix uu___6 in
+                          FStar_Extraction_ML_Syntax.MLE_Seq uu___5 in
+                        FStar_All.pipe_left
+                          (FStar_Extraction_ML_Syntax.with_ty expect1) uu___4)
+               | (FStar_Extraction_ML_Syntax.MLE_Try (s, branches), uu___1,
+                  uu___2) ->
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 = FStar_List.map coerce_branch branches in
+                       (s, uu___5) in
+                     FStar_Extraction_ML_Syntax.MLE_Try uu___4 in
+                   FStar_All.pipe_left
+                     (FStar_Extraction_ML_Syntax.with_ty expect1) uu___3
+               | uu___1 ->
+                   FStar_Extraction_ML_Syntax.with_ty expect1
+                     (FStar_Extraction_ML_Syntax.MLE_Coerce
+                        (e1, ty1, expect1)) in
+             aux e ty expect)
+let (maybe_coerce :
+  FStar_Range.range ->
+    FStar_Extraction_ML_UEnv.uenv ->
+      FStar_Extraction_ML_Syntax.mlexpr ->
+        FStar_Extraction_ML_Syntax.mlty ->
+          FStar_Extraction_ML_Syntax.mlty ->
+            FStar_Extraction_ML_Syntax.mlexpr)
   =
   fun pos ->
     fun g ->
@@ -823,7 +850,7 @@ let maybe_coerce :
                              FStar_Util.print3
                                "\n (*needed to coerce expression \n %s \n of type \n %s \n to type \n %s *) \n"
                                uu___7 uu___8 uu___9);
-                        (let uu___6 = apply_coercion g e ty1 expect in
+                        (let uu___6 = apply_coercion pos g e ty1 expect in
                          maybe_eta_expand g expect uu___6)))
 let (bv_as_mlty :
   FStar_Extraction_ML_UEnv.uenv ->
