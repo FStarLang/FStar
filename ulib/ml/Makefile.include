@@ -9,10 +9,9 @@ FSTAR_REALIZED_MODULES=All BaseTypes Buffer Bytes Char CommonST Constructive Dyn
 	UInt16 UInt32 UInt64 UInt8 \
 	Pointer.Derived1 Pointer.Derived2 \
 	Pointer.Derived3 \
-	BufferNG Tactics.Builtins \
+	BufferNG \
 	TaggedUnion \
-	Reflection.Types Reflection.Builtins Reflection.Data \
-	Tactics.Result Tactics.Types Tactics.Common Bytes Util \
+	Bytes Util \
 	Pervasives Order Range \
 	Vector.Base Vector.Properties Vector TSet
 	# prims is realized by default hence not included in this list
