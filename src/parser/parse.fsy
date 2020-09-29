@@ -37,6 +37,7 @@ let old_attribute_syntax_warning =
 %start warn_error_list
 %token AMP
 %token AND
+%token AS
 %token ASSERT
 %token ASSUME
 %token ATTRIBUTES
@@ -1616,6 +1617,9 @@ in
 | LET OPEN quident IN term
     {let (_1, _2, uid, _4, e) = ($1, (), $3, (), $5) in
       ( mk_term (LetOpen(uid, e)) (rhs2 parseState 1 5) Expr )}
+| LET OPEN term AS typ IN term
+    {let (_1, _2, r, _4, rty, _6, e) = ($1, (), $3, (), $5, (), $7) in
+      ( mk_term (LetOpenRecord(r, rty, e)) (rhs2 parseState 1 7) Expr )}
 | LET letqualifier letbinding list_attr_letbinding_ IN term
     {let (_2, q, lb, lbs, _6, e) = ($1, $2, $3, $4, (), $6) in
 let attrs =
