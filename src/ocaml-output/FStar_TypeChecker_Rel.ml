@@ -7555,8 +7555,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                      umax_heuristic_ok =
                                                        (uu___14.umax_heuristic_ok);
                                                      tcenv = (uu___14.tcenv);
-                                                     wl_implicits =
-                                                       (uu___14.wl_implicits);
+                                                     wl_implicits = [];
                                                      repr_subcomp_allowed =
                                                        (uu___14.repr_subcomp_allowed)
                                                    }) in
