@@ -678,8 +678,8 @@ let flex_uvar_head t =
     | Tm_uvar (u, _) -> u
     | _ -> failwith "Not a flex-uvar"
 
-(* Make sure the uvar at the head of t0 is not affected by a
- * the substitution in the Tm_uvar node.
+(* ensure_no_uvar_subst: Make sure the uvar at the head of t0 is not
+ * affected by a the substitution in the Tm_uvar node.
  *
  * In the case that it is, first solve it to a new appropriate uvar
  * without a substitution. This function returns t again, though it is
@@ -769,7 +769,10 @@ let ensure_no_uvar_subst (t0:term) (wl:worklist)
         t, wl
       end
     | _ ->
-      failwith "ensure_no_uvar_subst: expected a uvar at the head"
+      failwith (BU.format3 "ensure_no_uvar_subst: expected a uvar at the head (%s-%s-%s)"
+                           (Print.tag_of_term t0)
+                           (Print.tag_of_term head)
+                           (Print.tag_of_term (SS.compress head)))
 
 (* Only call if ensure_no_uvar_subst was called on t before *)
 let destruct_flex_t' t : flex_t =
@@ -3011,6 +3014,12 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
        *
        * See issue #1616. *)
         let t1, wl = ensure_no_uvar_subst t1 wl in
+        let t2 = U.canon_app t2 in
+        (* ^ This canon_app call is needed for the incredibly infrequent case
+         * where t2 is a Tm_app, its head uvar matches that of t1,
+         * *and* the uvar is solved to an application by the previous
+         * ensure_no_uvar_subst call. In that case, we get a nested application
+         * in t2, and the call below would raise an error. *)
         let t2, wl = ensure_no_uvar_subst t2 wl in
         let f1 = destruct_flex_t' t1 in
         let f2 = destruct_flex_t' t2 in
