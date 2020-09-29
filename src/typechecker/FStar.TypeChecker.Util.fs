@@ -528,7 +528,7 @@ let should_return env eopt lc =
     //if lc.res_typ is not an arrow, arrow_formals_comp returns Tot lc.res_typ
     let lc_is_unit_or_effectful =
       lc.res_typ |> U.arrow_formals_comp |> snd |> (fun c ->
-        not (Env.is_reifiable_comp env c) &&
+//        not (Env.is_reifiable_comp env c) &&
         (U.comp_result c |> U.is_unit || not (U.is_pure_or_ghost_comp c)))
     in
     match eopt with

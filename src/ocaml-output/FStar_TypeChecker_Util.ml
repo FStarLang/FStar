@@ -968,13 +968,11 @@ let (should_return :
             FStar_All.pipe_right uu___1 FStar_Pervasives_Native.snd in
           FStar_All.pipe_right uu___
             (fun c ->
-               (let uu___1 = FStar_TypeChecker_Env.is_reifiable_comp env c in
-                Prims.op_Negation uu___1) &&
-                 ((FStar_All.pipe_right (FStar_Syntax_Util.comp_result c)
-                     FStar_Syntax_Util.is_unit)
-                    ||
-                    (let uu___1 = FStar_Syntax_Util.is_pure_or_ghost_comp c in
-                     Prims.op_Negation uu___1))) in
+               (FStar_All.pipe_right (FStar_Syntax_Util.comp_result c)
+                  FStar_Syntax_Util.is_unit)
+                 ||
+                 (let uu___1 = FStar_Syntax_Util.is_pure_or_ghost_comp c in
+                  Prims.op_Negation uu___1)) in
         match eopt with
         | FStar_Pervasives_Native.None -> false
         | FStar_Pervasives_Native.Some e ->
