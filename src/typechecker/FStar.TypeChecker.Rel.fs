@@ -2978,7 +2978,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                   mk_t_problem wl [mk_binder x1] orig phi1 EQ phi2 None "refinement formula"
              in
              let tx = UF.new_transaction () in
-             match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with
+             (* We set wl_implicits to false, since in the success case we will
+              * extend the original wl with the extra implicits we get, and we
+              * do not want to duplicate the existing ones. *)
+             match solve env ({wl with defer_ok=false; wl_implicits=[];
+                                       attempting=[ref_prob]; wl_deferred=[]}) with
              | Failed (prob, msg) ->
                UF.rollback tx;
                if (not env.uvar_subtyping && has_uvars)
