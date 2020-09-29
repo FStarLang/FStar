@@ -933,7 +933,7 @@ let gamma_until (g:gamma) (bs:binders) =
  *
  * This comes in handy for the flex-rigid case, where the arguments of the flex are a pattern
  *)
-let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl =
+let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
   let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
   let g = gamma_until src.ctx_uvar_gamma pfx in
 
@@ -960,7 +960,7 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl =
         src.ctx_uvar_range)
   end
 
-let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list<ctx_uvar>) wl  =
+let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list<ctx_uvar>) wl : worklist =
     List.fold_right (restrict_ctx env tgt bs) sources wl
 
 let intersect_binders (g:gamma) (v1:binders) (v2:binders) : binders =
@@ -2983,14 +2983,14 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                then giveup env msg prob
                else fallback()
 
-             | Success (_, defer_to_tac, _) ->
+             | Success (_, defer_to_tac, imps) ->
                UF.commit tx;
                let guard =
                    U.mk_conj (p_guard base_prob)
                              (p_guard ref_prob |> guard_on_element wl problem x1) in
                let wl = solve_prob orig (Some guard) [] wl in
                let wl = {wl with ctr=wl.ctr+1} in
-               let wl = extend_wl wl defer_to_tac [] in
+               let wl = extend_wl wl defer_to_tac imps in
                solve env (attempt [base_prob] wl)
         else fallback()
 
