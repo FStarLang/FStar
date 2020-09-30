@@ -315,9 +315,7 @@ let built_in_primitive_steps : prim_step_set =
             let arg = U.unlazy_emb arg in
             begin match (SS.compress arg).n with
             | Tm_constant (FC.Const_int (i, None)) ->
-                match list_of_string i with
-                | '0' :: 'x' :: _ -> Some (fv1, Z.of_hex (substring i 2 ((length i) - 2)))
-                | _               -> Some (fv1, Z.big_int_of_string i)
+                Some (fv1, Z.big_int_of_string i)
             | _ ->
                 None
             end
