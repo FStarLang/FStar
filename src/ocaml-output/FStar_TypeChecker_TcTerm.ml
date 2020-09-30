@@ -4985,28 +4985,10 @@ and (tc_abs :
                       | (body2, cbody, guard_body) ->
                           let guard =
                             let uu___6 =
-                              env1.FStar_TypeChecker_Env.top_level ||
-                                (let uu___7 =
-                                   FStar_TypeChecker_Env.should_verify env1 in
-                                 Prims.op_Negation uu___7) in
-                            if uu___6
-                            then
-                              let uu___7 =
-                                FStar_TypeChecker_Rel.discharge_guard env1
-                                  g_env in
-                              let uu___8 =
-                                FStar_TypeChecker_Rel.discharge_guard
-                                  envbody1 guard_body in
-                              FStar_TypeChecker_Env.conj_guard uu___7 uu___8
-                            else
-                              (let guard1 =
-                                 let uu___8 =
-                                   FStar_TypeChecker_Env.close_guard env1
-                                     (FStar_List.append bs1 letrec_binders)
-                                     guard_body in
-                                 FStar_TypeChecker_Env.conj_guard g_env
-                                   uu___8 in
-                               guard1) in
+                              FStar_TypeChecker_Env.close_guard env1
+                                (FStar_List.append bs1 letrec_binders)
+                                guard_body in
+                            FStar_TypeChecker_Env.conj_guard g_env uu___6 in
                           let guard1 =
                             FStar_TypeChecker_Util.close_guard_implicits env1
                               false bs1 guard in

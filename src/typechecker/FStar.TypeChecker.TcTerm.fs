@@ -1669,11 +1669,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
            body, cbody, Env.conj_guard guard_body g_lc
     in
 
-    let guard = if env.top_level || not(Env.should_verify env)
-                then Env.conj_guard (Rel.discharge_guard env g_env)
-                                    (Rel.discharge_guard envbody guard_body)
-                else let guard = Env.conj_guard g_env (Env.close_guard env (bs@letrec_binders) guard_body) in
-                     guard in
+    let guard = Env.conj_guard g_env (Env.close_guard env (bs@letrec_binders) guard_body) in
 
     let guard = TcUtil.close_guard_implicits env false bs guard in //TODO: this is a noop w.r.t scoping; remove it and the eager_subtyping flag
     let tfun_computed = U.arrow bs cbody in
