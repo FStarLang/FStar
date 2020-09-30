@@ -427,10 +427,10 @@ let (uu___143 : unit) =
       let uu___2 =
         mk_total_step_1'_psc Prims.int_zero "tracepoint"
           FStar_Tactics_Types.tracepoint_with_psc
-          FStar_Tactics_Embedding.e_proofstate FStar_Syntax_Embeddings.e_unit
+          FStar_Tactics_Embedding.e_proofstate FStar_Syntax_Embeddings.e_bool
           FStar_Tactics_Types.tracepoint_with_psc
           FStar_Tactics_Embedding.e_proofstate_nbe
-          FStar_TypeChecker_NBETerm.e_unit in
+          FStar_TypeChecker_NBETerm.e_bool in
       let uu___3 =
         let uu___4 =
           mk_total_step_2' Prims.int_zero "set_proofstate_range"
