@@ -41,8 +41,10 @@ boot:
 	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
 
 # Build the libraries: fstar-compiler-lib, fstarlib, fstartaclib
+# Removes the .mgen files to trigger rebuild of the libraries if needed.
 libs:
 	$(Q)+$(MAKE) -C src/ocaml-output
+	$(Q)rm -f ulib/*.mgen
 	$(Q)+$(MAKE) -C ulib/ml
 
 # Regenerate all hints for the standard library and regression test suite
