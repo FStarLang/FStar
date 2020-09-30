@@ -489,7 +489,7 @@ let (set_ps_psc : FStar_TypeChecker_Cfg.psc -> proofstate -> proofstate) =
         tac_verb_dbg = (uu___.tac_verb_dbg);
         local_state = (uu___.local_state)
       }
-let (tracepoint : FStar_TypeChecker_Cfg.psc -> proofstate -> unit) =
+let (tracepoint_with_psc : FStar_TypeChecker_Cfg.psc -> proofstate -> unit) =
   fun psc ->
     fun ps ->
       let uu___ =
@@ -501,6 +501,16 @@ let (tracepoint : FStar_TypeChecker_Cfg.psc -> proofstate -> unit) =
         let subst = FStar_TypeChecker_Cfg.psc_subst ps1.psc in
         let uu___1 = subst_proof_state subst ps1 in ps1.__dump uu___1 "TRACE"
       else ()
+let (tracepoint : proofstate -> unit) =
+  fun ps ->
+    let uu___ =
+      (FStar_Options.tactic_trace ()) ||
+        (let uu___1 = FStar_Options.tactic_trace_d () in ps.depth <= uu___1) in
+    if uu___
+    then
+      let subst = FStar_TypeChecker_Cfg.psc_subst ps.psc in
+      let uu___1 = subst_proof_state subst ps in ps.__dump uu___1 "TRACE"
+    else ()
 let (set_proofstate_range : proofstate -> FStar_Range.range -> proofstate) =
   fun ps ->
     fun r ->
