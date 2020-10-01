@@ -1132,7 +1132,7 @@ let (binder_to_json :
           let n =
             let uu___1 = FStar_Syntax_Syntax.is_null_binder b in
             if uu___1
-            then FStar_Util.JsonNull
+            then FStar_Util.JsonStr "_"
             else
               (let uu___3 =
                  let uu___4 = nm_to_string a in imp_to_string uu___4 imp in
