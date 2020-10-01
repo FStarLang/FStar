@@ -3804,7 +3804,7 @@ let solve_universe_inequalities env ineqs : unit =
     solve_universe_inequalities' tx env ineqs;
     UF.commit tx
 
-let try_solve_deferred_constraints defer_ok smt_ok env (g:guard_t) =
+let try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env (g:guard_t) =
    let fail (d,s) =
       let msg = explain env d s in
       raise_error (Errors.Fatal_ErrorInSolveDeferredConstraints, msg) (p_loc d)
@@ -3830,20 +3830,27 @@ let try_solve_deferred_constraints defer_ok smt_ok env (g:guard_t) =
        failwith "Impossible: should have raised a failure already"
    in
    solve_universe_inequalities env g.univ_ineqs;
-   let g = DeferredImplicits.solve_deferred_to_tactic_goals env g in
+   let g =
+     if deferred_to_tac_ok
+     then DeferredImplicits.solve_deferred_to_tactic_goals env g
+     else g 
+   in
    if Env.debug env <| Options.Other "ResolveImplicitsHook"
    then BU.print1 "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s\n"
           (guard_to_string env g);
    {g with univ_ineqs=([], [])}
 
-let solve_deferred_constraints' smt_ok env (g:guard_t) =
-    try_solve_deferred_constraints false smt_ok env g
-
 let solve_deferred_constraints env (g:guard_t) =
-    solve_deferred_constraints' true env g
+    let defer_ok = false in
+    let smt_ok = true in
+    let deferred_to_tac_ok = true in
+    try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 
-let solve_some_deferred_constraints env (g:guard_t) =
-    try_solve_deferred_constraints true true env g
+let solve_non_tactic_deferred_constraints env (g:guard_t) =
+    let defer_ok = false in
+    let smt_ok = true in
+    let deferred_to_tac_ok = false in
+    try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 
 //use_smt flag says whether to use the smt solver to discharge this guard
 //if use_smt = true, this function NEVER returns None, the error might come from the smt solver though
@@ -3858,7 +3865,11 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
   then BU.print1 "///////////////////ResolveImplicitsHook: discharge_guard'\n\
                   guard = %s\n"
                   (guard_to_string env g);
-  let g = solve_deferred_constraints' use_smt env g in
+  let g = 
+    let defer_ok = false in
+    let deferred_to_tac_ok = true in
+    try_solve_deferred_constraints defer_ok use_smt deferred_to_tac_ok env g 
+  in
   let ret_g = {g with guard_f = Trivial} in
   if not (Env.should_verify env) then Some ret_g
   else
