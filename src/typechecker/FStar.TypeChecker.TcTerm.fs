@@ -3069,9 +3069,9 @@ and check_inner_let env e =
 
        //AR: for layered effects, solve any deferred constraints first
        //    we can do it at other calls to close_guard_implicits too, but let's see
-       let g2 = TcUtil.close_guard_implicits env
-         (cres.eff_name |> Env.norm_eff_name env |> Env.is_layered_effect env)
-         xb g2 in
+       let g2 = TcUtil.close_guard_implicits env false
+         // (cres.eff_name |> Env.norm_eff_name env |> Env.is_layered_effect env)
+                           xb g2 in
        let guard = Env.conj_guard g1 g2 in
 
        if Option.isSome (Env.expected_typ env)
