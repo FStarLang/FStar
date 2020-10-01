@@ -32,12 +32,7 @@ let (close_guard_implicits :
     fun solve_deferred ->
       fun xs ->
         fun g ->
-          let uu___ =
-            (FStar_Options.eager_subtyping ()) ||
-              (solve_deferred &&
-                 (match g.FStar_TypeChecker_Common.deferred_to_tac with
-                  | [] -> true
-                  | uu___1 -> false)) in
+          let uu___ = (FStar_Options.eager_subtyping ()) || solve_deferred in
           if uu___
           then
             let uu___1 =
@@ -74,7 +69,8 @@ let (close_guard_implicits :
                      FStar_Util.print_string "END\n")
                   else ());
                  (let g1 =
-                    FStar_TypeChecker_Rel.solve_deferred_constraints env
+                    FStar_TypeChecker_Rel.solve_non_tactic_deferred_constraints
+                      env
                       (let uu___3 = g in
                        {
                          FStar_TypeChecker_Common.guard_f =
