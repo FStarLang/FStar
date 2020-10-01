@@ -11074,115 +11074,129 @@ let (solve_universe_inequalities :
 let (try_solve_deferred_constraints :
   Prims.bool ->
     Prims.bool ->
-      FStar_TypeChecker_Env.env ->
-        FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
+      Prims.bool ->
+        FStar_TypeChecker_Env.env ->
+          FStar_TypeChecker_Common.guard_t ->
+            FStar_TypeChecker_Common.guard_t)
   =
   fun defer_ok ->
     fun smt_ok ->
-      fun env ->
-        fun g ->
-          let fail uu___ =
-            match uu___ with
-            | (d, s) ->
-                let msg = explain env d s in
-                FStar_Errors.raise_error
-                  (FStar_Errors.Fatal_ErrorInSolveDeferredConstraints, msg)
-                  (p_loc d) in
-          let wl =
-            let uu___ = wl_of_guard env g.FStar_TypeChecker_Common.deferred in
-            {
-              attempting = (uu___.attempting);
-              wl_deferred = (uu___.wl_deferred);
-              wl_deferred_to_tac = (uu___.wl_deferred_to_tac);
-              ctr = (uu___.ctr);
-              defer_ok;
-              smt_ok;
-              umax_heuristic_ok = (uu___.umax_heuristic_ok);
-              tcenv = (uu___.tcenv);
-              wl_implicits = (uu___.wl_implicits);
-              repr_subcomp_allowed = (uu___.repr_subcomp_allowed)
-            } in
-          (let uu___1 =
-             FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-               (FStar_Options.Other "Rel") in
-           if uu___1
-           then
-             let uu___2 = FStar_Util.string_of_bool defer_ok in
-             let uu___3 = wl_to_string wl in
-             let uu___4 =
-               FStar_Util.string_of_int
-                 (FStar_List.length g.FStar_TypeChecker_Common.implicits) in
-             FStar_Util.print3
-               "Trying to solve carried problems (defer_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
-               uu___2 uu___3 uu___4
-           else ());
-          (let g1 =
-             let uu___1 = solve_and_commit env wl fail in
-             match uu___1 with
-             | FStar_Pervasives_Native.Some (uu___2::uu___3, uu___4, uu___5)
-                 when Prims.op_Negation defer_ok ->
-                 failwith
-                   "Impossible: Unexpected deferred constraints remain"
-             | FStar_Pervasives_Native.Some (deferred, defer_to_tac, imps) ->
-                 let uu___2 = g in
-                 {
-                   FStar_TypeChecker_Common.guard_f =
-                     (uu___2.FStar_TypeChecker_Common.guard_f);
-                   FStar_TypeChecker_Common.deferred_to_tac =
-                     (FStar_List.append
-                        g.FStar_TypeChecker_Common.deferred_to_tac
-                        defer_to_tac);
-                   FStar_TypeChecker_Common.deferred = deferred;
-                   FStar_TypeChecker_Common.univ_ineqs =
-                     (uu___2.FStar_TypeChecker_Common.univ_ineqs);
-                   FStar_TypeChecker_Common.implicits =
-                     (FStar_List.append g.FStar_TypeChecker_Common.implicits
-                        imps)
-                 }
-             | uu___2 ->
-                 failwith "Impossible: should have raised a failure already" in
-           solve_universe_inequalities env
-             g1.FStar_TypeChecker_Common.univ_ineqs;
-           (let g2 =
-              FStar_TypeChecker_DeferredImplicits.solve_deferred_to_tactic_goals
-                env g1 in
-            (let uu___3 =
+      fun deferred_to_tac_ok ->
+        fun env ->
+          fun g ->
+            let fail uu___ =
+              match uu___ with
+              | (d, s) ->
+                  let msg = explain env d s in
+                  FStar_Errors.raise_error
+                    (FStar_Errors.Fatal_ErrorInSolveDeferredConstraints, msg)
+                    (p_loc d) in
+            let wl =
+              let uu___ = wl_of_guard env g.FStar_TypeChecker_Common.deferred in
+              {
+                attempting = (uu___.attempting);
+                wl_deferred = (uu___.wl_deferred);
+                wl_deferred_to_tac = (uu___.wl_deferred_to_tac);
+                ctr = (uu___.ctr);
+                defer_ok;
+                smt_ok;
+                umax_heuristic_ok = (uu___.umax_heuristic_ok);
+                tcenv = (uu___.tcenv);
+                wl_implicits = (uu___.wl_implicits);
+                repr_subcomp_allowed = (uu___.repr_subcomp_allowed)
+              } in
+            (let uu___1 =
                FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-                 (FStar_Options.Other "ResolveImplicitsHook") in
-             if uu___3
+                 (FStar_Options.Other "Rel") in
+             if uu___1
              then
-               let uu___4 = guard_to_string env g2 in
-               FStar_Util.print1
-                 "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s\n"
-                 uu___4
+               let uu___2 = FStar_Util.string_of_bool defer_ok in
+               let uu___3 = wl_to_string wl in
+               let uu___4 =
+                 FStar_Util.string_of_int
+                   (FStar_List.length g.FStar_TypeChecker_Common.implicits) in
+               FStar_Util.print3
+                 "Trying to solve carried problems (defer_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
+                 uu___2 uu___3 uu___4
              else ());
-            (let uu___3 = g2 in
-             {
-               FStar_TypeChecker_Common.guard_f =
-                 (uu___3.FStar_TypeChecker_Common.guard_f);
-               FStar_TypeChecker_Common.deferred_to_tac =
-                 (uu___3.FStar_TypeChecker_Common.deferred_to_tac);
-               FStar_TypeChecker_Common.deferred =
-                 (uu___3.FStar_TypeChecker_Common.deferred);
-               FStar_TypeChecker_Common.univ_ineqs = ([], []);
-               FStar_TypeChecker_Common.implicits =
-                 (uu___3.FStar_TypeChecker_Common.implicits)
-             })))
-let (solve_deferred_constraints' :
-  Prims.bool ->
-    FStar_TypeChecker_Env.env ->
-      FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
-  =
-  fun smt_ok ->
-    fun env -> fun g -> try_solve_deferred_constraints false smt_ok env g
+            (let g1 =
+               let uu___1 = solve_and_commit env wl fail in
+               match uu___1 with
+               | FStar_Pervasives_Native.Some
+                   (uu___2::uu___3, uu___4, uu___5) when
+                   Prims.op_Negation defer_ok ->
+                   failwith
+                     "Impossible: Unexpected deferred constraints remain"
+               | FStar_Pervasives_Native.Some (deferred, defer_to_tac, imps)
+                   ->
+                   let uu___2 = g in
+                   {
+                     FStar_TypeChecker_Common.guard_f =
+                       (uu___2.FStar_TypeChecker_Common.guard_f);
+                     FStar_TypeChecker_Common.deferred_to_tac =
+                       (FStar_List.append
+                          g.FStar_TypeChecker_Common.deferred_to_tac
+                          defer_to_tac);
+                     FStar_TypeChecker_Common.deferred = deferred;
+                     FStar_TypeChecker_Common.univ_ineqs =
+                       (uu___2.FStar_TypeChecker_Common.univ_ineqs);
+                     FStar_TypeChecker_Common.implicits =
+                       (FStar_List.append
+                          g.FStar_TypeChecker_Common.implicits imps)
+                   }
+               | uu___2 ->
+                   failwith
+                     "Impossible: should have raised a failure already" in
+             solve_universe_inequalities env
+               g1.FStar_TypeChecker_Common.univ_ineqs;
+             (let g2 =
+                if deferred_to_tac_ok
+                then
+                  FStar_TypeChecker_DeferredImplicits.solve_deferred_to_tactic_goals
+                    env g1
+                else g1 in
+              (let uu___3 =
+                 FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+                   (FStar_Options.Other "ResolveImplicitsHook") in
+               if uu___3
+               then
+                 let uu___4 = guard_to_string env g2 in
+                 FStar_Util.print1
+                   "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s\n"
+                   uu___4
+               else ());
+              (let uu___3 = g2 in
+               {
+                 FStar_TypeChecker_Common.guard_f =
+                   (uu___3.FStar_TypeChecker_Common.guard_f);
+                 FStar_TypeChecker_Common.deferred_to_tac =
+                   (uu___3.FStar_TypeChecker_Common.deferred_to_tac);
+                 FStar_TypeChecker_Common.deferred =
+                   (uu___3.FStar_TypeChecker_Common.deferred);
+                 FStar_TypeChecker_Common.univ_ineqs = ([], []);
+                 FStar_TypeChecker_Common.implicits =
+                   (uu___3.FStar_TypeChecker_Common.implicits)
+               })))
 let (solve_deferred_constraints :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
-  = fun env -> fun g -> solve_deferred_constraints' true env g
-let (solve_some_deferred_constraints :
+  =
+  fun env ->
+    fun g ->
+      let defer_ok = false in
+      let smt_ok = true in
+      let deferred_to_tac_ok = true in
+      try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
+let (solve_non_tactic_deferred_constraints :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
-  = fun env -> fun g -> try_solve_deferred_constraints true true env g
+  =
+  fun env ->
+    fun g ->
+      let defer_ok = false in
+      let smt_ok = true in
+      let deferred_to_tac_ok = false in
+      try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 let (discharge_guard' :
   (unit -> Prims.string) FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env ->
@@ -11213,7 +11227,11 @@ let (discharge_guard' :
                "///////////////////ResolveImplicitsHook: discharge_guard'\nguard = %s\n"
                uu___2
            else ());
-          (let g1 = solve_deferred_constraints' use_smt env g in
+          (let g1 =
+             let defer_ok = false in
+             let deferred_to_tac_ok = true in
+             try_solve_deferred_constraints defer_ok use_smt
+               deferred_to_tac_ok env g in
            let ret_g =
              let uu___1 = g1 in
              {
