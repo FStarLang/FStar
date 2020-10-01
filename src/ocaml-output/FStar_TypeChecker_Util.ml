@@ -69,7 +69,8 @@ let (close_guard_implicits :
                      FStar_Util.print_string "END\n")
                   else ());
                  (let g1 =
-                    FStar_TypeChecker_Rel.solve_deferred_constraints env
+                    FStar_TypeChecker_Rel.solve_non_tactic_deferred_constraints
+                      env
                       (let uu___3 = g in
                        {
                          FStar_TypeChecker_Common.guard_f =
