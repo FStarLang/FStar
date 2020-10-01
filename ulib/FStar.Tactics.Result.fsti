@@ -30,7 +30,7 @@ noeq type __result a =
               -> __result a
 
 (* A bit of help for the SMT, unsure if still needed *)
-val result_split : #a:Type -> r:(__result a) ->
-                        Lemma (Success? r \/ Failed? r) [SMTPat (Success? r);
-                                                         SMTPat (Failed? r)]
-let result_split #a r = ()
+let result_split #a (r:__result a)
+  : Lemma (Success? r \/ Failed? r)
+          [SMTPat (Success? r); SMTPat (Failed? r)]
+  = ()

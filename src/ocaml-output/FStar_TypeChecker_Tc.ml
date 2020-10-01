@@ -2354,9 +2354,7 @@ let (tc_decl' :
                                      (lbname.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
                                  match uu___5 with
                                  | FStar_Pervasives_Native.None ->
-                                     if lb.FStar_Syntax_Syntax.lbunivs <> []
-                                     then (false, lb, quals_opt)
-                                     else (gen, lb, quals_opt)
+                                     (gen, lb, quals_opt)
                                  | FStar_Pervasives_Native.Some
                                      ((uvs, tval), quals) ->
                                      let quals_opt1 =
@@ -4088,7 +4086,7 @@ let (tc_decls :
              FStar_Util.fold_flatten process_one_decl_timed ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_List.rev_append ses1 []), env1)
-let (uu___997 : unit) =
+let (uu___996 : unit) =
   FStar_ST.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

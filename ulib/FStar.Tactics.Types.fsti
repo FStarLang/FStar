@@ -38,7 +38,9 @@ val set_label    : string -> goal -> goal
 (* Tracing *)
 val incr_depth : proofstate -> proofstate
 val decr_depth : proofstate -> proofstate
-val tracepoint : proofstate -> unit
+(* [tracepoint] always returns true. We do not use unit to prevent
+erasure. *)
+val tracepoint : proofstate -> b:bool{b == true}
 val set_proofstate_range : proofstate -> FStar.Range.range -> proofstate
 
 type direction =
