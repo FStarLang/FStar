@@ -41,30 +41,33 @@ let let_ x e e' : term = app (U.abs [b x] e' None) [e]
 let mk_let x e e' : term =
     let e' = FStar.Syntax.Subst.subst [NM(x, 0)] e' in
     mk (Tm_let((false, [{lbname=BU.Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=Const.effect_Tot_lid; lbattrs=[];lbpos=dummyRange}]), e'))
-                           None dummyRange
+                           dummyRange
 
 let lid x = lid_of_path ["Test"; x] dummyRange
 let znat_l = S.lid_as_fv (lid "Z") delta_constant (Some Data_ctor)
 let snat_l = S.lid_as_fv (lid "S") delta_constant (Some Data_ctor)
-let tm_fv fv = mk (Tm_fvar fv) None dummyRange
+let tm_fv fv = mk (Tm_fvar fv) dummyRange
 let znat : term = tm_fv znat_l
-let snat s      = mk (Tm_app(tm_fv snat_l, [as_arg s])) None dummyRange
+let snat s      = mk (Tm_app(tm_fv snat_l, [as_arg s])) dummyRange
 let pat p = withinfo p dummyRange
+let snat_type = tm_fv (S.lid_as_fv (lid "snat") delta_constant None)
 open FStar.Syntax.Subst
 module SS=FStar.Syntax.Subst
 let mk_match h branches =
     let branches = branches |> List.map U.branch in
-    mk (Tm_match(h, branches)) None dummyRange
+    mk (Tm_match(h, branches)) dummyRange
 let pred_nat s  =
     let zbranch = pat (Pat_cons(znat_l, [])),
                   None,
                   znat in
     let sbranch = pat (Pat_cons(snat_l, [pat (Pat_var x), false])),
                   None,
-                  mk (Tm_bvar({x with index=0})) None dummyRange in
+                  mk (Tm_bvar({x with index=0})) dummyRange in
     mk_match s [zbranch;sbranch]
 let minus_nat t1 t2 =
     let minus = m in
+    let x = { x with sort = snat_type } in
+    let y = { y with sort = snat_type } in
     let zbranch = pat (Pat_cons(znat_l, [])),
                   None,
                   nm x in
@@ -74,7 +77,7 @@ let minus_nat t1 t2 =
     let lb = {lbname=BU.Inl minus; lbeff=lid_of_path ["Pure"] dummyRange; lbunivs=[]; lbtyp=tun;
               lbdef=subst [NM(minus, 0)] (U.abs [b x; b y] (mk_match (nm y) [zbranch; sbranch]) None);
               lbattrs=[]; lbpos=dummyRange} in
-    mk (Tm_let((true, [lb]), subst [NM(minus, 0)] (app (nm minus) [t1; t2]))) None dummyRange
+    mk (Tm_let((true, [lb]), subst [NM(minus, 0)] (app (nm minus) [t1; t2]))) dummyRange
 let encode_nat n =
     let rec aux out n =
         if n=0 then out
@@ -224,7 +227,8 @@ let tests =
   ; (401, (tc_nbe "7 + 3"), (tc_nbe "10"))
   ; (402, (tc_nbe "true && false"), (tc_nbe "false"))
   ; (403, (tc_nbe "3 = 5"), (tc_nbe "false"))
-  ; (404, (tc_nbe "\"abc\" ^ \"def\""), (tc_nbe "\"abcdef\"")) 
+  ; (404, (tc_nbe "\"abc\" ^ \"def\""), (tc_nbe "\"abcdef\""))
+  ; (405, (tc_nbe "(fun (x:list int) -> match x with | [] -> 0 | hd::tl -> 1) []"), (tc_nbe "0"))
 
   // Test for refinements 
   // ; (501, (tc_nbe "fun (x1:int{x1>(3+1)}) -> x1 + (1 + 0)"), (tc_nbe "fun (x1:int{x1>4}) -> x1 + 1")) // ZP : Fails because the two functions are not syntactically equal

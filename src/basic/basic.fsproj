@@ -85,6 +85,8 @@
     <Compile Include="boot/FStar.StringBuffer.fs" />
     <Compile Include="FStar.Platform.fsi" />
     <Compile Include="NotFStar.Platform.fs" />
+    <Compile Include="FStar.Thunk.fsi" />
+    <Compile Include="FStar.Thunk.fs" />
     <Compile Include="FStar.Common.fs" />
     <Compile Include="FStar.Getopt.fsi" />
     <Compile Include="NotFStar.Getopt.fs" />

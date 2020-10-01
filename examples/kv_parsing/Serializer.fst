@@ -62,7 +62,7 @@ let adjacent_entries_disjoint (#t:Type) (b1 b2:B.buffer t) :
 // requires keeping a large buffer in the writer and then projecting out
 // sub-buffers for the current fields.
 noeq type writer =
-     { length_field: b:lbuffer 4;
+     { length_field: lbuffer 4;
        entries_written_buf: bslice;
        entries_written_list: erased (list encoded_entry);
        num_entries_written: U32.t;

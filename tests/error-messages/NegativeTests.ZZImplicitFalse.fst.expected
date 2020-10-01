@@ -1,0 +1,6 @@
+>> Got issues: [
+NegativeTests.ZZImplicitFalse.fst(20,26-20,27): (Error 66) Failed to resolve implicit argument ?1 of type Prims.l_False introduced for user-provided implicit term at NegativeTests.ZZImplicitFalse.fst(20,26-20,27)
+>>]
+NegativeTests.ZZImplicitFalse.fst(18,4-18,7): (Warning 240) Admitting NegativeTests.ZZImplicitFalse.wtf without a definition
+Verified module: NegativeTests.ZZImplicitFalse
+All verification conditions discharged successfully

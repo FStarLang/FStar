@@ -44,9 +44,11 @@ val branch_to_string      : Syntax.branch -> string
 val modul_to_string       : modul -> string
 val univ_names_to_string  : univ_names -> string
 val univ_to_string        : universe -> string
+val univs_to_string       : universes -> string
 val attrs_to_string       : list<attribute> -> string
 val sigelt_to_string      : sigelt -> string
 val sigelt_to_string_short: sigelt -> string
+val tag_of_sigelt         : sigelt -> string
 val binder_to_string      : binder -> string
 val binders_to_string     : string -> binders -> string
 val binder_to_json        : DsEnv.env -> binder -> json
@@ -68,8 +70,7 @@ val delta_depth_to_string : delta_depth -> string
 val action_to_string  : action -> string
 val metadata_to_string : metadata -> string
 val ctx_uvar_to_string    : ctx_uvar -> string
+val ctx_uvar_to_string_no_reason    : ctx_uvar -> string
 
 val emb_typ_to_string: emb_typ -> string
 
-// VD: just for NBE testing
-val univs_to_string: universes -> string

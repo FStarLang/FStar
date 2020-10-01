@@ -7,7 +7,6 @@ include Makefile.include
 # them.
 
 ALL_EXAMPLE_DIRS=\
-bug-reports \
 data_structures \
 algorithms \
 crypto \
@@ -21,11 +20,8 @@ metatheory \
 verifythis \
 preorders \
 dm4free \
-incl \
-struct \
-micro-benchmarks \
-friends \
 tactics \
+param \
 typeclasses \
 miniparse \
 kv_parsing \
@@ -35,12 +31,12 @@ csl \
 hello \
 extraction \
 demos \
-refinement \
 indexed_effects \
 doublylinkedlist \
 regional \
 generic \
 calc \
+steel \
 layeredeffects
 
 # low-level \  ... NS: removing from CI for this branch

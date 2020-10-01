@@ -1,0 +1,31 @@
+[
+  "\u0013g_\u001ab¬¡]HV¤ÿÛÆ‰Ñ",
+  [
+    [
+      "Bug1840.resolve",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "05d7cd4a0f028dc0713d737cbb1d9225"
+    ],
+    [
+      "Bug1840.resolve'",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "equation_FStar.Reflection.Types.binders",
+        "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "991c4ac9de2ec809218fdecf77f7802c"
+    ]
+  ]
+]

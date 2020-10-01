@@ -29,8 +29,6 @@ let is_before t1 t2 = compare t1 t2 < 0
 let string_of_time = string_of_float
 
 exception Impos
-exception NYI of string
-exception HardError of string
 
 let cur_sigint_handler : Sys.signal_behavior ref =
   ref Sys.Signal_default
@@ -77,7 +75,8 @@ type proc =
      outc : out_channel;
      mutable killed : bool;
      stop_marker: (string -> bool) option;
-     id : string}
+     id : string;
+     start_time : time}
 
 let all_procs : (proc list) ref = ref []
 
@@ -109,6 +108,8 @@ let with_monitor _ f x = atomically (fun () ->
 let spawn f =
   let _ = Thread.create f () in ()
 
+let stack_dump () = Printexc.raw_backtrace_to_string (Printexc.get_callstack 1000)
+
 (* On the OCaml side it would make more sense to take stop_marker in
    ask_process, but the F# side isn't built that way *)
 let start_process'
@@ -125,7 +126,9 @@ let start_process'
                inc = Unix.in_channel_of_descr stdout_r;
                outc = Unix.out_channel_of_descr stdin_w;
                stop_marker = stop_marker;
-               killed = false } in
+               killed = false;
+               start_time = now()} in
+  (* print_string ("Started process " ^ proc.id ^ "\n" ^ (stack_dump())); *)
   all_procs := proc :: !all_procs;
   proc
 
@@ -154,6 +157,7 @@ let kill_process (p: proc) =
        with Unix.Unix_error (Unix.ESRCH, _, _) -> ());
       (* Avoid zombie processes (Unix.close_process does the same thing. *)
       waitpid_ignore_signals p.pid;
+      (* print_string ("Killed process " ^ p.id ^ "\n" ^ (stack_dump()));       *)
       p.killed <- true
     end
 
@@ -300,7 +304,6 @@ let string_builder_append b s = BatBuffer.add_string b s
 
 let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
-let stack_dump () = Printexc.raw_backtrace_to_string (Printexc.get_callstack 1000)
 
 type 'a set = ('a list) * ('a -> 'a -> bool)
 [@@deriving show]
@@ -418,8 +421,13 @@ let pimap_try_find (map: 'value pimap) (key: Z.t) =
   ZMap.Exceptionless.find key map
 let pimap_fold (m:'value pimap) f a = ZMap.fold f m a
 
+(* restore pre-2.11 BatString.nsplit behavior,
+   see https://github.com/ocaml-batteries-team/batteries-included/issues/845 *)
+let batstring_nsplit s t =
+  if s = "" then [] else BatString.nsplit s t
+                                    
 let format (fmt:string) (args:string list) =
-  let frags = BatString.nsplit fmt "%s" in
+  let frags = batstring_nsplit fmt "%s" in
   if BatList.length frags <> BatList.length args + 1 then
     failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (Pervasives.string_of_int (BatList.length frags)) ^ " got [" ^ (BatString.concat ", " args) ^ "] frags are [" ^ (BatString.concat ", " frags) ^ "]")
   else
@@ -432,6 +440,8 @@ let format3 f a b c = format f [a;b;c]
 let format4 f a b c d = format f [a;b;c;d]
 let format5 f a b c d e = format f [a;b;c;d;e]
 let format6 f a b c d e g = format f [a;b;c;d;e;g]
+
+let flush_stdout () = flush stdout
 
 let stdout_isatty () = Some (Unix.isatty Unix.stdout)
 
@@ -614,6 +624,10 @@ let remove_dups f l =
     | hd::tl -> let _, tl' = BatList.partition (f hd) tl in aux (hd::out) tl'
     | _ -> out in
   aux [] l
+
+let is_none = function
+  | None -> true
+  | Some _ -> false
 
 let is_some = function
   | None -> false
@@ -977,13 +991,17 @@ let load_value_from_file (fname:string) =
   with | _ -> None
 
 let save_2values_to_file (fname:string) value1 value2 =
-  let channel = open_out_bin fname in
-  BatPervasives.finally
-    (fun () -> close_out channel)
-    (fun channel ->
-      output_value channel value1;
-      output_value channel value2)
-    channel
+  try
+    let channel = open_out_bin fname in
+    BatPervasives.finally
+      (fun () -> close_out channel)
+      (fun channel ->
+        output_value channel value1;
+        output_value channel value2)
+      channel
+  with
+  | e -> delete_file fname;
+         raise e
 
 let load_2values_from_file (fname:string) =
   try
@@ -1012,6 +1030,11 @@ let digest_of_file =
 
 let digest_of_string (s:string) =
   BatDigest.to_hex (BatDigest.string s)
+
+(* Precondition: file exists *)
+let touch_file (fname:string) : unit =
+  (* Sets access and modification times to current time *)
+  Unix.utimes fname 0.0 0.0
 
 let ensure_decimal s = Z.to_string (Z.of_string s)
 
@@ -1045,6 +1068,11 @@ type hints_db = {
     hints: hints
 }
 
+type hints_read_result =
+  | HintsOK of hints_db
+  | MalformedJson
+  | UnableToOpen
+
 let write_hints (filename: string) (hints: hints_db): unit =
   let json = `List [
     `String hints.module_digest;
@@ -1071,7 +1099,7 @@ let write_hints (filename: string) (hints: hints_db): unit =
     (fun channel -> Yojson.Safe.pretty_to_channel channel json)
     channel
 
-let read_hints (filename: string): hints_db option =
+let read_hints (filename: string) : hints_read_result =
   let mk_hint nm ix fuel ifuel unsat_core time hash_opt = {
       hint_name = nm;
       hint_index = Z.of_int ix;
@@ -1097,7 +1125,7 @@ let read_hints (filename: string): hints_db option =
     let chan = open_in filename in
     let json = Yojson.Safe.from_channel chan in
     close_in chan;
-    Some (
+    HintsOK (
         match json with
         | `List [
             `String module_digest;
@@ -1134,11 +1162,9 @@ let read_hints (filename: string): hints_db option =
     )
   with
    | Exit ->
-      print1_warning "Malformed JSON hints file: %s; ran without hints\n" filename;
-      None
+      MalformedJson
    | Sys_error _ ->
-      print1_warning "Unable to open hints file: %s; ran without hints\n" filename;
-      None
+      UnableToOpen
 
 (** Interactive protocol **)
 

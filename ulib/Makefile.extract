@@ -4,19 +4,21 @@ FSTAR_HOME=..
 include gmake/z3.mk
 include gmake/fstar.mk
 
+#AR: 01/03
+NOEXTRACT_FILES=$(wildcard experimental/Steel.*.fst experimental/Steel.*.fsti)
 
-FSTAR_FILES=\
+FSTAR_FILES:=$(filter-out $(NOEXTRACT_FILES), \
 	$(wildcard FStar.*.fst FStar.*.fsti) \
 	$(wildcard LowStar.*.fst LowStar.*.fsti) \
 	$(wildcard legacy/*fst legacy/*fsti) \
-	$(wildcard experimental/*fst experimental/*fsti)
+	$(wildcard experimental/*fst experimental/*fsti))
 
 CODEGEN ?= OCaml
-MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --use_extracted_interfaces false --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
+MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
 
 %.checked.lax:
 	$(MY_FSTAR) $< --already_cached "* -$(basename $(notdir $<))"
-	touch $@
+	touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file

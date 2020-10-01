@@ -13,11 +13,28 @@ Guidelines for the changelog:
 
 # Version 0.9.7.0
 
+## Typeclass argument syntax
+
+  * The syntax for a typeclass argument (a.k.a. constraint) is now `{| ... |}`
+    instead of `[| ... |]`. They are also better supported, and be used in
+    `val` declarations and arrows which was not previously the case.
+
 ## Module system
 
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * The expected type of the `if_then_else` combinator for layered effects is now
+    `a:Type -> bs -> f:repr a is -> g:repr a js -> p:bool -> Type`
+    Previously, the `p` parameter used to have type `Type0`. It only needs
+    change in the definition of the combinator, no changes are required in
+    the client code using the effect. For example, see:
+    https://github.com/FStarLang/FStar/commit/731b353aa3bb6c32f4da97170284a1f301b242e1
+
+    The types of the combinators are also subject to stricter typing (no smt and no subtyping).
+    See this commit: https://github.com/FStarLang/FStar/commit/a5b2d8818e386b2be1058061a913ffcef4bfb8ea
+    for the kind of fixes this change required.
+
   * Cf. issue https://github.com/FStarLang/FStar/issues/1055,
     F* now enforces that unannotated, effectful functions have a
     trivial precondition (this is already the case for pure functions).
@@ -30,9 +47,33 @@ Guidelines for the changelog:
     This is a breaking change, see this commit for how we fixed the F* examples:
     https://github.com/FStarLang/FStar/commit/24bbae4b93a9937695160dff381625adb6565d28
 
-
   * Revised typechecking of nested patterns and ascriptions on
     patterns, fixing unsoundnesses (issue #238, for example)
+
+  * NBE: A call-by-value reduction strategy for F* terms is
+    implemented using "normalization by evaluation". Specific calls to
+    the normalizer (e.g., via `Pervasives.norm`) can request to use
+    this reduction strategy by passing the `nbe:norm_step` among the
+    reduction steps.
+
+  * Polymonadic binds: See https://github.com/FStarLang/FStar/wiki/Polymonadic-binds
+
+  * Names in the expressions are now annotated with the types at their binding sites
+    rather than with the expected types at the use sites. This change resulted in
+    a regression in the F* examples:
+    https://github.com/FStarLang/FStar/commit/752d457bda9c0a38eef04e71886cc16899d9c13d
+
+    The workaround is an explicit annotation (see comments in the commit above).
+
+  * An unsoundness was discovered and fixed in the treatment of
+    lexicographic tuples. In particular, we used to allow relating lex
+    tuples of different arity, notably, we had `LexCons _ _ << LexTop`.
+    This was intended for the convenience of writing mutual recursive
+    functions with decreases clauses using lex tuples of different arities.
+    However, this convenience was seldom used and it actually lead to
+    an unsoundness: See examples/bug-reports/BugLexTop.fst. This
+    variable arity lexicographic tuple ordering is no longer supported.
+
 
 ## Libraries
 
@@ -59,7 +100,13 @@ Guidelines for the changelog:
      staging ground, and a .cache directory in which .checked and
      .hints files are maintained.
 
+   * FStar.UInt[N].mul_div has been removed. This operation was not
+     supported uniformly, with only an implementation for UInt64
+     provided (using UInt128).
+
 ## Syntax
+   * `abstract` qualifier and the related option `--use_extracted_interfaces`
+     are no longer supported. Use interfaces instead.
 
    * We now overload `&` to construct both dependent and non-dependent
      tuple types. `t1 & t2` is equivalent to `tuple2 t1 t2` whereas
@@ -69,6 +116,11 @@ Guidelines for the changelog:
      the multiplication on integers, the `&` symbol can be used for
      tuples while reserving `*` for multiplication.
 
+   * Attributes are now specified using the notation `[@@ a1; ... ; an]` i.e.,
+     a semicolon separated list of terms. The old syntax will soon
+     be deprecated.
+
+
 ## Extraction
 
    * Cross-module inlining: Declarations in interfaces marked with the
@@ -77,6 +129,10 @@ Guidelines for the changelog:
      soon be the default behavior. Also see:
      https://github.com/FStarLang/FStar/wiki/Cross-module-Inlining
      and https://github.com/FStarLang/FStar/tree/master/examples/extraction/cmi.
+
+   * `--use_nbe_for_extraction`: A new option that enables the use of
+     the call-by-value normalization-by-evaluation reduction strategy
+     for normalizing code prior to extraction.
 
 ## SMT Encoding
 

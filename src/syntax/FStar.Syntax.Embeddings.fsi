@@ -18,6 +18,7 @@ type norm_step =
     | Primops
     | Delta
     | Zeta
+    | ZetaFull
     | Iota
     | Reify
     | UnfoldOnly  of list<string>
@@ -31,6 +32,7 @@ val steps_HNF           : term
 val steps_Primops       : term
 val steps_Delta         : term
 val steps_Zeta          : term
+val steps_ZetaFull      : term
 val steps_Iota          : term
 val steps_Reify         : term
 val steps_UnfoldOnly    : term
@@ -50,7 +52,7 @@ type norm_cb = FStar.Util.either<Ident.lident, term> -> term // a callback to th
 val id_norm_cb : norm_cb
 exception Embedding_failure
 exception Unembedding_failure
-type shadow_term = option<FStar.Common.thunk<term>>
+type shadow_term = option<Thunk.t<term>>
 
 type embed_t = FStar.Range.range -> shadow_term -> norm_cb -> term
 type unembed_t<'a> = bool -> norm_cb -> option<'a> // bool = whether we should warn on a failure
@@ -79,6 +81,11 @@ val try_unembed  : embedding<'a> -> term -> norm_cb -> option<'a>
 val type_of      : embedding<'a> -> typ
 val set_type     : typ -> embedding<'a> -> embedding<'a>
 
+val embed_as     : embedding<'a> ->
+                   ('a -> 'b) ->
+                   ('b -> 'a) ->
+                   option<typ> -> (* optionally change the type *)
+                   embedding<'b>
 
 (* Embeddings, both ways and containing type information *)
 val e_any         : embedding<term> // an identity

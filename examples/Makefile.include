@@ -6,7 +6,6 @@ endif
 include $(FSTAR_HOME)/ulib/gmake/z3.mk
 include $(FSTAR_HOME)/ulib/gmake/fstar.mk
 
-
 ifeq ($(OS),Windows_NT)
   MSBUILD = $(FSTAR_HOME)/src/msbuild.bat
 else
@@ -17,7 +16,7 @@ endif
 # we ignore the return result in benchmark runs because we can have micro-benchmarks which
 # produce error asserts when executed with '--admit_smt_queries true'
 %.uver: %.fst
-	$(BENCHMARK_PRE) $(FSTAR) --use_extracted_interfaces true $^
+	$(Q)$(BENCHMARK_PRE) $(FSTAR)  $^
 
 %.fail-uver: %.fst
 	(! $(FSTAR) $^ >/dev/null 2>&1) || (echo "NEGATIVE TEST FAILED ($@)!" ; false)

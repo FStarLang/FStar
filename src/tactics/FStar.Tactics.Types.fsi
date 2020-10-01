@@ -4,10 +4,12 @@ module FStar.Tactics.Types
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
+open FStar.Tactics.Common
 module Cfg = FStar.TypeChecker.Cfg
 module N = FStar.TypeChecker.Normalize
 module Range = FStar.Range
 module BU = FStar.Util
+module O = FStar.Options
 
 (*
    f: x:int -> P
@@ -59,7 +61,8 @@ type proofstate = {
 
 val decr_depth : proofstate -> proofstate
 val incr_depth : proofstate -> proofstate
-val tracepoint : Cfg.psc -> proofstate -> unit
+val tracepoint_with_psc : Cfg.psc -> proofstate -> bool
+val tracepoint : proofstate -> bool
 val set_proofstate_range : proofstate -> Range.range -> proofstate
 
 val subst_proof_state: subst_t -> proofstate -> proofstate
@@ -79,9 +82,17 @@ val goals_of     : proofstate -> list<goal>
 val smt_goals_of : proofstate -> list<goal>
 
 val mk_goal: env -> ctx_uvar -> FStar.Options.optionstate -> bool -> string -> goal
+
+type ctrl_flag =
+    | Continue
+    | Skip
+    | Abort
+
 type direction =
     | TopDown
     | BottomUp
 
-exception TacticFailure of string
-exception EExn of term
+val check_goal_solved' : goal -> option<term>
+val check_goal_solved  : goal -> bool
+val get_phi            : goal -> option<term>
+val is_irrelevant      : goal -> bool

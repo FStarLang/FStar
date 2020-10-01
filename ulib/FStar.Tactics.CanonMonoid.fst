@@ -94,9 +94,9 @@ let rec reification_aux (#a:Type) (mult unit me : term) : Tac (exp a) =
     else Var (unquote me)
 
 let reification (#a:Type) (m:monoid a) (me:term) : Tac (exp a) =
-    let mult = norm_term [delta] (quote (Monoid?.mult m)) in
-    let unit = norm_term [delta] (quote (Monoid?.unit m)) in
-    let me   = norm_term [delta] me in
+    let mult = norm_term [delta;zeta;iota] (quote (Monoid?.mult m)) in
+    let unit = norm_term [delta;zeta;iota] (quote (Monoid?.unit m)) in
+    let me   = norm_term [delta;zeta;iota] me in
     // dump ("mult = " ^ term_to_string mult ^
     //     "; unit = " ^ term_to_string unit ^
     //     "; me   = " ^ term_to_string me);

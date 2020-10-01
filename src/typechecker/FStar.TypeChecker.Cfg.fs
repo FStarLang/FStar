@@ -26,6 +26,7 @@ type fsteps = {
      beta : bool;
      iota : bool;
      zeta : bool;
+     zeta_full : bool;
      weak : bool;
      hnf  : bool;
      primops : bool;
@@ -63,6 +64,7 @@ let steps_to_string f =
     beta = %s;\n\
     iota = %s;\n\
     zeta = %s;\n\
+    zeta_full = %s;\n\
     weak = %s;\n\
     hnf  = %s;\n\
     primops = %s;\n\
@@ -84,10 +86,12 @@ let steps_to_string f =
     unascribe = %s;\n\
     in_full_norm_request = %s;\n\
     weakly_reduce_scrutinee = %s;\n\
+    for_extraction = %s;\n\
   }"
   [ f.beta |> b;
     f.iota |> b;
     f.zeta |> b;
+    f.zeta_full |> b;
     f.weak |> b;
     f.hnf  |> b;
     f.primops |> b;
@@ -108,12 +112,15 @@ let steps_to_string f =
     f.unmeta |> b;
     f.unascribe |> b;
     f.in_full_norm_request |> b;
-    f.weakly_reduce_scrutinee |> b]
+    f.weakly_reduce_scrutinee |> b;
+    f.for_extraction |> b;
+   ]
 
 let default_steps : fsteps = {
     beta = true;
     iota = true;
     zeta = true;
+    zeta_full = false;
     weak = false;
     hnf  = false;
     primops = false;
@@ -144,6 +151,7 @@ let fstep_add_one s fs =
     | Beta -> { fs with beta = true }
     | Iota -> { fs with iota = true }
     | Zeta -> { fs with zeta = true }
+    | ZetaFull -> { fs with zeta_full = true }
     | Exclude Beta -> { fs with beta = false }
     | Exclude Iota -> { fs with iota = false }
     | Exclude Zeta -> { fs with zeta = false }
@@ -194,6 +202,7 @@ type debug_switches = {
     wpe              : bool;
     norm_delayed     : bool;
     print_normalized : bool;
+    debug_nbe        : bool;
 }
 
 let no_debug_switches = {
@@ -206,6 +215,7 @@ let no_debug_switches = {
     wpe              = false;
     norm_delayed     = false;
     print_normalized = false;
+    debug_nbe        = false;
 }
 
 type primitive_step = {
@@ -226,7 +236,7 @@ let empty_prim_steps () : prim_step_set =
     BU.psmap_empty ()
 
 let add_step (s : primitive_step) (ss : prim_step_set) =
-    BU.psmap_add ss (I.text_of_lid s.name) s
+    BU.psmap_add ss (I.string_of_lid s.name) s
 
 let merge_steps (s1 : prim_step_set) (s2 : prim_step_set) : prim_step_set =
     BU.psmap_merge s1 s2
@@ -259,10 +269,10 @@ let cfg_to_string cfg =
 let cfg_env cfg = cfg.tcenv
 
 let find_prim_step cfg fv =
-    BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v)
+    BU.psmap_try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v)
 
 let is_prim_step cfg fv =
-    BU.is_some (BU.psmap_try_find cfg.primitive_steps (I.text_of_lid fv.fv_name.v))
+    BU.is_some (BU.psmap_try_find cfg.primitive_steps (I.string_of_lid fv.fv_name.v))
 
 let log cfg f =
     if cfg.debug.gen then f () else ()
@@ -280,8 +290,7 @@ let log_unfolding cfg f =
     if cfg.debug.unfolding then f () else ()
 
 let log_nbe cfg f =
-    if Env.debug cfg.tcenv <| Options.Other "NBE"
-    then f()
+    if cfg.debug.debug_nbe then f ()
 
 
 (*******************************************************************)
@@ -291,7 +300,6 @@ let embed_simple (emb:EMB.embedding<'a>) (r:Range.range) (x:'a) : term =
     EMB.embed emb x r None EMB.id_norm_cb
 let try_unembed_simple (emb:EMB.embedding<'a>) (x:term) : option<'a> =
     EMB.unembed emb x false EMB.id_norm_cb
-let mk t r = mk t None r
 let built_in_primitive_steps : prim_step_set =
     let arg_as_int    (a:arg) = fst a |> try_unembed_simple EMB.e_int in
     let arg_as_bool   (a:arg) = fst a |> try_unembed_simple EMB.e_bool in
@@ -303,7 +311,7 @@ let built_in_primitive_steps : prim_step_set =
         let a = U.unlazy_emb a in
         match (SS.compress hd).n, args with
         | Tm_fvar fv1, [(arg, _)]
-            when BU.ends_with (Ident.text_of_lid fv1.fv_name.v) "int_to_t" ->
+            when BU.ends_with (Ident.string_of_lid fv1.fv_name.v) "int_to_t" ->
             let arg = U.unlazy_emb arg in
             begin match (SS.compress arg).n with
             | Tm_constant (FC.Const_int (i, None)) ->
@@ -531,6 +539,21 @@ let built_in_primitive_steps : prim_step_set =
             end
         | _ -> failwith "Unexpected number of arguments"
     in
+    let division_op : psc -> EMB.norm_cb -> args -> option<term>
+      = fun psc _norm_cb args ->
+        match args with
+        | [(a1, None); (a2, None)] ->
+            begin match try_unembed_simple EMB.e_int a1,
+                        try_unembed_simple EMB.e_int a2 with
+            | Some m, Some n ->
+              if Z.to_int_fs n <> 0
+              then Some (embed_simple EMB.e_int psc.psc_range (Z.div_big_int m n))
+              else None
+
+            | _ -> None
+            end
+        | _ -> failwith "Unexpected number of arguments"
+    in
     let bogus_cbs = {
         NBE.iapp = (fun h _args -> h);
         NBE.translate = (fun _ -> failwith "bogus_cbs translate");
@@ -569,8 +592,8 @@ let built_in_primitive_steps : prim_step_set =
          (PC.op_Division,
              2,
              0,
-             binary_int_op (fun x y -> Z.div_big_int x y),
-             NBETerm.binary_int_op (fun x y -> Z.div_big_int x y));
+             division_op,
+             NBETerm.division_op);
          (PC.op_LT,
              2,
              0,
@@ -731,7 +754,7 @@ let built_in_primitive_steps : prim_step_set =
         let int_as_bounded r int_to_t n =
             let c = embed_simple EMB.e_int r n in
             let int_to_t = S.fv_to_tm int_to_t in
-            S.mk_Tm_app int_to_t [S.as_arg c] None r
+            S.mk_Tm_app int_to_t [S.as_arg c] r
         in
         let add_sub_mul_v =
           (bounded_signed_int_types @ bounded_unsigned_int_types)
@@ -944,7 +967,11 @@ let primop_time_report () : string =
 
 let extendable_primops_dirty : ref<bool> = BU.mk_ref true
 
-let mk_extendable_primop_set () =
+type register_prim_step_t = primitive_step -> unit
+type retrieve_prim_step_t = unit -> prim_step_set
+let mk_extendable_primop_set ()
+  : register_prim_step_t
+  * retrieve_prim_step_t =
   let steps = BU.mk_ref (empty_prim_steps ()) in
   let register (p:primitive_step) =
       extendable_primops_dirty := true;
@@ -957,7 +984,7 @@ let mk_extendable_primop_set () =
 let plugins = mk_extendable_primop_set ()
 let extra_steps = mk_extendable_primop_set ()
 
-let register_plugin p = fst plugins p
+let register_plugin (p:primitive_step) = fst plugins p
 let retrieve_plugins () =
     if Options.no_plugins ()
     then empty_prim_steps ()
@@ -1009,7 +1036,8 @@ let config' psteps s e =
              ; b380 = Env.debug e (Options.Other "380")
              ; wpe = Env.debug e (Options.Other "WPE")
              ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
-             ; print_normalized = Env.debug e (Options.Other "print_normalized_terms")}
+             ; print_normalized = Env.debug e (Options.Other "print_normalized_terms")
+             ; debug_nbe = Env.debug e (Options.Other "NBE")}
             else no_debug_switches
       ;
      steps = steps;
@@ -1021,3 +1049,18 @@ let config' psteps s e =
      reifying = false}
 
 let config s e = config' [] s e
+
+let should_reduce_local_let cfg lb =
+  if cfg.steps.do_not_unfold_pure_lets
+  then false //we're not allowed to do any local delta steps
+  else if cfg.steps.pure_subterms_within_computations &&
+          U.has_attribute lb.lbattrs PC.inline_let_attr
+  then true //1. we're extracting, and it's marked @inline_let
+  else
+    let n = Env.norm_eff_name cfg.tcenv lb.lbeff in
+    if U.is_pure_effect n &&
+       (cfg.normalize_pure_lets
+        || U.has_attribute lb.lbattrs PC.inline_let_attr)
+    then true //Or, 2. it's pure and we either not extracting, or it's marked @inline_let
+    else U.is_ghost_effect n && //Or, 3. it's ghost and we're not extracting
+         not (cfg.steps.pure_subterms_within_computations)

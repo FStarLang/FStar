@@ -26,10 +26,10 @@ let is_reifiable (m_mult:term) (m_unit:term) (me:term) : Tac bool =
    match inspect hd with
    | Tv_FVar fv ->
       // if unify (pack (Tv_FVar fv)) (quote (Monoid?.mult m)) then -- doesn't work
-     let t1 = norm_term [delta] (pack (Tv_FVar fv)) in
+     let t1 = norm_term [delta;zeta;iota] (pack (Tv_FVar fv)) in
      term_eq t1 m_mult
    | _ ->
-     term_eq (norm_term [delta] me) m_unit
+     term_eq (norm_term [delta;zeta;iota] me) m_unit
 
 let aux (#a:Type) (#rhs:a) (#lhs:a) (_:squash (lhs == rhs)) : Lemma (lhs == rhs) = ()
 
@@ -48,13 +48,13 @@ let replace_point (#a:Type) (m:monoid a) (rhs:exp a) =
      (* dump "before replace point"; *)
      apply_lemma t;
      (* dump "after replace point"; *)
-     norm [delta;primops;zeta];
+     norm [delta;primops;zeta;iota];
      (* dump "after replace norm"; *)
      trefl ())
 
 let should_rewrite (#a:Type) (m:monoid a) (everywhere:bool) (t:term) : Tac (bool * int) =
-  let m_mult = norm_term [delta] (quote (Monoid?.mult m)) in
-  let m_unit = norm_term [delta] (quote (Monoid?.unit m)) in
+  let m_mult = norm_term [delta;zeta;iota] (quote (Monoid?.mult m)) in
+  let m_unit = norm_term [delta;zeta;iota] (quote (Monoid?.unit m)) in
   // debug "should_rewrite: ";
   // debug (term_to_string t);
   if is_reifiable m_mult m_unit t
@@ -62,7 +62,7 @@ let should_rewrite (#a:Type) (m:monoid a) (everywhere:bool) (t:term) : Tac (bool
   else false, 0
 
 let rewrite_monoid (#a:Type) (m:monoid a) () : Tac unit =
-  norm [];
+  norm [zeta;iota];
   let g = cur_goal () in
   match term_as_formula g with
   | Comp (Eq (Some t)) lhs _ ->
@@ -90,7 +90,7 @@ let test (a b : int) (p:Type) =
         by (norm [];
             rewrite_int true;
             apply_imp (implies_intro());
-            norm [delta; zeta; primops];
+            norm [delta; zeta;iota; primops];
             apply (`refl))
     
 (* TODO: should extend this to a commutative monoid and

@@ -38,7 +38,7 @@ let append_inj_lemma b1 b2 c1 c2 =
   Classical.forall_intro #_ #(fun (x:(i:nat{i < length b1})) -> index b1 x == index c1 x) (lemma_append_inj_l b1 b2 c1 c2); //sadly, the 2nd implicit argument has to be provided explicitly
   Classical.forall_intro #_ #(fun (x:(i:nat{i < length b2})) -> index b2 x == index c2 x) (lemma_append_inj_r b1 b2 c1 c2)  //should fix this soon (NS)
 
-abstract val lemma_eq_intro: #a:Type -> s1:seq a -> s2:seq a -> Lemma
+val lemma_eq_intro: #a:Type -> s1:seq a -> s2:seq a -> Lemma
      (requires (Seq.length s1 = Seq.length s2
                /\ (forall (i:nat{i < Seq.length s1}).{:pattern (Seq.index s1 i); (Seq.index s2 i)} (Seq.index s1 i == Seq.index s2 i))))
      (ensures (Seq.equal s1 s2))

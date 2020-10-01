@@ -41,8 +41,9 @@ val ( <=. ) : real -> real -> Tot bool
 
 #reset-options "--smtencoding.elim_box true --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr native"
 //Tests
+let zero : real = of_int 0
 let one : real = of_int 1
-let two : real = 2.0R
+let two : real = of_int 2
 
 val sqrt_2 : r:real{r *. r = two}
 

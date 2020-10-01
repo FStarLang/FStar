@@ -16,24 +16,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "700cfae934b2ced31d7bd00ac108d73f"
-    ],
-    [
-      "CPS.SimpleLambdaLifting.add_cps",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "binder_x_66b03f5c7897b05649fed8196554c587_2",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_Prims.__cache_version_number__",
-        "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "a8c1eb86f18574d94c12167c84beb572"
+      "1b403c4097a29585007f7c50eff34e2e"
     ]
   ]
 ]

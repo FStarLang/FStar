@@ -1,0 +1,7 @@
+module M = Stdint.Int32
+type int32 = M.t
+type t = M.t
+let n = Prims.of_int 32
+
+let int_to_t x = M.of_string (Z.to_string x)
+let __int_to_t = int_to_t

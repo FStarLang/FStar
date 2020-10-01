@@ -136,7 +136,7 @@ let do_while_body_res_intro
 let rec do_while
   (tin tout: Type)
   (decrease: (tin -> GTot lex_t))
-  (body: ((x: tin) -> Tot (y: m (c_or (tin_decr tin decrease x) tout))))
+  (body: ((x: tin) -> Tot (m (c_or (tin_decr tin decrease x) tout))))
   (x: tin)
 : Tot (m tout)
   (decreases (decrease x))
@@ -192,7 +192,8 @@ let mk_do_while (#t: Type) (x: t) : T.Tac unit =
           begin match T.inspect ty with
           | T.Tv_Arrow tin' tout' ->
             begin match T.inspect_comp tout' with
-            | T.C_Unknown -> T.fail "UNKNOWN"
+            | T.C_GTotal _ _ -> T.fail "C_GTotal"
+            | T.C_Eff _ _ _ _ -> T.fail "C_Eff"
             | T.C_Total tout_ decr ->
               begin match T.inspect tout_ with
               | T.Tv_App m_tm (tout, T.Q_Explicit) ->

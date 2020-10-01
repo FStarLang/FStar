@@ -1,5 +1,5 @@
 [
-  "…ÚÌÅi\u0019jÇÄA'é”\u0014GÛ",
+  "Q^™úÐê\tg:„'Í3\u00172Ä",
   [
     [
       "FStar.Reader.f",
@@ -7,11 +7,10 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc", "unit_typing"
+        "@query", "int_typing", "primitive_Prims.op_Addition", "unit_typing"
       ],
       0,
-      "d0be6caababb36f25d1e928b57109eb9"
+      "91fa8a55568c602f5e3f1773cdaa6e96"
     ],
     [
       "FStar.Reader.g",
@@ -35,7 +34,7 @@
         "typing_FStar.Monotonic.Heap.sel"
       ],
       0,
-      "53b0207c43be6cd361ddf92ce4896c4e"
+      "383996ad2ccd02280a4d113889f8df06"
     ]
   ]
 ]

@@ -1,7 +1,7 @@
 (*
   Copyright 2008-2014 Microsoft Research
 
-  Authors: Nikhil Swamy, ...
+  Authors: Qunyan Mangus, Nikhil Swamy
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -45,24 +45,28 @@ let doc_to_string doc = FStar.Pprint.pretty_string (float_of_string "1.0") 100 d
 let parser_term_to_string t = doc_to_string (D.term_to_document t)
 let parser_pat_to_string t = doc_to_string (D.pat_to_document t)
 
+(* A callback into FStar.Syntax.Print.term_to_string. Careful, it's mutually recursive
+ * with this module and could loop, so only use it for debugging. *)
+let tts (t:S.term) : string = U.tts t
+
 let map_opt = List.filter_map
 
 let bv_as_unique_ident (x:S.bv) : I.ident =
   let unique_name =
-    if starts_with reserved_prefix x.ppname.idText
+    if starts_with reserved_prefix (string_of_id x.ppname)
     ||  Options.print_real_names () then
-      x.ppname.idText ^ (string_of_int x.index)
+      (string_of_id x.ppname) ^ (string_of_int x.index)
     else
-      x.ppname.idText
+      (string_of_id x.ppname)
   in
-  I.mk_ident (unique_name, x.ppname.idRange)
+  I.mk_ident (unique_name, (range_of_id x.ppname))
 
 let filter_imp a =
   (* keep typeclass args *)
-  a |> List.filter (function | (_, Some (S.Meta t)) when U.is_fvar C.tcresolve_lid t -> true
-                             | (_, Some (S.Implicit _))
-                             | (_, Some (S.Meta _)) -> false
-                             | _ -> true)
+  a |> List.filter (function | (_, Some (S.Meta (S.Arg_qualifier_meta_tac t))) when U.is_fvar C.tcresolve_lid t -> true
+                            | (_, Some (S.Implicit _))
+                            | (_, Some (S.Meta _)) -> false
+                            | _ -> true)
 
 let filter_pattern_imp xs =
   List.filter (fun (_, is_implicit) -> not is_implicit) xs
@@ -78,14 +82,10 @@ let rec universe_to_int n u =
 
 let universe_to_string univs =
   if (Options.print_universes()) then
-    List.map (fun x -> x.idText) univs |> String.concat  ", "
+    List.map (fun x -> (string_of_id x)) univs |> String.concat  ", "
   else ""
 
-// resugar_universe' included for consistency (it doesn't use its environment)
-let rec resugar_universe' (env: DsEnv.env) (u:S.universe) r: A.term =
-  resugar_universe u r
-
-and resugar_universe (u:S.universe) r: A.term =
+let rec resugar_universe (u:S.universe) r: A.term =
   let mk (a:A.term') r: A.term =
       //augment `a` an Unknown level (the level is unimportant ... we should maybe remove it altogether)
       A.mk_term a r A.Un
@@ -123,6 +123,11 @@ and resugar_universe (u:S.universe) r: A.term =
 
     | U_unknown -> mk A.Wild r (* not sure what to resugar to since it is not created by desugar *)
   end
+
+// resugar_universe' included for consistency (it doesn't use its environment)
+let resugar_universe' (env: DsEnv.env) (u:S.universe) r: A.term =
+  resugar_universe u r
+
 
 let string_to_op s =
   let name_of_op = function
@@ -180,6 +185,9 @@ let string_to_op s =
       None
 
 type expected_arity = option<int>
+
+(* GM: This almost never actually returns an expected arity. It does so
+only for subtraction, I think. *)
 let rec resugar_term_as_op (t:S.term) : option<(string*expected_arity)> =
   let infix_prim_ops = [
     (C.op_Addition    , "+" );
@@ -213,27 +221,33 @@ let rec resugar_term_as_op (t:S.term) : option<(string*expected_arity)> =
     (C.eq3_lid     , "===");
     (C.forall_lid  , "forall");
     (C.exists_lid  , "exists");
-    (C.salloc_lid  , "alloc")
+    (C.salloc_lid  , "alloc");
+    (C.calc_finish_lid, "calc_finish");
   ] in
   let fallback fv =
     match infix_prim_ops |> BU.find_opt (fun d -> fv_eq_lid fv (fst d)) with
     | Some op ->
       Some (snd op, None)
     | _ ->
-      let length = String.length(fv.fv_name.v.nsstr) in
-      let str = if length=0 then fv.fv_name.v.str
-          else BU.substring_from fv.fv_name.v.str (length+1) in
-      if BU.starts_with str "dtuple" then Some ("dtuple", None)
-      else if BU.starts_with str "tuple" then Some ("tuple", None)
+      let length = String.length (nsstr fv.fv_name.v) in
+      let str = if length=0 then (string_of_lid fv.fv_name.v)
+          else BU.substring_from (string_of_lid fv.fv_name.v) (length+1) in
+      (* Check that it is of the shape dtuple<int>, and return that arity *)
+      if BU.starts_with str "dtuple"
+         && Option.isSome (BU.safe_int_of_string (BU.substring_from str 6))
+      then Some ("dtuple", BU.safe_int_of_string (BU.substring_from str 6))
+      else if BU.starts_with str "tuple"
+         && Option.isSome (BU.safe_int_of_string (BU.substring_from str 5))
+      then Some ("tuple", BU.safe_int_of_string (BU.substring_from str 5))
       else if BU.starts_with str "try_with" then Some ("try_with", None)
-      else if fv_eq_lid fv C.sread_lid then Some (fv.fv_name.v.str, None)
+      else if fv_eq_lid fv C.sread_lid then Some (string_of_lid fv.fv_name.v, None)
       else None
   in
   match (SS.compress t).n with
     | Tm_fvar fv ->
-      let length = String.length(fv.fv_name.v.nsstr) in
-      let s = if length=0 then fv.fv_name.v.str
-              else BU.substring_from fv.fv_name.v.str (length+1) in
+      let length = String.length (nsstr fv.fv_name.v) in
+      let s = if length=0 then string_of_lid fv.fv_name.v
+              else BU.substring_from (string_of_lid fv.fv_name.v) (length+1) in
       begin match string_to_op s with
         | Some t -> Some t
         | _ -> fallback fv
@@ -251,10 +265,11 @@ let is_wild_pat (p:S.pat) : bool = match p.v with
     | _ -> false
 
 let is_tuple_constructor_lid lid =
-  C.is_tuple_data_lid' lid || C.is_dtuple_data_lid' lid
+     C.is_tuple_data_lid' lid
+  || C.is_dtuple_data_lid' lid
 
 let may_shorten lid =
-  match lid.str with
+  match string_of_lid lid with
   | "Prims.Nil"
   | "Prims.Cons" -> false
   | _ -> not (is_tuple_constructor_lid lid)
@@ -297,9 +312,9 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       //should be A.Var if lowercase
       //and A.Name if uppercase
       let a = fv.fv_name.v in
-      let length = String.length(fv.fv_name.v.nsstr) in
-      let s = if length=0 then a.str
-          else BU.substring_from a.str (length+1) in
+      let length = String.length (nsstr fv.fv_name.v) in
+      let s = if length=0 then string_of_lid a
+          else BU.substring_from (string_of_lid a) (length+1) in
       let is_prefix = I.reserved_prefix ^ "is_" in
       if BU.starts_with s is_prefix then
         let rest = BU.substring_from s (String.length is_prefix) in
@@ -315,6 +330,10 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           | _ ->
             failwith "wrong projector format"
         end
+       else if (lid_equals a C.smtpat_lid) then
+         mk (A.Tvar (I.mk_ident ("SMTPat", I.range_of_lid a)))
+       else if (lid_equals a C.smtpatOr_lid) then
+         mk (A.Tvar (I.mk_ident ("SMTPatOr", I.range_of_lid a)))
        else if (lid_equals a C.assert_lid || lid_equals a C.assume_lid
                 || Char.uppercase (String.get s 0) <> String.get s 0) then
          mk (A.Var (maybe_shorten_fv env fv))
@@ -367,7 +386,13 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       let body = resugar_term' env body in
       mk (A.Abs(patterns, body))
 
-    | Tm_arrow(xs, body) ->
+    | Tm_arrow _ ->
+      (* Flatten the arrow *)
+      let xs, body =
+        match (SS.compress (U.canon_arrow t)).n with
+        | Tm_arrow (xs, body) -> xs, body
+        | _ -> failwith "impossible: Tm_arrow in resugar_term"
+      in
       let xs, body = SS.open_comp xs body in
       let xs = if (Options.print_implicits()) then xs else filter_imp xs in
       let body = resugar_comp' env body in
@@ -397,10 +422,16 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
             | hd :: tl -> last tl
             | _ -> failwith "last of an empty list"
       in
-      let rec last_two = function
-            | [] | [_] -> failwith "last two elements of a list with less than two elements "
-            | [a1;a2] -> [a1;a2]
-            | _::t -> last_two t
+      let first_two_explicit args =
+        let rec drop_implicits args =
+          match args with
+          | (_, Some (S.Implicit _))::tl -> drop_implicits tl
+          | _ -> args
+        in
+        match drop_implicits args with
+        | []
+        | [_] -> failwith "not_enough explicit_arguments"
+        | a1::a2::_ -> [a1;a2]
       in
       let resugar_as_app e args =
         let args =
@@ -416,6 +447,12 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       begin match resugar_term_as_op e with
         | None->
           resugar_as_app e args
+
+        | Some ("calc_finish", _) ->
+          begin match resugar_calc env t with
+          | Some r -> r
+          | _ -> resugar_as_app e args
+          end
 
         | Some ("tuple", _) ->
           let out =
@@ -456,69 +493,83 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         | Some ("dtuple", _) ->
           resugar_as_app e args
 
-        | Some (ref_read, _) when (ref_read = C.sread_lid.str) ->
+        | Some (ref_read, _) when (ref_read = string_of_lid C.sread_lid) ->
           let (t, _) = List.hd args in
           begin match (SS.compress t).n with
-            | Tm_fvar fv when (U.field_projector_contains_constructor fv.fv_name.v.str) ->
-              let f = lid_of_path [fv.fv_name.v.str] t.pos in
+            | Tm_fvar fv when (U.field_projector_contains_constructor (string_of_lid fv.fv_name.v)) ->
+              let f = lid_of_path [string_of_lid fv.fv_name.v] t.pos in
               mk (A.Project(resugar_term' env t, f))
             | _ -> resugar_term' env t
           end
 
         | Some ("try_with", _) when List.length args > 1 ->
-          (* only the last two args are from original AST terms, others are added by typechecker *)
-          (* TODO: we need a place to store the information in the args added by the typechecker *)
-          let new_args = last_two args in
-          let body, handler = match new_args with
-            | [(a1, _);(a2, _)] -> a1, a2 (* where a1 and a1 is Tm_abs(Tm_match)) *)
-            | _ ->
-              failwith("wrong arguments to try_with")
-          in
-          let decomp term = match (SS.compress term).n with
-            | Tm_abs(x, e, _) ->
-              let x, e = SS.open_term x e in
-              e
-            | _ -> failwith("wrong argument format to try_with") in
-          let body = resugar_term' env (decomp body) in
-          let handler = resugar_term' env (decomp handler) in
-          let rec resugar_body t = match (t.tm) with
-            | A.Match(e, [(_,_,b)]) -> b
-            | A.Let(_, _, b) -> b  // One branch Match that is resugared as Let
-            | A.Ascribed(t1, t2, t3) ->
-              (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
-              mk (A.Ascribed(resugar_body t1, t2, t3))
-            | _ -> failwith("unexpected body format to try_with") in
-          let e = resugar_body body in
-          let rec resugar_branches t = match (t.tm) with
-            | A.Match(e, branches) -> branches
-            | A.Ascribed(t1, t2, t3) ->
-              (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
-              (* TODO: where should we keep the information stored in Ascribed? *)
-              resugar_branches t1
-            | _ ->
-              (* TODO: forall created by close_forall doesn't follow the normal forall format, not sure how to resugar back *)
-              []
-          in
-          let branches = resugar_branches handler in
-          mk (A.TryWith(e, branches))
+          (* attempt to resugar as `try .. with | ...`, but otherwise just resugar normally *)
+          begin try
+            (* only the first two explicit args are from original AST terms,
+             * others are added by typechecker *)
+            (* TODO: we need a place to store the information in the args added by the typechecker *)
+            let new_args = first_two_explicit args in
+            let body, handler = match new_args with
+              | [(a1, _);(a2, _)] -> a1, a2 (* where a1 and a1 is Tm_abs(Tm_match)) *)
+              | _ ->
+                failwith("wrong arguments to try_with")
+            in
+            let decomp term = match (SS.compress term).n with
+              | Tm_abs(x, e, _) ->
+                let x, e = SS.open_term x e in
+                e
+              | _ -> failwith("wrong argument format to try_with: " ^ term_to_string (resugar_term' env term)) in
+            let body = resugar_term' env (decomp body) in
+            let handler = resugar_term' env (decomp handler) in
+            let rec resugar_body t = match (t.tm) with
+              | A.Match(e, [(_,_,b)]) -> b
+              | A.Let(_, _, b) -> b  // One branch Match that is resugared as Let
+              | A.Ascribed(t1, t2, t3) ->
+                (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
+                mk (A.Ascribed(resugar_body t1, t2, t3))
+              | _ -> failwith("unexpected body format to try_with") in
+            let e = resugar_body body in
+            let rec resugar_branches t = match (t.tm) with
+              | A.Match(e, branches) -> branches
+              | A.Ascribed(t1, t2, t3) ->
+                (* this case happens when the match is wrapped in Meta_Monadic which is resugared to Ascribe*)
+                (* TODO: where should we keep the information stored in Ascribed? *)
+                resugar_branches t1
+              | _ ->
+                (* TODO: forall created by close_forall doesn't follow the normal forall format, not sure how to resugar back *)
+                []
+            in
+            let branches = resugar_branches handler in
+            mk (A.TryWith(e, branches))
+          with
+          | _ ->
+            resugar_as_app e args
+          end
 
         | Some ("try_with", _) ->
           resugar_as_app e args
 
         (* These have implicits, don't do the fancy printing when --print_implicits is on *)
-        | Some (op, _) when (op = "=" || op = "==" || op = "===" || op = "@" || op = ":=" || op = "|>")
+        | Some (op, _) when (op = "="
+                          || op = "=="
+                          || op = "==="
+                          || op = "@"
+                          || op = ":="
+                          || op = "|>"
+                          || op = "<<")
             && Options.print_implicits () ->
           resugar_as_app e args
 
         | Some (op, _) when op = "forall" || op = "exists" ->
           (* desugared from QForall(binders * patterns * body) to Tm_app(forall, Tm_abs(binders, Tm_meta(body, meta_pattern(list<args>)*)
-          let rec uncurry xs pat (t:A.term) = match t.tm with
-            | A.QExists(x, (_, p) , body)
-            | A.QForall(x, (_, p), body)
-              -> uncurry (x@xs) (p@pat) body
-            | _ -> xs, pat, t
+          let rec uncurry xs pats (t:A.term) = match t.tm with
+            | A.QExists(xs', (_, pats'), body)
+            | A.QForall(xs', (_, pats'), body) ->
+                uncurry (xs@xs') (pats@pats') body
+            | _ ->
+                xs, pats, t
           in
-          let resugar body = match (SS.compress body).n with
+          let resugar_forall_body body = match (SS.compress body).n with
             | Tm_abs(xs, body, _) ->
                 let xs, body = SS.open_term xs body in
                 let xs = if (Options.print_implicits()) then xs else filter_imp xs in
@@ -539,23 +590,22 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                   | _ -> [], resugar_term' env body
                 in
                 let xs, pats, body = uncurry xs pats body in
-                let xs = xs |> List.rev in
                 if op = "forall"
                 then mk (A.QForall(xs, (A.idents_of_binders xs t.pos, pats), body))
                 else mk (A.QExists(xs, (A.idents_of_binders xs t.pos, pats), body))
 
             | _ ->
-            (*forall added by typechecker.normalize doesn't not have Tm_abs as body*)
-            (*TODO:  should we resugar them back as forall/exists or just as the term of the body *)
-            if op = "forall" then mk (A.QForall([], ([], []), resugar_term' env body))
-            else mk (A.QExists([], ([], []), resugar_term' env body))
+              (*forall added by typechecker.normalize doesn't not have Tm_abs as body*)
+              (*TODO:  should we resugar them back as forall/exists or just as the term of the body *)
+              if op = "forall" then mk (A.QForall([], ([], []), resugar_term' env body))
+              else mk (A.QExists([], ([], []), resugar_term' env body))
           in
           (* only the last arg is from original AST terms, others are added by typechecker *)
           (* TODO: we need a place to store the information in the args added by the typechecker *)
           if List.length args > 0 then
             let args = last args in
             begin match args with
-              | [(b, _)] -> resugar b
+              | [(b, _)] -> resugar_forall_body b
               | _ -> failwith "wrong args format to QForall"
             end
           else
@@ -720,12 +770,138 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           resugar_meta_desugared i
       | Meta_named t ->
           mk (A.Name t)
-      | Meta_monadic (name, t)
-      | Meta_monadic_lift (name, _, t) ->
+      | Meta_monadic (_, t)
+      | Meta_monadic_lift (_, _, t) ->
         resugar_term' env e
       end
 
     | Tm_unknown -> mk A.Wild
+
+(* This entire function is of course very tied to the the desugaring
+of calc expressions in ToSyntax. This only really works for fully
+elaborated terms, sorry. *)
+and resugar_calc (env:DsEnv.env) (t0:S.term) : option<A.term> =
+  let mk (a:A.term') : A.term =
+    A.mk_term a t0.pos A.Un
+  in
+  (* Returns the non-resugared final relation and the calc_pack *)
+  let resugar_calc_finish (t:S.term) : option<(S.term * S.term)> =
+    let hd, args = U.head_and_args t in
+    match (SS.compress (U.un_uinst hd)).n, args with
+    | Tm_fvar fv, [(_, Some (S.Implicit _)); // type
+                   (rel, None);              // top relation
+                   (_, Some (S.Implicit _)); // x
+                   (_, Some (S.Implicit _)); // y
+                   (pf, None)]               // pf : unit -> GTot (calc_pack x y)
+        when S.fv_eq_lid fv C.calc_finish_lid ->
+        let pf = U.unthunk pf in
+        Some (rel, pf)
+
+    | _ ->
+        None
+  in
+  (* Un-eta expand a relation. Return it as-is if cannot be done. *)
+  let un_eta_rel (rel:S.term) : option<S.term> =
+    let bv_eq_tm (b:bv) (t:S.term) : bool =
+      match (SS.compress t).n with
+      | Tm_name b' when S.bv_eq b b' -> true
+      | _ -> false
+    in
+    match (SS.compress rel).n with
+    | Tm_abs ([b1;b2], body, _) ->
+        let ([b1;b2], body) = SS.open_term [b1;b2] body in
+        let body = U.unascribe body in
+        let body = match (U.unb2t body) with
+                   | Some body -> body
+                   | None -> body
+        in
+        begin match (SS.compress body).n with
+        | Tm_app (e, args) when List.length args >= 2 ->
+          begin match List.rev args with
+          | (a1, None)::(a2, None)::rest ->
+            if bv_eq_tm (fst b1) a2 && bv_eq_tm (fst b2) a1 // mind the flip
+            then Some <| U.mk_app e (List.rev rest)
+            else Some rel
+          | _ ->
+            Some rel
+          end
+        | _ -> Some rel
+        end
+
+    | _ ->
+        Some rel
+  in
+  (* Resugars an application of calc_step, returning the term, the relation,
+   * the justifcation, and the rest of the proof. *)
+  let resugar_step (pack:S.term) : option<(S.term * S.term * S.term * S.term)> =
+    let hd, args = U.head_and_args pack in
+    match (SS.compress (U.un_uinst hd)).n, args with
+    | Tm_fvar fv, [(_, Some (S.Implicit _)); // type
+                   (_, Some (S.Implicit _)); // x
+                   (_, Some (S.Implicit _)); // y
+                   (rel, None);              // relation
+                   (z, None);                // z, next val
+                   (pf, None);               // pf, rest of proof (thunked)
+                   (j, None)]                // justification (thunked)
+        when S.fv_eq_lid fv C.calc_step_lid ->
+        let pf = U.unthunk pf in
+        let j = U.unthunk j in
+        Some (z, rel, j, pf)
+
+    | _ ->
+        None
+  in
+  (* Resugar an application of calc_init *)
+  let resugar_init (pack:S.term) : option<S.term> =
+    let hd, args = U.head_and_args pack in
+    match (SS.compress (U.un_uinst hd)).n, args with
+    | Tm_fvar fv, [(_, Some (S.Implicit _)); // type
+                   (x, None)]                // initial value
+        when S.fv_eq_lid fv C.calc_init_lid ->
+        Some x
+
+    | _ ->
+        None
+  in
+  (* Repeats the above function until it returns none; what remains should be a calc_init *)
+  let rec resugar_all_steps (pack:S.term) : option<(list<(S.term * S.term * S.term)> * S.term)> =
+    match resugar_step pack with
+    | Some (t, r, j, k) ->
+        BU.bind_opt (resugar_all_steps k) (fun (steps, k) ->
+        Some ((t, r, j)::steps, k))
+    | None ->
+        Some ([], pack)
+  in
+  let resugar_rel (rel:S.term) : A.term =
+    (* Try to un-eta, don't worry if not *)
+    let rel = match un_eta_rel rel with
+              | Some rel -> rel
+              | None -> rel
+    in
+    let fallback () =
+        mk (A.Paren (resugar_term' env rel))
+    in
+    let hd, args = U.head_and_args rel in
+    if Options.print_implicits ()
+           && List.existsb (fun (_, q) -> S.is_implicit q) args
+    then fallback ()
+    else
+      begin match resugar_term_as_op hd with
+      | Some (s, None)
+      | Some (s, Some 2) -> mk (A.Op (Ident.id_of_text s, []))
+      | _ -> fallback ()
+      end
+  in
+  let build_calc (rel:S.term) (x0:S.term) (steps : list<(S.term * S.term * S.term)>) : A.term =
+    let r = resugar_term' env in
+    mk (CalcProof (resugar_rel rel, r x0,
+                    List.map (fun (z, rel, j) -> CalcStep (resugar_rel rel, r j, r z)) steps))
+  in
+
+  BU.bind_opt (resugar_calc_finish t0) (fun (rel, pack) ->
+  BU.bind_opt (resugar_all_steps pack) (fun (steps, k) ->
+  BU.bind_opt (resugar_init k) (fun x0 ->
+  Some <| build_calc rel x0 (List.rev steps))))
 
 and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
   let mk (a:A.term') : A.term =
@@ -908,8 +1084,8 @@ and resugar_pat' env (p:S.pat) (branch_bv: set<bv>) : A.pattern =
       // both A.PatTvar and A.PatVar are desugared to S.Pat_var. A PatTvar in the original file coresponds
       // to some type variable which is implicitly bound to the enclosing toplevel declaration.
       // When resugaring it will be just a normal (explicitly bound) variable.
-      begin match string_to_op v.ppname.idText with
-       | Some (op, _) -> mk (A.PatOp (Ident.mk_ident (op, v.ppname.idRange)))
+      begin match string_to_op (string_of_id v.ppname) with
+       | Some (op, _) -> mk (A.PatOp (Ident.mk_ident (op, (range_of_id v.ppname))))
        | None -> resugar_bv_as_pat' env v (to_arg_qual imp_opt) branch_bv None
       end
 
@@ -930,16 +1106,18 @@ and resugar_arg_qual env (q:option<S.arg_qualifier>) : option<(option<A.arg_qual
     if b then None
     else Some (Some A.Implicit)
   | Some S.Equality -> Some (Some A.Equality)
-  | Some (S.Meta t) ->
-    Some (Some (A.Meta (resugar_term' env t)))
+  | Some (S.Meta (S.Arg_qualifier_meta_tac t)) ->
+    Some (Some (A.Meta (A.Arg_qualifier_meta_tac (resugar_term' env t))))
+  | Some (S.Meta (S.Arg_qualifier_meta_attr t)) ->
+    Some (Some (A.Meta (A.Arg_qualifier_meta_attr (resugar_term' env t))))
 
 and resugar_imp env (q:option<S.arg_qualifier>) : A.imp =
   match q with
   | None -> A.Nothing
   | Some (S.Implicit false) -> A.Hash
-  | Some S.Equality
-  | Some (S.Implicit true) -> A.Nothing // We don't have syntax for inaccessible arguments
-  | Some (S.Meta t) -> A.HashBrace (resugar_term' env t)
+  | Some S.Equality //We don't have syntax for decorating equality contraints at applications
+  | Some (S.Implicit true) // We don't have syntax for inaccessible arguments
+  | Some (S.Meta _) -> A.Nothing //We don't have syntax to associate attributes or tactics at applications
 
 let resugar_qualifier : S.qualifier -> option<A.qualifier> = function
   | S.Assumption -> Some A.Assumption
@@ -949,7 +1127,6 @@ let resugar_qualifier : S.qualifier -> option<A.qualifier> = function
   (* TODO : Find the correct option to display this *)
   | Visible_default -> if true then None else Some A.Visible
   | S.Irreducible -> Some A.Irreducible
-  | S.Abstract -> Some A.Abstract
   | S.Inline_for_extraction -> Some A.Inline_for_extraction
   | S.NoExtract -> Some A.NoExtract
   | S.Noeq -> Some A.Noeq
@@ -997,25 +1174,25 @@ let resugar_typ env datacon_ses se : sigelts * A.tycon =
               (* Todo: resugar univs *)
               begin match (SS.compress term).n with
                 | Tm_arrow(bs, _) ->
-                  let mfields = bs |> List.map (fun (b, qual) -> (bv_as_unique_ident b, resugar_term' env b.sort, None)) in
+                  let mfields = bs |> List.map (fun (b, qual) -> (bv_as_unique_ident b, resugar_term' env b.sort)) in
                   mfields@fields
                 | _ -> failwith "unexpected"
               end
             | _ -> failwith "unexpected"
           in
           let fields =  List.fold_left resugar_datacon_as_fields [] current_datacons in
-          A.TyconRecord(tylid.ident, bs, None, fields)
+          A.TyconRecord(ident_of_lid tylid, bs, None, fields)
         else
           (* Resugar as a variant *)
           let resugar_datacon constructors se = match se.sigel with
             | Sig_datacon (l, univs, term, _, num, _) ->
               (* Todo: resugar univs *)
-              let c = (l.ident, Some (resugar_term' env term), None, false)  in
+              let c = (ident_of_lid l, Some (resugar_term' env term), false)  in
               c::constructors
             | _ -> failwith "unexpected"
           in
           let constructors =  List.fold_left resugar_datacon [] current_datacons in
-          A.TyconVariant(tylid.ident, bs, None, constructors)
+          A.TyconVariant(ident_of_lid tylid, bs, None, constructors)
       in
       other_datacons, tyc
   | _ -> failwith "Impossible : only Sig_inductive_typ can be resugared as types"
@@ -1024,8 +1201,6 @@ let mk_decl r q d' =
   {
     d = d' ;
     drange = r ;
-    (* TODO : documentation should be retrieved from the desugaring environment at some point *)
-    doc = None ;
     quals = List.choose resugar_qualifier q ;
     (* TODO : are these stocked up somewhere ? *)
     attrs = [] ;
@@ -1037,7 +1212,7 @@ let decl'_to_decl se d' =
 let resugar_tscheme'' env name (ts:S.tscheme) =
   let (univs, typ) = ts in
   let name = I.mk_ident (name, typ.pos) in
-  mk_decl typ.pos [] (A.Tycon(false, false, [(A.TyconAbbrev(name, [], None, resugar_term' env typ), None)]))
+  mk_decl typ.pos [] (A.Tycon(false, false, [(A.TyconAbbrev(name, [], None, resugar_term' env typ))]))
 
 let resugar_tscheme' env (ts:S.tscheme) =
   resugar_tscheme'' env "tscheme" ts
@@ -1090,11 +1265,11 @@ let resugar_eff_decl' env r q ed =
     if for_free then
       let a = A.Construct ((I.lid_of_str "construct"), [(action_defn, A.Nothing);(action_typ, A.Nothing)]) in
       let t = A.mk_term a r A.Un in
-      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, t ), None)]))
+      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(ident_of_lid d.action_name, action_params, None, t ))]))
     else
-      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(d.action_name.ident, action_params, None, action_defn), None)]))
+      mk_decl r q (A.Tycon(false, false, [(A.TyconAbbrev(ident_of_lid d.action_name, action_params, None, action_defn))]))
   in
-  let eff_name = ed.mname.ident in
+  let eff_name = ident_of_lid ed.mname in
   let eff_binders, eff_typ = SS.open_term ed.binders (ed.signature |> snd) in
   let eff_binders = if (Options.print_implicits()) then eff_binders else filter_imp eff_binders in
   let eff_binders = eff_binders |> map_opt (fun b -> resugar_binder' env b r) |> List.rev in
@@ -1124,24 +1299,27 @@ let resugar_sigelt' env se : option<A.decl> =
     begin match leftover_datacons with
       | [] -> //true
         (* TODO : documentation should be retrieved from the desugaring environment at some point *)
-        Some (decl'_to_decl se (Tycon (false, false, List.map (fun tyc -> tyc, None) tycons)))
+        Some (decl'_to_decl se (Tycon (false, false, tycons)))
       | [se] ->
         //assert (se.sigquals |> BU.for_some (function | ExceptionConstructor -> true | _ -> false));
         (* Exception constructor declaration case *)
         begin match se.sigel with
         | Sig_datacon(l, _, _, _, _, _) ->
-          Some (decl'_to_decl se (A.Exception (l.ident, None)))
+          Some (decl'_to_decl se (A.Exception (ident_of_lid l, None)))
         | _ -> failwith "wrong format for resguar to Exception"
         end
       | _ ->
         failwith "Should not happen hopefully"
     end
 
+  | Sig_fail _ ->
+    None
+
   | Sig_let (lbs, _) ->
     if (se.sigquals |> BU.for_some (function S.Projector(_,_) | S.Discriminator _ -> true | _ -> false)) then
       None
     else
-      let mk e = S.mk e None se.sigrng in
+      let mk e = S.mk e se.sigrng in
       let dummy = mk Tm_unknown in
       let desugared_let = mk (Tm_let(lbs, dummy)) in
       let t = resugar_term' env desugared_let in
@@ -1152,7 +1330,7 @@ let resugar_sigelt' env se : option<A.decl> =
       end
 
   | Sig_assume (lid, _, fml) ->
-    Some (decl'_to_decl se (Assume (lid.ident, resugar_term' env fml)))
+    Some (decl'_to_decl se (Assume (ident_of_lid lid, resugar_term' env fml)))
 
   | Sig_new_effect ed ->
     Some (resugar_eff_decl' env se.sigrng se.sigquals ed)
@@ -1182,7 +1360,7 @@ let resugar_sigelt' env se : option<A.decl> =
     let bs, c = SS.open_comp bs c in
     let bs = if (Options.print_implicits()) then bs else filter_imp bs in
     let bs = bs |> map_opt (fun b -> resugar_binder' env b se.sigrng) in
-    Some (decl'_to_decl se (A.Tycon(false, false, [A.TyconAbbrev(lid.ident, bs, None, resugar_comp' env c), None])))
+    Some (decl'_to_decl se (A.Tycon(false, false, [A.TyconAbbrev(ident_of_lid lid, bs, None, resugar_comp' env c)])))
 
   | Sig_pragma p ->
     Some (decl'_to_decl se (A.Pragma (resugar_pragma p)))
@@ -1198,15 +1376,20 @@ let resugar_sigelt' env se : option<A.decl> =
           let universes = universe_to_string uvs in
           label universes (resugar_term' env t)
       in
-      Some (decl'_to_decl se (A.Val (lid.ident,t')))
+      Some (decl'_to_decl se (A.Val (ident_of_lid lid,t')))
 
   | Sig_splice (ids, t) ->
-    Some (decl'_to_decl se (A.Splice (List.map (fun l -> l.ident) ids, resugar_term' env t)))
+    Some (decl'_to_decl se (A.Splice (List.map (fun l -> ident_of_lid l) ids, resugar_term' env t)))
 
   (* Already desugared in one of the above case or non-relevant *)
   | Sig_inductive_typ _
-  | Sig_datacon _
-  | Sig_main _ -> None
+  | Sig_datacon _ -> None
+
+  | Sig_polymonadic_bind (m, n, p, (_, t), _) ->
+    Some (decl'_to_decl se (A.Polymonadic_bind (m, n, p, resugar_term' env t)))
+
+  | Sig_polymonadic_subcomp (m, n, (_, t), _) ->
+    Some (decl'_to_decl se (A.Polymonadic_subcomp (m, n, resugar_term' env t)))
 
 (* Old interface: no envs *)
 

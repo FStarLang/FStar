@@ -1,12 +1,18 @@
 let make i c = BatUTF8.init (Z.to_int i) (fun _ -> BatUChar.chr c)
 let strcat s t = s ^ t
 let op_Hat s t =  strcat s t
+
+(* restore pre-2.11 BatString.nsplit behavior,
+   see https://github.com/ocaml-batteries-team/batteries-included/issues/845 *)
+let batstring_nsplit s t =
+  if s = "" then [] else BatString.nsplit s t
+
 let split seps s =
   let rec repeat_split acc = function
     | [] -> acc
     | sep::seps ->
        let usep = BatUTF8.init 1 (fun _ -> BatUChar.chr sep) in
-       let l = BatList.flatten (BatList.map (fun x -> BatString.nsplit x usep) acc) in
+       let l = BatList.flatten (BatList.map (fun x -> batstring_nsplit x usep) acc) in
        repeat_split l seps in
   repeat_split [s] seps
 let compare x y = Z.of_int (BatString.compare x y)

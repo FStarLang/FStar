@@ -5,10 +5,6 @@ out_file=$2
 threads=$3
 branchname=$4
 
-# Add ssh identity
-eval $(ssh-agent)
-ssh-add .ssh/id_rsa
-
 eval $(opam config env)
 
 echo $(date -u "+%Y-%m-%d %H:%M:%S") >> $out_file
@@ -19,9 +15,6 @@ tail_pd=$!
 kill $tail_pd
 
 echo $(date -u "+%Y-%m-%d %H:%M:%S") >> $out_file
-
-eval $(ssh-agent)
-ssh-add -D
 
 # Docs and binaries don't have query stats.
 if [[ $target != "fstar-docs"  && $target != "fstar-binary-build" ]]; then

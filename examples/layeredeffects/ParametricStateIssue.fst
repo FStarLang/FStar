@@ -63,7 +63,7 @@ module B = LowStar.Buffer
 
 
 inline_for_extraction
-type repr (a:Type) (_:unit) =
+type repr (a:Type) (_:eqtype_as_type unit) =
   unit ->
   St (option a)
 
@@ -83,38 +83,21 @@ let bind (a:Type) (b:Type)
   | None -> None
   | Some x -> (g x) ()
 
-inline_for_extraction
-let subcomp (a:Type)
-  (f:repr a ())
-: Pure (repr a ())
-  (requires True)
-  (ensures fun _ -> True)
-= f
-
-inline_for_extraction
-let if_then_else (a:Type)
-  (f:repr a ()) (g:repr a ())
-  (p:Type0)
-: Type
-= repr a ()
-
 
 /// The effect definition
 
 reifiable reflectable
 layered_effect {
-  EXN : a:Type -> unit -> Effect
+  EXN : a:Type -> eqtype_as_type unit -> Effect
   with
   repr = repr;
   return = return;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+  bind = bind
 }
 
 
 inline_for_extraction
-let lift_div_exn (a:Type) (wp:pure_wp a) (f:unit -> DIV a wp)
+let lift_div_exn (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> DIV a wp)
 : repr a ()
 = fun _ -> Some (f ())
 
@@ -144,7 +127,7 @@ type mrepr (a:Type) (state:Type0) =
   state -> EXN (a & state) ()
 
 inline_for_extraction noextract
-let streturn (a:Type) (state:Type0) (x:a)
+let streturn (a:Type) (x:a) (state:Type0)
 : mrepr a state
 = fun st -> (x, st)
 
@@ -158,22 +141,6 @@ let stbind (a:Type) (b:Type)
   let (x, st) = f st in
   g x st
 
-inline_for_extraction noextract
-let stsubcomp (a:Type)
-  (state:Type0)
-  (f:mrepr a state)
-: Pure (mrepr a state)
-  (requires True)
-  (ensures fun _ -> True)
-= f
-
-inline_for_extraction noextract
-let stif_then_else (a:Type)
-  (state:Type0)
-  (f:mrepr a state) (g:mrepr a state)
-  (p:Type0)
-: Type
-= mrepr a state
 
 reifiable reflectable
 layered_effect {
@@ -181,14 +148,12 @@ layered_effect {
   with
   repr = mrepr;
   return = streturn;
-  bind = stbind;
-  subcomp = stsubcomp;
-  if_then_else = stif_then_else
+  bind = stbind
 }
 
 
 inline_for_extraction noextract
-let lift_div_stexn (a:Type) (wp:pure_wp a) (state:Type0) (f:unit -> DIV a wp)
+let lift_div_stexn (a:Type) (wp:pure_wp a) (state:Type0) (f:eqtype_as_type unit -> DIV a wp)
 : mrepr a state
 = fun st -> (f (), st)
 
@@ -216,7 +181,6 @@ let parse_common (#a:Type0)
 inline_for_extraction noextract
 let parse_t1 = parse_common #t1 t1_parser
 
-//#set-options "--debug Test --debug_level Extraction --ugly --print_implicits --print_effect_args"
 inline_for_extraction noextract
 let parse_flt_aux ()
 : STEXN t1 rcv_state

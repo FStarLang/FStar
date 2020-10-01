@@ -94,9 +94,9 @@ let rec esubst_extensional s1 s2 e =
   | ELam t e1   ->
     let open FStar.Tactics in
     assert (esubst s1 (ELam t e1) == ELam t (esubst (esub_lam s1) e1))
-      by norm [delta_only [`%esubst]];
+      by norm [zeta; iota; delta_only [`%esubst]];
     assert (esubst s2 (ELam t e1) == ELam t (esubst (esub_lam s2) e1))
-      by norm [delta_only [`%esubst]];
+      by norm [zeta; iota; delta_only [`%esubst]];
     esubst_extensional (esub_lam s1) (esub_lam s2) e1
   | EApp e1 e2 -> esubst_extensional s1 s2 e1; esubst_extensional s1 s2 e2
 
@@ -104,7 +104,8 @@ val esub_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma (requires True)
       (ensures (esubst s (ELam t e) = ELam t (esubst (esub_lam s) e)))
 let esub_lam_hoist t e s =
   let open FStar.Tactics in
-  assert (esubst s (ELam t e) = ELam t (esubst (esub_lam s) e)) by norm [delta_only [`%esubst]]
+  assert (esubst s (ELam t e) = ELam t (esubst (esub_lam s) e))
+      by (norm [zeta; iota; delta_only [`%esubst]])
 
 val esub_beta : exp -> Tot esub
 let esub_beta e = fun y -> if y = 0 then e
@@ -163,9 +164,9 @@ let rec tsubst_extensional s1 s2 t =
   | TLam k t1 -> 
     let open FStar.Tactics in
     assert (tsubst s1 (TLam k t1) == TLam k (tsubst (tsub_lam s1) t1))
-      by norm [delta_only [`%tsubst]];
+      by norm [zeta; iota; delta_only [`%tsubst]];
     assert (tsubst s2 (TLam k t1) == TLam k (tsubst (tsub_lam s2) t1))
-      by norm [delta_only [`%tsubst]];
+      by norm [zeta; iota; delta_only [`%tsubst]];
     tsubst_extensional (tsub_lam s1) (tsub_lam s2) t1
   | TArr t1 t2 -> tsubst_extensional s1 s2 t1; tsubst_extensional s1 s2 t2
   | TApp t1 t2 -> tsubst_extensional s1 s2 t1; tsubst_extensional s1 s2 t2
@@ -174,7 +175,8 @@ val tsub_lam_hoist : k:knd -> t:typ -> s:tsub -> Lemma
       (ensures (tsubst s (TLam k t) = TLam k (tsubst (tsub_lam s) t)))
 let tsub_lam_hoist k t s =
   let open FStar.Tactics in
-  assert (tsubst s (TLam k t) = TLam k (tsubst (tsub_lam s) t)) by norm [delta_only [`%tsubst]]
+  assert (tsubst s (TLam k t) = TLam k (tsubst (tsub_lam s) t))
+      by norm [zeta; iota; delta_only [`%tsubst]]
 
 (* Type substitution composition *)
 (* CH: again, we managed to get rid of this for expressions only
@@ -273,7 +275,8 @@ let rec tsubst_id t =
   | TVar z -> ()
   | TLam k t1 ->
      tsub_lam_hoist k t1 tsub_id;
-     assert (feq tsub_id (tsub_lam tsub_id)) by norm [delta_only [`%tsub_lam; `%tsub_inc]];
+     assert (feq tsub_id (tsub_lam tsub_id))
+         by (norm [zeta; iota; delta_only [`%tsub_lam; `%tsub_inc]]);
      tsubst_extensional tsub_id (tsub_lam tsub_id) t1;
      tsubst_id t1
   | TArr t1 t2
@@ -524,7 +527,7 @@ let tshift_up_above_lam n k t =
   assert(tshift_up_above n (TLam k t) =
          TLam k (tsubst (tsub_lam (tsub_inc_above n)) t));
   assert (feq (tsub_lam (tsub_inc_above n)) (tsub_inc_above (n+1)))
-    by norm [delta_only [`%tsub_lam; `%tsub_inc_above]];
+    by norm [zeta; iota; delta_only [`%tsub_lam; `%tsub_inc_above]];
   tsubst_extensional (tsub_lam (tsub_inc_above n)) (tsub_inc_above (n+1)) t
 
 (* kinding weakening when a type variable binding is added to env *)

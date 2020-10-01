@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+   Copyright 2008-2020 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -45,16 +45,6 @@ type option_val =
   | Int of int
   | List of list<option_val>
   | Unset
-
-type error_flag =
-  | CFatal          //CFatal: these are reported using a raise_error: compiler cannot progress
-  | CAlwaysError    //CAlwaysError: these errors are reported using log_issue and cannot be suppressed
-                    //the compiler can progress after reporting them
-  | CError          //CError: these are reported as errors using log_issue
-                    //        but they can be turned into warnings or silenced
-  | CWarning        //CWarning: reported using log_issue as warnings by default;
-                    //          then can be silenced or escalated to errors
-  | CSilent         //CSilent: never the default for any issue, but warnings can be silenced
 
 (* A FLAG TO INDICATE THAT WE'RE RUNNING UNIT TESTS *)
 let __unit_tests__ = Util.mk_ref false
@@ -146,8 +136,18 @@ let set o =
 let snapshot () = Common.snapshot push fstar_options ()
 let rollback depth = Common.rollback pop fstar_options depth
 
-let set_option k v = Util.smap_add (internal_peek()) k v
+let set_option k v =
+  let map = internal_peek() in
+  if k = "report_assumes"
+  then match Util.smap_try_find map k with
+       | Some (String "error") ->
+         //It's already set to error; ignore any attempt to change it
+         ()
+       | _ -> Util.smap_add map k v
+  else Util.smap_add map k v
+
 let set_option' (k,v) =  set_option k v
+let set_admit_smt_queries (b:bool) = set_option "admit_smt_queries" (Bool b)
 
 let light_off_files : ref<list<string>> = Util.mk_ref []
 let add_light_off_file (filename:string) = light_off_files := filename :: !light_off_files
@@ -163,6 +163,7 @@ let defaults =
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
       ("cache_off"                    , Bool false);
+      ("print_cache_version"          , Bool false);
       ("cmi"                          , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
@@ -172,7 +173,6 @@ let defaults =
       ("dep"                          , Unset);
       ("detail_errors"                , Bool false);
       ("detail_hint_replay"           , Bool false);
-      ("doc"                          , Bool false);
       ("dump_module"                  , List []);
       ("eager_subtyping"              , Bool false);
       ("expose_interfaces"            , Bool false);
@@ -192,6 +192,7 @@ let defaults =
       ("include"                      , List []);
       ("print"                        , Bool false);
       ("print_in_place"               , Bool false);
+      ("force"                        , Bool false);
       ("fuel"                         , Unset);
       ("ifuel"                        , Unset);
       ("initial_fuel"                 , Int 2);
@@ -203,10 +204,10 @@ let defaults =
       ("log_types"                    , Bool false);
       ("max_fuel"                     , Int 8);
       ("max_ifuel"                    , Int 2);
-      ("min_fuel"                     , Int 1);
       ("MLish"                        , Bool false);
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
+      ("no_load_fstartaclib"          , Bool false);
       ("no_location_info"             , Bool false);
       ("no_smt"                       , Bool false);
       ("no_plugins"                   , Bool false);
@@ -219,14 +220,21 @@ let defaults =
       ("prims_ref"                    , Unset);
       ("print_bound_var_types"        , Bool false);
       ("print_effect_args"            , Bool false);
+      ("print_expected_failures"      , Bool false);
       ("print_full_names"             , Bool false);
       ("print_implicits"              , Bool false);
       ("print_universes"              , Bool false);
       ("print_z3_statistics"          , Bool false);
       ("prn"                          , Bool false);
+      ("quake"                        , Int 0);
+      ("quake_lo"                     , Int 1);
+      ("quake_hi"                     , Int 1);
+      ("quake_keep"                   , Bool false);
       ("query_stats"                  , Bool false);
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
+      ("report_assumes"               , Unset);
+      ("retry"                        , Bool false);
       ("reuse_hint_for"               , Unset);
       ("silent"                       , Bool false);
       ("smt"                          , Unset);
@@ -265,32 +273,14 @@ let defaults =
       ("__ml_no_eta_expand_coertions" , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
-      ("use_extracted_interfaces"     , Bool false);
       ("use_nbe"                      , Bool false);
+      ("use_nbe_for_extraction"       , Bool false);
       ("trivial_pre_for_unannotated_effectful_fns"
                                       , Bool true);
       ("profile_group_by_decl"        , Bool false);
       ("profile_component"            , Unset);
       ("profile"                      , Unset);
       ]
-
-let parse_warn_error_set_get =
-    let r = Util.mk_ref None in
-    let set (f:(string -> list<error_flag>)) =
-        match !r with
-        | None -> r := Some f
-        | _ -> failwith "Multiple initialization of FStar.Options"
-    in
-    let get () =
-        match !r with
-        | Some f -> f
-        | None ->
-          failwith "FStar.Options is improperly initialized"
-    in
-    set, get
-
-let initialize_parse_warn_error f = fst (parse_warn_error_set_get) f
-let parse_warn_error s = snd (parse_warn_error_set_get) () s
 
 let init () =
    let o = internal_peek () in
@@ -310,6 +300,43 @@ let get_option s =
   | None -> failwith ("Impossible: option " ^s^ " not found")
   | Some s -> s
 
+let set_verification_options o =
+  (* This are all the options restored when processing a check_with
+     attribute. All others are unchanged. We do this for two reasons:
+     1) It's unsafe to just set everything (e.g. verify_module would
+        cause lax verification, so we need to filter some stuff out).
+     2) So we don't propagate meaningless debugging options, which
+        is probably not intended.
+   *)
+  let verifopts = [
+    "initial_fuel";
+    "max_fuel";
+    "initial_ifuel";
+    "max_ifuel";
+    "detail_errors";
+    "detail_hint_replay";
+    "no_smt";
+    "quake";
+    "retry";
+    "smtencoding.elim_box";
+    "smtencoding.nl_arith_repr";
+    "smtencoding.l_arith_repr";
+    "smtencoding.valid_intro";
+    "smtencoding.valid_elim";
+    "tcnorm";
+    "no_plugins";
+    "no_tactics";
+    "vcgen.optimize_bind_as_seq";
+    "z3cliopt";
+    "z3refresh";
+    "z3rlimit";
+    "z3rlimit_factor";
+    "z3seed";
+    "use_two_phase_tc";
+    "trivial_pre_for_unannotated_effectful_fns";
+  ] in
+  List.iter (fun k -> set_option k (Util.smap_try_find o k |> Util.must)) verifopts
+
 let lookup_opt s c =
   c (get_option s)
 
@@ -320,22 +347,23 @@ let get_already_cached          ()      = lookup_opt "already_cached"           
 let get_cache_checked_modules   ()      = lookup_opt "cache_checked_modules"    as_bool
 let get_cache_dir               ()      = lookup_opt "cache_dir"                (as_option as_string)
 let get_cache_off               ()      = lookup_opt "cache_off"                as_bool
+let get_print_cache_version     ()      = lookup_opt "print_cache_version"      as_bool
 let get_cmi                     ()      = lookup_opt "cmi"                      as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
-let get_debug                   ()      = lookup_opt "debug"                    (as_list as_string)
+let get_debug                   ()      = lookup_opt "debug"                    as_comma_string_list
 let get_debug_level             ()      = lookup_opt "debug_level"              as_comma_string_list
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
-let get_doc                     ()      = lookup_opt "doc"                      as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
+let get_force                   ()      = lookup_opt "force"                    as_bool
 let get_fs_typ_app              ()      = lookup_opt "fs_typ_app"               as_bool
 let get_hide_uvar_nums          ()      = lookup_opt "hide_uvar_nums"           as_bool
 let get_hint_info               ()      = lookup_opt "hint_info"                as_bool
@@ -356,10 +384,10 @@ let get_log_queries             ()      = lookup_opt "log_queries"              
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
 let get_max_ifuel               ()      = lookup_opt "max_ifuel"                as_int
-let get_min_fuel                ()      = lookup_opt "min_fuel"                 as_int
 let get_MLish                   ()      = lookup_opt "MLish"                    as_bool
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
+let get_no_load_fstartaclib     ()      = lookup_opt "no_load_fstartaclib"      as_bool
 let get_no_location_info        ()      = lookup_opt "no_location_info"         as_bool
 let get_no_plugins              ()      = lookup_opt "no_plugins"               as_bool
 let get_no_smt                  ()      = lookup_opt "no_smt"                   as_bool
@@ -370,15 +398,21 @@ let get_ugly                    ()      = lookup_opt "ugly"                     
 let get_prims                   ()      = lookup_opt "prims"                    (as_option as_string)
 let get_print_bound_var_types   ()      = lookup_opt "print_bound_var_types"    as_bool
 let get_print_effect_args       ()      = lookup_opt "print_effect_args"        as_bool
+let get_print_expected_failures ()      = lookup_opt "print_expected_failures"  as_bool
 let get_print_full_names        ()      = lookup_opt "print_full_names"         as_bool
 let get_print_implicits         ()      = lookup_opt "print_implicits"          as_bool
 let get_print_universes         ()      = lookup_opt "print_universes"          as_bool
 let get_print_z3_statistics     ()      = lookup_opt "print_z3_statistics"      as_bool
 let get_prn                     ()      = lookup_opt "prn"                      as_bool
+let get_quake_lo                ()      = lookup_opt "quake_lo"                 as_int
+let get_quake_hi                ()      = lookup_opt "quake_hi"                 as_int
+let get_quake_keep              ()      = lookup_opt "quake_keep"               as_bool
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
+let get_retry                   ()      = lookup_opt "retry"                    as_bool
 let get_reuse_hint_for          ()      = lookup_opt "reuse_hint_for"           (as_option as_string)
+let get_report_assumes          ()      = lookup_opt "report_assumes"           (as_option as_string)
 let get_silent                  ()      = lookup_opt "silent"                   as_bool
 let get_smt                     ()      = lookup_opt "smt"                      (as_option as_string)
 let get_smtencoding_elim_box    ()      = lookup_opt "smtencoding.elim_box"     as_bool
@@ -417,8 +451,8 @@ let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
 let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
-let get_use_extracted_interfaces ()     = lookup_opt "use_extracted_interfaces" as_bool
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
+let get_use_nbe_for_extraction  ()      = lookup_opt "use_nbe_for_extraction"                  as_bool
 let get_trivial_pre_for_unannotated_effectful_fns
                                 ()      = lookup_opt "trivial_pre_for_unannotated_effectful_fns"    as_bool
 let get_profile                 ()      = lookup_opt "profile"                  (as_option (as_list as_string))
@@ -580,7 +614,7 @@ let rec desc_of_opt_type typ : option<string> =
   | ReverseAccumulated elem_spec
   | WithSideEffect (_, elem_spec) -> desc_of_opt_type elem_spec
 
-let rec arg_spec_of_opt_type opt_name typ : opt_variant<option_val> =
+let arg_spec_of_opt_type opt_name typ : opt_variant<option_val> =
   let parser = parse_opt_val opt_name typ in
   match desc_of_opt_type typ with
   | None -> ZeroArgs (fun () -> parser "")
@@ -597,7 +631,37 @@ let pp_lowercase s =
 let abort_counter : ref<int> =
     mk_ref 0
 
-let rec specs_with_types () : list<(char * string * opt_type * string)> =
+let interp_quake_arg (s:string)
+            : int * int * bool =
+           (* min,  max,  keep_going *)
+  let ios = int_of_string in
+  match split s "/" with
+  | [f] -> ios f, ios f, false
+  | [f1; f2] ->
+    if f2 = "k"
+    then ios f1, ios f1, true
+    else ios f1, ios f2, false
+  | [f1; f2; k] ->
+    if k = "k"
+    then ios f1, ios f2, true
+    else failwith "unexpected value for --quake"
+  | _ -> failwith "unexpected value for --quake"
+
+let set_option_warning_callback_aux,
+    option_warning_callback =
+    let cb = mk_ref None in
+    let set (f:string -> unit) =
+      cb := Some f
+    in
+    let call msg =
+      match !cb with
+      | None -> ()
+      | Some f -> f msg
+    in
+    set, call
+let set_option_warning_callback f = set_option_warning_callback_aux f
+
+let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)> =
      [( noshort,
         "abort_on",
         PostProcessed ((function Int x -> abort_counter := x; Int x
@@ -606,12 +670,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
       ( noshort,
         "admit_smt_queries",
-        BoolStr,
+        WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "admit_smt_queries"), BoolStr),
         "Admit SMT queries, unsafe! (default 'false')");
 
       ( noshort,
         "admit_except",
-        SimpleStr "[symbol|(symbol, id)]",
+        WithSideEffect ((fun _ -> if warn_unsafe then option_warning_callback "admit_except"), SimpleStr "[symbol|(symbol, id)]"),
         "Admit all queries, except those with label (<symbol>, <id>)) (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
 
        ( noshort,
@@ -634,6 +698,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "cache_off",
         Const (Bool true),
         "Do not read or write any .checked files");
+
+      ( noshort,
+        "print_cache_version",
+        Const (Bool true),
+        "Print the version for .checked files and exit.");
 
       ( noshort,
         "cmi",
@@ -662,11 +731,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        (noshort,
         "defensive",
-        EnumStr ["no"; "warn"; "fail"],
+        EnumStr ["no"; "warn"; "error"; "abort"],
         "Enable several internal sanity checks, useful to track bugs and report issues.\n\t\t\
          if 'no', no checks are performed\n\t\t\
          if 'warn', checks are performed and raise a warning when they fail\n\t\t\
-         if 'fail', like 'warn', but the compiler aborts instead of issuing a warning\n\t\t\
+         if 'error, like 'warn', but the compiler raises a hard error instead \n\t\t\
+         if 'abort, like 'warn', but the compiler immediately aborts on an error\n\t\t\
          (default 'no')");
 
        ( noshort,
@@ -686,11 +756,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "detail_hint_replay",
         Const (Bool true),
          "Emit a detailed report for proof whose unsat core fails to replay");
-
-       ( noshort,
-        "doc",
-        Const (Bool true),
-         "Extract Markdown documentation files for the input modules, as well as an index. Output is written to --odir directory.");
 
        ( noshort,
         "dump_module",
@@ -780,6 +845,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         Const (Bool true),
         "Parses and prettyprints in place the files included on the command line");
 
+       ( 'f',
+        "force",
+        Const (Bool true),
+        "Force checking the files given as arguments even if they have valid checked files");
+
        ( noshort,
         "fuel",
         PostProcessed
@@ -833,7 +903,7 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
 
        ( noshort,
         "lax",
-        Const (Bool true),
+        WithSideEffect ((fun () -> if warn_unsafe then option_warning_callback "lax"), Const (Bool true)),
         "Run the lax-type checker only (admit all verification conditions)");
 
       ( noshort,
@@ -862,11 +932,6 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Number of unrolling of inductive datatypes to try at most (default 2)");
 
        ( noshort,
-        "min_fuel",
-        IntStr "non-negative integer",
-        "Minimum number of unrolling of recursive functions to try (default 1)");
-
-       ( noshort,
         "MLish",
         Const (Bool true),
         "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
@@ -880,6 +945,11 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "no_extract",
         Accumulated (PathStr "module name"),
         "Deprecated: use --extract instead; Do not extract code from this module");
+
+       ( noshort,
+        "no_load_fstartaclib",
+        Const (Bool true),
+        "Do not attempt to load fstartaclib by default");
 
        ( noshort,
         "no_location_info",
@@ -917,6 +987,12 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Print inferred predicate transformers for all computation types");
 
        ( noshort,
+        "print_expected_failures",
+        Const (Bool true),
+        "Print the errors generated by declarations marked with expect_failure, \
+        useful for debugging error locations");
+
+       ( noshort,
         "print_full_names",
         Const (Bool true),
         "Print full names of variables");
@@ -942,6 +1018,25 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Print full names (deprecated; use --print_full_names instead)");
 
        ( noshort,
+        "quake",
+        PostProcessed
+            ((function | String s ->
+                         let min, max, k = interp_quake_arg s in
+                         set_option "quake_lo" (Int min);
+                         set_option "quake_hi" (Int max);
+                         set_option "quake_keep" (Bool k);
+                         set_option "retry" (Bool false);
+                         String s
+                       | _ -> failwith "impos"),
+            SimpleStr "positive integer or pair of positive integers"),
+        "Repeats SMT queries to check for robustness\n\t\t\
+         --quake N/M repeats each query checks that it succeeds at least N out of M times, aborting early if possible\n\t\t\
+         --quake N/M/k works as above, except it will unconditionally run M times\n\t\t\
+         --quake N is an alias for --quake N/N\n\t\t\
+         --quake N/k is an alias for --quake N/N/k\n\t\
+         Using --quake disables --retry.");
+
+       ( noshort,
         "query_stats",
         Const (Bool true),
         "Print SMT query statistics");
@@ -957,9 +1052,27 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
         "Record the state of options used to check each sigelt, useful for the `check_with` attribute and metaprogramming");
 
        ( noshort,
+        "retry",
+        PostProcessed
+            ((function | Int i ->
+                         set_option "quake_lo" (Int 1);
+                         set_option "quake_hi" (Int i);
+                         set_option "quake_keep" (Bool false);
+                         set_option "retry" (Bool true);
+                         Bool true
+                       | _ -> failwith "impos"),
+            IntStr "positive integer"),
+        "Retry each SMT query N times and succeed on the first try. Using --retry disables --quake.");
+
+       ( noshort,
         "reuse_hint_for",
         SimpleStr "toplevel_name",
         "Optimistically, attempt using the recorded hint for <toplevel_name> (a top-level name in the current module) when trying to verify some other term 'g'");
+
+       ( noshort,
+         "report_assumes",
+          EnumStr ["warn"; "error"],
+         "Report every use of an escape hatch, include assume, admit, etc.");
 
        ( noshort,
         "silent",
@@ -1190,14 +1303,14 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
          - [@r] makes range [r] fatal.");
 
         ( noshort,
-         "use_extracted_interfaces",
-          BoolStr,
-         "Extract interfaces from the dependencies and use them for verification (default 'false')");
-
-        ( noshort,
          "use_nbe",
           BoolStr,
          "Use normalization by evaluation as the default normalization strategy (default 'false')");
+
+        ( noshort,
+         "use_nbe_for_extraction",
+          BoolStr,
+         "Use normalization by evaluation for normalizing terms before extraction (default 'false')");
 
         ( noshort,
          "trivial_pre_for_unannotated_effectful_fns",
@@ -1236,14 +1349,14 @@ let rec specs_with_types () : list<(char * string * opt_type * string)> =
           This option is a module or namespace selector, like many other options (e.g., `--extract`)");
 
        ('h',
-        "help", WithSideEffect ((fun _ -> display_usage_aux (specs ()); exit 0),
+        "help", WithSideEffect ((fun _ -> display_usage_aux (specs warn_unsafe); exit 0),
                                 (Const (Bool true))),
         "Display this information")]
 
-and specs () : list<FStar.Getopt.opt> = // FIXME: Why does the interactive mode log the type of opt_specs_with_types as a triple??
+and specs (warn_unsafe:bool) : list<FStar.Getopt.opt> = // FIXME: Why does the interactive mode log the type of opt_specs_with_types as a triple??
   List.map (fun (short, long, typ, doc) ->
             mk_spec (short, long, arg_spec_of_opt_type long typ, doc))
-           (specs_with_types ())
+           (specs_with_types warn_unsafe)
 
 // Several options can only be set at the time the process is created,
 // and not controlled interactively via pragmas.
@@ -1272,7 +1385,6 @@ let settable = function
     | "log_types"
     | "max_fuel"
     | "max_ifuel"
-    | "min_fuel"
     | "no_plugins"
     | "__no_positivity"
     | "normalize_pure_terms_for_extraction"
@@ -1280,14 +1392,21 @@ let settable = function
     | "no_tactics"
     | "print_bound_var_types"
     | "print_effect_args"
+    | "print_expected_failures"
     | "print_full_names"
     | "print_implicits"
     | "print_universes"
     | "print_z3_statistics"
     | "prn"
+    | "quake_lo"
+    | "quake_hi"
+    | "quake_keep"
+    | "quake"
     | "query_stats"
     | "record_options"
+    | "retry"
     | "reuse_hint_for"
+    | "report_assumes"
     | "silent"
     | "smtencoding.elim_box"
     | "smtencoding.l_arith_repr"
@@ -1323,31 +1442,38 @@ let settable = function
     | "profile" -> true
     | _ -> false
 
-let all_specs = specs ()
-let all_specs_with_types = specs_with_types ()
+let all_specs = specs true
+let all_specs_with_types = specs_with_types true
 let settable_specs = all_specs |> List.filter (fun (_, x, _, _) -> settable x)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PUBLIC API
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-let display_usage () = display_usage_aux (specs())
+let set_error_flags_callback_aux,
+    set_error_flags =
+    let callback : ref<(option<(unit -> parse_cmdline_res)>)> = mk_ref None in
+    let set f = callback := Some f in
+    let call () =
+      match !callback with
+      | None -> failwith "Error flags callback not yet set"
+      | Some f -> f ()
+    in
+    set, call
+
+let set_error_flags_callback = set_error_flags_callback_aux
+let display_usage () = display_usage_aux all_specs
 
 let fstar_bin_directory = Util.get_exec_dir ()
-
-exception File_argument of string
-
-let set_options s =
-    try
-        if s = ""
-        then Success
-        else Getopt.parse_string settable_specs (fun s -> raise (File_argument s); ()) s
-    with
-    | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
 
 let file_list_ : ref<(list<string>)> = Util.mk_ref []
 
 let parse_cmd_line () =
   let res = Getopt.parse_cmdline all_specs (fun i -> file_list_ := !file_list_ @ [i]) in
+  let res =
+    if res = Success
+    then set_error_flags()
+    else res
+  in
   res, List.map FC.try_convert_file_name_to_mixed !file_list_
 
 let file_list () =
@@ -1358,7 +1484,7 @@ let restore_cmd_line_options should_clear =
      * Add them here as needed. *)
     let old_verify_module = get_verify_module() in
     if should_clear then clear() else init();
-    let r = Getopt.parse_cmdline (specs()) (fun x -> ()) in
+    let r = Getopt.parse_cmdline (specs false) (fun x -> ()) in
     set_option' ("verify_module", List (List.map String old_verify_module));
     r
 
@@ -1367,13 +1493,18 @@ let module_name_of_file_name f =
     let f = String.substring f 0 (String.length f - String.length (get_file_extension f) - 1) in
     String.lowercase f
 
-let should_verify m =
-  if get_lax () then
-    false
-  else let l = get_verify_module () in
-       List.contains (String.lowercase m) l
+let should_check m =
+  let l = get_verify_module () in
+  List.contains (String.lowercase m) l
 
-let should_verify_file fn = should_verify (module_name_of_file_name fn)
+let should_verify m =
+  not (get_lax ()) && should_check m
+
+let should_check_file fn =
+    should_check (module_name_of_file_name fn)
+
+let should_verify_file fn =
+    should_verify (module_name_of_file_name fn)
 
 let module_name_eq m1 m2 = String.lowercase m1 = String.lowercase m2
 
@@ -1448,7 +1579,7 @@ let prims () =
 let prims_basename () = basename (prims ())
 
 let pervasives () =
-  let filename = "FStar.Pervasives.fst" in
+  let filename = "FStar.Pervasives.fsti" in
   match find_file filename with
   | Some result -> result
   | None        -> failwith (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filename)
@@ -1515,6 +1646,7 @@ let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
 let cache_checked_modules        () = get_cache_checked_modules       ()
 let cache_off                    () = get_cache_off                   ()
+let print_cache_version          () = get_print_cache_version         ()
 let cmi                          () = get_cmi                         ()
 type codegen_t = | OCaml | FSharp | Kremlin | Plugin
 let codegen                      () =
@@ -1529,18 +1661,22 @@ let codegen                      () =
 
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
+
 let debug_module        modul       = (get_debug () |> List.existsb (module_name_eq modul))
-let debug_at_level      modul level = (get_debug () |> List.existsb (module_name_eq modul)) && debug_level_geq level
+let debug_at_level_no_module level  = debug_level_geq level
+let debug_at_level      modul level = debug_module modul && debug_at_level_no_module level
+
 let profile_group_by_decls       () = get_profile_group_by_decl ()
 let defensive                    () = get_defensive () <> "no"
-let defensive_fail               () = get_defensive () = "fail"
+let defensive_error              () = get_defensive () = "error"
+let defensive_abort              () = get_defensive () = "abort"
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
-let doc                          () = get_doc                         ()
 let dump_module                  s  = get_dump_module() |> List.existsb (module_name_eq s)
 let eager_subtyping              () = get_eager_subtyping()
 let expose_interfaces            () = get_expose_interfaces          ()
+let force                        () = get_force                       ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
 let full_context_dependency      () = true
 let hide_uvar_nums               () = get_hide_uvar_nums              ()
@@ -1575,13 +1711,13 @@ let keep_query_captions          () = log_queries                     ()
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
 let max_ifuel                    () = get_max_ifuel                   ()
-let min_fuel                     () = get_min_fuel                    ()
 let ml_ish                       () = get_MLish                       ()
 let set_ml_ish                   () = set_option "MLish" (Bool true)
 let no_default_includes          () = get_no_default_includes         ()
 let no_extract                   s  = get_no_extract() |> List.existsb (module_name_eq s)
 let normalize_pure_terms_for_extraction
                                  () = get_normalize_pure_terms_for_extraction ()
+let no_load_fstartaclib          () = get_no_load_fstartaclib         ()
 let no_location_info             () = get_no_location_info            ()
 let no_plugins                   () = get_no_plugins                  ()
 let no_smt                       () = get_no_smt                      ()
@@ -1589,14 +1725,20 @@ let output_dir                   () = get_odir                        ()
 let ugly                         () = get_ugly                        ()
 let print_bound_var_types        () = get_print_bound_var_types       ()
 let print_effect_args            () = get_print_effect_args           ()
+let print_expected_failures      () = get_print_expected_failures     ()
 let print_implicits              () = get_print_implicits             ()
 let print_real_names             () = get_prn () || get_print_full_names()
 let print_universes              () = get_print_universes             ()
 let print_z3_statistics          () = get_print_z3_statistics         ()
+let quake_lo                     () = get_quake_lo                    ()
+let quake_hi                     () = get_quake_hi                    ()
+let quake_keep                   () = get_quake_keep                  ()
 let query_stats                  () = get_query_stats                 ()
 let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()
+let retry                        () = get_retry                       ()
 let reuse_hint_for               () = get_reuse_hint_for              ()
+let report_assumes               () = get_report_assumes              ()
 let silent                       () = get_silent                      ()
 let smtencoding_elim_box         () = get_smtencoding_elim_box        ()
 let smtencoding_nl_arith_native  () = get_smtencoding_nl_arith_repr () = "native"
@@ -1631,6 +1773,7 @@ let vcgen_decorate_with_type     () = match get_vcgen_optimize_bind_as_seq  () w
                                       | Some "with_type" -> true
                                       | _ -> false
 let warn_default_effects         () = get_warn_default_effects        ()
+let warn_error                   () = String.concat " " (get_warn_error())
 let z3_exe                       () = match get_smt () with
                                     | None -> Platform.exe "z3"
                                     | Some s -> s
@@ -1643,9 +1786,8 @@ let use_two_phase_tc             () = get_use_two_phase_tc            ()
                                     && not (lax())
 let no_positivity                () = get_no_positivity               ()
 let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
-let warn_error                   () = String.concat "" (get_warn_error ())
-let use_extracted_interfaces     () = get_use_extracted_interfaces    ()
 let use_nbe                      () = get_use_nbe                     ()
+let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
 let trivial_pre_for_unannotated_effectful_fns
                                  () = get_trivial_pre_for_unannotated_effectful_fns ()
 
@@ -1727,16 +1869,6 @@ let should_be_already_cached m =
   | Some already_cached_setting ->
     module_matches_namespace_filter m already_cached_setting
 
-let error_flags =
-    let cache : Util.smap<list<error_flag>> = Util.smap_create 10 in
-    fun () ->
-        let we = warn_error() in
-        match Util.smap_try_find cache we with
-        | None ->
-          let r = parse_warn_error we in
-          Util.smap_add cache we r;
-          r
-        | Some r -> r
 
 let profile_enabled modul_opt phase =
   match modul_opt with
@@ -1746,3 +1878,16 @@ let profile_enabled modul_opt phase =
   | Some modul ->
     matches_namespace_filter_opt modul (get_profile())
     && matches_namespace_filter_opt phase (get_profile_component())
+
+exception File_argument of string
+
+let set_options s =
+    try
+        if s = ""
+        then Success
+        else let res = Getopt.parse_string settable_specs (fun s -> raise (File_argument s); ()) s in
+             if res=Success
+             then set_error_flags()
+             else res
+    with
+    | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)

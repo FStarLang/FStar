@@ -133,7 +133,7 @@ let parse fn =
                   | _ -> failwith "Impossible"
              else U.Inl modul
           | _ -> fileOrFragment
-      in ASTFragment (frags, FStar_Parser_LexFStar.flush_comments ())
+      in ASTFragment (frags, FStar_Parser_Util.flush_comments ())
       end
     | Fragment _ ->
       Term (MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.term lexer)

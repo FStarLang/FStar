@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "97ba62d19ea7abbe05d142c4c6e44805"
+      "7315ee33b0641d126ef405ef797fc2e0"
     ],
     [
       "FStar.Constructive.cor",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "4fe525af014a950920b798a6f460f2eb"
+      "1718a28cc421a7f3ae9fe70cc60a7d13"
     ],
     [
       "FStar.Constructive.__proj__IntroL__item__h",
@@ -31,7 +31,7 @@
         "refinement_interpretation_Tm_refine_5f96298b0b74547bf135efed6725faec"
       ],
       0,
-      "b548f42388a7e624888d76a0ab90a7e0"
+      "d0ef1c11180458926045e1af8a83986f"
     ],
     [
       "FStar.Constructive.__proj__IntroR__item__h",
@@ -45,7 +45,7 @@
         "refinement_interpretation_Tm_refine_7fbfb42f7ce95e0df3d91787685cfbfc"
       ],
       0,
-      "51ae59be644ebed8f57dc13e6766801e"
+      "87d5390a35fb227dce9935e20a3cb959"
     ],
     [
       "FStar.Constructive.__proj__ExIntro__item__h",
@@ -57,7 +57,7 @@
         "projection_inverse_FStar.Constructive.ExIntro_x"
       ],
       0,
-      "7b580cecc108e6231fe6a72249245cd5"
+      "eadc6f6e3b93748f52681635e96ed9b3"
     ],
     [
       "FStar.Constructive.eq_ind",
@@ -69,7 +69,7 @@
         "fuel_guarded_inversion_FStar.Constructive.ceq"
       ],
       0,
-      "fc3785f612ef469f02ba222f6211283d"
+      "22e88bb029ff1b036efdf0fb4971824e"
     ],
     [
       "FStar.Constructive.ceq_eq",
@@ -81,7 +81,7 @@
         "fuel_guarded_inversion_FStar.Constructive.ceq"
       ],
       0,
-      "b99f2c4b6eb4fce83e4ac5b76eebac4e"
+      "ce7949640ad60eabc34bc8291e0df4e5"
     ],
     [
       "FStar.Constructive.ceq_congruence",
@@ -93,7 +93,7 @@
         "fuel_guarded_inversion_FStar.Constructive.ceq"
       ],
       0,
-      "c73447267b56cff1b92b247dc3a03b00"
+      "7ee588503cbd589ccdcb4440ad9fafb4"
     ],
     [
       "FStar.Constructive.ceq_symm",
@@ -105,7 +105,7 @@
         "fuel_guarded_inversion_FStar.Constructive.ceq"
       ],
       0,
-      "dd54d180f101d99da58fce981685663f"
+      "961dbf9e10ba75aba9908478ed4ce5f7"
     ],
     [
       "FStar.Constructive.ceq_trans",
@@ -117,7 +117,7 @@
         "fuel_guarded_inversion_FStar.Constructive.ceq"
       ],
       0,
-      "3d861bc3babe190e2bea0a7c136e3e09"
+      "aa8d8b576e8baed99078930d181e8564"
     ],
     [
       "FStar.Constructive.cfalse_elim",
@@ -129,7 +129,7 @@
         "fuel_guarded_inversion_FStar.Constructive.cfalse"
       ],
       0,
-      "fa536ebb83f95e0dcba18de0f160ed16"
+      "23295a3e820e8ea7eb52f50334abaad2"
     ],
     [
       "FStar.Constructive.false_elim2",
@@ -141,7 +141,7 @@
         "fuel_guarded_inversion_FStar.Constructive.cfalse"
       ],
       0,
-      "bd33df3eb9bed3b3aa37eaa0276ad7d2"
+      "6d8c863aac9f2177fc226c5c1784ca81"
     ],
     [
       "FStar.Constructive.false_elim",
@@ -153,149 +153,7 @@
         "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
       ],
       0,
-      "c240b2def701fa134026df63fcf81ffd"
-    ],
-    [
-      "FStar.Constructive.cand",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "e26dfeff12beade47c0c606f5c31d0da"
-    ],
-    [
-      "FStar.Constructive.cor",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "c12b742521c4296029cf75c15c5ed59e"
-    ],
-    [
-      "FStar.Constructive.__proj__IntroL__item__h",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Constructive.IntroL",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_5f96298b0b74547bf135efed6725faec"
-      ],
-      0,
-      "a70b4a5e5b30d99394a8314da052b0de"
-    ],
-    [
-      "FStar.Constructive.__proj__IntroR__item__h",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "disc_equation_FStar.Constructive.IntroR",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_7fbfb42f7ce95e0df3d91787685cfbfc"
-      ],
-      0,
-      "313b8d558c59c260da8e2ac6bc90adea"
-    ],
-    [
-      "FStar.Constructive.__proj__ExIntro__item__h",
-      2,
-      2,
-      1,
-      [
-        "@query", "proj_equation_FStar.Constructive.ExIntro_x",
-        "projection_inverse_FStar.Constructive.ExIntro_x"
-      ],
-      0,
-      "d5010d494d3c5d2ab0663b99d0e9928b"
-    ],
-    [
-      "FStar.Constructive.eq_ind",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Constructive.ceq"
-      ],
-      0,
-      "d494520ed1aa6efa6f978c15f749b761"
-    ],
-    [
-      "FStar.Constructive.ceq_congruence",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Constructive.ceq"
-      ],
-      0,
-      "4efd117463ddb683b5ba36272e2e328b"
-    ],
-    [
-      "FStar.Constructive.ceq_symm",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Constructive.ceq"
-      ],
-      0,
-      "a3e3b4ade46721f97cc5c25f890934c6"
-    ],
-    [
-      "FStar.Constructive.ceq_trans",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Constructive.ceq"
-      ],
-      0,
-      "8049902af0812a1f017c5bca50a4ee00"
-    ],
-    [
-      "FStar.Constructive.cfalse_elim",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Constructive.cfalse"
-      ],
-      0,
-      "a433a4f556061d43516c8add64e90a67"
-    ],
-    [
-      "FStar.Constructive.false_elim2",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "fuel_guarded_inversion_FStar.Constructive.cfalse"
-      ],
-      0,
-      "1c5b48d7ad1677eda316625da5f305fa"
-    ],
-    [
-      "FStar.Constructive.false_elim",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_f1ecc6ab6882a651504f328937700647"
-      ],
-      0,
-      "3d32e7a18e9cae163ac4274a9c2fe8ea"
+      "989e01cf507d28bcabd46ebc1ff9e864"
     ]
   ]
 ]

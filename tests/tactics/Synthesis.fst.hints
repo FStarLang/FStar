@@ -1,0 +1,194 @@
+[
+  "óE€ü\u0003£’Û\u001a„å>¹Ï)\r",
+  [
+    [
+      "Synthesis.uu___1",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Synthesis.a" ],
+      0,
+      "01ecc4b0917ee0195dd03b832402fe72"
+    ],
+    [
+      "Synthesis.uu___8",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Synthesis.f8", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "abf543725d0f0f0b5ac1686950b3187b"
+    ],
+    [
+      "Synthesis.uu___18",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Synthesis.fn8" ],
+      0,
+      "530d99573520b70e0d5972f1d7c6ad45"
+    ],
+    [
+      "Synthesis.uu___26",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Synthesis.iszero" ],
+      0,
+      "26719cdab099468bd115e43f0b06fb72"
+    ],
+    [
+      "Synthesis.uu___27",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Synthesis.iszero" ],
+      0,
+      "150fb9ee27fad9f6ce2f5fa83953f2b0"
+    ],
+    [
+      "Synthesis.uu___28",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Synthesis.iszero",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "0a65cee33299e8624819d0232b5550c8"
+    ],
+    [
+      "Synthesis.uu___42",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Synthesis.f2" ],
+      0,
+      "7c20e1aa004a6c9961ae5b3c01ddc3b6"
+    ],
+    [
+      "Synthesis.f3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "11bd6e8b97366b025fc349831ad85ec7"
+    ],
+    [
+      "Synthesis.uu___56",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "135bfc22f221589fa356aa17685833ac"
+    ],
+    [
+      "Synthesis.uu___1",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Synthesis.a" ],
+      0,
+      "6860657305d596165a040fbe13fc92fb"
+    ],
+    [
+      "Synthesis.uu___8",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_Synthesis.f8", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "5d40c0c925a1217eb03db077e74d02b5"
+    ],
+    [
+      "Synthesis.uu___18",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Synthesis.fn8" ],
+      0,
+      "2b6ef1e79f057bb3230c471d9dcae9de"
+    ],
+    [
+      "Synthesis.uu___26",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Synthesis.iszero" ],
+      0,
+      "242e5401839f4a278c87b58078fedc0d"
+    ],
+    [
+      "Synthesis.uu___27",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Synthesis.iszero" ],
+      0,
+      "596bfbb8fcf978de446c06af5aa786e9"
+    ],
+    [
+      "Synthesis.uu___28",
+      2,
+      2,
+      1,
+      [
+        "@query", "equation_Synthesis.iszero",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "9854df4829a63a4409f129112ae7865b"
+    ],
+    [
+      "Synthesis.uu___42",
+      2,
+      2,
+      1,
+      [ "@query", "equation_Synthesis.f2" ],
+      0,
+      "052bf55b62a32750f3495d182f4871f8"
+    ],
+    [
+      "Synthesis.f3",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "int_typing", "primitive_Prims.op_LessThanOrEqual",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "b27211cb588b2028e4c1a3b123c5d6a1"
+    ],
+    [
+      "Synthesis.uu___56",
+      2,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "58b073ccc91441b112f7c6a5725d7bfb"
+    ]
+  ]
+]

@@ -40,7 +40,7 @@ let lseq (a: Type) (l: nat) : Type =
 (* Buffer general type, fully implemented on FStar's arrays *)
 noeq private type _buffer (a:Type) =
   | MkBuffer: max_length:UInt32.t
-    -> content:reference (s: lseq a (v max_length))
+    -> content:reference (lseq a (v max_length))
     -> idx:UInt32.t
     -> length:UInt32.t{v idx + v length <= v max_length}
     -> _buffer a
@@ -379,7 +379,7 @@ let modifies_trans_4_4 (#t #t' #t'' #t''':Type) (rid:rid) (b:buffer t) (b':buffe
 (* NB: those clauses are made abstract in order to make verification faster
 //    Lemmas follow to allow the programmer to make use of the real definition
 //    of those predicates in a general setting *)
-abstract let modifies_0 (h0 h1:mem) :Type0 =
+let modifies_0 (h0 h1:mem) :Type0 =
   modifies_one (HS.get_tip h0) h0 h1
   /\ modifies_buf_0 (HS.get_tip h0) h0 h1
   /\ HS.get_tip h0 == HS.get_tip h1
@@ -387,25 +387,25 @@ abstract let modifies_0 (h0 h1:mem) :Type0 =
 (* This one is very generic: it says
 //  * - some references have changed in the frame of b, but
 //  * - among all buffers in this frame, b is the only one that changed. *)
-abstract let modifies_1 (#a:Type) (b:buffer a) (h0 h1:mem) :Type0 =
+let modifies_1 (#a:Type) (b:buffer a) (h0 h1:mem) :Type0 =
   let rid = frameOf b in
   modifies_one rid h0 h1 /\ modifies_buf_1 rid b h0 h1 /\ HS.get_tip h0 == HS.get_tip h1
 
-abstract let modifies_2_1 (#a:Type) (b:buffer a) (h0 h1:mem) :Type0 =
+let modifies_2_1 (#a:Type) (b:buffer a) (h0 h1:mem) :Type0 =
   HS.get_tip h0 == HS.get_tip h1 /\
   (let rid = frameOf b in
    ((rid == HS.get_tip h0 /\ modifies_buf_1 rid b h0 h1 /\ modifies_one rid h0 h1)
    \/ (rid =!= HS.get_tip h0 /\ HS.modifies (Set.union (Set.singleton rid) (Set.singleton (HS.get_tip h0))) h0 h1
        /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_0 (HS.get_tip h0) h0 h1 )))
 
-abstract let modifies_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') (h0 h1:mem) :Type0 =
+let modifies_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') (h0 h1:mem) :Type0 =
   HS.get_tip h0 == HS.get_tip h1 /\
   (let rid = frameOf b in let rid' = frameOf b' in
    ((rid == rid' /\ modifies_buf_2 rid b b' h0 h1 /\ modifies_one rid h0 h1)
    \/ (rid =!= rid' /\ HS.modifies (Set.union (Set.singleton rid) (Set.singleton rid')) h0 h1
        /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 )))
 
-abstract let modifies_3 (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buffer a')  (b'':buffer a'') (h0 h1:mem) :Type0 =
+let modifies_3 (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buffer a')  (b'':buffer a'') (h0 h1:mem) :Type0 =
   HS.get_tip h0 == HS.get_tip h1 /\
   (let rid = frameOf b in let rid' = frameOf b' in let rid'' = frameOf b'' in
    ((rid == rid' /\ rid' == rid'' /\ modifies_buf_3 rid b b' b'' h0 h1 /\ modifies_one rid h0 h1)
@@ -419,7 +419,7 @@ abstract let modifies_3 (#a:Type) (#a':Type) (#a'':Type) (b:buffer a) (b':buffer
        /\ HS.modifies (Set.union (Set.union (Set.singleton rid) (Set.singleton rid')) (Set.singleton rid'')) h0 h1
        /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_1 rid'' b'' h0 h1)))
 
-abstract let modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') (h0 h1:mem) :Type0 =
+let modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') (h0 h1:mem) :Type0 =
   HS.get_tip h0 == HS.get_tip h1 /\
   (let rid = frameOf b in let rid' = frameOf b' in
    ((rid == rid' /\ rid' == HS.get_tip h0 /\ modifies_buf_2 rid b b' h0 h1 /\ modifies_one rid h0 h1)
@@ -433,7 +433,7 @@ abstract let modifies_3_2 (#a:Type) (#a':Type) (b:buffer a) (b':buffer a') (h0 h
        /\ HS.modifies (Set.union (Set.union (Set.singleton rid) (Set.singleton rid')) (Set.singleton (HS.get_tip h0))) h0 h1
        /\ modifies_buf_1 rid b h0 h1 /\ modifies_buf_1 rid' b' h0 h1 /\ modifies_buf_0 (HS.get_tip h0) h0 h1)))
 
-abstract let modifies_region (rid:rid) (bufs:TSet.set abuffer) (h0 h1:mem) :Type0 =
+let modifies_region (rid:rid) (bufs:TSet.set abuffer) (h0 h1:mem) :Type0 =
   modifies_one rid h0 h1 /\ modifies_bufs rid bufs h0 h1 /\ HS.get_tip h0 == HS.get_tip h1
 
 (* Lemmas introducing the 'modifies' predicates *)
@@ -901,7 +901,6 @@ let rcreate #a r init len = rcreate_common r init len false
     way to produce it should be `rcreate_mm`, and the only way to
     consume it should be `rfree.` Rationale: a buffer can be `rfree`d
     only if it is the result of `rcreate_mm`. Subbuffers should not. *)
-abstract
 let freeable (#a: Type) (b: buffer a) : GTot Type0 =
   is_mm b.content /\ is_eternal_region (frameOf b) /\ idx b == 0
 
@@ -1006,7 +1005,7 @@ private val lemma_aux: #a:Type -> b:buffer a -> n:UInt32.t{v n < length b} -> z:
   [SMTPat (HS.upd h0 b.content (Seq.upd (sel h0 b) (idx b + v n) z))]
 let lemma_aux #a b n z h0 = lemma_aux_2 b n z h0
 
-abstract val upd: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> Stack unit
+val upd: #a:Type -> b:buffer a -> n:UInt32.t -> z:a -> Stack unit
   (requires (fun h -> live h b /\ v n < length b))
   (ensures (fun h0 _ h1 -> live h0 b /\ live h1 b /\ v n < length b
     /\ modifies_1 b h0 h1

@@ -18,5 +18,3 @@ type native_primitive_step =
       tactic: itac}
 
 let list_all : unit -> list<native_primitive_step> = fun () -> []
-
-let is_native_tactic : FStar.Ident.lid -> bool = fun _ -> false

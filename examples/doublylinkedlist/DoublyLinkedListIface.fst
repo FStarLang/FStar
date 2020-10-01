@@ -103,7 +103,7 @@ let rec unchanged_node_vals (h0 h1:HS.mem) (ns:list (node 'a)) : GTot prop =
 /// Viewing ghostly state of a list
 
 let as_list h d =
-  G.reveal (d@h).DLL.nodes
+  (d@h).DLL.nodes
 
 /// Creating an empty DoublyLinkedList, and quickly accessing the head
 /// and tail of a DoublyLinkedList
@@ -230,7 +230,7 @@ val _auto_dll_fp_disjoint_from_push (h0 h1:HS.mem) (d:dll 'a) :
     [SMTPat (dll_valid h0 d);
      SMTPat (HS.fresh_frame h0 h1)]
 let _auto_dll_fp_disjoint_from_push h0 h1 d =
-  _lemma_nodelist_disjoint_in_push h0 h1 (G.reveal (d@h0).DLL.nodes)
+  _lemma_nodelist_disjoint_in_push h0 h1 (d@h0).DLL.nodes
 
 (** If a valid dll is placed into a pointer, it stays valid *)
 val _auto_dll_assign_valid_stays_valid (h0 h1:HS.mem) (d:dll 'a) (d2:DLL.dll 'a) :
@@ -245,8 +245,8 @@ val _auto_dll_assign_valid_stays_valid (h0 h1:HS.mem) (d:dll 'a) (d2:DLL.dll 'a)
      SMTPat (B.modifies (B.loc_buffer d) h0 h1);
      SMTPat (dll_valid h1 d)]
 let _auto_dll_assign_valid_stays_valid h0 h1 d d2 =
-  _lemma_nodelist_conn_in_unmodified_mem h0 h1 (B.loc_buffer d) (G.reveal d2.DLL.nodes);
-  _lemma_nodelist_contained_in_unmodified_mem h0 h1 (B.loc_buffer d) (G.reveal d2.DLL.nodes)
+  _lemma_nodelist_conn_in_unmodified_mem h0 h1 (B.loc_buffer d) d2.DLL.nodes;
+  _lemma_nodelist_contained_in_unmodified_mem h0 h1 (B.loc_buffer d) d2.DLL.nodes
 
 (** [unchanged_node_vals] is transitive *)
 let rec _lemma_unchanged_node_vals_transitive (h0 h1 h2:HS.mem) (ns:list (node 'a)) :
@@ -754,12 +754,12 @@ let dll_remove_tail #t d =
   let h1 = HST.get () in
 
   FStar.Classical.arrow_to_impl
-  #(L.length (G.reveal (d@h0).DLL.nodes) >= 2)
+  #(L.length (d@h0).DLL.nodes >= 2)
   #(DLL.dll_fp0 (d@h0) `B.loc_includes` B.loc_buffer ((d@h0).DLL.ltail@h0).DLL.blink)
     (fun _ ->
-       DLL.extract_nodelist_conn h0 (G.reveal (d@h0).DLL.nodes) (L.length (G.reveal (d@h0).DLL.nodes) - 2);
-       DLL.extract_nodelist_fp0 (G.reveal (d@h0).DLL.nodes) (L.length (G.reveal (d@h0).DLL.nodes) - 2);
-       L.lemma_unsnoc_is_last (G.reveal (d@h0).DLL.nodes));
+       DLL.extract_nodelist_conn h0 (d@h0).DLL.nodes (L.length (d@h0).DLL.nodes - 2);
+       DLL.extract_nodelist_fp0 (d@h0).DLL.nodes (L.length (d@h0).DLL.nodes - 2);
+       L.lemma_unsnoc_is_last (d@h0).DLL.nodes);
 
   _lemma_unchanged_node_vals_stays_valid0 h' h1 d;
   _lemma_unchanged_node_vals_transitive h0 h' h1 (as_list h0 d);
@@ -781,19 +781,19 @@ let dll_remove_mid #t d n =
   let h1 = HST.get () in
 
   FStar.Classical.arrow_to_impl
-  #(L.length (G.reveal (d@h0).DLL.nodes) >= 2)
+  #(L.length (d@h0).DLL.nodes >= 2)
   #(DLL.dll_fp0 (d@h0) `B.loc_includes` B.loc_buffer ((d@h0).DLL.ltail@h0).DLL.blink)
     (fun _ ->
-       DLL.extract_nodelist_conn h0 (G.reveal (d@h0).DLL.nodes) (L.length (G.reveal (d@h0).DLL.nodes) - 2);
-       DLL.extract_nodelist_fp0 (G.reveal (d@h0).DLL.nodes) (L.length (G.reveal (d@h0).DLL.nodes) - 2);
-       L.lemma_unsnoc_is_last (G.reveal (d@h0).DLL.nodes));
+       DLL.extract_nodelist_conn h0 (d@h0).DLL.nodes (L.length (d@h0).DLL.nodes - 2);
+       DLL.extract_nodelist_fp0 (d@h0).DLL.nodes (L.length (d@h0).DLL.nodes - 2);
+       L.lemma_unsnoc_is_last (d@h0).DLL.nodes);
   // assert (DLL.dll_fp0 (d@h0) `B.loc_includes` B.loc_buffer ((d@h0).DLL.lhead@h0).DLL.flink);
   // assert (DLL.dll_fp0 (d@h0) `B.loc_includes` B.loc_buffer ((d@h0).DLL.ltail@h0).DLL.blink);
 
   _lemma_next_node_in_list h0 n d;
-  _lemma_node_in_list_or_null_is_included ((n@h0).DLL.flink) (G.reveal (d@h0).DLL.nodes);
+  _lemma_node_in_list_or_null_is_included ((n@h0).DLL.flink) (d@h0).DLL.nodes;
   _lemma_prev_node_in_list h0 n d;
-  _lemma_node_in_list_or_null_is_included ((n@h0).DLL.blink) (G.reveal (d@h0).DLL.nodes);
+  _lemma_node_in_list_or_null_is_included ((n@h0).DLL.blink) (d@h0).DLL.nodes;
   // assert (DLL.dll_fp0 (d@h0) `B.loc_includes` B.loc_buffer (n@h0).DLL.flink);
   // assert (DLL.dll_fp0 (d@h0) `B.loc_includes` B.loc_buffer (n@h0).DLL.blink);
 
@@ -839,15 +839,15 @@ let dll_split_using #t d1 d2 n =
   assert (B.loc_buffer d1 `B.loc_disjoint` DLL.dll_fp0 (d1@h0));
   assert (DLL.dll_fp0 (d1@h0) `B.loc_includes` DLL.dll_fp0 y1);
   FStar.Classical.arrow_to_impl
-  #(L.length (G.reveal (d1@h0).DLL.nodes) >= 2)
+  #(L.length (d1@h0).DLL.nodes >= 2)
   #(DLL.dll_fp0 (d1@h0) `B.loc_includes` B.loc_buffer ((d1@h0).DLL.ltail@h0).DLL.blink)
     (fun _ ->
-       DLL.extract_nodelist_conn h0 (G.reveal (d1@h0).DLL.nodes) (L.length (G.reveal (d1@h0).DLL.nodes) - 2);
-       DLL.extract_nodelist_fp0 (G.reveal (d1@h0).DLL.nodes) (L.length (G.reveal (d1@h0).DLL.nodes) - 2);
-       L.lemma_unsnoc_is_last (G.reveal (d1@h0).DLL.nodes));
+       DLL.extract_nodelist_conn h0 (d1@h0).DLL.nodes (L.length (d1@h0).DLL.nodes - 2);
+       DLL.extract_nodelist_fp0 (d1@h0).DLL.nodes (L.length (d1@h0).DLL.nodes - 2);
+       L.lemma_unsnoc_is_last (d1@h0).DLL.nodes);
   _lemma_prev_node_in_list h0 n d1;
-  _lemma_node_in_list_or_null_is_included ((n@h0).DLL.blink) (G.reveal (d1@h0).DLL.nodes);
-  _lemma_node_in_list_is_included n (G.reveal (d1@h0).DLL.nodes);
+  _lemma_node_in_list_or_null_is_included ((n@h0).DLL.blink) (d1@h0).DLL.nodes;
+  _lemma_node_in_list_is_included n (d1@h0).DLL.nodes;
   assert (B.loc_buffer d1 `B.loc_disjoint` DLL.dll_fp0 (d1@h0'));
   _lemma_unchanged_node_vals_stays_valid0 h0' h0'' d1;
   _lemma_unchanged_node_vals_transitive h0 h0' h0'' (as_list h0 d1);
@@ -862,8 +862,8 @@ let dll_split_using #t d1 d2 n =
   _lemma_nodelist_conn_in_unmodified_mem h0'' h1 (B.loc_buffer d2) (as_list h0'' d1);
   _lemma_nodelist_contained_in_unmodified_mem h0'' h1 (B.loc_buffer d2) (as_list h0'' d1);
   assert (dll_valid h1 d1);
-  _lemma_nodelist_conn_in_unmodified_mem h0' h0'' (B.loc_buffer d1) (G.reveal y2.DLL.nodes);
-  _lemma_nodelist_contained_in_unmodified_mem h0' h0'' (B.loc_buffer d1) (G.reveal y2.DLL.nodes);
+  _lemma_nodelist_conn_in_unmodified_mem h0' h0'' (B.loc_buffer d1) y2.DLL.nodes;
+  _lemma_nodelist_contained_in_unmodified_mem h0' h0'' (B.loc_buffer d1) y2.DLL.nodes;
   assert (DLL.dll_valid h0'' y2);
   assert (dll_valid h1 d2);
   HST.pop_frame ();

@@ -1,0 +1,63 @@
+[
+  "¬¸Ìtq\u0019‡ËúßN\fÖ´\u0014Ä",
+  [
+    [
+      "LowStar.Array.Modifies.modifies_array_elim",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "605e57018771818309e01bd19d625977"
+    ],
+    [
+      "LowStar.Array.Modifies.modifies_array_writeable_elim",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "e3951c677c59d682a3499636c82c38fa"
+    ],
+    [
+      "LowStar.Array.Modifies.loc_union_gsub",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "bool_inversion",
+        "bool_typing", "equation_FStar.UInt.fits",
+        "equation_FStar.UInt.max_int", "equation_FStar.UInt.min_int",
+        "equation_FStar.UInt.size", "equation_FStar.UInt.uint_t",
+        "equation_LowStar.Array.Defs.vlength", "equation_Prims.l_and",
+        "equation_Prims.squash", "int_inversion", "l_and-interp",
+        "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
+        "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
+        "refinement_interpretation_Tm_refine_fca6d040de065d36997ff2da36b00bd1",
+        "typing_FStar.UInt32.v", "typing_LowStar.Array.Defs.length"
+      ],
+      0,
+      "0e8735d4a0d982f8bfadb5e7f4ff63d9"
+    ],
+    [
+      "LowStar.Array.Modifies.disjoint_gsubs",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.l_and",
+        "equation_Prims.squash", "l_and-interp",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "c8dc05b9a1253cd8daec797750f710d8"
+    ]
+  ]
+]

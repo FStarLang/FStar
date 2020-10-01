@@ -30,6 +30,7 @@ type fsteps = {
      beta : bool;
      iota : bool;
      zeta : bool;
+     zeta_full : bool;
      weak : bool;
      hnf  : bool;
      primops : bool;
@@ -89,6 +90,7 @@ type debug_switches = {
     wpe              : bool;
     norm_delayed     : bool;
     print_normalized : bool;
+    debug_nbe        : bool;
 }
 
 type cfg = {
@@ -132,3 +134,5 @@ val register_extra_step: primitive_step -> unit
 
 val config': list<primitive_step> -> list<step> -> Env.env -> cfg
 val config: list<step> -> Env.env -> cfg
+
+val should_reduce_local_let : cfg -> letbinding -> bool

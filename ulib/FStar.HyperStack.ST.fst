@@ -24,8 +24,8 @@ open FStar.Preorder
 
 (* Eternal regions remain contained *)
 private let eternal_region_pred (m1 m2:mem) :Type0
-  = forall (r:HS.rid).{:pattern (HS.is_eternal_color (color r)); (m1 `contains_region` r)}
-                 (HS.is_eternal_color (color r) /\ m1 `contains_region` r) ==> m2 `contains_region` r
+  = forall (r:HS.rid).{:pattern (HS.is_heap_color (color r)); (m1 `contains_region` r)}
+                 (HS.is_eternal_region_hs r /\ m1 `contains_region` r) ==> m2 `contains_region` r
 
 (* rid counter increases monotonically *)
 private let rid_ctr_pred (m1 m2:mem) :Type0 = get_rid_ctr m1 <= get_rid_ctr m2
@@ -49,7 +49,7 @@ private let eternal_refs_pred (m1 m2:mem) :Type0
       if is_mm r then True
       else
         if m1 `HS.contains` r then
-	  if HS.is_eternal_color (color (HS.frameOf r)) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
+	  if HS.is_eternal_region_hs (frameOf r) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
 	  else if m2 `contains_region` (HS.frameOf r) then m2 `HS.contains` r /\ rel (HS.sel m1 r) (HS.sel m2 r)
 	  else True
 	else True
@@ -95,7 +95,7 @@ let mem_rel :preorder mem
 
 (* Predicates that we will witness with regions and refs *)
 let region_contains_pred r =
-  fun m -> (not (HS.is_eternal_color (color r))) \/ m `contains_region` r
+  fun m -> (not (HS.is_eternal_region_hs r)) \/ m `contains_region` r
 
 let ref_contains_pred #_ #_ r =
   fun m ->
@@ -189,10 +189,9 @@ let new_colored_region r0 c =
 
 private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
   :ST (mreference a rel)
-      (requires (fun m       -> is_eternal_region i))
-      (ensures  (fun m0 r m1 -> is_eternal_region (frameOf r) /\ ralloc_post i init m0 r m1 /\ is_mm r == mm))
-  = if i <> HS.root then gst_recall (region_contains_pred i);
-    let m0 = gst_get () in
+      (requires (fun m       -> is_heap_color (color i) /\ m `contains_region` i))
+      (ensures  (fun m0 r m1 -> ralloc_post i init m0 r m1 /\ is_mm r == mm))
+  = let m0 = gst_get () in
     let r, m1 = HS.alloc rel i init mm m0 in
     Heap.lemma_next_addr_alloc rel (Map.sel (HS.get_hmap m0) i) init mm;  //AR: to prove that next_addr in tip's heap remains same (to satisfy the predicate in mm rel)
     gst_put m1;
@@ -202,8 +201,13 @@ private let ralloc_common (#a:Type) (#rel:preorder a) (i:rid) (init:a) (mm:bool)
     gst_witness (region_contains_pred i);
     r
 
-let ralloc #_ #_ i init = ralloc_common i init false
-let ralloc_mm #_ #_ i init = ralloc_common i init true
+let ralloc #_ #_ i init =
+  if i <> HS.root then gst_recall (region_contains_pred i);
+  ralloc_common i init false
+  
+let ralloc_mm #_ #_ i init =
+  if i <> HS.root then gst_recall (region_contains_pred i);
+  ralloc_common i init true
 
 let rfree #_ #_ r =
   let m0 = gst_get () in
@@ -313,3 +317,24 @@ let lemma_witnessed_or p q = W.lemma_witnessed_or mem_rel p q
 let lemma_witnessed_impl p q = W.lemma_witnessed_impl mem_rel p q
 let lemma_witnessed_forall #_ p = W.lemma_witnessed_forall mem_rel p
 let lemma_witnessed_exists #_ p = W.lemma_witnessed_exists mem_rel p
+
+
+let drgn = d_hrid
+let rid_of_drgn d = d
+
+let new_drgn r0 =
+  if r0 <> HS.root then gst_recall (region_contains_pred r0);  //recall containment of r0
+  HS.lemma_rid_ctr_pred ();
+  let m0 = gst_get () in
+  let new_rid, m1 = HS.new_freeable_heap_region m0 r0 in
+  gst_put m1;
+  gst_witness (region_contains_pred new_rid);
+  new_rid
+
+let free_drgn d =
+  let m0 = gst_get () in
+  let m1 = HS.free_heap_region m0 d in
+  gst_put m1
+
+let ralloc_drgn #_ #_ d init = ralloc_common (rid_of_drgn d) init false
+let ralloc_drgn_mm #_ #_ d init = ralloc_common (rid_of_drgn d) init true

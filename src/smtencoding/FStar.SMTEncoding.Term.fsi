@@ -78,6 +78,7 @@ type qop =
 
 type term' =
   | Integer    of string
+  | String     of string
   | Real       of string
   | BoundV     of int
   | FreeV      of fv
@@ -290,7 +291,7 @@ val mk_tester:       string -> term -> term
 val mk_Term_type:    term
 val mk_ApplyTF:      term -> term -> term
 val mk_ApplyTT:      term -> term -> Range.range -> term
-val mk_String_const: int -> Range.range -> term
+val mk_String_const: string -> Range.range -> term
 val mk_Precedes:     term -> term -> term -> term -> Range.range -> term
 val mk_LexCons:      term -> term -> term -> Range.range -> term
 val fuel_2: term

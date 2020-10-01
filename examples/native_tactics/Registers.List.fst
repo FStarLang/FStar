@@ -17,10 +17,10 @@ module Registers.List
 type reg = int
 type regmap (a:Type0) = list (int * a) * a
 
-[@plugin]
+[@@plugin]
 let create #a (x:a) : regmap a = [], x
 
-[@plugin]
+[@@plugin]
 let rec sel #a (r:regmap a) (x:reg) : Tot a (decreases (fst r)) =
   match r with
   | [], v -> v
@@ -28,16 +28,16 @@ let rec sel #a (r:regmap a) (x:reg) : Tot a (decreases (fst r)) =
 
 let sel' #a (r:regmap a) (x:reg) : Tot a = sel r x
 
-[@plugin]
+[@@plugin]
 let upd #a (r:regmap a) (x:reg) (v:a) : regmap a =
    (x, v)::(match r with | (f, s) -> f), (match r with | (f, s) -> s)
 
-[@plugin]
+[@@plugin]
 let rec const_map_n (n:nat) (x:'a) (r:regmap 'a) : regmap 'a =
   if n = 0 then r
   else const_map_n (n - 1) x (upd r n x)
 
-[@plugin]
+[@@plugin]
 let rec identity_map (n:nat) (r:regmap int) : regmap int =
   if n = 0 then r
   else identity_map (n - 1) (upd r n n)

@@ -32,18 +32,17 @@ let of_buffer b = (| MUTABLE, b |)
 
 let of_ibuffer b = (| IMMUTABLE, b |)
 
+let of_qbuf #_ #q b = (| q, b |)
+
 let index c i =
   let x = qbuf_mbuf c in
   B.index x i
 
-let sub c i len =
-  match qbuf_qual c with
-  | MUTABLE ->
-    let x : B.buffer _ = qbuf_mbuf c in
-    (| MUTABLE, B.msub _ x i len |)
-  | IMMUTABLE ->
-    let x : I.ibuffer _ = qbuf_mbuf c in
-    (| IMMUTABLE, B.msub _ x i len |)
+let sub #a c i len =
+  let (| q, x |) = c in
+  let x : B.mbuffer a (q_preorder q a) (q_preorder q a) = x in
+  let y = B.msub (q_preorder q a) x i len in
+  (| q, y |)
 
 let cast c = qbuf_mbuf c
 let to_buffer c = qbuf_mbuf c

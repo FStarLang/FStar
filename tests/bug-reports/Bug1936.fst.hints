@@ -1,0 +1,17 @@
+[
+  "ˆ¯dèÀ·\u0014„£\u0010π\u0003N\f\u00068",
+  [
+    [
+      "Bug1936.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "681a6eff4ce274e16de54ace758e6ae3"
+    ]
+  ]
+]

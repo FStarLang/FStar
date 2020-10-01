@@ -1,0 +1,115 @@
+[
+  "£\u0005TSˆ\u001fÏüêÉs!«r]Õ",
+  [
+    [
+      "LowStar.Lens.__proj__Mklens__item__lens_laws",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_LowStar.Lens.Mklens_get",
+        "proj_equation_LowStar.Lens.Mklens_put",
+        "projection_inverse_LowStar.Lens.Mklens_get",
+        "projection_inverse_LowStar.Lens.Mklens_put"
+      ],
+      0,
+      "040b422a57eb969445eac844dfac2cd8"
+    ],
+    [
+      "LowStar.Lens.__proj__Mkhs_lens__item__snapshot",
+      1,
+      2,
+      1,
+      [
+        "@query", "proj_equation_LowStar.Lens.Mkhs_lens_invariant",
+        "proj_equation_LowStar.Lens.Mkhs_lens_x",
+        "projection_inverse_LowStar.Lens.Mkhs_lens_invariant",
+        "projection_inverse_LowStar.Lens.Mkhs_lens_x",
+        "token_correspondence_LowStar.Lens.__proj__Mkhs_lens__item__invariant"
+      ],
+      0,
+      "761db015df5a6cdb2648bec4d7352516"
+    ],
+    [
+      "LowStar.Lens.__proj__Mkhs_lens__item__l",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_LowStar.Lens.imem_lens",
+        "proj_equation_LowStar.Lens.Mkhs_lens_footprint",
+        "proj_equation_LowStar.Lens.Mkhs_lens_invariant",
+        "proj_equation_LowStar.Lens.Mkhs_lens_x",
+        "projection_inverse_LowStar.Lens.Mkhs_lens_footprint",
+        "projection_inverse_LowStar.Lens.Mkhs_lens_invariant",
+        "projection_inverse_LowStar.Lens.Mkhs_lens_x",
+        "refinement_interpretation_Tm_refine_cb27e7e01c1acdd661219052e523b42b",
+        "token_correspondence_LowStar.Lens.__proj__Mkhs_lens__item__invariant"
+      ],
+      0,
+      "5f3c65b8eef4533f2a0818b4152446a4"
+    ],
+    [
+      "LowStar.Lens.LensST",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "1f158a59ce5835d8fd8dcdd9c8922e9b"
+    ],
+    [
+      "LowStar.Lens.reveal_inv",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "d9caec6c6e4beb609bbe6321b90cc552"
+    ],
+    [
+      "LowStar.Lens.for_n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
+      ],
+      0,
+      "95981ba360a3c99e8f8920628fa8d9ea"
+    ],
+    [
+      "LowStar.Lens.for_n",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_FStar.Monotonic.HyperHeap.hmap",
+        "equation_FStar.Monotonic.HyperStack.is_tip",
+        "equation_FStar.Monotonic.HyperStack.is_wf_with_ctr_and_tip",
+        "equation_FStar.Monotonic.HyperStack.mem", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "function_token_typing_FStar.Monotonic.Heap.heap",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "lemma_FStar.Map.lemma_ContainsDom", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_05e15190c946858f68c69156f585f95a",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_7e0b9b2dbca36eab00de093c1b701c6d",
+        "typing_FStar.Map.contains", "typing_FStar.Monotonic.HyperHeap.rid",
+        "typing_FStar.Monotonic.HyperStack.get_hmap",
+        "typing_FStar.Monotonic.HyperStack.get_tip"
+      ],
+      0,
+      "edea9773125a1bc1e2915857f15d860d"
+    ]
+  ]
+]

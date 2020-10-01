@@ -1,0 +1,30 @@
+[
+  "\u0019seÿ‡êtXÊ9ş\u001f–ßÛ",
+  [
+    [
+      "Bug1799.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "l_and-interp", "l_or-interp",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "f982ba5982564ad213b38711af92cc4e"
+    ],
+    [
+      "Bug1799.test'",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Bug1799.op_Less_Equals_Equals", "l_and-interp",
+        "l_or-interp"
+      ],
+      0,
+      "3ed2216ad8baedd16b10d6e367f074c1"
+    ]
+  ]
+]

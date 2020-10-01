@@ -1,5 +1,5 @@
 [
-  "–Ò¾\u000e¥ËÝšDË>@ŠÆ\u0006\u000e",
+  "qUŒðÐØäý›nxW\t\u0002\u0004P",
   [
     [
       "FStar.Reflection.Derived.Lemmas.list_ref",
@@ -20,12 +20,11 @@
         "disc_equation_Prims.Nil",
         "equation_with_fuel_FStar.Reflection.Data.forall_list.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "l_and-interp",
-        "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1f9ccbd7965cfe9da2affca9dbdb7cc3"
+      "59e60fbacc6ef7f96782b2e14a8fff22"
     ],
     [
       "FStar.Reflection.Derived.Lemmas.mk_app_collect_inv_s",
@@ -61,10 +60,10 @@
         "refinement_interpretation_Tm_refine_ec0a55e2708d9a8d47674f452c1bed2e",
         "token_correspondence_FStar.Reflection.Derived.Lemmas.uncurry",
         "token_correspondence_FStar.Reflection.Derived.mk_app",
-        "typing_FStar.Reflection.Basic.inspect_ln"
+        "typing_FStar.Reflection.Builtins.inspect_ln"
       ],
       0,
-      "62e401b2cd544bdac3fabe21bae03589"
+      "f15d44ea32b8da7031cc0eb0d44f3dcc"
     ],
     [
       "FStar.Reflection.Derived.Lemmas.mk_app_collect_inv",
@@ -74,8 +73,8 @@
       [
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.Reflection.Derived.mk_app.fuel_instrumented",
-        "@query", "binder_x_8632d594431d6c78cb2dd50457d25394_0",
-        "constructor_distinct_Prims.Nil", "data_typing_intro_Prims.Nil@tok",
+        "@query", "constructor_distinct_Prims.Nil",
+        "data_typing_intro_Prims.Nil@tok",
         "equation_FStar.Reflection.Data.argv",
         "equation_FStar.Reflection.Derived.collect_app",
         "equation_with_fuel_FStar.Reflection.Derived.mk_app.fuel_instrumented",
@@ -83,7 +82,7 @@
         "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "2ce0036aea1607409aa3f1e28b6a4c6d"
+      "77eee185cefd20786dfcba5676e8b390"
     ],
     [
       "FStar.Reflection.Derived.Lemmas.collect_app_order'",
@@ -114,6 +113,7 @@
         "equation_FStar.Reflection.Data.smaller",
         "equation_with_fuel_FStar.Reflection.Data.forall_list.fuel_instrumented",
         "equation_with_fuel_FStar.Reflection.Derived.collect_app_.fuel_instrumented",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "fuel_guarded_inversion_Prims.list",
         "function_token_typing_FStar.Reflection.Data.argv",
         "interpretation_Tm_abs_7317475f7e2c0d87663619fda2fae9b7",
@@ -127,11 +127,12 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
         "refinement_interpretation_Tm_refine_8c7aa007a877e8ebee64228e10bfcf12",
-        "typing_FStar.Reflection.Basic.inspect_ln",
+        "subterm_ordering_FStar.Pervasives.Native.Mktuple2",
+        "typing_FStar.Reflection.Builtins.inspect_ln",
         "typing_Tm_abs_7317475f7e2c0d87663619fda2fae9b7"
       ],
       0,
-      "c852178e20e8a8a5013c933f5e00f3ba"
+      "26111efc93db0df71653d45f50793749"
     ],
     [
       "FStar.Reflection.Derived.Lemmas.collect_app_order",
@@ -168,11 +169,11 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_8c7aa007a877e8ebee64228e10bfcf12",
-        "true_interp", "typing_FStar.Reflection.Basic.inspect_ln",
+        "true_interp", "typing_FStar.Reflection.Builtins.inspect_ln",
         "typing_Tm_abs_630fdbb4629e3ce5df70e7a63da07870"
       ],
       0,
-      "ac9a14a9a527dae114c420adbe166824"
+      "8f66a6251b0f3081572dcf79d6e86126"
     ],
     [
       "FStar.Reflection.Derived.Lemmas.collect_app_ref",
@@ -196,56 +197,7 @@
         "typing_Tm_abs_630fdbb4629e3ce5df70e7a63da07870"
       ],
       0,
-      "a9490cd8545b88cef1e62477d1f45af5"
-    ],
-    [
-      "FStar.Reflection.Derived.Lemmas.list_ref",
-      2,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.Reflection.Data.forall_list.fuel_instrumented",
-        "@fuel_irrelevance_FStar.Reflection.Data.forall_list.fuel_instrumented",
-        "@query",
-        "FStar.Reflection.Derived.Lemmas_interpretation_Tm_arrow_5a98e66daedcb0b3e66fcff80567f12a",
-        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "binder_x_0a56e3de562c08d8ab59f4ac6f626a98_3",
-        "binder_x_8691477dadb3127747d6cabdd98d71a0_2",
-        "binder_x_fe28d8bcde588226b4e538b35321de05_1",
-        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil",
-        "equation_with_fuel_FStar.Reflection.Data.forall_list.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list", "l_and-interp",
-        "projection_inverse_Prims.Cons_hd",
-        "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
-      ],
-      0,
-      "465783ebf5db4335cdc7ef5cf53d6b52"
-    ],
-    [
-      "FStar.Reflection.Derived.Lemmas.collect_app_ref",
-      2,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.Reflection.Data.forall_list.fuel_instrumented",
-        "@query",
-        "FStar.Reflection.Derived.Lemmas_interpretation_Tm_arrow_c09a2331e14a03dbb6676ffc3e80b22a",
-        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "constructor_distinct_Prims.Nil",
-        "equation_FStar.Pervasives.Native.snd",
-        "equation_FStar.Reflection.Data.argv",
-        "equation_with_fuel_FStar.Reflection.Data.forall_list.fuel_instrumented",
-        "function_token_typing_FStar.Reflection.Data.argv",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_Prims.Nil_a", "true_interp",
-        "typing_Tm_abs_630fdbb4629e3ce5df70e7a63da07870"
-      ],
-      0,
-      "6522c1d33877f0b56762260328172ca7"
+      "d7fc2989a2b3259bc0950b004ef963fa"
     ]
   ]
 ]

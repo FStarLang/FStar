@@ -12,7 +12,7 @@ type byte = u8
 type bytes = string
 type cbytes = string (* not in FStar.Bytes *)
 
-let len (b:bytes) = String.length b
+let len (b:bytes) = U32.of_native_int (String.length b)
 let length (b:bytes) = Z.of_int (String.length b)
 
 let reveal (b:bytes) = ()
@@ -28,41 +28,44 @@ type kbytes = bytes
 let empty_bytes = ""
 let empty_unique (b:bytes) = ()
 
-let get (b:bytes) (pos:u32) = int_of_char (String.get b pos)
+let get (b:bytes) (pos:u32) = int_of_char (String.get b (Z.to_int (U32.to_int pos)))
 let op_String_Access = get
 
-let index (b:bytes) (i:Z.t) = get b (Z.to_int i)
+let index (b:bytes) (i:Z.t) = get b (U32.uint_to_t i)
 
 type ('b1, 'b2) equal = unit
 
 let extensionality (b1:bytes) (b2:bytes) = ()
 
-let create (len:u32) (v:byte) = String.make len (char_of_int v)
-let create_ (len:Z.t) (v:byte) = create (Z.to_int len) v
+let create (len:u32) (v:byte)  = String.make (U32.to_native_int len) (char_of_int v)
+let create_ (len:Z.t) (v:byte) = String.make (Z.to_int  len) (char_of_int v)
 
 let init (len:u32) (f:u32 -> byte) =
-  String.init len (fun i -> char_of_int (f i))
+  String.init (U32.to_native_int len)
+    (fun (i:int) ->
+        let b : byte = f (U32.of_native_int i) in
+        char_of_int b)
 
-let abyte (b:byte) = create 1 b
+let abyte (b:byte) = create (U32.of_native_int 1) b
 let twobytes (bs:(byte * byte)) =
-  init 2 (fun i -> if i = 0 then fst bs else snd bs)
+  init (U32.of_native_int 2) (fun i -> if i = U32.of_native_int 0 then fst bs else snd bs)
 
 let append (b1:bytes) (b2:bytes) = b1 ^ b2
 let op_At_Bar = append
 
 let slice (b:bytes) (s:u32) (e:u32) =
-    String.sub b s (e - s)
+    String.sub b (U32.to_native_int s) (U32.to_native_int (U32.sub e s))
 let slice_ (b:bytes) (s:Z.t) (e:Z.t) =
-    slice b (Z.to_int s) (Z.to_int e)
+    slice b (U32.uint_to_t s) (U32.uint_to_t e)
 
 let sub (b:bytes) (s:u32) (l:u32) =
-    String.sub b s l
+    String.sub b (U32.to_native_int s) (U32.to_native_int l)
 
 let split (b:bytes) (k:u32) =
-    sub b 0 k,
-    sub b k (String.length b - k)
+    sub b (U32.of_native_int 0) k,
+    sub b k (U32.sub (U32.of_native_int (String.length b)) k)
 let split_ (b:bytes) (k:Z.t) =
-    split b (Z.to_int k)
+    split b (U32.of_int k)
 
 let fits_in_k_bytes (n:Z.t) (k:Z.t) = (* expects k to fit in an int *)
     Z.leq Z.zero n &&
@@ -80,7 +83,7 @@ let int_of_bytes (b:bytes) =
     let len = String.length b in
     let n = Z.of_int 256 in
     for y = 0 to len-1 do
-        x := Z.add (Z.mul n !x) (Z.of_int (get b y))
+        x := Z.add (Z.mul n !x) (Z.of_int (get b (U32.of_native_int y)))
     done;
     !x
 
@@ -116,21 +119,25 @@ let int8_of_bytes (b:bytes) =
     Z.to_int (int_of_bytes b)
 
 let bytes_of_int32 (n:U32.t) =
-    bytes_of_int (Z.of_int 4) (Z.of_int n)
+    bytes_of_int (Z.of_int 4) (U32.to_int n)
 
 let bytes_of_int16 (n:U32.t) =
-    bytes_of_int (Z.of_int 2) (Z.of_int n)
+    bytes_of_int (Z.of_int 2) (U32.to_int n)
 
 let bytes_of_int8 (n:U32.t) =
-    bytes_of_int (Z.of_int 1) (Z.of_int n)
+    bytes_of_int (Z.of_int 1) (U32.to_int n)
 
 type 'a minbytes = bytes
 
 let xor (len:U32.t) (s1:'a minbytes) (s2:'b minbytes) : bytes =
-    let f i = (int_of_char s1.[i]) lxor (int_of_char s2.[i]) in
+    let f (i:u32) : byte =
+        let l = int_of_char s1.[U32.to_native_int i] in
+        let r = int_of_char s2.[U32.to_native_int i] in
+        l lxor r
+    in
     init len f
 
-let xor_ (len:Z.t) = xor (Z.to_int len)
+let xor_ (len:Z.t) = xor (U32.of_int len)
 
 let xor_commutative (n:U32.t) (b1: 'a minbytes) (b2: 'b minbytes) = ()
 let xor_append (b1:bytes) (b2:bytes) (x1:bytes) (b2:bytes) = ()

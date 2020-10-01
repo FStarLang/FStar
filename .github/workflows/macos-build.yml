@@ -1,0 +1,37 @@
+name: Build FStar Binaries
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout everest
+      uses: actions/checkout@v2
+      with:
+        repository: project-everest/everest
+        path: everest
+    - name: Checkout FStar
+      uses: actions/checkout@v2
+      with:
+        path: FStar
+    - name: Setup dependencies
+      run: ./FStar/.github/setup.sh
+    - name: Build FStar
+      run: |
+        source FStar/.github/env.sh
+        make -j -C FStar all
+    - name: Package FStar
+      run: |
+        source FStar/.github/env.sh
+        PACKAGE_DOCS=0 make -j -C FStar package
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: fstar_package
+        path: FStar/src/ocaml-output/fstar_0.9.7.0-alpha1_Darwin_x86_64.tar.gz

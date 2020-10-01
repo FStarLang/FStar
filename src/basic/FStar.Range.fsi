@@ -32,8 +32,12 @@ val set_use_range: range -> rng -> range
 val set_def_range: range -> rng -> range
 val mk_pos: int -> int -> pos
 val mk_range: string -> pos -> pos -> range
+
+val union_rng: rng -> rng -> rng
 val union_ranges: range -> range -> range
+
 val rng_included: rng -> rng -> bool
+val string_of_pos: pos -> string
 val string_of_range: range -> string
 val string_of_def_range: range -> string
 val string_of_use_range: range -> string

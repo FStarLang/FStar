@@ -32,6 +32,7 @@ open FStar.SMTEncoding
 open FStar.SMTEncoding.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
+module UF = FStar.Syntax.Unionfind
 module N = FStar.TypeChecker.Normalize
 module BU = FStar.Util
 module U = FStar.Syntax.Util
@@ -54,7 +55,16 @@ let norm_before_encoding env t =
                  Env.AllowUnboundUniverses;
                  Env.EraseUniverses;
                  Env.Exclude Env.Zeta] in
-    N.normalize steps env.tcenv t
+    Profiling.profile
+      (fun () -> N.normalize steps env.tcenv t)
+      (Some (Ident.string_of_lid (Env.current_module env.tcenv)))
+      "FStar.TypeChecker.SMTEncoding.Encode.norm_before_encoding"
+
+let norm_with_steps steps env t =
+  Profiling.profile
+      (fun () -> N.normalize steps env t)
+      (Some (Ident.string_of_lid (Env.current_module env)))
+      "FStar.TypeChecker.SMTEncoding.Encode.norm"
 
 type prims_t = {
     mk:lident -> string -> term * int * list<decl>;
@@ -189,7 +199,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
          Util.mkAssume(mkForall_fuel env (Env.get_range env)
                                      ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxBoolFun) x)), Some "bool inversion", "bool_inversion")] in
     let mk_int : env -> string -> term -> list<decl>  = fun env nm tt ->
-        let lex_t = mkFreeV <| mk_fv (text_of_lid Const.lex_t_lid, Term_sort) in
+        let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
         let typing_pred = mk_HasType x tt in
         let typing_pred_y = mk_HasType y tt in
         let aa = mk_fv ("a", Int_sort) in
@@ -209,7 +219,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                                          precedes_y_x)),
                                   Some "well-founded ordering on nat (alt)", "well-founded-ordering-on-nat")] in
     let mk_real : env -> string -> term -> list<decl>  = fun env nm tt ->
-        let lex_t = mkFreeV <| mk_fv (text_of_lid Const.lex_t_lid, Term_sort) in
+        let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
         let typing_pred = mk_HasType x tt in
         let typing_pred_y = mk_HasType y tt in
         let aa = mk_fv ("a", Sort "Real") in
@@ -400,7 +410,7 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
 let encode_smt_lemma env fv t =
     let lid = fv.fv_name.v in
     let form, decls = encode_function_type_as_formula t env in
-    decls@([Util.mkAssume(form, Some ("Lemma: " ^ lid.str), ("lemma_"^lid.str))]
+    decls@([Util.mkAssume(form, Some ("Lemma: " ^ (string_of_lid lid)), ("lemma_"^(string_of_lid lid)))]
            |> mk_decls_trivial)
 
 let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
@@ -421,7 +431,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
               let tok, arity, definition = prims.mk lid vname in
               let env = push_free_var env lid arity vname (Some tok) in
               definition |> mk_decls_trivial, env
-         else let encode_non_total_function_typ = lid.nsstr <> "Prims" in
+         else let encode_non_total_function_typ = nsstr lid <> "Prims" in
               let formals, (pre_opt, res_t) =
                 let args, comp = curried_arrow_formals_comp t_norm in
                 let comp =
@@ -438,9 +448,9 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
                     let _, xxv = BU.prefix vars in
                     let xx = mkFreeV <| mk_fv (fv_name xxv, Term_sort) in
                     [Util.mkAssume(mkForall (S.range_of_fv fv) ([[vapp]], vars,
-                                            mkEq(vapp, Term.boxBool <| mk_tester (escape d.str) xx)),
+                                            mkEq(vapp, Term.boxBool <| mk_tester (escape (string_of_lid d)) xx)),
                                           Some "Discriminator equation",
-                                          ("disc_equation_"^escape d.str))]
+                                          ("disc_equation_"^escape (string_of_lid d)))]
 
                 | Projector(d, f) ->
                     let _, xxv = BU.prefix vars in
@@ -476,7 +486,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
                     | _ -> false
                 in
                 //Do not thunk ...
-                lid.nsstr <> "Prims"  //things in prims
+                nsstr lid <> "Prims"  //things in prims
                 && not (quals |> List.contains Logic) //logic qualified terms
                 && not (is_squash t_norm) //ambient squashed properties
                 && not (is_type t_norm) // : Type terms, since ambient typing hypotheses for these are cheap
@@ -614,7 +624,7 @@ let is_tactic t =
       true
     | Tm_arrow(_, c) ->
       let effect_name = U.comp_effect_name c in
-      BU.starts_with "FStar.Tactics" effect_name.str
+      BU.starts_with "FStar.Tactics" (string_of_lid effect_name)
     | _ -> false
 
 exception Let_rec_unencodeable
@@ -630,7 +640,7 @@ let encode_top_level_let :
       let formals, extra_formals = BU.first_N nbinders formals in
       let subst = List.map2 (fun (formal, _) (binder, _) -> NT(formal, S.bv_to_name binder)) formals binders in
       let extra_formals = extra_formals |> List.map (fun (x, i) -> {x with sort=SS.subst subst x.sort}, i) |> U.name_binders in
-      let body = Syntax.extend_app_n (SS.compress body) (snd <| U.args_of_binders extra_formals) None body.pos in
+      let body = Syntax.extend_app_n (SS.compress body) (snd <| U.args_of_binders extra_formals) body.pos in
       binders@extra_formals, body
     in
 
@@ -661,10 +671,10 @@ let encode_top_level_let :
           arrow_formals_comp_norm norm (U.unrefine t)
 
         | _ when not norm ->
-          let t_norm = N.normalize [Env.AllowUnboundUniverses; Env.Beta; Env.Weak; Env.HNF;
-                                    (* we don't know if this will terminate; so don't do recursive steps *)
-                                    Env.Exclude Env.Zeta;
-                                    Env.UnfoldUntil delta_constant; Env.EraseUniverses]
+          let t_norm = norm_with_steps [Env.AllowUnboundUniverses; Env.Beta; Env.Weak; Env.HNF;
+                                       (* we don't know if this will terminate; so don't do recursive steps *)
+                                       Env.Exclude Env.Zeta;
+                                       Env.UnfoldUntil delta_constant; Env.EraseUniverses]
                         tcenv t
           in
           arrow_formals_comp_norm true t_norm
@@ -785,7 +795,7 @@ let encode_top_level_let :
                     | Tm_fvar fv when S.fv_eq_lid fv FStar.Parser.Const.logical_lid -> true
                     | _ -> false
                   in
-                  let is_prims = lbn |> FStar.Util.right |> lid_of_fv |> (fun lid -> lid_equals (lid_of_ids lid.ns) Const.prims_lid) in
+                  let is_prims = lbn |> FStar.Util.right |> lid_of_fv |> (fun lid -> lid_equals (lid_of_ids (ns_of_lid lid)) Const.prims_lid) in
                   if not is_prims && (quals |> List.contains Logic || is_logical)
                   then app, mk_Valid app, encode_formula body env'
                   else app, app, encode_term body env'
@@ -795,7 +805,7 @@ let encode_top_level_let :
                 //But the guard is unnecessary given the pattern
                 let eqn = Util.mkAssume(mkForall (U.range_of_lbname lbn)
                                                  ([[pat]], vars, mkEq(app,body)),
-                                    Some (BU.format1 "Equation for %s" flid.str),
+                                    Some (BU.format1 "Equation for %s" (string_of_lid flid)),
                                     ("equation_"^fvb.smt_id)) in
                 decls@binder_decls@decls2@(eqn::primitive_type_axioms env.tcenv flid fvb.smt_id app
                                            |> mk_decls_trivial),
@@ -887,7 +897,7 @@ let encode_top_level_let :
                 Util.mkAssume
                     (mkForall' (U.range_of_lbname lbn)
                                ([[gsapp]], Some 0, fuel::vars, mkImp(guard, mkEq(gsapp, body_tm))),
-                     Some (BU.format1 "Equation for fuel-instrumented recursive function: %s" fvb.fvar_lid.str),
+                     Some (BU.format1 "Equation for fuel-instrumented recursive function: %s" (string_of_lid fvb.fvar_lid)),
                      "equation_with_fuel_" ^g) in
             let eqn_f = Util.mkAssume(mkForall (U.range_of_lbname lbn) ([[app]], vars, mkEq(app, gmax)),
                                     Some "Correspondence of recursive function to instrumented version",
@@ -987,11 +997,17 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
     let nm =
         match U.lid_of_sigelt se with
         | None -> ""
-        | Some l -> l.str in
+        | Some l -> (string_of_lid l) in
     let g, env = encode_sigelt' env se in
     let g =
         match g with
-         | [] -> [Caption (BU.format1 "<Skipped %s/>" nm)] |> mk_decls_trivial
+         | [] ->
+            begin
+            if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+              BU.print1 "Skipped encoding of %s\n" nm;
+            [Caption (BU.format1 "<Skipped %s/>" nm)] |> mk_decls_trivial
+            end
+
          | _ -> ([Caption (BU.format1 "<Start encoding %s>" nm)] |> mk_decls_trivial)
                 @g
                 @([Caption (BU.format1 "</end encoding %s>" nm)] |> mk_decls_trivial) in
@@ -1014,10 +1030,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     match se.sigel with
      | Sig_splice _ ->
          failwith "impossible -- splice should have been removed by Tc.fs"
+     | Sig_fail _ ->
+         failwith "impossible -- Sig_fail should have been removed by Tc.fs"
      | Sig_pragma _
-     | Sig_main _
      | Sig_effect_abbrev _
-     | Sig_sub_effect _ -> [], env
+     | Sig_sub_effect _
+     | Sig_polymonadic_bind _
+     | Sig_polymonadic_subcomp _ -> [], env
 
      | Sig_new_effect(ed) ->
        if not (is_smt_reifiable_effect env.tcenv ed.mname)
@@ -1036,7 +1055,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let close_effect_params tm =
               match ed.binders with
               | [] -> tm
-              | _ -> S.mk (Tm_abs(ed.binders, tm, Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL]))) None tm.pos
+              | _ -> S.mk (Tm_abs(ed.binders, tm, Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL]))) tm.pos
             in
 
             let encode_action env (a:S.action) =
@@ -1091,7 +1110,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                encode_top_level_val
                  (se.sigattrs |> BU.for_some is_uninterpreted_by_smt)
                  env fv t quals in
-             let tname = lid.str in
+             let tname = (string_of_lid lid) in
              let tsym = Option.get (try_lookup_free_var env lid) in
              decls
              @ (primitive_type_axioms env.tcenv lid tname tsym |> mk_decls_trivial),
@@ -1102,7 +1121,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let env = { env with tcenv = Env.push_univ_vars env.tcenv uvs } in
         let f = norm_before_encoding env f in
         let f, decls = encode_formula f env in
-        let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), (varops.mk_unique ("assumption_"^l.str)))]
+        let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), (varops.mk_unique ("assumption_"^(string_of_lid l))))]
                 |> mk_decls_trivial in
         decls@g, env
 
@@ -1135,11 +1154,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_let(_, _) when (se.sigquals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->
       //Discriminators are encoded directly via (our encoding of) theory of datatypes
+      if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+        BU.print1 "Not encoding discriminator '%s'\n" (Print.sigelt_to_string_short se);
       [], env
 
-    | Sig_let(_, lids) when (lids |> BU.for_some (fun (l:lident) -> (List.hd l.ns).idText = "Prims")
+    | Sig_let(_, lids) when (lids |> BU.for_some (fun (l:lident) -> string_of_id (List.hd (ns_of_lid l)) = "Prims")
                              && se.sigquals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
+      if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+        BU.print1 "Not encoding unfold let from Prims '%s'\n" (Print.sigelt_to_string_short se);
       [], env
 
     | Sig_let((false, [lb]), _)
@@ -1203,7 +1226,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  (S.mk_Tm_app
                    (S.fvar t (Delta_constant_at_level 0) None)
                    (snd (U.args_of_binders tps))
-                   None
                    (Ident.range_of_lid t))
                  k
              in
@@ -1279,7 +1301,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     Util.mkAssume(mkForall (Ident.range_of_lid t) ([[xx_has_type_sfuel]], add_fuel (mk_fv (ffsym, Fuel_sort)) (mk_fv (xxsym, Term_sort)::vars),
                                         mkImp(xx_has_type_sfuel, data_ax)),
                                 Some "inversion axiom", //this name matters! see Sig_bundle case near line 1493
-                                (varops.mk_unique ("fuel_guarded_inversion_"^t.str))) in
+                                (varops.mk_unique ("fuel_guarded_inversion_"^(string_of_lid t)))) in
                 decls
                 @([fuel_guarded_inversion] |> mk_decls_trivial) in
 
@@ -1287,7 +1309,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           let k =
             match tps with
             | [] -> k
-            | _ -> S.mk (Tm_arrow (tps, S.mk_Total k)) None k.pos
+            | _ -> S.mk (Tm_arrow (tps, S.mk_Total k)) k.pos
           in
           let k = norm_before_encoding env k in
           U.arrow_formals k
@@ -1457,16 +1479,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                Some "data constructor typing elim",
                                ("data_elim_" ^ ddconstrsym)) in
                   let subterm_ordering =
-                    let lex_t = mkFreeV <| mk_fv (text_of_lid Const.lex_t_lid, Term_sort) in
-                    if lid_equals d Const.lextop_lid
-                    then let x = mk_fv (varops.fresh env.current_module_name "x", Term_sort) in
-                         let xtm = mkFreeV x in
-                         Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                                ([[mk_Precedes lex_t lex_t xtm dapp]], [x], mkImp(mk_tester "LexCons" xtm, mk_Precedes lex_t lex_t xtm dapp)),
-                                     Some "lextop is top",
-                                     (varops.mk_unique "lextop"))
-                    else (* subterm ordering *)
-                      let prec =
+                    let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
+                    (* subterm ordering *)
+                    let prec =
                         vars
                           |> List.mapi (fun i v ->
                                 (* it's a parameter, so it's inaccessible and no need for a sub-term ordering on it *)
@@ -1474,9 +1489,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 then []
                                 else [mk_Precedes lex_t lex_t (mkFreeV v) dapp])
                           |> List.flatten
-                      in
-                      Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                             ([[ty_pred]], add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders), mkImp(ty_pred, mk_and_l prec)),
+                     in
+                     Util.mkAssume(mkForall (Ident.range_of_lid d)
+                                             ([[ty_pred]],
+                                              add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
+                                              mkImp(ty_pred, mk_and_l prec)),
                                     Some "subterm ordering",
                                     ("subterm_ordering_"^ddconstrsym))
                   in
@@ -1640,7 +1657,7 @@ let place_decl_elt_in_fact_dbs (env:env_t) (fact_db_ids:list<fact_db_id>) (elt:d
 
 let fact_dbs_for_lid (env:env_t) (lid:Ident.lid) =
     Name lid
-    ::Namespace (Ident.lid_of_ids lid.ns)
+    ::Namespace (Ident.lid_of_ids (ns_of_lid lid))
     ::open_fact_db_tags env
 
 let encode_top_level_facts (env:env_t) (se:sigelt) =
@@ -1696,26 +1713,27 @@ let give_decls_to_z3_and_set_env (env:env_t) (name:string) (decls:decls_t) :unit
 let encode_modul tcenv modul =
   if Options.lax() && Options.ml_ish() then [], []
   else begin
+    UF.with_uf_enabled (fun () ->
     varops.reset_fresh ();
-    let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  modul.name.str in
+    let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  (string_of_lid modul.name) in
     if Env.debug tcenv Options.Medium
-    then BU.print2 "+++++++++++Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> string_of_int);
+    then BU.print2 "+++++++++++Encoding externals for %s ... %s declarations\n" name (List.length modul.declarations |> string_of_int);
     let env = get_env modul.name tcenv |> reset_current_module_fvbs in
     let encode_signature (env:env_t) (ses:sigelts) =
         ses |> List.fold_left (fun (g, env) se ->
           let g', env = encode_top_level_facts env se in
           g@g', env) ([], env)
     in
-    let decls, env = encode_signature ({env with warn=false}) modul.exports in
+    let decls, env = encode_signature ({env with warn=false}) modul.declarations in
     give_decls_to_z3_and_set_env env name decls;
     if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals for %s\n" name;
     decls, env |> get_current_module_fvbs
-  end
+  ) end
 
 let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
   if Options.lax () && Options.ml_ish () then ()
   else
-    let name = BU.format2 "%s %s" (if tcmod.is_interface then "interface" else "module") tcmod.name.str in
+    let name = BU.format2 "%s %s" (if tcmod.is_interface then "interface" else "module") (string_of_lid tcmod.name) in
     if Env.debug tcenv Options.Medium
     then BU.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name (List.length decls |> string_of_int);
     let env = get_env tcmod.name tcenv |> reset_current_module_fvbs in
@@ -1732,7 +1750,7 @@ let encode_query use_env_msg tcenv q
   * list<ErrorReporting.label> //labels in the query
   * decl        //the query itself
   * list<decl>  //suffix, evaluating labels in the model, etc.
-  = Z3.query_logging.set_module_name (TypeChecker.Env.current_module tcenv).str;
+  = Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));
     let env = get_env (Env.current_module tcenv) tcenv in
     let q, bindings =
         let rec aux bindings = match bindings with
@@ -1746,7 +1764,7 @@ let encode_query use_env_msg tcenv q
                       //if the assumption is of the form x:(forall y. P) etc.
                     | _ ->
                       x.sort in
-                let t = N.normalize [Env.Eager_unfolding; Env.Beta; Env.Simplify; Env.Primops; Env.EraseUniverses] env.tcenv t in
+                let t = norm_with_steps [Env.Eager_unfolding; Env.Beta; Env.Simplify; Env.Primops; Env.EraseUniverses] env.tcenv t in
                 Syntax.mk_binder ({x with sort=t})::out, rest
             | _ -> [], bindings in
         let closing, bindings = aux tcenv.gamma in
@@ -1756,13 +1774,13 @@ let encode_query use_env_msg tcenv q
     if debug tcenv Options.Medium
     || debug tcenv <| Options.Other "SMTEncoding"
     || debug tcenv <| Options.Other "SMTQuery"
-    then BU.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
-    let phi, qdecls = encode_formula q env in
+    then BU.print1 "Encoding query formula {: %s\n" (Print.term_to_string q);
+    let (phi, qdecls), ms = BU.record_time (fun () -> encode_formula q env) in
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
     let label_prefix, label_suffix = encode_labels labels in
     let caption =
         if Options.log_queries ()
-        then [Caption ("Encoding query formula: " ^ (Print.term_to_string q))]
+        then [Caption ("Encoding query formula : " ^ (Print.term_to_string q))]
         else []
     in
     let query_prelude =
@@ -1773,4 +1791,13 @@ let encode_query use_env_msg tcenv q
 
     let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
     let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
+    if debug tcenv Options.Medium
+    || debug tcenv <| Options.Other "SMTEncoding"
+    || debug tcenv <| Options.Other "SMTQuery"
+    then BU.print_string "} Done encoding\n";
+    if debug tcenv Options.Medium
+    || debug tcenv <| Options.Other "SMTEncoding"
+    || debug tcenv <| Options.Other "SMTQuery"
+    || debug tcenv <| Options.Other "Time"
+    then BU.print1 "Encoding took %sms\n" (string_of_int ms);
     query_prelude, labels, qry, suffix

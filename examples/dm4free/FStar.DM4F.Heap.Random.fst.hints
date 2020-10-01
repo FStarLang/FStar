@@ -1,5 +1,5 @@
 [
-  "Õ1\u007f¨ÇZRØaŽ†Û¬ôøY",
+  "IÜOdë²‹ä\u0011BC¡„\u0001H\"",
   [
     [
       "FStar.DM4F.Heap.Random.id",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0d6b2a9fcd8554c5806517efc4847064"
+      "ed4c055b0998806ab405a24c8104392b"
     ],
     [
       "FStar.DM4F.Heap.Random.tape",
@@ -22,16 +22,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "assumption_FStar.Seq.Base.seq__uu___haseq",
         "equation_FStar.DM4F.Heap.Random.elem", "equation_Prims.eqtype",
         "equation_Prims.nat", "function_token_typing_Prims.int",
         "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "haseqTm_refine_c45738073e069418e791c7f105cc9178",
+        "lemma_FStar.Seq.Base.hasEq_lemma",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_kinding_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "d71f6eb88df972c6f364b31645d81506"
+      "0217faefedfe88ce0096cdddae02f49e"
     ],
     [
       "FStar.DM4F.Heap.Random.incr",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_704d8d13f27c4dc76ad704087a7f94d4"
       ],
       0,
-      "74e4bcc699d42177d7786ddbaa3e1582"
+      "f0ffcbc7b7e69c93b4de646b4f532d96"
     ],
     [
       "FStar.DM4F.Heap.Random.index",
@@ -63,7 +63,7 @@
         "refinement_interpretation_Tm_refine_a0cc2a17677bbaeff2f143ee81ec1933"
       ],
       0,
-      "a76644f47f4e4bb7afa7aab072c0c57a"
+      "6c81008057d52ca82d030d895b8e682d"
     ],
     [
       "FStar.DM4F.Heap.Random.upd",
@@ -84,7 +84,7 @@
         "refinement_kinding_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "e9bcd9712e68c2652ed4721324f33941"
+      "a09c9b692fb47f7083c5362504ed1954"
     ],
     [
       "FStar.DM4F.Heap.Random.create",
@@ -102,7 +102,7 @@
         "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
       ],
       0,
-      "eeb315c04fd86335019db7315b0810f6"
+      "c91ac5ffc61fa76c02048cfe7df38bfe"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_eq_intro",
@@ -122,7 +122,7 @@
         "refinement_interpretation_Tm_refine_a0cc2a17677bbaeff2f143ee81ec1933"
       ],
       0,
-      "986e8340d2369aff53e52854b27d9e1a"
+      "4e71f882af0db74d60e044234aca35cc"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_eq_elim",
@@ -139,7 +139,7 @@
         "refinement_kinding_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "622bc27e84ee14f86c4c6a6da6832b10"
+      "e9f930b840f3bb872c31ac3efb109a27"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_index_upd1",
@@ -160,7 +160,7 @@
         "refinement_interpretation_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "c7bc964a1a34027181113bff99f96022"
+      "e03474878a8287656173354d391ae9ac"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_index_upd2",
@@ -182,7 +182,7 @@
         "refinement_interpretation_Tm_refine_c45738073e069418e791c7f105cc9178"
       ],
       0,
-      "581dc2649314541cc782f03f1bdde7a8"
+      "06d1cb7c7f8759ace9899b2f7c47d222"
     ],
     [
       "FStar.DM4F.Heap.Random.lemma_index_create",
@@ -196,7 +196,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "e0353e3c942a7dfa91ad20cf9f57db0e"
+      "7e49337fb1bf1e0ef1eb9ed1a2498032"
     ]
   ]
 ]

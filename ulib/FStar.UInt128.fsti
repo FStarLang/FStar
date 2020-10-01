@@ -138,22 +138,22 @@ val uint128_to_uint64: a:t -> b:U64.t{U64.v b == v a % pow2 64}
 //val of_string: string -> Tot t
 
 (* Infix notations *)
-unfold let op_Plus_Hat = add
-unfold let op_Plus_Question_Hat = add_underspec
-unfold let op_Plus_Percent_Hat = add_mod
-unfold let op_Subtraction_Hat = sub
-unfold let op_Subtraction_Question_Hat = sub_underspec
-unfold let op_Subtraction_Percent_Hat = sub_mod
-unfold let op_Amp_Hat = logand
-unfold let op_Hat_Hat = logxor
-unfold let op_Bar_Hat = logor
-unfold let op_Less_Less_Hat = shift_left
-unfold let op_Greater_Greater_Hat = shift_right
-unfold let op_Equals_Hat = eq
-unfold let op_Greater_Hat = gt
-unfold let op_Less_Hat = lt
-unfold let op_Greater_Equals_Hat = gte
-unfold let op_Less_Equals_Hat = lte
+inline_for_extraction noextract let op_Plus_Hat = add
+inline_for_extraction noextract let op_Plus_Question_Hat = add_underspec
+inline_for_extraction noextract let op_Plus_Percent_Hat = add_mod
+inline_for_extraction noextract let op_Subtraction_Hat = sub
+inline_for_extraction noextract let op_Subtraction_Question_Hat = sub_underspec
+inline_for_extraction noextract let op_Subtraction_Percent_Hat = sub_mod
+inline_for_extraction noextract let op_Amp_Hat = logand
+inline_for_extraction noextract let op_Hat_Hat = logxor
+inline_for_extraction noextract let op_Bar_Hat = logor
+inline_for_extraction noextract let op_Less_Less_Hat = shift_left
+inline_for_extraction noextract let op_Greater_Greater_Hat = shift_right
+inline_for_extraction noextract let op_Equals_Hat = eq
+inline_for_extraction noextract let op_Greater_Hat = gt
+inline_for_extraction noextract let op_Less_Hat = lt
+inline_for_extraction noextract let op_Greater_Equals_Hat = gte
+inline_for_extraction noextract let op_Less_Equals_Hat = lte
 
 (* Multiplication primitives *)
 (* Note that unlike UIntN, we do not provide uint128 * uint128 primitives (mul,

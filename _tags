@@ -7,7 +7,7 @@
 # 28	Wildcard pattern given as argument to a constant constructor.
 
 true: \
-  annot, bin_annot, thread, -traverse, \
+  thread, -traverse, \
   package(batteries), \
   package(zarith), \
   package(ppx_deriving.std), \
@@ -34,7 +34,7 @@ true: \
   linkall
 
 # Turn off warnings for extracted files
-<src/ocaml-output/**/*.ml> or <ulib/**/extracted/*.ml> or <ulib/tactics_ml/fstarlib_leftovers/*.ml>: \
+<src/ocaml-output/**/*.ml> or <ulib/**/extracted/*.ml> or <ulib/tactics_ml/fstarlib_leftovers/*.ml> or <ulib/ml/*.ml>: \
   warn(-8-11-20-21-26-28)
 
 <ulib/ml/FStar_{U,}Int*.ml>  or "ulib/ml/fstarlib.cma": \

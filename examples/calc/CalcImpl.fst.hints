@@ -1,0 +1,56 @@
+[
+  "èi(a[jëz\fÍÀÜf≤l\u0013",
+  [
+    [
+      "CalcImpl.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "0430bb0389ff207ad05a422b7ed44b7c"
+    ],
+    [
+      "CalcImpl.test3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_CalcImpl.any",
+        "equation_Prims.logical", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "318387a24558a880c96f48450eba64bf"
+    ],
+    [
+      "CalcImpl.test4",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_CalcImpl.any",
+        "equation_Prims.logical", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "c48f1d1bea16219c19b121967622d6d0"
+    ],
+    [
+      "CalcImpl.test5",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_CalcImpl.op_Equals_Equals_Greater",
+        "primitive_Prims.op_LessThan", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "2147b3579ac4a8cf4d692b9b8316137d"
+    ]
+  ]
+]

@@ -72,6 +72,7 @@
     <Compile Include="FStar.Dependencies.fs" />
     <Compile Include="FStar.CheckedFiles.fsi" />
     <Compile Include="FStar.CheckedFiles.fs" />
+    <Compile Include="FStar.Universal.fsi" />
     <Compile Include="FStar.Universal.fs" />
     <Compile Include="FStar.Interactive.CompletionTable.fsi" />
     <Compile Include="FStar.Interactive.CompletionTable.fs" />
@@ -94,11 +95,6 @@
     <ProjectReference Include="..\extraction\extraction.fsproj">
       <Name>extraction</Name>
       <Project>{55398b56-03cf-4e11-adb0-a4274b7dbb35}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\fsdoc\fsdoc.fsproj">
-      <Name>fsdoc</Name>
-      <Project>{a2300238-cc63-4651-922e-88e7c0201bc9}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\smtencoding\smtencoding.fsproj">

@@ -12,7 +12,7 @@
         "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
       ],
       0,
-      "995457a1d87ac48082301224d9a494fa"
+      "f1a66b84702d3b27909fb4a732fe1a37"
     ],
     [
       "Ex10a.__proj__Writable__item___0",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
       ],
       0,
-      "6fc427a367e6a8740e2722eeaa7a141e"
+      "1981d7b2673b6d3b834693dca19cbe79"
     ],
     [
       "Ex10a.canRead",
@@ -38,7 +38,7 @@
         "fuel_guarded_inversion_Ex10a.entry"
       ],
       0,
-      "cc3b94ab0118b8412b212acf336c1ac9"
+      "a6340edb3b47765e5f0a2e72c46b21e3"
     ],
     [
       "Ex10a.revoke",
@@ -51,7 +51,7 @@
         "refinement_interpretation_Ex10a_Tm_refine_f978ff754af8f266cb4edc62e2a055cb"
       ],
       0,
-      "c9e29013149f8c7fc680f8f8320cacc0"
+      "5059c21a7a6b1e443e538b764fca94a5"
     ],
     [
       "Ex10a.safe_delete",
@@ -72,7 +72,7 @@
         "string_inversion", "unit_inversion", "unit_typing"
       ],
       0,
-      "ec54c3a4b20f3f58800ec7e3406b87ee"
+      "184165e8820e82c16ae040bdc9023219"
     ],
     [
       "Ex10a.test_acls",
@@ -85,16 +85,17 @@
         "@query",
         "Ex10a_interpretation_Tm_arrow_874ea41fef5db3d0b79dc4f1f9eea4a2",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "assumption_Ex10a.entry__uu___haseq",
         "constructor_distinct_Ex10a.Readable",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Prims.Cons",
         "disc_equation_FStar.Pervasives.Native.Some",
         "equation_Ex10a.canRead", "equation_Ex10a.canRead_t",
-        "equation_Ex10a.db",
+        "equation_Ex10a.db", "equation_FStar.Heap.trivial_preorder",
+        "equation_FStar.ST.mref", "equation_FStar.ST.ref",
         "equation_with_fuel_FStar.List.Tot.Base.tryFind.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.result",
+        "function_token_typing_Ex10a.db",
         "interpretation_Tm_abs_93700a44318bb4193871b2dacb8d41d6",
         "kinding_Ex10a.entry@tok", "primitive_Prims.op_Equality",
         "projection_inverse_Ex10a.Readable__0",
@@ -103,58 +104,13 @@
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl",
-        "typing_Tm_abs_93700a44318bb4193871b2dacb8d41d6", "unit_typing"
+        "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
+        "typing_Ex10a.acls", "typing_FStar.Heap.trivial_preorder",
+        "typing_FStar.Monotonic.Heap.sel",
+        "typing_Tm_abs_93700a44318bb4193871b2dacb8d41d6"
       ],
       0,
-      "51e65d308c5c45ce8afd2e876516c4bf"
-    ],
-    [
-      "Ex10a.__proj__Readable__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Ex10a.Readable",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_43c663371132c0c847de0562111b3034"
-      ],
-      0,
-      "44059df4589d1e459b45a9e47e0f3170"
-    ],
-    [
-      "Ex10a.__proj__Writable__item___0",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_Ex10a.Writable",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_b7c189cb365c663bbaaab1bb8e2e94da"
-      ],
-      0,
-      "d399cebb0d71b369215e230e1ed5bbde"
-    ],
-    [
-      "Ex10a.canRead",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_string",
-        "disc_equation_Ex10a.Readable", "disc_equation_Ex10a.Writable",
-        "fuel_guarded_inversion_Ex10a.entry"
-      ],
-      0,
-      "a88c0b8deab6e1436476780c0e21154d"
-    ],
-    [
-      "Ex10a.revoke",
-      2,
-      2,
-      1,
-      [ "@query", "assumption_Ex10a.entry__uu___haseq" ],
-      0,
-      "00fd35f49fa916b4a441beed71ed5738"
+      "89111359253a50f5cbe0909803740d0e"
     ]
   ]
 ]

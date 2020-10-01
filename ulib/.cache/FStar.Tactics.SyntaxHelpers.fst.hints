@@ -1,0 +1,29 @@
+[
+  "\u0016N††\u0003™˜â%K7±Rö`\u0006",
+  [
+    [
+      "FStar.Tactics.SyntaxHelpers.mk_arr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "00e14b52a46a82fd02c2d9864d5eea0c"
+    ],
+    [
+      "FStar.Tactics.SyntaxHelpers.mk_tot_arr",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
+      ],
+      0,
+      "50beae6e1031e8fb0f6b95a53da1419a"
+    ]
+  ]
+]

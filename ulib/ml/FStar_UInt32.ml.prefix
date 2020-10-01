@@ -1,0 +1,8 @@
+(* This file is meant to be concatenated to FStar_Ints.ml.body *)
+module M = Stdint.Uint32
+type uint32 = M.t
+type t = M.t
+let n = Prims.of_int 32
+
+let uint_to_t x = M.of_string (Z.to_string x)
+let __uint_to_t = uint_to_t

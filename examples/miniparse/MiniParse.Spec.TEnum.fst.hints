@@ -1,5 +1,5 @@
 [
-  "^≈Å¥∂\u001a\u001eJ3I\u0019qµP\u000e\u000e",
+  "T+e©O¢\u0011â\u001aM\u0002\u0013{\u0000ÛV",
   [
     [
       "MiniParse.Spec.TEnum.mk_tenum_branches",
@@ -25,7 +25,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "93c30c669a8f4204fbc24b45ae4f226d"
+      "7078018967be8992a9241d1faa7c55ba"
     ],
     [
       "MiniParse.Spec.TEnum.get_inductive_constructors",
@@ -39,11 +39,11 @@
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "function_token_typing_FStar.Reflection.Types.sigelt",
         "lemma_FStar.Pervasives.invertOption",
-        "typing_FStar.Reflection.Basic.inspect_fv",
-        "typing_FStar.Reflection.Basic.lookup_typ"
+        "typing_FStar.Reflection.Builtins.inspect_fv",
+        "typing_FStar.Reflection.Builtins.lookup_typ"
       ],
       0,
-      "b2abb7c46a93d63b010bbf4feda809fc"
+      "f1dd8326d5de70e76b7f788305c9e5f8"
     ],
     [
       "MiniParse.Spec.TEnum.invert_branches_with_cascade",
@@ -64,7 +64,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "ade41325db9bdb5ddad42f3d795f6f47"
+      "c1860e87dff167a36ce79d6484c03888"
     ],
     [
       "MiniParse.Spec.TEnum.synth_inverse_forall_bounded_u16_intro",
@@ -82,90 +82,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "37ef7e0a312f34961f8248aad599f6db"
-    ],
-    [
-      "MiniParse.Spec.TEnum.mk_tenum_branches",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "constructor_distinct_FStar.Tactics.Result.Failed",
-        "constructor_distinct_FStar.Tactics.Result.Success",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_FStar.Reflection.Data.argv",
-        "equation_FStar.Reflection.Types.name", "equation_Prims.nat",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "fuel_guarded_inversion_Prims.list", "int_inversion",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "projection_inverse_FStar.Tactics.Result.Failed_a",
-        "projection_inverse_FStar.Tactics.Result.Failed_exn",
-        "projection_inverse_FStar.Tactics.Result.Failed_ps",
-        "projection_inverse_FStar.Tactics.Result.Success_a",
-        "projection_inverse_FStar.Tactics.Result.Success_ps",
-        "projection_inverse_FStar.Tactics.Result.Success_v",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
-      0,
-      "c3fa8c20e0453080f3c0dfb13b62b65f"
-    ],
-    [
-      "MiniParse.Spec.TEnum.get_inductive_constructors",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.Reflection.Types_pretyping_b57262eead998d474939c05a17e1ffab",
-        "bool_inversion", "data_elim_FStar.Tactics.Result.Success",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "function_token_typing_FStar.Reflection.Types.sigelt",
-        "lemma_FStar.Pervasives.invertOption",
-        "typing_FStar.Reflection.Basic.inspect_fv",
-        "typing_FStar.Reflection.Basic.lookup_typ"
-      ],
-      0,
-      "3483c1aaf407dd615013f0d07a83cff7"
-    ],
-    [
-      "MiniParse.Spec.TEnum.invert_branches_with_cascade",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_FStar.Reflection.Data.branch",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
-        "fuel_guarded_inversion_Prims.list",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
-      ],
-      0,
-      "c17c7f8978f0ae32877dd6272d6e85d7"
-    ],
-    [
-      "MiniParse.Spec.TEnum.synth_inverse_forall_bounded_u16_intro",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "eq2-interp",
-        "equation_MiniParse.Spec.Combinators.synth_inverse",
-        "equation_MiniParse.Spec.Int.bounded_u16",
-        "equation_MiniParse.Spec.TEnum.synth_inverse_forall_bounded_u16_",
-        "equation_MiniParse.Spec.TEnum.synth_inverse_forall_bounded_u16_pred",
-        "equation_Prims.nat", "equation_Prims.squash", "int_inversion",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
-      ],
-      0,
-      "a71de558294b35d98b1497fe3c875a9f"
+      "618017bfb5c4db0bfb1157b1bda4a621"
     ]
   ]
 ]

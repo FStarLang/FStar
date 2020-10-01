@@ -2,7 +2,9 @@ include Makefile.config
 
 FSTAR_HOME ?= ..
 
-include Makefile.boot.common  #provides variables INCLUDE_PATHS, FSTAR_BOOT_OPTIONS, and CACHE_DIR, shared with interactive mode targets
+# Provides variables INCLUDE_PATHS, FSTAR_BOOT_OPTIONS,
+# and CACHE_DIR, shared with interactive mode targets
+include Makefile.boot.common
 
 FSTAR_BOOT ?= $(FSTAR)
 
@@ -14,14 +16,14 @@ FSTAR_C=$(FSTAR_BOOT) $(FSTAR_BOOT_OPTIONS) --cache_checked_modules --odir ocaml
 # Each "project" for the compiler is in its own namespace.  We want to
 # extract them all to OCaml.  Would be more convenient if all of them
 # were within, say, FStar.Compiler.*
-EXTRACT_NAMESPACES=FStar.Extraction FStar.Fsdoc FStar.Parser		\
+EXTRACT_NAMESPACES=FStar.Extraction FStar.Parser		\
 		   FStar.Reflection FStar.SMTEncoding FStar.Syntax	\
 		   FStar.Tactics FStar.Tests FStar.ToSyntax		\
 		   FStar.TypeChecker FStar.Profiling
 
 # Except some files that want to extract are not within a particularly
 # specific namespace. So, we mention extracting those explicitly.
-EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Range		\
+EXTRACT_MODULES=FStar.Pervasives FStar.Common FStar.Range FStar.Thunk		\
 		FStar.Options FStar.Ident FStar.Errors FStar.Const	\
 		FStar.Order FStar.Dependencies		\
 		FStar.Interactive.CompletionTable			\
@@ -46,13 +48,15 @@ EXTRACT = $(addprefix --extract_module , $(EXTRACT_MODULES))		\
 # ensures that if this rule is successful then %.checked.lax is more
 # recent than its dependences.
 %.checked.lax:
-	$(FSTAR_C) $< --already_cached "* -$(basename $(notdir $<))"
-	touch $@
+	@echo "[LAXCHECK  $(basename $(basename $(notdir $@)))]"
+	$(Q)$(FSTAR_C) $(SIL) $< --already_cached "* -$(basename $(notdir $<))"
+	$(Q)@touch -c $@
 
 # And then, in a separate invocation, from each .checked.lax we
 # extract an .ml file
 ocaml-output/%.ml:
-	$(BENCHMARK_PRE) $(FSTAR_C) $(notdir $(subst .checked.lax,,$<)) \
+	@echo "[EXTRACT   $(notdir $@)]"
+	$(Q)$(BENCHMARK_PRE) $(FSTAR_C) $(SIL) $(notdir $(subst .checked.lax,,$<)) \
                    --codegen OCaml \
                    --extract_module $(basename $(notdir $(subst .checked.lax,,$<)))
 
@@ -69,12 +73,13 @@ ocaml-output/%.ml:
 # the dependency analysis failed.
 
 .depend:
-	$(FSTAR_C) --dep full                 \
-		   fstar/FStar.Main.fs	      \
-		   boot/FStar.Tests.Test.fst  \
-		   $(EXTRACT)		      > ._depend
-	mv ._depend .depend
-	mkdir -p $(CACHE_DIR)
+	@echo "[DEPEND]"
+	$(Q)$(FSTAR_C) $(SIL) --dep full	\
+		fstar/FStar.Main.fs		\
+		boot/FStar.Tests.Test.fst	\
+		$(EXTRACT)			> ._depend
+	$(Q)mv ._depend .depend
+	$(Q)mkdir -p $(CACHE_DIR)
 
 depend: .depend
 

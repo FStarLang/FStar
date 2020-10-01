@@ -1,4 +1,5 @@
 open FStar_Parser_Parse
+open FStar_Parser_Util
 
 module Option  = BatOption
 module String  = BatString
@@ -40,7 +41,6 @@ let constructors = Hashtbl.create 0
 let operators = Hashtbl.create 0
 
 let () =
-  Hashtbl.add keywords "abstract"      ABSTRACT    ;
   Hashtbl.add keywords "attributes"    ATTRIBUTES  ;
   Hashtbl.add keywords "noeq"          NOEQUALITY  ;
   Hashtbl.add keywords "unopteq"       UNOPTEQUALITY  ;
@@ -77,7 +77,9 @@ let () =
   Hashtbl.add keywords "module"        MODULE      ;
   Hashtbl.add keywords "new"           NEW         ;
   Hashtbl.add keywords "new_effect"    NEW_EFFECT  ;
-  Hashtbl.add keywords "layered_effect"               LAYERED_EFFECT  ;
+  Hashtbl.add keywords "layered_effect"               LAYERED_EFFECT             ;
+  Hashtbl.add keywords "polymonadic_bind"             POLYMONADIC_BIND           ;
+  Hashtbl.add keywords "polymonadic_subcomp"          POLYMONADIC_SUBCOMP        ;
   Hashtbl.add keywords "noextract"     NOEXTRACT   ;
   Hashtbl.add keywords "of"            OF          ;
   Hashtbl.add keywords "open"          OPEN        ;
@@ -165,12 +167,15 @@ let () =
    "=", EQUALS;
    "%[", PERCENT_LBRACK;
    "!{", BANG_LBRACE;
+   "[@@", LBRACK_AT_AT;
    "[@", LBRACK_AT;
    "[", LBRACK;
    "[|", LBRACK_BAR;
+   "{|", LBRACE_BAR;
    "|>", PIPE_RIGHT;
    "]", RBRACK;
    "|]", BAR_RBRACK;
+   "|}", BAR_RBRACE;
    "{", LBRACE;
    "|", BAR;
    "}", RBRACE;
@@ -261,11 +266,6 @@ let rec mknewline n lexbuf =
   else (L.new_line lexbuf; mknewline (n-1) lexbuf)
 
 let clean_number x = String.strip ~chars:"uzyslLUnIN" x
-let comments : (string * FStar_Range.range) list ref = ref []
-
-let flush_comments () =
-  let lexed_comments = !comments in
-  comments := []; lexed_comments
 
 (* Try to trim each line of [comment] by the ammount of space
     on the first line of the comment if possible *)
@@ -293,12 +293,12 @@ let terminate_comment buffer startpos lexbuf =
   let comment = Buffer.contents buffer in
   let comment = maybe_trim_lines (startpos.Lexing.pos_cnum - startpos.Lexing.pos_bol) comment in
   Buffer.clear buffer;
-  comments := (comment, FStar_Parser_Util.mksyn_range startpos endpos) :: ! comments
+  add_comment (comment, FStar_Parser_Util.mksyn_range startpos endpos)
 
 let push_one_line_comment pre lexbuf =
   let startpos, endpos = L.range lexbuf in
   assert (startpos.Lexing.pos_lnum = endpos.Lexing.pos_lnum);
-  comments := (pre ^ L.lexeme lexbuf, FStar_Parser_Util.mksyn_range startpos endpos) :: !comments
+  add_comment (pre ^ L.lexeme lexbuf, FStar_Parser_Util.mksyn_range startpos endpos)
 
 (** Unicode class definitions
   Auto-generated from http:/ /www.unicode.org/Public/8.0.0/ucd/UnicodeData.txt **)
@@ -382,7 +382,7 @@ let regexp op_token =
   "u#" | "&" | "()" | "(" | ")" | "," | "~>" | "->" | "<--" |
   "<-" | "<==>" | "==>" | "." | "?." | "?" | ".[|" | ".[" | ".(|" | ".(" |
   "$" | "{:pattern" | ":" | "::" | ":=" | ";;" | ";" | "=" | "%[" |
-  "!{" | "[@" | "[|" | "[" | "|>" | "]" | "|]" | "{" | "|" | "}"
+  "!{" | "[@@" | "[@" | "[|" | "{|" | "[" | "|>" | "]" | "|]" | "|}" | "{" | "|" | "}"
 
 (* -------------------------------------------------------------------- *)
 let regexp xinteger =
@@ -491,9 +491,6 @@ let rec token = lexer
  | (integer | xinteger | ieee64 | xieee64) ident_char+ ->
    fail lexbuf (E.Fatal_SyntaxError, "This is not a valid numeric literal: " ^ L.lexeme lexbuf)
 
- | "(*" '*'* "*)" -> token lexbuf (* avoid confusion with fsdoc *)
- | "(**" -> fsdoc (1,"",[]) lexbuf
-
  | "(*" ->
    let inner, buffer, startpos = start_comment lexbuf in
    comment inner buffer startpos lexbuf
@@ -504,7 +501,7 @@ let rec token = lexer
       * creates a lexing conflict with op_infix3 which is caught below. *)
      one_line_comment (L.lexeme lexbuf) lexbuf
 
- | '"' -> string (Buffer.create 0) lexbuf
+ | '"' -> string (Buffer.create 0) lexbuf.Ulexing.start_p lexbuf
 
  | '`' '`' (([^'`' 10 13 0x2028 0x2029] | '`' [^'`' 10 13 0x2028 0x2029])+) '`' '`' ->
    IDENT (trim_both lexbuf 2 2)
@@ -521,13 +518,18 @@ let rec token = lexer
  | op_infix0d symbolchar* -> OPINFIX0d (L.lexeme lexbuf)
  | op_infix1  symbolchar* -> OPINFIX1 (L.lexeme lexbuf)
  | op_infix2  symbolchar* -> OPINFIX2 (L.lexeme lexbuf)
+ | "**"       symbolchar* -> OPINFIX4 (L.lexeme lexbuf)
+
+ (* Unicode Operators *)
+ | uoperator -> let id = L.lexeme lexbuf in
+   Hashtbl.find_option operators id |> Option.default (OPINFIX4 id)
+
  | op_infix3  symbolchar* -> 
      let l = L.lexeme lexbuf in
      if String.length l >= 2 && String.sub l 0 2 = "//" then
        one_line_comment l lexbuf
      else
         OPINFIX3 l
- | "**"       symbolchar* -> OPINFIX4 (L.lexeme lexbuf)
  | ".[]<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
  | ".()<-"                 -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
  | ".(||)<-"                -> OP_MIXFIX_ASSIGNMENT (L.lexeme lexbuf)
@@ -536,10 +538,6 @@ let rec token = lexer
  | ".()"                  -> OP_MIXFIX_ACCESS (L.lexeme lexbuf)
  | ".(||)"                 -> OP_MIXFIX_ACCESS (L.lexeme lexbuf)
  | ".[||]"                  -> OP_MIXFIX_ACCESS (L.lexeme lexbuf)
-
- (* Unicode Operators *)
- | uoperator -> let id = L.lexeme lexbuf in
-   Hashtbl.find_option operators id |> Option.default (OPINFIX4 id)
 
  | eof -> EOF
  | _ -> fail lexbuf (E.Fatal_SyntaxError, "unexpected char")
@@ -550,19 +548,25 @@ and one_line_comment pre = lexer
 and symbolchar_parser = lexer
  | symbolchar* -> OPINFIX0c (">" ^  L.lexeme lexbuf)
 
-and string buffer = lexer
- | '\\' newline anywhite* -> L.new_line lexbuf; string buffer lexbuf
+and string buffer start_pos = lexer
+ | '\\' newline anywhite* -> L.new_line lexbuf; string buffer start_pos lexbuf
  | newline ->
    Buffer.add_string buffer (L.lexeme lexbuf);
-   L.new_line lexbuf; string buffer lexbuf
+   L.new_line lexbuf; string buffer start_pos lexbuf
  | escape_char -> 
    Buffer.add_string buffer (BatUTF8.init 1 (fun _ -> unescape (L.ulexeme lexbuf) |> BatUChar.chr));
-   string buffer lexbuf
- | '"' -> STRING (Buffer.contents buffer)
- | '"''B' -> BYTEARRAY (ba_of_string (Buffer.contents buffer))
+   string buffer start_pos lexbuf
+ | '"' ->
+    (* position info must be set since the start of the string *)
+    lexbuf.Ulexing.start_p <- start_pos;
+    STRING (Buffer.contents buffer)
+ | '"''B' ->
+    (* as above *)
+    lexbuf.Ulexing.start_p <- start_pos;
+    BYTEARRAY (ba_of_string (Buffer.contents buffer))
  | _ ->
    Buffer.add_string buffer (L.lexeme lexbuf);
-   string buffer lexbuf
+   string buffer start_pos lexbuf
  | eof -> fail lexbuf (E.Fatal_SyntaxError, "unterminated string")
 
 and comment inner buffer startpos = lexer
@@ -582,31 +586,6 @@ and comment inner buffer startpos = lexer
    comment inner buffer startpos lexbuf
  | eof ->
    terminate_comment buffer startpos lexbuf; EOF
-
-(* Initially called with (1, "", []), i.e. comment nesting depth, accumulated
-   unstructured text, and list of key-value pairs parsed so far.
-   JP: this is a parser encoded within a lexer using regexps. This is
-   suboptimal. *)
-and fsdoc (n, doc, kw) = lexer
- | "(*" -> fsdoc (n + 1, doc ^ "(*", kw) lexbuf
- | "*)" newline newline ->
-   mknewline 2 lexbuf;
-   if n > 1 then fsdoc (n-1, doc ^ "*)", kw) lexbuf
-   else FSDOC_STANDALONE(doc, kw)
- | "*)" newline ->
-   L.new_line lexbuf;
-   if n > 1 then fsdoc (n-1, doc ^ "*)", kw) lexbuf
-   else FSDOC(doc, kw)
- | anywhite* "@" ['a'-'z' 'A'-'Z']+ [':']? anywhite* ->
-     fsdoc_kw_arg (n, doc, kw, BatString.strip ~chars:" \r\n\t@:" (L.lexeme lexbuf), "") lexbuf
- | newline -> L.new_line lexbuf; fsdoc (n, doc^"\n", kw) lexbuf
- | _ -> fsdoc(n, doc^(L.lexeme lexbuf), kw) lexbuf
-
-and fsdoc_kw_arg (n, doc, kw, kwn, kwa) = lexer
- | newline ->
-   L.new_line lexbuf;
-   fsdoc (n, doc, (kwn, kwa)::kw) lexbuf
- | _ -> fsdoc_kw_arg (n, doc, kw, kwn, kwa^(L.lexeme lexbuf)) lexbuf
 
 and ignore_endline = lexer
  | ' '* newline -> token lexbuf

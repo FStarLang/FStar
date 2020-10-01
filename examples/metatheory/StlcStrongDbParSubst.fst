@@ -166,9 +166,9 @@ let rec subst_extensional s1 s2 e =
   | EVar _ -> ()
   | ELam t e1 ->
     assert (subst s1 (ELam t e1) == ELam t (subst (sub_elam s1) e1))
-      by norm [delta_only [`%subst]];
+      by norm [zeta; iota; delta_only [`%subst]];
     assert (subst s2 (ELam t e1) == ELam t (subst (sub_elam s2) e1))
-      by norm [delta_only [`%subst]];
+      by norm [zeta; iota; delta_only [`%subst]];
     subst_extensional (sub_elam s1) (sub_elam s2) e1
   | EApp e1 e2 -> subst_extensional s1 s2 e1; subst_extensional s1 s2 e2
   | _ -> ()

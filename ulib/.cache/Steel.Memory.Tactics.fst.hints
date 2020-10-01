@@ -1,0 +1,96 @@
+[
+  "o\r\n•¿jÄŠ¼¦ÏO½õ\u000bð",
+  [
+    [
+      "Steel.Memory.Tactics.equiv_refl",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Memory.equiv" ],
+      0,
+      "3b6fb134f1f0e38a2fcbecaca96eba3e"
+    ],
+    [
+      "Steel.Memory.Tactics.equiv_sym",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Memory.equiv" ],
+      0,
+      "1297e352b0e8272beef13baf380b115c"
+    ],
+    [
+      "Steel.Memory.Tactics.equiv_trans",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Memory.equiv" ],
+      0,
+      "2a27c5e3597693b812287e300435816b"
+    ],
+    [
+      "Steel.Memory.Tactics.cm_identity",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Steel.Memory.equiv" ],
+      0,
+      "dd000853e83b2c7b5905ebf6a78ad825"
+    ],
+    [
+      "Steel.Memory.Tactics.rm",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Steel.Memory.Tactics.req",
+        "equation_Steel.Memory.equiv",
+        "function_token_typing_Steel.Memory.equiv",
+        "proj_equation_FStar.Algebra.CommMonoid.Equiv.EQ_eq",
+        "projection_inverse_FStar.Algebra.CommMonoid.Equiv.EQ_eq",
+        "token_correspondence_FStar.Algebra.CommMonoid.Equiv.__proj__EQ__item__eq",
+        "token_correspondence_Steel.Memory.equiv"
+      ],
+      0,
+      "6737d0f5979eacb921075261fb4a7711"
+    ],
+    [
+      "Steel.Memory.Tactics.shuffled",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_9b4ca71818bbe4836380a343255146fc"
+      ],
+      0,
+      "acc5f5626f0d6e98b57f0b5fe8282154"
+    ],
+    [
+      "Steel.Memory.Tactics.reshuffle0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "equation_Steel.Effect.Atomic.obs_at_most_one",
+        "equation_Steel.Memory.equiv",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "099c53e1396ce9d7ad81676517e297d5"
+    ],
+    [
+      "Steel.Memory.Tactics.reshuffle",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "babfe7c3aea6d6977244a38d4758c96c"
+    ]
+  ]
+]

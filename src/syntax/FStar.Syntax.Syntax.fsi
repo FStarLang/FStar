@@ -75,7 +75,7 @@ type universe =
   | U_unif  of universe_uvar
   | U_unknown
 and univ_name = ident
-and universe_uvar = Unionfind.p_uvar<option<universe>> * version
+and universe_uvar = Unionfind.p_uvar<option<universe>> * version * Range.range
 
 type univ_names    = list<univ_name>
 type universes     = list<universe>
@@ -115,8 +115,7 @@ type term' =
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of ctx_uvar_and_subst                          (* A unification variable ?u (aka meta-variable)
                                                                    and a delayed substitution of only NM or NT elements *)
-  | Tm_delayed    of (term * subst_ts)
-                   * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
+  | Tm_delayed    of term * subst_ts                             (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
   | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
@@ -129,10 +128,13 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
     ctx_uvar_reason:string;
     ctx_uvar_should_check:should_check_uvar;
     ctx_uvar_range:Range.range;
-    ctx_uvar_meta: option<(dyn * term)>; (* the dyn is an FStar.TypeChecker.Env.env *)
+    ctx_uvar_meta: option<ctx_uvar_meta_t>;
 }
+and ctx_uvar_meta_t =
+  | Ctx_uvar_meta_tac of dyn * term (* the dyn is an FStar.TypeChecker.Env.env *)
+  | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@...] notation *)
 and ctx_uvar_and_subst = ctx_uvar * subst_ts
-and uvar = Unionfind.p_uvar<option<term>> * version
+and uvar = Unionfind.p_uvar<option<term>> * version * Range.range
 and uvars = set<ctx_uvar>
 and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and ascription = either<term, comp> * option<term>               (* e <: t [by tac] or e <: C [by tac] *)
@@ -268,17 +270,24 @@ and lazy_kind =
   | Lazy_goal
   | Lazy_sigelt
   | Lazy_uvar
-  | Lazy_embedding of emb_typ * FStar.Common.thunk<term>
+  | Lazy_embedding of emb_typ * Thunk.t<term>
 and binding =
   | Binding_var      of bv
-  | Binding_lid      of lident * tscheme
+  | Binding_lid      of lident * (univ_names * typ)
+  (* ^ Not a tscheme: the universe names must be taken
+   * as fixed (and opened in the type). This is important since
+   * we do not support universe-polymorphic recursion.
+   * See #2106. *)
   | Binding_univ     of univ_name
 and tscheme = list<univ_name> * typ
 and gamma = list<binding>
 and arg_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
-  | Meta of term
+  | Meta of arg_qualifier_meta_t
   | Equality
+and arg_qualifier_meta_t =
+  | Arg_qualifier_meta_tac of term
+  | Arg_qualifier_meta_attr of term
 and aqual = option<arg_qualifier>
 
 val on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo
@@ -303,7 +312,6 @@ type qualifier =
   | Unfold_for_unification_and_vcgen       //a definition that *should* always be unfolded by the normalizer
   | Visible_default                        //a definition that may be unfolded by the normalizer, but only if necessary (default)
   | Irreducible                            //a definition that can never be unfolded by the normalizer
-  | Abstract                               //a symbol whose definition is only visible within the defining module
   | Inline_for_extraction                  //a symbol whose definition must be unfolded when compiling the program
   | NoExtract                              // a definition whose contents won't be extracted (currently, by KreMLin only)
   | Noeq                                   //for this type, don't generate HasEq
@@ -393,7 +401,6 @@ type wp_eff_combinators = {
  * Similarly the base effect name is also "" after desugaring, and is set by the typechecker
  *)
 type layered_eff_combinators = {
-  l_base_effect  : lident;
   l_repr         : (tscheme * tscheme);
   l_return       : (tscheme * tscheme);
   l_bind         : (tscheme * tscheme);
@@ -404,9 +411,9 @@ type layered_eff_combinators = {
 
 
 type eff_combinators =
-  | Primitive_eff: wp_eff_combinators -> eff_combinators
-  | DM4F_eff: wp_eff_combinators -> eff_combinators
-  | Layered_eff: layered_eff_combinators -> eff_combinators
+  | Primitive_eff of wp_eff_combinators
+  | DM4F_eff of wp_eff_combinators
+  | Layered_eff of layered_eff_combinators
 
 
 type eff_decl = {
@@ -430,6 +437,8 @@ type eff_decl = {
 type sig_metadata = {
     sigmeta_active:bool;
     sigmeta_fact_db_ids:list<string>;
+    sigmeta_admit:bool; //An internal flag to record that a sigelt's SMT proof should be admitted
+                        //Used in DM4Free
 }
 
 
@@ -450,43 +459,48 @@ type sig_metadata = {
  *     Sig_new_effect, with an eff_decl that has DM4F_eff combinators, with dummy wps plays its part
  *)
 type sigelt' =
-  | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
-                       * univ_names                //u1..un
-                       * binders                   //(x1:t1) ... (xn:tn)
-                       * typ                       //t
-                       * list<lident>              //mutually defined types
-                       * list<lident>              //data constructors for this type
+  | Sig_inductive_typ       of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t
+                            * univ_names                //u1..un
+                            * binders                   //(x1:t1) ... (xn:tn)
+                            * typ                       //t
+                            * list<lident>              //mutually defined types
+                            * list<lident>              //data constructors for this type
 (* a datatype definition is a Sig_bundle of all mutually defined `Sig_inductive_typ`s and `Sig_datacon`s.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
    where each higher level list represents one of the inductive types and its constructors.
    However, the current order is convenient as it matches the type-checking order for the mutuals;
    i.e., all the type constructors first; then all the data which may refer to the type constructors *)
-  | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors
-                       * list<lident>               //all the inductive types and data constructor names in this bundle
-  | Sig_datacon        of lident                    //name of the datacon
-                       * univ_names                 //universe variables of the inductive type it belongs to
-                       * typ                        //the constructor's type as an arrow
-                       * lident                     //the inductive type of the value this constructs
-                       * int                        //and the number of parameters of the inductive
-                       * list<lident>               //mutually defined types
-  | Sig_declare_typ    of lident
-                       * univ_names
-                       * typ
-  | Sig_let            of letbindings
-                       * list<lident>               //mutually defined
-  | Sig_main           of term
-  | Sig_assume         of lident
-                       * univ_names
-                       * formula
-  | Sig_new_effect     of eff_decl
-  | Sig_sub_effect     of sub_eff
-  | Sig_effect_abbrev  of lident
-                       * univ_names
-                       * binders
-                       * comp
-                       * list<cflag>
-  | Sig_pragma         of pragma
-  | Sig_splice         of list<lident> * term
+  | Sig_bundle              of list<sigelt>              //the set of mutually defined type and data constructors
+                          * list<lident>               //all the inductive types and data constructor names in this bundle
+  | Sig_datacon           of lident                    //name of the datacon
+                          * univ_names                 //universe variables of the inductive type it belongs to
+                          * typ                        //the constructor's type as an arrow (including parameters)
+                          * lident                     //the inductive type of the value this constructs
+                          * int                        //and the number of parameters of the inductive
+                          * list<lident>               //mutually defined types
+  | Sig_declare_typ       of lident
+                          * univ_names
+                          * typ
+  | Sig_let               of letbindings
+                          * list<lident>               //mutually defined
+  | Sig_assume            of lident
+                          * univ_names
+                          * formula
+  | Sig_new_effect        of eff_decl
+  | Sig_sub_effect        of sub_eff
+  | Sig_effect_abbrev     of lident
+                          * univ_names
+                          * binders
+                          * comp
+                          * list<cflag>
+  | Sig_pragma            of pragma
+  | Sig_splice            of list<lident> * term
+
+  | Sig_polymonadic_bind  of lident * lident * lident * tscheme * tscheme  //(m, n) |> p, the polymonadic term, and its type
+  | Sig_polymonadic_subcomp of lident * lident * tscheme * tscheme  //m <: n, the polymonadic subcomp term, and its type
+  | Sig_fail              of list<int>         (* Expected errors (empty for 'any') *)
+                          * bool               (* true if should fail in --lax *)
+                          * list<sigelt>       (* The sigelts to be checked *)
 
 and sigelt = {
     sigel:    sigelt';
@@ -502,15 +516,12 @@ type sigelts = list<sigelt>
 type modul = {
   name: lident;
   declarations: sigelts;
-  exports: sigelts;
   is_interface:bool;
 }
 val mod_name: modul -> lident
 
 type path = list<string>
 type subst_t = list<subst_elt>
-type mk_t_a<'a> = option<unit> -> range -> syntax<'a>
-type mk_t = mk_t_a<term'>
 
 val contains_reflectable:  list<qualifier> -> bool
 
@@ -518,15 +529,22 @@ val withsort: 'a -> withinfo_t<'a>
 val withinfo: 'a -> Range.range -> withinfo_t<'a>
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
-val mk: 'a -> Tot<mk_t_a<'a>>
+val mk: 'a -> range -> syntax<'a>
 
 val mk_lb :         (lbname * list<univ_name> * lident * typ * term * list<attribute> * range) -> letbinding
 val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
-val mk_Tm_app:      term -> args -> Tot<mk_t>
+val mk_Tm_app:      term -> args -> range -> term
+
+(* This raises an exception if the term is not a Tm_fvar,
+ * use with care. It has to be an Tm_fvar *immediately*,
+ * there is no solving of Tm_delayed nor Tm_uvar. If it's
+ * possible that it is not a Tm_fvar, which can be the case
+ * for non-typechecked terms, just use `mk`. *)
 val mk_Tm_uinst:    term -> universes -> term
-val extend_app:     term -> arg -> Tot<mk_t>
-val extend_app_n:   term -> args -> Tot<mk_t>
+
+val extend_app:     term -> arg -> range -> term
+val extend_app_n:   term -> args -> range -> term
 val mk_Tm_delayed:  (term * subst_ts) -> Range.range -> term
 val mk_Total:       typ -> comp
 val mk_GTotal:      typ -> comp
@@ -538,8 +556,8 @@ val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term
 val binders_to_names: binders -> list<term>
 
-val bv_eq:           bv -> bv -> Tot<bool>
-val order_bv:        bv -> bv -> Tot<int>
+val bv_eq:           bv -> bv -> bool
+val order_bv:        bv -> bv -> int
 val range_of_lbname: lbname -> range
 val range_of_bv:     bv -> range
 val set_range_of_bv: bv -> range -> bv
@@ -571,6 +589,7 @@ val is_null_binder: binder -> bool
 val argpos:         arg -> Range.range
 val pat_bvs:        pat -> list<bv>
 val is_implicit:    aqual -> bool
+val is_implicit_or_meta: aqual -> bool
 val as_implicit:    bool -> aqual
 val is_top_level:   list<letbinding> -> bool
 
@@ -627,4 +646,6 @@ val t_list_of       : term -> term
 val t_option_of     : term -> term
 val t_tuple2_of     : term -> term -> term
 val t_either_of     : term -> term -> term
-val unit_const      : term
+
+val unit_const_with_range : Range.range -> term
+val unit_const            : term

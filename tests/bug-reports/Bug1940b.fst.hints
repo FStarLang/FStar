@@ -1,0 +1,23 @@
+[
+  "TV·\u001bñª|Ó_'1Î…Â?\u001d",
+  [
+    [
+      "Bug1940b.u",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Bug1940b.f", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "dd6d663e79b369b47ddaf45b4415696e"
+    ],
+    [
+      "Bug1940b.v",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Bug1940b.g", "projection_inverse_BoxInt_proj_0" ],
+      0,
+      "b8664d7ad6d2ba9ece92e6f8222d7532"
+    ]
+  ]
+]

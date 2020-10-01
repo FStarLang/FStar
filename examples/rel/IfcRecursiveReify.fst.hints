@@ -15,7 +15,7 @@
         "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
       ],
       0,
-      "94ea5137465a0251552b5dc4ce6ce838"
+      "714c252b71ffb61a287e46f208911839"
     ],
     [
       "IfcRecursiveReify.ni_p1",
@@ -70,7 +70,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "8e5ce6906c520cd84940854c2e51149c"
+      "ceea4e3415950dc4d3bb140b493d75c6"
     ],
     [
       "IfcRecursiveReify.p2",
@@ -86,7 +86,7 @@
         "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
       ],
       0,
-      "896baec78c6664a87e95b37074f38401"
+      "1c51e988a7f34659abdae98dad482575"
     ],
     [
       "IfcRecursiveReify.ni_p2",
@@ -142,7 +142,7 @@
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "1cde642fa24e065f5f4fd3af523b3a8f"
+      "da9c27f23cbfacb7c206dd46c5ab0ce7"
     ],
     [
       "IfcRecursiveReify.ni_p3",
@@ -164,39 +164,7 @@
         "unit_typing"
       ],
       0,
-      "57f34931c032122e96c7d514c9d993b0"
-    ],
-    [
-      "IfcRecursiveReify.p1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_ae567c2fb75be05905677af440075565_2",
-        "equality_tok_Prims.LexTop@tok", "int_typing",
-        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
-      ],
-      0,
-      "570451e267221afba4e2c4f9c22ca4d4"
-    ],
-    [
-      "IfcRecursiveReify.p2",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "binder_x_ae567c2fb75be05905677af440075565_2",
-        "equality_tok_Prims.LexTop@tok", "int_typing",
-        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Subtraction",
-        "projection_inverse_BoxBool_proj_0",
-        "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
-      ],
-      0,
-      "05a10b6c1b550ddd0725753da00c8f66"
+      "d634670fa42bc7c0f9b174c0b86520d2"
     ]
   ]
 ]

@@ -14,7 +14,7 @@ inline_let:
 all: eta_expand inline_let all_cmi
 
 all_cmi:
-	$(MAKE) -C cmi all
+	+$(MAKE) -C cmi all
 
 out:
 	mkdir -p out

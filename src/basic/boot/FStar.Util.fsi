@@ -21,8 +21,6 @@ open FStar.All
 open FStar.BaseTypes
 
 exception Impos
-exception NYI of string
-exception HardError of string
 
 val max_int: int
 val return_all: 'a -> ML<'a>
@@ -149,6 +147,8 @@ val print_warning: string -> unit
 val print1_warning: string -> string -> unit
 val print2_warning: string -> string -> string -> unit
 val print3_warning: string -> string -> string -> string -> unit
+
+val flush_stdout: unit -> unit
 
 val stdout_isatty: unit -> option<bool>
 
@@ -322,6 +322,7 @@ val take: ('a -> bool) -> list<'a> -> list<'a> * list<'a>
 (* on top of the leftover input list *)
 val fold_flatten:('a -> 'b -> 'a * list<'b>) -> 'a -> list<'b> -> 'a
 
+val is_none: option<'a> -> Tot<bool>
 val is_some: option<'a> -> Tot<bool>
 val must: option<'a> -> 'a
 val dflt: 'a -> option<'a> -> Tot<'a>
@@ -422,6 +423,7 @@ val load_2values_from_file: string -> option<('a * 'b)>
 val print_exn: exn -> string
 val digest_of_file: string -> string
 val digest_of_string: string -> string
+val touch_file: string -> unit (* Precondition: file exists *)
 
 val ensure_decimal: string -> string
 val measure_execution_time: string -> (unit -> 'a) -> 'a
@@ -445,8 +447,13 @@ type hints_db = {
     hints: hints
 }
 
+type hints_read_result =
+  | HintsOK of hints_db
+  | MalformedJson
+  | UnableToOpen
+
 val write_hints: string -> hints_db -> unit
-val read_hints: string -> option<hints_db>
+val read_hints: string -> hints_read_result
 
 val json_of_string : string -> option<json>
 val string_of_json : json -> string

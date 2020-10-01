@@ -378,7 +378,7 @@ let rec lemma_unsnoc_index (#t:Type) (l:list t) (i:nat) :
 
     NOTE: Uses [strong_excluded_middle] axiom. *)
 let rec split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
-  GTot (r:(list t * list t)) =
+  GTot (list t * list t) =
   match l with
   | [_] -> [], l
   | a :: as ->
@@ -566,6 +566,7 @@ let rec mem_memP
   (x: a)
   (l: list a)
 : Lemma (ensures (mem x l <==> memP x l))
+        [SMTPat (mem x l); SMTPat (memP x l)]
 = match l with
   | [] -> ()
   | a :: q -> mem_memP x q
@@ -1000,14 +1001,14 @@ let rec precedes_append_cons_r
 
 let precedes_append_cons_prod_r
   (#a #b: Type)
-  (l l1: list (a * b))
+  (l1: list (a * b))
   (x: a)
   (y: b)
   (l2: list (a * b))
 : Lemma
-  (requires (l == append l1 ((x, y) :: l2)))
-  (ensures (x << l /\ y << l))
-  [SMTPatOr [ [ SMTPat (x << l); SMTPat (l == append l1 ((x, y) :: l2))] ; [SMTPat (y << l); SMTPat (l == append l1 ((x, y) :: l2))] ] ]
+  (ensures
+    x << (append l1 ((x, y) :: l2)) /\
+    y << (append l1 ((x, y) :: l2)))
 = precedes_append_cons_r l1 (x, y) l2
 
 let rec memP_precedes

@@ -57,8 +57,11 @@ val base_and_refinement       : env -> term -> term * option<(bv * term)>
 val unrefine   : env -> typ -> typ
 val try_teq    : bool -> env -> typ -> typ -> option<guard_t>
 val teq        : env -> typ -> typ -> guard_t
+val get_teq_predicate : env -> typ -> typ -> option<guard_t>
+val teq_force  : env -> typ -> typ -> unit
 val teq_nosmt        : env -> typ -> typ -> option<guard_t>
 val teq_nosmt_force  : env -> typ -> typ -> bool
+val layered_effect_teq : env -> typ -> typ -> reason:option<string> -> guard_t
 val get_subtyping_predicate: env -> typ -> typ -> option<guard_t>
 val get_subtyping_prop: env -> typ -> typ -> option<guard_t>
 val subtype_nosmt       : env -> typ -> typ -> option<guard_t>

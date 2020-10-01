@@ -39,7 +39,7 @@ let lemma_mk_mem'_projectors _ _ _ = ()
 
 let lemma_mem_projectors_are_in_wf_relation _ = ()
 
-let lemma_is_wf_ctr_and_tip_intro _ _ _ = ()
+let lemma_is_wf_ctr_and_tip_intro _ _ _ = root_is_not_freeable ()
 
 let lemma_is_wf_ctr_and_tip_elim _ = ()
 

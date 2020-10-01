@@ -30,6 +30,7 @@ type step =
   | Beta
   | Iota            //pattern matching
   | Zeta            //fixed points
+  | ZetaFull        //fixed points, even under blocked matches
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
   | Weak            //Do not descend into binders
   | HNF             //Only produce a head normal form
@@ -92,6 +93,12 @@ type goal = term
 
 type lift_comp_t = env -> comp -> comp * guard_t
 
+(*
+ * AR: Env maintains polymonadic binds as functions of type polymonadic_bind_t
+ *     read as: env -> c1 -> x -> c2 -> flags -> r -> (c * g)
+ *)
+and polymonadic_bind_t = env -> comp_typ -> option<bv> -> comp_typ -> list<cflag> -> Range.range -> comp * guard_t
+
 and mlift = {
   mlift_wp:lift_comp_t;
   mlift_term:option<(universe -> typ -> term -> term)>
@@ -108,6 +115,8 @@ and effects = {
   decls :list<(eff_decl * list<qualifier>)>;
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
+  polymonadic_binds :list<(lident * lident * lident * polymonadic_bind_t)>;  (* (m, n) |> p *)
+  polymonadic_subcomps :list<(lident * lident * tscheme)>;  (* m <: n *)
 }
 
 and env = {
@@ -124,10 +133,14 @@ and env = {
   instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
   effects        :effects;                      (* monad lattice *)
   generalize     :bool;                         (* should we generalize let bindings? *)
-  letrecs        :list<(lbname * typ * univ_names)>;           (* mutually recursive names and their types (for termination checking), adding universes, see the note in TcTerm.fs:build_let_rec_env about usage of this field *)
+  letrecs        :list<(lbname * int * typ * univ_names)>;  (* mutually recursive names, with recursion arity and their types (for termination checking), adding universes, see the note in TcTerm.fs:build_let_rec_env about usage of this field *)
   top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
   check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
   use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
+  use_eq_strict  :bool;                         (* this flag is a stricter version of use_eq *)
+                                                (* use_eq is not sticky, it is reset on set_expected_typ and clear_expected_typ *)
+                                                (* at least, whereas use_eq_strict does not change as we traverse the term *)
+                                                (* during typechecking, it also implies no smt *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   lax            :bool;                         (* don't even generate VCs *)
@@ -146,16 +159,18 @@ and env = {
   fv_delta_depths:BU.smap<delta_depth>;           (* cache for fv delta depths, its preferable to use Env.delta_depth_of_fv, soon fv.delta_depth should be removed *)
   proof_ns       :proof_namespace;                (* the current names that will be encoded to SMT (a.k.a. hint db) *)
   synth_hook          :env -> typ -> term -> term;     (* hook for synthesizing terms via tactics, third arg is tactic term *)
-  splice         :env -> term -> list<sigelt>;    (* hook for synthesizing terms via tactics, third arg is tactic term *)
+  try_solve_implicits_hook :env -> term -> implicits -> unit;     (* *)
+  splice         :env -> Range.range -> term -> list<sigelt>; (* hook for synthesizing terms via tactics, third arg is tactic term *)
   mpreprocess    :env -> term -> term -> term;    (* hook for preprocessing typechecked terms via metaprograms *)
   postprocess    :env -> term -> typ -> term -> term; (* hook for postprocessing typechecked terms via metaprograms *)
-  is_native_tactic: lid -> bool;                  (* callback into the native tactics engine *)
   identifier_info: ref<FStar.TypeChecker.Common.id_info_table>; (* information on identifiers *)
   tc_hooks       : tcenv_hooks;                   (* hooks that the interactive more relies onto for symbol tracking *)
   dsenv          : FStar.Syntax.DsEnv.env;        (* The desugaring environment from the front-end *)
   nbe            : list<step> -> env -> term -> term;  (* Callback to the NBE function *)
   strict_args_tab:BU.smap<(option<(list<int>)>)>;  (* a dictionary of fv names to strict arguments *)
   erasable_types_tab:BU.smap<bool>;              (* a dictionary of type names to erasable types *)
+  enable_defer_to_tac: bool                      (* Set by default; unset when running within a tactic itself, since we do not allow
+                                                    a tactic to defer problems to another tactic via the attribute mechanism *)
 }
 
 and solver_depth_t = int * int * int
@@ -290,7 +305,14 @@ val push_sigelt           : env -> sigelt -> env
 val push_new_effect       : env -> (eff_decl * list<qualifier>) -> env
 
 //client constructs the mlift and gives it to us
-val update_effect_lattice : env -> src:lident -> tgt:lident -> mlift -> env
+
+val exists_polymonadic_bind: env -> lident -> lident -> option<(lident * polymonadic_bind_t)>
+val exists_polymonadic_subcomp: env -> lident -> lident -> option<tscheme>
+val update_effect_lattice  : env -> src:lident -> tgt:lident -> mlift -> env
+
+val join_opt               : env -> lident -> lident -> option<(lident * mlift * mlift)>
+val add_polymonadic_bind   : env -> m:lident -> n:lident -> p:lident -> polymonadic_bind_t -> env
+val add_polymonadic_subcomp: env -> m:lident -> n:lident -> tscheme -> env
 
 val push_bv               : env -> bv -> env
 val push_bvs              : env -> list<bv> -> env
@@ -384,7 +406,13 @@ val def_check_closed_in_env   : Range.range -> msg:string -> env -> term -> unit
 val def_check_guard_wf        : Range.range -> msg:string -> env -> guard_t -> unit
 val close_forall              : env -> binders -> term -> term
 
-val new_implicit_var_aux : string -> Range.range -> env -> typ -> should_check_uvar -> option<(FStar.Dyn.dyn * term)> -> (term * list<(ctx_uvar * Range.range)> * guard_t)
+val new_implicit_var_aux : string ->
+                           Range.range ->
+                           env ->
+                           typ ->
+                           should_check_uvar ->
+                           option<ctx_uvar_meta_t> ->
+                           (term * list<(ctx_uvar * Range.range)> * guard_t)
 
 
 val print_gamma : gamma -> string
@@ -403,3 +431,10 @@ val print_gamma : gamma -> string
  *)
 
 val uvars_for_binders : env -> bs:S.binders -> substs:S.subst_t -> reason:(S.binder -> string) -> r:Range.range -> (list<S.term> * guard_t)
+
+val pure_precondition_for_trivial_post : env -> universe -> typ -> typ -> Range.range -> typ
+
+(* Fetch the arity from the letrecs field. None if not there (happens
+for either not a recursive let, or one that does not need the totality
+check. *)
+val get_letrec_arity : env -> lbname -> option<int>

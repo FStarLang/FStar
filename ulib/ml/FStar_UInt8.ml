@@ -13,16 +13,16 @@ let one = 1
 let ones = 255
                                               
 let add (a:uint8) (b:uint8) : uint8 = a + b
-let add_underspec a b = add a b
-let add_mod a b = (add a b) land 255
+let add_underspec a b = (add a b) land 255
+let add_mod = add_underspec
 
 let sub (a:uint8) (b:uint8) : uint8 = a - b
-let sub_underspec a b = sub a b
-let sub_mod a b = (sub a b) land 255
+let sub_underspec a b = (sub a b) land 255
+let sub_mod = sub_underspec
 
 let mul (a:uint8) (b:uint8) : uint8 = a * b
-let mul_underspec a b = mul a b
-let mul_mod a b = (mul a b) land 255
+let mul_underspec a b = (mul a b) land 255
+let mul_mod = mul_underspec
 
 let div (a:uint8) (b:uint8) : uint8 = a / b
 
@@ -35,8 +35,8 @@ let lognot (a:uint8) : uint8 = lnot a
        
 let int_to_uint8 (x:Prims.int) : uint8 = int_of_string (Prims.to_string x) % 256
 
-let shift_right (a:uint8) (b:uint8) : uint8 = a lsr b
-let shift_left  (a:uint8) (b:uint8) : uint8 = (a lsl b) land 255
+let shift_right (a:uint8) (b:Stdint.Uint32.t) : uint8 = a lsr (Stdint.Uint32.to_int b)
+let shift_left  (a:uint8) (b:Stdint.Uint32.t) : uint8 = (a lsl (Stdint.Uint32.to_int b)) land 255
 
 (* Comparison operators *)
 let eq (a:uint8) (b:uint8) : bool = a = b
@@ -74,7 +74,8 @@ let op_Less_Equals_Hat = lte
 
 let of_string s = int_of_string s
 let to_string s = string_of_int s
-let to_string_hex s = Printf.sprintf "%02x" s
+let to_string_hex s = Printf.sprintf "0x%x" s
+let to_string_hex_pad s = Printf.sprintf "%02x" s
 let uint_to_t s = int_to_uint8 s
 let to_int s = s
 let __uint_to_t = uint_to_t

@@ -47,8 +47,6 @@ let is_before t1 t2 = System.DateTime.Compare (t1, t2) < 0
 let string_of_time (t:time) = t.ToString "MM-dd-yyyy"
 
 exception Impos
-exception NYI of string
-exception HardError of string
 
 let max_int = System.Int32.MaxValue
 
@@ -389,6 +387,8 @@ let format4 f a b c d = format f [a;b;c;d]
 let format5 f a b c d e = format f [a;b;c;d;e]
 let format6 f a b c d e g = format f [a;b;c;d;e;g]
 
+let flush_stdout () = stdout.Flush()
+
 let stdout_isatty () = None:option<bool>
 
 // These functions have no effect in F#
@@ -550,6 +550,10 @@ let remove_dups f l =
    | _ -> out in
    aux [] l
 
+
+let is_none = function
+  | None -> true
+  | Some _ -> false
 
 let is_some = function
   | None -> false
@@ -924,7 +928,9 @@ let load_2values_from_file (fname:string) =
     printfn "Failed to load file because: %A" e;
     None
 
-
+(* Precondition: file exists *)
+let touch_file (fname:string) : unit =
+  File.SetLastWriteTime (fname, DateTime.Now)
 
 let print_exn (e: exn): string =
   e.Message
@@ -986,6 +992,11 @@ type hints_db = {
     module_digest:string;
     hints: hints
 }
+
+type hints_read_result =
+  | HintsOK of hints_db
+  | MalformedJson
+  | UnableToOpen
 
 [<DataContract>]
 type internal json_db = System.Object []
@@ -1076,21 +1087,19 @@ let write_hints (filename : string) (hdb : hints_db) : unit =
     let jdb = (json_db_from_hints_db hdb) in
     write_file filename (json jdb known_json_types)
 
-let read_hints (filename : string) : option<hints_db> =
+let read_hints (filename : string) : hints_read_result =
     try
         let sr = new System.IO.StreamReader(filename) in
-        Some (hints_db_from_json_db (unjson (sr.ReadToEnd()) known_json_types))
+        HintsOK (hints_db_from_json_db (unjson (sr.ReadToEnd()) known_json_types))
     with
     | Failure _ ->
-        Printf.eprintf "Warning: Malformed JSON hints file: %s; ran without hints\n" filename;
-        None
+        MalformedJson
     | :? System.ArgumentException
     | :? System.ArgumentNullException
     | :? System.IO.FileNotFoundException
     | :? System.IO.DirectoryNotFoundException
     | :? System.IO.IOException ->
-        Printf.eprintf "Warning: Unable to open hints file: %s; ran without hints\n" filename;
-        None
+        UnableToOpen
 
 (** Interactive protocol **)
 

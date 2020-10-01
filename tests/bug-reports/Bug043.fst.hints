@@ -1,0 +1,27 @@
+[
+  "ÿÜÓ«J•§¿‚Ù\tœp\u0014\u0007©",
+  [
+    [
+      "Bug043.nat",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "2c3ed66dea3c7e81f5735baf87711ae2"
+    ],
+    [
+      "Bug043.__proj__S__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Bug043.S",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_e9b75321b1c0b82fe3be1f811b1a5f79"
+      ],
+      0,
+      "4966255d69eb4f35ce5d9be5da91554c"
+    ]
+  ]
+]

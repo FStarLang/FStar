@@ -129,7 +129,7 @@ let irepr a s (wp: wp_t s a) =
   unit -> m:m s a { wp_of m `F.feq` wp }
 
 /// The WP of return is the return of the wp
-let ireturn (a:Type) (s:Type) (x:a)
+let ireturn (a:Type) (x:a) (s:Type)
   : irepr a s (wp_return x)
   = fun () -> Ret x
 
@@ -155,7 +155,7 @@ let eta (f:'a -> 'b) : Lemma (f == (fun x -> f x)) = ()
 
 /// Now, here's the main lemma of property (b).
 ///   stating at first using extensional equality
-let rec bind_wp_lem' (#a:_) (#b:_) (#s:_) (f:m s a) (g: (a -> m s b))
+let rec bind_wp_lem' (#a:Type u#aa) (#b:Type u#bb) (#s:_) (f:m s a) (g: (a -> m s b))
   : Lemma (wp_of (bind_m f g) `F.feq` bind_wp (wp_of f) (wp_of *. g))
   = match f with
     | Ret x ->
@@ -163,11 +163,14 @@ let rec bind_wp_lem' (#a:_) (#b:_) (#s:_) (f:m s a) (g: (a -> m s b))
       assert_norm (wp_of #a #s (Ret x) `F.feq` (fun s0 post -> post (x, s0)));
       assert (wp_of (bind_m (Ret x) g) `F.feq` bind_wp (wp_of (Ret x)) (wp_of *. g))
            by (T.dump "A";
-               T.norm [delta];
+               T.norm [zeta; iota; delta];
                T.dump "B";
                let x = T.forall_intro () in
                T.dump "C";
-               T.mapply (`eta);
+               // This should just be T.mapply (`eta), but the unifier
+               // will eagerly solve universe constraints and compute a
+               // wrong for the first universe level.
+               T.mapply (quote (eta u#(max bb 1) u#1));
                T.dump "D")
 
     | Put s k ->
@@ -207,7 +210,22 @@ let bind_wp_lem (#a:_) (#b:_) (#s:_) (f:m s a) (g: (a -> m s b))
 ///
 /// The index of the result is just the bind of indexes of the
 /// arguments
-let ibind a b s wp_f (wp_g: a ^-> wp_t s b)
+
+(*
+ * AR: 02/24: this is a bit funky
+ *     the combinator needs wp_g to be an F.restricted_t
+ *
+ *     previously this was added as a refinement to wp_g
+ *     but now that we require the combinator to be typeable with use_eq_strict, that fails
+ *
+ *     now, we can add it to the precondition of ibind (we not support Pure type for binds)
+ *
+ *     and then the bind combinator and the layered effect typecheck
+ *
+ *     but we can't use it, since the typechecker will now require a proof that
+ *       the continuation is a restricted_t, which fails
+ *)
+let ibind a b s wp_f (wp_g: a -> wp_t s b)
     (f:irepr a s wp_f)
     (g : (x:a -> irepr b s (wp_g x)))
   : irepr b s (bind_wp wp_f wp_g)
@@ -220,7 +238,7 @@ let ibind a b s wp_f (wp_g: a ^-> wp_t s b)
          assert ((wp_of *. m_g) `F.feq` wp_g);
          F.extensionality _ _ ((wp_of *. m_g)) wp_g;
          assert (F.on _ (wp_of *. m_g) == F.on _ wp_g);
-         assert (F.on _ wp_g == wp_g);
+         assume (F.on _ wp_g == wp_g);
          lem_on_comp wp_of m_g;
          assert (F.on _ (wp_of *. m_g) == (wp_of *. m_g));
          bind_m m_f m_g
@@ -254,7 +272,7 @@ let isubcomp (a:Type) (s:Type) (wp wp':wp_t s a) (f:irepr a s wp)
 let i_if_then_else (a:Type) (s:Type) (wpf wpg:wp_t s a)
                    (f:irepr a s wpf)
                    (g:irepr a s wpg)
-                   (p:Type0)
+                   (p:bool)
   : Type
   = irepr a s (F.on _ (fun s0 post -> (p ==> wpf s0 post) /\ (~p ==> wpg s0 post)))
 
@@ -270,7 +288,7 @@ let lift_pure_ifst
     (a:Type)
     (s:Type0)
     (wp:pure_wp a)
-    (f:unit -> PURE a wp)
+    (f:eqtype_as_type unit -> PURE a wp)
   : irepr a s (lift_wp a s wp)
   = admit();
     let x = f() in

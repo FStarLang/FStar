@@ -31,7 +31,6 @@ module HST = FStar.HyperStack.ST
     `nullptr #t` (of type `npointer t`) represents the "NULL" value.
 *)
 
-(* GM: Seems the initial fuels are needed, or we get queries with fuel=2 *)
 #set-options "--initial_fuel 1 --initial_ifuel 1 --max_fuel 1 --max_ifuel 1"
 
 type step: (from: typ) -> (to: typ) -> Tot Type0 =
@@ -524,7 +523,7 @@ let ovalue_is_readable_struct_intro
 = List.Tot.for_all_mem (struct_field_is_readable l ovalue_is_readable v) (List.Tot.map fst l.fields);
   ovalue_is_readable_struct_intro' l v
 
-let rec ovalue_is_readable_struct_elim
+let ovalue_is_readable_struct_elim
   (l: struct_typ)
   (v: otype_of_typ (TStruct l))
   (fd: struct_field l)
@@ -789,6 +788,7 @@ let rec value_of_ovalue_of_value
     = value_of_ovalue_of_value (typ_of_struct_field l f) (struct_sel #l v f)
     in
     Classical.forall_intro phi;
+    DM.equal_intro v' v;
     DM.equal_elim #(struct_field l) #(type_of_struct_field' l (fun x -> type_of_typ' x)) v' v
   | TArray len t' ->
     let (v: array len (type_of_typ t')) = v in
@@ -1579,7 +1579,7 @@ let path_disjoint_includes_l
   ]]
 = path_disjoint_includes p1 p2 p1' p2
 
-let rec path_disjoint_sym
+let path_disjoint_sym
   (#from: typ)
   (#value1: typ)
   (#value2: typ)
@@ -2629,6 +2629,7 @@ let is_active_union_field_includes_readable
 
 (** Operations on buffers *)
 
+#push-options "--ifuel 2"
 let _singleton_buffer_of_pointer
   (#t: typ)
   (p: pointer t)
@@ -2640,6 +2641,7 @@ let _singleton_buffer_of_pointer
     Buffer (BufferRootArray #ty #ln (Pointer from contents pth')) i 1ul 
   | _ ->
     Buffer (BufferRootSingleton p) 0ul 1ul
+#pop-options
 
 let gsingleton_buffer_of_pointer #t p = _singleton_buffer_of_pointer p
 
@@ -2851,6 +2853,7 @@ let buffer_length_buffer_as_seq
   (b: buffer t)
 = ()
 
+#push-options "--ifuel 2"
 let buffer_as_seq_gsingleton_buffer_of_pointer #t h p =
   let Pointer from contents pth = p in
   match pth with
@@ -2871,6 +2874,7 @@ let buffer_as_seq_gsingleton_buffer_of_pointer #t h p =
     assert (Seq.equal s1 s2)
   | _ ->
     Seq.slice_length (Seq.create 1 (gread h p))
+#pop-options
 
 let buffer_as_seq_gbuffer_of_array_pointer
   (#length: array_length_t)

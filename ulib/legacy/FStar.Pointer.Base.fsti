@@ -498,7 +498,7 @@ val gfield
   (#l: struct_typ)
   (p: pointer (TStruct l))
   (fd: struct_field l)
-: GTot (p' : pointer (typ_of_struct_field l fd))
+: GTot (pointer (typ_of_struct_field l fd))
 
 val as_addr_gfield
   (#l: struct_typ)
@@ -561,7 +561,7 @@ val gufield
   (#l: union_typ)
   (p: pointer (TUnion l))
   (fd: struct_field l)
-: GTot (p' : pointer (typ_of_struct_field l fd))
+: GTot (pointer (typ_of_struct_field l fd))
 
 val as_addr_gufield
   (#l: union_typ)
