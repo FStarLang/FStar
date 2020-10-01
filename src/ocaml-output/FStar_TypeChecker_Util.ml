@@ -32,7 +32,12 @@ let (close_guard_implicits :
     fun solve_deferred ->
       fun xs ->
         fun g ->
-          let uu___ = (FStar_Options.eager_subtyping ()) || solve_deferred in
+          let uu___ =
+            (FStar_Options.eager_subtyping ()) ||
+              (solve_deferred &&
+                 (match g.FStar_TypeChecker_Common.deferred_to_tac with
+                  | [] -> true
+                  | uu___1 -> false)) in
           if uu___
           then
             let uu___1 =

@@ -58,7 +58,10 @@ let new_implicit_var reason r env k =
     new_implicit_var_aux reason r env k Strict None
 
 let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t =
-  if Options.eager_subtyping () || solve_deferred then
+  if Options.eager_subtyping ()
+  || (solve_deferred &&
+     (match g.deferred_to_tac with [] -> true | _ -> false))
+  then
     let solve_now, defer =
       g.deferred |> List.partition (fun (_, p) -> Rel.flex_prob_closing env xs p)
     in

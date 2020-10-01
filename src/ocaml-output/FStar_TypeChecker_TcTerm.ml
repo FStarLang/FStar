@@ -8747,8 +8747,15 @@ and (check_inner_let :
                               cres.FStar_TypeChecker_Common.eff_name
                               cres.FStar_TypeChecker_Common.res_typ in
                           let g21 =
+                            let uu___5 =
+                              let uu___6 =
+                                FStar_All.pipe_right
+                                  cres.FStar_TypeChecker_Common.eff_name
+                                  (FStar_TypeChecker_Env.norm_eff_name env2) in
+                              FStar_All.pipe_right uu___6
+                                (FStar_TypeChecker_Env.is_layered_effect env2) in
                             FStar_TypeChecker_Util.close_guard_implicits env2
-                              false xb g2 in
+                              uu___5 xb g2 in
                           let guard = FStar_TypeChecker_Env.conj_guard g1 g21 in
                           let uu___5 =
                             let uu___6 =
