@@ -167,9 +167,11 @@ val bind_pure_steela_ (a:Type) (b:Type)
   (wp:pure_wp a)
   (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t b)
   (f:eqtype_as_type unit -> PURE a wp) (g:(x:a -> atomic_repr b opened_invariants o pre post))
-: atomic_repr b opened_invariants o
+: Pure (atomic_repr b opened_invariants o
     pre
-    post
+    post)
+  (requires wp (fun _ -> True))
+  (ensures fun _ -> True)
 
 polymonadic_bind (PURE, SteelAtomicF) |> SteelAtomicF = bind_pure_steela_
 
@@ -355,45 +357,35 @@ let return_atomic #a #opened_invariants #p (x:a)
   : SteelAtomic a opened_invariants unobservable (p x) p
   = SteelAtomic?.reflect (return a x opened_invariants #p)
 
-let h_assert_atomic (#opened_invariants:_) (p:slprop)
+val h_assert_atomic (#opened_invariants:_) (p:slprop)
   : SteelAtomic unit opened_invariants unobservable p (fun _ -> p)
-  = change_slprop p p (fun m -> ())
 
-let h_intro_emp_l (#opened_invariants:_) (p:slprop)
+val h_intro_emp_l (#opened_invariants:_) (p:slprop)
   : SteelAtomic unit opened_invariants unobservable p (fun _ -> emp `star` p)
-  = change_slprop p (emp `star` p) (fun m -> emp_unit p; star_commutative p emp)
 
-let h_elim_emp_l (#opened_invariants:_) (p:slprop)
+val h_elim_emp_l (#opened_invariants:_) (p:slprop)
   : SteelAtomic unit opened_invariants unobservable (emp `star` p) (fun _ -> p)
-  = change_slprop (emp `star` p) p (fun m -> emp_unit p; star_commutative p emp)
 
-let intro_pure #opened_invariants (#p:slprop) (q:prop { q })
+val intro_pure (#opened_invariants:_) (#p:slprop) (q:prop { q })
   : SteelAtomic unit opened_invariants unobservable p (fun _ -> p `star` pure q)
-  = change_slprop p (p `star` pure q) (fun m -> emp_unit p; pure_star_interp p q m)
 
-let h_commute (#opened_invariants:_) (p q:slprop)
+val h_commute (#opened_invariants:_) (p q:slprop)
   : SteelAtomic unit opened_invariants unobservable (p `star` q) (fun _ -> q `star` p)
-  = change_slprop (p `star` q) (q `star` p) (fun m -> star_commutative p q)
 
-let h_assoc_left (#opened_invariants:_) (p q r:slprop)
+val h_assoc_left (#opened_invariants:_) (p q r:slprop)
   : SteelAtomic unit opened_invariants unobservable ((p `star` q) `star` r) (fun _ -> p `star` (q `star` r))
-  = change_slprop ((p `star` q) `star` r) (p `star` (q `star` r)) (fun m -> star_associative p q r)
 
-let h_assoc_right (#opened_invariants:_) (p q r:slprop)
+val h_assoc_right (#opened_invariants:_) (p q r:slprop)
   : SteelAtomic unit opened_invariants unobservable (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
-  = change_slprop (p `star` (q `star` r)) ((p `star` q) `star` r) (fun m -> star_associative p q r)
 
-let intro_h_exists (#a:Type) (#opened_invariants:_) (x:a) (p:a -> slprop)
+val intro_h_exists (#a:Type) (#opened_invariants:_) (x:a) (p:a -> slprop)
   : SteelAtomic unit opened_invariants unobservable (p x) (fun _ -> h_exists p)
-  = change_slprop (p x) (h_exists p) (fun m -> intro_h_exists x p m)
 
-let intro_h_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p:a -> slprop)
+val intro_h_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p:a -> slprop)
   : SteelAtomic unit opened_invariants unobservable (p x) (fun _ -> h_exists p)
-  = change_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists (Ghost.reveal x) p m)
 
-let h_affine (#opened_invariants:_) (p q:slprop)
+val h_affine (#opened_invariants:_) (p q:slprop)
   : SteelAtomic unit opened_invariants unobservable (p `star` q) (fun _ -> p)
-  = change_slprop (p `star` q) p (fun m -> affine_star p q m)
 
 (* Witnessing an existential can only be done for frame-monotonic properties.
  * Most PCMs we use have a witness-invariant pts_to, which means this
