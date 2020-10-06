@@ -969,7 +969,14 @@ let (should_return :
             FStar_All.pipe_right uu___1 FStar_Pervasives_Native.snd in
           FStar_All.pipe_right uu___
             (fun c ->
-               (let uu___1 = FStar_TypeChecker_Env.is_reifiable_comp env c in
+               (let uu___1 =
+                  (FStar_TypeChecker_Env.is_reifiable_comp env c) &&
+                    (let uu___2 =
+                       let uu___3 =
+                         FStar_TypeChecker_Env.norm_eff_name env
+                           lc.FStar_TypeChecker_Common.eff_name in
+                       FStar_TypeChecker_Env.is_layered_effect env uu___3 in
+                     Prims.op_Negation uu___2) in
                 Prims.op_Negation uu___1) &&
                  ((FStar_All.pipe_right (FStar_Syntax_Util.comp_result c)
                      FStar_Syntax_Util.is_unit)
