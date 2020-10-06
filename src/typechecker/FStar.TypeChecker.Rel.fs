@@ -4063,36 +4063,42 @@ let resolve_implicits' env is_tac g =
           then until_fixpoint(out, true) tl
           else let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
                let tm = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.8" [Env.Beta] env tm in
-               let env = if forcelax then {env with lax=true} else env in
-               if Env.debug env <| Options.Other "Rel"
-               then BU.print5 "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"
-                               (Print.uvar_to_string ctx_u.ctx_uvar_head)
-                               (Print.term_to_string tm)
-                               (Print.term_to_string ctx_u.ctx_uvar_typ)
-                               reason
-                               (Range.string_of_range r);
-               let g =
-                 try
-                   env.check_type_of must_total env tm ctx_u.ctx_uvar_typ
-                 with e when Errors.handleable e ->
-                    Errors.add_errors [Error_BadImplicit,
-                                       BU.format3 "Failed while checking implicit %s set to %s of expected type %s"
+               if forcelax
+               && BU.set_is_empty (Free.uvars tm)
+               then until_fixpoint (out, true) tl
+               else begin
+                 let env = if forcelax then {env with lax=true} else env in
+                 if Env.debug env <| Options.Other "Rel"
+                 then BU.print5 "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"
+                                (Print.uvar_to_string ctx_u.ctx_uvar_head)
+                                (Print.term_to_string tm)
+                                (Print.term_to_string ctx_u.ctx_uvar_typ)
+                                reason
+                                (Range.string_of_range r);
+                 let g =
+                   try
+                     env.check_type_of must_total env tm ctx_u.ctx_uvar_typ
+                   with e when Errors.handleable e ->
+                     Errors.add_errors [Error_BadImplicit,
+                                         BU.format3 "Failed while checking implicit %s set to %s of expected type %s"
                                                (Print.uvar_to_string ctx_u.ctx_uvar_head)
                                                (N.term_to_string env tm)
                                                (N.term_to_string env ctx_u.ctx_uvar_typ), r];
                     raise e
-               in
-               let g' =
-                 match discharge_guard' (Some (fun () ->
-                        BU.format4 "%s (Introduced at %s for %s resolved at %s)"
-                            (Print.term_to_string tm)
-                            (Range.string_of_range r)
-                            reason
-                            (Range.string_of_range tm.pos))) env g true with
-                 | Some g -> g
-                 | None   -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
-               in
-               until_fixpoint (g'.implicits@out, true) tl in
+                 in
+                 let g' =
+                   match discharge_guard' (Some (fun () ->
+                         BU.format4 "%s (Introduced at %s for %s resolved at %s)"
+                                    (Print.term_to_string tm)
+                                    (Range.string_of_range r)
+                                    reason
+                                    (Range.string_of_range tm.pos))) env g true with
+                   | Some g -> g
+                   | None   -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
+                 in
+                 until_fixpoint (g'.implicits@out, true) tl
+               end
+          in
   {g with implicits=until_fixpoint ([], false) g.implicits}
 
 let resolve_implicits env g =
