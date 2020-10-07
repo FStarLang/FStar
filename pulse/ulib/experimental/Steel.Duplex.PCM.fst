@@ -41,7 +41,7 @@ let extended_to (tag:party) (#p:dprot) : P.preorder (partial_trace_of p) =
 
 
 noeq
-type t (p:dprot) =
+type t (p:dprot) : Type u#1 =
  | V : partial_trace_of p -> t p
  | A_W : q:dprot {is_send q} -> trace p q -> t p
  | A_R : q:dprot {is_recv q} -> trace p q -> t p
@@ -120,19 +120,18 @@ let pcm (prot:dprot) : pcm (t prot) =
 open Steel.Memory
 open Steel.Effect
 open FStar.Ghost
+module Mem = Steel.Memory
 
 let chan (p:dprot) = ref (t p) (pcm p)
 
-assume val pts_to (#p:dprot) (r:chan p) (v:(t p)) : slprop u#1
+val pts_to (#p:dprot) (r:chan p) (v:t p) : slprop u#1
+let pts_to r v = Mem.pts_to r v
 
 let endpoint_a (#p:dprot) (c:chan p) (next:dprot) (tr:trace p next) =
   pts_to c (if is_send next then A_W next tr else A_R next tr)
 
 let endpoint_b (#p:dprot) (c:chan p) (next:dprot) (tr:trace p next) =
   pts_to c (if is_send next then B_R next tr else B_W next tr)
-
-
-// From nik_fictional
 
 let frame_compatible (#p:dprot) (x:t p) (v y:t p) =
   (forall (frame:t p). {:pattern (composable x frame)}
@@ -141,16 +140,31 @@ let frame_compatible (#p:dprot) (x:t p) (v y:t p) =
             composable y frame /\
             v == compose y frame)
 
-assume
+let select_refine' (#p:dprot)
+                   (r:chan p)
+                   (x:erased (t p))
+                   (f:(v:t p{compatible (pcm p) x v}
+                      -> GTot (y:t p{compatible (pcm p) y v /\
+                                  frame_compatible x v y})))
+   : SteelT  (v:t p{compatible (pcm p) x v /\ refine v})
+             (Mem.pts_to r x)
+             (fun v -> Mem.pts_to r (f v))
+   = select_refine r x f
+
 val select_refine (#p:dprot)
                   (r:chan p)
-                  (x:t p)
+                  (x:erased (t p))
                   (f:(v:t p{compatible (pcm p) x v}
                       -> GTot (y:t p{compatible (pcm p) y v /\
                                   frame_compatible x v y})))
    : SteelT  (v:t p{compatible (pcm p) x v /\ refine v})
              (pts_to r x)
              (fun v -> pts_to r (f v))
+
+let select_refine #p r x f =
+  let v = select_refine' r x f in
+  change_slprop (Mem.pts_to r (f v)) (pts_to r (f v)) (fun _ -> ());
+  v
 
 let rec is_trace_prefix
   (#from:dprot) (#to #to':dprot)
@@ -540,6 +554,7 @@ val get_a_r (#p:dprot) (c:chan p) (q:dprot{is_recv q /\ more q}) (tr:trace p q)
              else pts_to c (extend_node_a_r tr tr'))
 
 let get_a_r #p c q tr =
+  change_slprop (pts_to c (A_R q tr)) (pts_to c (reveal (hide (A_R q tr)))) (fun _ -> ());
   let v = select_refine c (A_R q tr) (f_a_r q tr) in
   let (tr':partial_trace_of p{compatible (pcm p) (A_R q tr) (V tr')}) = V?._0 v in
   change_slprop
@@ -557,6 +572,7 @@ val get_b_r (#p:dprot) (c:chan p) (q:dprot{is_send q /\ more q}) (tr:trace p q)
              else pts_to c (extend_node_b_r tr tr'))
 
 let get_b_r #p c q tr =
+  change_slprop (pts_to c (B_R q tr)) (pts_to c (reveal (hide (B_R q tr)))) (fun _ -> ());
   let v = select_refine c (B_R q tr) (f_b_r q tr) in
   let (tr':partial_trace_of p{compatible (pcm p) (B_R q tr) (V tr')}) = V?._0 v in
   change_slprop
@@ -583,15 +599,22 @@ val write_b
   (x:msg_t next)
   :SteelT unit (pts_to r (B_W next tr)) (fun _ -> endpoint_b r (step next x) (extend tr x))
 
-assume
-val alloc (#p:dprot) (x:t p)
+val alloc (#p:dprot) (x:t p{compatible (pcm p) x x /\ refine x})
   : Steel (chan p) emp (fun r -> pts_to r x) (fun _ -> squash (compatible (pcm p) x x)) (fun _ _ _ -> True)
 
+let alloc x =
+  let r = alloc x in
+  change_slprop (Mem.pts_to r x) (pts_to r x) (fun _ -> ());
+  r
 
-assume
 val split (#p:dprot) (r:chan p) (v_full v0 v1:t p) (_:squash (composable v0 v1)) (_:squash (v_full == compose v0 v1))
   : SteelT unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)
 
+let split r v v0 v1 u1 u2 =
+  change_slprop (pts_to r v) (pts_to r (reveal (hide v))) (fun _ -> ());
+  split r v v0 v1;
+  change_slprop (pts_to r (reveal (hide v0))) (pts_to r v0) (fun _ -> ());
+  change_slprop (pts_to r (reveal (hide v1))) (pts_to r v1) (fun _ -> ())
 
 val new_chan (p:dprot)
   : SteelT (chan p) emp
