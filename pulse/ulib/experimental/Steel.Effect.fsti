@@ -488,6 +488,16 @@ val ( || ) (#aL:Type u#a)
           (preL `Mem.star` preR)
           (fun y -> postL (fst y) `Mem.star` postR (snd y))
 
+val add_action (#a:Type)
+               (#p:slprop)
+               (#q:a -> slprop)
+               (f:action_except a Set.empty p q)
+  : SteelT a p q
+
+val change_slprop (p q:slprop)
+                  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
+  : SteelT unit p (fun _ -> q)
+
 val read (#a:Type)
          (#pcm:_)
          (r:ref a pcm)
@@ -521,10 +531,15 @@ val free (#a:Type)
 val split (#a:Type)
           (#p:FStar.PCM.pcm a)
           (r:ref a p)
+          (v:Ghost.erased a)
           (v0:Ghost.erased a)
-          (v1:Ghost.erased a{FStar.PCM.composable p v0 v1})
-  : SteelT unit (pts_to r (FStar.PCM.op p v0 v1))
-                (fun _ -> pts_to r v0 `star` pts_to r v1)
+          (v1:Ghost.erased a)
+  : Steel unit (pts_to r v)
+               (fun _ -> pts_to r v0 `star` pts_to r v1)
+               (requires fun _ ->
+                 FStar.PCM.composable p v0 v1 /\
+                 v == Ghost.hide (FStar.PCM.op p v0 v1))
+               (ensures fun _ _ _ -> True)
 
 val gather (#a:Type)
            (#p:FStar.PCM.pcm a)
@@ -555,16 +570,6 @@ val recall (#a:Type u#1) (#pcm:FStar.PCM.pcm a) (#fact:property a)
            (pts_to r v `star` pure (witnessed r fact))
            (fun v1 -> pts_to r v `star` pure (fact v1))
 
-val add_action (#a:Type)
-               (#p:slprop)
-               (#q:a -> slprop)
-               (f:action_except a Set.empty p q)
-  : SteelT a p q
-
-val change_slprop (p q:slprop)
-                  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
-  : SteelT unit p (fun _ -> q)
-
 val cond (#a:Type)
          (b:bool)
          (p: (b':bool{b == b'}) -> slprop)
@@ -594,3 +599,9 @@ val select_refine (#a:Type u#1) (#p:pcm a)
    : SteelT  (v:a{compatible p x v /\ p.refine v})
              (pts_to r x)
              (fun v -> pts_to r (f v))
+
+val upd_gen (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
+            (f:FStar.PCM.frame_preserving_upd p x y)
+  : SteelT unit
+           (pts_to r x)
+           (fun _ -> pts_to r y)
