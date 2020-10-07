@@ -185,6 +185,14 @@ let par (#aL:Type u#a)
 
 let ( || ) f g = par f g
 
+let action_as_repr (#a:Type) (#p:slprop) (#q:a -> slprop) (f:action_except a Set.empty p q)
+  : repr a p q (fun _ -> True) (fun _ _ _ -> True)
+  = Ins.state_correspondence Set.empty; f
+
+let add_action f = Steel?.reflect (action_as_repr f)
+
+let change_slprop p q proof = add_action (Steel.Memory.change_slprop p q proof)
+
 let read #a #pcm r v0 = Steel.EffectX.read r v0
 
 let write #a #pcm r v0 v1 = Steel.EffectX.write r v0 v1
@@ -193,21 +201,25 @@ let alloc #a #pcm x = Steel.EffectX.alloc x
 
 let free #a #p r x = Steel.EffectX.free r x
 
-let split #a #p r v0 v1 = Steel.EffectX.split r v0 v1
+val split' (#a:Type)
+          (#p:FStar.PCM.pcm a)
+          (r:ref a p)
+          (v0:Ghost.erased a)
+          (v1:Ghost.erased a{FStar.PCM.composable p v0 v1})
+  : SteelT unit (pts_to r (FStar.PCM.op p v0 v1))
+                (fun _ -> pts_to r v0 `star` pts_to r v1)
+
+let split' #a #p r v0 v1 = Steel.EffectX.split r v0 v1
+
+let split #a #p r v v0 v1 =
+  change_slprop (pts_to r v) (pts_to r (FStar.PCM.op p v0 v1)) (fun _ -> ());
+  split' r v0 v1
 
 let gather #a #p r v0 v1 = Steel.EffectX.gather r v0 v1
 
 let witness #a #pcm r fact v u = from_steelx (fun _ -> Steel.EffectX.witness #a #pcm r fact v u)
 
 let recall #a #pcm #fact r v = Steel.EffectX.recall r v
-
-let action_as_repr (#a:Type) (#p:slprop) (#q:a -> slprop) (f:action_except a Set.empty p q)
-  : repr a p q (fun _ -> True) (fun _ _ _ -> True)
-  = Ins.state_correspondence Set.empty; f
-
-let add_action f = Steel?.reflect (action_as_repr f)
-
-let change_slprop p q proof = add_action (Steel.Memory.change_slprop p q proof)
 
 let cond_aux (#a:Type) (b:bool) (p: (b':bool{b == b'}) -> slprop)
              (q: bool -> a -> slprop)
@@ -266,3 +278,5 @@ let intro_exists #a x p = change_slprop (p x) (h_exists p) (fun m -> intro_h_exi
 let noop #p () = change_slprop p p (fun _ -> ())
 
 let select_refine #a #p r x f = add_action (Steel.Memory.select_refine Set.empty r x f)
+
+let upd_gen #a #p r x y f = add_action (Steel.Memory.upd_gen Set.empty r x y f)

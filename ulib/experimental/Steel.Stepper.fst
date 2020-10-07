@@ -82,8 +82,6 @@ let s_odd (r:ref stepper p) (n:nat) : Pure slprop (n % 2 <> 0) (fun _ -> True)  
 
 
 
-// Assuming select_refine from the nik_fictional branch for now
-
 let frame_compatible (x:erased stepper) (v y:stepper) =
   (forall (frame:stepper). {:pattern (composable x frame)}
             composable x frame /\
@@ -116,47 +114,12 @@ let select_refine (r:ref stepper p)
 
 (** Updating a ref cell for a user-defined PCM *)
 
-(** A frame-preserving update set on a PCM p, specified in two
-    parts:
-
-    1. To update a share of a PCM from [x] to [y]:
-        - Given a full value [v] compatible with [x] (i.e. exists f. op p x f = v)
-
-        + Produce a value [z] compatible with [y] (i.e.,
-          the final heap satisfies [pts_to r y])
-
-          - if v is a refined value then so is z,
-            and respects the preorder of frame_preserving updates on refined values
-*)
-let frame_preserving_upd_0 (x y:stepper) =
-    v:stepper{compatible p x v}
-  -> Tot (z:stepper{
-            compatible p y z /\
-             (refine v ==> refine z) /\
-             (refine v ==> frame_preserving p v z)})
-
-(** Further, the update respects PCM frames:
-
-    For any [frame] composable with the value [v] being updated,
-    [f] only updates the [v] part of [op p v frame] to [z], obtaining
-    [op p z frame]
- *)
-let frame_preserving_upd (x y:stepper) =
-  f:frame_preserving_upd_0 x y {
-     forall (v:stepper{compatible p x v}).
-         let z = f v in
-         (forall (frame:stepper). {:pattern (FStar.PCM.composable p v frame)}
-              FStar.PCM.composable p v frame ==>
-              FStar.PCM.composable p z frame /\
-              (compatible p x (op p v frame) ==>
-              (op p z frame == f (op p v frame))))
-  }
-
-assume
 val upd_gen_action (r:ref stepper p)
                    (x y:Ghost.erased stepper)
-                   (f:frame_preserving_upd x y)
+                   (f:FStar.PCM.frame_preserving_upd p x y)
   : SteelT unit (pts_to r x) (fun _ -> pts_to r y)
+
+let upd_gen_action r x y f = upd_gen r x y f
 
 let f_even (n0:even) (v:stepper{compatible p (Even n0) v})
   : GTot (y:stepper{compatible p y v /\ frame_compatible (Even n0) v y})
@@ -192,19 +155,20 @@ let get_odd (r:ref stepper p) (n0:odd)
     change_slprop (pts_to r (f_odd n0 v)) (if n = n0 then pts_to r (Odd n0) else pts_to r (OddWriteable n0)) (fun _ -> ());
     n
 
-let upd_even_f (n:even) : frame_preserving_upd (EvenWriteable n)
-                                               (Even (n + 2))
+let upd_even_f (n:even) : FStar.PCM.frame_preserving_upd p
+                            (EvenWriteable n)
+                            (Even (n + 2))
   = let f
-      : frame_preserving_upd_0 (EvenWriteable n) (Even (n + 2))
+      : FStar.PCM.frame_preserving_upd_0 p (EvenWriteable n) (Even (n + 2))
       = function
         | EvenWriteable n -> Even (n + 2)
         | V n -> V (n + 1)
     in
     f
 
-let upd_odd_f (n:odd) : frame_preserving_upd (OddWriteable n) (Odd (n + 2))
+let upd_odd_f (n:odd) : FStar.PCM.frame_preserving_upd p (OddWriteable n) (Odd (n + 2))
   = let f
-      : frame_preserving_upd_0 (OddWriteable n) (Odd (n + 2))
+      : FStar.PCM.frame_preserving_upd_0 p (OddWriteable n) (Odd (n + 2))
       = function
         | OddWriteable n -> Odd (n + 2)
         | V n -> V (n + 1)
@@ -231,11 +195,12 @@ let alloc x =
   change_slprop (Memory.pts_to r x) (pts_to r x) (fun _ -> ());
   r
 
-assume
-val split (r:ref stepper p) (v_full v0 v1:stepper)  : Steel unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)
+val split (r:ref stepper p) (v_full v0 v1:stepper)
+  : Steel unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)
       (fun _ -> composable v0 v1 /\ v_full == compose v0 v1)
       (fun _ _ _ -> True)
 
+let split r v_full v0 v1 = split r v_full v0 v1
 
 // Core functions of stepper
 
