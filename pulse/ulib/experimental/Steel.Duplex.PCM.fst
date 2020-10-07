@@ -637,7 +637,7 @@ val recv_a
 let rec recv_a #p c next tr =
   change_slprop (endpoint_a c next tr) (pts_to c (A_R next tr)) (fun _ -> ());
   let tr' = get_a_r c next tr in
-  cond (trace_length tr >= trace_length tr'.tr)
+  cond #(msg_t next) (trace_length tr >= trace_length tr'.tr)
     (fun b ->
       if b then pts_to c (A_R next tr)
       else (pts_to c (extend_node_a_r tr tr'))
@@ -683,7 +683,7 @@ val recv_b
 let rec recv_b #p c next tr =
   change_slprop (endpoint_b c next tr) (pts_to c (B_R next tr)) (fun _ -> ());
   let tr' = get_b_r c next tr in
-  cond (trace_length tr >= trace_length tr'.tr)
+  cond #(msg_t next) (trace_length tr >= trace_length tr'.tr)
     (fun b ->
       if b then pts_to c (B_R next tr)
       else (pts_to c (extend_node_b_r tr tr'))
