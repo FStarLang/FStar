@@ -278,8 +278,12 @@ let extract_pure #a #uses #p #f
            (pts_to_body r f v h)
            (fun _ -> pts_to_body r f v h)
   = Atomic.change_slprop (pts_to_body r f v h) (M.pts_to r h `star` pure (history_val h v f)) (fun _ -> ());
-    Atomic.elim_pure (history_val h v f);
-    Atomic.change_slprop (M.pts_to r h) (pts_to_body r f v h) (fun _ -> ())
+    let (u:unit{history_val h v f}) = Atomic.elim_pure (history_val h v f) in
+    Atomic.change_slprop (M.pts_to r h) (pts_to_body r f v h) (fun m ->
+      emp_unit (M.pts_to r h);
+      pure_star_interp (M.pts_to r h) (history_val h v f) m
+    );
+    u
 
 let elim_pure #a #uses #p #f
                  (r:ref a p)
@@ -290,7 +294,7 @@ let elim_pure #a #uses #p #f
            unobservable
            (pts_to_body r f v h)
            (fun _ ->  M.pts_to r h)
-  = extract_pure r v h;
+  = let _ = extract_pure r v h in
     Atomic.h_affine (M.pts_to r h) (pure (history_val h v f))
 
 module ST = Steel.Memory.Tactics
@@ -332,10 +336,10 @@ let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> slprop)
                 (r:ref a p)
   : SteelT a (h_exists (fun (v:a) -> pts_to r q v `star` f v))
              (fun v -> pts_to r q v `star` f v)
-  = pts_to_is_witness_invariant r q;
-    star_is_witinv_left (fun (v:a) -> pts_to r q v) f;
-
-    let v = Atomic.witness_h_exists #_ #_ #(fun (v:a) -> pts_to r q v `star` f v) () in
+  = let v = Atomic.witness_h_exists #_ #_ #(fun (v:a) -> pts_to r q v `star` f v) (
+        pts_to_is_witness_invariant r q;
+        star_is_witinv_left (fun (v:a) -> pts_to r q v) f
+    ) in
     Steel.Effect.change_slprop (pts_to r q (Ghost.hide (Ghost.reveal v)) `star` f v) (h_exists (pts_to_body r q v) `star` f v) (fun _ -> ());
 
     let h = Atomic.witness_h_exists #_ #_ #(pts_to_body r q v) () in
@@ -366,7 +370,7 @@ let write (#a:Type) (#p:Preorder.preorder a) (#v:erased a)
   = let h_old_e = witness_h_exists #_ #_ #(pts_to_body r full_perm v) () in
     let _ = elim_pure #_ #_ #_ #full_perm r v h_old_e in
 
-    let h_old:history a p = read r h_old_e in
+    let h_old = read r h_old_e in
     let h: history a p = extend_history h_old x in
     write r h_old_e h;
 

@@ -151,14 +151,6 @@ let drop_l_atomic #uses (p q:slprop)  ()
   : SteelAtomic unit uses unobservable (p `star` q) (fun _ -> q)
   = Atomic.change_slprop (p `star` q) q (affine_star p q)
 
-let elim_pure_atomic #uses  (#p:perm -> slprop) (q:perm)
-  : SteelAtomic (q':perm{perm_ok q' /\ q == q'}) uses unobservable
-                (p q `star` pure (perm_ok q))
-                (fun q' -> p q')
-  = let (q':perm {perm_ok q' /\ q == q'}) = elim_perm_ok q in
-    Atomic.change_slprop (p q) (p q') (fun _ -> ());
-    q'
-
 let alloc #a x =
   let v = Some (x, full_perm) in
   assert (FStar.PCM.composable pcm_frac v None);
@@ -183,9 +175,10 @@ let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
 let read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
   : SteelT a (h_exists (fun (v:a) -> pts_to r p v `star` q v))
                 (fun v -> pts_to r p v `star` q v)
-  = pts_to_witinv r p;
-    star_is_witinv_left (fun (v:a) -> pts_to r p v) q;
-    let vs:erased a = Atomic.witness_h_exists #_ #_ #(fun (v:a) -> pts_to r p v `star` q v) () in
+  = let vs:erased a = Atomic.witness_h_exists #_ #_ #(fun (v:a) -> pts_to r p v `star` q v) (
+        pts_to_witinv r p;
+        star_is_witinv_left (fun (v:a) -> pts_to r p v) q
+    ) in
 
     Steel.Effect.change_slprop (pts_to r p (Ghost.hide (Ghost.reveal vs)) `star` q vs) (pts_to r p vs `star` q vs) (fun _ -> ());
 

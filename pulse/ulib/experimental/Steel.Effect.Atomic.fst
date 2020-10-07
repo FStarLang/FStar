@@ -54,7 +54,6 @@ let preserves_frame_trans_equiv
         (ensures
           interp ((post `star` frame) `star` locks_invariant o m2) m2 /\
           (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m2)))
-        [SMTPat ()]
       = assert (interp ((p1 `star` frame) `star` locks_invariant o m1) m1);
         calc (equiv) {
           ((p1 `star` frame) `star` locks_invariant o m1);
@@ -69,7 +68,7 @@ let preserves_frame_trans_equiv
         assert (interp ((p2 `star` frame) `star` locks_invariant o m1) m1);
         assert (interp ((post `star` frame) `star` locks_invariant o m2) m2)
   in
-  ()
+  Classical.forall_intro (Classical.move_requires aux)
 
 let bind (a:Type u#a) (b:Type u#b)
    (opened:inames)
@@ -126,7 +125,6 @@ let preserves_frame_extend
         (ensures
           interp (((post `star` f) `star` frame) `star` locks_invariant o m1) m1 /\
           (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)))
-        [SMTPat ()]
       = calc (equiv) {
           ((pre `star` f) `star` frame) `star` locks_invariant o m0;
           (equiv) { star_associative pre f frame;
@@ -169,7 +167,7 @@ let preserves_frame_extend
         affine_star ((pre `star` frame) `star` locks_invariant o m0) f m0;
         assert (interp ((pre `star` frame) `star` locks_invariant o m0) m0)
   in
-  ()
+  Classical.forall_intro (Classical.move_requires aux)
 
 let interp_affine_middle (p q r:slprop) (m:full_mem)
   : Lemma (requires interp ((p `star` q) `star` r) m)
@@ -402,7 +400,7 @@ let h_affine p q = change_slprop (p `star` q) p (fun m -> affine_star p q m)
 // open NMSTTotal
 // open MSTTotal
 
-let witness_h_exists #a #u #p () = SteelAtomic?.reflect (Steel.Memory.witness_h_exists p)
+let witness_h_exists #a #u #p s = SteelAtomic?.reflect (Steel.Memory.witness_h_exists p)
 let lift_h_exists_atomic #a #u p = SteelAtomic?.reflect (Steel.Memory.lift_h_exists #u p)
 let h_exists_cong_atomic p q = change_slprop (h_exists p) (h_exists q) (fun m -> h_exists_cong p q)
 let elim_pure #uses p = SteelAtomic?.reflect (Steel.Memory.elim_pure #uses p)

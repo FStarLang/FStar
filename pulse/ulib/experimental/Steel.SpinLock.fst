@@ -96,12 +96,15 @@ val acquire_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
     (fun b -> lockinv p r  `star` (if b then p else emp))
 
 let acquire_core #p #u r i =
-  let ghost = Atomic.witness_h_exists #_ #_ #(fun (b:bool) -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)) () in
+  let ghost = witness_h_exists #_ #_ #(fun (b:bool) -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)) (
+    pts_to_witinv r full_perm;
+    star_is_witinv_left (fun (b:bool) -> pts_to r full_perm (Ghost.hide b)) (fun (b:bool) -> if b then emp else p)
+  ) in
 
   (** AF: This should be done by an automatic rewriting in the tactic *)
   Atomic.change_slprop (pts_to r full_perm (Ghost.hide (Ghost.reveal ghost))) (pts_to r full_perm ghost) (fun _ -> ());
 
-  let res:bool = cas r ghost available locked in
+  let res = cas r ghost available locked in
 
   (* Not sure we can avoid calling an SMT here. Better force the manual call? *)
   Atomic.change_slprop (if (Ghost.reveal ghost) then emp else p) (if res then p else emp)
@@ -129,11 +132,14 @@ val release_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
 
 let release_core #p #u r i =
   let open Atomic in
-  let v:Ghost.erased bool = Atomic.witness_h_exists #_ #u #(fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)) () in
+  let v = Atomic.witness_h_exists #_ #u #(fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)) (
+    pts_to_witinv r full_perm;
+    star_is_witinv_left (fun (b:bool) -> pts_to r full_perm (Ghost.hide b)) (fun (b:bool) -> if b then emp else p)
+  ) in
 
   Atomic.change_slprop (pts_to r full_perm (Ghost.hide (Ghost.reveal v))) (pts_to r full_perm v) (fun _ -> ());
 
-  let res:bool = cas r v locked available in
+  let res = cas r v locked available in
 
   (* Not sure we can avoid calling an SMT here. Better force the manual call? *)
   Atomic.change_slprop (if (Ghost.reveal v) then emp else p) (if res then emp else p)
