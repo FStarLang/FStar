@@ -581,14 +581,78 @@ let get_b_r #p c q tr =
     (fun _ -> ());
   tr'
 
-assume
-val write_a
+val upd_gen_action (#p:dprot)
+                   (r:chan p)
+                   (x y:Ghost.erased (t p))
+                   (f:FStar.PCM.frame_preserving_upd (pcm p) x y)
+  : SteelT unit (pts_to r x) (fun _ -> pts_to r y)
+
+let upd_gen_action #p r x y f = upd_gen r x y f
+
+let write_a_f_aux
+  (#p:dprot)
+  (#next:dprot{more next /\ tag_of next = Send})
+  (tr:trace p next)
+  (x:msg_t next)
+  : FStar.PCM.frame_preserving_upd_0 (pcm p) (A_W next tr)
+    (if is_send (step next x) then
+        A_W (step next x) (extend tr x) else A_R (step next x) (extend tr x))
+  = fun (v:t p{compatible (pcm p) (A_W next tr) v}) ->
+    let post = if is_send (step next x) then
+        A_W (step next x) (extend tr x) else A_R (step next x) (extend tr x) in
+    match v with
+    | A_W n tr' -> admit()
+    | V tr' ->
+        assert (tr'.to == next /\ tr'.tr == tr);
+        let res = V ({to = (step next x); tr = extend tr x}) in
+        assume (compatible (pcm p) post res);
+        res
+
+let write_a_f_lemma
+  (#p:dprot)
+  (#next:dprot{more next /\ tag_of next = Send})
+  (tr:trace p next)
+  (x:msg_t next)
+  (v:t p)
+  (frame:t p)
+  : Lemma
+    (requires compatible (pcm p) (A_W next tr) v /\ composable v frame)
+    (ensures
+      compatible (pcm p) (A_W next tr) v /\
+      composable v frame /\
+      composable (write_a_f_aux #p #next tr x v) frame /\
+      (compatible (pcm p) (A_W next tr) (compose v frame) ==>
+        (compose (write_a_f_aux tr x v) frame == write_a_f_aux tr x (compose v frame))))
+  = admit()
+
+let write_a_f
+  (#p:dprot)
+  (#next:dprot{more next /\ tag_of next = Send})
+  (tr:trace p next)
+  (x:msg_t next)
+  : FStar.PCM.frame_preserving_upd (pcm p) (A_W next tr)
+    (if is_send (step next x) then
+        A_W (step next x) (extend tr x) else A_R (step next x) (extend tr x))
+  = Classical.forall_intro_2 (Classical.move_requires_2 (write_a_f_lemma #p #next tr x));
+    write_a_f_aux #p #next tr x
+
+let write_a
   (#p:dprot)
   (r:chan p)
   (#next:dprot{more next /\ tag_of next = Send})
   (tr:trace p next)
   (x:msg_t next)
   :SteelT unit (pts_to r (A_W next tr)) (fun _ -> endpoint_a r (step next x) (extend tr x))
+  = change_slprop (pts_to r (A_W next tr)) (pts_to r (reveal (hide (A_W next tr)))) (fun _ -> ());
+    upd_gen_action r (hide (A_W next tr))
+                     (hide (if is_send (step next x) then
+                             A_W (step next x) (extend tr x)
+                            else A_R (step next x) (extend tr x)))
+                     (write_a_f tr x);
+    change_slprop (pts_to r (reveal (hide (if is_send (step next x) then
+                             A_W (step next x) (extend tr x)
+                            else A_R (step next x) (extend tr x)))))
+      (endpoint_a r (step next x) (extend tr x)) (fun _ -> ())
 
 assume
 val write_b
