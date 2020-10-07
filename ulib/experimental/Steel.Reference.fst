@@ -28,6 +28,23 @@ let ref a = H.ref (U.raise_t a)
 
 let pts_to r p v = H.pts_to r p (hide (U.raise_val (reveal v)))
 
+val raise_val_inj (#a:Type) (x y:a) : Lemma
+  (requires U.raise_val x == U.raise_val y)
+  (ensures x == y)
+
+let raise_val_inj x y =
+  U.downgrade_val_raise_val x;
+  U.downgrade_val_raise_val y
+
+let pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to r p)) =
+  let aux (x y : erased a) (m:mem)
+    : Lemma (requires (interp (pts_to r p x) m /\ interp (pts_to r p y) m))
+            (ensures  (x == y))
+    = H.pts_to_witinv r p;
+      raise_val_inj (reveal x) (reveal y)
+  in
+  Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
+
 let alloc x =
   let r = H.alloc (U.raise_val x) in
   change_slprop (H.pts_to r full_perm (U.raise_val x)) (pts_to r full_perm x) (fun _ -> ());
@@ -86,8 +103,9 @@ let gather_atomic #a #uses #p0 #p1 #v0 #v1 r =
   let v1' = Ghost.hide (U.raise_val (Ghost.reveal v1)) in
   A.change_slprop (pts_to r p0 v0) (H.pts_to r p0 v0') (fun _ -> ());
   A.change_slprop (pts_to r p1 v1) (H.pts_to r p1 v1') (fun _ -> ());
-  H.gather_atomic #_ #_ #p0 #p1 #v0' #v1' r;
-  A.change_slprop (H.pts_to r (sum_perm p0 p1) v0') (pts_to r (sum_perm p0 p1) v0) (fun _ -> ())
+  let (u:unit{v0' == v1'}) = H.gather_atomic #_ #_ #p0 #p1 #v0' #v1' r in
+  A.change_slprop (H.pts_to r (sum_perm p0 p1) v0') (pts_to r (sum_perm p0 p1) v0) (fun _ -> ());
+  u
 
 let raise_equiv (#t:Type) (x y:t)
   : Lemma (U.raise_val x == U.raise_val y <==>
