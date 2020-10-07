@@ -1,6 +1,6 @@
 module Effect.Tests
 
-open Steel.Effect
+open Steel.EffectX
 open Steel.Memory
 
 open Frame
@@ -9,14 +9,14 @@ assume val r1 : slprop
 assume val r2 : slprop
 assume val r3 : slprop
 
-assume val f1 (_:unit) : SteelT unit r1 (fun _ -> r1)
-assume val f12 (_:unit) : SteelT unit (r1 `star` r2) (fun _ -> r1 `star` r2)
-assume val f123 (_:unit) : SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
+assume val f1 (_:unit) : SteelXT unit r1 (fun _ -> r1)
+assume val f12 (_:unit) : SteelXT unit (r1 `star` r2) (fun _ -> r1 `star` r2)
+assume val f123 (_:unit) : SteelXT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
 
 module T = FStar.Tactics
 
 let test_frame1 (_:unit)
-: SteelT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
+: SteelXT unit ((r1 `star` r2) `star` r3) (fun _ -> (r1 `star` r2) `star` r3)
 = steel_frame_t f12;
   steel_frame_t f1;
   steel_frame_t f123;
@@ -29,11 +29,11 @@ let test_frame1 (_:unit)
 
 assume
 val crash_h_commute (p:slprop)
-  : SteelT unit emp (fun _ -> p)
+  : SteelXT unit emp (fun _ -> p)
 
 assume
 val crash_h_assert (_:unit)
-  : SteelT unit emp (fun _ -> emp)
+  : SteelXT unit emp (fun _ -> emp)
 
 assume val crash_get_prop : int -> slprop
 
@@ -48,7 +48,7 @@ let crash_test (_:unit)
 (**** moving the test case from Steel.ReshuffleFailure.ftst in ulib ****)
 
 open FStar.PCM
-module SB = Steel.SteelT.Basics
+module SB = Steel.SteelXT.Basics
 module ST = Steel.Memory.Tactics
 
 assume
@@ -56,10 +56,10 @@ val pp : int -> slprop u#1
 
 assume
 val act (a b:slprop)
-  : SteelT int (a `star` b) (fun x -> a `star` pp x)
+  : SteelXT int (a `star` b) (fun x -> a `star` pp x)
 
 let test (p q:slprop)
-  : SteelT int (p `star` q) (fun x -> pp x `star` q)
+  : SteelXT int (p `star` q) (fun x -> pp x `star` q)
   = ST.reshuffle();
     let x = act q p in
     ST.reshuffle #_ #_// (pp x `star` q) //needs this annotation
