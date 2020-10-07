@@ -445,7 +445,6 @@ let eta_expand (g:uenv) (t : mlty) (e : mlexpr) : mlexpr =
       let body = with_ty r <| MLE_App (e, vs_es) in
       with_ty t <| MLE_Fun (vs_ts, body)
 
-(* eta-expand `e` according to its type `t` *)
 let default_value_for_ty (g:uenv) (t : mlty) : mlexpr  =
     let ts, r = doms_and_cod t in
     let body r =
