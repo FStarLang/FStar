@@ -13,6 +13,7 @@ open Steel.Primitive.ForkJoin
 
 module U = FStar.Universe
 
+#set-options "--warn_error -330"  //turn off the experimental feature warning
 
 // (* Some helpers *)
 let change_slprop_equiv (p q : slprop)

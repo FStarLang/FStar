@@ -600,7 +600,7 @@ let next_trace #p (vr:chan_val) (vs:chan_val)
      extend_partial_trace tr msg
 
 let squash_and (vr:chan_val) (vs:chan_val{chan_inv_step_p vr vs})
-  : s:squash (chan_inv_step_p vr vs)
+  : squash (chan_inv_step_p vr vs)
   = ()
 
 let next_trace_st #p (vr:chan_val) (vs:chan_val) (tr:partial_trace_of p)

@@ -21,8 +21,6 @@ open Steel.Memory
 open Steel.FractionalPermission
 open FStar.Ghost
 
-#set-options "--print_universes --print_implicits"
-
 val ref (a:Type u#0) : Type u#0
 
 val pts_to (#a:Type u#0) (r:ref a) (p:perm) (v:erased a) : slprop u#1
@@ -33,7 +31,7 @@ val alloc (#a:Type) (x:a)
   : SteelT (ref a) emp (fun r -> pts_to r full_perm x)
 
 val read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
-  : Steel (x:a) (pts_to r p v) (fun x -> pts_to r p x)
+  : Steel a (pts_to r p v) (fun x -> pts_to r p x)
            (requires fun _ -> True)
            (ensures fun _ x _ -> x == Ghost.reveal v)
 

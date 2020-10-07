@@ -20,6 +20,8 @@ open FStar.PCM
 open Steel.Memory
 include Steel.Effect.Common
 
+#set-options "--warn_error -330"  //turn off the experimental feature warning
+
 val observability : Type0
 val has_eq_observability (_:unit) : Lemma (hasEq observability)
 val observable : observability

@@ -18,6 +18,8 @@ module Steel.Effect
 
 friend Steel.EffectX
 
+#set-options "--warn_error -330"  //turn off the experimental feature warning
+
 let repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
   Sem.action_t #state #a pre post (req_to_act_req req) (ens_to_act_ens ens)
 
@@ -262,3 +264,5 @@ let drop p = change_slprop p emp (fun m -> emp_unit p; affine_star p emp m)
 let intro_exists #a x p = change_slprop (p x) (h_exists p) (fun m -> intro_h_exists x p m)
 
 let noop #p () = change_slprop p p (fun _ -> ())
+
+let select_refine #a #p r x f = add_action (Steel.Memory.select_refine Set.empty r x f)

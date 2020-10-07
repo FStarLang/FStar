@@ -580,3 +580,17 @@ val intro_exists (#a:Type) (x:a) (p:a -> slprop)
   : SteelT unit (p x) (fun _ -> h_exists p)
 
 val noop (#p:slprop) (u:unit) : SteelT unit p (fun _ -> p)
+
+/// Operations on PCM Refs
+
+open FStar.PCM
+
+val select_refine (#a:Type u#1) (#p:pcm a)
+                  (r:ref a p)
+                  (x:Ghost.erased a)
+                  (f:(v:a{compatible p x v}
+                      -> GTot (y:a{compatible p y v /\
+                                  frame_compatible p x v y})))
+   : SteelT  (v:a{compatible p x v /\ p.refine v})
+             (pts_to r x)
+             (fun v -> pts_to r (f v))
