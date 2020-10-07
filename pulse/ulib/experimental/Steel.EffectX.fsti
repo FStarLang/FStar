@@ -21,6 +21,8 @@ module Mem = Steel.Memory
 module Ins = Steel.Semantics.Instantiate
 open Steel.Memory
 
+#set-options "--warn_error -330"  //turn off the experimental feature warning
+
 val join_preserves_interp (hp:slprop) (m0 m1:mem)
   : Lemma
     (requires (interp hp m0 /\ disjoint m0 m1))

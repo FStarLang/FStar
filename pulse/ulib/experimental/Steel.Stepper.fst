@@ -10,7 +10,7 @@ let max (n m:nat) : nat = if n >= m then n else m
 
 
 noeq
-type stepper =
+type stepper : Type u#1 =
   | V : n:nat{n > 0} -> stepper // the real value " whole value "
   | Even : n:even -> stepper
   | Odd  : n:odd -> stepper
@@ -72,9 +72,9 @@ open Steel.Memory
 open Steel.Effect
 open FStar.Ghost
 
-
-
-assume val pts_to (r:ref stepper p) (v:erased stepper) : slprop u#1
+// Use erased values here to avoid some rewritings
+val pts_to (r:ref stepper p) (v:erased stepper) : slprop u#1
+let pts_to r v = pts_to r v
 
 let v (r:ref stepper p) (n:nat{n > 0}) : slprop = pts_to r (V n)
 let s_even (r:ref stepper p) (n:nat) : Pure slprop (n % 2 == 0) (fun _ -> True)  = pts_to r (Even n)
@@ -91,9 +91,17 @@ let frame_compatible (x:erased stepper) (v y:stepper) =
             composable y frame /\
             v == compose y frame)
 
+let select_refine' (r:ref stepper p)
+                  (x:erased stepper)
+                  (f:(v:stepper{compatible p x v}
+                      -> GTot (y:stepper{compatible p y v /\
+                                  frame_compatible x v y})))
+   : SteelT  (v:stepper{compatible p x v /\ refine v})
+             (Memory.pts_to r x)
+             (fun v -> Memory.pts_to r (f v))
+   = select_refine r x f
 
-assume
-val select_refine (r:ref stepper p)
+let select_refine (r:ref stepper p)
                   (x:erased stepper)
                   (f:(v:stepper{compatible p x v}
                       -> GTot (y:stepper{compatible p y v /\
@@ -101,6 +109,9 @@ val select_refine (r:ref stepper p)
    : SteelT  (v:stepper{compatible p x v /\ refine v})
              (pts_to r x)
              (fun v -> pts_to r (f v))
+   = let v = select_refine' r x f in
+     change_slprop (Memory.pts_to r (f v)) (pts_to r (f v)) (fun _ -> ());
+     v
 
 
 (** Updating a ref cell for a user-defined PCM *)
@@ -212,9 +223,13 @@ let upd_odd (r:ref stepper p) (n:odd)
                      (Ghost.hide (Odd (n + 2)))
                      (upd_odd_f n)
 
-assume
-val alloc (x:stepper{compatible p x x})
+val alloc (x:stepper{compatible p x x /\ refine x})
   : SteelT (ref stepper p) emp (fun r -> pts_to r x)
+
+let alloc x =
+  let r = alloc x in
+  change_slprop (Memory.pts_to r x) (pts_to r x) (fun _ -> ());
+  r
 
 assume
 val split (r:ref stepper p) (v_full v0 v1:stepper)  : Steel unit (pts_to r v_full) (fun _ -> pts_to r v0 `star` pts_to r v1)

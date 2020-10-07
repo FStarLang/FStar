@@ -24,6 +24,8 @@ module Ins = Steel.Semantics.Instantiate
 
 open Steel.Memory
 
+#set-options "--warn_error -330"  //turn off the experimental feature warning
+
 let join_preserves_interp hp m0 m1
   = intro_emp m1;
     intro_star hp emp m0 m1;

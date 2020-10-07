@@ -256,7 +256,7 @@ let next_increase_length (tag:party) (#p:dprot) (x y:partial_trace_of p)
         = extend_increase_length x.tr msg
     in Classical.forall_intro (Classical.move_requires aux)
 
-let rec lemma_ahead_is_longer (tag:party) (#p:dprot) (q:dprot) (s:trace p q) (q':dprot) (s':trace p q')
+let lemma_ahead_is_longer (tag:party) (#p:dprot) (q:dprot) (s:trace p q) (q':dprot) (s':trace p q')
   : Lemma (requires ahead tag q q' s s')
           (ensures trace_length s >= trace_length s')
   = let open FStar.ReflexiveTransitiveClosure in
@@ -341,7 +341,7 @@ let compatible_b_r_v_is_ahead
 let extend_node_a_r (#p:dprot) (#q:dprot{more q /\ is_recv q}) (tr:trace p q)
   (tr':partial_trace_of p{trace_length tr'.tr > trace_length tr /\
     compatible (pcm p) (A_R q tr) (V tr')})
-  : (y:t p)
+  : t p
   = compatible_a_r_v_is_ahead tr tr';
     let x = next_message tr tr'.tr in
     let q' = step q x in
@@ -351,7 +351,7 @@ let extend_node_a_r (#p:dprot) (#q:dprot{more q /\ is_recv q}) (tr:trace p q)
 let extend_node_b_r (#p:dprot) (#q:dprot{more q /\ is_send q}) (tr:trace p q)
   (tr':partial_trace_of p{trace_length tr'.tr > trace_length tr /\
     compatible (pcm p) (B_R q tr) (V tr')})
-  : (y:t p)
+  : t p
   = compatible_b_r_v_is_ahead tr tr';
     let x = next_message tr tr'.tr in
     let q' = step q x in
