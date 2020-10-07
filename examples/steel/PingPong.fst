@@ -20,7 +20,7 @@ open Steel.Memory
 open Steel.Channel.Protocol
 module Duplex = Steel.Channel.Duplex
 module Protocol = Steel.Channel.Protocol
-open Steel.SteelT.Basics
+//open Steel.SteelT.Basics
 
 (** Specification and implementation of a pingpong protocol *)
 
@@ -52,7 +52,7 @@ let client (c:Duplex.chan pingpong)
     // This fact is available in the context and can be asserted.
     assert (y > 17);
     // To end the protocol, we return unit
-    return ()
+    ()
 
 
 /// An implementation of the server side of the protocol.
@@ -69,7 +69,7 @@ let server (c:Duplex.chan pingpong)
     // The dual protocol specifies that an integer is received, and that a greater integer
     // must be sent. We arbitrarily choose y + 42
     Duplex.send c (y + 42);
-    return ()
+    ()
 
 /// A wrong implementation of the server side of the protocol.
 /// If the `expect_failure` attribute is commented out, this function does not typecheck
@@ -82,7 +82,7 @@ let failed_server (c:Duplex.chan pingpong)
     // This send does not satisfy the protocol, as the integer should be greater than y
     // The error message points to the value sent not satisfying the protocol
     Duplex.send c (y - 42);
-    return ()
+    ()
 
 
 /// Initialization of both the client and the server side of the pingpong protocol.
@@ -96,10 +96,10 @@ let client_server (_:unit)
     // The separation logic assertion `endpoint c pingpong <*> endpoint c (dual pingpong)`
     // is in the context. We can execute both the clients in the server in parallel,
     // as they both operate on separated resources
-    par (fun _ -> client c) (fun _ -> server c);
+    let _ = par (fun _ -> client c) (fun _ -> server c) in
     // Our separation logic is affine, we can drop the endpoints from the context
     // to make them unavailable from outside client_server
-    drop _
+    drop (Duplex.endpoint c Protocol.done `star` Duplex.endpoint c Protocol.done)
 
 module T = Steel.Primitive.ForkJoin
 
@@ -107,11 +107,11 @@ module T = Steel.Primitive.ForkJoin
 
 let rec join_all (threads:list (T.thread emp))
   : SteelT unit emp (fun _ -> emp)
-  = match threads with
-    | [] -> return ()
-    | hd::tl ->
-      T.join hd;
-      join_all tl
+  = let open FStar.List.Tot.Base in
+    cond (isEmpty threads)
+      (fun _ -> emp) (fun _ _ -> emp)
+      (fun _ -> noop ())
+      (fun _ -> let Cons hd tl = threads in T.join hd; join_all tl)
 
 /// We leverage an existing fork/join library to execute n instances of client_server in parallel
 /// This function accumulates all created threads in its second argument.
@@ -121,11 +121,6 @@ let rec join_all (threads:list (T.thread emp))
 /// in a fork and adds the created thread to the list passed as argument in the continuation
 let rec many (n:nat) (threads:list (T.thread emp))
   : SteelT unit emp (fun _ -> emp)
-  = if n = 0 then join_all threads
-    else begin
-      // Helper to reshape the separation logic assertions, as framing is not yet automated
-      h_intro_emp_l _;
-      // Creates a thread to execute client_server,
-      // and recursively execute many in the continuation
-      T.fork client_server (fun t _ -> many (n - 1) (t::threads))
-    end
+  = cond (op_Equality #nat n 0) (fun _ -> emp) (fun _ _ -> emp)
+      (fun _ -> join_all threads)
+      (fun _ -> T.fork client_server (fun t _ -> many (n-1) (t::threads)); ())
