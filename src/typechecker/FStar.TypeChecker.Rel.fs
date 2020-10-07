@@ -3804,7 +3804,7 @@ let solve_universe_inequalities env ineqs : unit =
     solve_universe_inequalities' tx env ineqs;
     UF.commit tx
 
-let try_solve_deferred_constraints defer_ok smt_ok env (g:guard_t) =
+let try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env (g:guard_t) =
    let fail (d,s) =
       let msg = explain env d s in
       raise_error (Errors.Fatal_ErrorInSolveDeferredConstraints, msg) (p_loc d)
@@ -3830,20 +3830,27 @@ let try_solve_deferred_constraints defer_ok smt_ok env (g:guard_t) =
        failwith "Impossible: should have raised a failure already"
    in
    solve_universe_inequalities env g.univ_ineqs;
-   let g = DeferredImplicits.solve_deferred_to_tactic_goals env g in
+   let g =
+     if deferred_to_tac_ok
+     then DeferredImplicits.solve_deferred_to_tactic_goals env g
+     else g 
+   in
    if Env.debug env <| Options.Other "ResolveImplicitsHook"
    then BU.print1 "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s\n"
           (guard_to_string env g);
    {g with univ_ineqs=([], [])}
 
-let solve_deferred_constraints' smt_ok env (g:guard_t) =
-    try_solve_deferred_constraints false smt_ok env g
-
 let solve_deferred_constraints env (g:guard_t) =
-    solve_deferred_constraints' true env g
+    let defer_ok = false in
+    let smt_ok = true in
+    let deferred_to_tac_ok = true in
+    try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 
-let solve_some_deferred_constraints env (g:guard_t) =
-    try_solve_deferred_constraints true true env g
+let solve_non_tactic_deferred_constraints env (g:guard_t) =
+    let defer_ok = false in
+    let smt_ok = true in
+    let deferred_to_tac_ok = false in
+    try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 
 //use_smt flag says whether to use the smt solver to discharge this guard
 //if use_smt = true, this function NEVER returns None, the error might come from the smt solver though
@@ -3858,7 +3865,11 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
   then BU.print1 "///////////////////ResolveImplicitsHook: discharge_guard'\n\
                   guard = %s\n"
                   (guard_to_string env g);
-  let g = solve_deferred_constraints' use_smt env g in
+  let g = 
+    let defer_ok = false in
+    let deferred_to_tac_ok = true in
+    try_solve_deferred_constraints defer_ok use_smt deferred_to_tac_ok env g 
+  in
   let ret_g = {g with guard_f = Trivial} in
   if not (Env.should_verify env) then Some ret_g
   else
@@ -4052,36 +4063,42 @@ let resolve_implicits' env is_tac g =
           then until_fixpoint(out, true) tl
           else let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
                let tm = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.8" [Env.Beta] env tm in
-               let env = if forcelax then {env with lax=true} else env in
-               if Env.debug env <| Options.Other "Rel"
-               then BU.print5 "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"
-                               (Print.uvar_to_string ctx_u.ctx_uvar_head)
-                               (Print.term_to_string tm)
-                               (Print.term_to_string ctx_u.ctx_uvar_typ)
-                               reason
-                               (Range.string_of_range r);
-               let g =
-                 try
-                   env.check_type_of must_total env tm ctx_u.ctx_uvar_typ
-                 with e when Errors.handleable e ->
-                    Errors.add_errors [Error_BadImplicit,
-                                       BU.format3 "Failed while checking implicit %s set to %s of expected type %s"
+               if forcelax
+               && BU.set_is_empty (Free.uvars tm)
+               then until_fixpoint (out, true) tl
+               else begin
+                 let env = if forcelax then {env with lax=true} else env in
+                 if Env.debug env <| Options.Other "Rel"
+                 then BU.print5 "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"
+                                (Print.uvar_to_string ctx_u.ctx_uvar_head)
+                                (Print.term_to_string tm)
+                                (Print.term_to_string ctx_u.ctx_uvar_typ)
+                                reason
+                                (Range.string_of_range r);
+                 let g =
+                   try
+                     env.check_type_of must_total env tm ctx_u.ctx_uvar_typ
+                   with e when Errors.handleable e ->
+                     Errors.add_errors [Error_BadImplicit,
+                                         BU.format3 "Failed while checking implicit %s set to %s of expected type %s"
                                                (Print.uvar_to_string ctx_u.ctx_uvar_head)
                                                (N.term_to_string env tm)
                                                (N.term_to_string env ctx_u.ctx_uvar_typ), r];
                     raise e
-               in
-               let g' =
-                 match discharge_guard' (Some (fun () ->
-                        BU.format4 "%s (Introduced at %s for %s resolved at %s)"
-                            (Print.term_to_string tm)
-                            (Range.string_of_range r)
-                            reason
-                            (Range.string_of_range tm.pos))) env g true with
-                 | Some g -> g
-                 | None   -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
-               in
-               until_fixpoint (g'.implicits@out, true) tl in
+                 in
+                 let g' =
+                   match discharge_guard' (Some (fun () ->
+                         BU.format4 "%s (Introduced at %s for %s resolved at %s)"
+                                    (Print.term_to_string tm)
+                                    (Range.string_of_range r)
+                                    reason
+                                    (Range.string_of_range tm.pos))) env g true with
+                   | Some g -> g
+                   | None   -> failwith "Impossible, with use_smt = true, discharge_guard' should never have returned None"
+                 in
+                 until_fixpoint (g'.implicits@out, true) tl
+               end
+          in
   {g with implicits=until_fixpoint ([], false) g.implicits}
 
 let resolve_implicits env g =

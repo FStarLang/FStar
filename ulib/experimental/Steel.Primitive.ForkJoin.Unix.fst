@@ -223,7 +223,7 @@ let kfork (#p:slprop) (#q:slprop) (f : unit -> SteelK unit p (fun _ -> q))
   SteelK?.reflect (
   fun (#frame:slprop) (#postf:slprop)
     (k : (x:(thread q) -> SteelT unit (frame `star` emp) (fun _ -> postf))) ->
-      let t1 () : SteelT unit p (fun _ -> q) =
+      let t1 () : SteelT unit (emp `star` p) (fun _ -> q) =
         let r : steelK unit p (fun _ -> q) = reify (f ()) in
         r #emp #q (fun () -> idk ())
       in
