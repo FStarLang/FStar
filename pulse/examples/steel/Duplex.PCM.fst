@@ -1,4 +1,4 @@
-module Steel.Duplex.PCM
+module Duplex.PCM
 
 open FStar.PCM
 
