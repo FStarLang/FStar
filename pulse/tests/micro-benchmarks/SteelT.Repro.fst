@@ -46,17 +46,13 @@ inline_for_extraction noextract let resolve_frame () : Tac unit =
 [@@resolve_implicits; resolve_framing]
 let resolve () : Tac unit =
     let n = T.ngoals() in
-    if n = 21 then T.fail "Correct number of goals: Not solving any implicits"
+    if n = 18 then T.fail "Correct number of goals: Not solving any implicits"
     else T.admit_all()
 
 
-//#push-options "--debug Repro --debug_level ResolveImplicitsHook"
-#push-options "--print_implicits"
 val test_ok1 (_:unit)
   : SteelT unit emp (fun c -> emp)
-[@@expect_failure [287; 189]]
-// FIXME: 189 and 287 appeared during reshuffle in layered effects
-//        used to be only 228
+[@@expect_failure [228]]
 let test_ok1 _
   = let tr = dependent_provides () in
     let c = my_frame_t (myref_slprop tr) (*#(myref_slprop tr)*) () in
