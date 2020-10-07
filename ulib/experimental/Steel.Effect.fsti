@@ -27,7 +27,6 @@ module Ins = Steel.Semantics.Instantiate
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
-#push-options "--warn_error -271"
 let interp_depends_only_on_post (#a:Type) (hp:a -> slprop)
 : Lemma
   (forall (x:a).
@@ -35,10 +34,8 @@ let interp_depends_only_on_post (#a:Type) (hp:a -> slprop)
 = let aux (x:a)
     : Lemma
       (forall (m0:hmem (hp x)) (m1:mem{disjoint m0 m1}). interp (hp x) m0 <==> interp (hp x) (join m0 m1))
-      [SMTPat ()]
     = interp_depends_only_on (hp x) in
-  ()
-#pop-options
+  Classical.forall_intro aux
 
 let req_to_act_req (#pre:pre_t) (req:req_t pre) : Sem.l_pre #state pre =
   interp_depends_only_on pre;
