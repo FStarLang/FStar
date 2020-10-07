@@ -162,8 +162,7 @@ let par0 (#aL:Type u#a) (#preL:slprop u#1) (#postL:aL -> slprop u#1)
     (fun h0 y h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 (fst y) h1 /\ lpostR h0 (snd y) h1)
   = Steel?.reflect (fun _ -> Sem.run #state #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)))
 
-assume
-val par' (#aL:Type u#a)
+let par (#aL:Type u#a)
         (#preL:slprop u#1)
         (#postL:aL -> slprop u#1)
         (#lpreL:req_t preL)
@@ -180,9 +179,7 @@ val par' (#aL:Type u#a)
     (fun y -> postL (fst y) `Mem.star` postR (snd y))
     (fun h -> lpreL h /\ lpreR h)
     (fun h0 y h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 (fst y) h1 /\ lpostR h0 (snd y) h1)
-  // = par0 (reify (f ())) (reify (g()))
-
-let par = par'
+  = par0 (reify (f ())) (reify (g()))
 
 let ( || ) f g = par f g
 
