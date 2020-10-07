@@ -1,7 +1,7 @@
 module NewCanon
 
 open Steel.Memory
-open Steel.FramingEffect
+open Steel.Effect
 
 assume val p (#n:int) (n2:int) : slprop
 assume val q (#n:int) (#n':int) (n2:int) : slprop
@@ -106,7 +106,7 @@ let swap2 (#a:Type) (r0 r1:reference a) (v0 v1:erased a)
     rewrite_eq (pts_to r1 full_perm) (Ghost.hide u0) v0;
     rewrite_eq (pts_to r0 full_perm) (Ghost.hide u1) v1
 
-open Steel.FramingEffect.Atomic
+open Steel.Effect.Atomic
 
 assume val alloc2 (x:int)  : SteelAtomic ref Set.empty observable emp (fun y -> ptr y)
 assume val free2 (r:ref) : SteelAtomic unit Set.empty observable (ptr r) (fun _ -> emp)
