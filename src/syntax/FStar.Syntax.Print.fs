@@ -583,7 +583,7 @@ let term_to_string' env x =
 
 let binder_to_json env b =
     let (a, imp) = b in
-    let n = if is_null_binder b then JsonNull else JsonStr (imp_to_string (nm_to_string a) imp) in
+    let n = JsonStr (imp_to_string (nm_to_string a) imp) in
     let t = JsonStr (term_to_string' env a.sort) in
     JsonAssoc [("name", n); ("type", t)]
 
