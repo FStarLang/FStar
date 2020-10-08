@@ -249,3 +249,78 @@ let cons (#a:Type)
    = let pc = new_dlist v in
      let l = concat #_ #null_dlist #null_dlist #(snd pc) #[] (fst pc) ptr0 in
      fst pc, l
+
+
+let returnF (#a:_)
+            (q:(a -> slprop))
+            (x:a)
+    : SteelF a (q x) q (fun _ -> True) (fun _ _ _ -> True)
+    = sladmit_depF () 
+
+(* this version of concat tries to use if/then/else
+   instead of a cond combinator ...
+   and seems like with some work it could actually work *)
+let rec concat_alt (#a:Type)
+               (#[@@framing_implicit] from0:t a) 
+               (#[@@framing_implicit] to0: t a)
+               (#[@@framing_implicit] hd0:cell a)
+               (#[@@framing_implicit] tl0:list (cell a))
+               (#[@@framing_implicit] from1:t a) 
+               (#[@@framing_implicit] hd1:cell a)
+               (#[@@framing_implicit] tl1:list (cell a))
+               (ptr0:t a)
+               (ptr1:t a) 
+   : SteelT (list (cell a))
+     (dlist from0 ptr0 to0 (hd0::tl0) `star`
+      dlist from1 ptr1 null_dlist (hd1::tl1))
+     (fun l ->
+       dlist from0 ptr0 null_dlist l)
+   =
+     let to1 = null_dlist #a in
+
+     //1: read the ptr0 to get cell0
+     
+     let c0 = read_head from0 ptr0 to0 hd0 tl0 in
+
+     //2: unfold dlist to dlist cons
+     elim_dlist_cons from0 ptr0 to0 c0 tl0;     
+
+     let b = ptr_eq (next c0) to0 in
+
+     if b 
+     then (
+       (* refine just a small part of the context assertion based on b *)
+       change_slprop
+         (dlist ptr0 (next c0) to0 tl0)
+         (dlist ptr0 to0 to0 tl0)
+         (fun _ -> ());
+
+       (* inline concat_nil_l *)
+       // 1. invert dlist tl0 to dlist []
+       invert_dlist_nil_eq ptr0 to0 to0 tl0;
+       drop (dlist ptr0 to0 to0 []);
+       // tl0 == []
+       // this assume one is needed until we model null properly
+       assume (ptr0 =!= null_dlist);
+       
+       // 2. ptr0.next <- ptr1
+       write ptr0 (set_next c0 ptr1);
+   
+       write_prev ptr1 ptr0;
+
+       intro_dlist_cons from0 ptr0 _ _ ptr1 _;
+       drop (pure (tl0 == []));
+       returnF #_ 
+               (dlist from0 ptr0 null_dlist) 
+               (set_next c0 ptr1
+                   :: set_prev hd1 ptr0 
+                   :: tl1)                 
+     ) else (
+       (** But, I can't write the other branch
+           because it seems to want the pre-post to match exactly
+           rather than be related by equiv **)
+       // let l = concat_cons (concat #a) 
+       //              from0 ptr0 to0 c0 tl0
+       //              from1 ptr1 hd1 tl1 in
+       sladmit_depF () 
+     )
