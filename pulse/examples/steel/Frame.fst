@@ -24,7 +24,7 @@ module Frame
 open Steel.Semantics.Instantiate
 open Steel.Memory
 module Mem = Steel.Memory
-open Steel.Effect
+open Steel.EffectX
 open Steel.Memory.Tactics
 
 let rassert
@@ -33,8 +33,8 @@ let rassert
     FStar.Tactics.with_tactic
     reprove_frame
     (can_be_split_into h_in h_out emp /\ True)})
-  : SteelT unit h_in (fun _ -> h_out)
-  = Steel.SteelT.Basics.h_admit _ _
+  : SteelXT unit h_in (fun _ -> h_out)
+  = Steel.SteelXT.Basics.h_admit _ _
     // Steel?.reflect (fun _ ->
     //   let m0 = NMSTTotal.get () in
     //   FStar.Tactics.by_tactic_seman reprove_frame (can_be_split_into h_in h_out emp /\ True);
@@ -51,8 +51,8 @@ let steel_frame_t
       reprove_frame
       (can_be_split_into outer pre frame /\ True)}
   )
-  ($f:unit -> Steel a pre post (fun _ -> True) (fun _ _ _ -> True))
-: SteelT a
+  ($f:unit -> SteelX a pre post (fun _ -> True) (fun _ _ _ -> True))
+: SteelXT a
   outer
   (fun x -> post x `Mem.star` frame)
 = FStar.Tactics.by_tactic_seman reprove_frame (can_be_split_into outer pre frame /\ True);
@@ -60,5 +60,5 @@ let steel_frame_t
   FStar.Tactics.unfold_with_tactic reprove_frame
     (can_be_split_into outer (pre `Mem.star` frame) emp /\ True);
   rassert (pre `Mem.star` frame);
-  Steel.SteelT.Basics.frame f frame
+  Steel.SteelXT.Basics.frame f frame
 #pop-options

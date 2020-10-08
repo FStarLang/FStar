@@ -20,7 +20,9 @@ open Steel.SpinLock
 open Steel.Effect
 open Steel.Memory
 open Steel.HigherReference
-open Steel.SteelT.Basics
+module SX = Steel.EffectX
+open Steel.SteelXT.Basics
+
 
 module T = FStar.Tactics
 module ST = Steel.Memory.Tactics
@@ -29,17 +31,17 @@ module ST = Steel.Memory.Tactics
 private
 val reshuffle0 (#p #q : slprop)
               (_ : squash (p `equiv` q))
-   : SteelT unit p (fun _ -> q)
+   : SX.SteelXT unit p (fun _ -> q)
 
 private
 let reshuffle0 #p #q peq =
-  Steel.Effect.Atomic.change_slprop p q (fun m -> ())
+  Steel.EffectX.Atomic.change_slprop p q (fun m -> ())
 
 private
 val reshuffle (#p #q : slprop)
               (_ : squash (T.with_tactic ST.canon
                                          (squash (p `equiv` q))))
-   : SteelT unit p (fun _ -> q)
+   : SX.SteelXT unit p (fun _ -> q)
 
 #push-options "--no_tactics" (* GM: This should not be needed *)
 
@@ -54,17 +56,17 @@ let reshuffle #p #q peq =
 // Some generic lemmas
 ////////////////////////////////////////////////////////////////////////////////
 let assoc_r (p q r:slprop)
-  : SteelT unit ((p `star` q) `star` r) (fun _ -> p `star` (q `star` r))
+  : SX.SteelXT unit ((p `star` q) `star` r) (fun _ -> p `star` (q `star` r))
   = reshuffle ()
 
 let assoc_l (p q r:slprop)
-  : SteelT unit (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
+  : SX.SteelXT unit (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
   = reshuffle ()
 
 let pts_to_injective #a #p #q (r:ref a) (v0 v1:Ghost.erased a) (rest:Ghost.erased a -> slprop)
-  : SteelT unit (pts_to r p v0 `star` pts_to r q v1 `star` rest v1)
+  : SX.SteelXT unit (pts_to r p v0 `star` pts_to r q v1 `star` rest v1)
                 (fun _ -> pts_to r p v0 `star` pts_to r q v0 `star` rest v0)
-  = Steel.Effect.Atomic.change_slprop _ _
+  = Steel.EffectX.Atomic.change_slprop _ _
                 (fun m -> pts_to_ref_injective r p q v0 v1 m;
                        assert (v0 == v1))
 
@@ -72,18 +74,18 @@ open Steel.FractionalPermission
 
 (* Since pts_to is witness-invariant, we can witness any `q` here. *)
 let ghost_read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
-  : SteelT (Ghost.erased a) (h_exists (fun (v:a) -> pts_to r p v `star` q v))
+  : SX.SteelXT (Ghost.erased a) (h_exists (fun (v:a) -> pts_to r p v `star` q v))
              (fun v -> pts_to r p v `star` q v)
   = pts_to_witinv r p;
     star_is_witinv_left (fun (v:a) -> pts_to r p v) q;
     witness_h_exists ()
 
 val intro_pure_p (#p:prop) (s:squash p) (h:slprop)
-  : SteelT unit h (fun _ -> pure p `star` h)
+  : SX.SteelXT unit h (fun _ -> pure p `star` h)
 let intro_pure_p #p s h = intro_pure p; h_commute _ _
 
 val elim_pure (#p:prop)
-  : SteelT (squash p) (pure p) (fun _ -> emp)
+  : SX.SteelXT (squash p) (pure p) (fun _ -> emp)
 let elim_pure #p =
   assert (exists m. interp (pure p) m);
   FStar.Classical.forall_intro (pure_star_interp emp p);
@@ -92,28 +94,28 @@ let elim_pure #p =
   ()
 
 val intro_pure (#p:prop) (s:squash p)
-  : SteelT unit emp (fun _ -> pure p)
+  : SX.SteelXT unit emp (fun _ -> pure p)
 let intro_pure #p s =
   intro_pure_p #p s emp;
   reshuffle ()
 
 let elim_intro_pure (#p:prop)
-  : SteelT (squash p) (pure p) (fun _ -> pure p)
+  : SX.SteelXT (squash p) (pure p) (fun _ -> pure p)
   = let s = elim_pure #p in
     intro_pure #p s;
     s
 
 let dup_pure (p:prop)
-  : SteelT unit (pure p) (fun _ -> pure p `star` pure p)
+  : SX.SteelXT unit (pure p) (fun _ -> pure p `star` pure p)
   = let s = elim_intro_pure #p in
     intro_pure_p s _
 
 let rewrite_ext (p q:slprop) (_:squash (p == q))
-  : SteelT unit p (fun _ -> q)
+  : SX.SteelXT unit p (fun _ -> q)
   = return ()
 
 let h_exists_assoc_r (#a:Type) (p q r: a -> slprop)
-  : SteelT unit (h_exists (fun x -> p x `star` q x `star` r x))
+  : SX.SteelXT unit (h_exists (fun x -> p x `star` q x `star` r x))
                 (fun _ -> h_exists (fun x -> p x `star` (q x `star` r x)))
   = let aux (x:a) : Lemma ((p x `star` q x `star` r x) `equiv` (p x `star` (q x `star` r x)))
         = ST.shuffled (p x `star` q x `star` r x) (p x `star` (q x `star` r x))
@@ -127,13 +129,13 @@ let h_exists_assoc_r (#a:Type) (p q r: a -> slprop)
     reshuffle0 peq
 
 let rearrange_for_get_trace2 (p q r s t : slprop)
-  : SteelT unit ((p `star` q) `star` (r `star` s `star` t))
+  : SX.SteelXT unit ((p `star` q) `star` (r `star` s `star` t))
                 (fun _ -> (r `star` s `star` p `star` t) `star` q)
   = reshuffle ()
 
 
 let rearrange_for_get_trace (p q r s : slprop)
-  : SteelT unit (p `star` q `star` r `star` s)
+  : SX.SteelXT unit (p `star` q `star` r `star` s)
                 (fun _ -> r `star` (p `star` q `star` s))
   = reshuffle ()
 
@@ -193,11 +195,11 @@ let chan_inv #p (c:chan_t p) : slprop =
     pts_to c.send half vsend `star` chan_inv_recv c vsend)
 
 let rewrite_eq_squash #a (x:a) (y:a{x==y}) (p:a -> slprop)
-  : SteelT unit (p x) (fun _ -> p y)
+  : SX.SteelXT unit (p x) (fun _ -> p y)
   = h_assert (p y)
 
 let intro_chan_inv_cond_eq (vs vr:chan_val)
-  : SteelT unit (pure (vs == vr))
+  : SX.SteelXT unit (pure (vs == vr))
                 (fun _ -> chan_inv_cond vs vr)
   = elim_pure #(vs==vr);
     assert (vs == vr);
@@ -207,22 +209,22 @@ let intro_chan_inv_cond_eq (vs vr:chan_val)
     h_assert (chan_inv_cond vs vr)
 
 let intro_chan_inv_cond_step (vs vr:chan_val)
-  : SteelT unit (chan_inv_step vr vs)
+  : SX.SteelXT unit (chan_inv_step vr vs)
                 (fun _ -> chan_inv_cond vs vr)
   = elim_intro_pure #(chan_inv_step_p vr vs);
     assert (chan_inv_step_p vr vs);
     h_assert (chan_inv_step vr vs);
     rewrite_ext (chan_inv_step vr vs) (chan_inv_cond vs vr) ()
 
-let frame_l #a #q #r (f:unit -> SteelT a q r) (p:slprop)
-  : SteelT a (p `star` q) (fun x -> p `star` r x)
+let frame_l #a #q #r (f:unit -> SX.SteelXT a q r) (p:slprop)
+  : SX.SteelXT a (p `star` q) (fun x -> p `star` r x)
   = h_commute _ _;
     let x = frame f _ in
     h_commute _ _;
     return x
 
 let intro_chan_inv_aux #p (c:chan_t p) (vs vr:chan_val)
-  : SteelT unit (pts_to c.send half vs `star`
+  : SX.SteelXT unit (pts_to c.send half vs `star`
                  pts_to c.recv half vr `star`
                  trace_until c.trace vr `star`
                  chan_inv_cond vs vr)
@@ -233,7 +235,7 @@ let intro_chan_inv_aux #p (c:chan_t p) (vs vr:chan_val)
     intro_h_exists vs _
 
 let intro_chan_inv_step #p (c:chan_t p) (vs vr:chan_val)
-  : SteelT unit (pts_to c.send half vs `star`
+  : SX.SteelXT unit (pts_to c.send half vs `star`
                  pts_to c.recv half vr `star`
                  trace_until c.trace vr `star`
                  chan_inv_step vr vs)
@@ -242,7 +244,7 @@ let intro_chan_inv_step #p (c:chan_t p) (vs vr:chan_val)
     intro_chan_inv_aux c vs vr
 
 let intro_chan_inv_eq #p (c:chan_t p) (vs vr:chan_val)
-  : SteelT unit (pts_to c.send half vs `star`
+  : SX.SteelXT unit (pts_to c.send half vs `star`
                  pts_to c.recv half vr `star`
                  trace_until c.trace vr `star`
                  pure (vs == vr))
@@ -279,7 +281,7 @@ let sender #q (c:chan q) (p:prot) = in_state c.chan_chan.send p
 let receiver #q (c:chan q) (p:prot) = in_state c.chan_chan.recv p
 
 let intro_chan_inv #p (c:chan_t p) (v:chan_val)
-  : SteelT unit (pts_to c.send half v `star`
+  : SX.SteelXT unit (pts_to c.send half v `star`
                  pts_to c.recv half v `star`
                  trace_until c.trace v)
                 (fun _ -> chan_inv c)
@@ -290,7 +292,7 @@ let intro_chan_inv #p (c:chan_t p) (v:chan_val)
 let chan_val_p (p:prot) = (vs0:chan_val { in_state_prop p vs0 })
 
 let intro_in_state (r:ref chan_val) (p:prot) (v:chan_val_p p)
-  : SteelT unit (pts_to r half v) (fun _ -> in_state r p)
+  : SX.SteelXT unit (pts_to r half v) (fun _ -> in_state r p)
   = intro_pure_p #(in_state_prop p v) () _;
     h_commute _ _;
     intro_h_exists v _
@@ -298,7 +300,7 @@ let intro_in_state (r:ref chan_val) (p:prot) (v:chan_val_p p)
 let eq #a (x y : a) :prop = x == y
 
 let rewrite_eq #a (x:a) (y:a) (p:a -> slprop)
-  : SteelT unit (pure (eq x y) `star` p x) (fun _ -> p y)
+  : SX.SteelXT unit (pure (eq x y) `star` p x) (fun _ -> p y)
   = let _ = frame (fun _ -> elim_pure #(eq x y)) (p x) in
     h_assert (emp `star` p x);
     h_commute _ _;
@@ -312,7 +314,7 @@ let rewrite_eq #a (x:a) (y:a) (p:a -> slprop)
 
 
 let mk_chan_t_val (#p:prot) (send recv:ref chan_val) (tr:trace_ref p)
-  : SteelT (c:chan_t p{c==Mkchan_t send recv tr}) emp (fun c -> emp)
+  : SX.SteelXT (c:chan_t p{c==Mkchan_t send recv tr}) emp (fun c -> emp)
   = let c = (Mkchan_t send recv tr) in
     return #_ #(fun c -> emp) c
 
@@ -323,12 +325,12 @@ let initial_trace (p:prot) : (q:partial_trace_of p {until q == p})
   = { to = p; tr=Waiting p}
 
 let intro_until_eq #p (c:chan_t p) (v:init_chan_val p) //{p == step v.chan_prot v.chan_msg})
-  : SteelT unit emp (fun _ -> pure (until (initial_trace p) == (step v.chan_prot v.chan_msg)))
+  : SX.SteelXT unit emp (fun _ -> pure (until (initial_trace p) == (step v.chan_prot v.chan_msg)))
   = let s :squash (until (initial_trace p) == (step v.chan_prot v.chan_msg)) = () in
     intro_pure #_ s
 
 let intro_trace_until #q (r:trace_ref q) (tr:partial_trace_of q) (v:chan_val)
-  : SteelT unit (MRef.pts_to r full_perm tr `star` pure (until tr == step v.chan_prot v.chan_msg))
+  : SX.SteelXT unit (MRef.pts_to r full_perm tr `star` pure (until tr == step v.chan_prot v.chan_msg))
                 (fun _ -> trace_until r v)
   = intro_h_exists tr
                 (fun (tr:partial_trace_of q) ->
@@ -336,7 +338,7 @@ let intro_trace_until #q (r:trace_ref q) (tr:partial_trace_of q) (v:chan_val)
                      pure (until tr == (step v.chan_prot v.chan_msg)))
 
 let intro_trace_until_init  #p (c:chan_t p) (v:init_chan_val p)
-  : SteelT unit (MRef.pts_to c.trace full_perm (initial_trace p))
+  : SX.SteelXT unit (MRef.pts_to c.trace full_perm (initial_trace p))
                 (fun _ -> trace_until c.trace v)
   = h_intro_emp_l _;
     frame (fun _ -> intro_until_eq c v) _;
@@ -348,16 +350,20 @@ let intro_trace_until_init  #p (c:chan_t p) (v:init_chan_val p)
 let chan_t_sr (p:prot) (send recv:ref chan_val) = (c:chan_t p{c.send == send /\ c.recv == recv})
 
 let rearrange_pqr_qrp (p q r:slprop)
-  : SteelT unit (p `star` (q `star` r))
+  : SX.SteelXT unit (p `star` (q `star` r))
                 (fun _ -> q `star` r `star` p)
   = reshuffle ()
 
+let alloc_mref (#a:Type) (p:Preorder.preorder a) (v:a)
+  : SX.SteelXT (MRef.ref a p) emp (fun r -> MRef.pts_to r full_perm v)
+  = as_steelx (fun _ -> MRef.alloc p v)
+
 let mk_chan_t (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
-  : SteelT (chan_t_sr p send recv)
+  : SX.SteelXT (chan_t_sr p send recv)
            (pts_to send half v `star` pts_to recv half v)
            (fun c -> chan_inv c)
   = h_intro_emp_l _;
-    let tr : trace_ref p = frame (fun _ -> MRef.alloc (extended_to #p) (initial_trace p)) _ in
+    let tr : trace_ref p = frame (fun _ -> alloc_mref (extended_to #p) (initial_trace p)) _ in
     h_assert (MRef.pts_to tr full_perm (initial_trace p) `star` (pts_to send half v `star` pts_to recv half v));
     h_intro_emp_l _;
     let c = frame (fun _ -> mk_chan_t_val #p send recv tr) _ in
@@ -373,9 +379,22 @@ let mk_chan_t (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
     let c' : chan_t_sr p send recv = c in
     return #(chan_t_sr p send recv) #(fun c -> chan_inv c) c'
 
+let alloc (#a:Type) (x:a)
+  : SX.SteelXT (ref a) emp (fun r -> pts_to r full_perm x)
+  = as_steelx (fun _ -> alloc x)
 
-let new_chan (p:prot)
-  : SteelT (chan p) emp (fun c -> sender c p `star` receiver c p)
+let share_x (#a:Type) (#p:perm) (#v:Ghost.erased a) (r:ref a)
+  : SX.SteelXT unit
+    (pts_to r p v)
+    (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
+  = as_steelx (fun _ -> share r)
+
+let new_lock (p:slprop)
+  : SX.SteelXT (lock p) p (fun _ -> emp)
+  = as_steelx (fun _ -> new_lock p)
+
+let new_chan_x (p:prot)
+  : SX.SteelXT (chan p) emp (fun c -> sender c p `star` receiver c p)
   = let q = msg unit p in
     let v : chan_val = { chan_prot = q; chan_msg = (); chan_ctr = 0 } in
     let vp : init_chan_val p = v in
@@ -384,10 +403,10 @@ let new_chan (p:prot)
     h_intro_emp_l (pts_to send full_perm v);
     let recv = frame (fun _ -> alloc v) _ in //(pts_to send full v) in
     h_assert (pts_to recv full_perm v `star` pts_to send full_perm v);
-    let _  = frame (fun _ -> share recv) _ in //(pts_to send full_perm v) in
+    let _  = frame (fun _ -> share_x recv) _ in //(pts_to send full_perm v) in
     h_assert ((pts_to recv half v `star` pts_to recv half v) `star` pts_to send full_perm v);
     h_commute _ _;
-    let _  = frame (fun _ -> share send) _ in
+    let _  = frame (fun _ -> share_x send) _ in
     h_assert ((pts_to send half v `star` pts_to send half v) `star`
               (pts_to recv half v `star` pts_to recv half v));
     reshuffle #_ #((pts_to send half v `star` pts_to recv half v) `star` (pts_to send half v `star` pts_to recv half v)) ();
@@ -412,6 +431,9 @@ let new_chan (p:prot)
     rewrite_eq_squash recv ch.chan_chan.recv (fun r -> in_state ch.chan_chan.send p `star` in_state r p);
     h_assert (sender ch p `star` receiver ch p);
     return #(chan p) #(fun ch -> (sender ch p `star` receiver ch p)) ch
+
+let new_chan (p:prot) : SteelT (chan p) emp (fun c -> sender c p `star` receiver c p)
+  = new_chan_x p
 
 let send_pre (r:ref chan_val) (p:prot{more p}) #q (c:chan_t q) (vs vr:chan_val) : slprop =
   (pts_to c.send half vs `star`
@@ -442,35 +464,35 @@ let sender_ahead (r:ref chan_val) (p:prot{more p}) #q (c:chan_t q) (vs vr:chan_v
      in_state r p)
 
 let channel_cases (r:ref chan_val) (#p:prot{more p}) #q (c:chan q) (x:msg_t p) (vs vr:chan_val)
-                  (then_: (unit -> SteelT unit (send_recv_in_sync r p c.chan_chan vs vr) (fun _ -> in_state r (step p x))))
-                  (else_: (unit -> SteelT unit (sender_ahead r p c.chan_chan vs vr) (fun _ -> in_state r (step p x))))
-    : SteelT unit (send_pre r p c.chan_chan vs vr) (fun _ -> in_state r (step p x))
+                  (then_: (unit -> SX.SteelXT unit (send_recv_in_sync r p c.chan_chan vs vr) (fun _ -> in_state r (step p x))))
+                  (else_: (unit -> SX.SteelXT unit (sender_ahead r p c.chan_chan vs vr) (fun _ -> in_state r (step p x))))
+    : SX.SteelXT unit (send_pre r p c.chan_chan vs vr) (fun _ -> in_state r (step p x))
     = let cc = c.chan_chan in
       h_assert (send_pre r p cc vs vr);
       h_assert (send_pre_split r p cc vs vr (vs.chan_ctr = vr.chan_ctr));
-      cond (vs.chan_ctr = vr.chan_ctr) (send_pre_split r p cc vs vr) _ then_ else_
+      SX.cond (vs.chan_ctr = vr.chan_ctr) (send_pre_split r p cc vs vr) _ then_ else_
 
 let gather (#a:Type) (#v0 #v1:Ghost.erased a) (r:ref a)
-  : SteelT unit
+  : SX.SteelXT unit
     (pts_to r half v0 `star` pts_to r half v1)
     (fun _ -> pts_to r full_perm v0)
-  = gather r
+  = as_steelx (fun _ -> gather r)
 
 let share (#a:Type) (#v:a) (r:ref a)
-  : SteelT unit
+  : SX.SteelXT unit
     (pts_to r full_perm v)
     (fun _ -> pts_to r half v `star` pts_to r half v)
-  = share r
+  = as_steelx (fun _ -> share r)
 
 let update_channel (#p:sprot) #q (c:chan_t q) (x:msg_t p) (vs:chan_val) (r:ref chan_val)
-  : SteelT chan_val
+  : SX.SteelXT chan_val
            (pts_to r full_perm vs `star` in_state_slprop p vs)
            (fun vs' -> pts_to r full_perm vs' `star` (in_state_slprop (step p x) vs' `star` chan_inv_step vs vs'))
   = h_commute _ _;
     frame (fun _ -> elim_pure #(in_state_prop p vs)) _;
     h_elim_emp_l _;
     let vs' = next_chan_val x vs in
-    write r vs';
+    as_steelx (fun _ -> write r vs');
     intro_pure_p #(in_state_prop (step p x) vs') () _;
     h_commute _ _;
     h_assert (pts_to r full_perm vs' `star` in_state_slprop (step p x) vs');
@@ -483,12 +505,12 @@ let update_channel (#p:sprot) #q (c:chan_t q) (x:msg_t p) (vs:chan_val) (r:ref c
 let send_pre_available (p:sprot) #q (c:chan_t q) (vs vr:chan_val)  = send_recv_in_sync c.send p c vs vr
 
 let gather_r (#p:sprot) (r:ref chan_val) (v:chan_val)
-  : SteelT unit
+  : SX.SteelXT unit
     (pts_to r half v `star` in_state r p)
     (fun _ -> pts_to r full_perm v `star` in_state_slprop p v)
   = h_commute _ _;
     h_assert (in_state r p `star` pts_to r half v);
-    let sub () : SteelT _ _ _ = ghost_read_refine (in_state_slprop p) r in
+    let sub () : SX.SteelXT _ _ _ = ghost_read_refine (in_state_slprop p) r in
     let v' = frame sub _ in
     h_assert ((pts_to r half v' `star` in_state_slprop p v') `star` pts_to r half v);
     reshuffle #_ #(((pts_to r half v `star` pts_to r half v') `star` in_state_slprop p v')) ();
@@ -497,8 +519,12 @@ let gather_r (#p:sprot) (r:ref chan_val) (v:chan_val)
     h_assert (pts_to r half v `star` pts_to r half v `star` in_state_slprop p v);
     frame (fun _ -> gather r) _
 
+let release (#p:slprop) (l:lock p)
+  : SX.SteelXT unit p (fun _ -> emp)
+  = as_steelx (fun _ -> release l)
+
 let send_available (#p:sprot) #q (cc:chan q) (x:msg_t p) (vs vr:chan_val) (_:unit)
-  : SteelT unit (send_pre_available p #q cc.chan_chan vs vr) (fun _ -> sender cc (step p x))
+  : SX.SteelXT unit (send_pre_available p #q cc.chan_chan vs vr) (fun _ -> sender cc (step p x))
   = let c : chan_t q = cc.chan_chan in
     h_assert (pts_to c.send half vs `star`
               pts_to c.recv half vr `star`
@@ -518,7 +544,7 @@ let send_available (#p:sprot) #q (cc:chan q) (x:msg_t p) (vs vr:chan_val) (_:uni
                in_state c.send p));
     let _ = frame (fun _ -> elim_pure #(eq vs vr)) _ in
     assert (vs == vr);
-    h_elim_emp_l _; 
+    h_elim_emp_l _;
     rewrite_eq_squash vr vs (fun (vr:chan_val) ->
              pts_to c.send half vs `star`
              pts_to c.recv half vr `star`
@@ -574,11 +600,11 @@ let next_trace #p (vr:chan_val) (vs:chan_val)
      extend_partial_trace tr msg
 
 let squash_and (vr:chan_val) (vs:chan_val{chan_inv_step_p vr vs})
-  : s:squash (chan_inv_step_p vr vs)
+  : squash (chan_inv_step_p vr vs)
   = ()
 
 let next_trace_st #p (vr:chan_val) (vs:chan_val) (tr:partial_trace_of p)
-  : SteelT (extension_of tr)
+  : SX.SteelXT (extension_of tr)
            (chan_inv_step vr vs `star` pure (until tr == step vr.chan_prot vr.chan_msg))
            (fun ts -> pure (until ts == step vs.chan_prot vs.chan_msg))
   = let s0 : squash (chan_inv_step_p vr vs) =
@@ -592,19 +618,25 @@ let next_trace_st #p (vr:chan_val) (vs:chan_val) (tr:partial_trace_of p)
     h_assert (pure (until ts == step vs.chan_prot vs.chan_msg));
     return #(extension_of tr) #(fun ts -> pure (until ts == step vs.chan_prot vs.chan_msg)) ts
 
+let write_mref_x (#a:Type) (#p:Preorder.preorder a) (#v:Ghost.erased a)
+          (r:MRef.ref a p) (x:a{p v x})
+  : SX.SteelXT unit (MRef.pts_to r full_perm v)
+                (fun v -> MRef.pts_to r full_perm x)
+  = as_steelx (fun _ -> MRef.write r x)
+
 let write_trace #p (r:trace_ref p)
                    (old_tr:partial_trace_of p)
                    (new_tr:extension_of old_tr)
-  : SteelT unit (MRef.pts_to r full_perm old_tr)
+  : SX.SteelXT unit (MRef.pts_to r full_perm old_tr)
                 (fun _ -> MRef.pts_to r full_perm new_tr)
-  = let _ = MRef.write #_ #_ #old_tr r new_tr in
+  = let _ = write_mref_x #_ #_ #old_tr r new_tr in
     return ()
 
 let trace_property #p (vr:chan_val) (tr:partial_trace_of p) : slprop =
   pure (eq (until tr) (step vr.chan_prot vr.chan_msg))
 
 let update_trace #p (r:trace_ref p) (vr:chan_val) (vs:chan_val) (s:squash (chan_inv_step_p vr vs))
-  : SteelT unit
+  : SX.SteelXT unit
            (trace_until r vr) // `star` chan_inv_step vr vs)
            (fun _ -> trace_until r vs)
   = intro_pure_p s _;
@@ -613,11 +645,11 @@ let update_trace #p (r:trace_ref p) (vr:chan_val) (vs:chan_val) (s:squash (chan_
                    MRef.pts_to r full_perm tr `star`
                    pure (until tr == step vr.chan_prot vr.chan_msg))) `star`
                chan_inv_step vr vs);
-    let sub () : SteelT _ _ _
-       =
-        MRef.read_refine #(partial_trace_of p) #full_perm #(extended_to)
+    let sub () : SX.SteelXT _ _ _
+       = as_steelx (fun _ ->
+         MRef.read_refine #(partial_trace_of p) #full_perm #(extended_to)
            #(trace_property vr)
-           r
+           r)
     in
     let tr = frame sub _ in
     h_assert ((MRef.pts_to r full_perm tr `star` pure (eq (until tr) (step vr.chan_prot vr.chan_msg))) `star` chan_inv_step vr vs);
@@ -631,8 +663,12 @@ let update_trace #p (r:trace_ref p) (vr:chan_val) (vs:chan_val) (s:squash (chan_
                          MRef.pts_to r full_perm ts `star`
                          pure (until ts == step vs.chan_prot vs.chan_msg))
 
+let write (#a:Type) (#v:Ghost.erased a) (r:ref a) (x:a)
+  : SX.SteelXT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
+  = as_steelx (fun _ -> write r x)
+
 let recv_available (#p:sprot) #q (cc:chan q) (vs vr:chan_val) (_:unit)
-  : SteelT (msg_t p)
+  : SX.SteelXT (msg_t p)
     (sender_ahead cc.chan_chan.recv p cc.chan_chan vs vr)
     (fun x -> receiver cc (step p x))
   = let c = cc.chan_chan in
@@ -693,9 +729,9 @@ let recv_available (#p:sprot) #q (cc:chan q) (vs vr:chan_val) (_:unit)
 let send_pre_blocked (p:sprot) #q (c:chan_t q)  = sender_ahead c.send p c
 
 let send_blocked (#p:prot{more p}) #q (cc:chan q) (x:msg_t p) (vs vr:chan_val)
-                 (loop:(unit ->SteelT unit (sender cc p) (fun _ -> sender cc (step p x))))
+                 (loop:(unit -> SX.SteelXT unit (sender cc p) (fun _ -> sender cc (step p x))))
                  (_:unit)
-  : SteelT unit (send_pre_blocked p cc.chan_chan vs vr) (fun _ -> sender cc (step p x))
+  : SX.SteelXT unit (send_pre_blocked p cc.chan_chan vs vr) (fun _ -> sender cc (step p x))
   = let c = cc.chan_chan in
     h_assert ((pts_to c.send half vs `star`
                pts_to c.recv half vr `star`
@@ -709,7 +745,7 @@ let send_blocked (#p:prot{more p}) #q (cc:chan q) (x:msg_t p) (vs vr:chan_val)
     loop ()
 
 let send_receive_prelude (#p:prot) (cc:chan p)
-  : SteelT (chan_val & chan_val)
+  : SX.SteelXT (chan_val & chan_val)
            emp
            (fun v ->
              pts_to cc.chan_chan.send half (fst v) `star`
@@ -718,13 +754,13 @@ let send_receive_prelude (#p:prot) (cc:chan p)
              chan_inv_cond (fst v) (snd v))
   = let c : chan_t p = cc.chan_chan in
     let l : lock (chan_inv c) = cc.chan_lock in
-    let _ = acquire l in
+    let _ = as_steelx (fun _ -> acquire l) in
     h_assert (chan_inv c);
-    let vs = read_refine (chan_inv_recv c) c.send in
+    let vs = as_steelx (fun _ -> read_refine (chan_inv_recv c) c.send) in
     h_assert (pts_to c.send half vs `star` chan_inv_recv c vs);
     h_commute _ _;
     frame (fun _ -> h_exists_assoc_r _ _ _) _;
-    let sub () : SteelT _ _ _ = read_refine (fun vr -> trace_until c.trace vr `star` chan_inv_cond vs vr) c.recv in
+    let sub () : SX.SteelXT _ _ _ = as_steelx (fun _ -> read_refine (fun vr -> trace_until c.trace vr `star` chan_inv_cond vs vr) c.recv) in
     let vr = frame sub _ in
     h_assert ((pts_to c.recv half vr `star` (trace_until c.trace vr `star` chan_inv_cond vs vr)) `star` pts_to c.send half vs);
     reshuffle #_ #((pts_to c.send half vs `star`
@@ -740,8 +776,8 @@ let send_receive_prelude (#p:prot) (cc:chan p)
               chan_inv_cond (fst result) (snd result))
            result
 
-let rec send (#q:prot) (cc:chan q) (#p:prot{more p}) (x:msg_t p)
-  : SteelT unit (sender cc p) (fun _ -> sender cc (step p x))
+let rec send_x (#q:prot) (cc:chan q) (#p:prot{more p}) (x:msg_t p)
+  : SX.SteelXT unit (sender cc p) (fun _ -> sender cc (step p x))
   = h_assert (in_state cc.chan_chan.send p);
     h_intro_emp_l _;
     h_assert (emp `star` (in_state cc.chan_chan.send p));
@@ -755,38 +791,45 @@ let rec send (#q:prot) (cc:chan q) (#p:prot{more p}) (x:msg_t p)
     h_assert (send_pre cc.chan_chan.send p cc.chan_chan vs vr);
     channel_cases cc.chan_chan.send #p cc x vs vr
                   (send_available #p cc x vs vr)
-                  (send_blocked #p cc x vs vr (fun _ -> send cc x))
+                  (send_blocked #p cc x vs vr (fun _ -> send_x cc x))
+
+let send (#p:prot) (c:chan p) (#next:prot{more next}) (x:msg_t next)
+  : SteelT unit (sender c next) (fun _ -> sender c (step next x))
+  = send_x c x
 
 let channel_cases_recv
                   (r:ref chan_val) (#p:prot{more p}) #q (c:chan q) (vs vr:chan_val)
-                  (then_: (unit -> SteelT (msg_t p) (send_recv_in_sync r p c.chan_chan vs vr) (fun x -> in_state r (step p x))))
-                  (else_: (unit -> SteelT (msg_t p) (sender_ahead r p c.chan_chan vs vr) (fun x -> in_state r (step p x))))
-    : SteelT (msg_t p) (send_pre r p c.chan_chan vs vr) (fun x -> in_state r (step p x))
+                  (then_: (unit -> SX.SteelXT (msg_t p) (send_recv_in_sync r p c.chan_chan vs vr) (fun x -> in_state r (step p x))))
+                  (else_: (unit -> SX.SteelXT (msg_t p) (sender_ahead r p c.chan_chan vs vr) (fun x -> in_state r (step p x))))
+    : SX.SteelXT (msg_t p) (send_pre r p c.chan_chan vs vr) (fun x -> in_state r (step p x))
     = let cc = c.chan_chan in
       h_assert (send_pre r p cc vs vr);
       h_assert (send_pre_split r p cc vs vr (vs.chan_ctr = vr.chan_ctr));
-      cond (vs.chan_ctr = vr.chan_ctr) (send_pre_split r p cc vs vr) _ then_ else_
-
+      SX.cond (vs.chan_ctr = vr.chan_ctr) (send_pre_split r p cc vs vr) _ then_ else_
 
 let recv_blocked (#p:prot{more p}) #q (cc:chan q) (vs vr:chan_val)
-                 (loop:unit -> SteelT (msg_t p) (receiver cc p) (fun x -> receiver cc (step p x)))
+                 (loop:unit -> SX.SteelXT (msg_t p) (receiver cc p) (fun x -> receiver cc (step p x)))
                  (_:unit)
-  : SteelT (msg_t p) (send_recv_in_sync cc.chan_chan.recv p cc.chan_chan vs vr) (fun x -> receiver cc (step p x))
+  : SX.SteelXT (msg_t p) (send_recv_in_sync cc.chan_chan.recv p cc.chan_chan vs vr) (fun x -> receiver cc (step p x))
   = let c = cc.chan_chan in
     frame (fun _ -> intro_chan_inv_eq c vs vr) _;
     frame (fun _ -> release cc.chan_lock) _;
     h_elim_emp_l _;
     loop ()
 
-let rec recv #q (#p:prot{more p}) (cc:chan q)
-  : SteelT (msg_t p) (receiver cc p) (fun x -> receiver cc (step p x))
+let rec recv_x #q (#p:prot{more p}) (cc:chan q)
+  : SX.SteelXT (msg_t p) (receiver cc p) (fun x -> receiver cc (step p x))
   = h_intro_emp_l _;
     let vs_vr = frame (fun _ -> send_receive_prelude cc) _ in
     let vs = fst vs_vr in
     let vr = snd vs_vr in
     h_assert (send_pre cc.chan_chan.recv p cc.chan_chan vs vr);
-    channel_cases_recv cc.chan_chan.recv #p cc vs vr (recv_blocked #p cc vs vr (fun _ -> recv cc))
+    channel_cases_recv cc.chan_chan.recv #p cc vs vr (recv_blocked #p cc vs vr (fun _ -> recv_x cc))
                                                      (recv_available #p cc vs vr)
+
+let recv (#p:prot) (#next:prot{more next}) (c:chan p)
+  : SteelT (msg_t next) (receiver c next) (fun x -> receiver c (step next x))
+  = recv_x c
 
 let history_p' (#p:prot) (t:partial_trace_of p) (s:partial_trace_of p) : prop =
   t `extended_to` s /\ True
@@ -797,7 +840,6 @@ let history_p (#p:prot) (t:partial_trace_of p) : MRef.stable_property extended_t
 let history (#p:prot) (c:chan p) (t:partial_trace_of p) : slprop =
   pure (MRef.witnessed c.chan_chan.trace (history_p t))
 
-
 let history_duplicable (#p:prot) (c:chan p) (t:partial_trace_of p)
   : SteelT unit (history c t) (fun _ -> history c t `star` history c t)
   = dup_pure _
@@ -806,23 +848,37 @@ let extension_until #p (previous:partial_trace_of p) (q:prot) =
   (t:partial_trace_of p{previous `extended_to` t /\ until t == q})
 
 let recall_trace_ref #q (r:trace_ref q) (tr tr':partial_trace_of q)
-  : SteelT (squash (history_p tr tr'))
+  : SX.SteelXT (squash (history_p tr tr'))
            (MRef.pts_to r full_perm tr'  `star` pure (MRef.witnessed r (history_p tr)))
            (fun _ -> MRef.pts_to r full_perm tr')
-  = MRef.recall #(partial_trace_of q) #full_perm #extended_to #(history_p tr) r tr';
+  = as_steelx (fun _ -> MRef.recall #(partial_trace_of q) #full_perm #extended_to #(history_p tr) r tr');
     h_assert (MRef.pts_to r full_perm tr' `star` pure (history_p tr tr'));
     let s : squash (history_p tr tr') = frame_l (fun _ -> elim_pure #(history_p tr tr')) _ in
     h_commute _ _;
     h_elim_emp_l _;
     s
 
+let witness_mref (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:MRef.ref a p)
+            (fact:MRef.stable_property p)
+            (v:Ghost.erased a)
+            (u:squash (fact v))
+  : SX.SteelXT unit (MRef.pts_to r q v)
+                (fun _ -> MRef.pts_to r q v `star` pure (MRef.witnessed r fact))
+  = as_steelx (fun _ -> MRef.witness #a #q #p r fact v u)
+
 let witness_trace_ref #q (r:trace_ref q) (tr:partial_trace_of q)
-  : SteelT unit (MRef.pts_to r full_perm tr)
+  : SX.SteelXT unit (MRef.pts_to r full_perm tr)
                 (fun _ -> MRef.pts_to r full_perm tr `star` pure (MRef.witnessed r (history_p tr)))
-  = MRef.witness #_ #full_perm #extended_to r (history_p tr) tr ()
+  = witness_mref #_ #full_perm #extended_to r (history_p tr) tr ()
+
+let read_refine_mref (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#frame:a -> slprop)
+                (r:MRef.ref a p)
+  : SX.SteelXT a (h_exists (fun (v:a) -> MRef.pts_to r q v `star` frame v))
+             (fun v -> MRef.pts_to r q v `star` frame v)
+  = as_steelx (fun _ -> MRef.read_refine r)
 
 let extend_history #q (c:chan q) (tr:partial_trace_of q) (v:chan_val)
-  : SteelT (extension_of tr)
+  : SX.SteelXT (extension_of tr)
            (pts_to c.chan_chan.recv half v `star`
             history c tr `star`
             trace_until c.chan_chan.trace v)
@@ -830,7 +886,7 @@ let extend_history #q (c:chan q) (tr:partial_trace_of q) (v:chan_val)
                     history c tr' `star`
                     trace_until c.chan_chan.trace v `star`
                     pure (until tr' == step v.chan_prot v.chan_msg))
-  = let tr' = frame_l (fun _ -> MRef.read_refine c.chan_chan.trace) _ in
+  = let tr' = frame_l (fun _ -> read_refine_mref c.chan_chan.trace) _ in
     h_assert ((pts_to c.chan_chan.recv half v `star` history c tr) `star`
               (MRef.pts_to c.chan_chan.trace full_perm tr' `star`
                pure (until tr' == step v.chan_prot v.chan_msg)));
@@ -878,7 +934,7 @@ let extend_history #q (c:chan q) (tr:partial_trace_of q) (v:chan_val)
                                         pure (until tr' == step v.chan_prot v.chan_msg)) tr'
 
 let prot_equals #q (cc:chan q) #p (vr:chan_val)
-  : SteelT (squash (step vr.chan_prot vr.chan_msg == p))
+  : SX.SteelXT (squash (step vr.chan_prot vr.chan_msg == p))
            (pts_to cc.chan_chan.recv half vr `star` receiver cc p)
            (fun _ -> pts_to cc.chan_chan.recv half vr `star` receiver cc p)
   = let vr' = frame_l (fun _ -> ghost_read_refine _ cc.chan_chan.recv) _ in
@@ -896,14 +952,14 @@ let prot_equals #q (cc:chan q) #p (vr:chan_val)
 
 
 let rewrite_eq_squash_tok #a (x:a) (y:a) ($tok:squash (x==y)) (p:a -> slprop)
-  : SteelT unit (p x) (fun _ -> p y)
+  : SX.SteelXT unit (p x) (fun _ -> p y)
   = h_assert (p y)
 
 let witness_trace_until #q (r:trace_ref q) (vr:chan_val)
-  : SteelT (partial_trace_of q)
+  : SX.SteelXT (partial_trace_of q)
            (trace_until r vr)
            (fun tr -> trace_until r vr `star` pure (MRef.witnessed r (history_p tr)))
-  = let tr = MRef.read_refine r in
+  = let tr = read_refine_mref r in
     //need this assert
     h_assert (MRef.pts_to r full_perm tr `star` pure (until tr == step vr.chan_prot vr.chan_msg));
     frame (fun _ -> witness_trace_ref r tr) _;
@@ -914,19 +970,23 @@ let witness_trace_until #q (r:trace_ref q) (vr:chan_val)
     h_assert (trace_until r vr `star` pure (MRef.witnessed r (history_p tr)));
     return #(partial_trace_of q) tr
 
-let trace #q (cc:chan q)
-  : SteelT (partial_trace_of q) emp (fun tr -> history cc tr)
+let trace_x #q (cc:chan q)
+  : SX.SteelXT (partial_trace_of q) emp (fun tr -> history cc tr)
   = let _ = send_receive_prelude cc in
     rearrange_for_get_trace _ _ _ _;
     let tr = frame (fun _ -> witness_trace_until cc.chan_chan.trace _) _ in
     rearrange_for_get_trace2 _ _ _ _ _;
     frame (fun _ -> intro_chan_inv_aux cc.chan_chan _ _) _;
-    frame (fun _ -> release cc.chan_lock) _; 
+    frame (fun _ -> release cc.chan_lock) _;
     h_elim_emp_l (history cc tr);
     return #(partial_trace_of q) tr
 
-let extend_trace (#q:prot) (#p:prot) (cc:chan q) (tr:partial_trace_of q)
-  : SteelT (extension_of tr)
+let trace #q (cc:chan q)
+  : SteelT (partial_trace_of q) emp (fun tr -> history cc tr)
+  = trace_x cc
+
+let extend_trace_x (#q:prot) (#p:prot) (cc:chan q) (tr:partial_trace_of q)
+  : SX.SteelXT (extension_of tr)
            (receiver cc p `star` history cc tr)
            (fun t -> receiver cc p `star` history cc t `star` pure (until t == p))
   = h_intro_emp_l _;
@@ -982,3 +1042,9 @@ let extend_trace (#q:prot) (#p:prot) (cc:chan q) (tr:partial_trace_of q)
     h_assert (receiver cc p `star` (history cc tr' `star` pure (until tr' == p)));
     assoc_l _ _ _;
     return tr'
+
+let extend_trace (#q:prot) (#p:prot) (cc:chan q) (tr:partial_trace_of q)
+  : SteelT (extension_of tr)
+           (receiver cc p `star` history cc tr)
+           (fun t -> receiver cc p `star` history cc t `star` pure (until t == p))
+  = extend_trace_x cc tr
