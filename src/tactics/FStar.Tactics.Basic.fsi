@@ -22,8 +22,6 @@ module Z     = FStar.BigInt
 
 (* Internal utilities *)
 
-val goal_of_goal_ty : env -> typ -> goal * guard_t
-
 val proofstate_of_goals : Range.range -> env -> list<goal> -> list<implicit> -> proofstate
 (* Returns proofstate and uvar for main witness *)
 val proofstate_of_goal_ty : Range.range -> env -> typ -> proofstate * term
@@ -63,6 +61,7 @@ val t_apply_lemma          : bool -> bool -> term -> tac<unit>
 val print                  : string -> tac<unit>
 val debugging              : unit -> tac<bool>
 val dump                   : string -> tac<unit>
+val dump_all               : bool -> string -> tac<unit>
 val trefl                  : unit -> tac<unit>
 val dup                    : unit -> tac<unit>
 val prune                  : string -> tac<unit>

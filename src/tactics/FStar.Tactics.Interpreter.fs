@@ -358,6 +358,10 @@ let () =
         dump e_string e_unit
         dump NBET.e_string NBET.e_unit;
 
+      mk_tac_step_2 0 "dump_all"
+        dump_all e_bool      e_string      e_unit
+        dump_all NBET.e_bool NBET.e_string NBET.e_unit;
+
       mk_tac_step_3 0 "ctrl_rewrite"
         ctrl_rewrite E.e_direction (e_tactic_1 RE.e_term (e_tuple2 e_bool E.e_ctrl_flag))
                                    (e_tactic_thunk e_unit)
@@ -490,6 +494,8 @@ let run_tactic_on_ps
   : list<goal> // remaining goals
   * 'b // return value
   = let env = ps.main_context in
+    let env = { env with enable_defer_to_tac = false } in
+    let ps = { ps with main_context = env } in
     if !tacdbg then
         BU.print1 "Typechecking tactic: (%s) {\n" (Print.term_to_string tactic);
 
@@ -504,8 +510,13 @@ let run_tactic_on_ps
     Err.stop_if_err ();
     let tau = unembed_tactic_1 e_arg e_res tactic FStar.Syntax.Embeddings.id_norm_cb in
 
-    (* if !tacdbg then *)
-    (*     BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ); *)
+    if !tacdbg then
+    begin
+        BU.print1 "Running tactic with initial proof state (%s implicits) {\n"
+                  (string_of_int (List.length ps.all_implicits));
+        FStar.Tactics.Printing.do_dump_proofstate ps "Before running tactic";
+        BU.print_string "}\n"
+    end;
     let res, ms = BU.record_time (fun () -> run_safe (tau arg) ps) in
     if !tacdbg then
         BU.print_string "}\n";
@@ -525,25 +536,28 @@ let run_tactic_on_ps
                   (ps.goals @ ps.smt_goals);
 
         // Check that all implicits were instantiated
+        let print_implicit imp =
+          BU.format2 "\n(uvar=%s, sol=%s)"
+                      (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
+                      (match FStar.Syntax.Unionfind.find imp.imp_uvar.ctx_uvar_head with
+                       | None -> "UNSOLVED"
+                       | Some t -> Print.term_to_string t)
+        in
         if !tacdbg then
-            BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list
-                                                                    (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
-                                                                    ps.all_implicits);
+            BU.print2 "About to check %s tactic implicits{: %s}\n"
+              (string_of_int (List.length ps.all_implicits))
+              (FStar.Common.string_of_list print_implicit ps.all_implicits);
         let g = {Env.trivial_guard with TcComm.implicits=ps.all_implicits} in
         let g = TcRel.solve_deferred_constraints env g in
         if !tacdbg then
-            BU.print2 "Checked %s implicits (1): %s\n"
-                        (string_of_int (List.length ps.all_implicits))
-                        (FStar.Common.string_of_list
-                                (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
-                                ps.all_implicits);
+            BU.print2 "After solve_deffered_constraints %s implicits{: %s}\n"
+                        (string_of_int (List.length g.implicits))
+                        (FStar.Common.string_of_list print_implicit g.implicits);
         let g = TcRel.resolve_implicits_tac env g in
         if !tacdbg then
-            BU.print2 "Checked %s implicits (2): %s\n"
-                        (string_of_int (List.length ps.all_implicits))
-                        (FStar.Common.string_of_list
-                                (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
-                                ps.all_implicits);
+            BU.print2 "After resolve_implicits_tac %s implicits{: %s}\n"
+                        (string_of_int (List.length g.implicits))
+                        (FStar.Common.string_of_list print_implicit g.implicits);
         report_implicits rng_goal g.implicits;
         // /implicits
 
