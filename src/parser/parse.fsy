@@ -60,6 +60,7 @@ let old_attribute_syntax_warning =
 %token COLON_EQUALS
 %token COMMA
 %token CONJUNCTION
+%token DECREASES
 %token DEFAULT
 %token DISJUNCTION
 %token DOLLAR
@@ -1413,6 +1414,9 @@ in
 | ENSURES typ
     {let (_1, t) = ((), $2) in
       ( mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level )}
+| DECREASES typ
+    {let (_1, t) = ((), $2) in
+      ( mk_term (Decreases (t, None)) (rhs2 parseState 1 2) Type_level )}
 | ATTRIBUTES nonempty_list_atomicTerm_
     {let (_1, es) = ((), $2) in
       ( mk_term (Attributes es) (rhs2 parseState 1 2) Type_level )}
