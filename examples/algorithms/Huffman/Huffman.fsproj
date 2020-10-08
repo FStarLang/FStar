@@ -48,7 +48,7 @@
   <Import Project="$(FSTAR_HOME)\fsharp.extraction.targets" />
   <ItemGroup>
     <Compile Include="..\Huffman.fst" Link="Huffman.fst" />
-    <None Include="Huffman.repl.fsx" />
+    <None Include="Huffman.fsx" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
