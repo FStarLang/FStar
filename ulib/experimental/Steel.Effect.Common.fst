@@ -27,9 +27,6 @@ let sl_implies_interp p q =
   in Classical.forall_intro_2 (Classical.move_requires_2 aux)
 let sl_implies_interp_emp p q = ()
 
-let sl_implies_preserves_frame p q = ()
-let sl_implies_preserves_frame_right p q = ()
-
 let can_be_split_forall_frame p q frame x =
   assert (sl_implies (p x) (q x));
   slimp_star (p x) (q x) frame frame;

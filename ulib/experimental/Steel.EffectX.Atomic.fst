@@ -32,9 +32,9 @@ let atomic_repr a opened_invariants f pre post =
 let return a x o p = fun _ -> x
 
 let bind a b o o1 o2 pre_f post_f post_g f g =
-  fun m0 ->
-    let x = f () in
-    g x ()
+  fun frame ->
+    let x = f frame in
+    g x frame
 
 inline_for_extraction
 let lift_pure_steel_atomic a op p wp f

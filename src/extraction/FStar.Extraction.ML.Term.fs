@@ -445,7 +445,6 @@ let eta_expand (g:uenv) (t : mlty) (e : mlexpr) : mlexpr =
       let body = with_ty r <| MLE_App (e, vs_es) in
       with_ty t <| MLE_Fun (vs_ts, body)
 
-(* eta-expand `e` according to its type `t` *)
 let default_value_for_ty (g:uenv) (t : mlty) : mlexpr  =
     let ts, r = doms_and_cod t in
     let body r =
@@ -1656,12 +1655,18 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
 
           (* env_burn only matters for non-recursive lets and simply burns
            * the let bound variable in its own definition to generate
-           * code that is more understandable. *)
+           * code that is more understandable. We only do it for OCaml,
+           * to not affect Kremlin naming. *)
           let env_body, lbs, env_burn = List.fold_right (fun lb (env, lbs, env_burn) ->
               let (lbname, _, (t, (_, polytype)), add_unit, _) = lb in
               let env, nm, _ = UEnv.extend_lb env lbname t polytype add_unit in
-              let env_burn = UEnv.burn_name env_burn nm in
-              env, (nm,lb)::lbs, env_burn) lbs (g, [], g) in
+              let env_burn =
+                if Options.codegen () <> Some Options.Kremlin
+                then UEnv.burn_name env_burn nm
+                else env_burn
+              in
+              env, (nm,lb)::lbs, env_burn) lbs (g, [], g)
+          in
 
           let env_def = if is_rec then env_body else env_burn in
 

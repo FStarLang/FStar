@@ -20,6 +20,8 @@ friend Steel.EffectX
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
+#push-options "--fuel 0 --ifuel 1 --z3rlimit 20"
+
 let repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
   Sem.action_t #state #a pre post (req_to_act_req req) (ens_to_act_ens ens)
 
@@ -27,9 +29,9 @@ let return (a:Type) (x:a) (#[@@ framing_implicit] p:a -> slprop)
 : repr a (p x) p (return_req (p x)) (return_ens a x p)
   = fun _ -> x
 
-let bind a b f g = fun _ ->
-  let x = f () in
-  (g x) ()
+let bind a b f g = fun frame ->
+  let x = f frame in
+  (g x) frame
 
 let subcomp a f = f
 
@@ -40,31 +42,31 @@ let frame_aux (#a:Type)
   (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
   ($f:repr a pre post req ens) (frame:slprop)
 : repr a (pre `star` frame) (fun x -> post x `star` frame) req ens
-= fun _ ->
-  Sem.run #state #_ #_ #_ #_ #_ (Sem.Frame (Sem.Act f) frame (fun _ -> True))
+= fun frame' ->
+  Sem.run #state #_ #_ #_ #_ #_ frame' (Sem.Frame (Sem.Act f) frame (fun _ -> True))
 
 let bind_steel_steel a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g f g =
-  fun _ ->
-  let x = frame_aux f frame_f () in
-  frame_aux (g x) frame_g ()
+  fun frame' ->
+  let x = frame_aux f frame_f frame' in
+  frame_aux (g x) frame_g frame'
 
 let bind_steel_steelf (a:Type) (b:Type)
   #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f
   f g =
-  fun _ ->
-  let x = frame_aux f frame_f () in
-  (g x) ()
+  fun frame' ->
+  let x = frame_aux f frame_f frame' in
+  (g x) frame'
 
 let bind_steelf_steel (a:Type) (b:Type)
   #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_g
   f g =
-  fun _ ->
-  let x = f () in
-  frame_aux (g x) frame_g ()
+  fun frame' ->
+  let x = f frame' in
+  frame_aux (g x) frame_g frame'
 
-let bind_pure_steel_ a b wp f g = fun _ ->
+let bind_pure_steel_ a b wp f g = fun frame ->
   let x = f () in
-  (g x) ()
+  (g x) frame
 
 
 
@@ -162,7 +164,7 @@ let par0 (#aL:Type u#a) (#preL:slprop u#1) (#postL:aL -> slprop u#1)
     (fun y -> postL (fst y) `Mem.star` postR (snd y))
     (fun h -> lpreL h /\ lpreR h)
     (fun h0 y h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 (fst y) h1 /\ lpostR h0 (snd y) h1)
-  = Steel?.reflect (fun _ -> Sem.run #state #_ #_ #_ #_ #_ (Sem.Par (Sem.Act f) (Sem.Act g)))
+  = Steel?.reflect (fun frame -> Sem.run #state #_ #_ #_ #_ #_ frame (Sem.Par (Sem.Act f) (Sem.Act g)))
 
 let par (#aL:Type u#a)
         (#preL:slprop u#1)

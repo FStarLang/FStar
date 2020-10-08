@@ -58,25 +58,6 @@ val sl_implies_interp_emp (p q:slprop u#1)
   (ensures forall (m:mem). interp p m ==>  interp q m)
   [SMTPat (p `sl_implies` q)]
 
-val sl_implies_preserves_frame (p q:slprop u#1)
-: Lemma
-  (requires p `sl_implies` q)
-  (ensures
-    forall (m1 m2:mem) (r:slprop).
-      Sem.preserves_frame #state q r m1 m2 ==>
-      Sem.preserves_frame #state p r m1 m2)
-  [SMTPat (p `sl_implies` q)]
-
-val sl_implies_preserves_frame_right (p q:slprop u#1)
-: Lemma
-  (requires p `sl_implies` q)
-  (ensures
-    forall (m1 m2:mem) (r:slprop).
-      Sem.preserves_frame #state r p m1 m2 ==>
-      Sem.preserves_frame #state r q m1 m2)
-  [SMTPat (p `sl_implies` q)]
-
-
 let can_be_split (t1 t2:pre_t) = t1 `sl_implies` t2
 
 let can_be_split_forall (#a:Type) (t1 t2:post_t a) =

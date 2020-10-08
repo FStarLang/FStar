@@ -47,7 +47,7 @@ let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post
   interp_depends_only_on_post post;
   fun m0 x m1 -> interp pre m0 /\ interp (post x) m1 /\ ens m0 x m1
 
-val repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) : Type0
+val repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) : Type u#2
 
 unfold
 let return_req (p:slprop u#1) : req_t p = fun _ -> True

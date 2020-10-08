@@ -489,18 +489,33 @@ let (set_ps_psc : FStar_TypeChecker_Cfg.psc -> proofstate -> proofstate) =
         tac_verb_dbg = (uu___.tac_verb_dbg);
         local_state = (uu___.local_state)
       }
-let (tracepoint : FStar_TypeChecker_Cfg.psc -> proofstate -> unit) =
+let (tracepoint_with_psc :
+  FStar_TypeChecker_Cfg.psc -> proofstate -> Prims.bool) =
   fun psc ->
     fun ps ->
-      let uu___ =
-        (FStar_Options.tactic_trace ()) ||
-          (let uu___1 = FStar_Options.tactic_trace_d () in ps.depth <= uu___1) in
-      if uu___
-      then
-        let ps1 = set_ps_psc psc ps in
-        let subst = FStar_TypeChecker_Cfg.psc_subst ps1.psc in
-        let uu___1 = subst_proof_state subst ps1 in ps1.__dump uu___1 "TRACE"
-      else ()
+      (let uu___1 =
+         (FStar_Options.tactic_trace ()) ||
+           (let uu___2 = FStar_Options.tactic_trace_d () in
+            ps.depth <= uu___2) in
+       if uu___1
+       then
+         let ps1 = set_ps_psc psc ps in
+         let subst = FStar_TypeChecker_Cfg.psc_subst ps1.psc in
+         let uu___2 = subst_proof_state subst ps1 in
+         ps1.__dump uu___2 "TRACE"
+       else ());
+      true
+let (tracepoint : proofstate -> Prims.bool) =
+  fun ps ->
+    (let uu___1 =
+       (FStar_Options.tactic_trace ()) ||
+         (let uu___2 = FStar_Options.tactic_trace_d () in ps.depth <= uu___2) in
+     if uu___1
+     then
+       let subst = FStar_TypeChecker_Cfg.psc_subst ps.psc in
+       let uu___2 = subst_proof_state subst ps in ps.__dump uu___2 "TRACE"
+     else ());
+    true
 let (set_proofstate_range : proofstate -> FStar_Range.range -> proofstate) =
   fun ps ->
     fun r ->

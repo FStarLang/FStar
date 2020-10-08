@@ -104,8 +104,12 @@ let (load_native_tactics : unit -> unit) =
                  | FStar_Pervasives_Native.Some f -> f))) in
     let cmxs_files =
       FStar_All.pipe_right modules_to_load (FStar_List.map cmxs_file) in
-    FStar_List.iter (fun x -> FStar_Util.print1 "cmxs file: %s\n" x)
-      cmxs_files;
+    (let uu___2 = FStar_Options.debug_any () in
+     if uu___2
+     then
+       FStar_Util.print1 "Will try to load cmxs files: %s\n"
+         (FStar_String.concat ", " cmxs_files)
+     else ());
     (let uu___3 =
        (let uu___4 = FStar_Options.no_load_fstartaclib () in
         Prims.op_Negation uu___4) &&
