@@ -529,22 +529,13 @@ let run_tactic_on_ps
             BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list
                                                                     (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
                                                                     ps.all_implicits);
-        let g = {Env.trivial_guard with TcComm.implicits=ps.all_implicits} in
-        let g = TcRel.solve_deferred_constraints env g in
-        if !tacdbg then
-            BU.print2 "Checked %s implicits (1): %s\n"
-                        (string_of_int (List.length ps.all_implicits))
-                        (FStar.Common.string_of_list
-                                (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
-                                ps.all_implicits);
-        let g = TcRel.resolve_implicits_tac env g in
-        if !tacdbg then
-            BU.print2 "Checked %s implicits (2): %s\n"
-                        (string_of_int (List.length ps.all_implicits))
-                        (FStar.Common.string_of_list
-                                (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
-                                ps.all_implicits);
-        report_implicits rng_goal g.implicits;
+        let unsolved_implicits =
+          List.filter
+            (fun imp -> not (BU.set_is_empty (FStar.Syntax.Free.uvars imp.imp_tm)))
+            ps.all_implicits
+        in
+
+        report_implicits rng_goal unsolved_implicits;
         // /implicits
 
         if !tacdbg then
