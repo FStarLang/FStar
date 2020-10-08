@@ -1141,7 +1141,9 @@ let (filter_out_lcomp_cflags :
             | uu___1 -> true))
 let (closure_as_term :
   FStar_TypeChecker_Cfg.cfg ->
-    env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+    env ->
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   = fun cfg -> fun env1 -> fun t -> non_tail_inline_closure_env cfg env1 t
 let (unembed_binder_knot :
   FStar_Syntax_Syntax.binder FStar_Syntax_Embeddings.embedding
@@ -5189,7 +5191,8 @@ and (reify_lift :
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
       FStar_Syntax_Syntax.monad_name ->
         FStar_Syntax_Syntax.monad_name ->
-          FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+          FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+            FStar_Syntax_Syntax.term)
   =
   fun cfg ->
     fun e ->
