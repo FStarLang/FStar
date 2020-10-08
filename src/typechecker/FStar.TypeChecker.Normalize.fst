@@ -74,8 +74,20 @@ let cases f d = function
   | Some x -> f x
   | None -> d
 
+(* We memoize the normal form of variables in the environment, in
+ * order to implement call-by-need and avoid an exponential explosion,
+ * but we take care to only reuse memoized values when the cfg has not
+ * changed. The main reason is normalization requests, which can "grow"
+ * the set of allowed computations steps, and hence we may memoize
+ * something during the request that is used outside of it. This will
+ * essentially make it invalid. See issue #2155 in Github.
+ *
+ * We compare the cfg with physical equality, so it has to be the
+ * exact same object in memory. See read_memo and set_memo below. *)
+type cfg_memo 'a = memo (Cfg.cfg * 'a)
+
 type closure =
-  | Clos of env * term * memo (env * term) * bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint
+  | Clos of env * term * cfg_memo (env * term) * bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint
   | Univ of universe                               //universe terms do not have free variables
   | Dummy                                          //Dummy is a placeholder for a binder when doing strong reduction
 and env = list (option binder*closure)
@@ -89,7 +101,7 @@ type branches = list (pat * option term * term)
 type stack_elt =
  | Arg      of closure * aqual * Range.range
  | UnivArgs of list universe * Range.range
- | MemoLazy of memo (env * term)
+ | MemoLazy of cfg_memo (env * term)
  | Match    of env * option match_returns_ascription * branches * option residual_comp * cfg * Range.range
  | Abs      of env * binders * env * option residual_comp * Range.range //the second env is the first one extended with the binders, for reducing the option lcomp
  | App      of env * term * aqual * Range.range
@@ -101,11 +113,20 @@ type stack = list stack_elt
 
 let head_of t = let hd, _ = U.head_and_args_full t in hd
 
-let set_memo cfg (r:memo 'a) (t:'a) =
-  if cfg.memoize_lazy then
-    match !r with
-    | Some _ -> failwith "Unexpected set_memo: thunk already evaluated"
-    | None -> r := Some t
+let read_memo cfg (r:memo (Cfg.cfg * 'a)) : option 'a =
+  match !r with
+  | Some (cfg', a) when BU.physical_equality cfg cfg' ->
+    Some a
+  | _ -> None
+
+let set_memo cfg (r:memo (Cfg.cfg * 'a)) (t:'a) : unit =
+  if cfg.memoize_lazy then begin
+    (* We do this only as a sanity check. The only situation where we
+     * should set a memo again is when the cfg has changed. *)
+    if Option.isSome (read_memo cfg r) then
+      failwith "Unexpected set_memo: thunk already evaluated";
+    r := Some (cfg, t)
+  end
 
 let closure_to_string = function
     | Clos (env, t, _, _) -> BU.format2 "(env=%s elts; %s)" (List.length env |> string_of_int) (Print.term_to_string t)
@@ -1278,7 +1299,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    if not fix
                    || cfg.steps.zeta
                    || cfg.steps.zeta_full
-                   then match !r with
+                   then match read_memo cfg r with
                         | Some (env, t') ->
                             log cfg  (fun () -> BU.print2 "Lazy hit: %s cached to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
                             if maybe_weakly_reduced t'
@@ -1452,7 +1473,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    let stack =
                      stack |>
                      List.fold_right (fun (a, aq) stack ->
-                       Arg (Clos(env, a, BU.mk_ref (Some ([], a)), false),aq,t.pos)::stack)
+                       Arg (Clos(env, a, BU.mk_ref (Some (cfg, ([], a))), false),aq,t.pos)::stack)
                      norm_args
                    in
                    log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
@@ -1639,7 +1660,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     let memo = BU.mk_ref None in
                     let rec_env = (None, Clos(env, fix_f_i, memo, true))::rec_env in
                     rec_env, memo::memos, i + 1) (snd lbs) (env, [], 0) in
-            let _ = List.map2 (fun lb memo -> memo := Some (rec_env, lb.lbdef)) (snd lbs) memos in //tying the knot
+            let _ = List.map2 (fun lb memo -> memo := Some (cfg, (rec_env, lb.lbdef))) (snd lbs) memos in //tying the knot
             // NB: fold_left, since the binding structure of lbs is that righmost is closer, while in the env leftmost
             // is closer. In other words, the last element of lbs is index 0 for body, hence needs to be pushed last.
             let body_env = List.fold_left (fun env lb -> (None, Clos(rec_env, lb.lbdef, BU.mk_ref None, false))::env)
@@ -2672,7 +2693,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                   rebuild cfg env_arg stack t
              else let stack = App(env, t, aq, r)::stack in
                   norm cfg env_arg stack tm
-        else begin match !m with
+        else begin match read_memo cfg m with
           | None ->
             if cfg.steps.hnf && not (is_partial_primop_app cfg t)
             then let arg = closure_as_term cfg env_arg tm in
@@ -3030,7 +3051,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 //In that case, do not set the memo reference
                 let env = List.fold_left
                       (fun env (bv, t) -> (Some (S.mk_binder bv),
-                                        Clos([], t, BU.mk_ref (if cfg.steps.hnf then None else Some ([], t)), false))::env)
+                                        Clos([], t, BU.mk_ref (if cfg.steps.hnf then None else Some (cfg, ([], t))), false))::env)
                       env s in
                 norm cfg env stack (guard_when_clause wopt b rest)
         in
