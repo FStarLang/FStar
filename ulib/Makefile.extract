@@ -11,7 +11,8 @@ FSTAR_FILES:=$(filter-out $(NOEXTRACT_FILES), \
 	$(wildcard FStar.*.fst FStar.*.fsti) \
 	$(wildcard LowStar.*.fst LowStar.*.fsti) \
 	$(wildcard legacy/*fst legacy/*fsti) \
-	$(wildcard experimental/*fst experimental/*fsti))
+	$(wildcard experimental/*fst experimental/*fsti)) \
+	Steel.Effect.Common.fst
 
 CODEGEN ?= OCaml
 MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
