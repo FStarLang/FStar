@@ -1130,13 +1130,9 @@ let (binder_to_json :
       match uu___ with
       | (a, imp) ->
           let n =
-            let uu___1 = FStar_Syntax_Syntax.is_null_binder b in
-            if uu___1
-            then FStar_Util.JsonNull
-            else
-              (let uu___3 =
-                 let uu___4 = nm_to_string a in imp_to_string uu___4 imp in
-               FStar_Util.JsonStr uu___3) in
+            let uu___1 =
+              let uu___2 = nm_to_string a in imp_to_string uu___2 imp in
+            FStar_Util.JsonStr uu___1 in
           let t =
             let uu___1 = term_to_string' env a.FStar_Syntax_Syntax.sort in
             FStar_Util.JsonStr uu___1 in
