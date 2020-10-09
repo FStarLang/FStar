@@ -18,6 +18,8 @@ module FStar.Tactics.Util
 open FStar.Tactics.Effect
 open FStar.List.Tot
 
+#set-options "--z3rlimit 25 --fuel 1 --ifuel 1"
+
 (* Tac list functions, since there's no effect polymorphism *)
 val map: ('a -> Tac 'b) -> list 'a -> Tac (list 'b)
 let rec map f x = match x with
@@ -28,6 +30,14 @@ val iter : ('a -> Tac unit) -> list 'a -> Tac unit
 let rec iter f x = match x with
   | [] -> ()
   | a::tl -> f a; iter f tl
+
+val iteri_aux: int -> (int -> 'a -> Tac unit) -> list 'a -> Tac unit
+let rec iteri_aux i f x = match x with
+  | [] -> ()
+  | a::tl -> f i a; iteri_aux (i+1) f tl
+
+val iteri: (int -> 'a -> Tac unit) -> list 'a -> Tac unit
+let iteri f x = iteri_aux 0 f x
 
 val fold_left: ('a -> 'b -> Tac 'a) -> 'a -> l:list 'b -> Tac 'a
 let rec fold_left f x l = match l with
@@ -45,6 +55,11 @@ let rec zip #a #b l1 l2 = match l1, l2 with
     | x::xs, y::ys -> (x,y) :: (zip xs ys)
     | _ -> []
 
+val filter: ('a -> Tac bool) -> list 'a -> Tac (list 'a)
+let rec filter f = function
+  | [] -> []
+  | hd::tl -> if f hd then hd::(filter f tl) else filter f tl
+
 private let rec filter_map_acc (f:'a -> Tac (option 'b)) (acc:list 'b) (l:list 'a)
     : Tac (list 'b) =
   match l with
@@ -59,3 +74,11 @@ private let rec filter_map_acc (f:'a -> Tac (option 'b)) (acc:list 'b) (l:list '
 
 let filter_map (f:'a -> Tac (option 'b)) (l:list 'a) : Tac (list 'b) =
   filter_map_acc f [] l
+
+val tryPick: ('a -> Tac (option 'b)) -> list 'a -> Tac (option 'b)
+let rec tryPick f l = match l with
+    | [] -> None
+    | hd::tl ->
+       match f hd with
+         | Some x -> Some x
+         | None -> tryPick f tl

@@ -934,3 +934,11 @@ let nth_binder (i:int) : Tac binder =
   match List.Tot.Base.nth bs k with
   | None -> fail "not enough binders"
   | Some b -> b
+
+(** [mk_abs [x1; ...; xn] t] returns the term [fun x1 ... xn. t] *)
+let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
+  match args with
+  | [] -> t
+  | a :: args' ->
+    let t' = mk_abs args' t in
+    pack (Tv_Abs a t')
