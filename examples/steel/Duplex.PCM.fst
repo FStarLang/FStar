@@ -601,11 +601,22 @@ let write_a_f_aux
     let post = if is_send (step next x) then
         A_W (step next x) (extend tr x) else A_R (step next x) (extend tr x) in
     match v with
-    | A_W n tr' -> admit()
+    | A_W n tr' ->
+        assert (n == next /\ tr' == tr);
+        compatible_refl (pcm p) post;
+        post
     | V tr' ->
         assert (tr'.to == next /\ tr'.tr == tr);
         let res = V ({to = (step next x); tr = extend tr x}) in
-        assume (compatible (pcm p) post res);
+        let aux () : Lemma (compatible (pcm p) post res)
+          = if is_send (step next x) then (
+              assert (composable post (B_R next tr));
+              assert (compose (B_R next tr) post == res)
+            ) else (
+              assert (composable post (B_W (step next x) (extend tr x)));
+              assert (compose (B_W (step next x) (extend tr x)) post == res)
+            )
+        in aux ();
         res
 
 let write_a_f_lemma
@@ -623,7 +634,16 @@ let write_a_f_lemma
       composable (write_a_f_aux #p #next tr x v) frame /\
       (compatible (pcm p) (A_W next tr) (compose v frame) ==>
         (compose (write_a_f_aux tr x v) frame == write_a_f_aux tr x (compose v frame))))
-  = admit()
+  = let post = write_a_f_aux tr x v in
+    match v with
+    | A_W n tr ->
+      if Nil? frame then ()
+      else begin
+        let B_R n' tr' = frame in
+        assert (ahead A n n' tr tr');
+        admit()
+      end
+    | V tr' -> ()
 
 let write_a_f
   (#p:dprot)
