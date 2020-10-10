@@ -30,6 +30,7 @@ val term_to_string        : term -> string
 val comp_to_string        : comp -> string
 val env_open_modules      : Env.env -> list<name>
 val sigelt_opts           : sigelt -> option<vconfig>
+val embed_vconfig         : vconfig -> term
 
 val sigelt_attrs     : sigelt -> list<attribute>
 val set_sigelt_attrs : list<attribute> -> sigelt -> sigelt

@@ -126,6 +126,9 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "sigelt_opts"           sigelt_opts           E.e_sigelt          (e_option e_vconfig)
                                 sigelt_opts           NRE.e_sigelt        (NBET.e_option NBET.e_vconfig);
 
+    mk1 "embed_vconfig"         embed_vconfig         e_vconfig           E.e_term
+                                embed_vconfig         NBET.e_vconfig      NRE.e_term;
+
     mk1 "sigelt_attrs"          sigelt_attrs          E.e_sigelt          E.e_attributes
                                 sigelt_attrs          NRE.e_sigelt        NRE.e_attributes;
 

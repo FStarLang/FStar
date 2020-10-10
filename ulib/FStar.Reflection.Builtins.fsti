@@ -88,6 +88,10 @@ val set_sigelt_quals : list qualifier -> sigelt -> sigelt
 (* Reading the vconfig under which a particular sigelt was typechecked *)
 val sigelt_opts : sigelt -> option vconfig
 
+(* Embed a vconfig as a term, for instance to use it with the check_with
+attribute *)
+val embed_vconfig : vconfig -> term
+
 (* Marker to check a sigelt with a particular vconfig *)
 irreducible
 let check_with (vcfg : vconfig) : unit = ()
