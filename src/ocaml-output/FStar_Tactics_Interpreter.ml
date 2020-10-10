@@ -1699,8 +1699,27 @@ let run_tactic_on_ps :
                                             FStar_Util.set_is_empty uu___13 in
                                           Prims.op_Negation uu___12)
                                        ps1.FStar_Tactics_Types.all_implicits in
+                                   let g1 =
+                                     let uu___12 =
+                                       FStar_TypeChecker_Env.trivial_guard in
+                                     {
+                                       FStar_TypeChecker_Common.guard_f =
+                                         (uu___12.FStar_TypeChecker_Common.guard_f);
+                                       FStar_TypeChecker_Common.deferred_to_tac
+                                         =
+                                         (uu___12.FStar_TypeChecker_Common.deferred_to_tac);
+                                       FStar_TypeChecker_Common.deferred =
+                                         (uu___12.FStar_TypeChecker_Common.deferred);
+                                       FStar_TypeChecker_Common.univ_ineqs =
+                                         (uu___12.FStar_TypeChecker_Common.univ_ineqs);
+                                       FStar_TypeChecker_Common.implicits =
+                                         unsolved_implicits
+                                     } in
+                                   let g2 =
+                                     FStar_TypeChecker_Rel.resolve_implicits_tac
+                                       env g1 in
                                    report_implicits rng_goal
-                                     unsolved_implicits;
+                                     g2.FStar_TypeChecker_Common.implicits;
                                    (let uu___14 = FStar_ST.op_Bang tacdbg in
                                     if uu___14
                                     then

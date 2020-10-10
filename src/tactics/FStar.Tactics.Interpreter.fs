@@ -535,8 +535,9 @@ let run_tactic_on_ps
             ps.all_implicits
         in
 
-        report_implicits rng_goal unsolved_implicits;
-        // /implicits
+        let g = {Env.trivial_guard with TcComm.implicits=unsolved_implicits} in
+        let g = TcRel.resolve_implicits_tac env g in
+        report_implicits rng_goal g.implicits;
 
         if !tacdbg then
             do_dump_proofstate (subst_proof_state (Cfg.psc_subst ps.psc) ps) "at the finish line";
