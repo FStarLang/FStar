@@ -8327,13 +8327,26 @@ let rec (elim_uvars :
   =
   fun env1 ->
     fun s ->
-      match s.FStar_Syntax_Syntax.sigel with
+      let s1 =
+        let uu___ = s in
+        let uu___1 =
+          FStar_List.map FStar_Syntax_Subst.deep_compress
+            s.FStar_Syntax_Syntax.sigattrs in
+        {
+          FStar_Syntax_Syntax.sigel = (uu___.FStar_Syntax_Syntax.sigel);
+          FStar_Syntax_Syntax.sigrng = (uu___.FStar_Syntax_Syntax.sigrng);
+          FStar_Syntax_Syntax.sigquals = (uu___.FStar_Syntax_Syntax.sigquals);
+          FStar_Syntax_Syntax.sigmeta = (uu___.FStar_Syntax_Syntax.sigmeta);
+          FStar_Syntax_Syntax.sigattrs = uu___1;
+          FStar_Syntax_Syntax.sigopts = (uu___.FStar_Syntax_Syntax.sigopts)
+        } in
+      match s1.FStar_Syntax_Syntax.sigel with
       | FStar_Syntax_Syntax.Sig_inductive_typ
           (lid, univ_names, binders, typ, lids, lids') ->
           let uu___ = elim_uvars_aux_t env1 univ_names binders typ in
           (match uu___ with
            | (univ_names1, binders1, typ1) ->
-               let uu___1 = s in
+               let uu___1 = s1 in
                {
                  FStar_Syntax_Syntax.sigel =
                    (FStar_Syntax_Syntax.Sig_inductive_typ
@@ -8350,7 +8363,7 @@ let rec (elim_uvars :
                    (uu___1.FStar_Syntax_Syntax.sigopts)
                })
       | FStar_Syntax_Syntax.Sig_bundle (sigs, lids) ->
-          let uu___ = s in
+          let uu___ = s1 in
           let uu___1 =
             let uu___2 =
               let uu___3 = FStar_List.map (elim_uvars env1) sigs in
@@ -8371,7 +8384,7 @@ let rec (elim_uvars :
           let uu___ = elim_uvars_aux_t env1 univ_names [] typ in
           (match uu___ with
            | (univ_names1, uu___1, typ1) ->
-               let uu___2 = s in
+               let uu___2 = s1 in
                {
                  FStar_Syntax_Syntax.sigel =
                    (FStar_Syntax_Syntax.Sig_datacon
@@ -8391,7 +8404,7 @@ let rec (elim_uvars :
           let uu___ = elim_uvars_aux_t env1 univ_names [] typ in
           (match uu___ with
            | (univ_names1, uu___1, typ1) ->
-               let uu___2 = s in
+               let uu___2 = s1 in
                {
                  FStar_Syntax_Syntax.sigel =
                    (FStar_Syntax_Syntax.Sig_declare_typ
@@ -8440,7 +8453,7 @@ let rec (elim_uvars :
                           FStar_Syntax_Syntax.lbpos =
                             (uu___1.FStar_Syntax_Syntax.lbpos)
                         })) in
-          let uu___ = s in
+          let uu___ = s1 in
           {
             FStar_Syntax_Syntax.sigel =
               (FStar_Syntax_Syntax.Sig_let ((b, lbs1), lids));
@@ -8456,7 +8469,7 @@ let rec (elim_uvars :
           let uu___ = elim_uvars_aux_t env1 us [] t in
           (match uu___ with
            | (us1, uu___1, t1) ->
-               let uu___2 = s in
+               let uu___2 = s1 in
                {
                  FStar_Syntax_Syntax.sigel =
                    (FStar_Syntax_Syntax.Sig_assume (l, us1, t1));
@@ -8651,7 +8664,7 @@ let rec (elim_uvars :
                              FStar_Syntax_Syntax.eff_attrs =
                                (uu___4.FStar_Syntax_Syntax.eff_attrs)
                            } in
-                         let uu___4 = s in
+                         let uu___4 = s1 in
                          {
                            FStar_Syntax_Syntax.sigel =
                              (FStar_Syntax_Syntax.Sig_new_effect ed1);
@@ -8685,7 +8698,7 @@ let rec (elim_uvars :
               FStar_Syntax_Syntax.lift_wp = uu___1;
               FStar_Syntax_Syntax.lift = uu___2
             } in
-          let uu___ = s in
+          let uu___ = s1 in
           {
             FStar_Syntax_Syntax.sigel =
               (FStar_Syntax_Syntax.Sig_sub_effect sub_eff1);
@@ -8702,7 +8715,7 @@ let rec (elim_uvars :
           let uu___ = elim_uvars_aux_c env1 univ_names binders comp in
           (match uu___ with
            | (univ_names1, binders1, comp1) ->
-               let uu___1 = s in
+               let uu___1 = s1 in
                {
                  FStar_Syntax_Syntax.sigel =
                    (FStar_Syntax_Syntax.Sig_effect_abbrev
@@ -8718,9 +8731,9 @@ let rec (elim_uvars :
                  FStar_Syntax_Syntax.sigopts =
                    (uu___1.FStar_Syntax_Syntax.sigopts)
                })
-      | FStar_Syntax_Syntax.Sig_pragma uu___ -> s
-      | FStar_Syntax_Syntax.Sig_fail uu___ -> s
-      | FStar_Syntax_Syntax.Sig_splice uu___ -> s
+      | FStar_Syntax_Syntax.Sig_pragma uu___ -> s1
+      | FStar_Syntax_Syntax.Sig_fail uu___ -> s1
+      | FStar_Syntax_Syntax.Sig_splice uu___ -> s1
       | FStar_Syntax_Syntax.Sig_polymonadic_bind
           (m, n, p, (us_t, t), (us_ty, ty)) ->
           let uu___ = elim_uvars_aux_t env1 us_t [] t in
@@ -8729,7 +8742,7 @@ let rec (elim_uvars :
                let uu___2 = elim_uvars_aux_t env1 us_ty [] ty in
                (match uu___2 with
                 | (us_ty1, uu___3, ty1) ->
-                    let uu___4 = s in
+                    let uu___4 = s1 in
                     {
                       FStar_Syntax_Syntax.sigel =
                         (FStar_Syntax_Syntax.Sig_polymonadic_bind
@@ -8753,7 +8766,7 @@ let rec (elim_uvars :
                let uu___2 = elim_uvars_aux_t env1 us_ty [] ty in
                (match uu___2 with
                 | (us_ty1, uu___3, ty1) ->
-                    let uu___4 = s in
+                    let uu___4 = s1 in
                     {
                       FStar_Syntax_Syntax.sigel =
                         (FStar_Syntax_Syntax.Sig_polymonadic_subcomp

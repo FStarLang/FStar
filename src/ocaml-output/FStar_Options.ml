@@ -560,9 +560,8 @@ let (get_use_hint_hashes : unit -> Prims.bool) =
 let (get_use_native_tactics :
   unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> lookup_opt "use_native_tactics" (as_option as_string)
-let (get_use_tactics : unit -> Prims.bool) =
-  fun uu___ ->
-    let uu___1 = lookup_opt "no_tactics" as_bool in Prims.op_Negation uu___1
+let (get_no_tactics : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "no_tactics" as_bool
 let (get_using_facts_from :
   unit -> Prims.string Prims.list FStar_Pervasives_Native.option) =
   fun uu___ -> lookup_opt "using_facts_from" (as_option (as_list as_string))
@@ -1906,7 +1905,8 @@ let (use_hint_hashes : unit -> Prims.bool) =
 let (use_native_tactics :
   unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> get_use_native_tactics ()
-let (use_tactics : unit -> Prims.bool) = fun uu___ -> get_use_tactics ()
+let (use_tactics : unit -> Prims.bool) =
+  fun uu___ -> let uu___1 = get_no_tactics () in Prims.op_Negation uu___1
 let (using_facts_from :
   unit -> (Prims.string Prims.list * Prims.bool) Prims.list) =
   fun uu___ ->
@@ -2091,3 +2091,118 @@ let (set_options : Prims.string -> FStar_Getopt.parse_cmdline_res) =
     | File_argument s1 ->
         let uu___1 = FStar_Util.format1 "File %s is not a valid option" s1 in
         FStar_Getopt.Error uu___1
+let (get_vconfig : unit -> FStar_VConfig.vconfig) =
+  fun uu___ ->
+    let vcfg =
+      let uu___1 = get_initial_fuel () in
+      let uu___2 = get_max_fuel () in
+      let uu___3 = get_initial_ifuel () in
+      let uu___4 = get_max_ifuel () in
+      let uu___5 = get_detail_errors () in
+      let uu___6 = get_detail_hint_replay () in
+      let uu___7 = get_no_smt () in
+      let uu___8 = get_quake_lo () in
+      let uu___9 = get_quake_hi () in
+      let uu___10 = get_quake_keep () in
+      let uu___11 = get_retry () in
+      let uu___12 = get_smtencoding_elim_box () in
+      let uu___13 = get_smtencoding_nl_arith_repr () in
+      let uu___14 = get_smtencoding_l_arith_repr () in
+      let uu___15 = get_smtencoding_valid_intro () in
+      let uu___16 = get_smtencoding_valid_elim () in
+      let uu___17 = get_tcnorm () in
+      let uu___18 = get_no_plugins () in
+      let uu___19 = get_no_tactics () in
+      let uu___20 = get_vcgen_optimize_bind_as_seq () in
+      let uu___21 = get_z3cliopt () in
+      let uu___22 = get_z3refresh () in
+      let uu___23 = get_z3rlimit () in
+      let uu___24 = get_z3rlimit_factor () in
+      let uu___25 = get_z3seed () in
+      let uu___26 = get_use_two_phase_tc () in
+      let uu___27 = get_trivial_pre_for_unannotated_effectful_fns () in
+      let uu___28 = get_reuse_hint_for () in
+      {
+        FStar_VConfig.initial_fuel = uu___1;
+        FStar_VConfig.max_fuel = uu___2;
+        FStar_VConfig.initial_ifuel = uu___3;
+        FStar_VConfig.max_ifuel = uu___4;
+        FStar_VConfig.detail_errors = uu___5;
+        FStar_VConfig.detail_hint_replay = uu___6;
+        FStar_VConfig.no_smt = uu___7;
+        FStar_VConfig.quake_lo = uu___8;
+        FStar_VConfig.quake_hi = uu___9;
+        FStar_VConfig.quake_keep = uu___10;
+        FStar_VConfig.retry = uu___11;
+        FStar_VConfig.smtencoding_elim_box = uu___12;
+        FStar_VConfig.smtencoding_nl_arith_repr = uu___13;
+        FStar_VConfig.smtencoding_l_arith_repr = uu___14;
+        FStar_VConfig.smtencoding_valid_intro = uu___15;
+        FStar_VConfig.smtencoding_valid_elim = uu___16;
+        FStar_VConfig.tcnorm = uu___17;
+        FStar_VConfig.no_plugins = uu___18;
+        FStar_VConfig.no_tactics = uu___19;
+        FStar_VConfig.vcgen_optimize_bind_as_seq = uu___20;
+        FStar_VConfig.z3cliopt = uu___21;
+        FStar_VConfig.z3refresh = uu___22;
+        FStar_VConfig.z3rlimit = uu___23;
+        FStar_VConfig.z3rlimit_factor = uu___24;
+        FStar_VConfig.z3seed = uu___25;
+        FStar_VConfig.use_two_phase_tc = uu___26;
+        FStar_VConfig.trivial_pre_for_unannotated_effectful_fns = uu___27;
+        FStar_VConfig.reuse_hint_for = uu___28
+      } in
+    vcfg
+let (set_vconfig : FStar_VConfig.vconfig -> unit) =
+  fun vcfg ->
+    let option_as tag o =
+      match o with
+      | FStar_Pervasives_Native.None -> Unset
+      | FStar_Pervasives_Native.Some s -> tag s in
+    set_option "initial_fuel" (Int (vcfg.FStar_VConfig.initial_fuel));
+    set_option "max_fuel" (Int (vcfg.FStar_VConfig.max_fuel));
+    set_option "initial_ifuel" (Int (vcfg.FStar_VConfig.initial_ifuel));
+    set_option "max_ifuel" (Int (vcfg.FStar_VConfig.max_ifuel));
+    set_option "detail_errors" (Bool (vcfg.FStar_VConfig.detail_errors));
+    set_option "detail_hint_replay"
+      (Bool (vcfg.FStar_VConfig.detail_hint_replay));
+    set_option "no_smt" (Bool (vcfg.FStar_VConfig.no_smt));
+    set_option "quake_lo" (Int (vcfg.FStar_VConfig.quake_lo));
+    set_option "quake_hi" (Int (vcfg.FStar_VConfig.quake_hi));
+    set_option "quake_keep" (Bool (vcfg.FStar_VConfig.quake_keep));
+    set_option "retry" (Bool (vcfg.FStar_VConfig.retry));
+    set_option "smtencoding.elim_box"
+      (Bool (vcfg.FStar_VConfig.smtencoding_elim_box));
+    set_option "smtencoding.nl_arith_repr"
+      (String (vcfg.FStar_VConfig.smtencoding_nl_arith_repr));
+    set_option "smtencoding.l_arith_repr"
+      (String (vcfg.FStar_VConfig.smtencoding_l_arith_repr));
+    set_option "smtencoding.valid_intro"
+      (Bool (vcfg.FStar_VConfig.smtencoding_valid_intro));
+    set_option "smtencoding.valid_elim"
+      (Bool (vcfg.FStar_VConfig.smtencoding_valid_elim));
+    set_option "tcnorm" (Bool (vcfg.FStar_VConfig.tcnorm));
+    set_option "no_plugins" (Bool (vcfg.FStar_VConfig.no_plugins));
+    set_option "no_tactics" (Bool (vcfg.FStar_VConfig.no_tactics));
+    (let uu___20 =
+       option_as (fun uu___21 -> String uu___21)
+         vcfg.FStar_VConfig.vcgen_optimize_bind_as_seq in
+     set_option "vcgen.optimize_bind_as_seq" uu___20);
+    (let uu___21 =
+       let uu___22 =
+         FStar_List.map (fun uu___23 -> String uu___23)
+           vcfg.FStar_VConfig.z3cliopt in
+       List uu___22 in
+     set_option "z3cliopt" uu___21);
+    set_option "z3refresh" (Bool (vcfg.FStar_VConfig.z3refresh));
+    set_option "z3rlimit" (Int (vcfg.FStar_VConfig.z3rlimit));
+    set_option "z3rlimit_factor" (Int (vcfg.FStar_VConfig.z3rlimit_factor));
+    set_option "z3seed" (Int (vcfg.FStar_VConfig.z3seed));
+    set_option "use_two_phase_tc"
+      (Bool (vcfg.FStar_VConfig.use_two_phase_tc));
+    set_option "trivial_pre_for_unannotated_effectful_fns"
+      (Bool (vcfg.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns));
+    (let uu___28 =
+       option_as (fun uu___29 -> String uu___29)
+         vcfg.FStar_VConfig.reuse_hint_for in
+     set_option "reuse_hint_for" uu___28)

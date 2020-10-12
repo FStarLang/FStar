@@ -2943,6 +2943,7 @@ let elim_uvars_aux_c env univ_names binders c =
 
 // GM: Maybe this should take a pass over the attributes just to be safe?
 let rec elim_uvars (env:Env.env) (s:sigelt) =
+    let s = { s with sigattrs = List.map deep_compress s.sigattrs } in
     match s.sigel with
     | Sig_inductive_typ (lid, univ_names, binders, typ, lids, lids') ->
       let univ_names, binders, typ = elim_uvars_aux_t env univ_names binders typ in

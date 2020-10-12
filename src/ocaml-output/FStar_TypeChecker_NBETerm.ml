@@ -1063,6 +1063,13 @@ let (e_range : FStar_Range.range embedding) =
   let uu___1 =
     FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_range in
   mk_emb' em un uu___ uu___1
+let (e_vconfig : FStar_VConfig.vconfig embedding) =
+  let em cb r = failwith "e_vconfig NBE" in
+  let un cb t1 = failwith "e_vconfig NBE" in
+  let uu___ = lid_as_typ FStar_Parser_Const.vconfig_lid [] [] in
+  let uu___1 =
+    FStar_Syntax_Embeddings.emb_typ_of FStar_Syntax_Embeddings.e_vconfig in
+  mk_emb' em un uu___ uu___1
 let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
   fun ea ->
     let etyp =

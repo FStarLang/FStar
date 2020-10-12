@@ -21,6 +21,7 @@ open FStar.ST
 open FStar.All
 open FStar.Getopt
 open FStar.BaseTypes
+open FStar.VConfig
 
 //let __test_norm_all = Util.mk_ref false
 
@@ -265,3 +266,6 @@ val _commit: ref<string>
 
 val debug_embedding: ref<bool>
 val eager_embedding: ref<bool>
+
+val get_vconfig : unit -> vconfig
+val set_vconfig : vconfig -> unit
