@@ -3331,7 +3331,7 @@ let pure_wp (a:Type) = pure_post a -> pure_pre
 ```
 
 For example, one computation type for `0` is
-`PURE int return_zero return_zero` where
+`PURE int return_zero` where
 ```
 return_zero = fun (p:(int -> Type)) -> p 0
 ```
@@ -3373,7 +3373,6 @@ predicate transformers. It is defined as follows:
 ```
 effect Pure (a:Type) (pre:Type) (post: a -> Type) =
        PURE a (fun (p:pure_post a) -> pre /\ forall (x:a). post x ==> p x)
-              (fun (p:pure_post a) -> forall (x:a). pre /\ post x ==> p x)
 ```
 
 That is `Pure a pre post` is a computation which when `pre` is true
@@ -3384,7 +3383,6 @@ The `Tot` effect is defined below:
 ```
 effect Tot (a:Type) =
        PURE a (fun (p:pure_post a) -> forall (x:a). p x)
-              (fun (p:pure_post a) -> forall (x:a). p x)
 ```
 
 This means that a computation type `Tot a` only reveals that the
@@ -3609,7 +3607,7 @@ Let's start with the signature of `read`:
 ```
 let wp_read r = fun (post:state_post a) (h0:heap) ->  post (sel h0 r) h0
 
-assume val read: #a:Type -> r:ref a -> STATE a (wp_read r) (wp_read r)
+assume val read: #a:Type -> r:ref a -> STATE a (wp_read r)
 ```
 
 This says that `read r` returns a result `v:a` when `r:ref a`;
@@ -3622,7 +3620,7 @@ Next, here's the signature of `write`:
 ```
 let wp_write r v = fun (post:state_post a) (h0:heap) -> post () (upd h0 r v)
 
-assume val write: #a:Type -> r:ref a -> v:a -> STATE unit (wp_write r v) (wp_write r v)
+assume val write: #a:Type -> r:ref a -> v:a -> STATE unit (wp_write r v)
 ```
 
 This says that `write r v` returns a a `unit`-typed result when
@@ -4222,7 +4220,6 @@ type t = Map.t rid heap
 new_effect STATE = STATE_h t
 effect ST (a:Type) (pre:t -> Type) (post:t -> a -> t -> Type) =
        STATE a (fun 'p m0 -> pre m0 /\ (forall x m1. post m0 x m1 ==> 'p x m1))
-               (fun 'p m0 ->  (forall x m1. pre m0 /\ post m0 x m1 ==> 'p x m1))
 ```
 
 That is `HyperHeap.STATE` and `HyperHeap.ST` are just like the `STATE`
