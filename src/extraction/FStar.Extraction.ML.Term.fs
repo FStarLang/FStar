@@ -479,7 +479,7 @@ let maybe_eta_expand g expect e =
   Whereas with this optimization we produce (fun x -> Obj.magic (e : b) : c)  : a -> c
 *)
 let apply_coercion pos (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
-    if Options.codegen() = Some Options.FSharp
+    if Util.codegen_fsharp()
     then //magics are not always sound in F#; warn
         FStar.Errors.log_issue pos
           (Errors.Warning_NoMagicInFSharp,
