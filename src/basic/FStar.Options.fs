@@ -271,7 +271,6 @@ let defaults =
       ("z3cliopt"                     , List []);
       ("use_two_phase_tc"             , Bool true);
       ("__no_positivity"              , Bool false);
-      ("__ml_no_eta_expand_coertions" , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
       ("use_nbe"                      , Bool false);
@@ -450,7 +449,6 @@ let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
 let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         as_bool
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
-let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
 let get_use_nbe_for_extraction  ()      = lookup_opt "use_nbe_for_extraction"                  as_bool
@@ -1289,11 +1287,6 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
         Const (Bool true),
         "Don't check positivity of inductive types");
 
-       ( noshort,
-        "__ml_no_eta_expand_coertions",
-        Const (Bool true),
-        "Do not eta-expand coertions in generated OCaml");
-
         ( noshort,
         "warn_error",
         Accumulated (SimpleStr ("")),
@@ -1786,7 +1779,6 @@ let z3_seed                      () = get_z3seed                      ()
 let use_two_phase_tc             () = get_use_two_phase_tc            ()
                                     && not (lax())
 let no_positivity                () = get_no_positivity               ()
-let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
 let trivial_pre_for_unannotated_effectful_fns
