@@ -111,9 +111,8 @@ let (load_native_tactics : unit -> unit) =
          (FStar_String.concat ", " cmxs_files)
      else ());
     (let uu___3 =
-       (let uu___4 = FStar_Options.no_load_fstartaclib () in
-        Prims.op_Negation uu___4) &&
-         (Prims.op_Negation (FStar_Platform.system = FStar_Platform.Windows)) in
+       let uu___4 = FStar_Options.no_load_fstartaclib () in
+       Prims.op_Negation uu___4 in
      if uu___3 then FStar_Tactics_Load.try_load_lib () else ());
     FStar_Tactics_Load.load_tactics cmxs_files;
     (let uu___5 = FStar_Options.use_native_tactics () in

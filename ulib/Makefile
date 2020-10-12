@@ -21,7 +21,7 @@ extra: .cache
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 include $(FSTAR_HOME)/.common.mk
 
-fstarlib.mgen: *.fst *.fsti
+fstarlib.mgen: *.fst *.fsti experimental/*.fst experimental/*.fsti
 	mkdir -p ml/extracted
 	rm -f .depend.extract
 	+OUTPUT_DIRECTORY=ml/extracted \
@@ -39,7 +39,7 @@ fstartaclib.mgen: fstarlib.mgen
 	rm -f .depend.extract
 	+OUTPUT_DIRECTORY=tactics_ml/extracted \
 	    CODEGEN=Plugin \
-	    EXTRACT_MODULES="--extract '+FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES)'" \
+	    EXTRACT_MODULES="--extract '+FStar.Tactics +FStar.Reflection $(NOEXTRACT_MODULES) +Steel.Effect.Common'" \
 	    $(MAKE) -f Makefile.extract all-ml
 	mkdir -p tactics_ml/fstarlib_leftovers
 	cp $(FSTARLIB_LEFTOVERS) tactics_ml/fstarlib_leftovers

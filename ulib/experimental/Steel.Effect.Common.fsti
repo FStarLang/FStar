@@ -886,7 +886,7 @@ let rec solve_subcomp_pre (l:list goal) : Tac unit =
     match f with
     | App _ t ->
         let hd, args = collect_app t in
-        if term_eq hd (quote delay) then (focus (fun _ ->
+        if term_eq hd (`delay) then (focus (fun _ ->
           norm [delta_only [`%delay]];
           or_else (fun _ -> apply_lemma (`emp_unit_variant))
                   (fun _ ->
@@ -921,7 +921,7 @@ let rec solve_subcomp_post (l:list goal) : Tac unit =
     match f with
     | App _ t ->
         let hd, args = collect_app t in
-        if term_eq hd (quote annot_sub_post) then (focus (fun _ ->
+        if term_eq hd (`annot_sub_post) then (focus (fun _ ->
           or_else (fun _ -> apply_lemma (`emp_unit_variant_forall))
                   (fun _ ->
                      norm [delta_only [`%annot_sub_post]];
@@ -1005,9 +1005,9 @@ let solve_or_delay (g:goal) : Tac bool =
   match f with
   | App _ t ->
       let hd, args = collect_app t in
-      if term_eq hd (quote annot_sub_post) then false
-      else if term_eq hd (quote can_be_split) then solve_can_be_split args
-      else if term_eq hd (quote can_be_split_forall) then solve_can_be_split_forall args
+      if term_eq hd (`annot_sub_post) then false
+      else if term_eq hd (`can_be_split) then solve_can_be_split args
+      else if term_eq hd (`can_be_split_forall) then solve_can_be_split_forall args
       else false
   | Comp (Eq _) l r ->
     let lnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars l) in
@@ -1062,7 +1062,7 @@ let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
       | App t _ -> if term_eq t (`squash) then hd::slgoals, loggoals else slgoals, loggoals
       | _ -> slgoals, loggoals
 
-[@@ resolve_implicits; framing_implicit]
+[@@ resolve_implicits; framing_implicit; plugin]
 let init_resolve_tac () : Tac unit =
   let slgs, loggs = filter_goals (goals()) in
   set_goals slgs;
