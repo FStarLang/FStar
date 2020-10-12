@@ -3804,7 +3804,7 @@ let solve_universe_inequalities env ineqs : unit =
     solve_universe_inequalities' tx env ineqs;
     UF.commit tx
 
-let try_solve_deferred_constraints defer_ok smt_ok env (g:guard_t) =
+let try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env (g:guard_t) =
    let fail (d,s) =
       let msg = explain env d s in
       raise_error (Errors.Fatal_ErrorInSolveDeferredConstraints, msg) (p_loc d)
@@ -3830,24 +3830,47 @@ let try_solve_deferred_constraints defer_ok smt_ok env (g:guard_t) =
        failwith "Impossible: should have raised a failure already"
    in
    solve_universe_inequalities env g.univ_ineqs;
-   let g = DeferredImplicits.solve_deferred_to_tactic_goals env g in
+   let g =
+     if deferred_to_tac_ok
+     then DeferredImplicits.solve_deferred_to_tactic_goals env g
+     else g 
+   in
    if Env.debug env <| Options.Other "ResolveImplicitsHook"
    then BU.print1 "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s\n"
           (guard_to_string env g);
    {g with univ_ineqs=([], [])}
 
-let solve_deferred_constraints' smt_ok env (g:guard_t) =
-    try_solve_deferred_constraints false smt_ok env g
-
 let solve_deferred_constraints env (g:guard_t) =
-    solve_deferred_constraints' true env g
+    let defer_ok = false in
+    let smt_ok = true in
+    let deferred_to_tac_ok = true in
+    try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 
-let solve_some_deferred_constraints env (g:guard_t) =
-    try_solve_deferred_constraints true true env g
+let solve_non_tactic_deferred_constraints env (g:guard_t) =
+    let defer_ok = false in
+    let smt_ok = true in
+    let deferred_to_tac_ok = false in
+    try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 
-//use_smt flag says whether to use the smt solver to discharge this guard
-//if use_smt = true, this function NEVER returns None, the error might come from the smt solver though
-//if use_smt = false, then None means could not discharge the guard without using smt
+// Discharge (the logical part of) a guard [g].
+//
+// The `use_smt` flag says whether to use the smt solver to discharge
+// this guard
+//
+// - If use_smt = true, this function NEVER returns None, and can be
+//   considered to have successfully discharged the guard. However,
+//   it could have logged an SMT error. The VC (aka the logical part
+//   of the guard) is preprocessed with tactics before discharging:
+//   every subterm wrapped with `with_tactic` has the tactic run on it
+//   and a separate VC is generated for it. They are then discharged
+//   sequentially.
+//
+// - If use_smt = false, then None means could not discharge the guard
+//   without using smt. The procedure is to just normalize and simplify
+//   the VC and check that it is [True].
+//
+// In every case, when this function returns [Some g], then the logical
+// part of [g] is [Trivial].
 let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<guard_t> =
   let debug =
       (Env.debug env <| Options.Other "Rel")
@@ -3858,9 +3881,14 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
   then BU.print1 "///////////////////ResolveImplicitsHook: discharge_guard'\n\
                   guard = %s\n"
                   (guard_to_string env g);
-  let g = solve_deferred_constraints' use_smt env g in
+  let g = 
+    let defer_ok = false in
+    let deferred_to_tac_ok = true in
+    try_solve_deferred_constraints defer_ok use_smt deferred_to_tac_ok env g 
+  in
   let ret_g = {g with guard_f = Trivial} in
   if not (Env.should_verify env) then Some ret_g
+  // GM: ^ this doesn't look like the right place for this check.
   else
     match g.guard_f with
     | Trivial -> Some ret_g
