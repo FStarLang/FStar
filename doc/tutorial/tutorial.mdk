@@ -1,4 +1,4 @@
-Title         : Verified programming in F\*
+Title         : Verified programming in F*
 Sub title     : A tutorial
 Heading Base  : 2
 Author        : The F* Team
@@ -475,8 +475,8 @@ ordering and have F\* infer those effects for your programs---but that's
 more advanced and beyond the scope of this tutorial. (If curious you can
 check out [this paper](https://www.fstar-lang.org/papers/dm4free/).)
 
-From now on, we'll just refer to a type-and-effect pair (e.g. `:Tot
-int` where `:Tot` is the effect and `:int` is the result type), as a
+From now on, we'll just refer to a type-and-effect pair (e.g. `:Tot int` 
+where `:Tot` is the effect and `:int` is the result type), as a
 *computation* type.
 
 ## Function types
@@ -550,8 +550,8 @@ val canWrite: filename -> Tot bool
 ### The default effect is `Tot`
 
 Since total functions are very commonly used in verified programs,
-writing `Tot` is optional in F\*'s syntax.  As such, `filename ->
-bool` is a shorthand for `filename -> Tot bool`. Nevertheless, we
+writing `Tot` is optional in F\*'s syntax.  As such, `filename -> bool` 
+is a shorthand for `filename -> Tot bool`. Nevertheless, we
 consider it good practice to annotate functions with their result
 effect, even when it is `Tot`.
 
@@ -1305,8 +1305,8 @@ That's quite a tedious proof, isn't it. Here's a simpler proof.
 The `rev_injective_2` proof is based on the idea that every involutive
 function is injective. We've already proven that `reverse` is
 involutive. So, we invoke our lemma, once for `l1` and once for `l2`.
-This gives to the SMT solver the information that `reverse (reverse
-l1) = l1` and `reverse (reverse l2) = l2`, which suffices to complete
+This gives to the SMT solver the information that `reverse (reverse l1) = l1` 
+and `reverse (reverse l2) = l2`, which suffices to complete
 the proof. As usual, when structuring proofs, lemmas are your friends!
 ~~
 ~
@@ -1984,7 +1984,7 @@ quicksort. Unfortunately, with the lemmas as they are, we still can't
 prove our original implementation of quicksort correct. As we saw with
 our proofs of `rev_injective` (Section [#sec-basic-lists]), we need to
 explicitly invoke our lemmas in order to use their properties. We'll
-be able to do better in a minute, but lets see how to modify `sort` by
+be able to do better in a minute, but let's see how to modify `sort` by
 calling the lemmas to make the proof go through.
 
     let cmp i j = i <= j
@@ -2033,8 +2033,8 @@ properties? F\* provides exactly such a mechanism, which gives a
 way to bridge the gap between extrinsic and intrinsic proofs.
 
 Let's say we wrote the type of `partition_lemma` as below---the only
-difference is in the very last line, the addition of `[SMTPat
-(partition f l)]`. That line instructs F\* and the SMT solver to
+difference is in the very last line, the addition of `[SMTPat (partition f l)]`. 
+That line instructs F\* and the SMT solver to
 associate with every occurrence of the term `partition f l` the
 property proven by the lemma.
 
@@ -2328,7 +2328,7 @@ val step : exp -> Tot (option exp)
 We execute an application expression `EApp e1 e2` in multiple steps by first reducing
 `e1` to a value, then reducing `e2` to a value (following a *call-by-value*
 evaluation order), and if additionally `e1`
-is an abstraction `EAbs x t e' `we continue by substituting the formal
+is an abstraction `EAbs x t e'` we continue by substituting the formal
 argument `x` by the actual argument `e2`. If not we signal a dynamic typing error
 (a non-functional value is applied to arguments) by returning `None`.
 For `EIf e1 e2 e3` we first reduce the guard `e1`: if the guard reduces to `true`
@@ -5213,7 +5213,7 @@ how F\* is used in the process. For the encrypt-then-mac example in the next
 section, it might be nice to have an introduction to game-based proofs.
 ~
 
-Lets make the theory more concrete by looking at Encrypt-then-MAC 
+Let's make the theory more concrete by looking at Encrypt-then-MAC 
 based authenticated encryption. 
 
 ## Encrypt-then-MAC 
@@ -5318,7 +5318,7 @@ hide whether it was `m` or a string of `0z`s that was encrypted:
 [INCLUDE=code/solutions/EtM.CPA.fst:EtMCPADecrypt]
 ```
 
-Note that in the `match` statement, we did not define a '`| None`' branche. This is because the 
+Note that in the `match` statement, we did not define the '`| None`' branch. This is because the 
 precondition of `decrypt` requires for IND-CPA restricted adversaries (`ind_cpa_rest_adv=true`)
 that table lookup in `log` always succeeds.
 
@@ -5327,7 +5327,7 @@ This can be expressed as a stateful precondition for `decrypt`:
 ~ SolutionFragment {exname=EtM.CPA}
 [INCLUDE=code/solutions/EtM.CPA.fst:EtMCPADecryptRequires]
 ~
-where function `m_sel h0 k.log` retrives the content of `k.log` as stored in heap `h0`.
+where function `m_sel h0 k.log` retrieves the content of `k.log` as stored in heap `h0`.
 
 ~ Exercise
 Play with the type of `EtM.CPA.decrypt` above. What fails if you remove the precondition. What is the connection with chosen plaintext attacks?
@@ -5880,7 +5880,7 @@ let test() =
 
 This document was created using Daan Leijen's <https://madoko.net> markdown processor.
 
-If` you find any errors in it, or would like to improve it in any way,
+If you find any errors in it, or would like to improve it in any way,
 this is how you do it: 
 
 1. Point your browser at <https://madoko.net>
