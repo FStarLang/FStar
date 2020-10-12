@@ -1,9 +1,11 @@
 #light "off"
 module FStar.Tactics.Types
 
+open FStar
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
+open FStar.TypeChecker.Common
 
 module Env     = FStar.TypeChecker.Env
 module O       = FStar.Options
@@ -58,6 +60,17 @@ let mk_goal env u o b l = {
     label=l;
 }
 
+let goal_of_goal_ty env typ : goal * guard_t =
+    let u, ctx_uvars, g_u =
+        Env.new_implicit_var_aux "proofstate_of_goal_ty" typ.pos env typ Allow_untyped None
+    in
+    let ctx_uvar, _ = List.hd ctx_uvars in
+    let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
+    g, g_u
+
+let goal_of_implicit env (i:Env.implicit) : goal =
+  mk_goal ({env with gamma=i.imp_uvar.ctx_uvar_gamma}) i.imp_uvar (FStar.Options.peek()) false i.imp_reason
+
 let rename_binders subst bs =
     bs |> List.map (function (x, imp) ->
         let y = SS.subst subst (S.bv_to_name x) in
@@ -107,6 +120,9 @@ type proofstate = {
     tac_verb_dbg : bool;         //whether to print verbose debugging messages
 
     local_state  : BU.psmap<term>; // local metaprogram state
+    urgency      : int;          // When printing a proofstate due to an error, this
+                                 // is used by emacs to decide whether it should pop
+                                 // open a buffer or not (default: 1).
 }
 
 let subst_proof_state subst ps =

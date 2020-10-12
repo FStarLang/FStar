@@ -2345,6 +2345,12 @@ and (p_noSeqTerm' :
               let uu___3 = p_typ ps pb e1 in
               FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
             FStar_Pprint.group uu___1
+        | FStar_Parser_AST.Decreases (e1, wtf) ->
+            let uu___1 =
+              let uu___2 = str "decreases" in
+              let uu___3 = p_typ ps pb e1 in
+              FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+            FStar_Pprint.group uu___1
         | FStar_Parser_AST.Attributes es ->
             let uu___ =
               let uu___1 = str "attributes" in
@@ -3888,6 +3894,8 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
     | FStar_Parser_AST.Requires uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.Ensures uu___ ->
+        let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
+    | FStar_Parser_AST.Decreases uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.Attributes uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1

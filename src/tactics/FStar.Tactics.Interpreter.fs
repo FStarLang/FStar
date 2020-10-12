@@ -358,6 +358,10 @@ let () =
         dump e_string e_unit
         dump NBET.e_string NBET.e_unit;
 
+      mk_tac_step_2 0 "dump_all"
+        dump_all e_bool      e_string      e_unit
+        dump_all NBET.e_bool NBET.e_string NBET.e_unit;
+
       mk_tac_step_3 0 "ctrl_rewrite"
         ctrl_rewrite E.e_direction (e_tactic_1 RE.e_term (e_tuple2 e_bool E.e_ctrl_flag))
                                    (e_tactic_thunk e_unit)
@@ -449,6 +453,10 @@ let () =
       mk_tac_step_3 1 "lset"
         lset e_any e_string e_any e_unit
         (fun _ _ _ -> fail "sorry, `lset` does not work in NBE") NBET.e_any NBET.e_string NBET.e_any NBET.e_unit;
+
+      mk_tac_step_1 1 "set_urgency"
+        set_urgency e_int e_unit
+        set_urgency NBET.e_int NBET.e_unit;
 
     ]
 

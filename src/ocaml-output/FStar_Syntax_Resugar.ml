@@ -1648,70 +1648,115 @@ and (resugar_comp' :
             let uu___ = resugar_term' env c1.FStar_Syntax_Syntax.result_typ in
             (uu___, FStar_Parser_AST.Nothing) in
           let uu___ =
-            (FStar_Options.print_effect_args ()) ||
-              (FStar_Ident.lid_equals c1.FStar_Syntax_Syntax.effect_name
-                 FStar_Parser_Const.effect_Lemma_lid) in
+            (FStar_Ident.lid_equals c1.FStar_Syntax_Syntax.effect_name
+               FStar_Parser_Const.effect_Lemma_lid)
+              &&
+              ((FStar_List.length c1.FStar_Syntax_Syntax.effect_args) =
+                 (Prims.of_int (3))) in
           if uu___
           then
-            let universe =
-              FStar_List.map (fun u -> resugar_universe u)
-                c1.FStar_Syntax_Syntax.comp_univs in
             let args =
-              let uu___1 =
-                FStar_Ident.lid_equals c1.FStar_Syntax_Syntax.effect_name
-                  FStar_Parser_Const.effect_Lemma_lid in
-              if uu___1
-              then
-                match c1.FStar_Syntax_Syntax.effect_args with
-                | pre::post::pats::[] ->
-                    let post1 =
-                      let uu___2 =
-                        FStar_Syntax_Util.unthunk_lemma_post
-                          (FStar_Pervasives_Native.fst post) in
-                      (uu___2, (FStar_Pervasives_Native.snd post)) in
-                    let uu___2 =
-                      let uu___3 =
-                        FStar_Syntax_Util.is_fvar FStar_Parser_Const.true_lid
-                          (FStar_Pervasives_Native.fst pre) in
-                      if uu___3 then [] else [pre] in
-                    let uu___3 =
-                      let uu___4 =
-                        let uu___5 =
-                          FStar_Syntax_Util.is_fvar
-                            FStar_Parser_Const.nil_lid
-                            (FStar_Pervasives_Native.fst pats) in
-                        if uu___5 then [] else [pats] in
-                      FStar_List.append [post1] uu___4 in
-                    FStar_List.append uu___2 uu___3
-                | uu___2 -> c1.FStar_Syntax_Syntax.effect_args
-              else c1.FStar_Syntax_Syntax.effect_args in
-            let args1 =
               FStar_List.map
                 (fun uu___1 ->
                    match uu___1 with
                    | (e, uu___2) ->
                        let uu___3 = resugar_term' env e in
-                       (uu___3, FStar_Parser_AST.Nothing)) args in
-            let rec aux l uu___1 =
-              match uu___1 with
-              | [] -> l
-              | hd::tl ->
-                  (match hd with
-                   | FStar_Syntax_Syntax.DECREASES e ->
-                       let e1 =
-                         let uu___2 = resugar_term' env e in
-                         (uu___2, FStar_Parser_AST.Nothing) in
-                       aux (e1 :: l) tl
-                   | uu___2 -> aux l tl) in
-            let decrease = aux [] c1.FStar_Syntax_Syntax.flags in
-            mk
-              (FStar_Parser_AST.Construct
-                 ((c1.FStar_Syntax_Syntax.effect_name),
-                   (FStar_List.append (result :: decrease) args1)))
+                       (uu___3, FStar_Parser_AST.Nothing))
+                c1.FStar_Syntax_Syntax.effect_args in
+            let uu___1 =
+              match c1.FStar_Syntax_Syntax.effect_args with
+              | (pre, uu___2)::(post, uu___3)::(pats, uu___4)::[] ->
+                  (pre, post, pats)
+              | uu___2 -> failwith "impossible" in
+            (match uu___1 with
+             | (pre, post, pats) ->
+                 let pre1 =
+                   let uu___2 =
+                     FStar_Syntax_Util.is_fvar FStar_Parser_Const.true_lid
+                       pre in
+                   if uu___2 then [] else [pre] in
+                 let post1 = FStar_Syntax_Util.unthunk_lemma_post post in
+                 let pats1 =
+                   let uu___2 =
+                     let uu___3 = FStar_Syntax_Util.head_of pats in
+                     FStar_Syntax_Util.is_fvar FStar_Parser_Const.nil_lid
+                       uu___3 in
+                   if uu___2 then [] else [pats] in
+                 let pre2 =
+                   FStar_List.map
+                     (fun t ->
+                        let uu___2 =
+                          let uu___3 =
+                            let uu___4 = resugar_term' env t in
+                            (uu___4, FStar_Pervasives_Native.None) in
+                          FStar_Parser_AST.Requires uu___3 in
+                        mk uu___2) pre1 in
+                 let post2 =
+                   let uu___2 =
+                     let uu___3 =
+                       let uu___4 = resugar_term' env post1 in
+                       (uu___4, FStar_Pervasives_Native.None) in
+                     FStar_Parser_AST.Ensures uu___3 in
+                   mk uu___2 in
+                 let pats2 = FStar_List.map (resugar_term' env) pats1 in
+                 let rec aux l uu___2 =
+                   match uu___2 with
+                   | [] -> l
+                   | hd::tl ->
+                       (match hd with
+                        | FStar_Syntax_Syntax.DECREASES e ->
+                            let e1 =
+                              let uu___3 =
+                                let uu___4 =
+                                  let uu___5 = resugar_term' env e in
+                                  (uu___5, FStar_Pervasives_Native.None) in
+                                FStar_Parser_AST.Decreases uu___4 in
+                              mk uu___3 in
+                            aux (e1 :: l) tl
+                        | uu___3 -> aux l tl) in
+                 let decrease = aux [] c1.FStar_Syntax_Syntax.flags in
+                 let uu___2 =
+                   let uu___3 =
+                     let uu___4 =
+                       FStar_List.map
+                         (fun t -> (t, FStar_Parser_AST.Nothing))
+                         (FStar_List.append pre2
+                            (FStar_List.append (post2 :: decrease) pats2)) in
+                     ((c1.FStar_Syntax_Syntax.effect_name), uu___4) in
+                   FStar_Parser_AST.Construct uu___3 in
+                 mk uu___2)
           else
-            mk
-              (FStar_Parser_AST.Construct
-                 ((c1.FStar_Syntax_Syntax.effect_name), [result]))
+            (let uu___2 = FStar_Options.print_effect_args () in
+             if uu___2
+             then
+               let args =
+                 FStar_List.map
+                   (fun uu___3 ->
+                      match uu___3 with
+                      | (e, uu___4) ->
+                          let uu___5 = resugar_term' env e in
+                          (uu___5, FStar_Parser_AST.Nothing))
+                   c1.FStar_Syntax_Syntax.effect_args in
+               let rec aux l uu___3 =
+                 match uu___3 with
+                 | [] -> l
+                 | hd::tl ->
+                     (match hd with
+                      | FStar_Syntax_Syntax.DECREASES e ->
+                          let e1 =
+                            let uu___4 = resugar_term' env e in
+                            (uu___4, FStar_Parser_AST.Nothing) in
+                          aux (e1 :: l) tl
+                      | uu___4 -> aux l tl) in
+               let decrease = aux [] c1.FStar_Syntax_Syntax.flags in
+               mk
+                 (FStar_Parser_AST.Construct
+                    ((c1.FStar_Syntax_Syntax.effect_name),
+                      (FStar_List.append (result :: decrease) args)))
+             else
+               mk
+                 (FStar_Parser_AST.Construct
+                    ((c1.FStar_Syntax_Syntax.effect_name), [result])))
 and (resugar_binder' :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.binder ->
