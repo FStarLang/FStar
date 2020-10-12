@@ -619,6 +619,66 @@ let write_a_f_aux
         in aux ();
         res
 
+#push-options "--z3rlimit 20"
+let write_b_f_aux
+  (#p:dprot)
+  (#next:dprot{more next /\ tag_of next = Recv})
+  (tr:trace p next)
+  (x:msg_t next)
+  : FStar.PCM.frame_preserving_upd_0 (pcm p) (B_W next tr)
+    (if is_send (step next x) then
+        B_R (step next x) (extend tr x) else B_W (step next x) (extend tr x))
+  = fun (v:t p{compatible (pcm p) (B_W next tr) v}) ->
+    let post = if is_send (step next x) then
+        B_R (step next x) (extend tr x) else B_W (step next x) (extend tr x) in
+    match v with
+    | B_W n tr' ->
+        assert (n == next /\ tr' == tr);
+        compatible_refl (pcm p) post;
+        post
+    | V tr' ->
+        assert (tr'.to == next /\ tr'.tr == tr);
+        let res = V ({to = (step next x); tr = extend tr x}) in
+        let aux () : Lemma (compatible (pcm p) post res)
+          = if is_send (step next x) then (
+              assert (composable post (A_W (step next x) (extend tr x)));
+              assert (compose (A_W (step next x) (extend tr x)) post == res)
+            ) else (
+              assert (composable post (A_R next tr));
+              assert (compose (A_R next tr) post == res)
+            )
+        in aux ();
+        res
+#pop-options
+
+let lemma_ahead_extend_a (#p:dprot)
+  (n:dprot) (n':dprot{more n' /\ tag_of n' = Send})
+  (tr:trace p n) (n_tr:trace p n')
+  (x:msg_t n')
+  : Lemma (requires ahead A n' n n_tr tr)
+          (ensures ahead A (step n' x) n (extend n_tr x) tr)
+          (decreases (trace_length n_tr - trace_length tr))
+  = let s1 = {to = n; tr = tr} in
+    let s2 = {to = n'; tr = n_tr} in
+    let last = {to = step n' x; tr = extend n_tr x} in
+    let r = next A #p in
+    assert (R.closure r s1 s2);
+    assert (R.closure r s2 last)
+
+let lemma_ahead_extend_b (#p:dprot)
+  (n:dprot) (n':dprot{more n' /\ tag_of n' = Recv})
+  (tr:trace p n) (n_tr:trace p n')
+  (x:msg_t n')
+  : Lemma (requires ahead B n' n n_tr tr)
+          (ensures ahead B (step n' x) n (extend n_tr x) tr)
+          (decreases (trace_length n_tr - trace_length tr))
+  = let s1 = {to = n; tr = tr} in
+    let s2 = {to = n'; tr = n_tr} in
+    let last = {to = step n' x; tr = extend n_tr x} in
+    let r = next B #p in
+    assert (R.closure r s1 s2);
+    assert (R.closure r s2 last)
+
 let write_a_f_lemma
   (#p:dprot)
   (#next:dprot{more next /\ tag_of next = Send})
@@ -641,7 +701,54 @@ let write_a_f_lemma
       else begin
         let B_R n' tr' = frame in
         assert (ahead A n n' tr tr');
-        admit()
+        let next_n = step next x in
+        let next_tr = extend tr x in
+        lemma_ahead_extend_a n' next tr' tr x;
+        let aux () : Lemma
+          (requires compatible (pcm p) (A_W next tr) (compose v frame))
+          (ensures compose post frame == write_a_f_aux tr x (compose v frame))
+          = let last = {to = next_n; tr = next_tr} in
+            lemma_ahead_is_longer A next_n next_tr n' tr';
+            assert (compose post frame == V last);
+            assert (compose v frame == V ({to = n; tr = tr}))
+        in Classical.move_requires aux ()
+      end
+    | V tr' -> ()
+
+let write_b_f_lemma
+  (#p:dprot)
+  (#next:dprot{more next /\ tag_of next = Recv})
+  (tr:trace p next)
+  (x:msg_t next)
+  (v:t p)
+  (frame:t p)
+  : Lemma
+    (requires compatible (pcm p) (B_W next tr) v /\ composable v frame)
+    (ensures
+      compatible (pcm p) (B_W next tr) v /\
+      composable v frame /\
+      composable (write_b_f_aux #p #next tr x v) frame /\
+      (compatible (pcm p) (B_W next tr) (compose v frame) ==>
+        (compose (write_b_f_aux tr x v) frame == write_b_f_aux tr x (compose v frame))))
+  = let post = write_b_f_aux tr x v in
+    match v with
+    | B_W n tr ->
+      if Nil? frame then ()
+      else begin
+        let A_R n' tr' = frame in
+        assert (ahead B n n' tr tr');
+        let next_n = step next x in
+        let next_tr = extend tr x in
+        lemma_ahead_extend_b n' next tr' tr x;
+        let aux () : Lemma
+          (requires compatible (pcm p) (B_W next tr) (compose v frame))
+          (ensures compose post frame == write_b_f_aux tr x (compose v frame))
+          = let last = {to = next_n; tr = next_tr} in
+            lemma_ahead_is_longer B next_n next_tr n' tr';
+            Classical.move_requires (lemma_same_trace_length_ahead_refl B next_tr) tr';
+            assert (compose post frame == V last);
+            assert (compose v frame == V ({to = n; tr = tr}))
+        in Classical.move_requires aux ()
       end
     | V tr' -> ()
 
@@ -655,6 +762,17 @@ let write_a_f
         A_W (step next x) (extend tr x) else A_R (step next x) (extend tr x))
   = Classical.forall_intro_2 (Classical.move_requires_2 (write_a_f_lemma #p #next tr x));
     write_a_f_aux #p #next tr x
+
+let write_b_f
+  (#p:dprot)
+  (#next:dprot{more next /\ tag_of next = Recv})
+  (tr:trace p next)
+  (x:msg_t next)
+  : FStar.PCM.frame_preserving_upd (pcm p) (B_W next tr)
+    (if is_send (step next x) then
+        B_R (step next x) (extend tr x) else B_W (step next x) (extend tr x))
+  = Classical.forall_intro_2 (Classical.move_requires_2 (write_b_f_lemma #p #next tr x));
+    write_b_f_aux #p #next tr x
 
 let write_a
   (#p:dprot)
@@ -674,14 +792,23 @@ let write_a
                             else A_R (step next x) (extend tr x)))))
       (endpoint_a r (step next x) (extend tr x)) (fun _ -> ())
 
-assume
-val write_b
+let write_b
   (#p:dprot)
   (r:chan p)
   (#next:dprot{more next /\ tag_of next = Recv})
   (tr:trace p next)
   (x:msg_t next)
   :SteelT unit (pts_to r (B_W next tr)) (fun _ -> endpoint_b r (step next x) (extend tr x))
+  = change_slprop (pts_to r (B_W next tr)) (pts_to r (reveal (hide (B_W next tr)))) (fun _ -> ());
+    upd_gen_action r (hide (B_W next tr))
+                     (hide (if is_send (step next x) then
+                             B_R (step next x) (extend tr x)
+                            else B_W (step next x) (extend tr x)))
+                     (write_b_f tr x);
+    change_slprop (pts_to r (reveal (hide (if is_send (step next x) then
+                             B_R (step next x) (extend tr x)
+                            else B_W (step next x) (extend tr x)))))
+      (endpoint_b r (step next x) (extend tr x)) (fun _ -> ())
 
 val alloc (#p:dprot) (x:t p{compatible (pcm p) x x /\ refine x})
   : Steel (chan p) emp (fun r -> pts_to r x) (fun _ -> squash (compatible (pcm p) x x)) (fun _ _ _ -> True)
