@@ -639,9 +639,7 @@ let (apply_coercion :
       fun e ->
         fun ty ->
           fun expect ->
-            (let uu___1 =
-               let uu___2 = FStar_Options.codegen () in
-               uu___2 = (FStar_Pervasives_Native.Some FStar_Options.FSharp) in
+            (let uu___1 = FStar_Extraction_ML_Util.codegen_fsharp () in
              if uu___1
              then
                let uu___2 =
