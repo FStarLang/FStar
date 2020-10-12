@@ -1057,17 +1057,9 @@ and tc_synth head env args rng =
 
     t, TcComm.lcomp_of_comp <| mk_Total typ, Env.trivial_guard
 
-and tc_tactic a b env tau =
+and tc_tactic (a:typ) (b:typ) (env:Env.env) (tau:term) : term * lcomp * guard_t =
     let env = { env with failhard = true } in
     tc_check_tot_or_gtot_term env tau (t_tac_of a b) ""
-
-and tc_tactic_opt env topt : option<term> * guard_t =
-    match topt with
-    | None ->
-        None, Env.trivial_guard
-    | Some tactic ->
-        let tactic, _, g = tc_tactic t_unit t_unit env tactic
-        in Some tactic, g
 
 and check_instantiated_fvar (env:Env.env) (v:S.var) (q:option<S.fv_qual>) (e:term) (t0:typ)
   : term * lcomp * guard_t
