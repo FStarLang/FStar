@@ -39,8 +39,8 @@ let run_safe t ps =
     if Options.tactics_failhard ()
     then run t ps
     else try run t ps
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) -> Failed (TacticFailure msg, ps)
+    with | Errors.Err (_, msg, _)
+         | Errors.Error (_, msg, _, _) -> Failed (TacticFailure msg, ps)
          | e -> Failed (e, ps)
 
 let ret (x:'a) : tac<'a> =
@@ -106,8 +106,8 @@ let trytac (t : tac<'a>) : tac<option<'a>> =
 let trytac_exn (t : tac<'a>) : tac<option<'a>> =
     mk_tac (fun ps ->
     try run (trytac t) ps
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) ->
+    with | Errors.Err (_, msg, _)
+         | Errors.Error (_, msg, _, _) ->
            log ps (fun () -> BU.print1 "trytac_exn error: (%s)" msg);
            Success (None, ps))
 

@@ -819,8 +819,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       let e, c_e, g_e =
         let e, c, g = tc_tot_or_gtot_term env_no_ex e in
         if not <| TcComm.is_total_lcomp c then
-          Err.add_errors env [Errors.Error_UnexpectedGTotComputation, "Expected Tot, got a GTot computation", e.pos];
-        e, c, g in
+          Errors.log_issue e.pos (Errors.Error_UnexpectedGTotComputation, "Expected Tot, got a GTot computation");
+        e, c, g
+      in
 
       let (expected_repr_typ, g_repr), u_a, a, g_a =
         let a, u_a = U.type_u () in
@@ -3500,7 +3501,8 @@ let type_of_tot_term env e =
     let env = {env with top_level=false; letrecs=[]} in
     let t, c, g =
         try tc_tot_or_gtot_term env e
-        with Error(e, msg, _) -> raise_error (e, msg) (Env.get_range env) in
+        with Error(e, msg, _, ctx) -> raise (Error (e, msg, Env.get_range env, ctx))
+    in
     let c = N.ghost_to_pure_lcomp env c in
     if TcComm.is_total_lcomp c
     then t, c.res_typ, g

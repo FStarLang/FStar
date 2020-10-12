@@ -146,11 +146,11 @@ let __do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
         | Some g ->
             bind (add_implicits g.implicits) (fun () ->
             ret true)
-    with | Errors.Err (_, msg) -> begin
+    with | Errors.Err (_, msg, _) -> begin
             mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
             ret false)
             end
-         | Errors.Error (_, msg, r) -> begin
+         | Errors.Error (_, msg, r, _) -> begin
             mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
                                 msg (Range.string_of_range r)) (fun _ ->
             ret false)
@@ -303,8 +303,8 @@ let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (Print.term_to_string t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
     try ret (TcTerm.type_of_tot_term e t)
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) -> begin
+    with | Errors.Err (_, msg, _)
+         | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
                                                   msg
@@ -316,8 +316,8 @@ let __tc_ghost (e : env) (t : term) : tac<(term * typ * guard_t)> =
     let e = {e with uvar_subtyping=false} in
     try let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
         ret (t, lc.res_typ, g)
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) -> begin
+    with | Errors.Err (_, msg ,_)
+         | Errors.Error (_, msg, _ ,_) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
                                                   msg
@@ -329,8 +329,8 @@ let __tc_lax (e : env) (t : term) : tac<(term * lcomp * guard_t)> =
     let e = {e with uvar_subtyping=false} in
     let e = {e with lax = true} in
     try ret (TcTerm.tc_term e t)
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) -> begin
+    with | Errors.Err (_, msg, _)
+         | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
                                                   msg
