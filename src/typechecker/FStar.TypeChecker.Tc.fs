@@ -337,7 +337,7 @@ let proc_check_with (attrs:list<attribute>) (kont : unit -> 'a) : 'a =
     Options.with_saved_options (fun () ->
       Options.set_vconfig vcfg;
       kont ())
-  | _ -> failwith "huh?"
+  | _ -> failwith "ill-formed `check_with`"
 
 let handle_postprocess_with_attr (env:Env.env) (ats:list<attribute>)
     : (list<attribute> * option<term>)
@@ -536,11 +536,11 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       if Options.use_two_phase_tc () && Env.should_verify env
       then
         TcEff.tc_effect_abbrev ({ env with phase1 = true; lax = true }) (lid, uvs, tps, c) r
-	|> (fun (lid, uvs, tps, c) -> { se with sigel = Sig_effect_abbrev (lid, uvs, tps, c, flags) })
-	|> N.elim_uvars env |>
-	(fun se -> match se.sigel with
-	        | Sig_effect_abbrev (lid, uvs, tps, c, _) -> lid, uvs, tps, c
-		| _ -> failwith "Did not expect Sig_effect_abbrev to not be one after phase 1")
+        |> (fun (lid, uvs, tps, c) -> { se with sigel = Sig_effect_abbrev (lid, uvs, tps, c, flags) })
+        |> N.elim_uvars env |>
+        (fun se -> match se.sigel with
+                | Sig_effect_abbrev (lid, uvs, tps, c, _) -> lid, uvs, tps, c
+                | _ -> failwith "Did not expect Sig_effect_abbrev to not be one after phase 1")
       else lid, uvs, tps, c in
 
     let lid, uvs, tps, c = TcEff.tc_effect_abbrev env (lid, uvs, tps, c) r in
@@ -954,7 +954,11 @@ let tc_decls env ses =
                         (Print.tag_of_sigelt se)
                         (Print.sigelt_to_string se);
 
-    let ses', ses_elaborated, env = tc_decl env se in
+    let ses', ses_elaborated, env =
+            Errors.with_ctx (BU.format1 "While typechecking the top-level declaration `%s`" (Print.sigelt_to_string_short se))
+                    (fun () -> tc_decl env se)
+    in
+
     let ses' = ses' |> List.map (fun se ->
         if Env.debug env (Options.Other "UF")
         then BU.print1 "About to elim vars from %s\n" (Print.sigelt_to_string se);
@@ -1025,16 +1029,22 @@ let pop_context env msg = rollback_context env.solver msg None
 
 let tc_partial_modul env modul =
   let verify = Options.should_verify (string_of_lid modul.name) in
-  let action = if verify then "Verifying" else "Lax-checking" in
+  let action = if verify then "verifying" else "lax-checking" in
   let label = if modul.is_interface then "interface" else "implementation" in
   if Options.debug_any () then
-    BU.print3 "%s %s of %s\n" action label (string_of_lid modul.name);
+    BU.print3 "Now %s %s of %s\n" action label (string_of_lid modul.name);
 
-  let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") (string_of_lid modul.name) in
+  let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module") (string_of_lid modul.name) in
   let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
   let env = Env.set_current_module env modul.name in
-  let ses, env = tc_decls env modul.declarations in
-  {modul with declarations=ses}, env
+  (* Only set a context for dependencies *)
+  Errors.with_ctx_if (not (Options.should_check (string_of_lid modul.name)))
+                     (BU.format2 "While loading dependency %s%s"
+                                    (string_of_lid modul.name)
+                                    (if modul.is_interface then " (interface)" else "")) (fun () ->
+    let ses, env = tc_decls env modul.declarations in
+    {modul with declarations=ses}, env
+  )
 
 let tc_more_partial_modul env modul decls =
   let ses, env = tc_decls env decls in

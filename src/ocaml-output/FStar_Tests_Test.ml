@@ -14,7 +14,7 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
                 if uu___6 then () else FStar_All.exit Prims.int_one);
                FStar_All.exit Prims.int_zero)) ()
      with
-     | FStar_Errors.Error (err, msg, r) when
+     | FStar_Errors.Error (err, msg, r, _ctx) when
          let uu___2 = FStar_Options.trace_error () in
          FStar_All.pipe_left Prims.op_Negation uu___2 ->
          (if r = FStar_Range.dummyRange
