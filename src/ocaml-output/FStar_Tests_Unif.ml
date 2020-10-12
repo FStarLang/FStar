@@ -120,7 +120,8 @@ let (should_fail :
                     let uu___3 = FStar_Syntax_Print.term_to_string f in
                     FStar_Util.print3 "%s and %s are unifiable if %s\n"
                       uu___1 uu___2 uu___3)) ()
-      with | FStar_Errors.Error (e, msg, r) -> FStar_Util.print1 "%s\n" msg
+      with
+      | FStar_Errors.Error (e, msg, r, _ctx) -> FStar_Util.print1 "%s\n" msg
 let (unify' : Prims.string -> Prims.string -> unit) =
   fun x ->
     fun y ->
