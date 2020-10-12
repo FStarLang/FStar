@@ -809,14 +809,17 @@ type error_handler = {
     eh_clear: unit -> unit
 }
 
-(* No newline at the end *)
-let issue_message (i:issue) : string =
-  let ctx_string =
-    i.issue_ctx
+let ctx_string (ctx : list<string>) : string =
+  if Options.error_contexts ()
+  then
+    ctx
       |> List.map (fun s -> "\n> " ^ s)
       |> String.concat ""
-  in
-  i.issue_msg ^ ctx_string
+  else ""
+
+(* No newline at the end *)
+let issue_message (i:issue) : string =
+  i.issue_msg ^ ctx_string i.issue_ctx
 
 (* No newline at the end *)
 let format_issue issue =
@@ -832,12 +835,12 @@ let format_issue issue =
       | None -> "", ""
       | Some r when r = dummyRange ->
           "", (if def_range r = def_range dummyRange then ""
-               else BU.format1 "\n  (see also %s)" (Range.string_of_range r))
+               else BU.format1 " (see also %s)" (Range.string_of_range r))
       | Some r ->
         (BU.format1 "%s: " (Range.string_of_use_range r),
          (if use_range r = def_range r || def_range r = def_range dummyRange
           then ""
-          else BU.format1 "\n  (see also %s)" (Range.string_of_range r)))
+          else BU.format1 " (see also %s)" (Range.string_of_range r)))
   in
   let issue_number =
       match issue.issue_number with
@@ -1130,12 +1133,7 @@ let with_ctx (s:string) (f : unit -> 'a) : 'a =
        * TODO: deprecate failwith and use F* exceptions, which we can
        * then catch and print sensibly. *)
       | Failure msg ->
-        let ctx_str =
-          error_context.get ()
-          |> List.map (fun s -> "\n> " ^ s)
-          |> String.concat ""
-        in
-        Inl (Failure (msg ^ ctx_str))
+        Inl (Failure (msg ^ ctx_string (error_context.get ())))
       | ex -> Inl ex
   in
   ignore (error_context.pop ());
