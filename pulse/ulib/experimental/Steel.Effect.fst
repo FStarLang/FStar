@@ -45,10 +45,12 @@ let frame_aux (#a:Type)
 = fun frame' ->
   Sem.run #state #_ #_ #_ #_ #_ frame' (Sem.Frame (Sem.Act f) frame (fun _ -> True))
 
+#push-options "--z3rlimit_factor 2"
 let bind_steel_steel a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g f g =
   fun frame' ->
   let x = frame_aux f frame_f frame' in
   frame_aux (g x) frame_g frame'
+#pop-options
 
 let bind_steel_steelf (a:Type) (b:Type)
   #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f
