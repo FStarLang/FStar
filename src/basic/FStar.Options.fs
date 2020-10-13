@@ -176,6 +176,7 @@ let defaults =
       ("detail_hint_replay"           , Bool false);
       ("dump_module"                  , List []);
       ("eager_subtyping"              , Bool false);
+      ("error_contexts"               , Bool false);
       ("expose_interfaces"            , Bool false);
       ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
@@ -271,7 +272,6 @@ let defaults =
       ("z3cliopt"                     , List []);
       ("use_two_phase_tc"             , Bool true);
       ("__no_positivity"              , Bool false);
-      ("__ml_no_eta_expand_coertions" , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
       ("use_nbe"                      , Bool false);
@@ -360,6 +360,7 @@ let get_detail_errors           ()      = lookup_opt "detail_errors"            
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
+let get_error_contexts          ()      = lookup_opt "error_contexts"           as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
@@ -450,7 +451,6 @@ let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
 let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         as_bool
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
-let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
 let get_use_nbe_for_extraction  ()      = lookup_opt "use_nbe_for_extraction"                  as_bool
@@ -767,6 +767,11 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
         "eager_subtyping",
         Const (Bool true),
         "Try to solve subtyping constraints at each binder (loses precision but may be slightly more efficient)");
+
+       (noshort,
+        "error_contexts",
+        BoolStr,
+        "Print context information for each error or warning raised (default false)");
 
        ( noshort,
          "extract",
@@ -1289,11 +1294,6 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
         Const (Bool true),
         "Don't check positivity of inductive types");
 
-       ( noshort,
-        "__ml_no_eta_expand_coertions",
-        Const (Bool true),
-        "Do not eta-expand coertions in generated OCaml");
-
         ( noshort,
         "warn_error",
         Accumulated (SimpleStr ("")),
@@ -1679,6 +1679,7 @@ let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
 let dump_module                  s  = get_dump_module() |> List.existsb (module_name_eq s)
 let eager_subtyping              () = get_eager_subtyping()
+let error_contexts               () = get_error_contexts              ()
 let expose_interfaces            () = get_expose_interfaces          ()
 let force                        () = get_force                       ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
@@ -1789,7 +1790,6 @@ let z3_seed                      () = get_z3seed                      ()
 let use_two_phase_tc             () = get_use_two_phase_tc            ()
                                     && not (lax())
 let no_positivity                () = get_no_positivity               ()
-let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
 let trivial_pre_for_unannotated_effectful_fns

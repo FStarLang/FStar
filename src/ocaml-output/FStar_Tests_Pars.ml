@@ -36,7 +36,7 @@ let (parse_mod :
                    env' uu___4 FStar_Syntax_DsEnv.default_mii in
                (match uu___3 with | (env'1, uu___4) -> (env'1, m1)))
       | FStar_Parser_ParseIt.ParseError (err, msg, r) ->
-          FStar_Exn.raise (FStar_Errors.Error (err, msg, r))
+          FStar_Exn.raise (FStar_Errors.Error (err, msg, r, []))
       | FStar_Parser_ParseIt.ASTFragment (FStar_Util.Inr uu___1, uu___2) ->
           let msg = FStar_Util.format1 "%s: expected a module\n" mod_name in
           FStar_Errors.raise_error (FStar_Errors.Fatal_ModuleExpected, msg)

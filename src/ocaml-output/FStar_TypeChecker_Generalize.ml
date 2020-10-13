@@ -103,47 +103,50 @@ let (generalize_universes :
   =
   fun env ->
     fun t0 ->
-      let t =
-        FStar_TypeChecker_Normalize.normalize
-          [FStar_TypeChecker_Env.NoFullNorm;
-          FStar_TypeChecker_Env.Beta;
-          FStar_TypeChecker_Env.DoNotUnfoldPureLets] env t0 in
-      let univnames = gather_free_univnames env t in
-      (let uu___1 =
-         FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-           (FStar_Options.Other "Gen") in
-       if uu___1
-       then
-         let uu___2 = FStar_Syntax_Print.term_to_string t in
-         let uu___3 = FStar_Syntax_Print.univ_names_to_string univnames in
-         FStar_Util.print2
-           "generalizing universes in the term (post norm): %s with univnames: %s\n"
-           uu___2 uu___3
-       else ());
-      (let univs = FStar_Syntax_Free.univs t in
-       (let uu___2 =
-          FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-            (FStar_Options.Other "Gen") in
-        if uu___2
-        then
-          let uu___3 = string_of_univs univs in
-          FStar_Util.print1 "univs to gen : %s\n" uu___3
-        else ());
-       (let gen = gen_univs env univs in
-        (let uu___3 =
-           FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-             (FStar_Options.Other "Gen") in
-         if uu___3
-         then
-           let uu___4 = FStar_Syntax_Print.term_to_string t in
-           let uu___5 = FStar_Syntax_Print.univ_names_to_string gen in
-           FStar_Util.print2 "After generalization, t: %s and univs: %s\n"
-             uu___4 uu___5
-         else ());
-        (let univs1 = check_universe_generalization univnames gen t0 in
-         let t1 = FStar_TypeChecker_Normalize.reduce_uvar_solutions env t in
-         let ts = FStar_Syntax_Subst.close_univ_vars univs1 t1 in
-         (univs1, ts))))
+      FStar_Errors.with_ctx "While generalizing universes"
+        (fun uu___ ->
+           let t =
+             FStar_TypeChecker_Normalize.normalize
+               [FStar_TypeChecker_Env.NoFullNorm;
+               FStar_TypeChecker_Env.Beta;
+               FStar_TypeChecker_Env.DoNotUnfoldPureLets] env t0 in
+           let univnames = gather_free_univnames env t in
+           (let uu___2 =
+              FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+                (FStar_Options.Other "Gen") in
+            if uu___2
+            then
+              let uu___3 = FStar_Syntax_Print.term_to_string t in
+              let uu___4 = FStar_Syntax_Print.univ_names_to_string univnames in
+              FStar_Util.print2
+                "generalizing universes in the term (post norm): %s with univnames: %s\n"
+                uu___3 uu___4
+            else ());
+           (let univs = FStar_Syntax_Free.univs t in
+            (let uu___3 =
+               FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+                 (FStar_Options.Other "Gen") in
+             if uu___3
+             then
+               let uu___4 = string_of_univs univs in
+               FStar_Util.print1 "univs to gen : %s\n" uu___4
+             else ());
+            (let gen = gen_univs env univs in
+             (let uu___4 =
+                FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+                  (FStar_Options.Other "Gen") in
+              if uu___4
+              then
+                let uu___5 = FStar_Syntax_Print.term_to_string t in
+                let uu___6 = FStar_Syntax_Print.univ_names_to_string gen in
+                FStar_Util.print2
+                  "After generalization, t: %s and univs: %s\n" uu___5 uu___6
+              else ());
+             (let univs1 = check_universe_generalization univnames gen t0 in
+              let t1 =
+                FStar_TypeChecker_Normalize.reduce_uvar_solutions env t in
+              let ts = FStar_Syntax_Subst.close_univ_vars univs1 t1 in
+              (univs1, ts)))))
 let (gen :
   FStar_TypeChecker_Env.env ->
     Prims.bool ->
@@ -624,10 +627,13 @@ let (generalize :
   fun env ->
     fun is_rec ->
       fun lecs ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 = FStar_TypeChecker_Env.current_module env in
-            FStar_Ident.string_of_lid uu___2 in
-          FStar_Pervasives_Native.Some uu___1 in
-        FStar_Profiling.profile (fun uu___1 -> generalize' env is_rec lecs)
-          uu___ "FStar.TypeChecker.Util.generalize"
+        FStar_Errors.with_ctx "While generalizing"
+          (fun uu___ ->
+             let uu___1 =
+               let uu___2 =
+                 let uu___3 = FStar_TypeChecker_Env.current_module env in
+                 FStar_Ident.string_of_lid uu___3 in
+               FStar_Pervasives_Native.Some uu___2 in
+             FStar_Profiling.profile
+               (fun uu___2 -> generalize' env is_rec lecs) uu___1
+               "FStar.TypeChecker.Util.generalize")

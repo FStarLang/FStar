@@ -290,22 +290,23 @@ special `flexlink` technology for this. See `examples/crypto` and
 
 ### Step 2l. Building the F\* libraries ###
 
-A convenience make target exists for this:
+Just run:
 
-    $ make libs -j6
+    $ make -C ulib/ -j6
 
 It does two things:
 
 1. It verifies the F\* standard library, producing `.checked` files that cache
-   definitions to speed up subsequent usage. You can do this part separately with:
-
-        $ make -C ulib -j6
+   definitions to speed up subsequent usage.
 
 2. It builds the various OCaml libraries (`fstar-compiler-lib`, `fstarlib`,
    `fstartaclib`), needed for building OCaml code extracted from F\*, native
    tactics, etc. You can build this part separately with:
 
-        $ make -C ulib/ml -j6
+        $ make libs
+
+   (this target will also rebuild `fstar.exe`, since these libraries tightly
+   depend on the executable). This rule does NOT verify anything.
 
 ## Bootstrapping F\* in OCaml
 

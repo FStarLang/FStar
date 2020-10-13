@@ -2755,13 +2755,19 @@ let normalize_with_primitive_steps ps s e t =
     if is_nbe_request s then begin
       log_top c (fun () -> BU.print1 "Starting NBE for (%s) {\n" (Print.term_to_string t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
-      let (r, ms) = BU.record_time (fun () -> nbe_eval c s t) in
+      let (r, ms) = Errors.with_ctx "While normalizing a term via NBE" (fun () ->
+                      BU.record_time (fun () ->
+                        nbe_eval c s t))
+      in
       log_top c (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.term_to_string r) (string_of_int ms));
       r
     end else begin
       log_top c (fun () -> BU.print1 "Starting normalizer for (%s) {\n" (Print.term_to_string t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
-      let (r, ms) = BU.record_time (fun () -> norm c [] [] t) in
+      let (r, ms) = Errors.with_ctx "While normalizing a term" (fun () ->
+                      BU.record_time (fun () ->
+                        norm c [] [] t))
+      in
       log_top c (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.term_to_string r) (string_of_int ms));
       r
     end
@@ -2777,7 +2783,10 @@ let normalize_comp s e c =
     plugin_unfold_warn_ctr := 10;
     log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
     log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
-    let (c, ms) = BU.record_time (fun () -> norm_comp cfg [] c) in
+    let (c, ms) = Errors.with_ctx "While normalizing a computation type" (fun () ->
+                    BU.record_time (fun () ->
+                      norm_comp cfg [] c))
+    in
     log_top cfg (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.comp_to_string c) (string_of_int ms));
     c
 
