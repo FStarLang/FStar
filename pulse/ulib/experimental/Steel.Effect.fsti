@@ -135,30 +135,35 @@ val subcomp (a:Type)
   (ensures fun _ -> True)
 
 unfold
-let if_then_else_req (#pre:pre_t)
-  (req_then:req_t pre) (req_else:req_t pre)
+let if_then_else_req (#pre_f:pre_t) (#pre_g:pre_t) (s: squash (can_be_split pre_f pre_g))
+  (req_then:req_t pre_f) (req_else:req_t pre_g)
   (p:Type0)
-: req_t pre
+: req_t pre_f
 = fun h -> (p ==> req_then h) /\ ((~ p) ==> req_else h)
 
 unfold
-let if_then_else_ens (#a:Type) (#pre:pre_t) (#post:post_t a)
-  (ens_then:ens_t pre a post) (ens_else:ens_t pre a post)
+let if_then_else_ens (#a:Type) (#pre_f:pre_t) (#pre_g:pre_t) (#post_f:post_t a) (#post_g:post_t a)
+  (s1 : squash (can_be_split pre_f pre_g)) (s2 : squash (can_be_split_forall post_f post_g))
+  (ens_then:ens_t pre_f a post_f) (ens_else:ens_t pre_g a post_g)
   (p:Type0)
-: ens_t pre a post
+: ens_t pre_f a post_f
 = fun h0 x h1 -> (p ==> ens_then h0 x h1) /\ ((~ p) ==> ens_else h0 x h1)
 
 let if_then_else (a:Type)
-  (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t a)
-  (#[@@ framing_implicit] req_then:req_t pre) (#[@@ framing_implicit] ens_then:ens_t pre a post)
-  (#[@@ framing_implicit] req_else:req_t pre) (#[@@ framing_implicit] ens_else:ens_t pre a post)
-  (f:repr a pre post req_then ens_then)
-  (g:repr a pre post req_else ens_else)
+  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] pre_g:pre_t)
+  (#[@@ framing_implicit] post_f:post_t a) (#[@@ framing_implicit] post_g:post_t a)
+  (#[@@ framing_implicit] req_then:req_t pre_f) (#[@@ framing_implicit] ens_then:ens_t pre_f a post_f)
+  (#[@@ framing_implicit] req_else:req_t pre_g) (#[@@ framing_implicit] ens_else:ens_t pre_g a post_g)
+  (#[@@ framing_implicit] s_pre1: squash (can_be_split pre_f pre_g))
+  (#[@@ framing_implicit] s_post1: squash (can_be_split_forall post_f post_g))
+  (#[@@ framing_implicit] s_post2: squash (can_be_split_forall post_g post_f))
+  (f:repr a pre_f post_f req_then ens_then)
+  (g:repr a pre_g post_g req_else ens_else)
   (p:bool)
 : Type
-= repr a pre post
-    (if_then_else_req req_then req_else p)
-    (if_then_else_ens ens_then ens_else p)
+= repr a pre_f post_f
+    (if_then_else_req s_pre1 req_then req_else p)
+    (if_then_else_ens s_pre1 s_post1 ens_then ens_else p)
 
 [@@allow_informative_binders]
 reifiable reflectable
