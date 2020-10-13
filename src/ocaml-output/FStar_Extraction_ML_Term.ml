@@ -613,7 +613,7 @@ let (default_value_for_ty :
                    FStar_Extraction_ML_Syntax.MLE_Fun uu___4 in
                  FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty t)
                    uu___3)
-let (maybe_eta_expand :
+let (maybe_eta_expand_coercion :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Extraction_ML_Syntax.mlty ->
       FStar_Extraction_ML_Syntax.mlexpr -> FStar_Extraction_ML_Syntax.mlexpr)
@@ -622,9 +622,8 @@ let (maybe_eta_expand :
     fun expect ->
       fun e ->
         let uu___ =
-          (FStar_Options.ml_no_eta_expand_coertions ()) ||
-            (let uu___1 = FStar_Options.codegen () in
-             uu___1 = (FStar_Pervasives_Native.Some FStar_Options.Kremlin)) in
+          let uu___1 = FStar_Options.codegen () in
+          uu___1 = (FStar_Pervasives_Native.Some FStar_Options.Kremlin) in
         if uu___ then e else eta_expand g expect e
 let (apply_coercion :
   FStar_Range.range ->
@@ -849,7 +848,7 @@ let (maybe_coerce :
                                "\n (*needed to coerce expression \n %s \n of type \n %s \n to type \n %s *) \n"
                                uu___7 uu___8 uu___9);
                         (let uu___6 = apply_coercion pos g e ty1 expect in
-                         maybe_eta_expand g expect uu___6)))
+                         maybe_eta_expand_coercion g expect uu___6)))
 let (bv_as_mlty :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.bv -> FStar_Extraction_ML_Syntax.mlty)
