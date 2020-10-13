@@ -258,6 +258,7 @@ val safe_int_of_string: string -> option<int>
 val int_of_char:   char -> Tot<int>
 val int_of_byte:   byte -> Tot<int>
 val byte_of_char: char -> Tot<byte>
+val u32_of_char: char -> Tot<int>
 val char_of_int:   int -> Tot<char>
 val int_of_uint8: uint8 -> Tot<int>
 val uint16_of_int: int -> Tot<uint16>

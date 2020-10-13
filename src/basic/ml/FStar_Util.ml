@@ -520,6 +520,7 @@ let int_of_byte x = x
 let int_of_uint8 x = Z.of_int (Char.code x)
 let uint16_of_int i = Z.to_int i
 let byte_of_char c = c
+let u32_of_char c = Z.of_int 0
 
 let float_of_string s = float_of_string s
 let float_of_byte b = float_of_int (Char.code b)

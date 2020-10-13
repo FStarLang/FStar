@@ -448,6 +448,7 @@ let int_of_byte (s:byte) = int32 s
 let int_of_uint8 (i:uint8) = int32 i
 let uint16_of_int (i:int) = uint16 i
 let byte_of_char (s:char) = byte s
+let u32_of_char (s:char) = int32 0
 
 let float_of_string (s:string) = (float)s
 let float_of_byte (b:byte) = (float)b
