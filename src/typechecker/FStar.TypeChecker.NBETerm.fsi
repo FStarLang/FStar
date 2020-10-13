@@ -25,6 +25,7 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Errors
+open FStar.VConfig
 
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
@@ -253,6 +254,7 @@ val e_unit   : embedding<unit>
 val e_any    : embedding<t>
 val mk_any_emb : t -> embedding<t>
 val e_range  : embedding<Range.range>
+val e_vconfig  : embedding<vconfig>
 val e_norm_step : embedding<Syntax.Embeddings.norm_step>
 val e_list   : embedding<'a> -> embedding<list<'a>>
 val e_option : embedding<'a> -> embedding<option<'a>>

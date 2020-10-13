@@ -131,7 +131,7 @@ let (by_tactic_interp :
                         let uu___3 =
                           let uu___4 =
                             let uu___5 =
-                              FStar_Tactics_Basic.goal_of_goal_ty e assertion in
+                              FStar_Tactics_Types.goal_of_goal_ty e assertion in
                             FStar_All.pipe_left FStar_Pervasives_Native.fst
                               uu___5 in
                           [uu___4] in
@@ -142,7 +142,7 @@ let (by_tactic_interp :
                         let uu___3 =
                           let uu___4 =
                             let uu___5 =
-                              FStar_Tactics_Basic.goal_of_goal_ty e assertion in
+                              FStar_Tactics_Types.goal_of_goal_ty e assertion in
                             FStar_All.pipe_left FStar_Pervasives_Native.fst
                               uu___5 in
                           [uu___4] in

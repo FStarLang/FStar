@@ -327,17 +327,15 @@ let check_must_erase_attribute env se =
 
     | _ -> ()
 
-(* A(nother) hacky knot, set by FStar.Main *)
-let unembed_optionstate_knot : ref<option<EMB.embedding<O.optionstate>>> = BU.mk_ref None
-let unembed_optionstate (t : term) : option<O.optionstate> =
-    EMB.unembed (BU.must (!unembed_optionstate_knot)) t true EMB.id_norm_cb
-
 let proc_check_with (attrs:list<attribute>) (kont : unit -> 'a) : 'a =
   match U.get_attribute PC.check_with_lid attrs with
   | None -> kont ()
   | Some [(a, None)] ->
+    match EMB.unembed EMB.e_vconfig a true EMB.id_norm_cb with
+    | None -> failwith "nah"
+    | Some vcfg ->
     Options.with_saved_options (fun () ->
-      Options.set_verification_options (unembed_optionstate a |> BU.must);
+      Options.set_vconfig vcfg;
       kont ())
   | _ -> failwith "huh?"
 
@@ -382,6 +380,9 @@ let handle_postprocess_with_attr (env:Env.env) (ats:list<attribute>)
                                        (string_of_lid PC.postprocess_with));
         ats, None
 
+let store_sigopts (se:sigelt) : sigelt =
+  { se with sigopts = Some (Options.get_vconfig ()) }
+
 (* Alternative to making a huge let rec... knot is set below in this file *)
 let tc_decls_knot : ref<option<(Env.env -> list<sigelt> -> list<sigelt> * Env.env)>> =
   BU.mk_ref None
@@ -392,9 +393,9 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   proc_check_with se.sigattrs (fun () ->
   let r = se.sigrng in
   let se =
-     if Options.record_options ()
-     then { se with sigopts = Some (Options.peek ()) }
-     else se
+    if Options.record_options ()
+    then store_sigopts se
+    else se
   in
   match se.sigel with
   | Sig_inductive_typ _

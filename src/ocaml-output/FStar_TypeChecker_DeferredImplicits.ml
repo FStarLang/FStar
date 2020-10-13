@@ -503,18 +503,16 @@ let (solve_deferred_to_tactic_goals :
                              FStar_TypeChecker_Env.erasable_types_tab =
                                (uu___4.FStar_TypeChecker_Env.erasable_types_tab);
                              FStar_TypeChecker_Env.enable_defer_to_tac =
-                               (uu___4.FStar_TypeChecker_Env.enable_defer_to_tac)
+                               false
                            } in
                          let uu___4 =
-                           let uu___5 =
-                             is_flex tp.FStar_TypeChecker_Common.lhs in
-                           if uu___5
-                           then
-                             env2.FStar_TypeChecker_Env.type_of env_lax
-                               tp.FStar_TypeChecker_Common.lhs
-                           else
-                             env2.FStar_TypeChecker_Env.type_of env_lax
-                               tp.FStar_TypeChecker_Common.rhs in
+                           let t =
+                             let uu___5 =
+                               is_flex tp.FStar_TypeChecker_Common.lhs in
+                             if uu___5
+                             then tp.FStar_TypeChecker_Common.lhs
+                             else tp.FStar_TypeChecker_Common.rhs in
+                           env2.FStar_TypeChecker_Env.type_of env_lax t in
                          (match uu___4 with
                           | (uu___5, t_eq, uu___6) ->
                               let goal_ty =
