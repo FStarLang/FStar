@@ -115,4 +115,9 @@ let rec join (#p:slprop) (t:thread p)
   : SteelT unit emp (fun _ -> p)
   = let _ = L.acquire t.l in
     let b = read_refine #_ #full_perm (maybe_p p) t.r in
-    cond b (lock_inv_pred t.r p) (fun _ _ -> p) (join_case_true t) (join_case_false t join)
+    if b then
+      (change_slprop (lock_inv_pred t.r p b) (lock_inv_pred t.r p true) (fun _ -> ());
+        join_case_true t ())
+    else
+      (change_slprop (lock_inv_pred t.r p b) (lock_inv_pred t.r p false) (fun _ -> ());
+      join_case_false t join ())
