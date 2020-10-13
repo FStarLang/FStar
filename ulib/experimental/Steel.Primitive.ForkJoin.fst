@@ -100,24 +100,14 @@ let fork (#p #q #r #s:slprop)
     let _ = par (spawn f t) (g t) in
     ()
 
-let join_case_true (#p:slprop) (t:thread p) (_:unit)
-  : SteelT unit (lock_inv_pred t.r p true) (fun _ -> p)
-  = change_slprop (lock_inv_pred t.r p true) p (fun _ -> ())
-
-let join_case_false (#p:slprop) (t:thread p)
-  (loop: (t:thread p -> SteelT unit emp (fun _ -> p))) (_:unit)
-  : SteelT unit (lock_inv_pred t.r p false) (fun _ -> p)
-  = intro_exists false (lock_inv_pred t.r p);
-    L.release t.l;
-    loop t
-
 let rec join (#p:slprop) (t:thread p)
   : SteelT unit emp (fun _ -> p)
   = let _ = L.acquire t.l in
     let b = read_refine #_ #full_perm (maybe_p p) t.r in
     if b then
-      (change_slprop (lock_inv_pred t.r p b) (lock_inv_pred t.r p true) (fun _ -> ());
-        join_case_true t ())
+      (change_slprop (lock_inv_pred t.r p b) p (fun _ -> ()); ())
     else
       (change_slprop (lock_inv_pred t.r p b) (lock_inv_pred t.r p false) (fun _ -> ());
-      join_case_false t join ())
+      intro_exists false (lock_inv_pred t.r p);
+      L.release t.l;
+      join t)
