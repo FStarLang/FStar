@@ -2226,7 +2226,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                        let uu___27 =
                                          let uu___28 =
                                            FStar_All.pipe_right c
-                                             FStar_Util.u32_of_char in
+                                             FStar_Util.int_of_char in
                                          FStar_All.pipe_right uu___28
                                            FStar_BigInt.of_int_fs in
                                        FStar_TypeChecker_NBETerm.int_as_bounded
@@ -2239,7 +2239,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
                                           let uu___27 =
                                             let uu___28 =
                                               FStar_All.pipe_right c
-                                                FStar_Util.u32_of_char in
+                                                FStar_Util.int_of_char in
                                             FStar_All.pipe_right uu___28
                                               FStar_BigInt.of_int_fs in
                                           int_as_bounded r u32_int_to_t
