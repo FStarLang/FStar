@@ -76,3 +76,11 @@ let f_1529_2 () =
 let f_1529_3 () =
   reveal_opaque (`%f_1529) f_1529;
   assert (f_1529 4 == 5)
+
+
+(*
+ * FStar.Char.u32_of_char
+ *)
+#push-options "--no_smt"
+let test_u32_of_char () = assert_norm (FStar.Char.u32_of_char 'c' == 99ul)
+#pop-options
