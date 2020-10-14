@@ -648,10 +648,10 @@ let built_in_primitive_steps : prim_step_set =
              0,
              unary_op
                arg_as_char
-               (fun r c -> int_as_bounded r u32_int_to_t (c |> BU.u32_of_char |> Z.of_int_fs)),
+               (fun r c -> int_as_bounded r u32_int_to_t (c |> BU.int_of_char |> Z.of_int_fs)),
              NBETerm.unary_op
                NBETerm.arg_as_char
-               (fun c -> NBETerm.int_as_bounded u32_int_to_t (c |> BU.u32_of_char |> Z.of_int_fs)));
+               (fun c -> NBETerm.int_as_bounded u32_int_to_t (c |> BU.int_of_char |> Z.of_int_fs)));
          (PC.string_of_int_lid,
              1,
              0,
