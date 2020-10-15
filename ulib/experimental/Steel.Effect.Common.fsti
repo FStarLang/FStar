@@ -1042,6 +1042,21 @@ let rec resolve_tac () : Tac unit =
       (norm [delta_only [`%annot_sub_post]];
       resolve_tac_final ())
 
+
+
+let rec resolve_tac_logical () : Tac unit =
+  match goals () with
+  | [] -> ()
+  | g ->
+    if pick_next g then resolve_tac_logical ()
+    else
+      // This is only for requires/ensures constraints, which are equalities
+      // There should always be a scheduling of constraints, but it can happen
+      // that some uvar for the type of an equality is not resolved.
+      // If we reach this point, we try to simply call the unifier instead of failing directly
+      solve_all_eqs g
+
+
 let typ_contains_req_ens (t:term) : Tac bool =
   let name, _ = collect_app t in
   if term_eq name (`req_t) || term_eq name (`ens_t) then true
@@ -1077,4 +1092,4 @@ let init_resolve_tac () : Tac unit =
   solve_all_eqs(goals());
   resolve_tac ();
   set_goals loggs;
-  resolve_tac ()
+  resolve_tac_logical ()
