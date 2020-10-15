@@ -113,3 +113,89 @@ let swap4 (#a:_) (#v0 #v1:erased a) (r0 r1:ref a)
     write r0 tmp1;
     write r1 tmp0;
     change_eqF ()
+
+#push-options "--query_stats"
+let swapN (#a:_) (#v0 #v1:erased a) (r0 r1:ref a)
+                 (#u0 #u1:erased a) (s0 s1:ref a)
+  : SteelT unit
+    (pts_to r0 full_perm v0 `star` pts_to s0 full_perm u0 `star`
+     pts_to r1 full_perm v1 `star` pts_to s1 full_perm u1)
+    (fun _ ->  pts_to r0 full_perm v1 `star`  pts_to r1 full_perm v0 `star`
+            pts_to s0 full_perm u0 `star` pts_to s1 full_perm u1)
+
+  = swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1;
+
+    swap3 r0 r1;
+    swap3 r0 r1
