@@ -119,5 +119,5 @@ let rec join_all (threads:list (T.thread emp))
 /// in a fork and adds the created thread to the list passed as argument in the continuation
 let rec many (n:nat) (threads:list (T.thread emp))
   : SteelT unit emp (fun _ -> emp)
-  = if (op_Equality #nat n 0) then join_all threads
+  = if n = 0 then join_all threads
     else T.fork client_server (fun t _ -> many (n-1) (t::threads))

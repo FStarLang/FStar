@@ -583,6 +583,7 @@ val upd_gen_action (#p:dprot)
 
 let upd_gen_action #p r x y f = upd_gen r x y f
 
+#push-options "--z3rlimit 20"
 let write_a_f_aux
   (#p:dprot)
   (#next:dprot{more next /\ tag_of next = Send})
@@ -613,7 +614,6 @@ let write_a_f_aux
         in aux ();
         res
 
-#push-options "--z3rlimit 20"
 let write_b_f_aux
   (#p:dprot)
   (#next:dprot{more next /\ tag_of next = Recv})
