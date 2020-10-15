@@ -548,10 +548,7 @@ let f_b_r (#p:dprot) (q:dprot{is_send q /\ more q}) (tr:trace p q)
 val get_a_r (#p:dprot) (c:chan p) (q:dprot{is_recv q /\ more q}) (tr:trace p q)
   : SteelT (tr':partial_trace_of p{compatible (pcm p) (A_R q tr) (V tr')})
            (pts_to c (A_R q tr))
-           (fun tr' ->
-             if trace_length tr >= trace_length tr'.tr then
-               pts_to c (A_R q tr)
-             else pts_to c (extend_node_a_r tr tr'))
+           (fun tr' -> pts_to c (if trace_length tr >= trace_length tr'.tr then A_R q tr else extend_node_a_r tr tr'))
 
 let get_a_r #p c q tr =
   change_slprop (pts_to c (A_R q tr)) (pts_to c (reveal (hide (A_R q tr)))) (fun _ -> ());
@@ -559,17 +556,14 @@ let get_a_r #p c q tr =
   let (tr':partial_trace_of p{compatible (pcm p) (A_R q tr) (V tr')}) = V?._0 v in
   change_slprop
     (pts_to c (f_a_r q tr v))
-    (if trace_length tr >= trace_length tr'.tr then pts_to c (A_R q tr) else pts_to c (extend_node_a_r tr tr'))
+    (pts_to c (if trace_length tr >= trace_length tr'.tr then A_R q tr else extend_node_a_r tr tr'))
     (fun _ -> ());
   tr'
 
 val get_b_r (#p:dprot) (c:chan p) (q:dprot{is_send q /\ more q}) (tr:trace p q)
   : SteelT (tr':partial_trace_of p{compatible (pcm p) (B_R q tr) (V tr')})
            (pts_to c (B_R q tr))
-           (fun tr' ->
-             if trace_length tr >= trace_length tr'.tr then
-               pts_to c (B_R q tr)
-             else pts_to c (extend_node_b_r tr tr'))
+           (fun tr' -> pts_to c (if trace_length tr >= trace_length tr'.tr then B_R q tr else extend_node_b_r tr tr'))
 
 let get_b_r #p c q tr =
   change_slprop (pts_to c (B_R q tr)) (pts_to c (reveal (hide (B_R q tr)))) (fun _ -> ());
@@ -577,7 +571,7 @@ let get_b_r #p c q tr =
   let (tr':partial_trace_of p{compatible (pcm p) (B_R q tr) (V tr')}) = V?._0 v in
   change_slprop
     (pts_to c (f_b_r q tr v))
-    (if trace_length tr >= trace_length tr'.tr then pts_to c (B_R q tr) else pts_to c (extend_node_b_r tr tr'))
+    (pts_to c (if trace_length tr >= trace_length tr'.tr then B_R q tr else extend_node_b_r tr tr'))
     (fun _ -> ());
   tr'
 
@@ -872,16 +866,16 @@ let rec recv_a #p c next tr =
   change_slprop (endpoint_a c next tr) (pts_to c (A_R next tr)) (fun _ -> ());
   let tr' = get_a_r c next tr in
   if trace_length tr >= trace_length tr'.tr then
-    (change_slprop (if trace_length tr >= trace_length tr'.tr then pts_to c (A_R next tr)
-      else (pts_to c (extend_node_a_r tr tr')))
-      (endpoint_a c next tr) (fun _ -> ());
+    (change_slprop
+      (pts_to c (if trace_length tr >= trace_length tr'.tr then A_R next tr else extend_node_a_r tr tr'))
+      (endpoint_a c next tr)
+      (fun _ -> ());
      recv_a c next tr)
   else (
       compatible_a_r_v_is_ahead tr tr';
       let x = next_message tr tr'.tr in
       change_slprop
-        (if trace_length tr >= trace_length tr'.tr then pts_to c (A_R next tr)
-        else (pts_to c (extend_node_a_r tr tr')))
+        (pts_to c (if trace_length tr >= trace_length tr'.tr then A_R next tr else extend_node_a_r tr tr'))
         (endpoint_a c (step next x) (extend tr x))
         (fun _ -> ());
       x
@@ -915,7 +909,7 @@ let rec recv_b #p c next tr =
   let tr' = get_b_r c next tr in
   if trace_length tr >= trace_length tr'.tr then (
     change_slprop
-      (if trace_length tr >= trace_length tr'.tr then (pts_to c (B_R next tr)) else (pts_to c (extend_node_b_r tr tr')))
+      (pts_to c (if trace_length tr >= trace_length tr'.tr then B_R next tr else extend_node_b_r tr tr'))
       (endpoint_b c next tr)
       (fun _ -> ());
     recv_b c next tr
@@ -923,9 +917,8 @@ let rec recv_b #p c next tr =
       compatible_b_r_v_is_ahead tr tr';
       let x = next_message tr tr'.tr in
       change_slprop
-        (if trace_length tr >= trace_length tr'.tr then (pts_to c (B_R next tr)) else (pts_to c (extend_node_b_r tr tr')))
+        (pts_to c (if trace_length tr >= trace_length tr'.tr then B_R next tr else extend_node_b_r tr tr'))
         (endpoint_b c (step next x) (extend tr x))
         (fun _ -> ());
       x
-
   )
