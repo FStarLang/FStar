@@ -276,16 +276,14 @@ let rec concat_alt (#a:Type)
      (fun l ->
        dlist from0 ptr0 null_dlist l)
    =        
-     let to1 = null_dlist #a in
-
      //1: read the ptr0 to get cell0
-     
      let c0 = read_head from0 ptr0 to0 hd0 tl0 in
 
      //2: unfold dlist to dlist cons
      elim_dlist_cons from0 ptr0 to0 c0 tl0;     
-     assume (ptr0 =!= null_dlist);
 
+     // Permute the next two lines to see the tactic fail
+     assume (ptr0 =!= null_dlist);
      let b = ptr_eq (next c0) to0 in
 
      if b 
@@ -318,8 +316,8 @@ let rec concat_alt (#a:Type)
        change_slprop (dlist ptr0 (next c0) to0 tl0)
                      (dlist ptr0 (next c0) to0 (hd0::tl0'))
                      (fun _ -> ());
-       let l = concat (next c0) ptr1 in
+       let l = concat_alt (next c0) ptr1 in
        intro_dlist_cons from0 ptr0 _ _ (next c0) _;
-       returnF #_ (dlist from0 ptr0 null_dlist)
-                  (c0::l)
+       returnF (dlist from0 ptr0 null_dlist)
+               (c0::l)
      )
