@@ -275,7 +275,7 @@ let rec concat_alt (#a:Type)
       dlist from1 ptr1 null_dlist (hd1::tl1))
      (fun l ->
        dlist from0 ptr0 null_dlist l)
-   =
+   =        
      let to1 = null_dlist #a in
 
      //1: read the ptr0 to get cell0
@@ -284,6 +284,7 @@ let rec concat_alt (#a:Type)
 
      //2: unfold dlist to dlist cons
      elim_dlist_cons from0 ptr0 to0 c0 tl0;     
+     assume (ptr0 =!= null_dlist);
 
      let b = ptr_eq (next c0) to0 in
 
@@ -295,17 +296,13 @@ let rec concat_alt (#a:Type)
          (dlist ptr0 to0 to0 tl0)
          (fun _ -> ());
 
-       (* inline concat_nil_l *)
        // 1. invert dlist tl0 to dlist []
        invert_dlist_nil_eq ptr0 to0 to0 tl0;
        drop (dlist ptr0 to0 to0 []);
        // tl0 == []
-       // this assume one is needed until we model null properly
-       assume (ptr0 =!= null_dlist);
-       
+
        // 2. ptr0.next <- ptr1
        write ptr0 (set_next c0 ptr1);
-   
        write_prev ptr1 ptr0;
 
        intro_dlist_cons from0 ptr0 _ _ ptr1 _;
@@ -316,11 +313,13 @@ let rec concat_alt (#a:Type)
                    :: set_prev hd1 ptr0 
                    :: tl1)                 
      ) else (
-       (** But, I can't write the other branch
-           because it seems to want the pre-post to match exactly
-           rather than be related by equiv **)
-       // let l = concat_cons (concat #a) 
-       //              from0 ptr0 to0 c0 tl0
-       //              from1 ptr1 hd1 tl1 in
-       sladmit_depF () 
+       invert_dlist_cons_neq ptr0 (next c0) to0 tl0;
+       let Cons hd0 tl0' = tl0 in
+       change_slprop (dlist ptr0 (next c0) to0 tl0)
+                     (dlist ptr0 (next c0) to0 (hd0::tl0'))
+                     (fun _ -> ());
+       let l = concat (next c0) ptr1 in
+       intro_dlist_cons from0 ptr0 _ _ (next c0) _;
+       returnF #_ (dlist from0 ptr0 null_dlist)
+                  (c0::l)
      )

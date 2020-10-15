@@ -100,3 +100,32 @@ let test_if9 (b:bool) (r1 r2: ref) : SteelT unit
     write r2 0;
     if b then (write r1 0; ()) else (write r2 0; ());
     write r1 0
+
+assume val ipred : int -> slprop
+assume val bpred : bool -> slprop
+assume val f : unit -> SteelT int (bpred true) ipred
+assume val g : b:bool -> Steel int (bpred b) ipred
+       (requires fun _ -> b == false)
+       (ensures fun _ _ _ -> True)
+assume val returnF (#a:_)
+            (q:(a -> slprop))
+            (x:a)
+    : SteelF a (q x) q (fun _ -> True) (fun _ _ _ -> True)
+assume val h : unit -> SteelT int (bpred true) (fun x -> ipred (x + 1))
+assume val sladmit_depF (#a:_)
+                       (#[@@framing_implicit] p:slprop)
+                       (#[@@framing_implicit] q:(a -> slprop))
+                       (_:unit)
+       : SteelF a p q (fun _ -> True) (fun _ _ _ -> True)
+
+let testif10 (b:bool) : SteelT int (bpred b) ipred =
+  if b
+  then (
+    change_slprop (bpred b) (bpred true) (fun _ -> ());
+    let i = h () in
+    returnF ipred (i + 1)
+  )
+  else (
+    let x = g b in
+    returnF ipred x
+  )
