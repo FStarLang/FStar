@@ -140,19 +140,25 @@ let f_odd (n0:odd) (v:stepper{compatible p (Odd n0) v})
 // get_even/get_odd/upd_even/upd_odd should be done in
 // conjunction with "fictional" SL
 let get_even (r:ref stepper p) (n0:even)
-  : SteelT (n:nat{n > 0 /\ compatible p (Even n0) (V n)}) (pts_to r (Even n0))
-           (fun n -> if n = n0 then pts_to r (Even n0) else pts_to r (EvenWriteable n0))
+  : Steel nat
+          (pts_to r (Even n0))
+          (fun n -> pts_to r (if n = n0 then Even n0 else EvenWriteable n0))
+          (requires fun _ -> True)
+          (ensures fun _ n _ -> n > 0 /\ compatible p (Even n0) (V n))
   = let v = select_refine r (Even n0) (f_even n0) in
-    let (n:nat{n > 0 /\ compatible p (Even n0) (V n)}) = V?.n v in
-    change_slprop (pts_to r (f_even n0 v)) (if n = n0 then pts_to r (Even n0) else pts_to r (EvenWriteable n0)) (fun _ -> ());
+    let n:nat = V?.n v in
+    change_slprop (pts_to r (f_even n0 v)) (pts_to r (if n = n0 then Even n0 else EvenWriteable n0)) (fun _ -> ());
     n
 
 let get_odd (r:ref stepper p) (n0:odd)
-  : SteelT (n:nat{n > 0 /\ compatible p (Odd n0) (V n)}) (pts_to r (Odd n0))
-           (fun n -> if n = n0 then pts_to r (Odd n0) else pts_to r (OddWriteable n0))
+  : Steel nat
+          (pts_to r (Odd n0))
+          (fun n -> pts_to r (if n = n0 then Odd n0 else OddWriteable n0))
+          (requires fun _ -> True)
+          (ensures fun _ n _ -> n > 0 /\ compatible p (Odd n0) (V n))
   = let v = select_refine r (Odd n0) (f_odd n0) in
-    let (n:nat{n > 0 /\ compatible p (Odd n0) (V n)}) = V?.n v in
-    change_slprop (pts_to r (f_odd n0 v)) (if n = n0 then pts_to r (Odd n0) else pts_to r (OddWriteable n0)) (fun _ -> ());
+    let n:nat = V?.n v in
+    change_slprop (pts_to r (f_odd n0 v)) (pts_to r (if n = n0 then Odd n0 else OddWriteable n0)) (fun _ -> ());
     n
 
 let upd_even_f (n:even) : FStar.PCM.frame_preserving_upd p
@@ -215,20 +221,29 @@ val incr_even (r:ref stepper p) (n:even) : SteelT unit (s_even r n) (fun _ -> s_
 
 let rec incr_even r n =
   let x = get_even r n in
-  cond (x = n)
-    (fun b -> if b then pts_to r (Even n) else pts_to r (EvenWriteable n)) (fun _ _ -> s_even r (n+2))
-    (fun (_:squash ((x=n) == true)) -> incr_even r n)
-    (fun _ -> upd_even r n)
+  if x = n then (
+    change_slprop
+      (pts_to r (if x = n then Even n else EvenWriteable n))
+      (s_even r n) (fun _ -> ());
+    incr_even r n) else
+    (change_slprop
+      (pts_to r (if x = n then Even n else EvenWriteable n))
+      (pts_to r (EvenWriteable n)) (fun _ -> ());
+    upd_even r n)
 
 val incr_odd (r:ref stepper p) (n:odd) : SteelT unit (s_odd r n) (fun _ -> s_odd r (n + 2))
 
 let rec incr_odd r n =
   let x = get_odd r n in
-  cond (x = n)
-    (fun b -> if b then pts_to r (Odd n) else pts_to r (OddWriteable n)) (fun _ _ -> s_odd r (n+2))
-    (fun (_:squash ((x=n) == true)) -> incr_odd r n)
-    (fun _ -> upd_odd r n)
-
+  if x = n then (
+    change_slprop
+      (pts_to r (if x = n then Odd n else OddWriteable n))
+      (s_odd r n) (fun _ -> ());
+    incr_odd r n) else
+    (change_slprop
+      (pts_to r (if x = n then Odd n else OddWriteable n))
+      (pts_to r (OddWriteable n)) (fun _ -> ());
+    upd_odd r n)
 
 // Main driver incrementing the stepper forever in parallel
 
