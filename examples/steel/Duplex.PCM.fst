@@ -871,25 +871,21 @@ val recv_a
 let rec recv_a #p c next tr =
   change_slprop (endpoint_a c next tr) (pts_to c (A_R next tr)) (fun _ -> ());
   let tr' = get_a_r c next tr in
-  cond #(msg_t next) (trace_length tr >= trace_length tr'.tr)
-    (fun b ->
-      if b then pts_to c (A_R next tr)
-      else (pts_to c (extend_node_a_r tr tr'))
-    )
-    (fun _ x -> endpoint_a c (step next x) (extend tr x))
-    (fun _ ->
-      change_slprop (pts_to c (A_R next tr)) (endpoint_a c next tr) (fun _ -> ());
-      recv_a c next tr)
-    (fun _ ->
+  if trace_length tr >= trace_length tr'.tr then
+    (change_slprop (if trace_length tr >= trace_length tr'.tr then pts_to c (A_R next tr)
+      else (pts_to c (extend_node_a_r tr tr')))
+      (endpoint_a c next tr) (fun _ -> ());
+     recv_a c next tr)
+  else (
       compatible_a_r_v_is_ahead tr tr';
       let x = next_message tr tr'.tr in
       change_slprop
-        (pts_to c (extend_node_a_r tr tr'))
+        (if trace_length tr >= trace_length tr'.tr then pts_to c (A_R next tr)
+        else (pts_to c (extend_node_a_r tr tr')))
         (endpoint_a c (step next x) (extend tr x))
         (fun _ -> ());
       x
-    )
-
+  )
 
 val send_b
   (#p:dprot)
@@ -917,21 +913,19 @@ val recv_b
 let rec recv_b #p c next tr =
   change_slprop (endpoint_b c next tr) (pts_to c (B_R next tr)) (fun _ -> ());
   let tr' = get_b_r c next tr in
-  cond #(msg_t next) (trace_length tr >= trace_length tr'.tr)
-    (fun b ->
-      if b then pts_to c (B_R next tr)
-      else (pts_to c (extend_node_b_r tr tr'))
-    )
-    (fun _ x -> endpoint_b c (step next x) (extend tr x))
-    (fun _ ->
-      change_slprop (pts_to c (B_R next tr)) (endpoint_b c next tr) (fun _ -> ());
-      recv_b c next tr)
-    (fun _ ->
+  if trace_length tr >= trace_length tr'.tr then (
+    change_slprop
+      (if trace_length tr >= trace_length tr'.tr then (pts_to c (B_R next tr)) else (pts_to c (extend_node_b_r tr tr')))
+      (endpoint_b c next tr)
+      (fun _ -> ());
+    recv_b c next tr
+  ) else (
       compatible_b_r_v_is_ahead tr tr';
       let x = next_message tr tr'.tr in
       change_slprop
-        (pts_to c (extend_node_b_r tr tr'))
+        (if trace_length tr >= trace_length tr'.tr then (pts_to c (B_R next tr)) else (pts_to c (extend_node_b_r tr tr')))
         (endpoint_b c (step next x) (extend tr x))
         (fun _ -> ());
       x
-    )
+
+  )
