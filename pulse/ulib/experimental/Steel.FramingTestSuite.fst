@@ -11,11 +11,18 @@ assume val free (r:ref) : SteelT unit (ptr r) (fun _ -> emp)
 assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 assume val write (r:ref) (v: int) : SteelT unit (ptr r) (fun _ -> ptr r)
 
-let test1 (b1 b2 b3: ref) : SteelT int
+let test0 (b1 b2 b3: ref) : SteelT int
   (ptr b1 `star` ptr b2 `star` ptr b3)
   (fun _ -> ptr b1 `star` ptr b2 `star` ptr b3)
   =
   let x = read b1 in
+  x
+
+let test1 (b1 b2 b3: ref) : SteelT int
+  (ptr b1 `star` ptr b2 `star` ptr b3)
+  (fun _ -> ptr b1 `star` ptr b2 `star` ptr b3)
+  =
+  let x = (let y = read b1 in y) in
   x
 
 let test2 (b1 b2 b3: ref) : SteelT int
