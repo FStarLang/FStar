@@ -3,6 +3,24 @@ module Steel.FramingTestSuite
 open Steel.Memory
 open Steel.Effect
 
+#push-options "--print_implicits"
+
+let nat1 = n:nat{n > 2 /\ n < 10}
+let nat2 = n:nat{n < 10 /\ n > 2}
+
+assume val p (n:nat1) : slprop u#1
+assume val f (_:unit) : SteelT nat2 emp (fun n -> p n)
+
+
+(* Simplified version of what happened in Stepper. *)
+//[@expect_failure]
+let test_eq_guard (m:nat1) : SteelT nat1 emp (fun n -> p (if n = m then n else n))
+  = let n = f () in
+    change_slprop (p n) (p (if n = m then n else n)) (fun _ -> ());
+    n
+
+#pop-options
+
 assume val ref : Type0
 assume val ptr (_:ref) : slprop u#1
 
