@@ -100,3 +100,17 @@ let test_if9 (b:bool) (r1 r2: ref) : SteelT unit
     write r2 0;
     if b then (write r1 0; ()) else (write r2 0; ());
     write r1 0
+
+(* Leave out some extra slprop outside of if_then_else *)
+let test_if10 (b:bool) (r1 r2 r3: ref) : SteelT unit
+  (ptr r1 `star` ptr r2 `star` ptr r3)
+  (fun _ -> ptr r1 `star` ptr r2 `star` ptr r3)
+  = if b then (write r1 0; write r2 0) else (write r2 0; write r1 0);
+    write r2 0
+
+(* Tests if_then_else depending on previously created local var
+   AF: TODO, make this succeed. This is related to our handling of return *)
+[@expect_failure]
+let test_if11 () : SteelT ref emp ptr =
+  let r = alloc 0 in
+  if true then (noop #emp (); r) else (noop #emp (); r)
