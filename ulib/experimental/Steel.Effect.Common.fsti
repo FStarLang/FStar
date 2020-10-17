@@ -842,18 +842,26 @@ let canon' () : Tac unit =
 
 /// Puts the term containing return_post at the top.
 /// Returns the atom corresponding to return_post, and the list with the atom removed
-let rec return_at_top (l:list atom) (am:amap term) : Tac (atom * list atom) =
+let rec return_at_top' (l:list atom) (am:amap term) : Tac (atom * list atom) =
   match l with
   | [] -> fail "Couldn't find return_post term"
   | hd::tl ->
       if term_appears_in (`return_post) (select hd am) then hd, tl else
-      let ret, rest = return_at_top tl am in
+      let ret, rest = return_at_top' tl am in
       ret, hd::rest
 
+let return_at_top (l:list atom) (am:amap term) : Tac (nat * list atom) =
+  let ret, tl = return_at_top' l am in
+  List.Tot.Base.length tl, ret :: tl
+
 let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
+  let return_lhs = term_appears_in (`return_post) lhs in
+  let return_rhs = term_appears_in (`return_post) rhs in
+  let two_returns = return_lhs && return_rhs in
+
   let lhs, rhs =
     // Ensure that the return_post is on the left
-    if term_appears_in (`return_post) rhs then
+    if return_rhs && not (return_lhs) then
       (apply_lemma (`Steel.Memory.Tactics.equiv_sym); rhs, lhs) else lhs, rhs
   in
 
@@ -863,7 +871,10 @@ let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   let (r2_raw,  _, am) = reification eq m ts am rhs in
 
   let l1_raw = flatten r1_raw in
-  let new_l1, emps = return_at_top l1_raw am in
+  let n_l1, l1_raw = return_at_top l1_raw am in
+
+  let l2_raw = flatten r2_raw in
+  let n_l2, l2_raw = if two_returns then return_at_top l2_raw am else 0, l2_raw in
 
   let am = convert_am am in
   let r1 = quote_exp r1_raw in
@@ -875,8 +886,8 @@ let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
 
   apply (`monoid_reflect );
 
-  let l1 = quote_atoms (new_l1 :: emps) in
-  let l2 = quote_atoms (flatten r2_raw) in
+  let l1 = quote_atoms l1_raw in
+  let l2 = quote_atoms l2_raw in
 
   apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#am) (`#l1) (`#l2));
   let g = goals () in
@@ -906,9 +917,9 @@ let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
     or_else trefl (fun _ -> fail "first equivalent_lists did not build a valid permutation");
     or_else trefl (fun _ -> fail "second equivalent_lists did not build a valid permutation");
 
-    let n = List.Tot.Base.length emps in
+    if n_l2 > 0 then fail "TODO: n_l2 greater than 0";
 
-    focus (fun _ -> n_identity_left n eq m)
+    focus (fun _ -> n_identity_left n_l1 eq m)
   )
 
 let canon_return' (eq:term) (m:term) : Tac unit =
@@ -1150,15 +1161,17 @@ let solve_return (t:term) : Tac unit
     ) else
       // This should never happen
       fail "return_post goal in unexpected position";
-    apply_lemma (`equiv_sl_implies);
-    norm [delta_only [
-           `%__proj__CM__item__unit;
-           `%__proj__CM__item__mult;
-           `%Steel.Memory.Tactics.rm;
-           `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
-           `%fst; `%snd];
-         primops; iota; zeta];
-    canon_return ()
+      apply_lemma (`equiv_sl_implies);
+      match (goals ()) with
+      | [] -> () // Can happen if reflexivity was sufficient here
+      | _ -> norm [delta_only [
+                       `%__proj__CM__item__unit;
+                       `%__proj__CM__item__mult;
+                       `%Steel.Memory.Tactics.rm;
+                       `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                       `%fst; `%snd];
+                 primops; iota; zeta];
+             canon_return ()
 
 let rec solve_all_returns (l:list goal) : Tac unit =
   match l with
