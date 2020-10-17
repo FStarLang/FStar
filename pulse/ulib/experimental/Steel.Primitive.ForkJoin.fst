@@ -21,9 +21,6 @@ module L = Steel.SpinLock
 open Steel.FractionalPermission
 open FStar.Ghost
 open Steel.Reference
-//open Steel.SteelT.Basics
-
-//module U = FStar.Universe
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -35,8 +32,6 @@ let lock_inv_pred (r:ref bool) (p:slprop) (v:bool) : slprop =
 let lock_inv (r:ref bool) (p:slprop)
   : slprop
   = h_exists (lock_inv_pred r p)
-
-//#set-options "--print_universes --print_implicits"
 
 noeq
 type thread (p:slprop u#1) = {

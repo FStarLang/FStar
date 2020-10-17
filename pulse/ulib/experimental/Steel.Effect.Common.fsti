@@ -64,6 +64,17 @@ let can_be_split (t1 t2:pre_t) = t1 `sl_implies` t2
 let can_be_split_forall (#a:Type) (t1 t2:post_t a) =
   forall (x:a). t1 x `sl_implies` t2 x
 
+val equiv_forall (#a:Type) (t1 t2:post_t a) : Type0
+
+val equiv_forall_split (#a:Type) (t1 t2:post_t a)
+  : Lemma (requires t1 `equiv_forall` t2)
+          (ensures can_be_split_forall t1 t2 /\ can_be_split_forall t2 t1)
+          [SMTPat (t1 `equiv_forall` t2)]
+
+val equiv_forall_elim (#a:Type) (t1 t2:post_t a)
+  : Lemma (requires (forall (x:a). t1 x `equiv` t2 x))
+          (ensures t1 `equiv_forall` t2)
+
 val can_be_split_forall_frame (#a:Type) (p q:post_t a) (frame:slprop u#1) (x:a)
  : Lemma (requires can_be_split_forall p q)
          (ensures (frame `star` p x)  `sl_implies` (frame `star` q x))
@@ -840,6 +851,21 @@ let canon' () : Tac unit =
 (* A Variant of canon to collect all slprops in the context into the return_post term,
    and set all extra uvars to emp *)
 
+let rec slterm_nbr_uvars (t:term) : Tac int =
+  match inspect t with
+  | Tv_Uvar _ _ -> 1
+  | Tv_App _ _ ->
+    let hd, args = collect_app t in
+    if term_eq hd (`star) then
+
+      // Only count the number of unresolved slprops, not program implicits
+      fold_left (fun n (x, _) -> n + slterm_nbr_uvars x) 0 args
+    else if is_uvar hd then 1
+    else 0
+  | Tv_Abs _ t -> slterm_nbr_uvars t
+  | _ -> 0
+
+
 /// Puts the term containing return_post at the top.
 /// Returns the atom corresponding to return_post, and the list with the atom removed
 let rec return_at_top' (l:list atom) (am:amap term) : Tac (atom * list atom) =
@@ -849,6 +875,12 @@ let rec return_at_top' (l:list atom) (am:amap term) : Tac (atom * list atom) =
       if term_appears_in (`return_post) (select hd am) then hd, tl else
       let ret, rest = return_at_top' tl am in
       ret, hd::rest
+
+/// Checks whether the return slprop is fully resolved
+let return_resolved (l:list atom) (am:amap term) : Tac bool =
+  let ret, _ = return_at_top' l am in
+  let t = norm_term [delta_only [`%return_post]] (select ret am) in
+  slterm_nbr_uvars t = 0
 
 let return_at_top (l:list atom) (am:amap term) : Tac (nat * list atom) =
   let ret, tl = return_at_top' l am in
@@ -865,61 +897,75 @@ let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
       (apply_lemma (`Steel.Memory.Tactics.equiv_sym); rhs, lhs) else lhs, rhs
   in
 
+
   let m_unit = norm_term [iota; zeta; delta](`CM?.unit (`#m)) in
   let am = const m_unit in (* empty map *)
   let (r1_raw, ts, am) = reification eq m [] am lhs in
   let (r2_raw,  _, am) = reification eq m ts am rhs in
 
   let l1_raw = flatten r1_raw in
-  let n_l1, l1_raw = return_at_top l1_raw am in
-
   let l2_raw = flatten r2_raw in
-  let n_l2, l2_raw = if two_returns then return_at_top l2_raw am else 0, l2_raw in
 
-  let am = convert_am am in
-  let r1 = quote_exp r1_raw in
-  let r2 = quote_exp r2_raw in
+  let resolved1 = return_resolved l1_raw am in
+  let resolved2 = if two_returns then return_resolved l2_raw am else true in
 
-  change_sq (`(mdenote (`#eq) (`#m) (`#am) (`#r1)
-                 `EQ?.eq (`#eq)`
-               mdenote (`#eq) (`#m) (`#am) (`#r2)));
+  if resolved1 && resolved2 then (
+    // The return_post have already been gathered, we fall back on the normal canon
+    norm [delta_only [`%return_post]];
+    canon_l_r eq m lhs rhs
+  ) else (
 
-  apply (`monoid_reflect );
+    let n_l1, l1_raw = return_at_top l1_raw am in
 
-  let l1 = quote_atoms l1_raw in
-  let l2 = quote_atoms l2_raw in
+    let n_l2, l2_raw = if two_returns then return_at_top l2_raw am else 0, l2_raw in
 
-  apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#am) (`#l1) (`#l2));
-  let g = goals () in
-  if List.Tot.Base.length g = 0 then
-    // The application of equivalent_sorted seems to sometimes solve
-    // all goals
-    ()
-  else (
-    norm [primops; iota; zeta; delta_only
-      [`%xsdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
-        `%flatten; `%sort;
-        `%return_post;
-        `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
-        `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
-        `%fst; `%__proj__Mktuple2__item___1;
-        `%snd; `%__proj__Mktuple2__item___2;
-        `%__proj__CM__item__unit;
-        `%__proj__CM__item__mult;
-        `%Steel.Memory.Tactics.rm
+    let am = convert_am am in
+    let r1 = quote_exp r1_raw in
+    let r2 = quote_exp r2_raw in
 
-        ]];
+    change_sq (`(mdenote (`#eq) (`#m) (`#am) (`#r1)
+                   `EQ?.eq (`#eq)`
+                 mdenote (`#eq) (`#m) (`#am) (`#r2)));
 
-    split();
-    split();
-    // equivalent_lists should have built valid permutations.
-    // If that's not the case, it is a bug in equivalent_lists
-    or_else trefl (fun _ -> fail "first equivalent_lists did not build a valid permutation");
-    or_else trefl (fun _ -> fail "second equivalent_lists did not build a valid permutation");
+    apply (`monoid_reflect );
 
-    if n_l2 > 0 then fail "TODO: n_l2 greater than 0";
+    let l1 = quote_atoms l1_raw in
+    let l2 = quote_atoms l2_raw in
 
-    focus (fun _ -> n_identity_left n_l1 eq m)
+    apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#am) (`#l1) (`#l2));
+    let g = goals () in
+    if List.Tot.Base.length g = 0 then
+      // The application of equivalent_sorted seems to sometimes solve
+      // all goals
+      ()
+    else (
+      norm [primops; iota; zeta; delta_only
+        [`%xsdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
+          `%flatten; `%sort;
+          `%return_post;
+          `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
+          `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
+          `%fst; `%__proj__Mktuple2__item___1;
+          `%snd; `%__proj__Mktuple2__item___2;
+          `%__proj__CM__item__unit;
+          `%__proj__CM__item__mult;
+          `%Steel.Memory.Tactics.rm
+
+          ]];
+
+      split();
+      split();
+      // equivalent_lists should have built valid permutations.
+      // If that's not the case, it is a bug in equivalent_lists
+      or_else trefl (fun _ -> fail "first equivalent_lists did not build a valid permutation");
+      or_else trefl (fun _ -> fail "second equivalent_lists did not build a valid permutation");
+
+      if n_l2 > n_l1 then
+        (apply_lemma (`(EQ?.symmetry (`#eq)));
+         let n = n_l2 - n_l1 in
+         focus (fun _ -> n_identity_left n eq m))
+      else (let n = n_l1 - n_l2 in focus (fun _ -> n_identity_left n eq m))
+    )
   )
 
 let canon_return' (eq:term) (m:term) : Tac unit =
@@ -947,20 +993,6 @@ let canon_return' (eq:term) (m:term) : Tac unit =
 
 let canon_return () : Tac unit =
   canon_return' (`Steel.Memory.Tactics.req) (`Steel.Memory.Tactics.rm)
-
-let rec slterm_nbr_uvars (t:term) : Tac int =
-  match inspect t with
-  | Tv_Uvar _ _ -> 1
-  | Tv_App _ _ ->
-    let hd, args = collect_app t in
-    if term_eq hd (`star) then
-
-      // Only count the number of unresolved slprops, not program implicits
-      fold_left (fun n (x, _) -> n + slterm_nbr_uvars x) 0 args
-    else if is_uvar hd then 1
-    else 0
-  | Tv_Abs _ t -> slterm_nbr_uvars t
-  | _ -> 0
 
 let solve_can_be_split (args:list argv) : Tac bool =
   match args with
@@ -1030,6 +1062,35 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
       ) else false
 
   | _ -> false // Ill-formed can_be_split, should not happen
+
+let solve_equiv_forall (args:list argv) : Tac bool =
+  match args with
+  | [_; (t1, _); (t2, _)] ->
+      let lnbr = slterm_nbr_uvars t1 in
+      let rnbr = slterm_nbr_uvars t2 in
+      if lnbr + rnbr <= 1 then (
+        let open FStar.Algebra.CommMonoid.Equiv in
+        focus (fun _ -> apply_lemma (`equiv_forall_elim);
+                      match goals () with
+                      | [] -> ()
+                      | _ ->
+                        ignore (forall_intro());
+                        // TODO: Do this count in a better way
+                        if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
+                        or_else (fun _ ->  flip()) (fun _ -> ());
+                        norm [delta_only [
+                                `%__proj__CM__item__unit;
+                                `%__proj__CM__item__mult;
+                                `%Steel.Memory.Tactics.rm;
+                                `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                                `%fst; `%snd];
+                              primops; iota; zeta];
+                        canon'());
+        true
+      ) else false
+
+  | _ -> false // Ill-formed can_be_split, should not happen
+
 
 let rec solve_subcomp_pre (l:list goal) : Tac unit =
   match l with
@@ -1154,24 +1215,28 @@ let solve_return (t:term) : Tac unit
   = // Remove potential annotations first
     norm [delta_only [`%annot_sub_post; `%delay]];
     if term_appears_in (`can_be_split) t then (
-      norm [delta_only [`%can_be_split]]
+      norm [delta_only [`%can_be_split]];
+      apply_lemma (`equiv_sl_implies)
     ) else if term_appears_in (`can_be_split_forall) t then (
       ignore (forall_intro ());
-      norm [delta_only [`%can_be_split_forall]]
+      norm [delta_only [`%can_be_split_forall]];
+      apply_lemma (`equiv_sl_implies)
+    ) else if term_appears_in (`equiv_forall) t then (
+      apply_lemma (`equiv_forall_elim);
+      ignore (forall_intro())
     ) else
       // This should never happen
       fail "return_post goal in unexpected position";
-      apply_lemma (`equiv_sl_implies);
-      match (goals ()) with
-      | [] -> () // Can happen if reflexivity was sufficient here
-      | _ -> norm [delta_only [
-                       `%__proj__CM__item__unit;
-                       `%__proj__CM__item__mult;
-                       `%Steel.Memory.Tactics.rm;
-                       `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
-                       `%fst; `%snd];
-                 primops; iota; zeta];
-             canon_return ()
+    match (goals ()) with
+    | [] -> () // Can happen if reflexivity was sufficient here
+    | _ -> norm [delta_only [
+                     `%__proj__CM__item__unit;
+                     `%__proj__CM__item__mult;
+                     `%Steel.Memory.Tactics.rm;
+                     `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                     `%fst; `%snd];
+               primops; iota; zeta];
+           canon_return ()
 
 let rec solve_all_returns (l:list goal) : Tac unit =
   match l with
@@ -1206,6 +1271,7 @@ let solve_or_delay (g:goal) : Tac bool =
       if term_eq hd (`annot_sub_post) then false
       else if term_eq hd (`can_be_split) then solve_can_be_split args
       else if term_eq hd (`can_be_split_forall) then solve_can_be_split_forall args
+      else if term_eq hd (`equiv_forall) then solve_equiv_forall args
       else false
   | Comp (Eq _) l r ->
     let lnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars l) in
