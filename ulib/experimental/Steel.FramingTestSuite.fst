@@ -72,6 +72,8 @@ let test_if3 (b:bool) (r:ref) : SteelT unit (ptr r) (fun _ -> ptr r)
   = if b then noop #emp () else noop #emp ();
     () // Mandatory until we have a framing subcomp
 
+//#set-options "--tactic_trace_d 2"
+
 (* Need a bind in the else branch, else we have SteelF and Steel which cannot be composed *)
 let test_if4 (b:bool) : SteelT unit emp (fun _ -> emp)
   = if b then (let r = alloc 0 in free r) else (noop #emp (); ())
