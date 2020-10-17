@@ -47,7 +47,7 @@ val return (a:Type u#a)
    (x:a)
    (opened_invariants:inames)
    (#[@@ framing_implicit] p:a -> slprop u#1)
-  : atomic_repr a opened_invariants unobservable (p x) p
+  : atomic_repr a opened_invariants unobservable (return_pre (p x)) (return_post p)
 
 val bind (a:Type u#a) (b:Type u#b)
    (opened_invariants:inames)
