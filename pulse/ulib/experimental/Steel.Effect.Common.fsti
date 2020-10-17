@@ -634,20 +634,26 @@ let identity_left (#a:Type) (eq:equiv a) (m:cm a eq) (x:a)
   = CM?.identity m x;
     EQ?.symmetry eq (CM?.mult m (CM?.unit m) x) x
 
-let identity_right (#a:Type) (eq:equiv a) (m:cm a eq) (x:a)
-  : Lemma (EQ?.eq eq (CM?.mult m x (CM?.unit m)) x)
-  = admit()
-
 let identity_right_diff (#a:Type) (eq:equiv a) (m:cm a eq) (x y:a) : Lemma
   (requires EQ?.eq eq x y)
   (ensures EQ?.eq eq (CM?.mult m x (CM?.unit m)) y)
-  = admit()
+  = right_identity eq m x;
+    EQ?.transitivity eq (CM?.mult m x (CM?.unit m)) x y
+
+let rec dismiss_slprops () : Tac unit =
+  match term_as_formula' (cur_goal ()) with
+    | App t _ -> if term_eq t (`squash) then () else (dismiss(); dismiss_slprops ())
+    | _ -> dismiss(); dismiss_slprops ()
 
 let rec n_identity_left (n:int) (eq m:term) : Tac unit
-  = if n = 0 then apply_lemma (`(EQ?.reflexivity (`#eq)))
+  = if n = 0 then (
+      apply_lemma (`(EQ?.reflexivity (`#eq)));
+      // Cleaning up, in case a uvar has been generated here. It'll be solved later
+      set_goals [])
     else (
       apply_lemma (`identity_right_diff (`#eq) (`#m));
-      later();
+      // Drop the slprops generated, they will be solved later
+      dismiss_slprops ();
       n_identity_left (n-1) eq m
     )
 
@@ -873,31 +879,37 @@ let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   let l2 = quote_atoms (flatten r2_raw) in
 
   apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#am) (`#l1) (`#l2));
+  let g = goals () in
+  if List.Tot.Base.length g = 0 then
+    // The application of equivalent_sorted seems to sometimes solve
+    // all goals
+    ()
+  else (
+    norm [primops; iota; zeta; delta_only
+      [`%xsdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
+        `%flatten; `%sort;
+        `%return_post;
+        `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
+        `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
+        `%fst; `%__proj__Mktuple2__item___1;
+        `%snd; `%__proj__Mktuple2__item___2;
+        `%__proj__CM__item__unit;
+        `%__proj__CM__item__mult;
+        `%Steel.Memory.Tactics.rm
 
-  norm [primops; iota; zeta; delta_only
-    [`%xsdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
-      `%flatten; `%sort;
-      `%return_post;
-      `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
-      `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
-      `%fst; `%__proj__Mktuple2__item___1;
-      `%snd; `%__proj__Mktuple2__item___2;
-      `%__proj__CM__item__unit;
-      `%__proj__CM__item__mult;
-      `%Steel.Memory.Tactics.rm
+        ]];
 
-      ]];
+    split();
+    split();
+    // equivalent_lists should have built valid permutations.
+    // If that's not the case, it is a bug in equivalent_lists
+    or_else trefl (fun _ -> fail "first equivalent_lists did not build a valid permutation");
+    or_else trefl (fun _ -> fail "second equivalent_lists did not build a valid permutation");
 
-  split();
-  split();
-  // equivalent_lists should have built valid permutations.
-  // If that's not the case, it is a bug in equivalent_lists
-  or_else trefl (fun _ -> fail "first equivalent_lists did not build a valid permutation");
-  or_else trefl (fun _ -> fail "second equivalent_lists did not build a valid permutation");
+    let n = List.Tot.Base.length emps in
 
-  let n = List.Tot.Base.length emps in
-
-  n_identity_left n eq m
+    focus (fun _ -> n_identity_left n eq m)
+  )
 
 let canon_return' (eq:term) (m:term) : Tac unit =
   norm [iota; zeta];
@@ -1114,6 +1126,18 @@ let rec solve_all_eqs (l:list goal) : Tac unit =
         solve_all_eqs tl
     | _ -> later(); solve_all_eqs tl
 
+let rec solve_return_eqs (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let f = term_as_formula' (goal_type hd) in
+    match f with
+    | Comp (Eq _) l r ->
+        norm [delta_only [`%return_pre]];
+        trefl();
+        solve_return_eqs tl
+    | _ -> later(); solve_return_eqs tl
+
 // The term corresponds to a goal containing a return_post
 let solve_return (t:term) : Tac unit
   = // Remove potential annotations first
@@ -1142,7 +1166,7 @@ let rec solve_all_returns (l:list goal) : Tac unit =
   | hd::tl ->
     let t = goal_type hd in
     let f = term_as_formula' t in
-    if term_appears_in (`return_post) t then solve_return t else later();
+    if term_appears_in (`return_post) t then focus (fun _ -> solve_return t) else later();
     solve_all_returns tl
 
 let rec solve_triv_eqs (l:list goal) : Tac unit =
@@ -1240,21 +1264,36 @@ let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
 
 [@@ resolve_implicits; framing_implicit; plugin]
 let init_resolve_tac () : Tac unit =
+  // We split goals between framing goals, about slprops (slgs)
+  // and goals related to requires/ensures, that depend on slprops (loggs)
   let slgs, loggs = filter_goals (goals()) in
+
+  // We first solve the slprops
   set_goals slgs;
-  // We first need to solve the trivial equalities to ensure we're not restricting
-  // scopes for annotated slprops
-//  solve_triv_eqs (goals ());
-  // dump "all initial";
+
+  // We first solve all indirection equalities that will not lead to imprecise unification
+  // i.e. we can solve all equalities inserted by layered effects, except the ones corresponding
+  // to the preconditions of a pure return
   solve_indirection_eqs (goals());
-  dump "post indirections";
+
+  // To debug, it is best to look at the goals at this stage. Uncomment the next line
+  // dump "initial goals";
+
+  // We now solve all postconditions of pure returns to avoid restricting the uvars
   solve_all_returns (goals ());
 
+  // We can now solve the equalities for returns
+  solve_return_eqs (goals());
+
   solve_subcomp_pre (goals ());
+  solve_subcomp_post (goals ());
   // TODO: If we had better handling of lifts from PURE, we might prove a true
   // sl_implies here, "losing" extra assertions"
-  solve_subcomp_post (goals ());
-  solve_all_eqs(goals());
+
+//  solve_all_eqs(goals());
   resolve_tac ();
+
+  // We now solve the requires/ensures goals, which are all equalities
+  // All slprops are resolved by now
   set_goals loggs;
   resolve_tac_logical ()
