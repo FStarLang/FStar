@@ -788,7 +788,8 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
-     debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string se));
+  Errors.with_ctx (BU.format1 "While extracting top-level definition `%s`" (Print.sigelt_to_string_short se)) (fun () ->
+     debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string_short se));
      match se.sigel with
         | Sig_bundle _
         | Sig_inductive_typ _
@@ -951,6 +952,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        | Sig_pragma (p) ->
          U.process_pragma p se.sigrng;
          g, []
+  )
 
 let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
   let _ = Options.restore_cmd_line_options true in
@@ -980,15 +982,20 @@ let extract' (g:uenv) (m:modul) : uenv * option<mllib> =
 
 let extract (g:uenv) (m:modul) =
   ignore <| Options.restore_cmd_line_options true;
-  if not (Options.should_extract (string_of_lid m.name))
-  then failwith (BU.format1 "Extract called on a module %s that should not be extracted" (Ident.string_of_lid m.name));
+  if not (Options.should_extract (string_of_lid m.name)) then
+    failwith (BU.format1 "Extract called on a module %s that should not be extracted" (Ident.string_of_lid m.name));
+
   if Options.interactive() then g, None else begin
+
+  let nm = string_of_lid m.name in
   let g, mllib =
     UF.with_uf_enabled (fun () ->
-      if Options.debug_any ()
-      then let msg = BU.format1 "Extracting module %s" (Print.lid_to_string m.name) in
-           BU.measure_execution_time msg (fun () -> extract' g m)
-      else extract' g m)
+      Errors.with_ctx ("While extracting module " ^ nm) (fun () ->
+        if Options.debug_any () then
+          let msg = BU.format1 "Extracting module %s" nm in
+          BU.measure_execution_time msg (fun () -> extract' g m)
+        else
+          extract' g m))
   in
   ignore <| Options.restore_cmd_line_options true;
   exit_module g, mllib

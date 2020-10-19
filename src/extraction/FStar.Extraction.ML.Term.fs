@@ -445,7 +445,6 @@ let eta_expand (g:uenv) (t : mlty) (e : mlexpr) : mlexpr =
       let body = with_ty r <| MLE_App (e, vs_es) in
       with_ty t <| MLE_Fun (vs_ts, body)
 
-(* eta-expand `e` according to its type `t` *)
 let default_value_for_ty (g:uenv) (t : mlty) : mlexpr  =
     let ts, r = doms_and_cod t in
     let body r =
@@ -467,9 +466,8 @@ let default_value_for_ty (g:uenv) (t : mlty) : mlexpr  =
     else let vs_ts, g = fresh_mlidents ts g in
          with_ty t <| MLE_Fun (vs_ts, body r)
 
-let maybe_eta_expand g expect e =
-    if Options.ml_no_eta_expand_coertions () ||
-        Options.codegen () = Some Options.Kremlin // we need to stay first order for Kremlin
+let maybe_eta_expand_coercion g expect e =
+    if Options.codegen () = Some Options.Kremlin // we need to stay first order for Kremlin
     then e
     else eta_expand g expect e
 
@@ -559,7 +557,7 @@ let maybe_coerce pos (g:uenv) e ty (expect:mlty) : mlexpr =
                             (Code.string_of_mlexpr (current_module_of_uenv g) e)
                             (Code.string_of_mlty (current_module_of_uenv g) ty)
                             (Code.string_of_mlty (current_module_of_uenv g) expect)) in
-               maybe_eta_expand g expect (apply_coercion g e ty expect)
+               maybe_eta_expand_coercion g expect (apply_coercion g e ty expect)
 
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)
@@ -584,7 +582,8 @@ let bv_as_mlty (g:uenv) (bv:bv) =
         a bloated type is atleast as good as MLTY_Top?
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
-let extraction_norm_steps_core =
+let extraction_norm_steps =
+  let extraction_norm_steps_core =
     [Env.AllowUnboundUniverses;
      Env.EraseUniverses;
      Env.Inlining;
@@ -592,12 +591,11 @@ let extraction_norm_steps_core =
      Env.Exclude Env.Zeta;
      Env.Primops;
      Env.Unascribe;
-     Env.ForExtraction]
+     Env.ForExtraction] in
 
-let extraction_norm_steps_nbe =
-  Env.NBE::extraction_norm_steps_core
-
-let extraction_norm_steps () = 
+  let extraction_norm_steps_nbe =
+    Env.NBE::extraction_norm_steps_core in
+  
   if Options.use_nbe_for_extraction()
   then extraction_norm_steps_nbe
   else extraction_norm_steps_core
@@ -628,8 +626,9 @@ let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
    *)
   let c = comp_no_args c in
 
+  //AR: normalize the reified comp, to inline definitions that reification may have introduced
   if c |> U.comp_effect_name |> TcEnv.norm_eff_name env |> TcEnv.is_reifiable_effect env
-  then TcEnv.reify_comp env c S.U_unknown
+  then TcEnv.reify_comp env c S.U_unknown |> N.normalize extraction_norm_steps env
   else U.comp_result c
 
 
@@ -761,7 +760,7 @@ and binders_as_ml_binders (g:uenv) (bs:binders) : list<(mlident * mlty)> * uenv 
     env
 
 let term_as_mlty g t0 =
-    let t = N.normalize (extraction_norm_steps()) (tcenv_of_uenv g) t0 in
+    let t = N.normalize extraction_norm_steps (tcenv_of_uenv g) t0 in
     translate_term_to_mlty g t
 
 
@@ -1616,7 +1615,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                         if Options.ml_ish()
                         then lb.lbdef
                         else let norm_call () =
-                                 N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::(extraction_norm_steps())) tcenv lb.lbdef
+                                 N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::extraction_norm_steps) tcenv lb.lbdef
                              in
                              if TcEnv.debug tcenv <| Options.Other "Extraction"
                              || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
@@ -1653,12 +1652,22 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           in
           let lbs = extract_lb_sig g (is_rec, lbs) in
 
-          let env_body, lbs = List.fold_right (fun lb (env, lbs) ->
+          (* env_burn only matters for non-recursive lets and simply burns
+           * the let bound variable in its own definition to generate
+           * code that is more understandable. We only do it for OCaml,
+           * to not affect Kremlin naming. *)
+          let env_body, lbs, env_burn = List.fold_right (fun lb (env, lbs, env_burn) ->
               let (lbname, _, (t, (_, polytype)), add_unit, _) = lb in
               let env, nm, _ = UEnv.extend_lb env lbname t polytype add_unit in
-              env, (nm,lb)::lbs) lbs (g, []) in
+              let env_burn =
+                if Options.codegen () <> Some Options.Kremlin
+                then UEnv.burn_name env_burn nm
+                else env_burn
+              in
+              env, (nm,lb)::lbs, env_burn) lbs (g, [], g)
+          in
 
-          let env_def = if is_rec then env_body else g in
+          let env_def = if is_rec then env_body else env_burn in
 
           let lbs = lbs |> List.map (check_lb env_def)  in
 

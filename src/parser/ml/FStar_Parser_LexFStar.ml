@@ -52,6 +52,7 @@ let () =
   Hashtbl.add keywords "calc"          CALC        ;
   Hashtbl.add keywords "class"         CLASS       ;
   Hashtbl.add keywords "default"       DEFAULT     ;
+  Hashtbl.add keywords "decreases"     DECREASES   ;
   Hashtbl.add keywords "effect"        EFFECT      ;
   Hashtbl.add keywords "else"          ELSE        ;
   Hashtbl.add keywords "end"           END         ;
@@ -171,9 +172,11 @@ let () =
    "[@", LBRACK_AT;
    "[", LBRACK;
    "[|", LBRACK_BAR;
+   "{|", LBRACE_BAR;
    "|>", PIPE_RIGHT;
    "]", RBRACK;
    "|]", BAR_RBRACK;
+   "|}", BAR_RBRACE;
    "{", LBRACE;
    "|", BAR;
    "}", RBRACE;
@@ -380,7 +383,7 @@ let regexp op_token =
   "u#" | "&" | "()" | "(" | ")" | "," | "~>" | "->" | "<--" |
   "<-" | "<==>" | "==>" | "." | "?." | "?" | ".[|" | ".[" | ".(|" | ".(" |
   "$" | "{:pattern" | ":" | "::" | ":=" | ";;" | ";" | "=" | "%[" |
-  "!{" | "[@@" | "[@" | "[|" | "[" | "|>" | "]" | "|]" | "{" | "|" | "}"
+  "!{" | "[@@" | "[@" | "[|" | "{|" | "[" | "|>" | "]" | "|]" | "|}" | "{" | "|" | "}"
 
 (* -------------------------------------------------------------------- *)
 let regexp xinteger =

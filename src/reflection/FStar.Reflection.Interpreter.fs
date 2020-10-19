@@ -123,8 +123,11 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "pack_bv"               pack_bv               E.e_bv_view         E.e_bv
                                 pack_bv               NRE.e_bv_view       NRE.e_bv;
 
-    mk1 "sigelt_opts"           sigelt_opts           E.e_sigelt          (e_option E.e_term)
-                                sigelt_opts           NRE.e_sigelt        (NBET.e_option NRE.e_term);
+    mk1 "sigelt_opts"           sigelt_opts           E.e_sigelt          (e_option e_vconfig)
+                                sigelt_opts           NRE.e_sigelt        (NBET.e_option NBET.e_vconfig);
+
+    mk1 "embed_vconfig"         embed_vconfig         e_vconfig           E.e_term
+                                embed_vconfig         NBET.e_vconfig      NRE.e_term;
 
     mk1 "sigelt_attrs"          sigelt_attrs          E.e_sigelt          E.e_attributes
                                 sigelt_attrs          NRE.e_sigelt        NRE.e_attributes;
@@ -149,6 +152,12 @@ let reflection_primops : list<Cfg.primitive_step> = [
 
     mk2 "is_free"               is_free               E.e_bv              E.e_term           e_bool
                                 is_free               NRE.e_bv            NRE.e_term         NBET.e_bool;
+
+    mk1 "free_bvs"              free_bvs              E.e_term            (e_list E.e_bv)
+                                free_bvs              NRE.e_term          (NBET.e_list NRE.e_bv);
+
+    mk1 "free_uvars"            free_uvars            E.e_term            (e_list e_int)
+                                free_uvars            NRE.e_term          (NBET.e_list NBET.e_int);
 
     mk2 "lookup_attr"           RB.lookup_attr        E.e_term            E.e_env            (e_list E.e_fv)
                                 RB.lookup_attr        NRE.e_term          NRE.e_env          (NBET.e_list NRE.e_fv);

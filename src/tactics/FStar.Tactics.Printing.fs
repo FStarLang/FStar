@@ -119,6 +119,7 @@ let goal_to_json g =
 let ps_to_json (msg, ps) =
     JsonAssoc ([("label", JsonStr msg);
                 ("depth", JsonInt ps.depth);
+                ("urgency", JsonInt ps.urgency);
                 ("goals", JsonList (List.map goal_to_json ps.goals));
                 ("smt-goals", JsonList (List.map goal_to_json ps.smt_goals))] @
                 (if ps.entry_range <> Range.dummyRange
@@ -132,4 +133,3 @@ let do_dump_proofstate ps msg =
             print_generic "proof-state" ps_to_string ps_to_json (msg, ps);
             BU.flush_stdout () (* in case this is going to stdout, flush it immediately *)
         )
-

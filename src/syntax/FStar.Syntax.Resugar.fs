@@ -232,8 +232,13 @@ let rec resugar_term_as_op (t:S.term) : option<(string*expected_arity)> =
       let length = String.length (nsstr fv.fv_name.v) in
       let str = if length=0 then (string_of_lid fv.fv_name.v)
           else BU.substring_from (string_of_lid fv.fv_name.v) (length+1) in
-      if BU.starts_with str "dtuple" then Some ("dtuple", None)
-      else if BU.starts_with str "tuple" then Some ("tuple", None)
+      (* Check that it is of the shape dtuple<int>, and return that arity *)
+      if BU.starts_with str "dtuple"
+         && Option.isSome (BU.safe_int_of_string (BU.substring_from str 6))
+      then Some ("dtuple", BU.safe_int_of_string (BU.substring_from str 6))
+      else if BU.starts_with str "tuple"
+         && Option.isSome (BU.safe_int_of_string (BU.substring_from str 5))
+      then Some ("tuple", BU.safe_int_of_string (BU.substring_from str 5))
       else if BU.starts_with str "try_with" then Some ("try_with", None)
       else if fv_eq_lid fv C.sread_lid then Some (string_of_lid fv.fv_name.v, None)
       else None
@@ -381,7 +386,13 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       let body = resugar_term' env body in
       mk (A.Abs(patterns, body))
 
-    | Tm_arrow(xs, body) ->
+    | Tm_arrow _ ->
+      (* Flatten the arrow *)
+      let xs, body =
+        match (SS.compress (U.canon_arrow t)).n with
+        | Tm_arrow (xs, body) -> xs, body
+        | _ -> failwith "impossible: Tm_arrow in resugar_term"
+      in
       let xs, body = SS.open_comp xs body in
       let xs = if (Options.print_implicits()) then xs else filter_imp xs in
       let body = resugar_comp' env body in
@@ -929,22 +940,38 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
 
   | Comp c ->
     let result = (resugar_term' env c.result_typ, A.Nothing) in
-    if (Options.print_effect_args()) || lid_equals c.effect_name C.effect_Lemma_lid then
-      let universe = List.map (fun u -> resugar_universe u) c.comp_univs in
-      let args =
-       if (lid_equals c.effect_name C.effect_Lemma_lid) then (
+    if lid_equals c.effect_name C.effect_Lemma_lid && List.length c.effect_args = 3 then
+      let args = List.map(fun (e,_) -> (resugar_term' env e, A.Nothing)) c.effect_args in
+      let pre, post, pats =
         match c.effect_args with
-        | pre::post::pats::[] ->
-            // Common case, post is thunked.
-            let post = (U.unthunk_lemma_post (fst post), snd post) in
-             (if U.is_fvar C.true_lid (fst pre) then [] else [pre])
-            @[post]
-            @(if U.is_fvar C.nil_lid (fst pats) then [] else [pats])
-        | _ -> c.effect_args
-       ) else
-        c.effect_args
+        | (pre, _)::(post, _)::(pats, _)::[] ->
+          pre, post, pats
+        | _ -> failwith "impossible"
       in
-      let args = List.map(fun (e,_) -> (resugar_term' env e, A.Nothing)) args in
+      let pre = (if U.is_fvar C.true_lid pre then [] else [pre]) in
+      let post = U.unthunk_lemma_post post in
+      let pats = if U.is_fvar C.nil_lid (U.head_of pats) then [] else [pats] in
+
+      let pre = List.map (fun t -> mk (Requires (resugar_term' env t, None))) pre in
+      let post = mk (Ensures (resugar_term' env post, None)) in
+      let pats = List.map (resugar_term' env) pats in
+
+      let rec aux l = function
+       | [] -> l
+       | hd::tl ->
+          match hd with
+          | DECREASES e ->
+            let e = mk (Decreases (resugar_term' env e, None)) in
+            aux (e::l) tl
+          | _ -> aux l tl
+      in
+      let decrease = aux [] c.flags in
+
+      mk (A.Construct(c.effect_name, List.map (fun t -> (t, A.Nothing)) (pre@post::decrease@pats)))
+
+    else if (Options.print_effect_args()) then
+      (* let universe = List.map (fun u -> resugar_universe u) c.comp_univs in *)
+      let args = List.map(fun (e,_) -> (resugar_term' env e, A.Nothing)) c.effect_args in
       let rec aux l = function
        | [] -> l
        | hd::tl ->

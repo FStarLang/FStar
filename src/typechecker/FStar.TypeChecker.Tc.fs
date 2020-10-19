@@ -43,6 +43,7 @@ module TcUtil = FStar.TypeChecker.Util
 module BU = FStar.Util //basic util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
+module Gen = FStar.TypeChecker.Generalize
 module TcInductive = FStar.TypeChecker.TcInductive
 module TcEff = FStar.TypeChecker.TcEffect
 module PC = FStar.Parser.Const
@@ -158,7 +159,7 @@ let tc_type_common (env:env) ((uvs, t):tscheme) (expected_typ:typ) (r:Range.rang
   let env = Env.push_univ_vars env uvs in
   let t = tc_check_trivial_guard env t expected_typ in
   if uvs = [] then
-    let uvs, t = TcUtil.generalize_universes env t in
+    let uvs, t = Gen.generalize_universes env t in
     //AR: generalize_universes only calls N.reduce_uvar_solutions, so make sure there are no uvars left
     TcUtil.check_uvars r t;
     uvs, t
@@ -261,8 +262,14 @@ let tc_inductive' env ses quals attrs lids =
 let tc_inductive env ses quals attrs lids =
   let env = Env.push env "tc_inductive" in
   let pop () = ignore (Env.pop env "tc_inductive") in  //OK to ignore: caller will reuse original env
-  try tc_inductive' env ses quals attrs lids |> (fun r -> pop (); r)
-  with e -> pop (); raise e
+
+  if Options.trace_error () then
+    let r = tc_inductive' env ses quals attrs lids in
+    pop ();
+    r
+  else
+    try tc_inductive' env ses quals attrs lids |> (fun r -> pop (); r)
+    with e -> pop (); raise e
 
 (*
  *  Given `val t : Type` in an interface
@@ -320,19 +327,61 @@ let check_must_erase_attribute env se =
 
     | _ -> ()
 
-(* A(nother) hacky knot, set by FStar.Main *)
-let unembed_optionstate_knot : ref<option<EMB.embedding<O.optionstate>>> = BU.mk_ref None
-let unembed_optionstate (t : term) : option<O.optionstate> =
-    EMB.unembed (BU.must (!unembed_optionstate_knot)) t true EMB.id_norm_cb
-
 let proc_check_with (attrs:list<attribute>) (kont : unit -> 'a) : 'a =
   match U.get_attribute PC.check_with_lid attrs with
   | None -> kont ()
   | Some [(a, None)] ->
+    match EMB.unembed EMB.e_vconfig a true EMB.id_norm_cb with
+    | None -> failwith "nah"
+    | Some vcfg ->
     Options.with_saved_options (fun () ->
-      Options.set (unembed_optionstate a |> BU.must);
+      Options.set_vconfig vcfg;
       kont ())
-  | _ -> failwith "huh?"
+  | _ -> failwith "ill-formed `check_with`"
+
+let handle_postprocess_with_attr (env:Env.env) (ats:list<attribute>)
+    : (list<attribute> * option<term>)
+=
+    (* We find postprocess_for_extraction_with attrs, which we don't
+     * have to handle here, but we typecheck the tactic
+     * and elaborate it. *)
+    let tc_and_elab_tactic (env:Env.env) (tau:term) : term =
+        let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
+        Rel.force_trivial_guard env g_tau;
+        tau
+    in
+    let ats =
+      match U.extract_attr' PC.postprocess_extr_with ats with
+      | None -> ats
+      | Some (ats, [tau, None]) ->
+        let tau = tc_and_elab_tactic env tau in
+        (* Further, give it a spin through deep_compress to remove uvar nodes,
+         * since this term will be picked up at extraction time when
+         * the UF graph is blown away. *)
+        let tau = SS.deep_compress tau in
+        (U.mk_app (S.tabbrev PC.postprocess_extr_with) [tau, None])
+           :: ats
+      | Some (ats, [tau, None]) ->
+        Errors.log_issue (Env.get_range env)
+                         (Errors.Warning_UnrecognizedAttribute,
+                            BU.format1 "Ill-formed application of `%s`"
+                                       (string_of_lid PC.postprocess_extr_with));
+        ats
+    in
+    (* Now extract the postprocess_with, if any, and also check it *)
+    match U.extract_attr' PC.postprocess_with ats with
+    | None -> ats, None
+    | Some (ats, [tau, None]) ->
+        ats, Some (tc_and_elab_tactic env tau)
+    | Some (ats, args) ->
+        Errors.log_issue (Env.get_range env)
+                         (Errors.Warning_UnrecognizedAttribute,
+                            BU.format1 "Ill-formed application of `%s`"
+                                       (string_of_lid PC.postprocess_with));
+        ats, None
+
+let store_sigopts (se:sigelt) : sigelt =
+  { se with sigopts = Some (Options.get_vconfig ()) }
 
 (* Alternative to making a huge let rec... knot is set below in this file *)
 let tc_decls_knot : ref<option<(Env.env -> list<sigelt> -> list<sigelt> * Env.env)>> =
@@ -344,9 +393,9 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
   proc_check_with se.sigattrs (fun () ->
   let r = se.sigrng in
   let se =
-     if Options.record_options ()
-     then { se with sigopts = Some (Options.peek ()) }
-     else se
+    if Options.record_options ()
+    then store_sigopts se
+    else se
   in
   match se.sigel with
   | Sig_inductive_typ _
@@ -487,11 +536,11 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
       if Options.use_two_phase_tc () && Env.should_verify env
       then
         TcEff.tc_effect_abbrev ({ env with phase1 = true; lax = true }) (lid, uvs, tps, c) r
-	|> (fun (lid, uvs, tps, c) -> { se with sigel = Sig_effect_abbrev (lid, uvs, tps, c, flags) })
-	|> N.elim_uvars env |>
-	(fun se -> match se.sigel with
-	        | Sig_effect_abbrev (lid, uvs, tps, c, _) -> lid, uvs, tps, c
-		| _ -> failwith "Did not expect Sig_effect_abbrev to not be one after phase 1")
+        |> (fun (lid, uvs, tps, c) -> { se with sigel = Sig_effect_abbrev (lid, uvs, tps, c, flags) })
+        |> N.elim_uvars env |>
+        (fun se -> match se.sigel with
+                | Sig_effect_abbrev (lid, uvs, tps, c, _) -> lid, uvs, tps, c
+                | _ -> failwith "Did not expect Sig_effect_abbrev to not be one after phase 1")
       else lid, uvs, tps, c in
 
     let lid, uvs, tps, c = TcEff.tc_effect_abbrev env (lid, uvs, tps, c) r in
@@ -562,6 +611,10 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
     ) lids;
     let dsenv = List.fold_left DsEnv.push_sigelt_force env.dsenv ses in
     let env = { env with dsenv = dsenv } in
+
+    if Env.debug env Options.Low then
+        BU.print1 "Splice returned sigelts {\n%s\n}\n" (String.concat "\n" <| List.map Print.sigelt_to_string ses);
+
     [], ses, env
 
   | Sig_let(lbs, lids) ->
@@ -617,9 +670,7 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
           let lbname = right lb.lbname in //this is definitely not a local let binding
           let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname.fv_name.v with
             | None ->
-                if lb.lbunivs <> []
-                then false, lb, quals_opt // we already have generalized universes (e.g. elaborated term)
-                else gen, lb, quals_opt //no annotation found; use whatever was in the let binding
+                gen, lb, quals_opt
 
             | Some ((uvs,tval), quals) ->
               let quals_opt = check_quals_eq lbname.fv_name.v quals_opt quals in
@@ -698,29 +749,30 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
         in
         let (e, ms) =
             BU.record_time (fun () ->
-              tc_maybe_toplevel_term ({ env' with phase1 = true; lax = true }) e |> (fun (e, _, _) -> e) |> N.remove_uvar_solutions env' |> drop_lbtyp
-            ) in
-        if Env.debug env <| Options.Other "TwoPhases" then
-          BU.print1 "Let binding after phase 1: %s\n"
-            (Print.term_to_string e);
+              let (e, _, _) = tc_maybe_toplevel_term ({ env' with phase1 = true; lax = true }) e in
+              e)
+        in
         if Env.debug env <| Options.Other "TCDeclTime" then
-          BU.print1 "Let binding elaborated (phase 1) in %s milliseconds\n"
+          BU.print1 "Let binding elaborated (phase 1) in %s milliseconds, now removing uvars\n"
             (string_of_int ms);
+
+        if Env.debug env <| Options.Other "TwoPhases" then
+          BU.print1 "Let binding after phase 1, before removing uvars: %s\n"
+            (Print.term_to_string e);
+
+        let e = N.remove_uvar_solutions env' e |> drop_lbtyp in
+
+        if Env.debug env <| Options.Other "TwoPhases" then
+          BU.print1 "Let binding after phase 1, uvars removed: %s\n"
+            (Print.term_to_string e);
         e
       end
       else e
     in
+    let attrs, post_tau = handle_postprocess_with_attr env se.sigattrs in
+    (* remove the postprocess_with, if any *)
+    let se = { se with sigattrs = attrs } in
 
-    let attrs, post_tau =
-        match U.extract_attr' PC.postprocess_with se.sigattrs with
-        | None -> se.sigattrs, None
-        | Some (ats, [tau, None]) -> ats, Some tau
-        | Some (ats, args) ->
-            Errors.log_issue r (Errors.Warning_UnrecognizedAttribute,
-                                   ("Ill-formed application of `postprocess_with`"));
-            se.sigattrs, None
-    in
-    let se = { se with sigattrs = attrs } in (* to remove the postprocess_with *)
     let postprocess_lb (tau:term) (lb:letbinding) : letbinding =
         let s, univnames = SS.univ_var_opening lb.lbunivs in
         let lbdef = SS.subst s lb.lbdef in
@@ -902,7 +954,11 @@ let tc_decls env ses =
                         (Print.tag_of_sigelt se)
                         (Print.sigelt_to_string se);
 
-    let ses', ses_elaborated, env = tc_decl env se in
+    let ses', ses_elaborated, env =
+            Errors.with_ctx (BU.format1 "While typechecking the top-level declaration `%s`" (Print.sigelt_to_string_short se))
+                    (fun () -> tc_decl env se)
+    in
+
     let ses' = ses' |> List.map (fun se ->
         if Env.debug env (Options.Other "UF")
         then BU.print1 "About to elim vars from %s\n" (Print.sigelt_to_string se);
@@ -973,16 +1029,22 @@ let pop_context env msg = rollback_context env.solver msg None
 
 let tc_partial_modul env modul =
   let verify = Options.should_verify (string_of_lid modul.name) in
-  let action = if verify then "Verifying" else "Lax-checking" in
+  let action = if verify then "verifying" else "lax-checking" in
   let label = if modul.is_interface then "interface" else "implementation" in
   if Options.debug_any () then
-    BU.print3 "%s %s of %s\n" action label (string_of_lid modul.name);
+    BU.print3 "Now %s %s of %s\n" action label (string_of_lid modul.name);
 
-  let name = BU.format2 "%s %s"  (if modul.is_interface then "interface" else "module") (string_of_lid modul.name) in
+  let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module") (string_of_lid modul.name) in
   let env = {env with Env.is_iface=modul.is_interface; admit=not verify} in
   let env = Env.set_current_module env modul.name in
-  let ses, env = tc_decls env modul.declarations in
-  {modul with declarations=ses}, env
+  (* Only set a context for dependencies *)
+  Errors.with_ctx_if (not (Options.should_check (string_of_lid modul.name)))
+                     (BU.format2 "While loading dependency %s%s"
+                                    (string_of_lid modul.name)
+                                    (if modul.is_interface then " (interface)" else "")) (fun () ->
+    let ses, env = tc_decls env modul.declarations in
+    {modul with declarations=ses}, env
+  )
 
 let tc_more_partial_modul env modul decls =
   let ses, env = tc_decls env decls in

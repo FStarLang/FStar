@@ -29,6 +29,7 @@ open FStar.Const
 open FStar.Dyn
 module O = FStar.Options
 module PC = FStar.Parser.Const
+open FStar.VConfig
 
 (* Objects with metadata *)
 // IN F*: [@@ PpxDerivingYoJson; PpxDerivingShow ]
@@ -292,6 +293,10 @@ and lazy_kind =
 and binding =
   | Binding_var      of bv
   | Binding_lid      of lident * tscheme
+  (* ^ Not a tscheme: the universe names must be taken
+   * as fixed (and opened in the type). This is important since
+   * we do not support universe-polymorphic recursion.
+   * See #2106. *)
   | Binding_univ     of univ_name
 and tscheme = list<univ_name> * typ
 and gamma = list<binding>
@@ -428,7 +433,7 @@ type sigelt' =
                           * list<lident>               //all the inductive types and data constructor names in this bundle
   | Sig_datacon           of lident                    //name of the datacon
                           * univ_names                 //universe variables of the inductive type it belongs to
-                          * typ                        //the constructor's type as an arrow
+                          * typ                        //the constructor's type as an arrow (including parameters)
                           * lident                     //the inductive type of the value this constructs
                           * int                        //and the number of parameters of the inductive
                           * list<lident>               //mutually defined types
@@ -462,7 +467,7 @@ and sigelt = {
     sigquals: list<qualifier>;
     sigmeta:  sig_metadata;
     sigattrs: list<attribute>;
-    sigopts:  option<O.optionstate>; (* Saving the option context where this sigelt was checked in *)
+    sigopts:  option<vconfig>; (* Saving the option context where this sigelt was checked in *)
 }
 
 type sigelts = list<sigelt>
@@ -724,6 +729,7 @@ let t_real      = tconst PC.real_lid
 let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid
+let t_vconfig   = tconst PC.vconfig_lid
 let t_term      = tconst PC.term_lid
 let t_term_view = tabbrev PC.term_view_lid
 let t_order     = tconst PC.order_lid

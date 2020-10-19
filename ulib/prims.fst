@@ -559,11 +559,6 @@ type list (a: Type) =
   | Nil : list a
   | Cons : hd: a -> tl: list a -> list a
 
-(** The [decreases] attribute on a recursive function is used to
-    specify a well-founded ordering for a termination proof *)
-assume
-type decreases : #a: Type -> a -> Type0 
-
 (** The [M] marker is interpreted by the Dijkstra Monads for Free
      construction. It has a "double meaning", either as an alias for
      reasoning about the direct definitions, or as a marker for places

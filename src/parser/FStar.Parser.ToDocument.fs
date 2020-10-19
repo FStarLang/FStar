@@ -1187,7 +1187,7 @@ and p_tvar lid =
  * to prevent swallowing semicolons or not. For instance, in a record field, we
  * do. *)
 
-and paren_if b =
+and paren_if (b:bool) =
   if b then
     soft_parens_with_nesting
   else
@@ -1249,6 +1249,9 @@ and p_noSeqTerm' ps pb e = match e.tm with
   | Ensures (e, wtf) ->
       assert (wtf = None);
       group (str "ensures" ^/^ p_typ ps pb e)
+  | Decreases (e, wtf) ->
+      assert (wtf = None);
+      group (str "decreases" ^/^ p_typ ps pb e)
   | Attributes es ->
       group (str "attributes" ^/^ separate_map break1 p_atomicTerm es)
   | If (e1, e2, e3) ->
@@ -1898,6 +1901,7 @@ and p_projectionLHS e = match e.tm with
   | NamedTyp _  (* p_tmNoEq *)
   | Requires _  (* p_noSeqTerm *)
   | Ensures _   (* p_noSeqTerm *)
+  | Decreases _ (* p_noSeqTerm *)
   | Attributes _(* p_noSeqTerm *)
   | Quote _     (* p_noSeqTerm *)
   | VQuote _    (* p_noSeqTerm *)

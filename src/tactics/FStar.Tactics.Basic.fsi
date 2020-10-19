@@ -22,8 +22,6 @@ module Z     = FStar.BigInt
 
 (* Internal utilities *)
 
-val goal_of_goal_ty : env -> typ -> goal * guard_t
-
 val proofstate_of_goals : Range.range -> env -> list<goal> -> list<implicit> -> proofstate
 (* Returns proofstate and uvar for main witness *)
 val proofstate_of_goal_ty : Range.range -> env -> typ -> proofstate * term
@@ -43,8 +41,6 @@ val tc                     : env -> term -> tac<typ>
 val tcc                    : env -> term -> tac<comp>
 val unshelve               : term -> tac<unit>
 val unquote                : typ -> term -> tac<term>
-val catch                  : tac<'a> -> tac<BU.either<exn,'a>>
-val recover                : tac<'a> -> tac<BU.either<exn,'a>>
 val trivial                : unit -> tac<unit>
 val norm                   : list<EMB.norm_step> -> tac<unit>
 val norm_term_env          : env -> list<EMB.norm_step> -> term -> tac<term>
@@ -63,6 +59,7 @@ val t_apply_lemma          : bool -> bool -> term -> tac<unit>
 val print                  : string -> tac<unit>
 val debugging              : unit -> tac<bool>
 val dump                   : string -> tac<unit>
+val dump_all               : bool -> string -> tac<unit>
 val trefl                  : unit -> tac<unit>
 val dup                    : unit -> tac<unit>
 val prune                  : string -> tac<unit>
@@ -85,3 +82,4 @@ val join                   : unit -> tac<unit>
 val lget                   : typ -> string -> tac<term>
 val lset                   : typ -> string -> term -> tac<unit>
 val curms                  : unit -> tac<Z.t>
+val set_urgency            : Z.t -> tac<unit>

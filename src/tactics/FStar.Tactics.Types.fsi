@@ -57,11 +57,16 @@ type proofstate = {
     tac_verb_dbg : bool;         //whether to print verbose debugging messages
 
     local_state  : BU.psmap<term>; // local metaprogram state
+
+    urgency      : int;          // When printing a proofstate due to an error, this
+                                 // is used by emacs to decide whether it should pop
+                                 // open a buffer or not (default: 1).
 }
 
 val decr_depth : proofstate -> proofstate
 val incr_depth : proofstate -> proofstate
-val tracepoint : Cfg.psc -> proofstate -> unit
+val tracepoint_with_psc : Cfg.psc -> proofstate -> bool
+val tracepoint : proofstate -> bool
 val set_proofstate_range : proofstate -> Range.range -> proofstate
 
 val subst_proof_state: subst_t -> proofstate -> proofstate
@@ -81,6 +86,9 @@ val goals_of     : proofstate -> list<goal>
 val smt_goals_of : proofstate -> list<goal>
 
 val mk_goal: env -> ctx_uvar -> FStar.Options.optionstate -> bool -> string -> goal
+
+val goal_of_goal_ty : env -> typ -> goal * guard_t
+val goal_of_implicit : env -> implicit -> goal
 
 type ctrl_flag =
     | Continue

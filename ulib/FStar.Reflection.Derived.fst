@@ -345,3 +345,15 @@ let is_uvar (t : term) : bool =
     match inspect_ln (head t) with
     | Tv_Uvar _ _ -> true
     | _ -> false
+
+let binder_set_qual (q:aqualv) (b:binder) : Tot binder =
+  let (bv, _) = inspect_binder b in
+  pack_binder bv q
+
+(** Set a vconfig for a sigelt *)
+val add_check_with : vconfig -> sigelt -> Tot sigelt
+let add_check_with vcfg se =
+  let attrs = sigelt_attrs se in
+  let vcfg_t = embed_vconfig vcfg in
+  let t = `(check_with (`#vcfg_t)) in
+  set_sigelt_attrs (t :: attrs) se

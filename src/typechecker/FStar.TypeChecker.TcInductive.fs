@@ -39,6 +39,7 @@ module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
+module Gen = FStar.TypeChecker.Generalize
 module BU = FStar.Util //basic util
 module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
@@ -93,6 +94,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
          let k = SS.close tps k in
          let tps, k = SS.subst_binders usubst tps, SS.subst (SS.shift_subst (List.length tps) usubst) k in
          let fv_tc = S.lid_as_fv tc delta_constant None in
+         let (uvs, t_tc) = SS.open_univ_vars uvs t_tc in
          Env.push_let_binding env0 (Inr fv_tc) (uvs, t_tc),
          { s with sigel = Sig_inductive_typ(tc, uvs, tps, k, mutuals, data) },
          u,
@@ -157,7 +159,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
          let type_u_tc = S.mk (Tm_type u_tc) result.pos in
          let env' = Env.set_expected_typ env' type_u_tc in
          let result, res_lcomp = tc_trivial_guard env' result in
-         let head, args = U.head_and_args result in
+         let head, args = U.head_and_args' result in (* collect nested applications too *)
 
          (* Make sure the parameters are respected, cf #1534 *)
          (* The first few arguments, as many as List.length tps, must exactly match the
@@ -232,7 +234,7 @@ let generalize_and_inst_within (env:env_t) (tcs:list<(sigelt * universe)>) (data
         let t = U.arrow (binders@binders') (S.mk_Total t_unit) in
         if Env.debug env <| Options.Other "GenUniverses"
         then BU.print1 "@@@@@@Trying to generalize universes in %s\n" (N.term_to_string env t);
-        let (uvs, t) = TcUtil.generalize_universes env t in
+        let (uvs, t) = Gen.generalize_universes env t in
         if Env.debug env <| Options.Other "GenUniverses"
         then BU.print2 "@@@@@@Generalized to (%s, %s)\n"
                             (uvs |> List.map (fun u -> (string_of_id u)) |> String.concat ", ")

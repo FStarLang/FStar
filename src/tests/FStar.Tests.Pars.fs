@@ -35,7 +35,7 @@ let parse_mod mod_name dsenv =
         let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Range.dummyRange)) DsEnv.default_mii in
         env', m
     | ParseError (err, msg, r) ->
-        raise (Error(err, msg, r))
+        raise (Error(err, msg, r, []))
     | ASTFragment (Inr _, _) ->
         let msg = BU.format1 "%s: expected a module\n" mod_name in
         raise_error (Errors.Fatal_ModuleExpected, msg) dummyRange

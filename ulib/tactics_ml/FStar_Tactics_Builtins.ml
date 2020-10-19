@@ -117,6 +117,7 @@ let t_apply_lemma           = from_tac_3 B.t_apply_lemma
 let print                   = from_tac_1 B.print
 let debugging               = from_tac_1 B.debugging
 let dump                    = from_tac_1 B.dump
+let dump_all                = from_tac_2 B.dump_all
 let trefl                   = from_tac_1 B.trefl
 let dup                     = from_tac_1 B.dup
 let prune                   = from_tac_1 B.prune
@@ -136,6 +137,8 @@ let tadmit_t                = from_tac_1 B.tadmit_t
 let join                    = from_tac_1 B.join
 let inspect                 = from_tac_1 B.inspect
 let pack                    = from_tac_1 B.pack
+let curms                   = from_tac_1 B.curms
+let set_urgency             = from_tac_1 B.set_urgency
 
 (* sigh *)
 let fix_either (s : ('a, 'b) FStar_Util.either) : ('a, 'b) FStar_Pervasives.either =
@@ -152,9 +155,9 @@ let fmap f r =
 (* Those that need some translations. Maybe we can do this somewhere else
  * or automatically, but keep it for now *)
 let catch (t: unit -> 'a __tac): ((exn, 'a) FStar_Pervasives.either) __tac =
-        fun ps -> fmap fix_either (from_tac_1 B.catch (to_tac_0 (t ())) ps)
+        fun ps -> fmap fix_either (from_tac_1 TM.catch (to_tac_0 (t ())) ps)
 let recover (t: unit -> 'a __tac): ((exn, 'a) FStar_Pervasives.either) __tac =
-        fun ps -> fmap fix_either (from_tac_1 B.recover (to_tac_0 (t ())) ps)
+        fun ps -> fmap fix_either (from_tac_1 TM.recover (to_tac_0 (t ())) ps)
 
 let ctrl_rewrite
     (d : direction)

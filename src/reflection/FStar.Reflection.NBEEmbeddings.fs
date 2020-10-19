@@ -91,20 +91,6 @@ let e_binder =
     in
     mk_emb' embed_binder unembed_binder fstar_refl_binder_fv
 
-let e_optionstate =
-    let embed_optionstate cb (b:O.optionstate) : t =
-        mk_lazy cb b fstar_refl_optionstate Lazy_optionstate
-    in
-    let unembed_optionstate cb (t:t) : option<O.optionstate> =
-        match t.nbe_t with
-        | Lazy (BU.Inl {blob=b; lkind=Lazy_optionstate}, _) ->
-            Some (undyn b)
-        | _ ->
-            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded optionstate: %s" (t_to_string t)));
-            None
-    in
-    mk_emb' embed_optionstate unembed_optionstate fstar_refl_optionstate_fv
-
 let rec mapM_opt (f : ('a -> option<'b>)) (l : list<'a>) : option<list<'b>> =
     match l with
     | [] -> Some []
@@ -147,6 +133,7 @@ let e_aqualv =
         | Data.Q_Explicit -> mkConstruct ref_Q_Explicit.fv [] []
         | Data.Q_Implicit -> mkConstruct ref_Q_Implicit.fv [] []
         | Data.Q_Meta t   -> mkConstruct ref_Q_Meta.fv [] [as_arg (embed e_term cb t)]
+        | Data.Q_Meta_attr t -> mkConstruct ref_Q_Meta_attr.fv [] [as_arg (embed e_term cb t)]
     in
     let unembed_aqualv cb (t : t) : option<aqualv> =
         match t.nbe_t with
@@ -155,6 +142,9 @@ let e_aqualv =
         | Construct (fv, [], [(t, _)]) when S.fv_eq_lid fv ref_Q_Meta.lid ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
             Some (Data.Q_Meta t))
+        | Construct (fv, [], [(t, _)]) when S.fv_eq_lid fv ref_Q_Meta_attr.lid ->
+            BU.bind_opt (unembed e_term cb t) (fun t ->
+            Some (Data.Q_Meta_attr t))
 
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded aqualv: %s" (t_to_string t)));
@@ -601,6 +591,8 @@ let e_univ_name =
 let e_univ_names = e_list e_univ_name
 let e_string_list = e_list e_string
 
+let e_ctor = e_tuple2 e_string_list e_term
+
 let e_sigelt_view =
     let embed_sigelt_view cb (sev:sigelt_view) : t =
         match sev with
@@ -611,16 +603,12 @@ let e_sigelt_view =
                                    as_arg (embed e_term cb ty);
                                    as_arg (embed e_term cb t)]
 
-        | Sg_Constructor (nm, ty) ->
-            mkConstruct ref_Sg_Constructor.fv [] [as_arg (embed e_string_list cb nm);
-                                           as_arg (embed e_term cb ty)]
-
         | Sg_Inductive (nm, univs, bs, t, dcs) ->
             mkConstruct ref_Sg_Inductive.fv [] [as_arg (embed e_string_list cb nm);
                                          as_arg (embed e_univ_names cb univs);
                                          as_arg (embed e_binders cb bs);
                                          as_arg (embed e_term cb t);
-                                         as_arg (embed (e_list e_string_list) cb dcs)]
+                                         as_arg (embed (e_list e_ctor) cb dcs)]
 
         | Unk ->
             mkConstruct ref_Unk.fv [] []
@@ -632,7 +620,7 @@ let e_sigelt_view =
             BU.bind_opt (unembed e_univ_names cb us) (fun us ->
             BU.bind_opt (unembed e_binders cb bs) (fun bs ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
-            BU.bind_opt (unembed (e_list e_string_list) cb dcs) (fun dcs ->
+            BU.bind_opt (unembed (e_list e_ctor) cb dcs) (fun dcs ->
             Some <| Sg_Inductive (nm, us, bs, t, dcs))))))
 
         | Construct (fv, _, [(t, _); (ty, _); (univs, _); (fvar, _); (r, _)]) when S.fv_eq_lid fv ref_Sg_Let.lid ->
@@ -792,3 +780,12 @@ let e_qualifier =
         (fv_as_emb_typ fstar_refl_qualifier_fv)
 
 let e_qualifiers = e_list e_qualifier
+
+let e_vconfig =
+    let emb cb (o:order) : t =
+      failwith "emb vconfig NBE"
+    in
+    let unemb cb (t:t) : option<order> =
+      failwith "unemb vconfig NBE"
+    in
+    mk_emb' emb unemb (lid_as_fv PC.vconfig_lid delta_constant None)

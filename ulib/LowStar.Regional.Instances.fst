@@ -116,10 +116,15 @@ let buffer_r_alloc #a #_ (ia, len) r =
   B.malloc r ia len
 
 val buffer_r_free:
-  #a:Type -> len:Ghost.erased nonzero ->
+  #a:Type ->
+  #arg':Ghost.erased (a & nonzero) ->
+  arg:(a & nonzero) { arg == Ghost.reveal arg' } ->
   v:B.buffer a ->
   HST.ST unit
-    (requires (fun h0 -> buffer_r_inv len h0 v))
+    (requires (fun h0 ->
+      let ia = fst arg in
+      let len = snd arg in
+      buffer_r_inv len h0 v))
     (ensures (fun h0 _ h1 ->
       modifies (loc_all_regions_from false (buffer_region_of v)) h0 h1))
 let buffer_r_free #a len v =
@@ -161,7 +166,7 @@ let buffer_regional #a ia len =
       (buffer_r_alloc_p #a)
       // This is key: there is no partial application here, meaning this extracts to C.
       (buffer_r_alloc #a #(ia, len))
-      (buffer_r_free #a len)
+      (buffer_r_free #a #(ia, len))
 
 
 
@@ -246,7 +251,7 @@ let vector_r_alloc #a #rst rg r =
   V.alloc_reserve 1ul (rg_dummy rg) r
 
 val vector_r_free:
-  #a:Type0 -> #rst:Type -> rg:Ghost.erased (regional rst a) -> v:rvector rg ->
+  #a:Type0 -> #rst:Type -> #rg:Ghost.erased (regional rst a) -> (s:regional rst a{s == Ghost.reveal rg}) -> v:rvector rg ->
   HST.ST unit
     (requires (fun h0 -> vector_r_inv rg h0 v))
     (ensures (fun h0 _ h1 ->
@@ -269,4 +274,4 @@ let vector_regional #a #rst rg =
       (vector_irepr #a rg)
       (vector_r_alloc_p #a #rst rg)
       (vector_r_alloc #a #rst)
-      (vector_r_free #a #rst rg)
+      (vector_r_free #a #rst #rg)

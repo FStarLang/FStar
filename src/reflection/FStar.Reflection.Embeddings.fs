@@ -73,23 +73,6 @@ let e_binder =
     in
     mk_emb embed_binder unembed_binder fstar_refl_binder
 
-let e_optionstate =
-    let embed_optionstate (rng:Range.range) (b:O.optionstate) : term =
-        U.mk_lazy b fstar_refl_optionstate Lazy_optionstate (Some rng)
-    in
-    let unembed_optionstate w (t:term) : option<O.optionstate> =
-        match (SS.compress t).n with
-        | Tm_lazy {blob=b; lkind=Lazy_optionstate} ->
-            Some (undyn b)
-        | _ ->
-            if w then
-                Err.log_issue t.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded optionstate: %s" (Print.term_to_string t)));
-            None
-    in
-    mk_emb embed_optionstate unembed_optionstate fstar_refl_optionstate
-
-let _ = FStar.Reflection.Basic.e_optionstate_hook := Some e_optionstate
-
 let rec mapM_opt (f : ('a -> option<'b>)) (l : list<'a>) : option<list<'b>> =
     match l with
     | [] -> Some []
@@ -131,6 +114,9 @@ let e_aqualv =
         | Data.Q_Meta t   ->
             S.mk_Tm_app ref_Q_Meta.t [S.as_arg (embed e_term rng t)]
                         Range.dummyRange
+        | Data.Q_Meta_attr t   ->
+            S.mk_Tm_app ref_Q_Meta_attr.t [S.as_arg (embed e_term rng t)]
+                        Range.dummyRange
         in { r with pos = rng }
     in
     let unembed_aqualv w (t : term) : option<aqualv> =
@@ -142,6 +128,9 @@ let e_aqualv =
         | Tm_fvar fv, [(t, _)] when S.fv_eq_lid fv ref_Q_Meta.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
             Some (Data.Q_Meta t))
+        | Tm_fvar fv, [(t, _)] when S.fv_eq_lid fv ref_Q_Meta_attr.lid ->
+            BU.bind_opt (unembed' w e_term t) (fun t ->
+            Some (Data.Q_Meta_attr t))
 
         | _ ->
             if w then
@@ -636,6 +625,8 @@ let e_univ_name =
 
 let e_univ_names = e_list e_univ_name
 
+let e_ctor = e_tuple2 (e_string_list) e_term
+
 let e_sigelt_view =
     let embed_sigelt_view (rng:Range.range) (sev:sigelt_view) : term =
         match sev with
@@ -648,19 +639,13 @@ let e_sigelt_view =
                             S.as_arg (embed e_term rng t)]
                         rng
 
-        | Sg_Constructor (nm, ty) ->
-            S.mk_Tm_app ref_Sg_Constructor.t
-                        [S.as_arg (embed e_string_list rng nm);
-                            S.as_arg (embed e_term rng ty)]
-                        rng
-
         | Sg_Inductive (nm, univs, bs, t, dcs) ->
             S.mk_Tm_app ref_Sg_Inductive.t
                         [S.as_arg (embed e_string_list rng nm);
                             S.as_arg (embed e_univ_names rng univs);
                             S.as_arg (embed e_binders rng bs);
                             S.as_arg (embed e_term rng t);
-                            S.as_arg (embed (e_list e_string_list)  rng dcs)]
+                            S.as_arg (embed (e_list e_ctor) rng dcs)]
                         rng
 
         | Unk ->
@@ -675,7 +660,7 @@ let e_sigelt_view =
             BU.bind_opt (unembed' w e_univ_names us) (fun us ->
             BU.bind_opt (unembed' w e_binders bs) (fun bs ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
-            BU.bind_opt (unembed' w (e_list e_string_list) dcs) (fun dcs ->
+            BU.bind_opt (unembed' w (e_list e_ctor) dcs) (fun dcs ->
             Some <| Sg_Inductive (nm, us, bs, t, dcs))))))
 
         | Tm_fvar fv, [(r, _); (fvar, _); (univs, _); (ty, _); (t, _)] when S.fv_eq_lid fv ref_Sg_Let.lid ->

@@ -116,6 +116,7 @@ let solve_goals_with_tac env g (deferred_goals:implicits) (tac:sigelt) =
 (** This functions is called in Rel.force_trivial_guard to solve all
     goals in a guard that were deferred to a tactic *)
 let solve_deferred_to_tactic_goals env g =
+    if not env.enable_defer_to_tac then g else
     let deferred = g.deferred_to_tac in
     (** A unification problem between two terms is presented to
         a tactic as an equality goal between the terms. *)
@@ -125,12 +126,15 @@ let solve_deferred_to_tactic_goals env g =
       | TProb tp when tp.relation=EQ ->
         let env, _ = Env.clear_expected_typ env in
         let env = {env with gamma=tp.logical_guard_uvar.ctx_uvar_gamma} in
-        let env_lax = {env with lax=true; use_bv_sorts=true} in
+        let env_lax = {env with lax=true; use_bv_sorts=true; enable_defer_to_tac=false} in
         let _, t_eq, _ =
           //Prefer to use the type of the flex term to compute the
           //type instantiation of the equality, since it is more efficient
-          if is_flex tp.lhs then env.type_of env_lax tp.lhs
-          else env.type_of env_lax tp.rhs
+          let t =
+            if is_flex tp.lhs then tp.lhs
+            else tp.rhs
+          in
+          env.type_of env_lax t
         in
         let goal_ty = U.mk_eq2 (env.universe_of env_lax t_eq) t_eq tp.lhs tp.rhs in
         let goal, ctx_uvar, _ =

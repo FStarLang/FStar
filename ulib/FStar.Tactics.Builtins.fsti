@@ -27,49 +27,49 @@ open FStar.Tactics.Result
 
 (** [top_env] returns the environment where the tactic started running.
  * This works even if no goals are present. *)
-assume val top_env : unit -> Tac env
+val top_env : unit -> Tac env
 
 (** [fresh ()] returns a fresh integer. It does not get reset when
 catching a failure. *)
-assume val fresh : unit -> Tac int
+val fresh : unit -> Tac int
 
 (** [refine_intro] will turn a goal of shape [w : x:t{phi}]
 into [w : t] and [phi{w/x}] *)
-assume val refine_intro : unit -> Tac unit
+val refine_intro : unit -> Tac unit
 
 (** [tc] returns the type of a term in [env],
 or fails if it is untypeable. *)
-assume val tc : env -> term -> Tac term
+val tc : env -> term -> Tac term
 
 (** [tcc] like [tc], but returns the full computation type
 with the effect label and its arguments (WPs, etc) as well *)
-assume val tcc : env -> term -> Tac comp
+val tcc : env -> term -> Tac comp
 
 (** [unshelve] creates a goal from a term for its given type.
 It can be used when the system decided not to present a goal, but
 you want one anyway. For example, if you request a uvar through
 [uvar_env] or [fresh_uvar], you might want to instantiate it
 explicitly. *)
-assume val unshelve : term -> Tac unit
+val unshelve : term -> Tac unit
 
 (** [unquote t] with turn a quoted term [t] into an actual value, of
 any type. This will fail at tactic runtime if the quoted term does not
 typecheck to type [a]. *)
-assume val unquote : #a:Type -> term -> Tac a
+val unquote : #a:Type -> term -> Tac a
 
 (** [catch t] will attempt to run [t] and allow to recover from a
 failure. If [t] succeeds with return value [a], [catch t] returns [Inr
 a]. On failure, it returns [Inl msg], where [msg] is the error [t]
 raised, and all unionfind effects are reverted. See also [recover] and
 [or_else]. *)
-assume val catch : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
+val catch : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 
 (** Like [catch t], but will not discard unionfind effects on failure. *)
-assume val recover : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
+val recover : #a:Type -> (unit -> Tac a) -> TacS (either exn a)
 
 (** [trivial] will discharge the goal if it's exactly [True] after
 doing normalization and simplification of it. *)
-assume val trivial  : unit -> Tac unit
+val trivial  : unit -> Tac unit
 
 (** [norm steps] will call the normalizer on the current goal's
 type and witness, with its reduction behaviour parameterized
@@ -85,68 +85,68 @@ string operations)
 [iota] (reduce match statements over constructors)
 [delta_only] (restrict delta to only unfold this list of fully-qualfied identifiers)
 *)
-assume val norm  : list norm_step -> Tac unit
+val norm  : list norm_step -> Tac unit
 
 (** [norm_term_env e steps t] will call the normalizer on the term [t]
 using the list of steps [steps], over environment [e]. The list has the same meaning as for [norm]. *)
-assume val norm_term_env  : env -> list norm_step -> term -> Tac term
+val norm_term_env  : env -> list norm_step -> term -> Tac term
 
 (** [norm_binder_type steps b] will call the normalizer on the type of the [b]
 binder for the current goal. Notably, this cannot be done via binder_retype and norm,
 because of uvars being resolved to lambda-abstractions. *)
-assume val norm_binder_type  : list norm_step -> binder -> Tac unit
+val norm_binder_type  : list norm_step -> binder -> Tac unit
 
 (** [intro] pushes the first argument of an arrow goal into the
 environment, turning [Gamma |- ?u : x:a -> b] into [Gamma, x:a |- ?u' : b].
 Note that this does not work for logical implications/forall. See
 FStar.Tactics.Logic for that.
 *)
-assume val intro : unit -> Tac binder
+val intro : unit -> Tac binder
 
 (** Similar to intros, but allows to build a recursive function.
 Currently broken (c.f. issue #1103)
 *)
-assume val intro_rec  : unit -> Tac (binder * binder)
+val intro_rec  : unit -> Tac (binder * binder)
 
 (** [rename_to b nm] will rename the binder [b] to [nm] in
 the environment, goal, and witness in a safe manner. The only use of this
 is to make goals and terms more user readable. The primitive returns
 the new binder, since the old one disappears from the context. *)
-assume val rename_to  : binder -> string -> Tac binder
+val rename_to  : binder -> string -> Tac binder
 
 (** [revert] pushes out a binder from the environment into the goal type,
 so a behaviour opposite to [intros].
 *)
-assume val revert  : unit -> Tac unit
+val revert  : unit -> Tac unit
 
 (** [binder_retype] changes the type of a binder in the context. After calling it
 with a binder of type `t`, the user is presented with a goal of the form `t == ?u`
 to be filled. The original goal (following that one) has the type of `b` in the
 context replaced by `?u`.
 *)
-assume val binder_retype  : binder -> Tac unit
+val binder_retype  : binder -> Tac unit
 
 (** [clear_top] will drop the outermost binder from the environment.
 Can only be used if the goal does not at all depend on it.
 *)
-assume val clear_top : unit -> Tac unit
+val clear_top : unit -> Tac unit
 
 (** [clear] will drop the given binder from the context, is
 nothing depends on it.
 *)
-assume val clear : binder -> Tac unit
+val clear : binder -> Tac unit
 
 (** If [b] is a binder of type [v == r], [rewrite b] will rewrite
 the variable [v] for [r] everywhere in the current goal type and witness/
 *)
-assume val rewrite : binder -> Tac unit
+val rewrite : binder -> Tac unit
 
 (** First boolean is whether to attempt to intrpoduce a refinement
 before solving. In that case, a goal for the refinement formula will be
 added. Second boolean is whether to set the expected type internally.
 Just use `exact` from FStar.Tactics.Derived if you don't know what's up
 with all this. *)
-assume val t_exact : bool -> bool -> term -> Tac unit
+val t_exact : bool -> bool -> term -> Tac unit
 
 (** Inner primitive for [apply], takes a boolean specifying whether
 to not ask for implicits that appear free in posterior goals, and a
@@ -166,7 +166,7 @@ instantiate [?u]. We use this in typeclass resolution.
 You may want [apply] from FStar.Tactics.Derived, or one of
 the other user facing variants.
 *)
-assume val t_apply : uopt:bool -> noinst:bool -> term -> Tac unit
+val t_apply : uopt:bool -> noinst:bool -> term -> Tac unit
 
 (** [t_apply_lemma ni nilhs l] will solve a goal of type [squash phi]
 when [l] is a Lemma ensuring [phi]. The arguments to [l] and its
@@ -177,25 +177,31 @@ instantiate uvars in the goal. The [noinst_lhs] flag is similar, it
 forbids instantiating uvars *but only on the LHS of the goal*, provided
 the goal is an equality. It is meant to be useful for rewrite-goals, of
 the shape [X = ?u]. Setting [noinst] means [noinst_lhs] is ignored. *)
-assume val t_apply_lemma : noinst:bool -> noinst_lhs:bool -> term -> Tac unit
+val t_apply_lemma : noinst:bool -> noinst_lhs:bool -> term -> Tac unit
 // TODO: do the unit thing too for [apply].
 
 (** [print str] has no effect on the proofstate, but will have the side effect
 of printing [str] on the compiler's standard output. *)
-assume val print : string -> Tac unit
+val print : string -> Tac unit
 
 (** [debugging ()] returns true if the current module has the debug flag
 on, i.e. when [--debug MyModule --debug_level Tac] was passed in. *)
-assume val debugging : unit -> Tac bool
+val debugging : unit -> Tac bool
 
 (** Similar to [print], but will dump a text representation of the proofstate
 along with the message. *)
-assume val dump : string -> Tac unit
+val dump : string -> Tac unit
+
+(** Similar to [dump], but will print *every* unsolved implicit
+in the proofstate, not only the visible/focused goals. When the
+[print_resolved] boolean is true, it will also print every solved goal.
+Warning, these can be a *lot*. *)
+val dump_all : print_resolved:bool -> string -> Tac unit
 
 (** Solves a goal [Gamma |= squash (l == r)] by attempting to unify
 [l] with [r]. This currently only exists because of some universe problems
 when trying to [apply] a reflexivity lemma. *)
-assume val trefl : unit -> Tac unit
+val trefl : unit -> Tac unit
 
 (** [ctrl_rewrite] will traverse the current goal, and call [ctrl]
  * repeatedly on subterms. When [ctrl t] returns [(true, _)], the
@@ -220,7 +226,7 @@ assume val trefl : unit -> Tac unit
  *
  * See [pointwise] and [topdown_rewrite] for more friendly versions.
  *)
-assume val ctrl_rewrite :
+val ctrl_rewrite :
     direction ->
     (ctrl : term -> Tac (bool & ctrl_flag)) ->
     (rw:unit -> Tac unit) ->
@@ -233,103 +239,107 @@ assume val ctrl_rewrite :
 a goal's witness in any way needed, by choosing
 some [?u] (possibly with exact) and then solving the other goal.
 *)
-assume val dup : unit -> Tac unit
+val dup : unit -> Tac unit
 
 // Proof namespace management
 (** [prune "A.B.C"] will mark all top-level definitions in module
 [A.B.C] (and submodules of it) to not be encoded to the SMT, for the current goal.
 The string is a namespace prefix. [prune ""] will prune everything, but note
 that [prune "FStar.S"] will not prune ["FStar.Set"]. *)
-assume val prune : string -> Tac unit
+val prune : string -> Tac unit
 
 (** The opposite operation of [prune]. The latest one takes precedence. *)
-assume val addns : string -> Tac unit
+val addns : string -> Tac unit
 
 (** Destruct a value of an inductive type by matching on it. The generated
 match has one branch for each constructor and is therefore trivially
 exhaustive, no VC is generated for that purpose. It returns a list
 with the fvars of each constructor and their arities, in the order
 they appear as goals. *)
-assume val t_destruct : term -> Tac (list (fv * nat))
+val t_destruct : term -> Tac (list (fv * nat))
 
 (** Set command line options for the current goal. Mostly useful to
 change SMT encoding options such as [set_options "--z3rlimit 20"]. *)
-assume val set_options : string -> Tac unit
+val set_options : string -> Tac unit
 
 (** Creates a new, unconstrained unification variable in environment
 [env]. The type of the uvar can optionally be provided in [o]. If not
 provided, a second uvar is created for the type. *)
-assume val uvar_env : env -> option typ -> Tac term
+val uvar_env : env -> option typ -> Tac term
 
 (** Call the unifier on two terms. The returned boolean specifies
 whether unification was possible. When the tactic returns true, the
 terms have been unified, instantiating uvars as needed. When false,
 unification was not possible and no change to uvars occurs. *)
-assume val unify_env : env -> t1:term -> t2:term -> Tac bool
+val unify_env : env -> t1:term -> t2:term -> Tac bool
 
 (** Check if [t1] matches [t2], i.e., whether [t2] can have its uvars
 instantiated into unifying with [t1]. When the tactic returns true, the
 terms have been unified, instantiating uvars as needed. When false,
 matching was not possible and no change to uvars occurs. *)
-assume val match_env : env -> t1:term -> t2:term -> Tac bool
+val match_env : env -> t1:term -> t2:term -> Tac bool
 
 (** Launches an external process [prog] with arguments [args] and input
 [input] and returns the output. For security reasons, this can only be
 performed when the `--unsafe_tactic_exec` options was provided for the
 current F* invocation. The tactic will fail if this is not so. *)
-assume val launch_process : string -> list string -> string -> Tac string
+val launch_process : string -> list string -> string -> Tac string
 
 (** Get a fresh bv of some name and type. The name is only useful
 for pretty-printing, since there is a fresh unaccessible integer within
 the bv too. *)
-assume val fresh_bv_named : string -> typ -> Tac bv
+val fresh_bv_named : string -> typ -> Tac bv
 
 (** Change the goal to another type, given that it is convertible
 to the current type. *)
-assume val change : typ -> Tac unit
+val change : typ -> Tac unit
 
 (** Get the current guard policy. The guard policy specifies what should
 be done when a VC arises internally from the tactic engine. Options
 are SMT (mark it as an SMT goal), Goal (add it as an extra goal)
 and Force (only allow trivial guards, that need no SMT. *)
-assume val get_guard_policy : unit -> Tac guard_policy
+val get_guard_policy : unit -> Tac guard_policy
 
 (** Set the current guard policy. See [get_guard_policy} for an explanation *)
-assume val set_guard_policy : guard_policy -> Tac unit
+val set_guard_policy : guard_policy -> Tac unit
 
 (** [lax_on] returns true iff the current environment has the
 `--lax` option set, and thus drops all verification conditions. *)
-assume val lax_on : unit -> Tac bool
+val lax_on : unit -> Tac bool
 
 (** Admit the current goal and set the witness to the given term.
 Absolutely unsafe. Raises a warning. *)
-assume val tadmit_t : term -> Tac unit
+val tadmit_t : term -> Tac unit
 
 (** View a term in a fully-named representation *)
-assume val inspect : term -> Tac term_view
+val inspect : term -> Tac term_view
 
 (** Pack a term view on a fully-named representation back into a term *)
-assume val pack    : term_view -> Tac term
+val pack    : term_view -> Tac term
 
 (** Join the first two goals, which must be irrelevant, in a single
 one by finding a maximal prefix of their environment and reverting
 appropriately. Useful to minimize SMT queries that share internal
 obligations. *)
-assume val join : unit -> Tac unit
+val join : unit -> Tac unit
 
 (* Local metastate via a string-keyed map. [lget] fails if the
 found element is not typeable at the requested type. *)
-assume val lget     : #a:Type -> string -> Tac a
-assume val lset     : #a:Type -> string -> a -> Tac unit
+val lget     : #a:Type -> string -> Tac a
+val lset     : #a:Type -> string -> a -> Tac unit
 
 (** Set the current set of active goals at will. Obligations remain
 in the implicits. *)
-assume val set_goals     : list goal -> Tac unit
+val set_goals     : list goal -> Tac unit
 
 (** Set the current set of SMT goals at will. Obligations remain in the
 implicits. TODO: This is a really bad name, there's no special "SMT"
 about these goals. *)
-assume val set_smt_goals : list goal -> Tac unit
+val set_smt_goals : list goal -> Tac unit
 
 (** [curms ()] returns the current (wall) time in millseconds *)
-assume val curms : unit -> Tac int
+val curms : unit -> Tac int
+
+(** [set_urgency u] sets the urgency of error messages. Usually set just
+before raising an exception (see e.g. [fail_silently]). *)
+val set_urgency : int -> Tac unit

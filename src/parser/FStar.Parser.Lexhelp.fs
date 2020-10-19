@@ -148,6 +148,7 @@ let keywords =
     ALWAYS, "by"         ,BY;
     ALWAYS, "calc"       ,CALC;
     ALWAYS, "class"      ,CLASS;
+    ALWAYS, "decreases"  ,DECREASES;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;
     ALWAYS, "else"       ,ELSE;
