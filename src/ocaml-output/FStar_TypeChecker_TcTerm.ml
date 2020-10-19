@@ -2452,10 +2452,10 @@ and (tc_maybe_toplevel_term :
                                        uu___14 in
                                    if uu___13
                                    then
-                                     FStar_TypeChecker_Err.add_errors env1
-                                       [(FStar_Errors.Error_UnexpectedGTotComputation,
-                                          "Expected Tot, got a GTot computation",
-                                          (e2.FStar_Syntax_Syntax.pos))]
+                                     FStar_Errors.log_issue
+                                       e2.FStar_Syntax_Syntax.pos
+                                       (FStar_Errors.Error_UnexpectedGTotComputation,
+                                         "Expected Tot, got a GTot computation")
                                    else ());
                                   (e2, c, g)) in
                            (match uu___10 with
@@ -3159,24 +3159,6 @@ and (tc_tactic :
             } in
           let uu___ = FStar_Syntax_Syntax.t_tac_of a b in
           tc_check_tot_or_gtot_term env1 tau uu___ ""
-and (tc_tactic_opt :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option ->
-      (FStar_Syntax_Syntax.term FStar_Pervasives_Native.option *
-        FStar_TypeChecker_Common.guard_t))
-  =
-  fun env ->
-    fun topt ->
-      match topt with
-      | FStar_Pervasives_Native.None ->
-          (FStar_Pervasives_Native.None, FStar_TypeChecker_Env.trivial_guard)
-      | FStar_Pervasives_Native.Some tactic ->
-          let uu___ =
-            tc_tactic FStar_Syntax_Syntax.t_unit FStar_Syntax_Syntax.t_unit
-              env tactic in
-          (match uu___ with
-           | (tactic1, uu___1, g) ->
-               ((FStar_Pervasives_Native.Some tactic1), g))
 and (check_instantiated_fvar :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.var ->
@@ -10217,9 +10199,13 @@ let (type_of_tot_term :
            (fun uu___2 -> match () with | () -> tc_tot_or_gtot_term env1 e)
              ()
          with
-         | FStar_Errors.Error (e1, msg, uu___3) ->
-             let uu___4 = FStar_TypeChecker_Env.get_range env1 in
-             FStar_Errors.raise_error (e1, msg) uu___4 in
+         | FStar_Errors.Error (e1, msg, uu___3, ctx) ->
+             let uu___4 =
+               let uu___5 =
+                 let uu___6 = FStar_TypeChecker_Env.get_range env1 in
+                 (e1, msg, uu___6, ctx) in
+               FStar_Errors.Error uu___5 in
+             FStar_Exn.raise uu___4 in
        match uu___1 with
        | (t, c, g) ->
            let c1 = FStar_TypeChecker_Normalize.ghost_to_pure_lcomp env1 c in

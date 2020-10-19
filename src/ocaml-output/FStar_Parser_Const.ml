@@ -117,6 +117,9 @@ let (string_of_bool_lid : FStar_Ident.lident) =
 let (string_compare : FStar_Ident.lident) =
   p2l ["FStar"; "String"; "compare"]
 let (order_lid : FStar_Ident.lident) = p2l ["FStar"; "Order"; "order"]
+let (vconfig_lid : FStar_Ident.lident) = p2l ["FStar"; "VConfig"; "vconfig"]
+let (mkvconfig_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "VConfig"; "Mkvconfig"]
 let (op_Eq : FStar_Ident.lident) = pconst "op_Equality"
 let (op_notEq : FStar_Ident.lident) = pconst "op_disEquality"
 let (op_LT : FStar_Ident.lident) = pconst "op_LessThan"
@@ -265,7 +268,6 @@ let (comment_attr : FStar_Ident.lident) =
 let (fail_attr : FStar_Ident.lident) = psconst "expect_failure"
 let (fail_lax_attr : FStar_Ident.lident) = psconst "expect_lax_failure"
 let (tcdecltime_attr : FStar_Ident.lident) = psconst "tcdecltime"
-let (noextract_to_attr : FStar_Ident.lident) = psconst "noextract_to"
 let (assume_strictly_positive_attr_lid : FStar_Ident.lident) =
   psconst "assume_strictly_positive"
 let (unifier_hint_injective_lid : FStar_Ident.lident) =

@@ -60,8 +60,20 @@ let cases f d = function
   | Some x -> f x
   | None -> d
 
+(* We memoize the normal form of variables in the environment, in
+ * order to implement call-by-need and avoid an exponential explosion,
+ * but we take care to only reuse memoized values when the cfg has not
+ * changed. The main reason is normalization requests, which can "grow"
+ * the set of allowed computations steps, and hence we may memoize
+ * something during the request that is used outside of it. This will
+ * essentially make it invalid. See issue #2155 in Github.
+ *
+ * We compare the cfg with physical equality, so it has to be the
+ * exact same object in memory. See read_memo and set_memo below. *)
+type cfg_memo<'a> = memo<(Cfg.cfg * 'a)>
+
 type closure =
-  | Clos of env * term * memo<(env * term)> * bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint
+  | Clos of env * term * cfg_memo<(env * term)> * bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint
   | Univ of universe                               //universe terms do not have free variables
   | Dummy                                          //Dummy is a placeholder for a binder when doing strong reduction
 and env = list<(option<binder>*closure)>
@@ -73,7 +85,7 @@ type branches = list<(pat * option<term> * term)>
 type stack_elt =
  | Arg      of closure * aqual * Range.range
  | UnivArgs of list<universe> * Range.range
- | MemoLazy of memo<(env * term)>
+ | MemoLazy of cfg_memo<(env * term)>
  | Match    of env * branches * cfg * Range.range
  | Abs      of env * binders * env * option<residual_comp> * Range.range //the second env is the first one extended with the binders, for reducing the option<lcomp>
  | App      of env * term * aqual * Range.range
@@ -86,11 +98,20 @@ type stack = list<stack_elt>
 
 let head_of t = let hd, _ = U.head_and_args' t in hd
 
-let set_memo cfg (r:memo<'a>) (t:'a) =
-  if cfg.memoize_lazy then
-    match !r with
-    | Some _ -> failwith "Unexpected set_memo: thunk already evaluated"
-    | None -> r := Some t
+let read_memo cfg (r:memo<(Cfg.cfg * 'a)>) : option<'a> =
+  match !r with
+  | Some (cfg', a) when BU.physical_equality cfg cfg' ->
+    Some a
+  | _ -> None
+
+let set_memo cfg (r:memo<(Cfg.cfg * 'a)>) (t:'a) : unit =
+  if cfg.memoize_lazy then begin
+    (* We do this only as a sanity check. The only situation where we
+     * should set a memo again is when the cfg has changed. *)
+    if Option.isSome (read_memo cfg r) then
+      failwith "Unexpected set_memo: thunk already evaluated";
+    r := Some (cfg, t)
+  end
 
 let closure_to_string = function
     | Clos (env, t, _, _) -> BU.format2 "(env=%s elts; %s)" (List.length env |> string_of_int) (Print.term_to_string t)
@@ -854,6 +875,10 @@ type should_unfold_res =
     | Should_unfold_fully
     | Should_unfold_reify
 
+(* Max number of warnings to print in a single run.
+Initialized below in normalize *)
+let plugin_unfold_warn_ctr : ref<int> = BU.mk_ref 0
+
 let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     let attrs = match Env.attrs_of_qninfo qninfo with
             | None -> []
@@ -943,14 +968,28 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
                     (Range.string_of_range (S.range_of_fv fv))
                     (string_of_res res)
                     );
-    match res with
-    | false, _, _ -> Should_unfold_no
-    | true, false, false -> Should_unfold_yes
-    | true, true, false -> Should_unfold_fully
-    | true, false, true -> Should_unfold_reify
-    | _ ->
-      failwith <| BU.format1 "Unexpected unfolding result: %s" (string_of_res res)
-
+    let r =
+      match res with
+      | false, _, _ -> Should_unfold_no
+      | true, false, false -> Should_unfold_yes
+      | true, true, false -> Should_unfold_fully
+      | true, false, true -> Should_unfold_reify
+      | _ ->
+        failwith <| BU.format1 "Unexpected unfolding result: %s" (string_of_res res)
+    in
+    if cfg.steps.unfold_tac                             // If running a tactic,
+       && (r <> Should_unfold_no)                       // actually unfolding this fvar
+       && BU.for_some (U.is_fvar PC.plugin_attr) attrs  // it is a plugin
+       && !plugin_unfold_warn_ctr > 0                   // and we haven't raised too many warnings
+    then begin
+      // then warn about it
+      Errors.log_issue fv.fv_name.p
+                       (Errors.Warning_UnfoldPlugin,
+                        BU.format1 "Unfolding name which is marked as a plugin: %s"
+                                    (Print.fv_to_string fv));
+      plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1
+    end;
+    r
 let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
     let res =
         should_unfold cfg (fun cfg -> should_reify cfg stack) fv qninfo
@@ -1164,7 +1203,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    if not fix
                    || cfg.steps.zeta
                    || cfg.steps.zeta_full
-                   then match !r with
+                   then match read_memo cfg r with
                         | Some (env, t') ->
                             log cfg  (fun () -> BU.print2 "Lazy hit: %s cached to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
                             if maybe_weakly_reduced t'
@@ -1270,7 +1309,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    let stack =
                      stack |>
                      List.fold_right (fun (a, aq) stack ->
-                       Arg (Clos(env, a, BU.mk_ref (Some ([], a)), false),aq,t.pos)::stack)
+                       Arg (Clos(env, a, BU.mk_ref (Some (cfg, ([], a))), false),aq,t.pos)::stack)
                      norm_args
                    in
                    log cfg  (fun () -> BU.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
@@ -1456,7 +1495,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     let memo = BU.mk_ref None in
                     let rec_env = (None, Clos(env, fix_f_i, memo, true))::rec_env in
                     rec_env, memo::memos, i + 1) (snd lbs) (env, [], 0) in
-            let _ = List.map2 (fun lb memo -> memo := Some (rec_env, lb.lbdef)) (snd lbs) memos in //tying the knot
+            let _ = List.map2 (fun lb memo -> memo := Some (cfg, (rec_env, lb.lbdef))) (snd lbs) memos in //tying the knot
             let body_env = List.fold_right (fun lb env -> (None, Clos(rec_env, lb.lbdef, BU.mk_ref None, false))::env)
                                (snd lbs) env in
             norm cfg body_env stack body
@@ -2443,7 +2482,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                   rebuild cfg env_arg stack t
              else let stack = App(env, t, aq, r)::stack in
                   norm cfg env_arg stack tm
-        else begin match !m with
+        else begin match read_memo cfg m with
           | None ->
             if cfg.steps.hnf && not (is_partial_primop_app cfg t)
             then let arg = closure_as_term cfg env_arg tm in
@@ -2718,7 +2757,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 let env0 = env in
                 let env = List.fold_left
                       (fun env (bv, t) -> (Some (S.mk_binder bv),
-                                           Clos([], t, BU.mk_ref (Some ([], t)), false))::env)
+                                           Clos([], t, BU.mk_ref (Some (cfg, ([], t))), false))::env)
                       env s in
                 norm cfg env stack (guard_when_clause wopt b rest)
         in
@@ -2732,17 +2771,24 @@ let reflection_env_hook = BU.mk_ref None
 let normalize_with_primitive_steps ps s e t =
     let c = config' ps s e in
     reflection_env_hook := Some e;
+    plugin_unfold_warn_ctr := 10;
     log_cfg c (fun () -> BU.print1 "Cfg = %s\n" (cfg_to_string c));
     if is_nbe_request s then begin
       log_top c (fun () -> BU.print1 "Starting NBE for (%s) {\n" (Print.term_to_string t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
-      let (r, ms) = BU.record_time (fun () -> nbe_eval c s t) in
+      let (r, ms) = Errors.with_ctx "While normalizing a term via NBE" (fun () ->
+                      BU.record_time (fun () ->
+                        nbe_eval c s t))
+      in
       log_top c (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.term_to_string r) (string_of_int ms));
       r
     end else begin
       log_top c (fun () -> BU.print1 "Starting normalizer for (%s) {\n" (Print.term_to_string t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
-      let (r, ms) = BU.record_time (fun () -> norm c [] [] t) in
+      let (r, ms) = Errors.with_ctx "While normalizing a term" (fun () ->
+                      BU.record_time (fun () ->
+                        norm c [] [] t))
+      in
       log_top c (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.term_to_string r) (string_of_int ms));
       r
     end
@@ -2755,9 +2801,13 @@ let normalize s e t =
 let normalize_comp s e c =
     let cfg = config s e in
     reflection_env_hook := Some e;
+    plugin_unfold_warn_ctr := 10;
     log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
     log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
-    let (c, ms) = BU.record_time (fun () -> norm_comp cfg [] c) in
+    let (c, ms) = Errors.with_ctx "While normalizing a computation type" (fun () ->
+                    BU.record_time (fun () ->
+                      norm_comp cfg [] c))
+    in
     log_top cfg (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.comp_to_string c) (string_of_int ms));
     c
 
@@ -2923,6 +2973,7 @@ let elim_uvars_aux_c env univ_names binders c =
 
 // GM: Maybe this should take a pass over the attributes just to be safe?
 let rec elim_uvars (env:Env.env) (s:sigelt) =
+    let s = { s with sigattrs = List.map deep_compress s.sigattrs } in
     match s.sigel with
     | Sig_inductive_typ (lid, univ_names, binders, typ, lids, lids') ->
       let univ_names, binders, typ = elim_uvars_aux_t env univ_names binders typ in

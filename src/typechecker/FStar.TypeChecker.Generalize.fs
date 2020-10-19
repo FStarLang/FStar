@@ -82,6 +82,7 @@ let check_universe_generalization
                       ^ Print.term_to_string t)) t.pos
 
 let generalize_universes (env:env) (t0:term) : tscheme =
+  Errors.with_ctx "While generalizing universes" (fun () ->
     let t = N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env t0 in
     let univnames = gather_free_univnames env t in
     if Env.debug env <| Options.Other "Gen"
@@ -96,6 +97,7 @@ let generalize_universes (env:env) (t0:term) : tscheme =
     let t = N.reduce_uvar_solutions env t in
     let ts = SS.close_univ_vars univs t in
     univs, ts
+  )
 
 let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbname * list<univ_name> * term * comp * list<binder>)>> =
   if not <| (BU.for_all (fun (_, _, c) -> U.is_pure_or_ghost_comp c) lecs) //No value restriction in F*---generalize the types of pure computations
@@ -285,6 +287,8 @@ let generalize' env (is_rec:bool) (lecs:list<(lbname*term*comp)>) : (list<(lbnam
              generalized_lecs
 
 let generalize env is_rec lecs = 
-  Profiling.profile (fun () -> generalize' env is_rec lecs)
-                    (Some (Ident.string_of_lid (Env.current_module env)))
-                    "FStar.TypeChecker.Util.generalize"
+  Errors.with_ctx "While generalizing" (fun () ->
+    Profiling.profile (fun () -> generalize' env is_rec lecs)
+                      (Some (Ident.string_of_lid (Env.current_module env)))
+                      "FStar.TypeChecker.Util.generalize"
+  )

@@ -416,6 +416,7 @@ and (free_type_vars :
       | FStar_Parser_AST.Name uu___1 -> []
       | FStar_Parser_AST.Requires (t1, uu___1) -> free_type_vars env t1
       | FStar_Parser_AST.Ensures (t1, uu___1) -> free_type_vars env t1
+      | FStar_Parser_AST.Decreases (t1, uu___1) -> free_type_vars env t1
       | FStar_Parser_AST.NamedTyp (uu___1, t1) -> free_type_vars env t1
       | FStar_Parser_AST.Paren t1 -> failwith "impossible"
       | FStar_Parser_AST.Ascribed (t1, t', tacopt) ->
@@ -1344,14 +1345,11 @@ let (check_linear_pattern_variables :
             let aux out uu___1 =
               match uu___1 with
               | (p1, uu___2) ->
-                  let intersection =
-                    let uu___3 = pat_vars p1 in
-                    FStar_Util.set_intersect uu___3 out in
+                  let p_vars = pat_vars p1 in
+                  let intersection = FStar_Util.set_intersect p_vars out in
                   let uu___3 = FStar_Util.set_is_empty intersection in
                   if uu___3
-                  then
-                    let uu___4 = pat_vars p1 in
-                    FStar_Util.set_union out uu___4
+                  then FStar_Util.set_union out p_vars
                   else
                     (let duplicate_bv =
                        let uu___5 = FStar_Util.set_elements intersection in
@@ -2062,6 +2060,8 @@ and (desugar_term_maybe_top :
             let uu___1 = desugar_formula env t in (uu___1, noaqs)
         | FStar_Parser_AST.Ensures (t, lopt) ->
             let uu___1 = desugar_formula env t in (uu___1, noaqs)
+        | FStar_Parser_AST.Decreases (t, lopt) ->
+            desugar_term_maybe_top top_level env t
         | FStar_Parser_AST.Attributes ts ->
             failwith
               "Attributes should not be desugared by desugar_term_maybe_top"
@@ -3871,22 +3871,13 @@ and (desugar_comp :
                 (match uu___2 with
                  | FStar_Parser_AST.Ensures uu___3 -> true
                  | uu___3 -> false) in
-          let is_app head uu___ =
+          let is_decreases uu___ =
             match uu___ with
             | (t1, uu___1) ->
                 let uu___2 =
                   let uu___3 = unparen t1 in uu___3.FStar_Parser_AST.tm in
                 (match uu___2 with
-                 | FStar_Parser_AST.App
-                     ({ FStar_Parser_AST.tm = FStar_Parser_AST.Var d;
-                        FStar_Parser_AST.range = uu___3;
-                        FStar_Parser_AST.level = uu___4;_},
-                      uu___5, uu___6)
-                     ->
-                     let uu___7 =
-                       let uu___8 = FStar_Ident.ident_of_lid d in
-                       FStar_Ident.string_of_id uu___8 in
-                     uu___7 = head
+                 | FStar_Parser_AST.Decreases uu___3 -> true
                  | uu___3 -> false) in
           let is_smt_pat uu___ =
             match uu___ with
@@ -3923,7 +3914,6 @@ and (desugar_comp :
                              let uu___7 = FStar_Ident.string_of_lid smtpat in
                              uu___7 = s) ["smt_pat"; "smt_pat_or"])
                  | uu___3 -> false) in
-          let is_decreases = is_app "decreases" in
           let pre_process_comp_typ t1 =
             let uu___ = head_and_args t1 in
             match uu___ with
@@ -4192,41 +4182,28 @@ and (desugar_comp :
                          let result_typ =
                            desugar_typ env
                              (FStar_Pervasives_Native.fst result_arg) in
-                         let rest1 = desugar_args env rest in
                          let uu___4 =
-                           let is_decrease uu___5 =
+                           let is_decrease t1 =
+                             let uu___5 =
+                               let uu___6 =
+                                 unparen (FStar_Pervasives_Native.fst t1) in
+                               uu___6.FStar_Parser_AST.tm in
                              match uu___5 with
-                             | (t1, uu___6) ->
-                                 (match t1.FStar_Syntax_Syntax.n with
-                                  | FStar_Syntax_Syntax.Tm_app
-                                      ({
-                                         FStar_Syntax_Syntax.n =
-                                           FStar_Syntax_Syntax.Tm_fvar fv;
-                                         FStar_Syntax_Syntax.pos = uu___7;
-                                         FStar_Syntax_Syntax.vars = uu___8;_},
-                                       uu___9::[])
-                                      ->
-                                      FStar_Syntax_Syntax.fv_eq_lid fv
-                                        FStar_Parser_Const.decreases_lid
-                                  | uu___7 -> false) in
-                           FStar_All.pipe_right rest1
+                             | FStar_Parser_AST.Decreases uu___6 -> true
+                             | uu___6 -> false in
+                           FStar_All.pipe_right rest
                              (FStar_List.partition is_decrease) in
                          (match uu___4 with
-                          | (dec, rest2) ->
+                          | (dec, rest1) ->
+                              let rest2 = desugar_args env rest1 in
+                              let dec1 = desugar_args env dec in
                               let decreases_clause =
-                                FStar_All.pipe_right dec
-                                  (FStar_List.map
-                                     (fun uu___5 ->
-                                        match uu___5 with
-                                        | (t1, uu___6) ->
-                                            (match t1.FStar_Syntax_Syntax.n
-                                             with
-                                             | FStar_Syntax_Syntax.Tm_app
-                                                 (uu___7, (arg, uu___8)::[])
-                                                 ->
-                                                 FStar_Syntax_Syntax.DECREASES
-                                                   arg
-                                             | uu___7 -> failwith "impos"))) in
+                                FStar_List.map
+                                  (fun uu___5 ->
+                                     match uu___5 with
+                                     | (t1, uu___6) ->
+                                         FStar_Syntax_Syntax.DECREASES t1)
+                                  dec1 in
                               let no_additional_args =
                                 let is_empty l =
                                   match l with | [] -> true | uu___5 -> false in

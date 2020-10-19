@@ -40,9 +40,12 @@ boot:
 	$(Q)+$(MAKE) -C src/ ocaml
 	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
 
-# Build the libraries: fstar-compiler-lib, fstarlib, fstartaclib
+# Build the binary libraries: fstar-compiler-lib, fstarlib, fstartaclib
+# Removes the .mgen files to trigger rebuild of the libraries if needed.
+# This does NOT verify the library modules.
 libs:
 	$(Q)+$(MAKE) -C src/ocaml-output
+	$(Q)rm -f ulib/*.mgen
 	$(Q)+$(MAKE) -C ulib/ml
 
 # Regenerate all hints for the standard library and regression test suite
@@ -53,3 +56,10 @@ hints:
 
 bench:
 	./bin/run_benchmark.sh
+
+# Regenerate and accept expected output tests. Should be manually
+# reviewed before checking in.
+output:
+	$(Q)+$(MAKE) -C tests/error-messages accept
+	$(Q)+$(MAKE) -C tests/interactive accept
+	$(Q)+$(MAKE) -C tests/bug-reports output-accept

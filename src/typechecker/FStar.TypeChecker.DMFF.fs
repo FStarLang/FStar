@@ -1562,19 +1562,13 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   let mk_sigelt se = { mk_sigelt se with sigrng=ed_range } in
   // we do not expect the return_elab to verify,
   // since that may require internalizing monotonicity of WPs (i.e. continuation monad)
-  // The push/pop are not strictly necessary, since the sigmeta_admit is handled
-  // in a scoped way in Tc.tc_decl; still we retain the push/pop to be doubly sure
-  // that the admit on return_elab and bind_elab do not escape their context
+  // so we use register_admit which sets sigmeta_admit=true
   let return_wp = register "return_wp" return_wp in
-  sigelts := mk_sigelt (Sig_pragma (PushOptions None)) :: !sigelts;
   let return_elab = register_admit "return_elab" return_elab in
-  sigelts := mk_sigelt (Sig_pragma PopOptions) :: !sigelts;
 
   // we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
   let bind_wp = register "bind_wp" bind_wp in
-  sigelts := mk_sigelt (Sig_pragma (PushOptions None)) :: !sigelts;
   let bind_elab = register_admit "bind_elab" bind_elab in
-  sigelts := mk_sigelt (Sig_pragma PopOptions) :: !sigelts;
 
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
     let params_un = SS.open_binders action.action_params in
