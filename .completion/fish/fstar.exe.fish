@@ -112,7 +112,6 @@ complete -c fstar.exe -l z3rlimit_factor --description "positive_integer  Set th
 complete -c fstar.exe -l z3seed --description "positive_integer  Set the Z3 random seed (default 0)"
 complete -c fstar.exe -l use_two_phase_tc -r --description "Use the two phase typechecker (default 'true')"
 complete -c fstar.exe -l __no_positivity --description "Don't check positivity of inductive types"
-complete -c fstar.exe -l __ml_no_eta_expand_coertions --description "Do not eta-expand coertions in generated OCaml"
 complete -c fstar.exe -l warn_error --description "The [-warn_error] option follows the OCaml syntax, namely:"
 complete -c fstar.exe -l use_nbe -r --description "Use normalization by evaluation as the default normalization strategy (default 'false')"
 complete -c fstar.exe -l use_nbe_for_extraction -r --description "Use normalization by evaluation for normalizing terms before extraction (default 'false')"

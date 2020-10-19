@@ -59,12 +59,12 @@ let with_captured_errors' env sigint_handler f =
   | Util.SigInt ->
     Util.print_string "Interrupted"; None
 
-  | Error (e, msg, r) ->
-    TcErr.add_errors env [(e, msg, r)];
+  | Error (e, msg, r, ctx) ->
+    TcErr.add_errors env [(e, msg, r, ctx)];
     None
 
-  | Err (e, msg) ->
-    TcErr.add_errors env [(e, msg, TcEnv.get_range env)];
+  | Err (e, msg, ctx) ->
+    TcErr.add_errors env [(e, msg, TcEnv.get_range env, ctx)];
     None
 
   | Stop ->
@@ -409,7 +409,7 @@ let json_of_issue issue =
     @(match issue.issue_number with
       | None -> []
       | Some n -> [("number", JsonInt n)])
-    @[("message", JsonStr issue.issue_message);
+    @[("message", JsonStr (issue_message issue));
       ("ranges", JsonList
                    ((match issue.issue_range with
                      | None -> []
@@ -682,9 +682,9 @@ let load_deps st =
     | Inl st -> write_progress None []; Inl (st, deps)
 
 let rephrase_dependency_error issue =
-  { issue with issue_message =
+  { issue with issue_msg =
                format1 "Error while computing or loading dependencies:\n%s"
-                       issue.issue_message }
+                       issue.issue_msg }
 
 let run_push_without_deps st query =
   let set_nosynth_flag st flag =

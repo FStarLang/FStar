@@ -91,20 +91,6 @@ let e_binder =
     in
     mk_emb' embed_binder unembed_binder fstar_refl_binder_fv
 
-let e_optionstate =
-    let embed_optionstate cb (b:O.optionstate) : t =
-        mk_lazy cb b fstar_refl_optionstate Lazy_optionstate
-    in
-    let unembed_optionstate cb (t:t) : option<O.optionstate> =
-        match t.nbe_t with
-        | Lazy (BU.Inl {blob=b; lkind=Lazy_optionstate}, _) ->
-            Some (undyn b)
-        | _ ->
-            Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded optionstate: %s" (t_to_string t)));
-            None
-    in
-    mk_emb' embed_optionstate unembed_optionstate fstar_refl_optionstate_fv
-
 let rec mapM_opt (f : ('a -> option<'b>)) (l : list<'a>) : option<list<'b>> =
     match l with
     | [] -> Some []
@@ -794,3 +780,12 @@ let e_qualifier =
         (fv_as_emb_typ fstar_refl_qualifier_fv)
 
 let e_qualifiers = e_list e_qualifier
+
+let e_vconfig =
+    let emb cb (o:order) : t =
+      failwith "emb vconfig NBE"
+    in
+    let unemb cb (t:t) : option<order> =
+      failwith "unemb vconfig NBE"
+    in
+    mk_emb' emb unemb (lid_as_fv PC.vconfig_lid delta_constant None)

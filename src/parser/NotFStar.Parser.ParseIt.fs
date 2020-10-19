@@ -158,7 +158,7 @@ let parse fn =
   with
     | Empty_frag ->
         ASTFragment (Inr [], [])
-    | Error(e, msg, r) ->
+    | Error(e, msg, r, _) ->
         ParseError(e, msg, r)
     | e ->
         let pos_of_lexpos (p: Microsoft.FSharp.Text.Lexing.Position) =

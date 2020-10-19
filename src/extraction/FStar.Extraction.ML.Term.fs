@@ -466,9 +466,8 @@ let default_value_for_ty (g:uenv) (t : mlty) : mlexpr  =
     else let vs_ts, g = fresh_mlidents ts g in
          with_ty t <| MLE_Fun (vs_ts, body r)
 
-let maybe_eta_expand g expect e =
-    if Options.ml_no_eta_expand_coertions () ||
-        Options.codegen () = Some Options.Kremlin // we need to stay first order for Kremlin
+let maybe_eta_expand_coercion g expect e =
+    if Options.codegen () = Some Options.Kremlin // we need to stay first order for Kremlin
     then e
     else eta_expand g expect e
 
@@ -558,7 +557,7 @@ let maybe_coerce pos (g:uenv) e ty (expect:mlty) : mlexpr =
                             (Code.string_of_mlexpr (current_module_of_uenv g) e)
                             (Code.string_of_mlty (current_module_of_uenv g) ty)
                             (Code.string_of_mlty (current_module_of_uenv g) expect)) in
-               maybe_eta_expand g expect (apply_coercion g e ty expect)
+               maybe_eta_expand_coercion g expect (apply_coercion g e ty expect)
 
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)

@@ -478,14 +478,14 @@ let e_tactic_1_alt (ea: embedding<'a>) (er:embedding<'r>): embedding<('a -> (pro
 
 
 let report_implicits rng (is : Env.implicits) : unit =
-    let errs = List.map (fun imp ->
-                (Err.Error_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
+  is |> List.iter (fun imp ->
+    Errors.log_issue rng
+                (Err.Error_UninstantiatedUnificationVarInTactic,
+                 BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
                              (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
                              (Print.term_to_string imp.imp_uvar.ctx_uvar_typ)
-                             imp.imp_reason,
-                 rng)) is in
-    Err.add_errors errs;
-    Err.stop_if_err ()
+                             imp.imp_reason));
+  Err.stop_if_err ()
 
 let run_tactic_on_ps
   (rng_tac : Range.range)
@@ -571,5 +571,5 @@ let run_tactic_on_ps
                 raise e
         in
         Err.raise_error (Err.Fatal_UserTacticFailure,
-                            BU.format1 "user tactic failed: %s" (texn_to_string e))
+                            BU.format1 "user tactic failed: `%s`" (texn_to_string e))
                           ps.entry_range

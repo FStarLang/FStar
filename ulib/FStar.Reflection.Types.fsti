@@ -15,6 +15,8 @@
 *)
 module FStar.Reflection.Types
 
+include FStar.VConfig
+
 assume new type binder
 assume new type bv
 assume new type term
@@ -23,7 +25,6 @@ assume new type fv
 assume new type comp
 assume new type sigelt // called `def` in the paper, but we keep the internal name here
 assume new type ctx_uvar_and_subst
-assume new type optionstate
 
 type name : eqtype = list string
 type ident = range * string

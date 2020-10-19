@@ -117,6 +117,9 @@ let (string_of_bool_lid : FStar_Ident.lident) =
 let (string_compare : FStar_Ident.lident) =
   p2l ["FStar"; "String"; "compare"]
 let (order_lid : FStar_Ident.lident) = p2l ["FStar"; "Order"; "order"]
+let (vconfig_lid : FStar_Ident.lident) = p2l ["FStar"; "VConfig"; "vconfig"]
+let (mkvconfig_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "VConfig"; "Mkvconfig"]
 let (op_Eq : FStar_Ident.lident) = pconst "op_Equality"
 let (op_notEq : FStar_Ident.lident) = pconst "op_disEquality"
 let (op_LT : FStar_Ident.lident) = pconst "op_LessThan"
