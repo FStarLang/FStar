@@ -10,12 +10,12 @@ let cases :
         match uu___ with
         | FStar_Pervasives_Native.Some x -> f x
         | FStar_Pervasives_Native.None -> d
+type 'a cfg_memo = (FStar_TypeChecker_Cfg.cfg * 'a) FStar_Syntax_Syntax.memo
 type closure =
   | Clos of ((FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option *
   closure) Prims.list * FStar_Syntax_Syntax.term *
   ((FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option * closure)
-  Prims.list * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo *
-  Prims.bool) 
+  Prims.list * FStar_Syntax_Syntax.term) cfg_memo * Prims.bool) 
   | Univ of FStar_Syntax_Syntax.universe 
   | Dummy 
 let (uu___is_Clos : closure -> Prims.bool) =
@@ -25,7 +25,7 @@ let (__proj__Clos__item___0 :
     ((FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option * closure)
       Prims.list * FStar_Syntax_Syntax.term * ((FStar_Syntax_Syntax.binder
       FStar_Pervasives_Native.option * closure) Prims.list *
-      FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo * Prims.bool))
+      FStar_Syntax_Syntax.term) cfg_memo * Prims.bool))
   = fun projectee -> match projectee with | Clos _0 -> _0
 let (uu___is_Univ : closure -> Prims.bool) =
   fun projectee -> match projectee with | Univ _0 -> true | uu___ -> false
@@ -46,7 +46,7 @@ type stack_elt =
   | Arg of (closure * FStar_Syntax_Syntax.aqual * FStar_Range.range) 
   | UnivArgs of (FStar_Syntax_Syntax.universe Prims.list * FStar_Range.range)
   
-  | MemoLazy of (env * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo 
+  | MemoLazy of (env * FStar_Syntax_Syntax.term) cfg_memo 
   | Match of (env * branches * FStar_TypeChecker_Cfg.cfg * FStar_Range.range)
   
   | Abs of (env * FStar_Syntax_Syntax.binders * env *
@@ -76,7 +76,7 @@ let (uu___is_MemoLazy : stack_elt -> Prims.bool) =
   fun projectee ->
     match projectee with | MemoLazy _0 -> true | uu___ -> false
 let (__proj__MemoLazy__item___0 :
-  stack_elt -> (env * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo) =
+  stack_elt -> (env * FStar_Syntax_Syntax.term) cfg_memo) =
   fun projectee -> match projectee with | MemoLazy _0 -> _0
 let (uu___is_Match : stack_elt -> Prims.bool) =
   fun projectee -> match projectee with | Match _0 -> true | uu___ -> false
@@ -132,20 +132,36 @@ let (head_of : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
     let uu___ = FStar_Syntax_Util.head_and_args' t in
     match uu___ with | (hd, uu___1) -> hd
+let read_memo :
+  'a .
+    FStar_TypeChecker_Cfg.cfg ->
+      (FStar_TypeChecker_Cfg.cfg * 'a) FStar_Syntax_Syntax.memo ->
+        'a FStar_Pervasives_Native.option
+  =
+  fun cfg ->
+    fun r ->
+      let uu___ = FStar_ST.op_Bang r in
+      match uu___ with
+      | FStar_Pervasives_Native.Some (cfg', a1) when
+          FStar_Util.physical_equality cfg cfg' ->
+          FStar_Pervasives_Native.Some a1
+      | uu___1 -> FStar_Pervasives_Native.None
 let set_memo :
-  'a . FStar_TypeChecker_Cfg.cfg -> 'a FStar_Syntax_Syntax.memo -> 'a -> unit
+  'a .
+    FStar_TypeChecker_Cfg.cfg ->
+      (FStar_TypeChecker_Cfg.cfg * 'a) FStar_Syntax_Syntax.memo -> 'a -> unit
   =
   fun cfg ->
     fun r ->
       fun t ->
         if cfg.FStar_TypeChecker_Cfg.memoize_lazy
         then
-          let uu___ = FStar_ST.op_Bang r in
-          match uu___ with
-          | FStar_Pervasives_Native.Some uu___1 ->
-              failwith "Unexpected set_memo: thunk already evaluated"
-          | FStar_Pervasives_Native.None ->
-              FStar_ST.op_Colon_Equals r (FStar_Pervasives_Native.Some t)
+          ((let uu___1 =
+              let uu___2 = read_memo cfg r in FStar_Option.isSome uu___2 in
+            if uu___1
+            then failwith "Unexpected set_memo: thunk already evaluated"
+            else ());
+           FStar_ST.op_Colon_Equals r (FStar_Pervasives_Native.Some (cfg, t)))
         else ()
 let (closure_to_string : closure -> Prims.string) =
   fun uu___ ->
@@ -1125,7 +1141,9 @@ let (filter_out_lcomp_cflags :
             | uu___1 -> true))
 let (closure_as_term :
   FStar_TypeChecker_Cfg.cfg ->
-    env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+    env ->
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   = fun cfg -> fun env1 -> fun t -> non_tail_inline_closure_env cfg env1 t
 let (unembed_binder_knot :
   FStar_Syntax_Syntax.binder FStar_Syntax_Embeddings.embedding
@@ -2785,7 +2803,7 @@ let rec (norm :
                         ||
                         (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.zeta_full
                     then
-                      let uu___3 = FStar_ST.op_Bang r in
+                      let uu___3 = read_memo cfg r in
                       (match uu___3 with
                        | FStar_Pervasives_Native.Some (env3, t') ->
                            (FStar_TypeChecker_Cfg.log cfg
@@ -3650,7 +3668,7 @@ let rec (norm :
                                               let uu___8 =
                                                 FStar_Util.mk_ref
                                                   (FStar_Pervasives_Native.Some
-                                                     ([], a)) in
+                                                     (cfg, ([], a))) in
                                               (env1, a, uu___8, false) in
                                             Clos uu___7 in
                                           (uu___6, aq,
@@ -4308,7 +4326,8 @@ let rec (norm :
                            fun memo ->
                              FStar_ST.op_Colon_Equals memo
                                (FStar_Pervasives_Native.Some
-                                  (rec_env, (lb.FStar_Syntax_Syntax.lbdef))))
+                                  (cfg,
+                                    (rec_env, (lb.FStar_Syntax_Syntax.lbdef)))))
                         (FStar_Pervasives_Native.snd lbs) memos in
                     let body_env =
                       FStar_List.fold_right
@@ -5203,7 +5222,8 @@ and (reify_lift :
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
       FStar_Syntax_Syntax.monad_name ->
         FStar_Syntax_Syntax.monad_name ->
-          FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+          FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+            FStar_Syntax_Syntax.term)
   =
   fun cfg ->
     fun e ->
@@ -6901,7 +6921,7 @@ and (rebuild :
                         (let stack3 = (App (env1, t1, aq, r)) :: stack2 in
                          norm cfg env_arg stack3 tm))
                    else
-                     (let uu___6 = FStar_ST.op_Bang m in
+                     (let uu___6 = read_memo cfg m in
                       match uu___6 with
                       | FStar_Pervasives_Native.None ->
                           let uu___7 =
@@ -7588,7 +7608,7 @@ and (rebuild :
                                                     let uu___11 =
                                                       FStar_Util.mk_ref
                                                         (FStar_Pervasives_Native.Some
-                                                           ([], t2)) in
+                                                           (cfg1, ([], t2))) in
                                                     ([], t2, uu___11, false) in
                                                   Clos uu___10 in
                                                 (uu___8, uu___9) in
