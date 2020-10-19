@@ -1426,7 +1426,7 @@ in
 | IF noSeqTerm THEN noSeqTerm
     {let (_1, e1, _3, e2) = ((), $2, (), $4) in
       (
-        let e3 = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
+        let e3 = mk_term (Const Const_unit) (rhs2 parseState 1 4) Expr in
         mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
       )}
 | TRY term WITH reverse_left_flexible_nonempty_list_BAR_patternBranch_
