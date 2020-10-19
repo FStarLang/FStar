@@ -1083,3 +1083,27 @@ let init_last_inj (#a: Type) (l1: list a { Cons? l1 } ) (l2: list a { Cons? l2 }
   (ensures (l1 == l2))
 = append_init_last l1;
   append_init_last l2
+
+let rec memP_append (l1 l2 : list 'a) (x : 'a) : Lemma
+  (ensures memP x (l1@l2) <==> (memP x l1 \/ memP x l2))
+  [SMTPat (memP x (l1@l2))]
+= match l1 with
+  | [] -> ()
+  | _::l1 -> memP_append l1 l2 x
+
+(** Specification for [for_all f l] vs. mem *)
+let rec for_all_mem
+  (#a: Type)
+  (f: (a -> Tot bool))
+  (l: list a)
+: Lemma
+  (for_all f l <==> (forall x . memP x l ==> f x))
+  [SMTPat (for_all f l)]
+= match l with
+  | [] -> ()
+  | _ :: q -> for_all_mem f q
+
+let for_all_append #a (f: a -> Tot bool) (s1 s2: list a): Lemma
+  (ensures for_all f (s1 @ s2) <==> for_all f s1 && for_all f s2)
+  [SMTPat (for_all f (s1 @ s2))]
+= ()
