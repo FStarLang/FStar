@@ -247,6 +247,7 @@ let getprop (e:Env.env) (t:term) : option<term> =
     U.un_squash tn
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * O.optionstate)> =
+  Errors.with_ctx "While preprocessing VC with a tactic" (fun () ->
     tacdbg := Env.debug env (O.Other "Tac");
     if !tacdbg then
         BU.print2 "About to preprocess %s |= %s\n"
@@ -285,8 +286,10 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * O.optionstate)
     let gs = List.rev gs in (* Return new VCs in same order as goals *)
     // Use default opts for main goal
     (env, t', O.peek ()) :: gs
+  )
 
 let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
+  Errors.with_ctx "While synthesizing term with a tactic" (fun () ->
     // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
     if env.nosynth
     then mk_Tm_app (TcUtil.fvar_const env PC.magic_lid) [S.as_arg U.exp_unit] typ.pos
@@ -314,9 +317,10 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
             Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals") typ.pos) gs;
     w
     end
-
+  )
 
 let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
+  Errors.with_ctx "While solving implicits with a tactic" (fun () ->
     if env.nosynth then () else
     begin
     tacdbg := Env.debug env (O.Other "Tac");
@@ -343,8 +347,10 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
                             (Env.get_range env));
     ()
     end
+  )
 
 let splice (env:Env.env) (rng:Range.range) (tau:term) : list<sigelt> =
+  Errors.with_ctx "While running splice with a tactic" (fun () ->
     if env.nosynth then [] else begin
     tacdbg := Env.debug env (O.Other "Tac");
 
@@ -379,16 +385,20 @@ let splice (env:Env.env) (rng:Range.range) (tau:term) : list<sigelt> =
     in
     sigelts
     end
+  )
 
 let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =
+  Errors.with_ctx "While preprocessing a definition with a tactic" (fun () ->
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (O.Other "Tac");
     let ps = proofstate_of_goals tm.pos env [] [] in
     let gs, tm = run_tactic_on_ps tau.pos tm.pos RE.e_term tm RE.e_term tau ps in
     tm
     end
+  )
 
 let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
+  Errors.with_ctx "While postprocessing a definition with a tactic" (fun () ->
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (O.Other "Tac");
     let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ Allow_untyped None in
@@ -419,4 +429,4 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
 
     uvtm
     end
-
+  )

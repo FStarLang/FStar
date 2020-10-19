@@ -585,6 +585,9 @@ let (fstar_refl_qualifier : FStar_Syntax_Syntax.term) =
   mk_refl_data_lid_as_term "qualifier"
 let (fstar_refl_qualifier_fv : FStar_Syntax_Syntax.fv) =
   mk_refl_data_lid_as_fv "qualifier"
+let (fstar_refl_vconfig : FStar_Syntax_Syntax.term) =
+  let uu___ = FStar_Parser_Const.psconst "vconfig" in
+  FStar_Syntax_Syntax.tconst uu___
 let (ref_Mk_bv : refl_constant) =
   let lid = fstar_refl_data_lid "Mkbv_view" in
   let attr =
@@ -603,6 +606,16 @@ let (ref_Mk_bv : refl_constant) =
           uu___5 :: uu___6 in
         uu___3 :: uu___4 in
       (uu___1, uu___2) in
+    FStar_Syntax_Syntax.Record_ctor uu___ in
+  let fv =
+    FStar_Syntax_Syntax.lid_as_fv lid FStar_Syntax_Syntax.delta_constant
+      (FStar_Pervasives_Native.Some attr) in
+  let uu___ = FStar_Syntax_Syntax.fv_to_tm fv in { lid; fv; t = uu___ }
+let (ref_Mkvconfig : refl_constant) =
+  let lid = FStar_Parser_Const.psconst "Mkvconfig" in
+  let attr =
+    let uu___ =
+      let uu___1 = FStar_Parser_Const.psconst "vconfig" in (uu___1, []) in
     FStar_Syntax_Syntax.Record_ctor uu___ in
   let fv =
     FStar_Syntax_Syntax.lid_as_fv lid FStar_Syntax_Syntax.delta_constant

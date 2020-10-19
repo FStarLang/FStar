@@ -3852,9 +3852,25 @@ let solve_non_tactic_deferred_constraints env (g:guard_t) =
     let deferred_to_tac_ok = false in
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 
-//use_smt flag says whether to use the smt solver to discharge this guard
-//if use_smt = true, this function NEVER returns None, the error might come from the smt solver though
-//if use_smt = false, then None means could not discharge the guard without using smt
+// Discharge (the logical part of) a guard [g].
+//
+// The `use_smt` flag says whether to use the smt solver to discharge
+// this guard
+//
+// - If use_smt = true, this function NEVER returns None, and can be
+//   considered to have successfully discharged the guard. However,
+//   it could have logged an SMT error. The VC (aka the logical part
+//   of the guard) is preprocessed with tactics before discharging:
+//   every subterm wrapped with `with_tactic` has the tactic run on it
+//   and a separate VC is generated for it. They are then discharged
+//   sequentially.
+//
+// - If use_smt = false, then None means could not discharge the guard
+//   without using smt. The procedure is to just normalize and simplify
+//   the VC and check that it is [True].
+//
+// In every case, when this function returns [Some g], then the logical
+// part of [g] is [Trivial].
 let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<guard_t> =
   let debug =
       (Env.debug env <| Options.Other "Rel")
@@ -3872,6 +3888,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
   in
   let ret_g = {g with guard_f = Trivial} in
   if not (Env.should_verify env) then Some ret_g
+  // GM: ^ this doesn't look like the right place for this check.
   else
     match g.guard_f with
     | Trivial -> Some ret_g
@@ -4045,7 +4062,11 @@ let resolve_implicits' env is_tac g =
                     let env : Env.env = FStar.Dyn.undyn env_dyn in
                     if Env.debug env (Options.Other "Tac") then
                         BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
-                    let t = env.synth_hook env hd.imp_uvar.ctx_uvar_typ tau in
+
+                    let t =
+                      Errors.with_ctx "Running tactic for meta-arg"
+                        (fun () -> env.synth_hook env hd.imp_uvar.ctx_uvar_typ tau)
+                    in
                     // let the unifier handle setting the variable
                     let extra =
                         match teq_nosmt env t tm with
@@ -4072,15 +4093,11 @@ let resolve_implicits' env is_tac g =
                                reason
                                (Range.string_of_range r);
                let g =
-                 try
-                   env.check_type_of must_total env tm ctx_u.ctx_uvar_typ
-                 with e when Errors.handleable e ->
-                    Errors.add_errors [Error_BadImplicit,
-                                       BU.format3 "Failed while checking implicit %s set to %s of expected type %s"
+                 Errors.with_ctx (BU.format3 "While checking implicit %s set to %s of expected type %s"
                                                (Print.uvar_to_string ctx_u.ctx_uvar_head)
                                                (N.term_to_string env tm)
-                                               (N.term_to_string env ctx_u.ctx_uvar_typ), r];
-                    raise e
+                                               (N.term_to_string env ctx_u.ctx_uvar_typ))
+                                 (fun () -> env.check_type_of must_total env tm ctx_u.ctx_uvar_typ)
                in
                let g' =
                  match discharge_guard' (Some (fun () ->

@@ -41,6 +41,7 @@ module Z = FStar.BigInt
 module C = FStar.Const
 module Range = FStar.Range
 module SE = FStar.Syntax.Embeddings
+open FStar.VConfig
 
 type var = bv
 type sort = int
@@ -592,6 +593,12 @@ let e_range : embedding<Range.range> =
         None
     in
     mk_emb' em un (lid_as_typ PC.range_lid [] []) (SE.emb_typ_of SE.e_range)
+
+// vconfig, NYI
+let e_vconfig : embedding<vconfig> =
+    let em cb r = failwith "e_vconfig NBE" in
+    let un cb t = failwith "e_vconfig NBE" in
+    mk_emb' em un (lid_as_typ PC.vconfig_lid [] []) (SE.emb_typ_of SE.e_vconfig)
 
 // Emdedding lists
 let e_list (ea:embedding<'a>) =

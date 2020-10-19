@@ -14,7 +14,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1bc5381a637ec201922315f21a0ae101"
+      "28afd764ecdd57d239f3887d3a9c1e69"
     ],
     [
       "Ex06b.append",
@@ -29,7 +29,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7267274fedc4f6d8112c3c1c31274dd0"
+      "ec86701cc04aa5a4313c30bbd601449d"
     ],
     [
       "Ex06b.append_mem",
@@ -60,7 +60,7 @@
         "typing_Ex06b.mem"
       ],
       0,
-      "24f5682be37c49cb1c09035904ee2127"
+      "e692d6b7e8ffff0cd1373d9f40d478ba"
     ],
     [
       "Ex06b.length",
@@ -77,7 +77,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c946215d67558e6908fb7743f3366fce"
+      "f0aa08fc15bb2382b46d6f8422ecf2c4"
     ],
     [
       "Ex06b.sorted",
@@ -95,7 +95,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "087d658111de7577837e815ef87a010c"
+      "88503d5d1128162eff9412694840fd62"
     ],
     [
       "Ex06b.partition",
@@ -110,7 +110,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d8311e976a36fb376d68803ab9748e29"
+      "7c85b0611b72fcdcdf1e257888e5dc36"
     ],
     [
       "Ex06b.partition_lemma",
@@ -156,7 +156,7 @@
         "typing_Ex06b.length", "typing_Ex06b.mem", "typing_Ex06b.partition"
       ],
       0,
-      "7dec2e081ab4d03d0d1f2d488b924531"
+      "22383001112208ffb0baef8732787ede"
     ],
     [
       "Ex06b.sorted_concat_lemma",
@@ -199,7 +199,7 @@
         "typing_Ex06b.append", "typing_Ex06b.mem", "typing_Ex06b.sorted"
       ],
       0,
-      "c78f2abe76f4088f7906f25d7ba34156"
+      "392176601da9e06208f463bb4d9b9c68"
     ],
     [
       "Ex06b.sort",
@@ -265,7 +265,7 @@
         "typing_FStar.Pervasives.Native.snd", "well-founded-ordering-on-nat"
       ],
       0,
-      "610ff960d92041122194b94e6d9c9a30"
+      "17c5087db59f4070f46dbc3f9f59127d"
     ]
   ]
 ]
