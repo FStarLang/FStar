@@ -2495,9 +2495,17 @@ and (term_as_mlexpr' :
              (let uu___3 = FStar_Extraction_ML_UEnv.try_lookup_fv g fv in
               match uu___3 with
               | FStar_Pervasives_Native.None ->
-                  (FStar_Extraction_ML_Syntax.ml_unit,
-                    FStar_Extraction_ML_Syntax.E_PURE,
-                    FStar_Extraction_ML_Syntax.MLTY_Erased)
+                  ((let uu___5 =
+                      let uu___6 =
+                        let uu___7 = FStar_Syntax_Print.fv_to_string fv in
+                        FStar_Util.format1
+                          "Attempting to extract a call into erased function %s"
+                          uu___7 in
+                      (FStar_Errors.Error_CallToErased, uu___6) in
+                    FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___5);
+                   (FStar_Extraction_ML_Syntax.ml_unit,
+                     FStar_Extraction_ML_Syntax.E_PURE,
+                     FStar_Extraction_ML_Syntax.MLTY_Erased))
               | FStar_Pervasives_Native.Some
                   { FStar_Extraction_ML_UEnv.exp_b_name = uu___4;
                     FStar_Extraction_ML_UEnv.exp_b_expr = x;
