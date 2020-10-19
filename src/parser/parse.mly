@@ -655,7 +655,7 @@ noSeqTerm:
       { mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr }
   | IF e1=noSeqTerm THEN e2=noSeqTerm
       {
-        let e3 = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
+        let e3 = mk_term (Const Const_unit) (rhs2 parseState 1 4) Expr in
         mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
       }
   | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch)
