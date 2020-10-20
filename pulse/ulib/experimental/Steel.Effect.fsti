@@ -588,7 +588,7 @@ val drop (p:slprop) : SteelT unit p (fun _ -> emp)
 val intro_exists (#a:Type) (x:a) (p:a -> slprop)
   : SteelT unit (p x) (fun _ -> h_exists p)
 
-val noop (#p:slprop) (u:unit) : SteelT unit p (fun _ -> p)
+val noop (#[@@ framing_implicit] p:slprop) (u:unit) : SteelT unit p (fun _ -> p)
 
 /// Operations on PCM Refs
 
