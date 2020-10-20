@@ -82,5 +82,7 @@ let f_1529_3 () =
  * FStar.Char.u32_of_char
  *)
 #push-options "--no_smt"
-let test_u32_of_char () = assert_norm (FStar.Char.u32_of_char 'c' == 99ul)
+let test_u32_of_char () =
+  assert_norm (FStar.Char.u32_of_char 'c' == 99ul);
+  assert_norm (FStar.Char.u32_of_char '→' == 8594ul)
 #pop-options
