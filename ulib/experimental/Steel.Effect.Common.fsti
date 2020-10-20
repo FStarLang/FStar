@@ -911,6 +911,8 @@ let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
 
   if resolved1 && resolved2 then (
     // The return_post have already been gathered, we fall back on the normal canon
+    let lhs = norm_term [delta_only [`%return_post]] lhs in
+    let rhs = norm_term [delta_only [`%return_post]] rhs in
     norm [delta_only [`%return_post]];
     canon_l_r eq m lhs rhs
   ) else (
