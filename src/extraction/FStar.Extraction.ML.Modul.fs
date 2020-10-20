@@ -487,7 +487,7 @@ let extract_reifiable_effect g ed
         | Tm_uinst (tm, _) -> extract_fv tm
         | Tm_fvar fv ->
             let mlp = mlpath_of_lident g fv.fv_name.v in
-            let ({exp_b_tscheme=tysc}) = UEnv.lookup_fv g fv in
+            let ({exp_b_tscheme=tysc}) = UEnv.lookup_fv tm.pos g fv in
             with_ty MLTY_Top <| MLE_Name mlp, tysc
         | _ -> failwith (BU.format2 "(%s) Not an fv: %s"
                                         (Range.string_of_range tm.pos)
@@ -572,9 +572,43 @@ let extract_let_rec_types se (env:uenv) (lbs:list<letbinding>) =
       Option.get iface_opt,
       List.rev impls |> List.flatten
 
+module EMB=FStar.Syntax.Embeddings
+
+let get_noextract_to (se:sigelt) (backend:option<Options.codegen_t>) : bool =
+  BU.for_some (function attr ->
+    let hd, args = U.head_and_args attr in
+    match (SS.compress hd).n, args with
+    | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv PC.noextract_to_attr ->
+        begin match EMB.unembed EMB.e_string a false EMB.id_norm_cb with
+        | Some s ->
+          Option.isSome backend && Options.parse_codegen s = backend
+        | None ->
+          false
+        end
+    | _ -> false
+  ) se.sigattrs
+
+// We extract all definitions, unless:
+// 1- it has the `noextract` qualifier, and we are not extracting for Kremlin
+//    (kremlin needs the stub anyway, so we ignore the qualifier in that special case)
+// 2- it has a noextract_to attribute matching the current backend.
+let sigelt_has_noextract (se:sigelt) : bool =
+  List.contains S.NoExtract se.sigquals && Options.codegen () <> Some Options.Kremlin
+  || (get_noextract_to se (Options.codegen ()))
+
+let mark_sigelt_erased (se:sigelt) (g:uenv) : uenv =
+  debug g (fun u -> BU.print1 ">>>> NOT extracting %s \n" (Print.sigelt_to_string_short se));
+  // Cheating with delta levels and qualifiers below, but we don't ever use them.
+  List.fold_right (fun lid g -> extend_erased_fv g (S.lid_as_fv lid delta_constant None))
+                  (U.lids_of_sigelt se) g
 
 (*  The top-level extraction of a sigelt to an interface *)
 let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
+    if sigelt_has_noextract se then
+      let g = mark_sigelt_erased se g in
+      g, empty_iface
+    else
+
     match se.sigel with
     | Sig_bundle _
     | Sig_inductive_typ _
@@ -739,7 +773,6 @@ let extract_bundle env se =
    is extracted along with an invocation to FStar.Tactics.Native.register_tactic or register_plugin,
    which installs the compiled term as a primitive step in the normalizer
  *)
-module EMB=FStar.Syntax.Embeddings
 let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
     let w = with_ty MLTY_Top in
     let plugin_with_arity attrs =
@@ -784,20 +817,6 @@ let maybe_register_plugin (g:env_t) (se:sigelt) : list<mlmodule1> =
            | _ -> []
            end
 
-let get_noextract_to (se:sigelt) (backend:option<Options.codegen_t>) : bool =
-  BU.for_some (function attr ->
-    let hd, args = U.head_and_args attr in
-    match (SS.compress hd).n, args with
-    | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv PC.noextract_to_attr ->
-        begin match EMB.unembed EMB.e_string a false EMB.id_norm_cb with
-        | Some s ->
-          Option.isSome backend && Options.parse_codegen s = backend
-        | None ->
-          false
-        end
-    | _ -> false
-  ) se.sigattrs
-
 (*****************************************************************************)
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
@@ -805,13 +824,9 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
   Errors.with_ctx (BU.format1 "While extracting top-level definition `%s`" (Print.sigelt_to_string_short se)) (fun () ->
      debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string_short se));
 
-     // Extract this definition, unless
-     // 1- it has the `noextract` qualifier, and we are not extracting for Kremlin
-     //    (kremlin needs the stub anyway, so we ignore the qualifier in that special case)
-     // 2- it has a noextract_to attribute matching the current backend.
-     if (List.contains S.NoExtract se.sigquals && Options.codegen () <> Some Options.Kremlin)
-        || (get_noextract_to se (Options.codegen ()))
-     then g, []
+     if sigelt_has_noextract se then
+       let g = mark_sigelt_erased se g in
+       g, []
      else
 
      match se.sigel with
