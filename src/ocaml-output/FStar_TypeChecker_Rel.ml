@@ -1760,7 +1760,16 @@ let (ensure_no_uvar_subst :
                                     t0.FStar_Syntax_Syntax.pos in
                                 (t, wl1))))))
            | uu___2 ->
-               failwith "ensure_no_uvar_subst: expected a uvar at the head")
+               let uu___3 =
+                 let uu___4 = FStar_Syntax_Print.tag_of_term t0 in
+                 let uu___5 = FStar_Syntax_Print.tag_of_term head in
+                 let uu___6 =
+                   let uu___7 = FStar_Syntax_Subst.compress head in
+                   FStar_Syntax_Print.tag_of_term uu___7 in
+                 FStar_Util.format3
+                   "ensure_no_uvar_subst: expected a uvar at the head (%s-%s-%s)"
+                   uu___4 uu___5 uu___6 in
+               failwith uu___3)
 let (destruct_flex_t' : FStar_Syntax_Syntax.term -> flex_t) =
   fun t ->
     let uu___ = FStar_Syntax_Util.head_and_args t in
@@ -7546,8 +7555,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                      umax_heuristic_ok =
                                                        (uu___14.umax_heuristic_ok);
                                                      tcenv = (uu___14.tcenv);
-                                                     wl_implicits =
-                                                       (uu___14.wl_implicits);
+                                                     wl_implicits = [];
                                                      repr_subcomp_allowed =
                                                        (uu___14.repr_subcomp_allowed)
                                                    }) in
@@ -7566,67 +7574,68 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                     else fallback ())
                                                | Success
                                                    (uu___14, defer_to_tac,
-                                                    uu___15)
+                                                    imps)
                                                    ->
                                                    (FStar_Syntax_Unionfind.commit
                                                       tx;
                                                     (let guard =
-                                                       let uu___17 =
+                                                       let uu___16 =
                                                          FStar_All.pipe_right
                                                            (p_guard ref_prob)
                                                            (guard_on_element
                                                               wl2 problem x13) in
                                                        FStar_Syntax_Util.mk_conj
                                                          (p_guard base_prob)
-                                                         uu___17 in
+                                                         uu___16 in
                                                      let wl3 =
                                                        solve_prob orig
                                                          (FStar_Pervasives_Native.Some
                                                             guard) [] wl2 in
                                                      let wl4 =
-                                                       let uu___17 = wl3 in
+                                                       let uu___16 = wl3 in
                                                        {
                                                          attempting =
-                                                           (uu___17.attempting);
+                                                           (uu___16.attempting);
                                                          wl_deferred =
-                                                           (uu___17.wl_deferred);
+                                                           (uu___16.wl_deferred);
                                                          wl_deferred_to_tac =
-                                                           (uu___17.wl_deferred_to_tac);
+                                                           (uu___16.wl_deferred_to_tac);
                                                          ctr =
                                                            (wl3.ctr +
                                                               Prims.int_one);
                                                          defer_ok =
-                                                           (uu___17.defer_ok);
+                                                           (uu___16.defer_ok);
                                                          smt_ok =
-                                                           (uu___17.smt_ok);
+                                                           (uu___16.smt_ok);
                                                          umax_heuristic_ok =
-                                                           (uu___17.umax_heuristic_ok);
+                                                           (uu___16.umax_heuristic_ok);
                                                          tcenv =
-                                                           (uu___17.tcenv);
+                                                           (uu___16.tcenv);
                                                          wl_implicits =
-                                                           (uu___17.wl_implicits);
+                                                           (uu___16.wl_implicits);
                                                          repr_subcomp_allowed
                                                            =
-                                                           (uu___17.repr_subcomp_allowed)
+                                                           (uu___16.repr_subcomp_allowed)
                                                        } in
                                                      let wl5 =
                                                        extend_wl wl4
-                                                         defer_to_tac [] in
-                                                     let uu___17 =
+                                                         defer_to_tac imps in
+                                                     let uu___16 =
                                                        attempt [base_prob]
                                                          wl5 in
-                                                     solve env1 uu___17))))
+                                                     solve env1 uu___16))))
                                        else fallback ())))))
               | (FStar_Syntax_Syntax.Tm_uvar uu___7,
                  FStar_Syntax_Syntax.Tm_uvar uu___8) ->
                   let uu___9 = ensure_no_uvar_subst t1 wl in
                   (match uu___9 with
                    | (t11, wl1) ->
-                       let uu___10 = ensure_no_uvar_subst t2 wl1 in
+                       let t21 = FStar_Syntax_Util.canon_app t2 in
+                       let uu___10 = ensure_no_uvar_subst t21 wl1 in
                        (match uu___10 with
-                        | (t21, wl2) ->
+                        | (t22, wl2) ->
                             let f1 = destruct_flex_t' t11 in
-                            let f2 = destruct_flex_t' t21 in
+                            let f2 = destruct_flex_t' t22 in
                             solve_t_flex_flex env orig wl2 f1 f2))
               | (FStar_Syntax_Syntax.Tm_app
                  ({
@@ -7639,11 +7648,12 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                   let uu___12 = ensure_no_uvar_subst t1 wl in
                   (match uu___12 with
                    | (t11, wl1) ->
-                       let uu___13 = ensure_no_uvar_subst t2 wl1 in
+                       let t21 = FStar_Syntax_Util.canon_app t2 in
+                       let uu___13 = ensure_no_uvar_subst t21 wl1 in
                        (match uu___13 with
-                        | (t21, wl2) ->
+                        | (t22, wl2) ->
                             let f1 = destruct_flex_t' t11 in
-                            let f2 = destruct_flex_t' t21 in
+                            let f2 = destruct_flex_t' t22 in
                             solve_t_flex_flex env orig wl2 f1 f2))
               | (FStar_Syntax_Syntax.Tm_uvar uu___7,
                  FStar_Syntax_Syntax.Tm_app
@@ -7656,11 +7666,12 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                   let uu___12 = ensure_no_uvar_subst t1 wl in
                   (match uu___12 with
                    | (t11, wl1) ->
-                       let uu___13 = ensure_no_uvar_subst t2 wl1 in
+                       let t21 = FStar_Syntax_Util.canon_app t2 in
+                       let uu___13 = ensure_no_uvar_subst t21 wl1 in
                        (match uu___13 with
-                        | (t21, wl2) ->
+                        | (t22, wl2) ->
                             let f1 = destruct_flex_t' t11 in
-                            let f2 = destruct_flex_t' t21 in
+                            let f2 = destruct_flex_t' t22 in
                             solve_t_flex_flex env orig wl2 f1 f2))
               | (FStar_Syntax_Syntax.Tm_app
                  ({
@@ -7679,11 +7690,12 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                   let uu___15 = ensure_no_uvar_subst t1 wl in
                   (match uu___15 with
                    | (t11, wl1) ->
-                       let uu___16 = ensure_no_uvar_subst t2 wl1 in
+                       let t21 = FStar_Syntax_Util.canon_app t2 in
+                       let uu___16 = ensure_no_uvar_subst t21 wl1 in
                        (match uu___16 with
-                        | (t21, wl2) ->
+                        | (t22, wl2) ->
                             let f1 = destruct_flex_t' t11 in
-                            let f2 = destruct_flex_t' t21 in
+                            let f2 = destruct_flex_t' t22 in
                             solve_t_flex_flex env orig wl2 f1 f2))
               | (FStar_Syntax_Syntax.Tm_uvar uu___7, uu___8) when
                   problem.FStar_TypeChecker_Common.relation =
