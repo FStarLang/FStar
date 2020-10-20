@@ -643,7 +643,6 @@ let write_b_f_aux
             )
         in aux ();
         res
-#pop-options
 
 let lemma_ahead_extend_a (#p:dprot)
   (n:dprot) (n':dprot{more n' /\ tag_of n' = Send})
@@ -745,6 +744,8 @@ let write_b_f_lemma
         in Classical.move_requires aux ()
       end
     | V tr' -> ()
+
+#pop-options
 
 let write_a_f
   (#p:dprot)
