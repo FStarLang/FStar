@@ -768,6 +768,24 @@ let rec quote_atoms (l:list atom) = match l with
   | hd::tl -> let nt = pack_ln (Tv_Const (C_Int hd)) in
               (`Cons (`#nt) (`#(quote_atoms tl)))
 
+let normal_steps = [primops; iota; zeta; delta_only [
+          `%mdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
+          `%flatten; `%sort;
+          `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
+          `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
+          `%fst; `%__proj__Mktuple2__item___1;
+          `%snd; `%__proj__Mktuple2__item___2;
+          `%__proj__CM__item__unit;
+          `%__proj__CM__item__mult;
+          `%Steel.Memory.Tactics.rm]]
+
+let normal (#a:Type) (x:a) : a = FStar.Pervasives.norm normal_steps x
+
+let normal_elim (x:Type0) : Lemma
+  (requires x)
+  (ensures normal x)
+  = ()
+
 let canon_l_r (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   let m_unit = norm_term [iota; zeta; delta](`CM?.unit (`#m)) in
   let am = const m_unit in (* empty map *)
@@ -781,9 +799,10 @@ let canon_l_r (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   let r2 = quote_exp r2_raw in
   let l1 = quote_atoms l1_raw in
   let l2 = quote_atoms l2_raw in
-  change_sq (`(mdenote (`#eq) (`#m) (`#am) (`#r1)
+  change_sq (`(normal (mdenote (`#eq) (`#m) (`#am) (`#r1)
                  `EQ?.eq (`#eq)`
-               mdenote (`#eq) (`#m) (`#am) (`#r2)));
+               mdenote (`#eq) (`#m) (`#am) (`#r2))));
+  apply_lemma (`normal_elim);
 
   apply (`monoid_reflect );
 
@@ -924,10 +943,10 @@ let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
     let am = convert_am am in
     let r1 = quote_exp r1_raw in
     let r2 = quote_exp r2_raw in
-
-    change_sq (`(mdenote (`#eq) (`#m) (`#am) (`#r1)
+    change_sq (`(normal (mdenote (`#eq) (`#m) (`#am) (`#r1)
                    `EQ?.eq (`#eq)`
-                 mdenote (`#eq) (`#m) (`#am) (`#r2)));
+                 mdenote (`#eq) (`#m) (`#am) (`#r2))));
+    apply_lemma (`normal_elim);
 
     apply (`monoid_reflect );
 

@@ -76,6 +76,10 @@ let slprop = H.slprop
 
 let interp p m = H.interp p m.heap
 
+let equiv p1 p2 = forall m. interp p1 m <==> interp p2 m
+
+let reveal_equiv p1 p2 = ()
+
 let ref = H.ref
 
 let emp : slprop u#a = H.emp
@@ -559,7 +563,7 @@ let tot_action_with_frame_except
       (ensures fun (| x, m1 |) ->
         mem_evolves m0 m1 /\
         (forall (mp:mprop frame). mp (core_mem m0) == mp (core_mem m1)))
-    
+
 let tot_action_with_frame = tot_action_with_frame_except S.empty
 
 let lift_heap_action_with_frame
@@ -571,7 +575,7 @@ let lift_heap_action_with_frame
   : tot_action_with_frame_except e fp a fp'
   = fun frame m0 ->
     let h0 = hheap_of_hmem m0 in
-    
+
     calc (equiv) {
       fp `star` frame `star` locks_invariant e m0;
          (equiv) { star_associative fp frame (locks_invariant e m0) }
@@ -579,7 +583,7 @@ let lift_heap_action_with_frame
     };
     assert (H.interp (fp `star` frame `star` locks_invariant e m0) h0);
     assert (H.interp (fp `star` (frame `star` locks_invariant e m0)) h0);
-    
+
     //key: apply the heap action with frame * locks_invariant e m0
     let (| x, h1 |) = f (frame `star` locks_invariant e m0) h0 in
 
@@ -923,7 +927,7 @@ let recall (#a:Type u#1) (#pcm:pcm a) (#fact:property a)
       (pts_to r v)
       (pure (witnessed r fact))
       (locks_invariant e m0)
-      m0;      
+      m0;
     assert (interp (pts_to r v `star` locks_invariant e m0) m0);
     emp_unit (pts_to r v `star` locks_invariant e m0);
     pure_star_interp (pts_to r v `star` locks_invariant e m0) (fact v1) m0;
@@ -1187,7 +1191,7 @@ let with_inv_helper (fp frame ls1 ctr p ls2:slprop)
                      (fp `star` frame `star` p)
                      (p `star` fp `star` frame)
                      (ls2 `star` ctr) }
-      (p `star` fp `star` frame) `star` (ls2 `star` ctr);      
+      (p `star` fp `star` frame) `star` (ls2 `star` ctr);
     }
 
 let with_invariant (#a:Type)
@@ -1229,7 +1233,7 @@ let with_invariant (#a:Type)
     assert (interp (p `star` fp' r `star` frame `star`
       (lock_store_invariant (set_add i opened_invariants) m1.locks `star`
        ctr_validity m1.ctr (heap_of_mem m1))) m1);
-   
+
     NMSTTotal.recall _ mem_evolves (iname_for_p_mem i p);
 
     move_invariant opened_invariants m1.locks p i;
