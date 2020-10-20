@@ -1044,22 +1044,23 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
       let rnbr = slterm_nbr_uvars t2 in
       if lnbr + rnbr <= 1 then (
         let open FStar.Algebra.CommMonoid.Equiv in
-        focus (fun _ ->ignore (forall_intro());
-                     norm [delta_only [`%can_be_split_forall]];
-                     or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
-                       (fun _ ->
-                       apply_lemma (`equiv_sl_implies);
-                       // TODO: Do this count in a better way
-                       if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
-                       or_else (fun _ ->  flip()) (fun _ -> ());
-                       norm [delta_only [
-                              `%__proj__CM__item__unit;
-                              `%__proj__CM__item__mult;
-                              `%Steel.Memory.Tactics.rm;
-                              `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
-                              `%fst; `%snd];
-                            primops; iota; zeta];
-                       canon'()));
+        focus (fun _ ->
+          ignore (forall_intro());
+          norm [delta_only [`%can_be_split_forall]];
+          or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
+            (fun _ ->
+            apply_lemma (`equiv_sl_implies);
+            // TODO: Do this count in a better way
+            if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
+            or_else (fun _ ->  flip()) (fun _ -> ());
+            norm [delta_only [
+                   `%__proj__CM__item__unit;
+                   `%__proj__CM__item__mult;
+                   `%Steel.Memory.Tactics.rm;
+                   `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                   `%fst; `%snd];
+                 primops; iota; zeta];
+            canon'()));
         true
       ) else false
 
@@ -1076,6 +1077,7 @@ let solve_equiv_forall (args:list argv) : Tac bool =
                       match goals () with
                       | [] -> ()
                       | _ ->
+                        dismiss_slprops ();
                         ignore (forall_intro());
                         // TODO: Do this count in a better way
                         if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
