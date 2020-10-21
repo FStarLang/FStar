@@ -129,45 +129,74 @@ let destruct_eq (typ : typ) : option<(term * term)> =
         | None -> None
         end
 
-let __do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
-    let _ = if Env.debug env (Options.Other "1346") then
-                  BU.print2 "%%%%%%%%do_unify %s =? %s\n"
-                            (Print.term_to_string t1)
-                            (Print.term_to_string t2) in
+let __do_unify_wflags (dbg:bool) (allow_guards:bool)
+               (env : env) (t1 : term) (t2 : term)
+: tac<option<guard_t>> =
+    if dbg then
+      BU.print2 "%%%%%%%%do_unify %s =? %s\n" (Print.term_to_string t1)
+                                              (Print.term_to_string t2);
     try
-        let res = Rel.teq_nosmt env t1 t2 in
-        if Env.debug env (Options.Other "1346")
-        then (BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
+        let res =
+          if allow_guards
+          then let env = { env with unif_allow_ref_guards = allow_guards } in
+               Rel.try_teq false env t1 t2
+          else Rel.teq_nosmt env t1 t2
+        in
+        if dbg then
+          BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
                               (FStar.Common.string_of_option (Rel.guard_to_string env) res)
                               (Print.term_to_string t1)
-                              (Print.term_to_string t2));
+                              (Print.term_to_string t2);
+
         match res with
-        | None -> ret false
-        | Some g ->
-            bind (add_implicits g.implicits) (fun () ->
-            ret true)
+        | None ->
+          ret None
+        | Some g -> 
+          bind (add_implicits g.implicits) (fun () ->
+          ret (Some g))
+
     with | Errors.Err (_, msg, _) -> begin
             mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
-            ret false)
+            ret None)
             end
          | Errors.Error (_, msg, r, _) -> begin
             mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
                                 msg (Range.string_of_range r)) (fun _ ->
-            ret false)
+            ret None)
             end
 
-let do_unify env t1 t2 : tac<bool> =
+(* Just a wrapper over __do_unify_wflags to better debug *)
+let __do_unify (allow_guards:bool) (env : env) (t1 : term) (t2 : term)
+: tac<option<guard_t>> =
+    let dbg = Env.debug env (Options.Other "TacUnify") in
     bind idtac (fun () ->
-    if Env.debug env (Options.Other "1346") then (
+    if dbg then begin
         Options.push ();
         let _ = Options.set_options "--debug_level Rel --debug_level RelCheck" in
         ()
-    );
-    bind (__do_unify env t1 t2) (fun r ->
-    if Env.debug env (Options.Other "1346") then
+    end;
+    bind (__do_unify_wflags dbg allow_guards env t1 t2) (fun r ->
+    if dbg then
         Options.pop ();
     (* bind compress_implicits (fun _ -> *)
     ret r))
+
+
+(* SMT-free unification. *)
+let do_unify (env : env) (t1 : term) (t2 : term)
+: tac<bool> =
+  bind (__do_unify false env t1 t2) (function
+  | None -> ret false
+  | Some g ->
+    (* g has to be trivial and we have already added its implicits *)
+    if not (Env.is_trivial_guard_formula g) then
+      failwith "internal error: do_unify: guard is not trivial";
+    ret true
+  )
+
+let do_unify' (allow_guards : bool) (env : env) (t1 : term) (t2 : term)
+: tac<option<guard_t>> =
+  __do_unify allow_guards env t1 t2
 
 (* Does t1 match t2? That is, do they unify without instantiating/changing t1? *)
 let do_match (env:Env.env) (t1:term) (t2:term) : tac<bool> =
@@ -1035,23 +1064,47 @@ let addns (s:string) : tac<unit> =
     let g' = goal_with_env g ctx' in
     replace_cur g')
 
-let _trefl (l : term) (r : term) : tac<unit> =
-   bind cur_goal (fun g ->
-   bind (do_unify (goal_env g) l r) (fun b ->
-   if b then solve' g U.exp_unit else
-     (* if that didn't work, normalize and retry *)
-     let l = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.UnfoldTac] (goal_env g) l in
-     let r = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.UnfoldTac] (goal_env g) r in
-     bind (do_unify (goal_env g) l r) (fun b ->
-     if b then solve' g U.exp_unit else
-       let ls, rs = TypeChecker.Err.print_discrepancy (tts (goal_env g)) l r in
-       fail2 "not a trivial equality ((%s) vs (%s))" ls rs)))
+let guard_formula (g:guard_t) : term =
+  match g.guard_f with
+  | Trivial -> U.t_true
+  | NonTrivial f -> f
 
-let trefl () : tac<unit> = wrap_err "trefl" <|
+let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac<unit> =
+  bind cur_goal (fun g ->
+  let attempt (l : term) (r : term) : tac<bool> =
+    bind (do_unify' allow_guards (goal_env g) l r) (function
+    | None -> ret false
+    | Some guard ->
+      bind (solve' g U.exp_unit) (fun _ ->
+      if allow_guards
+      then
+        bind (goal_of_guard "t_trefl" (goal_env g) (guard_formula guard)) (fun goal ->
+        bind (push_goals [goal]) (fun _ ->
+        ret true))
+      else
+        // If allow_guards is false, this guard must be trivial and we don't
+        // add it, but we check its triviality for sanity.
+        if Env.is_trivial_guard_formula guard
+        then ret true
+        else failwith "internal error: _t_refl: guard is not trivial"
+      ))
+  in
+  bind (attempt l r) (function
+  | true -> ret ()
+  | false ->
+      (* if that didn't work, normalize and retry *)
+      let norm = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.UnfoldTac] (goal_env g) in
+      bind (attempt (norm l) (norm r)) (function
+      | true -> ret ()
+      | false ->
+        let ls, rs = TypeChecker.Err.print_discrepancy (tts (goal_env g)) l r in
+        fail2 "cannot unify (%s) and (%s)" ls rs)))
+
+let t_trefl (allow_guards:bool) : tac<unit> = wrap_err "t_trefl" <|
     bind cur_goal (fun g ->
     match destruct_eq (whnf (goal_env g) (goal_type g)) with
     | Some (l, r) ->
-        _trefl l r
+        _t_trefl allow_guards l r
     | None ->
         fail1 "not an equality (%s)" (tts (goal_env g) (goal_type g)))
 

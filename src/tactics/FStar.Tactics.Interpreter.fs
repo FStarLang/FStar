@@ -370,9 +370,9 @@ let () =
                                        (e_tactic_nbe_thunk NBET.e_unit)
                                         NBET.e_unit;
 
-      mk_tac_step_1 0 "trefl"
-        trefl   e_unit e_unit
-        trefl   NBET.e_unit NBET.e_unit;
+      mk_tac_step_1 0 "t_trefl"
+        t_trefl   e_bool e_unit
+        t_trefl   NBET.e_bool NBET.e_unit;
 
       mk_tac_step_1 0 "dup"
         dup     e_unit e_unit

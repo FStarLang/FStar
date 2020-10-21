@@ -152,6 +152,14 @@ discharged by the engine. Just a thin wrapper around [t_apply_lemma]. *)
 let apply_lemma (t : term) : Tac unit =
     t_apply_lemma false false t
 
+(** See docs for [t_trefl] *)
+let trefl () : Tac unit =
+  t_trefl false
+
+(** See docs for [t_trefl] *)
+let trefl_guard () : Tac unit =
+  t_trefl true
+
 (** Similar to [apply_lemma], but will not instantiate uvars in the
 goal while applying. *)
 let apply_lemma_noinst (t : term) : Tac unit =
