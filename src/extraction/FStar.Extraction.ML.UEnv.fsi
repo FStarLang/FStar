@@ -98,6 +98,9 @@ val is_type_name : g:uenv -> fv:fv -> bool
 (** Does the fv bind an F* inductive type or abbreviation? *)
 val is_fv_type: uenv -> fv -> bool
 
+(** Is the symbol marked as noextract for the current codegen target? *)
+val is_fv_noextract: uenv -> fv -> bool
+
 (** ML record name for an F* pair of type name and field name *)
 val lookup_record_field_name: uenv -> (lident * ident) -> mlpath
 

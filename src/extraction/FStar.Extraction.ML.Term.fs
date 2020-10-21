@@ -445,7 +445,7 @@ let eta_expand (g:uenv) (t : mlty) (e : mlexpr) : mlexpr =
       let body = with_ty r <| MLE_App (e, vs_es) in
       with_ty t <| MLE_Fun (vs_ts, body)
 
-let default_value_for_ty (g:uenv) (t : mlty) : mlexpr  =
+let default_value_for_ty pos (g:uenv) (t : mlty) : mlexpr  =
     let ts, r = doms_and_cod t in
     let body r =
         let r =
@@ -459,6 +459,10 @@ let default_value_for_ty (g:uenv) (t : mlty) : mlexpr  =
         | MLTY_Top ->
           apply_obj_repr ml_unit MLTY_Erased
         | _ ->
+          FStar.Errors.log_issue  pos
+                        (Errors.Error_CallToErased,
+                         BU.format1 "An erased term is unsafely coerced during extraction to `%s`---you may have incorrectly marked a term as `noextract`"
+                           (Code.string_of_mlty (current_module_of_uenv g) r));
           with_ty r <| MLE_Coerce (ml_unit, MLTY_Erased, r)
     in
     if ts = []
@@ -544,7 +548,7 @@ let maybe_coerce pos (g:uenv) e ty (expect:mlty) : mlexpr =
         match ty with
         | MLTY_Erased ->
           //generate a default value suitable for the expected type
-          default_value_for_ty g expect
+          default_value_for_ty pos g expect
         | _ ->
           if type_leq g (erase_effect_annotations ty) (erase_effect_annotations expect)
           then let _ = debug g (fun () ->
@@ -875,9 +879,20 @@ let rec extract_one_pat (imp : bool)
         g, None, true
 
     | Pat_cons (f, pats) ->
-        let d, tys = match lookup_fv g f with
-            | {exp_b_expr={expr=MLE_Name n}; exp_b_tscheme=ttys} -> n, ttys
-            | _ -> failwith "Expected a constructor" in
+        let d, tys = 
+          match try_lookup_fv g f with
+          | Some ({exp_b_expr={expr=MLE_Name n}; exp_b_tscheme=ttys}) -> n, ttys
+          | Some _ -> failwith "Expected a constructor"
+          | None -> 
+            if UEnv.is_fv_noextract g f
+            then FStar.Errors.raise_error 
+                              (Errors.Error_CallToErased,
+                               BU.format1 "Attempting to use a definition marked `noextract` or `noextract_to`: %s" (Print.fv_to_string f))
+                              (range_of_fv f)
+            else failwith (BU.format2 "(%s) free Variable %s not found\n"
+                                      (Range.string_of_range f.fv_name.p)
+                                      (Print.lid_to_string f.fv_name.v))
+        in
         let nTyVars = List.length (fst tys) in
         let tysVarPats, restPats =  BU.first_N nTyVars pats in
         let f_ty_opt =
@@ -1286,8 +1301,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           begin
                match try_lookup_fv g fv with
                | None -> //it's been erased
-                 Errors.log_issue t.pos (Errors.Error_CallToErased,
-                                         BU.format1 "Attempting to extract a call into erased function %s" (Print.fv_to_string fv));
+                 // Errors.log_issue t.pos (Errors.Error_CallToErased,
+                 //                         BU.format1 "Attempting to extract a call into erased function %s" (Print.fv_to_string fv));
                  ml_unit, E_PURE, MLTY_Erased
 
                | Some {exp_b_expr=x; exp_b_tscheme=mltys} ->

@@ -49,7 +49,9 @@ open FStar.TypeChecker
 module U  = FStar.Syntax.Util
 module BU = FStar.Util
 module Const = FStar.Parser.Const
-
+module S = FStar.Syntax.Syntax
+module SS = FStar.Syntax.Subst
+module PC = FStar.Parser.Const
 (**** Type definitions *)
 
 (** An ML identifier corresponding to an identifier in F* that binds a
@@ -174,6 +176,41 @@ let print_mlpath_map (g:uenv) =
 
 (**** Looking up identifiers *)
 
+module EMB=FStar.Syntax.Embeddings
+let rec is_sigelt_noextract g (se:sigelt) =
+   let backend = Options.codegen () in
+   match se.sigel with
+   | Sig_datacon (_, _, _, tc, _, _) ->
+     is_lid_noextract g tc
+
+   | _ ->
+     if List.contains S.NoExtract se.sigquals
+     && backend <> Some Options.Kremlin
+     then true
+     else
+       BU.for_some
+         (fun attr ->
+           let hd, args = U.head_and_args attr in
+           match (SS.compress hd).n, args with
+           | Tm_fvar fv, [(a, _)] when S.fv_eq_lid fv PC.noextract_to_attr ->
+             begin
+             match EMB.unembed EMB.e_string a false EMB.id_norm_cb with
+             | Some s ->
+               Option.isSome backend && Options.parse_codegen s = backend
+             | None ->
+               false
+             end
+           | _ -> false)
+         se.sigattrs
+
+and is_lid_noextract g l =
+  match TypeChecker.Env.lookup_sigelt g.env_tcenv l with
+  | None -> false
+  | Some se -> is_sigelt_noextract g se
+
+let is_fv_noextract g fv = is_lid_noextract g fv.fv_name.v
+
+
 (** Scans the list of bindings for an fv:
     - it's always mapped to an ML expression
   *)
@@ -250,6 +287,7 @@ let is_type_name g fv =
 let is_fv_type g fv =
     is_type_name g fv ||
     g.tydefs |> BU.for_some (fun tydef -> fv_eq fv tydef.tydef_fv)
+
 
 (** Find the ML counterpart of an F* record field identifier
 

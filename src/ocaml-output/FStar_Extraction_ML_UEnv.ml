@@ -207,6 +207,64 @@ let (print_mlpath_map : uenv -> Prims.string) =
                  FStar_Util.format2 "%s -> %s" key (string_of_mlpath value) in
                uu___ :: entries1) [] in
     FStar_String.concat "\n" entries
+let rec (is_sigelt_noextract :
+  uenv -> FStar_Syntax_Syntax.sigelt -> Prims.bool) =
+  fun g ->
+    fun se ->
+      let backend = FStar_Options.codegen () in
+      match se.FStar_Syntax_Syntax.sigel with
+      | FStar_Syntax_Syntax.Sig_datacon
+          (uu___, uu___1, uu___2, tc, uu___3, uu___4) ->
+          is_lid_noextract g tc
+      | uu___ ->
+          if
+            (FStar_List.contains FStar_Syntax_Syntax.NoExtract
+               se.FStar_Syntax_Syntax.sigquals)
+              &&
+              (backend <>
+                 (FStar_Pervasives_Native.Some FStar_Options.Kremlin))
+          then true
+          else
+            FStar_Util.for_some
+              (fun attr ->
+                 let uu___2 = FStar_Syntax_Util.head_and_args attr in
+                 match uu___2 with
+                 | (hd, args) ->
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 = FStar_Syntax_Subst.compress hd in
+                         uu___5.FStar_Syntax_Syntax.n in
+                       (uu___4, args) in
+                     (match uu___3 with
+                      | (FStar_Syntax_Syntax.Tm_fvar fv, (a, uu___4)::[])
+                          when
+                          FStar_Syntax_Syntax.fv_eq_lid fv
+                            FStar_Parser_Const.noextract_to_attr
+                          ->
+                          let uu___5 =
+                            let uu___6 =
+                              FStar_Syntax_Embeddings.unembed
+                                FStar_Syntax_Embeddings.e_string a in
+                            uu___6 false FStar_Syntax_Embeddings.id_norm_cb in
+                          (match uu___5 with
+                           | FStar_Pervasives_Native.Some s ->
+                               (FStar_Option.isSome backend) &&
+                                 (let uu___6 = FStar_Options.parse_codegen s in
+                                  uu___6 = backend)
+                           | FStar_Pervasives_Native.None -> false)
+                      | uu___4 -> false)) se.FStar_Syntax_Syntax.sigattrs
+and (is_lid_noextract : uenv -> FStar_Ident.lident -> Prims.bool) =
+  fun g ->
+    fun l ->
+      let uu___ = FStar_TypeChecker_Env.lookup_sigelt g.env_tcenv l in
+      match uu___ with
+      | FStar_Pervasives_Native.None -> false
+      | FStar_Pervasives_Native.Some se -> is_sigelt_noextract g se
+let (is_fv_noextract : uenv -> FStar_Syntax_Syntax.fv -> Prims.bool) =
+  fun g ->
+    fun fv ->
+      is_lid_noextract g
+        (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
 let (try_lookup_fv :
   uenv ->
     FStar_Syntax_Syntax.fv -> exp_binding FStar_Pervasives_Native.option)

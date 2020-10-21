@@ -576,43 +576,57 @@ let (eta_expand :
                    FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty t)
                      (FStar_Extraction_ML_Syntax.MLE_Fun (vs_ts, body)))
 let (default_value_for_ty :
-  FStar_Extraction_ML_UEnv.uenv ->
-    FStar_Extraction_ML_Syntax.mlty -> FStar_Extraction_ML_Syntax.mlexpr)
+  FStar_Range.range ->
+    FStar_Extraction_ML_UEnv.uenv ->
+      FStar_Extraction_ML_Syntax.mlty -> FStar_Extraction_ML_Syntax.mlexpr)
   =
-  fun g ->
-    fun t ->
-      let uu___ = FStar_Extraction_ML_Util.doms_and_cod t in
-      match uu___ with
-      | (ts, r) ->
-          let body r1 =
-            let r2 =
-              let uu___1 = FStar_Extraction_ML_Util.udelta_unfold g r1 in
-              match uu___1 with
-              | FStar_Pervasives_Native.None -> r1
-              | FStar_Pervasives_Native.Some r3 -> r3 in
-            match r2 with
-            | FStar_Extraction_ML_Syntax.MLTY_Erased ->
-                FStar_Extraction_ML_Syntax.ml_unit
-            | FStar_Extraction_ML_Syntax.MLTY_Top ->
-                FStar_Extraction_ML_Syntax.apply_obj_repr
+  fun pos ->
+    fun g ->
+      fun t ->
+        let uu___ = FStar_Extraction_ML_Util.doms_and_cod t in
+        match uu___ with
+        | (ts, r) ->
+            let body r1 =
+              let r2 =
+                let uu___1 = FStar_Extraction_ML_Util.udelta_unfold g r1 in
+                match uu___1 with
+                | FStar_Pervasives_Native.None -> r1
+                | FStar_Pervasives_Native.Some r3 -> r3 in
+              match r2 with
+              | FStar_Extraction_ML_Syntax.MLTY_Erased ->
                   FStar_Extraction_ML_Syntax.ml_unit
-                  FStar_Extraction_ML_Syntax.MLTY_Erased
-            | uu___1 ->
-                FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty r2)
-                  (FStar_Extraction_ML_Syntax.MLE_Coerce
-                     (FStar_Extraction_ML_Syntax.ml_unit,
-                       FStar_Extraction_ML_Syntax.MLTY_Erased, r2)) in
-          if ts = []
-          then body r
-          else
-            (let uu___2 = fresh_mlidents ts g in
-             match uu___2 with
-             | (vs_ts, g1) ->
-                 let uu___3 =
-                   let uu___4 = let uu___5 = body r in (vs_ts, uu___5) in
-                   FStar_Extraction_ML_Syntax.MLE_Fun uu___4 in
-                 FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty t)
-                   uu___3)
+              | FStar_Extraction_ML_Syntax.MLTY_Top ->
+                  FStar_Extraction_ML_Syntax.apply_obj_repr
+                    FStar_Extraction_ML_Syntax.ml_unit
+                    FStar_Extraction_ML_Syntax.MLTY_Erased
+              | uu___1 ->
+                  ((let uu___3 =
+                      let uu___4 =
+                        let uu___5 =
+                          let uu___6 =
+                            FStar_Extraction_ML_UEnv.current_module_of_uenv g in
+                          FStar_Extraction_ML_Code.string_of_mlty uu___6 r2 in
+                        FStar_Util.format1
+                          "An erased term is unsafely coerced to %s---you may have incorrectly marked a term as `noextract`"
+                          uu___5 in
+                      (FStar_Errors.Error_CallToErased, uu___4) in
+                    FStar_Errors.log_issue pos uu___3);
+                   FStar_All.pipe_left
+                     (FStar_Extraction_ML_Syntax.with_ty r2)
+                     (FStar_Extraction_ML_Syntax.MLE_Coerce
+                        (FStar_Extraction_ML_Syntax.ml_unit,
+                          FStar_Extraction_ML_Syntax.MLTY_Erased, r2))) in
+            if ts = []
+            then body r
+            else
+              (let uu___2 = fresh_mlidents ts g in
+               match uu___2 with
+               | (vs_ts, g1) ->
+                   let uu___3 =
+                     let uu___4 = let uu___5 = body r in (vs_ts, uu___5) in
+                     FStar_Extraction_ML_Syntax.MLE_Fun uu___4 in
+                   FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty t)
+                     uu___3)
 let (maybe_eta_expand_coercion :
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Extraction_ML_Syntax.mlty ->
@@ -746,14 +760,13 @@ let (apply_coercion :
                 FStar_Extraction_ML_Syntax.with_ty expect1
                   (FStar_Extraction_ML_Syntax.MLE_Coerce (e1, ty1, expect1)) in
           aux e ty expect
-let maybe_coerce :
-  'uuuuu .
-    'uuuuu ->
-      FStar_Extraction_ML_UEnv.uenv ->
-        FStar_Extraction_ML_Syntax.mlexpr ->
+let (maybe_coerce :
+  FStar_Range.range ->
+    FStar_Extraction_ML_UEnv.uenv ->
+      FStar_Extraction_ML_Syntax.mlexpr ->
+        FStar_Extraction_ML_Syntax.mlty ->
           FStar_Extraction_ML_Syntax.mlty ->
-            FStar_Extraction_ML_Syntax.mlty ->
-              FStar_Extraction_ML_Syntax.mlexpr
+            FStar_Extraction_ML_Syntax.mlexpr)
   =
   fun pos ->
     fun g ->
@@ -768,7 +781,7 @@ let maybe_coerce :
             | uu___1 ->
                 (match ty1 with
                  | FStar_Extraction_ML_Syntax.MLTY_Erased ->
-                     default_value_for_ty g expect
+                     default_value_for_ty pos g expect
                  | uu___2 ->
                      let uu___3 =
                        let uu___4 =
@@ -1378,18 +1391,46 @@ let rec (extract_one_pat :
                 (g, FStar_Pervasives_Native.None, true)
             | FStar_Syntax_Syntax.Pat_cons (f, pats) ->
                 let uu___ =
-                  let uu___1 = FStar_Extraction_ML_UEnv.lookup_fv g f in
+                  let uu___1 = FStar_Extraction_ML_UEnv.try_lookup_fv g f in
                   match uu___1 with
-                  | { FStar_Extraction_ML_UEnv.exp_b_name = uu___2;
-                      FStar_Extraction_ML_UEnv.exp_b_expr =
-                        {
-                          FStar_Extraction_ML_Syntax.expr =
-                            FStar_Extraction_ML_Syntax.MLE_Name n;
-                          FStar_Extraction_ML_Syntax.mlty = uu___3;
-                          FStar_Extraction_ML_Syntax.loc = uu___4;_};
-                      FStar_Extraction_ML_UEnv.exp_b_tscheme = ttys;_} ->
-                      (n, ttys)
-                  | uu___2 -> failwith "Expected a constructor" in
+                  | FStar_Pervasives_Native.Some
+                      { FStar_Extraction_ML_UEnv.exp_b_name = uu___2;
+                        FStar_Extraction_ML_UEnv.exp_b_expr =
+                          {
+                            FStar_Extraction_ML_Syntax.expr =
+                              FStar_Extraction_ML_Syntax.MLE_Name n;
+                            FStar_Extraction_ML_Syntax.mlty = uu___3;
+                            FStar_Extraction_ML_Syntax.loc = uu___4;_};
+                        FStar_Extraction_ML_UEnv.exp_b_tscheme = ttys;_}
+                      -> (n, ttys)
+                  | FStar_Pervasives_Native.Some uu___2 ->
+                      failwith "Expected a constructor"
+                  | FStar_Pervasives_Native.None ->
+                      let uu___2 =
+                        FStar_Extraction_ML_UEnv.is_fv_noextract g f in
+                      if uu___2
+                      then
+                        let uu___3 =
+                          let uu___4 =
+                            let uu___5 = FStar_Syntax_Print.fv_to_string f in
+                            FStar_Util.format1
+                              "Attempting to use a definition marked `noextract` or `noextract_to`: %s"
+                              uu___5 in
+                          (FStar_Errors.Error_CallToErased, uu___4) in
+                        let uu___4 = FStar_Syntax_Syntax.range_of_fv f in
+                        FStar_Errors.raise_error uu___3 uu___4
+                      else
+                        (let uu___4 =
+                           let uu___5 =
+                             FStar_Range.string_of_range
+                               (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.p in
+                           let uu___6 =
+                             FStar_Syntax_Print.lid_to_string
+                               (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+                           FStar_Util.format2
+                             "(%s) free Variable %s not found\n" uu___5
+                             uu___6 in
+                         failwith uu___4) in
                 (match uu___ with
                  | (d, tys) ->
                      let nTyVars =
@@ -2495,17 +2536,9 @@ and (term_as_mlexpr' :
              (let uu___3 = FStar_Extraction_ML_UEnv.try_lookup_fv g fv in
               match uu___3 with
               | FStar_Pervasives_Native.None ->
-                  ((let uu___5 =
-                      let uu___6 =
-                        let uu___7 = FStar_Syntax_Print.fv_to_string fv in
-                        FStar_Util.format1
-                          "Attempting to extract a call into erased function %s"
-                          uu___7 in
-                      (FStar_Errors.Error_CallToErased, uu___6) in
-                    FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___5);
-                   (FStar_Extraction_ML_Syntax.ml_unit,
-                     FStar_Extraction_ML_Syntax.E_PURE,
-                     FStar_Extraction_ML_Syntax.MLTY_Erased))
+                  (FStar_Extraction_ML_Syntax.ml_unit,
+                    FStar_Extraction_ML_Syntax.E_PURE,
+                    FStar_Extraction_ML_Syntax.MLTY_Erased)
               | FStar_Pervasives_Native.Some
                   { FStar_Extraction_ML_UEnv.exp_b_name = uu___4;
                     FStar_Extraction_ML_UEnv.exp_b_expr = x;
