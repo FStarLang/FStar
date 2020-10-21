@@ -36,7 +36,7 @@ let run_tactic_on_typ
                     =
     let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
     let ps, w = proofstate_of_goal_ty rng env typ in
-    let gs, _res = run_tactic_on_ps rng_tac rng_goal e_unit () e_unit tactic ps in
+    let gs, _res = run_tactic_on_ps rng_tac rng_goal false e_unit () e_unit tactic ps in
     gs, w
 
 let run_tactic_on_all_implicits
@@ -47,8 +47,9 @@ let run_tactic_on_all_implicits
     let ps, _ = proofstate_of_all_implicits rng_goal env imps in
     let goals, () =
       run_tactic_on_ps
-        rng_tac
+        (Env.get_range env)
         rng_goal
+        true
         e_unit
         ()
         e_unit
@@ -356,7 +357,7 @@ let splice (env:Env.env) (rng:Range.range) (tau:term) : list<sigelt> =
 
     let typ = S.t_decls in // running with goal type FStar.Reflection.Data.decls
     let ps = proofstate_of_goals tau.pos env [] [] in
-    let gs, sigelts = run_tactic_on_ps tau.pos tau.pos
+    let gs, sigelts = run_tactic_on_ps tau.pos tau.pos false
                                   e_unit ()
                                   (e_list RE.e_sigelt) tau ps in
 
@@ -392,7 +393,7 @@ let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (O.Other "Tac");
     let ps = proofstate_of_goals tm.pos env [] [] in
-    let gs, tm = run_tactic_on_ps tau.pos tm.pos RE.e_term tm RE.e_term tau ps in
+    let gs, tm = run_tactic_on_ps tau.pos tm.pos false RE.e_term tm RE.e_term tau ps in
     tm
     end
   )

@@ -488,8 +488,9 @@ let report_implicits rng (is : Env.implicits) : unit =
   Err.stop_if_err ()
 
 let run_tactic_on_ps
-  (rng_tac : Range.range)
+  (rng_call : Range.range)
   (rng_goal : Range.range)
+  (background : bool)
   (e_arg : embedding<'a>)
   (arg : 'a)
   (e_res : embedding<'b>)
@@ -570,6 +571,13 @@ let run_tactic_on_ps
             | e ->
                 raise e
         in
+        let rng =
+          if background
+          then match ps.goals with
+               | g::_ -> g.goal_ctx_uvar.ctx_uvar_range
+               | _ -> rng_call
+          else ps.entry_range
+        in
         Err.raise_error (Err.Fatal_UserTacticFailure,
                             BU.format1 "user tactic failed: `%s`" (texn_to_string e))
-                          ps.entry_range
+                          rng
