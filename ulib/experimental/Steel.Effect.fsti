@@ -59,7 +59,7 @@ let return_ens (a:Type) (x:a) (p:a -> slprop u#1) : ens_t (p x) a p = fun _ r _ 
  * Return is parametric in post (cf. return-scoping.txt)
  *)
 val return (a:Type) (x:a) (#[@@ framing_implicit] p:a -> slprop)
-: repr a (p x) p (return_req (p x)) (return_ens a x p)
+: repr a (return_pre (p x)) (return_post p) (return_req (p x)) (return_ens a x p)
 
 (*
  * We allow weakening of post resource of f to pre resource of g
@@ -143,7 +143,7 @@ let if_then_else_req (#pre_f:pre_t) (#pre_g:pre_t) (s: squash (can_be_split pre_
 
 unfold
 let if_then_else_ens (#a:Type) (#pre_f:pre_t) (#pre_g:pre_t) (#post_f:post_t a) (#post_g:post_t a)
-  (s1 : squash (can_be_split pre_f pre_g)) (s2 : squash (can_be_split_forall post_f post_g))
+  (s1 : squash (can_be_split pre_f pre_g)) (s2 : squash (equiv_forall post_f post_g))
   (ens_then:ens_t pre_f a post_f) (ens_else:ens_t pre_g a post_g)
   (p:Type0)
 : ens_t pre_f a post_f
@@ -154,16 +154,15 @@ let if_then_else (a:Type)
   (#[@@ framing_implicit] post_f:post_t a) (#[@@ framing_implicit] post_g:post_t a)
   (#[@@ framing_implicit] req_then:req_t pre_f) (#[@@ framing_implicit] ens_then:ens_t pre_f a post_f)
   (#[@@ framing_implicit] req_else:req_t pre_g) (#[@@ framing_implicit] ens_else:ens_t pre_g a post_g)
-  (#[@@ framing_implicit] s_pre1: squash (can_be_split pre_f pre_g))
-  (#[@@ framing_implicit] s_post1: squash (can_be_split_forall post_f post_g))
-  (#[@@ framing_implicit] s_post2: squash (can_be_split_forall post_g post_f))
+  (#[@@ framing_implicit] s_pre: squash (can_be_split pre_f pre_g))
+  (#[@@ framing_implicit] s_post: squash (equiv_forall post_f post_g))
   (f:repr a pre_f post_f req_then ens_then)
   (g:repr a pre_g post_g req_else ens_else)
   (p:bool)
 : Type
 = repr a pre_f post_f
-    (if_then_else_req s_pre1 req_then req_else p)
-    (if_then_else_ens s_pre1 s_post1 ens_then ens_else p)
+    (if_then_else_req s_pre req_then req_else p)
+    (if_then_else_ens s_pre s_post ens_then ens_else p)
 
 [@@allow_informative_binders]
 reifiable reflectable
@@ -589,7 +588,7 @@ val drop (p:slprop) : SteelT unit p (fun _ -> emp)
 val intro_exists (#a:Type) (x:a) (p:a -> slprop)
   : SteelT unit (p x) (fun _ -> h_exists p)
 
-val noop (#p:slprop) (u:unit) : SteelT unit p (fun _ -> p)
+val noop (#[@@ framing_implicit] p:slprop) (u:unit) : SteelT unit p (fun _ -> p)
 
 /// Operations on PCM Refs
 

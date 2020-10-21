@@ -19,7 +19,6 @@ open Steel.Effect
 open Steel.Effect.Atomic
 open Steel.Reference
 open Steel.FractionalPermission
-//open Steel.SteelT.Basics
 module Atomic = Steel.Effect.Atomic
 
 let available = false
@@ -123,7 +122,8 @@ let acquire' (#p:slprop) (l:lock p)
 
 let rec acquire #p l =
   let b = acquire' l in
-  cond b (fun b -> if b then p else emp) (fun _ _ -> p) noop (fun _ -> acquire l)
+  if b then (Steel.Effect.change_slprop (if b then p else emp) p (fun _ -> ()); ())
+  else (Steel.Effect.change_slprop (if b then p else emp) emp (fun _ -> ()); acquire l)
 
 val release_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
   : SteelAtomic bool u observable

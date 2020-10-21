@@ -11,11 +11,18 @@ assume val free (r:ref) : SteelT unit (ptr r) (fun _ -> emp)
 assume val read (r:ref) : SteelT int (ptr r) (fun _ -> ptr r)
 assume val write (r:ref) (v: int) : SteelT unit (ptr r) (fun _ -> ptr r)
 
-let test1 (b1 b2 b3: ref) : SteelT int
+let test0 (b1 b2 b3: ref) : SteelT int
   (ptr b1 `star` ptr b2 `star` ptr b3)
   (fun _ -> ptr b1 `star` ptr b2 `star` ptr b3)
   =
   let x = read b1 in
+  x
+
+let test1 (b1 b2 b3: ref) : SteelT int
+  (ptr b1 `star` ptr b2 `star` ptr b3)
+  (fun _ -> ptr b1 `star` ptr b2 `star` ptr b3)
+  =
+  let x = (let y = read b1 in y) in
   x
 
 let test2 (b1 b2 b3: ref) : SteelT int
@@ -65,6 +72,8 @@ let test_if3 (b:bool) (r:ref) : SteelT unit (ptr r) (fun _ -> ptr r)
   = if b then noop #emp () else noop #emp ();
     () // Mandatory until we have a framing subcomp
 
+//#set-options "--tactic_trace_d 2"
+
 (* Need a bind in the else branch, else we have SteelF and Steel which cannot be composed *)
 let test_if4 (b:bool) : SteelT unit emp (fun _ -> emp)
   = if b then (let r = alloc 0 in free r) else (noop #emp (); ())
@@ -101,6 +110,19 @@ let test_if9 (b:bool) (r1 r2: ref) : SteelT unit
     if b then (write r1 0; ()) else (write r2 0; ());
     write r1 0
 
+
+(* Leave out some extra slprop outside of if_then_else *)
+let test_if10 (b:bool) (r1 r2 r3: ref) : SteelT unit
+  (ptr r1 `star` ptr r2 `star` ptr r3)
+  (fun _ -> ptr r1 `star` ptr r2 `star` ptr r3)
+  = if b then (write r1 0; write r2 0) else (write r2 0; write r1 0);
+    write r2 0
+
+(* Tests if_then_else depending on previously created local var *)
+let test_if11 () : SteelT ref emp ptr =
+  let r = alloc 0 in
+  if true then (noop #emp (); r) else (noop #emp (); r)
+
 assume val ipred : int -> slprop
 assume val bpred : bool -> slprop
 assume val f : unit -> SteelT int (bpred true) ipred
@@ -118,7 +140,7 @@ assume val sladmit_depF (#a:_)
                        (_:unit)
        : SteelF a p q (fun _ -> True) (fun _ _ _ -> True)
 
-let testif10 (b:bool) : SteelT int (bpred b) ipred =
+let testif12 (b:bool) : SteelT int (bpred b) ipred =
   if b
   then (
     change_slprop (bpred b) (bpred true) (fun _ -> ());
