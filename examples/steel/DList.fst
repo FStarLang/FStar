@@ -257,6 +257,12 @@ let returnF (#a:_)
     : SteelF a (q x) q (fun _ -> True) (fun _ _ _ -> True)
     = sladmit_depF () 
 
+let returnT (#a:_)
+            (q:(a -> slprop))
+            (x:a)
+    : SteelT a (q x) q
+    = sladmit_depF () 
+
 (* this version of concat tries to use if/then/else
    instead of a cond combinator ...
    and seems like with some work it could actually work *)
@@ -320,4 +326,75 @@ let rec concat_alt (#a:Type)
        intro_dlist_cons from0 ptr0 _ _ (next c0) _;
        returnF (dlist from0 ptr0 null_dlist)
                (c0::l)
+     )
+
+//this ought to work though ...
+//it's identical to concat, except I'm using an if/then/else instead of cond
+let rec concat_alt2 (#a:Type)
+               (#[@@framing_implicit] from0:t a) 
+               (#[@@framing_implicit] to0: t a)
+               (#[@@framing_implicit] hd0:cell a)
+               (#[@@framing_implicit] tl0:list (cell a))
+               (#[@@framing_implicit] from1:t a) 
+               (#[@@framing_implicit] hd1:cell a)
+               (#[@@framing_implicit] tl1:list (cell a))
+               (ptr0:t a)
+               (ptr1:t a) 
+   : SteelT (list (cell a))
+     (dlist from0 ptr0 to0 (hd0::tl0) `star`
+      dlist from1 ptr1 null_dlist (hd1::tl1))
+     (fun l ->
+       dlist from0 ptr0 null_dlist l)
+   =
+     let to1 = null_dlist #a in
+
+     //1: read the ptr0 to get cell0
+     
+     let c0 = read_head from0 ptr0 to0 hd0 tl0 in
+
+     //2: unfold dlist to dlist cons
+     elim_dlist_cons from0 ptr0 to0 c0 tl0;     
+
+     let b = ptr_eq (next c0) to0 in
+
+     change_slprop
+        (pts_to ptr0 full_perm c0 `star`
+         dlist ptr0 (next c0) to0 tl0 `star`
+         dlist from1 ptr1 null_dlist (hd1::tl1))
+        (pts_to ptr0 full_perm c0 `star`
+         (if b 
+          then dlist ptr0 to0 to0 tl0
+          else dlist ptr0 (next c0) to0 tl0) `star`
+         dlist from1 ptr1 null_dlist (hd1::tl1))
+        (fun _ -> ());
+
+     if b
+     then (
+       change_slprop
+         (pts_to ptr0 full_perm c0 `star`
+           (if b 
+           then dlist ptr0 to0 to0 tl0
+           else dlist ptr0 (next c0) to0 tl0) `star`
+         dlist from1 ptr1 null_dlist (hd1::tl1))
+         (pts_to ptr0 full_perm c0 `star`
+          dlist ptr0 to0 to0 tl0 `star`
+         dlist from1 ptr1 null_dlist (hd1::tl1))
+         (fun _ -> ());
+       concat_nil_l from0 ptr0 to0 c0 tl0
+                    from1 ptr1 hd1 tl1
+     )
+     else (
+       change_slprop
+         (pts_to ptr0 full_perm c0 `star`
+           (if b 
+           then dlist ptr0 to0 to0 tl0
+           else dlist ptr0 (next c0) to0 tl0) `star`
+         dlist from1 ptr1 null_dlist (hd1::tl1))
+         (pts_to ptr0 full_perm c0 `star`
+           (dlist ptr0 (next c0) to0 tl0) `star`
+         dlist from1 ptr1 null_dlist (hd1::tl1))
+         (fun _ -> ());
+       concat_cons (concat_alt2 #a) 
+                   from0 ptr0 to0 c0 tl0
+                   from1 ptr1 hd1 tl1
      )
