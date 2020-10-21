@@ -8124,7 +8124,10 @@ let (eta_expand :
                                      (uu___6.FStar_TypeChecker_Env.erasable_types_tab);
                                    FStar_TypeChecker_Env.enable_defer_to_tac
                                      =
-                                     (uu___6.FStar_TypeChecker_Env.enable_defer_to_tac)
+                                     (uu___6.FStar_TypeChecker_Env.enable_defer_to_tac);
+                                   FStar_TypeChecker_Env.unif_allow_ref_guards
+                                     =
+                                     (uu___6.FStar_TypeChecker_Env.unif_allow_ref_guards)
                                  }) t in
                             match uu___5 with
                             | (uu___6, ty, uu___7) ->
@@ -8225,7 +8228,9 @@ let (eta_expand :
                            FStar_TypeChecker_Env.erasable_types_tab =
                              (uu___5.FStar_TypeChecker_Env.erasable_types_tab);
                            FStar_TypeChecker_Env.enable_defer_to_tac =
-                             (uu___5.FStar_TypeChecker_Env.enable_defer_to_tac)
+                             (uu___5.FStar_TypeChecker_Env.enable_defer_to_tac);
+                           FStar_TypeChecker_Env.unif_allow_ref_guards =
+                             (uu___5.FStar_TypeChecker_Env.unif_allow_ref_guards)
                          }) t in
                     (match uu___4 with
                      | (uu___5, ty, uu___6) -> eta_expand_with_type env1 t ty)))
