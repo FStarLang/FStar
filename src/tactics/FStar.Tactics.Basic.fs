@@ -96,40 +96,6 @@ let fail2 msg x y   = fail (BU.format2 msg x y)
 let fail3 msg x y z = fail (BU.format3 msg x y z)
 let fail4 msg x y z w = fail (BU.format4 msg x y z w)
 
-let catch (t : tac<'a>) : tac<either<exn,'a>> =
-    mk_tac (fun ps ->
-            let tx = UF.new_transaction () in
-            match run t ps with
-            | Success (a, q) ->
-                UF.commit tx;
-                Success (Inr a, q)
-            | Failed (m, q) ->
-                UF.rollback tx;
-                let ps = { ps with freshness = q.freshness } in //propagate the freshness even on failures
-                Success (Inl m, ps)
-           )
-
-let recover (t : tac<'a>) : tac<either<exn,'a>> =
-    mk_tac (fun ps ->
-            match run t ps with
-            | Success (a, q) -> Success (Inr a, q)
-            | Failed (m, q)  -> Success (Inl m, q)
-           )
-
-let trytac (t : tac<'a>) : tac<option<'a>> =
-    bind (catch t) (fun r ->
-    match r with
-    | Inr v -> ret (Some v)
-    | Inl _ -> ret None)
-
-let trytac_exn (t : tac<'a>) : tac<option<'a>> =
-    mk_tac (fun ps ->
-    try run (trytac t) ps
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) ->
-           log ps (fun () -> BU.print1 "trytac_exn error: (%s)" msg);
-           Success (None, ps))
-
 let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with
     | Some (U.BaseConn(l, [_; (e1, None); (e2, None)]))
@@ -180,11 +146,11 @@ let __do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
         | Some g ->
             bind (add_implicits g.implicits) (fun () ->
             ret true)
-    with | Errors.Err (_, msg) -> begin
+    with | Errors.Err (_, msg, _) -> begin
             mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
             ret false)
             end
-         | Errors.Error (_, msg, r) -> begin
+         | Errors.Error (_, msg, r, _) -> begin
             mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
                                 msg (Range.string_of_range r)) (fun _ ->
             ret false)
@@ -337,8 +303,8 @@ let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (Print.term_to_string t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
     try ret (TcTerm.type_of_tot_term e t)
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) -> begin
+    with | Errors.Err (_, msg, _)
+         | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
                                                   msg
@@ -350,8 +316,8 @@ let __tc_ghost (e : env) (t : term) : tac<(term * typ * guard_t)> =
     let e = {e with uvar_subtyping=false} in
     try let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
         ret (t, lc.res_typ, g)
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) -> begin
+    with | Errors.Err (_, msg ,_)
+         | Errors.Error (_, msg, _ ,_) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
                                                   msg
@@ -363,8 +329,8 @@ let __tc_lax (e : env) (t : term) : tac<(term * lcomp * guard_t)> =
     let e = {e with uvar_subtyping=false} in
     let e = {e with lax = true} in
     try ret (TcTerm.tc_term e t)
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) -> begin
+    with | Errors.Err (_, msg, _)
+         | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
                                                   msg
@@ -388,16 +354,10 @@ let with_policy pol (t : tac<'a>) : tac<'a> =
     bind (set_guard_policy old_pol) (fun () ->
     ret r))))
 
-let getopts : tac<FStar.Options.optionstate> =
-    bind (trytac cur_goal) (function
-    | Some g -> ret g.opts
-    | None -> ret (FStar.Options.peek ()))
-
 let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
     mlog (fun () ->
         BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
     bind (add_implicits g.implicits) (fun () ->
-    bind getopts (fun opts ->
     match (Rel.simplify_guard e g).guard_f with
     | TcComm.Trivial -> ret ()
     | TcComm.NonTrivial f ->
@@ -415,15 +375,13 @@ let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
 
     | Goal ->
         mlog (fun () -> BU.print2 "Making guard (%s:%s) into a goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        bind (mk_irrelevant_goal reason e f opts "") (fun goal ->
-        let goal = { goal with is_guard = true } in
-        push_goals [goal]))
+        bind (goal_of_guard reason e f) (fun g ->
+        push_goals [g]))
 
     | SMT ->
         mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        bind (mk_irrelevant_goal reason e f opts "") (fun goal ->
-        let goal = { goal with is_guard = true } in
-        push_smt_goals [goal]))
+        bind (goal_of_guard reason e f) (fun g ->
+        push_smt_goals [g]))
 
     | Force ->
         mlog (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
@@ -434,7 +392,7 @@ let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
             else ret ()
         with
         | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
-               fail1 "Forcing the guard failed (%s)" reason))))))
+               fail1 "Forcing the guard failed (%s)" reason)))))
 
 let tcc (e : env) (t : term) : tac<comp> = wrap_err "tcc" <|
     bind (__tc_lax e t) (fun (_, lc, _) ->
@@ -1642,6 +1600,11 @@ let lset (_ty:term) (k:string) (t:term) : tac<unit> = wrap_err "lset" <|
     let ps = { ps with local_state = BU.psmap_add ps.local_state k t } in
     set ps)
 
+let set_urgency (u:Z.t) : tac<unit> =
+    bind get (fun ps ->
+    let ps = { ps with urgency = Z.to_int_fs u } in
+    set ps)
+
 let tac_env (env:Env.env) : Env.env =
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
@@ -1664,6 +1627,7 @@ let proofstate_of_goals rng env goals imps =
         freshness = 0;
         tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
         local_state = BU.psmap_empty ();
+        urgency = 1;
     }
     in
     ps
@@ -1691,6 +1655,7 @@ let proofstate_of_all_implicits rng env imps =
         freshness = 0;
         tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
         local_state = BU.psmap_empty ();
+        urgency = 1;
     }
     in
     (ps, w)

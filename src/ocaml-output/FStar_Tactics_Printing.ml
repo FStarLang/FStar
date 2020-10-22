@@ -245,20 +245,24 @@ let (ps_to_json :
                 let uu___5 =
                   let uu___6 =
                     let uu___7 =
-                      FStar_List.map goal_to_json
-                        ps.FStar_Tactics_Types.goals in
-                    FStar_Util.JsonList uu___7 in
-                  ("goals", uu___6) in
-                let uu___6 =
+                      let uu___8 =
+                        FStar_List.map goal_to_json
+                          ps.FStar_Tactics_Types.goals in
+                      FStar_Util.JsonList uu___8 in
+                    ("goals", uu___7) in
                   let uu___7 =
                     let uu___8 =
                       let uu___9 =
-                        FStar_List.map goal_to_json
-                          ps.FStar_Tactics_Types.smt_goals in
-                      FStar_Util.JsonList uu___9 in
-                    ("smt-goals", uu___8) in
-                  [uu___7] in
-                uu___5 :: uu___6 in
+                        let uu___10 =
+                          FStar_List.map goal_to_json
+                            ps.FStar_Tactics_Types.smt_goals in
+                        FStar_Util.JsonList uu___10 in
+                      ("smt-goals", uu___9) in
+                    [uu___8] in
+                  uu___6 :: uu___7 in
+                ("urgency",
+                  (FStar_Util.JsonInt (ps.FStar_Tactics_Types.urgency))) ::
+                  uu___5 in
               ("depth", (FStar_Util.JsonInt (ps.FStar_Tactics_Types.depth)))
                 :: uu___4 in
             ("label", (FStar_Util.JsonStr msg)) :: uu___3 in

@@ -4,11 +4,12 @@ open Steel.Memory
 module Sem = Steel.Semantics.Hoare.MST
 open Steel.Semantics.Instantiate
 
-
 irreducible let framing_implicit : unit = ()
 
 let delay (p:Type0) : Type0 = p
 let annot_sub_post (p:Type0) : Type0 = p
+let return_pre (p:slprop u#1) : slprop u#1 = p
+let return_post (#a:Type) (p:a -> slprop u#1) : a -> slprop u#1 = p
 
 type pre_t = slprop u#1
 type post_t (a:Type) = a -> slprop u#1
@@ -63,6 +64,17 @@ let can_be_split (t1 t2:pre_t) = t1 `sl_implies` t2
 let can_be_split_forall (#a:Type) (t1 t2:post_t a) =
   forall (x:a). t1 x `sl_implies` t2 x
 
+val equiv_forall (#a:Type) (t1 t2:post_t a) : Type0
+
+val equiv_forall_split (#a:Type) (t1 t2:post_t a)
+  : Lemma (requires t1 `equiv_forall` t2)
+          (ensures can_be_split_forall t1 t2 /\ can_be_split_forall t2 t1)
+          [SMTPat (t1 `equiv_forall` t2)]
+
+val equiv_forall_elim (#a:Type) (t1 t2:post_t a)
+  : Lemma (requires (forall (x:a). t1 x `equiv` t2 x))
+          (ensures t1 `equiv_forall` t2)
+
 val can_be_split_forall_frame (#a:Type) (p q:post_t a) (frame:slprop u#1) (x:a)
  : Lemma (requires can_be_split_forall p q)
          (ensures (frame `star` p x)  `sl_implies` (frame `star` q x))
@@ -77,6 +89,24 @@ val lemma_sl_implies_refl (p:slprop) : Lemma
   (ensures p `sl_implies` p)
 
 open FStar.Tactics
+
+(* TODO: Remove once it lands in master ulib/ *)
+exception Yes
+
+let name_appears_in (nm:name) (t:term) : Tac bool =
+  let ff (t : term) : Tac term =
+    match t with
+    | Tv_FVar fv ->
+      if inspect_fv fv = nm then
+        raise Yes;
+      t
+    | t -> t
+  in
+  try ignore (visit_tm ff t); false with
+  | Yes -> true
+  | e -> raise e
+
+let term_appears_in (t:term) (i:term) : Tac bool = name_appears_in (explode_qn (term_to_string t)) i
 
 let atom : eqtype = int
 
@@ -615,6 +645,29 @@ let identity_left (#a:Type) (eq:equiv a) (m:cm a eq) (x:a)
   = CM?.identity m x;
     EQ?.symmetry eq (CM?.mult m (CM?.unit m) x) x
 
+let identity_right_diff (#a:Type) (eq:equiv a) (m:cm a eq) (x y:a) : Lemma
+  (requires EQ?.eq eq x y)
+  (ensures EQ?.eq eq (CM?.mult m x (CM?.unit m)) y)
+  = right_identity eq m x;
+    EQ?.transitivity eq (CM?.mult m x (CM?.unit m)) x y
+
+let rec dismiss_slprops () : Tac unit =
+  match term_as_formula' (cur_goal ()) with
+    | App t _ -> if term_eq t (`squash) then () else (dismiss(); dismiss_slprops ())
+    | _ -> dismiss(); dismiss_slprops ()
+
+let rec n_identity_left (n:int) (eq m:term) : Tac unit
+  = if n = 0 then (
+      apply_lemma (`(EQ?.reflexivity (`#eq)));
+      // Cleaning up, in case a uvar has been generated here. It'll be solved later
+      set_goals [])
+    else (
+      apply_lemma (`identity_right_diff (`#eq) (`#m));
+      // Drop the slprops generated, they will be solved later
+      dismiss_slprops ();
+      n_identity_left (n-1) eq m
+    )
+
 let equivalent_sorted (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (l1 l2 l1' l2':list atom)
     : Lemma (requires
               sort l1 == sort l1' /\
@@ -715,6 +768,24 @@ let rec quote_atoms (l:list atom) = match l with
   | hd::tl -> let nt = pack_ln (Tv_Const (C_Int hd)) in
               (`Cons (`#nt) (`#(quote_atoms tl)))
 
+let normal_steps = [primops; iota; zeta; delta_only [
+          `%mdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
+          `%flatten; `%sort;
+          `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
+          `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
+          `%fst; `%__proj__Mktuple2__item___1;
+          `%snd; `%__proj__Mktuple2__item___2;
+          `%__proj__CM__item__unit;
+          `%__proj__CM__item__mult;
+          `%Steel.Memory.Tactics.rm]]
+
+let normal (#a:Type) (x:a) : a = FStar.Pervasives.norm normal_steps x
+
+let normal_elim (x:Type0) : Lemma
+  (requires x)
+  (ensures normal x)
+  = ()
+
 let canon_l_r (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   let m_unit = norm_term [iota; zeta; delta](`CM?.unit (`#m)) in
   let am = const m_unit in (* empty map *)
@@ -728,9 +799,10 @@ let canon_l_r (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   let r2 = quote_exp r2_raw in
   let l1 = quote_atoms l1_raw in
   let l2 = quote_atoms l2_raw in
-  change_sq (`(mdenote (`#eq) (`#m) (`#am) (`#r1)
+  change_sq (`(normal (mdenote (`#eq) (`#m) (`#am) (`#r1)
                  `EQ?.eq (`#eq)`
-               mdenote (`#eq) (`#m) (`#am) (`#r2)));
+               mdenote (`#eq) (`#m) (`#am) (`#r2))));
+  apply_lemma (`normal_elim);
 
   apply (`monoid_reflect );
 
@@ -795,6 +867,9 @@ let canon_monoid (eq:term) (m:term) : Tac unit =
 let canon' () : Tac unit =
   canon_monoid (`Steel.Memory.Tactics.req) (`Steel.Memory.Tactics.rm)
 
+(* A Variant of canon to collect all slprops in the context into the return_post term,
+   and set all extra uvars to emp *)
+
 let rec slterm_nbr_uvars (t:term) : Tac int =
   match inspect t with
   | Tv_Uvar _ _ -> 1
@@ -808,6 +883,137 @@ let rec slterm_nbr_uvars (t:term) : Tac int =
     else 0
   | Tv_Abs _ t -> slterm_nbr_uvars t
   | _ -> 0
+
+
+/// Puts the term containing return_post at the top.
+/// Returns the atom corresponding to return_post, and the list with the atom removed
+let rec return_at_top' (l:list atom) (am:amap term) : Tac (atom * list atom) =
+  match l with
+  | [] -> fail "Couldn't find return_post term"
+  | hd::tl ->
+      if term_appears_in (`return_post) (select hd am) then hd, tl else
+      let ret, rest = return_at_top' tl am in
+      ret, hd::rest
+
+/// Checks whether the return slprop is fully resolved
+let return_resolved (l:list atom) (am:amap term) : Tac bool =
+  let ret, _ = return_at_top' l am in
+  let t = norm_term [delta_only [`%return_post]] (select ret am) in
+  slterm_nbr_uvars t = 0
+
+let return_at_top (l:list atom) (am:amap term) : Tac (nat * list atom) =
+  let ret, tl = return_at_top' l am in
+  List.Tot.Base.length tl, ret :: tl
+
+let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
+  let return_lhs = term_appears_in (`return_post) lhs in
+  let return_rhs = term_appears_in (`return_post) rhs in
+  let two_returns = return_lhs && return_rhs in
+
+  let lhs, rhs =
+    // Ensure that the return_post is on the left
+    if return_rhs && not (return_lhs) then
+      (apply_lemma (`Steel.Memory.Tactics.equiv_sym); rhs, lhs) else lhs, rhs
+  in
+
+
+  let m_unit = norm_term [iota; zeta; delta](`CM?.unit (`#m)) in
+  let am = const m_unit in (* empty map *)
+  let (r1_raw, ts, am) = reification eq m [] am lhs in
+  let (r2_raw,  _, am) = reification eq m ts am rhs in
+
+  let l1_raw = flatten r1_raw in
+  let l2_raw = flatten r2_raw in
+
+  let resolved1 = return_resolved l1_raw am in
+  let resolved2 = if two_returns then return_resolved l2_raw am else true in
+
+  if resolved1 && resolved2 then (
+    // The return_post have already been gathered, we fall back on the normal canon
+    let lhs = norm_term [delta_only [`%return_post]] lhs in
+    let rhs = norm_term [delta_only [`%return_post]] rhs in
+    norm [delta_only [`%return_post]];
+    canon_l_r eq m lhs rhs
+  ) else (
+
+    let n_l1, l1_raw = return_at_top l1_raw am in
+
+    let n_l2, l2_raw = if two_returns then return_at_top l2_raw am else 0, l2_raw in
+
+    let am = convert_am am in
+    let r1 = quote_exp r1_raw in
+    let r2 = quote_exp r2_raw in
+    change_sq (`(normal (mdenote (`#eq) (`#m) (`#am) (`#r1)
+                   `EQ?.eq (`#eq)`
+                 mdenote (`#eq) (`#m) (`#am) (`#r2))));
+    apply_lemma (`normal_elim);
+
+    apply (`monoid_reflect );
+
+    let l1 = quote_atoms l1_raw in
+    let l2 = quote_atoms l2_raw in
+
+    apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#am) (`#l1) (`#l2));
+    let g = goals () in
+    if List.Tot.Base.length g = 0 then
+      // The application of equivalent_sorted seems to sometimes solve
+      // all goals
+      ()
+    else (
+      norm [primops; iota; zeta; delta_only
+        [`%xsdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
+          `%flatten; `%sort;
+          `%return_post;
+          `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
+          `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
+          `%fst; `%__proj__Mktuple2__item___1;
+          `%snd; `%__proj__Mktuple2__item___2;
+          `%__proj__CM__item__unit;
+          `%__proj__CM__item__mult;
+          `%Steel.Memory.Tactics.rm
+
+          ]];
+
+      split();
+      split();
+      // equivalent_lists should have built valid permutations.
+      // If that's not the case, it is a bug in equivalent_lists
+      or_else trefl (fun _ -> fail "first equivalent_lists did not build a valid permutation");
+      or_else trefl (fun _ -> fail "second equivalent_lists did not build a valid permutation");
+
+      if n_l2 > n_l1 then
+        (apply_lemma (`(EQ?.symmetry (`#eq)));
+         let n = n_l2 - n_l1 in
+         focus (fun _ -> n_identity_left n eq m))
+      else (let n = n_l1 - n_l2 in focus (fun _ -> n_identity_left n eq m))
+    )
+  )
+
+let canon_return' (eq:term) (m:term) : Tac unit =
+  norm [iota; zeta];
+  let t = cur_goal () in
+  // removing top-level squash application
+  let sq, rel_xy = collect_app_ref t in
+  // unpacking the application of the equivalence relation (lhs `EQ?.eq eq` rhs)
+  (match rel_xy with
+   | [(rel_xy,_)] -> (
+       let open FStar.List.Tot.Base in
+       let rel, xy = collect_app_ref rel_xy in
+       if (length xy >= 2)
+       then (
+         match index xy (length xy - 2) , index xy (length xy - 1) with
+         | (lhs, Q_Explicit) , (rhs, Q_Explicit) ->
+           gather_return eq m lhs rhs
+         | _ -> fail "Goal should have been an application of a binary relation to 2 explicit arguments"
+       )
+       else (
+         fail "Goal should have been an application of a binary relation to n implicit and 2 explicit arguments"
+       )
+     )
+   | _ -> fail "Goal should be squash applied to a binary relation")
+
+let canon_return () : Tac unit =
+  canon_return' (`Steel.Memory.Tactics.req) (`Steel.Memory.Tactics.rm)
 
 let solve_can_be_split (args:list argv) : Tac bool =
   match args with
@@ -857,26 +1063,57 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
       let rnbr = slterm_nbr_uvars t2 in
       if lnbr + rnbr <= 1 then (
         let open FStar.Algebra.CommMonoid.Equiv in
-        focus (fun _ ->ignore (forall_intro());
-                     norm [delta_only [`%can_be_split_forall]];
-                     or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
-                       (fun _ ->
-                       apply_lemma (`equiv_sl_implies);
-                       // TODO: Do this count in a better way
-                       if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
-                       or_else (fun _ ->  flip()) (fun _ -> ());
-                       norm [delta_only [
-                              `%__proj__CM__item__unit;
-                              `%__proj__CM__item__mult;
-                              `%Steel.Memory.Tactics.rm;
-                              `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
-                              `%fst; `%snd];
-                            primops; iota; zeta];
-                       canon'()));
+        focus (fun _ ->
+          ignore (forall_intro());
+          norm [delta_only [`%can_be_split_forall]];
+          or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
+            (fun _ ->
+            apply_lemma (`equiv_sl_implies);
+            // TODO: Do this count in a better way
+            if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
+            or_else (fun _ ->  flip()) (fun _ -> ());
+            norm [delta_only [
+                   `%__proj__CM__item__unit;
+                   `%__proj__CM__item__mult;
+                   `%Steel.Memory.Tactics.rm;
+                   `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                   `%fst; `%snd];
+                 primops; iota; zeta];
+            canon'()));
         true
       ) else false
 
   | _ -> false // Ill-formed can_be_split, should not happen
+
+let solve_equiv_forall (args:list argv) : Tac bool =
+  match args with
+  | [_; (t1, _); (t2, _)] ->
+      let lnbr = slterm_nbr_uvars t1 in
+      let rnbr = slterm_nbr_uvars t2 in
+      if lnbr + rnbr <= 1 then (
+        let open FStar.Algebra.CommMonoid.Equiv in
+        focus (fun _ -> apply_lemma (`equiv_forall_elim);
+                      match goals () with
+                      | [] -> ()
+                      | _ ->
+                        dismiss_slprops ();
+                        ignore (forall_intro());
+                        // TODO: Do this count in a better way
+                        if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
+                        or_else (fun _ ->  flip()) (fun _ -> ());
+                        norm [delta_only [
+                                `%__proj__CM__item__unit;
+                                `%__proj__CM__item__mult;
+                                `%Steel.Memory.Tactics.rm;
+                                `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                                `%fst; `%snd];
+                              primops; iota; zeta];
+                        canon'());
+        true
+      ) else false
+
+  | _ -> false // Ill-formed can_be_split, should not happen
+
 
 let rec solve_subcomp_pre (l:list goal) : Tac unit =
   match l with
@@ -951,14 +1188,15 @@ let rec solve_subcomp_post (l:list goal) : Tac unit =
 let is_return_eq (l r:term) : Tac bool =
   let nl, al = collect_app l in
   let nr, ar = collect_app r in
-  match al, ar with
-  | [(t1, _)], [(t2, _)] ->
-    let b1 = is_uvar nl in
-    let b2 = is_uvar nr in
-    let b3 = not (is_uvar t1) in
-    let b4 = not (is_uvar t2) in
-    b1 && b2 && b3 && b4
-  | _ -> false
+  term_eq nl (`return_pre) || term_eq nr (`return_pre)
+  // match al, ar with
+  // | [(t1, _)], [(t2, _)] ->
+  //   let b1 = is_uvar nl in
+  //   let b2 = is_uvar nr in
+  //   let b3 = not (is_uvar t1) in
+  //   let b4 = not (is_uvar t2) in
+  //   b1 && b2 && b3 && b4
+  // | _ -> false
 
 let rec solve_indirection_eqs (l:list goal) : Tac unit =
   match l with
@@ -983,6 +1221,54 @@ let rec solve_all_eqs (l:list goal) : Tac unit =
         solve_all_eqs tl
     | _ -> later(); solve_all_eqs tl
 
+let rec solve_return_eqs (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let f = term_as_formula' (goal_type hd) in
+    match f with
+    | Comp (Eq _) l r ->
+        norm [delta_only [`%return_pre]];
+        trefl();
+        solve_return_eqs tl
+    | _ -> later(); solve_return_eqs tl
+
+// The term corresponds to a goal containing a return_post
+let solve_return (t:term) : Tac unit
+  = // Remove potential annotations first
+    norm [delta_only [`%annot_sub_post; `%delay]];
+    if term_appears_in (`can_be_split) t then (
+      norm [delta_only [`%can_be_split]];
+      apply_lemma (`equiv_sl_implies)
+    ) else if term_appears_in (`can_be_split_forall) t then (
+      ignore (forall_intro ());
+      norm [delta_only [`%can_be_split_forall]];
+      apply_lemma (`equiv_sl_implies)
+    ) else if term_appears_in (`equiv_forall) t then (
+      apply_lemma (`equiv_forall_elim);
+      ignore (forall_intro())
+    ) else
+      // This should never happen
+      fail "return_post goal in unexpected position";
+    match (goals ()) with
+    | [] -> () // Can happen if reflexivity was sufficient here
+    | _ -> norm [delta_only [
+                     `%__proj__CM__item__unit;
+                     `%__proj__CM__item__mult;
+                     `%Steel.Memory.Tactics.rm;
+                     `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                     `%fst; `%snd];
+               primops; iota; zeta];
+           canon_return ()
+
+let rec solve_all_returns (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let t = goal_type hd in
+    let f = term_as_formula' t in
+    if term_appears_in (`return_post) t then focus (fun _ -> solve_return t) else later();
+    solve_all_returns tl
 
 let rec solve_triv_eqs (l:list goal) : Tac unit =
   match l with
@@ -1008,6 +1294,7 @@ let solve_or_delay (g:goal) : Tac bool =
       if term_eq hd (`annot_sub_post) then false
       else if term_eq hd (`can_be_split) then solve_can_be_split args
       else if term_eq hd (`can_be_split_forall) then solve_can_be_split_forall args
+      else if term_eq hd (`equiv_forall) then solve_equiv_forall args
       else false
   | Comp (Eq _) l r ->
     let lnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars l) in
@@ -1079,17 +1366,36 @@ let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
 
 [@@ resolve_implicits; framing_implicit; plugin]
 let init_resolve_tac () : Tac unit =
+  // We split goals between framing goals, about slprops (slgs)
+  // and goals related to requires/ensures, that depend on slprops (loggs)
   let slgs, loggs = filter_goals (goals()) in
+
+  // We first solve the slprops
   set_goals slgs;
-  // We first need to solve the trivial equalities to ensure we're not restricting
-  // scopes for annotated slprops
-//  solve_triv_eqs (goals ());
+
+  // We first solve all indirection equalities that will not lead to imprecise unification
+  // i.e. we can solve all equalities inserted by layered effects, except the ones corresponding
+  // to the preconditions of a pure return
   solve_indirection_eqs (goals());
+
+  // To debug, it is best to look at the goals at this stage. Uncomment the next line
+  // dump "initial goals";
+
+  // We now solve all postconditions of pure returns to avoid restricting the uvars
+  solve_all_returns (goals ());
+
+  // We can now solve the equalities for returns
+  solve_return_eqs (goals());
+
   solve_subcomp_pre (goals ());
+  solve_subcomp_post (goals ());
   // TODO: If we had better handling of lifts from PURE, we might prove a true
   // sl_implies here, "losing" extra assertions"
-  solve_subcomp_post (goals ());
-  solve_all_eqs(goals());
+
+//  solve_all_eqs(goals());
   resolve_tac ();
+
+  // We now solve the requires/ensures goals, which are all equalities
+  // All slprops are resolved by now
   set_goals loggs;
   resolve_tac_logical ()

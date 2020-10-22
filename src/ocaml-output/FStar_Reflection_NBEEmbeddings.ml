@@ -123,32 +123,6 @@ let (e_binder :
          FStar_Pervasives_Native.None) in
   mk_emb' embed_binder unembed_binder
     FStar_Reflection_Data.fstar_refl_binder_fv
-let (e_optionstate :
-  FStar_Options.optionstate FStar_TypeChecker_NBETerm.embedding) =
-  let embed_optionstate cb b =
-    mk_lazy cb b FStar_Reflection_Data.fstar_refl_optionstate
-      FStar_Syntax_Syntax.Lazy_optionstate in
-  let unembed_optionstate cb t =
-    match t.FStar_TypeChecker_NBETerm.nbe_t with
-    | FStar_TypeChecker_NBETerm.Lazy
-        (FStar_Util.Inl
-         { FStar_Syntax_Syntax.blob = b;
-           FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_optionstate;
-           FStar_Syntax_Syntax.ltyp = uu___;
-           FStar_Syntax_Syntax.rng = uu___1;_},
-         uu___2)
-        ->
-        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
-    | uu___ ->
-        ((let uu___2 =
-            let uu___3 =
-              let uu___4 = FStar_TypeChecker_NBETerm.t_to_string t in
-              FStar_Util.format1 "Not an embedded optionstate: %s" uu___4 in
-            (FStar_Errors.Warning_NotEmbedded, uu___3) in
-          FStar_Errors.log_issue FStar_Range.dummyRange uu___2);
-         FStar_Pervasives_Native.None) in
-  mk_emb' embed_optionstate unembed_optionstate
-    FStar_Reflection_Data.fstar_refl_optionstate_fv
 let rec mapM_opt :
   'a 'b .
     ('a -> 'b FStar_Pervasives_Native.option) ->
@@ -2053,3 +2027,10 @@ let (e_qualifiers :
   FStar_Reflection_Data.qualifier Prims.list
     FStar_TypeChecker_NBETerm.embedding)
   = FStar_TypeChecker_NBETerm.e_list e_qualifier
+let (e_vconfig : FStar_Order.order FStar_TypeChecker_NBETerm.embedding) =
+  let emb cb o = failwith "emb vconfig NBE" in
+  let unemb cb t = failwith "unemb vconfig NBE" in
+  let uu___ =
+    FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.vconfig_lid
+      FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+  mk_emb' emb unemb uu___

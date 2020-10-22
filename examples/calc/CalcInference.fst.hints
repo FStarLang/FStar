@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "578d2166e8857ba1b4baf8a97d0f1c02"
+      "9cd4591420c1daae36dc7ade76b2a84e"
     ],
     [
       "CalcInference.test2",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "6f26aa23de3a62ba196320c4655c06bf"
+      "495f0ceaf1bc7113d5986ca74d1f8078"
     ],
     [
       "CalcInference.test3",
@@ -26,7 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "02ee35132a5bc81ba21e717118c3e64a"
+      "32da81b2a9161736a093e0b91e4b9a41"
     ]
   ]
 ]

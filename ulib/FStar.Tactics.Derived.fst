@@ -35,7 +35,12 @@ let run_tactic (t:unit -> Tac unit)
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
-let fail (#a:Type) (m:string) = raise #a (TacticFailure m)
+let fail (#a:Type) (m:string) =
+  raise #a (TacticFailure m)
+
+let fail_silently (#a:Type) (m:string) =
+  set_urgency 0;
+  raise #a (TacticFailure m)
 
 (** Return the current *goal*, not its type. (Ignores SMT goals) *)
 let _cur_goal () : Tac goal =
@@ -934,3 +939,20 @@ let nth_binder (i:int) : Tac binder =
   match List.Tot.Base.nth bs k with
   | None -> fail "not enough binders"
   | Some b -> b
+
+exception Appears
+
+(** Decides whether a top-level name [nm] syntactically
+appears in the term [t]. *)
+let name_appears_in (nm:name) (t:term) : Tac bool =
+  let ff (t : term) : Tac term =
+    match t with
+    | Tv_FVar fv ->
+      if inspect_fv fv = nm then
+        raise Appears;
+      t
+    | t -> t
+  in
+  try ignore (visit_tm ff t); false with
+  | Appears -> true
+  | e -> raise e

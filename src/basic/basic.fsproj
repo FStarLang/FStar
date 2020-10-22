@@ -90,6 +90,7 @@
     <Compile Include="FStar.Common.fs" />
     <Compile Include="FStar.Getopt.fsi" />
     <Compile Include="NotFStar.Getopt.fs" />
+    <Compile Include="FStar.VConfig.fs" />
     <Compile Include="FStar.Options.fsi" />
     <Compile Include="FStar.Options.fs" />
     <Compile Include="FStar.Range.fsi" />
