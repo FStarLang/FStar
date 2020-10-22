@@ -102,6 +102,17 @@ let (goal_with_env : goal -> FStar_TypeChecker_Env.env -> goal) =
         is_guard = (uu___.is_guard);
         label = (uu___.label)
       }
+let (goal_of_ctx_uvar : goal -> FStar_Syntax_Syntax.ctx_uvar -> goal) =
+  fun g ->
+    fun ctx_u ->
+      let uu___ = g in
+      {
+        goal_main_env = (uu___.goal_main_env);
+        goal_ctx_uvar = ctx_u;
+        opts = (uu___.opts);
+        is_guard = (uu___.is_guard);
+        label = (uu___.label)
+      }
 let (mk_goal :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.ctx_uvar ->

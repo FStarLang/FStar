@@ -126,6 +126,51 @@ let (dump_all : Prims.bool -> Prims.string -> unit FStar_Tactics_Monad.tac) =
                  (uu___.FStar_Tactics_Types.urgency)
              } in
            do_dump_ps msg ps'; FStar_Tactics_Result.Success ((), ps))
+let (dump_uvars_of :
+  FStar_Tactics_Types.goal -> Prims.string -> unit FStar_Tactics_Monad.tac) =
+  fun g ->
+    fun msg ->
+      FStar_Tactics_Monad.mk_tac
+        (fun ps ->
+           let uvs =
+             let uu___ =
+               let uu___1 = FStar_Tactics_Types.goal_type g in
+               FStar_Syntax_Free.uvars uu___1 in
+             FStar_All.pipe_right uu___ FStar_Util.set_elements in
+           let gs =
+             FStar_List.map (FStar_Tactics_Types.goal_of_ctx_uvar g) uvs in
+           let gs1 =
+             FStar_List.filter
+               (fun g1 ->
+                  let uu___ = FStar_Tactics_Types.check_goal_solved g1 in
+                  Prims.op_Negation uu___) gs in
+           let ps' =
+             let uu___ = ps in
+             {
+               FStar_Tactics_Types.main_context =
+                 (uu___.FStar_Tactics_Types.main_context);
+               FStar_Tactics_Types.all_implicits =
+                 (uu___.FStar_Tactics_Types.all_implicits);
+               FStar_Tactics_Types.goals = gs1;
+               FStar_Tactics_Types.smt_goals = [];
+               FStar_Tactics_Types.depth = (uu___.FStar_Tactics_Types.depth);
+               FStar_Tactics_Types.__dump =
+                 (uu___.FStar_Tactics_Types.__dump);
+               FStar_Tactics_Types.psc = (uu___.FStar_Tactics_Types.psc);
+               FStar_Tactics_Types.entry_range =
+                 (uu___.FStar_Tactics_Types.entry_range);
+               FStar_Tactics_Types.guard_policy =
+                 (uu___.FStar_Tactics_Types.guard_policy);
+               FStar_Tactics_Types.freshness =
+                 (uu___.FStar_Tactics_Types.freshness);
+               FStar_Tactics_Types.tac_verb_dbg =
+                 (uu___.FStar_Tactics_Types.tac_verb_dbg);
+               FStar_Tactics_Types.local_state =
+                 (uu___.FStar_Tactics_Types.local_state);
+               FStar_Tactics_Types.urgency =
+                 (uu___.FStar_Tactics_Types.urgency)
+             } in
+           do_dump_ps msg ps'; FStar_Tactics_Result.Success ((), ps))
 let fail1 :
   'uuuuu . Prims.string -> Prims.string -> 'uuuuu FStar_Tactics_Monad.tac =
   fun msg ->
