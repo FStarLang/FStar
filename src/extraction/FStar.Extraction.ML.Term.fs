@@ -1612,7 +1612,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                     //            BU.print1 "!!!!!!!About to normalize: %s\n" (Print.term_to_string lb.lbdef);
                     //            Options.set_option "debug_level" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
                     let lbdef =
-                        if Options.ml_ish()
+                        if Options.ml_ish() ||
+                           TcUtil.must_erase_for_extraction tcenv lb.lbtyp
                         then lb.lbdef
                         else let norm_call () =
                                  N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::extraction_norm_steps) tcenv lb.lbdef
