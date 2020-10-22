@@ -60,6 +60,7 @@ val print                  : string -> tac<unit>
 val debugging              : unit -> tac<bool>
 val dump                   : string -> tac<unit>
 val dump_all               : bool -> string -> tac<unit>
+val dump_uvars_of          : goal -> string -> tac<unit>
 val t_trefl                : (*allow_guards:*)bool -> tac<unit>
 val dup                    : unit -> tac<unit>
 val prune                  : string -> tac<unit>

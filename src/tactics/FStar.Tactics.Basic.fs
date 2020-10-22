@@ -91,6 +91,15 @@ let dump_all (print_resolved:bool) (msg:string) : tac<unit> =
     do_dump_ps msg ps';
     Success ((), ps))
 
+let dump_uvars_of (g:goal) (msg:string) : tac<unit> =
+  mk_tac (fun ps ->
+    let uvs = SF.uvars (goal_type g) |> BU.set_elements in
+    let gs = List.map (goal_of_ctx_uvar g) uvs in
+    let gs = List.filter (fun g -> not (check_goal_solved g)) gs in
+    let ps' = { ps with smt_goals = [] ; goals = gs } in
+    do_dump_ps msg ps';
+    Success ((), ps))
+
 let fail1 msg x     = fail (BU.format1 msg x)
 let fail2 msg x y   = fail (BU.format2 msg x y)
 let fail3 msg x y z = fail (BU.format3 msg x y z)

@@ -89,6 +89,7 @@ val mk_goal: env -> ctx_uvar -> FStar.Options.optionstate -> bool -> string -> g
 
 val goal_of_goal_ty : env -> typ -> goal * guard_t
 val goal_of_implicit : env -> implicit -> goal
+val goal_of_ctx_uvar: goal -> ctx_uvar -> goal
 
 type ctrl_flag =
     | Continue
