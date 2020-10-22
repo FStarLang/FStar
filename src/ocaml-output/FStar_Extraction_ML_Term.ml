@@ -3318,7 +3318,10 @@ and (term_as_mlexpr' :
                       (FStar_List.map
                          (fun lb ->
                             let lbdef =
-                              let uu___2 = FStar_Options.ml_ish () in
+                              let uu___2 =
+                                (FStar_Options.ml_ish ()) ||
+                                  (FStar_TypeChecker_Util.must_erase_for_extraction
+                                     tcenv lb.FStar_Syntax_Syntax.lbtyp) in
                               if uu___2
                               then lb.FStar_Syntax_Syntax.lbdef
                               else
