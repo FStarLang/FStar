@@ -42,15 +42,19 @@ let goal_witness g =
     FStar.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], NoUseRange))) Range.dummyRange
 let goal_type g = g.goal_ctx_uvar.ctx_uvar_typ
 
-let goal_with_type g t =
+let goal_with_type g t : goal =
     let c = g.goal_ctx_uvar in
     let c' = {c with ctx_uvar_typ = t} in
     { g with goal_ctx_uvar = c' }
 
-let goal_with_env g env =
+let goal_with_env g env : goal =
     let c = g.goal_ctx_uvar in
     let c' = {c with ctx_uvar_gamma = env.gamma ; ctx_uvar_binders = Env.all_binders env } in
     { g with goal_main_env=env; goal_ctx_uvar = c' }
+
+(* Unsafe? *)
+let goal_of_ctx_uvar (g:goal) (ctx_u : ctx_uvar) : goal =
+    { g with goal_ctx_uvar = ctx_u }
 
 let mk_goal env u o b l = {
     goal_main_env=env;

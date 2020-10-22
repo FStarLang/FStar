@@ -198,6 +198,9 @@ in the proofstate, not only the visible/focused goals. When the
 Warning, these can be a *lot*. *)
 val dump_all : print_resolved:bool -> string -> Tac unit
 
+(** Will print a goal for every unresolved implicit in the provided goal. *)
+val dump_uvars_of : goal -> string -> Tac unit
+
 (** Solves a goal [Gamma |= squash (l == r)] by attempting to unify
 [l] with [r]. This currently only exists because of some universe
 problems when trying to [apply] a reflexivity lemma. When [allow_guards]
