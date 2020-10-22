@@ -34,5 +34,3 @@ val rollback_context: solver_t -> string -> option<(int * int * solver_depth_t *
 val tc_decls: env -> list<sigelt> -> list<sigelt> * env
 val tc_partial_modul: env -> modul -> modul * env
 val tc_more_partial_modul: env -> modul -> list<sigelt> -> modul * list<sigelt> * env
-
-val unembed_optionstate_knot : ref<option<EMB.embedding<FStar.Options.optionstate>>>

@@ -854,6 +854,10 @@ type should_unfold_res =
     | Should_unfold_fully
     | Should_unfold_reify
 
+(* Max number of warnings to print in a single run.
+Initialized below in normalize *)
+let plugin_unfold_warn_ctr : ref<int> = BU.mk_ref 0
+
 let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     let attrs = match Env.attrs_of_qninfo qninfo with
             | None -> []
@@ -943,14 +947,28 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
                     (Range.string_of_range (S.range_of_fv fv))
                     (string_of_res res)
                     );
-    match res with
-    | false, _, _ -> Should_unfold_no
-    | true, false, false -> Should_unfold_yes
-    | true, true, false -> Should_unfold_fully
-    | true, false, true -> Should_unfold_reify
-    | _ ->
-      failwith <| BU.format1 "Unexpected unfolding result: %s" (string_of_res res)
-
+    let r =
+      match res with
+      | false, _, _ -> Should_unfold_no
+      | true, false, false -> Should_unfold_yes
+      | true, true, false -> Should_unfold_fully
+      | true, false, true -> Should_unfold_reify
+      | _ ->
+        failwith <| BU.format1 "Unexpected unfolding result: %s" (string_of_res res)
+    in
+    if cfg.steps.unfold_tac                             // If running a tactic,
+       && (r <> Should_unfold_no)                       // actually unfolding this fvar
+       && BU.for_some (U.is_fvar PC.plugin_attr) attrs  // it is a plugin
+       && !plugin_unfold_warn_ctr > 0                   // and we haven't raised too many warnings
+    then begin
+      // then warn about it
+      Errors.log_issue fv.fv_name.p
+                       (Errors.Warning_UnfoldPlugin,
+                        BU.format1 "Unfolding name which is marked as a plugin: %s"
+                                    (Print.fv_to_string fv));
+      plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1
+    end;
+    r
 let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
     let res =
         should_unfold cfg (fun cfg -> should_reify cfg stack) fv qninfo
@@ -2732,17 +2750,24 @@ let reflection_env_hook = BU.mk_ref None
 let normalize_with_primitive_steps ps s e t =
     let c = config' ps s e in
     reflection_env_hook := Some e;
+    plugin_unfold_warn_ctr := 10;
     log_cfg c (fun () -> BU.print1 "Cfg = %s\n" (cfg_to_string c));
     if is_nbe_request s then begin
       log_top c (fun () -> BU.print1 "Starting NBE for (%s) {\n" (Print.term_to_string t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
-      let (r, ms) = BU.record_time (fun () -> nbe_eval c s t) in
+      let (r, ms) = Errors.with_ctx "While normalizing a term via NBE" (fun () ->
+                      BU.record_time (fun () ->
+                        nbe_eval c s t))
+      in
       log_top c (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.term_to_string r) (string_of_int ms));
       r
     end else begin
       log_top c (fun () -> BU.print1 "Starting normalizer for (%s) {\n" (Print.term_to_string t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
-      let (r, ms) = BU.record_time (fun () -> norm c [] [] t) in
+      let (r, ms) = Errors.with_ctx "While normalizing a term" (fun () ->
+                      BU.record_time (fun () ->
+                        norm c [] [] t))
+      in
       log_top c (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.term_to_string r) (string_of_int ms));
       r
     end
@@ -2755,9 +2780,13 @@ let normalize s e t =
 let normalize_comp s e c =
     let cfg = config s e in
     reflection_env_hook := Some e;
+    plugin_unfold_warn_ctr := 10;
     log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
     log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
-    let (c, ms) = BU.record_time (fun () -> norm_comp cfg [] c) in
+    let (c, ms) = Errors.with_ctx "While normalizing a computation type" (fun () ->
+                    BU.record_time (fun () ->
+                      norm_comp cfg [] c))
+    in
     log_top cfg (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.comp_to_string c) (string_of_int ms));
     c
 
@@ -2923,6 +2952,7 @@ let elim_uvars_aux_c env univ_names binders c =
 
 // GM: Maybe this should take a pass over the attributes just to be safe?
 let rec elim_uvars (env:Env.env) (s:sigelt) =
+    let s = { s with sigattrs = List.map deep_compress s.sigattrs } in
     match s.sigel with
     | Sig_inductive_typ (lid, univ_names, binders, typ, lids, lids') ->
       let univ_names, binders, typ = elim_uvars_aux_t env univ_names binders typ in

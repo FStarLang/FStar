@@ -5,6 +5,7 @@ open FStar
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Range
+open FStar.VConfig
 
 module Print = FStar.Syntax.Print
 module S = FStar.Syntax.Syntax
@@ -252,6 +253,8 @@ let e_int =
         S.t_int
         BigInt.string_of_big_int
         emb_t_int
+
+let e_fsint = embed_as e_int Z.to_int_fs Z.of_int_fs None
 
 let e_string =
     let emb_t_string = ET_app(PC.string_lid |> Ident.string_of_lid, []) in
@@ -707,6 +710,146 @@ let e_range =
         S.t_range
         Range.string_of_range
         (ET_app (PC.range_lid |> Ident.string_of_lid, []))
+
+let e_vconfig =
+    let em (vcfg:vconfig) (rng:Range.range) _shadow norm : term =
+      (* The order is very important here, even if this is a record. *)
+      S.mk_Tm_app (tdataconstr PC.mkvconfig_lid) // TODO: should this be a record constructor? does it matter?
+                  [S.as_arg (embed e_fsint             vcfg.initial_fuel                              rng None norm);
+                   S.as_arg (embed e_fsint             vcfg.max_fuel                                  rng None norm);
+                   S.as_arg (embed e_fsint             vcfg.initial_ifuel                             rng None norm);
+                   S.as_arg (embed e_fsint             vcfg.max_ifuel                                 rng None norm);
+                   S.as_arg (embed e_bool              vcfg.detail_errors                             rng None norm);
+                   S.as_arg (embed e_bool              vcfg.detail_hint_replay                        rng None norm);
+                   S.as_arg (embed e_bool              vcfg.no_smt                                    rng None norm);
+                   S.as_arg (embed e_fsint             vcfg.quake_lo                                  rng None norm);
+                   S.as_arg (embed e_fsint             vcfg.quake_hi                                  rng None norm);
+                   S.as_arg (embed e_bool              vcfg.quake_keep                                rng None norm);
+                   S.as_arg (embed e_bool              vcfg.retry                                     rng None norm);
+                   S.as_arg (embed e_bool              vcfg.smtencoding_elim_box                      rng None norm);
+                   S.as_arg (embed e_string            vcfg.smtencoding_nl_arith_repr                 rng None norm);
+                   S.as_arg (embed e_string            vcfg.smtencoding_l_arith_repr                  rng None norm);
+                   S.as_arg (embed e_bool              vcfg.smtencoding_valid_intro                   rng None norm);
+                   S.as_arg (embed e_bool              vcfg.smtencoding_valid_elim                    rng None norm);
+                   S.as_arg (embed e_bool              vcfg.tcnorm                                    rng None norm);
+                   S.as_arg (embed e_bool              vcfg.no_plugins                                rng None norm);
+                   S.as_arg (embed e_bool              vcfg.no_tactics                                rng None norm);
+                   S.as_arg (embed (e_option e_string) vcfg.vcgen_optimize_bind_as_seq                rng None norm);
+                   S.as_arg (embed e_string_list       vcfg.z3cliopt                                  rng None norm);
+                   S.as_arg (embed e_bool              vcfg.z3refresh                                 rng None norm);
+                   S.as_arg (embed e_fsint             vcfg.z3rlimit                                  rng None norm);
+                   S.as_arg (embed e_fsint             vcfg.z3rlimit_factor                           rng None norm);
+                   S.as_arg (embed e_fsint             vcfg.z3seed                                    rng None norm);
+                   S.as_arg (embed e_bool              vcfg.use_two_phase_tc                          rng None norm);
+                   S.as_arg (embed e_bool              vcfg.trivial_pre_for_unannotated_effectful_fns rng None norm);
+                   S.as_arg (embed (e_option e_string) vcfg.reuse_hint_for                            rng None norm);
+                  ]
+                  rng
+    in
+    let un (t0:term) (w:bool) norm : option<vconfig> =
+        let t = U.unascribe t0 in
+        let hd, args = U.head_and_args t in
+        match (U.un_uinst hd).n, args with
+        (* Sigh *)
+        | Tm_fvar fv, [
+            (initial_fuel, _);
+            (max_fuel, _);
+            (initial_ifuel, _);
+            (max_ifuel, _);
+            (detail_errors, _);
+            (detail_hint_replay, _);
+            (no_smt, _);
+            (quake_lo, _);
+            (quake_hi, _);
+            (quake_keep, _);
+            (retry, _);
+            (smtencoding_elim_box, _);
+            (smtencoding_nl_arith_repr, _);
+            (smtencoding_l_arith_repr, _);
+            (smtencoding_valid_intro, _);
+            (smtencoding_valid_elim, _);
+            (tcnorm, _);
+            (no_plugins, _);
+            (no_tactics, _);
+            (vcgen_optimize_bind_as_seq, _);
+            (z3cliopt, _);
+            (z3refresh, _);
+            (z3rlimit, _);
+            (z3rlimit_factor, _);
+            (z3seed, _);
+            (use_two_phase_tc, _);
+            (trivial_pre_for_unannotated_effectful_fns, _);
+            (reuse_hint_for, _)
+            ] when S.fv_eq_lid fv PC.mkvconfig_lid ->
+                  BU.bind_opt (unembed e_fsint             initial_fuel w norm) (fun initial_fuel ->
+                  BU.bind_opt (unembed e_fsint             max_fuel w norm) (fun max_fuel ->
+                  BU.bind_opt (unembed e_fsint             initial_ifuel w norm) (fun initial_ifuel ->
+                  BU.bind_opt (unembed e_fsint             max_ifuel w norm) (fun max_ifuel ->
+                  BU.bind_opt (unembed e_bool              detail_errors w norm) (fun detail_errors ->
+                  BU.bind_opt (unembed e_bool              detail_hint_replay w norm) (fun detail_hint_replay ->
+                  BU.bind_opt (unembed e_bool              no_smt w norm) (fun no_smt ->
+                  BU.bind_opt (unembed e_fsint             quake_lo w norm) (fun quake_lo ->
+                  BU.bind_opt (unembed e_fsint             quake_hi w norm) (fun quake_hi ->
+                  BU.bind_opt (unembed e_bool              quake_keep w norm) (fun quake_keep ->
+                  BU.bind_opt (unembed e_bool              retry w norm) (fun retry ->
+                  BU.bind_opt (unembed e_bool              smtencoding_elim_box w norm) (fun smtencoding_elim_box ->
+                  BU.bind_opt (unembed e_string            smtencoding_nl_arith_repr w norm) (fun smtencoding_nl_arith_repr ->
+                  BU.bind_opt (unembed e_string            smtencoding_l_arith_repr w norm) (fun smtencoding_l_arith_repr ->
+                  BU.bind_opt (unembed e_bool              smtencoding_valid_intro w norm) (fun smtencoding_valid_intro ->
+                  BU.bind_opt (unembed e_bool              smtencoding_valid_elim w norm) (fun smtencoding_valid_elim ->
+                  BU.bind_opt (unembed e_bool              tcnorm w norm) (fun tcnorm ->
+                  BU.bind_opt (unembed e_bool              no_plugins w norm) (fun no_plugins ->
+                  BU.bind_opt (unembed e_bool              no_tactics w norm) (fun no_tactics ->
+                  BU.bind_opt (unembed (e_option e_string) vcgen_optimize_bind_as_seq w norm) (fun vcgen_optimize_bind_as_seq ->
+                  BU.bind_opt (unembed e_string_list       z3cliopt w norm) (fun z3cliopt ->
+                  BU.bind_opt (unembed e_bool              z3refresh w norm) (fun z3refresh ->
+                  BU.bind_opt (unembed e_fsint             z3rlimit w norm) (fun z3rlimit ->
+                  BU.bind_opt (unembed e_fsint             z3rlimit_factor w norm) (fun z3rlimit_factor ->
+                  BU.bind_opt (unembed e_fsint             z3seed w norm) (fun z3seed ->
+                  BU.bind_opt (unembed e_bool              use_two_phase_tc w norm) (fun use_two_phase_tc ->
+                  BU.bind_opt (unembed e_bool              trivial_pre_for_unannotated_effectful_fns w norm) (fun trivial_pre_for_unannotated_effectful_fns ->
+                  BU.bind_opt (unembed (e_option e_string) reuse_hint_for w norm) (fun reuse_hint_for ->
+                  Some ({
+                    initial_fuel = initial_fuel;
+                    max_fuel = max_fuel;
+                    initial_ifuel = initial_ifuel;
+                    max_ifuel = max_ifuel;
+                    detail_errors = detail_errors;
+                    detail_hint_replay = detail_hint_replay;
+                    no_smt = no_smt;
+                    quake_lo = quake_lo;
+                    quake_hi = quake_hi;
+                    quake_keep = quake_keep;
+                    retry = retry;
+                    smtencoding_elim_box = smtencoding_elim_box;
+                    smtencoding_nl_arith_repr = smtencoding_nl_arith_repr;
+                    smtencoding_l_arith_repr = smtencoding_l_arith_repr;
+                    smtencoding_valid_intro = smtencoding_valid_intro;
+                    smtencoding_valid_elim = smtencoding_valid_elim;
+                    tcnorm = tcnorm;
+                    no_plugins = no_plugins;
+                    no_tactics = no_tactics;
+                    vcgen_optimize_bind_as_seq = vcgen_optimize_bind_as_seq;
+                    z3cliopt = z3cliopt;
+                    z3refresh = z3refresh;
+                    z3rlimit = z3rlimit;
+                    z3rlimit_factor = z3rlimit_factor;
+                    z3seed = z3seed;
+                    use_two_phase_tc = use_two_phase_tc;
+                    trivial_pre_for_unannotated_effectful_fns = trivial_pre_for_unannotated_effectful_fns;
+                    reuse_hint_for = reuse_hint_for;
+                  })))))))))))))))))))))))))))))
+        | _ ->
+          if w then
+            Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded vconfig: %s" (Print.term_to_string t0)));
+          None
+    in
+    mk_emb_full
+        em
+        un
+        S.t_vconfig
+        (fun _ -> "vconfig")
+        (ET_app (PC.vconfig_lid |> Ident.string_of_lid, []))
 
 let or_else (f: option<'a>) (g:unit -> 'a) =
     match f with

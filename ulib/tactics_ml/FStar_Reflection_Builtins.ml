@@ -15,6 +15,7 @@ let term_to_string          = RB.term_to_string
 let comp_to_string          = RB.comp_to_string
 let env_open_modules        = RB.env_open_modules
 let sigelt_opts             = RB.sigelt_opts
+let embed_vconfig           = RB.embed_vconfig
 let sigelt_attrs            = RB.sigelt_attrs
 let set_sigelt_attrs        = RB.set_sigelt_attrs
 let sigelt_quals            = RB.sigelt_quals

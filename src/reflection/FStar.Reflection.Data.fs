@@ -12,6 +12,7 @@ module Ident = FStar.Ident
 module Range = FStar.Range
 module Z     = FStar.BigInt
 open FStar.Ident
+module PC = FStar.Parser.Const
 
 type name = list<string>
 type typ  = term
@@ -205,6 +206,8 @@ let fstar_refl_exp_fv           = mk_refl_data_lid_as_fv   "exp"
 let fstar_refl_qualifier        = mk_refl_data_lid_as_term "qualifier"
 let fstar_refl_qualifier_fv     = mk_refl_data_lid_as_fv   "qualifier"
 
+let fstar_refl_vconfig = tconst (PC.psconst "vconfig")
+
 (* bv_view, this is a record constructor *)
 
 let ref_Mk_bv =
@@ -213,6 +216,15 @@ let ref_Mk_bv =
                                 Ident.mk_ident ("bv_ppname", Range.dummyRange);
                                 Ident.mk_ident ("bv_index" , Range.dummyRange);
                                 Ident.mk_ident ("bv_sort"  , Range.dummyRange)]) in
+    let fv = lid_as_fv lid delta_constant (Some attr) in
+    { lid = lid
+    ; fv  = fv
+    ; t   = fv_to_tm fv
+    }
+
+let ref_Mkvconfig =
+    let lid = PC.psconst "Mkvconfig" in
+    let attr = Record_ctor (PC.psconst "vconfig", []) in
     let fv = lid_as_fv lid delta_constant (Some attr) in
     { lid = lid
     ; fv  = fv
