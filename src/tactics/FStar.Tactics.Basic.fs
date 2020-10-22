@@ -1605,14 +1605,6 @@ let set_urgency (u:Z.t) : tac<unit> =
     let ps = { ps with urgency = Z.to_int_fs u } in
     set ps)
 
-let goal_of_goal_ty env typ : goal * guard_t =
-    let u, ctx_uvars, g_u =
-        Env.new_implicit_var_aux "proofstate_of_goal_ty" typ.pos env typ Allow_untyped None
-    in
-    let ctx_uvar, _ = List.hd ctx_uvars in
-    let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
-    g, g_u
-
 let tac_env (env:Env.env) : Env.env =
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in
