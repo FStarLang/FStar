@@ -2985,8 +2985,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                        attempting=[ref_prob]; wl_deferred=[]}) with
              | Failed (prob, msg) ->
                UF.rollback tx;
-               if (not env.uvar_subtyping && has_uvars)
-               || not wl.smt_ok
+               if ((not env.uvar_subtyping && has_uvars)
+                   || not wl.smt_ok)
+                   && not env.unif_allow_ref_guards // if unif_allow_ref_guards is on, we don't give up
                then giveup env msg prob
                else fallback()
 
