@@ -309,7 +309,9 @@ let (copy_uvar :
               FStar_TypeChecker_Env.erasable_types_tab =
                 (uu___.FStar_TypeChecker_Env.erasable_types_tab);
               FStar_TypeChecker_Env.enable_defer_to_tac =
-                (uu___.FStar_TypeChecker_Env.enable_defer_to_tac)
+                (uu___.FStar_TypeChecker_Env.enable_defer_to_tac);
+              FStar_TypeChecker_Env.unif_allow_ref_guards =
+                (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
             } in
           let env1 = FStar_TypeChecker_Env.push_binders env bs in
           let uu___ = FStar_TypeChecker_Env.all_binders env1 in
@@ -6930,7 +6932,9 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                               FStar_TypeChecker_Env.erasable_types_tab =
                                 (uu___11.FStar_TypeChecker_Env.erasable_types_tab);
                               FStar_TypeChecker_Env.enable_defer_to_tac =
-                                (uu___11.FStar_TypeChecker_Env.enable_defer_to_tac)
+                                (uu___11.FStar_TypeChecker_Env.enable_defer_to_tac);
+                              FStar_TypeChecker_Env.unif_allow_ref_guards =
+                                (uu___11.FStar_TypeChecker_Env.unif_allow_ref_guards)
                             }) t in
                        match uu___10 with
                        | (uu___11, ty, uu___12) ->
@@ -7203,7 +7207,9 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                               FStar_TypeChecker_Env.erasable_types_tab =
                                 (uu___11.FStar_TypeChecker_Env.erasable_types_tab);
                               FStar_TypeChecker_Env.enable_defer_to_tac =
-                                (uu___11.FStar_TypeChecker_Env.enable_defer_to_tac)
+                                (uu___11.FStar_TypeChecker_Env.enable_defer_to_tac);
+                              FStar_TypeChecker_Env.unif_allow_ref_guards =
+                                (uu___11.FStar_TypeChecker_Env.unif_allow_ref_guards)
                             }) t in
                        match uu___10 with
                        | (uu___11, ty, uu___12) ->
@@ -7564,12 +7570,15 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                                    (FStar_Syntax_Unionfind.rollback
                                                       tx;
                                                     if
-                                                      ((Prims.op_Negation
-                                                          env1.FStar_TypeChecker_Env.uvar_subtyping)
-                                                         && has_uvars)
-                                                        ||
+                                                      (((Prims.op_Negation
+                                                           env1.FStar_TypeChecker_Env.uvar_subtyping)
+                                                          && has_uvars)
+                                                         ||
+                                                         (Prims.op_Negation
+                                                            wl2.smt_ok))
+                                                        &&
                                                         (Prims.op_Negation
-                                                           wl2.smt_ok)
+                                                           env1.FStar_TypeChecker_Env.unif_allow_ref_guards)
                                                     then giveup env1 msg prob
                                                     else fallback ())
                                                | Success
@@ -11780,7 +11789,10 @@ let (resolve_implicits' :
                                           (uu___7.FStar_TypeChecker_Env.erasable_types_tab);
                                         FStar_TypeChecker_Env.enable_defer_to_tac
                                           =
-                                          (uu___7.FStar_TypeChecker_Env.enable_defer_to_tac)
+                                          (uu___7.FStar_TypeChecker_Env.enable_defer_to_tac);
+                                        FStar_TypeChecker_Env.unif_allow_ref_guards
+                                          =
+                                          (uu___7.FStar_TypeChecker_Env.unif_allow_ref_guards)
                                       } in
                                     let tm1 =
                                       norm_with_steps
@@ -11916,7 +11928,10 @@ let (resolve_implicits' :
                                                (uu___9.FStar_TypeChecker_Env.erasable_types_tab);
                                              FStar_TypeChecker_Env.enable_defer_to_tac
                                                =
-                                               (uu___9.FStar_TypeChecker_Env.enable_defer_to_tac)
+                                               (uu___9.FStar_TypeChecker_Env.enable_defer_to_tac);
+                                             FStar_TypeChecker_Env.unif_allow_ref_guards
+                                               =
+                                               (uu___9.FStar_TypeChecker_Env.unif_allow_ref_guards)
                                            }
                                          else env1 in
                                        (let uu___10 =

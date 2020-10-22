@@ -102,7 +102,9 @@ let (set_check_kind :
         FStar_TypeChecker_Env.erasable_types_tab =
           (uu___.FStar_TypeChecker_Env.erasable_types_tab);
         FStar_TypeChecker_Env.enable_defer_to_tac =
-          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac)
+          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac);
+        FStar_TypeChecker_Env.unif_allow_ref_guards =
+          (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
       }
 let (repl_ld_tasks_of_deps :
   Prims.string Prims.list ->
