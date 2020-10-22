@@ -599,11 +599,11 @@ let (uu___143 : unit) =
                                       FStar_Tactics_InterpFuns.mk_tac_step_2
                                         Prims.int_one "catch"
                                         (fun uu___37 ->
-                                           FStar_Tactics_Basic.catch)
+                                           FStar_Tactics_Monad.catch)
                                         FStar_Syntax_Embeddings.e_any uu___33
                                         uu___34
                                         (fun uu___37 ->
-                                           FStar_Tactics_Basic.catch)
+                                           FStar_Tactics_Monad.catch)
                                         FStar_TypeChecker_NBETerm.e_any
                                         uu___35 uu___36 in
                                     let uu___33 =
@@ -625,11 +625,11 @@ let (uu___143 : unit) =
                                         FStar_Tactics_InterpFuns.mk_tac_step_2
                                           Prims.int_one "recover"
                                           (fun uu___39 ->
-                                             FStar_Tactics_Basic.recover)
+                                             FStar_Tactics_Monad.recover)
                                           FStar_Syntax_Embeddings.e_any
                                           uu___35 uu___36
                                           (fun uu___39 ->
-                                             FStar_Tactics_Basic.recover)
+                                             FStar_Tactics_Monad.recover)
                                           FStar_TypeChecker_NBETerm.e_any
                                           uu___37 uu___38 in
                                       let uu___35 =
@@ -1392,7 +1392,23 @@ let (uu___143 : unit) =
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_any
                                                                     FStar_TypeChecker_NBETerm.e_unit in
-                                                                    [uu___130] in
+                                                                    let uu___131
+                                                                    =
+                                                                    let uu___132
+                                                                    =
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_1
+                                                                    Prims.int_one
+                                                                    "set_urgency"
+                                                                    FStar_Tactics_Basic.set_urgency
+                                                                    FStar_Syntax_Embeddings.e_int
+                                                                    FStar_Syntax_Embeddings.e_unit
+                                                                    FStar_Tactics_Basic.set_urgency
+                                                                    FStar_TypeChecker_NBETerm.e_int
+                                                                    FStar_TypeChecker_NBETerm.e_unit in
+                                                                    [uu___132] in
+                                                                    uu___130
+                                                                    ::
+                                                                    uu___131 in
                                                                     uu___128
                                                                     ::
                                                                     uu___129 in
@@ -1578,22 +1594,24 @@ let (report_implicits :
   FStar_Range.range -> FStar_TypeChecker_Env.implicits -> unit) =
   fun rng ->
     fun is ->
-      let errs =
-        FStar_List.map
-          (fun imp ->
-             let uu___ =
-               let uu___1 =
-                 FStar_Syntax_Print.uvar_to_string
-                   (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
-               let uu___2 =
-                 FStar_Syntax_Print.term_to_string
-                   (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_typ in
-               FStar_Util.format3
-                 "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
-                 uu___1 uu___2 imp.FStar_TypeChecker_Common.imp_reason in
-             (FStar_Errors.Error_UninstantiatedUnificationVarInTactic, uu___,
-               rng)) is in
-      FStar_Errors.add_errors errs; FStar_Errors.stop_if_err ()
+      FStar_All.pipe_right is
+        (FStar_List.iter
+           (fun imp ->
+              let uu___1 =
+                let uu___2 =
+                  let uu___3 =
+                    FStar_Syntax_Print.uvar_to_string
+                      (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
+                  let uu___4 =
+                    FStar_Syntax_Print.term_to_string
+                      (imp.FStar_TypeChecker_Common.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_typ in
+                  FStar_Util.format3
+                    "Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")"
+                    uu___3 uu___4 imp.FStar_TypeChecker_Common.imp_reason in
+                (FStar_Errors.Error_UninstantiatedUnificationVarInTactic,
+                  uu___2) in
+              FStar_Errors.log_issue rng uu___1));
+      FStar_Errors.stop_if_err ()
 let run_tactic_on_ps :
   'a 'b .
     FStar_Range.range ->
@@ -1734,7 +1752,9 @@ let run_tactic_on_ps :
                     FStar_Tactics_Types.tac_verb_dbg =
                       (uu___.FStar_Tactics_Types.tac_verb_dbg);
                     FStar_Tactics_Types.local_state =
-                      (uu___.FStar_Tactics_Types.local_state)
+                      (uu___.FStar_Tactics_Types.local_state);
+                    FStar_Tactics_Types.urgency =
+                      (uu___.FStar_Tactics_Types.urgency)
                   } in
                 (let uu___1 = FStar_ST.op_Bang tacdbg in
                  if uu___1
@@ -1958,7 +1978,7 @@ let run_tactic_on_ps :
                                       let uu___13 =
                                         let uu___14 = texn_to_string e in
                                         FStar_Util.format1
-                                          "user tactic failed: %s" uu___14 in
+                                          "user tactic failed: `%s`" uu___14 in
                                       (FStar_Errors.Fatal_UserTacticFailure,
                                         uu___13) in
                                     FStar_Errors.raise_error uu___12

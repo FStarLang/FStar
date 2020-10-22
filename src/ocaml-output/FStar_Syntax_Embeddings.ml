@@ -441,6 +441,9 @@ let (e_int : FStar_BigInt.t embedding) =
               FStar_Pervasives_Native.None)) in
   mk_emb_full em un FStar_Syntax_Syntax.t_int FStar_BigInt.string_of_big_int
     emb_t_int
+let (e_fsint : Prims.int embedding) =
+  embed_as e_int FStar_BigInt.to_int_fs FStar_BigInt.of_int_fs
+    FStar_Pervasives_Native.None
 let (e_string : Prims.string embedding) =
   let emb_t_string =
     let uu___ =
@@ -1331,6 +1334,743 @@ let (e_range : FStar_Range.range embedding) =
       (uu___2, []) in
     FStar_Syntax_Syntax.ET_app uu___1 in
   mk_emb_full em un FStar_Syntax_Syntax.t_range FStar_Range.string_of_range
+    uu___
+let (e_vconfig : FStar_VConfig.vconfig embedding) =
+  let em vcfg rng _shadow norm =
+    let uu___ =
+      FStar_Syntax_Syntax.tdataconstr FStar_Parser_Const.mkvconfig_lid in
+    let uu___1 =
+      let uu___2 =
+        let uu___3 =
+          let uu___4 = embed e_fsint vcfg.FStar_VConfig.initial_fuel in
+          uu___4 rng FStar_Pervasives_Native.None norm in
+        FStar_Syntax_Syntax.as_arg uu___3 in
+      let uu___3 =
+        let uu___4 =
+          let uu___5 =
+            let uu___6 = embed e_fsint vcfg.FStar_VConfig.max_fuel in
+            uu___6 rng FStar_Pervasives_Native.None norm in
+          FStar_Syntax_Syntax.as_arg uu___5 in
+        let uu___5 =
+          let uu___6 =
+            let uu___7 =
+              let uu___8 = embed e_fsint vcfg.FStar_VConfig.initial_ifuel in
+              uu___8 rng FStar_Pervasives_Native.None norm in
+            FStar_Syntax_Syntax.as_arg uu___7 in
+          let uu___7 =
+            let uu___8 =
+              let uu___9 =
+                let uu___10 = embed e_fsint vcfg.FStar_VConfig.max_ifuel in
+                uu___10 rng FStar_Pervasives_Native.None norm in
+              FStar_Syntax_Syntax.as_arg uu___9 in
+            let uu___9 =
+              let uu___10 =
+                let uu___11 =
+                  let uu___12 = embed e_bool vcfg.FStar_VConfig.detail_errors in
+                  uu___12 rng FStar_Pervasives_Native.None norm in
+                FStar_Syntax_Syntax.as_arg uu___11 in
+              let uu___11 =
+                let uu___12 =
+                  let uu___13 =
+                    let uu___14 =
+                      embed e_bool vcfg.FStar_VConfig.detail_hint_replay in
+                    uu___14 rng FStar_Pervasives_Native.None norm in
+                  FStar_Syntax_Syntax.as_arg uu___13 in
+                let uu___13 =
+                  let uu___14 =
+                    let uu___15 =
+                      let uu___16 = embed e_bool vcfg.FStar_VConfig.no_smt in
+                      uu___16 rng FStar_Pervasives_Native.None norm in
+                    FStar_Syntax_Syntax.as_arg uu___15 in
+                  let uu___15 =
+                    let uu___16 =
+                      let uu___17 =
+                        let uu___18 =
+                          embed e_fsint vcfg.FStar_VConfig.quake_lo in
+                        uu___18 rng FStar_Pervasives_Native.None norm in
+                      FStar_Syntax_Syntax.as_arg uu___17 in
+                    let uu___17 =
+                      let uu___18 =
+                        let uu___19 =
+                          let uu___20 =
+                            embed e_fsint vcfg.FStar_VConfig.quake_hi in
+                          uu___20 rng FStar_Pervasives_Native.None norm in
+                        FStar_Syntax_Syntax.as_arg uu___19 in
+                      let uu___19 =
+                        let uu___20 =
+                          let uu___21 =
+                            let uu___22 =
+                              embed e_bool vcfg.FStar_VConfig.quake_keep in
+                            uu___22 rng FStar_Pervasives_Native.None norm in
+                          FStar_Syntax_Syntax.as_arg uu___21 in
+                        let uu___21 =
+                          let uu___22 =
+                            let uu___23 =
+                              let uu___24 =
+                                embed e_bool vcfg.FStar_VConfig.retry in
+                              uu___24 rng FStar_Pervasives_Native.None norm in
+                            FStar_Syntax_Syntax.as_arg uu___23 in
+                          let uu___23 =
+                            let uu___24 =
+                              let uu___25 =
+                                let uu___26 =
+                                  embed e_bool
+                                    vcfg.FStar_VConfig.smtencoding_elim_box in
+                                uu___26 rng FStar_Pervasives_Native.None norm in
+                              FStar_Syntax_Syntax.as_arg uu___25 in
+                            let uu___25 =
+                              let uu___26 =
+                                let uu___27 =
+                                  let uu___28 =
+                                    embed e_string
+                                      vcfg.FStar_VConfig.smtencoding_nl_arith_repr in
+                                  uu___28 rng FStar_Pervasives_Native.None
+                                    norm in
+                                FStar_Syntax_Syntax.as_arg uu___27 in
+                              let uu___27 =
+                                let uu___28 =
+                                  let uu___29 =
+                                    let uu___30 =
+                                      embed e_string
+                                        vcfg.FStar_VConfig.smtencoding_l_arith_repr in
+                                    uu___30 rng FStar_Pervasives_Native.None
+                                      norm in
+                                  FStar_Syntax_Syntax.as_arg uu___29 in
+                                let uu___29 =
+                                  let uu___30 =
+                                    let uu___31 =
+                                      let uu___32 =
+                                        embed e_bool
+                                          vcfg.FStar_VConfig.smtencoding_valid_intro in
+                                      uu___32 rng
+                                        FStar_Pervasives_Native.None norm in
+                                    FStar_Syntax_Syntax.as_arg uu___31 in
+                                  let uu___31 =
+                                    let uu___32 =
+                                      let uu___33 =
+                                        let uu___34 =
+                                          embed e_bool
+                                            vcfg.FStar_VConfig.smtencoding_valid_elim in
+                                        uu___34 rng
+                                          FStar_Pervasives_Native.None norm in
+                                      FStar_Syntax_Syntax.as_arg uu___33 in
+                                    let uu___33 =
+                                      let uu___34 =
+                                        let uu___35 =
+                                          let uu___36 =
+                                            embed e_bool
+                                              vcfg.FStar_VConfig.tcnorm in
+                                          uu___36 rng
+                                            FStar_Pervasives_Native.None norm in
+                                        FStar_Syntax_Syntax.as_arg uu___35 in
+                                      let uu___35 =
+                                        let uu___36 =
+                                          let uu___37 =
+                                            let uu___38 =
+                                              embed e_bool
+                                                vcfg.FStar_VConfig.no_plugins in
+                                            uu___38 rng
+                                              FStar_Pervasives_Native.None
+                                              norm in
+                                          FStar_Syntax_Syntax.as_arg uu___37 in
+                                        let uu___37 =
+                                          let uu___38 =
+                                            let uu___39 =
+                                              let uu___40 =
+                                                embed e_bool
+                                                  vcfg.FStar_VConfig.no_tactics in
+                                              uu___40 rng
+                                                FStar_Pervasives_Native.None
+                                                norm in
+                                            FStar_Syntax_Syntax.as_arg
+                                              uu___39 in
+                                          let uu___39 =
+                                            let uu___40 =
+                                              let uu___41 =
+                                                let uu___42 =
+                                                  let uu___43 =
+                                                    e_option e_string in
+                                                  embed uu___43
+                                                    vcfg.FStar_VConfig.vcgen_optimize_bind_as_seq in
+                                                uu___42 rng
+                                                  FStar_Pervasives_Native.None
+                                                  norm in
+                                              FStar_Syntax_Syntax.as_arg
+                                                uu___41 in
+                                            let uu___41 =
+                                              let uu___42 =
+                                                let uu___43 =
+                                                  let uu___44 =
+                                                    embed e_string_list
+                                                      vcfg.FStar_VConfig.z3cliopt in
+                                                  uu___44 rng
+                                                    FStar_Pervasives_Native.None
+                                                    norm in
+                                                FStar_Syntax_Syntax.as_arg
+                                                  uu___43 in
+                                              let uu___43 =
+                                                let uu___44 =
+                                                  let uu___45 =
+                                                    let uu___46 =
+                                                      embed e_bool
+                                                        vcfg.FStar_VConfig.z3refresh in
+                                                    uu___46 rng
+                                                      FStar_Pervasives_Native.None
+                                                      norm in
+                                                  FStar_Syntax_Syntax.as_arg
+                                                    uu___45 in
+                                                let uu___45 =
+                                                  let uu___46 =
+                                                    let uu___47 =
+                                                      let uu___48 =
+                                                        embed e_fsint
+                                                          vcfg.FStar_VConfig.z3rlimit in
+                                                      uu___48 rng
+                                                        FStar_Pervasives_Native.None
+                                                        norm in
+                                                    FStar_Syntax_Syntax.as_arg
+                                                      uu___47 in
+                                                  let uu___47 =
+                                                    let uu___48 =
+                                                      let uu___49 =
+                                                        let uu___50 =
+                                                          embed e_fsint
+                                                            vcfg.FStar_VConfig.z3rlimit_factor in
+                                                        uu___50 rng
+                                                          FStar_Pervasives_Native.None
+                                                          norm in
+                                                      FStar_Syntax_Syntax.as_arg
+                                                        uu___49 in
+                                                    let uu___49 =
+                                                      let uu___50 =
+                                                        let uu___51 =
+                                                          let uu___52 =
+                                                            embed e_fsint
+                                                              vcfg.FStar_VConfig.z3seed in
+                                                          uu___52 rng
+                                                            FStar_Pervasives_Native.None
+                                                            norm in
+                                                        FStar_Syntax_Syntax.as_arg
+                                                          uu___51 in
+                                                      let uu___51 =
+                                                        let uu___52 =
+                                                          let uu___53 =
+                                                            let uu___54 =
+                                                              embed e_bool
+                                                                vcfg.FStar_VConfig.use_two_phase_tc in
+                                                            uu___54 rng
+                                                              FStar_Pervasives_Native.None
+                                                              norm in
+                                                          FStar_Syntax_Syntax.as_arg
+                                                            uu___53 in
+                                                        let uu___53 =
+                                                          let uu___54 =
+                                                            let uu___55 =
+                                                              let uu___56 =
+                                                                embed e_bool
+                                                                  vcfg.FStar_VConfig.trivial_pre_for_unannotated_effectful_fns in
+                                                              uu___56 rng
+                                                                FStar_Pervasives_Native.None
+                                                                norm in
+                                                            FStar_Syntax_Syntax.as_arg
+                                                              uu___55 in
+                                                          let uu___55 =
+                                                            let uu___56 =
+                                                              let uu___57 =
+                                                                let uu___58 =
+                                                                  let uu___59
+                                                                    =
+                                                                    e_option
+                                                                    e_string in
+                                                                  embed
+                                                                    uu___59
+                                                                    vcfg.FStar_VConfig.reuse_hint_for in
+                                                                uu___58 rng
+                                                                  FStar_Pervasives_Native.None
+                                                                  norm in
+                                                              FStar_Syntax_Syntax.as_arg
+                                                                uu___57 in
+                                                            [uu___56] in
+                                                          uu___54 :: uu___55 in
+                                                        uu___52 :: uu___53 in
+                                                      uu___50 :: uu___51 in
+                                                    uu___48 :: uu___49 in
+                                                  uu___46 :: uu___47 in
+                                                uu___44 :: uu___45 in
+                                              uu___42 :: uu___43 in
+                                            uu___40 :: uu___41 in
+                                          uu___38 :: uu___39 in
+                                        uu___36 :: uu___37 in
+                                      uu___34 :: uu___35 in
+                                    uu___32 :: uu___33 in
+                                  uu___30 :: uu___31 in
+                                uu___28 :: uu___29 in
+                              uu___26 :: uu___27 in
+                            uu___24 :: uu___25 in
+                          uu___22 :: uu___23 in
+                        uu___20 :: uu___21 in
+                      uu___18 :: uu___19 in
+                    uu___16 :: uu___17 in
+                  uu___14 :: uu___15 in
+                uu___12 :: uu___13 in
+              uu___10 :: uu___11 in
+            uu___8 :: uu___9 in
+          uu___6 :: uu___7 in
+        uu___4 :: uu___5 in
+      uu___2 :: uu___3 in
+    FStar_Syntax_Syntax.mk_Tm_app uu___ uu___1 rng in
+  let un t0 w norm =
+    let t = FStar_Syntax_Util.unascribe t0 in
+    let uu___ = FStar_Syntax_Util.head_and_args t in
+    match uu___ with
+    | (hd, args) ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 = FStar_Syntax_Util.un_uinst hd in
+            uu___3.FStar_Syntax_Syntax.n in
+          (uu___2, args) in
+        (match uu___1 with
+         | (FStar_Syntax_Syntax.Tm_fvar fv,
+            (initial_fuel, uu___2)::(max_fuel, uu___3)::(initial_ifuel,
+                                                         uu___4)::(max_ifuel,
+                                                                   uu___5)::
+            (detail_errors, uu___6)::(detail_hint_replay, uu___7)::(no_smt,
+                                                                    uu___8)::
+            (quake_lo, uu___9)::(quake_hi, uu___10)::(quake_keep, uu___11)::
+            (retry, uu___12)::(smtencoding_elim_box, uu___13)::(smtencoding_nl_arith_repr,
+                                                                uu___14)::
+            (smtencoding_l_arith_repr, uu___15)::(smtencoding_valid_intro,
+                                                  uu___16)::(smtencoding_valid_elim,
+                                                             uu___17)::
+            (tcnorm, uu___18)::(no_plugins, uu___19)::(no_tactics, uu___20)::
+            (vcgen_optimize_bind_as_seq, uu___21)::(z3cliopt, uu___22)::
+            (z3refresh, uu___23)::(z3rlimit, uu___24)::(z3rlimit_factor,
+                                                        uu___25)::(z3seed,
+                                                                   uu___26)::
+            (use_two_phase_tc, uu___27)::(trivial_pre_for_unannotated_effectful_fns,
+                                          uu___28)::(reuse_hint_for, uu___29)::[])
+             when
+             FStar_Syntax_Syntax.fv_eq_lid fv
+               FStar_Parser_Const.mkvconfig_lid
+             ->
+             let uu___30 =
+               let uu___31 = unembed e_fsint initial_fuel in uu___31 w norm in
+             FStar_Util.bind_opt uu___30
+               (fun initial_fuel1 ->
+                  let uu___31 =
+                    let uu___32 = unembed e_fsint max_fuel in uu___32 w norm in
+                  FStar_Util.bind_opt uu___31
+                    (fun max_fuel1 ->
+                       let uu___32 =
+                         let uu___33 = unembed e_fsint initial_ifuel in
+                         uu___33 w norm in
+                       FStar_Util.bind_opt uu___32
+                         (fun initial_ifuel1 ->
+                            let uu___33 =
+                              let uu___34 = unembed e_fsint max_ifuel in
+                              uu___34 w norm in
+                            FStar_Util.bind_opt uu___33
+                              (fun max_ifuel1 ->
+                                 let uu___34 =
+                                   let uu___35 = unembed e_bool detail_errors in
+                                   uu___35 w norm in
+                                 FStar_Util.bind_opt uu___34
+                                   (fun detail_errors1 ->
+                                      let uu___35 =
+                                        let uu___36 =
+                                          unembed e_bool detail_hint_replay in
+                                        uu___36 w norm in
+                                      FStar_Util.bind_opt uu___35
+                                        (fun detail_hint_replay1 ->
+                                           let uu___36 =
+                                             let uu___37 =
+                                               unembed e_bool no_smt in
+                                             uu___37 w norm in
+                                           FStar_Util.bind_opt uu___36
+                                             (fun no_smt1 ->
+                                                let uu___37 =
+                                                  let uu___38 =
+                                                    unembed e_fsint quake_lo in
+                                                  uu___38 w norm in
+                                                FStar_Util.bind_opt uu___37
+                                                  (fun quake_lo1 ->
+                                                     let uu___38 =
+                                                       let uu___39 =
+                                                         unembed e_fsint
+                                                           quake_hi in
+                                                       uu___39 w norm in
+                                                     FStar_Util.bind_opt
+                                                       uu___38
+                                                       (fun quake_hi1 ->
+                                                          let uu___39 =
+                                                            let uu___40 =
+                                                              unembed e_bool
+                                                                quake_keep in
+                                                            uu___40 w norm in
+                                                          FStar_Util.bind_opt
+                                                            uu___39
+                                                            (fun quake_keep1
+                                                               ->
+                                                               let uu___40 =
+                                                                 let uu___41
+                                                                   =
+                                                                   unembed
+                                                                    e_bool
+                                                                    retry in
+                                                                 uu___41 w
+                                                                   norm in
+                                                               FStar_Util.bind_opt
+                                                                 uu___40
+                                                                 (fun retry1
+                                                                    ->
+                                                                    let uu___41
+                                                                    =
+                                                                    let uu___42
+                                                                    =
+                                                                    unembed
+                                                                    e_bool
+                                                                    smtencoding_elim_box in
+                                                                    uu___42 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___41
+                                                                    (fun
+                                                                    smtencoding_elim_box1
+                                                                    ->
+                                                                    let uu___42
+                                                                    =
+                                                                    let uu___43
+                                                                    =
+                                                                    unembed
+                                                                    e_string
+                                                                    smtencoding_nl_arith_repr in
+                                                                    uu___43 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___42
+                                                                    (fun
+                                                                    smtencoding_nl_arith_repr1
+                                                                    ->
+                                                                    let uu___43
+                                                                    =
+                                                                    let uu___44
+                                                                    =
+                                                                    unembed
+                                                                    e_string
+                                                                    smtencoding_l_arith_repr in
+                                                                    uu___44 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___43
+                                                                    (fun
+                                                                    smtencoding_l_arith_repr1
+                                                                    ->
+                                                                    let uu___44
+                                                                    =
+                                                                    let uu___45
+                                                                    =
+                                                                    unembed
+                                                                    e_bool
+                                                                    smtencoding_valid_intro in
+                                                                    uu___45 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___44
+                                                                    (fun
+                                                                    smtencoding_valid_intro1
+                                                                    ->
+                                                                    let uu___45
+                                                                    =
+                                                                    let uu___46
+                                                                    =
+                                                                    unembed
+                                                                    e_bool
+                                                                    smtencoding_valid_elim in
+                                                                    uu___46 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___45
+                                                                    (fun
+                                                                    smtencoding_valid_elim1
+                                                                    ->
+                                                                    let uu___46
+                                                                    =
+                                                                    let uu___47
+                                                                    =
+                                                                    unembed
+                                                                    e_bool
+                                                                    tcnorm in
+                                                                    uu___47 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___46
+                                                                    (fun
+                                                                    tcnorm1
+                                                                    ->
+                                                                    let uu___47
+                                                                    =
+                                                                    let uu___48
+                                                                    =
+                                                                    unembed
+                                                                    e_bool
+                                                                    no_plugins in
+                                                                    uu___48 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___47
+                                                                    (fun
+                                                                    no_plugins1
+                                                                    ->
+                                                                    let uu___48
+                                                                    =
+                                                                    let uu___49
+                                                                    =
+                                                                    unembed
+                                                                    e_bool
+                                                                    no_tactics in
+                                                                    uu___49 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___48
+                                                                    (fun
+                                                                    no_tactics1
+                                                                    ->
+                                                                    let uu___49
+                                                                    =
+                                                                    let uu___50
+                                                                    =
+                                                                    let uu___51
+                                                                    =
+                                                                    e_option
+                                                                    e_string in
+                                                                    unembed
+                                                                    uu___51
+                                                                    vcgen_optimize_bind_as_seq in
+                                                                    uu___50 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___49
+                                                                    (fun
+                                                                    vcgen_optimize_bind_as_seq1
+                                                                    ->
+                                                                    let uu___50
+                                                                    =
+                                                                    let uu___51
+                                                                    =
+                                                                    unembed
+                                                                    e_string_list
+                                                                    z3cliopt in
+                                                                    uu___51 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___50
+                                                                    (fun
+                                                                    z3cliopt1
+                                                                    ->
+                                                                    let uu___51
+                                                                    =
+                                                                    let uu___52
+                                                                    =
+                                                                    unembed
+                                                                    e_bool
+                                                                    z3refresh in
+                                                                    uu___52 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___51
+                                                                    (fun
+                                                                    z3refresh1
+                                                                    ->
+                                                                    let uu___52
+                                                                    =
+                                                                    let uu___53
+                                                                    =
+                                                                    unembed
+                                                                    e_fsint
+                                                                    z3rlimit in
+                                                                    uu___53 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___52
+                                                                    (fun
+                                                                    z3rlimit1
+                                                                    ->
+                                                                    let uu___53
+                                                                    =
+                                                                    let uu___54
+                                                                    =
+                                                                    unembed
+                                                                    e_fsint
+                                                                    z3rlimit_factor in
+                                                                    uu___54 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___53
+                                                                    (fun
+                                                                    z3rlimit_factor1
+                                                                    ->
+                                                                    let uu___54
+                                                                    =
+                                                                    let uu___55
+                                                                    =
+                                                                    unembed
+                                                                    e_fsint
+                                                                    z3seed in
+                                                                    uu___55 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___54
+                                                                    (fun
+                                                                    z3seed1
+                                                                    ->
+                                                                    let uu___55
+                                                                    =
+                                                                    let uu___56
+                                                                    =
+                                                                    unembed
+                                                                    e_bool
+                                                                    use_two_phase_tc in
+                                                                    uu___56 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___55
+                                                                    (fun
+                                                                    use_two_phase_tc1
+                                                                    ->
+                                                                    let uu___56
+                                                                    =
+                                                                    let uu___57
+                                                                    =
+                                                                    unembed
+                                                                    e_bool
+                                                                    trivial_pre_for_unannotated_effectful_fns in
+                                                                    uu___57 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___56
+                                                                    (fun
+                                                                    trivial_pre_for_unannotated_effectful_fns1
+                                                                    ->
+                                                                    let uu___57
+                                                                    =
+                                                                    let uu___58
+                                                                    =
+                                                                    let uu___59
+                                                                    =
+                                                                    e_option
+                                                                    e_string in
+                                                                    unembed
+                                                                    uu___59
+                                                                    reuse_hint_for in
+                                                                    uu___58 w
+                                                                    norm in
+                                                                    FStar_Util.bind_opt
+                                                                    uu___57
+                                                                    (fun
+                                                                    reuse_hint_for1
+                                                                    ->
+                                                                    FStar_Pervasives_Native.Some
+                                                                    {
+                                                                    FStar_VConfig.initial_fuel
+                                                                    =
+                                                                    initial_fuel1;
+                                                                    FStar_VConfig.max_fuel
+                                                                    =
+                                                                    max_fuel1;
+                                                                    FStar_VConfig.initial_ifuel
+                                                                    =
+                                                                    initial_ifuel1;
+                                                                    FStar_VConfig.max_ifuel
+                                                                    =
+                                                                    max_ifuel1;
+                                                                    FStar_VConfig.detail_errors
+                                                                    =
+                                                                    detail_errors1;
+                                                                    FStar_VConfig.detail_hint_replay
+                                                                    =
+                                                                    detail_hint_replay1;
+                                                                    FStar_VConfig.no_smt
+                                                                    = no_smt1;
+                                                                    FStar_VConfig.quake_lo
+                                                                    =
+                                                                    quake_lo1;
+                                                                    FStar_VConfig.quake_hi
+                                                                    =
+                                                                    quake_hi1;
+                                                                    FStar_VConfig.quake_keep
+                                                                    =
+                                                                    quake_keep1;
+                                                                    FStar_VConfig.retry
+                                                                    = retry1;
+                                                                    FStar_VConfig.smtencoding_elim_box
+                                                                    =
+                                                                    smtencoding_elim_box1;
+                                                                    FStar_VConfig.smtencoding_nl_arith_repr
+                                                                    =
+                                                                    smtencoding_nl_arith_repr1;
+                                                                    FStar_VConfig.smtencoding_l_arith_repr
+                                                                    =
+                                                                    smtencoding_l_arith_repr1;
+                                                                    FStar_VConfig.smtencoding_valid_intro
+                                                                    =
+                                                                    smtencoding_valid_intro1;
+                                                                    FStar_VConfig.smtencoding_valid_elim
+                                                                    =
+                                                                    smtencoding_valid_elim1;
+                                                                    FStar_VConfig.tcnorm
+                                                                    = tcnorm1;
+                                                                    FStar_VConfig.no_plugins
+                                                                    =
+                                                                    no_plugins1;
+                                                                    FStar_VConfig.no_tactics
+                                                                    =
+                                                                    no_tactics1;
+                                                                    FStar_VConfig.vcgen_optimize_bind_as_seq
+                                                                    =
+                                                                    vcgen_optimize_bind_as_seq1;
+                                                                    FStar_VConfig.z3cliopt
+                                                                    =
+                                                                    z3cliopt1;
+                                                                    FStar_VConfig.z3refresh
+                                                                    =
+                                                                    z3refresh1;
+                                                                    FStar_VConfig.z3rlimit
+                                                                    =
+                                                                    z3rlimit1;
+                                                                    FStar_VConfig.z3rlimit_factor
+                                                                    =
+                                                                    z3rlimit_factor1;
+                                                                    FStar_VConfig.z3seed
+                                                                    = z3seed1;
+                                                                    FStar_VConfig.use_two_phase_tc
+                                                                    =
+                                                                    use_two_phase_tc1;
+                                                                    FStar_VConfig.trivial_pre_for_unannotated_effectful_fns
+                                                                    =
+                                                                    trivial_pre_for_unannotated_effectful_fns1;
+                                                                    FStar_VConfig.reuse_hint_for
+                                                                    =
+                                                                    reuse_hint_for1
+                                                                    }))))))))))))))))))))))))))))
+         | uu___2 ->
+             (if w
+              then
+                (let uu___4 =
+                   let uu___5 =
+                     let uu___6 = FStar_Syntax_Print.term_to_string t0 in
+                     FStar_Util.format1 "Not an embedded vconfig: %s" uu___6 in
+                   (FStar_Errors.Warning_NotEmbedded, uu___5) in
+                 FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos uu___4)
+              else ();
+              FStar_Pervasives_Native.None)) in
+  let uu___ =
+    let uu___1 =
+      let uu___2 =
+        FStar_All.pipe_right FStar_Parser_Const.vconfig_lid
+          FStar_Ident.string_of_lid in
+      (uu___2, []) in
+    FStar_Syntax_Syntax.ET_app uu___1 in
+  mk_emb_full em un FStar_Syntax_Syntax.t_vconfig (fun uu___1 -> "vconfig")
     uu___
 let or_else : 'a . 'a FStar_Pervasives_Native.option -> (unit -> 'a) -> 'a =
   fun f ->

@@ -267,9 +267,7 @@ let (setup_hooks : unit -> unit) =
     FStar_ST.op_Colon_Equals FStar_Syntax_Util.tts_f
       (FStar_Pervasives_Native.Some FStar_Syntax_Print.term_to_string);
     FStar_ST.op_Colon_Equals FStar_TypeChecker_Normalize.unembed_binder_knot
-      (FStar_Pervasives_Native.Some FStar_Reflection_Embeddings.e_binder);
-    FStar_ST.op_Colon_Equals FStar_TypeChecker_Tc.unembed_optionstate_knot
-      (FStar_Pervasives_Native.Some FStar_Reflection_Embeddings.e_optionstate)
+      (FStar_Pervasives_Native.Some FStar_Reflection_Embeddings.e_binder)
 let (handle_error : Prims.exn -> unit) =
   fun e ->
     if FStar_Errors.handleable e then FStar_Errors.err_exn e else ();

@@ -793,7 +793,7 @@ let (load_interface_decls :
             (FStar_Errors.Fatal_ParseErrors, uu___2) in
           FStar_Errors.raise_err uu___1
       | FStar_Parser_ParseIt.ParseError (err, msg, rng) ->
-          FStar_Exn.raise (FStar_Errors.Error (err, msg, rng))
+          FStar_Exn.raise (FStar_Errors.Error (err, msg, rng, []))
       | FStar_Parser_ParseIt.Term uu___ ->
           failwith
             "Impossible: parsing a Toplevel always results in an ASTFragment"
