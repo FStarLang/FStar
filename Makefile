@@ -55,3 +55,10 @@ hints:
 
 bench:
 	./bin/run_benchmark.sh
+
+# Regenerate and accept expected output tests. Should be manually
+# reviewed before checking in.
+output:
+	$(Q)+$(MAKE) -C tests/error-messages accept
+	$(Q)+$(MAKE) -C tests/interactive accept
+	$(Q)+$(MAKE) -C tests/bug-reports output-accept

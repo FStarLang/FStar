@@ -365,6 +365,7 @@ type raw_error =
   | Warning_DeprecatedGeneric
   | Error_BadSplice
   | Error_UnexpectedUnresolvedUvar
+  | Warning_UnfoldPlugin
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
@@ -709,6 +710,7 @@ let default_settings : list<error_setting> =
     Warning_DeprecatedGeneric                         , CWarning, 337;
     Error_BadSplice                                   , CError, 338;
     Error_UnexpectedUnresolvedUvar                    , CAlwaysError, 339;
+    Warning_UnfoldPlugin                              , CWarning, 340;
     ]
 module BU = FStar.Util
 

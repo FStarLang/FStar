@@ -3852,9 +3852,25 @@ let solve_non_tactic_deferred_constraints env (g:guard_t) =
     let deferred_to_tac_ok = false in
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 
-//use_smt flag says whether to use the smt solver to discharge this guard
-//if use_smt = true, this function NEVER returns None, the error might come from the smt solver though
-//if use_smt = false, then None means could not discharge the guard without using smt
+// Discharge (the logical part of) a guard [g].
+//
+// The `use_smt` flag says whether to use the smt solver to discharge
+// this guard
+//
+// - If use_smt = true, this function NEVER returns None, and can be
+//   considered to have successfully discharged the guard. However,
+//   it could have logged an SMT error. The VC (aka the logical part
+//   of the guard) is preprocessed with tactics before discharging:
+//   every subterm wrapped with `with_tactic` has the tactic run on it
+//   and a separate VC is generated for it. They are then discharged
+//   sequentially.
+//
+// - If use_smt = false, then None means could not discharge the guard
+//   without using smt. The procedure is to just normalize and simplify
+//   the VC and check that it is [True].
+//
+// In every case, when this function returns [Some g], then the logical
+// part of [g] is [Trivial].
 let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<guard_t> =
   let debug =
       (Env.debug env <| Options.Other "Rel")
@@ -3872,6 +3888,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
   in
   let ret_g = {g with guard_f = Trivial} in
   if not (Env.should_verify env) then Some ret_g
+  // GM: ^ this doesn't look like the right place for this check.
   else
     match g.guard_f with
     | Trivial -> Some ret_g

@@ -183,7 +183,7 @@ let (do_rewrite :
         fun tm ->
           let uu___ =
             let uu___1 = __do_rewrite g0 rewriter env tm in
-            FStar_Tactics_Basic.catch uu___1 in
+            FStar_Tactics_Monad.catch uu___1 in
           FStar_Tactics_Monad.bind uu___
             (fun uu___1 ->
                match uu___1 with
