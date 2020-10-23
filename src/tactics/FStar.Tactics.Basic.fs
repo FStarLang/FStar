@@ -1281,6 +1281,23 @@ let unify_env (e:env) (t1 : term) (t2 : term) : tac<bool> = wrap_err "unify_env"
     bind (proc_guard "unify_env g2" e g2) (fun () ->
     tac_and (do_unify e ty1 ty2) (do_unify e t1 t2))))))
 
+let unify_guard_env (e:env) (t1 : term) (t2 : term) : tac<bool> = wrap_err "unify_guard_env" <|
+    bind get (fun ps ->
+    bind (__tc e t1) (fun (t1, ty1, g1) ->
+    bind (__tc e t2) (fun (t2, ty2, g2) ->
+    bind (proc_guard "unify_guard_env g1" e g1) (fun () ->
+    bind (proc_guard "unify_guard_env g2" e g2) (fun () ->
+    bind (do_unify' true e ty1 ty2) (function
+    | None -> ret false
+    | Some g1 ->
+      bind (do_unify' true e t1 t2) (function
+      | None -> ret false
+      | Some g2 ->
+        let formula : term = U.mk_conj (guard_formula g1) (guard_formula g2) in
+        bind (goal_of_guard "unify_guard_env.g2" e formula) (fun goal ->
+        bind (push_goals [goal]) (fun _ ->
+        ret true)))))))))
+
 let launch_process (prog : string) (args : list<string>) (input : string) : tac<string> =
     // The `bind idtac` thunks the tactic
     bind idtac (fun () ->

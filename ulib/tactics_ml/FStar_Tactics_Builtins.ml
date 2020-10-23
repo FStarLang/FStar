@@ -126,6 +126,7 @@ let t_destruct              = from_tac_1 B.t_destruct
 let set_options             = from_tac_1 B.set_options
 let uvar_env                = from_tac_2 B.uvar_env
 let unify_env               = from_tac_3 B.unify_env
+let unify_guard_env         = from_tac_3 B.unify_guard_env
 let match_env               = from_tac_3 B.match_env
 let launch_process          = from_tac_3 B.launch_process
 let fresh_bv_named          = from_tac_2 B.fresh_bv_named

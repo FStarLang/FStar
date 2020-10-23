@@ -280,6 +280,11 @@ terms have been unified, instantiating uvars as needed. When false,
 unification was not possible and no change to uvars occurs. *)
 val unify_env : env -> t1:term -> t2:term -> Tac bool
 
+(** Similar to [unify_env], but allows for some guards to be raised
+during unification (see [t_trefl] for an explanation). Will add a new
+goal with the guard. *)
+val unify_guard_env : env -> t1:term -> t2:term -> Tac bool
+
 (** Check if [t1] matches [t2], i.e., whether [t2] can have its uvars
 instantiated into unifying with [t1]. When the tactic returns true, the
 terms have been unified, instantiating uvars as needed. When false,

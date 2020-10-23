@@ -252,6 +252,10 @@ let unify (t1 t2 : term) : Tac bool =
     let e = cur_env () in
     unify_env e t1 t2
 
+let unify_guard (t1 t2 : term) : Tac bool =
+    let e = cur_env () in
+    unify_guard_env e t1 t2
+
 let tmatch (t1 t2 : term) : Tac bool =
     let e = cur_env () in
     match_env e t1 t2
