@@ -1,11 +1,11 @@
-module FStar.Interactive.Output
+module Interactive.Output
 
 open FStar.List
 open FStar.Tactics
 open FStar.Mul
-open FStar.Interactive.Base
-open FStar.Interactive.ExploreTerm
-open FStar.Interactive.Propositions
+open Interactive.Base
+open Interactive.ExploreTerm
+open Interactive.Propositions
 
 /// Facilities to output results to the IDE/emacs/whatever.
 /// Contains datatypes and functions to carry information.

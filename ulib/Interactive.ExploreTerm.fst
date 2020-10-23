@@ -1,9 +1,9 @@
-module FStar.Interactive.ExploreTerm
+module Interactive.ExploreTerm
 
 open FStar.List
 open FStar.Tactics
 open FStar.Mul
-open FStar.Interactive.Base
+open Interactive.Base
 
 #push-options "--z3rlimit 15 --fuel 0 --ifuel 1"
 

@@ -1,4 +1,4 @@
-module FStar.Interactive.PostProcess
+module Interactive.PostProcess
 
 module HS = FStar.HyperStack
 module ST = FStar.HyperStack.ST
@@ -7,11 +7,11 @@ module B = LowStar.Buffer
 open FStar.List
 open FStar.Tactics
 open FStar.Mul
-open FStar.Interactive.Base
-open FStar.Interactive.ExploreTerm
-open FStar.Interactive.Propositions
-open FStar.Interactive.Effectful
-open FStar.Interactive.Output
+open Interactive.Base
+open Interactive.ExploreTerm
+open Interactive.Propositions
+open Interactive.Effectful
+open Interactive.Output
 
 /// The high-level post-processing tactics, used to retrieve some specific
 /// information from the context and generate output which can be exploited
@@ -68,7 +68,7 @@ val is_focus_on_term : term -> Tac bool
 let is_focus_on_term t =
   match inspect t with
   | Tv_FVar fv ->
-    flatten_name (inspect_fv fv) = `%FStar.Interactive.PostProcess.focus_on_term
+    flatten_name (inspect_fv fv) = `%Interactive.PostProcess.focus_on_term
   | _ -> false
 
 /// Check if a term is an assertion or an assumption and return its content

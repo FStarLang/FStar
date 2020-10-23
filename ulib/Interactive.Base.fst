@@ -1,4 +1,4 @@
-module FStar.Interactive.Base
+module Interactive.Base
 
 open FStar.List
 open FStar.Tactics
