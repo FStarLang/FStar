@@ -17,8 +17,8 @@
         "equation_FStar.Reflection.Types.name", "equation_Prims.eqtype",
         "fuel_guarded_inversion_FStar.Tactics.Result.__result",
         "function_token_typing_FStar.Reflection.Types.sigelt",
-        "function_token_typing_FStar.Reflection.Types.term",
         "function_token_typing_Prims.string",
+        "kinding_FStar.VConfig.vconfig@tok",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_FStar.Tactics.Result.Failed_a",
         "projection_inverse_FStar.Tactics.Result.Failed_exn",
@@ -31,7 +31,7 @@
         "typing_FStar.Reflection.Builtins.sigelt_opts"
       ],
       0,
-      "a0267aadcdf7b1432468d3db00c131b8"
+      "6242bea98cb5e9767932d85b30723fdc"
     ]
   ]
 ]

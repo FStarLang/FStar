@@ -198,10 +198,17 @@ in the proofstate, not only the visible/focused goals. When the
 Warning, these can be a *lot*. *)
 val dump_all : print_resolved:bool -> string -> Tac unit
 
+(** Will print a goal for every unresolved implicit in the provided goal. *)
+val dump_uvars_of : goal -> string -> Tac unit
+
 (** Solves a goal [Gamma |= squash (l == r)] by attempting to unify
-[l] with [r]. This currently only exists because of some universe problems
-when trying to [apply] a reflexivity lemma. *)
-val trefl : unit -> Tac unit
+[l] with [r]. This currently only exists because of some universe
+problems when trying to [apply] a reflexivity lemma. When [allow_guards]
+is [true], it is allowed that (some) guards are raised during the
+unification process and added as a single goal to be discharged later.
+Currently, the only guards allowed here are for equating refinement
+types (e.g. [x:int{x>0}] and [x:int{0<x}]. *)
+val t_trefl : allow_guards:bool -> Tac unit
 
 (** [ctrl_rewrite] will traverse the current goal, and call [ctrl]
  * repeatedly on subterms. When [ctrl t] returns [(true, _)], the

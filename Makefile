@@ -40,8 +40,9 @@ boot:
 	$(Q)+$(MAKE) -C src/ ocaml
 	$(Q)+$(MAKE) -C src/ocaml-output ../../bin/fstar.exe
 
-# Build the libraries: fstar-compiler-lib, fstarlib, fstartaclib
+# Build the binary libraries: fstar-compiler-lib, fstarlib, fstartaclib
 # Removes the .mgen files to trigger rebuild of the libraries if needed.
+# This does NOT verify the library modules.
 libs:
 	$(Q)+$(MAKE) -C src/ocaml-output
 	$(Q)rm -f ulib/*.mgen

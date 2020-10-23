@@ -93,39 +93,6 @@ let (e_binder : FStar_Syntax_Syntax.binder FStar_Syntax_Embeddings.embedding)
          else ();
          FStar_Pervasives_Native.None) in
   mk_emb embed_binder unembed_binder FStar_Reflection_Data.fstar_refl_binder
-let (e_optionstate :
-  FStar_Options.optionstate FStar_Syntax_Embeddings.embedding) =
-  let embed_optionstate rng b =
-    FStar_Syntax_Util.mk_lazy b FStar_Reflection_Data.fstar_refl_optionstate
-      FStar_Syntax_Syntax.Lazy_optionstate (FStar_Pervasives_Native.Some rng) in
-  let unembed_optionstate w t =
-    let uu___ =
-      let uu___1 = FStar_Syntax_Subst.compress t in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_lazy
-        { FStar_Syntax_Syntax.blob = b;
-          FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_optionstate;
-          FStar_Syntax_Syntax.ltyp = uu___1;
-          FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Dyn.undyn b in FStar_Pervasives_Native.Some uu___3
-    | uu___1 ->
-        (if w
-         then
-           (let uu___3 =
-              let uu___4 =
-                let uu___5 = FStar_Syntax_Print.term_to_string t in
-                FStar_Util.format1 "Not an embedded optionstate: %s" uu___5 in
-              (FStar_Errors.Warning_NotEmbedded, uu___4) in
-            FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___3)
-         else ();
-         FStar_Pervasives_Native.None) in
-  mk_emb embed_optionstate unembed_optionstate
-    FStar_Reflection_Data.fstar_refl_optionstate
-let (uu___61 : unit) =
-  FStar_ST.op_Colon_Equals FStar_Reflection_Basic.e_optionstate_hook
-    (FStar_Pervasives_Native.Some e_optionstate)
 let rec mapM_opt :
   'a 'b .
     ('a -> 'b FStar_Pervasives_Native.option) ->

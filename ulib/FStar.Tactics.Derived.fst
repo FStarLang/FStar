@@ -152,6 +152,14 @@ discharged by the engine. Just a thin wrapper around [t_apply_lemma]. *)
 let apply_lemma (t : term) : Tac unit =
     t_apply_lemma false false t
 
+(** See docs for [t_trefl] *)
+let trefl () : Tac unit =
+  t_trefl false
+
+(** See docs for [t_trefl] *)
+let trefl_guard () : Tac unit =
+  t_trefl true
+
 (** Similar to [apply_lemma], but will not instantiate uvars in the
 goal while applying. *)
 let apply_lemma_noinst (t : term) : Tac unit =
@@ -939,6 +947,23 @@ let nth_binder (i:int) : Tac binder =
   match List.Tot.Base.nth bs k with
   | None -> fail "not enough binders"
   | Some b -> b
+
+exception Appears
+
+(** Decides whether a top-level name [nm] syntactically
+appears in the term [t]. *)
+let name_appears_in (nm:name) (t:term) : Tac bool =
+  let ff (t : term) : Tac term =
+    match t with
+    | Tv_FVar fv ->
+      if inspect_fv fv = nm then
+        raise Appears;
+      t
+    | t -> t
+  in
+  try ignore (visit_tm ff t); false with
+  | Appears -> true
+  | e -> raise e
 
 (** [mk_abs [x1; ...; xn] t] returns the term [fun x1 ... xn. t] *)
 let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =

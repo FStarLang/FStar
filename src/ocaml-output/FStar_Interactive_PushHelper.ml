@@ -102,7 +102,9 @@ let (set_check_kind :
         FStar_TypeChecker_Env.erasable_types_tab =
           (uu___.FStar_TypeChecker_Env.erasable_types_tab);
         FStar_TypeChecker_Env.enable_defer_to_tac =
-          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac)
+          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac);
+        FStar_TypeChecker_Env.unif_allow_ref_guards =
+          (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
       }
 let (repl_ld_tasks_of_deps :
   Prims.string Prims.list ->
@@ -623,7 +625,7 @@ let (repl_tx :
         | FStar_Util.SigInt ->
             (FStar_Util.print_error "[E] Interrupt";
              (FStar_Pervasives_Native.None, st))
-        | FStar_Errors.Error (e, msg, r) ->
+        | FStar_Errors.Error (e, msg, r, _ctx) ->
             let uu___1 =
               let uu___2 =
                 FStar_Interactive_JsonHelper.js_diag
@@ -631,7 +633,7 @@ let (repl_tx :
                   (FStar_Pervasives_Native.Some r) in
               FStar_Pervasives_Native.Some uu___2 in
             (uu___1, st)
-        | FStar_Errors.Err (e, msg) ->
+        | FStar_Errors.Err (e, msg, _ctx) ->
             let uu___1 =
               let uu___2 =
                 FStar_Interactive_JsonHelper.js_diag

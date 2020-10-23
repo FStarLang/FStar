@@ -134,6 +134,10 @@ let list_append_lid       = p2l ["FStar"; "List"; "append"]
 let list_tot_append_lid   = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let id_lid                = psconst "id"
 
+/// Constants from FStar.Char
+let c2l s = p2l ["FStar"; "Char"; s]
+let char_u32_of_char = c2l "u32_of_char"
+
 /// Constants from FStar.String
 let s2l n = p2l ["FStar"; "String"; n]
 let string_list_of_string_lid = s2l "list_of_string"
@@ -155,6 +159,8 @@ let string_of_int_lid = p2l ["Prims"; "string_of_int"]
 let string_of_bool_lid = p2l ["Prims"; "string_of_bool"]
 let string_compare = p2l ["FStar"; "String"; "compare"]
 let order_lid       = p2l ["FStar"; "Order"; "order"]
+let vconfig_lid     = p2l ["FStar"; "VConfig"; "vconfig"]
+let mkvconfig_lid   = p2l ["FStar"; "VConfig"; "Mkvconfig"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"

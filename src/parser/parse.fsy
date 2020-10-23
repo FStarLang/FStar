@@ -25,7 +25,6 @@ open FStar.String
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
-
 let mk_meta_tac m = Meta (Arg_qualifier_meta_tac m)
 let mk_meta_attr m = Meta (Arg_qualifier_meta_attr m)
 
@@ -1426,7 +1425,7 @@ in
 | IF noSeqTerm THEN noSeqTerm
     {let (_1, e1, _3, e2) = ((), $2, (), $4) in
       (
-        let e3 = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
+        let e3 = mk_term (Const Const_unit) (rhs2 parseState 1 4) Expr in
         mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
       )}
 | TRY term WITH reverse_left_flexible_nonempty_list_BAR_patternBranch_
@@ -2556,5 +2555,4 @@ in
    ( x :: xs )}
 
 %%
-
 

@@ -30,10 +30,10 @@ let run_safe :
       else
         (try (fun uu___2 -> match () with | () -> run t ps) ()
          with
-         | FStar_Errors.Err (uu___3, msg) ->
+         | FStar_Errors.Err (uu___3, msg, uu___4) ->
              FStar_Tactics_Result.Failed
                ((FStar_Tactics_Common.TacticFailure msg), ps)
-         | FStar_Errors.Error (uu___3, msg, uu___4) ->
+         | FStar_Errors.Error (uu___3, msg, uu___4, uu___5) ->
              FStar_Tactics_Result.Failed
                ((FStar_Tactics_Common.TacticFailure msg), ps)
          | e -> FStar_Tactics_Result.Failed (e, ps))
@@ -142,13 +142,13 @@ let trytac_exn : 'a . 'a tac -> 'a FStar_Pervasives_Native.option tac =
               match () with | () -> let uu___1 = trytac t in run uu___1 ps)
              ()
          with
-         | FStar_Errors.Err (uu___1, msg) ->
-             (log ps
-                (fun uu___3 -> FStar_Util.print1 "trytac_exn error: (%s)" msg);
-              FStar_Tactics_Result.Success (FStar_Pervasives_Native.None, ps))
-         | FStar_Errors.Error (uu___1, msg, uu___2) ->
+         | FStar_Errors.Err (uu___1, msg, uu___2) ->
              (log ps
                 (fun uu___4 -> FStar_Util.print1 "trytac_exn error: (%s)" msg);
+              FStar_Tactics_Result.Success (FStar_Pervasives_Native.None, ps))
+         | FStar_Errors.Error (uu___1, msg, uu___2, uu___3) ->
+             (log ps
+                (fun uu___5 -> FStar_Util.print1 "trytac_exn error: (%s)" msg);
               FStar_Tactics_Result.Success (FStar_Pervasives_Native.None, ps)))
 let rec mapM : 'a 'b . ('a -> 'b tac) -> 'a Prims.list -> 'b Prims.list tac =
   fun f ->

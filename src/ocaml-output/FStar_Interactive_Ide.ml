@@ -32,14 +32,14 @@ let with_captured_errors' :
         | FStar_Util.SigInt ->
             (FStar_Util.print_string "Interrupted";
              FStar_Pervasives_Native.None)
-        | FStar_Errors.Error (e, msg, r) ->
-            (FStar_TypeChecker_Err.add_errors env [(e, msg, r)];
+        | FStar_Errors.Error (e, msg, r, ctx) ->
+            (FStar_TypeChecker_Err.add_errors env [(e, msg, r, ctx)];
              FStar_Pervasives_Native.None)
-        | FStar_Errors.Err (e, msg) ->
+        | FStar_Errors.Err (e, msg, ctx) ->
             ((let uu___2 =
                 let uu___3 =
                   let uu___4 = FStar_TypeChecker_Env.get_range env in
-                  (e, msg, uu___4) in
+                  (e, msg, uu___4, ctx) in
                 [uu___3] in
               FStar_TypeChecker_Err.add_errors env uu___2);
              FStar_Pervasives_Native.None)
@@ -799,30 +799,33 @@ let (json_of_issue : FStar_Errors.issue -> FStar_Util.json) =
         let uu___2 =
           let uu___3 =
             let uu___4 =
-              let uu___5 =
-                let uu___6 =
-                  let uu___7 =
+              let uu___5 = FStar_Errors.issue_message issue in
+              FStar_Util.JsonStr uu___5 in
+            ("message", uu___4) in
+          let uu___4 =
+            let uu___5 =
+              let uu___6 =
+                let uu___7 =
+                  let uu___8 =
                     match issue.FStar_Errors.issue_range with
                     | FStar_Pervasives_Native.None -> []
                     | FStar_Pervasives_Native.Some r ->
-                        let uu___8 = FStar_Range.json_of_use_range r in
-                        [uu___8] in
-                  let uu___8 =
+                        let uu___9 = FStar_Range.json_of_use_range r in
+                        [uu___9] in
+                  let uu___9 =
                     match issue.FStar_Errors.issue_range with
                     | FStar_Pervasives_Native.Some r when
-                        let uu___9 = FStar_Range.def_range r in
-                        let uu___10 = FStar_Range.use_range r in
-                        uu___9 <> uu___10 ->
-                        let uu___9 = FStar_Range.json_of_def_range r in
-                        [uu___9]
-                    | uu___9 -> [] in
-                  FStar_List.append uu___7 uu___8 in
-                FStar_Util.JsonList uu___6 in
-              ("ranges", uu___5) in
-            [uu___4] in
-          ("message",
-            (FStar_Util.JsonStr (issue.FStar_Errors.issue_message))) ::
-            uu___3 in
+                        let uu___10 = FStar_Range.def_range r in
+                        let uu___11 = FStar_Range.use_range r in
+                        uu___10 <> uu___11 ->
+                        let uu___10 = FStar_Range.json_of_def_range r in
+                        [uu___10]
+                    | uu___10 -> [] in
+                  FStar_List.append uu___8 uu___9 in
+                FStar_Util.JsonList uu___7 in
+              ("ranges", uu___6) in
+            [uu___5] in
+          uu___3 :: uu___4 in
         FStar_List.append
           (match issue.FStar_Errors.issue_number with
            | FStar_Pervasives_Native.None -> []
@@ -1437,12 +1440,13 @@ let (rephrase_dependency_error : FStar_Errors.issue -> FStar_Errors.issue) =
     let uu___ = issue in
     let uu___1 =
       FStar_Util.format1 "Error while computing or loading dependencies:\n%s"
-        issue.FStar_Errors.issue_message in
+        issue.FStar_Errors.issue_msg in
     {
-      FStar_Errors.issue_message = uu___1;
+      FStar_Errors.issue_msg = uu___1;
       FStar_Errors.issue_level = (uu___.FStar_Errors.issue_level);
       FStar_Errors.issue_range = (uu___.FStar_Errors.issue_range);
-      FStar_Errors.issue_number = (uu___.FStar_Errors.issue_number)
+      FStar_Errors.issue_number = (uu___.FStar_Errors.issue_number);
+      FStar_Errors.issue_ctx = (uu___.FStar_Errors.issue_ctx)
     }
 let run_push_without_deps :
   'uuuuu .
@@ -1560,7 +1564,9 @@ let run_push_without_deps :
                FStar_TypeChecker_Env.erasable_types_tab =
                  (uu___1.FStar_TypeChecker_Env.erasable_types_tab);
                FStar_TypeChecker_Env.enable_defer_to_tac =
-                 (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac)
+                 (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac);
+               FStar_TypeChecker_Env.unif_allow_ref_guards =
+                 (uu___1.FStar_TypeChecker_Env.unif_allow_ref_guards)
              });
           FStar_Interactive_JsonHelper.repl_stdin =
             (uu___.FStar_Interactive_JsonHelper.repl_stdin);
