@@ -4091,6 +4091,90 @@ let (unify_env :
                                            let uu___10 = do_unify e t11 t21 in
                                            tac_and uu___9 uu___10))))) in
         FStar_All.pipe_left (FStar_Tactics_Monad.wrap_err "unify_env") uu___
+let (unify_guard_env :
+  env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term -> Prims.bool FStar_Tactics_Monad.tac)
+  =
+  fun e ->
+    fun t1 ->
+      fun t2 ->
+        let uu___ =
+          FStar_Tactics_Monad.bind FStar_Tactics_Monad.get
+            (fun ps ->
+               let uu___1 = __tc e t1 in
+               FStar_Tactics_Monad.bind uu___1
+                 (fun uu___2 ->
+                    match uu___2 with
+                    | (t11, ty1, g1) ->
+                        let uu___3 = __tc e t2 in
+                        FStar_Tactics_Monad.bind uu___3
+                          (fun uu___4 ->
+                             match uu___4 with
+                             | (t21, ty2, g2) ->
+                                 let uu___5 =
+                                   proc_guard "unify_guard_env g1" e g1 in
+                                 FStar_Tactics_Monad.bind uu___5
+                                   (fun uu___6 ->
+                                      let uu___7 =
+                                        proc_guard "unify_guard_env g2" e g2 in
+                                      FStar_Tactics_Monad.bind uu___7
+                                        (fun uu___8 ->
+                                           let uu___9 =
+                                             do_unify' true e ty1 ty2 in
+                                           FStar_Tactics_Monad.bind uu___9
+                                             (fun uu___10 ->
+                                                match uu___10 with
+                                                | FStar_Pervasives_Native.None
+                                                    ->
+                                                    FStar_Tactics_Monad.ret
+                                                      false
+                                                | FStar_Pervasives_Native.Some
+                                                    g11 ->
+                                                    let uu___11 =
+                                                      do_unify' true e t11
+                                                        t21 in
+                                                    FStar_Tactics_Monad.bind
+                                                      uu___11
+                                                      (fun uu___12 ->
+                                                         match uu___12 with
+                                                         | FStar_Pervasives_Native.None
+                                                             ->
+                                                             FStar_Tactics_Monad.ret
+                                                               false
+                                                         | FStar_Pervasives_Native.Some
+                                                             g21 ->
+                                                             let formula =
+                                                               let uu___13 =
+                                                                 guard_formula
+                                                                   g11 in
+                                                               let uu___14 =
+                                                                 guard_formula
+                                                                   g21 in
+                                                               FStar_Syntax_Util.mk_conj
+                                                                 uu___13
+                                                                 uu___14 in
+                                                             let uu___13 =
+                                                               FStar_Tactics_Monad.goal_of_guard
+                                                                 "unify_guard_env.g2"
+                                                                 e formula in
+                                                             FStar_Tactics_Monad.bind
+                                                               uu___13
+                                                               (fun goal ->
+                                                                  let uu___14
+                                                                    =
+                                                                    FStar_Tactics_Monad.push_goals
+                                                                    [goal] in
+                                                                  FStar_Tactics_Monad.bind
+                                                                    uu___14
+                                                                    (
+                                                                    fun
+                                                                    uu___15
+                                                                    ->
+                                                                    FStar_Tactics_Monad.ret
+                                                                    true))))))))) in
+        FStar_All.pipe_left (FStar_Tactics_Monad.wrap_err "unify_guard_env")
+          uu___
 let (launch_process :
   Prims.string ->
     Prims.string Prims.list ->
