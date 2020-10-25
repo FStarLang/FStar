@@ -366,6 +366,7 @@ type raw_error =
   | Error_BadSplice
   | Error_UnexpectedUnresolvedUvar
   | Warning_UnfoldPlugin
+  | Error_LayeredMissingAnnot
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
@@ -711,6 +712,7 @@ let default_settings : list<error_setting> =
     Error_BadSplice                                   , CError, 338;
     Error_UnexpectedUnresolvedUvar                    , CAlwaysError, 339;
     Warning_UnfoldPlugin                              , CWarning, 340;
+    Error_LayeredMissingAnnot                         , CAlwaysError, 341;
     ]
 module BU = FStar.Util
 

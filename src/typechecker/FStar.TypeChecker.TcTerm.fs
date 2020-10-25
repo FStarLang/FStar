@@ -213,7 +213,7 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
         else if U.is_pure_or_ghost_comp c
         then Some (tot_or_gtot c), c, None
         else if U.comp_effect_name c |> Env.norm_eff_name env |> Env.is_layered_effect env
-        then raise_error (Errors.Fatal_IllTyped,  //hard error if layered effects are used without annotations
+        then raise_error (Errors.Error_LayeredMissingAnnot,  //hard error if layered effects are used without annotations
                BU.format2 "Missing annotation for a layered effect (%s) computation at %s"
                  (c |> U.comp_effect_name |> Ident.string_of_lid) (Range.string_of_range e.pos)) e.pos
         else if Options.trivial_pre_for_unannotated_effectful_fns ()
