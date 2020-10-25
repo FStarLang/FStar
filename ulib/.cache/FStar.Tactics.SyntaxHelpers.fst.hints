@@ -11,7 +11,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "10e750fb32d95c42d8805c51d5f206ce"
+      "0e444e7f0f0b1b4eb59b89d45f5bff80"
     ],
     [
       "FStar.Tactics.SyntaxHelpers.mk_tot_arr",
@@ -23,7 +23,7 @@
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list"
       ],
       0,
-      "66e6bb861d0ff7f87b4a0ebd081bcf6e"
+      "0053bd89351a58b5c1874a304d81608b"
     ]
   ]
 ]

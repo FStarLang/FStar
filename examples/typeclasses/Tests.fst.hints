@@ -16,7 +16,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "954d48954e32bd685bad2d19383d37cd"
+      "9d5101c451ce8f5763748a428fca5145"
     ],
     [
       "Tests.uu___13",
@@ -25,7 +25,7 @@
       1,
       [ "@query" ],
       0,
-      "cc42c6a4cb1f2113e1b5f033f16f0db8"
+      "ec390883d22370ac8789ec74365efb97"
     ],
     [
       "Tests.uu___14",
@@ -34,7 +34,7 @@
       1,
       [ "@query" ],
       0,
-      "847318ad5edc6ed655a67a69993e7ba3"
+      "c9efbafd054e16c9b796cada53de8ed4"
     ],
     [
       "Tests.test1",
@@ -71,7 +71,7 @@
         "typing_Num.num_int", "typing_Tests.sum"
       ],
       0,
-      "9170394147e9664ca708a8ea4a91cfe4"
+      "1b919ab8e54fbc58800bfa1594860d9a"
     ],
     [
       "Tests.test2",
@@ -99,7 +99,7 @@
         "token_correspondence_Prims.op_Subtraction"
       ],
       0,
-      "cec818904660cfdff38ea4f053712fce"
+      "22d7ab88ac14f25b87adee78b2ece246"
     ]
   ]
 ]
