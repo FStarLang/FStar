@@ -24,6 +24,7 @@ module Env    = FStar.TypeChecker.Env
 module TcComm = FStar.TypeChecker.Common
 module N      = FStar.TypeChecker.Normalize
 module Const  = FStar.Const
+module Errors = FStar.Errors
 
 (* WHY DO I NEED TO COPY THESE? *)
 type controller_ty = term -> tac<(bool * ctrl_flag)>
