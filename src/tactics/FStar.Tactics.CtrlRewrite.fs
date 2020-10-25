@@ -63,13 +63,26 @@ let __do_rewrite
      * the typechecker, t can be elaborated and have more structure. In
      * particular, it can be abscribed and hence CONTAIN t AS A SUBTERM!
      * Which would cause an infinite loop between this function and
-     * ctrl_fold_env. *)
-    let _, lcomp, g = env.tc_term ({ env with Env.lax = true }) tm in
-    (* TODO: re-typechecking the goal is expensive *)
-    (* use type_of_well_typed_term...? *)
+     * ctrl_fold_env.
+     *
+     * If we got an error about a layered effect missing an annotation,
+     * we just skip the term, for reasons similar to unapplied constants
+     * above. Other exceptions are re-raised.
+     *)
+    let res =
+      try
+        Errors.with_ctx "While typechecking a subterm for ctrl_rewrite" (fun () ->
+          Some (env.tc_term ({ env with Env.lax = true }) tm))
+      with
+      | Errors.Error (Errors.Error_LayeredMissingAnnot, _, _, _) -> None
+      | e -> raise e
+    in
+    match res with
+    | None -> ret tm
+    | Some (_, lcomp, g) ->
 
     if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
-      ret tm (* SHOULD THIS CHECK BE IN MAYBE_REWRITE INSTEAD? *)
+      ret tm (* SHOULD THIS CHECK BE IN maybe_rewrite INSTEAD? *)
     else
     let typ = lcomp.res_typ in
     bind (new_uvar "do_rewrite.rhs" env typ) (fun (ut, uvar_ut) ->
