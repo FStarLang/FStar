@@ -283,7 +283,9 @@ let rec is_fstar_value (env:uenv) (t:term) =
     | Tm_constant _
     | Tm_bvar _
     | Tm_fvar _
+    | Tm_name _
     | Tm_abs _  -> true
+
     | Tm_app(head, args) ->
         (* If it's a constructor, then all we need to do is check that the
          * arguments to it are themselves values. *)
@@ -295,9 +297,26 @@ let rec is_fstar_value (env:uenv) (t:term) =
           is_fstar_value env head &&
           List.for_all (fun (arg, _) -> is_type env arg) args
 
+    | Tm_quoted _
+    | Tm_match _
+    | Tm_let _ ->
+      false
+
+    | Tm_uinst(t, _)
     | Tm_meta(t, _)
     | Tm_ascribed(t, _, _) -> is_fstar_value env t
-    | _ -> false
+
+    | Tm_lazy li -> is_fstar_value env (U.unfold_lazy li)
+
+    (* probably should not appear, marking them false to be safe *)
+    | Tm_type _
+    | Tm_refine _
+    | Tm_arrow _
+    | Tm_uvar _
+    | Tm_unknown ->
+      false
+
+    | Tm_delayed _ -> failwith "impossible"
 
 let rec is_ml_value e =
     match e.expr with
