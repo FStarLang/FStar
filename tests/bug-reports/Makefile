@@ -174,3 +174,10 @@ extract: $(subst .fst,.extract,$(SHOULD_EXTRACT_CLOSED))
 clean:
 	rm -rf out*
 	rm -rf Bug*.exe
+
+
+# %.ml: %.fst
+#         $(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract $(patsubst %.fst,%,%<)--codegen OCaml $<
+
+# %.extract-compare: %.ml
+#         diff -u --strip-trailing-cr $< $<.expected
