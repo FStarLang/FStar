@@ -209,19 +209,57 @@ let sort_ftv ftv =
   BU.sort_with (fun x y -> String.compare (string_of_id x) (string_of_id y)) <|
       BU.remove_dups (fun x y -> (string_of_id x) = (string_of_id y)) ftv
 
-let rec free_tick_vars_b env binder = match binder.b with
+let rec free_tick_vars_b (env:env_t) (binder:binder) : env_t * list<ident> =
+  match binder.b with
   | Variable _ -> env, []
   | TVariable x ->
     let env, _ = Env.push_bv env x in
     (env, [x])
   | Annotated(_, term) ->
-    (env, free_tick_vars env term)
+    (env, free_tick_vars0 env term)
   | TAnnotated(id, _) ->
     let env, _ = Env.push_bv env id in
     (env, [])
   | NoName t ->
-    (env, free_tick_vars env t)
-and free_tick_vars env t = match (unparen t).tm with
+    (env, free_tick_vars0 env t)
+
+and free_tick_vars_bs (env:env_t) (binders:list<binder>) : env_t * list<ident> =
+  List.fold_left (fun (env, free) binder ->
+      let env, f = free_tick_vars_b env binder in
+      env, f@free) (env, []) binders
+
+and free_tick_vars_pat (env:env_t) (pat:pattern) : list<ident> =
+  match pat.pat with
+  | PatWild _
+  | PatConst _
+  | PatVar _
+  | PatName _
+  | PatOp _ -> []
+
+  | PatTvar (a, _) ->
+    (match Env.try_lookup_id env a with
+      | None -> [a]
+      | _ -> [])
+
+  | PatApp (hd, args) ->
+    free_tick_vars_pat env hd @ List.collect (free_tick_vars_pat env) args
+
+  | PatAscribed (p, (t, tacopt)) ->
+    free_tick_vars_pat env p
+    @ free_tick_vars0 env t
+    @ (match tacopt with | None -> [] | Some tau -> free_tick_vars0 env tau)
+
+  | PatTuple (pats, _)
+  | PatList pats
+  | PatOr pats ->
+    List.collect (free_tick_vars_pat env) pats
+
+  | PatRecord fields ->
+    List.collect (fun (_, pat) -> free_tick_vars_pat env pat) fields
+
+(* May return duplicates and is unsorted, call free_tick_vars below instead. *)
+and free_tick_vars0 (env:env_t) (t:term) : list<ident> =
+let res = match t.tm with
   | Labeled _ -> failwith "Impossible --- labeled source term"
 
   | Tvar a ->
@@ -237,69 +275,101 @@ and free_tick_vars env t = match (unparen t).tm with
   | Discrim _
   | Name _  -> []
 
+  | LetOpen (_, t)
   | Requires (t, _)
   | Ensures (t, _)
   | Decreases (t, _)
-  | NamedTyp(_, t) -> free_tick_vars env t
-  | Paren t -> failwith "impossible"
+  | Paren t
+  | NamedTyp(_, t) -> free_tick_vars0 env t
+
   | Ascribed(t, t', tacopt) ->
     let ts = t::t'::(match tacopt with None -> [] | Some t -> [t]) in
-    List.collect (free_tick_vars env) ts
+    List.collect (free_tick_vars0 env) ts
 
-  | Construct(_, ts) -> List.collect (fun (t, _) -> free_tick_vars env t) ts
+  | Construct(_, ts) -> List.collect (fun (t, _) -> free_tick_vars0 env t) ts
 
-  | Op(_, ts) -> List.collect (free_tick_vars env) ts
+  | Op(_, ts) -> List.collect (free_tick_vars0 env) ts
 
-  | App(t1,t2,_) -> free_tick_vars env t1@free_tick_vars env t2
+  | App(t1,t2,_) -> free_tick_vars0 env t1@free_tick_vars0 env t2
 
   | Refine (b, t) ->
     let env, f = free_tick_vars_b env b in
-    f@free_tick_vars env t
+    f@free_tick_vars0 env t
 
   | Sum(binders, body) ->
     let env, free = List.fold_left (fun (env, free) bt ->
       let env, f =
         match bt with
         | Inl binder -> free_tick_vars_b env binder
-        | Inr t -> env, free_tick_vars env t
+        | Inr t -> env, free_tick_vars0 env t
       in
       env, f@free) (env, []) binders in
-    free@free_tick_vars env body
+    free@free_tick_vars0 env body
 
-  | Product(binders, body) ->
-    let env, free = List.fold_left (fun (env, free) binder ->
-      let env, f = free_tick_vars_b env binder in
-      env, f@free) (env, []) binders in
-    free@free_tick_vars env body
+  | QForall (bs, _, body)
+  | QExists (bs, _, body)
+  | Product(bs, body) ->
+    let env, free = free_tick_vars_bs env bs in
+    free@free_tick_vars0 env body
 
-  | Project(t, _) -> free_tick_vars env t
+  | Project(t, _) -> free_tick_vars0 env t
 
   | Attributes cattributes ->
       (* attributes should be closed but better safe than sorry *)
-      List.collect (free_tick_vars env) cattributes
+      List.collect (free_tick_vars0 env) cattributes
 
   | CalcProof (rel, init, steps) ->
-    free_tick_vars env rel
-    @ free_tick_vars env init
+    free_tick_vars0 env rel
+    @ free_tick_vars0 env init
     @ List.collect (fun (CalcStep (rel, just, next)) ->
-                            free_tick_vars env rel
-                            @ free_tick_vars env just
-                            @ free_tick_vars env next) steps
+                            free_tick_vars0 env rel
+                            @ free_tick_vars0 env just
+                            @ free_tick_vars0 env next) steps
 
-  | Abs _  (* not closing implicitly over free vars in all these forms: TODO: Fixme! *)
-  | Let _
-  | LetOpen _
-  | If _
-  | QForall _
-  | QExists _
-  | Record _
-  | Match _
-  | TryWith _
-  | Bind _
+  | Abs (pats, body) ->
+    List.collect (free_tick_vars_pat env) pats
+    @ free_tick_vars0 env body
+
+  | Let (_qual, bindings, body) ->
+    free_tick_vars0 env body
+    @ List.collect (fun (_, (pat, term)) -> free_tick_vars_pat env pat @ free_tick_vars0 env term)
+                   bindings
+
+  | If (c, t, e) ->
+    free_tick_vars0 env c
+    @ free_tick_vars0 env t
+    @ free_tick_vars0 env e
+
+  | Bind (_, t1, t2)
+  | Seq (t1, t2) ->
+    free_tick_vars0 env t1 @ free_tick_vars0 env t2
+
+  | Record (topt, fields) ->
+    (match topt with | None -> [] | Some t -> free_tick_vars0 env t)
+    @ List.collect (fun (_, t) -> free_tick_vars0 env t) fields
+
+  | Match (t, brs)
+  | TryWith (t, brs) ->
+    free_tick_vars0 env t
+    @ List.collect (fun (pat, _when, t) -> free_tick_vars_pat env pat @ free_tick_vars0 env t)
+                   brs
+
+
   | Quote _
   | VQuote _
-  | Antiquote _
-  | Seq _ -> []
+  | Antiquote _ ->
+    []
+
+  in
+  (* BU.print2 "GG free_tick_vars0(%s) = %s\n" (term_to_string t) *)
+  (*                                          (FStar.Common.string_of_list Ident.string_of_id res); *)
+  res
+
+let free_tick_vars (env:env_t) (t:term) : list<ident> =
+  let res = free_tick_vars0 env t |> sort_ftv in
+  (* BU.print2 "GG free_tick_vars(%s) = %s\n" (term_to_string t) *)
+  (*                                          (FStar.Common.string_of_list Ident.string_of_id res); *)
+  res
 
 let head_and_args t =
     let rec aux args t = match (unparen t).tm with
@@ -309,7 +379,7 @@ let head_and_args t =
     aux [] t
 
 let close env t =
-  let ftv = sort_ftv <| free_tick_vars env t in
+  let ftv = free_tick_vars env t in
   if List.length ftv = 0
   then t
   else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, mk_term Wild (range_of_id x) Type_level)) (range_of_id x) Type_level (Some Implicit)) in
@@ -317,7 +387,7 @@ let close env t =
        result
 
 let close_fun env t =
-  let ftv = sort_ftv <| free_tick_vars env t in
+  let ftv = free_tick_vars env t in
   if List.length ftv = 0
   then t
   else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, mk_term Wild (range_of_id x) Type_level)) (range_of_id x) Type_level (Some Implicit)) in
@@ -1185,6 +1255,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
           | PatAscribed(_, (t, Some tac)) -> env, free_tick_vars env t@free_tick_vars env tac@ftvs
           | _ -> env, ftvs) (env, []) binders in
       let ftv = sort_ftv ftv in
+      // GM: Replace with this?
+      (* let ftv = List.collect (free_tick_vars_pat env) binders |> sort_ftv in *)
       let binders = (ftv |> List.map (fun a ->
                         mk_pattern (PatTvar(a, Some AST.Implicit)) top.range))
                     @binders in //close over the free type variables
