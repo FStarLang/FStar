@@ -278,29 +278,25 @@ let is_constructor t = match (SS.compress t).n with
 
 (* something is a value iff it qualifies for the OCaml's "value restriction",
    which determines when a definition can be generalized *)
-let rec is_fstar_value (t:term) =
+let rec is_fstar_value (env:uenv) (t:term) =
     match (SS.compress t).n with
     | Tm_constant _
     | Tm_bvar _
     | Tm_fvar _
     | Tm_abs _  -> true
     | Tm_app(head, args) ->
+        (* If it's a constructor, then all we need to do is check that the
+         * arguments to it are themselves values. *)
         if is_constructor head
-        then args |> List.for_all (fun (te, _) -> is_fstar_value te)
-        else false
-        (* Consider:
-               let f (a:Type) (x:a) : Tot a = x
-               let g = f int
+        then args |> List.for_all (fun (te, _) -> is_fstar_value env te)
+        else
+          (* Not a constructor. If the head is a value (possibly a name) and all
+           * of the arguments are types, then this can be considered a value *)
+          is_fstar_value env head &&
+          List.for_all (fun (arg, _) -> is_type env arg) args
 
-           In principle, after erasure, g can be generalized.
-           But, we don't distinguish type- from term applications right now
-           and consider (f int) to be non-generalizable non-value.
-
-           This may cause extraction to eta-expand g, which isn't terrible,
-           but we should improve it.
-        *)
     | Tm_meta(t, _)
-    | Tm_ascribed(t, _, _) -> is_fstar_value t
+    | Tm_ascribed(t, _, _) -> is_fstar_value env t
     | _ -> false
 
 let rec is_ml_value e =
@@ -1050,8 +1046,8 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
                    let tbinders, tbody =
                         match BU.prefix_until (fun x -> not (is_type_binder g x)) bs with
                             | None -> bs, U.comp_result c
-                            | Some (bs, b, rest) -> bs, U.arrow (b::rest) c in
-
+                            | Some (bs, b, rest) -> bs, U.arrow (b::rest) c
+                   in
                    let n_tbinders = List.length tbinders in
                    let lbdef = normalize_abs lbdef |> U.unmeta in
                    begin match lbdef.n with
@@ -1068,9 +1064,10 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
                              let add_unit =
                                 match rest_args with
                                 | [] ->
-                                  not (is_fstar_value body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
+                                  not (is_fstar_value env body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
                                   || not (U.is_pure_comp c)
-                                | _ -> false in
+                                | _ -> false
+                             in
                              let rest_args = if add_unit then (unit_binder()::rest_args) else rest_args in
                              let polytype = if add_unit then push_unit polytype else polytype in
                              let body = U.abs rest_args body copt in
