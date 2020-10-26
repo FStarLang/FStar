@@ -1524,17 +1524,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
           norm cfg env stack t
 
         | Tm_uvar _ ->
-          let t = SS.compress t in
-          match t.n with
-          | Tm_uvar _ ->
-            if cfg.steps.check_no_uvars
-            then failwith (BU.format2 "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
-                                    (Range.string_of_range t.pos)
-                                    (Print.term_to_string t))
-            else rebuild cfg env stack (inline_closure_env cfg env [] t)
-
-          | _ ->
-            norm cfg env stack t
+          if cfg.steps.check_no_uvars
+          then failwith (BU.format2 "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
+                                  (Range.string_of_range t.pos)
+                                  (Print.term_to_string t))
+          else rebuild cfg env stack (inline_closure_env cfg env [] t)
 
 and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
