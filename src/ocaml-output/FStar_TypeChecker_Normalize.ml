@@ -4391,25 +4391,20 @@ let rec (norm :
                let t2 = FStar_Syntax_Subst.compress t1 in
                norm cfg env1 stack1 t2
            | FStar_Syntax_Syntax.Tm_uvar uu___2 ->
-               let t2 = FStar_Syntax_Subst.compress t1 in
-               (match t2.FStar_Syntax_Syntax.n with
-                | FStar_Syntax_Syntax.Tm_uvar uu___3 ->
-                    if
-                      (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
-                    then
-                      let uu___4 =
-                        let uu___5 =
-                          FStar_Range.string_of_range
-                            t2.FStar_Syntax_Syntax.pos in
-                        let uu___6 = FStar_Syntax_Print.term_to_string t2 in
-                        FStar_Util.format2
-                          "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
-                          uu___5 uu___6 in
-                      failwith uu___4
-                    else
-                      (let uu___5 = inline_closure_env cfg env1 [] t2 in
-                       rebuild cfg env1 stack1 uu___5)
-                | uu___3 -> norm cfg env1 stack1 t2))
+               if
+                 (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
+               then
+                 let uu___3 =
+                   let uu___4 =
+                     FStar_Range.string_of_range t1.FStar_Syntax_Syntax.pos in
+                   let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+                   FStar_Util.format2
+                     "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
+                     uu___4 uu___5 in
+                 failwith uu___3
+               else
+                 (let uu___4 = inline_closure_env cfg env1 [] t1 in
+                  rebuild cfg env1 stack1 uu___4))
 and (do_unfold_fv :
   FStar_TypeChecker_Cfg.cfg ->
     env ->
