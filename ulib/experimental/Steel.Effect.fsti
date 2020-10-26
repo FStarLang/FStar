@@ -502,6 +502,9 @@ val change_slprop (p q:slprop)
                   (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
   : SteelT unit p (fun _ -> q)
 
+val intro_pure (p:prop)
+  : Steel unit emp (fun _ -> pure p) (requires fun _ -> p) (ensures fun _ _ _ -> True)
+
 val read (#a:Type)
          (#pcm:_)
          (r:ref a pcm)
