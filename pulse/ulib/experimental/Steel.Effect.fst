@@ -197,6 +197,8 @@ let add_action f = Steel?.reflect (action_as_repr f)
 
 let change_slprop p q proof = add_action (Steel.Memory.change_slprop p q proof)
 
+let intro_pure p = change_slprop emp (pure p) (fun m -> pure_interp p m)
+
 let read #a #pcm r v0 = Steel.EffectX.read r v0
 
 let write #a #pcm r v0 v1 = Steel.EffectX.write r v0 v1
