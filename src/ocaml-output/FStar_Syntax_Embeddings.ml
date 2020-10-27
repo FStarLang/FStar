@@ -1080,6 +1080,7 @@ type norm_step =
   | UnfoldFully of Prims.string Prims.list 
   | UnfoldAttr of Prims.string Prims.list 
   | NBE 
+  | DescendIntoUvarTypes 
 let (uu___is_Simpl : norm_step -> Prims.bool) =
   fun projectee -> match projectee with | Simpl -> true | uu___ -> false
 let (uu___is_Weak : norm_step -> Prims.bool) =
@@ -1115,6 +1116,9 @@ let (__proj__UnfoldAttr__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee -> match projectee with | UnfoldAttr _0 -> _0
 let (uu___is_NBE : norm_step -> Prims.bool) =
   fun projectee -> match projectee with | NBE -> true | uu___ -> false
+let (uu___is_DescendIntoUvarTypes : norm_step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | DescendIntoUvarTypes -> true | uu___ -> false
 let (steps_Simpl : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_simpl
 let (steps_Weak : FStar_Syntax_Syntax.term) =
@@ -1141,6 +1145,8 @@ let (steps_UnfoldAttr : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_unfoldattr
 let (steps_NBE : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_nbe
+let (steps_DescendIntoUvarTypes : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_descend_into_uvar_types
 let (e_norm_step : norm_step embedding) =
   let t_norm_step =
     let uu___ = FStar_Ident.lid_of_str "FStar.Syntax.Embeddings.norm_step" in
@@ -1162,6 +1168,7 @@ let (e_norm_step : norm_step embedding) =
          | HNF -> steps_HNF
          | Primops -> steps_Primops
          | Delta -> steps_Delta
+         | DescendIntoUvarTypes -> steps_DescendIntoUvarTypes
          | Zeta -> steps_Zeta
          | ZetaFull -> steps_ZetaFull
          | Iota -> steps_Iota
@@ -1230,6 +1237,10 @@ let (e_norm_step : norm_step embedding) =
                   FStar_Syntax_Syntax.fv_eq_lid fv
                     FStar_Parser_Const.steps_delta
                   -> FStar_Pervasives_Native.Some Delta
+              | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
+                  FStar_Syntax_Syntax.fv_eq_lid fv
+                    FStar_Parser_Const.steps_descend_into_uvar_types
+                  -> FStar_Pervasives_Native.Some DescendIntoUvarTypes
               | (FStar_Syntax_Syntax.Tm_fvar fv, []) when
                   FStar_Syntax_Syntax.fv_eq_lid fv
                     FStar_Parser_Const.steps_zeta

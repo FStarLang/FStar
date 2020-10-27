@@ -207,7 +207,9 @@ let (zeta_false : config -> config) =
                FStar_TypeChecker_Cfg.nbe_step =
                  (uu___1.FStar_TypeChecker_Cfg.nbe_step);
                FStar_TypeChecker_Cfg.for_extraction =
-                 (uu___1.FStar_TypeChecker_Cfg.for_extraction)
+                 (uu___1.FStar_TypeChecker_Cfg.for_extraction);
+               FStar_TypeChecker_Cfg.descend_into_uvar_types =
+                 (uu___1.FStar_TypeChecker_Cfg.descend_into_uvar_types)
              });
           FStar_TypeChecker_Cfg.tcenv = (uu___.FStar_TypeChecker_Cfg.tcenv);
           FStar_TypeChecker_Cfg.debug = (uu___.FStar_TypeChecker_Cfg.debug);
@@ -2932,7 +2934,9 @@ let (normalize :
                    FStar_TypeChecker_Cfg.nbe_step =
                      (uu___1.FStar_TypeChecker_Cfg.nbe_step);
                    FStar_TypeChecker_Cfg.for_extraction =
-                     (uu___1.FStar_TypeChecker_Cfg.for_extraction)
+                     (uu___1.FStar_TypeChecker_Cfg.for_extraction);
+                   FStar_TypeChecker_Cfg.descend_into_uvar_types =
+                     (uu___1.FStar_TypeChecker_Cfg.descend_into_uvar_types)
                  });
               FStar_TypeChecker_Cfg.tcenv =
                 (uu___.FStar_TypeChecker_Cfg.tcenv);
@@ -3039,7 +3043,9 @@ let (normalize_for_unit_test :
                  FStar_TypeChecker_Cfg.nbe_step =
                    (uu___1.FStar_TypeChecker_Cfg.nbe_step);
                  FStar_TypeChecker_Cfg.for_extraction =
-                   (uu___1.FStar_TypeChecker_Cfg.for_extraction)
+                   (uu___1.FStar_TypeChecker_Cfg.for_extraction);
+                 FStar_TypeChecker_Cfg.descend_into_uvar_types =
+                   (uu___1.FStar_TypeChecker_Cfg.descend_into_uvar_types)
                });
             FStar_TypeChecker_Cfg.tcenv = (uu___.FStar_TypeChecker_Cfg.tcenv);
             FStar_TypeChecker_Cfg.debug = (uu___.FStar_TypeChecker_Cfg.debug);

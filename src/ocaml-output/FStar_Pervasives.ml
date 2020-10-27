@@ -203,6 +203,7 @@ type norm_step =
   | UnfoldOnly of Prims.string Prims.list 
   | UnfoldFully of Prims.string Prims.list 
   | UnfoldAttr of Prims.string Prims.list 
+  | DescendIntoUvarTypes 
 let (uu___is_Simpl : norm_step -> Prims.bool) =
   fun projectee -> match projectee with | Simpl -> true | uu___ -> false
 let (uu___is_Weak : norm_step -> Prims.bool) =
@@ -238,11 +239,15 @@ let (uu___is_UnfoldAttr : norm_step -> Prims.bool) =
     match projectee with | UnfoldAttr _0 -> true | uu___ -> false
 let (__proj__UnfoldAttr__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee -> match projectee with | UnfoldAttr _0 -> _0
+let (uu___is_DescendIntoUvarTypes : norm_step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | DescendIntoUvarTypes -> true | uu___ -> false
 let (simplify : norm_step) = Simpl
 let (weak : norm_step) = Weak
 let (hnf : norm_step) = HNF
 let (primops : norm_step) = Primops
 let (delta : norm_step) = Delta
+let (descend_into_uvar_types : norm_step) = DescendIntoUvarTypes
 let (zeta : norm_step) = Zeta
 let (zeta_full : norm_step) = ZetaFull
 let (iota : norm_step) = Iota

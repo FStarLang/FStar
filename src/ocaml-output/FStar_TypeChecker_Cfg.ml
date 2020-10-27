@@ -28,7 +28,8 @@ type fsteps =
   in_full_norm_request: Prims.bool ;
   weakly_reduce_scrutinee: Prims.bool ;
   nbe_step: Prims.bool ;
-  for_extraction: Prims.bool }
+  for_extraction: Prims.bool ;
+  descend_into_uvar_types: Prims.bool }
 let (__proj__Mkfsteps__item__beta : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -38,7 +39,7 @@ let (__proj__Mkfsteps__item__beta : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> beta
+        for_extraction; descend_into_uvar_types;_} -> beta
 let (__proj__Mkfsteps__item__iota : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -48,7 +49,7 @@ let (__proj__Mkfsteps__item__iota : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> iota
+        for_extraction; descend_into_uvar_types;_} -> iota
 let (__proj__Mkfsteps__item__zeta : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -58,7 +59,7 @@ let (__proj__Mkfsteps__item__zeta : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> zeta
+        for_extraction; descend_into_uvar_types;_} -> zeta
 let (__proj__Mkfsteps__item__zeta_full : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -68,7 +69,7 @@ let (__proj__Mkfsteps__item__zeta_full : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> zeta_full
+        for_extraction; descend_into_uvar_types;_} -> zeta_full
 let (__proj__Mkfsteps__item__weak : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -78,7 +79,7 @@ let (__proj__Mkfsteps__item__weak : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> weak
+        for_extraction; descend_into_uvar_types;_} -> weak
 let (__proj__Mkfsteps__item__hnf : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -88,7 +89,7 @@ let (__proj__Mkfsteps__item__hnf : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> hnf
+        for_extraction; descend_into_uvar_types;_} -> hnf
 let (__proj__Mkfsteps__item__primops : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -98,7 +99,7 @@ let (__proj__Mkfsteps__item__primops : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> primops
+        for_extraction; descend_into_uvar_types;_} -> primops
 let (__proj__Mkfsteps__item__do_not_unfold_pure_lets : fsteps -> Prims.bool)
   =
   fun projectee ->
@@ -109,7 +110,7 @@ let (__proj__Mkfsteps__item__do_not_unfold_pure_lets : fsteps -> Prims.bool)
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> do_not_unfold_pure_lets
+        for_extraction; descend_into_uvar_types;_} -> do_not_unfold_pure_lets
 let (__proj__Mkfsteps__item__unfold_until :
   fsteps -> FStar_Syntax_Syntax.delta_depth FStar_Pervasives_Native.option) =
   fun projectee ->
@@ -120,7 +121,7 @@ let (__proj__Mkfsteps__item__unfold_until :
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> unfold_until
+        for_extraction; descend_into_uvar_types;_} -> unfold_until
 let (__proj__Mkfsteps__item__unfold_only :
   fsteps -> FStar_Ident.lid Prims.list FStar_Pervasives_Native.option) =
   fun projectee ->
@@ -131,7 +132,7 @@ let (__proj__Mkfsteps__item__unfold_only :
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> unfold_only
+        for_extraction; descend_into_uvar_types;_} -> unfold_only
 let (__proj__Mkfsteps__item__unfold_fully :
   fsteps -> FStar_Ident.lid Prims.list FStar_Pervasives_Native.option) =
   fun projectee ->
@@ -142,7 +143,7 @@ let (__proj__Mkfsteps__item__unfold_fully :
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> unfold_fully
+        for_extraction; descend_into_uvar_types;_} -> unfold_fully
 let (__proj__Mkfsteps__item__unfold_attr :
   fsteps -> FStar_Ident.lid Prims.list FStar_Pervasives_Native.option) =
   fun projectee ->
@@ -153,7 +154,7 @@ let (__proj__Mkfsteps__item__unfold_attr :
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> unfold_attr
+        for_extraction; descend_into_uvar_types;_} -> unfold_attr
 let (__proj__Mkfsteps__item__unfold_tac : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -163,7 +164,7 @@ let (__proj__Mkfsteps__item__unfold_tac : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> unfold_tac
+        for_extraction; descend_into_uvar_types;_} -> unfold_tac
 let (__proj__Mkfsteps__item__pure_subterms_within_computations :
   fsteps -> Prims.bool) =
   fun projectee ->
@@ -174,7 +175,8 @@ let (__proj__Mkfsteps__item__pure_subterms_within_computations :
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> pure_subterms_within_computations
+        for_extraction; descend_into_uvar_types;_} ->
+        pure_subterms_within_computations
 let (__proj__Mkfsteps__item__simplify : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -184,7 +186,7 @@ let (__proj__Mkfsteps__item__simplify : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> simplify
+        for_extraction; descend_into_uvar_types;_} -> simplify
 let (__proj__Mkfsteps__item__erase_universes : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -194,7 +196,7 @@ let (__proj__Mkfsteps__item__erase_universes : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> erase_universes
+        for_extraction; descend_into_uvar_types;_} -> erase_universes
 let (__proj__Mkfsteps__item__allow_unbound_universes : fsteps -> Prims.bool)
   =
   fun projectee ->
@@ -205,7 +207,7 @@ let (__proj__Mkfsteps__item__allow_unbound_universes : fsteps -> Prims.bool)
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> allow_unbound_universes
+        for_extraction; descend_into_uvar_types;_} -> allow_unbound_universes
 let (__proj__Mkfsteps__item__reify_ : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -215,7 +217,7 @@ let (__proj__Mkfsteps__item__reify_ : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> reify_
+        for_extraction; descend_into_uvar_types;_} -> reify_
 let (__proj__Mkfsteps__item__compress_uvars : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -225,7 +227,7 @@ let (__proj__Mkfsteps__item__compress_uvars : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> compress_uvars
+        for_extraction; descend_into_uvar_types;_} -> compress_uvars
 let (__proj__Mkfsteps__item__no_full_norm : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -235,7 +237,7 @@ let (__proj__Mkfsteps__item__no_full_norm : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> no_full_norm
+        for_extraction; descend_into_uvar_types;_} -> no_full_norm
 let (__proj__Mkfsteps__item__check_no_uvars : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -245,7 +247,7 @@ let (__proj__Mkfsteps__item__check_no_uvars : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> check_no_uvars
+        for_extraction; descend_into_uvar_types;_} -> check_no_uvars
 let (__proj__Mkfsteps__item__unmeta : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -255,7 +257,7 @@ let (__proj__Mkfsteps__item__unmeta : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> unmeta
+        for_extraction; descend_into_uvar_types;_} -> unmeta
 let (__proj__Mkfsteps__item__unascribe : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -265,7 +267,7 @@ let (__proj__Mkfsteps__item__unascribe : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> unascribe
+        for_extraction; descend_into_uvar_types;_} -> unascribe
 let (__proj__Mkfsteps__item__in_full_norm_request : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -275,7 +277,7 @@ let (__proj__Mkfsteps__item__in_full_norm_request : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> in_full_norm_request
+        for_extraction; descend_into_uvar_types;_} -> in_full_norm_request
 let (__proj__Mkfsteps__item__weakly_reduce_scrutinee : fsteps -> Prims.bool)
   =
   fun projectee ->
@@ -286,7 +288,7 @@ let (__proj__Mkfsteps__item__weakly_reduce_scrutinee : fsteps -> Prims.bool)
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> weakly_reduce_scrutinee
+        for_extraction; descend_into_uvar_types;_} -> weakly_reduce_scrutinee
 let (__proj__Mkfsteps__item__nbe_step : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -296,7 +298,7 @@ let (__proj__Mkfsteps__item__nbe_step : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> nbe_step
+        for_extraction; descend_into_uvar_types;_} -> nbe_step
 let (__proj__Mkfsteps__item__for_extraction : fsteps -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -306,7 +308,18 @@ let (__proj__Mkfsteps__item__for_extraction : fsteps -> Prims.bool) =
         erase_universes; allow_unbound_universes; reify_; compress_uvars;
         no_full_norm; check_no_uvars; unmeta; unascribe;
         in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
-        for_extraction;_} -> for_extraction
+        for_extraction; descend_into_uvar_types;_} -> for_extraction
+let (__proj__Mkfsteps__item__descend_into_uvar_types : fsteps -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with
+    | { beta; iota; zeta; zeta_full; weak; hnf; primops;
+        do_not_unfold_pure_lets; unfold_until; unfold_only; unfold_fully;
+        unfold_attr; unfold_tac; pure_subterms_within_computations; simplify;
+        erase_universes; allow_unbound_universes; reify_; compress_uvars;
+        no_full_norm; check_no_uvars; unmeta; unascribe;
+        in_full_norm_request; weakly_reduce_scrutinee; nbe_step;
+        for_extraction; descend_into_uvar_types;_} -> descend_into_uvar_types
 let (steps_to_string : fsteps -> Prims.string) =
   fun f ->
     let format_opt f1 o =
@@ -424,7 +437,13 @@ let (steps_to_string : fsteps -> Prims.string) =
                                                           FStar_All.pipe_right
                                                             f.for_extraction
                                                             b in
-                                                        [uu___51] in
+                                                        let uu___52 =
+                                                          let uu___53 =
+                                                            FStar_All.pipe_right
+                                                              f.descend_into_uvar_types
+                                                              b in
+                                                          [uu___53] in
+                                                        uu___51 :: uu___52 in
                                                       uu___49 :: uu___50 in
                                                     uu___47 :: uu___48 in
                                                   uu___45 :: uu___46 in
@@ -451,7 +470,7 @@ let (steps_to_string : fsteps -> Prims.string) =
         uu___3 :: uu___4 in
       uu___1 :: uu___2 in
     FStar_Util.format
-      "{\nbeta = %s;\niota = %s;\nzeta = %s;\nzeta_full = %s;\nweak = %s;\nhnf  = %s;\nprimops = %s;\ndo_not_unfold_pure_lets = %s;\nunfold_until = %s;\nunfold_only = %s;\nunfold_fully = %s;\nunfold_attr = %s;\nunfold_tac = %s;\npure_subterms_within_computations = %s;\nsimplify = %s;\nerase_universes = %s;\nallow_unbound_universes = %s;\nreify_ = %s;\ncompress_uvars = %s;\nno_full_norm = %s;\ncheck_no_uvars = %s;\nunmeta = %s;\nunascribe = %s;\nin_full_norm_request = %s;\nweakly_reduce_scrutinee = %s;\nfor_extraction = %s;\n}"
+      "{\nbeta = %s;\niota = %s;\nzeta = %s;\nzeta_full = %s;\nweak = %s;\nhnf  = %s;\nprimops = %s;\ndo_not_unfold_pure_lets = %s;\nunfold_until = %s;\nunfold_only = %s;\nunfold_fully = %s;\nunfold_attr = %s;\nunfold_tac = %s;\npure_subterms_within_computations = %s;\nsimplify = %s;\nerase_universes = %s;\nallow_unbound_universes = %s;\nreify_ = %s;\ncompress_uvars = %s;\nno_full_norm = %s;\ncheck_no_uvars = %s;\nunmeta = %s;\nunascribe = %s;\nin_full_norm_request = %s;\nweakly_reduce_scrutinee = %s;\nfor_extraction = %s;\ndescend_into_uvar_types = %s;\n}"
       uu___
 let (default_steps : fsteps) =
   {
@@ -481,7 +500,8 @@ let (default_steps : fsteps) =
     in_full_norm_request = false;
     weakly_reduce_scrutinee = true;
     nbe_step = false;
-    for_extraction = false
+    for_extraction = false;
+    descend_into_uvar_types = false
   }
 let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
   fun s ->
@@ -517,7 +537,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.Iota ->
           let uu___ = fs in
@@ -549,7 +570,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.Zeta ->
           let uu___ = fs in
@@ -581,7 +603,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.ZetaFull ->
           let uu___ = fs in
@@ -613,7 +636,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.Exclude (FStar_TypeChecker_Env.Beta) ->
           let uu___ = fs in
@@ -645,7 +669,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.Exclude (FStar_TypeChecker_Env.Iota) ->
           let uu___ = fs in
@@ -677,7 +702,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.Exclude (FStar_TypeChecker_Env.Zeta) ->
           let uu___ = fs in
@@ -709,7 +735,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.Exclude uu___ -> failwith "Bad exclude"
       | FStar_TypeChecker_Env.Weak ->
@@ -742,7 +769,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.HNF ->
           let uu___ = fs in
@@ -774,7 +802,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.Primops ->
           let uu___ = fs in
@@ -806,7 +835,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.Eager_unfolding -> fs
       | FStar_TypeChecker_Env.Inlining -> fs
@@ -840,7 +870,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.UnfoldUntil d ->
           let uu___ = fs in
@@ -872,7 +903,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.UnfoldOnly lids ->
           let uu___ = fs in
@@ -904,7 +936,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.UnfoldFully lids ->
           let uu___ = fs in
@@ -936,7 +969,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.UnfoldAttr lids ->
           let uu___ = fs in
@@ -968,7 +1002,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.UnfoldTac ->
           let uu___ = fs in
@@ -1000,7 +1035,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.PureSubtermsWithinComputations ->
           let uu___ = fs in
@@ -1031,7 +1067,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.Simplify ->
           let uu___ = fs in
@@ -1063,7 +1100,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.EraseUniverses ->
           let uu___ = fs in
@@ -1095,7 +1133,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.AllowUnboundUniverses ->
           let uu___ = fs in
@@ -1127,7 +1166,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.Reify ->
           let uu___ = fs in
@@ -1159,7 +1199,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.CompressUvars ->
           let uu___ = fs in
@@ -1191,7 +1232,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.NoFullNorm ->
           let uu___ = fs in
@@ -1223,7 +1265,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.CheckNoUvars ->
           let uu___ = fs in
@@ -1255,7 +1298,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.Unmeta ->
           let uu___ = fs in
@@ -1287,7 +1331,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.Unascribe ->
           let uu___ = fs in
@@ -1319,7 +1364,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.NBE ->
           let uu___ = fs in
@@ -1351,7 +1397,8 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = true;
-            for_extraction = (uu___.for_extraction)
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
           }
       | FStar_TypeChecker_Env.ForExtraction ->
           let uu___ = fs in
@@ -1383,7 +1430,41 @@ let (fstep_add_one : FStar_TypeChecker_Env.step -> fsteps -> fsteps) =
             in_full_norm_request = (uu___.in_full_norm_request);
             weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
             nbe_step = (uu___.nbe_step);
-            for_extraction = true
+            for_extraction = true;
+            descend_into_uvar_types = (uu___.descend_into_uvar_types)
+          }
+      | FStar_TypeChecker_Env.DescendIntoUvarTypes ->
+          let uu___ = fs in
+          {
+            beta = (uu___.beta);
+            iota = (uu___.iota);
+            zeta = (uu___.zeta);
+            zeta_full = (uu___.zeta_full);
+            weak = (uu___.weak);
+            hnf = (uu___.hnf);
+            primops = (uu___.primops);
+            do_not_unfold_pure_lets = (uu___.do_not_unfold_pure_lets);
+            unfold_until = (uu___.unfold_until);
+            unfold_only = (uu___.unfold_only);
+            unfold_fully = (uu___.unfold_fully);
+            unfold_attr = (uu___.unfold_attr);
+            unfold_tac = (uu___.unfold_tac);
+            pure_subterms_within_computations =
+              (uu___.pure_subterms_within_computations);
+            simplify = (uu___.simplify);
+            erase_universes = (uu___.erase_universes);
+            allow_unbound_universes = (uu___.allow_unbound_universes);
+            reify_ = (uu___.reify_);
+            compress_uvars = (uu___.compress_uvars);
+            no_full_norm = (uu___.no_full_norm);
+            check_no_uvars = (uu___.check_no_uvars);
+            unmeta = (uu___.unmeta);
+            unascribe = (uu___.unascribe);
+            in_full_norm_request = (uu___.in_full_norm_request);
+            weakly_reduce_scrutinee = (uu___.weakly_reduce_scrutinee);
+            nbe_step = (uu___.nbe_step);
+            for_extraction = (uu___.for_extraction);
+            descend_into_uvar_types = true
           }
 let (to_fsteps : FStar_TypeChecker_Env.step Prims.list -> fsteps) =
   fun s -> FStar_List.fold_right fstep_add_one s default_steps
@@ -2972,7 +3053,8 @@ let (add_nbe : fsteps -> fsteps) =
         in_full_norm_request = (uu___1.in_full_norm_request);
         weakly_reduce_scrutinee = (uu___1.weakly_reduce_scrutinee);
         nbe_step = true;
-        for_extraction = (uu___1.for_extraction)
+        for_extraction = (uu___1.for_extraction);
+        descend_into_uvar_types = (uu___1.descend_into_uvar_types)
       }
     else s
 let (config' :

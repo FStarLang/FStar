@@ -1447,7 +1447,9 @@ let reduce_equality :
                   FStar_TypeChecker_Cfg.nbe_step =
                     (uu___1.FStar_TypeChecker_Cfg.nbe_step);
                   FStar_TypeChecker_Cfg.for_extraction =
-                    (uu___1.FStar_TypeChecker_Cfg.for_extraction)
+                    (uu___1.FStar_TypeChecker_Cfg.for_extraction);
+                  FStar_TypeChecker_Cfg.descend_into_uvar_types =
+                    (uu___1.FStar_TypeChecker_Cfg.descend_into_uvar_types)
                 });
              FStar_TypeChecker_Cfg.tcenv =
                (uu___.FStar_TypeChecker_Cfg.tcenv);
@@ -1608,6 +1610,8 @@ let (tr_norm_step :
         (FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant)
           :: uu___1
     | FStar_Syntax_Embeddings.NBE -> [FStar_TypeChecker_Env.NBE]
+    | FStar_Syntax_Embeddings.DescendIntoUvarTypes ->
+        [FStar_TypeChecker_Env.DescendIntoUvarTypes]
 let (tr_norm_steps :
   FStar_Syntax_Embeddings.norm_step Prims.list ->
     FStar_TypeChecker_Env.step Prims.list)
@@ -2232,7 +2236,9 @@ let decide_unfolding :
                            FStar_TypeChecker_Cfg.nbe_step =
                              (uu___1.FStar_TypeChecker_Cfg.nbe_step);
                            FStar_TypeChecker_Cfg.for_extraction =
-                             (uu___1.FStar_TypeChecker_Cfg.for_extraction)
+                             (uu___1.FStar_TypeChecker_Cfg.for_extraction);
+                           FStar_TypeChecker_Cfg.descend_into_uvar_types =
+                             (uu___1.FStar_TypeChecker_Cfg.descend_into_uvar_types)
                          });
                       FStar_TypeChecker_Cfg.tcenv =
                         (uu___.FStar_TypeChecker_Cfg.tcenv);
@@ -2534,7 +2540,9 @@ let rec (norm :
                           FStar_TypeChecker_Cfg.nbe_step =
                             (uu___4.FStar_TypeChecker_Cfg.nbe_step);
                           FStar_TypeChecker_Cfg.for_extraction =
-                            (uu___4.FStar_TypeChecker_Cfg.for_extraction)
+                            (uu___4.FStar_TypeChecker_Cfg.for_extraction);
+                          FStar_TypeChecker_Cfg.descend_into_uvar_types =
+                            (uu___4.FStar_TypeChecker_Cfg.descend_into_uvar_types)
                         });
                      FStar_TypeChecker_Cfg.tcenv =
                        (uu___3.FStar_TypeChecker_Cfg.tcenv);
@@ -2692,7 +2700,9 @@ let rec (norm :
                            FStar_TypeChecker_Cfg.nbe_step =
                              (uu___6.FStar_TypeChecker_Cfg.nbe_step);
                            FStar_TypeChecker_Cfg.for_extraction =
-                             (uu___6.FStar_TypeChecker_Cfg.for_extraction)
+                             (uu___6.FStar_TypeChecker_Cfg.for_extraction);
+                           FStar_TypeChecker_Cfg.descend_into_uvar_types =
+                             (uu___6.FStar_TypeChecker_Cfg.descend_into_uvar_types)
                          } in
                        {
                          FStar_TypeChecker_Cfg.steps = uu___5;
@@ -3866,7 +3876,9 @@ let rec (norm :
                           FStar_TypeChecker_Cfg.nbe_step =
                             (uu___3.FStar_TypeChecker_Cfg.nbe_step);
                           FStar_TypeChecker_Cfg.for_extraction =
-                            (uu___3.FStar_TypeChecker_Cfg.for_extraction)
+                            (uu___3.FStar_TypeChecker_Cfg.for_extraction);
+                          FStar_TypeChecker_Cfg.descend_into_uvar_types =
+                            (uu___3.FStar_TypeChecker_Cfg.descend_into_uvar_types)
                         });
                      FStar_TypeChecker_Cfg.tcenv =
                        (uu___2.FStar_TypeChecker_Cfg.tcenv);
@@ -4355,28 +4367,52 @@ let rec (norm :
                                 t1.FStar_Syntax_Syntax.pos in
                             rebuild cfg env1 stack1 t2)))
            | FStar_Syntax_Syntax.Tm_delayed uu___2 ->
-               let t2 = FStar_Syntax_Subst.compress t1 in
-               norm cfg env1 stack1 t2
-           | FStar_Syntax_Syntax.Tm_uvar uu___2 ->
-               let t2 = FStar_Syntax_Subst.compress t1 in
-               (match t2.FStar_Syntax_Syntax.n with
-                | FStar_Syntax_Syntax.Tm_uvar uu___3 ->
+               failwith "impossible, Tm_delayed on norm"
+           | FStar_Syntax_Syntax.Tm_uvar (uv, s) ->
+               if
+                 (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
+               then
+                 let uu___2 =
+                   let uu___3 =
+                     FStar_Range.string_of_range t1.FStar_Syntax_Syntax.pos in
+                   let uu___4 = FStar_Syntax_Print.term_to_string t1 in
+                   FStar_Util.format2
+                     "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
+                     uu___3 uu___4 in
+                 failwith uu___2
+               else
+                 (let t2 =
                     if
-                      (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
+                      (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.descend_into_uvar_types
                     then
-                      let uu___4 =
-                        let uu___5 =
-                          FStar_Range.string_of_range
-                            t2.FStar_Syntax_Syntax.pos in
-                        let uu___6 = FStar_Syntax_Print.term_to_string t2 in
-                        FStar_Util.format2
-                          "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
-                          uu___5 uu___6 in
-                      failwith uu___4
-                    else
-                      (let uu___5 = inline_closure_env cfg env1 [] t2 in
-                       rebuild cfg env1 stack1 uu___5)
-                | uu___3 -> norm cfg env1 stack1 t2))
+                      let uv' =
+                        let uu___3 = uv in
+                        let uu___4 =
+                          norm cfg env1 []
+                            uv.FStar_Syntax_Syntax.ctx_uvar_typ in
+                        {
+                          FStar_Syntax_Syntax.ctx_uvar_head =
+                            (uu___3.FStar_Syntax_Syntax.ctx_uvar_head);
+                          FStar_Syntax_Syntax.ctx_uvar_gamma =
+                            (uu___3.FStar_Syntax_Syntax.ctx_uvar_gamma);
+                          FStar_Syntax_Syntax.ctx_uvar_binders =
+                            (uu___3.FStar_Syntax_Syntax.ctx_uvar_binders);
+                          FStar_Syntax_Syntax.ctx_uvar_typ = uu___4;
+                          FStar_Syntax_Syntax.ctx_uvar_reason =
+                            (uu___3.FStar_Syntax_Syntax.ctx_uvar_reason);
+                          FStar_Syntax_Syntax.ctx_uvar_should_check =
+                            (uu___3.FStar_Syntax_Syntax.ctx_uvar_should_check);
+                          FStar_Syntax_Syntax.ctx_uvar_range =
+                            (uu___3.FStar_Syntax_Syntax.ctx_uvar_range);
+                          FStar_Syntax_Syntax.ctx_uvar_meta =
+                            (uu___3.FStar_Syntax_Syntax.ctx_uvar_meta)
+                        } in
+                      FStar_Syntax_Syntax.mk
+                        (FStar_Syntax_Syntax.Tm_uvar (uv', s))
+                        t1.FStar_Syntax_Syntax.pos
+                    else t1 in
+                  let uu___3 = inline_closure_env cfg env1 [] t2 in
+                  rebuild cfg env1 stack1 uu___3))
 and (do_unfold_fv :
   FStar_TypeChecker_Cfg.cfg ->
     env ->
@@ -7129,7 +7165,10 @@ and (rebuild :
                                 FStar_TypeChecker_Cfg.nbe_step =
                                   (uu___7.FStar_TypeChecker_Cfg.nbe_step);
                                 FStar_TypeChecker_Cfg.for_extraction =
-                                  (uu___7.FStar_TypeChecker_Cfg.for_extraction)
+                                  (uu___7.FStar_TypeChecker_Cfg.for_extraction);
+                                FStar_TypeChecker_Cfg.descend_into_uvar_types
+                                  =
+                                  (uu___7.FStar_TypeChecker_Cfg.descend_into_uvar_types)
                               } in
                             let uu___7 = cfg1 in
                             {
@@ -7401,7 +7440,10 @@ and (rebuild :
                                              (uu___11.FStar_TypeChecker_Cfg.nbe_step);
                                            FStar_TypeChecker_Cfg.for_extraction
                                              =
-                                             (uu___11.FStar_TypeChecker_Cfg.for_extraction)
+                                             (uu___11.FStar_TypeChecker_Cfg.for_extraction);
+                                           FStar_TypeChecker_Cfg.descend_into_uvar_types
+                                             =
+                                             (uu___11.FStar_TypeChecker_Cfg.descend_into_uvar_types)
                                          });
                                       FStar_TypeChecker_Cfg.tcenv =
                                         (uu___10.FStar_TypeChecker_Cfg.tcenv);
