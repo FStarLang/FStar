@@ -372,7 +372,7 @@ let bind_pure_steel__ens (#a:Type) (#b:Type)
 
 val bind_pure_steel_ (a:Type) (b:Type)
   (wp:pure_wp a)
-  (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t b)
+  (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:b -> slprop)
   (#[@@ framing_implicit] req:a -> req_t pre) (#[@@ framing_implicit] ens:a -> ens_t pre b post)
   (f:eqtype_as_type unit -> PURE a wp) (g:(x:a -> repr b pre post (req x) (ens x)))
 : repr b

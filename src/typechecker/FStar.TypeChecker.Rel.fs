@@ -2225,7 +2225,9 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //            (Print.args_to_string [last_arg_rhs]);
         let (Flex (t_lhs, u_lhs, _lhs_args)) = lhs in
         let lhs', lhs'_last_arg, wl =
-              let _, t_last_arg, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
+              let _, t_last_arg, _ = env.type_of ({env with lax=true; use_bv_sorts=true; expected_typ=None}) (fst last_arg_rhs) in
+
+              // let _, t_last_arg, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
               //FIXME: this may be an implicit arg ... fix qualifier
               //AR: 07/20: note the type of lhs' is t_last_arg -> t_res_lhs
               let _, lhs', wl =
@@ -2379,11 +2381,11 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                     ?u := (fun y1..ym -> ?w z1...zk)
                     ?v := (fun y1'..ym' -> ?w z1...zk)
                  *)
-                 //let sub_prob, wl =
+                 // let sub_prob, wl =
                  //   //is it strictly necessary to add this sub problem?
                  //   //we don't in other cases
                  //     mk_t_problem wl [] orig t_res_lhs EQ t_res_rhs None "flex-flex typing"
-                 //in
+                 // in
                  let ctx_w, (ctx_l, ctx_r) =
                     maximal_prefix u_lhs.ctx_uvar_binders
                                    u_rhs.ctx_uvar_binders
