@@ -21,7 +21,7 @@ let (run_tactic_on_typ :
             | (ps, w) ->
                 let uu___1 =
                   FStar_Tactics_Interpreter.run_tactic_on_ps rng_tac rng_goal
-                    FStar_Syntax_Embeddings.e_unit ()
+                    false FStar_Syntax_Embeddings.e_unit ()
                     FStar_Syntax_Embeddings.e_unit tactic ps in
                 (match uu___1 with | (gs, _res) -> (gs, w))
 let (run_tactic_on_all_implicits :
@@ -43,8 +43,9 @@ let (run_tactic_on_all_implicits :
             match uu___ with
             | (ps, uu___1) ->
                 let uu___2 =
-                  FStar_Tactics_Interpreter.run_tactic_on_ps rng_tac rng_goal
-                    FStar_Syntax_Embeddings.e_unit ()
+                  let uu___3 = FStar_TypeChecker_Env.get_range env in
+                  FStar_Tactics_Interpreter.run_tactic_on_ps uu___3 rng_goal
+                    true FStar_Syntax_Embeddings.e_unit ()
                     FStar_Syntax_Embeddings.e_unit tactic ps in
                 (match uu___2 with | (goals, ()) -> goals)
 type pol =
@@ -717,7 +718,7 @@ let (splice :
                        FStar_Reflection_Embeddings.e_sigelt in
                    FStar_Tactics_Interpreter.run_tactic_on_ps
                      tau.FStar_Syntax_Syntax.pos tau.FStar_Syntax_Syntax.pos
-                     FStar_Syntax_Embeddings.e_unit () uu___4 tau ps in
+                     false FStar_Syntax_Embeddings.e_unit () uu___4 tau ps in
                  match uu___3 with
                  | (gs, sigelts) ->
                      ((let uu___5 =
@@ -818,7 +819,7 @@ let (mpreprocess :
                  let uu___3 =
                    FStar_Tactics_Interpreter.run_tactic_on_ps
                      tau.FStar_Syntax_Syntax.pos tm.FStar_Syntax_Syntax.pos
-                     FStar_Reflection_Embeddings.e_term tm
+                     false FStar_Reflection_Embeddings.e_term tm
                      FStar_Reflection_Embeddings.e_term tau ps in
                  match uu___3 with | (gs, tm1) -> tm1)))
 let (postprocess :

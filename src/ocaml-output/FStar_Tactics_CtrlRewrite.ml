@@ -112,7 +112,9 @@ let (__do_rewrite :
                  FStar_TypeChecker_Env.erasable_types_tab =
                    (uu___1.FStar_TypeChecker_Env.erasable_types_tab);
                  FStar_TypeChecker_Env.enable_defer_to_tac =
-                   (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac)
+                   (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac);
+                 FStar_TypeChecker_Env.unif_allow_ref_guards =
+                   (uu___1.FStar_TypeChecker_Env.unif_allow_ref_guards)
                }) tm in
           match uu___ with
           | (uu___1, lcomp, g) ->

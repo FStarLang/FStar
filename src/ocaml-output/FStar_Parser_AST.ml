@@ -1425,6 +1425,9 @@ let rec (term_to_string : term -> Prims.string) =
   fun x ->
     match x.tm with
     | Wild -> "_"
+    | Decreases (t, uu___) ->
+        let uu___1 = term_to_string t in
+        FStar_Util.format1 "(decreases %s)" uu___1
     | Requires (t, uu___) ->
         let uu___1 = term_to_string t in
         FStar_Util.format1 "(requires %s)" uu___1

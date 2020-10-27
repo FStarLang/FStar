@@ -195,8 +195,9 @@ and env = {
   nbe            : list<step> -> env -> term -> term; (* Callback to the NBE function *)
   strict_args_tab:BU.smap<(option<(list<int>)>)>;                (* a dictionary of fv names to strict arguments *)
   erasable_types_tab:BU.smap<bool>;              (* a dictionary of type names to erasable types *)
-  enable_defer_to_tac: bool                      (* Set by default; unset when running within a tactic itself, since we do not allow
+  enable_defer_to_tac: bool;                     (* Set by default; unset when running within a tactic itself, since we do not allow
                                                     a tactic to defer problems to another tactic via the attribute mechanism *)
+  unif_allow_ref_guards:bool;                    (* Allow guards when unifying refinements, even when SMT is disabled *)
 }
 and solver_depth_t = int * int * int
 and solver_t = {
@@ -314,7 +315,8 @@ let initial_env deps tc_term type_of type_of_well_typed universe_of check_type_o
     nbe = nbe;
     strict_args_tab = BU.smap_create 20;
     erasable_types_tab = BU.smap_create 20;
-    enable_defer_to_tac=true
+    enable_defer_to_tac=true;
+    unif_allow_ref_guards=false;
   }
 
 let dsenv env = env.dsenv

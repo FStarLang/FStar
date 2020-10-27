@@ -180,7 +180,9 @@ let (init_once : unit -> unit) =
              FStar_TypeChecker_Env.erasable_types_tab =
                (uu___3.FStar_TypeChecker_Env.erasable_types_tab);
              FStar_TypeChecker_Env.enable_defer_to_tac =
-               (uu___3.FStar_TypeChecker_Env.enable_defer_to_tac)
+               (uu___3.FStar_TypeChecker_Env.enable_defer_to_tac);
+             FStar_TypeChecker_Env.unif_allow_ref_guards =
+               (uu___3.FStar_TypeChecker_Env.unif_allow_ref_guards)
            } in
          let uu___3 = FStar_TypeChecker_Tc.check_module env1 prims_mod false in
          (match uu___3 with
@@ -282,7 +284,9 @@ let (init_once : unit -> unit) =
                   FStar_TypeChecker_Env.erasable_types_tab =
                     (uu___4.FStar_TypeChecker_Env.erasable_types_tab);
                   FStar_TypeChecker_Env.enable_defer_to_tac =
-                    (uu___4.FStar_TypeChecker_Env.enable_defer_to_tac)
+                    (uu___4.FStar_TypeChecker_Env.enable_defer_to_tac);
+                  FStar_TypeChecker_Env.unif_allow_ref_guards =
+                    (uu___4.FStar_TypeChecker_Env.unif_allow_ref_guards)
                 } in
               let env4 =
                 FStar_TypeChecker_Env.set_current_module env3 test_lid in
@@ -422,7 +426,9 @@ let (tc' :
         FStar_TypeChecker_Env.erasable_types_tab =
           (uu___.FStar_TypeChecker_Env.erasable_types_tab);
         FStar_TypeChecker_Env.enable_defer_to_tac =
-          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac)
+          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac);
+        FStar_TypeChecker_Env.unif_allow_ref_guards =
+          (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
       } in
     let uu___ = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
     match uu___ with | (tm1, uu___1, g) -> (tm1, g, tcenv1)
@@ -516,7 +522,9 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
         FStar_TypeChecker_Env.erasable_types_tab =
           (uu___.FStar_TypeChecker_Env.erasable_types_tab);
         FStar_TypeChecker_Env.enable_defer_to_tac =
-          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac)
+          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac);
+        FStar_TypeChecker_Env.unif_allow_ref_guards =
+          (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
       } in
     let uu___ = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
     match uu___ with
