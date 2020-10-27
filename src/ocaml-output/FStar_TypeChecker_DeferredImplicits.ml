@@ -1,7 +1,7 @@
 open Prims
 let (is_flex : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t ->
-    let uu___ = FStar_Syntax_Util.head_and_args t in
+    let uu___ = FStar_Syntax_Util.head_and_args' t in
     match uu___ with
     | (head, _args) ->
         let uu___1 =
@@ -13,7 +13,7 @@ let (is_flex : FStar_Syntax_Syntax.term -> Prims.bool) =
 let (flex_uvar_head :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.ctx_uvar) =
   fun t ->
-    let uu___ = FStar_Syntax_Util.head_and_args t in
+    let uu___ = FStar_Syntax_Util.head_and_args' t in
     match uu___ with
     | (head, _args) ->
         let uu___1 =
