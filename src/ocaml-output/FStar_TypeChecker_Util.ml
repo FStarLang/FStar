@@ -989,7 +989,7 @@ let (should_return :
             (((FStar_TypeChecker_Common.is_pure_or_ghost_lcomp lc) &&
                 (Prims.op_Negation lc_is_unit_or_effectful))
                &&
-               (let uu___ = FStar_Syntax_Util.head_and_args' e in
+               (let uu___ = FStar_Syntax_Util.head_and_args_full e in
                 match uu___ with
                 | (head, uu___1) ->
                     let uu___2 =
