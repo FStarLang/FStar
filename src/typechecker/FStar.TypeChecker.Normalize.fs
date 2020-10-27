@@ -729,6 +729,7 @@ let tr_norm_step = function
     | EMB.UnfoldAttr names ->
         [UnfoldUntil delta_constant; UnfoldAttr (List.map I.lid_of_str names)]
     | EMB.NBE -> [NBE]
+    | EMB.DescendIntoUvarTypes -> [DescendIntoUvarTypes]
 
 let tr_norm_steps s =
     let s = List.concatMap tr_norm_step s in
@@ -1520,15 +1521,21 @@ let rec norm : cfg -> env -> stack -> term -> term =
         end //Tm_meta
 
         | Tm_delayed _ ->
-          let t = SS.compress t in
-          norm cfg env stack t
+          failwith "impossible, Tm_delayed on norm"
 
-        | Tm_uvar _ ->
+        | Tm_uvar (uv, s) ->
           if cfg.steps.check_no_uvars
           then failwith (BU.format2 "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
                                   (Range.string_of_range t.pos)
                                   (Print.term_to_string t))
-          else rebuild cfg env stack (inline_closure_env cfg env [] t)
+          else
+            let t =
+              if cfg.steps.descend_into_uvar_types
+              then let uv' = { uv with ctx_uvar_typ = norm cfg env [] uv.ctx_uvar_typ } in
+                   mk (Tm_uvar (uv', s)) t.pos
+              else t
+            in
+            rebuild cfg env stack (inline_closure_env cfg env [] t)
 
 and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with

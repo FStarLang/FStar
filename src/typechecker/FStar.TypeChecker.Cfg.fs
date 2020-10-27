@@ -49,7 +49,8 @@ type fsteps = {
      in_full_norm_request: bool;
      weakly_reduce_scrutinee:bool;
      nbe_step:bool;
-     for_extraction:bool
+     for_extraction:bool;
+     descend_into_uvar_types:bool;
 }
 
 let steps_to_string f =
@@ -87,6 +88,7 @@ let steps_to_string f =
     in_full_norm_request = %s;\n\
     weakly_reduce_scrutinee = %s;\n\
     for_extraction = %s;\n\
+    descend_into_uvar_types = %s;\n\
   }"
   [ f.beta |> b;
     f.iota |> b;
@@ -114,6 +116,7 @@ let steps_to_string f =
     f.in_full_norm_request |> b;
     f.weakly_reduce_scrutinee |> b;
     f.for_extraction |> b;
+    f.descend_into_uvar_types |> b;
    ]
 
 let default_steps : fsteps = {
@@ -143,7 +146,8 @@ let default_steps : fsteps = {
     in_full_norm_request = false;
     weakly_reduce_scrutinee = true;
     nbe_step = false;
-    for_extraction = false
+    for_extraction = false;
+    descend_into_uvar_types = false;
 }
 
 let fstep_add_one s fs =
@@ -179,6 +183,7 @@ let fstep_add_one s fs =
     | Unascribe ->  { fs with unascribe = true }
     | NBE -> {fs with nbe_step = true }
     | ForExtraction -> {fs with for_extraction = true }
+    | DescendIntoUvarTypes -> {fs with descend_into_uvar_types = true }
 
 let to_fsteps (s : list<step>) : fsteps =
     List.fold_right fstep_add_one s default_steps

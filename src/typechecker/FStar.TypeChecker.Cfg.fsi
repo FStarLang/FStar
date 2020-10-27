@@ -54,6 +54,7 @@ type fsteps = {
      weakly_reduce_scrutinee:bool;
      nbe_step:bool;
      for_extraction:bool;
+     descend_into_uvar_types:bool;
 }
 
 val default_steps : fsteps

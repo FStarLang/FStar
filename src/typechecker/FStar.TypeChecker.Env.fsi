@@ -55,6 +55,7 @@ type step =
   | Unascribe
   | NBE
   | ForExtraction   //marking an invocation of the normalizer for extraction
+  | DescendIntoUvarTypes // normalize the types of occurrences of uvars
 and steps = list<step>
 
 val eq_step : step -> step -> bool

@@ -580,6 +580,7 @@ type norm_step =
     | UnfoldFully of list<string>
     | UnfoldAttr  of list<string>
     | NBE
+    | DescendIntoUvarTypes
 
 (* the steps as terms *)
 let steps_Simpl         = tconst PC.steps_simpl
@@ -595,6 +596,7 @@ let steps_UnfoldOnly    = tconst PC.steps_unfoldonly
 let steps_UnfoldFully   = tconst PC.steps_unfoldonly
 let steps_UnfoldAttr    = tconst PC.steps_unfoldattr
 let steps_NBE           = tconst PC.steps_nbe
+let steps_DescendIntoUvarTypes = tconst PC.steps_descend_into_uvar_types
 
 let e_norm_step =
     let t_norm_step = U.fvar_const (Ident.lid_of_str "FStar.Syntax.Embeddings.norm_step") in
@@ -619,6 +621,8 @@ let e_norm_step =
                     steps_Primops
                 | Delta ->
                     steps_Delta
+                | DescendIntoUvarTypes ->
+                    steps_DescendIntoUvarTypes
                 | Zeta ->
                     steps_Zeta
                 | ZetaFull ->
@@ -660,6 +664,8 @@ let e_norm_step =
                     Some Primops
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_delta ->
                     Some Delta
+                | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_descend_into_uvar_types ->
+                    Some DescendIntoUvarTypes
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_zeta ->
                     Some Zeta
                 | Tm_fvar fv, [] when S.fv_eq_lid fv PC.steps_zeta_full ->
