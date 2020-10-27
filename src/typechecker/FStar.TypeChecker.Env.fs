@@ -68,6 +68,7 @@ type step =
   | Unascribe
   | NBE
   | ForExtraction //marking an invocation of the normalizer for extraction
+  | DescendIntoUvarTypes // normalize the types of occurrences of uvars
 and steps = list<step>
 
 let rec eq_step s1 s2 =

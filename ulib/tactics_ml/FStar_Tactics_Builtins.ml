@@ -35,6 +35,8 @@ let tr1 = function
           | UnfoldOnly  ss -> EMB.UnfoldOnly ss
           | UnfoldFully ss -> EMB.UnfoldFully ss
           | UnfoldAttr  ss -> EMB.UnfoldAttr  ss
+          | DescendIntoUvarTypes -> EMB.DescendIntoUvarTypes
+
 let rt1 = function
           | EMB.Simpl          -> Simpl
           | EMB.Weak           -> Weak
@@ -49,6 +51,7 @@ let rt1 = function
           | EMB.UnfoldOnly  ss -> UnfoldOnly ss
           | EMB.UnfoldFully ss -> UnfoldFully ss
           | EMB.UnfoldAttr  ss -> UnfoldAttr  ss
+          | EMB.DescendIntoUvarTypes -> DescendIntoUvarTypes
 
 (* the one plugins actually use *)
 let e_norm_step' : norm_step EMB.embedding =

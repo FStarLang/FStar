@@ -749,6 +749,9 @@ val primops : norm_step
 (** Unfold all non-recursive definitions *)
 val delta : norm_step
 
+(** Normalize the types of occurrences of uvars *)
+val descend_into_uvar_types : norm_step
+
 (** Unroll recursive calls
 
     Note: Since F*'s termination check is semantic rather than

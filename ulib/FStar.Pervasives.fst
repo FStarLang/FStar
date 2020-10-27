@@ -96,6 +96,7 @@ type norm_step =
   // idem
   | UnfoldFully : list string -> norm_step
   | UnfoldAttr : list string -> norm_step // Unfold definitions marked with the given attributes
+  | DescendIntoUvarTypes
 
 let simplify = Simpl
 
@@ -106,6 +107,8 @@ let hnf = HNF
 let primops = Primops
 
 let delta = Delta
+
+let descend_into_uvar_types = DescendIntoUvarTypes
 
 let zeta = Zeta
 
