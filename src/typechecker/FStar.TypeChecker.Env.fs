@@ -75,7 +75,7 @@ let rec eq_step s1 s2 =
   | Beta, Beta
   | Iota, Iota           //pattern matching
   | Zeta, Zeta            //fixed points
-  | ZetaFull, ZetaFull    //fixed points  
+  | ZetaFull, ZetaFull    //fixed points
   | Weak, Weak            //Do not descend into binders
   | HNF, HNF             //Only produce a head normal form
   | Primops, Primops         //reduce primitive operators like +, -, *, /, etc.
@@ -176,6 +176,7 @@ and env = {
   uvar_subtyping :bool;
   tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
   type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
+  type_of_well_typed :env -> term -> typ;          (* a callback to the type-checker; falls back on type_of if the term is not well-typed *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
   check_type_of  :bool -> env -> term -> typ -> guard_t;
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
@@ -261,7 +262,7 @@ let default_table_size = 200
 let new_sigtab () = BU.smap_create default_table_size
 let new_gamma_cache () = BU.smap_create 100
 
-let initial_env deps tc_term type_of universe_of check_type_of solver module_lid nbe =
+let initial_env deps tc_term type_of type_of_well_typed universe_of check_type_of solver module_lid nbe : env =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -290,6 +291,11 @@ let initial_env deps tc_term type_of universe_of check_type_of solver module_lid
     uvar_subtyping=true;
     tc_term=tc_term;
     type_of=type_of;
+   type_of_well_typed =
+      (fun env t -> match type_of_well_typed env t with
+        | None -> let _, ty, _ = type_of env t in ty
+        | Some ty -> ty
+      );
     check_type_of=check_type_of;
     universe_of=universe_of;
     use_bv_sorts=false;
@@ -1006,7 +1012,7 @@ let num_effect_indices env name r =
     raise_error (Errors.Fatal_UnexpectedSignatureForMonad,
       BU.format2 "Signature for %s not an arrow (%s)" (Ident.string_of_lid name)
       (Print.term_to_string sig_t)) r
-    
+
 
 let lookup_effect_quals env l =
     let l = norm_eff_name env l in
@@ -1139,7 +1145,7 @@ let join env l1 l2 : (lident * mlift * mlift) =
   match join_opt env l1 l2 with
   | None ->
     raise_error (Errors.Fatal_EffectsCannotBeComposed,
-      (BU.format2 "Effects %s and %s cannot be composed" 
+      (BU.format2 "Effects %s and %s cannot be composed"
         (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
   | Some t -> t
 
@@ -1204,7 +1210,7 @@ let effect_repr_aux only_reifiable env c u_res =
         like [TAC int] instead of [Tac int] (given:%s, expected:%s)."
         (Ident.string_of_lid eff_name) (string_of_int given) (string_of_int expected) in
       raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, message) r in
-      
+
   let effect_name = norm_eff_name env (U.comp_effect_name c) in
   match effect_decl_opt env effect_name with
   | None -> None
@@ -1421,7 +1427,7 @@ let update_effect_lattice env src tgt st_mlift =
           (Ident.string_of_lid src)
           (Ident.string_of_lid tgt)) env.range
       else (compose_edges (compose_edges i_src edge) tgt_j)::edges) edges all_tgt_j) [] all_i_src in
-  
+
 
   let order = new_edges@env.effects.order in
   // let order = BU.remove_dups (fun e1 e2 -> lid_equals e1.msource e2.msource
@@ -1736,9 +1742,9 @@ let string_of_proof_ns env =
 (* ------------------------------------------------*)
 let guard_of_guard_formula g = {
   guard_f=g;
-  deferred=[]; 
+  deferred=[];
   deferred_to_tac=[];
-  univ_ineqs=([], []); 
+  univ_ineqs=([], []);
   implicits=[]
 }
 
