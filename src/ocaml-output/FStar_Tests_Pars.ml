@@ -73,6 +73,7 @@ let (init_once : unit -> unit) =
       FStar_TypeChecker_Env.initial_env FStar_Parser_Dep.empty_deps
         FStar_TypeChecker_TcTerm.tc_term
         FStar_TypeChecker_TcTerm.type_of_tot_term
+        FStar_TypeChecker_TcTerm.type_of_well_typed_term
         FStar_TypeChecker_TcTerm.universe_of
         FStar_TypeChecker_TcTerm.check_type_of_well_typed_term solver
         FStar_Parser_Const.prims_lid
@@ -142,6 +143,8 @@ let (init_once : unit -> unit) =
                (uu___3.FStar_TypeChecker_Env.tc_term);
              FStar_TypeChecker_Env.type_of =
                (uu___3.FStar_TypeChecker_Env.type_of);
+             FStar_TypeChecker_Env.type_of_well_typed =
+               (uu___3.FStar_TypeChecker_Env.type_of_well_typed);
              FStar_TypeChecker_Env.universe_of =
                (uu___3.FStar_TypeChecker_Env.universe_of);
              FStar_TypeChecker_Env.check_type_of =
@@ -241,6 +244,8 @@ let (init_once : unit -> unit) =
                     (uu___4.FStar_TypeChecker_Env.tc_term);
                   FStar_TypeChecker_Env.type_of =
                     (uu___4.FStar_TypeChecker_Env.type_of);
+                  FStar_TypeChecker_Env.type_of_well_typed =
+                    (uu___4.FStar_TypeChecker_Env.type_of_well_typed);
                   FStar_TypeChecker_Env.universe_of =
                     (uu___4.FStar_TypeChecker_Env.universe_of);
                   FStar_TypeChecker_Env.check_type_of =
@@ -381,6 +386,8 @@ let (tc' :
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
+        FStar_TypeChecker_Env.type_of_well_typed =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.check_type_of =
@@ -473,6 +480,8 @@ let (tc_nbe_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
+        FStar_TypeChecker_Env.type_of_well_typed =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.check_type_of =

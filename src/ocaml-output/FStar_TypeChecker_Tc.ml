@@ -83,6 +83,8 @@ let (set_hint_correlator :
               (uu___1.FStar_TypeChecker_Env.tc_term);
             FStar_TypeChecker_Env.type_of =
               (uu___1.FStar_TypeChecker_Env.type_of);
+            FStar_TypeChecker_Env.type_of_well_typed =
+              (uu___1.FStar_TypeChecker_Env.type_of_well_typed);
             FStar_TypeChecker_Env.universe_of =
               (uu___1.FStar_TypeChecker_Env.universe_of);
             FStar_TypeChecker_Env.check_type_of =
@@ -193,6 +195,8 @@ let (set_hint_correlator :
               (uu___1.FStar_TypeChecker_Env.tc_term);
             FStar_TypeChecker_Env.type_of =
               (uu___1.FStar_TypeChecker_Env.type_of);
+            FStar_TypeChecker_Env.type_of_well_typed =
+              (uu___1.FStar_TypeChecker_Env.type_of_well_typed);
             FStar_TypeChecker_Env.universe_of =
               (uu___1.FStar_TypeChecker_Env.universe_of);
             FStar_TypeChecker_Env.check_type_of =
@@ -977,6 +981,8 @@ let (tc_decl' :
                        (uu___2.FStar_TypeChecker_Env.tc_term);
                      FStar_TypeChecker_Env.type_of =
                        (uu___2.FStar_TypeChecker_Env.type_of);
+                     FStar_TypeChecker_Env.type_of_well_typed =
+                       (uu___2.FStar_TypeChecker_Env.type_of_well_typed);
                      FStar_TypeChecker_Env.universe_of =
                        (uu___2.FStar_TypeChecker_Env.universe_of);
                      FStar_TypeChecker_Env.check_type_of =
@@ -1178,6 +1184,8 @@ let (tc_decl' :
                                   (uu___6.FStar_TypeChecker_Env.tc_term);
                                 FStar_TypeChecker_Env.type_of =
                                   (uu___6.FStar_TypeChecker_Env.type_of);
+                                FStar_TypeChecker_Env.type_of_well_typed =
+                                  (uu___6.FStar_TypeChecker_Env.type_of_well_typed);
                                 FStar_TypeChecker_Env.universe_of =
                                   (uu___6.FStar_TypeChecker_Env.universe_of);
                                 FStar_TypeChecker_Env.check_type_of =
@@ -1406,6 +1414,8 @@ let (tc_decl' :
                                      (uu___7.FStar_TypeChecker_Env.tc_term);
                                    FStar_TypeChecker_Env.type_of =
                                      (uu___7.FStar_TypeChecker_Env.type_of);
+                                   FStar_TypeChecker_Env.type_of_well_typed =
+                                     (uu___7.FStar_TypeChecker_Env.type_of_well_typed);
                                    FStar_TypeChecker_Env.universe_of =
                                      (uu___7.FStar_TypeChecker_Env.universe_of);
                                    FStar_TypeChecker_Env.check_type_of =
@@ -1607,6 +1617,8 @@ let (tc_decl' :
                                 (uu___7.FStar_TypeChecker_Env.tc_term);
                               FStar_TypeChecker_Env.type_of =
                                 (uu___7.FStar_TypeChecker_Env.type_of);
+                              FStar_TypeChecker_Env.type_of_well_typed =
+                                (uu___7.FStar_TypeChecker_Env.type_of_well_typed);
                               FStar_TypeChecker_Env.universe_of =
                                 (uu___7.FStar_TypeChecker_Env.universe_of);
                               FStar_TypeChecker_Env.check_type_of =
@@ -1800,6 +1812,8 @@ let (tc_decl' :
                               (uu___6.FStar_TypeChecker_Env.tc_term);
                             FStar_TypeChecker_Env.type_of =
                               (uu___6.FStar_TypeChecker_Env.type_of);
+                            FStar_TypeChecker_Env.type_of_well_typed =
+                              (uu___6.FStar_TypeChecker_Env.type_of_well_typed);
                             FStar_TypeChecker_Env.universe_of =
                               (uu___6.FStar_TypeChecker_Env.universe_of);
                             FStar_TypeChecker_Env.check_type_of =
@@ -1953,6 +1967,8 @@ let (tc_decl' :
                               (uu___6.FStar_TypeChecker_Env.tc_term);
                             FStar_TypeChecker_Env.type_of =
                               (uu___6.FStar_TypeChecker_Env.type_of);
+                            FStar_TypeChecker_Env.type_of_well_typed =
+                              (uu___6.FStar_TypeChecker_Env.type_of_well_typed);
                             FStar_TypeChecker_Env.universe_of =
                               (uu___6.FStar_TypeChecker_Env.universe_of);
                             FStar_TypeChecker_Env.check_type_of =
@@ -2146,6 +2162,8 @@ let (tc_decl' :
                               (uu___7.FStar_TypeChecker_Env.tc_term);
                             FStar_TypeChecker_Env.type_of =
                               (uu___7.FStar_TypeChecker_Env.type_of);
+                            FStar_TypeChecker_Env.type_of_well_typed =
+                              (uu___7.FStar_TypeChecker_Env.type_of_well_typed);
                             FStar_TypeChecker_Env.universe_of =
                               (uu___7.FStar_TypeChecker_Env.universe_of);
                             FStar_TypeChecker_Env.check_type_of =
@@ -2549,6 +2567,8 @@ let (tc_decl' :
                                (uu___4.FStar_TypeChecker_Env.tc_term);
                              FStar_TypeChecker_Env.type_of =
                                (uu___4.FStar_TypeChecker_Env.type_of);
+                             FStar_TypeChecker_Env.type_of_well_typed =
+                               (uu___4.FStar_TypeChecker_Env.type_of_well_typed);
                              FStar_TypeChecker_Env.universe_of =
                                (uu___4.FStar_TypeChecker_Env.universe_of);
                              FStar_TypeChecker_Env.check_type_of =
@@ -2729,6 +2749,9 @@ let (tc_decl' :
                                              (uu___8.FStar_TypeChecker_Env.tc_term);
                                            FStar_TypeChecker_Env.type_of =
                                              (uu___8.FStar_TypeChecker_Env.type_of);
+                                           FStar_TypeChecker_Env.type_of_well_typed
+                                             =
+                                             (uu___8.FStar_TypeChecker_Env.type_of_well_typed);
                                            FStar_TypeChecker_Env.universe_of
                                              =
                                              (uu___8.FStar_TypeChecker_Env.universe_of);
@@ -3092,6 +3115,8 @@ let (tc_decl' :
                                   (uu___8.FStar_TypeChecker_Env.tc_term);
                                 FStar_TypeChecker_Env.type_of =
                                   (uu___8.FStar_TypeChecker_Env.type_of);
+                                FStar_TypeChecker_Env.type_of_well_typed =
+                                  (uu___8.FStar_TypeChecker_Env.type_of_well_typed);
                                 FStar_TypeChecker_Env.universe_of =
                                   (uu___8.FStar_TypeChecker_Env.universe_of);
                                 FStar_TypeChecker_Env.check_type_of =
@@ -3283,6 +3308,8 @@ let (tc_decl' :
                                   (uu___8.FStar_TypeChecker_Env.tc_term);
                                 FStar_TypeChecker_Env.type_of =
                                   (uu___8.FStar_TypeChecker_Env.type_of);
+                                FStar_TypeChecker_Env.type_of_well_typed =
+                                  (uu___8.FStar_TypeChecker_Env.type_of_well_typed);
                                 FStar_TypeChecker_Env.universe_of =
                                   (uu___8.FStar_TypeChecker_Env.universe_of);
                                 FStar_TypeChecker_Env.check_type_of =
@@ -3559,6 +3586,8 @@ let (add_sigelt_to_env :
                          (uu___4.FStar_TypeChecker_Env.tc_term);
                        FStar_TypeChecker_Env.type_of =
                          (uu___4.FStar_TypeChecker_Env.type_of);
+                       FStar_TypeChecker_Env.type_of_well_typed =
+                         (uu___4.FStar_TypeChecker_Env.type_of_well_typed);
                        FStar_TypeChecker_Env.universe_of =
                          (uu___4.FStar_TypeChecker_Env.universe_of);
                        FStar_TypeChecker_Env.check_type_of =
@@ -3661,6 +3690,8 @@ let (add_sigelt_to_env :
                          (uu___3.FStar_TypeChecker_Env.tc_term);
                        FStar_TypeChecker_Env.type_of =
                          (uu___3.FStar_TypeChecker_Env.type_of);
+                       FStar_TypeChecker_Env.type_of_well_typed =
+                         (uu___3.FStar_TypeChecker_Env.type_of_well_typed);
                        FStar_TypeChecker_Env.universe_of =
                          (uu___3.FStar_TypeChecker_Env.universe_of);
                        FStar_TypeChecker_Env.check_type_of =
@@ -3763,6 +3794,8 @@ let (add_sigelt_to_env :
                          (uu___4.FStar_TypeChecker_Env.tc_term);
                        FStar_TypeChecker_Env.type_of =
                          (uu___4.FStar_TypeChecker_Env.type_of);
+                       FStar_TypeChecker_Env.type_of_well_typed =
+                         (uu___4.FStar_TypeChecker_Env.type_of_well_typed);
                        FStar_TypeChecker_Env.universe_of =
                          (uu___4.FStar_TypeChecker_Env.universe_of);
                        FStar_TypeChecker_Env.check_type_of =
@@ -3865,6 +3898,8 @@ let (add_sigelt_to_env :
                          (uu___4.FStar_TypeChecker_Env.tc_term);
                        FStar_TypeChecker_Env.type_of =
                          (uu___4.FStar_TypeChecker_Env.type_of);
+                       FStar_TypeChecker_Env.type_of_well_typed =
+                         (uu___4.FStar_TypeChecker_Env.type_of_well_typed);
                        FStar_TypeChecker_Env.universe_of =
                          (uu___4.FStar_TypeChecker_Env.universe_of);
                        FStar_TypeChecker_Env.check_type_of =
@@ -4199,6 +4234,8 @@ let (tc_partial_modul :
              (uu___1.FStar_TypeChecker_Env.tc_term);
            FStar_TypeChecker_Env.type_of =
              (uu___1.FStar_TypeChecker_Env.type_of);
+           FStar_TypeChecker_Env.type_of_well_typed =
+             (uu___1.FStar_TypeChecker_Env.type_of_well_typed);
            FStar_TypeChecker_Env.universe_of =
              (uu___1.FStar_TypeChecker_Env.universe_of);
            FStar_TypeChecker_Env.check_type_of =
@@ -4448,6 +4485,8 @@ let (check_module :
                (uu___2.FStar_TypeChecker_Env.tc_term);
              FStar_TypeChecker_Env.type_of =
                (uu___2.FStar_TypeChecker_Env.type_of);
+             FStar_TypeChecker_Env.type_of_well_typed =
+               (uu___2.FStar_TypeChecker_Env.type_of_well_typed);
              FStar_TypeChecker_Env.universe_of =
                (uu___2.FStar_TypeChecker_Env.universe_of);
              FStar_TypeChecker_Env.check_type_of =

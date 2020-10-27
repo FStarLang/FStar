@@ -208,6 +208,8 @@ let (check_no_subtyping_for_layered_combinator :
                (uu___1.FStar_TypeChecker_Env.tc_term);
              FStar_TypeChecker_Env.type_of =
                (uu___1.FStar_TypeChecker_Env.type_of);
+             FStar_TypeChecker_Env.type_of_well_typed =
+               (uu___1.FStar_TypeChecker_Env.type_of_well_typed);
              FStar_TypeChecker_Env.universe_of =
                (uu___1.FStar_TypeChecker_Env.universe_of);
              FStar_TypeChecker_Env.check_type_of =
@@ -2293,6 +2295,9 @@ let (tc_layered_eff_decl :
                                           (uu___16.FStar_TypeChecker_Env.tc_term);
                                         FStar_TypeChecker_Env.type_of =
                                           (uu___16.FStar_TypeChecker_Env.type_of);
+                                        FStar_TypeChecker_Env.type_of_well_typed
+                                          =
+                                          (uu___16.FStar_TypeChecker_Env.type_of_well_typed);
                                         FStar_TypeChecker_Env.universe_of =
                                           (uu___16.FStar_TypeChecker_Env.universe_of);
                                         FStar_TypeChecker_Env.check_type_of =
@@ -4024,6 +4029,9 @@ let (tc_non_layered_eff_decl :
                                                                     FStar_TypeChecker_Env.type_of
                                                                     =
                                                                     (uu___24.FStar_TypeChecker_Env.type_of);
+                                                                    FStar_TypeChecker_Env.type_of_well_typed
+                                                                    =
+                                                                    (uu___24.FStar_TypeChecker_Env.type_of_well_typed);
                                                                     FStar_TypeChecker_Env.universe_of
                                                                     =
                                                                     (uu___24.FStar_TypeChecker_Env.universe_of);
@@ -4295,6 +4303,9 @@ let (tc_non_layered_eff_decl :
                                                                    FStar_TypeChecker_Env.type_of
                                                                     =
                                                                     (uu___24.FStar_TypeChecker_Env.type_of);
+                                                                   FStar_TypeChecker_Env.type_of_well_typed
+                                                                    =
+                                                                    (uu___24.FStar_TypeChecker_Env.type_of_well_typed);
                                                                    FStar_TypeChecker_Env.universe_of
                                                                     =
                                                                     (uu___24.FStar_TypeChecker_Env.universe_of);
@@ -5394,6 +5405,8 @@ let (tc_lift :
                                (uu___5.FStar_TypeChecker_Env.tc_term);
                              FStar_TypeChecker_Env.type_of =
                                (uu___5.FStar_TypeChecker_Env.type_of);
+                             FStar_TypeChecker_Env.type_of_well_typed =
+                               (uu___5.FStar_TypeChecker_Env.type_of_well_typed);
                              FStar_TypeChecker_Env.universe_of =
                                (uu___5.FStar_TypeChecker_Env.universe_of);
                              FStar_TypeChecker_Env.check_type_of =
