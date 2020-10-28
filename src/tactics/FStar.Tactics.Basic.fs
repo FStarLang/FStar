@@ -942,7 +942,7 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
 
              let bs', t' = SS.close_binders bs, SS.close bs t in
 
-             let bs', t' = SS.subst_binders s bs', SS.subst s t in
+             let bs', t' = SS.subst_binders s bs', SS.subst s t' in
 
              let bs'', t'' = SS.open_term bs' t' in
 
