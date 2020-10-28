@@ -983,6 +983,7 @@ let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
 
       if n_l2 > n_l1 then
         (apply_lemma (`(EQ?.symmetry (`#eq)));
+         dismiss_slprops();
          let n = n_l2 - n_l1 in
          focus (fun _ -> n_identity_left n eq m))
       else (let n = n_l1 - n_l2 in focus (fun _ -> n_identity_left n eq m))
@@ -1015,6 +1016,8 @@ let canon_return' (eq:term) (m:term) : Tac unit =
 let canon_return () : Tac unit =
   canon_return' (`Steel.Memory.Tactics.req) (`Steel.Memory.Tactics.rm)
 
+let norm_ghost () : Tac unit = l_to_r [`FStar.Ghost.reveal_hide; `FStar.Ghost.hide_reveal]
+
 let solve_can_be_split (args:list argv) : Tac bool =
   match args with
   | [(t1, _); (t2, _)] ->
@@ -1023,6 +1026,7 @@ let solve_can_be_split (args:list argv) : Tac bool =
       if lnbr + rnbr <= 1 then (
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ -> norm [delta_only [`%can_be_split]];
+                     norm_ghost ();
                      // If we have exactly the same term on both side,
                      // equiv_sl_implies would solve the goal immediately
                      or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
@@ -1066,6 +1070,7 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
         focus (fun _ ->
           ignore (forall_intro());
           norm [delta_only [`%can_be_split_forall]];
+          norm_ghost ();
           or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
             (fun _ ->
             apply_lemma (`equiv_sl_implies);
@@ -1098,6 +1103,7 @@ let solve_equiv_forall (args:list argv) : Tac bool =
                       | _ ->
                         dismiss_slprops ();
                         ignore (forall_intro());
+                        norm_ghost ();
                         // TODO: Do this count in a better way
                         if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
                         or_else (fun _ ->  flip()) (fun _ -> ());
@@ -1128,6 +1134,7 @@ let rec solve_subcomp_pre (l:list goal) : Tac unit =
           or_else (fun _ -> apply_lemma (`emp_unit_variant))
                   (fun _ ->
                      norm [delta_only [`%can_be_split]];
+                     norm_ghost ();
                      // If we have exactly the same term on both side,
                      // equiv_sl_implies would solve the goal immediately
                      or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
@@ -1164,6 +1171,7 @@ let rec solve_subcomp_post (l:list goal) : Tac unit =
                      norm [delta_only [`%annot_sub_post]];
                      norm [delta_only [`%can_be_split_forall]];
                      ignore (forall_intro());
+                     norm_ghost ();
                      or_else
                        (fun _ -> apply_lemma (`lemma_sl_implies_refl))
                        (fun _ ->
@@ -1363,6 +1371,7 @@ let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
         else hd::slgoals, loggoals
       | App t _ -> if term_eq t (`squash) then hd::slgoals, loggoals else slgoals, loggoals
       | _ -> slgoals, loggoals
+
 
 [@@ resolve_implicits; framing_implicit; plugin]
 let init_resolve_tac () : Tac unit =
