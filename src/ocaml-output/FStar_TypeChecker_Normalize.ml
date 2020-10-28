@@ -4388,8 +4388,7 @@ let rec (norm :
                                 t1.FStar_Syntax_Syntax.pos in
                             rebuild cfg env1 stack1 t2)))
            | FStar_Syntax_Syntax.Tm_delayed uu___2 ->
-               let t2 = FStar_Syntax_Subst.compress t1 in
-               norm cfg env1 stack1 t2
+               failwith "impossible: Tm_delayed on norm"
            | FStar_Syntax_Syntax.Tm_uvar uu___2 ->
                if
                  (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
