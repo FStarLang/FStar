@@ -983,6 +983,7 @@ let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
 
       if n_l2 > n_l1 then
         (apply_lemma (`(EQ?.symmetry (`#eq)));
+         dismiss_slprops();
          let n = n_l2 - n_l1 in
          focus (fun _ -> n_identity_left n eq m))
       else (let n = n_l1 - n_l2 in focus (fun _ -> n_identity_left n eq m))
