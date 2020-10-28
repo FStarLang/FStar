@@ -367,6 +367,7 @@ type raw_error =
   | Error_BadSplice 
   | Error_UnexpectedUnresolvedUvar 
   | Warning_UnfoldPlugin 
+  | Error_LayeredMissingAnnot 
 let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -1842,6 +1843,9 @@ let (uu___is_Error_UnexpectedUnresolvedUvar : raw_error -> Prims.bool) =
 let (uu___is_Warning_UnfoldPlugin : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with | Warning_UnfoldPlugin -> true | uu___ -> false
+let (uu___is_Error_LayeredMissingAnnot : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Error_LayeredMissingAnnot -> true | uu___ -> false
 type flag = error_flag
 type error_setting = (raw_error * error_flag * Prims.int)
 let (default_settings : error_setting Prims.list) =
@@ -2190,7 +2194,8 @@ let (default_settings : error_setting Prims.list) =
   (Warning_DeprecatedGeneric, CWarning, (Prims.of_int (337)));
   (Error_BadSplice, CError, (Prims.of_int (338)));
   (Error_UnexpectedUnresolvedUvar, CAlwaysError, (Prims.of_int (339)));
-  (Warning_UnfoldPlugin, CWarning, (Prims.of_int (340)))]
+  (Warning_UnfoldPlugin, CWarning, (Prims.of_int (340)));
+  (Error_LayeredMissingAnnot, CAlwaysError, (Prims.of_int (341)))]
 let lookup_error :
   'uuuuu 'uuuuu1 'uuuuu2 .
     ('uuuuu * 'uuuuu1 * 'uuuuu2) Prims.list ->
