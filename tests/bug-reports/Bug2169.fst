@@ -1,21 +1,15 @@
 module Bug2169
 
-(* An effect for (demonic) nondeterminism via lists. *)
-
 open FStar.List.Tot
 open FStar.Tactics
-
 open FStar.FunctionalExtensionality
 module T = FStar.Tactics
 
 let elim_pure #a #wp ($f : unit -> PURE a wp) p
  : Pure a (requires (wp p)) (ensures (fun r -> p r))
- //: PURE a (fun p' -> wp p /\ (forall r. p r ==> p' r))
- // ^ basically this, requires monotonicity
  = FStar.Monotonic.Pure.wp_monotonic_pure ();
    f ()
 
-// m is a monad. In this particular example, lists
 val m (a : Type u#a) : Type u#a
 let m a = list a
 
@@ -25,8 +19,6 @@ let m_return x = [x]
 val m_bind (#a #b : Type) : m a -> (a -> m b) -> m b
 let m_bind l f = concatMap f l
 
-// w is an ordered (w_ord) monad with conjunction (w_conj) and actions from prop (w_act_prop)
-// In this example, good ol' continuations into prop
 val w0 (a : Type u#a) : Type u#(max 1 a)
 let w0 a = (a -> Type0) -> Type0
 
@@ -34,7 +26,7 @@ let monotonic (w:w0 'a) =
   forall p1 p2. (forall x. p1 x ==> p2 x) ==> w p1 ==> w p2
 
 val w (a : Type u#a) : Type u#(max 1 a)
-let w a = w:(w0 a)//{monotonic w}
+let w a = (w0 a)
 
 val w_ord (#a : Type) : w a -> w a -> Type0
 let w_ord wp1 wp2 = forall p. wp1 p ==> wp2 p
@@ -70,9 +62,9 @@ let rec concatmaplemma #a #b l f x =
     concatlemma (f h) (concatMap f t) x;
     concatmaplemma t f x
 
-let dm (a : Type) (wp : w a) : Type = 
+let dm (a : Type) (wp : w a) : Type =
   p:(a -> Type0) -> squash (wp p) -> l:(m a){forall x. memP x l ==> p x}
-  
+
 let irepr (a : Type) (wp: w a) = dm a wp
 
 let ireturn (a : Type) (x : a) : irepr a (w_return x) = fun _ _ -> [x]
@@ -122,7 +114,7 @@ let ibind (a : Type) (b : Type) (wp_v : w a) (wp_f: a -> w b) (v : irepr a wp_v)
           let l2 = unref l2 in
           let l2f = List.Tot.flatten l2 in
           l2f
- 
+
 let isubcomp (a:Type) (wp1 wp2: w a) (f : irepr a wp1) : Pure (irepr a wp2) (requires w_ord wp2 wp1) (ensures fun _ -> True) = f
 
 let wp_if_then_else (#a:Type) (wp1 wp2:w a) (b:bool) : w a=
@@ -139,7 +131,7 @@ layered_effect {
   with repr         = irepr;
        return       = ireturn;
        bind         = ibind;
-       subcomp      = isubcomp; 
+       subcomp      = isubcomp;
        if_then_else = i_if_then_else
 }
 
@@ -150,82 +142,6 @@ let lift_pure_nd (a:Type) (wp:pure_wp a) (f:(eqtype_as_type unit -> PURE a wp)) 
 
 sub_effect PURE ~> ND = lift_pure_nd
 
-val test_f : unit -> ND int (fun p -> p 5 /\ p 3)
-let test_f () =
-  ND?.reflect (fun _ _ -> [3; 5])
-
-//let l () : (l:(list int){forall p. p 5 /\ p 3 ==> interp l p}) = reify (test_f ())
-// ^ This one doesn't work... datatype subtyping to blame?
-
-let l () : (l:(list int)) = reify (test_f ()) (fun _ -> True) ()
-
-effect Nd (a:Type) (pre:pure_pre) (post:pure_post' a pre) =
-        ND a (fun (p:pure_post a) -> pre /\ (forall (pure_result:a). post pure_result ==> p pure_result))
-
-val choose : #a:Type0 -> x:a -> y:a -> ND a (fun p -> p x /\ p y)
-let choose #a x y =
-    ND?.reflect (fun _ _ -> [x;y])
-
-val fail : #a:Type0 -> unit -> ND a (fun p -> True)
-let fail #a () =
-    ND?.reflect (fun _ _ -> [])
-
-let flip () : ND bool (fun p -> p true /\ p false) =
-    choose true false
-
-let test () : ND int (fun p -> forall (x:int). 0 <= x /\ x < 10 ==> p x)  by (compute ()) =
-    let x = choose 0 1 in
-    let y = choose 2 3 in
-    let z = choose 4 5 in
-    x + y + z
-
-[@expect_failure]
-let test_bad () : ND int (fun p -> forall (x:int). 0 <= x /\ x < 5 ==> p x) by (compute ()) =
-    let x = choose 0 1 in
-    let y = choose 2 3 in
-    let z = choose 4 5 in
-    x + y + z
-
-let guard (b:bool) : ND unit (fun p -> b ==> p ()) by (compute ()) =
-  if b
-  then ()
-  else fail ()
-  
-let rec pick_from #a (l : list a) : ND a (fun p -> forall x. memP x l ==> p x) by (compute ()) =
-    match l with
-    | [] -> fail ()
-    | x::xs ->
-      if flip ()
-      then x
-      else pick_from xs
-
-let ( * ) = op_Multiply
-
-let pyths () : ND (int & int & int) (fun p -> forall x y z. x*x + y*y == z*z ==> p (x,y,z)) by (compute ()) =
-  let l = [1;2;3;4;5;6;7;8;9;10] in
-  let x = pick_from l in
-  let y = pick_from l in
-  let z = pick_from l in
-  guard (x*x + y*y = z*z);
-  (x,y,z)
-
-(* Extracted code for pyths:
-
-let (pyths_norm : unit -> (Prims.int * Prims.int * Prims.int) Prims.list) =
-  fun uu____1038  ->
-    [((Prims.parse_int "3"), (Prims.parse_int "4"), (Prims.parse_int "5"));
-    ((Prims.parse_int "4"), (Prims.parse_int "3"), (Prims.parse_int "5"));
-    ((Prims.parse_int "6"), (Prims.parse_int "8"), (Prims.parse_int "10"));
-    ((Prims.parse_int "8"), (Prims.parse_int "6"), (Prims.parse_int "10"))]
-*)
-let pyths_norm () = normalize_term (reify (pyths ()))
-
-(* ^ Try it in emacs: C-c C-s C-e pyths_norm ():
-Reducing ‘pyths_norm ()’…
-pyths_norm () ↓βδιζr [3, 4, 5; 4, 3, 5; 6, 8, 10; 8, 6, 10] <: list ((int * int) * int)
-*)
-
-opaque
 let g (x:int) : option int = Some x
 
 let wrap (f:int -> ND unit (fun p -> True)) (x':int) : ND unit (fun p -> True) =
@@ -240,21 +156,20 @@ let wrap (f:int -> ND unit (fun p -> True)) (x':int) : ND unit (fun p -> True) =
 let rewrite_inside_reify
   (f : int -> ND unit (fun p -> True))
   (g : int -> Tot (option int))
-  (x' : int) : Tot unit = 
+  (x' : int) : Tot unit =
 
-  let f' = wrap f in 
+  let f' = wrap f in
   let l = reify (f' x') (fun _ -> True) in
 
   match g x' with
-  | Some x -> 
+  | Some x ->
      let ll = reify (f x) (fun _ -> True) in
      assert (l == ll) by (
        unfold_def (`wrap);
        // This puts in rwr: g x' == Some b
        let rwr = (match (List.Tot.nth (cur_binders ()) 11) with
        | Some y -> y | None -> T.fail "no goal found") in
-       l_to_r [`rwr];
-       dump "H")
+       l_to_r [`rwr])
      // The assert ^ fails with the error:
      // "(Error) user tactic failed: Ill-typed reify: this constant must be fully applied"
   | None -> ()
