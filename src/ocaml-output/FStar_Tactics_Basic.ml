@@ -2992,7 +2992,7 @@ let (rewrite : FStar_Syntax_Syntax.binder -> unit FStar_Tactics_Monad.tac) =
                                            FStar_Syntax_Subst.subst_binders s
                                              bs' in
                                          let uu___10 =
-                                           FStar_Syntax_Subst.subst s t in
+                                           FStar_Syntax_Subst.subst s t' in
                                          (uu___9, uu___10) in
                                        (match uu___8 with
                                         | (bs'1, t'1) ->
