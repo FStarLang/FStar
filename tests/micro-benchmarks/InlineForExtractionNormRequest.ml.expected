@@ -1,0 +1,3 @@
+open Prims
+let id : 'a . 'a -> 'a = fun x -> x
+let (test : Prims.int -> Prims.int) = fun x -> Prims.int_one
