@@ -1520,8 +1520,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
         end //Tm_meta
 
         | Tm_delayed _ ->
-          let t = SS.compress t in
-          norm cfg env stack t
+          failwith "impossible: Tm_delayed on norm"
 
         | Tm_uvar _ ->
           if cfg.steps.check_no_uvars
