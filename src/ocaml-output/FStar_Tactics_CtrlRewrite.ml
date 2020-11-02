@@ -98,6 +98,9 @@ let (__do_rewrite :
                                       (uu___4.FStar_TypeChecker_Env.tc_term);
                                     FStar_TypeChecker_Env.type_of =
                                       (uu___4.FStar_TypeChecker_Env.type_of);
+                                    FStar_TypeChecker_Env.type_of_well_typed
+                                      =
+                                      (uu___4.FStar_TypeChecker_Env.type_of_well_typed);
                                     FStar_TypeChecker_Env.universe_of =
                                       (uu___4.FStar_TypeChecker_Env.universe_of);
                                     FStar_TypeChecker_Env.check_type_of =
