@@ -39,13 +39,13 @@ module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst
 
 let is_flex t =
-  let head, _args = U.head_and_args t in
+  let head, _args = U.head_and_args_full t in
   match (SS.compress head).n with
   | Tm_uvar _ -> true
   | _ -> false
 
 let flex_uvar_head t =
-    let head, _args = U.head_and_args t in
+    let head, _args = U.head_and_args_full t in
     match (SS.compress head).n with
     | Tm_uvar (u, _) -> u
     | _ -> failwith "Not a flex-uvar"

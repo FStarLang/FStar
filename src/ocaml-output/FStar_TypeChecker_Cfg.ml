@@ -1720,7 +1720,7 @@ let (built_in_primitive_steps : primitive_step FStar_Util.psmap) =
   let arg_as_bounded_int uu___ =
     match uu___ with
     | (a, uu___1) ->
-        let uu___2 = FStar_Syntax_Util.head_and_args' a in
+        let uu___2 = FStar_Syntax_Util.head_and_args_full a in
         (match uu___2 with
          | (hd, args) ->
              let a1 = FStar_Syntax_Util.unlazy_emb a in

@@ -381,7 +381,7 @@ let (tc_data :
                                       (match uu___6 with
                                        | (result1, res_lcomp) ->
                                            let uu___7 =
-                                             FStar_Syntax_Util.head_and_args'
+                                             FStar_Syntax_Util.head_and_args_full
                                                result1 in
                                            (match uu___7 with
                                             | (head, args) ->

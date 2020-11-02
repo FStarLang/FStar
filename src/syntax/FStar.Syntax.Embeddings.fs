@@ -323,7 +323,7 @@ let e_option (ea : embedding<'a>) =
             t
             t_option_a
             (fun t ->
-                let hd, args = U.head_and_args' t in
+                let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, _ when S.fv_eq_lid fv PC.none_lid -> Some None
                 | Tm_fvar fv, [_; (a, _)] when S.fv_eq_lid fv PC.some_lid ->
@@ -386,7 +386,7 @@ let e_tuple2 (ea:embedding<'a>) (eb:embedding<'b>) =
             t
             t_pair_a_b
             (fun t ->
-                let hd, args = U.head_and_args' t in
+                let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, [_; _; (a, _); (b, _)] when S.fv_eq_lid fv PC.lid_Mktuple2 ->
                     BU.bind_opt (unembed ea a w norm) (fun a ->
@@ -467,7 +467,7 @@ let e_either (ea:embedding<'a>) (eb:embedding<'b>) =
             t
             t_sum_a_b
             (fun t ->
-                let hd, args = U.head_and_args' t in
+                let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, [_; _; (a, _)] when S.fv_eq_lid fv PC.inl_lid ->
                     BU.bind_opt (unembed ea a w norm) (fun a ->
@@ -541,7 +541,7 @@ let e_list (ea:embedding<'a>) =
             t
             t_list_a
             (fun t ->
-                let hd, args = U.head_and_args' t in
+                let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, _
                     when S.fv_eq_lid fv PC.nil_lid -> Some []
