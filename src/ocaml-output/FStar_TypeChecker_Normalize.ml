@@ -2725,7 +2725,7 @@ let rec (norm :
                            FStar_TypeChecker_Cfg.nbe_step =
                              (uu___6.FStar_TypeChecker_Cfg.nbe_step);
                            FStar_TypeChecker_Cfg.for_extraction =
-                             (uu___6.FStar_TypeChecker_Cfg.for_extraction)
+                             ((cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction)
                          } in
                        {
                          FStar_TypeChecker_Cfg.steps = uu___5;

@@ -1152,7 +1152,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
                 then [Unfold delta_constant]
                 else [NoDelta] in
-              let cfg' = {cfg with steps = ({ to_fsteps s with in_full_norm_request=true})
+              let cfg' = {cfg with steps = ({ to_fsteps s
+                                              with in_full_norm_request=true;
+                                                   for_extraction=cfg.steps.for_extraction})
                                ; delta_level = delta_level
                                ; normalize_pure_lets = true } in
               let stack' =
