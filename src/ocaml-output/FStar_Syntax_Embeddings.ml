@@ -557,7 +557,7 @@ let e_option :
       let t = FStar_Syntax_Util.unmeta_safe t0 in
       lazy_unembed printer1 emb_t_option_a t t_option_a
         (fun t1 ->
-           let uu___ = FStar_Syntax_Util.head_and_args' t1 in
+           let uu___ = FStar_Syntax_Util.head_and_args_full t1 in
            match uu___ with
            | (hd, args) ->
                let uu___1 =
@@ -690,7 +690,7 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
         let t = FStar_Syntax_Util.unmeta_safe t0 in
         lazy_unembed printer1 emb_t_pair_a_b t t_pair_a_b
           (fun t1 ->
-             let uu___ = FStar_Syntax_Util.head_and_args' t1 in
+             let uu___ = FStar_Syntax_Util.head_and_args_full t1 in
              match uu___ with
              | (hd, args) ->
                  let uu___1 =
@@ -880,7 +880,7 @@ let e_either :
         let t = FStar_Syntax_Util.unmeta_safe t0 in
         lazy_unembed printer1 emb_t_sum_a_b t t_sum_a_b
           (fun t1 ->
-             let uu___ = FStar_Syntax_Util.head_and_args' t1 in
+             let uu___ = FStar_Syntax_Util.head_and_args_full t1 in
              match uu___ with
              | (hd, args) ->
                  let uu___1 =
@@ -1010,7 +1010,7 @@ let e_list : 'a . 'a embedding -> 'a Prims.list embedding =
       let t = FStar_Syntax_Util.unmeta_safe t0 in
       lazy_unembed printer1 emb_t_list_a t t_list_a
         (fun t1 ->
-           let uu___ = FStar_Syntax_Util.head_and_args' t1 in
+           let uu___ = FStar_Syntax_Util.head_and_args_full t1 in
            match uu___ with
            | (hd, args) ->
                let uu___1 =

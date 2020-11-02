@@ -942,7 +942,7 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
 
              let bs', t' = SS.close_binders bs, SS.close bs t in
 
-             let bs', t' = SS.subst_binders s bs', SS.subst s t in
+             let bs', t' = SS.subst_binders s bs', SS.subst s t' in
 
              let bs'', t'' = SS.open_term bs' t' in
 
@@ -1347,7 +1347,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
     bind (proc_guard "destruct" (goal_env g) guard) (fun () ->
     let s_ty = N.normalize [Env.UnfoldTac; Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant]
                            (goal_env g) s_ty in
-    let h, args = U.head_and_args' (U.unrefine s_ty) in
+    let h, args = U.head_and_args_full (U.unrefine s_ty) in
     bind (match (SS.compress h).n with
           | Tm_fvar fv -> ret (fv, [])
           | Tm_uinst ({ n = Tm_fvar fv }, us) -> ret (fv, us)

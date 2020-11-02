@@ -566,7 +566,8 @@ let (check_expected_effect :
                                  FStar_Util.format2
                                    "Missing annotation for a layered effect (%s) computation at %s"
                                    uu___11 uu___12 in
-                               (FStar_Errors.Fatal_IllTyped, uu___10) in
+                               (FStar_Errors.Error_LayeredMissingAnnot,
+                                 uu___10) in
                              FStar_Errors.raise_error uu___9
                                e.FStar_Syntax_Syntax.pos
                            else

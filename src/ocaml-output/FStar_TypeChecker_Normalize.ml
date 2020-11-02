@@ -130,7 +130,7 @@ let (__proj__Debug__item___0 :
 type stack = stack_elt Prims.list
 let (head_of : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
-    let uu___ = FStar_Syntax_Util.head_and_args' t in
+    let uu___ = FStar_Syntax_Util.head_and_args_full t in
     match uu___ with | (hd, uu___1) -> hd
 let set_memo :
   'a . FStar_TypeChecker_Cfg.cfg -> 'a FStar_Syntax_Syntax.memo -> 'a -> unit
@@ -4388,8 +4388,7 @@ let rec (norm :
                                 t1.FStar_Syntax_Syntax.pos in
                             rebuild cfg env1 stack1 t2)))
            | FStar_Syntax_Syntax.Tm_delayed uu___2 ->
-               let t2 = FStar_Syntax_Subst.compress t1 in
-               norm cfg env1 stack1 t2
+               failwith "impossible: Tm_delayed on norm"
            | FStar_Syntax_Syntax.Tm_uvar uu___2 ->
                if
                  (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
@@ -5679,7 +5678,7 @@ and (maybe_simplify_aux :
                   FStar_Util.print2 "WPE> is_applied %s -- %s\n" uu___3
                     uu___4)
                else ();
-               (let uu___3 = FStar_Syntax_Util.head_and_args' t in
+               (let uu___3 = FStar_Syntax_Util.head_and_args_full t in
                 match uu___3 with
                 | (hd, args) ->
                     let uu___4 =

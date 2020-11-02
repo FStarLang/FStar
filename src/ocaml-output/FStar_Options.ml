@@ -1332,6 +1332,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "detail_errors" -> true
     | "detail_hint_replay" -> true
     | "eager_subtyping" -> true
+    | "error_contexts" -> true
     | "hide_uvar_nums" -> true
     | "hint_dir" -> true
     | "hint_file" -> true
@@ -1414,7 +1415,7 @@ let (settable_specs :
     (FStar_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___583 :
+let (uu___584 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1430,11 +1431,11 @@ let (uu___583 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___583 with
+  match uu___584 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___583 with
+  match uu___584 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
