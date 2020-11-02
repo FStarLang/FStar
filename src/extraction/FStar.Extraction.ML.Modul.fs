@@ -873,8 +873,8 @@ let get_noextract_to (se:sigelt) (backend:option<Options.codegen_t>) : bool =
 (* Extracting the top-level definitions in a module                          *)
 (*****************************************************************************)
 let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
-  Errors.with_ctx (BU.format1 "While extracting top-level definition `%s`" (Print.sigelt_to_string_short se)) (fun () ->
-     debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string_short se));
+    Errors.with_ctx (BU.format1 "While extracting top-level definition `%s`" (Print.sigelt_to_string_short se)) (fun () ->
+      debug g (fun u -> BU.print1 ">>>> extract_sig %s \n" (Print.sigelt_to_string_short se));
 
      // Extract this definition, unless
      // 1- it has the `noextract` qualifier, and we are not extracting for Kremlin
@@ -884,7 +884,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
         || (get_noextract_to se (Options.codegen ()))
      then g, []
      else
-     match se.sigel with
+        match se.sigel with
         | Sig_bundle _
         | Sig_inductive_typ _
         | Sig_datacon _ ->

@@ -478,7 +478,7 @@ let maybe_eta_expand_coercion g expect e =
   Whereas with this optimization we produce (fun x -> Obj.magic (e : b) : c)  : a -> c
 *)
 let apply_coercion pos (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
-    if Options.codegen() = Some Options.FSharp
+    if Util.codegen_fsharp()
     then //magics are not always sound in F#; warn
         FStar.Errors.log_issue pos
           (Errors.Warning_NoMagicInFSharp,
@@ -565,7 +565,7 @@ let maybe_coerce pos (g:uenv) e ty (expect:mlty) : mlexpr =
                             (Code.string_of_mlexpr (current_module_of_uenv g) e)
                             (Code.string_of_mlty (current_module_of_uenv g) ty)
                             (Code.string_of_mlty (current_module_of_uenv g) expect)) in
-               maybe_eta_expand_coercion g expect (apply_coercion g e ty expect)
+               maybe_eta_expand_coercion g expect (apply_coercion pos g e ty expect)
 
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)

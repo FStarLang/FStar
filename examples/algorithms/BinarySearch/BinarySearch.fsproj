@@ -48,7 +48,7 @@
   <Import Project="$(FSTAR_HOME)\fsharp.extraction.targets" />
   <ItemGroup>
     <Compile Include="..\BinarySearch.fst" Link="BinarySearch.fst" />
-    <None Include="BinarySearch.repl.fsx" />
+    <None Include="BinarySearch.fsx" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
