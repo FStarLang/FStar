@@ -5,6 +5,7 @@ open FStar
 open FStar.All
 open FStar.Syntax.Syntax
 open FStar.Char
+open FStar.VConfig
 
 module Range = FStar.Range
 module Z = FStar.BigInt
@@ -93,9 +94,11 @@ val e_unit        : embedding<unit>
 val e_bool        : embedding<bool>
 val e_char        : embedding<char>
 val e_int         : embedding<Z.t>
+val e_fsint       : embedding<int>
 val e_string      : embedding<string>
 val e_norm_step   : embedding<norm_step>
 val e_range       : embedding<Range.range>
+val e_vconfig     : embedding<vconfig>
 
 val e_option      : embedding<'a> -> embedding<option<'a>>
 val e_list        : embedding<'a> -> embedding<list<'a>>

@@ -1493,6 +1493,8 @@ and (encode_term :
                                 (uu___6.FStar_TypeChecker_Env.tc_term);
                               FStar_TypeChecker_Env.type_of =
                                 (uu___6.FStar_TypeChecker_Env.type_of);
+                              FStar_TypeChecker_Env.type_of_well_typed =
+                                (uu___6.FStar_TypeChecker_Env.type_of_well_typed);
                               FStar_TypeChecker_Env.universe_of =
                                 (uu___6.FStar_TypeChecker_Env.universe_of);
                               FStar_TypeChecker_Env.check_type_of =
@@ -1531,7 +1533,9 @@ and (encode_term :
                               FStar_TypeChecker_Env.erasable_types_tab =
                                 (uu___6.FStar_TypeChecker_Env.erasable_types_tab);
                               FStar_TypeChecker_Env.enable_defer_to_tac =
-                                (uu___6.FStar_TypeChecker_Env.enable_defer_to_tac)
+                                (uu___6.FStar_TypeChecker_Env.enable_defer_to_tac);
+                              FStar_TypeChecker_Env.unif_allow_ref_guards =
+                                (uu___6.FStar_TypeChecker_Env.unif_allow_ref_guards)
                             }) res in
                        (match uu___5 with
                         | (pre_opt, res_t) ->

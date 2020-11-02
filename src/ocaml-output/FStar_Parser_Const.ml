@@ -95,6 +95,9 @@ let (list_append_lid : FStar_Ident.lident) = p2l ["FStar"; "List"; "append"]
 let (list_tot_append_lid : FStar_Ident.lident) =
   p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let (id_lid : FStar_Ident.lident) = psconst "id"
+let (c2l : Prims.string -> FStar_Ident.lident) =
+  fun s -> p2l ["FStar"; "Char"; s]
+let (char_u32_of_char : FStar_Ident.lident) = c2l "u32_of_char"
 let (s2l : Prims.string -> FStar_Ident.lident) =
   fun n -> p2l ["FStar"; "String"; n]
 let (string_list_of_string_lid : FStar_Ident.lident) = s2l "list_of_string"
@@ -117,6 +120,9 @@ let (string_of_bool_lid : FStar_Ident.lident) =
 let (string_compare : FStar_Ident.lident) =
   p2l ["FStar"; "String"; "compare"]
 let (order_lid : FStar_Ident.lident) = p2l ["FStar"; "Order"; "order"]
+let (vconfig_lid : FStar_Ident.lident) = p2l ["FStar"; "VConfig"; "vconfig"]
+let (mkvconfig_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "VConfig"; "Mkvconfig"]
 let (op_Eq : FStar_Ident.lident) = pconst "op_Equality"
 let (op_notEq : FStar_Ident.lident) = pconst "op_disEquality"
 let (op_LT : FStar_Ident.lident) = pconst "op_LessThan"
@@ -265,7 +271,6 @@ let (comment_attr : FStar_Ident.lident) =
 let (fail_attr : FStar_Ident.lident) = psconst "expect_failure"
 let (fail_lax_attr : FStar_Ident.lident) = psconst "expect_lax_failure"
 let (tcdecltime_attr : FStar_Ident.lident) = psconst "tcdecltime"
-let (noextract_to_attr : FStar_Ident.lident) = psconst "noextract_to"
 let (assume_strictly_positive_attr_lid : FStar_Ident.lident) =
   psconst "assume_strictly_positive"
 let (unifier_hint_injective_lid : FStar_Ident.lident) =
@@ -283,8 +288,6 @@ let (commute_nested_matches_lid : FStar_Ident.lident) =
   psconst "commute_nested_matches"
 let (allow_informative_binders_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "allow_informative_binders"]
-let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
-  psconst "remove_unused_type_parameters"
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
   let x = FStar_Util.mk_ref Prims.int_zero in
   let gen uu___ = FStar_Util.incr x; FStar_Util.read x in

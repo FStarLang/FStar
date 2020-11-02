@@ -307,7 +307,7 @@ let built_in_primitive_steps : prim_step_set =
     let arg_as_string (a:arg) = fst a |> try_unembed_simple EMB.e_string in
     let arg_as_list   (e:EMB.embedding<'a>) a = fst a |> try_unembed_simple (EMB.e_list e) in
     let arg_as_bounded_int (a, _) : option<(fv * Z.t)> =
-        let hd, args = U.head_and_args' a in
+        let hd, args = U.head_and_args_full a in
         let a = U.unlazy_emb a in
         match (SS.compress hd).n, args with
         | Tm_fvar fv1, [(arg, _)]
@@ -559,6 +559,11 @@ let built_in_primitive_steps : prim_step_set =
         NBE.translate = (fun _ -> failwith "bogus_cbs translate");
     }
     in
+    let int_as_bounded r int_to_t n =
+      let c = embed_simple EMB.e_int r n in
+      let int_to_t = S.fv_to_tm int_to_t in
+      S.mk_Tm_app int_to_t [S.as_arg c] r
+    in
     let basic_ops
       //this type annotation has to be on a single line for it to parse
       //because our support for F# style type-applications is very limited
@@ -634,6 +639,19 @@ let built_in_primitive_steps : prim_step_set =
              0,
              binary_bool_op (fun x y -> x || y),
              NBETerm.binary_bool_op (fun x y -> x || y));
+         (let u32_int_to_t =
+            ["FStar"; "UInt32"; "uint_to_t"]
+            |> PC.p2l
+            |> (fun l -> S.lid_as_fv l (S.Delta_constant_at_level 0) None) in
+          PC.char_u32_of_char,
+             1,
+             0,
+             unary_op
+               arg_as_char
+               (fun r c -> int_as_bounded r u32_int_to_t (c |> BU.int_of_char |> Z.of_int_fs)),
+             NBETerm.unary_op
+               NBETerm.arg_as_char
+               (fun c -> NBETerm.int_as_bounded u32_int_to_t (c |> BU.int_of_char |> Z.of_int_fs)));
          (PC.string_of_int_lid,
              1,
              0,
@@ -750,11 +768,6 @@ let built_in_primitive_steps : prim_step_set =
         in
         let bounded_unsigned_int_types =
            [ "UInt8"; "UInt16"; "UInt32"; "UInt64"; "UInt128"]
-        in
-        let int_as_bounded r int_to_t n =
-            let c = embed_simple EMB.e_int r n in
-            let int_to_t = S.fv_to_tm int_to_t in
-            S.mk_Tm_app int_to_t [S.as_arg c] r
         in
         let add_sub_mul_v =
           (bounded_signed_int_types @ bounded_unsigned_int_types)

@@ -26,12 +26,6 @@ open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Cfg
 
-type closure =
-  | Clos of env * term * memo<(env * term)> * bool  //memo for lazy evaluation; bool marks whether or not this is a fixpoint
-  | Univ of universe                                //universe terms do not have free variables
-  | Dummy                                           //Dummy is a placeholder for a binder when doing strong reduction
-and env = list<(option<binder> * closure)>
-
 type should_unfold_res =
     | Should_unfold_no
     | Should_unfold_yes
@@ -45,7 +39,6 @@ val should_unfold : cfg
                  -> should_unfold_res
 
 
-val closure_as_term : cfg -> env -> term -> term
 val eta_expand_with_type :Env.env -> term -> typ -> term
 val eta_expand:           Env.env -> term -> term
 val normalize:            steps -> Env.env -> term -> term

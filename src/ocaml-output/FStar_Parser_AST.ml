@@ -67,6 +67,7 @@ type term' =
   | Paren of term 
   | Requires of (term * Prims.string FStar_Pervasives_Native.option) 
   | Ensures of (term * Prims.string FStar_Pervasives_Native.option) 
+  | Decreases of (term * Prims.string FStar_Pervasives_Native.option) 
   | Labeled of (term * Prims.string * Prims.bool) 
   | Discrim of FStar_Ident.lid 
   | Attributes of term Prims.list 
@@ -271,6 +272,12 @@ let (uu___is_Ensures : term' -> Prims.bool) =
 let (__proj__Ensures__item___0 :
   term' -> (term * Prims.string FStar_Pervasives_Native.option)) =
   fun projectee -> match projectee with | Ensures _0 -> _0
+let (uu___is_Decreases : term' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Decreases _0 -> true | uu___ -> false
+let (__proj__Decreases__item___0 :
+  term' -> (term * Prims.string FStar_Pervasives_Native.option)) =
+  fun projectee -> match projectee with | Decreases _0 -> _0
 let (uu___is_Labeled : term' -> Prims.bool) =
   fun projectee -> match projectee with | Labeled _0 -> true | uu___ -> false
 let (__proj__Labeled__item___0 : term' -> (term * Prims.string * Prims.bool))
@@ -1418,6 +1425,9 @@ let rec (term_to_string : term -> Prims.string) =
   fun x ->
     match x.tm with
     | Wild -> "_"
+    | Decreases (t, uu___) ->
+        let uu___1 = term_to_string t in
+        FStar_Util.format1 "(decreases %s)" uu___1
     | Requires (t, uu___) ->
         let uu___1 = term_to_string t in
         FStar_Util.format1 "(requires %s)" uu___1

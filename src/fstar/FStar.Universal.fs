@@ -120,6 +120,7 @@ let init_env deps : TcEnv.env =
         deps
         TcTerm.tc_term
         TcTerm.type_of_tot_term
+        TcTerm.type_of_well_typed_term
         TcTerm.universe_of
         TcTerm.check_type_of_well_typed_term
         solver
@@ -213,7 +214,7 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
     Errors.raise_err (FStar.Errors.Fatal_ParseErrors, (BU.format1 "Unexpected result from parsing %s; expected a single interface"
                              interface_file_name))
   | Pars.ParseError (err, msg, rng) ->
-    raise (FStar.Errors.Error(err, msg, rng))
+    raise (FStar.Errors.Error(err, msg, rng, []))
   | Pars.Term _ ->
      failwith "Impossible: parsing a Toplevel always results in an ASTFragment"
 

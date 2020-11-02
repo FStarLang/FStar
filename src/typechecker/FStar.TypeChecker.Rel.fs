@@ -678,8 +678,8 @@ let flex_uvar_head t =
     | Tm_uvar (u, _) -> u
     | _ -> failwith "Not a flex-uvar"
 
-(* Make sure the uvar at the head of t0 is not affected by a
- * the substitution in the Tm_uvar node.
+(* ensure_no_uvar_subst: Make sure the uvar at the head of t0 is not
+ * affected by a the substitution in the Tm_uvar node.
  *
  * In the case that it is, first solve it to a new appropriate uvar
  * without a substitution. This function returns t again, though it is
@@ -769,7 +769,10 @@ let ensure_no_uvar_subst (t0:term) (wl:worklist)
         t, wl
       end
     | _ ->
-      failwith "ensure_no_uvar_subst: expected a uvar at the head"
+      failwith (BU.format3 "ensure_no_uvar_subst: expected a uvar at the head (%s-%s-%s)"
+                           (Print.tag_of_term t0)
+                           (Print.tag_of_term head)
+                           (Print.tag_of_term (SS.compress head)))
 
 (* Only call if ensure_no_uvar_subst was called on t before *)
 let destruct_flex_t' t : flex_t =
@@ -933,7 +936,7 @@ let gamma_until (g:gamma) (bs:binders) =
  *
  * This comes in handy for the flex-rigid case, where the arguments of the flex are a pattern
  *)
-let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl =
+let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
   let pfx, _ = maximal_prefix tgt.ctx_uvar_binders src.ctx_uvar_binders in
   let g = gamma_until src.ctx_uvar_gamma pfx in
 
@@ -960,7 +963,7 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl =
         src.ctx_uvar_range)
   end
 
-let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list<ctx_uvar>) wl  =
+let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list<ctx_uvar>) wl : worklist =
     List.fold_right (restrict_ctx env tgt bs) sources wl
 
 let intersect_binders (g:gamma) (v1:binders) (v2:binders) : binders =
@@ -2225,7 +2228,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //            (Print.args_to_string [last_arg_rhs]);
         let (Flex (t_lhs, u_lhs, _lhs_args)) = lhs in
         let lhs', lhs'_last_arg, wl =
-              let _, t_last_arg, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
+              let t_last_arg = env.type_of_well_typed ({env with lax=true; use_bv_sorts=true; expected_typ=None}) (fst last_arg_rhs) in
               //FIXME: this may be an implicit arg ... fix qualifier
               //AR: 07/20: note the type of lhs' is t_last_arg -> t_res_lhs
               let _, lhs', wl =
@@ -2975,22 +2978,27 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                   mk_t_problem wl [mk_binder x1] orig phi1 EQ phi2 None "refinement formula"
              in
              let tx = UF.new_transaction () in
-             match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with
+             (* We set wl_implicits to false, since in the success case we will
+              * extend the original wl with the extra implicits we get, and we
+              * do not want to duplicate the existing ones. *)
+             match solve env ({wl with defer_ok=false; wl_implicits=[];
+                                       attempting=[ref_prob]; wl_deferred=[]}) with
              | Failed (prob, msg) ->
                UF.rollback tx;
-               if (not env.uvar_subtyping && has_uvars)
-               || not wl.smt_ok
+               if ((not env.uvar_subtyping && has_uvars)
+                   || not wl.smt_ok)
+                   && not env.unif_allow_ref_guards // if unif_allow_ref_guards is on, we don't give up
                then giveup env msg prob
                else fallback()
 
-             | Success (_, defer_to_tac, _) ->
+             | Success (_, defer_to_tac, imps) ->
                UF.commit tx;
                let guard =
                    U.mk_conj (p_guard base_prob)
                              (p_guard ref_prob |> guard_on_element wl problem x1) in
                let wl = solve_prob orig (Some guard) [] wl in
                let wl = {wl with ctr=wl.ctr+1} in
-               let wl = extend_wl wl defer_to_tac [] in
+               let wl = extend_wl wl defer_to_tac imps in
                solve env (attempt [base_prob] wl)
         else fallback()
 
@@ -3011,6 +3019,12 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
        *
        * See issue #1616. *)
         let t1, wl = ensure_no_uvar_subst t1 wl in
+        let t2 = U.canon_app t2 in
+        (* ^ This canon_app call is needed for the incredibly infrequent case
+         * where t2 is a Tm_app, its head uvar matches that of t1,
+         * *and* the uvar is solved to an application by the previous
+         * ensure_no_uvar_subst call. In that case, we get a nested application
+         * in t2, and the call below would raise an error. *)
         let t2, wl = ensure_no_uvar_subst t2 wl in
         let f1 = destruct_flex_t' t1 in
         let f2 = destruct_flex_t' t2 in
@@ -3852,9 +3866,25 @@ let solve_non_tactic_deferred_constraints env (g:guard_t) =
     let deferred_to_tac_ok = false in
     try_solve_deferred_constraints defer_ok smt_ok deferred_to_tac_ok env g
 
-//use_smt flag says whether to use the smt solver to discharge this guard
-//if use_smt = true, this function NEVER returns None, the error might come from the smt solver though
-//if use_smt = false, then None means could not discharge the guard without using smt
+// Discharge (the logical part of) a guard [g].
+//
+// The `use_smt` flag says whether to use the smt solver to discharge
+// this guard
+//
+// - If use_smt = true, this function NEVER returns None, and can be
+//   considered to have successfully discharged the guard. However,
+//   it could have logged an SMT error. The VC (aka the logical part
+//   of the guard) is preprocessed with tactics before discharging:
+//   every subterm wrapped with `with_tactic` has the tactic run on it
+//   and a separate VC is generated for it. They are then discharged
+//   sequentially.
+//
+// - If use_smt = false, then None means could not discharge the guard
+//   without using smt. The procedure is to just normalize and simplify
+//   the VC and check that it is [True].
+//
+// In every case, when this function returns [Some g], then the logical
+// part of [g] is [Trivial].
 let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<guard_t> =
   let debug =
       (Env.debug env <| Options.Other "Rel")
@@ -3872,6 +3902,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option<g
   in
   let ret_g = {g with guard_f = Trivial} in
   if not (Env.should_verify env) then Some ret_g
+  // GM: ^ this doesn't look like the right place for this check.
   else
     match g.guard_f with
     | Trivial -> Some ret_g
@@ -4045,7 +4076,11 @@ let resolve_implicits' env is_tac g =
                     let env : Env.env = FStar.Dyn.undyn env_dyn in
                     if Env.debug env (Options.Other "Tac") then
                         BU.print1 "Running tactic for meta-arg %s\n" (Print.ctx_uvar_to_string ctx_u);
-                    let t = env.synth_hook env hd.imp_uvar.ctx_uvar_typ tau in
+
+                    let t =
+                      Errors.with_ctx "Running tactic for meta-arg"
+                        (fun () -> env.synth_hook env hd.imp_uvar.ctx_uvar_typ tau)
+                    in
                     // let the unifier handle setting the variable
                     let extra =
                         match teq_nosmt env t tm with
@@ -4072,15 +4107,11 @@ let resolve_implicits' env is_tac g =
                                reason
                                (Range.string_of_range r);
                let g =
-                 try
-                   env.check_type_of must_total env tm ctx_u.ctx_uvar_typ
-                 with e when Errors.handleable e ->
-                    Errors.add_errors [Error_BadImplicit,
-                                       BU.format3 "Failed while checking implicit %s set to %s of expected type %s"
+                 Errors.with_ctx (BU.format3 "While checking implicit %s set to %s of expected type %s"
                                                (Print.uvar_to_string ctx_u.ctx_uvar_head)
                                                (N.term_to_string env tm)
-                                               (N.term_to_string env ctx_u.ctx_uvar_typ), r];
-                    raise e
+                                               (N.term_to_string env ctx_u.ctx_uvar_typ))
+                                 (fun () -> env.check_type_of must_total env tm ctx_u.ctx_uvar_typ)
                in
                let g' =
                  match discharge_guard' (Some (fun () ->

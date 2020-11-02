@@ -141,7 +141,7 @@ let parse fn =
     | FStar_Errors.Empty_frag ->
       ASTFragment (U.Inr [], [])
 
-    | FStar_Errors.Error(e, msg, r) ->
+    | FStar_Errors.Error(e, msg, r, _ctx) ->
       ParseError (e, msg, r)
 
     | Parsing.Parse_error as e ->

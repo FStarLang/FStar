@@ -21,6 +21,7 @@ open FStar.ST
 open FStar.All
 open FStar.Getopt
 open FStar.BaseTypes
+open FStar.VConfig
 
 //let __test_norm_all = Util.mk_ref false
 
@@ -124,6 +125,7 @@ val display_usage               : unit    -> unit
 val dont_gen_projectors         : string  -> bool
 val dump_module                 : string  -> bool
 val eager_subtyping             : unit    -> bool
+val error_contexts              : unit    -> bool
 val expose_interfaces           : unit    -> bool
 val file_list                   : unit    -> list<string>
 val find_file                   : (string  -> option<string>)
@@ -233,7 +235,6 @@ val z3_rlimit_factor            : unit    -> int
 val z3_seed                     : unit    -> int
 val use_two_phase_tc            : unit    -> bool
 val no_positivity               : unit    -> bool
-val ml_no_eta_expand_coertions  : unit    -> bool
 val warn_error                  : unit    -> string
 val set_error_flags_callback    : ((unit  -> parse_cmdline_res) -> unit)
 val use_nbe                     : unit    -> bool
@@ -266,3 +267,6 @@ val _commit: ref<string>
 
 val debug_embedding: ref<bool>
 val eager_embedding: ref<bool>
+
+val get_vconfig : unit -> vconfig
+val set_vconfig : vconfig -> unit

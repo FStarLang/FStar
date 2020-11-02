@@ -192,10 +192,23 @@ val debugging : unit -> Tac bool
 along with the message. *)
 val dump : string -> Tac unit
 
+(** Similar to [dump], but will print *every* unsolved implicit
+in the proofstate, not only the visible/focused goals. When the
+[print_resolved] boolean is true, it will also print every solved goal.
+Warning, these can be a *lot*. *)
+val dump_all : print_resolved:bool -> string -> Tac unit
+
+(** Will print a goal for every unresolved implicit in the provided goal. *)
+val dump_uvars_of : goal -> string -> Tac unit
+
 (** Solves a goal [Gamma |= squash (l == r)] by attempting to unify
-[l] with [r]. This currently only exists because of some universe problems
-when trying to [apply] a reflexivity lemma. *)
-val trefl : unit -> Tac unit
+[l] with [r]. This currently only exists because of some universe
+problems when trying to [apply] a reflexivity lemma. When [allow_guards]
+is [true], it is allowed that (some) guards are raised during the
+unification process and added as a single goal to be discharged later.
+Currently, the only guards allowed here are for equating refinement
+types (e.g. [x:int{x>0}] and [x:int{0<x}]. *)
+val t_trefl : allow_guards:bool -> Tac unit
 
 (** [ctrl_rewrite] will traverse the current goal, and call [ctrl]
  * repeatedly on subterms. When [ctrl t] returns [(true, _)], the
@@ -267,6 +280,11 @@ terms have been unified, instantiating uvars as needed. When false,
 unification was not possible and no change to uvars occurs. *)
 val unify_env : env -> t1:term -> t2:term -> Tac bool
 
+(** Similar to [unify_env], but allows for some guards to be raised
+during unification (see [t_trefl] for an explanation). Will add a new
+goal with the guard. *)
+val unify_guard_env : env -> t1:term -> t2:term -> Tac bool
+
 (** Check if [t1] matches [t2], i.e., whether [t2] can have its uvars
 instantiated into unifying with [t1]. When the tactic returns true, the
 terms have been unified, instantiating uvars as needed. When false,
@@ -333,3 +351,7 @@ val set_smt_goals : list goal -> Tac unit
 
 (** [curms ()] returns the current (wall) time in millseconds *)
 val curms : unit -> Tac int
+
+(** [set_urgency u] sets the urgency of error messages. Usually set just
+before raising an exception (see e.g. [fail_silently]). *)
+val set_urgency : int -> Tac unit
