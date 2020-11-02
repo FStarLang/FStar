@@ -120,6 +120,7 @@ let init_env deps : TcEnv.env =
         deps
         TcTerm.tc_term
         TcTerm.type_of_tot_term
+        TcTerm.type_of_well_typed_term
         TcTerm.universe_of
         TcTerm.check_type_of_well_typed_term
         solver
