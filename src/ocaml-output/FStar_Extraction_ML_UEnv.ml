@@ -34,6 +34,7 @@ type ty_or_exp_b = (ty_binding, exp_binding) FStar_Util.either
 type binding =
   | Bv of (FStar_Syntax_Syntax.bv * ty_or_exp_b) 
   | Fv of (FStar_Syntax_Syntax.fv * exp_binding) 
+  | ErasedFv of FStar_Syntax_Syntax.fv 
 let (uu___is_Bv : binding -> Prims.bool) =
   fun projectee -> match projectee with | Bv _0 -> true | uu___ -> false
 let (__proj__Bv__item___0 :
@@ -44,6 +45,11 @@ let (uu___is_Fv : binding -> Prims.bool) =
 let (__proj__Fv__item___0 :
   binding -> (FStar_Syntax_Syntax.fv * exp_binding)) =
   fun projectee -> match projectee with | Fv _0 -> _0
+let (uu___is_ErasedFv : binding -> Prims.bool) =
+  fun projectee ->
+    match projectee with | ErasedFv _0 -> true | uu___ -> false
+let (__proj__ErasedFv__item___0 : binding -> FStar_Syntax_Syntax.fv) =
+  fun projectee -> match projectee with | ErasedFv _0 -> _0
 type tydef =
   {
   tydef_fv: FStar_Syntax_Syntax.fv ;
@@ -207,35 +213,73 @@ let (print_mlpath_map : uenv -> Prims.string) =
                  FStar_Util.format2 "%s -> %s" key (string_of_mlpath value) in
                uu___ :: entries1) [] in
     FStar_String.concat "\n" entries
-let (try_lookup_fv :
+let (lookup_fv_generic :
   uenv ->
-    FStar_Syntax_Syntax.fv -> exp_binding FStar_Pervasives_Native.option)
+    FStar_Syntax_Syntax.fv -> (Prims.bool, exp_binding) FStar_Util.either)
   =
   fun g ->
     fun fv ->
-      FStar_Util.find_map g.env_bindings
-        (fun uu___ ->
-           match uu___ with
-           | Fv (fv', t) when FStar_Syntax_Syntax.fv_eq fv fv' ->
-               FStar_Pervasives_Native.Some t
-           | uu___1 -> FStar_Pervasives_Native.None)
-let (lookup_fv : uenv -> FStar_Syntax_Syntax.fv -> exp_binding) =
-  fun g ->
-    fun fv ->
-      let uu___ = try_lookup_fv g fv in
-      match uu___ with
-      | FStar_Pervasives_Native.None ->
-          let uu___1 =
-            let uu___2 =
-              FStar_Range.string_of_range
-                (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.p in
-            let uu___3 =
-              FStar_Syntax_Print.lid_to_string
-                (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-            FStar_Util.format2 "(%s) free Variable %s not found\n" uu___2
-              uu___3 in
-          failwith uu___1
-      | FStar_Pervasives_Native.Some y -> y
+      let v =
+        FStar_Util.find_map g.env_bindings
+          (fun uu___ ->
+             match uu___ with
+             | Fv (fv', t) when FStar_Syntax_Syntax.fv_eq fv fv' ->
+                 FStar_Pervasives_Native.Some (FStar_Util.Inr t)
+             | ErasedFv fv' when FStar_Syntax_Syntax.fv_eq fv fv' ->
+                 FStar_Pervasives_Native.Some (FStar_Util.Inl true)
+             | uu___1 -> FStar_Pervasives_Native.None) in
+      match v with
+      | FStar_Pervasives_Native.Some r -> r
+      | FStar_Pervasives_Native.None -> FStar_Util.Inl false
+let (try_lookup_fv :
+  FStar_Range.range ->
+    uenv ->
+      FStar_Syntax_Syntax.fv -> exp_binding FStar_Pervasives_Native.option)
+  =
+  fun r ->
+    fun g ->
+      fun fv ->
+        let uu___ = lookup_fv_generic g fv in
+        match uu___ with
+        | FStar_Util.Inr r1 -> FStar_Pervasives_Native.Some r1
+        | FStar_Util.Inl (true) ->
+            ((let uu___2 =
+                let uu___3 =
+                  let uu___4 = FStar_Syntax_Print.fv_to_string fv in
+                  FStar_Util.format1
+                    "Attempting to extract erased variable `%s`" uu___4 in
+                (FStar_Errors.Error_CallToErased, uu___3) in
+              FStar_Errors.log_issue r uu___2);
+             FStar_Pervasives_Native.None)
+        | FStar_Util.Inl (false) -> FStar_Pervasives_Native.None
+let (lookup_fv :
+  FStar_Range.range -> uenv -> FStar_Syntax_Syntax.fv -> exp_binding) =
+  fun r ->
+    fun g ->
+      fun fv ->
+        let uu___ = lookup_fv_generic g fv in
+        match uu___ with
+        | FStar_Util.Inr t -> t
+        | FStar_Util.Inl (true) ->
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = FStar_Syntax_Print.fv_to_string fv in
+                FStar_Util.format1
+                  "Cannot extract variable `%s`, it was erased." uu___3 in
+              (FStar_Errors.Error_CallToErased, uu___2) in
+            FStar_Errors.raise_error uu___1 r
+        | FStar_Util.Inl (false) ->
+            let uu___1 =
+              let uu___2 =
+                FStar_Range.string_of_range
+                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.p in
+              let uu___3 =
+                FStar_Syntax_Print.lid_to_string
+                  (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+              FStar_Util.format2
+                "Internal error: (%s) free variable %s not found during extraction\n"
+                uu___2 uu___3 in
+            failwith uu___1
 let (lookup_bv : uenv -> FStar_Syntax_Syntax.bv -> ty_or_exp_b) =
   fun g ->
     fun bv ->
@@ -270,7 +314,9 @@ let (lookup_term :
       | FStar_Syntax_Syntax.Tm_name x ->
           let uu___ = lookup_bv g x in (uu___, FStar_Pervasives_Native.None)
       | FStar_Syntax_Syntax.Tm_fvar x ->
-          let uu___ = let uu___1 = lookup_fv g x in FStar_Util.Inr uu___1 in
+          let uu___ =
+            let uu___1 = lookup_fv t.FStar_Syntax_Syntax.pos g x in
+            FStar_Util.Inr uu___1 in
           (uu___, (x.FStar_Syntax_Syntax.fv_qual))
       | uu___ -> failwith "Impossible: lookup_term for a non-name"
 let (lookup_ty : uenv -> FStar_Syntax_Syntax.bv -> ty_binding) =
@@ -714,6 +760,21 @@ let (extend_fv :
                     currentModule = (uu___2.currentModule)
                   }), mlsymbol, exp_binding1)
           else failwith "freevars found"
+let (extend_erased_fv : uenv -> FStar_Syntax_Syntax.fv -> uenv) =
+  fun g ->
+    fun f ->
+      let uu___ = g in
+      {
+        env_tcenv = (uu___.env_tcenv);
+        env_bindings = ((ErasedFv f) :: (g.env_bindings));
+        env_mlident_map = (uu___.env_mlident_map);
+        mlpath_of_lid = (uu___.mlpath_of_lid);
+        env_fieldname_map = (uu___.env_fieldname_map);
+        mlpath_of_fieldname = (uu___.mlpath_of_fieldname);
+        tydefs = (uu___.tydefs);
+        type_names = (uu___.type_names);
+        currentModule = (uu___.currentModule)
+      }
 let (extend_lb :
   uenv ->
     FStar_Syntax_Syntax.lbname ->
