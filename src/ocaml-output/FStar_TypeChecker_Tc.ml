@@ -83,6 +83,8 @@ let (set_hint_correlator :
               (uu___1.FStar_TypeChecker_Env.tc_term);
             FStar_TypeChecker_Env.type_of =
               (uu___1.FStar_TypeChecker_Env.type_of);
+            FStar_TypeChecker_Env.type_of_well_typed =
+              (uu___1.FStar_TypeChecker_Env.type_of_well_typed);
             FStar_TypeChecker_Env.universe_of =
               (uu___1.FStar_TypeChecker_Env.universe_of);
             FStar_TypeChecker_Env.check_type_of =
@@ -118,7 +120,9 @@ let (set_hint_correlator :
             FStar_TypeChecker_Env.erasable_types_tab =
               (uu___1.FStar_TypeChecker_Env.erasable_types_tab);
             FStar_TypeChecker_Env.enable_defer_to_tac =
-              (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac)
+              (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac);
+            FStar_TypeChecker_Env.unif_allow_ref_guards =
+              (uu___1.FStar_TypeChecker_Env.unif_allow_ref_guards)
           }
       | FStar_Pervasives_Native.None ->
           let lids = FStar_Syntax_Util.lids_of_sigelt se in
@@ -193,6 +197,8 @@ let (set_hint_correlator :
               (uu___1.FStar_TypeChecker_Env.tc_term);
             FStar_TypeChecker_Env.type_of =
               (uu___1.FStar_TypeChecker_Env.type_of);
+            FStar_TypeChecker_Env.type_of_well_typed =
+              (uu___1.FStar_TypeChecker_Env.type_of_well_typed);
             FStar_TypeChecker_Env.universe_of =
               (uu___1.FStar_TypeChecker_Env.universe_of);
             FStar_TypeChecker_Env.check_type_of =
@@ -228,7 +234,9 @@ let (set_hint_correlator :
             FStar_TypeChecker_Env.erasable_types_tab =
               (uu___1.FStar_TypeChecker_Env.erasable_types_tab);
             FStar_TypeChecker_Env.enable_defer_to_tac =
-              (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac)
+              (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac);
+            FStar_TypeChecker_Env.unif_allow_ref_guards =
+              (uu___1.FStar_TypeChecker_Env.unif_allow_ref_guards)
           }
 let (log : FStar_TypeChecker_Env.env -> Prims.bool) =
   fun env ->
@@ -977,6 +985,8 @@ let (tc_decl' :
                        (uu___2.FStar_TypeChecker_Env.tc_term);
                      FStar_TypeChecker_Env.type_of =
                        (uu___2.FStar_TypeChecker_Env.type_of);
+                     FStar_TypeChecker_Env.type_of_well_typed =
+                       (uu___2.FStar_TypeChecker_Env.type_of_well_typed);
                      FStar_TypeChecker_Env.universe_of =
                        (uu___2.FStar_TypeChecker_Env.universe_of);
                      FStar_TypeChecker_Env.check_type_of =
@@ -1014,7 +1024,9 @@ let (tc_decl' :
                      FStar_TypeChecker_Env.erasable_types_tab =
                        (uu___2.FStar_TypeChecker_Env.erasable_types_tab);
                      FStar_TypeChecker_Env.enable_defer_to_tac =
-                       (uu___2.FStar_TypeChecker_Env.enable_defer_to_tac)
+                       (uu___2.FStar_TypeChecker_Env.enable_defer_to_tac);
+                     FStar_TypeChecker_Env.unif_allow_ref_guards =
+                       (uu___2.FStar_TypeChecker_Env.unif_allow_ref_guards)
                    }
                  else env in
                let env'1 = FStar_TypeChecker_Env.push env' "expect_failure" in
@@ -1178,6 +1190,8 @@ let (tc_decl' :
                                   (uu___6.FStar_TypeChecker_Env.tc_term);
                                 FStar_TypeChecker_Env.type_of =
                                   (uu___6.FStar_TypeChecker_Env.type_of);
+                                FStar_TypeChecker_Env.type_of_well_typed =
+                                  (uu___6.FStar_TypeChecker_Env.type_of_well_typed);
                                 FStar_TypeChecker_Env.universe_of =
                                   (uu___6.FStar_TypeChecker_Env.universe_of);
                                 FStar_TypeChecker_Env.check_type_of =
@@ -1216,7 +1230,9 @@ let (tc_decl' :
                                 FStar_TypeChecker_Env.erasable_types_tab =
                                   (uu___6.FStar_TypeChecker_Env.erasable_types_tab);
                                 FStar_TypeChecker_Env.enable_defer_to_tac =
-                                  (uu___6.FStar_TypeChecker_Env.enable_defer_to_tac)
+                                  (uu___6.FStar_TypeChecker_Env.enable_defer_to_tac);
+                                FStar_TypeChecker_Env.unif_allow_ref_guards =
+                                  (uu___6.FStar_TypeChecker_Env.unif_allow_ref_guards)
                               }) ses se1.FStar_Syntax_Syntax.sigquals
                              se1.FStar_Syntax_Syntax.sigattrs lids in
                          FStar_All.pipe_right uu___5
@@ -1406,6 +1422,8 @@ let (tc_decl' :
                                      (uu___7.FStar_TypeChecker_Env.tc_term);
                                    FStar_TypeChecker_Env.type_of =
                                      (uu___7.FStar_TypeChecker_Env.type_of);
+                                   FStar_TypeChecker_Env.type_of_well_typed =
+                                     (uu___7.FStar_TypeChecker_Env.type_of_well_typed);
                                    FStar_TypeChecker_Env.universe_of =
                                      (uu___7.FStar_TypeChecker_Env.universe_of);
                                    FStar_TypeChecker_Env.check_type_of =
@@ -1447,7 +1465,10 @@ let (tc_decl' :
                                      (uu___7.FStar_TypeChecker_Env.erasable_types_tab);
                                    FStar_TypeChecker_Env.enable_defer_to_tac
                                      =
-                                     (uu___7.FStar_TypeChecker_Env.enable_defer_to_tac)
+                                     (uu___7.FStar_TypeChecker_Env.enable_defer_to_tac);
+                                   FStar_TypeChecker_Env.unif_allow_ref_guards
+                                     =
+                                     (uu___7.FStar_TypeChecker_Env.unif_allow_ref_guards)
                                  }) ne se1.FStar_Syntax_Syntax.sigquals
                                 se1.FStar_Syntax_Syntax.sigattrs in
                             FStar_All.pipe_right uu___6
@@ -1607,6 +1628,8 @@ let (tc_decl' :
                                 (uu___7.FStar_TypeChecker_Env.tc_term);
                               FStar_TypeChecker_Env.type_of =
                                 (uu___7.FStar_TypeChecker_Env.type_of);
+                              FStar_TypeChecker_Env.type_of_well_typed =
+                                (uu___7.FStar_TypeChecker_Env.type_of_well_typed);
                               FStar_TypeChecker_Env.universe_of =
                                 (uu___7.FStar_TypeChecker_Env.universe_of);
                               FStar_TypeChecker_Env.check_type_of =
@@ -1645,7 +1668,9 @@ let (tc_decl' :
                               FStar_TypeChecker_Env.erasable_types_tab =
                                 (uu___7.FStar_TypeChecker_Env.erasable_types_tab);
                               FStar_TypeChecker_Env.enable_defer_to_tac =
-                                (uu___7.FStar_TypeChecker_Env.enable_defer_to_tac)
+                                (uu___7.FStar_TypeChecker_Env.enable_defer_to_tac);
+                              FStar_TypeChecker_Env.unif_allow_ref_guards =
+                                (uu___7.FStar_TypeChecker_Env.unif_allow_ref_guards)
                             }) (lid, uvs, tps, c) r in
                        FStar_All.pipe_right uu___6
                          (fun uu___7 ->
@@ -1800,6 +1825,8 @@ let (tc_decl' :
                               (uu___6.FStar_TypeChecker_Env.tc_term);
                             FStar_TypeChecker_Env.type_of =
                               (uu___6.FStar_TypeChecker_Env.type_of);
+                            FStar_TypeChecker_Env.type_of_well_typed =
+                              (uu___6.FStar_TypeChecker_Env.type_of_well_typed);
                             FStar_TypeChecker_Env.universe_of =
                               (uu___6.FStar_TypeChecker_Env.universe_of);
                             FStar_TypeChecker_Env.check_type_of =
@@ -1837,7 +1864,9 @@ let (tc_decl' :
                             FStar_TypeChecker_Env.erasable_types_tab =
                               (uu___6.FStar_TypeChecker_Env.erasable_types_tab);
                             FStar_TypeChecker_Env.enable_defer_to_tac =
-                              (uu___6.FStar_TypeChecker_Env.enable_defer_to_tac)
+                              (uu___6.FStar_TypeChecker_Env.enable_defer_to_tac);
+                            FStar_TypeChecker_Env.unif_allow_ref_guards =
+                              (uu___6.FStar_TypeChecker_Env.unif_allow_ref_guards)
                           }) (uvs, t) se1.FStar_Syntax_Syntax.sigrng in
                      match uu___5 with
                      | (uvs1, t1) ->
@@ -1953,6 +1982,8 @@ let (tc_decl' :
                               (uu___6.FStar_TypeChecker_Env.tc_term);
                             FStar_TypeChecker_Env.type_of =
                               (uu___6.FStar_TypeChecker_Env.type_of);
+                            FStar_TypeChecker_Env.type_of_well_typed =
+                              (uu___6.FStar_TypeChecker_Env.type_of_well_typed);
                             FStar_TypeChecker_Env.universe_of =
                               (uu___6.FStar_TypeChecker_Env.universe_of);
                             FStar_TypeChecker_Env.check_type_of =
@@ -1990,7 +2021,9 @@ let (tc_decl' :
                             FStar_TypeChecker_Env.erasable_types_tab =
                               (uu___6.FStar_TypeChecker_Env.erasable_types_tab);
                             FStar_TypeChecker_Env.enable_defer_to_tac =
-                              (uu___6.FStar_TypeChecker_Env.enable_defer_to_tac)
+                              (uu___6.FStar_TypeChecker_Env.enable_defer_to_tac);
+                            FStar_TypeChecker_Env.unif_allow_ref_guards =
+                              (uu___6.FStar_TypeChecker_Env.unif_allow_ref_guards)
                           }) (uvs, t) se1.FStar_Syntax_Syntax.sigrng in
                      match uu___5 with
                      | (uvs1, t1) ->
@@ -2146,6 +2179,8 @@ let (tc_decl' :
                               (uu___7.FStar_TypeChecker_Env.tc_term);
                             FStar_TypeChecker_Env.type_of =
                               (uu___7.FStar_TypeChecker_Env.type_of);
+                            FStar_TypeChecker_Env.type_of_well_typed =
+                              (uu___7.FStar_TypeChecker_Env.type_of_well_typed);
                             FStar_TypeChecker_Env.universe_of =
                               (uu___7.FStar_TypeChecker_Env.universe_of);
                             FStar_TypeChecker_Env.check_type_of =
@@ -2182,7 +2217,9 @@ let (tc_decl' :
                             FStar_TypeChecker_Env.erasable_types_tab =
                               (uu___7.FStar_TypeChecker_Env.erasable_types_tab);
                             FStar_TypeChecker_Env.enable_defer_to_tac =
-                              (uu___7.FStar_TypeChecker_Env.enable_defer_to_tac)
+                              (uu___7.FStar_TypeChecker_Env.enable_defer_to_tac);
+                            FStar_TypeChecker_Env.unif_allow_ref_guards =
+                              (uu___7.FStar_TypeChecker_Env.unif_allow_ref_guards)
                           } in
                         (let uu___8 =
                            FStar_TypeChecker_Env.debug env1 FStar_Options.Low in
@@ -2549,6 +2586,8 @@ let (tc_decl' :
                                (uu___4.FStar_TypeChecker_Env.tc_term);
                              FStar_TypeChecker_Env.type_of =
                                (uu___4.FStar_TypeChecker_Env.type_of);
+                             FStar_TypeChecker_Env.type_of_well_typed =
+                               (uu___4.FStar_TypeChecker_Env.type_of_well_typed);
                              FStar_TypeChecker_Env.universe_of =
                                (uu___4.FStar_TypeChecker_Env.universe_of);
                              FStar_TypeChecker_Env.check_type_of =
@@ -2586,7 +2625,9 @@ let (tc_decl' :
                              FStar_TypeChecker_Env.erasable_types_tab =
                                (uu___4.FStar_TypeChecker_Env.erasable_types_tab);
                              FStar_TypeChecker_Env.enable_defer_to_tac =
-                               (uu___4.FStar_TypeChecker_Env.enable_defer_to_tac)
+                               (uu___4.FStar_TypeChecker_Env.enable_defer_to_tac);
+                             FStar_TypeChecker_Env.unif_allow_ref_guards =
+                               (uu___4.FStar_TypeChecker_Env.unif_allow_ref_guards)
                            } in
                          let e1 =
                            let uu___4 =
@@ -2729,6 +2770,9 @@ let (tc_decl' :
                                              (uu___8.FStar_TypeChecker_Env.tc_term);
                                            FStar_TypeChecker_Env.type_of =
                                              (uu___8.FStar_TypeChecker_Env.type_of);
+                                           FStar_TypeChecker_Env.type_of_well_typed
+                                             =
+                                             (uu___8.FStar_TypeChecker_Env.type_of_well_typed);
                                            FStar_TypeChecker_Env.universe_of
                                              =
                                              (uu___8.FStar_TypeChecker_Env.universe_of);
@@ -2779,7 +2823,10 @@ let (tc_decl' :
                                              (uu___8.FStar_TypeChecker_Env.erasable_types_tab);
                                            FStar_TypeChecker_Env.enable_defer_to_tac
                                              =
-                                             (uu___8.FStar_TypeChecker_Env.enable_defer_to_tac)
+                                             (uu___8.FStar_TypeChecker_Env.enable_defer_to_tac);
+                                           FStar_TypeChecker_Env.unif_allow_ref_guards
+                                             =
+                                             (uu___8.FStar_TypeChecker_Env.unif_allow_ref_guards)
                                          }) e in
                                     match uu___7 with
                                     | (e2, uu___8, uu___9) -> e2) in
@@ -3092,6 +3139,8 @@ let (tc_decl' :
                                   (uu___8.FStar_TypeChecker_Env.tc_term);
                                 FStar_TypeChecker_Env.type_of =
                                   (uu___8.FStar_TypeChecker_Env.type_of);
+                                FStar_TypeChecker_Env.type_of_well_typed =
+                                  (uu___8.FStar_TypeChecker_Env.type_of_well_typed);
                                 FStar_TypeChecker_Env.universe_of =
                                   (uu___8.FStar_TypeChecker_Env.universe_of);
                                 FStar_TypeChecker_Env.check_type_of =
@@ -3130,7 +3179,9 @@ let (tc_decl' :
                                 FStar_TypeChecker_Env.erasable_types_tab =
                                   (uu___8.FStar_TypeChecker_Env.erasable_types_tab);
                                 FStar_TypeChecker_Env.enable_defer_to_tac =
-                                  (uu___8.FStar_TypeChecker_Env.enable_defer_to_tac)
+                                  (uu___8.FStar_TypeChecker_Env.enable_defer_to_tac);
+                                FStar_TypeChecker_Env.unif_allow_ref_guards =
+                                  (uu___8.FStar_TypeChecker_Env.unif_allow_ref_guards)
                               }) m n p t in
                          FStar_All.pipe_right uu___7
                            (fun uu___8 ->
@@ -3283,6 +3334,8 @@ let (tc_decl' :
                                   (uu___8.FStar_TypeChecker_Env.tc_term);
                                 FStar_TypeChecker_Env.type_of =
                                   (uu___8.FStar_TypeChecker_Env.type_of);
+                                FStar_TypeChecker_Env.type_of_well_typed =
+                                  (uu___8.FStar_TypeChecker_Env.type_of_well_typed);
                                 FStar_TypeChecker_Env.universe_of =
                                   (uu___8.FStar_TypeChecker_Env.universe_of);
                                 FStar_TypeChecker_Env.check_type_of =
@@ -3321,7 +3374,9 @@ let (tc_decl' :
                                 FStar_TypeChecker_Env.erasable_types_tab =
                                   (uu___8.FStar_TypeChecker_Env.erasable_types_tab);
                                 FStar_TypeChecker_Env.enable_defer_to_tac =
-                                  (uu___8.FStar_TypeChecker_Env.enable_defer_to_tac)
+                                  (uu___8.FStar_TypeChecker_Env.enable_defer_to_tac);
+                                FStar_TypeChecker_Env.unif_allow_ref_guards =
+                                  (uu___8.FStar_TypeChecker_Env.unif_allow_ref_guards)
                               }) m n t in
                          FStar_All.pipe_right uu___7
                            (fun uu___8 ->
@@ -3559,6 +3614,8 @@ let (add_sigelt_to_env :
                          (uu___4.FStar_TypeChecker_Env.tc_term);
                        FStar_TypeChecker_Env.type_of =
                          (uu___4.FStar_TypeChecker_Env.type_of);
+                       FStar_TypeChecker_Env.type_of_well_typed =
+                         (uu___4.FStar_TypeChecker_Env.type_of_well_typed);
                        FStar_TypeChecker_Env.universe_of =
                          (uu___4.FStar_TypeChecker_Env.universe_of);
                        FStar_TypeChecker_Env.check_type_of =
@@ -3595,7 +3652,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.erasable_types_tab =
                          (uu___4.FStar_TypeChecker_Env.erasable_types_tab);
                        FStar_TypeChecker_Env.enable_defer_to_tac =
-                         (uu___4.FStar_TypeChecker_Env.enable_defer_to_tac)
+                         (uu___4.FStar_TypeChecker_Env.enable_defer_to_tac);
+                       FStar_TypeChecker_Env.unif_allow_ref_guards =
+                         (uu___4.FStar_TypeChecker_Env.unif_allow_ref_guards)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.PopOptions) ->
@@ -3661,6 +3720,8 @@ let (add_sigelt_to_env :
                          (uu___3.FStar_TypeChecker_Env.tc_term);
                        FStar_TypeChecker_Env.type_of =
                          (uu___3.FStar_TypeChecker_Env.type_of);
+                       FStar_TypeChecker_Env.type_of_well_typed =
+                         (uu___3.FStar_TypeChecker_Env.type_of_well_typed);
                        FStar_TypeChecker_Env.universe_of =
                          (uu___3.FStar_TypeChecker_Env.universe_of);
                        FStar_TypeChecker_Env.check_type_of =
@@ -3697,7 +3758,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.erasable_types_tab =
                          (uu___3.FStar_TypeChecker_Env.erasable_types_tab);
                        FStar_TypeChecker_Env.enable_defer_to_tac =
-                         (uu___3.FStar_TypeChecker_Env.enable_defer_to_tac)
+                         (uu___3.FStar_TypeChecker_Env.enable_defer_to_tac);
+                       FStar_TypeChecker_Env.unif_allow_ref_guards =
+                         (uu___3.FStar_TypeChecker_Env.unif_allow_ref_guards)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.SetOptions uu___2) ->
@@ -3763,6 +3826,8 @@ let (add_sigelt_to_env :
                          (uu___4.FStar_TypeChecker_Env.tc_term);
                        FStar_TypeChecker_Env.type_of =
                          (uu___4.FStar_TypeChecker_Env.type_of);
+                       FStar_TypeChecker_Env.type_of_well_typed =
+                         (uu___4.FStar_TypeChecker_Env.type_of_well_typed);
                        FStar_TypeChecker_Env.universe_of =
                          (uu___4.FStar_TypeChecker_Env.universe_of);
                        FStar_TypeChecker_Env.check_type_of =
@@ -3799,7 +3864,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.erasable_types_tab =
                          (uu___4.FStar_TypeChecker_Env.erasable_types_tab);
                        FStar_TypeChecker_Env.enable_defer_to_tac =
-                         (uu___4.FStar_TypeChecker_Env.enable_defer_to_tac)
+                         (uu___4.FStar_TypeChecker_Env.enable_defer_to_tac);
+                       FStar_TypeChecker_Env.unif_allow_ref_guards =
+                         (uu___4.FStar_TypeChecker_Env.unif_allow_ref_guards)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.ResetOptions uu___2) ->
@@ -3865,6 +3932,8 @@ let (add_sigelt_to_env :
                          (uu___4.FStar_TypeChecker_Env.tc_term);
                        FStar_TypeChecker_Env.type_of =
                          (uu___4.FStar_TypeChecker_Env.type_of);
+                       FStar_TypeChecker_Env.type_of_well_typed =
+                         (uu___4.FStar_TypeChecker_Env.type_of_well_typed);
                        FStar_TypeChecker_Env.universe_of =
                          (uu___4.FStar_TypeChecker_Env.universe_of);
                        FStar_TypeChecker_Env.check_type_of =
@@ -3901,7 +3970,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.erasable_types_tab =
                          (uu___4.FStar_TypeChecker_Env.erasable_types_tab);
                        FStar_TypeChecker_Env.enable_defer_to_tac =
-                         (uu___4.FStar_TypeChecker_Env.enable_defer_to_tac)
+                         (uu___4.FStar_TypeChecker_Env.enable_defer_to_tac);
+                       FStar_TypeChecker_Env.unif_allow_ref_guards =
+                         (uu___4.FStar_TypeChecker_Env.unif_allow_ref_guards)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.RestartSolver) ->
@@ -4199,6 +4270,8 @@ let (tc_partial_modul :
              (uu___1.FStar_TypeChecker_Env.tc_term);
            FStar_TypeChecker_Env.type_of =
              (uu___1.FStar_TypeChecker_Env.type_of);
+           FStar_TypeChecker_Env.type_of_well_typed =
+             (uu___1.FStar_TypeChecker_Env.type_of_well_typed);
            FStar_TypeChecker_Env.universe_of =
              (uu___1.FStar_TypeChecker_Env.universe_of);
            FStar_TypeChecker_Env.check_type_of =
@@ -4234,7 +4307,9 @@ let (tc_partial_modul :
            FStar_TypeChecker_Env.erasable_types_tab =
              (uu___1.FStar_TypeChecker_Env.erasable_types_tab);
            FStar_TypeChecker_Env.enable_defer_to_tac =
-             (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac)
+             (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac);
+           FStar_TypeChecker_Env.unif_allow_ref_guards =
+             (uu___1.FStar_TypeChecker_Env.unif_allow_ref_guards)
          } in
        let env2 =
          FStar_TypeChecker_Env.set_current_module env1
@@ -4448,6 +4523,8 @@ let (check_module :
                (uu___2.FStar_TypeChecker_Env.tc_term);
              FStar_TypeChecker_Env.type_of =
                (uu___2.FStar_TypeChecker_Env.type_of);
+             FStar_TypeChecker_Env.type_of_well_typed =
+               (uu___2.FStar_TypeChecker_Env.type_of_well_typed);
              FStar_TypeChecker_Env.universe_of =
                (uu___2.FStar_TypeChecker_Env.universe_of);
              FStar_TypeChecker_Env.check_type_of =
@@ -4484,7 +4561,9 @@ let (check_module :
              FStar_TypeChecker_Env.erasable_types_tab =
                (uu___2.FStar_TypeChecker_Env.erasable_types_tab);
              FStar_TypeChecker_Env.enable_defer_to_tac =
-               (uu___2.FStar_TypeChecker_Env.enable_defer_to_tac)
+               (uu___2.FStar_TypeChecker_Env.enable_defer_to_tac);
+             FStar_TypeChecker_Env.unif_allow_ref_guards =
+               (uu___2.FStar_TypeChecker_Env.unif_allow_ref_guards)
            } in
          let uu___2 = tc_modul env1 m b in
          match uu___2 with

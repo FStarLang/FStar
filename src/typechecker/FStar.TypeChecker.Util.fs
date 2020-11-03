@@ -539,7 +539,7 @@ let should_return env eopt lc =
     | Some e ->
       TcComm.is_pure_or_ghost_lcomp lc                &&  //condition (a), (see above)
       not lc_is_unit_or_effectful                &&  //condition (b)
-      (let head, _ = U.head_and_args' e in
+      (let head, _ = U.head_and_args_full e in
        match (U.un_uinst head).n with
        | Tm_fvar fv ->  not (Env.is_irreducible env (lid_of_fv fv)) //condition (c)
        | _ -> true)                              &&

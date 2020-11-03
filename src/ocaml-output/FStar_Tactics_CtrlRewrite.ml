@@ -14,162 +14,207 @@ let (__do_rewrite :
     fun rewriter ->
       fun env ->
         fun tm ->
-          let uu___ =
-            env.FStar_TypeChecker_Env.tc_term
-              (let uu___1 = env in
-               {
-                 FStar_TypeChecker_Env.solver =
-                   (uu___1.FStar_TypeChecker_Env.solver);
-                 FStar_TypeChecker_Env.range =
-                   (uu___1.FStar_TypeChecker_Env.range);
-                 FStar_TypeChecker_Env.curmodule =
-                   (uu___1.FStar_TypeChecker_Env.curmodule);
-                 FStar_TypeChecker_Env.gamma =
-                   (uu___1.FStar_TypeChecker_Env.gamma);
-                 FStar_TypeChecker_Env.gamma_sig =
-                   (uu___1.FStar_TypeChecker_Env.gamma_sig);
-                 FStar_TypeChecker_Env.gamma_cache =
-                   (uu___1.FStar_TypeChecker_Env.gamma_cache);
-                 FStar_TypeChecker_Env.modules =
-                   (uu___1.FStar_TypeChecker_Env.modules);
-                 FStar_TypeChecker_Env.expected_typ =
-                   (uu___1.FStar_TypeChecker_Env.expected_typ);
-                 FStar_TypeChecker_Env.sigtab =
-                   (uu___1.FStar_TypeChecker_Env.sigtab);
-                 FStar_TypeChecker_Env.attrtab =
-                   (uu___1.FStar_TypeChecker_Env.attrtab);
-                 FStar_TypeChecker_Env.instantiate_imp =
-                   (uu___1.FStar_TypeChecker_Env.instantiate_imp);
-                 FStar_TypeChecker_Env.effects =
-                   (uu___1.FStar_TypeChecker_Env.effects);
-                 FStar_TypeChecker_Env.generalize =
-                   (uu___1.FStar_TypeChecker_Env.generalize);
-                 FStar_TypeChecker_Env.letrecs =
-                   (uu___1.FStar_TypeChecker_Env.letrecs);
-                 FStar_TypeChecker_Env.top_level =
-                   (uu___1.FStar_TypeChecker_Env.top_level);
-                 FStar_TypeChecker_Env.check_uvars =
-                   (uu___1.FStar_TypeChecker_Env.check_uvars);
-                 FStar_TypeChecker_Env.use_eq =
-                   (uu___1.FStar_TypeChecker_Env.use_eq);
-                 FStar_TypeChecker_Env.use_eq_strict =
-                   (uu___1.FStar_TypeChecker_Env.use_eq_strict);
-                 FStar_TypeChecker_Env.is_iface =
-                   (uu___1.FStar_TypeChecker_Env.is_iface);
-                 FStar_TypeChecker_Env.admit =
-                   (uu___1.FStar_TypeChecker_Env.admit);
-                 FStar_TypeChecker_Env.lax = true;
-                 FStar_TypeChecker_Env.lax_universes =
-                   (uu___1.FStar_TypeChecker_Env.lax_universes);
-                 FStar_TypeChecker_Env.phase1 =
-                   (uu___1.FStar_TypeChecker_Env.phase1);
-                 FStar_TypeChecker_Env.failhard =
-                   (uu___1.FStar_TypeChecker_Env.failhard);
-                 FStar_TypeChecker_Env.nosynth =
-                   (uu___1.FStar_TypeChecker_Env.nosynth);
-                 FStar_TypeChecker_Env.uvar_subtyping =
-                   (uu___1.FStar_TypeChecker_Env.uvar_subtyping);
-                 FStar_TypeChecker_Env.tc_term =
-                   (uu___1.FStar_TypeChecker_Env.tc_term);
-                 FStar_TypeChecker_Env.type_of =
-                   (uu___1.FStar_TypeChecker_Env.type_of);
-                 FStar_TypeChecker_Env.universe_of =
-                   (uu___1.FStar_TypeChecker_Env.universe_of);
-                 FStar_TypeChecker_Env.check_type_of =
-                   (uu___1.FStar_TypeChecker_Env.check_type_of);
-                 FStar_TypeChecker_Env.use_bv_sorts =
-                   (uu___1.FStar_TypeChecker_Env.use_bv_sorts);
-                 FStar_TypeChecker_Env.qtbl_name_and_index =
-                   (uu___1.FStar_TypeChecker_Env.qtbl_name_and_index);
-                 FStar_TypeChecker_Env.normalized_eff_names =
-                   (uu___1.FStar_TypeChecker_Env.normalized_eff_names);
-                 FStar_TypeChecker_Env.fv_delta_depths =
-                   (uu___1.FStar_TypeChecker_Env.fv_delta_depths);
-                 FStar_TypeChecker_Env.proof_ns =
-                   (uu___1.FStar_TypeChecker_Env.proof_ns);
-                 FStar_TypeChecker_Env.synth_hook =
-                   (uu___1.FStar_TypeChecker_Env.synth_hook);
-                 FStar_TypeChecker_Env.try_solve_implicits_hook =
-                   (uu___1.FStar_TypeChecker_Env.try_solve_implicits_hook);
-                 FStar_TypeChecker_Env.splice =
-                   (uu___1.FStar_TypeChecker_Env.splice);
-                 FStar_TypeChecker_Env.mpreprocess =
-                   (uu___1.FStar_TypeChecker_Env.mpreprocess);
-                 FStar_TypeChecker_Env.postprocess =
-                   (uu___1.FStar_TypeChecker_Env.postprocess);
-                 FStar_TypeChecker_Env.identifier_info =
-                   (uu___1.FStar_TypeChecker_Env.identifier_info);
-                 FStar_TypeChecker_Env.tc_hooks =
-                   (uu___1.FStar_TypeChecker_Env.tc_hooks);
-                 FStar_TypeChecker_Env.dsenv =
-                   (uu___1.FStar_TypeChecker_Env.dsenv);
-                 FStar_TypeChecker_Env.nbe =
-                   (uu___1.FStar_TypeChecker_Env.nbe);
-                 FStar_TypeChecker_Env.strict_args_tab =
-                   (uu___1.FStar_TypeChecker_Env.strict_args_tab);
-                 FStar_TypeChecker_Env.erasable_types_tab =
-                   (uu___1.FStar_TypeChecker_Env.erasable_types_tab);
-                 FStar_TypeChecker_Env.enable_defer_to_tac =
-                   (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac)
-               }) tm in
-          match uu___ with
-          | (uu___1, lcomp, g) ->
-              let uu___2 =
-                (let uu___3 =
-                   FStar_TypeChecker_Common.is_pure_or_ghost_lcomp lcomp in
-                 Prims.op_Negation uu___3) ||
-                  (let uu___3 = FStar_TypeChecker_Env.is_trivial g in
-                   Prims.op_Negation uu___3) in
-              if uu___2
-              then FStar_Tactics_Monad.ret tm
-              else
-                (let typ = lcomp.FStar_TypeChecker_Common.res_typ in
-                 let uu___4 =
-                   FStar_Tactics_Monad.new_uvar "do_rewrite.rhs" env typ in
-                 FStar_Tactics_Monad.bind uu___4
-                   (fun uu___5 ->
-                      match uu___5 with
-                      | (ut, uvar_ut) ->
-                          FStar_Tactics_Monad.mlog
-                            (fun uu___6 ->
-                               let uu___7 =
-                                 FStar_Syntax_Print.term_to_string tm in
-                               let uu___8 =
-                                 FStar_Syntax_Print.term_to_string ut in
-                               FStar_Util.print2
-                                 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
-                                 uu___7 uu___8)
-                            (fun uu___6 ->
-                               let uu___7 =
-                                 let uu___8 =
-                                   let uu___9 =
-                                     env.FStar_TypeChecker_Env.universe_of
-                                       env typ in
-                                   FStar_Syntax_Util.mk_eq2 uu___9 typ tm ut in
-                                 FStar_Tactics_Monad.add_irrelevant_goal g0
-                                   "do_rewrite.eq" env uu___8 in
-                               FStar_Tactics_Monad.bind uu___7
-                                 (fun uu___8 ->
-                                    let uu___9 =
-                                      FStar_Tactics_Basic.focus rewriter in
-                                    FStar_Tactics_Monad.bind uu___9
-                                      (fun uu___10 ->
-                                         let ut1 =
-                                           FStar_TypeChecker_Normalize.reduce_uvar_solutions
-                                             env ut in
-                                         FStar_Tactics_Monad.mlog
-                                           (fun uu___11 ->
-                                              let uu___12 =
-                                                FStar_Syntax_Print.term_to_string
-                                                  tm in
-                                              let uu___13 =
-                                                FStar_Syntax_Print.term_to_string
-                                                  ut1 in
-                                              FStar_Util.print2
-                                                "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
-                                                uu___12 uu___13)
-                                           (fun uu___11 ->
-                                              FStar_Tactics_Monad.ret ut1))))))
+          let should_skip =
+            let uu___ =
+              let uu___1 = FStar_Syntax_Subst.compress tm in
+              uu___1.FStar_Syntax_Syntax.n in
+            match uu___ with
+            | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify) ->
+                true
+            | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reflect
+                uu___1) -> true
+            | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range_of) ->
+                true
+            | FStar_Syntax_Syntax.Tm_constant
+                (FStar_Const.Const_set_range_of) -> true
+            | uu___1 -> false in
+          if should_skip
+          then FStar_Tactics_Monad.ret tm
+          else
+            (let res =
+               try
+                 (fun uu___1 ->
+                    match () with
+                    | () ->
+                        FStar_Errors.with_ctx
+                          "While typechecking a subterm for ctrl_rewrite"
+                          (fun uu___2 ->
+                             let uu___3 =
+                               env.FStar_TypeChecker_Env.tc_term
+                                 (let uu___4 = env in
+                                  {
+                                    FStar_TypeChecker_Env.solver =
+                                      (uu___4.FStar_TypeChecker_Env.solver);
+                                    FStar_TypeChecker_Env.range =
+                                      (uu___4.FStar_TypeChecker_Env.range);
+                                    FStar_TypeChecker_Env.curmodule =
+                                      (uu___4.FStar_TypeChecker_Env.curmodule);
+                                    FStar_TypeChecker_Env.gamma =
+                                      (uu___4.FStar_TypeChecker_Env.gamma);
+                                    FStar_TypeChecker_Env.gamma_sig =
+                                      (uu___4.FStar_TypeChecker_Env.gamma_sig);
+                                    FStar_TypeChecker_Env.gamma_cache =
+                                      (uu___4.FStar_TypeChecker_Env.gamma_cache);
+                                    FStar_TypeChecker_Env.modules =
+                                      (uu___4.FStar_TypeChecker_Env.modules);
+                                    FStar_TypeChecker_Env.expected_typ =
+                                      (uu___4.FStar_TypeChecker_Env.expected_typ);
+                                    FStar_TypeChecker_Env.sigtab =
+                                      (uu___4.FStar_TypeChecker_Env.sigtab);
+                                    FStar_TypeChecker_Env.attrtab =
+                                      (uu___4.FStar_TypeChecker_Env.attrtab);
+                                    FStar_TypeChecker_Env.instantiate_imp =
+                                      (uu___4.FStar_TypeChecker_Env.instantiate_imp);
+                                    FStar_TypeChecker_Env.effects =
+                                      (uu___4.FStar_TypeChecker_Env.effects);
+                                    FStar_TypeChecker_Env.generalize =
+                                      (uu___4.FStar_TypeChecker_Env.generalize);
+                                    FStar_TypeChecker_Env.letrecs =
+                                      (uu___4.FStar_TypeChecker_Env.letrecs);
+                                    FStar_TypeChecker_Env.top_level =
+                                      (uu___4.FStar_TypeChecker_Env.top_level);
+                                    FStar_TypeChecker_Env.check_uvars =
+                                      (uu___4.FStar_TypeChecker_Env.check_uvars);
+                                    FStar_TypeChecker_Env.use_eq =
+                                      (uu___4.FStar_TypeChecker_Env.use_eq);
+                                    FStar_TypeChecker_Env.use_eq_strict =
+                                      (uu___4.FStar_TypeChecker_Env.use_eq_strict);
+                                    FStar_TypeChecker_Env.is_iface =
+                                      (uu___4.FStar_TypeChecker_Env.is_iface);
+                                    FStar_TypeChecker_Env.admit =
+                                      (uu___4.FStar_TypeChecker_Env.admit);
+                                    FStar_TypeChecker_Env.lax = true;
+                                    FStar_TypeChecker_Env.lax_universes =
+                                      (uu___4.FStar_TypeChecker_Env.lax_universes);
+                                    FStar_TypeChecker_Env.phase1 =
+                                      (uu___4.FStar_TypeChecker_Env.phase1);
+                                    FStar_TypeChecker_Env.failhard =
+                                      (uu___4.FStar_TypeChecker_Env.failhard);
+                                    FStar_TypeChecker_Env.nosynth =
+                                      (uu___4.FStar_TypeChecker_Env.nosynth);
+                                    FStar_TypeChecker_Env.uvar_subtyping =
+                                      (uu___4.FStar_TypeChecker_Env.uvar_subtyping);
+                                    FStar_TypeChecker_Env.tc_term =
+                                      (uu___4.FStar_TypeChecker_Env.tc_term);
+                                    FStar_TypeChecker_Env.type_of =
+                                      (uu___4.FStar_TypeChecker_Env.type_of);
+                                    FStar_TypeChecker_Env.type_of_well_typed
+                                      =
+                                      (uu___4.FStar_TypeChecker_Env.type_of_well_typed);
+                                    FStar_TypeChecker_Env.universe_of =
+                                      (uu___4.FStar_TypeChecker_Env.universe_of);
+                                    FStar_TypeChecker_Env.check_type_of =
+                                      (uu___4.FStar_TypeChecker_Env.check_type_of);
+                                    FStar_TypeChecker_Env.use_bv_sorts =
+                                      (uu___4.FStar_TypeChecker_Env.use_bv_sorts);
+                                    FStar_TypeChecker_Env.qtbl_name_and_index
+                                      =
+                                      (uu___4.FStar_TypeChecker_Env.qtbl_name_and_index);
+                                    FStar_TypeChecker_Env.normalized_eff_names
+                                      =
+                                      (uu___4.FStar_TypeChecker_Env.normalized_eff_names);
+                                    FStar_TypeChecker_Env.fv_delta_depths =
+                                      (uu___4.FStar_TypeChecker_Env.fv_delta_depths);
+                                    FStar_TypeChecker_Env.proof_ns =
+                                      (uu___4.FStar_TypeChecker_Env.proof_ns);
+                                    FStar_TypeChecker_Env.synth_hook =
+                                      (uu___4.FStar_TypeChecker_Env.synth_hook);
+                                    FStar_TypeChecker_Env.try_solve_implicits_hook
+                                      =
+                                      (uu___4.FStar_TypeChecker_Env.try_solve_implicits_hook);
+                                    FStar_TypeChecker_Env.splice =
+                                      (uu___4.FStar_TypeChecker_Env.splice);
+                                    FStar_TypeChecker_Env.mpreprocess =
+                                      (uu___4.FStar_TypeChecker_Env.mpreprocess);
+                                    FStar_TypeChecker_Env.postprocess =
+                                      (uu___4.FStar_TypeChecker_Env.postprocess);
+                                    FStar_TypeChecker_Env.identifier_info =
+                                      (uu___4.FStar_TypeChecker_Env.identifier_info);
+                                    FStar_TypeChecker_Env.tc_hooks =
+                                      (uu___4.FStar_TypeChecker_Env.tc_hooks);
+                                    FStar_TypeChecker_Env.dsenv =
+                                      (uu___4.FStar_TypeChecker_Env.dsenv);
+                                    FStar_TypeChecker_Env.nbe =
+                                      (uu___4.FStar_TypeChecker_Env.nbe);
+                                    FStar_TypeChecker_Env.strict_args_tab =
+                                      (uu___4.FStar_TypeChecker_Env.strict_args_tab);
+                                    FStar_TypeChecker_Env.erasable_types_tab
+                                      =
+                                      (uu___4.FStar_TypeChecker_Env.erasable_types_tab);
+                                    FStar_TypeChecker_Env.enable_defer_to_tac
+                                      =
+                                      (uu___4.FStar_TypeChecker_Env.enable_defer_to_tac);
+                                    FStar_TypeChecker_Env.unif_allow_ref_guards
+                                      =
+                                      (uu___4.FStar_TypeChecker_Env.unif_allow_ref_guards)
+                                  }) tm in
+                             FStar_Pervasives_Native.Some uu___3)) ()
+               with
+               | FStar_Errors.Error
+                   (FStar_Errors.Error_LayeredMissingAnnot, uu___2, uu___3,
+                    uu___4)
+                   -> FStar_Pervasives_Native.None
+               | e -> FStar_Exn.raise e in
+             match res with
+             | FStar_Pervasives_Native.None -> FStar_Tactics_Monad.ret tm
+             | FStar_Pervasives_Native.Some (uu___1, lcomp, g) ->
+                 let uu___2 =
+                   (let uu___3 =
+                      FStar_TypeChecker_Common.is_pure_or_ghost_lcomp lcomp in
+                    Prims.op_Negation uu___3) ||
+                     (let uu___3 = FStar_TypeChecker_Env.is_trivial g in
+                      Prims.op_Negation uu___3) in
+                 if uu___2
+                 then FStar_Tactics_Monad.ret tm
+                 else
+                   (let typ = lcomp.FStar_TypeChecker_Common.res_typ in
+                    let uu___4 =
+                      FStar_Tactics_Monad.new_uvar "do_rewrite.rhs" env typ in
+                    FStar_Tactics_Monad.bind uu___4
+                      (fun uu___5 ->
+                         match uu___5 with
+                         | (ut, uvar_ut) ->
+                             FStar_Tactics_Monad.mlog
+                               (fun uu___6 ->
+                                  let uu___7 =
+                                    FStar_Syntax_Print.term_to_string tm in
+                                  let uu___8 =
+                                    FStar_Syntax_Print.term_to_string ut in
+                                  FStar_Util.print2
+                                    "do_rewrite: making equality\n\t%s ==\n\t%s\n"
+                                    uu___7 uu___8)
+                               (fun uu___6 ->
+                                  let uu___7 =
+                                    let uu___8 =
+                                      let uu___9 =
+                                        env.FStar_TypeChecker_Env.universe_of
+                                          env typ in
+                                      FStar_Syntax_Util.mk_eq2 uu___9 typ tm
+                                        ut in
+                                    FStar_Tactics_Monad.add_irrelevant_goal
+                                      g0 "do_rewrite.eq" env uu___8 in
+                                  FStar_Tactics_Monad.bind uu___7
+                                    (fun uu___8 ->
+                                       let uu___9 =
+                                         FStar_Tactics_Basic.focus rewriter in
+                                       FStar_Tactics_Monad.bind uu___9
+                                         (fun uu___10 ->
+                                            let ut1 =
+                                              FStar_TypeChecker_Normalize.reduce_uvar_solutions
+                                                env ut in
+                                            FStar_Tactics_Monad.mlog
+                                              (fun uu___11 ->
+                                                 let uu___12 =
+                                                   FStar_Syntax_Print.term_to_string
+                                                     tm in
+                                                 let uu___13 =
+                                                   FStar_Syntax_Print.term_to_string
+                                                     ut1 in
+                                                 FStar_Util.print2
+                                                   "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n"
+                                                   uu___12 uu___13)
+                                              (fun uu___11 ->
+                                                 FStar_Tactics_Monad.ret ut1)))))))
 let (do_rewrite :
   FStar_Tactics_Types.goal ->
     rewriter_ty ->
@@ -263,8 +308,6 @@ let rec map_ctac : 'a . 'a ctac -> 'a Prims.list ctac =
                match uu___1 with
                | ((x1, xs2), flag) ->
                    FStar_Tactics_Monad.ret ((x1 :: xs2), flag))
-let bind_ctac : 'a 'b . 'a ctac -> ('a -> 'b ctac) -> 'b ctac =
-  fun t -> fun f -> fun b1 -> failwith ""
 let ctac_id :
   'a . 'a -> ('a * FStar_Tactics_Types.ctrl_flag) FStar_Tactics_Monad.tac =
   fun x -> FStar_Tactics_Monad.ret (x, FStar_Tactics_Types.Continue)

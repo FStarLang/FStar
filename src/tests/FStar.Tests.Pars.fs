@@ -55,6 +55,7 @@ let init_once () : unit =
                 FStar.Parser.Dep.empty_deps
                 TcTerm.tc_term
                 TcTerm.type_of_tot_term
+                TcTerm.type_of_well_typed_term
                 TcTerm.universe_of
                 TcTerm.check_type_of_well_typed_term
                 solver

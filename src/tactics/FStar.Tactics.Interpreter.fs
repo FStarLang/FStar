@@ -362,6 +362,10 @@ let () =
         dump_all e_bool      e_string      e_unit
         dump_all NBET.e_bool NBET.e_string NBET.e_unit;
 
+      mk_tac_step_2 0 "dump_uvars_of"
+        dump_uvars_of E.e_goal      e_string      e_unit
+        dump_uvars_of E.e_goal_nbe NBET.e_string NBET.e_unit;
+
       mk_tac_step_3 0 "ctrl_rewrite"
         ctrl_rewrite E.e_direction (e_tactic_1 RE.e_term (e_tuple2 e_bool E.e_ctrl_flag))
                                    (e_tactic_thunk e_unit)
@@ -370,9 +374,9 @@ let () =
                                        (e_tactic_nbe_thunk NBET.e_unit)
                                         NBET.e_unit;
 
-      mk_tac_step_1 0 "trefl"
-        trefl   e_unit e_unit
-        trefl   NBET.e_unit NBET.e_unit;
+      mk_tac_step_1 0 "t_trefl"
+        t_trefl   e_bool e_unit
+        t_trefl   NBET.e_bool NBET.e_unit;
 
       mk_tac_step_1 0 "dup"
         dup     e_unit e_unit
@@ -417,6 +421,10 @@ let () =
       mk_tac_step_3 0 "unify_env"
         unify_env RE.e_env RE.e_term RE.e_term e_bool
         unify_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
+
+      mk_tac_step_3 0 "unify_guard_env"
+        unify_guard_env RE.e_env RE.e_term RE.e_term e_bool
+        unify_guard_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
 
       mk_tac_step_3 0 "match_env"
         match_env RE.e_env RE.e_term RE.e_term e_bool
@@ -488,8 +496,9 @@ let report_implicits rng (is : Env.implicits) : unit =
   Err.stop_if_err ()
 
 let run_tactic_on_ps
-  (rng_tac : Range.range)
+  (rng_call : Range.range)
   (rng_goal : Range.range)
+  (background : bool)
   (e_arg : embedding<'a>)
   (arg : 'a)
   (e_res : embedding<'b>)
@@ -580,6 +589,13 @@ let run_tactic_on_ps
             | e ->
                 raise e
         in
+        let rng =
+          if background
+          then match ps.goals with
+               | g::_ -> g.goal_ctx_uvar.ctx_uvar_range
+               | _ -> rng_call
+          else ps.entry_range
+        in
         Err.raise_error (Err.Fatal_UserTacticFailure,
                             BU.format1 "user tactic failed: `%s`" (texn_to_string e))
-                          ps.entry_range
+                          rng
