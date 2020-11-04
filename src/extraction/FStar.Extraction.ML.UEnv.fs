@@ -205,7 +205,10 @@ let try_lookup_fv (r:Range.range) (g:uenv) (fv:fv) : option<exp_binding> =
     (* Log an error/warning and return None *)
     Errors.log_issue r
       (Errors.Error_CallToErased,
-       BU.format1 "Attempting to extract erased variable `%s`" (Print.fv_to_string fv));
+       BU.format2 "Will not extract reference to variable `%s` since it is noextract; either remove its qualifier \
+                   or add it to this definition. This error can be ignored with `--warn_error -%s`."
+                   (Print.fv_to_string fv)
+                   (string_of_int Errors.call_to_erased_errno));
     None
   | Inl false ->
     None
@@ -214,16 +217,11 @@ let try_lookup_fv (r:Range.range) (g:uenv) (fv:fv) : option<exp_binding> =
 let lookup_fv (r:Range.range) (g:uenv) (fv:fv) : exp_binding =
   match lookup_fv_generic g fv with
   | Inr t -> t
-  | Inl true ->
-    (* Fail hard *)
-    Errors.raise_error
-      (Errors.Error_CallToErased,
-       BU.format1 "Cannot extract variable `%s`, it was erased." (Print.fv_to_string fv))
-      r
-  | Inl false ->
-    failwith (BU.format2 "Internal error: (%s) free variable %s not found during extraction\n"
+  | Inl b ->
+    failwith (BU.format3 "Internal error: (%s) free variable %s not found during extraction (erased=%s)\n"
               (Range.string_of_range fv.fv_name.p)
-              (Print.lid_to_string fv.fv_name.v))
+              (Print.lid_to_string fv.fv_name.v)
+              (string_of_bool b))
 
 (** An F* local variable (bv) can be mapped either to
     a ML type variable or a term variable *)
