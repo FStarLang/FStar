@@ -743,7 +743,6 @@ val commute_nested_matches : unit
   *)
 val noextract_to (backend:string) : Tot unit
 
-
 ///  Controlling normalization
 
 (** In any invocation of the F* normalizer, every occurrence of

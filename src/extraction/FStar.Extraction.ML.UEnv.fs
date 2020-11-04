@@ -91,10 +91,14 @@ type ty_or_exp_b = either<ty_binding, exp_binding>
 
     [Fv]: An F* top-level fv is associated with an ML term binding.
           Type definitions are maintained separately, see [tydef].
+
+    [ErasedFv]: An F* top-level name that was erased. Only to give
+                proper errors.
   *)
 type binding =
   | Bv  of bv * ty_or_exp_b
   | Fv  of fv * exp_binding
+  | ErasedFv of fv
 
 (** A top-level F* type definition, i.e., a type abbreviation,
     corresponds to a [tydef] in ML.
@@ -183,22 +187,48 @@ let print_mlpath_map (g:uenv) =
 
 (** Scans the list of bindings for an fv:
     - it's always mapped to an ML expression
+  Takes a range for error reporting.
   *)
-let try_lookup_fv (g:uenv) (fv:fv) : option<exp_binding> =
-    BU.find_map
-      g.env_bindings
+
+// Inr b: success
+// Inl true: was erased
+// Inl false: not found
+let lookup_fv_generic (g:uenv) (fv:fv) : either<bool, exp_binding> =
+  let v =
+    BU.find_map g.env_bindings
       (function
-        | Fv (fv', t) when fv_eq fv fv' -> Some t
-        | _ -> None)
+       | Fv (fv', t) when fv_eq fv fv' -> Some (Inr t)
+       | ErasedFv fv' when fv_eq fv fv' -> Some (Inl true)
+       | _ -> None)
+  in
+  match v with
+  | Some r -> r
+  | None -> Inl false
+
+let try_lookup_fv (r:Range.range) (g:uenv) (fv:fv) : option<exp_binding> =
+  match lookup_fv_generic g fv with
+  | Inr r -> Some r
+  | Inl true ->
+    (* Log an error/warning and return None *)
+    Errors.log_issue r
+      (Errors.Error_CallToErased,
+       BU.format2 "Will not extract reference to variable `%s` since it is noextract; either remove its qualifier \
+                   or add it to this definition. This error can be ignored with `--warn_error -%s`."
+                   (Print.fv_to_string fv)
+                   (string_of_int Errors.call_to_erased_errno));
+    None
+  | Inl false ->
+    None
 
 (** Fatal failure version of try_lookup_fv *)
-let lookup_fv (g:uenv) (fv:fv) : exp_binding =
-    match try_lookup_fv g fv with
-    | None ->
-      failwith (BU.format2 "(%s) free Variable %s not found\n"
-                           (Range.string_of_range fv.fv_name.p)
-                           (Print.lid_to_string fv.fv_name.v))
-    | Some y -> y
+let lookup_fv (r:Range.range) (g:uenv) (fv:fv) : exp_binding =
+  match lookup_fv_generic g fv with
+  | Inr t -> t
+  | Inl b ->
+    failwith (BU.format3 "Internal error: (%s) free variable %s not found during extraction (erased=%s)\n"
+              (Range.string_of_range fv.fv_name.p)
+              (Print.lid_to_string fv.fv_name.v)
+              (string_of_bool b))
 
 (** An F* local variable (bv) can be mapped either to
     a ML type variable or a term variable *)
@@ -220,7 +250,7 @@ let lookup_bv (g:uenv) (bv:bv) : ty_or_exp_b =
 let lookup_term g (t:term) =
     match t.n with
     | Tm_name x -> lookup_bv g x, None
-    | Tm_fvar x -> Inr (lookup_fv g x), x.fv_qual
+    | Tm_fvar x -> Inr (lookup_fv t.pos g x), x.fv_qual
     | _ -> failwith "Impossible: lookup_term for a non-name"
 
 (** Lookup an local variable mapped to a ML type variable *)
@@ -503,6 +533,9 @@ let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool)
         let mlident_map = BU.psmap_add g.env_mlident_map mlsymbol "" in
         {g with env_bindings=gamma; env_mlident_map=mlident_map}, mlsymbol, exp_binding
     else failwith "freevars found"
+
+let extend_erased_fv (g:uenv) (f:fv) : uenv =
+  { g with env_bindings = ErasedFv f :: g.env_bindings }
 
 (** Extend with a let binding, either local or top-level *)
 let extend_lb (g:uenv) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool)

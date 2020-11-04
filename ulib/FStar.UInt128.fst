@@ -289,7 +289,9 @@ val to_vec_append : #n1:nat{n1 > 0} -> #n2:nat{n2 > 0} -> num1:UInt.uint_t n1 ->
 let to_vec_append #n1 #n2 num1 num2 =
   UInt.append_lemma (UInt.to_vec num2) (UInt.to_vec num1)
 
+[@@ noextract_to "Kremlin"]
 let vec128 (a: t) : BV.bv_t 128 = UInt.to_vec #128 (v a)
+
 let vec64 (a: U64.t) : BV.bv_t 64 = UInt.to_vec (U64.v a)
 
 let to_vec_v (a: t) :

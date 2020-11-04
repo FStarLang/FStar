@@ -89,6 +89,7 @@ val lognot: a:t -> Pure t
 //eliminating the verification overhead of the wrapper
 private
 unfold
+[@@ noextract_to "Kremlin"]
 let __uint_to_t (x:int) : Tot t =
       assume (fits x 128);
       uint_to_t x
