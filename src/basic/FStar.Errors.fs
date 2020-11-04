@@ -370,7 +370,6 @@ type raw_error =
   | Error_CallToErased
   | Error_ErasedCtor
   | Error_RemoveUnusedTypeParameter
-  | Error_CallToErased
   | Warning_NoMagicInFSharp
 
 type flag = error_flag

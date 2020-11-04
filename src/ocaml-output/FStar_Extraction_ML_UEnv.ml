@@ -55,28 +55,40 @@ type tydef =
   tydef_fv: FStar_Syntax_Syntax.fv ;
   tydef_mlmodule_name: FStar_Extraction_ML_Syntax.mlsymbol Prims.list ;
   tydef_name: FStar_Extraction_ML_Syntax.mlsymbol ;
+  tydef_meta: FStar_Extraction_ML_Syntax.metadata ;
   tydef_def: FStar_Extraction_ML_Syntax.mltyscheme }
 let (__proj__Mktydef__item__tydef_fv : tydef -> FStar_Syntax_Syntax.fv) =
   fun projectee ->
     match projectee with
-    | { tydef_fv; tydef_mlmodule_name; tydef_name; tydef_def;_} -> tydef_fv
+    | { tydef_fv; tydef_mlmodule_name; tydef_name; tydef_meta; tydef_def;_}
+        -> tydef_fv
 let (__proj__Mktydef__item__tydef_mlmodule_name :
   tydef -> FStar_Extraction_ML_Syntax.mlsymbol Prims.list) =
   fun projectee ->
     match projectee with
-    | { tydef_fv; tydef_mlmodule_name; tydef_name; tydef_def;_} ->
-        tydef_mlmodule_name
+    | { tydef_fv; tydef_mlmodule_name; tydef_name; tydef_meta; tydef_def;_}
+        -> tydef_mlmodule_name
 let (__proj__Mktydef__item__tydef_name :
   tydef -> FStar_Extraction_ML_Syntax.mlsymbol) =
   fun projectee ->
     match projectee with
-    | { tydef_fv; tydef_mlmodule_name; tydef_name; tydef_def;_} -> tydef_name
+    | { tydef_fv; tydef_mlmodule_name; tydef_name; tydef_meta; tydef_def;_}
+        -> tydef_name
+let (__proj__Mktydef__item__tydef_meta :
+  tydef -> FStar_Extraction_ML_Syntax.metadata) =
+  fun projectee ->
+    match projectee with
+    | { tydef_fv; tydef_mlmodule_name; tydef_name; tydef_meta; tydef_def;_}
+        -> tydef_meta
 let (__proj__Mktydef__item__tydef_def :
   tydef -> FStar_Extraction_ML_Syntax.mltyscheme) =
   fun projectee ->
     match projectee with
-    | { tydef_fv; tydef_mlmodule_name; tydef_name; tydef_def;_} -> tydef_def
+    | { tydef_fv; tydef_mlmodule_name; tydef_name; tydef_meta; tydef_def;_}
+        -> tydef_def
 let (tydef_fv : tydef -> FStar_Syntax_Syntax.fv) = fun td -> td.tydef_fv
+let (tydef_meta : tydef -> FStar_Extraction_ML_Syntax.metadata) =
+  fun td -> td.tydef_meta
 let (tydef_def : tydef -> FStar_Extraction_ML_Syntax.mltyscheme) =
   fun td -> td.tydef_def
 let (tydef_mlpath : tydef -> FStar_Extraction_ML_Syntax.mlpath) =
@@ -86,75 +98,93 @@ type uenv =
   env_tcenv: FStar_TypeChecker_Env.env ;
   env_bindings: binding Prims.list ;
   env_mlident_map: FStar_Extraction_ML_Syntax.mlident FStar_Util.psmap ;
+  env_remove_typars: FStar_Extraction_ML_RemoveUnusedParameters.env_t ;
   mlpath_of_lid: FStar_Extraction_ML_Syntax.mlpath FStar_Util.psmap ;
   env_fieldname_map: FStar_Extraction_ML_Syntax.mlident FStar_Util.psmap ;
   mlpath_of_fieldname: FStar_Extraction_ML_Syntax.mlpath FStar_Util.psmap ;
   tydefs: tydef Prims.list ;
   type_names:
     (FStar_Syntax_Syntax.fv * FStar_Extraction_ML_Syntax.mlpath) Prims.list ;
+  tydef_declarations: Prims.bool FStar_Util.psmap ;
   currentModule: FStar_Extraction_ML_Syntax.mlpath }
 let (__proj__Mkuenv__item__env_tcenv : uenv -> FStar_TypeChecker_Env.env) =
   fun projectee ->
     match projectee with
-    | { env_tcenv; env_bindings; env_mlident_map; mlpath_of_lid;
-        env_fieldname_map; mlpath_of_fieldname; tydefs; type_names;
-        currentModule;_} -> env_tcenv
+    | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
+        mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
+        type_names; tydef_declarations; currentModule;_} -> env_tcenv
 let (__proj__Mkuenv__item__env_bindings : uenv -> binding Prims.list) =
   fun projectee ->
     match projectee with
-    | { env_tcenv; env_bindings; env_mlident_map; mlpath_of_lid;
-        env_fieldname_map; mlpath_of_fieldname; tydefs; type_names;
-        currentModule;_} -> env_bindings
+    | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
+        mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
+        type_names; tydef_declarations; currentModule;_} -> env_bindings
 let (__proj__Mkuenv__item__env_mlident_map :
   uenv -> FStar_Extraction_ML_Syntax.mlident FStar_Util.psmap) =
   fun projectee ->
     match projectee with
-    | { env_tcenv; env_bindings; env_mlident_map; mlpath_of_lid;
-        env_fieldname_map; mlpath_of_fieldname; tydefs; type_names;
-        currentModule;_} -> env_mlident_map
+    | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
+        mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
+        type_names; tydef_declarations; currentModule;_} -> env_mlident_map
+let (__proj__Mkuenv__item__env_remove_typars :
+  uenv -> FStar_Extraction_ML_RemoveUnusedParameters.env_t) =
+  fun projectee ->
+    match projectee with
+    | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
+        mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
+        type_names; tydef_declarations; currentModule;_} -> env_remove_typars
 let (__proj__Mkuenv__item__mlpath_of_lid :
   uenv -> FStar_Extraction_ML_Syntax.mlpath FStar_Util.psmap) =
   fun projectee ->
     match projectee with
-    | { env_tcenv; env_bindings; env_mlident_map; mlpath_of_lid;
-        env_fieldname_map; mlpath_of_fieldname; tydefs; type_names;
-        currentModule;_} -> mlpath_of_lid
+    | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
+        mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
+        type_names; tydef_declarations; currentModule;_} -> mlpath_of_lid
 let (__proj__Mkuenv__item__env_fieldname_map :
   uenv -> FStar_Extraction_ML_Syntax.mlident FStar_Util.psmap) =
   fun projectee ->
     match projectee with
-    | { env_tcenv; env_bindings; env_mlident_map; mlpath_of_lid;
-        env_fieldname_map; mlpath_of_fieldname; tydefs; type_names;
-        currentModule;_} -> env_fieldname_map
+    | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
+        mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
+        type_names; tydef_declarations; currentModule;_} -> env_fieldname_map
 let (__proj__Mkuenv__item__mlpath_of_fieldname :
   uenv -> FStar_Extraction_ML_Syntax.mlpath FStar_Util.psmap) =
   fun projectee ->
     match projectee with
-    | { env_tcenv; env_bindings; env_mlident_map; mlpath_of_lid;
-        env_fieldname_map; mlpath_of_fieldname; tydefs; type_names;
-        currentModule;_} -> mlpath_of_fieldname
+    | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
+        mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
+        type_names; tydef_declarations; currentModule;_} ->
+        mlpath_of_fieldname
 let (__proj__Mkuenv__item__tydefs : uenv -> tydef Prims.list) =
   fun projectee ->
     match projectee with
-    | { env_tcenv; env_bindings; env_mlident_map; mlpath_of_lid;
-        env_fieldname_map; mlpath_of_fieldname; tydefs; type_names;
-        currentModule;_} -> tydefs
+    | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
+        mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
+        type_names; tydef_declarations; currentModule;_} -> tydefs
 let (__proj__Mkuenv__item__type_names :
   uenv ->
     (FStar_Syntax_Syntax.fv * FStar_Extraction_ML_Syntax.mlpath) Prims.list)
   =
   fun projectee ->
     match projectee with
-    | { env_tcenv; env_bindings; env_mlident_map; mlpath_of_lid;
-        env_fieldname_map; mlpath_of_fieldname; tydefs; type_names;
-        currentModule;_} -> type_names
+    | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
+        mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
+        type_names; tydef_declarations; currentModule;_} -> type_names
+let (__proj__Mkuenv__item__tydef_declarations :
+  uenv -> Prims.bool FStar_Util.psmap) =
+  fun projectee ->
+    match projectee with
+    | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
+        mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
+        type_names; tydef_declarations; currentModule;_} ->
+        tydef_declarations
 let (__proj__Mkuenv__item__currentModule :
   uenv -> FStar_Extraction_ML_Syntax.mlpath) =
   fun projectee ->
     match projectee with
-    | { env_tcenv; env_bindings; env_mlident_map; mlpath_of_lid;
-        env_fieldname_map; mlpath_of_fieldname; tydefs; type_names;
-        currentModule;_} -> currentModule
+    | { env_tcenv; env_bindings; env_mlident_map; env_remove_typars;
+        mlpath_of_lid; env_fieldname_map; mlpath_of_fieldname; tydefs;
+        type_names; tydef_declarations; currentModule;_} -> currentModule
 let (tcenv_of_uenv : uenv -> FStar_TypeChecker_Env.env) =
   fun u -> u.env_tcenv
 let (set_tcenv : uenv -> FStar_TypeChecker_Env.env -> uenv) =
@@ -165,11 +195,13 @@ let (set_tcenv : uenv -> FStar_TypeChecker_Env.env -> uenv) =
         env_tcenv = t;
         env_bindings = (uu___.env_bindings);
         env_mlident_map = (uu___.env_mlident_map);
+        env_remove_typars = (uu___.env_remove_typars);
         mlpath_of_lid = (uu___.mlpath_of_lid);
         env_fieldname_map = (uu___.env_fieldname_map);
         mlpath_of_fieldname = (uu___.mlpath_of_fieldname);
         tydefs = (uu___.tydefs);
         type_names = (uu___.type_names);
+        tydef_declarations = (uu___.tydef_declarations);
         currentModule = (uu___.currentModule)
       }
 let (current_module_of_uenv : uenv -> FStar_Extraction_ML_Syntax.mlpath) =
@@ -183,13 +215,41 @@ let (set_current_module : uenv -> FStar_Extraction_ML_Syntax.mlpath -> uenv)
         env_tcenv = (uu___.env_tcenv);
         env_bindings = (uu___.env_bindings);
         env_mlident_map = (uu___.env_mlident_map);
+        env_remove_typars = (uu___.env_remove_typars);
         mlpath_of_lid = (uu___.mlpath_of_lid);
         env_fieldname_map = (uu___.env_fieldname_map);
         mlpath_of_fieldname = (uu___.mlpath_of_fieldname);
         tydefs = (uu___.tydefs);
         type_names = (uu___.type_names);
+        tydef_declarations = (uu___.tydef_declarations);
         currentModule = m
       }
+let with_typars_env :
+  'a .
+    uenv ->
+      (FStar_Extraction_ML_RemoveUnusedParameters.env_t ->
+         (FStar_Extraction_ML_RemoveUnusedParameters.env_t * 'a))
+        -> (uenv * 'a)
+  =
+  fun u ->
+    fun f ->
+      let uu___ = f u.env_remove_typars in
+      match uu___ with
+      | (e, x) ->
+          ((let uu___1 = u in
+            {
+              env_tcenv = (uu___1.env_tcenv);
+              env_bindings = (uu___1.env_bindings);
+              env_mlident_map = (uu___1.env_mlident_map);
+              env_remove_typars = e;
+              mlpath_of_lid = (uu___1.mlpath_of_lid);
+              env_fieldname_map = (uu___1.env_fieldname_map);
+              mlpath_of_fieldname = (uu___1.mlpath_of_fieldname);
+              tydefs = (uu___1.tydefs);
+              type_names = (uu___1.type_names);
+              tydef_declarations = (uu___1.tydef_declarations);
+              currentModule = (uu___1.currentModule)
+            }), x)
 let (bindings_of_uenv : uenv -> binding Prims.list) = fun u -> u.env_bindings
 let (debug : uenv -> (unit -> unit) -> unit) =
   fun g ->
@@ -339,6 +399,15 @@ let (lookup_tydef :
                    (module_name = tydef1.tydef_mlmodule_name)
                then FStar_Pervasives_Native.Some (tydef1.tydef_def)
                else FStar_Pervasives_Native.None)
+let (has_tydef_declaration : uenv -> FStar_Ident.lident -> Prims.bool) =
+  fun u ->
+    fun l ->
+      let uu___ =
+        let uu___1 = FStar_Ident.string_of_lid l in
+        FStar_Util.psmap_try_find u.tydef_declarations uu___1 in
+      match uu___ with
+      | FStar_Pervasives_Native.None -> false
+      | FStar_Pervasives_Native.Some b -> b
 let (mlpath_of_lident :
   uenv -> FStar_Ident.lident -> FStar_Extraction_ML_Syntax.mlpath) =
   fun g ->
@@ -527,11 +596,13 @@ let (new_mlpath_of_lident :
                    env_tcenv = (uu___4.env_tcenv);
                    env_bindings = (uu___4.env_bindings);
                    env_mlident_map = map;
+                   env_remove_typars = (uu___4.env_remove_typars);
                    mlpath_of_lid = (uu___4.mlpath_of_lid);
                    env_fieldname_map = (uu___4.env_fieldname_map);
                    mlpath_of_fieldname = (uu___4.mlpath_of_fieldname);
                    tydefs = (uu___4.tydefs);
                    type_names = (uu___4.type_names);
+                   tydef_declarations = (uu___4.tydef_declarations);
                    currentModule = (uu___4.currentModule)
                  } in
                let uu___4 = let uu___5 = mlns_of_lid x in (uu___5, name) in
@@ -547,11 +618,13 @@ let (new_mlpath_of_lident :
               env_tcenv = (uu___1.env_tcenv);
               env_bindings = (uu___1.env_bindings);
               env_mlident_map = (uu___1.env_mlident_map);
+              env_remove_typars = (uu___1.env_remove_typars);
               mlpath_of_lid = uu___2;
               env_fieldname_map = (uu___1.env_fieldname_map);
               mlpath_of_fieldname = (uu___1.mlpath_of_fieldname);
               tydefs = (uu___1.tydefs);
               type_names = (uu___1.type_names);
+              tydef_declarations = (uu___1.tydef_declarations);
               currentModule = (uu___1.currentModule)
             } in
           (mlp, g2)
@@ -580,11 +653,13 @@ let (extend_ty : uenv -> FStar_Syntax_Syntax.bv -> Prims.bool -> uenv) =
               env_tcenv = tcenv;
               env_bindings = gamma;
               env_mlident_map = mlident_map;
+              env_remove_typars = (uu___1.env_remove_typars);
               mlpath_of_lid = (uu___1.mlpath_of_lid);
               env_fieldname_map = (uu___1.env_fieldname_map);
               mlpath_of_fieldname = (uu___1.mlpath_of_fieldname);
               tydefs = (uu___1.tydefs);
               type_names = (uu___1.type_names);
+              tydef_declarations = (uu___1.tydef_declarations);
               currentModule = (uu___1.currentModule)
             }
 let (extend_bv :
@@ -644,11 +719,13 @@ let (extend_bv :
                     env_tcenv = tcenv;
                     env_bindings = gamma;
                     env_mlident_map = mlident_map;
+                    env_remove_typars = (uu___1.env_remove_typars);
                     mlpath_of_lid = (uu___1.mlpath_of_lid);
                     env_fieldname_map = (uu___1.env_fieldname_map);
                     mlpath_of_fieldname = (uu___1.mlpath_of_fieldname);
                     tydefs = (uu___1.tydefs);
                     type_names = (uu___1.type_names);
+                    tydef_declarations = (uu___1.tydef_declarations);
                     currentModule = (uu___1.currentModule)
                   }), mlident, exp_binding1)
 let (burn_name : uenv -> FStar_Extraction_ML_Syntax.mlident -> uenv) =
@@ -660,11 +737,13 @@ let (burn_name : uenv -> FStar_Extraction_ML_Syntax.mlident -> uenv) =
         env_tcenv = (uu___.env_tcenv);
         env_bindings = (uu___.env_bindings);
         env_mlident_map = uu___1;
+        env_remove_typars = (uu___.env_remove_typars);
         mlpath_of_lid = (uu___.mlpath_of_lid);
         env_fieldname_map = (uu___.env_fieldname_map);
         mlpath_of_fieldname = (uu___.mlpath_of_fieldname);
         tydefs = (uu___.tydefs);
         type_names = (uu___.type_names);
+        tydef_declarations = (uu___.tydef_declarations);
         currentModule = (uu___.currentModule)
       }
 let (new_mlident : uenv -> (uenv * FStar_Extraction_ML_Syntax.mlident)) =
@@ -749,11 +828,13 @@ let (extend_fv :
                     env_tcenv = (uu___2.env_tcenv);
                     env_bindings = gamma;
                     env_mlident_map = mlident_map;
+                    env_remove_typars = (uu___2.env_remove_typars);
                     mlpath_of_lid = (uu___2.mlpath_of_lid);
                     env_fieldname_map = (uu___2.env_fieldname_map);
                     mlpath_of_fieldname = (uu___2.mlpath_of_fieldname);
                     tydefs = (uu___2.tydefs);
                     type_names = (uu___2.type_names);
+                    tydef_declarations = (uu___2.tydef_declarations);
                     currentModule = (uu___2.currentModule)
                   }), mlsymbol, exp_binding1)
           else failwith "freevars found"
@@ -765,11 +846,13 @@ let (extend_erased_fv : uenv -> FStar_Syntax_Syntax.fv -> uenv) =
         env_tcenv = (uu___.env_tcenv);
         env_bindings = ((ErasedFv f) :: (g.env_bindings));
         env_mlident_map = (uu___.env_mlident_map);
+        env_remove_typars = (uu___.env_remove_typars);
         mlpath_of_lid = (uu___.mlpath_of_lid);
         env_fieldname_map = (uu___.env_fieldname_map);
         mlpath_of_fieldname = (uu___.mlpath_of_fieldname);
         tydefs = (uu___.tydefs);
         type_names = (uu___.type_names);
+        tydef_declarations = (uu___.tydef_declarations);
         currentModule = (uu___.currentModule)
       }
 let (extend_lb :
@@ -792,36 +875,61 @@ let (extend_tydef :
   uenv ->
     FStar_Syntax_Syntax.fv ->
       FStar_Extraction_ML_Syntax.mltyscheme ->
-        (tydef * FStar_Extraction_ML_Syntax.mlpath * uenv))
+        FStar_Extraction_ML_Syntax.metadata ->
+          (tydef * FStar_Extraction_ML_Syntax.mlpath * uenv))
   =
   fun g ->
     fun fv ->
       fun ts ->
-        let uu___ =
-          new_mlpath_of_lident g
-            (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-        match uu___ with
-        | (name, g1) ->
-            let tydef1 =
-              {
-                tydef_fv = fv;
-                tydef_mlmodule_name = (FStar_Pervasives_Native.fst name);
-                tydef_name = (FStar_Pervasives_Native.snd name);
-                tydef_def = ts
-              } in
-            (tydef1, name,
-              (let uu___1 = g1 in
-               {
-                 env_tcenv = (uu___1.env_tcenv);
-                 env_bindings = (uu___1.env_bindings);
-                 env_mlident_map = (uu___1.env_mlident_map);
-                 mlpath_of_lid = (uu___1.mlpath_of_lid);
-                 env_fieldname_map = (uu___1.env_fieldname_map);
-                 mlpath_of_fieldname = (uu___1.mlpath_of_fieldname);
-                 tydefs = (tydef1 :: (g1.tydefs));
-                 type_names = ((fv, name) :: (g1.type_names));
-                 currentModule = (uu___1.currentModule)
-               }))
+        fun meta ->
+          let uu___ =
+            new_mlpath_of_lident g
+              (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+          match uu___ with
+          | (name, g1) ->
+              let tydef1 =
+                {
+                  tydef_fv = fv;
+                  tydef_mlmodule_name = (FStar_Pervasives_Native.fst name);
+                  tydef_name = (FStar_Pervasives_Native.snd name);
+                  tydef_meta = meta;
+                  tydef_def = ts
+                } in
+              (tydef1, name,
+                (let uu___1 = g1 in
+                 {
+                   env_tcenv = (uu___1.env_tcenv);
+                   env_bindings = (uu___1.env_bindings);
+                   env_mlident_map = (uu___1.env_mlident_map);
+                   env_remove_typars = (uu___1.env_remove_typars);
+                   mlpath_of_lid = (uu___1.mlpath_of_lid);
+                   env_fieldname_map = (uu___1.env_fieldname_map);
+                   mlpath_of_fieldname = (uu___1.mlpath_of_fieldname);
+                   tydefs = (tydef1 :: (g1.tydefs));
+                   type_names = ((fv, name) :: (g1.type_names));
+                   tydef_declarations = (uu___1.tydef_declarations);
+                   currentModule = (uu___1.currentModule)
+                 }))
+let (extend_with_tydef_declaration : uenv -> FStar_Ident.lident -> uenv) =
+  fun u ->
+    fun l ->
+      let uu___ = u in
+      let uu___1 =
+        let uu___2 = FStar_Ident.string_of_lid l in
+        FStar_Util.psmap_add u.tydef_declarations uu___2 true in
+      {
+        env_tcenv = (uu___.env_tcenv);
+        env_bindings = (uu___.env_bindings);
+        env_mlident_map = (uu___.env_mlident_map);
+        env_remove_typars = (uu___.env_remove_typars);
+        mlpath_of_lid = (uu___.mlpath_of_lid);
+        env_fieldname_map = (uu___.env_fieldname_map);
+        mlpath_of_fieldname = (uu___.mlpath_of_fieldname);
+        tydefs = (uu___.tydefs);
+        type_names = (uu___.type_names);
+        tydef_declarations = uu___1;
+        currentModule = (uu___.currentModule)
+      }
 let (extend_type_name :
   uenv ->
     FStar_Syntax_Syntax.fv -> (FStar_Extraction_ML_Syntax.mlpath * uenv))
@@ -839,11 +947,13 @@ let (extend_type_name :
                env_tcenv = (uu___1.env_tcenv);
                env_bindings = (uu___1.env_bindings);
                env_mlident_map = (uu___1.env_mlident_map);
+               env_remove_typars = (uu___1.env_remove_typars);
                mlpath_of_lid = (uu___1.mlpath_of_lid);
                env_fieldname_map = (uu___1.env_fieldname_map);
                mlpath_of_fieldname = (uu___1.mlpath_of_fieldname);
                tydefs = (uu___1.tydefs);
                type_names = ((fv, name) :: (g1.type_names));
+               tydef_declarations = (uu___1.tydef_declarations);
                currentModule = (uu___1.currentModule)
              }))
 let (extend_with_monad_op_name :
@@ -935,11 +1045,13 @@ let (extend_record_field_name :
                    env_tcenv = (uu___2.env_tcenv);
                    env_bindings = (uu___2.env_bindings);
                    env_mlident_map = (uu___2.env_mlident_map);
+                   env_remove_typars = (uu___2.env_remove_typars);
                    mlpath_of_lid = (uu___2.mlpath_of_lid);
                    env_fieldname_map = fieldname_map;
                    mlpath_of_fieldname = uu___3;
                    tydefs = (uu___2.tydefs);
                    type_names = (uu___2.type_names);
+                   tydef_declarations = (uu___2.tydef_declarations);
                    currentModule = (uu___2.currentModule)
                  } in
                (name, g1))
@@ -961,11 +1073,13 @@ let (exit_module : uenv -> uenv) =
       env_tcenv = (uu___.env_tcenv);
       env_bindings = (uu___.env_bindings);
       env_mlident_map = uu___1;
+      env_remove_typars = (uu___.env_remove_typars);
       mlpath_of_lid = (uu___.mlpath_of_lid);
       env_fieldname_map = uu___2;
       mlpath_of_fieldname = (uu___.mlpath_of_fieldname);
       tydefs = (uu___.tydefs);
       type_names = (uu___.type_names);
+      tydef_declarations = (uu___.tydef_declarations);
       currentModule = (uu___.currentModule)
     }
 let (new_uenv : FStar_TypeChecker_Env.env -> uenv) =
@@ -975,15 +1089,19 @@ let (new_uenv : FStar_TypeChecker_Env.env -> uenv) =
       let uu___1 = FStar_Util.psmap_empty () in
       let uu___2 = initial_mlident_map () in
       let uu___3 = FStar_Util.psmap_empty () in
+      let uu___4 = FStar_Util.psmap_empty () in
       {
         env_tcenv = e;
         env_bindings = [];
         env_mlident_map = uu___;
+        env_remove_typars =
+          FStar_Extraction_ML_RemoveUnusedParameters.initial_env;
         mlpath_of_lid = uu___1;
         env_fieldname_map = uu___2;
         mlpath_of_fieldname = uu___3;
         tydefs = [];
         type_names = [];
+        tydef_declarations = uu___4;
         currentModule = ([], "")
       } in
     let a = "'a" in
