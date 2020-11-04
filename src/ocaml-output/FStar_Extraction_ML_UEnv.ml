@@ -246,8 +246,12 @@ let (try_lookup_fv :
             ((let uu___2 =
                 let uu___3 =
                   let uu___4 = FStar_Syntax_Print.fv_to_string fv in
-                  FStar_Util.format1
-                    "Attempting to extract erased variable `%s`" uu___4 in
+                  let uu___5 =
+                    FStar_Util.string_of_int
+                      FStar_Errors.call_to_erased_errno in
+                  FStar_Util.format2
+                    "Will not extract reference to variable `%s` since it is noextract; either remove its qualifier or add it to this definition. This error can be ignored with `--warn_error -%s`."
+                    uu___4 uu___5 in
                 (FStar_Errors.Error_CallToErased, uu___3) in
               FStar_Errors.log_issue r uu___2);
              FStar_Pervasives_Native.None)
@@ -260,15 +264,7 @@ let (lookup_fv :
         let uu___ = lookup_fv_generic g fv in
         match uu___ with
         | FStar_Util.Inr t -> t
-        | FStar_Util.Inl (true) ->
-            let uu___1 =
-              let uu___2 =
-                let uu___3 = FStar_Syntax_Print.fv_to_string fv in
-                FStar_Util.format1
-                  "Cannot extract variable `%s`, it was erased." uu___3 in
-              (FStar_Errors.Error_CallToErased, uu___2) in
-            FStar_Errors.raise_error uu___1 r
-        | FStar_Util.Inl (false) ->
+        | FStar_Util.Inl b ->
             let uu___1 =
               let uu___2 =
                 FStar_Range.string_of_range
@@ -276,9 +272,10 @@ let (lookup_fv :
               let uu___3 =
                 FStar_Syntax_Print.lid_to_string
                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-              FStar_Util.format2
-                "Internal error: (%s) free variable %s not found during extraction\n"
-                uu___2 uu___3 in
+              let uu___4 = FStar_Util.string_of_bool b in
+              FStar_Util.format3
+                "Internal error: (%s) free variable %s not found during extraction (erased=%s)\n"
+                uu___2 uu___3 uu___4 in
             failwith uu___1
 let (lookup_bv : uenv -> FStar_Syntax_Syntax.bv -> ty_or_exp_b) =
   fun g ->

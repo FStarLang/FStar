@@ -2245,6 +2245,9 @@ let (warn_on_use_errno : Prims.int) =
 let (defensive_errno : Prims.int) =
   let uu___ = lookup_error default_settings Warning_Defensive in
   error_number uu___
+let (call_to_erased_errno : Prims.int) =
+  let uu___ = lookup_error default_settings Error_CallToErased in
+  error_number uu___
 let (update_flags :
   (error_flag * Prims.string) Prims.list -> error_setting Prims.list) =
   fun l ->
