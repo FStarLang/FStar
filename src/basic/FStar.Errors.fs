@@ -366,6 +366,7 @@ type raw_error =
   | Error_BadSplice
   | Error_UnexpectedUnresolvedUvar
   | Warning_UnfoldPlugin
+  | Error_LayeredMissingAnnot
   | Error_RemoveUnusedTypeParameter
   | Error_CallToErased
   | Warning_NoMagicInFSharp
@@ -714,9 +715,10 @@ let default_settings : list<error_setting> =
     Error_BadSplice                                   , CError, 338;
     Error_UnexpectedUnresolvedUvar                    , CAlwaysError, 339;
     Warning_UnfoldPlugin                              , CWarning, 340;
-    Error_CallToErased                                , CError, 341;
-    Error_RemoveUnusedTypeParameter                   , CWarning, 342;
-    Warning_NoMagicInFSharp                           , CWarning, 343;
+    Error_LayeredMissingAnnot                         , CAlwaysError, 341;
+    Error_CallToErased                                , CError, 342;
+    Error_RemoveUnusedTypeParameter                   , CWarning, 343;
+    Warning_NoMagicInFSharp                           , CWarning, 344;
     ]
 module BU = FStar.Util
 

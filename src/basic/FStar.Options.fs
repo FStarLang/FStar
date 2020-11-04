@@ -1372,6 +1372,7 @@ let settable = function
     | "detail_errors"
     | "detail_hint_replay"
     | "eager_subtyping"
+    | "error_contexts"
     | "hide_uvar_nums"
     | "hint_dir"
     | "hint_file"

@@ -84,7 +84,7 @@ type stack_elt =
  | Debug    of term * BU.time
 type stack = list<stack_elt>
 
-let head_of t = let hd, _ = U.head_and_args' t in hd
+let head_of t = let hd, _ = U.head_and_args_full t in hd
 
 let set_memo cfg (r:memo<'a>) (t:'a) =
   if cfg.memoize_lazy then
@@ -1520,21 +1520,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
         end //Tm_meta
 
         | Tm_delayed _ ->
-          let t = SS.compress t in
-          norm cfg env stack t
+          failwith "impossible: Tm_delayed on norm"
 
         | Tm_uvar _ ->
-          let t = SS.compress t in
-          match t.n with
-          | Tm_uvar _ ->
-            if cfg.steps.check_no_uvars
-            then failwith (BU.format2 "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
-                                    (Range.string_of_range t.pos)
-                                    (Print.term_to_string t))
-            else rebuild cfg env stack (inline_closure_env cfg env [] t)
-
-          | _ ->
-            norm cfg env stack t
+          if cfg.steps.check_no_uvars
+          then failwith (BU.format2 "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
+                                  (Range.string_of_range t.pos)
+                                  (Print.term_to_string t))
+          else rebuild cfg env stack (inline_closure_env cfg env [] t)
 
 and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
@@ -2064,7 +2057,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
     let is_applied (bs:binders) (t : term) : option<bv> =
         if cfg.debug.wpe then
             BU.print2 "WPE> is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
-        let hd, args = U.head_and_args' t in
+        let hd, args = U.head_and_args_full t in
         match (SS.compress hd).n with
         | Tm_name bv when args_are_binders args bs ->
             if cfg.debug.wpe then
