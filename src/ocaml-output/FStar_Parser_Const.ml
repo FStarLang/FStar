@@ -95,6 +95,9 @@ let (list_append_lid : FStar_Ident.lident) = p2l ["FStar"; "List"; "append"]
 let (list_tot_append_lid : FStar_Ident.lident) =
   p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let (id_lid : FStar_Ident.lident) = psconst "id"
+let (c2l : Prims.string -> FStar_Ident.lident) =
+  fun s -> p2l ["FStar"; "Char"; s]
+let (char_u32_of_char : FStar_Ident.lident) = c2l "u32_of_char"
 let (s2l : Prims.string -> FStar_Ident.lident) =
   fun n -> p2l ["FStar"; "String"; n]
 let (string_list_of_string_lid : FStar_Ident.lident) = s2l "list_of_string"
