@@ -5,8 +5,10 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.Tactics.Result
 open FStar.Tactics.Types
-module BU  = FStar.Util
-module O   = FStar.Options
+
+module Range = FStar.Range
+module BU    = FStar.Util
+module O     = FStar.Options
 
 (* Type of tactics *)
 type tac<'a>
