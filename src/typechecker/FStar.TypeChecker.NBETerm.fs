@@ -958,6 +958,30 @@ let mk_range args : option<t> =
     end
 | _ -> None
 
+let and_op (args:args) : option<t> =
+  match args with
+  | [a1; a2] -> begin
+    match arg_as_bool a1 with
+    | Some false ->
+      Some (embed e_bool bogus_cbs false)
+    | Some true ->
+      Some (fst a2)
+    | _ -> None
+    end
+  | _ -> failwith "Unexpected number of arguments"
+
+let or_op (args:args) : option<t> =
+  match args with
+  | [a1; a2] -> begin
+    match arg_as_bool a1 with
+    | Some true ->
+      Some (embed e_bool bogus_cbs true)
+    | Some false ->
+      Some (fst a2)
+    | _ -> None
+    end
+  | _ -> failwith "Unexpected number of arguments"
+
 let division_op (args:args) : option<t> =
   match args with
   | [a1; a2] -> begin
