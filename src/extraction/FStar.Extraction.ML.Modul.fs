@@ -632,13 +632,27 @@ let get_noextract_to (se:sigelt) (backend:option<Options.codegen_t>) : bool =
     | _ -> false
   ) se.sigattrs
 
-// We extract all definitions, unless:
-// 1- it has the `noextract` qualifier, and we are not extracting for Kremlin
-//    (kremlin needs the stub anyway, so we ignore the qualifier in that special case)
+// We extract all definitions, unless if we're in one of the following cases:
+// 1- it has the `noextract` qualifier
 // 2- it has a noextract_to attribute matching the current backend.
+//
+// *and* we are not extracting for Kremlin
+// (kremlin needs the stubs, so we ignore the qualifier in that special case)
 let sigelt_has_noextract (se:sigelt) : bool =
-  List.contains S.NoExtract se.sigquals && Options.codegen () <> Some Options.Kremlin
-  || (get_noextract_to se (Options.codegen ()))
+  Options.codegen () <> Some Options.Kremlin
+  && (List.contains S.NoExtract se.sigquals
+      || get_noextract_to se (Options.codegen ()))
+
+// If this sigelt had [@@ noextract_to "Kremlin"] and we are indeed
+// extracting to Kremlin, then we will still process it: it's the
+// kremlin pipeline which will later drop the body. It checks for the
+// NoExtract qualifier to decide that, so we add it here.
+let kremlin_fixup_qual (se:sigelt) : sigelt =
+ if Options.codegen () = Some Options.Kremlin
+    && get_noextract_to se (Some Options.Kremlin)
+    && not (List.contains S.NoExtract se.sigquals)
+ then { se with sigquals = S.NoExtract :: se.sigquals }
+ else se
 
 let mark_sigelt_erased (se:sigelt) (g:uenv) : uenv =
   debug g (fun u -> BU.print1 ">>>> NOT extracting %s \n" (Print.sigelt_to_string_short se));
@@ -652,6 +666,7 @@ let extract_sigelt_iface (g:uenv) (se:sigelt) : uenv * iface =
       let g = mark_sigelt_erased se g in
       g, empty_iface
     else
+    let se = kremlin_fixup_qual se in
 
     match se.sigel with
     | Sig_bundle _
@@ -900,6 +915,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t * list<mlmodule1> =
        let g = mark_sigelt_erased se g in
        g, []
      else
+    let se = kremlin_fixup_qual se in
 
      match se.sigel with
         | Sig_bundle _
