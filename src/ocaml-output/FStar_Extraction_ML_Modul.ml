@@ -1320,12 +1320,37 @@ let (get_noextract_to :
                 | uu___3 -> false)) se.FStar_Syntax_Syntax.sigattrs
 let (sigelt_has_noextract : FStar_Syntax_Syntax.sigelt -> Prims.bool) =
   fun se ->
-    ((FStar_List.contains FStar_Syntax_Syntax.NoExtract
-        se.FStar_Syntax_Syntax.sigquals)
-       &&
-       (let uu___ = FStar_Options.codegen () in
-        uu___ <> (FStar_Pervasives_Native.Some FStar_Options.Kremlin)))
-      || (let uu___ = FStar_Options.codegen () in get_noextract_to se uu___)
+    (let uu___ = FStar_Options.codegen () in
+     uu___ <> (FStar_Pervasives_Native.Some FStar_Options.Kremlin)) &&
+      ((FStar_List.contains FStar_Syntax_Syntax.NoExtract
+          se.FStar_Syntax_Syntax.sigquals)
+         ||
+         (let uu___ = FStar_Options.codegen () in get_noextract_to se uu___))
+let (kremlin_fixup_qual :
+  FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt) =
+  fun se ->
+    let uu___ =
+      ((let uu___1 = FStar_Options.codegen () in
+        uu___1 = (FStar_Pervasives_Native.Some FStar_Options.Kremlin)) &&
+         (get_noextract_to se
+            (FStar_Pervasives_Native.Some FStar_Options.Kremlin)))
+        &&
+        (Prims.op_Negation
+           (FStar_List.contains FStar_Syntax_Syntax.NoExtract
+              se.FStar_Syntax_Syntax.sigquals)) in
+    if uu___
+    then
+      let uu___1 = se in
+      {
+        FStar_Syntax_Syntax.sigel = (uu___1.FStar_Syntax_Syntax.sigel);
+        FStar_Syntax_Syntax.sigrng = (uu___1.FStar_Syntax_Syntax.sigrng);
+        FStar_Syntax_Syntax.sigquals = (FStar_Syntax_Syntax.NoExtract ::
+          (se.FStar_Syntax_Syntax.sigquals));
+        FStar_Syntax_Syntax.sigmeta = (uu___1.FStar_Syntax_Syntax.sigmeta);
+        FStar_Syntax_Syntax.sigattrs = (uu___1.FStar_Syntax_Syntax.sigattrs);
+        FStar_Syntax_Syntax.sigopts = (uu___1.FStar_Syntax_Syntax.sigopts)
+      }
+    else se
 let (mark_sigelt_erased :
   FStar_Syntax_Syntax.sigelt ->
     FStar_Extraction_ML_UEnv.uenv -> FStar_Extraction_ML_UEnv.uenv)
@@ -1355,24 +1380,26 @@ let (extract_sigelt_iface :
       if uu___
       then let g1 = mark_sigelt_erased se g in (g1, empty_iface)
       else
-        (match se.FStar_Syntax_Syntax.sigel with
-         | FStar_Syntax_Syntax.Sig_bundle uu___2 -> extract_bundle_iface g se
+        (let se1 = kremlin_fixup_qual se in
+         match se1.FStar_Syntax_Syntax.sigel with
+         | FStar_Syntax_Syntax.Sig_bundle uu___2 ->
+             extract_bundle_iface g se1
          | FStar_Syntax_Syntax.Sig_inductive_typ uu___2 ->
-             extract_bundle_iface g se
+             extract_bundle_iface g se1
          | FStar_Syntax_Syntax.Sig_datacon uu___2 ->
-             extract_bundle_iface g se
+             extract_bundle_iface g se1
          | FStar_Syntax_Syntax.Sig_declare_typ (lid, univs, t) when
              FStar_Extraction_ML_Term.is_arity g t ->
              let uu___2 =
                extract_type_declaration g true lid
-                 se.FStar_Syntax_Syntax.sigquals
-                 se.FStar_Syntax_Syntax.sigattrs univs t in
+                 se1.FStar_Syntax_Syntax.sigquals
+                 se1.FStar_Syntax_Syntax.sigattrs univs t in
              (match uu___2 with | (env, iface1, uu___3) -> (env, iface1))
          | FStar_Syntax_Syntax.Sig_let ((false, lb::[]), uu___2) when
              FStar_Extraction_ML_Term.is_arity g lb.FStar_Syntax_Syntax.lbtyp
              ->
              let uu___3 =
-               FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
+               FStar_All.pipe_right se1.FStar_Syntax_Syntax.sigquals
                  (FStar_Util.for_some
                     (fun uu___4 ->
                        match uu___4 with
@@ -1382,8 +1409,8 @@ let (extract_sigelt_iface :
              then (g, empty_iface)
              else
                (let uu___5 =
-                  extract_typ_abbrev g se.FStar_Syntax_Syntax.sigquals
-                    se.FStar_Syntax_Syntax.sigattrs lb in
+                  extract_typ_abbrev g se1.FStar_Syntax_Syntax.sigquals
+                    se1.FStar_Syntax_Syntax.sigattrs lb in
                 match uu___5 with | (env, iface1, uu___6) -> (env, iface1))
          | FStar_Syntax_Syntax.Sig_let ((true, lbs), uu___2) when
              FStar_Util.for_some
@@ -1391,10 +1418,10 @@ let (extract_sigelt_iface :
                   FStar_Extraction_ML_Term.is_arity g
                     lb.FStar_Syntax_Syntax.lbtyp) lbs
              ->
-             let uu___3 = extract_let_rec_types se g lbs in
+             let uu___3 = extract_let_rec_types se1 g lbs in
              (match uu___3 with | (env, iface1, uu___4) -> (env, iface1))
          | FStar_Syntax_Syntax.Sig_declare_typ (lid, _univs, t) ->
-             let quals = se.FStar_Syntax_Syntax.sigquals in
+             let quals = se1.FStar_Syntax_Syntax.sigquals in
              let uu___2 =
                (FStar_All.pipe_right quals
                   (FStar_List.contains FStar_Syntax_Syntax.Assumption))
@@ -1426,7 +1453,7 @@ let (extract_sigelt_iface :
              (g, empty_iface)
          | FStar_Syntax_Syntax.Sig_pragma p ->
              (FStar_Syntax_Util.process_pragma p
-                se.FStar_Syntax_Syntax.sigrng;
+                se1.FStar_Syntax_Syntax.sigrng;
               (g, empty_iface))
          | FStar_Syntax_Syntax.Sig_splice uu___2 ->
              failwith "impossible: trying to extract splice"
@@ -1830,12 +1857,14 @@ let rec (extract_sig :
             if uu___3
             then let g1 = mark_sigelt_erased se g in (g1, [])
             else
-              (match se.FStar_Syntax_Syntax.sigel with
-               | FStar_Syntax_Syntax.Sig_bundle uu___5 -> extract_bundle g se
+              (let se1 = kremlin_fixup_qual se in
+               match se1.FStar_Syntax_Syntax.sigel with
+               | FStar_Syntax_Syntax.Sig_bundle uu___5 ->
+                   extract_bundle g se1
                | FStar_Syntax_Syntax.Sig_inductive_typ uu___5 ->
-                   extract_bundle g se
+                   extract_bundle g se1
                | FStar_Syntax_Syntax.Sig_datacon uu___5 ->
-                   extract_bundle g se
+                   extract_bundle g se1
                | FStar_Syntax_Syntax.Sig_new_effect ed when
                    let uu___5 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
                    FStar_TypeChecker_Env.is_reifiable_effect uu___5
@@ -1852,15 +1881,15 @@ let rec (extract_sig :
                    FStar_Extraction_ML_Term.is_arity g t ->
                    let uu___5 =
                      extract_type_declaration g false lid
-                       se.FStar_Syntax_Syntax.sigquals
-                       se.FStar_Syntax_Syntax.sigattrs univs t in
+                       se1.FStar_Syntax_Syntax.sigquals
+                       se1.FStar_Syntax_Syntax.sigattrs univs t in
                    (match uu___5 with | (env, uu___6, impl) -> (env, impl))
                | FStar_Syntax_Syntax.Sig_let ((false, lb::[]), uu___5) when
                    FStar_Extraction_ML_Term.is_arity g
                      lb.FStar_Syntax_Syntax.lbtyp
                    ->
                    let uu___6 =
-                     FStar_All.pipe_right se.FStar_Syntax_Syntax.sigquals
+                     FStar_All.pipe_right se1.FStar_Syntax_Syntax.sigquals
                        (FStar_Util.for_some
                           (fun uu___7 ->
                              match uu___7 with
@@ -1870,8 +1899,8 @@ let rec (extract_sig :
                    then (g, [])
                    else
                      (let uu___8 =
-                        extract_typ_abbrev g se.FStar_Syntax_Syntax.sigquals
-                          se.FStar_Syntax_Syntax.sigattrs lb in
+                        extract_typ_abbrev g se1.FStar_Syntax_Syntax.sigquals
+                          se1.FStar_Syntax_Syntax.sigattrs lb in
                       match uu___8 with | (env, uu___9, impl) -> (env, impl))
                | FStar_Syntax_Syntax.Sig_let ((true, lbs), uu___5) when
                    FStar_Util.for_some
@@ -1879,11 +1908,11 @@ let rec (extract_sig :
                         FStar_Extraction_ML_Term.is_arity g
                           lb.FStar_Syntax_Syntax.lbtyp) lbs
                    ->
-                   let uu___6 = extract_let_rec_types se g lbs in
+                   let uu___6 = extract_let_rec_types se1 g lbs in
                    (match uu___6 with | (env, uu___7, impl) -> (env, impl))
                | FStar_Syntax_Syntax.Sig_let (lbs, uu___5) ->
-                   let attrs = se.FStar_Syntax_Syntax.sigattrs in
-                   let quals = se.FStar_Syntax_Syntax.sigquals in
+                   let attrs = se1.FStar_Syntax_Syntax.sigattrs in
+                   let quals = se1.FStar_Syntax_Syntax.sigquals in
                    let uu___6 =
                      let uu___7 =
                        FStar_Syntax_Util.extract_attr'
@@ -1896,7 +1925,7 @@ let rec (extract_sig :
                          -> (ats, (FStar_Pervasives_Native.Some tau))
                      | FStar_Pervasives_Native.Some (ats, args) ->
                          (FStar_Errors.log_issue
-                            se.FStar_Syntax_Syntax.sigrng
+                            se1.FStar_Syntax_Syntax.sigrng
                             (FStar_Errors.Warning_UnrecognizedAttribute,
                               "Ill-formed application of `postprocess_for_extraction_with`");
                           (attrs, FStar_Pervasives_Native.None)) in
@@ -1939,7 +1968,7 @@ let rec (extract_sig :
                             FStar_Syntax_Syntax.mk
                               (FStar_Syntax_Syntax.Tm_let
                                  (lbs1, FStar_Syntax_Util.exp_false_bool))
-                              se.FStar_Syntax_Syntax.sigrng in
+                              se1.FStar_Syntax_Syntax.sigrng in
                           FStar_Extraction_ML_Term.term_as_mlexpr g uu___8 in
                         (match uu___7 with
                          | (ml_let, uu___8, uu___9) ->
@@ -2127,7 +2156,7 @@ let rec (extract_sig :
                                            let uu___14 =
                                              let uu___15 =
                                                FStar_Extraction_ML_Util.mlloc_of_range
-                                                 se.FStar_Syntax_Syntax.sigrng in
+                                                 se1.FStar_Syntax_Syntax.sigrng in
                                              FStar_Extraction_ML_Syntax.MLM_Loc
                                                uu___15 in
                                            [uu___14;
@@ -2135,7 +2164,7 @@ let rec (extract_sig :
                                              (flavor,
                                                (FStar_List.rev ml_lbs'))] in
                                          let uu___14 =
-                                           maybe_register_plugin g1 se in
+                                           maybe_register_plugin g1 se1 in
                                          FStar_List.append uu___13 uu___14 in
                                        (g1, uu___12))
                               | uu___10 ->
@@ -2151,7 +2180,7 @@ let rec (extract_sig :
                                       uu___12 in
                                   failwith uu___11)))
                | FStar_Syntax_Syntax.Sig_declare_typ (lid, uu___5, t) ->
-                   let quals = se.FStar_Syntax_Syntax.sigquals in
+                   let quals = se1.FStar_Syntax_Syntax.sigquals in
                    let uu___6 =
                      (FStar_All.pipe_right quals
                         (FStar_List.contains FStar_Syntax_Syntax.Assumption))
@@ -2165,7 +2194,7 @@ let rec (extract_sig :
                    if uu___6
                    then
                      let always_fail1 =
-                       let uu___7 = se in
+                       let uu___7 = se1 in
                        let uu___8 =
                          let uu___9 =
                            let uu___10 =
@@ -2203,7 +2232,7 @@ let rec (extract_sig :
                                  let uu___10 =
                                    let uu___11 =
                                      FStar_Extraction_ML_Util.mlloc_of_range
-                                       se.FStar_Syntax_Syntax.sigrng in
+                                       se1.FStar_Syntax_Syntax.sigrng in
                                    FStar_Extraction_ML_Syntax.MLM_Loc uu___11 in
                                  let uu___11 =
                                    let uu___12 =
@@ -2235,7 +2264,7 @@ let rec (extract_sig :
                    (g, [])
                | FStar_Syntax_Syntax.Sig_pragma p ->
                    (FStar_Syntax_Util.process_pragma p
-                      se.FStar_Syntax_Syntax.sigrng;
+                      se1.FStar_Syntax_Syntax.sigrng;
                     (g, [])))))
 let (extract' :
   FStar_Extraction_ML_UEnv.uenv ->
