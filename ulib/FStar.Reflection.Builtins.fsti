@@ -95,3 +95,5 @@ val embed_vconfig : vconfig -> term
 (* Marker to check a sigelt with a particular vconfig *)
 irreducible
 let check_with (vcfg : vconfig) : unit = ()
+
+val subst : bv -> term -> term -> term
