@@ -539,6 +539,36 @@ let built_in_primitive_steps : prim_step_set =
             end
         | _ -> failwith "Unexpected number of arguments"
     in
+    (* and_op and or_op are special cased because they are short-circuting,
+     * can run without unembedding its second argument. *)
+    let and_op : psc -> EMB.norm_cb -> args -> option<term>
+      = fun psc _norm_cb args ->
+        match args with
+        | [(a1, None); (a2, None)] ->
+            begin match try_unembed_simple EMB.e_bool a1 with
+            | Some false ->
+              Some (embed_simple EMB.e_bool psc.psc_range false)
+            | Some true ->
+              Some a2
+            | _ -> None
+            end
+        | _ -> failwith "Unexpected number of arguments"
+    in
+    let or_op : psc -> EMB.norm_cb -> args -> option<term>
+      = fun psc _norm_cb args ->
+        match args with
+        | [(a1, None); (a2, None)] ->
+            begin match try_unembed_simple EMB.e_bool a1 with
+            | Some true ->
+              Some (embed_simple EMB.e_bool psc.psc_range true)
+            | Some false ->
+              Some a2
+            | _ -> None
+            end
+        | _ -> failwith "Unexpected number of arguments"
+    in
+
+    (* division is special cased since we must avoid zero denominators *)
     let division_op : psc -> EMB.norm_cb -> args -> option<term>
       = fun psc _norm_cb args ->
         match args with
@@ -632,13 +662,13 @@ let built_in_primitive_steps : prim_step_set =
          (PC.op_And,
              2,
              0,
-             binary_bool_op (fun x y -> x && y),
-             NBETerm.binary_bool_op (fun x y -> x && y));
+             and_op,
+             NBETerm.and_op);
          (PC.op_Or,
              2,
              0,
-             binary_bool_op (fun x y -> x || y),
-             NBETerm.binary_bool_op (fun x y -> x || y));
+             or_op,
+             NBETerm.or_op);
          (let u32_int_to_t =
             ["FStar"; "UInt32"; "uint_to_t"]
             |> PC.p2l

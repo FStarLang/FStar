@@ -1705,6 +1705,32 @@ let (mk_range : args -> t FStar_Pervasives_Native.option) =
              FStar_Pervasives_Native.Some uu___1
          | uu___1 -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None
+let (and_op : args -> t FStar_Pervasives_Native.option) =
+  fun args1 ->
+    match args1 with
+    | a1::a2::[] ->
+        let uu___ = arg_as_bool a1 in
+        (match uu___ with
+         | FStar_Pervasives_Native.Some (false) ->
+             let uu___1 = embed e_bool bogus_cbs false in
+             FStar_Pervasives_Native.Some uu___1
+         | FStar_Pervasives_Native.Some (true) ->
+             FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst a2)
+         | uu___1 -> FStar_Pervasives_Native.None)
+    | uu___ -> failwith "Unexpected number of arguments"
+let (or_op : args -> t FStar_Pervasives_Native.option) =
+  fun args1 ->
+    match args1 with
+    | a1::a2::[] ->
+        let uu___ = arg_as_bool a1 in
+        (match uu___ with
+         | FStar_Pervasives_Native.Some (true) ->
+             let uu___1 = embed e_bool bogus_cbs true in
+             FStar_Pervasives_Native.Some uu___1
+         | FStar_Pervasives_Native.Some (false) ->
+             FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst a2)
+         | uu___1 -> FStar_Pervasives_Native.None)
+    | uu___ -> failwith "Unexpected number of arguments"
 let (division_op : args -> t FStar_Pervasives_Native.option) =
   fun args1 ->
     match args1 with
