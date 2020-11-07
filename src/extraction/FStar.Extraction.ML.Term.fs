@@ -875,9 +875,16 @@ let rec extract_one_pat (imp : bool)
         g, None, true
 
     | Pat_cons (f, pats) ->
-        let d, tys = match lookup_fv g f with
-            | {exp_b_expr={expr=MLE_Name n}; exp_b_tscheme=ttys} -> n, ttys
-            | _ -> failwith "Expected a constructor" in
+        let d, tys =
+          match try_lookup_fv p.p g f with
+          | Some ({exp_b_expr={expr=MLE_Name n}; exp_b_tscheme=ttys}) -> n, ttys
+          | Some _ -> failwith "Expected a constructor"
+          | None ->
+            Errors.raise_error (Errors.Error_ErasedCtor,
+                                BU.format1 "Cannot extract this pattern, the %s constructor was erased"
+                                            (Print.fv_to_string f))
+                               f.fv_name.p
+        in
         let nTyVars = List.length (fst tys) in
         let tysVarPats, restPats =  BU.first_N nTyVars pats in
         let f_ty_opt =
@@ -1212,7 +1219,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           ml_unit, E_PURE, ml_unit_ty
 
         | Tm_quoted (qt, { qkind = Quote_dynamic }) ->
-          let ({exp_b_expr=fw}) = UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
+          let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv PC.failwith_lid delta_constant None) in
           with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Cannot evaluate open quotation at runtime")]),
           E_PURE,
           ml_int_ty
@@ -1284,7 +1291,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           then ml_unit, E_PURE, ml_unit_ty //Erase type argument
           else
           begin
-               match try_lookup_fv g fv with
+               match try_lookup_fv t.pos g fv with
                | None -> //it's been erased
                  ml_unit, E_PURE, MLTY_Erased
 
@@ -1516,7 +1523,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               then ml_unit, E_PURE, ml_unit_ty //Erase type argument: TODO: FIXME, this could be effectful
               else match (U.un_uinst head).n with
                    | Tm_fvar fv ->
-                     (match try_lookup_fv g fv with
+                     (match try_lookup_fv t.pos g fv with
                       | None -> //erased head
                         ml_unit, E_PURE, MLTY_Erased
                       | _ ->
@@ -1730,7 +1737,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                            with_ty t_e <| MLE_Coerce (e, t_e, MLTY_Top)) in
              begin match mlbranches with
                 | [] ->
-                    let ({exp_b_expr=fw}) = UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
+                    let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv PC.failwith_lid delta_constant None) in
                     with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
                     E_PURE,
                     ml_int_ty

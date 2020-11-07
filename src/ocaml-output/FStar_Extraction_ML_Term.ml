@@ -1378,18 +1378,32 @@ let rec (extract_one_pat :
                 (g, FStar_Pervasives_Native.None, true)
             | FStar_Syntax_Syntax.Pat_cons (f, pats) ->
                 let uu___ =
-                  let uu___1 = FStar_Extraction_ML_UEnv.lookup_fv g f in
+                  let uu___1 =
+                    FStar_Extraction_ML_UEnv.try_lookup_fv
+                      p.FStar_Syntax_Syntax.p g f in
                   match uu___1 with
-                  | { FStar_Extraction_ML_UEnv.exp_b_name = uu___2;
-                      FStar_Extraction_ML_UEnv.exp_b_expr =
-                        {
-                          FStar_Extraction_ML_Syntax.expr =
-                            FStar_Extraction_ML_Syntax.MLE_Name n;
-                          FStar_Extraction_ML_Syntax.mlty = uu___3;
-                          FStar_Extraction_ML_Syntax.loc = uu___4;_};
-                      FStar_Extraction_ML_UEnv.exp_b_tscheme = ttys;_} ->
-                      (n, ttys)
-                  | uu___2 -> failwith "Expected a constructor" in
+                  | FStar_Pervasives_Native.Some
+                      { FStar_Extraction_ML_UEnv.exp_b_name = uu___2;
+                        FStar_Extraction_ML_UEnv.exp_b_expr =
+                          {
+                            FStar_Extraction_ML_Syntax.expr =
+                              FStar_Extraction_ML_Syntax.MLE_Name n;
+                            FStar_Extraction_ML_Syntax.mlty = uu___3;
+                            FStar_Extraction_ML_Syntax.loc = uu___4;_};
+                        FStar_Extraction_ML_UEnv.exp_b_tscheme = ttys;_}
+                      -> (n, ttys)
+                  | FStar_Pervasives_Native.Some uu___2 ->
+                      failwith "Expected a constructor"
+                  | FStar_Pervasives_Native.None ->
+                      let uu___2 =
+                        let uu___3 =
+                          let uu___4 = FStar_Syntax_Print.fv_to_string f in
+                          FStar_Util.format1
+                            "Cannot extract this pattern, the %s constructor was erased"
+                            uu___4 in
+                        (FStar_Errors.Error_ErasedCtor, uu___3) in
+                      FStar_Errors.raise_error uu___2
+                        (f.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.p in
                 (match uu___ with
                  | (d, tys) ->
                      let nTyVars =
@@ -2345,7 +2359,8 @@ and (term_as_mlexpr' :
                FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.failwith_lid
                  FStar_Syntax_Syntax.delta_constant
                  FStar_Pervasives_Native.None in
-             FStar_Extraction_ML_UEnv.lookup_fv g uu___3 in
+             FStar_Extraction_ML_UEnv.lookup_fv t.FStar_Syntax_Syntax.pos g
+               uu___3 in
            (match uu___2 with
             | { FStar_Extraction_ML_UEnv.exp_b_name = uu___3;
                 FStar_Extraction_ML_UEnv.exp_b_expr = fw;
@@ -2492,7 +2507,9 @@ and (term_as_mlexpr' :
                FStar_Extraction_ML_Syntax.E_PURE,
                FStar_Extraction_ML_Syntax.ml_unit_ty)
            else
-             (let uu___3 = FStar_Extraction_ML_UEnv.try_lookup_fv g fv in
+             (let uu___3 =
+                FStar_Extraction_ML_UEnv.try_lookup_fv
+                  t.FStar_Syntax_Syntax.pos g fv in
               match uu___3 with
               | FStar_Pervasives_Native.None ->
                   (FStar_Extraction_ML_Syntax.ml_unit,
@@ -3106,7 +3123,8 @@ and (term_as_mlexpr' :
                    match uu___5 with
                    | FStar_Syntax_Syntax.Tm_fvar fv ->
                        let uu___6 =
-                         FStar_Extraction_ML_UEnv.try_lookup_fv g fv in
+                         FStar_Extraction_ML_UEnv.try_lookup_fv
+                           t.FStar_Syntax_Syntax.pos g fv in
                        (match uu___6 with
                         | FStar_Pervasives_Native.None ->
                             (FStar_Extraction_ML_Syntax.ml_unit,
@@ -3643,8 +3661,8 @@ and (term_as_mlexpr' :
                                        FStar_Parser_Const.failwith_lid
                                        FStar_Syntax_Syntax.delta_constant
                                        FStar_Pervasives_Native.None in
-                                   FStar_Extraction_ML_UEnv.lookup_fv g
-                                     uu___6 in
+                                   FStar_Extraction_ML_UEnv.lookup_fv
+                                     t.FStar_Syntax_Syntax.pos g uu___6 in
                                  (match uu___5 with
                                   | {
                                       FStar_Extraction_ML_UEnv.exp_b_name =
