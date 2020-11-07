@@ -341,3 +341,5 @@ val prims_to_fstar_range_step : args -> option<t>
 
 val mk_range : args -> option<t>
 val division_op : args -> option<t>
+val and_op : args -> option<t>
+val or_op : args -> option<t>
