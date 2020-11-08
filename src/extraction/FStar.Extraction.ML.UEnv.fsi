@@ -55,6 +55,7 @@ type binding =
 (** Type abbreviations, aka definitions *)
 type tydef
 val tydef_fv : tydef -> fv
+val tydef_meta : tydef -> FStar.Extraction.ML.Syntax.metadata
 val tydef_mlpath : tydef -> mlpath
 val tydef_def: tydef -> mltyscheme
 
@@ -64,6 +65,7 @@ val tcenv_of_uenv : u:uenv -> TypeChecker.Env.env
 val set_tcenv : u:uenv -> t:TypeChecker.Env.env -> uenv
 val current_module_of_uenv : u:uenv -> mlpath
 val set_current_module : u:uenv -> p:mlpath -> uenv
+val with_typars_env : uenv -> (RemoveUnusedParameters.env_t -> RemoveUnusedParameters.env_t * 'a) -> uenv * 'a
 
 (** Debugging only *)
 val bindings_of_uenv : uenv -> list<binding>
@@ -94,6 +96,9 @@ val lookup_ty: g:uenv -> bv:bv -> ty_binding
 
 (** Lookup a type definition *)
 val lookup_tydef : uenv -> mlpath -> option<mltyscheme>
+
+(** Does a type definition have an accompanying `val` declaration? *)
+val has_tydef_declaration : uenv -> lident -> bool
 
 (** ML qualified name corresponding to an F* qualified name *)
 val mlpath_of_lident : uenv -> lident -> mlpath
@@ -164,7 +169,16 @@ val extend_tydef:
     uenv ->
     fv ->
     mltyscheme ->
+    FStar.Extraction.ML.Syntax.metadata ->
     tydef * mlpath * uenv
+
+(** This identifier is for the declaration of a type `val t _ : Type` 
+    We record it in the environment to control later if we are
+    allows to remove unused type parameters in the definition of `t`. **)
+val extend_with_tydef_declaration:
+    uenv ->
+    lident -> 
+    uenv
 
 (** Extend with an inductive type *)
 val extend_type_name: 
@@ -194,7 +208,7 @@ val extend_record_field_name :
     uenv ->
     (lident * ident) ->
     mlident * uenv
-
+    
 (** ML module identifier for an F* module name *)
 val extend_with_module_name : 
     uenv -> 

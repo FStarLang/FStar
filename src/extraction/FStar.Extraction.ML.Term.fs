@@ -477,7 +477,15 @@ let maybe_eta_expand_coercion g expect e =
   Otherwise, we often end up with coercions like (Obj.magic (fun x -> e) : a -> b) : a -> c
   Whereas with this optimization we produce (fun x -> Obj.magic (e : b) : c)  : a -> c
 *)
-let apply_coercion (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
+let apply_coercion pos (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
+    if Util.codegen_fsharp()
+    then //magics are not always sound in F#; warn
+        FStar.Errors.log_issue pos
+          (Errors.Warning_NoMagicInFSharp,
+           BU.format2 
+             "Inserted an unsafe type coercion in generated code from %s to %s; this may be unsound in F#"
+               (Code.string_of_mlty (current_module_of_uenv g) ty)
+               (Code.string_of_mlty (current_module_of_uenv g) expect));
     let mk_fun binder body =
         match body.expr with
         | MLE_Fun(binders, body) ->
@@ -557,7 +565,7 @@ let maybe_coerce pos (g:uenv) e ty (expect:mlty) : mlexpr =
                             (Code.string_of_mlexpr (current_module_of_uenv g) e)
                             (Code.string_of_mlty (current_module_of_uenv g) ty)
                             (Code.string_of_mlty (current_module_of_uenv g) expect)) in
-               maybe_eta_expand_coercion g expect (apply_coercion g e ty expect)
+               maybe_eta_expand_coercion g expect (apply_coercion pos g e ty expect)
 
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)
@@ -1293,6 +1301,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           begin
                match try_lookup_fv t.pos g fv with
                | None -> //it's been erased
+                 // Errors.log_issue t.pos (Errors.Error_CallToErased,
+                 //                         BU.format1 "Attempting to extract a call into erased function %s" (Print.fv_to_string fv));
                  ml_unit, E_PURE, MLTY_Erased
 
                | Some {exp_b_expr=x; exp_b_tscheme=mltys} ->
@@ -1525,6 +1535,9 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                    | Tm_fvar fv ->
                      (match try_lookup_fv t.pos g fv with
                       | None -> //erased head
+                        // Errors.log_issue t.pos
+                        //   (Errors.Error_CallToErased,
+                        //    BU.format1 "Attempting to extract a call into erased function %s" (Print.fv_to_string fv));
                         ml_unit, E_PURE, MLTY_Erased
                       | _ ->
                         extract_app_with_instantiations ())

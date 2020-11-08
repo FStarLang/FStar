@@ -114,11 +114,13 @@ type tydef = {
   tydef_fv:fv;
   tydef_mlmodule_name:list<mlsymbol>;
   tydef_name:mlsymbol;
+  tydef_meta:FStar.Extraction.ML.Syntax.metadata;
   tydef_def:mltyscheme
 }
 
 (** tydef is abstract:  Some accessors *)
 let tydef_fv (td : tydef) = td.tydef_fv
+let tydef_meta (td : tydef) = td.tydef_meta
 let tydef_def (td : tydef) = td.tydef_def
 let tydef_mlpath (td : tydef) : mlpath = td.tydef_mlmodule_name, td.tydef_name
 
@@ -138,11 +140,13 @@ type uenv = {
   env_tcenv:TypeChecker.Env.env;
   env_bindings:list<binding>;
   env_mlident_map:psmap<mlident>;
+  env_remove_typars:RemoveUnusedParameters.env_t;
   mlpath_of_lid:psmap<mlpath>;
   env_fieldname_map:psmap<mlident>;
   mlpath_of_fieldname:psmap<mlpath>;
   tydefs:list<tydef>;
   type_names:list<(fv*mlpath)>;
+  tydef_declarations:psmap<bool>;
   currentModule: mlpath // needed to properly translate the definitions in the current file
 }
 
@@ -152,6 +156,9 @@ let tcenv_of_uenv (u:uenv) : TypeChecker.Env.env = u.env_tcenv
 let set_tcenv (u:uenv) (t:TypeChecker.Env.env) = { u with env_tcenv=t}
 let current_module_of_uenv (u:uenv) : mlpath = u.currentModule
 let set_current_module (u:uenv) (m:mlpath) : uenv = { u with currentModule = m }
+let with_typars_env (u:uenv) (f:_) =
+  let e, x = f u.env_remove_typars in
+  {u with env_remove_typars=e}, x
 
 (**** Debugging *)
 
@@ -260,6 +267,11 @@ let lookup_tydef (env:uenv) ((module_name, ty_name):mlpath)
         && module_name = tydef.tydef_mlmodule_name
         then Some tydef.tydef_def
         else None)
+
+let has_tydef_declaration (u:uenv) (l:lid) =
+  match BU.psmap_try_find u.tydef_declarations (Ident.string_of_lid l) with
+  | None -> false
+  | Some b -> b
 
 (** Given an F* qualified name, find its ML counterpart *)
 let mlpath_of_lident (g:uenv) (x:lident) : mlpath =
@@ -538,17 +550,22 @@ let extend_lb (g:uenv) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool)
         extend_fv g f t_x add_unit
 
 (** Extend with an abbreviation [fv] for the type scheme [ts] *)
-let extend_tydef (g:uenv) (fv:fv) (ts:mltyscheme) : tydef * mlpath * uenv =
+let extend_tydef (g:uenv) (fv:fv) (ts:mltyscheme) (meta:FStar.Extraction.ML.Syntax.metadata)
+  : tydef * mlpath * uenv =
     let name, g = new_mlpath_of_lident g fv.fv_name.v in
     let tydef = {
         tydef_fv = fv;
         tydef_mlmodule_name=fst name;
         tydef_name = snd name;
+        tydef_meta = meta;
         tydef_def = ts;
     } in
     tydef,
     name,
     {g with tydefs=tydef::g.tydefs; type_names=(fv, name)::g.type_names}
+
+let extend_with_tydef_declaration u l =
+  { u with tydef_declarations = BU.psmap_add u.tydef_declarations (Ident.string_of_lid l) true }
 
 (** Extend with [fv], the identifer for an F* inductive type *)
 let extend_type_name (g:uenv) (fv:fv) : mlpath * uenv =
@@ -633,11 +650,13 @@ let new_uenv (e:TypeChecker.Env.env)
       env_tcenv = e;
       env_bindings =[];
       env_mlident_map=initial_mlident_map ();
+      env_remove_typars=RemoveUnusedParameters.initial_env;
       mlpath_of_lid = BU.psmap_empty();
       env_fieldname_map=initial_mlident_map ();
       mlpath_of_fieldname = BU.psmap_empty();
       tydefs =[];
       type_names=[];
+      tydef_declarations = BU.psmap_empty();
       currentModule = ([], "");
     } in
     (* We handle [failwith] specially, extracting it to OCaml's 'failwith'

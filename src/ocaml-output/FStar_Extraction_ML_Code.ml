@@ -1071,7 +1071,12 @@ let (doc_of_mltydecl :
     fun decls ->
       let for1 uu___ =
         match uu___ with
-        | (uu___1, x, mangle_opt, tparams, uu___2, body) ->
+        | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___1;
+            FStar_Extraction_ML_Syntax.tydecl_name = x;
+            FStar_Extraction_ML_Syntax.tydecl_ignored = mangle_opt;
+            FStar_Extraction_ML_Syntax.tydecl_parameters = tparams;
+            FStar_Extraction_ML_Syntax.tydecl_meta = uu___2;
+            FStar_Extraction_ML_Syntax.tydecl_defn = body;_} ->
             let x1 =
               match mangle_opt with
               | FStar_Pervasives_Native.None -> x

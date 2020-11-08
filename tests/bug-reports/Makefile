@@ -101,7 +101,9 @@ SHOULD_NOT_VERIFY_NOT_WORKING=Bug186.fst Bug397b.fst
 
 # These will be checked as part of the F* regressions.
 SHOULD_EXTRACT_CLOSED=Bug086.fst Bug314.fst Bug540.fst Bug541.fst Bug589.fst \
-	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst
+	ExtractionBug2.fst Bug1101.fst Bug1485.fst Bug734.fst Bug310.fst \
+	Bug2058.fst RemoveUnusedTypars.B.fst RemoveUnusedTyparsIFace.B.fst \
+	PushPopProjectors.fst
 #ExtractionBug03.fst
 
 # Bug1479.fst Crashes when in CI with "Error: Unbound module FStar_Tactics_Effect"
@@ -158,6 +160,30 @@ Bug2058.ml:
 
 Bug2058.extract: Bug2058.ml
 	diff -u --strip-trailing-cr Bug2058.ml Bug2058.ml.expected
+
+output-accept: Bug310.ml Bug2058.ml
+	cp Bug310.ml Bug310.ml.expected
+	cp Bug2058.ml Bug2058.ml.expected
+
+RemoveUnusedTypars.B.extract: RemoveUnusedTypars.A.fst RemoveUnusedTypars.B.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTypars.A.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTypars.B.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTypars.A --codegen FSharp RemoveUnusedTypars.A.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTypars.B --codegen FSharp RemoveUnusedTypars.B.fst
+	diff -u --strip-trailing-cr RemoveUnusedTypars_A.fs RemoveUnusedTypars_A.fs.expected
+	diff -u --strip-trailing-cr RemoveUnusedTypars_B.fs RemoveUnusedTypars_B.fs.expected
+
+RemoveUnusedTyparsIFace.B.extract: RemoveUnusedTyparsIFace.A.fst RemoveUnusedTyparsIFace.B.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTyparsIFace.A.fsti --warn_error -333
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTyparsIFace.A.fst --warn_error -333
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTyparsIFace.B.fst --warn_error -333
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTyparsIFace.A --codegen FSharp RemoveUnusedTyparsIFace.A.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTyparsIFace.B --codegen FSharp RemoveUnusedTyparsIFace.B.fst
+	diff -u --strip-trailing-cr RemoveUnusedTyparsIFace_A.fs RemoveUnusedTyparsIFace_A.fs.expected
+	diff -u --strip-trailing-cr RemoveUnusedTyparsIFace_B.fs RemoveUnusedTyparsIFace_B.fs.expected
+
+PushPopProjectors.extract: PushPopProjectors.fst
+	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out_$* --codegen FSharp $^
 
 output-accept: Bug310.ml Bug2058.ml
 	cp Bug310.ml Bug310.ml.expected
