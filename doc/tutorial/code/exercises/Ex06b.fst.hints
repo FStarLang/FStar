@@ -14,7 +14,7 @@
         "fuel_guarded_inversion_Prims.list", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "28afd764ecdd57d239f3887d3a9c1e69"
+      "e836c4bcf9b5a73048fef544a61ed37b"
     ],
     [
       "Ex06b.append",
@@ -29,7 +29,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ec86701cc04aa5a4313c30bbd601449d"
+      "366f0854cf638c6c8d38a43354112c50"
     ],
     [
       "Ex06b.append_mem",
@@ -60,7 +60,7 @@
         "typing_Ex06b.mem"
       ],
       0,
-      "e692d6b7e8ffff0cd1373d9f40d478ba"
+      "526b183db3eb025d4aa8ef4f2b1501d3"
     ],
     [
       "Ex06b.length",
@@ -77,7 +77,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f0aa08fc15bb2382b46d6f8422ecf2c4"
+      "6002c54964618d852ab7cf31267fe595"
     ],
     [
       "Ex06b.sorted",
@@ -98,7 +98,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "07cf6a5580d080c2e65b0556228a08c0"
+      "531bf401e4d1b649e2542d084d9b4eed"
     ],
     [
       "Ex06b.partition",
@@ -113,7 +113,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "4ef6b5e90c3071576185b491cb86c6f3"
+      "8c650d0d5c306d492bd9ca7581549a22"
     ],
     [
       "Ex06b.partition_lemma",
@@ -159,7 +159,7 @@
         "typing_Ex06b.length", "typing_Ex06b.mem", "typing_Ex06b.partition"
       ],
       0,
-      "585d818b26f1ac4f1f3a05ef25c4aa7d"
+      "2fd4639b22b4af46a58d2cd6bee546ef"
     ],
     [
       "Ex06b.sorted_concat_lemma",
@@ -202,7 +202,7 @@
         "typing_Ex06b.append", "typing_Ex06b.mem", "typing_Ex06b.sorted"
       ],
       0,
-      "132214b46e3e612a586806d84976d43a"
+      "7906649efd4ebbfd2be320bb4a26312e"
     ],
     [
       "Ex06b.sort",
@@ -267,7 +267,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "dfcb94f3fcad9759929cf5cae170e99f"
+      "02489cc0dfb51fea3e68b48d6cfc0073"
     ]
   ]
 ]
