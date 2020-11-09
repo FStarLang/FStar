@@ -361,6 +361,14 @@ let fresh_binder t : Tac binder =
     let i = fresh () in
     fresh_binder_named ("x" ^ string_of_int i) t
 
+let fresh_implicit_binder_named nm t : Tac binder =
+    mk_implicit_binder (fresh_bv_named nm t)
+
+let fresh_implicit_binder t : Tac binder =
+    (* See comment in fresh_bv *)
+    let i = fresh () in
+    fresh_implicit_binder_named ("x" ^ string_of_int i) t
+
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
                                  (ensures (fun ps r -> if b
                                                        then Success? r /\ Success?.ps r == ps
