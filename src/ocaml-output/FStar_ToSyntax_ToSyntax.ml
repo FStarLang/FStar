@@ -453,7 +453,7 @@ and (free_type_vars :
                          | FStar_Util.Inl binder ->
                              free_type_vars_b env1 binder
                          | FStar_Util.Inr t1 ->
-                             let uu___4 = free_type_vars env1 body in
+                             let uu___4 = free_type_vars env1 t1 in
                              (env1, uu___4) in
                        (match uu___3 with
                         | (env2, f) -> (env2, (FStar_List.append f free))))

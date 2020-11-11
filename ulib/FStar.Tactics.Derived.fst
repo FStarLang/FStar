@@ -152,6 +152,14 @@ discharged by the engine. Just a thin wrapper around [t_apply_lemma]. *)
 let apply_lemma (t : term) : Tac unit =
     t_apply_lemma false false t
 
+(** See docs for [t_trefl] *)
+let trefl () : Tac unit =
+  t_trefl false
+
+(** See docs for [t_trefl] *)
+let trefl_guard () : Tac unit =
+  t_trefl true
+
 (** Similar to [apply_lemma], but will not instantiate uvars in the
 goal while applying. *)
 let apply_lemma_noinst (t : term) : Tac unit =
@@ -243,6 +251,10 @@ let fresh_uvar (o : option typ) : Tac term =
 let unify (t1 t2 : term) : Tac bool =
     let e = cur_env () in
     unify_env e t1 t2
+
+let unify_guard (t1 t2 : term) : Tac bool =
+    let e = cur_env () in
+    unify_guard_env e t1 t2
 
 let tmatch (t1 t2 : term) : Tac bool =
     let e = cur_env () in

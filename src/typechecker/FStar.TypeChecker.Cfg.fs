@@ -307,7 +307,7 @@ let built_in_primitive_steps : prim_step_set =
     let arg_as_string (a:arg) = fst a |> try_unembed_simple EMB.e_string in
     let arg_as_list   (e:EMB.embedding<'a>) a = fst a |> try_unembed_simple (EMB.e_list e) in
     let arg_as_bounded_int (a, _) : option<(fv * Z.t)> =
-        let hd, args = U.head_and_args' a in
+        let hd, args = U.head_and_args_full a in
         let a = U.unlazy_emb a in
         match (SS.compress hd).n, args with
         | Tm_fvar fv1, [(arg, _)]

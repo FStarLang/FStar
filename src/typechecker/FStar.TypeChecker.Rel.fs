@@ -2228,7 +2228,7 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
         //            (Print.args_to_string [last_arg_rhs]);
         let (Flex (t_lhs, u_lhs, _lhs_args)) = lhs in
         let lhs', lhs'_last_arg, wl =
-              let _, t_last_arg, wl = copy_uvar u_lhs [] (fst <| U.type_u()) wl in
+              let t_last_arg = env.type_of_well_typed ({env with lax=true; use_bv_sorts=true; expected_typ=None}) (fst last_arg_rhs) in
               //FIXME: this may be an implicit arg ... fix qualifier
               //AR: 07/20: note the type of lhs' is t_last_arg -> t_res_lhs
               let _, lhs', wl =
@@ -2985,8 +2985,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                        attempting=[ref_prob]; wl_deferred=[]}) with
              | Failed (prob, msg) ->
                UF.rollback tx;
-               if (not env.uvar_subtyping && has_uvars)
-               || not wl.smt_ok
+               if ((not env.uvar_subtyping && has_uvars)
+                   || not wl.smt_ok)
+                   && not env.unif_allow_ref_guards // if unif_allow_ref_guards is on, we don't give up
                then giveup env msg prob
                else fallback()
 

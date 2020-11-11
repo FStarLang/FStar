@@ -23,6 +23,10 @@ module Z      = FStar.BigInt
 module Env    = FStar.TypeChecker.Env
 module TcComm = FStar.TypeChecker.Common
 module N      = FStar.TypeChecker.Normalize
+module Const  = FStar.Const
+module Errors = FStar.Errors
+
+let rangeof g = g.goal_ctx_uvar.ctx_uvar_range
 
 (* WHY DO I NEED TO COPY THESE? *)
 type controller_ty = term -> tac<(bool * ctrl_flag)>
@@ -35,21 +39,56 @@ let __do_rewrite
     (tm : term)
   : tac<term>
 =
+  (*
+   * We skip certain terms. In particular if the term is a constant
+   * which must have an argument (reify, reflect, range_of,
+   * set_range_of), since typechecking will then fail, and the tactic
+   * will also not be able to do anything useful. Morally, `reify` is
+   * not a term, so it's fine to skip it.
+   *
+   * This is not perfect since if we have any other node wrapping the
+   * `reify` (metadata?) this will still fail. But I don't think that
+   * ever happens currently.
+   *)
+  let should_skip =
+    match (SS.compress tm).n with
+    | S.Tm_constant Const.Const_reify
+    | S.Tm_constant (Const.Const_reflect _)
+    | S.Tm_constant Const.Const_range_of
+    | S.Tm_constant Const.Const_set_range_of ->
+      true
+    | _ -> false
+  in
+  if should_skip then ret tm else begin
+
     (* It's important to keep the original term if we want to do
      * nothing, (hence the underscore below) since after the call to
      * the typechecker, t can be elaborated and have more structure. In
      * particular, it can be abscribed and hence CONTAIN t AS A SUBTERM!
      * Which would cause an infinite loop between this function and
-     * ctrl_fold_env. *)
-    let _, lcomp, g = env.tc_term ({ env with Env.lax = true }) tm in
-    (* TODO: re-typechecking the goal is expensive *)
-    (* use type_of_well_typed_term...? *)
+     * ctrl_fold_env.
+     *
+     * If we got an error about a layered effect missing an annotation,
+     * we just skip the term, for reasons similar to unapplied constants
+     * above. Other exceptions are re-raised.
+     *)
+    let res =
+      try
+        Errors.with_ctx "While typechecking a subterm for ctrl_rewrite" (fun () ->
+          Some (env.tc_term ({ env with Env.lax = true }) tm))
+      with
+      | Errors.Error (Errors.Error_LayeredMissingAnnot, _, _, _) -> None
+      | e -> raise e
+    in
+    match res with
+    | None -> ret tm
+    | Some (_, lcomp, g) ->
 
     if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
-      ret tm (* SHOULD THIS CHECK BE IN MAYBE_REWRITE INSTEAD? *)
+      ret tm (* SHOULD THIS CHECK BE IN maybe_rewrite INSTEAD? *)
     else
     let typ = lcomp.res_typ in
-    bind (new_uvar "do_rewrite.rhs" env typ) (fun (ut, uvar_ut) ->
+    bind (new_uvar "do_rewrite.rhs" env typ (rangeof g0)) (fun (ut, uvar_ut) ->
     mlog (fun () ->
        BU.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n"
          (Print.term_to_string tm) (Print.term_to_string ut)) (fun () ->
@@ -66,6 +105,7 @@ let __do_rewrite
                    (Print.term_to_string tm)
                    (Print.term_to_string ut)) (fun () ->
     ret ut)))))
+  end
 
 (* If __do_rewrite fails with "SKIP" we do nothing *)
 let do_rewrite
@@ -122,11 +162,11 @@ let rec map_ctac (c : ctac<'a>)
         bind (par_ctac c (map_ctac c) (x, xs)) (fun ((x, xs), flag) ->
         ret (x::xs, flag))
 
-let bind_ctac
-    (t : ctac<'a>)
-    (f : 'a -> ctac<'b>)
-  : ctac<'b>
-  = fun b -> failwith ""
+(* let bind_ctac *)
+(*     (t : ctac<'a>) *)
+(*     (f : 'a -> ctac<'b>) *)
+(*   : ctac<'b> *)
+(*   = fun b -> failwith "" *)
 
 let ctac_id (* : ctac<'a> *) =
   fun (x:'a) -> ret (x, Continue)
