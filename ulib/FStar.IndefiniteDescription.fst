@@ -28,14 +28,25 @@ module FStar.IndefiniteDescription
 
 (** The main axiom:
 
+    Given a proof of [p], we can obtain a witness for [p] in [GTot].
+*)
+assume
+val indefinite_unsquash (#p:Type) (x:squash p) : GTot p
+
+(*
+    Indefinite description:
+
     Given a classical proof of [exists x. p x], we can exhibit an erased
     (computationally irrelevant) a witness [x:erased a] validating
     [p x].
 *)
-assume
 val indefinite_description_tot (a:Type) (p:(a -> prop) { exists x. p x })
   : Tot (w:Ghost.erased a{ p w })
-
+let indefinite_description_tot a p =
+  let sq0 : squash (exists x. p x) = () in
+  let sq1 : squash (x:a & p x) = Squash.join_squash sq0 in
+  let (| w, pf |) = indefinite_unsquash sq1 in
+  w
 
 (** A version in ghost is easily derivable *)
 let indefinite_description_ghost (a: Type) (p: (a -> prop) { exists x. p x })
@@ -43,7 +54,7 @@ let indefinite_description_ghost (a: Type) (p: (a -> prop) { exists x. p x })
   = let w = indefinite_description_tot a p in
     let x = Ghost.reveal w in
     x
-  
+
 (** An alternate formulation, mainly for legacy reasons.
 
     Given a classical proof of [exists x. p x], we can exhibit (ghostly) a
@@ -53,10 +64,13 @@ let indefinite_description_ghost (a: Type) (p: (a -> prop) { exists x. p x })
     [Prims.prop] for a description of the ongoing work on more
     systematically using [prop] in the libraries *)
 [@@deprecated "Consider using indefinite_description_ghost instead"]
-assume
 val indefinite_description (a: Type) (p: (a -> GTot Type0))
   : Ghost (x: a & p x) (requires (exists x. p x)) (ensures (fun _ -> True))
-  
+let indefinite_description a p =
+  let sq0 : squash (exists x. p x) = () in
+  let sq1 : squash (x:a & p x) = Squash.join_squash sq0 in
+  indefinite_unsquash sq1
+
 open FStar.Classical
 open FStar.Squash
 
@@ -64,23 +78,10 @@ open FStar.Squash
     middle, i.e., one can case-analyze the truth of a proposition
     (only in [Ghost]) *)
 let strong_excluded_middle (p: Type0) : GTot (b: bool{b = true <==> p}) =
-  let aux (p: Type0) : Lemma (exists b. b = true <==> p) =
-    give_proof (bind_squash (get_proof (l_or p (~p)))
-          (fun (b: l_or p (~p)) ->
-              bind_squash b
-                (fun (b': c_or p (~p)) ->
-                    match b' with
-                    | Left hp ->
-                      give_witness hp;
-                      exists_intro (fun b -> b = true <==> p) true;
-                      get_proof (exists b. b = true <==> p)
-                    | Right hnp ->
-                      give_witness hnp;
-                      exists_intro (fun b -> b = true <==> p) false;
-                      get_proof (exists b. b = true <==> p))))
-  in
-  aux p;
-  indefinite_description_ghost bool (fun b -> b = true <==> p)
+  let tf : squash (p \/ ~p) = () in
+  match indefinite_unsquash (Squash.join_squash tf) with
+  | Left  _ -> true
+  | Right _ -> false
 
 (** We also can combine this with a the classical tautology converting
     with a [forall] and an [exists] to extract a witness of validity of [p] from
@@ -97,3 +98,17 @@ let stronger_markovs_principle (p: (nat -> GTot bool))
 let stronger_markovs_principle_prop (p: (nat -> GTot prop))
     : Ghost nat (requires (~(forall (n: nat). ~(p n)))) (ensures (fun n -> p n)) =
     indefinite_description_ghost _ p
+
+(** The axiom of choice in Ghost.
+
+    From a function [f] that, for every [x:a], (ghostly) produces a [b],
+    we can (ghostly) obtain a total function from [a] to [b]. Further,
+    this new function is pointwise equal to [f].
+*)
+val ghost_choice (#a:Type) (#b:Type) (f:(a -> GTot b))
+  : Ghost (a -> b)
+          (requires True)
+          (ensures fun f' -> forall x. f x == f' x)
+let ghost_choice #a #b f =
+  let fs (x:a) : squash (y:b{y == f x}) = Squash.return_squash (f x) in
+  indefinite_unsquash (push_squash fs)

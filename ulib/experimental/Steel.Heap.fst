@@ -750,7 +750,7 @@ let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
     in
     g
 
-#push-options "--z3rlimit_factor 8 --max_fuel 0 --initial_ifuel 2 --max_ifuel 2"
+#push-options "--z3rlimit 80 --max_fuel 0 --initial_ifuel 2 --max_ifuel 2"
 let select_refine_pre (#a:_) (#p:_)
                       (r:ref a p)
                       (x:erased a)

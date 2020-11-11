@@ -51,9 +51,9 @@ val bind_squash (#a #b: Type) (x: squash a) (f: (a -> GTot (squash b))) : Tot (s
     proof-irrelevant proof of [forall (x:a). b x].
 
     Note: since [f] is not itself squashed, [push_squash f] is not
-    equal to [f].  *)
+    equal to [f]. *)
 val push_squash (#a: Type) (#b: (a -> Type)) (f: (x: a -> Tot (squash (b x))))
-    : Tot (squash (x: a -> GTot (b x)))
+    : Tot (squash (x: a -> Tot (b x)))
 
 /// The pre- and postconditions of of [Pure] are equivalent to
 /// squashed arguments and results.

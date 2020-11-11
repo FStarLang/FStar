@@ -32,7 +32,9 @@ let give_proof (#p:Type) _ = ()
 let proof_irrelevance (p:Type) x y = ()
 
 let squash_double_arrow #a #p f =
-    bind_squash f push_squash
+  bind_squash f (fun (f : (x:a -> GTot (squash (p x)))) ->
+  bind_squash (push_squash f) (fun (f':(x:a -> Tot (p x))) ->
+  return_squash (fun x -> f' x <: GTot (p x))))
 
 let push_sum (#a:Type) (#b:(a -> Type)) ($p : dtuple2 a (fun (x:a) -> squash (b x))) =
     match p with
