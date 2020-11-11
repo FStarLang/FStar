@@ -792,22 +792,42 @@ let canon_l_r (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   let (r1_raw, ts, am) = reification eq m [] am lhs in
   let (r2_raw,  _, am) = reification eq m ts am rhs in
 
-  let l1_raw, l2_raw, emp_frame = equivalent_lists (flatten r1_raw) (flatten r2_raw) am in
-
-  let am = convert_am am in
+  let c_am = convert_am am in
   let r1 = quote_exp r1_raw in
   let r2 = quote_exp r2_raw in
-  let l1 = quote_atoms l1_raw in
-  let l2 = quote_atoms l2_raw in
-  change_sq (`(normal (mdenote (`#eq) (`#m) (`#am) (`#r1)
+
+  change_sq (`(normal (mdenote (`#eq) (`#m) (`#c_am) (`#r1)
                  `EQ?.eq (`#eq)`
-               mdenote (`#eq) (`#m) (`#am) (`#r2))));
+               mdenote (`#eq) (`#m) (`#c_am) (`#r2))));
   apply_lemma (`normal_elim);
 
   apply (`monoid_reflect );
 
+  dump "pre or";
 
-  apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#am) (`#l1) (`#l2));
+  or_else
+    (fun _ ->     norm [primops; iota; zeta; delta_only
+      [`%xsdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
+        `%flatten; `%sort;
+        `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
+        `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
+        `%fst; `%__proj__Mktuple2__item___1;
+        `%snd; `%__proj__Mktuple2__item___2;
+        `%__proj__CM__item__unit;
+        `%__proj__CM__item__mult;
+        `%Steel.Memory.Tactics.rm
+
+        ]];
+        dump "here";
+      trefl() )
+     (fun _ ->
+
+  let l1_raw, l2_raw, emp_frame = equivalent_lists (flatten r1_raw) (flatten r2_raw) am in
+  let l1 = quote_atoms l1_raw in
+  let l2 = quote_atoms l2_raw in
+
+
+  apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#c_am) (`#l1) (`#l2));
   let g = goals () in
   if List.Tot.Base.length g = 0 then
     // The application of equivalent_sorted seems to sometimes solve
@@ -836,7 +856,7 @@ let canon_l_r (eq: term) (m: term) (lhs rhs:term) : Tac unit =
 
     if emp_frame then apply_lemma (`identity_left (`#eq) (`#m))
     else apply_lemma (`(EQ?.reflexivity (`#eq)))
-  )
+  ))
 
 
 let canon_monoid (eq:term) (m:term) : Tac unit =
