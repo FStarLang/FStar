@@ -5,6 +5,7 @@ module Sem = Steel.Semantics.Hoare.MST
 open Steel.Semantics.Instantiate
 
 irreducible let framing_implicit : unit = ()
+irreducible let __reduce__ = ()
 
 let delay (p:Type0) : Type0 = p
 let annot_sub_post (p:Type0) : Type0 = p
@@ -1036,6 +1037,7 @@ let solve_can_be_split (args:list argv) : Tac bool =
                               `%Steel.Memory.Tactics.rm;
                               `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
                               `%fst; `%snd];
+                            delta_attr [`%__reduce__];
                             primops; iota; zeta];
                        canon'()));
         true
@@ -1079,6 +1081,7 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
                    `%Steel.Memory.Tactics.rm;
                    `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
                    `%fst; `%snd];
+                 delta_attr [`%__reduce__];
                  primops; iota; zeta];
             canon'()));
         true
@@ -1108,6 +1111,7 @@ let solve_equiv_forall (args:list argv) : Tac bool =
                                 `%Steel.Memory.Tactics.rm;
                                 `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
                                 `%fst; `%snd];
+                              delta_attr [`%__reduce__];
                               primops; iota; zeta];
                         canon'());
         true
@@ -1139,6 +1143,7 @@ let rec solve_subcomp_pre (l:list goal) : Tac unit =
                               `%Steel.Memory.Tactics.rm;
                               `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
                               `%fst; `%snd];
+                            delta_attr [`%__reduce__];
                             primops; iota; zeta];
                        canon'()))
            ))
@@ -1179,6 +1184,7 @@ let rec solve_subcomp_post (l:list goal) : Tac unit =
                               `%Steel.Memory.Tactics.rm;
                               `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
                               `%fst; `%snd];
+                            delta_attr [`%__reduce__];
                             primops; iota; zeta];
                        canon'()))
           ))
@@ -1259,6 +1265,7 @@ let solve_return (t:term) : Tac unit
                      `%Steel.Memory.Tactics.rm;
                      `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
                      `%fst; `%snd];
+               delta_attr [`%__reduce__];
                primops; iota; zeta];
            canon_return ()
 
