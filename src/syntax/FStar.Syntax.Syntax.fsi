@@ -27,6 +27,7 @@ open FStar.Range
 open FStar.Ident
 open FStar.Dyn
 module O = FStar.Options
+open FStar.VConfig
 
 // JP: all these types are defined twice and every change has to be performed
 // twice (because of the .fs). TODO: move the type definitions into a standalone
@@ -508,7 +509,7 @@ and sigelt = {
     sigquals: list<qualifier>;
     sigmeta:  sig_metadata;
     sigattrs: list<attribute>;
-    sigopts:  option<O.optionstate>; (* Saving the option context where this sigelt was checked in *)
+    sigopts:  option<vconfig>; (* Saving the option context where this sigelt was checked in *)
 }
 
 type sigelts = list<sigelt>
@@ -632,6 +633,7 @@ val t_real          : term
 val t_float         : term
 val t_char          : term
 val t_range         : term
+val t_vconfig       : term
 val t_norm_step     : term
 val t_term          : term
 val t_term_view     : term

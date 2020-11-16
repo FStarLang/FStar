@@ -27,6 +27,7 @@ module O     = FStar.Options
 module RD    = FStar.Reflection.Data
 module EMB   = FStar.Syntax.Embeddings
 module N     = FStar.TypeChecker.Normalize
+open FStar.VConfig
 
 open FStar.Dyn
 
@@ -481,14 +482,10 @@ let sigelt_quals (se : sigelt) : list<RD.qualifier> =
 let set_sigelt_quals (quals : list<RD.qualifier>) (se : sigelt) : sigelt =
     { se with sigquals = List.map rd_to_syntax_qual quals }
 
-(* Set by FStar.Reflection.Embeddings *)
-let e_optionstate_hook : ref<option<EMB.embedding<O.optionstate>>> = BU.mk_ref None
+let sigelt_opts (se : sigelt) : option<vconfig> = se.sigopts
 
-let sigelt_opts (se : sigelt) : option<term> =
-    match se.sigopts with
-    | None -> None
-    | Some o -> Some (EMB.embed (!e_optionstate_hook |> BU.must) o
-                        Range.dummyRange None EMB.id_norm_cb)
+let embed_vconfig (vcfg : vconfig) : term =
+  EMB.embed EMB.e_vconfig vcfg Range.dummyRange None EMB.id_norm_cb
 
 let inspect_sigelt (se : sigelt) : sigelt_view =
     match se.sigel with
@@ -623,3 +620,6 @@ let explode_qn s = String.split ['.'] s
 let compare_string s1 s2 = Z.of_int_fs (String.compare s1 s2)
 
 let push_binder e b = Env.push_binders e [b]
+
+let subst (x:bv) (n:term) (m:term) : term =
+  SS.subst [NT(x,n)] m

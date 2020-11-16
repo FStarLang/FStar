@@ -445,7 +445,6 @@ let eta_expand (g:uenv) (t : mlty) (e : mlexpr) : mlexpr =
       let body = with_ty r <| MLE_App (e, vs_es) in
       with_ty t <| MLE_Fun (vs_ts, body)
 
-(* eta-expand `e` according to its type `t` *)
 let default_value_for_ty (g:uenv) (t : mlty) : mlexpr  =
     let ts, r = doms_and_cod t in
     let body r =
@@ -467,9 +466,8 @@ let default_value_for_ty (g:uenv) (t : mlty) : mlexpr  =
     else let vs_ts, g = fresh_mlidents ts g in
          with_ty t <| MLE_Fun (vs_ts, body r)
 
-let maybe_eta_expand g expect e =
-    if Options.ml_no_eta_expand_coertions () ||
-        Options.codegen () = Some Options.Kremlin // we need to stay first order for Kremlin
+let maybe_eta_expand_coercion g expect e =
+    if Options.codegen () = Some Options.Kremlin // we need to stay first order for Kremlin
     then e
     else eta_expand g expect e
 
@@ -479,7 +477,15 @@ let maybe_eta_expand g expect e =
   Otherwise, we often end up with coercions like (Obj.magic (fun x -> e) : a -> b) : a -> c
   Whereas with this optimization we produce (fun x -> Obj.magic (e : b) : c)  : a -> c
 *)
-let apply_coercion (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
+let apply_coercion pos (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
+    if Util.codegen_fsharp()
+    then //magics are not always sound in F#; warn
+        FStar.Errors.log_issue pos
+          (Errors.Warning_NoMagicInFSharp,
+           BU.format2 
+             "Inserted an unsafe type coercion in generated code from %s to %s; this may be unsound in F#"
+               (Code.string_of_mlty (current_module_of_uenv g) ty)
+               (Code.string_of_mlty (current_module_of_uenv g) expect));
     let mk_fun binder body =
         match body.expr with
         | MLE_Fun(binders, body) ->
@@ -559,7 +565,7 @@ let maybe_coerce pos (g:uenv) e ty (expect:mlty) : mlexpr =
                             (Code.string_of_mlexpr (current_module_of_uenv g) e)
                             (Code.string_of_mlty (current_module_of_uenv g) ty)
                             (Code.string_of_mlty (current_module_of_uenv g) expect)) in
-               maybe_eta_expand g expect (apply_coercion g e ty expect)
+               maybe_eta_expand_coercion g expect (apply_coercion pos g e ty expect)
 
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)
@@ -877,9 +883,16 @@ let rec extract_one_pat (imp : bool)
         g, None, true
 
     | Pat_cons (f, pats) ->
-        let d, tys = match lookup_fv g f with
-            | {exp_b_expr={expr=MLE_Name n}; exp_b_tscheme=ttys} -> n, ttys
-            | _ -> failwith "Expected a constructor" in
+        let d, tys =
+          match try_lookup_fv p.p g f with
+          | Some ({exp_b_expr={expr=MLE_Name n}; exp_b_tscheme=ttys}) -> n, ttys
+          | Some _ -> failwith "Expected a constructor"
+          | None ->
+            Errors.raise_error (Errors.Error_ErasedCtor,
+                                BU.format1 "Cannot extract this pattern, the %s constructor was erased"
+                                            (Print.fv_to_string f))
+                               f.fv_name.p
+        in
         let nTyVars = List.length (fst tys) in
         let tysVarPats, restPats =  BU.first_N nTyVars pats in
         let f_ty_opt =
@@ -1214,7 +1227,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           ml_unit, E_PURE, ml_unit_ty
 
         | Tm_quoted (qt, { qkind = Quote_dynamic }) ->
-          let ({exp_b_expr=fw}) = UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
+          let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv PC.failwith_lid delta_constant None) in
           with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Cannot evaluate open quotation at runtime")]),
           E_PURE,
           ml_int_ty
@@ -1286,8 +1299,10 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           then ml_unit, E_PURE, ml_unit_ty //Erase type argument
           else
           begin
-               match try_lookup_fv g fv with
+               match try_lookup_fv t.pos g fv with
                | None -> //it's been erased
+                 // Errors.log_issue t.pos (Errors.Error_CallToErased,
+                 //                         BU.format1 "Attempting to extract a call into erased function %s" (Print.fv_to_string fv));
                  ml_unit, E_PURE, MLTY_Erased
 
                | Some {exp_b_expr=x; exp_b_tscheme=mltys} ->
@@ -1518,8 +1533,11 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               then ml_unit, E_PURE, ml_unit_ty //Erase type argument: TODO: FIXME, this could be effectful
               else match (U.un_uinst head).n with
                    | Tm_fvar fv ->
-                     (match try_lookup_fv g fv with
+                     (match try_lookup_fv t.pos g fv with
                       | None -> //erased head
+                        // Errors.log_issue t.pos
+                        //   (Errors.Error_CallToErased,
+                        //    BU.format1 "Attempting to extract a call into erased function %s" (Print.fv_to_string fv));
                         ml_unit, E_PURE, MLTY_Erased
                       | _ ->
                         extract_app_with_instantiations ())
@@ -1732,7 +1750,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                            with_ty t_e <| MLE_Coerce (e, t_e, MLTY_Top)) in
              begin match mlbranches with
                 | [] ->
-                    let ({exp_b_expr=fw}) = UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
+                    let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv PC.failwith_lid delta_constant None) in
                     with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
                     E_PURE,
                     ml_int_ty

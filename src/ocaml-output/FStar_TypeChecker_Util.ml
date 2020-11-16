@@ -69,7 +69,8 @@ let (close_guard_implicits :
                      FStar_Util.print_string "END\n")
                   else ());
                  (let g1 =
-                    FStar_TypeChecker_Rel.solve_deferred_constraints env
+                    FStar_TypeChecker_Rel.solve_non_tactic_deferred_constraints
+                      env
                       (let uu___3 = g in
                        {
                          FStar_TypeChecker_Common.guard_f =
@@ -968,7 +969,14 @@ let (should_return :
             FStar_All.pipe_right uu___1 FStar_Pervasives_Native.snd in
           FStar_All.pipe_right uu___
             (fun c ->
-               (let uu___1 = FStar_TypeChecker_Env.is_reifiable_comp env c in
+               (let uu___1 =
+                  (FStar_TypeChecker_Env.is_reifiable_comp env c) &&
+                    (let uu___2 =
+                       let uu___3 =
+                         FStar_TypeChecker_Env.norm_eff_name env
+                           lc.FStar_TypeChecker_Common.eff_name in
+                       FStar_TypeChecker_Env.is_layered_effect env uu___3 in
+                     Prims.op_Negation uu___2) in
                 Prims.op_Negation uu___1) &&
                  ((FStar_All.pipe_right (FStar_Syntax_Util.comp_result c)
                      FStar_Syntax_Util.is_unit)
@@ -981,7 +989,7 @@ let (should_return :
             (((FStar_TypeChecker_Common.is_pure_or_ghost_lcomp lc) &&
                 (Prims.op_Negation lc_is_unit_or_effectful))
                &&
-               (let uu___ = FStar_Syntax_Util.head_and_args' e in
+               (let uu___ = FStar_Syntax_Util.head_and_args_full e in
                 match uu___ with
                 | (head, uu___1) ->
                     let uu___2 =
@@ -6358,6 +6366,8 @@ let (update_env_sub_eff :
                  (uu___1.FStar_TypeChecker_Env.tc_term);
                FStar_TypeChecker_Env.type_of =
                  (uu___1.FStar_TypeChecker_Env.type_of);
+               FStar_TypeChecker_Env.type_of_well_typed =
+                 (uu___1.FStar_TypeChecker_Env.type_of_well_typed);
                FStar_TypeChecker_Env.universe_of =
                  (uu___1.FStar_TypeChecker_Env.universe_of);
                FStar_TypeChecker_Env.check_type_of =
@@ -6394,7 +6404,9 @@ let (update_env_sub_eff :
                FStar_TypeChecker_Env.erasable_types_tab =
                  (uu___1.FStar_TypeChecker_Env.erasable_types_tab);
                FStar_TypeChecker_Env.enable_defer_to_tac =
-                 (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac)
+                 (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac);
+               FStar_TypeChecker_Env.unif_allow_ref_guards =
+                 (uu___1.FStar_TypeChecker_Env.unif_allow_ref_guards)
              }) sub.FStar_Syntax_Syntax.source sub.FStar_Syntax_Syntax.target
             uu___ in
         let uu___ = env1 in
@@ -6447,6 +6459,8 @@ let (update_env_sub_eff :
             (uu___.FStar_TypeChecker_Env.tc_term);
           FStar_TypeChecker_Env.type_of =
             (uu___.FStar_TypeChecker_Env.type_of);
+          FStar_TypeChecker_Env.type_of_well_typed =
+            (uu___.FStar_TypeChecker_Env.type_of_well_typed);
           FStar_TypeChecker_Env.universe_of =
             (uu___.FStar_TypeChecker_Env.universe_of);
           FStar_TypeChecker_Env.check_type_of =
@@ -6481,7 +6495,9 @@ let (update_env_sub_eff :
           FStar_TypeChecker_Env.erasable_types_tab =
             (uu___.FStar_TypeChecker_Env.erasable_types_tab);
           FStar_TypeChecker_Env.enable_defer_to_tac =
-            (uu___.FStar_TypeChecker_Env.enable_defer_to_tac)
+            (uu___.FStar_TypeChecker_Env.enable_defer_to_tac);
+          FStar_TypeChecker_Env.unif_allow_ref_guards =
+            (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
         }
 let (update_env_polymonadic_bind :
   FStar_TypeChecker_Env.env ->

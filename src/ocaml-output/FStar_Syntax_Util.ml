@@ -593,7 +593,7 @@ let (head_and_args :
     match t1.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_app (head, args) -> (head, args)
     | uu___ -> (t1, [])
-let rec (head_and_args' :
+let rec (head_and_args_full :
   FStar_Syntax_Syntax.term ->
     (FStar_Syntax_Syntax.term * (FStar_Syntax_Syntax.term'
       FStar_Syntax_Syntax.syntax * FStar_Syntax_Syntax.arg_qualifier
@@ -603,7 +603,7 @@ let rec (head_and_args' :
     let t1 = FStar_Syntax_Subst.compress t in
     match t1.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_app (head, args) ->
-        let uu___ = head_and_args' head in
+        let uu___ = head_and_args_full head in
         (match uu___ with
          | (head1, args') -> (head1, (FStar_List.append args' args)))
     | uu___ -> (t1, [])
@@ -829,7 +829,7 @@ let (canon_app :
     FStar_Syntax_Syntax.term)
   =
   fun t ->
-    let uu___ = let uu___1 = unascribe t in head_and_args' uu___1 in
+    let uu___ = let uu___1 = unascribe t in head_and_args_full uu___1 in
     match uu___ with
     | (hd, args) ->
         FStar_Syntax_Syntax.mk_Tm_app hd args t.FStar_Syntax_Syntax.pos
@@ -2860,7 +2860,7 @@ let (destruct_typ_as_formula :
       let uu___ = un_squash t in
       FStar_Util.bind_opt uu___
         (fun t1 ->
-           let uu___1 = head_and_args' t1 in
+           let uu___1 = head_and_args_full t1 in
            match uu___1 with
            | (hd, args) ->
                let uu___2 =
@@ -3016,7 +3016,7 @@ let (destruct_typ_as_formula :
       let uu___ = un_squash t in
       FStar_Util.bind_opt uu___
         (fun t1 ->
-           let uu___1 = head_and_args' t1 in
+           let uu___1 = head_and_args_full t1 in
            match uu___1 with
            | (hd, args) ->
                let uu___2 =

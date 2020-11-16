@@ -92,12 +92,11 @@ let print_discrepancy :
                 | (xs, ys, true) -> (xs, ys)
                 | uu___2 -> let uu___3 = succ cur in go uu___3)) in
         FStar_Options.with_saved_options (fun uu___ -> go bas)
-let errors_smt_detail :
-  'uuuuu .
-    FStar_TypeChecker_Env.env ->
-      ('uuuuu * Prims.string * FStar_Range.range) Prims.list ->
-        (Prims.string, Prims.string) FStar_Util.either ->
-          ('uuuuu * Prims.string * FStar_Range.range) Prims.list
+let (errors_smt_detail :
+  FStar_TypeChecker_Env.env ->
+    FStar_Errors.error Prims.list ->
+      (Prims.string, Prims.string) FStar_Util.either ->
+        FStar_Errors.error Prims.list)
   =
   fun env ->
     fun errs ->
@@ -113,12 +112,12 @@ let errors_smt_detail :
             (FStar_List.map
                (fun uu___ ->
                   match uu___ with
-                  | (e, msg, r) ->
+                  | (e, msg, r, ctx) ->
                       let uu___1 =
                         if r = FStar_Range.dummyRange
                         then
                           let uu___2 = FStar_TypeChecker_Env.get_range env in
-                          (e, msg, uu___2)
+                          (e, msg, uu___2, ctx)
                         else
                           (let r' =
                              let uu___3 = FStar_Range.use_range r in
@@ -161,15 +160,15 @@ let errors_smt_detail :
                                  Prims.op_Hat " (Also see: " uu___6 in
                                Prims.op_Hat msg uu___5 in
                              let uu___5 = FStar_TypeChecker_Env.get_range env in
-                             (e, uu___4, uu___5)
-                           else (e, msg, r)) in
+                             (e, uu___4, uu___5, ctx)
+                           else (e, msg, r, ctx)) in
                       (match uu___1 with
-                       | (e1, msg1, r1) ->
-                           (e1, (maybe_add_smt_detail msg1), r1)))) in
+                       | (e1, msg1, r1, ctx1) ->
+                           (e1, (maybe_add_smt_detail msg1), r1, ctx1)))) in
         errs1
 let (add_errors_smt_detail :
   FStar_TypeChecker_Env.env ->
-    (FStar_Errors.raw_error * Prims.string * FStar_Range.range) Prims.list ->
+    FStar_Errors.error Prims.list ->
       (Prims.string, Prims.string) FStar_Util.either -> unit)
   =
   fun env ->
@@ -178,10 +177,22 @@ let (add_errors_smt_detail :
         let uu___ = errors_smt_detail env errs smt_detail in
         FStar_Errors.add_errors uu___
 let (add_errors :
+  FStar_TypeChecker_Env.env -> FStar_Errors.error Prims.list -> unit) =
+  fun env -> fun errs -> add_errors_smt_detail env errs (FStar_Util.Inl "")
+let (log_issue :
   FStar_TypeChecker_Env.env ->
-    (FStar_Errors.raw_error * Prims.string * FStar_Range.range) Prims.list ->
-      unit)
-  = fun env -> fun errs -> add_errors_smt_detail env errs (FStar_Util.Inl "")
+    FStar_Range.range -> (FStar_Errors.raw_error * Prims.string) -> unit)
+  =
+  fun env ->
+    fun r ->
+      fun uu___ ->
+        match uu___ with
+        | (e, m) ->
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = FStar_Errors.get_ctx () in (e, m, r, uu___3) in
+              [uu___2] in
+            add_errors env uu___1
 let (err_msg_type_strings :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->

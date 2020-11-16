@@ -827,7 +827,7 @@ let (simplify :
            let uu___2 = FStar_Syntax_Print.tag_of_term t in
            FStar_Util.print2 "WPE> is_applied %s -- %s\n" uu___1 uu___2)
         else ();
-        (let uu___1 = FStar_Syntax_Util.head_and_args' t in
+        (let uu___1 = FStar_Syntax_Util.head_and_args_full t in
          match uu___1 with
          | (hd, args) ->
              let uu___2 =

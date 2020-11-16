@@ -105,6 +105,8 @@ let (push_with_kind :
                 (uu___.FStar_TypeChecker_Env.tc_term);
               FStar_TypeChecker_Env.type_of =
                 (uu___.FStar_TypeChecker_Env.type_of);
+              FStar_TypeChecker_Env.type_of_well_typed =
+                (uu___.FStar_TypeChecker_Env.type_of_well_typed);
               FStar_TypeChecker_Env.universe_of =
                 (uu___.FStar_TypeChecker_Env.universe_of);
               FStar_TypeChecker_Env.check_type_of =
@@ -141,7 +143,9 @@ let (push_with_kind :
               FStar_TypeChecker_Env.erasable_types_tab =
                 (uu___.FStar_TypeChecker_Env.erasable_types_tab);
               FStar_TypeChecker_Env.enable_defer_to_tac =
-                (uu___.FStar_TypeChecker_Env.enable_defer_to_tac)
+                (uu___.FStar_TypeChecker_Env.enable_defer_to_tac);
+              FStar_TypeChecker_Env.unif_allow_ref_guards =
+                (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
             } in
           let res = FStar_TypeChecker_Tc.push_context env1 msg in
           FStar_Options.push ();
@@ -174,18 +178,18 @@ let (check_frag :
                         (m, env1, uu___3) in
                       FStar_Pervasives_Native.Some uu___2)) ()
         with
-        | FStar_Errors.Error (e, msg, r) when
+        | FStar_Errors.Error (e, msg, r, ctx) when
             let uu___1 = FStar_Options.trace_error () in
             Prims.op_Negation uu___1 ->
-            (FStar_TypeChecker_Err.add_errors env [(e, msg, r)];
+            (FStar_TypeChecker_Err.add_errors env [(e, msg, r, ctx)];
              FStar_Pervasives_Native.None)
-        | FStar_Errors.Err (e, msg) when
+        | FStar_Errors.Err (e, msg, ctx) when
             let uu___1 = FStar_Options.trace_error () in
             Prims.op_Negation uu___1 ->
             ((let uu___2 =
                 let uu___3 =
                   let uu___4 = FStar_TypeChecker_Env.get_range env in
-                  (e, msg, uu___4) in
+                  (e, msg, uu___4, ctx) in
                 [uu___3] in
               FStar_TypeChecker_Err.add_errors env uu___2);
              FStar_Pervasives_Native.None)

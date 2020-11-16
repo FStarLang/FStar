@@ -1292,7 +1292,7 @@ and sigelt =
   sigquals: qualifier Prims.list ;
   sigmeta: sig_metadata ;
   sigattrs: attribute Prims.list ;
-  sigopts: FStar_Options.optionstate FStar_Pervasives_Native.option }
+  sigopts: FStar_VConfig.vconfig FStar_Pervasives_Native.option }
 let (uu___is_Sig_inductive_typ : sigelt' -> Prims.bool) =
   fun projectee ->
     match projectee with | Sig_inductive_typ _0 -> true | uu___ -> false
@@ -1403,7 +1403,7 @@ let (__proj__Mksigelt__item__sigattrs : sigelt -> attribute Prims.list) =
     match projectee with
     | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopts;_} -> sigattrs
 let (__proj__Mksigelt__item__sigopts :
-  sigelt -> FStar_Options.optionstate FStar_Pervasives_Native.option) =
+  sigelt -> FStar_VConfig.vconfig FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
     | { sigel; sigrng; sigquals; sigmeta; sigattrs; sigopts;_} -> sigopts
@@ -1868,6 +1868,7 @@ let (t_real : term) = tconst FStar_Parser_Const.real_lid
 let (t_float : term) = tconst FStar_Parser_Const.float_lid
 let (t_char : term) = tabbrev FStar_Parser_Const.char_lid
 let (t_range : term) = tconst FStar_Parser_Const.range_lid
+let (t_vconfig : term) = tconst FStar_Parser_Const.vconfig_lid
 let (t_term : term) = tconst FStar_Parser_Const.term_lid
 let (t_term_view : term) = tabbrev FStar_Parser_Const.term_view_lid
 let (t_order : term) = tconst FStar_Parser_Const.order_lid

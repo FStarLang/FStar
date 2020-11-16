@@ -213,7 +213,7 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
         else if U.is_pure_or_ghost_comp c
         then Some (tot_or_gtot c), c, None
         else if U.comp_effect_name c |> Env.norm_eff_name env |> Env.is_layered_effect env
-        then raise_error (Errors.Fatal_IllTyped,  //hard error if layered effects are used without annotations
+        then raise_error (Errors.Error_LayeredMissingAnnot,  //hard error if layered effects are used without annotations
                BU.format2 "Missing annotation for a layered effect (%s) computation at %s"
                  (c |> U.comp_effect_name |> Ident.string_of_lid) (Range.string_of_range e.pos)) e.pos
         else if Options.trivial_pre_for_unannotated_effectful_fns ()
@@ -819,8 +819,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
       let e, c_e, g_e =
         let e, c, g = tc_tot_or_gtot_term env_no_ex e in
         if not <| TcComm.is_total_lcomp c then
-          Err.add_errors env [Errors.Error_UnexpectedGTotComputation, "Expected Tot, got a GTot computation", e.pos];
-        e, c, g in
+          Errors.log_issue e.pos (Errors.Error_UnexpectedGTotComputation, "Expected Tot, got a GTot computation");
+        e, c, g
+      in
 
       let (expected_repr_typ, g_repr), u_a, a, g_a =
         let a, u_a = U.type_u () in
@@ -1057,17 +1058,9 @@ and tc_synth head env args rng =
 
     t, TcComm.lcomp_of_comp <| mk_Total typ, Env.trivial_guard
 
-and tc_tactic a b env tau =
+and tc_tactic (a:typ) (b:typ) (env:Env.env) (tau:term) : term * lcomp * guard_t =
     let env = { env with failhard = true } in
     tc_check_tot_or_gtot_term env tau (t_tac_of a b) ""
-
-and tc_tactic_opt env topt : option<term> * guard_t =
-    match topt with
-    | None ->
-        None, Env.trivial_guard
-    | Some tactic ->
-        let tactic, _, g = tc_tactic t_unit t_unit env tactic
-        in Some tactic, g
 
 and check_instantiated_fvar (env:Env.env) (v:S.var) (q:option<S.fv_qual>) (e:term) (t0:typ)
   : term * lcomp * guard_t
@@ -3508,7 +3501,8 @@ let type_of_tot_term env e =
     let env = {env with top_level=false; letrecs=[]} in
     let t, c, g =
         try tc_tot_or_gtot_term env e
-        with Error(e, msg, _) -> raise_error (e, msg) (Env.get_range env) in
+        with Error(e, msg, _, ctx) -> raise (Error (e, msg, Env.get_range env, ctx))
+    in
     let c = N.ghost_to_pure_lcomp env c in
     if TcComm.is_total_lcomp c
     then t, c.res_typ, g

@@ -25,6 +25,7 @@ open FStar
 open FStar.Util
 open FStar.Getopt
 open FStar.BaseTypes
+open FStar.VConfig
 
 module FC = FStar.Common
 
@@ -175,6 +176,7 @@ let defaults =
       ("detail_hint_replay"           , Bool false);
       ("dump_module"                  , List []);
       ("eager_subtyping"              , Bool false);
+      ("error_contexts"               , Bool false);
       ("expose_interfaces"            , Bool false);
       ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
@@ -204,7 +206,6 @@ let defaults =
       ("log_types"                    , Bool false);
       ("max_fuel"                     , Int 8);
       ("max_ifuel"                    , Int 2);
-      ("min_fuel"                     , Int 1);
       ("MLish"                        , Bool false);
       ("no_default_includes"          , Bool false);
       ("no_extract"                   , List []);
@@ -235,6 +236,7 @@ let defaults =
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
       ("report_assumes"               , Unset);
+      ("retry"                        , Bool false);
       ("reuse_hint_for"               , Unset);
       ("silent"                       , Bool false);
       ("smt"                          , Unset);
@@ -270,7 +272,6 @@ let defaults =
       ("z3cliopt"                     , List []);
       ("use_two_phase_tc"             , Bool true);
       ("__no_positivity"              , Bool false);
-      ("__ml_no_eta_expand_coertions" , Bool false);
       ("__tactics_nbe"                , Bool false);
       ("warn_error"                   , List []);
       ("use_nbe"                      , Bool false);
@@ -300,6 +301,43 @@ let get_option s =
   | None -> failwith ("Impossible: option " ^s^ " not found")
   | Some s -> s
 
+let set_verification_options o =
+  (* This are all the options restored when processing a check_with
+     attribute. All others are unchanged. We do this for two reasons:
+     1) It's unsafe to just set everything (e.g. verify_module would
+        cause lax verification, so we need to filter some stuff out).
+     2) So we don't propagate meaningless debugging options, which
+        is probably not intended.
+   *)
+  let verifopts = [
+    "initial_fuel";
+    "max_fuel";
+    "initial_ifuel";
+    "max_ifuel";
+    "detail_errors";
+    "detail_hint_replay";
+    "no_smt";
+    "quake";
+    "retry";
+    "smtencoding.elim_box";
+    "smtencoding.nl_arith_repr";
+    "smtencoding.l_arith_repr";
+    "smtencoding.valid_intro";
+    "smtencoding.valid_elim";
+    "tcnorm";
+    "no_plugins";
+    "no_tactics";
+    "vcgen.optimize_bind_as_seq";
+    "z3cliopt";
+    "z3refresh";
+    "z3rlimit";
+    "z3rlimit_factor";
+    "z3seed";
+    "use_two_phase_tc";
+    "trivial_pre_for_unannotated_effectful_fns";
+  ] in
+  List.iter (fun k -> set_option k (Util.smap_try_find o k |> Util.must)) verifopts
+
 let lookup_opt s c =
   c (get_option s)
 
@@ -322,6 +360,7 @@ let get_detail_errors           ()      = lookup_opt "detail_errors"            
 let get_detail_hint_replay      ()      = lookup_opt "detail_hint_replay"       as_bool
 let get_dump_module             ()      = lookup_opt "dump_module"              (as_list as_string)
 let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
+let get_error_contexts          ()      = lookup_opt "error_contexts"           as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
@@ -347,7 +386,6 @@ let get_log_queries             ()      = lookup_opt "log_queries"              
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
 let get_max_ifuel               ()      = lookup_opt "max_ifuel"                as_int
-let get_min_fuel                ()      = lookup_opt "min_fuel"                 as_int
 let get_MLish                   ()      = lookup_opt "MLish"                    as_bool
 let get_no_default_includes     ()      = lookup_opt "no_default_includes"      as_bool
 let get_no_extract              ()      = lookup_opt "no_extract"               (as_list as_string)
@@ -399,7 +437,7 @@ let get_use_eq_at_higher_order  ()      = lookup_opt "use_eq_at_higher_order"   
 let get_use_hints               ()      = lookup_opt "use_hints"                as_bool
 let get_use_hint_hashes         ()      = lookup_opt "use_hint_hashes"          as_bool
 let get_use_native_tactics      ()      = lookup_opt "use_native_tactics"       (as_option as_string)
-let get_use_tactics             ()      = not (lookup_opt "no_tactics"          as_bool)
+let get_no_tactics              ()      = lookup_opt "no_tactics"               as_bool
 let get_using_facts_from        ()      = lookup_opt "using_facts_from"         (as_option (as_list as_string))
 let get_vcgen_optimize_bind_as_seq  ()  = lookup_opt "vcgen.optimize_bind_as_seq" (as_option as_string)
 let get_verify_module           ()      = lookup_opt "verify_module"            (as_list as_string)
@@ -413,7 +451,6 @@ let get_z3rlimit_factor         ()      = lookup_opt "z3rlimit_factor"          
 let get_z3seed                  ()      = lookup_opt "z3seed"                   as_int
 let get_use_two_phase_tc        ()      = lookup_opt "use_two_phase_tc"         as_bool
 let get_no_positivity           ()      = lookup_opt "__no_positivity"          as_bool
-let get_ml_no_eta_expand_coertions ()   = lookup_opt "__ml_no_eta_expand_coertions" as_bool
 let get_warn_error              ()      = lookup_opt "warn_error"               (as_list as_string)
 let get_use_nbe                 ()      = lookup_opt "use_nbe"                  as_bool
 let get_use_nbe_for_extraction  ()      = lookup_opt "use_nbe_for_extraction"                  as_bool
@@ -731,6 +768,11 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
         Const (Bool true),
         "Try to solve subtyping constraints at each binder (loses precision but may be slightly more efficient)");
 
+       (noshort,
+        "error_contexts",
+        BoolStr,
+        "Print context information for each error or warning raised (default false)");
+
        ( noshort,
          "extract",
          Accumulated (SimpleStr "One or more space-separated occurrences of '[+|-]( * | namespace | module)'"),
@@ -894,11 +936,6 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
         "max_ifuel",
         IntStr "non-negative integer",
         "Number of unrolling of inductive datatypes to try at most (default 2)");
-
-       ( noshort,
-        "min_fuel",
-        IntStr "non-negative integer",
-        "Minimum number of unrolling of recursive functions to try (default 1)");
 
        ( noshort,
         "MLish",
@@ -1257,11 +1294,6 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
         Const (Bool true),
         "Don't check positivity of inductive types");
 
-       ( noshort,
-        "__ml_no_eta_expand_coertions",
-        Const (Bool true),
-        "Do not eta-expand coertions in generated OCaml");
-
         ( noshort,
         "warn_error",
         Accumulated (SimpleStr ("")),
@@ -1340,6 +1372,7 @@ let settable = function
     | "detail_errors"
     | "detail_hint_replay"
     | "eager_subtyping"
+    | "error_contexts"
     | "hide_uvar_nums"
     | "hint_dir"
     | "hint_file"
@@ -1354,7 +1387,6 @@ let settable = function
     | "log_types"
     | "max_fuel"
     | "max_ifuel"
-    | "min_fuel"
     | "no_plugins"
     | "__no_positivity"
     | "normalize_pure_terms_for_extraction"
@@ -1619,15 +1651,18 @@ let cache_off                    () = get_cache_off                   ()
 let print_cache_version          () = get_print_cache_version         ()
 let cmi                          () = get_cmi                         ()
 type codegen_t = | OCaml | FSharp | Kremlin | Plugin
+
+let parse_codegen =
+  function
+  | "OCaml" -> Some OCaml
+  | "FSharp" -> Some FSharp
+  | "Kremlin" -> Some Kremlin
+  | "Plugin" -> Some Plugin
+  | _ -> None
+
 let codegen                      () =
-    Util.map_opt
-           (get_codegen())
-           (function
-            | "OCaml" -> OCaml
-            | "FSharp" -> FSharp
-            | "Kremlin" -> Kremlin
-            | "Plugin" -> Plugin
-            | _ -> failwith "Impossible")
+    Util.map_opt (get_codegen())
+                 (fun s -> parse_codegen s |> must)
 
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 let debug_any                    () = get_debug () <> []
@@ -1645,6 +1680,7 @@ let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
 let dump_module                  s  = get_dump_module() |> List.existsb (module_name_eq s)
 let eager_subtyping              () = get_eager_subtyping()
+let error_contexts               () = get_error_contexts              ()
 let expose_interfaces            () = get_expose_interfaces          ()
 let force                        () = get_force                       ()
 let fs_typ_app    (filename:string) = List.contains filename !light_off_files
@@ -1681,7 +1717,6 @@ let keep_query_captions          () = log_queries                     ()
 let log_types                    () = get_log_types                   ()
 let max_fuel                     () = get_max_fuel                    ()
 let max_ifuel                    () = get_max_ifuel                   ()
-let min_fuel                     () = get_min_fuel                    ()
 let ml_ish                       () = get_MLish                       ()
 let set_ml_ish                   () = set_option "MLish" (Bool true)
 let no_default_includes          () = get_no_default_includes         ()
@@ -1734,7 +1769,7 @@ let use_eq_at_higher_order       () = get_use_eq_at_higher_order      ()
 let use_hints                    () = get_use_hints                   ()
 let use_hint_hashes              () = get_use_hint_hashes             ()
 let use_native_tactics           () = get_use_native_tactics          ()
-let use_tactics                  () = get_use_tactics                 ()
+let use_tactics                  () = not (get_no_tactics             ())
 let using_facts_from             () =
     match get_using_facts_from () with
     | None -> [ [], true ] //if not set, then retain all facts
@@ -1756,7 +1791,6 @@ let z3_seed                      () = get_z3seed                      ()
 let use_two_phase_tc             () = get_use_two_phase_tc            ()
                                     && not (lax())
 let no_positivity                () = get_no_positivity               ()
-let ml_no_eta_expand_coertions   () = get_ml_no_eta_expand_coertions  ()
 let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
 let trivial_pre_for_unannotated_effectful_fns
@@ -1862,3 +1896,74 @@ let set_options s =
              else res
     with
     | File_argument s -> Getopt.Error (FStar.Util.format1 "File %s is not a valid option" s)
+
+
+let get_vconfig () =
+  let vcfg = {
+    initial_fuel                              = get_initial_fuel ();
+    max_fuel                                  = get_max_fuel ();
+    initial_ifuel                             = get_initial_ifuel ();
+    max_ifuel                                 = get_max_ifuel ();
+    detail_errors                             = get_detail_errors ();
+    detail_hint_replay                        = get_detail_hint_replay ();
+    no_smt                                    = get_no_smt ();
+    quake_lo                                  = get_quake_lo ();
+    quake_hi                                  = get_quake_hi ();
+    quake_keep                                = get_quake_keep ();
+    retry                                     = get_retry ();
+    smtencoding_elim_box                      = get_smtencoding_elim_box ();
+    smtencoding_nl_arith_repr                 = get_smtencoding_nl_arith_repr ();
+    smtencoding_l_arith_repr                  = get_smtencoding_l_arith_repr ();
+    smtencoding_valid_intro                   = get_smtencoding_valid_intro ();
+    smtencoding_valid_elim                    = get_smtencoding_valid_elim ();
+    tcnorm                                    = get_tcnorm ();
+    no_plugins                                = get_no_plugins ();
+    no_tactics                                = get_no_tactics ();
+    vcgen_optimize_bind_as_seq                = get_vcgen_optimize_bind_as_seq ();
+    z3cliopt                                  = get_z3cliopt ();
+    z3refresh                                 = get_z3refresh ();
+    z3rlimit                                  = get_z3rlimit ();
+    z3rlimit_factor                           = get_z3rlimit_factor ();
+    z3seed                                    = get_z3seed ();
+    use_two_phase_tc                          = get_use_two_phase_tc ();
+    trivial_pre_for_unannotated_effectful_fns = get_trivial_pre_for_unannotated_effectful_fns ();
+    reuse_hint_for                            = get_reuse_hint_for ();
+  }
+  in
+  vcfg
+
+let set_vconfig (vcfg:vconfig) : unit =
+  let option_as (tag : 'a -> option_val) (o : option<'a>) : option_val =
+    match o with
+    | None -> Unset
+    | Some s -> tag s
+  in
+  set_option "initial_fuel"                              (Int vcfg.initial_fuel);
+  set_option "max_fuel"                                  (Int vcfg.max_fuel);
+  set_option "initial_ifuel"                             (Int vcfg.initial_ifuel);
+  set_option "max_ifuel"                                 (Int vcfg.max_ifuel);
+  set_option "detail_errors"                             (Bool vcfg.detail_errors);
+  set_option "detail_hint_replay"                        (Bool vcfg.detail_hint_replay);
+  set_option "no_smt"                                    (Bool vcfg.no_smt);
+  set_option "quake_lo"                                  (Int vcfg.quake_lo);
+  set_option "quake_hi"                                  (Int vcfg.quake_hi);
+  set_option "quake_keep"                                (Bool vcfg.quake_keep);
+  set_option "retry"                                     (Bool vcfg.retry);
+  set_option "smtencoding.elim_box"                      (Bool vcfg.smtencoding_elim_box);
+  set_option "smtencoding.nl_arith_repr"                 (String vcfg.smtencoding_nl_arith_repr);
+  set_option "smtencoding.l_arith_repr"                  (String vcfg.smtencoding_l_arith_repr);
+  set_option "smtencoding.valid_intro"                   (Bool vcfg.smtencoding_valid_intro);
+  set_option "smtencoding.valid_elim"                    (Bool vcfg.smtencoding_valid_elim);
+  set_option "tcnorm"                                    (Bool vcfg.tcnorm);
+  set_option "no_plugins"                                (Bool vcfg.no_plugins);
+  set_option "no_tactics"                                (Bool vcfg.no_tactics);
+  set_option "vcgen.optimize_bind_as_seq"                (option_as String vcfg.vcgen_optimize_bind_as_seq);
+  set_option "z3cliopt"                                  (List (List.map String vcfg.z3cliopt));
+  set_option "z3refresh"                                 (Bool vcfg.z3refresh);
+  set_option "z3rlimit"                                  (Int vcfg.z3rlimit);
+  set_option "z3rlimit_factor"                           (Int vcfg.z3rlimit_factor);
+  set_option "z3seed"                                    (Int vcfg.z3seed);
+  set_option "use_two_phase_tc"                          (Bool vcfg.use_two_phase_tc);
+  set_option "trivial_pre_for_unannotated_effectful_fns" (Bool vcfg.trivial_pre_for_unannotated_effectful_fns);
+  set_option "reuse_hint_for"                            (option_as String vcfg.reuse_hint_for);
+  ()

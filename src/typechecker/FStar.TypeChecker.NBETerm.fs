@@ -41,6 +41,7 @@ module Z = FStar.BigInt
 module C = FStar.Const
 module Range = FStar.Range
 module SE = FStar.Syntax.Embeddings
+open FStar.VConfig
 
 type var = bv
 type sort = int
@@ -593,6 +594,12 @@ let e_range : embedding<Range.range> =
     in
     mk_emb' em un (lid_as_typ PC.range_lid [] []) (SE.emb_typ_of SE.e_range)
 
+// vconfig, NYI
+let e_vconfig : embedding<vconfig> =
+    let em cb r = failwith "e_vconfig NBE" in
+    let un cb t = failwith "e_vconfig NBE" in
+    mk_emb' em un (lid_as_typ PC.vconfig_lid [] []) (SE.emb_typ_of SE.e_vconfig)
+
 // Emdedding lists
 let e_list (ea:embedding<'a>) =
     let etyp =
@@ -950,6 +957,30 @@ let mk_range args : option<t> =
     | _ -> None
     end
 | _ -> None
+
+let and_op (args:args) : option<t> =
+  match args with
+  | [a1; a2] -> begin
+    match arg_as_bool a1 with
+    | Some false ->
+      Some (embed e_bool bogus_cbs false)
+    | Some true ->
+      Some (fst a2)
+    | _ -> None
+    end
+  | _ -> failwith "Unexpected number of arguments"
+
+let or_op (args:args) : option<t> =
+  match args with
+  | [a1; a2] -> begin
+    match arg_as_bool a1 with
+    | Some true ->
+      Some (embed e_bool bogus_cbs true)
+    | Some false ->
+      Some (fst a2)
+    | _ -> None
+    end
+  | _ -> failwith "Unexpected number of arguments"
 
 let division_op (args:args) : option<t> =
   match args with

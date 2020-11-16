@@ -29,6 +29,7 @@ let lemma_to_squash_gtot #a #p f x =
 val get_squashed (#b a: Type) : Pure a (requires (a /\ a == squash b)) (ensures (fun _ -> True))
 
 #push-options "--smtencoding.valid_intro true --smtencoding.valid_elim true"
+[@@ noextract_to "FSharp"]
 let get_squashed #b a =
   let p = get_proof a in
   join_squash #b p

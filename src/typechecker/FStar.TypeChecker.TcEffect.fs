@@ -205,6 +205,7 @@ let validate_layered_effect_binders env (bs:binders) (repr_terms:list<term>) (ch
  * Typechecking of layered effects
  *)
 let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) (attrs : list<S.attribute>) =
+Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
   if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
     BU.print1 "Typechecking layered effect: \n\t%s\n" (Print.eff_decl_to_string false ed);
 
@@ -623,7 +624,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) (attrs 
   (*
    * Checking the soundness of the if_then_else combinator
    *
-   * In all combinators, other than if_then_else, the soundess is ensured
+   * In all combinators, other than if_then_else, the soundness is ensured
    *   by extracting the application of those combinators to their definitions
    * For if_then_else, the combinator does not have an extraction equivalent
    *   It is only used in VC generation
@@ -648,7 +649,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) (attrs 
    * 
    * Similarly for the g case
    *)
-  let _if_then_else_is_sound =
+  let _if_then_else_is_sound = Errors.with_ctx "While checking if-then-else soundness" (fun () ->
     let r = (ed |> U.get_layered_if_then_else_combinator |> must |> snd).pos in
 
     (*
@@ -739,7 +740,9 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) (attrs 
       let env = Env.push_bv env (S.new_bv None not_p) in
       let _, _, g_g = tc_tot_or_gtot_term env tm_subcomp_ascribed_g in
       Rel.force_trivial_guard env g_g in
-    () in
+    ()
+  )
+  in
 
 
   (*
@@ -884,8 +887,10 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) (attrs 
     signature     = (let us, t, _ = signature in (us, t));
     combinators   = combinators;
     actions       = List.map (tc_action env0) ed.actions }
+)
 
 let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) (_attrs : list<S.attribute>) : S.eff_decl =
+Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
   if Env.debug env0 <| Options.Other "ED" then
     BU.print1 "Typechecking eff_decl: \n\t%s\n" (Print.eff_decl_to_string false ed);
 
@@ -1302,6 +1307,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) (_at
     BU.print1 "Typechecked effect declaration:\n\t%s\n" (Print.eff_decl_to_string false ed);
 
   ed
+)
 
 let tc_eff_decl env ed quals attrs =
   (if ed |> U.is_layered then tc_layered_eff_decl else tc_non_layered_eff_decl) env ed quals attrs
