@@ -408,7 +408,7 @@ let assoc_comp (w0, r0, fs0) (w1, r1, fs1) (w2, r2, fs2) =
   }
 
 
-let modifies (w:label) (s0 s1:store) = (forall l. ~(Set.mem l w) ==> sel s0 l == sel s1 l)
+let modifies (w:label) (s0 s1:store) = (forall l.{:pattern (sel s1 l)} ~(Set.mem l w) ==> sel s0 l == sel s1 l)
 let frame (a:Type) (w r:label) (fs:flows) #p #q (f:ist a w r fs p q)
   : ist a w r fs p (fun s0 x s1 -> q s0 x s1 /\ modifies w s0 s1)
   = let aux (s0:store{p s0}) (l:loc{~(Set.mem l w)})
@@ -458,11 +458,26 @@ let bind (a b:Type)
          (x:ist a w0 r0 fs0 p q)
          (y: (x:a -> ist b w1 r1 fs1 (r x) (s x)))
   : ist b (union w0 w1) (union r0 r1) (fs0 @ add_source r0 ((bot, w1)::fs1))
-          (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 ==> r x s1))
-          (fun s0 r s2 -> (exists x s1. q s0 x s1 /\ s x s1 r s2) /\ modifies (union w0 w1) s0 s2)
-  = frame _ _ _ _ (pre_bind _ _ _ _ _ _ _ _ x y)
+          (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 /\ modifies w0 s0 s1 ==> r x s1))
+          (fun s0 r s2 -> (exists x s1. (q s0 x s1 /\ modifies w0 s0 s1) /\ (s x s1 r s2 /\ modifies w1 s1 s2)))
+  = (pre_bind _ _ _ _ _ _ _ _ (frame _ _ _ _ x) (fun a -> frame _ _ _ _ (y a)))
   
 
+let refine_flow #a #w #r #f #fs #p #q
+                (c: ist a w r (f::fs) p q)
+  : Pure (ist a w r fs p q)
+         (requires 
+           (forall from to v. 
+             has_flow_1 from to f ==>
+             (forall s0 x x' s1 s1'. 
+               p s0 /\
+               p (havoc s0 from v) /\
+               q s0 x s1 /\
+               q (havoc s0 from v) x' s1' ==>
+               sel s1 to == sel s1' to)))
+         (ensures fun _ -> True)
+  = c
+  
 let consequence (a:Type) (w0 r0:label) p q p' q' (fs0:flows) (f:ist a w0 r0 fs0 p q)
   : Pure (comp a p' q')
     (requires (forall s. p' s ==> p s) /\
@@ -471,15 +486,21 @@ let consequence (a:Type) (w0 r0:label) p q p' q' (fs0:flows) (f:ist a w0 r0 fs0 
   = let g : comp a p' q' = fun s -> f s in
     g
 
+let norm_spec (p:Type) 
+  : Lemma (requires (norm [delta;iota;zeta] p))
+          (ensures p)
+  = ()
 let subcomp (a:Type) (w0 r0 w1 r1:label) #p #q #p' #q' (fs0 fs1:flows) (f:ist a w0 r0 fs0 p q)
   : Pure (ist a w1 r1 fs1 p' q')
     (requires label_inclusion w0 w1 /\
               label_inclusion r0 r1 /\
-              fs0 `flows_included_in` fs1 /\
+              (norm [delta;iota;zeta] (fs0 `flows_included_in` fs1)) /\
               (forall s. p' s ==> p s) /\
               (forall s0 x s1. p' s0 /\ q s0 x s1 ==> q' s0 x s1))
     (fun _ -> True)
   = let forig = f in
+    norm_spec (fs0 `flows_included_in` fs1);
+    assert ((fs0 `flows_included_in` fs1));
     let f : comp a p' q' = consequence a w0 r0 p q p' q' fs0 f in
     let f_reads_ok (l:loc) (s0:store{p' s0})
       : Lemma (requires (~(Set.mem l r1)))
@@ -588,44 +609,54 @@ let test3_1 (l:lref) (h:href) (x:int)
           (single l)
           []
     (requires fun _ -> True)
-    (ensures fun s0 r s1 -> True) //sel s1 h == 0)
+    (ensures fun s0 r s1 -> sel s1 h == 0 /\ r == sel s1 l)
   = write h 0;
     read l
 
 effect ISTT (a:Type) (w r:label) (fs:flows) = IST a w r fs (fun _ -> True) (fun _ _ _ -> True)
 let test4 (l:lref) (h:href) (x:int)
-  : ISTT int (single l)
+  : IST int (single l)
           (single h)
           [single h, bot]
+    (requires fun _ -> True)
+    (ensures fun s0 r s1 -> sel s1 l == x /\ r == sel s1 h)
   = write l x;
     read h
 
 let test5 (l:lref) (h:href) (x:int)
-  : ISTT int (single l)
-          (single h)
-          []
+  : IST int (single l)
+           (single h)
+           []
+    (requires fun _ -> True)
+    (ensures fun s0 r s1 -> sel s1 l == x /\ r == sel s1 h)
   = write l x;
     read h
 
 let test6 (l:lref) (h:href)
-  : ISTT unit high low [low, high]
+  : IST unit high low [low, high]
+    (requires fun _ -> True)
+    (ensures fun s0 r s1 -> sel s1 h == sel s0 l)
   = let x = read l in
     write h x
 
 //This leaks the contents of the href
 let test7 (l:lref) (h:href)
-  : ISTT unit (single l)
+  : IST unit (single l)
              (single h)
              [high, low]
+    (requires fun _ -> True)
+    (ensures fun s0 r s1 -> sel s1 l == sel s0 h)
   = let x = read h in
     write l x
 
 //But, label-based IFC is inherently imprecise
 //This one still reports a leakage, even though it doesn't really leak h
 let test8 (l:lref) (h:href)
-  : ISTT unit (single l)
+  : IST unit (single l)
              (union (single h) (single l))
              [(single l `union` single h, single l)]
+    (requires fun _ -> True)
+    (ensures fun s0 _ s1 -> sel s1 l == sel s0 l)
   = let x0 = read h in
     let x = read l in
     write l x
@@ -633,9 +664,11 @@ let test8 (l:lref) (h:href)
 //But, label-based IFC is inherently imprecise
 //This one still reports a leakage, even though it doesn't really leak h
 let test9 (l:lref) (h:href)
-  : ISTT unit (single l)
+  : IST unit (single l)
              (union (single h) (single l))
              [(single l `union` single h, single l)]
+    (requires fun _ -> True)
+    (ensures fun s0 _ s1 -> sel s1 l == sel s0 l)
   = let x= (let x0 = read h in
             read l)
     in
@@ -702,5 +735,8 @@ let test14 ()
   = (c0 (); c1()); c2()
 
 let test15 (l:lref)
-  : ISTT unit (single l) (single l) []
+  : IST unit (single l) (single l) []
+    (requires fun _ -> True)
+    (ensures fun s0 _ s1 -> sel s0 l == sel s1 l)
   = write l (read l)
+
