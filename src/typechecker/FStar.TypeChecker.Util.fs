@@ -1613,8 +1613,11 @@ let bind_cases env0 (res_t:typ)
                 strengthen_comp env None comp check bind_cases_flags in
               c, Env.conj_guard g_comp g in
 
+            //AR: 11/18: we don't need to close this guard with the scrutinee bv
+            //           since the tc_match code does a bind with the scrutinee
+            //           expression, which will take care of this bv
             //close g_comp with the scrutinee bv
-            let g_comp = Env.close_guard env0 [scrutinee |> S.mk_binder] g_comp in
+            //let g_comp = Env.close_guard env0 [scrutinee |> S.mk_binder] g_comp in
 
             match lcases with
             | []
