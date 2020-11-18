@@ -1167,30 +1167,51 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     in
     let success d r t1 t2 = (r, (if d>0 then Some(t1, t2) else None)) in
     let fail d r t1 t2 = (r, (if d>0 then Some(t1, t2) else None)) in
-    let rec aux retry n_delta t1 t2 =
+
+    (*
+     * AR: d1_prev and d2_prev make sure that we are making progress towards
+     *     delta level 0 when unfolding symbols
+     *
+     *     These are delta depths of t1 and t2 in the previous call for aux
+     *       starting from None in the first call
+     *)
+    let rec aux inline_delta_equational n_delta t1 t2 d1_prev d2_prev =
         let r = head_matches env t1 t2 in
         if Env.debug env <| Options.Other "RelDelta" then
             BU.print3 "head_matches (%s, %s) = %s\n"
                 (Print.term_to_string t1)
                 (Print.term_to_string t2)
                 (string_of_match_result r);
+
+        let d_decreases d1 d2 =
+          let aux d_prev d =
+            match d_prev with
+            | None -> true  //None -> Some, good
+            | Some d_prev -> Common.delta_depth_greater_than d_prev d in
+
+          aux d1_prev d1 || aux d2_prev d2 in
+
         let reduce_one_and_try_again (d1:delta_depth) (d2:delta_depth) =
-          let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
-          let t1, t2 = if d1_greater_than_d2
-                       then let t1' = normalize_refinement [Env.UnfoldUntil d2; Env.Weak; Env.HNF] env t1 in
-                            t1', t2
-                       else let t2' = normalize_refinement [Env.UnfoldUntil d1; Env.Weak; Env.HNF] env t2 in
-                            t1, t2' in
-          aux retry (n_delta + 1) t1 t2
+          if d_decreases d1 d2 then
+            let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
+            let t1, t2 = if d1_greater_than_d2
+                         then let t1' = normalize_refinement [Env.UnfoldUntil d2; Env.Weak; Env.HNF] env t1 in
+                              t1', t2
+                         else let t2' = normalize_refinement [Env.UnfoldUntil d1; Env.Weak; Env.HNF] env t2 in
+                              t1, t2' in
+            aux inline_delta_equational (n_delta + 1)  t1 t2 (Some d1) (Some d2)
+          else fail n_delta r t1 t2
         in
 
-        let reduce_both_and_try_again (d:delta_depth) (r:match_result) =
-          match Common.decr_delta_depth d with
-          | None -> fail n_delta r t1 t2
-          | Some d ->
-            let t1 = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t1 in
-            let t2 = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t2 in
-            aux retry (n_delta + 1) t1 t2
+        let reduce_both_and_try_again (d0:delta_depth) (r:match_result) =
+          if d_decreases d0 d0 then
+            match Common.decr_delta_depth d0 with
+            | None -> fail n_delta r t1 t2
+            | Some d ->
+              let t1 = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t1 in
+              let t2 = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t2 in
+              aux inline_delta_equational (n_delta + 1) t1 t2 (Some d0) (Some d0)
+          else fail n_delta r t1 t2
         in
 
         match r with
@@ -1199,12 +1220,12 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
 
             | MisMatch(Some (Delta_equational_at_level _), _)
             | MisMatch(_, Some (Delta_equational_at_level _)) ->
-              if not retry then fail n_delta r t1 t2
+              if not inline_delta_equational then fail n_delta r t1 t2
               else begin match maybe_inline t1, maybe_inline t2 with
                    | None, None       -> fail n_delta r t1 t2
-                   | Some t1, None    -> aux false (n_delta + 1) t1 t2
-                   | None, Some t2    -> aux false (n_delta + 1) t1 t2
-                   | Some t1, Some t2 -> aux false (n_delta + 1) t1 t2
+                   | Some t1, None    -> aux false (n_delta + 1) t1 t2 d1_prev d2_prev
+                   | None, Some t2    -> aux false (n_delta + 1) t1 t2 d1_prev d2_prev
+                   | Some t1, Some t2 -> aux false (n_delta + 1) t1 t2 d1_prev d2_prev
                    end
 
             | MisMatch(Some d1, Some d2) when (d1=d2) -> //incompatible
@@ -1218,7 +1239,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
 
             | _ ->
               success n_delta r t1 t2 in
-    let r = aux true 0 t1 t2 in
+    let r = aux true 0 t1 t2 None None in
     if Env.debug env <| Options.Other "RelDelta" then
         BU.print4 "head_matches_delta (%s, %s) = %s (%s)\n"
             (Print.term_to_string t1)
