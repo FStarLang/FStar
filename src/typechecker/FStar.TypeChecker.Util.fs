@@ -1880,6 +1880,9 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
              else Rel.get_subtyping_predicate env lc.res_typ t, true in
   match gopt with
     | None, _ ->
+        (*
+         * AR: 11/18: should this always fail hard?
+         *)
         if env.failhard
         then raise_error (Err.basic_type_error env (Some e) t lc.res_typ) e.pos
         else (

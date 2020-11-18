@@ -1321,7 +1321,14 @@ and tc_comp env c : comp                                      (* checked version
          | [] -> head
          | us -> S.mk (Tm_uinst(head, us)) c0.pos in
       let tc = mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) c.result_typ.pos in
-      let tc, _, f = tc_check_tot_or_gtot_term env tc S.teff "" in
+      let tc, _, f =
+        (*
+         * AR: 11/18: TcUtil.weaken_result_typ by default logs a typing error and continues
+         *            Failing hard when typechecking computation types, since errors
+         *              like missing effect args can result in broken invariants in
+         *              the unifier or the normalizer
+         *)
+        tc_check_tot_or_gtot_term ({ env with failhard = true }) tc S.teff "" in
       let head, args = U.head_and_args tc in
       let comp_univs = match (SS.compress head).n with
         | Tm_uinst(_, us) -> us
