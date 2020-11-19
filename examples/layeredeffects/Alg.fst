@@ -35,7 +35,7 @@ let op_out : op -> Type =
  | Read -> state
  | Write -> unit
  | Raise -> empty
- | Other i -> other_inp i
+ | Other i -> other_out i
 
 (* Free monad over `op` *)
 noeq
@@ -311,8 +311,7 @@ let handle_with (#a #b:_) (#labs0 #labs1 : ops)
            (v : a -> Alg b labs1)
            (h : handler labs0 b labs1)
            (* Looking at v and h together, they basically represent
-            * a handler type [ a<labs0> ->> b<labs1> ] from other
-            * languages. *)
+            * a handler type [ a<labs0> ->> b<labs1> ] *)
    : Alg b labs1
   = Alg?.reflect (handle_tree (reify (f ()))
                               (fun x -> reify (v x))
