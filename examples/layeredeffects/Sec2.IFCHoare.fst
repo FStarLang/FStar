@@ -463,17 +463,20 @@ let bind (a b:Type)
   = (pre_bind _ _ _ _ _ _ _ _ (frame _ _ _ _ x) (fun a -> frame _ _ _ _ (y a)))
   
 
-let refine_flow #a #w #r #f #fs #p #q
+let refine_flow_ist #a #w #r #f #fs #p #q
                 (c: ist a w r (f::fs) p q)
   : Pure (ist a w r fs p q)
          (requires 
            (forall from to v. 
-             has_flow_1 from to f ==>
+             has_flow_1 from to f /\
+             from <> to ==>
              (forall s0 x x' s1 s1'. 
                p s0 /\
                p (havoc s0 from v) /\
                q s0 x s1 /\
-               q (havoc s0 from v) x' s1' ==>
+               modifies w s0 s1 /\
+               q (havoc s0 from v) x' s1' /\
+               modifies w (havoc s0 from v) s1' ==>
                sel s1 to == sel s1' to)))
          (ensures fun _ -> True)
   = c
@@ -532,6 +535,9 @@ let subcomp (a:Type) (w0 r0 w1 r1:label) #p #q #p' #q' (fs0 fs1:flows) (f:ist a 
     assert (respects_flows f fs1);
     f
 
+[@@allow_informative_binders]
+total
+reifiable
 reflectable
 layered_effect {
   IST : a:Type ->
@@ -564,6 +570,25 @@ let lift_pure (a:Type) (x:u -> Tot a)
   = return a (x())
 
 sub_effect PURE ~> IST = lift_pure
+
+
+let refine_flow #a #w #r #f #fs #p #q
+                ($c: unit -> IST a w r (f::fs) p q)
+  : Pure (unit -> IST a w r fs p q)
+         (requires 
+           (forall from to v. 
+             has_flow_1 from to f /\
+             from <> to ==>
+             (forall s0 x x' s1 s1'. 
+               p s0 /\
+               p (havoc s0 from v) /\
+               q s0 x s1 /\
+               modifies w s0 s1 /\
+               q (havoc s0 from v) x' s1' /\
+               modifies w (havoc s0 from v) s1' ==>
+               sel s1 to == sel s1' to)))
+         (ensures fun _ -> True)
+  =  (fun () -> IST?.reflect (refine_flow_ist (reify (c()))))
 
 let ref (l:label) = r:loc {r `Set.mem` l}
 assume val high : label
@@ -650,16 +675,26 @@ let test7 (l:lref) (h:href)
     write l x
 
 //But, label-based IFC is inherently imprecise
-//This one still reports a leakage, even though it doesn't really leak h
+//This one reports a leakage, even though it doesn't really leak h
 let test8 (l:lref) (h:href)
   : IST unit (single l)
              (union (single h) (single l))
-             [(single l `union` single h, single l)]
+             [(single h, single l)]
     (requires fun _ -> True)
-    (ensures fun s0 _ s1 -> sel s1 l == sel s0 l)
+    (ensures fun s0 _ s1 -> sel s1 l == sel s0 l + 1)
   = let x0 = read h in
     let x = read l in
-    write l x
+    write l (x + 1)
+
+//But, using the Hoare refinements, we can recover precision and remove
+//the spurious flow from h to l
+let refine_test8 (l:lref) (h:href)
+  : unit -> IST unit (single l)
+             (union (single h) (single l))
+             []
+             (requires fun _ -> True)
+             (ensures fun s0 _ s1 -> sel s1 l == sel s0 l + 1)
+  = refine_flow (fun () -> test8 l h)
 
 //But, label-based IFC is inherently imprecise
 //This one still reports a leakage, even though it doesn't really leak h
@@ -673,6 +708,15 @@ let test9 (l:lref) (h:href)
             read l)
     in
     write l x
+
+let refine_test9 (l:lref) (h:href)
+  : (unit -> IST unit (single l)
+                     (union (single h) (single l))
+                     []
+                     (requires fun _ -> True)
+                     (ensures fun s0 _ s1 -> sel s1 l == sel s0 l))
+  = refine_flow (fun () -> test9 l h)
+
 
 assume
 val cw0 : label
