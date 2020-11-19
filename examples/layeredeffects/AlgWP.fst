@@ -374,17 +374,6 @@ let null_ro #a : st_wp a = quotient_ro null
 let null_ro1 #a : st_wp a = fun s0 p -> forall x. p (x, s0)
 let null_equiv_sanity a = assert (null_ro #a `equiv` null_ro1 #a)
 
-//let null_ro_strongest_ro #a (w : st_wp a)
-//  : Lemma (requires (is_ro w))
-//          (ensures (null_ro `stronger` w))
-//  = assert (quotient_ro w `stronger` w);
-//    assert (quotient_ro w `stronger` quotient_ro w);
-//    admit ()
-//
-//
-//    assume (is_mono w);
-//    ()
-
 let bind_null_ro #a #b (w : st_wp a) (f : a -> st_wp b)
   : Lemma (requires (null_ro `stronger` w) /\ (forall x. null_ro `stronger` f x))
           (ensures null_ro `stronger` (bind_wp w f))
