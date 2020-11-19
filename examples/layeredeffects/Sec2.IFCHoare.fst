@@ -110,7 +110,7 @@ let no_leakage_k #a #p #q (f:comp a p q) (from to:loc) (k:int) =
 let no_leakage #a #p #q (f:comp a p q) (from to:loc) = forall k. no_leakage_k f from to k
 let respects_flows #a #p #q (f:comp a p q) (fs:flows) =
     (forall from to. {:pattern (no_leakage f from to)} ~(has_flow from to fs) /\ from<>to ==> no_leakage f from to)
-let ist a (writes:label) (reads:label) (fs:flows) (p:pre) (q:post a) =
+let ist a (writes:label) (reads:label) (fs:flows) (p:pre) (q:store -> a -> store -> Type0) =
   f:comp a p q {
     reads_ok f reads /\
     writes_ok f writes  /\
@@ -557,7 +557,7 @@ layered_effect {
         reads:label ->
         flows:flows ->
         p:pre ->
-        q:post a ->
+        q:(store -> a -> store -> Type0) ->
         Effect
   with
     repr = ist;
@@ -796,3 +796,19 @@ let test15 (l:lref)
     (ensures fun s0 _ s1 -> sel s0 l == sel s1 l)
   = write l (read l)
 
+let ist_exn a w r fs (p:pre) (q:post a) =
+    unit -> IST (option a) w r fs p 
+               (fun s0 x s1 ->
+                 match x with
+                 | None -> True
+                 | Some x -> q s0 x s1)
+
+#push-options "--error_contexts true --print_implicits --print_bound_var_types --debug Sec2.IFCHoare --debug_level ExplainRel"
+// let ist_exn_return (a:Type) (x:a) (_:unit)
+//   : IST (option a) bot bot [] 
+//         (fun _ -> True)
+//         (fun s0 r s1 -> match r with | None -> True | Some r -> s0 == s1 /\ r == x)
+//   = Some x
+
+// let ist_return 
+// let ifc_exn 
