@@ -33,10 +33,45 @@ let does_not_read_loc_v #a #p #q (f:comp a p q)
      sel s1' l == sel s0' l)))
 
 let does_not_read_loc #a #p #q (f:comp a p q) (reads:label) (l:loc) (s0:store{p s0}) =
-  forall v.
-    does_not_read_loc_v f reads l s0 v
+  forall v. does_not_read_loc_v f reads l s0 v
+let agree_on (reads:label) (s0 s1: store) = forall l. Set.mem l reads ==> sel s0 l == sel s1 l
+let related_runs #a #p #q (f:comp a p q) (s0:store{p s0}) (s0':store{p s0'}) =
+      (let x1, s1 = f s0 in
+       let x1', s1' = f s0' in
+       x1 == x1' /\
+       (forall (l:loc). (sel s1 l == sel s1' l \/ (sel s1 l == sel s0 l /\ sel s1' l == sel s0' l))))
 let reads_ok #a #p #q (f:comp a p q) (reads:label) =
-    (forall (l:loc) (s:store{p s}). ~(Set.mem l reads) ==> does_not_read_loc f reads l s)
+    forall (s0:store{p s0}) (s0':store{p s0'}). agree_on reads s0 s0' ==> related_runs f s0 s0'
+let reads_ok_preserves_equal_locs #a #p #q (f:comp a p q) (reads:label) (s0:store{p s0}) (s0':store{p s0'})
+  : Lemma (requires agree_on reads s0 s0' /\ reads_ok f reads)
+          (ensures (let x1, s1 = f s0 in
+                    let x1', s1' = f s0' in
+                    agree_on reads s1 s1'))
+  = ()      
+
+let weaken_reads_ok #a #p #q (f:comp a p q) (reads reads1:label)
+  : Lemma (requires reads_ok f reads /\
+                    label_inclusion reads reads1)
+          (ensures reads_ok f reads1)
+  = let aux s0 s0'
+    : Lemma (requires p s0 /\ p s0' /\ agree_on reads1 s0 s0')
+            (ensures agree_on reads s0 s0')
+            [SMTPat(agree_on reads1 s0 s0')]
+    = ()
+    in
+    ()
+let reads_ok_does_not_read_loc #a #p #q (f:comp a p q) (reads:label) (l:loc{~(Set.mem l reads)}) (s0:store{p s0})
+  : Lemma 
+    (requires reads_ok f reads)
+    (ensures does_not_read_loc f reads l s0)
+  = let aux (v:int)
+      : Lemma (requires p (havoc s0 l v))
+              (ensures does_not_read_loc_v f reads l s0 v)
+              [SMTPat ()]
+      = assert (agree_on reads s0 (havoc s0 l v));
+        ()
+    in
+    ()
 let writes_ok #a #p #q (f:comp a p q) (writes:Set.set loc) =
     (forall (l:loc). ~(Set.mem l writes) ==>
                (forall (s0:store{p s0}).
@@ -100,6 +135,7 @@ let bind_comp (#a #b:Type)
            (fun s0 r s2 -> (exists x s1. q s0 x s1 /\ s x s1 r s2)) 
   = fun s0 -> let v, s1 = x s0 in y v s1
 
+
 let bind_comp_reads_ok (#a #b:Type)
                        (#w0 #r0 #w1 #r1:label)
                        (#fs0 #fs1:flows)
@@ -110,32 +146,23 @@ let bind_comp_reads_ok (#a #b:Type)
   = let f = bind_comp x y in
     let p_f = (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 ==> r x s1)) in
     let reads = union r0 r1 in
-    let f_reads_ok (l:loc) (s0:store{p_f s0})
-      : Lemma (requires (~(Set.mem l reads)))
-              (ensures (does_not_read_loc f reads l s0))
-              [SMTPat (does_not_read_loc f reads l s0)]
-      = let aux (k:_)
-          : Lemma (requires (p_f (havoc s0 l k)))
-                  (ensures (does_not_read_loc_v f reads l s0 k))
-                  [SMTPat (does_not_read_loc_v f reads l s0 k)]
-          = let s0' = (havoc s0 l k) in
-            let v, s1 = x s0 in
-            let v', s1' = x s0' in
-            assert (does_not_read_loc x r0 l s0);
-            assert (does_not_read_loc_v x r0 l s0 k);
-            assert (v == v');
-            assert (does_not_read_loc (y v) r1 l s1);
-            let u, s2 = y v s1 in
-            let u', s2' = y v s1' in
-            assert (forall l'. l' <> l ==> sel s1 l' == sel s1' l');
-            if sel s1 l = sel s1' l
-            then (assert (forall l. sel s1 l == sel s1' l);
-                  assert (Map.equal s1 s1'))
-            else (assert (sel s1 l == sel s0 l /\
-                         sel (havoc s0 l k) l == sel s1' l);
-                  assert (Map.equal s1' (havoc s1 l k)))
-       in
-       ()
+    let f_reads_ok (s0:store{p_f s0}) (s0':store{p_f s0'})
+      : Lemma 
+        (requires agree_on reads s0 s0')
+        (ensures  related_runs f s0 s0')
+        [SMTPat()]
+      = let y1, s1 = x s0 in
+        let y1', s1' = x s0' in      
+        weaken_reads_ok x r0 reads;
+        assert (related_runs x s0 s0');
+        weaken_reads_ok (y y1) r1 reads;
+        reads_ok_preserves_equal_locs x reads s0 s0';
+        assert (forall l. l `Set.mem` r1 ==> sel s1 l == sel s1' l);        
+        assert (agree_on r1 s1 s1');
+        assert (y1 == y1');
+        let res, s2 = y y1 s1 in
+        let res', s2' = y y1 s1' in
+        assert (res == res')
     in
     ()
 
@@ -262,6 +289,7 @@ let bind_comp_no_leakage (#a #b:Type)
       then begin
         assert (~(Set.mem from r0));
         assert (reads_ok x r0);
+        reads_ok_does_not_read_loc x r0 from s0;
         assert (does_not_read_loc x r0 from s0);
         assert (does_not_read_loc_v x r0 from s0 k);
         assert (v0 == v0');
@@ -424,7 +452,8 @@ let frame (a:Type) (w r:label) (fs:flows) #p #q (f:ist a w r fs p q)
       : Lemma (requires (~(Set.mem l r)))
               (ensures (does_not_read_loc g r l s))
               [SMTPat()]
-      = assert (does_not_read_loc f r l s)
+      = reads_ok_does_not_read_loc g r l s;
+        assert (does_not_read_loc f r l s)
     in
     assert (reads_ok g r);    
     assert (writes_ok g w);   
@@ -505,24 +534,7 @@ let subcomp (a:Type) (w0 r0 w1 r1:label) #p #q #p' #q' (fs0 fs1:flows) (f:ist a 
     norm_spec (fs0 `flows_included_in` fs1);
     assert ((fs0 `flows_included_in` fs1));
     let f : comp a p' q' = consequence a w0 r0 p q p' q' fs0 f in
-    let f_reads_ok (l:loc) (s0:store{p' s0})
-      : Lemma (requires (~(Set.mem l r1)))
-              (ensures (does_not_read_loc f r1 l s0))
-              [SMTPat (does_not_read_loc f r1 l s0)]
-      = let aux (k :_ {p' (havoc s0 l k)})
-          : Lemma (ensures (does_not_read_loc_v f r1 l s0 k))
-                  [SMTPat  (does_not_read_loc_v f r1 l s0 k)]
-          = let v, s1 = f s0 in
-            let v', s1' = f (havoc s0 l k) in
-            assert (does_not_read_loc forig r0 l s0);            
-            assert (does_not_read_loc f r0 l s0);
-            assert (v == v');
-            assert (not (Set.mem l w0) ==> sel s1' l = k);
-            assert (not (Set.mem l w1) ==> sel s1' l = k);
-            ()
-        in
-        ()
-    in
+    weaken_reads_ok f r0 r1;
     assert (reads_ok f r1);
     assert (writes_ok f w1);
     let respects_flows_lemma (from to:_)
