@@ -1,5 +1,5 @@
 [
-  ">ïïé…jóÃÜãm½ 9®Á",
+  "1ËVxŠ\u000b%4\u0019‘\"w¬ˆñò",
   [
     [
       "GT.coerce",
@@ -118,7 +118,22 @@
         "projection_inverse_BoxBool_proj_0", "unit_typing"
       ],
       0,
-      "22da2d2fd7f03df8049647cd4578c5e6"
+      "93cf4e9408d187328311e9e3ebcd2ba0"
+    ],
+    [
+      "GT.appn",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "unit_typing"
+      ],
+      0,
+      "5a43db2a5bbf6844bf86ca54e3c12e9d"
     ],
     [
       "GT.labs0",
@@ -127,7 +142,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "int_inversion" ],
       0,
-      "1f662a121432c3239d94a2a72b933b93"
+      "0ddb62f27a533e00503ca0e9631048f8"
     ],
     [
       "GT.labs",
@@ -142,7 +157,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "a6449c9d193ebfabeb1149d5623ae3b8"
+      "1bc496e1fbf16040bb784b954322776f"
     ]
   ]
 ]
