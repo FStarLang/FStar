@@ -159,11 +159,9 @@ let (__do_rewrite :
              | FStar_Pervasives_Native.None -> FStar_Tactics_Monad.ret tm
              | FStar_Pervasives_Native.Some (uu___1, lcomp, g) ->
                  let uu___2 =
-                   (let uu___3 =
-                      FStar_TypeChecker_Common.is_pure_or_ghost_lcomp lcomp in
-                    Prims.op_Negation uu___3) ||
-                     (let uu___3 = FStar_TypeChecker_Env.is_trivial g in
-                      Prims.op_Negation uu___3) in
+                   let uu___3 =
+                     FStar_TypeChecker_Common.is_pure_or_ghost_lcomp lcomp in
+                   Prims.op_Negation uu___3 in
                  if uu___2
                  then FStar_Tactics_Monad.ret tm
                  else

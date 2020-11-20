@@ -1684,6 +1684,29 @@ let set_urgency (u:Z.t) : tac<unit> =
     let ps = { ps with urgency = Z.to_int_fs u } in
     set ps)
 
+let t_commute_applied_match () : tac<unit> = wrap_err "t_commute_applied_match" <|
+  bind cur_goal (fun g ->
+  match destruct_eq (whnf (goal_env g) (goal_type g)) with
+  | Some (l, r) -> begin
+    let lh, las = U.head_and_args_full l in
+    match (SS.compress (U.unascribe lh)).n with
+    | Tm_match (e, brs) ->
+      let brs' = List.map (fun (p, w, e) -> p, w, U.mk_app e las) brs in
+      let l' = mk (Tm_match (e, brs')) l.pos in
+      bind (do_unify' false (goal_env g) l' r) (function
+      | None -> fail "discharging the equality failed"
+      | Some guard ->
+        if Env.is_trivial_guard_formula guard
+        then solve g U.exp_unit
+        else failwith "internal error: _t_refl: guard is not trivial")
+    | _ ->
+      fail "lhs is not a match"
+    end
+  | None ->
+    fail "not an equality")
+
+(**** Creating proper environments and proofstates ****)
+
 let tac_env (env:Env.env) : Env.env =
     let env, _ = Env.clear_expected_typ env in
     let env = { env with Env.instantiate_imp = false } in

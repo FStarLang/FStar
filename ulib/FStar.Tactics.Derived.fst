@@ -160,6 +160,10 @@ let trefl () : Tac unit =
 let trefl_guard () : Tac unit =
   t_trefl true
 
+(** See docs for [t_commute_applied_match] *)
+let commute_applied_match () : Tac unit =
+  t_commute_applied_match ()
+
 (** Similar to [apply_lemma], but will not instantiate uvars in the
 goal while applying. *)
 let apply_lemma_noinst (t : term) : Tac unit =
