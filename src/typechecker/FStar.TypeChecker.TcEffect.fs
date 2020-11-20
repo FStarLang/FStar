@@ -1386,7 +1386,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
         (Env.push_binders env (a::rest_bs)) r sub.source u_a (a |> fst |> S.bv_to_name) in
       S.gen_bv "f" None f_sort |> S.mk_binder, g in
 
-    let bs = a::(rest_bs@[f_b]) in
+    let bs = a::rest_bs in
 
     //repr<?u> ?u_i ... ?u_n
     let repr, g_repr = TcUtil.fresh_effect_repr_en
@@ -1449,7 +1449,7 @@ let tc_lift env sub r =
   let ed_tgt = Env.get_effect_decl env sub.target in
 
   if ed_src |> U.is_layered || ed_tgt |> U.is_layered
-  then tc_layered_lift env sub
+  then tc_layered_lift (Env.set_range env r) sub
   else
     let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
     let b, wp_b_tgt = monad_signature env sub.target (Env.lookup_effect_lid env sub.target) in
