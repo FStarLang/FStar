@@ -15,9 +15,9 @@ let pre = store -> Type0
 let post a = store -> a -> store -> Type0
 let comp a (p:pre) (q:post a) = s0:store{p s0} -> r:(a & store){q s0 (fst r) (snd r)}
 let havoc s l x = upd s l x
-let does_not_read_loc_v #a #p #q (f:comp a p q) 
-                        (reads:label) 
-                        (l:loc) 
+let does_not_read_loc_v #a #p #q (f:comp a p q)
+                        (reads:label)
+                        (l:loc)
                         (s0:store{p s0})
                         v =
     let s0' = havoc s0 l v in
@@ -47,7 +47,7 @@ let reads_ok_preserves_equal_locs #a #p #q (f:comp a p q) (reads:label) (s0:stor
           (ensures (let x1, s1 = f s0 in
                     let x1', s1' = f s0' in
                     agree_on reads s1 s1'))
-  = ()      
+  = ()
 
 let weaken_reads_ok #a #p #q (f:comp a p q) (reads reads1:label)
   : Lemma (requires reads_ok f reads /\
@@ -61,7 +61,7 @@ let weaken_reads_ok #a #p #q (f:comp a p q) (reads reads1:label)
     in
     ()
 let reads_ok_does_not_read_loc #a #p #q (f:comp a p q) (reads:label) (l:loc{~(Set.mem l reads)}) (s0:store{p s0})
-  : Lemma 
+  : Lemma
     (requires reads_ok f reads)
     (ensures does_not_read_loc f reads l s0)
   = let aux (v:int)
@@ -104,7 +104,7 @@ let flows_included_in_union (a b c:label)
                        ([a, b; union a b, c]))
   = ()
 let no_leakage_k #a #p #q (f:comp a p q) (from to:loc) (k:int) =
-  forall (s0:store{p s0}).{:pattern (havoc s0 from k)} 
+  forall (s0:store{p s0}).{:pattern (havoc s0 from k)}
     p (havoc s0 from k) ==>
     sel (snd (f s0)) to == (sel (snd (f (havoc s0 from k))) to)
 let no_leakage #a #p #q (f:comp a p q) (from to:loc) = forall k. no_leakage_k f from to k
@@ -116,13 +116,13 @@ let ist a (writes:label) (reads:label) (fs:flows) (p:pre) (q:store -> a -> store
     writes_ok f writes  /\
     respects_flows f fs
   }
-let iread (l:loc) : ist int bot (single l) [] (fun _ -> True) (fun s0 x s1 -> s0 == s1 /\ x == sel s0 l) = 
+let iread (l:loc) : ist int bot (single l) [] (fun _ -> True) (fun s0 x s1 -> s0 == s1 /\ x == sel s0 l) =
   let f : comp int (fun _ -> True) (fun s0 x s1 -> s0 == s1 /\ x == sel s0 l) = fun s -> sel s l, s in
   f
-let return (a:Type) (x:a) : ist a bot bot [] (fun _ -> True) (fun s0 r s1 -> s0 == s1 /\ r == x) = 
+let return (a:Type) (x:a) : ist a bot bot [] (fun _ -> True) (fun s0 r s1 -> s0 == s1 /\ r == x) =
   let f : comp a (fun _ -> True) (fun s0 r s1 -> s0 == s1 /\ r == x) = fun s -> x,s in
   f
-let iwrite (l:loc) (x:int) : ist unit (single l) bot [] (fun _ -> True) (fun s0 _ s1 -> s1 == upd s0 l x) = 
+let iwrite (l:loc) (x:int) : ist unit (single l) bot [] (fun _ -> True) (fun s0 _ s1 -> s1 == upd s0 l x) =
   let f : comp unit (fun _ -> True) (fun s0 _ s1 -> s1 == upd s0 l x) = fun s -> (), upd s l x in
   f
 let bind_comp (#a #b:Type)
@@ -132,7 +132,7 @@ let bind_comp (#a #b:Type)
               (x:ist a w0 r0 fs0 p q)
               (y: (x:a -> ist b w1 r1 fs1 (r x) (s x)))
   : comp b (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 ==> r x s1))
-           (fun s0 r s2 -> (exists x s1. q s0 x s1 /\ s x s1 r s2)) 
+           (fun s0 r s2 -> (exists x s1. q s0 x s1 /\ s x s1 r s2))
   = fun s0 -> let v, s1 = x s0 in y v s1
 
 
@@ -147,17 +147,17 @@ let bind_comp_reads_ok (#a #b:Type)
     let p_f = (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 ==> r x s1)) in
     let reads = union r0 r1 in
     let f_reads_ok (s0:store{p_f s0}) (s0':store{p_f s0'})
-      : Lemma 
+      : Lemma
         (requires agree_on reads s0 s0')
         (ensures  related_runs f s0 s0')
         [SMTPat()]
       = let y1, s1 = x s0 in
-        let y1', s1' = x s0' in      
+        let y1', s1' = x s0' in
         weaken_reads_ok x r0 reads;
         assert (related_runs x s0 s0');
         weaken_reads_ok (y y1) r1 reads;
         reads_ok_preserves_equal_locs x reads s0 s0';
-        assert (forall l. l `Set.mem` r1 ==> sel s1 l == sel s1' l);        
+        assert (forall l. l `Set.mem` r1 ==> sel s1 l == sel s1' l);
         assert (agree_on r1 s1 s1');
         assert (y1 == y1');
         let res, s2 = y y1 s1 in
@@ -254,7 +254,7 @@ let bind_comp_no_leakage (#a #b:Type)
         let s0' = havoc s0 from k in
         p_f s0 /\
         p_f s0' /\
-        from <> to /\ 
+        from <> to /\
         ~(has_flow from to (fs0 @ add_source r0 ((bot, w1)::fs1)))))
       (ensures (let f = bind_comp x y in
                 let s0' = havoc s0 from k in
@@ -443,7 +443,7 @@ let frame (a:Type) (w r:label) (fs:flows) #p #q (f:ist a w r fs p q)
       : Lemma (let x, s1 = f s0 in
                sel s0 l == sel s1 l)
                [SMTPat()]
-               
+
       = ()
     in
     let g : comp a p (fun s0 x s1 -> q s0 x s1 /\ modifies w s0 s1) = fun s0 -> f s0 in
@@ -455,10 +455,10 @@ let frame (a:Type) (w r:label) (fs:flows) #p #q (f:ist a w r fs p q)
       = reads_ok_does_not_read_loc g r l s;
         assert (does_not_read_loc f r l s)
     in
-    assert (reads_ok g r);    
-    assert (writes_ok g w);   
+    assert (reads_ok g r);
+    assert (writes_ok g w);
     let respects_flows_lemma (from to:_)
-      : Lemma 
+      : Lemma
         (requires ~(has_flow from to fs) /\ from<>to)
         (ensures (no_leakage g from to))
         [SMTPat(no_leakage g from to)]
@@ -477,7 +477,7 @@ let pre_bind (a b:Type)
           (fun s0 r s2 -> (exists x s1. q s0 x s1 /\ s x s1 r s2))
   = let f = bind_comp x y in
     bind_comp_reads_ok x y;
-    bind_comp_writes_ok x y;    
+    bind_comp_writes_ok x y;
     bind_comp_flows_ok x y;
     f
 
@@ -490,16 +490,16 @@ let bind (a b:Type)
           (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 /\ modifies w0 s0 s1 ==> r x s1))
           (fun s0 r s2 -> (exists x s1. (q s0 x s1 /\ modifies w0 s0 s1) /\ (s x s1 r s2 /\ modifies w1 s1 s2)))
   = (pre_bind _ _ _ _ _ _ _ _ (frame _ _ _ _ x) (fun a -> frame _ _ _ _ (y a)))
-  
+
 
 let refine_flow_ist #a #w #r #f #fs #p #q
                 (c: ist a w r (f::fs) p q)
   : Pure (ist a w r fs p q)
-         (requires 
-           (forall from to v. 
+         (requires
+           (forall from to v.
              has_flow_1 from to f /\
              from <> to ==>
-             (forall s0 x x' s1 s1'. 
+             (forall s0 x x' s1 s1'.
                p s0 /\
                p (havoc s0 from v) /\
                q s0 x s1 /\
@@ -509,7 +509,7 @@ let refine_flow_ist #a #w #r #f #fs #p #q
                sel s1 to == sel s1' to)))
          (ensures fun _ -> True)
   = c
-  
+
 let consequence (a:Type) (w0 r0:label) p q p' q' (fs0:flows) (f:ist a w0 r0 fs0 p q)
   : Pure (comp a p' q')
     (requires (forall s. p' s ==> p s) /\
@@ -518,7 +518,7 @@ let consequence (a:Type) (w0 r0:label) p q p' q' (fs0:flows) (f:ist a w0 r0 fs0 
   = let g : comp a p' q' = fun s -> f s in
     g
 
-let norm_spec (p:Type) 
+let norm_spec (p:Type)
   : Lemma (requires (norm [delta;iota;zeta] p))
           (ensures p)
   = ()
@@ -538,7 +538,7 @@ let subcomp (a:Type) (w0 r0 w1 r1:label) #p #q #p' #q' (fs0 fs1:flows) (f:ist a 
     assert (reads_ok f r1);
     assert (writes_ok f w1);
     let respects_flows_lemma (from to:_)
-      : Lemma 
+      : Lemma
         (requires ~(has_flow from to fs1) /\ from<>to)
         (ensures (no_leakage f from to))
         [SMTPat(no_leakage f from to)]
@@ -565,12 +565,12 @@ layered_effect {
     bind = bind;
     subcomp = subcomp
 }
-let read (l:loc) 
+let read (l:loc)
   : IST int bot (single l) []
     (requires fun _ -> True)
     (ensures fun s0 x s1 -> x == sel s0 l)
   = IST?.reflect (iread l)
-let write (l:loc) (x:int) 
+let write (l:loc) (x:int)
   : IST unit (single l) bot []
     (requires fun _ -> True)
     (ensures fun _ _ s1 -> sel s1 l == x)
@@ -587,11 +587,11 @@ sub_effect PURE ~> IST = lift_pure
 let refine_flow #a #w #r #f #fs #p #q
                 ($c: unit -> IST a w r (f::fs) p q)
   : Pure (unit -> IST a w r fs p q)
-         (requires 
-           (forall from to v. 
+         (requires
+           (forall from to v.
              has_flow_1 from to f /\
              from <> to ==>
-             (forall s0 x x' s1 s1'. 
+             (forall s0 x x' s1 s1'.
                p s0 /\
                p (havoc s0 from v) /\
                q s0 x s1 /\
@@ -797,18 +797,29 @@ let test15 (l:lref)
   = write l (read l)
 
 let ist_exn a w r fs (p:pre) (q:post a) =
-    unit -> IST (option a) w r fs p 
+    unit -> IST (option a) w r fs p
                (fun s0 x s1 ->
                  match x with
                  | None -> True
                  | Some x -> q s0 x s1)
 
-#push-options "--error_contexts true --print_implicits --print_bound_var_types --debug Sec2.IFCHoare --debug_level ExplainRel"
-// let ist_exn_return (a:Type) (x:a) (_:unit)
-//   : IST (option a) bot bot [] 
-//         (fun _ -> True)
-//         (fun s0 r s1 -> match r with | None -> True | Some r -> s0 == s1 /\ r == x)
-//   = Some x
+let return_comp a (x:a) : comp a (fun _ -> True) (fun s0 r s1 -> s0 == s1 /\ r == x) = fun s -> x,s
+let bind_comp' (a b:Type)
+                p q r s
+               (x:comp a p q)
+               (y: (x:a -> comp b (r x) (s x)))
+  : comp b (fun s0 -> p s0 /\ (forall x s1. q s0 x s1 ==> r x s1))
+           (fun s0 r s2 -> (exists x s1. q s0 x s1 /\ s x s1 r s2))
+  = fun s0 -> let v, s1 = x s0 in y v s1
 
-// let ist_return 
-// let ifc_exn 
+layered_effect {
+  HST : a:Type -> p:pre -> q:post a -> Effect
+  with
+    repr = comp;
+    return = return_comp;
+    bind = bind_comp'
+}
+
+let lift_ist_hst a w r fs p q (x:ist a w r fs p q) : comp a p (fun s0 x s1 -> q s0 x s1 /\ modifies w s0 s1) =
+  frame _ _ _ _ x
+sub_effect IST ~> HST = lift_ist_hst
