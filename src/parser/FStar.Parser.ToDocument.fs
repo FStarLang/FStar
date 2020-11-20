@@ -1078,7 +1078,7 @@ and p_binder' (is_atomic: bool) (b: binder): document * option<document> * catf 
           else
             p_tmFormula t
           in
-          optional p_aqual b.aqual ^^ p_lident lid, t'
+          optional p_aqual b.aqual ^^ p_lident lid, lparen ^^ t' ^^ rparen
         in
         let catf =
           if is_atomic || (is_meta_qualifier b.aqual) then
