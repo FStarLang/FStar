@@ -632,17 +632,29 @@ let get_noextract_to (se:sigelt) (backend:option<Options.codegen_t>) : bool =
     | _ -> false
   ) se.sigattrs
 
-// We extract all definitions, unless if we're in one of the following cases:
-// 1- it has the `noextract` qualifier
-// 2- it has a noextract_to attribute matching the current backend.
-//
-// *and* we are not extracting for Kremlin
-// (kremlin needs the stubs, so we ignore the qualifier in that special case)
+(*
+ * We support two kinds of noextract knobs:
+ *   - a noextract qualifier
+ *   - a "noextract_to" attribute that takes a string value as argument
+ *     the string value is the backend name, e.g. Kremlin, OCaml, ...
+ *
+ * Whether to extract a definition depends on the backend
+ *   since sometimes Kremlin needs the stubs even for definitions
+ *   marked as noextract
+ *
+ * TODO: what are such cases? Even there, can we optimize
+ *   extraction to extract only the signature of the definition
+ *   so that we don't pay the cost of normalization etc. for the body
+ *)
 let sigelt_has_noextract (se:sigelt) : bool =
-  Options.codegen () <> Some Options.Kremlin
-  && (List.contains S.NoExtract se.sigquals
-      || get_noextract_to se (Options.codegen ()))
-
+  let has_noextract_qualifier = List.contains S.NoExtract se.sigquals in
+  let has_noextract_attribute = get_noextract_to se (Options.codegen ()) in
+  match Options.codegen () with
+  | Some Options.Kremlin ->
+    has_noextract_qualifier && has_noextract_attribute
+  | _ ->
+    has_noextract_qualifier || has_noextract_attribute
+  
 // If this sigelt had [@@ noextract_to "Kremlin"] and we are indeed
 // extracting to Kremlin, then we will still process it: it's the
 // kremlin pipeline which will later drop the body. It checks for the
