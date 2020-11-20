@@ -522,6 +522,11 @@ let norm_spec (p:Type)
   : Lemma (requires (norm [delta;iota;zeta] p))
           (ensures p)
   = ()
+let norm_spec_inv (p:Type)
+  : Lemma (requires p)
+          (ensures (norm [delta;iota;zeta] p))
+  = ()
+
 let subcomp (a:Type) (w0 r0 w1 r1:label) #p #q #p' #q' (fs0 fs1:flows) (f:ist a w0 r0 fs0 p q)
   : Pure (ist a w1 r1 fs1 p' q')
     (requires label_inclusion w0 w1 /\
@@ -547,6 +552,42 @@ let subcomp (a:Type) (w0 r0 w1 r1:label) #p #q #p' #q' (fs0 fs1:flows) (f:ist a 
     assert (respects_flows f fs1);
     f
 
+let if_then_else (a:Type) w0 r0 f0 p0 q0
+                          w1 r1 f1
+                          p1 q1
+                          (c_then:ist a w0 r0 f0 p0 q0)
+                          (c_else:ist a w1 r1 f1 p1 q1)
+                          (b:bool)
+   = ist a  (w0 `union` w1) (r0 `union` r1) (f0 @ f1)
+   (fun s -> if b then p0 s else p1 s) (fun s0 x s1 -> if b then q0 s0 x s1 else q1 s0 x s1)
+
+let rec append_memP #a (x:a) (l0 l1:list a)
+  : Lemma (List.Tot.memP x (l0 @ l1) <==> (List.Tot.memP x l0 \/ List.Tot.memP x l1))
+  = match l0 with
+    | [] -> ()
+    | hd::tl -> append_memP x tl l1
+
+let weaken_flows_append (fs fs':flows)
+  : Lemma (ensures (norm [delta;iota;zeta] (fs `flows_included_in` (fs @ fs')) /\
+                   (norm [delta;iota;zeta] (fs' `flows_included_in` (fs @ fs')))))
+          [SMTPat  ()]
+  = let aux (f0:flow)
+      : Lemma
+        (requires f0 `List.Tot.memP` fs)
+        (ensures  f0 `List.Tot.memP` (fs @ fs'))
+        [SMTPat(f0 `List.Tot.memP` (fs @ fs'))]
+      = append_memP f0 fs fs'
+    in
+    let aux (f0:flow)
+      : Lemma
+        (requires f0 `List.Tot.memP` fs')
+        (ensures  f0 `List.Tot.memP` (fs @ fs'))
+        [SMTPat(f0 `List.Tot.memP` (fs @ fs'))]
+      = append_memP f0 fs fs'
+    in
+    norm_spec_inv (fs `flows_included_in` (fs @ fs'));
+    norm_spec_inv (fs' `flows_included_in` (fs @ fs'))
+
 [@@allow_informative_binders]
 total
 reifiable
@@ -563,8 +604,10 @@ layered_effect {
     repr = ist;
     return = return;
     bind = bind;
-    subcomp = subcomp
+    subcomp = subcomp;
+    if_then_else = if_then_else
 }
+
 let read (l:loc)
   : IST int bot (single l) []
     (requires fun _ -> True)
