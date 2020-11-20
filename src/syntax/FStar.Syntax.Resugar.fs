@@ -373,7 +373,11 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       //before inspecting any syntactic form that has binding structure
       //you must call SS.open_* to replace de Bruijn indexes with names
       let xs, body = SS.open_term xs body in
-      let xs = if Options.print_implicits () then xs else filter_imp xs in
+      let xs = if Options.print_implicits () then xs else (
+          match filter_imp xs with
+          | [] -> xs // if the abstraction has only implicit arguments, print them anyway
+          | xs -> xs
+        ) in
       let body_bv = FStar.Syntax.Free.names body in
       let patterns = xs |> List.choose (fun (x, qual) ->
         //x.sort contains a type annotation for the bound variable
