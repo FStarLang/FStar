@@ -1001,7 +1001,13 @@ and resugar_binder' env (b:S.binder) r : option<A.binder> =
       if S.is_null_bv x then
         A.mk_binder (A.NoName e) r A.Type_level imp
       else
-        A.mk_binder (A.Annotated (bv_as_unique_ident x, e)) r A.Type_level imp
+        A.mk_binder (A.Annotated (bv_as_unique_ident x, 
+          ( match e with // Detect nested annotations 
+          | Mkterm (A.Refine (Mkbinder (Annotated _) _ _ _,t)) pos l
+            -> mk_term (A.Paren e) pos l // wrap into `Paren` node
+          | _ -> e
+          )
+        )) r A.Type_level imp
   end
 
 and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: BU.set<bv>) typ_opt =
