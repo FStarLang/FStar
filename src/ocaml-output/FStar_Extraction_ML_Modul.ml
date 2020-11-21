@@ -1320,12 +1320,16 @@ let (get_noextract_to :
                 | uu___3 -> false)) se.FStar_Syntax_Syntax.sigattrs
 let (sigelt_has_noextract : FStar_Syntax_Syntax.sigelt -> Prims.bool) =
   fun se ->
-    (let uu___ = FStar_Options.codegen () in
-     uu___ <> (FStar_Pervasives_Native.Some FStar_Options.Kremlin)) &&
-      ((FStar_List.contains FStar_Syntax_Syntax.NoExtract
-          se.FStar_Syntax_Syntax.sigquals)
-         ||
-         (let uu___ = FStar_Options.codegen () in get_noextract_to se uu___))
+    let has_noextract_qualifier =
+      FStar_List.contains FStar_Syntax_Syntax.NoExtract
+        se.FStar_Syntax_Syntax.sigquals in
+    let has_noextract_attribute =
+      let uu___ = FStar_Options.codegen () in get_noextract_to se uu___ in
+    let uu___ = FStar_Options.codegen () in
+    match uu___ with
+    | FStar_Pervasives_Native.Some (FStar_Options.Kremlin) ->
+        has_noextract_qualifier && has_noextract_attribute
+    | uu___1 -> has_noextract_qualifier || has_noextract_attribute
 let (kremlin_fixup_qual :
   FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt) =
   fun se ->
