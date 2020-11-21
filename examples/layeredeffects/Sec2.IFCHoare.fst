@@ -559,7 +559,8 @@ let if_then_else (a:Type) w0 r0 f0 p0 q0
                           (c_else:ist a w1 r1 f1 p1 q1)
                           (b:bool)
    = ist a  (w0 `union` w1) (r0 `union` r1) (f0 @ f1)
-   (fun s -> if b then p0 s else p1 s) (fun s0 x s1 -> if b then q0 s0 x s1 else q1 s0 x s1)
+            (fun s -> if b then p0 s else p1 s)
+            (fun s0 x s1 -> if b then q0 s0 x s1 else q1 s0 x s1)
 
 let rec append_memP #a (x:a) (l0 l1:list a)
   : Lemma (List.Tot.memP x (l0 @ l1) <==> (List.Tot.memP x l0 \/ List.Tot.memP x l1))
@@ -621,7 +622,7 @@ let write (l:loc) (x:int)
 
 let u : Type = unit
 let lift_pure (a:Type) (x:u -> Tot a)
-  : ist a bot bot [] (fun _ -> True) (fun s0 v s1 -> s0 == s1 /\ v == x())
+  : ist a bot bot [] (fun _ -> True) (fun s0 v s1 -> s0 == s1)
   = return a (x())
 
 sub_effect PURE ~> IST = lift_pure
@@ -740,6 +741,14 @@ let test8 (l:lref) (h:href)
   = let x0 = read h in
     let x = read l in
     write l (x + 1)
+
+module T = FStar.Tactics
+let test_cond (l:lref) (h:href) (b:bool)
+  : ISTT unit (union (single l) (single l))
+              (union (single h) (union (single h) (single l)))
+              ([high, low]@[single h, single l])
+   by (T.dump "A"; T.tadmit())
+  = if b then test7 l h else test8 l h
 
 //But, using the Hoare refinements, we can recover precision and remove
 //the spurious flow from h to l
