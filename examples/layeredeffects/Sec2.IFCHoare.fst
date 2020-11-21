@@ -621,11 +621,19 @@ let write (l:loc) (x:int)
   = IST?.reflect (iwrite l x)
 
 let u : Type = unit
-let lift_pure (a:Type) (x:u -> Tot a)
-  : ist a bot bot [] (fun _ -> True) (fun s0 v s1 -> s0 == s1)
-  = return a (x())
 
-sub_effect PURE ~> IST = lift_pure
+let lift_PURE_IST (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
+  : Pure (ist a bot bot [] (fun _ -> True) (fun s0 _ s1 -> s0 == s1))
+      (requires wp (fun _ -> True))
+      (ensures fun _ -> True)
+  = FStar.Monotonic.Pure.wp_monotonic_pure ();
+    return a (f ())
+
+// let lift_pure (a:Type) (x:u -> Tot a)
+//   : ist a bot bot [] (fun _ -> True) (fun s0 v s1 -> s0 == s1)
+//   = return a (x())
+
+sub_effect PURE ~> IST = lift_PURE_IST
 
 
 let refine_flow #a #w #r #f #fs #p #q
@@ -747,7 +755,7 @@ let test_cond (l:lref) (h:href) (b:bool)
   : ISTT unit (union (single l) (single l))
               (union (single h) (union (single h) (single l)))
               ([high, low]@[single h, single l])
-   by (T.dump "A"; T.tadmit())
+   //by (T.dump "A"; T.tadmit())
   = if b then test7 l h else test8 l h
 
 //But, using the Hoare refinements, we can recover precision and remove
