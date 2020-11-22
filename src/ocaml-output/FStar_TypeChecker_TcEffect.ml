@@ -5031,7 +5031,8 @@ let (tc_layered_lift :
                                             } in
                                           FStar_Syntax_Syntax.mk_Comp uu___10 in
                                         let uu___10 =
-                                          FStar_Syntax_Util.arrow bs c in
+                                          FStar_Syntax_Util.arrow
+                                            (FStar_List.append bs [f_b]) c in
                                         let uu___11 =
                                           let uu___12 =
                                             FStar_TypeChecker_Env.conj_guard

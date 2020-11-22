@@ -64,5 +64,5 @@ let lift_Tot_M (a:Type) (f:unit -> Tot a)
   : repr a lift_Tot_M_pre (lift_Tot_M_post f)
   = fun _ -> f ()
 
-[@@expect_failure [12; 66]]
+[@@expect_failure]
 sub_effect PURE ~> M = lift_Tot_M
