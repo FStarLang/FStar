@@ -1404,7 +1404,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
       effect_args = [ pure_wp_uvar |> S.as_arg ];
       flags = [] }) in
 
-    U.arrow bs c, Env.conj_guard (Env.conj_guard g_f_b g_repr) guard_wp in
+    U.arrow (bs@[f_b]) c, Env.conj_guard (Env.conj_guard g_f_b g_repr) guard_wp in
 
   if Env.debug env <| Options.Other "LayeredEffectsTc" then
     BU.print1 "tc_layered_lift: before unification k: %s\n" (Print.term_to_string k);
