@@ -150,7 +150,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
                 | FStar.Const.Const_int(repr, Some sw) ->
                   FStar.ToSyntax.ToSyntax.desugar_machine_integer env.dsenv repr sw p.p
                 | _ ->
-                  mk (Tm_constant c) None p.p
+                  mk (Tm_constant c) p.p
              in
              ([], [], [], env, e, trivial_guard, p)
 
@@ -164,12 +164,12 @@ let pat_as_exp (introduce_bv_uvars:bool)
 
            | Pat_wild x ->
              let x, g, env = intro_bv env x in
-             let e = mk (Tm_name x) None p.p in
+             let e = mk (Tm_name x) p.p in
              ([x], [], [x], env, e, g, p)
 
            | Pat_var x ->
              let x, g, env = intro_bv env x in
-             let e = mk (Tm_name x) None p.p in
+             let e = mk (Tm_name x) p.p in
              ([x], [x], [], env, e, g, p)
 
            | Pat_cons(fv, pats) ->
@@ -182,7 +182,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
                     (b'::b, a'::a, w'::w, env, arg::args, conj_guard guard guard', (pat, imp)::pats))
                ([], [], [], env, [], trivial_guard, [])
              in
-             let e = mk_Tm_app (Syntax.fv_to_tm fv) (args |> List.rev) None p.p in
+             let e = mk_Tm_app (Syntax.fv_to_tm fv) (args |> List.rev) p.p in
              (List.rev b |> List.flatten,
               List.rev a |> List.flatten,
               List.rev w |> List.flatten,

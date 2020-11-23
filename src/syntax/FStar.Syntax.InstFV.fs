@@ -28,7 +28,7 @@ type inst_t = list<(lident * universes)>
 
 
 
-let mk t s = S.mk s None t.pos
+let mk t s = S.mk s t.pos
 
 let rec inst (s:term -> fv -> term) t =
     let t = SS.compress t in

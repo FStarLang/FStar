@@ -41,7 +41,7 @@ inline_for_extraction val init_ghost: #a:Type -> len:nat -> contents: (i:nat { i
 
 val empty (#a:Type) : Tot (s:(seq a){length s=0})
 
-[@(deprecated "Seq.empty")]
+[@@(deprecated "Seq.empty")]
 unfold
 let createEmpty (#a:Type)
     : Tot (s:(seq a){length s=0})
@@ -131,6 +131,7 @@ val lemma_index_slice: #a:Type -> s:seq a -> i:nat -> j:nat{i <= j /\ j <= lengt
 
 val hasEq_lemma: a:Type -> Lemma (requires (hasEq a)) (ensures (hasEq (seq a))) [SMTPat (hasEq  (seq a))]
 
+[@@ remove_unused_type_parameters [0; 1; 2]]
 val equal (#a:Type) (s1:seq a) (s2:seq a) : Tot prop
 
 (* decidable equality *)

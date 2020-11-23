@@ -75,7 +75,8 @@ type proc =
      outc : out_channel;
      mutable killed : bool;
      stop_marker: (string -> bool) option;
-     id : string}
+     id : string;
+     start_time : time}
 
 let all_procs : (proc list) ref = ref []
 
@@ -107,6 +108,8 @@ let with_monitor _ f x = atomically (fun () ->
 let spawn f =
   let _ = Thread.create f () in ()
 
+let stack_dump () = Printexc.raw_backtrace_to_string (Printexc.get_callstack 1000)
+
 (* On the OCaml side it would make more sense to take stop_marker in
    ask_process, but the F# side isn't built that way *)
 let start_process'
@@ -123,7 +126,9 @@ let start_process'
                inc = Unix.in_channel_of_descr stdout_r;
                outc = Unix.out_channel_of_descr stdin_w;
                stop_marker = stop_marker;
-               killed = false } in
+               killed = false;
+               start_time = now()} in
+  (* print_string ("Started process " ^ proc.id ^ "\n" ^ (stack_dump())); *)
   all_procs := proc :: !all_procs;
   proc
 
@@ -152,6 +157,7 @@ let kill_process (p: proc) =
        with Unix.Unix_error (Unix.ESRCH, _, _) -> ());
       (* Avoid zombie processes (Unix.close_process does the same thing. *)
       waitpid_ignore_signals p.pid;
+      (* print_string ("Killed process " ^ p.id ^ "\n" ^ (stack_dump()));       *)
       p.killed <- true
     end
 
@@ -298,7 +304,6 @@ let string_builder_append b s = BatBuffer.add_string b s
 
 let message_of_exn (e:exn) = Printexc.to_string e
 let trace_of_exn (e:exn) = Printexc.get_backtrace ()
-let stack_dump () = Printexc.raw_backtrace_to_string (Printexc.get_callstack 1000)
 
 type 'a set = ('a list) * ('a -> 'a -> bool)
 [@@deriving show]
@@ -986,13 +991,17 @@ let load_value_from_file (fname:string) =
   with | _ -> None
 
 let save_2values_to_file (fname:string) value1 value2 =
-  let channel = open_out_bin fname in
-  BatPervasives.finally
-    (fun () -> close_out channel)
-    (fun channel ->
-      output_value channel value1;
-      output_value channel value2)
-    channel
+  try
+    let channel = open_out_bin fname in
+    BatPervasives.finally
+      (fun () -> close_out channel)
+      (fun channel ->
+        output_value channel value1;
+        output_value channel value2)
+      channel
+  with
+  | e -> delete_file fname;
+         raise e
 
 let load_2values_from_file (fname:string) =
   try

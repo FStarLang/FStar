@@ -19,8 +19,8 @@ module FStar.Pervasives
 (* This is a file from the core library, dependencies must be explicit *)
 open Prims
 
-
 /// Implementation of FStar.Pervasives.fsti
+let remove_unused_type_parameters _ = ()
 
 let smt_pat #_ _ = ()
 
@@ -69,6 +69,12 @@ let strict_on_arguments _ = ()
 let resolve_implicits = ()
 
 let erasable = ()
+
+let allow_informative_binders = ()
+
+let commute_nested_matches = ()
+
+let noextract_to _ = ()
 
 let normalize_term #_ x = x
 

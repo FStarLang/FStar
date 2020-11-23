@@ -11,7 +11,7 @@
         "assumption_Prims.HasEq_string"
       ],
       0,
-      "262cc105aa9764cc0390104384dcce43"
+      "c0afcf3d3654269f1b5c4c6832cef002"
     ],
     [
       "NetKat.__proj__PrFieldEq__item__f",
@@ -24,7 +24,7 @@
         "refinement_interpretation_Tm_refine_bec35291186e95c3d6c80baa7a08d736"
       ],
       0,
-      "8789b51841224ce5537c4117685a6e1b"
+      "97c725598b073f2827e12992e504d8f0"
     ],
     [
       "NetKat.__proj__PrFieldEq__item__v",
@@ -37,7 +37,7 @@
         "refinement_interpretation_Tm_refine_bec35291186e95c3d6c80baa7a08d736"
       ],
       0,
-      "ba071488e4714f07e0c536a81ea05a36"
+      "67125ed13e8b522f9574a23ffca749bd"
     ],
     [
       "NetKat.__proj__PrOr__item__p1",
@@ -50,7 +50,7 @@
         "refinement_interpretation_Tm_refine_d8586aba505eaf6dbae671713c3d3051"
       ],
       0,
-      "b5c74095eaa70219ebc79615614d6e94"
+      "81eeebf9b044939b261ccee1042317a5"
     ],
     [
       "NetKat.__proj__PrOr__item__p2",
@@ -63,7 +63,7 @@
         "refinement_interpretation_Tm_refine_d8586aba505eaf6dbae671713c3d3051"
       ],
       0,
-      "44a3fd40f909973ecd0a80cc16f251b5"
+      "442bca7139669327627709956818aa5d"
     ],
     [
       "NetKat.__proj__PrAnd__item__p1",
@@ -76,7 +76,7 @@
         "refinement_interpretation_Tm_refine_1946ce43305aefbee803bf8108076b85"
       ],
       0,
-      "6711e37c72db4554cca24f5b79cd5d46"
+      "c702d43fa5dd7f7d5628573e77d73d4f"
     ],
     [
       "NetKat.__proj__PrAnd__item__p2",
@@ -89,7 +89,7 @@
         "refinement_interpretation_Tm_refine_1946ce43305aefbee803bf8108076b85"
       ],
       0,
-      "c4d5735c3c7680b309c76c9c4e386b6a"
+      "d58c6cfc12bbe85f16f35c2e67623ec8"
     ],
     [
       "NetKat.__proj__PrNot__item__p",
@@ -102,7 +102,7 @@
         "refinement_interpretation_Tm_refine_7760677cd8a5f6510bfc8a68ad245267"
       ],
       0,
-      "0961376dd70a9a46fad36397b38ed788"
+      "3b0bc037e848eb27f6662abeb6f9a5ff"
     ],
     [
       "NetKat.__proj__PoFilter__item__p",
@@ -115,7 +115,7 @@
         "refinement_interpretation_Tm_refine_e0380cdb056d7ca9abeae44e9ba6fa85"
       ],
       0,
-      "401eb2d41417dbdfddb94ec01be8314d"
+      "a0436f6d76cc3a35716295c1cd8ea90c"
     ],
     [
       "NetKat.__proj__PoMod__item__f",
@@ -128,7 +128,7 @@
         "refinement_interpretation_Tm_refine_cbdb8a3b39554f903e421008232b8117"
       ],
       0,
-      "d4c82ce2ee69a09bfb514a842ded361e"
+      "ae1e44bff80d6cbc58b3361120671104"
     ],
     [
       "NetKat.__proj__PoMod__item__v",
@@ -141,7 +141,7 @@
         "refinement_interpretation_Tm_refine_cbdb8a3b39554f903e421008232b8117"
       ],
       0,
-      "58deb5c70f081cb8d570653c9dc53412"
+      "0fd343fd21810f9f55aab81cca40c5ff"
     ],
     [
       "NetKat.__proj__PoUnion__item__p1",
@@ -154,7 +154,7 @@
         "refinement_interpretation_Tm_refine_a8893467cf1d00dd4f2ceb1dbd36a332"
       ],
       0,
-      "3c0725fc72884f2f5d5be67a201688e9"
+      "329f0fccebf0dd302afca2d39a9d6ffe"
     ],
     [
       "NetKat.__proj__PoUnion__item__p2",
@@ -167,7 +167,7 @@
         "refinement_interpretation_Tm_refine_a8893467cf1d00dd4f2ceb1dbd36a332"
       ],
       0,
-      "7e00344eba70c47406a92c14cd2e43dc"
+      "b7bef1a0d16007d730dc6d91b387680f"
     ],
     [
       "NetKat.__proj__PoSeq__item__p1",
@@ -180,7 +180,7 @@
         "refinement_interpretation_Tm_refine_dc2206fbcc21342adf2266b89e13e92a"
       ],
       0,
-      "012d4eadb1cee988ad3c0053c61805d0"
+      "c714bf8744141764d6fae15f04a73ac8"
     ],
     [
       "NetKat.__proj__PoSeq__item__p2",
@@ -193,7 +193,7 @@
         "refinement_interpretation_Tm_refine_dc2206fbcc21342adf2266b89e13e92a"
       ],
       0,
-      "39a89cb2132600f142e606a9ce4f792b"
+      "b9601680c5d2b697b4ca97c4c40e26ec"
     ],
     [
       "NetKat.__proj__PoStar__item__p",
@@ -206,214 +206,7 @@
         "refinement_interpretation_Tm_refine_85f8b73a81bd8fc5fad5d793e629d0e4"
       ],
       0,
-      "739ad618d1180c128f39e5c62023159a"
-    ],
-    [
-      "NetKat.predicate",
-      1,
-      2,
-      1,
-      [
-        "@query", "assumption_Prims.HasEq_int",
-        "assumption_Prims.HasEq_string"
-      ],
-      0,
-      "3ed41e19ec533e0ea853290ccb35a096"
-    ],
-    [
-      "NetKat.__proj__PrFieldEq__item__f",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PrFieldEq",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_bec35291186e95c3d6c80baa7a08d736"
-      ],
-      0,
-      "db682e4007d76ae30cbb5394c5e6aff8"
-    ],
-    [
-      "NetKat.__proj__PrFieldEq__item__v",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PrFieldEq",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_bec35291186e95c3d6c80baa7a08d736"
-      ],
-      0,
-      "e72a7f7b9968d930c344b8e7d6cc0a64"
-    ],
-    [
-      "NetKat.__proj__PrOr__item__p1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PrOr",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_d8586aba505eaf6dbae671713c3d3051"
-      ],
-      0,
-      "6b7dfe7e8b48f254e8a8c133a462a05f"
-    ],
-    [
-      "NetKat.__proj__PrOr__item__p2",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PrOr",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_d8586aba505eaf6dbae671713c3d3051"
-      ],
-      0,
-      "7d7adb78addfe8cdf3d415ebec986647"
-    ],
-    [
-      "NetKat.__proj__PrAnd__item__p1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PrAnd",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1946ce43305aefbee803bf8108076b85"
-      ],
-      0,
-      "004d0ffb11fcd9ec5896a573549b3c0f"
-    ],
-    [
-      "NetKat.__proj__PrAnd__item__p2",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PrAnd",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_1946ce43305aefbee803bf8108076b85"
-      ],
-      0,
-      "a85ff020e91707f71c420c7b92e7e059"
-    ],
-    [
-      "NetKat.__proj__PrNot__item__p",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PrNot",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_7760677cd8a5f6510bfc8a68ad245267"
-      ],
-      0,
-      "bc5985a315acfb287f78c725a348aed2"
-    ],
-    [
-      "NetKat.__proj__PoFilter__item__p",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoFilter",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_e0380cdb056d7ca9abeae44e9ba6fa85"
-      ],
-      0,
-      "fd8d4adea1d1b8244b62bc4d56456ced"
-    ],
-    [
-      "NetKat.__proj__PoMod__item__f",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoMod",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_cbdb8a3b39554f903e421008232b8117"
-      ],
-      0,
-      "2c6977bcaf591667e153765cb9f2debe"
-    ],
-    [
-      "NetKat.__proj__PoMod__item__v",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoMod",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_cbdb8a3b39554f903e421008232b8117"
-      ],
-      0,
-      "90ad81a005a9cc257dcba84529e25666"
-    ],
-    [
-      "NetKat.__proj__PoUnion__item__p1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoUnion",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_a8893467cf1d00dd4f2ceb1dbd36a332"
-      ],
-      0,
-      "4e49fa8f0144f7e839e43b6bb648669a"
-    ],
-    [
-      "NetKat.__proj__PoUnion__item__p2",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoUnion",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_a8893467cf1d00dd4f2ceb1dbd36a332"
-      ],
-      0,
-      "29ebbe99caea594f2f812bee4a0e0e52"
-    ],
-    [
-      "NetKat.__proj__PoSeq__item__p1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoSeq",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_dc2206fbcc21342adf2266b89e13e92a"
-      ],
-      0,
-      "6b186aa3b88858765fbbae05d8712a2d"
-    ],
-    [
-      "NetKat.__proj__PoSeq__item__p2",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoSeq",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_dc2206fbcc21342adf2266b89e13e92a"
-      ],
-      0,
-      "ac1f68aa22f8c724af983fc0f85f07ca"
-    ],
-    [
-      "NetKat.__proj__PoStar__item__p",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "disc_equation_NetKat.PoStar",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_85f8b73a81bd8fc5fad5d793e629d0e4"
-      ],
-      0,
-      "18a701f6b8c79d421e5fba76b51eb011"
+      "5c4051116ae9e68c6a9a9819a7fa81af"
     ]
   ]
 ]

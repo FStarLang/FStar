@@ -80,7 +80,7 @@ module C = FStar.Parser.Const
 
 let mk_by_tactic tac f =
     let t_by_tactic = S.mk_Tm_uinst (tabbrev C.by_tactic_lid) [U_zero] in
-    S.mk_Tm_app t_by_tactic [S.as_arg tac; S.as_arg f] None Range.dummyRange
+    S.mk_Tm_app t_by_tactic [S.as_arg tac; S.as_arg f] Range.dummyRange
 
 let rec delta_depth_greater_than l m = match l, m with
     | Delta_equational_at_level i, Delta_equational_at_level j -> i > j
@@ -209,7 +209,7 @@ let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:ga
     let print_gamma gamma =
         (gamma |> List.map (function
           | Binding_var x -> "Binding_var " ^ (Print.bv_to_string x)
-          | Binding_univ u -> "Binding_univ " ^ (text_of_id u)
+          | Binding_univ u -> "Binding_univ " ^ (string_of_id u)
           | Binding_lid (l, _) -> "Binding_lid " ^ (Ident.string_of_lid l)))//  @
     // (env.gamma_sig |> List.map (fun (ls, _) ->
     //     "Binding_sig " ^ (ls |> List.map Ident.string_of_lid |> String.concat ", ")
@@ -259,12 +259,20 @@ let implicits_to_string imps =
 
 type guard_t = {
   guard_f:    guard_formula;
+  deferred_to_tac: deferred; //This field maintains problems that are to be dispatched to a tactic
+                             //They are never attempted by the unification engine in Rel
   deferred:   deferred;
   univ_ineqs: list<universe> * list<univ_ineq>;
   implicits:  implicits;
 }
 
-let trivial_guard = {guard_f=Trivial; deferred=[]; univ_ineqs=([], []); implicits=[]}
+let trivial_guard = {
+  guard_f=Trivial;
+  deferred_to_tac=[];
+  deferred=[];
+  univ_ineqs=([], []);
+  implicits=[]
+}
 
 let conj_guard_f g1 g2 = match g1, g2 with
   | Trivial, g
@@ -281,11 +289,14 @@ let imp_guard_f g1 g2 = match g1, g2 with
   | NonTrivial f1, NonTrivial f2 ->
     let imp = U.mk_imp f1 f2 in check_trivial imp
 
-let binop_guard f g1 g2 = {guard_f=f g1.guard_f g2.guard_f;
-                           deferred=g1.deferred@g2.deferred;
-                           univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
-                                       snd g1.univ_ineqs@snd g2.univ_ineqs);
-                           implicits=g1.implicits@g2.implicits}
+let binop_guard f g1 g2 = {
+  guard_f=f g1.guard_f g2.guard_f;
+  deferred_to_tac=g1.deferred_to_tac@g2.deferred_to_tac;
+  deferred=g1.deferred@g2.deferred;
+  univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
+              snd g1.univ_ineqs@snd g2.univ_ineqs);
+  implicits=g1.implicits@g2.implicits
+}
 let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
 let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
 let conj_guards gs = List.fold_left conj_guard trivial_guard gs
@@ -370,13 +381,15 @@ let residual_comp_of_lcomp lc = {
     residual_flags=lc.cflags
   }
 
-let lcomp_of_comp c0 =
+let lcomp_of_comp_guard c0 g =
     let eff_name, flags =
         match c0.n with
         | Total _ -> PC.effect_Tot_lid, [TOTAL]
         | GTotal _ -> PC.effect_GTot_lid, [SOMETRIVIAL]
         | Comp c -> c.effect_name, c.flags in
-    mk_lcomp eff_name (U.comp_result c0) flags (fun () -> c0, trivial_guard)
+    mk_lcomp eff_name (U.comp_result c0) flags (fun () -> c0, g)
+
+let lcomp_of_comp c0 = lcomp_of_comp_guard c0 trivial_guard
 
 ////////////////////////////////////////////////////////////////////////////////
 // Core logical simplification of terms
@@ -406,7 +419,7 @@ let simplify (debug:bool) (tm:term) : term =
     let is_applied (bs:binders) (t : term) : option<bv> =
         if debug then
             BU.print2 "WPE> is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
-        let hd, args = U.head_and_args' t in
+        let hd, args = U.head_and_args_full t in
         match (SS.compress hd).n with
         | Tm_name bv when args_are_binders args bs ->
             if debug then
@@ -463,7 +476,7 @@ let simplify (debug:bool) (tm:term) : term =
         in
         let head, args = U.head_and_args t in
         let args = List.map maybe_un_auto_squash_arg args in
-        S.mk_Tm_app head args None t.pos
+        S.mk_Tm_app head args t.pos
     in
     let rec clearly_inhabited (ty : typ) : bool =
         match (U.unmeta ty).n with

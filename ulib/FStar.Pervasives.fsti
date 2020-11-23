@@ -40,6 +40,20 @@ include FStar.Pervasives.Native
 ///   trigger various kinds of special treatments for those
 ///   definitions.
 
+(** [remove_unused_type_parameters]
+
+    This attribute is used to decorate signatures in interfaces for
+    type abbreviations, indicating that the 0-based positional
+    parameters are unused in the definition and should be eliminated
+    for extraction.
+
+    This is important particularly for use with F# extraction, since
+    F# does not accept type abbreviations with unused type parameters.
+
+    See tests/bug-reports/RemoveUnusedTyparsIFace.A.fsti
+ *)
+val remove_unused_type_parameters : list int -> Tot unit
+
 (** Values of type [pattern] are used to tag [Lemma]s with SMT
     quantifier triggers *)
 type pattern : Type0 = unit
@@ -110,6 +124,7 @@ let trivial_pure_post (a: Type) : pure_post a = fun _ -> True
 
     Use [intro_ambient t] for that.
     See, e.g., LowStar.Monotonic.Buffer.fst and its usage there for loc_none *)
+[@@ remove_unused_type_parameters [0; 1;]]
 val ambient (#a: Type) (x: a) : Type0
 
 (** cf. [ambient], above *)
@@ -188,7 +203,7 @@ let st_if_then_else
       (wp_then wp_else: st_wp_h heap a)
       (post: st_post_h heap a)
       (h0: heap)
-     = l_ITE p (wp_then post h0) (wp_else post h0)
+     = wp_then post h0 /\ (~p ==> wp_else post h0)
 
 (** As with [PURE] the [ite_wp] combinator names the postcondition as
     [k] to avoid duplicating it. *)
@@ -272,7 +287,7 @@ let ex_bind_wp (r1: range) (a b: Type) (wp1: ex_wp a) (wp2: (a -> GTot (ex_wp b)
     First, a simple case analysis on [p] *)
 unfold
 let ex_if_then_else (a p: Type) (wp_then wp_else: ex_wp a) (post: ex_post a) =
-  l_ITE p (wp_then post) (wp_else post)
+  wp_then post /\ (~p ==> wp_else post)
 
 (** Naming continuations for use with branching *)
 unfold
@@ -378,7 +393,7 @@ let all_if_then_else
       (wp_then wp_else: all_wp_h heap a)
       (post: all_post_h heap a)
       (h0: heap)
-     = l_ITE p (wp_then post h0) (wp_else post h0)
+     = wp_then post h0 /\ (~p ==> wp_else post h0)
 
 (** Naming postcondition for better sharing in [ALL_h] *)
 unfold
@@ -434,6 +449,7 @@ new_effect {
  Be careful using this, since it explicitly subverts the [ifuel]
  setting. If used unwisely, this can lead to very poor SMT solver
  performance.  *)
+[@@ remove_unused_type_parameters [0]]
 val inversion (a: Type) : Type0
 
 (** To introduce [inversion t] in the SMT solver's context, call
@@ -489,7 +505,7 @@ val false_elim (#a: Type) (u: unit{False}) : Tot a
 /// Attributes are desugared and checked for being well-scoped. But,
 /// they are not type-checked.
 ///
-/// It is associated with a definition using the [[@attribute]]
+/// It is associated with a definition using the [[@@attribute]]
 /// notation, just preceding the definition.
 
 (** We collect several internal ocaml attributes into a single
@@ -502,16 +518,16 @@ val false_elim (#a: Type) (u: unit{False}) : Tot a
     An example:
 
      {[
-        [@ CInline ] let f x = UInt32.(x +%^ 1)
+        [@@ CInline ] let f x = UInt32.(x +%^ 1)
       ]}
 
     is extracted to C by KReMLin to a C definition tagged with the
     [inline] qualifier. *)
 type __internal_ocaml_attributes =
   | PpxDerivingShow
-  | PpxDerivingShowConstant of string (* Generate [@@ deriving show ] on the resulting OCaml type *)
+  | PpxDerivingShowConstant of string (* Generate [@@@ deriving show ] on the resulting OCaml type *)
   | PpxDerivingYoJson (* Similar, but for constant printers. *)
-  | CInline (* Generate [@@ deriving yojson ] on the resulting OCaml type *)
+  | CInline (* Generate [@@@ deriving yojson ] on the resulting OCaml type *)
   (* KreMLin-only: generates a C "inline" attribute on the resulting
      * function declaration. *)
   | Substitute
@@ -638,7 +654,7 @@ val unifier_hint_injective : unit
 
   In particular, given
      {[
-        [@(strict_on_arguments [1;2])]
+        [@@(strict_on_arguments [1;2])]
         let f x0 (x1:list x0) (x1:option x0) = e
      ]}
 
@@ -675,6 +691,57 @@ val resolve_implicits : unit
     See tests/micro-benchmarks/Erasable.fst, for examples.  Also
     see https://github.com/FStarLang/FStar/issues/1844 *)
 val erasable : unit
+
+(** THIS ATTRIBUTE CAN BREAK EXTRACTION SOUNDNESS, USE WITH CARE
+
+    Combinators for reifiable layered effects must have binders with
+    non-informative types, since at extraction time, those binders are
+    substituted with ().
+    This attribute can be added to a layered effect definition to skip this
+    check, i.e. adding it will allow informative binder types, but then
+    the code should not be extracted *)
+val allow_informative_binders : unit
+
+(** [commute_nested_matches]
+    This attribute can be used to decorate an inductive type [t]
+
+    During normalization, if reduction is blocked on matching the
+    constructors of [t] in the following sense:
+
+    [
+     match (match e0 with | P1 -> e1 | ... | Pn -> en) with
+     | Q1 -> f1 ... | Qm -> fm
+    ]
+
+    i.e., the outer match is stuck due to the inner match on [e0]
+    being stuck, and if the head constructor the outer [Qi] patterns
+    are the constructors of the decorated inductive type [t], then,
+    this is reduced to
+
+    [
+     match e0 with
+     | P1 -> (match e1 with | Q1 -> f1 ... | Qm -> fm)
+     | ...
+     | Pn -> (match en with | Q1 -> f1 ... | Qm -> fm)
+    ]
+
+    This is sometimes useful when partially evaluating code before
+    extraction, particularly when aiming to obtain first-order code
+    for KReMLin. However, this attribute should be used with care,
+    since if after the rewriting the inner matches do not reduce, then
+    this can cause an explosion in code size.
+
+    See tests/micro-benchmarks/CommuteNestedMatches.fst
+    and examples/layeredeffects/LowParseWriters.fsti
+  *)
+val commute_nested_matches : unit
+
+(** This attribute controls extraction: it can be used to disable
+    extraction of a given top-level definition into a specific backend,
+    such as "OCaml". If any extracted code must call into an erased
+    function, an error will be raised (code 340).
+  *)
+val noextract_to (backend:string) : Tot unit
 
 ///  Controlling normalization
 
@@ -719,7 +786,7 @@ val delta : norm_step
   *)
 val zeta : norm_step
 
-(** Unroll recursive calls 
+(** Unroll recursive calls
 
     Unlike [zeta], [zeta_full] has no looping prevention
     heuristics. F* will try to unroll recursive functions as much as
@@ -769,15 +836,15 @@ val delta_fully (s: list string) : Tot norm_step
       {[
         irreducible let my_attr = ()
 
-        [@my_attr]
+        [@@my_attr]
         let f0 = 0
 
-        [@my_attr]
+        [@@my_attr]
         let f1 = f0 + 1
       ]}
 
    {[norm [delta_attr [`%my_attr]] f1]}
-   
+
    will reduce to [0 + 1].
 
   *)
@@ -818,3 +885,9 @@ val singleton (#a: Type) (x: a) : Tot (y: a{y == x})
     an identity function, we have an SMT axiom:
     [forall t e.{:pattern (with_type t e)} has_type (with_type t e) t] *)
 val with_type (#t: Type) (e: t) : Tot t
+
+(** A weakening coercion from eqtype to Type.
+
+    One of its uses is in types of layered effect combinators that
+    are subjected to stricter typing discipline (no subtyping) *)
+unfold let eqtype_as_type (a:eqtype) : Type = a

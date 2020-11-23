@@ -36,7 +36,7 @@ let run_tactic_on_typ
                     =
     let rng = range_of_rng (use_range rng_goal) (use_range rng_tac) in
     let ps, w = proofstate_of_goal_ty rng env typ in
-    let gs, _res = run_tactic_on_ps rng_tac rng_goal e_unit () e_unit tactic ps in
+    let gs, _res = run_tactic_on_ps rng_tac rng_goal false e_unit () e_unit tactic ps in
     gs, w
 
 let run_tactic_on_all_implicits
@@ -47,8 +47,9 @@ let run_tactic_on_all_implicits
     let ps, _ = proofstate_of_all_implicits rng_goal env imps in
     let goals, () =
       run_tactic_on_ps
-        rng_tac
+        (Env.get_range env)
         rng_goal
+        true
         e_unit
         ()
         e_unit
@@ -247,6 +248,7 @@ let getprop (e:Env.env) (t:term) : option<term> =
     U.un_squash tn
 
 let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * O.optionstate)> =
+  Errors.with_ctx "While preprocessing VC with a tactic" (fun () ->
     tacdbg := Env.debug env (O.Other "Tac");
     if !tacdbg then
         BU.print2 "About to preprocess %s |= %s\n"
@@ -285,11 +287,13 @@ let preprocess (env:Env.env) (goal:term) : list<(Env.env * term * O.optionstate)
     let gs = List.rev gs in (* Return new VCs in same order as goals *)
     // Use default opts for main goal
     (env, t', O.peek ()) :: gs
+  )
 
 let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
+  Errors.with_ctx "While synthesizing term with a tactic" (fun () ->
     // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
     if env.nosynth
-    then mk_Tm_app (TcUtil.fvar_const env PC.magic_lid) [S.as_arg U.exp_unit] None typ.pos
+    then mk_Tm_app (TcUtil.fvar_const env PC.magic_lid) [S.as_arg U.exp_unit] typ.pos
     else begin
     tacdbg := Env.debug env (O.Other "Tac");
 
@@ -304,6 +308,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
             if !tacdbg then
               BU.print1 "Synthesis left a goal: %s\n" (Print.term_to_string vc);
             let guard = { guard_f = NonTrivial vc
+                        ; deferred_to_tac = []
                         ; deferred = []
                         ; univ_ineqs = [], []
                         ; implicits = [] } in
@@ -313,9 +318,10 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
             Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "synthesis left open goals") typ.pos) gs;
     w
     end
-
+  )
 
 let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
+  Errors.with_ctx "While solving implicits with a tactic" (fun () ->
     if env.nosynth then () else
     begin
     tacdbg := Env.debug env (O.Other "Tac");
@@ -331,6 +337,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
             if !tacdbg then
               BU.print1 "Synthesis left a goal: %s\n" (Print.term_to_string vc);
             let guard = { guard_f = NonTrivial vc
+                        ; deferred_to_tac = []
                         ; deferred = []
                         ; univ_ineqs = [], []
                         ; implicits = [] } in
@@ -341,14 +348,16 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
                             (Env.get_range env));
     ()
     end
+  )
 
-let splice (env:Env.env) (tau:term) : list<sigelt> =
+let splice (env:Env.env) (rng:Range.range) (tau:term) : list<sigelt> =
+  Errors.with_ctx "While running splice with a tactic" (fun () ->
     if env.nosynth then [] else begin
     tacdbg := Env.debug env (O.Other "Tac");
 
     let typ = S.t_decls in // running with goal type FStar.Reflection.Data.decls
     let ps = proofstate_of_goals tau.pos env [] [] in
-    let gs, sigelts = run_tactic_on_ps tau.pos tau.pos
+    let gs, sigelts = run_tactic_on_ps tau.pos tau.pos false
                                   e_unit ()
                                   (e_list RE.e_sigelt) tau ps in
 
@@ -364,19 +373,33 @@ let splice (env:Env.env) (tau:term) : list<sigelt> =
       BU.print1 "splice: got decls = %s\n"
                  (FStar.Common.string_of_list Print.sigelt_to_string sigelts);
 
-    // Unembed the result, this must work if things are well-typed
+    let sigelts = sigelts |> List.map (fun se ->
+        (* Check for bare Sig_datacon and Sig_inductive_typ, and abort if so. *)
+        begin match se.sigel with
+        | Sig_datacon _
+        | Sig_inductive_typ _ ->
+          Err.raise_error (Err.Error_BadSplice,
+                           (BU.format1 "Tactic returned bad sigelt: %s\nIf you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt." (Print.sigelt_to_string_short se))) rng
+        | _ -> ()
+        end;
+        { se with sigrng = rng })
+    in
     sigelts
     end
+  )
 
 let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =
+  Errors.with_ctx "While preprocessing a definition with a tactic" (fun () ->
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (O.Other "Tac");
     let ps = proofstate_of_goals tm.pos env [] [] in
-    let gs, tm = run_tactic_on_ps tau.pos tm.pos RE.e_term tm RE.e_term tau ps in
+    let gs, tm = run_tactic_on_ps tau.pos tm.pos false RE.e_term tm RE.e_term tau ps in
     tm
     end
+  )
 
 let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
+  Errors.with_ctx "While postprocessing a definition with a tactic" (fun () ->
     if env.nosynth then tm else begin
     tacdbg := Env.debug env (O.Other "Tac");
     let uvtm, _, g_imp = Env.new_implicit_var_aux "postprocess RHS" tm.pos env typ Allow_untyped None in
@@ -385,7 +408,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
     // eq2 is squashed already, so it's in Type0
     let goal = U.mk_squash U_zero (U.mk_eq2 u typ tm uvtm) in
     let gs, w = run_tactic_on_typ tau.pos tm.pos tau env goal in
-    // see comment in`synthesize`
+    // see comment in `synthesize`
     List.iter (fun g ->
         match getprop (goal_env g) (goal_type g) with
         | Some vc ->
@@ -393,6 +416,7 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
             if !tacdbg then
               BU.print1 "Postprocessing left a goal: %s\n" (Print.term_to_string vc);
             let guard = { guard_f = NonTrivial vc
+                        ; deferred_to_tac = []
                         ; deferred = []
                         ; univ_ineqs = [], []
                         ; implicits = [] } in
@@ -406,4 +430,4 @@ let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
 
     uvtm
     end
-
+  )

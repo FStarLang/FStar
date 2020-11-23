@@ -28,10 +28,10 @@ unfold let norm_simple #a (x:a) : a =
 type reg_file = int -> int
 
 
-[@qattr]
+[@@qattr]
 let sel (r:reg_file) (x:int) = r x
 
-[@qattr]
+[@@qattr]
 let upd (r:reg_file) (x:int) (v:int) = fun y -> if x=y then v else sel r y
 
 
@@ -61,15 +61,15 @@ noeq type state = {
   mem: int;
 }
 
-[@qattr]
+[@@qattr]
 let up_reg (r:int) (v:int) (s:state) : state =
   { s with regs = fun r' -> if r = r' then v else s.regs r' }
 
-[@qattr]
+[@@qattr]
 let up_xmm (x:int) (v:int) (s:state) : state =
   { s with xmms = fun x' -> if x = x' then v else s.xmms x' }
 
-[@qattr] let update_reg (r:int) (sM:state) (sK:state) : state = up_reg r (sM.regs r) sK [@qattr] let update_xmm (x:int) (sM:state) (sK:state) : state = up_xmm x (sM.xmms x) sK [@qattr] let upd_flags (flags:int) (s:state) : state = { s with flags = flags } [@qattr] let upd_mem (mem:int) (s:state) : state = { s with mem = mem }
+[@@qattr] let update_reg (r:int) (sM:state) (sK:state) : state = up_reg r (sM.regs r) sK [@@qattr] let update_xmm (x:int) (sM:state) (sK:state) : state = up_xmm x (sM.xmms x) sK [@@qattr] let upd_flags (flags:int) (s:state) : state = { s with flags = flags } [@@qattr] let upd_mem (mem:int) (s:state) : state = { s with mem = mem }
 
 
 
@@ -86,7 +86,7 @@ unfold let normal (x:Type0) : Type0 =
   norm [iota; zeta; simplify; primops; delta_attr [`%qattr]; delta_only normal_steps] x
 
 
-[@ "opaque_to_smt" qattr]
+[@@ "opaque_to_smt" qattr]
 let wp_compute_ghash_incremental (x:int) (s0:state) (k:(state -> Type0)) : Type0 =
   let sM = s0 in
 // COMMENT OUT 1-3 OF THE FOLLOWING LINES TO SPEED UP:

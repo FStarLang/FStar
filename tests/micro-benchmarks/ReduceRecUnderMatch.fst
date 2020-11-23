@@ -54,17 +54,24 @@ let rec f2 (l : list nat)
 
 (** To partially evaluate all the recursion in [f2],
     postprocess the definition with the unroll tactic *)
-[@(postprocess_with (unroll (`%f2)))]
+[@@(postprocess_with (unroll (`%f2)))]
 let f3 (b:bool) : Dv bool =
     f2 [1;2;3;4] b
 
 (** You can also do the same, but wait until extraction to unroll it *)
-[@(postprocess_for_extraction_with (unroll (`%f2)))]
+[@@(postprocess_for_extraction_with (unroll (`%f2)))]
 let f4 (b:bool) : Dv bool =
     f2 [1;2;3;4] b
 
-(* Unfortunately, this style doesn't work yet because of a normalizer
-   bug in the handling of Pervasives.norm. I'm trying to fix that, but
-   meanwhile, you can use the above style *)
+let norm_and_check_no t () =
+  T.norm [];
+  checkno (qname_as_term t);
+  T.trefl()
+
+(** This style also works, with a `Pervasives.norm`
+    The tactic is only used here as a scaffolding for a test harness,
+    ensuring that the norm [zeta_full; ... ] works as intended
+    and removes all occurrences of f2 *)
+[@@(postprocess_with (norm_and_check_no (`%f2)))]
 let g : (b:bool) -> Dv bool =
   Pervasives.norm [zeta_full; delta_only [`%f2]; iota] (f2 [1;2;3])

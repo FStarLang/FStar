@@ -2,6 +2,8 @@
 
 #set -x
 
+set -e # abort on errors
+
 target=$1
 out_file=$2 # GM: This seems unused
 threads=$3
@@ -86,9 +88,7 @@ function fetch_kremlin() {
     export_home KREMLIN "$(pwd)/kremlin"
 }
 
-function fetch_and_make_kremlin() {
-    fetch_kremlin
-
+function make_kremlin() {
     # Default build target is minimal, unless specified otherwise
     local localTarget
     if [[ $1 == "" ]]; then
@@ -123,9 +123,7 @@ function fetch_qd() {
     export_home QD "$(pwd)/qd"
 }
 
-function fetch_and_make_qd() {
-    fetch_qd
-
+function make_qd() {
     # Default build target is minimal, unless specified otherwise
     local localTarget
     if [[ $1 == "" ]]; then
@@ -235,7 +233,11 @@ function fstar_default_build () {
         export OTHERFLAGS="--record_hints $OTHERFLAGS"
     fi
 
-    fetch_kremlin
+    # Start fetching while we build F*
+    fetch_kremlin &
+    fetch_hacl &
+    fetch_qd &
+    fetch_mitls &
 
     # Build F*, along with fstarlib
     if ! make -C src -j $threads utest-prelude; then
@@ -246,26 +248,22 @@ function fstar_default_build () {
 
     export_home FSTAR "$(pwd)"
 
-    # Fetch and build subprojects for orange tests
-    fetch_hacl &
-    fetch_and_make_kremlin &
-    fetch_mitls &
-    fetch_and_make_qd &
-    {
-        if [ ! -d hacl-star-old ]; then
-            git clone https://github.com/mitls/hacl-star hacl-star-old
-            cd hacl-star-old && git reset --hard 98755f79579a0c153140e8d9a186145beafacf8f
-        fi
-    } &
-    wait
-    # fetch_vale depends on fetch_hacl for the hacl-star/vale/.vale_version file
-    fetch_vale
+    wait # for fetches above
 
     # The commands above were executed in sub-shells and their EXPORTs are not
     # propagated to the current shell. Re-do.
     export_home HACL "$(pwd)/hacl-star"
+    export_home EVERCRYPT "$(pwd)/hacl-star/providers"
     export_home KREMLIN "$(pwd)/kremlin"
     export_home QD "$(pwd)/qd"
+
+    # Fetch and build subprojects for orange tests
+    make_kremlin &
+    make_qd &
+    wait
+
+    # fetch_vale depends on fetch_hacl for the hacl-star/vale/.vale_version file
+    fetch_vale
 
     # Once F* is built, run its main regression suite, along with more relevant
     # tests.
@@ -310,12 +308,6 @@ function fstar_default_build () {
             {
                 echo "Error - Pkg.fst-ver (mitls verify)"
                 echo " - Pkg.fst-ver (mitls verify)" >>$ORANGE_FILE
-            }
-
-        OTHERFLAGS="--use_hint_hashes --use_extracted_interfaces true" make -C mitls-fstar/src/tls -j $threads Pkg.fst-ver ||
-            {
-                echo "Error - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)"
-                echo " - Pkg.fst-ver with --use_extracted_interfaces true (mitls verify)" >>$ORANGE_FILE
             }
     } &
 

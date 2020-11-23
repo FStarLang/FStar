@@ -138,8 +138,7 @@ type compatibilityMode =
     | FSHARP  (* keyword, but an identifier under --ml-compatibility mode *)
 
 let keywords =
-  [ ALWAYS, "abstract"   ,ABSTRACT;
-    ALWAYS, "attributes" ,ATTRIBUTES;
+  [ ALWAYS, "attributes" ,ATTRIBUTES;
     ALWAYS, "noeq"       ,NOEQUALITY;
     ALWAYS, "unopteq"    ,UNOPTEQUALITY;
     ALWAYS, "and"        ,AND;
@@ -149,6 +148,7 @@ let keywords =
     ALWAYS, "by"         ,BY;
     ALWAYS, "calc"       ,CALC;
     ALWAYS, "class"      ,CLASS;
+    ALWAYS, "decreases"  ,DECREASES;
     FSHARP, "default"    ,DEFAULT;
     ALWAYS, "effect"     ,EFFECT;
     ALWAYS, "else"       ,ELSE;
@@ -176,6 +176,7 @@ let keywords =
     ALWAYS, "new_effect" ,NEW_EFFECT;
     ALWAYS, "layered_effect"            ,LAYERED_EFFECT;
     ALWAYS, "polymonadic_bind"          ,POLYMONADIC_BIND;
+    ALWAYS, "polymonadic_subcomp"       ,POLYMONADIC_SUBCOMP;
     ALWAYS, "noextract",  NOEXTRACT;
     ALWAYS, "of"         ,OF;
     ALWAYS, "open"       ,OPEN;

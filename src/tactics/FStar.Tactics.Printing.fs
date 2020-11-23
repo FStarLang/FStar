@@ -30,7 +30,7 @@ let goal_to_string_verbose (g:goal) : string =
 
 let unshadow (bs : binders) (t : term) : binders * term =
     (* string name of a bv *)
-    let s b = (text_of_id b.ppname) in
+    let s b = (string_of_id b.ppname) in
     let sset bv s = S.gen_bv s (Some (range_of_id bv.ppname)) bv.sort in
     let fresh_until b f =
         let rec aux i =
@@ -119,6 +119,7 @@ let goal_to_json g =
 let ps_to_json (msg, ps) =
     JsonAssoc ([("label", JsonStr msg);
                 ("depth", JsonInt ps.depth);
+                ("urgency", JsonInt ps.urgency);
                 ("goals", JsonList (List.map goal_to_json ps.goals));
                 ("smt-goals", JsonList (List.map goal_to_json ps.smt_goals))] @
                 (if ps.entry_range <> Range.dummyRange
@@ -132,4 +133,3 @@ let do_dump_proofstate ps msg =
             print_generic "proof-state" ps_to_string ps_to_json (msg, ps);
             BU.flush_stdout () (* in case this is going to stdout, flush it immediately *)
         )
-

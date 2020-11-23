@@ -364,4 +364,6 @@ let upd_seq_spec (#b: _) (h:HS.mem) (vb:buffer b{live h vb}) (s:Seq.seq b{Seq.le
     assert (as_seq h' vb == s);
     assert (as == B.as_seq h' (as_buffer vb));
     let v= get_view vb in
-    FStar.Classical.forall_intro_2 (fun x y -> FStar.Classical.move_requires (as_seq'_injective v x) y)
+    FStar.Classical.forall_intro_2 (fun as1 as2 ->
+      Classical.move_requires (as_seq'_injective v as1) as2
+         <: Lemma ((as_seq' as1 v `Seq.equal` as_seq' as2 v) ==> (as1 `Seq.equal` as2)))

@@ -640,7 +640,7 @@ let encode_top_level_let :
       let formals, extra_formals = BU.first_N nbinders formals in
       let subst = List.map2 (fun (formal, _) (binder, _) -> NT(formal, S.bv_to_name binder)) formals binders in
       let extra_formals = extra_formals |> List.map (fun (x, i) -> {x with sort=SS.subst subst x.sort}, i) |> U.name_binders in
-      let body = Syntax.extend_app_n (SS.compress body) (snd <| U.args_of_binders extra_formals) None body.pos in
+      let body = Syntax.extend_app_n (SS.compress body) (snd <| U.args_of_binders extra_formals) body.pos in
       binders@extra_formals, body
     in
 
@@ -984,7 +984,9 @@ let encode_top_level_let :
                     (if plural then "s" else "")
                     (List.map fst names |> String.concat ",")
                     (if plural then "their" else "its"),
-                  r)];
+                  r,
+                  Errors.get_ctx () // TODO: fix this, leaking abstraction
+                  )];
               decls, env_decls  //decls are type declarations for the lets, if there is an inner let rec, only those are encoded to the solver
 
     with Let_rec_unencodeable ->
@@ -997,11 +999,21 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
     let nm =
         match U.lid_of_sigelt se with
         | None -> ""
-        | Some l -> (string_of_lid l) in
-    let g, env = encode_sigelt' env se in
+        | Some l -> (string_of_lid l)
+    in
+    let g, env = Errors.with_ctx (BU.format1 "While encoding top-level declaration `%s`"
+                                             (Print.sigelt_to_string_short se))
+                   (fun () -> encode_sigelt' env se)
+    in
     let g =
         match g with
-         | [] -> [Caption (BU.format1 "<Skipped %s/>" nm)] |> mk_decls_trivial
+         | [] ->
+            begin
+            if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+              BU.print1 "Skipped encoding of %s\n" nm;
+            [Caption (BU.format1 "<Skipped %s/>" nm)] |> mk_decls_trivial
+            end
+
          | _ -> ([Caption (BU.format1 "<Start encoding %s>" nm)] |> mk_decls_trivial)
                 @g
                 @([Caption (BU.format1 "</end encoding %s>" nm)] |> mk_decls_trivial) in
@@ -1029,7 +1041,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_pragma _
      | Sig_effect_abbrev _
      | Sig_sub_effect _
-     | Sig_polymonadic_bind _ -> [], env
+     | Sig_polymonadic_bind _
+     | Sig_polymonadic_subcomp _ -> [], env
 
      | Sig_new_effect(ed) ->
        if not (is_smt_reifiable_effect env.tcenv ed.mname)
@@ -1048,7 +1061,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let close_effect_params tm =
               match ed.binders with
               | [] -> tm
-              | _ -> S.mk (Tm_abs(ed.binders, tm, Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL]))) None tm.pos
+              | _ -> S.mk (Tm_abs(ed.binders, tm, Some (U.mk_residual_comp Const.effect_Tot_lid None [TOTAL]))) tm.pos
             in
 
             let encode_action env (a:S.action) =
@@ -1147,11 +1160,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_let(_, _) when (se.sigquals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->
       //Discriminators are encoded directly via (our encoding of) theory of datatypes
+      if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+        BU.print1 "Not encoding discriminator '%s'\n" (Print.sigelt_to_string_short se);
       [], env
 
-    | Sig_let(_, lids) when (lids |> BU.for_some (fun (l:lident) -> text_of_id (List.hd (ns_of_lid l)) = "Prims")
+    | Sig_let(_, lids) when (lids |> BU.for_some (fun (l:lident) -> string_of_id (List.hd (ns_of_lid l)) = "Prims")
                              && se.sigquals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
+      if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+        BU.print1 "Not encoding unfold let from Prims '%s'\n" (Print.sigelt_to_string_short se);
       [], env
 
     | Sig_let((false, [lb]), _)
@@ -1215,7 +1232,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  (S.mk_Tm_app
                    (S.fvar t (Delta_constant_at_level 0) None)
                    (snd (U.args_of_binders tps))
-                   None
                    (Ident.range_of_lid t))
                  k
              in
@@ -1299,7 +1315,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           let k =
             match tps with
             | [] -> k
-            | _ -> S.mk (Tm_arrow (tps, S.mk_Total k)) None k.pos
+            | _ -> S.mk (Tm_arrow (tps, S.mk_Total k)) k.pos
           in
           let k = norm_before_encoding env k in
           U.arrow_formals k
@@ -1707,14 +1723,14 @@ let encode_modul tcenv modul =
     varops.reset_fresh ();
     let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  (string_of_lid modul.name) in
     if Env.debug tcenv Options.Medium
-    then BU.print2 "+++++++++++Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> string_of_int);
+    then BU.print2 "+++++++++++Encoding externals for %s ... %s declarations\n" name (List.length modul.declarations |> string_of_int);
     let env = get_env modul.name tcenv |> reset_current_module_fvbs in
     let encode_signature (env:env_t) (ses:sigelts) =
         ses |> List.fold_left (fun (g, env) se ->
           let g', env = encode_top_level_facts env se in
           g@g', env) ([], env)
     in
-    let decls, env = encode_signature ({env with warn=false}) modul.exports in
+    let decls, env = encode_signature ({env with warn=false}) modul.declarations in
     give_decls_to_z3_and_set_env env name decls;
     if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals for %s\n" name;
     decls, env |> get_current_module_fvbs
@@ -1740,7 +1756,9 @@ let encode_query use_env_msg tcenv q
   * list<ErrorReporting.label> //labels in the query
   * decl        //the query itself
   * list<decl>  //suffix, evaluating labels in the model, etc.
-  = Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));
+  =
+  Errors.with_ctx "While encoding a query" (fun () ->
+    Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));
     let env = get_env (Env.current_module tcenv) tcenv in
     let q, bindings =
         let rec aux bindings = match bindings with
@@ -1791,3 +1809,4 @@ let encode_query use_env_msg tcenv q
     || debug tcenv <| Options.Other "Time"
     then BU.print1 "Encoding took %sms\n" (string_of_int ms);
     query_prelude, labels, qry, suffix
+  )

@@ -1,6 +1,5 @@
 HINTS_ENABLED?=--use_hints
-# 271: theory symbols in smt patters
-WARN_ERROR=--warn_error -271
+WARN_ERROR=
 OTHERFLAGS+=$(WARN_ERROR)
 
 ifdef Z3

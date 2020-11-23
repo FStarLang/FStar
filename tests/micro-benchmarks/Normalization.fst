@@ -62,7 +62,7 @@ let test_sort1 = assert_norm (FStar.List.Tot.sortWith (FStar.List.Tot.compare_of
 (*
  * Cf. #1529
  *)
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 let f_1529 (x:int) = 5
 
 let f_1529_1 () =
@@ -76,3 +76,13 @@ let f_1529_2 () =
 let f_1529_3 () =
   reveal_opaque (`%f_1529) f_1529;
   assert (f_1529 4 == 5)
+
+
+(*
+ * FStar.Char.u32_of_char
+ *)
+#push-options "--no_smt"
+let test_u32_of_char () =
+  assert_norm (FStar.Char.u32_of_char 'c' == 99ul);
+  assert_norm (FStar.Char.u32_of_char '→' == 8594ul)
+#pop-options

@@ -8,24 +8,18 @@ open FStar.Order
 module Env = FStar.TypeChecker.Env
 open FStar.Reflection.Data
 open FStar.ST
-module O = FStar.Options
-module RD = FStar.Reflection.Data
+module O   = FStar.Options
+module RD  = FStar.Reflection.Data
 module EMB = FStar.Syntax.Embeddings
-module Z = FStar.BigInt
-
-(* Tying a knot into the environment which started execution.
- * Needed to inspect sigelts and the like without needing
- * to explicitly pass it in. This entire module should really be in
- * the TAC effect, and this crap is a symptom, let's move it. *)
-val env_hook : ref<option<Env.env>>
-
-(* Another hack to circumvent module recursion *)
-val e_optionstate_hook : ref<option<EMB.embedding<O.optionstate>>>
+module Z   = FStar.BigInt
+open FStar.VConfig
 
 (* Primitives *)
 val compare_bv            : bv -> bv -> order
 val lookup_typ            : Env.env -> list<string> -> option<sigelt>
 val is_free               : bv -> term -> bool
+val free_bvs              : term -> list<bv>
+val free_uvars            : term -> list<Z.t>
 val lookup_attr           : term -> Env.env -> list<fv>
 val all_defs_in_env       : Env.env -> list<fv>
 val defs_in_module        : Env.env -> name -> list<fv>
@@ -35,7 +29,8 @@ val term_eq               : term -> term -> bool
 val term_to_string        : term -> string
 val comp_to_string        : comp -> string
 val env_open_modules      : Env.env -> list<name>
-val sigelt_opts           : sigelt -> option<term>
+val sigelt_opts           : sigelt -> option<vconfig>
+val embed_vconfig         : vconfig -> term
 
 val sigelt_attrs     : sigelt -> list<attribute>
 val set_sigelt_attrs : list<attribute> -> sigelt -> sigelt
@@ -67,6 +62,8 @@ val pack_binder    : bv -> aqualv -> binder
 
 val inspect_aqual  : aqual -> aqualv
 val pack_aqual     : aqualv -> aqual
+
+val subst          : bv -> term -> term -> term
 
 (* We're only taking these as primitives to break the dependency from *
 FStar.Tactics into FStar.String, which pulls a LOT of modules. *)

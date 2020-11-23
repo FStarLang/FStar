@@ -11,7 +11,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "fab31647debb7f63468f47923c7bd91d"
+      "0e82154e8123999c61028ae33735aa40"
     ],
     [
       "OPLSS.HMACSHA1.tag",
@@ -23,7 +23,7 @@
         "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "7d8488d2bc61a29c30617a539555821d"
+      "36e9e537dd4852ca588ae362b66fb785"
     ],
     [
       "OPLSS.HMACSHA1.hmac_sha1",
@@ -48,56 +48,7 @@
         "typing_OPLSS.byte_of_int"
       ],
       0,
-      "b7ea2003078a1be4581d3a8eb732b9ec"
-    ],
-    [
-      "OPLSS.HMACSHA1.sha1_key",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_OPLSS.HMACSHA1.keysize",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "44bea178010a8c513c44907f35e163cd"
-    ],
-    [
-      "OPLSS.HMACSHA1.tag",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_OPLSS.HMACSHA1.macsize",
-        "projection_inverse_BoxInt_proj_0"
-      ],
-      0,
-      "190b01cc1a86c89b4e294c03eef1a8cd"
-    ],
-    [
-      "OPLSS.HMACSHA1.hmac_sha1",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.UInt8_pretyping_512f0e4172b97206a8b0e16196475713",
-        "equation_OPLSS.HMACSHA1.blocksize",
-        "equation_OPLSS.HMACSHA1.keysize",
-        "equation_OPLSS.HMACSHA1.sha1_key", "equation_OPLSS.bytes",
-        "equation_OPLSS.lbytes", "equation_Prims.eqtype",
-        "equation_Prims.nat", "int_typing",
-        "lemma_FStar.Seq.Base.lemma_create_len",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_1770f7f5914d37a8c358e0f35e606914",
-        "refinement_interpretation_Tm_refine_31c7d3d85d92cb942c95a78642e657c7",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "typing_FStar.Seq.Base.length", "typing_FStar.UInt8.t",
-        "typing_OPLSS.byte_of_int"
-      ],
-      0,
-      "b1719a60921e4efbe8832fa8346190ef"
+      "f565f9f97ea65eda787702ce1e64b581"
     ]
   ]
 ]

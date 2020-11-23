@@ -26,13 +26,13 @@ let id () : Tot unit = ()
 let _ = taketot id
 let _ = takegtot id
 
-[@(expect_failure [189])]
+[@@(expect_failure [189])]
 let _ = taketac id
 
 let f0 : int -> Tot int = fun x -> x
 let g0 : #a:Type -> #b:Type -> (a -> Tac b) -> a -> Tac b = fun #a #b f x -> f x
 
-[@(expect_failure [189])]
+[@@(expect_failure [189])]
 let tau () = let x = g0 f0 2 in ()
 
 // would get stuck
@@ -40,7 +40,7 @@ let tau () = let x = g0 f0 2 in ()
 
 let f (x : int) : Tot int = x + 1
 
-[@(expect_failure [189])]
+[@@(expect_failure [189])]
 let _ = assert_by_tactic True
             (fun () -> let l = map f [1] in
                        ())
@@ -65,7 +65,7 @@ let rec list_sum (l:list nat) : nat =
   | n :: l' ->
     n + (list_sum l')
 
-[@(expect_failure [189])]
+[@@(expect_failure [189])]
 let recursive_norm () : Tac unit =
   let ctrl (t : term) = (true, 0) in
   topdown_rewrite ctrl trefl

@@ -32,7 +32,7 @@
         "typing_FStar.Seq.Base.index"
       ],
       0,
-      "2d71bf36f0fe6782ea220b0ec697634b"
+      "50e40e052b522fc3b79a61a16de50afd"
     ],
     [
       "OTP.bij",
@@ -60,7 +60,7 @@
         "typing_FStar.DM4F.OTP.Heap.to_id", "typing_FStar.DM4F.OTP.Heap.upd"
       ],
       0,
-      "9fe2e7258aac02e6d73e1219418f9e33"
+      "a4d5f64769e8e396d924e739950aa26d"
     ],
     [
       "OTP.xor_prop",
@@ -96,7 +96,7 @@
         "typing_FStar.Seq.Base.index"
       ],
       0,
-      "1f000ce1ab464ccf40f41cac4e6ec582"
+      "3cf52cb98aeab909d962960b37ae9ba1"
     ],
     [
       "OTP.otp_secure",
@@ -162,130 +162,7 @@
         "unit_typing"
       ],
       0,
-      "be4d37cb1f1c75ade612d123920a3e14"
-    ],
-    [
-      "OTP.op_Hat_Hat",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
-        "refinement_interpretation_Prims_Tm_refine_f048236b5f8051f83b495ea5eaa6127b"
-      ],
-      0,
-      "0d47587ab9564f77dd0c2006c2c116a8"
-    ],
-    [
-      "OTP.xor_idempotent",
-      2,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.BitVector.logxor_vec.fuel_instrumented",
-        "@fuel_irrelevance_FStar.BitVector.logxor_vec.fuel_instrumented",
-        "@query", "Prims_pretyping_f537159ed795b314b4e58c260361ae86",
-        "bool_inversion", "bool_typing", "equation_FStar.BitVector.bv_t",
-        "equation_FStar.DM4F.OTP.Heap.elem", "equation_OTP.op_Hat_Hat",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_Prims.bool", "int_inversion",
-        "lemma_FStar.BitVector.logxor_vec_definition",
-        "lemma_FStar.Seq.Base.lemma_eq_elim",
-        "primitive_Prims.op_disEquality",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_5fe6997c7dcd85a789398b4f012d50e2",
-        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
-        "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
-        "refinement_interpretation_Tm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e",
-        "token_correspondence_FStar.BitVector.logxor_vec",
-        "token_correspondence_OTP.op_Hat_Hat",
-        "typing_FStar.BitVector.logxor_vec", "typing_FStar.DM4F.OTP.Heap.q",
-        "typing_FStar.Seq.Base.index"
-      ],
-      0,
-      "b52450c002a8137c42ffefafed18c1ae"
-    ],
-    [
-      "OTP.bij",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.BitVector_interpretation_Tm_arrow_d5001f682a0789c7aa8e67d06058b034",
-        "equation_FStar.DM4F.OTP.Heap.elem",
-        "equation_FStar.DM4F.OTP.Heap.sel",
-        "equation_FStar.DM4F.OTP.Heap.size", "equation_OTP.op_Hat_Hat",
-        "equation_Prims.nat",
-        "function_token_typing_FStar.BitVector.logxor_vec", "int_typing",
-        "lemma_FStar.DM4F.OTP.Heap.lemma_eq_intro",
-        "lemma_FStar.DM4F.OTP.Heap.lemma_index_upd1",
-        "lemma_FStar.DM4F.OTP.Heap.lemma_index_upd2",
-        "lemma_OTP.xor_idempotent", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_a7b6a6d2bd5866f2aebb991bbb9a8621",
-        "refinement_interpretation_Tm_refine_ab1935d06c5b83d762f98a79720546e5",
-        "token_correspondence_FStar.BitVector.logxor_vec",
-        "token_correspondence_OTP.op_Hat_Hat",
-        "typing_FStar.DM4F.OTP.Heap.q", "typing_FStar.DM4F.OTP.Heap.sel",
-        "typing_FStar.DM4F.OTP.Heap.to_id", "typing_FStar.DM4F.OTP.Heap.upd"
-      ],
-      0,
-      "01ff6a49346756ed444d360e7ec6f4de"
-    ],
-    [
-      "OTP.xor_prop",
-      2,
-      2,
-      1,
-      [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.BitVector.logxor_vec.fuel_instrumented",
-        "@fuel_irrelevance_FStar.BitVector.logxor_vec.fuel_instrumented",
-        "@query",
-        "FStar.BitVector_interpretation_Tm_arrow_006f5bd096f4bee0f94d2d70b137c448",
-        "Prims_pretyping_f537159ed795b314b4e58c260361ae86", "bool_inversion",
-        "bool_typing", "equation_FStar.BitVector.bv_t",
-        "equation_FStar.DM4F.OTP.Heap.elem", "equation_OTP.op_Hat_Hat",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "function_token_typing_FStar.BitVector.logxor_vec",
-        "function_token_typing_Prims.bool", "int_inversion",
-        "lemma_FStar.BitVector.logxor_vec_definition",
-        "lemma_FStar.Seq.Base.lemma_eq_elim",
-        "primitive_Prims.op_disEquality",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c",
-        "refinement_interpretation_Tm_refine_d83f8da8ef6c1cb9f71d1465c1bb1c55",
-        "refinement_interpretation_Tm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e",
-        "refinement_interpretation_Tm_refine_e823aa4a10399492746a2bbc2bdbec0f",
-        "token_correspondence_FStar.BitVector.logxor_vec",
-        "token_correspondence_OTP.op_Hat_Hat",
-        "typing_FStar.BitVector.logxor_vec", "typing_FStar.DM4F.OTP.Heap.q",
-        "typing_FStar.Seq.Base.index"
-      ],
-      0,
-      "e58698046e223f604b0d51e3d2f35dc1"
-    ],
-    [
-      "OTP.otp_secure",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_FStar.BitVector.bv_t",
-        "equation_FStar.DM4F.OTP.Heap.elem", "equation_Prims.eqtype",
-        "function_token_typing_Prims.bool",
-        "haseqTm_refine_e2d5d62a90ceed8a6faf9d20615f4e1e",
-        "lemma_FStar.Seq.Base.hasEq_lemma",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "89271db247cce93d634581033e909b57"
+      "4dc7468056e83579e9a4b9e780fc2757"
     ]
   ]
 ]

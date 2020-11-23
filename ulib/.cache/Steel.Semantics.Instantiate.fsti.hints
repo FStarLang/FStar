@@ -1,14 +1,26 @@
 [
-  "¾ƒ\u000e^ú4\u0001¶Q¶kË ’ðÛ",
+  "JVUV\u000b8!Kó\u0005½\u0011ˆÀ¦™",
   [
     [
-      "Steel.Semantics.Instantiate.state",
+      "Steel.Semantics.Instantiate.state_uses",
       1,
       2,
       1,
       [ "@query" ],
       0,
-      "3b434ea1dbdfc045bf6477a2539c9a8e"
+      "2812d1abb114c07840a6f88be24b7ebb"
+    ],
+    [
+      "Steel.Semantics.Instantiate.state_correspondence",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_83b7f74668e2de4073384eaaf24260ac"
+      ],
+      0,
+      "8b8223cab2b4220556bbcbac862e0f23"
     ]
   ]
 ]

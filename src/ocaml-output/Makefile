@@ -42,7 +42,6 @@ GENERATED_FILES=parse.mly FStar_Parser_Parse.ml FStar_Version.ml intfiles
 # The directory where we install files when doing "make install".
 # Overridden via the command-line by the OPAM invocation.
 PREFIX=$(shell pwd)/fstar
-PATH_TO_FILE=$(PREFIX)/bin/z3.exe
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
 DOS2UNIX=$(shell which dos2unix >/dev/null 2>&1 && echo dos2unix || echo true)
@@ -154,10 +153,10 @@ FStar_Parser_Parse.ml: parse.mly
 	$(Q)ocamlyacc parse.mly 2> yac-log
 	$(Q)cat yac-log
 	@if [ "0$$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/')" -gt 6 ]; then \
-	  @echo "shift-reduce conflicts have increased; please fix" && exit 255; \
+	  echo "shift-reduce conflicts have increased; please fix" && rm -f $@ && false; \
 	fi
 	@if grep -q "reduce/reduce" yac-log ; then \
-	  @echo "A reduce-reduce conflict was introduced; please fix" && exit 255; \
+	  echo "A reduce-reduce conflict was introduced; please fix" && rm -f $@ && false; \
 	fi
 	$(Q)cat parse.ml >> $@
 	$(Q)rm parse.ml parse.mli
@@ -277,7 +276,6 @@ package: all
 	$(call fexport,tests)
 	$(call fexport,ucontrib)
 	$(call fexport,doc/tutorial)
-
 ifeq ($(MADOKO),Madoko)
 	@# Build the tutorial
 	+$(MAKE) -C fstar/doc/tutorial
@@ -290,7 +288,6 @@ endif
 	@# Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt $(PREFIX)
 	cp $(Z3_LICENSE) $(PREFIX)/LICENSE-z3.txt
-
 	@# Z3
 ifeq ($(OS),Windows_NT)
 	cp $(shell which libgmp-10.dll) $(PREFIX)/bin

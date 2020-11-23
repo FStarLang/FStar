@@ -11,7 +11,7 @@
         "equation_Cap.byte", "equation_Platform.Bytes.bytes"
       ],
       0,
-      "22ddad53a0f13dd85206d9d5fd1c5e7c"
+      "7c41f6afe3e402a27e8bed458394da61"
     ],
     [
       "Cap.issue",
@@ -28,7 +28,7 @@
         "string_inversion", "token_correspondence_Cap.capRead"
       ],
       0,
-      "7eeb6a1859af84065d9f5befac9c1506"
+      "fbe4af0dda80b48831177b07570cd5b6"
     ],
     [
       "Cap.main",
@@ -55,36 +55,7 @@
         "typing_Platform.Bytes.equalBytes", "unit_typing"
       ],
       0,
-      "855d1822eae65cd6fa4d12b0262ce116"
-    ],
-    [
-      "Cap.capRead",
-      2,
-      2,
-      1,
-      [
-        "@query", "assumption_Platform.Bytes.HasEq_bytes",
-        "equation_Cap.byte", "equation_Platform.Bytes.bytes"
-      ],
-      0,
-      "eba8499348468ceac5375cfdf720fdee"
-    ],
-    [
-      "Cap.issue",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "assumption_Cap.UTF8_inj",
-        "equation_Cap.capRead", "equation_Cert.ACLs.canRead",
-        "equation_Cert.ACLs.file", "equation_MAC.pkey",
-        "function_token_typing_MAC.key_prop",
-        "refinement_interpretation_Tm_refine_8780019b0aae248f45fa2cdeef995357",
-        "refinement_interpretation_Tm_refine_e7c2b5a7f5564b833b80f9c630ccb99f",
-        "string_inversion", "token_correspondence_Cap.capRead"
-      ],
-      0,
-      "32538700318ac321b5eb6dd1d880138a"
+      "8f51754e9a3a3942df4cd626ab9956e1"
     ]
   ]
 ]

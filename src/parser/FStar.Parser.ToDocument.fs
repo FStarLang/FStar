@@ -226,7 +226,7 @@ let is_unit e =
 
 let matches_var t x =
     match t.tm with
-        | Var y -> (text_of_id x) = string_of_lid y
+        | Var y -> (string_of_id x) = string_of_lid y
         | _ -> false
 
 let is_tuple_constructor = C.is_tuple_data_lid'
@@ -277,9 +277,9 @@ let is_general_construction e =
   not (is_list e || is_lex_list e)
 
 let is_general_prefix_op op =
-  let op_starting_char =  char_at (Ident.text_of_id op) 0 in
+  let op_starting_char =  char_at (Ident.string_of_id op) 0 in
   op_starting_char = '!' || op_starting_char = '?' ||
-  (op_starting_char = '~' && Ident.text_of_id op <> "~")
+  (op_starting_char = '~' && Ident.string_of_id op <> "~")
 
 (* might already exist somewhere *)
 let head_and_args e =
@@ -392,14 +392,14 @@ let levels op =
 let operatorInfix0ad12 = [opinfix0a ; opinfix0b ; opinfix0c ; opinfix0d ; opinfix1 ; opinfix2 ]
 
 let is_operatorInfix0ad12 op =
-    List.tryFind (matches_level <| Ident.text_of_id op) operatorInfix0ad12 <> None
+    List.tryFind (matches_level <| Ident.string_of_id op) operatorInfix0ad12 <> None
 
 let is_operatorInfix34 =
     let opinfix34 = [ opinfix3 ; opinfix4 ] in
-    fun op -> List.tryFind (matches_level <| Ident.text_of_id op) opinfix34 <> None
+    fun op -> List.tryFind (matches_level <| Ident.string_of_id op) opinfix34 <> None
 
 let handleable_args_length (op:ident) =
-  let op_s = Ident.text_of_id op in
+  let op_s = Ident.string_of_id op in
   if is_general_prefix_op op || List.mem op_s [ "-" ; "~" ] then 1
   else if (is_operatorInfix0ad12 op ||
     is_operatorInfix34 op ||
@@ -411,12 +411,12 @@ let handleable_args_length (op:ident) =
 let handleable_op op args =
   match List.length args with
   | 0 -> true
-  | 1 -> is_general_prefix_op op || List.mem (Ident.text_of_id op) [ "-" ; "~" ]
+  | 1 -> is_general_prefix_op op || List.mem (Ident.string_of_id op) [ "-" ; "~" ]
   | 2 ->
     is_operatorInfix0ad12 op ||
     is_operatorInfix34 op ||
-    List.mem (Ident.text_of_id op) ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"]
-  | 3 -> List.mem (Ident.text_of_id op) [".()<-" ; ".[]<-"]
+    List.mem (Ident.string_of_id op) ["<==>" ; "==>" ; "\\/" ; "/\\" ; "=" ; "|>" ; ":=" ; ".()" ; ".[]"]
+  | 3 -> List.mem (Ident.string_of_id op) [".()<-" ; ".[]<-"]
   | _ -> false
 
 
@@ -668,7 +668,7 @@ let rec p_decl (d: decl): document =
     (* Don't push 'assume' on a new line when it used as a keyword *)
     match (d.quals, d.d) with
     | ([Assumption], Assume(id, _)) ->
-      if char_at (text_of_id id) 0 |> is_upper then
+      if char_at (string_of_id id) 0 |> is_upper then
         p_qualifier Assumption ^^ space
       else
         p_qualifiers d.quals
@@ -681,8 +681,8 @@ let rec p_decl (d: decl): document =
 and p_attributes attrs =
     match attrs with
     | [] -> empty
-    | _ -> lbracket ^^ str "@ " ^^
-             align ((flow break1 (List.map p_atomicTerm attrs)) ^^ rbracket) ^^ hardline
+    | _ -> lbracket ^^ str "@@ " ^^
+             align ((flow (str "; ") (List.map (p_noSeqTermAndComment false false) attrs)) ^^ rbracket) ^^ hardline
 
 and p_justSig d = match d.d with
   | Val (lid, t) ->
@@ -730,7 +730,7 @@ and p_rawDecl d = match d.d with
     (* KM : not exactly sure which one of the cases below and above is used for 'assume val ..'*)
   | Assume(id, t) ->
     let decl_keyword =
-      if char_at (text_of_id id) 0 |> is_upper
+      if char_at (string_of_id id) 0 |> is_upper
       then empty
       else str "val" ^^ space
     in
@@ -932,7 +932,6 @@ and p_subEffect lift =
 
 and p_qualifier = function
   | Private -> str "private"
-  | Abstract -> str "abstract"
   | Noeq -> str "noeq"
   | Unopteq -> str "unopteq"
   | Assumption -> str "assume"
@@ -966,13 +965,15 @@ and p_letqualifier = function
 and p_aqual = function
   | Implicit -> str "#"
   | Equality -> str "$"
-  | Meta t ->
+  | Meta (Arg_qualifier_meta_tac t) ->
     let t =
       match t.tm with
       | Abs (_ ,e) -> e
       | _ -> mk_term (App (t, unit_const t.range, Nothing)) t.range Expr
     in
     str "#[" ^^ p_term false false t ^^ str "]" ^^ break1
+  | Meta (Arg_qualifier_meta_attr t) ->
+    str "#[@" ^^ p_term false false t ^^ str "]" ^^ break1
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1005,7 +1006,7 @@ and p_atomicPattern p = match p.pat with
      * simpleArrow RPAREN). *)
     begin match pat.pat, t.tm with
     | PatVar (lid, aqual), Refine({b = Annotated(lid', t)}, phi)
-      when (text_of_id lid) = (text_of_id lid') ->
+      when (string_of_id lid) = (string_of_id lid') ->
       (* p_refinement jumps into p_appTerm for the annotated type; this is
        * tighter than simpleArrow (which is what the parser uses), meaning that
        * this printer may conservatively insert parentheses. TODO fix, but be
@@ -1029,7 +1030,7 @@ and p_atomicPattern p = match p.pat with
     assert (arg_qualifier_opt = None) ;
     p_tvar tv
   | PatOp op ->
-    lparen ^^ space ^^ str (Ident.text_of_id op) ^^ space ^^ rparen
+    lparen ^^ space ^^ str (Ident.string_of_id op) ^^ space ^^ rparen
   | PatWild aqual ->
     optional p_aqual aqual ^^ underscore
   | PatConst c ->
@@ -1047,7 +1048,7 @@ and p_atomicPattern p = match p.pat with
 (* Skipping patternOrMultibinder since it would need retro-engineering the flattening of binders *)
 
 and is_typ_tuple e = match e.tm with
-  | Op(id, _) when text_of_id id = "*" -> true
+  | Op(id, _) when string_of_id id = "*" -> true
   | _ -> false
 
 and is_meta_qualifier aq =
@@ -1069,7 +1070,7 @@ and p_binder' (is_atomic: bool) (b: binder): document * option<document> * catf 
   | Annotated (lid, t) ->
       let b', t' =
         match t.tm with
-        | Refine ({b = Annotated (lid', t)}, phi) when (text_of_id lid) = (text_of_id lid') ->
+        | Refine ({b = Annotated (lid', t)}, phi) when (string_of_id lid) = (string_of_id lid') ->
           p_refinement' b.aqual (p_lident lid) t phi
         | _ ->
           let t' = if is_typ_tuple t then
@@ -1134,13 +1135,13 @@ and p_binders (is_atomic: bool) (bs: list<binder>): document = separate_or_flow 
 (*                                                                            *)
 (* ****************************************************************************)
 
-and text_of_id_or_underscore lid =
-  if starts_with (text_of_id lid) reserved_prefix && not (Options.print_real_names ())
+and string_of_id_or_underscore lid =
+  if starts_with (string_of_id lid) reserved_prefix && not (Options.print_real_names ())
   then underscore
-  else str (text_of_id lid)
+  else str (string_of_id lid)
 
 and text_of_lid_or_underscore lid =
-  if starts_with (text_of_id (ident_of_lid lid)) reserved_prefix && not (Options.print_real_names ())
+  if starts_with (string_of_id (ident_of_lid lid)) reserved_prefix && not (Options.print_real_names ())
   then underscore
   else str (string_of_lid lid)
 
@@ -1151,16 +1152,16 @@ and p_quident lid =
   text_of_lid_or_underscore lid
 
 and p_ident lid =
-  text_of_id_or_underscore lid
+  string_of_id_or_underscore lid
 
 and p_lident lid =
-  text_of_id_or_underscore lid
+  string_of_id_or_underscore lid
 
 and p_uident lid =
-  text_of_id_or_underscore lid
+  string_of_id_or_underscore lid
 
 and p_tvar lid =
-  text_of_id_or_underscore lid
+  string_of_id_or_underscore lid
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1186,7 +1187,7 @@ and p_tvar lid =
  * to prevent swallowing semicolons or not. For instance, in a record field, we
  * do. *)
 
-and paren_if b =
+and paren_if (b:bool) =
   if b then
     soft_parens_with_nesting
   else
@@ -1234,11 +1235,11 @@ and p_noSeqTerm' ps pb e = match e.tm with
       group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ ps pb t)
   | Ascribed (e, t, Some tac) ->
       group (p_tmIff e ^/^ langle ^^ colon ^/^ p_typ false false t ^/^ str "by" ^/^ p_typ ps pb (maybe_unthunk tac))
-  | Op (id, [ e1; e2; e3 ]) when text_of_id id = ".()<-" ->
+  | Op (id, [ e1; e2; e3 ]) when string_of_id id = ".()<-" ->
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_parens_with_nesting (p_term false false e2)
           ^^ space ^^ larrow) ^^ jump2 (p_noSeqTermAndComment ps pb e3))
-  | Op (id, [ e1; e2; e3 ]) when text_of_id id = ".[]<-" ->
+  | Op (id, [ e1; e2; e3 ]) when string_of_id id = ".[]<-" ->
       group (
         group (p_atomicTermNotQUident e1 ^^ dot ^^ soft_brackets_with_nesting (p_term false false e2)
           ^^ space ^^ larrow) ^^ jump2 (p_noSeqTermAndComment ps pb e3))
@@ -1248,6 +1249,9 @@ and p_noSeqTerm' ps pb e = match e.tm with
   | Ensures (e, wtf) ->
       assert (wtf = None);
       group (str "ensures" ^/^ p_typ ps pb e)
+  | Decreases (e, wtf) ->
+      assert (wtf = None);
+      group (str "decreases" ^/^ p_typ ps pb e)
   | Attributes es ->
       group (str "attributes" ^/^ separate_map break1 p_atomicTerm es)
   | If (e1, e2, e3) ->
@@ -1345,7 +1349,11 @@ and p_calcStep _ (CalcStep (rel, just, next)) =
 and p_attrs_opt = function
   | None -> empty
   | Some terms ->
-    group (str "[@" ^/^ (separate_map break1 p_atomicTerm terms) ^/^ str "]")
+    group (str "[@@" ^/^
+           (separate_map (str "; ")
+                         (p_noSeqTermAndComment false false)
+                         terms) ^/^
+           str "]")
 
 and p_typ ps pb e = with_comment (p_typ' ps pb) e e.range
 
@@ -1405,7 +1413,7 @@ and pats_as_binders_if_possible pats =
   | PatAscribed(pat, (t, None)) ->
     (match pat.pat, t.tm  with
      | PatVar (lid, aqual), Refine({b = Annotated(lid', t)}, phi)
-       when (text_of_id lid) = (text_of_id lid') ->
+       when (string_of_id lid) = (string_of_id lid') ->
          Some (p_refinement' aqual (p_ident lid) t phi)
      | PatVar (lid, aqual), _ ->
        Some (optional p_aqual aqual ^^ p_ident lid, p_tmEqNoRefinement t)
@@ -1499,12 +1507,12 @@ and p_patternBranch pb (pat, when_opt, e) =
 
 (* Nothing underneath tmIff is at risk of swallowing a semicolon. *)
 and p_tmIff e = match e.tm with
-    | Op(id, [e1;e2]) when text_of_id id = "<==>" ->
+    | Op(id, [e1;e2]) when string_of_id id = "<==>" ->
         infix0 (str "<==>") (p_tmImplies e1) (p_tmIff e2)
     | _ -> p_tmImplies e
 
 and p_tmImplies e = match e.tm with
-    | Op(id, [e1;e2]) when text_of_id id = "==>" ->
+    | Op(id, [e1;e2]) when string_of_id id = "==>" ->
         infix0 (str "==>") (p_tmArrow (Arrows (2, 2)) false p_tmFormula e1) (p_tmImplies e2)
     | _ -> p_tmArrow (Arrows (2, 2)) false p_tmFormula e
 
@@ -1607,12 +1615,12 @@ and p_tmFormula e =
     flow_map disj (fun d -> flow_map conj (fun x -> group x) d) formula
 
 and p_tmDisjunction e = match e.tm with
-  | Op(id, [e1;e2]) when text_of_id id = "\\/" ->
+  | Op(id, [e1;e2]) when string_of_id id = "\\/" ->
       (p_tmDisjunction e1) @ [p_tmConjunction e2]
   | _ -> [p_tmConjunction e]
 
 and p_tmConjunction e = match e.tm with
-  | Op(id, [e1;e2]) when text_of_id id = "/\\" ->
+  | Op(id, [e1;e2]) when string_of_id id = "/\\" ->
       (p_tmConjunction e1) @ [p_tmTuple e2]
   | _ -> [p_tmTuple e]
 
@@ -1637,17 +1645,17 @@ and p_tmEqWith p_X e =
 and p_tmEqWith' p_X curr e = match e.tm with
   (* We don't have any information to print `infix` aplication *)
   | Op (op, [e1; e2]) when (* Implications and iffs are handled specially by the parser *)
-                           not (Ident.text_of_id op = "==>"
-                                || Ident.text_of_id op = "<==>")
+                           not (Ident.string_of_id op = "==>"
+                                || Ident.string_of_id op = "<==>")
                            && (is_operatorInfix0ad12 op
-                               || Ident.text_of_id op = "="
-                               || Ident.text_of_id op = "|>") ->
-      let op = Ident.text_of_id op in
+                               || Ident.string_of_id op = "="
+                               || Ident.string_of_id op = "|>") ->
+      let op = Ident.string_of_id op in
       let left, mine, right = levels op in
       paren_if_gt curr mine (infix0 (str <| op) (p_tmEqWith' p_X left e1) (p_tmEqWith' p_X right e2))
-  | Op(id, [ e1; e2 ]) when text_of_id id = ":=" ->
+  | Op(id, [ e1; e2 ]) when string_of_id id = ":=" ->
       group (p_tmEqWith p_X e1 ^^ space ^^ colon ^^ equals ^/+^ p_tmEqWith p_X e2)
-  | Op(id, [e]) when text_of_id id = "-" ->
+  | Op(id, [e]) when string_of_id id = "-" ->
       let left, mine, right = levels "-" in
       minus ^/^ p_tmEqWith' p_X mine e
   | _ -> p_tmNoEqWith p_X e
@@ -1671,7 +1679,7 @@ and p_tmNoEqWith' inside_tuple p_X curr e = match e.tm with
         | Inr t -> p_tmNoEqWith' false p_X left t ^^ space ^^ str op ^^ break1
       in
       paren_if_gt curr mine (concat_map p_dsumfst binders ^^ p_tmNoEqWith' false p_X right res)
-  | Op(id, [e1; e2]) when text_of_id id = "*" && !unfold_tuples ->
+  | Op(id, [e1; e2]) when string_of_id id = "*" && !unfold_tuples ->
       let op = "*" in
       let left, mine, right = levels op in
       if inside_tuple then
@@ -1679,17 +1687,17 @@ and p_tmNoEqWith' inside_tuple p_X curr e = match e.tm with
       else
         paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2))
   | Op (op, [e1; e2]) when is_operatorInfix34 op ->
-      let op = Ident.text_of_id op in
+      let op = Ident.string_of_id op in
       let left, mine, right = levels op in
       paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' false p_X left e1) (p_tmNoEqWith' false p_X right e2))
   | Record(with_opt, record_fields) ->
       braces_with_nesting ( default_or_map empty p_with_clause with_opt ^^
                             separate_map_last (semi ^^ break1) p_simpleDef record_fields )
-  | Op(id, [e]) when text_of_id id = "~" ->
+  | Op(id, [e]) when string_of_id id = "~" ->
       group (str "~" ^^ p_atomicTerm e)
   | Paren p when inside_tuple ->
       (match p.tm with
-       | Op(id, [e1; e2]) when text_of_id id = "*" ->
+       | Op(id, [e1; e2]) when string_of_id id = "*" ->
            let op = "*" in
            let left, mine, right = levels op in
            paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2))
@@ -1771,10 +1779,10 @@ and p_argTerm arg_imp = match arg_imp with
 and p_fsTypArg (e, _) = p_indexingTerm e
 
 and p_indexingTerm_aux exit e = match e.tm with
-  | Op(id, [e1 ; e2]) when text_of_id id = ".()" ->
+  | Op(id, [e1 ; e2]) when string_of_id id = ".()" ->
         group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^
         soft_parens_with_nesting (p_term false false e2))
-  | Op(id, [e1; e2]) when text_of_id id = ".[]" ->
+  | Op(id, [e1; e2]) when string_of_id id = ".[]" ->
         group (p_indexingTerm_aux p_atomicTermNotQUident e1 ^^ dot ^^
         soft_brackets_with_nesting (p_term false false e2))
   | _ ->
@@ -1790,7 +1798,7 @@ and p_atomicTerm e = match e.tm with
   | Name lid ->
       p_quident lid
   | Op(op, [e]) when is_general_prefix_op op ->
-      str (Ident.text_of_id op) ^^ p_atomicTerm e
+      str (Ident.string_of_id op) ^^ p_atomicTerm e
   | _ -> p_atomicTermNotQUident e
 
 and p_atomicTermNotQUident e = match e.tm with
@@ -1809,9 +1817,9 @@ and p_atomicTermNotQUident e = match e.tm with
   | Name lid when lid_equals lid C.false_lid ->
     str "False"
   | Op(op, [e]) when is_general_prefix_op op ->
-    str (Ident.text_of_id op) ^^ p_atomicTermNotQUident e
+    str (Ident.string_of_id op) ^^ p_atomicTermNotQUident e
   | Op(op, []) ->
-    lparen ^^ space ^^ str (Ident.text_of_id op) ^^ space ^^ rparen
+    lparen ^^ space ^^ str (Ident.string_of_id op) ^^ space ^^ rparen
   | Construct (lid, args) when is_dtuple_constructor lid && all1_explicit args ->
       surround 2 1 (lparen ^^ bar)
         (separate_map (comma ^^ break1) (fun (e, _) -> p_tmEq e) args)
@@ -1859,7 +1867,7 @@ and p_projectionLHS e = match e.tm with
   (* they are considered as invalid AST. We try to fail as soon as possible in order *)
   (* to prevent the pretty printer from looping *)
   | Op (op, args) when not (handleable_op op args) ->
-    failwith ("Operation " ^ Ident.text_of_id op ^ " with " ^ string_of_int (List.length args) ^
+    failwith ("Operation " ^ Ident.string_of_id op ^ " with " ^ string_of_int (List.length args) ^
               " arguments couldn't be handled by the pretty printer")
   | Uvar id ->
     failwith "Unexpected universe variable out of universe context"
@@ -1893,6 +1901,7 @@ and p_projectionLHS e = match e.tm with
   | NamedTyp _  (* p_tmNoEq *)
   | Requires _  (* p_noSeqTerm *)
   | Ensures _   (* p_noSeqTerm *)
+  | Decreases _ (* p_noSeqTerm *)
   | Attributes _(* p_noSeqTerm *)
   | Quote _     (* p_noSeqTerm *)
   | VQuote _    (* p_noSeqTerm *)
@@ -1931,7 +1940,7 @@ and p_constant = function
 and p_universe u = str "u#" ^^ p_atomicUniverse u
 
 and p_universeFrom u = match u.tm with
-  | Op(id, [u1 ; u2]) when text_of_id id = "+" ->
+  | Op(id, [u1 ; u2]) when string_of_id id = "+" ->
     group (p_universeFrom u1 ^/^ plus ^/^ p_universeFrom u2)
   | App _ ->
     let head, args = head_and_args u in
@@ -1948,10 +1957,10 @@ and p_universeFrom u = match u.tm with
 and p_atomicUniverse u = match u.tm with
   | Wild -> underscore
   | Const (Const_int (r, sw)) -> p_constant (Const_int (r, sw))
-  | Uvar id -> str (text_of_id id)
+  | Uvar id -> str (string_of_id id)
   | Paren u -> soft_parens_with_nesting (p_universeFrom u)
   | App _ -> soft_parens_with_nesting (p_universeFrom u)
-  | Op(id, [_ ; _]) when text_of_id id = "+" -> soft_parens_with_nesting (p_universeFrom u)
+  | Op(id, [_ ; _]) when string_of_id id = "+" -> soft_parens_with_nesting (p_universeFrom u)
   | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
 
 let term_to_document e =

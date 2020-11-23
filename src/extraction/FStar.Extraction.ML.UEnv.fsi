@@ -50,10 +50,12 @@ type ty_or_exp_b = either<ty_binding, exp_binding>
 type binding =
   | Bv  of bv * ty_or_exp_b
   | Fv  of fv * exp_binding
+  | ErasedFv of fv
 
 (** Type abbreviations, aka definitions *)
 type tydef
 val tydef_fv : tydef -> fv
+val tydef_meta : tydef -> FStar.Extraction.ML.Syntax.metadata
 val tydef_mlpath : tydef -> mlpath
 val tydef_def: tydef -> mltyscheme
 
@@ -63,6 +65,7 @@ val tcenv_of_uenv : u:uenv -> TypeChecker.Env.env
 val set_tcenv : u:uenv -> t:TypeChecker.Env.env -> uenv
 val current_module_of_uenv : u:uenv -> mlpath
 val set_current_module : u:uenv -> p:mlpath -> uenv
+val with_typars_env : uenv -> (RemoveUnusedParameters.env_t -> RemoveUnusedParameters.env_t * 'a) -> uenv * 'a
 
 (** Debugging only *)
 val bindings_of_uenv : uenv -> list<binding>
@@ -73,9 +76,14 @@ val new_uenv : e:TypeChecker.Env.env -> uenv
 
 (*** Looking up identifiers *)
 
-(** Lookup a top-level term identifier *)
-val try_lookup_fv: g:uenv -> fv:fv -> option<exp_binding>
-val lookup_fv: g:uenv -> fv:fv -> exp_binding
+(** Lookup a top-level term identifier. Raises an error/warning when the
+FV has been erased, using the given range. *)
+val try_lookup_fv: Range.range -> g:uenv -> fv:fv -> option<exp_binding>
+
+(* As above, but will abort if the variable is not found or was erased.
+Only use this for variables that must be in the environment, such as
+definitions in Prims. *)
+val lookup_fv: Range.range -> g:uenv -> fv:fv -> exp_binding
 
 (** Lookup a local term or type variable *)
 val lookup_bv: g:uenv -> bv: bv -> ty_or_exp_b
@@ -88,6 +96,9 @@ val lookup_ty: g:uenv -> bv:bv -> ty_binding
 
 (** Lookup a type definition *)
 val lookup_tydef : uenv -> mlpath -> option<mltyscheme>
+
+(** Does a type definition have an accompanying `val` declaration? *)
+val has_tydef_declaration : uenv -> lident -> bool
 
 (** ML qualified name corresponding to an F* qualified name *)
 val mlpath_of_lident : uenv -> lident -> mlpath
@@ -119,6 +130,17 @@ val extend_bv:
     mk_unit: bool ->
     uenv * mlident * exp_binding
 
+(** Make sure a given ML name is not used in an environment. The
+scope of the environment is not changed at all. This can be used to
+generate less confusing names, for instance, in `let x = E in F`, we can
+burn `x` in `E` to avoid generating code like `let x = let x = 1 in x in
+x`, which does not have any shadowing, but is hard to read. Of course,
+`x` is burnt in `F` since it is in-scope there. *)
+val burn_name:
+    uenv ->
+    mlident ->
+    uenv
+
 (** Extend with an top-level term identifier, maybe thunked *)
 val extend_fv: 
     uenv ->
@@ -126,6 +148,12 @@ val extend_fv:
     mltyscheme ->
     add_unit:bool ->
     uenv * mlident * exp_binding
+
+(** Extend the fv environment by marking that a variable was erased. *)
+val extend_erased_fv:
+    uenv ->
+    fv ->
+    uenv
 
 (** Extend with a local or top-level let binding, maybe thunked *)
 val extend_lb: 
@@ -141,7 +169,16 @@ val extend_tydef:
     uenv ->
     fv ->
     mltyscheme ->
+    FStar.Extraction.ML.Syntax.metadata ->
     tydef * mlpath * uenv
+
+(** This identifier is for the declaration of a type `val t _ : Type` 
+    We record it in the environment to control later if we are
+    allows to remove unused type parameters in the definition of `t`. **)
+val extend_with_tydef_declaration:
+    uenv ->
+    lident -> 
+    uenv
 
 (** Extend with an inductive type *)
 val extend_type_name: 
@@ -170,8 +207,8 @@ val extend_with_action_name:
 val extend_record_field_name :
     uenv ->
     (lident * ident) ->
-    mlpath * uenv
-
+    mlident * uenv
+    
 (** ML module identifier for an F* module name *)
 val extend_with_module_name : 
     uenv -> 

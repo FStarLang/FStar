@@ -327,7 +327,7 @@ let rec quote_exp (e:exp) : Tac term =
   | Var x -> mk_e_app (`Var) [pack (Tv_Const (C_Int x))]
   | Mult e1 e2 -> mk_e_app (`Mult) [quote_exp e1; quote_exp e2]
 
-(* [@plugin] *)
+(* [@@plugin] *)
 let canon_monoid_aux
     (a b: Type) (ta: term) (unquotea: term -> Tac a) (quotea: a -> Tac term)
     (tm tmult tunit: term) (munit: a) (tb: term) (quoteb:b->Tac term)

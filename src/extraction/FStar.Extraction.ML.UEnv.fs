@@ -91,10 +91,14 @@ type ty_or_exp_b = either<ty_binding, exp_binding>
 
     [Fv]: An F* top-level fv is associated with an ML term binding.
           Type definitions are maintained separately, see [tydef].
+
+    [ErasedFv]: An F* top-level name that was erased. Only to give
+                proper errors.
   *)
 type binding =
   | Bv  of bv * ty_or_exp_b
   | Fv  of fv * exp_binding
+  | ErasedFv of fv
 
 (** A top-level F* type definition, i.e., a type abbreviation,
     corresponds to a [tydef] in ML.
@@ -110,11 +114,13 @@ type tydef = {
   tydef_fv:fv;
   tydef_mlmodule_name:list<mlsymbol>;
   tydef_name:mlsymbol;
+  tydef_meta:FStar.Extraction.ML.Syntax.metadata;
   tydef_def:mltyscheme
 }
 
 (** tydef is abstract:  Some accessors *)
 let tydef_fv (td : tydef) = td.tydef_fv
+let tydef_meta (td : tydef) = td.tydef_meta
 let tydef_def (td : tydef) = td.tydef_def
 let tydef_mlpath (td : tydef) : mlpath = td.tydef_mlmodule_name, td.tydef_name
 
@@ -134,11 +140,13 @@ type uenv = {
   env_tcenv:TypeChecker.Env.env;
   env_bindings:list<binding>;
   env_mlident_map:psmap<mlident>;
+  env_remove_typars:RemoveUnusedParameters.env_t;
   mlpath_of_lid:psmap<mlpath>;
   env_fieldname_map:psmap<mlident>;
   mlpath_of_fieldname:psmap<mlpath>;
   tydefs:list<tydef>;
   type_names:list<(fv*mlpath)>;
+  tydef_declarations:psmap<bool>;
   currentModule: mlpath // needed to properly translate the definitions in the current file
 }
 
@@ -148,6 +156,9 @@ let tcenv_of_uenv (u:uenv) : TypeChecker.Env.env = u.env_tcenv
 let set_tcenv (u:uenv) (t:TypeChecker.Env.env) = { u with env_tcenv=t}
 let current_module_of_uenv (u:uenv) : mlpath = u.currentModule
 let set_current_module (u:uenv) (m:mlpath) : uenv = { u with currentModule = m }
+let with_typars_env (u:uenv) (f:_) =
+  let e, x = f u.env_remove_typars in
+  {u with env_remove_typars=e}, x
 
 (**** Debugging *)
 
@@ -176,22 +187,48 @@ let print_mlpath_map (g:uenv) =
 
 (** Scans the list of bindings for an fv:
     - it's always mapped to an ML expression
+  Takes a range for error reporting.
   *)
-let try_lookup_fv (g:uenv) (fv:fv) : option<exp_binding> =
-    BU.find_map
-      g.env_bindings
+
+// Inr b: success
+// Inl true: was erased
+// Inl false: not found
+let lookup_fv_generic (g:uenv) (fv:fv) : either<bool, exp_binding> =
+  let v =
+    BU.find_map g.env_bindings
       (function
-        | Fv (fv', t) when fv_eq fv fv' -> Some t
-        | _ -> None)
+       | Fv (fv', t) when fv_eq fv fv' -> Some (Inr t)
+       | ErasedFv fv' when fv_eq fv fv' -> Some (Inl true)
+       | _ -> None)
+  in
+  match v with
+  | Some r -> r
+  | None -> Inl false
+
+let try_lookup_fv (r:Range.range) (g:uenv) (fv:fv) : option<exp_binding> =
+  match lookup_fv_generic g fv with
+  | Inr r -> Some r
+  | Inl true ->
+    (* Log an error/warning and return None *)
+    Errors.log_issue r
+      (Errors.Error_CallToErased,
+       BU.format2 "Will not extract reference to variable `%s` since it is noextract; either remove its qualifier \
+                   or add it to this definition. This error can be ignored with `--warn_error -%s`."
+                   (Print.fv_to_string fv)
+                   (string_of_int Errors.call_to_erased_errno));
+    None
+  | Inl false ->
+    None
 
 (** Fatal failure version of try_lookup_fv *)
-let lookup_fv (g:uenv) (fv:fv) : exp_binding =
-    match try_lookup_fv g fv with
-    | None ->
-      failwith (BU.format2 "(%s) free Variable %s not found\n"
-                           (Range.string_of_range fv.fv_name.p)
-                           (Print.lid_to_string fv.fv_name.v))
-    | Some y -> y
+let lookup_fv (r:Range.range) (g:uenv) (fv:fv) : exp_binding =
+  match lookup_fv_generic g fv with
+  | Inr t -> t
+  | Inl b ->
+    failwith (BU.format3 "Internal error: (%s) free variable %s not found during extraction (erased=%s)\n"
+              (Range.string_of_range fv.fv_name.p)
+              (Print.lid_to_string fv.fv_name.v)
+              (string_of_bool b))
 
 (** An F* local variable (bv) can be mapped either to
     a ML type variable or a term variable *)
@@ -213,7 +250,7 @@ let lookup_bv (g:uenv) (bv:bv) : ty_or_exp_b =
 let lookup_term g (t:term) =
     match t.n with
     | Tm_name x -> lookup_bv g x, None
-    | Tm_fvar x -> Inr (lookup_fv g x), x.fv_qual
+    | Tm_fvar x -> Inr (lookup_fv t.pos g x), x.fv_qual
     | _ -> failwith "Impossible: lookup_term for a non-name"
 
 (** Lookup an local variable mapped to a ML type variable *)
@@ -230,6 +267,11 @@ let lookup_tydef (env:uenv) ((module_name, ty_name):mlpath)
         && module_name = tydef.tydef_mlmodule_name
         then Some tydef.tydef_def
         else None)
+
+let has_tydef_declaration (u:uenv) (l:lid) =
+  match BU.psmap_try_find u.tydef_declarations (Ident.string_of_lid l) with
+  | None -> false
+  | Some b -> b
 
 (** Given an F* qualified name, find its ML counterpart *)
 let mlpath_of_lident (g:uenv) (x:lident) : mlpath =
@@ -252,13 +294,18 @@ let is_fv_type g fv =
     g.tydefs |> BU.for_some (fun tydef -> fv_eq fv tydef.tydef_fv)
 
 (** Find the ML counterpart of an F* record field identifier
-    - Record field names are pairs of a fully qualified *type* name
+
+    - F* Record field names are pairs of a fully qualified *type* name
       and the short field name
 
     - In ML, the record field name is unique for a given namespace
-      (i.e., unique per F* module) *)
+      (i.e., unique per F* module)
+
+    In extend_record_field_name we associate a module-level unique ML
+    fieldname with the [(type_name, fn)] pair.
+ *)
 let lookup_record_field_name g (type_name, fn) =
-    let key = Ident.lid_of_ids (ns_of_lid type_name @ [fn]) in
+    let key = Ident.lid_of_ids (ids_of_lid type_name @ [fn]) in
     match BU.psmap_try_find g.mlpath_of_fieldname (string_of_lid key) with
     | None -> failwith ("Field name not found: " ^ string_of_lid key)
     | Some mlp -> mlp
@@ -331,10 +378,10 @@ let rename_conventional (s:string) (is_local_type_variable:bool) : string =
     It is either the [ppname] (pretty-printing name)
     Or, in case the [ppname] is unset, it's the unique name in F* *)
 let root_name_of_bv (x:bv): mlident =
-  if BU.starts_with (text_of_id x.ppname) Ident.reserved_prefix
+  if BU.starts_with (string_of_id x.ppname) Ident.reserved_prefix
   || is_null_bv x
-  then (text_of_id x.ppname) ^ "_" ^ (string_of_int x.index)
-  else text_of_id x.ppname
+  then Ident.reserved_prefix
+  else string_of_id x.ppname
 
 (** Given a candidate root_name, generate an ML identifier
     for it that is unique in the current scope.
@@ -362,7 +409,7 @@ let find_uniq ml_ident_map root_name is_local_type_variable =
 
 (** The ML namespace corresponding to an F* qualified name
     is just all the identifiers in the F* namespace (as strings) *)
-let mlns_of_lid (x:lident) = List.map text_of_id (ns_of_lid x)
+let mlns_of_lid (x:lident) = List.map string_of_id (ns_of_lid x)
 
 (**** Extending context with identifiers *)
 
@@ -385,8 +432,8 @@ let mlns_of_lid (x:lident) = List.map text_of_id (ns_of_lid x)
 let new_mlpath_of_lident (g:uenv) (x : lident) : mlpath * uenv =
   let mlp, g =
     if Ident.lid_equals x FStar.Parser.Const.failwith_lid
-    then ([], text_of_id (ident_of_lid x)), g
-    else let name, map = find_uniq g.env_mlident_map (text_of_id (ident_of_lid x)) false in
+    then ([], string_of_id (ident_of_lid x)), g
+    else let name, map = find_uniq g.env_mlident_map (string_of_id (ident_of_lid x)) false in
          let g = { g with env_mlident_map = map } in
          (mlns_of_lid x, name), g
   in
@@ -438,6 +485,9 @@ let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool)
     let tcenv = TypeChecker.Env.push_binders g.env_tcenv (binders_of_list [x]) in
     {g with env_bindings=gamma; env_mlident_map = mlident_map; env_tcenv=tcenv}, mlident, exp_binding
 
+let burn_name (g:uenv) (i:mlident) : uenv =
+  { g with env_mlident_map = BU.psmap_add g.env_mlident_map i "" }
+
 (** Generating a fresh local term variable *)
 let new_mlident (g:uenv)
   : uenv * mlident
@@ -484,6 +534,9 @@ let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool)
         {g with env_bindings=gamma; env_mlident_map=mlident_map}, mlsymbol, exp_binding
     else failwith "freevars found"
 
+let extend_erased_fv (g:uenv) (f:fv) : uenv =
+  { g with env_bindings = ErasedFv f :: g.env_bindings }
+
 (** Extend with a let binding, either local or top-level *)
 let extend_lb (g:uenv) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool)
     : uenv
@@ -497,17 +550,22 @@ let extend_lb (g:uenv) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool)
         extend_fv g f t_x add_unit
 
 (** Extend with an abbreviation [fv] for the type scheme [ts] *)
-let extend_tydef (g:uenv) (fv:fv) (ts:mltyscheme) : tydef * mlpath * uenv =
+let extend_tydef (g:uenv) (fv:fv) (ts:mltyscheme) (meta:FStar.Extraction.ML.Syntax.metadata)
+  : tydef * mlpath * uenv =
     let name, g = new_mlpath_of_lident g fv.fv_name.v in
     let tydef = {
         tydef_fv = fv;
         tydef_mlmodule_name=fst name;
         tydef_name = snd name;
+        tydef_meta = meta;
         tydef_def = ts;
     } in
     tydef,
     name,
     {g with tydefs=tydef::g.tydefs; type_names=(fv, name)::g.type_names}
+
+let extend_with_tydef_declaration u l =
+  { u with tydef_declarations = BU.psmap_add u.tydef_declarations (Ident.string_of_lid l) true }
 
 (** Extend with [fv], the identifer for an F* inductive type *)
 let extend_type_name (g:uenv) (fv:fv) : mlpath * uenv =
@@ -529,7 +587,7 @@ let extend_with_monad_op_name g (ed:Syntax.eff_decl) nm ts =
 (** The actions of an effect declaration are qualified to the module
     name in which they are defined. *)
 let extend_with_action_name g (ed:Syntax.eff_decl) (a:Syntax.action) ts =
-    let nm = text_of_id (ident_of_lid a.action_name) in
+    let nm = string_of_id (ident_of_lid a.action_name) in
     let module_name = ns_of_lid ed.mname in
     let lid = Ident.lid_of_ids (module_name@[Ident.id_of_text nm]) in
     let g, mlid, exp_b = extend_fv g (lid_as_fv lid delta_constant None) ts false in
@@ -539,16 +597,29 @@ let extend_with_action_name g (ed:Syntax.eff_decl) (a:Syntax.action) ts =
 (** Record field names are in a separate namespace in ML and cannot
     clash with type names, top-level names, local identifiers etc.
 
-    So, we maintain then in a separate map *)
+    So, we maintain then in a separate map.
+
+    We generate a unique field name associated with just the
+    [fn]---the generated [name] is a unique field name for the current
+    module.
+
+    However, we associate this generated name with the [(type_name,
+    fn)] pair, and retrieve the unique ML fieldname [name] using this
+    pair as a key.
+
+    This is important to avoid name clashes among record in the same
+    module whose fields have overlapping names. See Bug 2058 and
+    tests/Bug2058.fst
+ *)
 let extend_record_field_name g (type_name, fn) =
-    let key = Ident.lid_of_ids (ns_of_lid type_name @ [fn]) in
-    let name, fieldname_map = find_uniq g.env_fieldname_map (text_of_id fn) false in
-    let ns = mlns_of_lid key in
+    let key = Ident.lid_of_ids (ids_of_lid type_name @ [fn]) in
+    let name, fieldname_map = find_uniq g.env_fieldname_map (string_of_id fn) false in
+    let ns = mlns_of_lid type_name in
     let mlp = ns, name in
     let g = { g with env_fieldname_map = fieldname_map;
                      mlpath_of_fieldname = BU.psmap_add g.mlpath_of_fieldname (string_of_lid key) mlp }
     in
-    mlp, g
+    name, g
 
 
 (** Module names are in a different namespace in OCaml
@@ -559,7 +630,7 @@ let extend_record_field_name g (type_name, fn) =
     When printed, instead of A.B.C, we get A_B_C *)
 let extend_with_module_name (g:uenv) (m:lid) =
   let ns = mlns_of_lid m in
-  let p = text_of_id (ident_of_lid m) in
+  let p = string_of_id (ident_of_lid m) in
   (ns, p), g
 
 (** After completing the extraction of a module
@@ -579,11 +650,13 @@ let new_uenv (e:TypeChecker.Env.env)
       env_tcenv = e;
       env_bindings =[];
       env_mlident_map=initial_mlident_map ();
+      env_remove_typars=RemoveUnusedParameters.initial_env;
       mlpath_of_lid = BU.psmap_empty();
       env_fieldname_map=initial_mlident_map ();
       mlpath_of_fieldname = BU.psmap_empty();
       tydefs =[];
       type_names=[];
+      tydef_declarations = BU.psmap_empty();
       currentModule = ([], "");
     } in
     (* We handle [failwith] specially, extracting it to OCaml's 'failwith'

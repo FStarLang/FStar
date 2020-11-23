@@ -44,10 +44,8 @@ val extract_let_rec_annotation: env -> letbinding -> univ_names * typ * bool
 //val decorate_pattern: env -> pat -> term -> pat
 val decorated_pattern_as_term: pat -> list<bv> * term
 
-//instantiation and generalization
+//instantiation of implicits
 val maybe_instantiate : env -> term -> typ -> (term * typ * guard_t)
-val generalize: env -> bool -> list<(lbname*term*comp)> -> list<(lbname*univ_names*term*comp*list<binder>)>
-val generalize_universes: env -> term -> tscheme
 
 //operations on computation types
 (* most operations on computations are lazy *)
@@ -56,8 +54,6 @@ val lcomp_univ_opt: lcomp -> (option<universe> * guard_t)
 val is_pure_effect: env -> lident -> bool
 val is_pure_or_ghost_effect: env -> lident -> bool
 val should_not_inline_lc: lcomp -> bool
-val should_return: env -> option<term> -> lcomp -> bool
-val return_value: env -> option<universe> -> typ -> term -> comp
 val bind: Range.range -> env -> option<term> -> lcomp -> lcomp_with_binder -> lcomp
 val maybe_return_e2_and_bind: Range.range -> env -> option<term> -> lcomp -> e2:term -> lcomp_with_binder -> lcomp
 //the bv is the scrutinee binder, that bind_cases uses to close the guard (from lifting the computations)
@@ -132,5 +128,5 @@ val get_field_projector_name : env -> datacon:lident -> index:int -> lident
 
 
 (* update the env functions *)
-val update_env_sub_eff : env -> sub_eff -> env
+val update_env_sub_eff : env -> sub_eff -> Range.range -> env
 val update_env_polymonadic_bind : env -> lident -> lident -> lident -> tscheme -> env

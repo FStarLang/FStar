@@ -67,3 +67,22 @@ assume type hasEq: Type -> GTot Type0
 effect Lemma (a:Type) (pre:Type) (post:squash pre -> Type) (pats:list pattern) =
        Pure a pre (fun r -> post ())
 ```
+
+> [`c_True`](#c_True) [`c_True`](#c_True)
+
+[`c_True`](#c_True) [`c_True`](#c_True)
+
+[`c_True`](#c_True) [`c_True`](#c_True)
+
+### `c_True` `c_True`
+
+#### foo
+
+Talking about [`foo`](#foo) and not `rec`
+
+```fstar
+let rec foo (l:list int) =
+  match l with
+  | [] -> ()
+  | h :: t -> foo t
+```

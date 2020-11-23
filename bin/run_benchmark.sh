@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ue
 set -o pipefail
 
 # There are hooks within the FStar makefiles to make it easy to run a
@@ -57,6 +57,11 @@ Options:
 
   --custom DIR,NAME,RULE        Run a custom benchmark (advanced, see script).
 
+  --compare REV1,REV2   Run a benchmark on both of these F* revisions (commit
+                        hashes or branches) and report a summary of each,
+                        alongside a small more detailed comparison between
+                        them. Your current worktree will not be modified,
+                        the revisions will be checked out in fresh directories.
 
 You can also use environment variables to set wrappers for tasksetting
 and/or setting FStar OTHERFLAGS, for example:
@@ -69,7 +74,7 @@ Will wrap calls to F* will 'taskset --cpu-list 3' and provide the
 EOF
 }
 
-write_simple_summary() {
+function write_simple_summary() {
     IN=${1}
     AGG=${1}.summary
     IND=${1}.perfile
@@ -94,7 +99,7 @@ write_simple_summary() {
     echo "Wrote ${IND}"
 }
 
-write_csv() {
+function write_csv() {
     IN=${1}
     OUT=${1}.csv
 
@@ -107,7 +112,7 @@ write_csv() {
     cat ${IN}.bench | jq -s -r ".[] | [$JQ_ARGS] | @csv" >> ${OUT}
 }
 
-write_csv_and_summary() {
+function write_csv_and_summary() {
     write_csv $1
     write_simple_summary $1
 }
@@ -115,16 +120,17 @@ write_csv_and_summary() {
 # Grabs all the .bench files in directory $1 and contatenates them
 # into directory #2, after passing them through jq to get nice format
 # and remove useless info
-cat_benches_into () {
+function cat_benches_into () {
     if hash jq 2>/dev/null; then
-        find "$1" -name '*.bench' -exec cat {} \; | jq -s ".[] | del(.ocaml)"> $2
+        find "$1" -name '*.bench' -exec cat {} \; >$2
+        cat $2 | jq -s ".[] | del(.ocaml)" >$2.pretty
     else
         echo "Unable to find jq to create csv and summary (https://stedolan.github.io/jq/)"
     fi
 }
 
 # Clean F* and rebuild
-clean_slate () {
+function clean_slate () {
     make clean
     make -C src clean_boot
     make -C src clean
@@ -152,10 +158,12 @@ clean_slate () {
     ls -ltr ulib >> ${BENCH_OUTDIR}/build_fstarlib.log
 }
 
-bench_dir () {
+function bench_dir () {
     BENCH_DIR="$1"
     NAME="$2"
     RULE="$3"
+
+    mkdir -p ${BENCH_OUTDIR}
 
     if $RUN; then
         # Remove old .bench files
@@ -167,6 +175,112 @@ bench_dir () {
     cat_benches_into "${BENCH_DIR}" "${BENCH_OUTDIR}/${NAME}.bench"
     write_csv_and_summary ${BENCH_OUTDIR}/${NAME}
 }
+
+function run_bench_suite () {
+  if $CLEAN; then
+      clean_slate
+  fi
+
+  for i in ${CUSTOMS[*]}; do
+      DIR=$(echo "$i" | cut -d, -f1)
+      NAME=$(echo "$i" | cut -d, -f2)
+      RULE=$(echo "$i" | cut -d, -f3)
+      bench_dir "$DIR" "$NAME" "$RULE"
+
+      return
+  done
+
+  if $AUTO; then
+      bench_dir "tests/micro-benchmarks" "micro-benchmarks" "all"
+      bench_dir "ulib/" "ulib" "benchmark"
+
+      if $RUN; then make -C src clean_boot; fi
+      bench_dir "src/" "ocaml_extract" "ocaml"
+  fi
+}
+
+function compare_bench_output () {
+    COMPARE_LDIR=$1
+    COMPARE_RDIR=$2
+
+    mkdir -p ${BENCH_OUTDIR}
+    rm -rf ${BENCH_OUTDIR}/left
+    rm -rf ${BENCH_OUTDIR}/right
+    cp -r ${COMPARE_LDIR}/${BENCH_OUTDIR} ${BENCH_OUTDIR}/left
+    cp -r ${COMPARE_RDIR}/${BENCH_OUTDIR} ${BENCH_OUTDIR}/right
+
+    function line () {
+        echo "======================================================================"
+    }
+
+    function compare_perfile () {
+        K=$1
+        L=$2
+        R=$3
+
+        # Get top 10 files on each side
+        TOP_L=$(cat $L | tail -n+2 | sort -n -k$K -r | head -n 10 | awk '{print $1}')
+        TOP_R=$(cat $R | tail -n+2 | sort -n -k$K -r | head -n 10 | awk '{print $1}')
+        ALL="${TOP_L} ${TOP_R}"
+
+        # Hack, build a regexp matching those files.
+        REGEXP=$(echo ${ALL} | tr ' ' '|' | sed 's/|$//')
+
+        # TODO: use mktemp
+        # Grep for both top 10 on each side, building a table of position-name-value
+        cat $L | tail -n+2 | sort -n -k$K -r | awk '{printf "%s\t%-40s\t%10s\n", NR, $1, $'$K'}' | grep -E ${REGEXP} >top2_l
+        cat $R | tail -n+2 | sort -n -k$K -r | awk '{printf "%s\t%-40s\t%10s\n", NR, $1, $'$K'}' | grep -E ${REGEXP} >top2_r
+
+        # Paste together
+        paste top2_l top2_r
+    }
+
+    # TODO: allow to override with --custom
+    (for tag in micro-benchmarks ulib ocaml_extract; do
+        echo "For $tag"
+        line
+        echo
+        echo "Summary for ${COMPARE_L}"
+        cat ${BENCH_OUTDIR}/left/$tag.summary
+        echo
+
+        echo "Summary for ${COMPARE_R}" >&3
+        cat ${BENCH_OUTDIR}/right/$tag.summary
+        echo >&3
+
+        echo "Per-file comparison, total time. Left is ${COMPARE_L}, right is ${COMPARE_R}"
+        compare_perfile 2 ${BENCH_OUTDIR}/left/$tag.perfile ${BENCH_OUTDIR}/right/$tag.perfile
+        echo >&3
+
+        echo "Per-file comparison, memory. Left is ${COMPARE_L}, right is ${COMPARE_R}"
+        compare_perfile 5 ${BENCH_OUTDIR}/left/$tag.perfile ${BENCH_OUTDIR}/right/$tag.perfile
+        echo
+    done) >&3
+}
+
+function clone_version_into_dir () {
+    V=$1
+    DIR=$2
+
+    # It would be more elegant to just checkout a worktree instead of
+    # cloning the whole repo (+ history). But that would require calling
+    # the archive rule (since otherwise the build will fail to build
+    # FStar_Version.ml and etc), and that's a whole thing, so let's just
+    # clone for now. The --reference means we don't really take any
+    # extra space anyway.
+    git clone . ${DIR} || true
+
+    # We allow to fail above since it may be already cloned. The next
+    # reset will fail anyway if it's not the right repo.
+
+    # New repo doesn't have any branches, parse $V into a commit
+    V=$(git rev-parse ${V})
+
+    pushd ${DIR}
+    git reset --hard ${V}
+    popd
+}
+
 
 # BENCH_OTHERFLAGS are passed to the benchmark commands when they execute,
 #  we default to '--admit_smt_queries true' to exclude Z3 execution time from the benchmarks
@@ -182,16 +296,20 @@ BENCH_OUTDIR="./bench_results/"`date +'%Y%m%d_%H%M%S'`
 CLEAN=false
 AUTO=true
 RUN=true
+COMPARE=false
 JLEVEL=1
+
+COMPARE_L=
+COMPARE_R=
 
 # First pass for options
 OPTIONS=co:hnj:
-LONGOPTS=clean,odir:,help,custom:,norun
+LONGOPTS=clean,odir:,help,custom:,norun,compare:
 PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 
 eval set -- "$PARSED"
 
-while true; do
+while [ $# -gt 0 ]; do
     case "$1" in
         -c|--clean)
             CLEAN=true
@@ -224,6 +342,13 @@ while true; do
             B2="$2"
             shift 2
             eval set -- "$@" "$B1" "$B2"
+            ;;
+
+        --compare)
+            COMPARE=true
+            COMPARE_L=$(echo $2 | cut -d, -f1)
+            COMPARE_R=$(echo $2 | cut -d, -f2)
+            shift 2
             ;;
 
         --)
@@ -266,7 +391,7 @@ CUSTOMS=
 
 eval set -- "$PARSED"
 
-while true; do
+while [ $# -gt 0 ]; do
     case "$1" in
         --custom)
             CUSTOMS+=($2)
@@ -293,22 +418,39 @@ fi
 
 mkdir -p ${BENCH_OUTDIR}
 
-if $CLEAN; then
-    clean_slate
+# We output the summaries to this file
+exec 3>${BENCH_OUTDIR}/output
+# and to the console as well via this trick
+tail -f ${BENCH_OUTDIR}/output &
+
+TAILPID=$!
+trap "kill $!" err exit
+
+if $COMPARE; then
+
+    COMPARE_LDIR=bench-subdir-${COMPARE_L}
+    clone_version_into_dir ${COMPARE_L} ${COMPARE_LDIR}
+
+    COMPARE_RDIR=bench-subdir-${COMPARE_R}
+    clone_version_into_dir ${COMPARE_R} ${COMPARE_RDIR}
+
+    pushd ${COMPARE_LDIR}
+    if $RUN; then
+      make -j${JLEVEL} ADMIT=1
+    fi
+    run_bench_suite
+    popd
+
+    pushd ${COMPARE_RDIR}
+    if $RUN; then
+      make -j${JLEVEL} ADMIT=1
+    fi
+    run_bench_suite
+    popd
+
+    compare_bench_output ${COMPARE_LDIR} ${COMPARE_RDIR}
+
+    exit 0
 fi
 
-for i in ${CUSTOMS[*]}; do
-    DIR=$(echo "$i" | cut -d, -f1)
-    NAME=$(echo "$i" | cut -d, -f2)
-    RULE=$(echo "$i" | cut -d, -f3)
-    bench_dir "$DIR" "$NAME" "$RULE"
-done
-
-# If not --custom, run the default set of benchmarks
-if $AUTO; then
-    bench_dir "tests/micro-benchmarks" "micro-benchmarks" "all"
-    bench_dir "ulib/" "ulib" "benchmark"
-
-    if $RUN; then make -C src clean_boot; fi
-    bench_dir "src/" "ocaml_extract" "ocaml"
-fi
+run_bench_suite

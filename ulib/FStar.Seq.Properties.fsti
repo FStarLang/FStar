@@ -430,7 +430,7 @@ let rec seq_to_list (#a:Type) (s:seq a)
 = if length s = 0 then []
   else index s 0::seq_to_list (slice s 1 (length s))
 
-[@"opaque_to_smt"]
+[@@"opaque_to_smt"]
 let rec seq_of_list (#a:Type) (l:list a) : Tot (s:seq a{L.length l = length s})  =
   match l with
   | [] -> Seq.empty #a
@@ -472,6 +472,7 @@ val lemma_index_is_nth: #a:Type -> s:seq a -> i:nat{i < length s} -> Lemma
 //    An undecidable version of `mem`,
 //    for when the sequence payload is not an eqtype
 ////////////////////////////////////////////////////////////////////////////////
+[@@ remove_unused_type_parameters [0; 1; 2]]
 val contains (#a:Type) (s:seq a) (x:a) : Tot Type0
 
 val contains_intro (#a:Type) (s:seq a) (k:nat) (x:a)
@@ -603,10 +604,11 @@ val cons_index_slice
   (s: seq a)
   (i: nat)
   (j: nat {i < j /\ j <= length s} )
+  (k:nat{k == i+1})
 : Lemma
   (requires True)
-  (ensures (cons (index s i) (slice s (i + 1) j) == slice s i j))
-  [SMTPat (cons (index s i) (slice s (i + 1) j))]
+  (ensures (cons (index s i) (slice s k j) == slice s i j))
+  [SMTPat (cons (index s i) (slice s k j))]
 
 val slice_is_empty
   (#a: Type)
@@ -642,7 +644,7 @@ val lemma_seq_of_list_index (#a:Type) (l:list a) (i:nat{i < List.Tot.length l})
          (ensures  (index (seq_of_list l) i == List.Tot.index l i))
          [SMTPat (index (seq_of_list l) i)]
 
-[@(deprecated "seq_of_list")]
+[@@(deprecated "seq_of_list")]
 let of_list (#a:Type) (l:list a) :seq a = seq_of_list l
 
 val seq_of_list_tl

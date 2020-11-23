@@ -17,6 +17,7 @@ open FStar.Tactics.Basic
 open FStar.Tactics.CtrlRewrite
 open FStar.Tactics.InterpFuns
 open FStar.Tactics.Native
+open FStar.Tactics.Common
 
 module BU      = FStar.Util
 module Cfg     = FStar.TypeChecker.Cfg
@@ -83,7 +84,6 @@ let unembed_tactic_0 (eb:embedding<'b>) (embedded_tac_b:term) (ncb:norm_cb) : ta
 
     let tm = S.mk_Tm_app embedded_tac_b
                          [S.as_arg (embed E.e_proofstate rng proof_state ncb)]
-                          None
                           rng in
 
 
@@ -142,7 +142,7 @@ let unembed_tactic_1 (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:norm_cb
     fun x ->
       let rng = FStar.Range.dummyRange  in
       let x_tm = embed ea rng x ncb in
-      let app = S.mk_Tm_app f [as_arg x_tm] None rng in
+      let app = S.mk_Tm_app f [as_arg x_tm] rng in
       unembed_tactic_0 er app ncb
 
 let unembed_tactic_nbe_1 (ea:NBET.embedding<'a>) (er:NBET.embedding<'r>) (cb:NBET.nbe_cbs) (f:NBET.t) : 'a -> tac<'r> =
@@ -162,7 +162,7 @@ let e_tactic_nbe_thunk (er : NBET.embedding<'r>) : NBET.embedding<tac<'r>>
     NBET.mk_emb
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (thunk)?")
            (fun cb t -> Some (unembed_tactic_nbe_1 NBET.e_unit er cb t ()))
-           (NBET.Constant NBET.Unit)
+           (NBET.mk_t (NBET.Constant NBET.Unit))
            (emb_typ_of e_unit)
 
 let e_tactic_1 (ea : embedding<'a>) (er : embedding<'r>) : embedding<('a -> tac<'r>)>
@@ -176,7 +176,7 @@ let e_tactic_nbe_1 (ea : NBET.embedding<'a>) (er : NBET.embedding<'r>) : NBET.em
     NBET.mk_emb
            (fun cb _ -> failwith "Impossible: NBE embedding tactic (1)?")
            (fun cb t -> Some (unembed_tactic_nbe_1 ea er cb t))
-           (NBET.Constant NBET.Unit)
+           (NBET.mk_t (NBET.Constant NBET.Unit))
            (emb_typ_of e_unit)
 
 
@@ -191,8 +191,8 @@ let () =
      * like which embeddings are needed for the arguments, but more annoyingly the underlying
      * implementation. Would be nice to have something better in the not-so-long run. *)
     [ mk_total_step_1'_psc 0 "tracepoint"
-        tracepoint E.e_proofstate e_unit
-        tracepoint E.e_proofstate_nbe NBET.e_unit;
+        tracepoint_with_psc E.e_proofstate e_bool
+        tracepoint_with_psc E.e_proofstate_nbe NBET.e_bool;
 
       mk_total_step_2' 0 "set_proofstate_range"
         set_proofstate_range E.e_proofstate e_range E.e_proofstate
@@ -314,9 +314,9 @@ let () =
         t_apply e_bool e_bool RE.e_term e_unit
         t_apply NBET.e_bool NBET.e_bool NRE.e_term NBET.e_unit;
 
-      mk_tac_step_1 0 "apply_lemma"
-        apply_lemma RE.e_term e_unit
-        apply_lemma NRE.e_term NBET.e_unit;
+      mk_tac_step_3 0 "t_apply_lemma"
+        t_apply_lemma e_bool e_bool RE.e_term e_unit
+        t_apply_lemma NBET.e_bool NBET.e_bool NRE.e_term NBET.e_unit;
 
       mk_tac_step_1 0 "set_options"
         set_options e_string e_unit
@@ -358,6 +358,14 @@ let () =
         dump e_string e_unit
         dump NBET.e_string NBET.e_unit;
 
+      mk_tac_step_2 0 "dump_all"
+        dump_all e_bool      e_string      e_unit
+        dump_all NBET.e_bool NBET.e_string NBET.e_unit;
+
+      mk_tac_step_2 0 "dump_uvars_of"
+        dump_uvars_of E.e_goal      e_string      e_unit
+        dump_uvars_of E.e_goal_nbe NBET.e_string NBET.e_unit;
+
       mk_tac_step_3 0 "ctrl_rewrite"
         ctrl_rewrite E.e_direction (e_tactic_1 RE.e_term (e_tuple2 e_bool E.e_ctrl_flag))
                                    (e_tactic_thunk e_unit)
@@ -366,9 +374,9 @@ let () =
                                        (e_tactic_nbe_thunk NBET.e_unit)
                                         NBET.e_unit;
 
-      mk_tac_step_1 0 "trefl"
-        trefl   e_unit e_unit
-        trefl   NBET.e_unit NBET.e_unit;
+      mk_tac_step_1 0 "t_trefl"
+        t_trefl   e_bool e_unit
+        t_trefl   NBET.e_bool NBET.e_unit;
 
       mk_tac_step_1 0 "dup"
         dup     e_unit e_unit
@@ -414,6 +422,14 @@ let () =
         unify_env RE.e_env RE.e_term RE.e_term e_bool
         unify_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
 
+      mk_tac_step_3 0 "unify_guard_env"
+        unify_guard_env RE.e_env RE.e_term RE.e_term e_bool
+        unify_guard_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
+
+      mk_tac_step_3 0 "match_env"
+        match_env RE.e_env RE.e_term RE.e_term e_bool
+        match_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
+
       mk_tac_step_3 0 "launch_process"
         launch_process e_string (e_list e_string) e_string e_string
         launch_process NBET.e_string (NBET.e_list NBET.e_string) NBET.e_string NBET.e_string;
@@ -446,13 +462,21 @@ let () =
         lset e_any e_string e_any e_unit
         (fun _ _ _ -> fail "sorry, `lset` does not work in NBE") NBET.e_any NBET.e_string NBET.e_any NBET.e_unit;
 
+      mk_tac_step_1 1 "set_urgency"
+        set_urgency e_int e_unit
+        set_urgency NBET.e_int NBET.e_unit;
+
+      mk_tac_step_1 1 "t_commute_applied_match"
+        t_commute_applied_match e_unit e_unit
+        t_commute_applied_match NBET.e_unit NBET.e_unit;
+
     ]
 
 let unembed_tactic_1_alt (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:norm_cb) : option<('a -> tac<'r>)> =
     Some (fun x ->
       let rng = FStar.Range.dummyRange  in
       let x_tm = embed ea rng x ncb in
-      let app = S.mk_Tm_app f [as_arg x_tm] None rng in
+      let app = S.mk_Tm_app f [as_arg x_tm] rng in
       unembed_tactic_0 er app ncb)
 
 let e_tactic_1_alt (ea: embedding<'a>) (er:embedding<'r>): embedding<('a -> (proofstate -> __result<'r>))> =
@@ -466,18 +490,19 @@ let e_tactic_1_alt (ea: embedding<'a>) (er:embedding<'r>): embedding<('a -> (pro
 
 
 let report_implicits rng (is : Env.implicits) : unit =
-    let errs = List.map (fun imp ->
-                (Err.Error_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
+  is |> List.iter (fun imp ->
+    Errors.log_issue rng
+                (Err.Error_UninstantiatedUnificationVarInTactic,
+                 BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
                              (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
                              (Print.term_to_string imp.imp_uvar.ctx_uvar_typ)
-                             imp.imp_reason,
-                 rng)) is in
-    Err.add_errors errs;
-    Err.stop_if_err ()
+                             imp.imp_reason));
+  Err.stop_if_err ()
 
 let run_tactic_on_ps
-  (rng_tac : Range.range)
+  (rng_call : Range.range)
   (rng_goal : Range.range)
+  (background : bool)
   (e_arg : embedding<'a>)
   (arg : 'a)
   (e_res : embedding<'b>)
@@ -500,7 +525,6 @@ let run_tactic_on_ps
     Err.stop_if_err ();
     let tau = unembed_tactic_1 e_arg e_res tactic FStar.Syntax.Embeddings.id_norm_cb in
 
-    Reflection.Basic.env_hook := Some env;
     (* if !tacdbg then *)
     (*     BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ); *)
     let res, ms = BU.record_time (fun () -> run_safe (tau arg) ps) in
@@ -559,6 +583,13 @@ let run_tactic_on_ps
             | e ->
                 raise e
         in
+        let rng =
+          if background
+          then match ps.goals with
+               | g::_ -> g.goal_ctx_uvar.ctx_uvar_range
+               | _ -> rng_call
+          else ps.entry_range
+        in
         Err.raise_error (Err.Fatal_UserTacticFailure,
-                            BU.format1 "user tactic failed: %s" (texn_to_string e))
-                          ps.entry_range
+                            BU.format1 "user tactic failed: `%s`" (texn_to_string e))
+                          rng

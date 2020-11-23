@@ -134,6 +134,10 @@ let list_append_lid       = p2l ["FStar"; "List"; "append"]
 let list_tot_append_lid   = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let id_lid                = psconst "id"
 
+/// Constants from FStar.Char
+let c2l s = p2l ["FStar"; "Char"; s]
+let char_u32_of_char = c2l "u32_of_char"
+
 /// Constants from FStar.String
 let s2l n = p2l ["FStar"; "String"; n]
 let string_list_of_string_lid = s2l "list_of_string"
@@ -155,6 +159,8 @@ let string_of_int_lid = p2l ["Prims"; "string_of_int"]
 let string_of_bool_lid = p2l ["Prims"; "string_of_bool"]
 let string_compare = p2l ["FStar"; "String"; "compare"]
 let order_lid       = p2l ["FStar"; "Order"; "order"]
+let vconfig_lid     = p2l ["FStar"; "VConfig"; "vconfig"]
+let mkvconfig_lid   = p2l ["FStar"; "VConfig"; "Mkvconfig"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
@@ -315,12 +321,16 @@ let comment_attr = p2l ["FStar"; "Pervasives"; "Comment"]
 let fail_attr      = psconst "expect_failure"
 let fail_lax_attr  = psconst "expect_lax_failure"
 let tcdecltime_attr = psconst "tcdecltime"
+let noextract_to_attr = psconst "noextract_to"
 let assume_strictly_positive_attr_lid = psconst "assume_strictly_positive"
 let unifier_hint_injective_lid = psconst "unifier_hint_injective"
 let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
 let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
 let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Range.dummyRange
+let commute_nested_matches_lid = psconst "commute_nested_matches"
+let allow_informative_binders_attr = p2l ["FStar"; "Pervasives"; "allow_informative_binders"]
+let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 
 let gen_reset =
     let x = U.mk_ref 0 in
@@ -332,7 +342,7 @@ let next_id = fst gen_reset
 let sli (l:lident) : string =
   if FStar.Options.print_real_names()
   then string_of_lid l
-  else text_of_id (ident_of_lid l)
+  else string_of_id (ident_of_lid l)
 
 let const_to_string x = match x with
   | Const_effect -> "Effect"
@@ -362,7 +372,7 @@ let lid_tuple2   = mk_tuple_lid 2 dummyRange
 let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
 
-let is_tuple_constructor_id  id  = is_tuple_constructor_string (text_of_id id)
+let is_tuple_constructor_id  id  = is_tuple_constructor_string (string_of_id id)
 let is_tuple_constructor_lid lid = is_tuple_constructor_string (string_of_lid lid)
 
 let mk_tuple_data_lid n r =
@@ -374,7 +384,7 @@ let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
 let is_tuple_datacon_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.Mktuple"
 
-let is_tuple_datacon_id  id  = is_tuple_datacon_string (text_of_id id)
+let is_tuple_datacon_id  id  = is_tuple_datacon_string (string_of_id id)
 let is_tuple_datacon_lid lid = is_tuple_datacon_string (string_of_lid lid)
 
 let is_tuple_data_lid f n =
@@ -411,7 +421,7 @@ let is_dtuple_data_lid f n =
 let is_dtuple_data_lid' f = is_dtuple_datacon_string (string_of_lid f)
 
 let is_name (lid:lident) =
-  let c = U.char_at (text_of_id (ident_of_lid lid)) 0 in
+  let c = U.char_at (string_of_id (ident_of_lid lid)) 0 in
   U.is_upper c
 
 (* tactic constants *)

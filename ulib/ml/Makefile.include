@@ -9,16 +9,15 @@ FSTAR_REALIZED_MODULES=All BaseTypes Buffer Bytes Char CommonST Constructive Dyn
 	UInt16 UInt32 UInt64 UInt8 \
 	Pointer.Derived1 Pointer.Derived2 \
 	Pointer.Derived3 \
-	BufferNG Tactics.Builtins \
+	BufferNG \
 	TaggedUnion \
-	Reflection.Types Reflection.Builtins Reflection.Data \
-	Tactics.Result Tactics.Types Bytes Util \
+	Bytes Util \
 	Pervasives Order Range \
 	Vector.Base Vector.Properties Vector TSet
 	# prims is realized by default hence not included in this list
 
 NOEXTRACT_MODULES=$(addprefix -FStar., $(FSTAR_REALIZED_MODULES) Printf) \
-  -LowStar.Printf +FStar.List.Tot.Properties +FStar.Int.Cast.Full -Steel.Memory -Steel.Actions -Steel.Semantics
+  -LowStar.Printf +FStar.List.Tot.Properties +FStar.Int.Cast.Full -Steel
 
 FSTAR_DEFAULT_ARGS=
 ULIB_ML=$(FSTAR_HOME)/ulib/ml

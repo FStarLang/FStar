@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "99df8dc61c26230da4a22b267dff29ca"
+      "64186bb722c34cb45757aea3cea2a1fd"
     ],
     [
       "CalcInference.test2",
@@ -17,7 +17,7 @@
       1,
       [ "@query" ],
       0,
-      "d29742a7aab42916c46916f46ac246df"
+      "31421098cd4730f49f113785d8681186"
     ],
     [
       "CalcInference.test3",
@@ -26,34 +26,7 @@
       1,
       [ "@query" ],
       0,
-      "fec555bef3853e1df59c0cc90ffcaef6"
-    ],
-    [
-      "CalcInference.test1",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "03fb8e0e8239c6373b15147bf8a3a720"
-    ],
-    [
-      "CalcInference.test2",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "3329158271b0130c8a6fcec14d7bdfba"
-    ],
-    [
-      "CalcInference.test3",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "218e542f1ad7c09c03d0a2a0b9f9c1d4"
+      "0335e7cf9ae812534f5383cf1dc763aa"
     ]
   ]
 ]

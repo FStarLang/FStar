@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "2a494476bc2bf72794ac2165bb7ac1cf"
+      "71ca3040560ef698834e394b027de401"
     ],
     [
       "OPLSS.auto_lemma_mem_snoc",
@@ -22,21 +22,7 @@
       1,
       [ "@query" ],
       0,
-      "a7708b3c334591dc21d3ca5579e623cd"
-    ],
-    [
-      "OPLSS.lbytes",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "5baa83a983c8c83a673c96ec9b22c6f6"
+      "10b94edd8b1cea44e04319b603b17212"
     ]
   ]
 ]

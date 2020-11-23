@@ -53,7 +53,7 @@ type record_or_dc = {
   constrname: ident;
   parms: binders;
   fields: list<(ident * typ)>;
-  is_private_or_abstract: bool;
+  is_private: bool;
   is_record:bool
 }
 
@@ -193,7 +193,7 @@ let unmangleMap = [("op_ColonColon", "Cons", delta_constant, Some Data_ctor);
 
 let unmangleOpName (id:ident) : option<term> =
   find_map unmangleMap (fun (x,y,dd,dq) ->
-    if text_of_id id = x
+    if string_of_id id = x
     then Some (S.fvar (lid_of_path ["Prims"; y] (range_of_id id)) dd dq) //NS delta ok
     else None)
 
@@ -215,7 +215,7 @@ let find_in_record ns id record cont =
  then
       let fname = lid_of_ids (ns_of_lid record.typename @ [id]) in
       let find = BU.find_map record.fields (fun (f, _) ->
-        if text_of_id id = text_of_id f
+        if string_of_id id = string_of_id f
         then Some record
         else None)
       in
@@ -243,7 +243,7 @@ let find_in_module_with_includes
     (ns: lident)
     (id: ident)
     : cont_t<'a> =
-  let idstr = text_of_id id in
+  let idstr = string_of_id id in
   let rec aux = function
   | [] ->
     find_in_module_default
@@ -287,10 +287,10 @@ let try_lookup_id''
   (lookup_default_id: cont_t<'a> -> ident -> cont_t<'a>) : option<'a>
   =
     let check_local_binding_id : local_binding -> bool = function
-      (id', _, _) -> text_of_id id' = text_of_id id
+      (id', _, _) -> string_of_id id' = string_of_id id
     in
     let check_rec_binding_id : rec_binding -> bool = function
-      (id', _, _, _) -> text_of_id id' = text_of_id id
+      (id', _, _, _) -> string_of_id id' = string_of_id id
     in
     let curmod_ns = ids_of_lid (current_module env) in
     let proc = function
@@ -310,7 +310,7 @@ let try_lookup_id''
         find_in_module_with_includes eikind find_in_module Cont_ignore env ns id
 
       | Top_level_def id'
-        when text_of_id id' = text_of_id id ->
+        when string_of_id id' = string_of_id id ->
         (* indicates a global definition shadowing previous
         "open"s. If the definition is not actually found by the
         [lookup_default_id] finder, then it may mean that we are in a
@@ -402,7 +402,7 @@ let resolve_module_name env lid (honor_ns: bool) : option<lident> =
           else aux q
 
         | Module_abbrev (name, modul) :: _
-          when nslen = 0 && (text_of_id name) = (text_of_id (ident_of_lid lid)) ->
+          when nslen = 0 && (string_of_id name) = (string_of_id (ident_of_lid lid)) ->
           Some modul
 
         | _ :: q ->
@@ -521,9 +521,8 @@ let delta_depth_of_declaration (lid:lident) (quals:list<qualifier>) =
             || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
             then delta_equational
             else delta_constant in
-    if quals |> BU.for_some (function Abstract -> true | _ -> false)
-    || (quals |> BU.for_some (function Assumption -> true | _ -> false)
-    && not (quals |> BU.for_some (function New -> true | _ -> false)))
+    if quals |> BU.for_some (function Assumption -> true | _ -> false)
+    && not (quals |> BU.for_some (function New -> true | _ -> false))
     then Delta_abstract dd
     else dd
 
@@ -547,7 +546,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
                  let dd = delta_depth_of_declaration lid quals in
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
                  | Some refl_monad ->
-                        let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) None occurrence_range in
+                        let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) occurrence_range in
                         Some (Term_name (refl_const, se.sigattrs))
                  | _ ->
                    Some (Term_name(fvar lid dd (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
@@ -711,6 +710,7 @@ let try_lookup_datacon env (lid:lident) =
         if quals |> BU.for_some (function Assumption -> true | _ -> false)
         then Some (lid_as_fv lid delta_constant None)
         else None
+      | ({ sigel = Sig_splice _ }, _) (* A spliced datacon *)
       | ({ sigel = Sig_datacon _ }, _) ->
          let qual = fv_qual_of_se (fst se) in
          Some (lid_as_fv lid delta_constant qual)
@@ -738,7 +738,7 @@ let record_cache_aux_with_filter =
     (* remove private/abstract records *)
     let filter () =
         let rc = peek () in
-        let filtered = List.filter (fun r -> not r.is_private_or_abstract) rc in
+        let filtered = List.filter (fun r -> not r.is_private) rc in
         record_cache := filtered :: List.tl !record_cache
     in
     let aux =
@@ -788,9 +788,7 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match
                               constrname=ident_of_lid constrname;
                               parms=parms;
                               fields=fields;
-                              is_private_or_abstract =
-                                List.contains Private typename_quals ||
-                                List.contains Abstract typename_quals;
+                              is_private = List.contains Private typename_quals;
                               is_record=is_rec} in
                 (* the record is added to the current list of
                 top-level definitions, to allow shadowing field names
@@ -803,11 +801,11 @@ let extract_record (e:env) (new_globs: ref<(list<scope_mod>)>) = fun se -> match
                     match get_exported_id_set e modul with
                     | Some my_ex ->
                       let my_exported_ids = my_ex Exported_id_field in
-                      let () = my_exported_ids := BU.set_add (text_of_id id) !my_exported_ids in
+                      let () = my_exported_ids := BU.set_add (string_of_id id) !my_exported_ids in
                       (* also add the projector name *)
                       let projname = mk_field_projector_name_from_ident constrname id
                                      |> ident_of_lid
-                                     |> text_of_id
+                                     |> string_of_id
                       in
                       let () = my_exported_ids := BU.set_add projname !my_exported_ids in
                       ()
@@ -880,7 +878,7 @@ let push_scope_mod env scope_mod =
 
 let push_bv' env (x:ident) =
   let r = range_of_id x in
-  let bv = S.gen_bv (text_of_id x) (Some r) ({ tun with pos = r }) in
+  let bv = S.gen_bv (string_of_id x) (Some r) ({ tun with pos = r }) in
   let used_marker = BU.mk_ref false in
   push_scope_mod env (Local_binding (x, bv, used_marker)), bv, used_marker
 
@@ -934,7 +932,7 @@ let push_sigelt' fail_on_dup env s =
       let () = match get_exported_id_set env modul with
       | Some f ->
         let my_exported_ids = f Exported_id_term_type in
-        my_exported_ids := BU.set_add (text_of_id (ident_of_lid lid)) !my_exported_ids
+        my_exported_ids := BU.set_add (string_of_id (ident_of_lid lid)) !my_exported_ids
       | None -> () (* current module was not prepared? should not happen *)
       in
       let is_iface = env.iface && not env.admitted_iface in
@@ -1043,7 +1041,6 @@ let finish env modul =
     match se.sigel with
     | Sig_bundle(ses, _) ->
       if List.contains Private quals
-      || List.contains Abstract quals
       then ses |> List.iter (fun se -> match se.sigel with
                 | Sig_datacon(lid, _, _, _, _, _) ->
                   BU.smap_remove (sigmap env) (string_of_lid lid)
@@ -1051,7 +1048,7 @@ let finish env modul =
                   BU.smap_remove (sigmap env) (string_of_lid lid);
                   if not (List.contains Private quals)
                   then //it's only abstract; add it back to the environment as an abstract type
-                       let sigel = Sig_declare_typ(lid, univ_names, S.mk (Tm_arrow(binders, S.mk_Total typ)) None (Ident.range_of_lid lid)) in
+                       let sigel = Sig_declare_typ(lid, univ_names, S.mk (Tm_arrow(binders, S.mk_Total typ)) (Ident.range_of_lid lid)) in
                        let se = {se with sigel=sigel; sigquals=Assumption::quals} in
                        BU.smap_add (sigmap env) (string_of_lid lid) (se, false)
                 | _ -> ())
@@ -1062,18 +1059,9 @@ let finish env modul =
 
     | Sig_let((_,lbs), _) ->
       if List.contains Private quals
-      || List.contains Abstract quals
       then begin
            lbs |> List.iter (fun lb -> BU.smap_remove (sigmap env) (string_of_lid (right lb.lbname).fv_name.v))
-      end;
-      if List.contains Abstract quals
-      && not (List.contains Private quals)
-      then lbs |> List.iter (fun lb ->
-           let lid = (right lb.lbname).fv_name.v in
-           let quals = Assumption :: quals in
-           let decl = { se with sigel = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp);
-                                sigquals = quals } in
-           BU.smap_add (sigmap env) (string_of_lid lid) (decl, false))
+      end
 
     | _ -> ());
   (* update the sets of transitively exported names of this module by
@@ -1237,7 +1225,7 @@ let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_in
 
 let enter_monad_scope env mname =
   match env.curmonad with
-  | Some mname' -> raise_error (Errors.Fatal_MonadAlreadyDefined, ("Trying to define monad " ^ (text_of_id mname) ^ ", but already in monad scope " ^ (text_of_id mname'))) (range_of_id mname)
+  | Some mname' -> raise_error (Errors.Fatal_MonadAlreadyDefined, ("Trying to define monad " ^ (string_of_id mname) ^ ", but already in monad scope " ^ (string_of_id mname'))) (range_of_id mname)
   | None -> {env with curmonad = Some mname}
 
 let fail_or env lookup lid = match lookup lid with
@@ -1272,11 +1260,11 @@ let fail_or env lookup lid = match lookup lid with
            msg
            (string_of_lid modul)
            (string_of_lid modul')
-           (text_of_id (ident_of_lid lid))
+           (string_of_id (ident_of_lid lid))
     in
     raise_error (Errors.Fatal_IdentifierNotFound, msg) (range_of_lid lid)
   | Some r -> r
 
 let fail_or2 lookup id = match lookup id with
-  | None -> raise_error (Errors.Fatal_IdentifierNotFound, ("Identifier not found [" ^(text_of_id id)^"]")) (range_of_id id)
+  | None -> raise_error (Errors.Fatal_IdentifierNotFound, ("Identifier not found [" ^(string_of_id id)^"]")) (range_of_id id)
   | Some r -> r

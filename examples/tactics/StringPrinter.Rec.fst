@@ -23,19 +23,19 @@ module U32 = FStar.UInt32
 
 let tin_decr
   (tin: Type)
-  (decreases: (tin -> GTot lex_t))
+  (dec: (tin -> GTot lex_t))
   (x: tin)
 : Tot Type
-= (x' : tin { decreases x' << decreases x } )
+= (x' : tin { dec x' << dec x } )
 
 let do_while_body_post
   (tin tout: Type)
-  (decreases: (tin -> GTot lex_t))
+  (dec: (tin -> GTot lex_t))
   (f: ((x: tin) -> Tot (m tout)))
   (x: tin)
-  (y: m (c_or (tin_decr tin decreases x) tout))
+  (y: m (c_or (tin_decr tin dec x) tout))
 : GTot Type0
-= f x () == bind y (fun (y' : c_or (tin_decr tin decreases x) tout) -> begin match y' with
+= f x () == bind y (fun (y' : c_or (tin_decr tin dec x) tout) -> begin match y' with
   | Left x' -> f x'
   | Right y' -> ret y'
   end) ()
@@ -43,18 +43,18 @@ let do_while_body_post
 let do_while_body_res_t
   (tin tout: Type)
   (f: ((x: tin) -> Tot (m tout)))
-  (decreases: (tin -> GTot lex_t))
+  (dec: (tin -> GTot lex_t))
   (x: tin)
 : Tot Type
-= (y: m (c_or (tin_decr tin decreases x) tout) { do_while_body_post tin tout decreases f x y } )
+= (y: m (c_or (tin_decr tin dec x) tout) { do_while_body_post tin tout dec f x y } )
 
 let do_while_body_t'
   (tin tout: Type)
   (f: ((x: tin) -> Tot (m tout)))
-  (decreases: (tin -> GTot lex_t))
+  (dec: (tin -> GTot lex_t))
 : Tot Type
 = (x: tin) ->
-  Tot (do_while_body_res_t tin tout f decreases x)
+  Tot (do_while_body_res_t tin tout f dec x)
 
 let lift_c_or
   (tin tout: Type)
@@ -125,11 +125,11 @@ let rec mk_do_while_body
 let do_while_body_res_intro
   (tin tout: Type)
   (f: ((x: tin) -> Tot (m tout)))
-  (decreases: (tin -> GTot lex_t))
+  (dec: (tin -> GTot lex_t))
   (x: tin)
-  (y: m (c_or (tin_decr tin decreases x) tout))
-: Pure (do_while_body_res_t tin tout f decreases x)
-  (requires (do_while_body_post tin tout decreases f x y))
+  (y: m (c_or (tin_decr tin dec x) tout))
+: Pure (do_while_body_res_t tin tout f dec x)
+  (requires (do_while_body_post tin tout dec f x y))
   (ensures (fun y' -> y' == y))
 = y
 

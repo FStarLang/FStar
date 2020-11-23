@@ -43,18 +43,18 @@ class monad (m : Type0 -> Type0) = {
   laws   : monad_laws m return bind;
 }
 
-let f #a #b #m [|monad m|] (x : m (a -> b)) (y : m a) : m b =
+let f #a #b #m {| monad m |} (x : m (a -> b)) (y : m a) : m b =
   bind #m x (fun x ->
   bind #m y (fun y ->
   return #m (x y)))
 
-let g #a #b #m [|d : monad m|] (x : m a) =
+let g #a #b #m {| d : monad m |} (x : m a) =
   d.laws.idL () (fun () -> x);
   d.laws.idR x;
   assert (bind #m x (return #m) == bind #m (return #m ()) (fun () -> x))
 
 (* Same bug as EnumEq, I think, requiring the #d in for laws *)
-let g' #a #b #m [|monad m|] (x : m a) =
+let g' #a #b #m {| monad m |} (x : m a) =
   (laws #m).idL () (fun () -> x);
   (laws #m).idR x;
   assert (bind #m x (return #m) == bind #m (return #m ()) (fun () -> x))

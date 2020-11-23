@@ -183,7 +183,7 @@ type errors = {
     error_fuel: int;
     error_ifuel: int;
     error_hint: option<(list<string>)>;
-    error_messages: list<(Errors.raw_error * string * Range.range)>
+    error_messages: list<Errors.error>;
 }
 
 let error_to_short_string err =
@@ -264,7 +264,11 @@ let query_errors settings z3result =
             error_fuel = settings.query_fuel;
             error_ifuel = settings.query_ifuel;
             error_hint = settings.query_hint;
-            error_messages = List.map (fun (_, x, y) -> Errors.Error_Z3SolverError,x,y) error_labels
+            error_messages = List.map (fun (_, x, y) -> Errors.Error_Z3SolverError,
+                                                        x,
+                                                        y,
+                                                        Errors.get_ctx ()) // FIXME: leaking abstraction
+                                      error_labels
         }
      in
      Some err
@@ -286,14 +290,14 @@ let detail_hint_replay settings z3result =
            in
            detail_errors true settings.query_env settings.query_all_labels ask_z3
 
-let find_localized_errors errs =
+let find_localized_errors (errs : list<errors>) : option<errors> =
     errs |> List.tryFind (fun err -> match err.error_messages with [] -> false | _ -> true)
 
 let errors_to_report (settings : query_settings) : list<Errors.error> =
     let format_smt_error msg =
       BU.format1 "SMT solver says:\n\t%s;\n\t\
                   Note: 'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit;\n\t\
-                  'incomplete quantifiers' means a (partial) counterexample was found, so try to spell your proof out in greater detail, increase fuel or ifuel\n\t\
+                  'incomplete quantifiers' means Z3 could not prove the query, so try to spell your proof out in greater detail, increase fuel or ifuel\n\t\
                   'unknown' means Z3 provided no further reason for the proof failing"
         msg
     in
@@ -338,7 +342,7 @@ let errors_to_report (settings : query_settings) : list<Errors.error> =
               ) (0, 0, 0) settings.query_errors
             in
             (match incomplete_count, canceled_count, unknown_count with
-             | _, 0, 0 when incomplete_count > 0 -> "The solver found a (partial) counterexample, try to spell your proof in more detail or increase fuel/ifuel"
+             | _, 0, 0 when incomplete_count > 0 -> "The SMT solver could not prove the query, try to spell your proof in more detail or increase fuel/ifuel"
              | 0, _, 0 when canceled_count > 0   -> "The SMT query timed out, you might want to increase the rlimit"
              | _, _, _                           -> "Try with --query_stats to get more details") |> Inl
         in
@@ -351,7 +355,8 @@ let errors_to_report (settings : query_settings) : list<Errors.error> =
                    settings.query_env
                    [(Errors.Error_UnknownFatal_AssertionFailure,
                      "Unknown assertion failed",
-                     settings.query_range)]
+                     settings.query_range,
+                     Errors.get_ctx ())]
                    smt_error
     in
     let detailed_errors : unit =
@@ -678,13 +683,6 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
       else []
     in
 
-    let min_fuel =
-        if Options.min_fuel() < Options.initial_fuel()
-        then [{default_settings with query_fuel=Options.min_fuel();
-                                     query_ifuel=1}]
-        else []
-    in
-
     let all_configs =
         use_hints_setting
         @ [default_settings]
@@ -823,10 +821,10 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
             (* Summarize them *)
             let errs = errs |> List.flatten |> collect in
             (* Show the amount on each error *)
-            let errs = errs |> List.map (fun ((e, m, r), n) ->
+            let errs = errs |> List.map (fun ((e, m, r, ctx), n) ->
                 if n > 1
-                then (e, m ^ BU.format1 " (%s times)" (string_of_int n), r)
-                else (e, m, r))
+                then (e, m ^ BU.format1 " (%s times)" (string_of_int n), r, ctx)
+                else (e, m, r, ctx))
             in
             (* Now report them *)
             FStar.Errors.add_errors errs;
@@ -838,9 +836,9 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
             in
             (* Adding another error for the threshold (but not for --retry) *)
             if quaking then
-              FStar.TypeChecker.Err.add_errors
-                env
-                [(Errors.Error_QuakeFailed,
+              FStar.TypeChecker.Err.log_issue
+                env rng
+                (Errors.Error_QuakeFailed,
                   BU.format6
                     "Query %s failed the quake test, %s out of %s attempts succeded, \
                      but the threshold was %s out of %s%s"
@@ -849,8 +847,8 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
                     (string_of_int total_ran)
                     (string_of_int lo)
                     (string_of_int hi)
-                    (if total_ran < hi then " (early abort)" else ""),
-                  rng)]
+                    (if total_ran < hi then " (early abort)" else ""))
+
           end
           else begin
             (* Just report them as usual *)
@@ -924,21 +922,19 @@ let do_solve use_env_msg tcenv q : unit =
     with
       | FStar.SMTEncoding.Env.Inner_let_rec names ->  //can be raised by encode_query
         pop ();  //AR: Important, we push-ed before encode_query was called
-        FStar.TypeChecker.Err.add_errors
-          tcenv
-          [(Errors.Error_NonTopRecFunctionNotFullyEncoded,
-            BU.format1
-              "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
-              (String.concat "," (List.map fst names)),
-            tcenv.range)]
+        FStar.TypeChecker.Err.log_issue
+          tcenv tcenv.range
+          (Errors.Error_NonTopRecFunctionNotFullyEncoded,
+           BU.format1
+             "Could not encode the query since F* does not support precise smtencoding of inner let-recs yet (in this case %s)"
+             (String.concat "," (List.map fst names)))
 
 let solve use_env_msg tcenv q : unit =
     if Options.no_smt () then
-        FStar.TypeChecker.Err.add_errors
-                 tcenv
-                 [(Errors.Error_NoSMTButNeeded,
-                    BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q),
-                        tcenv.range)]
+        FStar.TypeChecker.Err.log_issue
+          tcenv tcenv.range
+            (Errors.Error_NoSMTButNeeded,
+             BU.format1 "Q = %s\nA query could not be solved internally, and --no_smt was given" (Print.term_to_string q))
     else
     Profiling.profile
       (fun () -> do_solve use_env_msg tcenv q)

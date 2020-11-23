@@ -355,13 +355,22 @@ type raw_error =
   | Error_IllSMTPat
   | Error_IllScopedTerm
   | Warning_UnusedLetRec
-  | Fatal_PolymonadicBind_conflict
+  | Fatal_Effects_Ordering_Coherence
   | Warning_BleedingEdge_Feature
   | Warning_IgnoredBinding
-  | Warning_AbstractQualifier
   | Warning_CouldNotReadHints
   | Fatal_BadUvar
   | Warning_WarnOnUse
+  | Warning_DeprecatedAttributeSyntax
+  | Warning_DeprecatedGeneric
+  | Error_BadSplice
+  | Error_UnexpectedUnresolvedUvar
+  | Warning_UnfoldPlugin
+  | Error_LayeredMissingAnnot
+  | Error_CallToErased
+  | Error_ErasedCtor
+  | Error_RemoveUnusedTypeParameter
+  | Warning_NoMagicInFSharp
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
@@ -696,13 +705,22 @@ let default_settings : list<error_setting> =
     Error_IllSMTPat                                   , CError, 326;
     Error_IllScopedTerm                               , CError, 327;
     Warning_UnusedLetRec                              , CWarning, 328;
-    Fatal_PolymonadicBind_conflict                    , CError, 329;
+    Fatal_Effects_Ordering_Coherence                  , CError, 329;
     Warning_BleedingEdge_Feature                      , CWarning, 330;
     Warning_IgnoredBinding                            , CWarning, 331;
-    Warning_AbstractQualifier                         , CWarning, 332;
     Warning_CouldNotReadHints                         , CWarning, 333;
     Fatal_BadUvar                                     , CFatal,   334;
-    Warning_WarnOnUse                                 , CSilent,  335
+    Warning_WarnOnUse                                 , CSilent,  335;
+    Warning_DeprecatedAttributeSyntax                 , CSilent,  336;
+    Warning_DeprecatedGeneric                         , CWarning, 337;
+    Error_BadSplice                                   , CError, 338;
+    Error_UnexpectedUnresolvedUvar                    , CAlwaysError, 339;
+    Warning_UnfoldPlugin                              , CWarning, 340;
+    Error_LayeredMissingAnnot                         , CAlwaysError, 341;
+    Error_CallToErased                                , CError, 342;
+    Error_ErasedCtor                                  , CError, 343;
+    Error_RemoveUnusedTypeParameter                   , CWarning, 344;
+    Warning_NoMagicInFSharp                           , CWarning, 345
     ]
 module BU = FStar.Util
 
@@ -725,6 +743,10 @@ let lookup_error_range settings (l, h) =
   matches
 
 let error_number (_, _, i) = i
+
+let warn_on_use_errno = error_number (lookup_error default_settings Warning_WarnOnUse)
+let defensive_errno   = error_number (lookup_error default_settings Warning_Defensive)
+let call_to_erased_errno = error_number (lookup_error default_settings Error_CallToErased)
 
 let update_flags (l:list<(error_flag * string)>)
   : list<error_setting>
@@ -764,9 +786,10 @@ let update_flags (l:list<(error_flag * string)>)
   @ default_settings
 
 
-type error = raw_error * string * Range.range
+(* error code, message, source position, and error context *)
+type error = raw_error * string * Range.range * list<string>
 
-exception Err     of raw_error * string
+exception Err     of raw_error * string * list<string>
 exception Error   of error
 exception Warning of error
 exception Stop
@@ -783,10 +806,11 @@ type issue_level =
 | EError
 
 type issue = {
-    issue_message: string;
+    issue_msg: string;
     issue_level: issue_level;
     issue_range: option<Range.range>;
-    issue_number: option<int>
+    issue_number: option<int>;
+    issue_ctx: list<string>;
 }
 
 type error_handler = {
@@ -796,30 +820,45 @@ type error_handler = {
     eh_clear: unit -> unit
 }
 
+let ctx_string (ctx : list<string>) : string =
+  if Options.error_contexts ()
+  then
+    ctx
+      |> List.map (fun s -> "\n> " ^ s)
+      |> String.concat ""
+  else ""
+
+(* No newline at the end *)
+let issue_message (i:issue) : string =
+  i.issue_msg ^ ctx_string i.issue_ctx
+
+(* No newline at the end *)
 let format_issue issue =
-    let level_header =
-        match issue.issue_level with
-        | EInfo -> "Info"
-        | EWarning -> "Warning"
-        | EError -> "Error"
-        | ENotImplemented -> "Feature not yet implemented: " in
-    let range_str, see_also_str =
-        match issue.issue_range with
-        | None -> "", ""
-        | Some r when r = dummyRange ->
-            "", (if def_range r = def_range dummyRange then ""
-                 else BU.format1 " (see also %s)" (Range.string_of_range r))
-        | Some r ->
-          (BU.format1 "%s: " (Range.string_of_use_range r),
-           (if use_range r = def_range r || def_range r = def_range dummyRange
-            then ""
-            else BU.format1 " (see also %s)" (Range.string_of_range r)))
-    in
-    let issue_number =
-        match issue.issue_number with
-        | None -> ""
-        | Some n -> BU.format1 " %s" (string_of_int n) in
-    BU.format5 "%s(%s%s) %s%s\n" range_str level_header issue_number issue.issue_message see_also_str
+  let level_header =
+      match issue.issue_level with
+      | EInfo -> "Info"
+      | EWarning -> "Warning"
+      | EError -> "Error"
+      | ENotImplemented -> "Feature not yet implemented: "
+  in
+  let range_str, see_also_str =
+      match issue.issue_range with
+      | None -> "", ""
+      | Some r when r = dummyRange ->
+          "", (if def_range r = def_range dummyRange then ""
+               else BU.format1 " (see also %s)" (Range.string_of_range r))
+      | Some r ->
+        (BU.format1 "%s: " (Range.string_of_use_range r),
+         (if use_range r = def_range r || def_range r = def_range dummyRange
+          then ""
+          else BU.format1 " (see also %s)" (Range.string_of_range r)))
+  in
+  let issue_number =
+      match issue.issue_number with
+      | None -> ""
+      | Some n -> BU.format1 " %s" (string_of_int n)
+  in
+  BU.format5 "%s(%s%s) %s%s" range_str level_header issue_number (issue_message issue) see_also_str
 
 let print_issue issue =
     let printer =
@@ -828,7 +867,7 @@ let print_issue issue =
         | EWarning -> BU.print_warning
         | EError -> BU.print_error
         | ENotImplemented -> BU.print_error in
-    printer (format_issue issue)
+    printer (format_issue issue ^ "\n")
 
 let compare_issues i1 i2 =
     match i1.issue_range, i2.issue_range with
@@ -839,7 +878,13 @@ let compare_issues i1 i2 =
 
 let mk_default_handler print =
     let issues : ref<list<issue>> = BU.mk_ref [] in
-    let add_one (e: issue) = issues := e :: !issues in
+    let add_one (e: issue) =
+        if Options.defensive_abort () && e.issue_number = Some defensive_errno then
+          failwith "Aborting due to --defensive abort";
+        match e.issue_level with
+        | EInfo -> print_issue e
+        | _ -> issues := e :: !issues
+    in
     let count_errors () =
         List.fold_left (fun n i ->
           match i.issue_level with
@@ -865,8 +910,13 @@ let default_handler = mk_default_handler true
 let current_handler =
     BU.mk_ref default_handler
 
-let mk_issue level range msg n =
-    { issue_level = level; issue_range = range; issue_message = msg; issue_number = n}
+let mk_issue level range msg n ctx = {
+  issue_level = level;
+  issue_range = range;
+  issue_msg = msg;
+  issue_number = n;
+  issue_ctx = ctx;
+}
 
 let get_err_count () = (!current_handler).eh_count_errors ()
 
@@ -894,35 +944,42 @@ let set_handler handler =
     let issues = report_all () in
     clear (); current_handler := handler; add_many issues
 
-
-type error_message_prefix = {
-    set_prefix: string -> unit;
-    append_prefix: string -> string;
-    clear_prefix: unit -> unit;
+type error_context_t = {
+    push  : string -> unit;
+    pop   : unit -> string;
+    clear : unit -> unit;
+    get   : unit -> list<string>;
 }
 
-let message_prefix =
-    let pfx = BU.mk_ref None in
-    let set_prefix s = pfx := Some s in
-    let clear_prefix () = pfx := None in
-    let append_prefix s = match !pfx with
-        | None -> s
-        | Some p -> p ^ ": " ^ s in
-    {set_prefix=set_prefix;
-     clear_prefix=clear_prefix;
-     append_prefix=append_prefix}
+let error_context : error_context_t =
+    let ctxs = BU.mk_ref [] in
+    let push s = ctxs := s :: !ctxs in
+    let pop s =
+        match !ctxs with
+        | h::t -> (ctxs := t; h)
+        | _ -> failwith "cannot pop error prefix..."
+    in
+    let clear () = ctxs := [] in
+    let get () = !ctxs in
+    { push  = push
+    ; pop   = pop
+    ; clear = clear
+    ; get   = get
+    }
 
+let get_ctx () : list<string> =
+  error_context.get ()
 
 let diag r msg =
   if Options.debug_any()
-  then add_one (mk_issue EInfo (Some r) msg None)
+  then add_one (mk_issue EInfo (Some r) msg None [])
 
 let warn_unsafe_options rng_opt msg =
   match Options.report_assumes () with
   | Some "warn" ->
-    add_one (mk_issue EWarning rng_opt ("Every use of this option triggers a warning: " ^msg) (Some 334))
+    add_one (mk_issue EWarning rng_opt ("Every use of this option triggers a warning: " ^msg) (Some warn_on_use_errno) [])
   | Some "error" ->
-    add_one (mk_issue EError rng_opt ("Every use of this option triggers an error: " ^msg) (Some 334))
+    add_one (mk_issue EError rng_opt ("Every use of this option triggers an error: " ^msg) (Some warn_on_use_errno) [])
   | _ -> ()
 
 let set_option_warning_callback_range (ropt:option<Range.range>) =
@@ -989,8 +1046,7 @@ let lookup err =
   let v, level, i = lookup_error flags err in
   let with_level level = v, level, i in
   match v with
-  | Warning_Defensive
-        when Options.defensive_fail() ->
+  | Warning_Defensive when Options.defensive_error () || Options.defensive_abort () ->
     with_level CAlwaysError
 
   | Warning_WarnOnUse ->
@@ -1009,38 +1065,45 @@ let lookup err =
          | CWarning
          | CSilent -> CError
          | _ -> level)
+      | Some _ ->
+        level
     in
     with_level level'
 
   | _ ->
     with_level level
 
-let log_issue r (e, msg) =
+let log_issue_ctx r (e, msg) ctx =
   match lookup e with
   | (_, CAlwaysError, errno)
   | (_, CError, errno)  ->
-     add_one (mk_issue EError (Some r) msg (Some errno))
+     add_one (mk_issue EError (Some r) msg (Some errno) ctx)
   | (_, CWarning, errno) ->
-     add_one (mk_issue EWarning (Some r) msg (Some errno))
+     add_one (mk_issue EWarning (Some r) msg (Some errno) ctx)
   | (_, CSilent, _) -> ()
   // We allow using log_issue to report a Fatal error in interactive mode
   | (_, CFatal, errno) ->
-    let i = mk_issue EError (Some r) msg (Some errno) in
+    let i = mk_issue EError (Some r) msg (Some errno) ctx in
     if Options.ide()
     then add_one i
     else failwith ("don't use log_issue to report fatal error, should use raise_error: " ^format_issue i)
 
-let add_errors errs =
-    atomically (fun () -> List.iter (fun (e, msg, r) -> log_issue r (e, (message_prefix.append_prefix msg))) errs)
+let log_issue r (e, msg) =
+  let ctx = error_context.get () in
+  log_issue_ctx r (e, msg) ctx
 
-let issue_of_exn = function
-    | Error(e, msg, r) ->
-      let errno = error_number (lookup e) in
-      Some (mk_issue EError (Some r) (message_prefix.append_prefix msg) (Some errno))
-    | Err (e, msg) ->
-      let errno = error_number (lookup e) in
-      Some (mk_issue EError None (message_prefix.append_prefix msg) (Some errno))
-    | _ -> None
+let add_errors (errs : list<error>) : unit =
+    atomically (fun () -> List.iter (fun (e, msg, r, ctx) -> log_issue_ctx r (e, msg) ctx) errs)
+
+let issue_of_exn (e:exn) : option<issue> =
+  match e with
+  | Error(e, msg, r, ctx) ->
+    let errno = error_number (lookup e) in
+    Some (mk_issue EError (Some r) msg (Some errno) ctx)
+  | Err (e, msg, ctx) ->
+    let errno = error_number (lookup e) in
+    Some (mk_issue EError None msg (Some errno) ctx)
+  | _ -> None
 
 let err_exn exn =
     if exn = Stop then ()
@@ -1060,16 +1123,46 @@ let stop_if_err () =
     then raise Stop
 
 let raise_error (e, msg) r =
-  raise (Error (e, msg, r))
+  raise (Error (e, msg, r, error_context.get ()))
 
 let raise_err (e, msg) =
-  raise (Err (e, msg))
+  raise (Err (e, msg, error_context.get ()))
+
+let with_ctx (s:string) (f : unit -> 'a) : 'a =
+  error_context.push s;
+  let r =
+    (* If we're debugging the failure, don't do anything,
+     * since catching and rethrowing the exception will change
+     * the stack trace. We still push the context though. *)
+    if Options.trace_error ()
+    then Inr (f ())
+    else
+    try
+      Inr (f ())
+    with
+      (* Adding context to `failwith`, though it will be printed badly.
+       * TODO: deprecate failwith and use F* exceptions, which we can
+       * then catch and print sensibly. *)
+      | Failure msg ->
+        Inl (Failure (msg ^ ctx_string (error_context.get ())))
+      | ex -> Inl ex
+  in
+  ignore (error_context.pop ());
+  match r with
+  | Inr r -> r
+  | Inl e -> raise e
+
+let with_ctx_if (b:bool) (s:string) (f : unit -> 'a) : 'a =
+  if b then
+    with_ctx s f
+  else
+    f ()
 
 let catch_errors (f : unit -> 'a) : list<issue> * option<'a> =
     let newh = mk_default_handler false in
     let old = !current_handler in
     current_handler := newh;
-    let r = try let r = f () in Some r
+    let r = try Some (f ())
             with | ex -> err_exn ex; None
     in
     let all_issues = newh.eh_report() in //de-duplicated already

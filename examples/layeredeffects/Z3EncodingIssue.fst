@@ -100,7 +100,7 @@ inline_for_extraction
 let if_then_else (a:Type)
   (wp_f:wp_t a) (wp_g:wp_t a)
   (f:repr a wp_f) (g:repr a wp_g)
-  (p:Type0)
+  (p:bool)
 : Type
 = repr a
   (fun post s ->
@@ -127,7 +127,7 @@ assume PURE_wp_monotonic:
     (forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q))
 
 let lift_div_chacha (a:Type)
-  (wp:pure_wp a) (f:unit -> DIV a wp)
+  (wp:pure_wp a) (f:eqtype_as_type unit -> DIV a wp)
 : repr a (fun p s -> wp (fun x -> p x s))
 = fun _ -> f ()
 
@@ -204,7 +204,7 @@ assume val fn (_:unit) : STATE unit (fun p h -> p () h)
 ///   BUT this time it succeeds! See the code below after chacha_fn
 
 
-[@expect_failure]
+[@@expect_failure]
 let chacha_fn ()
 : Chacha unit
   (requires fun _ -> True)
@@ -262,7 +262,7 @@ let hsubcomp (a:Type)
 let hif_then_else (a:Type)
   (wp_then:hwp_t a) (wp_else:hwp_t a)
   (f:hrepr a wp_then) (g:hrepr a wp_else)
-  (p:Type0)
+  (p:bool)
 : Type
 = hrepr a
   (fun post n ->
@@ -281,9 +281,10 @@ layered_effect {
   if_then_else = hif_then_else
 }
 
-let lift_div_ref (a:Type) (wp:pure_wp a{forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q)}) (f:unit -> DIV a wp)
+let lift_div_ref (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> DIV a wp)
 : hrepr a (fun p n -> wp (fun x -> p x n))
-= fun _ -> f ()
+= assume (forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q));
+  fun _ -> f ()
 
 sub_effect DIV ~> REF = lift_div_ref
 

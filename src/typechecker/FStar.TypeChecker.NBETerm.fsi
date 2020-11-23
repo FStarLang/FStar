@@ -25,6 +25,7 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Errors
+open FStar.VConfig
 
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
@@ -102,7 +103,7 @@ type atom
         list<letbinding>
   | UVar of Thunk.t<S.term>
 
-and t
+and t'
   =
   | Lam of (list<t> -> t)            //these expect their arguments in binder order (optimized for convenience beta reduction)
         * BU.either<(list<t> * binders * option<S.residual_comp>), list<arg>> //a context, binders and residual_comp for readback
@@ -120,6 +121,7 @@ and t
   | Reflect of t
   | Quote of S.term * S.quoteinfo
   | Lazy of BU.either<S.lazyinfo,(Dyn.dyn * emb_typ)> * Thunk.t<t>
+  | Meta of t * Thunk.t<S.metadata>
   | TopLevelLet of
        // 1. The definition of the fv
        letbinding *
@@ -151,6 +153,11 @@ and t
       // 6. for each argument, a bool records if that argument appears in the decreases
       //    This is used to detect potentially non-terminating loops
       list<bool>
+
+and t = {
+  nbe_t : t';
+  nbe_r : Range.range
+}
 
 and comp =
   | Tot of t * option<universe>
@@ -198,7 +205,8 @@ val arg_to_string : arg -> string
 val args_to_string : args -> string
 
 // NBE term manipulation
-
+val mk_t : t' -> t
+val nbe_t_of_t : t -> t'
 val isAccu : t -> bool
 val isNotAccu : t -> bool
 
@@ -246,6 +254,7 @@ val e_unit   : embedding<unit>
 val e_any    : embedding<t>
 val mk_any_emb : t -> embedding<t>
 val e_range  : embedding<Range.range>
+val e_vconfig  : embedding<vconfig>
 val e_norm_step : embedding<Syntax.Embeddings.norm_step>
 val e_list   : embedding<'a> -> embedding<list<'a>>
 val e_option : embedding<'a> -> embedding<option<'a>>
@@ -331,3 +340,6 @@ val dummy_interp : Ident.lid -> args -> option<t>
 val prims_to_fstar_range_step : args -> option<t>
 
 val mk_range : args -> option<t>
+val division_op : args -> option<t>
+val and_op : args -> option<t>
+val or_op : args -> option<t>

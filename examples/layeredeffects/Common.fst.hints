@@ -1,0 +1,69 @@
+[
+  "\u0012²2ë!<\u0017Œ°_\f@\u0010\u0002»»",
+  [
+    [
+      "Common.coerce",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
+      ],
+      0,
+      "a2996b0e55a7537f927b90580891eb14"
+    ],
+    [
+      "Common.elim_pure",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "eq2-interp", "equation_Prims.l_True", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
+        "interpretation_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec",
+        "l_imp-interp", "l_quant_interp_904a74cfe3507104488fdcb4d014247a",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec"
+      ],
+      0,
+      "6bd6829576fddd0d2f5262dfcff75407"
+    ],
+    [
+      "Common.bind_pure",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Common_interpretation_Tm_arrow_c05bc9331677cc1a187ad7677301a601",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "eq2-interp", "equation_Prims.l_True", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
+        "interpretation_Tm_abs_b8677fdb4762b121b0a6a9f68bd9c0d5",
+        "interpretation_Tm_abs_bf37fb79d7e653c594baf9f2dbe6b1f5",
+        "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
+        "l_imp-interp", "l_quant_interp_904a74cfe3507104488fdcb4d014247a",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_b8677fdb4762b121b0a6a9f68bd9c0d5",
+        "typing_Tm_abs_bf37fb79d7e653c594baf9f2dbe6b1f5",
+        "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
+      ],
+      0,
+      "80f804384de2ed124f3a09786999b06d"
+    ],
+    [
+      "Common.return_pure",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "09fe5492a218212052fac53aa3fa720f"
+    ]
+  ]
+]

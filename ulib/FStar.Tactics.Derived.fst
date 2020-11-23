@@ -35,7 +35,12 @@ let run_tactic (t:unit -> Tac unit)
 let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
-let fail (#a:Type) (m:string) = raise #a (TacticFailure m)
+let fail (#a:Type) (m:string) =
+  raise #a (TacticFailure m)
+
+let fail_silently (#a:Type) (m:string) =
+  set_urgency 0;
+  raise #a (TacticFailure m)
 
 (** Return the current *goal*, not its type. (Ignores SMT goals) *)
 let _cur_goal () : Tac goal =
@@ -140,6 +145,33 @@ let apply (t : term) : Tac unit =
 let apply_noinst (t : term) : Tac unit =
     t_apply true true t
 
+(** [apply_lemma l] will solve a goal of type [squash phi] when [l] is a
+Lemma ensuring [phi]. The arguments to [l] and its requires clause are
+introduced as new goals. As a small optimization, [unit] arguments are
+discharged by the engine. Just a thin wrapper around [t_apply_lemma]. *)
+let apply_lemma (t : term) : Tac unit =
+    t_apply_lemma false false t
+
+(** See docs for [t_trefl] *)
+let trefl () : Tac unit =
+  t_trefl false
+
+(** See docs for [t_trefl] *)
+let trefl_guard () : Tac unit =
+  t_trefl true
+
+(** See docs for [t_commute_applied_match] *)
+let commute_applied_match () : Tac unit =
+  t_commute_applied_match ()
+
+(** Similar to [apply_lemma], but will not instantiate uvars in the
+goal while applying. *)
+let apply_lemma_noinst (t : term) : Tac unit =
+    t_apply_lemma true false t
+
+let apply_lemma_rw (t : term) : Tac unit =
+    t_apply_lemma false true t
+
 (** [apply_raw f] is like [apply], but will ask for all arguments
 regardless of whether they appear free in further goals. See the
 explanation in [t_apply]. *)
@@ -212,7 +244,7 @@ let open_modules () : Tac (list name) =
     env_open_modules (top_env ())
 
 let rec repeatn (#a:Type) (n : int) (t : unit -> Tac a) : Tac (list a) =
-    if n = 0
+    if n <= 0
     then []
     else t () :: repeatn (n - 1) t
 
@@ -220,10 +252,17 @@ let fresh_uvar (o : option typ) : Tac term =
     let e = cur_env () in
     uvar_env e o
 
-let unify t1 t2 : Tac bool =
+let unify (t1 t2 : term) : Tac bool =
     let e = cur_env () in
     unify_env e t1 t2
 
+let unify_guard (t1 t2 : term) : Tac bool =
+    let e = cur_env () in
+    unify_guard_env e t1 t2
+
+let tmatch (t1 t2 : term) : Tac bool =
+    let e = cur_env () in
+    match_env e t1 t2
 
 (** [divide n t1 t2] will split the current set of goals into the [n]
 first ones, and the rest. It then runs [t1] on the first set, and [t2]
@@ -325,6 +364,14 @@ let fresh_binder t : Tac binder =
     (* See comment in fresh_bv *)
     let i = fresh () in
     fresh_binder_named ("x" ^ string_of_int i) t
+
+let fresh_implicit_binder_named nm t : Tac binder =
+    mk_implicit_binder (fresh_bv_named nm t)
+
+let fresh_implicit_binder t : Tac binder =
+    (* See comment in fresh_bv *)
+    let i = fresh () in
+    fresh_implicit_binder_named ("x" ^ string_of_int i) t
 
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
                                  (ensures (fun ps r -> if b
@@ -537,12 +584,13 @@ let unfold_def (t:term) : Tac unit =
         norm [delta_fully [n]]
     | _ -> fail "unfold_def: term is not a fv"
 
-(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating equalities.
-The lemmas need to prove *propositional* equalities, that is, using [==]. *)
+(** Rewrites left-to-right, and bottom-up, given a set of lemmas stating
+equalities. The lemmas need to prove *propositional* equalities, that
+is, using [==]. *)
 let l_to_r (lems:list term) : Tac unit =
     let first_or_trefl () : Tac unit =
         fold_left (fun k l () ->
-                    (fun () -> apply_lemma l)
+                    (fun () -> apply_lemma_rw l)
                     `or_else` k)
                   trefl lems () in
     pointwise first_or_trefl
@@ -861,8 +909,6 @@ and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
   in
   pack_comp cv'
 
-exception NotAListLiteral
-
 let rec destruct_list (t : term) : Tac (list term) =
     let head, args = collect_app t in
     match inspect_ln head, args with
@@ -917,3 +963,20 @@ let nth_binder (i:int) : Tac binder =
   match List.Tot.Base.nth bs k with
   | None -> fail "not enough binders"
   | Some b -> b
+
+exception Appears
+
+(** Decides whether a top-level name [nm] syntactically
+appears in the term [t]. *)
+let name_appears_in (nm:name) (t:term) : Tac bool =
+  let ff (t : term) : Tac term =
+    match t with
+    | Tv_FVar fv ->
+      if inspect_fv fv = nm then
+        raise Appears;
+      t
+    | t -> t
+  in
+  try ignore (visit_tm ff t); false with
+  | Appears -> true
+  | e -> raise e

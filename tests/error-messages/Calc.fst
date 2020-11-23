@@ -7,7 +7,7 @@ open FStar.Tactics
 let eta (f:'a->'b->bool) x y : Type0 = f x y
 
 (* bad chain *)
-[@(expect_failure [19])]
+[@@(expect_failure [19])]
 let test_gt_lt_elab () =
   calc_finish (eta (>=))
    (fun () ->
@@ -17,7 +17,7 @@ let test_gt_lt_elab () =
         (fun () -> ()))
 
 (* bad chain *)
-[@(expect_failure [19])]
+[@@(expect_failure [19])]
 let test_gt_lt () =
   calc (>=) {
     10;
@@ -28,14 +28,14 @@ let test_gt_lt () =
   }
 
 (* bad chain, not refl *)
-[@(expect_failure [19])]
+[@@(expect_failure [19])]
 let test_singl () =
   calc (<) {
     10;
   }
 
 (* bad chain *)
-[@(expect_failure [19])]
+[@@(expect_failure [19])]
 let test (x:int) : Lemma True =
   calc (>) {
     x;
@@ -44,7 +44,7 @@ let test (x:int) : Lemma True =
   }
 
 
-[@(expect_failure [19])]
+[@@(expect_failure [19])]
 let fail1 () =
   calc (==) {
     1;
@@ -56,7 +56,7 @@ let fail1 () =
     4;
   }
 
-[@(expect_failure [19])]
+[@@(expect_failure [19])]
 let fail2 () =
   calc (==) {
     1;
@@ -68,7 +68,7 @@ let fail2 () =
     4;
   }
 
-[@(expect_failure [19])]
+[@@(expect_failure [19])]
 let fail3 () =
   calc (==) {
     1;
@@ -85,7 +85,7 @@ assume val q : prop
 assume val lem : unit -> Lemma (requires p) (ensures q)
 
 (* checking that the impl intro trick doesn't mess up error messages *)
-[@(expect_failure [19])]
+[@@(expect_failure [19])]
 let test_impl_elab () =
   calc_finish (==>) (fun () ->
     calc_step (==>) q
@@ -93,7 +93,7 @@ let test_impl_elab () =
       (fun () -> calc_push_impl (fun _ -> ()))
   )
 
-[@(expect_failure [19])]
+[@@(expect_failure [19])]
 let test_impl () =
   calc (==>) {
     p;
@@ -105,7 +105,7 @@ assume val my_lemma (x:int) : Lemma
   (requires false)
   (ensures  true)
 
-[@(expect_failure [19])]
+[@@(expect_failure [19])]
 let test_1763_elab (x:int) : Lemma (True) =
   calc_finish (fun x y -> x == y) (fun () ->
     calc_step (fun x y -> x == y) x (fun () ->
@@ -114,7 +114,7 @@ let test_1763_elab (x:int) : Lemma (True) =
       (fun () -> my_lemma x))
       (fun () -> ()))
 
-[@(expect_failure [19])]
+[@@(expect_failure [19])]
 let test_1763 (x:int) : Lemma (True) =
   calc (==) {
     x;

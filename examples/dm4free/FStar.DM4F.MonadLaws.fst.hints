@@ -19,7 +19,7 @@
         "token_correspondence_FStar.DM4F.MonadLaws.return_st"
       ],
       0,
-      "5dc71843b5f72a84c2a72a111cc122b2"
+      "6cd9c217896c82b567b999e145551a25"
     ],
     [
       "FStar.DM4F.MonadLaws.left_unit_st",
@@ -36,7 +36,7 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
       ],
       0,
-      "db2bc968a35ae22f3cb0f44f2019b22c"
+      "abb89cbe0a86e3bd4ff1b2ae5314a6cb"
     ],
     [
       "FStar.DM4F.MonadLaws.assoc_st",
@@ -50,7 +50,7 @@
         "interpretation_Tm_abs_7706f980135a89a687c904d968136d5b"
       ],
       0,
-      "07234b41d097991cdb58d780bb0e4451"
+      "928be5da25d5ec33609c9b78022b7c58"
     ],
     [
       "FStar.DM4F.MonadLaws.bind_ifc",
@@ -73,7 +73,7 @@
         "typing_FStar.Pervasives.Native.uu___is_Some"
       ],
       0,
-      "062359fa3f5231447f9c073cd23d76c1"
+      "4f4b9b7899a7ed6a5ef863b2b2cb5f31"
     ],
     [
       "FStar.DM4F.MonadLaws.left_unit",
@@ -105,7 +105,7 @@
         "typing_FStar.DM4F.MonadLaws.return_ifc"
       ],
       0,
-      "0f5ab306ae87ebecc7b919e5569765a5"
+      "7a13e2399393fefb17a27d87f419ef99"
     ],
     [
       "FStar.DM4F.MonadLaws.right_unit",
@@ -135,7 +135,7 @@
         "token_correspondence_FStar.DM4F.MonadLaws.return_ifc"
       ],
       0,
-      "717bd1eb7d5ad98a2136590d2394dfea"
+      "f4477ad916f6d31af13c3379e340dd22"
     ],
     [
       "FStar.DM4F.MonadLaws.associativity",
@@ -177,81 +177,7 @@
         "typing_tok_FStar.DM4F.MonadLaws.Low@tok"
       ],
       0,
-      "d4b0cc7ef9d6f592158d4bc476447492"
-    ],
-    [
-      "FStar.DM4F.MonadLaws.right_unit_st",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.DM4F.MonadLaws_interpretation_Tm_arrow_a0084ca3a951f68c3110bd0ebd7c60fe",
-        "equation_FStar.DM4F.MonadLaws.bind_st",
-        "equation_FStar.DM4F.MonadLaws.return_st",
-        "equation_FStar.DM4F.MonadLaws.st",
-        "equation_FStar.FunctionalExtensionality.feq",
-        "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
-        "interpretation_Tm_abs_7706f980135a89a687c904d968136d5b",
-        "interpretation_Tm_abs_a02c4ab615d86c1fd4d6707b08902221",
-        "token_correspondence_FStar.DM4F.MonadLaws.return_st"
-      ],
-      0,
-      "10f70ac2240b7147264fa88bc668f8c7"
-    ],
-    [
-      "FStar.DM4F.MonadLaws.left_unit_st",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.DM4F.MonadLaws.bind_st",
-        "equation_FStar.DM4F.MonadLaws.return_st",
-        "equation_FStar.FunctionalExtensionality.feq",
-        "interpretation_Tm_abs_7706f980135a89a687c904d968136d5b",
-        "interpretation_Tm_abs_a02c4ab615d86c1fd4d6707b08902221",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
-        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2"
-      ],
-      0,
-      "6a46576154561602581e921479070bf2"
-    ],
-    [
-      "FStar.DM4F.MonadLaws.assoc_st",
-      2,
-      2,
-      1,
-      [
-        "@query", "equation_FStar.DM4F.MonadLaws.bind_st",
-        "equation_FStar.FunctionalExtensionality.feq",
-        "interpretation_Tm_abs_684e5ffc9fdc1cae7fa344c11aac6e60",
-        "interpretation_Tm_abs_7706f980135a89a687c904d968136d5b"
-      ],
-      0,
-      "d06e6c0ab155aa45f371117faaa43e3d"
-    ],
-    [
-      "FStar.DM4F.MonadLaws.bind_ifc",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "FStar.DM4F.MonadLaws_interpretation_Tm_arrow_03d7c8f404a3f17a41fbd38d1795a79e",
-        "FStar.DM4F.MonadLaws_interpretation_Tm_arrow_05275a1cf51d299be9159781d6b8228d",
-        "FStar.DM4F.MonadLaws_pretyping_eb5d41e13bf746cc49f141ba21a8c7a8",
-        "bool_inversion", "bool_typing",
-        "data_typing_intro_FStar.DM4F.MonadLaws.High@tok",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
-        "equation_FStar.DM4F.MonadLaws.ifc",
-        "kinding_FStar.DM4F.MonadLaws.label@tok",
-        "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "lemma_FStar.Pervasives.invertOption",
-        "typing_FStar.Pervasives.Native.uu___is_Some"
-      ],
-      0,
-      "ee078ca49228056d1589042864f60013"
+      "dd610b24782550a610b09dd05cf507ae"
     ]
   ]
 ]

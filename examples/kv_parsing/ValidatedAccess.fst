@@ -105,7 +105,7 @@ let for_readonly #t init start finish inv f =
 
 // TODO: get this to extract (same issue as with Validator.for_readonly)
 // unfold
-[@"substitute"]
+[@@"substitute"]
 // sadly for_readonly only takes a single buffer and we need two input buffers here
 val for_readonly2 :
   #t:Type0 ->

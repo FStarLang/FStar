@@ -24,9 +24,13 @@ open FStar_String
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
-let abstract_qualifier_warning =
-  "abstract qualifier will soon be removed from F*, use interfaces instead"
 
+let mk_meta_tac m = Meta (Arg_qualifier_meta_tac m)
+let mk_meta_attr m = Meta (Arg_qualifier_meta_attr m)
+
+let old_attribute_syntax_warning =
+  "The `[@ ...]` syntax of attributes is deprecated. \
+   Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 %}
 
 %token <bytes> BYTEARRAY
@@ -54,7 +58,7 @@ let abstract_qualifier_warning =
 %token <bool> LET
 
 %token FORALL EXISTS ASSUME NEW LOGIC ATTRIBUTES
-%token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE ABSTRACT UNFOLD INLINE_FOR_EXTRACTION
+%token IRREDUCIBLE UNFOLDABLE INLINE OPAQUE UNFOLD INLINE_FOR_EXTRACTION
 %token NOEXTRACT
 %token NOEQUALITY UNOPTEQUALITY PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS PRAGMA_PUSH_OPTIONS PRAGMA_POP_OPTIONS PRAGMA_RESTART_SOLVER
 %token TYP_APP_LESS TYP_APP_GREATER SUBTYPE SUBKIND BY
@@ -68,12 +72,13 @@ let abstract_qualifier_warning =
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
-%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT DOT_LBRACK DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE BANG_LBRACE
-%token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
+%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT DOT_LBRACK
+%token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE_BAR LBRACE BANG_LBRACE
+%token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN PIPE_RIGHT
-%token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND SPLICE SQUIGGLY_RARROW TOTAL
-%token REQUIRES ENSURES
+%token NEW_EFFECT SUB_EFFECT LAYERED_EFFECT POLYMONADIC_BIND POLYMONADIC_SUBCOMP SPLICE SQUIGGLY_RARROW TOTAL
+%token REQUIRES ENSURES DECREASES
 %token MINUS COLON_EQUALS QUOTE BACKTICK_AT BACKTICK_HASH
 %token BACKTICK UNIV_HASH
 %token BACKTICK_PERC
@@ -139,7 +144,18 @@ pragma:
 
 attribute:
   | LBRACK_AT x = list(atomicTerm) RBRACK
+      {
+        let _ =
+            match x with
+            | _::_::_ ->
+                  log_issue (lhs parseState) (Warning_DeprecatedAttributeSyntax,
+                                              old_attribute_syntax_warning)
+            | _ -> () in
+         x
+      }
+  | LBRACK_AT_AT x = semiColonTermList RBRACK
       { x }
+
 
 decoration:
   | x=attribute
@@ -224,7 +240,7 @@ rawDecl:
           | bs -> mk_term (Product(bs, t)) (rhs2 parseState 3 5) Type_level
         in Val(lid, t)
       }
-  | SPLICE LBRACK ids=separated_list(SEMICOLON, lidentOrOperator) RBRACK t=thunk(atomicTerm)
+  | SPLICE LBRACK ids=separated_list(SEMICOLON, ident) RBRACK t=thunk(atomicTerm)
       { Splice (ids, t) }
   | EXCEPTION lid=uident t_opt=option(OF t=typ {t})
       { Exception(lid, t_opt) }
@@ -236,6 +252,8 @@ rawDecl:
       { SubEffect se }
   | POLYMONADIC_BIND b=polymonadic_bind
       { Polymonadic_bind b }
+  | POLYMONADIC_SUBCOMP c=polymonadic_subcomp
+      { Polymonadic_subcomp c }
 
 typeDecl:
   (* TODO : change to lident with stratify *)
@@ -347,6 +365,10 @@ polymonadic_bind:
   | LPAREN m_eff=quident COMMA n_eff=quident RPAREN PIPE_RIGHT p_eff=quident EQUALS bind=simpleTerm
       { (m_eff, n_eff, p_eff, bind) }
 
+polymonadic_subcomp:
+  | m_eff=quident SUBTYPE n_eff=quident EQUALS subcomp=simpleTerm
+    { (m_eff, n_eff, subcomp) }
+
 
 /******************************************************************************/
 /*                        Qualifiers, tags, ...                               */
@@ -372,10 +394,6 @@ qualifier:
   | TOTAL         { TotalEffect }
   | PRIVATE       { Private }
   
-  | ABSTRACT      { log_issue (lhs parseState) (Warning_AbstractQualifier,
-                                                abstract_qualifier_warning);
-		    Abstract }
-  
   | NOEQUALITY    { Noeq }
   | UNOPTEQUALITY { Unopteq }
   | NEW           { New }
@@ -400,7 +418,8 @@ aqual:
   | q=aqualUniverses { q }
 
 aqualUniverses:
-  | HASH LBRACK t=thunk(tmNoEq) RBRACK { Meta t }
+  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t }
+  | HASH LBRACK_AT_AT t=tmNoEq RBRACK { mk_meta_attr t }
   | HASH      { Implicit }
   | DOLLAR    { Equality }
 
@@ -465,25 +484,28 @@ fieldPattern:
   (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
   (* preprocessing to ocamlyacc/fsyacc (which is expected since the macro are expanded) *)
 patternOrMultibinder:
-  | LBRACK_BAR UNDERSCORE COLON t=simpleArrow BAR_RBRACK
+  | LBRACE_BAR UNDERSCORE COLON t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        let w = mk_pattern (PatWild (Some (Meta mt)))
+        let w = mk_pattern (PatWild (Some (mk_meta_tac mt)))
                                  (rhs2 parseState 1 5) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
       }
 
-  | LBRACK_BAR i=lident COLON t=simpleArrow BAR_RBRACK
+  (* GM: I would rather use lidentOrUnderscore and delete the rule above,
+   * but I need to produce a PatWild above, and a PatVar here. However
+   * why does PatWild even exist..? *)
+  | LBRACE_BAR i=lident COLON t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        let w = mk_pattern (PatVar (i, Some (Meta mt)))
+        let w = mk_pattern (PatVar (i, Some (mk_meta_tac mt)))
                                  (rhs2 parseState 1 5) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
       }
 
-  | LBRACK_BAR t=simpleArrow BAR_RBRACK
+  | LBRACE_BAR t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
-        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (Meta mt)))
+        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (mk_meta_tac mt)))
                                  (rhs2 parseState 1 3) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 3)]
@@ -503,10 +525,24 @@ binder:
        let (q, lid) = aqualified_lid in
        mk_binder (Variable lid) (rhs parseState 1) Type_level q
      }
+
   | tv=tvar  { mk_binder (TVariable tv) (rhs parseState 1) Kind None  }
        (* small regression here : fun (=x : t) ... is not accepted anymore *)
 
 multiBinder:
+  | LBRACE_BAR id=lidentOrUnderscore COLON t=simpleArrow BAR_RBRACE
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        let r = rhs2 parseState 1 5 in
+        [mk_binder (Annotated (id, t)) r Type_level (Some (mk_meta_tac mt))]
+      }
+
+  | LBRACE_BAR t=simpleArrow BAR_RBRACE
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
+        let r = rhs2 parseState 1 3 in
+        let id = gen r in
+        [mk_binder (Annotated (id, t)) r Type_level (Some (mk_meta_tac mt))]
+      }
+
   | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
@@ -539,7 +575,7 @@ lidentOrOperator:
   | id=IDENT
     { mk_ident(id, rhs parseState 1) }
   | LPAREN id=operator RPAREN
-    { mk_ident (compile_op' (text_of_id id) (range_of_id id), range_of_id id) }
+    { mk_ident (compile_op' (string_of_id id) (range_of_id id), range_of_id id) }
 
 lidentOrUnderscore:
   | id=IDENT { mk_ident(id, rhs parseState 1)}
@@ -604,20 +640,22 @@ noSeqTerm:
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
         let (op, e2, _) = op_expr in
-        let opid = mk_ident (text_of_id op ^ "<-", range_of_id op) in
+        let opid = mk_ident (string_of_id op ^ "<-", range_of_id op) in
         mk_term (Op(opid, [ e1; e2; e3 ])) (rhs2 parseState 1 4) Expr
       }
   | REQUIRES t=typ
       { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type_level }
   | ENSURES t=typ
       { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level }
+  | DECREASES t=typ
+      { mk_term (Decreases (t, None)) (rhs2 parseState 1 2) Type_level }
   | ATTRIBUTES es=nonempty_list(atomicTerm)
       { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
   | IF e1=noSeqTerm THEN e2=noSeqTerm ELSE e3=noSeqTerm
       { mk_term (If(e1, e2, e3)) (rhs2 parseState 1 6) Expr }
   | IF e1=noSeqTerm THEN e2=noSeqTerm
       {
-        let e3 = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
+        let e3 = mk_term (Const Const_unit) (rhs2 parseState 1 4) Expr in
         mk_term (If(e1, e2, e3)) (rhs2 parseState 1 4) Expr
       }
   | TRY e1=term WITH pbs=left_flexible_nonempty_list(BAR, patternBranch)
@@ -783,11 +821,22 @@ simpleArrow:
   | e=tmEqNoRefinement { e }
 
 simpleArrowDomain:
+  | LBRACE_BAR t=tmEqNoRefinement BAR_RBRACE
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        (Some (mk_meta_tac mt), t)
+      }
+
   | aq_opt=ioption(aqual) dom_tm=tmEqNoRefinement { aq_opt, dom_tm }
 
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
 %inline tmArrowDomain(Tm):
+  | LBRACE_BAR t=Tm BAR_RBRACE
+      { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
+        (Some (mk_meta_tac mt), t)
+      }
+
   | LPAREN q=aqual dom_tm=Tm RPAREN { Some q, dom_tm }
+
   | aq_opt=ioption(aqual) dom_tm=Tm { aq_opt, dom_tm }
 
 tmFormula:
@@ -1111,8 +1160,8 @@ universeFrom:
        }
   | max=ident us=nonempty_list(atomicUniverse)
       {
-        if text_of_id max <> string_of_lid max_lid
-        then log_issue (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ text_of_id max ^
+        if string_of_id max <> string_of_lid max_lid
+        then log_issue (rhs parseState 1) (Error_InvalidUniverseVar, "A lower case ident " ^ string_of_id max ^
                           " was found in a universe context. " ^
                           "It should be either max or a universe variable 'usomething.");
         let max = mk_term (Var (lid_of_ids [max])) (rhs parseState 1) Expr in

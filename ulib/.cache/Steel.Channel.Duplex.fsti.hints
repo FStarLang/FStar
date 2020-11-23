@@ -1,0 +1,44 @@
+[
+  "yJQayÔðpxÖ\u000f\u0001\u000fxïk",
+  [
+    [
+      "Steel.Channel.Duplex.send",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq",
+        "equation_Steel.Channel.Protocol.more"
+      ],
+      0,
+      "d661cb6ac1d3a22ac2c497f9a3609f9c"
+    ],
+    [
+      "Steel.Channel.Duplex.recv",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_Steel.Channel.Protocol.tag__uu___haseq",
+        "equation_Steel.Channel.Protocol.more"
+      ],
+      0,
+      "c8061994a29ed35eb22c6a028067395e"
+    ],
+    [
+      "Steel.Channel.Duplex.extend_trace",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.eq2",
+        "equation_Prims.squash", "equation_Prims.subtype_of",
+        "equation_Steel.Channel.Protocol.until",
+        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "58f48a29d0abaa792e55509c10f66048"
+    ]
+  ]
+]

@@ -156,7 +156,7 @@ let rec fragment_ghostly_connections (#t:Type) (f:fragment t) : GTot Type0 =
 
 /// Containment properties
 ///
-/// WARNING: [@] and [^@] require containment to reasonably talk about
+/// WARNING: [@@] and [^@] require containment to reasonably talk about
 /// what they do.
 
 let rec nodelist_contained0 (#t:Type) (h0:heap) (nl:nodelist t) : GTot Type0 =

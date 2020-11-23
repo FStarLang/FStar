@@ -84,7 +84,7 @@ let if_then_else
       (ens_else:M.post_t state a)
       (f:repr a state rel req_then ens_then)
       (g:repr a state rel req_else ens_else)
-      (p:Type0)
+      (p:bool)
     : Type
     =
   repr a state rel
@@ -157,7 +157,7 @@ let lift_pure_nmst
       (state:Type u#2)
       (rel:P.preorder state)
       (wp:pure_wp a)
-      (f:unit -> PURE a wp)
+      (f:eqtype_as_type unit -> PURE a wp)
     : repr a state rel
       (fun s0 -> wp (fun _ -> True))
       (fun s0 x s1 -> wp (fun _ -> True) /\  (~ (wp (fun r -> r =!= x \/ s0 =!= s1))))

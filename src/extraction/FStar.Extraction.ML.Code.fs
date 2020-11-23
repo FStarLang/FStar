@@ -638,7 +638,7 @@ and doc_of_loc (lineno, file) =
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
-    let for1 (_, x, mangle_opt, tparams, _, body) =
+    let for1 ({tydecl_name=x; tydecl_ignored=mangle_opt; tydecl_parameters=tparams; tydecl_defn=body}) =
         let x = match mangle_opt with
                 | None -> x
                 | Some y -> y in

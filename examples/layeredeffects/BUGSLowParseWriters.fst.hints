@@ -1,0 +1,172 @@
+[
+  "wZ;»»Ø∞[\u0001}x\u001f…2ÎÉ",
+  [
+    [
+      "BUGSLowParseWriters.__proj__Correct__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_663361c39544907ac5067c9c50873bd4"
+      ],
+      0,
+      "a687bc674d384c618520d3bc6f09760c"
+    ],
+    [
+      "BUGSLowParseWriters.__proj__Error__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3b282434ccd43fdb008018983e216134"
+      ],
+      0,
+      "05fd9292efa4773ca55146d3c77eba36"
+    ],
+    [
+      "BUGSLowParseWriters.read_repr_spec",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_BUGSLowParseWriters.Correct",
+        "disc_equation_BUGSLowParseWriters.Error",
+        "fuel_guarded_inversion_BUGSLowParseWriters.result",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_a21d04f2177efa608733964b5aa08d52"
+      ],
+      0,
+      "359b483fee7d24aa5150bd0127e8f1fb"
+    ],
+    [
+      "BUGSLowParseWriters.read_return_spec",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_BUGSLowParseWriters.Correct",
+        "projection_inverse_BUGSLowParseWriters.Correct__0",
+        "projection_inverse_BUGSLowParseWriters.Correct_a"
+      ],
+      0,
+      "939d7a634ac1d6b9348cacfadc81c47b"
+    ],
+    [
+      "BUGSLowParseWriters.read_bind_spec",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_BUGSLowParseWriters.Correct",
+        "constructor_distinct_BUGSLowParseWriters.Error",
+        "disc_equation_BUGSLowParseWriters.Correct",
+        "disc_equation_BUGSLowParseWriters.Error",
+        "projection_inverse_BUGSLowParseWriters.Correct__0",
+        "projection_inverse_BUGSLowParseWriters.Correct_a",
+        "projection_inverse_BUGSLowParseWriters.Error__0",
+        "projection_inverse_BUGSLowParseWriters.Error_a",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "574d2428401fefb58055b68d3d58384f"
+    ],
+    [
+      "BUGSLowParseWriters.read_subcomp_spec",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "data_elim_BUGSLowParseWriters.Correct"
+      ],
+      0,
+      "80a7ee3f254f51926430ebd64cffa640"
+    ],
+    [
+      "BUGSLowParseWriters.read_subcomp",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "032807b4c16b00e83a7ddd419f6108bb"
+    ],
+    [
+      "BUGSLowParseWriters.ERead",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "ce3033b592816f192ca75f4da9dc0c75"
+    ],
+    [
+      "BUGSLowParseWriters.ERead",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
+      ],
+      0,
+      "06d0e6a2d4fd354f4c441327b0437e89"
+    ],
+    [
+      "BUGSLowParseWriters.lift_pure_read_spec",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "constructor_distinct_BUGSLowParseWriters.Correct", "eq2-interp",
+        "equation_Prims.l_Forall", "equation_Prims.l_True",
+        "equation_Prims.logical", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_", "function_token_typing_Prims.l_True",
+        "interpretation_Tm_abs_1a3b3b2e3463fa5b017852858d0bc89d",
+        "interpretation_Tm_abs_3ed2a9d5cf9afbd60993b8aec125d431",
+        "interpretation_Tm_abs_5e34897418ce4950a4effcc8c159cf53",
+        "l_imp-interp", "l_not-interp",
+        "l_quant_interp_d7d3a048ecab29ba5b8115834b43165b",
+        "projection_inverse_BUGSLowParseWriters.Correct__0",
+        "projection_inverse_BUGSLowParseWriters.Correct_a",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "refinement_interpretation_Tm_refine_c222225452414e26eb1f819da23278fe",
+        "typing_Tm_abs_1a3b3b2e3463fa5b017852858d0bc89d",
+        "typing_Tm_abs_3ed2a9d5cf9afbd60993b8aec125d431",
+        "typing_Tm_abs_5e34897418ce4950a4effcc8c159cf53"
+      ],
+      0,
+      "263d65111dba0482be4e300aeb5f1c2a"
+    ],
+    [
+      "BUGSLowParseWriters.lift_pure_read",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "9d1e323d56349657f7246e2b6e78a615"
+    ],
+    [
+      "BUGSLowParseWriters.read_bind_spec'",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_BUGSLowParseWriters.Correct",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "542cdf4cf9a155ef12d9fa2359f0b184"
+    ]
+  ]
+]

@@ -287,10 +287,10 @@ let resugar_exp e = match e.expr with
 let record_field_path = function
     | f::_ ->
         let ns, _ = BU.prefix (ns_of_lid f) in
-        ns |> List.map (fun id -> (text_of_id id))
+        ns |> List.map (fun id -> (string_of_id id))
     | _ -> failwith "impos"
 
-let record_fields fs vs = List.map2 (fun (f:lident) e -> (text_of_id (ident_of_lid f)), e) fs vs
+let record_fields fs vs = List.map2 (fun (f:lident) e -> (string_of_id (ident_of_lid f)), e) fs vs
 //
 //let resugar_pat q p = match p with
 //    | MLP_CTor(d, pats) ->
@@ -320,17 +320,11 @@ let resugar_mlty t = match t with
         | _ -> t
       end
     | _ -> t
-
-let flatten_ns ns =
-    if codegen_fsharp()
-    then String.concat "." ns
-    else String.concat "_" ns
-let flatten_mlpath (ns, n) =
-    if codegen_fsharp()
-    then String.concat "." (ns@[n])
-    else String.concat "_" (ns@[n])
+    
+let flatten_ns ns = String.concat "_" ns
+let flatten_mlpath (ns, n) = String.concat "_" (ns@[n])
 let ml_module_name_of_lid (l:lident) =
-  let mlp = l |> ns_of_lid |> List.map text_of_id,  text_of_id (ident_of_lid l) in
+  let mlp = l |> ns_of_lid |> List.map string_of_id,  string_of_id (ident_of_lid l) in
   flatten_mlpath mlp
 
 
@@ -425,7 +419,8 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
     let t = N.normalize [
       Env.EraseUniverses;
       Env.AllowUnboundUniverses;
-      Env.UnfoldUntil S.delta_constant // unfold abbreviations such as nat
+      Env.UnfoldUntil S.delta_constant; // unfold abbreviations such as nat
+      Env.ForExtraction
     ] tcenv t in
     let w = with_ty MLTY_Top in
     let as_name mlp       = with_ty MLTY_Top <| MLE_Name mlp in
@@ -529,7 +524,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
         where [[t]] is the ML denotation of the F* type t
     *)
     let rec mk_embedding l (env:list<(bv * string)>) (t: term): mlexpr =
-        let t = FStar.TypeChecker.Normalize.unfold_whnf tcenv t in
+        let t = FStar.TypeChecker.Normalize.unfold_whnf' [Env.ForExtraction] tcenv t in
         match (FStar.Syntax.Subst.compress t).n with
         | Tm_name bv
              when BU.for_some (find_env_entry bv) env ->
@@ -549,8 +544,8 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
           emb_arrow l (mk_embedding l env t0) (mk_embedding l env t1)
 
         | Tm_arrow(b::more::bs, c) ->
-          let tail = S.mk (Tm_arrow(more::bs, c)) None t.pos in
-          let t = S.mk (Tm_arrow([b], S.mk_Total tail)) None t.pos in
+          let tail = S.mk (Tm_arrow(more::bs, c)) t.pos in
+          let t = S.mk (Tm_arrow([b], S.mk_Total tail)) t.pos in
           mk_embedding l env t
 
         | Tm_fvar _
@@ -567,7 +562,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                 args
                 |> List.map (fun (t, _) -> mk_embedding l env t)
             in
-            let nm = text_of_id (ident_of_lid fv.fv_name.v) in
+            let nm = string_of_id (ident_of_lid fv.fv_name.v) in
             let (_, t_arity, _trepr_head), loc_embedding =
                 BU.find_opt
                     (fun ((x, _, _), _) -> fv_eq_lid fv x)

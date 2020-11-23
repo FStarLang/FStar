@@ -37,7 +37,8 @@ regional \
 generic \
 calc \
 steel \
-layeredeffects
+layeredeffects \
+misc
 
 # low-level \  ... NS: removing from CI for this branch
 

@@ -188,8 +188,7 @@ val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
       Lemma
         (requires ( Some? (typing empty v) /\
               Some? (typing (extend g x (Some?.v (typing empty v))) e)))
-        (ensures (Some? (typing empty v) /\
-                  typing g (subst x v e) ==
+        (ensures (typing g (subst x v e) ==
                   typing (extend g x (Some?.v (typing empty v))) e))
 let rec substitution_preserves_typing x e v g =
   let Some t_x = typing empty v in

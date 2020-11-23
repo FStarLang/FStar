@@ -59,12 +59,12 @@ let with_captured_errors' env sigint_handler f =
   | Util.SigInt ->
     Util.print_string "Interrupted"; None
 
-  | Error (e, msg, r) ->
-    TcErr.add_errors env [(e, msg, r)];
+  | Error (e, msg, r, ctx) ->
+    TcErr.add_errors env [(e, msg, r, ctx)];
     None
 
-  | Err (e, msg) ->
-    TcErr.add_errors env [(e, msg, TcEnv.get_range env)];
+  | Err (e, msg, ctx) ->
+    TcErr.add_errors env [(e, msg, TcEnv.get_range env, ctx)];
     None
 
   | Stop ->
@@ -409,7 +409,7 @@ let json_of_issue issue =
     @(match issue.issue_number with
       | None -> []
       | Some n -> [("number", JsonInt n)])
-    @[("message", JsonStr issue.issue_message);
+    @[("message", JsonStr (issue_message issue));
       ("ranges", JsonList
                    ((match issue.issue_range with
                      | None -> []
@@ -682,9 +682,9 @@ let load_deps st =
     | Inl st -> write_progress None []; Inl (st, deps)
 
 let rephrase_dependency_error issue =
-  { issue with issue_message =
+  { issue with issue_msg =
                format1 "Error while computing or loading dependencies:\n%s"
-                       issue.issue_message }
+                       issue.issue_msg }
 
 let run_push_without_deps st query =
   let set_nosynth_flag st flag =
@@ -847,7 +847,7 @@ let run_with_parsed_and_tc_term st term line column continuation =
     fst (FStar.ToSyntax.ToSyntax.decls_to_sigelts decls env.dsenv) in
 
   let typecheck tcenv decls =
-    let ses, _, _ = FStar.TypeChecker.Tc.tc_decls tcenv decls in
+    let ses, _ = FStar.TypeChecker.Tc.tc_decls tcenv decls in
     ses in
 
   run_and_rewind st (QueryNOK, JsonStr "Computation interrupted") (fun st ->
@@ -915,7 +915,7 @@ let sc_typ tcenv sc = // Memoized version of sc_typ
    match !sc.sc_typ with
    | Some t -> t
    | None -> let typ = match try_lookup_lid tcenv sc.sc_lid with
-                       | None -> SS.mk SS.Tm_unknown None Range.dummyRange
+                       | None -> SS.mk SS.Tm_unknown Range.dummyRange
                        | Some ((_, typ), _) -> typ in
              sc.sc_typ := Some typ; typ
 

@@ -84,7 +84,8 @@ let load_native_tactics () =
             end
     in
     let cmxs_files = modules_to_load |> List.map cmxs_file in
-    List.iter (fun x -> Util.print1 "cmxs file: %s\n" x) cmxs_files;
+    if Options.debug_any () then
+      Util.print1 "Will try to load cmxs files: %s\n" (String.concat ", " cmxs_files);
     if not (Options.no_load_fstartaclib ()) && not (FStar.Platform.system = FStar.Platform.Windows) then
         Tactics.Load.try_load_lib ();
     Tactics.Load.load_tactics cmxs_files;
@@ -129,18 +130,6 @@ let go _ =
         then let _, deps = Parser.Dep.collect filenames FStar.CheckedFiles.load_parsing_data_from_cache in
              Parser.Dep.print deps;
              report_errors []
-
-        (* Input validation: should this go to process_args? *)
-        (*          don't verify anything *)
-        else if Options.use_extracted_interfaces ()
-             && (not (Options.expose_interfaces ()))
-             && List.length filenames > 1
-        then
-          Errors.raise_error (Errors.Error_TooManyFiles,
-                              "Only one command line file is allowed if \
-                               --use_extracted_interfaces is set, \
-                               found " ^ (string_of_int (List.length filenames)))
-                             Range.dummyRange
 
         (* --print: Emit files in canonical source syntax *)
         else if Options.print () || Options.print_in_place () then
@@ -224,7 +213,6 @@ let setup_hooks () =
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
     FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder;
-    FStar.TypeChecker.Tc.unembed_optionstate_knot := Some FStar.Reflection.Embeddings.e_optionstate;
     ()
 
 let handle_error e =

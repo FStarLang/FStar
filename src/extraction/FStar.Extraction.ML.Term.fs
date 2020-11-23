@@ -445,7 +445,6 @@ let eta_expand (g:uenv) (t : mlty) (e : mlexpr) : mlexpr =
       let body = with_ty r <| MLE_App (e, vs_es) in
       with_ty t <| MLE_Fun (vs_ts, body)
 
-(* eta-expand `e` according to its type `t` *)
 let default_value_for_ty (g:uenv) (t : mlty) : mlexpr  =
     let ts, r = doms_and_cod t in
     let body r =
@@ -467,9 +466,8 @@ let default_value_for_ty (g:uenv) (t : mlty) : mlexpr  =
     else let vs_ts, g = fresh_mlidents ts g in
          with_ty t <| MLE_Fun (vs_ts, body r)
 
-let maybe_eta_expand g expect e =
-    if Options.ml_no_eta_expand_coertions () ||
-        Options.codegen () = Some Options.Kremlin // we need to stay first order for Kremlin
+let maybe_eta_expand_coercion g expect e =
+    if Options.codegen () = Some Options.Kremlin // we need to stay first order for Kremlin
     then e
     else eta_expand g expect e
 
@@ -479,7 +477,15 @@ let maybe_eta_expand g expect e =
   Otherwise, we often end up with coercions like (Obj.magic (fun x -> e) : a -> b) : a -> c
   Whereas with this optimization we produce (fun x -> Obj.magic (e : b) : c)  : a -> c
 *)
-let apply_coercion (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
+let apply_coercion pos (g:uenv) (e:mlexpr) (ty:mlty) (expect:mlty) : mlexpr =
+    if Util.codegen_fsharp()
+    then //magics are not always sound in F#; warn
+        FStar.Errors.log_issue pos
+          (Errors.Warning_NoMagicInFSharp,
+           BU.format2 
+             "Inserted an unsafe type coercion in generated code from %s to %s; this may be unsound in F#"
+               (Code.string_of_mlty (current_module_of_uenv g) ty)
+               (Code.string_of_mlty (current_module_of_uenv g) expect));
     let mk_fun binder body =
         match body.expr with
         | MLE_Fun(binders, body) ->
@@ -559,7 +565,7 @@ let maybe_coerce pos (g:uenv) e ty (expect:mlty) : mlexpr =
                             (Code.string_of_mlexpr (current_module_of_uenv g) e)
                             (Code.string_of_mlty (current_module_of_uenv g) ty)
                             (Code.string_of_mlty (current_module_of_uenv g) expect)) in
-               maybe_eta_expand g expect (apply_coercion g e ty expect)
+               maybe_eta_expand_coercion g expect (apply_coercion pos g e ty expect)
 
 (********************************************************************************************)
 (* The main extraction of terms to ML types                                                 *)
@@ -584,7 +590,8 @@ let bv_as_mlty (g:uenv) (bv:bv) =
         a bloated type is atleast as good as MLTY_Top?
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
-let extraction_norm_steps_core =
+let extraction_norm_steps =
+  let extraction_norm_steps_core =
     [Env.AllowUnboundUniverses;
      Env.EraseUniverses;
      Env.Inlining;
@@ -592,12 +599,11 @@ let extraction_norm_steps_core =
      Env.Exclude Env.Zeta;
      Env.Primops;
      Env.Unascribe;
-     Env.ForExtraction]
+     Env.ForExtraction] in
 
-let extraction_norm_steps_nbe =
-  Env.NBE::extraction_norm_steps_core
-
-let extraction_norm_steps () = 
+  let extraction_norm_steps_nbe =
+    Env.NBE::extraction_norm_steps_core in
+  
   if Options.use_nbe_for_extraction()
   then extraction_norm_steps_nbe
   else extraction_norm_steps_core
@@ -628,8 +634,9 @@ let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
    *)
   let c = comp_no_args c in
 
+  //AR: normalize the reified comp, to inline definitions that reification may have introduced
   if c |> U.comp_effect_name |> TcEnv.norm_eff_name env |> TcEnv.is_reifiable_effect env
-  then TcEnv.reify_comp env c S.U_unknown
+  then TcEnv.reify_comp env c S.U_unknown |> N.normalize extraction_norm_steps env
   else U.comp_result c
 
 
@@ -646,7 +653,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
         else
             let formals, _ =
                 let (_, fvty), _ = FStar.TypeChecker.Env.lookup_lid (tcenv_of_uenv g) fv.fv_name.v in
-                let fvty = N.normalize [Env.UnfoldUntil delta_constant] (tcenv_of_uenv g) fvty in
+                let fvty = N.normalize [Env.UnfoldUntil delta_constant; Env.ForExtraction] (tcenv_of_uenv g) fvty in
                 U.arrow_formals fvty in
             let mlargs = List.map (arg_as_mlty g) args in
             let mlargs =
@@ -709,7 +716,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
                   fv_app_as_mlty env fv args
 
                 | Tm_app (head, args') ->
-                  translate_term_to_mlty env (S.mk (Tm_app(head, args'@args)) None t.pos)
+                  translate_term_to_mlty env (S.mk (Tm_app(head, args'@args)) t.pos)
 
                 | _ -> MLTY_Top in
             res
@@ -761,7 +768,7 @@ and binders_as_ml_binders (g:uenv) (bs:binders) : list<(mlident * mlty)> * uenv 
     env
 
 let term_as_mlty g t0 =
-    let t = N.normalize (extraction_norm_steps()) (tcenv_of_uenv g) t0 in
+    let t = N.normalize extraction_norm_steps (tcenv_of_uenv g) t0 in
     translate_term_to_mlty g t
 
 
@@ -810,7 +817,7 @@ let resugar_pat g q p = match p with
         | _ ->
           match q with
           | Some (Record_ctor (ty, fns)) ->
-              let path = List.map text_of_id (ns_of_lid ty) in
+              let path = List.map string_of_id (ns_of_lid ty) in
               let fs = record_fields g ty fns pats in
               MLP_Record(path, fs)
           | _ -> p
@@ -876,9 +883,16 @@ let rec extract_one_pat (imp : bool)
         g, None, true
 
     | Pat_cons (f, pats) ->
-        let d, tys = match lookup_fv g f with
-            | {exp_b_expr={expr=MLE_Name n}; exp_b_tscheme=ttys} -> n, ttys
-            | _ -> failwith "Expected a constructor" in
+        let d, tys =
+          match try_lookup_fv p.p g f with
+          | Some ({exp_b_expr={expr=MLE_Name n}; exp_b_tscheme=ttys}) -> n, ttys
+          | Some _ -> failwith "Expected a constructor"
+          | None ->
+            Errors.raise_error (Errors.Error_ErasedCtor,
+                                BU.format1 "Cannot extract this pattern, the %s constructor was erased"
+                                            (Print.fv_to_string f))
+                               f.fv_name.p
+        in
         let nTyVars = List.length (fst tys) in
         let tysVarPats, restPats =  BU.first_N nTyVars pats in
         let f_ty_opt =
@@ -956,7 +970,7 @@ let maybe_eta_data_and_project_record (g:uenv) (qual : option<fv_qual>) (residua
     let as_record qual e =
       match e.expr, qual with
       | MLE_CTor(_, args), Some (Record_ctor(tyname, fields)) ->
-        let path = List.map text_of_id (ns_of_lid tyname) in
+        let path = List.map string_of_id (ns_of_lid tyname) in
         let fields = record_fields g tyname fields args in
         with_ty e.mlty <| MLE_Record(path, fields)
       | _ -> e
@@ -1095,7 +1109,7 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
                        let polytype = tbinders |> List.map (fun (x, _) -> (UEnv.lookup_ty env x).ty_b_name), expected_t in
                        //In this case, an eta expansion is safe
                        let args = tbinders |> List.map (fun (bv, _) -> S.bv_to_name bv |> as_arg) in
-                       let e = mk (Tm_app(lbdef, args)) None lbdef.pos in
+                       let e = mk (Tm_app(lbdef, args)) lbdef.pos in
                        (lbname_, f_e, (lbtyp, (tbinders, polytype)), false, e)
 
                      | _ ->
@@ -1213,7 +1227,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           ml_unit, E_PURE, ml_unit_ty
 
         | Tm_quoted (qt, { qkind = Quote_dynamic }) ->
-          let ({exp_b_expr=fw}) = UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
+          let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv PC.failwith_lid delta_constant None) in
           with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "Cannot evaluate open quotation at runtime")]),
           E_PURE,
           ml_int_ty
@@ -1285,8 +1299,10 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           then ml_unit, E_PURE, ml_unit_ty //Erase type argument
           else
           begin
-               match try_lookup_fv g fv with
+               match try_lookup_fv t.pos g fv with
                | None -> //it's been erased
+                 // Errors.log_issue t.pos (Errors.Error_CallToErased,
+                 //                         BU.format1 "Attempting to extract a call into erased function %s" (Print.fv_to_string fv));
                  ml_unit, E_PURE, MLTY_Erased
 
                | Some {exp_b_expr=x; exp_b_tscheme=mltys} ->
@@ -1309,7 +1325,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             match rcopt with
             | Some rc ->
                 if TcEnv.is_reifiable_rc (tcenv_of_uenv env) rc
-                then TcUtil.reify_body (tcenv_of_uenv env) [TcEnv.Inlining; TcEnv.Unascribe] body
+                then TcUtil.reify_body (tcenv_of_uenv env) [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] body
                 else body
             | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (Print.term_to_string body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
@@ -1344,12 +1360,12 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
              *)
             | Tm_abs(bs, _, _rc) (* when is_total _rc *) -> //this is a beta_redex --- also reduce it before extraction
               t
-              |> N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses] (tcenv_of_uenv g)
+              |> N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction] (tcenv_of_uenv g)
               |> term_as_mlexpr g
 
             | Tm_constant Const_reify ->
-              let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining; TcEnv.Unascribe] head (List.hd args) in
-              let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) None t.pos in
+              let e = TcUtil.reify_body_with_arg (tcenv_of_uenv g) [TcEnv.Inlining; TcEnv.ForExtraction; TcEnv.Unascribe] head (List.hd args) in
+              let tm = S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos in
               term_as_mlexpr g tm
 
             | _ ->
@@ -1517,8 +1533,11 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
               then ml_unit, E_PURE, ml_unit_ty //Erase type argument: TODO: FIXME, this could be effectful
               else match (U.un_uinst head).n with
                    | Tm_fvar fv ->
-                     (match try_lookup_fv g fv with
+                     (match try_lookup_fv t.pos g fv with
                       | None -> //erased head
+                        // Errors.log_issue t.pos
+                        //   (Errors.Error_CallToErased,
+                        //    BU.format1 "Attempting to extract a call into erased function %s" (Print.fv_to_string fv));
                         ml_unit, E_PURE, MLTY_Erased
                       | _ ->
                         extract_app_with_instantiations ())
@@ -1616,7 +1635,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                         if Options.ml_ish()
                         then lb.lbdef
                         else let norm_call () =
-                                 N.normalize (Env.PureSubtermsWithinComputations::(extraction_norm_steps())) tcenv lb.lbdef
+                                 N.normalize (Env.PureSubtermsWithinComputations::Env.Reify::extraction_norm_steps) tcenv lb.lbdef
                              in
                              if TcEnv.debug tcenv <| Options.Other "Extraction"
                              || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
@@ -1630,7 +1649,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                                           (BU.format1 "###(Time to normalize top-level let %s)"
                                             (Print.lbname_to_string lb.lbname))
                                           norm_call in
-//                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
+                                  BU.print1 "Normalized to %s\n" (Print.term_to_string a);
                                   a
                              else norm_call ()
                     in
@@ -1653,12 +1672,22 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           in
           let lbs = extract_lb_sig g (is_rec, lbs) in
 
-          let env_body, lbs = List.fold_right (fun lb (env, lbs) ->
+          (* env_burn only matters for non-recursive lets and simply burns
+           * the let bound variable in its own definition to generate
+           * code that is more understandable. We only do it for OCaml,
+           * to not affect Kremlin naming. *)
+          let env_body, lbs, env_burn = List.fold_right (fun lb (env, lbs, env_burn) ->
               let (lbname, _, (t, (_, polytype)), add_unit, _) = lb in
               let env, nm, _ = UEnv.extend_lb env lbname t polytype add_unit in
-              env, (nm,lb)::lbs) lbs (g, []) in
+              let env_burn =
+                if Options.codegen () <> Some Options.Kremlin
+                then UEnv.burn_name env_burn nm
+                else env_burn
+              in
+              env, (nm,lb)::lbs, env_burn) lbs (g, [], g)
+          in
 
-          let env_def = if is_rec then env_body else g in
+          let env_def = if is_rec then env_body else env_burn in
 
           let lbs = lbs |> List.map (check_lb env_def)  in
 
@@ -1721,7 +1750,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                            with_ty t_e <| MLE_Coerce (e, t_e, MLTY_Top)) in
              begin match mlbranches with
                 | [] ->
-                    let ({exp_b_expr=fw}) = UEnv.lookup_fv g (S.lid_as_fv PC.failwith_lid delta_constant None) in
+                    let ({exp_b_expr=fw}) = UEnv.lookup_fv t.pos g (S.lid_as_fv PC.failwith_lid delta_constant None) in
                     with_ty ml_int_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]),
                     E_PURE,
                     ml_int_ty

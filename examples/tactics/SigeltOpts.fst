@@ -9,14 +9,8 @@ let sp1 = assert (List.length [1] == 1)
 #pop-options
 
 (* Fails without fuel *)
-[@expect_failure]
+[@@expect_failure]
 let sp2 = assert (List.length [1] == 1)
-
-val add_check_with : term -> sigelt -> Tac sigelt
-let add_check_with opts se =
-  let attrs = sigelt_attrs se in
-  let t = `(check_with (`#opts)) in
-  set_sigelt_attrs (t :: attrs) se
 
 let tau () : Tac decls =
   match lookup_typ (top_env ()) ["SigeltOpts"; "sp1"] with
@@ -34,5 +28,5 @@ let tau () : Tac decls =
 %splice[blah] (tau ())
 
 (* Outside, still with max_fuel = 0 *)
-[@expect_failure]
+[@@expect_failure]
 let sp3 = assert (List.length [1] == 1)

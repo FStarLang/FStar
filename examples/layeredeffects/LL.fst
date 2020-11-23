@@ -90,7 +90,7 @@ inline_for_extraction
 let eif_then_else (a:Type)
   (wp_f:ewp_t a) (wp_g:ewp_t a)
   (f:erepr a wp_f) (g:erepr a wp_g)
-  (p:Type0)
+  (p:bool)
 : Type
 = erepr a
   (fun post ->
@@ -100,7 +100,7 @@ let eif_then_else (a:Type)
 
 /// The effect definition
 
-reifiable reflectable
+total reifiable reflectable
 layered_effect {
   EXN : a:Type -> ewp_t a -> Effect
   with
@@ -121,7 +121,7 @@ assume Pure_wp_monotonic:
              (wp p ==> wp q)))
 
 inline_for_extraction
-let lift_pure_exn (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
+let lift_pure_exn (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
 : erepr a (fun p -> wp (fun x -> p (Some x)))
 = fun _ -> Some (f ())
 
@@ -283,14 +283,14 @@ inline_for_extraction
 let if_then_else (a:Type)
   (wp_f:wp_t a) (wp_g:wp_t a)
   (f:repr a wp_f) (g:repr a wp_g)
-  (p:Type0)
+  (p:bool)
 : Type
 = repr a
   (fun post n ->
     (p ==> wp_f post n) /\
     ((~ p) ==> wp_g post n))
 
-reifiable reflectable
+total reifiable reflectable
 layered_effect {
   STEXN : a:Type -> wp:wp_t a -> Effect
   with
@@ -302,7 +302,7 @@ layered_effect {
 }
 
 inline_for_extraction
-let lift_pure_stexn (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
+let lift_pure_stexn (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
 : repr a (fun p n -> wp (fun x -> p (Some (x, n))))
 = fun n -> (f (), n)
 

@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "fd04b7c645da25f4ed96ec7ef3e9336e"
+      "2276ff97c4cffc39dc7a03a2ab47d858"
     ],
     [
       "IMSTsub.nat_rel",
@@ -24,7 +24,7 @@
         "token_correspondence_IMSTsub.nat_rel_"
       ],
       0,
-      "f390288bf008f632fcab0e24d6be7392"
+      "13cf23fd213e29d823d26f8fae10d61e"
     ],
     [
       "IMSTsub.eq_rel'",
@@ -38,7 +38,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "7f8400c44199a379ecbe879151e94a5d"
+      "867a275de71433f8ff0c626c7525a612"
     ],
     [
       "IMSTsub.eq_rel",
@@ -54,7 +54,7 @@
         "token_correspondence_IMSTsub.eq_rel_"
       ],
       0,
-      "d95913a407dd60a529e411a882671d16"
+      "a95d92f8dcb9bc2494f3ae17998cb3a9"
     ],
     [
       "IMSTsub.f",
@@ -63,7 +63,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "unit_inversion" ],
       0,
-      "5b8bdcb0072cf4f2a5a8a02a340da900"
+      "a7d0523a46059d62c5437e1cd1c9e578"
     ],
     [
       "IMSTsub.g",
@@ -94,7 +94,7 @@
         "token_correspondence_IMSTsub.nat_rel_"
       ],
       0,
-      "9629e198c97563ec4644c81a6c7737bb"
+      "8bd053d8825d3b18df08ed1c636b7d1a"
     ],
     [
       "IMSTsub.h",
@@ -118,62 +118,7 @@
         "token_correspondence_IMSTsub.nat_rel_"
       ],
       0,
-      "c2d8b22227089580d793f78d478c9670"
-    ],
-    [
-      "IMSTsub.idx",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "4044a395ec362fad5cf80f86510b64d9"
-    ],
-    [
-      "IMSTsub.nat_rel",
-      2,
-      2,
-      1,
-      [
-        "@query", "b2t_def", "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive", "equation_IMSTsub.nat_rel_",
-        "equation_Prims.nat", "primitive_Prims.op_LessThanOrEqual",
-        "projection_inverse_BoxBool_proj_0",
-        "token_correspondence_IMSTsub.nat_rel_"
-      ],
-      0,
-      "109987272a9feb65a463efce6ecec522"
-    ],
-    [
-      "IMSTsub.eq_rel'",
-      2,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.eqtype",
-        "equation_Prims.nat", "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
-      ],
-      0,
-      "83a7c9742f68b5fa838611408ed16fc2"
-    ],
-    [
-      "IMSTsub.eq_rel",
-      2,
-      2,
-      1,
-      [
-        "@query", "b2t_def", "equation_FStar.Preorder.preorder_rel",
-        "equation_FStar.Preorder.reflexive",
-        "equation_FStar.Preorder.transitive", "equation_IMSTsub.eq_rel_",
-        "equation_Prims.nat", "primitive_Prims.op_Equality",
-        "projection_inverse_BoxBool_proj_0",
-        "token_correspondence_IMSTsub.eq_rel_"
-      ],
-      0,
-      "633bbca7c8310d3a3388a49eabb91655"
+      "07fa132e34c30933117f9d91a8f89711"
     ]
   ]
 ]
