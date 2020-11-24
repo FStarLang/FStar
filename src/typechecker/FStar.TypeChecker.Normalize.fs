@@ -1257,7 +1257,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_app(head, args) ->
             let strict_args =
-              match (U.un_uinst head).n with
+              match (head |> U.unascribe |> U.un_uinst).n with
               | Tm_fvar fv -> Env.fv_has_strict_args cfg.tcenv fv
               | _ -> None
             in
@@ -1279,7 +1279,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   if i >= norm_args_len then false
                   else
                     let arg_i, _ = List.nth norm_args i in
-                    let head, _ = U.head_and_args arg_i in
+                    let head, _ = arg_i |> U.unascribe |> U.head_and_args in
                     match (un_uinst head).n with
                     | Tm_constant _ -> true
                     | Tm_fvar fv -> Env.is_datacon cfg.tcenv (S.lid_of_fv fv)
