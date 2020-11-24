@@ -3559,7 +3559,10 @@ let rec (norm :
            | FStar_Syntax_Syntax.Tm_app (head, args) ->
                let strict_args =
                  let uu___2 =
-                   let uu___3 = FStar_Syntax_Util.un_uinst head in
+                   let uu___3 =
+                     let uu___4 =
+                       FStar_All.pipe_right head FStar_Syntax_Util.unascribe in
+                     FStar_All.pipe_right uu___4 FStar_Syntax_Util.un_uinst in
                    uu___3.FStar_Syntax_Syntax.n in
                  match uu___2 with
                  | FStar_Syntax_Syntax.Tm_fvar fv ->
@@ -3616,7 +3619,11 @@ let rec (norm :
                                  match uu___4 with
                                  | (arg_i, uu___5) ->
                                      let uu___6 =
-                                       FStar_Syntax_Util.head_and_args arg_i in
+                                       let uu___7 =
+                                         FStar_All.pipe_right arg_i
+                                           FStar_Syntax_Util.unascribe in
+                                       FStar_All.pipe_right uu___7
+                                         FStar_Syntax_Util.head_and_args in
                                      (match uu___6 with
                                       | (head1, uu___7) ->
                                           let uu___8 =
