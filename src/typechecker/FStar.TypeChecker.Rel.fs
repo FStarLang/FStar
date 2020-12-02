@@ -1167,6 +1167,19 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     in
     let success d r t1 t2 = (r, (if d>0 then Some(t1, t2) else None)) in
     let fail d r t1 t2 = (r, (if d>0 then Some(t1, t2) else None)) in
+
+    (*
+     * AR: When we delta-unfold the terms below, it may happen that application of an fv with
+     *       delta depth say 1 doesn't unfold because it is marked with strict_on_arguments
+     *     To prevent looping in that case, we make sure that we have made progress
+     *       in an unfolding call to the normalizer
+     *     This made_progress function is checking that we have made progress in unfolding t to t'
+     *     See #2184
+     *)
+    let made_progress t t' =
+      let head, head' = U.head_and_args t |> fst, U.head_and_args t' |> fst in
+      not (U.eq_tm head head' = U.Equal) in
+
     let rec aux retry n_delta t1 t2 =
         let r = head_matches env t1 t2 in
         if Env.debug env <| Options.Other "RelDelta" then
@@ -1176,21 +1189,27 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
                 (string_of_match_result r);
         let reduce_one_and_try_again (d1:delta_depth) (d2:delta_depth) =
           let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
-          let t1, t2 = if d1_greater_than_d2
-                       then let t1' = normalize_refinement [Env.UnfoldUntil d2; Env.Weak; Env.HNF] env t1 in
-                            t1', t2
-                       else let t2' = normalize_refinement [Env.UnfoldUntil d1; Env.Weak; Env.HNF] env t2 in
-                            t1, t2' in
-          aux retry (n_delta + 1) t1 t2
+          let t1, t2, made_progress =
+            if d1_greater_than_d2
+            then let t1' = normalize_refinement [Env.UnfoldUntil d2; Env.Weak; Env.HNF] env t1 in
+                 t1', t2, made_progress t1 t1'
+            else let t2' = normalize_refinement [Env.UnfoldUntil d1; Env.Weak; Env.HNF] env t2 in
+                 t1, t2', made_progress t2 t2' in
+          if made_progress
+          then aux retry (n_delta + 1) t1 t2
+          else fail n_delta r t1 t2
         in
 
         let reduce_both_and_try_again (d:delta_depth) (r:match_result) =
           match Common.decr_delta_depth d with
           | None -> fail n_delta r t1 t2
           | Some d ->
-            let t1 = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t1 in
-            let t2 = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t2 in
-            aux retry (n_delta + 1) t1 t2
+            let t1' = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t1 in
+            let t2' = normalize_refinement [Env.UnfoldUntil d; Env.Weak; Env.HNF] env t2 in
+            if made_progress t1 t1' &&
+               made_progress t2 t2'
+            then aux retry (n_delta + 1) t1' t2'
+            else fail n_delta r t1 t2
         in
 
         match r with

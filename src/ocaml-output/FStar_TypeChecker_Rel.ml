@@ -2602,6 +2602,21 @@ let (head_matches_delta :
               (if d > Prims.int_zero
                then FStar_Pervasives_Native.Some (t11, t21)
                else FStar_Pervasives_Native.None)) in
+          let made_progress t t' =
+            let uu___ =
+              let uu___1 =
+                let uu___2 = FStar_Syntax_Util.head_and_args t in
+                FStar_All.pipe_right uu___2 FStar_Pervasives_Native.fst in
+              let uu___2 =
+                let uu___3 = FStar_Syntax_Util.head_and_args t' in
+                FStar_All.pipe_right uu___3 FStar_Pervasives_Native.fst in
+              (uu___1, uu___2) in
+            match uu___ with
+            | (head, head') ->
+                let uu___1 =
+                  let uu___2 = FStar_Syntax_Util.eq_tm head head' in
+                  uu___2 = FStar_Syntax_Util.Equal in
+                Prims.op_Negation uu___1 in
           let rec aux retry n_delta t11 t21 =
             let r = head_matches env t11 t21 in
             (let uu___1 =
@@ -2626,32 +2641,39 @@ let (head_matches_delta :
                        [FStar_TypeChecker_Env.UnfoldUntil d2;
                        FStar_TypeChecker_Env.Weak;
                        FStar_TypeChecker_Env.HNF] env t11 in
-                   (t1', t21)
+                   let uu___2 = made_progress t11 t1' in (t1', t21, uu___2)
                  else
                    (let t2' =
                       normalize_refinement
                         [FStar_TypeChecker_Env.UnfoldUntil d1;
                         FStar_TypeChecker_Env.Weak;
                         FStar_TypeChecker_Env.HNF] env t21 in
-                    (t11, t2')) in
+                    let uu___3 = made_progress t21 t2' in (t11, t2', uu___3)) in
                match uu___1 with
-               | (t12, t22) -> aux retry (n_delta + Prims.int_one) t12 t22 in
+               | (t12, t22, made_progress1) ->
+                   if made_progress1
+                   then aux retry (n_delta + Prims.int_one) t12 t22
+                   else fail n_delta r t12 t22 in
              let reduce_both_and_try_again d r1 =
                let uu___1 = FStar_TypeChecker_Common.decr_delta_depth d in
                match uu___1 with
                | FStar_Pervasives_Native.None -> fail n_delta r1 t11 t21
                | FStar_Pervasives_Native.Some d1 ->
-                   let t12 =
+                   let t1' =
                      normalize_refinement
                        [FStar_TypeChecker_Env.UnfoldUntil d1;
                        FStar_TypeChecker_Env.Weak;
                        FStar_TypeChecker_Env.HNF] env t11 in
-                   let t22 =
+                   let t2' =
                      normalize_refinement
                        [FStar_TypeChecker_Env.UnfoldUntil d1;
                        FStar_TypeChecker_Env.Weak;
                        FStar_TypeChecker_Env.HNF] env t21 in
-                   aux retry (n_delta + Prims.int_one) t12 t22 in
+                   let uu___2 =
+                     (made_progress t11 t1') && (made_progress t21 t2') in
+                   if uu___2
+                   then aux retry (n_delta + Prims.int_one) t1' t2'
+                   else fail n_delta r1 t11 t21 in
              match r with
              | MisMatch
                  (FStar_Pervasives_Native.Some
