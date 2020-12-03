@@ -593,7 +593,7 @@ let (head_and_args :
     match t1.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_app (head, args) -> (head, args)
     | uu___ -> (t1, [])
-let rec (head_and_args' :
+let rec (head_and_args_full :
   FStar_Syntax_Syntax.term ->
     (FStar_Syntax_Syntax.term * (FStar_Syntax_Syntax.term'
       FStar_Syntax_Syntax.syntax * FStar_Syntax_Syntax.arg_qualifier
@@ -603,7 +603,7 @@ let rec (head_and_args' :
     let t1 = FStar_Syntax_Subst.compress t in
     match t1.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Tm_app (head, args) ->
-        let uu___ = head_and_args' head in
+        let uu___ = head_and_args_full head in
         (match uu___ with
          | (head1, args') -> (head1, (FStar_List.append args' args)))
     | uu___ -> (t1, [])
@@ -829,7 +829,7 @@ let (canon_app :
     FStar_Syntax_Syntax.term)
   =
   fun t ->
-    let uu___ = let uu___1 = unascribe t in head_and_args' uu___1 in
+    let uu___ = let uu___1 = unascribe t in head_and_args_full uu___1 in
     match uu___ with
     | (hd, args) ->
         FStar_Syntax_Syntax.mk_Tm_app hd args t.FStar_Syntax_Syntax.pos
@@ -892,6 +892,13 @@ let rec (eq_tm :
                         let uu___4 = eq_tm a1 a2 in eq_inj acc uu___4) Equal)
             uu___2
         else NotEqual in
+      let qual_is_inj uu___ =
+        match uu___ with
+        | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Data_ctor) ->
+            true
+        | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Record_ctor
+            uu___1) -> true
+        | uu___1 -> false in
       let heads_and_args_in_case_both_data =
         let uu___ =
           let uu___1 = FStar_All.pipe_right t11 unmeta in
@@ -914,13 +921,8 @@ let rec (eq_tm :
                  (match uu___2 with
                   | (FStar_Syntax_Syntax.Tm_fvar f,
                      FStar_Syntax_Syntax.Tm_fvar g) when
-                      (f.FStar_Syntax_Syntax.fv_qual =
-                         (FStar_Pervasives_Native.Some
-                            FStar_Syntax_Syntax.Data_ctor))
-                        &&
-                        (g.FStar_Syntax_Syntax.fv_qual =
-                           (FStar_Pervasives_Native.Some
-                              FStar_Syntax_Syntax.Data_ctor))
+                      (qual_is_inj f.FStar_Syntax_Syntax.fv_qual) &&
+                        (qual_is_inj g.FStar_Syntax_Syntax.fv_qual)
                       -> FStar_Pervasives_Native.Some (f, args1, g, args2)
                   | uu___3 -> FStar_Pervasives_Native.None)) in
       let t12 = unmeta t11 in
@@ -2858,7 +2860,7 @@ let (destruct_typ_as_formula :
       let uu___ = un_squash t in
       FStar_Util.bind_opt uu___
         (fun t1 ->
-           let uu___1 = head_and_args' t1 in
+           let uu___1 = head_and_args_full t1 in
            match uu___1 with
            | (hd, args) ->
                let uu___2 =
@@ -3014,7 +3016,7 @@ let (destruct_typ_as_formula :
       let uu___ = un_squash t in
       FStar_Util.bind_opt uu___
         (fun t1 ->
-           let uu___1 = head_and_args' t1 in
+           let uu___1 = head_and_args_full t1 in
            match uu___1 with
            | (hd, args) ->
                let uu___2 =

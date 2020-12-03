@@ -72,6 +72,8 @@ let with_dsenv_of_tcenv :
                  (uu___1.FStar_TypeChecker_Env.tc_term);
                FStar_TypeChecker_Env.type_of =
                  (uu___1.FStar_TypeChecker_Env.type_of);
+               FStar_TypeChecker_Env.type_of_well_typed =
+                 (uu___1.FStar_TypeChecker_Env.type_of_well_typed);
                FStar_TypeChecker_Env.universe_of =
                  (uu___1.FStar_TypeChecker_Env.universe_of);
                FStar_TypeChecker_Env.check_type_of =
@@ -107,7 +109,9 @@ let with_dsenv_of_tcenv :
                FStar_TypeChecker_Env.erasable_types_tab =
                  (uu___1.FStar_TypeChecker_Env.erasable_types_tab);
                FStar_TypeChecker_Env.enable_defer_to_tac =
-                 (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac)
+                 (uu___1.FStar_TypeChecker_Env.enable_defer_to_tac);
+               FStar_TypeChecker_Env.unif_allow_ref_guards =
+                 (uu___1.FStar_TypeChecker_Env.unif_allow_ref_guards)
              }))
 let with_tcenv_of_env :
   'a .
@@ -232,6 +236,7 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_NBE.normalize uu___1 in
       FStar_TypeChecker_Env.initial_env deps FStar_TypeChecker_TcTerm.tc_term
         FStar_TypeChecker_TcTerm.type_of_tot_term
+        FStar_TypeChecker_TcTerm.type_of_well_typed_term
         FStar_TypeChecker_TcTerm.universe_of
         FStar_TypeChecker_TcTerm.check_type_of_well_typed_term solver
         FStar_Parser_Const.prims_lid uu___ in
@@ -279,6 +284,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
+        FStar_TypeChecker_Env.type_of_well_typed =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.check_type_of =
@@ -312,7 +319,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.erasable_types_tab =
           (uu___.FStar_TypeChecker_Env.erasable_types_tab);
         FStar_TypeChecker_Env.enable_defer_to_tac =
-          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac)
+          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac);
+        FStar_TypeChecker_Env.unif_allow_ref_guards =
+          (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
       } in
     let env2 =
       let uu___ = env1 in
@@ -358,6 +367,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
+        FStar_TypeChecker_Env.type_of_well_typed =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.check_type_of =
@@ -392,7 +403,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.erasable_types_tab =
           (uu___.FStar_TypeChecker_Env.erasable_types_tab);
         FStar_TypeChecker_Env.enable_defer_to_tac =
-          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac)
+          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac);
+        FStar_TypeChecker_Env.unif_allow_ref_guards =
+          (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
       } in
     let env3 =
       let uu___ = env2 in
@@ -438,6 +451,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
+        FStar_TypeChecker_Env.type_of_well_typed =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.check_type_of =
@@ -472,7 +487,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.erasable_types_tab =
           (uu___.FStar_TypeChecker_Env.erasable_types_tab);
         FStar_TypeChecker_Env.enable_defer_to_tac =
-          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac)
+          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac);
+        FStar_TypeChecker_Env.unif_allow_ref_guards =
+          (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
       } in
     let env4 =
       let uu___ = env3 in
@@ -518,6 +535,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
+        FStar_TypeChecker_Env.type_of_well_typed =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.check_type_of =
@@ -551,7 +570,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.erasable_types_tab =
           (uu___.FStar_TypeChecker_Env.erasable_types_tab);
         FStar_TypeChecker_Env.enable_defer_to_tac =
-          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac)
+          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac);
+        FStar_TypeChecker_Env.unif_allow_ref_guards =
+          (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
       } in
     let env5 =
       let uu___ = env4 in
@@ -597,6 +618,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
+        FStar_TypeChecker_Env.type_of_well_typed =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.check_type_of =
@@ -630,7 +653,9 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.erasable_types_tab =
           (uu___.FStar_TypeChecker_Env.erasable_types_tab);
         FStar_TypeChecker_Env.enable_defer_to_tac =
-          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac)
+          (uu___.FStar_TypeChecker_Env.enable_defer_to_tac);
+        FStar_TypeChecker_Env.unif_allow_ref_guards =
+          (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
       } in
     (env5.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env5; env5
 let (tc_one_fragment :
@@ -793,7 +818,7 @@ let (load_interface_decls :
             (FStar_Errors.Fatal_ParseErrors, uu___2) in
           FStar_Errors.raise_err uu___1
       | FStar_Parser_ParseIt.ParseError (err, msg, rng) ->
-          FStar_Exn.raise (FStar_Errors.Error (err, msg, rng))
+          FStar_Exn.raise (FStar_Errors.Error (err, msg, rng, []))
       | FStar_Parser_ParseIt.Term uu___ ->
           failwith
             "Impossible: parsing a Toplevel always results in an ASTFragment"
@@ -858,7 +883,6 @@ let (tc_one_file :
                let uu___3 = FStar_Options.restore_cmd_line_options true in
                FStar_All.pipe_right uu___3 (fun uu___4 -> ())
              else () in
-           let post_smt_encoding uu___1 = FStar_SMTEncoding_Z3.refresh () in
            let maybe_extract_mldefs tcmod env1 =
              let uu___1 =
                (let uu___2 = FStar_Options.codegen () in
@@ -905,29 +929,31 @@ let (tc_one_file :
                      fmod.FStar_Syntax_Syntax.name in
                  let check_mod uu___3 =
                    let check env2 =
+                     (let uu___5 =
+                        let uu___6 = FStar_Options.lax () in
+                        Prims.op_Negation uu___6 in
+                      if uu___5 then FStar_SMTEncoding_Z3.refresh () else ());
                      with_tcenv_of_env env2
                        (fun tcenv ->
                           (match tcenv.FStar_TypeChecker_Env.gamma with
                            | [] -> ()
-                           | uu___5 ->
+                           | uu___6 ->
                                failwith
                                  "Impossible: gamma contains leaked names");
-                          (let uu___5 =
+                          (let uu___6 =
                              FStar_TypeChecker_Tc.check_module tcenv fmod
                                (FStar_Util.is_some pre_fn) in
-                           match uu___5 with
+                           match uu___6 with
                            | (modul, env3) ->
                                (maybe_restore_opts ();
                                 (let smt_decls =
-                                   let uu___7 =
-                                     let uu___8 = FStar_Options.lax () in
-                                     Prims.op_Negation uu___8 in
-                                   if uu___7
+                                   let uu___8 =
+                                     let uu___9 = FStar_Options.lax () in
+                                     Prims.op_Negation uu___9 in
+                                   if uu___8
                                    then
-                                     let smt_decls1 =
-                                       FStar_SMTEncoding_Encode.encode_modul
-                                         env3 modul in
-                                     (post_smt_encoding (); smt_decls1)
+                                     FStar_SMTEncoding_Encode.encode_modul
+                                       env3 modul
                                    else ([], []) in
                                  ((modul, smt_decls), env3))))) in
                    let uu___4 =
@@ -1038,28 +1064,33 @@ let (tc_one_file :
                        uu___4
                    else ());
                   (let extend_tcenv tcmod1 tcenv =
-                     let uu___3 =
-                       let uu___4 =
-                         FStar_ToSyntax_ToSyntax.add_modul_to_env tcmod1
-                           tc_result.FStar_CheckedFiles.mii
-                           (FStar_TypeChecker_Normalize.erase_universes tcenv) in
-                       FStar_All.pipe_left (with_dsenv_of_tcenv tcenv) uu___4 in
-                     match uu___3 with
-                     | (uu___4, tcenv1) ->
-                         let env1 =
-                           FStar_TypeChecker_Tc.load_checked_module tcenv1
-                             tcmod1 in
-                         (maybe_restore_opts ();
-                          (let uu___7 =
-                             let uu___8 = FStar_Options.lax () in
-                             Prims.op_Negation uu___8 in
-                           if uu___7
-                           then
-                             (FStar_SMTEncoding_Encode.encode_modul_from_cache
-                                env1 tcmod1 smt_decls;
-                              post_smt_encoding ())
-                           else ());
-                          ((), env1)) in
+                     (let uu___4 =
+                        let uu___5 = FStar_Options.lax () in
+                        Prims.op_Negation uu___5 in
+                      if uu___4 then FStar_SMTEncoding_Z3.refresh () else ());
+                     (let uu___4 =
+                        let uu___5 =
+                          FStar_ToSyntax_ToSyntax.add_modul_to_env tcmod1
+                            tc_result.FStar_CheckedFiles.mii
+                            (FStar_TypeChecker_Normalize.erase_universes
+                               tcenv) in
+                        FStar_All.pipe_left (with_dsenv_of_tcenv tcenv)
+                          uu___5 in
+                      match uu___4 with
+                      | (uu___5, tcenv1) ->
+                          let env1 =
+                            FStar_TypeChecker_Tc.load_checked_module tcenv1
+                              tcmod1 in
+                          (maybe_restore_opts ();
+                           (let uu___8 =
+                              let uu___9 = FStar_Options.lax () in
+                              Prims.op_Negation uu___9 in
+                            if uu___8
+                            then
+                              FStar_SMTEncoding_Encode.encode_modul_from_cache
+                                env1 tcmod1 smt_decls
+                            else ());
+                           ((), env1))) in
                    let env1 =
                      FStar_Profiling.profile
                        (fun uu___3 ->
@@ -1229,7 +1260,10 @@ let (batch_mode_tc :
        let uu___1 = tc_fold_interleave dep_graph ([], [], env) filenames in
        match uu___1 with
        | (all_mods, mllibs, env1) ->
-           (emit mllibs;
+           ((let uu___3 =
+               let uu___4 = FStar_Errors.get_err_count () in
+               uu___4 = Prims.int_zero in
+             if uu___3 then emit mllibs else ());
             (let solver_refresh env2 =
                let uu___3 =
                  with_tcenv_of_env env2

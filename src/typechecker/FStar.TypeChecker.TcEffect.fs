@@ -205,6 +205,7 @@ let validate_layered_effect_binders env (bs:binders) (repr_terms:list<term>) (ch
  * Typechecking of layered effects
  *)
 let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) (attrs : list<S.attribute>) =
+Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
   if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
     BU.print1 "Typechecking layered effect: \n\t%s\n" (Print.eff_decl_to_string false ed);
 
@@ -623,7 +624,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) (attrs 
   (*
    * Checking the soundness of the if_then_else combinator
    *
-   * In all combinators, other than if_then_else, the soundess is ensured
+   * In all combinators, other than if_then_else, the soundness is ensured
    *   by extracting the application of those combinators to their definitions
    * For if_then_else, the combinator does not have an extraction equivalent
    *   It is only used in VC generation
@@ -648,7 +649,7 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) (attrs 
    * 
    * Similarly for the g case
    *)
-  let _if_then_else_is_sound =
+  let _if_then_else_is_sound = Errors.with_ctx "While checking if-then-else soundness" (fun () ->
     let r = (ed |> U.get_layered_if_then_else_combinator |> must |> snd).pos in
 
     (*
@@ -739,7 +740,9 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) (attrs 
       let env = Env.push_bv env (S.new_bv None not_p) in
       let _, _, g_g = tc_tot_or_gtot_term env tm_subcomp_ascribed_g in
       Rel.force_trivial_guard env g_g in
-    () in
+    ()
+  )
+  in
 
 
   (*
@@ -884,8 +887,10 @@ let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list<qualifier>) (attrs 
     signature     = (let us, t, _ = signature in (us, t));
     combinators   = combinators;
     actions       = List.map (tc_action env0) ed.actions }
+)
 
 let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) (_attrs : list<S.attribute>) : S.eff_decl =
+Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
   if Env.debug env0 <| Options.Other "ED" then
     BU.print1 "Typechecking eff_decl: \n\t%s\n" (Print.eff_decl_to_string false ed);
 
@@ -1302,6 +1307,7 @@ let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list<qualifier>) (_at
     BU.print1 "Typechecked effect declaration:\n\t%s\n" (Print.eff_decl_to_string false ed);
 
   ed
+)
 
 let tc_eff_decl env ed quals attrs =
   (if ed |> U.is_layered then tc_layered_eff_decl else tc_non_layered_eff_decl) env ed quals attrs
@@ -1380,7 +1386,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
         (Env.push_binders env (a::rest_bs)) r sub.source u_a (a |> fst |> S.bv_to_name) in
       S.gen_bv "f" None f_sort |> S.mk_binder, g in
 
-    let bs = a::(rest_bs@[f_b]) in
+    let bs = a::rest_bs in
 
     //repr<?u> ?u_i ... ?u_n
     let repr, g_repr = TcUtil.fresh_effect_repr_en
@@ -1398,7 +1404,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
       effect_args = [ pure_wp_uvar |> S.as_arg ];
       flags = [] }) in
 
-    U.arrow bs c, Env.conj_guard (Env.conj_guard g_f_b g_repr) guard_wp in
+    U.arrow (bs@[f_b]) c, Env.conj_guard (Env.conj_guard g_f_b g_repr) guard_wp in
 
   if Env.debug env <| Options.Other "LayeredEffectsTc" then
     BU.print1 "tc_layered_lift: before unification k: %s\n" (Print.term_to_string k);
@@ -1443,7 +1449,7 @@ let tc_lift env sub r =
   let ed_tgt = Env.get_effect_decl env sub.target in
 
   if ed_src |> U.is_layered || ed_tgt |> U.is_layered
-  then tc_layered_lift env sub
+  then tc_layered_lift (Env.set_range env r) sub
   else
     let a, wp_a_src = monad_signature env sub.source (Env.lookup_effect_lid env sub.source) in
     let b, wp_b_tgt = monad_signature env sub.target (Env.lookup_effect_lid env sub.target) in

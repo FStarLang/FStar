@@ -684,27 +684,16 @@ let (set_sigelt_quals :
         FStar_Syntax_Syntax.sigattrs = (uu___.FStar_Syntax_Syntax.sigattrs);
         FStar_Syntax_Syntax.sigopts = (uu___.FStar_Syntax_Syntax.sigopts)
       }
-let (e_optionstate_hook :
-  FStar_Options.optionstate FStar_Syntax_Embeddings.embedding
-    FStar_Pervasives_Native.option FStar_ST.ref)
-  = FStar_Util.mk_ref FStar_Pervasives_Native.None
 let (sigelt_opts :
   FStar_Syntax_Syntax.sigelt ->
-    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
-  =
-  fun se ->
-    match se.FStar_Syntax_Syntax.sigopts with
-    | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-    | FStar_Pervasives_Native.Some o ->
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              let uu___3 = FStar_ST.op_Bang e_optionstate_hook in
-              FStar_All.pipe_right uu___3 FStar_Util.must in
-            FStar_Syntax_Embeddings.embed uu___2 o in
-          uu___1 FStar_Range.dummyRange FStar_Pervasives_Native.None
-            FStar_Syntax_Embeddings.id_norm_cb in
-        FStar_Pervasives_Native.Some uu___
+    FStar_VConfig.vconfig FStar_Pervasives_Native.option)
+  = fun se -> se.FStar_Syntax_Syntax.sigopts
+let (embed_vconfig : FStar_VConfig.vconfig -> FStar_Syntax_Syntax.term) =
+  fun vcfg ->
+    let uu___ =
+      FStar_Syntax_Embeddings.embed FStar_Syntax_Embeddings.e_vconfig vcfg in
+    uu___ FStar_Range.dummyRange FStar_Pervasives_Native.None
+      FStar_Syntax_Embeddings.id_norm_cb
 let (inspect_sigelt :
   FStar_Syntax_Syntax.sigelt -> FStar_Reflection_Data.sigelt_view) =
   fun se ->
@@ -930,3 +919,11 @@ let (push_binder :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binder -> FStar_TypeChecker_Env.env)
   = fun e -> fun b -> FStar_TypeChecker_Env.push_binders e [b]
+let (subst :
+  FStar_Syntax_Syntax.bv ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+  =
+  fun x ->
+    fun n ->
+      fun m -> FStar_Syntax_Subst.subst [FStar_Syntax_Syntax.NT (x, n)] m

@@ -870,7 +870,7 @@ let rec deep_compress (t:term) : term =
       // on a sigelt that has already been typechecked, so this case should
       // be impossible.
       Err.raise_err (Err.Error_UnexpectedUnresolvedUvar,
-                     "Internal erorr: unexpected unresolved uvar in deep_compress")
+                     "Internal error: unexpected unresolved uvar in deep_compress")
 
     | Tm_quoted (tm, qi) ->
       let qi = S.on_antiquoted deep_compress qi in
@@ -938,7 +938,7 @@ and deep_compress_univ (u:universe) : universe =
   | U_unif _ ->
       // GM: Same as for Tm_uvar
       Err.raise_err (Err.Error_UnexpectedUnresolvedUvar,
-                     "Internal erorr: unexpected unresolved (universe) uvar in deep_compress")
+                     "Internal error: unexpected unresolved (universe) uvar in deep_compress")
 
 and deep_compress_meta = function
   | Meta_pattern (names, args) ->

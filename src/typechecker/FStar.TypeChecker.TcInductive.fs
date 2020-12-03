@@ -159,12 +159,16 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
          let type_u_tc = S.mk (Tm_type u_tc) result.pos in
          let env' = Env.set_expected_typ env' type_u_tc in
          let result, res_lcomp = tc_trivial_guard env' result in
-         let head, args = U.head_and_args' result in (* collect nested applications too *)
+         let head, args = U.head_and_args_full result in (* collect nested applications too *)
 
          (* Make sure the parameters are respected, cf #1534 *)
          (* The first few arguments, as many as List.length tps, must exactly match the
           * bvs in tps, as they have been opened already by the code above. Must be done
-          * after typechecking `result`, to make sure implicits are filled in. *)
+          * after typechecking `result`, to make sure implicits are filled in. However,
+          * we stop if we logged an error, since it may mean the result type is missing
+          * some parameters, and we'd crash when trying to extract them. See issue
+          * #2167. *)
+         Errors.stop_if_err ();
          let p_args = fst (BU.first_N (List.length tps) args) in
          List.iter2 (fun (bv, _) (t, _) ->
             match (SS.compress t).n with

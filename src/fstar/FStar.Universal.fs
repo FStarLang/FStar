@@ -120,6 +120,7 @@ let init_env deps : TcEnv.env =
         deps
         TcTerm.tc_term
         TcTerm.type_of_tot_term
+        TcTerm.type_of_well_typed_term
         TcTerm.universe_of
         TcTerm.check_type_of_well_typed_term
         solver
@@ -213,7 +214,7 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
     Errors.raise_err (FStar.Errors.Fatal_ParseErrors, (BU.format1 "Unexpected result from parsing %s; expected a single interface"
                              interface_file_name))
   | Pars.ParseError (err, msg, rng) ->
-    raise (FStar.Errors.Error(err, msg, rng))
+    raise (FStar.Errors.Error(err, msg, rng, []))
   | Pars.Term _ ->
      failwith "Impossible: parsing a Toplevel always results in an ASTFragment"
 
@@ -270,9 +271,6 @@ let tc_one_file
     if not (Options.interactive ()) then
       Options.restore_cmd_line_options true |> ignore
   in
-  let post_smt_encoding (_:unit) :unit =
-    FStar.SMTEncoding.Z3.refresh ()
-  in
   let maybe_extract_mldefs tcmod env =
       if Options.codegen() = None
       || not (Options.should_extract (string_of_lid tcmod.name))
@@ -299,6 +297,7 @@ let tc_one_file
       let mii = FStar.Syntax.DsEnv.inclusion_info (tcenv_of_uenv env).dsenv fmod.name in
       let check_mod () =
           let check env =
+              if not (Options.lax()) then FStar.SMTEncoding.Z3.refresh();
               with_tcenv_of_env env (fun tcenv ->
                  let _ = match tcenv.gamma with
                          | [] -> ()
@@ -308,10 +307,8 @@ let tc_one_file
                  //AR: encode the module to to smt
                  maybe_restore_opts ();
                  let smt_decls =
-                   if (not (Options.lax()))
-                   then let smt_decls = FStar.SMTEncoding.Encode.encode_modul env modul in
-                        post_smt_encoding ();
-                        smt_decls
+                   if not (Options.lax())
+                   then FStar.SMTEncoding.Encode.encode_modul env modul
                    else [], []
                  in
                  ((modul, smt_decls), env))
@@ -386,6 +383,7 @@ let tc_one_file
         then BU.print1 "Module after type checking:\n%s\n" (FStar.Syntax.Print.modul_to_string tcmod);
 
         let extend_tcenv tcmod tcenv =
+            if not (Options.lax()) then FStar.SMTEncoding.Z3.refresh();
             let _, tcenv =
                 with_dsenv_of_tcenv tcenv <|
                     FStar.ToSyntax.ToSyntax.add_modul_to_env
@@ -397,8 +395,7 @@ let tc_one_file
             maybe_restore_opts ();
             //AR: encode smt module and do post processing
             if (not (Options.lax())) then begin
-              FStar.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls;
-              post_smt_encoding ()
+              FStar.SMTEncoding.Encode.encode_modul_from_cache env tcmod smt_decls
             end;
             (), env
         in
@@ -496,7 +493,8 @@ let batch_mode_tc filenames dep_graph =
   end;
   let env = FStar.Extraction.ML.UEnv.new_uenv (init_env dep_graph) in
   let all_mods, mllibs, env = tc_fold_interleave dep_graph ([], [], env) filenames in
-  emit mllibs;
+  if FStar.Errors.get_err_count() = 0 then
+    emit mllibs;
   let solver_refresh env =
       snd <|
       with_tcenv_of_env env (fun tcenv ->

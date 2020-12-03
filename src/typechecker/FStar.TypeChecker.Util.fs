@@ -58,7 +58,9 @@ let new_implicit_var reason r env k =
     new_implicit_var_aux reason r env k Strict None
 
 let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t =
-  if Options.eager_subtyping () || solve_deferred then
+  if Options.eager_subtyping ()
+  || solve_deferred
+  then
     let solve_now, defer =
       g.deferred |> List.partition (fun (_, p) -> Rel.flex_prob_closing env xs p)
     in
@@ -70,7 +72,7 @@ let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t 
       List.iter (fun (s, p) -> BU.print2 "%s: %s\n" s (Rel.prob_to_string env p)) defer;
       BU.print_string "END\n"
     end;
-    let g = Rel.solve_deferred_constraints env ({g with deferred=solve_now}) in
+    let g = Rel.solve_non_tactic_deferred_constraints env ({g with deferred=solve_now}) in
     let g = {g with deferred=defer} in
     g
   else g
@@ -528,7 +530,8 @@ let should_return env eopt lc =
     //if lc.res_typ is not an arrow, arrow_formals_comp returns Tot lc.res_typ
     let lc_is_unit_or_effectful =
       lc.res_typ |> U.arrow_formals_comp |> snd |> (fun c ->
-        not (Env.is_reifiable_comp env c) &&
+        (not (Env.is_reifiable_comp env c &&
+              not (Env.is_layered_effect env (Env.norm_eff_name env lc.eff_name)))) &&
         (U.comp_result c |> U.is_unit || not (U.is_pure_or_ghost_comp c)))
     in
     match eopt with
@@ -536,7 +539,7 @@ let should_return env eopt lc =
     | Some e ->
       TcComm.is_pure_or_ghost_lcomp lc                &&  //condition (a), (see above)
       not lc_is_unit_or_effectful                &&  //condition (b)
-      (let head, _ = U.head_and_args' e in
+      (let head, _ = U.head_and_args_full e in
        match (U.un_uinst head).n with
        | Tm_fvar fv ->  not (Env.is_irreducible env (lid_of_fv fv)) //condition (c)
        | _ -> true)                              &&
@@ -1610,8 +1613,11 @@ let bind_cases env0 (res_t:typ)
                 strengthen_comp env None comp check bind_cases_flags in
               c, Env.conj_guard g_comp g in
 
+            //AR: 11/18: we don't need to close this guard with the scrutinee bv
+            //           since the tc_match code does a bind with the scrutinee
+            //           expression, which will take care of this bv
             //close g_comp with the scrutinee bv
-            let g_comp = Env.close_guard env0 [scrutinee |> S.mk_binder] g_comp in
+            //let g_comp = Env.close_guard env0 [scrutinee |> S.mk_binder] g_comp in
 
             match lcases with
             | []
@@ -1877,6 +1883,9 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
              else Rel.get_subtyping_predicate env lc.res_typ t, true in
   match gopt with
     | None, _ ->
+        (*
+         * AR: 11/18: should this always fail hard?
+         *)
         if env.failhard
         then raise_error (Err.basic_type_error env (Some e) t lc.res_typ) e.pos
         else (

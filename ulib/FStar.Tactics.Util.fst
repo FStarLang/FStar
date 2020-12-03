@@ -24,6 +24,14 @@ let rec map f x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
 
+val __mapi: nat -> (nat -> 'a -> Tac 'b) -> list 'a -> Tac (list 'b)
+let rec __mapi i f x = match x with
+  | [] -> []
+  | a::tl -> f i a::__mapi (i+1) f tl
+
+val mapi: (nat -> 'a -> Tac 'b) -> list 'a -> Tac (list 'b)
+let mapi f l = __mapi 0 f l
+
 val iter : ('a -> Tac unit) -> list 'a -> Tac unit
 let rec iter f x = match x with
   | [] -> ()

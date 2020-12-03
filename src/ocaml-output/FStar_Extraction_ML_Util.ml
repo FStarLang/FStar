@@ -561,18 +561,12 @@ let (resugar_mlty :
          | uu___1 -> t)
     | uu___ -> t
 let (flatten_ns : Prims.string Prims.list -> Prims.string) =
-  fun ns ->
-    let uu___ = codegen_fsharp () in
-    if uu___ then FStar_String.concat "." ns else FStar_String.concat "_" ns
+  fun ns -> FStar_String.concat "_" ns
 let (flatten_mlpath :
   (Prims.string Prims.list * Prims.string) -> Prims.string) =
   fun uu___ ->
     match uu___ with
-    | (ns, n) ->
-        let uu___1 = codegen_fsharp () in
-        if uu___1
-        then FStar_String.concat "." (FStar_List.append ns [n])
-        else FStar_String.concat "_" (FStar_List.append ns [n])
+    | (ns, n) -> FStar_String.concat "_" (FStar_List.append ns [n])
 let (ml_module_name_of_lid : FStar_Ident.lident -> Prims.string) =
   fun l ->
     let mlp =

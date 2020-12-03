@@ -354,11 +354,11 @@ let head_and_args t =
         | Tm_app(head, args) -> head, args
         | _ -> t, []
 
-let rec head_and_args' t =
+let rec head_and_args_full t =
     let t = compress t in
     match t.n with
         | Tm_app(head, args) ->
-            let (head, args') = head_and_args' head
+            let (head, args') = head_and_args_full head
             in (head, args'@args)
         | _ -> t, []
 
@@ -478,7 +478,7 @@ let mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option<range>) : term =
     mk (Tm_lazy i) rng
 
 let canon_app t =
-    let hd, args = head_and_args' (unascribe t) in
+    let hd, args = head_and_args_full (unascribe t) in
     mk_Tm_app hd args t.pos
 
 (* ---------------------------------------------------------------------- *)
@@ -551,12 +551,17 @@ let rec eq_tm (t1:term) (t2:term) : eq_result =
                                 eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
         ) else NotEqual
     in
+    let qual_is_inj = function
+      | Some Data_ctor
+      | Some (Record_ctor _) -> true
+      | _ -> false
+    in
     let heads_and_args_in_case_both_data :option<(fv * args * fv * args)> =
       let head1, args1 = t1 |> unmeta |> head_and_args in
       let head2, args2 = t2 |> unmeta |> head_and_args in
       match (un_uinst head1).n, (un_uinst head2).n with
-      | Tm_fvar f, Tm_fvar g when f.fv_qual = Some Data_ctor &&
-                                  g.fv_qual = Some Data_ctor -> Some (f, args1, g, args2)
+      | Tm_fvar f, Tm_fvar g when qual_is_inj f.fv_qual &&
+                                  qual_is_inj g.fv_qual -> Some (f, args1, g, args2)
       | _ -> None
     in
     let t1 = unmeta t1 in
@@ -1440,7 +1445,7 @@ let destruct_typ_as_formula f : option<connective> =
     in
     let destruct_sq_base_conn t =
         bind_opt (un_squash t) (fun t ->
-        let hd, args = head_and_args' t in
+        let hd, args = head_and_args_full t in
         match (un_uinst hd).n with
         | Tm_fvar fv -> lookup_arity_lid destruct_sq_base_table fv.fv_name.v args
         | _ -> None
@@ -1502,7 +1507,7 @@ let destruct_typ_as_formula f : option<connective> =
         | _ -> None)
     and destruct_sq_exists t =
         bind_opt (un_squash t) (fun t ->
-        let hd, args = head_and_args' t in
+        let hd, args = head_and_args_full t in
         match (un_uinst hd).n, args with
         | Tm_fvar fv, [(a1, _); (a2, _)]
             when fv_eq_lid fv PC.dtuple2_lid ->

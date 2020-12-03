@@ -419,7 +419,7 @@ let simplify (debug:bool) (tm:term) : term =
     let is_applied (bs:binders) (t : term) : option<bv> =
         if debug then
             BU.print2 "WPE> is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
-        let hd, args = U.head_and_args' t in
+        let hd, args = U.head_and_args_full t in
         match (SS.compress hd).n with
         | Tm_name bv when args_are_binders args bs ->
             if debug then

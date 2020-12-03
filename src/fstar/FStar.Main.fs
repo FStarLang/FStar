@@ -84,7 +84,8 @@ let load_native_tactics () =
             end
     in
     let cmxs_files = modules_to_load |> List.map cmxs_file in
-    List.iter (fun x -> Util.print1 "cmxs file: %s\n" x) cmxs_files;
+    if Options.debug_any () then
+      Util.print1 "Will try to load cmxs files: %s\n" (String.concat ", " cmxs_files);
     if not (Options.no_load_fstartaclib ()) && not (FStar.Platform.system = FStar.Platform.Windows) then
         Tactics.Load.try_load_lib ();
     Tactics.Load.load_tactics cmxs_files;
@@ -212,7 +213,6 @@ let setup_hooks () =
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
     FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder;
-    FStar.TypeChecker.Tc.unembed_optionstate_knot := Some FStar.Reflection.Embeddings.e_optionstate;
     ()
 
 let handle_error e =

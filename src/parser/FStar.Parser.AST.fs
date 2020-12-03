@@ -74,6 +74,7 @@ type term' =
   | Paren     of term
   | Requires  of term * option<string>
   | Ensures   of term * option<string>
+  | Decreases of term * option<string>
   | Labeled   of term * string * bool
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
   | Attributes of list<term>   (* attributes decorating a term *)
@@ -524,6 +525,7 @@ let imp_to_string = function
     | _ -> ""
 let rec term_to_string (x:term) = match x.tm with
   | Wild -> "_"
+  | Decreases (t, _) -> Util.format1 "(decreases %s)" (term_to_string t)
   | Requires (t, _) -> Util.format1 "(requires %s)" (term_to_string t)
   | Ensures (t, _) -> Util.format1 "(ensures %s)" (term_to_string t)
   | Labeled (t, l, _) -> Util.format2 "(labeled %s %s)" l (term_to_string t)

@@ -67,51 +67,43 @@ let debugging () : tac<bool> =
     bind get (fun ps ->
     ret (Env.debug ps.main_context (Options.Other "Tac")))
 
+let do_dump_ps (msg:string) (ps:proofstate) : unit =
+  let psc = ps.psc in
+  let subst = Cfg.psc_subst psc in
+  do_dump_proofstate (subst_proof_state subst ps) msg
+
 let dump (msg:string) : tac<unit> =
-    mk_tac (fun ps ->
-                   let psc = ps.psc in
-                   let subst = Cfg.psc_subst psc in
-                   do_dump_proofstate (subst_proof_state subst ps) msg;
-                   Success ((), ps))
+  mk_tac (fun ps ->
+    do_dump_ps msg ps;
+    Success ((), ps))
+
+let dump_all (print_resolved:bool) (msg:string) : tac<unit> =
+  mk_tac (fun ps ->
+    (* Make a new proofstate with goals for each implicit,
+     * print it, and return original proofstate unchanged. *)
+    let gs = List.map (fun i -> goal_of_implicit ps.main_context i) ps.all_implicits in
+    let gs =
+     if print_resolved
+     then gs
+     else List.filter (fun g -> not (check_goal_solved g)) gs
+    in
+    let ps' = { ps with smt_goals = [] ; goals = gs } in
+    do_dump_ps msg ps';
+    Success ((), ps))
+
+let dump_uvars_of (g:goal) (msg:string) : tac<unit> =
+  mk_tac (fun ps ->
+    let uvs = SF.uvars (goal_type g) |> BU.set_elements in
+    let gs = List.map (goal_of_ctx_uvar g) uvs in
+    let gs = List.filter (fun g -> not (check_goal_solved g)) gs in
+    let ps' = { ps with smt_goals = [] ; goals = gs } in
+    do_dump_ps msg ps';
+    Success ((), ps))
 
 let fail1 msg x     = fail (BU.format1 msg x)
 let fail2 msg x y   = fail (BU.format2 msg x y)
 let fail3 msg x y z = fail (BU.format3 msg x y z)
 let fail4 msg x y z w = fail (BU.format4 msg x y z w)
-
-let catch (t : tac<'a>) : tac<either<exn,'a>> =
-    mk_tac (fun ps ->
-            let tx = UF.new_transaction () in
-            match run t ps with
-            | Success (a, q) ->
-                UF.commit tx;
-                Success (Inr a, q)
-            | Failed (m, q) ->
-                UF.rollback tx;
-                let ps = { ps with freshness = q.freshness } in //propagate the freshness even on failures
-                Success (Inl m, ps)
-           )
-
-let recover (t : tac<'a>) : tac<either<exn,'a>> =
-    mk_tac (fun ps ->
-            match run t ps with
-            | Success (a, q) -> Success (Inr a, q)
-            | Failed (m, q)  -> Success (Inl m, q)
-           )
-
-let trytac (t : tac<'a>) : tac<option<'a>> =
-    bind (catch t) (fun r ->
-    match r with
-    | Inr v -> ret (Some v)
-    | Inl _ -> ret None)
-
-let trytac_exn (t : tac<'a>) : tac<option<'a>> =
-    mk_tac (fun ps ->
-    try run (trytac t) ps
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) ->
-           log ps (fun () -> BU.print1 "trytac_exn error: (%s)" msg);
-           Success (None, ps))
 
 let destruct_eq' (typ : typ) : option<(term * term)> =
     match U.destruct_typ_as_formula typ with
@@ -146,45 +138,74 @@ let destruct_eq (typ : typ) : option<(term * term)> =
         | None -> None
         end
 
-let __do_unify (env : env) (t1 : term) (t2 : term) : tac<bool> =
-    let _ = if Env.debug env (Options.Other "1346") then
-                  BU.print2 "%%%%%%%%do_unify %s =? %s\n"
-                            (Print.term_to_string t1)
-                            (Print.term_to_string t2) in
+let __do_unify_wflags (dbg:bool) (allow_guards:bool)
+               (env : env) (t1 : term) (t2 : term)
+: tac<option<guard_t>> =
+    if dbg then
+      BU.print2 "%%%%%%%%do_unify %s =? %s\n" (Print.term_to_string t1)
+                                              (Print.term_to_string t2);
     try
-        let res = Rel.teq_nosmt env t1 t2 in
-        if Env.debug env (Options.Other "1346")
-        then (BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
+        let res =
+          if allow_guards
+          then let env = { env with unif_allow_ref_guards = allow_guards } in
+               Rel.try_teq false env t1 t2
+          else Rel.teq_nosmt env t1 t2
+        in
+        if dbg then
+          BU.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
                               (FStar.Common.string_of_option (Rel.guard_to_string env) res)
                               (Print.term_to_string t1)
-                              (Print.term_to_string t2));
+                              (Print.term_to_string t2);
+
         match res with
-        | None -> ret false
-        | Some g ->
-            bind (add_implicits g.implicits) (fun () ->
-            ret true)
-    with | Errors.Err (_, msg) -> begin
+        | None ->
+          ret None
+        | Some g -> 
+          bind (add_implicits g.implicits) (fun () ->
+          ret (Some g))
+
+    with | Errors.Err (_, msg, _) -> begin
             mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" msg ) (fun _ ->
-            ret false)
+            ret None)
             end
-         | Errors.Error (_, msg, r) -> begin
+         | Errors.Error (_, msg, r, _) -> begin
             mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
                                 msg (Range.string_of_range r)) (fun _ ->
-            ret false)
+            ret None)
             end
 
-let do_unify env t1 t2 : tac<bool> =
+(* Just a wrapper over __do_unify_wflags to better debug *)
+let __do_unify (allow_guards:bool) (env : env) (t1 : term) (t2 : term)
+: tac<option<guard_t>> =
+    let dbg = Env.debug env (Options.Other "TacUnify") in
     bind idtac (fun () ->
-    if Env.debug env (Options.Other "1346") then (
+    if dbg then begin
         Options.push ();
         let _ = Options.set_options "--debug_level Rel --debug_level RelCheck" in
         ()
-    );
-    bind (__do_unify env t1 t2) (fun r ->
-    if Env.debug env (Options.Other "1346") then
+    end;
+    bind (__do_unify_wflags dbg allow_guards env t1 t2) (fun r ->
+    if dbg then
         Options.pop ();
     (* bind compress_implicits (fun _ -> *)
     ret r))
+
+
+(* SMT-free unification. *)
+let do_unify (env : env) (t1 : term) (t2 : term)
+: tac<bool> =
+  bind (__do_unify false env t1 t2) (function
+  | None -> ret false
+  | Some g ->
+    (* g has to be trivial and we have already added its implicits *)
+    if not (Env.is_trivial_guard_formula g) then
+      failwith "internal error: do_unify: guard is not trivial";
+    ret true
+  )
+
+let do_unify' (allow_guards : bool) (env : env) (t1 : term) (t2 : term)
+: tac<option<guard_t>> =
+  __do_unify allow_guards env t1 t2
 
 (* Does t1 match t2? That is, do they unify without instantiating/changing t1? *)
 let do_match (env:Env.env) (t1:term) (t2:term) : tac<bool> =
@@ -320,8 +341,8 @@ let __tc (e : env) (t : term) : tac<(term * typ * guard_t)> =
     mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (Print.term_to_string t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
     try ret (TcTerm.type_of_tot_term e t)
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) -> begin
+    with | Errors.Err (_, msg, _)
+         | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
                                                   msg
@@ -333,8 +354,8 @@ let __tc_ghost (e : env) (t : term) : tac<(term * typ * guard_t)> =
     let e = {e with uvar_subtyping=false} in
     try let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
         ret (t, lc.res_typ, g)
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) -> begin
+    with | Errors.Err (_, msg ,_)
+         | Errors.Error (_, msg, _ ,_) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
                                                   msg
@@ -346,8 +367,8 @@ let __tc_lax (e : env) (t : term) : tac<(term * lcomp * guard_t)> =
     let e = {e with uvar_subtyping=false} in
     let e = {e with lax = true} in
     try ret (TcTerm.tc_term e t)
-    with | Errors.Err (_, msg)
-         | Errors.Error (_, msg, _) -> begin
+    with | Errors.Err (_, msg, _)
+         | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type %s in context (%s). Error = (%s)" (tts e t)
                                                   (Env.all_binders e |> Print.binders_to_string ", ")
                                                   msg
@@ -371,16 +392,10 @@ let with_policy pol (t : tac<'a>) : tac<'a> =
     bind (set_guard_policy old_pol) (fun () ->
     ret r))))
 
-let getopts : tac<FStar.Options.optionstate> =
-    bind (trytac cur_goal) (function
-    | Some g -> ret g.opts
-    | None -> ret (FStar.Options.peek ()))
-
 let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
     mlog (fun () ->
         BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
     bind (add_implicits g.implicits) (fun () ->
-    bind getopts (fun opts ->
     match (Rel.simplify_guard e g).guard_f with
     | TcComm.Trivial -> ret ()
     | TcComm.NonTrivial f ->
@@ -398,15 +413,13 @@ let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
 
     | Goal ->
         mlog (fun () -> BU.print2 "Making guard (%s:%s) into a goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        bind (mk_irrelevant_goal reason e f opts "") (fun goal ->
-        let goal = { goal with is_guard = true } in
-        push_goals [goal]))
+        bind (goal_of_guard reason e f) (fun g ->
+        push_goals [g]))
 
     | SMT ->
         mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT goal\n" reason (Rel.guard_to_string e g)) (fun () ->
-        bind (mk_irrelevant_goal reason e f opts "") (fun goal ->
-        let goal = { goal with is_guard = true } in
-        push_smt_goals [goal]))
+        bind (goal_of_guard reason e f) (fun g ->
+        push_smt_goals [g]))
 
     | Force ->
         mlog (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
@@ -417,7 +430,7 @@ let proc_guard (reason:string) (e : env) (g : guard_t) : tac<unit> =
             else ret ()
         with
         | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (Rel.guard_to_string e g)) (fun () ->
-               fail1 "Forcing the guard failed (%s)" reason))))))
+               fail1 "Forcing the guard failed (%s)" reason)))))
 
 let tcc (e : env) (t : term) : tac<comp> = wrap_err "tcc" <|
     bind (__tc_lax e t) (fun (_, lc, _) ->
@@ -929,7 +942,7 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
 
              let bs', t' = SS.close_binders bs, SS.close bs t in
 
-             let bs', t' = SS.subst_binders s bs', SS.subst s t in
+             let bs', t' = SS.subst_binders s bs', SS.subst s t' in
 
              let bs'', t'' = SS.open_term bs' t' in
 
@@ -1060,23 +1073,47 @@ let addns (s:string) : tac<unit> =
     let g' = goal_with_env g ctx' in
     replace_cur g')
 
-let _trefl (l : term) (r : term) : tac<unit> =
-   bind cur_goal (fun g ->
-   bind (do_unify (goal_env g) l r) (fun b ->
-   if b then solve' g U.exp_unit else
-     (* if that didn't work, normalize and retry *)
-     let l = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.UnfoldTac] (goal_env g) l in
-     let r = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.UnfoldTac] (goal_env g) r in
-     bind (do_unify (goal_env g) l r) (fun b ->
-     if b then solve' g U.exp_unit else
-       let ls, rs = TypeChecker.Err.print_discrepancy (tts (goal_env g)) l r in
-       fail2 "not a trivial equality ((%s) vs (%s))" ls rs)))
+let guard_formula (g:guard_t) : term =
+  match g.guard_f with
+  | Trivial -> U.t_true
+  | NonTrivial f -> f
 
-let trefl () : tac<unit> = wrap_err "trefl" <|
+let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac<unit> =
+  bind cur_goal (fun g ->
+  let attempt (l : term) (r : term) : tac<bool> =
+    bind (do_unify' allow_guards (goal_env g) l r) (function
+    | None -> ret false
+    | Some guard ->
+      bind (solve' g U.exp_unit) (fun _ ->
+      if allow_guards
+      then
+        bind (goal_of_guard "t_trefl" (goal_env g) (guard_formula guard)) (fun goal ->
+        bind (push_goals [goal]) (fun _ ->
+        ret true))
+      else
+        // If allow_guards is false, this guard must be trivial and we don't
+        // add it, but we check its triviality for sanity.
+        if Env.is_trivial_guard_formula guard
+        then ret true
+        else failwith "internal error: _t_refl: guard is not trivial"
+      ))
+  in
+  bind (attempt l r) (function
+  | true -> ret ()
+  | false ->
+      (* if that didn't work, normalize and retry *)
+      let norm = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.UnfoldTac] (goal_env g) in
+      bind (attempt (norm l) (norm r)) (function
+      | true -> ret ()
+      | false ->
+        let ls, rs = TypeChecker.Err.print_discrepancy (tts (goal_env g)) l r in
+        fail2 "cannot unify (%s) and (%s)" ls rs)))
+
+let t_trefl (allow_guards:bool) : tac<unit> = wrap_err "t_trefl" <|
     bind cur_goal (fun g ->
     match destruct_eq (whnf (goal_env g) (goal_type g)) with
     | Some (l, r) ->
-        _trefl l r
+        _t_trefl allow_guards l r
     | None ->
         fail1 "not an equality (%s)" (tts (goal_env g) (goal_type g)))
 
@@ -1244,6 +1281,23 @@ let unify_env (e:env) (t1 : term) (t2 : term) : tac<bool> = wrap_err "unify_env"
     bind (proc_guard "unify_env g2" e g2) (fun () ->
     tac_and (do_unify e ty1 ty2) (do_unify e t1 t2))))))
 
+let unify_guard_env (e:env) (t1 : term) (t2 : term) : tac<bool> = wrap_err "unify_guard_env" <|
+    bind get (fun ps ->
+    bind (__tc e t1) (fun (t1, ty1, g1) ->
+    bind (__tc e t2) (fun (t2, ty2, g2) ->
+    bind (proc_guard "unify_guard_env g1" e g1) (fun () ->
+    bind (proc_guard "unify_guard_env g2" e g2) (fun () ->
+    bind (do_unify' true e ty1 ty2) (function
+    | None -> ret false
+    | Some g1 ->
+      bind (do_unify' true e t1 t2) (function
+      | None -> ret false
+      | Some g2 ->
+        let formula : term = U.mk_conj (guard_formula g1) (guard_formula g2) in
+        bind (goal_of_guard "unify_guard_env.g2" e formula) (fun goal ->
+        bind (push_goals [goal]) (fun _ ->
+        ret true)))))))))
+
 let launch_process (prog : string) (args : list<string>) (input : string) : tac<string> =
     // The `bind idtac` thunks the tactic
     bind idtac (fun () ->
@@ -1293,7 +1347,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
     bind (proc_guard "destruct" (goal_env g) guard) (fun () ->
     let s_ty = N.normalize [Env.UnfoldTac; Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant]
                            (goal_env g) s_ty in
-    let h, args = U.head_and_args' (U.unrefine s_ty) in
+    let h, args = U.head_and_args_full (U.unrefine s_ty) in
     bind (match (SS.compress h).n with
           | Tm_fvar fv -> ret (fv, [])
           | Tm_uinst ({ n = Tm_fvar fv }, us) -> ret (fv, us)
@@ -1625,13 +1679,33 @@ let lset (_ty:term) (k:string) (t:term) : tac<unit> = wrap_err "lset" <|
     let ps = { ps with local_state = BU.psmap_add ps.local_state k t } in
     set ps)
 
-let goal_of_goal_ty env typ : goal * guard_t =
-    let u, ctx_uvars, g_u =
-        Env.new_implicit_var_aux "proofstate_of_goal_ty" typ.pos env typ Allow_untyped None
-    in
-    let ctx_uvar, _ = List.hd ctx_uvars in
-    let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
-    g, g_u
+let set_urgency (u:Z.t) : tac<unit> =
+    bind get (fun ps ->
+    let ps = { ps with urgency = Z.to_int_fs u } in
+    set ps)
+
+let t_commute_applied_match () : tac<unit> = wrap_err "t_commute_applied_match" <|
+  bind cur_goal (fun g ->
+  match destruct_eq (whnf (goal_env g) (goal_type g)) with
+  | Some (l, r) -> begin
+    let lh, las = U.head_and_args_full l in
+    match (SS.compress (U.unascribe lh)).n with
+    | Tm_match (e, brs) ->
+      let brs' = List.map (fun (p, w, e) -> p, w, U.mk_app e las) brs in
+      let l' = mk (Tm_match (e, brs')) l.pos in
+      bind (do_unify' false (goal_env g) l' r) (function
+      | None -> fail "discharging the equality failed"
+      | Some guard ->
+        if Env.is_trivial_guard_formula guard
+        then solve g U.exp_unit
+        else failwith "internal error: _t_refl: guard is not trivial")
+    | _ ->
+      fail "lhs is not a match"
+    end
+  | None ->
+    fail "not an equality")
+
+(**** Creating proper environments and proofstates ****)
 
 let tac_env (env:Env.env) : Env.env =
     let env, _ = Env.clear_expected_typ env in
@@ -1655,6 +1729,7 @@ let proofstate_of_goals rng env goals imps =
         freshness = 0;
         tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
         local_state = BU.psmap_empty ();
+        urgency = 1;
     }
     in
     ps
@@ -1664,9 +1739,6 @@ let proofstate_of_goal_ty rng env typ =
     let g, g_u = goal_of_goal_ty env typ in
     let ps = proofstate_of_goals rng env [g] g_u.implicits in
     (ps, goal_witness g)
-
-let goal_of_implicit env (i:Env.implicit) : goal =
-  mk_goal ({env with gamma=i.imp_uvar.ctx_uvar_gamma}) i.imp_uvar (FStar.Options.peek()) false i.imp_reason
 
 let proofstate_of_all_implicits rng env imps =
     let env = tac_env env in
@@ -1685,6 +1757,7 @@ let proofstate_of_all_implicits rng env imps =
         freshness = 0;
         tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
         local_state = BU.psmap_empty ();
+        urgency = 1;
     }
     in
     (ps, w)

@@ -1040,7 +1040,9 @@ let encode_top_level_let :
                     (if plural then "s" else "")
                     (List.map fst names |> String.concat ",")
                     (if plural then "their" else "its"),
-                  r)];
+                  r,
+                  Errors.get_ctx () // TODO: fix this, leaking abstraction
+                  )];
               decls, env_decls  //decls are type declarations for the lets, if there is an inner let rec, only those are encoded to the solver
 
     with Let_rec_unencodeable ->
@@ -1053,8 +1055,12 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
     let nm =
         match U.lid_of_sigelt se with
         | None -> ""
-        | Some l -> (string_of_lid l) in
-    let g, env = encode_sigelt' env se in
+        | Some l -> (string_of_lid l)
+    in
+    let g, env = Errors.with_ctx (BU.format1 "While encoding top-level declaration `%s`"
+                                             (Print.sigelt_to_string_short se))
+                   (fun () -> encode_sigelt' env se)
+    in
     let g =
         match g with
          | [] ->
@@ -1876,7 +1882,9 @@ let encode_query use_env_msg tcenv q
   * list<ErrorReporting.label> //labels in the query
   * decl        //the query itself
   * list<decl>  //suffix, evaluating labels in the model, etc.
-  = Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));
+  =
+  Errors.with_ctx "While encoding a query" (fun () ->
+    Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));
     let env = get_env (Env.current_module tcenv) tcenv in
     let q, bindings =
         let rec aux bindings = match bindings with
@@ -1927,3 +1935,4 @@ let encode_query use_env_msg tcenv q
     || debug tcenv <| Options.Other "Time"
     then BU.print1 "Encoding took %sms\n" (string_of_int ms);
     query_prelude, labels, qry, suffix
+  )

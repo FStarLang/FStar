@@ -559,11 +559,6 @@ type list (a: Type) =
   | Nil : list a
   | Cons : hd: a -> tl: list a -> list a
 
-(** The [decreases] attribute on a recursive function is used to
-    specify a well-founded ordering for a termination proof *)
-assume
-type decreases : #a: Type -> a -> Type0 
-
 (** The [M] marker is interpreted by the Dijkstra Monads for Free
      construction. It has a "double meaning", either as an alias for
      reasoning about the direct definitions, or as a marker for places
@@ -701,4 +696,4 @@ let labeled (r: range) (msg: string) (b: Type) : Type = b
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 28
+let __cache_version_number__ = 29
