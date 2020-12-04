@@ -818,19 +818,14 @@ let encode_top_level_let :
 
                 (* Open universes *)
                 let flid = fvb.fvar_lid in
-                let env', univ_names, e, t_norm =
-                  let tcenv', univ_names, e_t =
+                let env', univ_names, e_t =
                       Env.open_universes_in env.tcenv uvs [e; t_norm]
-                  in
-                  let e, t_norm =
+                in
+                let env' = { env with tcenv = env' } in
+                let e, t_norm =
                       match e_t with
                       | [e; t_norm] -> e, t_norm
                       | _ -> failwith "Impossible"
-                  in
-                  {env with tcenv=tcenv'},
-                  univ_names,
-                  e,
-                  t_norm
                 in
                 let univ_vars, univ_terms =
                   List.map EncodeTerm.encode_univ_name univ_names
@@ -946,13 +941,9 @@ let encode_top_level_let :
 
             (* Open universes *)
             let env', e, t_norm =
-                let tcenv', _, e_t =
-                    Env.open_universes_in env.tcenv uvs [e; t_norm] in
-                let e, t_norm =
-                    match e_t with
-                    | [e; t_norm] -> e, t_norm
-                    | _ -> failwith "Impossible" in
-                {env with tcenv=tcenv'}, e, t_norm
+                let env', _, [e; t_norm] =
+                  Env.open_universes_in env.tcenv uvs [e; t_norm] in
+                {env with tcenv = env'}, e, t_norm
             in
             if !dbg_SMTEncoding
             then BU.print3 "Encoding let rec %s : %s = %s\n"

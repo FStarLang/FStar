@@ -381,5 +381,3 @@ let reset_current_module_fvbs env = { env with fvar_bindings = (env.fvar_binding
 let get_current_module_fvbs env = env.fvar_bindings |> snd
 let add_fvar_binding_to_env fvb env =
   { env with fvar_bindings = add_fvar_binding fvb env.fvar_bindings }
-
-(* </Environment> *)
