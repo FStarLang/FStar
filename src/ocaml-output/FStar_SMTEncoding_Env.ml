@@ -344,6 +344,7 @@ let binder_of_eithervar :
   = fun v -> (v, FStar_Pervasives_Native.None)
 type env_t =
   {
+  universes: FStar_Syntax_Syntax.univ_names ;
   bvar_bindings:
     (FStar_Syntax_Syntax.bv * FStar_SMTEncoding_Term.term) FStar_Util.pimap
       FStar_Util.psmap
@@ -358,6 +359,14 @@ type env_t =
   current_module_name: Prims.string ;
   encoding_quantifier: Prims.bool ;
   global_cache: FStar_SMTEncoding_Term.decls_elt FStar_Util.smap }
+let (__proj__Mkenv_t__item__universes :
+  env_t -> FStar_Syntax_Syntax.univ_names) =
+  fun projectee ->
+    match projectee with
+    | { universes; bvar_bindings; fvar_bindings; depth; tcenv; warn;
+        nolabels; use_zfuel_name; encode_non_total_function_typ;
+        current_module_name; encoding_quantifier; global_cache;_} ->
+        universes
 let (__proj__Mkenv_t__item__bvar_bindings :
   env_t ->
     (FStar_Syntax_Syntax.bv * FStar_SMTEncoding_Term.term) FStar_Util.pimap
@@ -365,72 +374,79 @@ let (__proj__Mkenv_t__item__bvar_bindings :
   =
   fun projectee ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache;_} -> bvar_bindings
+    | { universes; bvar_bindings; fvar_bindings; depth; tcenv; warn;
+        nolabels; use_zfuel_name; encode_non_total_function_typ;
+        current_module_name; encoding_quantifier; global_cache;_} ->
+        bvar_bindings
 let (__proj__Mkenv_t__item__fvar_bindings :
   env_t -> (fvar_binding FStar_Util.psmap * fvar_binding Prims.list)) =
   fun projectee ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache;_} -> fvar_bindings
+    | { universes; bvar_bindings; fvar_bindings; depth; tcenv; warn;
+        nolabels; use_zfuel_name; encode_non_total_function_typ;
+        current_module_name; encoding_quantifier; global_cache;_} ->
+        fvar_bindings
 let (__proj__Mkenv_t__item__depth : env_t -> Prims.int) =
   fun projectee ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache;_} -> depth
+    | { universes; bvar_bindings; fvar_bindings; depth; tcenv; warn;
+        nolabels; use_zfuel_name; encode_non_total_function_typ;
+        current_module_name; encoding_quantifier; global_cache;_} -> depth
 let (__proj__Mkenv_t__item__tcenv : env_t -> FStar_TypeChecker_Env.env) =
   fun projectee ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache;_} -> tcenv
+    | { universes; bvar_bindings; fvar_bindings; depth; tcenv; warn;
+        nolabels; use_zfuel_name; encode_non_total_function_typ;
+        current_module_name; encoding_quantifier; global_cache;_} -> tcenv
 let (__proj__Mkenv_t__item__warn : env_t -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache;_} -> warn
+    | { universes; bvar_bindings; fvar_bindings; depth; tcenv; warn;
+        nolabels; use_zfuel_name; encode_non_total_function_typ;
+        current_module_name; encoding_quantifier; global_cache;_} -> warn
 let (__proj__Mkenv_t__item__nolabels : env_t -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache;_} -> nolabels
+    | { universes; bvar_bindings; fvar_bindings; depth; tcenv; warn;
+        nolabels; use_zfuel_name; encode_non_total_function_typ;
+        current_module_name; encoding_quantifier; global_cache;_} -> nolabels
 let (__proj__Mkenv_t__item__use_zfuel_name : env_t -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache;_} -> use_zfuel_name
+    | { universes; bvar_bindings; fvar_bindings; depth; tcenv; warn;
+        nolabels; use_zfuel_name; encode_non_total_function_typ;
+        current_module_name; encoding_quantifier; global_cache;_} ->
+        use_zfuel_name
 let (__proj__Mkenv_t__item__encode_non_total_function_typ :
   env_t -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache;_} -> encode_non_total_function_typ
+    | { universes; bvar_bindings; fvar_bindings; depth; tcenv; warn;
+        nolabels; use_zfuel_name; encode_non_total_function_typ;
+        current_module_name; encoding_quantifier; global_cache;_} ->
+        encode_non_total_function_typ
 let (__proj__Mkenv_t__item__current_module_name : env_t -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache;_} -> current_module_name
+    | { universes; bvar_bindings; fvar_bindings; depth; tcenv; warn;
+        nolabels; use_zfuel_name; encode_non_total_function_typ;
+        current_module_name; encoding_quantifier; global_cache;_} ->
+        current_module_name
 let (__proj__Mkenv_t__item__encoding_quantifier : env_t -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache;_} -> encoding_quantifier
+    | { universes; bvar_bindings; fvar_bindings; depth; tcenv; warn;
+        nolabels; use_zfuel_name; encode_non_total_function_typ;
+        current_module_name; encoding_quantifier; global_cache;_} ->
+        encoding_quantifier
 let (__proj__Mkenv_t__item__global_cache :
   env_t -> FStar_SMTEncoding_Term.decls_elt FStar_Util.smap) =
   fun projectee ->
     match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache;_} -> global_cache
+    | { universes; bvar_bindings; fvar_bindings; depth; tcenv; warn;
+        nolabels; use_zfuel_name; encode_non_total_function_typ;
+        current_module_name; encoding_quantifier; global_cache;_} ->
+        global_cache
 let (print_env : env_t -> Prims.string) =
   fun e ->
     let bvars =
@@ -544,6 +560,7 @@ let (gen_term_var :
         let uu___1 = env in
         let uu___2 = add_bvar_binding (x, y) env.bvar_bindings in
         {
+          universes = (uu___1.universes);
           bvar_bindings = uu___2;
           fvar_bindings = (uu___1.fvar_bindings);
           depth = (env.depth + Prims.int_one);
@@ -573,6 +590,7 @@ let (new_term_constant :
         let uu___1 = env in
         let uu___2 = add_bvar_binding (x, y) env.bvar_bindings in
         {
+          universes = (uu___1.universes);
           bvar_bindings = uu___2;
           fvar_bindings = (uu___1.fvar_bindings);
           depth = (uu___1.depth);
@@ -601,6 +619,7 @@ let (new_term_constant_from_string :
           let uu___1 = env in
           let uu___2 = add_bvar_binding (x, y) env.bvar_bindings in
           {
+            universes = (uu___1.universes);
             bvar_bindings = uu___2;
             fvar_bindings = (uu___1.fvar_bindings);
             depth = (uu___1.depth);
@@ -623,6 +642,7 @@ let (push_term_var :
         let uu___ = env in
         let uu___1 = add_bvar_binding (x, t) env.bvar_bindings in
         {
+          universes = (uu___.universes);
           bvar_bindings = uu___1;
           fvar_bindings = (uu___.fvar_bindings);
           depth = (uu___.depth);
@@ -709,6 +729,7 @@ let (new_term_constant_and_tok_from_lid_aux :
                 let uu___2 = env in
                 let uu___3 = add_fvar_binding fvb env.fvar_bindings in
                 {
+                  universes = (uu___2.universes);
                   bvar_bindings = (uu___2.bvar_bindings);
                   fvar_bindings = uu___3;
                   depth = (uu___2.depth);
@@ -778,6 +799,7 @@ let (push_free_var_maybe_thunked :
               let uu___ = env in
               let uu___1 = add_fvar_binding fvb env.fvar_bindings in
               {
+                universes = (uu___.universes);
                 bvar_bindings = (uu___.bvar_bindings);
                 fvar_bindings = uu___1;
                 depth = (uu___.depth);
@@ -837,6 +859,7 @@ let (push_zfuel_name : env_t -> FStar_Ident.lident -> Prims.string -> env_t)
         let uu___ = env in
         let uu___1 = add_fvar_binding fvb1 env.fvar_bindings in
         {
+          universes = (uu___.universes);
           bvar_bindings = (uu___.bvar_bindings);
           fvar_bindings = uu___1;
           depth = (uu___.depth);
@@ -1022,6 +1045,7 @@ let (reset_current_module_fvbs : env_t -> env_t) =
         FStar_All.pipe_right env.fvar_bindings FStar_Pervasives_Native.fst in
       (uu___2, []) in
     {
+      universes = (uu___.universes);
       bvar_bindings = (uu___.bvar_bindings);
       fvar_bindings = uu___1;
       depth = (uu___.depth);
@@ -1043,6 +1067,7 @@ let (add_fvar_binding_to_env : fvar_binding -> env_t -> env_t) =
       let uu___ = env in
       let uu___1 = add_fvar_binding fvb env.fvar_bindings in
       {
+        universes = (uu___.universes);
         bvar_bindings = (uu___.bvar_bindings);
         fvar_bindings = uu___1;
         depth = (uu___.depth);
@@ -1055,3 +1080,72 @@ let (add_fvar_binding_to_env : fvar_binding -> env_t -> env_t) =
         encoding_quantifier = (uu___.encoding_quantifier);
         global_cache = (uu___.global_cache)
       }
+let (open_universes_in :
+  env_t ->
+    FStar_Syntax_Syntax.univ_names ->
+      FStar_Syntax_Syntax.term Prims.list ->
+        (env_t * FStar_Syntax_Syntax.univ_names * FStar_Syntax_Syntax.term
+          Prims.list))
+  =
+  fun env ->
+    fun univs ->
+      fun terms ->
+        let uu___ =
+          FStar_TypeChecker_Env.open_universes_in env.tcenv univs terms in
+        match uu___ with
+        | (tcenv', univ_names, terms') ->
+            let env1 =
+              let uu___1 = env in
+              {
+                universes = (FStar_List.append env.universes univ_names);
+                bvar_bindings = (uu___1.bvar_bindings);
+                fvar_bindings = (uu___1.fvar_bindings);
+                depth = (uu___1.depth);
+                tcenv = tcenv';
+                warn = (uu___1.warn);
+                nolabels = (uu___1.nolabels);
+                use_zfuel_name = (uu___1.use_zfuel_name);
+                encode_non_total_function_typ =
+                  (uu___1.encode_non_total_function_typ);
+                current_module_name = (uu___1.current_module_name);
+                encoding_quantifier = (uu___1.encoding_quantifier);
+                global_cache = (uu___1.global_cache)
+              } in
+            (env1, univ_names, terms')
+let with_open_universes :
+  'a .
+    env_t ->
+      FStar_Syntax_Syntax.univ_names ->
+        FStar_Syntax_Syntax.term Prims.list ->
+          (env_t ->
+             FStar_Syntax_Syntax.univ_names ->
+               FStar_Syntax_Syntax.term Prims.list -> ('a * env_t))
+            -> ('a * env_t)
+  =
+  fun env ->
+    fun univs ->
+      fun terms ->
+        fun f ->
+          let uu___ = open_universes_in env univs terms in
+          match uu___ with
+          | (env1, univ_names, terms') ->
+              let uu___1 = f env1 univ_names terms' in
+              (match uu___1 with
+               | (res, env2) ->
+                   (res,
+                     (let uu___2 = env2 in
+                      {
+                        universes = (env.universes);
+                        bvar_bindings = (uu___2.bvar_bindings);
+                        fvar_bindings = (uu___2.fvar_bindings);
+                        depth = (uu___2.depth);
+                        tcenv = (env.tcenv);
+                        warn = (uu___2.warn);
+                        nolabels = (uu___2.nolabels);
+                        use_zfuel_name = (uu___2.use_zfuel_name);
+                        encode_non_total_function_typ =
+                          (uu___2.encode_non_total_function_typ);
+                        current_module_name = (uu___2.current_module_name);
+                        encoding_quantifier = (uu___2.encoding_quantifier);
+                        global_cache = (uu___2.global_cache)
+                      })))

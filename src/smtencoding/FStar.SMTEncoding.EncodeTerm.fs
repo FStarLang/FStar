@@ -773,7 +773,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         if  (env.encode_non_total_function_typ
              && U.is_pure_or_ghost_comp res)
              || U.is_tot_or_gtot_comp res
-        then let vars, guards_l, env', decls, _ = encode_binders None binders env in
+        then 
+             let univ_vars = List.map encode_univ_name env.universes in
+             let vars, guards_l, env', decls, _ = encode_binders None binders env in
              let fsym = mk_fv (varops.fresh module_name "f", Term_sort) in
              let f = mkFreeV  fsym in
              let app = mk_Apply f vars in
@@ -819,8 +821,13 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                  mkAnd (t_interp, tot_fun_axioms)
              in
              let cvars =
-               Term.free_variables t_interp
-               |> List.filter (fun x -> fv_name x <> fv_name fsym)
+               let cvars = 
+                 Term.free_variables t_interp
+                 |> List.filter (fun x -> fv_name x <> fv_name fsym)
+               in
+               let cvars = List.map fst univ_vars @ cvars in
+               BU.remove_dups fv_eq cvars
+               |> List.rev
              in
              let tkey =
                mkForall t.pos ([], fsym::cvars, t_interp)
@@ -835,6 +842,10 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let tsym =
                prefix ^ BU.digest_of_string tkey_hash
              in
+             BU.print2 "Adding univ_vars %s to %s\n"
+                 (List.map (fun x -> fv_name (fst x)) univ_vars |> String.concat ", ")
+                 (tsym);
+             
              let cvar_sorts = List.map fv_sort cvars in
              let caption =
                  if Options.log_queries()
@@ -844,7 +855,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let tdecl = Term.DeclFun(tsym, cvar_sorts, Term_sort, caption) in
 
              let t = mkApp(tsym, List.map mkFreeV cvars) in //arity ok
-             let t_has_kind = mk_HasType t (mk_Term_type mk_U_unknown) in //NS: REVIEW! Can we give it a more precise universe
+             let t_has_kind = 
+               let univ = env.tcenv.universe_of env.tcenv t0 in
+               let u = encode_universe univ in
+               mk_HasType t (mk_Term_type u) 
+             in //NS: REVIEW! Can we give it a more precise universe
 
              let k_assumption =
              let a_name = "kinding_"^tsym in
@@ -896,9 +911,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let t = mkApp(tsym, []) in
              let t_kinding =
                 let a_name = "non_total_function_typing_" ^tsym in
-                Util.mkAssume(mk_HasType t (mk_Term_type mk_U_unknown), //NS: REVIEW! Can we give it a more precise universe
+                let u = 
+                  let univ = env.tcenv.universe_of env.tcenv t0 in
+                  encode_universe univ
+                in
+                Util.mkAssume(mk_HasType t (mk_Term_type u), //NS: REVIEW! Can we give it a more precise universe
                               Some "Typing for non-total arrows",
-                              a_name) in
+                              a_name) 
+             in
              let fsym = mk_fv ("f", Term_sort) in
              let f = mkFreeV fsym in
              let f_has_t = mk_HasType f t in
@@ -946,7 +966,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         //to get around that, computing cvars separately from the components of the encoding variable
         let cvars = BU.remove_dups fv_eq (Term.free_variables refinement @ Term.free_variables tm_has_type_with_fuel) in
         let cvars = cvars |> List.filter (fun y -> fv_name y <> x && fv_name y <> fsym) in
-
+        let cvars = 
+          let univ_vars = List.map encode_univ_name env.universes in
+          let cvars = List.map fst univ_vars @ cvars in
+          BU.remove_dups fv_eq cvars
+        in
         let xfv = mk_fv (x, Term_sort) in
         let ffv = mk_fv (fsym, Fuel_sort) in
         let tkey = mkForall t0.pos ([], ffv::xfv::cvars, encoding) in
@@ -1152,14 +1176,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
             let encode_full_app fv univs =
                 let fname, fuel_args, arity = lookup_free_var_sym env fv in
-                BU.print5 "Encoding %s with arity %s applied to %s fuel args, %s univs, and %s args\n"
-                          (match fname with
-                           | BU.Inl (Var s) -> s
-                           | BU.Inr tm -> Term.print_smt_term tm)
-                          (string_of_int arity)
-                          (string_of_int (List.length fuel_args))
-                          (string_of_int (List.length univs))
-                          (string_of_int (List.length args));
+                // BU.print5 "Encoding %s with arity %s applied to %s fuel args, %s univs, and %s args\n"
+                //           (match fname with
+                //            | BU.Inl (Var s) -> s
+                //            | BU.Inr tm -> Term.print_smt_term tm)
+                //           (string_of_int arity)
+                //           (string_of_int (List.length fuel_args))
+                //           (string_of_int (List.length univs))
+                //           (string_of_int (List.length args));
                 let tm = maybe_curry_app t0.pos fname (arity+List.length univs) (fuel_args@univs@args) in
                 tm, decls
             in

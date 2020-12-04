@@ -651,10 +651,14 @@ let encode_top_level_val uninterpreted env lid us t quals =
     else decls, env
 
 let encode_top_level_vals env bindings quals =
-    bindings |> List.fold_left (fun (decls, env) lb ->
-        let us, t = SS.open_univ_vars lb.lbunivs lb.lbtyp in
-        let decls', env = encode_top_level_val false env (BU.right lb.lbname) us t quals in
-        decls@decls', env) ([], env)
+    bindings |>
+    List.fold_left
+      (fun (decls, env) lb ->
+        FStar.SMTEncoding.Env.with_open_universes env lb.lbunivs [lb.lbtyp]
+          (fun env us [t] ->
+            let decls', env = encode_top_level_val false env (BU.right lb.lbname) us t quals in
+            decls@decls', env))
+      ([], env)
 
 let is_tactic t =
     let fstar_tactics_tactic_lid = FStar.Parser.Const.p2l ["FStar"; "Tactics"; "tactic"] in
@@ -765,19 +769,22 @@ let encode_top_level_let :
       if bindings |> BU.for_all (fun lb -> U.is_lemma lb.lbtyp || is_tactic lb.lbtyp)
       then encode_top_level_vals env bindings quals
       else
-        let toks, typs, decls, env =
-          bindings |> List.fold_left (fun (toks, typs, decls, env) lb ->
-            (* some, but not all are lemmas; impossible *)
-            if U.is_lemma lb.lbtyp then raise Let_rec_unencodeable;
-            let us, t = SS.open_univ_vars lb.lbunivs lb.lbtyp in
-            let t_norm = norm_before_encoding env t in
-            (* We are declaring the top_level_let with t_norm which might contain *)
-            (* non-reified reifiable computation type. *)
-            (* TODO : clear this mess, the declaration should have a type corresponding to *)
-            (* the encoded term *)
-            let tok, decl, env = declare_top_level_let env (BU.right lb.lbname) us t t_norm in
-            tok::toks, t_norm::typs, decl::decls, env)
-            ([], [], [], env)
+        let (toks, typs, decls), env =
+          bindings |>
+          List.fold_left
+            (fun ((toks, typs, decls), env) lb ->
+              (* some, but not all are lemmas; impossible *)
+              if U.is_lemma lb.lbtyp then raise Let_rec_unencodeable;
+              FStar.SMTEncoding.Env.with_open_universes env lb.lbunivs [lb.lbtyp]
+                (fun env us [t] ->
+                  let t_norm = norm_before_encoding env t in
+                  (* We are declaring the top_level_let with t_norm which might contain *)
+                  (* non-reified reifiable computation type. *)
+                  (* TODO : clear this mess, the declaration should have a type corresponding to *)
+                  (* the encoded term *)
+                  let tok, decl, env = declare_top_level_let env (BU.right lb.lbname) us t t_norm in
+                  (tok::toks, t_norm::typs, decl::decls), env))
+            (([], [], []), env)
         in
         let toks_fvbs = List.rev toks in
         let decls = List.rev decls |> List.flatten in
@@ -805,19 +812,13 @@ let encode_top_level_let :
 
                 (* Open universes *)
                 let flid = fvb.fvar_lid in
-                let env', univ_names, e, t_norm =
-                  let tcenv', univ_names, e_t =
-                      Env.open_universes_in env.tcenv uvs [e; t_norm]
-                  in
-                  let e, t_norm =
+                let env', univ_names, e_t =
+                      FStar.SMTEncoding.Env.open_universes_in env uvs [e; t_norm]
+                in
+                let e, t_norm =
                       match e_t with
                       | [e; t_norm] -> e, t_norm
                       | _ -> failwith "Impossible"
-                  in
-                  {env with tcenv=tcenv'},
-                  univ_names,
-                  e,
-                  t_norm
                 in
                 let univ_vars, univ_terms =
                   List.map EncodeTerm.encode_univ_name univ_names
@@ -892,13 +893,9 @@ let encode_top_level_let :
 
             (* Open universes *)
             let env', e, t_norm =
-                let tcenv', _, e_t =
-                    Env.open_universes_in env.tcenv uvs [e; t_norm] in
-                let e, t_norm =
-                    match e_t with
-                    | [e; t_norm] -> e, t_norm
-                    | _ -> failwith "Impossible" in
-                {env with tcenv=tcenv'}, e, t_norm
+                let env, _, [e; t_norm] =
+                    FStar.SMTEncoding.Env.open_universes_in env uvs [e; t_norm] in
+                env, e, t_norm
             in
             if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
             then BU.print3 "Encoding let rec %s : %s = %s\n"
@@ -1161,40 +1158,41 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         [], env
 
      | Sig_declare_typ(lid, us, t) ->
-        let us, t = SS.open_univ_vars us t in
-        let quals = se.sigquals in
-        let will_encode_definition = not (quals |> BU.for_some (function
-            | Assumption | Projector _ | Discriminator _ | Irreducible -> true
-            | _ -> false)) in
-        if will_encode_definition
-        then [], env //nothing to do at the declaration; wait to encode the definition
-        else let fv = S.lid_as_fv lid delta_constant None in
-             let decls, env =
-               encode_top_level_val
-                 (se.sigattrs |> BU.for_some is_uninterpreted_by_smt)
-                 env fv us t quals
-             in
-             let tname = (string_of_lid lid) in
-             let tsym = Option.get (try_lookup_free_var env lid) in
-             decls
-             @ (primitive_type_axioms env.tcenv lid tname tsym |> mk_decls_trivial),
-             env
+        FStar.SMTEncoding.Env.with_open_universes env us [t]
+          (fun env us [t] ->
+            let quals = se.sigquals in
+            let will_encode_definition = not (quals |> BU.for_some (function
+                | Assumption | Projector _ | Discriminator _ | Irreducible -> true
+                | _ -> false)) in
+            if will_encode_definition
+            then [], env //nothing to do at the declaration; wait to encode the definition
+            else let fv = S.lid_as_fv lid delta_constant None in
+                 let decls, env =
+                   encode_top_level_val
+                     (se.sigattrs |> BU.for_some is_uninterpreted_by_smt)
+                     env fv us t quals
+                 in
+                 let tname = (string_of_lid lid) in
+                 let tsym = Option.get (try_lookup_free_var env lid) in
+                 decls
+                 @ (primitive_type_axioms env.tcenv lid tname tsym |> mk_decls_trivial),
+                 env)
 
      | Sig_assume(l, us, f) ->
-        let uvs, f = SS.open_univ_vars us f in
-        let env = { env with tcenv = Env.push_univ_vars env.tcenv uvs } in
-        let f = norm_before_encoding env f in
-        let f, decls = encode_formula f env in
-        let f =
-          let univ_fvs, univ_tms =
-            List.map EncodeTerm.encode_univ_name uvs
-            |> List.unzip
-          in
-          Term.mkForall (Ident.range_of_lid l) ([], univ_fvs, f) //NS: flatten quantifier for a pattern
-        in
-        let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), (varops.mk_unique ("assumption_"^(string_of_lid l))))]
-                |> mk_decls_trivial in
-        decls@g, env
+        FStar.SMTEncoding.Env.with_open_universes env us [f]
+          (fun env uvs [f] ->
+            let f = norm_before_encoding env f in
+            let f, decls = encode_formula f env in
+            let f =
+              let univ_fvs, univ_tms =
+                List.map EncodeTerm.encode_univ_name uvs
+                |> List.unzip
+              in
+              Term.mkForall (Ident.range_of_lid l) ([], univ_fvs, f) //NS: flatten quantifier for a pattern
+            in
+            let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), (varops.mk_unique ("assumption_"^(string_of_lid l))))]
+                    |> mk_decls_trivial in
+            decls@g, env)
 
      | Sig_let(lbs, _)
         when se.sigquals |> List.contains S.Irreducible
@@ -1480,86 +1478,86 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_datacon(d, us, t, _, n_tps, _) ->
         let quals = se.sigquals in
-        let us, t = SS.open_univ_vars us t in
-        let univ_fvs, univs = List.map EncodeTerm.encode_univ_name us |> List.unzip in
-        let univ_sorts = univs |> List.map (fun _ -> univ_sort) in
-        let t = norm_before_encoding env t in
-        let formals, t_res = U.arrow_formals t in
-        let arity = List.length formals in
-        let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d arity in
-        let ddtok_tm = mkApp(ddtok, univs) in
-        let fuel_var, fuel_tm = fresh_fvar env.current_module_name "f" Fuel_sort in
-        let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
-        let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
-        let univ_fields =
-          univs
-          |> List.mapi
-            (fun i _ ->
-              let bv = {S.null_bv S.tun with ppname=Ident.mk_ident (string_of_int i, Range.dummyRange)} in
-              mk_term_projector_name d bv, univ_sort, true)
-        in
-        let n_univs = List.length univ_fields in
-        let fields = names |> List.mapi (fun _i x ->
-            let projectible = true in
-//            let projectible = n >= n_tps in //Note: the type parameters are not projectible,
+        let encode_datacon_body env us t =
+          let univ_fvs, univs = List.map EncodeTerm.encode_univ_name us |> List.unzip in
+          let univ_sorts = univs |> List.map (fun _ -> univ_sort) in
+          let t = norm_before_encoding env t in
+          let formals, t_res = U.arrow_formals t in
+          let arity = List.length formals in
+          let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d arity in
+          let ddtok_tm = mkApp(ddtok, univs) in
+          let fuel_var, fuel_tm = fresh_fvar env.current_module_name "f" Fuel_sort in
+          let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
+          let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
+          let univ_fields =
+            univs
+            |> List.mapi
+              (fun i _ ->
+                let bv = {S.null_bv S.tun with ppname=Ident.mk_ident (string_of_int i, Range.dummyRange)} in
+                mk_term_projector_name d bv, univ_sort, true)
+          in
+          let n_univs = List.length univ_fields in
+          let fields = names |> List.mapi (fun _i x ->
+              let projectible = true in
+              //            let projectible = n >= n_tps in //Note: the type parameters are not projectible,
                                             //i.e., (MkTuple2 int bool 0 false) is only injective in its last two arguments
                                             //This allows the term to both have type (int * bool)
                                             //as well as (nat * bool), without leading us to conclude that int=nat
                                             //Also see https://github.com/FStarLang/FStar/issues/349
-            mk_term_projector_name d x, Term_sort, projectible)
-        in
-        let datacons =
-          (ddconstrsym, univ_fields@fields, Term_sort, varops.next_id(), true)
-          |> Term.constructor_to_decl (Ident.range_of_lid d)
-        in
-        let app = mk_Apply ddtok_tm vars in
-        let guard = mk_and_l guards in
-        let xvars = List.map mkFreeV vars in
-        let dapp =  mkApp(ddconstrsym, univs@xvars) in //arity ok; |xvars| = |formals| = arity
+              mk_term_projector_name d x, Term_sort, projectible)
+          in
+          let datacons =
+                  (ddconstrsym, univ_fields@fields, Term_sort, varops.next_id(), true)
+                  |> Term.constructor_to_decl (Ident.range_of_lid d)
+          in
+          let app = mk_Apply ddtok_tm vars in
+          let guard = mk_and_l guards in
+          let xvars = List.map mkFreeV vars in
+          let dapp =  mkApp(ddconstrsym, univs@xvars) in //arity ok; |xvars| = |formals| = arity
 
-        let tok_typing, decls3 = encode_term_pred None t env ddtok_tm in
-        let tok_typing =
-             match fields, univs with
-             | _::_, [] ->
-               let ff = mk_fv ("ty", Term_sort) in
-               let f = mkFreeV ff in
-               let vtok_app_l = mk_Apply ddtok_tm [ff] in
-               let vtok_app_r = mk_Apply f [mk_fv (ddtok, Term_sort)] in
-                //guard the token typing assumption with a Apply(tok, f) or Apply(f, tok)
-                //Additionally, the body of the term becomes NoHoist f (HasType tok ...)
-                //   to prevent the Z3 simplifier from hoisting the (HasType tok ...) part out
-                //Since the top-levels of modules are full of function typed terms
-                //not guarding it this way causes every typing assumption of an arrow type to be fired immediately
-                //regardless of whether or not the function is used ... leading to bloat
-                //these patterns aim to restrict the use of the typing assumption until such point as it is actually needed
-               mkForall (Ident.range_of_lid d)
-                        ([[vtok_app_l]; [vtok_app_r]],
-                        [ff],
-                        Term.mk_NoHoist f tok_typing)
-             | _ ->
-               close_universes (Ident.range_of_lid d) univ_fvs ddtok_tm tok_typing
-        in
-        let vars', guards', env'', decls_formals, _ = encode_binders (Some fuel_tm) formals env in //NS/CH: used to be s_fuel_tm
-        let vars', (ty_pred', decls_pred) =
-             let xvars = List.map mkFreeV vars' in
-             let dapp =  mkApp(ddconstrsym, univs@xvars) in //arity ok; |xvars| = |formals| = arity
-             vars',
-             encode_term_pred (Some fuel_tm) t_res env'' dapp
-        in
-        let guard' = mk_and_l guards' in
-        let proxy_fresh = match formals with
-            | [] -> []
-            | _ -> [Term.fresh_token (ddtok_tm, univ_fvs, Term_sort) (varops.next_id())] in
+          let tok_typing, decls3 = encode_term_pred None t env ddtok_tm in
+          let tok_typing =
+              match fields, univs with
+              | _::_, [] ->
+                let ff = mk_fv ("ty", Term_sort) in
+                let f = mkFreeV ff in
+                let vtok_app_l = mk_Apply ddtok_tm [ff] in
+                let vtok_app_r = mk_Apply f [mk_fv (ddtok, Term_sort)] in
+                  //guard the token typing assumption with a Apply(tok, f) or Apply(f, tok)
+                  //Additionally, the body of the term becomes NoHoist f (HasType tok ...)
+                  //   to prevent the Z3 simplifier from hoisting the (HasType tok ...) part out
+                  //Since the top-levels of modules are full of function typed terms
+                  //not guarding it this way causes every typing assumption of an arrow type to be fired immediately
+                  //regardless of whether or not the function is used ... leading to bloat
+                  //these patterns aim to restrict the use of the typing assumption until such point as it is actually needed
+                mkForall (Ident.range_of_lid d)
+                         ([[vtok_app_l]; [vtok_app_r]],
+                         [ff],
+                         Term.mk_NoHoist f tok_typing)
+              | _ ->
+                close_universes (Ident.range_of_lid d) univ_fvs ddtok_tm tok_typing
+          in
+          let vars', guards', env'', decls_formals, _ = encode_binders (Some fuel_tm) formals env in //NS/CH: used to be s_fuel_tm
+          let vars', (ty_pred', decls_pred) =
+              let xvars = List.map mkFreeV vars' in
+              let dapp =  mkApp(ddconstrsym, univs@xvars) in //arity ok; |xvars| = |formals| = arity
+              vars',
+              encode_term_pred (Some fuel_tm) t_res env'' dapp
+          in
+          let guard' = mk_and_l guards' in
+          let proxy_fresh = match formals with
+              | [] -> []
+              | _ -> [Term.fresh_token (ddtok_tm, univ_fvs, Term_sort) (varops.next_id())] in
 
-        let encode_elim () =
-            let head, args = U.head_and_args t_res in
-            match (SS.compress head).n with
-            | Tm_uinst({n=Tm_fvar fv}, _)
-            | Tm_fvar fv ->
-                  let encoded_head_fvb = lookup_free_var_name env' fv.fv_name in
-                  let encoded_args, arg_decls = encode_args args env' in
-                  let guards_for_parameter (orig_arg:S.term)(arg:term) xv =
-                    let fv =
+          let encode_elim () =
+              let head, args = U.head_and_args t_res in
+              match (SS.compress head).n with
+              | Tm_uinst({n=Tm_fvar fv}, _)
+              | Tm_fvar fv ->
+                let encoded_head_fvb = lookup_free_var_name env' fv.fv_name in
+                let encoded_args, arg_decls = encode_args args env' in
+                let guards_for_parameter (orig_arg:S.term)(arg:term) xv =
+                  let fv =
                       match arg.tm with
                       | FreeV fv -> fv
                       | _ ->
@@ -1567,15 +1565,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                            BU.format1 "Inductive type parameter %s must be a variable ; \
                                        You may want to change it to an index."
                                       (FStar.Syntax.Print.term_to_string orig_arg)) orig_arg.pos
-                    in
-                    let guards = guards |> List.collect (fun g ->
+                  in
+                  let guards = guards |> List.collect (fun g ->
                         if List.contains fv (Term.free_variables g)
                         then [Term.subst g fv xv]
                         else [])
-                    in
-                    mk_and_l guards
                   in
-                  let _, arg_vars, elim_eqns_or_guards, _ =
+                  mk_and_l guards
+                in
+                let _, arg_vars, elim_eqns_or_guards, _ =
                     List.fold_left (fun (env, arg_vars, eqns_or_guards, i) (orig_arg, arg) ->
                       let _, xv, env = gen_term_var env (S.new_bv None tun) in
                       (* we only get equations induced on the type indices, not parameters; *)
@@ -1587,28 +1585,28 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       in
                       (env, xv::arg_vars, eqns, i + 1))
                       (env', [], [], 0) (FStar.List.zip args encoded_args)
-                  in
-                  let arg_vars = List.rev arg_vars in
-                  let ty = maybe_curry_fvb fv.fv_name.p
+                in
+                let arg_vars = List.rev arg_vars in
+                let ty = maybe_curry_fvb fv.fv_name.p
                                            ({encoded_head_fvb with smt_arity=List.length univ_fvs + encoded_head_fvb.smt_arity})
                                            (univs @ arg_vars)
-                  in
-                  let xvars = List.map mkFreeV vars in
-                  let dapp =  mkApp(ddconstrsym, univs@xvars) in //arity ok; |xvars| = |formals| = arity
-                  let ty_pred = mk_HasTypeWithFuel (Some s_fuel_tm) dapp ty in
-                  let arg_binders = List.map fv_of_term arg_vars in
-                  let typing_inversion =
+                in
+                let xvars = List.map mkFreeV vars in
+                let dapp =  mkApp(ddconstrsym, univs@xvars) in //arity ok; |xvars| = |formals| = arity
+                let ty_pred = mk_HasTypeWithFuel (Some s_fuel_tm) dapp ty in
+                let arg_binders = List.map fv_of_term arg_vars in
+                let typing_inversion =
                     Util.mkAssume(mkForall (Ident.range_of_lid d)
                                   ([[ty_pred]],
                                     add_fuel (mk_fv (fuel_var, Fuel_sort)) (univ_fvs@vars@arg_binders),
                                     mkImp(ty_pred, mk_and_l (elim_eqns_or_guards@guards))),
                                   Some "data constructor typing elim",
                                   ("data_elim_" ^ ddconstrsym))
-                  in
-                  let subterm_ordering =
-                    let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
+                in
+                let subterm_ordering =
+                let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
                     (* subterm ordering *)
-                    let prec =
+                let prec =
                         vars
                           |> List.mapi (fun i v ->
                                 (* it's a parameter, so it's inaccessible and no need for a sub-term ordering on it *)
@@ -1616,23 +1614,23 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 then []
                                 else [mk_Valid (mk_Precedes lex_t lex_t (mkFreeV v) dapp)])
                           |> List.flatten
-                     in
-                     Util.mkAssume(mkForall (Ident.range_of_lid d)
+                in
+                Util.mkAssume(mkForall (Ident.range_of_lid d)
                                              ([[ty_pred]],
                                               add_fuel (mk_fv (fuel_var, Fuel_sort)) (univ_fvs@vars@arg_binders),
                                               mkImp(ty_pred, mk_and_l prec)),
                                     Some "subterm ordering",
                                     ("subterm_ordering_"^ddconstrsym))
-                  in
-                  arg_decls, [typing_inversion; subterm_ordering]
+                in
+                arg_decls, [typing_inversion; subterm_ordering]
 
-                | _ ->
+              | _ ->
                   Errors.log_issue se.sigrng (Errors.Warning_ConstructorBuildsUnexpectedType, (BU.format2 "Constructor %s builds an unexpected type %s\n"
                         (Print.lid_to_string d) (Print.term_to_string head)));
                   [], []
-        in
-        let decls2, elim = encode_elim () in
-        let g = binder_decls
+          in
+          let decls2, elim = encode_elim () in
+          let g = binder_decls
                 @decls2
                 @decls3
                 @([Term.DeclFun(ddtok, univ_sorts, Term_sort, Some (BU.format1 "data constructor proxy: %s" (Print.lid_to_string d)))]
@@ -1648,8 +1646,20 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                  Some "data constructor typing intro",
                                  ("data_typing_intro_"^ddtok));
                    ]@elim |> mk_decls_trivial)
+          in
+          (datacons |> mk_decls_trivial) @ g, env
         in
-        (datacons |> mk_decls_trivial) @ g, env
+        FStar.SMTEncoding.Env.with_open_universes env us [t]
+          (fun env us [t] ->
+            BU.print3 "<start>Encoding datacon %s with <%s>.%s\n"
+              (Print.lid_to_string d)
+              (Print.univ_names_to_string us)
+              (Print.term_to_string t);
+            let res = encode_datacon_body env us t in
+            BU.print1 "<end>Encoding datacon %s\n"
+                          (Print.lid_to_string d);
+            res)
+
 
 and encode_sigelts env ses :(decls_t * env_t) =
     ses |> List.fold_left (fun (g, env) se ->
@@ -1711,12 +1721,16 @@ let encode_env_bindings (env:env_t) (bindings:list<S.binding>) : (decls_t * env_
             i+1, decls@g, env'
 
         | S.Binding_lid(x, (us, t)) ->
-            let us, t = SS.open_univ_vars us t in
-            let t_norm = norm_before_encoding env t in
-            let fv = S.lid_as_fv x delta_constant None in
-//            Printf.printf "Encoding %s at type %s\n" (Print.lid_to_string x) (Print.term_to_string t);
-            let g, env' = encode_free_var false env fv us t t_norm [] in
-            i+1, decls@g, env'
+          let (j, decls), env =
+            FStar.SMTEncoding.Env.with_open_universes env us [t]
+            (fun env us [t] ->
+              let t_norm = norm_before_encoding env t in
+              let fv = S.lid_as_fv x delta_constant None in
+    //            Printf.printf "Encoding %s at type %s\n" (Print.lid_to_string x) (Print.term_to_string t);
+              let g, env' = encode_free_var false env fv us t t_norm [] in
+              (i+1, decls@g), env')
+          in
+          j, decls, env
     in
     let _, decls, env = List.fold_right encode_binding bindings (0, [], env) in
     decls, env
@@ -1728,7 +1742,8 @@ let encode_labels (labs:list<error_label>) =
 
 (* caching encodings of the environment and the top-level API to the encoding *)
 let last_env : ref<list<env_t>> = BU.mk_ref []
-let init_env tcenv = last_env := [{bvar_bindings=BU.psmap_empty ();
+let init_env tcenv = last_env := [{ universes = [];
+                                   bvar_bindings=BU.psmap_empty ();
                                    fvar_bindings=(BU.psmap_empty (), []);
                                    tcenv=tcenv; warn=true; depth=0;
                                    nolabels=false; use_zfuel_name=false;

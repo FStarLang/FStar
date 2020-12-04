@@ -150,6 +150,7 @@ let check_valid_fvb fvb =
 let binder_of_eithervar v = (v, None)
 
 type env_t = {
+    universes: univ_names;
     bvar_bindings: BU.psmap<BU.pimap<(bv * term)>>;
     fvar_bindings: (BU.psmap<fvar_binding> * list<fvar_binding>);  //list of fvar bindings for the current module
                                                                    //remember them so that we can store them in the checked file
@@ -348,5 +349,22 @@ let reset_current_module_fvbs env = { env with fvar_bindings = (env.fvar_binding
 let get_current_module_fvbs env = env.fvar_bindings |> snd
 let add_fvar_binding_to_env fvb env =
   { env with fvar_bindings = add_fvar_binding fvb env.fvar_bindings }
+
+let open_universes_in env univs terms =
+    let tcenv', univ_names, terms' =
+      Env.open_universes_in env.tcenv univs terms
+    in
+    let env1 =
+        { env with tcenv = tcenv';
+                   universes = env.universes @ univ_names}
+    in
+    env1, univ_names, terms'
+
+let with_open_universes env univs terms (f:(env_t -> univ_names -> list<Syntax.term> -> 'a * env_t)) : 'a * env_t =
+    let env1, univ_names, terms' = open_universes_in env univs terms in
+    let res, env2 = f env1 univ_names terms' in
+    res,
+    { env2 with tcenv = env.tcenv;
+                universes = env.universes}
 
 (* </Environment> *)
