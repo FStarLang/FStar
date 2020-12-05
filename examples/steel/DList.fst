@@ -1,6 +1,6 @@
 module DList
 open Steel.Memory
-open Steel.Effect  
+open Steel.Effect
 open Steel.FractionalPermission
 open Steel.Reference
 open DList.Invariant
@@ -13,7 +13,7 @@ open Utils
 //except very basic stuff from Prims and Pervasives
 //and application-specific stuff for this particular module (Steel.DList)
 let new_dlist (#a:Type) (init:a)
-  : Steel (t a & cell a) 
+  : Steel (t a & cell a)
           emp
           (fun pc -> dlist null_dlist (fst pc) null_dlist [snd pc])
           (requires fun _ -> True)
@@ -28,7 +28,7 @@ let new_dlist (#a:Type) (init:a)
                   (fun _ -> ());
     intro_dlist_cons null_dlist p null_dlist cell [];
     let pc = p, cell in
-    return pc
+    pc
 
 let read_head (#a:_) (from0:t a) (ptr0:t a) (to0: t a)
               (hd:cell a)
@@ -45,7 +45,7 @@ let read_head (#a:_) (from0:t a) (ptr0:t a) (to0: t a)
 
      //2: read the ptr0 to get cell0
      let c0 = read ptr0 in
-     
+
      change_slprop (dlist ptr0 (next hd) to0 tl)
                    (dlist ptr0 (next c0) to0 tl)
                    (fun _ -> ());
@@ -106,12 +106,12 @@ let concat_nil_l (#a:Type)
        to0 =!= ptr0)
      (ensures fun _ _ _ -> True)
    = assume (ptr0 =!= null_dlist);
-   
+
      // 1. invert dlist tl0 to dlist []
      invert_dlist_nil_eq ptr0 to0 to0 tl0;
      drop (dlist ptr0 to0 to0 []);
      // tl0 == []
-     
+
      // 2. ptr0.next <- ptr1
      write ptr0 (set_next hd ptr1);
 
@@ -120,10 +120,10 @@ let concat_nil_l (#a:Type)
      intro_dlist_cons from0 ptr0 _ _ ptr1 _;
 
      drop (pure (tl0 == []));
-     return (set_next hd ptr1
-             :: set_prev hd1 ptr0 
+     (set_next hd ptr1
+             :: set_prev hd1 ptr0
              :: tl1)
-     
+
 let concat_t a =
   (#[@@framing_implicit] from0:t a) ->
   (#[@@framing_implicit] to0: t a) ->
@@ -139,16 +139,16 @@ let concat_t a =
       dlist from1 ptr1 null_dlist (hd1::tl1))
      (fun l ->
        dlist from0 ptr0 null_dlist l)
-       
+
 let concat_cons (#a:Type) (aux:concat_t a)
                 (from0:t a) (ptr0:t a) (to0: t a) (c0:cell a) (tl0:list (cell a))
                 (from1:t a) (ptr1:t a) (hd1:cell a) (tl1:list (cell a))
    : Steel (list (cell a))
      (pts_to ptr0 full_perm c0 `star`
       dlist ptr0 (next c0) to0 tl0 `star`
-      dlist from1 ptr1 null_dlist (hd1::tl1))   
+      dlist from1 ptr1 null_dlist (hd1::tl1))
      (fun l -> dlist from0 ptr0 null_dlist l)
-     (requires fun _ ->  
+     (requires fun _ ->
        next c0 =!= to0 /\
        prev c0 == from0)
      (ensures fun _ _ _ -> True)
@@ -163,15 +163,15 @@ let concat_cons (#a:Type) (aux:concat_t a)
      c0::l
 
 let rec concat (#a:Type)
-               (#[@@framing_implicit] from0:t a) 
+               (#[@@framing_implicit] from0:t a)
                (#[@@framing_implicit] to0: t a)
                (#[@@framing_implicit] hd0:cell a)
                (#[@@framing_implicit] tl0:list (cell a))
-               (#[@@framing_implicit] from1:t a) 
+               (#[@@framing_implicit] from1:t a)
                (#[@@framing_implicit] hd1:cell a)
                (#[@@framing_implicit] tl1:list (cell a))
                (ptr0:t a)
-               (ptr1:t a) 
+               (ptr1:t a)
    : SteelT (list (cell a))
      (dlist from0 ptr0 to0 (hd0::tl0) `star`
       dlist from1 ptr1 null_dlist (hd1::tl1))
@@ -181,11 +181,11 @@ let rec concat (#a:Type)
      let to1 = null_dlist #a in
 
      //1: read the ptr0 to get cell0
-     
+
      let c0 = read_head from0 ptr0 to0 hd0 tl0 in
 
      //2: unfold dlist to dlist cons
-     elim_dlist_cons from0 ptr0 to0 c0 tl0;     
+     elim_dlist_cons from0 ptr0 to0 c0 tl0;
 
      let b = ptr_eq (next c0) to0 in
 
@@ -194,7 +194,7 @@ let rec concat (#a:Type)
          dlist ptr0 (next c0) to0 tl0 `star`
          dlist from1 ptr1 null_dlist (hd1::tl1))
         (pts_to ptr0 full_perm c0 `star`
-         (if b 
+         (if b
           then dlist ptr0 to0 to0 tl0
           else dlist ptr0 (next c0) to0 tl0) `star`
          dlist from1 ptr1 null_dlist (hd1::tl1))
@@ -207,11 +207,11 @@ let rec concat (#a:Type)
           else dlist ptr0 (next c0) to0 tl0) `star`
           dlist from1 ptr1 null_dlist (hd1::tl1))
        (fun b l -> dlist from0 ptr0 null_dlist l)
-       (fun _ -> 
+       (fun _ ->
          concat_nil_l from0 ptr0 to0 c0 tl0
                       from1 ptr1 hd1 tl1)
        (fun _ ->
-         concat_cons (concat #a) 
+         concat_cons (concat #a)
                      from0 ptr0 to0 c0 tl0
                      from1 ptr1 hd1 tl1)
 
@@ -255,21 +255,21 @@ let returnF (#a:_)
             (q:(a -> slprop))
             (x:a)
     : SteelF a (q x) q (fun _ -> True) (fun _ _ _ -> True)
-    = sladmit_depF () 
+    = sladmit_depF ()
 
 (* this version of concat tries to use if/then/else
    instead of a cond combinator ...
    and seems like with some work it could actually work *)
 let rec concat_alt (#a:Type)
-               (#[@@framing_implicit] from0:t a) 
+               (#[@@framing_implicit] from0:t a)
                (#[@@framing_implicit] to0: t a)
                (#[@@framing_implicit] hd0:cell a)
                (#[@@framing_implicit] tl0:list (cell a))
-               (#[@@framing_implicit] from1:t a) 
+               (#[@@framing_implicit] from1:t a)
                (#[@@framing_implicit] hd1:cell a)
                (#[@@framing_implicit] tl1:list (cell a))
                (ptr0:t a)
-               (ptr1:t a) 
+               (ptr1:t a)
    : SteelT (list (cell a))
      (dlist from0 ptr0 to0 (hd0::tl0) `star`
       dlist from1 ptr1 null_dlist (hd1::tl1))
@@ -279,15 +279,15 @@ let rec concat_alt (#a:Type)
      let to1 = null_dlist #a in
 
      //1: read the ptr0 to get cell0
-     
+
      let c0 = read_head from0 ptr0 to0 hd0 tl0 in
 
      //2: unfold dlist to dlist cons
-     elim_dlist_cons from0 ptr0 to0 c0 tl0;     
+     elim_dlist_cons from0 ptr0 to0 c0 tl0;
 
      let b = ptr_eq (next c0) to0 in
 
-     if b 
+     if b
      then (
        (* refine just a small part of the context assertion based on b *)
        change_slprop
@@ -302,25 +302,25 @@ let rec concat_alt (#a:Type)
        // tl0 == []
        // this assume one is needed until we model null properly
        assume (ptr0 =!= null_dlist);
-       
+
        // 2. ptr0.next <- ptr1
        write ptr0 (set_next c0 ptr1);
-   
+
        write_prev ptr1 ptr0;
 
        intro_dlist_cons from0 ptr0 _ _ ptr1 _;
        drop (pure (tl0 == []));
-       returnF #_ 
-               (dlist from0 ptr0 null_dlist) 
+       returnF #_
+               (dlist from0 ptr0 null_dlist)
                (set_next c0 ptr1
-                   :: set_prev hd1 ptr0 
-                   :: tl1)                 
+                   :: set_prev hd1 ptr0
+                   :: tl1)
      ) else (
        (** But, I can't write the other branch
            because it seems to want the pre-post to match exactly
            rather than be related by equiv **)
-       // let l = concat_cons (concat #a) 
+       // let l = concat_cons (concat #a)
        //              from0 ptr0 to0 c0 tl0
        //              from1 ptr1 hd1 tl1 in
-       sladmit_depF () 
+       sladmit_depF ()
      )
