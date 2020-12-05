@@ -34,25 +34,12 @@ let swap0 (#a:_) (#v0 #v1:erased a) (r0 r1:ref a)
                   (pts_to r1 full_perm v0)
                   (fun _ -> ())
 
-
 let change_eq (#[@@ framing_implicit] p:slprop)
               (#[@@ framing_implicit] q:slprop)
-              (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
-  : SteelT unit p (fun _ -> q)
-  = change_slprop p q proof
+  : Steel unit p (fun _ -> q) (fun _ -> p == q) (fun _ _ _ -> True)
+  = change_slprop p q (fun _ -> ())
 
 let swap1 (#a:_) (#v0 #v1:erased a) (r0 r1:ref a)
-  : SteelT unit
-    (pts_to r0 full_perm v0 `star` pts_to r1 full_perm v1)
-    (fun _ ->  pts_to r0 full_perm v1 `star`  pts_to r1 full_perm v0)
-  = let tmp0 = read r0 in
-    let tmp1 = read r1 in
-    write r0 tmp1;
-    write r1 tmp0;
-    change_eq (fun _ -> ())
-
-
-let swap2 (#a:_) (#v0 #v1:erased a) (r0 r1:ref a)
   : SteelT unit
     (pts_to r0 full_perm v0 `star` pts_to r1 full_perm v1)
     (fun _ ->  pts_to r0 full_perm v1 `star`  pts_to r1 full_perm v0)
@@ -65,8 +52,6 @@ let swap2 (#a:_) (#v0 #v1:erased a) (r0 r1:ref a)
         pts_to r1 full_perm (Ghost.hide tmp0))
       #(pts_to r0 full_perm v1 `star`
         pts_to r1 full_perm v0)
-        (fun _ -> ())
-
 
 let change_eq' (#[@@ framing_implicit] p:slprop)
                (#[@@ framing_implicit] q:slprop)
@@ -75,16 +60,6 @@ let change_eq' (#[@@ framing_implicit] p:slprop)
     (requires fun _ -> p==q)
     (ensures fun _ _ _ -> True)
   = change_slprop p q (fun _ -> ())
-
-let swap3 (#a:_) (#v0 #v1:erased a) (r0 r1:ref a)
-  : SteelT unit
-    (pts_to r0 full_perm v0 `star` pts_to r1 full_perm v1)
-    (fun _ ->  pts_to r0 full_perm v1 `star`  pts_to r1 full_perm v0)
-  = let tmp0 = read r0 in
-    let tmp1 = read r1 in
-    write r0 tmp1;
-    write r1 tmp0;
-    change_eq' ()
 
 [@expect_failure] //steelT </: steelF
 let change_eqF (#[@@ framing_implicit] p:slprop)
