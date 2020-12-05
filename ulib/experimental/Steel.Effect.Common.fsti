@@ -7,8 +7,6 @@ open Steel.Semantics.Instantiate
 irreducible let framing_implicit : unit = ()
 irreducible let __reduce__ = ()
 
-let delay (p:Type0) : Type0 = p
-let annot_sub_post (p:Type0) : Type0 = p
 let return_pre (p:slprop u#1) : slprop u#1 = p
 let return_post (#a:Type) (p:a -> slprop u#1) : a -> slprop u#1 = p
 
@@ -906,6 +904,8 @@ let return_at_top (l:list atom) (am:amap term) : Tac (nat * list atom) =
   let ret, tl = return_at_top' l am in
   List.Tot.Base.length tl, ret :: tl
 
+exception AlreadyGathered
+
 let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   let return_lhs = term_appears_in (`return_post) lhs in
   let return_rhs = term_appears_in (`return_post) rhs in
@@ -930,11 +930,8 @@ let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   let resolved2 = if two_returns then return_resolved l2_raw am else true in
 
   if resolved1 && resolved2 then (
-    // The return_post have already been gathered, we fall back on the normal canon
-    let lhs = norm_term [delta_only [`%return_post]] lhs in
-    let rhs = norm_term [delta_only [`%return_post]] rhs in
-    norm [delta_only [`%return_post]];
-    canon_l_r eq m lhs rhs
+    // The return_post have already been gathered, we will fall back on the normal canon
+    raise AlreadyGathered
   ) else (
 
     let n_l1, l1_raw = return_at_top l1_raw am in
@@ -1051,14 +1048,6 @@ let emp_unit_variant (p:slprop) : Lemma
     equiv_symmetric (p `star` emp) p;
     equiv_sl_implies p (p `star` emp)
 
-let emp_unit_variant_forall (#a:Type) (p:a -> slprop) : Lemma
-   (ensures annot_sub_post (can_be_split_forall (fun x -> p x `star` emp) p))
-  = let aux (x:a) : Lemma
-      ((fun x -> p x `star` emp) x `sl_implies` p x)
-      = Classical.forall_intro emp_unit;
-        equiv_sl_implies ((fun x -> p x `star` emp) x) (p x)
-    in Classical.forall_intro aux
-
 let solve_can_be_split_forall (args:list argv) : Tac bool =
   match args with
   | [_; (t1, _); (t2, _)] ->
@@ -1119,79 +1108,6 @@ let solve_equiv_forall (args:list argv) : Tac bool =
 
   | _ -> false // Ill-formed can_be_split, should not happen
 
-
-let rec solve_subcomp_pre (l:list goal) : Tac unit =
-  match l with
-  | [] -> ()
-  | hd::tl ->
-    let f = term_as_formula' (goal_type hd) in
-    match f with
-    | App _ t ->
-        let hd, args = collect_app t in
-        if term_eq hd (`delay) then (focus (fun _ ->
-          norm [delta_only [`%delay]];
-          or_else (fun _ -> apply_lemma (`emp_unit_variant))
-                  (fun _ ->
-                     norm [delta_only [`%can_be_split]];
-                     // If we have exactly the same term on both side,
-                     // equiv_sl_implies would solve the goal immediately
-                     or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
-                      (fun _ -> apply_lemma (`equiv_sl_implies);
-                       norm [delta_only [
-                              `%__proj__CM__item__unit;
-                              `%__proj__CM__item__mult;
-                              `%Steel.Memory.Tactics.rm;
-                              `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
-                              `%fst; `%snd];
-                            delta_attr [`%__reduce__];
-                            primops; iota; zeta];
-                       canon'()))
-           ))
-        else (later());
-        solve_subcomp_pre tl
-    | _ -> later(); solve_subcomp_pre tl
-
-// If we have a return (as a pure value lifted to Steel), the associated
-// dependent slprop will need to be unified.
-// TODO: Maybe we should have a more systematic way of handling lifts from Pure?
-// i.e. an annotation on return in Effect that ensures associated slprops
-// always become the "maximal" one in the context?
-let rec solve_subcomp_post (l:list goal) : Tac unit =
-  match l with
-  | [] -> ()
-  | hd::tl ->
-    let f = term_as_formula' (goal_type hd) in
-    match f with
-    | App _ t ->
-        let hd, args = collect_app t in
-        if term_eq hd (`annot_sub_post) then (focus (fun _ ->
-          or_else (fun _ -> apply_lemma (`emp_unit_variant_forall))
-                  (fun _ ->
-                     norm [delta_only [`%annot_sub_post]];
-                     norm [delta_only [`%can_be_split_forall]];
-                     ignore (forall_intro());
-                     or_else
-                       (fun _ -> apply_lemma (`lemma_sl_implies_refl))
-                       (fun _ ->
-                       let open FStar.Algebra.CommMonoid.Equiv in
-                       apply_lemma (`equiv_sl_implies);
-                       // The term on the right should have the slprop uvars
-                       apply_lemma (`Steel.Memory.Tactics.equiv_sym);
-                       or_else (fun _ ->  flip()) (fun _ -> ());
-                       norm [delta_only [
-                              `%__proj__CM__item__unit;
-                              `%__proj__CM__item__mult;
-                              `%Steel.Memory.Tactics.rm;
-                              `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
-                              `%fst; `%snd];
-                            delta_attr [`%__reduce__];
-                            primops; iota; zeta];
-                       canon'()))
-          ))
-        else (later());
-        solve_subcomp_post tl
-    | _ -> later(); solve_subcomp_post tl
-
 let is_return_eq (l r:term) : Tac bool =
   let nl, al = collect_app l in
   let nr, ar = collect_app r in
@@ -1243,7 +1159,6 @@ let rec solve_return_eqs (l:list goal) : Tac unit =
 // The term corresponds to a goal containing a return_post
 let solve_return (t:term) : Tac unit
   = // Remove potential annotations first
-    norm [delta_only [`%annot_sub_post; `%delay]];
     if term_appears_in (`can_be_split) t then (
       norm [delta_only [`%can_be_split]];
       apply_lemma (`equiv_sl_implies)
@@ -1275,7 +1190,13 @@ let rec solve_all_returns (l:list goal) : Tac unit =
   | hd::tl ->
     let t = goal_type hd in
     let f = term_as_formula' t in
-    if term_appears_in (`return_post) t then focus (fun _ -> solve_return t) else later();
+    if term_appears_in (`return_post) t then (
+      try focus (fun _ -> solve_return t) with
+        // If return_post has already been gathered, we remove the annotation, and will solve this constraint normally later
+        | AlreadyGathered -> norm [delta_only [`%return_post]]; later()
+        | TacticFailure m -> fail m
+        | _ -> () // Success
+    ) else later();
     solve_all_returns tl
 
 let rec solve_triv_eqs (l:list goal) : Tac unit =
@@ -1295,12 +1216,13 @@ let rec solve_triv_eqs (l:list goal) : Tac unit =
 
 // Returns true if the goal has been solved, false if it should be delayed
 let solve_or_delay (g:goal) : Tac bool =
-  let f = term_as_formula' (goal_type g) in
+  // Beta-reduce the goal first if possible
+  norm [];
+  let f = term_as_formula' (cur_goal ()) in
   match f with
   | App _ t ->
       let hd, args = collect_app t in
-      if term_eq hd (`annot_sub_post) then false
-      else if term_eq hd (`can_be_split) then solve_can_be_split args
+      if term_eq hd (`can_be_split) then solve_can_be_split args
       else if term_eq hd (`can_be_split_forall) then solve_can_be_split_forall args
       else if term_eq hd (`equiv_forall) then solve_equiv_forall args
       else false
@@ -1320,23 +1242,13 @@ let rec pick_next (l:list goal) : Tac bool =
   | [] -> false
   | a::q -> if solve_or_delay a then true else (later (); pick_next q)
 
-let rec resolve_tac_final () : Tac unit =
-  match goals () with
-  | [] -> ()
-  | g ->
-    if pick_next g then resolve_tac_final ()
-    else fail "Could not make progress, no solvable goal found"
-
 let rec resolve_tac () : Tac unit =
   match goals () with
   | [] -> ()
   | g ->
     // TODO: If it picks a goal it cannot solve yet, try all the other ones?
     if pick_next g then resolve_tac ()
-    else
-      (norm [delta_only [`%annot_sub_post]];
-      resolve_tac_final ())
-
+    else fail "Could not make progress, no solvable goal found"
 
 
 let rec resolve_tac_logical () : Tac unit =
@@ -1395,12 +1307,9 @@ let init_resolve_tac () : Tac unit =
   // We can now solve the equalities for returns
   solve_return_eqs (goals());
 
-  solve_subcomp_pre (goals ());
-  solve_subcomp_post (goals ());
   // TODO: If we had better handling of lifts from PURE, we might prove a true
   // sl_implies here, "losing" extra assertions"
 
-//  solve_all_eqs(goals());
   resolve_tac ();
 
   // We now solve the requires/ensures goals, which are all equalities
