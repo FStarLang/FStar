@@ -32,7 +32,7 @@ type steelK (t:Type u#aa) (pre : slprop u#1) (post:t->slprop u#1) =
   SteelT unit (frame `star` pre) (fun _ -> postf)
 
 (* The classic continuation monad *)
-let return a (x:a) (#[@@ framing_implicit] p: a -> slprop) : steelK a (p x) p =
+let return a (x:a) (#[@@ framing_implicit] p: a -> slprop) : steelK a (return_pre (p x)) (return_post p) =
   fun k -> k x
 
 let bind (a:Type) (b:Type)
@@ -206,7 +206,7 @@ polymonadic_bind (PURE, SteelKF) |> SteelKF = bind_tot_steelK_
 
 polymonadic_subcomp SteelKF <: SteelK = subcomp
 
-(* Sanity check *)
+// (* Sanity check *)
 let test_lift #p #q (f : unit -> SteelK unit p (fun _ -> q)) : SteelK unit p (fun _ -> q) =
   ();
   f ();
