@@ -1,4 +1,4 @@
-module FStar.List
+module FStar_List
 open Prims
 //open FStar.List.Tot.Base
 

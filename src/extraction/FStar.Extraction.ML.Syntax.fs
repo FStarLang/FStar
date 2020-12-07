@@ -141,6 +141,8 @@ type meta =
   | CIfDef
   | CMacro
   | Deprecated of string
+  | RemoveUnusedTypeParameters of list<int> * FStar.Range.range //positional
+  | HasValDecl of FStar.Range.range //this symbol appears in the interface of a module
 
 // rename
 type metadata = list<meta>
@@ -196,8 +198,16 @@ type mltybody =
         One could have instead used a mlty and tupled the argument types?
      *)
 
-// bool: this was assumed (C backend)
-type one_mltydecl = bool * mlsymbol * option<mlsymbol> * mlidents * metadata * option<mltybody>
+
+type one_mltydecl = {
+  tydecl_assumed : bool; // bool: this was assumed (C backend)
+  tydecl_name    : mlsymbol;
+  tydecl_ignored : option<mlsymbol>;
+  tydecl_parameters : mlidents;
+  tydecl_meta    : metadata;
+  tydecl_defn    : option<mltybody>
+}
+
 type mltydecl = list<one_mltydecl> // each element of this list is one among a collection of mutually defined types
 
 type mlmodule1 =
@@ -235,10 +245,10 @@ let ml_string_ty  = MLTY_Named ([], (["Prims"], "string"))
 let ml_unit    = with_ty ml_unit_ty (MLE_Const MLC_Unit)
 let mlp_lalloc = (["SST"], "lalloc")
 let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
-    let obj_ns = if Options.codegen() = Some Options.FSharp
-                 then "FSharp.Compatibility.OCaml.Obj"
-                 else "Obj" in
-    let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) (MLE_Name([obj_ns], "repr")) in
+    let repr_name = if Options.codegen() = Some Options.FSharp
+                    then MLE_Name([], "box")
+                    else MLE_Name(["Obj"], "repr") in
+    let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) repr_name in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc
 
 open FStar.Syntax.Syntax

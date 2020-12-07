@@ -24,3 +24,11 @@ let test1' = assert((true && true) = true)
 let test2' = assert((true && false) = false)
 let test3' = assert((false && true) = false)
 let test4' = assert((false && false) = false)
+
+#push-options "--no_smt"
+
+(* The normalizer also shorts-circuits *)
+let test1'' (b:bool) = assert_norm ((false && b) == false)
+let test2'' (b:bool) = assert_norm ((true  && b) == b)
+let test3'' (b:bool) = assert_norm ((false || b) == b)
+let test4'' (b:bool) = assert_norm ((true  || b) == true)

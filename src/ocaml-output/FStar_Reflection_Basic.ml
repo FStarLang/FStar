@@ -919,3 +919,11 @@ let (push_binder :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binder -> FStar_TypeChecker_Env.env)
   = fun e -> fun b -> FStar_TypeChecker_Env.push_binders e [b]
+let (subst :
+  FStar_Syntax_Syntax.bv ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+  =
+  fun x ->
+    fun n ->
+      fun m -> FStar_Syntax_Subst.subst [FStar_Syntax_Syntax.NT (x, n)] m

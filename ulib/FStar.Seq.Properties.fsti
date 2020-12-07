@@ -472,6 +472,7 @@ val lemma_index_is_nth: #a:Type -> s:seq a -> i:nat{i < length s} -> Lemma
 //    An undecidable version of `mem`,
 //    for when the sequence payload is not an eqtype
 ////////////////////////////////////////////////////////////////////////////////
+[@@ remove_unused_type_parameters [0; 1; 2]]
 val contains (#a:Type) (s:seq a) (x:a) : Tot Type0
 
 val contains_intro (#a:Type) (s:seq a) (k:nat) (x:a)

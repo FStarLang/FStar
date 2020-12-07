@@ -2667,14 +2667,6 @@ let rec (norm :
                          [FStar_TypeChecker_Env.Unfold
                             FStar_Syntax_Syntax.delta_constant]
                        else [FStar_TypeChecker_Env.NoDelta] in
-                     let delta_level1 =
-                       if
-                         (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
-                       then
-                         FStar_List.append delta_level
-                           [FStar_TypeChecker_Env.Eager_unfolding_only;
-                           FStar_TypeChecker_Env.InliningDelta]
-                       else delta_level in
                      let cfg'1 =
                        let uu___4 = cfg in
                        let uu___5 =
@@ -2733,7 +2725,7 @@ let rec (norm :
                            FStar_TypeChecker_Cfg.nbe_step =
                              (uu___6.FStar_TypeChecker_Cfg.nbe_step);
                            FStar_TypeChecker_Cfg.for_extraction =
-                             ((cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction)
+                             (uu___6.FStar_TypeChecker_Cfg.for_extraction)
                          } in
                        {
                          FStar_TypeChecker_Cfg.steps = uu___5;
@@ -2741,7 +2733,7 @@ let rec (norm :
                            (uu___4.FStar_TypeChecker_Cfg.tcenv);
                          FStar_TypeChecker_Cfg.debug =
                            (uu___4.FStar_TypeChecker_Cfg.debug);
-                         FStar_TypeChecker_Cfg.delta_level = delta_level1;
+                         FStar_TypeChecker_Cfg.delta_level = delta_level;
                          FStar_TypeChecker_Cfg.primitive_steps =
                            (uu___4.FStar_TypeChecker_Cfg.primitive_steps);
                          FStar_TypeChecker_Cfg.strong =
@@ -3567,7 +3559,10 @@ let rec (norm :
            | FStar_Syntax_Syntax.Tm_app (head, args) ->
                let strict_args =
                  let uu___2 =
-                   let uu___3 = FStar_Syntax_Util.un_uinst head in
+                   let uu___3 =
+                     let uu___4 =
+                       FStar_All.pipe_right head FStar_Syntax_Util.unascribe in
+                     FStar_All.pipe_right uu___4 FStar_Syntax_Util.un_uinst in
                    uu___3.FStar_Syntax_Syntax.n in
                  match uu___2 with
                  | FStar_Syntax_Syntax.Tm_fvar fv ->
@@ -3624,7 +3619,11 @@ let rec (norm :
                                  match uu___4 with
                                  | (arg_i, uu___5) ->
                                      let uu___6 =
-                                       FStar_Syntax_Util.head_and_args arg_i in
+                                       let uu___7 =
+                                         FStar_All.pipe_right arg_i
+                                           FStar_Syntax_Util.unascribe in
+                                       FStar_All.pipe_right uu___7
+                                         FStar_Syntax_Util.head_and_args in
                                      (match uu___6 with
                                       | (head1, uu___7) ->
                                           let uu___8 =

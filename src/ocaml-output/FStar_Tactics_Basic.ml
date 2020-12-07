@@ -5468,6 +5468,65 @@ let (set_urgency : FStar_BigInt.t -> unit FStar_Tactics_Monad.tac) =
              FStar_Tactics_Types.urgency = uu___1
            } in
          FStar_Tactics_Monad.set ps1)
+let (t_commute_applied_match : unit -> unit FStar_Tactics_Monad.tac) =
+  fun uu___ ->
+    let uu___1 =
+      FStar_Tactics_Monad.bind FStar_Tactics_Monad.cur_goal
+        (fun g ->
+           let uu___2 =
+             let uu___3 =
+               let uu___4 = FStar_Tactics_Types.goal_env g in
+               let uu___5 = FStar_Tactics_Types.goal_type g in
+               whnf uu___4 uu___5 in
+             destruct_eq uu___3 in
+           match uu___2 with
+           | FStar_Pervasives_Native.Some (l, r) ->
+               let uu___3 = FStar_Syntax_Util.head_and_args_full l in
+               (match uu___3 with
+                | (lh, las) ->
+                    let uu___4 =
+                      let uu___5 =
+                        let uu___6 = FStar_Syntax_Util.unascribe lh in
+                        FStar_Syntax_Subst.compress uu___6 in
+                      uu___5.FStar_Syntax_Syntax.n in
+                    (match uu___4 with
+                     | FStar_Syntax_Syntax.Tm_match (e, brs) ->
+                         let brs' =
+                           FStar_List.map
+                             (fun uu___5 ->
+                                match uu___5 with
+                                | (p, w, e1) ->
+                                    let uu___6 =
+                                      FStar_Syntax_Util.mk_app e1 las in
+                                    (p, w, uu___6)) brs in
+                         let l' =
+                           FStar_Syntax_Syntax.mk
+                             (FStar_Syntax_Syntax.Tm_match (e, brs'))
+                             l.FStar_Syntax_Syntax.pos in
+                         let uu___5 =
+                           let uu___6 = FStar_Tactics_Types.goal_env g in
+                           do_unify' false uu___6 l' r in
+                         FStar_Tactics_Monad.bind uu___5
+                           (fun uu___6 ->
+                              match uu___6 with
+                              | FStar_Pervasives_Native.None ->
+                                  FStar_Tactics_Monad.fail
+                                    "discharging the equality failed"
+                              | FStar_Pervasives_Native.Some guard ->
+                                  let uu___7 =
+                                    FStar_TypeChecker_Env.is_trivial_guard_formula
+                                      guard in
+                                  if uu___7
+                                  then solve g FStar_Syntax_Util.exp_unit
+                                  else
+                                    failwith
+                                      "internal error: _t_refl: guard is not trivial")
+                     | uu___5 ->
+                         FStar_Tactics_Monad.fail "lhs is not a match"))
+           | FStar_Pervasives_Native.None ->
+               FStar_Tactics_Monad.fail "not an equality") in
+    FStar_All.pipe_left
+      (FStar_Tactics_Monad.wrap_err "t_commute_applied_match") uu___1
 let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env1 ->
     let uu___ = FStar_TypeChecker_Env.clear_expected_typ env1 in

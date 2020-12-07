@@ -1048,101 +1048,119 @@ and (translate_type_decl :
   =
   fun env1 ->
     fun ty ->
-      let uu___ = ty in
-      match uu___ with
-      | (uu___1, uu___2, uu___3, uu___4, flags, uu___5) ->
-          if FStar_List.mem FStar_Extraction_ML_Syntax.NoExtract flags
-          then FStar_Pervasives_Native.None
-          else
-            (match ty with
-             | (assumed, name1, _mangled_name, args, flags1,
-                FStar_Pervasives_Native.Some
-                (FStar_Extraction_ML_Syntax.MLTD_Abbrev t)) ->
-                 let name2 = ((env1.module_name), name1) in
-                 let env2 =
-                   FStar_List.fold_left
-                     (fun env3 -> fun name3 -> extend_t env3 name3) env1 args in
-                 if
-                   assumed &&
-                     (FStar_List.mem FStar_Extraction_ML_Syntax.CAbstract
-                        flags1)
-                 then
-                   FStar_Pervasives_Native.Some (DTypeAbstractStruct name2)
-                 else
-                   if assumed
-                   then
-                     (let name3 =
-                        FStar_Extraction_ML_Syntax.string_of_mlpath name2 in
-                      FStar_Util.print1_warning
-                        "Not extracting type definition %s to KreMLin (assumed type)\n"
-                        name3;
-                      FStar_Pervasives_Native.None)
-                   else
-                     (let uu___9 =
-                        let uu___10 =
-                          let uu___11 = translate_flags flags1 in
-                          let uu___12 = translate_type env2 t in
-                          (name2, uu___11, (FStar_List.length args), uu___12) in
-                        DTypeAlias uu___10 in
-                      FStar_Pervasives_Native.Some uu___9)
-             | (uu___7, name1, _mangled_name, args, flags1,
-                FStar_Pervasives_Native.Some
-                (FStar_Extraction_ML_Syntax.MLTD_Record fields)) ->
-                 let name2 = ((env1.module_name), name1) in
-                 let env2 =
-                   FStar_List.fold_left
-                     (fun env3 -> fun name3 -> extend_t env3 name3) env1 args in
+      if
+        FStar_List.mem FStar_Extraction_ML_Syntax.NoExtract
+          ty.FStar_Extraction_ML_Syntax.tydecl_meta
+      then FStar_Pervasives_Native.None
+      else
+        (match ty with
+         | { FStar_Extraction_ML_Syntax.tydecl_assumed = assumed;
+             FStar_Extraction_ML_Syntax.tydecl_name = name1;
+             FStar_Extraction_ML_Syntax.tydecl_ignored = uu___1;
+             FStar_Extraction_ML_Syntax.tydecl_parameters = args;
+             FStar_Extraction_ML_Syntax.tydecl_meta = flags;
+             FStar_Extraction_ML_Syntax.tydecl_defn =
+               FStar_Pervasives_Native.Some
+               (FStar_Extraction_ML_Syntax.MLTD_Abbrev t);_}
+             ->
+             let name2 = ((env1.module_name), name1) in
+             let env2 =
+               FStar_List.fold_left
+                 (fun env3 -> fun name3 -> extend_t env3 name3) env1 args in
+             if
+               assumed &&
+                 (FStar_List.mem FStar_Extraction_ML_Syntax.CAbstract flags)
+             then FStar_Pervasives_Native.Some (DTypeAbstractStruct name2)
+             else
+               if assumed
+               then
+                 (let name3 =
+                    FStar_Extraction_ML_Syntax.string_of_mlpath name2 in
+                  FStar_Util.print1_warning
+                    "Not extracting type definition %s to KreMLin (assumed type)\n"
+                    name3;
+                  FStar_Pervasives_Native.None)
+               else
+                 (let uu___4 =
+                    let uu___5 =
+                      let uu___6 = translate_flags flags in
+                      let uu___7 = translate_type env2 t in
+                      (name2, uu___6, (FStar_List.length args), uu___7) in
+                    DTypeAlias uu___5 in
+                  FStar_Pervasives_Native.Some uu___4)
+         | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___1;
+             FStar_Extraction_ML_Syntax.tydecl_name = name1;
+             FStar_Extraction_ML_Syntax.tydecl_ignored = uu___2;
+             FStar_Extraction_ML_Syntax.tydecl_parameters = args;
+             FStar_Extraction_ML_Syntax.tydecl_meta = flags;
+             FStar_Extraction_ML_Syntax.tydecl_defn =
+               FStar_Pervasives_Native.Some
+               (FStar_Extraction_ML_Syntax.MLTD_Record fields);_}
+             ->
+             let name2 = ((env1.module_name), name1) in
+             let env2 =
+               FStar_List.fold_left
+                 (fun env3 -> fun name3 -> extend_t env3 name3) env1 args in
+             let uu___3 =
+               let uu___4 =
+                 let uu___5 = translate_flags flags in
+                 let uu___6 =
+                   FStar_List.map
+                     (fun uu___7 ->
+                        match uu___7 with
+                        | (f, t) ->
+                            let uu___8 =
+                              let uu___9 = translate_type env2 t in
+                              (uu___9, false) in
+                            (f, uu___8)) fields in
+                 (name2, uu___5, (FStar_List.length args), uu___6) in
+               DTypeFlat uu___4 in
+             FStar_Pervasives_Native.Some uu___3
+         | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___1;
+             FStar_Extraction_ML_Syntax.tydecl_name = name1;
+             FStar_Extraction_ML_Syntax.tydecl_ignored = uu___2;
+             FStar_Extraction_ML_Syntax.tydecl_parameters = args;
+             FStar_Extraction_ML_Syntax.tydecl_meta = flags;
+             FStar_Extraction_ML_Syntax.tydecl_defn =
+               FStar_Pervasives_Native.Some
+               (FStar_Extraction_ML_Syntax.MLTD_DType branches1);_}
+             ->
+             let name2 = ((env1.module_name), name1) in
+             let flags1 = translate_flags flags in
+             let env2 = FStar_List.fold_left extend_t env1 args in
+             let uu___3 =
+               let uu___4 =
+                 let uu___5 =
+                   FStar_List.map
+                     (fun uu___6 ->
+                        match uu___6 with
+                        | (cons, ts) ->
+                            let uu___7 =
+                              FStar_List.map
+                                (fun uu___8 ->
+                                   match uu___8 with
+                                   | (name3, t) ->
+                                       let uu___9 =
+                                         let uu___10 = translate_type env2 t in
+                                         (uu___10, false) in
+                                       (name3, uu___9)) ts in
+                            (cons, uu___7)) branches1 in
+                 (name2, flags1, (FStar_List.length args), uu___5) in
+               DTypeVariant uu___4 in
+             FStar_Pervasives_Native.Some uu___3
+         | { FStar_Extraction_ML_Syntax.tydecl_assumed = uu___1;
+             FStar_Extraction_ML_Syntax.tydecl_name = name1;
+             FStar_Extraction_ML_Syntax.tydecl_ignored = uu___2;
+             FStar_Extraction_ML_Syntax.tydecl_parameters = uu___3;
+             FStar_Extraction_ML_Syntax.tydecl_meta = uu___4;
+             FStar_Extraction_ML_Syntax.tydecl_defn = uu___5;_} ->
+             ((let uu___7 =
                  let uu___8 =
-                   let uu___9 =
-                     let uu___10 = translate_flags flags1 in
-                     let uu___11 =
-                       FStar_List.map
-                         (fun uu___12 ->
-                            match uu___12 with
-                            | (f, t) ->
-                                let uu___13 =
-                                  let uu___14 = translate_type env2 t in
-                                  (uu___14, false) in
-                                (f, uu___13)) fields in
-                     (name2, uu___10, (FStar_List.length args), uu___11) in
-                   DTypeFlat uu___9 in
-                 FStar_Pervasives_Native.Some uu___8
-             | (uu___7, name1, _mangled_name, args, flags1,
-                FStar_Pervasives_Native.Some
-                (FStar_Extraction_ML_Syntax.MLTD_DType branches1)) ->
-                 let name2 = ((env1.module_name), name1) in
-                 let flags2 = translate_flags flags1 in
-                 let env2 = FStar_List.fold_left extend_t env1 args in
-                 let uu___8 =
-                   let uu___9 =
-                     let uu___10 =
-                       FStar_List.map
-                         (fun uu___11 ->
-                            match uu___11 with
-                            | (cons, ts) ->
-                                let uu___12 =
-                                  FStar_List.map
-                                    (fun uu___13 ->
-                                       match uu___13 with
-                                       | (name3, t) ->
-                                           let uu___14 =
-                                             let uu___15 =
-                                               translate_type env2 t in
-                                             (uu___15, false) in
-                                           (name3, uu___14)) ts in
-                                (cons, uu___12)) branches1 in
-                     (name2, flags2, (FStar_List.length args), uu___10) in
-                   DTypeVariant uu___9 in
-                 FStar_Pervasives_Native.Some uu___8
-             | (uu___7, name1, _mangled_name, uu___8, uu___9, uu___10) ->
-                 ((let uu___12 =
-                     let uu___13 =
-                       FStar_Util.format1
-                         "Error extracting type definition %s to KreMLin\n"
-                         name1 in
-                     (FStar_Errors.Warning_DefinitionNotTranslated, uu___13) in
-                   FStar_Errors.log_issue FStar_Range.dummyRange uu___12);
-                  FStar_Pervasives_Native.None))
+                   FStar_Util.format1
+                     "Error extracting type definition %s to KreMLin\n" name1 in
+                 (FStar_Errors.Warning_DefinitionNotTranslated, uu___8) in
+               FStar_Errors.log_issue FStar_Range.dummyRange uu___7);
+              FStar_Pervasives_Native.None))
 and (translate_type : env -> FStar_Extraction_ML_Syntax.mlty -> typ) =
   fun env1 ->
     fun t ->
