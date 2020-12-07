@@ -874,6 +874,17 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     let comb_or l = List.fold_right (fun (a,b,c) (x,y,z) -> (a||x, b||y, c||z)) l (false, false, false) in
     let string_of_res (x,y,z) = BU.format3 "(%s,%s,%s)" (string_of_bool x) (string_of_bool y) (string_of_bool z) in
 
+    let default_unfolding () =
+        log_unfolding cfg (fun () -> BU.print3 "should_unfold: Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
+                                               (Print.fv_to_string fv)
+                                               (Print.delta_depth_to_string fv.fv_delta)
+                                               (FStar.Common.string_of_list Env.string_of_delta_level cfg.delta_level));
+        yesno <| (cfg.delta_level |> BU.for_some (function
+             | NoDelta -> false
+             | InliningDelta
+             | Eager_unfolding_only -> true
+             | Unfold l -> Common.delta_depth_greater_than (Env.delta_depth_of_fv cfg.tcenv fv) l))
+    in
     let res = match qninfo, cfg.steps.unfold_only, cfg.steps.unfold_fully, cfg.steps.unfold_attr with
     // We unfold dm4f actions if and only if we are reifying
     | _ when Env.qninfo_is_action qninfo ->
@@ -918,29 +929,33 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         // being used. Note that in `None`, we default to `no`, otherwise everything would
         // unfold (unless we had all criteria present at once, which is unlikely)
 
-        comb_or [
-         (match cfg.steps.unfold_only with
-          | None -> no
-          | Some lids -> yesno <| BU.for_some (fv_eq_lid fv) lids)
-        ;(match cfg.steps.unfold_attr with
-          | None -> no
-          | Some lids -> yesno <| BU.for_some (fun at -> BU.for_some (fun lid -> U.is_fvar lid at) lids) attrs)
-        ;(match cfg.steps.unfold_fully with
-          | None -> no
-          | Some lids -> fullyno <| BU.for_some (fv_eq_lid fv) lids)
-        ]
+        let meets_some_criterion =
+          comb_or [
+          (match cfg.steps.unfold_only with
+            | None -> no
+            | Some lids -> yesno <| BU.for_some (fv_eq_lid fv) lids)
+          ;(match cfg.steps.unfold_attr with
+            | None -> no
+            | Some lids -> yesno <| BU.for_some (fun at -> BU.for_some (fun lid -> U.is_fvar lid at) lids) attrs)
+          ;(match cfg.steps.unfold_fully with
+            | None -> no
+            | Some lids -> fullyno <| BU.for_some (fv_eq_lid fv) lids)
+          ]
+        in
+        if cfg.steps.for_extraction
+        then (
+          //in the case of extraction, we always enable the ambient inline_for_extraction/unfold
+          //rules. User-specified criteria an interpreted as further enabling additional unfoldings
+          //for extraction only
+          match meets_some_criterion with
+          | false, _, _ -> default_unfolding()
+          | _ -> meets_some_criterion
+        )
+        else meets_some_criterion
 
     // Nothing special, just check the depth
     | _ ->
-        log_unfolding cfg (fun () -> BU.print3 "should_unfold: Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
-                                               (Print.fv_to_string fv)
-                                               (Print.delta_depth_to_string fv.fv_delta)
-                                               (FStar.Common.string_of_list Env.string_of_delta_level cfg.delta_level));
-        yesno <| (cfg.delta_level |> BU.for_some (function
-             | NoDelta -> false
-             | InliningDelta
-             | Eager_unfolding_only -> true
-             | Unfold l -> Common.delta_depth_greater_than (Env.delta_depth_of_fv cfg.tcenv fv) l))
+        default_unfolding()
     in
     log_unfolding cfg (fun () -> BU.print3 "should_unfold: For %s (%s), unfolding res = %s\n"
                     (Print.fv_to_string fv)

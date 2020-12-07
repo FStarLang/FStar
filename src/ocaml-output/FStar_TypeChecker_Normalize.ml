@@ -1869,6 +1869,35 @@ let (should_unfold :
                 let uu___2 = FStar_Util.string_of_bool y in
                 let uu___3 = FStar_Util.string_of_bool z in
                 FStar_Util.format3 "(%s,%s,%s)" uu___1 uu___2 uu___3 in
+          let default_unfolding uu___ =
+            FStar_TypeChecker_Cfg.log_unfolding cfg
+              (fun uu___2 ->
+                 let uu___3 = FStar_Syntax_Print.fv_to_string fv in
+                 let uu___4 =
+                   FStar_Syntax_Print.delta_depth_to_string
+                     fv.FStar_Syntax_Syntax.fv_delta in
+                 let uu___5 =
+                   FStar_Common.string_of_list
+                     FStar_TypeChecker_Env.string_of_delta_level
+                     cfg.FStar_TypeChecker_Cfg.delta_level in
+                 FStar_Util.print3
+                   "should_unfold: Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
+                   uu___3 uu___4 uu___5);
+            (let uu___2 =
+               FStar_All.pipe_right cfg.FStar_TypeChecker_Cfg.delta_level
+                 (FStar_Util.for_some
+                    (fun uu___3 ->
+                       match uu___3 with
+                       | FStar_TypeChecker_Env.NoDelta -> false
+                       | FStar_TypeChecker_Env.InliningDelta -> true
+                       | FStar_TypeChecker_Env.Eager_unfolding_only -> true
+                       | FStar_TypeChecker_Env.Unfold l ->
+                           let uu___4 =
+                             FStar_TypeChecker_Env.delta_depth_of_fv
+                               cfg.FStar_TypeChecker_Cfg.tcenv fv in
+                           FStar_TypeChecker_Common.delta_depth_greater_than
+                             uu___4 l)) in
+             FStar_All.pipe_left yesno uu___2) in
           let res =
             if FStar_TypeChecker_Env.qninfo_is_action qninfo
             then
@@ -1965,45 +1994,53 @@ let (should_unfold :
                            FStar_Util.print1
                              "should_unfold: Reached a %s with selective unfolding\n"
                              uu___6);
-                      (let uu___5 =
-                         let uu___6 =
-                           match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_only
-                           with
-                           | FStar_Pervasives_Native.None -> no
-                           | FStar_Pervasives_Native.Some lids ->
-                               let uu___7 =
-                                 FStar_Util.for_some
-                                   (FStar_Syntax_Syntax.fv_eq_lid fv) lids in
-                               FStar_All.pipe_left yesno uu___7 in
-                         let uu___7 =
-                           let uu___8 =
-                             match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_attr
+                      (let meets_some_criterion =
+                         let uu___5 =
+                           let uu___6 =
+                             match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_only
                              with
                              | FStar_Pervasives_Native.None -> no
                              | FStar_Pervasives_Native.Some lids ->
-                                 let uu___9 =
+                                 let uu___7 =
                                    FStar_Util.for_some
-                                     (fun at ->
-                                        FStar_Util.for_some
-                                          (fun lid ->
-                                             FStar_Syntax_Util.is_fvar lid at)
-                                          lids) attrs in
-                                 FStar_All.pipe_left yesno uu___9 in
-                           let uu___9 =
-                             let uu___10 =
-                               match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_fully
+                                     (FStar_Syntax_Syntax.fv_eq_lid fv) lids in
+                                 FStar_All.pipe_left yesno uu___7 in
+                           let uu___7 =
+                             let uu___8 =
+                               match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_attr
                                with
                                | FStar_Pervasives_Native.None -> no
                                | FStar_Pervasives_Native.Some lids ->
-                                   let uu___11 =
+                                   let uu___9 =
                                      FStar_Util.for_some
-                                       (FStar_Syntax_Syntax.fv_eq_lid fv)
-                                       lids in
-                                   FStar_All.pipe_left fullyno uu___11 in
-                             [uu___10] in
-                           uu___8 :: uu___9 in
-                         uu___6 :: uu___7 in
-                       comb_or uu___5))
+                                       (fun at ->
+                                          FStar_Util.for_some
+                                            (fun lid ->
+                                               FStar_Syntax_Util.is_fvar lid
+                                                 at) lids) attrs in
+                                   FStar_All.pipe_left yesno uu___9 in
+                             let uu___9 =
+                               let uu___10 =
+                                 match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_fully
+                                 with
+                                 | FStar_Pervasives_Native.None -> no
+                                 | FStar_Pervasives_Native.Some lids ->
+                                     let uu___11 =
+                                       FStar_Util.for_some
+                                         (FStar_Syntax_Syntax.fv_eq_lid fv)
+                                         lids in
+                                     FStar_All.pipe_left fullyno uu___11 in
+                               [uu___10] in
+                             uu___8 :: uu___9 in
+                           uu___6 :: uu___7 in
+                         comb_or uu___5 in
+                       if
+                         (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                       then
+                         match meets_some_criterion with
+                         | (false, uu___5, uu___6) -> default_unfolding ()
+                         | uu___5 -> meets_some_criterion
+                       else meets_some_criterion))
                  | (uu___, uu___1, FStar_Pervasives_Native.Some uu___2,
                     uu___3) ->
                      (FStar_TypeChecker_Cfg.log_unfolding cfg
@@ -2012,45 +2049,53 @@ let (should_unfold :
                            FStar_Util.print1
                              "should_unfold: Reached a %s with selective unfolding\n"
                              uu___6);
-                      (let uu___5 =
-                         let uu___6 =
-                           match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_only
-                           with
-                           | FStar_Pervasives_Native.None -> no
-                           | FStar_Pervasives_Native.Some lids ->
-                               let uu___7 =
-                                 FStar_Util.for_some
-                                   (FStar_Syntax_Syntax.fv_eq_lid fv) lids in
-                               FStar_All.pipe_left yesno uu___7 in
-                         let uu___7 =
-                           let uu___8 =
-                             match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_attr
+                      (let meets_some_criterion =
+                         let uu___5 =
+                           let uu___6 =
+                             match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_only
                              with
                              | FStar_Pervasives_Native.None -> no
                              | FStar_Pervasives_Native.Some lids ->
-                                 let uu___9 =
+                                 let uu___7 =
                                    FStar_Util.for_some
-                                     (fun at ->
-                                        FStar_Util.for_some
-                                          (fun lid ->
-                                             FStar_Syntax_Util.is_fvar lid at)
-                                          lids) attrs in
-                                 FStar_All.pipe_left yesno uu___9 in
-                           let uu___9 =
-                             let uu___10 =
-                               match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_fully
+                                     (FStar_Syntax_Syntax.fv_eq_lid fv) lids in
+                                 FStar_All.pipe_left yesno uu___7 in
+                           let uu___7 =
+                             let uu___8 =
+                               match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_attr
                                with
                                | FStar_Pervasives_Native.None -> no
                                | FStar_Pervasives_Native.Some lids ->
-                                   let uu___11 =
+                                   let uu___9 =
                                      FStar_Util.for_some
-                                       (FStar_Syntax_Syntax.fv_eq_lid fv)
-                                       lids in
-                                   FStar_All.pipe_left fullyno uu___11 in
-                             [uu___10] in
-                           uu___8 :: uu___9 in
-                         uu___6 :: uu___7 in
-                       comb_or uu___5))
+                                       (fun at ->
+                                          FStar_Util.for_some
+                                            (fun lid ->
+                                               FStar_Syntax_Util.is_fvar lid
+                                                 at) lids) attrs in
+                                   FStar_All.pipe_left yesno uu___9 in
+                             let uu___9 =
+                               let uu___10 =
+                                 match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_fully
+                                 with
+                                 | FStar_Pervasives_Native.None -> no
+                                 | FStar_Pervasives_Native.Some lids ->
+                                     let uu___11 =
+                                       FStar_Util.for_some
+                                         (FStar_Syntax_Syntax.fv_eq_lid fv)
+                                         lids in
+                                     FStar_All.pipe_left fullyno uu___11 in
+                               [uu___10] in
+                             uu___8 :: uu___9 in
+                           uu___6 :: uu___7 in
+                         comb_or uu___5 in
+                       if
+                         (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                       then
+                         match meets_some_criterion with
+                         | (false, uu___5, uu___6) -> default_unfolding ()
+                         | uu___5 -> meets_some_criterion
+                       else meets_some_criterion))
                  | (uu___, uu___1, uu___2, FStar_Pervasives_Native.Some
                     uu___3) ->
                      (FStar_TypeChecker_Cfg.log_unfolding cfg
@@ -2059,77 +2104,54 @@ let (should_unfold :
                            FStar_Util.print1
                              "should_unfold: Reached a %s with selective unfolding\n"
                              uu___6);
-                      (let uu___5 =
-                         let uu___6 =
-                           match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_only
-                           with
-                           | FStar_Pervasives_Native.None -> no
-                           | FStar_Pervasives_Native.Some lids ->
-                               let uu___7 =
-                                 FStar_Util.for_some
-                                   (FStar_Syntax_Syntax.fv_eq_lid fv) lids in
-                               FStar_All.pipe_left yesno uu___7 in
-                         let uu___7 =
-                           let uu___8 =
-                             match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_attr
+                      (let meets_some_criterion =
+                         let uu___5 =
+                           let uu___6 =
+                             match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_only
                              with
                              | FStar_Pervasives_Native.None -> no
                              | FStar_Pervasives_Native.Some lids ->
-                                 let uu___9 =
+                                 let uu___7 =
                                    FStar_Util.for_some
-                                     (fun at ->
-                                        FStar_Util.for_some
-                                          (fun lid ->
-                                             FStar_Syntax_Util.is_fvar lid at)
-                                          lids) attrs in
-                                 FStar_All.pipe_left yesno uu___9 in
-                           let uu___9 =
-                             let uu___10 =
-                               match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_fully
+                                     (FStar_Syntax_Syntax.fv_eq_lid fv) lids in
+                                 FStar_All.pipe_left yesno uu___7 in
+                           let uu___7 =
+                             let uu___8 =
+                               match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_attr
                                with
                                | FStar_Pervasives_Native.None -> no
                                | FStar_Pervasives_Native.Some lids ->
-                                   let uu___11 =
+                                   let uu___9 =
                                      FStar_Util.for_some
-                                       (FStar_Syntax_Syntax.fv_eq_lid fv)
-                                       lids in
-                                   FStar_All.pipe_left fullyno uu___11 in
-                             [uu___10] in
-                           uu___8 :: uu___9 in
-                         uu___6 :: uu___7 in
-                       comb_or uu___5))
-                 | uu___ ->
-                     (FStar_TypeChecker_Cfg.log_unfolding cfg
-                        (fun uu___2 ->
-                           let uu___3 = FStar_Syntax_Print.fv_to_string fv in
-                           let uu___4 =
-                             FStar_Syntax_Print.delta_depth_to_string
-                               fv.FStar_Syntax_Syntax.fv_delta in
-                           let uu___5 =
-                             FStar_Common.string_of_list
-                               FStar_TypeChecker_Env.string_of_delta_level
-                               cfg.FStar_TypeChecker_Cfg.delta_level in
-                           FStar_Util.print3
-                             "should_unfold: Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n"
-                             uu___3 uu___4 uu___5);
-                      (let uu___2 =
-                         FStar_All.pipe_right
-                           cfg.FStar_TypeChecker_Cfg.delta_level
-                           (FStar_Util.for_some
-                              (fun uu___3 ->
-                                 match uu___3 with
-                                 | FStar_TypeChecker_Env.NoDelta -> false
-                                 | FStar_TypeChecker_Env.InliningDelta ->
-                                     true
-                                 | FStar_TypeChecker_Env.Eager_unfolding_only
-                                     -> true
-                                 | FStar_TypeChecker_Env.Unfold l ->
-                                     let uu___4 =
-                                       FStar_TypeChecker_Env.delta_depth_of_fv
-                                         cfg.FStar_TypeChecker_Cfg.tcenv fv in
-                                     FStar_TypeChecker_Common.delta_depth_greater_than
-                                       uu___4 l)) in
-                       FStar_All.pipe_left yesno uu___2))) in
+                                       (fun at ->
+                                          FStar_Util.for_some
+                                            (fun lid ->
+                                               FStar_Syntax_Util.is_fvar lid
+                                                 at) lids) attrs in
+                                   FStar_All.pipe_left yesno uu___9 in
+                             let uu___9 =
+                               let uu___10 =
+                                 match (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_fully
+                                 with
+                                 | FStar_Pervasives_Native.None -> no
+                                 | FStar_Pervasives_Native.Some lids ->
+                                     let uu___11 =
+                                       FStar_Util.for_some
+                                         (FStar_Syntax_Syntax.fv_eq_lid fv)
+                                         lids in
+                                     FStar_All.pipe_left fullyno uu___11 in
+                               [uu___10] in
+                             uu___8 :: uu___9 in
+                           uu___6 :: uu___7 in
+                         comb_or uu___5 in
+                       if
+                         (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
+                       then
+                         match meets_some_criterion with
+                         | (false, uu___5, uu___6) -> default_unfolding ()
+                         | uu___5 -> meets_some_criterion
+                       else meets_some_criterion))
+                 | uu___ -> default_unfolding ()) in
           FStar_TypeChecker_Cfg.log_unfolding cfg
             (fun uu___1 ->
                let uu___2 = FStar_Syntax_Print.fv_to_string fv in
