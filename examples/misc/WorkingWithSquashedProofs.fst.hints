@@ -1,0 +1,70 @@
+[
+  "|Ä\u0016†‡>K\u0014Ë›¤yŽ!\u0015ã",
+  [
+    [
+      "WorkingWithSquashedProofs.lemma_as_squash",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "c259f4f269a6ad08a1e245e4fe0f11c5"
+    ],
+    [
+      "WorkingWithSquashedProofs.foo_implies_bar",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_460b166284656e401cd2507f30d7a622"
+      ],
+      0,
+      "3a7b03162d196947a34774b5e216e199"
+    ],
+    [
+      "WorkingWithSquashedProofs.valid_baz",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "equation_Prims.squash",
+        "fuel_guarded_inversion_Prims.c_or",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "af7f4275bb296b82a12b94eb8e215843"
+    ],
+    [
+      "WorkingWithSquashedProofs.valid_baz_alt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "equation_Prims.squash",
+        "fuel_guarded_inversion_Prims.c_or",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "17f43ca4ff1f5cc94498ac7fedf6c19e"
+    ],
+    [
+      "WorkingWithSquashedProofs.elim_squash_or",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Left",
+        "disc_equation_Prims.Right", "fuel_guarded_inversion_Prims.c_or",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "c3a5f10b709cbaad0f9bbcdf4ecd98ad"
+    ]
+  ]
+]
