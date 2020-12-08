@@ -52,7 +52,9 @@ let (unshadow :
               match uu___ with
               | b2::[] -> b2
               | uu___1 -> failwith "impossible: unshadow subst_binders" in
-            let uu___ = b1 in
+            let uu___ =
+              ((b1.FStar_Syntax_Syntax.binder_bv),
+                (b1.FStar_Syntax_Syntax.binder_qual)) in
             (match uu___ with
              | (bv0, q) ->
                  let nbs =
@@ -60,7 +62,13 @@ let (unshadow :
                    fresh_until uu___1
                      (fun s1 -> Prims.op_Negation (FStar_List.mem s1 seen)) in
                  let bv = sset bv0 nbs in
-                 let b2 = (bv, q) in
+                 let b2 =
+                   {
+                     FStar_Syntax_Syntax.binder_bv = bv;
+                     FStar_Syntax_Syntax.binder_qual = q;
+                     FStar_Syntax_Syntax.binder_attrs =
+                       (b1.FStar_Syntax_Syntax.binder_attrs)
+                   } in
                  let uu___1 =
                    let uu___2 =
                      let uu___3 =

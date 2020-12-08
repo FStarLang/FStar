@@ -419,11 +419,12 @@ let rec translate (cfg:config) (bs:list<t>) (e:term) : t =
       let norm () =
         let ctx, binders_rev =
           List.fold_left
-            (fun (ctx, binders_rev) (x, q) ->
+            (fun (ctx, binders_rev) b ->
+              let x = b.binder_bv in
               let t = readback cfg (translate cfg ctx x.sort) in
               let x = { S.freshen_bv x with sort = t } in
               let ctx = mkAccuVar x :: ctx in
-              ctx, (x, q) :: binders_rev)
+              ctx, ({b with binder_bv=x}) :: binders_rev)
             (bs, [])
             xs
         in
@@ -835,7 +836,7 @@ and translate_fv (cfg: config) (bs:list<t>) (fvar:fv): t =
                  | None ->
                    debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
                    iapp cfg (mkFV fvar [] []) args'),
-              (let f (_:int) = S.new_bv None S.t_unit, None in
+              (let f (_:int) = S.mk_binder (S.new_bv None S.t_unit) in
                BU.Inl ([], FStar.Common.tabulate arity f, None)),
               arity)
 
@@ -1000,7 +1001,7 @@ and translate_monadic (m, ty) cfg bs e : t =
                 S.residual_flags=[];
                 S.residual_typ=Some ty
             } in
-           S.mk (Tm_abs([(BU.left lb.lbname, None)], body, Some body_rc)) body.pos
+           S.mk (Tm_abs([S.mk_binder (BU.left lb.lbname)], body, Some body_rc)) body.pos
        in
        let maybe_range_arg =
            if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
@@ -1112,7 +1113,7 @@ and translate_monadic_lift (msrc, mtgt, ty) cfg bs e : t =
       (* The wp is only necessary to typecheck, so this should not create an issue. *)
       let lift_lam =
         let x = S.new_bv None S.tun in
-        U.abs [(x, None)]
+        U.abs [S.mk_binder x]
               (lift U_unknown ty (S.bv_to_name x))
               None
       in
@@ -1172,12 +1173,13 @@ and readback (cfg:config) (x:t) : term =
         | BU.Inl (ctx, binders, rc) ->
           let ctx, binders_rev, accus_rev =
             List.fold_left
-              (fun (ctx, binders_rev, accus_rev) (x, q) ->
+              (fun (ctx, binders_rev, accus_rev) b ->
+                let x = b.binder_bv in
                 let tnorm = readback cfg (translate cfg ctx x.sort) in
                 let x = { S.freshen_bv x with sort = tnorm } in
                 let ax = mkAccuVar x in
                 let ctx = ax :: ctx in
-                ctx, (x,q)::binders_rev, ax::accus_rev)
+                ctx, ({b with binder_bv=x})::binders_rev, ax::accus_rev)
               (ctx, [], [])
               binders
           in
@@ -1195,7 +1197,7 @@ and readback (cfg:config) (x:t) : term =
             List.fold_right
               (fun (t, _) (binders, accus) ->
                 let x = S.new_bv None (readback cfg t) in
-                (x, None)::binders, mkAccuVar x :: accus)
+                (S.mk_binder x)::binders, mkAccuVar x :: accus)
               args
               ([],[])
           in
@@ -1230,7 +1232,7 @@ and readback (cfg:config) (x:t) : term =
           (fun (t, q) ->
             let t = readback cfg t in
             let x = S.new_bv None t in
-            (x, q))
+            ({binder_bv=x;binder_qual=q;binder_attrs=[]}))
           args
       in
       let c = readback_comp cfg c in
@@ -1304,7 +1306,7 @@ and readback (cfg:config) (x:t) : term =
     | Accu(UnreducedLet (var, typ, defn, body, lb), args) ->
       let typ = readback cfg (Thunk.force typ) in
       let defn = readback cfg (Thunk.force defn) in
-      let body = SS.close [var, None] (readback cfg (Thunk.force body)) in
+      let body = SS.close [S.mk_binder var] (readback cfg (Thunk.force body)) in
       let lbname = BU.Inl ({ BU.left lb.lbname with sort = typ }) in
       let lb = { lb with lbname = lbname; lbtyp = typ; lbdef = defn } in
       let hd = S.mk (Tm_let((false, [lb]), body)) Range.dummyRange in

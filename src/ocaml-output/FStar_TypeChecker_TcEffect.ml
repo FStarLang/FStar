@@ -336,17 +336,13 @@ let (validate_layered_effect_binders :
                   (fun t ->
                      let uu___1 =
                        let uu___2 =
-                         let uu___3 =
-                           FStar_All.pipe_right b FStar_Pervasives_Native.fst in
-                         FStar_All.pipe_right uu___3
-                           FStar_Syntax_Syntax.bv_to_name in
+                         FStar_Syntax_Syntax.bv_to_name
+                           b.FStar_Syntax_Syntax.binder_bv in
                        FStar_Syntax_Util.eq_tm uu___2 t in
                      uu___1 = FStar_Syntax_Util.Equal) repr_names_args)
                  ||
-                 (match FStar_Pervasives_Native.snd b with
-                  | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta
-                      (FStar_Syntax_Syntax.Arg_qualifier_meta_attr uu___1))
-                      -> true
+                 (match b.FStar_Syntax_Syntax.binder_attrs with
+                  | uu___1::uu___2 -> true
                   | uu___1 -> false) in
              let invalid_binders =
                FStar_List.filter
@@ -376,7 +372,7 @@ let (validate_layered_effect_binders :
                                FStar_TypeChecker_Env.push_binders env1 [b] in
                              let uu___4 =
                                FStar_TypeChecker_Normalize.non_info_norm env2
-                                 (FStar_Pervasives_Native.fst b).FStar_Syntax_Syntax.sort in
+                                 (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
                              if uu___4
                              then (env2, bs1)
                              else (env2, (b :: bs1))) (env, []) bs in
@@ -482,10 +478,8 @@ let (tc_layered_eff_decl :
                 let fresh_x_a x a =
                   let uu___4 =
                     let uu___5 =
-                      let uu___6 =
-                        FStar_All.pipe_right a FStar_Pervasives_Native.fst in
-                      FStar_All.pipe_right uu___6
-                        FStar_Syntax_Syntax.bv_to_name in
+                      FStar_Syntax_Syntax.bv_to_name
+                        a.FStar_Syntax_Syntax.binder_bv in
                     FStar_Syntax_Syntax.gen_bv x FStar_Pervasives_Native.None
                       uu___5 in
                   FStar_All.pipe_right uu___4 FStar_Syntax_Syntax.mk_binder in
@@ -513,10 +507,8 @@ let (tc_layered_eff_decl :
                             | (a, u) ->
                                 let rest_bs =
                                   let uu___7 =
-                                    let uu___8 =
-                                      FStar_All.pipe_right a
-                                        FStar_Pervasives_Native.fst in
-                                    FStar_All.pipe_right uu___8
+                                    FStar_All.pipe_right
+                                      a.FStar_Syntax_Syntax.binder_bv
                                       FStar_Syntax_Syntax.bv_to_name in
                                   FStar_TypeChecker_Util.layered_effect_indices_as_binders
                                     env r ed.FStar_Syntax_Syntax.mname
@@ -564,10 +556,8 @@ let (tc_layered_eff_decl :
                                      match uu___8 with
                                      | (us1, t, uu___9) -> (us1, t) in
                                    let uu___8 =
-                                     let uu___9 =
-                                       FStar_All.pipe_right a
-                                         FStar_Pervasives_Native.fst in
-                                     FStar_All.pipe_right uu___9
+                                     FStar_All.pipe_right
+                                       a.FStar_Syntax_Syntax.binder_bv
                                        FStar_Syntax_Syntax.bv_to_name in
                                    FStar_TypeChecker_Util.layered_effect_indices_as_binders
                                      env r ed.FStar_Syntax_Syntax.mname
@@ -671,41 +661,51 @@ let (tc_layered_eff_decl :
                                          let uu___12 =
                                            FStar_Syntax_Subst.open_binders bs in
                                          (match uu___12 with
-                                          | (a', uu___13)::(x', uu___14)::bs1
+                                          | {
+                                              FStar_Syntax_Syntax.binder_bv =
+                                                a';
+                                              FStar_Syntax_Syntax.binder_qual
+                                                = uu___13;
+                                              FStar_Syntax_Syntax.binder_attrs
+                                                = uu___14;_}::{
+                                                                FStar_Syntax_Syntax.binder_bv
+                                                                  = x';
+                                                                FStar_Syntax_Syntax.binder_qual
+                                                                  = uu___15;
+                                                                FStar_Syntax_Syntax.binder_attrs
+                                                                  = uu___16;_}::bs1
                                               ->
-                                              let uu___15 =
-                                                let uu___16 =
-                                                  let uu___17 =
-                                                    let uu___18 =
-                                                      let uu___19 =
-                                                        let uu___20 =
+                                              let uu___17 =
+                                                let uu___18 =
+                                                  let uu___19 =
+                                                    let uu___20 =
+                                                      let uu___21 =
+                                                        let uu___22 =
                                                           FStar_Syntax_Syntax.bv_to_name
-                                                            (FStar_Pervasives_Native.fst
-                                                               a) in
-                                                        (a', uu___20) in
+                                                            a.FStar_Syntax_Syntax.binder_bv in
+                                                        (a', uu___22) in
                                                       FStar_Syntax_Syntax.NT
-                                                        uu___19 in
-                                                    [uu___18] in
+                                                        uu___21 in
+                                                    [uu___20] in
                                                   FStar_Syntax_Subst.subst_binders
-                                                    uu___17 in
+                                                    uu___19 in
                                                 FStar_All.pipe_right bs1
-                                                  uu___16 in
-                                              let uu___16 =
-                                                let uu___17 =
-                                                  let uu___18 =
-                                                    let uu___19 =
-                                                      let uu___20 =
+                                                  uu___18 in
+                                              let uu___18 =
+                                                let uu___19 =
+                                                  let uu___20 =
+                                                    let uu___21 =
+                                                      let uu___22 =
                                                         FStar_Syntax_Syntax.bv_to_name
-                                                          (FStar_Pervasives_Native.fst
-                                                             x_a) in
-                                                      (x', uu___20) in
+                                                          x_a.FStar_Syntax_Syntax.binder_bv in
+                                                      (x', uu___22) in
                                                     FStar_Syntax_Syntax.NT
-                                                      uu___19 in
-                                                  [uu___18] in
+                                                      uu___21 in
+                                                  [uu___20] in
                                                 FStar_Syntax_Subst.subst_binders
-                                                  uu___17 in
-                                              FStar_All.pipe_right uu___15
-                                                uu___16)
+                                                  uu___19 in
+                                              FStar_All.pipe_right uu___17
+                                                uu___18)
                                      | uu___11 ->
                                          not_an_arrow_error "return"
                                            (Prims.of_int (2)) ty r in
@@ -716,7 +716,7 @@ let (tc_layered_eff_decl :
                                          bs in
                                      let uu___12 =
                                        FStar_All.pipe_right
-                                         (FStar_Pervasives_Native.fst a)
+                                         a.FStar_Syntax_Syntax.binder_bv
                                          FStar_Syntax_Syntax.bv_to_name in
                                      fresh_repr r uu___11 u_a uu___12 in
                                    (match uu___10 with
@@ -809,11 +809,22 @@ let (tc_layered_eff_decl :
                                                  FStar_Syntax_Subst.open_binders
                                                    bs in
                                                (match uu___14 with
-                                                | (a', uu___15)::(b',
-                                                                  uu___16)::bs1
+                                                | {
+                                                    FStar_Syntax_Syntax.binder_bv
+                                                      = a';
+                                                    FStar_Syntax_Syntax.binder_qual
+                                                      = uu___15;
+                                                    FStar_Syntax_Syntax.binder_attrs
+                                                      = uu___16;_}::{
+                                                                    FStar_Syntax_Syntax.binder_bv
+                                                                    = b';
+                                                                    FStar_Syntax_Syntax.binder_qual
+                                                                    = uu___17;
+                                                                    FStar_Syntax_Syntax.binder_attrs
+                                                                    = uu___18;_}::bs1
                                                     ->
-                                                    let uu___17 =
-                                                      let uu___18 =
+                                                    let uu___19 =
+                                                      let uu___20 =
                                                         FStar_All.pipe_right
                                                           bs1
                                                           (FStar_List.splitAt
@@ -822,35 +833,33 @@ let (tc_layered_eff_decl :
                                                                 -
                                                                 (Prims.of_int (2)))) in
                                                       FStar_All.pipe_right
-                                                        uu___18
+                                                        uu___20
                                                         FStar_Pervasives_Native.fst in
-                                                    let uu___18 =
-                                                      let uu___19 =
-                                                        let uu___20 =
-                                                          let uu___21 =
-                                                            let uu___22 =
+                                                    let uu___20 =
+                                                      let uu___21 =
+                                                        let uu___22 =
+                                                          let uu___23 =
+                                                            let uu___24 =
                                                               FStar_Syntax_Syntax.bv_to_name
-                                                                (FStar_Pervasives_Native.fst
-                                                                   a) in
-                                                            (a', uu___22) in
+                                                                a.FStar_Syntax_Syntax.binder_bv in
+                                                            (a', uu___24) in
                                                           FStar_Syntax_Syntax.NT
-                                                            uu___21 in
-                                                        let uu___21 =
-                                                          let uu___22 =
-                                                            let uu___23 =
-                                                              let uu___24 =
+                                                            uu___23 in
+                                                        let uu___23 =
+                                                          let uu___24 =
+                                                            let uu___25 =
+                                                              let uu___26 =
                                                                 FStar_Syntax_Syntax.bv_to_name
-                                                                  (FStar_Pervasives_Native.fst
-                                                                    b) in
-                                                              (b', uu___24) in
+                                                                  b.FStar_Syntax_Syntax.binder_bv in
+                                                              (b', uu___26) in
                                                             FStar_Syntax_Syntax.NT
-                                                              uu___23 in
-                                                          [uu___22] in
-                                                        uu___20 :: uu___21 in
+                                                              uu___25 in
+                                                          [uu___24] in
+                                                        uu___22 :: uu___23 in
                                                       FStar_Syntax_Subst.subst_binders
-                                                        uu___19 in
+                                                        uu___21 in
                                                     FStar_All.pipe_right
-                                                      uu___17 uu___18)
+                                                      uu___19 uu___20)
                                            | uu___13 ->
                                                not_an_arrow_error "bind"
                                                  (Prims.of_int (4)) ty r in
@@ -862,8 +871,7 @@ let (tc_layered_eff_decl :
                                                  env bs in
                                              let uu___15 =
                                                FStar_All.pipe_right
-                                                 (FStar_Pervasives_Native.fst
-                                                    a)
+                                                 a.FStar_Syntax_Syntax.binder_bv
                                                  FStar_Syntax_Syntax.bv_to_name in
                                              fresh_repr r uu___14 u_a uu___15 in
                                            match uu___13 with
@@ -889,8 +897,7 @@ let (tc_layered_eff_decl :
                                                          [x_a]) in
                                                   let uu___16 =
                                                     FStar_All.pipe_right
-                                                      (FStar_Pervasives_Native.fst
-                                                         b)
+                                                      b.FStar_Syntax_Syntax.binder_bv
                                                       FStar_Syntax_Syntax.bv_to_name in
                                                   fresh_repr r uu___15 u_b
                                                     uu___16 in
@@ -926,8 +933,7 @@ let (tc_layered_eff_decl :
                                                          env bs in
                                                      let uu___16 =
                                                        FStar_All.pipe_right
-                                                         (FStar_Pervasives_Native.fst
-                                                            b)
+                                                         b.FStar_Syntax_Syntax.binder_bv
                                                          FStar_Syntax_Syntax.bv_to_name in
                                                      fresh_repr r uu___15 u_b
                                                        uu___16 in
@@ -1080,8 +1086,7 @@ let (tc_layered_eff_decl :
                                                                     let uu___21
                                                                     =
                                                                     FStar_Syntax_Subst.compress
-                                                                    (FStar_Pervasives_Native.fst
-                                                                    g_b).FStar_Syntax_Syntax.sort in
+                                                                    (g_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
                                                                     uu___21.FStar_Syntax_Syntax.n in
                                                                     match uu___20
                                                                     with
@@ -1099,8 +1104,7 @@ let (tc_layered_eff_decl :
                                                                     validate_layered_effect_binders
                                                                     env1 bs3
                                                                     [
-                                                                    (FStar_Pervasives_Native.fst
-                                                                    f_b).FStar_Syntax_Syntax.sort;
+                                                                    (f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
                                                                     g_sort;
                                                                     res_t]
                                                                     check_non_informative_binders
@@ -1168,7 +1172,8 @@ let (tc_layered_eff_decl :
                                                 let uu___17 =
                                                   FStar_All.pipe_right bs1
                                                     (FStar_List.map
-                                                       FStar_Pervasives_Native.fst) in
+                                                       (fun b ->
+                                                          b.FStar_Syntax_Syntax.binder_bv)) in
                                                 FStar_All.pipe_right uu___17
                                                   (FStar_List.map
                                                      FStar_Syntax_Syntax.bv_to_name) in
@@ -1184,10 +1189,8 @@ let (tc_layered_eff_decl :
                                           repr_t_applied in
                                       let uu___13 =
                                         let uu___14 =
-                                          let uu___15 =
-                                            FStar_All.pipe_right f_b
-                                              FStar_Pervasives_Native.fst in
-                                          FStar_All.pipe_right uu___15
+                                          FStar_All.pipe_right
+                                            f_b.FStar_Syntax_Syntax.binder_bv
                                             FStar_Syntax_Syntax.bv_to_name in
                                         FStar_Syntax_Util.abs
                                           (FStar_List.append bs1 [f_b])
@@ -1247,33 +1250,39 @@ let (tc_layered_eff_decl :
                                               FStar_Syntax_Subst.open_binders
                                                 bs in
                                             (match uu___15 with
-                                             | (a', uu___16)::bs1 ->
-                                                 let uu___17 =
-                                                   let uu___18 =
+                                             | {
+                                                 FStar_Syntax_Syntax.binder_bv
+                                                   = a';
+                                                 FStar_Syntax_Syntax.binder_qual
+                                                   = uu___16;
+                                                 FStar_Syntax_Syntax.binder_attrs
+                                                   = uu___17;_}::bs1
+                                                 ->
+                                                 let uu___18 =
+                                                   let uu___19 =
                                                      FStar_All.pipe_right bs1
                                                        (FStar_List.splitAt
                                                           ((FStar_List.length
                                                               bs1)
                                                              - Prims.int_one)) in
                                                    FStar_All.pipe_right
-                                                     uu___18
+                                                     uu___19
                                                      FStar_Pervasives_Native.fst in
-                                                 let uu___18 =
-                                                   let uu___19 =
-                                                     let uu___20 =
-                                                       let uu___21 =
-                                                         let uu___22 =
+                                                 let uu___19 =
+                                                   let uu___20 =
+                                                     let uu___21 =
+                                                       let uu___22 =
+                                                         let uu___23 =
                                                            FStar_Syntax_Syntax.bv_to_name
-                                                             (FStar_Pervasives_Native.fst
-                                                                a) in
-                                                         (a', uu___22) in
+                                                             a.FStar_Syntax_Syntax.binder_bv in
+                                                         (a', uu___23) in
                                                        FStar_Syntax_Syntax.NT
-                                                         uu___21 in
-                                                     [uu___20] in
+                                                         uu___22 in
+                                                     [uu___21] in
                                                    FStar_Syntax_Subst.subst_binders
-                                                     uu___19 in
-                                                 FStar_All.pipe_right uu___17
-                                                   uu___18)
+                                                     uu___20 in
+                                                 FStar_All.pipe_right uu___18
+                                                   uu___19)
                                         | uu___14 ->
                                             not_an_arrow_error "stronger"
                                               (Prims.of_int (2)) ty r in
@@ -1285,7 +1294,7 @@ let (tc_layered_eff_decl :
                                               env bs in
                                           let uu___16 =
                                             FStar_All.pipe_right
-                                              (FStar_Pervasives_Native.fst a)
+                                              a.FStar_Syntax_Syntax.binder_bv
                                               FStar_Syntax_Syntax.bv_to_name in
                                           fresh_repr r uu___15 u uu___16 in
                                         match uu___14 with
@@ -1307,8 +1316,7 @@ let (tc_layered_eff_decl :
                                                  env bs in
                                              let uu___16 =
                                                FStar_All.pipe_right
-                                                 (FStar_Pervasives_Native.fst
-                                                    a)
+                                                 a.FStar_Syntax_Syntax.binder_bv
                                                  FStar_Syntax_Syntax.bv_to_name in
                                              fresh_repr r uu___15 u uu___16 in
                                            (match uu___14 with
@@ -1454,8 +1462,7 @@ let (tc_layered_eff_decl :
                                                                     validate_layered_effect_binders
                                                                     env1 bs3
                                                                     [
-                                                                    (FStar_Pervasives_Native.fst
-                                                                    f_b).FStar_Syntax_Syntax.sort;
+                                                                    (f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
                                                                     res_t]
                                                                     check_non_informative_binders
                                                                     r)));
@@ -1522,7 +1529,8 @@ let (tc_layered_eff_decl :
                                                  let uu___18 =
                                                    FStar_All.pipe_right bs1
                                                      (FStar_List.map
-                                                        FStar_Pervasives_Native.fst) in
+                                                        (fun b ->
+                                                           b.FStar_Syntax_Syntax.binder_bv)) in
                                                  FStar_All.pipe_right uu___18
                                                    (FStar_List.map
                                                       FStar_Syntax_Syntax.bv_to_name) in
@@ -1593,9 +1601,16 @@ let (tc_layered_eff_decl :
                                                    FStar_Syntax_Subst.open_binders
                                                      bs in
                                                  (match uu___17 with
-                                                  | (a', uu___18)::bs1 ->
-                                                      let uu___19 =
-                                                        let uu___20 =
+                                                  | {
+                                                      FStar_Syntax_Syntax.binder_bv
+                                                        = a';
+                                                      FStar_Syntax_Syntax.binder_qual
+                                                        = uu___18;
+                                                      FStar_Syntax_Syntax.binder_attrs
+                                                        = uu___19;_}::bs1
+                                                      ->
+                                                      let uu___20 =
+                                                        let uu___21 =
                                                           FStar_All.pipe_right
                                                             bs1
                                                             (FStar_List.splitAt
@@ -1604,28 +1619,24 @@ let (tc_layered_eff_decl :
                                                                   -
                                                                   (Prims.of_int (3)))) in
                                                         FStar_All.pipe_right
-                                                          uu___20
+                                                          uu___21
                                                           FStar_Pervasives_Native.fst in
-                                                      let uu___20 =
-                                                        let uu___21 =
-                                                          let uu___22 =
-                                                            let uu___23 =
-                                                              let uu___24 =
-                                                                let uu___25 =
-                                                                  FStar_All.pipe_right
-                                                                    a
-                                                                    FStar_Pervasives_Native.fst in
+                                                      let uu___21 =
+                                                        let uu___22 =
+                                                          let uu___23 =
+                                                            let uu___24 =
+                                                              let uu___25 =
                                                                 FStar_All.pipe_right
-                                                                  uu___25
+                                                                  a.FStar_Syntax_Syntax.binder_bv
                                                                   FStar_Syntax_Syntax.bv_to_name in
-                                                              (a', uu___24) in
+                                                              (a', uu___25) in
                                                             FStar_Syntax_Syntax.NT
-                                                              uu___23 in
-                                                          [uu___22] in
+                                                              uu___24 in
+                                                          [uu___23] in
                                                         FStar_Syntax_Subst.subst_binders
-                                                          uu___21 in
+                                                          uu___22 in
                                                       FStar_All.pipe_right
-                                                        uu___19 uu___20)
+                                                        uu___20 uu___21)
                                              | uu___16 ->
                                                  not_an_arrow_error
                                                    "if_then_else"
@@ -1637,10 +1648,8 @@ let (tc_layered_eff_decl :
                                                  FStar_TypeChecker_Env.push_binders
                                                    env bs in
                                                let uu___18 =
-                                                 let uu___19 =
-                                                   FStar_All.pipe_right a
-                                                     FStar_Pervasives_Native.fst in
-                                                 FStar_All.pipe_right uu___19
+                                                 FStar_All.pipe_right
+                                                   a.FStar_Syntax_Syntax.binder_bv
                                                    FStar_Syntax_Syntax.bv_to_name in
                                                fresh_repr r uu___17 u_a
                                                  uu___18 in
@@ -1664,12 +1673,8 @@ let (tc_layered_eff_decl :
                                                       FStar_TypeChecker_Env.push_binders
                                                         env bs in
                                                     let uu___19 =
-                                                      let uu___20 =
-                                                        FStar_All.pipe_right
-                                                          a
-                                                          FStar_Pervasives_Native.fst in
                                                       FStar_All.pipe_right
-                                                        uu___20
+                                                        a.FStar_Syntax_Syntax.binder_bv
                                                         FStar_Syntax_Syntax.bv_to_name in
                                                     fresh_repr r uu___18 u_a
                                                       uu___19 in
@@ -1703,12 +1708,8 @@ let (tc_layered_eff_decl :
                                                            (FStar_List.append
                                                               bs [p_b]) in
                                                        let uu___19 =
-                                                         let uu___20 =
-                                                           FStar_All.pipe_right
-                                                             a
-                                                             FStar_Pervasives_Native.fst in
                                                          FStar_All.pipe_right
-                                                           uu___20
+                                                           a.FStar_Syntax_Syntax.binder_bv
                                                            FStar_Syntax_Syntax.bv_to_name in
                                                        fresh_repr r uu___18
                                                          u_a uu___19 in
@@ -1809,10 +1810,8 @@ let (tc_layered_eff_decl :
                                                                     validate_layered_effect_binders
                                                                     env1 bs3
                                                                     [
-                                                                    (FStar_Pervasives_Native.fst
-                                                                    f_b).FStar_Syntax_Syntax.sort;
-                                                                    (FStar_Pervasives_Native.fst
-                                                                    g_b).FStar_Syntax_Syntax.sort;
+                                                                    (f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
+                                                                    (g_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
                                                                     body1]
                                                                     check_non_informative_binders
                                                                     r)));
@@ -1880,7 +1879,8 @@ let (tc_layered_eff_decl :
                                                    FStar_Pervasives_Native.snd in
                                                FStar_All.pipe_right uu___21
                                                  (FStar_List.map
-                                                    FStar_Pervasives_Native.fst) in
+                                                    (fun b ->
+                                                       b.FStar_Syntax_Syntax.binder_bv)) in
                                              FStar_All.pipe_right uu___20
                                                (FStar_List.map
                                                   FStar_Syntax_Syntax.bv_to_name) in
@@ -1903,11 +1903,18 @@ let (tc_layered_eff_decl :
                                                     (FStar_List.map
                                                        (fun uu___22 ->
                                                           match uu___22 with
-                                                          | (b, qual) ->
-                                                              let uu___23 =
+                                                          | {
+                                                              FStar_Syntax_Syntax.binder_bv
+                                                                = b;
+                                                              FStar_Syntax_Syntax.binder_qual
+                                                                = qual;
+                                                              FStar_Syntax_Syntax.binder_attrs
+                                                                = uu___23;_}
+                                                              ->
+                                                              let uu___24 =
                                                                 FStar_Syntax_Syntax.bv_to_name
                                                                   b in
-                                                              (uu___23,
+                                                              (uu___24,
                                                                 (binder_aq_to_arg_aq
                                                                    qual)))) in
                                                 FStar_Syntax_Syntax.mk_Tm_app
@@ -1960,7 +1967,8 @@ let (tc_layered_eff_decl :
                                                                     FStar_All.pipe_right
                                                                     bs_except_last
                                                                     (FStar_List.map
-                                                                    FStar_Pervasives_Native.snd) in
+                                                                    (fun b ->
+                                                                    b.FStar_Syntax_Syntax.binder_qual)) in
                                                                    let uu___27
                                                                     =
                                                                     let uu___28
@@ -1970,7 +1978,8 @@ let (tc_layered_eff_decl :
                                                                     FStar_List.hd in
                                                                     FStar_All.pipe_right
                                                                     uu___28
-                                                                    FStar_Pervasives_Native.snd in
+                                                                    (fun b ->
+                                                                    b.FStar_Syntax_Syntax.binder_qual) in
                                                                    (uu___26,
                                                                     uu___27))
                                                           | uu___24 ->
@@ -3145,7 +3154,19 @@ let (tc_non_layered_eff_decl :
                                               FStar_Syntax_Subst.open_binders
                                                 bs1 in
                                             (match bs2 with
-                                             | (a, uu___13)::(wp, uu___14)::[]
+                                             | {
+                                                 FStar_Syntax_Syntax.binder_bv
+                                                   = a;
+                                                 FStar_Syntax_Syntax.binder_qual
+                                                   = uu___13;
+                                                 FStar_Syntax_Syntax.binder_attrs
+                                                   = uu___14;_}::{
+                                                                   FStar_Syntax_Syntax.binder_bv
+                                                                    = wp;
+                                                                   FStar_Syntax_Syntax.binder_qual
+                                                                    = uu___15;
+                                                                   FStar_Syntax_Syntax.binder_attrs
+                                                                    = uu___16;_}::[]
                                                  ->
                                                  (a,
                                                    (wp.FStar_Syntax_Syntax.sort))
@@ -4833,8 +4854,16 @@ let (monad_signature :
         | FStar_Syntax_Syntax.Tm_arrow (bs, c) ->
             let bs1 = FStar_Syntax_Subst.open_binders bs in
             (match bs1 with
-             | (a, uu___)::(wp, uu___1)::[] ->
-                 (a, (wp.FStar_Syntax_Syntax.sort))
+             | { FStar_Syntax_Syntax.binder_bv = a;
+                 FStar_Syntax_Syntax.binder_qual = uu___;
+                 FStar_Syntax_Syntax.binder_attrs = uu___1;_}::{
+                                                                 FStar_Syntax_Syntax.binder_bv
+                                                                   = wp;
+                                                                 FStar_Syntax_Syntax.binder_qual
+                                                                   = uu___2;
+                                                                 FStar_Syntax_Syntax.binder_attrs
+                                                                   = uu___3;_}::[]
+                 -> (a, (wp.FStar_Syntax_Syntax.sort))
              | uu___ -> fail ())
         | uu___ -> fail ()
 let (tc_layered_lift :
@@ -4916,29 +4945,32 @@ let (tc_layered_lift :
                                let uu___9 =
                                  FStar_Syntax_Subst.open_binders bs in
                                (match uu___9 with
-                                | (a', uu___10)::bs1 ->
-                                    let uu___11 =
-                                      let uu___12 =
+                                | { FStar_Syntax_Syntax.binder_bv = a';
+                                    FStar_Syntax_Syntax.binder_qual = uu___10;
+                                    FStar_Syntax_Syntax.binder_attrs =
+                                      uu___11;_}::bs1
+                                    ->
+                                    let uu___12 =
+                                      let uu___13 =
                                         FStar_All.pipe_right bs1
                                           (FStar_List.splitAt
                                              ((FStar_List.length bs1) -
                                                 Prims.int_one)) in
-                                      FStar_All.pipe_right uu___12
+                                      FStar_All.pipe_right uu___13
                                         FStar_Pervasives_Native.fst in
-                                    let uu___12 =
-                                      let uu___13 =
-                                        let uu___14 =
-                                          let uu___15 =
-                                            let uu___16 =
+                                    let uu___13 =
+                                      let uu___14 =
+                                        let uu___15 =
+                                          let uu___16 =
+                                            let uu___17 =
                                               FStar_Syntax_Syntax.bv_to_name
-                                                (FStar_Pervasives_Native.fst
-                                                   a) in
-                                            (a', uu___16) in
-                                          FStar_Syntax_Syntax.NT uu___15 in
-                                        [uu___14] in
+                                                a.FStar_Syntax_Syntax.binder_bv in
+                                            (a', uu___17) in
+                                          FStar_Syntax_Syntax.NT uu___16 in
+                                        [uu___15] in
                                       FStar_Syntax_Subst.subst_binders
-                                        uu___13 in
-                                    FStar_All.pipe_right uu___11 uu___12)
+                                        uu___14 in
+                                    FStar_All.pipe_right uu___12 uu___13)
                            | uu___8 ->
                                let uu___9 =
                                  let uu___10 =
@@ -4953,10 +4985,8 @@ let (tc_layered_lift :
                                FStar_TypeChecker_Env.push_binders env (a ::
                                  rest_bs) in
                              let uu___10 =
-                               let uu___11 =
-                                 FStar_All.pipe_right a
-                                   FStar_Pervasives_Native.fst in
-                               FStar_All.pipe_right uu___11
+                               FStar_All.pipe_right
+                                 a.FStar_Syntax_Syntax.binder_bv
                                  FStar_Syntax_Syntax.bv_to_name in
                              FStar_TypeChecker_Util.fresh_effect_repr_en
                                uu___9 r sub.FStar_Syntax_Syntax.source u_a
@@ -4977,10 +5007,8 @@ let (tc_layered_lift :
                                 let uu___9 =
                                   FStar_TypeChecker_Env.push_binders env bs in
                                 let uu___10 =
-                                  let uu___11 =
-                                    FStar_All.pipe_right a
-                                      FStar_Pervasives_Native.fst in
-                                  FStar_All.pipe_right uu___11
+                                  FStar_All.pipe_right
+                                    a.FStar_Syntax_Syntax.binder_bv
                                     FStar_Syntax_Syntax.bv_to_name in
                                 FStar_TypeChecker_Util.fresh_effect_repr_en
                                   uu___9 r sub.FStar_Syntax_Syntax.target u_a
@@ -5108,7 +5136,7 @@ let (tc_layered_lift :
                                              env [a] in
                                          validate_layered_effect_binders env1
                                            bs2
-                                           [(FStar_Pervasives_Native.fst f_b).FStar_Syntax_Syntax.sort;
+                                           [(f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
                                            res_t]
                                            check_non_informative_binders r)));
                           (let sub1 =
@@ -5706,8 +5734,12 @@ let (tc_effect_abbrev :
                                    env3 g;
                                  (let expected_result_typ =
                                     match tps3 with
-                                    | (x, uu___7)::uu___8 ->
-                                        FStar_Syntax_Syntax.bv_to_name x
+                                    | { FStar_Syntax_Syntax.binder_bv = x;
+                                        FStar_Syntax_Syntax.binder_qual =
+                                          uu___7;
+                                        FStar_Syntax_Syntax.binder_attrs =
+                                          uu___8;_}::uu___9
+                                        -> FStar_Syntax_Syntax.bv_to_name x
                                     | uu___7 ->
                                         FStar_Errors.raise_error
                                           (FStar_Errors.Fatal_NotEnoughArgumentsForEffect,
@@ -5881,49 +5913,54 @@ let (tc_polymonadic_bind :
                                       let uu___7 =
                                         FStar_Syntax_Subst.open_binders bs in
                                       (match uu___7 with
-                                       | (a', uu___8)::(b', uu___9)::bs1 ->
-                                           let uu___10 =
-                                             let uu___11 =
+                                       | {
+                                           FStar_Syntax_Syntax.binder_bv = a';
+                                           FStar_Syntax_Syntax.binder_qual =
+                                             uu___8;
+                                           FStar_Syntax_Syntax.binder_attrs =
+                                             uu___9;_}::{
+                                                          FStar_Syntax_Syntax.binder_bv
+                                                            = b';
+                                                          FStar_Syntax_Syntax.binder_qual
+                                                            = uu___10;
+                                                          FStar_Syntax_Syntax.binder_attrs
+                                                            = uu___11;_}::bs1
+                                           ->
+                                           let uu___12 =
+                                             let uu___13 =
                                                FStar_All.pipe_right bs1
                                                  (FStar_List.splitAt
                                                     ((FStar_List.length bs1)
                                                        - (Prims.of_int (2)))) in
-                                             FStar_All.pipe_right uu___11
+                                             FStar_All.pipe_right uu___13
                                                FStar_Pervasives_Native.fst in
-                                           let uu___11 =
-                                             let uu___12 =
-                                               let uu___13 =
-                                                 let uu___14 =
-                                                   let uu___15 =
-                                                     let uu___16 =
-                                                       FStar_All.pipe_right a
-                                                         FStar_Pervasives_Native.fst in
+                                           let uu___13 =
+                                             let uu___14 =
+                                               let uu___15 =
+                                                 let uu___16 =
+                                                   let uu___17 =
                                                      FStar_All.pipe_right
-                                                       uu___16
+                                                       a.FStar_Syntax_Syntax.binder_bv
                                                        FStar_Syntax_Syntax.bv_to_name in
-                                                   (a', uu___15) in
+                                                   (a', uu___17) in
                                                  FStar_Syntax_Syntax.NT
-                                                   uu___14 in
-                                               let uu___14 =
-                                                 let uu___15 =
-                                                   let uu___16 =
-                                                     let uu___17 =
-                                                       let uu___18 =
-                                                         FStar_All.pipe_right
-                                                           b
-                                                           FStar_Pervasives_Native.fst in
+                                                   uu___16 in
+                                               let uu___16 =
+                                                 let uu___17 =
+                                                   let uu___18 =
+                                                     let uu___19 =
                                                        FStar_All.pipe_right
-                                                         uu___18
+                                                         b.FStar_Syntax_Syntax.binder_bv
                                                          FStar_Syntax_Syntax.bv_to_name in
-                                                     (b', uu___17) in
+                                                     (b', uu___19) in
                                                    FStar_Syntax_Syntax.NT
-                                                     uu___16 in
-                                                 [uu___15] in
-                                               uu___13 :: uu___14 in
+                                                     uu___18 in
+                                                 [uu___17] in
+                                               uu___15 :: uu___16 in
                                              FStar_Syntax_Subst.subst_binders
-                                               uu___12 in
-                                           FStar_All.pipe_right uu___10
-                                             uu___11)
+                                               uu___14 in
+                                           FStar_All.pipe_right uu___12
+                                             uu___13)
                                   | uu___6 ->
                                       let uu___7 =
                                         let uu___8 =
@@ -5946,10 +5983,8 @@ let (tc_polymonadic_bind :
                                       FStar_TypeChecker_Env.push_binders env1
                                         bs in
                                     let uu___8 =
-                                      let uu___9 =
-                                        FStar_All.pipe_right a
-                                          FStar_Pervasives_Native.fst in
-                                      FStar_All.pipe_right uu___9
+                                      FStar_All.pipe_right
+                                        a.FStar_Syntax_Syntax.binder_bv
                                         FStar_Syntax_Syntax.bv_to_name in
                                     FStar_TypeChecker_Util.fresh_effect_repr_en
                                       uu___7 r m u_a uu___8 in
@@ -5968,10 +6003,8 @@ let (tc_polymonadic_bind :
                                        let x_a =
                                          let uu___7 =
                                            let uu___8 =
-                                             let uu___9 =
-                                               FStar_All.pipe_right a
-                                                 FStar_Pervasives_Native.fst in
-                                             FStar_All.pipe_right uu___9
+                                             FStar_All.pipe_right
+                                               a.FStar_Syntax_Syntax.binder_bv
                                                FStar_Syntax_Syntax.bv_to_name in
                                            FStar_Syntax_Syntax.gen_bv "x"
                                              FStar_Pervasives_Native.None
@@ -5984,10 +6017,8 @@ let (tc_polymonadic_bind :
                                              env1
                                              (FStar_List.append bs [x_a]) in
                                          let uu___9 =
-                                           let uu___10 =
-                                             FStar_All.pipe_right b
-                                               FStar_Pervasives_Native.fst in
-                                           FStar_All.pipe_right uu___10
+                                           FStar_All.pipe_right
+                                             b.FStar_Syntax_Syntax.binder_bv
                                              FStar_Syntax_Syntax.bv_to_name in
                                          FStar_TypeChecker_Util.fresh_effect_repr_en
                                            uu___8 r n u_b uu___9 in
@@ -6020,10 +6051,8 @@ let (tc_polymonadic_bind :
                                               FStar_TypeChecker_Env.push_binders
                                                 env1 bs in
                                             let uu___9 =
-                                              let uu___10 =
-                                                FStar_All.pipe_right b
-                                                  FStar_Pervasives_Native.fst in
-                                              FStar_All.pipe_right uu___10
+                                              FStar_All.pipe_right
+                                                b.FStar_Syntax_Syntax.binder_bv
                                                 FStar_Syntax_Syntax.bv_to_name in
                                             FStar_TypeChecker_Util.fresh_effect_repr_en
                                               uu___8 r p u_b uu___9 in
@@ -6185,8 +6214,7 @@ let (tc_polymonadic_bind :
                                                                     let uu___15
                                                                     =
                                                                     FStar_Syntax_Subst.compress
-                                                                    (FStar_Pervasives_Native.fst
-                                                                    g_b).FStar_Syntax_Syntax.sort in
+                                                                    (g_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
                                                                     uu___15.FStar_Syntax_Syntax.n in
                                                                     match uu___14
                                                                     with
@@ -6204,8 +6232,7 @@ let (tc_polymonadic_bind :
                                                                     validate_layered_effect_binders
                                                                     env2 bs3
                                                                     [
-                                                                    (FStar_Pervasives_Native.fst
-                                                                    f_b).FStar_Syntax_Syntax.sort;
+                                                                    (f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
                                                                     g_sort;
                                                                     res_t]
                                                                     check_non_informative_binders
@@ -6286,29 +6313,31 @@ let (tc_polymonadic_subcomp :
                                let uu___6 =
                                  FStar_Syntax_Subst.open_binders bs in
                                (match uu___6 with
-                                | (a', uu___7)::bs1 ->
-                                    let uu___8 =
-                                      let uu___9 =
+                                | { FStar_Syntax_Syntax.binder_bv = a';
+                                    FStar_Syntax_Syntax.binder_qual = uu___7;
+                                    FStar_Syntax_Syntax.binder_attrs = uu___8;_}::bs1
+                                    ->
+                                    let uu___9 =
+                                      let uu___10 =
                                         FStar_All.pipe_right bs1
                                           (FStar_List.splitAt
                                              ((FStar_List.length bs1) -
                                                 Prims.int_one)) in
-                                      FStar_All.pipe_right uu___9
+                                      FStar_All.pipe_right uu___10
                                         FStar_Pervasives_Native.fst in
-                                    let uu___9 =
-                                      let uu___10 =
-                                        let uu___11 =
-                                          let uu___12 =
-                                            let uu___13 =
+                                    let uu___10 =
+                                      let uu___11 =
+                                        let uu___12 =
+                                          let uu___13 =
+                                            let uu___14 =
                                               FStar_Syntax_Syntax.bv_to_name
-                                                (FStar_Pervasives_Native.fst
-                                                   a) in
-                                            (a', uu___13) in
-                                          FStar_Syntax_Syntax.NT uu___12 in
-                                        [uu___11] in
+                                                a.FStar_Syntax_Syntax.binder_bv in
+                                            (a', uu___14) in
+                                          FStar_Syntax_Syntax.NT uu___13 in
+                                        [uu___12] in
                                       FStar_Syntax_Subst.subst_binders
-                                        uu___10 in
-                                    FStar_All.pipe_right uu___8 uu___9)
+                                        uu___11 in
+                                    FStar_All.pipe_right uu___9 uu___10)
                            | uu___5 ->
                                let uu___6 =
                                  let uu___7 =
@@ -6328,10 +6357,8 @@ let (tc_polymonadic_subcomp :
                              let uu___6 =
                                FStar_TypeChecker_Env.push_binders env bs in
                              let uu___7 =
-                               let uu___8 =
-                                 FStar_All.pipe_right a
-                                   FStar_Pervasives_Native.fst in
-                               FStar_All.pipe_right uu___8
+                               FStar_All.pipe_right
+                                 a.FStar_Syntax_Syntax.binder_bv
                                  FStar_Syntax_Syntax.bv_to_name in
                              FStar_TypeChecker_Util.fresh_effect_repr_en
                                uu___6 r m u uu___7 in
@@ -6350,10 +6377,8 @@ let (tc_polymonadic_subcomp :
                                 let uu___6 =
                                   FStar_TypeChecker_Env.push_binders env bs in
                                 let uu___7 =
-                                  let uu___8 =
-                                    FStar_All.pipe_right a
-                                      FStar_Pervasives_Native.fst in
-                                  FStar_All.pipe_right uu___8
+                                  FStar_All.pipe_right
+                                    a.FStar_Syntax_Syntax.binder_bv
                                     FStar_Syntax_Syntax.bv_to_name in
                                 FStar_TypeChecker_Util.fresh_effect_repr_en
                                   uu___6 r n u uu___7 in
@@ -6502,8 +6527,7 @@ let (tc_polymonadic_subcomp :
                                                                env [a1] in
                                                            validate_layered_effect_binders
                                                              env1 bs3
-                                                             [(FStar_Pervasives_Native.fst
-                                                                 f_b).FStar_Syntax_Syntax.sort;
+                                                             [(f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort;
                                                              res_t]
                                                              check_non_informative_binders
                                                              r)));

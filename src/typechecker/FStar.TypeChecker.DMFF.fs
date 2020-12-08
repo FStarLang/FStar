@@ -127,9 +127,9 @@ let gen_wps_for_free
   in
 
   (* Some helpers. *)
-  let binders_of_list = List.map (fun (t, b) -> t, S.as_implicit b) in
-  let mk_all_implicit = List.map (fun t -> fst t, S.as_implicit true) in
-  let args_of_binders = List.map (fun bv -> S.as_arg (S.bv_to_name (fst bv))) in
+  let binders_of_list = List.map (fun (t, b) -> {binder_bv=t;binder_qual=S.as_implicit b;binder_attrs=[]}) in
+  let mk_all_implicit = List.map (fun t -> { t with binder_qual=S.as_implicit true }) in
+  let args_of_binders = List.map (fun bv -> S.as_arg (S.bv_to_name bv.binder_bv)) in
 
   let env, mk_ctx, mk_gctx =
     // Neither [ctx_def] or [gctx_def] take implicit arguments.
@@ -152,7 +152,7 @@ let gen_wps_for_free
     let mk_app fv t =
       // The [mk_ctx] and [mk_gctx] helpers therefore do not use implicits either
       mk (Tm_app (fv,
-        List.map (fun (bv, _) -> S.bv_to_name bv, S.as_implicit false) binders @
+        List.map (fun ({binder_bv=bv}) -> S.bv_to_name bv, S.as_implicit false) binders @
         [ S.bv_to_name a, S.as_implicit false; t, S.as_implicit false ]))
     in
 
@@ -332,12 +332,12 @@ let gen_wps_for_free
   (* Invariant: [x] and [y] have type [t] *)
   let rec is_discrete t = match (SS.compress t).n with
     | Tm_type _ -> false
-    | Tm_arrow (bs, c) -> List.for_all (fun (b,_) -> is_discrete b.sort) bs && is_discrete (U.comp_result c)
+    | Tm_arrow (bs, c) -> List.for_all (fun ({binder_bv=b}) -> is_discrete b.sort) bs && is_discrete (U.comp_result c)
     | _ -> true
   in
   let rec is_monotonic t = match (SS.compress t).n with
     | Tm_type _ -> true
-    | Tm_arrow (bs, c) -> List.for_all (fun (b,_) -> is_discrete b.sort) bs && is_monotonic (U.comp_result c)
+    | Tm_arrow (bs, c) -> List.for_all (fun ({binder_bv=b}) -> is_discrete b.sort) bs && is_monotonic (U.comp_result c)
     | _ -> is_discrete t
   in
   let rec mk_rel rel t x y =
@@ -349,7 +349,7 @@ let gen_wps_for_free
         rel x y
     | Tm_arrow ([ binder ], { n = GTotal (b, _) })
     | Tm_arrow ([ binder ], { n = Total (b, _) }) ->
-        let a = (fst binder).sort in
+        let a = binder.binder_bv.sort in
         if is_monotonic a  || is_monotonic b //this is an important special case; most monads have zero-order results
         then let a1 = S.gen_bv "a1" None a in
              let body = mk_rel b
@@ -399,7 +399,7 @@ let gen_wps_for_free
           List.fold_left U.mk_conj rel0 rels
         | Tm_arrow (binders, { n = GTotal (b, _) })
         | Tm_arrow (binders, { n = Total (b, _) }) ->
-          let bvs = List.mapi (fun i (bv,q) -> S.gen_bv ("a" ^ string_of_int i) None bv.sort) binders in
+          let bvs = List.mapi (fun i ({binder_bv=bv;binder_qual=q}) -> S.gen_bv ("a" ^ string_of_int i) None bv.sort) binders in
           let args = List.map (fun ai -> S.as_arg (S.bv_to_name ai)) bvs in
           let body = mk_stronger b (U.mk_app x args) (U.mk_app y args) in
           List.fold_right (fun bv body -> mk_forall bv body) bvs body
@@ -416,12 +416,12 @@ let gen_wps_for_free
     let wp = S.gen_bv "wp" None wp_a in
     let wp_args, post = BU.prefix gamma in
     // forall k: post a
-    let k = S.gen_bv "k" None (fst post).sort in
+    let k = S.gen_bv "k" None post.binder_bv.sort in
     let equiv =
         let k_tm = S.bv_to_name k in
         let eq = mk_rel U.mk_iff k.sort
                           k_tm
-                          (S.bv_to_name (fst post)) in
+                          (S.bv_to_name post.binder_bv) in
         match U.destruct_typ_as_formula eq with
         | Some (QAll (binders, [], body)) ->
           let k_app = U.mk_app k_tm (args_of_binders binders) in
@@ -446,7 +446,7 @@ let gen_wps_for_free
     let wp = S.gen_bv "wp" None wp_a in
     let wp_args, post = BU.prefix gamma in
     let x = S.gen_bv "x" None S.tun in
-    let body = U.mk_forall_no_univ x (U.mk_app (S.bv_to_name <| fst post) [as_arg (S.bv_to_name x)]) in
+    let body = U.mk_forall_no_univ x (U.mk_app (S.bv_to_name <| post.binder_bv) [as_arg (S.bv_to_name x)]) in
     U.abs (binders @ S.binders_of_list [ a ] @ gamma) body ret_gtot_type in
 
   let null_wp = register env (mk_lid "null_wp") null_wp in
@@ -530,7 +530,8 @@ let double_star typ =
 
 let rec mk_star_to_type mk env a =
   mk (Tm_arrow (
-    [S.null_bv (star_type' env a), S.as_implicit false],
+    [{binder_bv=S.null_bv (star_type' env a);binder_qual=S.as_implicit false;
+      binder_attrs=[]}],
     mk_Total U.ktype0
   ))
 
@@ -545,8 +546,8 @@ and star_type' env t =
   match t.n with
   | Tm_arrow (binders, _) ->
       // TODO: check that this is not a dependent arrow.
-      let binders = List.map (fun (bv, aqual) ->
-        { bv with sort = star_type' env bv.sort }, aqual
+      let binders = List.map (fun b ->
+        {b with binder_bv={b.binder_bv with sort = star_type' env b.binder_bv.sort}}
       ) binders in
       (* Catch the GTotal case early; it seems relatively innocuous to allow
        * GTotal to appear. TODO fix this as a clean, single pattern-matching. *)
@@ -563,7 +564,9 @@ and star_type' env t =
               // F*'s arrows are n-ary (and the intermediary arrows are pure), so the rule is:
               //   (H_0  -> ... -> H_n  -t-> A)* = H_0* -> ... -> H_n* -> (A* -> Type) -> Type
               mk (Tm_arrow (
-                binders @ [ S.null_bv (mk_star_to_type env a), S.as_implicit false ],
+                binders @ [ {binder_bv=S.null_bv (mk_star_to_type env a);
+                             binder_qual=S.as_implicit false;
+                             binder_attrs=[]} ],
                 mk_Total U.ktype0))
       end
 
@@ -601,7 +604,7 @@ and star_type' env t =
                             then (debug ty sinter ; raise Not_found)
                         in
                         let binders, c = SS.open_comp binders c in
-                        let s = List.fold_left (fun s (bv, _) ->
+                        let s = List.fold_left (fun s ({binder_bv=bv}) ->
                             non_dependent_or_raise s bv.sort ;
                             set_add bv s
                         ) S.no_names binders in
@@ -914,14 +917,14 @@ and infer (env: env) (e: term): nm * term * term =
       let env = { env with tcenv = push_binders env.tcenv binders } in
 
       // For the *-translation, [x: t] becomes [x: t*].
-      let s_binders = List.map (fun (bv, qual) ->
-        let sort = star_type' env bv.sort in
-        { bv with sort = sort }, qual
+      let s_binders = List.map (fun b ->
+        let sort = star_type' env b.binder_bv.sort in
+        {b with binder_bv = { b.binder_bv with sort = sort } }
       ) binders in
 
       // For the _-translation, things are a little bit trickier. We need to
       // update the substitution, and one binder may turn into two binders.
-      let env, u_binders = List.fold_left (fun (env, acc) (bv, qual) ->
+      let env, u_binders = List.fold_left (fun (env, acc) ({binder_bv=bv}) ->
         let c = bv.sort in
         if is_C c then
           let xw = S.gen_bv ((string_of_id bv.ppname) ^ "__w") None (star_type' env c) in
@@ -1070,7 +1073,7 @@ and infer (env: env) (e: term): nm * term * term =
             end
         | [], _ :: _ ->
             failwith "just checked that?!"
-        | (bv, _) :: binders, (arg, _) :: args ->
+        | ({binder_bv=bv}) :: binders, (arg, _) :: args ->
             final_type (NT (bv, arg) :: subst) (binders, comp) args
       in
       let final_type = final_type [] (binders, comp) args in
@@ -1078,7 +1081,7 @@ and infer (env: env) (e: term): nm * term * term =
 
       let binders, _ = List.splitAt n' binders in
 
-      let s_args, u_args = List.split (List.map2 (fun (bv, _) (arg, q) ->
+      let s_args, u_args = List.split (List.map2 (fun ({binder_bv=bv}) (arg, q) ->
         // TODO: implement additional check that the arguments are T-free if
         // head is [Tm_fvar ...] with [Mktuple], [Left], etc.
         // Note: not enforcing the types of the arguments because 1) it has
@@ -1295,14 +1298,15 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
   | Tm_arrow (binders, comp) ->
       let binders = U.name_binders binders in
       let binders_orig, comp = open_comp binders comp in
-      let bvs, binders = List.split (List.map (fun (bv, q) ->
+      let bvs, binders = List.split (List.map (fun b ->
+        let bv, q = b.binder_bv, b.binder_qual in
         let h = bv.sort in
         if is_C h then
           let w' = S.gen_bv ((string_of_id bv.ppname) ^ "__w'") None (star_type' env h) in
-          w', [ w', q; S.null_bv (trans_F_ env h (S.bv_to_name w')), q ]
+          w', [ {b with binder_bv=w'}; {b with binder_bv=S.null_bv (trans_F_ env h (S.bv_to_name w'))} ]
         else
           let x = S.gen_bv ((string_of_id bv.ppname) ^ "__x") None (star_type' env h) in
-          x, [ x, q ]
+          x, [ {b with binder_bv=x} ]
       ) binders_orig) in
       let binders = List.flatten binders in
       let comp = SS.subst_comp (U.rename_binders binders_orig (S.binders_of_list bvs)) comp in
@@ -1370,8 +1374,8 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     Errors.raise_error (e, err_msg) signature.pos
   in
 
-  let effect_binders = List.map (fun (bv, qual) ->
-    { bv with sort = N.normalize [ Env.EraseUniverses ] env bv.sort }, qual
+  let effect_binders = List.map (fun b ->
+    {b with binder_bv={b.binder_bv with sort = N.normalize [ Env.EraseUniverses ] env b.binder_bv.sort }}
   ) effect_binders in
 
   // Every combinator found in the effect declaration is parameterized over
@@ -1380,7 +1384,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   let a, effect_marker =
     // TODO: more stringent checks on the shape of the signature; better errors
     match (SS.compress signature_un).n with
-    | Tm_arrow ([(a, _)], effect_marker) ->
+    | Tm_arrow ([({binder_bv=a})], effect_marker) ->
         a, effect_marker
     | _ ->
         raise_error (Errors.Fatal_BadSignatureShape, "bad shape for effect-for-free signature")
@@ -1416,7 +1420,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
 
   // Building: [a -> wp a -> Effect]
   let effect_signature =
-    let binders = [ (a, S.as_implicit false); S.gen_bv "dijkstra_wp" None wp_a |> S.mk_binder ] in
+    let binders = [ ({binder_bv=a;binder_qual=S.as_implicit false;binder_attrs=[]}); S.gen_bv "dijkstra_wp" None wp_a |> S.mk_binder ] in
     let binders = close_binders binders in
     mk (Tm_arrow (binders, effect_marker))
   in
@@ -1464,7 +1468,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
         (* invariant but we need them for normalization *)
         let env0 = push_binders (get_env dmff_env) [b1 ; b2] in
         let wp_b1 =
-          let raw_wp_b1 = mk (Tm_app (wp_type, [ (S.bv_to_name (fst b1), S.as_implicit false) ])) in
+          let raw_wp_b1 = mk (Tm_app (wp_type, [ (S.bv_to_name b1.binder_bv, S.as_implicit false) ])) in
           N.normalize [ Env.Beta ] env0 raw_wp_b1
         in
         let bs, body, what' = U.abs_formals <| N.eta_expand_with_type env0 body (U.unascribe wp_b1) in
@@ -1491,7 +1495,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
         end ;
 
         let wp =
-          let t2 = (fst b2).sort in
+          let t2 = b2.binder_bv.sort in
           let pure_wp_type = double_star t2 in
           S.gen_bv "wp" None pure_wp_type
         in
@@ -1573,8 +1577,9 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   let dmff_env, actions = List.fold_left (fun (dmff_env, actions) action ->
     let params_un = SS.open_binders action.action_params in
     let action_params, env', _ = TcTerm.tc_tparams (get_env dmff_env) params_un in
-    let action_params = List.map (fun (bv, qual) ->
-      { bv with sort = N.normalize [ Env.EraseUniverses ] env' bv.sort }, qual
+    let action_params = List.map (fun b ->
+      { b with binder_bv={b.binder_bv with sort=
+        N.normalize [ Env.EraseUniverses ] env' b.binder_bv.sort } }
     ) action_params in
     let dmff_env' = set_env dmff_env env' in
     // We need to reverse-engineer what tc_eff_decl wants here...
@@ -1634,8 +1639,8 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
         | Tm_arrow (wp_binders, c) ->
             let wp_binders, c = SS.open_comp wp_binders c in
             let pre_args, post_args =
-                List.partition (fun (bv,_) ->
-                  Free.names bv.sort |> BU.set_mem (fst type_param) |> not
+                List.partition (fun ({binder_bv=bv}) ->
+                  Free.names bv.sort |> BU.set_mem type_param.binder_bv |> not
                 ) wp_binders
             in
             let post = match post_args with
@@ -1655,7 +1660,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
             // Pre-condition does not mention the return type; don't close over it
             U.arrow pre_args c,
             // Post-condition does, however!
-            U.abs (type_param :: effect_param) (fst post).sort None
+            U.abs (type_param :: effect_param) post.binder_bv.sort None
         | _ ->
             raise_error (Errors.Fatal_ImpossiblePrePostArrow, (BU.format1 "Impossible: pre/post arrow %s" (Print.term_to_string arrow)))
         end

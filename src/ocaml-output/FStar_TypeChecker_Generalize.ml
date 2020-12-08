@@ -507,6 +507,20 @@ let (gen :
                                             FStar_Syntax_InstFV.inst
                                               instantiate_lbname_with_app e1
                                           else e1 in
+                                        let tvars_bs =
+                                          FStar_All.pipe_right gen_tvars
+                                            (FStar_List.map
+                                               (fun uu___7 ->
+                                                  match uu___7 with
+                                                  | (x, q) ->
+                                                      {
+                                                        FStar_Syntax_Syntax.binder_bv
+                                                          = x;
+                                                        FStar_Syntax_Syntax.binder_qual
+                                                          = q;
+                                                        FStar_Syntax_Syntax.binder_attrs
+                                                          = []
+                                                      })) in
                                         let t =
                                           let uu___7 =
                                             let uu___8 =
@@ -524,18 +538,18 @@ let (gen :
                                                | (bs1, cod1) ->
                                                    FStar_Syntax_Util.arrow
                                                      (FStar_List.append
-                                                        gen_tvars bs1) cod1)
+                                                        tvars_bs bs1) cod1)
                                           | uu___8 ->
                                               FStar_Syntax_Util.arrow
-                                                gen_tvars c1 in
+                                                tvars_bs c1 in
                                         let e' =
-                                          FStar_Syntax_Util.abs gen_tvars e2
+                                          FStar_Syntax_Util.abs tvars_bs e2
                                             (FStar_Pervasives_Native.Some
                                                (FStar_Syntax_Util.residual_comp_of_comp
                                                   c1)) in
                                         let uu___7 =
                                           FStar_Syntax_Syntax.mk_Total t in
-                                        (e', uu___7, gen_tvars)) in
+                                        (e', uu___7, tvars_bs)) in
                              (match uu___4 with
                               | (e1, c1, gvs) ->
                                   (lbname, gen_univs1, e1, c1, gvs)))) in
