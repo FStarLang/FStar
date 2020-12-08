@@ -54,12 +54,12 @@ let rec (term_eq' :
       let binders_eq xs ys =
         ((FStar_List.length xs) = (FStar_List.length ys)) &&
           (FStar_List.forall2
-             (fun uu___ ->
-                fun uu___1 ->
-                  match (uu___, uu___1) with
-                  | ((x1, uu___2), (y1, uu___3)) ->
-                      term_eq' x1.FStar_Syntax_Syntax.sort
-                        y1.FStar_Syntax_Syntax.sort) xs ys) in
+             (fun x1 ->
+                fun y1 ->
+                  term_eq'
+                    (x1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
+                    (y1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort)
+             xs ys) in
       let args_eq xs ys =
         ((FStar_List.length xs) = (FStar_List.length ys)) &&
           (FStar_List.forall2
