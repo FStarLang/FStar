@@ -232,10 +232,10 @@ let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:ga
      else match BU.prefix_until (function Binding_var _ -> true | _ -> false) g, bs with
      | None, [] -> ()
      | Some (_, hd, gamma_tail), _::_ ->
-       let _, (x, _) = BU.prefix bs in
+       let _, x = BU.prefix bs in
        begin
        match hd with
-       | Binding_var x' when S.bv_eq x x' ->
+       | Binding_var x' when S.bv_eq x.binder_bv x' ->
          ()
        | _ -> fail()
         end
@@ -408,9 +408,9 @@ let simplify (debug:bool) (tm:term) : term =
     in
     let rec args_are_binders args bs =
         match args, bs with
-        | (t, _)::args, (bv, _)::bs ->
+        | (t, _)::args, b::bs ->
             begin match (SS.compress t).n with
-            | Tm_name bv' -> S.bv_eq bv bv' && args_are_binders args bs
+            | Tm_name bv' -> S.bv_eq b.binder_bv bv' && args_are_binders args bs
             | _ -> false
             end
         | [], [] -> true

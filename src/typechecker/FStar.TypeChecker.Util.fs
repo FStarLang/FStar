@@ -344,14 +344,14 @@ let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Ran
     | _ -> raise_error (return_t_shape_error "Either not an arrow or not enough binders") r in
 
   let rest_bs_uvars, g_uvars = Env.uvars_for_binders
-    env rest_bs [NT (a_b |> fst, a); NT (x_b |> fst, e)]
+    env rest_bs [NT (a_b.binder_bv, a); NT (x_b.binder_bv, e)]
     (fun b -> BU.format3 "implicit var for binder %s of %s at %s"
              (Print.binder_to_string b)
              (BU.format1 "%s.return" (Ident.string_of_lid ed.mname))
              (Range.string_of_range r)) r in
 
   let subst = List.map2
-    (fun b t -> NT (b |> fst, t))
+    (fun b t -> NT (b.binder_bv, t))
     (a_b::x_b::rest_bs) (a::e::rest_bs_uvars) in
 
   let is =
@@ -634,7 +634,7 @@ let mk_indexed_bind env
 
   //create uvars for rest_bs, with proper substitutions of a_b, b_b, and b_i with t1, t2, and ?ui
   let rest_bs_uvars, g_uvars = Env.uvars_for_binders
-    env rest_bs [NT (a_b |> fst, t1); NT (b_b |> fst, t2)]
+    env rest_bs [NT (a_b.binder_bv, t1); NT (b_b.binder_bv, t2)]
     (fun b -> BU.format3
       "implicit var for binder %s of %s at %s"
       (Print.binder_to_string b) bind_name (Range.string_of_range r1)) r1 in
@@ -651,12 +651,12 @@ let mk_indexed_bind env
               | _ -> "<no attr>"));
 
   let subst = List.map2
-    (fun b t -> NT (b |> fst, t))
+    (fun b t -> NT (b.binder_bv, t))
     (a_b::b_b::rest_bs) (t1::t2::rest_bs_uvars) in
 
   let f_guard =  //unify c1's indices with f's indices in the bind_wp
     let f_sort_is = effect_args_from_repr
-      (SS.compress (f_b |> fst).sort)
+      (SS.compress f_b.binder_bv.sort)
       (U.is_layered m_ed) r1 |> List.map (SS.subst subst) in
     List.fold_left2
       (fun g i1 f_i1 -> 
@@ -675,10 +675,10 @@ let mk_indexed_bind env
       | Some x -> S.mk_binder x in
 
     let g_sort_is : list<term> =
-      match (SS.compress (g_b |> fst).sort).n with
+      match (SS.compress g_b.binder_bv.sort).n with
       | Tm_arrow (bs, c) ->
         let bs, c = SS.open_comp bs c in
-        let bs_subst = NT (List.hd bs |> fst, x_a |> fst |> S.bv_to_name) in
+        let bs_subst = NT ((List.hd bs).binder_bv, x_a.binder_bv |> S.bv_to_name) in
         let c = SS.subst_comp [bs_subst] c in
         effect_args_from_repr (SS.compress (U.comp_result c)) (U.is_layered n_ed) r1
         |> List.map (SS.subst subst)
@@ -1400,19 +1400,19 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
     | _ -> raise_error (conjunction_t_error "Either not an abstraction or not enough binders") r in
 
   let rest_bs_uvars, g_uvars = Env.uvars_for_binders
-    env rest_bs [NT (a_b |> fst, a)]
+    env rest_bs [NT (a_b.binder_bv, a)]
     (fun b -> BU.format3
       "implicit var for binder %s of %s:conjunction at %s"
       (Print.binder_to_string b) (Ident.string_of_lid ed.mname)
       (r |> Range.string_of_range)) r in
 
   let substs = List.map2
-    (fun b t -> NT (b |> fst, t))
+    (fun b t -> NT (b.binder_bv, t))
     (a_b::(rest_bs@[p_b])) (a::(rest_bs_uvars@[p])) in
 
   let f_guard =
     let f_sort_is =
-      match (SS.compress (f_b |> fst).sort).n with
+      match (SS.compress f_b.binder_bv.sort).n with
       | Tm_app (_, _::is) ->
         is |> List.map fst |> List.map (SS.subst substs)
       | _ -> raise_error (conjunction_t_error "f's type is not a repr type") r in
@@ -1422,7 +1422,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
 
   let g_guard =
     let g_sort_is =
-      match (SS.compress (g_b |> fst).sort).n with
+      match (SS.compress g_b.binder_bv.sort).n with
       | Tm_app (_, _::is) ->
         is |> List.map fst |> List.map (SS.subst substs)
       | _ -> raise_error (conjunction_t_error "g's type is not a repr type") r in

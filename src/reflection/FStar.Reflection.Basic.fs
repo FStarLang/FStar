@@ -64,11 +64,11 @@ let get_env () : Env.env =
   | Some e -> e
 
 (* private *)
+//TODO: AR: inspect for attributes code is missing
 let inspect_aqual (aq : aqual) : aqualv =
     match aq with
     | Some (Implicit _) -> Data.Q_Implicit
-    | Some (Meta (Arg_qualifier_meta_tac t)) -> Data.Q_Meta t
-    | Some (Meta (Arg_qualifier_meta_attr t)) -> Data.Q_Meta_attr t
+    | Some (Meta t) -> Data.Q_Meta t
     | Some Equality
     | None -> Data.Q_Explicit
 
@@ -77,8 +77,8 @@ let pack_aqual (aqv : aqualv) : aqual =
     match aqv with
     | Data.Q_Explicit -> None
     | Data.Q_Implicit -> Some (Implicit false)
-    | Data.Q_Meta t   -> Some (Meta (Arg_qualifier_meta_tac t))
-    | Data.Q_Meta_attr t   -> Some (Meta (Arg_qualifier_meta_attr t))
+    | Data.Q_Meta t   -> Some (Meta t)
+    | Data.Q_Meta_attr t   -> None //TODO: AR: FIXME: Some (Meta (Arg_qualifier_meta_attr t))
 
 let inspect_fv (fv:fv) : list<string> =
     Ident.path_of_lid (lid_of_fv fv)
@@ -524,7 +524,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
             (* Substitute the parameters of the constructor to match
              * those of the inductive opened above, and return the type
              * of the constructor already instantiated. *)
-            let s' = List.map2 (fun b1 b2 -> NT (fst b1, S.bv_to_name (fst b2)))
+            let s' = List.map2 (fun b1 b2 -> NT (b1.binder_bv, S.bv_to_name b2.binder_bv))
                                param_ctor_bs param_bs
             in
             let cty = SS.subst s' cty in
@@ -596,11 +596,10 @@ let pack_bv (bvv:bv_view) : bv =
     }
 
 let inspect_binder (b:binder) : bv * aqualv =
-    let bv, aq = b in
-    bv, inspect_aqual aq
+    b.binder_bv, inspect_aqual (b.binder_qual)
 
 let pack_binder (bv:bv) (aqv:aqualv) : binder =
-    bv, pack_aqual aqv
+    { binder_bv=bv; binder_qual=pack_aqual aqv; binder_attrs=[] }  //TODO: AR: should take attrs too
 
 open FStar.TypeChecker.Env
 let moduleof (e : Env.env) : list<string> =

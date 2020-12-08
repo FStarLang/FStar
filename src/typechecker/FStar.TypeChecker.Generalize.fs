@@ -248,15 +248,16 @@ let gen env (is_rec:bool) (lecs:list<(lbname * term * comp)>) : option<list<(lbn
                 else e
               in
               //now, with the uvars gone, we can close over the newly introduced type names
+              let tvars_bs = gen_tvars |> List.map (fun (x, q) -> {binder_bv=x; binder_qual=q; binder_attrs=[]}) in
               let t = match (SS.compress (U.comp_result c)).n with
                     | Tm_arrow(bs, cod) ->
                       let bs, cod = SS.open_comp bs cod in
-                      U.arrow (gen_tvars@bs) cod
+                      U.arrow (tvars_bs@bs) cod
 
                     | _ ->
-                      U.arrow gen_tvars c in
-              let e' = U.abs gen_tvars e (Some (U.residual_comp_of_comp c)) in
-              e', S.mk_Total t, gen_tvars in
+                      U.arrow tvars_bs c in
+              let e' = U.abs tvars_bs e (Some (U.residual_comp_of_comp c)) in
+              e', S.mk_Total t, tvars_bs in
           (lbname, gen_univs, e, c, gvs)) in
      Some ecs
 

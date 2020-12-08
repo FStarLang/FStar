@@ -1031,7 +1031,7 @@ let lookup_projector env lid i =
           if ((i < 0) || i >= List.length binders) //this has to be within bounds!
           then fail ()
           else let b = List.nth binders i in
-               U.mk_field_projector_name lid (fst b) i
+               U.mk_field_projector_name lid b.binder_bv i
         | _ -> fail ()
 
 let is_projector env (l:lident) : bool =
@@ -1169,7 +1169,7 @@ let wp_sig_aux decls m =
     let _, s = inst_tscheme md.signature in
     let s = Subst.compress s in
     match md.binders, s.n with
-      | [], Tm_arrow([(a, _); (wp, _)], c) when (is_teff (comp_result c)) -> a, wp.sort
+      | [], Tm_arrow([b; wp_b], c) when (is_teff (comp_result c)) -> b.binder_bv, wp_b.binder_bv.sort
       | _ -> failwith "Impossible"
 
 let wp_signature env m = wp_sig_aux env.effects.decls m
@@ -1196,7 +1196,7 @@ let rec unfold_effect_abbrev env comp =
                                 (BU.string_of_int (List.length binders))
                                 (BU.string_of_int (List.length c.effect_args + 1))
                                 (Print.comp_to_string (S.mk_Comp c)))) comp.pos;
-      let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in
+      let inst = List.map2 (fun b (t, _) -> NT(b.binder_bv, t)) binders (as_arg c.result_typ::c.effect_args) in
       let c1 = Subst.subst_comp inst cdef in
       let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
       unfold_effect_abbrev env c
@@ -1583,7 +1583,7 @@ let pop_bv env =
     | _ -> None
 
 let push_binders env (bs:binders) =
-    List.fold_left (fun env (x, _) -> push_bv env x) env bs
+    List.fold_left (fun env b -> push_bv env b.binder_bv) env bs
 
 let binding_of_lb (x:lbname) t = match x with
   | Inl x ->
@@ -1832,15 +1832,15 @@ let close_guard_univs us bs g =
       let f =
           List.fold_right2 (fun u b f ->
               if Syntax.is_null_binder b then f
-              else U.mk_forall u (fst b) f)
+              else U.mk_forall u b.binder_bv f)
         us bs f in
     {g with guard_f=NonTrivial f}
 
 let close_forall env bs f =
     List.fold_right (fun b f ->
             if Syntax.is_null_binder b then f
-            else let u = env.universe_of env (fst b).sort in
-                 U.mk_forall u (fst b) f)
+            else let u = env.universe_of env b.binder_bv.sort in
+                 U.mk_forall u b.binder_bv f)
     bs f
 
 let close_guard env binders g =
@@ -1921,7 +1921,7 @@ let new_implicit_var_aux reason r env k should_check meta =
  *)
 let uvars_for_binders env (bs:S.binders) substs reason r =
   bs |> List.fold_left (fun (substs, uvars, g) b ->
-    let sort = SS.subst substs (fst b).sort in
+    let sort = SS.subst substs b.binder_bv.sort in
 
     (*
      * AR: If there is a tactic associated with this binder,
@@ -1932,10 +1932,10 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
      *)
 
     let ctx_uvar_meta_t, strict =
-      match snd b with
-      | Some (Meta (Arg_qualifier_meta_tac t)) ->
+      match b.binder_qual, b.binder_attrs with
+      | Some (Meta t), [] ->
         Some (Ctx_uvar_meta_tac (FStar.Dyn.mkdyn env, t)), false
-      | Some (Meta (Arg_qualifier_meta_attr t)) ->
+      | _, t::_ ->
         Some (Ctx_uvar_meta_attr t), true
       | _ -> None, false in
 
@@ -1946,7 +1946,7 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
     then List.iter (fun (ctx_uvar, _) -> BU.print1 "Layered Effect uvar : %s\n"
       (Print.ctx_uvar_to_string_no_reason ctx_uvar)) l_ctx_uvars;
 
-    substs@[NT (b |> fst, t)], uvars@[t], conj_guard g g_t
+    substs@[NT (b.binder_bv, t)], uvars@[t], conj_guard g g_t
   ) (substs, [], trivial_guard) |> (fun (_, uvars, g) -> uvars, g)
 
 

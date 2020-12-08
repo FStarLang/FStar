@@ -99,7 +99,7 @@ and binder' =
   | TAnnotated of ident * term
   | NoName of term
 
-and binder = {b:binder'; brange:range; blevel:level; aqual:aqual}
+and binder = {b:binder'; brange:range; blevel:level; aqual:aqual; battributes:attributes_}
 
 and pattern' =
   | PatWild     of aqual
@@ -120,10 +120,7 @@ and branch = (pattern * option<term> * term)
 and arg_qualifier =
     | Implicit
     | Equality
-    | Meta of arg_qualifier_meta_t
-and arg_qualifier_meta_t =
-  | Arg_qualifier_meta_tac of term
-  | Arg_qualifier_meta_attr of term
+    | Meta of term
 and aqual = option<arg_qualifier>
 and imp =
     | FsTypApp
@@ -250,7 +247,8 @@ let mk_decl d r decorations =
   let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
   { d=d; drange=r; quals=qualifiers; attrs=attributes_ }
 
-let mk_binder b r l i = {b=b; brange=r; blevel=l; aqual=i}
+let mk_binder_with_attrs b r l i attrs = {b=b; brange=r; blevel=l; aqual=i; battributes=attrs}
+let mk_binder b r l i = mk_binder_with_attrs b r l i []
 let mk_term t r l = {tm=t; range=r; level=l}
 let mk_uminus t rminus r l =
   let t =
@@ -670,13 +668,15 @@ and binder_to_string x =
   | TAnnotated(i,t)
   | Annotated(i,t) -> Util.format2 "%s:%s" ((string_of_id i)) (t |> term_to_string)
   | NoName t -> t |> term_to_string in
-  Util.format2 "%s%s" (aqual_to_string x.aqual) s
+  Util.format3 "%s%s%s"
+    (aqual_to_string x.aqual)
+    (if x.battributes=[] then "" else attrs_opt_to_string (Some x.battributes))
+    s
 
 and aqual_to_string = function
   | Some Equality -> "$"
   | Some Implicit -> "#"
-  | Some (Meta (Arg_qualifier_meta_tac t)) -> "#[" ^ term_to_string t ^ "]"
-  | Some (Meta (Arg_qualifier_meta_attr t)) -> "[@@" ^ term_to_string t ^ "]"
+  | Some (Meta t) -> "#[" ^ term_to_string t ^ "]"
   | None -> ""
 
 and pat_to_string x = match x.pat with

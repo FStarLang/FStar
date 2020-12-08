@@ -173,10 +173,10 @@ let validate_layered_effect_binders env (bs:binders) (repr_terms:list<term>) (ch
 
   let valid_binder b =
     //it appears in a repr index in a head position
-    List.existsb (fun t -> U.eq_tm (b |> fst |> S.bv_to_name) t = U.Equal) repr_names_args
+    List.existsb (fun t -> U.eq_tm (S.bv_to_name b.binder_bv) t = U.Equal) repr_names_args
     ||
-    (match snd b with  //or has a tactic associated
-     | Some (Meta (Arg_qualifier_meta_attr _)) -> true
+    (match b.binder_attrs with  //or has a tactic associated
+     | _::_ -> true
      | _ -> false) in
 
   let invalid_binders = List.filter (fun b -> not (valid_binder b)) bs in
@@ -190,7 +190,7 @@ let validate_layered_effect_binders env (bs:binders) (repr_terms:list<term>) (ch
   then
     let _, informative_binders = List.fold_left (fun (env, bs) b ->
       let env = Env.push_binders env [b] in
-      if N.non_info_norm env (fst b).sort
+      if N.non_info_norm env b.binder_bv.sort
       then (env, bs)
       else (env, b::bs)) (env, []) bs in
     if List.length informative_binders <> 0 then
@@ -224,7 +224,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
   //helper function to get (a:Type ?u), returns the binder and ?u
   let fresh_a_and_u_a (a:string) : binder * universe = U.type_u () |> (fun (t, u) -> S.gen_bv a None t |> S.mk_binder, u) in
   //helper function to get (x:a)
-  let fresh_x_a (x:string) (a:binder) : binder = S.gen_bv x None (a |> fst |> S.bv_to_name) |> S.mk_binder in
+  let fresh_x_a (x:string) (a:binder) : binder = S.gen_bv x None (S.bv_to_name a.binder_bv) |> S.mk_binder in
 
 
   (*
@@ -255,7 +255,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let env = Env.push_univ_vars env0 us in
 
     let a, u = fresh_a_and_u_a "a" in
-    let rest_bs = TcUtil.layered_effect_indices_as_binders env r ed.mname (sig_us, sig_t) u (a |> fst |> S.bv_to_name) in
+    let rest_bs = TcUtil.layered_effect_indices_as_binders env r ed.mname (sig_us, sig_t) u (a.binder_bv |> S.bv_to_name) in
     let bs = a::rest_bs in
     let k = U.arrow bs (S.mk_Total S.teff) in  //U.arrow does closing over bs
     let g_eq = Rel.teq env t k in
@@ -282,7 +282,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let a, u = fresh_a_and_u_a "a" in
     let rest_bs =
       let signature_ts = let us, t, _ = signature in (us, t) in
-      TcUtil.layered_effect_indices_as_binders env r ed.mname signature_ts u (a |> fst |> S.bv_to_name) in
+      TcUtil.layered_effect_indices_as_binders env r ed.mname signature_ts u (a.binder_bv |> S.bv_to_name) in
     let bs = a::rest_bs in
     let k = U.arrow bs (U.type_u () |> (fun (t, u) -> S.mk_Total' t (Some (new_u_univ ())))) in  //note the universe of Tot need not be u
     let g = Rel.teq env ty k in
@@ -338,12 +338,12 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let rest_bs =
       match (SS.compress ty).n with
       | Tm_arrow (bs, _) when List.length bs >= 2 ->
-        let ((a', _)::(x', _)::bs) = SS.open_binders bs in
-        bs |> SS.subst_binders [NT (a', bv_to_name (fst a))]
-           |> SS.subst_binders [NT (x', bv_to_name (fst x_a))]
+        let (({binder_bv=a'})::({binder_bv=x'})::bs) = SS.open_binders bs in
+        bs |> SS.subst_binders [NT (a', bv_to_name a.binder_bv)]
+           |> SS.subst_binders [NT (x', bv_to_name x_a.binder_bv)]
       | _ -> not_an_arrow_error "return" 2 ty r in
     let bs = a::x_a::rest_bs in
-    let repr, g = fresh_repr r (Env.push_binders env bs) u_a (fst a |> S.bv_to_name) in
+    let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a.binder_bv |> S.bv_to_name) in
     let k = U.arrow bs (S.mk_Total' repr (Some u_a)) in
     let g_eq = Rel.teq env ty k in
     Rel.force_trivial_guard env (Env.conj_guard g g_eq);
@@ -387,19 +387,19 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let rest_bs =
       match (SS.compress ty).n with
       | Tm_arrow (bs, _) when List.length bs >= 4 ->
-        let ((a', _)::(b', _)::bs) = SS.open_binders bs in
+        let (({binder_bv=a'})::({binder_bv=b'})::bs) = SS.open_binders bs in
         bs |> List.splitAt (List.length bs - 2) |> fst
-           |> SS.subst_binders [NT (a', bv_to_name (fst a)); NT (b', bv_to_name (fst b))] 
+           |> SS.subst_binders [NT (a', bv_to_name a.binder_bv); NT (b', bv_to_name b.binder_bv)] 
       | _ -> not_an_arrow_error "bind" 4 ty r in
     let bs = a::b::rest_bs in
     let f, guard_f =
-      let repr, g = fresh_repr r (Env.push_binders env bs) u_a (fst a |> S.bv_to_name) in
+      let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a.binder_bv |> S.bv_to_name) in
       S.gen_bv "f" None repr |> S.mk_binder, g in
     let g, guard_g =
       let x_a = fresh_x_a "x" a in
-      let repr, g = fresh_repr r (Env.push_binders env (bs@[x_a])) u_b (fst b |> S.bv_to_name) in
+      let repr, g = fresh_repr r (Env.push_binders env (bs@[x_a])) u_b (b.binder_bv |> S.bv_to_name) in
       S.gen_bv "g" None (U.arrow [x_a] (S.mk_Total' repr (Some (new_u_univ ())))) |> S.mk_binder, g in
-    let repr, guard_repr = fresh_repr r (Env.push_binders env bs) u_b (fst b |> S.bv_to_name) in
+    let repr, guard_repr = fresh_repr r (Env.push_binders env bs) u_b (b.binder_bv |> S.bv_to_name) in
 
     //the computation type of the bind combinator can be a PURE type
     let pure_wp_uvar, g_pure_wp_uvar = pure_wp_uvar (Env.push_binders env bs) repr
@@ -433,10 +433,10 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
          *                it to be closed in env
          *)
         let g_sort =
-          match (SS.compress (fst g_b).sort).n with
+          match (SS.compress g_b.binder_bv.sort).n with
           | Tm_arrow (_, c) -> U.comp_result c in
         let env = Env.push_binders env [a; b] in
-        validate_layered_effect_binders env bs [(fst f_b).sort; g_sort; res_t]
+        validate_layered_effect_binders env bs [f_b.binder_bv.sort; g_sort; res_t]
           check_non_informative_binders r in
 
     bind_us, bind_t, k |> SS.close_univ_vars bind_us in
@@ -470,10 +470,10 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
              let repr_ts = let (us, t, _) = repr in (us, t) in
              Env.inst_tscheme_with repr_ts [U_unknown] |> snd in
            let repr_t_applied = mk
-             (Tm_app (repr_t, bs |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg))
+             (Tm_app (repr_t, bs |> List.map (fun b -> b.binder_bv) |> List.map S.bv_to_name |> List.map S.as_arg))
              Range.dummyRange in
            let f_b = S.null_binder repr_t_applied in
-           [], U.abs (bs@[f_b]) (f_b |> fst |> S.bv_to_name) None
+           [], U.abs (bs@[f_b]) (f_b.binder_bv |> S.bv_to_name) None
          | _ -> failwith "Impossible!")
       | _ -> ts in
         
@@ -495,15 +495,15 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let rest_bs =
       match (SS.compress ty).n with
       | Tm_arrow (bs, _) when List.length bs >= 2 ->
-        let ((a', _)::bs) = SS.open_binders bs in
+        let (({binder_bv=a'})::bs) = SS.open_binders bs in
         bs |> List.splitAt (List.length bs - 1) |> fst
-           |> SS.subst_binders [NT (a', bv_to_name (fst a))]
+           |> SS.subst_binders [NT (a', bv_to_name a.binder_bv)]
       | _ -> not_an_arrow_error "stronger" 2 ty r in
     let bs = a::rest_bs in
     let f, guard_f =
-      let repr, g = fresh_repr r (Env.push_binders env bs) u (fst a |> S.bv_to_name) in
+      let repr, g = fresh_repr r (Env.push_binders env bs) u (a.binder_bv |> S.bv_to_name) in
       S.gen_bv "f" None repr |> S.mk_binder, g in
-    let ret_t, guard_ret_t = fresh_repr r (Env.push_binders env bs) u (fst a |> S.bv_to_name) in
+    let ret_t, guard_ret_t = fresh_repr r (Env.push_binders env bs) u (a.binder_bv |> S.bv_to_name) in
 
     let pure_wp_uvar, guard_wp = pure_wp_uvar (Env.push_binders env bs) ret_t 
       (BU.format1 "implicit for pure_wp in checking stronger for %s" (string_of_lid ed.mname))
@@ -535,7 +535,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           List.splitAt (List.length bs - 1) bs
           |> (fun (l1, l2) -> l1, List.hd l2) in
         let env = Env.push_binders env [a] in
-        validate_layered_effect_binders env bs [(fst f_b).sort; res_t]
+        validate_layered_effect_binders env bs [f_b.binder_bv.sort; res_t]
           check_non_informative_binders r in
 
     stronger_us, stronger_t, k |> SS.close_univ_vars stronger_us in
@@ -561,7 +561,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
              let repr_ts = let (us, t, _) = repr in (us, t) in
              Env.inst_tscheme_with repr_ts [U_unknown] |> snd in
            let repr_t_applied = mk
-             (Tm_app (repr_t, bs |> List.map fst |> List.map S.bv_to_name |> List.map S.as_arg))
+             (Tm_app (repr_t, bs |> List.map (fun b -> b.binder_bv) |> List.map S.bv_to_name |> List.map S.as_arg))
              Range.dummyRange in
            let f_b = S.null_binder repr_t_applied in
            let g_b = S.null_binder repr_t_applied in
@@ -583,19 +583,19 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let rest_bs =
       match (SS.compress ty).n with
       | Tm_arrow (bs, _) when List.length bs >= 4 ->
-        let ((a', _)::bs) = SS.open_binders bs in
+        let (({binder_bv=a'})::bs) = SS.open_binders bs in
         bs |> List.splitAt (List.length bs - 3) |> fst
-           |> SS.subst_binders [NT (a', a |> fst |> S.bv_to_name)]
+           |> SS.subst_binders [NT (a', a.binder_bv |> S.bv_to_name)]
       | _ -> not_an_arrow_error "if_then_else" 4 ty r in
     let bs = a::rest_bs in
     let f_bs, guard_f =
-      let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a |> fst |> S.bv_to_name) in
+      let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a.binder_bv |> S.bv_to_name) in
       S.gen_bv "f" None repr |> S.mk_binder, g in
     let g_bs, guard_g =
-      let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a |> fst |> S.bv_to_name) in
+      let repr, g = fresh_repr r (Env.push_binders env bs) u_a (a.binder_bv |> S.bv_to_name) in
       S.gen_bv "g" None repr |> S.mk_binder, g in
     let p_b = S.gen_bv "p" None U.t_bool |> S.mk_binder in
-    let t_body, guard_body = fresh_repr r (Env.push_binders env (bs@[p_b])) u_a (a |> fst |> S.bv_to_name) in
+    let t_body, guard_body = fresh_repr r (Env.push_binders env (bs@[p_b])) u_a (a.binder_bv |> S.bv_to_name) in
     let k = U.abs (bs@[f_bs; g_bs; p_b]) t_body None in
     let guard_eq = Rel.teq env t k in
     [guard_f; guard_g; guard_body; guard_eq] |> List.iter (Rel.force_trivial_guard env);
@@ -611,7 +611,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           |> (fun (l1, l2) -> l1,
                           l2 |> List.hd, l2 |> List.tl |> List.hd) in
         let env = Env.push_binders env [a] in
-        validate_layered_effect_binders env bs [(fst f_b).sort; (fst g_b).sort; body]
+        validate_layered_effect_binders env bs [f_b.binder_bv.sort; g_b.binder_bv.sort; body]
           check_non_informative_binders r in
 
     if_then_else_us,
@@ -677,12 +677,12 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           bs
           |> List.splitAt (List.length bs - 3)
           |> snd
-          |> List.map fst
+          |> List.map (fun b -> b.binder_bv)
           |> List.map S.bv_to_name
           |> (fun l -> let (f::g::p::[]) = l in f, g, p) in
         Env.push_binders (Env.push_univ_vars env0 us) bs,
         S.mk_Tm_app ite_t
-          (bs |> List.map (fun (b, qual) -> S.bv_to_name b, binder_aq_to_arg_aq qual))
+          (bs |> List.map (fun ({binder_bv=b;binder_qual=qual}) -> S.bv_to_name b, binder_aq_to_arg_aq qual))
           r,
         f, g, p
       | _ -> failwith "Impossible! ite_t must have been an abstraction with at least 3 binders" in
@@ -696,7 +696,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         match (SS.compress subcomp_ty).n with
         | Tm_arrow (bs, _) ->
           let bs_except_last, last_b = bs |> List.splitAt (List.length bs - 1) in
-          bs_except_last |> List.map snd, last_b |> List.hd |> snd
+          bs_except_last |> List.map (fun b -> b.binder_qual), last_b |> List.hd |> (fun b -> b.binder_qual)
         | _ -> failwith "Impossible! subcomp_ty must have been an arrow with at lease 1 binder" in
 
      let aqs_except_last, last_aq =
@@ -1004,7 +1004,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
     | Tm_arrow (bs, _) ->
       let bs = SS.open_binders bs in
       (match bs with
-       | [(a, _); (wp, _)] -> a, wp.sort
+       | [({binder_bv=a}); ({binder_bv=wp})] -> a, wp.sort
        | _ -> fail signature)
     | _ -> fail signature
   in
@@ -1319,7 +1319,7 @@ let monad_signature env m s =
   | Tm_arrow(bs, c) ->
     let bs = SS.open_binders bs in
     begin match bs with
-        | [(a, _);(wp, _)] -> a, wp.sort
+        | [({binder_bv=a});({binder_bv=wp})] -> a, wp.sort
         | _ -> fail ()
     end
   | _ -> fail ()
@@ -1374,16 +1374,16 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
     let rest_bs =
       match (SS.compress lift_ty).n with
       | Tm_arrow (bs, _) when List.length bs >= 2 ->
-        let ((a', _)::bs) = SS.open_binders bs in
+        let (({binder_bv=a'})::bs) = SS.open_binders bs in
         bs |> List.splitAt (List.length bs - 1) |> fst
-           |> SS.subst_binders [NT (a', bv_to_name (fst a))]
+           |> SS.subst_binders [NT (a', bv_to_name a.binder_bv)]
       | _ ->
         raise_error (Errors.Fatal_UnexpectedExpressionType,
           lift_t_shape_error "either not an arrow, or not enough binders") r in
 
     let f_b, g_f_b =
       let f_sort, g = TcUtil.fresh_effect_repr_en
-        (Env.push_binders env (a::rest_bs)) r sub.source u_a (a |> fst |> S.bv_to_name) in
+        (Env.push_binders env (a::rest_bs)) r sub.source u_a (a.binder_bv |> S.bv_to_name) in
       S.gen_bv "f" None f_sort |> S.mk_binder, g in
 
     let bs = a::rest_bs in
@@ -1391,7 +1391,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
     //repr<?u> ?u_i ... ?u_n
     let repr, g_repr = TcUtil.fresh_effect_repr_en
       (Env.push_binders env bs)
-      r sub.target u_a (a |> fst |> S.bv_to_name) in
+      r sub.target u_a (a.binder_bv |> S.bv_to_name) in
 
     let pure_wp_uvar, guard_wp = pure_wp_uvar (Env.push_binders env bs) repr
       (BU.format2 "implicit for pure_wp in typechecking lift %s~>%s"
@@ -1429,7 +1429,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
         List.splitAt (List.length bs - 1) bs
         |> (fun (l1, l2) -> l1, List.hd l2) in
       let env = Env.push_binders env [a] in
-      validate_layered_effect_binders env bs [(fst f_b).sort; res_t] check_non_informative_binders r in
+      validate_layered_effect_binders env bs [f_b.binder_bv.sort; res_t] check_non_informative_binders r in
 
   let sub = { sub with
     lift = Some (us, lift);
@@ -1564,7 +1564,7 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
   let _ =
     let expected_result_typ =
       match tps with
-      | (x, _)::_ -> S.bv_to_name x
+      | ({binder_bv=x})::_ -> S.bv_to_name x
       | _ -> raise_error (Errors.Fatal_NotEnoughArgumentsForEffect,
                          "Effect abbreviations must bind at least the result type")
                         r
@@ -1634,9 +1634,9 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
   let rest_bs =
     match (SS.compress ty).n with
     | Tm_arrow (bs, _) when List.length bs >= 4 ->
-      let ((a', _)::(b', _)::bs) = SS.open_binders bs in
+      let (({binder_bv=a'})::({binder_bv=b'})::bs) = SS.open_binders bs in
       bs |> List.splitAt (List.length bs - 2) |> fst
-         |> SS.subst_binders [NT (a', a |> fst |> S.bv_to_name); NT (b', b |> fst |> S.bv_to_name)]
+         |> SS.subst_binders [NT (a', a.binder_bv |> S.bv_to_name); NT (b', b.binder_bv |> S.bv_to_name)]
     | _ ->
       raise_error (Errors.Fatal_UnexpectedEffect,
         BU.format3 "Type of %s is not an arrow with >= 4 binders (%s::%s)" eff_name
@@ -1645,15 +1645,15 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
   let bs = a::b::rest_bs in
 
   let f, guard_f =
-    let repr, g = TcUtil.fresh_effect_repr_en (Env.push_binders env bs) r m u_a (a |> fst |> S.bv_to_name) in
+    let repr, g = TcUtil.fresh_effect_repr_en (Env.push_binders env bs) r m u_a (a.binder_bv |> S.bv_to_name) in
     S.gen_bv "f" None repr |> S.mk_binder, g in
 
   let g, guard_g =
-    let x_a = S.gen_bv "x" None (a |> fst |> S.bv_to_name) |> S.mk_binder in
-    let repr, g = TcUtil.fresh_effect_repr_en (Env.push_binders env (bs@[x_a])) r n u_b (b |> fst |> S.bv_to_name) in
+    let x_a = S.gen_bv "x" None (a.binder_bv |> S.bv_to_name) |> S.mk_binder in
+    let repr, g = TcUtil.fresh_effect_repr_en (Env.push_binders env (bs@[x_a])) r n u_b (b.binder_bv |> S.bv_to_name) in
     S.gen_bv "g" None (U.arrow [x_a] (S.mk_Total' repr (Some (new_u_univ ())))) |> S.mk_binder, g in
 
-  let repr, guard_repr = TcUtil.fresh_effect_repr_en (Env.push_binders env bs) r p u_b (b |> fst |> S.bv_to_name) in
+  let repr, guard_repr = TcUtil.fresh_effect_repr_en (Env.push_binders env bs) r p u_b (b.binder_bv |> S.bv_to_name) in
 
   let pure_wp_uvar, g_pure_wp_uvar = pure_wp_uvar (Env.push_binders env bs) repr
     (BU.format1 "implicit for pure_wp in checking %s" eff_name)
@@ -1690,10 +1690,10 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme) : (S
                         l2 |> List.hd, l2 |> List.tl |> List.hd) in
       //AR: CAUTION: a little lax about opening g_b with x:a binder, see comment in tc_layered_eff bind checking
       let g_sort =
-        match (SS.compress (fst g_b).sort).n with
+        match (SS.compress g_b.binder_bv.sort).n with
         | Tm_arrow (_, c) -> U.comp_result c in
       let env = Env.push_binders env [a; b] in
-      validate_layered_effect_binders env bs [(fst f_b).sort; g_sort; res_t] check_non_informative_binders r in
+      validate_layered_effect_binders env bs [f_b.binder_bv.sort; g_sort; res_t] check_non_informative_binders r in
 
 
   log_issue r (Errors.Warning_BleedingEdge_Feature,
@@ -1727,9 +1727,9 @@ let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tschem
   let rest_bs =
     match (SS.compress ty).n with
     | Tm_arrow (bs, _) when List.length bs >= 2 ->
-      let ((a', _)::bs) = SS.open_binders bs in
+      let (({binder_bv=a'})::bs) = SS.open_binders bs in
       bs |> List.splitAt (List.length bs - 1) |> fst
-         |> SS.subst_binders [NT (a', bv_to_name (fst a))]
+         |> SS.subst_binders [NT (a', bv_to_name a.binder_bv)]
     | _ -> 
       raise_error (Errors.Fatal_UnexpectedEffect,
         BU.format3 "Type of polymonadic subcomp %s is not an arrow with >= 2 binders (%s::%s)"
@@ -1739,11 +1739,11 @@ let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tschem
   let bs = a::rest_bs in
   let f, guard_f =
     let repr, g = TcUtil.fresh_effect_repr_en (Env.push_binders env bs) r m u
-      (a |> fst |> S.bv_to_name) in
+      (a.binder_bv |> S.bv_to_name) in
     S.gen_bv "f" None repr |> S.mk_binder, g in
     
   let ret_t, guard_ret_t = TcUtil.fresh_effect_repr_en (Env.push_binders env bs)
-    r n u (a |> fst |> S.bv_to_name) in
+    r n u (a.binder_bv |> S.bv_to_name) in
 
   let pure_wp_uvar, guard_wp = pure_wp_uvar (Env.push_binders env bs) ret_t 
     (BU.format1 "implicit for pure_wp in checking polymonadic subcomp %s" combinator_name)
@@ -1785,7 +1785,7 @@ let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) : (S.tschem
         List.splitAt (List.length bs - 1) bs
         |> (fun (l1, l2) -> l1, List.hd l2) in
       let env = Env.push_binders env [a] in
-      validate_layered_effect_binders env bs [(fst f_b).sort; res_t] check_non_informative_binders r in
+      validate_layered_effect_binders env bs [f_b.binder_bv.sort; res_t] check_non_informative_binders r in
 
 
   log_issue r (Errors.Warning_BleedingEdge_Feature,

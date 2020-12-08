@@ -796,6 +796,7 @@ let collect_one
 
       and collect_binder b =
         collect_aqual b.aqual;
+        b.battributes |> List.iter collect_term;
         match b with
         | { b = Annotated (_, t) }
         | { b = TAnnotated (_, t) }
@@ -803,8 +804,7 @@ let collect_one
         | _ -> ()
 
       and collect_aqual = function
-        | Some (Meta (Arg_qualifier_meta_tac t))
-        | Some (Meta (Arg_qualifier_meta_attr t)) -> collect_term t
+        | Some (Meta t) -> collect_term t
         | _ -> ()
 
       and collect_term t =

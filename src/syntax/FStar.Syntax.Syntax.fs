@@ -193,7 +193,11 @@ and pat = withinfo_t<pat'>
 and comp = syntax<comp'>
 and arg = term * aqual                                           (* marks an explicitly provided implicit arg *)
 and args = list<arg>
-and binder = bv * aqual                                          (* f:   #n:nat -> vector n int -> T; f #17 v *)
+and binder = {
+  binder_bv    : bv;
+  binder_qual  : aqual;
+  binder_attrs : list<attribute>
+}                                                                (* f:   #[@@ attr] n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                       (* bool marks implicit binder *)
 and cflag =                                                      (* flags applicable to computation types, usually for optimizations *)
   | TOTAL                                                          (* computation has no real effect, can be reduced safely *)
@@ -302,11 +306,8 @@ and tscheme = list<univ_name> * typ
 and gamma = list<binding>
 and arg_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
-  | Meta of arg_qualifier_meta_t
+  | Meta of term  //meta-argument that specifies a tactic term
   | Equality
-and arg_qualifier_meta_t =
-  | Arg_qualifier_meta_tac of term
-  | Arg_qualifier_meta_attr of term
 and aqual = option<arg_qualifier>
 
 // This is set in FStar.Main.main, where all modules are in-scope.
@@ -559,7 +560,7 @@ let mk (t:'a) r = {
 
 let bv_to_tm   bv :term = mk (Tm_bvar bv) (range_of_bv bv)
 let bv_to_name bv :term = mk (Tm_name bv) (range_of_bv bv)
-let binders_to_names (bs:binders) : list<term> = bs |> List.map (fun (x, _) -> bv_to_name x)
+let binders_to_names (bs:binders) : list<term> = bs |> List.map (fun b -> bv_to_name b.binder_bv)
 let mk_Tm_app (t1:typ) (args:list<arg>) p =
     match args with
     | [] -> t1
@@ -617,22 +618,26 @@ let is_type (t:term) = match t.n with
     | _ -> false
 let null_id  = mk_ident("_", dummyRange)
 let null_bv k = {ppname=null_id; index=0; sort=k}
-let mk_binder (a:bv) : binder = a, None
-let null_binder t : binder = null_bv t, None
+let mk_binder (a:bv) : binder = {
+  binder_bv = a;
+  binder_qual = None;
+  binder_attrs = []
+}
+let null_binder t : binder = mk_binder (null_bv t)
 let imp_tag = Implicit false
 let iarg t : arg = t, Some imp_tag
 let as_arg t : arg = t, None
 let is_null_bv (b:bv) = string_of_id b.ppname = string_of_id null_id
-let is_null_binder (b:binder) = is_null_bv (fst b)
+let is_null_binder (b:binder) = is_null_bv b.binder_bv
 
 let is_top_level = function
     | {lbname=Inr _}::_ -> true
     | _ -> false
 
 let freenames_of_binders (bs:binders) : freenames =
-    List.fold_right (fun (x, _) out -> Util.set_add x out) bs no_names
+    List.fold_right (fun b out -> Util.set_add b.binder_bv out) bs no_names
 
-let binders_of_list fvs : binders = (fvs |> List.map (fun t -> t, None))
+let binders_of_list fvs : binders = (fvs |> List.map (fun t -> mk_binder t))
 let binders_of_freenames (fvs:freenames) = Util.set_elements fvs |> binders_of_list
 let is_implicit = function Some (Implicit _) -> true | _ -> false
 let is_implicit_or_meta = function Some (Implicit _) | Some (Meta _) -> true | _ -> false
@@ -662,7 +667,7 @@ let freshen_bv bv =
     then new_bv (Some (range_of_bv bv)) bv.sort
     else {bv with index=Ident.next_id()}
 
-let freshen_binder (b:binder) = let (bv, aq) = b in (freshen_bv bv, aq)
+let freshen_binder (b:binder) = { b with binder_bv = freshen_bv b.binder_bv }
 
 let new_univ_name ropt =
     let id = Ident.next_id() in

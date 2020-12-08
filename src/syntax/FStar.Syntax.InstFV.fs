@@ -101,7 +101,10 @@ let rec inst (s:term -> fv -> term) t =
       | Tm_meta(t, tag) ->
         mk (Tm_meta(inst s t, tag))
 
-and inst_binders s bs = bs |> List.map (fun (x, imp) -> {x with sort=inst s x.sort}, imp)
+and inst_binders s bs = bs |> List.map (fun b ->
+  { b with
+    binder_bv = { b.binder_bv with sort = inst s b.binder_bv.sort };
+    binder_attrs = b.binder_attrs |> List.map (inst s) })  //AR: TODO: may be we don't need to inst attrs?
 
 and inst_args s args = args |> List.map (fun (a, imp) -> inst s a, imp)
 

@@ -434,7 +434,7 @@ let mk_ref_assign t1 t2 pos =
  *)
 let rec generalize_annotated_univs (s:sigelt) :sigelt =
   let bs_univnames (bs:binders) :BU.set<univ_name> =
-    bs |> List.fold_left (fun uvs ( { sort = t }, _) -> BU.set_union uvs (Free.univnames t)) (BU.new_set Syntax.order_univ_name)
+    bs |> List.fold_left (fun uvs b -> BU.set_union uvs (Free.univnames b.binder_bv.sort)) (BU.new_set Syntax.order_univ_name)
   in
   let empty_set = BU.new_set Syntax.order_univ_name in
 
@@ -1116,16 +1116,16 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | Sum(binders, t) -> //dependent tuple
       let env, _, targs = List.fold_left (fun (env, tparams, typs) b ->
-                let xopt, t =
+                let xopt, t, attrs =
                   match b with
                   | Inl b -> desugar_binder env b
-                  | Inr t -> None, desugar_typ env t
+                  | Inr t -> None, desugar_typ env t, []
                 in
                 let env, x =
                     match xopt with
                     | None -> env, S.new_bv (Some top.range) (setpos tun)
                     | Some x -> push_bv env x in
-                (env, tparams@[{x with sort=t}, None], typs@[as_arg <| no_annot_abs tparams t]))
+                (env, tparams@[{S.binder_bv={x with sort=t}; S.binder_qual=None; S.binder_attrs=attrs}], typs@[as_arg <| no_annot_abs tparams t]))
         (env, [], [])
         (binders@[Inl <| mk_binder (NoName t) t.range Type_level None]) in
       let tup = fail_or env (try_lookup_lid env) (C.mk_dtuple_lid (List.length targs) top.range) in
@@ -1146,12 +1146,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | Refine(b, f) ->
       begin match desugar_binder env b with
-        | (None, _) -> failwith "Missing binder in refinement"
+        | (None, _, _) -> failwith "Missing binder in refinement"
 
         | b ->
-          let (x, _), env = as_binder env None b in
+          let b, env = as_binder env None b in
           let f = desugar_formula env f in
-          setpos <| U.refine x f, noaqs
+          setpos <| U.refine b.binder_bv f, noaqs
       end
 
     | Abs(binders, body) ->
@@ -1239,7 +1239,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                           | _ -> failwith "Impossible"
                           end
                     in
-                    (x, aq), sc_pat_opt
+                    ({S.binder_bv=x; S.binder_qual=aq; S.binder_attrs=[]}), sc_pat_opt
             in
             aux env (b::bs) sc_pat_opt rest
        in
@@ -1920,7 +1920,7 @@ and desugar_formula env (f:term) : S.term =
         mk (Tm_meta (body, Meta_pattern (names, pats)))
     in
     match tk with
-      | Some a, k ->
+      | Some a, k, _ ->  //AR: TODO: ignoring the attributes here
         let env, a = push_bv env a in
         let a = {a with sort=k} in
         let body = desugar_formula env body in
@@ -1968,40 +1968,36 @@ and desugar_formula env (f:term) : S.term =
 
     | _ -> desugar_term env f
 
-and desugar_binder env b : option<ident> * S.term = match b.b with
+and desugar_binder env b : option<ident> * S.term * list<S.attribute> =
+  let attrs = b.battributes |> List.map (desugar_term env) in
+  match b.b with
   | TAnnotated(x, t)
-  | Annotated(x, t) -> Some x, desugar_typ env t
-  | TVariable x     -> Some x, mk (Tm_type U_unknown) (range_of_id x)
-  | NoName t        -> None, desugar_typ env t
-  | Variable x      -> Some x, tun_r (range_of_id x)
+  | Annotated(x, t) -> Some x, desugar_typ env t, attrs
+  | TVariable x     -> Some x, mk (Tm_type U_unknown) (range_of_id x), attrs
+  | NoName t        -> None, desugar_typ env t, attrs
+  | Variable x      -> Some x, tun_r (range_of_id x), attrs
 
 and as_binder env imp = function
-  | (None, k) -> (null_bv k, trans_aqual env imp), env
-  | (Some a, k) ->
+  | (None, k, attrs) -> {S.binder_bv=null_bv k; S.binder_qual=trans_aqual env imp;S.binder_attrs=attrs}, env
+  | (Some a, k, attrs) ->
     let env, a = Env.push_bv env a in
-    ({a with sort=k}, trans_aqual env imp), env
+    ({S.binder_bv={a with sort=k}; S.binder_qual=trans_aqual env imp; S.binder_attrs=attrs}), env
 
 and trans_aqual env = function
   | Some AST.Implicit -> Some S.imp_tag
   | Some AST.Equality -> Some S.Equality
-  | Some (AST.Meta (AST.Arg_qualifier_meta_tac t)) ->
-    Some (S.Meta (S.Arg_qualifier_meta_tac (desugar_term env t)))
-  | Some (AST.Meta (AST.Arg_qualifier_meta_attr t)) ->
-    let t = desugar_term env t in
-    FStar.Errors.log_issue t.pos
-      (Errors.Warning_BleedingEdge_Feature,
-       "Associating attributes with a binder is an experimental feature---expect its behavior to change");
-    Some (S.Meta (S.Arg_qualifier_meta_attr t))
+  | Some (AST.Meta t) ->
+    Some (S.Meta (desugar_term env t))
   | None -> None
 
-let typars_of_binders env bs =
+let typars_of_binders env bs : _ * binders =
     let env, tpars = List.fold_left (fun (env, out) b ->
         let tk = desugar_binder env ({b with blevel=Formula}) in  (* typars follow the same binding conventions as formulas *)
         match tk with
-            | Some a, k ->
+            | Some a, k, attrs ->
                 let env, a = push_bv env a in
                 let a = {a with sort=k} in
-                (env, (a, trans_aqual env b.aqual)::out)
+                (env, ({S.binder_bv=a; S.binder_qual=trans_aqual env b.aqual; S.binder_attrs=attrs})::out)
             | _ -> raise_error (Errors.Fatal_UnexpectedBinder, "Unexpected binder") b.brange) (env, []) bs in
     env, List.rev tpars
 
@@ -2048,7 +2044,8 @@ let mk_data_discriminators quals env datas =
 let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
     let p = range_of_lid lid in
 
-    fields |> List.mapi (fun i (x, _) ->
+    fields |> List.mapi (fun i fld ->
+        let x = fld.S.binder_bv in
         let field_name = U.mk_field_projector_name lid x i in
         let only_decl =
             lid_equals C.prims_lid  (Env.current_module env)
@@ -2201,9 +2198,9 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
       _env, _env2, se, tconstr
     | _ -> failwith "Unexpected tycon" in
   let push_tparams env bs =
-    let env, bs = List.fold_left (fun (env, tps) (x, imp) ->
-        let env, y = Env.push_bv env x.ppname in
-        env, (y, imp)::tps) (env, []) bs in
+    let env, bs = List.fold_left (fun (env, tps) b ->
+        let env, y = Env.push_bv env b.binder_bv.ppname in
+        env, (({S.binder_bv=y; S.binder_qual=b.binder_qual; S.binder_attrs=b.binder_attrs})::tps)) (env, []) bs in
     env, List.rev bs in
   match tcs with
     | [TyconAbstract(id, bs, kopt)] ->
@@ -2324,7 +2321,7 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
             mk_term (App(tot, t, Nothing)) t.range t.level in
           let tycon = (tname, tpars, k) in
           let env_tps, tps = push_tparams env tpars in
-          let data_tpars = List.map (fun (x, _) -> (x, Some (S.Implicit true))) tps in
+          let data_tpars = List.map (fun tp -> { tp with S.binder_qual = Some (S.Implicit true) }) tps in
           let tot_tconstr = mk_tot tconstr in
           let attrs = List.map (desugar_term env) d.attrs in
           let val_attrs = Env.lookup_letbinding_quals_and_attrs env tname |> snd in
@@ -2387,8 +2384,8 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
 let desugar_binders env binders =
     let env, binders = List.fold_left (fun (env,binders) b ->
     match desugar_binder env b with
-      | (Some a, k) ->
-        let binder, env = as_binder env b.aqual (Some a, k) in
+      | desugared_b ->
+        let binder, env = as_binder env b.aqual desugared_b in
         env, binder::binders
 
       | _ -> raise_error (Errors.Fatal_MissingNameInBinder, "Missing name in binder") b.brange) (env, []) binders in
