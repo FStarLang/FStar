@@ -909,7 +909,7 @@ and mkPrelude z3options =
                 (declare-datatypes () ((Universe \n\
                                         (Univ (ulevel Int)))))\n\
                 (define-fun imax ((i Int) (j Int)) Int \n\
-                  (ite (>= i j) i i))\n\
+                  (ite (>= i j) i j))\n\
                 (define-fun U_zero () Universe (Univ 0))\n\
                 (define-fun U_succ ((u Universe)) Universe\n\
                   (Univ (+ (ulevel u) 1)))\n\
