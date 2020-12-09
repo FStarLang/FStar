@@ -502,6 +502,17 @@ val change_slprop (p q:slprop)
                   (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
   : SteelT unit p (fun _ -> q)
 
+val rewrite_context (#[@@framing_implicit] p:slprop)
+                    (#[@@framing_implicit] q:slprop)
+                    (_:unit)
+  : SteelF unit p (fun _ -> q) (requires fun _ -> p == q) (ensures fun _ _ _ -> True)
+
+val sladmit (#a:Type)
+            (#[@@framing_implicit] p:pre_t)
+            (#[@@framing_implicit] q:post_t a)
+            (_:unit)
+  : SteelF a p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
+
 val intro_pure (p:prop)
   : Steel unit emp (fun _ -> pure p) (requires fun _ -> p) (ensures fun _ _ _ -> True)
 

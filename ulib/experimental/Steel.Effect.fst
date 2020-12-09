@@ -197,6 +197,12 @@ let add_action f = Steel?.reflect (action_as_repr f)
 
 let change_slprop p q proof = add_action (Steel.Memory.change_slprop p q proof)
 
+let rewrite_context #p #q _ =
+  assert (p == q);
+  SteelF?.reflect (action_as_repr (Steel.Memory.change_slprop p q (fun _ -> ())))
+
+let sladmit #a #p #q _ = SteelF?.reflect (fun _ -> NMST.nmst_admit ())
+
 let intro_pure p = change_slprop emp (pure p) (fun m -> pure_interp p m)
 
 let read #a #pcm r v0 = Steel.EffectX.read r v0
