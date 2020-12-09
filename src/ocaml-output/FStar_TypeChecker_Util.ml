@@ -4454,9 +4454,8 @@ let (pure_or_ghost_pre_and_post :
         FStar_Syntax_Util.refine x uu___ in
       let norm t =
         FStar_TypeChecker_Normalize.normalize
-          [FStar_TypeChecker_Env.Beta;
-          FStar_TypeChecker_Env.Eager_unfolding;
-          FStar_TypeChecker_Env.EraseUniverses] env t in
+          [FStar_TypeChecker_Env.Beta; FStar_TypeChecker_Env.Eager_unfolding]
+          env t in
       let uu___ = FStar_Syntax_Util.is_tot_or_gtot_comp comp in
       if uu___
       then

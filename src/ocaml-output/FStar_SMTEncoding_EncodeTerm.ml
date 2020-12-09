@@ -1719,152 +1719,138 @@ and (encode_term :
                                           FStar_Util.digest_of_string
                                             tkey_hash in
                                         Prims.op_Hat prefix uu___8 in
-                                      ((let uu___9 =
-                                          let uu___10 =
+                                      let cvar_sorts =
+                                        FStar_List.map
+                                          FStar_SMTEncoding_Term.fv_sort
+                                          cvars in
+                                      let caption =
+                                        let uu___8 =
+                                          FStar_Options.log_queries () in
+                                        if uu___8
+                                        then
+                                          let uu___9 =
+                                            let uu___10 =
+                                              FStar_TypeChecker_Normalize.term_to_string
+                                                env.FStar_SMTEncoding_Env.tcenv
+                                                t0 in
+                                            FStar_Util.replace_char uu___10
+                                              10 32 in
+                                          FStar_Pervasives_Native.Some uu___9
+                                        else FStar_Pervasives_Native.None in
+                                      let tdecl =
+                                        FStar_SMTEncoding_Term.DeclFun
+                                          (tsym, cvar_sorts,
+                                            FStar_SMTEncoding_Term.Term_sort,
+                                            caption) in
+                                      let t2 =
+                                        let uu___8 =
+                                          let uu___9 =
                                             FStar_List.map
-                                              (fun x ->
-                                                 FStar_SMTEncoding_Term.fv_name
-                                                   (FStar_Pervasives_Native.fst
-                                                      x)) univ_vars in
-                                          FStar_All.pipe_right uu___10
-                                            (FStar_String.concat ", ") in
-                                        FStar_Util.print2
-                                          "Adding univ_vars %s to %s\n"
-                                          uu___9 tsym);
-                                       (let cvar_sorts =
-                                          FStar_List.map
-                                            FStar_SMTEncoding_Term.fv_sort
-                                            cvars in
-                                        let caption =
+                                              FStar_SMTEncoding_Util.mkFreeV
+                                              cvars in
+                                          (tsym, uu___9) in
+                                        FStar_SMTEncoding_Util.mkApp uu___8 in
+                                      let t_has_kind =
+                                        let univ =
+                                          (env.FStar_SMTEncoding_Env.tcenv).FStar_TypeChecker_Env.universe_of
+                                            env.FStar_SMTEncoding_Env.tcenv
+                                            t0 in
+                                        let u = encode_universe univ in
+                                        let uu___8 =
+                                          FStar_SMTEncoding_Term.mk_Term_type
+                                            u in
+                                        FStar_SMTEncoding_Term.mk_HasType t2
+                                          uu___8 in
+                                      let k_assumption =
+                                        let a_name =
+                                          Prims.op_Hat "kinding_" tsym in
+                                        let uu___8 =
                                           let uu___9 =
-                                            FStar_Options.log_queries () in
-                                          if uu___9
-                                          then
-                                            let uu___10 =
-                                              let uu___11 =
-                                                FStar_TypeChecker_Normalize.term_to_string
-                                                  env.FStar_SMTEncoding_Env.tcenv
-                                                  t0 in
-                                              FStar_Util.replace_char uu___11
-                                                10 32 in
-                                            FStar_Pervasives_Native.Some
-                                              uu___10
-                                          else FStar_Pervasives_Native.None in
-                                        let tdecl =
-                                          FStar_SMTEncoding_Term.DeclFun
-                                            (tsym, cvar_sorts,
-                                              FStar_SMTEncoding_Term.Term_sort,
-                                              caption) in
-                                        let t2 =
-                                          let uu___9 =
-                                            let uu___10 =
-                                              FStar_List.map
-                                                FStar_SMTEncoding_Util.mkFreeV
-                                                cvars in
-                                            (tsym, uu___10) in
-                                          FStar_SMTEncoding_Util.mkApp uu___9 in
-                                        let t_has_kind =
-                                          let univ =
-                                            (env.FStar_SMTEncoding_Env.tcenv).FStar_TypeChecker_Env.universe_of
-                                              env.FStar_SMTEncoding_Env.tcenv
-                                              t0 in
-                                          let u = encode_universe univ in
-                                          let uu___9 =
-                                            FStar_SMTEncoding_Term.mk_Term_type
-                                              u in
-                                          FStar_SMTEncoding_Term.mk_HasType
-                                            t2 uu___9 in
-                                        let k_assumption =
-                                          let a_name =
-                                            Prims.op_Hat "kinding_" tsym in
-                                          let uu___9 =
-                                            let uu___10 =
-                                              FStar_SMTEncoding_Term.mkForall
-                                                t0.FStar_Syntax_Syntax.pos
-                                                ([[t_has_kind]], cvars,
-                                                  t_has_kind) in
-                                            (uu___10,
-                                              (FStar_Pervasives_Native.Some
-                                                 a_name), a_name) in
-                                          FStar_SMTEncoding_Util.mkAssume
-                                            uu___9 in
-                                        let f_has_t =
-                                          FStar_SMTEncoding_Term.mk_HasType f
-                                            t2 in
-                                        let f_has_t_z =
-                                          FStar_SMTEncoding_Term.mk_HasTypeZ
-                                            f t2 in
-                                        let pre_typing =
-                                          let a_name =
-                                            Prims.op_Hat "pre_typing_" tsym in
+                                            FStar_SMTEncoding_Term.mkForall
+                                              t0.FStar_Syntax_Syntax.pos
+                                              ([[t_has_kind]], cvars,
+                                                t_has_kind) in
+                                          (uu___9,
+                                            (FStar_Pervasives_Native.Some
+                                               a_name), a_name) in
+                                        FStar_SMTEncoding_Util.mkAssume
+                                          uu___8 in
+                                      let f_has_t =
+                                        FStar_SMTEncoding_Term.mk_HasType f
+                                          t2 in
+                                      let f_has_t_z =
+                                        FStar_SMTEncoding_Term.mk_HasTypeZ f
+                                          t2 in
+                                      let pre_typing =
+                                        let a_name =
+                                          Prims.op_Hat "pre_typing_" tsym in
+                                        let uu___8 =
                                           let uu___9 =
                                             let uu___10 =
                                               let uu___11 =
                                                 let uu___12 =
                                                   let uu___13 =
                                                     let uu___14 =
-                                                      let uu___15 =
-                                                        FStar_SMTEncoding_Term.mk_PreType
-                                                          f in
-                                                      FStar_SMTEncoding_Term.mk_tester
-                                                        "Tm_arrow" uu___15 in
-                                                    (f_has_t, uu___14) in
-                                                  FStar_SMTEncoding_Util.mkImp
-                                                    uu___13 in
-                                                ([[f_has_t]], (fsym ::
-                                                  cvars), uu___12) in
-                                              let uu___12 =
-                                                mkForall_fuel module_name
-                                                  t0.FStar_Syntax_Syntax.pos in
-                                              uu___12 uu___11 in
-                                            (uu___10,
-                                              (FStar_Pervasives_Native.Some
-                                                 "pre-typing for functions"),
-                                              (Prims.op_Hat module_name
-                                                 (Prims.op_Hat "_" a_name))) in
-                                          FStar_SMTEncoding_Util.mkAssume
-                                            uu___9 in
-                                        let t_interp2 =
-                                          let a_name =
-                                            Prims.op_Hat "interpretation_"
-                                              tsym in
+                                                      FStar_SMTEncoding_Term.mk_PreType
+                                                        f in
+                                                    FStar_SMTEncoding_Term.mk_tester
+                                                      "Tm_arrow" uu___14 in
+                                                  (f_has_t, uu___13) in
+                                                FStar_SMTEncoding_Util.mkImp
+                                                  uu___12 in
+                                              ([[f_has_t]], (fsym :: cvars),
+                                                uu___11) in
+                                            let uu___11 =
+                                              mkForall_fuel module_name
+                                                t0.FStar_Syntax_Syntax.pos in
+                                            uu___11 uu___10 in
+                                          (uu___9,
+                                            (FStar_Pervasives_Native.Some
+                                               "pre-typing for functions"),
+                                            (Prims.op_Hat module_name
+                                               (Prims.op_Hat "_" a_name))) in
+                                        FStar_SMTEncoding_Util.mkAssume
+                                          uu___8 in
+                                      let t_interp2 =
+                                        let a_name =
+                                          Prims.op_Hat "interpretation_" tsym in
+                                        let uu___8 =
                                           let uu___9 =
                                             let uu___10 =
                                               let uu___11 =
-                                                let uu___12 =
-                                                  FStar_SMTEncoding_Util.mkIff
-                                                    (f_has_t_z, t_interp1) in
-                                                ([[f_has_t_z]], (fsym ::
-                                                  cvars), uu___12) in
-                                              FStar_SMTEncoding_Term.mkForall
-                                                t0.FStar_Syntax_Syntax.pos
-                                                uu___11 in
-                                            (uu___10,
-                                              (FStar_Pervasives_Native.Some
-                                                 a_name),
-                                              (Prims.op_Hat module_name
-                                                 (Prims.op_Hat "_" a_name))) in
-                                          FStar_SMTEncoding_Util.mkAssume
-                                            uu___9 in
-                                        let t_decls =
-                                          [tdecl;
-                                          k_assumption;
-                                          pre_typing;
-                                          t_interp2] in
+                                                FStar_SMTEncoding_Util.mkIff
+                                                  (f_has_t_z, t_interp1) in
+                                              ([[f_has_t_z]], (fsym ::
+                                                cvars), uu___11) in
+                                            FStar_SMTEncoding_Term.mkForall
+                                              t0.FStar_Syntax_Syntax.pos
+                                              uu___10 in
+                                          (uu___9,
+                                            (FStar_Pervasives_Native.Some
+                                               a_name),
+                                            (Prims.op_Hat module_name
+                                               (Prims.op_Hat "_" a_name))) in
+                                        FStar_SMTEncoding_Util.mkAssume
+                                          uu___8 in
+                                      let t_decls =
+                                        [tdecl;
+                                        k_assumption;
+                                        pre_typing;
+                                        t_interp2] in
+                                      let uu___8 =
                                         let uu___9 =
                                           let uu___10 =
                                             let uu___11 =
-                                              let uu___12 =
-                                                FStar_SMTEncoding_Term.mk_decls
-                                                  tsym tkey_hash t_decls
-                                                  (FStar_List.append decls
-                                                     (FStar_List.append
-                                                        decls' guard_decls)) in
-                                              FStar_List.append guard_decls
-                                                uu___12 in
-                                            FStar_List.append decls' uu___11 in
-                                          FStar_List.append decls uu___10 in
-                                        (t2, uu___9)))))))
+                                              FStar_SMTEncoding_Term.mk_decls
+                                                tsym tkey_hash t_decls
+                                                (FStar_List.append decls
+                                                   (FStar_List.append decls'
+                                                      guard_decls)) in
+                                            FStar_List.append guard_decls
+                                              uu___11 in
+                                          FStar_List.append decls' uu___10 in
+                                        FStar_List.append decls uu___9 in
+                                      (t2, uu___8)))))
                 else
                   (let tkey_hash =
                      let uu___4 =

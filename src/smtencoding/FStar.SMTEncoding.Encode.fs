@@ -350,25 +350,27 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
         let range_ty = mkApp(range, []) in
         [Util.mkAssume(mk_HasTypeZ (mk_Range_const ()) range_ty, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
    let mk_inversion_axiom : env -> string -> term -> list<decl> = fun env inversion tt ->
-       // (assert (forall ((t Term))
-       //            (! (implies (Valid (FStar.Pervasives.inversion t))
+       // (assert (forall ((u Universe) (t Term))
+       //            (! (implies (Valid (FStar.Pervasives.inversion u t))
        //                        (forall ((x Term))
        //                                (! (implies (HasTypeFuel ZFuel x t)
        //                                            (HasTypeFuel (SFuel ZFuel) x t))
        //                                   :pattern ((HasTypeFuel ZFuel x t)))))
        //               :pattern ((FStar.Pervasives.inversion t)))))
+        let uu = mk_fv ("u", univ_sort) in
+        let u = mkFreeV uu in
         let tt = mk_fv ("t", Term_sort) in
         let t = mkFreeV tt in
         let xx = mk_fv ("x", Term_sort) in
         let x = mkFreeV xx in
-        let inversion_t = mkApp(inversion, [t]) in
+        let inversion_t = mkApp(inversion, [u;t]) in
         let valid = mkApp("Valid", [inversion_t]) in
         let body =
           let hastypeZ = mk_HasTypeZ x t in
           let hastypeS = mk_HasTypeFuel (n_fuel 1) x t in
           mkForall (Env.get_range env) ([[hastypeZ]], [xx], mkImp(hastypeZ, hastypeS))
         in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[inversion_t]], [tt], mkImp(valid, body)), Some "inversion interpretation", "inversion-interp")]
+        [Util.mkAssume(mkForall (Env.get_range env) ([[inversion_t]], [uu;tt], mkImp(valid, body)), Some "inversion interpretation", "inversion-interp")]
    in
    let mk_with_type_axiom : env -> string -> term -> list<decl> = fun env with_type tt ->
         (* (assert (forall ((t Term) (e Term))
@@ -1284,13 +1286,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        (decls |> mk_decls_trivial) @ elts @ rest @ (inversions |> mk_decls_trivial), env
 
      | Sig_inductive_typ(t, universe_names, tps, k, _, datas) ->
-         let tcenv = env.tcenv in
+         let tcenv_orig = env.tcenv in
+         let universes_orig = env.universes in
          let usubst, uvs = SS.univ_var_opening universe_names in
          let tcenv, tps, k =
-                Env.push_univ_vars tcenv uvs,
+                Env.push_univ_vars tcenv_orig uvs,
                 SS.subst_binders usubst tps,
                 SS.subst (SS.shift_subst (List.length tps) usubst) k
          in
+         let env = { env with tcenv = tcenv; universes = env.universes @ uvs } in
          let univ_vars, univ_terms =
            List.map EncodeTerm.encode_univ_name uvs
            |> List.unzip
@@ -1472,6 +1476,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let g = (decls |> mk_decls_trivial)
                 @binder_decls
                 @aux in
+        let env = { env with tcenv = tcenv_orig; universes = universes_orig } in
         g, env
 
     | Sig_datacon(d, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env
@@ -1650,15 +1655,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           (datacons |> mk_decls_trivial) @ g, env
         in
         FStar.SMTEncoding.Env.with_open_universes env us [t]
-          (fun env us [t] ->
-            BU.print3 "<start>Encoding datacon %s with <%s>.%s\n"
-              (Print.lid_to_string d)
-              (Print.univ_names_to_string us)
-              (Print.term_to_string t);
-            let res = encode_datacon_body env us t in
-            BU.print1 "<end>Encoding datacon %s\n"
-                          (Print.lid_to_string d);
-            res)
+          (fun env us [t] -> encode_datacon_body env us t)
 
 
 and encode_sigelts env ses :(decls_t * env_t) =
