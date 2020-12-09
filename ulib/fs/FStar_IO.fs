@@ -1,4 +1,4 @@
-module FStar.IO
+module FStar_IO
 exception EOF
 open System
 open System.IO

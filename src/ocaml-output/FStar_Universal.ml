@@ -72,6 +72,8 @@ let with_dsenv_of_tcenv :
                  (uu___1.FStar_TypeChecker_Env.tc_term);
                FStar_TypeChecker_Env.type_of =
                  (uu___1.FStar_TypeChecker_Env.type_of);
+               FStar_TypeChecker_Env.type_of_well_typed =
+                 (uu___1.FStar_TypeChecker_Env.type_of_well_typed);
                FStar_TypeChecker_Env.universe_of =
                  (uu___1.FStar_TypeChecker_Env.universe_of);
                FStar_TypeChecker_Env.check_type_of =
@@ -234,6 +236,7 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_NBE.normalize uu___1 in
       FStar_TypeChecker_Env.initial_env deps FStar_TypeChecker_TcTerm.tc_term
         FStar_TypeChecker_TcTerm.type_of_tot_term
+        FStar_TypeChecker_TcTerm.type_of_well_typed_term
         FStar_TypeChecker_TcTerm.universe_of
         FStar_TypeChecker_TcTerm.check_type_of_well_typed_term solver
         FStar_Parser_Const.prims_lid uu___ in
@@ -281,6 +284,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
+        FStar_TypeChecker_Env.type_of_well_typed =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.check_type_of =
@@ -362,6 +367,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
+        FStar_TypeChecker_Env.type_of_well_typed =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.check_type_of =
@@ -444,6 +451,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
+        FStar_TypeChecker_Env.type_of_well_typed =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.check_type_of =
@@ -526,6 +535,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
+        FStar_TypeChecker_Env.type_of_well_typed =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.check_type_of =
@@ -607,6 +618,8 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
         FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
+        FStar_TypeChecker_Env.type_of_well_typed =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
         FStar_TypeChecker_Env.check_type_of =
@@ -1247,7 +1260,10 @@ let (batch_mode_tc :
        let uu___1 = tc_fold_interleave dep_graph ([], [], env) filenames in
        match uu___1 with
        | (all_mods, mllibs, env1) ->
-           (emit mllibs;
+           ((let uu___3 =
+               let uu___4 = FStar_Errors.get_err_count () in
+               uu___4 = Prims.int_zero in
+             if uu___3 then emit mllibs else ());
             (let solver_refresh env2 =
                let uu___3 =
                  with_tcenv_of_env env2

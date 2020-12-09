@@ -989,7 +989,7 @@ let (should_return :
             (((FStar_TypeChecker_Common.is_pure_or_ghost_lcomp lc) &&
                 (Prims.op_Negation lc_is_unit_or_effectful))
                &&
-               (let uu___ = FStar_Syntax_Util.head_and_args' e in
+               (let uu___ = FStar_Syntax_Util.head_and_args_full e in
                 match uu___ with
                 | (head, uu___1) ->
                     let uu___2 =
@@ -3517,17 +3517,9 @@ let (bind_cases :
                                   (c, uu___8) in
                             (match uu___6 with
                              | (comp1, g_comp1) ->
-                                 let g_comp2 =
-                                   let uu___7 =
-                                     let uu___8 =
-                                       FStar_All.pipe_right scrutinee
-                                         FStar_Syntax_Syntax.mk_binder in
-                                     [uu___8] in
-                                   FStar_TypeChecker_Env.close_guard env0
-                                     uu___7 g_comp1 in
                                  (match lcases with
-                                  | [] -> (comp1, g_comp2)
-                                  | uu___7::[] -> (comp1, g_comp2)
+                                  | [] -> (comp1, g_comp1)
+                                  | uu___7::[] -> (comp1, g_comp1)
                                   | uu___7 ->
                                       let uu___8 =
                                         let uu___9 =
@@ -3536,7 +3528,7 @@ let (bind_cases :
                                         FStar_All.pipe_right uu___9
                                           FStar_Syntax_Util.is_layered in
                                       if uu___8
-                                      then (comp1, g_comp2)
+                                      then (comp1, g_comp1)
                                       else
                                         (let comp2 =
                                            FStar_TypeChecker_Env.comp_to_comp_typ
@@ -3574,7 +3566,7 @@ let (bind_cases :
                                              let uu___13 =
                                                mk_comp md1 u_res_t res_t wp1
                                                  bind_cases_flags in
-                                             (uu___13, g_comp2)))))) in
+                                             (uu___13, g_comp1)))))) in
               FStar_TypeChecker_Common.mk_lcomp eff res_t bind_cases_flags
                 bind_cases1
 let (check_comp :
@@ -6366,6 +6358,8 @@ let (update_env_sub_eff :
                  (uu___1.FStar_TypeChecker_Env.tc_term);
                FStar_TypeChecker_Env.type_of =
                  (uu___1.FStar_TypeChecker_Env.type_of);
+               FStar_TypeChecker_Env.type_of_well_typed =
+                 (uu___1.FStar_TypeChecker_Env.type_of_well_typed);
                FStar_TypeChecker_Env.universe_of =
                  (uu___1.FStar_TypeChecker_Env.universe_of);
                FStar_TypeChecker_Env.check_type_of =
@@ -6457,6 +6451,8 @@ let (update_env_sub_eff :
             (uu___.FStar_TypeChecker_Env.tc_term);
           FStar_TypeChecker_Env.type_of =
             (uu___.FStar_TypeChecker_Env.type_of);
+          FStar_TypeChecker_Env.type_of_well_typed =
+            (uu___.FStar_TypeChecker_Env.type_of_well_typed);
           FStar_TypeChecker_Env.universe_of =
             (uu___.FStar_TypeChecker_Env.universe_of);
           FStar_TypeChecker_Env.check_type_of =

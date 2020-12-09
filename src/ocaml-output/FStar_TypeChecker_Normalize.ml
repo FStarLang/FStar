@@ -130,7 +130,7 @@ let (__proj__Debug__item___0 :
 type stack = stack_elt Prims.list
 let (head_of : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
-    let uu___ = FStar_Syntax_Util.head_and_args' t in
+    let uu___ = FStar_Syntax_Util.head_and_args_full t in
     match uu___ with | (hd, uu___1) -> hd
 let set_memo :
   'a . FStar_TypeChecker_Cfg.cfg -> 'a FStar_Syntax_Syntax.memo -> 'a -> unit
@@ -3559,7 +3559,10 @@ let rec (norm :
            | FStar_Syntax_Syntax.Tm_app (head, args) ->
                let strict_args =
                  let uu___2 =
-                   let uu___3 = FStar_Syntax_Util.un_uinst head in
+                   let uu___3 =
+                     let uu___4 =
+                       FStar_All.pipe_right head FStar_Syntax_Util.unascribe in
+                     FStar_All.pipe_right uu___4 FStar_Syntax_Util.un_uinst in
                    uu___3.FStar_Syntax_Syntax.n in
                  match uu___2 with
                  | FStar_Syntax_Syntax.Tm_fvar fv ->
@@ -3616,7 +3619,11 @@ let rec (norm :
                                  match uu___4 with
                                  | (arg_i, uu___5) ->
                                      let uu___6 =
-                                       FStar_Syntax_Util.head_and_args arg_i in
+                                       let uu___7 =
+                                         FStar_All.pipe_right arg_i
+                                           FStar_Syntax_Util.unascribe in
+                                       FStar_All.pipe_right uu___7
+                                         FStar_Syntax_Util.head_and_args in
                                      (match uu___6 with
                                       | (head1, uu___7) ->
                                           let uu___8 =
@@ -4388,28 +4395,22 @@ let rec (norm :
                                 t1.FStar_Syntax_Syntax.pos in
                             rebuild cfg env1 stack1 t2)))
            | FStar_Syntax_Syntax.Tm_delayed uu___2 ->
-               let t2 = FStar_Syntax_Subst.compress t1 in
-               norm cfg env1 stack1 t2
+               failwith "impossible: Tm_delayed on norm"
            | FStar_Syntax_Syntax.Tm_uvar uu___2 ->
-               let t2 = FStar_Syntax_Subst.compress t1 in
-               (match t2.FStar_Syntax_Syntax.n with
-                | FStar_Syntax_Syntax.Tm_uvar uu___3 ->
-                    if
-                      (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
-                    then
-                      let uu___4 =
-                        let uu___5 =
-                          FStar_Range.string_of_range
-                            t2.FStar_Syntax_Syntax.pos in
-                        let uu___6 = FStar_Syntax_Print.term_to_string t2 in
-                        FStar_Util.format2
-                          "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
-                          uu___5 uu___6 in
-                      failwith uu___4
-                    else
-                      (let uu___5 = inline_closure_env cfg env1 [] t2 in
-                       rebuild cfg env1 stack1 uu___5)
-                | uu___3 -> norm cfg env1 stack1 t2))
+               if
+                 (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.check_no_uvars
+               then
+                 let uu___3 =
+                   let uu___4 =
+                     FStar_Range.string_of_range t1.FStar_Syntax_Syntax.pos in
+                   let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+                   FStar_Util.format2
+                     "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
+                     uu___4 uu___5 in
+                 failwith uu___3
+               else
+                 (let uu___4 = inline_closure_env cfg env1 [] t1 in
+                  rebuild cfg env1 stack1 uu___4))
 and (do_unfold_fv :
   FStar_TypeChecker_Cfg.cfg ->
     env ->
@@ -5684,7 +5685,7 @@ and (maybe_simplify_aux :
                   FStar_Util.print2 "WPE> is_applied %s -- %s\n" uu___3
                     uu___4)
                else ();
-               (let uu___3 = FStar_Syntax_Util.head_and_args' t in
+               (let uu___3 = FStar_Syntax_Util.head_and_args_full t in
                 match uu___3 with
                 | (hd, args) ->
                     let uu___4 =
@@ -8084,6 +8085,8 @@ let (eta_expand :
                                      (uu___6.FStar_TypeChecker_Env.tc_term);
                                    FStar_TypeChecker_Env.type_of =
                                      (uu___6.FStar_TypeChecker_Env.type_of);
+                                   FStar_TypeChecker_Env.type_of_well_typed =
+                                     (uu___6.FStar_TypeChecker_Env.type_of_well_typed);
                                    FStar_TypeChecker_Env.universe_of =
                                      (uu___6.FStar_TypeChecker_Env.universe_of);
                                    FStar_TypeChecker_Env.check_type_of =
@@ -8192,6 +8195,8 @@ let (eta_expand :
                              (uu___5.FStar_TypeChecker_Env.tc_term);
                            FStar_TypeChecker_Env.type_of =
                              (uu___5.FStar_TypeChecker_Env.type_of);
+                           FStar_TypeChecker_Env.type_of_well_typed =
+                             (uu___5.FStar_TypeChecker_Env.type_of_well_typed);
                            FStar_TypeChecker_Env.universe_of =
                              (uu___5.FStar_TypeChecker_Env.universe_of);
                            FStar_TypeChecker_Env.check_type_of =

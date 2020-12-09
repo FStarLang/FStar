@@ -942,7 +942,7 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
 
              let bs', t' = SS.close_binders bs, SS.close bs t in
 
-             let bs', t' = SS.subst_binders s bs', SS.subst s t in
+             let bs', t' = SS.subst_binders s bs', SS.subst s t' in
 
              let bs'', t'' = SS.open_term bs' t' in
 
@@ -1281,6 +1281,23 @@ let unify_env (e:env) (t1 : term) (t2 : term) : tac<bool> = wrap_err "unify_env"
     bind (proc_guard "unify_env g2" e g2) (fun () ->
     tac_and (do_unify e ty1 ty2) (do_unify e t1 t2))))))
 
+let unify_guard_env (e:env) (t1 : term) (t2 : term) : tac<bool> = wrap_err "unify_guard_env" <|
+    bind get (fun ps ->
+    bind (__tc e t1) (fun (t1, ty1, g1) ->
+    bind (__tc e t2) (fun (t2, ty2, g2) ->
+    bind (proc_guard "unify_guard_env g1" e g1) (fun () ->
+    bind (proc_guard "unify_guard_env g2" e g2) (fun () ->
+    bind (do_unify' true e ty1 ty2) (function
+    | None -> ret false
+    | Some g1 ->
+      bind (do_unify' true e t1 t2) (function
+      | None -> ret false
+      | Some g2 ->
+        let formula : term = U.mk_conj (guard_formula g1) (guard_formula g2) in
+        bind (goal_of_guard "unify_guard_env.g2" e formula) (fun goal ->
+        bind (push_goals [goal]) (fun _ ->
+        ret true)))))))))
+
 let launch_process (prog : string) (args : list<string>) (input : string) : tac<string> =
     // The `bind idtac` thunks the tactic
     bind idtac (fun () ->
@@ -1330,7 +1347,7 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
     bind (proc_guard "destruct" (goal_env g) guard) (fun () ->
     let s_ty = N.normalize [Env.UnfoldTac; Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant]
                            (goal_env g) s_ty in
-    let h, args = U.head_and_args' (U.unrefine s_ty) in
+    let h, args = U.head_and_args_full (U.unrefine s_ty) in
     bind (match (SS.compress h).n with
           | Tm_fvar fv -> ret (fv, [])
           | Tm_uinst ({ n = Tm_fvar fv }, us) -> ret (fv, us)
@@ -1666,6 +1683,29 @@ let set_urgency (u:Z.t) : tac<unit> =
     bind get (fun ps ->
     let ps = { ps with urgency = Z.to_int_fs u } in
     set ps)
+
+let t_commute_applied_match () : tac<unit> = wrap_err "t_commute_applied_match" <|
+  bind cur_goal (fun g ->
+  match destruct_eq (whnf (goal_env g) (goal_type g)) with
+  | Some (l, r) -> begin
+    let lh, las = U.head_and_args_full l in
+    match (SS.compress (U.unascribe lh)).n with
+    | Tm_match (e, brs) ->
+      let brs' = List.map (fun (p, w, e) -> p, w, U.mk_app e las) brs in
+      let l' = mk (Tm_match (e, brs')) l.pos in
+      bind (do_unify' false (goal_env g) l' r) (function
+      | None -> fail "discharging the equality failed"
+      | Some guard ->
+        if Env.is_trivial_guard_formula guard
+        then solve g U.exp_unit
+        else failwith "internal error: _t_refl: guard is not trivial")
+    | _ ->
+      fail "lhs is not a match"
+    end
+  | None ->
+    fail "not an equality")
+
+(**** Creating proper environments and proofstates ****)
 
 let tac_env (env:Env.env) : Env.env =
     let env, _ = Env.clear_expected_typ env in

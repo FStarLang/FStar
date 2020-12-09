@@ -210,6 +210,13 @@ Currently, the only guards allowed here are for equating refinement
 types (e.g. [x:int{x>0}] and [x:int{0<x}]. *)
 val t_trefl : allow_guards:bool -> Tac unit
 
+(** Provides a proof for the equality
+[(match e with ... | pi -> ei ...) a1 .. an
+ == (match e with ... | pi -> e1 a1 .. an)].
+This is particularly useful to rewrite the expression on the left to the
+one on the right when the RHS is actually a unification variable. *)
+val t_commute_applied_match : unit -> Tac unit
+
 (** [ctrl_rewrite] will traverse the current goal, and call [ctrl]
  * repeatedly on subterms. When [ctrl t] returns [(true, _)], the
  * tactic will call [rw] with a goal of type [t = ?u], which once
@@ -279,6 +286,11 @@ whether unification was possible. When the tactic returns true, the
 terms have been unified, instantiating uvars as needed. When false,
 unification was not possible and no change to uvars occurs. *)
 val unify_env : env -> t1:term -> t2:term -> Tac bool
+
+(** Similar to [unify_env], but allows for some guards to be raised
+during unification (see [t_trefl] for an explanation). Will add a new
+goal with the guard. *)
+val unify_guard_env : env -> t1:term -> t2:term -> Tac bool
 
 (** Check if [t1] matches [t2], i.e., whether [t2] can have its uvars
 instantiated into unifying with [t1]. When the tactic returns true, the

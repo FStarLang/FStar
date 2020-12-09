@@ -13,7 +13,7 @@
         "projection_inverse_Monad.Mkmonad_return"
       ],
       0,
-      "5f9114d920f4e8c72e1ba5dc99ebe445"
+      "715c6f6ac9f18e54569a48efa268d199"
     ],
     [
       "Monad.g",
@@ -31,7 +31,7 @@
         "token_correspondence_Monad.return"
       ],
       0,
-      "d7386e05f6dedf65e589f9eaf1eae9f3"
+      "8aa9c191051a5d205cff1567af987546"
     ],
     [
       "Monad.g'",
@@ -49,7 +49,7 @@
         "token_correspondence_Monad.return"
       ],
       0,
-      "e663ea786fdc4b7bbfa5c52abeda6ef8"
+      "36f1ff035c706a73ada059a5a37600d5"
     ]
   ]
 ]

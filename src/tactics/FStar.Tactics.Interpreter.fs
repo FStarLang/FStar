@@ -422,6 +422,10 @@ let () =
         unify_env RE.e_env RE.e_term RE.e_term e_bool
         unify_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
 
+      mk_tac_step_3 0 "unify_guard_env"
+        unify_guard_env RE.e_env RE.e_term RE.e_term e_bool
+        unify_guard_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
+
       mk_tac_step_3 0 "match_env"
         match_env RE.e_env RE.e_term RE.e_term e_bool
         match_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
@@ -461,6 +465,10 @@ let () =
       mk_tac_step_1 1 "set_urgency"
         set_urgency e_int e_unit
         set_urgency NBET.e_int NBET.e_unit;
+
+      mk_tac_step_1 1 "t_commute_applied_match"
+        t_commute_applied_match e_unit e_unit
+        t_commute_applied_match NBET.e_unit NBET.e_unit;
 
     ]
 

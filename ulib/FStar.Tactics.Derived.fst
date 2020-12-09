@@ -160,6 +160,10 @@ let trefl () : Tac unit =
 let trefl_guard () : Tac unit =
   t_trefl true
 
+(** See docs for [t_commute_applied_match] *)
+let commute_applied_match () : Tac unit =
+  t_commute_applied_match ()
+
 (** Similar to [apply_lemma], but will not instantiate uvars in the
 goal while applying. *)
 let apply_lemma_noinst (t : term) : Tac unit =
@@ -251,6 +255,10 @@ let fresh_uvar (o : option typ) : Tac term =
 let unify (t1 t2 : term) : Tac bool =
     let e = cur_env () in
     unify_env e t1 t2
+
+let unify_guard (t1 t2 : term) : Tac bool =
+    let e = cur_env () in
+    unify_guard_env e t1 t2
 
 let tmatch (t1 t2 : term) : Tac bool =
     let e = cur_env () in
@@ -356,6 +364,14 @@ let fresh_binder t : Tac binder =
     (* See comment in fresh_bv *)
     let i = fresh () in
     fresh_binder_named ("x" ^ string_of_int i) t
+
+let fresh_implicit_binder_named nm t : Tac binder =
+    mk_implicit_binder (fresh_bv_named nm t)
+
+let fresh_implicit_binder t : Tac binder =
+    (* See comment in fresh_bv *)
+    let i = fresh () in
+    fresh_implicit_binder_named ("x" ^ string_of_int i) t
 
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
                                  (ensures (fun ps r -> if b

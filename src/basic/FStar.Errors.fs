@@ -366,6 +366,11 @@ type raw_error =
   | Error_BadSplice
   | Error_UnexpectedUnresolvedUvar
   | Warning_UnfoldPlugin
+  | Error_LayeredMissingAnnot
+  | Error_CallToErased
+  | Error_ErasedCtor
+  | Error_RemoveUnusedTypeParameter
+  | Warning_NoMagicInFSharp
 
 type flag = error_flag
 type error_setting = raw_error * error_flag * int
@@ -711,6 +716,11 @@ let default_settings : list<error_setting> =
     Error_BadSplice                                   , CError, 338;
     Error_UnexpectedUnresolvedUvar                    , CAlwaysError, 339;
     Warning_UnfoldPlugin                              , CWarning, 340;
+    Error_LayeredMissingAnnot                         , CAlwaysError, 341;
+    Error_CallToErased                                , CError, 342;
+    Error_ErasedCtor                                  , CError, 343;
+    Error_RemoveUnusedTypeParameter                   , CWarning, 344;
+    Warning_NoMagicInFSharp                           , CWarning, 345
     ]
 module BU = FStar.Util
 
@@ -736,6 +746,7 @@ let error_number (_, _, i) = i
 
 let warn_on_use_errno = error_number (lookup_error default_settings Warning_WarnOnUse)
 let defensive_errno   = error_number (lookup_error default_settings Warning_Defensive)
+let call_to_erased_errno = error_number (lookup_error default_settings Error_CallToErased)
 
 let update_flags (l:list<(error_flag * string)>)
   : list<error_setting>

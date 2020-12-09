@@ -213,7 +213,7 @@ let check_expected_effect env (copt:option<comp>) (ec : term * comp) : term * co
         else if U.is_pure_or_ghost_comp c
         then Some (tot_or_gtot c), c, None
         else if U.comp_effect_name c |> Env.norm_eff_name env |> Env.is_layered_effect env
-        then raise_error (Errors.Fatal_IllTyped,  //hard error if layered effects are used without annotations
+        then raise_error (Errors.Error_LayeredMissingAnnot,  //hard error if layered effects are used without annotations
                BU.format2 "Missing annotation for a layered effect (%s) computation at %s"
                  (c |> U.comp_effect_name |> Ident.string_of_lid) (Range.string_of_range e.pos)) e.pos
         else if Options.trivial_pre_for_unannotated_effectful_fns ()
@@ -1321,7 +1321,14 @@ and tc_comp env c : comp                                      (* checked version
          | [] -> head
          | us -> S.mk (Tm_uinst(head, us)) c0.pos in
       let tc = mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) c.result_typ.pos in
-      let tc, _, f = tc_check_tot_or_gtot_term env tc S.teff "" in
+      let tc, _, f =
+        (*
+         * AR: 11/18: TcUtil.weaken_result_typ by default logs a typing error and continues
+         *            Failing hard when typechecking computation types, since errors
+         *              like missing effect args can result in broken invariants in
+         *              the unifier or the normalizer
+         *)
+        tc_check_tot_or_gtot_term ({ env with failhard = true }) tc S.teff "" in
       let head, args = U.head_and_args tc in
       let comp_univs = match (SS.compress head).n with
         | Tm_uinst(_, us) -> us

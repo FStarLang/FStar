@@ -34,9 +34,13 @@ let inspect_bv              = RB.inspect_bv
 let pack_bv                 = RB.pack_bv
 let inspect_binder          = RB.inspect_binder
 let pack_binder             = RB.pack_binder
-let inspect_aqual           = RB.inspect_aqual
-let pack_aqual              = RB.pack_aqual
 let implode_qn              = RB.implode_qn
 let explode_qn              = RB.explode_qn
 let compare_string          = RB.compare_string
 let push_binder             = RB.push_binder
+let subst                   = RB.subst
+
+(* GM: Not sure if theese are needed, we don't expose them
+ * in the library. *)
+let inspect_aqual           = RB.inspect_aqual
+let pack_aqual              = RB.pack_aqual

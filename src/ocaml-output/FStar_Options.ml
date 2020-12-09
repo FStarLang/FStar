@@ -1332,6 +1332,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "detail_errors" -> true
     | "detail_hint_replay" -> true
     | "eager_subtyping" -> true
+    | "error_contexts" -> true
     | "hide_uvar_nums" -> true
     | "hint_dir" -> true
     | "hint_file" -> true
@@ -1414,7 +1415,7 @@ let (settable_specs :
     (FStar_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___583 :
+let (uu___584 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1430,11 +1431,11 @@ let (uu___583 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___583 with
+  match uu___584 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___583 with
+  match uu___584 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1715,17 +1716,22 @@ let (uu___is_Kremlin : codegen_t -> Prims.bool) =
   fun projectee -> match projectee with | Kremlin -> true | uu___ -> false
 let (uu___is_Plugin : codegen_t -> Prims.bool) =
   fun projectee -> match projectee with | Plugin -> true | uu___ -> false
+let (parse_codegen :
+  Prims.string -> codegen_t FStar_Pervasives_Native.option) =
+  fun uu___ ->
+    match uu___ with
+    | "OCaml" -> FStar_Pervasives_Native.Some OCaml
+    | "FSharp" -> FStar_Pervasives_Native.Some FSharp
+    | "Kremlin" -> FStar_Pervasives_Native.Some Kremlin
+    | "Plugin" -> FStar_Pervasives_Native.Some Plugin
+    | uu___1 -> FStar_Pervasives_Native.None
 let (codegen : unit -> codegen_t FStar_Pervasives_Native.option) =
   fun uu___ ->
     let uu___1 = get_codegen () in
     FStar_Util.map_opt uu___1
-      (fun uu___2 ->
-         match uu___2 with
-         | "OCaml" -> OCaml
-         | "FSharp" -> FSharp
-         | "Kremlin" -> Kremlin
-         | "Plugin" -> Plugin
-         | uu___3 -> failwith "Impossible")
+      (fun s ->
+         let uu___2 = parse_codegen s in
+         FStar_All.pipe_right uu___2 FStar_Util.must)
 let (codegen_libs : unit -> Prims.string Prims.list Prims.list) =
   fun uu___ ->
     let uu___1 = get_codegen_lib () in

@@ -271,6 +271,7 @@ let (comment_attr : FStar_Ident.lident) =
 let (fail_attr : FStar_Ident.lident) = psconst "expect_failure"
 let (fail_lax_attr : FStar_Ident.lident) = psconst "expect_lax_failure"
 let (tcdecltime_attr : FStar_Ident.lident) = psconst "tcdecltime"
+let (noextract_to_attr : FStar_Ident.lident) = psconst "noextract_to"
 let (assume_strictly_positive_attr_lid : FStar_Ident.lident) =
   psconst "assume_strictly_positive"
 let (unifier_hint_injective_lid : FStar_Ident.lident) =
@@ -288,6 +289,8 @@ let (commute_nested_matches_lid : FStar_Ident.lident) =
   psconst "commute_nested_matches"
 let (allow_informative_binders_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "allow_informative_binders"]
+let (remove_unused_type_parameters_lid : FStar_Ident.lident) =
+  psconst "remove_unused_type_parameters"
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =
   let x = FStar_Util.mk_ref Prims.int_zero in
   let gen uu___ = FStar_Util.incr x; FStar_Util.read x in

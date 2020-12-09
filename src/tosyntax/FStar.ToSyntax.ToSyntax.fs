@@ -261,7 +261,7 @@ and free_type_vars env t = match (unparen t).tm with
       let env, f =
         match bt with
         | Inl binder -> free_type_vars_b env binder
-        | Inr t -> env, free_type_vars env body
+        | Inr t -> env, free_type_vars env t
       in
       env, f@free) (env, []) binders in
     free@free_type_vars env body

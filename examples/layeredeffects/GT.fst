@@ -100,12 +100,10 @@ let app #a #b #i (f : a -> GTD b i) (x : a) : GTD b i = f x
 
 open FStar.Tactics
 
-[@@expect_failure]
 let rec appn #a #i (n:nat) (f : a -> GTD a i) (x : a) : GTD a i =
   match n with
   | 0 -> x
   | _ -> begin
-    assume (n>0);
     appn (n-1) f (f x)
   end
 

@@ -21,7 +21,8 @@ extra: .cache
 include $(FSTAR_HOME)/ulib/ml/Makefile.include
 include $(FSTAR_HOME)/.common.mk
 
-fstarlib.mgen: *.fst *.fsti
+# GM: These dependencies suck, but are needed.
+fstarlib.mgen: *.fst *.fsti experimental/*.fst experimental/*.fsti legacy/*.fst legacy/*.fsti
 	mkdir -p ml/extracted
 	rm -f .depend.extract
 	+OUTPUT_DIRECTORY=ml/extracted \

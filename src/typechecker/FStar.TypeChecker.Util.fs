@@ -539,7 +539,7 @@ let should_return env eopt lc =
     | Some e ->
       TcComm.is_pure_or_ghost_lcomp lc                &&  //condition (a), (see above)
       not lc_is_unit_or_effectful                &&  //condition (b)
-      (let head, _ = U.head_and_args' e in
+      (let head, _ = U.head_and_args_full e in
        match (U.un_uinst head).n with
        | Tm_fvar fv ->  not (Env.is_irreducible env (lid_of_fv fv)) //condition (c)
        | _ -> true)                              &&
@@ -1613,8 +1613,11 @@ let bind_cases env0 (res_t:typ)
                 strengthen_comp env None comp check bind_cases_flags in
               c, Env.conj_guard g_comp g in
 
+            //AR: 11/18: we don't need to close this guard with the scrutinee bv
+            //           since the tc_match code does a bind with the scrutinee
+            //           expression, which will take care of this bv
             //close g_comp with the scrutinee bv
-            let g_comp = Env.close_guard env0 [scrutinee |> S.mk_binder] g_comp in
+            //let g_comp = Env.close_guard env0 [scrutinee |> S.mk_binder] g_comp in
 
             match lcases with
             | []
@@ -1880,6 +1883,9 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
              else Rel.get_subtyping_predicate env lc.res_typ t, true in
   match gopt with
     | None, _ ->
+        (*
+         * AR: 11/18: should this always fail hard?
+         *)
         if env.failhard
         then raise_error (Err.basic_type_error env (Some e) t lc.res_typ) e.pos
         else (
