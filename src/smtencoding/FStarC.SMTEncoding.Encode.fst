@@ -360,25 +360,27 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
         let range_ty = mkApp(range, []) in
         [Util.mkAssume(mk_HasTypeZ (mk_Range_const ()) range_ty, Some "Range_const typing", (varops.mk_unique "typing_range_const"))] in
    let mk_inversion_axiom : env -> string -> term -> list decl = fun env inversion tt ->
-       // (assert (forall ((t Term))
-       //            (! (implies (Valid (FStar.Pervasives.inversion t))
+       // (assert (forall ((u Universe) (t Term))
+       //            (! (implies (Valid (FStar.Pervasives.inversion u t))
        //                        (forall ((x Term))
        //                                (! (implies (HasTypeFuel ZFuel x t)
        //                                            (HasTypeFuel (SFuel ZFuel) x t))
        //                                   :pattern ((HasTypeFuel ZFuel x t)))))
        //               :pattern ((FStar.Pervasives.inversion t)))))
+        let uu = mk_fv ("u", univ_sort) in
+        let u = mkFreeV uu in
         let tt = mk_fv ("t", Term_sort) in
         let t = mkFreeV tt in
         let xx = mk_fv ("x", Term_sort) in
         let x = mkFreeV xx in
-        let inversion_t = mkApp(inversion, [t]) in
+        let inversion_t = mkApp(inversion, [u;t]) in
         let valid = mkApp("Valid", [inversion_t]) in
         let body =
           let hastypeZ = mk_HasTypeZ x t in
           let hastypeS = mk_HasTypeFuel (n_fuel 1) x t in
           mkForall (Env.get_range env) ([[hastypeZ]], [xx], mkImp(hastypeZ, hastypeS))
         in
-        [Util.mkAssume(mkForall (Env.get_range env) ([[inversion_t]], [tt], mkImp(valid, body)), Some "inversion interpretation", "inversion-interp")]
+        [Util.mkAssume(mkForall (Env.get_range env) ([[inversion_t]], [uu;tt], mkImp(valid, body)), Some "inversion interpretation", "inversion-interp")]
    in
    let prims =  [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);

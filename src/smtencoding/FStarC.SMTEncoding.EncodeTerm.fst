@@ -829,9 +829,11 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let tsym =
                prefix ^ BU.digest_of_string tkey_hash
              in
-             BU.print2 "Adding univ_vars %s to %s\n"
-                 (List.map (fun x -> fv_name (fst x)) univ_vars |> String.concat ", ")
-                 (tsym);
+             // BU.print4 "%s: Adding univ_vars %s to %s, encoding of %s\n"
+             //     ((FStar.Errors.(error_context.get())) |> String.concat ">\n")
+             //     (List.map (fun x -> fv_name (fst x)) univ_vars |> String.concat ", ")
+             //     (tsym)
+             //     (Print.term_to_string t);
              
              let cvar_sorts = List.map fv_sort cvars in
              let caption =
