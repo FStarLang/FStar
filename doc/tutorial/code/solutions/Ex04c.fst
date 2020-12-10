@@ -36,7 +36,7 @@ let rec append_mem #a l1 l2 x =
   | hd::tl -> append_mem tl l2 x
 
 (*
- Z3 proves the base case: mem x (append [] l) <==> mem x l2.
+ Z3 proves the base case: mem x (append [] l2) <==> mem x l2.
   
  The proof uses the induction hypothesis:
    tl << l1 ==> mem x (append tl l2) <==> mem x tl || mem x l2.
