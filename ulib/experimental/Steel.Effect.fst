@@ -68,21 +68,21 @@ let rewrite_l_3 (p1 p2 q r:slprop) : Lemma
 let bind_steel_steel a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post f g =
   fun frame' ->
   let x = frame_aux f frame_f frame' in
-  let y = frame_aux (g x) frame_g frame' in
+  let y = frame_aux (g x) (frame_g x) frame' in
 
   let m1 = nmst_get() in
 
   // We have the following
   // assert (interp
-  //   ((post_g x y `star` frame_g) `star` frame' `star` locks_invariant Set.empty m1)
+  //   ((post_g x y `star` frame_g x) `star` frame' `star` locks_invariant Set.empty m1)
   //     m1);
 
   // We need to prove
   // assert ((post y `star` frame' `star` locks_invariant Set.empty m1) `equiv`
-  //   ((post_g x y `star` frame_g) `star` frame' `star` locks_invariant Set.empty m1));
+  //   ((post_g x y `star` frame_g x) `star` frame' `star` locks_invariant Set.empty m1));
 
   // We do this by calling the following lemma
-  rewrite_l_3 (post y) (post_g x y `star` frame_g) frame' (locks_invariant Set.empty m1);
+  rewrite_l_3 (post y) (post_g x y `star` frame_g x) frame' (locks_invariant Set.empty m1);
 
   // To get
   // assert (interp (post y `star` frame' `star` locks_invariant Set.empty m1) m1);
@@ -107,10 +107,10 @@ let bind_steelf_steel (a:Type) (b:Type)
   f g =
   fun frame' ->
   let x = f frame' in
-  let y = frame_aux (g x) frame_g frame' in
+  let y = frame_aux (g x) (frame_g x) frame' in
 
   let m1 = nmst_get () in
-  rewrite_l_3 (post y) (post_g x y `star` frame_g) frame' (locks_invariant Set.empty m1);
+  rewrite_l_3 (post y) (post_g x y `star` frame_g x) frame' (locks_invariant Set.empty m1);
 
   y
 
