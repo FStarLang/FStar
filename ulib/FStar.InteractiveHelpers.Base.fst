@@ -16,25 +16,17 @@ let bv_eq (bv1 bv2 : bv) =
    * and actually we could limit ourselves to checking the index *)
   bvv1.bv_ppname = bvv2.bv_ppname && bvv1.bv_index = bvv2.bv_index
 
-val name_eq : name -> name -> Tot bool
-let rec name_eq n1 n2 =
-  match n1, n2 with
-  | [], [] -> true
-  | x1::n1', x2::n2' ->
-    x1 = x2 && name_eq n1' n2'
-  | _ -> false
-
 val fv_eq : fv -> fv -> Tot bool
 let fv_eq fv1 fv2 =
   let n1 = inspect_fv fv1 in
   let n2 = inspect_fv fv2 in
-  name_eq n1 n2
+  n1 = n2
 
 // TODO: use everywhere
 val fv_eq_name : fv -> name -> Tot bool
 let fv_eq_name fv n =
   let fvn = inspect_fv fv in
-  name_eq fvn n
+  fvn = n
 
 // TODO: use more
 val opt_apply (#a #b : Type) (f : a -> Tot b) (x : option a) : Tot (option b)

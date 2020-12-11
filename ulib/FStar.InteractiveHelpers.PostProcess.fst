@@ -298,7 +298,7 @@ let is_conjunction t =
     begin match inspect hd with
     | Tv_FVar fv ->
       let fvn = inspect_fv fv in
-      if name_eq fvn and_qn || name_eq fvn ["Prims"; "op_AmpAmp"]
+      if fvn = and_qn || fvn = ["Prims"; "op_AmpAmp"]
       then Some (x, y) else None
     | _ -> None
     end
