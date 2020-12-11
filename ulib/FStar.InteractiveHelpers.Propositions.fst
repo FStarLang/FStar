@@ -1,10 +1,10 @@
-module Interactive.Propositions
+module FStar.InteractiveHelpers.Propositions
 
 open FStar.List
 open FStar.Tactics
 open FStar.Mul
-open Interactive.Base
-open Interactive.ExploreTerm
+open FStar.InteractiveHelpers.Base
+open FStar.InteractiveHelpers.ExploreTerm
 
 /// Propositions and assertions.
 /// Assertions are propositions to be inserted in the F* code: we differentiate
