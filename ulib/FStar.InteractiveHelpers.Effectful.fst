@@ -1,13 +1,13 @@
-module Interactive.Effectful
+module FStar.InteractiveHelpers.Effectful
 
 module HS = FStar.HyperStack
 
 open FStar.List
 open FStar.Tactics
 open FStar.Mul
-open Interactive.Base
-open Interactive.ExploreTerm
-open Interactive.Propositions
+open FStar.InteractiveHelpers.Base
+open FStar.InteractiveHelpers.ExploreTerm
+open FStar.InteractiveHelpers.Propositions
 
 /// Effectful term analysis: retrieve information about an effectful term, including
 /// its return type, its arguments, its correctly instantiated pre/postcondition, etc.
