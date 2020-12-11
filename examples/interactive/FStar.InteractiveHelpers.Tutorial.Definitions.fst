@@ -1,4 +1,4 @@
-module Interactive.Tutorial.Definitions
+module FStar.InteractiveHelpers.Tutorial.Definitions
 
 module HS = FStar.HyperStack
 module ST = FStar.HyperStack.ST
@@ -8,7 +8,7 @@ open FStar.List
 open FStar.Tactics
 open FStar.Mul
 
-/// Some dummy functions used for the tutorial for the FStar.Interactive functions
+/// Some dummy functions used for the tutorial for the FStar.FStar.InteractiveHelpers functions
 
 #push-options "--z3rlimit 50 --fuel 0 --ifuel 0"
 

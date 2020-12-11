@@ -1,4 +1,4 @@
-module Interactive.ParseTest
+module FStar.InteractiveHelpers.ParseTest
 
 module HS = FStar.HyperStack
 module ST = FStar.HyperStack.ST
@@ -8,8 +8,8 @@ open FStar.List
 open FStar.Tactics
 open FStar.Mul
 
-open FStar.Interactive
-open Interactive.Tutorial.Definitions
+open FStar.FStar.InteractiveHelpers
+open FStar.InteractiveHelpers.Tutorial.Definitions
 
 /// This file contains some functions "interesting to parse", to test the parser
 /// for the F* extended mode. It is for development/debugging purpose only.
@@ -18,7 +18,7 @@ open Interactive.Tutorial.Definitions
 
 (*** Tests *)
 let a'_ = 3
-let f = Interactive.ParseTest.a'_
+let f = FStar.InteractiveHelpers.ParseTest.a'_
 
 let x1 = Some?.v (Some 3)
 let x2 = 3
@@ -74,10 +74,10 @@ let test2 #a b (l : list a) =
   in
   x + y
 
-let test3 'a = Interactive.ParseTest.test2 'a
+let test3 'a = FStar.InteractiveHelpers.ParseTest.test2 'a
 
 let test4 b l =
-  assert(Interactive.ParseTest.test2 b l == test2 b l)
+  assert(FStar.InteractiveHelpers.ParseTest.test2 b l == test2 b l)
 
 let f1 (#a : Type0) : Type = list a
 

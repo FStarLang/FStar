@@ -1,4 +1,4 @@
-module Interactive.Tutorial
+module FStar.InteractiveHelpers.Tutorial
 
 module HS = FStar.HyperStack
 module ST = FStar.HyperStack.ST
@@ -7,7 +7,7 @@ module B = LowStar.Buffer
 open FStar.List
 open FStar.Tactics
 open FStar.Mul
-open Interactive.Tutorial.Definitions
+open FStar.InteractiveHelpers.Tutorial.Definitions
 
 /// WARNING: if a command fails, it is very likely because of the below issue
 /// The extended mode requires the FEM.Process module to run meta-processing
@@ -16,7 +16,7 @@ open Interactive.Tutorial.Definitions
 /// will need to restart the F* mode), which means that if you intend to use the
 /// extended mode while working on a file, you have to make sure F* will load
 /// FEM.Process:
-module FI = FStar.Interactive
+module FI = FStar.FStar.InteractiveHelpers
 /// alternatively if you're not afraid of shadowing:
 /// open FEM.Process
 
