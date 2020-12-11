@@ -31,6 +31,8 @@ let equiv_forall #a p q = forall x. p x `equiv` q x
 let equiv_forall_split #a t1 t2 = ()
 let equiv_forall_elim #a t1 t2 = ()
 
+let can_be_split_post_elim #a #b t1 t2 = ()
+
 let can_be_split_forall_frame p q frame x =
   assert (sl_implies (p x) (q x));
   slimp_star (p x) (q x) frame frame;

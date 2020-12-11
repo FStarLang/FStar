@@ -118,6 +118,7 @@ let print                   = from_tac_1 B.print
 let debugging               = from_tac_1 B.debugging
 let dump                    = from_tac_1 B.dump
 let dump_all                = from_tac_2 B.dump_all
+let dump_uvars_of           = from_tac_2 B.dump_uvars_of                            
 let t_trefl                 = from_tac_1 B.t_trefl
 let dup                     = from_tac_1 B.dup
 let prune                   = from_tac_1 B.prune

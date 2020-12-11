@@ -62,6 +62,20 @@ let test6 (b1 b2 b3: ref) : SteelT unit
   write b2 (x + 1);
   free b4
 
+// With the formalism relying on can_be_split_post, this example fails if we normalize return_pre eqs goals before unification
+// When solving this equality, we have the goal
+// (*?u19*) _ _ == return_pre ((fun x -> (fun x -> (*?u758*) _ x x) x) r)
+// with x and r in the context of ?u19
+// Not normalizing allows us to solve it as a function applied to x and r
+// Normalizing would lead to solve it to an slprop with x and r in the context,
+// but which would later fail when trying to prove the equivalence with (fun r -> ptr r)
+// in the postcondition
+let test7 (_:unit) : SteelT ref emp ptr
+  = let r = alloc 0 in
+    let x = read r in
+    write r 0;
+    r
+
 let test_if1 (b:bool) : SteelT unit emp (fun _ -> emp)
   = if b then noop #emp () else noop #emp ()
 
