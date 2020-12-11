@@ -1139,6 +1139,11 @@ and tc_value env (e:term) : term
     let tc = if Env.should_verify env then Inl t else Inr (TcComm.lcomp_of_comp <| mk_Total t) in
     value_check_expected_typ env e tc implicits
 
+  (* Unannotated lex_t and LexTop should default to universe 0 *)
+  | Tm_fvar fv when S.fv_eq_lid fv Const.lex_t_lid ||
+                    S.fv_eq_lid fv Const.lextop_lid ->
+    tc_value env (S.mk_Tm_uinst top [U_zero])
+
   | Tm_uinst({n=Tm_fvar fv}, _)
   | Tm_fvar fv when S.fv_eq_lid fv Const.synth_lid && not env.phase1 ->
     raise_error (Errors.Fatal_BadlyInstantiatedSynthByTactic, "Badly instantiated synth_by_tactic") (Env.get_range env)
