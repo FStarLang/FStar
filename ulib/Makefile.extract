@@ -12,7 +12,7 @@ FSTAR_FILES:=$(filter-out $(NOEXTRACT_FILES), \
 	$(wildcard LowStar.*.fst LowStar.*.fsti) \
 	$(wildcard legacy/*fst legacy/*fsti) \
 	$(wildcard experimental/*fst experimental/*fsti)) \
-        $(wildcard FStar.Interactive.*.fst)
+        $(wildcard FStar.InteractiveHelpers.*.fst)
 
 CODEGEN ?= OCaml
 MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --lax --cache_checked_modules --odir $(OUTPUT_DIRECTORY) --cache_dir .cache.lax
