@@ -1313,8 +1313,7 @@ let (mk_app :
           FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_app (f, args)) r
 let (mk_app_binders :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-    (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier
-      FStar_Pervasives_Native.option) Prims.list ->
+    FStar_Syntax_Syntax.binder Prims.list ->
       FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun f ->
@@ -1323,9 +1322,11 @@ let (mk_app_binders :
         FStar_List.map
           (fun uu___1 ->
              match uu___1 with
-             | (bv, aq) ->
-                 let uu___2 = FStar_Syntax_Syntax.bv_to_name bv in
-                 (uu___2, aq)) bs in
+             | { FStar_Syntax_Syntax.binder_bv = bv;
+                 FStar_Syntax_Syntax.binder_qual = aq;
+                 FStar_Syntax_Syntax.binder_attrs = uu___2;_} ->
+                 let uu___3 = FStar_Syntax_Syntax.bv_to_name bv in
+                 (uu___3, aq)) bs in
       mk_app f uu___
 let (field_projector_prefix : Prims.string) = "__proj__"
 let (field_projector_sep : Prims.string) = "__item__"

@@ -272,9 +272,9 @@ let check_pattern_vars env vars pats =
     | [] -> ()
     | hd::tl ->
         let pat_vars = List.fold_left (fun out x -> BU.set_union out (Free.names x)) (Free.names hd) tl in
-        match vars |> BU.find_opt (fun (b, _) -> not(BU.set_mem b pat_vars)) with
+        match vars |> BU.find_opt (fun ({binder_bv=b}) -> not(BU.set_mem b pat_vars)) with
         | None -> ()
-        | Some (x,_) ->
+        | Some ({binder_bv=x}) ->
         let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
         Errors.log_issue pos (Errors.Warning_SMTPatternIllFormed,
                               BU.format1 "SMT pattern misses at least one bound variable: %s"
@@ -422,7 +422,7 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
       bs |> List.fold_left
       (fun (vars, guards, env, decls, names) b ->
         let v, g, env, decls', n =
-            let x = fst b in
+            let x = b.binder_bv in
             let xxsym, xx, env' = gen_term_var env x in
             let guard_x_t, decls' =
               encode_term_pred fuel_opt (norm env x.sort) env xx
@@ -878,8 +878,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
           ] in
           match normalize_refinement steps env.tcenv t0 with
           | {n=Tm_refine(x, f)} ->
-            let b, f = SS.open_term [x, None] f in
-            fst (List.hd b), f
+            let b, f = SS.open_term [S.mk_binder x] f in
+            (List.hd b).binder_bv, f
           | _ -> failwith "impossible"
         in
 
@@ -1021,7 +1021,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         | _ ->
             let args, decls = encode_args args_e env in
 
-            let encode_partial_app ht_opt =
+            let encode_partial_app (ht_opt:option<(S.typ * S.binders * S.comp)>) =
                 let smt_head, decls' = encode_term head env in
                 let app_tm = mk_Apply_args smt_head args in
                 match ht_opt with
@@ -1035,14 +1035,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                              (Print.comp_to_string c)
                              (Print.args_to_string args_e);
                     let formals, rest = BU.first_N (List.length args_e) formals in
-                    let subst = List.map2 (fun (bv, _) (a, _) -> Syntax.NT(bv, a)) formals args_e in
+                    let subst = List.map2 (fun ({binder_bv=bv}) (a, _) -> Syntax.NT(bv, a)) formals args_e in
                     let ty = U.arrow rest c |> SS.subst subst in
                     if Env.debug env.tcenv (Options.Other "PartialApp")
                     then BU.print1 "Encoding partial application, after subst:\n\tty=%s\n"
                             (Print.term_to_string ty);
                     let vars, pattern, has_type, decls'' =
                       let t_hyps, decls =
-                        List.fold_left2 (fun (t_hyps, decls) (bv, _) e ->
+                        List.fold_left2 (fun (t_hyps, decls) ({binder_bv=bv}) e ->
                           let t = SS.subst subst bv.sort in
                           let t_hyp, decls' = encode_term_pred None t env e in
                           if Env.debug env.tcenv (Options.Other "PartialApp")
@@ -1308,8 +1308,8 @@ and encode_let
     =
     fun x t1 e1 e2 env encode_body ->
         let ee1, decls1 = encode_term (U.ascribe e1 (BU.Inl t1, None)) env in
-        let xs, e2 = SS.open_term [(x, None)] e2 in
-        let x, _ = List.hd xs in
+        let xs, e2 = SS.open_term [S.mk_binder x] e2 in
+        let x = (List.hd xs).binder_bv in
         let env' = push_term_var env x ee1 in
         let ee2, decls2 = encode_body e2 env' in
         ee2, decls1@decls2

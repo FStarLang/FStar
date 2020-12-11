@@ -785,7 +785,7 @@ let mk_app f args =
       mk (Tm_app(f, args)) r
 
 let mk_app_binders f bs =
-    mk_app f (List.map (fun (bv, aq) -> (bv_to_name bv, aq)) bs)
+    mk_app f (List.map (fun ({binder_bv=bv;binder_qual=aq}) -> (bv_to_name bv, aq)) bs)
 
 (***********************************************************************************************)
 (* Combining an effect name with the name of one of its actions, or a

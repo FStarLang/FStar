@@ -132,7 +132,9 @@ let tc_lex_t env ses quals lids =
             let hd = S.new_bv (Some r2) (S.bv_to_name a) in
             let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_name ucons2])) r2) in
             let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) r2 in
-            U.arrow [(a, Some S.imp_tag); (hd, None); (tl, None)] (S.mk_Total res) in
+            U.arrow [({binder_bv=a;binder_qual=Some S.imp_tag;binder_attrs=[]});
+                     ({binder_bv=hd;binder_qual=None; binder_attrs=[]}); 
+                     ({binder_bv=tl;binder_qual=None; binder_attrs=[]})] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
         let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, PC.lex_t_lid, 0, []);
                            sigquals = [];
@@ -647,17 +649,18 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
           let rec rename_binders def_bs val_bs =
             match def_bs, val_bs with
             | [], _ | _, [] -> val_bs
-            | (body_bv, _) :: bt, (val_bv, aqual) :: vt ->
-              (match has_auto_name body_bv, has_auto_name val_bv with
-               | true, _ -> (val_bv, aqual)
-               | false, true -> ({ val_bv with
-                                   ppname = mk_ident (string_of_id body_bv.ppname, range_of_id val_bv.ppname) }, aqual)
+            | ({binder_bv=body_bv}) :: bt, val_b :: vt ->
+              (match has_auto_name body_bv, has_auto_name val_b.binder_bv with
+               | true, _ -> val_b
+               | false, true -> { val_b with
+                                 binder_bv={val_b.binder_bv with
+                                   ppname = mk_ident (string_of_id body_bv.ppname, range_of_id val_b.binder_bv.ppname)} }
                | false, false ->
                  // if (string_of_id body_bv.ppname) <> (string_of_id val_bv.ppname) then
                  //   Errors.warn (range_of_id body_bv.ppname)
                  //     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
                  //                  (string_of_id body_bv.ppname) (string_of_id val_bv.ppname));
-                 (val_bv, aqual)) :: rename_binders bt vt in
+                 val_b) :: rename_binders bt vt in
           Syntax.mk (Tm_arrow(rename_binders def_bs val_bs, c)) r end
         | _ -> typ in
       { lb with lbtyp = rename_in_typ lb.lbdef lb.lbtyp } in

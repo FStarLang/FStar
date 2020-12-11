@@ -1025,7 +1025,7 @@ let (interpret_plugin_as_term_fun :
                        let t0 =
                          let uu___2 =
                            let uu___3 = FStar_List.hd bs in
-                           FStar_Pervasives_Native.fst uu___3 in
+                           uu___3.FStar_Syntax_Syntax.binder_bv in
                          uu___2.FStar_Syntax_Syntax.sort in
                        let t11 = FStar_Syntax_Util.comp_result c1 in
                        let uu___2 = mk_embedding l env1 t0 in
@@ -1357,16 +1357,19 @@ let (interpret_plugin_as_term_fun :
                          FStar_Util.prefix_until
                            (fun uu___4 ->
                               match uu___4 with
-                              | (b, uu___5) ->
-                                  let uu___6 =
-                                    let uu___7 =
+                              | { FStar_Syntax_Syntax.binder_bv = b;
+                                  FStar_Syntax_Syntax.binder_qual = uu___5;
+                                  FStar_Syntax_Syntax.binder_attrs = uu___6;_}
+                                  ->
+                                  let uu___7 =
+                                    let uu___8 =
                                       FStar_Syntax_Subst.compress
                                         b.FStar_Syntax_Syntax.sort in
-                                    uu___7.FStar_Syntax_Syntax.n in
-                                  (match uu___6 with
-                                   | FStar_Syntax_Syntax.Tm_type uu___7 ->
+                                    uu___8.FStar_Syntax_Syntax.n in
+                                  (match uu___7 with
+                                   | FStar_Syntax_Syntax.Tm_type uu___8 ->
                                        false
-                                   | uu___7 -> true)) bs1 in
+                                   | uu___8 -> true)) bs1 in
                        match uu___3 with
                        | FStar_Pervasives_Native.None -> (bs1, [])
                        | FStar_Pervasives_Native.Some (tvars, x, rest) ->
@@ -1385,7 +1388,7 @@ let (interpret_plugin_as_term_fun :
                             FStar_List.map2
                               (fun b ->
                                  fun nm ->
-                                   ((FStar_Pervasives_Native.fst b), nm))
+                                   ((b.FStar_Syntax_Syntax.binder_bv), nm))
                               type_vars tvar_names in
                           let rec aux loc accum_embeddings bs3 =
                             match bs3 with
@@ -1507,13 +1510,16 @@ let (interpret_plugin_as_term_fun :
                                             uu___9 in
                                         NoTacticEmbedding uu___8 in
                                       FStar_Exn.raise uu___7))
-                            | (b, uu___3)::bs4 ->
-                                let uu___4 =
-                                  let uu___5 =
+                            | { FStar_Syntax_Syntax.binder_bv = b;
+                                FStar_Syntax_Syntax.binder_qual = uu___3;
+                                FStar_Syntax_Syntax.binder_attrs = uu___4;_}::bs4
+                                ->
+                                let uu___5 =
+                                  let uu___6 =
                                     mk_embedding loc tvar_context
                                       b.FStar_Syntax_Syntax.sort in
-                                  uu___5 :: accum_embeddings in
-                                aux loc uu___4 bs4 in
+                                  uu___6 :: accum_embeddings in
+                                aux loc uu___5 bs4 in
                           (try
                              (fun uu___3 ->
                                 match () with

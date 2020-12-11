@@ -638,8 +638,8 @@ let encode_top_level_let :
     let eta_expand binders formals body t =
       let nbinders = List.length binders in
       let formals, extra_formals = BU.first_N nbinders formals in
-      let subst = List.map2 (fun (formal, _) (binder, _) -> NT(formal, S.bv_to_name binder)) formals binders in
-      let extra_formals = extra_formals |> List.map (fun (x, i) -> {x with sort=SS.subst subst x.sort}, i) |> U.name_binders in
+      let subst = List.map2 (fun ({binder_bv=formal}) ({binder_bv=binder}) -> NT(formal, S.bv_to_name binder)) formals binders in
+      let extra_formals = extra_formals |> List.map (fun b -> {b with binder_bv={b.binder_bv with sort=SS.subst subst b.binder_bv.sort}}) |> U.name_binders in
       let body = Syntax.extend_app_n (SS.compress body) (snd <| U.args_of_binders extra_formals) body.pos in
       binders@extra_formals, body
     in
@@ -655,7 +655,7 @@ let encode_top_level_let :
       let tcenv = {env.tcenv with lax=true} in
 
       let subst_comp formals actuals comp =
-          let subst = List.map2 (fun (x, _) (b, _) -> NT(x, S.bv_to_name b)) formals actuals in
+          let subst = List.map2 (fun ({binder_bv=x}) ({binder_bv=b}) -> NT(x, S.bv_to_name b)) formals actuals in
           SS.subst_comp subst comp
       in
 
@@ -1075,7 +1075,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   Term.DeclFun(atok, [], Term_sort, Some "Action token")]
               in
               let _, xs_sorts, xs =
-                let aux (bv, _) (env, acc_sorts, acc) =
+                let aux ({binder_bv=bv}) (env, acc_sorts, acc) =
                   let xxsym, xx, env = gen_term_var env bv in
                   env, mk_fv (xxsym, Term_sort)::acc_sorts, xx::acc
                 in
@@ -1255,7 +1255,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 universe_leq (N.normalize_universe env_tps u) u_k
              in
              let tp_ok (tp:S.binder) (u_tp:universe) =
-                let t_tp = (fst tp).sort in
+                let t_tp = tp.binder_bv.sort in
                 if u_leq_u_k u_tp
                 then true
                 else let formals, _ = U.arrow_formals t_tp in
@@ -1288,7 +1288,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         | Tm_app(_, indices) -> indices
                         | _ -> [] in
                     let env = args |> List.fold_left
-                        (fun env (x, _) -> push_term_var env x (mkApp(mk_term_projector_name l x, [xx])))
+                        (fun env ({binder_bv=x}) -> push_term_var env x (mkApp(mk_term_projector_name l x, [xx])))
                         env in
                     let indices, decls' = encode_args indices env in
                     if List.length indices <> List.length vars
