@@ -45,26 +45,74 @@ let frame_aux (#a:Type)
 = fun frame' ->
   Sem.run #state #_ #_ #_ #_ #_ frame' (Sem.Frame (Sem.Act f) frame (fun _ -> True))
 
+let nmst_get (#st:Sem.st) ()
+  : Sem.Mst (Sem.full_mem st)
+           (fun _ -> True)
+           (fun s0 s s1 -> s0 == s /\ s == s1)
+  = NMST.get ()
+
+let rewrite_l_3 (p1 p2 q r:slprop) : Lemma
+    (requires p1 `equiv` p2)
+    (ensures (p1 `star` q `star` r) `equiv` (p2 `star` q `star` r))
+    = calc (equiv) {
+        p1 `star` q `star` r;
+        (equiv) { star_associative p1 q r }
+        p1 `star` (q `star` r);
+        (equiv) { equiv_extensional_on_star p1 p2 (q `star` r) }
+        p2 `star` (q `star` r);
+        (equiv) { star_associative p2 q r }
+        p2 `star` q `star` r;
+      }
+
 #push-options "--z3rlimit_factor 2"
-let bind_steel_steel a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g f g =
+let bind_steel_steel a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post f g =
   fun frame' ->
   let x = frame_aux f frame_f frame' in
-  frame_aux (g x) frame_g frame'
+  let y = frame_aux (g x) frame_g frame' in
+
+  let m1 = nmst_get() in
+
+  // We have the following
+  // assert (interp
+  //   ((post_g x y `star` frame_g) `star` frame' `star` locks_invariant Set.empty m1)
+  //     m1);
+
+  // We need to prove
+  // assert ((post y `star` frame' `star` locks_invariant Set.empty m1) `equiv`
+  //   ((post_g x y `star` frame_g) `star` frame' `star` locks_invariant Set.empty m1));
+
+  // We do this by calling the following lemma
+  rewrite_l_3 (post y) (post_g x y `star` frame_g) frame' (locks_invariant Set.empty m1);
+
+  // To get
+  // assert (interp (post y `star` frame' `star` locks_invariant Set.empty m1) m1);
+
+  y
 #pop-options
 
 let bind_steel_steelf (a:Type) (b:Type)
-  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #post
   f g =
   fun frame' ->
   let x = frame_aux f frame_f frame' in
-  (g x) frame'
+  let y = (g x) frame' in
+
+  let m1 = nmst_get () in
+  rewrite_l_3 (post y) (post_g x y) frame' (locks_invariant Set.empty m1);
+
+  y
 
 let bind_steelf_steel (a:Type) (b:Type)
-  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_g
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_g #post
   f g =
   fun frame' ->
   let x = f frame' in
-  frame_aux (g x) frame_g frame'
+  let y = frame_aux (g x) frame_g frame' in
+
+  let m1 = nmst_get () in
+  rewrite_l_3 (post y) (post_g x y `star` frame_g) frame' (locks_invariant Set.empty m1);
+
+  y
 
 let bind_pure_steel_ a b wp f g = fun frame ->
   let x = f () in
