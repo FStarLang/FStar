@@ -166,47 +166,18 @@ let term_construct (t : term) : Tac string =
 /// The first issue is that when parsing terms, F* automatically inserts
 /// abscriptions, which then clutter the terms printed to the user. The current
 /// workaround is to filter those ascriptions in the terms before exploiting them.
-/// TODO: this actually doesn't work, because when opening then closing terms, we
-/// drop some meta-data not shown in the term views and which is used for pretty
-/// printing. For example, [a /\ b] becomes [l_and a b]...
+/// TODO: this actually doesn't work for some unknown reason: some terms like [a /\ b]
+/// become [l_and a b]...
 
 val filter_ascriptions : bool -> term -> Tac term
 
-let rec filter_ascriptions dbg t =
+let filter_ascriptions dbg t =
   print_dbg dbg ("[> filter_ascriptions: " ^ term_view_construct t ^ ": " ^ term_to_string t );
-  match inspect t with
-  | Tv_Var _ | Tv_BVar _ | Tv_FVar _ -> t
-  | Tv_App hd (a,qual) ->
-    let hd = filter_ascriptions dbg hd in
-    let a = filter_ascriptions dbg a in
-    pack (Tv_App hd (a, qual))
-  | Tv_Abs br body ->
-    let body = filter_ascriptions dbg body in
-    pack (Tv_Abs br body)
-  | Tv_Arrow br c0 -> t (* TODO: we might want to explore that *)
-  | Tv_Type () -> t
-  | Tv_Refine bv ref ->
-    (* TODO: also filter the type of the bv *)
-    let ref = filter_ascriptions dbg ref in
-    pack (Tv_Refine bv ref)
-  | Tv_Const _ -> t
-  | Tv_Uvar _ _ -> t
-  | Tv_Let recf attrs bv def body ->
-    (* The attributes shouldn't need to be filtered *)
-    let def = filter_ascriptions dbg def in
-    let body = filter_ascriptions dbg body in
-    pack (Tv_Let recf attrs bv def body)
-  | Tv_Match scrutinee branches ->
-    let scrutinee = filter_ascriptions dbg scrutinee in
-    (* For the branches: we don't need to explore the patterns *)
-    let branches = map (fun (pat, tm) -> (pat, filter_ascriptions dbg tm)) branches in
-    pack (Tv_Match scrutinee branches)
-  | Tv_AscribedT e _ _
-  | Tv_AscribedC e _ _ ->
-    filter_ascriptions dbg e
-  | _ ->
-    (* Unknown *)
-    t
+  visit_tm (fun t ->
+    match inspect t with
+    | Tv_AscribedT e _ _
+    | Tv_AscribedC e _ _ -> e
+    | _ -> t) t
 
 /// Our prettification function. Apply it to all the terms which might be printed
 /// back to the user. Note that the time at which the function is applied is
@@ -447,14 +418,16 @@ let norm_apply_subst_in_comp e c subst =
     pack_comp (C_Eff us eff_name result eff_args)
 
 /// As substitution with normalization is very expensive, we implemented another
-/// technique which works by exploring terms. This is super fast, but as some
-/// information not accessible to the meta F* tactics is dropped along the way,
-/// it has a big impact on pretty printing. For example, terms like [A /\ B] get
-/// printed as [Prims.l_and A B].
+/// technique which works by exploring terms. This is super fast, but the terms
+/// seem not to be reconstructed in the same way, which has a big impact on pretty printing.
+/// For example, terms like [A /\ B] get printed as [Prims.l_and A B].
 val deep_apply_subst : env -> term -> list (bv & term) -> Tac term
 // Whenever we encounter a construction which introduces a binder, we need to apply
 // the substitution in the binder type. Note that this gives a new binder, with
-// which we need to replace the old one in what follows
+// which we need to replace the old one in what follows.
+// Also note that it should be possible to rewrite [deep_apply_subst] in terms of [visit_tm],
+// but [deep_apply_subst] seems to be a bit more precise with regard to type replacements (not
+// sure it is really important, though).
 val deep_apply_subst_in_bv : env -> bv -> list (bv & term) -> Tac (bv & list (bv & term))
 val deep_apply_subst_in_binder : env -> binder -> list (bv & term) -> Tac (binder & list (bv & term))
 val deep_apply_subst_in_comp : env -> comp -> list (bv & term) -> Tac comp
