@@ -391,11 +391,17 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                     | Tm_fvar fv when S.fv_eq_lid fv Const.lexcons_lid -> dec
                     | _ -> mk_lex_list [dec] in
           let cflags = U.comp_flags c in
+          let res =
           match cflags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
                 | Some (DECREASES dec) -> as_lex_list dec
                 | _ ->
                     let xs = bs |> filter_types_and_functions in
                     mk_lex_list xs
+          in
+          if debug env Options.Low
+          then BU.print1 "Building a decreases = %s\n"
+                (Print.term_to_string res);
+          res
       in
 
       let previous_dec = decreases_clause actuals expected_c in
