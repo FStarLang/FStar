@@ -198,8 +198,18 @@ and free_names_and_uvars_comp c use_cache =
               union (free_univs u) (free_names_and_uvars t use_cache)
 
             | Comp ct ->
-              let us = free_names_and_uvars_args ct.effect_args (free_names_and_uvars ct.result_typ use_cache) use_cache in
-              List.fold_left (fun us u -> union us (free_univs u)) us ct.comp_univs in
+              let decreases_vars =
+                match List.tryFind (function DECREASES _ -> true | _ -> false) ct.flags with
+                | None -> no_free_vars
+                | Some (DECREASES d) ->
+                  free_names_and_uvars d use_cache
+                | Some _ ->
+                  failwith "impossible"
+              in
+              let us = union (free_names_and_uvars ct.result_typ use_cache) decreases_vars in
+              let us = free_names_and_uvars_args ct.effect_args us use_cache in
+              List.fold_left (fun us u -> union us (free_univs u)) us ct.comp_univs
+         in
          c.vars := Some (fst n);
          n
 
