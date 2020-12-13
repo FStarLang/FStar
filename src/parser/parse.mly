@@ -24,13 +24,21 @@ open FStar_String
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
-
-let mk_meta_tac m = Meta (Arg_qualifier_meta_tac m)
-let mk_meta_attr m = Meta (Arg_qualifier_meta_attr m)
+let mk_meta_tac m = Meta m
 
 let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
+
+let get_aqual_and_attrs aqual_universe_opt =
+  match aqual_universe_opt with
+    | None -> None, []
+    | Some (q, []) -> Some q, []
+    | Some (Implicit, l) when List.length l <> 0 -> None, l
+    | _ -> failwith "Unexpected aqualUniverse"
+
+let get_aqual_and_attrs_and_X (aqual_universe_opt, x) =
+  (get_aqual_and_attrs aqual_universe_opt), x
 %}
 
 %token <bytes> BYTEARRAY
@@ -414,14 +422,14 @@ letqualifier:
  (* Remove with stratify *)
 aqual:
   | EQUALS    {  log_issue (lhs parseState) (Warning_DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
-                                        Equality }
+                                        Equality, [] }
   | q=aqualUniverses { q }
 
 aqualUniverses:
-  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t }
-  | HASH LBRACK_AT_AT t=tmNoEq RBRACK { mk_meta_attr t }
-  | HASH      { Implicit }
-  | DOLLAR    { Equality }
+  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t, [] }
+  | HASH LBRACK_AT_AT t=tmNoEq RBRACK { Implicit, [t] }
+  | HASH      { Implicit, [] }
+  | DOLLAR    { Equality, [] }
 
 /******************************************************************************/
 /*                         Patterns, binders                                  */
@@ -470,7 +478,11 @@ atomicPattern:
   | c=constant
       { mk_pattern (PatConst c) (rhs parseState 1) }
   | qual_id=aqualified(lident)
-      { mk_pattern (PatVar (snd qual_id, fst qual_id)) (rhs parseState 1) }
+    {
+      let qual_id =
+        let (aqual, _attrs), lid = get_aqual_and_attrs_and_X qual_id in
+        (aqual, lid) in
+      mk_pattern (PatVar (snd qual_id, fst qual_id)) (rhs parseState 1) }
   | uid=quident
       { mk_pattern (PatName uid) (rhs parseState 1) }
 
@@ -516,14 +528,17 @@ patternOrMultibinder:
         let pos = rhs2 parseState 1 7 in
         let t_pos = rhs parseState 5 in
         let qual_ids = qual_id0 :: qual_ids in
+        let qual_ids = qual_ids |> List.map (fun x ->
+          let (aq, _attrs), lid = get_aqual_and_attrs_and_X x in
+          (aq, lid)) in
         List.map (fun (q, x) -> mkRefinedPattern (mk_pattern (PatVar (x, q)) pos) t false r t_pos pos) qual_ids
       }
 
 binder:
   | aqualified_lid=aqualified(lidentOrUnderscore)
      {
-       let (q, lid) = aqualified_lid in
-       mk_binder (Variable lid) (rhs parseState 1) Type_level q
+       let (q, attrs), lid = get_aqual_and_attrs_and_X aqualified_lid in
+       mk_binder_with_attrs (Variable lid) (rhs parseState 1) Type_level q attrs
      }
 
   | tv=tvar  { mk_binder (TVariable tv) (rhs parseState 1) Kind None  }
@@ -546,7 +561,9 @@ multiBinder:
   | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
-       List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q) qual_ids
+       List.map (fun x ->
+         let (q, attrs), x = get_aqual_and_attrs_and_X x in
+         mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q attrs) qual_ids
      }
 
 binders: bss=list(b=binder {[b]} | bs=multiBinder {bs}) { flatten bss }
@@ -799,10 +816,10 @@ tmImplies:
 tmArrow(Tm):
   | dom=tmArrowDomain(Tm) RARROW tgt=tmArrow(Tm)
      {
-       let (aq_opt, dom_tm) = dom in
+       let ((aq_opt, attrs), dom_tm) = dom in
        let b = match extract_named_refinement dom_tm with
-         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
-         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+         | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      }
@@ -811,10 +828,10 @@ tmArrow(Tm):
 simpleArrow:
   | dom=simpleArrowDomain RARROW tgt=simpleArrow
      {
-       let (aq_opt, dom_tm) = dom in
+       let ((aq_opt, attrs), dom_tm) = dom in
        let b = match extract_named_refinement dom_tm with
-         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
-         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+         | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      }
@@ -823,21 +840,23 @@ simpleArrow:
 simpleArrowDomain:
   | LBRACE_BAR t=tmEqNoRefinement BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        (Some (mk_meta_tac mt), t)
+        ((Some (mk_meta_tac mt), []), t)
       }
 
-  | aq_opt=ioption(aqual) dom_tm=tmEqNoRefinement { aq_opt, dom_tm }
+  | aq_opt=ioption(aqual) dom_tm=tmEqNoRefinement
+    {
+      (get_aqual_and_attrs aq_opt), dom_tm }
 
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
 %inline tmArrowDomain(Tm):
   | LBRACE_BAR t=Tm BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        (Some (mk_meta_tac mt), t)
+        ((Some (mk_meta_tac mt), []), t)
       }
 
-  | LPAREN q=aqual dom_tm=Tm RPAREN { Some q, dom_tm }
+  | LPAREN q=aqual dom_tm=Tm RPAREN { get_aqual_and_attrs (Some q), dom_tm }
 
-  | aq_opt=ioption(aqual) dom_tm=Tm { aq_opt, dom_tm }
+  | aq_opt=ioption(aqual) dom_tm=Tm { get_aqual_and_attrs aq_opt, dom_tm }
 
 tmFormula:
   | e1=tmFormula DISJUNCTION e2=tmConjunction
@@ -893,7 +912,7 @@ tmNoEqWith(X):
             let dom =
                match extract_named_refinement e1 with
                | Some (x, t, f) ->
-                 let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
+                 let dom = mkRefinedBinder x t true f (rhs parseState 1) None [] in
                  Inl dom
                | _ ->
                  Inr e1

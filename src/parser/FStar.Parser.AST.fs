@@ -373,17 +373,17 @@ let mkDTuple args r =
   let cons = C.mk_dtuple_data_lid (List.length args) r in
   mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
-let mkRefinedBinder id t should_bind_var refopt m implicit : binder =
-  let b = mk_binder (Annotated(id, t)) m Type_level implicit in
+let mkRefinedBinder id t should_bind_var refopt m implicit attrs : binder =
+  let b = mk_binder_with_attrs (Annotated(id, t)) m Type_level implicit attrs in
   match refopt with
     | None -> b
     | Some phi ->
         if should_bind_var
-        then mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit
+        then mk_binder_with_attrs (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit attrs
         else
             let x = gen t.range in
-            let b = mk_binder (Annotated (x, t)) m Type_level implicit in
-            mk_binder (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit
+            let b = mk_binder_with_attrs (Annotated (x, t)) m Type_level implicit attrs in
+            mk_binder_with_attrs (Annotated(id, mk_term (Refine(b, phi)) m Type_level)) m Type_level implicit attrs
 
 let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
     let t = match phi_opt with

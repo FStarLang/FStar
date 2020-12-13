@@ -268,8 +268,8 @@ let shift n s = match s with
 let shift_subst n s = List.map (shift n) s
 let shift_subst' n s = fst s |> List.map (shift_subst n), snd s
 let subst_binder' s b =
-  { b with
-    binder_bv = { b.binder_bv with sort = subst' s b.binder_bv.sort };
+  { binder_bv = { b.binder_bv with sort = subst' s b.binder_bv.sort };
+    binder_qual = subst_imp' s b.binder_qual;
     binder_attrs = b.binder_attrs |> List.map (subst' s) }
 
 

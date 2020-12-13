@@ -1190,7 +1190,8 @@ let (mkRefinedBinder :
       Prims.bool ->
         term FStar_Pervasives_Native.option ->
           FStar_Range.range ->
-            arg_qualifier FStar_Pervasives_Native.option -> binder)
+            arg_qualifier FStar_Pervasives_Native.option ->
+              term Prims.list -> binder)
   =
   fun id ->
     fun t ->
@@ -1198,24 +1199,28 @@ let (mkRefinedBinder :
         fun refopt ->
           fun m ->
             fun implicit ->
-              let b = mk_binder (Annotated (id, t)) m Type_level implicit in
-              match refopt with
-              | FStar_Pervasives_Native.None -> b
-              | FStar_Pervasives_Native.Some phi ->
-                  if should_bind_var
-                  then
-                    mk_binder
-                      (Annotated
-                         (id, (mk_term (Refine (b, phi)) m Type_level))) m
-                      Type_level implicit
-                  else
-                    (let x = FStar_Ident.gen t.range in
-                     let b1 =
-                       mk_binder (Annotated (x, t)) m Type_level implicit in
-                     mk_binder
-                       (Annotated
-                          (id, (mk_term (Refine (b1, phi)) m Type_level))) m
-                       Type_level implicit)
+              fun attrs ->
+                let b =
+                  mk_binder_with_attrs (Annotated (id, t)) m Type_level
+                    implicit attrs in
+                match refopt with
+                | FStar_Pervasives_Native.None -> b
+                | FStar_Pervasives_Native.Some phi ->
+                    if should_bind_var
+                    then
+                      mk_binder_with_attrs
+                        (Annotated
+                           (id, (mk_term (Refine (b, phi)) m Type_level))) m
+                        Type_level implicit attrs
+                    else
+                      (let x = FStar_Ident.gen t.range in
+                       let b1 =
+                         mk_binder_with_attrs (Annotated (x, t)) m Type_level
+                           implicit attrs in
+                       mk_binder_with_attrs
+                         (Annotated
+                            (id, (mk_term (Refine (b1, phi)) m Type_level)))
+                         m Type_level implicit attrs)
 let (mkRefinedPattern :
   pattern ->
     term ->
