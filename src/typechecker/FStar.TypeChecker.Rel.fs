@@ -2140,11 +2140,11 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
            let subst = DB(0, hd1)::SS.shift_subst 1 subst in  //extend the substitution
            let env = Env.push_bv env hd1 in
            begin
-           match aux wl (scope @ [x]) env subst xs ys with
+           match aux wl (scope @ [{x with binder_bv=hd1}]) env subst xs ys with
            | env, Inl (sub_probs, phi), wl ->
              let phi =
                  U.mk_conj (p_guard prob)
-                           (close_forall env [x] phi) in
+                           (close_forall env [{x with binder_bv=hd1}] phi) in
              if debug env <| Options.Other "Rel"
              then BU.print2 "Formula is %s\n\thd1=%s\n" (Print.term_to_string phi) (Print.bv_to_string hd1);
              env, Inl (prob::sub_probs, phi), wl

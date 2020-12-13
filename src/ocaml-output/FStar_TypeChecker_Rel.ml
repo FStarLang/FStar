@@ -5037,15 +5037,37 @@ and (solve_binders :
                                     let env2 =
                                       FStar_TypeChecker_Env.push_bv env1 hd12 in
                                     let uu___4 =
-                                      aux wl2 (FStar_List.append scope [x])
-                                        env2 subst1 xs1 ys1 in
+                                      aux wl2
+                                        (FStar_List.append scope
+                                           [(let uu___5 = x in
+                                             {
+                                               FStar_Syntax_Syntax.binder_bv
+                                                 = hd12;
+                                               FStar_Syntax_Syntax.binder_qual
+                                                 =
+                                                 (uu___5.FStar_Syntax_Syntax.binder_qual);
+                                               FStar_Syntax_Syntax.binder_attrs
+                                                 =
+                                                 (uu___5.FStar_Syntax_Syntax.binder_attrs)
+                                             })]) env2 subst1 xs1 ys1 in
                                     (match uu___4 with
                                      | (env3, FStar_Util.Inl
                                         (sub_probs, phi), wl3) ->
                                          let phi1 =
                                            let uu___5 =
                                              FStar_TypeChecker_Env.close_forall
-                                               env3 [x] phi in
+                                               env3
+                                               [(let uu___6 = x in
+                                                 {
+                                                   FStar_Syntax_Syntax.binder_bv
+                                                     = hd12;
+                                                   FStar_Syntax_Syntax.binder_qual
+                                                     =
+                                                     (uu___6.FStar_Syntax_Syntax.binder_qual);
+                                                   FStar_Syntax_Syntax.binder_attrs
+                                                     =
+                                                     (uu___6.FStar_Syntax_Syntax.binder_attrs)
+                                                 })] phi in
                                            FStar_Syntax_Util.mk_conj
                                              (p_guard prob) uu___5 in
                                          ((let uu___6 =
