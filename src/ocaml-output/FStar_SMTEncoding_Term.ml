@@ -2108,10 +2108,16 @@ let (mk_ApplyTT : term -> term -> FStar_Range.range -> term) =
   fun t -> fun t' -> fun r -> mkApp ("ApplyTT", [t; t']) r
 let (kick_partial_app : term -> term) =
   fun t ->
-    let uu___ =
-      let uu___1 = mkApp ("__uu__PartialApp", []) t.rng in
-      mk_ApplyTT uu___1 t t.rng in
-    FStar_All.pipe_right uu___ mk_Valid
+    let fvs1 = freevars t in
+    let fvs2 = FStar_Util.remove_dups fv_eq fvs1 in
+    let kick =
+      let uu___ =
+        let uu___1 = mkApp ("__uu__PartialApp", []) t.rng in
+        mk_ApplyTT uu___1 t t.rng in
+      FStar_All.pipe_right uu___ mk_Valid in
+    let res =
+      match fvs2 with | [] -> kick | fvs3 -> mkForall t.rng ([], fvs3, kick) in
+    res
 let (mk_String_const : Prims.string -> FStar_Range.range -> term) =
   fun s ->
     fun r ->

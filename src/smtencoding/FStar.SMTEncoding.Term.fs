@@ -1191,7 +1191,23 @@ let mk_Rank x         = mkApp("Rank", [x])
 let mk_tester n t     = mkApp("is-"^n,   [t]) t.rng
 let mk_ApplyTF t t'   = mkApp("ApplyTF", [t;t']) t.rng
 let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
-let kick_partial_app t  = mk_ApplyTT (mkApp("__uu__PartialApp", []) t.rng) t t.rng |> mk_Valid
+let kick_partial_app t  =
+  let fvs = freevars t in
+  let fvs = BU.remove_dups fv_eq fvs in
+  let kick = mk_ApplyTT (mkApp("__uu__PartialApp", []) t.rng) t t.rng |> mk_Valid in
+  let res =
+    match fvs with
+    | [] -> kick
+    | fvs -> mkForall t.rng ([], fvs, kick)
+  in
+  // BU.print3 "Kick partial app for %s with free variables {%s}, got %s\n"
+  //   (print_smt_term t)
+  //   (List.map (fun (n, s, _) -> BU.format2 "(%s:%s)" n (strSort s)) fvs |> String.concat ", ")
+  //   (print_smt_term res);
+  res
+
+
+
 let mk_String_const s r = mkApp ("FString_const", [mk (String s) r]) r
 let mk_Precedes x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4])  r
 let mk_lex_t r = mkApp("Prims.lex_t", []) r

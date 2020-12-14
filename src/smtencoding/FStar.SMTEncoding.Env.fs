@@ -127,8 +127,9 @@ let fvb_to_string fvb =
     | None -> "None"
     | Some s -> Term.print_smt_term s
   in
-  BU.format5 "{ lid = %s;\n  smt_id = %s;\n  smt_token = %s;\n smt_fuel_partial_app = %s;\n fvb_thunked = %s }"
+  BU.format6 "{ lid = %s;\n smt_arity = %s;\n smt_id = %s;\n  smt_token = %s;\n smt_fuel_partial_app = %s;\n fvb_thunked = %s }"
     (Ident.string_of_lid fvb.fvar_lid)
+    (BU.string_of_int fvb.smt_arity)
     fvb.smt_id
     (term_opt_to_string fvb.smt_token)
     (term_opt_to_string fvb.smt_fuel_partial_app)

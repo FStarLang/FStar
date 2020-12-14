@@ -301,12 +301,13 @@ let (fvb_to_string : fvar_binding -> Prims.string) =
       | FStar_Pervasives_Native.Some s ->
           FStar_SMTEncoding_Term.print_smt_term s in
     let uu___ = FStar_Ident.string_of_lid fvb.fvar_lid in
-    let uu___1 = term_opt_to_string fvb.smt_token in
-    let uu___2 = term_opt_to_string fvb.smt_fuel_partial_app in
-    let uu___3 = FStar_Util.string_of_bool fvb.fvb_thunked in
-    FStar_Util.format5
-      "{ lid = %s;\n  smt_id = %s;\n  smt_token = %s;\n smt_fuel_partial_app = %s;\n fvb_thunked = %s }"
-      uu___ fvb.smt_id uu___1 uu___2 uu___3
+    let uu___1 = FStar_Util.string_of_int fvb.smt_arity in
+    let uu___2 = term_opt_to_string fvb.smt_token in
+    let uu___3 = term_opt_to_string fvb.smt_fuel_partial_app in
+    let uu___4 = FStar_Util.string_of_bool fvb.fvb_thunked in
+    FStar_Util.format6
+      "{ lid = %s;\n smt_arity = %s;\n smt_id = %s;\n  smt_token = %s;\n smt_fuel_partial_app = %s;\n fvb_thunked = %s }"
+      uu___ uu___1 fvb.smt_id uu___2 uu___3 uu___4
 let (check_valid_fvb : fvar_binding -> unit) =
   fun fvb ->
     if
