@@ -347,6 +347,7 @@ type sigelt_view =
   
   | Sg_Inductive of (name * FStar_Syntax_Syntax.univ_name Prims.list *
   FStar_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list) 
+  | Sg_Val of (name * FStar_Syntax_Syntax.univ_name Prims.list * typ) 
   | Unk 
 let (uu___is_Sg_Let : sigelt_view -> Prims.bool) =
   fun projectee -> match projectee with | Sg_Let _0 -> true | uu___ -> false
@@ -363,6 +364,11 @@ let (__proj__Sg_Inductive__item___0 :
     (name * FStar_Syntax_Syntax.univ_name Prims.list *
       FStar_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list))
   = fun projectee -> match projectee with | Sg_Inductive _0 -> _0
+let (uu___is_Sg_Val : sigelt_view -> Prims.bool) =
+  fun projectee -> match projectee with | Sg_Val _0 -> true | uu___ -> false
+let (__proj__Sg_Val__item___0 :
+  sigelt_view -> (name * FStar_Syntax_Syntax.univ_name Prims.list * typ)) =
+  fun projectee -> match projectee with | Sg_Val _0 -> _0
 let (uu___is_Unk : sigelt_view -> Prims.bool) =
   fun projectee -> match projectee with | Unk -> true | uu___ -> false
 type var = FStar_BigInt.t
@@ -454,55 +460,55 @@ let (mk_inspect_pack_pair : Prims.string -> (refl_constant * refl_constant))
       let uu___ = FStar_Syntax_Syntax.fv_to_tm pack_fv in
       { lid = pack_lid; fv = pack_fv; t = uu___ } in
     (inspect, pack)
-let (uu___79 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_ln"
+let (uu___80 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_ln"
 let (fstar_refl_inspect_ln : refl_constant) =
-  match uu___79 with
+  match uu___80 with
   | (fstar_refl_inspect_ln1, fstar_refl_pack_ln) -> fstar_refl_inspect_ln1
 let (fstar_refl_pack_ln : refl_constant) =
-  match uu___79 with
+  match uu___80 with
   | (fstar_refl_inspect_ln1, fstar_refl_pack_ln1) -> fstar_refl_pack_ln1
-let (uu___86 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_fv"
+let (uu___87 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_fv"
 let (fstar_refl_inspect_fv : refl_constant) =
-  match uu___86 with
+  match uu___87 with
   | (fstar_refl_inspect_fv1, fstar_refl_pack_fv) -> fstar_refl_inspect_fv1
 let (fstar_refl_pack_fv : refl_constant) =
-  match uu___86 with
+  match uu___87 with
   | (fstar_refl_inspect_fv1, fstar_refl_pack_fv1) -> fstar_refl_pack_fv1
-let (uu___93 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_bv"
+let (uu___94 : (refl_constant * refl_constant)) = mk_inspect_pack_pair "_bv"
 let (fstar_refl_inspect_bv : refl_constant) =
-  match uu___93 with
+  match uu___94 with
   | (fstar_refl_inspect_bv1, fstar_refl_pack_bv) -> fstar_refl_inspect_bv1
 let (fstar_refl_pack_bv : refl_constant) =
-  match uu___93 with
+  match uu___94 with
   | (fstar_refl_inspect_bv1, fstar_refl_pack_bv1) -> fstar_refl_pack_bv1
-let (uu___100 : (refl_constant * refl_constant)) =
+let (uu___101 : (refl_constant * refl_constant)) =
   mk_inspect_pack_pair "_binder"
 let (fstar_refl_inspect_binder : refl_constant) =
-  match uu___100 with
+  match uu___101 with
   | (fstar_refl_inspect_binder1, fstar_refl_pack_binder) ->
       fstar_refl_inspect_binder1
 let (fstar_refl_pack_binder : refl_constant) =
-  match uu___100 with
+  match uu___101 with
   | (fstar_refl_inspect_binder1, fstar_refl_pack_binder1) ->
       fstar_refl_pack_binder1
-let (uu___107 : (refl_constant * refl_constant)) =
+let (uu___108 : (refl_constant * refl_constant)) =
   mk_inspect_pack_pair "_comp"
 let (fstar_refl_inspect_comp : refl_constant) =
-  match uu___107 with
+  match uu___108 with
   | (fstar_refl_inspect_comp1, fstar_refl_pack_comp) ->
       fstar_refl_inspect_comp1
 let (fstar_refl_pack_comp : refl_constant) =
-  match uu___107 with
+  match uu___108 with
   | (fstar_refl_inspect_comp1, fstar_refl_pack_comp1) ->
       fstar_refl_pack_comp1
-let (uu___114 : (refl_constant * refl_constant)) =
+let (uu___115 : (refl_constant * refl_constant)) =
   mk_inspect_pack_pair "_sigelt"
 let (fstar_refl_inspect_sigelt : refl_constant) =
-  match uu___114 with
+  match uu___115 with
   | (fstar_refl_inspect_sigelt1, fstar_refl_pack_sigelt) ->
       fstar_refl_inspect_sigelt1
 let (fstar_refl_pack_sigelt : refl_constant) =
-  match uu___114 with
+  match uu___115 with
   | (fstar_refl_inspect_sigelt1, fstar_refl_pack_sigelt1) ->
       fstar_refl_pack_sigelt1
 let (fstar_refl_env : FStar_Syntax_Syntax.term) =
