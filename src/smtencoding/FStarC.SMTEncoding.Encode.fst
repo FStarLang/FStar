@@ -382,6 +382,29 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
         in
         [Util.mkAssume(mkForall (Env.get_range env) ([[inversion_t]], [uu;tt], mkImp(valid, body)), Some "inversion interpretation", "inversion-interp")]
    in
+   let mk_with_type_axiom : env -> string -> term -> list decl = fun env with_type tt ->
+        (* (assert (forall ((u Universe) (t Term) (e Term))
+                           (! (and (= (Prims.with_type u t e)
+                                       e)
+                                   (HasType (Prims.with_type u t e) t))
+                            :weight 0
+                            :pattern ((Prims.with_type t e)))))
+         *)
+        let uu = mk_fv ("u", univ_sort) in
+        let u = mkFreeV uu in
+        let tt = mk_fv ("t", Term_sort) in
+        let t = mkFreeV tt in
+        let ee = mk_fv ("e", Term_sort) in
+        let e = mkFreeV ee in
+        let with_type_t_e = mkApp(with_type, [u; t; e]) in
+        [Util.mkAssume(mkForall' (Env.get_range env) ([[with_type_t_e]],
+                                 Some 0, //weight
+                                 [uu;tt;ee],
+                                 mkAnd(mkEq(with_type_t_e, e),
+                                       mk_HasType with_type_t_e t)),
+                       Some "with_type primitive axiom",
+                       "@with_type_primitive_axiom")] //the "@" in the name forces it to be retained even when the contex is pruned
+   in
    let prims =  [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
@@ -408,6 +431,14 @@ let primitive_type_axioms : env -> lident -> string -> term -> list decl =
 let encode_smt_lemma env fv t =
     let lid = fv.fv_name.v in
     let form, decls = encode_function_type_as_formula t env in
+    let form =
+      match (Free.univnames t |> FlatSet.elems) with
+      | [] -> form
+      | us ->
+        let univ_vars = List.map encode_univ_name us in
+        let cvars = List.map fst univ_vars in
+        mkForall (range_of_fv fv) ([], cvars, form)
+    in
     decls@([Util.mkAssume(form, Some ("Lemma: " ^ (string_of_lid lid)), ("lemma_"^(string_of_lid lid)))]
            |> mk_decls_trivial)
 
@@ -942,10 +973,11 @@ let encode_top_level_let :
           let encode_one_binding env0 (fvb, g, gtok) t_norm ({lbunivs=uvs;lbname=lbn; lbdef=e}) =
 
             (* Open universes *)
-            let env', e, t_norm =
-                let env', _, [e; t_norm] =
+            let env', e, univ_vars, t_norm =
+                let env', univ_names, [e; t_norm] =
                   Env.open_universes_in env.tcenv uvs [e; t_norm] in
-                {env with tcenv = env'}, e, t_norm
+                let univ_vars, _ = List.map EncodeTerm.encode_univ_name univ_names |> List.unzip in
+                {env with tcenv = env'}, e, univ_vars, t_norm
             in
             if !dbg_SMTEncoding
             then BU.print3 "Encoding let rec %s : %s = %s\n"
@@ -971,7 +1003,6 @@ let encode_top_level_let :
 
 
             let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
-
             let guard, guard_decls =
                 match pre_opt with
                 | None -> mk_and_l guards, []
@@ -980,15 +1011,25 @@ let encode_top_level_let :
                   mk_and_l (guards@[guard]), decls0
             in
             let binder_decls = binder_decls @ guard_decls in
-            let decl_g = Term.DeclFun(g, Fuel_sort::List.map fv_sort (fst (BU.first_N fvb.smt_arity vars)), Term_sort, Some "Fuel-instrumented function name") in
-            let decl_g_tok = Term.DeclFun(gtok, [], Term_sort, Some "Token for fuel-instrumented partial applications") in
+            let univ_sorts = List.map fv_sort univ_vars in
+            let decl_g =
+              Term.DeclFun(g,
+                           (Fuel_sort::
+                            univ_sorts @
+                            List.map fv_sort (fst (BU.first_N fvb.smt_arity vars))),
+                           Term_sort,
+                           Some "Fuel-instrumented function name")
+            in
             let env0 = push_zfuel_name env0 fvb.fvar_lid g gtok in
+            let decl_g_tok = Term.DeclFun(gtok, univ_sorts, Term_sort, Some "Token for fuel-instrumented partial applications") in
+            let univ_vars_tm = List.map mkFreeV univ_vars in
             let vars_tm = List.map mkFreeV vars in
-            let rng = (S.range_of_lbname lbn) in
-            let app = maybe_curry_fvb rng fvb (List.map mkFreeV vars) in
-            let mk_g_app args = maybe_curry_app rng (Inl (Var g)) (fvb.smt_arity + 1) args in
-            let gsapp = mk_g_app (mkApp("SFuel", [fuel_tm])::vars_tm) in
-            let gmax = mk_g_app (mkApp("MaxFuel", [])::vars_tm) in
+            let rng = S.range_of_lbname lbn in
+            let fvb_with_univs_arity = {fvb with smt_arity=List.length univ_vars + fvb.smt_arity} in
+            let app = maybe_curry_fvb rng fvb_with_univs_arity (List.map mkFreeV (univ_vars@vars)) in
+            let mk_g_app args =  maybe_curry_app rng (Inl (Var g)) (fvb_with_univs_arity.smt_arity + 1) args in
+            let gsapp = mk_g_app (mkApp("SFuel", [fuel_tm])::univ_vars_tm@vars_tm) in
+            let gmax = mk_g_app (mkApp("MaxFuel", [])::univ_vars_tm@vars_tm) in
             let body_tm, decls2 = encode_term body env' in
 
             //NS 05.25: This used to be  mkImp(mk_and_l guards, mkEq(gsapp, body_tm)
@@ -997,30 +1038,45 @@ let encode_top_level_let :
             //NS 11/28/2018: Restoring the mkImp (mk_and_l guards, mkEq(gsapp, body_tm))
             //   11/29/2018: Also guarding by the precondition of a Pure/Ghost function in addition to typing guards
             let eqn_g =
-                Util.mkAssume
-                    (mkForall' (S.range_of_lbname lbn)
-                               ([[gsapp]], Some 0, fuel::vars, mkImp(guard, mkEq(gsapp, body_tm))),
-                     Some (BU.format1 "Equation for fuel-instrumented recursive function: %s" (string_of_lid fvb.fvar_lid)),
-                     "equation_with_fuel_" ^g) in
-            let eqn_f = Util.mkAssume(mkForall (S.range_of_lbname lbn) ([[app]], vars, mkEq(app, gmax)),
-                                    Some "Correspondence of recursive function to instrumented version",
-                                    ("@fuel_correspondence_"^g)) in
-            let eqn_g' = Util.mkAssume(mkForall (S.range_of_lbname lbn) ([[gsapp]], fuel::vars, mkEq(gsapp,  mk_g_app (Term.n_fuel 0::vars_tm))),
-                                    Some "Fuel irrelevance",
-                                    ("@fuel_irrelevance_" ^g)) in
+              Util.mkAssume
+                (mkForall' (S.range_of_lbname lbn)
+                           ([[gsapp]], Some 0, fuel::(univ_vars@vars), mkImp(guard, mkEq(gsapp, body_tm))),
+                Some (BU.format1 "Equation for fuel-instrumented recursive function: %s" (string_of_lid fvb.fvar_lid)),
+                "equation_with_fuel_" ^g)
+            in
+            let eqn_f =
+              Util.mkAssume
+                (mkForall (S.range_of_lbname lbn)
+                          ([[app]], univ_vars@vars, mkEq(app, gmax)),
+                 Some "Correspondence of recursive function to instrumented version",
+                 "@fuel_correspondence_"^g)
+            in
+            let eqn_g' =
+              Util.mkAssume
+                (mkForall (S.range_of_lbname lbn)
+                          ([[gsapp]], fuel::(univ_vars@vars), mkEq(gsapp,  mk_g_app (Term.n_fuel 0::(univ_vars_tm@vars_tm)))),
+                Some "Fuel irrelevance",
+                "@fuel_irrelevance_" ^g)
+            in
             let aux_decls, g_typing =
-              let gapp = mk_g_app (fuel_tm::vars_tm) in
+              let gapp = mk_g_app (fuel_tm::(univ_vars_tm@vars_tm)) in
               let tok_corr =
-                let tok_app = mk_Apply (mkFreeV <| mk_fv (gtok, Term_sort)) (fuel::vars) in
+                let gtok_univs_app = Util.mkApp' (Var gtok, univ_vars_tm) in
+                let tok_app = mk_Apply gtok_univs_app (fuel::vars) in
                 let tot_fun_axioms =
-                  let head = mkFreeV <| mk_fv (gtok, Term_sort) in
+                  let head = gtok_univs_app in
                   let vars = fuel :: vars in
                   //the guards are trivial here since this tot_fun_axioms
                   //should never appear in a goal (see Bug1750.fst, test_currying)
                   let guards = List.map (fun _ -> mkTrue) vars in
-                  EncodeTerm.isTotFun_axioms rng head vars guards (U.is_pure_comp tres_comp)
+                  let tot_fun_axioms =
+                    EncodeTerm.isTotFun_axioms rng head vars guards (U.is_pure_comp tres_comp)
+                  in
+                  match univ_vars with
+                  | [] -> tot_fun_axioms
+                  | _ -> mkForall (S.range_of_lbname lbn) ([], univ_vars, tot_fun_axioms)
                 in
-                Util.mkAssume(mkAnd(mkForall (S.range_of_lbname lbn) ([[tok_app]], fuel::vars, mkEq(tok_app, gapp)),
+                Util.mkAssume(mkAnd(mkForall (S.range_of_lbname lbn) ([[tok_app]], fuel::(univ_vars@vars), mkEq(tok_app, gapp)),
                                     tot_fun_axioms),
                               Some "Fuel token correspondence",
                               ("fuel_token_correspondence_"^gtok))
@@ -1028,7 +1084,7 @@ let encode_top_level_let :
               let aux_decls, typing_corr =
                 let g_typing, d3 = encode_term_pred None tres env' gapp in
                 d3, [Util.mkAssume(mkForall (S.range_of_lbname lbn)
-                                            ([[gapp]], fuel::vars, mkImp(guard, g_typing)),
+                                            ([[gapp]], fuel::(univ_vars@vars), mkImp(guard, g_typing)),
                                     Some "Typing correspondence of token to term",
                                     ("token_correspondence_"^g))]
               in
