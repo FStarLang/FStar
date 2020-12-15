@@ -4506,9 +4506,8 @@ and (encode_sigelt' :
                                  FStar_All.pipe_right uu___4 FStar_List.unzip in
                                match uu___3 with
                                | (univ_fvs, univ_tms) ->
-                                   let uu___4 = FStar_Ident.range_of_lid l in
-                                   FStar_SMTEncoding_Term.mkForall uu___4
-                                     ([], univ_fvs, f3) in
+                                   FStar_SMTEncoding_Term.mkForallFlat
+                                     (univ_fvs, f3) in
                              let g =
                                let uu___3 =
                                  let uu___4 =

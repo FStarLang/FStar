@@ -1226,7 +1226,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 List.map EncodeTerm.encode_univ_name uvs
                 |> List.unzip
               in
-              Term.mkForall (Ident.range_of_lid l) ([], univ_fvs, f) //NS: flatten quantifier for a pattern
+              Term.mkForallFlat (univ_fvs, f) //NS: flatten quantifier for a pattern
             in
             let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), (varops.mk_unique ("assumption_"^(string_of_lid l))))]
                     |> mk_decls_trivial in

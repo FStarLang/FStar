@@ -247,6 +247,7 @@ val mkForall:  Range.range -> (list<list<pat>> * fvs * term) -> term
 val mkForall': Range.range -> (list<list<pat>> * option<int> * fvs * term)  -> term
 val mkForall'': Range.range -> (list<list<pat>> * option<int> * list<sort> * term) -> term
 val mkExists: Range.range -> (list<list<pat>> * fvs * term) -> term
+val mkForallFlat:  (fvs * term) -> term
 val mkLet: (list<term> * term) -> Range.range -> term
 val mkLet': (list<(fv * term)> * term) -> Range.range -> term
 

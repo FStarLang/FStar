@@ -1210,6 +1210,27 @@ let (mkExists :
       match uu___ with
       | (pats, vars, body) ->
           mkQuant' r (Exists, pats, FStar_Pervasives_Native.None, vars, body)
+let (mkForallFlat : (fvs * term) -> term) =
+  fun uu___ ->
+    match uu___ with
+    | (vars, body) ->
+        (match body.tm with
+         | Quant (Forall, pats, wopt, sorts, body') ->
+             let closing =
+               let uu___1 =
+                 FStar_List.map (fun s -> ("ignore", s, true)) sorts in
+               FStar_List.append vars uu___1 in
+             let uu___1 =
+               let uu___2 =
+                 FStar_All.pipe_right pats
+                   (FStar_List.map (FStar_List.map (abstr closing))) in
+               let uu___3 =
+                 let uu___4 = FStar_List.map fv_sort vars in
+                 FStar_List.append uu___4 sorts in
+               let uu___4 = abstr closing body' in
+               (Forall, uu___2, wopt, uu___3, uu___4) in
+             mkQuant body.rng true uu___1
+         | uu___1 -> mkForall body.rng ([], vars, body))
 let (mkLet' : ((fv * term) Prims.list * term) -> FStar_Range.range -> term) =
   fun uu___ ->
     fun r ->
