@@ -660,10 +660,11 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
      *
      * Don't think the boolean false below matters, but is perhaps safer (see Syntax.fsi)
      *)
-    let binder_aq_to_arg_aq aq =
-      match aq with
-      | Some (Implicit _) -> aq
-      | Some (Meta _) -> Some (Implicit false)
+    let binder_aq_to_arg_aq (aq, attrs) =
+      match aq, attrs with
+      | Some (Implicit _), _ -> aq
+      | Some (Meta _), _
+      | None, _ when List.length attrs <> 0 -> Some (Implicit false)
       | _ -> None in
 
     let ite_us, ite_t, _ = if_then_else in
@@ -682,7 +683,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           |> (fun l -> let (f::g::p::[]) = l in f, g, p) in
         Env.push_binders (Env.push_univ_vars env0 us) bs,
         S.mk_Tm_app ite_t
-          (bs |> List.map (fun ({binder_bv=b;binder_qual=qual}) -> S.bv_to_name b, binder_aq_to_arg_aq qual))
+          (bs |> List.map (fun b -> S.bv_to_name b.binder_bv, binder_aq_to_arg_aq (b.binder_qual, b.binder_attrs)))
           r,
         f, g, p
       | _ -> failwith "Impossible! ite_t must have been an abstraction with at least 3 binders" in
@@ -696,7 +697,8 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         match (SS.compress subcomp_ty).n with
         | Tm_arrow (bs, _) ->
           let bs_except_last, last_b = bs |> List.splitAt (List.length bs - 1) in
-          bs_except_last |> List.map (fun b -> b.binder_qual), last_b |> List.hd |> (fun b -> b.binder_qual)
+          bs_except_last |> List.map (fun b -> b.binder_qual, b.binder_attrs),
+          last_b |> List.hd |> (fun b -> b.binder_qual, b.binder_attrs)
         | _ -> failwith "Impossible! subcomp_ty must have been an arrow with at lease 1 binder" in
 
      let aqs_except_last, last_aq =

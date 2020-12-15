@@ -43,11 +43,11 @@ module SS = FStar.Syntax.Subst
 
 let tun_r (r:Range.range) : S.term = { tun with pos = r }
 
-type annotated_pat = Syntax.pat * list<(bv * Syntax.typ)>
+type annotated_pat = Syntax.pat * list<(bv * Syntax.typ * list<S.term>)>
 
 let desugar_disjunctive_pattern annotated_pats when_opt branch =
     annotated_pats |> List.map (fun (pat, annots) ->
-        let branch = List.fold_left (fun br (bv, ty) ->
+        let branch = List.fold_left (fun br (bv, ty, _) ->
                         let lb = U.mk_letbinding (Inl bv) [] ty C.effect_Tot_lid (S.bv_to_name bv) [] br.pos in
                         let branch = SS.close [S.mk_binder bv] branch in
                         mk (Tm_let ((false, [lb]), branch)) br.pos) branch annots in
@@ -333,8 +333,8 @@ let rec uncurry bs t = match t.tm with
 
 let rec is_var_pattern p = match p.pat with
   | PatWild _
-  | PatTvar(_, _)
-  | PatVar(_, _) -> true
+  | PatTvar _
+  | PatVar _ -> true
   | PatAscribed(p, _) -> is_var_pattern p
   | _ -> false
 
@@ -345,7 +345,7 @@ let rec is_app_pattern p = match p.pat with
 
 let replace_unit_pattern p = match p.pat with
   | PatConst FStar.Const.Const_unit ->
-    mk_pattern (PatAscribed (mk_pattern (PatWild None) p.prange, (unit_ty p.prange, None))) p.prange
+    mk_pattern (PatAscribed (mk_pattern (PatWild (None, [])) p.prange, (unit_ty p.prange, None))) p.prange
   | _ -> p
 
 let rec destruct_app_pattern (env:env_t) (is_top_level:bool) (p:pattern)
@@ -357,9 +357,9 @@ let rec destruct_app_pattern (env:env_t) (is_top_level:bool) (p:pattern)
   | PatAscribed(p,t) ->
     let (name, args, _) = destruct_app_pattern env is_top_level p in
     (name, args, Some t)
-  | PatApp({pat=PatVar (id, _)}, args) when is_top_level ->
+  | PatApp({pat=PatVar (id, _, _)}, args) when is_top_level ->
     (Inr (qualify env id), args, None)
-  | PatApp({pat=PatVar (id, _)}, args) ->
+  | PatApp({pat=PatVar (id, _, _)}, args) ->
     (Inl id, args, None)
   | _ ->
     failwith "Not an app pattern"
@@ -374,8 +374,8 @@ let rec gather_pattern_bound_vars_maybe_top acc p =
   | PatName _
   | PatOp _ -> acc
   | PatApp (phead, pats) -> gather_pattern_bound_vars_from_list (phead::pats)
-  | PatTvar (x, _)
-  | PatVar (x, _) -> set_add x acc
+  | PatTvar (x, _, _)
+  | PatVar (x, _, _) -> set_add x acc
   | PatList pats
   | PatTuple  (pats, _)
   | PatOr pats -> gather_pattern_bound_vars_from_list pats
@@ -387,16 +387,16 @@ let gather_pattern_bound_vars : pattern -> set<Ident.ident> =
   fun p -> gather_pattern_bound_vars_maybe_top acc p
 
 type bnd =
-  | LocalBinder of bv     * S.aqual
+  | LocalBinder of bv     * S.aqual * list<S.term>
   | LetBinder   of lident * (S.term * option<S.term>)
 
 let is_implicit (b:bnd) : bool =
   match b with
-  | LocalBinder (_, Some (S.Implicit _)) -> true
+  | LocalBinder (_, Some (S.Implicit _), _) -> true
   | _ -> false
 
 let binder_of_bnd = function
-  | LocalBinder (a, aq) -> a, aq
+  | LocalBinder (a, aq, attrs) -> a, aq, attrs
   | _ -> failwith "Impossible"
 
 (* TODO : shouldn't this be Tot by default ? *)
@@ -684,7 +684,7 @@ let rec desugar_data_pat
     * env_t                          (* env updated with the BVs pushed in *)
     * bnd                            (* a binder for the pattern *)
     * pat                            (* elaborated pattern *)
-    * list<(bv * Syntax.typ)>        (* ascripted pattern variables (collected) *)
+    * list<(bv * Syntax.typ * list<S.term>)>        (* ascripted pattern variables (collected) *)
     =
     let pos q = Syntax.withinfo q p.prange in
     let pos_r r q = Syntax.withinfo q r in
@@ -695,7 +695,7 @@ let rec desugar_data_pat
       | PatOp op ->
         (* Turn into a PatVar and recurse *)
         let id_op = mk_ident (compile_op 0 (string_of_id op) (range_of_id op), (range_of_id op)) in
-        let p = { p with pat = PatVar (id_op, None) } in
+        let p = { p with pat = PatVar (id_op, None, []) } in
         aux loc env p
 
       | PatAscribed(p, (t, tacopt)) ->
@@ -710,10 +710,10 @@ let rec desugar_data_pat
         let loc, env', binder, p, annots = aux loc env p in
         let annots', binder = match binder with
             | LetBinder _ -> failwith "impossible"
-            | LocalBinder(x, aq) ->
+            | LocalBinder(x, aq, attrs) ->
               let t = desugar_term env (close_fun env t) in
               let x = { x with sort = t } in
-              [(x, t)], LocalBinder(x, aq)
+              [(x, t, attrs)], LocalBinder(x, aq, attrs)
         in
         (* Check that the ascription is over a variable, and not something else *)
         begin match p.v with
@@ -727,25 +727,27 @@ let rec desugar_data_pat
         end;
         loc, env', binder, p, annots'@annots
 
-      | PatWild aq ->
+      | PatWild (aq, attrs) ->
         let aq = trans_aqual env aq in
+        let attrs = attrs |> List.map (desugar_term env) in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
-        loc, env, LocalBinder(x, aq), pos <| Pat_wild x, []
+        loc, env, LocalBinder(x, aq, attrs), pos <| Pat_wild x, []
 
       | PatConst c ->
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
-        loc, env, LocalBinder(x, None), pos <| Pat_constant c, []
+        loc, env, LocalBinder(x, None, []), pos <| Pat_constant c, []
 
-      | PatTvar(x, aq)
-      | PatVar (x, aq) ->
+      | PatTvar(x, aq, attrs)
+      | PatVar (x, aq, attrs) ->
         let aq = trans_aqual env aq in
+        let attrs = attrs |> List.map (desugar_term env) in
         let loc, env, xbv = resolvex loc env x in
-        loc, env, LocalBinder(xbv, aq), pos <| Pat_var xbv, []
+        loc, env, LocalBinder(xbv, aq, attrs), pos <| Pat_var xbv, []
 
       | PatName l ->
         let l = fail_or env (try_lookup_datacon env) l in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
-        loc, env, LocalBinder(x,  None), pos <| Pat_cons(l, []), []
+        loc, env, LocalBinder(x,  None, []), pos <| Pat_cons(l, []), []
 
       | PatApp({pat=PatName l}, args) ->
         let loc, env, annots, args = List.fold_right (fun arg (loc,env, annots, args) ->
@@ -754,7 +756,7 @@ let rec desugar_data_pat
           (loc, env, ans@annots, (arg, imp)::args)) args (loc, env, [], []) in
         let l = fail_or env  (try_lookup_datacon env) l in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
-        loc, env, LocalBinder(x, None), pos <| Pat_cons(l, args), annots
+        loc, env, LocalBinder(x, None, []), pos <| Pat_cons(l, args), annots
 
       | PatApp _ -> raise_error (Errors.Fatal_UnexpectedPattern, "Unexpected pattern") p.prange
 
@@ -767,7 +769,7 @@ let rec desugar_data_pat
             pos_r r <| Pat_cons(S.lid_as_fv C.cons_lid delta_constant (Some Data_ctor), [(hd, false);(tl, false)])) pats
                         (pos_r (Range.end_range p.prange) <| Pat_cons(S.lid_as_fv C.nil_lid delta_constant (Some Data_ctor), [])) in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
-        loc, env, LocalBinder(x, None), pat, annots
+        loc, env, LocalBinder(x, None, []), pat, annots
 
       | PatTuple(args, dep) ->
         let loc, env, annots, args = List.fold_left (fun (loc, env, annots, pats) p ->
@@ -781,7 +783,7 @@ let rec desugar_data_pat
           | Tm_fvar fv -> fv
           | _ -> failwith "impossible" in
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
-        loc, env, LocalBinder(x, None), pos <| Pat_cons(l, args), annots
+        loc, env, LocalBinder(x, None, []), pos <| Pat_cons(l, args), annots
 
       | PatRecord ([]) ->
         raise_error (Errors.Fatal_UnexpectedPattern, "Unexpected pattern") p.prange
@@ -792,7 +794,7 @@ let rec desugar_data_pat
         let fields = fields |> List.map (fun (f, p) -> (ident_of_lid f, p)) in
         let args = record.fields |> List.map (fun (f, _) ->
           match fields |> List.tryFind (fun (g, _) -> (string_of_id f) = (string_of_id g)) with
-            | None -> mk_pattern (PatWild None) p.prange
+            | None -> mk_pattern (PatWild (None, [])) p.prange
             | Some (_, p) -> p) in
         let app = mk_pattern (PatApp(mk_pattern (PatName (lid_of_ids (ns_of_lid record.typename @ [record.constrname]))) p.prange, args)) p.prange in
         let env, e, b, p, annots = aux loc env app in
@@ -840,12 +842,12 @@ and desugar_binding_pat_maybe_top top env p
     match p.pat with
     | PatOp x ->
         mklet (op_to_ident x) (tun_r (range_of_id x)) None
-    | PatVar (x, _) ->
+    | PatVar (x, _, _) ->
         mklet x (tun_r (range_of_id x)) None
     | PatAscribed({pat=PatOp x}, (t, tacopt)) ->
         let tacopt = BU.map_opt tacopt (desugar_term env) in
         mklet (op_to_ident x) (desugar_term env t) tacopt
-    | PatAscribed({pat=PatVar (x, _)}, (t, tacopt)) ->
+    | PatAscribed({pat=PatVar (x, _, _)}, (t, tacopt)) ->
         let tacopt = BU.map_opt tacopt (desugar_term env) in
         mklet x (desugar_term env t) tacopt
     | _ ->
@@ -1186,7 +1188,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
           | _ -> env, ftvs) (env, []) binders in
       let ftv = sort_ftv ftv in
       let binders = (ftv |> List.map (fun a ->
-                        mk_pattern (PatTvar(a, Some AST.Implicit)) top.range))
+                        mk_pattern (PatTvar(a, Some AST.Implicit, [])) top.range))
                     @binders in //close over the free type variables
       (*
          fun (P1 x1) (P2 x2) (P3 x3) -> e
@@ -1219,7 +1221,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
             let b, sc_pat_opt =
                 match b with
                 | LetBinder _ -> failwith "Impossible"
-                | LocalBinder (x, aq) ->
+                | LocalBinder (x, aq, attrs) ->
                     let sc_pat_opt =
                         match pat, sc_pat_opt with
                         | None, _ -> sc_pat_opt
@@ -1239,7 +1241,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                           | _ -> failwith "Impossible"
                           end
                     in
-                    ({S.binder_bv=x; S.binder_qual=aq; S.binder_attrs=[]}), sc_pat_opt
+                    ({S.binder_bv=x; S.binder_qual=aq; S.binder_attrs=attrs}), sc_pat_opt
             in
             aux env (b::bs) sc_pat_opt rest
        in
@@ -1268,7 +1270,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       aux [] [] top
 
     | Bind(x, t1, t2) ->
-      let xpat = AST.mk_pattern (AST.PatVar(x, None)) (range_of_id x) in
+      let xpat = AST.mk_pattern (AST.PatVar(x, None,[])) (range_of_id x) in
       let k = AST.mk_term (Abs([xpat], t2)) t2.range t2.level in
       let bind_lid = Ident.lid_of_path ["bind"] (range_of_id x) in
       let bind = AST.mk_term (AST.Var bind_lid) (range_of_id x) AST.Expr in
@@ -1277,7 +1279,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | Seq(t1, t2) ->
       (* Convert it to a letbinding, desugar it, and then slap a Meta_desugared sequence on it to keep track of this *)
       (* TODO: GM: Maybe we don't really care about that *)
-      let t = mk_term (Let(NoLetQualifier, [None, (mk_pattern (PatWild None) t1.range,t1)], t2)) top.range Expr in
+      let t = mk_term (Let(NoLetQualifier, [None, (mk_pattern (PatWild (None, [])) t1.range,t1)], t2)) top.range Expr in
       let tm, s = desugar_term_aq env t in
       mk (Tm_meta(tm, Meta_desugared Sequence)), s
 
@@ -1295,11 +1297,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
           else match un_function p def with
                 | Some (p, def) -> attr_opt, destruct_app_pattern env top_level p, def
                 | _ -> begin match p.pat with
-                        | PatAscribed({pat=PatVar(id,_)}, t) ->
+                        | PatAscribed({pat=PatVar(id,_,_)}, t) ->
                             if top_level
                             then attr_opt, (Inr (qualify env id), [], Some t), def
                             else attr_opt, (Inl id, [], Some t), def
-                        | PatVar(id, _) ->
+                        | PatVar(id, _, _) ->
                             if top_level
                             then attr_opt, (Inr (qualify env id), [], None), def
                             else attr_opt, (Inl id, [], None), def
@@ -1420,7 +1422,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
            let fv = S.lid_as_fv l (incr_delta_qualifier t1) None in
            mk <| Tm_let((false, [mk_lb (attrs, Inr fv, t, t1, t1.pos)]), body), aq
 
-         | LocalBinder (x,_) ->
+         | LocalBinder (x,_,_) ->
            // TODO unsure if keep _ or [] on second comp below
            let body, aq = desugar_term_aq env t2 in
            let body = match pat with
@@ -1516,7 +1518,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
           let x = FStar.Ident.gen e.range in
           let xterm = mk_term (Var (lid_of_ids [x])) (range_of_id x) Expr in
           let record = Record(None, record.fields |> List.map (fun (f, _) -> get_field (Some xterm) f)) in
-          Let(NoLetQualifier, [None, (mk_pattern (PatVar (x, None)) (range_of_id x), e)], mk_term record top.range top.level) in
+          Let(NoLetQualifier, [None, (mk_pattern (PatVar (x, None,[])) (range_of_id x), e)], mk_term record top.range top.level) in
 
       let recterm = mk_term recterm top.range top.level in
       let e, s = desugar_term_aq env recterm in
@@ -1612,7 +1614,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         let y = Ident.gen' "y" rel.range in
         let xt = mk_term (Tvar x) rel.range Expr in
         let yt = mk_term (Tvar y) rel.range Expr in
-        let pats = [mk_pattern (PatVar (x, None)) rel.range; mk_pattern (PatVar (y, None)) rel.range] in
+        let pats = [mk_pattern (PatVar (x, None,[])) rel.range; mk_pattern (PatVar (y, None,[])) rel.range] in
         mk_term (Abs (pats,
             mk_term (Ascribed (
                 mkApp rel [(xt, Nothing); (yt, Nothing)] rel.range,
@@ -2989,7 +2991,7 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
       in
       let fresh_toplevel_name = Ident.gen Range.dummyRange in
       let fresh_pat =
-        let var_pat = mk_pattern (PatVar (fresh_toplevel_name, None)) Range.dummyRange in
+        let var_pat = mk_pattern (PatVar (fresh_toplevel_name, None, [])) Range.dummyRange in
         (* TODO : What about inner type ascriptions ? Is there any way to retrieve those ? *)
         match pat.pat with
           | PatAscribed (pat, ty) -> { pat with pat = PatAscribed (var_pat, ty) }
@@ -3026,13 +3028,13 @@ and desugar_decl_noattrs env (d:decl) : (env_t * sigelts) =
           | Some id ->
             let lid = lid_of_ids [id] in
             let branch = mk_term (Var lid) (range_of_lid lid) Expr in
-            let bv_pat = mk_pattern (PatVar (id, None)) (range_of_id id) in
+            let bv_pat = mk_pattern (PatVar (id, None, [])) (range_of_id id) in
             bv_pat, branch
 
           | None ->
             let id = Ident.gen Range.dummyRange in
             let branch = mk_term (Const FStar.Const.Const_unit) Range.dummyRange Expr in
-            let bv_pat = mk_pattern (PatVar (id, None)) (range_of_id id) in
+            let bv_pat = mk_pattern (PatVar (id, None, [])) (range_of_id id) in
             let bv_pat = mk_pattern (PatAscribed (bv_pat, (unit_ty (range_of_id id), None)))
                                     (range_of_id id) in
             bv_pat, branch

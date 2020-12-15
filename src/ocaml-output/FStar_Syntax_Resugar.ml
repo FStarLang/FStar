@@ -1270,7 +1270,8 @@ let rec (resugar_term' :
                                          let uu___8 =
                                            let uu___9 = bv_as_unique_ident bv in
                                            (uu___9,
-                                             FStar_Pervasives_Native.None) in
+                                             FStar_Pervasives_Native.None,
+                                             []) in
                                          FStar_Parser_AST.PatVar uu___8 in
                                        mk_pat uu___7 in
                                      (uu___6, term) in
@@ -1293,7 +1294,14 @@ let rec (resugar_term' :
                                                            let uu___10 =
                                                              bv_as_unique_ident
                                                                b.FStar_Syntax_Syntax.binder_bv in
-                                                           (uu___10, q) in
+                                                           let uu___11 =
+                                                             FStar_All.pipe_right
+                                                               b.FStar_Syntax_Syntax.binder_attrs
+                                                               (FStar_List.map
+                                                                  (resugar_term'
+                                                                    env)) in
+                                                           (uu___10, q,
+                                                             uu___11) in
                                                          FStar_Parser_AST.PatVar
                                                            uu___9 in
                                                        mk_pat uu___8))) in
@@ -1855,9 +1863,9 @@ and (resugar_bv_as_pat' :
                 if used
                 then
                   let uu___1 =
-                    let uu___2 = bv_as_unique_ident v in (uu___2, aqual) in
+                    let uu___2 = bv_as_unique_ident v in (uu___2, aqual, []) in
                   FStar_Parser_AST.PatVar uu___1
-                else FStar_Parser_AST.PatWild aqual in
+                else FStar_Parser_AST.PatWild (aqual, []) in
               mk uu___ in
             match typ_opt with
             | FStar_Pervasives_Native.None -> pat
@@ -2055,7 +2063,7 @@ and (resugar_pat' :
                     (hd,
                       (mk
                          (FStar_Parser_AST.PatWild
-                            FStar_Pervasives_Native.None)))
+                            (FStar_Pervasives_Native.None, []))))
                       :: uu___2
                 | (hd1::tl1, hd2::tl2) ->
                     let uu___2 = map2 tl1 tl2 in (hd1, hd2) :: uu___2 in
@@ -2088,7 +2096,7 @@ and (resugar_pat' :
                      FStar_Pervasives_Native.None)
           | FStar_Syntax_Syntax.Pat_wild uu___ ->
               let uu___1 =
-                let uu___2 = to_arg_qual imp_opt in
+                let uu___2 = let uu___3 = to_arg_qual imp_opt in (uu___3, []) in
                 FStar_Parser_AST.PatWild uu___2 in
               mk uu___1
           | FStar_Syntax_Syntax.Pat_dot_term (bv, term) ->

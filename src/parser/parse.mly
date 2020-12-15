@@ -33,9 +33,7 @@ let old_attribute_syntax_warning =
 let get_aqual_and_attrs aqual_universe_opt =
   match aqual_universe_opt with
     | None -> None, []
-    | Some (q, []) -> Some q, []
-    | Some (Implicit, l) when List.length l <> 0 -> None, l
-    | _ -> failwith "Unexpected aqualUniverse"
+    | Some (q, l) -> Some q, l
 
 let get_aqual_and_attrs_and_X (aqual_universe_opt, x) =
   (get_aqual_and_attrs aqual_universe_opt), x
@@ -304,7 +302,7 @@ attr_letbinding:
 letbinding:
   | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(patternOrMultibinder) ascr_opt=ascribeTyp? EQUALS tm=term
       {
-        let pat = mk_pattern (PatVar(lid, None)) (rhs parseState 2) in
+        let pat = mk_pattern (PatVar(lid, None, [])) (rhs parseState 2) in
         let pat = mk_pattern (PatApp (pat, flatten lbp)) (rhs2 parseState 1 3) in
         let pos = rhs2 parseState 1 6 in
         match ascr_opt with
@@ -468,21 +466,19 @@ atomicPattern:
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rhs2 parseState 1 5) }
   | LPAREN pat=tuplePattern RPAREN   { pat }
-  | tv=tvar                   { mk_pattern (PatTvar (tv, None)) (rhs parseState 1) }
+  | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rhs parseState 1) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
   | UNDERSCORE
-      { mk_pattern (PatWild None) (rhs parseState 1) }
+      { mk_pattern (PatWild (None, [])) (rhs parseState 1) }
   | HASH UNDERSCORE
-      { mk_pattern (PatWild (Some Implicit)) (rhs parseState 1) }
+      { mk_pattern (PatWild (Some Implicit, [])) (rhs parseState 1) }
   | c=constant
       { mk_pattern (PatConst c) (rhs parseState 1) }
   | qual_id=aqualified(lident)
     {
-      let qual_id =
-        let (aqual, _attrs), lid = get_aqual_and_attrs_and_X qual_id in
-        (aqual, lid) in
-      mk_pattern (PatVar (snd qual_id, fst qual_id)) (rhs parseState 1) }
+      let (aqual, attrs), lid = get_aqual_and_attrs_and_X qual_id in
+      mk_pattern (PatVar (lid, aqual, attrs)) (rhs parseState 1) }
   | uid=quident
       { mk_pattern (PatName uid) (rhs parseState 1) }
 
@@ -490,7 +486,7 @@ fieldPattern:
   | p = separated_pair(qlident, EQUALS, tuplePattern)
       { p }
   | lid=qlident
-      { lid, mk_pattern (PatVar (ident_of_lid lid, None)) (rhs parseState 1) }
+      { lid, mk_pattern (PatVar (ident_of_lid lid, None, [])) (rhs parseState 1) }
 
   (* (x : t) is already covered by atomicPattern *)
   (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
@@ -498,7 +494,7 @@ fieldPattern:
 patternOrMultibinder:
   | LBRACE_BAR UNDERSCORE COLON t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        let w = mk_pattern (PatWild (Some (mk_meta_tac mt)))
+        let w = mk_pattern (PatWild (Some (mk_meta_tac mt), []))
                                  (rhs2 parseState 1 5) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
@@ -509,7 +505,7 @@ patternOrMultibinder:
    * why does PatWild even exist..? *)
   | LBRACE_BAR i=lident COLON t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        let w = mk_pattern (PatVar (i, Some (mk_meta_tac mt)))
+        let w = mk_pattern (PatVar (i, Some (mk_meta_tac mt), []))
                                  (rhs2 parseState 1 5) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
@@ -517,7 +513,7 @@ patternOrMultibinder:
 
   | LBRACE_BAR t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
-        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (mk_meta_tac mt)))
+        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (mk_meta_tac mt), []))
                                  (rhs2 parseState 1 3) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 3)]
@@ -528,10 +524,8 @@ patternOrMultibinder:
         let pos = rhs2 parseState 1 7 in
         let t_pos = rhs parseState 5 in
         let qual_ids = qual_id0 :: qual_ids in
-        let qual_ids = qual_ids |> List.map (fun x ->
-          let (aq, _attrs), lid = get_aqual_and_attrs_and_X x in
-          (aq, lid)) in
-        List.map (fun (q, x) -> mkRefinedPattern (mk_pattern (PatVar (x, q)) pos) t false r t_pos pos) qual_ids
+        let qual_ids = qual_ids |> List.map get_aqual_and_attrs_and_X in
+        List.map (fun ((aq, attrs), x) -> mkRefinedPattern (mk_pattern (PatVar (x, aq, attrs)) pos) t false r t_pos pos) qual_ids
       }
 
 binder:
@@ -612,13 +606,13 @@ tvar:
 /*                            Types and terms                                 */
 /******************************************************************************/
 
-thunk(X): | t=X { mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+thunk(X): | t=X { mk_term (Abs ([mk_pattern (PatWild (None, [])) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
 
 thunk2(X):
   | t=X
      { let u = mk_term (Const Const_unit) (rhs parseState 3) Expr in
        let t = mk_term (Seq (u, t)) (rhs parseState 3) Expr in
-       mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+       mk_term (Abs ([mk_pattern (PatWild (None, [])) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
 
 ascribeTyp:
   | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=thunk(atomicTerm) {tactic}) { t, tacopt }

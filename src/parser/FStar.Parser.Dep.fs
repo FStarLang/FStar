@@ -933,10 +933,11 @@ let collect_one
         collect_pattern' p.pat
 
       and collect_pattern' = function
-        | PatVar (_, aqual)
-        | PatTvar (_, aqual)
-        | PatWild aqual ->
-            collect_aqual aqual
+        | PatVar (_, aqual, attrs)
+        | PatTvar (_, aqual, attrs)
+        | PatWild (aqual, attrs) ->
+            collect_aqual aqual;
+            attrs |> List.iter collect_term
 
         | PatOp _
         | PatConst _ ->
