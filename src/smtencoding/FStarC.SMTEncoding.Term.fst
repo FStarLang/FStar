@@ -563,7 +563,16 @@ let mkForall' r (pats, wopt, vars, body) =
     mkQuant' r (Forall, pats, wopt, vars, body)
 let mkExists r (pats, vars, body) =
     mkQuant' r (Exists, pats, None, vars, body)
-
+let mkForallFlat (vars, body) =
+    match body.tm with
+    | Quant(Forall, pats, wopt, sorts, body') ->
+      let closing = vars @ List.map (fun s -> FV ("ignore", s, true)) sorts in
+      mkQuant body.rng true (Forall,
+                             pats |> List.map (List.map (abstr closing)),
+                             wopt,
+                             List.map fv_sort vars@sorts,
+                             abstr closing body')
+    | _ -> mkForall body.rng ([], vars, body)
 let mkLet' (bindings, body) r =
   let vars, es = List.split bindings in
   mkLet (es, abstr vars body) r
