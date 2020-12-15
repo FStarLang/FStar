@@ -5749,11 +5749,18 @@ let (desugar_binders :
                match uu___1 with
                | (env1, binders1) ->
                    let uu___2 = desugar_binder env1 b in
-                   let uu___3 =
-                     as_binder env1 b.FStar_Parser_AST.aqual uu___2 in
-                   (match uu___3 with
-                    | (binder, env2) -> (env2, (binder :: binders1))))
-          (env, []) binders in
+                   (match uu___2 with
+                    | (FStar_Pervasives_Native.Some a, k, attrs) ->
+                        let uu___3 =
+                          as_binder env1 b.FStar_Parser_AST.aqual
+                            ((FStar_Pervasives_Native.Some a), k, attrs) in
+                        (match uu___3 with
+                         | (binder, env2) -> (env2, (binder :: binders1)))
+                    | uu___3 ->
+                        FStar_Errors.raise_error
+                          (FStar_Errors.Fatal_MissingNameInBinder,
+                            "Missing name in binder")
+                          b.FStar_Parser_AST.brange)) (env, []) binders in
       match uu___ with
       | (env1, binders1) -> (env1, (FStar_List.rev binders1))
 let (push_reflect_effect :

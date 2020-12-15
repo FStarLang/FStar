@@ -648,7 +648,8 @@ let mk_indexed_bind env
              (Print.term_to_string t)
              (match u.ctx_uvar_meta with
               | Some (Ctx_uvar_meta_attr a) -> Print.term_to_string a
-              | _ -> "<no attr>"));
+              | _ -> "<no attr>")
+         | _ -> failwith ("Impossible, expected a uvar, got : " ^ Print.term_to_string t));
 
   let subst = List.map2
     (fun b t -> NT (b.binder_bv, t))
@@ -2150,7 +2151,7 @@ let maybe_instantiate (env:Env.env) e t =
                   | _, ({binder_bv=x; binder_qual=qual; binder_attrs=attrs})::rest
                     when (match qual with | Some (Meta _) -> true
                                           | _ -> false)
-                       || (attrs <> []) ->
+                       || (List.length attrs > 0) ->
                       let t = SS.subst subst x.sort in
                       let meta_t = 
                         match qual, attrs with
@@ -2158,6 +2159,7 @@ let maybe_instantiate (env:Env.env) e t =
                           Ctx_uvar_meta_tac (mkdyn env, tau)
                         | _, attr::_ ->
                           Ctx_uvar_meta_attr attr
+                        | _ -> failwith "Impossible, match is under a guard, did not expect this case"
                       in
                       let v, _, g = new_implicit_var_aux "Instantiation of meta argument"
                                                          e.pos env t Strict

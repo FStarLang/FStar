@@ -1252,7 +1252,19 @@ let (mk_indexed_bind :
                                                                     FStar_Util.print2
                                                                     "Generated uvar %s with attribute %s\n"
                                                                     uu___13
-                                                                    uu___14))
+                                                                    uu___14
+                                                                | uu___12 ->
+                                                                    let uu___13
+                                                                    =
+                                                                    let uu___14
+                                                                    =
+                                                                    FStar_Syntax_Print.term_to_string
+                                                                    t in
+                                                                    Prims.op_Hat
+                                                                    "Impossible, expected a uvar, got : "
+                                                                    uu___14 in
+                                                                    failwith
+                                                                    uu___13))
                                                       else ());
                                                      (let subst =
                                                         FStar_List.map2
@@ -4728,7 +4740,8 @@ let (maybe_instantiate :
                            (match qual with
                             | FStar_Pervasives_Native.Some
                                 (FStar_Syntax_Syntax.Meta uu___4) -> true
-                            | uu___4 -> false) || (attrs <> [])
+                            | uu___4 -> false) ||
+                             ((FStar_List.length attrs) > Prims.int_zero)
                            ->
                            let t2 =
                              FStar_Syntax_Subst.subst subst
@@ -4742,7 +4755,10 @@ let (maybe_instantiate :
                                    (uu___6, tau) in
                                  FStar_Syntax_Syntax.Ctx_uvar_meta_tac uu___5
                              | (uu___4, attr::uu___5) ->
-                                 FStar_Syntax_Syntax.Ctx_uvar_meta_attr attr in
+                                 FStar_Syntax_Syntax.Ctx_uvar_meta_attr attr
+                             | uu___4 ->
+                                 failwith
+                                   "Impossible, match is under a guard, did not expect this case" in
                            let uu___4 =
                              FStar_TypeChecker_Env.new_implicit_var_aux
                                "Instantiation of meta argument"

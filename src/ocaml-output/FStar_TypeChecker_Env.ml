@@ -3183,6 +3183,8 @@ let (delta_depth_of_qninfo :
               | FStar_Syntax_Syntax.Sig_pragma uu___4 ->
                   FStar_Pervasives_Native.None
               | FStar_Syntax_Syntax.Sig_polymonadic_bind uu___4 ->
+                  FStar_Pervasives_Native.None
+              | FStar_Syntax_Syntax.Sig_polymonadic_subcomp uu___4 ->
                   FStar_Pervasives_Native.None))
 let (delta_depth_of_fv :
   env -> FStar_Syntax_Syntax.fv -> FStar_Syntax_Syntax.delta_depth) =

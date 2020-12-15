@@ -5799,7 +5799,8 @@ and (check_application_args :
                           (match qual with
                            | FStar_Pervasives_Native.Some
                                (FStar_Syntax_Syntax.Meta uu___4) -> true
-                           | uu___4 -> false) || (attrs <> [])
+                           | uu___4 -> false) ||
+                            ((FStar_List.length attrs) > Prims.int_zero)
                           ->
                           let uu___4 =
                             match (qual, attrs) with
@@ -5825,7 +5826,9 @@ and (check_application_args :
                                 (match uu___7 with
                                  | (attr2, uu___8, g_attr) ->
                                      ((FStar_Syntax_Syntax.Ctx_uvar_meta_attr
-                                         attr2), g_attr)) in
+                                         attr2), g_attr))
+                            | uu___5 ->
+                                failwith "Impossible, match is under a guard" in
                           (match uu___4 with
                            | (ctx_uvar_meta, g_tau_or_attr) ->
                                let t =

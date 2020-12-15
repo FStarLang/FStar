@@ -2047,7 +2047,7 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
     let p = range_of_lid lid in
 
     fields |> List.mapi (fun i fld ->
-        let x = fld.S.binder_bv in
+        let x = fld.binder_bv in
         let field_name = U.mk_field_projector_name lid x i in
         let only_decl =
             lid_equals C.prims_lid  (Env.current_module env)
@@ -2386,8 +2386,8 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
 let desugar_binders env binders =
     let env, binders = List.fold_left (fun (env,binders) b ->
     match desugar_binder env b with
-      | desugared_b ->
-        let binder, env = as_binder env b.aqual desugared_b in
+      | Some a, k, attrs ->
+        let binder, env = as_binder env b.aqual (Some a, k, attrs) in
         env, binder::binders
 
       | _ -> raise_error (Errors.Fatal_MissingNameInBinder, "Missing name in binder") b.brange) (env, []) binders in

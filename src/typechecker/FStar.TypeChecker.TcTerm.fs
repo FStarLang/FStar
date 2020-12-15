@@ -1971,7 +1971,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
         | ({binder_bv=x;binder_qual=qual;binder_attrs=attrs})::rest, (_, None)::_
           when (match qual with | Some (Meta _) -> true
                                 | _ -> false)
-             || (attrs <> []) -> (* instantiate a meta arg *)
+             || (List.length attrs > 0) -> (* instantiate a meta arg *)
             (* We follow the exact same procedure as for instantiating an implicit,
              * except that we keep track of the (uvar, env, metaprogram) pair in the environment
              * so we can later come back to the implicit and, if it wasn't solved by unification,
@@ -1992,6 +1992,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                   let attr = SS.subst subst attr in
                   let attr, _, g_attr = tc_tot_or_gtot_term env attr in
                   Ctx_uvar_meta_attr attr, g_attr
+                | _ -> failwith "Impossible, match is under a guard"
             in
             let t = SS.subst subst x.sort in
             let t, g_ex = check_no_escape (Some head) env fvs t in
