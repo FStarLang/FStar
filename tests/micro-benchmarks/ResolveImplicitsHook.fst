@@ -86,7 +86,7 @@ let resolve_tac () : Tac unit =
   if T.ngoals() = 45 then T.fail "Got 45 goals as expected; failing intentionally"
   else T.admit_all()
 
-[@@expect_failure [228]]
+[@@expect_failure [66]]
 let test1 (b:bool)
   : cmd (r1 ** r2 ** r3 ** r4 ** r5)
         (r1 ** r2 ** r3 ** r4 ** r5)
