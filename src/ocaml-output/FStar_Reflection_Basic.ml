@@ -785,6 +785,13 @@ let (inspect_sigelt :
                     let uu___3 = FStar_List.map inspect_ctor c_lids in
                     (nm, us1, param_bs2, ty2, uu___3) in
                   FStar_Reflection_Data.Sg_Inductive uu___2))
+    | FStar_Syntax_Syntax.Sig_declare_typ (lid, us, ty) ->
+        let nm = FStar_Ident.path_of_lid lid in
+        let uu___ = FStar_Syntax_Subst.univ_var_opening us in
+        (match uu___ with
+         | (s, us1) ->
+             let ty1 = FStar_Syntax_Subst.subst s ty in
+             FStar_Reflection_Data.Sg_Val (nm, us1, ty1))
     | uu___ -> FStar_Reflection_Data.Unk
 let (pack_sigelt :
   FStar_Reflection_Data.sigelt_view -> FStar_Syntax_Syntax.sigelt) =
@@ -850,6 +857,12 @@ let (pack_sigelt :
           FStar_Syntax_Syntax.sigattrs = (uu___.FStar_Syntax_Syntax.sigattrs);
           FStar_Syntax_Syntax.sigopts = (uu___.FStar_Syntax_Syntax.sigopts)
         }
+    | FStar_Reflection_Data.Sg_Val (nm, us_names, ty) ->
+        let val_lid = FStar_Ident.lid_of_path nm FStar_Range.dummyRange in
+        let s = FStar_Syntax_Subst.univ_var_closing us_names in
+        let typ = FStar_Syntax_Subst.subst s ty in
+        FStar_All.pipe_left FStar_Syntax_Syntax.mk_sigelt
+          (FStar_Syntax_Syntax.Sig_declare_typ (val_lid, us_names, typ))
     | FStar_Reflection_Data.Unk -> failwith "packing Unk, sorry"
 let (inspect_bv : FStar_Syntax_Syntax.bv -> FStar_Reflection_Data.bv_view) =
   fun bv ->
