@@ -494,8 +494,9 @@ any [x] in [sortWith f l] is the same as the number of occurrences in
 [l]. *)
 val sortWith_permutation: #a:eqtype -> f:(a -> a -> Tot int) -> l:list a ->
   Lemma (requires True)
-        (ensures (forall x. count x l = count x (sortWith f l)))
+        (ensures (forall x.{:pattern (count x l)} count x l = count x (sortWith f l)))
         (decreases (length l))
+#push-options "--z3rlimit_factor 4 --max_fuel 2 --max_ifuel 1"
 let rec sortWith_permutation #a f l = match l with
     | [] -> ()
     | pivot::tl ->
@@ -505,6 +506,7 @@ let rec sortWith_permutation #a f l = match l with
        sortWith_permutation f lo;
        sortWith_permutation f hi;
        append_count_forall (sortWith f lo) (pivot::sortWith f hi)
+#pop-options
 
 (** [sorted f l] holds if, and only if, any two consecutive elements
 [x], [y] of [l] are such that [f x y] holds. *)
@@ -544,6 +546,7 @@ val sortWith_sorted: #a:eqtype -> f:(a -> a -> Tot int) -> l:list a ->
   Lemma (requires (total_order #a (bool_of_compare f)))
         (ensures ((sorted (bool_of_compare f) (sortWith f l)) /\ (forall x. mem x l = mem x (sortWith f l))))
         (decreases (length l))
+#push-options "--z3rlimit_factor 4"
 let rec sortWith_sorted #a f l = match l with
     | [] -> ()
     | pivot::tl ->
@@ -555,7 +558,7 @@ let rec sortWith_sorted #a f l = match l with
        sortWith_sorted f hi;
        append_mem_forall (sortWith f lo) (pivot::sortWith f hi);
        append_sorted (bool_of_compare f) (sortWith f lo) (sortWith f hi) pivot
-
+#pop-options
 
 (** Correctness of [mem] for types with decidable equality. TODO:
 replace [mem] with [memP] in relevant lemmas and define the right
