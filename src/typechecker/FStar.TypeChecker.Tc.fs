@@ -115,10 +115,8 @@ let tc_lex_t env ses quals lids =
                    sigattrs = [];
                    sigopts = None; } in
 
-        let utop = S.new_univ_name (Some r1) in
-        let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r1) delta_constant None, [U_name utop])) r1 in
-        let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
-        let dc_lextop = { sigel = Sig_datacon(lex_top, [utop], lex_top_t, PC.lex_t_lid, 0, []);
+        let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r1) delta_constant None, [U_zero])) r1 in
+        let dc_lextop = { sigel = Sig_datacon(lex_top, [], lex_top_t, PC.lex_t_lid, 0, []);
                           sigquals = [];
                           sigrng = r1;
                           sigmeta = default_sigmeta;

@@ -1228,7 +1228,7 @@ let mk_with_type u t e =
     mk (Tm_app(t_with_type, [iarg t; as_arg e])) dummyRange
 
 let lex_t    = fvar_const PC.lex_t_lid
-let lex_top :term = mk (Tm_uinst (fvar PC.lextop_lid delta_constant (Some Data_ctor), [U_zero])) dummyRange //NS delta: ok
+let lex_top :term = fvar PC.lextop_lid delta_constant (Some Data_ctor) //NS delta: ok
 let lex_pair = fvar PC.lexcons_lid delta_constant (Some Data_ctor) //NS delta: ok
 let tforall  = fvar PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
 let t_haseq   = fvar PC.haseq_lid delta_constant None //NS delta: wrong Delta_abstract (Delta_constant_at_level 0)?
