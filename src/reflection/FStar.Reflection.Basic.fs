@@ -64,7 +64,6 @@ let get_env () : Env.env =
   | Some e -> e
 
 (* private *)
-//TODO: AR: inspect for attributes code is missing
 let inspect_aqual (aq : aqual) : aqualv =
     match aq with
     | Some (Implicit _) -> Data.Q_Implicit

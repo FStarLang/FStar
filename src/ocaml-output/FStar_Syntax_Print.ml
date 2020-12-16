@@ -131,6 +131,28 @@ let (filter_imp :
         false
     | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta uu___) -> false
     | uu___ -> true
+let filter_imp_args :
+  'uuuuu .
+    ('uuuuu * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) Prims.list ->
+      ('uuuuu * FStar_Syntax_Syntax.arg_qualifier
+        FStar_Pervasives_Native.option) Prims.list
+  =
+  fun args ->
+    FStar_All.pipe_right args
+      (FStar_List.filter
+         (fun a ->
+            let uu___ = FStar_All.pipe_right a FStar_Pervasives_Native.snd in
+            FStar_All.pipe_right uu___ filter_imp))
+let (filter_imp_binders :
+  FStar_Syntax_Syntax.binder Prims.list ->
+    FStar_Syntax_Syntax.binder Prims.list)
+  =
+  fun bs ->
+    FStar_All.pipe_right bs
+      (FStar_List.filter
+         (fun b ->
+            FStar_All.pipe_right b.FStar_Syntax_Syntax.binder_qual filter_imp))
 let rec (reconstruct_lex :
   exp -> exp Prims.list FStar_Pervasives_Native.option) =
   fun e ->
@@ -139,13 +161,7 @@ let rec (reconstruct_lex :
       uu___1.FStar_Syntax_Syntax.n in
     match uu___ with
     | FStar_Syntax_Syntax.Tm_app (f, args) ->
-        let args1 =
-          FStar_All.pipe_right args
-            (FStar_List.filter
-               (fun a ->
-                  let uu___1 =
-                    FStar_All.pipe_right a FStar_Pervasives_Native.snd in
-                  FStar_All.pipe_right uu___1 filter_imp)) in
+        let args1 = filter_imp_args args in
         let exps = FStar_List.map FStar_Pervasives_Native.fst args1 in
         let uu___1 =
           (is_lex_cons f) && ((FStar_List.length exps) = (Prims.of_int (2))) in
@@ -900,14 +916,7 @@ and (binders_to_string :
     fun bs ->
       let bs1 =
         let uu___ = FStar_Options.print_implicits () in
-        if uu___
-        then bs
-        else
-          FStar_All.pipe_right bs
-            (FStar_List.filter
-               (fun b ->
-                  FStar_All.pipe_right b.FStar_Syntax_Syntax.binder_qual
-                    filter_imp)) in
+        if uu___ then bs else filter_imp_binders bs in
       if sep = " -> "
       then
         let uu___ =
@@ -928,15 +937,7 @@ and (args_to_string : FStar_Syntax_Syntax.args -> Prims.string) =
   fun args ->
     let args1 =
       let uu___ = FStar_Options.print_implicits () in
-      if uu___
-      then args
-      else
-        FStar_All.pipe_right args
-          (FStar_List.filter
-             (fun a ->
-                let uu___2 =
-                  FStar_All.pipe_right a FStar_Pervasives_Native.snd in
-                FStar_All.pipe_right uu___2 filter_imp)) in
+      if uu___ then args else filter_imp_args args in
     let uu___ = FStar_All.pipe_right args1 (FStar_List.map arg_to_string) in
     FStar_All.pipe_right uu___ (FStar_String.concat " ")
 and (comp_to_string : FStar_Syntax_Syntax.comp -> Prims.string) =

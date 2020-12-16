@@ -638,9 +638,20 @@ let encode_top_level_let :
     let eta_expand binders formals body t =
       let nbinders = List.length binders in
       let formals, extra_formals = BU.first_N nbinders formals in
-      let subst = List.map2 (fun ({binder_bv=formal}) ({binder_bv=binder}) -> NT(formal, S.bv_to_name binder)) formals binders in
-      let extra_formals = extra_formals |> List.map (fun b -> {b with binder_bv={b.binder_bv with sort=SS.subst subst b.binder_bv.sort}}) |> U.name_binders in
-      let body = Syntax.extend_app_n (SS.compress body) (snd <| U.args_of_binders extra_formals) body.pos in
+      let subst =
+        List.map2 (fun ({binder_bv=formal}) ({binder_bv=binder}) ->
+          NT(formal, S.bv_to_name binder)
+        ) formals binders in
+      let extra_formals =
+        extra_formals
+          |> List.map (fun b ->
+              {b with
+               binder_bv={b.binder_bv with
+                          sort=SS.subst subst b.binder_bv.sort}})
+          |> U.name_binders in
+      let body = Syntax.extend_app_n
+        (SS.compress body)
+        (snd <| U.args_of_binders extra_formals) body.pos in
       binders@extra_formals, body
     in
 

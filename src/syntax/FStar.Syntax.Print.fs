@@ -125,10 +125,14 @@ let filter_imp aq =
    | Some (Implicit _)
    | Some (Meta _) -> false
    | _ -> true
+let filter_imp_args args =
+  args |> List.filter (fun a -> a |> snd |> filter_imp)
+let filter_imp_binders bs =
+  bs |> List.filter (fun b -> b.binder_qual |> filter_imp)
 let rec reconstruct_lex (e:exp) =
   match (compress e).n with
   | Tm_app (f, args) ->
-      let args = args |> List.filter (fun a -> a |> snd |> filter_imp) in
+      let args = filter_imp_args args in
       let exps = List.map fst args in
       if is_lex_cons f && List.length exps = 2 then
         match reconstruct_lex (List.nth exps 1) with
@@ -474,7 +478,10 @@ and binder_to_string b =  binder_to_string' false b
 and arrow_binder_to_string b = binder_to_string' true b
 
 and binders_to_string sep bs =
-    let bs = if (Options.print_implicits()) then bs else bs |> List.filter (fun b -> b.binder_qual |> filter_imp) in
+    let bs =
+      if (Options.print_implicits())
+      then bs
+      else filter_imp_binders bs in
     if sep = " -> "
     then bs |> List.map arrow_binder_to_string |> String.concat sep
     else bs |> List.map binder_to_string |> String.concat sep
@@ -483,7 +490,10 @@ and arg_to_string = function
    | a, imp -> imp_to_string (term_to_string a) imp
 
 and args_to_string args =
-    let args = if (Options.print_implicits()) then args else args |> List.filter (fun a -> a |> snd |> filter_imp) in
+    let args =
+      if (Options.print_implicits())
+      then args
+      else filter_imp_args args in
     args |> List.map arg_to_string |> String.concat " "
 
 and comp_to_string c =

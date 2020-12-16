@@ -713,7 +713,7 @@ let e_exp =
 let e_attribute  = e_term
 let e_attributes = e_list e_attribute
 
-let e_binder_view = e_tuple2 e_bv (e_tuple2 e_aqualv (e_list e_attribute))
+let e_binder_view = e_tuple2 e_bv (e_tuple2 e_aqualv e_attributes)
 
 let e_qualifier =
     let embed (rng:Range.range) (q:RD.qualifier) : term =

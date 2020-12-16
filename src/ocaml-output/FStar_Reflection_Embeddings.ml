@@ -1722,9 +1722,7 @@ let (e_attributes :
   = FStar_Syntax_Embeddings.e_list e_attribute
 let (e_binder_view :
   FStar_Reflection_Data.binder_view FStar_Syntax_Embeddings.embedding) =
-  let uu___ =
-    let uu___1 = FStar_Syntax_Embeddings.e_list e_attribute in
-    FStar_Syntax_Embeddings.e_tuple2 e_aqualv uu___1 in
+  let uu___ = FStar_Syntax_Embeddings.e_tuple2 e_aqualv e_attributes in
   FStar_Syntax_Embeddings.e_tuple2 e_bv uu___
 let (e_qualifier :
   FStar_Reflection_Data.qualifier FStar_Syntax_Embeddings.embedding) =

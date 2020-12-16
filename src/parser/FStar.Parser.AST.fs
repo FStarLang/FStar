@@ -684,7 +684,7 @@ and attr_list_to_string = function
   | l -> attrs_opt_to_string (Some l)
 
 and pat_to_string x = match x.pat with
-  | PatWild (None, attrs) -> "_" ^ (attr_list_to_string attrs)
+  | PatWild (None, attrs) -> attr_list_to_string attrs ^ "_"
   | PatWild (_, attrs) -> "#" ^ (attr_list_to_string attrs) ^ "_" 
   | PatConst c -> C.const_to_string c
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)

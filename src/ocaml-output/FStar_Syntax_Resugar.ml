@@ -48,6 +48,28 @@ let (filter_imp :
         false
     | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta uu___) -> false
     | uu___ -> true
+let filter_imp_args :
+  'uuuuu .
+    ('uuuuu * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) Prims.list ->
+      ('uuuuu * FStar_Syntax_Syntax.arg_qualifier
+        FStar_Pervasives_Native.option) Prims.list
+  =
+  fun args ->
+    FStar_All.pipe_right args
+      (FStar_List.filter
+         (fun arg ->
+            let uu___ = FStar_All.pipe_right arg FStar_Pervasives_Native.snd in
+            FStar_All.pipe_right uu___ filter_imp))
+let (filter_imp_bs :
+  FStar_Syntax_Syntax.binder Prims.list ->
+    FStar_Syntax_Syntax.binder Prims.list)
+  =
+  fun bs ->
+    FStar_All.pipe_right bs
+      (FStar_List.filter
+         (fun b ->
+            FStar_All.pipe_right b.FStar_Syntax_Syntax.binder_qual filter_imp))
 let filter_pattern_imp :
   'uuuuu .
     ('uuuuu * Prims.bool) Prims.list -> ('uuuuu * Prims.bool) Prims.list
@@ -654,15 +676,7 @@ let rec (resugar_term' :
                 | (xs1, body1) ->
                     let xs2 =
                       let uu___4 = FStar_Options.print_implicits () in
-                      if uu___4
-                      then xs1
-                      else
-                        FStar_All.pipe_right xs1
-                          (FStar_List.filter
-                             (fun x ->
-                                FStar_All.pipe_right
-                                  x.FStar_Syntax_Syntax.binder_qual
-                                  filter_imp)) in
+                      if uu___4 then xs1 else filter_imp_bs xs1 in
                     let body2 = resugar_comp' env body1 in
                     let xs3 =
                       let uu___4 =
@@ -752,15 +766,7 @@ let rec (resugar_term' :
                            mk (FStar_Parser_AST.App (acc, x, qual))) e2 args2 in
           let args1 =
             let uu___1 = FStar_Options.print_implicits () in
-            if uu___1
-            then args
-            else
-              FStar_All.pipe_right args
-                (FStar_List.filter
-                   (fun a ->
-                      let uu___3 =
-                        FStar_All.pipe_right a FStar_Pervasives_Native.snd in
-                      FStar_All.pipe_right uu___3 filter_imp)) in
+            if uu___1 then args else filter_imp_args args in
           let uu___1 = resugar_term_as_op e in
           (match uu___1 with
            | FStar_Pervasives_Native.None -> resugar_as_app e args1
@@ -809,15 +815,7 @@ let rec (resugar_term' :
                      | (xs1, body2) ->
                          let xs2 =
                            let uu___6 = FStar_Options.print_implicits () in
-                           if uu___6
-                           then xs1
-                           else
-                             FStar_All.pipe_right xs1
-                               (FStar_List.filter
-                                  (fun x ->
-                                     FStar_All.pipe_right
-                                       x.FStar_Syntax_Syntax.binder_qual
-                                       filter_imp)) in
+                           if uu___6 then xs1 else filter_imp_bs xs1 in
                          let xs3 =
                            FStar_All.pipe_right xs2
                              ((map_opt ())
@@ -981,15 +979,7 @@ let rec (resugar_term' :
                       | (xs1, body2) ->
                           let xs2 =
                             let uu___6 = FStar_Options.print_implicits () in
-                            if uu___6
-                            then xs1
-                            else
-                              FStar_All.pipe_right xs1
-                                (FStar_List.filter
-                                   (fun x ->
-                                      FStar_All.pipe_right
-                                        x.FStar_Syntax_Syntax.binder_qual
-                                        filter_imp)) in
+                            if uu___6 then xs1 else filter_imp_bs xs1 in
                           let xs3 =
                             FStar_All.pipe_right xs2
                               ((map_opt ())
@@ -1246,13 +1236,7 @@ let rec (resugar_term' :
                                          FStar_Options.print_implicits () in
                                        if uu___8
                                        then b1
-                                       else
-                                         FStar_All.pipe_right b1
-                                           (FStar_List.filter
-                                              (fun b3 ->
-                                                 FStar_All.pipe_right
-                                                   b3.FStar_Syntax_Syntax.binder_qual
-                                                   filter_imp)) in
+                                       else filter_imp_bs b1 in
                                      (b2, t2, true))
                             | uu___6 -> ([], def, false) in
                           (match uu___4 with
@@ -2230,14 +2214,7 @@ let (resugar_typ :
              | (current_datacons, other_datacons) ->
                  let bs1 =
                    let uu___3 = FStar_Options.print_implicits () in
-                   if uu___3
-                   then bs
-                   else
-                     FStar_All.pipe_right bs
-                       (FStar_List.filter
-                          (fun b ->
-                             FStar_All.pipe_right
-                               b.FStar_Syntax_Syntax.binder_qual filter_imp)) in
+                   if uu___3 then bs else filter_imp_bs bs in
                  let bs2 =
                    FStar_All.pipe_right bs1
                      ((map_opt ())
@@ -2483,13 +2460,7 @@ let (resugar_eff_decl' :
                        let uu___2 = FStar_Options.print_implicits () in
                        if uu___2
                        then action_params
-                       else
-                         FStar_All.pipe_right action_params
-                           (FStar_List.filter
-                              (fun ap ->
-                                 FStar_All.pipe_right
-                                   ap.FStar_Syntax_Syntax.binder_qual
-                                   filter_imp)) in
+                       else filter_imp_bs action_params in
                      let action_params2 =
                        let uu___2 =
                          FStar_All.pipe_right action_params1
@@ -2552,14 +2523,7 @@ let (resugar_eff_decl' :
           | (eff_binders, eff_typ) ->
               let eff_binders1 =
                 let uu___1 = FStar_Options.print_implicits () in
-                if uu___1
-                then eff_binders
-                else
-                  FStar_All.pipe_right eff_binders
-                    (FStar_List.filter
-                       (fun b ->
-                          FStar_All.pipe_right
-                            b.FStar_Syntax_Syntax.binder_qual filter_imp)) in
+                if uu___1 then eff_binders else filter_imp_bs eff_binders in
               let eff_binders2 =
                 let uu___1 =
                   FStar_All.pipe_right eff_binders1
@@ -2715,14 +2679,7 @@ let (resugar_sigelt' :
            | (bs1, c1) ->
                let bs2 =
                  let uu___1 = FStar_Options.print_implicits () in
-                 if uu___1
-                 then bs1
-                 else
-                   FStar_All.pipe_right bs1
-                     (FStar_List.filter
-                        (fun b ->
-                           FStar_All.pipe_right
-                             b.FStar_Syntax_Syntax.binder_qual filter_imp)) in
+                 if uu___1 then bs1 else filter_imp_bs bs1 in
                let bs3 =
                  FStar_All.pipe_right bs2
                    ((map_opt ())

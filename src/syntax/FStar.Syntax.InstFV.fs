@@ -104,7 +104,7 @@ let rec inst (s:term -> fv -> term) t =
 and inst_binders s bs = bs |> List.map (fun b ->
   { b with
     binder_bv = { b.binder_bv with sort = inst s b.binder_bv.sort };
-    binder_attrs = b.binder_attrs |> List.map (inst s) })  //AR: TODO: may be we don't need to inst attrs?
+    binder_attrs = b.binder_attrs |> List.map (inst s) })
 
 and inst_args s args = args |> List.map (fun (a, imp) -> inst s a, imp)
 

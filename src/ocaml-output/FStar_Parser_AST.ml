@@ -1738,7 +1738,7 @@ and (pat_to_string : pattern -> Prims.string) =
   fun x ->
     match x.pat with
     | PatWild (FStar_Pervasives_Native.None, attrs) ->
-        let uu___ = attr_list_to_string attrs in Prims.op_Hat "_" uu___
+        let uu___ = attr_list_to_string attrs in Prims.op_Hat uu___ "_"
     | PatWild (uu___, attrs) ->
         let uu___1 =
           let uu___2 = attr_list_to_string attrs in Prims.op_Hat uu___2 "_" in
