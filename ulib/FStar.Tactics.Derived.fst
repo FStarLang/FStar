@@ -980,3 +980,11 @@ let name_appears_in (nm:name) (t:term) : Tac bool =
   try ignore (visit_tm ff t); false with
   | Appears -> true
   | e -> raise e
+
+(** [mk_abs [x1; ...; xn] t] returns the term [fun x1 ... xn -> t] *)
+let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
+  match args with
+  | [] -> t
+  | a :: args' ->
+    let t' = mk_abs args' t in
+    pack (Tv_Abs a t')
