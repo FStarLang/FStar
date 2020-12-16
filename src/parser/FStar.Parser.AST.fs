@@ -670,7 +670,7 @@ and binder_to_string x =
   | NoName t -> t |> term_to_string in
   Util.format3 "%s%s%s"
     (aqual_to_string x.aqual)
-    (if x.battributes=[] then "" else attrs_opt_to_string (Some x.battributes))
+    (attr_list_to_string x.battributes)
     s
 
 and aqual_to_string = function

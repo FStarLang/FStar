@@ -31,13 +31,21 @@ let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
+(*
+ * AR: convert an option (aqualifier & attributes)
+ *     to an (option aqualifier & attributes)
+ *)
 let get_aqual_and_attrs aqual_universe_opt =
   match aqual_universe_opt with
     | None -> None, []
     | Some (q, l) -> Some q, l
 
+(*
+ * AR: convert an (option (aqualifier & attributes)) & X
+ *     to an (option aqualifier & attributes) & X from it
+ *)
 let get_aqual_and_attrs_and_X (aqual_universe_opt, x) =
-  (get_aqual_and_attrs aqual_universe_opt), x
+  get_aqual_and_attrs aqual_universe_opt, x
 %}
 %start inputFragment
 %start term
@@ -428,19 +436,19 @@ list_multiBinder_:
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
-nonempty_list_aqualified_lident__:
-  aqualified_lident_
+nonempty_list_aqualifiedWithAttrs_lident__:
+  aqualifiedWithAttrs_lident_
     {let x = $1 in
     ( [ x ] )}
-| aqualified_lident_ nonempty_list_aqualified_lident__
+| aqualifiedWithAttrs_lident_ nonempty_list_aqualifiedWithAttrs_lident__
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
-nonempty_list_aqualified_lidentOrUnderscore__:
-  aqualified_lidentOrUnderscore_
+nonempty_list_aqualifiedWithAttrs_lidentOrUnderscore__:
+  aqualifiedWithAttrs_lidentOrUnderscore_
     {let x = $1 in
     ( [ x ] )}
-| aqualified_lidentOrUnderscore_ nonempty_list_aqualified_lidentOrUnderscore__
+| aqualifiedWithAttrs_lidentOrUnderscore_ nonempty_list_aqualifiedWithAttrs_lidentOrUnderscore__
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
@@ -1029,11 +1037,11 @@ aqual:
     {let _1 = () in
               (  log_issue (lhs parseState) (Warning_DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
                                         Equality, [] )}
-| aqualUniverses
+| aqualAndAttrsUniverses
     {let q = $1 in
-                     ( q )}
+                             ( q )}
 
-aqualUniverses:
+aqualAndAttrsUniverses:
   HASH LBRACK thunk_tmNoEq_ RBRACK
     {let (_1, _2, t, _4) = ((), (), $3, ()) in
                                        ( mk_meta_tac t, [] )}
@@ -1116,10 +1124,10 @@ let op =     ( mk_ident (op, rhs parseState 1) ) in
 | constant
     {let c = $1 in
       ( mk_pattern (PatConst c) (rhs parseState 1) )}
-| aqualified_lident_
+| aqualifiedWithAttrs_lident_
     {let qual_id = $1 in
     (
-      let (aqual, attrs), lid = get_aqual_and_attrs_and_X qual_id in
+      let (aqual, attrs), lid = qual_id in
       mk_pattern (PatVar (lid, aqual, attrs)) (rhs parseState 1) )}
 | quident
     {let uid = $1 in
@@ -1162,21 +1170,20 @@ patternOrMultibinder:
 | atomicPattern
     {let pat = $1 in
                       ( [pat] )}
-| LPAREN aqualified_lident_ nonempty_list_aqualified_lident__ COLON simpleArrow refineOpt RPAREN
+| LPAREN aqualifiedWithAttrs_lident_ nonempty_list_aqualifiedWithAttrs_lident__ COLON simpleArrow refineOpt RPAREN
     {let (_1, qual_id0, qual_ids, _4, t, r, _7) = ((), $2, $3, (), $5, $6, ()) in
       (
         let pos = rhs2 parseState 1 7 in
         let t_pos = rhs parseState 5 in
         let qual_ids = qual_id0 :: qual_ids in
-        let qual_ids = qual_ids |> List.map get_aqual_and_attrs_and_X in
         List.map (fun ((aq, attrs), x) -> mkRefinedPattern (mk_pattern (PatVar (x, aq, attrs)) pos) t false r t_pos pos) qual_ids
       )}
 
 binder:
-  aqualified_lidentOrUnderscore_
-    {let aqualified_lid = $1 in
+  aqualifiedWithAttrs_lidentOrUnderscore_
+    {let aqualifiedWithAttrs_lid = $1 in
      (
-       let (q, attrs), lid = get_aqual_and_attrs_and_X aqualified_lid in
+       let (q, attrs), lid = aqualifiedWithAttrs_lid in
        mk_binder_with_attrs (Variable lid) (rhs parseState 1) Type_level q attrs
      )}
 | tvar
@@ -1197,12 +1204,11 @@ multiBinder:
         let id = gen r in
         [mk_binder (Annotated (id, t)) r Type_level (Some (mk_meta_tac mt))]
       )}
-| LPAREN nonempty_list_aqualified_lidentOrUnderscore__ COLON simpleArrow refineOpt RPAREN
+| LPAREN nonempty_list_aqualifiedWithAttrs_lidentOrUnderscore__ COLON simpleArrow refineOpt RPAREN
     {let (_1, qual_ids, _3, t, r, _6) = ((), $2, (), $4, $5, ()) in
      (
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
-       List.map (fun x ->
-         let (q, attrs), x = get_aqual_and_attrs_and_X x in
+       List.map (fun ((q, attrs), x) ->
          mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q attrs) qual_ids
      )}
 
@@ -1211,37 +1217,37 @@ binders:
     {let bss = $1 in
                                                         ( flatten bss )}
 
-aqualified_lident_:
+aqualifiedWithAttrs_lident_:
   lident
     {let y = $1 in
 let x =
   let x =     ( None ) in
       ( (x, y) )
 in
-                                                  ( x )}
-| aqualUniverses lident
+                                                                   ( get_aqual_and_attrs_and_X x )}
+| aqualAndAttrsUniverses lident
     {let (x, y) = ($1, $2) in
 let x =
   let x =     ( Some x ) in
       ( (x, y) )
 in
-                                                  ( x )}
+                                                                   ( get_aqual_and_attrs_and_X x )}
 
-aqualified_lidentOrUnderscore_:
+aqualifiedWithAttrs_lidentOrUnderscore_:
   lidentOrUnderscore
     {let y = $1 in
 let x =
   let x =     ( None ) in
       ( (x, y) )
 in
-                                                  ( x )}
-| aqualUniverses lidentOrUnderscore
+                                                                   ( get_aqual_and_attrs_and_X x )}
+| aqualAndAttrsUniverses lidentOrUnderscore
     {let (x, y) = ($1, $2) in
 let x =
   let x =     ( Some x ) in
       ( (x, y) )
 in
-                                                  ( x )}
+                                                                   ( get_aqual_and_attrs_and_X x )}
 
 qlident:
   path_lident_
@@ -1776,13 +1782,11 @@ simpleArrowDomain:
 | tmEqNoRefinement
     {let dom_tm = $1 in
 let aq_opt =     ( None ) in
-    (
-      (get_aqual_and_attrs aq_opt), dom_tm )}
+                                                  ( get_aqual_and_attrs aq_opt, dom_tm )}
 | aqual tmEqNoRefinement
     {let (x, dom_tm) = ($1, $2) in
 let aq_opt =     ( Some x ) in
-    (
-      (get_aqual_and_attrs aq_opt), dom_tm )}
+                                                  ( get_aqual_and_attrs aq_opt, dom_tm )}
 
 tmFormula:
   tmFormula DISJUNCTION tmConjunction
@@ -2569,5 +2573,4 @@ in
    ( x :: xs )}
 
 %%
-
 
