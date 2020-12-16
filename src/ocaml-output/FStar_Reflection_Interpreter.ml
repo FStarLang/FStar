@@ -489,14 +489,22 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                       FStar_Reflection_NBEEmbeddings.e_binder_view in
                                   let uu___33 =
                                     let uu___34 =
-                                      mk2 "pack_binder"
+                                      let uu___35 =
+                                        FStar_Syntax_Embeddings.e_list
+                                          FStar_Reflection_Embeddings.e_term in
+                                      let uu___36 =
+                                        FStar_TypeChecker_NBETerm.e_list
+                                          FStar_Reflection_NBEEmbeddings.e_term in
+                                      mk3 "pack_binder"
                                         FStar_Reflection_Basic.pack_binder
                                         FStar_Reflection_Embeddings.e_bv
                                         FStar_Reflection_Embeddings.e_aqualv
+                                        uu___35
                                         FStar_Reflection_Embeddings.e_binder
                                         FStar_Reflection_Basic.pack_binder
                                         FStar_Reflection_NBEEmbeddings.e_bv
                                         FStar_Reflection_NBEEmbeddings.e_aqualv
+                                        uu___36
                                         FStar_Reflection_NBEEmbeddings.e_binder in
                                     let uu___35 =
                                       let uu___36 =

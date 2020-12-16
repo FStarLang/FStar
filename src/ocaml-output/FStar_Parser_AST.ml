@@ -1717,10 +1717,7 @@ and (binder_to_string : binder -> Prims.string) =
           FStar_Util.format2 "%s:%s" uu___ uu___1
       | NoName t -> FStar_All.pipe_right t term_to_string in
     let uu___ = aqual_to_string x.aqual in
-    let uu___1 =
-      if x.battributes = []
-      then ""
-      else attrs_opt_to_string (FStar_Pervasives_Native.Some (x.battributes)) in
+    let uu___1 = attr_list_to_string x.battributes in
     FStar_Util.format3 "%s%s%s" uu___ uu___1 s
 and (aqual_to_string :
   arg_qualifier FStar_Pervasives_Native.option -> Prims.string) =

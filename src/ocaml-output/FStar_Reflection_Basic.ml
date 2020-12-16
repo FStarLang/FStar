@@ -27,7 +27,6 @@ let (pack_aqual : FStar_Reflection_Data.aqualv -> FStar_Syntax_Syntax.aqual)
         FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit false)
     | FStar_Reflection_Data.Q_Meta t ->
         FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta t)
-    | FStar_Reflection_Data.Q_Meta_attr t -> FStar_Pervasives_Native.None
 let (inspect_fv : FStar_Syntax_Syntax.fv -> Prims.string Prims.list) =
   fun fv ->
     let uu___ = FStar_Syntax_Syntax.lid_of_fv fv in
@@ -864,23 +863,28 @@ let (pack_bv : FStar_Reflection_Data.bv_view -> FStar_Syntax_Syntax.bv) =
     }
 let (inspect_binder :
   FStar_Syntax_Syntax.binder ->
-    (FStar_Syntax_Syntax.bv * FStar_Reflection_Data.aqualv))
+    (FStar_Syntax_Syntax.bv * (FStar_Reflection_Data.aqualv *
+      FStar_Syntax_Syntax.term Prims.list)))
   =
   fun b ->
-    let uu___ = inspect_aqual b.FStar_Syntax_Syntax.binder_qual in
+    let uu___ =
+      let uu___1 = inspect_aqual b.FStar_Syntax_Syntax.binder_qual in
+      (uu___1, (b.FStar_Syntax_Syntax.binder_attrs)) in
     ((b.FStar_Syntax_Syntax.binder_bv), uu___)
 let (pack_binder :
   FStar_Syntax_Syntax.bv ->
-    FStar_Reflection_Data.aqualv -> FStar_Syntax_Syntax.binder)
+    FStar_Reflection_Data.aqualv ->
+      FStar_Syntax_Syntax.term Prims.list -> FStar_Syntax_Syntax.binder)
   =
   fun bv ->
     fun aqv ->
-      let uu___ = pack_aqual aqv in
-      {
-        FStar_Syntax_Syntax.binder_bv = bv;
-        FStar_Syntax_Syntax.binder_qual = uu___;
-        FStar_Syntax_Syntax.binder_attrs = []
-      }
+      fun attrs ->
+        let uu___ = pack_aqual aqv in
+        {
+          FStar_Syntax_Syntax.binder_bv = bv;
+          FStar_Syntax_Syntax.binder_qual = uu___;
+          FStar_Syntax_Syntax.binder_attrs = attrs
+        }
 let (moduleof : FStar_TypeChecker_Env.env -> Prims.string Prims.list) =
   fun e -> FStar_Ident.path_of_lid e.FStar_TypeChecker_Env.curmodule
 let (env_open_modules :

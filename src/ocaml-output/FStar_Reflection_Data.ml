@@ -304,7 +304,8 @@ let (__proj__Mkbv_view__item__bv_index : bv_view -> FStar_BigInt.t) =
 let (__proj__Mkbv_view__item__bv_sort : bv_view -> typ) =
   fun projectee ->
     match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_sort
-type binder_view = (FStar_Syntax_Syntax.bv * aqualv)
+type binder_view =
+  (FStar_Syntax_Syntax.bv * (aqualv * FStar_Syntax_Syntax.term Prims.list))
 type comp_view =
   | C_Total of (typ * FStar_Syntax_Syntax.term
   FStar_Pervasives_Native.option) 
