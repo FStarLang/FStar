@@ -373,7 +373,11 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       //before inspecting any syntactic form that has binding structure
       //you must call SS.open_* to replace de Bruijn indexes with names
       let xs, body = SS.open_term xs body in
-      let xs = if Options.print_implicits () then xs else filter_imp xs in
+      let xs = if Options.print_implicits () then xs else (
+          match filter_imp xs with
+          | [] -> xs // if the abstraction has only implicit arguments, print them anyway
+          | xs -> xs
+        ) in
       let body_bv = FStar.Syntax.Free.names body in
       let patterns = xs |> List.choose (fun (x, qual) ->
         //x.sort contains a type annotation for the bound variable
@@ -997,7 +1001,13 @@ and resugar_binder' env (b:S.binder) r : option<A.binder> =
       if S.is_null_bv x then
         A.mk_binder (A.NoName e) r A.Type_level imp
       else
-        A.mk_binder (A.Annotated (bv_as_unique_ident x, e)) r A.Type_level imp
+        A.mk_binder (A.Annotated (bv_as_unique_ident x, 
+          ( match e with // Detect nested annotations 
+          | Mkterm (A.Refine (Mkbinder (Annotated _) _ _ _,t)) pos l
+            -> mk_term (A.Paren e) pos l // wrap into `Paren` node
+          | _ -> e
+          )
+        )) r A.Type_level imp
   end
 
 and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: BU.set<bv>) typ_opt =
