@@ -78,7 +78,6 @@ let pack_aqual (aqv : aqualv) : aqual =
     | Data.Q_Explicit -> None
     | Data.Q_Implicit -> Some (Implicit false)
     | Data.Q_Meta t   -> Some (Meta t)
-    | Data.Q_Meta_attr t   -> None //TODO: AR: FIXME: Some (Meta (Arg_qualifier_meta_attr t))
 
 let inspect_fv (fv:fv) : list<string> =
     Ident.path_of_lid (lid_of_fv fv)
@@ -595,11 +594,11 @@ let pack_bv (bvv:bv_view) : bv =
       sort = bvv.bv_sort;
     }
 
-let inspect_binder (b:binder) : bv * aqualv =
-    b.binder_bv, inspect_aqual (b.binder_qual)
+let inspect_binder (b:binder) : bv * (aqualv * list<term>) =
+    b.binder_bv, (inspect_aqual (b.binder_qual), b.binder_attrs)
 
-let pack_binder (bv:bv) (aqv:aqualv) : binder =
-    { binder_bv=bv; binder_qual=pack_aqual aqv; binder_attrs=[] }  //TODO: AR: should take attrs too
+let pack_binder (bv:bv) (aqv:aqualv) (attrs:list<term>) : binder =
+    { binder_bv=bv; binder_qual=pack_aqual aqv; binder_attrs=attrs }
 
 open FStar.TypeChecker.Env
 let moduleof (e : Env.env) : list<string> =

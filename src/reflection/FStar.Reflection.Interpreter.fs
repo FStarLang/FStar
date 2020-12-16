@@ -170,8 +170,8 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "inspect_binder"        inspect_binder        E.e_binder          E.e_binder_view
                                 inspect_binder        NRE.e_binder        NRE.e_binder_view;
 
-    mk2 "pack_binder"           pack_binder           E.e_bv              E.e_aqualv         E.e_binder
-                                pack_binder           NRE.e_bv            NRE.e_aqualv       NRE.e_binder;
+    mk3 "pack_binder"           pack_binder           E.e_bv              E.e_aqualv         (e_list E.e_term)          E.e_binder
+                                pack_binder           NRE.e_bv            NRE.e_aqualv       (NBET.e_list NRE.e_term)   NRE.e_binder;
 
     mk3 "subst"                 subst                 E.e_bv              E.e_term           E.e_term           E.e_term
                                 subst                 NRE.e_bv            NRE.e_term         NRE.e_term         NRE.e_term;

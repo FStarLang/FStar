@@ -86,13 +86,13 @@ let abv_to_string bv : Tot string =
   term_to_string bvv.bv_sort
 
 let print_binder_info (full : bool) (b : binder) : Tac unit =
-  let bv, a = inspect_binder b in
+  let bv, (a, _attrs) = inspect_binder b in
   let a_str = match a with
     | Q_Implicit -> "Implicit"
     | Q_Explicit -> "Explicit"
     | Q_Meta t -> "Meta: " ^ term_to_string t
-    | Q_Meta_attr t -> "Meta attribute: " ^ term_to_string t
   in
+  
   let bview = inspect_bv bv in
   if full then
     print (
@@ -396,7 +396,6 @@ let norm_apply_subst_in_comp e c subst =
     | Q_Implicit
     | Q_Explicit -> a
     | Q_Meta t -> Q_Meta (subst t)
-    | Q_Meta_attr t -> Q_Meta_attr (subst t)
   in
   match inspect_comp c with
   | C_Total ret decr ->
@@ -502,10 +501,13 @@ and deep_apply_subst_in_bv e bv subst =
   let bv' = Tactics.fresh_bv_named bvv.bv_ppname ty in
   bv', (bv, pack (Tv_Var bv'))::subst
 
+(*
+ * AR: TODO: should apply subst in attrs?
+ *)
 and deep_apply_subst_in_binder e br subst =
-  let bv, qual = inspect_binder br in
+  let bv, (qual, attrs) = inspect_binder br in
   let bv, subst = deep_apply_subst_in_bv e bv subst in
-  pack_binder bv qual, subst 
+  pack_binder bv qual attrs, subst 
 
 and deep_apply_subst_in_comp e c subst =
   let subst = (fun x -> deep_apply_subst e x subst) in
@@ -514,7 +516,6 @@ and deep_apply_subst_in_comp e c subst =
     | Q_Implicit
     | Q_Explicit -> a
     | Q_Meta t -> Q_Meta (subst t)
-    | Q_Meta_attr t -> Q_Meta_attr (subst t)
   in
   match inspect_comp c with
   | C_Total ret decr ->

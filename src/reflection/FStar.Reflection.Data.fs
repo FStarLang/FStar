@@ -94,7 +94,7 @@ type bv_view = {
     bv_sort : typ;
 }
 
-type binder_view = bv * aqualv
+type binder_view = bv * (aqualv * list<term>)
 
 type comp_view =
     | C_Total of typ * option<term>  //optional decreases clause
