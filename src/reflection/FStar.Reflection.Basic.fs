@@ -539,8 +539,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
 
     | Sig_declare_typ (lid, us, ty) ->
         let nm = Ident.path_of_lid lid in
-        let s, us = SS.univ_var_opening us in
-        let ty = SS.subst s ty in
+        let us, ty = SS.open_univ_vars us ty in
         Sg_Val (nm, us, ty)
 
     | _ ->
@@ -586,8 +585,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
 
     | Sg_Val (nm, us_names, ty) ->
         let val_lid = Ident.lid_of_path nm Range.dummyRange in
-        let s = SS.univ_var_closing us_names in
-        let typ = SS.subst s ty in
+        let typ = SS.close_univ_vars us_names ty in
         mk_sigelt <| Sig_declare_typ (val_lid, us_names, typ)
 
     | Unk ->
