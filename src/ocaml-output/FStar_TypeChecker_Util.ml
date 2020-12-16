@@ -4698,40 +4698,40 @@ let (maybe_instantiate :
                             FStar_Syntax_Syntax.binder_qual =
                               FStar_Pervasives_Native.Some
                               (FStar_Syntax_Syntax.Implicit uu___4);
-                            FStar_Syntax_Syntax.binder_attrs = uu___5;_}::rest)
+                            FStar_Syntax_Syntax.binder_attrs = [];_}::rest)
                            ->
                            let t2 =
                              FStar_Syntax_Subst.subst subst
                                x.FStar_Syntax_Syntax.sort in
-                           let uu___6 =
+                           let uu___5 =
                              new_implicit_var
                                "Instantiation of implicit argument"
                                e.FStar_Syntax_Syntax.pos env t2 in
-                           (match uu___6 with
-                            | (v, uu___7, g) ->
-                                ((let uu___9 =
+                           (match uu___5 with
+                            | (v, uu___6, g) ->
+                                ((let uu___8 =
                                     FStar_TypeChecker_Env.debug env
                                       FStar_Options.High in
-                                  if uu___9
+                                  if uu___8
                                   then
-                                    let uu___10 =
+                                    let uu___9 =
                                       FStar_Syntax_Print.term_to_string v in
                                     FStar_Util.print1
                                       "maybe_instantiate: Instantiating implicit with %s\n"
-                                      uu___10
+                                      uu___9
                                   else ());
                                  (let subst1 =
                                     (FStar_Syntax_Syntax.NT (x, v)) :: subst in
-                                  let uu___9 =
+                                  let uu___8 =
                                     aux subst1 (decr_inst inst_n) rest in
-                                  match uu___9 with
+                                  match uu___8 with
                                   | (args, bs3, subst2, g') ->
-                                      let uu___10 =
+                                      let uu___9 =
                                         FStar_TypeChecker_Env.conj_guard g g' in
                                       (((v,
                                           (FStar_Pervasives_Native.Some
                                              FStar_Syntax_Syntax.imp_tag)) ::
-                                        args), bs3, subst2, uu___10))))
+                                        args), bs3, subst2, uu___9))))
                        | (uu___3,
                           { FStar_Syntax_Syntax.binder_bv = x;
                             FStar_Syntax_Syntax.binder_qual = qual;

@@ -5735,63 +5735,63 @@ and (check_application_args :
                            FStar_Syntax_Syntax.binder_qual =
                              FStar_Pervasives_Native.Some
                              (FStar_Syntax_Syntax.Implicit uu___2);
-                           FStar_Syntax_Syntax.binder_attrs = uu___3;_}::rest,
-                         (uu___4, FStar_Pervasives_Native.None)::uu___5) ->
+                           FStar_Syntax_Syntax.binder_attrs = [];_}::rest,
+                         (uu___3, FStar_Pervasives_Native.None)::uu___4) ->
                           let t =
                             FStar_Syntax_Subst.subst subst
                               x.FStar_Syntax_Syntax.sort in
-                          let uu___6 =
+                          let uu___5 =
                             check_no_escape
                               (FStar_Pervasives_Native.Some head) env fvs t in
-                          (match uu___6 with
+                          (match uu___5 with
                            | (t1, g_ex) ->
                                let r1 =
                                  match outargs with
                                  | [] -> head.FStar_Syntax_Syntax.pos
-                                 | ((t2, uu___7), uu___8, uu___9)::uu___10 ->
-                                     let uu___11 =
+                                 | ((t2, uu___6), uu___7, uu___8)::uu___9 ->
+                                     let uu___10 =
                                        FStar_Range.def_range
                                          head.FStar_Syntax_Syntax.pos in
-                                     let uu___12 =
-                                       let uu___13 =
+                                     let uu___11 =
+                                       let uu___12 =
                                          FStar_Range.use_range
                                            head.FStar_Syntax_Syntax.pos in
-                                       let uu___14 =
+                                       let uu___13 =
                                          FStar_Range.use_range
                                            t2.FStar_Syntax_Syntax.pos in
-                                       FStar_Range.union_rng uu___13 uu___14 in
-                                     FStar_Range.range_of_rng uu___11 uu___12 in
-                               let uu___7 =
+                                       FStar_Range.union_rng uu___12 uu___13 in
+                                     FStar_Range.range_of_rng uu___10 uu___11 in
+                               let uu___6 =
                                  FStar_TypeChecker_Util.new_implicit_var
                                    "Instantiating implicit argument in application"
                                    r1 env t1 in
-                               (match uu___7 with
-                                | (varg, uu___8, implicits) ->
+                               (match uu___6 with
+                                | (varg, uu___7, implicits) ->
                                     let subst1 =
                                       (FStar_Syntax_Syntax.NT (x, varg)) ::
                                       subst in
                                     let arg =
-                                      let uu___9 =
+                                      let uu___8 =
                                         FStar_Syntax_Syntax.as_implicit true in
-                                      (varg, uu___9) in
+                                      (varg, uu___8) in
                                     let guard =
                                       FStar_List.fold_right
                                         FStar_TypeChecker_Env.conj_guard
                                         [g_ex; g] implicits in
-                                    let uu___9 =
-                                      let uu___10 =
-                                        let uu___11 =
-                                          let uu___12 =
-                                            let uu___13 =
+                                    let uu___8 =
+                                      let uu___9 =
+                                        let uu___10 =
+                                          let uu___11 =
+                                            let uu___12 =
                                               FStar_Syntax_Syntax.mk_Total t1 in
-                                            FStar_All.pipe_right uu___13
+                                            FStar_All.pipe_right uu___12
                                               FStar_TypeChecker_Common.lcomp_of_comp in
                                           (arg, FStar_Pervasives_Native.None,
-                                            uu___12) in
-                                        uu___11 :: outargs in
-                                      (subst1, uu___10, (arg :: arg_rets),
+                                            uu___11) in
+                                        uu___10 :: outargs in
+                                      (subst1, uu___9, (arg :: arg_rets),
                                         guard, fvs) in
-                                    tc_args head_info uu___9 rest args1))
+                                    tc_args head_info uu___8 rest args1))
                       | ({ FStar_Syntax_Syntax.binder_bv = x;
                            FStar_Syntax_Syntax.binder_qual = qual;
                            FStar_Syntax_Syntax.binder_attrs = attrs;_}::rest,
