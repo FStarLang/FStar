@@ -1057,20 +1057,29 @@ let (guard_letrecs :
                           -> dec
                       | uu___3 -> mk_lex_list [dec]) in
                let cflags = FStar_Syntax_Util.comp_flags c in
-               let uu___1 =
-                 FStar_All.pipe_right cflags
-                   (FStar_List.tryFind
-                      (fun uu___2 ->
-                         match uu___2 with
-                         | FStar_Syntax_Syntax.DECREASES uu___3 -> true
-                         | uu___3 -> false)) in
-               match uu___1 with
-               | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES
-                   dec) -> as_lex_list dec
-               | uu___2 ->
-                   let xs =
-                     FStar_All.pipe_right bs filter_types_and_functions in
-                   mk_lex_list xs) in
+               let res =
+                 let uu___1 =
+                   FStar_All.pipe_right cflags
+                     (FStar_List.tryFind
+                        (fun uu___2 ->
+                           match uu___2 with
+                           | FStar_Syntax_Syntax.DECREASES uu___3 -> true
+                           | uu___3 -> false)) in
+                 match uu___1 with
+                 | FStar_Pervasives_Native.Some
+                     (FStar_Syntax_Syntax.DECREASES dec) -> as_lex_list dec
+                 | uu___2 ->
+                     let xs =
+                       FStar_All.pipe_right bs filter_types_and_functions in
+                     mk_lex_list xs in
+               (let uu___2 =
+                  FStar_TypeChecker_Env.debug env1 FStar_Options.Low in
+                if uu___2
+                then
+                  let uu___3 = FStar_Syntax_Print.term_to_string res in
+                  FStar_Util.print1 "Building a decreases = %s\n" uu___3
+                else ());
+               res) in
             let previous_dec = decreases_clause actuals expected_c in
             let guard_one_letrec uu___ =
               match uu___ with
@@ -3329,6 +3338,13 @@ and (tc_value :
                               FStar_TypeChecker_Common.lcomp_of_comp uu___6 in
                           FStar_Util.Inr uu___5) in
                      value_check_expected_typ env1 e2 tc implicits)))
+      | FStar_Syntax_Syntax.Tm_fvar fv when
+          (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.lex_t_lid) ||
+            (FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.lextop_lid)
+          ->
+          let uu___ =
+            FStar_Syntax_Syntax.mk_Tm_uinst top [FStar_Syntax_Syntax.U_zero] in
+          tc_value env1 uu___
       | FStar_Syntax_Syntax.Tm_uinst
           ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
              FStar_Syntax_Syntax.pos = uu___;
