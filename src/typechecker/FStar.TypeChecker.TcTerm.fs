@@ -1945,7 +1945,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                      bs       (* formal parameters *)
                      args     (* remaining actual arguments *) : (term * lcomp * guard_t) =
         match bs, args with
-        | ({binder_bv=x;binder_qual=Some (Implicit _)})::rest, (_, None)::_ -> (* instantiate an implicit arg *)
+        | ({binder_bv=x;binder_qual=Some (Implicit _);binder_attrs=[]})::rest, (_, None)::_ -> (* instantiate an implicit arg *)
             let t = SS.subst subst x.sort in
             let t, g_ex = check_no_escape (Some head) env fvs t in
             (* We compute a range by combining the range of the head

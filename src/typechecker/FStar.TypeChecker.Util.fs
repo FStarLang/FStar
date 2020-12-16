@@ -2138,7 +2138,7 @@ let maybe_instantiate (env:Env.env) e t =
               let rec aux subst inst_n bs =
                   match inst_n, bs with
                   | Some 0, _ -> [], bs, subst, Env.trivial_guard //no more instantiations to do
-                  | _, ({binder_bv=x; binder_qual=Some (Implicit _)})::rest ->
+                  | _, ({binder_bv=x; binder_qual=Some (Implicit _);binder_attrs=[]})::rest ->
                       let t = SS.subst subst x.sort in
                       let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
                       if Env.debug env Options.High then
