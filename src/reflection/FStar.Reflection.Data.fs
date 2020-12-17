@@ -41,7 +41,6 @@ type aqualv =
     | Q_Implicit
     | Q_Explicit
     | Q_Meta of term
-    | Q_Meta_attr of term
 
 type argv = term * aqualv
 
