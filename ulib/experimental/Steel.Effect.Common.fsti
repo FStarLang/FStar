@@ -6,6 +6,7 @@ open Steel.Semantics.Instantiate
 
 irreducible let framing_implicit : unit = ()
 irreducible let __reduce__ = ()
+irreducible let smt_fallback : unit = ()
 
 let return_pre (p:slprop u#1) : slprop u#1 = p
 let return_post (#a:Type) (p:a -> slprop u#1) : a -> slprop u#1 = p
@@ -241,14 +242,85 @@ let rec try_unifying_remaining (l:list atom) (u:term) (am:amap term) : Tac unit 
       | Success -> try_unifying_remaining tl u am
       | _ -> fail ("could not find candidate for scrutinee " ^ term_to_string (select hd am))
 
-(* Recursively calls equivalent_lists_once.
-   Stops when we're done with unification, or when we didn't make any progress
-   If we didn't make any progress, we have too many candidates for some terms.
-   Accumulates rewritings of l1 and l2 in l1_del and l2_del, with the invariant
-   that the two lists are unifiable at any point
-   The boolean indicates if there is a leftover empty frame
-   *)
-let rec equivalent_lists' (n:nat) (l1 l2 l1_del l2_del:list atom) (am:amap term)
+let rec print_atoms (l:list atom) (am:amap term) : Tac string =
+  match l with
+  | [] -> ""
+  | [hd] -> term_to_string (select hd am)
+  | hd::tl -> term_to_string (select hd am) ^ " * " ^ print_atoms tl am
+
+let is_smt_binder (b:binder) : Tac bool =
+  let (bv, aqual) = inspect_binder b in
+  match aqual with
+  | Q_Meta_attr t -> term_eq t (`smt_fallback)
+  | _ -> false
+
+let rec new_args_for_smt_attrs (env:env) (l:list argv) (ty:typ) : Tac (list argv * list term) =
+  match l, inspect ty with
+  | (arg, aqualv)::tl, Tv_Arrow binder comp ->
+    let needs_smt = is_smt_binder binder in
+    let new_hd =
+      if needs_smt then (
+        dump "cur";
+        let arg_ty = tc env arg in
+        let uvar = fresh_uvar (Some arg_ty) in
+        unshelve uvar;
+        flip ();
+        (uvar, aqualv)
+      ) else (arg, aqualv)
+    in
+    begin
+    match inspect_comp comp with
+    | C_Total ty2 _ ->
+      let tl_argv, tl_terms = new_args_for_smt_attrs env tl ty2 in
+      new_hd::tl_argv, (if needs_smt then arg::tl_terms else tl_terms)
+    | _ -> fail "computation type not supported in definition of slprops"
+    end
+  | [], Tv_FVar fv -> [], []
+  | _ -> fail "should not happen. Is an slprop partially applied?"
+
+
+// let rec new_term_for_attributes (t:term) (ty:typ) : Tac term =
+//   match inspect t, inspect ty with
+//   | Tv_App hd (a_term, a_qual), Tv_Arrow binder comp -> begin
+//     match inspect_comp comp with
+//     | C_Total ty2 _ ->
+//         let tl = new_term_for_attributes
+//         (if is_smt_binder binder then let uvar = fresh_uvar ()
+//     dump ("term is " ^ term_to_string t);
+//     begin
+//     match inspect_ln ty with
+//     | Tv_Arrow binder comp -> begin
+//       match inspect_comp comp with
+//       | C_Total ty2 _ -> (if is_smt_binder binder then "yes " else "no ") ^ check_type_for_attributes ty2
+//     | _ -> fail "computation type not supported"
+//     end
+//   | Tv_FVar fv -> implode_qn (inspect_fv fv)
+//   | _ -> fail "expected an arrow type"
+
+
+let rewrite_term_for_smt (env:env) (am:amap term * list term) (a:atom) : Tac (amap term * list term)
+  = let am, prev_uvar_terms = am in
+    let term = select a am in
+    let hd, args = collect_app term in
+    let t = tc env hd in
+    let new_args, uvar_terms = new_args_for_smt_attrs env args t in
+    let new_term = mk_app hd new_args in
+    update a new_term am, uvar_terms@prev_uvar_terms
+
+    // fail (term_to_string new_term);
+
+    // fail ("should not have reached this")//check_type_for_attributes t)
+
+    // match lookup_typ env (explode_qn (term_to_string hd)) with
+    // | None -> fail "could not find this slprop, should not happen (or uvar?)"
+    // | Some ty ->
+    //   match inspect_sigelt ty with
+    //   | Sg_Let _ _ _ _ _ -> fail "this is a let"
+    //   | Sg_Inductive _ _ _ _ _ -> fail "this is an inductive"
+    //   | Sg_Val nm _ ty -> fail (check_type_for_attributes ty)
+    //   | Unk -> fail "unknown"
+
+let rec equivalent_lists_fallback (n:nat) (l1 l2 l1_del l2_del:list atom) (am:amap term)
   : Tac (list atom * list atom * bool) =
   match l1 with
   | [] -> begin match l2 with
@@ -276,7 +348,63 @@ let rec equivalent_lists' (n:nat) (l1 l2 l1_del l2_del:list atom) (am:amap term)
       if n' >= n then
         // Should always be smaller or equal to n
         // If it is equal, no progress was made.
-        fail ("could not find candidate for scrutinee " ^ term_to_string (get_head rem2 am))
+        fail ("could not find a solution for unifying\n" ^ print_atoms rem1 am ^ "\nand\n" ^ print_atoms rem2 am)
+//        fail ("could not find candidate for this scrutinee " ^ term_to_string (get_head rem2 am))
+      else equivalent_lists_fallback n' rem1 rem2 l1_del' l2_del' am
+
+let replace_smt_uvars (l1 l2:list atom) (am:amap term) : Tac (amap term * list term)
+  = let env = cur_env () in
+    fold_left (rewrite_term_for_smt env) (am, []) l2
+    // dump (print_atoms l2 am);
+    // dump (print_atoms l1 am);
+    // fail "debug smt fallback"
+
+    // match l1 with
+    // | [] -> fail "empty fallback"
+    // | hd::tl -> try_smt_fallback_once hd am env;
+    // fail "debug smt fallback";
+    // l1, l2
+
+(* Recursively calls equivalent_lists_once.
+   Stops when we're done with unification, or when we didn't make any progress
+   If we didn't make any progress, we have too many candidates for some terms.
+   Accumulates rewritings of l1 and l2 in l1_del and l2_del, with the invariant
+   that the two lists are unifiable at any point
+   The boolean indicates if there is a leftover empty frame
+   *)
+let rec equivalent_lists' (n:nat) (l1 l2 l1_del l2_del:list atom) (am:amap term)
+  : Tac (list atom * list atom * bool * list term) =
+  match l1 with
+  | [] -> begin match l2 with
+    | [] -> (l1_del, l2_del, false, [])
+    | [hd] ->
+      // Succeed if there is only one uvar left in l2, which can be therefore
+      // be unified with emp
+      if is_uvar (select hd am) then (
+        // xsdenote is left associative: We put hd at the top to get
+        // ?u `star` p <==> emp `star` p
+        (l1_del, hd :: l2_del, true, []))
+      else fail ("could not find candidates for " ^ term_to_string (get_head l2 am))
+    | _ -> fail ("could not find candidates for " ^ term_to_string (get_head l2 am))
+    end
+  | _ ->
+    if is_only_uvar l2 am then (
+      // Terms left in l1, but only a uvar left in l2.
+      // Put all terms left at the end of l1_rem, so that they can be unified
+      // with exactly the uvar because of the structure of xsdenote
+      try_unifying_remaining l1 (get_head l2 am) am;
+      l1_del @ l1, l2_del @ l2, false, []
+    ) else
+      let rem1, rem2, l1_del', l2_del' = equivalent_lists_once l1 l2 l1_del l2_del am in
+      let n' = List.Tot.length rem1 in
+      if n' >= n then
+        // Should always be smaller or equal to n
+        // If it is equal, no progress was made.
+        let new_am, uvar_terms  = replace_smt_uvars rem1 rem2 am in
+        let l1_f, l2_f, b = equivalent_lists_fallback n' rem1 rem2 l1_del' l2_del' new_am in
+        l1_f, l2_f, b, uvar_terms
+//        fail ("could not find a solution for unifying\n" ^ print_atoms rem1 am ^ "\nand\n" ^ print_atoms rem2 am)
+//        fail ("could not find candidate for this scrutinee " ^ term_to_string (get_head rem2 am))
       else equivalent_lists' n' rem1 rem2 l1_del' l2_del' am
 
 (* Checks if term for atom t unifies with fall uvars in l *)
@@ -308,12 +436,13 @@ let rec most_restricted_at_top (l1 l2:list atom) (am:amap term) : Tac (list atom
    If it succeeds, returns permutations of l1, l2, and a boolean indicating
    if l2 has a trailing empty frame to be unified
 *)
-let equivalent_lists (l1 l2:list atom) (am:amap term) : Tac (list atom * list atom * bool) =
-  let l1, l2, l1_del, l2_del = trivial_cancels l1 l2 am in
+let equivalent_lists (l1 l2:list atom) (am:amap term)
+  : Tac (list atom * list atom * bool * list term)
+= let l1, l2, l1_del, l2_del = trivial_cancels l1 l2 am in
   let l1 = most_restricted_at_top l1 l2 am in
   let n = List.Tot.length l1 in
-  let l1_del, l2_del, emp_frame = equivalent_lists' n l1 l2 l1_del l2_del am in
-  l1_del, l2_del, emp_frame
+  let l1_del, l2_del, emp_frame, uvar_terms = equivalent_lists' n l1 l2 l1_del l2_del am in
+  l1_del, l2_del, emp_frame, uvar_terms
 
 open FStar.Reflection.Derived.Lemmas
 
@@ -646,6 +775,18 @@ let rec sort_correct_aux (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (xs:list
 
 #push-options "--fuel 0 --ifuel 0"
 
+let smt_reflexivity (#a:Type) (eq:equiv a) (x y:a)
+  : Lemma (requires x == y)
+          (ensures EQ?.eq eq x y)
+  = EQ?.reflexivity eq x
+
+let identity_left_smt (#a:Type) (eq:equiv a) (m:cm a eq) (x y:a)
+  : Lemma
+    (requires x == y)
+    (ensures EQ?.eq eq x (CM?.mult m (CM?.unit m) y))
+  = CM?.identity m x;
+    EQ?.symmetry eq (CM?.mult m (CM?.unit m) x) x
+
 let identity_left (#a:Type) (eq:equiv a) (m:cm a eq) (x:a)
   : Lemma (EQ?.eq eq x (CM?.mult m (CM?.unit m) x))
   = CM?.identity m x;
@@ -798,7 +939,7 @@ let canon_l_r (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   let (r1_raw, ts, am) = reification eq m [] am lhs in
   let (r2_raw,  _, am) = reification eq m ts am rhs in
 
-  let l1_raw, l2_raw, emp_frame = equivalent_lists (flatten r1_raw) (flatten r2_raw) am in
+  let l1_raw, l2_raw, emp_frame, uvar_terms = equivalent_lists (flatten r1_raw) (flatten r2_raw) am in
 
   let am = convert_am am in
   let r1 = quote_exp r1_raw in
@@ -840,10 +981,13 @@ let canon_l_r (eq: term) (m: term) (lhs rhs:term) : Tac unit =
     or_else trefl (fun _ -> fail "first equivalent_lists did not build a valid permutation");
     or_else trefl (fun _ -> fail "second equivalent_lists did not build a valid permutation");
 
-    if emp_frame then apply_lemma (`identity_left (`#eq) (`#m))
-    else apply_lemma (`(EQ?.reflexivity (`#eq)))
+    match uvar_terms with
+    | [] -> if emp_frame then apply_lemma (`identity_left (`#eq) (`#m))
+           else apply_lemma (`(EQ?.reflexivity (`#eq)))
+    | l -> if emp_frame then apply_lemma (`identity_left_smt (`#eq) (`#m))
+           else apply_lemma (`smt_reflexivity (`#eq));
+           dump "solving this"; smt (); iter (fun x -> dump (term_to_string x); exact x) l; dump "done?"
   )
-
 
 let canon_monoid (eq:term) (m:term) : Tac unit =
   norm [iota; zeta];
