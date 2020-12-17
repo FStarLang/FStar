@@ -68,7 +68,7 @@ val is_focus_on_term : term -> Tac bool
 let is_focus_on_term t =
   match inspect t with
   | Tv_FVar fv ->
-    flatten_name (inspect_fv fv) = `%FStar.InteractiveHelpers.PostProcess.focus_on_term
+    flatten_name (inspect_fv fv) = `%focus_on_term
   | _ -> false
 
 /// Check if a term is an assertion or an assumption and return its content
