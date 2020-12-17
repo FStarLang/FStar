@@ -1057,6 +1057,23 @@ let return_at_top (l:list atom) (am:amap term) : Tac (nat * list atom) =
 
 exception AlreadyGathered
 
+let rec exact_emps' (l:list atom) (am:amap term) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let t = select hd am in
+    let b = unify t (`emp) in
+    if not b then fail "could not unify with emp";
+    exact_emps' tl am
+
+// The first term will always be the return_post since we called return_at_top previously.
+// We ignore it, and unify the rest with emp
+let exact_emps (l:list atom) (am:amap term) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl -> exact_emps' tl am
+
+// Solve all frames with a return_post to emp
 let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
   let return_lhs = term_appears_in (`return_post) lhs in
   let return_rhs = term_appears_in (`return_post) rhs in
@@ -1089,54 +1106,8 @@ let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
 
     let n_l2, l2_raw = if two_returns then return_at_top l2_raw am else 0, l2_raw in
 
-    let am = convert_am am in
-    let r1 = quote_exp r1_raw in
-    let r2 = quote_exp r2_raw in
-    change_sq (`(normal (mdenote (`#eq) (`#m) (`#am) (`#r1)
-                   `EQ?.eq (`#eq)`
-                 mdenote (`#eq) (`#m) (`#am) (`#r2))));
-    apply_lemma (`normal_elim);
-
-    apply (`monoid_reflect );
-
-    let l1 = quote_atoms l1_raw in
-    let l2 = quote_atoms l2_raw in
-
-    apply_lemma (`equivalent_sorted (`#eq) (`#m) (`#am) (`#l1) (`#l2));
-    let g = goals () in
-    if List.Tot.Base.length g = 0 then
-      // The application of equivalent_sorted seems to sometimes solve
-      // all goals
-      ()
-    else (
-      norm [primops; iota; zeta; delta_only
-        [`%xsdenote; `%select; `%List.Tot.Base.assoc; `%List.Tot.Base.append;
-          `%flatten; `%sort;
-          `%return_post;
-          `%List.Tot.Base.sortWith; `%List.Tot.Base.partition;
-          `%List.Tot.Base.bool_of_compare; `%List.Tot.Base.compare_of_bool;
-          `%fst; `%__proj__Mktuple2__item___1;
-          `%snd; `%__proj__Mktuple2__item___2;
-          `%__proj__CM__item__unit;
-          `%__proj__CM__item__mult;
-          `%Steel.Memory.Tactics.rm
-
-          ]];
-
-      split();
-      split();
-      // equivalent_lists should have built valid permutations.
-      // If that's not the case, it is a bug in equivalent_lists
-      or_else trefl (fun _ -> fail "first equivalent_lists did not build a valid permutation");
-      or_else trefl (fun _ -> fail "second equivalent_lists did not build a valid permutation");
-
-      if n_l2 > n_l1 then
-        (apply_lemma (`(EQ?.symmetry (`#eq)));
-         dismiss_slprops();
-         let n = n_l2 - n_l1 in
-         focus (fun _ -> n_identity_left n eq m))
-      else (let n = n_l1 - n_l2 in focus (fun _ -> n_identity_left n eq m))
-    )
+    exact_emps l1_raw am;
+    if two_returns then exact_emps l2_raw am
   )
 
 let canon_return' (eq:term) (m:term) : Tac unit =
@@ -1259,6 +1230,30 @@ let solve_equiv_forall (args:list argv) : Tac bool =
 
   | _ -> false // Ill-formed can_be_split, should not happen
 
+let solve_equiv (args:list argv) : Tac bool =
+  match args with
+  | [(t1, _); (t2, _)] ->
+      let lnbr = slterm_nbr_uvars t1 in
+      let rnbr = slterm_nbr_uvars t2 in
+        if lnbr + rnbr <= 1 then (
+        let open FStar.Algebra.CommMonoid.Equiv in
+        focus (fun _ ->  // TODO: Do this count in a better way
+                       if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
+                       or_else (fun _ ->  flip()) (fun _ -> ());
+                       norm [delta_only [
+                               `%__proj__CM__item__unit;
+                               `%__proj__CM__item__mult;
+                               `%Steel.Memory.Tactics.rm;
+                               `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                               `%fst; `%snd];
+                             delta_attr [`%__reduce__];
+                             primops; iota; zeta];
+                       canon'());
+        true
+      ) else false
+
+  | _ -> fail "ill-formed equiv"
+
 
 let solve_can_be_split_post (args:list argv) : Tac bool =
   match args with
@@ -1365,7 +1360,8 @@ let solve_return (t:term) : Tac unit
                      `%fst; `%snd];
                delta_attr [`%__reduce__];
                primops; iota; zeta];
-           canon_return ()
+           canon_return ();
+           norm [delta_only [`%return_post]]
 
 let rec solve_all_returns (l:list goal) : Tac unit =
   match l with
@@ -1374,11 +1370,12 @@ let rec solve_all_returns (l:list goal) : Tac unit =
     let t = goal_type hd in
     let f = term_as_formula' t in
     if term_appears_in (`return_post) t then (
-      try focus (fun _ -> solve_return t) with
+      (try solve_return t with
         // If return_post has already been gathered, we remove the annotation, and will solve this constraint normally later
-        | AlreadyGathered -> norm [delta_only [`%return_post]]; later()
+        | AlreadyGathered -> norm [delta_only [`%return_post]]
         | TacticFailure m -> fail m
         | _ -> () // Success
+      ); later()
     ) else later();
     solve_all_returns tl
 
@@ -1409,6 +1406,7 @@ let solve_or_delay (g:goal) : Tac bool =
       else if term_eq hd (`can_be_split_forall) then solve_can_be_split_forall args
       else if term_eq hd (`equiv_forall) then solve_equiv_forall args
       else if term_eq hd (`can_be_split_post) then solve_can_be_split_post args
+      else if term_eq hd (`Steel.Memory.equiv) then solve_equiv args
       else false
   | Comp (Eq _) l r ->
     let lnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars l) in
@@ -1492,7 +1490,7 @@ let init_resolve_tac () : Tac unit =
   // To debug, it is best to look at the goals at this stage. Uncomment the next line
   // dump "initial goals";
 
-  // We now solve all postconditions of pure returns to avoid restricting the uvars
+  // We now solve all frames of postconditions of pure returns to emp
   solve_all_returns (goals ());
 
   // We can now solve the equalities for returns
