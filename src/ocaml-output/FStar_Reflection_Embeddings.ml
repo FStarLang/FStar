@@ -2055,20 +2055,26 @@ let (unfold_lazy_binder :
     let binder = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob in
     let uu___ = FStar_Reflection_Basic.inspect_binder binder in
     match uu___ with
-    | (bv, (aq, uu___1)) ->
-        let uu___2 =
+    | (bv, (aq, attrs)) ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 = embed e_bv i.FStar_Syntax_Syntax.rng bv in
+            FStar_Syntax_Syntax.as_arg uu___3 in
           let uu___3 =
-            let uu___4 = embed e_bv i.FStar_Syntax_Syntax.rng bv in
-            FStar_Syntax_Syntax.as_arg uu___4 in
-          let uu___4 =
+            let uu___4 =
+              let uu___5 = embed e_aqualv i.FStar_Syntax_Syntax.rng aq in
+              FStar_Syntax_Syntax.as_arg uu___5 in
             let uu___5 =
-              let uu___6 = embed e_aqualv i.FStar_Syntax_Syntax.rng aq in
-              FStar_Syntax_Syntax.as_arg uu___6 in
-            [uu___5] in
-          uu___3 :: uu___4 in
+              let uu___6 =
+                let uu___7 =
+                  embed e_attributes i.FStar_Syntax_Syntax.rng attrs in
+                FStar_Syntax_Syntax.as_arg uu___7 in
+              [uu___6] in
+            uu___4 :: uu___5 in
+          uu___2 :: uu___3 in
         FStar_Syntax_Syntax.mk_Tm_app
           FStar_Reflection_Data.fstar_refl_pack_binder.FStar_Reflection_Data.t
-          uu___2 i.FStar_Syntax_Syntax.rng
+          uu___1 i.FStar_Syntax_Syntax.rng
 let (unfold_lazy_fvar :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
   fun i ->

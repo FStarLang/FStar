@@ -873,9 +873,10 @@ let unfold_lazy_bv  (i : lazyinfo) : term =
 (* TODO: non-uniform *)
 let unfold_lazy_binder (i : lazyinfo) : term =
     let binder : binder = undyn i.blob in
-    let bv, (aq, _) = inspect_binder binder in
+    let bv, (aq, attrs) = inspect_binder binder in
     S.mk_Tm_app fstar_refl_pack_binder.t [S.as_arg (embed e_bv i.rng bv);
-                                          S.as_arg (embed e_aqualv i.rng aq)]
+                                          S.as_arg (embed e_aqualv i.rng aq);
+                                          S.as_arg (embed e_attributes i.rng attrs)]
                 i.rng
 
 let unfold_lazy_fvar (i : lazyinfo) : term =

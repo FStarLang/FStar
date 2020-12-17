@@ -352,8 +352,8 @@ type nonTerminalId =
     | NONTERM_list_decl_
     | NONTERM_list_decoration_
     | NONTERM_list_multiBinder_
-    | NONTERM_nonempty_list_aqualified_lident__
-    | NONTERM_nonempty_list_aqualified_lidentOrUnderscore__
+    | NONTERM_nonempty_list_aqualifiedWithAttrs_lident__
+    | NONTERM_nonempty_list_aqualifiedWithAttrs_lidentOrUnderscore__
     | NONTERM_nonempty_list_atomicPattern_
     | NONTERM_nonempty_list_atomicTerm_
     | NONTERM_nonempty_list_atomicUniverse_
@@ -398,7 +398,7 @@ type nonTerminalId =
     | NONTERM_maybeFocus
     | NONTERM_letqualifier
     | NONTERM_aqual
-    | NONTERM_aqualUniverses
+    | NONTERM_aqualAndAttrsUniverses
     | NONTERM_disjunctivePattern
     | NONTERM_tuplePattern
     | NONTERM_constructorPattern
@@ -408,8 +408,8 @@ type nonTerminalId =
     | NONTERM_binder
     | NONTERM_multiBinder
     | NONTERM_binders
-    | NONTERM_aqualified_lident_
-    | NONTERM_aqualified_lidentOrUnderscore_
+    | NONTERM_aqualifiedWithAttrs_lident_
+    | NONTERM_aqualifiedWithAttrs_lidentOrUnderscore_
     | NONTERM_qlident
     | NONTERM_quident
     | NONTERM_path_lident_
