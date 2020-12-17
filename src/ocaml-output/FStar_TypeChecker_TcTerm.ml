@@ -5795,11 +5795,8 @@ and (check_application_args :
                            FStar_Syntax_Syntax.binder_qual = qual;
                            FStar_Syntax_Syntax.binder_attrs = attrs;_}::rest,
                          (uu___2, FStar_Pervasives_Native.None)::uu___3) when
-                          (match qual with
-                           | FStar_Pervasives_Native.Some
-                               (FStar_Syntax_Syntax.Meta uu___4) -> true
-                           | uu___4 -> false) ||
-                            ((FStar_List.length attrs) > Prims.int_zero)
+                          FStar_TypeChecker_Util.maybe_implicit_with_meta_or_attr
+                            qual attrs
                           ->
                           let uu___4 =
                             match (qual, attrs) with
@@ -5818,7 +5815,9 @@ and (check_application_args :
                                        FStar_Syntax_Syntax.Ctx_uvar_meta_tac
                                          uu___9 in
                                      (uu___8, g_tau))
-                            | (uu___5, attr::uu___6) ->
+                            | (FStar_Pervasives_Native.Some
+                               (FStar_Syntax_Syntax.Implicit uu___5),
+                               attr::uu___6) ->
                                 let attr1 =
                                   FStar_Syntax_Subst.subst subst attr in
                                 let uu___7 = tc_tot_or_gtot_term env attr1 in

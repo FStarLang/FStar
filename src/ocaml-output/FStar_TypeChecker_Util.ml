@@ -4594,6 +4594,18 @@ let (remove_reify : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
                   failwith
                     "Impossible : Reify applied to multiple arguments after normalization.")
            else t)
+let (maybe_implicit_with_meta_or_attr :
+  FStar_Syntax_Syntax.aqual ->
+    FStar_Syntax_Syntax.attribute Prims.list -> Prims.bool)
+  =
+  fun aq ->
+    fun attrs ->
+      match (aq, attrs) with
+      | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta uu___),
+         uu___1) -> true
+      | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit uu___),
+         uu___1::uu___2) -> true
+      | uu___ -> false
 let (maybe_instantiate :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
@@ -4736,12 +4748,7 @@ let (maybe_instantiate :
                           { FStar_Syntax_Syntax.binder_bv = x;
                             FStar_Syntax_Syntax.binder_qual = qual;
                             FStar_Syntax_Syntax.binder_attrs = attrs;_}::rest)
-                           when
-                           (match qual with
-                            | FStar_Pervasives_Native.Some
-                                (FStar_Syntax_Syntax.Meta uu___4) -> true
-                            | uu___4 -> false) ||
-                             ((FStar_List.length attrs) > Prims.int_zero)
+                           when maybe_implicit_with_meta_or_attr qual attrs
                            ->
                            let t2 =
                              FStar_Syntax_Subst.subst subst
