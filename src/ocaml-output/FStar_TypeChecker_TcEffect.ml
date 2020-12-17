@@ -1846,17 +1846,7 @@ let (tc_layered_eff_decl :
                                     uu___13) -> aq
                                  | (FStar_Pervasives_Native.Some
                                     (FStar_Syntax_Syntax.Meta uu___12),
-                                    uu___13) when
-                                     (FStar_List.length attrs1) <>
-                                       Prims.int_zero
-                                     ->
-                                     FStar_Pervasives_Native.Some
-                                       (FStar_Syntax_Syntax.Implicit false)
-                                 | (FStar_Pervasives_Native.None, uu___12)
-                                     when
-                                     (FStar_List.length attrs1) <>
-                                       Prims.int_zero
-                                     ->
+                                    uu___13) ->
                                      FStar_Pervasives_Native.Some
                                        (FStar_Syntax_Syntax.Implicit false)
                                  | uu___12 -> FStar_Pervasives_Native.None) in
