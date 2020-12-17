@@ -228,11 +228,11 @@ let nbe_int3 :
                            FStar_Util.bind_opt uu___4
                              (fun b2 ->
                                 let uu___5 =
-                                  FStar_TypeChecker_NBETerm.unembed eb cb c1 in
+                                  FStar_TypeChecker_NBETerm.unembed ec cb c1 in
                                 FStar_Util.bind_opt uu___5
                                   (fun c2 ->
                                      let uu___6 =
-                                       let uu___7 = f a2 b2 (Obj.magic c2) in
+                                       let uu___7 = f a2 b2 c2 in
                                        FStar_TypeChecker_NBETerm.embed er cb
                                          uu___7 in
                                      FStar_Pervasives_Native.Some uu___6)))
