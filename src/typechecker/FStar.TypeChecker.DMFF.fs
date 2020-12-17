@@ -127,7 +127,7 @@ let gen_wps_for_free
   in
 
   (* Some helpers. *)
-  let binders_of_list = List.map (fun (t, b) -> {binder_bv=t;binder_qual=S.as_implicit b;binder_attrs=[]}) in
+  let binders_of_list = List.map (fun (t, b) -> S.mk_binder_with_attrs t (S.as_implicit b) []) in
   let mk_all_implicit = List.map (fun t -> { t with binder_qual=S.as_implicit true }) in
   let args_of_binders = List.map (fun bv -> S.as_arg (S.bv_to_name bv.binder_bv)) in
 
@@ -530,8 +530,7 @@ let double_star typ =
 
 let rec mk_star_to_type mk env a =
   mk (Tm_arrow (
-    [{binder_bv=S.null_bv (star_type' env a);binder_qual=S.as_implicit false;
-      binder_attrs=[]}],
+    [S.mk_binder_with_attrs (S.null_bv (star_type' env a)) (S.as_implicit false) []],
     mk_Total U.ktype0
   ))
 
@@ -564,9 +563,8 @@ and star_type' env t =
               // F*'s arrows are n-ary (and the intermediary arrows are pure), so the rule is:
               //   (H_0  -> ... -> H_n  -t-> A)* = H_0* -> ... -> H_n* -> (A* -> Type) -> Type
               mk (Tm_arrow (
-                binders @ [ {binder_bv=S.null_bv (mk_star_to_type env a);
-                             binder_qual=S.as_implicit false;
-                             binder_attrs=[]} ],
+                binders @ [ S.mk_binder_with_attrs (S.null_bv (mk_star_to_type env a))
+                              (S.as_implicit false) []],
                 mk_Total U.ktype0))
       end
 
@@ -1420,7 +1418,8 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
 
   // Building: [a -> wp a -> Effect]
   let effect_signature =
-    let binders = [ ({binder_bv=a;binder_qual=S.as_implicit false;binder_attrs=[]}); S.gen_bv "dijkstra_wp" None wp_a |> S.mk_binder ] in
+    let binders = [ S.mk_binder_with_attrs a (S.as_implicit false) [];
+                    S.gen_bv "dijkstra_wp" None wp_a |> S.mk_binder ] in
     let binders = close_binders binders in
     mk (Tm_arrow (binders, effect_marker))
   in

@@ -618,11 +618,12 @@ let is_type (t:term) = match t.n with
     | _ -> false
 let null_id  = mk_ident("_", dummyRange)
 let null_bv k = {ppname=null_id; index=0; sort=k}
-let mk_binder (a:bv) : binder = {
-  binder_bv = a;
-  binder_qual = None;
-  binder_attrs = []
+let mk_binder_with_attrs bv aqual attrs = {
+  binder_bv = bv;
+  binder_qual = aqual;
+  binder_attrs = attrs
 }
+let mk_binder a = mk_binder_with_attrs a None []
 let null_binder t : binder = mk_binder (null_bv t)
 let imp_tag = Implicit false
 let iarg t : arg = t, Some imp_tag

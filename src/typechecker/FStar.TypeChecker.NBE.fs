@@ -1232,7 +1232,7 @@ and readback (cfg:config) (x:t) : term =
           (fun (t, q) ->
             let t = readback cfg t in
             let x = S.new_bv None t in
-            ({binder_bv=x;binder_qual=q;binder_attrs=[]}))
+            S.mk_binder_with_attrs x q [])
           args
       in
       let c = readback_comp cfg c in

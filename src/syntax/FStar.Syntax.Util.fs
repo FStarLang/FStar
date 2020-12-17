@@ -83,7 +83,7 @@ let null_binders_of_tks (tks:list<(typ * aqual)>) : binders =
     tks |> List.map (fun (t, imp) -> { null_binder t with binder_qual = imp })
 
 let binders_of_tks (tks:list<(typ * aqual)>) : binders =
-    tks |> List.map (fun (t, imp) -> { binder_bv = new_bv (Some t.pos) t; binder_qual = imp; binder_attrs = [] })
+    tks |> List.map (fun (t, imp) -> mk_binder_with_attrs (new_bv (Some t.pos) t) imp []) 
 
 let binders_of_freevars fvs = U.set_elements fvs |> List.map mk_binder
 
@@ -1777,7 +1777,7 @@ and arg_eq_dbg (dbg : bool) a1 a2 =
            a1 a2
 and binder_eq_dbg (dbg : bool) b1 b2 =
     (check "binder_sort" (term_eq_dbg dbg b1.binder_bv.sort b2.binder_bv.sort)) &&
-    (check "binder qual" (eq_aqual b1.binder_qual b2.binder_qual = Equal))  //TODO: AR: not checking attributes
+    (check "binder qual" (eq_aqual b1.binder_qual b2.binder_qual = Equal))  //AR: not checking attributes, should we?
 and comp_eq_dbg (dbg : bool) c1 c2 =
     let c1 = comp_to_comp_typ_nouniv c1 in
     let c2 = comp_to_comp_typ_nouniv c2 in

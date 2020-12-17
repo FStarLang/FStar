@@ -505,7 +505,7 @@ and close_binders cfg env bs =
             let imp = close_imp cfg env imp in
             let attrs = List.map (non_tail_inline_closure_env cfg env) attrs in
             let env = dummy::env in
-            env, (({binder_bv=b;binder_qual=imp;binder_attrs=attrs})::out)) (env, []) in
+            env, ((S.mk_binder_with_attrs b imp attrs)::out)) (env, []) in
     List.rev bs, env
 
 and close_comp cfg env c =
@@ -1988,7 +1988,7 @@ and norm_binder (cfg:Cfg.cfg) (env:env) (b:binder) : binder =
               | Some (S.Meta t) -> Some (S.Meta (closure_as_term cfg env t))
               | i -> i in
     let attrs = List.map (norm cfg env []) b.binder_attrs in
-    {binder_bv=x;binder_qual=imp;binder_attrs=attrs}
+    S.mk_binder_with_attrs x imp attrs
 
 and norm_binders : cfg -> env -> binders -> binders =
     fun cfg env bs ->

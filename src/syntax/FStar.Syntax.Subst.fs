@@ -268,9 +268,10 @@ let shift n s = match s with
 let shift_subst n s = List.map (shift n) s
 let shift_subst' n s = fst s |> List.map (shift_subst n), snd s
 let subst_binder' s b =
-  { binder_bv = { b.binder_bv with sort = subst' s b.binder_bv.sort };
-    binder_qual = subst_imp' s b.binder_qual;
-    binder_attrs = b.binder_attrs |> List.map (subst' s) }
+  S.mk_binder_with_attrs
+    ({ b.binder_bv with sort = subst' s b.binder_bv.sort })
+    (subst_imp' s b.binder_qual)
+    (b.binder_attrs |> List.map (subst' s))
 
 
 let subst_binders' s bs =
@@ -516,7 +517,7 @@ let open_binders' bs =
           let attrs = b.binder_attrs |> List.map (subst o) in
           let o = DB(0, x')::shift_subst 1 o in
           let bs', o = aux bs' o in
-          ({binder_bv = x'; binder_qual = imp; binder_attrs = attrs})::bs', o in
+          (S.mk_binder_with_attrs x' imp attrs)::bs', o in
    aux bs []
 let open_binders (bs:binders) = fst (open_binders' bs)
 let open_term' (bs:binders) t =
@@ -579,7 +580,7 @@ let close_binders (bs:binders) : binders =
           let imp = subst_imp s b.binder_qual in
           let attrs = b.binder_attrs |> List.map (subst s) in
           let s' = NM(x, 0)::shift_subst 1 s in
-          ({binder_bv = x; binder_qual = imp; binder_attrs = attrs})::aux s' tl in
+          (S.mk_binder_with_attrs x imp attrs)::aux s' tl in
     aux [] bs
 
 let close_pat p =
@@ -975,4 +976,4 @@ and deep_compress_binders bs =
                 let x = {b.binder_bv with sort=deep_compress b.binder_bv.sort} in
                 let q = deep_compress_aqual b.binder_qual in
                 let attrs = b.binder_attrs |> List.map deep_compress in
-                ({binder_bv = x; binder_qual = q; binder_attrs = attrs})) bs
+                (S.mk_binder_with_attrs x q attrs)) bs

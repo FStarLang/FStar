@@ -419,7 +419,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
         let precedes = TcUtil.label "Could not prove termination of this recursive call" r precedes in
         let bs, ({binder_bv=last; binder_qual=imp}) = BU.prefix formals in
         let last = {last with sort=U.refine last precedes} in
-        let refined_formals = bs@[({binder_bv=last;binder_qual=imp; binder_attrs=[]})] in
+        let refined_formals = bs@[S.mk_binder_with_attrs last imp []] in
         let t' = U.arrow refined_formals c in
         if debug env Options.Medium
         then BU.print3 "Refined let rec %s\n\tfrom type %s\n\tto type %s\n"
@@ -1524,7 +1524,7 @@ and tc_abs_check_binders env bs bs_expected  : Env.env                         (
       (* When an implicit is expected, but the user provided an
        * explicit binder, insert a nameless implicit binder. *)
       let bv = S.new_bv (Some (Ident.range_of_id hd_e.ppname)) (SS.subst subst hd_e.sort) in
-      aux (env, subst) (({binder_bv=bv;binder_qual=q;binder_attrs=attrs}) :: bs) bs_expected
+      aux (env, subst) ((S.mk_binder_with_attrs bv q attrs) :: bs) bs_expected
 
     | ({binder_bv=hd;binder_qual=imp;binder_attrs=attrs})::bs,
       ({binder_bv=hd_expected;binder_qual=imp';binder_attrs=attrs'})::bs_expected -> begin
@@ -3435,7 +3435,7 @@ and tc_binder env ({binder_bv=x;binder_qual=imp;binder_attrs=attrs}) =
       attrs |> List.map (fun attr ->
         let attr, _, _ = tc_check_tot_or_gtot_term env attr t_unit "" in
         attr) in
-    let x = {binder_bv={x with sort=t};binder_qual=imp;binder_attrs=attrs} in
+    let x = S.mk_binder_with_attrs ({x with sort=t}) imp attrs in
     if Env.debug env Options.High
     then BU.print2 "Pushing binder %s at type %s\n" (Print.bv_to_string x.binder_bv) (Print.term_to_string t);
     x, push_binding env x, g, u

@@ -132,9 +132,9 @@ let tc_lex_t env ses quals lids =
             let hd = S.new_bv (Some r2) (S.bv_to_name a) in
             let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_name ucons2])) r2) in
             let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) r2 in
-            U.arrow [({binder_bv=a;binder_qual=Some S.imp_tag;binder_attrs=[]});
-                     ({binder_bv=hd;binder_qual=None; binder_attrs=[]}); 
-                     ({binder_bv=tl;binder_qual=None; binder_attrs=[]})] (S.mk_Total res) in
+            U.arrow [(S.mk_binder_with_attrs a (Some S.imp_tag) []);
+                     (S.mk_binder_with_attrs hd None []); 
+                     (S.mk_binder_with_attrs tl None [])] (S.mk_Total res) in
         let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
         let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, PC.lex_t_lid, 0, []);
                            sigquals = [];

@@ -581,6 +581,8 @@ val binders_of_freenames: freenames -> binders
 val binders_of_list:      list<bv> -> binders
 
 val null_bv:        term -> bv
+val mk_binder_with_attrs
+           :        bv -> aqual -> list<attribute> -> binder
 val mk_binder:      bv -> binder
 val null_binder:    term -> binder
 val as_arg:         term -> arg
