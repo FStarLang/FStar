@@ -81,7 +81,7 @@ let nbe_int3 (m:lid) (f:'a -> 'b -> 'c -> 'r) (ea:NBET.embedding<'a>) (eb:NBET.e
     | [(a, _); (b, _); (c, _)] ->
         BU.bind_opt (NBET.unembed ea cb a) (fun a ->
         BU.bind_opt (NBET.unembed eb cb b) (fun b ->
-        BU.bind_opt (NBET.unembed eb cb c) (fun c ->
+        BU.bind_opt (NBET.unembed ec cb c) (fun c ->
         Some (NBET.embed er cb (f a b c)))))
     | _ -> None
 
@@ -170,8 +170,8 @@ let reflection_primops : list<Cfg.primitive_step> = [
     mk1 "inspect_binder"        inspect_binder        E.e_binder          E.e_binder_view
                                 inspect_binder        NRE.e_binder        NRE.e_binder_view;
 
-    mk3 "pack_binder"           pack_binder           E.e_bv              E.e_aqualv         (e_list E.e_term)          E.e_binder
-                                pack_binder           NRE.e_bv            NRE.e_aqualv       (NBET.e_list NRE.e_term)   NRE.e_binder;
+    mk3 "pack_binder"           RB.pack_binder        E.e_bv              E.e_aqualv         (e_list E.e_term)          E.e_binder
+                                RB.pack_binder        NRE.e_bv            NRE.e_aqualv       (NBET.e_list NRE.e_term)   NRE.e_binder;
 
     mk3 "subst"                 subst                 E.e_bv              E.e_term           E.e_term           E.e_term
                                 subst                 NRE.e_bv            NRE.e_term         NRE.e_term         NRE.e_term;
