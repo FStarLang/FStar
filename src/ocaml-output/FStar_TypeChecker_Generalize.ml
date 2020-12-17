@@ -513,14 +513,8 @@ let (gen :
                                                (fun uu___7 ->
                                                   match uu___7 with
                                                   | (x, q) ->
-                                                      {
-                                                        FStar_Syntax_Syntax.binder_bv
-                                                          = x;
-                                                        FStar_Syntax_Syntax.binder_qual
-                                                          = q;
-                                                        FStar_Syntax_Syntax.binder_attrs
-                                                          = []
-                                                      })) in
+                                                      FStar_Syntax_Syntax.mk_binder_with_attrs
+                                                        x q [])) in
                                         let t =
                                           let uu___7 =
                                             let uu___8 =

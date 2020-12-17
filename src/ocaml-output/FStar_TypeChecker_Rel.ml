@@ -1906,11 +1906,10 @@ let (solve_prob' :
                              uu___3.FStar_Syntax_Syntax.n in
                            (match uu___2 with
                             | FStar_Syntax_Syntax.Tm_name x ->
-                                [{
-                                   FStar_Syntax_Syntax.binder_bv = x;
-                                   FStar_Syntax_Syntax.binder_qual = i;
-                                   FStar_Syntax_Syntax.binder_attrs = []
-                                 }]
+                                let uu___3 =
+                                  FStar_Syntax_Syntax.mk_binder_with_attrs x
+                                    i [] in
+                                [uu___3]
                             | uu___3 -> (fail (); [])))) in
              let wl1 =
                let g = whnf wl.tcenv (p_guard prob) in
@@ -2292,8 +2291,7 @@ let (name_exists_in_binders :
 let (pat_vars :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binder Prims.list ->
-      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.arg_qualifier
-        FStar_Pervasives_Native.option) Prims.list ->
+      (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual) Prims.list ->
         FStar_Syntax_Syntax.binders FStar_Pervasives_Native.option)
   =
   fun env ->
@@ -2312,12 +2310,11 @@ let (pat_vars :
                    if uu___
                    then FStar_Pervasives_Native.None
                    else
-                     aux
-                       ({
-                          FStar_Syntax_Syntax.binder_bv = a;
-                          FStar_Syntax_Syntax.binder_qual = i;
-                          FStar_Syntax_Syntax.binder_attrs = []
-                        } :: seen) args2
+                     (let uu___2 =
+                        let uu___3 =
+                          FStar_Syntax_Syntax.mk_binder_with_attrs a i [] in
+                        uu___3 :: seen in
+                      aux uu___2 args2)
                | uu___ -> FStar_Pervasives_Native.None) in
         aux [] args
 type match_result =
@@ -3621,22 +3618,21 @@ let (quasi_pattern :
                                  formals1 in
                              let t_res1 =
                                FStar_Syntax_Subst.subst subst t_res in
-                             aux
-                               ({
-                                  FStar_Syntax_Syntax.binder_bv =
-                                    (let uu___12 = x1 in
-                                     {
-                                       FStar_Syntax_Syntax.ppname =
-                                         (uu___12.FStar_Syntax_Syntax.ppname);
-                                       FStar_Syntax_Syntax.index =
-                                         (uu___12.FStar_Syntax_Syntax.index);
-                                       FStar_Syntax_Syntax.sort =
-                                         (formal.FStar_Syntax_Syntax.sort)
-                                     });
-                                  FStar_Syntax_Syntax.binder_qual = a_imp;
-                                  FStar_Syntax_Syntax.binder_attrs =
-                                    (fml.FStar_Syntax_Syntax.binder_attrs)
-                                } :: pat_binders) formals2 t_res1 args2)
+                             let uu___12 =
+                               let uu___13 =
+                                 FStar_Syntax_Syntax.mk_binder_with_attrs
+                                   (let uu___14 = x1 in
+                                    {
+                                      FStar_Syntax_Syntax.ppname =
+                                        (uu___14.FStar_Syntax_Syntax.ppname);
+                                      FStar_Syntax_Syntax.index =
+                                        (uu___14.FStar_Syntax_Syntax.index);
+                                      FStar_Syntax_Syntax.sort =
+                                        (formal.FStar_Syntax_Syntax.sort)
+                                    }) a_imp
+                                   fml.FStar_Syntax_Syntax.binder_attrs in
+                               uu___13 :: pat_binders in
+                             aux uu___12 formals2 t_res1 args2)
                       | uu___10 ->
                           aux (fml :: pat_binders) formals1 t_res args2))
             | ([], args2) ->
@@ -4898,22 +4894,20 @@ and (imitate_arrow :
                                       let uu___5 =
                                         let uu___6 =
                                           let uu___7 =
-                                            let uu___8 =
+                                            FStar_Syntax_Syntax.mk_binder_with_attrs
+                                              y imp attrs in
+                                          [uu___7] in
+                                        FStar_List.append bs uu___6 in
+                                      let uu___6 =
+                                        let uu___7 =
+                                          let uu___8 =
+                                            let uu___9 =
                                               FStar_Syntax_Syntax.bv_to_name
                                                 y in
-                                            (uu___8, imp) in
-                                          [uu___7] in
-                                        FStar_List.append bs_terms uu___6 in
-                                      aux
-                                        (FStar_List.append bs
-                                           [{
-                                              FStar_Syntax_Syntax.binder_bv =
-                                                y;
-                                              FStar_Syntax_Syntax.binder_qual
-                                                = imp;
-                                              FStar_Syntax_Syntax.binder_attrs
-                                                = attrs
-                                            }]) uu___5 formals2 wl2) in
+                                            (uu___9, imp) in
+                                          [uu___8] in
+                                        FStar_List.append bs_terms uu___7 in
+                                      aux uu___5 uu___6 formals2 wl2) in
                            let uu___4 = occurs_check u_lhs arrow in
                            (match uu___4 with
                             | (uu___5, occurs_ok, msg) ->

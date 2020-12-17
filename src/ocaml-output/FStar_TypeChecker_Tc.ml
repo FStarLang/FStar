@@ -422,27 +422,24 @@ let tc_lex_t :
                             FStar_Syntax_Syntax.U_name ucons2]]) in
                      FStar_Syntax_Syntax.Tm_uinst uu___21 in
                    FStar_Syntax_Syntax.mk uu___20 r2 in
-                 let uu___20 = FStar_Syntax_Syntax.mk_Total res in
-                 FStar_Syntax_Util.arrow
-                   [{
-                      FStar_Syntax_Syntax.binder_bv = a;
-                      FStar_Syntax_Syntax.binder_qual =
-                        (FStar_Pervasives_Native.Some
-                           FStar_Syntax_Syntax.imp_tag);
-                      FStar_Syntax_Syntax.binder_attrs = []
-                    };
-                   {
-                     FStar_Syntax_Syntax.binder_bv = hd;
-                     FStar_Syntax_Syntax.binder_qual =
-                       FStar_Pervasives_Native.None;
-                     FStar_Syntax_Syntax.binder_attrs = []
-                   };
-                   {
-                     FStar_Syntax_Syntax.binder_bv = tl;
-                     FStar_Syntax_Syntax.binder_qual =
-                       FStar_Pervasives_Native.None;
-                     FStar_Syntax_Syntax.binder_attrs = []
-                   }] uu___20 in
+                 let uu___20 =
+                   let uu___21 =
+                     FStar_Syntax_Syntax.mk_binder_with_attrs a
+                       (FStar_Pervasives_Native.Some
+                          FStar_Syntax_Syntax.imp_tag) [] in
+                   let uu___22 =
+                     let uu___23 =
+                       FStar_Syntax_Syntax.mk_binder_with_attrs hd
+                         FStar_Pervasives_Native.None [] in
+                     let uu___24 =
+                       let uu___25 =
+                         FStar_Syntax_Syntax.mk_binder_with_attrs tl
+                           FStar_Pervasives_Native.None [] in
+                       [uu___25] in
+                     uu___23 :: uu___24 in
+                   uu___21 :: uu___22 in
+                 let uu___21 = FStar_Syntax_Syntax.mk_Total res in
+                 FStar_Syntax_Util.arrow uu___20 uu___21 in
                let lex_cons_t1 =
                  FStar_Syntax_Subst.close_univ_vars [ucons1; ucons2]
                    lex_cons_t in

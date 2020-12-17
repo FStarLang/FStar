@@ -485,11 +485,7 @@ let (subst_binder' :
       let uu___2 =
         FStar_All.pipe_right b.FStar_Syntax_Syntax.binder_attrs
           (FStar_List.map (subst' s)) in
-      {
-        FStar_Syntax_Syntax.binder_bv = uu___;
-        FStar_Syntax_Syntax.binder_qual = uu___1;
-        FStar_Syntax_Syntax.binder_attrs = uu___2
-      }
+      FStar_Syntax_Syntax.mk_binder_with_attrs uu___ uu___1 uu___2
 let (subst_binders' :
   (FStar_Syntax_Syntax.subst_elt Prims.list Prims.list *
     FStar_Syntax_Syntax.maybe_set_use_range) ->
@@ -1015,11 +1011,11 @@ let (open_binders' :
           let uu___ = aux bs' o1 in
           (match uu___ with
            | (bs'1, o2) ->
-               (({
-                   FStar_Syntax_Syntax.binder_bv = x';
-                   FStar_Syntax_Syntax.binder_qual = imp;
-                   FStar_Syntax_Syntax.binder_attrs = attrs
-                 } :: bs'1), o2)) in
+               let uu___1 =
+                 let uu___2 =
+                   FStar_Syntax_Syntax.mk_binder_with_attrs x' imp attrs in
+                 uu___2 :: bs'1 in
+               (uu___1, o2)) in
     aux bs []
 let (open_binders :
   FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.binders) =
@@ -1188,12 +1184,8 @@ let (close_binders :
           let s' =
             let uu___ = shift_subst Prims.int_one s in
             (FStar_Syntax_Syntax.NM (x, Prims.int_zero)) :: uu___ in
-          let uu___ = aux s' tl in
-          {
-            FStar_Syntax_Syntax.binder_bv = x;
-            FStar_Syntax_Syntax.binder_qual = imp;
-            FStar_Syntax_Syntax.binder_attrs = attrs
-          } :: uu___ in
+          let uu___ = FStar_Syntax_Syntax.mk_binder_with_attrs x imp attrs in
+          let uu___1 = aux s' tl in uu___ :: uu___1 in
     aux [] bs
 let (close_pat :
   FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t ->
@@ -1956,8 +1948,4 @@ and (deep_compress_binders :
          let attrs =
            FStar_All.pipe_right b.FStar_Syntax_Syntax.binder_attrs
              (FStar_List.map deep_compress) in
-         {
-           FStar_Syntax_Syntax.binder_bv = x;
-           FStar_Syntax_Syntax.binder_qual = q;
-           FStar_Syntax_Syntax.binder_attrs = attrs
-         }) bs
+         FStar_Syntax_Syntax.mk_binder_with_attrs x q attrs) bs

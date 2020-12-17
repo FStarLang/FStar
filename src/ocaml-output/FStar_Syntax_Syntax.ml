@@ -1635,13 +1635,13 @@ let (null_id : FStar_Ident.ident) =
   FStar_Ident.mk_ident ("_", FStar_Range.dummyRange)
 let (null_bv : term -> bv) =
   fun k -> { ppname = null_id; index = Prims.int_zero; sort = k }
+let (mk_binder_with_attrs : bv -> aqual -> attribute Prims.list -> binder) =
+  fun bv1 ->
+    fun aqual1 ->
+      fun attrs ->
+        { binder_bv = bv1; binder_qual = aqual1; binder_attrs = attrs }
 let (mk_binder : bv -> binder) =
-  fun a ->
-    {
-      binder_bv = a;
-      binder_qual = FStar_Pervasives_Native.None;
-      binder_attrs = []
-    }
+  fun a -> mk_binder_with_attrs a FStar_Pervasives_Native.None []
 let (null_binder : term -> binder) =
   fun t -> let uu___ = null_bv t in mk_binder uu___
 let (imp_tag : arg_qualifier) = Implicit false

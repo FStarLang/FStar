@@ -162,11 +162,7 @@ let (binders_of_tks :
                   FStar_Syntax_Syntax.new_bv
                     (FStar_Pervasives_Native.Some (t.FStar_Syntax_Syntax.pos))
                     t in
-                {
-                  FStar_Syntax_Syntax.binder_bv = uu___1;
-                  FStar_Syntax_Syntax.binder_qual = imp;
-                  FStar_Syntax_Syntax.binder_attrs = []
-                }))
+                FStar_Syntax_Syntax.mk_binder_with_attrs uu___1 imp []))
 let (binders_of_freevars :
   FStar_Syntax_Syntax.bv FStar_Util.set ->
     FStar_Syntax_Syntax.binder Prims.list)

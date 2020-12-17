@@ -63,12 +63,8 @@ let (unshadow :
                      (fun s1 -> Prims.op_Negation (FStar_List.mem s1 seen)) in
                  let bv = sset bv0 nbs in
                  let b2 =
-                   {
-                     FStar_Syntax_Syntax.binder_bv = bv;
-                     FStar_Syntax_Syntax.binder_qual = q;
-                     FStar_Syntax_Syntax.binder_attrs =
-                       (b1.FStar_Syntax_Syntax.binder_attrs)
-                   } in
+                   FStar_Syntax_Syntax.mk_binder_with_attrs bv q
+                     b1.FStar_Syntax_Syntax.binder_attrs in
                  let uu___1 =
                    let uu___2 =
                      let uu___3 =

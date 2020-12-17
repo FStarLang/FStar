@@ -1148,12 +1148,12 @@ let (guard_letrecs :
                                  FStar_Syntax_Syntax.sort = uu___6
                                } in
                              let refined_formals =
-                               FStar_List.append bs
-                                 [{
-                                    FStar_Syntax_Syntax.binder_bv = last1;
-                                    FStar_Syntax_Syntax.binder_qual = imp;
-                                    FStar_Syntax_Syntax.binder_attrs = []
-                                  }] in
+                               let uu___5 =
+                                 let uu___6 =
+                                   FStar_Syntax_Syntax.mk_binder_with_attrs
+                                     last1 imp [] in
+                                 [uu___6] in
+                               FStar_List.append bs uu___5 in
                              let t' =
                                FStar_Syntax_Util.arrow refined_formals c in
                              ((let uu___6 =
@@ -4578,12 +4578,11 @@ and (tc_abs_check_binders :
                        FStar_Syntax_Subst.subst subst
                          hd_e.FStar_Syntax_Syntax.sort in
                      FStar_Syntax_Syntax.new_bv uu___5 uu___6 in
-                   aux (env1, subst)
-                     ({
-                        FStar_Syntax_Syntax.binder_bv = bv;
-                        FStar_Syntax_Syntax.binder_qual = q;
-                        FStar_Syntax_Syntax.binder_attrs = attrs
-                      } :: bs1) bs_expected1
+                   let uu___5 =
+                     let uu___6 =
+                       FStar_Syntax_Syntax.mk_binder_with_attrs bv q attrs in
+                     uu___6 :: bs1 in
+                   aux (env1, subst) uu___5 bs_expected1
                | ({ FStar_Syntax_Syntax.binder_bv = hd;
                     FStar_Syntax_Syntax.binder_qual = imp;
                     FStar_Syntax_Syntax.binder_attrs = attrs;_}::bs2,
@@ -10132,19 +10131,15 @@ and (tc_binder :
                                     match uu___6 with
                                     | (attr1, uu___7, uu___8) -> attr1)) in
                           let x1 =
-                            {
-                              FStar_Syntax_Syntax.binder_bv =
-                                (let uu___6 = x in
-                                 {
-                                   FStar_Syntax_Syntax.ppname =
-                                     (uu___6.FStar_Syntax_Syntax.ppname);
-                                   FStar_Syntax_Syntax.index =
-                                     (uu___6.FStar_Syntax_Syntax.index);
-                                   FStar_Syntax_Syntax.sort = t
-                                 });
-                              FStar_Syntax_Syntax.binder_qual = imp1;
-                              FStar_Syntax_Syntax.binder_attrs = attrs1
-                            } in
+                            FStar_Syntax_Syntax.mk_binder_with_attrs
+                              (let uu___6 = x in
+                               {
+                                 FStar_Syntax_Syntax.ppname =
+                                   (uu___6.FStar_Syntax_Syntax.ppname);
+                                 FStar_Syntax_Syntax.index =
+                                   (uu___6.FStar_Syntax_Syntax.index);
+                                 FStar_Syntax_Syntax.sort = t
+                               }) imp1 attrs1 in
                           ((let uu___7 =
                               FStar_TypeChecker_Env.debug env
                                 FStar_Options.High in

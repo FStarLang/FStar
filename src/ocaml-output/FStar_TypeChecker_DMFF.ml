@@ -122,11 +122,7 @@ let (gen_wps_for_free :
                      match uu___2 with
                      | (t, b) ->
                          let uu___3 = FStar_Syntax_Syntax.as_implicit b in
-                         {
-                           FStar_Syntax_Syntax.binder_bv = t;
-                           FStar_Syntax_Syntax.binder_qual = uu___3;
-                           FStar_Syntax_Syntax.binder_attrs = []
-                         }) in
+                         FStar_Syntax_Syntax.mk_binder_with_attrs t uu___3 []) in
               let mk_all_implicit =
                 FStar_List.map
                   (fun t ->
@@ -1349,11 +1345,7 @@ let rec (mk_star_to_type :
                   let uu___5 = star_type' env1 a in
                   FStar_Syntax_Syntax.null_bv uu___5 in
                 let uu___5 = FStar_Syntax_Syntax.as_implicit false in
-                {
-                  FStar_Syntax_Syntax.binder_bv = uu___4;
-                  FStar_Syntax_Syntax.binder_qual = uu___5;
-                  FStar_Syntax_Syntax.binder_attrs = []
-                } in
+                FStar_Syntax_Syntax.mk_binder_with_attrs uu___4 uu___5 [] in
               [uu___3] in
             let uu___3 =
               FStar_Syntax_Syntax.mk_Total FStar_Syntax_Util.ktype0 in
@@ -1435,11 +1427,8 @@ and (star_type' :
                                 FStar_Syntax_Syntax.null_bv uu___9 in
                               let uu___9 =
                                 FStar_Syntax_Syntax.as_implicit false in
-                              {
-                                FStar_Syntax_Syntax.binder_bv = uu___8;
-                                FStar_Syntax_Syntax.binder_qual = uu___9;
-                                FStar_Syntax_Syntax.binder_attrs = []
-                              } in
+                              FStar_Syntax_Syntax.mk_binder_with_attrs uu___8
+                                uu___9 [] in
                             [uu___7] in
                           FStar_List.append binders1 uu___6 in
                         let uu___6 =
@@ -3578,12 +3567,8 @@ let (cps_and_elaborate :
                                     let uu___9 =
                                       let uu___10 =
                                         FStar_Syntax_Syntax.as_implicit false in
-                                      {
-                                        FStar_Syntax_Syntax.binder_bv = a1;
-                                        FStar_Syntax_Syntax.binder_qual =
-                                          uu___10;
-                                        FStar_Syntax_Syntax.binder_attrs = []
-                                      } in
+                                      FStar_Syntax_Syntax.mk_binder_with_attrs
+                                        a1 uu___10 [] in
                                     let uu___10 =
                                       let uu___11 =
                                         let uu___12 =

@@ -1013,12 +1013,12 @@ and (close_binders :
                           FStar_List.map
                             (non_tail_inline_closure_env cfg env2) attrs in
                         let env3 = dummy :: env2 in
-                        (env3,
-                          ({
-                             FStar_Syntax_Syntax.binder_bv = b1;
-                             FStar_Syntax_Syntax.binder_qual = imp1;
-                             FStar_Syntax_Syntax.binder_attrs = attrs1
-                           } :: out))) (env1, [])) in
+                        let uu___3 =
+                          let uu___4 =
+                            FStar_Syntax_Syntax.mk_binder_with_attrs b1 imp1
+                              attrs1 in
+                          uu___4 :: out in
+                        (env3, uu___3)) (env1, [])) in
         match uu___ with | (env2, bs1) -> ((FStar_List.rev bs1), env2)
 and (close_comp :
   FStar_TypeChecker_Cfg.cfg ->
@@ -5521,11 +5521,7 @@ and (norm_binder :
         let attrs =
           FStar_List.map (norm cfg env1 [])
             b.FStar_Syntax_Syntax.binder_attrs in
-        {
-          FStar_Syntax_Syntax.binder_bv = x;
-          FStar_Syntax_Syntax.binder_qual = imp;
-          FStar_Syntax_Syntax.binder_attrs = attrs
-        }
+        FStar_Syntax_Syntax.mk_binder_with_attrs x imp attrs
 and (norm_binders :
   FStar_TypeChecker_Cfg.cfg ->
     env -> FStar_Syntax_Syntax.binders -> FStar_Syntax_Syntax.binders)

@@ -2565,11 +2565,7 @@ and (readback :
                       let x1 =
                         FStar_Syntax_Syntax.new_bv
                           FStar_Pervasives_Native.None t1 in
-                      {
-                        FStar_Syntax_Syntax.binder_bv = x1;
-                        FStar_Syntax_Syntax.binder_qual = q;
-                        FStar_Syntax_Syntax.binder_attrs = []
-                      }) args in
+                      FStar_Syntax_Syntax.mk_binder_with_attrs x1 q []) args in
            let c1 = readback_comp cfg c in
            let uu___1 = FStar_Syntax_Util.arrow binders c1 in
            with_range uu___1
