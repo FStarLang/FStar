@@ -2081,6 +2081,12 @@ let remove_reify (t: S.term): S.term =
 (*********************************************************************************************)
 (* Instantiation and generalization *)
 (*********************************************************************************************)
+let maybe_implicit_with_meta_or_attr aq attrs =
+  match aq, attrs with
+  | Some (Meta _), _
+  | Some (Implicit _), _::_ -> true
+  | _ -> false
+
 let maybe_instantiate (env:Env.env) e t =
   let torig = SS.compress t in
   if not env.instantiate_imp
@@ -2149,9 +2155,7 @@ let maybe_instantiate (env:Env.env) e t =
                       (v, Some S.imp_tag)::args, bs, subst, Env.conj_guard g g'
 
                   | _, ({binder_bv=x; binder_qual=qual; binder_attrs=attrs})::rest
-                    when (match qual with | Some (Meta _) -> true
-                                          | _ -> false)
-                       || (List.length attrs > 0) ->
+                    when maybe_implicit_with_meta_or_attr qual attrs ->
                       let t = SS.subst subst x.sort in
                       let meta_t = 
                         match qual, attrs with
@@ -2366,7 +2370,6 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
   let sig_ctx = mk_sigelt (Sig_let (lb, [ lident ])) in
   {sig_ctx with sigquals=[ Unfold_for_unification_and_vcgen ]},
   mk (Tm_fvar fv) Range.dummyRange
-
 
 /////////////////////////////////////////////////////////////////////////////
 //Checks that the qualifiers on this sigelt are legal for it

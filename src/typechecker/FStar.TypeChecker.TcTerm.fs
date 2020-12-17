@@ -1945,7 +1945,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                      bs       (* formal parameters *)
                      args     (* remaining actual arguments *) : (term * lcomp * guard_t) =
         match bs, args with
-        | ({binder_bv=x;binder_qual=Some (Implicit _);binder_attrs=[]})::rest, (_, None)::_ -> (* instantiate an implicit arg *)
+        | ({binder_bv=x;binder_qual=Some (Implicit _);binder_attrs=[]})::rest,
+          (_, None)::_ -> (* instantiate an implicit arg that's not associated with a tactic, i.e. no Meta or attrs *)
             let t = SS.subst subst x.sort in
             let t, g_ex = check_no_escape (Some head) env fvs t in
             (* We compute a range by combining the range of the head
@@ -1968,10 +1969,9 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             let guard = List.fold_right Env.conj_guard [g_ex; g] implicits in
             tc_args head_info (subst, (arg, None, S.mk_Total t |> TcComm.lcomp_of_comp)::outargs, arg::arg_rets, guard, fvs) rest args
 
-        | ({binder_bv=x;binder_qual=qual;binder_attrs=attrs})::rest, (_, None)::_
-          when (match qual with | Some (Meta _) -> true
-                                | _ -> false)
-             || (List.length attrs > 0) -> (* instantiate a meta arg *)
+        | ({binder_bv=x;binder_qual=qual;binder_attrs=attrs})::rest,
+          (_, None)::_
+          when (TcUtil.maybe_implicit_with_meta_or_attr qual attrs) -> (* instantiate a meta arg *)
             (* We follow the exact same procedure as for instantiating an implicit,
              * except that we keep track of the (uvar, env, metaprogram) pair in the environment
              * so we can later come back to the implicit and, if it wasn't solved by unification,
@@ -1988,7 +1988,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                   let tau = SS.subst subst tau in
                   let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
                   Ctx_uvar_meta_tac (mkdyn env, tau), g_tau
-                | _, attr::_ ->
+                | Some (Implicit _), attr::_ ->
                   let attr = SS.subst subst attr in
                   let attr, _, g_attr = tc_tot_or_gtot_term env attr in
                   Ctx_uvar_meta_attr attr, g_attr
