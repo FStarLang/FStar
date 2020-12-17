@@ -2081,7 +2081,7 @@ let remove_reify (t: S.term): S.term =
 (*********************************************************************************************)
 (* Instantiation and generalization *)
 (*********************************************************************************************)
-let maybe_implicit_with_meta_or_attr aq attrs =
+let maybe_implicit_with_meta_or_attr aq (attrs:list<attribute>) =
   match aq, attrs with
   | Some (Meta _), _
   | Some (Implicit _), _::_ -> true

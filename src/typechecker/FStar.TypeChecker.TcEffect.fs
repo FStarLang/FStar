@@ -663,8 +663,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let binder_aq_to_arg_aq (aq, attrs) =
       match aq, attrs with
       | Some (Implicit _), _ -> aq
-      | Some (Meta _), _
-      | None, _ when List.length attrs <> 0 -> Some (Implicit false)
+      | Some (Meta _), _ -> Some (Implicit false)
       | _ -> None in
 
     let ite_us, ite_t, _ = if_then_else in
