@@ -10,26 +10,25 @@ open FStar.Mul
 open FStar.InteractiveHelpers.Tutorial.Definitions
 
 /// WARNING: if a command fails, it is very likely because of the below issue
-/// The extended mode requires the FEM.Process module to run meta-processing
+/// The extended mode requires the FStar.InteractiveHelpers module to run meta-processing
 /// functions on the code the user is working on. F* needs to know which modules
 /// to load from the very start and won't load additional modules on-demand (you
 /// will need to restart the F* mode), which means that if you intend to use the
 /// extended mode while working on a file, you have to make sure F* will load
-/// FEM.Process:
-module FI = FStar.FStar.InteractiveHelpers
+/// FStar.InteractiveHelpers:
+module FI = FStar.InteractiveHelpers
 /// alternatively if you're not afraid of shadowing:
-/// open FEM.Process
+/// open FStar.InteractiveHelpers
 
 #push-options "--z3rlimit 50 --fuel 0 --ifuel 0"
 
 (*** Basic commands *)
 (**** Rolling admit (C-S-r) *)
-/// F* is not always very precise when generating errors to indicate which
-/// proof obligation failed to the user. The most common workaround is the
+/// A very common technique used when incrementally working on a proof is the
 /// "rolling-admit" technique, which consists in inserting an admit in the
-/// problematic function and moving it around until we identify the exact
-/// piece of code which makes verification fail. This technique is made
-/// simpler by the [fem-roll-admit command] (C-S-r).
+/// a function which doesn't typecheck and moving it around until we
+/// identify the exact piece of code which makes verification fail.
+/// This technique is made simpler by the [fem-roll-admit command] (C-S-r).
 
 /// Try typing C-S-r anywhere below to insert/move an admit:
 let simpl_ex1 (x : nat) =
@@ -59,13 +58,12 @@ let simpl_ex1 (x : nat) =
 /// at the very end and adding function calls or assertions one at a time,
 /// type-checking with F* at every changement to make sure that it is legal.
 /// However, when such functions or proofs become long, whenever we query F*,
-/// it often takes time to recheck all the already known to succeed proof
+/// it takes a lot of time to recheck all the already known-to-succeed proof
 /// obligations, before getting to the new (interesting) ones. A common way of
 /// mitigating this problem is to convert the assertions to assumptions once we
 /// know they succeed.
 
-/// Try calling fem-switch-assert-assume (C-S-s) in
-/// the below function.
+/// Try calling fem-switch-assert-assume (C-S-s) in the below function.
 /// Note that it operates either on the assertion under the pointer, or on the
 /// current selection.
 let simpl_ex2 (x : nat) =
@@ -256,7 +254,7 @@ let ut_ex1 (x y : nat) : unit =
    * use for rewriting.
    *)
   assert(f3 (f3 (x + y)) = 4 * (x + y));
-  assert(2 * z1 = z1 + z1);  
+  assert(2 * z1 = z1 + z1);
   assert(f3 (f3 (x + y)) = 2 * z1) (* <- SELECT an operand then call C-c C-e C-u *)
 
 /// Of course, it works with effectful functions too, and searches the context
@@ -373,9 +371,9 @@ let dbg_ex1 () : Tot nat =
 /// Note that the post-processing tactic will FAIL: it is NORMAL. It aborts early
 /// so as not to deal with any proof obligation. However, you should be able to
 /// retrieve useful information from the *Messages* buffer.
-[@(postprocess_with (FEM.pp_analyze_effectful_term false false true))]
+[@(postprocess_with (FStar.InteractiveHelpers.pp_analyze_effectful_term false false true))]
 let dbg_ex2 () : Tot nat =
   let x = 4 in
   let y = 2 in
-  let _ = FEM.focus_on_term in (* indicates the term to analyze to the post-processing tactic *)
+  let _ = FStar.InteractiveHelpers.focus_on_term in (* indicates the term to analyze to the post-processing tactic *)
   f1 x y

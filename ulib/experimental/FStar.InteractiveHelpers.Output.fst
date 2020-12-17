@@ -139,7 +139,7 @@ let result_to_printout (prefix:string) (res:export_result) :
   (* Assertions *)
   let str = str ^ propositions_to_printout ge (prefix ^ ":pres") pres in
   let str = str ^ propositions_to_printout ge (prefix ^ ":posts") posts in
-  str ^ prefix ^ ":END\n" ^ "%FEM:FSTAR_META:END%"
+  str ^ prefix ^ ":END\n" ^ "%FIH:FSTAR_META:END%"
 
 let printout_result (prefix:string) (res:export_result) :
   Tac unit =
