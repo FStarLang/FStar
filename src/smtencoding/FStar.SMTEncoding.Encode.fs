@@ -461,7 +461,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
                     [Util.mkAssume(mkForall (S.range_of_fv fv) ([[vapp]], vars,
                                             mkEq(vapp, prim_app)), Some "Projector equation", ("proj_equation_"^tp_name))]
                 | _ -> []) in
-              let vars, guards, env', decls1, _ = encode_binders None formals env in
+              let vars, _, guards, env', decls1, _ = encode_binders None formals env in
               let guard, decls1 = match pre_opt with
                 | None -> mk_and_l guards, decls1
                 | Some p -> let g, ds = encode_formula p env' in mk_and_l (g::guards), decls1@ds in
@@ -510,7 +510,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
               let vapp = mkApp(vname, List.map mkFreeV vars) in //arity ok, see decl below, arity is |vars| (#1383)
               let decls2, env =
                 let vname_decl = Term.DeclFun(vname, vars |> List.map fv_sort, Term_sort, None) in
-                let tok_typing, decls2 =
+                let _, tok_typing, decls2 =
                     let env = {env with encode_non_total_function_typ=encode_non_total_function_typ} in
                     if not(head_normal env tt)
                     then encode_term_pred None tt env vtok_tm
@@ -780,7 +780,7 @@ let encode_top_level_let :
                                 (Print.binders_to_string ", " binders)
                                 (Print.term_to_string body);
                 (* Encode binders *)
-                let vars, _guards, env', binder_decls, _ = encode_binders None binders env' in
+                let vars, _,  _guards, env', binder_decls, _ = encode_binders None binders env' in
                 let vars, app =
                     if fvb.fvb_thunked && vars = []
                     then let dummy_var = mk_fv ("@dummy", dummy_sort) in
@@ -867,7 +867,7 @@ let encode_top_level_let :
             //in
 
 
-            let vars, guards, env', binder_decls, _ = encode_binders None binders env' in
+            let vars, _, guards, env', binder_decls, _ = encode_binders None binders env' in
 
             let guard, guard_decls =
                 match pre_opt with
@@ -923,7 +923,7 @@ let encode_top_level_let :
                               ("fuel_token_correspondence_"^gtok))
               in
               let aux_decls, typing_corr =
-                let g_typing, d3 = encode_term_pred None tres env' gapp in
+                let _, g_typing, d3 = encode_term_pred None tres env' gapp in
                 d3, [Util.mkAssume(mkForall (U.range_of_lbname lbn)
                                             ([[gapp]], fuel::vars, mkImp(guard, g_typing)),
                                     Some "Typing correspondence of token to term",
@@ -1321,7 +1321,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
           U.arrow_formals k
         in
 
-        let vars, guards, env', binder_decls, _ = encode_binders None formals env in
+        let vars, _, guards, env', binder_decls, _ = encode_binders None formals env in
         let arity = List.length vars in
         let tname, ttok, env = new_term_constant_and_tok_from_lid env t arity in
         let ttok_tm = mkApp(ttok, []) in
@@ -1356,7 +1356,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             if lid_equals t Const.lex_t_lid then tok_decls, env  //AR: for lex_t, we add the declaration in the prelude itself
             else tname_decl@tok_decls, env in
         let kindingAx =
-            let k, decls = encode_term_pred None res env' tapp in
+            let _, k, decls = encode_term_pred None res env' tapp in
             let karr =
                 if List.length formals > 0
                 then [Util.mkAssume(mk_tester "Tm_arrow" (mk_PreType ttok_tm), Some "kinding", ("pre_kinding_"^ttok))]
@@ -1390,7 +1390,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let ddtok_tm = mkApp(ddtok, []) in
         let fuel_var, fuel_tm = fresh_fvar env.current_module_name "f" Fuel_sort in
         let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
-        let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
+        let vars, vars_sorts, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
         let fields = names |> List.mapi (fun n x ->
             let projectible = true in
 //            let projectible = n >= n_tps in //Note: the type parameters are not projectible,
@@ -1405,7 +1405,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let xvars = List.map mkFreeV vars in
         let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
 
-        let tok_typing, decls3 = encode_term_pred None t env ddtok_tm in
+        let _, tok_typing, decls3 = encode_term_pred None t env ddtok_tm in
         let tok_typing =
              match fields with
              | _::_ ->
@@ -1425,8 +1425,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         [ff],
                         Term.mk_NoHoist f tok_typing)
              | _ -> tok_typing in
-        let vars', guards', env'', decls_formals, _ = encode_binders (Some fuel_tm) formals env in //NS/CH: used to be s_fuel_tm
-        let ty_pred', decls_pred =
+        let vars', _, guards', env'', decls_formals, _ = encode_binders (Some fuel_tm) formals env in //NS/CH: used to be s_fuel_tm
+        let _, ty_pred', decls_pred =
              let xvars = List.map mkFreeV vars' in
              let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
              encode_term_pred (Some fuel_tm) t_res env'' dapp in
@@ -1488,12 +1488,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
                     (* subterm ordering *)
                     let prec =
-                        vars
-                          |> List.mapi (fun i v ->
+                        let vars_with_sorts =
+                          List.map2 (fun v s -> (v, s)) vars vars_sorts in
+                        vars_with_sorts
+                          |> List.mapi (fun i (v, s) ->
                                 (* it's a parameter, so it's inaccessible and no need for a sub-term ordering on it *)
                                 if i < n_tps
                                 then []
-                                else [mk_Precedes lex_t lex_t (mkFreeV v) dapp])
+                                else [mk_Precedes s ty (mkFreeV v) dapp])
                           |> List.flatten
                      in
                      Util.mkAssume(mkForall (Ident.range_of_lid d)
