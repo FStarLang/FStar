@@ -996,15 +996,6 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               ||  S.fv_eq_lid fv Const.exists_lid) ->
           encode_deeply_embedded_quantifier t0 env
 
-        | Tm_uinst({n=Tm_fvar fv}, _), [(v0, _) ; (v1, _); (v2, _)]
-        | Tm_fvar fv,  [(v0, _); (v1, _); (v2, _)]
-            when S.fv_eq_lid fv Const.lexcons_lid ->
-            //lex tuples are primitive
-            let v0, decls0 = encode_term v0 env in
-            let v1, decls1 = encode_term v1 env in
-            let v2, decls2 = encode_term v2 env in
-            mk_LexCons v0 v1 v2, decls0@decls1@decls2
-
         | Tm_constant Const_range_of, [(arg, _)] ->
             encode_const (Const_range arg.pos) env
 

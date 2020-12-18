@@ -199,14 +199,13 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
          Util.mkAssume(mkForall_fuel env (Env.get_range env)
                                      ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxBoolFun) x)), Some "bool inversion", "bool_inversion")] in
     let mk_int : env -> string -> term -> list<decl>  = fun env nm tt ->
-        let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
         let typing_pred = mk_HasType x tt in
         let typing_pred_y = mk_HasType y tt in
         let aa = mk_fv ("a", Int_sort) in
         let a = mkFreeV aa in
         let bb = mk_fv ("b", Int_sort) in
         let b = mkFreeV bb in
-        let precedes_y_x = mk_Valid <| mkApp("Prims.precedes", [lex_t; lex_t;y;x]) in
+        let precedes_y_x = mk_Valid <| mkApp("Prims.precedes", [tt;tt;y;x]) in
         [Util.mkAssume(mkForall (Env.get_range env) ([[Term.boxInt b]], [bb], mk_HasType (Term.boxInt b) tt), Some "int typing", "int_typing");
          Util.mkAssume(mkForall_fuel env (Env.get_range env) ([[typing_pred]], [xx], mkImp(typing_pred, mk_tester (fst boxIntFun) x)), Some "int inversion", "int_inversion");
          Util.mkAssume(mkForall_fuel env (Env.get_range env) ([[typing_pred; typing_pred_y;precedes_y_x]],
@@ -219,14 +218,13 @@ let primitive_type_axioms : env -> lident -> string -> term -> list<decl> =
                                          precedes_y_x)),
                                   Some "well-founded ordering on nat (alt)", "well-founded-ordering-on-nat")] in
     let mk_real : env -> string -> term -> list<decl>  = fun env nm tt ->
-        let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
         let typing_pred = mk_HasType x tt in
         let typing_pred_y = mk_HasType y tt in
         let aa = mk_fv ("a", Sort "Real") in
         let a = mkFreeV aa in
         let bb = mk_fv ("b", Sort "Real") in
         let b = mkFreeV bb in
-        let precedes_y_x = mk_Valid <| mkApp("Prims.precedes", [lex_t; lex_t;y;x]) in
+        let precedes_y_x = mk_Valid <| mkApp("Prims.precedes", [tt;tt;y;x]) in
         [Util.mkAssume(mkForall
                          (Env.get_range env)
                          ([[Term.boxReal b]],
@@ -1353,8 +1351,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                                         Some "name-token correspondence",
                                                         ("token_correspondence_"^ttok)) in
                         [ttok_decl; ttok_fresh; name_tok_corr], env in
-            if lid_equals t Const.lex_t_lid then tok_decls, env  //AR: for lex_t, we add the declaration in the prelude itself
-            else tname_decl@tok_decls, env in
+            tname_decl@tok_decls, env in
         let kindingAx =
             let _, k, decls = encode_term_pred None res env' tapp in
             let karr =
@@ -1378,8 +1375,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 @binder_decls
                 @aux in
         g, env
-
-    | Sig_datacon(d, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env
 
     | Sig_datacon(d, _, t, _, n_tps, _) ->
         let quals = se.sigquals in
@@ -1485,7 +1480,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                Some "data constructor typing elim",
                                ("data_elim_" ^ ddconstrsym)) in
                   let subterm_ordering =
-                    let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
                     (* subterm ordering *)
                     let prec =
                         let vars_with_sorts =

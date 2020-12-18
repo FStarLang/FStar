@@ -279,7 +279,6 @@ let lid_with_range lid r = lid_of_path (path_of_lid lid) r
 
 let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
-let lexConsTerm r hd tl = mk_term (Construct(C.lexcons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
 
 let mkConsList r elts =
   let nil = mk_term (Construct(C.nil_lid, [])) r Expr in

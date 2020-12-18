@@ -2098,8 +2098,7 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
 
 let mk_data_projector_names iquals env se : list<sigelt> =
   match se.sigel with
-  | Sig_datacon(lid, _, t, _, n, _) when (//(not env.iface || env.admitted_iface) &&
-                                                not (lid_equals lid C.lexcons_lid)) ->
+  | Sig_datacon(lid, _, t, _, n, _) ->
     let formals, _ = U.arrow_formals t in
     begin match formals with
         | [] -> [] //no fields to project

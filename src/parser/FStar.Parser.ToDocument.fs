@@ -240,7 +240,7 @@ let is_list_structure cons_lid nil_lid =
   in aux
 
 let is_list = is_list_structure C.cons_lid C.nil_lid
-let is_lex_list = is_list_structure C.lexcons_lid C.lextop_lid
+let is_lex_list _ = false //AR: TODO: is_list_structure C.lexcons_lid C.lextop_lid
 
 (* [extract_from_list e] assumes that [is_list_structure xxx yyy e] holds *)
 (* and returns the list of terms contained in the list *)

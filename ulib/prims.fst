@@ -568,23 +568,6 @@ effect M (a: Type) = Tot a (attributes cps)
 (** Returning a value into the [M] effect *)
 let returnM (a: Type) (x: a) : M a = x
 
-(** The type of lexicographically ordered tuples.
-
-    Its values are usually written [%[a;b;c]] instead of
-    [LexCons a (LexCons b (LexCons c LexTop))]
-
-    Its main interest is in its ordering. In particular
-
-    [{
-      %[a;b] << %[c;d] <==> a << c  \/ (a == c /\ b << d)
-    }]
-    
-    TODO: Rather than exposing this as an an inductive type, we plan
-          to revise this as an abstract type.  *)
-type lex_t =
-  | LexTop : lex_t
-  | LexCons : #a: Type -> a -> lex_t -> lex_t
-
 (** [as_requires] turns a WP into a precondition, by applying it to
     a trivial postcondition *)
 unfold
