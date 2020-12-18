@@ -160,7 +160,7 @@ let (no_inst : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
       FStar_TypeChecker_Env.unif_allow_ref_guards =
         (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
     }
-let rec (mk_lex_list :
+let rec (mk_lex_tuple :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax Prims.list ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
@@ -169,7 +169,7 @@ let rec (mk_lex_list :
     | [] -> failwith "Did not expect an empty lex list"
     | x::[] -> x
     | hd::tl ->
-        let rest = mk_lex_list tl in
+        let rest = mk_lex_tuple tl in
         let r =
           if rest.FStar_Syntax_Syntax.pos = FStar_Range.dummyRange
           then hd.FStar_Syntax_Syntax.pos
@@ -1060,7 +1060,7 @@ let (guard_letrecs :
                           FStar_Syntax_Syntax.fv_eq_lid fv
                             FStar_Parser_Const.lid_Mktuple2
                           -> dec
-                      | uu___3 -> mk_lex_list [dec]) in
+                      | uu___3 -> mk_lex_tuple [dec]) in
                let cflags = FStar_Syntax_Util.comp_flags c in
                let uu___1 =
                  FStar_All.pipe_right cflags
@@ -1075,7 +1075,7 @@ let (guard_letrecs :
                | uu___2 ->
                    let xs =
                      FStar_All.pipe_right bs filter_types_and_functions in
-                   mk_lex_list xs) in
+                   mk_lex_tuple xs) in
             let previous_dec = decreases_clause actuals expected_c in
             let guard_one_letrec uu___ =
               match uu___ with
