@@ -160,27 +160,32 @@ let (no_inst : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
       FStar_TypeChecker_Env.unif_allow_ref_guards =
         (uu___.FStar_TypeChecker_Env.unif_allow_ref_guards)
     }
-let (mk_lex_list :
+let rec (mk_lex_list :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax Prims.list ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
   =
   fun vs ->
-    FStar_List.fold_right
-      (fun v ->
-         fun tl ->
-           let r =
-             if tl.FStar_Syntax_Syntax.pos = FStar_Range.dummyRange
-             then v.FStar_Syntax_Syntax.pos
-             else
-               FStar_Range.union_ranges v.FStar_Syntax_Syntax.pos
-                 tl.FStar_Syntax_Syntax.pos in
-           let uu___ =
-             let uu___1 = FStar_Syntax_Syntax.as_arg v in
-             let uu___2 =
-               let uu___3 = FStar_Syntax_Syntax.as_arg tl in [uu___3] in
-             uu___1 :: uu___2 in
-           FStar_Syntax_Syntax.mk_Tm_app FStar_Syntax_Util.lex_pair uu___ r)
-      vs FStar_Syntax_Util.lex_top
+    match vs with
+    | [] -> failwith "Did not expect an empty lex list"
+    | x::[] -> x
+    | hd::tl ->
+        let rest = mk_lex_list tl in
+        let r =
+          if rest.FStar_Syntax_Syntax.pos = FStar_Range.dummyRange
+          then hd.FStar_Syntax_Syntax.pos
+          else
+            FStar_Range.union_ranges hd.FStar_Syntax_Syntax.pos
+              rest.FStar_Syntax_Syntax.pos in
+        let uu___ =
+          FStar_Syntax_Syntax.fvar FStar_Parser_Const.lid_Mktuple2
+            FStar_Syntax_Syntax.delta_constant
+            (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
+        let uu___1 =
+          let uu___2 = FStar_Syntax_Syntax.as_arg hd in
+          let uu___3 =
+            let uu___4 = FStar_Syntax_Syntax.as_arg rest in [uu___4] in
+          uu___2 :: uu___3 in
+        FStar_Syntax_Syntax.mk_Tm_app uu___ uu___1 r
 let (is_eq :
   FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
     Prims.bool)
@@ -1053,7 +1058,7 @@ let (guard_letrecs :
                      (match head.FStar_Syntax_Syntax.n with
                       | FStar_Syntax_Syntax.Tm_fvar fv when
                           FStar_Syntax_Syntax.fv_eq_lid fv
-                            FStar_Parser_Const.lexcons_lid
+                            FStar_Parser_Const.lid_Mktuple2
                           -> dec
                       | uu___3 -> mk_lex_list [dec]) in
                let cflags = FStar_Syntax_Util.comp_flags c in

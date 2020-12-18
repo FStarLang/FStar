@@ -965,12 +965,18 @@ let (mkConsList : FStar_Range.range -> term Prims.list -> term) =
     fun elts ->
       let nil = mk_term (Construct (FStar_Parser_Const.nil_lid, [])) r Expr in
       FStar_List.fold_right (fun e -> fun tl -> consTerm r e tl) elts nil
-let (mkLexList : FStar_Range.range -> term Prims.list -> term) =
+let rec (mkLexTuple : FStar_Range.range -> term Prims.list -> term) =
   fun r ->
     fun elts ->
-      let nil =
-        mk_term (Construct (FStar_Parser_Const.lextop_lid, [])) r Expr in
-      FStar_List.fold_right (fun e -> fun tl -> lexConsTerm r e tl) elts nil
+      match elts with
+      | [] -> failwith "Did not expect an empty lex list"
+      | elt::[] -> elt
+      | hd::tl ->
+          let rest = mkLexTuple r tl in
+          mk_term
+            (Construct
+               (FStar_Parser_Const.lid_Mktuple2,
+                 [(hd, Nothing); (rest, Nothing)])) r Expr
 let (ml_comp : term -> term) =
   fun t ->
     let ml = mk_term (Name FStar_Parser_Const.effect_ML_lid) t.range Expr in
