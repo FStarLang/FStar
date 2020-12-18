@@ -285,9 +285,16 @@ let mkConsList r elts =
   let nil = mk_term (Construct(C.nil_lid, [])) r Expr in
     List.fold_right (fun e tl -> consTerm r e tl) elts nil
 
-let mkLexList r elts =
-  let nil = mk_term (Construct(C.lextop_lid, [])) r Expr in
-  List.fold_right (fun e tl -> lexConsTerm r e tl) elts nil
+(*
+ * [a; b; c] -> a, (b, c)
+ *)
+let rec mkLexTuple r elts =
+  match elts with
+  | [] -> failwith "Did not expect an empty lex list"
+  | [elt] -> elt
+  | hd::tl ->
+    let rest = mkLexTuple r tl in
+    mk_term (Construct (C.lid_Mktuple2, [(hd, Nothing); (rest, Nothing)])) r Expr
 
 let ml_comp t =
     let ml = mk_term (Name C.effect_ML_lid) t.range Expr in

@@ -50,11 +50,22 @@ module Const = FStar.Parser.Const
 (* Some local utilities *)
 let instantiate_both env = {env with Env.instantiate_imp=true}
 let no_inst env = {env with Env.instantiate_imp=false}
-let mk_lex_list vs =
-    List.fold_right (fun v tl ->
-        let r = if tl.pos = Range.dummyRange then v.pos else Range.union_ranges v.pos tl.pos in
-        mk_Tm_app lex_pair [as_arg v; as_arg tl] r)
-    vs lex_top
+
+let rec mk_lex_tuple vs =
+  match vs with
+  | [] -> failwith "Did not expect an empty lex list"
+  | [x] -> x
+  | hd::tl ->
+    let rest = mk_lex_tuple tl in
+    let r =
+      if rest.pos = Range.dummyRange
+      then hd.pos
+      else Range.union_ranges hd.pos rest.pos in
+    mk_Tm_app
+      (fvar Const.lid_Mktuple2 delta_constant (Some Data_ctor))
+      [as_arg hd; as_arg rest]
+      r
+
 let is_eq = function
     | Some Equality -> true
     | _ -> false
@@ -388,14 +399,14 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
           let as_lex_list dec =
                 let head, _ = U.head_and_args dec in
                 match head.n with (* The decreases clause is always an expression of type lex_t; promote if it isn't *)
-                    | Tm_fvar fv when S.fv_eq_lid fv Const.lexcons_lid -> dec
-                    | _ -> mk_lex_list [dec] in
+                    | Tm_fvar fv when S.fv_eq_lid fv Const.lid_Mktuple2 -> dec
+                    | _ -> mk_lex_tuple [dec] in
           let cflags = U.comp_flags c in
           match cflags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
                 | Some (DECREASES dec) -> as_lex_list dec
                 | _ ->
                     let xs = bs |> filter_types_and_functions in
-                    mk_lex_list xs
+                    mk_lex_tuple xs
       in
 
       let previous_dec = decreases_clause actuals expected_c in
