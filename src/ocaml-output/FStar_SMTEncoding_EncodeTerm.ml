@@ -2002,51 +2002,138 @@ and (encode_term :
                                             (Prims.op_Hat "haseq" tsym)) in
                                         FStar_SMTEncoding_Util.mkAssume
                                           uu___8 in
-                                      let t_kinding =
-                                        let uu___8 =
-                                          let uu___9 =
-                                            FStar_SMTEncoding_Term.mkForall
-                                              t0.FStar_Syntax_Syntax.pos
-                                              ([[t_has_kind]], cvars1,
-                                                t_has_kind) in
-                                          (uu___9,
-                                            (FStar_Pervasives_Native.Some
-                                               "refinement kinding"),
-                                            (Prims.op_Hat
-                                               "refinement_kinding_" tsym)) in
-                                        FStar_SMTEncoding_Util.mkAssume
-                                          uu___8 in
-                                      let t_interp =
-                                        let uu___8 =
+                                      let uu___8 =
+                                        let fsym1 =
                                           let uu___9 =
                                             let uu___10 =
-                                              let uu___11 =
-                                                FStar_SMTEncoding_Util.mkIff
-                                                  (x_has_t, encoding) in
-                                              ([[x_has_t]], (ffv :: xfv ::
-                                                cvars1), uu___11) in
-                                            FStar_SMTEncoding_Term.mkForall
-                                              t0.FStar_Syntax_Syntax.pos
-                                              uu___10 in
-                                          (uu___9,
-                                            (FStar_Pervasives_Native.Some
-                                               "refinement_interpretation"),
-                                            (Prims.op_Hat
-                                               "refinement_interpretation_"
-                                               tsym)) in
-                                        FStar_SMTEncoding_Util.mkAssume
-                                          uu___8 in
-                                      let t_decls =
-                                        [tdecl; t_kinding; t_interp; t_haseq] in
-                                      let uu___8 =
+                                              FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.fresh
+                                                env.FStar_SMTEncoding_Env.current_module_name
+                                                "x" in
+                                            (uu___10,
+                                              FStar_SMTEncoding_Term.Term_sort) in
+                                          FStar_SMTEncoding_Term.mk_fv uu___9 in
                                         let uu___9 =
-                                          let uu___10 =
-                                            FStar_SMTEncoding_Term.mk_decls
-                                              tsym tkey_hash t_decls
-                                              (FStar_List.append decls decls') in
-                                          FStar_List.append decls' uu___10 in
-                                        FStar_List.append decls uu___9 in
-                                      (t2, uu___8))))))))
+                                          FStar_SMTEncoding_Util.mkFreeV
+                                            fsym1 in
+                                        (fsym1, uu___9) in
+                                      match uu___8 with
+                                      | (x_pre_sym, x_pre_tm) ->
+                                          let uu___9 =
+                                            let fsym1 =
+                                              let uu___10 =
+                                                let uu___11 =
+                                                  FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.fresh
+                                                    env.FStar_SMTEncoding_Env.current_module_name
+                                                    "y" in
+                                                (uu___11,
+                                                  FStar_SMTEncoding_Term.Term_sort) in
+                                              FStar_SMTEncoding_Term.mk_fv
+                                                uu___10 in
+                                            let uu___10 =
+                                              FStar_SMTEncoding_Util.mkFreeV
+                                                fsym1 in
+                                            (fsym1, uu___10) in
+                                          (match uu___9 with
+                                           | (y_pre_sym, y_pre_tm) ->
+                                               let precedes_base =
+                                                 let uu___10 =
+                                                   FStar_SMTEncoding_Util.mkApp
+                                                     ("Prims.precedes",
+                                                       [base_t;
+                                                       base_t;
+                                                       x_pre_tm;
+                                                       y_pre_tm]) in
+                                                 FStar_SMTEncoding_Term.mk_Valid
+                                                   uu___10 in
+                                               let precedes_ref =
+                                                 let uu___10 =
+                                                   FStar_SMTEncoding_Util.mkApp
+                                                     ("Prims.precedes",
+                                                       [t2;
+                                                       t2;
+                                                       x_pre_tm;
+                                                       y_pre_tm]) in
+                                                 FStar_SMTEncoding_Term.mk_Valid
+                                                   uu___10 in
+                                               let t_precedes =
+                                                 let uu___10 =
+                                                   let uu___11 =
+                                                     let uu___12 =
+                                                       let uu___13 =
+                                                         FStar_SMTEncoding_Util.mkImp
+                                                           (precedes_base,
+                                                             precedes_ref) in
+                                                       ([[precedes_ref]],
+                                                         (x_pre_sym ::
+                                                         y_pre_sym ::
+                                                         cvars1), uu___13) in
+                                                     FStar_SMTEncoding_Term.mkForall
+                                                       t0.FStar_Syntax_Syntax.pos
+                                                       uu___12 in
+                                                   (uu___11,
+                                                     (FStar_Pervasives_Native.Some
+                                                        (Prims.op_Hat
+                                                           "precees for "
+                                                           tsym)),
+                                                     (Prims.op_Hat "precedes"
+                                                        tsym)) in
+                                                 FStar_SMTEncoding_Util.mkAssume
+                                                   uu___10 in
+                                               let t_kinding =
+                                                 let uu___10 =
+                                                   let uu___11 =
+                                                     FStar_SMTEncoding_Term.mkForall
+                                                       t0.FStar_Syntax_Syntax.pos
+                                                       ([[t_has_kind]],
+                                                         cvars1, t_has_kind) in
+                                                   (uu___11,
+                                                     (FStar_Pervasives_Native.Some
+                                                        "refinement kinding"),
+                                                     (Prims.op_Hat
+                                                        "refinement_kinding_"
+                                                        tsym)) in
+                                                 FStar_SMTEncoding_Util.mkAssume
+                                                   uu___10 in
+                                               let t_interp =
+                                                 let uu___10 =
+                                                   let uu___11 =
+                                                     let uu___12 =
+                                                       let uu___13 =
+                                                         FStar_SMTEncoding_Util.mkIff
+                                                           (x_has_t,
+                                                             encoding) in
+                                                       ([[x_has_t]], (ffv ::
+                                                         xfv :: cvars1),
+                                                         uu___13) in
+                                                     FStar_SMTEncoding_Term.mkForall
+                                                       t0.FStar_Syntax_Syntax.pos
+                                                       uu___12 in
+                                                   (uu___11,
+                                                     (FStar_Pervasives_Native.Some
+                                                        "refinement_interpretation"),
+                                                     (Prims.op_Hat
+                                                        "refinement_interpretation_"
+                                                        tsym)) in
+                                                 FStar_SMTEncoding_Util.mkAssume
+                                                   uu___10 in
+                                               let t_decls =
+                                                 [tdecl;
+                                                 t_kinding;
+                                                 t_interp;
+                                                 t_haseq;
+                                                 t_precedes] in
+                                               let uu___10 =
+                                                 let uu___11 =
+                                                   let uu___12 =
+                                                     FStar_SMTEncoding_Term.mk_decls
+                                                       tsym tkey_hash t_decls
+                                                       (FStar_List.append
+                                                          decls decls') in
+                                                   FStar_List.append decls'
+                                                     uu___12 in
+                                                 FStar_List.append decls
+                                                   uu___11 in
+                                               (t2, uu___10)))))))))
        | FStar_Syntax_Syntax.Tm_uvar (uv, uu___1) ->
            let ttm =
              let uu___2 =
