@@ -26,6 +26,8 @@ let smt_pat #_ _ = ()
 
 let smt_pat_or _ = ()
 
+let precedes_lex _ _ _ _ _ _ = admit ()
+
 let spinoff p = p
 
 let assert_spinoff _ = ()
