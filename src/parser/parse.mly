@@ -24,13 +24,27 @@ open FStar_String
 let logic_qualifier_deprecation_warning =
   "logic qualifier is deprecated, please remove it from the source program. In case your program verifies with the qualifier annotated but not without it, please try to minimize the example and file a github issue"
 
-
-let mk_meta_tac m = Meta (Arg_qualifier_meta_tac m)
-let mk_meta_attr m = Meta (Arg_qualifier_meta_attr m)
+let mk_meta_tac m = Meta m
 
 let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
+
+(*
+ * AR: convert an option (aqualifier & attributes)
+ *     to an (option aqualifier & attributes)
+ *)
+let get_aqual_and_attrs aqual_universe_opt =
+  match aqual_universe_opt with
+    | None -> None, []
+    | Some (q, l) -> Some q, l
+
+(*
+ * AR: convert an (option (aqualifier & attributes)) & X
+ *     to an (option aqualifier & attributes) & X from it
+ *)
+let get_aqual_and_attrs_and_X (aqual_universe_opt, x) =
+  get_aqual_and_attrs aqual_universe_opt, x
 %}
 
 %token <bytes> BYTEARRAY
@@ -296,7 +310,7 @@ attr_letbinding:
 letbinding:
   | focus_opt=maybeFocus lid=lidentOrOperator lbp=nonempty_list(patternOrMultibinder) ascr_opt=ascribeTyp? EQUALS tm=term
       {
-        let pat = mk_pattern (PatVar(lid, None)) (rhs parseState 2) in
+        let pat = mk_pattern (PatVar(lid, None, [])) (rhs parseState 2) in
         let pat = mk_pattern (PatApp (pat, flatten lbp)) (rhs2 parseState 1 3) in
         let pos = rhs2 parseState 1 6 in
         match ascr_opt with
@@ -414,14 +428,20 @@ letqualifier:
  (* Remove with stratify *)
 aqual:
   | EQUALS    {  log_issue (lhs parseState) (Warning_DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
-                                        Equality }
-  | q=aqualUniverses { q }
+                                        Equality, [] }
+  | q=aqualAndAttrsUniverses { q }
 
-aqualUniverses:
-  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t }
-  | HASH LBRACK_AT_AT t=tmNoEq RBRACK { mk_meta_attr t }
-  | HASH      { Implicit }
-  | DOLLAR    { Equality }
+(*
+ * AR: this should be generalized to:
+ *     (a) allow more than one attributes on the binders
+ *     (b) allow attributes on non-implicit binders
+ *     note that in the [@@ case, we choose the Implicit aqual
+ *)
+aqualAndAttrsUniverses:
+  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t, [] }
+  | HASH LBRACK_AT_AT t=tmNoEq RBRACK { Implicit, [t] }
+  | HASH      { Implicit, [] }
+  | DOLLAR    { Equality, [] }
 
 /******************************************************************************/
 /*                         Patterns, binders                                  */
@@ -460,17 +480,19 @@ atomicPattern:
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rhs2 parseState 1 5) }
   | LPAREN pat=tuplePattern RPAREN   { pat }
-  | tv=tvar                   { mk_pattern (PatTvar (tv, None)) (rhs parseState 1) }
+  | tv=tvar                   { mk_pattern (PatTvar (tv, None, [])) (rhs parseState 1) }
   | LPAREN op=operator RPAREN
       { mk_pattern (PatOp op) (rhs2 parseState 1 3) }
   | UNDERSCORE
-      { mk_pattern (PatWild None) (rhs parseState 1) }
+      { mk_pattern (PatWild (None, [])) (rhs parseState 1) }
   | HASH UNDERSCORE
-      { mk_pattern (PatWild (Some Implicit)) (rhs parseState 1) }
+      { mk_pattern (PatWild (Some Implicit, [])) (rhs parseState 1) }
   | c=constant
       { mk_pattern (PatConst c) (rhs parseState 1) }
-  | qual_id=aqualified(lident)
-      { mk_pattern (PatVar (snd qual_id, fst qual_id)) (rhs parseState 1) }
+  | qual_id=aqualifiedWithAttrs(lident)
+    {
+      let (aqual, attrs), lid = qual_id in
+      mk_pattern (PatVar (lid, aqual, attrs)) (rhs parseState 1) }
   | uid=quident
       { mk_pattern (PatName uid) (rhs parseState 1) }
 
@@ -478,7 +500,7 @@ fieldPattern:
   | p = separated_pair(qlident, EQUALS, tuplePattern)
       { p }
   | lid=qlident
-      { lid, mk_pattern (PatVar (ident_of_lid lid, None)) (rhs parseState 1) }
+      { lid, mk_pattern (PatVar (ident_of_lid lid, None, [])) (rhs parseState 1) }
 
   (* (x : t) is already covered by atomicPattern *)
   (* we do *NOT* allow _ in multibinder () since it creates reduce/reduce conflicts when*)
@@ -486,7 +508,7 @@ fieldPattern:
 patternOrMultibinder:
   | LBRACE_BAR UNDERSCORE COLON t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        let w = mk_pattern (PatWild (Some (mk_meta_tac mt)))
+        let w = mk_pattern (PatWild (Some (mk_meta_tac mt), []))
                                  (rhs2 parseState 1 5) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
@@ -497,7 +519,7 @@ patternOrMultibinder:
    * why does PatWild even exist..? *)
   | LBRACE_BAR i=lident COLON t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        let w = mk_pattern (PatVar (i, Some (mk_meta_tac mt)))
+        let w = mk_pattern (PatVar (i, Some (mk_meta_tac mt), []))
                                  (rhs2 parseState 1 5) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 5)]
@@ -505,25 +527,25 @@ patternOrMultibinder:
 
   | LBRACE_BAR t=simpleArrow BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 2) Type_level in
-        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (mk_meta_tac mt)))
+        let w = mk_pattern (PatVar (gen (rhs2 parseState 1 3), Some (mk_meta_tac mt), []))
                                  (rhs2 parseState 1 3) in
         let asc = (t, None) in
         [mk_pattern (PatAscribed(w, asc)) (rhs2 parseState 1 3)]
       }
   | pat=atomicPattern { [pat] }
-  | LPAREN qual_id0=aqualified(lident) qual_ids=nonempty_list(aqualified(lident)) COLON t=simpleArrow r=refineOpt RPAREN
+  | LPAREN qual_id0=aqualifiedWithAttrs(lident) qual_ids=nonempty_list(aqualifiedWithAttrs(lident)) COLON t=simpleArrow r=refineOpt RPAREN
       {
         let pos = rhs2 parseState 1 7 in
         let t_pos = rhs parseState 5 in
         let qual_ids = qual_id0 :: qual_ids in
-        List.map (fun (q, x) -> mkRefinedPattern (mk_pattern (PatVar (x, q)) pos) t false r t_pos pos) qual_ids
+        List.map (fun ((aq, attrs), x) -> mkRefinedPattern (mk_pattern (PatVar (x, aq, attrs)) pos) t false r t_pos pos) qual_ids
       }
 
 binder:
-  | aqualified_lid=aqualified(lidentOrUnderscore)
+  | aqualifiedWithAttrs_lid=aqualifiedWithAttrs(lidentOrUnderscore)
      {
-       let (q, lid) = aqualified_lid in
-       mk_binder (Variable lid) (rhs parseState 1) Type_level q
+       let (q, attrs), lid = aqualifiedWithAttrs_lid in
+       mk_binder_with_attrs (Variable lid) (rhs parseState 1) Type_level q attrs
      }
 
   | tv=tvar  { mk_binder (TVariable tv) (rhs parseState 1) Kind None  }
@@ -543,15 +565,16 @@ multiBinder:
         [mk_binder (Annotated (id, t)) r Type_level (Some (mk_meta_tac mt))]
       }
 
-  | LPAREN qual_ids=nonempty_list(aqualified(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
+  | LPAREN qual_ids=nonempty_list(aqualifiedWithAttrs(lidentOrUnderscore)) COLON t=simpleArrow r=refineOpt RPAREN
      {
        let should_bind_var = match qual_ids with | [ _ ] -> true | _ -> false in
-       List.map (fun (q, x) -> mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q) qual_ids
+       List.map (fun ((q, attrs), x) ->
+         mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q attrs) qual_ids
      }
 
 binders: bss=list(b=binder {[b]} | bs=multiBinder {bs}) { flatten bss }
 
-aqualified(X): x=pair(ioption(aqualUniverses), X) { x }
+aqualifiedWithAttrs(X): x=pair(ioption(aqualAndAttrsUniverses), X) { get_aqual_and_attrs_and_X x }
 
 /******************************************************************************/
 /*                      Identifiers, module paths                             */
@@ -595,13 +618,13 @@ tvar:
 /*                            Types and terms                                 */
 /******************************************************************************/
 
-thunk(X): | t=X { mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+thunk(X): | t=X { mk_term (Abs ([mk_pattern (PatWild (None, [])) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
 
 thunk2(X):
   | t=X
      { let u = mk_term (Const Const_unit) (rhs parseState 3) Expr in
        let t = mk_term (Seq (u, t)) (rhs parseState 3) Expr in
-       mk_term (Abs ([mk_pattern (PatWild None) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
+       mk_term (Abs ([mk_pattern (PatWild (None, [])) (rhs parseState 3)], t)) (rhs parseState 3) Expr }
 
 ascribeTyp:
   | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=thunk(atomicTerm) {tactic}) { t, tacopt }
@@ -799,10 +822,10 @@ tmImplies:
 tmArrow(Tm):
   | dom=tmArrowDomain(Tm) RARROW tgt=tmArrow(Tm)
      {
-       let (aq_opt, dom_tm) = dom in
+       let ((aq_opt, attrs), dom_tm) = dom in
        let b = match extract_named_refinement dom_tm with
-         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
-         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+         | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      }
@@ -811,10 +834,10 @@ tmArrow(Tm):
 simpleArrow:
   | dom=simpleArrowDomain RARROW tgt=simpleArrow
      {
-       let (aq_opt, dom_tm) = dom in
+       let ((aq_opt, attrs), dom_tm) = dom in
        let b = match extract_named_refinement dom_tm with
-         | None -> mk_binder (NoName dom_tm) (rhs parseState 1) Un aq_opt
-         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt
+         | None -> mk_binder_with_attrs (NoName dom_tm) (rhs parseState 1) Un aq_opt attrs
+         | Some (x, t, f) -> mkRefinedBinder x t true f (rhs2 parseState 1 1) aq_opt attrs
        in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      }
@@ -823,21 +846,21 @@ simpleArrow:
 simpleArrowDomain:
   | LBRACE_BAR t=tmEqNoRefinement BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        (Some (mk_meta_tac mt), t)
+        ((Some (mk_meta_tac mt), []), t)
       }
 
-  | aq_opt=ioption(aqual) dom_tm=tmEqNoRefinement { aq_opt, dom_tm }
+  | aq_opt=ioption(aqual) dom_tm=tmEqNoRefinement { get_aqual_and_attrs aq_opt, dom_tm }
 
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
 %inline tmArrowDomain(Tm):
   | LBRACE_BAR t=Tm BAR_RBRACE
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
-        (Some (mk_meta_tac mt), t)
+        ((Some (mk_meta_tac mt), []), t)
       }
 
-  | LPAREN q=aqual dom_tm=Tm RPAREN { Some q, dom_tm }
+  | LPAREN q=aqual dom_tm=Tm RPAREN { get_aqual_and_attrs (Some q), dom_tm }
 
-  | aq_opt=ioption(aqual) dom_tm=Tm { aq_opt, dom_tm }
+  | aq_opt=ioption(aqual) dom_tm=Tm { get_aqual_and_attrs aq_opt, dom_tm }
 
 tmFormula:
   | e1=tmFormula DISJUNCTION e2=tmConjunction
@@ -893,7 +916,7 @@ tmNoEqWith(X):
             let dom =
                match extract_named_refinement e1 with
                | Some (x, t, f) ->
-                 let dom = mkRefinedBinder x t true f (rhs parseState 1) None in
+                 let dom = mkRefinedBinder x t true f (rhs parseState 1) None [] in
                  Inl dom
                | _ ->
                  Inr e1

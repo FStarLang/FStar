@@ -116,7 +116,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                 if lid_equals tc_lid (must (U.lid_of_sigelt se))
                 then match se.sigel with
                      | Sig_inductive_typ(_, _, tps, _, _, _) ->
-                        let tps = tps |> SS.subst_binders usubst |> List.map (fun (x, _) -> (x, Some S.imp_tag)) in
+                        let tps = tps |> SS.subst_binders usubst |> List.map (fun x -> {x with binder_qual=Some S.imp_tag}) in
                         let tps = Subst.open_binders tps in
                         Some (Env.push_binders env tps, tps, u_tc)
                      | _ -> failwith "Impossible"
@@ -137,7 +137,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
                   //need to map the prefix of bs corresponding to params to the tps of the inductive
                   let _, bs' = BU.first_N ntps bs in
                   let t = mk (Tm_arrow(bs', res)) t.pos in
-                  let subst = tps |> List.mapi (fun i (x, _) -> DB(ntps - (1 + i), x)) in
+                  let subst = tps |> List.mapi (fun i ({binder_bv=x}) -> DB(ntps - (1 + i), x)) in
 (*open*)          let bs, c = U.arrow_formals_comp (SS.subst subst t) in
                   (* check that c is a Tot computation, reject it otherwise
                    * (unless --MLish, which will mark all of them with ML effect) *)
@@ -170,7 +170,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
           * #2167. *)
          Errors.stop_if_err ();
          let p_args = fst (BU.first_N (List.length tps) args) in
-         List.iter2 (fun (bv, _) (t, _) ->
+         List.iter2 (fun ({binder_bv=bv}) (t, _) ->
             match (SS.compress t).n with
             | Tm_name bv' when S.bv_eq bv bv' -> ()
             | _ ->
@@ -205,13 +205,13 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
             | _ -> raise_error (Errors.Fatal_UnexpectedConstructorType, (BU.format2 "Expected a constructor of type %s; got %s"
                                         (Print.lid_to_string tc_lid)
                                         (Print.term_to_string head))) se.sigrng in
-         let g =List.fold_left2 (fun g (x, _) u_x ->
+         let g =List.fold_left2 (fun g ({binder_bv=x}) u_x ->
                 Env.conj_guard g (Rel.universe_inequality u_x u_tc))
             g_uvs
             arguments
             us in
 
-(*close*)let t = U.arrow ((tps |> List.map (fun (x, _) -> (x, Some (Implicit true))))@arguments) (S.mk_Total result) in
+(*close*)let t = U.arrow ((tps |> List.map (fun b -> {b with binder_qual=Some (Implicit true)}))@arguments) (S.mk_Total result) in
                         //NB: the tps are tagged as Implicit inaccessbile arguments of the data constructor
          let t = SS.close_univ_vars _uvs t in
          { se with sigel = Sig_datacon(c, _uvs, t, tc_lid, ntps, []) },
@@ -250,7 +250,7 @@ let generalize_and_inst_within (env:env_t) (tcs:list<(sigelt * universe)>) (data
         let uvs, t = SS.open_univ_vars uvs t in
         let args, _ = U.arrow_formals t in
         let tc_types, data_types = BU.first_N (List.length binders) args in
-        let tcs = List.map2 (fun (x, _) (se, _) -> match se.sigel with
+        let tcs = List.map2 (fun ({binder_bv=x}) (se, _) -> match se.sigel with
             | Sig_inductive_typ(tc, _, tps, _, mutuals, datas) ->
               let ty = SS.close_univ_vars uvs x.sort in
               let tps, t = match (SS.compress ty).n with
@@ -274,7 +274,7 @@ let generalize_and_inst_within (env:env_t) (tcs:list<(sigelt * universe)>) (data
             | _ ->
              let uvs_universes = uvs |> List.map U_name in
              let tc_insts = tcs |> List.map (function { sigel = Sig_inductive_typ(tc, _, _, _, _, _) } -> (tc, uvs_universes) | _ -> failwith "Impossible") in
-             List.map2 (fun (t, _) d ->
+             List.map2 (fun ({binder_bv=t}) d ->
                 match d.sigel with
                     | Sig_datacon(l, _, _, tc, ntps, mutuals) ->
                         let ty = InstFV.instantiate tc_insts t.sort |> SS.close_univ_vars uvs in
@@ -362,7 +362,7 @@ let rec ty_strictly_positive_in_type (ty_lid:lident) (btype:term) (unfolded:unfo
          true
        else
          let _ = debug_log env (fun () -> "Checking struict positivity, Pure arrow, checking that ty does not occur in the binders, and that it is strictly positive in the return type") in
-         List.for_all (fun (b, _) -> not (ty_occurs_in ty_lid b.sort)) sbs &&  //ty must not occur on the left of any arrow
+         List.for_all (fun ({binder_bv=b}) -> not (ty_occurs_in ty_lid b.sort)) sbs &&  //ty must not occur on the left of any arrow
            (let _, return_type = SS.open_term sbs (FStar.Syntax.Util.comp_result c) in  //and it must occur strictly positive in the result type
             ty_strictly_positive_in_type ty_lid return_type unfolded (push_binders env sbs)) //TODO: do we need to compress c, if so how?
      | Tm_fvar _ ->
@@ -450,7 +450,7 @@ and ty_nested_positive_in_dlid (ty_lid:lident) (dlid:lident) (ilid:lident) (us:u
     //get the number of arguments that cover the type parameters num_ibs, these are what we will substitute, remaining ones are the indexes that we leave
     let args, _ = List.splitAt num_ibs args in
     //form the substitution, it's a name -> term substitution list
-    let subst = List.fold_left2 (fun subst ib arg -> subst @ [NT (fst ib, fst arg)]) [] ibs args in
+    let subst = List.fold_left2 (fun subst ib arg -> subst @ [NT (ib.binder_bv, fst arg)]) [] ibs args in
     //substitute into the dbs and the computation type c
     let dbs = SS.subst_binders subst dbs in
     let c = SS.subst_comp (SS.shift_subst (List.length dbs) subst) c in
@@ -479,7 +479,7 @@ and ty_nested_positive_in_type (ty_lid:lident) (t:term') (ilid:lident) (num_ibs:
     let b, _ =
     List.fold_left (fun (r, env) b ->
         if not r then r, env  //we have already seen a problematic binder
-        else ty_strictly_positive_in_type ty_lid (fst b).sort unfolded env, push_binders env [b]
+        else ty_strictly_positive_in_type ty_lid b.binder_bv.sort unfolded env, push_binders env [b]
     ) (true, env) sbs
     in
     b
@@ -513,7 +513,7 @@ let ty_positive_in_datacon (ty_lid:lident) (dlid:lident) (ty_bs:binders) (us:uni
     let b, _ =
       List.fold_left (fun (r, env) b ->
         if not r then r, env  //if we have already found some binder that does not satisfy the condition, short circuit
-        else ty_strictly_positive_in_type ty_lid (fst b).sort unfolded env, push_binders env [b]  //push the binder in the environment, we do some normalization, so might be better to keep env good
+        else ty_strictly_positive_in_type ty_lid b.binder_bv.sort unfolded env, push_binders env [b]  //push the binder in the environment, we do some normalization, so might be better to keep env good
       ) (true, env) dbs
     in
     b
@@ -604,28 +604,28 @@ let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list<subst_elt>) (us:
   //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
   let ind = mk_Tm_uinst (S.fvar lid delta_constant None) (List.map (fun u -> U_name u) us) in
   //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) Range.dummyRange in
+  let ind = mk_Tm_app ind (List.map (fun ({binder_bv=bv;binder_qual=aq}) -> S.bv_to_name bv, aq) bs) Range.dummyRange in
   //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) Range.dummyRange in
+  let ind = mk_Tm_app ind (List.map (fun ({binder_bv=bv;binder_qual=aq}) -> S.bv_to_name bv, aq) ibs) Range.dummyRange in
   //haseq of ind
   let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] Range.dummyRange in
   //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
   //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
   let bs' = List.filter (fun b ->
-    Rel.subtype_nosmt_force en (fst b).sort  (fst (U.type_u ()))
+    Rel.subtype_nosmt_force en b.binder_bv.sort  (fst (U.type_u ()))
   ) bs in
-  let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name (fst b))] Range.dummyRange)) U.t_true bs' in
+  let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name b.binder_bv)] Range.dummyRange)) U.t_true bs' in
   //implication
   let fml = U.mk_imp haseq_bs haseq_ind in
   //attach pattern -- is this the right place ?
   let fml = { fml with n = Tm_meta (fml, Meta_pattern(binders_to_names ibs, [[S.as_arg haseq_ind]])) } in
   //fold right with ibs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] Range.dummyRange) ibs fml in
+  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [S.mk_binder b.binder_bv] (SS.close [b] t) None) ] Range.dummyRange) ibs fml in
 
   //fold right with bs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] Range.dummyRange) bs fml in
+  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app U.tforall [ S.as_arg (U.abs [S.mk_binder b.binder_bv] (SS.close [b] t) None) ] Range.dummyRange) bs fml in
 
   let axiom_lid = get_haseq_axiom_lid lid in
   axiom_lid, fml, bs, ibs, haseq_bs
@@ -646,9 +646,9 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
     let dbs = SS.open_binders dbs in
     //fold on dbs, add haseq of its sort to the guard
     let cond = List.fold_left (fun (t:term) (b:binder) ->
-      let haseq_b = mk_Tm_app U.t_haseq [S.as_arg (fst b).sort] Range.dummyRange in
+      let haseq_b = mk_Tm_app U.t_haseq [S.as_arg b.binder_bv.sort] Range.dummyRange in
       //label the haseq predicate so that we get a proper error message if the assertion fails
-      let sort_range = (fst b).sort.pos in
+      let sort_range = b.binder_bv.sort.pos in
       let haseq_b = TcUtil.label
                     (BU.format1 "Failed to prove that the type '%s' supports decidable equality because of this argument; add either the 'noeq' or 'unopteq' qualifier" (string_of_lid ty_lid))
                     sort_range
@@ -657,7 +657,7 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
       U.mk_conj t haseq_b) U.t_true dbs
     in
     //fold right over dbs and add a forall for each binder in dbs
-    List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] Range.dummyRange) dbs cond
+    List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [S.mk_binder b.binder_bv] (SS.close [b] t) None) ] Range.dummyRange) dbs cond
   | _                -> U.t_true
 
 //this is the folding function for tcs
@@ -788,15 +788,15 @@ let unoptimized_haseq_data (usubst:list<subst_elt>) (bs:binders) (haseq_ind:term
     //if the sort is a mutual, guard its hasEq with the hasEq of the current type constructor
     //cond is the conjunct of the hasEq of all the data constructor arguments
     let cond = List.fold_left (fun (t:term) (b:binder) ->
-      let sort = (fst b).sort in
-      let haseq_sort = mk_Tm_app U.t_haseq [S.as_arg (fst b).sort] Range.dummyRange in
+      let sort = b.binder_bv.sort in
+      let haseq_sort = mk_Tm_app U.t_haseq [S.as_arg b.binder_bv.sort] Range.dummyRange in
       let haseq_sort = if is_mutual sort then U.mk_imp haseq_ind haseq_sort else haseq_sort in
       U.mk_conj t haseq_sort) U.t_true dbs
     in
 
             //fold right with dbs, close and add a forall b
                 //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-            let cond = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] Range.dummyRange) dbs cond in
+            let cond = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [S.mk_binder b.binder_bv] (SS.close [b] t) None) ] Range.dummyRange) dbs cond in
 
             //new accumulator is old one /\ cond
             U.mk_conj acc cond
@@ -829,9 +829,9 @@ let unoptimized_haseq_ty (all_datas_in_the_bundle:list<sigelt>) (mutuals:list<li
   //term for unapplied inductive type, making a Tm_uinst, otherwise there are unresolved universe variables, may be that's fine ?
   let ind = mk_Tm_uinst (S.fvar lid delta_constant None) (List.map (fun u -> U_name u) us) in
   //apply the bs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) bs) Range.dummyRange in
+  let ind = mk_Tm_app ind (List.map (fun ({binder_bv=bv;binder_qual=aq}) -> S.bv_to_name bv, aq) bs) Range.dummyRange in
   //apply the ibs parameters, bv_to_name ok ? also note that we are copying the qualifiers from the binder, so that implicits remain implicits
-  let ind = mk_Tm_app ind (List.map (fun (bv, aq) -> S.bv_to_name bv, aq) ibs) Range.dummyRange in
+  let ind = mk_Tm_app ind (List.map (fun ({binder_bv=bv;binder_qual=aq}) -> S.bv_to_name bv, aq) ibs) Range.dummyRange in
   //haseq of ind applied to all bs and ibs
   let haseq_ind = mk_Tm_app U.t_haseq [S.as_arg ind] Range.dummyRange in
 
@@ -854,10 +854,10 @@ let unoptimized_haseq_ty (all_datas_in_the_bundle:list<sigelt>) (mutuals:list<li
 
   //fold right with ibs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] Range.dummyRange) ibs fml in
+  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [S.mk_binder b.binder_bv] (SS.close [b] t) None) ] Range.dummyRange) ibs fml in
   //fold right with bs, close and add a forall b
   //we are setting the qualifier of the binder to None explicitly, we don't want to make forall binder implicit etc. ?
-  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [(fst b, None)] (SS.close [b] t) None) ] Range.dummyRange) bs fml in
+  let fml = List.fold_right (fun (b:binder) (t:term) -> mk_Tm_app tforall [ S.as_arg (U.abs [S.mk_binder b.binder_bv] (SS.close [b] t) None) ] Range.dummyRange) bs fml in
 
   //new accumulator is old accumulator /\ fml
   U.mk_conj acc fml
@@ -1073,7 +1073,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     let tps = inductive_tps in //List.map2 (fun (x,_) (_,imp) -> ({x,imp)) implicit_tps inductive_tps in
     let arg_typ =
         let inst_tc = S.mk (Tm_uinst (S.fv_to_tm (S.lid_as_fv tc delta_constant None), inst_univs)) p in
-        let args = tps@indices |> List.map (fun (x, imp) -> S.bv_to_name x,imp) in
+        let args = tps@indices |> List.map (fun ({binder_bv=x;binder_qual=imp}) -> S.bv_to_name x,imp) in
         S.mk_Tm_app inst_tc args p
     in
     let unrefined_arg_binder = S.mk_binder (projectee arg_typ) in
@@ -1091,9 +1091,9 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
 
     let ntps = List.length tps in
-    let all_params = List.map (fun (x, _) -> x, Some S.imp_tag) tps @ fields in
+    let all_params = List.map (fun b -> {b with binder_qual=Some S.imp_tag}) tps @ fields in
 
-    let imp_binders = tps @ indices |> List.map (fun (x, _) -> x, Some S.imp_tag) in
+    let imp_binders = tps @ indices |> List.map (fun b -> {b with binder_qual=Some S.imp_tag}) in
 
     let early_prims_inductive =
       lid_equals C.prims_lid  (Env.current_module env) &&
@@ -1145,7 +1145,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                     if not refine_domain
                     then U.exp_true_bool   // If we have at most one constructor
                     else
-                        let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
+                        let arg_pats = all_params |> List.mapi (fun j ({binder_bv=x;binder_qual=imp}) ->
                             let b = S.is_implicit imp in
                             if b && j < ntps
                             then pos (Pat_dot_term (S.gen_bv (string_of_id x.ppname) None tun, tun)), b
@@ -1153,7 +1153,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                         in
                         let pat_true = pos (S.Pat_cons (S.lid_as_fv lid delta_constant (Some fvq), arg_pats)), None, U.exp_true_bool in
                         let pat_false = pos (Pat_wild (S.new_bv None tun)), None, U.exp_false_bool in
-                        let arg_exp = S.bv_to_name (fst unrefined_arg_binder) in
+                        let arg_exp = S.bv_to_name unrefined_arg_binder.binder_bv in
                         mk (Tm_match(arg_exp, [U.branch pat_true ; U.branch pat_false])) p
                 in
                 let dd = Delta_equational_at_level 1 in
@@ -1182,11 +1182,11 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     in
 
 
-    let arg_exp = S.bv_to_name (fst arg_binder) in
+    let arg_exp = S.bv_to_name arg_binder.binder_bv in
     let binders = imp_binders@[arg_binder] in
     let arg = U.arg_of_non_null_binder arg_binder in
 
-    let subst = fields |> List.mapi (fun i (a, _) ->
+    let subst = fields |> List.mapi (fun i ({binder_bv=a}) ->
             let field_name = U.mk_field_projector_name lid a i in
             let field_proj_tm = mk_Tm_uinst (S.fv_to_tm (S.lid_as_fv field_name (Delta_equational_at_level 1) None)) inst_univs in
             let proj = mk_Tm_app field_proj_tm [arg] p in
@@ -1194,7 +1194,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     in
 
     let projectors_ses =
-      fields |> List.mapi (fun i (x, _) ->
+      fields |> List.mapi (fun i ({binder_bv=x}) ->
           let p = S.range_of_bv x in
           let field_name = U.mk_field_projector_name lid x i in
           let t =
@@ -1239,7 +1239,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
           then [decl] //only the signature
           else
               let projection = S.gen_bv (string_of_id x.ppname) None tun in
-              let arg_pats = all_params |> List.mapi (fun j (x,imp) ->
+              let arg_pats = all_params |> List.mapi (fun j ({binder_bv=x;binder_qual=imp}) ->
                   let b = S.is_implicit imp in
                   if i+ntps=j  //this is the one to project
                   then pos (Pat_var projection), b
@@ -1320,7 +1320,7 @@ let mk_data_operations iquals attrs env tcs se =
 
     let fields =
         let imp_tps, fields = BU.first_N n_typars formals in
-        let rename = List.map2 (fun (x, _) (x', _) -> S.NT(x, S.bv_to_name x')) imp_tps inductive_tps in
+        let rename = List.map2 (fun ({binder_bv=x}) ({binder_bv=x'}) -> S.NT(x, S.bv_to_name x')) imp_tps inductive_tps in
         SS.subst_binders rename fields
     in
     let erasable = U.has_attribute se.sigattrs FStar.Parser.Const.erasable_attr in

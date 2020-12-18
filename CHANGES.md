@@ -105,6 +105,11 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+   * Support for binder attributes in the reflection APIs `pack_binder`
+     and `inspect_binder`. This is a breaking change, see
+     https://github.com/project-everest/hacl-star/commit/7a3199c745b69966e54a313e648a275d21686087
+     commit for how to fix the breaking code.
+
    * `abstract` qualifier and the related option `--use_extracted_interfaces`
      are no longer supported. Use interfaces instead.
 
