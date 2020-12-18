@@ -952,14 +952,6 @@ let (consTerm : FStar_Range.range -> term -> term -> term) =
           (Construct
              (FStar_Parser_Const.cons_lid, [(hd, Nothing); (tl, Nothing)])) r
           Expr
-let (lexConsTerm : FStar_Range.range -> term -> term -> term) =
-  fun r ->
-    fun hd ->
-      fun tl ->
-        mk_term
-          (Construct
-             (FStar_Parser_Const.lexcons_lid, [(hd, Nothing); (tl, Nothing)]))
-          r Expr
 let (mkConsList : FStar_Range.range -> term Prims.list -> term) =
   fun r ->
     fun elts ->

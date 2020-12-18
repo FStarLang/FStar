@@ -4825,10 +4825,7 @@ let (mk_data_projector_names :
       fun se ->
         match se.FStar_Syntax_Syntax.sigel with
         | FStar_Syntax_Syntax.Sig_datacon (lid, uu___, t, uu___1, n, uu___2)
-            when
-            let uu___3 =
-              FStar_Ident.lid_equals lid FStar_Parser_Const.lexcons_lid in
-            Prims.op_Negation uu___3 ->
+            ->
             let uu___3 = FStar_Syntax_Util.arrow_formals t in
             (match uu___3 with
              | (formals, uu___4) ->

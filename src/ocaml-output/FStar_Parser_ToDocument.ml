@@ -364,9 +364,7 @@ let (is_list_structure :
       aux
 let (is_list : FStar_Parser_AST.term -> Prims.bool) =
   is_list_structure FStar_Parser_Const.cons_lid FStar_Parser_Const.nil_lid
-let (is_lex_list : FStar_Parser_AST.term -> Prims.bool) =
-  is_list_structure FStar_Parser_Const.lexcons_lid
-    FStar_Parser_Const.lextop_lid
+let is_lex_list : 'uuuuu . 'uuuuu -> Prims.bool = fun uu___ -> false
 let rec (extract_from_list :
   FStar_Parser_AST.term -> FStar_Parser_AST.term Prims.list) =
   fun e ->

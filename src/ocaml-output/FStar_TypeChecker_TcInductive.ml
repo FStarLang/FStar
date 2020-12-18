@@ -3228,11 +3228,7 @@ let (mk_data_operations :
           fun se ->
             match se.FStar_Syntax_Syntax.sigel with
             | FStar_Syntax_Syntax.Sig_datacon
-                (constr_lid, uvs, t, typ_lid, n_typars, uu___) when
-                let uu___1 =
-                  FStar_Ident.lid_equals constr_lid
-                    FStar_Parser_Const.lexcons_lid in
-                Prims.op_Negation uu___1 ->
+                (constr_lid, uvs, t, typ_lid, n_typars, uu___) ->
                 let uu___1 = FStar_Syntax_Subst.univ_var_opening uvs in
                 (match uu___1 with
                  | (univ_opening, uvs1) ->

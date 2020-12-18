@@ -109,10 +109,6 @@ let (is_quant : FStar_Syntax_Syntax.typ -> Prims.bool) =
     is_prim_op (FStar_Pervasives_Native.fst (FStar_List.split quants)) t
 let (is_ite : FStar_Syntax_Syntax.typ -> Prims.bool) =
   fun t -> is_prim_op [FStar_Parser_Const.ite_lid] t
-let (is_lex_cons : exp -> Prims.bool) =
-  fun f -> is_prim_op [FStar_Parser_Const.lexcons_lid] f
-let (is_lex_top : exp -> Prims.bool) =
-  fun f -> is_prim_op [FStar_Parser_Const.lextop_lid] f
 let is_inr :
   'uuuuu 'uuuuu1 . ('uuuuu, 'uuuuu1) FStar_Util.either -> Prims.bool =
   fun uu___ ->
@@ -140,36 +136,6 @@ let filter_imp :
             | (uu___1, FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta
                uu___2)) -> false
             | uu___1 -> true))
-let rec (reconstruct_lex :
-  exp -> exp Prims.list FStar_Pervasives_Native.option) =
-  fun e ->
-    let uu___ =
-      let uu___1 = FStar_Syntax_Subst.compress e in
-      uu___1.FStar_Syntax_Syntax.n in
-    match uu___ with
-    | FStar_Syntax_Syntax.Tm_app (f, args) ->
-        let args1 = filter_imp args in
-        let exps = FStar_List.map FStar_Pervasives_Native.fst args1 in
-        let uu___1 =
-          (is_lex_cons f) && ((FStar_List.length exps) = (Prims.of_int (2))) in
-        if uu___1
-        then
-          let uu___2 =
-            let uu___3 = FStar_List.nth exps Prims.int_one in
-            reconstruct_lex uu___3 in
-          (match uu___2 with
-           | FStar_Pervasives_Native.Some xs ->
-               let uu___3 =
-                 let uu___4 = FStar_List.nth exps Prims.int_zero in uu___4 ::
-                   xs in
-               FStar_Pervasives_Native.Some uu___3
-           | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None)
-        else FStar_Pervasives_Native.None
-    | uu___1 ->
-        let uu___2 = is_lex_top e in
-        if uu___2
-        then FStar_Pervasives_Native.Some []
-        else FStar_Pervasives_Native.None
 let rec find : 'a . ('a -> Prims.bool) -> 'a Prims.list -> 'a =
   fun f ->
     fun l ->

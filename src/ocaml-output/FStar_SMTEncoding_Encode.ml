@@ -874,13 +874,6 @@ let (primitive_type_axioms :
       [uu___2] in
     uu___ :: uu___1 in
   let mk_int env nm tt =
-    let lex_t =
-      let uu___ =
-        let uu___1 =
-          let uu___2 = FStar_Ident.string_of_lid FStar_Parser_Const.lex_t_lid in
-          (uu___2, FStar_SMTEncoding_Term.Term_sort) in
-        FStar_SMTEncoding_Term.mk_fv uu___1 in
-      FStar_All.pipe_left FStar_SMTEncoding_Util.mkFreeV uu___ in
     let typing_pred = FStar_SMTEncoding_Term.mk_HasType x tt in
     let typing_pred_y = FStar_SMTEncoding_Term.mk_HasType y tt in
     let aa =
@@ -891,7 +884,7 @@ let (primitive_type_axioms :
     let b = FStar_SMTEncoding_Util.mkFreeV bb in
     let precedes_y_x =
       let uu___ =
-        FStar_SMTEncoding_Util.mkApp ("Prims.precedes", [lex_t; lex_t; y; x]) in
+        FStar_SMTEncoding_Util.mkApp ("Prims.precedes", [tt; tt; y; x]) in
       FStar_All.pipe_left FStar_SMTEncoding_Term.mk_Valid uu___ in
     let uu___ =
       let uu___1 =
@@ -992,13 +985,6 @@ let (primitive_type_axioms :
       uu___2 :: uu___3 in
     uu___ :: uu___1 in
   let mk_real env nm tt =
-    let lex_t =
-      let uu___ =
-        let uu___1 =
-          let uu___2 = FStar_Ident.string_of_lid FStar_Parser_Const.lex_t_lid in
-          (uu___2, FStar_SMTEncoding_Term.Term_sort) in
-        FStar_SMTEncoding_Term.mk_fv uu___1 in
-      FStar_All.pipe_left FStar_SMTEncoding_Util.mkFreeV uu___ in
     let typing_pred = FStar_SMTEncoding_Term.mk_HasType x tt in
     let typing_pred_y = FStar_SMTEncoding_Term.mk_HasType y tt in
     let aa =
@@ -1011,7 +997,7 @@ let (primitive_type_axioms :
     let b = FStar_SMTEncoding_Util.mkFreeV bb in
     let precedes_y_x =
       let uu___ =
-        FStar_SMTEncoding_Util.mkApp ("Prims.precedes", [lex_t; lex_t; y; x]) in
+        FStar_SMTEncoding_Util.mkApp ("Prims.precedes", [tt; tt; y; x]) in
       FStar_All.pipe_left FStar_SMTEncoding_Term.mk_Valid uu___ in
     let uu___ =
       let uu___1 =
@@ -5023,14 +5009,8 @@ and (encode_sigelt' :
                                      env1) in
                              match uu___9 with
                              | (tok_decls, env2) ->
-                                 let uu___10 =
-                                   FStar_Ident.lid_equals t
-                                     FStar_Parser_Const.lex_t_lid in
-                                 if uu___10
-                                 then (tok_decls, env2)
-                                 else
-                                   ((FStar_List.append tname_decl tok_decls),
-                                     env2) in
+                                 ((FStar_List.append tname_decl tok_decls),
+                                   env2) in
                            (match uu___8 with
                             | (decls, env2) ->
                                 let kindingAx =
@@ -5123,10 +5103,6 @@ and (encode_sigelt' :
                                   FStar_List.append uu___9
                                     (FStar_List.append binder_decls aux) in
                                 (g, env2))))))
-       | FStar_Syntax_Syntax.Sig_datacon
-           (d, uu___1, uu___2, uu___3, uu___4, uu___5) when
-           FStar_Ident.lid_equals d FStar_Parser_Const.lexcons_lid ->
-           ([], env)
        | FStar_Syntax_Syntax.Sig_datacon
            (d, uu___1, t, uu___2, n_tps, uu___3) ->
            let quals = se.FStar_Syntax_Syntax.sigquals in
@@ -5518,23 +5494,6 @@ and (encode_sigelt' :
                                                                     uu___25 in
                                                                    let subterm_ordering
                                                                     =
-                                                                    let lex_t
-                                                                    =
-                                                                    let uu___25
-                                                                    =
-                                                                    let uu___26
-                                                                    =
-                                                                    let uu___27
-                                                                    =
-                                                                    FStar_Ident.string_of_lid
-                                                                    FStar_Parser_Const.lex_t_lid in
-                                                                    (uu___27,
-                                                                    FStar_SMTEncoding_Term.Term_sort) in
-                                                                    FStar_SMTEncoding_Term.mk_fv
-                                                                    uu___26 in
-                                                                    FStar_All.pipe_left
-                                                                    FStar_SMTEncoding_Util.mkFreeV
-                                                                    uu___25 in
                                                                     let prec
                                                                     =
                                                                     let vars_with_sorts
@@ -5857,23 +5816,6 @@ and (encode_sigelt' :
                                                                     uu___22 in
                                                                    let subterm_ordering
                                                                     =
-                                                                    let lex_t
-                                                                    =
-                                                                    let uu___22
-                                                                    =
-                                                                    let uu___23
-                                                                    =
-                                                                    let uu___24
-                                                                    =
-                                                                    FStar_Ident.string_of_lid
-                                                                    FStar_Parser_Const.lex_t_lid in
-                                                                    (uu___24,
-                                                                    FStar_SMTEncoding_Term.Term_sort) in
-                                                                    FStar_SMTEncoding_Term.mk_fv
-                                                                    uu___23 in
-                                                                    FStar_All.pipe_left
-                                                                    FStar_SMTEncoding_Util.mkFreeV
-                                                                    uu___22 in
                                                                     let prec
                                                                     =
                                                                     let vars_with_sorts
