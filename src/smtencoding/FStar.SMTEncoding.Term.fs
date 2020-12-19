@@ -1015,6 +1015,17 @@ and mkPrelude z3options =
                                  (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
                                  (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true)]
 in
+   let lex_ordering =
+     "(assert (forall ((t1 Term) (t2 Term) (s1 Term) (s2 Term) (a Term) (b Term))\n\
+                      (! (implies (and (HasType a t1)\n\
+                                       (HasType a s1)\n\
+                                       (HasType b t2)\n\
+                                       (HasType b s2)\n\
+                                       (Valid (Prims.precedes t1 t2 a b)))\n\
+                                  (Valid (Prims.precedes s1 s2 a b)))\n\
+                         :pattern ((Prims.precedes s1 s2 a b)\n\
+                                   (HasType a t1)\n\
+                                   (HasType b t2)))))\n" in
    let bcons = constrs |> List.collect (constructor_to_decl norng)
                        |> List.map (declToSmt z3options) |> String.concat "\n" in
    let valid_intro =
@@ -1033,6 +1044,7 @@ in
                        :qid __prelude_valid_elim)))\n"
    in
    basic
+   ^ lex_ordering
    ^ bcons
    ^ (if FStar.Options.smtencoding_valid_intro()
       then valid_intro
