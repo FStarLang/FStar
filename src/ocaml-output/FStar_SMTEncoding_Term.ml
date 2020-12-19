@@ -1789,6 +1789,8 @@ and (mkPrelude : Prims.string -> Prims.string) =
       ((FStar_Pervasives_Native.fst boxRealFun),
         [((FStar_Pervasives_Native.snd boxRealFun), (Sort "Real"), true)],
         Term_sort, (Prims.of_int (10)), true)] in
+    let lex_ordering =
+      "(assert (forall ((t1 Term) (t2 Term) (s1 Term) (s2 Term) (a Term) (b Term))\n(! (implies (and (HasType a t1)\n(HasType a s1)\n(HasType b t2)\n(HasType b s2)\n(Valid (Prims.precedes t1 t2 a b)))\n(Valid (Prims.precedes s1 s2 a b)))\n:pattern ((Prims.precedes s1 s2 a b)\n(HasType a t1)\n(HasType b t2)))))\n" in
     let bcons =
       let uu___ =
         let uu___1 =
@@ -1803,13 +1805,15 @@ and (mkPrelude : Prims.string -> Prims.string) =
     let uu___ =
       let uu___1 =
         let uu___2 =
-          let uu___3 = FStar_Options.smtencoding_valid_intro () in
-          if uu___3 then valid_intro else "" in
-        let uu___3 =
-          let uu___4 = FStar_Options.smtencoding_valid_elim () in
-          if uu___4 then valid_elim else "" in
-        Prims.op_Hat uu___2 uu___3 in
-      Prims.op_Hat bcons uu___1 in
+          let uu___3 =
+            let uu___4 = FStar_Options.smtencoding_valid_intro () in
+            if uu___4 then valid_intro else "" in
+          let uu___4 =
+            let uu___5 = FStar_Options.smtencoding_valid_elim () in
+            if uu___5 then valid_elim else "" in
+          Prims.op_Hat uu___3 uu___4 in
+        Prims.op_Hat bcons uu___2 in
+      Prims.op_Hat lex_ordering uu___1 in
     Prims.op_Hat basic uu___
 let (declsToSmt : Prims.string -> decl Prims.list -> Prims.string) =
   fun z3options ->
