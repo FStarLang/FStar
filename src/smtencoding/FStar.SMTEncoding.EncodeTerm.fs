@@ -932,23 +932,6 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                         Some ("haseq for " ^ tsym),
                         "haseq" ^ tsym) in
 
-
-        let x_pre_sym, x_pre_tm =
-          let fsym = mk_fv (varops.fresh env.current_module_name "x", Term_sort) in
-          fsym, mkFreeV fsym in
-        let y_pre_sym, y_pre_tm =
-          let fsym = mk_fv (varops.fresh env.current_module_name "y", Term_sort) in
-          fsym, mkFreeV fsym in
-        let precedes_base = mk_Valid
-          (mkApp ("Prims.precedes", [base_t; base_t; x_pre_tm; y_pre_tm])) in
-        let precedes_ref = mk_Valid
-          (mkApp ("Prims.precedes", [t; t; x_pre_tm; y_pre_tm])) in
-        let t_precedes =
-        Util.mkAssume(mkForall t0.pos ([[precedes_ref]], x_pre_sym::y_pre_sym::cvars,
-          (mkImp (precedes_base, precedes_ref))),
-          Some ("precees for " ^ tsym),
-          "precedes" ^ tsym) in
-
         // let t_valid =
         //   let xx = (x, Term_sort) in
         //   let valid_t = mkApp ("Valid", [t]) in
@@ -971,7 +954,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
         let t_decls = [tdecl;
                        t_kinding; //t_valid;
-                       t_interp; t_haseq; t_precedes] in
+                       t_interp; t_haseq] in
         t, decls@decls'@mk_decls tsym tkey_hash t_decls (decls@decls')
 
       | Tm_uvar (uv, _) ->
