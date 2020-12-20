@@ -4,7 +4,7 @@ module BugLexTop
    Also, with contributions from Jay Bosamiya for the proof of False.
    It was fixed in 92e50f9b5ba34afe97b2cc09ba66dfa090438825
 *)
-val n_lexcons : nat -> lex_t
+val n_lexcons : nat -> lex_t u#0
 let rec n_lexcons n =
   if n = 0 then LexTop else LexCons LexTop (n_lexcons (n-1))
 
