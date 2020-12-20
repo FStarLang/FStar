@@ -387,7 +387,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                         | _ -> [S.bv_to_name b]) in
           let as_lex_list dec =
                 let head, _ = U.head_and_args dec in
-                match head.n with (* The decreases clause is always an expression of type lex_t; promote if it isn't *)
+                match (U.un_uinst head).n with (* The decreases clause is always an expression of type lex_t; promote if it isn't *)
                     | Tm_fvar fv when S.fv_eq_lid fv Const.lexcons_lid -> dec
                     | _ -> mk_lex_list [dec] in
           let cflags = U.comp_flags c in
