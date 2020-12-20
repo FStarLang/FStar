@@ -341,9 +341,6 @@ let tc_lex_t :
                    FStar_Syntax_Syntax.sigattrs = [];
                    FStar_Syntax_Syntax.sigopts = FStar_Pervasives_Native.None
                  } in
-               let utop =
-                 FStar_Syntax_Syntax.new_univ_name
-                   (FStar_Pervasives_Native.Some r1) in
                let lex_top_t =
                  let uu___20 =
                    let uu___21 =
@@ -354,16 +351,14 @@ let tc_lex_t :
                        FStar_Syntax_Syntax.fvar uu___23
                          FStar_Syntax_Syntax.delta_constant
                          FStar_Pervasives_Native.None in
-                     (uu___22, [FStar_Syntax_Syntax.U_name utop]) in
+                     (uu___22, [FStar_Syntax_Syntax.U_zero]) in
                    FStar_Syntax_Syntax.Tm_uinst uu___21 in
                  FStar_Syntax_Syntax.mk uu___20 r1 in
-               let lex_top_t1 =
-                 FStar_Syntax_Subst.close_univ_vars [utop] lex_top_t in
                let dc_lextop =
                  {
                    FStar_Syntax_Syntax.sigel =
                      (FStar_Syntax_Syntax.Sig_datacon
-                        (lex_top, [utop], lex_top_t1,
+                        (lex_top, [], lex_top_t,
                           FStar_Parser_Const.lex_t_lid, Prims.int_zero, []));
                    FStar_Syntax_Syntax.sigrng = r1;
                    FStar_Syntax_Syntax.sigquals = [];
@@ -4148,7 +4143,7 @@ let (tc_decls :
              FStar_Util.fold_flatten process_one_decl_timed ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_List.rev_append ses1 []), env1)
-let (uu___1000 : unit) =
+let (uu___998 : unit) =
   FStar_ST.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

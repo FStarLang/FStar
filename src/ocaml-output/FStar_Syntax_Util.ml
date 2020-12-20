@@ -2323,15 +2323,9 @@ let (mk_with_type :
 let (lex_t : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.lex_t_lid
 let (lex_top : FStar_Syntax_Syntax.term) =
-  let uu___ =
-    let uu___1 =
-      let uu___2 =
-        FStar_Syntax_Syntax.fvar FStar_Parser_Const.lextop_lid
-          FStar_Syntax_Syntax.delta_constant
-          (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor) in
-      (uu___2, [FStar_Syntax_Syntax.U_zero]) in
-    FStar_Syntax_Syntax.Tm_uinst uu___1 in
-  FStar_Syntax_Syntax.mk uu___ FStar_Range.dummyRange
+  FStar_Syntax_Syntax.fvar FStar_Parser_Const.lextop_lid
+    FStar_Syntax_Syntax.delta_constant
+    (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor)
 let (lex_pair : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar FStar_Parser_Const.lexcons_lid
     FStar_Syntax_Syntax.delta_constant

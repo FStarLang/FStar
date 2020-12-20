@@ -1050,12 +1050,15 @@ let (guard_letrecs :
                  let uu___1 = FStar_Syntax_Util.head_and_args dec in
                  match uu___1 with
                  | (head, uu___2) ->
-                     (match head.FStar_Syntax_Syntax.n with
+                     let uu___3 =
+                       let uu___4 = FStar_Syntax_Util.un_uinst head in
+                       uu___4.FStar_Syntax_Syntax.n in
+                     (match uu___3 with
                       | FStar_Syntax_Syntax.Tm_fvar fv when
                           FStar_Syntax_Syntax.fv_eq_lid fv
                             FStar_Parser_Const.lexcons_lid
                           -> dec
-                      | uu___3 -> mk_lex_list [dec]) in
+                      | uu___4 -> mk_lex_list [dec]) in
                let cflags = FStar_Syntax_Util.comp_flags c in
                let uu___1 =
                  FStar_All.pipe_right cflags
