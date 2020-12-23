@@ -433,13 +433,12 @@ aqual:
 
 (*
  * AR: this should be generalized to:
- *     (a) allow more than one attributes on the binders
- *     (b) allow attributes on non-implicit binders
+ *     (a) allow attributes on non-implicit binders
  *     note that in the [@@ case, we choose the Implicit aqual
  *)
 aqualAndAttrsUniverses:
   | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t, [] }
-  | HASH LBRACK_AT_AT t=tmNoEq RBRACK { Implicit, [t] }
+  | HASH LBRACK_AT_AT t=semiColonTermList RBRACK { Implicit, t }
   | HASH      { Implicit, [] }
   | DOLLAR    { Equality, [] }
 

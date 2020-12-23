@@ -1045,9 +1045,10 @@ aqualAndAttrsUniverses:
   HASH LBRACK thunk_tmNoEq_ RBRACK
     {let (_1, _2, t, _4) = ((), (), $3, ()) in
                                        ( mk_meta_tac t, [] )}
-| HASH LBRACK_AT_AT tmNoEq RBRACK
-    {let (_1, _2, t, _4) = ((), (), $3, ()) in
-                                      ( Implicit, [t] )}
+| HASH LBRACK_AT_AT right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
+    {let (_1, _2, l, _4) = ((), (), $3, ()) in
+let t =                                                 ( l ) in
+                                                 ( Implicit, t )}
 | HASH
     {let _1 = () in
               ( Implicit, [] )}
@@ -2573,4 +2574,5 @@ in
    ( x :: xs )}
 
 %%
+
 
