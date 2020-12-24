@@ -66,7 +66,8 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
             | _::_, [] -> //fill the rest with dot patterns, if all the remaining formals are implicit
             formals |>
             List.map
-                (fun (t, imp) ->
+                (fun fml ->
+                    let t, imp = fml.binder_bv, fml.binder_qual in
                     match imp with
                     | Some (Implicit inaccessible) ->
                     let a = Syntax.new_bv (Some (Syntax.range_of_bv t)) tun in
@@ -81,7 +82,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
 
             | f::formals', (p, p_imp)::pats' ->
             begin
-            match f with
+            match f.binder_bv, f.binder_qual with
             | (_, Some (Implicit inaccessible))
                 when inaccessible && p_imp -> //we have an inaccessible pattern but the user wrote a pattern there explicitly
               begin

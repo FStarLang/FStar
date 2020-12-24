@@ -114,9 +114,6 @@ let e_aqualv =
         | Data.Q_Meta t   ->
             S.mk_Tm_app ref_Q_Meta.t [S.as_arg (embed e_term rng t)]
                         Range.dummyRange
-        | Data.Q_Meta_attr t   ->
-            S.mk_Tm_app ref_Q_Meta_attr.t [S.as_arg (embed e_term rng t)]
-                        Range.dummyRange
         in { r with pos = rng }
     in
     let unembed_aqualv w (t : term) : option<aqualv> =
@@ -128,9 +125,6 @@ let e_aqualv =
         | Tm_fvar fv, [(t, _)] when S.fv_eq_lid fv ref_Q_Meta.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
             Some (Data.Q_Meta t))
-        | Tm_fvar fv, [(t, _)] when S.fv_eq_lid fv ref_Q_Meta_attr.lid ->
-            BU.bind_opt (unembed' w e_term t) (fun t ->
-            Some (Data.Q_Meta_attr t))
 
         | _ ->
             if w then
@@ -716,11 +710,10 @@ let e_exp =
     in
     mk_emb embed_exp unembed_exp fstar_refl_exp
 
-
-let e_binder_view = e_tuple2 e_bv e_aqualv
-
 let e_attribute  = e_term
 let e_attributes = e_list e_attribute
+
+let e_binder_view = e_tuple2 e_bv (e_tuple2 e_aqualv e_attributes)
 
 let e_qualifier =
     let embed (rng:Range.range) (q:RD.qualifier) : term =
@@ -880,9 +873,10 @@ let unfold_lazy_bv  (i : lazyinfo) : term =
 (* TODO: non-uniform *)
 let unfold_lazy_binder (i : lazyinfo) : term =
     let binder : binder = undyn i.blob in
-    let bv, aq = inspect_binder binder in
+    let bv, (aq, attrs) = inspect_binder binder in
     S.mk_Tm_app fstar_refl_pack_binder.t [S.as_arg (embed e_bv i.rng bv);
-                                        S.as_arg (embed e_aqualv i.rng aq)]
+                                          S.as_arg (embed e_aqualv i.rng aq);
+                                          S.as_arg (embed e_attributes i.rng attrs)]
                 i.rng
 
 let unfold_lazy_fvar (i : lazyinfo) : term =

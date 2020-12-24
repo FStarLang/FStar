@@ -560,17 +560,18 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
           let rec rename_binders def_bs val_bs =
             match def_bs, val_bs with
             | [], _ | _, [] -> val_bs
-            | (body_bv, _) :: bt, (val_bv, aqual) :: vt ->
-              (match has_auto_name body_bv, has_auto_name val_bv with
-               | true, _ -> (val_bv, aqual)
-               | false, true -> ({ val_bv with
-                                   ppname = mk_ident (string_of_id body_bv.ppname, range_of_id val_bv.ppname) }, aqual)
+            | ({binder_bv=body_bv}) :: bt, val_b :: vt ->
+              (match has_auto_name body_bv, has_auto_name val_b.binder_bv with
+               | true, _ -> val_b
+               | false, true -> { val_b with
+                                 binder_bv={val_b.binder_bv with
+                                   ppname = mk_ident (string_of_id body_bv.ppname, range_of_id val_b.binder_bv.ppname)} }
                | false, false ->
                  // if (string_of_id body_bv.ppname) <> (string_of_id val_bv.ppname) then
                  //   Errors.warn (range_of_id body_bv.ppname)
                  //     (BU.format2 "Parameter name %s doesn't match name %s used in val declaration"
                  //                  (string_of_id body_bv.ppname) (string_of_id val_bv.ppname));
-                 (val_bv, aqual)) :: rename_binders bt vt in
+                 val_b) :: rename_binders bt vt in
           Syntax.mk (Tm_arrow(rename_binders def_bs val_bs, c)) r end
         | _ -> typ in
       { lb with lbtyp = rename_in_typ lb.lbdef lb.lbtyp } in

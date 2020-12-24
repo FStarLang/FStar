@@ -35,11 +35,14 @@ let bv_of_binder (b : binder) : bv =
     let bv, _ = inspect_binder b in
     bv
 
+(*
+ * AR: add versions that take attributes as arguments?
+ *)
 let mk_binder (bv : bv) : binder =
-    pack_binder bv Q_Explicit
+    pack_binder bv Q_Explicit []
 
 let mk_implicit_binder (bv : bv) : binder =
-    pack_binder bv Q_Implicit
+    pack_binder bv Q_Implicit []
 
 let name_of_binder (b : binder) : string =
     name_of_bv (bv_of_binder b)
@@ -48,7 +51,7 @@ let type_of_binder (b : binder) : typ =
     type_of_bv (bv_of_binder b)
 
 let binder_to_string (b : binder) : string =
-    bv_to_string (bv_of_binder b) //TODO: print aqual
+    bv_to_string (bv_of_binder b) //TODO: print aqual, attributes
 
 val flatten_name : name -> Tot string
 let rec flatten_name ns =
@@ -350,8 +353,8 @@ let is_uvar (t : term) : bool =
     | _ -> false
 
 let binder_set_qual (q:aqualv) (b:binder) : Tot binder =
-  let (bv, _) = inspect_binder b in
-  pack_binder bv q
+  let bv, (_, attrs) = inspect_binder b in
+  pack_binder bv q attrs
 
 (** Set a vconfig for a sigelt *)
 val add_check_with : vconfig -> sigelt -> Tot sigelt

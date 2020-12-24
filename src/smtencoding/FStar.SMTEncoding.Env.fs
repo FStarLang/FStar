@@ -52,7 +52,7 @@ let primitive_projector_by_pos env lid i =
           if ((i < 0) || i >= List.length binders) //this has to be within bounds!
           then fail ()
           else let b = List.nth binders i in
-                mk_term_projector_name lid (fst b)
+                mk_term_projector_name lid b.binder_bv
         | _ -> fail ()
 let mk_term_projector_name_by_pos lid (i:int) = escape <| BU.format2 "%s_%s" (string_of_lid lid) (string_of_int i)
 let mk_term_projector (lid:lident) (a:bv) : term =

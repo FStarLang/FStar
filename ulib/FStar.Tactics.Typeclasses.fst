@@ -110,7 +110,7 @@ let mk_class (nm:string) : Tac decls =
                   let sfv = pack_fv (ns @ [s]) in
                   let dbv = fresh_bv_named "d" cod in
                   let tcr = (`tcresolve) in
-                  let tcdict = pack_binder dbv (Q_Meta tcr) in
+                  let tcdict = pack_binder dbv (Q_Meta tcr) [] in
                   let proj_name = cur_module () @ [base ^ s] in
                   let proj = pack (Tv_FVar (pack_fv (cur_module () @ [base ^ s]))) in
 
@@ -130,7 +130,7 @@ let mk_class (nm:string) : Tac decls =
                     | [] -> fail "mk_class: impossible, no binders"
                     | b1::bs' ->
                         let (bv, aq) = inspect_binder b1 in
-                        let b1 = pack_binder bv (Q_Meta tcr) in
+                        let b1 = pack_binder bv (Q_Meta tcr) [] in
                         mk_arr (ps@(b1::bs')) cod
                   in
 

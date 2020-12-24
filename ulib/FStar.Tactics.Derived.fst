@@ -817,9 +817,9 @@ let on_sort_bv (f : term -> Tac term) (xbv:bv) : Tac bv =
   bv
 
 let on_sort_binder (f : term -> Tac term) (b:binder) : Tac binder =
-  let (bv, q) = inspect_binder b in
+  let bv, (q, attrs) = inspect_binder b in
   let bv = on_sort_bv f bv in
-  let b = pack_binder bv q in
+  let b = pack_binder bv q attrs in
   b
 
 let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =

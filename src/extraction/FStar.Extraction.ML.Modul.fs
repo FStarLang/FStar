@@ -144,7 +144,7 @@ let extract_metadata metas =
 
 let binders_as_mlty_binders (env:UEnv.uenv) bs =
     BU.fold_map
-      (fun env (bv, _) ->
+      (fun env ({binder_bv=bv}) ->
         let env = UEnv.extend_ty env bv false in
         let name =
           match lookup_bv env bv with
@@ -200,7 +200,7 @@ let bundle_as_inductive_families env ses quals
                         let _us, t = SS.open_univ_vars us t in
                         let bs', body = U.arrow_formals t in
                         let bs_params, rest = BU.first_N (List.length bs) bs' in
-                        let subst = List.map2 (fun (b', _) (b, _) -> S.NT(b', S.bv_to_name b)) bs_params bs in
+                        let subst = List.map2 (fun ({binder_bv=b'}) ({binder_bv=b}) -> S.NT(b', S.bv_to_name b)) bs_params bs in
                         let t = U.arrow rest (S.mk_Total body) |> SS.subst subst in
                         [{dname=d; dtyp=t}]
                     | _ -> []) in
@@ -802,7 +802,7 @@ let extract_bundle env se =
         let steps = [ Env.Inlining; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses; Env.AllowUnboundUniverses; Env.ForExtraction ] in
         let names = match (SS.compress (N.normalize steps (tcenv_of_uenv env_iparams) ctor.dtyp)).n with
           | Tm_arrow (bs, _) ->
-              List.map (fun ({ ppname = ppname }, _) -> (string_of_id ppname)) bs
+              List.map (fun ({binder_bv={ ppname = ppname }}) -> (string_of_id ppname)) bs
           | _ ->
               []
         in
