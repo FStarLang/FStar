@@ -212,10 +212,9 @@ type l_ITE (p: logical) (q: logical) (r: logical) : logical = (p ==> q) /\ (~p =
     The [<<] order includes:
         * The [<] ordering on natural numbers
         * The subterm ordering on inductive types
-        * A lexicographic ordering on the lex_t type, below
         * And, via FStar.WellFounded, relating [f x << f] *)
 assume
-type precedes : #a: Type -> #b: Type -> a -> b -> Type0 
+type precedes : #a: Type -> #b: Type -> a -> b -> Type0
 
 (** Within the SMT encoding, we have a relation [(HasType e t)]
     asserting that (the encoding of) [e] has a type corresponding to

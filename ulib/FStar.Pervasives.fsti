@@ -100,12 +100,6 @@ val smt_pat_or (x: list (list pattern)) : Tot pattern
 effect Lemma (a: Type) (pre: Type) (post: (squash pre -> Type)) (pats: list pattern) =
   Pure a pre (fun r -> post ())
 
-val precedes_lex (a:Type) (b:Type) (x_a:a) (x_b:b) (y_a:a) (y_b:b)
-  : Lemma
-      (precedes (x_a, x_b) (y_a, y_b) <==> ((precedes x_a y_a) \/
-                                           (x_a == y_a /\ precedes x_b y_b)))
-      [SMTPat (precedes (x_a, x_b) (y_a, y_b))]
-
 (** In the default mode of operation, all proofs in a verification
     condition are bundled into a single SMT query. Sub-terms marked
     with the [spinoff] below are the exception: each of them is
