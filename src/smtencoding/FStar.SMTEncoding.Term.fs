@@ -1013,21 +1013,19 @@ and mkPrelude z3options =
                                  (fst boxIntFun,     [snd boxIntFun,  Int_sort, true],   Term_sort, 7, true);
                                  (fst boxBoolFun,    [snd boxBoolFun, Bool_sort, true],  Term_sort, 8, true);
                                  (fst boxStringFun,  [snd boxStringFun, String_sort, true], Term_sort, 9, true);
-                                 (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true)]
-in
-   let lex_ordering =
-     "(assert (forall ((t1 Term) (t2 Term) (s1 Term) (s2 Term) (a Term) (b Term))\n\
-                      (! (implies (and (HasType a t1)\n\
-                                       (HasType a s1)\n\
-                                       (HasType b t2)\n\
-                                       (HasType b s2)\n\
-                                       (Valid (Prims.precedes t1 t2 a b)))\n\
-                                  (Valid (Prims.precedes s1 s2 a b)))\n\
-                         :pattern ((Prims.precedes s1 s2 a b)\n\
-                                   (HasType a t1)\n\
-                                   (HasType b t2)))))\n" in
+                                 (fst boxRealFun,    [snd boxRealFun, Sort "Real", true], Term_sort, 10, true);
+                                 ("LexCons",    [("LexCons_0", Term_sort, true); ("LexCons_1", Term_sort, true); ("LexCons_2", Term_sort, true)], Term_sort, 11, true)] in
    let bcons = constrs |> List.collect (constructor_to_decl norng)
                        |> List.map (declToSmt z3options) |> String.concat "\n" in
+   let lex_ordering = "\n(declare-fun Prims.lex_t () Term)\n\
+                      (assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n\
+                                                          (! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n\
+                                                                  (Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n\
+                                                          :pattern (Prims.precedes t1 t2 e1 e2))))\n\
+                      (assert (forall ((t1 Term) (t2 Term))\n\
+                                      (! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n\
+                                      (< (Rank t1) (Rank t2)))\n\
+                                      :pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
    let valid_intro =
      "(assert (forall ((e Term) (t Term))\n\
                       (! (implies (HasType e t)\n\
@@ -1044,8 +1042,8 @@ in
                        :qid __prelude_valid_elim)))\n"
    in
    basic
-   ^ lex_ordering
    ^ bcons
+   ^ lex_ordering
    ^ (if FStar.Options.smtencoding_valid_intro()
       then valid_intro
       else "")
@@ -1158,6 +1156,7 @@ let mk_ApplyTT t t'  r  = mkApp("ApplyTT", [t;t']) r
 let kick_partial_app t  = mk_ApplyTT (mkApp("__uu__PartialApp", []) t.rng) t t.rng |> mk_Valid
 let mk_String_const s r = mkApp ("FString_const", [mk (String s) r]) r
 let mk_Precedes x1 x2 x3 x4 r = mkApp("Prims.precedes", [x1;x2;x3;x4])  r|> mk_Valid
+let mk_LexCons x1 x2 x3 r  = mkApp("LexCons", [x1;x2;x3]) r
 let rec n_fuel n =
     if n = 0 then mkApp("ZFuel", []) norng
     else mkApp("SFuel", [n_fuel (n - 1)]) norng
