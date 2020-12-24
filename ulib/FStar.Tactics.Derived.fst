@@ -880,20 +880,12 @@ and visit_comp (ff : term -> Tac term) (c : comp) : Tac comp =
     match cv with
     | C_Total ret decr ->
         let ret = visit_tm ff ret in
-        let decr =
-            match decr with
-            | None -> None
-            | Some d -> Some (visit_tm ff d)
-        in
+        let decr = map (visit_tm ff) decr in
         C_Total ret decr
 
     | C_GTotal ret decr ->
         let ret = visit_tm ff ret in
-        let decr =
-            match decr with
-            | None -> None
-            | Some d -> Some (visit_tm ff d)
-        in
+        let decr = map (visit_tm ff) decr in
         C_GTotal ret decr
 
     | C_Lemma pre post pats ->

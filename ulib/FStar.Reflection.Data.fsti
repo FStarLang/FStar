@@ -80,8 +80,8 @@ type term_view =
 // Very basic for now
 noeq
 type comp_view =
-  | C_Total     : ret:typ -> decr:(option term) -> comp_view
-  | C_GTotal    : ret:typ -> decr:(option term) -> comp_view
+  | C_Total     : ret:typ -> decr:(list term) -> comp_view
+  | C_GTotal    : ret:typ -> decr:(list term) -> comp_view
   | C_Lemma     : term -> term -> term -> comp_view // pre, post, patterns
   | C_Eff       : us:(list unit) -> (* TODO: expose universes properly,
                                              pass them back as obtained for now, or [] *)
@@ -197,10 +197,9 @@ let smaller (tv:term_view) (t:term) : Type0 =
 [@@ remove_unused_type_parameters [0; 1]]
 let smaller_comp (cv:comp_view) (c:comp) : Type0 =
     match cv with
-    | C_Total t md ->
-        t << c /\ (match md with | Some d -> d << c | None -> True)
+    | C_Total t md -> t << c /\ md << c
     | C_GTotal t md ->
-        t << c /\ (match md with | Some d -> d << c | None -> True)
+        t << c /\ md << c
     | C_Lemma pre post pats ->
         pre << c /\ post << c /\ pats << c
     | C_Eff us eff res args ->
