@@ -1189,7 +1189,7 @@ let (e_comp_view :
           let uu___2 =
             let uu___3 =
               let uu___4 =
-                let uu___5 = FStar_TypeChecker_NBETerm.e_option e_term in
+                let uu___5 = FStar_TypeChecker_NBETerm.e_list e_term in
                 FStar_TypeChecker_NBETerm.embed uu___5 cb md in
               FStar_TypeChecker_NBETerm.as_arg uu___4 in
             [uu___3] in
@@ -1204,7 +1204,7 @@ let (e_comp_view :
           let uu___2 =
             let uu___3 =
               let uu___4 =
-                let uu___5 = FStar_TypeChecker_NBETerm.e_option e_term in
+                let uu___5 = FStar_TypeChecker_NBETerm.e_list e_term in
                 FStar_TypeChecker_NBETerm.embed uu___5 cb md in
               FStar_TypeChecker_NBETerm.as_arg uu___4 in
             [uu___3] in
@@ -1272,7 +1272,7 @@ let (e_comp_view :
         FStar_Util.bind_opt uu___3
           (fun t2 ->
              let uu___4 =
-               let uu___5 = FStar_TypeChecker_NBETerm.e_option e_term in
+               let uu___5 = FStar_TypeChecker_NBETerm.e_list e_term in
                FStar_TypeChecker_NBETerm.unembed uu___5 cb md in
              FStar_Util.bind_opt uu___4
                (fun md1 ->
@@ -1288,7 +1288,7 @@ let (e_comp_view :
         FStar_Util.bind_opt uu___3
           (fun t2 ->
              let uu___4 =
-               let uu___5 = FStar_TypeChecker_NBETerm.e_option e_term in
+               let uu___5 = FStar_TypeChecker_NBETerm.e_list e_term in
                FStar_TypeChecker_NBETerm.unembed uu___5 cb md in
              FStar_Util.bind_opt uu___4
                (fun md1 ->

@@ -1588,8 +1588,8 @@ let (has_decreases : FStar_Syntax_Syntax.comp -> Prims.bool) =
                   | FStar_Syntax_Syntax.DECREASES uu___2 -> true
                   | uu___2 -> false)) in
         (match uu___ with
-         | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES d) ->
-             true
+         | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES
+             uu___1) -> true
          | uu___1 -> false)
     | uu___ -> false
 let rec (arrow_formals_comp_ln :
@@ -1700,7 +1700,16 @@ let (let_rec_arity :
         let uu___1 =
           FStar_Util.map_opt dopt
             (fun d ->
-               let d_bvs = FStar_Syntax_Free.names d in
+               let d_bvs =
+                 let uu___2 =
+                   let uu___3 =
+                     FStar_Util.new_set FStar_Syntax_Syntax.order_bv in
+                   FStar_List.fold_left
+                     (fun s ->
+                        fun t ->
+                          let uu___4 = FStar_Syntax_Free.names t in
+                          FStar_Util.set_union s uu___4) uu___3 in
+                 FStar_All.pipe_right d uu___2 in
                let uu___2 =
                  FStar_Common.tabulate n_univs (fun uu___3 -> false) in
                let uu___3 =
@@ -2265,6 +2274,27 @@ let (mk_eq2 :
             FStar_Range.union_ranges e1.FStar_Syntax_Syntax.pos
               e2.FStar_Syntax_Syntax.pos in
           FStar_Syntax_Syntax.mk uu___ uu___1
+let (teq3 : FStar_Syntax_Syntax.term) = fvar_const FStar_Parser_Const.eq3_lid
+let (mk_untyped_eq3 :
+  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+  =
+  fun e1 ->
+    fun e2 ->
+      let uu___ =
+        let uu___1 =
+          let uu___2 =
+            let uu___3 = FStar_Syntax_Syntax.as_arg e1 in
+            let uu___4 =
+              let uu___5 = FStar_Syntax_Syntax.as_arg e2 in [uu___5] in
+            uu___3 :: uu___4 in
+          (teq3, uu___2) in
+        FStar_Syntax_Syntax.Tm_app uu___1 in
+      let uu___1 =
+        FStar_Range.union_ranges e1.FStar_Syntax_Syntax.pos
+          e2.FStar_Syntax_Syntax.pos in
+      FStar_Syntax_Syntax.mk uu___ uu___1
 let (mk_has_type :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term ->

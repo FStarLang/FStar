@@ -1357,6 +1357,15 @@ term:
     {let (x, _2, e1, _4, e2) = ($1, (), $3, (), $5) in
       ( mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr )}
 
+decreasesClause:
+  typ
+    {let t = $1 in
+          ( [t] )}
+| PERCENT_LBRACK right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
+    {let (_1, l, _3) = ((), $2, ()) in
+let es =                                                 ( l ) in
+                                               ( es )}
+
 noSeqTerm:
   typ
     {let t = $1 in
@@ -1414,9 +1423,9 @@ in
 | ENSURES typ
     {let (_1, t) = ((), $2) in
       ( mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level )}
-| DECREASES typ
-    {let (_1, t) = ((), $2) in
-      ( mk_term (Decreases (t, None)) (rhs2 parseState 1 2) Type_level )}
+| DECREASES decreasesClause
+    {let (_1, l) = ((), $2) in
+      ( mk_term (Decreases (l, None)) (rhs2 parseState 1 2) Type_level )}
 | ATTRIBUTES nonempty_list_atomicTerm_
     {let (_1, es) = ((), $2) in
       ( mk_term (Attributes es) (rhs2 parseState 1 2) Type_level )}
@@ -2246,10 +2255,6 @@ let es =                                                 ( l ) in
     {let (_1, l, _3) = ((), $2, ()) in
 let es =                                                 ( l ) in
       ( mkConsList (rhs2 parseState 1 3) es )}
-| PERCENT_LBRACK right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
-    {let (_1, l, _3) = ((), $2, ()) in
-let es =                                                 ( l ) in
-      ( mkLexTuple (rhs2 parseState 1 3) es )}
 | BANG_LBRACE loption_separated_nonempty_list_COMMA_appTerm__ RBRACE
     {let (_1, xs, _3) = ((), $2, ()) in
 let es =     ( xs ) in

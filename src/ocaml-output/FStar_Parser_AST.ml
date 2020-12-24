@@ -67,7 +67,8 @@ type term' =
   | Paren of term 
   | Requires of (term * Prims.string FStar_Pervasives_Native.option) 
   | Ensures of (term * Prims.string FStar_Pervasives_Native.option) 
-  | Decreases of (term * Prims.string FStar_Pervasives_Native.option) 
+  | Decreases of (term Prims.list * Prims.string
+  FStar_Pervasives_Native.option) 
   | Labeled of (term * Prims.string * Prims.bool) 
   | Discrim of FStar_Ident.lid 
   | Attributes of term Prims.list 
@@ -276,7 +277,7 @@ let (uu___is_Decreases : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Decreases _0 -> true | uu___ -> false
 let (__proj__Decreases__item___0 :
-  term' -> (term * Prims.string FStar_Pervasives_Native.option)) =
+  term' -> (term Prims.list * Prims.string FStar_Pervasives_Native.option)) =
   fun projectee -> match projectee with | Decreases _0 -> _0
 let (uu___is_Labeled : term' -> Prims.bool) =
   fun projectee -> match projectee with | Labeled _0 -> true | uu___ -> false
@@ -957,18 +958,8 @@ let (mkConsList : FStar_Range.range -> term Prims.list -> term) =
     fun elts ->
       let nil = mk_term (Construct (FStar_Parser_Const.nil_lid, [])) r Expr in
       FStar_List.fold_right (fun e -> fun tl -> consTerm r e tl) elts nil
-let rec (mkLexTuple : FStar_Range.range -> term Prims.list -> term) =
-  fun r ->
-    fun elts ->
-      match elts with
-      | [] -> failwith "Did not expect an empty lex list"
-      | elt::[] -> elt
-      | hd::tl ->
-          let rest = mkLexTuple r tl in
-          mk_term
-            (Construct
-               (FStar_Parser_Const.lid_Mktuple2,
-                 [(hd, Nothing); (rest, Nothing)])) r Expr
+let (unit_const : FStar_Range.range -> term) =
+  fun r -> mk_term (Const FStar_Const.Const_unit) r Expr
 let (ml_comp : term -> term) =
   fun t ->
     let ml = mk_term (Name FStar_Parser_Const.effect_ML_lid) t.range Expr in
@@ -1047,8 +1038,6 @@ let (mkExplicitApp : term -> term Prims.list -> FStar_Range.range -> term) =
                  FStar_List.fold_left
                    (fun t1 -> fun a -> mk_term (App (t1, a, Nothing)) r Un) t
                    args)
-let (unit_const : FStar_Range.range -> term) =
-  fun r -> mk_term (Const FStar_Const.Const_unit) r Expr
 let (mkAdmitMagic : FStar_Range.range -> term) =
   fun r ->
     let admit =
@@ -1423,9 +1412,22 @@ let rec (term_to_string : term -> Prims.string) =
   fun x ->
     match x.tm with
     | Wild -> "_"
-    | Decreases (t, uu___) ->
-        let uu___1 = term_to_string t in
-        FStar_Util.format1 "(decreases %s)" uu___1
+    | Decreases (l, uu___) ->
+        let uu___1 =
+          match l with
+          | [] -> ""
+          | hd::tl ->
+              let uu___2 =
+                let uu___3 = term_to_string hd in
+                FStar_List.fold_left
+                  (fun s ->
+                     fun t ->
+                       let uu___4 =
+                         let uu___5 = term_to_string t in
+                         Prims.op_Hat ";" uu___5 in
+                       Prims.op_Hat s uu___4) uu___3 in
+              FStar_All.pipe_right tl uu___2 in
+        FStar_Util.format1 "(decreases [%s])" uu___1
     | Requires (t, uu___) ->
         let uu___1 = term_to_string t in
         FStar_Util.format1 "(requires %s)" uu___1

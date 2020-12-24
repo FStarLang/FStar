@@ -1372,8 +1372,9 @@ let (collect_one :
              | FStar_Parser_AST.Paren t -> collect_term t
              | FStar_Parser_AST.Requires (t, uu___3) -> collect_term t
              | FStar_Parser_AST.Ensures (t, uu___3) -> collect_term t
-             | FStar_Parser_AST.Decreases (t, uu___3) -> collect_term t
              | FStar_Parser_AST.Labeled (t, uu___3, uu___4) -> collect_term t
+             | FStar_Parser_AST.Decreases (l, uu___3) ->
+                 FStar_List.iter collect_term l
              | FStar_Parser_AST.Quote (t, uu___3) -> collect_term t
              | FStar_Parser_AST.Antiquote t -> collect_term t
              | FStar_Parser_AST.VQuote t -> collect_term t

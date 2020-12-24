@@ -1582,6 +1582,28 @@ and (p_letbinding :
                    FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___5 in
                  FStar_Pprint.op_Hat_Hat doc_pat uu___4 in
                FStar_Pprint.ifflat uu___2 uu___3)
+and (p_term_list :
+  Prims.bool ->
+    Prims.bool -> FStar_Parser_AST.term Prims.list -> FStar_Pprint.document)
+  =
+  fun ps ->
+    fun pb ->
+      fun l ->
+        let rec aux uu___ =
+          match uu___ with
+          | [] -> FStar_Pprint.empty
+          | x::[] -> p_term ps pb x
+          | x::xs ->
+              let uu___1 = p_term ps pb x in
+              let uu___2 =
+                let uu___3 = str ";" in
+                let uu___4 = aux xs in FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
+              FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+        let uu___ = str "[" in
+        let uu___1 =
+          let uu___2 = aux l in
+          let uu___3 = str "]" in FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
+        FStar_Pprint.op_Hat_Hat uu___ uu___1
 and (p_newEffect : FStar_Parser_AST.effect_decl -> FStar_Pprint.document) =
   fun uu___ ->
     match uu___ with
@@ -2343,10 +2365,10 @@ and (p_noSeqTerm' :
               let uu___3 = p_typ ps pb e1 in
               FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
             FStar_Pprint.group uu___1
-        | FStar_Parser_AST.Decreases (e1, wtf) ->
+        | FStar_Parser_AST.Decreases (l, wtf) ->
             let uu___1 =
               let uu___2 = str "decreases" in
-              let uu___3 = p_typ ps pb e1 in
+              let uu___3 = p_term_list ps pb l in
               FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
             FStar_Pprint.group uu___1
         | FStar_Parser_AST.Attributes es ->

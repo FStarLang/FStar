@@ -101,7 +101,7 @@ and cflag =
   | SHOULD_NOT_INLINE 
   | LEMMA 
   | CPS 
-  | DECREASES of t 
+  | DECREASES of t Prims.list 
 and residual_comp =
   {
   residual_effect: FStar_Ident.lident ;
@@ -312,7 +312,7 @@ let (uu___is_CPS : cflag -> Prims.bool) =
 let (uu___is_DECREASES : cflag -> Prims.bool) =
   fun projectee ->
     match projectee with | DECREASES _0 -> true | uu___ -> false
-let (__proj__DECREASES__item___0 : cflag -> t) =
+let (__proj__DECREASES__item___0 : cflag -> t Prims.list) =
   fun projectee -> match projectee with | DECREASES _0 -> _0
 let (__proj__Mkresidual_comp__item__residual_effect :
   residual_comp -> FStar_Ident.lident) =
