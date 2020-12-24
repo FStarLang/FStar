@@ -881,6 +881,15 @@ and p_letbinding kw (pat, e) =
   let doc_expr = inline_comment_or_above comm doc_expr empty in
   ifflat (doc_pat ^/^ equals ^/^ doc_expr) (doc_pat ^^ space ^^ group (equals ^^ jump2 doc_expr))
 
+and p_term_list ps pb l =
+    let rec aux = function
+        | [] -> empty
+        | [x] -> p_term ps pb x
+        | x::xs -> p_term ps pb x ^^ str ";" ^^ aux xs
+    in
+    str "[" ^^ aux l ^^ str "]"
+
+
 (* ****************************************************************************)
 (*                                                                            *)
 (*                          Printing effects                                  *)
@@ -1249,9 +1258,9 @@ and p_noSeqTerm' ps pb e = match e.tm with
   | Ensures (e, wtf) ->
       assert (wtf = None);
       group (str "ensures" ^/^ p_typ ps pb e)
-  | Decreases (e, wtf) ->
+  | Decreases (l, wtf) ->
       assert (wtf = None);
-      group (str "decreases" ^/^ p_typ ps pb e)
+      group (str "decreases" ^/^ p_term_list ps pb l)
   | Attributes es ->
       group (str "attributes" ^/^ separate_map break1 p_atomicTerm es)
   | If (e1, e2, e3) ->

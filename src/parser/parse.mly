@@ -633,6 +633,11 @@ term:
   | x=lidentOrUnderscore LONG_LEFT_ARROW e1=noSeqTerm SEMICOLON e2=term
       { mk_term (Bind(x, e1, e2)) (rhs2 parseState 1 5) Expr }
 
+decreasesClause:
+  | t=typ { [t] }
+  | PERCENT_LBRACK es=semiColonTermList RBRACK { es }
+
+
 noSeqTerm:
   | t=typ  { t }
   | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
@@ -647,8 +652,8 @@ noSeqTerm:
       { mk_term (Requires(t, None)) (rhs2 parseState 1 2) Type_level }
   | ENSURES t=typ
       { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level }
-  | DECREASES t=typ
-      { mk_term (Decreases (t, None)) (rhs2 parseState 1 2) Type_level }
+  | DECREASES l=decreasesClause
+      { mk_term (Decreases (l, None)) (rhs2 parseState 1 2) Type_level }
   | ATTRIBUTES es=nonempty_list(atomicTerm)
       { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
   | IF e1=noSeqTerm THEN e2=noSeqTerm ELSE e3=noSeqTerm
@@ -1064,8 +1069,6 @@ projectionLHS:
       }
   | LBRACK es=semiColonTermList RBRACK
       { mkConsList (rhs2 parseState 1 3) es }
-  | PERCENT_LBRACK es=semiColonTermList RBRACK
-      { mkLexTuple (rhs2 parseState 1 3) es }
   | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE
       { mkRefSet (rhs2 parseState 1 3) es }
   | ns=quident QMARK_DOT id=lident

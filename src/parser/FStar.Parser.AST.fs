@@ -74,7 +74,7 @@ type term' =
   | Paren     of term
   | Requires  of term * option<string>
   | Ensures   of term * option<string>
-  | Decreases of term * option<string>
+  | Decreases of list<term> * option<string>
   | Labeled   of term * string * bool
   | Discrim   of lid   (* Some?  (formerly is_Some) *)
   | Attributes of list<term>   (* attributes decorating a term *)
@@ -284,16 +284,7 @@ let mkConsList r elts =
   let nil = mk_term (Construct(C.nil_lid, [])) r Expr in
     List.fold_right (fun e tl -> consTerm r e tl) elts nil
 
-(*
- * [a; b; c] -> a, (b, c)
- *)
-let rec mkLexTuple r elts =
-  match elts with
-  | [] -> failwith "Did not expect an empty lex list"
-  | [elt] -> elt
-  | hd::tl ->
-    let rest = mkLexTuple r tl in
-    mk_term (Construct (C.lid_Mktuple2, [(hd, Nothing); (rest, Nothing)])) r Expr
+let unit_const r = mk_term(Const Const_unit) r Expr
 
 let ml_comp t =
     let ml = mk_term (Name C.effect_ML_lid) t.range Expr in
@@ -328,8 +319,6 @@ let mkExplicitApp t args r = match args with
   | _ -> match t.tm with
       | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, Nothing)) args))) r Un
       | _ -> List.fold_left (fun t a -> mk_term (App(t, a, Nothing)) r Un) t args
-
-let unit_const r = mk_term(Const Const_unit) r Expr
 
 let mkAdmitMagic r =
     let admit =
@@ -531,7 +520,11 @@ let imp_to_string = function
     | _ -> ""
 let rec term_to_string (x:term) = match x.tm with
   | Wild -> "_"
-  | Decreases (t, _) -> Util.format1 "(decreases %s)" (term_to_string t)
+  | Decreases (l, _) -> Util.format1 "(decreases [%s])"
+    (match l with
+     | [] -> ""
+     | hd::tl ->
+       tl |> List.fold_left (fun s t -> s ^ ";" ^ term_to_string t) (term_to_string hd))
   | Requires (t, _) -> Util.format1 "(requires %s)" (term_to_string t)
   | Ensures (t, _) -> Util.format1 "(ensures %s)" (term_to_string t)
   | Labeled (t, l, _) -> Util.format2 "(labeled %s %s)" l (term_to_string t)
