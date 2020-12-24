@@ -51,21 +51,6 @@ module Const = FStar.Parser.Const
 let instantiate_both env = {env with Env.instantiate_imp=true}
 let no_inst env = {env with Env.instantiate_imp=false}
 
-let rec mk_lex_tuple vs =
-  match vs with
-  | [] -> failwith "Did not expect an empty lex list"
-  | [x] -> x
-  | hd::tl ->
-    let rest = mk_lex_tuple tl in
-    let r =
-      if rest.pos = Range.dummyRange
-      then hd.pos
-      else Range.union_ranges hd.pos rest.pos in
-    mk_Tm_app
-      (fvar Const.lid_Mktuple2 delta_constant (Some Data_ctor))
-      [as_arg hd; as_arg rest]
-      r
-
 let is_eq = function
     | Some Equality -> true
     | _ -> false
@@ -381,7 +366,6 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
     | letrecs ->
       let r = Env.get_range env in
       let env = {env with letrecs=[]} in
-      let precedes = TcUtil.fvar_const env Const.precedes_lid in
 
       let decreases_clause bs c =
           if debug env Options.Low
@@ -396,18 +380,19 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                         | Tm_type _
                         | Tm_arrow _ -> []
                         | _ -> [S.bv_to_name b]) in
-          let as_lex_list dec =
-                let head, _ = U.head_and_args dec in
-                match head.n with (* The decreases clause is always an expression of type lex_t; promote if it isn't *)
-                    | Tm_fvar fv when S.fv_eq_lid fv Const.lid_Mktuple2 -> dec
-                    | _ -> mk_lex_tuple [dec] in
           let cflags = U.comp_flags c in
           match cflags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
-                | Some (DECREASES dec) -> as_lex_list dec
-                | _ ->
-                    let xs = bs |> filter_types_and_functions in
-                    mk_lex_tuple xs
-      in
+                | Some (DECREASES l) -> l
+                | _ -> bs |> filter_types_and_functions in
+
+      let precedes_t = TcUtil.fvar_const env Const.precedes_lid in
+      let rec mk_precedes_lex l l_prev =
+        match l, l_prev with
+        | [x], [x_prev] -> mk_Tm_app precedes_t [as_arg x; as_arg x_prev] r
+        | x::tl, x_prev::tl_prev ->
+          mk_disj (mk_Tm_app precedes_t [as_arg x; as_arg x_prev] r)
+                  (mk_conj (mk_untyped_eq3 x x_prev)
+                           (mk_precedes_lex tl tl_prev)) in
 
       let previous_dec = decreases_clause actuals expected_c in
 
@@ -423,7 +408,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
         //make sure they all have non-null names
         let formals = formals |> List.map (fun (x, imp) -> if S.is_null_bv x then (S.new_bv (Some (S.range_of_bv x)) x.sort, imp) else x,imp) in
         let dec = decreases_clause formals c in
-        let precedes = mk_Tm_app precedes [as_arg dec; as_arg previous_dec] r in
+        let precedes = mk_precedes_lex dec previous_dec in
         let precedes = TcUtil.label "Could not prove termination of this recursive call" r precedes in
         let bs, (last, imp) = BU.prefix formals in
         let last = {last with sort=U.refine last precedes} in
@@ -1347,10 +1332,12 @@ and tc_comp env c : comp                                      (* checked version
       let _, args = U.head_and_args tc in
       let res, args = List.hd args, List.tl args in
       let flags, guards = c.flags |> List.map (function
-        | DECREASES e ->
+        | DECREASES l ->
             let env, _ = Env.clear_expected_typ env in
-            let e, _, g = tc_tot_or_gtot_term env e in
-            DECREASES e, g
+            let l, g = l |> List.fold_left (fun (l, g) e ->
+              let e, _, g_e = tc_tot_or_gtot_term env e in
+              l@[e], Env.conj_guard g g_e) ([], Env.trivial_guard) in
+            DECREASES l, g
         | f -> f, Env.trivial_guard) |> List.unzip in
       let u = env.universe_of env (fst res) in
       let c = mk_Comp ({c with
