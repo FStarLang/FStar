@@ -473,12 +473,14 @@ let e_comp_view =
     let embed_comp_view cb (cv : comp_view) : t =
         match cv with
         | C_Total (t, md) ->
-            mkConstruct ref_C_Total.fv [] [as_arg (embed e_term cb t);
-                                    as_arg (embed (e_option e_term) cb md)]
+            mkConstruct ref_C_Total.fv [] [
+              as_arg (embed e_term cb t);
+              as_arg (embed (e_list e_term) cb md)]
 
         | C_GTotal (t, md) ->
-            mkConstruct ref_C_GTotal.fv [] [as_arg (embed e_term cb t);
-                                    as_arg (embed (e_option e_term) cb md)]
+            mkConstruct ref_C_GTotal.fv [] [
+              as_arg (embed e_term cb t);
+              as_arg (embed (e_list e_term) cb md)]
 
         | C_Lemma (pre, post, pats) ->
             mkConstruct ref_C_Lemma.fv [] [as_arg (embed e_term cb pre); as_arg (embed e_term cb post); as_arg (embed e_term cb pats)]
@@ -494,12 +496,12 @@ let e_comp_view =
         match t.nbe_t with
         | Construct (fv, _, [(md, _); (t, _)]) when S.fv_eq_lid fv ref_C_Total.lid ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
-            BU.bind_opt (unembed (e_option e_term) cb md) (fun md ->
+            BU.bind_opt (unembed (e_list e_term) cb md) (fun md ->
             Some <| C_Total (t, md)))
 
         | Construct (fv, _, [(md, _); (t, _)]) when S.fv_eq_lid fv ref_C_GTotal.lid ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
-            BU.bind_opt (unembed (e_option e_term) cb md) (fun md ->
+            BU.bind_opt (unembed (e_list e_term) cb md) (fun md ->
             Some <| C_GTotal (t, md)))
 
         | Construct (fv, _, [(post, _); (pre, _); (pats, _)]) when S.fv_eq_lid fv ref_C_Lemma.lid ->

@@ -230,15 +230,15 @@ let rec inspect_ln (t:term) : term_view =
         Tv_Unknown
 
 let inspect_comp (c : comp) : comp_view =
-    let get_dec (flags : list<cflag>) : option<term> =
+    let get_dec (flags : list<cflag>) : list<term> =
         match List.tryFind (function DECREASES _ -> true | _ -> false) flags with
-        | None -> None
-        | Some (DECREASES t) -> Some t
+        | None -> []
+        | Some (DECREASES ts) -> ts
         | _ -> failwith "impossible"
     in
     match c.n with
-    | Total (t, _) -> C_Total (t, None)
-    | GTotal (t, _) -> C_GTotal (t, None)
+    | Total (t, _) -> C_Total (t, [])
+    | GTotal (t, _) -> C_GTotal (t, [])
     | Comp ct -> begin
         if Ident.lid_equals ct.effect_name PC.effect_Lemma_lid then
             match ct.effect_args with
@@ -262,23 +262,23 @@ let inspect_comp (c : comp) : comp_view =
 
 let pack_comp (cv : comp_view) : comp =
     match cv with
-    | C_Total (t, None) -> mk_Total t
-    | C_Total (t, Some d) ->
+    | C_Total (t, []) -> mk_Total t
+    | C_Total (t, l) ->
         let ct = { comp_univs=[U_zero]
                  ; effect_name=PC.effect_Tot_lid
                  ; result_typ = t
                  ; effect_args = []
-                 ; flags = [DECREASES d] }
+                 ; flags = [DECREASES l] }
         in
         S.mk_Comp ct
 
-    | C_GTotal (t, None) -> mk_GTotal t
-    | C_GTotal (t, Some d) ->
+    | C_GTotal (t, []) -> mk_GTotal t
+    | C_GTotal (t, l) ->
         let ct = { comp_univs=[U_zero]
                  ; effect_name=PC.effect_GTot_lid
                  ; result_typ = t
                  ; effect_args = []
-                 ; flags = [DECREASES d] }
+                 ; flags = [DECREASES l] }
         in
         S.mk_Comp ct
 
