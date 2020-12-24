@@ -2067,38 +2067,51 @@ let (tc_decl' :
                          match (def_bs1, val_bs1) with
                          | ([], uu___3) -> val_bs1
                          | (uu___3, []) -> val_bs1
-                         | ((body_bv, uu___3)::bt, (val_bv, aqual)::vt) ->
-                             let uu___4 =
-                               let uu___5 =
-                                 let uu___6 = has_auto_name body_bv in
-                                 let uu___7 = has_auto_name val_bv in
-                                 (uu___6, uu___7) in
-                               match uu___5 with
-                               | (true, uu___6) -> (val_bv, aqual)
+                         | ({ FStar_Syntax_Syntax.binder_bv = body_bv;
+                              FStar_Syntax_Syntax.binder_qual = uu___3;
+                              FStar_Syntax_Syntax.binder_attrs = uu___4;_}::bt,
+                            val_b::vt) ->
+                             let uu___5 =
+                               let uu___6 =
+                                 let uu___7 = has_auto_name body_bv in
+                                 let uu___8 =
+                                   has_auto_name
+                                     val_b.FStar_Syntax_Syntax.binder_bv in
+                                 (uu___7, uu___8) in
+                               match uu___6 with
+                               | (true, uu___7) -> val_b
                                | (false, true) ->
-                                   let uu___6 =
-                                     let uu___7 = val_bv in
-                                     let uu___8 =
-                                       let uu___9 =
-                                         let uu___10 =
+                                   let uu___7 = val_b in
+                                   let uu___8 =
+                                     let uu___9 =
+                                       val_b.FStar_Syntax_Syntax.binder_bv in
+                                     let uu___10 =
+                                       let uu___11 =
+                                         let uu___12 =
                                            FStar_Ident.string_of_id
                                              body_bv.FStar_Syntax_Syntax.ppname in
-                                         let uu___11 =
+                                         let uu___13 =
                                            FStar_Ident.range_of_id
-                                             val_bv.FStar_Syntax_Syntax.ppname in
-                                         (uu___10, uu___11) in
-                                       FStar_Ident.mk_ident uu___9 in
+                                             (val_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.ppname in
+                                         (uu___12, uu___13) in
+                                       FStar_Ident.mk_ident uu___11 in
                                      {
-                                       FStar_Syntax_Syntax.ppname = uu___8;
+                                       FStar_Syntax_Syntax.ppname = uu___10;
                                        FStar_Syntax_Syntax.index =
-                                         (uu___7.FStar_Syntax_Syntax.index);
+                                         (uu___9.FStar_Syntax_Syntax.index);
                                        FStar_Syntax_Syntax.sort =
-                                         (uu___7.FStar_Syntax_Syntax.sort)
+                                         (uu___9.FStar_Syntax_Syntax.sort)
                                      } in
-                                   (uu___6, aqual)
-                               | (false, false) -> (val_bv, aqual) in
-                             let uu___5 = rename_binders bt vt in uu___4 ::
-                               uu___5 in
+                                   {
+                                     FStar_Syntax_Syntax.binder_bv = uu___8;
+                                     FStar_Syntax_Syntax.binder_qual =
+                                       (uu___7.FStar_Syntax_Syntax.binder_qual);
+                                     FStar_Syntax_Syntax.binder_attrs =
+                                       (uu___7.FStar_Syntax_Syntax.binder_attrs)
+                                   }
+                               | (false, false) -> val_b in
+                             let uu___6 = rename_binders bt vt in uu___5 ::
+                               uu___6 in
                        let uu___3 =
                          let uu___4 =
                            let uu___5 = rename_binders def_bs val_bs in
@@ -3915,7 +3928,7 @@ let (tc_decls :
              FStar_Util.fold_flatten process_one_decl_timed ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_List.rev_append ses1 []), env1)
-let (uu___920 : unit) =
+let (uu___921 : unit) =
   FStar_ST.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

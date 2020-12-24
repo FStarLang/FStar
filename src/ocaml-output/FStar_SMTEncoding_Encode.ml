@@ -2417,33 +2417,44 @@ let (encode_top_level_let :
                       (fun uu___2 ->
                          fun uu___3 ->
                            match (uu___2, uu___3) with
-                           | ((formal, uu___4), (binder, uu___5)) ->
-                               let uu___6 =
-                                 let uu___7 =
+                           | ({ FStar_Syntax_Syntax.binder_bv = formal;
+                                FStar_Syntax_Syntax.binder_qual = uu___4;
+                                FStar_Syntax_Syntax.binder_attrs = uu___5;_},
+                              { FStar_Syntax_Syntax.binder_bv = binder;
+                                FStar_Syntax_Syntax.binder_qual = uu___6;
+                                FStar_Syntax_Syntax.binder_attrs = uu___7;_})
+                               ->
+                               let uu___8 =
+                                 let uu___9 =
                                    FStar_Syntax_Syntax.bv_to_name binder in
-                                 (formal, uu___7) in
-                               FStar_Syntax_Syntax.NT uu___6) formals1
+                                 (formal, uu___9) in
+                               FStar_Syntax_Syntax.NT uu___8) formals1
                       binders in
                   let extra_formals1 =
                     let uu___2 =
                       FStar_All.pipe_right extra_formals
                         (FStar_List.map
-                           (fun uu___3 ->
-                              match uu___3 with
-                              | (x, i) ->
-                                  let uu___4 =
-                                    let uu___5 = x in
-                                    let uu___6 =
-                                      FStar_Syntax_Subst.subst subst
-                                        x.FStar_Syntax_Syntax.sort in
-                                    {
-                                      FStar_Syntax_Syntax.ppname =
-                                        (uu___5.FStar_Syntax_Syntax.ppname);
-                                      FStar_Syntax_Syntax.index =
-                                        (uu___5.FStar_Syntax_Syntax.index);
-                                      FStar_Syntax_Syntax.sort = uu___6
-                                    } in
-                                  (uu___4, i))) in
+                           (fun b ->
+                              let uu___3 = b in
+                              let uu___4 =
+                                let uu___5 = b.FStar_Syntax_Syntax.binder_bv in
+                                let uu___6 =
+                                  FStar_Syntax_Subst.subst subst
+                                    (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                                {
+                                  FStar_Syntax_Syntax.ppname =
+                                    (uu___5.FStar_Syntax_Syntax.ppname);
+                                  FStar_Syntax_Syntax.index =
+                                    (uu___5.FStar_Syntax_Syntax.index);
+                                  FStar_Syntax_Syntax.sort = uu___6
+                                } in
+                              {
+                                FStar_Syntax_Syntax.binder_bv = uu___4;
+                                FStar_Syntax_Syntax.binder_qual =
+                                  (uu___3.FStar_Syntax_Syntax.binder_qual);
+                                FStar_Syntax_Syntax.binder_attrs =
+                                  (uu___3.FStar_Syntax_Syntax.binder_attrs)
+                              })) in
                     FStar_All.pipe_right uu___2
                       FStar_Syntax_Util.name_binders in
                   let body1 =
@@ -2563,11 +2574,17 @@ let (encode_top_level_let :
                     (fun uu___1 ->
                        fun uu___2 ->
                          match (uu___1, uu___2) with
-                         | ((x, uu___3), (b, uu___4)) ->
-                             let uu___5 =
-                               let uu___6 = FStar_Syntax_Syntax.bv_to_name b in
-                               (x, uu___6) in
-                             FStar_Syntax_Syntax.NT uu___5) formals actuals in
+                         | ({ FStar_Syntax_Syntax.binder_bv = x;
+                              FStar_Syntax_Syntax.binder_qual = uu___3;
+                              FStar_Syntax_Syntax.binder_attrs = uu___4;_},
+                            { FStar_Syntax_Syntax.binder_bv = b;
+                              FStar_Syntax_Syntax.binder_qual = uu___5;
+                              FStar_Syntax_Syntax.binder_attrs = uu___6;_})
+                             ->
+                             let uu___7 =
+                               let uu___8 = FStar_Syntax_Syntax.bv_to_name b in
+                               (x, uu___8) in
+                             FStar_Syntax_Syntax.NT uu___7) formals actuals in
                 FStar_Syntax_Subst.subst_comp subst comp in
               let rec arrow_formals_comp_norm norm t1 =
                 let t2 =
@@ -4022,20 +4039,24 @@ and (encode_sigelt' :
                               let uu___7 =
                                 let aux uu___8 uu___9 =
                                   match (uu___8, uu___9) with
-                                  | ((bv, uu___10), (env3, acc_sorts, acc))
-                                      ->
-                                      let uu___11 =
+                                  | ({ FStar_Syntax_Syntax.binder_bv = bv;
+                                       FStar_Syntax_Syntax.binder_qual =
+                                         uu___10;
+                                       FStar_Syntax_Syntax.binder_attrs =
+                                         uu___11;_},
+                                     (env3, acc_sorts, acc)) ->
+                                      let uu___12 =
                                         FStar_SMTEncoding_Env.gen_term_var
                                           env3 bv in
-                                      (match uu___11 with
+                                      (match uu___12 with
                                        | (xxsym, xx, env4) ->
-                                           let uu___12 =
-                                             let uu___13 =
+                                           let uu___13 =
+                                             let uu___14 =
                                                FStar_SMTEncoding_Term.mk_fv
                                                  (xxsym,
                                                    FStar_SMTEncoding_Term.Term_sort) in
-                                             uu___13 :: acc_sorts in
-                                           (env4, uu___12, (xx :: acc))) in
+                                             uu___14 :: acc_sorts in
+                                           (env4, uu___13, (xx :: acc))) in
                                 FStar_List.fold_right aux formals
                                   (env2, [], []) in
                               (match uu___7 with
@@ -4655,7 +4676,7 @@ and (encode_sigelt' :
                                        universe_leq uu___9 u_k in
                                      let tp_ok tp u_tp =
                                        let t_tp =
-                                         (FStar_Pervasives_Native.fst tp).FStar_Syntax_Syntax.sort in
+                                         (tp.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
                                        let uu___9 = u_leq_u_k u_tp in
                                        if uu___9
                                        then true
@@ -4769,21 +4790,28 @@ and (encode_sigelt' :
                                                           fun uu___11 ->
                                                             match uu___11
                                                             with
-                                                            | (x, uu___12) ->
-                                                                let uu___13 =
-                                                                  let uu___14
+                                                            | {
+                                                                FStar_Syntax_Syntax.binder_bv
+                                                                  = x;
+                                                                FStar_Syntax_Syntax.binder_qual
+                                                                  = uu___12;
+                                                                FStar_Syntax_Syntax.binder_attrs
+                                                                  = uu___13;_}
+                                                                ->
+                                                                let uu___14 =
+                                                                  let uu___15
                                                                     =
-                                                                    let uu___15
+                                                                    let uu___16
                                                                     =
                                                                     FStar_SMTEncoding_Env.mk_term_projector_name
                                                                     l x in
-                                                                    (uu___15,
+                                                                    (uu___16,
                                                                     [xx]) in
                                                                   FStar_SMTEncoding_Util.mkApp
-                                                                    uu___14 in
+                                                                    uu___15 in
                                                                 FStar_SMTEncoding_Env.push_term_var
                                                                   env2 x
-                                                                  uu___13)
+                                                                  uu___14)
                                                        env) in
                                                 let uu___11 =
                                                   FStar_SMTEncoding_EncodeTerm.encode_args
