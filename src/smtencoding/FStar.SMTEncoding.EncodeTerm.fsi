@@ -55,7 +55,7 @@ val encode_term_pred: fuel_opt:option<term>
                     -> t:typ
                     -> env:env_t
                     -> e:term
-                    -> term * term * decls_t
+                    -> term * decls_t
 
 val encode_args : l:args -> env:env_t -> list<term> * decls_t
 
@@ -66,4 +66,4 @@ val encode_function_type_as_formula : t:typ -> env:env_t -> term * decls_t
 val encode_binders : fuel_opt:option<term>
                   -> bs:Syntax.binders
                   -> env:env_t
-                  -> list<fv> * list<term> * list<term> * env_t * decls_t * list<bv>
+                  -> list<fv> * list<term> * env_t * decls_t * list<bv>
