@@ -915,7 +915,7 @@ let has_decreases (c:comp) : bool =
   match c.n with
   | Comp ct ->
     begin match ct.flags |> U.find_opt (function DECREASES _ -> true | _ -> false) with
-    | Some (DECREASES d) -> true
+    | Some (DECREASES _) -> true
     | _ -> false
     end
   | _ -> false
@@ -993,10 +993,10 @@ let let_rec_arity (lb:letbinding) : int * option<(list<bool>)> =
     let n_univs = List.length lb.lbunivs in
     n_univs + List.length bs,
     U.map_opt dopt (fun d ->
-       let d_bvs = FStar.Syntax.Free.names d in
+       let d_bvs = d |> List.fold_left (fun s t ->
+         set_union s (FStar.Syntax.Free.names t)) (new_set Syntax.order_bv) in
        Common.tabulate n_univs (fun _ -> false)
        @ (bs |> List.map (fun (x, _) -> U.set_mem x d_bvs)))
-
 
 let abs_formals t =
     let subst_lcomp_opt s l = match l with
@@ -1216,6 +1216,10 @@ let mk_untyped_eq2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) (Range.union
 let mk_eq2 (u:universe) (t:typ) (e1:term) (e2:term) : term =
     let eq_inst = mk_Tm_uinst teq [u] in
     mk (Tm_app(eq_inst, [iarg t; as_arg e1; as_arg e2])) (Range.union_ranges e1.pos e2.pos)
+
+let teq3 = fvar_const PC.eq3_lid
+let mk_untyped_eq3 e1 e2 = mk (Tm_app(teq3, [as_arg e1; as_arg e2])) (Range.union_ranges e1.pos e2.pos)
+
 
 let mk_has_type t x t' =
     let t_has_type = fvar_const PC.has_type_lid in //TODO: Fix the U_zeroes below!

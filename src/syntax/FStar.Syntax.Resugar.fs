@@ -960,8 +960,8 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
        | [] -> l
        | hd::tl ->
           match hd with
-          | DECREASES e ->
-            let e = mk (Decreases (resugar_term' env e, None)) in
+          | DECREASES ts ->
+            let e = mk (Decreases (ts |> List.map (resugar_term' env), None)) in
             aux (e::l) tl
           | _ -> aux l tl
       in
@@ -976,9 +976,9 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
        | [] -> l
        | hd::tl ->
           match hd with
-          | DECREASES e ->
-            let e = (resugar_term' env e, A.Nothing) in
-            aux (e::l) tl
+          | DECREASES ts ->
+            let es = ts |> List.map (fun e -> resugar_term' env e, A.Nothing) in
+            aux (es@l) tl
           | _ -> aux l tl
       in
       let decrease = aux [] c.flags in

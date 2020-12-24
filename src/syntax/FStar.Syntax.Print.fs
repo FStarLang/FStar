@@ -515,7 +515,15 @@ and comp_to_string c =
                && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
           then U.format1 "ALL %s" (term_to_string c.result_typ)
           else U.format2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
-      let dec = c.flags |> List.collect (function DECREASES e -> [U.format1 " (decreases %s)" (term_to_string e)] | _ -> []) |> String.concat " " in
+      let dec = c.flags
+        |> List.collect (function DECREASES l ->
+           [U.format1 " (decreases [%s])"
+             (match l with
+              | [] -> ""
+              | hd::tl ->
+                tl |> List.fold_left (fun s t ->
+                  s ^ ";" ^ term_to_string t) (term_to_string hd))] | _ -> [])
+        |> String.concat " " in
       U.format2 "%s%s" basic dec
     )
 

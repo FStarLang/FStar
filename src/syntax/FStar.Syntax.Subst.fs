@@ -230,7 +230,7 @@ let rec subst' (s:subst_ts) (t:term) : term =
 
 let subst_flags' s flags =
     flags |> List.map (function
-        | DECREASES a -> DECREASES (subst' s a)
+        | DECREASES l -> DECREASES (l |> List.map (subst' s))
         | f -> f)
 
 let subst_imp' s i =
@@ -882,8 +882,8 @@ let rec deep_compress (t:term) : term =
 and deep_compress_cflags flags =
     List.map
         (fun f -> match f with
-        | DECREASES t ->
-          DECREASES (deep_compress t)
+        | DECREASES l ->
+          DECREASES (l |> List.map deep_compress)
 
         (* All of these do not have a subterm, so do nothing *)
         | TOTAL

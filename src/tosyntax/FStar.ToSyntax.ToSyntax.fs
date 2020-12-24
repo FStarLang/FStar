@@ -239,8 +239,8 @@ and free_type_vars env t = match (unparen t).tm with
 
   | Requires (t, _)
   | Ensures (t, _)
-  | Decreases (t, _)
   | NamedTyp(_, t) -> free_type_vars env t
+  | Decreases (l, _) -> List.collect (free_type_vars env) l
   | Paren t -> failwith "impossible"
   | Ascribed(t, t', tacopt) ->
     let ts = t::t'::(match tacopt with None -> [] | Some t -> [t]) in
@@ -936,9 +936,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | Ensures (t, lopt) ->
       desugar_formula env t, noaqs
-
-    | Decreases (t, lopt) ->
-      desugar_term_maybe_top top_level env t
 
     | Attributes ts ->
         failwith "Attributes should not be desugared by desugar_term_maybe_top"
@@ -1844,8 +1841,11 @@ and desugar_comp r (allow_type_promotion:bool) env t =
       rest |> List.partition is_decrease
     in
     let rest = desugar_args env rest in
-    let dec = desugar_args env dec in
-    let decreases_clause = List.map (fun (t, _) -> DECREASES t) dec in
+    let decreases_clause = dec |>
+      List.map (fun t -> match (unparen (fst t)).tm with
+                      | Decreases (l, _) ->
+                        DECREASES (l |> List.map (desugar_term env))
+                      | _ -> failwith "Impossible!") in
 
     let no_additional_args =
         (* F# complains about not being able to use = on some types.. *)

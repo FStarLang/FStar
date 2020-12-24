@@ -188,7 +188,7 @@ and cflag =                                                      (* flags applic
   | TRIVIAL_POSTCONDITION                                          (* the computation has no meaningful postcondition *)
   | SHOULD_NOT_INLINE                                              (* a stopgap, see issue #1362, removing it revives the failure *)
   | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
-  | DECREASES of term
+  | DECREASES of list<term>
 and metadata =
   | Meta_pattern       of list<term> * list<args>                (* Patterns for SMT quantifier instantiation; the first arg instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
