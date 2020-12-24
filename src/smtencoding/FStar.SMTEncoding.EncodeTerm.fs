@@ -411,7 +411,6 @@ let rec encode_const c env =
 
 and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
                             (list<fv>                       (* translated bound variables *)
-                            * list<term>                    (* binder sorts *)
                             * list<term>                    (* guards *)
                             * env_t                         (* extended context *)
                             * decls_t                       (* top-level decls to be emitted *)
@@ -419,35 +418,33 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
 
     if Env.debug env.tcenv Options.Medium then BU.print1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);
 
-    let vars, sorts, guards, env, decls, names =
+    let vars, guards, env, decls, names =
       bs |> List.fold_left
-      (fun (vars, sorts, guards, env, decls, names) b ->
-        let v, t, g, env, decls', n =
+      (fun (vars, guards, env, decls, names) b ->
+        let v, g, env, decls', n =
             let x = fst b in
             let xxsym, xx, env' = gen_term_var env x in
-            let t_term, guard_x_t, decls' =
+            let guard_x_t, decls' =
               encode_term_pred fuel_opt (norm env x.sort) env xx
             in //if we had polarities, we could generate a mkHasTypeZ here in the negative case
             mk_fv (xxsym, Term_sort),
-            t_term,
             guard_x_t,
             env',
             decls',
             x
         in
-        v::vars, t::sorts, g::guards, env, decls@decls', n::names)
-       ([], [], [], env, [], [])
+        v::vars, g::guards, env, decls@decls', n::names)
+       ([], [], env, [], [])
     in
     List.rev vars,
-    List.rev sorts,
     List.rev guards,
     env,
     decls,
     List.rev names
 
-and encode_term_pred (fuel_opt:option<term>) (t:typ) (env:env_t) (e:term) : term * term * decls_t =
+and encode_term_pred (fuel_opt:option<term>) (t:typ) (env:env_t) (e:term) : term * decls_t =
     let t, decls = encode_term t env in
-    t, mk_HasTypeWithFuel fuel_opt e t, decls
+    mk_HasTypeWithFuel fuel_opt e t, decls
 
 and encode_term_pred' (fuel_opt:option<term>) (t:typ) (env:env_t) (e:term) : term * decls_t =
     let t, decls = encode_term t env in
@@ -733,12 +730,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         if  (env.encode_non_total_function_typ
              && U.is_pure_or_ghost_comp res)
              || U.is_tot_or_gtot_comp res
-        then let vars, _, guards_l, env', decls, _ = encode_binders None binders env in
+        then let vars, guards_l, env', decls, _ = encode_binders None binders env in
              let fsym = mk_fv (varops.fresh module_name "f", Term_sort) in
              let f = mkFreeV  fsym in
              let app = mk_Apply f vars in
              let pre_opt, res_t = TcUtil.pure_or_ghost_pre_and_post ({env.tcenv with lax=true}) res in
-             let _, res_pred, decls' = encode_term_pred None res_t env' app in
+             let res_pred, decls' = encode_term_pred None res_t env' app in
              let guards, guard_decls = match pre_opt with
                 | None -> mk_and_l guards_l, []
                 | Some pre ->
@@ -840,7 +837,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 * AR: any decls computed here are ignored
                 *     we encode terms in this let-scope just to compute a hash
                 *)
-               let vars, _, guards_l, env_bs, _, _ = encode_binders None binders env in
+               let vars, guards_l, env_bs, _, _ = encode_binders None binders env in
                let c = Env.unfold_effect_abbrev env.tcenv res |> S.mk_Comp in
                let ct, _ = encode_term (c |> U.comp_result) env_bs in
                let effect_args, _ = encode_args (c |> U.comp_effect_args) env_bs in
@@ -931,7 +928,6 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         Util.mkAssume(mkForall t0.pos ([[t_haseq_ref]], cvars, (mkIff (t_haseq_ref, t_haseq_base))),
                         Some ("haseq for " ^ tsym),
                         "haseq" ^ tsym) in
-
         // let t_valid =
         //   let xx = (x, Term_sort) in
         //   let valid_t = mkApp ("Valid", [t]) in
@@ -959,7 +955,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
       | Tm_uvar (uv, _) ->
         let ttm = mk_Term_uvar (Unionfind.uvar_id uv.ctx_uvar_head) in
-        let _, t_has_k, decls = encode_term_pred None uv.ctx_uvar_typ env ttm in //TODO: skip encoding this if it has already been encoded before
+        let t_has_k, decls = encode_term_pred None uv.ctx_uvar_typ env ttm in //TODO: skip encoding this if it has already been encoded before
         let d =
             Util.mkAssume(t_has_k,
                           Some "Uvar typing",
@@ -1039,7 +1035,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                       let t_hyps, decls =
                         List.fold_left2 (fun (t_hyps, decls) (bv, _) e ->
                           let t = SS.subst subst bv.sort in
-                          let _, t_hyp, decls' = encode_term_pred None t env e in
+                          let t_hyp, decls' = encode_term_pred None t env e in
                           if Env.debug env.tcenv (Options.Other "PartialApp")
                           then BU.print2 "Encoded typing hypothesis for %s ... got %s\n"
                                          (Print.term_to_string t)
@@ -1052,13 +1048,12 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                       let t_head_hyp, decls' =
                         match smt_head.tm with
                         | FreeV _ ->
-                          let _, g, decls = encode_term_pred None head_type env smt_head in
-                          g, decls
+                          encode_term_pred None head_type env smt_head
                         | _ ->
                           mkTrue, []
                       in
                       let hyp = Term.mk_and_l (t_head_hyp::t_hyps) Range.dummyRange in
-                      let _, has_type_conclusion, decls'' =
+                      let has_type_conclusion, decls'' =
                           encode_term_pred None ty env app_tm
                       in
                       let has_type = mkImp (hyp, has_type_conclusion) in
@@ -1209,7 +1204,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               if is_impure rc && not (is_smt_reifiable_rc env.tcenv rc)
               then fallback() //we know it's not pure; so don't encode it precisely
               else
-                let vars, _, guards, envbody, decls, _ = encode_binders None bs env in
+                let vars, guards, envbody, decls, _ = encode_binders None bs env in
                 let body = if is_smt_reifiable_rc env.tcenv rc
                            then TcUtil.reify_body env.tcenv [] body
                            else body
@@ -1605,7 +1600,7 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
             mk_Valid tt, decls in
 
     let encode_q_body env (bs:Syntax.binders) (ps:list<args>) body =
-        let vars, _, guards, env, decls, _ = encode_binders None bs env in
+        let vars, guards, env, decls, _ = encode_binders None bs env in
         let pats, decls' = encode_smt_patterns ps env in
         let body, decls'' = encode_formula body env in
         let guards = match pats with
