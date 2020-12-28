@@ -1046,36 +1046,63 @@ let (guard_letrecs :
               FStar_TypeChecker_Util.fvar_const env1
                 FStar_Parser_Const.lex_eq_lid in
             let rec mk_precedes_lex l l_prev =
-              match (l, l_prev) with
-              | (x::[], x_prev::[]) ->
-                  let uu___ =
-                    let uu___1 = FStar_Syntax_Syntax.as_arg x in
-                    let uu___2 =
-                      let uu___3 = FStar_Syntax_Syntax.as_arg x_prev in
-                      [uu___3] in
-                    uu___1 :: uu___2 in
-                  FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___ r
-              | (x::tl, x_prev::tl_prev) ->
-                  let uu___ =
+              let rec aux l1 l_prev1 =
+                match (l1, l_prev1) with
+                | (x::[], x_prev::[]) ->
+                    let uu___ =
+                      let uu___1 = FStar_Syntax_Syntax.as_arg x in
+                      let uu___2 =
+                        let uu___3 = FStar_Syntax_Syntax.as_arg x_prev in
+                        [uu___3] in
+                      uu___1 :: uu___2 in
+                    FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___ r
+                | (x::tl, x_prev::tl_prev) ->
+                    let uu___ =
+                      let uu___1 =
+                        let uu___2 = FStar_Syntax_Syntax.as_arg x in
+                        let uu___3 =
+                          let uu___4 = FStar_Syntax_Syntax.as_arg x_prev in
+                          [uu___4] in
+                        uu___2 :: uu___3 in
+                      FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___1 r in
                     let uu___1 =
-                      let uu___2 = FStar_Syntax_Syntax.as_arg x in
-                      let uu___3 =
-                        let uu___4 = FStar_Syntax_Syntax.as_arg x_prev in
-                        [uu___4] in
-                      uu___2 :: uu___3 in
-                    FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___1 r in
-                  let uu___1 =
-                    let uu___2 =
-                      let uu___3 =
-                        let uu___4 = FStar_Syntax_Syntax.as_arg x in
-                        let uu___5 =
-                          let uu___6 = FStar_Syntax_Syntax.as_arg x_prev in
-                          [uu___6] in
-                        uu___4 :: uu___5 in
-                      FStar_Syntax_Syntax.mk_Tm_app lex_eq_t uu___3 r in
-                    let uu___3 = mk_precedes_lex tl tl_prev in
-                    FStar_Syntax_Util.mk_conj uu___2 uu___3 in
-                  FStar_Syntax_Util.mk_disj uu___ uu___1 in
+                      let uu___2 =
+                        let uu___3 =
+                          let uu___4 = FStar_Syntax_Syntax.as_arg x in
+                          let uu___5 =
+                            let uu___6 = FStar_Syntax_Syntax.as_arg x_prev in
+                            [uu___6] in
+                          uu___4 :: uu___5 in
+                        FStar_Syntax_Syntax.mk_Tm_app lex_eq_t uu___3 r in
+                      let uu___3 = aux tl tl_prev in
+                      FStar_Syntax_Util.mk_conj uu___2 uu___3 in
+                    FStar_Syntax_Util.mk_disj uu___ uu___1 in
+              let uu___ =
+                let uu___1 =
+                  ((FStar_List.length l), (FStar_List.length l_prev)) in
+                match uu___1 with
+                | (n, n_prev) ->
+                    if n = n_prev
+                    then (l, l_prev)
+                    else
+                      if n < n_prev
+                      then
+                        (let uu___3 =
+                           let uu___4 =
+                             FStar_All.pipe_right l_prev
+                               (FStar_List.splitAt n) in
+                           FStar_All.pipe_right uu___4
+                             FStar_Pervasives_Native.fst in
+                         (l, uu___3))
+                      else
+                        (let uu___4 =
+                           let uu___5 =
+                             FStar_All.pipe_right l
+                               (FStar_List.splitAt n_prev) in
+                           FStar_All.pipe_right uu___5
+                             FStar_Pervasives_Native.fst in
+                         (uu___4, l_prev)) in
+              match uu___ with | (l1, l_prev1) -> aux l1 l_prev1 in
             let previous_dec = decreases_clause actuals expected_c in
             let guard_one_letrec uu___ =
               match uu___ with
