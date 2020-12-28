@@ -1111,7 +1111,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let env, decls2 = BU.fold_map encode_action env ed.actions in
             List.flatten decls2, env
 
-     | Sig_declare_typ(lid, _, _) when (lid_equals lid Const.precedes_lid) ->
+     | Sig_declare_typ(lid, _, _)
+       when (lid_equals lid Const.precedes_lid) ||
+            (lid_equals lid Const.lex_eq_lid) ->
         let tname, ttok, env = new_term_constant_and_tok_from_lid env lid 4 in
         [], env
 
@@ -1364,8 +1366,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                                         Some "name-token correspondence",
                                                         ("token_correspondence_"^ttok)) in
                         [ttok_decl; ttok_fresh; name_tok_corr], env in
-            if lid_equals t Const.lex_t_lid then tok_decls, env  //AR: for lex_t, we add the declaration in the prelude itself
-            else tname_decl@tok_decls, env in
+            tname_decl@tok_decls, env in
         let kindingAx =
             let k, decls = encode_term_pred None res env' tapp in
             let karr =

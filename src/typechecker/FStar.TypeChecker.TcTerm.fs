@@ -386,12 +386,13 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                 | _ -> bs |> filter_types_and_functions in
 
       let precedes_t = TcUtil.fvar_const env Const.precedes_lid in
+      let lex_eq_t = TcUtil.fvar_const env Const.lex_eq_lid in
       let rec mk_precedes_lex l l_prev =
         match l, l_prev with
         | [x], [x_prev] -> mk_Tm_app precedes_t [as_arg x; as_arg x_prev] r
         | x::tl, x_prev::tl_prev ->
           mk_disj (mk_Tm_app precedes_t [as_arg x; as_arg x_prev] r)
-                  (mk_conj (mk_untyped_eq3 x x_prev)
+                  (mk_conj (mk_Tm_app lex_eq_t [as_arg x; as_arg x_prev] r)
                            (mk_precedes_lex tl tl_prev)) in
 
       let previous_dec = decreases_clause actuals expected_c in
