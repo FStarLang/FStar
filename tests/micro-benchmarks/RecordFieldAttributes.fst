@@ -24,12 +24,8 @@ let rec fv_eq (fv1 : list string) (fv2 : list string) : bool =
     | _, _ -> false
 
 let unpack_field (b : T.binder) : T.Tac (string * option T.term * T.term) = 
-    let (bv, aqual) = T.inspect_binder b in
-    let attr_opt = 
-        match aqual with
-        | T.Q_Meta_attr t -> Some t
-        | _ -> None
-    in
+    let (bv, (_, attrs)) = T.inspect_binder b in
+    let attr_opt = match attrs with | [] -> None | _ -> Some (FStar.List.Tot.hd attrs) in
     let bvv = T.inspect_bv bv in
     // Need to make fields of bv_view 
     let open FStar.Tactics in
@@ -92,13 +88,6 @@ let validate_attribute (expectedDescription : string) (attr : T.term) : T.Tac un
 let _ =
     assert True by begin
         let fields = get_record_fields (T.top_env ()) (T.explode_qn (`%r)) in
-        //T.iter (fun (name, attr_opt, t) -> 
-        //    let attr_str = 
-        //        match attr_opt with
-        //        | Some t -> "[@@ " ^ T.term_to_ast_string t ^ " ] " 
-        //        | None -> ""
-        //    in
-        //    T.print (attr_str ^ name ^ " : " ^ (T.term_to_ast_string t))) fields
         let field1, field2 = 
             match fields with 
             | field1 :: field2 :: [] -> (field1, field2)
@@ -119,13 +108,6 @@ let _ =
 let _ = 
         assert True by begin
         let fields = get_record_fields (T.top_env ()) (T.explode_qn (`%r2)) in
-        //T.iter (fun (name, attr_opt, t) -> 
-        //    let attr_str = 
-        //        match attr_opt with
-        //        | Some t -> "[@@ " ^ T.term_to_ast_string t ^ " ] " 
-        //        | None -> ""
-        //    in
-        //    T.print (attr_str ^ name ^ " : " ^ (T.term_to_ast_string t))) fields
         let field1, field2 = 
             match fields with 
             | field1 :: field2 :: [] -> (field1, field2)
