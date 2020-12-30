@@ -67,8 +67,8 @@ type term' =
   | Paren of term 
   | Requires of (term * Prims.string FStar_Pervasives_Native.option) 
   | Ensures of (term * Prims.string FStar_Pervasives_Native.option) 
-  | Decreases of (term Prims.list * Prims.string
-  FStar_Pervasives_Native.option) 
+  | LexList of term Prims.list 
+  | Decreases of (term * Prims.string FStar_Pervasives_Native.option) 
   | Labeled of (term * Prims.string * Prims.bool) 
   | Discrim of FStar_Ident.lid 
   | Attributes of term Prims.list 
@@ -272,11 +272,15 @@ let (uu___is_Ensures : term' -> Prims.bool) =
 let (__proj__Ensures__item___0 :
   term' -> (term * Prims.string FStar_Pervasives_Native.option)) =
   fun projectee -> match projectee with | Ensures _0 -> _0
+let (uu___is_LexList : term' -> Prims.bool) =
+  fun projectee -> match projectee with | LexList _0 -> true | uu___ -> false
+let (__proj__LexList__item___0 : term' -> term Prims.list) =
+  fun projectee -> match projectee with | LexList _0 -> _0
 let (uu___is_Decreases : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | Decreases _0 -> true | uu___ -> false
 let (__proj__Decreases__item___0 :
-  term' -> (term Prims.list * Prims.string FStar_Pervasives_Native.option)) =
+  term' -> (term * Prims.string FStar_Pervasives_Native.option)) =
   fun projectee -> match projectee with | Decreases _0 -> _0
 let (uu___is_Labeled : term' -> Prims.bool) =
   fun projectee -> match projectee with | Labeled _0 -> true | uu___ -> false
@@ -1427,22 +1431,25 @@ let rec (term_to_string : term -> Prims.string) =
   fun x ->
     match x.tm with
     | Wild -> "_"
-    | Decreases (l, uu___) ->
-        let uu___1 =
+    | LexList l ->
+        let uu___ =
           match l with
-          | [] -> ""
+          | [] -> " "
           | hd::tl ->
-              let uu___2 =
-                let uu___3 = term_to_string hd in
+              let uu___1 =
+                let uu___2 = term_to_string hd in
                 FStar_List.fold_left
                   (fun s ->
                      fun t ->
-                       let uu___4 =
-                         let uu___5 = term_to_string t in
-                         Prims.op_Hat ";" uu___5 in
-                       Prims.op_Hat s uu___4) uu___3 in
-              FStar_All.pipe_right tl uu___2 in
-        FStar_Util.format1 "(decreases [%s])" uu___1
+                       let uu___3 =
+                         let uu___4 = term_to_string t in
+                         Prims.op_Hat "; " uu___4 in
+                       Prims.op_Hat s uu___3) uu___2 in
+              FStar_All.pipe_right tl uu___1 in
+        FStar_Util.format1 "%[%s]" uu___
+    | Decreases (t, uu___) ->
+        let uu___1 = term_to_string t in
+        FStar_Util.format1 "(decreases %s)" uu___1
     | Requires (t, uu___) ->
         let uu___1 = term_to_string t in
         FStar_Util.format1 "(requires %s)" uu___1

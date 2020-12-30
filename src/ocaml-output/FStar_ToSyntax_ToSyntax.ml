@@ -418,8 +418,9 @@ and (free_type_vars :
       | FStar_Parser_AST.Name uu___1 -> []
       | FStar_Parser_AST.Requires (t1, uu___1) -> free_type_vars env t1
       | FStar_Parser_AST.Ensures (t1, uu___1) -> free_type_vars env t1
+      | FStar_Parser_AST.Decreases (t1, uu___1) -> free_type_vars env t1
       | FStar_Parser_AST.NamedTyp (uu___1, t1) -> free_type_vars env t1
-      | FStar_Parser_AST.Decreases (l, uu___1) ->
+      | FStar_Parser_AST.LexList l ->
           FStar_List.collect (free_type_vars env) l
       | FStar_Parser_AST.Paren t1 -> failwith "impossible"
       | FStar_Parser_AST.Ascribed (t1, t', tacopt) ->
@@ -4245,7 +4246,14 @@ and (desugar_comp :
                                           uu___6.FStar_Parser_AST.tm in
                                         match uu___5 with
                                         | FStar_Parser_AST.Decreases
-                                            (l, uu___6) ->
+                                            (t2, uu___6) ->
+                                            let l =
+                                              let t3 = unparen t2 in
+                                              match t3.FStar_Parser_AST.tm
+                                              with
+                                              | FStar_Parser_AST.LexList l1
+                                                  -> l1
+                                              | uu___7 -> [t3] in
                                             let uu___7 =
                                               FStar_All.pipe_right l
                                                 (FStar_List.map

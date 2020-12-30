@@ -2380,10 +2380,16 @@ and (p_noSeqTerm' :
               let uu___3 = p_typ ps pb e1 in
               FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
             FStar_Pprint.group uu___1
-        | FStar_Parser_AST.Decreases (l, wtf) ->
+        | FStar_Parser_AST.LexList l ->
+            let uu___ =
+              let uu___1 = str "%" in
+              let uu___2 = p_term_list ps pb l in
+              FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+            FStar_Pprint.group uu___
+        | FStar_Parser_AST.Decreases (e1, wtf) ->
             let uu___1 =
               let uu___2 = str "decreases" in
-              let uu___3 = p_term_list ps pb l in
+              let uu___3 = p_typ ps pb e1 in
               FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
             FStar_Pprint.group uu___1
         | FStar_Parser_AST.Attributes es ->
@@ -3950,6 +3956,12 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.CalcProof uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
+    | FStar_Parser_AST.LexList l ->
+        let uu___ =
+          let uu___1 = str "%" in
+          let uu___2 = p_term_list false false l in
+          FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+        FStar_Pprint.group uu___
 and (p_constant : FStar_Const.sconst -> FStar_Pprint.document) =
   fun uu___ ->
     match uu___ with

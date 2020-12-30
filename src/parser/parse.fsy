@@ -46,13 +46,6 @@ let get_aqual_and_attrs aqual_universe_opt =
  *)
 let get_aqual_and_attrs_and_X (aqual_universe_opt, x) =
   get_aqual_and_attrs aqual_universe_opt, x
-
-let rec get_decreases_list t =
-  match t.tm with
-  | Paren t -> get_decreases_list t
-  | Decreases (l, _) -> l
-  | _ -> [t]
-
 %}
 %start inputFragment
 %start term
@@ -1440,7 +1433,7 @@ in
       ( mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level )}
 | DECREASES typ
     {let (_1, t) = ((), $2) in
-      ( mk_term (Decreases (get_decreases_list t, None)) (rhs2 parseState 1 2) Type_level )}
+      ( mk_term (Decreases (t, None)) (rhs2 parseState 1 2) Type_level )}
 | ATTRIBUTES nonempty_list_atomicTerm_
     {let (_1, es) = ((), $2) in
       ( mk_term (Attributes es) (rhs2 parseState 1 2) Type_level )}
@@ -2273,7 +2266,7 @@ let es =                                                 ( l ) in
 | PERCENT_LBRACK right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
     {let (_1, l, _3) = ((), $2, ()) in
 let es =                                                 ( l ) in
-      ( mk_term (Decreases (es, None)) (rhs2 parseState 1 3) Type_level )}
+      ( mk_term (LexList es) (rhs2 parseState 1 3) Type_level )}
 | BANG_LBRACE loption_separated_nonempty_list_COMMA_appTerm__ RBRACE
     {let (_1, xs, _3) = ((), $2, ()) in
 let es =     ( xs ) in
