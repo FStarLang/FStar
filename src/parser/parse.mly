@@ -45,13 +45,6 @@ let get_aqual_and_attrs aqual_universe_opt =
  *)
 let get_aqual_and_attrs_and_X (aqual_universe_opt, x) =
   get_aqual_and_attrs aqual_universe_opt, x
-
-let rec get_decreases_list t =
-  match t.tm with
-  | Paren t -> get_decreases_list t
-  | Decreases (l, _) -> l
-  | _ -> [t]
-
 %}
 
 %token <bytes> BYTEARRAY
@@ -678,7 +671,7 @@ noSeqTerm:
   | ENSURES t=typ
       { mk_term (Ensures(t, None)) (rhs2 parseState 1 2) Type_level }
   | DECREASES t=typ
-      { mk_term (Decreases (get_decreases_list t, None)) (rhs2 parseState 1 2) Type_level }
+      { mk_term (Decreases (t, None)) (rhs2 parseState 1 2) Type_level }
   | ATTRIBUTES es=nonempty_list(atomicTerm)
       { mk_term (Attributes es) (rhs2 parseState 1 2) Type_level }
   | IF e1=noSeqTerm THEN e2=noSeqTerm ELSE e3=noSeqTerm
@@ -1095,7 +1088,7 @@ projectionLHS:
   | LBRACK es=semiColonTermList RBRACK
       { mkConsList (rhs2 parseState 1 3) es }
   | PERCENT_LBRACK es=semiColonTermList RBRACK
-      { mk_term (Decreases (es, None)) (rhs2 parseState 1 3) Type_level }
+      { mk_term (LexList es) (rhs2 parseState 1 3) Type_level }
   | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE
       { mkRefSet (rhs2 parseState 1 3) es }
   | ns=quident QMARK_DOT id=lident

@@ -1257,9 +1257,11 @@ and p_noSeqTerm' ps pb e = match e.tm with
   | Ensures (e, wtf) ->
       assert (wtf = None);
       group (str "ensures" ^/^ p_typ ps pb e)
-  | Decreases (l, wtf) ->
+  | LexList l ->
+      group (str "%" ^^ p_term_list ps pb l)
+  | Decreases (e, wtf) ->
       assert (wtf = None);
-      group (str "decreases" ^/^ p_term_list ps pb l)
+      group (str "decreases" ^/^ p_typ ps pb e)
   | Attributes es ->
       group (str "attributes" ^/^ separate_map break1 p_atomicTerm es)
   | If (e1, e2, e3) ->
@@ -1916,6 +1918,7 @@ and p_projectionLHS e = match e.tm with
   | Antiquote _ (* p_noSeqTerm *)
   | CalcProof _ (* p_noSeqTerm *)
     -> soft_parens_with_nesting (p_term false false e)
+  | LexList l -> group (str "%" ^^ p_term_list false false l)
 
 and p_constant = function
   | Const_effect -> str "Effect"

@@ -987,7 +987,8 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
        | hd::tl ->
           match hd with
           | DECREASES ts ->
-            let e = mk (Decreases (ts |> List.map (resugar_term' env), None)) in
+            let lexlist = mk (LexList (ts |> List.map (resugar_term' env))) in
+            let e = mk (Decreases (lexlist, None)) in
             aux (e::l) tl
           | _ -> aux l tl
       in

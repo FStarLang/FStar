@@ -908,7 +908,8 @@ let collect_one
         | Ensures (t, _)
         | Labeled (t, _, _) ->
             collect_term t
-        | Decreases (l, _) -> List.iter collect_term l
+        | LexList l -> List.iter collect_term l
+        | Decreases (t, _) -> collect_term t
         | Quote (t, _)
         | Antiquote t
         | VQuote t ->

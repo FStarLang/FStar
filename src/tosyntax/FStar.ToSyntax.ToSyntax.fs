@@ -239,9 +239,13 @@ and free_type_vars env t = match (unparen t).tm with
 
   | Requires (t, _)
   | Ensures (t, _)
+  | Decreases (t, _)
   | NamedTyp(_, t) -> free_type_vars env t
-  | Decreases (l, _) -> List.collect (free_type_vars env) l
+
+  | LexList l -> List.collect (free_type_vars env) l
+  
   | Paren t -> failwith "impossible"
+
   | Ascribed(t, t', tacopt) ->
     let ts = t::t'::(match tacopt with None -> [] | Some t -> [t]) in
     List.collect (free_type_vars env) ts
@@ -1846,7 +1850,12 @@ and desugar_comp r (allow_type_promotion:bool) env t =
     let rest = desugar_args env rest in
     let decreases_clause = dec |>
       List.map (fun t -> match (unparen (fst t)).tm with
-                      | Decreases (l, _) ->
+                      | Decreases (t, _) ->
+                        let l =
+                          let t = unparen t in
+                          match t.tm with
+                          | LexList l -> l
+                          | _ -> [t] in
                         DECREASES (l |> List.map (desugar_term env))
                       | _ -> failwith "Impossible!") in
 
