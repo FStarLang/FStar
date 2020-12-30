@@ -289,7 +289,8 @@ recordFieldDecl:
   | qualified_lid=aqualifiedWithAttrs(lident) COLON t=typ 
       { 
         let (qual, attrs), lid = qualified_lid in
-        in (qual, lid, t) }
+        (lid, qual, attrs, t) 
+      }
 
 constructorDecl:
   | BAR uid=uident COLON t=typ                { (uid, Some t, false) }
