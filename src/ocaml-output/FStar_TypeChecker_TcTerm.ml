@@ -1048,6 +1048,18 @@ let (guard_letrecs :
             let rec mk_precedes_lex l l_prev =
               let rec aux l1 l_prev1 =
                 match (l1, l_prev1) with
+                | ([], []) ->
+                    let uu___ =
+                      let uu___1 =
+                        FStar_Syntax_Syntax.as_arg
+                          FStar_Syntax_Syntax.unit_const in
+                      let uu___2 =
+                        let uu___3 =
+                          FStar_Syntax_Syntax.as_arg
+                            FStar_Syntax_Syntax.unit_const in
+                        [uu___3] in
+                      uu___1 :: uu___2 in
+                    FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___ r
                 | (x::[], x_prev::[]) ->
                     let uu___ =
                       let uu___1 = FStar_Syntax_Syntax.as_arg x in
