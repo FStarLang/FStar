@@ -390,6 +390,8 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
       let rec mk_precedes_lex l l_prev =
         let rec aux l l_prev =
           match l, l_prev with
+          | [], [] ->
+            mk_Tm_app precedes_t [as_arg S.unit_const; as_arg S.unit_const] r
           | [x], [x_prev] -> mk_Tm_app precedes_t [as_arg x; as_arg x_prev] r
           | x::tl, x_prev::tl_prev ->
             mk_disj (mk_Tm_app precedes_t [as_arg x; as_arg x_prev] r)
