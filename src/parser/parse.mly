@@ -566,9 +566,6 @@ multiBinder:
          mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q attrs) qual_ids
      }
 
-(* TODO_MB: Can we make binders nonempty_list here? It removes one of the shift/reduce conflicts with 
-            attributes on non-implicit binders
-            Perhaps we could require parens in certain cases, e.g. when attributes are used? *)
 binders: bss=nonempty_list(b=binder {[b]} | bs=multiBinder {bs}) { flatten bss }
 
 %inline aqualifiedNoAttrs(X): x=pair(ioption(aqualUniverses), X) { (fst x, []), snd x }
