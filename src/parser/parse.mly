@@ -30,21 +30,11 @@ let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
-(*
- * AR: convert an option (aqualifier & attributes)
- *     to an (option aqualifier & attributes)
- *)
-let get_aqual_and_attrs aqual_universe_opt =
-  match aqual_universe_opt with
-    | None -> None, []
-    | Some (q, l) -> Some q, l
+let none_to_empty_list x = 
+  match x with
+  | None -> []
+  | Some l -> l
 
-(*
- * AR: convert an (option (aqualifier & attributes)) & X
- *     to an (option aqualifier & attributes) & X from it
- *)
-let get_aqual_and_attrs_and_X (aqual_universe_opt, x) =
-  get_aqual_and_attrs aqual_universe_opt, x
 %}
 
 %token <bytes> BYTEARRAY
@@ -271,8 +261,8 @@ rawDecl:
 
 typeDecl:
   (* TODO : change to lident with stratify *)
-  | lid=ident tparams=typars ascr_opt=ascribeKind? tcdef=typeDefinition
-      { tcdef lid tparams ascr_opt }
+  | lid=ident tparams=typars? ascr_opt=ascribeKind? tcdef=typeDefinition
+      { tcdef lid (none_to_empty_list tparams) ascr_opt }
 
 typars:
   | x=tvarinsts              { x }
@@ -296,8 +286,10 @@ typeDefinition:
       { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
 
 recordFieldDecl:
-  |  lid=lident COLON t=typ
-      { (lid, t) }
+  | qualified_lid=aqualifiedWithAttrs(lident) COLON t=typ 
+      { 
+        let (qual, attrs), lid = qualified_lid in
+        in (qual, lid, t) }
 
 constructorDecl:
   | BAR uid=uident COLON t=typ                { (uid, Some t, false) }
@@ -336,14 +328,14 @@ effectRedefinition:
     { RedefineEffect(lid, [], t) }
 
 effectDefinition:
-  | LBRACE lid=uident bs=binders COLON typ=tmArrow(tmNoEq)
+  | LBRACE lid=uident bs=binders? COLON typ=tmArrow(tmNoEq)
            WITH eds=separated_nonempty_list(SEMICOLON, effectDecl)
     RBRACE
-    { DefineEffect(lid, bs, typ, eds) }
+    { DefineEffect(lid, none_to_empty_list bs, typ, eds) }
 
 effectDecl:
-  | lid=lident action_params=binders EQUALS t=simpleTerm
-    { mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t)])) (rhs2 parseState 1 3) [] }
+  | lid=lident action_params=binders? EQUALS t=simpleTerm
+    { mk_decl (Tycon (false, false, [TyconAbbrev(lid, none_to_empty_list action_params, None, t)])) (rhs2 parseState 1 3) [] }
 
 subEffect:
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
@@ -428,19 +420,21 @@ letqualifier:
  (* Remove with stratify *)
 aqual:
   | EQUALS    {  log_issue (lhs parseState) (Warning_DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
-                                        Equality, [] }
-  | q=aqualAndAttrsUniverses { q }
+                                        Equality }
+  | q=aqualUniverses { q }
 
 (*
  * AR: this should be generalized to:
  *     (a) allow attributes on non-implicit binders
  *     note that in the [@@ case, we choose the Implicit aqual
  *)
-aqualAndAttrsUniverses:
-  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t, [] }
-  | HASH LBRACK_AT_AT t=semiColonTermList RBRACK { Implicit, t }
-  | HASH      { Implicit, [] }
-  | DOLLAR    { Equality, [] }
+aqualUniverses: 
+  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t }
+  | HASH      { Implicit }
+  | DOLLAR    { Equality }
+
+newAttributes:
+  | LBRACK_AT_AT t=semiColonTermList RBRACK { t }
 
 /******************************************************************************/
 /*                         Patterns, binders                                  */
@@ -488,7 +482,7 @@ atomicPattern:
       { mk_pattern (PatWild (Some Implicit, [])) (rhs parseState 1) }
   | c=constant
       { mk_pattern (PatConst c) (rhs parseState 1) }
-  | qual_id=aqualifiedWithAttrs(lident)
+  | qual_id=aqualifiedWithAttrs(lident) (* TODO_MB: Should we really allow attributes here? *)
     {
       let (aqual, attrs), lid = qual_id in
       mk_pattern (PatVar (lid, aqual, attrs)) (rhs parseState 1) }
@@ -541,7 +535,7 @@ patternOrMultibinder:
       }
 
 binder:
-  | aqualifiedWithAttrs_lid=aqualifiedWithAttrs(lidentOrUnderscore)
+  | aqualifiedWithAttrs_lid=aqualifiedWithAttrs(lidentOrUnderscore) (* TODO_MB: Enabling attributes here increases shift/reduce conflicts around LBRACK_AT_AT by 3 *) 
      {
        let (q, attrs), lid = aqualifiedWithAttrs_lid in
        mk_binder_with_attrs (Variable lid) (rhs parseState 1) Type_level q attrs
@@ -571,9 +565,17 @@ multiBinder:
          mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q attrs) qual_ids
      }
 
-binders: bss=list(b=binder {[b]} | bs=multiBinder {bs}) { flatten bss }
+(* TODO_MB: Can we make binders nonempty_list here? It removes one of the shift/reduce conflicts with 
+            attributes on non-implicit binders
+            Perhaps we could require parens in certain cases, e.g. when attributes are used? *)
+binders: bss=nonempty_list(b=binder {[b]} | bs=multiBinder {bs}) { flatten bss }
 
-aqualifiedWithAttrs(X): x=pair(ioption(aqualAndAttrsUniverses), X) { get_aqual_and_attrs_and_X x }
+%inline aqualifiedNoAttrs(X): x=pair(ioption(aqualUniverses), X) { (fst x, []), snd x }
+%inline aqualifiedWithAttrs(X):
+  | aq=aqualUniverses attrs=newAttributes x=X { (Some aq, attrs), x }
+  | aq=aqualUniverses x=X { (Some aq, []), x }
+  | attrs=newAttributes x=X { (None, attrs), x }
+  | x=X { (None, []), x }
 
 /******************************************************************************/
 /*                      Identifiers, module paths                             */
@@ -847,8 +849,8 @@ simpleArrowDomain:
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
         ((Some (mk_meta_tac mt), []), t)
       }
-
-  | aq_opt=ioption(aqual) dom_tm=tmEqNoRefinement { get_aqual_and_attrs aq_opt, dom_tm }
+  (* TODO_MB: Enabling attributes on non-implicit fields on the rule below increases the number of shift/reduce conflicts *)
+  | aq_opt=ioption(aqual) attrs_opt=ioption(newAttributes) dom_tm=tmEqNoRefinement { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
 %inline tmArrowDomain(Tm):
@@ -856,10 +858,10 @@ simpleArrowDomain:
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
         ((Some (mk_meta_tac mt), []), t)
       }
-
-  | LPAREN q=aqual dom_tm=Tm RPAREN { get_aqual_and_attrs (Some q), dom_tm }
-
-  | aq_opt=ioption(aqual) dom_tm=Tm { get_aqual_and_attrs aq_opt, dom_tm }
+  (* TODO_MB: Enabling attributes on non-implicit fields on the rule below increases the number of shift/reduce conflicts *)
+  | LPAREN q=aqual attrs_opt=ioption(newAttributes) dom_tm=Tm RPAREN { (Some q, none_to_empty_list attrs_opt), dom_tm }
+  (* TODO_MB: Enabling attributes on non-implicit fields on the rule below increases the number of shift/reduce conflicts *)
+  | aq_opt=ioption(aqual) attrs_opt=ioption(newAttributes) dom_tm=Tm { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
 tmFormula:
   | e1=tmFormula DISJUNCTION e2=tmConjunction
