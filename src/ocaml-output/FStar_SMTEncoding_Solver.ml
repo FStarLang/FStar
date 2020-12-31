@@ -605,38 +605,6 @@ let (errors_to_report : query_settings -> FStar_Errors.error Prims.list) =
             [uu___2] in
           FStar_TypeChecker_Err.errors_smt_detail settings.query_env uu___1
             smt_error in
-    (let uu___ = FStar_Options.detail_errors () in
-     if uu___
-     then
-       let initial_fuel =
-         let uu___1 = settings in
-         let uu___2 = FStar_Options.initial_fuel () in
-         let uu___3 = FStar_Options.initial_ifuel () in
-         {
-           query_env = (uu___1.query_env);
-           query_decl = (uu___1.query_decl);
-           query_name = (uu___1.query_name);
-           query_index = (uu___1.query_index);
-           query_range = (uu___1.query_range);
-           query_fuel = uu___2;
-           query_ifuel = uu___3;
-           query_rlimit = (uu___1.query_rlimit);
-           query_hint = FStar_Pervasives_Native.None;
-           query_errors = (uu___1.query_errors);
-           query_all_labels = (uu___1.query_all_labels);
-           query_suffix = (uu___1.query_suffix);
-           query_hash = (uu___1.query_hash)
-         } in
-       let ask_z3 label_assumptions =
-         let uu___1 =
-           with_fuel_and_diagnostics initial_fuel label_assumptions in
-         FStar_SMTEncoding_Z3.ask settings.query_range
-           (filter_facts_without_core settings.query_env) settings.query_hash
-           settings.query_all_labels uu___1 FStar_Pervasives_Native.None
-           false in
-       FStar_SMTEncoding_ErrorReporting.detail_errors false
-         settings.query_env settings.query_all_labels ask_z3
-     else ());
     basic_errors
 let (report_errors : query_settings -> unit) =
   fun qry_settings ->
@@ -945,6 +913,194 @@ let collect : 'a . 'a Prims.list -> ('a * Prims.int) Prims.list =
           then (h, (n + Prims.int_one)) :: t
           else (let uu___1 = add_one t x in (h, n) :: uu___1) in
     FStar_List.fold_left add_one acc l
+let (one_assertion_at_a_time :
+  query_settings -> (errors Prims.list, query_settings) FStar_Util.either) =
+  fun config ->
+    let ask q_tm r errs =
+      let q =
+        let uu___ =
+          let uu___1 = FStar_SMTEncoding_Util.mkNot q_tm in
+          let uu___2 =
+            FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.mk_unique
+              "@query" in
+          (uu___1, FStar_Pervasives_Native.None, uu___2) in
+        FStar_SMTEncoding_Util.mkAssume uu___ in
+      let config1 =
+        let uu___ = config in
+        {
+          query_env = (uu___.query_env);
+          query_decl = q;
+          query_name = (uu___.query_name);
+          query_index = (uu___.query_index);
+          query_range = r;
+          query_fuel = (uu___.query_fuel);
+          query_ifuel = (uu___.query_ifuel);
+          query_rlimit = (uu___.query_rlimit);
+          query_hint = (uu___.query_hint);
+          query_errors = (uu___.query_errors);
+          query_all_labels = (uu___.query_all_labels);
+          query_suffix = (uu___.query_suffix);
+          query_hash = FStar_Pervasives_Native.None
+        } in
+      (let uu___1 = FStar_Range.string_of_range r in
+       FStar_Util.print1 "Asking assertion at %s ...\n" uu___1);
+      (let z3_result =
+         let uu___1 = with_fuel_and_diagnostics config1 [] in
+         FStar_SMTEncoding_Z3.ask config1.query_range (fun l -> (l, false))
+           FStar_Pervasives_Native.None [] uu___1
+           FStar_Pervasives_Native.None false in
+       let uu___1 = process_result config1 z3_result in
+       match uu___1 with
+       | FStar_Pervasives_Native.None ->
+           (FStar_Util.print_string "Assertion succeeded\n"; errs)
+       | FStar_Pervasives_Native.Some err ->
+           (FStar_Util.print1 "Assertion failed (reason: %s)\n"
+              err.error_reason;
+            err
+            ::
+            errs)) in
+    let giveZ3 q =
+      let d =
+        let uu___ =
+          let uu___1 =
+            FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.mk_unique
+              "@detail_assume" in
+          (q, FStar_Pervasives_Native.None, uu___1) in
+        FStar_SMTEncoding_Util.mkAssume uu___ in
+      FStar_SMTEncoding_Z3.giveZ3 [d] in
+    let is_label t =
+      match t.FStar_SMTEncoding_Term.tm with
+      | FStar_SMTEncoding_Term.FreeV (s, uu___, uu___1) ->
+          FStar_Util.starts_with s "label_"
+      | uu___ -> false in
+    let get_range_of_error_label label_tm =
+      match label_tm.FStar_SMTEncoding_Term.tm with
+      | FStar_SMTEncoding_Term.FreeV (s, uu___, uu___1) ->
+          let uu___2 =
+            let uu___3 =
+              FStar_All.pipe_right config.query_all_labels
+                (FStar_List.find
+                   (fun uu___4 ->
+                      match uu___4 with
+                      | ((s1, uu___5, uu___6), uu___7, uu___8) -> s1 = s)) in
+            FStar_All.pipe_right uu___3 FStar_Util.must in
+          (match uu___2 with | (uu___3, uu___4, r) -> r) in
+    let rec descend_and_ask q r errs =
+      match q.FStar_SMTEncoding_Term.tm with
+      | FStar_SMTEncoding_Term.FreeV uu___ -> ask q r errs
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.TrueOp, uu___) ->
+          ask q r errs
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.FalseOp, uu___) ->
+          ask q r errs
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Not, uu___) ->
+          ask q r errs
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Eq, uu___) ->
+          ask q r errs
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.LT, uu___) ->
+          ask q r errs
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.LTE, uu___) ->
+          ask q r errs
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.GT, uu___) ->
+          ask q r errs
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.GTE, uu___) ->
+          ask q r errs
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.BvUlt, uu___) ->
+          ask q r errs
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Var uu___, uu___1)
+          -> ask q r errs
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Or, t::q1::[])
+          when is_label t ->
+          let uu___ = get_range_of_error_label t in ask q1 uu___ errs
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Or, uu___) ->
+          ask q r errs
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Imp, l::q1::[]) ->
+          (giveZ3 l; descend_and_ask q1 r errs)
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.And, q1::q2::[])
+          ->
+          let errs_new = descend_and_ask q1 r errs in
+          (if (FStar_List.length errs_new) = (FStar_List.length errs)
+           then giveZ3 q1
+           else ();
+           descend_and_ask q2 r errs_new)
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Iff, q1::q2::[])
+          ->
+          let q_tm =
+            let uu___ =
+              let uu___1 = FStar_SMTEncoding_Util.mkImp (q1, q2) in
+              let uu___2 = FStar_SMTEncoding_Util.mkImp (q2, q1) in
+              (uu___1, uu___2) in
+            FStar_SMTEncoding_Util.mkAnd uu___ in
+          descend_and_ask q_tm r errs
+      | FStar_SMTEncoding_Term.App
+          (FStar_SMTEncoding_Term.ITE, scrutinee::q1::q2::[]) ->
+          let q_tm =
+            let uu___ =
+              let uu___1 = FStar_SMTEncoding_Util.mkImp (scrutinee, q1) in
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 = FStar_SMTEncoding_Util.mkNot scrutinee in
+                  (uu___4, q2) in
+                FStar_SMTEncoding_Util.mkImp uu___3 in
+              (uu___1, uu___2) in
+            FStar_SMTEncoding_Util.mkAnd uu___ in
+          descend_and_ask q_tm r errs
+      | FStar_SMTEncoding_Term.Quant
+          (FStar_SMTEncoding_Term.Forall, _pats, uu___, sorts, body) ->
+          (FStar_SMTEncoding_Z3.push "Entering a forall";
+           (let inst_names =
+              FStar_All.pipe_right sorts
+                (FStar_List.map
+                   (fun uu___2 ->
+                      let uu___3 =
+                        let uu___4 = FStar_Ident.next_id () in
+                        FStar_All.pipe_left FStar_Util.string_of_int uu___4 in
+                      Prims.op_Hat "uu___" uu___3)) in
+            let insts =
+              FStar_List.map2
+                (fun s ->
+                   fun name ->
+                     let uu___2 = FStar_SMTEncoding_Term.mk_fv (name, s) in
+                     FStar_All.pipe_right uu___2
+                       FStar_SMTEncoding_Util.mkFreeV) sorts inst_names in
+            let inst_body = FStar_SMTEncoding_Term.inst insts body in
+            (let uu___3 =
+               FStar_List.map2
+                 (fun s ->
+                    fun name ->
+                      FStar_SMTEncoding_Term.DeclFun
+                        (name, [], s, FStar_Pervasives_Native.None)) sorts
+                 inst_names in
+             FStar_SMTEncoding_Z3.giveZ3 uu___3);
+            (let errs1 = descend_and_ask inst_body r errs in
+             FStar_SMTEncoding_Z3.pop "Exiting a forall"; errs1)))
+      | FStar_SMTEncoding_Term.Quant
+          (FStar_SMTEncoding_Term.Exists, uu___, uu___1, uu___2, uu___3) ->
+          ask q r errs
+      | uu___ -> failwith "Unhandled query term!" in
+    (let uu___1 = FStar_Range.string_of_range config.query_range in
+     let uu___2 = FStar_Util.string_of_int config.query_fuel in
+     let uu___3 = FStar_Util.string_of_int config.query_ifuel in
+     FStar_Util.print3
+       "Trying one assertion at a time for query at %s (without hints, fuel=%s, ifuel=%s)\n"
+       uu___1 uu___2 uu___3);
+    (match config.query_decl with
+     | FStar_SMTEncoding_Term.Assume
+         { FStar_SMTEncoding_Term.assumption_term = q;
+           FStar_SMTEncoding_Term.assumption_caption = uu___1;
+           FStar_SMTEncoding_Term.assumption_name = uu___2;
+           FStar_SMTEncoding_Term.assumption_fact_ids = uu___3;_}
+         ->
+         (match q.FStar_SMTEncoding_Term.tm with
+          | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Not, q1::[])
+              ->
+              let errs = descend_and_ask q1 config.query_range [] in
+              if (FStar_List.length errs) = Prims.int_zero
+              then FStar_Util.Inr config
+              else FStar_Util.Inl errs
+          | uu___4 ->
+              failwith
+                "Impossible! Expected an unsat query wrapped in a Not constructor")
+     | uu___1 -> failwith "Impossible! Expected an Assume query")
 let (ask_and_report_errors :
   FStar_TypeChecker_Env.env ->
     FStar_SMTEncoding_Term.error_labels ->
@@ -1150,6 +1306,8 @@ let (ask_and_report_errors :
                       (used_hint config)) in
                  let check_all_configs configs =
                    fold_queries configs check_one_config process_result in
+                 let check_one_assertion_at_a_time uu___2 =
+                   one_assertion_at_a_time default_settings in
                  let quake_and_check_all_configs configs =
                    let lo = FStar_Options.quake_lo () in
                    let hi = FStar_Options.quake_hi () in
@@ -1166,15 +1324,24 @@ let (ask_and_report_errors :
                      then Prims.int_one
                      else if lo > hi1 then hi1 else lo in
                    let run_one seed1 =
-                     let uu___2 = FStar_Options.z3_refresh () in
+                     let uu___2 = FStar_Options.detail_errors () in
                      if uu___2
                      then
-                       FStar_Options.with_saved_options
-                         (fun uu___3 ->
-                            FStar_Options.set_option "z3seed"
-                              (FStar_Options.Int seed1);
-                            check_all_configs configs)
-                     else check_all_configs configs in
+                       (if quaking_or_retrying
+                        then
+                          failwith
+                            "detail_errors is incompatible with quaking"
+                        else check_one_assertion_at_a_time ())
+                     else
+                       (let uu___4 = FStar_Options.z3_refresh () in
+                        if uu___4
+                        then
+                          FStar_Options.with_saved_options
+                            (fun uu___5 ->
+                               FStar_Options.set_option "z3seed"
+                                 (FStar_Options.Int seed1);
+                               check_all_configs configs)
+                        else check_all_configs configs) in
                    let rec fold_nat' f acc lo2 hi2 =
                      if lo2 > hi2
                      then acc
