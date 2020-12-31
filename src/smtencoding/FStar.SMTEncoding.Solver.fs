@@ -359,29 +359,29 @@ let errors_to_report (settings : query_settings) : list<Errors.error> =
                      Errors.get_ctx ())]
                    smt_error
     in
-    let detailed_errors : unit =
-      if Options.detail_errors()
-      then let initial_fuel = {
-                  settings with query_fuel=Options.initial_fuel();
-                                query_ifuel=Options.initial_ifuel();
-                                query_hint=None
-              }
-           in
-           let ask_z3 label_assumptions =
-              Z3.ask  settings.query_range
-                      (filter_facts_without_core settings.query_env)
-                      settings.query_hash
-                      settings.query_all_labels
-                      (with_fuel_and_diagnostics initial_fuel label_assumptions)
-                      None
-                      false
-              in
-           (* GM: This is a bit of hack, we don't return these detailed errors
-            * (it implies rewriting detail_errors heavily). Returning them
-            * is only relevant for summarizing errors on --quake, where I don't
-            * think we care about these. *)
-           detail_errors false settings.query_env settings.query_all_labels ask_z3
-    in
+    // let detailed_errors : unit =
+    //   if Options.detail_errors()
+    //   then let initial_fuel = {
+    //               settings with query_fuel=Options.initial_fuel();
+    //                             query_ifuel=Options.initial_ifuel();
+    //                             query_hint=None
+    //           }
+    //        in
+    //        let ask_z3 label_assumptions =
+    //           Z3.ask  settings.query_range
+    //                   (filter_facts_without_core settings.query_env)
+    //                   settings.query_hash
+    //                   settings.query_all_labels
+    //                   (with_fuel_and_diagnostics initial_fuel label_assumptions)
+    //                   None
+    //                   false
+    //           in
+    //        (* GM: This is a bit of hack, we don't return these detailed errors
+    //         * (it implies rewriting detail_errors heavily). Returning them
+    //         * is only relevant for summarizing errors on --quake, where I don't
+    //         * think we care about these. *)
+    //        detail_errors false settings.query_env settings.query_all_labels ask_z3
+    // in
     basic_errors
 
 let report_errors qry_settings =
@@ -617,6 +617,112 @@ let collect (l : list<'a>) : list<('a * int)> =
     in
     List.fold_left add_one acc l
 
+
+let one_assertion_at_a_time config : either<list<errors>, query_settings> =
+  let ask q_tm r errs : list<errors> =
+    let q = mkAssume (mkNot q_tm, None,
+      FStar.SMTEncoding.Env.varops.FStar.SMTEncoding.Env.mk_unique "@query") in
+    let config = { config with query_decl = q; query_range = r; query_hash = None } in
+    BU.print1 "Asking assertion at %s ...\n"
+      (Range.string_of_range r);
+    let z3_result = Z3.ask
+      config.query_range
+      (fun l -> l, false)  //no filtering based on hints
+      None  //no cache
+      []  //no labels?
+      (with_fuel_and_diagnostics config [])  //the query, wrapped in fuel etc.
+      None
+      false in  //use the bg instance of Z3
+    match process_result config z3_result with
+    | None ->
+      BU.print_string "Assertion succeeded\n";
+      errs //query succeeded
+    | Some err ->
+      BU.print1 "Assertion failed (reason: %s)\n" err.error_reason;
+      err::errs in
+
+  let giveZ3 q : unit =
+    let d = mkAssume (q, None,
+      FStar.SMTEncoding.Env.varops.FStar.SMTEncoding.Env.mk_unique "@detail_assume") in
+    Z3.giveZ3 [d] in
+
+  let is_label t = match t.tm with
+    | FreeV (s, _, _) -> starts_with s "label_"
+    | _ -> false in
+
+  let get_range_of_error_label label_tm =
+    match label_tm.tm with
+    | FreeV (s, _, _) ->
+      let (_, _, r) = config.query_all_labels |> List.find (fun ((s1, _, _), _, _) -> s1 = s) |> must in
+      r in
+
+  let rec descend_and_ask (q:term) (r:Range.range) (errs:list<errors>) : list<errors> =
+    match q.tm with
+    | FreeV _
+    | App (TrueOp, _)
+    | App (FalseOp, _)
+    | App (Not, _)
+    | App (Eq, _)
+    | App (LT, _)
+    | App (LTE, _)
+    | App (GT, _)
+    | App (GTE, _)
+    | App (BvUlt, _)
+    | App (Var _, _) -> ask q r errs  //atomic goal
+
+    | App (Or, [t; q]) when is_label t -> ask q (get_range_of_error_label t) errs  //strip the label
+
+    | App (Or, _) -> ask q r errs  //treating Or as atomic
+
+    | App (Imp, [l; q]) ->  //add l to the Z3 context and ask r
+      giveZ3 l;
+      descend_and_ask q r errs
+
+    | App (And, [q1; q2]) ->
+      let errs_new = descend_and_ask q1 r errs in
+      if List.length errs_new = List.length errs then giveZ3 q1;
+      descend_and_ask q2 r errs_new
+
+    | App (Iff, [q1; q2]) ->
+      let q_tm = mkAnd (mkImp (q1, q2), mkImp (q2, q1)) in
+      descend_and_ask q_tm r errs
+
+    | App (ITE, [scrutinee; q1; q2]) ->
+      let q_tm = mkAnd (mkImp (scrutinee, q1), mkImp ((mkNot scrutinee), q2)) in
+      descend_and_ask q_tm r errs
+
+    | Quant (Forall, _pats, _, sorts, body) ->  //open and descend
+      Z3.push "Entering a forall";
+      let inst_names =
+        sorts |> List.map (fun _ -> "uu___" ^ (string_of_int <| Ident.next_id ())) in
+      let insts = List.map2 (fun s name -> mk_fv (name, s) |> mkFreeV) sorts inst_names in
+      let inst_body = Term.inst insts body in
+      Z3.giveZ3
+        (List.map2 (fun s name -> DeclFun (name, [], s, None)) sorts inst_names);
+      let errs = descend_and_ask inst_body r errs in
+      Z3.pop "Exiting a forall";
+      errs
+
+    | Quant (Exists, _, _, _, _) -> ask q r errs  //treating Exists as atomic
+      
+    | _ -> failwith "Unhandled query term!" in
+      
+
+  BU.print3 "Trying one assertion at a time for query at %s (without hints, fuel=%s, ifuel=%s)\n"
+    (Range.string_of_range config.query_range)
+    (string_of_int config.query_fuel)
+    (string_of_int config.query_ifuel);
+
+  match config.query_decl with
+  | Assume ({assumption_term=q}) ->
+    (match q.tm with
+     | App (Not, [q]) ->
+       let errs = descend_and_ask q config.query_range [] in
+       if List.length errs = 0 then Inr config
+       else Inl errs
+     | _ -> failwith "Impossible! Expected an unsat query wrapped in a Not constructor")
+  | _ -> failwith "Impossible! Expected an Assume query"
+
 let ask_and_report_errors env all_labels prefix query suffix : unit =
     Z3.giveZ3 prefix; //feed the context of the query to the solver
 
@@ -706,6 +812,9 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
         fold_queries configs check_one_config process_result
     in
 
+    let check_one_assertion_at_a_time () : either<list<errors>, query_settings> =
+      one_assertion_at_a_time default_settings in
+
     let quake_and_check_all_configs configs =
         let lo   = Options.quake_lo () in
         let hi   = Options.quake_hi () in
@@ -720,30 +829,35 @@ let ask_and_report_errors env all_labels prefix query suffix : unit =
             else lo
         in
         let run_one (seed:int) =
-            (* Here's something annoying regarding --quake:
-             *
-             * In normal circumstances, we can just run the query again and get
-             * a slightly different behaviour because of Z3 accumulating some
-             * internal state that doesn't get erased on a (pop). So we simply repeat
-             * the query then.
-             *
-             * But, if we're doing --z3refresh, we will always get the exact
-             * same behaviour by doing that, so we do want to set the seed in this case.
-             *
-             * Why not always set it? Because it requires restarting the solver, which
-             * takes a long time.
-             *
-             * Why not use the (set-option smt.random_seed ..) command? Because
-             * it seems to have no effect just before a (check-sat), so it needs to be
-             * set early, which basically implies restarting.
-             *
-             * So we do this horrendous thing.
-             *)
-            if Options.z3_refresh ()
-            then Options.with_saved_options (fun () ->
-                   Options.set_option "z3seed" (Options.Int seed);
-                   check_all_configs configs)
-            else check_all_configs configs
+            if Options.detail_errors ()
+            then if quaking_or_retrying
+                 then failwith "detail_errors is incompatible with quaking"
+                 else check_one_assertion_at_a_time ()
+            else
+              (* Here's something annoying regarding --quake:
+               *
+               * In normal circumstances, we can just run the query again and get
+               * a slightly different behaviour because of Z3 accumulating some
+               * internal state that doesn't get erased on a (pop). So we simply repeat
+               * the query then.
+               *
+               * But, if we're doing --z3refresh, we will always get the exact
+               * same behaviour by doing that, so we do want to set the seed in this case.
+               *
+               * Why not always set it? Because it requires restarting the solver, which
+               * takes a long time.
+               *
+               * Why not use the (set-option smt.random_seed ..) command? Because
+               * it seems to have no effect just before a (check-sat), so it needs to be
+               * set early, which basically implies restarting.
+               *
+               * So we do this horrendous thing.
+               *)
+              if Options.z3_refresh ()
+              then Options.with_saved_options (fun () ->
+                     Options.set_option "z3seed" (Options.Int seed);
+                     check_all_configs configs)
+              else check_all_configs configs
         in
         let rec fold_nat' (f : 'a -> int -> 'a) (acc : 'a) (lo : int) (hi : int) : 'a =
             if lo > hi
