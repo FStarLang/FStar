@@ -678,10 +678,11 @@ let one_assertion_at_a_time config : either<list<errors>, query_settings> =
       giveZ3 l;
       descend_and_ask q r errs
 
-    | App (And, [q1; q2]) ->
-      let errs_new = descend_and_ask q1 r errs in
-      if List.length errs_new = List.length errs then giveZ3 q1;
-      descend_and_ask q2 r errs_new
+    | App (And, qs) ->
+      qs |> List.fold_left (fun errs q ->
+        let errs_new = descend_and_ask q r errs in
+        if List.length errs_new = List.length errs then giveZ3 q;  //no new errors, add q to Z3
+        errs_new) errs
 
     | App (Iff, [q1; q2]) ->
       let q_tm = mkAnd (mkImp (q1, q2), mkImp (q2, q1)) in
@@ -705,7 +706,7 @@ let one_assertion_at_a_time config : either<list<errors>, query_settings> =
 
     | Quant (Exists, _, _, _, _) -> ask q r errs  //treating Exists as atomic
       
-    | _ -> failwith "Unhandled query term!" in
+    | _ -> failwith ("Unhandled query term : " ^ print_smt_term q) in
       
 
   BU.print3 "Trying one assertion at a time for query at %s (without hints, fuel=%s, ifuel=%s)\n"
