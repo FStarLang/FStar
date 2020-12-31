@@ -1015,13 +1015,18 @@ let (one_assertion_at_a_time :
           ask q r errs
       | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Imp, l::q1::[]) ->
           (giveZ3 l; descend_and_ask q1 r errs)
-      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.And, q1::q2::[])
-          ->
-          let errs_new = descend_and_ask q1 r errs in
-          (if (FStar_List.length errs_new) = (FStar_List.length errs)
-           then giveZ3 q1
-           else ();
-           descend_and_ask q2 r errs_new)
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.And, qs) ->
+          FStar_All.pipe_right qs
+            (FStar_List.fold_left
+               (fun errs1 ->
+                  fun q1 ->
+                    let errs_new = descend_and_ask q1 r errs1 in
+                    if
+                      (FStar_List.length errs_new) =
+                        (FStar_List.length errs1)
+                    then giveZ3 q1
+                    else ();
+                    errs_new) errs)
       | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Iff, q1::q2::[])
           ->
           let q_tm =
@@ -1076,7 +1081,11 @@ let (one_assertion_at_a_time :
       | FStar_SMTEncoding_Term.Quant
           (FStar_SMTEncoding_Term.Exists, uu___, uu___1, uu___2, uu___3) ->
           ask q r errs
-      | uu___ -> failwith "Unhandled query term!" in
+      | uu___ ->
+          let uu___1 =
+            let uu___2 = FStar_SMTEncoding_Term.print_smt_term q in
+            Prims.op_Hat "Unhandled query term : " uu___2 in
+          failwith uu___1 in
     (let uu___1 = FStar_Range.string_of_range config.query_range in
      let uu___2 = FStar_Util.string_of_int config.query_fuel in
      let uu___3 = FStar_Util.string_of_int config.query_ifuel in
