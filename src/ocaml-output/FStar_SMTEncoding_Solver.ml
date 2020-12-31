@@ -975,31 +975,29 @@ let (one_assertion_at_a_time :
               query_suffix = (uu___1.query_suffix);
               query_hash = FStar_Pervasives_Native.None
             } in
-          ((let uu___2 =
-              match lab_opt with
-              | FStar_Pervasives_Native.Some
-                  ((s, uu___3, uu___4), uu___5, uu___6) when s <> "" -> s
-              | uu___3 -> FStar_SMTEncoding_Term.print_smt_term q_tm in
-            let uu___3 = FStar_Range.string_of_use_range r in
-            let uu___4 = FStar_Range.string_of_def_range r in
-            FStar_Util.print3
-              "Checking assertion (%s) at %s (also see %s) ...\n" uu___2
-              uu___3 uu___4);
-           (let z3_result =
-              let uu___2 = with_fuel_and_diagnostics config1 [] in
-              FStar_SMTEncoding_Z3.ask r (fun l -> (l, false))
-                FStar_Pervasives_Native.None config1.query_all_labels uu___2
-                FStar_Pervasives_Native.None false in
-            let uu___2 = process_result config1 z3_result in
-            match uu___2 with
-            | FStar_Pervasives_Native.None ->
-                (FStar_Util.print_string "Assertion succeeded\n"; errs)
-            | FStar_Pervasives_Native.Some err ->
-                (FStar_Util.print1 "Assertion failed (reason: %s)\n"
-                   err.error_reason;
-                 err
-                 ::
-                 errs))) in
+          let z3_result =
+            let uu___1 = with_fuel_and_diagnostics config1 [] in
+            FStar_SMTEncoding_Z3.ask r (fun l -> (l, false))
+              FStar_Pervasives_Native.None config1.query_all_labels uu___1
+              FStar_Pervasives_Native.None false in
+          let uu___1 = process_result config1 z3_result in
+          (match uu___1 with
+           | FStar_Pervasives_Native.None -> errs
+           | FStar_Pervasives_Native.Some err ->
+               ((let uu___3 =
+                   match lab_opt with
+                   | FStar_Pervasives_Native.Some
+                       ((s, uu___4, uu___5), uu___6, uu___7) when s <> "" ->
+                       s
+                   | uu___4 -> FStar_SMTEncoding_Term.print_smt_term q_tm in
+                 let uu___4 = FStar_Range.string_of_use_range r in
+                 let uu___5 = FStar_Range.string_of_def_range r in
+                 FStar_Util.print3
+                   "Assertion (%s) failed at %s (also see %s)\n" uu___3
+                   uu___4 uu___5);
+                err
+                ::
+                errs)) in
     let giveZ3 q =
       let d =
         let uu___ =

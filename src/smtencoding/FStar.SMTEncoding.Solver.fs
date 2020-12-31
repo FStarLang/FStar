@@ -652,12 +652,12 @@ let one_assertion_at_a_time config : either<list<errors>, query_settings> =
         query_hash = None;
         query_all_labels = labels } in
 
-    BU.print3 "Checking assertion (%s) at %s (also see %s) ...\n"
-      (match lab_opt with
-       | Some ((s, _, _), _, _) when s <> "" -> s
-       | _ -> print_smt_term q_tm)
-      (Range.string_of_use_range r)
-      (Range.string_of_def_range r);
+    // BU.print3 "Checking assertion (%s) at %s (also see %s) ...\n"
+    //   (match lab_opt with
+    //    | Some ((s, _, _), _, _) when s <> "" -> s
+    //    | _ -> print_smt_term q_tm)
+    //   (Range.string_of_use_range r)
+    //   (Range.string_of_def_range r);
 
     let z3_result = Z3.ask
       r
@@ -670,10 +670,15 @@ let one_assertion_at_a_time config : either<list<errors>, query_settings> =
 
     match process_result config z3_result with
     | None ->
-      BU.print_string "Assertion succeeded\n";
+      //BU.print_string "Assertion succeeded\n";
       errs //query succeeded
     | Some err ->
-      BU.print1 "Assertion failed (reason: %s)\n" err.error_reason;
+      BU.print3 "Assertion (%s) failed at %s (also see %s)\n"
+        (match lab_opt with
+         | Some ((s, _, _), _, _) when s <> "" -> s
+         | _ -> print_smt_term q_tm)
+        (Range.string_of_use_range r)
+        (Range.string_of_def_range r);
       err::errs in
 
   let giveZ3 q : unit =
