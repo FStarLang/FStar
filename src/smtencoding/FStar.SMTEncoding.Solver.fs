@@ -186,6 +186,15 @@ type errors = {
     error_messages: list<Errors.error>;
 }
 
+let errors_to_string (e:errors) =
+  BU.format5 "{ error_reason = %s; error_fuel = %s; error_ifuel = %s; error_hint = %s; error_messages = %s }"
+    e.error_reason
+    (string_of_int e.error_fuel)
+    (string_of_int e.error_ifuel)
+    (match e.error_hint with | Some l -> string_of_int (List.length l) | None -> "<empty>")
+    (string_of_int (List.length e.error_messages))
+    
+
 let error_to_short_string err =
     BU.format4 "%s (fuel=%s; ifuel=%s%s)"
             err.error_reason
@@ -619,20 +628,46 @@ let collect (l : list<'a>) : list<('a * int)> =
 
 
 let one_assertion_at_a_time config : either<list<errors>, query_settings> =
-  let ask q_tm r errs : list<errors> =
-    let q = mkAssume (mkNot q_tm, None,
-      FStar.SMTEncoding.Env.varops.FStar.SMTEncoding.Env.mk_unique "@query") in
-    let config = { config with query_decl = q; query_range = r; query_hash = None } in
-    BU.print1 "Asking assertion at %s ...\n"
-      (Range.string_of_range r);
+
+  let ask (q_tm:term) lab_opt errs : list<errors> =
+    let r, q, labels =
+      let r, q_tm, labels = match lab_opt with
+        | Some label ->
+          let fv, _, r = label in
+          r, Term.mkOr (Term.mkFreeV fv r, q_tm) r, [label] //, [label]
+        | None -> config.query_range, q_tm, [] in
+     
+      r,
+      mkAssume
+        (mkNot q_tm,
+         None,
+         FStar.SMTEncoding.Env.varops.FStar.SMTEncoding.Env.mk_unique "@query"),
+      labels in
+
+    //prepare the config
+    let config =
+      { config with
+        query_decl = q;
+        query_range = r;
+        query_hash = None;
+        query_all_labels = labels } in
+
+    BU.print3 "Checking assertion (%s) at %s (also see %s) ...\n"
+      (match lab_opt with
+       | Some ((s, _, _), _, _) when s <> "" -> s
+       | _ -> print_smt_term q_tm)
+      (Range.string_of_use_range r)
+      (Range.string_of_def_range r);
+
     let z3_result = Z3.ask
-      config.query_range
+      r
       (fun l -> l, false)  //no filtering based on hints
       None  //no cache
-      []  //no labels?
+      config.query_all_labels
       (with_fuel_and_diagnostics config [])  //the query, wrapped in fuel etc.
-      None
+      None  //this argument was for n_cores, should we remove it from Z3.ask?
       false in  //use the bg instance of Z3
+
     match process_result config z3_result with
     | None ->
       BU.print_string "Assertion succeeded\n";
@@ -650,13 +685,12 @@ let one_assertion_at_a_time config : either<list<errors>, query_settings> =
     | FreeV (s, _, _) -> starts_with s "label_"
     | _ -> false in
 
-  let get_range_of_error_label label_tm =
+  let get_label label_tm =
     match label_tm.tm with
-    | FreeV (s, _, _) ->
-      let (_, _, r) = config.query_all_labels |> List.find (fun ((s1, _, _), _, _) -> s1 = s) |> must in
-      r in
+    | FreeV (s, _, _) -> config.query_all_labels |> List.find (fun ((s1, _, _), _, _) -> s1 = s) |> must in
 
-  let rec descend_and_ask (q:term) (r:Range.range) (errs:list<errors>) : list<errors> =
+  let rec descend_and_ask (q:term) lab_opt (errs:list<errors>)
+    : list<errors> =
     match q.tm with
     | FreeV _
     | App (TrueOp, _)
@@ -668,29 +702,29 @@ let one_assertion_at_a_time config : either<list<errors>, query_settings> =
     | App (GT, _)
     | App (GTE, _)
     | App (BvUlt, _)
-    | App (Var _, _) -> ask q r errs  //atomic goal
+    | App (Var _, _) -> ask q lab_opt errs  //atomic goal
 
-    | App (Or, [t; q]) when is_label t -> ask q (get_range_of_error_label t) errs  //strip the label
+    | App (Or, [t; q]) when is_label t -> ask q (get_label t |> Some) errs  //strip the label
 
-    | App (Or, _) -> ask q r errs  //treating Or as atomic
+    | App (Or, _) -> ask q lab_opt errs  //treating Or as atomic
 
     | App (Imp, [l; q]) ->  //add l to the Z3 context and ask r
       giveZ3 l;
-      descend_and_ask q r errs
+      descend_and_ask q lab_opt errs
 
     | App (And, qs) ->
       qs |> List.fold_left (fun errs q ->
-        let errs_new = descend_and_ask q r errs in
+        let errs_new = descend_and_ask q lab_opt errs in
         if List.length errs_new = List.length errs then giveZ3 q;  //no new errors, add q to Z3
         errs_new) errs
 
     | App (Iff, [q1; q2]) ->
       let q_tm = mkAnd (mkImp (q1, q2), mkImp (q2, q1)) in
-      descend_and_ask q_tm r errs
+      descend_and_ask q_tm lab_opt errs
 
     | App (ITE, [scrutinee; q1; q2]) ->
       let q_tm = mkAnd (mkImp (scrutinee, q1), mkImp ((mkNot scrutinee), q2)) in
-      descend_and_ask q_tm r errs
+      descend_and_ask q_tm lab_opt errs
 
     | Quant (Forall, _pats, _, sorts, body) ->  //open and descend
       Z3.push "Entering a forall";
@@ -700,11 +734,11 @@ let one_assertion_at_a_time config : either<list<errors>, query_settings> =
       let inst_body = Term.inst insts body in
       Z3.giveZ3
         (List.map2 (fun s name -> DeclFun (name, [], s, None)) sorts inst_names);
-      let errs = descend_and_ask inst_body r errs in
+      let errs = descend_and_ask inst_body lab_opt errs in
       Z3.pop "Exiting a forall";
       errs
 
-    | Quant (Exists, _, _, _, _) -> ask q r errs  //treating Exists as atomic
+    | Quant (Exists, _, _, _, _) -> ask q lab_opt errs  //treating Exists as atomic
       
     | _ -> failwith ("Unhandled query term : " ^ print_smt_term q) in
       
@@ -718,7 +752,7 @@ let one_assertion_at_a_time config : either<list<errors>, query_settings> =
   | Assume ({assumption_term=q}) ->
     (match q.tm with
      | App (Not, [q]) ->
-       let errs = descend_and_ask q config.query_range [] in
+       let errs = descend_and_ask q None [] in
        if List.length errs = 0 then Inr config
        else Inl errs
      | _ -> failwith "Impossible! Expected an unsat query wrapped in a Not constructor")
