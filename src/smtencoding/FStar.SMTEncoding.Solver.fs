@@ -670,7 +670,11 @@ let one_assertion_at_a_time config : either<list<errors>, query_settings> =
 
     match process_result config z3_result with
     | None ->
-      //BU.print_string "Assertion succeeded\n";
+      BU.print2 "Assertion (%s) at %s succeeded\n"
+        (match lab_opt with
+         | Some ((s, _, _), _, _) when s <> "" -> s
+         | _ -> print_smt_term q_tm)
+        (Range.string_of_use_range r);        
       errs //query succeeded
     | Some err ->
       BU.print3 "Assertion (%s) failed at %s (also see %s)\n"

@@ -982,7 +982,17 @@ let (one_assertion_at_a_time :
               FStar_Pervasives_Native.None false in
           let uu___1 = process_result config1 z3_result in
           (match uu___1 with
-           | FStar_Pervasives_Native.None -> errs
+           | FStar_Pervasives_Native.None ->
+               ((let uu___3 =
+                   match lab_opt with
+                   | FStar_Pervasives_Native.Some
+                       ((s, uu___4, uu___5), uu___6, uu___7) when s <> "" ->
+                       s
+                   | uu___4 -> FStar_SMTEncoding_Term.print_smt_term q_tm in
+                 let uu___4 = FStar_Range.string_of_use_range r in
+                 FStar_Util.print2 "Assertion (%s) at %s succeeded\n" uu___3
+                   uu___4);
+                errs)
            | FStar_Pervasives_Native.Some err ->
                ((let uu___3 =
                    match lab_opt with
