@@ -7,6 +7,11 @@ open Steel.Semantics.Instantiate
 open Steel.Effect.Common
 module FExt = FStar.FunctionalExtensionality
 
+irreducible let __steel_reduce__ : unit = ()
+
+unfold
+let normal (#a:Type) (x:a) = norm [delta_attr [`%__steel_reduce__]] x
+
 let selector' (a:Type) (hp:slprop) = hmem hp -> a
 
 let sel_depends_only_on (#a:Type) (#hp:slprop) (sel:selector' a hp) =
@@ -14,11 +19,8 @@ let sel_depends_only_on (#a:Type) (#hp:slprop) (sel:selector' a hp) =
     (interp_depends_only_on hp; (
     sel m0 == sel (join m0 m1)))
 
-let sel_depends_only_on_core (#a:Type) (#hp:slprop) (sel:selector' a hp) =
-  forall (m0:hmem hp). (sel m0 == sel (core_mem m0))
-
 let selector (a:Type) (hp:slprop) : Type =
-  sel:selector' a hp{sel_depends_only_on sel} // /\ sel_depends_only_on_core sel}
+  sel:selector' a hp{sel_depends_only_on sel}
 
 noeq
 type vprop =
@@ -132,13 +134,14 @@ let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post
   fun m0 x m1 ->
     interp pre.hp m0 /\ interp (post x).hp m1 /\ ens (mk_rmem pre m0) x (mk_rmem (post x) m1)
 
-unfold
+[@__steel_reduce__]
 let unrestricted_focus_rmem (#r:vprop) (h:rmem r) (r0:vprop{r `can_be_split` r0})
   = fun (r':vprop{can_be_split r0 r'}) -> can_be_split_trans r r0 r'; h r'
 
 val focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0})
   : Tot (rmem r0)
 
+[@__steel_reduce__]
 let focus_rmem #r h r0 =
   FExt.on_dom
    (r':vprop{can_be_split r0 r'})
@@ -186,8 +189,9 @@ let can_be_split_3_interp p1 p2 q r m =
 val repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) : Type u#2
 
 let repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
-  Sem.action_t #state #a (pre.hp) (to_post post) (req_to_act_req req) (ens_to_act_ens ens)
-
+  Sem.action_t #state #a (pre.hp) (to_post post)
+    (req_to_act_req req)
+    (ens_to_act_ens ens)
 
 unfold
 let return_req (p:vprop) : req_t p = fun _ -> True
@@ -200,6 +204,7 @@ val return (a:Type u#a) (x:a) (p:a -> vprop)
 
 let return a x p = fun _ -> x
 
+[@__steel_reduce__]
 unfold
 let bind_req (#a:Type) (#pre_f:vprop) (#post_f:a -> vprop)
              (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
@@ -207,6 +212,7 @@ let bind_req (#a:Type) (#pre_f:vprop) (#post_f:a -> vprop)
   : req_t pre_f
   = fun h -> req_f h /\ (forall (x:a) h1. ens_f h x h1 ==> req_g x h1)
 
+[@__steel_reduce__]
 unfold
 let bind_ens (#a:Type) (#b:Type) (#pre_f:vprop) (#post_f:a -> vprop)
              (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
@@ -363,8 +369,8 @@ val frame (#a:Type)
     (pre `star` frame)
     (fun x -> post x `star` frame)
     (fun h -> req (focus_rmem h pre))
-    (fun h0 r h1 -> req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r))
-      /\ focus_rmem h0 frame == focus_rmem h1 frame)
+    (fun h0 r h1 -> normal (req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r))
+      /\ h0 frame == h1 frame))
 
 let respects_fp (#fp:vprop) (p:hmem fp -> prop) : prop =
   forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)
@@ -394,9 +400,10 @@ let frame00 (#a:Type)
     (fun x -> post x `star` frame)
     (fun h -> req (focus_rmem h pre))
     (fun h0 r h1 -> req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r))
-      /\ focus_rmem h0 frame == focus_rmem h1 frame)
+      /\ h0 frame == h1 frame)
   = fun frame' ->
       let m0 = nmst_get () in
+
       let snap:rmem frame = mk_rmem frame (core_mem m0) in
 
       focus_is_restrict_mk_rmem (pre `star` frame) pre (core_mem m0);
@@ -413,6 +420,13 @@ let frame00 (#a:Type)
 
       focus_is_restrict_mk_rmem (post x `star` frame) (post x) (core_mem m1);
 
+      // We proved focus_rmem h0 frame == focus_rmem h1 frame so far, we need to conclude
+      let h0:rmem (pre `star` frame) = mk_rmem (pre `star` frame) (core_mem m0) in
+      let h1:rmem (post x `star` frame) = mk_rmem (post x `star` frame) (core_mem m1) in
+
+      reveal_focus_rmem h0 frame frame;
+      reveal_focus_rmem h1 frame frame;
+
       x
 #pop-options
 
@@ -427,11 +441,102 @@ let frame0 (#a:Type)
     (pre `star` frame)
     (fun x -> post x `star` frame)
     (fun h -> req (focus_rmem h pre))
-    (fun h0 r h1 -> req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r))
-      /\ focus_rmem h0 frame == focus_rmem h1 frame)
+    (fun h0 r h1 -> normal (req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r))
+      /\ h0 frame == h1 frame))
   = SteelSel?.reflect (frame00 f frame)
 
 let frame f frame = (frame0 (reify (f ())) frame)
+
+val vemp :vprop
+let vemp = {hp = emp; t = unit; sel = fun _ -> ()}
+
+open FStar.Ghost
+
+assume val ref (a:Type0) : Type0
+
+assume val ptr (#a:Type0) (r:ref a) : slprop
+
+assume val sel (#a:Type0) (r:ref a) (h:Mem.hmem (ptr r)) : a
+
+val ptr_sel' (#a:Type0) (r: ref a) : selector' a (ptr r)
+let ptr_sel' #a r = sel r
+
+val ptr_sel (#a:Type0) (r:ref a) : selector a (ptr r)
+let ptr_sel r =
+  assume (sel_depends_only_on (ptr_sel' r));
+  ptr_sel' r
+
+val vptr (#a:Type0) (r:ref a) : vprop
+let vptr #a r =
+  {hp = ptr r;
+   t = a;
+   sel = ptr_sel r}
+
+assume
+val alloc (#a:Type0) (x:a) : SteelSel (ref a)
+  vemp (fun r -> vptr r)
+  (requires fun _ -> True)
+  (ensures fun _ r h1 -> h1 (vptr r) == x)
+
+assume
+val get (#r:vprop) (_:unit) : SteelSel (rmem r)
+  r (fun _ -> r)
+  (requires fun _ -> True)
+  (ensures fun h0 r h1 -> h0 == h1 /\ h1 == r)
+
+assume
+val read (#a:Type0) (r:ref a) : SteelSel a
+  (vptr r) (fun _ -> vptr r)
+  (requires fun _ -> True)
+  (ensures fun h0 x h1 -> h0 (vptr r) == h1 (vptr r) /\ x == h1 (vptr r))
+
+assume
+val write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
+  (vptr r) (fun _ -> vptr r)
+  (requires fun _ -> True)
+  (ensures fun _ _ h1 -> x == h1 (vptr r))
+
+assume
+val rewrite_2 (#a:Type) (r1 r2:ref a) : SteelSel unit
+  (vptr r1 `star` vptr r2) (fun _ -> vptr r2 `star` vptr r1)
+  (requires fun _ -> True)
+  (ensures fun h0 _ h1 -> h0 (vptr r1) == h1 (vptr r1) /\ h0 (vptr r2) == h1 (vptr r2))
+
+val test (r:ref int) : SteelSel unit
+  (vptr r) (fun _ -> vptr r)
+  (requires fun _ -> True)
+  (ensures fun _ _ h1 -> h1 (vptr r) == 0)
+
+let test r =
+  write r 1;
+  write r 0
+
+val test2 (r1 r2:ref int) : SteelSel unit
+  (vptr r1 `star` vptr r2) (fun _ -> vptr r1 `star` vptr r2)
+  (requires fun _ -> True)
+  (ensures fun _ _ h1 -> h1 (vptr r1) == 0)
+
+
+let test2 r1 r2 =
+  frame (fun _ -> write r1 1) (vptr r2);
+  frame (fun _ -> write r1 0) (vptr r2)
+
+val swap (#a:Type0) (r1 r2:ref a) : SteelSel unit
+  (vptr r1 `star` vptr r2)
+  (fun _ -> vptr r1 `star` vptr r2)
+  (requires fun _ -> True)
+  (ensures fun h0 _ h1 ->
+    h0 (vptr r1) == h1 (vptr r2) /\
+    h0 (vptr r2) == h1 (vptr r1))
+
+let swap #a r1 r2 =
+  let x1 = frame (fun _ -> read r1) (vptr r2) in
+  rewrite_2 r1 r2;
+  let x2 = frame (fun _ -> read r2) (vptr r1) in
+  frame (fun _ -> write r2 x1) (vptr r1);
+  rewrite_2 r2 r1;
+  frame (fun _ -> write r1 x2) (vptr r2)
+
 
 (* Going towards automation. This already verifies *)
 
