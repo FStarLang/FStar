@@ -262,6 +262,8 @@ rawDecl:
       { NewEffect ne }
   | LAYERED_EFFECT ne=effectDefinition
       { LayeredEffect ne }
+  | EFFECT ne=layeredEffectDefinition
+      { LayeredEffect ne }
   | SUB_EFFECT se=subEffect
       { SubEffect se }
   | POLYMONADIC_BIND b=polymonadic_bind
@@ -340,6 +342,34 @@ effectDefinition:
            WITH eds=separated_nonempty_list(SEMICOLON, effectDecl)
     RBRACE
     { DefineEffect(lid, bs, typ, eds) }
+
+layeredEffectDefinition:
+  | LBRACE lid=uident bs=binders WITH r=tmNoEq RBRACE
+    {
+      let typ =  (* bs -> Effect *)
+        let first_b, last_b =
+          match bs with
+          | [] ->
+             raise_error (Fatal_SyntaxError,
+                          "Syntax error: unexpected empty binders list in the layered effect definition")
+                         (range_of_id lid)
+          | _ -> hd bs, last bs |> must in
+        let r = union_ranges first_b.brange last_b.brange in
+        mk_term (Product (bs, mk_term (Name (lid_of_str "Effect")) r Type_level)) r Type_level in
+      let rec decls (r:term) =
+        match r.tm with
+        | Paren r -> decls r
+        | Record (None, flds) ->
+           flds |> List.map (fun (lid, t) ->
+                              mk_decl (Tycon (false,
+                                              false,
+                                              [TyconAbbrev (ident_of_lid lid, [], None, t)]))
+                                      t.range [])
+        | _ ->
+           raise_error (Fatal_SyntaxError,
+                        "Syntax error: layered effect combinators should be declared as a record")
+                       r.range in
+      DefineEffect (lid, [], typ, decls r) }
 
 effectDecl:
   | lid=lident action_params=binders EQUALS t=simpleTerm
