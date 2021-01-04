@@ -1055,8 +1055,22 @@ let (one_assertion_at_a_time :
           ask q lab_opt errs
       | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Var uu___, uu___1)
           -> ask q lab_opt errs
-      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Or, t::q1::[])
-          when is_label t ->
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Or, t::qs) when
+          is_label t ->
+          let q1 =
+            if (FStar_List.length qs) = Prims.int_one
+            then FStar_List.hd qs
+            else
+              (let uu___1 = q in
+               {
+                 FStar_SMTEncoding_Term.tm =
+                   (FStar_SMTEncoding_Term.App
+                      (FStar_SMTEncoding_Term.Or, qs));
+                 FStar_SMTEncoding_Term.freevars =
+                   (uu___1.FStar_SMTEncoding_Term.freevars);
+                 FStar_SMTEncoding_Term.rng =
+                   (uu___1.FStar_SMTEncoding_Term.rng)
+               }) in
           let uu___ =
             let uu___1 = get_label t in
             FStar_All.pipe_right uu___1
