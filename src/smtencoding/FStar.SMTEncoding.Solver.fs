@@ -713,7 +713,11 @@ let one_assertion_at_a_time config : either<list<errors>, query_settings> =
     | App (BvUlt, _)
     | App (Var _, _) -> ask q lab_opt errs  //atomic goal
 
-    | App (Or, [t; q]) when is_label t -> ask q (get_label t |> Some) errs  //strip the label
+    | App (Or, t::qs) when is_label t ->
+      let q =
+        if List.length qs = 1 then List.hd qs
+        else { q with tm=App (Or, qs) } in
+      ask q (get_label t |> Some) errs  //strip the label
 
     | App (Or, _) -> ask q lab_opt errs  //treating Or as atomic
 
