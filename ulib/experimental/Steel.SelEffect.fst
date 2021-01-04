@@ -12,7 +12,7 @@ irreducible let __steel_reduce__ : unit = ()
 unfold
 let normal (#a:Type) (x:a) = norm [delta_attr [`%__steel_reduce__]] x
 
-let selector' (a:Type) (hp:slprop) = hmem hp -> a
+let selector' (a:Type) (hp:slprop) = hmem hp -> GTot a
 
 let sel_depends_only_on (#a:Type) (#hp:slprop) (sel:selector' a hp) =
   forall (m0:hmem hp) (m1:mem{disjoint m0 m1}).
@@ -75,7 +75,7 @@ val can_be_split_forall_refl (#a:Type) (p:post_t a)
   [SMTPat (p `can_be_split_forall` p)]
 
 
-let rmem (pre:pre_t) = FExt.restricted_t (r0:vprop{can_be_split pre r0}) (fun r0 -> r0.t)
+let rmem (pre:pre_t) = FExt.restricted_g_t (r0:vprop{can_be_split pre r0}) (fun r0 -> r0.t)
 
 unfold
 let unrestricted_mk_rmem (r:vprop) (h:hmem r) = fun (r0:vprop{r `can_be_split` r0}) -> r0.sel h
@@ -83,13 +83,13 @@ let unrestricted_mk_rmem (r:vprop) (h:hmem r) = fun (r0:vprop{r `can_be_split` r
 val mk_rmem (r:vprop) (h:hmem r) : Tot (rmem r)
 
 let mk_rmem r h =
-   FExt.on_dom
+   FExt.on_dom_g
      (r0:vprop{r `can_be_split` r0})
      (unrestricted_mk_rmem r h)
 
 let reveal_mk_rmem (r:vprop) (h:hmem r) (r0:vprop{r `can_be_split` r0})
   : Lemma ((mk_rmem r h) r0 == r0.sel h)
-  = FExt.feq_on_domain (unrestricted_mk_rmem r h)
+  = FExt.feq_on_domain_g (unrestricted_mk_rmem r h)
 
 type req_t (pre:pre_t) = rmem pre -> prop
 type ens_t (pre:pre_t) (a:Type) (post:post_t a) =
@@ -99,7 +99,7 @@ let rmem_depends_only_on' (pre:pre_t) (m0:hmem pre) (m1:mem{disjoint m0 m1})
   : Lemma (mk_rmem pre m0 == mk_rmem pre (join m0 m1))
   = Classical.forall_intro (reveal_mk_rmem pre m0);
     Classical.forall_intro (reveal_mk_rmem pre (join m0 m1));
-    FExt.extensionality
+    FExt.extensionality_g
       (r0:vprop{can_be_split pre r0})
       (fun r0 -> r0.t)
       (mk_rmem pre m0)
@@ -143,7 +143,7 @@ val focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0})
 
 [@__steel_reduce__]
 let focus_rmem #r h r0 =
-  FExt.on_dom
+  FExt.on_dom_g
    (r':vprop{can_be_split r0 r'})
    (unrestricted_focus_rmem h r0)
 
@@ -152,7 +152,7 @@ let reveal_focus_rmem (#r:vprop) (h:rmem r) (r0:vprop{r `can_be_split` r0}) (r':
     r `can_be_split` r' /\
     focus_rmem h r0 r' == h r')
   = can_be_split_trans r r0 r';
-    FExt.feq_on_domain (unrestricted_focus_rmem h r0)
+    FExt.feq_on_domain_g (unrestricted_focus_rmem h r0)
 
 let focus_is_restrict_mk_rmem (fp0 fp1:vprop) (m:hmem fp0)
   : Lemma
@@ -170,7 +170,7 @@ let focus_is_restrict_mk_rmem (fp0 fp1:vprop) (m:hmem fp0)
         reveal_focus_rmem f0 fp1 r
     in Classical.forall_intro aux;
 
-    FExt.extensionality
+    FExt.extensionality_g
       (r0:vprop{can_be_split fp1 r0})
       (fun r0 -> r0.t)
       (mk_rmem fp1 m)
@@ -184,7 +184,6 @@ val can_be_split_3_interp (p1 p2 q r:slprop u#1) (m:mem)
 let can_be_split_3_interp p1 p2 q r m =
   star_associative p1 q r;
   star_associative p2 q r
-
 
 val repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) : Type u#2
 
@@ -450,20 +449,61 @@ let frame f frame = (frame0 (reify (f ())) frame)
 val vemp :vprop
 let vemp = {hp = emp; t = unit; sel = fun _ -> ()}
 
+val get (#r:vprop) (_:unit) : SteelSel (rmem r)
+  r (fun _ -> r)
+  (requires fun _ -> True)
+  (ensures fun h0 r h1 -> h0 == h1 /\ h1 == r)
+
+let get0 (#r:vprop) (_:unit) : repr (rmem r)
+  r (fun _ -> r)
+  (requires fun _ -> True)
+  (ensures fun h0 r h1 -> h0 == h1 /\ h1 == r)
+  = fun frame ->
+      let m0 = nmst_get () in
+      mk_rmem r (core_mem m0)
+
+let get #r _ = SteelSel?.reflect (get0 #r ())
+
 open FStar.Ghost
 
-assume val ref (a:Type0) : Type0
+(* Simple Reference library, only full permissions.
+   AF: Permissions would likely need to be an index of the vprop ptr.
+   It cannot be part of a selector, as it is not invariant when joining with a disjoint memory
+   Using the value of the ref as a selector is ok because refs with fractional permissions
+   all share the same value.
+   Refs on PCM are more complicated, and likely not usable with selectors
+*)
 
-assume val ptr (#a:Type0) (r:ref a) : slprop
+module R = Steel.Reference
+open Steel.FractionalPermission
 
-assume val sel (#a:Type0) (r:ref a) (h:Mem.hmem (ptr r)) : a
+val ref (a:Type0) : Type0
+let ref a = R.ref a
+
+val ptr (#a:Type0) (r:ref a) : slprop u#1
+let ptr r = h_exists (R.pts_to r full_perm)
+
+val sel (#a:Type0) (r:ref a) (h:Mem.hmem (ptr r)) : GTot a
+
+let sel #a r h =
+  let x = id_elim_exists #(erased a) (R.pts_to r full_perm) h in
+  reveal reveal x
+
 
 val ptr_sel' (#a:Type0) (r: ref a) : selector' a (ptr r)
 let ptr_sel' #a r = sel r
 
+let ptr_sel_depends_only_on (#a:Type0) (r:ref a)
+  (m0:Mem.hmem (ptr r)) (m1:mem{disjoint m0 m1})
+  : Lemma (ptr_sel' r m0 == ptr_sel' r (join m0 m1))
+  = let x = reveal (id_elim_exists #(erased a) (R.pts_to r full_perm) m0) in
+    let y = reveal (id_elim_exists #(erased a) (R.pts_to r full_perm) (join m0 m1)) in
+    R.pts_to_witinv r full_perm;
+    elim_wi (R.pts_to r full_perm) x y (join m0 m1)
+
 val ptr_sel (#a:Type0) (r:ref a) : selector a (ptr r)
 let ptr_sel r =
-  assume (sel_depends_only_on (ptr_sel' r));
+  Classical.forall_intro_2 (ptr_sel_depends_only_on r);
   ptr_sel' r
 
 val vptr (#a:Type0) (r:ref a) : vprop
@@ -472,17 +512,13 @@ let vptr #a r =
    t = a;
    sel = ptr_sel r}
 
+(* AF : Keeping these assumed for now, the implementation should be straightforward *)
+
 assume
 val alloc (#a:Type0) (x:a) : SteelSel (ref a)
   vemp (fun r -> vptr r)
   (requires fun _ -> True)
   (ensures fun _ r h1 -> h1 (vptr r) == x)
-
-assume
-val get (#r:vprop) (_:unit) : SteelSel (rmem r)
-  r (fun _ -> r)
-  (requires fun _ -> True)
-  (ensures fun h0 r h1 -> h0 == h1 /\ h1 == r)
 
 assume
 val read (#a:Type0) (r:ref a) : SteelSel a
