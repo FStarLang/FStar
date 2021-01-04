@@ -580,9 +580,10 @@ match%sedlex lexbuf with
    lexbuf.Sedlexing.start_p <- start_pos;
    BYTEARRAY (ba_of_string (Buffer.contents buffer))
  | eof -> fail lexbuf (E.Fatal_SyntaxError, "unterminated string")
- | _ ->
+ | any ->
   Buffer.add_string buffer (L.lexeme lexbuf);
   string buffer start_pos lexbuf
+ | _ -> assert false
 
 and comment inner buffer startpos lexbuf =
 match%sedlex lexbuf with
@@ -599,9 +600,10 @@ match%sedlex lexbuf with
    if inner then EOF else token lexbuf
  | eof ->
    terminate_comment buffer startpos lexbuf; EOF
- | _ ->
+ | any ->
    Buffer.add_string buffer (L.lexeme lexbuf);
    comment inner buffer startpos lexbuf
+ | _ -> assert false
 
 and ignore_endline lexbuf =
 match%sedlex lexbuf with
