@@ -40,11 +40,21 @@ type post_t (a:Type) = a -> vprop
 let can_be_split (p q:vprop) = can_be_split p.hp q.hp
 let can_be_split_forall (#a:Type) (p q:post_t a) = forall x. can_be_split (p x) (q x)
 
+(* Some properties about can_be_split that need to be exposed
+   or derived from Steel.Effect.Common *)
+
 assume
-val can_be_split_star (p q:vprop)
+val can_be_split_star_l (p q:vprop)
 : Lemma
   (ensures (p `star` q) `can_be_split` p)
   [SMTPat ((p `star` q) `can_be_split` p)]
+
+assume
+val can_be_split_star_r (p q:vprop)
+: Lemma
+  (ensures (p `star` q) `can_be_split` q)
+  [SMTPat ((p `star` q) `can_be_split` q)]
+
 
 assume
 val can_be_split_trans (p q r:vprop)
@@ -353,9 +363,25 @@ val frame (#a:Type)
     (pre `star` frame)
     (fun x -> post x `star` frame)
     (fun h -> req (focus_rmem h pre))
-    // TODO: Add preservation of frame_sel
-    (fun h0 r h1 -> req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r)))
+    (fun h0 r h1 -> req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r))
+      /\ focus_rmem h0 frame == focus_rmem h1 frame)
 
+let respects_fp (#fp:vprop) (p:hmem fp -> prop) : prop =
+  forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)
+
+let fp_mprop (fp:vprop) = p:(hmem fp -> prop) { respects_fp #fp p }
+
+
+val req_frame (frame:vprop) (snap:rmem frame) : mprop frame.hp
+
+let req_frame' (frame:vprop) (snap:rmem frame) (m:mem) : prop =
+  interp frame.hp m /\ mk_rmem frame m == snap
+
+let req_frame frame snap =
+  rmem_depends_only_on frame;
+  req_frame' frame snap
+
+#push-options "--z3rlimit 20"
 let frame00 (#a:Type)
           (#pre:pre_t)
           (#post:post_t a)
@@ -367,14 +393,28 @@ let frame00 (#a:Type)
     (pre `star` frame)
     (fun x -> post x `star` frame)
     (fun h -> req (focus_rmem h pre))
-    (fun h0 r h1 -> req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r)))
+    (fun h0 r h1 -> req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r))
+      /\ focus_rmem h0 frame == focus_rmem h1 frame)
   = fun frame' ->
       let m0 = nmst_get () in
+      let snap:rmem frame = mk_rmem frame (core_mem m0) in
+
       focus_is_restrict_mk_rmem (pre `star` frame) pre (core_mem m0);
-      let x = Sem.run #state #_ #_ #_ #_ #_ frame' (Sem.Frame (Sem.Act f) frame.hp (fun _ -> True)) in
+
+      let x = Sem.run #state #_ #_ #_ #_ #_ frame' (Sem.Frame (Sem.Act f) frame.hp (req_frame frame snap)) in
+
       let m1 = nmst_get () in
+
+      can_be_split_star_r pre frame;
+      focus_is_restrict_mk_rmem (pre `star` frame) frame (core_mem m0);
+      can_be_split_star_r (post x) frame;
+      focus_is_restrict_mk_rmem (post x `star` frame) frame (core_mem m1);
+
+
       focus_is_restrict_mk_rmem (post x `star` frame) (post x) (core_mem m1);
+
       x
+#pop-options
 
 let frame0 (#a:Type)
           (#pre:pre_t)
@@ -387,12 +427,11 @@ let frame0 (#a:Type)
     (pre `star` frame)
     (fun x -> post x `star` frame)
     (fun h -> req (focus_rmem h pre))
-    (fun h0 r h1 -> req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r)))
+    (fun h0 r h1 -> req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r))
+      /\ focus_rmem h0 frame == focus_rmem h1 frame)
   = SteelSel?.reflect (frame00 f frame)
 
 let frame f frame = (frame0 (reify (f ())) frame)
-
-
 
 (* Going towards automation. This already verifies *)
 
