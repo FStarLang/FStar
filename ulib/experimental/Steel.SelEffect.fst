@@ -52,6 +52,17 @@ val can_be_split_trans (p q r:vprop)
   (requires p `can_be_split` q /\ q `can_be_split` r)
   (ensures p `can_be_split` r)
 
+assume
+val can_be_split_refl (p:vprop)
+: Lemma (p `can_be_split` p)
+  [SMTPat (p `can_be_split` p)]
+
+assume
+val can_be_split_forall_refl (#a:Type) (p:post_t a)
+: Lemma (p `can_be_split_forall` p)
+  [SMTPat (p `can_be_split_forall` p)]
+
+
 let rmem (pre:pre_t) = FExt.restricted_t (r0:vprop{can_be_split pre r0}) (fun r0 -> r0.t)
 
 unfold
@@ -166,6 +177,226 @@ val repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a p
 
 let repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
   Sem.action_t #state #a (pre.hp) (to_post post) (req_to_act_req req) (ens_to_act_ens ens)
+
+
+unfold
+let return_req (p:vprop) : req_t p = fun _ -> True
+
+unfold
+let return_ens (#a:Type) (x:a) (p:a -> vprop) : ens_t (p x) a p = fun _ r _ -> r == x
+
+val return (a:Type u#a) (x:a) (p:a -> vprop)
+  : repr a (p x) p (return_req (p x)) (return_ens x p)
+
+let return a x p = fun _ -> x
+
+unfold
+let bind_req (#a:Type) (#pre_f:vprop) (#post_f:a -> vprop)
+             (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+             (req_g:(x:a -> req_t (post_f x)))
+  : req_t pre_f
+  = fun h -> req_f h /\ (forall (x:a) h1. ens_f h x h1 ==> req_g x h1)
+
+unfold
+let bind_ens (#a:Type) (#b:Type) (#pre_f:vprop) (#post_f:a -> vprop)
+             (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+             (#post_g:b -> vprop) (ens_g:(x:a -> ens_t (post_f x) b post_g))
+  : ens_t pre_f b post_g
+  = fun h0 y h2 -> req_f h0 /\ (exists x h1. ens_f h0 x h1 /\ (ens_g x) h1 y h2)
+
+val bind (a:Type)
+         (b:Type)
+         (pre_f:vprop)
+         (post_f:a -> vprop)
+         (req_f:req_t pre_f)
+         (ens_f:ens_t pre_f a post_f)
+         (post_g:b -> vprop)
+         (req_g:(x:a -> req_t (post_f x)))
+         (ens_g:(x:a -> ens_t (post_f x) b post_g))
+         (f:repr a pre_f post_f req_f ens_f)
+         (g:(x:a -> repr b (post_f x) post_g (req_g x) (ens_g x)))
+   : repr b pre_f post_g
+          (bind_req req_f ens_f req_g)
+          (bind_ens req_f ens_f ens_g)
+
+let bind a b pre_f post_f req_f ens_f post_g req_g ens_g f g
+  = fun frame ->
+      let x = f frame in
+      g x frame
+
+unfold
+let subcomp_pre (#a:Type)
+                (#pre:vprop)
+                (#post:a -> vprop)
+                (req_f:req_t pre)
+                (ens_f:ens_t pre a post)
+                (req_g:req_t pre)
+                (ens_g:ens_t pre a post)
+   : pure_pre
+   = (forall h. req_g h ==> req_f h) /\
+     (forall h0 x h1. (req_g h0 /\ ens_f h0 x h1) ==> ens_g h0 x h1)
+
+val subcomp (a:Type)
+            (pre:vprop)
+            (post:a -> vprop)
+            (req_f:req_t pre)
+            (ens_f:ens_t pre a post)
+            (req_g:req_t pre)
+            (ens_g:ens_t pre a post)
+            (f:repr a pre post req_f ens_f)
+  : Pure (repr a pre post req_g ens_g)
+         (requires subcomp_pre req_f ens_f req_g ens_g)
+         (ensures fun _ -> True)
+
+let subcomp a pre post req_f ens_f req_g ens_g f = f
+
+[@@ allow_informative_binders]
+reifiable reflectable
+layered_effect {
+  SteelSel : a:Type
+        -> pre:pre_t
+        -> post:post_t a
+        -> req:req_t pre
+        -> ens:ens_t pre a post
+        -> Effect
+  with
+  repr = repr;
+  return = return;
+  bind = bind;
+  subcomp = subcomp
+}
+
+unfold
+let bind_pure_steel_req (#a:Type)
+                        (wp:pure_wp a)
+                        (#pre_g:vprop)
+                        (req_g:a -> req_t pre_g)
+  : req_t pre_g
+  = FStar.Monotonic.Pure.wp_monotonic_pure ();
+    fun h -> wp (fun x -> req_g x h) /\ wp (fun _ -> True)
+
+unfold
+let bind_pure_steel_ens (#a:Type)
+                        (#b:Type)
+                        (wp:pure_wp a)
+                        (#pre_g:vprop)
+                        (#post_g:b -> vprop)
+                        (ens_g:a -> ens_t pre_g b post_g)
+   : ens_t pre_g b post_g
+   = fun h0 r h1 -> wp (fun _ -> True) /\ (exists x. (~ (wp (fun r -> r =!= x))) /\ ens_g x h0 r h1)
+
+val bind_pure_steel (a:Type)
+                    (b:Type)
+                    (wp:pure_wp a)
+                    (pre_g:vprop)
+                    (post_g:b -> vprop)
+                    (req_g:a -> req_t pre_g)
+                    (ens_g:a -> ens_t pre_g b post_g)
+                    (f:eqtype_as_type unit -> PURE a wp)
+                    (g:(x:a -> repr b pre_g post_g (req_g x) (ens_g x)))
+  : repr b pre_g post_g
+         (bind_pure_steel_req wp req_g)
+         (bind_pure_steel_ens wp ens_g)
+
+let bind_pure_steel a b wp pre_g post_b req_g ens_g f g
+  = FStar.Monotonic.Pure.wp_monotonic_pure ();
+    fun frame ->
+      let x = f () in
+      g x frame
+
+polymonadic_bind (PURE, SteelSel) |> SteelSel = bind_pure_steel
+
+unfold
+let bind_div_steel_req (#a:Type) (wp:pure_wp a)
+  (#pre_g:pre_t) (req_g:a -> req_t pre_g)
+: req_t pre_g
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun h -> wp (fun _ -> True) /\ (forall x. (req_g x) h)
+
+unfold
+let bind_div_steel_ens (#a:Type) (#b:Type)
+  (wp:pure_wp a)
+  (#pre_g:pre_t) (#post_g:post_t b) (ens_g:a -> ens_t pre_g b post_g)
+: ens_t pre_g b post_g
+= fun h0 r h1 -> wp (fun _ -> True) /\ (exists x. ens_g x h0 r h1)
+
+#push-options "--z3rlimit 20 --fuel 2 --ifuel 1"
+let bind_div_steel (a:Type) (b:Type)
+  (wp:pure_wp a)
+  (pre_g:pre_t) (post_g:post_t b) (req_g:a -> req_t pre_g) (ens_g:a -> ens_t pre_g b post_g)
+  (f:eqtype_as_type unit -> DIV a wp) (g:(x:a -> repr b pre_g post_g (req_g x) (ens_g x)))
+: repr b pre_g post_g
+    (bind_div_steel_req wp req_g)
+    (bind_div_steel_ens wp ens_g)
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun frame ->
+  let x = f () in
+  g x frame
+#pop-options
+
+polymonadic_bind (DIV, SteelSel) |> SteelSel = bind_div_steel
+
+let nmst_get (#st:Sem.st) ()
+  : Sem.Mst (Sem.full_mem st)
+           (fun _ -> True)
+           (fun s0 s s1 -> s0 == s /\ s == s1)
+  = NMST.get ()
+
+val frame (#a:Type)
+          (#pre:pre_t)
+          (#post:post_t a)
+          (#req:req_t pre)
+          (#ens:ens_t pre a post)
+          ($f:unit -> SteelSel a pre post req ens)
+          (frame:vprop)
+  : SteelSel a
+    (pre `star` frame)
+    (fun x -> post x `star` frame)
+    (fun h -> req (focus_rmem h pre))
+    // TODO: Add preservation of frame_sel
+    (fun h0 r h1 -> req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r)))
+
+let frame00 (#a:Type)
+          (#pre:pre_t)
+          (#post:post_t a)
+          (#req:req_t pre)
+          (#ens:ens_t pre a post)
+          (f:repr a pre post req ens)
+          (frame:vprop)
+  : repr a
+    (pre `star` frame)
+    (fun x -> post x `star` frame)
+    (fun h -> req (focus_rmem h pre))
+    (fun h0 r h1 -> req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r)))
+  = fun frame' ->
+      let m0 = nmst_get () in
+      focus_is_restrict_mk_rmem (pre `star` frame) pre (core_mem m0);
+      let x = Sem.run #state #_ #_ #_ #_ #_ frame' (Sem.Frame (Sem.Act f) frame.hp (fun _ -> True)) in
+      let m1 = nmst_get () in
+      focus_is_restrict_mk_rmem (post x `star` frame) (post x) (core_mem m1);
+      x
+
+let frame0 (#a:Type)
+          (#pre:pre_t)
+          (#post:post_t a)
+          (#req:req_t pre)
+          (#ens:ens_t pre a post)
+          (f:repr a pre post req ens)
+          (frame:vprop)
+  : SteelSel a
+    (pre `star` frame)
+    (fun x -> post x `star` frame)
+    (fun h -> req (focus_rmem h pre))
+    (fun h0 r h1 -> req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r)))
+  = SteelSel?.reflect (frame00 f frame)
+
+let frame f frame = (frame0 (reify (f ())) frame)
+
+
+
+(* Going towards automation. This already verifies *)
+
+(*
 
 unfold
 let return_req (p:vprop) : req_t p = fun _ -> True
@@ -286,6 +517,62 @@ layered_effect {
        bind = bind;
        subcomp = subcomp
 }
+
+unfold
+let bind_pure_steel__req (#a:Type) (wp:pure_wp a)
+  (#pre:pre_t) (req:a -> req_t pre)
+: req_t pre
+= fun m -> wp (fun x -> (req x) m) /\ as_requires wp
+
+unfold
+let bind_pure_steel__ens (#a:Type) (#b:Type)
+  (wp:pure_wp a)
+  (#pre:pre_t) (#post:post_t b) (ens:a -> ens_t pre b post)
+: ens_t pre b post
+= fun m0 r m1 -> as_requires wp /\ (exists (x:a). as_ensures wp x /\ (ens x) m0 r m1)
+
+assume
+val bind_pure_steel_ (a:Type) (b:Type)
+  (wp:pure_wp a)
+  (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t b)
+  (#[@@ framing_implicit] req:a -> req_t pre) (#[@@ framing_implicit] ens:a -> ens_t pre b post)
+  (f:eqtype_as_type unit -> PURE a wp) (g:(x:a -> repr b pre post (req x) (ens x)))
+: repr b
+    pre
+    post
+    (bind_pure_steel__req wp req)
+    (bind_pure_steel__ens wp ens)
+
+polymonadic_bind (PURE, SteelSel) |> SteelSel = bind_pure_steel_
+
+unfold
+let bind_div_steel_req (#a:Type) (wp:pure_wp a)
+  (#pre_g:pre_t) (req_g:a -> req_t pre_g)
+: req_t pre_g
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun h -> wp (fun _ -> True) /\ (forall x. (req_g x) h)
+
+unfold
+let bind_div_steel_ens (#a:Type) (#b:Type)
+  (wp:pure_wp a)
+  (#pre_g:pre_t) (#post_g:post_t b) (ens_g:a -> ens_t pre_g b post_g)
+: ens_t pre_g b post_g
+= fun h0 r h1 -> wp (fun _ -> True) /\ (exists x. ens_g x h0 r h1)
+
+
+assume
+val bind_div_steel (a:Type) (b:Type)
+  (wp:pure_wp a)
+  (pre_g:pre_t) (post_g:post_t b) (req_g:a -> req_t pre_g) (ens_g:a -> ens_t pre_g b post_g)
+  (f:eqtype_as_type unit -> DIV a wp) (g:(x:a -> repr b pre_g post_g (req_g x) (ens_g x)))
+: repr b pre_g post_g
+    (bind_div_steel_req wp req_g)
+    (bind_div_steel_ens wp ens_g)
+
+polymonadic_bind (DIV, SteelSel) |> SteelSel = bind_div_steel
+
+*)
+
 
 
 // unfold
