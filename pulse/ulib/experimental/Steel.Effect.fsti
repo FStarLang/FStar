@@ -66,7 +66,7 @@ let return_req (p:slprop) : fp_mprop p = fun _ -> True
 unfold
 let return_ens (#a:Type) (x:a) (p:a -> slprop) : fp_binary_mprop (p x) p = fun _ r _ -> r == x
 
-val returnc (a:Type u#a) (x:a) (p:a -> slprop)
+val return (a:Type u#a) (x:a) (p:a -> slprop)
   : repr a (p x) p (return_req (p x)) (return_ens x p)
 
 unfold
@@ -157,19 +157,13 @@ let if_then_else (a:Type)
 
 [@@ allow_informative_binders]
 reifiable reflectable
-layered_effect {
-  Steel : a:Type
-        -> pre:slprop u#1
-        -> post:(a -> slprop u#1)
-        -> req:fp_mprop pre
-        -> ens:fp_binary_mprop pre post
-        -> Effect
-  with
-  repr = repr;
-  return = returnc;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+effect {
+  Steel (a:Type)
+        (pre:slprop u#1)
+        (post:a -> slprop u#1)
+        (req:fp_mprop pre)
+        (ens:fp_binary_mprop pre post)
+  with { repr; return; bind; subcomp; if_then_else }
 }
 
 effect SteelT (a:Type) (pre:slprop) (post:a -> slprop) =
