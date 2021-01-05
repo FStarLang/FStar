@@ -389,21 +389,6 @@ let nmst_get (#st:Sem.st) ()
            (fun s0 s s1 -> s0 == s /\ s == s1)
   = NMST.get ()
 
-val get (#r:vprop) (_:unit) : SteelSel (rmem r)
-  r (fun _ -> r)
-  (requires fun _ -> True)
-  (ensures fun h0 r h1 -> h0 == h1 /\ h1 == r)
-
-let get0 (#r:vprop) (_:unit) : repr (rmem r)
-  r (fun _ -> r)
-  (requires fun _ -> True)
-  (ensures fun h0 r h1 -> h0 == h1 /\ h1 == r)
-  = fun frame ->
-      let m0 = nmst_get () in
-      mk_rmem r (core_mem m0)
-
-let get #r _ = SteelSel?.reflect (get0 #r ())
-
 [@__steel_reduce__]
 let rec frame_equalities
   (frame:vprop)
@@ -424,6 +409,36 @@ let rec frame_equalities
         frame_equalities p1 h01 h11 /\
         frame_equalities p2 h02 h12
 
+let rec lemma_frame_equalities_refl (frame:vprop) (h:rmem frame) : Lemma (frame_equalities frame h h) =
+  match frame with
+  | VUnit _ -> ()
+  | VStar p1 p2 ->
+        can_be_split_star_l p1 p2;
+        can_be_split_star_r p1 p2;
+
+        let h1 = focus_rmem h p1 in
+        let h2 = focus_rmem h p2 in
+
+        lemma_frame_equalities_refl p1 h1;
+        lemma_frame_equalities_refl p2 h2
+
+val get (#p:vprop) (_:unit) : SteelSel (rmem p)
+  p (fun _ -> p)
+  (requires fun _ -> True)
+  (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
+
+let get0 (#p:vprop) (_:unit) : repr (rmem p)
+  p (fun _ -> p)
+  (requires fun _ -> True)
+  (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
+  = fun frame ->
+      let m0 = nmst_get () in
+      let h0 = mk_rmem p (core_mem m0) in
+      lemma_frame_equalities_refl p h0;
+      h0
+
+let get #r _ = SteelSel?.reflect (get0 #r ())
+
 let respects_fp (#fp:vprop) (p:hmem fp -> prop) : prop =
   forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)
 
@@ -438,19 +453,6 @@ let req_frame' (frame:vprop) (snap:rmem frame) (m:mem) : prop =
 let req_frame frame snap =
   rmem_depends_only_on frame;
   req_frame' frame snap
-
-let rec lemma_frame_equalities_refl (frame:vprop) (h:rmem frame) : Lemma (frame_equalities frame h h) =
-  match frame with
-  | VUnit _ -> ()
-  | VStar p1 p2 ->
-        can_be_split_star_l p1 p2;
-        can_be_split_star_r p1 p2;
-
-        let h1 = focus_rmem h p1 in
-        let h2 = focus_rmem h p2 in
-
-        lemma_frame_equalities_refl p1 h1;
-        lemma_frame_equalities_refl p2 h2
 
 #push-options "--z3rlimit 20"
 let frame00 (#a:Type)
@@ -665,9 +667,13 @@ val test3 (r1 r2 r3:ref int) : SteelSel unit
     sel h0 r2 == sel h1 r2
   )
 
-
+// AF: Should work with r3 if we specify the additional can_be_split
 let test3 r1 r2 r3 =
+  let h0 = get () in
   frame (fun _ -> write r1 1) (vptr r2 `star` vptr r3);
+  let h1 = get() in
+  assert (sel h1 r1 == 1);
+  assert (sel h0 r2 == sel h1 r2);
   frame (fun _ -> write r1 0) (vptr r2 `star` vptr r3)
 
 
