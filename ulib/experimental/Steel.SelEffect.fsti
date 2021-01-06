@@ -3,7 +3,7 @@ module Steel.SelEffect
 open Steel.Memory
 module Mem = Steel.Memory
 module FExt = FStar.FunctionalExtensionality
-
+open FStar.Ghost
 
 (* Normalization helpers *)
 
@@ -25,8 +25,11 @@ let sel_depends_only_on (#a:Type) (#hp:slprop) (sel:selector' a hp) =
     (interp_depends_only_on hp; (
     sel m0 == sel (join m0 m1)))
 
+let sel_depends_only_on_core (#a:Type) (#hp:slprop) (sel:selector' a hp) =
+  forall (m0:hmem hp). sel m0 == sel (core_mem m0)
+
 let selector (a:Type) (hp:slprop) : Type =
-  sel:selector' a hp{sel_depends_only_on sel}
+  sel:selector' a hp{sel_depends_only_on sel /\ sel_depends_only_on_core sel}
 
 /// The basis of our selector framework: Separation logic assertions enhanced with selectors
 /// Note that selectors are "optional", it is always possible to use a non-informative selector,
@@ -261,10 +264,19 @@ let rec frame_equalities
 
 (* Some helper functions *)
 
+val returnc (#a:Type) (#p:a -> vprop) (x:a)
+  : SteelSel a (p x) p (fun _ -> True) (fun h0 r h1 -> r == x /\ normal (frame_equalities (p x) h0 h1))
+
 val get (#p:vprop) (_:unit) : SteelSel (rmem p)
   p (fun _ -> p)
   (requires fun _ -> True)
   (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
+
+val change_slprop (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
+  ) : SteelSel unit p (fun _ -> q) (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
 
 val frame (#a:Type)
           (#pre:pre_t)
@@ -322,12 +334,12 @@ val write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
 
 (* Should do this in a more princpled way once we have automated framing *)
 
-val rewrite_2 (#a:Type) (r1 r2:ref a) : SteelSel unit
-  (vptr r1 `star` vptr r2) (fun _ -> vptr r2 `star` vptr r1)
+val rewrite_2 (p q:vprop) : SteelSel unit
+  (p `star` q) (fun _ -> q `star` p)
   (requires fun _ -> True)
   (ensures fun h0 _ h1 ->
-    h0 (vptr r1) == h1 (vptr r1) /\
-    h0 (vptr r2) == h1 (vptr r2))
+    h0 p == h1 p /\
+    h0 q == h1 q)
 
 (* AF: Ultimately, the precondition should probably be a squashed implicit that can be resolved by tactic *)
 unfold
@@ -381,8 +393,8 @@ let swap (#a:Type0) (r1 r2:ref a) : SteelSel unit
     sel h0 r1 == sel h1 r2 /\
     sel h0 r2 == sel h1 r1)
   = let x1 = frame (fun _ -> read r1) (vptr r2) in
-    rewrite_2 r1 r2;
+    rewrite_2 (vptr r1) (vptr r2);
     let x2 = frame (fun _ -> read r2) (vptr r1) in
     frame (fun _ -> write r2 x1) (vptr r1);
-    rewrite_2 r2 r1;
+    rewrite_2 (vptr r2) (vptr r1);
     frame (fun _ -> write r1 x2) (vptr r2)
