@@ -5,6 +5,7 @@ module Mem = Steel.Memory
 module C = Steel.Effect.Common
 open Steel.Semantics.Instantiate
 module FExt = FStar.FunctionalExtensionality
+module Eff = Steel.Effect
 
 let hmem (p:vprop) = hmem (hp_of p)
 
@@ -18,12 +19,6 @@ let can_be_split_trans p q r = admit()
 let can_be_split_star_l p q = admit()
 let can_be_split_star_r p q = admit()
 let can_be_split_refl p = admit()
-
-// val can_be_split_forall_refl (#a:Type) (p:post_t a)
-// : Lemma (p `can_be_split_forall` p)
-//   [SMTPat (p `can_be_split_forall` p)]
-
-
 
 unfold
 let unrestricted_mk_rmem (r:vprop) (h:hmem r) = fun (r0:vprop{r `can_be_split` r0}) -> normal (sel_of r0 h)
@@ -131,10 +126,7 @@ let bind a b pre_f post_f req_f ens_f post_g req_g ens_g f g
       let x = f frame in
       g x frame
 
-
 let subcomp a pre post req_f ens_f req_g ens_g f = f
-
-
 
 let bind_pure_steel a b wp pre_g post_b req_g ens_g f g
   = FStar.Monotonic.Pure.wp_monotonic_pure ();
@@ -193,6 +185,18 @@ let rec lemma_frame_equalities_refl (frame:vprop) (h:rmem frame) : Lemma (frame_
         lemma_frame_equalities_refl p1 h1;
         lemma_frame_equalities_refl p2 h2
 
+let returnc0 (#a:Type) (#p:a -> vprop) (x:a)
+  : repr a (p x) p (fun _ -> True) (fun h0 r h1 -> r == x /\ normal (frame_equalities (p x) h0 h1))
+  = fun frame ->
+      let m0 = nmst_get () in
+      let h0 = mk_rmem (p x) (core_mem m0) in
+      lemma_frame_equalities_refl (p x) h0;
+      x
+
+let returnc (#a:Type) (#p:a -> vprop) (x:a)
+  : SteelSel a (p x) p (fun _ -> True) (fun h0 r h1 -> r == x /\ normal (frame_equalities (p x) h0 h1))
+  = SteelSel?.reflect (returnc0 #a #p x)
+
 
 let get0 (#p:vprop) (_:unit) : repr (rmem p)
   p (fun _ -> p)
@@ -206,11 +210,50 @@ let get0 (#p:vprop) (_:unit) : repr (rmem p)
 
 let get #r _ = SteelSel?.reflect (get0 #r ())
 
+
+let intro_star (p q:vprop) (r:slprop) (vp:erased (t_of p)) (vq:erased (t_of q)) (m:mem)
+  (proof:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
+  )
+  : Lemma
+   (requires interp ((hp_of p) `Mem.star` r) m /\ sel_of p m == reveal vp)
+   (ensures interp ((hp_of q) `Mem.star` r) m)
+= let p = hp_of p in
+  let q = hp_of q in
+  let intro (ml mr:mem) : Lemma
+      (requires interp q ml /\ interp r mr /\ disjoint ml mr)
+      (ensures disjoint ml mr /\ interp (q `Mem.star` r) (join ml mr))
+  = intro_star q r ml mr
+  in
+  elim_star p r m;
+  Classical.forall_intro (Classical.move_requires proof);
+  Classical.forall_intro_2 (Classical.move_requires_2 intro)
+
+#push-options "--z3rlimit 20 --fuel 1 --ifuel 0"
+let change_slprop0 (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
+  (proof:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
+  ) : repr unit p (fun _ -> q) (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
+  = fun frame ->
+      let m = nmst_get () in
+      proof (core_mem m);
+      Classical.forall_intro (Classical.move_requires proof);
+      intro_star p q (frame `Mem.star` locks_invariant Set.empty m) vp vq m proof
+#pop-options
+
+let change_slprop (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
+  ) : SteelSel unit p (fun _ -> q) (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
+  = SteelSel?.reflect (change_slprop0 p q vp vq l)
+
 let respects_fp (#fp:vprop) (p:hmem fp -> prop) : prop =
   forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)
 
 let fp_mprop (fp:vprop) = p:(hmem fp -> prop) { respects_fp #fp p }
-
 
 val req_frame (frame:vprop) (snap:rmem frame) : mprop (hp_of frame)
 
@@ -326,7 +369,7 @@ let ptr r = h_exists (R.pts_to r full_perm)
 val ptr_sel' (#a:Type0) (r: ref a) : selector' a (ptr r)
 let ptr_sel' #a r = fun h ->
   let x = id_elim_exists #(erased a) (R.pts_to r full_perm) h in
-  reveal reveal x
+  reveal (reveal x)
 
 let ptr_sel_depends_only_on (#a:Type0) (r:ref a)
   (m0:Mem.hmem (ptr r)) (m1:mem{disjoint m0 m1})
@@ -336,39 +379,137 @@ let ptr_sel_depends_only_on (#a:Type0) (r:ref a)
     R.pts_to_witinv r full_perm;
     elim_wi (R.pts_to r full_perm) x y (join m0 m1)
 
+let ptr_sel_depends_only_on_core (#a:Type0) (r:ref a)
+  (m0:Mem.hmem (ptr r))
+  : Lemma (ptr_sel' r m0 == ptr_sel' r (core_mem m0))
+  = let x = reveal (id_elim_exists #(erased a) (R.pts_to r full_perm) m0) in
+    let y = reveal (id_elim_exists #(erased a) (R.pts_to r full_perm) (core_mem m0)) in
+    R.pts_to_witinv r full_perm;
+    elim_wi (R.pts_to r full_perm) x y (core_mem m0)
+
+
 let ptr_sel r =
   Classical.forall_intro_2 (ptr_sel_depends_only_on r);
+  Classical.forall_intro (ptr_sel_depends_only_on_core r);
   ptr_sel' r
 
-(* AF : Keeping these assumed for now, the implementation should be straightforward *)
+friend Steel.Effect
 
-assume
-val alloc (#a:Type0) (x:a) : SteelSel (ref a)
-  vemp (fun r -> vptr r)
+let as_steelsel0 (#a:Type)
+  (#pre:pre_t) (#post:post_t a)
+  (#req:prop) (#ens:a -> prop)
+  (f:Eff.repr a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
+: repr a pre post (fun _ -> req) (fun _ x _ -> ens x)
+  = fun frame -> f frame
+
+
+let as_steelsel1 (#a:Type)
+  (#pre:pre_t) (#post:post_t a)
+  (#req:prop) (#ens:a -> prop)
+  (f:Eff.repr a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
+: SteelSel a pre post (fun _ -> req) (fun _ x _ -> ens x)
+  = SteelSel?.reflect (as_steelsel0 f)
+
+let as_steelsel (#a:Type)
+  (#pre:pre_t) (#post:post_t a)
+  (#req:prop) (#ens:a -> prop)
+  ($f:unit -> Eff.Steel a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
+: SteelSel a pre post (fun _ -> req) (fun _ x _ -> ens x)
+  = as_steelsel1 (reify (f ()))
+
+let vptr_tmp' (#a:Type) (r:ref a) (p:perm) (v:erased a) : vprop' =
+  { hp = R.pts_to r p v;
+    t = unit;
+    sel = fun _ -> ()}
+let vptr_tmp r p v : vprop = VUnit (vptr_tmp' r p v)
+
+val alloc0 (#a:Type0) (x:a) : SteelSel (ref a)
+  vemp (fun r -> vptr_tmp r full_perm x)
   (requires fun _ -> True)
-  (ensures fun _ r h1 -> h1 (vptr r) == x)
+  (ensures fun _ r h1 -> True)
 
-assume
-val read (#a:Type0) (r:ref a) : SteelSel a
+let alloc0 x = as_steelsel (fun _ -> R.alloc x)
+
+let intro_vptr (#a:Type) (r:ref a) (v:erased a) (m:mem) : Lemma
+  (requires interp (hp_of (vptr_tmp r full_perm v)) m)
+  (ensures interp (hp_of (vptr r)) m /\ sel_of (vptr r) m == reveal v)
+  = Mem.intro_h_exists v (R.pts_to r full_perm) m;
+    R.pts_to_witinv r full_perm
+
+let elim_vptr (#a:Type) (r:ref a) (v:erased a) (m:mem) : Lemma
+  (requires interp (hp_of (vptr r)) m /\ sel_of (vptr r) m == reveal v)
+  (ensures interp (hp_of (vptr_tmp r full_perm v)) m)
+  = Mem.elim_h_exists (R.pts_to r full_perm) m;
+    R.pts_to_witinv r full_perm
+
+let alloc x =
+  let r = alloc0 x in
+  change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x);
+  returnc r
+
+val read0 (#a:Type0) (r:ref a) (v:erased a) : SteelSel a
+  (vptr_tmp r full_perm v) (fun x -> vptr_tmp r full_perm x)
+  (requires fun _ -> True)
+  (ensures fun h0 x h1 -> x == reveal v)
+
+let read0 #a r v = as_steelsel (fun _ -> R.read #a #full_perm #v r)
+
+let read (#a:Type0) (r:ref a) : SteelSel a
   (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
   (ensures fun h0 x h1 -> h0 (vptr r) == h1 (vptr r) /\ x == h1 (vptr r))
+  = let h0 = get() in
+    let v = hide (h0 (vptr r)) in
+    change_slprop (vptr r) (vptr_tmp r full_perm v) v () (elim_vptr r v);
+    let x = read0 r v in
+    change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x);
+    returnc x
 
-assume
-val write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
+val write0 (#a:Type0) (v:erased a) (r:ref a) (x:a)
+  : SteelSel unit
+    (vptr_tmp r full_perm v) (fun _ -> vptr_tmp r full_perm x)
+    (fun _ -> True) (fun _ _ _ -> True)
+
+let write0 #a v r x = as_steelsel (fun _ -> R.write #a #v r x)
+
+let write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
   (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
   (ensures fun _ _ h1 -> x == h1 (vptr r))
+  = let h0 = get() in
+    let v = hide (h0 (vptr r)) in
+    change_slprop (vptr r) (vptr_tmp r full_perm v) v () (elim_vptr r v);
+    write0 v r x;
+    change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x)
 
-(* Should do this in a more princpled way once we have automated framing *)
-
-assume
-val rewrite_2 (#a:Type) (r1 r2:ref a) : SteelSel unit
-  (vptr r1 `star` vptr r2) (fun _ -> vptr r2 `star` vptr r1)
+(* should do this in a more princpled way once we have automated framing *)
+#push-options "--z3rlimit 50 --fuel 1 --ifuel 1"
+let rewrite_20 (p q:vprop) : repr unit
+  (p `star` q) (fun _ -> q `star` p)
   (requires fun _ -> True)
-  (ensures fun h0 _ h1 -> h0 (vptr r1) == h1 (vptr r1) /\ h0 (vptr r2) == h1 (vptr r2))
+  (ensures fun h0 _ h1 -> h0 p == h1 p /\ h0 q == h1 q)
+  = fun frame ->
+      let m = nmst_get () in
+      let h0 = mk_rmem (p `star` q) (core_mem m) in
+      let h1 = mk_rmem (q `star` p) (core_mem m) in
 
+     let vp = hide (h0 (p `star` q)) in
+     let vq = hide (h1 (q `star` p)) in
 
+     intro_star
+          (p `star` q)
+          (q `star` p)
+          (frame `Mem.star` locks_invariant Set.empty m)
+          vp vq
+          m
+          (fun _ -> ())
+#pop-options
+
+let rewrite_2 (p q:vprop) : SteelSel unit
+  (p `star` q) (fun _ -> q `star` p)
+  (requires fun h -> True)
+  (ensures fun h0 _ h1 -> h0 p == h1 p /\ h0 q == h1 q)
+  = SteelSel?.reflect (rewrite_20 p q)
 
 (* Going towards automation. This already verifies *)
 
