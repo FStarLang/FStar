@@ -37,7 +37,7 @@ let join_obs (o1:observability) (o2:observability) =
   then observable
   else unobservable
 
-val atomic_repr (a:Type u#a)
+val repr (a:Type u#a)
                 (opened_invariants:inames)
                 (g:observability)
                 (pre:slprop u#1)
@@ -48,7 +48,7 @@ val return (a:Type u#a)
            (x:a)
            (opened_invariants:inames)
            (p:a -> slprop u#1)
-  : atomic_repr a opened_invariants unobservable (p x) p
+  : repr a opened_invariants unobservable (p x) p
 
 val bind (a:Type u#a)
          (b:Type u#b)
@@ -58,26 +58,22 @@ val bind (a:Type u#a)
          (pre_f:slprop)
          (post_f:a -> slprop)
          (post_g:b -> slprop)
-         (f:atomic_repr a opened_invariants o1 pre_f post_f)
-         (g:(x:a -> atomic_repr b opened_invariants o2 (post_f x) post_g))
-  : Pure (atomic_repr b opened_invariants (join_obs o1 o2) pre_f post_g)
+         (f:repr a opened_invariants o1 pre_f post_f)
+         (g:(x:a -> repr b opened_invariants o2 (post_f x) post_g))
+  : Pure (repr b opened_invariants (join_obs o1 o2) pre_f post_g)
       (requires obs_at_most_one o1 o2)
       (ensures fun _ -> True)
 
 [@@allow_informative_binders]
 total
 reifiable reflectable
-layered_effect {
-  SteelAtomic : a:Type
-              -> opened_invariants:inames
-              -> o:observability
-              -> pre:slprop u#1
-              -> post:(a -> slprop u#1)
-              -> Effect
-  with
-  repr = atomic_repr;
-  return = return;
-  bind = bind
+effect {
+  SteelAtomic (a:Type)
+              (opened_invariants:inames)
+              (o:observability)
+              (pre:slprop u#1)
+              (post:a -> slprop u#1)
+  with { repr; return; bind }
 }
 
 inline_for_extraction
@@ -86,7 +82,7 @@ val lift_pure_steel_atomic (a:Type)
                            (p:slprop)
                            (wp:pure_wp a)
                            (f:eqtype_as_type unit -> PURE a wp)
-  : Pure (atomic_repr a opened_invariants unobservable p (fun _ -> p))
+  : Pure (repr a opened_invariants unobservable p (fun _ -> p))
          (requires wp (fun _ -> True))
          (ensures fun _ -> True)
 
