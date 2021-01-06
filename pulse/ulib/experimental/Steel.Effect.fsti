@@ -375,7 +375,7 @@ val add_action (#a:Type)
 
 (***** Bind and Subcomp relation with Steel.Atomic *****)
 
-open Steel.Effect.Atomic
+module Atomic = Steel.Effect.Atomic
 
 unfold
 let bind_req_atomic_steel (#a:Type) (#pre_f:slprop) (#post_f:a -> slprop) (req_g:(x:a -> fp_mprop (post_f x)))
@@ -389,14 +389,14 @@ let bind_ens_atomic_steel (#a:Type) (#b:Type)
 = fun _ y h2 -> exists x h1. (ens_g x) h1 y h2
 
 val bind_atomic_steel (a:Type) (b:Type)
-  (pre_f:slprop) (post_f:a -> slprop) (obs:observability)
+  (pre_f:slprop) (post_f:a -> slprop) (obs:Atomic.observability)
   (post_g:b -> slprop) (req_g:(x:a -> fp_mprop (post_f x))) (ens_g:(x:a -> fp_binary_mprop (post_f x) post_g))
-  (f:atomic_repr a Set.empty obs pre_f post_f) (g:(x:a -> repr b (post_f x) post_g (req_g x) (ens_g x)))
+  (f:Atomic.repr a Set.empty obs pre_f post_f) (g:(x:a -> repr b (post_f x) post_g (req_g x) (ens_g x)))
 : repr b pre_f post_g
     (bind_req_atomic_steel req_g)
     (bind_ens_atomic_steel ens_g)
 
-polymonadic_bind (SteelAtomic, Steel) |> Steel = bind_atomic_steel
+polymonadic_bind (Atomic.SteelAtomic, Steel) |> Steel = bind_atomic_steel
 
 unfold
 let subcomp_req_atomic_steel (a:Type) (pre_f:slprop) : fp_mprop pre_f = fun _ -> True
@@ -407,8 +407,8 @@ let subcomp_ens_atomic_steel (#a:Type) (pre_f:slprop) (post_f:a -> slprop)
 = fun _ _ _ -> True
 
 val subcomp_atomic_steel (a:Type)
-  (pre_f:slprop) (post_f:a -> slprop) (obs:observability)
-  (f:atomic_repr a Set.empty obs pre_f post_f)
+  (pre_f:slprop) (post_f:a -> slprop) (obs:Atomic.observability)
+  (f:Atomic.repr a Set.empty obs pre_f post_f)
 : repr a pre_f post_f (subcomp_req_atomic_steel a pre_f) (subcomp_ens_atomic_steel pre_f post_f)
 
-polymonadic_subcomp SteelAtomic <: Steel = subcomp_atomic_steel
+polymonadic_subcomp Atomic.SteelAtomic <: Steel = subcomp_atomic_steel

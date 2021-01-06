@@ -106,7 +106,7 @@ let repr a pre post req ens =
     (req_to_act_req req)
     (ens_to_act_ens ens)
 
-let returnc (a:Type u#a) (x:a) (p:a -> slprop) = fun _ -> x
+let return (a:Type u#a) (x:a) (p:a -> slprop) = fun _ -> x
 
 let bind a b pre_f post_f req_f ens_f post_g req_g ens_g f g
   = fun frame ->
@@ -262,7 +262,7 @@ let add_action f = Steel?.reflect (action_as_repr f)
 (***** Bind and Subcomp relation with Steel.Atomic *****)
 
 friend Steel.Effect.Atomic
-open Steel.Effect.Atomic
+//open Steel.Effect.Atomic
 
 #push-options "--z3rlimit 40"
 let bind_atomic_steel _ _ _ _ _ _ _ _ f g
