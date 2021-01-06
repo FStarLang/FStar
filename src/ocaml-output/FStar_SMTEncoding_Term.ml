@@ -1788,12 +1788,7 @@ and (mkPrelude : Prims.string -> Prims.string) =
         Term_sort, (Prims.of_int (9)), true);
       ((FStar_Pervasives_Native.fst boxRealFun),
         [((FStar_Pervasives_Native.snd boxRealFun), (Sort "Real"), true)],
-        Term_sort, (Prims.of_int (10)), true);
-      ("LexCons",
-        [("LexCons_0", Term_sort, true);
-        ("LexCons_1", Term_sort, true);
-        ("LexCons_2", Term_sort, true)], Term_sort, (Prims.of_int (11)),
-        true)] in
+        Term_sort, (Prims.of_int (10)), true)] in
     let bcons =
       let uu___ =
         let uu___1 =
@@ -2116,8 +2111,6 @@ let (mk_Precedes : term -> term -> term -> term -> FStar_Range.range -> term)
           fun r ->
             let uu___ = mkApp ("Prims.precedes", [x1; x2; x3; x4]) r in
             FStar_All.pipe_right uu___ mk_Valid
-let (mk_LexCons : term -> term -> term -> FStar_Range.range -> term) =
-  fun x1 -> fun x2 -> fun x3 -> fun r -> mkApp ("LexCons", [x1; x2; x3]) r
 let rec (n_fuel : Prims.int -> term) =
   fun n ->
     if n = Prims.int_zero
