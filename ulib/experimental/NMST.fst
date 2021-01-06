@@ -92,19 +92,9 @@ let if_then_else
     (fun s0 x s1 -> (p ==> ens_then s0 x s1) /\ ((~ p) ==> ens_else s0 x s1))
 
 reifiable reflectable
-layered_effect {
-  NMSTATE :
-    a:Type ->
-    state:Type u#2 ->
-    rel:P.preorder state ->
-    req:M.pre_t state ->
-    ens:M.post_t state a -> Effect
-  with
-    repr = repr;
-    return = return;
-    bind = bind;
-    subcomp = subcomp;
-    if_then_else = if_then_else
+effect {
+  NMSTATE (a:Type) (state:Type u#2) (rel:P.preorder state) (req:M.pre_t state) (ens:M.post_t state a)
+  with { repr; return; bind; subcomp; if_then_else }
 }
 
 let get (#state:Type u#2) (#rel:P.preorder state) ()
