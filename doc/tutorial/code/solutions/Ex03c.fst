@@ -27,25 +27,39 @@ let rec fibonacci_greater_than_arg n =
   | 2 -> ()
   | _ -> fibonacci_greater_than_arg (n-1)
 
-(*     
- Z3 proves the base case.
-  
+(*
  The proof uses the induction hypothesis:
    forall x, 2 <= x < n ==> fibonacci x >= x
-   
- Our goal is to prove that:
+
+ Z3 proves the base case, when n=2.
+
+ Our remaining goal is to prove that for n >= 3
   fibonacci n >= n or equivalently fibonacci (n-1) + fibonacci (n-2) > n
-  
- We make use of induction hypothesis to prove that 
-  fibonacci (n-1) >= n-1
-  
- For fibonacci (n-1) we use the property 
-   forall x, fibonacci x > 1 
-   
- This can be seen by giving fibonacci the stronger type
-   val fibonacci : nat -> Tot (r:nat{r>=1})
-   
- From this Z3 can proves the post condition 
+
+ From the induction hypothesis we have,
+   fibonacci(n - 1) >= n - 1
+
+ To conclude, it suffices to prove that prove that fibonacci(n - 2) >= 1.
+
+ Z3 is able to prove this as follows:
+
+ We have: fibonacci(n - 1) = fib (n - 2) + fib (n - 3) >= n - 1 > 1
+
+ Assume, for contradiction, that fibonacci (n - 2) = 0.
+   Then fibonacci (n - 3) > 1. (H)
+
+   If n = 3, then fibonacci(n - 2) = fibonacci(1) = 1. Which is a contradiction.
+
+   If n > 3, then
+     0 = //by assumption
+     fibonacci (n - 2) = //by definition
+     fibonacci (n - 3) + fibonacci (n - 4) >= //since fibonacci(n-4) : nat >= 0
+     fibonacci (n - 3) > //by (H), above
+     1
+
+   So, we have a contradiction.
+
+ So fibonacci (n - 2) >= 1
 *)
 
 // END: FibonacciGreaterThanArgProof
