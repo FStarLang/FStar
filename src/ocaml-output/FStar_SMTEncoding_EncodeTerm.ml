@@ -142,7 +142,7 @@ let (norm_with_steps :
           FStar_Pervasives_Native.Some uu___1 in
         FStar_Profiling.profile
           (fun uu___1 -> FStar_TypeChecker_Normalize.normalize steps env t)
-          uu___ "FStar.TypeChecker.SMTEncoding.EncodeTerm.norm_with_steps"
+          uu___ "FStar.SMTEncoding.EncodeTerm.norm_with_steps"
 let (normalize_refinement :
   FStar_TypeChecker_Env.steps ->
     FStar_TypeChecker_Env.env ->
@@ -159,8 +159,7 @@ let (normalize_refinement :
         FStar_Profiling.profile
           (fun uu___1 ->
              FStar_TypeChecker_Normalize.normalize_refinement steps env t)
-          uu___
-          "FStar.TypeChecker.SMTEncoding.EncodeTerm.normalize_refinement"
+          uu___ "FStar.SMTEncoding.EncodeTerm.normalize_refinement"
 let (whnf :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)

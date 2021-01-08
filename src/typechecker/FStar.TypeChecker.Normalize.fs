@@ -2739,6 +2739,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 let reflection_env_hook = BU.mk_ref None
 
 let normalize_with_primitive_steps ps s e t =
+  Profiling.profile (fun () ->
     let c = config' ps s e in
     reflection_env_hook := Some e;
     plugin_unfold_warn_ctr := 10;
@@ -2762,13 +2763,17 @@ let normalize_with_primitive_steps ps s e t =
       log_top c (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.term_to_string r) (string_of_int ms));
       r
     end
+  )
+  (Some (Ident.string_of_lid (Env.current_module e)))
+  "FStar.TypeChecker.Normalize.normalize_with_primitive_steps"
 
 let normalize s e t =
     Profiling.profile (fun () -> normalize_with_primitive_steps [] s e t)
                       (Some (Ident.string_of_lid (Env.current_module e)))
-                      "FStar.TypeChecker.Normalize"
+                      "FStar.TypeChecker.Normalize.normalize"
 
 let normalize_comp s e c =
+  Profiling.profile (fun () ->
     let cfg = config s e in
     reflection_env_hook := Some e;
     plugin_unfold_warn_ctr := 10;
@@ -2779,7 +2784,10 @@ let normalize_comp s e c =
                       norm_comp cfg [] c))
     in
     log_top cfg (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.comp_to_string c) (string_of_int ms));
-    c
+    c)
+  (Some (Ident.string_of_lid (Env.current_module e)))
+  "FStar.TypeChecker.Normalize.normalize_comp"
+    
 
 let normalize_universe env u = norm_universe (config [] env) [] u
 
