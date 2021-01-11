@@ -216,7 +216,7 @@ let (tc_data :
       fun se ->
         match se.FStar_Syntax_Syntax.sigel with
         | FStar_Syntax_Syntax.Sig_datacon
-            (c, _uvs, t, tc_lid, ntps, _mutual_tcs) ->
+            (c, _uvs, t, tc_lid, ntps, mutual_tcs) ->
             let uu___ = FStar_Syntax_Subst.univ_var_opening _uvs in
             (match uu___ with
              | (usubst, _uvs1) ->
@@ -636,7 +636,7 @@ let (tc_data :
                                                           (FStar_Syntax_Syntax.Sig_datacon
                                                              (c, _uvs1, t3,
                                                                tc_lid, ntps,
-                                                               []));
+                                                               mutual_tcs));
                                                         FStar_Syntax_Syntax.sigrng
                                                           =
                                                           (uu___11.FStar_Syntax_Syntax.sigrng);
