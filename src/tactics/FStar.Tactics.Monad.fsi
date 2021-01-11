@@ -5,7 +5,10 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.Tactics.Result
 open FStar.Tactics.Types
-module O   = FStar.Options
+
+module Range = FStar.Range
+module BU    = FStar.Util
+module O     = FStar.Options
 
 (* Type of tactics *)
 type tac<'a>
@@ -38,6 +41,18 @@ val traise : exn -> tac<'a>
  * and provide more structure. *)
 val fail : string -> tac<'a>
 
+(* Catch exceptions, restore UF graph on a failure *)
+val catch : tac<'a> -> tac<BU.either<exn,'a>>
+
+(* Catch exceptions, but keep UF graph at the time of the failure *)
+val recover : tac<'a> -> tac<BU.either<exn,'a>>
+
+(* Try running a tactic. If it fails, return None. *)
+val trytac : tac<'a> -> tac<option<'a>>
+
+(* As [trytac], but also catches exceptions and turns them into [None]. *)
+val trytac_exn : tac<'a> -> tac<option<'a>>
+
 (* Good old mapM *)
 val mapM : ('a -> tac<'b>) -> list<'a> -> tac<list<'b>>
 
@@ -49,7 +64,7 @@ val set_smt_goals  : list<goal> -> tac<unit>
 val add_goals      : list<goal> -> tac<unit>
 val add_smt_goals  : list<goal> -> tac<unit>
 
-(* Add goals to the env of the list *)
+(* Add goals to the end of the list *)
 val push_goals     : list<goal> -> tac<unit>
 val push_smt_goals : list<goal> -> tac<unit>
 
@@ -62,6 +77,10 @@ val dismiss_all : tac<unit>
 (* Replace the current goal with another *)
 val replace_cur : goal -> tac<unit>
 
+(* Get the option state for the current goal, or the global one
+if there are no goals. *)
+val getopts : tac<FStar.Options.optionstate>
+
 (* Add an implicit to the proofstate. The [all_implicits] field
  * is the only place where we keep track of open goals that need
  * to be solved. The [goals] and [smt_goals] fields are user-facing,
@@ -70,17 +89,20 @@ val add_implicits : implicits -> tac<unit>
 
 (* Create a new uvar, and keep track of it in the proofstate to
  * ensure we solve it. *)
-val new_uvar : string -> env -> typ -> tac<(term * ctx_uvar)>
+val new_uvar : string -> env -> typ -> Range.range -> tac<(term * ctx_uvar)>
 
 (* Create a squashed goal from a given formula *)
-val mk_irrelevant_goal : string -> env -> typ -> O.optionstate -> string -> tac<goal>
+val mk_irrelevant_goal : string -> env -> typ -> Range.range -> O.optionstate -> string -> tac<goal>
 
 (* Create an add an irrelevant goal, allows to set options and label *)
-val add_irrelevant_goal' : string -> env -> typ -> O.optionstate -> string -> tac<unit>
+val add_irrelevant_goal' : string -> env -> typ -> Range.range -> O.optionstate -> string -> tac<unit>
 
 (* Create an add an irrelevant goal, taking a [base_goal] as a template for
  * options and label (which seldom need to be changed) *)
 val add_irrelevant_goal : goal -> string -> env -> typ -> tac<unit>
+
+(* Create a goal from a typechecking guard. *)
+val goal_of_guard : string -> env -> term -> Range.range -> tac<goal>
 
 (* Run a tactic [t], and it fails with a [TacticFailure] exception,
  * add a note in the error message. *)

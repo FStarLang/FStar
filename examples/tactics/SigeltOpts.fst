@@ -12,12 +12,6 @@ let sp1 = assert (List.length [1] == 1)
 [@@expect_failure]
 let sp2 = assert (List.length [1] == 1)
 
-val add_check_with : term -> sigelt -> Tac sigelt
-let add_check_with opts se =
-  let attrs = sigelt_attrs se in
-  let t = `(check_with (`#opts)) in
-  set_sigelt_attrs (t :: attrs) se
-
 let tau () : Tac decls =
   match lookup_typ (top_env ()) ["SigeltOpts"; "sp1"] with
   | None -> fail "1"

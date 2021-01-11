@@ -40,7 +40,8 @@ SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug
   Bug1940b.fst Bug1940c.fst Bug1936.fst Bug1952a.fst Bug1952b.fst Bug1953.fst Bug1074.fst Bug442.fst Bug1954.fst \
   Bug1903.fst Bug1121a.fst Bug1121b.fst Bug1956.fst Bug1228.fst Bug829.fst Bug451.fst Bug1966a.fst Bug1966b.fst Bug1976.fst \
   Bug1986.fst Bug1995.fst Bug1507.fst Bug2001.fst Bug2004.fst Bug855a.fst Bug855b.fst Bug1097.fst Bug1918.fst Bug1390.fst Bug2031.fst \
-  Bug379.fst Bug1182a.fst Bug1182b.fst Bug1901.fst Bug1902.fst Bug258.fst Bug2055.fst Bug2081.fst Bug2099.fst Bug2106.fst
+  Bug379.fst Bug1182a.fst Bug1182b.fst Bug1901.fst Bug1902.fst Bug258.fst Bug2055.fst Bug2081.fst Bug2099.fst Bug2106.fst Bug2132.fst \
+  Bug2138.fst Bug2146.fst Bug2074.fst Bug2125a.fst Bug2125b.fst Bug2167.fst Bug2169.fst Bug2169b.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
@@ -146,13 +147,21 @@ verify-maybe-close: $(subst .fst,.verify,$(SHOULD_VERIFY_MAYBE_CLOSE))
 
 not-verify: $(subst .fst,.not-verify,$(SHOULD_NOT_VERIFY_CLOSED))
 
-Bug310.extract:
+Bug310.ml:
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug310 --codegen OCaml Bug310.fst
+
+Bug310.extract: Bug310.ml
 	diff -u --strip-trailing-cr Bug310.ml Bug310.ml.expected
 
-Bug2058.extract:
+Bug2058.ml:
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract Bug2058 --codegen OCaml Bug2058.fst
+
+Bug2058.extract: Bug2058.ml
 	diff -u --strip-trailing-cr Bug2058.ml Bug2058.ml.expected
+
+output-accept: Bug310.ml Bug2058.ml
+	cp Bug310.ml Bug310.ml.expected
+	cp Bug2058.ml Bug2058.ml.expected
 
 %.extract: %.fst
 	mkdir -p out_$*

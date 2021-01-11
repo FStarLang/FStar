@@ -239,6 +239,7 @@ and free_type_vars env t = match (unparen t).tm with
 
   | Requires (t, _)
   | Ensures (t, _)
+  | Decreases (t, _)
   | NamedTyp(_, t) -> free_type_vars env t
   | Paren t -> failwith "impossible"
   | Ascribed(t, t', tacopt) ->
@@ -260,7 +261,7 @@ and free_type_vars env t = match (unparen t).tm with
       let env, f =
         match bt with
         | Inl binder -> free_type_vars_b env binder
-        | Inr t -> env, free_type_vars env body
+        | Inr t -> env, free_type_vars env t
       in
       env, f@free) (env, []) binders in
     free@free_type_vars env body
@@ -622,9 +623,10 @@ let check_linear_pattern_variables pats r =
     | Pat_var x -> BU.set_add x S.no_names
     | Pat_cons(_, pats) ->
       let aux out (p, _) =
-          let intersection = BU.set_intersect (pat_vars p) out in
+          let p_vars = pat_vars p in
+          let intersection = BU.set_intersect p_vars out in
           if BU.set_is_empty intersection
-          then BU.set_union out (pat_vars p)
+          then BU.set_union out p_vars
           else
             let duplicate_bv = List.hd (BU.set_elements intersection) in
             raise_error ( Errors.Fatal_NonLinearPatternNotPermitted,
@@ -934,6 +936,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | Ensures (t, lopt) ->
       desugar_formula env t, noaqs
+
+    | Decreases (t, lopt) ->
+      desugar_term_maybe_top top_level env t
 
     | Attributes ts ->
         failwith "Attributes should not be desugared by desugar_term_maybe_top"
@@ -1669,8 +1674,8 @@ and desugar_comp r (allow_type_promotion:bool) env t =
       | Ensures _ -> true
       | _ -> false
     in
-    let is_app head (t, _) = match (unparen t).tm with
-      | App({tm=Var d}, _, _) -> (string_of_id (ident_of_lid d)) = head
+    let is_decreases (t, _) = match (unparen t).tm with
+      | Decreases _ -> true
       | _ -> false
     in
     let is_smt_pat (t,_) =
@@ -1691,7 +1696,6 @@ and desugar_comp r (allow_type_promotion:bool) env t =
           (* [C.smtpat_lid ; C.smtpatT_lid ; C.smtpatOr_lid] *)
       | _ -> false
     in
-    let is_decreases = is_app "decreases" in
     let pre_process_comp_typ (t:AST.term) =
       let head, args = head_and_args t in
       match head.tm with
@@ -1832,21 +1836,17 @@ and desugar_comp r (allow_type_promotion:bool) env t =
     let universes = List.map (fun (u, imp) -> desugar_universe u) universes in
     let result_arg, rest = List.hd args, List.tl args in
     let result_typ = desugar_typ env (fst result_arg) in
-    let rest = desugar_args env rest in
     let dec, rest =
-      let is_decrease (t, _) = match t.n with
-        | Tm_app({n=Tm_fvar fv}, [_]) -> S.fv_eq_lid fv C.decreases_lid
+      let is_decrease t = match (unparen (fst t)).tm with
+        | Decreases _ -> true
         | _ -> false
       in
       rest |> List.partition is_decrease
     in
+    let rest = desugar_args env rest in
+    let dec = desugar_args env dec in
+    let decreases_clause = List.map (fun (t, _) -> DECREASES t) dec in
 
-    let decreases_clause =
-      dec |> List.map (fun (t, _) ->
-        match t.n with
-        | Tm_app(_, [(arg, _)]) -> DECREASES arg
-        | _ -> failwith "impos")
-    in
     let no_additional_args =
         (* F# complains about not being able to use = on some types.. *)
         let is_empty (l:list<'a>) = match l with | [] -> true | _ -> false in

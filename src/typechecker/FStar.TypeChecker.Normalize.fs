@@ -84,7 +84,7 @@ type stack_elt =
  | Debug    of term * BU.time
 type stack = list<stack_elt>
 
-let head_of t = let hd, _ = U.head_and_args' t in hd
+let head_of t = let hd, _ = U.head_and_args_full t in hd
 
 let set_memo cfg (r:memo<'a>) (t:'a) =
   if cfg.memoize_lazy then
@@ -854,6 +854,10 @@ type should_unfold_res =
     | Should_unfold_fully
     | Should_unfold_reify
 
+(* Max number of warnings to print in a single run.
+Initialized below in normalize *)
+let plugin_unfold_warn_ctr : ref<int> = BU.mk_ref 0
+
 let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     let attrs = match Env.attrs_of_qninfo qninfo with
             | None -> []
@@ -943,14 +947,28 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
                     (Range.string_of_range (S.range_of_fv fv))
                     (string_of_res res)
                     );
-    match res with
-    | false, _, _ -> Should_unfold_no
-    | true, false, false -> Should_unfold_yes
-    | true, true, false -> Should_unfold_fully
-    | true, false, true -> Should_unfold_reify
-    | _ ->
-      failwith <| BU.format1 "Unexpected unfolding result: %s" (string_of_res res)
-
+    let r =
+      match res with
+      | false, _, _ -> Should_unfold_no
+      | true, false, false -> Should_unfold_yes
+      | true, true, false -> Should_unfold_fully
+      | true, false, true -> Should_unfold_reify
+      | _ ->
+        failwith <| BU.format1 "Unexpected unfolding result: %s" (string_of_res res)
+    in
+    if cfg.steps.unfold_tac                             // If running a tactic,
+       && (r <> Should_unfold_no)                       // actually unfolding this fvar
+       && BU.for_some (U.is_fvar PC.plugin_attr) attrs  // it is a plugin
+       && !plugin_unfold_warn_ctr > 0                   // and we haven't raised too many warnings
+    then begin
+      // then warn about it
+      Errors.log_issue fv.fv_name.p
+                       (Errors.Warning_UnfoldPlugin,
+                        BU.format1 "Unfolding name which is marked as a plugin: %s"
+                                    (Print.fv_to_string fv));
+      plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1
+    end;
+    r
 let decide_unfolding cfg env stack rng fv qninfo (* : option<(cfg * stack)> *) =
     let res =
         should_unfold cfg (fun cfg -> should_reify cfg stack) fv qninfo
@@ -1204,15 +1222,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       end
                   end
 
-                // TODO: GM: This bit is shady, and it breaks unfold_fully across lambdas
-                | Cfg cfg :: stack ->
-                  norm cfg env stack t
-
                 | MemoLazy r :: stack ->
                   set_memo cfg r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
                   log cfg  (fun () -> BU.print1 "\tSet memo %s\n" (Print.term_to_string t));
                   norm cfg env stack t
 
+                | Cfg _ :: _
                 | Match _::_
                 | Debug _::_
                 | Meta _::_
@@ -1505,21 +1520,14 @@ let rec norm : cfg -> env -> stack -> term -> term =
         end //Tm_meta
 
         | Tm_delayed _ ->
-          let t = SS.compress t in
-          norm cfg env stack t
+          failwith "impossible: Tm_delayed on norm"
 
         | Tm_uvar _ ->
-          let t = SS.compress t in
-          match t.n with
-          | Tm_uvar _ ->
-            if cfg.steps.check_no_uvars
-            then failwith (BU.format2 "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
-                                    (Range.string_of_range t.pos)
-                                    (Print.term_to_string t))
-            else rebuild cfg env stack (inline_closure_env cfg env [] t)
-
-          | _ ->
-            norm cfg env stack t
+          if cfg.steps.check_no_uvars
+          then failwith (BU.format2 "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
+                                  (Range.string_of_range t.pos)
+                                  (Print.term_to_string t))
+          else rebuild cfg env stack (inline_closure_env cfg env [] t)
 
 and do_unfold_fv cfg env stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
@@ -2049,7 +2057,7 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term =
     let is_applied (bs:binders) (t : term) : option<bv> =
         if cfg.debug.wpe then
             BU.print2 "WPE> is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
-        let hd, args = U.head_and_args' t in
+        let hd, args = U.head_and_args_full t in
         match (SS.compress hd).n with
         | Tm_name bv when args_are_binders args bs ->
             if cfg.debug.wpe then
@@ -2735,17 +2743,24 @@ let reflection_env_hook = BU.mk_ref None
 let normalize_with_primitive_steps ps s e t =
     let c = config' ps s e in
     reflection_env_hook := Some e;
+    plugin_unfold_warn_ctr := 10;
     log_cfg c (fun () -> BU.print1 "Cfg = %s\n" (cfg_to_string c));
     if is_nbe_request s then begin
       log_top c (fun () -> BU.print1 "Starting NBE for (%s) {\n" (Print.term_to_string t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
-      let (r, ms) = BU.record_time (fun () -> nbe_eval c s t) in
+      let (r, ms) = Errors.with_ctx "While normalizing a term via NBE" (fun () ->
+                      BU.record_time (fun () ->
+                        nbe_eval c s t))
+      in
       log_top c (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.term_to_string r) (string_of_int ms));
       r
     end else begin
       log_top c (fun () -> BU.print1 "Starting normalizer for (%s) {\n" (Print.term_to_string t));
       log_top c (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string c));
-      let (r, ms) = BU.record_time (fun () -> norm c [] [] t) in
+      let (r, ms) = Errors.with_ctx "While normalizing a term" (fun () ->
+                      BU.record_time (fun () ->
+                        norm c [] [] t))
+      in
       log_top c (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.term_to_string r) (string_of_int ms));
       r
     end
@@ -2758,9 +2773,13 @@ let normalize s e t =
 let normalize_comp s e c =
     let cfg = config s e in
     reflection_env_hook := Some e;
+    plugin_unfold_warn_ctr := 10;
     log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
     log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (cfg_to_string cfg));
-    let (c, ms) = BU.record_time (fun () -> norm_comp cfg [] c) in
+    let (c, ms) = Errors.with_ctx "While normalizing a computation type" (fun () ->
+                    BU.record_time (fun () ->
+                      norm_comp cfg [] c))
+    in
     log_top cfg (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.comp_to_string c) (string_of_int ms));
     c
 
@@ -2891,144 +2910,6 @@ let eta_expand (env:Env.env) (t:term) : term =
         eta_expand_with_type env t ty
       end
 
-//////////////////////////////////////////////////////////////////
-//Eliminating all unification variables and delayed substitutions in a sigelt
-//////////////////////////////////////////////////////////////////
-
-let rec elim_delayed_subst_term (t:term) : term =
-    let mk x = S.mk x t.pos in
-    let t = SS.compress t in
-    let elim_bv x = {x with sort=elim_delayed_subst_term x.sort} in
-    match t.n with
-    | Tm_delayed _ -> failwith "Impossible"
-    | Tm_bvar _
-    | Tm_name _
-    | Tm_fvar _
-    | Tm_uinst _
-    | Tm_constant _
-    | Tm_type _
-    | Tm_unknown -> t
-
-    (* We also use this function to unfold lazy embeddings:
-     * they may contain lambdas and cannot be written into
-     * .checked files. *)
-    | Tm_lazy li ->
-      elim_delayed_subst_term (U.unfold_lazy li)
-
-    | Tm_abs(bs, t, rc_opt) ->
-      let elim_rc rc =
-        {rc with
-            residual_typ=BU.map_opt rc.residual_typ elim_delayed_subst_term;
-            residual_flags=elim_delayed_subst_cflags rc.residual_flags}
-      in
-      mk (Tm_abs(elim_delayed_subst_binders bs,
-                 elim_delayed_subst_term t,
-                 BU.map_opt rc_opt elim_rc))
-
-    | Tm_arrow(bs, c) ->
-      mk (Tm_arrow(elim_delayed_subst_binders bs, elim_delayed_subst_comp c))
-
-    | Tm_refine(bv, phi) ->
-      mk (Tm_refine(elim_bv bv, elim_delayed_subst_term phi))
-
-    | Tm_app(t, args) ->
-      mk (Tm_app(elim_delayed_subst_term t, elim_delayed_subst_args args))
-
-    | Tm_match(t, branches) ->
-      let rec elim_pat (p:pat) =
-        match p.v with
-        | Pat_var x ->
-          {p with v=Pat_var (elim_bv x)}
-        | Pat_wild x ->
-          {p with v=Pat_wild (elim_bv x)}
-        | Pat_dot_term(x, t0) ->
-          {p with v=Pat_dot_term(elim_bv x, elim_delayed_subst_term t0)}
-        | Pat_cons (fv, pats) ->
-          {p with v=Pat_cons(fv, List.map (fun (x, b) -> elim_pat x, b) pats)}
-        | _ -> p
-      in
-      let elim_branch (pat, wopt, t) =
-          (elim_pat pat,
-           BU.map_opt wopt elim_delayed_subst_term,
-           elim_delayed_subst_term t)
-      in
-      mk (Tm_match(elim_delayed_subst_term t, List.map elim_branch branches))
-
-    | Tm_ascribed(t, a, lopt) ->
-      let elim_ascription (tc, topt) =
-        (match tc with
-         | Inl t -> Inl (elim_delayed_subst_term t)
-         | Inr c -> Inr (elim_delayed_subst_comp c)),
-        BU.map_opt topt elim_delayed_subst_term
-      in
-      mk (Tm_ascribed(elim_delayed_subst_term t, elim_ascription a, lopt))
-
-    | Tm_let(lbs, t) ->
-      let elim_lb lb =
-         {lb with
-             lbtyp = elim_delayed_subst_term lb.lbtyp;
-             lbdef = elim_delayed_subst_term lb.lbdef }
-      in
-      mk (Tm_let((fst lbs, List.map elim_lb (snd lbs)),
-                  elim_delayed_subst_term t))
-
-    | Tm_uvar(u,s) ->
-      mk (Tm_uvar(u,s)) //explicitly don't descend into (bs,t) to not break sharing there
-
-    | Tm_quoted (tm, qi) ->
-      let qi = S.on_antiquoted elim_delayed_subst_term qi in
-      mk (Tm_quoted (elim_delayed_subst_term tm, qi))
-
-    | Tm_meta(t, md) ->
-      mk (Tm_meta(elim_delayed_subst_term t, elim_delayed_subst_meta md))
-
-and elim_delayed_subst_cflags flags =
-    List.map
-        (function
-        | DECREASES t -> DECREASES (elim_delayed_subst_term t)
-        | f -> f)
-        flags
-
-and elim_delayed_subst_comp (c:comp) : comp =
-    let mk x = S.mk x c.pos in
-    match c.n with
-    | Total(t, uopt) ->
-      mk (Total(elim_delayed_subst_term t, uopt))
-    | GTotal(t, uopt) ->
-      mk (GTotal(elim_delayed_subst_term t, uopt))
-    | Comp ct ->
-      let ct =
-        {ct with
-            result_typ=elim_delayed_subst_term ct.result_typ;
-            effect_args=elim_delayed_subst_args ct.effect_args;
-            flags=elim_delayed_subst_cflags ct.flags} in
-      mk (Comp ct)
-
-and elim_delayed_subst_meta = function
-  | Meta_pattern (names, args) -> Meta_pattern(List.map elim_delayed_subst_term names, List.map elim_delayed_subst_args args)
-  | Meta_monadic(m, t) -> Meta_monadic(m, elim_delayed_subst_term t)
-  | Meta_monadic_lift(m1, m2, t) -> Meta_monadic_lift(m1, m2, elim_delayed_subst_term t)
-  | m -> m
-
-and elim_delayed_subst_args args =
-    List.map (fun (t, q) -> elim_delayed_subst_term t, q) args
-
-and elim_delayed_subst_aqual (q:aqual) : aqual =
-  match q with
-  | Some (S.Meta (Arg_qualifier_meta_tac t)) ->
-    Some (S.Meta (Arg_qualifier_meta_tac (elim_delayed_subst_term t)))
-
-  | Some (S.Meta (Arg_qualifier_meta_attr t)) ->
-    Some (S.Meta (Arg_qualifier_meta_attr (elim_delayed_subst_term t)))
-
-  | q -> q
-
-and elim_delayed_subst_binders bs =
-    List.map (fun (x, q) ->
-                let x = {x with sort=elim_delayed_subst_term x.sort} in
-                let q = elim_delayed_subst_aqual q in
-                x, q) bs
-
 let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (tc:either<typ, comp>) =
     let t =
       match binders, tc with
@@ -3040,7 +2921,7 @@ let elim_uvars_aux_tc (env:Env.env) (univ_names:univ_names) (binders:binders) (t
     let univ_names, t = Subst.open_univ_vars univ_names t in
     let t = remove_uvar_solutions env t in
     let t = Subst.close_univ_vars univ_names t in
-    let t = elim_delayed_subst_term t in
+    let t = Subst.deep_compress t in
     let binders, tc =
         match binders with
         | [] -> [], Inl t
@@ -3064,6 +2945,7 @@ let elim_uvars_aux_c env univ_names binders c =
 
 // GM: Maybe this should take a pass over the attributes just to be safe?
 let rec elim_uvars (env:Env.env) (s:sigelt) =
+    let s = { s with sigattrs = List.map deep_compress s.sigattrs } in
     match s.sigel with
     | Sig_inductive_typ (lid, univ_names, binders, typ, lids, lids') ->
       let univ_names, binders, typ = elim_uvars_aux_t env univ_names binders typ in
@@ -3083,7 +2965,7 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
     | Sig_let((b, lbs), lids) ->
       let lbs = lbs |> List.map (fun lb ->
         let opening, lbunivs = Subst.univ_var_opening lb.lbunivs in
-        let elim t = elim_delayed_subst_term (Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t))) in
+        let elim t = Subst.deep_compress (Subst.close_univ_vars lbunivs (remove_uvar_solutions env (Subst.subst opening t))) in
         let lbtyp = elim lb.lbtyp in
         let lbdef = elim lb.lbdef in
         {lb with lbunivs = lbunivs;

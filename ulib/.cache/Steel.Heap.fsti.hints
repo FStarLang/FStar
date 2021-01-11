@@ -1,5 +1,5 @@
 [
-  "§\u0017ñ×ååI†\u0018øÈG4 Æ®",
+  "ÄM›™{H(î%%}v©?äû",
   [
     [
       "Steel.Heap.join_commutative",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "577cdee5df73c1fb3ea621702c1dbcce"
+      "765a8860dd1e2061c0389a578a07a240"
     ],
     [
       "Steel.Heap.disjoint_join",
@@ -20,7 +20,7 @@
       1,
       [ "@query" ],
       0,
-      "f9f2ae30412ff41ad0d57f3925b2d952"
+      "014e2d92cc64fe4b3a68372b868a1bd8"
     ],
     [
       "Steel.Heap.join_associative",
@@ -33,7 +33,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c1040b2a890e117d5663d2041e8a4659"
+      "4481fe9ce693a6a56f1f70b98d0838fd"
     ],
     [
       "Steel.Heap.heap_prop_is_affine",
@@ -47,7 +47,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "a5ca07117abee34af6a2ba512c255b00"
+      "8c6ecfe95b4ea9183dbf55a518d8f153"
     ],
     [
       "Steel.Heap.pts_to_compatible",
@@ -56,7 +56,7 @@
       1,
       [ "@query" ],
       0,
-      "ddb553d1b8cda1f08930e6837a6ea1b0"
+      "4a3cfc990c73a4021dce8b359e10c5dc"
     ],
     [
       "Steel.Heap.intro_star",
@@ -68,7 +68,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "9c3ded3958d21fdb46f52b96b492f4ab"
+      "2fc5c8cb4be09a971cb254299fe00dd4"
     ],
     [
       "Steel.Heap.pure",
@@ -80,7 +80,7 @@
         "interpretation_Tm_abs_631a29915bf9a085ae2d714058f48fbf"
       ],
       0,
-      "6e55948fca68e05e94dcd1c2081044d8"
+      "b391050f2dbbaca7d2f1f86c589732f9"
     ],
     [
       "Steel.Heap.is_frame_preserving",
@@ -89,7 +89,16 @@
       1,
       [ "@query" ],
       0,
-      "f93cdba696f62fe53e4cc4d873543163"
+      "02e85125fb5245feca038b1dacdb3056"
+    ],
+    [
+      "Steel.Heap.action_with_frame",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "efd23fab5cc283f1126be441893eb02d"
     ],
     [
       "Steel.Heap.action_framing",
@@ -105,7 +114,7 @@
         "refinement_interpretation_Tm_refine_edbdae9d6b6624a6ec3f6b429364c960"
       ],
       0,
-      "84f4c5bc6c18a5bc600576aef938d002"
+      "b41da9956ea46906e43513e9b7aa900f"
     ],
     [
       "Steel.Heap.sel_v",
@@ -114,7 +123,7 @@
       1,
       [ "@query" ],
       0,
-      "3bb9cd2fa6fbe521072c50fa4ce4f2a9"
+      "c0c75ca2ae20e52d2b1d7049374d9828"
     ],
     [
       "Steel.Heap.witnessed_ref",
@@ -123,7 +132,16 @@
       1,
       [ "@query" ],
       0,
-      "747afdae55dc1a695a4d51b3139f58c8"
+      "766aa27d83e81d27b28b4ff40d531992"
+    ],
+    [
+      "Steel.Heap.select_refine",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "beec4785ba47190434e1050f0baf9e4b"
     ],
     [
       "Steel.Heap.split_action",
@@ -135,7 +153,7 @@
         "refinement_interpretation_Tm_refine_782bbf7acd60ae0036bd61a1f4d3807b"
       ],
       0,
-      "166c167f5e4e7acbfe84a68c36b8ae5e"
+      "70fc338d03347484f85069328239d215"
     ],
     [
       "Steel.Heap.gather_action",
@@ -147,7 +165,7 @@
         "refinement_interpretation_Tm_refine_625413e9a3a548e616103efddf1886c4"
       ],
       0,
-      "b4b14f2f42414b8f9418a0e79095b32f"
+      "8a177e2945b502182cd75717b7542743"
     ],
     [
       "Steel.Heap.extend",
@@ -160,7 +178,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "2b480842658271d16439bc6d9ec862cc"
+      "f6508e9268b3a667c3d51b9e2d5cb116"
     ],
     [
       "Steel.Heap.id_elim_star",
@@ -169,7 +187,7 @@
       1,
       [ "@query" ],
       0,
-      "f396620a8ff6aa74f4a879dca1b6b94a"
+      "fae9e40a983b5dfec1ffa13176ce93bd"
     ],
     [
       "Steel.Heap.is_frame_monotonic",
@@ -183,7 +201,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "0b393388cc0eebdff7c9363e7edc85de"
+      "8046dac60af9a7c083082e8d2d359a21"
     ]
   ]
 ]

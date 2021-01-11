@@ -1,12 +1,11 @@
 ## Table of Contents ##
 
-  * [Table of Contents](#table-of-contents)
   * [Online editor](#online-editor)
   * [OPAM package](#opam-package)
-  * [Binary releases](#binary-releases)
+  * [Binary package](#binary-package)
     * [Testing a binary package](#testing-a-binary-package)
-    * [Chocolatey Package on Windows](#chocolatey-package-on-windows)
   * [Running F* from a docker image](#running-f-from-a-docker-image)
+  * [Chocolatey Package on Windows](#chocolatey-package-on-windows)
   * [Building F* from the OCaml sources](#building-f-from-the-ocaml-sources)
     * [Prerequisites: Working OCaml setup](#prerequisites-working-ocaml-setup)
       * [Instructions for Windows](#instructions-for-windows)
@@ -51,7 +50,7 @@ Note: On MacOS you will additionally need to install `coreutils`
 via Homebrew or Macports for the OPAM package of F\* to work
 (see [issue #469](https://github.com/FStarLang/FStar/issues/469)).
 
-## Binary releases ##
+## Binary package ##
 
 Every year or so we release [F\* binaries on GitHub] (for Windows, Mac, and Linux)
 and for Windows and Linux we also try to provide [automatic weekly builds].
@@ -76,7 +75,7 @@ running the following commands. (Note: On Windows this requires Cygwin and `make
 
         $ export PATH=/path/to/fstar/bin:$PATH
         $ fstar.exe --version
-        F* 0.9.7.0~dev
+        F* 0.9.7.0-alpha1
         platform=Linux_x86_64
         compiler=OCaml 4.09.1
         date=yyyy-mm-ddThh:nn:ss+02:00
@@ -85,8 +84,8 @@ running the following commands. (Note: On Windows this requires Cygwin and `make
         Z3 version 4.8.5 - 64 bit
 
    Note: if you are using the binary package and extracted it to, say, the
-   `fstar` directory, then both `fstar.exe` and the right version of `z3` are in
-   the `fstar/bin` directory.
+   `/path/to/fstar` directory, then both `fstar.exe` and the right version of
+   `z3` are in the `path/to/fstar/bin` directory.
 
 2. Run the micro benchmarks:
 
@@ -140,9 +139,23 @@ running the following commands. (Note: On Windows this requires Cygwin and `make
          like this `Unix.Unix_error(Unix.ENOMEM, "fork", "")`
          you can increase the limits with `ulimit -n 4000`.
 
-### Chocolatey Package on Windows ###
+## Running F\* from a docker image ##
 
-On windows you can use chocolatey package manager to install and update fstar
+An alternative to installing binaries is to install a docker image.
+We currently provide the following two on docker hub: `fstarlang/fstar-emacs`
+with emacs support and `fstarlang/fstar` for purists.
+The image is automatically kept up to date through a cloud build.
+
+You only have to install docker and an X server for your platform and you are good to go.
+See [Running F\* from a docker image](https://github.com/FStarLang/FStar/wiki/Running-F%2A-from-a-docker-image)
+for the details on how to use docker.
+
+## Chocolatey Package on Windows ##
+
+On windows you can use chocolatey package manager to install and update the
+latest released version of F\*. (Keep in mind that you will often get an old
+version of F\* this way, so unless a release happened recently we don't really
+recommend it.)
 
     > choco install fstar
 
@@ -152,19 +165,10 @@ or
 
 you can find the package description [here](https://chocolatey.org/packages/FStar)
 
-## Running F\* from a docker image ##
-
-An alternative to installing binaries is to install a docker image.
-We currently provide the following two on docker hub: `fstarlang/fstar-emacs`
-with emacs support and `fstarlang/fstar` for purists.
-The image is automatically kept up to date through a cloud build.
-
-You only have to install docker and an X server for your platform and you are good to go.
-See [Running F\* from a docker image](https://github.com/FStarLang/FStar/wiki/Running-F%2A-from-a-docker-image) for the details on how to use docker.
-
 ## Building F\* from the OCaml sources ##
 
-If you have a serious interest in F\* then we recommend that you build F\* from the sources on GitHub (the `master` branch).
+If you have a serious interest in F\* then we recommend that you build
+F\* from the sources on GitHub (the `master` branch).
 
 **Short version**:
 Once you have a [working OCaml setup](#prerequisites-working-ocaml-setup),
@@ -286,22 +290,23 @@ special `flexlink` technology for this. See `examples/crypto` and
 
 ### Step 2l. Building the F\* libraries ###
 
-A convenience make target exists for this:
+Just run:
 
-    $ make libs -j6
+    $ make -C ulib/ -j6
 
 It does two things:
 
 1. It verifies the F\* standard library, producing `.checked` files that cache
-   definitions to speed up subsequent usage. You can do this part separately with:
-
-        $ make -C ulib -j6
+   definitions to speed up subsequent usage.
 
 2. It builds the various OCaml libraries (`fstar-compiler-lib`, `fstarlib`,
    `fstartaclib`), needed for building OCaml code extracted from F\*, native
    tactics, etc. You can build this part separately with:
 
-        $ make -C ulib/ml -j6
+        $ make libs
+
+   (this target will also rebuild `fstar.exe`, since these libraries tightly
+   depend on the executable). This rule does NOT verify anything.
 
 ## Bootstrapping F\* in OCaml
 
@@ -326,7 +331,8 @@ A convenience Makefile target is available to run all three steps:
 
 ### Step 2b. Extract the sources of F\* itself to OCaml ###
 
-1. Make sure you follow the instructions above to get a [working OCaml setup]().
+1. Make sure you follow the instructions above to get a
+   [working OCaml setup](#prerequisites-working-ocaml-setup).
 
 2. Once you satisfy the prerequisites for your platform,
    translate the F\* sources to OCaml using F\* by running:

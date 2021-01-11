@@ -191,8 +191,8 @@ let () =
      * like which embeddings are needed for the arguments, but more annoyingly the underlying
      * implementation. Would be nice to have something better in the not-so-long run. *)
     [ mk_total_step_1'_psc 0 "tracepoint"
-        tracepoint E.e_proofstate e_unit
-        tracepoint E.e_proofstate_nbe NBET.e_unit;
+        tracepoint_with_psc E.e_proofstate e_bool
+        tracepoint_with_psc E.e_proofstate_nbe NBET.e_bool;
 
       mk_total_step_2' 0 "set_proofstate_range"
         set_proofstate_range E.e_proofstate e_range E.e_proofstate
@@ -358,6 +358,14 @@ let () =
         dump e_string e_unit
         dump NBET.e_string NBET.e_unit;
 
+      mk_tac_step_2 0 "dump_all"
+        dump_all e_bool      e_string      e_unit
+        dump_all NBET.e_bool NBET.e_string NBET.e_unit;
+
+      mk_tac_step_2 0 "dump_uvars_of"
+        dump_uvars_of E.e_goal      e_string      e_unit
+        dump_uvars_of E.e_goal_nbe NBET.e_string NBET.e_unit;
+
       mk_tac_step_3 0 "ctrl_rewrite"
         ctrl_rewrite E.e_direction (e_tactic_1 RE.e_term (e_tuple2 e_bool E.e_ctrl_flag))
                                    (e_tactic_thunk e_unit)
@@ -366,9 +374,9 @@ let () =
                                        (e_tactic_nbe_thunk NBET.e_unit)
                                         NBET.e_unit;
 
-      mk_tac_step_1 0 "trefl"
-        trefl   e_unit e_unit
-        trefl   NBET.e_unit NBET.e_unit;
+      mk_tac_step_1 0 "t_trefl"
+        t_trefl   e_bool e_unit
+        t_trefl   NBET.e_bool NBET.e_unit;
 
       mk_tac_step_1 0 "dup"
         dup     e_unit e_unit
@@ -414,6 +422,10 @@ let () =
         unify_env RE.e_env RE.e_term RE.e_term e_bool
         unify_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
 
+      mk_tac_step_3 0 "unify_guard_env"
+        unify_guard_env RE.e_env RE.e_term RE.e_term e_bool
+        unify_guard_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
+
       mk_tac_step_3 0 "match_env"
         match_env RE.e_env RE.e_term RE.e_term e_bool
         match_env NRE.e_env NRE.e_term NRE.e_term NBET.e_bool;
@@ -450,6 +462,10 @@ let () =
         lset e_any e_string e_any e_unit
         (fun _ _ _ -> fail "sorry, `lset` does not work in NBE") NBET.e_any NBET.e_string NBET.e_any NBET.e_unit;
 
+      mk_tac_step_1 1 "set_urgency"
+        set_urgency e_int e_unit
+        set_urgency NBET.e_int NBET.e_unit;
+
     ]
 
 let unembed_tactic_1_alt (ea:embedding<'a>) (er:embedding<'r>) (f:term) (ncb:norm_cb) : option<('a -> tac<'r>)> =
@@ -470,18 +486,19 @@ let e_tactic_1_alt (ea: embedding<'a>) (er:embedding<'r>): embedding<('a -> (pro
 
 
 let report_implicits rng (is : Env.implicits) : unit =
-    let errs = List.map (fun imp ->
-                (Err.Error_UninstantiatedUnificationVarInTactic, BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
+  is |> List.iter (fun imp ->
+    Errors.log_issue rng
+                (Err.Error_UninstantiatedUnificationVarInTactic,
+                 BU.format3 ("Tactic left uninstantiated unification variable %s of type %s (reason = \"%s\")")
                              (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
                              (Print.term_to_string imp.imp_uvar.ctx_uvar_typ)
-                             imp.imp_reason,
-                 rng)) is in
-    Err.add_errors errs;
-    Err.stop_if_err ()
+                             imp.imp_reason));
+  Err.stop_if_err ()
 
 let run_tactic_on_ps
-  (rng_tac : Range.range)
+  (rng_call : Range.range)
   (rng_goal : Range.range)
+  (background : bool)
   (e_arg : embedding<'a>)
   (arg : 'a)
   (e_res : embedding<'b>)
@@ -490,6 +507,8 @@ let run_tactic_on_ps
   : list<goal> // remaining goals
   * 'b // return value
   = let env = ps.main_context in
+    let env = { env with enable_defer_to_tac = false } in
+    let ps = { ps with main_context = env } in
     if !tacdbg then
         BU.print1 "Typechecking tactic: (%s) {\n" (Print.term_to_string tactic);
 
@@ -504,8 +523,13 @@ let run_tactic_on_ps
     Err.stop_if_err ();
     let tau = unembed_tactic_1 e_arg e_res tactic FStar.Syntax.Embeddings.id_norm_cb in
 
-    (* if !tacdbg then *)
-    (*     BU.print1 "Running tactic with goal = (%s) {\n" (Print.term_to_string typ); *)
+    if !tacdbg then
+    begin
+        BU.print1 "Running tactic with initial proof state (%s implicits) {\n"
+                  (string_of_int (List.length ps.all_implicits));
+        FStar.Tactics.Printing.do_dump_proofstate ps "Before running tactic";
+        BU.print_string "}\n"
+    end;
     let res, ms = BU.record_time (fun () -> run_safe (tau arg) ps) in
     if !tacdbg then
         BU.print_string "}\n";
@@ -525,25 +549,28 @@ let run_tactic_on_ps
                   (ps.goals @ ps.smt_goals);
 
         // Check that all implicits were instantiated
+        let print_implicit imp =
+          BU.format2 "\n(uvar=%s, sol=%s)"
+                      (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)
+                      (match FStar.Syntax.Unionfind.find imp.imp_uvar.ctx_uvar_head with
+                       | None -> "UNSOLVED"
+                       | Some t -> Print.term_to_string t)
+        in
         if !tacdbg then
-            BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list
-                                                                    (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
-                                                                    ps.all_implicits);
+            BU.print2 "About to check %s tactic implicits{: %s}\n"
+              (string_of_int (List.length ps.all_implicits))
+              (FStar.Common.string_of_list print_implicit ps.all_implicits);
         let g = {Env.trivial_guard with TcComm.implicits=ps.all_implicits} in
         let g = TcRel.solve_deferred_constraints env g in
         if !tacdbg then
-            BU.print2 "Checked %s implicits (1): %s\n"
-                        (string_of_int (List.length ps.all_implicits))
-                        (FStar.Common.string_of_list
-                                (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
-                                ps.all_implicits);
+            BU.print2 "After solve_deffered_constraints %s implicits{: %s}\n"
+                        (string_of_int (List.length g.implicits))
+                        (FStar.Common.string_of_list print_implicit g.implicits);
         let g = TcRel.resolve_implicits_tac env g in
         if !tacdbg then
-            BU.print2 "Checked %s implicits (2): %s\n"
-                        (string_of_int (List.length ps.all_implicits))
-                        (FStar.Common.string_of_list
-                                (fun imp -> Print.ctx_uvar_to_string imp.imp_uvar)
-                                ps.all_implicits);
+            BU.print2 "After resolve_implicits_tac %s implicits{: %s}\n"
+                        (string_of_int (List.length g.implicits))
+                        (FStar.Common.string_of_list print_implicit g.implicits);
         report_implicits rng_goal g.implicits;
         // /implicits
 
@@ -562,6 +589,13 @@ let run_tactic_on_ps
             | e ->
                 raise e
         in
+        let rng =
+          if background
+          then match ps.goals with
+               | g::_ -> g.goal_ctx_uvar.ctx_uvar_range
+               | _ -> rng_call
+          else ps.entry_range
+        in
         Err.raise_error (Err.Fatal_UserTacticFailure,
-                            BU.format1 "user tactic failed: %s" (texn_to_string e))
-                          ps.entry_range
+                            BU.format1 "user tactic failed: `%s`" (texn_to_string e))
+                          rng

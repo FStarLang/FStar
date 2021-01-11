@@ -39,13 +39,13 @@ module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst
 
 let is_flex t =
-  let head, _args = U.head_and_args t in
+  let head, _args = U.head_and_args_full t in
   match (SS.compress head).n with
   | Tm_uvar _ -> true
   | _ -> false
 
 let flex_uvar_head t =
-    let head, _args = U.head_and_args t in
+    let head, _args = U.head_and_args_full t in
     match (SS.compress head).n with
     | Tm_uvar (u, _) -> u
     | _ -> failwith "Not a flex-uvar"
@@ -126,16 +126,19 @@ let solve_deferred_to_tactic_goals env g =
       | TProb tp when tp.relation=EQ ->
         let env, _ = Env.clear_expected_typ env in
         let env = {env with gamma=tp.logical_guard_uvar.ctx_uvar_gamma} in
-        let env_lax = {env with lax=true; use_bv_sorts=true} in
+        let env_lax = {env with lax=true; use_bv_sorts=true; enable_defer_to_tac=false} in
         let _, t_eq, _ =
           //Prefer to use the type of the flex term to compute the
           //type instantiation of the equality, since it is more efficient
-          if is_flex tp.lhs then env.type_of env_lax tp.lhs
-          else env.type_of env_lax tp.rhs
+          let t =
+            if is_flex tp.lhs then tp.lhs
+            else tp.rhs
+          in
+          env.type_of env_lax t
         in
         let goal_ty = U.mk_eq2 (env.universe_of env_lax t_eq) t_eq tp.lhs tp.rhs in
         let goal, ctx_uvar, _ =
-            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Strict None
+            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Allow_untyped None
         in
         let imp =
             { imp_reason = "";

@@ -41,7 +41,7 @@ let __bind (a:Type) (b:Type) (r1 r2:range) (t1:__tac a) (t2:a -> __tac b) : __ta
             let ps' = set_proofstate_range ps' (FStar.Range.prims_to_fstar_range r2) in
             // Force evaluation of __tracepoint q even on the interpreter
             begin match tracepoint ps' with
-            | () -> t2 a (decr_depth ps')
+            | true -> t2 a (decr_depth ps')
             end
         | Failed e ps' -> Failed e ps'
 
