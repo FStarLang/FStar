@@ -20,16 +20,6 @@
 
 module FStar.WellFounded
 
-[@@deprecated "this is no longer needed"]
-let axiom1_dep (#a:Type) (#b:(a->Type)) (f:(y:a -> Tot (b y))) (x:a)
-  : Lemma True
-  = ()
-
-[@@deprecated "this is no longer needed"]
-let axiom1 (#a:Type) (#b:Type) (f:(a -> Tot b)) (x:a)
-  : Lemma True
-  = ()
-
 noeq
 type acc (a:Type) (r:(a -> a -> Type)) (x:a) : Type =
   | AccIntro : (y:a -> r y x -> Tot (acc a r y)) -> acc a r x
