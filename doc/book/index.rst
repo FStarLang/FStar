@@ -31,18 +31,22 @@ Part 1: F* Manual
    * Modules and Interfaces
        *
 
-   * Extraction
-       * Computational irrelevance and erasure (Ghost)
-
    * A Mental Model of the F* Typechecker
        * Type inference based on higher order unification
        * Normalization and proofs by reflection
        * SMT Solving
 
+   * Extraction
+       * Computational irrelevance and erasure (Ghost)
+       * Normalization for extraction
+           * inlining, pure subterms, postprocess(fwd to meta)
+
    * Scripting F* with Metaprogramming
        * Proof states
        * Reflecting on syntax
        * Quotation
+       * Scripting extraction
+       * Hooks
 
 3. A User's Guide
 
@@ -50,6 +54,8 @@ Part 1: F* Manual
        * Dependence Analysis
        * Checked files
        * Sample project
+
+   * Using the F* editor
 
    * SMT Proofs
        * Quantifiers and Patterns
@@ -71,6 +77,9 @@ Part 1: F* Manual
        * Axioms
        * Termination proofs
 
+   * Proof Engineering
+       * Building, maintaining and debugging stable proofs
+
    * Extraction
        * OCaml
        * F#
@@ -82,6 +91,10 @@ Part 1: F* Manual
    * Error messages
 
    * Syntax guide
+
+   * FAQ
+
+4. Core libraries
 
 Part 2: F* in Action
 
@@ -132,7 +145,15 @@ Part 2: F* in Action
 7. Steel: An Extensible Concurrent Separation Logic
 
 8. EverParse?
+   * Miniparse
 
+9. An End-to-end Verified Low-level App
+
+Part 3: Other resources
+
+   * Recorded coding session
+   * Talks, presentations
+   * Exemplary code
 
 
 Overview
