@@ -99,13 +99,13 @@ let norm_with_steps steps env t =
   Profiling.profile
     (fun () -> N.normalize steps env t)
     (Some (Ident.string_of_lid (Env.current_module env)))
-    "FStar.TypeChecker.SMTEncoding.EncodeTerm.norm_with_steps"
+    "FStar.SMTEncoding.EncodeTerm.norm_with_steps"
 
 let normalize_refinement steps env t =
   Profiling.profile
     (fun () -> N.normalize_refinement steps env t)
     (Some (Ident.string_of_lid (Env.current_module env)))
-    "FStar.TypeChecker.SMTEncoding.EncodeTerm.normalize_refinement"
+    "FStar.SMTEncoding.EncodeTerm.normalize_refinement"
 
 let whnf env t =
     if head_normal env t then t

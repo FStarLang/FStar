@@ -65,18 +65,12 @@ let (load_native_tactics : unit -> unit) =
       let uu___1 = ml_module_name m in Prims.op_Hat uu___1 ".ml" in
     let cmxs_file m =
       let cmxs = let uu___1 = ml_module_name m in Prims.op_Hat uu___1 ".cmxs" in
-      let uu___1 =
-        let uu___2 =
-          FStar_All.pipe_right cmxs FStar_Options.prepend_output_dir in
-        FStar_Options.find_file uu___2 in
+      let uu___1 = FStar_Options.find_file cmxs in
       match uu___1 with
       | FStar_Pervasives_Native.Some f -> f
       | FStar_Pervasives_Native.None ->
           let uu___2 =
-            let uu___3 =
-              let uu___4 = ml_file m in
-              FStar_All.pipe_right uu___4 FStar_Options.prepend_output_dir in
-            FStar_Options.find_file uu___3 in
+            let uu___3 = ml_file m in FStar_Options.find_file uu___3 in
           (match uu___2 with
            | FStar_Pervasives_Native.None ->
                let uu___3 =

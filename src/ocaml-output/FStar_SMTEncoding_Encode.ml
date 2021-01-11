@@ -23,7 +23,7 @@ let (norm_before_encoding :
         (fun uu___1 ->
            FStar_TypeChecker_Normalize.normalize steps
              env.FStar_SMTEncoding_Env.tcenv t) uu___
-        "FStar.TypeChecker.SMTEncoding.Encode.norm_before_encoding"
+        "FStar.SMTEncoding.Encode.norm_before_encoding"
 let (norm_with_steps :
   FStar_TypeChecker_Env.steps ->
     FStar_TypeChecker_Env.env ->
@@ -39,7 +39,7 @@ let (norm_with_steps :
           FStar_Pervasives_Native.Some uu___1 in
         FStar_Profiling.profile
           (fun uu___1 -> FStar_TypeChecker_Normalize.normalize steps env t)
-          uu___ "FStar.TypeChecker.SMTEncoding.Encode.norm"
+          uu___ "FStar.SMTEncoding.Encode.norm"
 type prims_t =
   {
   mk:

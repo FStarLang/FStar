@@ -58,13 +58,13 @@ let norm_before_encoding env t =
     Profiling.profile
       (fun () -> N.normalize steps env.tcenv t)
       (Some (Ident.string_of_lid (Env.current_module env.tcenv)))
-      "FStar.TypeChecker.SMTEncoding.Encode.norm_before_encoding"
+      "FStar.SMTEncoding.Encode.norm_before_encoding"
 
 let norm_with_steps steps env t =
   Profiling.profile
       (fun () -> N.normalize steps env t)
       (Some (Ident.string_of_lid (Env.current_module env)))
-      "FStar.TypeChecker.SMTEncoding.Encode.norm"
+      "FStar.SMTEncoding.Encode.norm"
 
 type prims_t = {
     mk:lident -> string -> term * int * list<decl>;
