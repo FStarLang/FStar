@@ -392,6 +392,7 @@ type nonTerminalId =
     | NONTERM_newEffect
     | NONTERM_effectRedefinition
     | NONTERM_effectDefinition
+    | NONTERM_layeredEffectDefinition
     | NONTERM_effectDecl
     | NONTERM_subEffect
     | NONTERM_polymonadic_bind
