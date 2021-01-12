@@ -182,3 +182,32 @@ let recall_initialized (#a:Type0) (b:ubuffer a) (i:nat)
   :HST.ST unit (fun h0      -> (recallable b \/ live h0 b) /\ b `initialized_at` i)
                (fun h0 _ h1 -> h0 == h1 /\ live h0 b /\ (i < length b ==> Some? (Seq.index (as_seq h0 b) i)))
   = recall_p b (ipred i)
+
+let buffer_immutable_buffer_disjoint
+  (#ti:Type) (#t:Type0)
+  (bi:LowStar.ImmutableBuffer.ibuffer ti)
+  (b:ubuffer t)
+  (h: HS.mem)
+: Lemma
+  (requires (
+    live h b /\
+    live h bi /\
+    (exists (x:t). True ) // If the type is not inhabited, the initialization and immutable preorders are effectively identical
+  ))
+  (ensures (
+    disjoint b bi
+  ))
+= if length b = 0
+    then empty_disjoint b bi
+  else if length bi = 0
+    then empty_disjoint bi b
+  else begin
+    let open LowStar.ImmutableBuffer in
+    let s = as_seq h b in
+    let s0 = Seq.upd s 0 None in
+    let s1 = Seq.upd s 0 (Some (FStar.IndefiniteDescription.indefinite_description_ghost t (fun _ -> True))) in
+    assert(initialization_preorder _ s0 s1 /\
+           Seq.index s0 0 =!= Seq.index s1 0 /\
+           ~( immutable_preorder _ s0 s1 <==> initialization_preorder _ s0 s1));
+    live_same_addresses_equal_types_and_preorders b bi h
+  end
