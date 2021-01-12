@@ -61,11 +61,11 @@ let rec fmap_stream' (#a #b:Type) (f:a -> b) (x:stream' a) : stream' b =
 noeq 
 type stream (a:Type) =
   | SNil: stream a
-  | SCons: _:unit -> f:(unit -> stream a) -> stream a
+  | SCons: _:a -> f:(unit -> stream a) -> stream a
 
 let rec fmap_stream (#a #b:Type) (f:a -> b) (x:stream a) : stream b =
   match x with
   | SNil -> SNil
   | SCons h t ->
     let ft () = fmap_stream f (t ()) in
-    SCons () ft
+    SCons (f h) ft
