@@ -406,7 +406,7 @@ let rec complete_memo_rec_extr
   | Done y -> y
   | Need x' cont ->
     let y = memo_extr_p (p x px) (memo_rec_extr_temp f x px) x' in
-    complete_memo_rec_extr f x (cont <| y)
+    complete_memo_rec_extr f x (cont y)
 
 and memo_rec_extr_temp (f: (x:dom -> partial_result x)) (x0:dom) (px0:partial_result x0) (x:dom{p x0 px0 x})
   : Memo codom (decreases %[x0 ; 0 ; px0])
@@ -444,7 +444,7 @@ let rec complete_memo_rec_extr_computes :
     let y, h1 = reify (memo_extr_p (p x px) (memo_rec_extr_temp f x px) x') h0 in
     assert (y == fixp f x') ;
     assert (valid_memo h1 (fixp f)) ;
-    complete_memo_rec_extr_computes f x (cont <| y) h1
+    complete_memo_rec_extr_computes f x (cont y) h1
 and memo_rec_extr_computes :
   (f:(x:dom -> partial_result x)) ->
   (x:dom) ->
@@ -494,7 +494,7 @@ let rec complete_fixp_eq_proof
   match px with
   | Done y -> y == g x
   | Need x1 cont ->
-    fixp f x1 == g x1 ==> complete_fixp_eq_proof f g x (cont <| (fixp f x1))
+    fixp f x1 == g x1 ==> complete_fixp_eq_proof f g x (cont (fixp f x1))
 
 unfold
 let fixp_eq_proof f g = forall x. complete_fixp_eq_proof f g x (f x)
@@ -514,7 +514,7 @@ let rec complete_fixp_eq
   match px with
   | Done y -> ()
   | Need x1 cont ->
-    fixp_eq' f g x1 ; complete_fixp_eq f g x (cont <| (fixp f x1))
+    fixp_eq' f g x1 ; complete_fixp_eq f g x (cont  (fixp f x1))
 
 and fixp_eq'
   (f: (x:dom -> Tot (partial_result x)))
