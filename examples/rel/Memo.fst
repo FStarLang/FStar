@@ -17,7 +17,7 @@ module Memo
 
 open FStar.Classical
 open FStar.Squash
-open FStar.WellFounded
+
 
 (* These should be indices of our effect *)
 type dom : eqtype = int
@@ -270,11 +270,6 @@ noeq type partial_result (x0:dom) : Type =
 (* Or a computation asking for the result of the recursive call on [x] and a continuation [cont] *)
 | Need : x:dom{x << x0} -> cont:(codom -> Tot (partial_result x0)) -> partial_result x0
 
-(* The rule [f x << f] is currently not primitive but take as an axiom in FStar.WellFounded *)
-(* We define a convenience operator doing the application and ensuring the corresponding decreasing clause *)
-unfold
-let ( <| ) #x = apply #codom #(fun _ -> partial_result x)
-
 
 (* We can define the actual total function represented *)
 (* by [f : x:dom -> Tot (partial_result x)] with *)
@@ -286,7 +281,7 @@ let rec  complete_fixp (f: (x:dom) -> partial_result x) (x:dom) (px:partial_resu
   match px with
   | Done y -> y
   | Need x' cont ->
-    complete_fixp f x (cont <| (fixp f x'))
+    complete_fixp f x (cont (fixp f x'))
 
 and fixp (f: (x:dom -> Tot (partial_result x))) (x0:dom)
   : Tot codom (decreases %[x0 ; 1 ; ()])
@@ -313,7 +308,7 @@ let rec fpartial_result x (f: (x:dom -> partial_result x)) (px:partial_result x)
   match px with
   | Done y -> y == fixp f x
   | Need x1 cont ->
-    fpartial_result x f (cont <| (fixp f x1))
+    fpartial_result x f (cont (fixp f x1))
 
 
 let rec fpartial_result_lemma f x px (w:reachable f x px) : Lemma (requires True) (ensures (fpartial_result x f px)) (decreases px)
@@ -321,7 +316,7 @@ let rec fpartial_result_lemma f x px (w:reachable f x px) : Lemma (requires True
   | Done y -> reachable_lemma f x px w (* ; assert (y == fixp f x) ;     assert (fpartial_result x f px) *)
 
   | Need x' cont ->
-    let px' = cont <| (fixp f x') in
+    let px' = cont (fixp f x') in
     fpartial_result_lemma f x px' (Later x' cont w)
 
 let fpartial_result_init_lemma f x
@@ -368,7 +363,7 @@ let rec complete_memo_rec (f: (x:dom -> Tot (partial_result x))) (x:dom) (px:par
         y
     in
     assert (y == fixp f x') ;
-    let px1 = cont <| y in
+    let px1 = cont y in
     assert (fpartial_result x f px1) ;
     complete_memo_rec f x px1
 
