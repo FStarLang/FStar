@@ -89,6 +89,8 @@ Guidelines for the changelog:
      in your programs. Instead, we have enhanced F*'s SMT encoding of
      inductive types to include additional, more targeted
      well-foundedness axioms.
+     tests/micro-benchmarks/TestWellFoundedRecursion.fst provides
+     several small representative examples.
 
    * Two core axioms were discovered by Aseem Rastogi to be formulated
      in an unsound manner.

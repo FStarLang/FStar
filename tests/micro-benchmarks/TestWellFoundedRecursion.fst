@@ -42,7 +42,32 @@ let rec map #a #b (f:a -> b) (x:tree a)
     | Leaf data -> Leaf (f data)
     | Node ch -> Node (fun n -> map f (ch n))
 
-noeq 
+let codomain_ordering (#a:Type) (x:tree a{Node? x})
+  : Lemma (forall n. Node?.children x n << x)
+  = ()
+
+let test (#a:Type) (g:nat -> tree a) (n:nat)
+  : Lemma (g n << Node g)
+  = //`g n << Node g` is not automatically provable in the SMT encoding
+    //due to the way the triggers are set up
+    //But, with a call to the lemma above, it is provable
+    codomain_ordering (Node g)
+
+//An unusual style
+let rec map_alt (#a:Type0) (#b:Type0) (f:a -> b) (x:tree a)
+  : Tot (tree b)
+        (decreases %[x;1])
+  = match x with
+    | Leaf data -> Leaf (f data)
+    | Node ch -> Node (map_alt' #a #b f ch)
+and map_alt' (#a:Type0) (#b:Type0) (f:a -> b) (g: (nat -> tree a))
+  : Tot (nat -> tree b)
+        (decreases %[Node g; 0])
+  = fun n -> codomain_ordering (Node g);  //sadly, seems to require a call to the lemma
+          map_alt f (g n)
+
+
+noeq
 type stream' (a:Type) =
   | SNil': stream' a
   | SCons': a & (unit -> stream' a) -> stream' a
@@ -58,7 +83,7 @@ let rec fmap_stream' (#a #b:Type) (f:a -> b) (x:stream' a) : stream' b =
     SCons' (f h, ft)
 
 //You have to write it this way
-noeq 
+noeq
 type stream (a:Type) =
   | SNil: stream a
   | SCons: _:a -> f:(unit -> stream a) -> stream a
