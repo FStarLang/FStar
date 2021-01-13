@@ -9,12 +9,6 @@ open FStar.Ghost
 
 irreducible let __steel_reduce__ : unit = ()
 
-unfold
-let normal (#a:Type) (x:a) =
-  norm [
-    delta_attr [`%__steel_reduce__];
-    iota;zeta;primops]
-  x
 
 (* Definition of a selector for a given slprop *)
 
@@ -46,6 +40,15 @@ noeq
 type vprop =
   | VUnit : vprop' -> vprop
   | VStar: vprop -> vprop -> vprop
+
+unfold
+let normal (#a:Type) (x:a) =
+  norm [
+    delta_attr [`%__steel_reduce__];
+    delta_only [`%Mkvprop'?.t; `%Mkvprop'?.hp; `%Mkvprop'?.sel];
+    iota;zeta;primops]
+  x
+
 
 [@__steel_reduce__]
 let star = VStar
@@ -348,8 +351,6 @@ let sel (#a:Type) (#p:vprop) (h:rmem p) (r:ref a)
   = h (vptr r)
 
 (* Some tests *)
-
-
 
 let test (r:ref int) : SteelSel unit
   (vptr r) (fun _ -> vptr r)
