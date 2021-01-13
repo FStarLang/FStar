@@ -1516,7 +1516,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 Some "subterm ordering",
                                 ("subterm_ordering_"^ddconstrsym))
               in
-              let codomain_ordering =
+              let codomain_ordering, codomain_decls =
                 let tot_or_gtot_inductive_codomain c =
                   let is_inductive l =
                       match FStar.TypeChecker.Env.lookup_sigelt env.tcenv l with
@@ -1533,35 +1533,41 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   in
                   res
                 in
-                let codomain_prec_l =
-                  List.collect
-                    (fun (formal, var) ->
+                let codomain_prec_l, cod_decls =
+                  List.fold_left2
+                    (fun (codomain_prec_l, cod_decls) formal var ->
                         let bs, c = U.arrow_formals_comp formal.binder_bv.sort in
                         match bs with
-                        | [] -> []
-                        | _ when not (tot_or_gtot_inductive_codomain c) -> []
+                        | [] -> codomain_prec_l, cod_decls
+                        | _ when not (tot_or_gtot_inductive_codomain c) -> codomain_prec_l, cod_decls
                         | _ ->
                          //var bs << D ... var ...
-                         let bs', guards', env', bs_decls, _ = encode_binders None bs env'' in
+                         let bs', guards', _env', bs_decls, _ = encode_binders None bs env'' in
                          let fun_app = mk_Apply (mkFreeV var) bs' in
-                         [mkForall (Ident.range_of_lid d)
-                                   ([[mk_Precedes lex_t lex_t fun_app dapp]],
-                                    bs',
-                                    mkImp (mk_and_l guards',
-                                           mk_Precedes lex_t lex_t fun_app dapp))])
-                    (List.zip formals vars)
+                         mkForall (Ident.range_of_lid d)
+                                  ([[mk_Precedes lex_t lex_t fun_app dapp]],
+                                   bs',
+                                   mkImp (mk_and_l guards',
+                                          mk_Precedes lex_t lex_t fun_app dapp))
+                         :: codomain_prec_l,
+                         bs_decls @ cod_decls)
+                    ([],[])
+                    formals
+                    vars
                 in
                 match codomain_prec_l with
-                | [] -> []
+                | [] ->
+                  [], cod_decls
                 | _ ->
                   [Util.mkAssume(mkForall (Ident.range_of_lid d)
                                          ([[ty_pred]],
                                           add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
                                           mkImp(ty_pred, mk_and_l codomain_prec_l)),
-                                Some "well-founded ordering on codomain",
-                                ("well_founded_ordering_on_comdain_"^ddconstrsym))]
+                                 Some "well-founded ordering on codomain",
+                                 ("well_founded_ordering_on_comdain_"^ddconstrsym))],
+                  cod_decls
               in
-              arg_decls,
+              arg_decls @ codomain_decls,
               [typing_inversion; subterm_ordering] @ codomain_ordering
 
             | _ ->
