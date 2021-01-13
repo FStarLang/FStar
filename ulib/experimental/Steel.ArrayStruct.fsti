@@ -188,6 +188,8 @@ let _ : unit  = _ by (check_extract_update (`%update_x))
 /// What if [update_z] assigns first one value then another? Then we claim that it does not matter since this more complicated execution trace will be extracted by Kremlin to a simpler one. In F*
 /// you would still have to prove that the F* body of `update_x` is frame perserving, so if you do
 /// that then the frame preservedness still holds for the simpler version extracted by Kremlin.
+/// The frame perservation is the reason why we don't have race conditions. Having no race conditions
+/// is the correct argument about why the meta-argument of correctness is valid.
 
 
 (**** get *)
@@ -242,22 +244,35 @@ let rw_pointer_upd_sig
 
 /// The `a` parameter to the typeclass has to be a Low*-compatible value, something that can be
 /// assigned atomically in an update statement.
-class rw_pointer (a: Type u#a) = {
-  pointer_ref:  Type u#0;
+class rw_pointer (pointer_ref : Type u#0) (a: Type u#a) = {
   pointer_slref: pointer_ref -> a -> slprop;
+  // TODO: Ask Aymeric about why framing tactic error
   pointer_get: rw_pointer_get_sig a pointer_ref pointer_slref;
   pointer_upd: rw_pointer_upd_sig a pointer_ref pointer_slref;
+}
+
+//TODO: typeclass inheritance with https://github.com/project-everest/hacl-star/blob/polubelova_bignum/code/rsapss/Hacl.Bignum.Montgomery.fsti#L130
+class r_pointer (pointer_ref : Type u#0) (a: Type u#a) = {
+  pointer_slref: pointer_ref -> a -> slprop;
+  // TODO: Ask Aymeric about why framing tactic error
+  pointer_get: rw_pointer_get_sig a pointer_ref pointer_slref;
 }
 
 /// The goal of this typeclass is to be able to write generic functions like
 
 val increment_generic
-  (#cls: rw_pointer UInt32.t)
-  (r: cls.pointer_ref)
+  (#pt_t: Type u#0)
+  (#cls: rw_pointer pt_t UInt32.t)
+  (r: pt_t)
   (v: Ghost.erased UInt32.t{UInt32.v v + 1 <= UInt.max_int 32})
     : SteelT unit
       (cls.pointer_slref r v)
       (fun _ -> cls.pointer_slref r (UInt32.add v 1ul))
+
+
+/// How will this be reinterpreted for KreMLin extraction? It will extract to uint32_t* because it
+/// will see that there is the rw_pointer typeclass whose 2 argument is Uint32.t. If it were
+/// r_pointer it would have extracted to const *uint32_t
 
 (**** Instantiating the pointer typeclass *)
 
@@ -269,6 +284,8 @@ val increment_generic
 
 /// But we can also instantiate it for the leaves of our structure
 
+(* This should be abstract and decorated with an attribute that says "can be extracted
+to a pointer to uint32 *)
 let u32_pair_x_field_ref = u32_pair_ref
 
 let slu32_pair_x_field (r: u32_pair_x_field_ref) (v: UInt32.t) : slprop =
@@ -280,8 +297,7 @@ val u32_pair_x_field_get
 val u32_pair_x_field_upd
   : rw_pointer_upd_sig UInt32.t u32_pair_x_field_ref slu32_pair_x_field
 
-instance u32_pair_x_field_pointer : rw_pointer UInt32.t = {
-  pointer_ref = u32_pair_x_field_ref;
+instance u32_pair_x_field_pointer : rw_pointer u32_pair_x_field_ref UInt32.t = {
   pointer_slref = slu32_pair_x_field;
   pointer_get = u32_pair_x_field_get;
   pointer_upd = u32_pair_x_field_upd;
@@ -325,10 +341,8 @@ instance u32_pair_pointer : rw_pointer u32_pair = {
 /// explosion that is allowed by the PCM. We'll show here an example for our pair of integers.
 
 val recombinable (r: u32_pair_ref) (r12: u32_pair_x_field_ref & u32_pair_y_field_ref) : prop
-[@@ extract_explode u32_pair_pointer ->
-  (u32_pair_x_field_pointer, u32_pair_y_field_pointer) ->
-  recombinable
-]
+
+[@@ extract_explode recombinable]
 val explose_u32_pair_into_x_y (r: u32_pair_ref) (pair: u32_pair)
   : SteelT (r12:(u32_pair_x_field_ref & u32_pair_y_field_ref){recombinable r r12})
   (slu32_pair r pair)
@@ -343,7 +357,7 @@ val explose_u32_pair_into_x_y (r: u32_pair_ref) (pair: u32_pair)
 /// FieldX path and memory will contain the value of the field Y along with FieldY path.
 /// These two memory are composable thanks to the PCM that we've defined for `u32_pair_stored`.
 
-[@@ extract_recombine u32_pair_pointer -> u32_pair_x_field_pointer -> u32_pair_y_field_pointer ]
+[@@ extract_recombine ]
 val recombine_u32_pair_from_x_y
   (r: u32_pair_ref)
   (r1: u32_pair_x_field_ref)
@@ -353,3 +367,7 @@ val recombine_u32_pair_from_x_y
   : SteelT unit
     (slu32_pair_x_field r1 v1 `star` slu32_pair_y_field r2 v2)
     (fun _ -> slu32_pair r ({ x = v1; y = v2}))
+
+// TODO example: write a program that allocates a pair, explodes it, increment both fields,
+// recombine it. From this program, imagine how it will be extracted to KreMLin and if
+// it has sufficient information to do so
