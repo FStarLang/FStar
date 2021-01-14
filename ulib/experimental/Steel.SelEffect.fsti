@@ -9,6 +9,7 @@ open FStar.Ghost
 
 irreducible let framing_implicit : unit = ()
 irreducible let __steel_reduce__ : unit = ()
+irreducible let __reduce__ : unit = ()
 
 (* Definition of a selector for a given slprop *)
 
@@ -50,7 +51,7 @@ let normal (#a:Type) (x:a) =
   x
 
 
-[@__steel_reduce__]
+[@@ __steel_reduce__; __reduce__]
 let star = VStar
 
 [@__steel_reduce__]
@@ -71,12 +72,12 @@ let rec sel_of (p:vprop) : selector (t_of p) (hp_of p) = match p with
      let sel2 = sel_of p2 in
      fun h -> (sel1 h, sel2 h)
 
-
-let return_pre (p:vprop) : vprop = p
-let return_post (#a:Type) (p:a -> vprop) : a -> vprop = p
-
 type pre_t = vprop
 type post_t (a:Type) = a -> vprop
+
+let return_pre (p:vprop) : vprop = p
+let return_post (#a:Type) (p:post_t a) : post_t a = p
+
 
 val can_be_split (p q:vprop) : Type0
 let can_be_split_forall (#a:Type) (p q:post_t a) = forall x. can_be_split (p x) (q x)
@@ -103,13 +104,14 @@ val can_be_split_refl (p:vprop)
 (* A restricted view of the heap,
    that only allows to access selectors of the current slprop *)
 
+unfold
 let equiv_forall (#a:Type) (t1 t2:post_t a) : Type0
   = t1 `can_be_split_forall` t2 /\ t2 `can_be_split_forall` t1
 
-val equiv_forall_split (#a:Type) (t1 t2:post_t a)
-  : Lemma (requires t1 `equiv_forall` t2)
-          (ensures can_be_split_forall t1 t2 /\ can_be_split_forall t2 t1)
-          [SMTPat (t1 `equiv_forall` t2)]
+// val equiv_forall_split (#a:Type) (t1 t2:post_t a)
+//   : Lemma (requires t1 `equiv_forall` t2)
+//           (ensures can_be_split_forall t1 t2 /\ can_be_split_forall t2 t1)
+//           [SMTPat (t1 `equiv_forall` t2)]
 
 let can_be_split_post (#a #b:Type) (t1:a -> post_t b) (t2:post_t b) =
   forall (x:a). equiv_forall (t1 x) t2
@@ -575,6 +577,13 @@ val equiv_can_be_split (p1 p2:vprop) : Lemma
   (requires p1 `equiv` p2)
   (ensures p1 `can_be_split` p2)
 
+val can_be_split_post_elim (#a #b:Type) (t1:a -> post_t b) (t2:post_t b)
+  : Lemma (requires (forall (x:a) (y:b). t1 x y `equiv` t2 y))
+          (ensures t1 `can_be_split_post` t2)
+
+val equiv_forall_elim (#a:Type) (t1 t2:post_t a)
+  : Lemma (requires (forall (x:a). t1 x `equiv` t2 x))
+          (ensures t1 `equiv_forall` t2)
 
 open FStar.Tactics
 
@@ -621,34 +630,107 @@ inline_for_extraction noextract let rm : CE.cm vprop req =
      star_commutative
      star_congruence
 
+(* Specialize visit_tm to reimplement name_appears_in.
+   AF: As of Jan 14, 2021, calling name_appears_in from FStar.Tactics.Derived leads to a segfault *)
+
 exception Appears
+
+let on_sort_bv (f : term -> Tac unit) (xbv:bv) : Tac unit =
+  f (inspect_bv xbv).bv_sort
+
+let on_sort_binder (f : term -> Tac unit) (b:binder) : Tac unit =
+  let (bv, q) = inspect_binder b in
+  on_sort_bv f bv
+
+let rec visit_tm (ff : term -> Tac unit) (t : term) : Tac unit =
+  let tv = inspect_ln t in
+  (match tv with
+  | Tv_FVar _ -> ()
+  | Tv_Var bv ->
+      on_sort_bv ff bv
+
+  | Tv_BVar bv -> on_sort_bv ff bv
+
+  | Tv_Type () -> ()
+  | Tv_Const c -> ()
+  | Tv_Uvar i u -> ()
+  | Tv_Unknown -> ()
+  | Tv_Arrow b c ->
+      on_sort_binder ff b;
+      visit_comp ff c
+  | Tv_Abs b t ->
+      let b = on_sort_binder (visit_tm ff) b in
+      visit_tm ff t
+
+  | Tv_App l (r, q) ->
+       visit_tm ff l;
+       visit_tm ff r
+
+  | Tv_Refine b r ->
+      visit_tm ff r
+
+  | Tv_Let r attrs b def t ->
+      visit_tm ff def;
+      visit_tm ff t
+
+  | Tv_Match sc brs ->
+      visit_tm ff sc;
+      iter (visit_br ff) brs
+
+  | Tv_AscribedT e t topt ->
+      visit_tm ff e;
+      visit_tm ff t
+
+  | Tv_AscribedC e c topt ->
+      visit_tm ff e
+
+  ); ff t
+
+and visit_br (ff : term -> Tac unit) (b:branch) : Tac unit =
+  let (p, t) = b in
+  visit_tm ff t
+
+and visit_comp (ff : term -> Tac unit) (c : comp) : Tac unit =
+  let cv = inspect_comp c in
+  match cv with
+  | C_Total ret decr ->
+      visit_tm ff ret;
+      (match decr with
+        | None -> ()
+        | Some d -> visit_tm ff d
+      )
+  | C_GTotal ret decr ->
+      visit_tm ff ret;
+      (match decr with
+        | None -> ()
+        | Some d -> visit_tm ff d
+      )
+
+  | C_Lemma pre post pats ->
+      visit_tm ff pre;
+      visit_tm ff post;
+      visit_tm ff pats
+
+  | C_Eff us eff res args ->
+      visit_tm ff res;
+      iter (fun (a, q) -> visit_tm ff a) args
+
 
 (** Decides whether a top-level name [nm] syntactically
 // appears in the term [t]. *)
 let name_appears_in (nm:name) (t:term) : Tac bool =
-  // let ff (t:term) : Tac term = raise Appears in
-  let ff (t : term) : Tac term =
+  let ff (t : term) : Tac unit =
     match t with
-    | Tv_FVar fv ->
-        let uh = inspect_fv fv in
-        let nm1 = implode_qn nm in
-        let nm2 = implode_qn uh in
-        dump (nm1 ^ " " ^ nm2);
-        if nm1 = nm2 then (
-          dump "compared";
-        raise Appears)
-        else dump "not compared";
-      t
-    | t -> t
+    | Tv_FVar fv -> if inspect_fv fv = nm then raise Appears
+    | t -> ()
   in
   try ignore (visit_tm ff t); false with
   | Appears -> true
-  | e -> dump "pre raise"; raise e
+  | e -> raise e
 
 
-let term_appears_in (t:term) (i:term) : Tac bool = let b = name_appears_in (explode_qn (term_to_string t)) i in
-  dump "after";
-  b
+let term_appears_in (t:term) (i:term) : Tac bool =
+  name_appears_in (explode_qn (term_to_string t)) i
 
 
 
@@ -1486,7 +1568,7 @@ let gather_return (eq: term) (m: term) (lhs rhs:term) : Tac unit =
     let am = convert_am am in
     let r1 = quote_exp r1_raw in
     let r2 = quote_exp r2_raw in
-    change_sq (`(normal (mdenote (`#eq) (`#m) (`#am) (`#r1)
+    change_sq (`(normal_tac (mdenote (`#eq) (`#m) (`#am) (`#r1)
                    `EQ?.eq (`#eq)`
                  mdenote (`#eq) (`#m) (`#am) (`#r2))));
     apply_lemma (`normal_elim);
@@ -1560,6 +1642,287 @@ let canon_return () : Tac unit =
   canon_return' (`req) (`rm)
 
 
+let solve_can_be_split (args:list argv) : Tac bool =
+  match args with
+  | [(t1, _); (t2, _)] ->
+      let lnbr = slterm_nbr_uvars t1 in
+      let rnbr = slterm_nbr_uvars t2 in
+      if lnbr + rnbr <= 1 then (
+        let open FStar.Algebra.CommMonoid.Equiv in
+        focus (fun _ -> apply_lemma (`equiv_can_be_split);
+                     // If we have exactly the same term on both side,
+                     // equiv_sl_implies would solve the goal immediately
+                     or_else (fun _ -> apply_lemma (`equiv_refl))
+                      (fun _ ->
+                      if rnbr = 0 then apply_lemma (`equiv_sym);
+
+                       norm [delta_only [
+                              `%__proj__CM__item__unit;
+                              `%__proj__CM__item__mult;
+                              `%rm;
+                              `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                              `%fst; `%snd];
+                            delta_attr [`%__reduce__];
+                            primops; iota; zeta];
+                       canon'()));
+        true
+      ) else false
+
+  | _ -> false // Ill-formed can_be_split, should not happen
+
+val emp_unit_variant (p:vprop) : Lemma
+   (ensures can_be_split p (p `star` vemp))
+
+let solve_can_be_split_forall (args:list argv) : Tac bool =
+  match args with
+  | [_; (t1, _); (t2, _)] ->
+      let lnbr = slterm_nbr_uvars t1 in
+      let rnbr = slterm_nbr_uvars t2 in
+      if lnbr + rnbr <= 1 then (
+        let open FStar.Algebra.CommMonoid.Equiv in
+        focus (fun _ ->
+          ignore (forall_intro());
+          apply_lemma (`equiv_can_be_split);
+          dismiss_slprops();
+          or_else (fun _ -> apply_lemma (`equiv_refl))
+            (fun _ ->
+            if lnbr <> 0 && rnbr = 0 then apply_lemma (`equiv_sym);
+            or_else (fun _ ->  flip()) (fun _ -> ());
+            norm [delta_only [
+                   `%__proj__CM__item__unit;
+                   `%__proj__CM__item__mult;
+                   `%rm;
+                   `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                   `%fst; `%snd];
+                delta_attr [`%__reduce__];
+                 primops; iota; zeta];
+            canon'()));
+        true
+      ) else false
+
+  | _ -> false // Ill-formed can_be_split, should not happen
+
+let solve_equiv_forall (args:list argv) : Tac bool =
+  match args with
+  | [_; (t1, _); (t2, _)] ->
+      let lnbr = slterm_nbr_uvars t1 in
+      let rnbr = slterm_nbr_uvars t2 in
+      if lnbr + rnbr <= 1 then (
+        let open FStar.Algebra.CommMonoid.Equiv in
+        focus (fun _ -> apply_lemma (`equiv_forall_elim);
+                      match goals () with
+                      | [] -> ()
+                      | _ ->
+                        dismiss_slprops ();
+                        ignore (forall_intro());
+                        // TODO: Do this count in a better way
+                        if lnbr <> 0 && rnbr = 0 then apply_lemma (`equiv_sym);
+                        or_else (fun _ ->  flip()) (fun _ -> ());
+                        norm [delta_only [
+                                `%__proj__CM__item__unit;
+                                `%__proj__CM__item__mult;
+                                `%rm;
+                                `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                                `%fst; `%snd];
+                              delta_attr [`%__reduce__];
+                              primops; iota; zeta];
+                        canon'());
+        true
+      ) else false
+
+  | _ -> false // Ill-formed can_be_split, should not happen
+
+
+let solve_can_be_split_post (args:list argv) : Tac bool =
+  match args with
+  | [_; _; (t1, _); (t2, _)] ->
+      let lnbr = slterm_nbr_uvars t1 in
+      let rnbr = slterm_nbr_uvars t2 in
+      if lnbr + rnbr <= 1 then (
+        let open FStar.Algebra.CommMonoid.Equiv in
+        focus (fun _ -> norm[];
+                      let g = _cur_goal () in
+                      ignore (forall_intro());
+                      apply_lemma (`equiv_forall_elim);
+                      match goals () with
+                      | [] -> ()
+                      | _ ->
+                        dismiss_slprops ();
+                        ignore (forall_intro());
+                        // TODO: Do this count in a better way
+                        if lnbr <> 0 && rnbr = 0 then apply_lemma (`equiv_sym);
+                        or_else (fun _ ->  flip()) (fun _ -> ());
+                        norm [delta_only [
+                                `%__proj__CM__item__unit;
+                                `%__proj__CM__item__mult;
+                                `%rm;
+                                `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                                `%fst; `%snd];
+                              delta_attr [`%__reduce__];
+                              primops; iota; zeta];
+                        canon'());
+        true
+      ) else false
+
+  | _ -> fail "ill-formed can_be_split_post"
+
+let is_return_eq (l r:term) : Tac bool =
+  let nl, al = collect_app l in
+  let nr, ar = collect_app r in
+  term_eq nl (`return_pre) || term_eq nr (`return_pre)
+
+let rec solve_indirection_eqs (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let f = term_as_formula' (goal_type hd) in
+    match f with
+    | Comp (Eq _) l r ->
+        if is_return_eq l r then later() else trefl();
+        solve_indirection_eqs tl
+    | _ -> later(); solve_indirection_eqs tl
+
+
+let rec solve_all_eqs (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let f = term_as_formula' (goal_type hd) in
+    match f with
+    | Comp (Eq _) l r ->
+        trefl();
+        solve_all_eqs tl
+    | _ -> later(); solve_all_eqs tl
+
+
+let rec solve_return_eqs (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let f = term_as_formula' (goal_type hd) in
+    match f with
+    | Comp (Eq _) l r ->
+        trefl();
+        solve_return_eqs tl
+    | _ -> later(); solve_return_eqs tl
+
+// The term corresponds to a goal containing a return_post
+let solve_return (t:term) : Tac unit
+  = // Remove potential annotations first
+    if term_appears_in (`can_be_split) t then (
+      apply_lemma (`equiv_can_be_split)
+    ) else if term_appears_in (`can_be_split_forall) t then (
+      ignore (forall_intro ());
+      apply_lemma (`equiv_can_be_split)
+    ) else if term_appears_in (`equiv_forall) t then (
+      fail "equiv_forall"
+      // apply_lemma (`equiv_forall_elim);
+      // ignore (forall_intro())
+    ) else if term_appears_in (`can_be_split_post) t then (
+      apply_lemma (`can_be_split_post_elim);
+      dismiss_slprops();
+      ignore (forall_intro ());
+      ignore (forall_intro ())
+    ) else
+      // This should never happen
+      fail "return_post goal in unexpected position";
+    match (goals ()) with
+    | [] -> () // Can happen if reflexivity was sufficient here
+    | _ -> norm [delta_only [
+                     `%CE.__proj__CM__item__unit;
+                     `%CE.__proj__CM__item__mult;
+                     `%rm;
+                     `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                     `%fst; `%snd];
+               delta_attr [`%__reduce__];
+               primops; iota; zeta];
+           canon_return ()
+
+
+let rec solve_all_returns (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let t = goal_type hd in
+    let f = term_as_formula' t in
+    if term_appears_in (`return_post) t then (
+      try focus (fun _ -> solve_return t) with
+        // If return_post has already been gathered, we remove the annotation, and will solve this constraint normally later
+        | AlreadyGathered -> norm [delta_only [`%return_post]]; later()
+        | TacticFailure m -> fail m
+        | _ -> () // Success
+    ) else later();
+    solve_all_returns tl
+
+
+let rec solve_triv_eqs (l:list goal) : Tac unit =
+  match l with
+  | [] -> ()
+  | hd::tl ->
+    let f = term_as_formula' (goal_type hd) in
+    match f with
+    | Comp (Eq _) l r ->
+      let lnbr = slterm_nbr_uvars l in
+      let rnbr = slterm_nbr_uvars r in
+      // Only solve equality if there is only one uvar
+      // trefl();
+     if lnbr = 0 || rnbr = 0 then trefl () else later();
+      solve_triv_eqs tl
+    | _ -> later(); solve_triv_eqs tl
+
+// Returns true if the goal has been solved, false if it should be delayed
+let solve_or_delay (g:goal) : Tac bool =
+  // Beta-reduce the goal first if possible
+  norm [];
+  let f = term_as_formula' (cur_goal ()) in
+  match f with
+  | App _ t ->
+      let hd, args = collect_app t in
+      if term_eq hd (`can_be_split) then solve_can_be_split args
+      else if term_eq hd (`can_be_split_forall) then solve_can_be_split_forall args
+      else if term_eq hd (`equiv_forall) then solve_equiv_forall args
+      else if term_eq hd (`can_be_split_post) then solve_can_be_split_post args
+      else false
+  | Comp (Eq _) l r ->
+    let lnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars l) in
+    let rnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars r) in
+    // Only solve equality if one of the terms is completely determined
+    if lnbr = 0 || rnbr = 0 then (trefl (); true) else false
+  | _ -> false
+
+
+// Returns true if it successfully solved a goal
+// If it returns false, it means it didn't find any solvable goal,
+// which should mean only delayed goals are left
+let rec pick_next (l:list goal) : Tac bool =
+  match l with
+  | [] -> false
+  | a::q -> if solve_or_delay a then true else (later (); pick_next q)
+
+
+let rec resolve_tac () : Tac unit =
+  match goals () with
+  | [] -> ()
+  | g ->
+    norm [];
+    // TODO: If it picks a goal it cannot solve yet, try all the other ones?
+    if pick_next g then resolve_tac ()
+    else fail "Could not make progress, no solvable goal found"
+
+
+let rec resolve_tac_logical () : Tac unit =
+  match goals () with
+  | [] -> ()
+  | g ->
+    if pick_next g then resolve_tac_logical ()
+    else
+      // This is only for requires/ensures constraints, which are equalities
+      // There should always be a scheduling of constraints, but it can happen
+      // that some uvar for the type of an equality is not resolved.
+      // If we reach this point, we try to simply call the unifier instead of failing directly
+      solve_all_eqs g
+
+
 
 
 let typ_contains_req_ens (t:term) : Tac bool =
@@ -1582,86 +1945,12 @@ let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
       | App t _ -> if term_eq t (`squash) then hd::slgoals, loggoals else slgoals, loggoals
       | _ -> slgoals, loggoals
 
-let is_return_eq (l r:term) : Tac bool =
-  let nl, al = collect_app l in
-  let nr, ar = collect_app r in
-  term_eq nl (`return_pre) || term_eq nr (`return_pre)
 
-let rec solve_indirection_eqs (l:list goal) : Tac unit =
+
+let rec norm_return_pre (l:list goal) : Tac unit =
   match l with
   | [] -> ()
-  | hd::tl ->
-    let f = term_as_formula' (goal_type hd) in
-    match f with
-    | Comp (Eq _) l r ->
-        if is_return_eq l r then later() else trefl();
-        solve_indirection_eqs tl
-    | _ -> later(); solve_indirection_eqs tl
-
-
-let rec solve_return_eqs (l:list goal) : Tac unit =
-  match l with
-  | [] -> ()
-  | hd::tl ->
-    let f = term_as_formula' (goal_type hd) in
-    match f with
-    | Comp (Eq _) l r ->
-        trefl();
-        solve_return_eqs tl
-    | _ -> later(); solve_return_eqs tl
-
-// The term corresponds to a goal containing a return_post
-let solve_return (t:term) : Tac unit
-  = dump "entering return";
-    // Remove potential annotations first
-    if term_appears_in (`can_be_split) t then (
-      apply_lemma (`equiv_can_be_split)
-    ) else if term_appears_in (`can_be_split_forall) t then (
-      ignore (forall_intro ());
-      apply_lemma (`equiv_can_be_split)
-    ) else if term_appears_in (`equiv_forall) t then (
-      fail "equiv_forall"
-      // apply_lemma (`equiv_forall_elim);
-      // ignore (forall_intro())
-    ) else if term_appears_in (`can_be_split_post) t then (
-      fail "can_be_split_post"
-      // apply_lemma (`can_be_split_post_elim);
-      // dismiss_slprops();
-      // ignore (forall_intro ());
-      // ignore (forall_intro ())
-    ) else
-      // This should never happen
-      fail "return_post goal in unexpected position";
-    match (goals ()) with
-    | [] -> () // Can happen if reflexivity was sufficient here
-    | _ -> norm [delta_only [
-                     `%CE.__proj__CM__item__unit;
-                     `%CE.__proj__CM__item__mult;
-                     `%rm;
-                     `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
-                     `%fst; `%snd];
-//               delta_attr [`%__reduce__];
-               primops; iota; zeta];
-           canon_return ()
-
-
-let rec solve_all_returns (l:list goal) : Tac unit =
-  match l with
-  | [] -> ()
-  | hd::tl ->
-    let t = goal_type hd in
-    let f = term_as_formula' t in
-    dump "entering solve";
-    if term_appears_in (`return_post) t then (
-      try focus (fun _ -> solve_return t) with
-        // If return_post has already been gathered, we remove the annotation, and will solve this constraint normally later
-        | AlreadyGathered -> norm [delta_only [`%return_post]]; later()
-        | TacticFailure m -> fail m
-        | _ -> () // Success
-    ) else later();
-    solve_all_returns tl
-
-
+  | hd::tl -> norm [delta_only [`%return_pre]]; later(); norm_return_pre tl
 
 [@@ resolve_implicits; framing_implicit]
 let init_resolve_tac () : Tac unit =
@@ -1683,8 +1972,25 @@ let init_resolve_tac () : Tac unit =
   // We now solve all postconditions of pure returns to avoid restricting the uvars
   solve_all_returns (goals ());
 
+  // We can now solve the equalities for returns
+  solve_return_eqs (goals());
 
-  fail "all"
+  // It is important to not normalize the return_pre equalities before solving them
+  // Else, we lose some variables dependencies, leading to the tactic being stuck
+  // See test7 in FramingTestSuite for more explanations of what is failing
+  // Once unification has been done, we can then safely normalize and remove all return_pre
+  norm_return_pre (goals());
+
+  // TODO: If we had better handling of lifts from PURE, we might prove a true
+  // sl_implies here, "losing" extra assertions"
+
+  resolve_tac ();
+
+
+  // We now solve the requires/ensures goals, which are all equalities
+  // All slprops are resolved by now
+  set_goals loggs;
+  resolve_tac_logical ()
 
 (* Some tests *)
 
@@ -1692,8 +1998,9 @@ let test (r:ref int) : SteelSel unit
   (vptr r) (fun _ -> vptr r)
   (requires fun _ -> True)
   (ensures fun _ _ h1 -> sel h1 r == 0)
-  = write r 1;
-    write r 0
+  = // write r 1;
+    write r 0;
+    ()
 
 // let test2 (r1 r2:ref int) : SteelSel unit
 //   (vptr r1 `star` vptr r2) (fun _ -> vptr r1 `star` vptr r2)
