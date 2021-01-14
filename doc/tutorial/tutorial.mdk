@@ -670,6 +670,7 @@ We can assert and automatically check more general properties about `max`. For e
 ## Factorial and Fibonacci functions
 
 Let's take a look at the factorial function:
+
     open FStar.Mul
     let rec factorial n = 
       if n = 0 then 1 else n * (factorial (n - 1))
