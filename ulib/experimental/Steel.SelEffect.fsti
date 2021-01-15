@@ -82,8 +82,6 @@ let return_post (#a:Type) (p:post_t a) : post_t a = p
 
 
 val can_be_split (p q:vprop) : Type0
-
-unfold
 let can_be_split_forall (#a:Type) (p q:post_t a) = forall x. can_be_split (p x) (q x)
 
 val can_be_split_trans (p q r:vprop)
@@ -108,7 +106,6 @@ val can_be_split_refl (p:vprop)
 (* A restricted view of the heap,
    that only allows to access selectors of the current slprop *)
 
-unfold
 let equiv_forall (#a:Type) (t1 t2:post_t a) : Type0
   = t1 `can_be_split_forall` t2 /\ t2 `can_be_split_forall` t1
 
@@ -236,10 +233,10 @@ let subcomp_pre (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
   (_:squash (can_be_split pre_g pre_f))
-  (_:squash (can_be_split_forall post_f post_g))
+  (_:squash (equiv_forall post_f post_g))
 : pure_pre
 = normal ((forall (m0:rmem pre_g). req_g m0 ==> req_f (focus_rmem m0 pre_f)) /\
-  (forall (m0:rmem pre_g) (x:a) (m1:rmem (post_f x)). ens_f (focus_rmem m0 pre_f) x m1 ==> ens_g m0 x (focus_rmem m1 (post_g x))))
+  (forall (m0:rmem pre_g) (x:a) (m1:rmem (post_g x)). ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) ==> ens_g m0 x m1))
 
 val subcomp (a:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
@@ -247,11 +244,46 @@ val subcomp (a:Type)
   (#[@@ framing_implicit] pre_g:pre_t) (#[@@ framing_implicit] post_g:post_t a)
   (#[@@ framing_implicit] req_g:req_t pre_g) (#[@@ framing_implicit] ens_g:ens_t pre_g a post_g)
   (#[@@ framing_implicit] p1:squash (can_be_split pre_g pre_f))
-  (#[@@ framing_implicit] p2:squash (can_be_split_forall post_f post_g))
+  (#[@@ framing_implicit] p2:squash (equiv_forall post_f post_g))
   (f:repr a pre_f post_f req_f ens_f)
 : Pure (repr a pre_g post_g req_g ens_g)
   (requires normal (subcomp_pre req_f ens_f req_g ens_g p1 p2))
   (ensures fun _ -> True)
+
+unfold
+let if_then_else_req
+  (#pre_f:pre_t) (#pre_g:pre_t)
+  (s: squash (can_be_split pre_f pre_g))
+  (req_then:req_t pre_f) (req_else:req_t pre_g)
+  (p:Type0)
+: req_t pre_f
+= fun h -> normal ((p ==> req_then h) /\ ((~ p) ==> req_else (focus_rmem h pre_g)))
+
+unfold
+let if_then_else_ens (#a:Type)
+  (#pre_f:pre_t) (#pre_g:pre_t) (#post_f:post_t a) (#post_g:post_t a)
+  (s1 : squash (can_be_split pre_f pre_g))
+  (s2 : squash (equiv_forall post_f post_g))
+  (ens_then:ens_t pre_f a post_f) (ens_else:ens_t pre_g a post_g)
+  (p:Type0)
+: ens_t pre_f a post_f
+= fun h0 x h1 -> normal ((p ==> ens_then (focus_rmem h0 pre_f) x (focus_rmem h1 (post_f x))) /\
+  ((~ p) ==> ens_else (focus_rmem h0 pre_g) x (focus_rmem h1 (post_g x))))
+
+let if_then_else (a:Type)
+  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] pre_g:pre_t)
+  (#[@@ framing_implicit] post_f:post_t a) (#[@@ framing_implicit] post_g:post_t a)
+  (#[@@ framing_implicit] req_then:req_t pre_f) (#[@@ framing_implicit] ens_then:ens_t pre_f a post_f)
+  (#[@@ framing_implicit] req_else:req_t pre_g) (#[@@ framing_implicit] ens_else:ens_t pre_g a post_g)
+  (#[@@ framing_implicit] s_pre: squash (can_be_split pre_f pre_g))
+  (#[@@ framing_implicit] s_post: squash (equiv_forall post_f post_g))
+  (f:repr a pre_f post_f req_then ens_then)
+  (g:repr a pre_g post_g req_else ens_else)
+  (p:bool)
+: Type
+= repr a pre_f post_f
+    (if_then_else_req s_pre req_then req_else p)
+    (if_then_else_ens s_pre s_post ens_then ens_else p)
 
 [@@allow_informative_binders]
 reifiable reflectable
@@ -260,7 +292,8 @@ layered_effect {
   with repr = repr;
        return = return;
        bind = bind;
-       subcomp = subcomp
+       subcomp = subcomp;
+       if_then_else = if_then_else
 }
 
 [@@allow_informative_binders]
@@ -2039,7 +2072,7 @@ let test1 (r:ref int) : SteelSel unit
 let test2 (r1 r2:ref int) : SteelSel unit
   (vptr r1 `star` vptr r2) (fun _ -> vptr r1 `star` vptr r2)
   (requires fun h -> sel r1 h == 1)
-  (ensures fun h0 _ h1 -> True) // sel r1 h1 == 0 /\ sel r2 h0 == sel r2 h1)
+  (ensures fun h0 _ h1 -> sel r1 h1 == 0 /\ sel r2 h0 == sel r2 h1)
   = let h1 = get() in
     assert (sel r1 h1 == 1);
     write r1 0
