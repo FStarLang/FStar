@@ -102,6 +102,8 @@ val can_be_split_star_r (p q:vprop)
 val can_be_split_refl (p:vprop)
 : Lemma (p `can_be_split` p)
 [SMTPat (p `can_be_split` p)]
+
+
 //
 (* A restricted view of the heap,
    that only allows to access selectors of the current slprop *)
@@ -587,6 +589,10 @@ val equiv_can_be_split (p1 p2:vprop) : Lemma
   (requires p1 `equiv` p2)
   (ensures p1 `can_be_split` p2)
 
+val intro_can_be_split_frame (p q:vprop) (frame:vprop)
+  : Lemma (requires q `equiv` (p `star` frame))
+          (ensures can_be_split q p /\ True)
+
 val can_be_split_post_elim (#a #b:Type) (t1:a -> post_t b) (t2:post_t b)
   : Lemma (requires (forall (x:a) (y:b). t1 x y `equiv` t2 y))
           (ensures t1 `can_be_split_post` t2)
@@ -594,6 +600,8 @@ val can_be_split_post_elim (#a #b:Type) (t1:a -> post_t b) (t2:post_t b)
 val equiv_forall_elim (#a:Type) (t1 t2:post_t a)
   : Lemma (requires (forall (x:a). t1 x `equiv` t2 x))
           (ensures t1 `equiv_forall` t2)
+
+
 
 open FStar.Tactics
 
@@ -2035,16 +2043,29 @@ val frame (#a:Type)
       ens (focus_rmem h0 pre) r (focus_rmem h1 (post r))
       /\ frame_equalities frame (focus_rmem h0 frame) (focus_rmem h1 frame)))
 
-(* AF: Ultimately, the precondition should probably be a squashed implicit that can be resolved by tactic *)
+(* AF: There probably is a simpler way to get from p to squash p in a tactic, so that we can use apply_lemma *)
+let squash_and p (x:squash (p /\ True)) : (p /\ True) =
+  let x : squash (p `c_and` True) = FStar.Squash.join_squash x in
+  x
+
+let selector_tactic () : Tac unit =
+  apply (`squash_and);
+  apply_lemma (`intro_can_be_split_frame);
+  flip ();
+  norm [delta_only [
+         `%__proj__CM__item__unit;
+         `%__proj__CM__item__mult;
+         `%rm;
+         `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+         `%fst; `%snd];
+       delta_attr [`%__reduce__];
+       primops; iota; zeta];
+  canon' ()
+
 [@@ __steel_reduce__]
 let sel (#a:Type) (#p:vprop) (r:ref a)
-  // (#[@@framing_implicit] frame:vprop)
-  // (#[@@framing_implicit] u:squash (can_be_split p (vptr r `star` frame)))
-  (h:rmem p)
-  = assume (can_be_split p (vptr r)); //can_be_split_trans p (vptr r `star` frame) (vptr r);
-    h (vptr r)
-
-
+  (h:rmem p{with_tactic selector_tactic (can_be_split p (vptr r) /\ True)})
+  = h (vptr r)
 
 (* Some tests *)
 
@@ -2055,10 +2076,10 @@ let test0 (r:ref int) : SteelSel unit
   (requires fun h -> sel r h == 0)
   (ensures fun _ _ h1 -> sel r h1 == 1)
   = let h = get () in
-    assert (sel r h == 0);
+   // assert (sel r h == 0);
     write r 1;
     let h1 = get() in
-    assert (sel r h1 == 1);
+//    assert (sel r h1 == 1);
     write r 1
 
 let test1 (r:ref int) : SteelSel unit
@@ -2073,20 +2094,13 @@ let test2 (r1 r2:ref int) : SteelSel unit
   (vptr r1 `star` vptr r2) (fun _ -> vptr r1 `star` vptr r2)
   (requires fun h -> sel r1 h == 1)
   (ensures fun h0 _ h1 -> sel r1 h1 == 0 /\ sel r2 h0 == sel r2 h1)
-  = let h1 = get() in
-    assert (sel r1 h1 == 1);
+  = write r1 0;
     write r1 0
 
-
-// AF: Should work with r3 if we specify the additional can_be_split
 let test3 (r1 r2 r3:ref int) : SteelSel unit
   (vptr r1 `star` (vptr r2 `star` vptr r3)) (fun _ -> vptr r1 `star` (vptr r2 `star` vptr r3))
   (requires fun _ -> True)
-    // can_be_split (vptr r1 `star` vptr r2 `star` vptr r3) (vptr r1) /\
-    // can_be_split (vptr r1 `star` (vptr r2 `star` vptr r3)) (vptr r2))
   (ensures fun h0 _ h1 ->
-    // can_be_split (vptr r1 `star` vptr r2 `star` vptr r3) (vptr r1) /\
-    // can_be_split (vptr r1 `star` (vptr r2 `star` vptr r3)) (vptr r2) /\
     sel r1 h1 == 0 /\
     sel r2 h0 == sel r2 h1 /\
     sel r3 h0 == sel r3 h1
@@ -2094,7 +2108,7 @@ let test3 (r1 r2 r3:ref int) : SteelSel unit
   = let h0 = get () in
     write r1 1;
     let h1 = get() in
-    assert (sel r1 h1 == 1);
+    // assert (sel r1 h1 == 1);
     // assert (sel r2 h0 == sel r2 h1);
     write r1 0
 
