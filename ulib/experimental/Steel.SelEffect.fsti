@@ -572,17 +572,6 @@ val write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
   (requires fun _ -> True)
   (ensures fun _ _ h1 -> x == h1 (vptr r))
 
-(* Should do this in a more princpled way once we have automated framing *)
-
-val rewrite_2 (p q:vprop) : SteelSel unit
-  (p `star` q) (fun _ -> q `star` p)
-  (requires fun _ -> True)
-  (ensures fun h0 _ h1 ->
-    h0 p == h1 p /\
-    h0 q == h1 q)
-
-
-
 (* Framing Tactic *)
 
 val equiv_can_be_split (p1 p2:vprop) : Lemma

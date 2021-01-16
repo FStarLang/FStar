@@ -672,6 +672,150 @@ let bind_steelf_steel_aux a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g
 
 let bind_steelf_steel a b f g = norm_repr (bind_steelf_steel_aux a b f g)
 
+let bind_pure_steel_ a b wp #pre #post #req #ens f g
+  = FStar.Monotonic.Pure.wp_monotonic_pure ();
+    fun frame ->
+      let x = f () in
+      g x frame
+
+let vemp':vprop' =
+  { hp = emp;
+    t = unit;
+    sel = fun _ -> ()}
+let vemp = VUnit vemp'
+
+(* Simple Reference library, only full permissions.
+   AF: Permissions would likely need to be an index of the vprop ptr.
+   It cannot be part of a selector, as it is not invariant when joining with a disjoint memory
+   Using the value of the ref as a selector is ok because refs with fractional permissions
+   all share the same value.
+   Refs on PCM are more complicated, and likely not usable with selectors
+*)
+
+module R = Steel.Reference
+open Steel.FractionalPermission
+
+let ref a = R.ref a
+
+let ptr r = h_exists (R.pts_to r full_perm)
+
+val ptr_sel' (#a:Type0) (r: ref a) : selector' a (ptr r)
+let ptr_sel' #a r = fun h ->
+  let x = id_elim_exists #(erased a) (R.pts_to r full_perm) h in
+  reveal (reveal x)
+
+let ptr_sel_depends_only_on (#a:Type0) (r:ref a)
+  (m0:Mem.hmem (ptr r)) (m1:mem{disjoint m0 m1})
+  : Lemma (ptr_sel' r m0 == ptr_sel' r (join m0 m1))
+  = let x = reveal (id_elim_exists #(erased a) (R.pts_to r full_perm) m0) in
+    let y = reveal (id_elim_exists #(erased a) (R.pts_to r full_perm) (join m0 m1)) in
+    R.pts_to_witinv r full_perm;
+    elim_wi (R.pts_to r full_perm) x y (join m0 m1)
+
+let ptr_sel_depends_only_on_core (#a:Type0) (r:ref a)
+  (m0:Mem.hmem (ptr r))
+  : Lemma (ptr_sel' r m0 == ptr_sel' r (core_mem m0))
+  = let x = reveal (id_elim_exists #(erased a) (R.pts_to r full_perm) m0) in
+    let y = reveal (id_elim_exists #(erased a) (R.pts_to r full_perm) (core_mem m0)) in
+    R.pts_to_witinv r full_perm;
+    elim_wi (R.pts_to r full_perm) x y (core_mem m0)
+
+
+let ptr_sel r =
+  Classical.forall_intro_2 (ptr_sel_depends_only_on r);
+  Classical.forall_intro (ptr_sel_depends_only_on_core r);
+  ptr_sel' r
+
+friend Steel.Effect
+
+let as_steelsel0 (#a:Type)
+  (#pre:pre_t) (#post:post_t a)
+  (#req:prop) (#ens:a -> prop)
+  (f:Eff.repr a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
+: repr a pre post (fun _ -> req) (fun _ x _ -> ens x)
+  = fun frame -> f frame
+
+
+let as_steelsel1 (#a:Type)
+  (#pre:pre_t) (#post:post_t a)
+  (#req:prop) (#ens:a -> prop)
+  (f:Eff.repr a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
+: SteelSel a pre post (fun _ -> req) (fun _ x _ -> ens x)
+  = SteelSel?.reflect (as_steelsel0 f)
+
+let as_steelsel (#a:Type)
+  (#pre:pre_t) (#post:post_t a)
+  (#req:prop) (#ens:a -> prop)
+  ($f:unit -> Eff.Steel a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
+: SteelSel a pre post (fun _ -> req) (fun _ x _ -> ens x)
+  = as_steelsel1 (reify (f ()))
+
+let vptr_tmp' (#a:Type) (r:ref a) (p:perm) (v:erased a) : vprop' =
+  { hp = R.pts_to r p v;
+    t = unit;
+    sel = fun _ -> ()}
+let vptr_tmp r p v : vprop = VUnit (vptr_tmp' r p v)
+
+val alloc0 (#a:Type0) (x:a) : SteelSel (ref a)
+  vemp (fun r -> vptr_tmp r full_perm x)
+  (requires fun _ -> True)
+  (ensures fun _ r h1 -> True)
+
+let alloc0 x = as_steelsel (fun _ -> R.alloc x)
+
+let intro_vptr (#a:Type) (r:ref a) (v:erased a) (m:mem) : Lemma
+  (requires interp (hp_of (vptr_tmp r full_perm v)) m)
+  (ensures interp (hp_of (vptr r)) m /\ sel_of (vptr r) m == reveal v)
+  = Mem.intro_h_exists v (R.pts_to r full_perm) m;
+    R.pts_to_witinv r full_perm
+
+let elim_vptr (#a:Type) (r:ref a) (v:erased a) (m:mem) : Lemma
+  (requires interp (hp_of (vptr r)) m /\ sel_of (vptr r) m == reveal v)
+  (ensures interp (hp_of (vptr_tmp r full_perm v)) m)
+  = Mem.elim_h_exists (R.pts_to r full_perm) m;
+    R.pts_to_witinv r full_perm
+
+let alloc x =
+  let r = alloc0 x in
+  change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x);
+  returnc r
+
+val read0 (#a:Type0) (r:ref a) (v:erased a) : SteelSel a
+  (vptr_tmp r full_perm v) (fun x -> vptr_tmp r full_perm x)
+  (requires fun _ -> True)
+  (ensures fun h0 x h1 -> x == reveal v)
+
+let read0 #a r v = as_steelsel (fun _ -> R.read #a #full_perm #v r)
+
+let read (#a:Type0) (r:ref a) : SteelSel a
+  (vptr r) (fun _ -> vptr r)
+  (requires fun _ -> True)
+  (ensures fun h0 x h1 -> h0 (vptr r) == h1 (vptr r) /\ x == h1 (vptr r))
+  = let h0 = get() in
+    let v = hide (h0 (vptr r)) in
+    change_slprop (vptr r) (vptr_tmp r full_perm v) v () (elim_vptr r v);
+    let x = read0 r v in
+    change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x);
+    returnc x
+
+val write0 (#a:Type0) (v:erased a) (r:ref a) (x:a)
+  : SteelSel unit
+    (vptr_tmp r full_perm v) (fun _ -> vptr_tmp r full_perm x)
+    (fun _ -> True) (fun _ _ _ -> True)
+
+let write0 #a v r x = as_steelsel (fun _ -> R.write #a #v r x)
+
+let write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
+  (vptr r) (fun _ -> vptr r)
+  (requires fun _ -> True)
+  (ensures fun _ _ h1 -> x == h1 (vptr r))
+  = let h0 = get() in
+    let v = hide (h0 (vptr r)) in
+    change_slprop (vptr r) (vptr_tmp r full_perm v) v () (elim_vptr r v);
+    write0 v r x;
+    change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x)
+
+
 (*
 let subcomp a pre post req_f ens_f req_g ens_g f = f
 
@@ -880,136 +1024,6 @@ let vemp = VUnit vemp'
 
 open FStar.Ghost
 
-(* Simple Reference library, only full permissions.
-   AF: Permissions would likely need to be an index of the vprop ptr.
-   It cannot be part of a selector, as it is not invariant when joining with a disjoint memory
-   Using the value of the ref as a selector is ok because refs with fractional permissions
-   all share the same value.
-   Refs on PCM are more complicated, and likely not usable with selectors
-*)
-
-module R = Steel.Reference
-open Steel.FractionalPermission
-
-let ref a = R.ref a
-
-let ptr r = h_exists (R.pts_to r full_perm)
-
-val ptr_sel' (#a:Type0) (r: ref a) : selector' a (ptr r)
-let ptr_sel' #a r = fun h ->
-  let x = id_elim_exists #(erased a) (R.pts_to r full_perm) h in
-  reveal (reveal x)
-
-let ptr_sel_depends_only_on (#a:Type0) (r:ref a)
-  (m0:Mem.hmem (ptr r)) (m1:mem{disjoint m0 m1})
-  : Lemma (ptr_sel' r m0 == ptr_sel' r (join m0 m1))
-  = let x = reveal (id_elim_exists #(erased a) (R.pts_to r full_perm) m0) in
-    let y = reveal (id_elim_exists #(erased a) (R.pts_to r full_perm) (join m0 m1)) in
-    R.pts_to_witinv r full_perm;
-    elim_wi (R.pts_to r full_perm) x y (join m0 m1)
-
-let ptr_sel_depends_only_on_core (#a:Type0) (r:ref a)
-  (m0:Mem.hmem (ptr r))
-  : Lemma (ptr_sel' r m0 == ptr_sel' r (core_mem m0))
-  = let x = reveal (id_elim_exists #(erased a) (R.pts_to r full_perm) m0) in
-    let y = reveal (id_elim_exists #(erased a) (R.pts_to r full_perm) (core_mem m0)) in
-    R.pts_to_witinv r full_perm;
-    elim_wi (R.pts_to r full_perm) x y (core_mem m0)
-
-
-let ptr_sel r =
-  Classical.forall_intro_2 (ptr_sel_depends_only_on r);
-  Classical.forall_intro (ptr_sel_depends_only_on_core r);
-  ptr_sel' r
-
-friend Steel.Effect
-
-let as_steelsel0 (#a:Type)
-  (#pre:pre_t) (#post:post_t a)
-  (#req:prop) (#ens:a -> prop)
-  (f:Eff.repr a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
-: repr a pre post (fun _ -> req) (fun _ x _ -> ens x)
-  = fun frame -> f frame
-
-
-let as_steelsel1 (#a:Type)
-  (#pre:pre_t) (#post:post_t a)
-  (#req:prop) (#ens:a -> prop)
-  (f:Eff.repr a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
-: SteelSel a pre post (fun _ -> req) (fun _ x _ -> ens x)
-  = SteelSel?.reflect (as_steelsel0 f)
-
-let as_steelsel (#a:Type)
-  (#pre:pre_t) (#post:post_t a)
-  (#req:prop) (#ens:a -> prop)
-  ($f:unit -> Eff.Steel a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
-: SteelSel a pre post (fun _ -> req) (fun _ x _ -> ens x)
-  = as_steelsel1 (reify (f ()))
-
-let vptr_tmp' (#a:Type) (r:ref a) (p:perm) (v:erased a) : vprop' =
-  { hp = R.pts_to r p v;
-    t = unit;
-    sel = fun _ -> ()}
-let vptr_tmp r p v : vprop = VUnit (vptr_tmp' r p v)
-
-val alloc0 (#a:Type0) (x:a) : SteelSel (ref a)
-  vemp (fun r -> vptr_tmp r full_perm x)
-  (requires fun _ -> True)
-  (ensures fun _ r h1 -> True)
-
-let alloc0 x = as_steelsel (fun _ -> R.alloc x)
-
-let intro_vptr (#a:Type) (r:ref a) (v:erased a) (m:mem) : Lemma
-  (requires interp (hp_of (vptr_tmp r full_perm v)) m)
-  (ensures interp (hp_of (vptr r)) m /\ sel_of (vptr r) m == reveal v)
-  = Mem.intro_h_exists v (R.pts_to r full_perm) m;
-    R.pts_to_witinv r full_perm
-
-let elim_vptr (#a:Type) (r:ref a) (v:erased a) (m:mem) : Lemma
-  (requires interp (hp_of (vptr r)) m /\ sel_of (vptr r) m == reveal v)
-  (ensures interp (hp_of (vptr_tmp r full_perm v)) m)
-  = Mem.elim_h_exists (R.pts_to r full_perm) m;
-    R.pts_to_witinv r full_perm
-
-let alloc x =
-  let r = alloc0 x in
-  change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x);
-  returnc r
-
-val read0 (#a:Type0) (r:ref a) (v:erased a) : SteelSel a
-  (vptr_tmp r full_perm v) (fun x -> vptr_tmp r full_perm x)
-  (requires fun _ -> True)
-  (ensures fun h0 x h1 -> x == reveal v)
-
-let read0 #a r v = as_steelsel (fun _ -> R.read #a #full_perm #v r)
-
-let read (#a:Type0) (r:ref a) : SteelSel a
-  (vptr r) (fun _ -> vptr r)
-  (requires fun _ -> True)
-  (ensures fun h0 x h1 -> h0 (vptr r) == h1 (vptr r) /\ x == h1 (vptr r))
-  = let h0 = get() in
-    let v = hide (h0 (vptr r)) in
-    change_slprop (vptr r) (vptr_tmp r full_perm v) v () (elim_vptr r v);
-    let x = read0 r v in
-    change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x);
-    returnc x
-
-val write0 (#a:Type0) (v:erased a) (r:ref a) (x:a)
-  : SteelSel unit
-    (vptr_tmp r full_perm v) (fun _ -> vptr_tmp r full_perm x)
-    (fun _ -> True) (fun _ _ _ -> True)
-
-let write0 #a v r x = as_steelsel (fun _ -> R.write #a #v r x)
-
-let write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
-  (vptr r) (fun _ -> vptr r)
-  (requires fun _ -> True)
-  (ensures fun _ _ h1 -> x == h1 (vptr r))
-  = let h0 = get() in
-    let v = hide (h0 (vptr r)) in
-    change_slprop (vptr r) (vptr_tmp r full_perm v) v () (elim_vptr r v);
-    write0 v r x;
-    change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x)
 
 (* should do this in a more princpled way once we have automated framing *)
 #push-options "--z3rlimit 50 --fuel 1 --ifuel 1"
