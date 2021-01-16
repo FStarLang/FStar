@@ -11,9 +11,6 @@ let hmem (p:vprop) = hmem (hp_of p)
 
 let can_be_split (p q:vprop) : prop = Mem.slimp (hp_of p) (hp_of q)
 
-(* Some properties about can_be_split that need to be exposed
-   or derived from Steel.Effect.Common *)
-
 let can_be_split_trans p q r = ()
 let can_be_split_star_l p q = ()
 let can_be_split_star_r p q = ()
@@ -678,6 +675,39 @@ let bind_pure_steel_ a b wp #pre #post #req #ens f g
       let x = f () in
       g x frame
 
+(* We need a bind with DIV to implement par, using reification *)
+
+unfold
+let bind_div_steel_req (#a:Type) (wp:pure_wp a)
+  (#pre_g:pre_t) (req_g:a -> req_t pre_g)
+: req_t pre_g
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun h -> wp (fun _ -> True) /\ (forall x. (req_g x) h)
+
+unfold
+let bind_div_steel_ens (#a:Type) (#b:Type)
+  (wp:pure_wp a)
+  (#pre_g:pre_t) (#post_g:post_t b) (ens_g:a -> ens_t pre_g b post_g)
+: ens_t pre_g b post_g
+= fun h0 r h1 -> wp (fun _ -> True) /\ (exists x. ens_g x h0 r h1)
+
+#push-options "--z3rlimit 20 --fuel 2 --ifuel 1"
+let bind_div_steel (a:Type) (b:Type)
+  (wp:pure_wp a)
+  (pre_g:pre_t) (post_g:post_t b) (req_g:a -> req_t pre_g) (ens_g:a -> ens_t pre_g b post_g)
+  (f:eqtype_as_type unit -> DIV a wp) (g:(x:a -> repr b pre_g post_g (req_g x) (ens_g x)))
+: repr b pre_g post_g
+    (bind_div_steel_req wp req_g)
+    (bind_div_steel_ens wp ens_g)
+= FStar.Monotonic.Pure.wp_monotonic_pure ();
+  fun frame ->
+  let x = f () in
+  g x frame
+#pop-options
+
+polymonadic_bind (DIV, SteelSel) |> SteelSel = bind_div_steel
+
+
 let vemp':vprop' =
   { hp = emp;
     t = unit;
@@ -730,25 +760,26 @@ friend Steel.Effect
 
 let as_steelsel0 (#a:Type)
   (#pre:pre_t) (#post:post_t a)
-  (#req:prop) (#ens:a -> prop)
-  (f:Eff.repr a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
+  (#req:Type0) (#ens:a -> Type0)
+  ($f:Eff.repr a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
 : repr a pre post (fun _ -> req) (fun _ x _ -> ens x)
   = fun frame -> f frame
 
 
 let as_steelsel1 (#a:Type)
-  (#pre:pre_t) (#post:post_t a)
-  (#req:prop) (#ens:a -> prop)
-  (f:Eff.repr a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
-: SteelSel a pre post (fun _ -> req) (fun _ x _ -> ens x)
+  (#pre:vprop') (#post:a -> vprop')
+  (#req:Type0) (#ens:a -> Type0)
+  ($f:Eff.repr a (pre.hp) (fun x -> (post x).hp) (fun h -> req) (fun _ x _ -> ens x))
+: SteelSel a (VUnit pre) (fun x -> VUnit (post x)) (fun _ -> req) (fun _ x _ -> ens x)
   = SteelSel?.reflect (as_steelsel0 f)
 
 let as_steelsel (#a:Type)
   (#pre:pre_t) (#post:post_t a)
-  (#req:prop) (#ens:a -> prop)
-  ($f:unit -> Eff.Steel a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
+  (#req:Type0) (#ens:a -> Type0)
+  (f:unit -> Eff.Steel a (hp_of pre) (fun x -> hp_of (post x)) (fun h -> req) (fun _ x _ -> ens x))
 : SteelSel a pre post (fun _ -> req) (fun _ x _ -> ens x)
   = as_steelsel1 (reify (f ()))
+
 
 let vptr_tmp' (#a:Type) (r:ref a) (p:perm) (v:erased a) : vprop' =
   { hp = R.pts_to r p v;
@@ -761,7 +792,7 @@ val alloc0 (#a:Type0) (x:a) : SteelSel (ref a)
   (requires fun _ -> True)
   (ensures fun _ r h1 -> True)
 
-let alloc0 x = as_steelsel (fun _ -> R.alloc x)
+let alloc0 #a x = as_steelsel #_ #vemp #(fun r -> vptr_tmp r full_perm x) #True #(fun _ -> True) (fun _ -> R.alloc x)
 
 let intro_vptr (#a:Type) (r:ref a) (v:erased a) (m:mem) : Lemma
   (requires interp (hp_of (vptr_tmp r full_perm v)) m)
