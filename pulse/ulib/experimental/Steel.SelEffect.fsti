@@ -43,7 +43,6 @@ type vprop =
   | VUnit : vprop' -> vprop
   | VStar: vprop -> vprop -> vprop
 
-[@@__steel_reduce__]
 unfold
 let normal (#a:Type) (x:a) =
   norm [
@@ -499,18 +498,20 @@ polymonadic_bind (SteelSelF, SteelSel) |> SteelSelF = bind_steelf_steel
 //  * PURE, Steel(F) bind
 //  *)
 
+[@@__steel_reduce__]
 unfold
 let bind_pure_steel__req (#a:Type) (wp:pure_wp a)
   (#pre:pre_t) (req:a -> req_t pre)
 : req_t pre
-= fun m -> normal (wp (fun x -> (req x) m) /\ as_requires wp)
+= fun m -> (wp (fun x -> (req x) m) /\ as_requires wp)
 
+[@@__steel_reduce__]
 unfold
 let bind_pure_steel__ens (#a:Type) (#b:Type)
   (wp:pure_wp a)
   (#pre:pre_t) (#post:post_t b) (ens:a -> ens_t pre b post)
 : ens_t pre b post
-= fun m0 r m1 -> normal (as_requires wp /\ (exists (x:a). as_ensures wp x /\ (ens x) m0 r m1))
+= fun m0 r m1 -> (as_requires wp /\ (exists (x:a). as_ensures wp x /\ ((ens x) m0 r m1)))
 
 val bind_pure_steel_ (a:Type) (b:Type)
   (wp:pure_wp a)
@@ -532,46 +533,6 @@ polymonadic_bind (PURE, SteelSelF) |> SteelSelF = bind_pure_steel_
 
 polymonadic_subcomp SteelSelF <: SteelSel = subcomp
 
-(* Empty assertion *)
-val vemp :vprop
-
-(* Simple Reference library, only full permissions.
-   AF: Permissions would likely need to be an index of the vprop ptr.
-   It cannot be part of a selector, as it is not invariant when joining with a disjoint memory
-   Using the value of the ref as a selector is ok because refs with fractional permissions
-   all share the same value.
-   Refs on PCM are more complicated, and likely not usable with selectors
-*)
-
-val ref (a:Type0) : Type0
-val ptr (#a:Type0) (r:ref a) : slprop u#1
-val ptr_sel (#a:Type0) (r:ref a) : selector a (ptr r)
-
-[@@ __steel_reduce__]
-let vptr' #a r : vprop' =
-  {hp = ptr r;
-   t = a;
-   sel = ptr_sel r}
-
-[@@ __steel_reduce__]
-unfold
-let vptr r = VUnit (vptr' r)
-
-val alloc (#a:Type0) (x:a) : SteelSel (ref a)
-  vemp (fun r -> vptr r)
-  (requires fun _ -> True)
-  (ensures fun _ r h1 -> h1 (vptr r) == x)
-
-val read (#a:Type0) (r:ref a) : SteelSel a
-  (vptr r) (fun _ -> vptr r)
-  (requires fun _ -> True)
-  (ensures fun h0 x h1 -> h0 (vptr r) == h1 (vptr r) /\ x == h1 (vptr r))
-
-val write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
-  (vptr r) (fun _ -> vptr r)
-  (requires fun _ -> True)
-  (ensures fun _ _ h1 -> x == h1 (vptr r))
-
 (* Framing Tactic *)
 
 val equiv_can_be_split (p1 p2:vprop) : Lemma
@@ -591,6 +552,8 @@ val equiv_forall_elim (#a:Type) (t1 t2:post_t a)
           (ensures t1 `equiv_forall` t2)
 
 
+(* Empty assertion *)
+val vemp :vprop
 
 open FStar.Tactics
 
@@ -2000,6 +1963,7 @@ let init_resolve_tac () : Tac unit =
   set_goals loggs;
   resolve_tac_logical ()
 
+
 (* Some helper functions *)
 
 val get (#[@@framing_implicit] p:vprop) (_:unit) : SteelSelF (rmem p)
@@ -2012,6 +1976,46 @@ val change_slprop (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
     (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
     (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
   ) : SteelSel unit p (fun _ -> q) (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
+
+
+
+(* Simple Reference library, only full permissions.
+   AF: Permissions would likely need to be an index of the vprop ptr.
+   It cannot be part of a selector, as it is not invariant when joining with a disjoint memory
+   Using the value of the ref as a selector is ok because refs with fractional permissions
+   all share the same value.
+   Refs on PCM are more complicated, and likely not usable with selectors
+*)
+
+val ref (a:Type0) : Type0
+val ptr (#a:Type0) (r:ref a) : slprop u#1
+val ptr_sel (#a:Type0) (r:ref a) : selector a (ptr r)
+
+[@@ __steel_reduce__]
+let vptr' #a r : vprop' =
+  {hp = ptr r;
+   t = a;
+   sel = ptr_sel r}
+
+[@@ __steel_reduce__]
+unfold
+let vptr r = VUnit (vptr' r)
+
+val alloc (#a:Type0) (x:a) : SteelSel (ref a)
+  vemp (fun r -> vptr r)
+  (requires fun _ -> True)
+  (ensures fun _ r h1 -> h1 (vptr r) == x)
+
+val read (#a:Type0) (r:ref a) : SteelSel a
+  (vptr r) (fun _ -> vptr r)
+  (requires fun _ -> True)
+  (ensures fun h0 x h1 -> h0 (vptr r) == h1 (vptr r) /\ x == h1 (vptr r))
+
+val write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
+  (vptr r) (fun _ -> vptr r)
+  (requires fun _ -> True)
+  (ensures fun _ _ h1 -> x == h1 (vptr r))
+
 
 
 (* AF: There probably is a simpler way to get from p to squash p in a tactic, so that we can use apply_lemma *)
@@ -2042,15 +2046,20 @@ let sel (#a:Type) (#p:vprop) (r:ref a)
 
 #push-options "--fuel 0 --ifuel 0"
 
+// #set-options "--admit_smt_queries true"
+
 let test0 (r:ref int) : SteelSel unit
   (vptr r) (fun _ -> vptr r)
   (requires fun h -> sel r h == 0)
   (ensures fun _ _ h1 -> sel r h1 == 1)
   = let h = get () in
-   // assert (sel r h == 0);
+    assert (sel r h == 0);
     write r 1;
     let h1 = get() in
-//    assert (sel r h1 == 1);
+    // AF: Uncommenting the following line leads to the error
+    // ASSERTION FAILURE: Name not found: pure_null_wp
+    // during the encoding to Z3
+    // assert (sel r h1 == 1);
     write r 1
 
 let test1 (r:ref int) : SteelSel unit
