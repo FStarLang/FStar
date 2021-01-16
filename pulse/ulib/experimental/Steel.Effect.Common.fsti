@@ -22,7 +22,7 @@ let join_preserves_interp (hp:slprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
   affine_star hp emp (join m0 m1)
 
 let ens_depends_only_on (#a:Type) (pre:slprop) (post:a -> slprop)
-  (q:(hmem pre -> x:a -> hmem (post x) -> prop))
+  (q:(hmem pre -> x:a -> hmem (post x) -> Type0))
 
 = //can join any disjoint mem to the pre-mem and q is still valid
   (forall x (m_pre:hmem pre) m_post (m:mem{disjoint m_pre m}).
@@ -32,11 +32,11 @@ let ens_depends_only_on (#a:Type) (pre:slprop) (post:a -> slprop)
   (forall x m_pre (m_post:hmem (post x)) (m:mem{disjoint m_post m}).
      q m_pre x m_post <==> q m_pre x (join m_post m))
 
-type req_t (pre:pre_t) = q:(hmem pre -> prop){  //inlining depends only on
+type req_t (pre:pre_t) = q:(hmem pre -> Type0){  //inlining depends only on
   forall (m0:hmem pre) (m1:mem{disjoint m0 m1}). q m0 <==> q (join m0 m1)
 }
 type ens_t (pre:pre_t) (a:Type u#a) (post:post_t u#a a) : Type u#(max 2 a) =
-  q:(hmem pre -> x:a -> hmem (post x) -> prop){
+  q:(hmem pre -> x:a -> hmem (post x) -> Type0){
     ens_depends_only_on pre post q
   }
 
