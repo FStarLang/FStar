@@ -249,7 +249,7 @@ val subcomp (a:Type)
   (#[@@ framing_implicit] p2:squash (equiv_forall post_f post_g))
   (f:repr a pre_f post_f req_f ens_f)
 : Pure (repr a pre_g post_g req_g ens_g)
-  (requires normal (subcomp_pre req_f ens_f req_g ens_g p1 p2))
+  (requires (subcomp_pre req_f ens_f req_g ens_g p1 p2))
   (ensures fun _ -> True)
 
 unfold
@@ -2013,9 +2013,6 @@ let init_resolve_tac () : Tac unit =
 
 (* Some helper functions *)
 
-val returnc (#a:Type) (#p:a -> vprop) (x:a)
-  : SteelSel a (p x) p (fun _ -> True) (fun h0 r h1 -> r == x /\ normal (frame_equalities (p x) h0 h1))
-
 val get (#[@@framing_implicit] p:vprop) (_:unit) : SteelSelF (rmem p)
   p (fun _ -> p)
   (requires fun _ -> True)
@@ -2027,21 +2024,6 @@ val change_slprop (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
     (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
   ) : SteelSel unit p (fun _ -> q) (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
 
-val frame (#a:Type)
-          (#pre:pre_t)
-          (#post:post_t a)
-          (#req:req_t pre)
-          (#ens:ens_t pre a post)
-          ($f:unit -> SteelSel a pre post req ens)
-          (frame:vprop)
-  : SteelSel a
-    (pre `star` frame)
-    (fun x -> post x `star` frame)
-    (fun h -> normal (req (focus_rmem h pre)))
-    (fun h0 r h1 -> normal (
-      req (focus_rmem h0 pre) /\
-      ens (focus_rmem h0 pre) r (focus_rmem h1 (post r))
-      /\ frame_equalities frame (focus_rmem h0 frame) (focus_rmem h1 frame)))
 
 (* AF: There probably is a simpler way to get from p to squash p in a tactic, so that we can use apply_lemma *)
 let squash_and p (x:squash (p /\ True)) : (p /\ True) =

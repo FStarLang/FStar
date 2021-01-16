@@ -9,16 +9,17 @@ module Eff = Steel.Effect
 
 let hmem (p:vprop) = hmem (hp_of p)
 
-let can_be_split (p q:vprop) : prop = C.can_be_split (hp_of p) (hp_of q) /\ True
-let can_be_split_forall (#a:Type) (p q:post_t a) : prop = forall x. can_be_split (p x) (q x)
+let can_be_split (p q:vprop) : prop = Mem.slimp (hp_of p) (hp_of q)
 
 (* Some properties about can_be_split that need to be exposed
    or derived from Steel.Effect.Common *)
 
-let can_be_split_trans p q r = admit()
-let can_be_split_star_l p q = admit()
-let can_be_split_star_r p q = admit()
-let can_be_split_refl p = admit()
+let can_be_split_trans p q r = ()
+let can_be_split_star_l p q = ()
+let can_be_split_star_r p q = ()
+let can_be_split_refl p = ()
+
+let equiv p q = Mem.equiv (hp_of p) (hp_of q)
 
 unfold
 let unrestricted_mk_rmem (r:vprop) (h:hmem r) = fun (r0:vprop{r `can_be_split` r0}) -> normal (sel_of r0 h)
@@ -104,28 +105,574 @@ let focus_is_restrict_mk_rmem (fp0 fp1:vprop) (m:hmem fp0)
       (mk_rmem fp1 m)
       (focus_rmem (mk_rmem fp0 m) fp1)
 
+let focus_focus_is_focus (fp0 fp1 fp2:vprop) (m:hmem fp0)
+  : Lemma
+    (requires fp0 `can_be_split` fp1 /\ fp1 `can_be_split` fp2)
+    (ensures focus_rmem (focus_rmem (mk_rmem fp0 m) fp1) fp2 == focus_rmem (mk_rmem fp0 m) fp2)
+  = let f0:rmem fp0 = mk_rmem fp0 m in
+    let f1:rmem fp1 = focus_rmem f0 fp1 in
+    let f20:rmem fp2 = focus_rmem f0 fp2 in
+    let f21:rmem fp2 = focus_rmem f1 fp2 in
+
+    let aux (r:vprop{can_be_split fp2 r}) : Lemma (f20 r == f21 r)
+      = reveal_mk_rmem fp0 m r;
+        reveal_focus_rmem f0 fp1 r;
+        reveal_focus_rmem f0 fp2 r;
+        reveal_focus_rmem f1 fp2 r
+
+    in Classical.forall_intro aux;
+
+    FExt.extensionality_g
+      (r0:vprop{can_be_split fp2 r0})
+      (fun r0 -> normal (t_of r0))
+      f20 f21
+
 val can_be_split_3_interp (p1 p2 q r:slprop u#1) (m:mem)
 : Lemma
-  (requires p1 `C.sl_implies` p2)
-  (ensures interp (p1 `Mem.star` q `Mem.star` r) m ==>  interp (p2 `Mem.star` q `Mem.star` r) m)
+  (requires p1 `slimp` p2 /\  interp (p1 `Mem.star` q `Mem.star` r) m)
+  (ensures interp (p2 `Mem.star` q `Mem.star` r) m)
 
 let can_be_split_3_interp p1 p2 q r m =
   star_associative p1 q r;
-  star_associative p2 q r
+  star_associative p2 q r;
+  slimp_star p1 p2 (q `Mem.star` r) (q `Mem.star` r)
 
 let repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
   Sem.action_t #state #a (hp_of pre) (to_post post)
     ((req_to_act_req req))
     ((ens_to_act_ens ens))
 
-let return a x p = fun _ -> x
+let nmst_get (#st:Sem.st) ()
+  : Sem.Mst (Sem.full_mem st)
+           (fun _ -> True)
+           (fun s0 s s1 -> s0 == s /\ s == s1)
+  = NMST.get ()
+
+let rec lemma_frame_equalities_refl (frame:vprop) (h:rmem frame) : Lemma (frame_equalities frame h h) =
+  match frame with
+  | VUnit _ -> ()
+  | VStar p1 p2 ->
+        can_be_split_star_l p1 p2;
+        can_be_split_star_r p1 p2;
+
+        let h1 = focus_rmem h p1 in
+        let h2 = focus_rmem h p2 in
+
+        lemma_frame_equalities_refl p1 h1;
+        lemma_frame_equalities_refl p2 h2
+
+let return a x #p = fun _ ->
+      let m0 = nmst_get () in
+      let h0 = mk_rmem (p x) (core_mem m0) in
+      lemma_frame_equalities_refl (p x) h0;
+      x
+
+#push-options "--fuel 0 --ifuel 0"
+
+let norm_repr (#a:Type) (#pre:pre_t) (#post:post_t a) (#req:req_t pre) (#ens:ens_t pre a post)
+ (f:repr a pre post req ens) : repr a pre post (fun h -> normal (req h)) (fun h0 x h1 -> normal (ens h0 x h1))
+ = f
 
 
-let bind a b pre_f post_f req_f ens_f post_g req_g ens_g f g
-  = fun frame ->
-      let x = f frame in
-      g x frame
+unfold
+let bind_req_unnormal (#a:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (#pre_g:a -> pre_t)
+  (req_g:(x:a -> req_t (pre_g x)))
+  (_:squash (can_be_split_forall post_f pre_g))
+  (m0:rmem pre_f)
+= req_f m0 /\
+  (forall (x:a) (m1:rmem (post_f x)). ens_f m0 x m1 ==> (req_g x) (focus_rmem m1 (pre_g x)))
 
+unfold
+let bind_ens_unnormal (#a:Type) (#b:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
+  (ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (post:post_t b)
+  (_:squash (can_be_split_forall post_f pre_g))
+  (_:squash (can_be_split_post post_g post))
+  (m0:rmem pre_f)
+  (y:b)
+  (m2:rmem (post y))
+: prop
+= req_f m0 /\
+  (exists (x:a) (m1:rmem (post_f x)). ens_f m0 x m1 /\ (ens_g x) (focus_rmem m1 (pre_g x)) y (focus_rmem m2 (post_g x y)))
+
+val bind_aux (a:Type) (b:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (#req_f:req_t pre_f) (#ens_f:ens_t pre_f a post_f)
+  (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
+  (#req_g:(x:a -> req_t (pre_g x))) (#ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#post:post_t b)
+  (#p1:squash (can_be_split_forall post_f pre_g))
+  (#p2:squash (can_be_split_post post_g post))
+  (f:repr a pre_f post_f req_f ens_f)
+  (g:(x:a -> repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: repr b
+    pre_f
+    post
+    (bind_req_unnormal req_f ens_f req_g p1)
+    (bind_ens_unnormal req_f ens_f ens_g post p1 p2)
+
+let bind_aux a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #post #p1 #p2 f g =
+fun frame ->
+  let x = f frame in
+  let m1 = nmst_get () in
+
+  focus_is_restrict_mk_rmem (post_f x) (pre_g x) (core_mem m1);
+  can_be_split_3_interp (hp_of (post_f x)) (hp_of (pre_g x)) frame (locks_invariant Set.empty m1) m1;
+
+
+  let y = g x frame in
+
+  let m2 = nmst_get () in
+
+  focus_is_restrict_mk_rmem (post y) (post_g x y) (core_mem m2);
+
+
+  can_be_split_3_interp (hp_of (post_g x y)) (hp_of (post y)) frame (locks_invariant Set.empty m2) m2;
+
+  y
+
+
+let bind a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #post #p1 #p2 f g =
+  norm_repr (bind_aux a b f g)
+
+unfold
+let subcomp_pre_unnormal (#a:Type)
+  (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
+  (_:squash (can_be_split pre_g pre_f))
+  (_:squash (equiv_forall post_f post_g))
+: pure_pre
+= ((forall (m0:rmem pre_g). req_g m0 ==> req_f (focus_rmem m0 pre_f)) /\
+  (forall (m0:rmem pre_g) (x:a) (m1:rmem (post_g x)). ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) ==> ens_g m0 x m1))
+
+let unnormal (p:prop) : Lemma (requires normal p) (ensures p) = ()
+
+let subcomp a #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #p1 #p2 f =
+  fun frame ->
+    let m0 = nmst_get () in
+    let h0 = mk_rmem pre_g (core_mem m0) in
+    focus_is_restrict_mk_rmem pre_g pre_f (core_mem m0);
+
+    can_be_split_3_interp (hp_of pre_g) (hp_of pre_f) frame (locks_invariant Set.empty m0) m0;
+
+    let x = f frame in
+
+
+    let m1 = nmst_get () in
+    let h1 = mk_rmem (post_g x) (core_mem m1) in
+
+    focus_is_restrict_mk_rmem (post_g x) (post_f x) (core_mem m1);
+
+    unnormal (subcomp_pre_unnormal req_f ens_f req_g ens_g p1 p2);
+
+
+    can_be_split_3_interp (hp_of (post_f x)) (hp_of (post_g x)) frame (locks_invariant Set.empty m1) m1;
+
+    x
+
+val req_frame (frame:vprop) (snap:rmem frame) : mprop (hp_of frame)
+
+let req_frame' (frame:vprop) (snap:rmem frame) (m:mem) : prop =
+  interp (hp_of frame) m /\ mk_rmem frame m == snap
+
+let req_frame frame snap =
+  rmem_depends_only_on frame;
+  req_frame' frame snap
+
+#push-options "--z3rlimit 20 --fuel 1 --ifuel 1"
+
+val frame00 (#a:Type)
+          (#pre:pre_t)
+          (#post:post_t a)
+          (#req:req_t pre)
+          (#ens:ens_t pre a post)
+          ($f:repr a pre post req ens)
+          (frame:vprop)
+  : repr a
+    (pre `star` frame)
+    (fun x -> post x `star` frame)
+    (fun h -> req (focus_rmem h pre))
+    (fun h0 r h1 -> req (focus_rmem h0 pre) /\ ens (focus_rmem h0 pre) r (focus_rmem h1 (post r)) /\
+     frame_equalities frame (focus_rmem h0 frame) (focus_rmem h1 frame))
+
+let frame00 #a #pre #post #req #ens f frame =
+  fun frame' ->
+      let m0 = nmst_get () in
+
+      let snap:rmem frame = mk_rmem frame (core_mem m0) in
+
+      focus_is_restrict_mk_rmem (pre `star` frame) pre (core_mem m0);
+
+      let x = Sem.run #state #_ #_ #_ #_ #_ frame' (Sem.Frame (Sem.Act f) (hp_of frame) (req_frame frame snap)) in
+
+      let m1 = nmst_get () in
+
+      can_be_split_star_r pre frame;
+      focus_is_restrict_mk_rmem (pre `star` frame) frame (core_mem m0);
+      can_be_split_star_r (post x) frame;
+      focus_is_restrict_mk_rmem (post x `star` frame) frame (core_mem m1);
+
+      focus_is_restrict_mk_rmem (post x `star` frame) (post x) (core_mem m1);
+
+      // We proved focus_rmem h0 frame == focus_rmem h1 frame so far
+
+      let h0:rmem (pre `star` frame) = mk_rmem (pre `star` frame) (core_mem m0) in
+      lemma_frame_equalities_refl frame (focus_rmem h0 frame);
+
+      x
+
+#pop-options
+
+unfold
+let bind_steel_steel_req_unnormal (#a:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (#pre_g:a -> pre_t)
+  (req_g:(x:a -> req_t (pre_g x)))
+  (frame_f:vprop) (frame_g:a -> vprop)
+  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
+  (m0:rmem (pre_f `star` frame_f))
+= req_f (focus_rmem m0 pre_f) /\
+  (forall (x:a) (m1:rmem (post_f x `star` frame_f)). (
+    can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (pre_g x);
+    (ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) /\
+      frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem m1 frame_f))
+    ==>
+      (req_g x) (focus_rmem m1 (pre_g x))))
+
+unfold
+let bind_steel_steel_ens_unnormal (#a:Type) (#b:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
+  (ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (frame_f:vprop) (frame_g:a -> vprop)
+  (post:post_t b)
+  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
+  (_:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
+  (m0:rmem (pre_f `star` frame_f))
+  (y:b)
+  (m2:rmem (post y))
+= req_f (focus_rmem m0 pre_f) /\
+  (exists (x:a) (m1:rmem (post_f x `star` frame_f)). (
+    can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (pre_g x);
+    can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (frame_g x);
+    can_be_split_trans (post y) (post_g x y `star` frame_g x) (post_g x y);
+    can_be_split_trans (post y) (post_g x y `star` frame_g x) (frame_g x);
+    frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem m1 frame_f) /\
+    frame_equalities (frame_g x) (focus_rmem m1 (frame_g x)) (focus_rmem m2 (frame_g x)) /\
+    ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) /\
+    (ens_g x) (focus_rmem m1 (pre_g x)) y (focus_rmem m2 (post_g x y))))
+
+val bind_steel_steel_aux (a:Type) (b:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (#req_f:req_t pre_f) (#ens_f:ens_t pre_f a post_f)
+  (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
+  (#req_g:(x:a -> req_t (pre_g x))) (#ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#frame_f:vprop) (#frame_g:a -> vprop)
+  (#post:post_t b)
+  (#p:squash (can_be_split_forall
+    (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
+  (#p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
+  (f:repr a pre_f post_f req_f ens_f)
+  (g:(x:a -> repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: repr b
+    (pre_f `star` frame_f)
+    post
+    (bind_steel_steel_req_unnormal req_f ens_f req_g frame_f frame_g p)
+    (bind_steel_steel_ens_unnormal req_f ens_f ens_g frame_f frame_g post p p2)
+
+#push-options "--z3rlimit 20"
+let bind_steel_steel_aux a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #p #p2 f g =
+  fun frame ->
+    let m0 = nmst_get () in
+
+    let h0 = mk_rmem (pre_f `star` frame_f) (core_mem m0) in
+
+    let x = frame00 f frame_f frame  in
+
+    let m1 = nmst_get () in
+
+    let h1 = mk_rmem (post_f x `star` frame_f) (core_mem m1) in
+
+    let h1' = mk_rmem (pre_g x `star` frame_g x) (core_mem m1) in
+
+    can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (pre_g x);
+    focus_is_restrict_mk_rmem
+      (post_f x `star` frame_f)
+      (pre_g x `star` frame_g x)
+      (core_mem m1);
+    focus_focus_is_focus
+      (post_f x `star` frame_f)
+      (pre_g x `star` frame_g x)
+      (pre_g x)
+      (core_mem m1);
+    assert (focus_rmem h1' (pre_g x) == focus_rmem h1 (pre_g x));
+
+    can_be_split_3_interp
+      (hp_of (post_f x `star` frame_f))
+      (hp_of (pre_g x `star` frame_g x))
+      frame (locks_invariant Set.empty m1) m1;
+
+    let y = frame00 (g x) (frame_g x) frame in
+
+    let m2 = nmst_get () in
+
+    can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (pre_g x);
+    can_be_split_trans (post_f x `star` frame_f) (pre_g x `star` frame_g x) (frame_g x);
+    can_be_split_trans (post y) (post_g x y `star` frame_g x) (post_g x y);
+    can_be_split_trans (post y) (post_g x y `star` frame_g x) (frame_g x);
+
+    let h2' = mk_rmem (post_g x y `star` frame_g x) (core_mem m2) in
+    let h2 = mk_rmem (post y) (core_mem m2) in
+
+
+
+    // assert (focus_rmem h1' (pre_g x) == focus_rmem h1 (pre_g x));
+
+    focus_focus_is_focus
+      (post_f x `star` frame_f)
+      (pre_g x `star` frame_g x)
+      (frame_g x)
+      (core_mem m1);
+
+    focus_is_restrict_mk_rmem
+      (post_g x y `star` frame_g x)
+      (post y)
+      (core_mem m2);
+
+    focus_focus_is_focus
+      (post_g x y `star` frame_g x)
+      (post y)
+      (frame_g x)
+      (core_mem m2);
+    focus_focus_is_focus
+      (post_g x y `star` frame_g x)
+      (post y)
+      (post_g x y)
+      (core_mem m2);
+
+    can_be_split_3_interp
+      (hp_of (post_g x y `star` frame_g x))
+      (hp_of (post y))
+      frame (locks_invariant Set.empty m2) m2;
+
+
+    y
+
+#pop-options
+
+let bind_steel_steel a b f g =
+  norm_repr (bind_steel_steel_aux a b f g)
+
+unfold
+let bind_steel_steelf_req_unnormal (#a:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (#pre_g:a -> pre_t)
+  (req_g:(x:a -> req_t (pre_g x)))
+  (frame_f:vprop)
+  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
+  (m0:rmem (pre_f `star` frame_f))
+= req_f (focus_rmem m0 pre_f) /\
+  (forall (x:a) (m1:rmem (post_f x `star` frame_f)).
+    (ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) /\ frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem m1 frame_f)) ==>
+      (req_g x) (focus_rmem m1 (pre_g x)))
+
+unfold
+let bind_steel_steelf_ens_unnormal (#a:Type) (#b:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
+  (ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (frame_f:vprop)
+  (post:post_t b)
+  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
+  (_: squash (can_be_split_post post_g post))
+  (m0:rmem (pre_f `star` frame_f))
+  (y:b)
+  (m2:rmem (post y))
+= req_f (focus_rmem m0 pre_f) /\
+  (exists (x:a) (m1:rmem (post_f x `star` frame_f)). (
+    frame_equalities frame_f (focus_rmem m0 frame_f) (focus_rmem m1 frame_f)) /\
+    ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) /\ (ens_g x) (focus_rmem m1 (pre_g x)) y (focus_rmem m2 (post_g x y)))
+
+val bind_steel_steelf_aux (a:Type) (b:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (#req_f:req_t pre_f) (#ens_f:ens_t pre_f a post_f)
+  (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
+  (#req_g:(x:a -> req_t (pre_g x))) (#ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#frame_f:vprop)
+  (#post:post_t b)
+  (#p:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
+  (#p2: squash (can_be_split_post post_g post))
+  (f:repr a pre_f post_f req_f ens_f)
+  (g:(x:a -> repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: repr b
+    (pre_f `star` frame_f)
+    post
+    (bind_steel_steelf_req_unnormal req_f ens_f req_g frame_f p)
+    (bind_steel_steelf_ens_unnormal req_f ens_f ens_g frame_f post p p2)
+
+let bind_steel_steelf_aux a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #post #p #p2 f g =
+  fun frame ->
+
+    let x = frame00 f frame_f frame in
+    let m1 = nmst_get () in
+
+    can_be_split_3_interp
+      (hp_of (post_f x `star` frame_f))
+      (hp_of (pre_g x))
+      frame (locks_invariant Set.empty m1) m1;
+
+    focus_is_restrict_mk_rmem
+      (post_f x `star` frame_f)
+      (pre_g x)
+      (core_mem m1);
+
+    let y = g x frame in
+
+    let m2 = nmst_get () in
+
+    focus_is_restrict_mk_rmem (post y) (post_g x y) (core_mem m2);
+
+
+    can_be_split_3_interp (hp_of (post_g x y)) (hp_of (post y)) frame (locks_invariant Set.empty m2) m2;
+
+    y
+
+let bind_steel_steelf a b f g = norm_repr (bind_steel_steelf_aux a b f g)
+
+unfold
+let bind_steelf_steel_req_unnormal (#a:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (#pre_g:a -> pre_t)
+  (req_g:(x:a -> req_t (pre_g x)))
+  (frame_g:a -> vprop)
+  (_:squash (can_be_split_forall post_f (fun x -> pre_g x `star` frame_g x)))
+  (m0:rmem pre_f)
+= req_f m0 /\
+  (forall (x:a) (m1:rmem (post_f x)). (
+    can_be_split_trans (post_f x) (pre_g x `star` frame_g x) (pre_g x);
+    ens_f m0 x m1 ==> (req_g x) (focus_rmem m1 (pre_g x))))
+
+unfold
+let bind_steelf_steel_ens_unnormal (#a:Type) (#b:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
+  (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
+  (ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (frame_g:a -> vprop)
+  (post:post_t b)
+  (_:squash (can_be_split_forall post_f (fun x -> pre_g x `star` frame_g x)))
+  (_:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
+  (m0:rmem pre_f)
+  (y:b)
+  (m2:rmem (post y))
+= req_f m0 /\
+  (exists (x:a) (m1:rmem (post_f x)). (
+    can_be_split_trans (post_f x) (pre_g x `star` frame_g x) (pre_g x);
+    can_be_split_trans (post_f x) (pre_g x `star` frame_g x) (frame_g x);
+    can_be_split_trans (post y) (post_g x y `star` frame_g x) (post_g x y);
+    can_be_split_trans (post y) (post_g x y `star` frame_g x) (frame_g x);
+    frame_equalities (frame_g x) (focus_rmem m1 (frame_g x)) (focus_rmem m2 (frame_g x)) /\
+    ens_f m0 x m1 /\ (ens_g x) (focus_rmem m1 (pre_g x)) y (focus_rmem m2 (post_g x y))))
+
+val bind_steelf_steel_aux (a:Type) (b:Type)
+  (#pre_f:pre_t) (#post_f:post_t a)
+  (#req_f:req_t pre_f) (#ens_f:ens_t pre_f a post_f)
+  (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
+  (#req_g:(x:a -> req_t (pre_g x))) (#ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#frame_g:a -> vprop)
+  (#post:post_t b)
+  (#p:squash (can_be_split_forall post_f (fun x -> pre_g x `star` frame_g x)))
+  (#p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
+  (f:repr a pre_f post_f req_f ens_f)
+  (g:(x:a -> repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: repr b
+    pre_f
+    post
+    (bind_steelf_steel_req_unnormal req_f ens_f req_g frame_g p)
+    (bind_steelf_steel_ens_unnormal req_f ens_f ens_g frame_g post p p2)
+
+#push-options "--z3rlimit 20"
+let bind_steelf_steel_aux a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_g #post #p #p2 f g =
+  fun frame ->
+    let x = f frame in
+    let m1 = nmst_get () in
+
+    let h1 = mk_rmem (post_f x) (core_mem m1) in
+
+    let h1' = mk_rmem (pre_g x `star` frame_g x) (core_mem m1) in
+
+    can_be_split_trans (post_f x) (pre_g x `star` frame_g x) (pre_g x);
+    focus_is_restrict_mk_rmem
+      (post_f x)
+      (pre_g x `star` frame_g x)
+      (core_mem m1);
+    focus_focus_is_focus
+      (post_f x)
+      (pre_g x `star` frame_g x)
+      (pre_g x)
+      (core_mem m1);
+    assert (focus_rmem h1' (pre_g x) == focus_rmem h1 (pre_g x));
+
+    can_be_split_3_interp
+      (hp_of (post_f x))
+      (hp_of (pre_g x `star` frame_g x))
+      frame (locks_invariant Set.empty m1) m1;
+
+    let y = frame00 (g x) (frame_g x) frame in
+
+    let m2 = nmst_get () in
+
+    can_be_split_trans (post_f x) (pre_g x `star` frame_g x) (pre_g x);
+    can_be_split_trans (post_f x) (pre_g x `star` frame_g x) (frame_g x);
+    can_be_split_trans (post y) (post_g x y `star` frame_g x) (post_g x y);
+    can_be_split_trans (post y) (post_g x y `star` frame_g x) (frame_g x);
+
+
+    focus_focus_is_focus
+      (post_f x)
+      (pre_g x `star` frame_g x)
+      (frame_g x)
+      (core_mem m1);
+
+    focus_is_restrict_mk_rmem
+      (post_g x y `star` frame_g x)
+      (post y)
+      (core_mem m2);
+
+    focus_focus_is_focus
+      (post_g x y `star` frame_g x)
+      (post y)
+      (frame_g x)
+      (core_mem m2);
+    focus_focus_is_focus
+      (post_g x y `star` frame_g x)
+      (post y)
+      (post_g x y)
+      (core_mem m2);
+
+    can_be_split_3_interp
+      (hp_of (post_g x y `star` frame_g x))
+      (hp_of (post y))
+      frame (locks_invariant Set.empty m2) m2;
+
+
+    y
+#pop-options
+
+let bind_steelf_steel a b f g = norm_repr (bind_steelf_steel_aux a b f g)
+
+(*
 let subcomp a pre post req_f ens_f req_g ens_g f = f
 
 let bind_pure_steel a b wp pre_g post_b req_g ens_g f g
@@ -166,24 +713,6 @@ let bind_div_steel (a:Type) (b:Type)
 
 polymonadic_bind (DIV, SteelSel) |> SteelSel = bind_div_steel
 
-let nmst_get (#st:Sem.st) ()
-  : Sem.Mst (Sem.full_mem st)
-           (fun _ -> True)
-           (fun s0 s s1 -> s0 == s /\ s == s1)
-  = NMST.get ()
-
-let rec lemma_frame_equalities_refl (frame:vprop) (h:rmem frame) : Lemma (frame_equalities frame h h) =
-  match frame with
-  | VUnit _ -> ()
-  | VStar p1 p2 ->
-        can_be_split_star_l p1 p2;
-        can_be_split_star_r p1 p2;
-
-        let h1 = focus_rmem h p1 in
-        let h2 = focus_rmem h p2 in
-
-        lemma_frame_equalities_refl p1 h1;
-        lemma_frame_equalities_refl p2 h2
 
 let returnc0 (#a:Type) (#p:a -> vprop) (x:a)
   : repr a (p x) p (fun _ -> True) (fun h0 r h1 -> r == x /\ normal (frame_equalities (p x) h0 h1))
@@ -744,3 +1273,4 @@ polymonadic_bind (DIV, SteelSel) |> SteelSel = bind_div_steel
 
 // let bind_steel_steelf a b f g =
 //   fun frame' -> admit()
+*)
