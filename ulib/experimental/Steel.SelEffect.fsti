@@ -603,6 +603,7 @@ inline_for_extraction noextract let rm : CE.cm vprop req =
 (* Specialize visit_tm to reimplement name_appears_in.
    AF: As of Jan 14, 2021, calling name_appears_in from FStar.Tactics.Derived leads to a segfault *)
 
+(*
 exception Appears
 
 let on_sort_bv (f : term -> Tac unit) (xbv:bv) : Tac unit =
@@ -685,19 +686,18 @@ and visit_comp (ff : term -> Tac unit) (c : comp) : Tac unit =
       visit_tm ff res;
       iter (fun (a, q) -> visit_tm ff a) args
 
-
 (** Decides whether a top-level name [nm] syntactically
 // appears in the term [t]. *)
 let name_appears_in (nm:name) (t:term) : Tac bool =
-  let ff (t : term) : Tac unit =
+  let ff (t : term) : Tac term =
     match t with
     | Tv_FVar fv -> if inspect_fv fv = nm then raise Appears
     | t -> ()
-  in
+  inw
   try ignore (visit_tm ff t); false with
   | Appears -> true
   | e -> raise e
-
+*)
 
 let term_appears_in (t:term) (i:term) : Tac bool =
   name_appears_in (explode_qn (term_to_string t)) i
@@ -2017,7 +2017,6 @@ val write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
   (ensures fun _ _ h1 -> x == h1 (vptr r))
 
 
-
 (* AF: There probably is a simpler way to get from p to squash p in a tactic, so that we can use apply_lemma *)
 let squash_and p (x:squash (p /\ True)) : (p /\ True) =
   let x : squash (p `c_and` True) = FStar.Squash.join_squash x in
@@ -2048,18 +2047,20 @@ let sel (#a:Type) (#p:vprop) (r:ref a)
 
 // #set-options "--admit_smt_queries true"
 
+(* AF: Typechecking the following crashes F* with a segfault.
+  This occurs when running the framing tactic, inside a call to visit_tm from name_appears_in, defined in the standard library.
+  Replacing this call by the visit_tm commented out in this file solves the segfault.
+  The problem seems to stem from a "bad" term being built by the visit_tm from the standard library.
+  The visit_tm in this file circumvents this problem by not rebuilding a term, and instead taking a
+  term -> Tac unit as its argument *)
+
 let test0 (r:ref int) : SteelSel unit
   (vptr r) (fun _ -> vptr r)
   (requires fun h -> sel r h == 0)
   (ensures fun _ _ h1 -> sel r h1 == 1)
   = let h = get () in
-    assert (sel r h == 0);
     write r 1;
     let h1 = get() in
-    // AF: Uncommenting the following line leads to the error
-    // ASSERTION FAILURE: Name not found: pure_null_wp
-    // during the encoding to Z3
-    // assert (sel r h1 == 1);
     write r 1
 
 let test1 (r:ref int) : SteelSel unit
