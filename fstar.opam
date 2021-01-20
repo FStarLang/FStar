@@ -19,7 +19,7 @@ depends: [
   "ppx_deriving"
   "ppx_deriving_yojson"
   "process"
-  "ocaml-migrate-parsetree"
+  "ocaml-migrate-parsetree" {< "2.1.0"}
 ]
 depexts: ["coreutils"] {os = "macos" & os-distribution = "homebrew"}
 build: [

@@ -269,7 +269,7 @@ let is_type env t =
         else BU.print2 "not a type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
     b
 
-let is_type_binder env x = is_arity env (fst x).sort
+let is_type_binder env x = is_arity env x.binder_bv.sort
 
 let is_constructor t = match (SS.compress t).n with
     | Tm_fvar ({fv_qual=Some Data_ctor})
@@ -752,13 +752,13 @@ and binders_as_ml_binders (g:uenv) (bs:binders) : list<(mlident * mlty)> * uenv 
     let ml_bs, env = bs |> List.fold_left (fun (ml_bs, env) b ->
             if is_type_binder g b
             then //no first-class polymorphism; so type-binders get wiped out
-                 let b = fst b in
+                 let b = b.binder_bv in
                  let env = extend_ty env b true in
                  let ml_b = (lookup_ty env b).ty_b_name in
                  let ml_b = (ml_b (*name of the binder*),
                              ml_unit_ty (*type of the binder. correspondingly, this argument gets converted to the unit value in application *)) in
                  ml_b::ml_bs, env
-            else let b = fst b in
+            else let b = b.binder_bv in
                  let t = translate_term_to_mlty env b.sort in
                  let env, b, _ = extend_bv env b ([], t) false false in
                  let ml_b = b, t in
@@ -1075,11 +1075,11 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
                         if n_tbinders <= List.length bs
                         then let targs, rest_args = BU.first_N n_tbinders bs in
                              let expected_source_ty =
-                                let s = List.map2 (fun (x, _) (y, _) -> S.NT(x, S.bv_to_name y)) tbinders targs in
+                                let s = List.map2 (fun ({binder_bv=x}) ({binder_bv=y}) -> S.NT(x, S.bv_to_name y)) tbinders targs in
                                 SS.subst s tbody in
-                             let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a false) g targs in
+                             let env = List.fold_left (fun env ({binder_bv=a}) -> UEnv.extend_ty env a false) g targs in
                              let expected_t = term_as_mlty env expected_source_ty in
-                             let polytype = targs |> List.map (fun (x, _) -> (UEnv.lookup_ty env x).ty_b_name), expected_t in
+                             let polytype = targs |> List.map (fun ({binder_bv=x}) -> (UEnv.lookup_ty env x).ty_b_name), expected_t in
                              let add_unit =
                                 match rest_args with
                                 | [] ->
@@ -1104,11 +1104,11 @@ let extract_lb_sig (g:uenv) (lbs:letbindings) =
                      | Tm_uinst _
                      | Tm_fvar _
                      | Tm_name _ ->
-                       let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a false) g tbinders in
+                       let env = List.fold_left (fun env ({binder_bv=a}) -> UEnv.extend_ty env a false) g tbinders in
                        let expected_t = term_as_mlty env tbody in
-                       let polytype = tbinders |> List.map (fun (x, _) -> (UEnv.lookup_ty env x).ty_b_name), expected_t in
+                       let polytype = tbinders |> List.map (fun ({binder_bv=x}) -> (UEnv.lookup_ty env x).ty_b_name), expected_t in
                        //In this case, an eta expansion is safe
-                       let args = tbinders |> List.map (fun (bv, _) -> S.bv_to_name bv |> as_arg) in
+                       let args = tbinders |> List.map (fun ({binder_bv=bv}) -> S.bv_to_name bv |> as_arg) in
                        let e = mk (Tm_app(lbdef, args)) lbdef.pos in
                        (lbname_, f_e, (lbtyp, (tbinders, polytype)), false, e)
 
@@ -1559,8 +1559,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
         | Tm_let((false, [lb]), e') 
           when not (is_top_level [lb])
           && BU.is_some (U.get_attribute FStar.Parser.Const.rename_let_attr lb.lbattrs) ->
-          let b = BU.left lb.lbname, None in
-          let (x, _), body = SS.open_term_1 b e' in
+          let b = S.mk_binder (BU.left lb.lbname) in
+          let ({binder_bv=x}), body = SS.open_term_1 b e' in
           // BU.print_string "Reached let with rename_let attribute\n";
           let suggested_name = 
               let attr = U.get_attribute FStar.Parser.Const.rename_let_attr lb.lbattrs in
@@ -1601,7 +1601,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
             | Some y -> 
               let other_attrs = remove_attr lb.lbattrs in
               let rename = [NT(x, S.bv_to_name y)] in
-              let body = SS.close ([y, None]) (SS.subst rename body) in 
+              let body = SS.close ([S.mk_binder y]) (SS.subst rename body) in 
               let lb = { lb with lbname=Inl y; lbattrs=other_attrs } in
               Tm_let ((false, [lb]), body)
            in
@@ -1658,7 +1658,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           in
 
           let check_lb env (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, e)) =
-              let env = List.fold_left (fun env (a, _) -> UEnv.extend_ty env a false) env targs in
+              let env = List.fold_left (fun env ({binder_bv=a}) -> UEnv.extend_ty env a false) env targs in
               let expected_t = snd polytype in
               let e, ty = check_term_as_mlexpr env e f expected_t in
               let e, f = maybe_promote_effect e f expected_t in
@@ -1795,7 +1795,7 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
         | Tm_arrow (binders, _) ->
           let binders = 
               binders
-              |> List.filter (function (_, (Some (Implicit _))) -> true | _ -> false)
+              |> List.filter (function ({binder_qual=Some (Implicit _)}) -> true | _ -> false)
           in
           List.fold_right 
             (fun _ (g, vs) ->

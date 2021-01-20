@@ -41,7 +41,6 @@ type aqualv =
     | Q_Implicit
     | Q_Explicit
     | Q_Meta of term
-    | Q_Meta_attr of term
 
 type argv = term * aqualv
 
@@ -94,7 +93,7 @@ type bv_view = {
     bv_sort : typ;
 }
 
-type binder_view = bv * aqualv
+type binder_view = bv * (aqualv * list<term>)
 
 type comp_view =
     | C_Total of typ * option<term>  //optional decreases clause
@@ -224,7 +223,6 @@ let ref_Mk_bv =
 let ref_Q_Explicit  = fstar_refl_data_const "Q_Explicit"
 let ref_Q_Implicit  = fstar_refl_data_const "Q_Implicit"
 let ref_Q_Meta      = fstar_refl_data_const "Q_Meta"
-let ref_Q_Meta_attr = fstar_refl_data_const "Q_Meta_attr"
 
 (* const *)
 let ref_C_Unit      = fstar_refl_data_const "C_Unit"

@@ -499,7 +499,7 @@ let report_implicits rng (is : Env.implicits) : unit =
                              imp.imp_reason));
   Err.stop_if_err ()
 
-let run_tactic_on_ps
+let run_tactic_on_ps'
   (rng_call : Range.range)
   (rng_goal : Range.range)
   (background : bool)
@@ -593,3 +593,17 @@ let run_tactic_on_ps
         Err.raise_error (Err.Fatal_UserTacticFailure,
                             BU.format1 "user tactic failed: `%s`" (texn_to_string e))
                           rng
+
+let run_tactic_on_ps
+          (rng_call : Range.range)
+          (rng_goal : Range.range)
+          (background : bool)
+          (e_arg : embedding<'a>)
+          (arg : 'a)
+          (e_res : embedding<'b>)
+          (tactic:term)
+          (ps:proofstate) =
+    Profiling.profile
+      (fun () -> run_tactic_on_ps' rng_call rng_goal background e_arg arg e_res tactic ps)
+      (Some (Ident.string_of_lid (Env.current_module ps.main_context)))
+      "FStar.Tactics.Interpreter.run_tactic_on_ps"

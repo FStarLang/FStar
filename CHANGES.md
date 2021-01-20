@@ -77,6 +77,21 @@ Guidelines for the changelog:
 
 ## Libraries
 
+   * Guido Martinez found that `FStar.WellFounded.axiom1_dep` (and its
+     specialization axiom1) is unsound when instantiated across
+     different universe levels. The issue and fix is discussed in
+     detail here: https://github.com/FStarLang/FStar/issues/2069
+
+     In summary, `FStar.WellFounded.axiom1_dep`,
+     `FStar.WellFounded.axiom1`, and `FStar.WellFounded.apply` have
+     all been removed. The user-facing universe polymorphic axiom is
+     no longer needed---you should just be able to remove calls to it
+     in your programs. Instead, we have enhanced F*'s SMT encoding of
+     inductive types to include additional, more targeted
+     well-foundedness axioms.
+     tests/micro-benchmarks/TestWellFoundedRecursion.fst provides
+     several small representative examples.
+
    * Two core axioms were discovered by Aseem Rastogi to be formulated
      in an unsound manner.
 
@@ -105,6 +120,11 @@ Guidelines for the changelog:
      provided (using UInt128).
 
 ## Syntax
+   * Support for binder attributes in the reflection APIs `pack_binder`
+     and `inspect_binder`. This is a breaking change, see
+     https://github.com/project-everest/hacl-star/commit/7a3199c745b69966e54a313e648a275d21686087
+     commit for how to fix the breaking code.
+
    * `abstract` qualifier and the related option `--use_extracted_interfaces`
      are no longer supported. Use interfaces instead.
 

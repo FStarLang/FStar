@@ -92,16 +92,18 @@ and binder =
   b: binder' ;
   brange: FStar_Range.range ;
   blevel: level ;
-  aqual: arg_qualifier FStar_Pervasives_Native.option }
+  aqual: arg_qualifier FStar_Pervasives_Native.option ;
+  battributes: term Prims.list }
 and pattern' =
-  | PatWild of arg_qualifier FStar_Pervasives_Native.option 
+  | PatWild of (arg_qualifier FStar_Pervasives_Native.option * term
+  Prims.list) 
   | PatConst of FStar_Const.sconst 
   | PatApp of (pattern * pattern Prims.list) 
   | PatVar of (FStar_Ident.ident * arg_qualifier
-  FStar_Pervasives_Native.option) 
+  FStar_Pervasives_Native.option * term Prims.list) 
   | PatName of FStar_Ident.lid 
   | PatTvar of (FStar_Ident.ident * arg_qualifier
-  FStar_Pervasives_Native.option) 
+  FStar_Pervasives_Native.option * term Prims.list) 
   | PatList of pattern Prims.list 
   | PatTuple of (pattern Prims.list * Prims.bool) 
   | PatRecord of (FStar_Ident.lid * pattern) Prims.list 
@@ -114,10 +116,7 @@ and pattern = {
 and arg_qualifier =
   | Implicit 
   | Equality 
-  | Meta of arg_qualifier_meta_t 
-and arg_qualifier_meta_t =
-  | Arg_qualifier_meta_tac of term 
-  | Arg_qualifier_meta_attr of term 
+  | Meta of term 
 and imp =
   | FsTypApp 
   | Hash 
@@ -347,22 +346,31 @@ let (uu___is_NoName : binder' -> Prims.bool) =
 let (__proj__NoName__item___0 : binder' -> term) =
   fun projectee -> match projectee with | NoName _0 -> _0
 let (__proj__Mkbinder__item__b : binder -> binder') =
-  fun projectee -> match projectee with | { b; brange; blevel; aqual;_} -> b
+  fun projectee ->
+    match projectee with | { b; brange; blevel; aqual; battributes;_} -> b
 let (__proj__Mkbinder__item__brange : binder -> FStar_Range.range) =
   fun projectee ->
-    match projectee with | { b; brange; blevel; aqual;_} -> brange
+    match projectee with
+    | { b; brange; blevel; aqual; battributes;_} -> brange
 let (__proj__Mkbinder__item__blevel : binder -> level) =
   fun projectee ->
-    match projectee with | { b; brange; blevel; aqual;_} -> blevel
+    match projectee with
+    | { b; brange; blevel; aqual; battributes;_} -> blevel
 let (__proj__Mkbinder__item__aqual :
   binder -> arg_qualifier FStar_Pervasives_Native.option) =
   fun projectee ->
-    match projectee with | { b; brange; blevel; aqual;_} -> aqual
+    match projectee with
+    | { b; brange; blevel; aqual; battributes;_} -> aqual
+let (__proj__Mkbinder__item__battributes : binder -> term Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { b; brange; blevel; aqual; battributes;_} -> battributes
 let (uu___is_PatWild : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatWild _0 -> true | uu___ -> false
 let (__proj__PatWild__item___0 :
-  pattern' -> arg_qualifier FStar_Pervasives_Native.option) =
-  fun projectee -> match projectee with | PatWild _0 -> _0
+  pattern' ->
+    (arg_qualifier FStar_Pervasives_Native.option * term Prims.list))
+  = fun projectee -> match projectee with | PatWild _0 -> _0
 let (uu___is_PatConst : pattern' -> Prims.bool) =
   fun projectee ->
     match projectee with | PatConst _0 -> true | uu___ -> false
@@ -376,7 +384,8 @@ let (uu___is_PatVar : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatVar _0 -> true | uu___ -> false
 let (__proj__PatVar__item___0 :
   pattern' ->
-    (FStar_Ident.ident * arg_qualifier FStar_Pervasives_Native.option))
+    (FStar_Ident.ident * arg_qualifier FStar_Pervasives_Native.option * term
+      Prims.list))
   = fun projectee -> match projectee with | PatVar _0 -> _0
 let (uu___is_PatName : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatName _0 -> true | uu___ -> false
@@ -386,7 +395,8 @@ let (uu___is_PatTvar : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatTvar _0 -> true | uu___ -> false
 let (__proj__PatTvar__item___0 :
   pattern' ->
-    (FStar_Ident.ident * arg_qualifier FStar_Pervasives_Native.option))
+    (FStar_Ident.ident * arg_qualifier FStar_Pervasives_Native.option * term
+      Prims.list))
   = fun projectee -> match projectee with | PatTvar _0 -> _0
 let (uu___is_PatList : pattern' -> Prims.bool) =
   fun projectee -> match projectee with | PatList _0 -> true | uu___ -> false
@@ -428,21 +438,8 @@ let (uu___is_Equality : arg_qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Equality -> true | uu___ -> false
 let (uu___is_Meta : arg_qualifier -> Prims.bool) =
   fun projectee -> match projectee with | Meta _0 -> true | uu___ -> false
-let (__proj__Meta__item___0 : arg_qualifier -> arg_qualifier_meta_t) =
+let (__proj__Meta__item___0 : arg_qualifier -> term) =
   fun projectee -> match projectee with | Meta _0 -> _0
-let (uu___is_Arg_qualifier_meta_tac : arg_qualifier_meta_t -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Arg_qualifier_meta_tac _0 -> true | uu___ -> false
-let (__proj__Arg_qualifier_meta_tac__item___0 : arg_qualifier_meta_t -> term)
-  = fun projectee -> match projectee with | Arg_qualifier_meta_tac _0 -> _0
-let (uu___is_Arg_qualifier_meta_attr : arg_qualifier_meta_t -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | Arg_qualifier_meta_attr _0 -> true
-    | uu___ -> false
-let (__proj__Arg_qualifier_meta_attr__item___0 :
-  arg_qualifier_meta_t -> term) =
-  fun projectee -> match projectee with | Arg_qualifier_meta_attr _0 -> _0
 let (uu___is_FsTypApp : imp -> Prims.bool) =
   fun projectee -> match projectee with | FsTypApp -> true | uu___ -> false
 let (uu___is_Hash : imp -> Prims.bool) =
@@ -860,13 +857,24 @@ let (mk_decl : decl' -> FStar_Range.range -> decoration Prims.list -> decl) =
                | Qualifier q -> FStar_Pervasives_Native.Some q
                | uu___1 -> FStar_Pervasives_Native.None) decorations in
         { d; drange = r; quals = qualifiers1; attrs = attributes_2 }
+let (mk_binder_with_attrs :
+  binder' ->
+    FStar_Range.range ->
+      level ->
+        arg_qualifier FStar_Pervasives_Native.option ->
+          term Prims.list -> binder)
+  =
+  fun b ->
+    fun r ->
+      fun l ->
+        fun i ->
+          fun attrs ->
+            { b; brange = r; blevel = l; aqual = i; battributes = attrs }
 let (mk_binder :
   binder' ->
     FStar_Range.range ->
       level -> arg_qualifier FStar_Pervasives_Native.option -> binder)
-  =
-  fun b ->
-    fun r -> fun l -> fun i -> { b; brange = r; blevel = l; aqual = i }
+  = fun b -> fun r -> fun l -> fun i -> mk_binder_with_attrs b r l i []
 let (mk_term : term' -> FStar_Range.range -> level -> term) =
   fun t -> fun r -> fun l -> { tm = t; range = r; level = l }
 let (mk_uminus :
@@ -919,7 +927,7 @@ let (mk_function :
                   (uu___5, branches) in
                 Match uu___4 in
               mk_term uu___3 r2 Expr in
-            ([mk_pattern (PatVar (x, FStar_Pervasives_Native.None)) r1],
+            ([mk_pattern (PatVar (x, FStar_Pervasives_Native.None, [])) r1],
               uu___2) in
           Abs uu___1 in
         mk_term uu___ r2 Expr
@@ -1077,7 +1085,7 @@ let mkWildAdmitMagic :
   =
   fun r ->
     let uu___ = mkAdmitMagic r in
-    ((mk_pattern (PatWild FStar_Pervasives_Native.None) r),
+    ((mk_pattern (PatWild (FStar_Pervasives_Native.None, [])) r),
       FStar_Pervasives_Native.None, uu___)
 let focusBranches :
   'uuuuu .
@@ -1186,7 +1194,8 @@ let (mkRefinedBinder :
       Prims.bool ->
         term FStar_Pervasives_Native.option ->
           FStar_Range.range ->
-            arg_qualifier FStar_Pervasives_Native.option -> binder)
+            arg_qualifier FStar_Pervasives_Native.option ->
+              term Prims.list -> binder)
   =
   fun id ->
     fun t ->
@@ -1194,24 +1203,28 @@ let (mkRefinedBinder :
         fun refopt ->
           fun m ->
             fun implicit ->
-              let b = mk_binder (Annotated (id, t)) m Type_level implicit in
-              match refopt with
-              | FStar_Pervasives_Native.None -> b
-              | FStar_Pervasives_Native.Some phi ->
-                  if should_bind_var
-                  then
-                    mk_binder
-                      (Annotated
-                         (id, (mk_term (Refine (b, phi)) m Type_level))) m
-                      Type_level implicit
-                  else
-                    (let x = FStar_Ident.gen t.range in
-                     let b1 =
-                       mk_binder (Annotated (x, t)) m Type_level implicit in
-                     mk_binder
-                       (Annotated
-                          (id, (mk_term (Refine (b1, phi)) m Type_level))) m
-                       Type_level implicit)
+              fun attrs ->
+                let b =
+                  mk_binder_with_attrs (Annotated (id, t)) m Type_level
+                    implicit attrs in
+                match refopt with
+                | FStar_Pervasives_Native.None -> b
+                | FStar_Pervasives_Native.Some phi ->
+                    if should_bind_var
+                    then
+                      mk_binder_with_attrs
+                        (Annotated
+                           (id, (mk_term (Refine (b, phi)) m Type_level))) m
+                        Type_level implicit attrs
+                    else
+                      (let x = FStar_Ident.gen t.range in
+                       let b1 =
+                         mk_binder_with_attrs (Annotated (x, t)) m Type_level
+                           implicit attrs in
+                       mk_binder_with_attrs
+                         (Annotated
+                            (id, (mk_term (Refine (b1, phi)) m Type_level)))
+                         m Type_level implicit attrs)
 let (mkRefinedPattern :
   pattern ->
     term ->
@@ -1232,12 +1245,13 @@ let (mkRefinedPattern :
                     if should_bind_pat
                     then
                       (match pat.pat with
-                       | PatVar (x, uu___) ->
+                       | PatVar (x, uu___, attrs) ->
                            mk_term
                              (Refine
-                                ((mk_binder (Annotated (x, t)) t_range
-                                    Type_level FStar_Pervasives_Native.None),
-                                  phi)) range Type_level
+                                ((mk_binder_with_attrs (Annotated (x, t))
+                                    t_range Type_level
+                                    FStar_Pervasives_Native.None attrs), phi))
+                             range Type_level
                        | uu___ ->
                            let x = FStar_Ident.gen t_range in
                            let phi1 =
@@ -1257,7 +1271,8 @@ let (mkRefinedPattern :
                                    Name uu___3 in
                                  mk_term uu___2 phi.range Formula in
                                ((mk_pattern
-                                   (PatWild FStar_Pervasives_Native.None)
+                                   (PatWild
+                                      (FStar_Pervasives_Native.None, []))
                                    phi.range), FStar_Pervasives_Native.None,
                                  uu___1) in
                              mk_term
@@ -1288,7 +1303,7 @@ let rec (extract_named_refinement :
         FStar_Pervasives_Native.Some (x, t, FStar_Pervasives_Native.None)
     | Refine
         ({ b = Annotated (x, t); brange = uu___; blevel = uu___1;
-           aqual = uu___2;_},
+           aqual = uu___2; battributes = uu___3;_},
          t')
         ->
         FStar_Pervasives_Native.Some
@@ -1701,38 +1716,48 @@ and (binder_to_string : binder -> Prims.string) =
           let uu___1 = FStar_All.pipe_right t term_to_string in
           FStar_Util.format2 "%s:%s" uu___ uu___1
       | NoName t -> FStar_All.pipe_right t term_to_string in
-    let uu___ = aqual_to_string x.aqual in FStar_Util.format2 "%s%s" uu___ s
+    let uu___ = aqual_to_string x.aqual in
+    let uu___1 = attr_list_to_string x.battributes in
+    FStar_Util.format3 "%s%s%s" uu___ uu___1 s
 and (aqual_to_string :
   arg_qualifier FStar_Pervasives_Native.option -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | FStar_Pervasives_Native.Some (Equality) -> "$"
     | FStar_Pervasives_Native.Some (Implicit) -> "#"
-    | FStar_Pervasives_Native.Some (Meta (Arg_qualifier_meta_tac t)) ->
+    | FStar_Pervasives_Native.Some (Meta t) ->
         let uu___1 = let uu___2 = term_to_string t in Prims.op_Hat uu___2 "]" in
         Prims.op_Hat "#[" uu___1
-    | FStar_Pervasives_Native.Some (Meta (Arg_qualifier_meta_attr t)) ->
-        let uu___1 = let uu___2 = term_to_string t in Prims.op_Hat uu___2 "]" in
-        Prims.op_Hat "[@@" uu___1
     | FStar_Pervasives_Native.None -> ""
+and (attr_list_to_string : term Prims.list -> Prims.string) =
+  fun uu___ ->
+    match uu___ with
+    | [] -> ""
+    | l -> attrs_opt_to_string (FStar_Pervasives_Native.Some l)
 and (pat_to_string : pattern -> Prims.string) =
   fun x ->
     match x.pat with
-    | PatWild (FStar_Pervasives_Native.None) -> "_"
-    | PatWild uu___ -> "#_"
+    | PatWild (FStar_Pervasives_Native.None, attrs) ->
+        let uu___ = attr_list_to_string attrs in Prims.op_Hat uu___ "_"
+    | PatWild (uu___, attrs) ->
+        let uu___1 =
+          let uu___2 = attr_list_to_string attrs in Prims.op_Hat uu___2 "_" in
+        Prims.op_Hat "#" uu___1
     | PatConst c -> FStar_Parser_Const.const_to_string c
     | PatApp (p, ps) ->
         let uu___ = FStar_All.pipe_right p pat_to_string in
         let uu___1 = to_string_l " " pat_to_string ps in
         FStar_Util.format2 "(%s %s)" uu___ uu___1
-    | PatTvar (i, aq) ->
+    | PatTvar (i, aq, attrs) ->
         let uu___ = aqual_to_string aq in
-        let uu___1 = FStar_Ident.string_of_id i in
-        FStar_Util.format2 "%s%s" uu___ uu___1
-    | PatVar (i, aq) ->
+        let uu___1 = attr_list_to_string attrs in
+        let uu___2 = FStar_Ident.string_of_id i in
+        FStar_Util.format3 "%s%s%s" uu___ uu___1 uu___2
+    | PatVar (i, aq, attrs) ->
         let uu___ = aqual_to_string aq in
-        let uu___1 = FStar_Ident.string_of_id i in
-        FStar_Util.format2 "%s%s" uu___ uu___1
+        let uu___1 = attr_list_to_string attrs in
+        let uu___2 = FStar_Ident.string_of_id i in
+        FStar_Util.format3 "%s%s%s" uu___ uu___1 uu___2
     | PatName l -> FStar_Ident.string_of_lid l
     | PatList l ->
         let uu___ = to_string_l "; " pat_to_string l in
@@ -1780,8 +1805,8 @@ let rec (head_id_of_pat : pattern -> FStar_Ident.lident Prims.list) =
   fun p ->
     match p.pat with
     | PatName l -> [l]
-    | PatVar (i, uu___) ->
-        let uu___1 = FStar_Ident.lid_of_ids [i] in [uu___1]
+    | PatVar (i, uu___, uu___1) ->
+        let uu___2 = FStar_Ident.lid_of_ids [i] in [uu___2]
     | PatApp (p1, uu___) -> head_id_of_pat p1
     | PatAscribed (p1, uu___) -> head_id_of_pat p1
     | uu___ -> []
@@ -1892,7 +1917,8 @@ let (decl_is_val : FStar_Ident.ident -> decl -> Prims.bool) =
       | uu___ -> false
 let (thunk : term -> term) =
   fun ens ->
-    let wildpat = mk_pattern (PatWild FStar_Pervasives_Native.None) ens.range in
+    let wildpat =
+      mk_pattern (PatWild (FStar_Pervasives_Native.None, [])) ens.range in
     mk_term (Abs ([wildpat], ens)) ens.range Expr
 let (idents_of_binders :
   binder Prims.list -> FStar_Range.range -> FStar_Ident.ident Prims.list) =
