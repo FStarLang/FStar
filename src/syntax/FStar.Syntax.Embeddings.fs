@@ -579,6 +579,7 @@ type norm_step =
     | UnfoldOnly  of list<string>
     | UnfoldFully of list<string>
     | UnfoldAttr  of list<string>
+    | UnfoldQual  of list<string>
     | NBE
 
 (* the steps as terms *)
@@ -594,6 +595,7 @@ let steps_Reify         = tconst PC.steps_reify
 let steps_UnfoldOnly    = tconst PC.steps_unfoldonly
 let steps_UnfoldFully   = tconst PC.steps_unfoldonly
 let steps_UnfoldAttr    = tconst PC.steps_unfoldattr
+let steps_UnfoldQual    = tconst PC.steps_unfoldqual
 let steps_NBE           = tconst PC.steps_nbe
 
 let e_norm_step =
@@ -638,6 +640,10 @@ let e_norm_step =
                 | UnfoldAttr l ->
                     S.mk_Tm_app steps_UnfoldAttr [S.as_arg (embed (e_list e_string) l rng None norm)]
                                 rng
+                | UnfoldQual l ->
+                    S.mk_Tm_app steps_UnfoldQual [S.as_arg (embed (e_list e_string) l rng None norm)]
+                                rng
+
                 )
     in
     let un (t0:term) (w:bool) norm : option<norm_step> =
@@ -679,6 +685,9 @@ let e_norm_step =
                 | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldattr ->
                     BU.bind_opt (unembed (e_list e_string) l w norm) (fun ss ->
                     Some <| UnfoldAttr ss)
+                | Tm_fvar fv, [(l, _)] when S.fv_eq_lid fv PC.steps_unfoldqual ->
+                    BU.bind_opt (unembed (e_list e_string) l w norm) (fun ss ->
+                    Some <| UnfoldQual ss)
                 | _ ->
                     if w then
                     Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded norm_step: %s" (Print.term_to_string t0)));

@@ -55,6 +55,7 @@ type step =
   | UnfoldOnly  of list<FStar.Ident.lid>
   | UnfoldFully of list<FStar.Ident.lid>
   | UnfoldAttr  of list<FStar.Ident.lid>
+  | UnfoldQual  of list<string>
   | UnfoldTac
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
@@ -100,6 +101,7 @@ let rec eq_step s1 s2 =
   | UnfoldFully lids1, UnfoldFully lids2
   | UnfoldAttr lids1, UnfoldAttr lids2 ->
       List.length lids1 = List.length lids2 && List.forall2 Ident.lid_equals lids1 lids2
+  | UnfoldQual strs1, UnfoldQual strs2 -> strs1 = strs2
   | _ -> false
 
 type sig_binding = list<lident> * sigelt
