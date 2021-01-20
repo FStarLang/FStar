@@ -791,8 +791,6 @@ let change_slprop (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
    all share the same value.
    Refs on PCM are more complicated, and likely not usable with selectors
 *)
-(*
-Close to verifying, but several issues with universes and the SMTEncoding of pure_null_wp
 
 module R = Steel.Reference
 open Steel.FractionalPermission
@@ -858,14 +856,12 @@ let vptr_tmp' (#a:Type) (r:ref a) (p:perm) (v:erased a) : vprop' =
     sel = fun _ -> ()}
 let vptr_tmp r p v : vprop = VUnit (vptr_tmp' r p v)
 
-assume
 val alloc0 (#a:Type0) (x:a) : SteelSel (ref a)
   vemp (fun r -> vptr_tmp r full_perm x)
   (requires fun _ -> True)
   (ensures fun _ r h1 -> True)
 
-
-// let alloc0 #a x = as_steelsel #_ #vemp #(fun r -> vptr_tmp r full_perm x) #True #(fun _ -> True) (fun _ -> R.alloc x)
+let alloc0 #a x = as_steelsel (fun _ -> R.alloc x)
 
 let intro_vptr (#a:Type) (r:ref a) (v:erased a) (m:mem) : Lemma
   (requires interp (hp_of (vptr_tmp r full_perm v)) m)
@@ -918,4 +914,3 @@ let write (#a:Type0) (r:ref a) (x:a) : SteelSel unit
     change_slprop (vptr r) (vptr_tmp r full_perm v) v () (elim_vptr r v);
     write0 v r x;
     change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x)
-*)
