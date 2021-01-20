@@ -6,7 +6,6 @@ open Common
 open FStar.Tactics
 open FStar.List.Tot
 open FStar.Universe
-module WF = FStar.WellFounded
 module L = Lattice
 module Ghost = FStar.Ghost
 module Map = FStar.Map
@@ -49,7 +48,7 @@ type ops = list op
 let rec abides #a (labs:ops) (f : tree0 a) : prop =
   begin match f with
   | Op a i k ->
-    mem a labs /\ (forall o. (WF.axiom1 k o; abides labs (k o)))
+    mem a labs /\ (forall o. abides labs (k o))
   | Return _ -> True
   end
 
@@ -90,7 +89,6 @@ let rec abides_sublist_nopat #a (l1 l2 : ops) (c : tree0 a)
     | Return _ -> ()
     | Op a i k ->
       let sub o : Lemma (abides l2 (k o)) =
-        FStar.WellFounded.axiom1 k o;
         abides_sublist_nopat l1 l2 (k o)
       in
       Classical.forall_intro sub
@@ -127,7 +125,6 @@ let rec fold_with #a #b #labs f v h =
   | Return x -> v x
   | Op act i k ->
     let k' (o : op_out act) : b =
-        WF.axiom1 k o;
        fold_with #_ #_ #labs (k o) v h
     in
     h act i k'
@@ -249,18 +246,16 @@ let rec interp_as_wp #a (t : rwtree a) : st_wp a =
   match t with
   | Return x -> return_wp x
   | Op Read _ k ->
-    bind_wp read_wp (fun s -> WF.axiom1 k s; interp_as_wp (k s))
+    bind_wp read_wp (fun s -> interp_as_wp (k s))
   | Op Write s k ->
-    bind_wp (write_wp s) (fun (o:unit) -> WF.axiom1 k o; interp_as_wp (k o))
+    bind_wp (write_wp s) (fun (o:unit) -> interp_as_wp (k o))
 
 let rec interp_rdwr_tree #a (t : tree a [Read;Write]) (s:state) : Tot (a & state) =
   match t with
   | Return x -> (x, s)
   | Op Read _ k ->
-    FStar.WellFounded.axiom1 k s;
     interp_rdwr_tree (k s) s
   | Op Write s k ->
-    FStar.WellFounded.axiom1 k ();
     interp_rdwr_tree (k ()) s
 
 let interp_as_fun #a (t : rwtree a) : (state -> a & state) =
@@ -291,14 +286,12 @@ let rec interp_monotonic #a (c:rwtree a) : Lemma (wp_is_monotonic (interp_as_wp 
   | Return x -> ()
   | Op Read _ k ->
     let aux (x:state) : Lemma (wp_is_monotonic (interp_as_wp (k x))) =
-      WF.axiom1 k x;
       interp_monotonic (k x)
     in
     Classical.forall_intro aux;
     bind_preserves_mon read_wp (fun x -> interp_as_wp (k x))
   | Op Write s k ->
     let aux (x:unit) : Lemma (wp_is_monotonic (interp_as_wp (k x))) =
-      WF.axiom1 k x;
       interp_monotonic (k x)
     in
     Classical.forall_intro aux;
@@ -317,7 +310,6 @@ let rec interp_morph #a #b (c : rwtree a) (f : a -> rwtree b) (p:_) (s0:_)
     | Op Read _ k ->
       let aux (o:state) : Lemma (interp_as_wp (k o) s0 (fun (y, s1) -> interp_as_wp (f y) s1 p)
                                         == interp_as_wp (tbind (k o) f) s0 p) =
-        WF.axiom1 k o;
         interp_morph (k o) f p s0
       in
       Classical.forall_intro aux
@@ -325,7 +317,6 @@ let rec interp_morph #a #b (c : rwtree a) (f : a -> rwtree b) (p:_) (s0:_)
     | Op Write s k ->
       let aux (o:unit) : Lemma (interp_as_wp (k o) s (fun (y, s1) -> interp_as_wp (f y) s1 p)
                                         == interp_as_wp (tbind (k o) f) s p) =
-        WF.axiom1 k o;
         interp_morph (k o) f p s
       in
       Classical.forall_intro aux
@@ -452,10 +443,8 @@ let rec interp_sem #a (t : rwtree a) (s0:state)
   = match t with
     | Return x -> (x, s0)
     | Op Read i k -> 
-      WF.axiom1 k s0;
       interp_sem (k s0) s0
     | Op Write i k ->
-      WF.axiom1 k ();
       interp_sem (k ()) i
     
 let soundness #a #wp (t : unit -> AlgWP a wp)

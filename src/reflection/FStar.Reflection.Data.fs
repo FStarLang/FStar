@@ -41,7 +41,6 @@ type aqualv =
     | Q_Implicit
     | Q_Explicit
     | Q_Meta of term
-    | Q_Meta_attr of term
 
 type argv = term * aqualv
 
@@ -94,7 +93,7 @@ type bv_view = {
     bv_sort : typ;
 }
 
-type binder_view = bv * aqualv
+type binder_view = bv * (aqualv * list<term>)
 
 type comp_view =
     | C_Total of typ * option<term>  //optional decreases clause

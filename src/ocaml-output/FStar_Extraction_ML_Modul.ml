@@ -221,12 +221,11 @@ let (extract_metadata :
   FStar_Syntax_Syntax.term Prims.list ->
     FStar_Extraction_ML_Syntax.meta Prims.list)
   = fun metas -> FStar_List.choose extract_meta metas
-let binders_as_mlty_binders :
-  'uuuuu .
-    FStar_Extraction_ML_UEnv.uenv ->
-      (FStar_Syntax_Syntax.bv * 'uuuuu) Prims.list ->
-        (FStar_Extraction_ML_UEnv.uenv * FStar_Extraction_ML_Syntax.mlident
-          Prims.list)
+let (binders_as_mlty_binders :
+  FStar_Extraction_ML_UEnv.uenv ->
+    FStar_Syntax_Syntax.binder Prims.list ->
+      (FStar_Extraction_ML_UEnv.uenv * FStar_Extraction_ML_Syntax.mlident
+        Prims.list))
   =
   fun env ->
     fun bs ->
@@ -234,14 +233,16 @@ let binders_as_mlty_binders :
         (fun env1 ->
            fun uu___ ->
              match uu___ with
-             | (bv, uu___1) ->
+             | { FStar_Syntax_Syntax.binder_bv = bv;
+                 FStar_Syntax_Syntax.binder_qual = uu___1;
+                 FStar_Syntax_Syntax.binder_attrs = uu___2;_} ->
                  let env2 = FStar_Extraction_ML_UEnv.extend_ty env1 bv false in
                  let name =
-                   let uu___2 = FStar_Extraction_ML_UEnv.lookup_bv env2 bv in
-                   match uu___2 with
+                   let uu___3 = FStar_Extraction_ML_UEnv.lookup_bv env2 bv in
+                   match uu___3 with
                    | FStar_Util.Inl ty ->
                        ty.FStar_Extraction_ML_UEnv.ty_b_name
-                   | uu___3 -> failwith "Impossible" in
+                   | uu___4 -> failwith "Impossible" in
                  (env2, name)) env bs
 type data_constructor =
   {
@@ -375,21 +376,31 @@ let (bundle_as_inductive_families :
                                                                     uu___8)
                                                                     with
                                                                     | 
-                                                                    ((b',
-                                                                    uu___9),
-                                                                    (b,
-                                                                    uu___10))
+                                                                    ({
+                                                                    FStar_Syntax_Syntax.binder_bv
+                                                                    = b';
+                                                                    FStar_Syntax_Syntax.binder_qual
+                                                                    = uu___9;
+                                                                    FStar_Syntax_Syntax.binder_attrs
+                                                                    = uu___10;_},
+                                                                    {
+                                                                    FStar_Syntax_Syntax.binder_bv
+                                                                    = b;
+                                                                    FStar_Syntax_Syntax.binder_qual
+                                                                    = uu___11;
+                                                                    FStar_Syntax_Syntax.binder_attrs
+                                                                    = uu___12;_})
                                                                     ->
-                                                                    let uu___11
+                                                                    let uu___13
                                                                     =
-                                                                    let uu___12
+                                                                    let uu___14
                                                                     =
                                                                     FStar_Syntax_Syntax.bv_to_name
                                                                     b in
                                                                     (b',
-                                                                    uu___12) in
+                                                                    uu___14) in
                                                                     FStar_Syntax_Syntax.NT
-                                                                    uu___11)
+                                                                    uu___13)
                                                                 bs_params bs1 in
                                                             let t5 =
                                                               let uu___7 =
@@ -1600,10 +1611,14 @@ let (extract_bundle :
               FStar_List.map
                 (fun uu___2 ->
                    match uu___2 with
-                   | ({ FStar_Syntax_Syntax.ppname = ppname;
-                        FStar_Syntax_Syntax.index = uu___3;
-                        FStar_Syntax_Syntax.sort = uu___4;_},
-                      uu___5) -> FStar_Ident.string_of_id ppname) bs
+                   | {
+                       FStar_Syntax_Syntax.binder_bv =
+                         { FStar_Syntax_Syntax.ppname = ppname;
+                           FStar_Syntax_Syntax.index = uu___3;
+                           FStar_Syntax_Syntax.sort = uu___4;_};
+                       FStar_Syntax_Syntax.binder_qual = uu___5;
+                       FStar_Syntax_Syntax.binder_attrs = uu___6;_} ->
+                       FStar_Ident.string_of_id ppname) bs
           | uu___1 -> [] in
         let tys = (ml_tyvars, mlt) in
         let fvv =

@@ -609,7 +609,7 @@ let refine_intro () : tac<unit> = wrap_err "refine_intro" <|
     | t, Some (bv, phi) ->
         let g1 = goal_with_type g t in
         let bv, phi = match SS.open_term [S.mk_binder bv] phi with
-                      | bvs, phi -> fst (List.hd bvs), phi
+                      | bvs, phi -> (List.hd bvs).binder_bv, phi
         in
         bind (mk_irrelevant_goal "refine_intro refinement" (goal_env g)
                     (SS.subst [S.NT (bv, (goal_witness g))] phi) g.opts g.label) (fun g2 ->
@@ -676,11 +676,11 @@ let rec  __try_unify_by_application
             fail2 "Could not instantiate, %s to %s" (term_to_string e ty1) (term_to_string e ty2)
         | Some (b, c) ->
             if not (U.is_total_comp c) then fail "Codomain is effectful" else
-            bind (new_uvar "apply arg" e (fst b).sort) (fun (uvt, uv) ->
+            bind (new_uvar "apply arg" e b.binder_bv.sort) (fun (uvt, uv) ->
             mlog (fun () -> BU.print1 "t_apply: generated uvar %s\n" (Print.ctx_uvar_to_string uv)) (fun _ ->
             let typ = U.comp_result c in
-            let typ' = SS.subst [S.NT (fst b, uvt)] typ in
-            __try_unify_by_application only_match ((uvt, snd b, uv)::acc) e typ' ty2))
+            let typ' = SS.subst [S.NT (b.binder_bv, uvt)] typ in
+            __try_unify_by_application only_match ((uvt, b.binder_qual, uv)::acc) e typ' ty2))
     end)
 
 (* Can t1 unify t2 if it's applied to arguments? If so return uvars for them *)
@@ -784,7 +784,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
     | None -> fail "not a lemma or squashed function"
     | Some (pre, post) ->
     bind (
-       fold_left (fun (b, aq) (uvs, imps, subst) ->
+       fold_left (fun ({binder_bv=b;binder_qual=aq}) (uvs, imps, subst) ->
                let b_t = SS.subst subst b.sort in
                if is_unit_t b_t
                then
@@ -905,16 +905,16 @@ let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac<option<(bv * goal)>> =
         let bs'', t'' = SS.open_term bs' t' in
 
         (* b2 has been freshened *)
-        let b2 = fst (List.hd bs'') in
+        let b2 = (List.hd bs'').binder_bv in
 
         (* Make a new goal in the new env (with new binders) *)
-        let new_env = push_bvs e0 (List.map fst bs'') in
+        let new_env = push_bvs e0 (List.map (fun b -> b.binder_bv) bs'') in
         bind (new_uvar "subst_goal" new_env t'') (fun (uvt, uv) ->
         let goal' = mk_goal new_env uv g.opts g.is_guard g.label in
 
         (* Solve the old goal with an application of the new witness *)
         let sol = U.mk_app (U.abs bs'' uvt None)
-                            (List.map (fun (bv, q) -> S.as_arg (S.bv_to_name bv)) bs) in
+                            (List.map (fun ({binder_bv=bv;binder_qual=q}) -> S.as_arg (S.bv_to_name bv)) bs) in
         bind (set_solution g sol) (fun () ->
 
         ret (Some (b2, goal'))))
@@ -924,7 +924,7 @@ let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac<option<(bv * goal)>> =
 
 let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
     bind cur_goal (fun goal ->
-    let bv, _ = h in
+    let bv = h.binder_bv in
     mlog (fun _ -> BU.print2 "+++Rewrite %s : %s\n" (Print.bv_to_string bv) (Print.term_to_string bv.sort)) (fun _ ->
     match split_env bv (goal_env goal) with
     | None -> fail "binder not found in environment"
@@ -946,12 +946,12 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
 
              let bs'', t'' = SS.open_term bs' t' in
 
-             let new_env = push_bvs e0 (bv::(List.map fst bs'')) in
+             let new_env = push_bvs e0 (bv::(List.map (fun b -> b.binder_bv) bs'')) in
 
              bind (new_uvar "rewrite" new_env t'') (fun (uvt, uv) ->
              let goal' = mk_goal new_env uv goal.opts goal.is_guard goal.label in
              let sol = U.mk_app (U.abs bs'' uvt None)
-                                 (List.map (fun (bv, _) -> S.as_arg (S.bv_to_name bv)) bs) in
+                                 (List.map (fun ({binder_bv=bv}) -> S.as_arg (S.bv_to_name bv)) bs) in
 
              (* See comment in subst_goal *)
              bind (set_solution goal sol) (fun () ->
@@ -964,17 +964,17 @@ let rewrite (h:binder) : tac<unit> = wrap_err "rewrite" <|
 
 let rename_to (b : binder) (s : string) : tac<binder> = wrap_err "rename_to" <|
     bind cur_goal (fun goal ->
-    let bv, q = b in
+    let bv = b.binder_bv in
     let bv' = freshen_bv ({ bv with ppname = mk_ident (s, (range_of_id bv.ppname)) }) in
     bind (subst_goal bv bv' goal) (function
     | None -> fail "binder not found in environment"
     | Some (bv',  goal) ->
         bind (replace_cur goal) (fun () ->
-        ret (bv', q))))
+        ret ({b with binder_bv=bv'}))))
 
 let binder_retype (b : binder) : tac<unit> = wrap_err "binder_retype" <|
     bind cur_goal (fun goal ->
-    let bv, _ = b in
+    let bv = b.binder_bv in
     match split_env bv (goal_env goal) with
     | None -> fail "binder is not present in environment"
     | Some (e0, bv, bvs) ->
@@ -1001,7 +1001,7 @@ let binder_retype (b : binder) : tac<unit> = wrap_err "binder_retype" <|
 (* TODO: move to bv *)
 let norm_binder_type (s : list<EMB.norm_step>) (b : binder) : tac<unit> = wrap_err "norm_binder_type" <|
     bind cur_goal (fun goal ->
-    let bv, _ = b in
+    let bv = b.binder_bv in
     match split_env bv (goal_env goal) with
     | None -> fail "binder is not present in environment"
     | Some (e0, bv, bvs) -> begin
@@ -1018,7 +1018,7 @@ let revert () : tac<unit> =
     match Env.pop_bv (goal_env goal) with
     | None -> fail "Cannot revert; empty context"
     | Some (x, env') ->
-        let typ' = U.arrow [(x, None)] (mk_Total (goal_type goal)) in
+        let typ' = U.arrow [S.mk_binder x] (mk_Total (goal_type goal)) in
         bind (new_uvar "revert" env' typ') (fun (r, u_r) ->
         bind (set_solution goal (S.mk_Tm_app r [S.as_arg (S.bv_to_name x)] (goal_type goal).pos)) (fun () ->
         let g = mk_goal env' u_r goal.opts goal.is_guard goal.label in
@@ -1028,7 +1028,7 @@ let free_in bv t =
     Util.set_mem bv (SF.names t)
 
 let clear (b : binder) : tac<unit> =
-    let bv = fst b in
+    let bv = b.binder_bv in
     bind cur_goal (fun goal ->
     mlog (fun () -> BU.print2 "Clear of (%s), env has %s binders\n"
                         (Print.binder_to_string b)
@@ -1147,7 +1147,7 @@ let longest_prefix (f : 'a -> 'a -> bool) (l1 : list<'a>) (l2 : list<'a>) : list
 let join_goals g1 g2 : tac<goal> =
     (* The one in Syntax.Util ignores null_binders, why? *)
     let close_forall_no_univs bs f =
-        List.fold_right (fun b f -> U.mk_forall_no_univ (fst b) f) bs f
+        List.fold_right (fun b f -> U.mk_forall_no_univ b.binder_bv f) bs f
     in
     match get_phi g1 with
     | None -> fail "goal 1 is not irrelevant"
@@ -1415,8 +1415,8 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                               // freshen just to be extra safe.. probably not needed
                               freshen_bv ({ bv with ppname = ppname })
                           in
-                          let bs' = List.map (fun (bv, aq) -> (rename_bv bv, aq)) bs in
-                          let subst = List.map2 (fun (bv, _) (bv', _) -> NT (bv, bv_to_name bv')) bs bs' in
+                          let bs' = List.map (fun b -> {b with binder_bv=rename_bv b.binder_bv}) bs in
+                          let subst = List.map2 (fun ({binder_bv=bv}) ({binder_bv=bv'}) -> NT (bv, bv_to_name bv')) bs bs' in
                           SS.subst_binders subst bs', SS.subst_comp subst comp
                         in
 
@@ -1431,11 +1431,11 @@ let t_destruct (s_tm : term) : tac<list<(fv * Z.t)>> = wrap_err "destruct" <|
                         let a_ps, a_is = List.splitAt nparam args in
                         failwhen (List.length a_ps <> List.length d_ps) "params not match?" (fun () ->
                         let d_ps_a_ps = List.zip d_ps a_ps in
-                        let subst = List.map (fun ((bv, _), (t, _)) -> NT (bv, t)) d_ps_a_ps in
+                        let subst = List.map (fun (({binder_bv=bv}), (t, _)) -> NT (bv, t)) d_ps_a_ps in
                         let bs = SS.subst_binders subst bs in
-                        let subpats_1 = List.map (fun ((bv, _), (t, _)) ->
+                        let subpats_1 = List.map (fun (({binder_bv=bv}), (t, _)) ->
                                                  (mk_pat (Pat_dot_term (bv, t)), true)) d_ps_a_ps in
-                        let subpats_2 = List.map (fun (bv, aq) ->
+                        let subpats_2 = List.map (fun ({binder_bv=bv;binder_qual=aq}) ->
                                                  (mk_pat (Pat_var bv), is_imp aq)) bs in
                         let subpats = subpats_1 @ subpats_2 in
                         let pat = mk_pat (Pat_cons (fv, subpats)) in
@@ -1542,7 +1542,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
         let b = (match b' with
         | [b'] -> b'
         | _ -> failwith "impossible") in
-        ret <| Tv_Refine (fst b, t)
+        ret <| Tv_Refine (b.binder_bv, t)
 
     | Tm_constant c ->
         ret <| Tv_Const (inspect_const c)
@@ -1562,7 +1562,7 @@ let rec inspect (t:term) : tac<term_view> = wrap_err "inspect" (
                     | [b] -> b
                     | _ -> failwith "impossible: open_term returned different amount of binders"
             in
-            ret <| Tv_Let (false, lb.lbattrs, fst b, lb.lbdef, t2)
+            ret <| Tv_Let (false, lb.lbattrs, b.binder_bv, lb.lbdef, t2)
         end
 
     | Tm_let ((true, [lb]), t2) ->

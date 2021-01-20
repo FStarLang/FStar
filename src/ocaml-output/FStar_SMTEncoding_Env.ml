@@ -69,7 +69,7 @@ let (primitive_projector_by_pos :
                       else
                         (let b = FStar_List.nth binders i in
                          mk_term_projector_name lid
-                           (FStar_Pervasives_Native.fst b)))
+                           b.FStar_Syntax_Syntax.binder_bv))
              | uu___3 -> fail ())
 let (mk_term_projector_name_by_pos :
   FStar_Ident.lident -> Prims.int -> Prims.string) =
