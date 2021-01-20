@@ -7,16 +7,9 @@ open Steel.Semantics.Instantiate
 module FExt = FStar.FunctionalExtensionality
 module Eff = Steel.Effect
 
+friend Steel.SelEffect.Common
+
 let hmem (p:vprop) = hmem (hp_of p)
-
-let can_be_split (p q:vprop) : prop = Mem.slimp (hp_of p) (hp_of q)
-
-let can_be_split_trans p q r = ()
-let can_be_split_star_l p q = ()
-let can_be_split_star_r p q = ()
-let can_be_split_refl p = ()
-
-let equiv p q = Mem.equiv (hp_of p) (hp_of q)
 
 unfold
 let unrestricted_mk_rmem (r:vprop) (h:hmem r) = fun (r0:vprop{r `can_be_split` r0}) -> normal (sel_of r0 h)
@@ -130,8 +123,8 @@ val can_be_split_3_interp (p1 p2 q r:slprop u#1) (m:mem)
   (ensures interp (p2 `Mem.star` q `Mem.star` r) m)
 
 let can_be_split_3_interp p1 p2 q r m =
-  star_associative p1 q r;
-  star_associative p2 q r;
+  Mem.star_associative p1 q r;
+  Mem.star_associative p2 q r;
   slimp_star p1 p2 (q `Mem.star` r) (q `Mem.star` r)
 
 let repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
@@ -707,30 +700,6 @@ let bind_div_steel (a:Type) (b:Type)
 
 polymonadic_bind (DIV, SteelSel) |> SteelSel = bind_div_steel
 #pop-options
-
-let equiv_can_be_split p1 p2 = ()
-let intro_can_be_split_frame p q frame = ()
-let can_be_split_post_elim t1 t2 = ()
-let equiv_forall_elim t1 t2 = ()
-
-let vemp':vprop' =
-  { hp = emp;
-    t = unit;
-    sel = fun _ -> ()}
-let vemp = VUnit vemp'
-
-let equiv_refl x = ()
-let equiv_sym x y = ()
-let equiv_trans x y z = ()
-
-let cm_identity x =
-  Mem.emp_unit (hp_of x);
-  Mem.star_commutative (hp_of x) emp
-let star_commutative p1 p2 = Mem.star_commutative (hp_of p1) (hp_of p2)
-let star_associative p1 p2 p3 = Mem.star_associative (hp_of p1) (hp_of p2) (hp_of p3)
-let star_congruence p1 p2 p3 p4 = Mem.star_congruence (hp_of p1) (hp_of p2) (hp_of p3) (hp_of p4)
-
-let emp_unit_variant p = Mem.emp_unit (hp_of p)
 
 let get0 (#p:vprop) (_:unit) : repr (rmem p)
   p (fun _ -> p)
