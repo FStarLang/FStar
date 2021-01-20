@@ -849,7 +849,7 @@ and p_letlhs kw (pat, _) inner_let =
     | _ -> pat, None
   in
   match pat.pat with
-  | PatApp ({pat=PatVar (lid, _)}, pats) ->
+  | PatApp ({pat=PatVar (lid, _, _)}, pats) ->
       (* has binders *)
       let ascr_doc =
         (match ascr with
@@ -965,15 +965,13 @@ and p_letqualifier = function
 and p_aqual = function
   | Implicit -> str "#"
   | Equality -> str "$"
-  | Meta (Arg_qualifier_meta_tac t) ->
+  | Meta t ->
     let t =
       match t.tm with
       | Abs (_ ,e) -> e
       | _ -> mk_term (App (t, unit_const t.range, Nothing)) t.range Expr
     in
     str "#[" ^^ p_term false false t ^^ str "]" ^^ break1
-  | Meta (Arg_qualifier_meta_attr t) ->
-    str "#[@" ^^ p_term false false t ^^ str "]" ^^ break1
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1005,16 +1003,16 @@ and p_atomicPattern p = match p.pat with
     (* This inverts the first rule of atomicPattern (LPAREN tuplePattern COLON
      * simpleArrow RPAREN). *)
     begin match pat.pat, t.tm with
-    | PatVar (lid, aqual), Refine({b = Annotated(lid', t)}, phi)
+    | PatVar (lid, aqual, attrs), Refine({b = Annotated(lid', t)}, phi)
       when (string_of_id lid) = (string_of_id lid') ->
       (* p_refinement jumps into p_appTerm for the annotated type; this is
        * tighter than simpleArrow (which is what the parser uses), meaning that
        * this printer may conservatively insert parentheses. TODO fix, but be
        * aware that there are multiple callers to p_refinement and that
        * p_appTerm is probably the lower bound of all expected levels. *)
-      soft_parens_with_nesting (p_refinement aqual (p_ident lid) t phi)
-    | PatWild aqual, Refine({b = NoName t}, phi) ->
-      soft_parens_with_nesting (p_refinement aqual underscore t phi)
+      soft_parens_with_nesting (p_refinement aqual attrs (p_ident lid) t phi)
+    | PatWild (aqual, attrs), Refine({b = NoName t}, phi) ->
+      soft_parens_with_nesting (p_refinement aqual attrs underscore t phi)
     | _ ->
         (* TODO implement p_simpleArrow *)
         soft_parens_with_nesting (p_tuplePattern pat ^^ colon ^/^ p_tmEqNoRefinement t)
@@ -1026,17 +1024,18 @@ and p_atomicPattern p = match p.pat with
     soft_braces_with_nesting (separate_break_map semi p_recordFieldPat pats)
   | PatTuple(pats, true) ->
     surround 2 1 (lparen ^^ bar) (separate_break_map comma p_constructorPattern pats) (bar ^^ rparen)
-  | PatTvar (tv, arg_qualifier_opt) ->
+  | PatTvar (tv, arg_qualifier_opt, attrs) ->
     assert (arg_qualifier_opt = None) ;
+    assert (attrs = []);
     p_tvar tv
   | PatOp op ->
     lparen ^^ space ^^ str (Ident.string_of_id op) ^^ space ^^ rparen
-  | PatWild aqual ->
-    optional p_aqual aqual ^^ underscore
+  | PatWild (aqual, attrs) ->
+    optional p_aqual aqual ^^ p_attributes attrs ^^ underscore
   | PatConst c ->
     p_constant c
-  | PatVar (lid, aqual) ->
-    optional p_aqual aqual ^^ p_lident lid
+  | PatVar (lid, aqual, attrs) ->
+    optional p_aqual aqual ^^ p_attributes attrs ^^ p_lident lid
   | PatName uid ->
       p_quident uid
   | PatOr _ -> failwith "Inner or pattern !"
@@ -1071,7 +1070,7 @@ and p_binder' (is_atomic: bool) (b: binder): document * option<document> * catf 
       let b', t' =
         match t.tm with
         | Refine ({b = Annotated (lid', t)}, phi) when (string_of_id lid) = (string_of_id lid') ->
-          p_refinement' b.aqual (p_lident lid) t phi
+          p_refinement' b.aqual b.battributes (p_lident lid) t phi
         | _ ->
           let t' = if is_typ_tuple t then
             soft_parens_with_nesting (p_tmFormula t)
@@ -1091,7 +1090,7 @@ and p_binder' (is_atomic: bool) (b: binder): document * option<document> * catf 
   | NoName t ->
     begin match t.tm with
       | Refine ({b = NoName t}, phi) ->
-        let b', t' = p_refinement' b.aqual underscore t phi in
+        let b', t' = p_refinement' b.aqual b.battributes underscore t phi in
         b', Some t', cat_with_colon
       | _ ->
         if is_atomic
@@ -1099,11 +1098,11 @@ and p_binder' (is_atomic: bool) (b: binder): document * option<document> * catf 
         else p_appTerm t, None, cat_with_colon (* This choice seems valid (used in p_tmNoEq') *)
     end
 
-and p_refinement aqual_opt binder t phi =
-  let b, typ = p_refinement' aqual_opt binder t phi in
+and p_refinement aqual_opt attrs binder t phi =
+  let b, typ = p_refinement' aqual_opt attrs binder t phi in
   cat_with_colon b typ
 
-and p_refinement' aqual_opt binder t phi =
+and p_refinement' aqual_opt attrs binder t phi =
   let is_t_atomic =
     match t.tm with
     | Construct _
@@ -1117,7 +1116,7 @@ and p_refinement' aqual_opt binder t phi =
    * If t can be displayed on a single line, tightly surround it with braces,
    * otherwise pad with a space. *)
   let jump_break = if is_t_atomic then 0 else 1 in
-  (optional p_aqual aqual_opt ^^ binder),
+  (optional p_aqual aqual_opt ^^ p_attributes attrs ^^ binder),
     (p_appTerm t ^^
       (jump 2 jump_break (group ((ifflat
         (soft_braces_with_nesting_tight phi) (soft_braces_with_nesting phi))))))
@@ -1320,7 +1319,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
     let lbs_doc = group (separate break1 lbs_docs) in
     paren_if ps (group (lbs_doc ^^ hardline ^^ p_term false pb e))
 
-  | Abs([{pat=PatVar(x, typ_opt)}], {tm=Match(maybe_x, branches)}) when matches_var maybe_x x ->
+  | Abs([{pat=PatVar(x, typ_opt, _)}], {tm=Match(maybe_x, branches)}) when matches_var maybe_x x ->
     paren_if (ps || pb) (
       group (str "function" ^/^ separate_map_last hardline p_patternBranch branches))
   | Quote (e, Dynamic) ->
@@ -1412,11 +1411,11 @@ and pats_as_binders_if_possible pats =
   let all_binders p = match p.pat with
   | PatAscribed(pat, (t, None)) ->
     (match pat.pat, t.tm  with
-     | PatVar (lid, aqual), Refine({b = Annotated(lid', t)}, phi)
+     | PatVar (lid, aqual, attrs), Refine({b = Annotated(lid', t)}, phi)
        when (string_of_id lid) = (string_of_id lid') ->
-         Some (p_refinement' aqual (p_ident lid) t phi)
-     | PatVar (lid, aqual), _ ->
-       Some (optional p_aqual aqual ^^ p_ident lid, p_tmEqNoRefinement t)
+         Some (p_refinement' aqual attrs (p_ident lid) t phi)
+     | PatVar (lid, aqual, attrs), _ ->
+       Some (optional p_aqual aqual ^^ p_attributes attrs ^^  p_ident lid, p_tmEqNoRefinement t)
      | _ -> None)
   | _ -> None
   in
@@ -1721,7 +1720,7 @@ and p_with_clause e = p_appTerm e ^^ space ^^ str "with" ^^ break1
 
 and p_refinedBinder b phi =
     match b.b with
-    | Annotated (lid, t) -> p_refinement b.aqual (p_lident lid) t phi
+    | Annotated (lid, t) -> p_refinement b.aqual b.battributes (p_lident lid) t phi
     | TAnnotated _ -> failwith "Is this still used ?"
     | Variable _
     | TVariable _

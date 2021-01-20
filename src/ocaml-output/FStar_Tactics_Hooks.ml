@@ -313,24 +313,31 @@ let rec (traverse :
                      let e' = FStar_TypeChecker_Env.push_binders e bs1 in
                      let r0 =
                        FStar_List.map
-                         (fun uu___2 ->
-                            match uu___2 with
-                            | (bv, aq) ->
-                                let r1 =
-                                  traverse f (flip pol1) e
-                                    bv.FStar_Syntax_Syntax.sort in
-                                let uu___3 =
-                                  comb1
-                                    (fun s' ->
-                                       ((let uu___4 = bv in
-                                         {
-                                           FStar_Syntax_Syntax.ppname =
-                                             (uu___4.FStar_Syntax_Syntax.ppname);
-                                           FStar_Syntax_Syntax.index =
-                                             (uu___4.FStar_Syntax_Syntax.index);
-                                           FStar_Syntax_Syntax.sort = s'
-                                         }), aq)) in
-                                uu___3 r1) bs1 in
+                         (fun b ->
+                            let r1 =
+                              traverse f (flip pol1) e
+                                (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                            let uu___2 =
+                              comb1
+                                (fun s' ->
+                                   let uu___3 = b in
+                                   {
+                                     FStar_Syntax_Syntax.binder_bv =
+                                       (let uu___4 =
+                                          b.FStar_Syntax_Syntax.binder_bv in
+                                        {
+                                          FStar_Syntax_Syntax.ppname =
+                                            (uu___4.FStar_Syntax_Syntax.ppname);
+                                          FStar_Syntax_Syntax.index =
+                                            (uu___4.FStar_Syntax_Syntax.index);
+                                          FStar_Syntax_Syntax.sort = s'
+                                        });
+                                     FStar_Syntax_Syntax.binder_qual =
+                                       (uu___3.FStar_Syntax_Syntax.binder_qual);
+                                     FStar_Syntax_Syntax.binder_attrs =
+                                       (uu___3.FStar_Syntax_Syntax.binder_attrs)
+                                   }) in
+                            uu___2 r1) bs1 in
                      let rbs = comb_list r0 in
                      let rt = traverse f pol1 e' topen in
                      comb2

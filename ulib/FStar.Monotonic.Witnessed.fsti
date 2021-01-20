@@ -31,6 +31,7 @@ open FStar.Preorder
 
 (* Witnessed modality *)
 
+[@@ remove_unused_type_parameters [0; 1; 2]]
 val witnessed : #state:Type -> rel:preorder state -> p:(state -> Type0) -> Type0
 
 (* Weakening for the witnessed modality *)

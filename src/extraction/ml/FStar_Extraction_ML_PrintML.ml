@@ -419,7 +419,11 @@ let add_deriving_const (md: metadata) (ptype_manifest: core_type option): core_t
       BatOption.map (fun x -> {x with ptyp_attributes=[deriving_const]}) ptype_manifest
   | _ -> ptype_manifest
 
-let build_one_tydecl ((_, x, mangle_opt, tparams, attrs, body): one_mltydecl): type_declaration =
+let build_one_tydecl ({tydecl_name=x;
+                       tydecl_ignored=mangle_opt;
+                       tydecl_parameters=tparams;
+                       tydecl_meta=attrs;
+                       tydecl_defn=body}: one_mltydecl): type_declaration =
   let ptype_name = match mangle_opt with
     | Some y -> mk_sym y
     | None -> mk_sym x in
@@ -495,9 +499,10 @@ let print (out_dir: string option) (ext: string) (ml: mllib) =
      iter print_module ast
   | ".fs" ->
      (* Use the old printer for F# extraction *)
-     let new_doc = FStar_Pprint.blank_buffer_doc in
+     let new_doc = FStar_Extraction_ML_Code.doc_of_mllib ml in
      iter (fun (n, d) ->
          FStar_Util.write_file
            (FStar_Options.prepend_output_dir (BatString.concat "" [n;ext]))
-           (FStar_Pprint.pretty_string 0.8 (Prims.parse_int "120") d)) new_doc
+           (FStar_Extraction_ML_Code.pretty (Prims.parse_int "120") d)
+           ) new_doc
   | _ -> failwith "Unrecognized extension"

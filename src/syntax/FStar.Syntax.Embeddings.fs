@@ -858,7 +858,7 @@ let or_else (f: option<'a>) (g:unit -> 'a) =
 
 let e_arrow (ea:embedding<'a>) (eb:embedding<'b>) : embedding<('a -> 'b)> =
     let t_arrow =
-        S.mk (Tm_arrow([S.null_bv ea.typ, None],
+        S.mk (Tm_arrow([S.mk_binder (S.null_bv ea.typ)],
                         S.mk_Total eb.typ))
               Range.dummyRange
     in

@@ -1260,7 +1260,10 @@ let (batch_mode_tc :
        let uu___1 = tc_fold_interleave dep_graph ([], [], env) filenames in
        match uu___1 with
        | (all_mods, mllibs, env1) ->
-           (emit mllibs;
+           ((let uu___3 =
+               let uu___4 = FStar_Errors.get_err_count () in
+               uu___4 = Prims.int_zero in
+             if uu___3 then emit mllibs else ());
             (let solver_refresh env2 =
                let uu___3 =
                  with_tcenv_of_env env2

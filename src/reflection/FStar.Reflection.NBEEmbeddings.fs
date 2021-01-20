@@ -133,7 +133,6 @@ let e_aqualv =
         | Data.Q_Explicit -> mkConstruct ref_Q_Explicit.fv [] []
         | Data.Q_Implicit -> mkConstruct ref_Q_Implicit.fv [] []
         | Data.Q_Meta t   -> mkConstruct ref_Q_Meta.fv [] [as_arg (embed e_term cb t)]
-        | Data.Q_Meta_attr t -> mkConstruct ref_Q_Meta_attr.fv [] [as_arg (embed e_term cb t)]
     in
     let unembed_aqualv cb (t : t) : option<aqualv> =
         match t.nbe_t with
@@ -142,9 +141,6 @@ let e_aqualv =
         | Construct (fv, [], [(t, _)]) when S.fv_eq_lid fv ref_Q_Meta.lid ->
             BU.bind_opt (unembed e_term cb t) (fun t ->
             Some (Data.Q_Meta t))
-        | Construct (fv, [], [(t, _)]) when S.fv_eq_lid fv ref_Q_Meta_attr.lid ->
-            BU.bind_opt (unembed e_term cb t) (fun t ->
-            Some (Data.Q_Meta_attr t))
 
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded aqualv: %s" (t_to_string t)));
@@ -666,7 +662,7 @@ let e_exp =
     in
     mk_emb' embed_exp unembed_exp fstar_refl_exp_fv
 
-let e_binder_view = e_tuple2 e_bv e_aqualv
+let e_binder_view = e_tuple2 e_bv (e_tuple2 e_aqualv (e_list e_term))
 
 let e_attribute  = e_term
 let e_attributes = e_list e_attribute

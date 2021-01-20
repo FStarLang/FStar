@@ -160,6 +160,10 @@ let trefl () : Tac unit =
 let trefl_guard () : Tac unit =
   t_trefl true
 
+(** See docs for [t_commute_applied_match] *)
+let commute_applied_match () : Tac unit =
+  t_commute_applied_match ()
+
 (** Similar to [apply_lemma], but will not instantiate uvars in the
 goal while applying. *)
 let apply_lemma_noinst (t : term) : Tac unit =
@@ -360,6 +364,14 @@ let fresh_binder t : Tac binder =
     (* See comment in fresh_bv *)
     let i = fresh () in
     fresh_binder_named ("x" ^ string_of_int i) t
+
+let fresh_implicit_binder_named nm t : Tac binder =
+    mk_implicit_binder (fresh_bv_named nm t)
+
+let fresh_implicit_binder t : Tac binder =
+    (* See comment in fresh_bv *)
+    let i = fresh () in
+    fresh_implicit_binder_named ("x" ^ string_of_int i) t
 
 let guard (b : bool) : TacH unit (requires (fun _ -> True))
                                  (ensures (fun ps r -> if b
@@ -805,9 +817,9 @@ let on_sort_bv (f : term -> Tac term) (xbv:bv) : Tac bv =
   bv
 
 let on_sort_binder (f : term -> Tac term) (b:binder) : Tac binder =
-  let (bv, q) = inspect_binder b in
+  let bv, (q, attrs) = inspect_binder b in
   let bv = on_sort_bv f bv in
-  let b = pack_binder bv q in
+  let b = pack_binder bv q attrs in
   b
 
 let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
@@ -968,3 +980,11 @@ let name_appears_in (nm:name) (t:term) : Tac bool =
   try ignore (visit_tm ff t); false with
   | Appears -> true
   | e -> raise e
+
+(** [mk_abs [x1; ...; xn] t] returns the term [fun x1 ... xn -> t] *)
+let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
+  match args with
+  | [] -> t
+  | a :: args' ->
+    let t' = mk_abs args' t in
+    pack (Tv_Abs a t')

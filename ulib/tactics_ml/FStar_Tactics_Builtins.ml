@@ -118,7 +118,7 @@ let print                   = from_tac_1 B.print
 let debugging               = from_tac_1 B.debugging
 let dump                    = from_tac_1 B.dump
 let dump_all                = from_tac_2 B.dump_all
-let dump_uvars_of           = from_tac_2 B.dump_uvars_of                            
+let dump_uvars_of           = from_tac_2 B.dump_uvars_of
 let t_trefl                 = from_tac_1 B.t_trefl
 let dup                     = from_tac_1 B.dup
 let prune                   = from_tac_1 B.prune
@@ -141,6 +141,7 @@ let inspect                 = from_tac_1 B.inspect
 let pack                    = from_tac_1 B.pack
 let curms                   = from_tac_1 B.curms
 let set_urgency             = from_tac_1 B.set_urgency
+let t_commute_applied_match = from_tac_1 B.t_commute_applied_match
 
 (* sigh *)
 let fix_either (s : ('a, 'b) FStar_Util.either) : ('a, 'b) FStar_Pervasives.either =

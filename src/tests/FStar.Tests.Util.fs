@@ -37,7 +37,7 @@ let rec term_eq' t1 t2 =
     let t2 = SS.compress t2 in
     let binders_eq xs ys =
         List.length xs = List.length ys
-        && List.forall2 (fun ((x, _):binder) ((y, _):binder) -> term_eq' x.sort y.sort) xs ys in
+        && List.forall2 (fun (x:binder) (y:binder) -> term_eq' x.binder_bv.sort y.binder_bv.sort) xs ys in
     let args_eq xs ys =
          List.length xs = List.length ys
          && List.forall2 (fun (a, imp) (b, imp') -> term_eq' a b && U.eq_aqual imp imp'=U.Equal) xs ys in

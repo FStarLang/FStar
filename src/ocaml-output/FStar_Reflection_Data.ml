@@ -75,7 +75,6 @@ type aqualv =
   | Q_Implicit 
   | Q_Explicit 
   | Q_Meta of FStar_Syntax_Syntax.term 
-  | Q_Meta_attr of FStar_Syntax_Syntax.term 
 let (uu___is_Q_Implicit : aqualv -> Prims.bool) =
   fun projectee -> match projectee with | Q_Implicit -> true | uu___ -> false
 let (uu___is_Q_Explicit : aqualv -> Prims.bool) =
@@ -84,11 +83,6 @@ let (uu___is_Q_Meta : aqualv -> Prims.bool) =
   fun projectee -> match projectee with | Q_Meta _0 -> true | uu___ -> false
 let (__proj__Q_Meta__item___0 : aqualv -> FStar_Syntax_Syntax.term) =
   fun projectee -> match projectee with | Q_Meta _0 -> _0
-let (uu___is_Q_Meta_attr : aqualv -> Prims.bool) =
-  fun projectee ->
-    match projectee with | Q_Meta_attr _0 -> true | uu___ -> false
-let (__proj__Q_Meta_attr__item___0 : aqualv -> FStar_Syntax_Syntax.term) =
-  fun projectee -> match projectee with | Q_Meta_attr _0 -> _0
 type argv = (FStar_Syntax_Syntax.term * aqualv)
 type term_view =
   | Tv_Var of FStar_Syntax_Syntax.bv 
@@ -304,7 +298,8 @@ let (__proj__Mkbv_view__item__bv_index : bv_view -> FStar_BigInt.t) =
 let (__proj__Mkbv_view__item__bv_sort : bv_view -> typ) =
   fun projectee ->
     match projectee with | { bv_ppname; bv_index; bv_sort;_} -> bv_sort
-type binder_view = (FStar_Syntax_Syntax.bv * aqualv)
+type binder_view =
+  (FStar_Syntax_Syntax.bv * (aqualv * FStar_Syntax_Syntax.term Prims.list))
 type comp_view =
   | C_Total of (typ * FStar_Syntax_Syntax.term
   FStar_Pervasives_Native.option) 
@@ -347,6 +342,7 @@ type sigelt_view =
   
   | Sg_Inductive of (name * FStar_Syntax_Syntax.univ_name Prims.list *
   FStar_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list) 
+  | Sg_Val of (name * FStar_Syntax_Syntax.univ_name Prims.list * typ) 
   | Unk 
 let (uu___is_Sg_Let : sigelt_view -> Prims.bool) =
   fun projectee -> match projectee with | Sg_Let _0 -> true | uu___ -> false
@@ -363,6 +359,11 @@ let (__proj__Sg_Inductive__item___0 :
     (name * FStar_Syntax_Syntax.univ_name Prims.list *
       FStar_Syntax_Syntax.binder Prims.list * typ * ctor Prims.list))
   = fun projectee -> match projectee with | Sg_Inductive _0 -> _0
+let (uu___is_Sg_Val : sigelt_view -> Prims.bool) =
+  fun projectee -> match projectee with | Sg_Val _0 -> true | uu___ -> false
+let (__proj__Sg_Val__item___0 :
+  sigelt_view -> (name * FStar_Syntax_Syntax.univ_name Prims.list * typ)) =
+  fun projectee -> match projectee with | Sg_Val _0 -> _0
 let (uu___is_Unk : sigelt_view -> Prims.bool) =
   fun projectee -> match projectee with | Unk -> true | uu___ -> false
 type var = FStar_BigInt.t

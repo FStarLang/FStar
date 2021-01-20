@@ -616,6 +616,8 @@ let rec (t_to_string : t -> Prims.string) =
             FStar_Syntax_Print.fv_to_string uu___5 in
           FStar_String.op_Hat uu___4 ")" in
         FStar_String.op_Hat "TopLevelRec (" uu___3
+    | Meta (t1, uu___) ->
+        let uu___1 = t_to_string t1 in FStar_String.op_Hat "Meta " uu___1
 and (atom_to_string : atom -> Prims.string) =
   fun a ->
     match a with
@@ -1262,7 +1264,12 @@ let (e_norm_step : FStar_Syntax_Embeddings.norm_step embedding) =
             let uu___3 = let uu___4 = e_list e_string in embed uu___4 cb l in
             as_arg uu___3 in
           [uu___2] in
-        mkFV uu___ [] uu___1 in
+        mkFV uu___ [] uu___1
+    | FStar_Syntax_Embeddings.ZetaFull ->
+        let uu___ =
+          FStar_Syntax_Syntax.lid_as_fv FStar_Parser_Const.steps_zeta_full
+            FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None in
+        mkFV uu___ [] [] in
   let un cb t0 =
     match t0.nbe_t with
     | FV (fv, uu___, []) when
@@ -1705,6 +1712,32 @@ let (mk_range : args -> t FStar_Pervasives_Native.option) =
              FStar_Pervasives_Native.Some uu___1
          | uu___1 -> FStar_Pervasives_Native.None)
     | uu___ -> FStar_Pervasives_Native.None
+let (and_op : args -> t FStar_Pervasives_Native.option) =
+  fun args1 ->
+    match args1 with
+    | a1::a2::[] ->
+        let uu___ = arg_as_bool a1 in
+        (match uu___ with
+         | FStar_Pervasives_Native.Some (false) ->
+             let uu___1 = embed e_bool bogus_cbs false in
+             FStar_Pervasives_Native.Some uu___1
+         | FStar_Pervasives_Native.Some (true) ->
+             FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst a2)
+         | uu___1 -> FStar_Pervasives_Native.None)
+    | uu___ -> failwith "Unexpected number of arguments"
+let (or_op : args -> t FStar_Pervasives_Native.option) =
+  fun args1 ->
+    match args1 with
+    | a1::a2::[] ->
+        let uu___ = arg_as_bool a1 in
+        (match uu___ with
+         | FStar_Pervasives_Native.Some (true) ->
+             let uu___1 = embed e_bool bogus_cbs true in
+             FStar_Pervasives_Native.Some uu___1
+         | FStar_Pervasives_Native.Some (false) ->
+             FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst a2)
+         | uu___1 -> FStar_Pervasives_Native.None)
+    | uu___ -> failwith "Unexpected number of arguments"
 let (division_op : args -> t FStar_Pervasives_Native.option) =
   fun args1 ->
     match args1 with
