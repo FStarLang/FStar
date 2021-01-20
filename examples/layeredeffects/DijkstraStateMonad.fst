@@ -17,7 +17,6 @@
 module DijkstraStateMonad
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
-module W = FStar.WellFounded
 module T = FStar.Tactics
 
 /// This example illustrates how to derive a WP-indexed state monad
@@ -34,7 +33,7 @@ type m (s:Type0) (a:Type) =
 let rec bind_m #s #a #b (x:m s a) (y: (a -> m s b)) : m s b =
   match x with
   | Ret x -> y x
-  | Get k -> Get (fun s -> W.axiom1 k s; bind_m (k s) y)
+  | Get k -> Get (fun s -> bind_m (k s) y)
   | Put s k -> Put s (bind_m k y)
 
 /// Now, we want to build an indexed version of m, where the index is
@@ -82,7 +81,7 @@ let rec wp_of #a #s (x:m s a)
   : wp_t s a
   = match x with
     | Ret v -> wp_return v
-    | Get k -> F.on _ (fun s0 -> W.axiom1 k s0; (wp_of (k s0)) s0)
+    | Get k -> F.on _ (fun s0 -> (wp_of (k s0)) s0)
     | Put s k -> wp_put (wp_of k) s
 
 /// We prove the soundness of the wp semantics by giving it a model in
@@ -96,7 +95,6 @@ let rec run (#a:_) (#s:_) (m:m s a) (s0:s) (post: post_t s a)
   = match m with
     | Ret x -> (x, s0)
     | Get k ->
-      W.axiom1 k s0;
       run (k s0) s0 post
     | Put s k ->
       run k s post
@@ -184,8 +182,7 @@ let rec bind_wp_lem' (#a:Type u#aa) (#b:Type u#bb) (#s:_) (f:m s a) (g: (a -> m 
           (ensures (wp_of (bind_m (k x) g) `F.feq`
                     bind_wp (wp_of (k x)) (wp_of *. g)))
           [SMTPat (k x)]
-        = W.axiom1 k x;
-          bind_wp_lem' (k x) g
+        = bind_wp_lem' (k x) g
       in
       assert_norm (wp_of (bind_m (Get k) g) ==
                    wp_of (Get (fun x -> bind_m (k x) g)));

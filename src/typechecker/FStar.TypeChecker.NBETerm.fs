@@ -341,6 +341,7 @@ let rec t_to_string (x:t) =
   | LocalLetRec (_, l, _, _, _, _, _) -> "LocalLetRec (" ^ (FStar.Syntax.Print.lbs_to_string [] (true, [l])) ^ ")"
   | TopLevelLet (lb, _, _) -> "TopLevelLet (" ^ FStar.Syntax.Print.fv_to_string (BU.right lb.lbname) ^ ")"
   | TopLevelRec (lb, _, _, _) -> "TopLevelRec (" ^ FStar.Syntax.Print.fv_to_string (BU.right lb.lbname) ^ ")"
+  | Meta (t, _) -> "Meta " ^ t_to_string t
 and atom_to_string (a: atom) =
   match a with
   | Var v -> "Var " ^ (P.bv_to_string v)
@@ -671,6 +672,7 @@ let e_norm_step =
         | SE.UnfoldAttr l ->
                      mkFV (lid_as_fv PC.steps_unfoldattr S.delta_constant None)
                           [] [as_arg (embed (e_list e_string) cb l)]
+        | SE.ZetaFull -> mkFV (lid_as_fv PC.steps_zeta_full S.delta_constant None) [] []
     in
     let un cb (t0:t) : option<SE.norm_step> =
         match t0.nbe_t with
@@ -957,6 +959,30 @@ let mk_range args : option<t> =
     | _ -> None
     end
 | _ -> None
+
+let and_op (args:args) : option<t> =
+  match args with
+  | [a1; a2] -> begin
+    match arg_as_bool a1 with
+    | Some false ->
+      Some (embed e_bool bogus_cbs false)
+    | Some true ->
+      Some (fst a2)
+    | _ -> None
+    end
+  | _ -> failwith "Unexpected number of arguments"
+
+let or_op (args:args) : option<t> =
+  match args with
+  | [a1; a2] -> begin
+    match arg_as_bool a1 with
+    | Some true ->
+      Some (embed e_bool bogus_cbs true)
+    | Some false ->
+      Some (fst a2)
+    | _ -> None
+    end
+  | _ -> failwith "Unexpected number of arguments"
 
 let division_op (args:args) : option<t> =
   match args with

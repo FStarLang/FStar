@@ -210,6 +210,13 @@ Currently, the only guards allowed here are for equating refinement
 types (e.g. [x:int{x>0}] and [x:int{0<x}]. *)
 val t_trefl : allow_guards:bool -> Tac unit
 
+(** Provides a proof for the equality
+[(match e with ... | pi -> ei ...) a1 .. an
+ == (match e with ... | pi -> e1 a1 .. an)].
+This is particularly useful to rewrite the expression on the left to the
+one on the right when the RHS is actually a unification variable. *)
+val t_commute_applied_match : unit -> Tac unit
+
 (** [ctrl_rewrite] will traverse the current goal, and call [ctrl]
  * repeatedly on subterms. When [ctrl t] returns [(true, _)], the
  * tactic will call [rw] with a goal of type [t = ?u], which once

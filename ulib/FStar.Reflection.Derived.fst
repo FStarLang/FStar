@@ -35,8 +35,14 @@ let bv_of_binder (b : binder) : bv =
     let bv, _ = inspect_binder b in
     bv
 
+(*
+ * AR: add versions that take attributes as arguments?
+ *)
 let mk_binder (bv : bv) : binder =
-    pack_binder bv Q_Explicit
+    pack_binder bv Q_Explicit []
+
+let mk_implicit_binder (bv : bv) : binder =
+    pack_binder bv Q_Implicit []
 
 let name_of_binder (b : binder) : string =
     name_of_bv (bv_of_binder b)
@@ -45,7 +51,7 @@ let type_of_binder (b : binder) : typ =
     type_of_bv (bv_of_binder b)
 
 let binder_to_string (b : binder) : string =
-    bv_to_string (bv_of_binder b) //TODO: print aqual
+    bv_to_string (bv_of_binder b) //TODO: print aqual, attributes
 
 val flatten_name : name -> Tot string
 let rec flatten_name ns =
@@ -146,7 +152,7 @@ let compare_binder (b1 b2 : binder) : order =
     let bv1, _ = inspect_binder b1 in
     let bv2, _ = inspect_binder b2 in
     compare_bv bv1 bv2
-  
+
 let rec compare_term (s t : term) : order =
     match inspect_ln s, inspect_ln t with
     | Tv_Var sv, Tv_Var tv ->
@@ -221,7 +227,7 @@ let rec compare_term (s t : term) : order =
     | Tv_Uvar _ _, _   -> Lt   | _, Tv_Uvar _ _   -> Gt
     | Tv_Match _ _, _  -> Lt   | _, Tv_Match _ _  -> Gt
     | Tv_AscribedT _ _ _, _  -> Lt | _, Tv_AscribedT _ _ _  -> Gt
-    | Tv_AscribedC _ _ _, _  -> Lt | _, Tv_AscribedC _ _ _  -> Gt    
+    | Tv_AscribedC _ _ _, _  -> Lt | _, Tv_AscribedC _ _ _  -> Gt
     | Tv_Unknown, _    -> Lt   | _, Tv_Unknown    -> Gt
 and compare_argv (a1 a2 : argv) : order =
     let a1, q1 = a1 in
@@ -251,7 +257,7 @@ and compare_comp (c1 c2 : comp) : order =
 
     | C_Lemma p1 q1 s1, C_Lemma p2 q2 s2 ->
       lex (compare_term p1 p2)
-          (fun () -> 
+          (fun () ->
             lex (compare_term q1 q2)
                 (fun () -> compare_term s1 s2)
           )
@@ -324,7 +330,7 @@ let rec head (t : term) : term =
     | Tv_Abs _ t
     | Tv_Refine _ t
     | Tv_App t _
-    | Tv_AscribedT t _ _ 
+    | Tv_AscribedT t _ _
     | Tv_AscribedC t _ _ -> head t
 
     | Tv_Unknown
@@ -347,8 +353,8 @@ let is_uvar (t : term) : bool =
     | _ -> false
 
 let binder_set_qual (q:aqualv) (b:binder) : Tot binder =
-  let (bv, _) = inspect_binder b in
-  pack_binder bv q
+  let bv, (_, attrs) = inspect_binder b in
+  pack_binder bv q attrs
 
 (** Set a vconfig for a sigelt *)
 val add_check_with : vconfig -> sigelt -> Tot sigelt

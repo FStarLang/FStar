@@ -44,8 +44,8 @@ val pack_fv        : name -> fv
 val inspect_bv     : bv -> bv_view
 val pack_bv        : bv_view -> bv
 
-val inspect_binder : binder -> bv * aqualv
-val pack_binder    : bv -> aqualv -> binder
+val inspect_binder : binder -> bv * (aqualv * list term)
+val pack_binder    : bv -> aqualv -> list term -> binder
 
 (* These are equivalent to [String.concat "."], [String.split ['.']]
  * and [String.compare]. We're only taking them as primitives to break
@@ -95,3 +95,5 @@ val embed_vconfig : vconfig -> term
 (* Marker to check a sigelt with a particular vconfig *)
 irreducible
 let check_with (vcfg : vconfig) : unit = ()
+
+val subst : bv -> term -> term -> term

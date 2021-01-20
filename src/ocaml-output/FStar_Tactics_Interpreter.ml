@@ -1437,7 +1437,23 @@ let (uu___143 : unit) =
                                                                     FStar_Tactics_Basic.set_urgency
                                                                     FStar_TypeChecker_NBETerm.e_int
                                                                     FStar_TypeChecker_NBETerm.e_unit in
-                                                                    [uu___136] in
+                                                                    let uu___137
+                                                                    =
+                                                                    let uu___138
+                                                                    =
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_1
+                                                                    Prims.int_one
+                                                                    "t_commute_applied_match"
+                                                                    FStar_Tactics_Basic.t_commute_applied_match
+                                                                    FStar_Syntax_Embeddings.e_unit
+                                                                    FStar_Syntax_Embeddings.e_unit
+                                                                    FStar_Tactics_Basic.t_commute_applied_match
+                                                                    FStar_TypeChecker_NBETerm.e_unit
+                                                                    FStar_TypeChecker_NBETerm.e_unit in
+                                                                    [uu___138] in
+                                                                    uu___136
+                                                                    ::
+                                                                    uu___137 in
                                                                     uu___134
                                                                     ::
                                                                     uu___135 in
@@ -1650,7 +1666,7 @@ let (report_implicits :
                   uu___2) in
               FStar_Errors.log_issue rng uu___1));
       FStar_Errors.stop_if_err ()
-let run_tactic_on_ps :
+let run_tactic_on_ps' :
   'a 'b .
     FStar_Range.range ->
       FStar_Range.range ->
@@ -2044,3 +2060,35 @@ let run_tactic_on_ps :
                                         (FStar_Errors.Fatal_UserTacticFailure,
                                           uu___13) in
                                       FStar_Errors.raise_error uu___12 rng))))))))
+let run_tactic_on_ps :
+  'a 'b .
+    FStar_Range.range ->
+      FStar_Range.range ->
+        Prims.bool ->
+          'a FStar_Syntax_Embeddings.embedding ->
+            'a ->
+              'b FStar_Syntax_Embeddings.embedding ->
+                FStar_Syntax_Syntax.term ->
+                  FStar_Tactics_Types.proofstate ->
+                    (FStar_Tactics_Types.goal Prims.list * 'b)
+  =
+  fun rng_call ->
+    fun rng_goal ->
+      fun background ->
+        fun e_arg ->
+          fun arg ->
+            fun e_res ->
+              fun tactic ->
+                fun ps ->
+                  let uu___ =
+                    let uu___1 =
+                      let uu___2 =
+                        FStar_TypeChecker_Env.current_module
+                          ps.FStar_Tactics_Types.main_context in
+                      FStar_Ident.string_of_lid uu___2 in
+                    FStar_Pervasives_Native.Some uu___1 in
+                  FStar_Profiling.profile
+                    (fun uu___1 ->
+                       run_tactic_on_ps' rng_call rng_goal background e_arg
+                         arg e_res tactic ps) uu___
+                    "FStar.Tactics.Interpreter.run_tactic_on_ps"

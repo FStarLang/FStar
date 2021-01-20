@@ -440,11 +440,13 @@ let (check_uvar_ctx_invariant :
                   uu___3::uu___4) ->
                    let uu___5 = FStar_Util.prefix bs in
                    (match uu___5 with
-                    | (uu___6, (x, uu___7)) ->
+                    | (uu___6, x) ->
                         (match hd with
                          | FStar_Syntax_Syntax.Binding_var x' when
-                             FStar_Syntax_Syntax.bv_eq x x' -> ()
-                         | uu___8 -> fail ()))
+                             FStar_Syntax_Syntax.bv_eq
+                               x.FStar_Syntax_Syntax.binder_bv x'
+                             -> ()
+                         | uu___7 -> fail ()))
                | uu___2 -> fail ())
 type implicit =
   {
@@ -809,15 +811,16 @@ let (simplify :
         | uu___1 -> FStar_Pervasives_Native.None in
       let rec args_are_binders args bs =
         match (args, bs) with
-        | ((t, uu___)::args1, (bv, uu___1)::bs1) ->
-            let uu___2 =
-              let uu___3 = FStar_Syntax_Subst.compress t in
-              uu___3.FStar_Syntax_Syntax.n in
-            (match uu___2 with
+        | ((t, uu___)::args1, b::bs1) ->
+            let uu___1 =
+              let uu___2 = FStar_Syntax_Subst.compress t in
+              uu___2.FStar_Syntax_Syntax.n in
+            (match uu___1 with
              | FStar_Syntax_Syntax.Tm_name bv' ->
-                 (FStar_Syntax_Syntax.bv_eq bv bv') &&
-                   (args_are_binders args1 bs1)
-             | uu___3 -> false)
+                 (FStar_Syntax_Syntax.bv_eq b.FStar_Syntax_Syntax.binder_bv
+                    bv')
+                   && (args_are_binders args1 bs1)
+             | uu___2 -> false)
         | ([], []) -> true
         | (uu___, uu___1) -> false in
       let is_applied bs t =

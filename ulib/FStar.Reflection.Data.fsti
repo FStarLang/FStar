@@ -48,7 +48,6 @@ type aqualv =
     | Q_Implicit
     | Q_Explicit
     | Q_Meta of term
-    | Q_Meta_attr of term
 
 type argv = term * aqualv
 
@@ -74,7 +73,7 @@ type term_view =
   | Tv_Let    : recf:bool -> attrs:(list term) -> bv:bv -> def:term -> body:term -> term_view
   | Tv_Match  : scrutinee:term -> brs:(list branch) -> term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> term_view
-  | Tv_AscribedC : e:term -> c:comp -> tac:option term -> term_view  
+  | Tv_AscribedC : e:term -> c:comp -> tac:option term -> term_view
   | Tv_Unknown  : term_view // Baked in "None"
 
 // Very basic for now
@@ -114,6 +113,12 @@ type sigelt_view =
       (params:binders) ->       // parameters
       (typ:typ) ->              // the type annotation for the inductive, i.e., indices -> Type #u
       (cts:list ctor) ->        // the constructors, opened with univs and applied to params already
+      sigelt_view
+
+  | Sg_Val :
+      (nm:name) ->
+      (univs:list univ_name) ->
+      (typ:typ) ->
       sigelt_view
 
   | Unk
@@ -161,6 +166,7 @@ let rec forall_list (p:'a -> Type) (l:list 'a) : Type =
     | x::xs -> p x /\ forall_list p xs
 
 (* Comparison of a term_view to term. Allows to recurse while changing the view *)
+[@@ remove_unused_type_parameters [0; 1]]
 let smaller (tv:term_view) (t:term) : Type0 =
     match tv with
     | Tv_App l r ->
@@ -193,6 +199,7 @@ let smaller (tv:term_view) (t:term) : Type0 =
     | Tv_Uvar _ _
     | Tv_FVar _ -> True
 
+[@@ remove_unused_type_parameters [0; 1]]
 let smaller_comp (cv:comp_view) (c:comp) : Type0 =
     match cv with
     | C_Total t md ->
@@ -204,8 +211,10 @@ let smaller_comp (cv:comp_view) (c:comp) : Type0 =
     | C_Eff us eff res args ->
         res << c
 
+[@@ remove_unused_type_parameters [0; 1]]
 let smaller_bv (bvv:bv_view) (bv:bv) : Type0 =
     bvv.bv_sort << bv
 
+[@@ remove_unused_type_parameters [0; 1]]
 let smaller_binder (b:binder) ((bv, _): bv * aqualv) : Type0 =
     bv << b

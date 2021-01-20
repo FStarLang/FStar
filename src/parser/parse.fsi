@@ -93,6 +93,7 @@ type token =
   | LBRACK_AT
   | LBRACK
   | LBRACE_COLON_PATTERN
+  | LBRACE_BAR
   | LBRACE
   | LAYERED_EFFECT
   | LARROW
@@ -134,6 +135,7 @@ type token =
   | DOLLAR
   | DISJUNCTION
   | DEFAULT
+  | DECREASES
   | CONJUNCTION
   | COMMA
   | COLON_EQUALS
@@ -146,6 +148,7 @@ type token =
   | BY
   | BEGIN
   | BAR_RBRACK
+  | BAR_RBRACE
   | BAR
   | BANG_LBRACE
   | BACKTICK_PERC
@@ -249,6 +252,7 @@ type tokenId =
     | TOKEN_LBRACK_AT
     | TOKEN_LBRACK
     | TOKEN_LBRACE_COLON_PATTERN
+    | TOKEN_LBRACE_BAR
     | TOKEN_LBRACE
     | TOKEN_LAYERED_EFFECT
     | TOKEN_LARROW
@@ -290,6 +294,7 @@ type tokenId =
     | TOKEN_DOLLAR
     | TOKEN_DISJUNCTION
     | TOKEN_DEFAULT
+    | TOKEN_DECREASES
     | TOKEN_CONJUNCTION
     | TOKEN_COMMA
     | TOKEN_COLON_EQUALS
@@ -302,6 +307,7 @@ type tokenId =
     | TOKEN_BY
     | TOKEN_BEGIN
     | TOKEN_BAR_RBRACK
+    | TOKEN_BAR_RBRACE
     | TOKEN_BAR
     | TOKEN_BANG_LBRACE
     | TOKEN_BACKTICK_PERC
@@ -346,8 +352,8 @@ type nonTerminalId =
     | NONTERM_list_decl_
     | NONTERM_list_decoration_
     | NONTERM_list_multiBinder_
-    | NONTERM_nonempty_list_aqualified_lident__
-    | NONTERM_nonempty_list_aqualified_lidentOrUnderscore__
+    | NONTERM_nonempty_list_aqualifiedWithAttrs_lident__
+    | NONTERM_nonempty_list_aqualifiedWithAttrs_lidentOrUnderscore__
     | NONTERM_nonempty_list_atomicPattern_
     | NONTERM_nonempty_list_atomicTerm_
     | NONTERM_nonempty_list_atomicUniverse_
@@ -392,7 +398,7 @@ type nonTerminalId =
     | NONTERM_maybeFocus
     | NONTERM_letqualifier
     | NONTERM_aqual
-    | NONTERM_aqualUniverses
+    | NONTERM_aqualAndAttrsUniverses
     | NONTERM_disjunctivePattern
     | NONTERM_tuplePattern
     | NONTERM_constructorPattern
@@ -402,8 +408,8 @@ type nonTerminalId =
     | NONTERM_binder
     | NONTERM_multiBinder
     | NONTERM_binders
-    | NONTERM_aqualified_lident_
-    | NONTERM_aqualified_lidentOrUnderscore_
+    | NONTERM_aqualifiedWithAttrs_lident_
+    | NONTERM_aqualifiedWithAttrs_lidentOrUnderscore_
     | NONTERM_qlident
     | NONTERM_quident
     | NONTERM_path_lident_

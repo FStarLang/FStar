@@ -2087,7 +2087,7 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
             let uu___2 =
               let uu___3 =
                 let uu___4 = FStar_Syntax_Syntax.null_bv ea.typ in
-                (uu___4, FStar_Pervasives_Native.None) in
+                FStar_Syntax_Syntax.mk_binder uu___4 in
               [uu___3] in
             let uu___3 = FStar_Syntax_Syntax.mk_Total eb.typ in
             (uu___2, uu___3) in

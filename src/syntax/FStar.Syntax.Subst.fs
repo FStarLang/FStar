@@ -235,9 +235,8 @@ let subst_flags' s flags =
 
 let subst_imp' s i =
   match i with
-  | Some (Meta (Arg_qualifier_meta_tac t)) -> Some (Meta (Arg_qualifier_meta_tac (subst' s t)))
-  | Some (Meta (Arg_qualifier_meta_attr t)) -> Some (Meta (Arg_qualifier_meta_attr (subst' s t)))
-  | i -> i
+  | Some (Meta t) -> Some (Meta (subst' s t))
+  | _ -> i
 
 let subst_comp_typ' s t =
   match s with
@@ -268,7 +267,11 @@ let shift n s = match s with
     | NT _  -> s
 let shift_subst n s = List.map (shift n) s
 let shift_subst' n s = fst s |> List.map (shift_subst n), snd s
-let subst_binder' s (x, imp) = {x with sort=subst' s x.sort}, subst_imp' s imp
+let subst_binder' s b =
+  S.mk_binder_with_attrs
+    ({ b.binder_bv with sort = subst' s b.binder_bv.sort })
+    (subst_imp' s b.binder_qual)
+    (b.binder_attrs |> List.map (subst' s))
 
 
 let subst_binders' s bs =
@@ -315,7 +318,7 @@ let push_subst_lcomp s lopt = match lopt with
 
 let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
     let should_retain x =
-        u.ctx_uvar_binders |> U.for_some (fun (x', _) -> S.bv_eq x x')
+        u.ctx_uvar_binders |> U.for_some (fun b -> S.bv_eq x b.binder_bv)
     in
     let rec aux = function
         | [] -> []
@@ -504,16 +507,17 @@ let set_use_range r t = subst' ([], SomeUseRange (Range.set_def_range r (Range.u
 let subst_comp s t = subst_comp' ([s], NoUseRange) t
 let subst_imp s imp = subst_imp' ([s], NoUseRange) imp
 let closing_subst (bs:binders) =
-    List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst
+    List.fold_right (fun b (subst, n)  -> (NM(b.binder_bv, n)::subst, n+1)) bs ([], 0) |> fst
 let open_binders' bs =
    let rec aux bs o = match bs with
         | [] -> [], o
-        | (x, imp)::bs' ->
-          let x' = {freshen_bv x with sort=subst o x.sort} in
-          let imp = subst_imp o imp in
+        | b::bs' ->
+          let x' = {freshen_bv b.binder_bv with sort=subst o b.binder_bv.sort} in
+          let imp = subst_imp o b.binder_qual in
+          let attrs = b.binder_attrs |> List.map (subst o) in
           let o = DB(0, x')::shift_subst 1 o in
           let bs', o = aux bs' o in
-          (x',imp)::bs', o in
+          (S.mk_binder_with_attrs x' imp attrs)::bs', o in
    aux bs []
 let open_binders (bs:binders) = fst (open_binders' bs)
 let open_term' (bs:binders) t =
@@ -571,11 +575,12 @@ let close_comp (bs:binders) (c:comp) = subst_comp (closing_subst bs) c
 let close_binders (bs:binders) : binders =
     let rec aux s (bs:binders) = match bs with
         | [] -> []
-        | (x, imp)::tl ->
-          let x = {x with sort=subst s x.sort} in
-          let imp = subst_imp s imp in
+        | b::tl ->
+          let x = {b.binder_bv with sort=subst s b.binder_bv.sort} in
+          let imp = subst_imp s b.binder_qual in
+          let attrs = b.binder_attrs |> List.map (subst s) in
           let s' = NM(x, 0)::shift_subst 1 s in
-          (x, imp)::aux s' tl in
+          (S.mk_binder_with_attrs x imp attrs)::aux s' tl in
     aux [] bs
 
 let close_pat p =
@@ -708,7 +713,7 @@ let close_let_rec lbs (t:term) =
 let close_tscheme (binders:binders) ((us, t) : tscheme) =
     let n = List.length binders - 1 in
     let k = List.length us in
-    let s = List.mapi (fun i (x, _) -> NM(x, k + (n - i))) binders in
+    let s = List.mapi (fun i b -> NM(b.binder_bv, k + (n - i))) binders in
     let t = subst s t in
     (us, t)
 
@@ -724,7 +729,7 @@ let subst_tscheme (s:list<subst_elt>) ((us, t):tscheme) =
 
 let opening_of_binders (bs:binders) =
   let n = List.length bs - 1 in
-  bs |> List.mapi (fun i (x, _) -> DB(n - i, x))
+  bs |> List.mapi (fun i b -> DB(n - i, b.binder_bv))
 
 let closing_of_binders (bs:binders) = closing_subst bs
 
@@ -735,7 +740,7 @@ let open_term_1 b t =
 
 let open_term_bvs bvs t =
     let bs, t = open_term (List.map mk_binder bvs) t in
-    List.map fst bs, t
+    List.map (fun b -> b.binder_bv) bs, t
 
 let open_term_bv bv t =
     match open_term_bvs [bv] t with
@@ -961,16 +966,14 @@ and deep_compress_args args =
 
 and deep_compress_aqual (q:aqual) : aqual =
   match q with
-  | Some (S.Meta (Arg_qualifier_meta_tac t)) ->
-    Some (S.Meta (Arg_qualifier_meta_tac (deep_compress t)))
+  | Some (S.Meta t) ->
+    Some (S.Meta (deep_compress t))
 
-  | Some (S.Meta (Arg_qualifier_meta_attr t)) ->
-    Some (S.Meta (Arg_qualifier_meta_attr (deep_compress t)))
-
-  | q -> q
+  | _ -> q
 
 and deep_compress_binders bs =
-    List.map (fun (x, q) ->
-                let x = {x with sort=deep_compress x.sort} in
-                let q = deep_compress_aqual q in
-                x, q) bs
+    List.map (fun b ->
+                let x = {b.binder_bv with sort=deep_compress b.binder_bv.sort} in
+                let q = deep_compress_aqual b.binder_qual in
+                let attrs = b.binder_attrs |> List.map deep_compress in
+                (S.mk_binder_with_attrs x q attrs)) bs

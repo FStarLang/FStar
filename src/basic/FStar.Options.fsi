@@ -111,6 +111,7 @@ val cmi                         : unit    -> bool
 type codegen_t =
     | OCaml | FSharp | Kremlin | Plugin
 val codegen                     : unit    -> option<codegen_t>
+val parse_codegen               : string  -> option<codegen_t>
 val codegen_libs                : unit    -> list<list<string>>
 val profile_enabled             : module_name:option<string> -> profile_phase:string -> bool
 val profile_group_by_decls      : unit    -> bool
