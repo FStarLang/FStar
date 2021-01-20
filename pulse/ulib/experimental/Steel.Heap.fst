@@ -750,6 +750,20 @@ let refined_pre_action_as_action (#fp0:slprop) (#a:Type) (#fp1:a -> slprop)
     in
     g
 
+let select_join #a #p (r:ref a p) (x:erased a) (h:full_heap) (hl hr:heap)
+  : Lemma
+    (requires
+      disjoint hl hr /\
+      h == join hl hr /\
+      interp (pts_to r x) h /\
+      interp (pts_to r x) hl /\
+      contains_addr hr r)
+    (ensures (
+      let Ref _ _ _ vl = select_addr hl r in
+      let Ref _ _ _ vr = select_addr hr r in
+      sel_v r x h == op p vl vr))
+  = ()
+
 #push-options "--z3rlimit_factor 8 --max_fuel 0 --initial_ifuel 2 --max_ifuel 2"
 let select_refine_pre (#a:_) (#p:_)
                       (r:ref a p)
@@ -785,7 +799,8 @@ let select_refine_pre (#a:_) (#p:_)
                     let Ref _ _ frac_l v_l = select_addr hl r in
                     let Ref _ _ _ v_r = select_addr hr r in
                     assert (composable p v_l v_r);
-                    assert (op p v_l v_r == v);
+                    select_join r x h0 hl hr;
+                    assert (op p v_l v_r == v); //NS: this one seems to be fragile, without the lemma call above
                     assert (compatible p x v_l);
                     let aux (frame_l:a)
                       : Lemma
