@@ -48,6 +48,7 @@ let normal (#a:Type) (x:a) =
   norm [
     delta_attr [`%__steel_reduce__];
     delta_only [`%Mkvprop'?.t; `%Mkvprop'?.hp; `%Mkvprop'?.sel];
+    delta_qualifier ["unfold"];
     iota;zeta;primops]
   x
 
@@ -2059,7 +2060,7 @@ let test0 (r:ref int) : SteelSel unit
     // AF: Uncommenting the following line leads to the error
     // ASSERTION FAILURE: Name not found: pure_null_wp
     // during the encoding to Z3
-    // assert (sel r h1 == 1);
+    assert (sel r h1 == 1);
     write r 1
 
 let test1 (r:ref int) : SteelSel unit
@@ -2088,8 +2089,8 @@ let test3 (r1 r2 r3:ref int) : SteelSel unit
   = let h0 = get () in
     write r1 1;
     let h1 = get() in
-    // assert (sel r1 h1 == 1);
-    // assert (sel r2 h0 == sel r2 h1);
+    assert (sel r1 h1 == 1);
+    assert (sel r2 h0 == sel r2 h1);
     write r1 0
 
 
