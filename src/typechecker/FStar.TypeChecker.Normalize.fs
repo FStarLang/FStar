@@ -1372,12 +1372,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Inl t -> Inl (norm cfg env [] t)
                     | Inr c -> Inr (norm_comp cfg env c) in
                 let tacopt = BU.map_opt tacopt (norm cfg env []) in
-                // match stack with
-                // | Cfg cfg :: stack ->
-                //   let t = mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos in
-                //   norm cfg env stack t
-                // | _ ->
-                rebuild cfg env stack (mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos)
+                match stack with
+                | Cfg cfg :: stack ->
+                  let t = mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos in
+                  norm cfg env stack t
+                | _ ->
+                  rebuild cfg env stack (mk (Tm_ascribed(U.unascribe t1, (tc, tacopt), l)) t.pos)
             end
 
           | Tm_match(head, branches) ->
