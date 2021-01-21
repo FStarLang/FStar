@@ -3835,27 +3835,15 @@ let rec (norm :
                              FStar_Util.Inr uu___5 in
                        let tacopt1 =
                          FStar_Util.map_opt tacopt (norm cfg env1 []) in
-                       match stack1 with
-                       | (Cfg cfg1)::stack2 ->
-                           let t2 =
-                             let uu___5 =
-                               let uu___6 =
-                                 let uu___7 = FStar_Syntax_Util.unascribe t12 in
-                                 (uu___7, (tc1, tacopt1), l) in
-                               FStar_Syntax_Syntax.Tm_ascribed uu___6 in
-                             FStar_Syntax_Syntax.mk uu___5
-                               t1.FStar_Syntax_Syntax.pos in
-                           norm cfg1 env1 stack2 t2
-                       | uu___5 ->
-                           let uu___6 =
-                             let uu___7 =
-                               let uu___8 =
-                                 let uu___9 = FStar_Syntax_Util.unascribe t12 in
-                                 (uu___9, (tc1, tacopt1), l) in
-                               FStar_Syntax_Syntax.Tm_ascribed uu___8 in
-                             FStar_Syntax_Syntax.mk uu___7
-                               t1.FStar_Syntax_Syntax.pos in
-                           rebuild cfg env1 stack1 uu___6))))
+                       let uu___5 =
+                         let uu___6 =
+                           let uu___7 =
+                             let uu___8 = FStar_Syntax_Util.unascribe t12 in
+                             (uu___8, (tc1, tacopt1), l) in
+                           FStar_Syntax_Syntax.Tm_ascribed uu___7 in
+                         FStar_Syntax_Syntax.mk uu___6
+                           t1.FStar_Syntax_Syntax.pos in
+                       rebuild cfg env1 stack1 uu___5))))
            | FStar_Syntax_Syntax.Tm_match (head, branches1) ->
                let stack2 =
                  (Match (env1, branches1, cfg, (t1.FStar_Syntax_Syntax.pos)))
