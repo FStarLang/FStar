@@ -948,7 +948,8 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
           //rules. User-specified criteria an interpreted as further enabling additional unfoldings
           //for extraction only
           match meets_some_criterion with
-          | false, _, _ -> default_unfolding()
+          | false, _, _ ->
+            yesno <| Option.isSome (Env.lookup_definition_qninfo [Eager_unfolding_only; InliningDelta] fv.fv_name.v qninfo)
           | _ -> meets_some_criterion
         )
         else meets_some_criterion
@@ -1167,11 +1168,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 if s |> BU.for_some (function UnfoldUntil _ | UnfoldOnly _ | UnfoldFully _ -> true | _ -> false)
                 then [Unfold delta_constant]
                 else [NoDelta]
-              in
-              let delta_level =
-                  if cfg.steps.for_extraction
-                  then delta_level@[Env.Eager_unfolding_only; Env.InliningDelta]
-                  else delta_level
               in
               let cfg' = {cfg with steps = ({ to_fsteps s
                                               with in_full_norm_request=true;

@@ -2027,7 +2027,16 @@ let (should_unfold :
                          (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
                        then
                          match meets_some_criterion with
-                         | (false, uu___5, uu___6) -> default_unfolding ()
+                         | (false, uu___5, uu___6) ->
+                             let uu___7 =
+                               let uu___8 =
+                                 FStar_TypeChecker_Env.lookup_definition_qninfo
+                                   [FStar_TypeChecker_Env.Eager_unfolding_only;
+                                   FStar_TypeChecker_Env.InliningDelta]
+                                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                   qninfo in
+                               FStar_Option.isSome uu___8 in
+                             FStar_All.pipe_left yesno uu___7
                          | uu___5 -> meets_some_criterion
                        else meets_some_criterion))
                  | (uu___, uu___1, FStar_Pervasives_Native.Some uu___2,
@@ -2082,7 +2091,16 @@ let (should_unfold :
                          (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
                        then
                          match meets_some_criterion with
-                         | (false, uu___5, uu___6) -> default_unfolding ()
+                         | (false, uu___5, uu___6) ->
+                             let uu___7 =
+                               let uu___8 =
+                                 FStar_TypeChecker_Env.lookup_definition_qninfo
+                                   [FStar_TypeChecker_Env.Eager_unfolding_only;
+                                   FStar_TypeChecker_Env.InliningDelta]
+                                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                   qninfo in
+                               FStar_Option.isSome uu___8 in
+                             FStar_All.pipe_left yesno uu___7
                          | uu___5 -> meets_some_criterion
                        else meets_some_criterion))
                  | (uu___, uu___1, uu___2, FStar_Pervasives_Native.Some
@@ -2137,7 +2155,16 @@ let (should_unfold :
                          (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
                        then
                          match meets_some_criterion with
-                         | (false, uu___5, uu___6) -> default_unfolding ()
+                         | (false, uu___5, uu___6) ->
+                             let uu___7 =
+                               let uu___8 =
+                                 FStar_TypeChecker_Env.lookup_definition_qninfo
+                                   [FStar_TypeChecker_Env.Eager_unfolding_only;
+                                   FStar_TypeChecker_Env.InliningDelta]
+                                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+                                   qninfo in
+                               FStar_Option.isSome uu___8 in
+                             FStar_All.pipe_left yesno uu___7
                          | uu___5 -> meets_some_criterion
                        else meets_some_criterion))
                  | uu___ -> default_unfolding ()) in
@@ -2678,14 +2705,6 @@ let rec (norm :
                          [FStar_TypeChecker_Env.Unfold
                             FStar_Syntax_Syntax.delta_constant]
                        else [FStar_TypeChecker_Env.NoDelta] in
-                     let delta_level1 =
-                       if
-                         (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.for_extraction
-                       then
-                         FStar_List.append delta_level
-                           [FStar_TypeChecker_Env.Eager_unfolding_only;
-                           FStar_TypeChecker_Env.InliningDelta]
-                       else delta_level in
                      let cfg'1 =
                        let uu___4 = cfg in
                        let uu___5 =
@@ -2752,7 +2771,7 @@ let rec (norm :
                            (uu___4.FStar_TypeChecker_Cfg.tcenv);
                          FStar_TypeChecker_Cfg.debug =
                            (uu___4.FStar_TypeChecker_Cfg.debug);
-                         FStar_TypeChecker_Cfg.delta_level = delta_level1;
+                         FStar_TypeChecker_Cfg.delta_level = delta_level;
                          FStar_TypeChecker_Cfg.primitive_steps =
                            (uu___4.FStar_TypeChecker_Cfg.primitive_steps);
                          FStar_TypeChecker_Cfg.strong =
