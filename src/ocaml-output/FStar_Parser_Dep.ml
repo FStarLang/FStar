@@ -1205,30 +1205,31 @@ let (collect_one :
              FStar_List.iter collect_binder binders
            and collect_binder b =
              collect_aqual b.FStar_Parser_AST.aqual;
+             FStar_All.pipe_right b.FStar_Parser_AST.battributes
+               (FStar_List.iter collect_term);
              (match b with
               | {
-                  FStar_Parser_AST.b = FStar_Parser_AST.Annotated (uu___3, t);
-                  FStar_Parser_AST.brange = uu___4;
-                  FStar_Parser_AST.blevel = uu___5;
-                  FStar_Parser_AST.aqual = uu___6;_} -> collect_term t
+                  FStar_Parser_AST.b = FStar_Parser_AST.Annotated (uu___4, t);
+                  FStar_Parser_AST.brange = uu___5;
+                  FStar_Parser_AST.blevel = uu___6;
+                  FStar_Parser_AST.aqual = uu___7;
+                  FStar_Parser_AST.battributes = uu___8;_} -> collect_term t
               | {
                   FStar_Parser_AST.b = FStar_Parser_AST.TAnnotated
-                    (uu___3, t);
+                    (uu___4, t);
+                  FStar_Parser_AST.brange = uu___5;
+                  FStar_Parser_AST.blevel = uu___6;
+                  FStar_Parser_AST.aqual = uu___7;
+                  FStar_Parser_AST.battributes = uu___8;_} -> collect_term t
+              | { FStar_Parser_AST.b = FStar_Parser_AST.NoName t;
                   FStar_Parser_AST.brange = uu___4;
                   FStar_Parser_AST.blevel = uu___5;
-                  FStar_Parser_AST.aqual = uu___6;_} -> collect_term t
-              | { FStar_Parser_AST.b = FStar_Parser_AST.NoName t;
-                  FStar_Parser_AST.brange = uu___3;
-                  FStar_Parser_AST.blevel = uu___4;
-                  FStar_Parser_AST.aqual = uu___5;_} -> collect_term t
-              | uu___3 -> ())
+                  FStar_Parser_AST.aqual = uu___6;
+                  FStar_Parser_AST.battributes = uu___7;_} -> collect_term t
+              | uu___4 -> ())
            and collect_aqual uu___2 =
              match uu___2 with
-             | FStar_Pervasives_Native.Some (FStar_Parser_AST.Meta
-                 (FStar_Parser_AST.Arg_qualifier_meta_tac t)) ->
-                 collect_term t
-             | FStar_Pervasives_Native.Some (FStar_Parser_AST.Meta
-                 (FStar_Parser_AST.Arg_qualifier_meta_attr t)) ->
+             | FStar_Pervasives_Native.Some (FStar_Parser_AST.Meta t) ->
                  collect_term t
              | uu___3 -> ()
            and collect_term t = collect_term' t.FStar_Parser_AST.tm
@@ -1399,10 +1400,15 @@ let (collect_one :
            and collect_pattern p = collect_pattern' p.FStar_Parser_AST.pat
            and collect_pattern' uu___2 =
              match uu___2 with
-             | FStar_Parser_AST.PatVar (uu___3, aqual) -> collect_aqual aqual
-             | FStar_Parser_AST.PatTvar (uu___3, aqual) ->
-                 collect_aqual aqual
-             | FStar_Parser_AST.PatWild aqual -> collect_aqual aqual
+             | FStar_Parser_AST.PatVar (uu___3, aqual, attrs) ->
+                 (collect_aqual aqual;
+                  FStar_All.pipe_right attrs (FStar_List.iter collect_term))
+             | FStar_Parser_AST.PatTvar (uu___3, aqual, attrs) ->
+                 (collect_aqual aqual;
+                  FStar_All.pipe_right attrs (FStar_List.iter collect_term))
+             | FStar_Parser_AST.PatWild (aqual, attrs) ->
+                 (collect_aqual aqual;
+                  FStar_All.pipe_right attrs (FStar_List.iter collect_term))
              | FStar_Parser_AST.PatOp uu___3 -> ()
              | FStar_Parser_AST.PatConst uu___3 -> ()
              | FStar_Parser_AST.PatApp (p, ps) ->

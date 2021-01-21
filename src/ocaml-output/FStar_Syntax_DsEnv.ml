@@ -1931,27 +1931,21 @@ let (extract_record :
                                        let formals' =
                                          FStar_All.pipe_right formals
                                            (FStar_List.collect
-                                              (fun uu___20 ->
-                                                 match uu___20 with
-                                                 | (x, q) ->
-                                                     let uu___21 =
-                                                       (FStar_Syntax_Syntax.is_null_bv
-                                                          x)
-                                                         ||
-                                                         (is_rec &&
-                                                            (FStar_Syntax_Syntax.is_implicit
-                                                               q)) in
-                                                     if uu___21
-                                                     then []
-                                                     else [(x, q)])) in
+                                              (fun f ->
+                                                 let uu___20 =
+                                                   (FStar_Syntax_Syntax.is_null_bv
+                                                      f.FStar_Syntax_Syntax.binder_bv)
+                                                     ||
+                                                     (is_rec &&
+                                                        (FStar_Syntax_Syntax.is_implicit
+                                                           f.FStar_Syntax_Syntax.binder_qual)) in
+                                                 if uu___20 then [] else [f])) in
                                        let fields' =
                                          FStar_All.pipe_right formals'
                                            (FStar_List.map
-                                              (fun uu___20 ->
-                                                 match uu___20 with
-                                                 | (x, q) ->
-                                                     ((x.FStar_Syntax_Syntax.ppname),
-                                                       (x.FStar_Syntax_Syntax.sort)))) in
+                                              (fun f ->
+                                                 (((f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.ppname),
+                                                   ((f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort)))) in
                                        let fields = fields' in
                                        let record =
                                          let uu___20 =

@@ -228,11 +228,11 @@ let nbe_int3 :
                            FStar_Util.bind_opt uu___4
                              (fun b2 ->
                                 let uu___5 =
-                                  FStar_TypeChecker_NBETerm.unembed eb cb c1 in
+                                  FStar_TypeChecker_NBETerm.unembed ec cb c1 in
                                 FStar_Util.bind_opt uu___5
                                   (fun c2 ->
                                      let uu___6 =
-                                       let uu___7 = f a2 b2 (Obj.magic c2) in
+                                       let uu___7 = f a2 b2 c2 in
                                        FStar_TypeChecker_NBETerm.embed er cb
                                          uu___7 in
                                      FStar_Pervasives_Native.Some uu___6)))
@@ -489,14 +489,22 @@ let (reflection_primops : FStar_TypeChecker_Cfg.primitive_step Prims.list) =
                                       FStar_Reflection_NBEEmbeddings.e_binder_view in
                                   let uu___33 =
                                     let uu___34 =
-                                      mk2 "pack_binder"
+                                      let uu___35 =
+                                        FStar_Syntax_Embeddings.e_list
+                                          FStar_Reflection_Embeddings.e_term in
+                                      let uu___36 =
+                                        FStar_TypeChecker_NBETerm.e_list
+                                          FStar_Reflection_NBEEmbeddings.e_term in
+                                      mk3 "pack_binder"
                                         FStar_Reflection_Basic.pack_binder
                                         FStar_Reflection_Embeddings.e_bv
                                         FStar_Reflection_Embeddings.e_aqualv
+                                        uu___35
                                         FStar_Reflection_Embeddings.e_binder
                                         FStar_Reflection_Basic.pack_binder
                                         FStar_Reflection_NBEEmbeddings.e_bv
                                         FStar_Reflection_NBEEmbeddings.e_aqualv
+                                        uu___36
                                         FStar_Reflection_NBEEmbeddings.e_binder in
                                     let uu___35 =
                                       let uu___36 =

@@ -43,7 +43,10 @@ let rec (elaborate_pat :
                       | (uu___4::uu___5, []) ->
                           FStar_All.pipe_right formals
                             (FStar_List.map
-                               (fun uu___6 ->
+                               (fun fml ->
+                                  let uu___6 =
+                                    ((fml.FStar_Syntax_Syntax.binder_bv),
+                                      (fml.FStar_Syntax_Syntax.binder_qual)) in
                                   match uu___6 with
                                   | (t1, imp) ->
                                       (match imp with
@@ -82,7 +85,9 @@ let rec (elaborate_pat :
                                            FStar_Errors.raise_error uu___8
                                              uu___9)))
                       | (f1::formals', (p1, p_imp)::pats') ->
-                          (match f1 with
+                          (match ((f1.FStar_Syntax_Syntax.binder_bv),
+                                   (f1.FStar_Syntax_Syntax.binder_qual))
+                           with
                            | (uu___4, FStar_Pervasives_Native.Some
                               (FStar_Syntax_Syntax.Implicit inaccessible))
                                when inaccessible && p_imp ->

@@ -47,7 +47,7 @@ let rec lift : t1 -> t2 =
     function
     | A1 -> A2
     | B1 i -> B2 i
-    | C1 f -> C2 (fun x -> lift (FStar.WellFounded.axiom1 f x; f x))
+    | C1 f -> C2 (fun x -> lift (f x))
 
 let lemA () : Lemma (lift A1 == A2) = ()
 let lemB x : Lemma (lift (B1 x) == (B2 x)) = ()
