@@ -5,7 +5,8 @@ let (tun_r : FStar_Range.range -> FStar_Syntax_Syntax.term) =
     {
       FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = r;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
+      FStar_Syntax_Syntax.hash_code = (uu___.FStar_Syntax_Syntax.hash_code)
     }
 type annotated_pat =
   (FStar_Syntax_Syntax.pat * (FStar_Syntax_Syntax.bv *
@@ -354,7 +355,9 @@ let (op_as_term :
                {
                  FStar_Syntax_Syntax.n = (uu___2.FStar_Syntax_Syntax.n);
                  FStar_Syntax_Syntax.pos = uu___3;
-                 FStar_Syntax_Syntax.vars = (uu___2.FStar_Syntax_Syntax.vars)
+                 FStar_Syntax_Syntax.vars = (uu___2.FStar_Syntax_Syntax.vars);
+                 FStar_Syntax_Syntax.hash_code =
+                   (uu___2.FStar_Syntax_Syntax.hash_code)
                }) env true uu___1 in
         match uu___ with
         | FStar_Pervasives_Native.Some t -> FStar_Pervasives_Native.Some t
@@ -1283,15 +1286,15 @@ let (check_no_aq : FStar_Syntax_Syntax.antiquotations -> unit) =
            (e,
             { FStar_Syntax_Syntax.qkind = FStar_Syntax_Syntax.Quote_dynamic;
               FStar_Syntax_Syntax.antiquotes = uu___;_});
-         FStar_Syntax_Syntax.pos = uu___1;
-         FStar_Syntax_Syntax.vars = uu___2;_})::uu___3
+         FStar_Syntax_Syntax.pos = uu___1; FStar_Syntax_Syntax.vars = uu___2;
+         FStar_Syntax_Syntax.hash_code = uu___3;_})::uu___4
         ->
-        let uu___4 =
-          let uu___5 =
-            let uu___6 = FStar_Syntax_Print.term_to_string e in
-            FStar_Util.format1 "Unexpected antiquotation: `@(%s)" uu___6 in
-          (FStar_Errors.Fatal_UnexpectedAntiquotation, uu___5) in
-        FStar_Errors.raise_error uu___4 e.FStar_Syntax_Syntax.pos
+        let uu___5 =
+          let uu___6 =
+            let uu___7 = FStar_Syntax_Print.term_to_string e in
+            FStar_Util.format1 "Unexpected antiquotation: `@(%s)" uu___7 in
+          (FStar_Errors.Fatal_UnexpectedAntiquotation, uu___6) in
+        FStar_Errors.raise_error uu___5 e.FStar_Syntax_Syntax.pos
     | (bv, e)::uu___ ->
         let uu___1 =
           let uu___2 =
@@ -2027,7 +2030,9 @@ and (desugar_machine_integer :
                              FStar_Syntax_Syntax.pos =
                                (uu___3.FStar_Syntax_Syntax.pos);
                              FStar_Syntax_Syntax.vars =
-                               (uu___3.FStar_Syntax_Syntax.vars)
+                               (uu___3.FStar_Syntax_Syntax.vars);
+                             FStar_Syntax_Syntax.hash_code =
+                               (uu___3.FStar_Syntax_Syntax.hash_code)
                            }
                        | uu___3 ->
                            failwith
@@ -2073,7 +2078,9 @@ and (desugar_term_maybe_top :
           {
             FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
             FStar_Syntax_Syntax.pos = (top.FStar_Parser_AST.range);
-            FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+            FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
+            FStar_Syntax_Syntax.hash_code =
+              (uu___.FStar_Syntax_Syntax.hash_code)
           } in
         let uu___ = let uu___1 = unparen top in uu___1.FStar_Parser_AST.tm in
         match uu___ with
@@ -3550,35 +3557,36 @@ and (desugar_term_maybe_top :
                          FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar
                            fv;
                          FStar_Syntax_Syntax.pos = uu___2;
-                         FStar_Syntax_Syntax.vars = uu___3;_},
+                         FStar_Syntax_Syntax.vars = uu___3;
+                         FStar_Syntax_Syntax.hash_code = uu___4;_},
                        args)
                       ->
-                      let uu___4 =
-                        let uu___5 =
-                          let uu___6 =
-                            let uu___7 =
-                              let uu___8 =
+                      let uu___5 =
+                        let uu___6 =
+                          let uu___7 =
+                            let uu___8 =
+                              let uu___9 =
                                 FStar_Ident.set_lid_range
                                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
                                   e.FStar_Syntax_Syntax.pos in
-                              let uu___9 =
-                                let uu___10 =
-                                  let uu___11 =
-                                    let uu___12 =
+                              let uu___10 =
+                                let uu___11 =
+                                  let uu___12 =
+                                    let uu___13 =
                                       FStar_All.pipe_right
                                         record.FStar_Syntax_DsEnv.fields
                                         (FStar_List.map
                                            FStar_Pervasives_Native.fst) in
                                     ((record.FStar_Syntax_DsEnv.typename),
-                                      uu___12) in
-                                  FStar_Syntax_Syntax.Record_ctor uu___11 in
-                                FStar_Pervasives_Native.Some uu___10 in
-                              FStar_Syntax_Syntax.fvar uu___8
-                                FStar_Syntax_Syntax.delta_constant uu___9 in
-                            (uu___7, args) in
-                          FStar_Syntax_Syntax.Tm_app uu___6 in
-                        FStar_All.pipe_left mk uu___5 in
-                      (uu___4, s)
+                                      uu___13) in
+                                  FStar_Syntax_Syntax.Record_ctor uu___12 in
+                                FStar_Pervasives_Native.Some uu___11 in
+                              FStar_Syntax_Syntax.fvar uu___9
+                                FStar_Syntax_Syntax.delta_constant uu___10 in
+                            (uu___8, args) in
+                          FStar_Syntax_Syntax.Tm_app uu___7 in
+                        FStar_All.pipe_left mk uu___6 in
+                      (uu___5, s)
                   | uu___2 -> (e, s)))
         | FStar_Parser_AST.Project (e, f) ->
             let uu___1 =
@@ -3644,7 +3652,9 @@ and (desugar_term_maybe_top :
                      FStar_Syntax_Syntax.n = (uu___3.FStar_Syntax_Syntax.n);
                      FStar_Syntax_Syntax.pos = (e.FStar_Parser_AST.range);
                      FStar_Syntax_Syntax.vars =
-                       (uu___3.FStar_Syntax_Syntax.vars)
+                       (uu___3.FStar_Syntax_Syntax.vars);
+                     FStar_Syntax_Syntax.hash_code =
+                       (uu___3.FStar_Syntax_Syntax.hash_code)
                    } in
                  (uu___2, noaqs)
              | uu___2 ->
@@ -4371,7 +4381,9 @@ and (desugar_formula :
         {
           FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
           FStar_Syntax_Syntax.pos = (f.FStar_Parser_AST.range);
-          FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+          FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
+          FStar_Syntax_Syntax.hash_code =
+            (uu___.FStar_Syntax_Syntax.hash_code)
         } in
       let desugar_quant q b pats body =
         let tk =
@@ -4407,7 +4419,9 @@ and (desugar_formula :
                                  (uu___2.FStar_Syntax_Syntax.n);
                                FStar_Syntax_Syntax.pos = uu___3;
                                FStar_Syntax_Syntax.vars =
-                                 (uu___2.FStar_Syntax_Syntax.vars)
+                                 (uu___2.FStar_Syntax_Syntax.vars);
+                               FStar_Syntax_Syntax.hash_code =
+                                 (uu___2.FStar_Syntax_Syntax.hash_code)
                              })) in
                    let pats2 =
                      FStar_All.pipe_right pats1

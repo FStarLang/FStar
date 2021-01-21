@@ -2849,7 +2849,9 @@ let (equality_ops : primitive_step FStar_Util.psmap) =
                   FStar_Syntax_Syntax.n = (uu___4.FStar_Syntax_Syntax.n);
                   FStar_Syntax_Syntax.pos = r;
                   FStar_Syntax_Syntax.vars =
-                    (uu___4.FStar_Syntax_Syntax.vars)
+                    (uu___4.FStar_Syntax_Syntax.vars);
+                  FStar_Syntax_Syntax.hash_code =
+                    (uu___4.FStar_Syntax_Syntax.hash_code)
                 })
          | FStar_Syntax_Util.NotEqual ->
              FStar_Pervasives_Native.Some
@@ -2858,7 +2860,9 @@ let (equality_ops : primitive_step FStar_Util.psmap) =
                   FStar_Syntax_Syntax.n = (uu___4.FStar_Syntax_Syntax.n);
                   FStar_Syntax_Syntax.pos = r;
                   FStar_Syntax_Syntax.vars =
-                    (uu___4.FStar_Syntax_Syntax.vars)
+                    (uu___4.FStar_Syntax_Syntax.vars);
+                  FStar_Syntax_Syntax.hash_code =
+                    (uu___4.FStar_Syntax_Syntax.hash_code)
                 })
          | uu___4 -> FStar_Pervasives_Native.None)
     | uu___ -> failwith "Unexpected number of arguments" in
@@ -2878,7 +2882,9 @@ let (equality_ops : primitive_step FStar_Util.psmap) =
                   FStar_Syntax_Syntax.n = (uu___5.FStar_Syntax_Syntax.n);
                   FStar_Syntax_Syntax.pos = r;
                   FStar_Syntax_Syntax.vars =
-                    (uu___5.FStar_Syntax_Syntax.vars)
+                    (uu___5.FStar_Syntax_Syntax.vars);
+                  FStar_Syntax_Syntax.hash_code =
+                    (uu___5.FStar_Syntax_Syntax.hash_code)
                 })
          | FStar_Syntax_Util.NotEqual ->
              FStar_Pervasives_Native.Some
@@ -2887,7 +2893,9 @@ let (equality_ops : primitive_step FStar_Util.psmap) =
                   FStar_Syntax_Syntax.n = (uu___5.FStar_Syntax_Syntax.n);
                   FStar_Syntax_Syntax.pos = r;
                   FStar_Syntax_Syntax.vars =
-                    (uu___5.FStar_Syntax_Syntax.vars)
+                    (uu___5.FStar_Syntax_Syntax.vars);
+                  FStar_Syntax_Syntax.hash_code =
+                    (uu___5.FStar_Syntax_Syntax.hash_code)
                 })
          | uu___5 -> FStar_Pervasives_Native.None)
     | uu___ -> failwith "Unexpected number of arguments" in

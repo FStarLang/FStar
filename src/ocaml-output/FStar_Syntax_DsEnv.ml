@@ -2195,7 +2195,9 @@ let (push_bv' :
            {
              FStar_Syntax_Syntax.n = (uu___1.FStar_Syntax_Syntax.n);
              FStar_Syntax_Syntax.pos = r;
-             FStar_Syntax_Syntax.vars = (uu___1.FStar_Syntax_Syntax.vars)
+             FStar_Syntax_Syntax.vars = (uu___1.FStar_Syntax_Syntax.vars);
+             FStar_Syntax_Syntax.hash_code =
+               (uu___1.FStar_Syntax_Syntax.hash_code)
            }) in
       let used_marker1 = FStar_Util.mk_ref false in
       ((push_scope_mod env1 (Local_binding (x, bv, used_marker1))), bv,

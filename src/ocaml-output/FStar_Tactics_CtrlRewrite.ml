@@ -592,7 +592,9 @@ and (on_subterms :
                              FStar_Syntax_Syntax.pos =
                                (uu___2.FStar_Syntax_Syntax.pos);
                              FStar_Syntax_Syntax.vars =
-                               (uu___2.FStar_Syntax_Syntax.vars)
+                               (uu___2.FStar_Syntax_Syntax.vars);
+                             FStar_Syntax_Syntax.hash_code =
+                               (uu___2.FStar_Syntax_Syntax.hash_code)
                            }), flag))
 let (do_ctrl_rewrite :
   FStar_Tactics_Types.goal ->

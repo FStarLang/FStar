@@ -274,7 +274,9 @@ let tag_with_range :
              {
                FStar_Syntax_Syntax.n = t';
                FStar_Syntax_Syntax.pos = r1;
-               FStar_Syntax_Syntax.vars = (uu___2.FStar_Syntax_Syntax.vars)
+               FStar_Syntax_Syntax.vars = (uu___2.FStar_Syntax_Syntax.vars);
+               FStar_Syntax_Syntax.hash_code =
+                 (uu___2.FStar_Syntax_Syntax.hash_code)
              })
 let tag_lid_with_range :
   'uuuuu .
@@ -736,7 +738,9 @@ let rec (push_subst :
                    FStar_Syntax_Syntax.n = uu___3;
                    FStar_Syntax_Syntax.pos = (uu___2.FStar_Syntax_Syntax.pos);
                    FStar_Syntax_Syntax.vars =
-                     (uu___2.FStar_Syntax_Syntax.vars)
+                     (uu___2.FStar_Syntax_Syntax.vars);
+                   FStar_Syntax_Syntax.hash_code =
+                     (uu___2.FStar_Syntax_Syntax.hash_code)
                  } in
                tag_with_range uu___1 s
            | FStar_Pervasives_Native.Some t1 ->
@@ -1603,7 +1607,9 @@ let rec (deep_compress :
         {
           FStar_Syntax_Syntax.n = (uu___1.FStar_Syntax_Syntax.n);
           FStar_Syntax_Syntax.pos = (uu___1.FStar_Syntax_Syntax.pos);
-          FStar_Syntax_Syntax.vars = uu___2
+          FStar_Syntax_Syntax.vars = uu___2;
+          FStar_Syntax_Syntax.hash_code =
+            (uu___1.FStar_Syntax_Syntax.hash_code)
         }
     | FStar_Syntax_Syntax.Tm_constant uu___ ->
         let uu___1 = t1 in
@@ -1611,7 +1617,9 @@ let rec (deep_compress :
         {
           FStar_Syntax_Syntax.n = (uu___1.FStar_Syntax_Syntax.n);
           FStar_Syntax_Syntax.pos = (uu___1.FStar_Syntax_Syntax.pos);
-          FStar_Syntax_Syntax.vars = uu___2
+          FStar_Syntax_Syntax.vars = uu___2;
+          FStar_Syntax_Syntax.hash_code =
+            (uu___1.FStar_Syntax_Syntax.hash_code)
         }
     | FStar_Syntax_Syntax.Tm_bvar uu___ ->
         let uu___1 = t1 in
@@ -1619,7 +1627,9 @@ let rec (deep_compress :
         {
           FStar_Syntax_Syntax.n = (uu___1.FStar_Syntax_Syntax.n);
           FStar_Syntax_Syntax.pos = (uu___1.FStar_Syntax_Syntax.pos);
-          FStar_Syntax_Syntax.vars = uu___2
+          FStar_Syntax_Syntax.vars = uu___2;
+          FStar_Syntax_Syntax.hash_code =
+            (uu___1.FStar_Syntax_Syntax.hash_code)
         }
     | FStar_Syntax_Syntax.Tm_name uu___ ->
         let uu___1 = t1 in
@@ -1627,7 +1637,9 @@ let rec (deep_compress :
         {
           FStar_Syntax_Syntax.n = (uu___1.FStar_Syntax_Syntax.n);
           FStar_Syntax_Syntax.pos = (uu___1.FStar_Syntax_Syntax.pos);
-          FStar_Syntax_Syntax.vars = uu___2
+          FStar_Syntax_Syntax.vars = uu___2;
+          FStar_Syntax_Syntax.hash_code =
+            (uu___1.FStar_Syntax_Syntax.hash_code)
         }
     | FStar_Syntax_Syntax.Tm_unknown ->
         let uu___ = t1 in
@@ -1635,7 +1647,9 @@ let rec (deep_compress :
         {
           FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
           FStar_Syntax_Syntax.pos = (uu___.FStar_Syntax_Syntax.pos);
-          FStar_Syntax_Syntax.vars = uu___1
+          FStar_Syntax_Syntax.vars = uu___1;
+          FStar_Syntax_Syntax.hash_code =
+            (uu___.FStar_Syntax_Syntax.hash_code)
         }
     | FStar_Syntax_Syntax.Tm_uinst (f, us) ->
         let us1 = FStar_List.map deep_compress_univ us in

@@ -903,7 +903,9 @@ let (comp_no_args :
           {
             FStar_Syntax_Syntax.n = (FStar_Syntax_Syntax.Comp ct1);
             FStar_Syntax_Syntax.pos = (uu___.FStar_Syntax_Syntax.pos);
-            FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+            FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
+            FStar_Syntax_Syntax.hash_code =
+              (uu___.FStar_Syntax_Syntax.hash_code)
           } in
         c1
 let maybe_reify_comp :
@@ -2413,14 +2415,18 @@ and (term_as_mlexpr' :
                                 FStar_Syntax_Syntax.pos =
                                   (uu___3.FStar_Syntax_Syntax.pos);
                                 FStar_Syntax_Syntax.vars =
-                                  (uu___3.FStar_Syntax_Syntax.vars)
+                                  (uu___3.FStar_Syntax_Syntax.vars);
+                                FStar_Syntax_Syntax.hash_code =
+                                  (uu___3.FStar_Syntax_Syntax.hash_code)
                               })))) in
              let uu___2 = head in
              {
                FStar_Syntax_Syntax.n =
                  (FStar_Syntax_Syntax.Tm_match (scrutinee, branches1));
                FStar_Syntax_Syntax.pos = (uu___2.FStar_Syntax_Syntax.pos);
-               FStar_Syntax_Syntax.vars = (uu___2.FStar_Syntax_Syntax.vars)
+               FStar_Syntax_Syntax.vars = (uu___2.FStar_Syntax_Syntax.vars);
+               FStar_Syntax_Syntax.hash_code =
+                 (uu___2.FStar_Syntax_Syntax.hash_code)
              }
          | uu___2 ->
              failwith
@@ -2714,35 +2720,38 @@ and (term_as_mlexpr' :
               FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
                 (FStar_Const.Const_range_of);
               FStar_Syntax_Syntax.pos = uu___1;
-              FStar_Syntax_Syntax.vars = uu___2;_},
-            (a1, uu___3)::[])
+              FStar_Syntax_Syntax.vars = uu___2;
+              FStar_Syntax_Syntax.hash_code = uu___3;_},
+            (a1, uu___4)::[])
            ->
            let ty =
-             let uu___4 =
-               FStar_Syntax_Syntax.tabbrev FStar_Parser_Const.range_lid in
-             term_as_mlty g uu___4 in
-           let uu___4 =
              let uu___5 =
+               FStar_Syntax_Syntax.tabbrev FStar_Parser_Const.range_lid in
+             term_as_mlty g uu___5 in
+           let uu___5 =
+             let uu___6 =
                FStar_Extraction_ML_Util.mlexpr_of_range
                  a1.FStar_Syntax_Syntax.pos in
              FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty ty)
-               uu___5 in
-           (uu___4, FStar_Extraction_ML_Syntax.E_PURE, ty)
+               uu___6 in
+           (uu___5, FStar_Extraction_ML_Syntax.E_PURE, ty)
        | FStar_Syntax_Syntax.Tm_app
            ({
               FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
                 (FStar_Const.Const_set_range_of);
               FStar_Syntax_Syntax.pos = uu___1;
-              FStar_Syntax_Syntax.vars = uu___2;_},
-            (t1, uu___3)::(r, uu___4)::[])
+              FStar_Syntax_Syntax.vars = uu___2;
+              FStar_Syntax_Syntax.hash_code = uu___3;_},
+            (t1, uu___4)::(r, uu___5)::[])
            -> term_as_mlexpr g t1
        | FStar_Syntax_Syntax.Tm_app
            ({
               FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
                 (FStar_Const.Const_reflect uu___1);
               FStar_Syntax_Syntax.pos = uu___2;
-              FStar_Syntax_Syntax.vars = uu___3;_},
-            uu___4)
+              FStar_Syntax_Syntax.vars = uu___3;
+              FStar_Syntax_Syntax.hash_code = uu___4;_},
+            uu___5)
            -> failwith "Unreachable? Tm_app Const_reflect"
        | FStar_Syntax_Syntax.Tm_app (head, args) when
            (is_match head) &&
@@ -3387,7 +3396,9 @@ and (term_as_mlexpr' :
                     FStar_Syntax_Syntax.pos =
                       (uu___4.FStar_Syntax_Syntax.pos);
                     FStar_Syntax_Syntax.vars =
-                      (uu___4.FStar_Syntax_Syntax.vars)
+                      (uu___4.FStar_Syntax_Syntax.vars);
+                    FStar_Syntax_Syntax.hash_code =
+                      (uu___4.FStar_Syntax_Syntax.hash_code)
                   } in
                 term_as_mlexpr' g top2)
        | FStar_Syntax_Syntax.Tm_let ((is_rec, lbs), e') ->

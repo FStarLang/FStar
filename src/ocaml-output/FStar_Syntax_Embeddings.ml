@@ -308,7 +308,8 @@ let (e_unit : unit embedding) =
     {
       FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
+      FStar_Syntax_Syntax.hash_code = (uu___.FStar_Syntax_Syntax.hash_code)
     } in
   let un t0 w _norm =
     let t = FStar_Syntax_Util.unascribe t0 in
@@ -344,7 +345,8 @@ let (e_bool : Prims.bool embedding) =
     {
       FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
+      FStar_Syntax_Syntax.hash_code = (uu___.FStar_Syntax_Syntax.hash_code)
     } in
   let un t0 w _norm =
     let t = FStar_Syntax_Util.unmeta_safe t0 in
@@ -378,7 +380,8 @@ let (e_char : FStar_Char.char embedding) =
     {
       FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
+      FStar_Syntax_Syntax.hash_code = (uu___.FStar_Syntax_Syntax.hash_code)
     } in
   let un t0 w _norm =
     let t = FStar_Syntax_Util.unmeta_safe t0 in

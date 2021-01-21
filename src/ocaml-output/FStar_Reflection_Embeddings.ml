@@ -180,7 +180,8 @@ let (e_aqualv :
     {
       FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
+      FStar_Syntax_Syntax.hash_code = (uu___.FStar_Syntax_Syntax.hash_code)
     } in
   let unembed_aqualv w t =
     let t1 = FStar_Syntax_Util.unascribe t in
@@ -364,7 +365,8 @@ let (e_const :
     {
       FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
+      FStar_Syntax_Syntax.hash_code = (uu___.FStar_Syntax_Syntax.hash_code)
     } in
   let unembed_const w t =
     let t1 = FStar_Syntax_Util.unascribe t in
@@ -861,7 +863,9 @@ let (e_term_view_aq :
           {
             FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
             FStar_Syntax_Syntax.pos = rng;
-            FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+            FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
+            FStar_Syntax_Syntax.hash_code =
+              (uu___.FStar_Syntax_Syntax.hash_code)
           } in
     let unembed_term_view w t =
       let uu___ = FStar_Syntax_Util.head_and_args t in
@@ -1382,7 +1386,8 @@ let (e_order : FStar_Order.order FStar_Syntax_Embeddings.embedding) =
     {
       FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
+      FStar_Syntax_Syntax.hash_code = (uu___.FStar_Syntax_Syntax.hash_code)
     } in
   let unembed_order w t =
     let t1 = FStar_Syntax_Util.unascribe t in
@@ -1538,7 +1543,9 @@ let (e_sigelt_view :
         {
           FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
           FStar_Syntax_Syntax.pos = rng;
-          FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+          FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
+          FStar_Syntax_Syntax.hash_code =
+            (uu___.FStar_Syntax_Syntax.hash_code)
         } in
   let unembed_sigelt_view w t =
     let t1 = FStar_Syntax_Util.unascribe t in
@@ -1662,7 +1669,8 @@ let (e_exp : FStar_Reflection_Data.exp FStar_Syntax_Embeddings.embedding) =
     {
       FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
+      FStar_Syntax_Syntax.hash_code = (uu___.FStar_Syntax_Syntax.hash_code)
     } in
   let rec unembed_exp w t =
     let t1 = FStar_Syntax_Util.unascribe t in
@@ -1844,7 +1852,8 @@ let (e_qualifier :
     {
       FStar_Syntax_Syntax.n = (uu___.FStar_Syntax_Syntax.n);
       FStar_Syntax_Syntax.pos = rng;
-      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars)
+      FStar_Syntax_Syntax.vars = (uu___.FStar_Syntax_Syntax.vars);
+      FStar_Syntax_Syntax.hash_code = (uu___.FStar_Syntax_Syntax.hash_code)
     } in
   let unembed w t =
     let t1 = FStar_Syntax_Util.unascribe t in

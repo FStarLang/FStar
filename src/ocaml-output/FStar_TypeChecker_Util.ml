@@ -4184,22 +4184,23 @@ let (weaken_result_typ :
                                 FStar_Syntax_Syntax.n =
                                   FStar_Syntax_Syntax.Tm_fvar fv;
                                 FStar_Syntax_Syntax.pos = uu___7;
-                                FStar_Syntax_Syntax.vars = uu___8;_},
-                              uu___9)
+                                FStar_Syntax_Syntax.vars = uu___8;
+                                FStar_Syntax_Syntax.hash_code = uu___9;_},
+                              uu___10)
                              when
                              FStar_Syntax_Syntax.fv_eq_lid fv
                                FStar_Parser_Const.true_lid
                              ->
                              let lc1 =
-                               let uu___10 = lc in
+                               let uu___11 = lc in
                                {
                                  FStar_TypeChecker_Common.eff_name =
-                                   (uu___10.FStar_TypeChecker_Common.eff_name);
+                                   (uu___11.FStar_TypeChecker_Common.eff_name);
                                  FStar_TypeChecker_Common.res_typ = t;
                                  FStar_TypeChecker_Common.cflags =
-                                   (uu___10.FStar_TypeChecker_Common.cflags);
+                                   (uu___11.FStar_TypeChecker_Common.cflags);
                                  FStar_TypeChecker_Common.comp_thunk =
-                                   (uu___10.FStar_TypeChecker_Common.comp_thunk)
+                                   (uu___11.FStar_TypeChecker_Common.comp_thunk)
                                } in
                              FStar_TypeChecker_Common.lcomp_comp lc1
                          | uu___6 ->

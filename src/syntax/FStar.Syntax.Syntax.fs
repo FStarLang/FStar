@@ -243,6 +243,7 @@ and syntax<'a> = {
     n:'a;
     pos:Range.range;
     vars:memo<free_vars>;
+    hash_code:memo<FStar.Hash.hash_code>
 }
 and bv = {
     ppname:ident;  //programmer-provided name for pretty-printing
@@ -551,12 +552,17 @@ let no_universe_names = new_universe_names_set ()
 let freenames_of_list l = List.fold_right Util.set_add l no_names
 let list_of_freenames (fvs:freenames) = Util.set_elements fvs
 
-(* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
+(* Constructors for each term form; 
+   NO HASH CONSING, but we store a hash code at each node;
+   just makes all the auxiliary data at each node *)
 let mk (t:'a) r = {
     n=t;
     pos=r;
     vars=Util.mk_ref None;
+    hash_code=Util.mk_ref None
 }
+
+
 
 let bv_to_tm   bv :term = mk (Tm_bvar bv) (range_of_bv bv)
 let bv_to_name bv :term = mk (Tm_name bv) (range_of_bv bv)

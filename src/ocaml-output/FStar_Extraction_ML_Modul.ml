@@ -96,12 +96,12 @@ let rec (extract_meta :
     let uu___ = FStar_Syntax_Subst.compress x in
     match uu___ with
     | { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
-        FStar_Syntax_Syntax.pos = uu___1;
-        FStar_Syntax_Syntax.vars = uu___2;_} ->
-        let uu___3 =
-          let uu___4 = FStar_Syntax_Syntax.lid_of_fv fv in
-          FStar_Ident.string_of_lid uu___4 in
-        (match uu___3 with
+        FStar_Syntax_Syntax.pos = uu___1; FStar_Syntax_Syntax.vars = uu___2;
+        FStar_Syntax_Syntax.hash_code = uu___3;_} ->
+        let uu___4 =
+          let uu___5 = FStar_Syntax_Syntax.lid_of_fv fv in
+          FStar_Ident.string_of_lid uu___5 in
+        (match uu___4 with
          | "FStar.Pervasives.PpxDerivingShow" ->
              FStar_Pervasives_Native.Some
                FStar_Extraction_ML_Syntax.PpxDerivingShow
@@ -125,24 +125,26 @@ let rec (extract_meta :
          | "Prims.deprecated" ->
              FStar_Pervasives_Native.Some
                (FStar_Extraction_ML_Syntax.Deprecated "")
-         | uu___4 -> FStar_Pervasives_Native.None)
+         | uu___5 -> FStar_Pervasives_Native.None)
     | {
         FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_app
           ({ FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar fv;
              FStar_Syntax_Syntax.pos = uu___1;
-             FStar_Syntax_Syntax.vars = uu___2;_},
+             FStar_Syntax_Syntax.vars = uu___2;
+             FStar_Syntax_Syntax.hash_code = uu___3;_},
            ({
               FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
-                (FStar_Const.Const_string (s, uu___3));
-              FStar_Syntax_Syntax.pos = uu___4;
-              FStar_Syntax_Syntax.vars = uu___5;_},
-            uu___6)::[]);
-        FStar_Syntax_Syntax.pos = uu___7;
-        FStar_Syntax_Syntax.vars = uu___8;_} ->
-        let uu___9 =
-          let uu___10 = FStar_Syntax_Syntax.lid_of_fv fv in
-          FStar_Ident.string_of_lid uu___10 in
-        (match uu___9 with
+                (FStar_Const.Const_string (s, uu___4));
+              FStar_Syntax_Syntax.pos = uu___5;
+              FStar_Syntax_Syntax.vars = uu___6;
+              FStar_Syntax_Syntax.hash_code = uu___7;_},
+            uu___8)::[]);
+        FStar_Syntax_Syntax.pos = uu___9; FStar_Syntax_Syntax.vars = uu___10;
+        FStar_Syntax_Syntax.hash_code = uu___11;_} ->
+        let uu___12 =
+          let uu___13 = FStar_Syntax_Syntax.lid_of_fv fv in
+          FStar_Ident.string_of_lid uu___13 in
+        (match uu___12 with
          | "FStar.Pervasives.PpxDerivingShowConstant" ->
              FStar_Pervasives_Native.Some
                (FStar_Extraction_ML_Syntax.PpxDerivingShowConstant s)
@@ -164,28 +166,28 @@ let rec (extract_meta :
          | "Prims.deprecated" ->
              FStar_Pervasives_Native.Some
                (FStar_Extraction_ML_Syntax.Deprecated s)
-         | uu___10 -> FStar_Pervasives_Native.None)
+         | uu___13 -> FStar_Pervasives_Native.None)
     | {
         FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
           (FStar_Const.Const_string ("KremlinPrivate", uu___1));
-        FStar_Syntax_Syntax.pos = uu___2;
-        FStar_Syntax_Syntax.vars = uu___3;_} ->
+        FStar_Syntax_Syntax.pos = uu___2; FStar_Syntax_Syntax.vars = uu___3;
+        FStar_Syntax_Syntax.hash_code = uu___4;_} ->
         FStar_Pervasives_Native.Some FStar_Extraction_ML_Syntax.Private
     | {
         FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
           (FStar_Const.Const_string ("c_inline", uu___1));
-        FStar_Syntax_Syntax.pos = uu___2;
-        FStar_Syntax_Syntax.vars = uu___3;_} ->
+        FStar_Syntax_Syntax.pos = uu___2; FStar_Syntax_Syntax.vars = uu___3;
+        FStar_Syntax_Syntax.hash_code = uu___4;_} ->
         FStar_Pervasives_Native.Some FStar_Extraction_ML_Syntax.CInline
     | {
         FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_constant
           (FStar_Const.Const_string ("substitute", uu___1));
-        FStar_Syntax_Syntax.pos = uu___2;
-        FStar_Syntax_Syntax.vars = uu___3;_} ->
+        FStar_Syntax_Syntax.pos = uu___2; FStar_Syntax_Syntax.vars = uu___3;
+        FStar_Syntax_Syntax.hash_code = uu___4;_} ->
         FStar_Pervasives_Native.Some FStar_Extraction_ML_Syntax.Substitute
     | { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_meta (x1, uu___1);
-        FStar_Syntax_Syntax.pos = uu___2;
-        FStar_Syntax_Syntax.vars = uu___3;_} -> extract_meta x1
+        FStar_Syntax_Syntax.pos = uu___2; FStar_Syntax_Syntax.vars = uu___3;
+        FStar_Syntax_Syntax.hash_code = uu___4;_} -> extract_meta x1
     | uu___1 ->
         let uu___2 = FStar_Syntax_Util.head_and_args x in
         (match uu___2 with
@@ -1781,12 +1783,13 @@ let (maybe_register_plugin :
                            FStar_Syntax_Syntax.Tm_constant
                            (FStar_Const.Const_int (s, uu___3));
                          FStar_Syntax_Syntax.pos = uu___4;
-                         FStar_Syntax_Syntax.vars = uu___5;_},
-                       uu___6)::[] ->
-                        let uu___7 =
-                          let uu___8 = FStar_Util.int_of_string s in
-                          FStar_Pervasives_Native.Some uu___8 in
-                        FStar_Pervasives_Native.Some uu___7
+                         FStar_Syntax_Syntax.vars = uu___5;
+                         FStar_Syntax_Syntax.hash_code = uu___6;_},
+                       uu___7)::[] ->
+                        let uu___8 =
+                          let uu___9 = FStar_Util.int_of_string s in
+                          FStar_Pervasives_Native.Some uu___9 in
+                        FStar_Pervasives_Native.Some uu___8
                     | uu___3 ->
                         FStar_Pervasives_Native.Some
                           FStar_Pervasives_Native.None)) in
@@ -2063,12 +2066,14 @@ let rec (extract_sig :
                                                              FStar_Syntax_Syntax.pos
                                                                = uu___27;
                                                              FStar_Syntax_Syntax.vars
-                                                               = uu___28;_})
+                                                               = uu___28;
+                                                             FStar_Syntax_Syntax.hash_code
+                                                               = uu___29;_})
                                                           when
-                                                          let uu___29 =
+                                                          let uu___30 =
                                                             FStar_Ident.string_of_lid
                                                               e in
-                                                          uu___29 =
+                                                          uu___30 =
                                                             "FStar.HyperStack.ST.StackInline"
                                                           ->
                                                           [FStar_Extraction_ML_Syntax.StackInline]

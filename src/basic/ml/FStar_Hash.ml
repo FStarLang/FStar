@@ -1,0 +1,9 @@
+type hash_code = int
+let of_int (i:int) = Z.of_int i
+let of_string (s:string) = failwith "TODO"
+let mix (h0: hash_code) (h1:hash_code) = failwith "TODO"
+type 'a cmp = 'a -> 'a -> bool
+type 'a hashtable = unit
+let create (c:'a cmp) = ()
+let insert (hc: hash_code) (x: 'a) (ht:'a hashtable) = ()
+let lookup (hc: hash_code) (ht:'a hashtable) = None
