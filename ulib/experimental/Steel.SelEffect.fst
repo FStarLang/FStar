@@ -767,6 +767,22 @@ let change_slprop_20 (p q:vprop) (vq:erased (t_of q))
 
 let change_slprop_2 p q vq l = SteelSel?.reflect (change_slprop_20 p q vq l)
 
+let reveal_star0 (p1 p2:vprop)
+ : repr unit (p1 `star` p2) (fun _ -> p1 `star` p2)
+   (fun _ -> True)
+   (fun h0 _ h1 ->
+     h0 (p1 `star` p2) == (h1 p1, h1 p2) /\
+     h1 (p1 `star` p2) == (h0 p1, h0 p2)
+   )
+ = fun frame ->
+     let m = nmst_get() in
+     reveal_mk_rmem (p1 `star` p2) m (p1 `star` p2);
+     reveal_mk_rmem (p1 `star` p2) m p1;
+     reveal_mk_rmem (p1 `star` p2) m p2
+
+let reveal_star p1 p2 = SteelSel?.reflect (reveal_star0 p1 p2)
+
+
 (* Simple Reference library, only full permissions.
    AF: Permissions would likely need to be an index of the vprop ptr.
    It cannot be part of a selector, as it is not invariant when joining with a disjoint memory
@@ -804,6 +820,8 @@ let ptr_sel r =
   Classical.forall_intro_2 (ptr_sel_depends_only_on r);
   Classical.forall_intro (ptr_sel_depends_only_on_core r);
   ptr_sel' r
+
+let ptr_sel_interp #a r m = R.pts_to_witinv r full_perm
 
 friend Steel.Effect
 

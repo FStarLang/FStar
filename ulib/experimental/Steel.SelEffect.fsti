@@ -427,6 +427,15 @@ val change_slprop_2 (p q:vprop) (vq:erased (t_of q))
     (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
   ) : SteelSel unit p (fun _ -> q) (fun _ -> True) (fun _ _ h1 -> h1 q == reveal vq)
 
+val reveal_star (p1 p2:vprop)
+ : SteelSel unit (p1 `star` p2) (fun _ -> p1 `star` p2)
+   (requires fun _ -> True)
+   (ensures fun h0 _ h1 ->
+     h0 (p1 `star` p2) == (h1 p1, h1 p2) /\
+     h1 (p1 `star` p2) == (h0 p1, h0 p2)
+   )
+
+
 
 (* Simple Reference library, only full permissions.
    AF: Permissions would likely need to be an index of the vprop ptr.
@@ -443,6 +452,10 @@ let ref (a:Type0) : Type0 = R.ref a
 let ptr (#a:Type0) (r:ref a) : slprop u#1 = h_exists (R.pts_to r full_perm)
 
 val ptr_sel (#a:Type0) (r:ref a) : selector a (ptr r)
+
+val ptr_sel_interp (#a:Type0) (r:ref a) (m:mem) : Lemma
+  (requires interp (ptr r) m)
+  (ensures interp (R.pts_to r full_perm (ptr_sel r m)) m)
 
 [@@ __steel_reduce__]
 let vptr' #a r : vprop' =
