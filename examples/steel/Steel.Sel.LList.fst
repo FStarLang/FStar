@@ -4,7 +4,7 @@ open Steel.FractionalPermission
 module Mem = Steel.Memory
 module R = Steel.Reference
 
-friend Steel.SelEffect
+// friend Steel.SelEffect
 
 #push-options "--__no_positivity"
 noeq
@@ -22,7 +22,8 @@ let mk_cell (n: t 'a) (d:'a) = {
 }
 
 (* AF: Need to put that in the standard library at some point *)
-assume val null_llist (#a:Type) : t a
+let null_llist #a = admit()
+let is_null #a ptr = admit()
 
 let rec llist_sl' (#a:Type) (ptr:t a)
                          (l:list (cell a))
@@ -115,3 +116,80 @@ let llist_sel #a ptr =
   Classical.forall_intro_2 (llist_sel_depends_only_on ptr);
   Classical.forall_intro (llist_sel_depends_only_on_core ptr);
   llist_sel' ptr
+
+
+#push-options "--fuel 1 --ifuel 0"
+
+let llist_sel_interp (#a:Type0) (ptr:t a) (l:list (cell a)) (m:mem) : Lemma
+  (requires interp (llist_sl' ptr l) m)
+  (ensures interp (llist_sl ptr) m /\ llist_sel' ptr m == datas l)
+  = intro_h_exists l (llist_sl' ptr) m;
+    llist_sl'_witinv ptr
+
+let intro_nil_lemma (a:Type0) (m:mem) : Lemma
+    (requires interp (hp_of vemp) m)
+    (ensures interp (llist_sl (null_llist #a)) m /\ llist_sel (null_llist #a) m == [])
+    = let ptr:t a = null_llist in
+      pure_interp (ptr == null_llist) m;
+      let open FStar.Tactics in
+      assert (llist_sl' ptr [] == pure (ptr == null_llist)) by (norm [delta; zeta; iota]);
+      intro_h_exists [] (llist_sl' ptr) m;
+      llist_sel_interp ptr [] m
+
+let intro_llist_nil a =
+    change_slprop_2 vemp (llist (null_llist #a)) ([] <: list a) (intro_nil_lemma a)
+
+open FStar.Ghost
+
+let intro_cons_lemma_aux (#a:Type0) (ptr1 ptr2:t a)
+  (x: cell a) (l:list (cell a)) (m:mem) : Lemma
+  (requires interp (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l) m /\
+    next x == ptr2)
+  (ensures interp (llist_sl' ptr1 (x::l)) m)
+  = // AF: Need this as a lemma from standard library: interp (pts_to r) ==> r =!= null
+    assume (ptr1 =!= null_llist);
+    emp_unit (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l);
+    pure_star_interp (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l) (ptr1 =!= null_llist) m
+
+let intro_cons_lemma (#a:Type0) (ptr1 ptr2:t a)
+  (x: cell a) (l:list a) (m:mem) : Lemma
+  (requires interp (ptr ptr1 `Mem.star` llist_sl ptr2) m /\
+    next x == ptr2 /\
+    sel_of (vptr ptr1) m == x /\
+    sel_of (llist ptr2) m == l)
+  (ensures interp (llist_sl ptr1) m /\ llist_sel ptr1 m == data x :: l)
+  = Mem.elim_h_exists (llist_sl' ptr2) m;
+    let l' = FStar.IndefiniteDescription.indefinite_description_ghost (list (cell a))
+      (fun x -> interp (llist_sl' ptr2 x) m) in
+    let aux (m:mem) (x:cell a) (ml mr:mem) : Lemma
+      (requires disjoint ml mr /\ m == join ml mr /\
+        interp (ptr ptr1) ml /\ interp (llist_sl ptr2) mr /\
+        ptr_sel ptr1 m == x /\ interp (llist_sl' ptr2 l') m)
+      (ensures interp (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l') m)
+      = ptr_sel_interp ptr1 ml;
+        assert (interp (R.pts_to ptr1 full_perm x) ml);
+        Mem.elim_h_exists (llist_sl' ptr2) mr;
+        let l2 = FStar.IndefiniteDescription.indefinite_description_ghost (list (cell a))
+          (fun x -> interp (llist_sl' ptr2 x) mr) in
+        join_commutative ml mr;
+        assert (interp (llist_sl' ptr2 l2) m);
+        llist_sl'_witinv ptr2;
+        assert (interp (llist_sl' ptr2 l') mr);
+        intro_star (R.pts_to ptr1 full_perm x) (llist_sl' ptr2 l') ml mr
+    in
+    elim_star (ptr ptr1) (llist_sl ptr2) m;
+    Classical.forall_intro_2 (Classical.move_requires_2 (aux m x));
+    assert (interp (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l') m);
+    intro_cons_lemma_aux ptr1 ptr2 x l' m;
+    intro_h_exists (x::l') (llist_sl' ptr1) m;
+    llist_sel_interp ptr1 (x::l') m
+
+let intro_llist_cons ptr1 ptr2 =
+  let h = get #(vptr ptr1 `star` llist ptr2) () in
+  let x = hide (sel ptr1 h) in
+  let l = hide (v_llist ptr2 h) in
+  reveal_star (vptr ptr1) (llist ptr2);
+  change_slprop (vptr ptr1 `star` llist ptr2) (llist ptr1) (reveal x, reveal l) (data x :: l) (fun m ->  intro_cons_lemma ptr1 ptr2 x l m)
+
+
+#pop-options
