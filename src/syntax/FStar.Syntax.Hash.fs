@@ -61,7 +61,9 @@ and hash_term' (t:term)
   //Primes: 1 -- 40
   = match (SS.compress t).n with
     | Tm_bvar bv -> H.mix (H.of_int 3) (H.of_int bv.index)
-    | Tm_name bv -> H.mix (H.of_int 5) (H.of_string (Ident.string_of_id bv.ppname))
+    | Tm_name bv -> H.mix (H.of_int 5)
+                         (H.mix (H.of_string (Ident.string_of_id bv.ppname))
+                                (H.of_int bv.index))
     | Tm_fvar fv -> H.mix (H.of_int 7) (hash_fv fv)
     | Tm_uinst(t, us) -> H.mix (H.of_int 11)
                                    (H.mix (hash_term t)
@@ -321,7 +323,9 @@ let rec equal_term (t1 t2:term)
   = if physical_equality t1 t2 then true else
     match (SS.compress t1).n, (SS.compress t2).n with
     | Tm_bvar x, Tm_bvar y -> x.index = y.index
-    | Tm_name x, Tm_name y -> Ident.ident_equals x.ppname y.ppname
+    | Tm_name x, Tm_name y ->
+      Ident.ident_equals x.ppname y.ppname &&
+      x.index = y.index
     | Tm_fvar f, Tm_fvar g -> equal_fv f g
     | Tm_uinst (t1, u1), Tm_uinst (t2, u2) ->
       equal_term t1 t2 &&

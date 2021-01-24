@@ -4639,36 +4639,60 @@ and (encode_sigelt' :
                                            let uu___10 =
                                              let uu___11 =
                                                FStar_Ident.string_of_lid t in
-                                             FStar_Util.format1
-                                               "Impossible: Unresolved or unknown universe in inductive type %s"
-                                               uu___11 in
+                                             let uu___12 =
+                                               FStar_Syntax_Print.univ_to_string
+                                                 u in
+                                             let uu___13 =
+                                               FStar_Syntax_Print.univ_to_string
+                                                 v in
+                                             FStar_Util.format3
+                                               "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
+                                               uu___11 uu___12 uu___13 in
                                            failwith uu___10
                                        | (uu___9,
                                           FStar_Syntax_Syntax.U_unknown) ->
                                            let uu___10 =
                                              let uu___11 =
                                                FStar_Ident.string_of_lid t in
-                                             FStar_Util.format1
-                                               "Impossible: Unresolved or unknown universe in inductive type %s"
-                                               uu___11 in
+                                             let uu___12 =
+                                               FStar_Syntax_Print.univ_to_string
+                                                 u in
+                                             let uu___13 =
+                                               FStar_Syntax_Print.univ_to_string
+                                                 v in
+                                             FStar_Util.format3
+                                               "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
+                                               uu___11 uu___12 uu___13 in
                                            failwith uu___10
                                        | (FStar_Syntax_Syntax.U_unif uu___9,
                                           uu___10) ->
                                            let uu___11 =
                                              let uu___12 =
                                                FStar_Ident.string_of_lid t in
-                                             FStar_Util.format1
-                                               "Impossible: Unresolved or unknown universe in inductive type %s"
-                                               uu___12 in
+                                             let uu___13 =
+                                               FStar_Syntax_Print.univ_to_string
+                                                 u in
+                                             let uu___14 =
+                                               FStar_Syntax_Print.univ_to_string
+                                                 v in
+                                             FStar_Util.format3
+                                               "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
+                                               uu___12 uu___13 uu___14 in
                                            failwith uu___11
                                        | (uu___9, FStar_Syntax_Syntax.U_unif
                                           uu___10) ->
                                            let uu___11 =
                                              let uu___12 =
                                                FStar_Ident.string_of_lid t in
-                                             FStar_Util.format1
-                                               "Impossible: Unresolved or unknown universe in inductive type %s"
-                                               uu___12 in
+                                             let uu___13 =
+                                               FStar_Syntax_Print.univ_to_string
+                                                 u in
+                                             let uu___14 =
+                                               FStar_Syntax_Print.univ_to_string
+                                                 v in
+                                             FStar_Util.format3
+                                               "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
+                                               uu___12 uu___13 uu___14 in
                                            failwith uu___11
                                        | uu___9 -> false in
                                      let u_leq_u_k u =

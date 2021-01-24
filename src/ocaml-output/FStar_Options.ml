@@ -243,6 +243,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("log_types", (Bool false));
   ("max_fuel", (Int (Prims.of_int (8))));
   ("max_ifuel", (Int (Prims.of_int (2))));
+  ("memoize_tc", (Bool false));
   ("MLish", (Bool false));
   ("no_default_includes", (Bool false));
   ("no_extract", (List []));
@@ -461,6 +462,8 @@ let (get_max_fuel : unit -> Prims.int) =
   fun uu___ -> lookup_opt "max_fuel" as_int
 let (get_max_ifuel : unit -> Prims.int) =
   fun uu___ -> lookup_opt "max_ifuel" as_int
+let (get_memoize_tc : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "memoize_tc" as_bool
 let (get_MLish : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "MLish" as_bool
 let (get_no_default_includes : unit -> Prims.bool) =
@@ -923,7 +926,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___404 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___405 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f = FStar_ST.op_Colon_Equals cb (FStar_Pervasives_Native.Some f) in
@@ -934,11 +937,11 @@ let (uu___404 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___404 with
+  match uu___405 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___404 with
+  match uu___405 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1113,6 +1116,8 @@ let rec (specs_with_types :
       "Number of unrolling of recursive functions to try at most (default 8)");
     (FStar_Getopt.noshort, "max_ifuel", (IntStr "non-negative integer"),
       "Number of unrolling of inductive datatypes to try at most (default 2)");
+    (FStar_Getopt.noshort, "memoize_tc", (Const (Bool true)),
+      "Enable memoizing type-checker results (experimental DO NOT USE YET)");
     (FStar_Getopt.noshort, "MLish", (Const (Bool true)),
       "Trigger various specializations for compiling the F* compiler itself (not meant for user code)");
     (FStar_Getopt.noshort, "no_default_includes", (Const (Bool true)),
@@ -1415,7 +1420,7 @@ let (settable_specs :
     (FStar_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___584 :
+let (uu___585 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1431,11 +1436,11 @@ let (uu___584 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___584 with
+  match uu___585 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___584 with
+  match uu___585 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1823,6 +1828,7 @@ let (keep_query_captions : unit -> Prims.bool) =
 let (log_types : unit -> Prims.bool) = fun uu___ -> get_log_types ()
 let (max_fuel : unit -> Prims.int) = fun uu___ -> get_max_fuel ()
 let (max_ifuel : unit -> Prims.int) = fun uu___ -> get_max_ifuel ()
+let (memoize_tc : unit -> Prims.bool) = fun uu___ -> get_memoize_tc ()
 let (ml_ish : unit -> Prims.bool) = fun uu___ -> get_MLish ()
 let (set_ml_ish : unit -> unit) = fun uu___ -> set_option "MLish" (Bool true)
 let (no_default_includes : unit -> Prims.bool) =

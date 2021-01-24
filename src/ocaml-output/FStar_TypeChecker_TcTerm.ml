@@ -1395,6 +1395,36 @@ and (tc_maybe_toplevel_term :
   =
   fun env ->
     fun e ->
+      let uu___ =
+        (((FStar_Options.lax ()) || env.FStar_TypeChecker_Env.lax) ||
+           env.FStar_TypeChecker_Env.phase1)
+          ||
+          (let uu___1 = FStar_Options.memoize_tc () in
+           Prims.op_Negation uu___1) in
+      if uu___
+      then tc_maybe_toplevel_term' env e
+      else
+        (let uu___2 = FStar_TypeChecker_Common.lookup e in
+         match uu___2 with
+         | FStar_Pervasives_Native.None ->
+             let uu___3 = tc_maybe_toplevel_term' env e in
+             (match uu___3 with
+              | (e', lc, g) ->
+                  (FStar_TypeChecker_Common.insert e e' lc g; (e', lc, g)))
+         | FStar_Pervasives_Native.Some (e', lc, g) ->
+             let uu___3 = comp_check_expected_typ env e' lc in
+             (match uu___3 with
+              | (e'1, lc', g') ->
+                  let uu___4 = FStar_TypeChecker_Env.conj_guard g g' in
+                  (e'1, lc', uu___4)))
+and (tc_maybe_toplevel_term' :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.term ->
+      (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.lcomp *
+        FStar_TypeChecker_Common.guard_t))
+  =
+  fun env ->
+    fun e ->
       let env1 =
         if e.FStar_Syntax_Syntax.pos = FStar_Range.dummyRange
         then env

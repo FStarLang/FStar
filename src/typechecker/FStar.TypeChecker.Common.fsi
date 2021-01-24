@@ -175,3 +175,7 @@ val lcomp_of_comp_guard : comp -> guard_t -> lcomp
 //lcomp_of_comp_guard with trivial guard
 val lcomp_of_comp : comp -> lcomp
 val simplify : debug:bool -> term -> term
+////////////////////////////////////////////////////////////////////////////////
+val clear_memo_table: unit -> unit
+val insert (e:term) (e':term) (lc:lcomp) (guard:guard_t) : unit
+val lookup (e:term) : option (term & lcomp & guard_t)

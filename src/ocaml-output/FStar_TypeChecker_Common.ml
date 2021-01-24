@@ -1700,3 +1700,73 @@ let (simplify :
                w FStar_Syntax_Util.t_false
            | FStar_Pervasives_Native.None -> tm)
       | uu___1 -> tm
+type hash_entry =
+  {
+  elaborated_term: FStar_Syntax_Syntax.term ;
+  free_names: FStar_Syntax_Syntax.bv FStar_Util.set ;
+  lcomp: lcomp ;
+  guard: guard_t }
+let (__proj__Mkhash_entry__item__elaborated_term :
+  hash_entry -> FStar_Syntax_Syntax.term) =
+  fun projectee ->
+    match projectee with
+    | { elaborated_term; free_names; lcomp = lcomp1; guard;_} ->
+        elaborated_term
+let (__proj__Mkhash_entry__item__free_names :
+  hash_entry -> FStar_Syntax_Syntax.bv FStar_Util.set) =
+  fun projectee ->
+    match projectee with
+    | { elaborated_term; free_names; lcomp = lcomp1; guard;_} -> free_names
+let (__proj__Mkhash_entry__item__lcomp : hash_entry -> lcomp) =
+  fun projectee ->
+    match projectee with
+    | { elaborated_term; free_names; lcomp = lcomp1; guard;_} -> lcomp1
+let (__proj__Mkhash_entry__item__guard : hash_entry -> guard_t) =
+  fun projectee ->
+    match projectee with
+    | { elaborated_term; free_names; lcomp = lcomp1; guard;_} -> guard
+type tc_table = (FStar_Syntax_Syntax.term, hash_entry) FStar_Hash.hashtable
+let (table : tc_table) = FStar_Hash.create FStar_Syntax_Hash.equal_term
+let (clear_memo_table : unit -> unit) = fun uu___ -> FStar_Hash.clear table
+let (insert :
+  FStar_Syntax_Syntax.term ->
+    FStar_Syntax_Syntax.term -> lcomp -> guard_t -> unit)
+  =
+  fun e ->
+    fun e' ->
+      fun lc ->
+        fun guard ->
+          let uu___ =
+            (let uu___1 = FStar_Syntax_Free.uvars e' in
+             FStar_Util.set_is_empty uu___1) &&
+              (let uu___1 = FStar_Syntax_Free.univs e' in
+               FStar_Util.set_is_empty uu___1) in
+          if uu___
+          then
+            let entry =
+              let uu___1 = FStar_Syntax_Free.names e' in
+              { elaborated_term = e'; free_names = uu___1; lcomp = lc; guard
+              } in
+            FStar_Hash.insert (e, FStar_Syntax_Hash.hash_term) entry table
+          else ()
+let (lookup :
+  FStar_Syntax_Syntax.term ->
+    (FStar_Syntax_Syntax.term * lcomp * guard_t)
+      FStar_Pervasives_Native.option)
+  =
+  fun e ->
+    let uu___ = FStar_Hash.lookup (e, FStar_Syntax_Hash.hash_term) table in
+    match uu___ with
+    | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+    | FStar_Pervasives_Native.Some he ->
+        ((let uu___2 = FStar_Syntax_Print.term_to_string e in
+          let uu___3 = FStar_Syntax_Print.term_to_string he.elaborated_term in
+          let uu___4 =
+            let uu___5 =
+              let uu___6 = lcomp_comp he.lcomp in
+              FStar_Pervasives_Native.fst uu___6 in
+            FStar_Syntax_Print.comp_to_string uu___5 in
+          FStar_Util.print3 "Hit: %s elaborated to %s : %s\n" uu___2 uu___3
+            uu___4);
+         FStar_Pervasives_Native.Some
+           ((he.elaborated_term), (he.lcomp), (he.guard)))
