@@ -38,7 +38,7 @@ type vprop' =
 
 (* Lifting the star operator to an inductive type makes normalization
    and implementing some later functions easier *)
-[@@__steel_reduce__]
+[@@__steel_reduce__; erasable]
 noeq
 type vprop =
   | VUnit : vprop' -> vprop
@@ -70,7 +70,7 @@ let rec t_of (p:vprop) = match p with
   | VStar p1 p2 -> t_of p1 * t_of p2
 
 [@__steel_reduce__]
-let rec sel_of (p:vprop) : selector (t_of p) (hp_of p) = match p with
+let rec sel_of (p:vprop) : GTot (selector (t_of p) (hp_of p)) = match p with
   | VUnit p -> fun h -> p.sel h
   | VStar p1 p2 ->
      let sel1 = sel_of p1 in
