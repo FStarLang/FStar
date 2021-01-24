@@ -745,12 +745,7 @@ let change_slprop0 (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
       intro_star p q (frame `Mem.star` locks_invariant Set.empty m) vp vq m proof
 #pop-options
 
-let change_slprop p q vp vq l//  (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
-  // (l:(m:mem) -> Lemma
-  //   (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
-  //   (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
-  // ) : SteelSel unit p (fun _ -> q) (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
-  = SteelSel?.reflect (change_slprop0 p q vp vq l)
+let change_slprop p q vp vq l  = SteelSel?.reflect (change_slprop0 p q vp vq l)
 
 #push-options "--z3rlimit 20 --fuel 1 --ifuel 0"
 let change_slprop_20 (p q:vprop) (vq:erased (t_of q))
@@ -766,6 +761,21 @@ let change_slprop_20 (p q:vprop) (vq:erased (t_of q))
 #pop-options
 
 let change_slprop_2 p q vq l = SteelSel?.reflect (change_slprop_20 p q vq l)
+
+let extract_info0 (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures fact)
+  ) : repr unit p (fun _ -> p)
+      (fun h -> h p == reveal vp)
+      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
+  = fun frame ->
+      let m0 = nmst_get () in
+      let h0 = mk_rmem p (core_mem m0) in
+      lemma_frame_equalities_refl p h0;
+      l (core_mem m0)
+
+let extract_info p vp fact l = SteelSel?.reflect (extract_info0 p vp fact l)
 
 let reveal_star0 (p1 p2:vprop)
  : repr unit (p1 `star` p2) (fun _ -> p1 `star` p2)

@@ -427,6 +427,15 @@ val change_slprop_2 (p q:vprop) (vq:erased (t_of q))
     (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
   ) : SteelSel unit p (fun _ -> q) (fun _ -> True) (fun _ _ h1 -> h1 q == reveal vq)
 
+val extract_info (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+    (ensures fact)
+  ) : SteelSel unit p (fun _ -> p)
+      (fun h -> h p == reveal vp)
+      (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
+
+
 val reveal_star (p1 p2:vprop)
  : SteelSel unit (p1 `star` p2) (fun _ -> p1 `star` p2)
    (requires fun _ -> True)
