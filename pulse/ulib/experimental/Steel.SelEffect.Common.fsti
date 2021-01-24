@@ -48,7 +48,9 @@ unfold
 let normal (#a:Type) (x:a) =
   norm [
     delta_attr [`%__steel_reduce__];
-    delta_only [`%Mkvprop'?.t; `%Mkvprop'?.hp; `%Mkvprop'?.sel];
+    delta_only [`%Mkvprop'?.t; `%Mkvprop'?.hp; `%Mkvprop'?.sel;
+      `%FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__mult;
+      `%FStar.Algebra.CommMonoid.Equiv.__proj__CM__item__unit];
     delta_qualifier ["unfold"];
     iota;zeta;primops]
   x
@@ -147,7 +149,9 @@ val equiv_forall_elim (#a:Type) (t1 t2:post_t a)
 
 
 (* Empty assertion *)
-val vemp :vprop
+val vemp' :vprop'
+[@__reduce__]
+unfold let vemp = VUnit vemp'
 
 open FStar.Tactics
 
@@ -185,7 +189,7 @@ val star_congruence (p1 p2 p3 p4:vprop)
   : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
           (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
 
-
+[@__steel_reduce__]
 inline_for_extraction noextract let rm : CE.cm vprop req =
   CE.CM vemp
      star

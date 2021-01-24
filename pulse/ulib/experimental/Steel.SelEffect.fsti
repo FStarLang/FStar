@@ -378,14 +378,14 @@ unfold
 let bind_pure_steel__req (#a:Type) (wp:pure_wp a)
   (#pre:pre_t) (req:a -> req_t pre)
 : req_t pre
-= fun m -> (wp (fun x -> (req x) m) /\ as_requires wp)
+= fun m -> normal ((wp (fun x -> (req x) m) /\ as_requires wp))
 
 unfold
 let bind_pure_steel__ens (#a:Type) (#b:Type)
   (wp:pure_wp a)
   (#pre:pre_t) (#post:post_t b) (ens:a -> ens_t pre b post)
 : ens_t pre b post
-= fun m0 r m1 -> (as_requires wp /\ (exists (x:a). as_ensures wp x /\ ((ens x) m0 r m1)))
+= fun m0 r m1 -> normal ((as_requires wp /\ (exists (x:a). as_ensures wp x /\ ((ens x) m0 r m1))))
 
 val bind_pure_steel_ (a:Type) (b:Type)
   (wp:pure_wp a)
@@ -415,11 +415,17 @@ val get (#[@@framing_implicit] p:vprop) (_:unit) : SteelSelF (rmem p)
   (requires fun _ -> True)
   (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
 
-val change_slprop (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
+val change_slprop (p q:vprop) (vp:erased (normal (t_of p))) (vq:erased (normal (t_of q)))
   (l:(m:mem) -> Lemma
     (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
     (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
   ) : SteelSel unit p (fun _ -> q) (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
+
+val change_slprop_2 (p q:vprop) (vq:erased (t_of q))
+  (l:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
+  ) : SteelSel unit p (fun _ -> q) (fun _ -> True) (fun _ _ h1 -> h1 q == reveal vq)
 
 
 (* Simple Reference library, only full permissions.
@@ -430,8 +436,12 @@ val change_slprop (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
    Refs on PCM are more complicated, and likely not usable with selectors
 *)
 
-val ref (a:Type0) : Type0
-val ptr (#a:Type0) (r:ref a) : slprop u#1
+module R = Steel.Reference
+open Steel.FractionalPermission
+
+let ref (a:Type0) : Type0 = R.ref a
+let ptr (#a:Type0) (r:ref a) : slprop u#1 = h_exists (R.pts_to r full_perm)
+
 val ptr_sel (#a:Type0) (r:ref a) : selector a (ptr r)
 
 [@@ __steel_reduce__]

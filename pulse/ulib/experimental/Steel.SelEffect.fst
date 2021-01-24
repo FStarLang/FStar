@@ -745,13 +745,27 @@ let change_slprop0 (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
       intro_star p q (frame `Mem.star` locks_invariant Set.empty m) vp vq m proof
 #pop-options
 
-let change_slprop (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
-  (l:(m:mem) -> Lemma
-    (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
-    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
-  ) : SteelSel unit p (fun _ -> q) (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
+let change_slprop p q vp vq l//  (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
+  // (l:(m:mem) -> Lemma
+  //   (requires interp (hp_of p) m /\ sel_of p m == reveal vp)
+  //   (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
+  // ) : SteelSel unit p (fun _ -> q) (fun h -> h p == reveal vp) (fun _ _ h1 -> h1 q == reveal vq)
   = SteelSel?.reflect (change_slprop0 p q vp vq l)
 
+#push-options "--z3rlimit 20 --fuel 1 --ifuel 0"
+let change_slprop_20 (p q:vprop) (vq:erased (t_of q))
+  (proof:(m:mem) -> Lemma
+    (requires interp (hp_of p) m)
+    (ensures interp (hp_of q) m /\ sel_of q m == reveal vq)
+  ) : repr unit p (fun _ -> q) (fun _ -> True) (fun _ _ h1 -> h1 q == reveal vq)
+  = fun frame ->
+      let m = nmst_get () in
+      proof (core_mem m);
+      Classical.forall_intro (Classical.move_requires proof);
+      intro_star p q (frame `Mem.star` locks_invariant Set.empty m) (sel_of p m) vq m proof
+#pop-options
+
+let change_slprop_2 p q vq l = SteelSel?.reflect (change_slprop_20 p q vq l)
 
 (* Simple Reference library, only full permissions.
    AF: Permissions would likely need to be an index of the vprop ptr.
@@ -763,10 +777,6 @@ let change_slprop (p q:vprop) (vp:erased (t_of p)) (vq:erased (t_of q))
 
 module R = Steel.Reference
 open Steel.FractionalPermission
-
-let ref a = R.ref a
-
-let ptr r = h_exists (R.pts_to r full_perm)
 
 val ptr_sel' (#a:Type0) (r: ref a) : selector' a (ptr r)
 let ptr_sel' #a r = fun h ->
@@ -818,11 +828,12 @@ let as_steelsel (#a:Type)
 : SteelSel a pre post (fun _ -> req) (fun _ x _ -> ens x)
   = as_steelsel1 (reify (f ()))
 
-
+unfold
 let vptr_tmp' (#a:Type) (r:ref a) (p:perm) (v:erased a) : vprop' =
   { hp = R.pts_to r p v;
     t = unit;
     sel = fun _ -> ()}
+unfold
 let vptr_tmp r p v : vprop = VUnit (vptr_tmp' r p v)
 
 val alloc0 (#a:Type0) (x:a) : SteelSel (ref a)

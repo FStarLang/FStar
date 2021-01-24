@@ -27,8 +27,6 @@ let vemp':vprop' =
   { hp = emp;
     t = unit;
     sel = fun _ -> ()}
-let vemp = VUnit vemp'
-
 
 let equiv_refl x = ()
 let equiv_sym x y = ()
