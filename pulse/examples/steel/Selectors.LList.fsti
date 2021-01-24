@@ -1,4 +1,4 @@
-module Steel.Sel.LList
+module Selectors.LList
 
 open Steel.Memory
 open Steel.SelEffect
