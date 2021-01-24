@@ -50,9 +50,7 @@ let rec datas (#a:Type) (l:list (cell a)) : list a =
 val llist_sel' (#a:Type0) (ptr:t a) : selector' (list a) (llist_sl ptr)
 
 let llist_sel' #a ptr = fun h ->
-  Mem.elim_h_exists (llist_sl' ptr) h;
-  let l = FStar.IndefiniteDescription.indefinite_description_ghost (list (cell a))
-    (fun x -> interp (llist_sl' ptr x) h) in
+  let l = id_elim_exists (llist_sl' ptr) h in
   datas l
 
 let llist_sl'_witinv (#a:Type) (ptr:t a) : Lemma (is_witness_invariant (llist_sl' ptr))
@@ -89,12 +87,8 @@ let llist_sel_depends_only_on (#a:Type0) (ptr:t a)
   (m0:Mem.hmem (llist_sl ptr)) (m1:mem{disjoint m0 m1})
   : Lemma (llist_sel' ptr m0 == llist_sel' ptr (Mem.join m0 m1))
   = let m':Mem.hmem (llist_sl ptr) = Mem.join m0 m1 in
-    Mem.elim_h_exists (llist_sl' ptr) m0;
-    Mem.elim_h_exists (llist_sl' ptr) m';
-    let l1 = FStar.IndefiniteDescription.indefinite_description_ghost (list (cell a))
-      (fun x -> interp (llist_sl' ptr x) m0) in
-    let l2 = FStar.IndefiniteDescription.indefinite_description_ghost (list (cell a))
-      (fun x -> interp (llist_sl' ptr x) m') in
+    let l1 = Ghost.reveal (id_elim_exists (llist_sl' ptr) m0) in
+    let l2 = Ghost.reveal (id_elim_exists (llist_sl' ptr) m') in
 
     llist_sl'_witinv ptr;
     Mem.elim_wi (llist_sl' ptr) l1 l2 m'
@@ -102,13 +96,8 @@ let llist_sel_depends_only_on (#a:Type0) (ptr:t a)
 let llist_sel_depends_only_on_core (#a:Type0) (ptr:t a)
   (m0:Mem.hmem (llist_sl ptr))
   : Lemma (llist_sel' ptr m0 == llist_sel' ptr (core_mem m0))
-  = Mem.elim_h_exists (llist_sl' ptr) m0;
-    Mem.elim_h_exists (llist_sl' ptr) (core_mem m0);
-    let l1 = FStar.IndefiniteDescription.indefinite_description_ghost (list (cell a))
-      (fun x -> interp (llist_sl' ptr x) m0) in
-    let l2 = FStar.IndefiniteDescription.indefinite_description_ghost (list (cell a))
-      (fun x -> interp (llist_sl' ptr x) (core_mem m0)) in
-
+  = let l1 = Ghost.reveal (id_elim_exists (llist_sl' ptr) m0) in
+    let l2 = Ghost.reveal (id_elim_exists (llist_sl' ptr) (core_mem m0)) in
     llist_sl'_witinv ptr;
     Mem.elim_wi (llist_sl' ptr) l1 l2 (core_mem m0)
 
@@ -118,7 +107,7 @@ let llist_sel #a ptr =
   llist_sel' ptr
 
 
-#push-options "--fuel 1 --ifuel 0"
+#push-options "--fuel 1 --ifuel 1"
 
 let llist_sel_interp (#a:Type0) (ptr:t a) (l:list (cell a)) (m:mem) : Lemma
   (requires interp (llist_sl' ptr l) m)
@@ -158,9 +147,7 @@ let intro_cons_lemma (#a:Type0) (ptr1 ptr2:t a)
     sel_of (vptr ptr1) m == x /\
     sel_of (llist ptr2) m == l)
   (ensures interp (llist_sl ptr1) m /\ llist_sel ptr1 m == data x :: l)
-  = Mem.elim_h_exists (llist_sl' ptr2) m;
-    let l' = FStar.IndefiniteDescription.indefinite_description_ghost (list (cell a))
-      (fun x -> interp (llist_sl' ptr2 x) m) in
+  = let l' = id_elim_exists (llist_sl' ptr2) m in
     let aux (m:mem) (x:cell a) (ml mr:mem) : Lemma
       (requires disjoint ml mr /\ m == join ml mr /\
         interp (ptr ptr1) ml /\ interp (llist_sl ptr2) mr /\
@@ -168,9 +155,7 @@ let intro_cons_lemma (#a:Type0) (ptr1 ptr2:t a)
       (ensures interp (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l') m)
       = ptr_sel_interp ptr1 ml;
         assert (interp (R.pts_to ptr1 full_perm x) ml);
-        Mem.elim_h_exists (llist_sl' ptr2) mr;
-        let l2 = FStar.IndefiniteDescription.indefinite_description_ghost (list (cell a))
-          (fun x -> interp (llist_sl' ptr2 x) mr) in
+        let l2 = id_elim_exists (llist_sl' ptr2) mr in
         join_commutative ml mr;
         assert (interp (llist_sl' ptr2 l2) m);
         llist_sl'_witinv ptr2;
@@ -190,6 +175,34 @@ let intro_llist_cons ptr1 ptr2 =
   let l = hide (v_llist ptr2 h) in
   reveal_star (vptr ptr1) (llist ptr2);
   change_slprop (vptr ptr1 `star` llist ptr2) (llist ptr1) (reveal x, reveal l) (data x :: l) (fun m ->  intro_cons_lemma ptr1 ptr2 x l m)
+
+let reveal_non_empty_lemma (#a:Type) (ptr:t a) (l:list a) (m:mem) : Lemma
+    (requires interp (llist_sl ptr) m /\ llist_sel ptr m == l /\ ptr =!= null_llist)
+    (ensures Cons? l)
+= let l' = id_elim_exists (llist_sl' ptr) m in
+  llist_sel_interp ptr l' m;
+  pure_interp (ptr == null_llist) m
+
+let is_cons (#a:Type) (l:list a) : prop = match l with
+  | [] -> False
+  | _ -> True
+
+let reveal_non_empty #a ptr =
+  let h = get #(llist ptr) () in
+  let l = hide (v_llist ptr h) in
+  extract_info (llist ptr) l (is_cons l) (reveal_non_empty_lemma ptr l)
+
+// let tail #a ptr =
+//   let h = get #(llist ptr) () in
+//   let l:erased (list a) = hide (v_llist ptr h) in
+//   reveal_non_empty ptr;
+//   let x:erased a = hide (L.hd l) in
+//   let x:erased (cell a) = hide (mk_cell x ptr) in
+//   change_slprop (llist ptr) (vptr ptr `star` llist (next x)) l (reveal x, L.tl l) (fun _ -> admit());
+//   // change_slprop (vptr ptr) (vptr ptr `star` llist ptr) (mk_cell ptr (L.hd l)) (mk_cell ptr (L.hd l), L.tl l) (fun _ -> admit());
+//   // reveal_star (vptr ptr) (llist ptr);
+
+//   (next x)
 
 
 #pop-options
