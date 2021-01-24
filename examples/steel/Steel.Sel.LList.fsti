@@ -50,12 +50,6 @@ val intro_llist_cons (#a:Type0) (ptr1 ptr2:t a)
                   (requires fun h -> next (sel ptr1 h) == ptr2)
                   (ensures fun h0 _ h1 -> v_llist ptr1 h1 == (data (sel ptr1 h0)) :: v_llist ptr2 h0)
 
-val reveal_non_empty (#a:Type0) (ptr:t a)
-  : SteelSel unit (llist ptr) (fun _ -> llist ptr)
-             (requires fun _ -> ptr =!= null_llist)
-             (ensures fun h0 _ h1 -> v_llist ptr h0 == v_llist ptr h1 /\ Cons? (v_llist ptr h0))
-
-
 val tail (#a:Type0) (ptr:t a)
   : SteelSel (t a) (llist ptr)
                    (fun n -> vptr ptr `star` llist n)

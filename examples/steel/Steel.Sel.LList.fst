@@ -47,11 +47,9 @@ let rec datas (#a:Type) (l:list (cell a)) : list a =
   | [] -> []
   | hd::tl -> data hd :: datas tl
 
-val llist_sel' (#a:Type0) (ptr:t a) : selector' (list a) (llist_sl ptr)
+val llist_sel_cell' (#a:Type0) (ptr:t a) : selector' (list (cell a)) (llist_sl ptr)
 
-let llist_sel' #a ptr = fun h ->
-  let l = id_elim_exists (llist_sl' ptr) h in
-  datas l
+let llist_sel_cell' #a ptr = fun h -> id_elim_exists (llist_sl' ptr) h
 
 let llist_sl'_witinv (#a:Type) (ptr:t a) : Lemma (is_witness_invariant (llist_sl' ptr))
   = let rec aux (ptr:t a) (x y:list (cell a)) (m:mem) : Lemma
@@ -85,7 +83,7 @@ let llist_sl'_witinv (#a:Type) (ptr:t a) : Lemma (is_witness_invariant (llist_sl
 
 let llist_sel_depends_only_on (#a:Type0) (ptr:t a)
   (m0:Mem.hmem (llist_sl ptr)) (m1:mem{disjoint m0 m1})
-  : Lemma (llist_sel' ptr m0 == llist_sel' ptr (Mem.join m0 m1))
+  : Lemma (llist_sel_cell' ptr m0 == llist_sel_cell' ptr (Mem.join m0 m1))
   = let m':Mem.hmem (llist_sl ptr) = Mem.join m0 m1 in
     let l1 = Ghost.reveal (id_elim_exists (llist_sl' ptr) m0) in
     let l2 = Ghost.reveal (id_elim_exists (llist_sl' ptr) m') in
@@ -95,23 +93,27 @@ let llist_sel_depends_only_on (#a:Type0) (ptr:t a)
 
 let llist_sel_depends_only_on_core (#a:Type0) (ptr:t a)
   (m0:Mem.hmem (llist_sl ptr))
-  : Lemma (llist_sel' ptr m0 == llist_sel' ptr (core_mem m0))
+  : Lemma (llist_sel_cell' ptr m0 == llist_sel_cell' ptr (core_mem m0))
   = let l1 = Ghost.reveal (id_elim_exists (llist_sl' ptr) m0) in
     let l2 = Ghost.reveal (id_elim_exists (llist_sl' ptr) (core_mem m0)) in
     llist_sl'_witinv ptr;
     Mem.elim_wi (llist_sl' ptr) l1 l2 (core_mem m0)
 
-let llist_sel #a ptr =
+val llist_sel_cell (#a:Type0) (r:t a) : selector (list (cell a)) (llist_sl r)
+
+let llist_sel_cell #a ptr =
   Classical.forall_intro_2 (llist_sel_depends_only_on ptr);
   Classical.forall_intro (llist_sel_depends_only_on_core ptr);
-  llist_sel' ptr
+  llist_sel_cell' ptr
 
+
+let llist_sel ptr = fun h -> datas (llist_sel_cell ptr h)
 
 #push-options "--fuel 1 --ifuel 1"
 
 let llist_sel_interp (#a:Type0) (ptr:t a) (l:list (cell a)) (m:mem) : Lemma
   (requires interp (llist_sl' ptr l) m)
-  (ensures interp (llist_sl ptr) m /\ llist_sel' ptr m == datas l)
+  (ensures interp (llist_sl ptr) m /\ llist_sel_cell' ptr m == l)
   = intro_h_exists l (llist_sl' ptr) m;
     llist_sl'_witinv ptr
 
@@ -176,8 +178,8 @@ let intro_llist_cons ptr1 ptr2 =
   reveal_star (vptr ptr1) (llist ptr2);
   change_slprop (vptr ptr1 `star` llist ptr2) (llist ptr1) (reveal x, reveal l) (data x :: l) (fun m ->  intro_cons_lemma ptr1 ptr2 x l m)
 
-let reveal_non_empty_lemma (#a:Type) (ptr:t a) (l:list a) (m:mem) : Lemma
-    (requires interp (llist_sl ptr) m /\ llist_sel ptr m == l /\ ptr =!= null_llist)
+let reveal_non_empty_lemma (#a:Type) (ptr:t a) (l:list (cell a)) (m:mem) : Lemma
+    (requires interp (llist_sl ptr) m /\ llist_sel_cell ptr m == l /\ ptr =!= null_llist)
     (ensures Cons? l)
 = let l' = id_elim_exists (llist_sl' ptr) m in
   llist_sel_interp ptr l' m;
@@ -187,22 +189,107 @@ let is_cons (#a:Type) (l:list a) : prop = match l with
   | [] -> False
   | _ -> True
 
-let reveal_non_empty #a ptr =
-  let h = get #(llist ptr) () in
-  let l = hide (v_llist ptr h) in
-  extract_info (llist ptr) l (is_cons l) (reveal_non_empty_lemma ptr l)
+[@@__steel_reduce__]
+let llist_cell' #a r : vprop' =
+  {hp = llist_sl r;
+   t = list (cell a);
+   sel = llist_sel_cell r}
+unfold
+let llist_cell (#a:Type0) (r:t a) = VUnit (llist_cell' r)
 
-// let tail #a ptr =
-//   let h = get #(llist ptr) () in
-//   let l:erased (list a) = hide (v_llist ptr h) in
-//   reveal_non_empty ptr;
-//   let x:erased a = hide (L.hd l) in
-//   let x:erased (cell a) = hide (mk_cell x ptr) in
-//   change_slprop (llist ptr) (vptr ptr `star` llist (next x)) l (reveal x, L.tl l) (fun _ -> admit());
-//   // change_slprop (vptr ptr) (vptr ptr `star` llist ptr) (mk_cell ptr (L.hd l)) (mk_cell ptr (L.hd l), L.tl l) (fun _ -> admit());
-//   // reveal_star (vptr ptr) (llist ptr);
+[@@ __steel_reduce__]
+let v_cell (#a:Type0) (#p:vprop) (r:t a)
+  (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (llist_cell r) /\ True)}) : GTot (list (cell a))
+  = h (llist_cell r)
 
-//   (next x)
+val reveal_non_empty_cell (#a:Type0) (ptr:t a)
+  : SteelSel unit (llist_cell ptr) (fun _ -> llist_cell ptr)
+             (requires fun _ -> ptr =!= null_llist)
+             (ensures fun h0 _ h1 -> v_cell ptr h0 == v_cell ptr h1 /\ Cons? (v_cell ptr h0))
+
+let reveal_non_empty_cell #a ptr =
+  let h = get #(llist_cell ptr)  () in
+  let l = hide (v_cell ptr h) in
+  extract_info (llist_cell ptr) l (is_cons l) (reveal_non_empty_lemma ptr l)
+
+let tail_cell_lemma (#a:Type0) (r:t a) (l:list (cell a)) (m:mem) : Lemma
+  (requires Cons? l /\ interp (llist_sl r) m /\ llist_sel_cell r m == l)
+  (ensures (let x = L.hd l in
+    interp (ptr r `Mem.star` llist_sl (next x)) m /\
+    sel_of (vptr r) m == x /\
+    sel_of (llist_cell (next x)) m == L.tl l))
+  = llist_sel_interp r l m;
+    assert (interp (llist_sl' r l) m);
+    let x = L.hd l in
+    let tl = L.tl l in
+    let sl = R.pts_to r full_perm x `Mem.star` llist_sl' (next x) tl in
+    pure_star_interp sl (r =!= null_llist) m;
+    emp_unit sl;
+    assert (interp sl m);
+    let aux (m:mem) (ml mr:mem) : Lemma
+      (requires disjoint ml mr /\ m == join ml mr /\
+        interp (R.pts_to r full_perm x) ml /\ interp (llist_sl' (next x) tl) mr)
+      (ensures interp (ptr r `Mem.star` llist_sl (next x)) m /\
+        sel_of (vptr r) m == x /\
+        sel_of (llist_cell (next x)) m == tl)
+      = intro_h_exists (hide x) (R.pts_to r full_perm) ml;
+        llist_sel_interp (next x) tl mr;
+        intro_star (ptr r) (llist_sl (next x)) ml mr;
+        ptr_sel_interp r ml;
+        R.pts_to_witinv r full_perm;
+        join_commutative ml mr
+    in
+    elim_star (R.pts_to r full_perm x) (llist_sl' (next x) tl) m;
+    Classical.forall_intro_2 (Classical.move_requires_2 (aux m))
+
+
+val tail_cell (#a:Type0) (ptr:t a)
+  : SteelSel (t a) (llist_cell ptr)
+                   (fun n -> vptr ptr `star` llist_cell n)
+                   (requires fun _ -> ptr =!= null_llist)
+                   (ensures fun h0 n h1 ->
+                     Cons? (v_cell ptr h0) /\
+                     n == next (sel ptr h1) /\
+                     sel ptr h1 == L.hd (v_cell ptr h0) /\
+                     v_cell n h1 == L.tl (v_cell ptr h0))
+
+let tail_cell #a ptr =
+  let h = get #(llist_cell ptr) () in
+  let l = hide (v_cell ptr h) in
+  reveal_non_empty_cell ptr;
+  let x = hide (L.hd l) in
+  change_slprop (llist_cell ptr) (vptr ptr `star` llist_cell (next x)) l (reveal x, L.tl l)
+    (fun m -> tail_cell_lemma ptr l m);
+  reveal_star (vptr ptr) (llist_cell (next x));
+  let v = read ptr in
+  change_slprop (llist_cell (next x)) (llist_cell (next v)) (L.tl l) (L.tl l) (fun _ -> ());
+  next v
+
+val to_list_cell (#a:Type0) (ptr:t a)
+  : SteelSel unit (llist ptr) (fun _ -> llist_cell ptr)
+                  (requires fun _ -> True)
+                  (ensures fun h0 _ h1 -> v_llist ptr h0 == datas (v_cell ptr h1))
+
+let to_list_cell ptr =
+  change_slprop_rel (llist ptr) (llist_cell ptr) (fun x y -> x == datas y) (fun _ -> ())
+
+val from_list_cell (#a:Type0) (ptr:t a)
+  : SteelSel unit (llist_cell ptr) (fun _ -> llist ptr)
+                  (requires fun _ -> True)
+                  (ensures fun h0 _ h1 -> v_llist ptr h1 == datas (v_cell ptr h0))
+
+let from_list_cell ptr =
+  let h = get #(llist_cell ptr) () in
+  change_slprop (llist_cell ptr) (llist ptr) (v_cell ptr h) (datas (v_cell ptr h)) (fun _ -> ())
+
+let tail #a ptr =
+  // AF: Not sure why these gets are needed for verification?
+  let h0 = get #(llist ptr) () in
+  to_list_cell ptr;
+  let h0' = get #(llist_cell ptr) () in
+  let n = tail_cell #a ptr in
+  from_list_cell n;
+  n
 
 
 #pop-options
