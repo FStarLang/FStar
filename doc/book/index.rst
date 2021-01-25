@@ -156,17 +156,11 @@ Part 3: Other resources
    * Exemplary code
 
 
-Overview
---------
-
-* :ref:`tutorial-overview`
-* :ref:`PL-pl-foundations`
-
-
 .. toctree::
    :hidden:
    :maxdepth: 1
    :caption: Contents:
 
    tutorial-overview
+   sec2/Design-of-fstar-Intro
    PL-pl-foundations
