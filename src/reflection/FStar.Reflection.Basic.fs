@@ -535,6 +535,11 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
         in
         Sg_Inductive (nm, us, param_bs, ty, List.map inspect_ctor c_lids)
 
+    | Sig_declare_typ (lid, us, ty) ->
+        let nm = Ident.path_of_lid lid in
+        let us, ty = SS.open_univ_vars us ty in
+        Sg_Val (nm, us, ty)
+
     | _ ->
         Unk
 
@@ -575,6 +580,11 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
       in
       let se = mk_sigelt <| Sig_bundle (ind_se::ctor_ses, ind_lid::c_lids) in
       { se with sigquals = Noeq::se.sigquals }
+
+    | Sg_Val (nm, us_names, ty) ->
+        let val_lid = Ident.lid_of_path nm Range.dummyRange in
+        let typ = SS.close_univ_vars us_names ty in
+        mk_sigelt <| Sig_declare_typ (val_lid, us_names, typ)
 
     | Unk ->
         failwith "packing Unk, sorry"
