@@ -1517,29 +1517,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 ("subterm_ordering_"^ddconstrsym))
               in
               let codomain_ordering, codomain_decls =
-                let tot_or_gtot_inductive_codomain c =
-                  let is_inductive l =
-                      match FStar.TypeChecker.Env.lookup_sigelt env.tcenv l with
-                      | Some ({sigel=Sig_inductive_typ _}) -> true
-                      | _ -> false
-                  in
-                  let res =
-                   if not (U.is_tot_or_gtot_comp c)
-                   then false
-                   else let head, _ = U.head_and_args (U.comp_result c) in
-                        BU.for_some
-                          (fun mutual -> is_inductive mutual && U.is_fvar mutual head)
-                          mutuals
-                  in
-                  res
-                in
                 let codomain_prec_l, cod_decls =
                   List.fold_left2
                     (fun (codomain_prec_l, cod_decls) formal var ->
                         let bs, c = U.arrow_formals_comp formal.binder_bv.sort in
                         match bs with
                         | [] -> codomain_prec_l, cod_decls
-                        | _ when not (tot_or_gtot_inductive_codomain c) -> codomain_prec_l, cod_decls
+                        | _ when not (U.is_tot_or_gtot_comp c) -> codomain_prec_l, cod_decls
                         | _ ->
                          //var bs << D ... var ...
                          let bs', guards', _env', bs_decls, _ = encode_binders None bs env'' in
