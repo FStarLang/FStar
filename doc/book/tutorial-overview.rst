@@ -2,7 +2,6 @@
 
 A Short Tutorial Introduction to F*
 ===================================
-
 Port and integrate chapters 1--6 in the existing online tutorial
 
 
