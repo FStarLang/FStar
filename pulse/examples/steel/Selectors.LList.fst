@@ -14,9 +14,9 @@ type cell (a: Type0) = {
 }
 #pop-options
 
-let next (c:cell 'a) : t 'a = c.next
-let data (c:cell 'a) : 'a = c.data
-let mk_cell (n: t 'a) (d:'a) = {
+let next #a (c:cell a) : t a = c.next
+let data #a (c:cell a) : a = c.data
+let mk_cell #a (n: t a) (d:a) = {
   next = n;
   data = d
 }
@@ -124,11 +124,22 @@ let intro_nil_lemma (a:Type0) (m:mem) : Lemma
       pure_interp (ptr == null_llist) m;
       let open FStar.Tactics in
       assert (llist_sl' ptr [] == pure (ptr == null_llist)) by (norm [delta; zeta; iota]);
-      intro_h_exists [] (llist_sl' ptr) m;
       llist_sel_interp ptr [] m
 
 let intro_llist_nil a =
     change_slprop_2 vemp (llist (null_llist #a)) ([] <: list a) (intro_nil_lemma a)
+
+let elim_nil_lemma (#a:Type0) (ptr:t a) (m:mem) : Lemma
+    (requires interp (llist_sl ptr) m /\ ptr == null_llist)
+    (ensures interp (llist_sl ptr) m /\ llist_sel ptr m == [])
+    = let l' = id_elim_exists (llist_sl' ptr) m in
+      pure_interp (ptr == null_llist) m;
+      llist_sel_interp ptr [] m
+
+let elim_llist_nil #a ptr =
+  change_slprop_rel (llist ptr) (llist ptr)
+    (fun x y -> x == y /\ y == [])
+    (fun m -> elim_nil_lemma ptr m)
 
 open FStar.Ghost
 

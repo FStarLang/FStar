@@ -701,6 +701,12 @@ let bind_div_steel (a:Type) (b:Type)
 polymonadic_bind (DIV, SteelSel) |> SteelSel = bind_div_steel
 #pop-options
 
+let noop0 (_:unit)
+  : repr unit vemp (fun _ -> vemp) (requires fun _ -> True) (ensures fun _ _ _ -> True)
+  = fun frame -> ()
+
+let noop () = SteelSel?.reflect (noop0 ())
+
 let get0 (#p:vprop) (_:unit) : repr (rmem p)
   p (fun _ -> p)
   (requires fun _ -> True)
@@ -908,6 +914,8 @@ let alloc x =
   let r = alloc0 x in
   change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x);
   r
+
+let free r = change_slprop_2 (vptr r) vemp () intro_emp
 
 val read0 (#a:Type0) (r:ref a) (v:erased a) : SteelSel a
   (vptr_tmp r full_perm v) (fun x -> vptr_tmp r full_perm x)
