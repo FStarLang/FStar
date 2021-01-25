@@ -410,6 +410,9 @@ polymonadic_subcomp SteelSelF <: SteelSel = subcomp
 
 (* Some helper functions *)
 
+val noop (_:unit)
+  : SteelSel unit vemp (fun _ -> vemp) (requires fun _ -> True) (ensures fun _ _ _ -> True)
+
 val get (#[@@framing_implicit] p:vprop) (_:unit) : SteelSelF (rmem p)
   p (fun _ -> p)
   (requires fun _ -> True)
@@ -488,6 +491,11 @@ val alloc (#a:Type0) (x:a) : SteelSel (ref a)
   vemp (fun r -> vptr r)
   (requires fun _ -> True)
   (ensures fun _ r h1 -> h1 (vptr r) == x)
+
+val free (#a:Type0) (r:ref a) : SteelSel unit
+  (vptr r) (fun _ -> vemp)
+  (requires fun _ -> True)
+  (ensures fun _ _ _ -> True)
 
 val read (#a:Type0) (r:ref a) : SteelSel a
   (vptr r) (fun _ -> vptr r)
