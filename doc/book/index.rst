@@ -96,6 +96,8 @@ Part 1: F* Manual
 
 4. Core libraries
 
+.. _corelib_Prims:
+
 Part 2: F* in Action
 
 1. Foundations of Programming Languages
