@@ -87,6 +87,10 @@ type ref (a:Type u#a) (pcm:pcm a): Type u#0 =
   | Null
   | Addr of addr
 
+let null (#a:Type u#a) (#pcm:pcm a) : ref a pcm = Null
+
+let is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null}) = Null? r
+
 let disjoint (m0 m1:heap u#h)
   : prop
   = forall a. disjoint_addr m0 m1 a

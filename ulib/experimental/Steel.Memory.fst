@@ -82,6 +82,10 @@ let reveal_equiv p1 p2 = ()
 
 let ref = H.ref
 
+let null = H.null
+
+let is_null = H.is_null
+
 let emp : slprop u#a = H.emp
 let pure = H.pure
 let pts_to = H.pts_to

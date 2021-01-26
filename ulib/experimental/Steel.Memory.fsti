@@ -99,6 +99,14 @@ let slimp (p1 p2 : slprop) : prop =
 (** A memory maps a [ref]erence to its associated value *)
 val ref (a:Type u#a) (pcm:pcm a) : Type u#0
 
+(** [null] is a specific reference, that is not associated to any value
+*)
+val null (#a:Type u#a) (#pcm:pcm a) : ref a pcm
+
+(** Checking whether [r] is the null pointer is decidable through [is_null]
+*)
+val is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null})
+
 (** All the standard connectives of separation logic, based on [Steel.Heap] *)
 val emp : slprop u#a
 val pure (p:prop) : slprop u#a

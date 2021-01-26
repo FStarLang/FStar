@@ -42,6 +42,14 @@ val heap  : Type u#(a + 1)
 (** A [ref a pcm] is a key into the [heap], containing a value of type [a] governed by the [pcm] *)
 val ref (a:Type u#a) (pcm:pcm a) : Type u#0
 
+(** [null] is a specific reference, that is not associated to any value
+*)
+val null (#a:Type u#a) (#pcm:pcm a) : ref a pcm
+
+(** Checking whether [r] is the null pointer is decidable through [is_null]
+*)
+val is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null})
+
 (** The predicate describing non-overlapping heaps *)
 val disjoint (h0 h1:heap u#h) : prop
 
@@ -373,7 +381,7 @@ let pre_action (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
   - evolving the heap according to the heap preorder;
   - not allocating any new references;
   - preserving the validity of any heap proposition affecting any frame
-*)  
+*)
 unfold
 let action_related_heaps (frame:slprop) (h0 h1:full_heap) =
   heap_evolves h0 h1 /\
