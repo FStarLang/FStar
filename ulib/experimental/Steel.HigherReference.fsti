@@ -23,6 +23,9 @@ open FStar.Ghost
 
 val ref (a:Type u#1) : Type u#0
 
+val null (#a:Type u#1) : ref a
+val is_null (#a:Type u#1) (r:ref a) : (b:bool{b <==> r == null})
+
 val pts_to (#a:Type u#1) (r:ref a) (p:perm) (v:erased a) : slprop u#1
 
 val pts_to_ref_injective

@@ -26,6 +26,9 @@ module A = Steel.Effect.Atomic
 
 let ref a = H.ref (U.raise_t a)
 
+let null #a = H.null #(U.raise_t a)
+let is_null #a r = H.is_null #(U.raise_t a) r
+
 let pts_to r p v = H.pts_to r p (hide (U.raise_val (reveal v)))
 
 val raise_val_inj (#a:Type) (x y:a) : Lemma
