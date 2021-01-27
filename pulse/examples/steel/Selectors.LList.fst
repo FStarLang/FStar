@@ -22,8 +22,8 @@ let mk_cell #a (n: t a) (d:a) = {
 }
 
 (* AF: Need to put that in the standard library at some point *)
-let null_llist #a = admit()
-let is_null #a ptr = admit()
+let null_llist #a = R.null
+let is_null #a ptr = R.is_null ptr
 
 let rec llist_sl' (#a:Type) (ptr:t a)
                          (l:list (cell a))
@@ -149,7 +149,8 @@ let intro_cons_lemma_aux (#a:Type0) (ptr1 ptr2:t a)
     next x == ptr2)
   (ensures interp (llist_sl' ptr1 (x::l)) m)
   = // AF: Need this as a lemma from standard library: interp (pts_to r) ==> r =!= null
-    assume (ptr1 =!= null_llist);
+    affine_star (R.pts_to ptr1 full_perm x) (llist_sl' ptr2 l) m;
+    R.pts_to_not_null ptr1 full_perm x m;
     emp_unit (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l);
     pure_star_interp (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l) (ptr1 =!= null_llist) m
 
