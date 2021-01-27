@@ -235,8 +235,6 @@ let par (#aL:Type u#a)
     (fun h0 y h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 (fst y) h1 /\ lpostR h0 (snd y) h1)
   = par0 (reify (f ())) (reify (g()))
 
-let ( || ) f g = par f g
-
 let action_as_repr (#a:Type) (#p:slprop) (#q:a -> slprop) (f:action_except a Set.empty p q)
   : repr a p q (fun _ -> True) (fun _ _ _ -> True)
   = Ins.state_correspondence Set.empty; f
