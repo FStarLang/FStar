@@ -23,7 +23,29 @@ open FStar.Ghost
 
 val ref (a:Type u#0) : Type u#0
 
+val null (#a:Type u#0) : ref a
+val is_null (#a:Type u#0) (r:ref a) : (b:bool{b <==> r == null})
+
 val pts_to (#a:Type u#0) (r:ref a) (p:perm) (v:erased a) : slprop u#1
+
+val pts_to_ref_injective
+      (#a: Type u#0)
+      (r: ref a)
+      (p0 p1:perm)
+      (v0 v1: erased a)
+      (m:mem)
+    : Lemma
+      (requires
+        interp (pts_to r p0 v0 `star` pts_to r p1 v1) m)
+      (ensures v0 == v1)
+
+val pts_to_not_null (#a:Type u#0)
+                    (x:ref a)
+                    (p:perm)
+                    (v: erased a)
+                    (m:mem)
+  : Lemma (requires interp (pts_to x p v) m)
+          (ensures x =!= null)
 
 val pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to r p))
 

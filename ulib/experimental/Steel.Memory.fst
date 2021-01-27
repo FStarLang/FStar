@@ -82,6 +82,10 @@ let reveal_equiv p1 p2 = ()
 
 let ref = H.ref
 
+let null = H.null
+
+let is_null = H.is_null
+
 let emp : slprop u#a = H.emp
 let pure = H.pure
 let pts_to = H.pts_to
@@ -158,7 +162,8 @@ let pure_star_interp p q m = H.pure_star_interp p q (heap_of_mem m)
 ////////////////////////////////////////////////////////////////////////////////
 
 let pts_to_compatible x v0 v1 m = H.pts_to_compatible x v0 v1 (heap_of_mem m)
-let pts_to_compatible_equiv #a #pcm v0 v1 = H.pts_to_compatible_equiv v0 v1
+let pts_to_compatible_equiv #a #pcm x v0 v1 = H.pts_to_compatible_equiv x v0 v1
+let pts_to_not_null #a #pcm x v m = H.pts_to_not_null x v (heap_of_mem m)
 
 ////////////////////////////////////////////////////////////////////////////////
 // star

@@ -56,6 +56,8 @@ let pcm_frac #a : pcm (fractional a) = {
 module Mem = Steel.Memory
 
 let ref a = Mem.ref (fractional a) pcm_frac
+let null #a = Mem.null #(fractional a) #pcm_frac
+let is_null #a r = Mem.is_null #(fractional a) #pcm_frac r
 let perm_ok p : prop = (p.v <=. 1.0R == true) /\ True
 let pts_to_raw (#a:Type) (r:ref a) (p:perm) (v:erased a) = Mem.pts_to r (Some (Ghost.reveal v, p))
 let pts_to #a r p v = pts_to_raw r p v `star` pure (perm_ok p)
@@ -103,6 +105,16 @@ let pts_to_ref_injective
       Mem.pts_to_compatible r (Some (Ghost.reveal v0, p0))
                               (Some (Ghost.reveal v1, p1))
                               m
+
+let pts_to_not_null (#a:Type u#1)
+                    (r:ref a)
+                    (p:perm)
+                    (v: erased a)
+                    (m:mem)
+  : Lemma (requires interp (pts_to r p v) m)
+          (ensures r =!= null)
+  = Mem.affine_star (pts_to_raw r p v) (pure (perm_ok p)) m;
+    Mem.pts_to_not_null r (Some (Ghost.reveal v, p)) m
 
 let pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to r p)) =
   let aux (x y : erased a) (m:mem)
