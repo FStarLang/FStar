@@ -26,6 +26,9 @@ module A = Steel.Effect.Atomic
 
 let ref a = H.ref (U.raise_t a)
 
+let null #a = H.null #(U.raise_t a)
+let is_null #a r = H.is_null #(U.raise_t a) r
+
 let pts_to r p v = H.pts_to r p (hide (U.raise_val (reveal v)))
 
 val raise_val_inj (#a:Type) (x y:a) : Lemma
@@ -35,6 +38,31 @@ val raise_val_inj (#a:Type) (x y:a) : Lemma
 let raise_val_inj x y =
   U.downgrade_val_raise_val x;
   U.downgrade_val_raise_val y
+
+let pts_to_ref_injective
+      (#a: Type u#0)
+      (r: ref a)
+      (p0 p1:perm)
+      (v0 v1: erased a)
+      (m:mem)
+    : Lemma
+      (requires
+        interp (pts_to r p0 v0 `star` pts_to r p1 v1) m)
+      (ensures v0 == v1)
+    = let v0' = hide (U.raise_val (reveal v0)) in
+      let v1' = hide (U.raise_val (reveal v1)) in
+      H.pts_to_ref_injective r p0 p1 v0' v1' m;
+      raise_val_inj (reveal v0) (reveal v1)
+
+let pts_to_not_null (#a:Type u#0)
+                    (x:ref a)
+                    (p:perm)
+                    (v: erased a)
+                    (m:mem)
+  : Lemma (requires interp (pts_to x p v) m)
+          (ensures x =!= null)
+  = let v = hide (U.raise_val (reveal v)) in
+    H.pts_to_not_null x p v m
 
 let pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to r p)) =
   let aux (x y : erased a) (m:mem)
