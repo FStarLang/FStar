@@ -550,6 +550,8 @@ let pts_to_join' (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v1 v2:a) (m:heap)
 let pts_to_compatible_equiv (#a:Type) (#pcm:_) (x:ref a pcm) (v0:a) (v1:a{composable pcm v0 v1})
   = FStar.Classical.forall_intro (pts_to_compatible x v0 v1)
 
+let pts_to_not_null (#a:Type) (#pcm:_) (x:ref a pcm) (v:a) (m:heap) = ()
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // star

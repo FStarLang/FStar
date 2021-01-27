@@ -106,6 +106,16 @@ let pts_to_ref_injective
                               (Some (Ghost.reveal v1, p1))
                               m
 
+let pts_to_not_null (#a:Type u#1)
+                    (r:ref a)
+                    (p:perm)
+                    (v: erased a)
+                    (m:mem)
+  : Lemma (requires interp (pts_to r p v) m)
+          (ensures r =!= null)
+  = Mem.affine_star (pts_to_raw r p v) (pure (perm_ok p)) m;
+    Mem.pts_to_not_null r (Some (Ghost.reveal v, p)) m
+
 let pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to r p)) =
   let aux (x y : erased a) (m:mem)
     : Lemma (requires (interp (pts_to r p x) m /\ interp (pts_to r p y) m))
