@@ -260,6 +260,14 @@ val pts_to_compatible_equiv (#a:Type)
   : Lemma (equiv (pts_to x v0 `star` pts_to x v1)
                  (pts_to x (op pcm v0 v1)))
 
+val pts_to_not_null (#a:Type)
+                    (#pcm:_)
+                    (x:ref a pcm)
+                    (v:a)
+                    (m:heap)
+  : Lemma (requires interp (pts_to x v) m)
+          (ensures x =!= null)
+
 (***** Properties of separating conjunction *)
 
 (** The separating conjunction [star] arises from the disjointness of partial heaps *)

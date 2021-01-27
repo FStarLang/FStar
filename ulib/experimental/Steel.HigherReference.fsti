@@ -39,6 +39,14 @@ val pts_to_ref_injective
         interp (pts_to r p0 v0 `star` pts_to r p1 v1) m)
       (ensures v0 == v1)
 
+val pts_to_not_null (#a:Type u#1)
+                    (x:ref a)
+                    (p:perm)
+                    (v: erased a)
+                    (m:mem)
+  : Lemma (requires interp (pts_to x p v) m)
+          (ensures x =!= null)
+
 val pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to r p))
 
 val alloc (#a:Type) (x:a)

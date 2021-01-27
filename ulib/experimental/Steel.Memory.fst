@@ -162,7 +162,8 @@ let pure_star_interp p q m = H.pure_star_interp p q (heap_of_mem m)
 ////////////////////////////////////////////////////////////////////////////////
 
 let pts_to_compatible x v0 v1 m = H.pts_to_compatible x v0 v1 (heap_of_mem m)
-let pts_to_compatible_equiv #a #pcm v0 v1 = H.pts_to_compatible_equiv v0 v1
+let pts_to_compatible_equiv #a #pcm x v0 v1 = H.pts_to_compatible_equiv x v0 v1
+let pts_to_not_null #a #pcm x v m = H.pts_to_not_null x v (heap_of_mem m)
 
 ////////////////////////////////////////////////////////////////////////////////
 // star
