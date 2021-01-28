@@ -9,12 +9,12 @@ let alloc x n =
   let s = Seq.create (U32.v n) x in
   alloc s
 
-let read r i =
+let index r i =
   let s = read r in
   Seq.index s (U32.v i)
 
-let write r i x =
-  let s = Steel.SelEffect.read r in
+let upd r i x =
+  let s = read r in
   let s' = Seq.upd s (U32.v i) x in
   write r s'
 

@@ -50,7 +50,7 @@ val alloc (#t:Type) (x:t) (n:U32.t)
              (requires fun _ -> True)
              (ensures fun _ r h1 -> asel r h1 == Seq.create (U32.v n) x)
 
-val read (#t:Type) (r:array t) (i:U32.t)
+val index (#t:Type) (r:array t) (i:U32.t)
   : SteelSel t
              (varray r)
              (fun _ -> varray r)
@@ -60,7 +60,7 @@ val read (#t:Type) (r:array t) (i:U32.t)
                asel r h0 == asel r h1 /\
                x == Seq.index (asel r h1) (U32.v i))
 
-val write (#t:Type) (r:array t) (i:U32.t) (x:t)
+val upd (#t:Type) (r:array t) (i:U32.t) (x:t)
   : SteelSel unit
              (varray r)
              (fun _ -> varray r)
