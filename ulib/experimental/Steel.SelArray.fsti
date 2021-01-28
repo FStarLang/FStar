@@ -20,13 +20,13 @@ open Steel.SelEffect
 open FStar.Ghost
 module U32 = FStar.UInt32
 
-let contents (t:Type u#0) = erased (FStar.Seq.seq t)
+let contents (t:Type u#0) = FStar.Seq.seq t
 let length #t (r:contents t) : GTot nat = Seq.length r
 
 val array (t:Type u#0) : Type u#0
 
 val is_array (#a:Type0) (r:array a) : slprop u#1
-val array_sel (#a:Type0) (r:array a) : selector (Seq.seq a) (is_array r)
+val array_sel (#a:Type0) (r:array a) : selector (contents a) (is_array r)
 
 [@@ __steel_reduce__]
 let varray' #a r : vprop' =
