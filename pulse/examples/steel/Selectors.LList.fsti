@@ -51,6 +51,13 @@ val elim_llist_nil (#a:Type0) (ptr:t a)
             v_llist ptr h0 == v_llist ptr h1 /\
             v_llist ptr h1 == [])
 
+val cons_is_not_null (#a:Type0) (ptr:t a)
+  : SteelSel unit (llist ptr) (fun _ -> llist ptr)
+             (requires fun h -> Cons? (v_llist ptr h))
+             (ensures fun h0 _ h1 ->
+               v_llist ptr h0 == v_llist ptr h1 /\
+               ptr =!= null_llist)
+
 val intro_llist_cons (#a:Type0) (ptr1 ptr2:t a)
   : SteelSel unit (vptr ptr1 `star` llist ptr2)
                   (fun _ -> llist ptr1)
@@ -65,3 +72,36 @@ val tail (#a:Type0) (ptr:t a)
                      Cons? (v_llist ptr h0) /\
                      sel ptr h1 == mk_cell n (L.hd (v_llist ptr h0)) /\
                      v_llist n h1 == L.tl (v_llist ptr h0))
+
+
+val ind_llist_sl (#a:Type0) (r:ref (t a)) : slprop u#1
+val ind_llist_sel (#a:Type0) (r:ref (t a)) : selector (list a) (ind_llist_sl r)
+
+[@@__steel_reduce__]
+let ind_llist' (#a:Type0) (r:ref (t a)) : vprop' =
+  { hp = ind_llist_sl r;
+    t = list a;
+    sel = ind_llist_sel r}
+unfold
+let ind_llist (#a:Type0) (r:ref (t a)) = VUnit (ind_llist' r)
+
+[@@ __steel_reduce__]
+let v_ind_llist (#a:Type0) (#p:vprop) (r:ref (t a))
+  (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (ind_llist r) /\ True)}) : GTot (list a)
+  = h (ind_llist r)
+
+val unpack_ind (#a:Type0) (r:ref (t a))
+  : SteelSel (t a)
+             (ind_llist r)
+             (fun p -> vptr r `star` llist p)
+             (requires fun _ -> True)
+             (ensures fun h0 p h1 ->
+               sel r h1 == p /\
+               v_llist p h1 == v_ind_llist r h0)
+
+val pack_ind (#a:Type0) (r:ref (t a)) (p:t a)
+  : SteelSel unit
+             (vptr r `star` llist p)
+             (fun _ -> ind_llist r)
+             (requires fun h -> sel r h == p)
+             (ensures fun h0 _ h1 -> v_llist p h0 == v_ind_llist r h1)

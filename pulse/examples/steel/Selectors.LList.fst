@@ -143,6 +143,24 @@ let elim_llist_nil #a ptr =
 
 open FStar.Ghost
 
+#set-options "--z3rlimit 20"
+
+let lemma_cons_not_null (#a:Type) (ptr:t a) (l:list a) (m:mem) : Lemma
+    (requires interp (llist_sl ptr) m /\ llist_sel ptr m == l /\ Cons? l)
+    (ensures ptr =!= null_llist)
+    = let l' = id_elim_exists (llist_sl' ptr) m in
+      assert (interp (llist_sl' ptr l') m);
+      llist_sel_interp ptr l' m;
+      match reveal l' with
+      | hd::tl ->
+          let p = R.pts_to ptr full_perm (hide hd) `Mem.star` llist_sl' (next hd) tl in
+          pure_star_interp p (ptr =!= null_llist) m
+
+let cons_is_not_null #a ptr =
+  let h = get #(llist ptr)  () in
+  let l = hide (v_llist ptr h) in
+  extract_info (llist ptr) l (ptr =!= null_llist) (lemma_cons_not_null ptr l)
+
 let intro_cons_lemma_aux (#a:Type0) (ptr1 ptr2:t a)
   (x: cell a) (l:list (cell a)) (m:mem) : Lemma
   (requires interp (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l) m /\
@@ -291,8 +309,7 @@ val from_list_cell (#a:Type0) (ptr:t a)
                   (ensures fun h0 _ h1 -> v_llist ptr h1 == datas (v_cell ptr h0))
 
 let from_list_cell ptr =
-  let h = get #(llist_cell ptr) () in
-  change_slprop (llist_cell ptr) (llist ptr) (v_cell ptr h) (datas (v_cell ptr h)) (fun _ -> ())
+  change_slprop_rel (llist_cell ptr) (llist ptr) (fun x y -> datas x == y) (fun _ -> ())
 
 let tail #a ptr =
   // AF: Not sure why these gets are needed for verification?
@@ -303,5 +320,141 @@ let tail #a ptr =
   from_list_cell n;
   n
 
+
+let ind_llist_sl' (#a:Type0) (r:ref (t a)) (p:t a) : slprop u#1 =
+  R.pts_to r full_perm p `Mem.star` llist_sl p
+let ind_llist_sl (#a:Type0) (r:ref (t a)) = h_exists (ind_llist_sl' r)
+
+let ind_llist_sel_full' (#a:Type0) (r:ref (t a)) : selector' (t a * list a) (ind_llist_sl r) =
+  fun h ->
+    let p = id_elim_exists (ind_llist_sl' r) h in
+    (reveal p, llist_sel p h)
+
+let ind_llist_sel_depends_only_on (#a:Type0) (ptr:ref (t a))
+  (m0:Mem.hmem (ind_llist_sl ptr)) (m1:mem{disjoint m0 m1})
+  : Lemma (ind_llist_sel_full' ptr m0 == ind_llist_sel_full' ptr (Mem.join m0 m1))
+  = let m' = Mem.join m0 m1 in
+    let p1 = reveal (id_elim_exists (ind_llist_sl' ptr) m0) in
+    let p2 = reveal (id_elim_exists (ind_llist_sl' ptr) m') in
+
+    R.pts_to_witinv ptr full_perm;
+    Mem.elim_wi (ind_llist_sl' ptr) p1 p2 m'
+
+let ind_llist_sel_depends_only_on_core (#a:Type0) (ptr:ref (t a))
+  (m0:Mem.hmem (ind_llist_sl ptr))
+  : Lemma (ind_llist_sel_full' ptr m0 == ind_llist_sel_full' ptr (core_mem m0))
+  = let p1 = reveal (id_elim_exists (ind_llist_sl' ptr) m0) in
+    let p2 = reveal (id_elim_exists (ind_llist_sl' ptr) (core_mem m0)) in
+
+    R.pts_to_witinv ptr full_perm;
+    Mem.elim_wi (ind_llist_sl' ptr) p1 p2 (core_mem m0)
+
+let ind_llist_sel_full (#a:Type0) (r:ref (t a)) : selector (t a * list a) (ind_llist_sl r) =
+  Classical.forall_intro_2 (ind_llist_sel_depends_only_on r);
+  Classical.forall_intro (ind_llist_sel_depends_only_on_core r);
+  ind_llist_sel_full' r
+
+let ind_llist_sel r = fun h -> snd (ind_llist_sel_full r h)
+
+[@@__steel_reduce__]
+let ind_llist_full' #a r : vprop' =
+  {hp = ind_llist_sl r;
+   t = t a * list a;
+   sel = ind_llist_sel_full r}
+unfold
+let ind_llist_full (#a:Type0) (r:ref (t a)) = VUnit (ind_llist_full' r)
+
+[@@ __steel_reduce__]
+let v_full (#a:Type0) (#p:vprop) (r:ref (t a))
+  (h:rmem p{FStar.Tactics.with_tactic selector_tactic (can_be_split p (ind_llist_full r) /\ True)})
+  = h (ind_llist_full r)
+
+let intro_ptr_frame_lemma (#a:Type0) (r:ref a) (x:a) (frame:slprop) (m:mem)
+  : Lemma (requires interp (R.pts_to r full_perm x `Mem.star` frame) m)
+          (ensures interp (ptr r `Mem.star` frame) m /\ sel_of (vptr r) m == x)
+  = let aux (m:mem) (ml mr:mem) : Lemma
+      (requires disjoint ml mr /\ m == join ml mr /\
+        interp (R.pts_to r full_perm x) ml /\ interp frame mr)
+      (ensures interp (ptr r `Mem.star` frame) m /\
+        sel_of (vptr r) m == x)
+      = intro_h_exists (hide x) (R.pts_to r full_perm) ml;
+        intro_star (ptr r) frame ml mr;
+        ptr_sel_interp r ml;
+        R.pts_to_witinv r full_perm
+    in
+    elim_star (R.pts_to r full_perm x) frame m;
+    Classical.forall_intro_2 (Classical.move_requires_2 (aux m))
+
+let intro_pts_to_frame_lemma (#a:Type0) (r:ref a) (x:a) (frame:slprop) (m:mem)
+  : Lemma (requires interp (ptr r `Mem.star` frame) m /\ sel_of (vptr r) m == x)
+          (ensures interp (R.pts_to r full_perm x `Mem.star` frame) m)
+  = let aux (m:mem) (ml mr:mem) : Lemma
+      (requires disjoint ml mr /\ m == join ml mr /\
+        interp (ptr r) ml /\ interp frame mr /\ sel_of (vptr r) ml == x)
+      (ensures interp (R.pts_to r full_perm x `Mem.star` frame) m)
+      = ptr_sel_interp r ml;
+        intro_star (R.pts_to r full_perm x) frame ml mr
+    in
+    elim_star (ptr r) frame m;
+    Classical.forall_intro_2 (Classical.move_requires_2 (aux m))
+
+
+let unpack_ind_lemma (#a:Type0) (r:ref (t a)) (p:t a) (l:list a) (m:mem) : Lemma
+  (requires interp (ind_llist_sl r) m /\ ind_llist_sel_full r m == (p, l))
+  (ensures
+    interp (ptr r `Mem.star` llist_sl p) m /\
+    sel_of (vptr r) m == p /\
+    sel_of (llist p) m == l)
+  = intro_ptr_frame_lemma r p (llist_sl p) m
+
+val unpack_ind_full (#a:Type0) (r:ref (t a))
+  : SteelSel (t a)
+             (ind_llist_full r)
+             (fun p -> vptr r `star` llist p)
+             (requires fun _ -> True)
+             (ensures fun h0 p h1 ->
+               sel r h1 == p /\
+               p == fst (v_full r h0) /\
+               v_llist p h1 == snd (v_full r h0))
+
+let unpack_ind_full r =
+    let h = get #(ind_llist_full r) () in
+    let s = hide (v_full r h) in
+    let gp = hide (fst (reveal s)) in
+    let gl = hide (snd (reveal s)) in
+    change_slprop
+      (ind_llist_full r)
+      (vptr r `star` llist (reveal gp))
+      s
+      (reveal gp, reveal gl)
+      (fun m -> unpack_ind_lemma r gp gl m);
+    reveal_star (vptr r) (llist (reveal gp));
+    let p = read r in
+    change_slprop_rel (llist (reveal gp)) (llist p) (fun x y -> x == y) (fun _ -> ());
+    p
+
+let unpack_ind r =
+  change_slprop_rel (ind_llist r) (ind_llist_full r) (fun x y -> x == snd y) (fun _ -> ());
+  let p = unpack_ind_full r in
+  p
+
+let pack_ind_lemma (#a:Type0) (r:ref (t a)) (p:t a) (l:list a) (m:mem)
+  : Lemma
+    (requires
+      interp (ptr r `Mem.star` llist_sl p) m /\
+      sel_of (vptr r) m == p /\
+      sel_of (llist p) m == l)
+    (ensures interp (ind_llist_sl r) m /\ sel_of (ind_llist r) m == l)
+  = intro_pts_to_frame_lemma r p (llist_sl p) m;
+    intro_h_exists p (ind_llist_sl' r) m;
+    let (p', l') = ind_llist_sel_full r m in
+    unpack_ind_lemma r p' l' m;
+    R.pts_to_witinv r full_perm
+
+let pack_ind r p =
+  let h = get #(vptr r `star` llist p) () in
+  reveal_star (vptr r) (llist p);
+  let gl = hide (v_llist p h) in
+  change_slprop (vptr r `star` llist p) (ind_llist r) (p, reveal gl) gl (fun m -> pack_ind_lemma r p gl m)
 
 #pop-options
