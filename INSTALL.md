@@ -244,7 +244,7 @@ Then follow step 4 in [Instructions for all OSes](#instructions-for-all-oses) be
 4. F\* depends on a bunch of external OCaml packages which you should install using OPAM:
 
   ```sh
-  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process ocaml-migrate-parsetree
+  $ opam install ocamlbuild ocamlfind batteries stdint zarith yojson fileutils pprint menhir ulex ppx_deriving ppx_deriving_yojson process ocaml-migrate-parsetree=1.8.0
   ```
 
   **Note:** This list of opam packages is longer than the list in the
