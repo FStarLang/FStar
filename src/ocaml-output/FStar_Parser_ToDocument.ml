@@ -364,7 +364,6 @@ let (is_list_structure :
       aux
 let (is_list : FStar_Parser_AST.term -> Prims.bool) =
   is_list_structure FStar_Parser_Const.cons_lid FStar_Parser_Const.nil_lid
-let is_lex_list : 'uuuuu . 'uuuuu -> Prims.bool = fun uu___ -> false
 let rec (extract_from_list :
   FStar_Parser_AST.term -> FStar_Parser_AST.term Prims.list) =
   fun e ->
@@ -470,8 +469,7 @@ let (is_general_application : FStar_Parser_AST.term -> Prims.bool) =
   fun e ->
     let uu___ = (is_array e) || (is_ref_set e) in Prims.op_Negation uu___
 let (is_general_construction : FStar_Parser_AST.term -> Prims.bool) =
-  fun e ->
-    let uu___ = (is_list e) || (is_lex_list e) in Prims.op_Negation uu___
+  fun e -> let uu___ = is_list e in Prims.op_Negation uu___
 let (is_general_prefix_op : FStar_Ident.ident -> Prims.bool) =
   fun op ->
     let op_starting_char =
@@ -3850,16 +3848,6 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
             (fun ps -> p_noSeqTermAndComment ps false) uu___3 in
         FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero
           FStar_Pprint.lbracket uu___1 FStar_Pprint.rbracket
-    | uu___ when is_lex_list e ->
-        let uu___1 =
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.percent FStar_Pprint.lbracket in
-        let uu___2 =
-          let uu___3 = FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1 in
-          let uu___4 = extract_from_list e in
-          separate_map_or_flow_last uu___3
-            (fun ps -> p_noSeqTermAndComment ps false) uu___4 in
-        FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one uu___1 uu___2
-          FStar_Pprint.rbracket
     | uu___ when is_ref_set e ->
         let es = extract_from_ref_set e in
         let uu___1 =

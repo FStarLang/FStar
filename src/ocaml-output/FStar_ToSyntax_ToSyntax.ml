@@ -4260,7 +4260,10 @@ and (desugar_comp :
                                                    (desugar_term env)) in
                                             FStar_Syntax_Syntax.DECREASES
                                               uu___7
-                                        | uu___6 -> failwith "Impossible!")) in
+                                        | uu___6 ->
+                                            fail
+                                              (FStar_Errors.Fatal_UnexpectedComputationTypeForLetRec,
+                                                "Unexpected decreases clause"))) in
                               let no_additional_args =
                                 let is_empty l =
                                   match l with | [] -> true | uu___5 -> false in

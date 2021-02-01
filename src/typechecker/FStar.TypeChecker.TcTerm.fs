@@ -388,6 +388,12 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
       let precedes_t = TcUtil.fvar_const env Const.precedes_lid in
       let lex_eq_t = TcUtil.fvar_const env Const.lex_eq_lid in
       let rec mk_precedes_lex l l_prev =
+        (*
+         * AR: aux assumes that l and l_prev have the same lengths
+         *     Given l = [a; b; c], l_prev = [d; e; f], it builds:
+         *       a << d \/ (lex_eq a d /\ b << e) \/ (lex_eq a d /\ lex_eq b e /\ c << f
+         *     We build an "untyped" term here, the caller will typecheck it properly
+         *)
         let rec aux l l_prev =
           match l, l_prev with
           | [], [] ->
@@ -398,6 +404,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                     (mk_conj (mk_Tm_app lex_eq_t [as_arg x; as_arg x_prev] r)
                              (aux tl tl_prev)) in
 
+        (* Call aux with equal sized prefixes of l and l_prev *)
         let l, l_prev =
           let n, n_prev = List.length l, List.length l_prev in
           if n = n_prev then l, l_prev

@@ -205,19 +205,29 @@ type l_not (p: logical) : logical = l_imp p False
 unfold
 type l_ITE (p: logical) (q: logical) (r: logical) : logical = (p ==> q) /\ (~p ==> r)
 
-(** One of the main axioms provided by prims is [precedes], a a
+
+(** One of the main axioms provided by prims is [precedes], a
     built-in well-founded partial order over all terms. It's typically
     written with an infix binary [<<].
 
     The [<<] order includes:
         * The [<] ordering on natural numbers
         * The subterm ordering on inductive types
-        * And, via FStar.WellFounded, relating [f x << f] *)
+        * [f x << D f] for data constructors D of an inductive t whose
+          arguments include a ghost or total function returning a t *)
+
 assume
 type precedes : #a: Type -> #b: Type -> a -> b -> Type0
 
+(** F* allows writing [decreases] clauses with recursive functions,
+    as the user-provided semantic termination metric.
+
+    The abstract [lex_eq] predicate serves as the notion of equality
+    when verifying these termination metrics *)
+    
 assume
 val lex_eq : #a:Type -> #b:Type -> a -> b -> Type0
+
 
 (** Within the SMT encoding, we have a relation [(HasType e t)]
     asserting that (the encoding of) [e] has a type corresponding to
@@ -681,4 +691,4 @@ let labeled (r: range) (msg: string) (b: Type) : Type = b
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 31
+let __cache_version_number__ = 32

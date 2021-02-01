@@ -1857,7 +1857,9 @@ and desugar_comp r (allow_type_promotion:bool) env t =
                           | LexList l -> l
                           | _ -> [t] in
                         DECREASES (l |> List.map (desugar_term env))
-                      | _ -> failwith "Impossible!") in
+                      | _ ->
+                        fail (Errors.Fatal_UnexpectedComputationTypeForLetRec,
+                              "Unexpected decreases clause")) in
 
     let no_additional_args =
         (* F# complains about not being able to use = on some types.. *)

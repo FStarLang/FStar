@@ -356,7 +356,6 @@ let rec complete_memo_rec (f: (x:dom -> Tot (partial_result x))) (x:dom) (px:par
       | None ->
         let px' = f x' in
         fpartial_result_lemma f x' px' Now ;
-        //assert ( %[x' ; px'] << %[x ; px]) ;
         let y = complete_memo_rec f x' (f x') in
         assert (y == fixp f x') ;
         MEMO?.put x' y ;
