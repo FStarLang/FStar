@@ -105,6 +105,7 @@ type ctor = name * typ
 type sigelt_view =
     | Sg_Let of bool * fv * list<univ_name> * typ * term
     | Sg_Inductive of name * list<univ_name> * list<binder> * typ * list<ctor> // name, params, type, constructors
+    | Sg_Val of name * list<univ_name> * typ
     | Unk
 
 type var = Z.t

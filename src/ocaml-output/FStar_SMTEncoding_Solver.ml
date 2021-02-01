@@ -1571,7 +1571,7 @@ let (solve :
              FStar_Pervasives_Native.Some uu___3 in
            FStar_Profiling.profile
              (fun uu___3 -> do_solve use_env_msg tcenv q) uu___2
-             "FStar.TypeChecker.SMTEncoding.solve_top_level")
+             "FStar.SMTEncoding.solve_top_level")
 let (solver : FStar_TypeChecker_Env.solver_t) =
   {
     FStar_TypeChecker_Env.init =

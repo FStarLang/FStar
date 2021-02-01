@@ -2439,6 +2439,14 @@ let rec (delta_depth_of_term :
       | FStar_Syntax_Syntax.Tm_fvar fv ->
           let uu___ = fv_delta_depth env fv in
           FStar_Pervasives_Native.Some uu___
+let (universe_has_max :
+  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.universe -> Prims.bool) =
+  fun env ->
+    fun u ->
+      let u1 = FStar_TypeChecker_Normalize.normalize_universe env u in
+      match u1 with
+      | FStar_Syntax_Syntax.U_max uu___ -> true
+      | uu___ -> false
 let rec (head_matches :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> match_result)
@@ -5864,8 +5872,28 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                 let uu___3 = FStar_Syntax_Util.head_and_args t2 in
                 (match uu___3 with
                  | (head2, args2) ->
+                     let need_unif1 =
+                       match (((head1.FStar_Syntax_Syntax.n), args1),
+                               ((head2.FStar_Syntax_Syntax.n), args2))
+                       with
+                       | ((FStar_Syntax_Syntax.Tm_uinst (uu___4, us1),
+                           uu___5::uu___6),
+                          (FStar_Syntax_Syntax.Tm_uinst (uu___7, us2),
+                           uu___8::uu___9)) ->
+                           let uu___10 =
+                             (FStar_List.for_all
+                                (fun u ->
+                                   let uu___11 = universe_has_max env1 u in
+                                   Prims.op_Negation uu___11) us1)
+                               &&
+                               (FStar_List.for_all
+                                  (fun u ->
+                                     let uu___11 = universe_has_max env1 u in
+                                     Prims.op_Negation uu___11) us2) in
+                           if uu___10 then need_unif else true
+                       | uu___4 -> need_unif in
                      let solve_head_then wl2 k =
-                       if need_unif
+                       if need_unif1
                        then k true wl2
                        else
                          (let uu___5 =
@@ -5901,7 +5929,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              uu___6 = FStar_Syntax_Util.Equal) in
                         if uu___5
                         then
-                          (if need_unif
+                          (if need_unif1
                            then
                              solve_t env1
                                (let uu___6 = problem in
@@ -5949,7 +5977,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                         FStar_Pervasives_Native.None) ->
                                          let mk_sub_probs wl2 =
                                            let argp =
-                                             if need_unif
+                                             if need_unif1
                                              then
                                                FStar_List.zip
                                                  ((head1,
@@ -10993,37 +11021,45 @@ let (try_teq :
     fun env ->
       fun t1 ->
         fun t2 ->
-          (let uu___1 =
-             FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-               (FStar_Options.Other "Rel") in
-           if uu___1
-           then
-             let uu___2 = FStar_Syntax_Print.term_to_string t1 in
-             let uu___3 = FStar_Syntax_Print.term_to_string t2 in
-             FStar_Util.print2 "try_teq of %s and %s {\n" uu___2 uu___3
-           else ());
-          (let uu___1 =
-             let uu___2 = FStar_TypeChecker_Env.get_range env in
-             new_t_problem (empty_worklist env) env t1
-               FStar_TypeChecker_Common.EQ t2 FStar_Pervasives_Native.None
-               uu___2 in
-           match uu___1 with
-           | (prob, wl) ->
-               let g =
-                 let uu___2 =
-                   solve_and_commit env (singleton wl prob smt_ok)
-                     (fun uu___3 -> FStar_Pervasives_Native.None) in
-                 FStar_All.pipe_left (with_guard env prob) uu___2 in
-               ((let uu___3 =
-                   FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-                     (FStar_Options.Other "Rel") in
-                 if uu___3
-                 then
-                   let uu___4 =
-                     FStar_Common.string_of_option (guard_to_string env) g in
-                   FStar_Util.print1 "} res = %s\n" uu___4
-                 else ());
-                g))
+          let uu___ =
+            let uu___1 =
+              let uu___2 = FStar_TypeChecker_Env.current_module env in
+              FStar_Ident.string_of_lid uu___2 in
+            FStar_Pervasives_Native.Some uu___1 in
+          FStar_Profiling.profile
+            (fun uu___1 ->
+               (let uu___3 =
+                  FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+                    (FStar_Options.Other "Rel") in
+                if uu___3
+                then
+                  let uu___4 = FStar_Syntax_Print.term_to_string t1 in
+                  let uu___5 = FStar_Syntax_Print.term_to_string t2 in
+                  FStar_Util.print2 "try_teq of %s and %s {\n" uu___4 uu___5
+                else ());
+               (let uu___3 =
+                  let uu___4 = FStar_TypeChecker_Env.get_range env in
+                  new_t_problem (empty_worklist env) env t1
+                    FStar_TypeChecker_Common.EQ t2
+                    FStar_Pervasives_Native.None uu___4 in
+                match uu___3 with
+                | (prob, wl) ->
+                    let g =
+                      let uu___4 =
+                        solve_and_commit env (singleton wl prob smt_ok)
+                          (fun uu___5 -> FStar_Pervasives_Native.None) in
+                      FStar_All.pipe_left (with_guard env prob) uu___4 in
+                    ((let uu___5 =
+                        FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+                          (FStar_Options.Other "Rel") in
+                      if uu___5
+                      then
+                        let uu___6 =
+                          FStar_Common.string_of_option (guard_to_string env)
+                            g in
+                        FStar_Util.print1 "} res = %s\n" uu___6
+                      else ());
+                     g))) uu___ "FStar.TypeChecker.Rel.try_teq"
 let (teq :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
@@ -11123,68 +11159,76 @@ let (sub_comp :
   fun env ->
     fun c1 ->
       fun c2 ->
-        let rel =
-          if env.FStar_TypeChecker_Env.use_eq
-          then FStar_TypeChecker_Common.EQ
-          else FStar_TypeChecker_Common.SUB in
-        (let uu___1 =
-           FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-             (FStar_Options.Other "Rel") in
-         if uu___1
-         then
-           let uu___2 = FStar_Syntax_Print.comp_to_string c1 in
-           let uu___3 = FStar_Syntax_Print.comp_to_string c2 in
-           FStar_Util.print3 "sub_comp of %s --and-- %s --with-- %s\n" uu___2
-             uu___3
-             (if rel = FStar_TypeChecker_Common.EQ then "EQ" else "SUB")
-         else ());
-        (let uu___1 =
-           let uu___2 = FStar_TypeChecker_Env.get_range env in
-           new_problem (empty_worklist env) env c1 rel c2
-             FStar_Pervasives_Native.None uu___2 "sub_comp" in
-         match uu___1 with
-         | (prob, wl) ->
-             let wl1 =
-               let uu___2 = wl in
-               {
-                 attempting = (uu___2.attempting);
-                 wl_deferred = (uu___2.wl_deferred);
-                 wl_deferred_to_tac = (uu___2.wl_deferred_to_tac);
-                 ctr = (uu___2.ctr);
-                 defer_ok = (uu___2.defer_ok);
-                 smt_ok = (uu___2.smt_ok);
-                 umax_heuristic_ok = (uu___2.umax_heuristic_ok);
-                 tcenv = (uu___2.tcenv);
-                 wl_implicits = (uu___2.wl_implicits);
-                 repr_subcomp_allowed = true
-               } in
-             let prob1 = FStar_TypeChecker_Common.CProb prob in
-             (def_check_prob "sub_comp" prob1;
-              (let uu___3 =
-                 FStar_Util.record_time
-                   (fun uu___4 ->
-                      let uu___5 =
-                        solve_and_commit env (singleton wl1 prob1 true)
-                          (fun uu___6 -> FStar_Pervasives_Native.None) in
-                      FStar_All.pipe_left (with_guard env prob1) uu___5) in
-               match uu___3 with
-               | (r, ms) ->
-                   ((let uu___5 =
-                       FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-                         (FStar_Options.Other "RelBench") in
-                     if uu___5
-                     then
-                       let uu___6 = FStar_Syntax_Print.comp_to_string c1 in
-                       let uu___7 = FStar_Syntax_Print.comp_to_string c2 in
-                       let uu___8 = FStar_Util.string_of_int ms in
-                       FStar_Util.print4
-                         "sub_comp of %s --and-- %s --with-- %s --- solved in %s ms\n"
-                         uu___6 uu___7
-                         (if rel = FStar_TypeChecker_Common.EQ
-                          then "EQ"
-                          else "SUB") uu___8
-                     else ());
-                    r))))
+        let uu___ =
+          let uu___1 =
+            let uu___2 = FStar_TypeChecker_Env.current_module env in
+            FStar_Ident.string_of_lid uu___2 in
+          FStar_Pervasives_Native.Some uu___1 in
+        FStar_Profiling.profile
+          (fun uu___1 ->
+             let rel =
+               if env.FStar_TypeChecker_Env.use_eq
+               then FStar_TypeChecker_Common.EQ
+               else FStar_TypeChecker_Common.SUB in
+             (let uu___3 =
+                FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+                  (FStar_Options.Other "Rel") in
+              if uu___3
+              then
+                let uu___4 = FStar_Syntax_Print.comp_to_string c1 in
+                let uu___5 = FStar_Syntax_Print.comp_to_string c2 in
+                FStar_Util.print3 "sub_comp of %s --and-- %s --with-- %s\n"
+                  uu___4 uu___5
+                  (if rel = FStar_TypeChecker_Common.EQ then "EQ" else "SUB")
+              else ());
+             (let uu___3 =
+                let uu___4 = FStar_TypeChecker_Env.get_range env in
+                new_problem (empty_worklist env) env c1 rel c2
+                  FStar_Pervasives_Native.None uu___4 "sub_comp" in
+              match uu___3 with
+              | (prob, wl) ->
+                  let wl1 =
+                    let uu___4 = wl in
+                    {
+                      attempting = (uu___4.attempting);
+                      wl_deferred = (uu___4.wl_deferred);
+                      wl_deferred_to_tac = (uu___4.wl_deferred_to_tac);
+                      ctr = (uu___4.ctr);
+                      defer_ok = (uu___4.defer_ok);
+                      smt_ok = (uu___4.smt_ok);
+                      umax_heuristic_ok = (uu___4.umax_heuristic_ok);
+                      tcenv = (uu___4.tcenv);
+                      wl_implicits = (uu___4.wl_implicits);
+                      repr_subcomp_allowed = true
+                    } in
+                  let prob1 = FStar_TypeChecker_Common.CProb prob in
+                  (def_check_prob "sub_comp" prob1;
+                   (let uu___5 =
+                      FStar_Util.record_time
+                        (fun uu___6 ->
+                           let uu___7 =
+                             solve_and_commit env (singleton wl1 prob1 true)
+                               (fun uu___8 -> FStar_Pervasives_Native.None) in
+                           FStar_All.pipe_left (with_guard env prob1) uu___7) in
+                    match uu___5 with
+                    | (r, ms) ->
+                        ((let uu___7 =
+                            FStar_All.pipe_left
+                              (FStar_TypeChecker_Env.debug env)
+                              (FStar_Options.Other "RelBench") in
+                          if uu___7
+                          then
+                            let uu___8 = FStar_Syntax_Print.comp_to_string c1 in
+                            let uu___9 = FStar_Syntax_Print.comp_to_string c2 in
+                            let uu___10 = FStar_Util.string_of_int ms in
+                            FStar_Util.print4
+                              "sub_comp of %s --and-- %s --with-- %s --- solved in %s ms\n"
+                              uu___8 uu___9
+                              (if rel = FStar_TypeChecker_Common.EQ
+                               then "EQ"
+                               else "SUB") uu___10
+                          else ());
+                         r))))) uu___ "FStar.TypeChecker.Rel.sub_comp"
 let (solve_universe_inequalities' :
   FStar_Syntax_Unionfind.tx ->
     FStar_TypeChecker_Env.env ->
@@ -11366,99 +11410,109 @@ let (try_solve_deferred_constraints :
       fun deferred_to_tac_ok ->
         fun env ->
           fun g ->
-            let fail uu___ =
-              match uu___ with
-              | (d, s) ->
-                  let msg = explain env d s in
-                  FStar_Errors.raise_error
-                    (FStar_Errors.Fatal_ErrorInSolveDeferredConstraints, msg)
-                    (p_loc d) in
-            let wl =
-              let uu___ = wl_of_guard env g.FStar_TypeChecker_Common.deferred in
-              {
-                attempting = (uu___.attempting);
-                wl_deferred = (uu___.wl_deferred);
-                wl_deferred_to_tac = (uu___.wl_deferred_to_tac);
-                ctr = (uu___.ctr);
-                defer_ok;
-                smt_ok;
-                umax_heuristic_ok = (uu___.umax_heuristic_ok);
-                tcenv = (uu___.tcenv);
-                wl_implicits = (uu___.wl_implicits);
-                repr_subcomp_allowed = (uu___.repr_subcomp_allowed)
-              } in
-            (let uu___1 =
-               FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-                 (FStar_Options.Other "Rel") in
-             if uu___1
-             then
-               let uu___2 = FStar_Util.string_of_bool defer_ok in
-               let uu___3 = wl_to_string wl in
-               let uu___4 =
-                 FStar_Util.string_of_int
-                   (FStar_List.length g.FStar_TypeChecker_Common.implicits) in
-               FStar_Util.print3
-                 "Trying to solve carried problems (defer_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
-                 uu___2 uu___3 uu___4
-             else ());
-            (let g1 =
-               let uu___1 = solve_and_commit env wl fail in
-               match uu___1 with
-               | FStar_Pervasives_Native.Some
-                   (uu___2::uu___3, uu___4, uu___5) when
-                   Prims.op_Negation defer_ok ->
-                   failwith
-                     "Impossible: Unexpected deferred constraints remain"
-               | FStar_Pervasives_Native.Some (deferred, defer_to_tac, imps)
-                   ->
-                   let uu___2 = g in
+            let uu___ =
+              let uu___1 =
+                let uu___2 = FStar_TypeChecker_Env.current_module env in
+                FStar_Ident.string_of_lid uu___2 in
+              FStar_Pervasives_Native.Some uu___1 in
+            FStar_Profiling.profile
+              (fun uu___1 ->
+                 let fail uu___2 =
+                   match uu___2 with
+                   | (d, s) ->
+                       let msg = explain env d s in
+                       FStar_Errors.raise_error
+                         (FStar_Errors.Fatal_ErrorInSolveDeferredConstraints,
+                           msg) (p_loc d) in
+                 let wl =
+                   let uu___2 =
+                     wl_of_guard env g.FStar_TypeChecker_Common.deferred in
                    {
-                     FStar_TypeChecker_Common.guard_f =
-                       (uu___2.FStar_TypeChecker_Common.guard_f);
-                     FStar_TypeChecker_Common.deferred_to_tac =
-                       (FStar_List.append
-                          g.FStar_TypeChecker_Common.deferred_to_tac
-                          defer_to_tac);
-                     FStar_TypeChecker_Common.deferred = deferred;
-                     FStar_TypeChecker_Common.univ_ineqs =
-                       (uu___2.FStar_TypeChecker_Common.univ_ineqs);
-                     FStar_TypeChecker_Common.implicits =
-                       (FStar_List.append
-                          g.FStar_TypeChecker_Common.implicits imps)
-                   }
-               | uu___2 ->
-                   failwith
-                     "Impossible: should have raised a failure already" in
-             solve_universe_inequalities env
-               g1.FStar_TypeChecker_Common.univ_ineqs;
-             (let g2 =
-                if deferred_to_tac_ok
-                then
-                  FStar_TypeChecker_DeferredImplicits.solve_deferred_to_tactic_goals
-                    env g1
-                else g1 in
-              (let uu___3 =
-                 FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-                   (FStar_Options.Other "ResolveImplicitsHook") in
-               if uu___3
-               then
-                 let uu___4 = guard_to_string env g2 in
-                 FStar_Util.print1
-                   "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s\n"
-                   uu___4
-               else ());
-              (let uu___3 = g2 in
-               {
-                 FStar_TypeChecker_Common.guard_f =
-                   (uu___3.FStar_TypeChecker_Common.guard_f);
-                 FStar_TypeChecker_Common.deferred_to_tac =
-                   (uu___3.FStar_TypeChecker_Common.deferred_to_tac);
-                 FStar_TypeChecker_Common.deferred =
-                   (uu___3.FStar_TypeChecker_Common.deferred);
-                 FStar_TypeChecker_Common.univ_ineqs = ([], []);
-                 FStar_TypeChecker_Common.implicits =
-                   (uu___3.FStar_TypeChecker_Common.implicits)
-               })))
+                     attempting = (uu___2.attempting);
+                     wl_deferred = (uu___2.wl_deferred);
+                     wl_deferred_to_tac = (uu___2.wl_deferred_to_tac);
+                     ctr = (uu___2.ctr);
+                     defer_ok;
+                     smt_ok;
+                     umax_heuristic_ok = (uu___2.umax_heuristic_ok);
+                     tcenv = (uu___2.tcenv);
+                     wl_implicits = (uu___2.wl_implicits);
+                     repr_subcomp_allowed = (uu___2.repr_subcomp_allowed)
+                   } in
+                 (let uu___3 =
+                    FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+                      (FStar_Options.Other "Rel") in
+                  if uu___3
+                  then
+                    let uu___4 = FStar_Util.string_of_bool defer_ok in
+                    let uu___5 = wl_to_string wl in
+                    let uu___6 =
+                      FStar_Util.string_of_int
+                        (FStar_List.length
+                           g.FStar_TypeChecker_Common.implicits) in
+                    FStar_Util.print3
+                      "Trying to solve carried problems (defer_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
+                      uu___4 uu___5 uu___6
+                  else ());
+                 (let g1 =
+                    let uu___3 = solve_and_commit env wl fail in
+                    match uu___3 with
+                    | FStar_Pervasives_Native.Some
+                        (uu___4::uu___5, uu___6, uu___7) when
+                        Prims.op_Negation defer_ok ->
+                        failwith
+                          "Impossible: Unexpected deferred constraints remain"
+                    | FStar_Pervasives_Native.Some
+                        (deferred, defer_to_tac, imps) ->
+                        let uu___4 = g in
+                        {
+                          FStar_TypeChecker_Common.guard_f =
+                            (uu___4.FStar_TypeChecker_Common.guard_f);
+                          FStar_TypeChecker_Common.deferred_to_tac =
+                            (FStar_List.append
+                               g.FStar_TypeChecker_Common.deferred_to_tac
+                               defer_to_tac);
+                          FStar_TypeChecker_Common.deferred = deferred;
+                          FStar_TypeChecker_Common.univ_ineqs =
+                            (uu___4.FStar_TypeChecker_Common.univ_ineqs);
+                          FStar_TypeChecker_Common.implicits =
+                            (FStar_List.append
+                               g.FStar_TypeChecker_Common.implicits imps)
+                        }
+                    | uu___4 ->
+                        failwith
+                          "Impossible: should have raised a failure already" in
+                  solve_universe_inequalities env
+                    g1.FStar_TypeChecker_Common.univ_ineqs;
+                  (let g2 =
+                     if deferred_to_tac_ok
+                     then
+                       FStar_TypeChecker_DeferredImplicits.solve_deferred_to_tactic_goals
+                         env g1
+                     else g1 in
+                   (let uu___5 =
+                      FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+                        (FStar_Options.Other "ResolveImplicitsHook") in
+                    if uu___5
+                    then
+                      let uu___6 = guard_to_string env g2 in
+                      FStar_Util.print1
+                        "ResolveImplicitsHook: Solved deferred to tactic goals, remaining guard is\n%s\n"
+                        uu___6
+                    else ());
+                   (let uu___5 = g2 in
+                    {
+                      FStar_TypeChecker_Common.guard_f =
+                        (uu___5.FStar_TypeChecker_Common.guard_f);
+                      FStar_TypeChecker_Common.deferred_to_tac =
+                        (uu___5.FStar_TypeChecker_Common.deferred_to_tac);
+                      FStar_TypeChecker_Common.deferred =
+                        (uu___5.FStar_TypeChecker_Common.deferred);
+                      FStar_TypeChecker_Common.univ_ineqs = ([], []);
+                      FStar_TypeChecker_Common.implicits =
+                        (uu___5.FStar_TypeChecker_Common.implicits)
+                    })))) uu___
+              "FStar.TypeChecker.Rel.try_solve_deferred_constraints"
 let (solve_deferred_constraints :
   FStar_TypeChecker_Env.env ->
     FStar_TypeChecker_Common.guard_t -> FStar_TypeChecker_Common.guard_t)
@@ -12396,46 +12450,58 @@ let (check_subtyping :
   fun env ->
     fun t1 ->
       fun t2 ->
-        (let uu___1 =
-           FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-             (FStar_Options.Other "Rel") in
-         if uu___1
-         then
-           let uu___2 = FStar_TypeChecker_Normalize.term_to_string env t1 in
-           let uu___3 = FStar_TypeChecker_Normalize.term_to_string env t2 in
-           FStar_Util.print2 "check_subtyping of %s and %s\n" uu___2 uu___3
-         else ());
-        (let uu___1 =
-           new_t_prob (empty_worklist env) env t1
-             FStar_TypeChecker_Common.SUB t2 in
-         match uu___1 with
-         | (prob, x, wl) ->
-             let g =
-               let uu___2 =
-                 solve_and_commit env (singleton wl prob true)
-                   (fun uu___3 -> FStar_Pervasives_Native.None) in
-               FStar_All.pipe_left (with_guard env prob) uu___2 in
-             ((let uu___3 =
-                 (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
-                    (FStar_Options.Other "Rel"))
-                   && (FStar_Util.is_some g) in
-               if uu___3
-               then
-                 let uu___4 =
-                   FStar_TypeChecker_Normalize.term_to_string env t1 in
-                 let uu___5 =
-                   FStar_TypeChecker_Normalize.term_to_string env t2 in
-                 let uu___6 =
-                   let uu___7 = FStar_Util.must g in
-                   guard_to_string env uu___7 in
-                 FStar_Util.print3
-                   "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
-                   uu___4 uu___5 uu___6
-               else ());
-              (match g with
-               | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-               | FStar_Pervasives_Native.Some g1 ->
-                   FStar_Pervasives_Native.Some (x, g1))))
+        let uu___ =
+          let uu___1 =
+            let uu___2 = FStar_TypeChecker_Env.current_module env in
+            FStar_Ident.string_of_lid uu___2 in
+          FStar_Pervasives_Native.Some uu___1 in
+        FStar_Profiling.profile
+          (fun uu___1 ->
+             (let uu___3 =
+                FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+                  (FStar_Options.Other "Rel") in
+              if uu___3
+              then
+                let uu___4 =
+                  FStar_TypeChecker_Normalize.term_to_string env t1 in
+                let uu___5 =
+                  FStar_TypeChecker_Normalize.term_to_string env t2 in
+                FStar_Util.print2 "check_subtyping of %s and %s\n" uu___4
+                  uu___5
+              else ());
+             (let uu___3 =
+                new_t_prob (empty_worklist env) env t1
+                  FStar_TypeChecker_Common.SUB t2 in
+              match uu___3 with
+              | (prob, x, wl) ->
+                  let g =
+                    let uu___4 =
+                      solve_and_commit env (singleton wl prob true)
+                        (fun uu___5 -> FStar_Pervasives_Native.None) in
+                    FStar_All.pipe_left (with_guard env prob) uu___4 in
+                  ((let uu___5 =
+                      (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env)
+                         (FStar_Options.Other "Rel"))
+                        && (FStar_Util.is_some g) in
+                    if uu___5
+                    then
+                      let uu___6 =
+                        FStar_TypeChecker_Normalize.term_to_string env t1 in
+                      let uu___7 =
+                        FStar_TypeChecker_Normalize.term_to_string env t2 in
+                      let uu___8 =
+                        let uu___9 = FStar_Util.must g in
+                        guard_to_string env uu___9 in
+                      FStar_Util.print3
+                        "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
+                        uu___6 uu___7 uu___8
+                    else ());
+                   (match g with
+                    | FStar_Pervasives_Native.None ->
+                        FStar_Pervasives_Native.None
+                    | FStar_Pervasives_Native.Some g1 ->
+                        FStar_Pervasives_Native.Some (x, g1))))) uu___
+          "FStar.TypeChecker.Rel.check_subtyping"
 let (get_subtyping_predicate :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
