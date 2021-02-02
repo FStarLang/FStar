@@ -1111,10 +1111,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let env, decls2 = BU.fold_map encode_action env ed.actions in
             List.flatten decls2, env
 
-     | Sig_declare_typ(lid, _, _)
-       when (lid_equals lid Const.precedes_lid) ||
-            (lid_equals lid Const.lex_eq_lid) ->
-        //precedes and lex_eq are added in the prelude, see FStar.SMTEncoding.Term.fs
+     | Sig_declare_typ(lid, _, _) when (lid_equals lid Const.precedes_lid) ->
+        //precedes is added in the prelude, see FStar.SMTEncoding.Term.fs
         let tname, ttok, env = new_term_constant_and_tok_from_lid env lid 4 in
         [], env
 

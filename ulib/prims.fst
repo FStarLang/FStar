@@ -219,15 +219,6 @@ type l_ITE (p: logical) (q: logical) (r: logical) : logical = (p ==> q) /\ (~p =
 assume
 type precedes : #a: Type -> #b: Type -> a -> b -> Type0
 
-(** F* allows writing [decreases] clauses with recursive functions,
-    as the user-provided semantic termination metric.
-
-    The abstract [lex_eq] predicate serves as the notion of equality
-    when verifying these termination metrics *)
-    
-assume
-val lex_eq : #a:Type -> #b:Type -> a -> b -> Type0
-
 
 (** Within the SMT encoding, we have a relation [(HasType e t)]
     asserting that (the encoding of) [e] has a type corresponding to

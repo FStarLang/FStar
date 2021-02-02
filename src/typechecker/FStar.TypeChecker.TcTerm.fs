@@ -386,12 +386,11 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                 | _ -> bs |> filter_types_and_functions in
 
       let precedes_t = TcUtil.fvar_const env Const.precedes_lid in
-      let lex_eq_t = TcUtil.fvar_const env Const.lex_eq_lid in
       let rec mk_precedes_lex l l_prev =
         (*
          * AR: aux assumes that l and l_prev have the same lengths
          *     Given l = [a; b; c], l_prev = [d; e; f], it builds:
-         *       a << d \/ (lex_eq a d /\ b << e) \/ (lex_eq a d /\ lex_eq b e /\ c << f
+         *       a << d \/ (eq3 a d /\ b << e) \/ (eq3 a d /\ eq3 b e /\ c << f
          *     We build an "untyped" term here, the caller will typecheck it properly
          *)
         let rec aux l l_prev =
@@ -401,8 +400,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
           | [x], [x_prev] -> mk_Tm_app precedes_t [as_arg x; as_arg x_prev] r
           | x::tl, x_prev::tl_prev ->
             mk_disj (mk_Tm_app precedes_t [as_arg x; as_arg x_prev] r)
-                    (mk_conj (mk_Tm_app lex_eq_t [as_arg x; as_arg x_prev] r)
-                             (aux tl tl_prev)) in
+                    (mk_conj (mk_untyped_eq3 x x_prev) (aux tl tl_prev)) in
 
         (* Call aux with equal sized prefixes of l and l_prev *)
         let l, l_prev =
