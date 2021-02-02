@@ -219,7 +219,6 @@ type l_ITE (p: logical) (q: logical) (r: logical) : logical = (p ==> q) /\ (~p =
 assume
 type precedes : #a: Type -> #b: Type -> a -> b -> Type0
 
-
 (** Within the SMT encoding, we have a relation [(HasType e t)]
     asserting that (the encoding of) [e] has a type corresponding to
     (the encoding of) [t].
