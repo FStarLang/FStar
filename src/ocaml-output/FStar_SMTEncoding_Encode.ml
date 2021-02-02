@@ -4130,9 +4130,7 @@ and (encode_sigelt' :
               match uu___3 with
               | (env1, decls2) -> ((FStar_List.flatten decls2), env1))
        | FStar_Syntax_Syntax.Sig_declare_typ (lid, uu___1, uu___2) when
-           (FStar_Ident.lid_equals lid FStar_Parser_Const.precedes_lid) ||
-             (FStar_Ident.lid_equals lid FStar_Parser_Const.lex_eq_lid)
-           ->
+           FStar_Ident.lid_equals lid FStar_Parser_Const.precedes_lid ->
            let uu___3 =
              FStar_SMTEncoding_Env.new_term_constant_and_tok_from_lid env lid
                (Prims.of_int (4)) in

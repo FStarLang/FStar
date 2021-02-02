@@ -1042,9 +1042,6 @@ let (guard_letrecs :
             let precedes_t =
               FStar_TypeChecker_Util.fvar_const env1
                 FStar_Parser_Const.precedes_lid in
-            let lex_eq_t =
-              FStar_TypeChecker_Util.fvar_const env1
-                FStar_Parser_Const.lex_eq_lid in
             let rec mk_precedes_lex l l_prev =
               let rec aux l1 l_prev1 =
                 match (l1, l_prev1) with
@@ -1078,14 +1075,7 @@ let (guard_letrecs :
                         uu___2 :: uu___3 in
                       FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___1 r in
                     let uu___1 =
-                      let uu___2 =
-                        let uu___3 =
-                          let uu___4 = FStar_Syntax_Syntax.as_arg x in
-                          let uu___5 =
-                            let uu___6 = FStar_Syntax_Syntax.as_arg x_prev in
-                            [uu___6] in
-                          uu___4 :: uu___5 in
-                        FStar_Syntax_Syntax.mk_Tm_app lex_eq_t uu___3 r in
+                      let uu___2 = FStar_Syntax_Util.mk_untyped_eq3 x x_prev in
                       let uu___3 = aux tl tl_prev in
                       FStar_Syntax_Util.mk_conj uu___2 uu___3 in
                     FStar_Syntax_Util.mk_disj uu___ uu___1 in
