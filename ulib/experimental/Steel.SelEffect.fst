@@ -805,20 +805,42 @@ let extract_info0 (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
 let extract_info p vp fact l = SteelSel?.reflect (extract_info0 p vp fact l)
 
 let reveal_star0 (p1 p2:vprop)
- : repr unit (p1 `star` p2) (fun _ -> p1 `star` p2)
+  : repr unit (p1 `star` p2) (fun _ -> p1 `star` p2)
    (fun _ -> True)
    (fun h0 _ h1 ->
-     h0 (p1 `star` p2) == (h1 p1, h1 p2) /\
-     h1 (p1 `star` p2) == (h0 p1, h0 p2)
+     h0 p1 == h1 p1 /\ h0 p2 == h1 p2 /\
+     h0 (p1 `star` p2) == (h0 p1, h0 p2) /\
+     h1 (p1 `star` p2) == (h1 p1, h1 p2)
    )
  = fun frame ->
      let m = nmst_get() in
+     let h0 = mk_rmem (p1 `star` p2) (core_mem m) in
      reveal_mk_rmem (p1 `star` p2) m (p1 `star` p2);
      reveal_mk_rmem (p1 `star` p2) m p1;
      reveal_mk_rmem (p1 `star` p2) m p2
 
 let reveal_star p1 p2 = SteelSel?.reflect (reveal_star0 p1 p2)
 
+let reveal_star_30 (p1 p2 p3:vprop)
+ : repr unit (p1 `star` p2 `star` p3) (fun _ -> p1 `star` p2 `star` p3)
+   (requires fun _ -> True)
+   (ensures fun h0 _ h1 ->
+     can_be_split (p1 `star` p2 `star` p3) p1 /\
+     can_be_split (p1 `star` p2 `star` p3) p2 /\
+     h0 p1 == h1 p1 /\ h0 p2 == h1 p2 /\ h0 p3 == h1 p3 /\
+     h0 (p1 `star` p2 `star` p3) == ((h0 p1, h0 p2), h0 p3) /\
+     h1 (p1 `star` p2 `star` p3) == ((h1 p1, h1 p2), h1 p3)
+   )
+ = fun frame ->
+     let m = nmst_get () in
+     let h0 = mk_rmem (p1 `star` p2 `star` p3) (core_mem m) in
+     can_be_split_trans (p1 `star` p2 `star` p3) (p1 `star` p2) p1;
+     can_be_split_trans (p1 `star` p2 `star` p3) (p1 `star` p2) p2;
+     reveal_mk_rmem (p1 `star` p2 `star` p3) m (p1 `star` p2 `star` p3);
+     reveal_mk_rmem (p1 `star` p2 `star` p3) m (p1 `star` p2);
+     reveal_mk_rmem (p1 `star` p2 `star` p3) m p3
+
+let reveal_star_3 p1 p2 p3 = SteelSel?.reflect (reveal_star_30 p1 p2 p3)
 
 (* Simple Reference library, only full permissions.
    AF: Permissions would likely need to be an index of the vprop ptr.
