@@ -49,11 +49,3 @@ val length (#a:Type0) (p:t a)
              (ensures fun h0 x h1 ->
                v_llist p h0 == v_llist p h1 /\
                L.length (v_llist p h0) == x)
-
-
-val append (#a:Type0) (p:t a) (x: a)
-  : SteelSel (t a) (llist p) (fun n -> llist n)
-             (requires fun _ -> True)
-             (ensures fun h0 n h1 ->
-               let l = v_llist n h1 in
-               L.append (v_llist p h0) [x] == l)
