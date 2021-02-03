@@ -166,11 +166,13 @@ let intro_cons_lemma_aux (#a:Type0) (ptr1 ptr2:t a)
   (requires interp (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l) m /\
     next x == ptr2)
   (ensures interp (llist_sl' ptr1 (x::l)) m)
-  = // AF: Need this as a lemma from standard library: interp (pts_to r) ==> r =!= null
-    affine_star (R.pts_to ptr1 full_perm x) (llist_sl' ptr2 l) m;
+  = affine_star (R.pts_to ptr1 full_perm x) (llist_sl' ptr2 l) m;
     R.pts_to_not_null ptr1 full_perm x m;
     emp_unit (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l);
-    pure_star_interp (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l) (ptr1 =!= null_llist) m
+    pure_star_interp
+      (R.pts_to ptr1 full_perm x `Mem.star` llist_sl' ptr2 l)
+      (ptr1 =!= null_llist)
+      m
 
 let intro_cons_lemma (#a:Type0) (ptr1 ptr2:t a)
   (x: cell a) (l:list a) (m:mem) : Lemma
