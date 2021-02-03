@@ -65,6 +65,9 @@ let can_be_split_forall (#a:Type) (t1 t2:post_t a) =
 
 val equiv_forall (#a:Type) (t1 t2:post_t a) : Type0
 
+val equiv_forall_refl (#a:Type) (t:post_t a)
+  : Lemma (t `equiv_forall` t)
+
 val equiv_forall_split (#a:Type) (t1 t2:post_t a)
   : Lemma (requires t1 `equiv_forall` t2)
           (ensures can_be_split_forall t1 t2 /\ can_be_split_forall t2 t1)
@@ -1092,40 +1095,9 @@ let solve_equiv_forall (args:list argv) : Tac bool =
       let rnbr = slterm_nbr_uvars t2 in
       if lnbr + rnbr <= 1 then (
         let open FStar.Algebra.CommMonoid.Equiv in
-        focus (fun _ -> apply_lemma (`equiv_forall_elim);
-                      match goals () with
-                      | [] -> ()
-                      | _ ->
-                        dismiss_slprops ();
-                        ignore (forall_intro());
-                        // TODO: Do this count in a better way
-                        if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
-                        or_else (fun _ ->  flip()) (fun _ -> ());
-                        norm [delta_only [
-                                `%__proj__CM__item__unit;
-                                `%__proj__CM__item__mult;
-                                `%Steel.Memory.Tactics.rm;
-                                `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
-                                `%fst; `%snd];
-                              delta_attr [`%__reduce__];
-                              primops; iota; zeta];
-                        canon'());
-        true
-      ) else false
-
-  | _ -> false // Ill-formed can_be_split, should not happen
-
-
-let solve_can_be_split_post (args:list argv) : Tac bool =
-  match args with
-  | [_; _; (t1, _); (t2, _)] ->
-      let lnbr = slterm_nbr_uvars t1 in
-      let rnbr = slterm_nbr_uvars t2 in
-      if lnbr + rnbr <= 1 then (
-        let open FStar.Algebra.CommMonoid.Equiv in
-        focus (fun _ -> norm[];
-                      let g = _cur_goal () in
-                      ignore (forall_intro());
+        focus (fun _ ->
+          or_else (fun _ -> apply_lemma (`equiv_forall_refl))
+                  (fun _ ->
                       apply_lemma (`equiv_forall_elim);
                       match goals () with
                       | [] -> ()
@@ -1143,7 +1115,43 @@ let solve_can_be_split_post (args:list argv) : Tac bool =
                                 `%fst; `%snd];
                               delta_attr [`%__reduce__];
                               primops; iota; zeta];
-                        canon'());
+                        canon'()));
+        true
+      ) else false
+
+  | _ -> false // Ill-formed can_be_split, should not happen
+
+
+let solve_can_be_split_post (args:list argv) : Tac bool =
+  match args with
+  | [_; _; (t1, _); (t2, _)] ->
+      let lnbr = slterm_nbr_uvars t1 in
+      let rnbr = slterm_nbr_uvars t2 in
+      if lnbr + rnbr <= 1 then (
+        let open FStar.Algebra.CommMonoid.Equiv in
+        focus (fun _ -> norm[];
+                      let g = _cur_goal () in
+                      ignore (forall_intro());
+              or_else (fun _ -> apply_lemma (`equiv_forall_refl))
+                      (fun _ ->
+                      apply_lemma (`equiv_forall_elim);
+                      match goals () with
+                      | [] -> ()
+                      | _ ->
+                        dismiss_slprops ();
+                        ignore (forall_intro());
+                        // TODO: Do this count in a better way
+                        if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
+                        or_else (fun _ ->  flip()) (fun _ -> ());
+                        norm [delta_only [
+                                `%__proj__CM__item__unit;
+                                `%__proj__CM__item__mult;
+                                `%Steel.Memory.Tactics.rm;
+                                `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                                `%fst; `%snd];
+                              delta_attr [`%__reduce__];
+                              primops; iota; zeta];
+                        canon'()));
         true
       ) else false
 
