@@ -1,5 +1,5 @@
 [
-  "$˚∑,ÆÑ∞˚”æ\u000evÊÑ’Q",
+  "^@ØY\u0006\u001e≈\u001eçìg∞Có—’",
   [
     [
       "FStar.WellFounded.acc_inv",
@@ -11,16 +11,7 @@
         "subterm_ordering_FStar.WellFounded.AccIntro"
       ],
       0,
-      "d90d2285398101612fb6d170831cbc98"
-    ],
-    [
-      "FStar.WellFounded.apply",
-      1,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "023ef0c7ac67ad432921741a3dad8fea"
+      "a1aa3dff4392c65496f64076c7a5286e"
     ],
     [
       "FStar.WellFounded.fix_F",
@@ -33,10 +24,11 @@
         "equality_tok_Prims.LexTop@tok",
         "equation_FStar.WellFounded.acc_inv",
         "fuel_guarded_inversion_FStar.WellFounded.acc",
-        "subterm_ordering_FStar.WellFounded.AccIntro"
+        "token_correspondence_FStar.WellFounded.acc_inv",
+        "well_founded_ordering_on_comdain_FStar.WellFounded.AccIntro"
       ],
       0,
-      "0d925691130d1b02054542a3f071f1d9"
+      "30e4c50d34e4d0cc02557cb6cd5fd808"
     ]
   ]
 ]
