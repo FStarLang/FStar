@@ -335,6 +335,14 @@ effect MstTot
 let action_except (a:Type u#a) (except:inames) (expects:slprop) (provides: a -> slprop) =
   frame:slprop -> MstTot a except expects provides frame (fun _ -> True) (fun _ _ _ -> True)
 
+let action_except_full (a:Type u#a)
+  (except:inames)
+  (expects:slprop)
+  (provides: a -> slprop)
+  (req:mprop expects)
+  (ens:mprop2 expects provides)
+= frame:slprop -> MstTot a except expects provides frame req ens
+
 val sel_action (#a:Type u#1) (#pcm:_) (e:inames) (r:ref a pcm) (v0:erased a)
   : action_except (v:a{compatible pcm v0 v}) e (pts_to r v0) (fun _ -> pts_to r v0)
 
@@ -448,9 +456,11 @@ val frame (#a:Type)
           (#opened_invariants:inames)
           (#pre:slprop)
           (#post:a -> slprop)
+          (#req:mprop pre)
+          (#ens:mprop2 pre post)
           (frame:slprop)
-          ($f:action_except a opened_invariants pre post)
-  : action_except a opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
+          ($f:action_except_full a opened_invariants pre post req ens)
+  : action_except_full a opened_invariants (pre `star` frame) (fun x -> post x `star` frame) req ens
 
 val change_slprop (#opened_invariants:inames)
                   (p q:slprop)
