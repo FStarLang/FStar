@@ -386,21 +386,40 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                 | _ -> bs |> filter_types_and_functions in
 
       let precedes_t = TcUtil.fvar_const env Const.precedes_lid in
-      let rec mk_precedes_lex l l_prev =
+      let rec mk_precedes_lex env l l_prev : term =
         (*
          * AR: aux assumes that l and l_prev have the same lengths
          *     Given l = [a; b; c], l_prev = [d; e; f], it builds:
          *       a << d \/ (eq3 a d /\ b << e) \/ (eq3 a d /\ eq3 b e /\ c << f
          *     We build an "untyped" term here, the caller will typecheck it properly
          *)
-        let rec aux l l_prev =
+        let rec aux l l_prev : term =
+         let type_of (e1:term) (e2:term) : typ * typ =
+           let t1 = env.type_of_well_typed env e1 in
+           let t2 = env.type_of_well_typed env e2 in
+           U.unrefine t1, U.unrefine t2 in
+
           match l, l_prev with
           | [], [] ->
             mk_Tm_app precedes_t [as_arg S.unit_const; as_arg S.unit_const] r
-          | [x], [x_prev] -> mk_Tm_app precedes_t [as_arg x; as_arg x_prev] r
+          | [x], [x_prev] ->
+            let t_x, t_x_prev = type_of x x_prev in
+            mk_Tm_app precedes_t [
+              iarg t_x;
+              iarg t_x_prev;
+              as_arg x;
+              as_arg x_prev ] r
           | x::tl, x_prev::tl_prev ->
-            mk_disj (mk_Tm_app precedes_t [as_arg x; as_arg x_prev] r)
-                    (mk_conj (mk_untyped_eq3 x x_prev) (aux tl tl_prev)) in
+            let t_x, t_x_prev = type_of x x_prev in
+            let tm_precedes = mk_Tm_app precedes_t [
+              iarg t_x;
+              iarg t_x_prev;
+              as_arg x;
+              as_arg x_prev ] r in
+            let eq3_x_x_prev = mk_eq3_no_univ t_x t_x_prev x x_prev in
+
+            mk_disj tm_precedes
+                    (mk_conj eq3_x_x_prev (aux tl tl_prev)) in
 
         (* Call aux with equal sized prefixes of l and l_prev *)
         let l, l_prev =
@@ -427,7 +446,9 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
           then ({b with binder_bv=S.new_bv (Some (S.range_of_bv b.binder_bv)) b.binder_bv.sort})
           else b) in
         let dec = decreases_clause formals c in
-        let precedes = mk_precedes_lex dec previous_dec in
+        let precedes =
+          let env = Env.push_binders env formals in
+          mk_precedes_lex env dec previous_dec in
         let precedes = TcUtil.label "Could not prove termination of this recursive call" r precedes in
         let bs, ({binder_bv=last; binder_qual=imp}) = BU.prefix formals in
         let last = {last with sort=U.refine last precedes} in
@@ -439,7 +460,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
         l, t', u_names
       in
       letrecs |> List.map guard_one_letrec
-
+      
 let wrap_guard_with_tactic_opt topt g =
    match topt with
    | None -> g
