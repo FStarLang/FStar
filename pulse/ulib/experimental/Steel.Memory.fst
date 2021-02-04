@@ -1273,11 +1273,13 @@ let frame (#a:Type)
           (#opened_invariants:inames)
           (#pre:slprop)
           (#post:a -> slprop)
+          (#req:mprop pre)
+          (#ens:mprop2 pre post)
           (frame:slprop)
-          ($f:action_except a opened_invariants pre post)
+          ($f:action_except_full a opened_invariants pre post req ens)
           (frame0:slprop)
   : MstTot a opened_invariants (pre `star` frame) (fun x -> post x `star` frame) frame0
-           (fun _ -> True) (fun _ _ _ -> True)
+           req ens
   = let m0 : full_mem = NMSTTotal.get () in
     equiv_pqrs_p_qr_s pre frame frame0 (linv opened_invariants m0);
     assert (interp (pre `star` frame `star` frame0 `star` linv opened_invariants m0) m0);
