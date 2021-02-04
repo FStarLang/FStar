@@ -1216,6 +1216,8 @@ let mk_eq2 (u:universe) (t:typ) (e1:term) (e2:term) : term =
     mk (Tm_app(eq_inst, [iarg t; as_arg e1; as_arg e2])) (Range.union_ranges e1.pos e2.pos)
 
 let teq3 = fvar_const PC.eq3_lid
+let mk_eq3_no_univ t1 t2 e1 e2 =
+  mk (Tm_app(teq3, [iarg t1; iarg t2; as_arg e1; as_arg e2])) (Range.union_ranges e1.pos e2.pos)
 let mk_untyped_eq3 e1 e2 = mk (Tm_app(teq3, [as_arg e1; as_arg e2])) (Range.union_ranges e1.pos e2.pos)
 
 
