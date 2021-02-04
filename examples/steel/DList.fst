@@ -23,12 +23,25 @@ let new_dlist (#a:Type) (init:a)
     let pc = p, cell in
     pc
 
+let read_norefine (#a:Type)
+                  (#[@@framing_implicit] p:perm)
+                  (#[@@framing_implicit] v:Ghost.erased a)
+                  (r:ref a)
+  : Steel a (pts_to r p v) (fun x -> pts_to r p v)
+            (requires fun _ -> True)
+            (ensures fun _ x _ -> x == Ghost.reveal v)
+  = let x = read r in
+    change_slprop (pts_to r p (Ghost.hide x))
+                  (pts_to r p v)
+                  (fun _ -> ());
+    x
+
 let read_head (#a:_) (from0:t a) (ptr0:t a) (to0: t a)
               (hd:cell a)
               (tl:list (cell a))
   : Steel (cell a)
     (dlist from0 ptr0 to0 (hd::tl))
-    (fun v -> dlist from0 ptr0 to0 (v::tl))
+    (fun v -> dlist from0 ptr0 to0 (hd::tl))
     (requires fun _ ->
       True)
     (ensures fun _ v _ ->
@@ -37,14 +50,14 @@ let read_head (#a:_) (from0:t a) (ptr0:t a) (to0: t a)
      elim_dlist_cons from0 ptr0 to0 hd tl;
 
      //2: read the ptr0 to get cell0
-     let c0 = read ptr0 in
+     let c0 = read_norefine ptr0 in
 
-     change_slprop (dlist ptr0 (next hd) to0 tl)
-                   (dlist ptr0 (next c0) to0 tl)
-                   (fun _ -> ());
+     // change_slprop (dlist ptr0 (next hd) to0 tl)
+     //               (dlist ptr0 (next c0) to0 tl)
+     //               (fun _ -> ());
 
      //3: fold it back into a dlist
-     intro_dlist_cons from0 ptr0 to0 c0 tl;
+     intro_dlist_cons from0 ptr0 to0 hd tl;
 
      c0
 
@@ -168,46 +181,45 @@ let rec concat (#a:Type)
                (ptr0:t a)
                (ptr1:t a)
    : SteelT (list (cell a))
-     (dlist from0 ptr0 to0 (hd0::tl0) `star`
-      dlist from1 ptr1 null_dlist (hd1::tl1))
-     (fun l ->
-       dlist from0 ptr0 null_dlist l)
+           (dlist from0 ptr0 to0 (hd0::tl0) `star`
+            dlist from1 ptr1 null_dlist (hd1::tl1))
+           (fun l -> dlist from0 ptr0 null_dlist l)
    =
-     let to1 = null_dlist #a in
+//     let to1 = null_dlist #a in
 
      //1: read the ptr0 to get cell0
 
      let c0 = read_head from0 ptr0 to0 hd0 tl0 in
 
      //2: unfold dlist to dlist cons
-     elim_dlist_cons from0 ptr0 to0 c0 tl0;
+     elim_dlist_cons from0 ptr0 to0 hd0 tl0;
 
      let b = ptr_eq (next c0) to0 in
 
      change_slprop
-        (pts_to ptr0 full_perm c0 `star`
-         dlist ptr0 (next c0) to0 tl0 `star`
+        (pts_to ptr0 full_perm hd0 `star`
+         dlist ptr0 (next hd0) to0 tl0 `star`
          dlist from1 ptr1 null_dlist (hd1::tl1))
-        (pts_to ptr0 full_perm c0 `star`
+        (pts_to ptr0 full_perm hd0 `star`
          (if b
           then dlist ptr0 to0 to0 tl0
-          else dlist ptr0 (next c0) to0 tl0) `star`
+          else dlist ptr0 (next hd0) to0 tl0) `star`
          dlist from1 ptr1 null_dlist (hd1::tl1))
         (fun _ -> ());
      cond b
        (fun b' ->
-         pts_to ptr0 full_perm c0 `star`
+         pts_to ptr0 full_perm hd0 `star`
          (if b'
           then dlist ptr0 to0 to0 tl0
-          else dlist ptr0 (next c0) to0 tl0) `star`
-          dlist from1 ptr1 null_dlist (hd1::tl1))
+          else dlist ptr0 (next hd0) to0 tl0) `star`
+               dlist from1 ptr1 null_dlist (hd1::tl1))
        (fun b l -> dlist from0 ptr0 null_dlist l)
        (fun _ ->
-         concat_nil_l from0 ptr0 to0 c0 tl0
+         concat_nil_l from0 ptr0 to0 hd0 tl0
                       from1 ptr1 hd1 tl1)
        (fun _ ->
          concat_cons (concat #a)
-                     from0 ptr0 to0 c0 tl0
+                     from0 ptr0 to0 hd0 tl0
                      from1 ptr1 hd1 tl1)
 
 let snoc (#a:Type)
@@ -261,8 +273,7 @@ let rec concat_alt (#a:Type)
    : SteelT (list (cell a))
      (dlist from0 ptr0 to0 (hd0::tl0) `star`
       dlist from1 ptr1 null_dlist (hd1::tl1))
-     (fun l ->
-       dlist from0 ptr0 null_dlist l)
+     (fun l -> dlist from0 ptr0 null_dlist l)
    =
      dlist_not_null ptr0;
 
@@ -270,7 +281,7 @@ let rec concat_alt (#a:Type)
      let c0 = read_head from0 ptr0 to0 hd0 tl0 in
 
      //2: unfold dlist to dlist cons
-     elim_dlist_cons from0 ptr0 to0 c0 tl0;
+     elim_dlist_cons from0 ptr0 to0 hd0 tl0;
 
      let b = ptr_eq (next c0) to0 in
 
@@ -278,7 +289,7 @@ let rec concat_alt (#a:Type)
      then (
        (* refine just a small part of the context assertion based on b *)
        change_slprop
-         (dlist ptr0 (next c0) to0 tl0)
+         (dlist ptr0 (next hd0) to0 tl0)
          (dlist ptr0 to0 to0 tl0)
          (fun _ -> ());
 
@@ -301,12 +312,48 @@ let rec concat_alt (#a:Type)
        :: set_prev hd1 ptr0
        :: tl1
      ) else (
-       invert_dlist_cons_neq ptr0 (next c0) to0 tl0;
-       let Cons hd0 tl0' = tl0 in
-       change_slprop (dlist ptr0 (next c0) to0 tl0)
-                     (dlist ptr0 (next c0) to0 (hd0 :: tl0'))
+       invert_dlist_cons_neq ptr0 (next hd0) to0 tl0;
+       let Cons hd0' tl0' = tl0 in
+       change_slprop (dlist ptr0 (next hd0) to0 tl0)
+                     (dlist ptr0 (next c0) to0 (hd0' :: tl0'))
                      (fun _ -> ());
        let l = concat_alt (next c0) ptr1 in
        intro_dlist_cons from0 ptr0 _ _ (next c0) _;
-       c0::l
+       hd0::l
+     )
+
+let rec length (#a:Type)
+               (#[@@framing_implicit] from:t a)
+               (#[@@framing_implicit] to: t a)
+               (#[@@framing_implicit] rep:list (cell a))
+               (p:t a)
+   : Steel nat
+      (dlist from p to rep)
+      (fun _ -> dlist from p to rep)
+      (requires fun _ -> True)
+      (ensures fun _ n _ -> n == List.Tot.length rep)
+   = let b = ptr_eq p to in
+     if b
+     then (
+       invert_dlist_nil_eq from p to rep;
+       U.elim_pure (rep == []);
+       change_slprop (dlist from to to []) (dlist from p to rep) (fun _ -> ());
+       0
+     )
+     else (
+       invert_dlist_cons_neq from p to rep;
+       let hd :: tl = rep in
+       change_slprop (dlist from p to rep) (dlist from p to (hd :: tl)) (fun _ -> ());
+       let p_val = read_head from p to hd tl in
+       elim_dlist_cons from p to hd tl;
+       change_slprop (dlist p (next hd) to tl)
+                     (dlist p (next p_val) to tl)
+                     (fun _ -> ());
+       let n = length (next p_val) in
+       change_slprop (dlist p (next p_val) to tl)
+                     (dlist p (next hd) to tl)
+                     (fun _ -> ());
+       intro_dlist_cons from p to hd (next hd) tl;
+       change_slprop (dlist from p to (hd :: tl)) (dlist from p to rep) (fun _ -> ());
+       1 + n
      )
