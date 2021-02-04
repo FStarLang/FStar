@@ -384,6 +384,7 @@ val change_slprop (#opened_invariants:inames)
                   (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
   : SteelAtomic unit opened_invariants unobservable p (fun _ -> q)
 
+
 // Some utilities
 let return_atomic #a #opened_invariants #p (x:a)
   : SteelAtomic a opened_invariants unobservable (p x) p
@@ -442,3 +443,8 @@ val elim_pure (#uses:_) (p:prop)
   : SteelAtomic (_:unit{p}) uses unobservable
                 (pure p)
                 (fun _ -> emp)
+
+let lift_lemma #uses (p:slprop) (q:prop) (l:(hmem p -> Lemma q))
+  : SteelAtomic (u:unit{q}) uses unobservable p (fun _ -> p)
+  = change_slprop p (p `star` pure q) (fun m -> l m; Steel.Memory.pure_star_interp p q m; Steel.Memory.emp_unit p);
+    elim_pure q
