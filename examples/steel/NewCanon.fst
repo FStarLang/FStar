@@ -108,39 +108,39 @@ let swap2 (#a:Type) (r0 r1:reference a) (v0 v1:erased a)
 
 open Steel.Effect.Atomic
 
-assume val alloc2 (x:int)  : SteelAtomic ref Set.empty observable emp (fun y -> ptr y)
-assume val free2 (r:ref) : SteelAtomic unit Set.empty observable (ptr r) (fun _ -> emp)
-assume val ghost_read (r:ref) : SteelAtomic int Set.empty unobservable (ptr r) (fun _ -> ptr r)
+assume val alloc2 (x:int)  : SteelAtomicT ref Set.empty observable emp (fun y -> ptr y)
+assume val free2 (r:ref) : SteelAtomicT unit Set.empty observable (ptr r) (fun _ -> emp)
+assume val ghost_read (r:ref) : SteelAtomicT int Set.empty unobservable (ptr r) (fun _ -> ptr r)
 
-let test21 (x:int) : SteelAtomic ref Set.empty observable emp ptr =
+let test21 (x:int) : SteelAtomicT ref Set.empty observable emp ptr =
   let y = alloc2 x in y
 
 [@expect_failure]
 // Cannot have two observable atomic computations
-let test22 (x:int) : SteelAtomic unit Set.empty observable emp (fun _ -> emp) =
+let test22 (x:int) : SteelAtomicT unit Set.empty observable emp (fun _ -> emp) =
   let y = alloc2 x in
   free2 y
 
-let test23 (r:ref) : SteelAtomic int Set.empty unobservable (ptr r) (fun _ -> ptr r)
+let test23 (r:ref) : SteelAtomicT int Set.empty unobservable (ptr r) (fun _ -> ptr r)
   = let x = ghost_read r in
     let y = ghost_read r in
     x
 
-let test24 (r:ref) : SteelAtomic ref Set.empty observable (ptr r) (fun y -> ptr r `star` ptr y)
+let test24 (r:ref) : SteelAtomicT ref Set.empty observable (ptr r) (fun y -> ptr r `star` ptr y)
   = let y = alloc2 0 in
     y
 
-let test25 (r1 r2:ref) : SteelAtomic ref Set.empty observable
+let test25 (r1 r2:ref) : SteelAtomicT ref Set.empty observable
     (ptr r1 `star` ptr r2) (fun y -> ptr r1 `star` ptr r2 `star` ptr y)
   = let y = alloc2 0 in
     y
 
 // Exercising subcomp on observability
-let test26 (r1 r2:ref) : SteelAtomic unit Set.empty observable (ptr r1 `star` ptr r2) (fun _ -> ptr r2 `star` ptr r1)
+let test26 (r1 r2:ref) : SteelAtomicT unit Set.empty observable (ptr r1 `star` ptr r2) (fun _ -> ptr r2 `star` ptr r1)
   = let _ = ghost_read r1 in
     ()
 
-let test27 (a:unit) : SteelAtomic ref Set.empty observable emp (fun y -> ptr y) =
+let test27 (a:unit) : SteelAtomicT ref Set.empty observable emp (fun y -> ptr y) =
   let x = alloc2 0 in
   let v = ghost_read x in
   x
