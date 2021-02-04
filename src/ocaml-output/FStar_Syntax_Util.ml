@@ -2282,6 +2282,36 @@ let (mk_eq2 :
               e2.FStar_Syntax_Syntax.pos in
           FStar_Syntax_Syntax.mk uu___ uu___1
 let (teq3 : FStar_Syntax_Syntax.term) = fvar_const FStar_Parser_Const.eq3_lid
+let (mk_eq3_no_univ :
+  FStar_Syntax_Syntax.term ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+          FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+  =
+  fun t1 ->
+    fun t2 ->
+      fun e1 ->
+        fun e2 ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = FStar_Syntax_Syntax.iarg t1 in
+                let uu___4 =
+                  let uu___5 = FStar_Syntax_Syntax.iarg t2 in
+                  let uu___6 =
+                    let uu___7 = FStar_Syntax_Syntax.as_arg e1 in
+                    let uu___8 =
+                      let uu___9 = FStar_Syntax_Syntax.as_arg e2 in [uu___9] in
+                    uu___7 :: uu___8 in
+                  uu___5 :: uu___6 in
+                uu___3 :: uu___4 in
+              (teq3, uu___2) in
+            FStar_Syntax_Syntax.Tm_app uu___1 in
+          let uu___1 =
+            FStar_Range.union_ranges e1.FStar_Syntax_Syntax.pos
+              e2.FStar_Syntax_Syntax.pos in
+          FStar_Syntax_Syntax.mk uu___ uu___1
 let (mk_untyped_eq3 :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->

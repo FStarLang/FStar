@@ -1042,8 +1042,16 @@ let (guard_letrecs :
             let precedes_t =
               FStar_TypeChecker_Util.fvar_const env1
                 FStar_Parser_Const.precedes_lid in
-            let rec mk_precedes_lex l l_prev =
+            let rec mk_precedes_lex env2 l l_prev =
               let rec aux l1 l_prev1 =
+                let type_of e1 e2 =
+                  let t1 =
+                    env2.FStar_TypeChecker_Env.type_of_well_typed env2 e1 in
+                  let t2 =
+                    env2.FStar_TypeChecker_Env.type_of_well_typed env2 e2 in
+                  let uu___ = FStar_Syntax_Util.unrefine t1 in
+                  let uu___1 = FStar_Syntax_Util.unrefine t2 in
+                  (uu___, uu___1) in
                 match (l1, l_prev1) with
                 | ([], []) ->
                     let uu___ =
@@ -1058,27 +1066,49 @@ let (guard_letrecs :
                       uu___1 :: uu___2 in
                     FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___ r
                 | (x::[], x_prev::[]) ->
-                    let uu___ =
-                      let uu___1 = FStar_Syntax_Syntax.as_arg x in
-                      let uu___2 =
-                        let uu___3 = FStar_Syntax_Syntax.as_arg x_prev in
-                        [uu___3] in
-                      uu___1 :: uu___2 in
-                    FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___ r
+                    let uu___ = type_of x x_prev in
+                    (match uu___ with
+                     | (t_x, t_x_prev) ->
+                         let uu___1 =
+                           let uu___2 = FStar_Syntax_Syntax.iarg t_x in
+                           let uu___3 =
+                             let uu___4 = FStar_Syntax_Syntax.iarg t_x_prev in
+                             let uu___5 =
+                               let uu___6 = FStar_Syntax_Syntax.as_arg x in
+                               let uu___7 =
+                                 let uu___8 =
+                                   FStar_Syntax_Syntax.as_arg x_prev in
+                                 [uu___8] in
+                               uu___6 :: uu___7 in
+                             uu___4 :: uu___5 in
+                           uu___2 :: uu___3 in
+                         FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___1 r)
                 | (x::tl, x_prev::tl_prev) ->
-                    let uu___ =
-                      let uu___1 =
-                        let uu___2 = FStar_Syntax_Syntax.as_arg x in
-                        let uu___3 =
-                          let uu___4 = FStar_Syntax_Syntax.as_arg x_prev in
-                          [uu___4] in
-                        uu___2 :: uu___3 in
-                      FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___1 r in
-                    let uu___1 =
-                      let uu___2 = FStar_Syntax_Util.mk_untyped_eq3 x x_prev in
-                      let uu___3 = aux tl tl_prev in
-                      FStar_Syntax_Util.mk_conj uu___2 uu___3 in
-                    FStar_Syntax_Util.mk_disj uu___ uu___1 in
+                    let uu___ = type_of x x_prev in
+                    (match uu___ with
+                     | (t_x, t_x_prev) ->
+                         let tm_precedes =
+                           let uu___1 =
+                             let uu___2 = FStar_Syntax_Syntax.iarg t_x in
+                             let uu___3 =
+                               let uu___4 = FStar_Syntax_Syntax.iarg t_x_prev in
+                               let uu___5 =
+                                 let uu___6 = FStar_Syntax_Syntax.as_arg x in
+                                 let uu___7 =
+                                   let uu___8 =
+                                     FStar_Syntax_Syntax.as_arg x_prev in
+                                   [uu___8] in
+                                 uu___6 :: uu___7 in
+                               uu___4 :: uu___5 in
+                             uu___2 :: uu___3 in
+                           FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___1 r in
+                         let eq3_x_x_prev =
+                           FStar_Syntax_Util.mk_eq3_no_univ t_x t_x_prev x
+                             x_prev in
+                         let uu___1 =
+                           let uu___2 = aux tl tl_prev in
+                           FStar_Syntax_Util.mk_conj eq3_x_x_prev uu___2 in
+                         FStar_Syntax_Util.mk_disj tm_precedes uu___1) in
               let uu___ =
                 let uu___1 =
                   ((FStar_List.length l), (FStar_List.length l_prev)) in
@@ -1145,7 +1175,10 @@ let (guard_letrecs :
                                      }
                                    else b)) in
                          let dec = decreases_clause formals1 c in
-                         let precedes = mk_precedes_lex dec previous_dec in
+                         let precedes =
+                           let env2 =
+                             FStar_TypeChecker_Env.push_binders env1 formals1 in
+                           mk_precedes_lex env2 dec previous_dec in
                          let precedes1 =
                            FStar_TypeChecker_Util.label
                              "Could not prove termination of this recursive call"
