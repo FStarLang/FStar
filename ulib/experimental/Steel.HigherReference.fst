@@ -338,6 +338,8 @@ let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
         (pts_to r full_perm v)
         (cas_provides r v v_new)
         fr
+        (fun _ -> True)
+        (fun _ _ _ -> True)
    = let m0 : full_mem = NMSTTotal.get () in
      let fv = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
      let fv' = Some (v_new, full_perm) in

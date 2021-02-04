@@ -165,6 +165,8 @@ let cas_action (#t:eqtype)
             (pts_to r full_perm v)
             (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
             frame
+            (fun _ -> True)
+            (fun _ _ _ -> True)
    = let hv =     (Ghost.hide (U.raise_val (Ghost.reveal v))) in
      let b = H.cas_action #(U.raise_t t)
                   (lift_eq #t)
