@@ -154,7 +154,7 @@
         "well_founded_ordering_on_comdain_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "ac5b0c4a65cca9424f314adb86194bcb"
+      "38cabca46f559c2a9cfafa217a2026b4"
     ],
     [
       "Steel.Channel.Protocol.flip_tag",
@@ -218,7 +218,7 @@
         "well_founded_ordering_on_comdain_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "4d9bcb588e8ddd841fe69e17c966a4e7"
+      "e4045a46462991634b71e53e5bbbafce"
     ],
     [
       "Steel.Channel.Protocol.bind",
@@ -263,7 +263,7 @@
         "well_founded_ordering_on_comdain_Steel.Channel.Protocol.Msg"
       ],
       0,
-      "8bf862ec0640b15eb61b8d0dae0a7990"
+      "fb7c565c5d9fd4b1cf5b6e3057b00126"
     ],
     [
       "Steel.Channel.Protocol.return",
