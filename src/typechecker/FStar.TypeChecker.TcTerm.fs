@@ -3333,7 +3333,7 @@ and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
             then g_acc, t
             else (let env0 = Env.push_univ_vars env0 univ_vars in
                   let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) "" in
-                  Env.conj_guard g_acc (g |> Rel.resolve_implicits env |> Rel.discharge_guard env), norm env0 t) in
+                  Env.conj_guard g_acc (g |> Rel.resolve_implicits env |> Rel.discharge_guard env), t) in
         // AR: This code (below) also used to have && Env.should_verify env
         // i.e. when lax checking it was adding lbname in the second branch
         // this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug056)
