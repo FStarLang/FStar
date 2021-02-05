@@ -244,19 +244,24 @@ let rw_pointer_upd_sig
 
 /// The `a` parameter to the typeclass has to be a Low*-compatible value, something that can be
 /// assigned atomically in an update statement.
+///
+//TODO: enrich the GitHub issue (#1355) about typechecking projectors where the typechecking
+//involves calling the subcomp of an effect
+#push-options "--__temp_no_proj Steel.ArrayStruct"
 class rw_pointer (pointer_ref : Type u#0) (a: Type u#a) = {
-  pointer_slref: pointer_ref -> a -> slprop;
-  // TODO: Ask Aymeric about why framing tactic error
-  pointer_get: rw_pointer_get_sig a pointer_ref pointer_slref;
-  pointer_upd: rw_pointer_upd_sig a pointer_ref pointer_slref;
+  rw_pointer_slref: pointer_ref -> a -> slprop;
+  rw_pointer_get: rw_pointer_get_sig a pointer_ref rw_pointer_slref;
+  rw_pointer_upd: rw_pointer_upd_sig a pointer_ref rw_pointer_slref;
 }
+#pop-options
 
 //TODO: typeclass inheritance with https://github.com/project-everest/hacl-star/blob/polubelova_bignum/code/rsapss/Hacl.Bignum.Montgomery.fsti#L130
-class r_pointer (pointer_ref : Type u#0) (a: Type u#a) = {
-  pointer_slref: pointer_ref -> a -> slprop;
-  // TODO: Ask Aymeric about why framing tactic error
-  pointer_get: rw_pointer_get_sig a pointer_ref pointer_slref;
+#push-options "--__temp_no_proj Steel.ArrayStruct"
+noeq type r_pointer (pointer_ref : Type u#0) (a: Type u#a) = {
+  r_pointer_slref: pointer_ref -> a -> slprop;
+  r_pointer_get: rw_pointer_get_sig a pointer_ref r_pointer_slref;
 }
+#pop-options
 
 /// The goal of this typeclass is to be able to write generic functions like
 
@@ -266,8 +271,8 @@ val increment_generic
   (r: pt_t)
   (v: Ghost.erased UInt32.t{UInt32.v v + 1 <= UInt.max_int 32})
     : SteelT unit
-      (cls.pointer_slref r v)
-      (fun _ -> cls.pointer_slref r (UInt32.add v 1ul))
+      (cls.rw_pointer_slref r v)
+      (fun _ -> cls.rw_pointer_slref r (UInt32.add v 1ul))
 
 
 /// How will this be reinterpreted for KreMLin extraction? It will extract to uint32_t* because it
