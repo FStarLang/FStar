@@ -394,23 +394,35 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
          *     We build an "untyped" term here, the caller will typecheck it properly
          *)
         let rec aux l l_prev : term =
-         let type_of (e1:term) (e2:term) : typ * typ =
-           let t1 = env.type_of_well_typed env e1 in
-           let t2 = env.type_of_well_typed env e2 in
-           U.unrefine t1, U.unrefine t2 in
+
+         (*
+          * AR: when building the eq3 term, we also provide the type arguments
+          *     if we don't, when the eq3 term is later typechecked, F* may
+          *       infer the type arguments that are not "equal" in the smt encoding,
+          *       and then Z3 would fail to prove eq3
+          *     so we do a best case effort here, unfold until delta constant, and then unrefine
+          *)
+         let type_of (e:term) : typ =
+           e |> env.type_of_well_typed env
+             |> N.normalize [Env.UnfoldUntil delta_constant; Env.Eager_unfolding] env
+             |> U.unrefine in
 
           match l, l_prev with
           | [], [] ->
-            mk_Tm_app precedes_t [as_arg S.unit_const; as_arg S.unit_const] r
-          | [x], [x_prev] ->
-            let t_x, t_x_prev = type_of x x_prev in
+            //AR: this case should not come up, we handle the singleton lists in the next case
             mk_Tm_app precedes_t [
-              iarg t_x;
-              iarg t_x_prev;
+              iarg S.t_unit;
+              iarg S.t_unit;
+              as_arg S.unit_const;
+              as_arg S.unit_const] r
+          | [x], [x_prev] ->
+            mk_Tm_app precedes_t [
+              x |> type_of |> iarg;
+              x_prev |> type_of |> iarg;
               as_arg x;
               as_arg x_prev ] r
           | x::tl, x_prev::tl_prev ->
-            let t_x, t_x_prev = type_of x x_prev in
+            let t_x, t_x_prev = type_of x, type_of x_prev in
             let tm_precedes = mk_Tm_app precedes_t [
               iarg t_x;
               iarg t_x_prev;
