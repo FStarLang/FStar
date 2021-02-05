@@ -1044,61 +1044,123 @@ let (guard_letrecs :
                 FStar_Parser_Const.precedes_lid in
             let rec mk_precedes_lex env2 l l_prev =
               let rec aux l1 l_prev1 =
-                let type_of e =
-                  let uu___ =
-                    let uu___1 =
-                      FStar_All.pipe_right e
+                let type_of e1 e2 =
+                  let t1 =
+                    let uu___ =
+                      FStar_All.pipe_right e1
                         (env2.FStar_TypeChecker_Env.type_of_well_typed env2) in
-                    FStar_All.pipe_right uu___1
-                      (FStar_TypeChecker_Normalize.normalize
-                         [FStar_TypeChecker_Env.UnfoldUntil
-                            FStar_Syntax_Syntax.delta_constant;
-                         FStar_TypeChecker_Env.Eager_unfolding] env2) in
-                  FStar_All.pipe_right uu___ FStar_Syntax_Util.unrefine in
+                    FStar_All.pipe_right uu___ FStar_Syntax_Util.unrefine in
+                  let t2 =
+                    let uu___ =
+                      FStar_All.pipe_right e2
+                        (env2.FStar_TypeChecker_Env.type_of_well_typed env2) in
+                    FStar_All.pipe_right uu___ FStar_Syntax_Util.unrefine in
+                  let rec warn t11 t21 =
+                    let uu___ =
+                      let uu___1 = FStar_Syntax_Util.eq_tm t11 t21 in
+                      uu___1 = FStar_Syntax_Util.Equal in
+                    if uu___
+                    then false
+                    else
+                      (let uu___2 =
+                         let uu___3 =
+                           let uu___4 = FStar_Syntax_Subst.compress t11 in
+                           uu___4.FStar_Syntax_Syntax.n in
+                         let uu___4 =
+                           let uu___5 = FStar_Syntax_Subst.compress t21 in
+                           uu___5.FStar_Syntax_Syntax.n in
+                         (uu___3, uu___4) in
+                       match uu___2 with
+                       | (FStar_Syntax_Syntax.Tm_uinst (t12, uu___3),
+                          FStar_Syntax_Syntax.Tm_uinst (t22, uu___4)) ->
+                           warn t12 t22
+                       | (FStar_Syntax_Syntax.Tm_name uu___3,
+                          FStar_Syntax_Syntax.Tm_name uu___4) -> false
+                       | (FStar_Syntax_Syntax.Tm_app (h1, args1),
+                          FStar_Syntax_Syntax.Tm_app (h2, args2)) ->
+                           ((warn h1 h2) ||
+                              ((FStar_List.length args1) <>
+                                 (FStar_List.length args2)))
+                             ||
+                             (let uu___3 = FStar_List.zip args1 args2 in
+                              FStar_All.pipe_right uu___3
+                                (FStar_List.existsML
+                                   (fun uu___4 ->
+                                      match uu___4 with
+                                      | ((a1, uu___5), (a2, uu___6)) ->
+                                          warn a1 a2)))
+                       | (FStar_Syntax_Syntax.Tm_refine (t12, phi1),
+                          FStar_Syntax_Syntax.Tm_refine (t22, phi2)) ->
+                           (warn t12.FStar_Syntax_Syntax.sort
+                              t22.FStar_Syntax_Syntax.sort)
+                             || (warn phi1 phi2)
+                       | (FStar_Syntax_Syntax.Tm_uvar uu___3, uu___4) ->
+                           false
+                       | (uu___3, FStar_Syntax_Syntax.Tm_uvar uu___4) ->
+                           false
+                       | (uu___3, uu___4) -> true) in
+                  (let uu___1 = warn t1 t2 in
+                   if uu___1
+                   then
+                     let uu___2 =
+                       let uu___3 =
+                         let uu___4 = FStar_Syntax_Subst.compress t1 in
+                         uu___4.FStar_Syntax_Syntax.n in
+                       let uu___4 =
+                         let uu___5 = FStar_Syntax_Subst.compress t2 in
+                         uu___5.FStar_Syntax_Syntax.n in
+                       (uu___3, uu___4) in
+                     match uu___2 with
+                     | (FStar_Syntax_Syntax.Tm_name uu___3,
+                        FStar_Syntax_Syntax.Tm_name uu___4) -> ()
+                     | (uu___3, uu___4) ->
+                         let uu___5 =
+                           let uu___6 =
+                             let uu___7 =
+                               FStar_Syntax_Print.term_to_string e1 in
+                             let uu___8 =
+                               FStar_Range.string_of_range
+                                 e1.FStar_Syntax_Syntax.pos in
+                             let uu___9 =
+                               FStar_Syntax_Print.term_to_string t1 in
+                             let uu___10 =
+                               FStar_Syntax_Print.term_to_string e2 in
+                             let uu___11 =
+                               FStar_Range.string_of_range
+                                 e2.FStar_Syntax_Syntax.pos in
+                             let uu___12 =
+                               FStar_Syntax_Print.term_to_string t2 in
+                             FStar_Util.format6
+                               "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type\n"
+                               uu___7 uu___8 uu___9 uu___10 uu___11 uu___12 in
+                           (FStar_Errors.Warning_Defensive, uu___6) in
+                         FStar_Errors.log_issue e1.FStar_Syntax_Syntax.pos
+                           uu___5
+                   else ());
+                  (t1, t2) in
                 match (l1, l_prev1) with
                 | ([], []) ->
                     let uu___ =
                       let uu___1 =
-                        FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_unit in
+                        FStar_Syntax_Syntax.as_arg
+                          FStar_Syntax_Syntax.unit_const in
                       let uu___2 =
                         let uu___3 =
-                          FStar_Syntax_Syntax.iarg FStar_Syntax_Syntax.t_unit in
-                        let uu___4 =
-                          let uu___5 =
-                            FStar_Syntax_Syntax.as_arg
-                              FStar_Syntax_Syntax.unit_const in
-                          let uu___6 =
-                            let uu___7 =
-                              FStar_Syntax_Syntax.as_arg
-                                FStar_Syntax_Syntax.unit_const in
-                            [uu___7] in
-                          uu___5 :: uu___6 in
-                        uu___3 :: uu___4 in
+                          FStar_Syntax_Syntax.as_arg
+                            FStar_Syntax_Syntax.unit_const in
+                        [uu___3] in
                       uu___1 :: uu___2 in
                     FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___ r
                 | (x::[], x_prev::[]) ->
                     let uu___ =
-                      let uu___1 =
-                        let uu___2 = FStar_All.pipe_right x type_of in
-                        FStar_All.pipe_right uu___2 FStar_Syntax_Syntax.iarg in
+                      let uu___1 = FStar_Syntax_Syntax.as_arg x in
                       let uu___2 =
-                        let uu___3 =
-                          let uu___4 = FStar_All.pipe_right x_prev type_of in
-                          FStar_All.pipe_right uu___4
-                            FStar_Syntax_Syntax.iarg in
-                        let uu___4 =
-                          let uu___5 = FStar_Syntax_Syntax.as_arg x in
-                          let uu___6 =
-                            let uu___7 = FStar_Syntax_Syntax.as_arg x_prev in
-                            [uu___7] in
-                          uu___5 :: uu___6 in
-                        uu___3 :: uu___4 in
+                        let uu___3 = FStar_Syntax_Syntax.as_arg x_prev in
+                        [uu___3] in
                       uu___1 :: uu___2 in
                     FStar_Syntax_Syntax.mk_Tm_app precedes_t uu___ r
                 | (x::tl, x_prev::tl_prev) ->
-                    let uu___ =
-                      let uu___1 = type_of x in
-                      let uu___2 = type_of x_prev in (uu___1, uu___2) in
+                    let uu___ = type_of x x_prev in
                     (match uu___ with
                      | (t_x, t_x_prev) ->
                          let tm_precedes =

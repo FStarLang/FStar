@@ -413,6 +413,10 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                   | Tm_app (h1, args1), Tm_app (h2, args2) ->
                     warn h1 h2 || List.length args1 <> List.length args2 ||
                     (List.zip args1 args2 |> List.existsML (fun ((a1, _), (a2, _)) -> warn a1 a2))
+                  | Tm_refine (t1, phi1), Tm_refine (t2, phi2) ->
+                    warn t1.sort t2.sort || warn phi1 phi2
+                  | Tm_uvar _, _
+                  | _, Tm_uvar _ -> false
                   | _, _ -> true in
 
            (if warn t1 t2
@@ -432,13 +436,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
           match l, l_prev with
           | [], [] ->
             mk_Tm_app precedes_t [as_arg S.unit_const; as_arg S.unit_const] r
-          | [x], [x_prev] ->
-            let t_x, t_x_prev = type_of x x_prev in
-            mk_Tm_app precedes_t [
-              iarg t_x;
-              iarg t_x_prev;
-              as_arg x;
-              as_arg x_prev ] r
+          | [x], [x_prev] -> mk_Tm_app precedes_t [as_arg x; as_arg x_prev] r
           | x::tl, x_prev::tl_prev ->
             let t_x, t_x_prev = type_of x x_prev in
             let tm_precedes = mk_Tm_app precedes_t [
