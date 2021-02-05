@@ -395,9 +395,39 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
          *)
         let rec aux l l_prev : term =
          let type_of (e1:term) (e2:term) : typ * typ =
-           let t1 = env.type_of_well_typed env e1 in
-           let t2 = env.type_of_well_typed env e2 in
-           U.unrefine t1, U.unrefine t2 in
+           (*
+            * AR: we compute the types of e1 and e2 to provide type
+            *     arguments to eq3 (otherwise F* may infer something that Z3 is unable
+            *       to prove equal later on)
+            *     as a check, if the types are not equal, we emit a warning so that
+            *       the programmer may annotate explicitly if needed
+            *)
+           let t1 = e1 |> env.type_of_well_typed env |> U.unrefine in
+           let t2 = e2 |> env.type_of_well_typed env |> U.unrefine in
+           let rec warn t1 t2 =
+             if U.eq_tm t1 t2 = Equal
+             then false
+             else match (SS.compress t1).n, (SS.compress t2).n with
+                  | Tm_uinst (t1, _), Tm_uinst (t2, _) -> warn t1 t2
+                  | Tm_name _, Tm_name _ -> false  //do not warn for names, e.g. in polymorphic functions, the names may be instantiated at the call sites
+                  | Tm_app (h1, args1), Tm_app (h2, args2) ->
+                    warn h1 h2 || List.length args1 <> List.length args2 ||
+                    (List.zip args1 args2 |> List.existsML (fun ((a1, _), (a2, _)) -> warn a1 a2))
+                  | _, _ -> true in
+
+           (if warn t1 t2
+            then match (SS.compress t1).n, (SS.compress t2).n with
+                 | Tm_name _, Tm_name _ -> ()
+                 | _, _ ->
+                   Errors.log_issue e1.pos (Errors.Warning_Defensive,
+                     BU.format6 "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type\n"
+                       (Print.term_to_string e1)
+                       (Range.string_of_range e1.pos)
+                       (Print.term_to_string t1)
+                       (Print.term_to_string e2)
+                       (Range.string_of_range e2.pos)
+                       (Print.term_to_string t2)));
+           t1, t2 in
 
           match l, l_prev with
           | [], [] ->
