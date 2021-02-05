@@ -939,7 +939,7 @@ let solve use_env_msg tcenv q : unit =
     Profiling.profile
       (fun () -> do_solve use_env_msg tcenv q)
       (Some (Ident.string_of_lid (Env.current_module tcenv)))
-      "FStar.TypeChecker.SMTEncoding.solve_top_level"
+      "FStar.SMTEncoding.solve_top_level"
 
 
 (**********************************************************************************************)

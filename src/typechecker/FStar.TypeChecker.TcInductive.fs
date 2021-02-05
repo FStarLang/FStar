@@ -107,7 +107,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
 let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
   : sigelt -> sigelt * guard_t =
     fun se -> match se.sigel with
-    | Sig_datacon(c, _uvs, t, tc_lid, ntps, _mutual_tcs) ->
+    | Sig_datacon(c, _uvs, t, tc_lid, ntps, mutual_tcs) ->
          //assert (_uvs = []);
          let usubst, _uvs = SS.univ_var_opening _uvs in
          let env, t = Env.push_univ_vars env _uvs, SS.subst usubst t in
@@ -214,7 +214,7 @@ let tc_data (env:env_t) (tcs : list<(sigelt * universe)>)
 (*close*)let t = U.arrow ((tps |> List.map (fun b -> {b with binder_qual=Some (Implicit true)}))@arguments) (S.mk_Total result) in
                         //NB: the tps are tagged as Implicit inaccessbile arguments of the data constructor
          let t = SS.close_univ_vars _uvs t in
-         { se with sigel = Sig_datacon(c, _uvs, t, tc_lid, ntps, []) },
+         { se with sigel = Sig_datacon(c, _uvs, t, tc_lid, ntps, mutual_tcs) },
          g
 
    | _ -> failwith "impossible"

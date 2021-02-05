@@ -73,7 +73,7 @@ type term_view =
   | Tv_Let    : recf:bool -> attrs:(list term) -> bv:bv -> def:term -> body:term -> term_view
   | Tv_Match  : scrutinee:term -> brs:(list branch) -> term_view
   | Tv_AscribedT : e:term -> t:term -> tac:option term -> term_view
-  | Tv_AscribedC : e:term -> c:comp -> tac:option term -> term_view  
+  | Tv_AscribedC : e:term -> c:comp -> tac:option term -> term_view
   | Tv_Unknown  : term_view // Baked in "None"
 
 // Very basic for now
@@ -113,6 +113,12 @@ type sigelt_view =
       (params:binders) ->       // parameters
       (typ:typ) ->              // the type annotation for the inductive, i.e., indices -> Type #u
       (cts:list ctor) ->        // the constructors, opened with univs and applied to params already
+      sigelt_view
+
+  | Sg_Val :
+      (nm:name) ->
+      (univs:list univ_name) ->
+      (typ:typ) ->
       sigelt_view
 
   | Unk

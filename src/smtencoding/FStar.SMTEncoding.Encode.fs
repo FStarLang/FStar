@@ -58,13 +58,13 @@ let norm_before_encoding env t =
     Profiling.profile
       (fun () -> N.normalize steps env.tcenv t)
       (Some (Ident.string_of_lid (Env.current_module env.tcenv)))
-      "FStar.TypeChecker.SMTEncoding.Encode.norm_before_encoding"
+      "FStar.SMTEncoding.Encode.norm_before_encoding"
 
 let norm_with_steps steps env t =
   Profiling.profile
       (fun () -> N.normalize steps env t)
       (Some (Ident.string_of_lid (Env.current_module env)))
-      "FStar.TypeChecker.SMTEncoding.Encode.norm"
+      "FStar.SMTEncoding.Encode.norm"
 
 type prims_t = {
     mk:lident -> string -> term * int * list<decl>;
@@ -1392,7 +1392,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_datacon(d, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env
 
-    | Sig_datacon(d, _, t, _, n_tps, _) ->
+    | Sig_datacon(d, _, t, _, n_tps, mutuals) ->
         let quals = se.sigquals in
         let t = norm_before_encoding env t in
         let formals, t_res = U.arrow_formals t in
@@ -1449,12 +1449,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let encode_elim () =
             let head, args = U.head_and_args t_res in
             match (SS.compress head).n with
-                | Tm_uinst({n=Tm_fvar fv}, _)
-                | Tm_fvar fv ->
-                  let encoded_head_fvb = lookup_free_var_name env' fv.fv_name in
-                  let encoded_args, arg_decls = encode_args args env' in
-                  let guards_for_parameter (orig_arg:S.term)(arg:term) xv =
-                    let fv =
+            | Tm_uinst({n=Tm_fvar fv}, _)
+            | Tm_fvar fv ->
+              let encoded_head_fvb = lookup_free_var_name env' fv.fv_name in
+              let encoded_args, arg_decls = encode_args args env' in
+              let guards_for_parameter (orig_arg:S.term)(arg:term) xv =
+                  let fv =
                       match arg.tm with
                       | FreeV fv -> fv
                       | _ ->
@@ -1462,16 +1462,17 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                            BU.format1 "Inductive type parameter %s must be a variable ; \
                                        You may want to change it to an index."
                                       (FStar.Syntax.Print.term_to_string orig_arg)) orig_arg.pos
-                    in
-                    let guards = guards |> List.collect (fun g ->
+                  in
+                  let guards = guards |> List.collect (fun g ->
                         if List.contains fv (Term.free_variables g)
                         then [Term.subst g fv xv]
                         else [])
-                    in
-                    mk_and_l guards
                   in
-                  let _, arg_vars, elim_eqns_or_guards, _ =
-                    List.fold_left (fun (env, arg_vars, eqns_or_guards, i) (orig_arg, arg) ->
+                  mk_and_l guards
+              in
+              let _, arg_vars, elim_eqns_or_guards, _ =
+                  List.fold_left
+                    (fun (env, arg_vars, eqns_or_guards, i) (orig_arg, arg) ->
                       let _, xv, env = gen_term_var env (S.new_bv None tun) in
                       (* we only get equations induced on the type indices, not parameters; *)
                       (* Also see https://github.com/FStarLang/FStar/issues/349 *)
@@ -1481,24 +1482,25 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         else mkEq(arg, xv)::eqns_or_guards
                       in
                       (env, xv::arg_vars, eqns, i + 1))
-                      (env', [], [], 0) (FStar.List.zip args encoded_args)
-                  in
-                  let arg_vars = List.rev arg_vars in
-                  let ty = maybe_curry_fvb fv.fv_name.p encoded_head_fvb arg_vars in
-                  let xvars = List.map mkFreeV vars in
-                  let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
-                  let ty_pred = mk_HasTypeWithFuel (Some s_fuel_tm) dapp ty in
-                  let arg_binders = List.map fv_of_term arg_vars in
-                  let typing_inversion =
+                    (env', [], [], 0)
+                    (FStar.List.zip args encoded_args)
+              in
+              let arg_vars = List.rev arg_vars in
+              let ty = maybe_curry_fvb fv.fv_name.p encoded_head_fvb arg_vars in
+              let xvars = List.map mkFreeV vars in
+              let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
+              let ty_pred = mk_HasTypeWithFuel (Some s_fuel_tm) dapp ty in
+              let arg_binders = List.map fv_of_term arg_vars in
+              let typing_inversion =
                     Util.mkAssume(mkForall (Ident.range_of_lid d) ([[ty_pred]],
                                         add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
                                         mkImp(ty_pred, mk_and_l (elim_eqns_or_guards@guards))),
                                Some "data constructor typing elim",
                                ("data_elim_" ^ ddconstrsym)) in
-                  let subterm_ordering =
-                    let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
-                    (* subterm ordering *)
-                    let prec =
+              let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
+              let subterm_ordering =
+                  (* subterm ordering *)
+                  let prec =
                         vars
                           |> List.mapi (fun i v ->
                                 (* it's a parameter, so it's inaccessible and no need for a sub-term ordering on it *)
@@ -1506,20 +1508,75 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 then []
                                 else [mk_Precedes lex_t lex_t (mkFreeV v) dapp])
                           |> List.flatten
-                     in
-                     Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                             ([[ty_pred]],
-                                              add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
-                                              mkImp(ty_pred, mk_and_l prec)),
-                                    Some "subterm ordering",
-                                    ("subterm_ordering_"^ddconstrsym))
                   in
-                  arg_decls, [typing_inversion; subterm_ordering]
-
+                  Util.mkAssume(mkForall (Ident.range_of_lid d)
+                                         ([[ty_pred]],
+                                          add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
+                                          mkImp(ty_pred, mk_and_l prec)),
+                                Some "subterm ordering",
+                                ("subterm_ordering_"^ddconstrsym))
+              in
+              let codomain_ordering, codomain_decls =
+                let tot_or_gtot_inductive_codomain c =
+                  let is_inductive l =
+                      match FStar.TypeChecker.Env.lookup_sigelt env.tcenv l with
+                      | Some ({sigel=Sig_inductive_typ _}) -> true
+                      | _ -> false
+                  in
+                  let res =
+                   if not (U.is_tot_or_gtot_comp c)
+                   then false
+                   else let head, _ = U.head_and_args (U.comp_result c) in
+                        BU.for_some
+                          (fun mutual -> is_inductive mutual && U.is_fvar mutual head)
+                          mutuals
+                  in
+                  res
+                in
+                let codomain_prec_l, cod_decls =
+                  List.fold_left2
+                    (fun (codomain_prec_l, cod_decls) formal var ->
+                        let bs, c = U.arrow_formals_comp formal.binder_bv.sort in
+                        match bs with
+                        | [] -> codomain_prec_l, cod_decls
+                        | _ when not (tot_or_gtot_inductive_codomain c) -> codomain_prec_l, cod_decls
+                        | _ ->
+                         //var bs << D ... var ...
+                         let bs', guards', _env', bs_decls, _ = encode_binders None bs env'' in
+                         let fun_app = mk_Apply (mkFreeV var) bs' in
+                         mkForall (Ident.range_of_lid d)
+                                  ([[mk_Precedes lex_t lex_t fun_app dapp]],
+                                   bs',
+                                   mkImp (mk_and_l guards',
+                                          mk_Precedes lex_t lex_t fun_app dapp))
+                         :: codomain_prec_l,
+                         bs_decls @ cod_decls)
+                    ([],[])
+                    formals
+                    vars
+                in
+                match codomain_prec_l with
+                | [] ->
+                  [], cod_decls
                 | _ ->
-                  Errors.log_issue se.sigrng (Errors.Warning_ConstructorBuildsUnexpectedType, (BU.format2 "Constructor %s builds an unexpected type %s\n"
-                        (Print.lid_to_string d) (Print.term_to_string head)));
-                  [], [] in
+                  [Util.mkAssume(mkForall (Ident.range_of_lid d)
+                                         ([[ty_pred]],
+                                          add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
+                                          mkImp(ty_pred, mk_and_l codomain_prec_l)),
+                                 Some "well-founded ordering on codomain",
+                                 ("well_founded_ordering_on_comdain_"^ddconstrsym))],
+                  cod_decls
+              in
+              arg_decls @ codomain_decls,
+              [typing_inversion; subterm_ordering] @ codomain_ordering
+
+            | _ ->
+              Errors.log_issue se.sigrng
+                  (Errors.Warning_ConstructorBuildsUnexpectedType,
+                   BU.format2 "Constructor %s builds an unexpected type %s\n"
+                              (Print.lid_to_string d) (Print.term_to_string head));
+              [], []
+        in
         let decls2, elim = encode_elim () in
         let g = binder_decls
                 @decls2
