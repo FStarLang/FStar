@@ -9711,8 +9711,7 @@ and (build_let_rec_env :
                                             env2) in
                                      FStar_TypeChecker_Env.conj_guard g_acc
                                        uu___8 in
-                                   let uu___8 = norm env01 t1 in
-                                   (uu___7, uu___8)) in
+                                   (uu___7, t1)) in
                           (match uu___3 with
                            | (g, t1) ->
                                let uu___4 =
