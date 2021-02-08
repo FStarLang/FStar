@@ -371,26 +371,335 @@ arbitrary refinements of your choosing, e.g.,::
    invariants about your programs that may otherwise have only been
    implicit in your code.
 
+   Refinement types in F* trace their lineage to `F7
+   <https://www.microsoft.com/en-us/research/project/f7-refinement-types-for-f/>`_,
+   a language developed at Microsoft Research c. 2007 -- 2011. `Liquid
+   Haskell <https://ucsd-progsys.github.io/liquidhaskell-blog/>`_ is
+   another language with refinement types. Those languages provide
+   additional background and resources for learning about refinement
+   types.
+
+   Refinement types, in conjunction with dependent function types,
+   are, in principle, sufficient to encode many kinds of logics for
+   program correctness. However, refinement types are just one among
+   several tools in F* for program specification and proof.
+
 Refinement subtyping
 ^^^^^^^^^^^^^^^^^^^^
 
+We have seen so far how to define a new refinement type, like `nat` or
+`even`. However, to make use of refinement types we need rules that
+allow us to:
 
+1. check that a program term has a given refinement type, e.g., to
+   check that `0` has type `nat`. This is sometimes called
+   *introducing* a refinement type.
+
+2. make use of a term that has a refinement type, e.g., given `x :
+   even` we would like to be write `x + 1`, treating `x` as an `int`
+   to add `1` to it. This is sometimes called *eliminating* a
+   refinement type.
+
+The technical mechanism in F* that supports both these features is
+called *refinement subtyping*.
+
+If you're used to a language like Java, C# or some other
+object-oriented language, you're familiar with the idea of
+subtyping. A type `t` is a subtype of `s` whenever a program term of
+type `t` can be safely treated as an `s`. For example, in Java, all
+object types are subtypes of the type `Object`, the base class of all
+objects.
+
+For boolean refinement types, the subtyping rules are as follows:
+
+* The type `x:t { p }` is a subtype of `t`. That is, given `e :
+  (x:t{p})`, it is always safe to *eliminate* the refinement and
+  consider `e` to also have type `t`.
+
+* For a term `e` of type `t` (i.e., `e : t`), `t` is a subtype of the
+  boolean refinement type `x:t { p }` whenever `p[e / x]` is provably
+  equal to `true`. In other words, to *introduce* `e : t` at the
+  boolean refinement type `x:t{ p }`, it suffices to prove that the
+  term `p` with `e` substituted for bound variable `x`, evaluates to
+  `true`.
+
+The the elimination rule for refinement types (i.e., the first part
+above) is simple---with our intuition of types as sets, the refinement
+type `x:t{ p }` *refines* the set corresponding to `t` by the
+predicate `p`, i.e., the `x:t{ p }` denotes a subset of `t`, so, of
+course `x:t{ p }` is a subtype of `t`.
+
+The other direction is a bit more subtle: `x:t{ p }` is only a subtype
+of `p`, for those terms `e` that validate `p`. You're probably also
+wondering about how to prove that `p[e/x]` evaluates to `true`---this
+:ref:`part of the tutorial<tutorial:refinements>` should provide some
+answers. But, the short version is that F*, by default, uses an SMT
+solver to prove such fact, though you can also use tactics and other
+techniques to do so. More information can be found
+:ref:`here<mental-model:refinements>`.
+
+An example
+++++++++++
+
+Given `x:even`, consider typechecking `x + 1 : odd`; it takes a few
+steps:
+
+1. The operator `+` expects both its arguments to have type `int` and
+   returns an `int`.
+
+2. To prove that the first argument `x:even` is a valid argument for
+   `+`, we use refinement subtyping to eliminate the refinement and
+   obtain `x:int`. The second argument `1:int` already has the
+   required type. Thus, `x + 1 : int`.
+
+3. To conclude that `x + 1 : odd`, we need to introduce a refinement
+   type, by proving that the refinement predicate of `odd` evaluates
+   to true, i.e., `x + 1 % 2 = 1`. This is provable by SMT, since we
+   started with the knowledge that `x` is even.
+
+As such, F* applies subtyping repeatedly to introduce and eliminate
+refinement types, applying it multiple times even to check a simple
+term like `x + 1 : odd`.
 
 
 Function types or arrows
 ........................
 
+Functions are the main abstraction facility of any functional language
+and their types are, correspondigly, the main specificational
+construct.
 
-Syntax of binders
-^^^^^^^^^^^^^^^^^
+Total dependent functions
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
+In its most basic form, function types have the shape::
+
+  x:t0 -> t1
+
+This is the type of a function that
+
+1. receives an argument `e` of type `t0`, and
+
+2. always returns a value of type `t1[e / x]`, i.e., the type of the
+   returned value depends on the argument `e`.
+
+It's worth emphasizing how this differs from function types in other
+languages.
+
+* F*'s function type are dependent---the type of the result depends on
+  the argument. For example, we can write a function that returns a
+  `bool` when applied to an even number and returns a `string` when
+  applied to an odd number.
+
+* In F*'s core language, all functions are total, i.e., a function
+  call always terminates after consuming a finite but unbounded amount
+  of resources.
+
+.. note::
+
+   That said, on any given computer, it is possible for a function
+   call to fail to return due to resource exhaustion, e.g., running
+   out of memory. Later, as we look at :ref:`effects <effects>`, we
+   will see that F* also supports writing non-terminating functions.
+
+Some examples and common notation
++++++++++++++++++++++++++++++++++
+
+1. Functions are *curried*. Functions that take multiple arguments are
+   written as functions that take the first argument and return a
+   function that takes the next argument and so on. For instance, the
+   type of integer addition is::
+
+     val (+) : x:int -> y:int -> int
+
+2. Not all functions are dependent and the name of the argument can be
+   omitted when it is not needed. For example, here's a more concise
+   way to write the type of `(+)`::
+
+     val (+) : int -> int -> int
+
+3. Function types can be mixed with refinement types. For instance,
+   here's the type of integer division---the refinement on the divisor
+   forbids division-by-zero errors::
+
+     val (/) : int -> (divisor:int { divisor <> 0 }) -> int
+
+4. Dependence between the arguments and the result type can be used to
+   state relationships among them. For instance, there are several
+   types for the function `let incr = (fun (x:int) -> x + 1)`::
+
+     val incr : int -> int
+     val incr : x:int -> y:int{y > x}
+     val incr : x:int -> y:int{y = x + 1}
+
+   The first type `(int -> int)` is its traditional type in languages
+   like OCaml.
+
+   The second type `(x:int -> y:int{y > x})` states that the returned
+   value `y` is greater than the argument `x`.
+
+   The third type is the most precise: `(x:int -> y:int{y = x + 1})`
+   states that the result `y` is exactly the increment of the argument
+   `x`.
+
+5. It's often convenient to add refinements on arguments in a
+   dependent function type. For instance::
+
+     val f : x:(x:int{ x >= 1 }) -> y:(y:int{ y > x }) -> z:int{ z > x + y }
+
+   Since this style is so common, and it is inconvenient to have to
+   bind two names for the parameters `x` and `y`, F* allows (and
+   encourages) you to write::
+
+     val f : x:int{ x >= 1 } -> y:int{ y > x } -> z:int{ z > x + y }
+
+6. To emphasize that functions in F*'s core are total functions (i.e.,
+   they always return a result), we sometimes annotate the result type
+   with the effect label "`Tot`". This label is optional, but
+   especially as we learn about :ref:`effects <effects>`, emphasizing
+   that some functions have no effects via the `Tot` label is
+   useful. For example, one might typically write::
+
+     val f : x:int{ x >= 1 } -> y:int{ y > x } -> Tot (z:int{ z > x + y })
+
+   adding a `Tot` annotation on the last arrow, to indicate that the
+   function has no side effects. One could also write::
+
+     val f : x:int{ x >= 1 } -> Tot (y:int{ y > x } -> Tot (z:int{ z > x + y }))
+
+   adding an annotation on the intermediate arrow, though this is not
+   customary.
+
+Please refer to the section on :ref:`Implicit Arguments <implicits>`,
+where we explain the full syntax of binders, in function abstractions
+and types.
 
 Type: The type of types
 .........................
 
+One characteristic of F* (and many other dependently typed languages)
+is that it treats programs and their types uniformly, all within a
+single syntactic class. A type system in this style is sometimes
+called a *Pure Type System* or `PTS
+<https://en.wikipedia.org/wiki/Pure_type_system>`_.
+
+In F* (as in other PTSs) types have types too, functions can take
+types as arguments and return types as results, etc. In particular,
+the type of a type is `Type`, e.g., `bool : Type`, `int : Type`, `int
+-> int : Type` etc. In fact, even `Type` has a type---as we'll see in
+the subsection on :ref:`universes <universes>`.
+
+Parametric polymorphism or generics
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Most modern typed languages provide a way to write programs with
+generic types. For instance, C# and Java provide generics, C++ has
+templates, and languages like OCaml and Haskell have several kinds of
+polymorphic types.
+
+In F*, writing functions that are generic or polymorphic in types
+arises naturally as a special case of dependent function types. For
+example, here's a polymorphic identity function::
+
+  let id : a:Type -> a -> a = fun a x -> x
+
+There are a several things to note here:
+
+* The type of `id` is a dependent function type, with two
+  arguments. The first argument is `a : Type`; the second argument is
+  a term of type `a`; and the result also has the same type `a`.
+
+* The definition of `id` is a lambda term with two arguments `a :
+  Type` (corresponding to the first argument type) and `x : a`. The
+  function returns `x`---it's an identity function on the second
+  argument.
+
+Here are some equivalent ways to write it::
+
+  let id = fun (a:Type) (x:a) -> x <: a
+  let id (a:Type) (x:a) : a = x
+
+To call `id`, one can apply and check its type as shown::
+
+  id bool true : bool
+  id bool false : bool
+  id int (-1) : int
+  id nat 17 : nat
+  id string "hello" : string
+  id (int -> int) (fun x -> x) 0 : int
+
+.. note::
+
+   Exercises
+
+   Try completing the following programs::
+
+     let apply : a:Type -> b:Type -> (a -> b) -> a -> b = <fill me in>
+     let compose : a:Type -> b:Type -> c:Type -> (b -> c) -> (a -> b) -> a -> c = <fill me in>
+     let twice : <fill me in> = fun a f x -> compose a a a f f x
+
+It's a bit tedious to have to explicitly provide that first type
+argument to `id`. Next, we'll see how to use implicits in F* and
+instruct F* to automatically infer their instantiations.
+
 
 Implicit arguments
 ..................
+
+.. _implicits:
+
+
+Syntax of binders
+^^^^^^^^^^^^^^^^^
+
+..
+   \fstar syntax is
+   roughly modeled on OCaml (\ls$val$, \ls$let$, \ls$match$ etc.)
+   although there are many differences to account for the additional
+   typing features.
+   %
+   Binding occurrences \ls$b$ of variables take the form \ls$x:t$, declaring
+   a variable \ls$x$ at type \ls$t$; or \ls$#x:t$ indicating that the
+   binding is for an implicit argument.
+   %
+   The syntax
+   %
+   \ls@fun (b$_1$) ... (b$_n$) -> t@ introduces a lambda abstraction, whereas
+   %
+   \ls@b$_1$ -> ... -> b$_n$ -> c@ is the shape of a curried function type.
+   Refinement types are written \ls$b{t}$,
+   e.g., \ls$x:int{x>=0}$ is the type of non-negative integers
+   (i.e., \ls$nat$).
+   %
+   As usual, a bound variable is in scope to the right of its binding; we
+   omit the type in a binding when it can be inferred; and for
+   non-dependent function types, we omit the variable name.
+   %
+   For example, the type of the
+   pure append function on vectors is written
+   %
+   \ls$#a:Type -> #m:nat -> #n:nat -> vec a m -> vec a n -> vec a (m + n)$,
+   %
+   with the two explicit arguments and the return type depending on the
+   three implicit arguments marked with `\ls$#$'. The type of pairs in \fstar is
+   represented by \ls`a & b`
+   with \ls`a` and \ls`b` as the types of the first
+   and second components respectively. In contrast, dependent tuple types are
+   written as \ls`x:a & b` where \ls`x`
+   is bound in \ls`b`. A dependent pair value is
+   written \ls`(| e, f |)` and we
+   use \ls`x._1` and \ls`x._2` for the first and second dependent
+   projection maps.
+
+
+Universes
+.........
+.. _universes:
+
+
+Decidable equality and `eqtype`
+...............................
+
 
 
 Let bindings
@@ -401,6 +710,21 @@ Inductive type definitions
 ..........................
 
 .. _tuples:
+
+Discriminators
+^^^^^^^^^^^^^^
+
+Projectors
+^^^^^^^^^^
+
+Equality
+^^^^^^^^
+
+Positivity
+^^^^^^^^^^
+
+Universe constraints
+^^^^^^^^^^^^^^^^^^^^
 
 Pattern matching
 ................
@@ -418,29 +742,34 @@ Proof irrelevance, squash types and classical logic
 ...................................................
 
 
-Decidable equality and `eqtype`
-...............................
-
-
-Universes
-.........
-
-
 Misc
 ....
+
+
+Evaluation strategy
+^^^^^^^^^^^^^^^^^^^
 
 .. _ascriptions:
 
 Effects
 -------
+.. _effects:
 
 
 Modules and Interfaces
 ----------------------
 .. _modules:
 
-
 .. toctree::
    :hidden:
    :maxdepth: 1
    :caption: Contents:
+
+A Mental Model of the F* Typechecker
+------------------------------------
+.. _mental-model:refinements:
+
+
+Dangling
+
+.. _tutorial:refinements:
