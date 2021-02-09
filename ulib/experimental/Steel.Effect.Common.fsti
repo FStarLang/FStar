@@ -14,6 +14,9 @@ let return_post (#a:Type) (p:a -> slprop u#1) : a -> slprop u#1 = p
 type pre_t = slprop u#1
 type post_t (a:Type) = a -> slprop u#1
 
+// Needed to avoid some logical vs prop issues during unification with no subtyping
+let true_p : prop = True
+
 let join_preserves_interp (hp:slprop) (m0:hmem hp) (m1:mem{disjoint m0 m1})
 : Lemma
   (interp hp (join m0 m1))
@@ -281,25 +284,6 @@ let rec new_args_for_smt_attrs (env:env) (l:list argv) (ty:typ) : Tac (list argv
   | _ -> fail "should not happen. Is an slprop partially applied?"
 
 
-// let rec new_term_for_attributes (t:term) (ty:typ) : Tac term =
-//   match inspect t, inspect ty with
-//   | Tv_App hd (a_term, a_qual), Tv_Arrow binder comp -> begin
-//     match inspect_comp comp with
-//     | C_Total ty2 _ ->
-//         let tl = new_term_for_attributes
-//         (if is_smt_binder binder then let uvar = fresh_uvar ()
-//     dump ("term is " ^ term_to_string t);
-//     begin
-//     match inspect_ln ty with
-//     | Tv_Arrow binder comp -> begin
-//       match inspect_comp comp with
-//       | C_Total ty2 _ -> (if is_smt_binder binder then "yes " else "no ") ^ check_type_for_attributes ty2
-//     | _ -> fail "computation type not supported"
-//     end
-//   | Tv_FVar fv -> implode_qn (inspect_fv fv)
-//   | _ -> fail "expected an arrow type"
-
-
 let rewrite_term_for_smt (env:env) (am:amap term * list term) (a:atom) : Tac (amap term * list term)
   = let am, prev_uvar_terms = am in
     let term = select a am in
@@ -308,19 +292,6 @@ let rewrite_term_for_smt (env:env) (am:amap term * list term) (a:atom) : Tac (am
     let new_args, uvar_terms = new_args_for_smt_attrs env args t in
     let new_term = mk_app hd new_args in
     update a new_term am, uvar_terms@prev_uvar_terms
-
-    // fail (term_to_string new_term);
-
-    // fail ("should not have reached this")//check_type_for_attributes t)
-
-    // match lookup_typ env (explode_qn (term_to_string hd)) with
-    // | None -> fail "could not find this slprop, should not happen (or uvar?)"
-    // | Some ty ->
-    //   match inspect_sigelt ty with
-    //   | Sg_Let _ _ _ _ _ -> fail "this is a let"
-    //   | Sg_Inductive _ _ _ _ _ -> fail "this is an inductive"
-    //   | Sg_Val nm _ ty -> fail (check_type_for_attributes ty)
-    //   | Unk -> fail "unknown"
 
 let rec equivalent_lists_fallback (n:nat) (l1 l2 l1_del l2_del:list atom) (am:amap term)
   : Tac (list atom * list atom * bool) =
@@ -357,15 +328,6 @@ let rec equivalent_lists_fallback (n:nat) (l1 l2 l1_del l2_del:list atom) (am:am
 let replace_smt_uvars (l1 l2:list atom) (am:amap term) : Tac (amap term * list term)
   = let env = cur_env () in
     fold_left (rewrite_term_for_smt env) (am, []) l2
-    // dump (print_atoms l2 am);
-    // dump (print_atoms l1 am);
-    // fail "debug smt fallback"
-
-    // match l1 with
-    // | [] -> fail "empty fallback"
-    // | hd::tl -> try_smt_fallback_once hd am env;
-    // fail "debug smt fallback";
-    // l1, l2
 
 (* Recursively calls equivalent_lists_once.
    Stops when we're done with unification, or when we didn't make any progress
@@ -405,8 +367,6 @@ let rec equivalent_lists' (n:nat) (l1 l2 l1_del l2_del:list atom) (am:amap term)
         let new_am, uvar_terms  = replace_smt_uvars rem1 rem2 am in
         let l1_f, l2_f, b = equivalent_lists_fallback n' rem1 rem2 l1_del' l2_del' new_am in
         l1_f, l2_f, b, uvar_terms
-//        fail ("could not find a solution for unifying\n" ^ print_atoms rem1 am ^ "\nand\n" ^ print_atoms rem2 am)
-//        fail ("could not find candidate for this scrutinee " ^ term_to_string (get_head rem2 am))
       else equivalent_lists' n' rem1 rem2 l1_del' l2_del' am
 
 (* Checks if term for atom t unifies with fall uvars in l *)
@@ -984,10 +944,13 @@ let canon_l_r (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac
     or_else trefl (fun _ -> fail "second equivalent_lists did not build a valid permutation");
 
     match uvar_terms with
-    | [] -> if emp_frame then apply_lemma (`identity_left (`#eq) (`#m))
-           else apply_lemma (`(EQ?.reflexivity (`#eq)))
-    | l -> if emp_frame then apply_lemma (`identity_left_smt (`#eq) (`#m))
-           else
+    | [] -> // Closing unneded prop uvar
+            if unify pr (`true_p) then () else fail "could not unify SMT prop with True";
+            if emp_frame then apply_lemma (`identity_left (`#eq) (`#m))
+            else apply_lemma (`(EQ?.reflexivity (`#eq)))
+    | l -> if emp_frame then (
+             apply_lemma (`identity_left_smt (`#eq) (`#m))
+           ) else
              apply_lemma (`smt_reflexivity (`#eq) (`#pr));
              split();
              exact (`(FStar.Squash.return_squash (`#pr_bind)));
@@ -1164,7 +1127,7 @@ let solve_can_be_split (args:list argv) : Tac bool =
                               `%fst; `%snd];
                             delta_attr [`%__reduce__];
                             primops; iota; zeta];
-                       canon' (`True) (`True)));
+                       canon' (`true_p) (`true_p)));
         true
       ) else false
 
@@ -1200,7 +1163,7 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
                    `%fst; `%snd];
                  delta_attr [`%__reduce__];
                  primops; iota; zeta];
-            canon' (`True) (`True)));
+            canon' (`true_p) (`true_p)));
         true
       ) else false
 
@@ -1218,7 +1181,11 @@ let solve_can_be_split_forall_dep (args:list argv) : Tac bool =
           let pr = mk_app pr [(binder_to_term x, Q_Explicit)] in
           norm [delta_only [`%can_be_split_forall_dep]];
           let pr_bind = implies_intro () in
-          or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
+          or_else
+            (fun _ ->
+              let b = unify pr (`true_p) in
+              if not b then fail "could not unify SMT prop with True";
+              apply_lemma (`lemma_sl_implies_refl))
             (fun _ ->
             apply_lemma (`equiv_sl_implies);
             // TODO: Do this count in a better way
@@ -1238,7 +1205,6 @@ let solve_can_be_split_forall_dep (args:list argv) : Tac bool =
       ) else false
 
   | _ -> false // Ill-formed can_be_split, should not happen
-
 
 let solve_equiv_forall (args:list argv) : Tac bool =
   match args with
@@ -1264,7 +1230,7 @@ let solve_equiv_forall (args:list argv) : Tac bool =
                                 `%fst; `%snd];
                               delta_attr [`%__reduce__];
                               primops; iota; zeta];
-                        canon'(`True) (`True));
+                        canon'(`true_p) (`true_p));
         true
       ) else false
 
@@ -1288,7 +1254,7 @@ let solve_equiv (args:list argv) : Tac bool =
                                `%fst; `%snd];
                              delta_attr [`%__reduce__];
                              primops; iota; zeta];
-                       canon'(`True) (`True));
+                       canon'(`true_p) (`true_p));
         true
       ) else false
 
@@ -1322,7 +1288,7 @@ let solve_can_be_split_post (args:list argv) : Tac bool =
                                 `%fst; `%snd];
                               delta_attr [`%__reduce__];
                               primops; iota; zeta];
-                        canon'(`True) (`True));
+                        canon'(`true_p) (`true_p));
         true
       ) else false
 
@@ -1387,6 +1353,8 @@ let solve_return (t:term) : Tac unit
       dismiss_slprops();
       ignore (forall_intro ());
       ignore (forall_intro ())
+    ) else if term_appears_in (`can_be_split_forall_dep) t then (
+      fail "can_be_split_forall_dep not supported"
     ) else
       // This should never happen
       fail "return_post goal in unexpected position";
