@@ -64,8 +64,8 @@ let can_be_split (t1 t2:pre_t) = t1 `sl_implies` t2
 let can_be_split_forall (#a:Type) (t1 t2:post_t a) =
   forall (x:a). t1 x `sl_implies` t2 x
 
-let can_be_split_forall_dep (#a:Type) (p:prop) (t1 t2:post_t a) =
-  forall (x:a). p ==> t1 x `sl_implies` t2 x
+let can_be_split_forall_dep (#a:Type) (p:a -> prop) (t1 t2:post_t a) =
+  forall (x:a). p x ==> t1 x `sl_implies` t2 x
 
 val equiv_forall (#a:Type) (t1 t2:post_t a) : Type0
 
@@ -1214,9 +1214,10 @@ let solve_can_be_split_forall_dep (args:list argv) : Tac bool =
       if lnbr + rnbr <= 1 then (
         let open FStar.Algebra.CommMonoid.Equiv in
         focus (fun _ ->
-          ignore (forall_intro());
+          let x = forall_intro() in
+          let pr = mk_app pr [(binder_to_term x, Q_Explicit)] in
           norm [delta_only [`%can_be_split_forall_dep]];
-          let pr_bind = (implies_intro ()) in
+          let pr_bind = implies_intro () in
           or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
             (fun _ ->
             apply_lemma (`equiv_sl_implies);
