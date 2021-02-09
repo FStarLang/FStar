@@ -84,13 +84,13 @@ let bind_ens (#a:Type) (#b:Type)
   (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
   (ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
   (post:post_t b)
-  (pr:a -> prop)
-  (_:squash (can_be_split_forall_dep pr post_f pre_g))
+  (pr1:a -> prop)
+  (_:squash (can_be_split_forall_dep pr1 post_f pre_g))
   (_:squash (can_be_split_post post_g post))
 : ens_t pre_f b post
 = fun m0 y m2 ->
   req_f m0 /\
-  (exists (x:a) (m1:hmem (post_f x)). pr x /\ ens_f m0 x m1 /\ (ens_g x) m1 y m2)
+  (exists (x:a) (m1:hmem (post_f x)). pr1 x /\ ens_f m0 x m1 /\ (ens_g x) m1 y m2)
 
 val bind (a:Type) (b:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
@@ -98,16 +98,16 @@ val bind (a:Type) (b:Type)
   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:a -> post_t b)
   (#[@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
   (#[@@ framing_implicit] post:post_t b)
-  (#[@@ framing_implicit] pr:a -> prop)
-  (#[@@ framing_implicit] p1:squash (can_be_split_forall_dep pr post_f pre_g))
+  (#[@@ framing_implicit] pr1:a -> prop)
+  (#[@@ framing_implicit] p1:squash (can_be_split_forall_dep pr1 post_f pre_g))
   (#[@@ framing_implicit] p2:squash (can_be_split_post post_g post))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
 : repr b
     pre_f
     post
-    (bind_req req_f ens_f req_g pr p1)
-    (bind_ens req_f ens_f ens_g post pr p1 p2)
+    (bind_req req_f ens_f req_g pr1 p1)
+    (bind_ens req_f ens_f ens_g post pr1 p1 p2)
 
 
 (*
