@@ -737,8 +737,8 @@ let rec sort_correct_aux (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (xs:list
 
 #push-options "--fuel 0 --ifuel 0"
 
-let smt_reflexivity (#a:Type) (eq:equiv a) (pr:prop) (x y:a)
-  : Lemma (requires pr /\ pr == (x == y))
+let smt_reflexivity (#a:Type) (eq:equiv a) (x y:a)
+  : Lemma (requires x == y)
           (ensures EQ?.eq eq x y)
   = EQ?.reflexivity eq x
 
@@ -950,12 +950,11 @@ let canon_l_r (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac
             else apply_lemma (`(EQ?.reflexivity (`#eq)))
     | l -> if emp_frame then (
              apply_lemma (`identity_left_smt (`#eq) (`#m))
-           ) else
-             apply_lemma (`smt_reflexivity (`#eq) (`#pr));
-             split();
-             exact (`(FStar.Squash.return_squash (`#pr_bind)));
-             trefl();
-             iter (fun x -> exact x) l
+           ) else (
+             apply_lemma (`smt_reflexivity (`#eq))
+           );
+           exact (`(FStar.Squash.return_squash (`#pr_bind)));
+           iter (fun x -> exact x) l
  )
 
 let canon_monoid (eq:term) (m:term) (pr:term) (pr_bind:term) : Tac unit =
