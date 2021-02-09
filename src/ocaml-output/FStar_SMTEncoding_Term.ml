@@ -1788,12 +1788,7 @@ and (mkPrelude : Prims.string -> Prims.string) =
         Term_sort, (Prims.of_int (9)), true);
       ((FStar_Pervasives_Native.fst boxRealFun),
         [((FStar_Pervasives_Native.snd boxRealFun), (Sort "Real"), true)],
-        Term_sort, (Prims.of_int (10)), true);
-      ("LexCons",
-        [("LexCons_0", Term_sort, true);
-        ("LexCons_1", Term_sort, true);
-        ("LexCons_2", Term_sort, true)], Term_sort, (Prims.of_int (11)),
-        true)] in
+        Term_sort, (Prims.of_int (10)), true)] in
     let bcons =
       let uu___ =
         let uu___1 =
@@ -1802,7 +1797,7 @@ and (mkPrelude : Prims.string -> Prims.string) =
         FStar_All.pipe_right uu___1 (FStar_List.map (declToSmt z3options)) in
       FStar_All.pipe_right uu___ (FStar_String.concat "\n") in
     let lex_ordering =
-      "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n(is-LexCons t))\n(declare-fun Prims.lex_t () Term)\n(assert (forall ((t1 Term) (t2 Term) (x1 Term) (x2 Term) (y1 Term) (y2 Term))\n(iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t (LexCons t1 x1 x2) (LexCons t2 y1 y2)))\n(or (Valid (Prims.precedes t1 t2 x1 y1))\n(and (= x1 y1)\n(Valid (Prims.precedes Prims.lex_t Prims.lex_t x2 y2)))))))\n(assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n(! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n(Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n:pattern (Prims.precedes t1 t2 e1 e2))))\n(assert (forall ((t1 Term) (t2 Term))\n(! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n(< (Rank t1) (Rank t2)))\n:pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
+      "\n(declare-fun Prims.lex_t () Term)\n(assert (forall ((t1 Term) (t2 Term) (e1 Term) (e2 Term))\n(! (iff (Valid (Prims.precedes t1 t2 e1 e2))\n(Valid (Prims.precedes Prims.lex_t Prims.lex_t e1 e2)))\n:pattern (Prims.precedes t1 t2 e1 e2))))\n(assert (forall ((t1 Term) (t2 Term))\n(! (iff (Valid (Prims.precedes Prims.lex_t Prims.lex_t t1 t2)) \n(< (Rank t1) (Rank t2)))\n:pattern ((Prims.precedes Prims.lex_t Prims.lex_t t1 t2)))))\n" in
     let valid_intro =
       "(assert (forall ((e Term) (t Term))\n(! (implies (HasType e t)\n(Valid t))\n:pattern ((HasType e t)\n(Valid t))\n:qid __prelude_valid_intro)))\n" in
     let valid_elim =
@@ -2116,8 +2111,6 @@ let (mk_Precedes : term -> term -> term -> term -> FStar_Range.range -> term)
           fun r ->
             let uu___ = mkApp ("Prims.precedes", [x1; x2; x3; x4]) r in
             FStar_All.pipe_right uu___ mk_Valid
-let (mk_LexCons : term -> term -> term -> FStar_Range.range -> term) =
-  fun x1 -> fun x2 -> fun x3 -> fun r -> mkApp ("LexCons", [x1; x2; x3]) r
 let rec (n_fuel : Prims.int -> term) =
   fun n ->
     if n = Prims.int_zero

@@ -2298,7 +2298,7 @@ let es =                                                 ( l ) in
 | PERCENT_LBRACK right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
     {let (_1, l, _3) = ((), $2, ()) in
 let es =                                                 ( l ) in
-      ( mkLexList (rhs2 parseState 1 3) es )}
+      ( mk_term (LexList es) (rhs2 parseState 1 3) Type_level )}
 | BANG_LBRACE loption_separated_nonempty_list_COMMA_appTerm__ RBRACE
     {let (_1, xs, _3) = ((), $2, ()) in
 let es =     ( xs ) in

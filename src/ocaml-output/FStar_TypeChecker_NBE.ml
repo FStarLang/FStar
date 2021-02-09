@@ -1963,8 +1963,9 @@ and (translate_flag :
             FStar_TypeChecker_NBETerm.SHOULD_NOT_INLINE
         | FStar_Syntax_Syntax.LEMMA -> FStar_TypeChecker_NBETerm.LEMMA
         | FStar_Syntax_Syntax.CPS -> FStar_TypeChecker_NBETerm.CPS
-        | FStar_Syntax_Syntax.DECREASES tm ->
-            let uu___ = translate cfg bs tm in
+        | FStar_Syntax_Syntax.DECREASES l ->
+            let uu___ =
+              FStar_All.pipe_right l (FStar_List.map (translate cfg bs)) in
             FStar_TypeChecker_NBETerm.DECREASES uu___
 and (readback_flag :
   config -> FStar_TypeChecker_NBETerm.cflag -> FStar_Syntax_Syntax.cflag) =
@@ -1984,8 +1985,9 @@ and (readback_flag :
           FStar_Syntax_Syntax.SHOULD_NOT_INLINE
       | FStar_TypeChecker_NBETerm.LEMMA -> FStar_Syntax_Syntax.LEMMA
       | FStar_TypeChecker_NBETerm.CPS -> FStar_Syntax_Syntax.CPS
-      | FStar_TypeChecker_NBETerm.DECREASES t ->
-          let uu___ = readback cfg t in FStar_Syntax_Syntax.DECREASES uu___
+      | FStar_TypeChecker_NBETerm.DECREASES l ->
+          let uu___ = FStar_All.pipe_right l (FStar_List.map (readback cfg)) in
+          FStar_Syntax_Syntax.DECREASES uu___
 and (translate_monadic :
   (FStar_Syntax_Syntax.monad_name * FStar_Syntax_Syntax.term'
     FStar_Syntax_Syntax.syntax) ->
