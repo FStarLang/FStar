@@ -119,3 +119,46 @@ val append_tree_left (#a: Type0) (ptr: t a) (left : t a)
       ))
 
 (** Self-balancing part of trees *)
+let rec tree_height (#a: Type0) (t: tree a) 
+    : Tot nat =
+    match t with
+    | Leaf -> 0
+    | Node d left right -> 
+    let left_height = tree_height left in
+    let right_height = tree_height right in
+    (if left_height > right_height then left_height
+    else right_height) + 1
+
+let rec tree_balanced (#a: Type0) (t: tree a)
+    : option nat =
+    match t with
+    | Leaf -> Some 0
+    | Node d left right ->
+    let left_balanced = tree_balanced left in
+    let right_balanced = tree_balanced right in
+    match left_balanced, right_balanced with
+    | Some l, Some r -> if (l - r) <= 1 && (r - l) <= 1 then 
+    Some ((if l > r then l else r) + 1)
+    else None
+    | _ -> None 
+
+val vtree_balanced (#a: Type0) (t: t a)
+    : SteelSel bool
+    (linked_tree t) (fun _ -> linked_tree t)
+    (requires (fun h0 -> True))
+    (ensures (fun h0 b h1 ->
+      v_linked_tree t h0 == v_linked_tree t h1 /\
+      b = Some? (tree_balanced (v_linked_tree t h0))))
+    
+val rotate_left (#a: Type0) (t: t a)
+    : SteelSel unit
+    (linked_tree t) (fun _ -> linked_tree t)
+    (requires (fun h0 -> 
+      match v_linked_tree t h0 with
+      | Node x t1 (Node z t23 t4) -> True
+      | _ -> False))
+    (ensures fun h0 _ h1 ->
+      match (v_linked_tree t h0, v_linked_tree t h1) with
+      | Node x t1 (Node z t23 t4), Node z' (Node x' t1' t23') t4' ->
+      x == x' /\ t1 == t1' /\ t23 == t23' /\ t4 == t4' /\ z == z'
+      | _ -> False)
