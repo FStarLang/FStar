@@ -7,6 +7,32 @@ open Steel.Reference
 
 (* Several variants *)
 
+assume
+val pts (#a:Type u#0) (r:ref a) (p:perm) (#[@@smt_fallback] v:erased a) : slprop u#1
+
+assume
+val read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
+  : SteelF a (pts r p #v) (fun x -> pts r p #v)
+           (requires fun _ -> True)
+           (ensures fun _ x _ -> x == Ghost.reveal v)
+
+#set-options "--print_implicits"
+// #set-options "--print_implicits --log_queries --tactic_trace_d 1"
+
+let test (#v0 #v1:erased int) (r0 r1:ref int)
+  : SteelT unit
+    (pts r0 full_perm #v0)// `star` pts r1 full_perm #v1)
+    (fun _ ->  pts r0 full_perm #0)// `star`  pts r1 full_perm #v1)
+  = //let tmp0 = read r0 in
+    assume (v0 == hide 0);
+//    let _:squash (v0 == hide 0) = admit() in
+    let tmp1 = read r0 in
+//    assert (v0 == hide 0);
+    ()
+
+
+let stop () = ()
+
 (* Fails without an slprop rewriting, but prints 9 goals *)
 [@expect_failure]
 let swap (#a:_) (#v0 #v1:erased a) (r0 r1:ref a)
