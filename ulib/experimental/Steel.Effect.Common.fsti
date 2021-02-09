@@ -64,6 +64,9 @@ let can_be_split (t1 t2:pre_t) = t1 `sl_implies` t2
 let can_be_split_forall (#a:Type) (t1 t2:post_t a) =
   forall (x:a). t1 x `sl_implies` t2 x
 
+let can_be_split_forall_dep (#a:Type) (p:prop) (t1 t2:post_t a) =
+  forall (x:a). p ==> t1 x `sl_implies` t2 x
+
 val equiv_forall (#a:Type) (t1 t2:post_t a) : Type0
 
 val equiv_forall_split (#a:Type) (t1 t2:post_t a)
@@ -260,7 +263,6 @@ let rec new_args_for_smt_attrs (env:env) (l:list argv) (ty:typ) : Tac (list argv
     let needs_smt = is_smt_binder binder in
     let new_hd =
       if needs_smt then (
-        dump "cur";
         let arg_ty = tc env arg in
         let uvar = fresh_uvar (Some arg_ty) in
         unshelve uvar;
@@ -775,8 +777,8 @@ let rec sort_correct_aux (#a:Type) (eq:equiv a) (m:cm a eq) (am:amap a) (xs:list
 
 #push-options "--fuel 0 --ifuel 0"
 
-let smt_reflexivity (#a:Type) (eq:equiv a) (x y:a)
-  : Lemma (requires x == y)
+let smt_reflexivity (#a:Type) (eq:equiv a) (pr:prop) (x y:a)
+  : Lemma (requires pr /\ pr == (x == y))
           (ensures EQ?.eq eq x y)
   = EQ?.reflexivity eq x
 
@@ -933,7 +935,7 @@ let normal_elim (x:Type0) : Lemma
   (ensures normal x)
   = ()
 
-let canon_l_r (eq: term) (m: term) (lhs rhs:term) : Tac unit =
+let canon_l_r (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac unit =
   let m_unit = norm_term [iota; zeta; delta](`CM?.unit (`#m)) in
   let am = const m_unit in (* empty map *)
   let (r1_raw, ts, am) = reification eq m [] am lhs in
@@ -985,11 +987,15 @@ let canon_l_r (eq: term) (m: term) (lhs rhs:term) : Tac unit =
     | [] -> if emp_frame then apply_lemma (`identity_left (`#eq) (`#m))
            else apply_lemma (`(EQ?.reflexivity (`#eq)))
     | l -> if emp_frame then apply_lemma (`identity_left_smt (`#eq) (`#m))
-           else apply_lemma (`smt_reflexivity (`#eq));
-           dump "solving this"; smt (); iter (fun x -> dump (term_to_string x); exact x) l; dump "done?"
-  )
+           else
+             apply_lemma (`smt_reflexivity (`#eq) (`#pr));
+             split();
+             exact (`(FStar.Squash.return_squash (`#pr_bind)));
+             trefl();
+             iter (fun x -> exact x) l
+ )
 
-let canon_monoid (eq:term) (m:term) : Tac unit =
+let canon_monoid (eq:term) (m:term) (pr:term) (pr_bind:term) : Tac unit =
   norm [iota; zeta];
   let t = cur_goal () in
   // removing top-level squash application
@@ -1003,7 +1009,7 @@ let canon_monoid (eq:term) (m:term) : Tac unit =
        then (
          match index xy (length xy - 2) , index xy (length xy - 1) with
          | (lhs, Q_Explicit) , (rhs, Q_Explicit) ->
-           canon_l_r eq m lhs rhs
+           canon_l_r eq m pr pr_bind lhs rhs
          | _ -> fail "Goal should have been an application of a binary relation to 2 explicit arguments"
        )
        else (
@@ -1014,8 +1020,8 @@ let canon_monoid (eq:term) (m:term) : Tac unit =
 
 (* Try to integrate it into larger tactic *)
 
-let canon' () : Tac unit =
-  canon_monoid (`Steel.Memory.Tactics.req) (`Steel.Memory.Tactics.rm)
+let canon' (pr:term) (pr_bind:term) : Tac unit =
+  canon_monoid (`Steel.Memory.Tactics.req) (`Steel.Memory.Tactics.rm) pr pr_bind
 
 (* A Variant of canon to collect all slprops in the context into the return_post term,
    and set all extra uvars to emp *)
@@ -1158,7 +1164,7 @@ let solve_can_be_split (args:list argv) : Tac bool =
                               `%fst; `%snd];
                             delta_attr [`%__reduce__];
                             primops; iota; zeta];
-                       canon'()));
+                       canon' (`True) (`True)));
         true
       ) else false
 
@@ -1194,11 +1200,44 @@ let solve_can_be_split_forall (args:list argv) : Tac bool =
                    `%fst; `%snd];
                  delta_attr [`%__reduce__];
                  primops; iota; zeta];
-            canon'()));
+            canon' (`True) (`True)));
         true
       ) else false
 
   | _ -> false // Ill-formed can_be_split, should not happen
+
+let solve_can_be_split_forall_dep (args:list argv) : Tac bool =
+  match args with
+  | [_; (pr, _); (t1, _); (t2, _)] ->
+      let lnbr = slterm_nbr_uvars t1 in
+      let rnbr = slterm_nbr_uvars t2 in
+      if lnbr + rnbr <= 1 then (
+        let open FStar.Algebra.CommMonoid.Equiv in
+        focus (fun _ ->
+          ignore (forall_intro());
+          norm [delta_only [`%can_be_split_forall_dep]];
+          let pr_bind = (implies_intro ()) in
+          or_else (fun _ -> apply_lemma (`lemma_sl_implies_refl))
+            (fun _ ->
+            apply_lemma (`equiv_sl_implies);
+            // TODO: Do this count in a better way
+            if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
+            or_else (fun _ ->  flip()) (fun _ -> ());
+            norm [delta_only [
+                   `%__proj__CM__item__unit;
+                   `%__proj__CM__item__mult;
+                   `%Steel.Memory.Tactics.rm;
+                   `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                   `%fst; `%snd];
+                 delta_attr [`%__reduce__];
+                 primops; iota; zeta];
+            canon' pr pr_bind));
+        true
+
+      ) else false
+
+  | _ -> false // Ill-formed can_be_split, should not happen
+
 
 let solve_equiv_forall (args:list argv) : Tac bool =
   match args with
@@ -1224,7 +1263,7 @@ let solve_equiv_forall (args:list argv) : Tac bool =
                                 `%fst; `%snd];
                               delta_attr [`%__reduce__];
                               primops; iota; zeta];
-                        canon'());
+                        canon'(`True) (`True));
         true
       ) else false
 
@@ -1248,7 +1287,7 @@ let solve_equiv (args:list argv) : Tac bool =
                                `%fst; `%snd];
                              delta_attr [`%__reduce__];
                              primops; iota; zeta];
-                       canon'());
+                       canon'(`True) (`True));
         true
       ) else false
 
@@ -1282,7 +1321,7 @@ let solve_can_be_split_post (args:list argv) : Tac bool =
                                 `%fst; `%snd];
                               delta_attr [`%__reduce__];
                               primops; iota; zeta];
-                        canon'());
+                        canon'(`True) (`True));
         true
       ) else false
 
@@ -1407,6 +1446,7 @@ let solve_or_delay (g:goal) : Tac bool =
       else if term_eq hd (`equiv_forall) then solve_equiv_forall args
       else if term_eq hd (`can_be_split_post) then solve_can_be_split_post args
       else if term_eq hd (`Steel.Memory.equiv) then solve_equiv args
+      else if term_eq hd (`can_be_split_forall_dep) then solve_can_be_split_forall_dep args
       else false
   | Comp (Eq _) l r ->
     let lnbr = List.Tot.length (FStar.Reflection.Builtins.free_uvars l) in
