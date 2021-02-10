@@ -35,6 +35,7 @@ type fsteps = {
      unfold_only  : option<list<I.lid>>;
      unfold_fully : option<list<I.lid>>;
      unfold_attr  : option<list<I.lid>>;
+     unfold_qual  : option<list<string>>;
      unfold_tac : bool;
      pure_subterms_within_computations : bool;
      simplify : bool;
@@ -73,6 +74,7 @@ let steps_to_string f =
     unfold_only = %s;\n\
     unfold_fully = %s;\n\
     unfold_attr = %s;\n\
+    unfold_qual = %s;\n\
     unfold_tac = %s;\n\
     pure_subterms_within_computations = %s;\n\
     simplify = %s;\n\
@@ -100,6 +102,7 @@ let steps_to_string f =
     f.unfold_only |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
     f.unfold_fully |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
     f.unfold_attr |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
+    f.unfold_qual |> format_opt (String.concat ", ");
     f.unfold_tac |> b;
     f.pure_subterms_within_computations |> b;
     f.simplify |> b;
@@ -129,6 +132,7 @@ let default_steps : fsteps = {
     unfold_only = None;
     unfold_fully = None;
     unfold_attr = None;
+    unfold_qual = None;
     unfold_tac = false;
     pure_subterms_within_computations = false;
     simplify = false;
@@ -166,6 +170,7 @@ let fstep_add_one s fs =
     | UnfoldOnly  lids -> { fs with unfold_only  = Some lids }
     | UnfoldFully lids -> { fs with unfold_fully = Some lids }
     | UnfoldAttr  lids -> { fs with unfold_attr  = Some lids }
+    | UnfoldQual  strs -> { fs with unfold_qual  = Some strs }
     | UnfoldTac ->  { fs with unfold_tac = true }
     | PureSubtermsWithinComputations ->  { fs with pure_subterms_within_computations = true }
     | Simplify ->  { fs with simplify = true }
@@ -539,6 +544,36 @@ let built_in_primitive_steps : prim_step_set =
             end
         | _ -> failwith "Unexpected number of arguments"
     in
+    (* and_op and or_op are special cased because they are short-circuting,
+     * can run without unembedding its second argument. *)
+    let and_op : psc -> EMB.norm_cb -> args -> option<term>
+      = fun psc _norm_cb args ->
+        match args with
+        | [(a1, None); (a2, None)] ->
+            begin match try_unembed_simple EMB.e_bool a1 with
+            | Some false ->
+              Some (embed_simple EMB.e_bool psc.psc_range false)
+            | Some true ->
+              Some a2
+            | _ -> None
+            end
+        | _ -> failwith "Unexpected number of arguments"
+    in
+    let or_op : psc -> EMB.norm_cb -> args -> option<term>
+      = fun psc _norm_cb args ->
+        match args with
+        | [(a1, None); (a2, None)] ->
+            begin match try_unembed_simple EMB.e_bool a1 with
+            | Some true ->
+              Some (embed_simple EMB.e_bool psc.psc_range true)
+            | Some false ->
+              Some a2
+            | _ -> None
+            end
+        | _ -> failwith "Unexpected number of arguments"
+    in
+
+    (* division is special cased since we must avoid zero denominators *)
     let division_op : psc -> EMB.norm_cb -> args -> option<term>
       = fun psc _norm_cb args ->
         match args with
@@ -632,13 +667,13 @@ let built_in_primitive_steps : prim_step_set =
          (PC.op_And,
              2,
              0,
-             binary_bool_op (fun x y -> x && y),
-             NBETerm.binary_bool_op (fun x y -> x && y));
+             and_op,
+             NBETerm.and_op);
          (PC.op_Or,
              2,
              0,
-             binary_bool_op (fun x y -> x || y),
-             NBETerm.binary_bool_op (fun x y -> x || y));
+             or_op,
+             NBETerm.or_op);
          (let u32_int_to_t =
             ["FStar"; "UInt32"; "uint_to_t"]
             |> PC.p2l

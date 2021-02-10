@@ -1,5 +1,5 @@
 [
-  ">ïïé…jóÃÜãm½ 9®Á",
+  "1ËVxŠ\u000b%4\u0019‘\"w¬ˆñò",
   [
     [
       "GT.coerce",
@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
       ],
       0,
-      "e0416ec2cacace6105d35ba616d266ea"
+      "9c070284e476837cf8e882ec0e125789"
     ],
     [
       "GT.m",
@@ -24,7 +24,7 @@
         "fuel_guarded_inversion_GT.idx", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "34364965059e4bfb41446b757b4c2bf6"
+      "be20beb11710d369fba5de39599b47a8"
     ],
     [
       "GT.return",
@@ -43,7 +43,7 @@
         "typing_Tm_abs_b68e73a4efe6a575c72f28a07914e6c3"
       ],
       0,
-      "f9c4e1c68ee95a5f861780464d28d4fa"
+      "d1021186d99b129fd88b87c0685ce797"
     ],
     [
       "GT.bind",
@@ -60,7 +60,7 @@
         "typing_Tm_abs_24309c3cadd869b94b5601201277f265"
       ],
       0,
-      "eb64efc85a0bfd2fed6842009ffb3260"
+      "23cdb6c9467bf303a256850ed49ea5d1"
     ],
     [
       "GT.r_map",
@@ -77,7 +77,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "911422aee1d6f233fd45d07f3055def8"
+      "a1e8d4e8f91df86e85a90ddc5246546b"
     ],
     [
       "GT.lift_pure_gtd",
@@ -105,7 +105,7 @@
         "typing_Tm_abs_735bfa0400a12573ed48312f042e45e7"
       ],
       0,
-      "9e153ed1a571068135dbd134bf2340c3"
+      "2e3656f352e50ebcebdbda9357182280"
     ],
     [
       "GT.map",
@@ -118,7 +118,22 @@
         "projection_inverse_BoxBool_proj_0", "unit_typing"
       ],
       0,
-      "39aa7d8dadfd9a79d579badd8008bb92"
+      "882eb528abc93a345600cfb24f83332d"
+    ],
+    [
+      "GT.appn",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "unit_typing"
+      ],
+      0,
+      "db575d4b76c464d10acaa0b523fe5697"
     ],
     [
       "GT.labs0",
@@ -127,7 +142,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "int_inversion" ],
       0,
-      "f0b3fbf04dc20dfbed8e366184f51a1a"
+      "448980a2e8e13eff3a1b9aecc383af48"
     ],
     [
       "GT.labs",
@@ -142,7 +157,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "e3e5ec614eddf5d8fa9fa27f05071ad5"
+      "70a5f713edd2bb1556f1a13173d417d9"
     ]
   ]
 ]

@@ -432,10 +432,11 @@ effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
 
 
 
+module AtomicX = Steel.EffectX.Atomic
 module EffectX = Steel.EffectX
 
-let triv_pre (fp:pre_t) : EffectX.fp_mprop fp = fun _ -> True
-let triv_post (fp:pre_t) (#a:Type) (fp':post_t a) : EffectX.fp_binary_mprop fp fp'
+let triv_pre (fp:pre_t) : AtomicX.fp_mprop fp = fun _ -> True
+let triv_post (fp:pre_t) (#a:Type) (fp':post_t a) : AtomicX.fp_binary_mprop fp fp'
   = fun _ _ _ -> True
 
 let triv_pre' (fp:pre_t) : req_t fp = fun _ -> True
@@ -509,18 +510,6 @@ val par (#aL:Type u#a)
     (fun y -> postL (fst y) `Mem.star` postR (snd y))
     (fun h -> lpreL h /\ lpreR h)
     (fun h0 y h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 (fst y) h1 /\ lpostR h0 (snd y) h1)
-
-val ( || ) (#aL:Type u#a)
-          (#preL:slprop)
-          (#postL:aL -> slprop)
-          ($f:unit -> SteelT aL preL postL)
-          (#aR:Type u#a)
-          (#preR:slprop)
-          (#postR:aR -> slprop)
-          ($g:unit -> SteelT aR preR postR)
- : SteelT (aL & aR)
-          (preL `Mem.star` preR)
-          (fun y -> postL (fst y) `Mem.star` postR (snd y))
 
 val add_action (#a:Type)
                (#p:slprop)

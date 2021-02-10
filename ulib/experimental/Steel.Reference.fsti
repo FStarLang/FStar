@@ -23,7 +23,29 @@ open FStar.Ghost
 
 val ref (a:Type u#0) : Type u#0
 
+val null (#a:Type u#0) : ref a
+val is_null (#a:Type u#0) (r:ref a) : (b:bool{b <==> r == null})
+
 val pts_to (#a:Type u#0) (r:ref a) (p:perm) (v:erased a) : slprop u#1
+
+val pts_to_ref_injective
+      (#a: Type u#0)
+      (r: ref a)
+      (p0 p1:perm)
+      (v0 v1: erased a)
+      (m:mem)
+    : Lemma
+      (requires
+        interp (pts_to r p0 v0 `star` pts_to r p1 v1) m)
+      (ensures v0 == v1)
+
+val pts_to_not_null (#a:Type u#0)
+                    (x:ref a)
+                    (p:perm)
+                    (v: erased a)
+                    (m:mem)
+  : Lemma (requires interp (pts_to x p v) m)
+          (ensures x =!= null)
 
 val pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to r p))
 
@@ -47,12 +69,12 @@ val free (#a:Type0) (#v:erased a) (r:ref a)
 
 
 val share_atomic (#a:Type0) (#uses:_) (#p:perm) (#v:erased a) (r:ref a)
-  : SteelAtomic unit uses unobservable
+  : SteelAtomicT unit uses unobservable
     (pts_to r p v)
     (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
 
 val gather_atomic (#a:Type0) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
-  : SteelAtomic (_:unit{v0 == v1}) uses unobservable
+  : SteelAtomicT (_:unit{v0 == v1}) uses unobservable
     (pts_to r p0 v0 `star` pts_to r p1 v1)
     (fun _ -> pts_to r (sum_perm p0 p1) v0)
 
@@ -62,7 +84,7 @@ val cas (#t:eqtype)
         (v:Ghost.erased t)
         (v_old:t)
         (v_new:t)
-  : SteelAtomic
+  : SteelAtomicT
         (b:bool{b <==> (Ghost.reveal v == v_old)})
         uses
         observable

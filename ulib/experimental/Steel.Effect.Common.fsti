@@ -74,6 +74,9 @@ let can_be_split_forall_dep (#a:Type) (p:a -> prop) (t1 t2:post_t a) =
 
 val equiv_forall (#a:Type) (t1 t2:post_t a) : Type0
 
+val equiv_forall_refl (#a:Type) (t:post_t a)
+  : Lemma (t `equiv_forall` t)
+
 val equiv_forall_split (#a:Type) (t1 t2:post_t a)
   : Lemma (requires t1 `equiv_forall` t2)
           (ensures can_be_split_forall t1 t2 /\ can_be_split_forall t2 t1)
@@ -259,7 +262,7 @@ let rec print_atoms (l:list atom) (am:amap term) : Tac string =
 let is_smt_binder (b:binder) : Tac bool =
   let (bv, aqual) = inspect_binder b in
   match aqual with
-  | Q_Meta_attr t -> term_eq t (`smt_fallback)
+  | Q_Meta _, [t] -> term_eq t (`smt_fallback)
   | _ -> false
 
 let rec new_args_for_smt_attrs (env:env) (l:list argv) (ty:typ) : Tac (list argv * list term) =
@@ -1249,7 +1252,10 @@ let solve_equiv_forall (args:list argv) : Tac bool =
       let rnbr = slterm_nbr_uvars t2 in
       if lnbr + rnbr <= 1 then (
         let open FStar.Algebra.CommMonoid.Equiv in
-        focus (fun _ -> apply_lemma (`equiv_forall_elim);
+        focus (fun _ ->
+          or_else (fun _ -> apply_lemma (`equiv_forall_refl))
+                  (fun _ ->
+                      apply_lemma (`equiv_forall_elim);
                       match goals () with
                       | [] -> ()
                       | _ ->
@@ -1266,7 +1272,7 @@ let solve_equiv_forall (args:list argv) : Tac bool =
                                 `%fst; `%snd];
                               delta_attr [`%__reduce__];
                               primops; iota; zeta];
-                        canon'(`true_p) (`true_p));
+                        canon'(`true_p) (`true_p)));
         true
       ) else false
 
@@ -1307,6 +1313,8 @@ let solve_can_be_split_post (args:list argv) : Tac bool =
         focus (fun _ -> norm[];
                       let g = _cur_goal () in
                       ignore (forall_intro());
+              or_else (fun _ -> apply_lemma (`equiv_forall_refl))
+                      (fun _ ->
                       apply_lemma (`equiv_forall_elim);
                       match goals () with
                       | [] -> ()
@@ -1324,7 +1332,7 @@ let solve_can_be_split_post (args:list argv) : Tac bool =
                                 `%fst; `%snd];
                               delta_attr [`%__reduce__];
                               primops; iota; zeta];
-                        canon'(`true_p) (`true_p));
+                        canon'(`true_p) (`true_p)));
         true
       ) else false
 

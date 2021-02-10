@@ -13,12 +13,8 @@ let (inspect_aqual :
     match aq with
     | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit uu___) ->
         FStar_Reflection_Data.Q_Implicit
-    | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta
-        (FStar_Syntax_Syntax.Arg_qualifier_meta_tac t)) ->
+    | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta t) ->
         FStar_Reflection_Data.Q_Meta t
-    | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta
-        (FStar_Syntax_Syntax.Arg_qualifier_meta_attr t)) ->
-        FStar_Reflection_Data.Q_Meta_attr t
     | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Equality) ->
         FStar_Reflection_Data.Q_Explicit
     | FStar_Pervasives_Native.None -> FStar_Reflection_Data.Q_Explicit
@@ -30,13 +26,7 @@ let (pack_aqual : FStar_Reflection_Data.aqualv -> FStar_Syntax_Syntax.aqual)
     | FStar_Reflection_Data.Q_Implicit ->
         FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit false)
     | FStar_Reflection_Data.Q_Meta t ->
-        FStar_Pervasives_Native.Some
-          (FStar_Syntax_Syntax.Meta
-             (FStar_Syntax_Syntax.Arg_qualifier_meta_tac t))
-    | FStar_Reflection_Data.Q_Meta_attr t ->
-        FStar_Pervasives_Native.Some
-          (FStar_Syntax_Syntax.Meta
-             (FStar_Syntax_Syntax.Arg_qualifier_meta_attr t))
+        FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta t)
 let (inspect_fv : FStar_Syntax_Syntax.fv -> Prims.string Prims.list) =
   fun fv ->
     let uu___ = FStar_Syntax_Syntax.lid_of_fv fv in
@@ -769,8 +759,8 @@ let (inspect_sigelt :
                                         let uu___11 =
                                           let uu___12 =
                                             FStar_Syntax_Syntax.bv_to_name
-                                              (FStar_Pervasives_Native.fst b2) in
-                                          ((FStar_Pervasives_Native.fst b1),
+                                              b2.FStar_Syntax_Syntax.binder_bv in
+                                          ((b1.FStar_Syntax_Syntax.binder_bv),
                                             uu___12) in
                                         FStar_Syntax_Syntax.NT uu___11)
                                    param_ctor_bs param_bs2 in
@@ -787,11 +777,9 @@ let (inspect_sigelt :
                   FStar_Reflection_Data.Sg_Inductive uu___2))
     | FStar_Syntax_Syntax.Sig_declare_typ (lid, us, ty) ->
         let nm = FStar_Ident.path_of_lid lid in
-        let uu___ = FStar_Syntax_Subst.univ_var_opening us in
+        let uu___ = FStar_Syntax_Subst.open_univ_vars us ty in
         (match uu___ with
-         | (s, us1) ->
-             let ty1 = FStar_Syntax_Subst.subst s ty in
-             FStar_Reflection_Data.Sg_Val (nm, us1, ty1))
+         | (us1, ty1) -> FStar_Reflection_Data.Sg_Val (nm, us1, ty1))
     | uu___ -> FStar_Reflection_Data.Unk
 let (pack_sigelt :
   FStar_Reflection_Data.sigelt_view -> FStar_Syntax_Syntax.sigelt) =
@@ -859,8 +847,7 @@ let (pack_sigelt :
         }
     | FStar_Reflection_Data.Sg_Val (nm, us_names, ty) ->
         let val_lid = FStar_Ident.lid_of_path nm FStar_Range.dummyRange in
-        let s = FStar_Syntax_Subst.univ_var_closing us_names in
-        let typ = FStar_Syntax_Subst.subst s ty in
+        let typ = FStar_Syntax_Subst.close_univ_vars us_names ty in
         FStar_All.pipe_left FStar_Syntax_Syntax.mk_sigelt
           (FStar_Syntax_Syntax.Sig_declare_typ (val_lid, us_names, typ))
     | FStar_Reflection_Data.Unk -> failwith "packing Unk, sorry"
@@ -886,16 +873,28 @@ let (pack_bv : FStar_Reflection_Data.bv_view -> FStar_Syntax_Syntax.bv) =
     }
 let (inspect_binder :
   FStar_Syntax_Syntax.binder ->
-    (FStar_Syntax_Syntax.bv * FStar_Reflection_Data.aqualv))
+    (FStar_Syntax_Syntax.bv * (FStar_Reflection_Data.aqualv *
+      FStar_Syntax_Syntax.term Prims.list)))
   =
   fun b ->
-    let uu___ = b in
-    match uu___ with
-    | (bv, aq) -> let uu___1 = inspect_aqual aq in (bv, uu___1)
+    let uu___ =
+      let uu___1 = inspect_aqual b.FStar_Syntax_Syntax.binder_qual in
+      (uu___1, (b.FStar_Syntax_Syntax.binder_attrs)) in
+    ((b.FStar_Syntax_Syntax.binder_bv), uu___)
 let (pack_binder :
   FStar_Syntax_Syntax.bv ->
-    FStar_Reflection_Data.aqualv -> FStar_Syntax_Syntax.binder)
-  = fun bv -> fun aqv -> let uu___ = pack_aqual aqv in (bv, uu___)
+    FStar_Reflection_Data.aqualv ->
+      FStar_Syntax_Syntax.term Prims.list -> FStar_Syntax_Syntax.binder)
+  =
+  fun bv ->
+    fun aqv ->
+      fun attrs ->
+        let uu___ = pack_aqual aqv in
+        {
+          FStar_Syntax_Syntax.binder_bv = bv;
+          FStar_Syntax_Syntax.binder_qual = uu___;
+          FStar_Syntax_Syntax.binder_attrs = attrs
+        }
 let (moduleof : FStar_TypeChecker_Env.env -> Prims.string Prims.list) =
   fun e -> FStar_Ident.path_of_lid e.FStar_TypeChecker_Env.curmodule
 let (env_open_modules :
@@ -932,3 +931,11 @@ let (push_binder :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.binder -> FStar_TypeChecker_Env.env)
   = fun e -> fun b -> FStar_TypeChecker_Env.push_binders e [b]
+let (subst :
+  FStar_Syntax_Syntax.bv ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
+  =
+  fun x ->
+    fun n ->
+      fun m -> FStar_Syntax_Subst.subst [FStar_Syntax_Syntax.NT (x, n)] m

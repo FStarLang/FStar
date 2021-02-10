@@ -303,6 +303,7 @@ let steps_reify         = psconst "reify_"
 let steps_unfoldonly    = psconst "delta_only"
 let steps_unfoldfully   = psconst "delta_fully"
 let steps_unfoldattr    = psconst "delta_attr"
+let steps_unfoldqual    = psconst "delta_qualifier"
 let steps_nbe           = psconst "nbe"
 
 (* attributes *)
@@ -321,6 +322,7 @@ let comment_attr = p2l ["FStar"; "Pervasives"; "Comment"]
 let fail_attr      = psconst "expect_failure"
 let fail_lax_attr  = psconst "expect_lax_failure"
 let tcdecltime_attr = psconst "tcdecltime"
+let noextract_to_attr = psconst "noextract_to"
 let assume_strictly_positive_attr_lid = psconst "assume_strictly_positive"
 let unifier_hint_injective_lid = psconst "unifier_hint_injective"
 let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
@@ -329,6 +331,7 @@ let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_
 let check_with_lid = lid_of_path (["FStar"; "Reflection"; "Builtins"; "check_with"]) FStar.Range.dummyRange
 let commute_nested_matches_lid = psconst "commute_nested_matches"
 let allow_informative_binders_attr = p2l ["FStar"; "Pervasives"; "allow_informative_binders"]
+let remove_unused_type_parameters_lid = psconst "remove_unused_type_parameters"
 
 let gen_reset =
     let x = U.mk_ref 0 in

@@ -368,6 +368,10 @@ type raw_error =
   | Error_UnexpectedUnresolvedUvar 
   | Warning_UnfoldPlugin 
   | Error_LayeredMissingAnnot 
+  | Error_CallToErased 
+  | Error_ErasedCtor 
+  | Error_RemoveUnusedTypeParameter 
+  | Warning_NoMagicInFSharp 
 let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -1846,6 +1850,20 @@ let (uu___is_Warning_UnfoldPlugin : raw_error -> Prims.bool) =
 let (uu___is_Error_LayeredMissingAnnot : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with | Error_LayeredMissingAnnot -> true | uu___ -> false
+let (uu___is_Error_CallToErased : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Error_CallToErased -> true | uu___ -> false
+let (uu___is_Error_ErasedCtor : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Error_ErasedCtor -> true | uu___ -> false
+let (uu___is_Error_RemoveUnusedTypeParameter : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | Error_RemoveUnusedTypeParameter -> true
+    | uu___ -> false
+let (uu___is_Warning_NoMagicInFSharp : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Warning_NoMagicInFSharp -> true | uu___ -> false
 type flag = error_flag
 type error_setting = (raw_error * error_flag * Prims.int)
 let (default_settings : error_setting Prims.list) =
@@ -2195,7 +2213,11 @@ let (default_settings : error_setting Prims.list) =
   (Error_BadSplice, CError, (Prims.of_int (338)));
   (Error_UnexpectedUnresolvedUvar, CAlwaysError, (Prims.of_int (339)));
   (Warning_UnfoldPlugin, CWarning, (Prims.of_int (340)));
-  (Error_LayeredMissingAnnot, CAlwaysError, (Prims.of_int (341)))]
+  (Error_LayeredMissingAnnot, CAlwaysError, (Prims.of_int (341)));
+  (Error_CallToErased, CError, (Prims.of_int (342)));
+  (Error_ErasedCtor, CError, (Prims.of_int (343)));
+  (Error_RemoveUnusedTypeParameter, CWarning, (Prims.of_int (344)));
+  (Warning_NoMagicInFSharp, CWarning, (Prims.of_int (345)))]
 let lookup_error :
   'uuuuu 'uuuuu1 'uuuuu2 .
     ('uuuuu * 'uuuuu1 * 'uuuuu2) Prims.list ->
@@ -2234,6 +2256,9 @@ let (warn_on_use_errno : Prims.int) =
   error_number uu___
 let (defensive_errno : Prims.int) =
   let uu___ = lookup_error default_settings Warning_Defensive in
+  error_number uu___
+let (call_to_erased_errno : Prims.int) =
+  let uu___ = lookup_error default_settings Error_CallToErased in
   error_number uu___
 let (update_flags :
   (error_flag * Prims.string) Prims.list -> error_setting Prims.list) =

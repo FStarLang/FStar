@@ -84,7 +84,7 @@ let __do_rewrite
     | None -> ret tm
     | Some (_, lcomp, g) ->
 
-    if not (TcComm.is_pure_or_ghost_lcomp lcomp) || not (Env.is_trivial g) then
+    if not (TcComm.is_pure_or_ghost_lcomp lcomp) then 
       ret tm (* SHOULD THIS CHECK BE IN maybe_rewrite INSTEAD? *)
     else
     let typ = lcomp.res_typ in

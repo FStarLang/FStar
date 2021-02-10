@@ -13,7 +13,7 @@ module R = FStar.ReflexiveTransitiveClosure
 // Simplifying protocols for now
 let rec no_loop (p:dprot') = match p with
   | Return _ -> False
-  | Msg _ a k -> (forall x. (WF.axiom1 k x; no_loop (k x)))
+  | Msg _ a k -> (forall x. no_loop (k x))
   | DoWhile _ _ -> False
 
 let dprot = p:dprot'{no_loop p}

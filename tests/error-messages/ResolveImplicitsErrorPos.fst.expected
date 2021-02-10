@@ -6,6 +6,5 @@ Goal 1/1 (Instantiation of meta argument):
 >> Got issues: [
 ResolveImplicitsErrorPos.fst(15,10-15,11): (Error 228) user tactic failed: `oops`
 >>]
-ResolveImplicitsErrorPos.fst(11,11-11,14): (Warning 330) Associating attributes with a binder is an experimental feature---expect its behavior to change
 Verified module: ResolveImplicitsErrorPos
 All verification conditions discharged successfully

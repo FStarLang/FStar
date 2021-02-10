@@ -67,8 +67,7 @@ let get_env () : Env.env =
 let inspect_aqual (aq : aqual) : aqualv =
     match aq with
     | Some (Implicit _) -> Data.Q_Implicit
-    | Some (Meta (Arg_qualifier_meta_tac t)) -> Data.Q_Meta t
-    | Some (Meta (Arg_qualifier_meta_attr t)) -> Data.Q_Meta_attr t
+    | Some (Meta t) -> Data.Q_Meta t
     | Some Equality
     | None -> Data.Q_Explicit
 
@@ -77,8 +76,7 @@ let pack_aqual (aqv : aqualv) : aqual =
     match aqv with
     | Data.Q_Explicit -> None
     | Data.Q_Implicit -> Some (Implicit false)
-    | Data.Q_Meta t   -> Some (Meta (Arg_qualifier_meta_tac t))
-    | Data.Q_Meta_attr t   -> Some (Meta (Arg_qualifier_meta_attr t))
+    | Data.Q_Meta t   -> Some (Meta t)
 
 let inspect_fv (fv:fv) : list<string> =
     Ident.path_of_lid (lid_of_fv fv)
@@ -524,7 +522,7 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
             (* Substitute the parameters of the constructor to match
              * those of the inductive opened above, and return the type
              * of the constructor already instantiated. *)
-            let s' = List.map2 (fun b1 b2 -> NT (fst b1, S.bv_to_name (fst b2)))
+            let s' = List.map2 (fun b1 b2 -> NT (b1.binder_bv, S.bv_to_name b2.binder_bv))
                                param_ctor_bs param_bs
             in
             let cty = SS.subst s' cty in
@@ -539,10 +537,8 @@ let inspect_sigelt (se : sigelt) : sigelt_view =
 
     | Sig_declare_typ (lid, us, ty) ->
         let nm = Ident.path_of_lid lid in
-        let s, us = SS.univ_var_opening us in
-        let ty = SS.subst s ty in
+        let us, ty = SS.open_univ_vars us ty in
         Sg_Val (nm, us, ty)
-       
 
     | _ ->
         Unk
@@ -587,8 +583,7 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
 
     | Sg_Val (nm, us_names, ty) ->
         let val_lid = Ident.lid_of_path nm Range.dummyRange in
-        let s = SS.univ_var_closing us_names in
-        let typ = SS.subst s ty in
+        let typ = SS.close_univ_vars us_names ty in
         mk_sigelt <| Sig_declare_typ (val_lid, us_names, typ)
 
     | Unk ->
@@ -608,12 +603,11 @@ let pack_bv (bvv:bv_view) : bv =
       sort = bvv.bv_sort;
     }
 
-let inspect_binder (b:binder) : bv * aqualv =
-    let bv, aq = b in
-    bv, inspect_aqual aq
+let inspect_binder (b:binder) : bv * (aqualv * list<term>) =
+    b.binder_bv, (inspect_aqual (b.binder_qual), b.binder_attrs)
 
-let pack_binder (bv:bv) (aqv:aqualv) : binder =
-    bv, pack_aqual aqv
+let pack_binder (bv:bv) (aqv:aqualv) (attrs:list<term>) : binder =
+    { binder_bv=bv; binder_qual=pack_aqual aqv; binder_attrs=attrs }
 
 open FStar.TypeChecker.Env
 let moduleof (e : Env.env) : list<string> =
@@ -633,3 +627,6 @@ let explode_qn s = String.split ['.'] s
 let compare_string s1 s2 = Z.of_int_fs (String.compare s1 s2)
 
 let push_binder e b = Env.push_binders e [b]
+
+let subst (x:bv) (n:term) (m:term) : term =
+  SS.subst [NT(x,n)] m

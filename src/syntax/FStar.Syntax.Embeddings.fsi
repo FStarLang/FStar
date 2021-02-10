@@ -25,6 +25,7 @@ type norm_step =
     | UnfoldOnly  of list<string>
     | UnfoldFully of list<string>
     | UnfoldAttr  of list<string>
+    | UnfoldQual  of list<string>
     | NBE
 
 val steps_Simpl         : term

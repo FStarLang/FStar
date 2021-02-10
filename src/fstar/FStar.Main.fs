@@ -66,10 +66,10 @@ let load_native_tactics () =
     let ml_file m = ml_module_name m ^ ".ml" in
     let cmxs_file m =
         let cmxs = ml_module_name m ^ ".cmxs" in
-        match FStar.Options.find_file (cmxs |> Options.prepend_output_dir) with
+        match FStar.Options.find_file cmxs with
         | Some f -> f
         | None ->
-        match FStar.Options.find_file (ml_file m |> Options.prepend_output_dir) with
+        match FStar.Options.find_file (ml_file m) with
         | None ->
             E.raise_err (E.Fatal_FailToCompileNativeTactic,
                          Util.format1 "Failed to compile native tactic; extracted module %s not found" (ml_file m))

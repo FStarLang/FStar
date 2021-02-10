@@ -1082,6 +1082,7 @@ type norm_step =
   | UnfoldOnly of Prims.string Prims.list 
   | UnfoldFully of Prims.string Prims.list 
   | UnfoldAttr of Prims.string Prims.list 
+  | UnfoldQual of Prims.string Prims.list 
   | NBE 
 let (uu___is_Simpl : norm_step -> Prims.bool) =
   fun projectee -> match projectee with | Simpl -> true | uu___ -> false
@@ -1116,6 +1117,11 @@ let (uu___is_UnfoldAttr : norm_step -> Prims.bool) =
     match projectee with | UnfoldAttr _0 -> true | uu___ -> false
 let (__proj__UnfoldAttr__item___0 : norm_step -> Prims.string Prims.list) =
   fun projectee -> match projectee with | UnfoldAttr _0 -> _0
+let (uu___is_UnfoldQual : norm_step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UnfoldQual _0 -> true | uu___ -> false
+let (__proj__UnfoldQual__item___0 : norm_step -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | UnfoldQual _0 -> _0
 let (uu___is_NBE : norm_step -> Prims.bool) =
   fun projectee -> match projectee with | NBE -> true | uu___ -> false
 let (steps_Simpl : FStar_Syntax_Syntax.term) =
@@ -1142,6 +1148,8 @@ let (steps_UnfoldFully : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_unfoldonly
 let (steps_UnfoldAttr : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_unfoldattr
+let (steps_UnfoldQual : FStar_Syntax_Syntax.term) =
+  FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_unfoldqual
 let (steps_NBE : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.tconst FStar_Parser_Const.steps_nbe
 let (e_norm_step : norm_step embedding) =
@@ -1199,7 +1207,17 @@ let (e_norm_step : norm_step embedding) =
                    uu___4 rng FStar_Pervasives_Native.None norm in
                  FStar_Syntax_Syntax.as_arg uu___3 in
                [uu___2] in
-             FStar_Syntax_Syntax.mk_Tm_app steps_UnfoldAttr uu___1 rng) in
+             FStar_Syntax_Syntax.mk_Tm_app steps_UnfoldAttr uu___1 rng
+         | UnfoldQual l ->
+             let uu___1 =
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 =
+                     let uu___5 = e_list e_string in embed uu___5 l in
+                   uu___4 rng FStar_Pervasives_Native.None norm in
+                 FStar_Syntax_Syntax.as_arg uu___3 in
+               [uu___2] in
+             FStar_Syntax_Syntax.mk_Tm_app steps_UnfoldQual uu___1 rng) in
   let un t0 w norm =
     let t = FStar_Syntax_Util.unmeta_safe t0 in
     lazy_unembed printer1 emb_t_norm_step t t_norm_step
@@ -1292,6 +1310,19 @@ let (e_norm_step : norm_step embedding) =
                        FStar_All.pipe_left
                          (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
                          (UnfoldAttr ss))
+              | (FStar_Syntax_Syntax.Tm_fvar fv, (l, uu___2)::[]) when
+                  FStar_Syntax_Syntax.fv_eq_lid fv
+                    FStar_Parser_Const.steps_unfoldqual
+                  ->
+                  let uu___3 =
+                    let uu___4 =
+                      let uu___5 = e_list e_string in unembed uu___5 l in
+                    uu___4 w norm in
+                  FStar_Util.bind_opt uu___3
+                    (fun ss ->
+                       FStar_All.pipe_left
+                         (fun uu___4 -> FStar_Pervasives_Native.Some uu___4)
+                         (UnfoldQual ss))
               | uu___2 ->
                   (if w
                    then
@@ -2087,7 +2118,7 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
             let uu___2 =
               let uu___3 =
                 let uu___4 = FStar_Syntax_Syntax.null_bv ea.typ in
-                (uu___4, FStar_Pervasives_Native.None) in
+                FStar_Syntax_Syntax.mk_binder uu___4 in
               [uu___3] in
             let uu___3 = FStar_Syntax_Syntax.mk_Total eb.typ in
             (uu___2, uu___3) in
