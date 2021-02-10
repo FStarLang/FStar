@@ -99,6 +99,14 @@ let slimp (p1 p2 : slprop) : prop =
 (** A memory maps a [ref]erence to its associated value *)
 val ref (a:Type u#a) (pcm:pcm a) : Type u#0
 
+(** [null] is a specific reference, that is not associated to any value
+*)
+val null (#a:Type u#a) (#pcm:pcm a) : ref a pcm
+
+(** Checking whether [r] is the null pointer is decidable through [is_null]
+*)
+val is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null})
+
 (** All the standard connectives of separation logic, based on [Steel.Heap] *)
 val emp : slprop u#a
 val pure (p:prop) : slprop u#a
@@ -161,6 +169,14 @@ val pts_to_compatible_equiv (#a:Type)
                             (v1:a{composable pcm v0 v1})
   : Lemma (equiv (pts_to x v0 `star` pts_to x v1)
                  (pts_to x (op pcm v0 v1)))
+
+val pts_to_not_null (#a:Type u#a)
+                    (#pcm:_)
+                    (x:ref a pcm)
+                    (v:a)
+                    (m:mem u#a)
+  : Lemma (requires interp (pts_to x v) m)
+          (ensures x =!= null)
 
 (***** Properties of the separating conjunction *)
 
@@ -275,6 +291,15 @@ let mprop (fp:slprop u#a) =
     forall (m0:mem{interp fp m0}) (m1:mem{disjoint m0 m1}).
       q m0 <==> q (join m0 m1)}
 
+let mprop2 (#a:Type u#b) (fp_pre:slprop u#a) (fp_post:a -> slprop u#a) =
+  q:(mem u#a -> a -> mem u#a -> prop){
+    // can join any disjoint mem to the pre-mem and q is still valid
+    (forall (x:a) (m0:mem{interp fp_pre m0}) (m_post:mem{interp (fp_post x) m_post}) (m1:mem{disjoint m0 m1}).
+      q m0 x m_post <==> q (join m0 m1) x m_post) /\
+    // can join any mem to the post-mem and q is still valid
+    (forall (x:a) (m_pre:mem{interp fp_pre m_pre}) (m0:mem{interp (fp_post x) m0}) (m1:mem{disjoint m0 m1}).
+      q m_pre x m0 <==> q m_pre x (join m0 m1))}
+
 (**
   The preorder along wich the memory evolves with every update. See [Steel.Heap.heap_evolves]
 *)
@@ -292,19 +317,31 @@ effect MstTot
   (expects:slprop u#1)
   (provides: a -> slprop u#1)
   (frame:slprop u#1)
+  (pre:mprop expects)
+  (post:mprop2 expects provides)
   = NMSTTotal.NMSTATETOT a (full_mem u#1) mem_evolves
     (requires fun m0 ->
         inames_ok except m0 /\
-        interp (expects `star` frame `star` locks_invariant except m0) m0)
+        interp (expects `star` frame `star` locks_invariant except m0) m0 /\
+        pre (core_mem m0))
     (ensures fun m0 x m1 ->
         inames_ok except m1 /\
         interp (expects `star` frame `star` locks_invariant except m0) m0 /\  //TODO: fix the effect so as not to repeat this
         interp (provides x `star` frame `star` locks_invariant except m1) m1 /\
+        post (core_mem m0) x (core_mem m1) /\
         (forall (f_frame:mprop frame). f_frame (core_mem m0) == f_frame (core_mem m1)))
 
 (** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
 let action_except (a:Type u#a) (except:inames) (expects:slprop) (provides: a -> slprop) =
-  frame:slprop -> MstTot a except expects provides frame
+  frame:slprop -> MstTot a except expects provides frame (fun _ -> True) (fun _ _ _ -> True)
+
+let action_except_full (a:Type u#a)
+  (except:inames)
+  (expects:slprop)
+  (provides: a -> slprop)
+  (req:mprop expects)
+  (ens:mprop2 expects provides)
+= frame:slprop -> MstTot a except expects provides frame req ens
 
 val sel_action (#a:Type u#1) (#pcm:_) (e:inames) (r:ref a pcm) (v0:erased a)
   : action_except (v:a{compatible pcm v0 v}) e (pts_to r v0) (fun _ -> pts_to r v0)
@@ -419,9 +456,11 @@ val frame (#a:Type)
           (#opened_invariants:inames)
           (#pre:slprop)
           (#post:a -> slprop)
+          (#req:mprop pre)
+          (#ens:mprop2 pre post)
           (frame:slprop)
-          ($f:action_except a opened_invariants pre post)
-  : action_except a opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
+          ($f:action_except_full a opened_invariants pre post req ens)
+  : action_except_full a opened_invariants (pre `star` frame) (fun x -> post x `star` frame) req ens
 
 val change_slprop (#opened_invariants:inames)
                   (p q:slprop)

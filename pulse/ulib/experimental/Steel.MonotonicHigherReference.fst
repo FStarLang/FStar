@@ -272,7 +272,7 @@ let extract_pure #a #uses #p #f
                  (r:ref a p)
                  (v:Ghost.erased a)
                  (h:Ghost.erased (history a p))
-  : SteelAtomic (_:unit{history_val h v f})
+  : SteelAtomicT (_:unit{history_val h v f})
            uses
            unobservable
            (pts_to_body r f v h)
@@ -289,7 +289,7 @@ let elim_pure #a #uses #p #f
                  (r:ref a p)
                  (v:Ghost.erased a)
                  (h:Ghost.erased (history a p))
-  : SteelAtomic (_:unit{history_val h v f})
+  : SteelAtomicT (_:unit{history_val h v f})
            uses
            unobservable
            (pts_to_body r f v h)

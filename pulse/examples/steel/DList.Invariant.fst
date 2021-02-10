@@ -21,6 +21,7 @@ open Steel.Effect
 open Steel.FractionalPermission
 open Steel.Reference
 module L = FStar.List.Tot
+module U = Steel.Utils
 
 #push-options "--__no_positivity"
 noeq
@@ -43,7 +44,6 @@ let mk_cell (p n: t 'a) (d:'a) = {
 let hd l = Cons?.hd l
 let tl l = Cons?.tl l
 
-let null_dlist (#a:Type)  = admit()
 let ptr_eq (#a:Type) (x y:t a) = admit()
 
 
@@ -66,7 +66,8 @@ let rec dlist' (#a:Type) (left:t a)
       pure (prev hd == left) `star`
       dlist' ptr (next hd) right tl
 let dlist = dlist'
-
+                  
+  
 // assume
 // val dlist_injective (#a:_) (left ptr right : t a)
 //                            (l1 l2:list (cell a))
@@ -107,10 +108,13 @@ let elim_dlist_nil (#a:Type) (left ptr right:t a)
                    (fun m -> pure_interp (ptr == right) m;
                           norm_spec [delta;zeta] ((dlist left ptr right [])))
 
-assume
-val intro_star_pure (p:slprop) (q:prop) (h:mem)
+
+let intro_star_pure (p:slprop) (q:prop) (h:mem)
   : Lemma (interp p h /\ q ==> interp (p `star` pure q) h)
-          
+  = let open Steel.Memory in
+    emp_unit p;
+    pure_star_interp p q h
+  
 let dlist_right_right_nil (#a:Type) (left right:t a) (l:list (cell a)) (m:mem)
   : Lemma
     (requires interp (dlist left right right l) m)
@@ -156,13 +160,6 @@ let intro_dlist_cons (#a:Type) (left:t a)
                     (dlist left ptr right (hd::tl))
                     (fun _ -> norm_spec [delta;zeta] (dlist left ptr right (hd::tl)))
 
-
-assume 
-val elim_pure (p:prop)
-  : Steel unit (pure p) (fun _ -> emp)
-    (requires fun _ -> True)
-    (ensures fun _ _ _ -> p)
-
 let elim_dlist_cons (#a:Type) (left:t a)
                               (ptr:t a)
                               (right:t a)
@@ -174,8 +171,8 @@ let elim_dlist_cons (#a:Type) (left:t a)
                      pure (prev hd == left) `star`
                      dlist ptr (next hd) right tl)
                     (fun _ -> norm_spec [delta;zeta] (dlist left ptr right (hd::tl)));
-     elim_pure (right =!= ptr);                    
-     elim_pure (prev hd == left)                         
+     U.elim_pure (right =!= ptr);                    
+     U.elim_pure (prev hd == left)                         
 
 let lemma_invert_dlist_cons_neq (#a:Type) (left ptr right:t a) (l:list (cell a)) (m:mem)
   : Lemma
@@ -202,5 +199,35 @@ let invert_dlist_cons_neq (#a:Type) (left ptr right:t a) (l:list (cell a))
    = change_slprop (dlist left ptr right l)
                    (dlist left ptr right l `star` pure (Cons? l == true))
                    (lemma_invert_dlist_cons_neq left ptr right l);
-     elim_pure (Cons? l == true)                   
+     U.elim_pure (Cons? l == true)                   
+
+
+////////////////////////////////////////////////////////////////////////////////
+  
+let dlist_not_null (#a:Type) 
+                   (#[@@framing_implicit] left:t a)
+                   (#[@@framing_implicit] right:t a) 
+                   (#[@@framing_implicit] rep:list (cell a))
+                   (p:t a)
+  = U.lift_lemma (dlist left p right rep)
+                 ((Cons? rep) == true)
+                 (fun m -> if Cons? rep 
+                        then ()
+                        else (assert (p =!= right);
+                              lemma_invert_dlist_cons_neq left p right rep m);
+                              Steel.Memory.pure_star_interp
+                                (dlist left p right rep)
+                                (Cons? rep == true)
+                                m);
+    let hd :: tl = rep in
+    change_slprop (dlist left p right rep)
+                  (dlist left p right (hd :: tl))
+                  (fun _ -> ());
+    elim_dlist_cons left p right hd tl;
+    U.pts_to_not_null #_ #full_perm #(Ghost.hide hd) p;
+    intro_dlist_cons left p right hd tl;
+    change_slprop (dlist left p right (hd :: tl)) 
+                  (dlist left p right rep) 
+                  (fun _ -> ())
+
 
