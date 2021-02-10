@@ -64,6 +64,8 @@ val sl_implies_interp_emp (p q:slprop u#1)
 
 let can_be_split (t1 t2:pre_t) = t1 `sl_implies` t2
 
+let can_be_split_dep (p:prop) (t1 t2:pre_t) = p ==> t1 `sl_implies` t2
+
 let can_be_split_forall (#a:Type) (t1 t2:post_t a) =
   forall (x:a). t1 x `sl_implies` t2 x
 
@@ -1132,6 +1134,41 @@ let solve_can_be_split (args:list argv) : Tac bool =
 
   | _ -> false // Ill-formed can_be_split, should not happen
 
+let solve_can_be_split_dep (args:list argv) : Tac bool =
+  match args with
+  | [(p, _); (t1, _); (t2, _)] ->
+      let lnbr = slterm_nbr_uvars t1 in
+      let rnbr = slterm_nbr_uvars t2 in
+      if lnbr + rnbr <= 1 then (
+        let open FStar.Algebra.CommMonoid.Equiv in
+        focus (fun _ ->
+          norm [delta_only [`%can_be_split]];
+          let p_bind = implies_intro () in
+          or_else
+            (fun _ ->
+              let b = unify p (`true_p) in
+              if not b then fail "could not unify SMT prop with True";
+              apply_lemma (`lemma_sl_implies_refl))
+            (fun _ ->
+              apply_lemma (`equiv_sl_implies);
+              // TODO: Do this count in a better way
+              if lnbr <> 0 && rnbr = 0 then apply_lemma (`Steel.Memory.Tactics.equiv_sym);
+              or_else (fun _ ->  flip()) (fun _ -> ());
+              norm [delta_only [
+                     `%__proj__CM__item__unit;
+                     `%__proj__CM__item__mult;
+                     `%Steel.Memory.Tactics.rm;
+                     `%__proj__Mktuple2__item___1; `%__proj__Mktuple2__item___2;
+                     `%fst; `%snd];
+                   delta_attr [`%__reduce__];
+                   primops; iota; zeta];
+              canon' p p_bind));
+        true
+
+      ) else false
+
+  | _ -> fail "ill-formed can_be_split_dep"
+
 let emp_unit_variant (p:slprop) : Lemma
    (ensures can_be_split p (p `star` emp))
   = Classical.forall_intro emp_unit;
@@ -1352,8 +1389,10 @@ let solve_return (t:term) : Tac unit
       dismiss_slprops();
       ignore (forall_intro ());
       ignore (forall_intro ())
+    ) else if term_appears_in (`can_be_split_dep) t then (
+      fail "can_be_split_dep not supported in return"
     ) else if term_appears_in (`can_be_split_forall_dep) t then (
-      fail "can_be_split_forall_dep not supported"
+      fail "can_be_split_forall_dep not supported in return"
     ) else
       // This should never happen
       fail "return_post goal in unexpected position";
@@ -1414,6 +1453,7 @@ let solve_or_delay (g:goal) : Tac bool =
       else if term_eq hd (`equiv_forall) then solve_equiv_forall args
       else if term_eq hd (`can_be_split_post) then solve_can_be_split_post args
       else if term_eq hd (`Steel.Memory.equiv) then solve_equiv args
+      else if term_eq hd (`can_be_split_dep) then solve_can_be_split_dep args
       else if term_eq hd (`can_be_split_forall_dep) then solve_can_be_split_forall_dep args
       else false
   | Comp (Eq _) l r ->
