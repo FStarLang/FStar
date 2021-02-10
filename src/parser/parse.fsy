@@ -285,13 +285,6 @@ option_ascribeTyp_:
     {let x = $1 in
     ( Some x )}
 
-option_binders_:
-  
-    {    ( None )}
-| binders
-    {let x = $1 in
-    ( Some x )}
-
 option_fsTypeArgs_:
   
     {    ( None )}
@@ -318,13 +311,6 @@ option_term_:
   
     {    ( None )}
 | term
-    {let x = $1 in
-    ( Some x )}
-
-option_typars_:
-  
-    {    ( None )}
-| typars
     {let x = $1 in
     ( Some x )}
 
@@ -370,6 +356,18 @@ list___anonymous_10_:
 | DOT qlident list___anonymous_10_
     {let (_1, id, xs) = ((), $2, $3) in
 let x =                                                     (id) in
+    ( x :: xs )}
+
+list___anonymous_4_:
+  
+    {    ( [] )}
+| binder list___anonymous_4_
+    {let (b, xs) = ($1, $2) in
+let x =                            ([b]) in
+    ( x :: xs )}
+| multiBinder list___anonymous_4_
+    {let (bs, xs) = ($1, $2) in
+let x =                                                   (bs) in
     ( x :: xs )}
 
 list_argTerm_:
@@ -428,90 +426,20 @@ list_multiBinder_:
     {let (x, xs) = ($1, $2) in
     ( x :: xs )}
 
-nonempty_list___anonymous_4_:
-  binder
-    {let b = $1 in
-let x =                                     ([b]) in
-    ( [ x ] )}
-| multiBinder
-    {let bs = $1 in
-let x =                                                            (bs) in
-    ( [ x ] )}
-| binder nonempty_list___anonymous_4_
-    {let (b, xs) = ($1, $2) in
-let x =                                     ([b]) in
-    ( x :: xs )}
-| multiBinder nonempty_list___anonymous_4_
-    {let (bs, xs) = ($1, $2) in
-let x =                                                            (bs) in
-    ( x :: xs )}
-
 nonempty_list_aqualifiedWithAttrs_lident__:
-  aqualUniverses newAttributes lident
-    {let (aq, attrs, x) = ($1, $2, $3) in
-let x =                                               ( (Some aq, attrs), x ) in
-    ( [ x ] )}
-| aqualUniverses lident
-    {let (aq, x) = ($1, $2) in
-let x =                           ( (Some aq, []), x ) in
-    ( [ x ] )}
-| newAttributes lident
-    {let (attrs, x) = ($1, $2) in
-let x =                             ( (None, attrs), x ) in
-    ( [ x ] )}
-| lident
+  aqualifiedWithAttrs_lident_
     {let x = $1 in
-let x =         ( (None, []), x ) in
     ( [ x ] )}
-| aqualUniverses newAttributes lident nonempty_list_aqualifiedWithAttrs_lident__
-    {let (aq, attrs, x, xs) = ($1, $2, $3, $4) in
-let x =                                               ( (Some aq, attrs), x ) in
-    ( x :: xs )}
-| aqualUniverses lident nonempty_list_aqualifiedWithAttrs_lident__
-    {let (aq, x, xs) = ($1, $2, $3) in
-let x =                           ( (Some aq, []), x ) in
-    ( x :: xs )}
-| newAttributes lident nonempty_list_aqualifiedWithAttrs_lident__
-    {let (attrs, x, xs) = ($1, $2, $3) in
-let x =                             ( (None, attrs), x ) in
-    ( x :: xs )}
-| lident nonempty_list_aqualifiedWithAttrs_lident__
+| aqualifiedWithAttrs_lident_ nonempty_list_aqualifiedWithAttrs_lident__
     {let (x, xs) = ($1, $2) in
-let x =         ( (None, []), x ) in
     ( x :: xs )}
 
 nonempty_list_aqualifiedWithAttrs_lidentOrUnderscore__:
-  aqualUniverses newAttributes lidentOrUnderscore
-    {let (aq, attrs, x) = ($1, $2, $3) in
-let x =                                               ( (Some aq, attrs), x ) in
-    ( [ x ] )}
-| aqualUniverses lidentOrUnderscore
-    {let (aq, x) = ($1, $2) in
-let x =                           ( (Some aq, []), x ) in
-    ( [ x ] )}
-| newAttributes lidentOrUnderscore
-    {let (attrs, x) = ($1, $2) in
-let x =                             ( (None, attrs), x ) in
-    ( [ x ] )}
-| lidentOrUnderscore
+  aqualifiedWithAttrs_lidentOrUnderscore_
     {let x = $1 in
-let x =         ( (None, []), x ) in
     ( [ x ] )}
-| aqualUniverses newAttributes lidentOrUnderscore nonempty_list_aqualifiedWithAttrs_lidentOrUnderscore__
-    {let (aq, attrs, x, xs) = ($1, $2, $3, $4) in
-let x =                                               ( (Some aq, attrs), x ) in
-    ( x :: xs )}
-| aqualUniverses lidentOrUnderscore nonempty_list_aqualifiedWithAttrs_lidentOrUnderscore__
-    {let (aq, x, xs) = ($1, $2, $3) in
-let x =                           ( (Some aq, []), x ) in
-    ( x :: xs )}
-| newAttributes lidentOrUnderscore nonempty_list_aqualifiedWithAttrs_lidentOrUnderscore__
-    {let (attrs, x, xs) = ($1, $2, $3) in
-let x =                             ( (None, attrs), x ) in
-    ( x :: xs )}
-| lidentOrUnderscore nonempty_list_aqualifiedWithAttrs_lidentOrUnderscore__
+| aqualifiedWithAttrs_lidentOrUnderscore_ nonempty_list_aqualifiedWithAttrs_lidentOrUnderscore__
     {let (x, xs) = ($1, $2) in
-let x =         ( (None, []), x ) in
     ( x :: xs )}
 
 nonempty_list_atomicPattern_:
@@ -852,9 +780,9 @@ let ids =     ( xs ) in
       ( Polymonadic_subcomp c )}
 
 typeDecl:
-  ident option_typars_ option_ascribeKind_ typeDefinition
+  ident typars option_ascribeKind_ typeDefinition
     {let (lid, tparams, ascr_opt, tcdef) = ($1, $2, $3, $4) in
-      ( tcdef lid (none_to_empty_list tparams) ascr_opt )}
+      ( tcdef lid tparams ascr_opt )}
 
 typars:
   tvarinsts
@@ -883,30 +811,8 @@ typeDefinition:
       ( (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) )}
 
 recordFieldDecl:
-  aqualUniverses newAttributes lident COLON typ
-    {let (aq, attrs, x, _2, t) = ($1, $2, $3, (), $5) in
-let qualified_lid =                                               ( (Some aq, attrs), x ) in
-      ( 
-        let (qual, attrs), lid = qualified_lid in
-        (lid, qual, attrs, t) 
-      )}
-| aqualUniverses lident COLON typ
-    {let (aq, x, _2, t) = ($1, $2, (), $4) in
-let qualified_lid =                           ( (Some aq, []), x ) in
-      ( 
-        let (qual, attrs), lid = qualified_lid in
-        (lid, qual, attrs, t) 
-      )}
-| newAttributes lident COLON typ
-    {let (attrs, x, _2, t) = ($1, $2, (), $4) in
-let qualified_lid =                             ( (None, attrs), x ) in
-      ( 
-        let (qual, attrs), lid = qualified_lid in
-        (lid, qual, attrs, t) 
-      )}
-| lident COLON typ
-    {let (x, _2, t) = ($1, (), $3) in
-let qualified_lid =         ( (None, []), x ) in
+  aqualifiedWithAttrs_lident_ COLON typ
+    {let (qualified_lid, _2, t) = ($1, (), $3) in
       ( 
         let (qual, attrs), lid = qualified_lid in
         (lid, qual, attrs, t) 
@@ -962,9 +868,9 @@ effectRedefinition:
     ( RedefineEffect(lid, [], t) )}
 
 effectDefinition:
-  LBRACE uident option_binders_ COLON tmArrow_tmNoEq_ WITH separated_nonempty_list_SEMICOLON_effectDecl_ RBRACE
+  LBRACE uident binders COLON tmArrow_tmNoEq_ WITH separated_nonempty_list_SEMICOLON_effectDecl_ RBRACE
     {let (_1, lid, bs, _4, typ, _6, eds, _8) = ((), $2, $3, (), $5, (), $7, ()) in
-    ( DefineEffect(lid, none_to_empty_list bs, typ, eds) )}
+    ( DefineEffect(lid, bs, typ, eds) )}
 
 layeredEffectDefinition:
   LBRACE uident binders WITH tmNoEq RBRACE
@@ -996,9 +902,9 @@ layeredEffectDefinition:
       DefineEffect (lid, [], typ, decls r) )}
 
 effectDecl:
-  lident option_binders_ EQUALS simpleTerm
+  lident binders EQUALS simpleTerm
     {let (lid, action_params, _3, t) = ($1, $2, (), $4) in
-    ( mk_decl (Tycon (false, false, [TyconAbbrev(lid, none_to_empty_list action_params, None, t)])) (rhs2 parseState 1 3) [] )}
+    ( mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t)])) (rhs2 parseState 1 3) [] )}
 
 subEffect:
   quident SQUIGGLY_RARROW quident EQUALS simpleTerm
@@ -1152,15 +1058,6 @@ letqualifier:
     {                ( NoLetQualifier )}
 
 aqual:
-  EQUALS
-    {let _1 = () in
-              (  log_issue (lhs parseState) (Warning_DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
-                                        Equality )}
-| aqualUniverses
-    {let q = $1 in
-                     ( q )}
-
-aqualUniverses:
   HASH LBRACK thunk_tmNoEq_ RBRACK
     {let (_1, _2, t, _4) = ((), (), $3, ()) in
                                        ( mk_meta_tac t )}
@@ -1171,7 +1068,7 @@ aqualUniverses:
     {let _1 = () in
               ( Equality )}
 
-newAttributes:
+binderAttributes:
   LBRACK_AT_AT right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
     {let (_1, l, _3) = ((), $2, ()) in
 let t =                                                 ( l ) in
@@ -1246,27 +1143,8 @@ let op =     ( mk_ident (op, rhs parseState 1) ) in
 | constant
     {let c = $1 in
       ( mk_pattern (PatConst c) (rhs parseState 1) )}
-| aqualUniverses newAttributes lident
-    {let (aq, attrs, x) = ($1, $2, $3) in
-let qual_id =                                               ( (Some aq, attrs), x ) in
-    (
-      let (aqual, attrs), lid = qual_id in
-      mk_pattern (PatVar (lid, aqual, attrs)) (rhs parseState 1) )}
-| aqualUniverses lident
-    {let (aq, x) = ($1, $2) in
-let qual_id =                           ( (Some aq, []), x ) in
-    (
-      let (aqual, attrs), lid = qual_id in
-      mk_pattern (PatVar (lid, aqual, attrs)) (rhs parseState 1) )}
-| newAttributes lident
-    {let (attrs, x) = ($1, $2) in
-let qual_id =                             ( (None, attrs), x ) in
-    (
-      let (aqual, attrs), lid = qual_id in
-      mk_pattern (PatVar (lid, aqual, attrs)) (rhs parseState 1) )}
-| lident
-    {let x = $1 in
-let qual_id =         ( (None, []), x ) in
+| aqualifiedWithAttrs_lident_
+    {let qual_id = $1 in
     (
       let (aqual, attrs), lid = qual_id in
       mk_pattern (PatVar (lid, aqual, attrs)) (rhs parseState 1) )}
@@ -1311,36 +1189,8 @@ patternOrMultibinder:
 | atomicPattern
     {let pat = $1 in
                       ( [pat] )}
-| LPAREN aqualUniverses newAttributes lident nonempty_list_aqualifiedWithAttrs_lident__ COLON simpleArrow refineOpt RPAREN
-    {let (_1, aq, attrs, x, qual_ids, _4, t, r, _7) = ((), $2, $3, $4, $5, (), $7, $8, ()) in
-let qual_id0 =                                               ( (Some aq, attrs), x ) in
-      (
-        let pos = rhs2 parseState 1 7 in
-        let t_pos = rhs parseState 5 in
-        let qual_ids = qual_id0 :: qual_ids in
-        List.map (fun ((aq, attrs), x) -> mkRefinedPattern (mk_pattern (PatVar (x, aq, attrs)) pos) t false r t_pos pos) qual_ids
-      )}
-| LPAREN aqualUniverses lident nonempty_list_aqualifiedWithAttrs_lident__ COLON simpleArrow refineOpt RPAREN
-    {let (_1, aq, x, qual_ids, _4, t, r, _7) = ((), $2, $3, $4, (), $6, $7, ()) in
-let qual_id0 =                           ( (Some aq, []), x ) in
-      (
-        let pos = rhs2 parseState 1 7 in
-        let t_pos = rhs parseState 5 in
-        let qual_ids = qual_id0 :: qual_ids in
-        List.map (fun ((aq, attrs), x) -> mkRefinedPattern (mk_pattern (PatVar (x, aq, attrs)) pos) t false r t_pos pos) qual_ids
-      )}
-| LPAREN newAttributes lident nonempty_list_aqualifiedWithAttrs_lident__ COLON simpleArrow refineOpt RPAREN
-    {let (_1, attrs, x, qual_ids, _4, t, r, _7) = ((), $2, $3, $4, (), $6, $7, ()) in
-let qual_id0 =                             ( (None, attrs), x ) in
-      (
-        let pos = rhs2 parseState 1 7 in
-        let t_pos = rhs parseState 5 in
-        let qual_ids = qual_id0 :: qual_ids in
-        List.map (fun ((aq, attrs), x) -> mkRefinedPattern (mk_pattern (PatVar (x, aq, attrs)) pos) t false r t_pos pos) qual_ids
-      )}
-| LPAREN lident nonempty_list_aqualifiedWithAttrs_lident__ COLON simpleArrow refineOpt RPAREN
-    {let (_1, x, qual_ids, _4, t, r, _7) = ((), $2, $3, (), $5, $6, ()) in
-let qual_id0 =         ( (None, []), x ) in
+| LPAREN aqualifiedWithAttrs_lident_ nonempty_list_aqualifiedWithAttrs_lident__ COLON simpleArrow refineOpt RPAREN
+    {let (_1, qual_id0, qual_ids, _4, t, r, _7) = ((), $2, $3, (), $5, $6, ()) in
       (
         let pos = rhs2 parseState 1 7 in
         let t_pos = rhs parseState 5 in
@@ -1349,30 +1199,8 @@ let qual_id0 =         ( (None, []), x ) in
       )}
 
 binder:
-  aqualUniverses newAttributes lidentOrUnderscore
-    {let (aq, attrs, x) = ($1, $2, $3) in
-let aqualifiedWithAttrs_lid =                                               ( (Some aq, attrs), x ) in
-     (
-       let (q, attrs), lid = aqualifiedWithAttrs_lid in
-       mk_binder_with_attrs (Variable lid) (rhs parseState 1) Type_level q attrs
-     )}
-| aqualUniverses lidentOrUnderscore
-    {let (aq, x) = ($1, $2) in
-let aqualifiedWithAttrs_lid =                           ( (Some aq, []), x ) in
-     (
-       let (q, attrs), lid = aqualifiedWithAttrs_lid in
-       mk_binder_with_attrs (Variable lid) (rhs parseState 1) Type_level q attrs
-     )}
-| newAttributes lidentOrUnderscore
-    {let (attrs, x) = ($1, $2) in
-let aqualifiedWithAttrs_lid =                             ( (None, attrs), x ) in
-     (
-       let (q, attrs), lid = aqualifiedWithAttrs_lid in
-       mk_binder_with_attrs (Variable lid) (rhs parseState 1) Type_level q attrs
-     )}
-| lidentOrUnderscore
-    {let x = $1 in
-let aqualifiedWithAttrs_lid =         ( (None, []), x ) in
+  aqualifiedWithAttrs_lidentOrUnderscore_
+    {let aqualifiedWithAttrs_lid = $1 in
      (
        let (q, attrs), lid = aqualifiedWithAttrs_lid in
        mk_binder_with_attrs (Variable lid) (rhs parseState 1) Type_level q attrs
@@ -1404,9 +1232,37 @@ multiBinder:
      )}
 
 binders:
-  nonempty_list___anonymous_4_
+  list___anonymous_4_
     {let bss = $1 in
-                                                                 ( flatten bss )}
+                                                        ( flatten bss )}
+
+aqualifiedWithAttrs_lident_:
+  aqual binderAttributes lident
+    {let (aq, attrs, x) = ($1, $2, $3) in
+                                        ( (Some aq, attrs), x )}
+| aqual lident
+    {let (aq, x) = ($1, $2) in
+                 ( (Some aq, []), x )}
+| binderAttributes lident
+    {let (attrs, x) = ($1, $2) in
+                               ( (None, attrs), x )}
+| lident
+    {let x = $1 in
+        ( (None, []), x )}
+
+aqualifiedWithAttrs_lidentOrUnderscore_:
+  aqual binderAttributes lidentOrUnderscore
+    {let (aq, attrs, x) = ($1, $2, $3) in
+                                        ( (Some aq, attrs), x )}
+| aqual lidentOrUnderscore
+    {let (aq, x) = ($1, $2) in
+                 ( (Some aq, []), x )}
+| binderAttributes lidentOrUnderscore
+    {let (attrs, x) = ($1, $2) in
+                               ( (None, attrs), x )}
+| lidentOrUnderscore
+    {let x = $1 in
+        ( (None, []), x )}
 
 qlident:
   path_lident_
@@ -1821,7 +1677,7 @@ let dom =       ( let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_l
     {let (_1, q, dom_tm, _5, _2, tgt) = ((), $2, $3, (), (), $6) in
 let dom =
   let attrs_opt =     ( None ) in
-                                                                       ( (Some q, none_to_empty_list attrs_opt), dom_tm )
+                                                                          ( (Some q, none_to_empty_list attrs_opt), dom_tm )
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
@@ -1831,11 +1687,11 @@ in
        in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      )}
-| LPAREN aqual newAttributes tmFormula RPAREN RARROW tmArrow_tmFormula_
+| LPAREN aqual binderAttributes tmFormula RPAREN RARROW tmArrow_tmFormula_
     {let (_1, q, x, dom_tm, _5, _2, tgt) = ((), $2, $3, $4, (), (), $7) in
 let dom =
   let attrs_opt =     ( Some x ) in
-                                                                       ( (Some q, none_to_empty_list attrs_opt), dom_tm )
+                                                                          ( (Some q, none_to_empty_list attrs_opt), dom_tm )
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
@@ -1850,7 +1706,7 @@ in
 let dom =
   let attrs_opt =     ( None ) in
   let aq_opt =     ( None ) in
-                                                                       ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
+                                                                          ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
@@ -1860,12 +1716,12 @@ in
        in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      )}
-| newAttributes tmFormula RARROW tmArrow_tmFormula_
+| binderAttributes tmFormula RARROW tmArrow_tmFormula_
     {let (x, dom_tm, _2, tgt) = ($1, $2, (), $4) in
 let dom =
   let attrs_opt =     ( Some x ) in
   let aq_opt =     ( None ) in
-                                                                       ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
+                                                                          ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
@@ -1880,7 +1736,7 @@ in
 let dom =
   let attrs_opt =     ( None ) in
   let aq_opt =     ( Some x ) in
-                                                                       ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
+                                                                          ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
@@ -1890,7 +1746,7 @@ in
        in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      )}
-| aqual newAttributes tmFormula RARROW tmArrow_tmFormula_
+| aqual binderAttributes tmFormula RARROW tmArrow_tmFormula_
     {let (x, x_inlined1, dom_tm, _2, tgt) = ($1, $2, $3, (), $5) in
 let dom =
   let attrs_opt =
@@ -1898,7 +1754,7 @@ let dom =
         ( Some x )
   in
   let aq_opt =     ( Some x ) in
-                                                                       ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
+                                                                          ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
@@ -1930,7 +1786,7 @@ let dom =       ( let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_l
     {let (_1, q, dom_tm, _5, _2, tgt) = ((), $2, $3, (), (), $6) in
 let dom =
   let attrs_opt =     ( None ) in
-                                                                       ( (Some q, none_to_empty_list attrs_opt), dom_tm )
+                                                                          ( (Some q, none_to_empty_list attrs_opt), dom_tm )
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
@@ -1940,11 +1796,11 @@ in
        in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      )}
-| LPAREN aqual newAttributes tmNoEq RPAREN RARROW tmArrow_tmNoEq_
+| LPAREN aqual binderAttributes tmNoEq RPAREN RARROW tmArrow_tmNoEq_
     {let (_1, q, x, dom_tm, _5, _2, tgt) = ((), $2, $3, $4, (), (), $7) in
 let dom =
   let attrs_opt =     ( Some x ) in
-                                                                       ( (Some q, none_to_empty_list attrs_opt), dom_tm )
+                                                                          ( (Some q, none_to_empty_list attrs_opt), dom_tm )
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
@@ -1959,7 +1815,7 @@ in
 let dom =
   let attrs_opt =     ( None ) in
   let aq_opt =     ( None ) in
-                                                                       ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
+                                                                          ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
@@ -1969,12 +1825,12 @@ in
        in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      )}
-| newAttributes tmNoEq RARROW tmArrow_tmNoEq_
+| binderAttributes tmNoEq RARROW tmArrow_tmNoEq_
     {let (x, dom_tm, _2, tgt) = ($1, $2, (), $4) in
 let dom =
   let attrs_opt =     ( Some x ) in
   let aq_opt =     ( None ) in
-                                                                       ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
+                                                                          ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
@@ -1989,7 +1845,7 @@ in
 let dom =
   let attrs_opt =     ( None ) in
   let aq_opt =     ( Some x ) in
-                                                                       ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
+                                                                          ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
@@ -1999,7 +1855,7 @@ in
        in
        mk_term (Product([b], tgt)) (rhs2 parseState 1 3)  Un
      )}
-| aqual newAttributes tmNoEq RARROW tmArrow_tmNoEq_
+| aqual binderAttributes tmNoEq RARROW tmArrow_tmNoEq_
     {let (x, x_inlined1, dom_tm, _2, tgt) = ($1, $2, $3, (), $5) in
 let dom =
   let attrs_opt =
@@ -2007,7 +1863,7 @@ let dom =
         ( Some x )
   in
   let aq_opt =     ( Some x ) in
-                                                                       ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
+                                                                          ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )
 in
      (
        let ((aq_opt, attrs), dom_tm) = dom in
@@ -2046,25 +1902,25 @@ simpleArrowDomain:
     {let dom_tm = $1 in
 let attrs_opt =     ( None ) in
 let aq_opt =     ( None ) in
-                                                                                   ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )}
-| newAttributes tmEqNoRefinement
+                                                                                      ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )}
+| binderAttributes tmEqNoRefinement
     {let (x, dom_tm) = ($1, $2) in
 let attrs_opt =     ( Some x ) in
 let aq_opt =     ( None ) in
-                                                                                   ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )}
+                                                                                      ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )}
 | aqual tmEqNoRefinement
     {let (x, dom_tm) = ($1, $2) in
 let attrs_opt =     ( None ) in
 let aq_opt =     ( Some x ) in
-                                                                                   ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )}
-| aqual newAttributes tmEqNoRefinement
+                                                                                      ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )}
+| aqual binderAttributes tmEqNoRefinement
     {let (x, x_inlined1, dom_tm) = ($1, $2, $3) in
 let attrs_opt =
   let x = x_inlined1 in
       ( Some x )
 in
 let aq_opt =     ( Some x ) in
-                                                                                   ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )}
+                                                                                      ( (aq_opt, none_to_empty_list attrs_opt), dom_tm )}
 
 tmFormula:
   tmFormula DISJUNCTION tmConjunction

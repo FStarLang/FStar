@@ -263,8 +263,8 @@ rawDecl:
 
 typeDecl:
   (* TODO : change to lident with stratify *)
-  | lid=ident tparams=typars? ascr_opt=ascribeKind? tcdef=typeDefinition
-      { tcdef lid (none_to_empty_list tparams) ascr_opt }
+  | lid=ident tparams=typars ascr_opt=ascribeKind? tcdef=typeDefinition
+      { tcdef lid tparams ascr_opt }
 
 typars:
   | x=tvarinsts              { x }
@@ -331,10 +331,10 @@ effectRedefinition:
     { RedefineEffect(lid, [], t) }
 
 effectDefinition:
-  | LBRACE lid=uident bs=binders? COLON typ=tmArrow(tmNoEq)
+  | LBRACE lid=uident bs=binders COLON typ=tmArrow(tmNoEq)
            WITH eds=separated_nonempty_list(SEMICOLON, effectDecl)
     RBRACE
-    { DefineEffect(lid, none_to_empty_list bs, typ, eds) }
+    { DefineEffect(lid, bs, typ, eds) }
 
 layeredEffectDefinition:
   | LBRACE lid=uident bs=binders WITH r=tmNoEq RBRACE
@@ -365,8 +365,8 @@ layeredEffectDefinition:
       DefineEffect (lid, [], typ, decls r) }
 
 effectDecl:
-  | lid=lident action_params=binders? EQUALS t=simpleTerm
-    { mk_decl (Tycon (false, false, [TyconAbbrev(lid, none_to_empty_list action_params, None, t)])) (rhs2 parseState 1 3) [] }
+  | lid=lident action_params=binders EQUALS t=simpleTerm
+    { mk_decl (Tycon (false, false, [TyconAbbrev(lid, action_params, None, t)])) (rhs2 parseState 1 3) [] }
 
 subEffect:
   | src_eff=quident SQUIGGLY_RARROW tgt_eff=quident EQUALS lift=simpleTerm
@@ -448,23 +448,17 @@ letqualifier:
   | REC         { Rec }
   |             { NoLetQualifier }
 
- (* Remove with stratify *)
-aqual:
-  | EQUALS    {  log_issue (lhs parseState) (Warning_DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
-                                        Equality }
-  | q=aqualUniverses { q }
-
 (*
  * AR: this should be generalized to:
  *     (a) allow attributes on non-implicit binders
  *     note that in the [@@ case, we choose the Implicit aqual
  *)
-aqualUniverses: 
+aqual: 
   | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t }
   | HASH      { Implicit }
   | DOLLAR    { Equality }
 
-newAttributes:
+binderAttributes:
   | LBRACK_AT_AT t=semiColonTermList RBRACK { t }
 
 /******************************************************************************/
@@ -596,13 +590,12 @@ multiBinder:
          mkRefinedBinder x t should_bind_var r (rhs2 parseState 1 6) q attrs) qual_ids
      }
 
-binders: bss=nonempty_list(b=binder {[b]} | bs=multiBinder {bs}) { flatten bss }
+binders: bss=list(b=binder {[b]} | bs=multiBinder {bs}) { flatten bss }
 
-%inline aqualifiedNoAttrs(X): x=pair(ioption(aqualUniverses), X) { (fst x, []), snd x }
-%inline aqualifiedWithAttrs(X):
-  | aq=aqualUniverses attrs=newAttributes x=X { (Some aq, attrs), x }
-  | aq=aqualUniverses x=X { (Some aq, []), x }
-  | attrs=newAttributes x=X { (None, attrs), x }
+aqualifiedWithAttrs(X):
+  | aq=aqual attrs=binderAttributes x=X { (Some aq, attrs), x }
+  | aq=aqual x=X { (Some aq, []), x }
+  | attrs=binderAttributes x=X { (None, attrs), x }
   | x=X { (None, []), x }
 
 /******************************************************************************/
@@ -878,7 +871,7 @@ simpleArrowDomain:
         ((Some (mk_meta_tac mt), []), t)
       }
   (* TODO_MB: Enabling attributes on non-implicit fields on the rule below increases the number of shift/reduce conflicts *)
-  | aq_opt=ioption(aqual) attrs_opt=ioption(newAttributes) dom_tm=tmEqNoRefinement { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
+  | aq_opt=ioption(aqual) attrs_opt=ioption(binderAttributes) dom_tm=tmEqNoRefinement { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
 %inline tmArrowDomain(Tm):
@@ -887,9 +880,9 @@ simpleArrowDomain:
         ((Some (mk_meta_tac mt), []), t)
       }
   (* TODO_MB: Enabling attributes on non-implicit fields on the rule below increases the number of shift/reduce conflicts *)
-  | LPAREN q=aqual attrs_opt=ioption(newAttributes) dom_tm=Tm RPAREN { (Some q, none_to_empty_list attrs_opt), dom_tm }
+  | LPAREN q=aqual attrs_opt=ioption(binderAttributes) dom_tm=Tm RPAREN { (Some q, none_to_empty_list attrs_opt), dom_tm }
   (* TODO_MB: Enabling attributes on non-implicit fields on the rule below increases the number of shift/reduce conflicts *)
-  | aq_opt=ioption(aqual) attrs_opt=ioption(newAttributes) dom_tm=Tm { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
+  | aq_opt=ioption(aqual) attrs_opt=ioption(binderAttributes) dom_tm=Tm { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
 tmFormula:
   | e1=tmFormula DISJUNCTION e2=tmConjunction
