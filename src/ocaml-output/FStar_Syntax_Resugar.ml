@@ -2243,13 +2243,28 @@ let (resugar_typ :
                                   FStar_All.pipe_right bs3
                                     (FStar_List.map
                                        (fun b ->
+                                          let q =
+                                            let uu___9 =
+                                              resugar_arg_qual env
+                                                b.FStar_Syntax_Syntax.binder_qual in
+                                            match uu___9 with
+                                            | FStar_Pervasives_Native.Some q1
+                                                -> q1
+                                            | FStar_Pervasives_Native.None ->
+                                                failwith
+                                                  "Unexpected inaccesible implicit argument of a data constructor while resugaring a record field" in
                                           let uu___9 =
                                             bv_as_unique_ident
                                               b.FStar_Syntax_Syntax.binder_bv in
                                           let uu___10 =
+                                            FStar_All.pipe_right
+                                              b.FStar_Syntax_Syntax.binder_attrs
+                                              (FStar_List.map
+                                                 (resugar_term' env)) in
+                                          let uu___11 =
                                             resugar_term' env
                                               (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                          (uu___9, uu___10))) in
+                                          (uu___9, q, uu___10, uu___11))) in
                                 FStar_List.append mfields fields
                             | uu___8 -> failwith "unexpected")
                        | uu___4 -> failwith "unexpected" in

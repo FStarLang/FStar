@@ -468,7 +468,8 @@ type tycon =
   | TyconAbbrev of (FStar_Ident.ident * binder Prims.list * knd
   FStar_Pervasives_Native.option * term) 
   | TyconRecord of (FStar_Ident.ident * binder Prims.list * knd
-  FStar_Pervasives_Native.option * (FStar_Ident.ident * term) Prims.list) 
+  FStar_Pervasives_Native.option * (FStar_Ident.ident * aqual * attributes_ *
+  term) Prims.list) 
   | TyconVariant of (FStar_Ident.ident * binder Prims.list * knd
   FStar_Pervasives_Native.option * (FStar_Ident.ident * term
   FStar_Pervasives_Native.option * Prims.bool) Prims.list) 
@@ -494,7 +495,8 @@ let (uu___is_TyconRecord : tycon -> Prims.bool) =
 let (__proj__TyconRecord__item___0 :
   tycon ->
     (FStar_Ident.ident * binder Prims.list * knd
-      FStar_Pervasives_Native.option * (FStar_Ident.ident * term) Prims.list))
+      FStar_Pervasives_Native.option * (FStar_Ident.ident * aqual *
+      attributes_ * term) Prims.list))
   = fun projectee -> match projectee with | TyconRecord _0 -> _0
 let (uu___is_TyconVariant : tycon -> Prims.bool) =
   fun projectee ->

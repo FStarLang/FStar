@@ -138,7 +138,7 @@ type expr = term
 type tycon =
   | TyconAbstract of ident * list<binder> * option<knd>
   | TyconAbbrev   of ident * list<binder> * option<knd> * term
-  | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * term)>
+  | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * aqual * attributes_ * term)>
   | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * bool)> (* bool is whether it's using 'of' notation *)
 
 type qualifier =
