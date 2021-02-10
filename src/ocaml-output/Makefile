@@ -152,7 +152,7 @@ FStar_Parser_Parse.ml: parse.mly
 	@echo "[OCAMLYACC]"
 	$(Q)ocamlyacc parse.mly 2> yac-log
 	$(Q)cat yac-log
-	@if [ "0$$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/')" -gt 11 ]; then \
+	@if [ "0$$(grep "shift/reduce" yac-log | sed 's/^\([0-9]\+\).*/\1/')" -gt 6 ]; then \
 	  echo "shift-reduce conflicts have increased; please fix" && rm -f $@ && false; \
 	fi
 	@if grep -q "reduce/reduce" yac-log ; then \
