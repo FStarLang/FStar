@@ -94,7 +94,7 @@ new_effect SteelK = SteelKF
 private
 let rearrange3 (p q r:slprop) : Lemma
   (((p `star` q) `star` r) `equiv` (p `star` (r `star` q)))
-  = assert   (((p `star` q) `star` r) `equiv` (p `star` (r `star` q))) by canon'()
+  = assert   (((p `star` q) `star` r) `equiv` (p `star` (r `star` q))) by canon' (`true_p) (`true_p)
 
 let bind_steelk_steelk (a:Type) (b:Type)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
@@ -230,7 +230,7 @@ let kfork (#p:slprop) (#q:slprop) (f : unit -> SteelK unit p (fun _ -> q))
       in
       let t2 (t:thread q) () : SteelT unit frame (fun _ -> postf) = k t in
       let ff () : SteelT unit (p `star` frame) (fun _ -> postf) =
-        fork #p #q #frame #postf t1 t2; ()
+        fork #p #q #frame #postf t1 t2
       in
       ff())
 
