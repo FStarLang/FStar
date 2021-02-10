@@ -261,9 +261,8 @@ let rec print_atoms (l:list atom) (am:amap term) : Tac string =
 
 let is_smt_binder (b:binder) : Tac bool =
   let (bv, aqual) = inspect_binder b in
-  match aqual with
-  | Q_Meta _, [t] -> term_eq t (`smt_fallback)
-  | _ -> false
+  let l = snd aqual in
+  not (List.Tot.isEmpty (filter (fun t -> term_eq t (`smt_fallback)) l))
 
 let rec new_args_for_smt_attrs (env:env) (l:list argv) (ty:typ) : Tac (list argv * list term) =
   match l, inspect ty with
