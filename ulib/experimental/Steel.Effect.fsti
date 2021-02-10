@@ -121,20 +121,22 @@ val bind (a:Type) (b:Type)
 
 unfold
 let subcomp_pre (#a:Type)
+  (#pr:prop)
   (#pre_f:pre_t) (#post_f:post_t a) (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:pre_t) (#post_g:post_t a) (req_g:req_t pre_g) (ens_g:ens_t pre_g a post_g)
-  (_:squash (can_be_split pre_g pre_f))
+  (_:squash (can_be_split_dep pr pre_g pre_f))
   (_:squash (can_be_split_forall post_f post_g))
 : pure_pre
-= (forall (m0:hmem pre_g). req_g m0 ==> req_f m0) /\
-  (forall (m0:hmem pre_g) (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 ==> ens_g m0 x m1)
+= (forall (m0:hmem pre_g). req_g m0 ==> pr /\ req_f m0) /\
+  (forall (m0:hmem pre_g) (x:a) (m1:hmem (post_f x)). pr /\ ens_f m0 x m1 ==> ens_g m0 x m1)
 
 val subcomp (a:Type)
+  (#[@@ framing_implicit] pr:prop)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
   (#[@@ framing_implicit] req_f:req_t pre_f) (#[@@ framing_implicit] ens_f:ens_t pre_f a post_f)
   (#[@@ framing_implicit] pre_g:pre_t) (#[@@ framing_implicit] post_g:post_t a)
   (#[@@ framing_implicit] req_g:req_t pre_g) (#[@@ framing_implicit] ens_g:ens_t pre_g a post_g)
-  (#[@@ framing_implicit] p1:squash (can_be_split pre_g pre_f))
+  (#[@@ framing_implicit] p1:squash (can_be_split_dep pr pre_g pre_f))
   (#[@@ framing_implicit] p2:squash (can_be_split_forall post_f post_g))
   (f:repr a pre_f post_f req_f ens_f)
 : Pure (repr a pre_g post_g req_g ens_g)
@@ -142,28 +144,33 @@ val subcomp (a:Type)
   (ensures fun _ -> True)
 
 unfold
-let if_then_else_req (#pre_f:pre_t) (#pre_g:pre_t)
-  (s: squash (can_be_split pre_f pre_g))
+let if_then_else_req
+  (#pr:prop)
+  (#pre_f:pre_t) (#pre_g:pre_t)
+  (s: squash (can_be_split_dep pr pre_f pre_g))
   (req_then:req_t pre_f) (req_else:req_t pre_g)
   (p:Type0)
 : req_t pre_f
-= fun h -> (p ==> req_then h) /\ ((~ p) ==> req_else h)
+= fun h -> (p ==> req_then h) /\ ((~ p) ==> pr /\ req_else h)
 
 unfold
-let if_then_else_ens (#a:Type) (#pre_f:pre_t) (#pre_g:pre_t) (#post_f:post_t a) (#post_g:post_t a)
-  (s1 : squash (can_be_split pre_f pre_g))
+let if_then_else_ens (#a:Type)
+  (#pr:prop)
+  (#pre_f:pre_t) (#pre_g:pre_t) (#post_f:post_t a) (#post_g:post_t a)
+  (s1 : squash (can_be_split_dep pr pre_f pre_g))
   (s2 : squash (equiv_forall post_f post_g))
   (ens_then:ens_t pre_f a post_f) (ens_else:ens_t pre_g a post_g)
   (p:Type0)
 : ens_t pre_f a post_f
-= fun h0 x h1 -> (p ==> ens_then h0 x h1) /\ ((~ p) ==> ens_else h0 x h1)
+= fun h0 x h1 -> (p ==> ens_then h0 x h1) /\ ((~ p) ==> pr /\ ens_else h0 x h1)
 
 let if_then_else (a:Type)
+  (#[@@ framing_implicit] pr:prop)
   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] pre_g:pre_t)
   (#[@@ framing_implicit] post_f:post_t a) (#[@@ framing_implicit] post_g:post_t a)
   (#[@@ framing_implicit] req_then:req_t pre_f) (#[@@ framing_implicit] ens_then:ens_t pre_f a post_f)
   (#[@@ framing_implicit] req_else:req_t pre_g) (#[@@ framing_implicit] ens_else:ens_t pre_g a post_g)
-  (#[@@ framing_implicit] s_pre: squash (can_be_split pre_f pre_g))
+  (#[@@ framing_implicit] s_pre: squash (can_be_split_dep pr pre_f pre_g))
   (#[@@ framing_implicit] s_post: squash (equiv_forall post_f post_g))
   (f:repr a pre_f post_f req_then ens_then)
   (g:repr a pre_g post_g req_else ens_else)
