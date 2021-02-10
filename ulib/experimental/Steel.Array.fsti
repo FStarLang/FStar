@@ -74,12 +74,12 @@ val join (#t:Type) (#p:perm) (#rl #rr:contents t) (al ar:array t)
           (fun _ _ _ -> True)
 
 val share (#t:Type) (#uses:_) (#p:perm) (#r:contents t) (a:array t) (i:U32.t { U32.v i < length r })
-  : SteelAtomic unit uses unobservable
+  : SteelAtomicT unit uses unobservable
            (is_array a p r)
            (fun _ -> is_array a (half_perm p) r `star` is_array a (half_perm p) r)
 
 val gather (#t:Type) (#uses:_) (#p #p':perm) (#r #r':contents t) (a:array t) (i:U32.t { U32.v i < length r })
-  : SteelAtomic unit uses unobservable
+  : SteelAtomicT unit uses unobservable
            (is_array a p r `star` is_array a p' r')
            (fun _ -> is_array a (sum_perm p p') r)
 

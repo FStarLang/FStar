@@ -20,40 +20,9 @@ module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.Memory
 module Ins = Steel.Semantics.Instantiate
 open Steel.Memory
+open Steel.EffectX.Atomic
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
-
-val join_preserves_interp (hp:slprop) (m0 m1:mem)
-  : Lemma
-    (requires (interp hp m0 /\ disjoint m0 m1))
-    (ensures (interp hp (join m0 m1)))
-    [SMTPat (interp hp (join m0 m1))]
-
-val respects_fp (#fp:slprop) (p: hmem fp -> prop) : prop
-#push-options "--query_stats"
-val reveal_respects_fp (#fp:_) (p:hmem fp -> prop)
-  : Lemma (respects_fp p <==>
-           (forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)))
-          [SMTPat (respects_fp #fp p)]
-#pop-options
-let fp_mprop (fp:slprop) = p:(hmem fp -> prop) { respects_fp p }
-
-val respects_binary_fp (#a:Type) (#pre:slprop) (#post:a -> slprop)
-                       (q:(hmem pre -> x:a -> hmem (post x) -> prop)) : prop
-
-val reveal_respects_binary_fp (#a:Type) (#pre:slprop) (#post:a -> slprop)
-                              (q:(hmem pre -> x:a -> hmem (post x) -> prop))
-  : Lemma (respects_binary_fp q <==>
-            //at this point we need to know interp pre (join h_pre h) -- use join_preserves_interp for that
-            (forall x (h_pre:hmem pre) h_post (h:mem{disjoint h_pre h}).
-              q h_pre x h_post <==> q (join h_pre h) x h_post) /\
-            //can join any disjoint heap to the post-heap and q is still valid
-            (forall x h_pre (h_post:hmem (post x)) (h:mem{disjoint h_post h}).
-              q h_pre x h_post <==> q h_pre x (join h_post h)))
-           [SMTPat (respects_binary_fp #a #pre #post q)]
-
-let fp_binary_mprop #a (pre:slprop) (post: a -> slprop) =
-  p:(hmem pre -> x:a -> hmem (post x) -> prop){ respects_binary_fp p }
 
 val repr (a:Type u#a)
          (pre:slprop u#1)
@@ -383,26 +352,15 @@ val add_action (#a:Type)
 
 (***** Bind and Subcomp relation with Steel.Atomic *****)
 
-open Steel.EffectX.Atomic
-
-unfold
-let bind_req_atomic_steel (#a:Type) (#pre_f:slprop) (#post_f:a -> slprop) (req_g:(x:a -> fp_mprop (post_f x)))
-: fp_mprop pre_f
-= fun _ -> forall (x:a) h1. req_g x h1
-
-unfold
-let bind_ens_atomic_steel (#a:Type) (#b:Type)
-  (#pre_f:slprop) (#post_f:a -> slprop) (#post_g:b -> slprop) (ens_g:(x:a -> fp_binary_mprop (post_f x) post_g))
-: fp_binary_mprop pre_f post_g
-= fun _ y h2 -> exists x h1. (ens_g x) h1 y h2
-
 val bind_atomic_steel (a:Type) (b:Type)
   (pre_f:slprop) (post_f:a -> slprop) (obs:observability)
+  (req_f:fp_mprop pre_f) (ens_f:fp_binary_mprop pre_f post_f)
   (post_g:b -> slprop) (req_g:(x:a -> fp_mprop (post_f x))) (ens_g:(x:a -> fp_binary_mprop (post_f x) post_g))
-  (f:atomic_repr a Set.empty obs pre_f post_f) (g:(x:a -> repr b (post_f x) post_g (req_g x) (ens_g x)))
+  (f:atomic_repr a Set.empty obs pre_f post_f req_f ens_f)
+  (g:(x:a -> repr b (post_f x) post_g (req_g x) (ens_g x)))
 : repr b pre_f post_g
-    (bind_req_atomic_steel req_g)
-    (bind_ens_atomic_steel ens_g)
+    (bind_req req_f ens_f req_g)
+    (bind_ens req_f ens_f ens_g)
 
 polymonadic_bind (SteelAtomicX, SteelX) |> SteelX = bind_atomic_steel
 
@@ -415,8 +373,12 @@ let subcomp_ens_atomic_steel (#a:Type) (pre_f:slprop) (post_f:a -> slprop)
 = fun _ _ _ -> True
 
 val subcomp_atomic_steel (a:Type)
-  (pre_f:slprop) (post_f:a -> slprop) (obs:observability)
-  (f:atomic_repr a Set.empty obs pre_f post_f)
-: repr a pre_f post_f (subcomp_req_atomic_steel a pre_f) (subcomp_ens_atomic_steel pre_f post_f)
+  (pre:slprop) (post:a -> slprop) (obs:observability)
+  (req_f:fp_mprop pre) (ens_f:fp_binary_mprop pre post)
+  (req_g:fp_mprop pre) (ens_g:fp_binary_mprop pre post)
+  (f:atomic_repr a Set.empty obs pre post req_f ens_f)
+: Pure (repr a pre post req_g ens_g)
+       (requires subcomp_pre req_f ens_f req_g ens_g)
+       (ensures fun _ -> True)
 
 polymonadic_subcomp SteelAtomicX <: SteelX = subcomp_atomic_steel

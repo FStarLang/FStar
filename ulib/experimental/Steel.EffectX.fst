@@ -26,7 +26,11 @@ open Steel.Memory
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
-let join_preserves_interp hp m0 m1
+let join_preserves_interp (hp:slprop) (m0 m1:mem)
+  : Lemma
+    (requires (interp hp m0 /\ disjoint m0 m1))
+    (ensures (interp hp (join m0 m1)))
+    [SMTPat (interp hp (join m0 m1))]
   = intro_emp m1;
     intro_star hp emp m0 m1;
     affine_star hp emp (join m0 m1)
@@ -267,12 +271,12 @@ friend Steel.EffectX.Atomic
 open Steel.EffectX.Atomic
 
 #push-options "--z3rlimit 40"
-let bind_atomic_steel _ _ _ _ _ _ _ _ f g
+let bind_atomic_steel _ _ _ _ _ _ _ _ _ _ f g
 = fun frame ->
   let x = f frame in
   g x frame
 #pop-options
 
 #push-options "--z3rlimit 40"
-let subcomp_atomic_steel _ _ _ _ f = fun m0 -> f m0
+let subcomp_atomic_steel _ _ _ _ _ _ _ _ f = fun m0 -> f m0
 #pop-options
