@@ -3,7 +3,7 @@ open Steel.Memory
 open Steel.Effect
 open Steel.FractionalPermission
 open Steel.Reference
-open LList.Invariant
+include LList.Invariant
 module L = FStar.List.Tot.Base
 
 let rec datas (#a:Type) (l:list (cell a)) : list a =
@@ -21,7 +21,7 @@ val new_llist (#a:Type) (init:a)
 let new_llist #a init =
   let cell = mk_cell null_llist init in
   let p = alloc cell in
-  assume (p =!= null_llist);
+  assume (~ (is_null p));
   intro_llist_nil a;
   change_slprop (llist null_llist []) (llist (next cell) []) (fun _ -> ());
   intro_llist_cons p cell [];
@@ -38,7 +38,7 @@ val push (#a:Type) (ptr:t a) (l:list (cell a)) (v:a)
 let push #a ptr l v =
   let cell = mk_cell ptr v in
   let p = alloc cell in
-  assume (p =!= null_llist);
+  assume (~ (is_null p));
   change_slprop (llist ptr l) (llist (next cell) l) (fun _ -> ());
   intro_llist_cons p cell l;
   let pc = p, (cell::l) in
