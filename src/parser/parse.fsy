@@ -111,6 +111,7 @@ let none_to_empty_list x =
 %token LBRACK
 %token LBRACK_AT
 %token LBRACK_AT_AT
+%token LBRACK_AT_AT_AT
 %token LBRACK_BAR
 %token LENS_PAREN_LEFT
 %token LENS_PAREN_RIGHT
@@ -1069,10 +1070,10 @@ aqual:
               ( Equality )}
 
 binderAttributes:
-  LBRACK_AT_AT right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
+  LBRACK_AT_AT_AT right_flexible_list_SEMICOLON_noSeqTerm_ RBRACK
     {let (_1, l, _3) = ((), $2, ()) in
 let t =                                                 ( l ) in
-                                            ( t )}
+                                               ( t )}
 
 disjunctivePattern:
   separated_nonempty_list_BAR_tuplePattern_

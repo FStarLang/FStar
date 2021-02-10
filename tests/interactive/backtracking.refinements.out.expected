@@ -37,7 +37,7 @@
 {"kind": "response", "query-id": "36", "response": [{"level": "error", "message": "Identifier not found: [b]", "number": 72, "ranges": [{"beg": [5, 7], "end": [5, 8], "fname": "<input>"}]}], "status": "success"}
 {"kind": "response", "query-id": "37", "response": [[3, "Prims", "nat"]], "status": "success"}
 {"kind": "response", "query-id": "38", "response": [], "status": "success"}
-{"kind": "response", "query-id": "39", "response": [{"level": "warning", "message": "The '=' notation for equality constraints on binders is deprecated; use '$' instead", "number": 244, "ranges": [{"beg": [5, 14], "end": [5, 15], "fname": "<input>"}]}, {"level": "error", "message": "Syntax error: Stdlib.Parsing.Parse_error", "number": 168, "ranges": [{"beg": [5, 21], "end": [5, 21], "fname": "<input>"}]}], "status": "success"}
+{"kind": "response", "query-id": "39", "response": [{"level": "error", "message": "Syntax error: Stdlib.Parsing.Parse_error", "number": 168, "ranges": [{"beg": [5, 15], "end": [5, 15], "fname": "<input>"}]}], "status": "success"}
 {"kind": "response", "query-id": "40", "response": [{"level": "error", "message": "Syntax error: Stdlib.Parsing.Parse_error", "number": 168, "ranges": [{"beg": [5, 19], "end": [5, 19], "fname": "<input>"}]}], "status": "success"}
 {"kind": "response", "query-id": "41", "response": [{"level": "error", "message": "Syntax error: Stdlib.Parsing.Parse_error", "number": 168, "ranges": [{"beg": [5, 26], "end": [5, 26], "fname": "<input>"}]}], "status": "success"}
 {"kind": "response", "query-id": "42", "response": [], "status": "success"}

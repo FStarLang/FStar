@@ -76,7 +76,7 @@ let none_to_empty_list x =
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
-%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT DOT_LBRACK
+%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
 %token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
@@ -459,7 +459,7 @@ aqual:
   | DOLLAR    { Equality }
 
 binderAttributes:
-  | LBRACK_AT_AT t=semiColonTermList RBRACK { t }
+  | LBRACK_AT_AT_AT t=semiColonTermList RBRACK { t }
 
 /******************************************************************************/
 /*                         Patterns, binders                                  */
