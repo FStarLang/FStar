@@ -550,6 +550,6 @@ val elim_pure (#uses:_) (p:prop)
                 (fun _ -> emp)
 
 let lift_lemma #uses (p:slprop) (q:prop) (l:(hmem p -> Lemma q))
-  : SteelAtomic (u:unit{q}) uses unobservable p (fun _ -> p)
+  : SteelAtomicT (u:unit{q}) uses unobservable p (fun _ -> p)
   = change_slprop p (p `star` pure q) (fun m -> l m; Steel.Memory.pure_star_interp p q m; Steel.Memory.emp_unit p);
     elim_pure q

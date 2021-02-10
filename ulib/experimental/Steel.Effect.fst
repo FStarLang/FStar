@@ -88,7 +88,6 @@ let bind_steel_steel a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens
   // assert (interp (post y `star` frame' `star` locks_invariant Set.empty m1) m1);
 
   y
-#pop-options
 
 let bind_steel_steelf (a:Type) (b:Type)
   #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #post
@@ -101,6 +100,7 @@ let bind_steel_steelf (a:Type) (b:Type)
   rewrite_l_3 (post y) (post_g x y) frame' (locks_invariant Set.empty m1);
 
   y
+#pop-options
 
 let bind_steelf_steel (a:Type) (b:Type)
   #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_g #post
