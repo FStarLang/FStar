@@ -92,17 +92,16 @@ val pack_tree (#a: Type0) (ptr: t a) (left: t a) (right: t a)
       ))
 
 val unpack_tree (#a: Type0) (ptr: t a)
-    : SteelSel (t a & t a)
+    : SteelSel (node a)
       (linked_tree ptr)
-      (fun (left, right) ->
-        linked_tree left `star` linked_tree right `star` vptr ptr)
+      (fun node ->
+        linked_tree (get_left node) `star` linked_tree (get_right node) `star` vptr ptr)
       (requires (fun h0 -> not (is_null_t ptr)))
-      (ensures (fun h0 (left, right) h1 ->
+      (ensures (fun h0 node h1 ->
         v_linked_tree ptr h0 == Spec.Node
-          (admit())
-          // AF: why ({ Spec.key = get_data (sel ptr h1); Spec.payload = get_data (sel ptr h1)})
-          (v_linked_tree left h1)
-          (v_linked_tree right h1)
+          (get_data (sel ptr h1))
+          (v_linked_tree (get_left node) h1)
+          (v_linked_tree (get_right node) h1)
       ))
 
 (**** High-level operations on trees *)

@@ -10,7 +10,6 @@ type tree (a: Type) =
   | Leaf : tree a
   | Node: data: a -> left: tree a -> right: tree a -> tree a
 
-
 (**** Binary search trees *)
 
 type node_data (a b: Type) = {
