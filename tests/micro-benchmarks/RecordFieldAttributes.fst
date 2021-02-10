@@ -6,14 +6,14 @@ type description (d : string) = ()
 
 type r = 
     {
-        #[@@ (description "This is a number") ] field1 : int;
-        #[@@ (description "This is a string") ] field2 : string;
+        #[@@@ (description "This is a number") ] field1 : int;
+        #[@@@ (description "This is a string") ] field2 : string;
     }
 
 type r2 = 
     {
-        [@@ (description "This is a number") ] field1_explicit : int;
-        [@@ (description "This is a string") ] field2_explicit : string;
+        [@@@ (description "This is a number") ] field1_explicit : int;
+        [@@@ (description "This is a string") ] field2_explicit : string;
     }
 
 // Compares if two fully qualified names are equal

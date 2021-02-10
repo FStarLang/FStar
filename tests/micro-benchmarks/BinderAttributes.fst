@@ -10,14 +10,14 @@ let default_to (def : 'a) (x : option 'a) : Tot 'a =
 type description (d : string) = ()
 
 type inductive_example = 
-    | CaseExplicit : [@@ description "x"] x:int -> [@@ description "y"] y:string -> inductive_example
-    | CaseImplicit : #[@@ description "x_imp"] x_imp:int -> #[@@ description "y_imp"] y_imp:string -> inductive_example
-    | CaseMixed : #[@@ description "x_imp"] x_imp:int -> [@@ description "y"] y:string -> inductive_example
+    | CaseExplicit : [@@@ description "x"] x:int -> [@@@ description "y"] y:string -> inductive_example
+    | CaseImplicit : #[@@@ description "x_imp"] x_imp:int -> #[@@@ description "y_imp"] y_imp:string -> inductive_example
+    | CaseMixed : #[@@@ description "x_imp"] x_imp:int -> [@@@ description "y"] y:string -> inductive_example
 
-let f (#[@@ description "x_imp"] x_imp:int) ([@@ description "y"] y:string) : Tot unit =
+let f (#[@@@ description "x_imp"] x_imp:int) ([@@@ description "y"] y:string) : Tot unit =
     ()
 
-let f2 (#[@@ description "x_imp"]x_imp [@@ description "y"]y : int) : Tot unit =
+let f2 (#[@@@ description "x_imp"]x_imp [@@@ description "y"]y : int) : Tot unit =
     ()
 
 type binder = 
