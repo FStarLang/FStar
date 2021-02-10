@@ -3,6 +3,8 @@ module Selectors.Tree
 open Steel.Memory
 open Steel.SelEffect
 
+module Spec = FStar.Trees
+
 (*** Type declarations *)
 
 (**** Base types *)
@@ -14,10 +16,7 @@ val node (a: Type0) : Type
 let t (a: Type0) = ref (node a)
 
 (** This type reflects the contents of a tree without the memory layout *)
-type tree (a: Type0) =
-  | Leaf : tree a
-  | Node: data: a -> left: tree a -> right: tree a -> tree a
-
+type tree (a: Type0) = Spec.tree a
 (**** Slprop and selector *)
 
 (** The separation logic proposition representing the memory layout of the tree *)
@@ -69,7 +68,7 @@ val intro_linked_tree_leaf (#a: Type0)
     : SteelSel unit
       vemp (fun _ -> linked_tree (null_t #a))
       (requires (fun _ -> True))
-      (ensures (fun _ _ h1 -> v_linked_tree #a null_t h1 == Leaf))
+      (ensures (fun _ _ h1 -> v_linked_tree #a null_t h1 == Spec.Leaf))
 
 val elim_linked_tree_leaf (#a: Type0) (ptr: t a)
     : SteelSel unit
@@ -77,88 +76,49 @@ val elim_linked_tree_leaf (#a: Type0) (ptr: t a)
        (requires (fun _ -> is_null_t ptr))
        (ensures (fun h0 _ h1 ->
          v_linked_tree ptr h0 == v_linked_tree ptr h1 /\
-         v_linked_tree ptr h1 == Leaf))
+         v_linked_tree ptr h1 == Spec.Leaf))
 
-val update_data (#a: Type0) (ptr: t a) (new_v: a)
+val pack_tree (#a: Type0) (ptr: t a) (left: t a) (right: t a)
     : SteelSel unit
-      (linked_tree ptr) (fun _ -> linked_tree ptr)
-      (requires (fun h0 -> Node? (v_linked_tree ptr h0) /\ not (is_null_t ptr)))
+      (vptr ptr `star` linked_tree left `star` linked_tree right)
+      (fun _ -> linked_tree ptr)
+      (requires (fun h0 ->
+        not (is_null_t ptr) /\
+        get_left (sel ptr h0) == left /\
+        get_right (sel ptr h0) == right))
       (ensures (fun h0 _ h1 ->
-        Node? (v_linked_tree ptr h0) /\ ( // For AF: do not repeat precondition?
-        let Node old_v left right = v_linked_tree ptr h0 in
-        v_linked_tree ptr h1 == Node new_v left right
-      )))
-
-val intro_tree_left_cons (#a: Type0) (ptr: t a) (left : t a)
-    : SteelSel unit
-      (vptr ptr `star` linked_tree left)
-      (fun _ ->  vptr ptr `star` linked_tree left)
-      (requires (fun h0 -> get_left (sel ptr h0) == null_t))
-      (ensures (fun h0 _ h1 ->
-        get_data (sel ptr h1) == get_data (sel ptr h0) /\
-        get_left (sel ptr h1) == left /\
-        get_right (sel ptr h1) == get_right (sel ptr h0) /\
-        v_linked_tree left h0 == v_linked_tree left h1
+        v_linked_tree ptr h1 ==
+          Spec.Node (get_data (sel ptr h0)) (v_linked_tree left h0) (v_linked_tree right h0)
       ))
 
+val unpack_tree (#a: Type0) (ptr: t a)
+    : SteelSel (t a & t a)
+      (linked_tree ptr)
+      (fun (left, right) ->
+        linked_tree left `star` linked_tree right `star` vptr ptr)
+      (requires (fun h0 -> not (is_null_t ptr)))
+      (ensures (fun h0 (left, right) h1 ->
+        v_linked_tree ptr h0 == Spec.Node
+          (admit())
+          // AF: why ({ Spec.key = get_data (sel ptr h1); Spec.payload = get_data (sel ptr h1)})
+          (v_linked_tree left h1)
+          (v_linked_tree right h1)
+      ))
 
 (**** High-level operations on trees *)
 
-val append_tree_left (#a: Type0) (ptr: t a) (left : t a)
-    : SteelSel unit
-      (linked_tree ptr `star` linked_tree left)
-      (fun _ ->  linked_tree ptr)
-      (requires (fun h0 -> match v_linked_tree ptr h0 with Node _ Leaf _ -> True | _ -> False))
-      (ensures (fun h0 _ h1 ->
-        match v_linked_tree ptr h0, v_linked_tree ptr h1 with
-        | Node old_data Leaf old_right, Node new_data new_left new_right ->
-          old_data == new_data /\
-          new_left == v_linked_tree left h0 /\
-          new_right == old_right
-        | _, _ -> False
+val append_left (#a: Type0) (ptr: t a) (v : a)
+    : SteelSel (t a)
+      (linked_tree ptr)
+      (fun ptr' ->  linked_tree ptr')
+      (requires (fun h0 -> True))
+      (ensures (fun h0 ptr' h1 -> v_linked_tree ptr' h1 == Spec.append_left (v_linked_tree ptr h0) v))
+
+val append_right (#a: Type0) (ptr: t a) (v : a)
+    : SteelSel (t a)
+      (linked_tree ptr)
+      (fun ptr' ->  linked_tree ptr')
+      (requires (fun h0 -> True))
+      (ensures (fun h0 ptr' h1 ->
+        v_linked_tree ptr' h1 == Spec.append_right (v_linked_tree ptr h0) v
       ))
-
-(** Self-balancing part of trees *)
-let rec tree_height (#a: Type0) (t: tree a) 
-    : Tot nat =
-    match t with
-    | Leaf -> 0
-    | Node d left right -> 
-    let left_height = tree_height left in
-    let right_height = tree_height right in
-    (if left_height > right_height then left_height
-    else right_height) + 1
-
-let rec tree_balanced (#a: Type0) (t: tree a)
-    : option nat =
-    match t with
-    | Leaf -> Some 0
-    | Node d left right ->
-    let left_balanced = tree_balanced left in
-    let right_balanced = tree_balanced right in
-    match left_balanced, right_balanced with
-    | Some l, Some r -> if (l - r) <= 1 && (r - l) <= 1 then 
-    Some ((if l > r then l else r) + 1)
-    else None
-    | _ -> None 
-
-val vtree_balanced (#a: Type0) (t: t a)
-    : SteelSel bool
-    (linked_tree t) (fun _ -> linked_tree t)
-    (requires (fun h0 -> True))
-    (ensures (fun h0 b h1 ->
-      v_linked_tree t h0 == v_linked_tree t h1 /\
-      b = Some? (tree_balanced (v_linked_tree t h0))))
-    
-val rotate_left (#a: Type0) (t: t a)
-    : SteelSel unit
-    (linked_tree t) (fun _ -> linked_tree t)
-    (requires (fun h0 -> 
-      match v_linked_tree t h0 with
-      | Node x t1 (Node z t23 t4) -> True
-      | _ -> False))
-    (ensures fun h0 _ h1 ->
-      match (v_linked_tree t h0, v_linked_tree t h1) with
-      | Node x t1 (Node z t23 t4), Node z' (Node x' t1' t23') t4' ->
-      x == x' /\ t1 == t1' /\ t23 == t23' /\ t4 == t4' /\ z == z'
-      | _ -> False)
