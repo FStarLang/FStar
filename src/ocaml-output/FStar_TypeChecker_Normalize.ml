@@ -1061,8 +1061,11 @@ and (close_comp :
                      (FStar_List.map
                         (fun uu___1 ->
                            match uu___1 with
-                           | FStar_Syntax_Syntax.DECREASES t ->
-                               let uu___2 = inline_closure_env cfg env1 [] t in
+                           | FStar_Syntax_Syntax.DECREASES l ->
+                               let uu___2 =
+                                 FStar_All.pipe_right l
+                                   (FStar_List.map
+                                      (inline_closure_env cfg env1 [])) in
                                FStar_Syntax_Syntax.DECREASES uu___2
                            | f -> f)) in
                  let uu___1 =
@@ -5468,8 +5471,10 @@ and (norm_comp :
                  (FStar_List.map
                     (fun uu___1 ->
                        match uu___1 with
-                       | FStar_Syntax_Syntax.DECREASES t ->
-                           let uu___2 = norm cfg env1 [] t in
+                       | FStar_Syntax_Syntax.DECREASES l ->
+                           let uu___2 =
+                             FStar_All.pipe_right l
+                               (FStar_List.map (norm cfg env1 [])) in
                            FStar_Syntax_Syntax.DECREASES uu___2
                        | f -> f)) in
              let comp_univs =

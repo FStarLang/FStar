@@ -114,7 +114,7 @@ and inst_comp s c = match c.n with
     | Comp ct -> let ct = {ct with result_typ=inst s ct.result_typ;
                                    effect_args=inst_args s ct.effect_args;
                                    flags=ct.flags |> List.map (function
-                                        | DECREASES t -> DECREASES (inst s t)
+                                        | DECREASES l -> DECREASES (l |> List.map (inst s))
                                         | f -> f)} in
                  S.mk_Comp ct
 

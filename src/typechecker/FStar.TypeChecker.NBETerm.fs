@@ -180,7 +180,7 @@ and cflag =
   | SHOULD_NOT_INLINE
   | LEMMA
   | CPS
-  | DECREASES of t
+  | DECREASES of list<t>
 
 and residual_comp = {
   residual_effect:lident;

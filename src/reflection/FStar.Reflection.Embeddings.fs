@@ -511,12 +511,12 @@ let e_comp_view =
         match cv with
         | C_Total (t, md) ->
             S.mk_Tm_app ref_C_Total.t [S.as_arg (embed e_term rng t);
-                                       S.as_arg (embed (e_option e_term) rng md)]
+                                       S.as_arg (embed (e_list e_term) rng md)]
                         rng
 
         | C_GTotal (t, md) ->
             S.mk_Tm_app ref_C_GTotal.t [S.as_arg (embed e_term rng t);
-                                       S.as_arg (embed (e_option e_term) rng md)]
+                                       S.as_arg (embed (e_list e_term) rng md)]
                         rng
 
         | C_Lemma (pre, post, pats) ->
@@ -538,12 +538,12 @@ let e_comp_view =
         match (U.un_uinst hd).n, args with
         | Tm_fvar fv, [(t, _); (md, _)] when S.fv_eq_lid fv ref_C_Total.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
-            BU.bind_opt (unembed' w (e_option e_term) md) (fun md ->
+            BU.bind_opt (unembed' w (e_list e_term) md) (fun md ->
             Some <| C_Total (t, md)))
 
         | Tm_fvar fv, [(t, _); (md, _)] when S.fv_eq_lid fv ref_C_GTotal.lid ->
             BU.bind_opt (unembed' w e_term t) (fun t ->
-            BU.bind_opt (unembed' w (e_option e_term) md) (fun md ->
+            BU.bind_opt (unembed' w (e_list e_term) md) (fun md ->
             Some <| C_GTotal (t, md)))
 
         | Tm_fvar fv, [(pre, _); (post, _); (pats, _)] when S.fv_eq_lid fv ref_C_Lemma.lid ->

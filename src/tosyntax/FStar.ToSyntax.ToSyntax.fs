@@ -241,7 +241,11 @@ and free_type_vars env t = match (unparen t).tm with
   | Ensures (t, _)
   | Decreases (t, _)
   | NamedTyp(_, t) -> free_type_vars env t
+
+  | LexList l -> List.collect (free_type_vars env) l
+  
   | Paren t -> failwith "impossible"
+
   | Ascribed(t, t', tacopt) ->
     let ts = t::t'::(match tacopt with None -> [] | Some t -> [t]) in
     List.collect (free_type_vars env) ts
@@ -938,9 +942,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | Ensures (t, lopt) ->
       desugar_formula env t, noaqs
-
-    | Decreases (t, lopt) ->
-      desugar_term_maybe_top top_level env t
 
     | Attributes ts ->
         failwith "Attributes should not be desugared by desugar_term_maybe_top"
@@ -1847,8 +1848,18 @@ and desugar_comp r (allow_type_promotion:bool) env t =
       rest |> List.partition is_decrease
     in
     let rest = desugar_args env rest in
-    let dec = desugar_args env dec in
-    let decreases_clause = List.map (fun (t, _) -> DECREASES t) dec in
+    let decreases_clause = dec |>
+      List.map (fun t -> match (unparen (fst t)).tm with
+                      | Decreases (t, _) ->
+                        let l =
+                          let t = unparen t in
+                          match t.tm with
+                          | LexList l -> l
+                          | _ -> [t] in
+                        DECREASES (l |> List.map (desugar_term env))
+                      | _ ->
+                        fail (Errors.Fatal_UnexpectedComputationTypeForLetRec,
+                              "Unexpected decreases clause")) in
 
     let no_additional_args =
         (* F# complains about not being able to use = on some types.. *)
@@ -2099,8 +2110,7 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
 
 let mk_data_projector_names iquals env se : list<sigelt> =
   match se.sigel with
-  | Sig_datacon(lid, _, t, _, n, _) when (//(not env.iface || env.admitted_iface) &&
-                                                not (lid_equals lid C.lexcons_lid)) ->
+  | Sig_datacon(lid, _, t, _, n, _) ->
     let formals, _ = U.arrow_formals t in
     begin match formals with
         | [] -> [] //no fields to project

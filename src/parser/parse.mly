@@ -1110,7 +1110,7 @@ projectionLHS:
   | LBRACK es=semiColonTermList RBRACK
       { mkConsList (rhs2 parseState 1 3) es }
   | PERCENT_LBRACK es=semiColonTermList RBRACK
-      { mkLexList (rhs2 parseState 1 3) es }
+      { mk_term (LexList es) (rhs2 parseState 1 3) Type_level }
   | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE
       { mkRefSet (rhs2 parseState 1 3) es }
   | ns=quident QMARK_DOT id=lident

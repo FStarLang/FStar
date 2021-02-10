@@ -115,8 +115,6 @@ let is_b2t (t:typ)   = is_prim_op [C.b2t_lid] t
 let is_quant (t:typ) = is_prim_op (fst (List.split quants)) t
 let is_ite (t:typ)   = is_prim_op [C.ite_lid] t
 
-let is_lex_cons (f:exp) = is_prim_op [C.lexcons_lid] f
-let is_lex_top (f:exp) = is_prim_op [C.lextop_lid] f
 let is_inr = function Inl _ -> false | Inr _ -> true
 let filter_imp aq =
    (* keep typeclass args *)
@@ -129,17 +127,6 @@ let filter_imp_args args =
   args |> List.filter (fun a -> a |> snd |> filter_imp)
 let filter_imp_binders bs =
   bs |> List.filter (fun b -> b.binder_qual |> filter_imp)
-let rec reconstruct_lex (e:exp) =
-  match (compress e).n with
-  | Tm_app (f, args) ->
-      let args = filter_imp_args args in
-      let exps = List.map fst args in
-      if is_lex_cons f && List.length exps = 2 then
-        match reconstruct_lex (List.nth exps 1) with
-        | Some xs -> Some (List.nth exps 0 :: xs)
-        | None    -> None
-      else None
-  | _ -> if is_lex_top e then Some [] else None
 
 (* CH: F# List.find has a different type from find in list.fst ... so just a hack for now *)
 let rec find  (f:'a -> bool) (l:list<'a>) : 'a = match l with
@@ -540,7 +527,15 @@ and comp_to_string c =
                && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
           then U.format1 "ALL %s" (term_to_string c.result_typ)
           else U.format2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
-      let dec = c.flags |> List.collect (function DECREASES e -> [U.format1 " (decreases %s)" (term_to_string e)] | _ -> []) |> String.concat " " in
+      let dec = c.flags
+        |> List.collect (function DECREASES l ->
+           [U.format1 " (decreases [%s])"
+             (match l with
+              | [] -> ""
+              | hd::tl ->
+                tl |> List.fold_left (fun s t ->
+                  s ^ ";" ^ term_to_string t) (term_to_string hd))] | _ -> [])
+        |> String.concat " " in
       U.format2 "%s%s" basic dec
     )
 

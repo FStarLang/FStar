@@ -909,9 +909,10 @@ let collect_one
             collect_term t
         | Requires (t, _)
         | Ensures (t, _)
-        | Decreases (t, _)
         | Labeled (t, _, _) ->
             collect_term t
+        | LexList l -> List.iter collect_term l
+        | Decreases (t, _) -> collect_term t
         | Quote (t, _)
         | Antiquote t
         | VQuote t ->
