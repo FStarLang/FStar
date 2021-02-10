@@ -507,7 +507,7 @@ atomicPattern:
       { mk_pattern (PatWild (Some Implicit, [])) (rhs parseState 1) }
   | c=constant
       { mk_pattern (PatConst c) (rhs parseState 1) }
-  | qual_id=aqualifiedWithAttrs(lident) (* TODO_MB: Should we really allow attributes here? *)
+  | qual_id=aqualifiedWithAttrs(lident)
     {
       let (aqual, attrs), lid = qual_id in
       mk_pattern (PatVar (lid, aqual, attrs)) (rhs parseState 1) }
@@ -560,7 +560,7 @@ patternOrMultibinder:
       }
 
 binder:
-  | aqualifiedWithAttrs_lid=aqualifiedWithAttrs(lidentOrUnderscore) (* TODO_MB: Enabling attributes here increases shift/reduce conflicts around LBRACK_AT_AT by 3 *) 
+  | aqualifiedWithAttrs_lid=aqualifiedWithAttrs(lidentOrUnderscore)
      {
        let (q, attrs), lid = aqualifiedWithAttrs_lid in
        mk_binder_with_attrs (Variable lid) (rhs parseState 1) Type_level q attrs
@@ -870,7 +870,6 @@ simpleArrowDomain:
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
         ((Some (mk_meta_tac mt), []), t)
       }
-  (* TODO_MB: Enabling attributes on non-implicit fields on the rule below increases the number of shift/reduce conflicts *)
   | aq_opt=ioption(aqual) attrs_opt=ioption(binderAttributes) dom_tm=tmEqNoRefinement { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
@@ -879,9 +878,7 @@ simpleArrowDomain:
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
         ((Some (mk_meta_tac mt), []), t)
       }
-  (* TODO_MB: Enabling attributes on non-implicit fields on the rule below increases the number of shift/reduce conflicts *)
   | LPAREN q=aqual attrs_opt=ioption(binderAttributes) dom_tm=Tm RPAREN { (Some q, none_to_empty_list attrs_opt), dom_tm }
-  (* TODO_MB: Enabling attributes on non-implicit fields on the rule below increases the number of shift/reduce conflicts *)
   | aq_opt=ioption(aqual) attrs_opt=ioption(binderAttributes) dom_tm=Tm { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
 tmFormula:
