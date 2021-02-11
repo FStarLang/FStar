@@ -1275,7 +1275,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
 
 let mk_data_operations iquals attrs env tcs se =
   match se.sigel with
-  | Sig_datacon(constr_lid, uvs, t, typ_lid, n_typars, _) when not (lid_equals constr_lid C.lexcons_lid) ->
+  | Sig_datacon(constr_lid, uvs, t, typ_lid, n_typars, _) ->
 
     let univ_opening, uvs = SS.univ_var_opening uvs in
     let t = SS.subst univ_opening t in

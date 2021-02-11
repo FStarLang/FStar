@@ -234,15 +234,14 @@ let (inspect_comp :
              | FStar_Syntax_Syntax.DECREASES uu___2 -> true
              | uu___2 -> false) flags in
       match uu___ with
-      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-      | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES t) ->
-          FStar_Pervasives_Native.Some t
+      | FStar_Pervasives_Native.None -> []
+      | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.DECREASES ts) -> ts
       | uu___1 -> failwith "impossible" in
     match c.FStar_Syntax_Syntax.n with
     | FStar_Syntax_Syntax.Total (t, uu___) ->
-        FStar_Reflection_Data.C_Total (t, FStar_Pervasives_Native.None)
+        FStar_Reflection_Data.C_Total (t, [])
     | FStar_Syntax_Syntax.GTotal (t, uu___) ->
-        FStar_Reflection_Data.C_GTotal (t, FStar_Pervasives_Native.None)
+        FStar_Reflection_Data.C_GTotal (t, [])
     | FStar_Syntax_Syntax.Comp ct ->
         let uu___ =
           FStar_Ident.lid_equals ct.FStar_Syntax_Syntax.effect_name
@@ -289,9 +288,8 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
   =
   fun cv ->
     match cv with
-    | FStar_Reflection_Data.C_Total (t, FStar_Pervasives_Native.None) ->
-        FStar_Syntax_Syntax.mk_Total t
-    | FStar_Reflection_Data.C_Total (t, FStar_Pervasives_Native.Some d) ->
+    | FStar_Reflection_Data.C_Total (t, []) -> FStar_Syntax_Syntax.mk_Total t
+    | FStar_Reflection_Data.C_Total (t, l) ->
         let ct =
           {
             FStar_Syntax_Syntax.comp_univs = [FStar_Syntax_Syntax.U_zero];
@@ -299,12 +297,12 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
               FStar_Parser_Const.effect_Tot_lid;
             FStar_Syntax_Syntax.result_typ = t;
             FStar_Syntax_Syntax.effect_args = [];
-            FStar_Syntax_Syntax.flags = [FStar_Syntax_Syntax.DECREASES d]
+            FStar_Syntax_Syntax.flags = [FStar_Syntax_Syntax.DECREASES l]
           } in
         FStar_Syntax_Syntax.mk_Comp ct
-    | FStar_Reflection_Data.C_GTotal (t, FStar_Pervasives_Native.None) ->
+    | FStar_Reflection_Data.C_GTotal (t, []) ->
         FStar_Syntax_Syntax.mk_GTotal t
-    | FStar_Reflection_Data.C_GTotal (t, FStar_Pervasives_Native.Some d) ->
+    | FStar_Reflection_Data.C_GTotal (t, l) ->
         let ct =
           {
             FStar_Syntax_Syntax.comp_univs = [FStar_Syntax_Syntax.U_zero];
@@ -312,7 +310,7 @@ let (pack_comp : FStar_Reflection_Data.comp_view -> FStar_Syntax_Syntax.comp)
               FStar_Parser_Const.effect_GTot_lid;
             FStar_Syntax_Syntax.result_typ = t;
             FStar_Syntax_Syntax.effect_args = [];
-            FStar_Syntax_Syntax.flags = [FStar_Syntax_Syntax.DECREASES d]
+            FStar_Syntax_Syntax.flags = [FStar_Syntax_Syntax.DECREASES l]
           } in
         FStar_Syntax_Syntax.mk_Comp ct
     | FStar_Reflection_Data.C_Lemma (pre, post, pats) ->

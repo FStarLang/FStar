@@ -83,7 +83,7 @@ let mk_e_app (t : term) (args : list term) : Tot term =
 let rec mk_tot_arr_ln (bs: list binder) (cod : term) : Tot term (decreases bs) =
     match bs with
     | [] -> cod
-    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_ln bs cod) None)))
+    | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_ln bs cod) [])))
 
 private
 let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (decreases c) =
@@ -100,12 +100,12 @@ let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder * comp) (d
 
 val collect_arr_ln_bs : typ -> list binder * comp
 let collect_arr_ln_bs t =
-    let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
+    let (bs, c) = collect_arr' [] (pack_comp (C_Total t [])) in
     (List.Tot.Base.rev bs, c)
 
 val collect_arr_ln : typ -> list typ * comp
 let collect_arr_ln t =
-    let (bs, c) = collect_arr' [] (pack_comp (C_Total t None)) in
+    let (bs, c) = collect_arr' [] (pack_comp (C_Total t [])) in
     let ts = List.Tot.Base.map type_of_binder bs in
     (List.Tot.Base.rev ts, c)
 
@@ -153,7 +153,7 @@ let compare_binder (b1 b2 : binder) : order =
     let bv2, _ = inspect_binder b2 in
     compare_bv bv1 bv2
 
-let rec compare_term (s t : term) : order =
+let rec compare_term (s t : term) : Tot order (decreases s) =
     match inspect_ln s, inspect_ln t with
     | Tv_Var sv, Tv_Var tv ->
         compare_bv sv tv
@@ -229,7 +229,15 @@ let rec compare_term (s t : term) : order =
     | Tv_AscribedT _ _ _, _  -> Lt | _, Tv_AscribedT _ _ _  -> Gt
     | Tv_AscribedC _ _ _, _  -> Lt | _, Tv_AscribedC _ _ _  -> Gt
     | Tv_Unknown, _    -> Lt   | _, Tv_Unknown    -> Gt
-and compare_argv (a1 a2 : argv) : order =
+and compare_term_list (l1 l2:list term) : Tot order (decreases l1) =
+  match l1, l2 with
+  | [], [] -> Eq
+  | [], _ -> Lt
+  | _, [] -> Gt
+  | hd1::tl1, hd2::tl2 ->
+    lex (compare_term hd1 hd2) (fun () -> compare_term_list tl1 tl2)
+
+and compare_argv (a1 a2 : argv) : Tot order (decreases a1) =
     let a1, q1 = a1 in
     let a2, q2 = a2 in
     match q1, q2 with
@@ -237,23 +245,15 @@ and compare_argv (a1 a2 : argv) : order =
     | Q_Implicit, Q_Explicit -> Lt
     | Q_Explicit, Q_Implicit -> Gt
     | _, _ -> compare_term a1 a2
-and compare_comp (c1 c2 : comp) : order =
+and compare_comp (c1 c2 : comp) : Tot order (decreases c1) =
     let cv1 = inspect_comp c1 in
     let cv2 = inspect_comp c2 in
     match cv1, cv2 with
     | C_Total t1 md1, C_Total t2 md2 -> lex (compare_term t1 t2)
-                                        (fun () -> match md1, md2 with
-                                                   | None, None -> Eq
-                                                   | None, Some _ -> Lt
-                                                   | Some _, None -> Gt
-                                                   | Some x, Some y -> compare_term x y)
+                                           (fun () -> compare_term_list md1 md2)
 
     | C_GTotal t1 md1, C_GTotal t2 md2 -> lex (compare_term t1 t2)
-                                        (fun () -> match md1, md2 with
-                                                   | None, None -> Eq
-                                                   | None, Some _ -> Lt
-                                                   | Some _, None -> Gt
-                                                   | Some x, Some y -> compare_term x y)
+                                             (fun () -> compare_term_list md1 md2)
 
     | C_Lemma p1 q1 s1, C_Lemma p2 q2 s2 ->
       lex (compare_term p1 p2)

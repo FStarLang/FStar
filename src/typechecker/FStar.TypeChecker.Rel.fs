@@ -1084,6 +1084,11 @@ let rec delta_depth_of_term env t =
     | Tm_abs _ -> Some delta_constant
     | Tm_fvar fv -> Some (fv_delta_depth env fv)
 
+let universe_has_max env u =
+  let u = N.normalize_universe env u in
+  match u with
+  | U_max _ -> true
+  | _ -> false
 
 let rec head_matches env t1 t2 : match_result =
   let t1 = U.unmeta t1 in
@@ -1094,7 +1099,6 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_name x, Tm_name y -> if S.bv_eq x y then FullMatch else MisMatch(None, None)
     | Tm_fvar f, Tm_fvar g -> if S.fv_eq f g then FullMatch else MisMatch(Some (fv_delta_depth env f), Some (fv_delta_depth env g))
     | Tm_uinst (f, _), Tm_uinst(g, _) -> head_matches env f g |> head_match
-
     | Tm_constant FC.Const_reify, Tm_constant FC.Const_reify -> FullMatch
     | Tm_constant FC.Const_reify, _
     | _, Tm_constant FC.Const_reify -> HeadMatch true
@@ -1400,6 +1404,7 @@ let ufailed_simple (s:string) : univ_eq_sol =
 let ufailed_thunk (s: unit -> string) : univ_eq_sol =
   UFailed (mklstr s)
 
+  
 let rec really_solve_universe_eq pid_orig wl u1 u2 =
     let u1 = N.normalize_universe wl.tcenv u1 in
     let u2 = N.normalize_universe wl.tcenv u2 in
@@ -2471,12 +2476,21 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             (Print.term_to_string t2) (Print.tag_of_term t2);
         let head1, args1 = U.head_and_args t1 in
         let head2, args2 = U.head_and_args t2 in
+        let need_unif =
+          match (head1.n, args1), (head2.n, args2) with
+          | (Tm_uinst(_, us1), _::_), (Tm_uinst(_, us2), _::_) ->
+            if List.for_all (fun u -> not (universe_has_max env u)) us1
+            && List.for_all (fun u -> not (universe_has_max env u)) us2
+            then need_unif //if no umaxes then go ahead as usual
+            else true //else, decompose the problem and potentially defer
+          | _ -> need_unif
+        in
         let solve_head_then wl k =
             if need_unif then k true wl
             else match solve_maybe_uinsts env orig head1 head2 wl with
-            | USolved wl -> k true wl //(solve_prob orig None [] wl)
-            | UFailed msg -> giveup env msg orig
-            | UDeferred wl -> k false (defer_lit "universe constraints" orig wl)
+                 | USolved wl -> k true wl //(solve_prob orig None [] wl)
+                 | UFailed msg -> giveup env msg orig
+                 | UDeferred wl -> k false (defer_lit "universe constraints" orig wl)
         in
         let nargs = List.length args1 in
         if nargs <> List.length args2

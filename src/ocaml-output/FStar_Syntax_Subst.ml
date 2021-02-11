@@ -362,8 +362,9 @@ let (subst_flags' :
         (FStar_List.map
            (fun uu___ ->
               match uu___ with
-              | FStar_Syntax_Syntax.DECREASES a ->
-                  let uu___1 = subst' s a in
+              | FStar_Syntax_Syntax.DECREASES l ->
+                  let uu___1 =
+                    FStar_All.pipe_right l (FStar_List.map (subst' s)) in
                   FStar_Syntax_Syntax.DECREASES uu___1
               | f -> f))
 let (subst_imp' :
@@ -1822,8 +1823,9 @@ and (deep_compress_cflags :
     FStar_List.map
       (fun f ->
          match f with
-         | FStar_Syntax_Syntax.DECREASES t ->
-             let uu___ = deep_compress t in
+         | FStar_Syntax_Syntax.DECREASES l ->
+             let uu___ =
+               FStar_All.pipe_right l (FStar_List.map deep_compress) in
              FStar_Syntax_Syntax.DECREASES uu___
          | FStar_Syntax_Syntax.TOTAL -> f
          | FStar_Syntax_Syntax.MLEFFECT -> f

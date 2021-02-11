@@ -969,7 +969,7 @@ and translate_flag cfg bs (f : S.cflag) : cflag =
     | S.SHOULD_NOT_INLINE -> SHOULD_NOT_INLINE
     | S.LEMMA -> LEMMA
     | S.CPS -> CPS
-    | S.DECREASES tm -> DECREASES (translate cfg bs tm)
+    | S.DECREASES l -> DECREASES (l |> List.map (translate cfg bs))
 
 and readback_flag cfg (f : cflag) : S.cflag =
     match f with
@@ -982,7 +982,7 @@ and readback_flag cfg (f : cflag) : S.cflag =
     | SHOULD_NOT_INLINE -> S.SHOULD_NOT_INLINE
     | LEMMA -> S.LEMMA
     | CPS -> S.CPS
-    | DECREASES t -> S.DECREASES (readback cfg t)
+    | DECREASES l -> S.DECREASES (l |> List.map (readback cfg))
 
 and translate_monadic (m, ty) cfg bs e : t =
    let e = U.unascribe e in
