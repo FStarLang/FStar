@@ -73,3 +73,19 @@ let higher_ref_pts_to_injective_eq #a #p #q (r:H.ref a) (v0 v1:Ghost.erased a)
                       (pts_to r p v0 `star` pts_to r q v0)
                       (v0 == v1)
                       (pts_to_ref_injective r p q v0 v1)
+
+let rewrite #a (#[@@framing_implicit]p:a -> slprop)(x y:a)
+  : Steel unit (p x) (fun _ -> p y)
+    (requires fun _ -> x == y)
+    (ensures fun _ _ _ -> True)
+  = Steel.Effect.change_slprop (p x) (p y) (fun _ -> ())
+
+let extract_pure (p:prop)
+  : Steel unit (pure p) (fun _ -> pure p) (fun _ -> True) (fun _ _ _ -> p)
+  = Steel.Utils.elim_pure p;
+    Steel.Effect.intro_pure p
+
+let dup_pure (p:prop)
+  : SteelT unit (pure p) (fun _ -> pure p `star` pure p)
+  = Steel.Utils.extract_pure p;
+    Steel.Effect.intro_pure p
