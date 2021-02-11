@@ -222,7 +222,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2af2df31d323a2b3ca4a0c5f6da6f457"
+      "72f85b19c3e05e1796d7b85d663a9475"
     ],
     [
       "StlcStrongDbParSubst.subst",
@@ -962,7 +962,7 @@
         "token_correspondence_StlcStrongDbParSubst.sub_beta"
       ],
       0,
-      "05f2ce43b77c514959a887f3da3ba8e1"
+      "25f3f21a4090a29b7905c8023c6925ab"
     ],
     [
       "StlcStrongDbParSubst.preservation",
