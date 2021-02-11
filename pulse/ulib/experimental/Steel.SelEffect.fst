@@ -934,6 +934,8 @@ let elim_vptr (#a:Type) (r:ref a) (v:erased a) (m:mem) : Lemma
 
 let alloc x =
   let r = alloc0 x in
+  extract_info (vptr_tmp r full_perm x) () (~ (R.is_null r))
+    (fun m -> R.pts_to_not_null r full_perm x m);
   change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x);
   r
 

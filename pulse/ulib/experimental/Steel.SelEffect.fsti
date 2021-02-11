@@ -502,7 +502,7 @@ let vptr r = VUnit (vptr' r)
 val alloc (#a:Type0) (x:a) : SteelSel (ref a)
   vemp (fun r -> vptr r)
   (requires fun _ -> True)
-  (ensures fun _ r h1 -> h1 (vptr r) == x)
+  (ensures fun _ r h1 -> h1 (vptr r) == x /\ not (R.is_null r))
 
 val free (#a:Type0) (r:ref a) : SteelSel unit
   (vptr r) (fun _ -> vemp)
