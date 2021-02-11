@@ -50,11 +50,7 @@ module Const = FStar.Parser.Const
 (* Some local utilities *)
 let instantiate_both env = {env with Env.instantiate_imp=true}
 let no_inst env = {env with Env.instantiate_imp=false}
-let mk_lex_list vs =
-    List.fold_right (fun v tl ->
-        let r = if tl.pos = Range.dummyRange then v.pos else Range.union_ranges v.pos tl.pos in
-        mk_Tm_app lex_pair [as_arg v; as_arg tl] r)
-    vs lex_top
+
 let is_eq = function
     | Some Equality -> true
     | _ -> false
@@ -370,7 +366,6 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
     | letrecs ->
       let r = Env.get_range env in
       let env = {env with letrecs=[]} in
-      let precedes = TcUtil.fvar_const env Const.precedes_lid in
 
       let decreases_clause bs c =
           if debug env Options.Low
@@ -385,18 +380,82 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
                         | Tm_type _
                         | Tm_arrow _ -> []
                         | _ -> [S.bv_to_name b]) in
-          let as_lex_list dec =
-                let head, _ = U.head_and_args dec in
-                match head.n with (* The decreases clause is always an expression of type lex_t; promote if it isn't *)
-                    | Tm_fvar fv when S.fv_eq_lid fv Const.lexcons_lid -> dec
-                    | _ -> mk_lex_list [dec] in
           let cflags = U.comp_flags c in
           match cflags |> List.tryFind (function DECREASES _ -> true | _ -> false) with
-                | Some (DECREASES dec) -> as_lex_list dec
-                | _ ->
-                    let xs = bs |> filter_types_and_functions in
-                    mk_lex_list xs
-      in
+                | Some (DECREASES l) -> l
+                | _ -> bs |> filter_types_and_functions in
+
+      let precedes_t = TcUtil.fvar_const env Const.precedes_lid in
+      let rec mk_precedes_lex env l l_prev : term =
+        (*
+         * AR: aux assumes that l and l_prev have the same lengths
+         *     Given l = [a; b; c], l_prev = [d; e; f], it builds:
+         *       a << d \/ (eq3 a d /\ b << e) \/ (eq3 a d /\ eq3 b e /\ c << f
+         *     We build an "untyped" term here, the caller will typecheck it properly
+         *)
+        let rec aux l l_prev : term =
+         let type_of (e1:term) (e2:term) : typ * typ =
+           (*
+            * AR: we compute the types of e1 and e2 to provide type
+            *     arguments to eq3 (otherwise F* may infer something that Z3 is unable
+            *       to prove equal later on)
+            *     as a check, if the types are not equal, we emit a warning so that
+            *       the programmer may annotate explicitly if needed
+            *)
+           let t1 = e1 |> env.type_of_well_typed env |> U.unrefine in
+           let t2 = e2 |> env.type_of_well_typed env |> U.unrefine in
+           let rec warn t1 t2 =
+             if U.eq_tm t1 t2 = Equal
+             then false
+             else match (SS.compress t1).n, (SS.compress t2).n with
+                  | Tm_uinst (t1, _), Tm_uinst (t2, _) -> warn t1 t2
+                  | Tm_name _, Tm_name _ -> false  //do not warn for names, e.g. in polymorphic functions, the names may be instantiated at the call sites
+                  | Tm_app (h1, args1), Tm_app (h2, args2) ->
+                    warn h1 h2 || List.length args1 <> List.length args2 ||
+                    (List.zip args1 args2 |> List.existsML (fun ((a1, _), (a2, _)) -> warn a1 a2))
+                  | Tm_refine (t1, phi1), Tm_refine (t2, phi2) ->
+                    warn t1.sort t2.sort || warn phi1 phi2
+                  | Tm_uvar _, _
+                  | _, Tm_uvar _ -> false
+                  | _, _ -> true in
+
+           (if warn t1 t2
+            then match (SS.compress t1).n, (SS.compress t2).n with
+                 | Tm_name _, Tm_name _ -> ()
+                 | _, _ ->
+                   Errors.log_issue e1.pos (Errors.Warning_Defensive,
+                     BU.format6 "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type\n"
+                       (Print.term_to_string e1)
+                       (Range.string_of_range e1.pos)
+                       (Print.term_to_string t1)
+                       (Print.term_to_string e2)
+                       (Range.string_of_range e2.pos)
+                       (Print.term_to_string t2)));
+           t1, t2 in
+
+          match l, l_prev with
+          | [], [] ->
+            mk_Tm_app precedes_t [as_arg S.unit_const; as_arg S.unit_const] r
+          | [x], [x_prev] -> mk_Tm_app precedes_t [as_arg x; as_arg x_prev] r
+          | x::tl, x_prev::tl_prev ->
+            let t_x, t_x_prev = type_of x x_prev in
+            let tm_precedes = mk_Tm_app precedes_t [
+              iarg t_x;
+              iarg t_x_prev;
+              as_arg x;
+              as_arg x_prev ] r in
+            let eq3_x_x_prev = mk_eq3_no_univ t_x t_x_prev x x_prev in
+
+            mk_disj tm_precedes
+                    (mk_conj eq3_x_x_prev (aux tl tl_prev)) in
+
+        (* Call aux with equal sized prefixes of l and l_prev *)
+        let l, l_prev =
+          let n, n_prev = List.length l, List.length l_prev in
+          if n = n_prev then l, l_prev
+          else if n < n_prev then l, l_prev |> List.splitAt n |> fst
+          else l |> List.splitAt n_prev |> fst, l_prev in
+        aux l l_prev in
 
       let previous_dec = decreases_clause actuals expected_c in
 
@@ -415,7 +474,9 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
           then ({b with binder_bv=S.new_bv (Some (S.range_of_bv b.binder_bv)) b.binder_bv.sort})
           else b) in
         let dec = decreases_clause formals c in
-        let precedes = mk_Tm_app precedes [as_arg dec; as_arg previous_dec] r in
+        let precedes =
+          let env = Env.push_binders env formals in
+          mk_precedes_lex env dec previous_dec in
         let precedes = TcUtil.label "Could not prove termination of this recursive call" r precedes in
         let bs, ({binder_bv=last; binder_qual=imp}) = BU.prefix formals in
         let last = {last with sort=U.refine last precedes} in
@@ -427,7 +488,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ*univ_names)> =
         l, t', u_names
       in
       letrecs |> List.map guard_one_letrec
-
+      
 let wrap_guard_with_tactic_opt topt g =
    match topt with
    | None -> g
@@ -1339,10 +1400,12 @@ and tc_comp env c : comp                                      (* checked version
       let _, args = U.head_and_args tc in
       let res, args = List.hd args, List.tl args in
       let flags, guards = c.flags |> List.map (function
-        | DECREASES e ->
+        | DECREASES l ->
             let env, _ = Env.clear_expected_typ env in
-            let e, _, g = tc_tot_or_gtot_term env e in
-            DECREASES e, g
+            let l, g = l |> List.fold_left (fun (l, g) e ->
+              let e, _, g_e = tc_tot_or_gtot_term env e in
+              l@[e], Env.conj_guard g g_e) ([], Env.trivial_guard) in
+            DECREASES l, g
         | f -> f, Env.trivial_guard) |> List.unzip in
       let u = env.universe_of env (fst res) in
       let c = mk_Comp ({c with
@@ -3270,7 +3333,7 @@ and build_let_rec_env _top_level env lbs : list<letbinding> * env_t * guard_t =
             then g_acc, t
             else (let env0 = Env.push_univ_vars env0 univ_vars in
                   let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| U.type_u()) "" in
-                  Env.conj_guard g_acc (g |> Rel.resolve_implicits env |> Rel.discharge_guard env), norm env0 t) in
+                  Env.conj_guard g_acc (g |> Rel.resolve_implicits env |> Rel.discharge_guard env), t) in
         // AR: This code (below) also used to have && Env.should_verify env
         // i.e. when lax checking it was adding lbname in the second branch
         // this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug056)

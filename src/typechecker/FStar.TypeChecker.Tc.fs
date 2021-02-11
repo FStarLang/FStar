@@ -79,83 +79,6 @@ let log env = (Options.log_types()) &&  not(lid_equals PC.prims_lid (Env.current
 
 (*****************Type-checking the signature of a module*****************************)
 
-let tc_lex_t env ses quals lids =
-    (* We specifically type lex_t as:
-
-          type lex_t<u> : Type(u) =
-          datacon LexTop<utop>  : lex_t<utop>
-          datacon LexCons<ucons1, ucons2> : #a:Type(ucons1) -> hd:a -> tl:lex_t<ucons2> -> lex_t<max ucons1 ucons2>
-    *)
-    assert (quals = []);
-    let err_range = (List.hd ses).sigrng in
-    begin match lids with
-        | [lex_t; lex_top; lex_cons] when
-            (lid_equals lex_t PC.lex_t_lid
-             && lid_equals lex_top PC.lextop_lid
-             && lid_equals lex_cons PC.lexcons_lid) -> ()
-        | _ -> Errors.raise_error (Errors.Fatal_InvalidRedefinitionOfLexT, ("Invalid (partial) redefinition of lex_t")) err_range
-    end;
-    begin match ses with
-      //AR: we were enforcing the univs to be [], which breaks down when we have two phases
-      //    the typechecking of lex_t is anyway hardcoded, so it should be fine to ignore that restriction
-      | [{ sigel = Sig_inductive_typ(lex_t, _, [], t, _, _);  sigquals = []; sigrng = r };
-         { sigel = Sig_datacon(lex_top, _, _t_top, _lex_t_top, 0, _); sigquals = []; sigrng = r1 };
-         { sigel = Sig_datacon(lex_cons, _, _t_cons, _lex_t_cons, 0, _); sigquals = []; sigrng = r2 }]
-         when (lid_equals lex_t PC.lex_t_lid
-            && lid_equals lex_top PC.lextop_lid
-            && lid_equals lex_cons PC.lexcons_lid) ->
-
-        let u = S.new_univ_name (Some r) in
-        let t = mk (Tm_type(U_name u)) r in
-        let t = Subst.close_univ_vars [u] t in
-        let tc = { sigel = Sig_inductive_typ(lex_t, [u], [], t, [], [PC.lextop_lid; PC.lexcons_lid]);
-                   sigquals = [];
-                   sigrng = r;
-                   sigmeta = default_sigmeta;
-                   sigattrs = [];
-                   sigopts = None; } in
-
-        let utop = S.new_univ_name (Some r1) in
-        let lex_top_t = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r1) delta_constant None, [U_name utop])) r1 in
-        let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
-        let dc_lextop = { sigel = Sig_datacon(lex_top, [utop], lex_top_t, PC.lex_t_lid, 0, []);
-                          sigquals = [];
-                          sigrng = r1;
-                          sigmeta = default_sigmeta;
-                          sigattrs = [];
-                          sigopts = None; } in
-
-        let ucons1 = S.new_univ_name (Some r2) in
-        let ucons2 = S.new_univ_name (Some r2) in
-        let lex_cons_t =
-            let a = S.new_bv (Some r2) (mk (Tm_type(U_name ucons1)) r2) in
-            let hd = S.new_bv (Some r2) (S.bv_to_name a) in
-            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_name ucons2])) r2) in
-            let res = mk (Tm_uinst(S.fvar (Ident.set_lid_range PC.lex_t_lid r2) delta_constant None, [U_max [U_name ucons1; U_name ucons2]])) r2 in
-            U.arrow [(S.mk_binder_with_attrs a (Some S.imp_tag) []);
-                     (S.mk_binder_with_attrs hd None []); 
-                     (S.mk_binder_with_attrs tl None [])] (S.mk_Total res) in
-        let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
-        let dc_lexcons = { sigel = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, PC.lex_t_lid, 0, []);
-                           sigquals = [];
-                           sigrng = r2;
-                           sigmeta = default_sigmeta;
-                           sigattrs = [];
-                           sigopts = None; } in
-        { sigel = Sig_bundle([tc; dc_lextop; dc_lexcons], lids);
-          sigquals = [];
-          sigrng = Env.get_range env;
-          sigmeta = default_sigmeta;
-          sigattrs = [];
-          sigopts = None; }
-      | _ ->
-        let err_msg =
-          BU.format1 "Invalid (re)definition of lex_t: %s\n"
-            (Print.sigelt_to_string (mk_sigelt (Sig_bundle(ses, lids))))
-        in
-        raise_error (Errors.Fatal_InvalidRedefinitionOfLexT, err_msg) err_range
-    end
-
 let tc_type_common (env:env) ((uvs, t):tscheme) (expected_typ:typ) (r:Range.range) :tscheme =
   let uvs, t = SS.open_univ_vars uvs t in
   let env = Env.push_univ_vars env uvs in
@@ -669,18 +592,6 @@ let tc_decl' env0 se: list<sigelt> * list<sigelt> * Env.env =
                                     (string_of_int e) (string_of_int n2) (string_of_int n1))
     end;
     [], [], env
-
-  | Sig_bundle(ses, lids) when (lids |> BU.for_some (lid_equals PC.lex_t_lid)) ->
-    //lex_t is very special; it uses a more expressive form of universe polymorphism than is allowed elsewhere
-    //Instead of this special treatment, we could make use of explicit lifts, but LexCons is used pervasively
-    (*
-        type lex_t<u> =
-          | LexTop<u>  : lex_t<u>
-          | LexCons<u1, u2> : #a:Type(u1) -> a -> lex_t<u2> -> lex_t<max u1 u2>
-    *)
-    let env = Env.set_range env r in
-    let se = tc_lex_t env ses se.sigquals lids  in
-    [se], [], env0
 
   | Sig_bundle(ses, lids) ->
     let env = Env.set_range env r in

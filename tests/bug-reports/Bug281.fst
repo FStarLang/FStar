@@ -40,7 +40,7 @@ val sub_einc : nat -> Tot (exp)
 let sub_einc x = EVar (x+1)
 
 val esubst : s:sub -> e:exp -> Tot (r:exp{renaming s /\ EVar? e ==> EVar? r})
-(decreases %[is_evar e; is_renaming s; 1;e])
+(decreases %[(is_evar e) <: int; is_renaming s; 1;e])
 val sub_elam : s:sub -> Tot (r:sub{renaming s ==> renaming r})
 (decreases %[1;is_renaming s; 0; EVar 0])
 

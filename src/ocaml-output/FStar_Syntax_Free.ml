@@ -318,16 +318,35 @@ and (free_names_and_uvars_comp :
                 let uu___3 = free_names_and_uvars t use_cache in
                 union uu___2 uu___3
             | FStar_Syntax_Syntax.Comp ct ->
+                let decreases_vars =
+                  let uu___2 =
+                    FStar_List.tryFind
+                      (fun uu___3 ->
+                         match uu___3 with
+                         | FStar_Syntax_Syntax.DECREASES uu___4 -> true
+                         | uu___4 -> false) ct.FStar_Syntax_Syntax.flags in
+                  match uu___2 with
+                  | FStar_Pervasives_Native.None -> no_free_vars
+                  | FStar_Pervasives_Native.Some
+                      (FStar_Syntax_Syntax.DECREASES l) ->
+                      FStar_All.pipe_right l
+                        (FStar_List.fold_left
+                           (fun acc ->
+                              fun t ->
+                                let uu___3 = free_names_and_uvars t use_cache in
+                                union acc uu___3) no_free_vars) in
                 let us =
                   let uu___2 =
                     free_names_and_uvars ct.FStar_Syntax_Syntax.result_typ
                       use_cache in
+                  union uu___2 decreases_vars in
+                let us1 =
                   free_names_and_uvars_args
-                    ct.FStar_Syntax_Syntax.effect_args uu___2 use_cache in
+                    ct.FStar_Syntax_Syntax.effect_args us use_cache in
                 FStar_List.fold_left
-                  (fun us1 ->
-                     fun u -> let uu___2 = free_univs u in union us1 uu___2)
-                  us ct.FStar_Syntax_Syntax.comp_univs in
+                  (fun us2 ->
+                     fun u -> let uu___2 = free_univs u in union us2 uu___2)
+                  us1 ct.FStar_Syntax_Syntax.comp_univs in
           (FStar_ST.op_Colon_Equals c.FStar_Syntax_Syntax.vars
              (FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst n));
            n)

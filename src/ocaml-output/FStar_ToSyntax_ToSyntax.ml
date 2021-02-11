@@ -420,6 +420,8 @@ and (free_type_vars :
       | FStar_Parser_AST.Ensures (t1, uu___1) -> free_type_vars env t1
       | FStar_Parser_AST.Decreases (t1, uu___1) -> free_type_vars env t1
       | FStar_Parser_AST.NamedTyp (uu___1, t1) -> free_type_vars env t1
+      | FStar_Parser_AST.LexList l ->
+          FStar_List.collect (free_type_vars env) l
       | FStar_Parser_AST.Paren t1 -> failwith "impossible"
       | FStar_Parser_AST.Ascribed (t1, t', tacopt) ->
           let ts = t1 :: t' ::
@@ -2084,8 +2086,6 @@ and (desugar_term_maybe_top :
             let uu___1 = desugar_formula env t in (uu___1, noaqs)
         | FStar_Parser_AST.Ensures (t, lopt) ->
             let uu___1 = desugar_formula env t in (uu___1, noaqs)
-        | FStar_Parser_AST.Decreases (t, lopt) ->
-            desugar_term_maybe_top top_level env t
         | FStar_Parser_AST.Attributes ts ->
             failwith
               "Attributes should not be desugared by desugar_term_maybe_top"
@@ -4235,14 +4235,35 @@ and (desugar_comp :
                          (match uu___4 with
                           | (dec, rest1) ->
                               let rest2 = desugar_args env rest1 in
-                              let dec1 = desugar_args env dec in
                               let decreases_clause =
-                                FStar_List.map
-                                  (fun uu___5 ->
-                                     match uu___5 with
-                                     | (t1, uu___6) ->
-                                         FStar_Syntax_Syntax.DECREASES t1)
-                                  dec1 in
+                                FStar_All.pipe_right dec
+                                  (FStar_List.map
+                                     (fun t1 ->
+                                        let uu___5 =
+                                          let uu___6 =
+                                            unparen
+                                              (FStar_Pervasives_Native.fst t1) in
+                                          uu___6.FStar_Parser_AST.tm in
+                                        match uu___5 with
+                                        | FStar_Parser_AST.Decreases
+                                            (t2, uu___6) ->
+                                            let l =
+                                              let t3 = unparen t2 in
+                                              match t3.FStar_Parser_AST.tm
+                                              with
+                                              | FStar_Parser_AST.LexList l1
+                                                  -> l1
+                                              | uu___7 -> [t3] in
+                                            let uu___7 =
+                                              FStar_All.pipe_right l
+                                                (FStar_List.map
+                                                   (desugar_term env)) in
+                                            FStar_Syntax_Syntax.DECREASES
+                                              uu___7
+                                        | uu___6 ->
+                                            fail
+                                              (FStar_Errors.Fatal_UnexpectedComputationTypeForLetRec,
+                                                "Unexpected decreases clause"))) in
                               let no_additional_args =
                                 let is_empty l =
                                   match l with | [] -> true | uu___5 -> false in
@@ -4855,10 +4876,7 @@ let (mk_data_projector_names :
       fun se ->
         match se.FStar_Syntax_Syntax.sigel with
         | FStar_Syntax_Syntax.Sig_datacon (lid, uu___, t, uu___1, n, uu___2)
-            when
-            let uu___3 =
-              FStar_Ident.lid_equals lid FStar_Parser_Const.lexcons_lid in
-            Prims.op_Negation uu___3 ->
+            ->
             let uu___3 = FStar_Syntax_Util.arrow_formals t in
             (match uu___3 with
              | (formals, uu___4) ->

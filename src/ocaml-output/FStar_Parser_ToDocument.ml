@@ -364,9 +364,6 @@ let (is_list_structure :
       aux
 let (is_list : FStar_Parser_AST.term -> Prims.bool) =
   is_list_structure FStar_Parser_Const.cons_lid FStar_Parser_Const.nil_lid
-let (is_lex_list : FStar_Parser_AST.term -> Prims.bool) =
-  is_list_structure FStar_Parser_Const.lexcons_lid
-    FStar_Parser_Const.lextop_lid
 let rec (extract_from_list :
   FStar_Parser_AST.term -> FStar_Parser_AST.term Prims.list) =
   fun e ->
@@ -472,8 +469,7 @@ let (is_general_application : FStar_Parser_AST.term -> Prims.bool) =
   fun e ->
     let uu___ = (is_array e) || (is_ref_set e) in Prims.op_Negation uu___
 let (is_general_construction : FStar_Parser_AST.term -> Prims.bool) =
-  fun e ->
-    let uu___ = (is_list e) || (is_lex_list e) in Prims.op_Negation uu___
+  fun e -> let uu___ = is_list e in Prims.op_Negation uu___
 let (is_general_prefix_op : FStar_Ident.ident -> Prims.bool) =
   fun op ->
     let op_starting_char =
@@ -1584,6 +1580,28 @@ and (p_letbinding :
                    FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___5 in
                  FStar_Pprint.op_Hat_Hat doc_pat uu___4 in
                FStar_Pprint.ifflat uu___2 uu___3)
+and (p_term_list :
+  Prims.bool ->
+    Prims.bool -> FStar_Parser_AST.term Prims.list -> FStar_Pprint.document)
+  =
+  fun ps ->
+    fun pb ->
+      fun l ->
+        let rec aux uu___ =
+          match uu___ with
+          | [] -> FStar_Pprint.empty
+          | x::[] -> p_term ps pb x
+          | x::xs ->
+              let uu___1 = p_term ps pb x in
+              let uu___2 =
+                let uu___3 = str ";" in
+                let uu___4 = aux xs in FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
+              FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+        let uu___ = str "[" in
+        let uu___1 =
+          let uu___2 = aux l in
+          let uu___3 = str "]" in FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
+        FStar_Pprint.op_Hat_Hat uu___ uu___1
 and (p_newEffect : FStar_Parser_AST.effect_decl -> FStar_Pprint.document) =
   fun uu___ ->
     match uu___ with
@@ -2360,6 +2378,12 @@ and (p_noSeqTerm' :
               let uu___3 = p_typ ps pb e1 in
               FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
             FStar_Pprint.group uu___1
+        | FStar_Parser_AST.LexList l ->
+            let uu___ =
+              let uu___1 = str "%" in
+              let uu___2 = p_term_list ps pb l in
+              FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+            FStar_Pprint.group uu___
         | FStar_Parser_AST.Decreases (e1, wtf) ->
             let uu___1 =
               let uu___2 = str "decreases" in
@@ -3824,16 +3848,6 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
             (fun ps -> p_noSeqTermAndComment ps false) uu___3 in
         FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero
           FStar_Pprint.lbracket uu___1 FStar_Pprint.rbracket
-    | uu___ when is_lex_list e ->
-        let uu___1 =
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.percent FStar_Pprint.lbracket in
-        let uu___2 =
-          let uu___3 = FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1 in
-          let uu___4 = extract_from_list e in
-          separate_map_or_flow_last uu___3
-            (fun ps -> p_noSeqTermAndComment ps false) uu___4 in
-        FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one uu___1 uu___2
-          FStar_Pprint.rbracket
     | uu___ when is_ref_set e ->
         let es = extract_from_ref_set e in
         let uu___1 =
@@ -3930,6 +3944,12 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.CalcProof uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
+    | FStar_Parser_AST.LexList l ->
+        let uu___ =
+          let uu___1 = str "%" in
+          let uu___2 = p_term_list false false l in
+          FStar_Pprint.op_Hat_Hat uu___1 uu___2 in
+        FStar_Pprint.group uu___
 and (p_constant : FStar_Const.sconst -> FStar_Pprint.document) =
   fun uu___ ->
     match uu___ with

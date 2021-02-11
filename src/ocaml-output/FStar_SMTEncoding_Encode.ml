@@ -5048,14 +5048,8 @@ and (encode_sigelt' :
                                      env1) in
                              match uu___8 with
                              | (tok_decls, env2) ->
-                                 let uu___9 =
-                                   FStar_Ident.lid_equals t
-                                     FStar_Parser_Const.lex_t_lid in
-                                 if uu___9
-                                 then (tok_decls, env2)
-                                 else
-                                   ((FStar_List.append tname_decl tok_decls),
-                                     env2) in
+                                 ((FStar_List.append tname_decl tok_decls),
+                                   env2) in
                            (match uu___7 with
                             | (decls, env2) ->
                                 let kindingAx =
@@ -5148,10 +5142,6 @@ and (encode_sigelt' :
                                   FStar_List.append uu___8
                                     (FStar_List.append binder_decls aux) in
                                 (g, env2))))))
-       | FStar_Syntax_Syntax.Sig_datacon
-           (d, uu___1, uu___2, uu___3, uu___4, uu___5) when
-           FStar_Ident.lid_equals d FStar_Parser_Const.lexcons_lid ->
-           ([], env)
        | FStar_Syntax_Syntax.Sig_datacon
            (d, uu___1, t, uu___2, n_tps, mutuals) ->
            let quals = se.FStar_Syntax_Syntax.sigquals in
