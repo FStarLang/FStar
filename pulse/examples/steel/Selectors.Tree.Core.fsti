@@ -31,7 +31,7 @@ val mk_node (#a: Type0) (data: a) (left right: t a)
 
 (**** Slprop and selector *)
 
-val null_t (#a: Type0) : t a
+let null_t (#a: Type0) : t a = Steel.Reference.null
 val is_null_t (#a: Type0) (r: t a) : (b:bool{b <==> r == null_t})
 
 
@@ -85,7 +85,7 @@ val drop_linked_tree_leaf (#a: Type0) (ptr: t a)
     : SteelSel unit
        (linked_tree ptr) (fun _ -> vemp)
        (requires (fun _ -> is_null_t ptr))
-       (ensures (fun _ _ _ -> True))
+       (ensures (fun h0 _ _ -> v_linked_tree ptr h0 == Spec.Leaf))
 
 val pack_tree (#a: Type0) (ptr: t a) (left: t a) (right: t a)
     : SteelSel unit
@@ -110,5 +110,6 @@ val unpack_tree (#a: Type0) (ptr: t a)
         v_linked_tree ptr h0 == Spec.Node
           (get_data (sel ptr h1))
           (v_linked_tree (get_left node) h1)
-          (v_linked_tree (get_right node) h1)
+          (v_linked_tree (get_right node) h1) /\
+        (sel ptr h1) == node
       ))
