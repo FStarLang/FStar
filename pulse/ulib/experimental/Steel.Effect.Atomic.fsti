@@ -525,10 +525,8 @@ val intro_h_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p
 val h_affine (#opened_invariants:_) (p q:slprop)
   : SteelAtomicT unit opened_invariants unobservable (p `star` q) (fun _ -> p)
 
-(* Witnessing an existential can only be done for frame-monotonic properties.
- * Most PCMs we use have a witness-invariant pts_to, which means this
- * condition is usually trivial and can be hidden from programs. *)
-val witness_h_exists (#a:Type) (#opened_invariants:_) (#p:a -> slprop) (_:squash (is_frame_monotonic p))
+(* Witnessing an existential *)
+val witness_h_exists (#a:Type) (#opened_invariants:_) (#p:a -> slprop) (_:unit)
   : SteelAtomicT (Ghost.erased a) opened_invariants unobservable
                 (h_exists p) (fun x -> p x)
 
