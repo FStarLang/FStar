@@ -24,8 +24,8 @@ let new_dlist (#a:Type) (init:a)
     pc
 
 let read_norefine (#a:Type)
-                  (#[@@framing_implicit] p:perm)
-                  (#[@@framing_implicit] v:Ghost.erased a)
+                  (#[@@@ framing_implicit] p:perm)
+                  (#[@@@ framing_implicit] v:Ghost.erased a)
                   (r:ref a)
   : Steel a (pts_to r p v) (fun x -> pts_to r p v)
             (requires fun _ -> True)
@@ -133,13 +133,13 @@ let concat_nil_l (#a:Type)
              :: tl1
 
 let concat_t a =
-  (#[@@framing_implicit] from0:t a) ->
-  (#[@@framing_implicit] to0: t a) ->
-  (#[@@framing_implicit] hd0:cell a) ->
-  (#[@@framing_implicit] tl0:list (cell a)) ->
-  (#[@@framing_implicit] from1:t a) ->
-  (#[@@framing_implicit] hd1:cell a) ->
-  (#[@@framing_implicit] tl1:list (cell a)) ->
+  (#[@@@ framing_implicit] from0:t a) ->
+  (#[@@@ framing_implicit] to0: t a) ->
+  (#[@@@ framing_implicit] hd0:cell a) ->
+  (#[@@@ framing_implicit] tl0:list (cell a)) ->
+  (#[@@@ framing_implicit] from1:t a) ->
+  (#[@@@ framing_implicit] hd1:cell a) ->
+  (#[@@@ framing_implicit] tl1:list (cell a)) ->
   (ptr0:t a) ->
   (ptr1:t a) ->
   SteelT (list (cell a))
@@ -171,13 +171,13 @@ let concat_cons (#a:Type) (aux:concat_t a)
      c0::l
 
 let rec concat (#a:Type)
-               (#[@@framing_implicit] from0:t a)
-               (#[@@framing_implicit] to0: t a)
-               (#[@@framing_implicit] hd0:cell a)
-               (#[@@framing_implicit] tl0:list (cell a))
-               (#[@@framing_implicit] from1:t a)
-               (#[@@framing_implicit] hd1:cell a)
-               (#[@@framing_implicit] tl1:list (cell a))
+               (#[@@@ framing_implicit] from0:t a)
+               (#[@@@ framing_implicit] to0: t a)
+               (#[@@@ framing_implicit] hd0:cell a)
+               (#[@@@ framing_implicit] tl0:list (cell a))
+               (#[@@@ framing_implicit] from1:t a)
+               (#[@@@ framing_implicit] hd1:cell a)
+               (#[@@@ framing_implicit] tl1:list (cell a))
                (ptr0:t a)
                (ptr1:t a)
    : SteelT (list (cell a))
@@ -223,10 +223,10 @@ let rec concat (#a:Type)
                      from1 ptr1 hd1 tl1)
 
 let snoc (#a:Type)
-         (#[@@framing_implicit] from0:t a)
-         (#[@@framing_implicit] to0: t a)
-         (#[@@framing_implicit] hd0:cell a)
-         (#[@@framing_implicit] l0:list (cell a))
+         (#[@@@ framing_implicit] from0:t a)
+         (#[@@@ framing_implicit] to0: t a)
+         (#[@@@ framing_implicit] hd0:cell a)
+         (#[@@@ framing_implicit] l0:list (cell a))
          (ptr0:t a)
          (v:a)
    : SteelT (list (cell a))
@@ -261,13 +261,13 @@ let cons (#a:Type)
    instead of a cond combinator ...
    and seems like with some work it could actually work *)
 let rec concat_alt (#a:Type)
-               (#[@@framing_implicit] from0:t a)
-               (#[@@framing_implicit] to0: t a)
-               (#[@@framing_implicit] hd0:cell a)
-               (#[@@framing_implicit] tl0:list (cell a))
-               (#[@@framing_implicit] from1:t a)
-               (#[@@framing_implicit] hd1:cell a)
-               (#[@@framing_implicit] tl1:list (cell a))
+               (#[@@@ framing_implicit] from0:t a)
+               (#[@@@ framing_implicit] to0: t a)
+               (#[@@@ framing_implicit] hd0:cell a)
+               (#[@@@ framing_implicit] tl0:list (cell a))
+               (#[@@@ framing_implicit] from1:t a)
+               (#[@@@ framing_implicit] hd1:cell a)
+               (#[@@@ framing_implicit] tl1:list (cell a))
                (ptr0:t a)
                (ptr1:t a)
    : SteelT (list (cell a))
@@ -323,9 +323,9 @@ let rec concat_alt (#a:Type)
      )
 
 let rec length (#a:Type)
-               (#[@@framing_implicit] from:t a)
-               (#[@@framing_implicit] to: t a)
-               (#[@@framing_implicit] rep:list (cell a))
+               (#[@@@ framing_implicit] from:t a)
+               (#[@@@ framing_implicit] to: t a)
+               (#[@@@ framing_implicit] rep:list (cell a))
                (p:t a)
    : Steel nat
       (dlist from p to rep)
