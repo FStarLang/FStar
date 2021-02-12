@@ -361,13 +361,6 @@ let send_receive_prelude (#p:prot) (cc:chan p)
                                (fun _ -> ());
     (vs, vr)
 
-let emp_unit (p:slprop)
-  : Lemma ((p `star` emp == p) /\
-           (emp `star` p == p))
-          [SMTPatOr [[SMTPat (p `star` emp)];
-                     [SMTPat (emp `star` p)]]]
-  = admit()
-
 let rec send (#p:prot) (c:chan p) (#next:prot{more next}) (x:msg_t next)
   : SteelT unit (sender c next) (fun _ -> sender c (step next x))
   = let v = send_receive_prelude c in //matching v as vs,vr fails
