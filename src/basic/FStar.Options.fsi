@@ -147,6 +147,7 @@ val interactive                 : unit    -> bool
 val keep_query_captions         : unit    -> bool
 val lax                         : unit    -> bool
 val load                        : unit    -> list<string>
+val load_cmxs                   : unit    -> list<string>
 val legacy_interactive          : unit    -> bool
 val lsp_server                  : unit    -> bool
 val log_queries                 : unit    -> bool

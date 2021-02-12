@@ -239,6 +239,7 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("keep_query_captions", (Bool true));
   ("lax", (Bool false));
   ("load", (List []));
+  ("load_cmxs", (List []));
   ("log_queries", (Bool false));
   ("log_types", (Bool false));
   ("max_fuel", (Int (Prims.of_int (8))));
@@ -453,6 +454,8 @@ let (get_keep_query_captions : unit -> Prims.bool) =
 let (get_lax : unit -> Prims.bool) = fun uu___ -> lookup_opt "lax" as_bool
 let (get_load : unit -> Prims.string Prims.list) =
   fun uu___ -> lookup_opt "load" (as_list as_string)
+let (get_load_cmxs : unit -> Prims.string Prims.list) =
+  fun uu___ -> lookup_opt "load_cmxs" (as_list as_string)
 let (get_log_queries : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "log_queries" as_bool
 let (get_log_types : unit -> Prims.bool) =
@@ -923,7 +926,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else failwith "unexpected value for --quake"
     | uu___ -> failwith "unexpected value for --quake"
-let (uu___404 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___405 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f = FStar_ST.op_Colon_Equals cb (FStar_Pervasives_Native.Some f) in
@@ -934,11 +937,11 @@ let (uu___404 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___404 with
+  match uu___405 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___404 with
+  match uu___405 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1104,7 +1107,10 @@ let rec (specs_with_types :
            (Const (Bool true)))),
       "Run the lax-type checker only (admit all verification conditions)");
     (FStar_Getopt.noshort, "load", (ReverseAccumulated (PathStr "module")),
-      "Load compiled module");
+      "Load OCaml module, compiling it if necessary");
+    (FStar_Getopt.noshort, "load_cmxs",
+      (ReverseAccumulated (PathStr "module")),
+      "Load compiled module, fails hard if the module is not already compiled");
     (FStar_Getopt.noshort, "log_types", (Const (Bool true)),
       "Print types computed for data/val/let-bindings");
     (FStar_Getopt.noshort, "log_queries", (Const (Bool true)),
@@ -1343,6 +1349,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "initial_ifuel" -> true
     | "lax" -> true
     | "load" -> true
+    | "load_cmxs" -> true
     | "log_queries" -> true
     | "log_types" -> true
     | "max_fuel" -> true
@@ -1415,7 +1422,7 @@ let (settable_specs :
     (FStar_List.filter
        (fun uu___ ->
           match uu___ with | (uu___1, x, uu___2, uu___3) -> settable x))
-let (uu___584 :
+let (uu___586 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -1431,11 +1438,11 @@ let (uu___584 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___584 with
+  match uu___586 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___584 with
+  match uu___586 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -1815,6 +1822,8 @@ let (interactive : unit -> Prims.bool) =
   fun uu___ -> (get_in ()) || (get_ide ())
 let (lax : unit -> Prims.bool) = fun uu___ -> get_lax ()
 let (load : unit -> Prims.string Prims.list) = fun uu___ -> get_load ()
+let (load_cmxs : unit -> Prims.string Prims.list) =
+  fun uu___ -> get_load_cmxs ()
 let (legacy_interactive : unit -> Prims.bool) = fun uu___ -> get_in ()
 let (lsp_server : unit -> Prims.bool) = fun uu___ -> get_lsp ()
 let (log_queries : unit -> Prims.bool) = fun uu___ -> get_log_queries ()

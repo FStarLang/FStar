@@ -1325,12 +1325,13 @@ and (p_typeDecl :
           ->
           let p_recordField ps uu___1 =
             match uu___1 with
-            | (lid1, t) ->
+            | (lid1, aq, attrs, t) ->
                 let uu___2 =
                   let uu___3 =
                     FStar_Range.extend_to_end_of_line
                       t.FStar_Parser_AST.range in
-                  with_comment_sep (p_recordFieldDecl ps) (lid1, t) uu___3 in
+                  with_comment_sep (p_recordFieldDecl ps)
+                    (lid1, aq, attrs, t) uu___3 in
                 (match uu___2 with
                  | (comm, field) ->
                      let sep =
@@ -1410,17 +1411,25 @@ and (p_typeDeclPrefix :
                     prefix2 uu___1 typ))
 and (p_recordFieldDecl :
   Prims.bool ->
-    (FStar_Ident.ident * FStar_Parser_AST.term) -> FStar_Pprint.document)
+    (FStar_Ident.ident * FStar_Parser_AST.aqual *
+      FStar_Parser_AST.attributes_ * FStar_Parser_AST.term) ->
+      FStar_Pprint.document)
   =
   fun ps ->
     fun uu___ ->
       match uu___ with
-      | (lid, t) ->
+      | (lid, aq, attrs, t) ->
           let uu___1 =
-            let uu___2 = p_lident lid in
+            let uu___2 = FStar_Pprint.optional p_aqual aq in
             let uu___3 =
-              let uu___4 = p_typ ps false t in
-              FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu___4 in
+              let uu___4 = p_attributes attrs in
+              let uu___5 =
+                let uu___6 = p_lident lid in
+                let uu___7 =
+                  let uu___8 = p_typ ps false t in
+                  FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu___8 in
+                FStar_Pprint.op_Hat_Hat uu___6 uu___7 in
+              FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
             FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
           FStar_Pprint.group uu___1
 and (p_constructorBranch :

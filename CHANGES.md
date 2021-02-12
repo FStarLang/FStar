@@ -147,6 +147,10 @@ Guidelines for the changelog:
      a semicolon separated list of terms. The old syntax will soon
      be deprecated.
 
+   * Attributes on binders are now using a different syntax `[@@@ a1; ... ; an]` i.e., 
+     @@@ instead of @@. This is a breaking change that enables 
+     using attributes on explicit binders, record fields and more. See 
+     https://github.com/FStarLang/FStar/pull/2192 for more details. 
 
 ## Extraction
 

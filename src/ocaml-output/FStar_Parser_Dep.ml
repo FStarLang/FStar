@@ -1182,8 +1182,12 @@ let (collect_one :
                   FStar_Util.iter_opt k collect_term;
                   FStar_List.iter
                     (fun uu___6 ->
-                       match uu___6 with | (uu___7, t) -> collect_term t)
-                    identterms)
+                       match uu___6 with
+                       | (uu___7, aq, attrs, t) ->
+                           (collect_aqual aq;
+                            FStar_All.pipe_right attrs
+                              (FStar_List.iter collect_term);
+                            collect_term t)) identterms)
              | FStar_Parser_AST.TyconVariant (uu___3, binders, k, identterms)
                  ->
                  (collect_binders binders;

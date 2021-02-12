@@ -202,6 +202,7 @@ let defaults =
       ("keep_query_captions"          , Bool true);
       ("lax"                          , Bool false);
       ("load"                         , List []);
+      ("load_cmxs"                    , List []);
       ("log_queries"                  , Bool false);
       ("log_types"                    , Bool false);
       ("max_fuel"                     , Int 8);
@@ -382,6 +383,7 @@ let get_initial_ifuel           ()      = lookup_opt "initial_ifuel"            
 let get_keep_query_captions     ()      = lookup_opt "keep_query_captions"      as_bool
 let get_lax                     ()      = lookup_opt "lax"                      as_bool
 let get_load                    ()      = lookup_opt "load"                     (as_list as_string)
+let get_load_cmxs               ()      = lookup_opt "load_cmxs"                (as_list as_string) 
 let get_log_queries             ()      = lookup_opt "log_queries"              as_bool
 let get_log_types               ()      = lookup_opt "log_types"                as_bool
 let get_max_fuel                ()      = lookup_opt "max_fuel"                 as_int
@@ -915,7 +917,12 @@ let rec specs_with_types warn_unsafe : list<(char * string * opt_type * string)>
       ( noshort,
        "load",
         ReverseAccumulated (PathStr "module"),
-        "Load compiled module");
+        "Load OCaml module, compiling it if necessary");
+
+      ( noshort,
+       "load_cmxs",
+        ReverseAccumulated (PathStr "module"),
+        "Load compiled module, fails hard if the module is not already compiled");
 
        ( noshort,
         "log_types",
@@ -1383,6 +1390,7 @@ let settable = function
     | "initial_ifuel"
     | "lax"
     | "load"
+    | "load_cmxs"
     | "log_queries"
     | "log_types"
     | "max_fuel"
@@ -1709,6 +1717,7 @@ let initial_ifuel                () = min (get_initial_ifuel ()) (get_max_ifuel 
 let interactive                  () = get_in () || get_ide ()
 let lax                          () = get_lax                         ()
 let load                         () = get_load                        ()
+let load_cmxs                    () = get_load_cmxs                   ()
 let legacy_interactive           () = get_in                          ()
 let lsp_server                   () = get_lsp                         ()
 let log_queries                  () = get_log_queries                 ()
