@@ -44,7 +44,7 @@ let change_slprop_ens (p:slprop) (q:slprop) (r:prop) (f:(m:mem -> Lemma (require
     elim_pure r
 
 
-let pure_as_ens (#[@@framing_implicit] p:prop) ()
+let pure_as_ens (#[@@@framing_implicit] p:prop) ()
   : Steel unit (pure p) (fun _ -> pure p) (fun _ -> True) (fun _ _ _ -> p)
   = change_slprop_ens (pure p) (pure p) p (Steel.Memory.pure_interp p)
 
@@ -74,7 +74,7 @@ let higher_ref_pts_to_injective_eq #a #p #q (r:H.ref a) (v0 v1:Ghost.erased a)
                       (v0 == v1)
                       (pts_to_ref_injective r p q v0 v1)
 
-let rewrite #a (#[@@framing_implicit]p:a -> slprop)(x y:a)
+let rewrite #a (#[@@@framing_implicit]p:a -> slprop)(x y:a)
   : Steel unit (p x) (fun _ -> p y)
     (requires fun _ -> x == y)
     (ensures fun _ _ _ -> True)
