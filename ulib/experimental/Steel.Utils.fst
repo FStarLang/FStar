@@ -41,7 +41,7 @@ let change_slprop_ens (p:slprop) (q:slprop) (r:prop) (f:(m:mem -> Lemma (require
                                  (fun m -> f m;
                                         Steel.Memory.emp_unit q;
                                         Steel.Memory.pure_star_interp q r m);
-    Steel.Utils.elim_pure r
+    elim_pure r
 
 
 let pure_as_ens (#[@@framing_implicit] p:prop) ()
@@ -82,12 +82,12 @@ let rewrite #a (#[@@framing_implicit]p:a -> slprop)(x y:a)
 
 let extract_pure (p:prop)
   : Steel unit (pure p) (fun _ -> pure p) (fun _ -> True) (fun _ _ _ -> p)
-  = Steel.Utils.elim_pure p;
+  = elim_pure p;
     Steel.Effect.intro_pure p
 
 let dup_pure (p:prop)
   : SteelT unit (pure p) (fun _ -> pure p `star` pure p)
-  = Steel.Utils.extract_pure p;
+  = extract_pure p;
     Steel.Effect.intro_pure p
 
 let emp_unit (p:slprop)

@@ -875,6 +875,12 @@ let tc_decls env ses =
                         (Print.tag_of_sigelt se)
                         (Print.sigelt_to_string se);
 
+    let _ = 
+      if Env.debug env (Options.Other "ToggleIdInfo")
+      then Env.toggle_id_info env true
+      else Env.toggle_id_info env false
+    in
+
     let ses', ses_elaborated, env =
             Errors.with_ctx (BU.format1 "While typechecking the top-level declaration `%s`" (Print.sigelt_to_string_short se))
                     (fun () -> tc_decl env se)
@@ -891,7 +897,7 @@ let tc_decls env ses =
 
     Env.promote_id_info env (fun t ->
         if Env.debug env (Options.Other "UF")
-        then BU.print1 "About to promote id info on %s\n" (Print.term_to_string t);
+        then BU.print1 "check uvars %s\n" (Print.term_to_string t);
         N.normalize
                [Env.AllowUnboundUniverses; //this is allowed, since we're reducing types that appear deep within some arbitrary context
                 Env.CheckNoUvars;
