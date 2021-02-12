@@ -1,6 +1,7 @@
 module BinderAttributes
 
 module T = FStar.Tactics
+open FStar.List.Tot
 
 let default_to (def : 'a) (x : option 'a) : Tot 'a = 
     match x with
@@ -105,46 +106,37 @@ let rec validate (expected : binders) (actual : binders) : T.Tac unit =
                 end
     | _, _ -> T.fail "Test failed. Expected different number of binders"
 
-let rec iter2 (f : 'a -> 'b -> T.Tac unit) (l1 : list 'a) (l2 : list 'b) : T.Tac unit = 
-    match l1, l2 with
-    | [], [] -> ()
-    | x :: xs, y :: ys -> begin
-        f x y;
-        iter2 f xs ys
-        end
-    | _, _ -> T.fail "Lists have different sizes"
-
 let _ =
     assert True by begin
-        T.print "inductive_example:";
         let b = binders_from_term (T.top_env()) (T.explode_qn (`%inductive_example)) in
         let bss = T.map (fun b -> binders_to_string b) b in
-        T.iter (fun bs -> T.print bs) bss;
         let expected = 
             [ 
                 [{ name = "x"; qual = "Explicit"; desc = Some "x"; }; { name = "y"; qual = "Explicit"; desc = Some "y"; }]; 
                 [{ name = "x_imp"; qual = "Implicit"; desc = Some "x_imp"; }; { name = "y_imp"; qual = "Implicit"; desc = Some "y_imp"; }]; 
                 [{ name = "x_imp"; qual = "Implicit"; desc = Some "x_imp"; }; { name = "y"; qual = "Explicit"; desc = Some "y"; }]; 
             ] in
-        iter2 (fun ex bs -> validate ex bs) expected b
+        if length expected = length b
+            then T.iter2 (fun ex bs -> validate ex bs) expected b
+            else T.fail "Lists have different sizes"
     end
 
 let _ =
     assert True by begin
-        T.print "f:";
         let b = binders_from_term (T.top_env()) (T.explode_qn (`%f)) in
         let bss = T.map (fun b -> binders_to_string b) b in
-        T.iter (fun bs -> T.print bs) bss;
         let expected = [[{ name = "x_imp"; qual = "Implicit"; desc = Some "x_imp"; }; { name = "y"; qual = "Explicit"; desc = Some "y"; }]] in
-        iter2 (fun ex bs -> validate ex bs) expected b    
+        if length expected = length b
+            then T.iter2 (fun ex bs -> validate ex bs) expected b
+            else T.fail "Lists have different sizes"   
     end
 
 let _ =
     assert True by begin
-        T.print "f2:";
         let b = binders_from_term (T.top_env()) (T.explode_qn (`%f2)) in
         let bss = T.map (fun b -> binders_to_string b) b in
-        T.iter (fun bs -> T.print bs) bss;
         let expected = [[{ name = "x_imp"; qual = "Implicit"; desc = Some "x_imp"; }; { name = "y"; qual = "Explicit"; desc = Some "y"; }]] in
-        iter2 (fun ex bs -> validate ex bs) expected b 
+        if length expected = length b
+            then T.iter2 (fun ex bs -> validate ex bs) expected b
+            else T.fail "Lists have different sizes"
     end

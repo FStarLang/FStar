@@ -1,0 +1,120 @@
+[
+  "CÞÙY\b\u0006MÁ0ß¦À!\u007f\u0007û",
+  [
+    [
+      "MultipleAttributesBinder.__proj__String__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bf4f065dc94b202adcf8aa9019f17109"
+      ],
+      0,
+      "9ee1b6b8022783511c8ce6f390e9e82e"
+    ],
+    [
+      "MultipleAttributesBinder.__proj__Int__item__v",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_2adb22eda77444787c5487a23e08fa8a"
+      ],
+      0,
+      "f469bb1a3d6d098ffefbac863e5e8c48"
+    ],
+    [
+      "MultipleAttributesBinder.binder_from_term",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_FStar.Reflection.Data.Q_Explicit",
+        "disc_equation_FStar.Reflection.Data.Q_Implicit",
+        "disc_equation_FStar.Reflection.Data.Q_Meta",
+        "fuel_guarded_inversion_FStar.Reflection.Data.aqualv",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "286962ef97ce00371ce58c2cd4892c59"
+    ],
+    [
+      "MultipleAttributesBinder.binders_from_term",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Reflection.Types.name",
+        "function_token_typing_FStar.Reflection.Types.sigelt",
+        "lemma_FStar.Pervasives.invertOption",
+        "typing_FStar.Reflection.Builtins.lookup_typ"
+      ],
+      0,
+      "da6b1d5bbadff40843916f75c6baca36"
+    ],
+    [
+      "MultipleAttributesBinder.uu___62",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
+        "equation_MultipleAttributesBinder.binders", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
+      ],
+      0,
+      "a69478cff94f8ce0be12f03701d80d42"
+    ],
+    [
+      "MultipleAttributesBinder.uu___62",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Tactics.Result.Success",
+        "constructor_distinct_Prims.Cons", "disc_equation_Prims.Cons",
+        "equation_MultipleAttributesBinder.binders", "equation_Prims.eqtype",
+        "equation_Prims.nat",
+        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "function_token_typing_Prims.int",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Tactics.Result.Success_v",
+        "projection_inverse_Prims.Cons_a",
+        "projection_inverse_Prims.Cons_hd",
+        "projection_inverse_Prims.Cons_tl",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "true_interp"
+      ],
+      0,
+      "db48f68663f0077a5168d327a003b5cd"
+    ]
+  ]
+]
