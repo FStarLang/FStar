@@ -3824,6 +3824,15 @@ let (tc_decls :
                               FStar_TypeChecker_Normalize.elim_uvars env2 se1)) in
                     (FStar_TypeChecker_Env.promote_id_info env2
                        (fun t ->
+                          (let uu___7 =
+                             FStar_TypeChecker_Env.debug env2
+                               (FStar_Options.Other "UF") in
+                           if uu___7
+                           then
+                             let uu___8 = FStar_Syntax_Print.term_to_string t in
+                             FStar_Util.print1
+                               "About to promote id info on %s\n" uu___8
+                           else ());
                           FStar_TypeChecker_Normalize.normalize
                             [FStar_TypeChecker_Env.AllowUnboundUniverses;
                             FStar_TypeChecker_Env.CheckNoUvars;
@@ -3896,7 +3905,7 @@ let (tc_decls :
              FStar_Util.fold_flatten process_one_decl_timed ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_List.rev_append ses1 []), env1)
-let (uu___920 : unit) =
+let (uu___922 : unit) =
   FStar_ST.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :
