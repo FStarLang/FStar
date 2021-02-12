@@ -787,9 +787,9 @@ and p_typeDecl pre = function
     let comm, doc = p_typ_sep false false t in
     comm, p_typeDeclPrefix pre true lid bs typ_opt, doc, jump2
   | TyconRecord (lid, bs, typ_opt, record_field_decls) ->
-    let p_recordField (ps: bool) (lid, t) =
+    let p_recordField (ps: bool) (lid, aq, attrs, t) =
       let comm, field =
-        with_comment_sep (p_recordFieldDecl ps) (lid, t)
+        with_comment_sep (p_recordFieldDecl ps) (lid, aq, attrs, t)
                          (extend_to_end_of_line t.range) in
       let sep = if ps then semi else empty in
       inline_comment_or_above comm field sep
@@ -829,8 +829,8 @@ and p_typeDeclPrefix kw eq lid bs typ_opt =
     let binders = p_binders_list true bs in
     with_kw (fun n -> prefix2 (prefix2 n (flow break1 binders)) typ)
 
-and p_recordFieldDecl ps (lid, t) =
-  group (p_lident lid ^^ colon ^^ p_typ ps false t)
+and p_recordFieldDecl ps (lid, aq, attrs, t) =
+  group (optional p_aqual aq ^^ p_attributes attrs ^^ p_lident lid ^^ colon ^^ p_typ ps false t)
 
 and p_constructorBranch (uid, t_opt, use_of) =
   let sep = if use_of then str "of" else colon in
