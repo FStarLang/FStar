@@ -137,7 +137,7 @@ let test_if11 () : SteelT ref emp ptr =
   if true then (noop #emp (); r) else (noop #emp (); r)
 
 
-// Test for refinement types in return values. cf PR 2224
+// Test for refinement types in return values. cf PR 2227
 assume
 val f (p:prop) :
   SteelT (u:unit{p}) emp (fun _ -> emp)
