@@ -6,6 +6,7 @@ module FExt = FStar.FunctionalExtensionality
 open FStar.Ghost
 include Steel.SelEffect.Common
 
+#set-options "--warn_error -330"  //turn off the experimental feature warning
 
 (* focus_rmem is an additional restriction of our view of memory.
    We expose it here to be able to reduce through normalization;
