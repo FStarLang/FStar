@@ -18,13 +18,13 @@ assume
 val nop (_:unit) : SteelT unit emp (fun c -> emp)
 
 assume
-val h_admit (#a:Type) (#[@@resolve_framing] p:slprop) (q:a -> slprop) : SteelT a p q
+val h_admit (#a:Type) (#[@@@resolve_framing] p:slprop) (q:a -> slprop) : SteelT a p q
 
 assume
 val my_frame_t
   (outer:slprop)
-  (#[@@resolve_framing] frame:slprop)
-  (#[@@resolve_framing] _:squash (can_be_split_into outer emp frame))
+  (#[@@@resolve_framing] frame:slprop)
+  (#[@@@resolve_framing] _:squash (can_be_split_into outer emp frame))
   (_:unit)
   : SteelT unit outer (fun _ -> frame)
 
