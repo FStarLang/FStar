@@ -24,6 +24,13 @@ Guidelines for the changelog:
   * Friend modules (https://github.com/FStarLang/FStar/wiki/Friend-modules)
 
 ## Core typechecker
+  * Cf. issue https://github.com/FStarLang/FStar/issues/1916,
+    F* has a revised treatment for the lexicographic tuples. This is a breaking change
+    and may require some additional annotations in the decreases clauses, see for example:
+    https://github.com/FStarLang/FStar/pull/2218/commits/0baf2277cd1e2c83ba71c4bc9659f1a84837a33a.
+    F* tries to give a warning for such cases that the proof may require type annotations on
+    these decreases clause elements.
+
   * The expected type of the `if_then_else` combinator for layered effects is now
     `a:Type -> bs -> f:repr a is -> g:repr a js -> p:bool -> Type`
     Previously, the `p` parameter used to have type `Type0`. It only needs

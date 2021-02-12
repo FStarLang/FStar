@@ -96,8 +96,8 @@ type bv_view = {
 type binder_view = bv * (aqualv * list<term>)
 
 type comp_view =
-    | C_Total of typ * option<term>  //optional decreases clause
-    | C_GTotal of typ * option<term> //idem
+    | C_Total of typ * list<term>  //decreases clause
+    | C_GTotal of typ * list<term> //idem
     | C_Lemma of term * term * term
     | C_Eff of list<unit> * name * term * list<argv>
 

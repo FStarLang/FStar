@@ -257,7 +257,7 @@ and cflag =
   | TRIVIAL_POSTCONDITION 
   | SHOULD_NOT_INLINE 
   | CPS 
-  | DECREASES of term' syntax 
+  | DECREASES of term' syntax Prims.list 
 and metadata =
   | Meta_pattern of (term' syntax Prims.list * (term' syntax * arg_qualifier
   FStar_Pervasives_Native.option) Prims.list Prims.list) 
@@ -645,7 +645,7 @@ let (uu___is_CPS : cflag -> Prims.bool) =
 let (uu___is_DECREASES : cflag -> Prims.bool) =
   fun projectee ->
     match projectee with | DECREASES _0 -> true | uu___ -> false
-let (__proj__DECREASES__item___0 : cflag -> term' syntax) =
+let (__proj__DECREASES__item___0 : cflag -> term' syntax Prims.list) =
   fun projectee -> match projectee with | DECREASES _0 -> _0
 let (uu___is_Meta_pattern : metadata -> Prims.bool) =
   fun projectee ->
