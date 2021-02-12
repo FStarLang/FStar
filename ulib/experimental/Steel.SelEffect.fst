@@ -662,7 +662,7 @@ let bind_steelf_steel_aux a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g
 
 let bind_steelf_steel a b f g = norm_repr (bind_steelf_steel_aux a b f g)
 
-let bind_pure_steel_ a b wp #pre #post #req #ens f g
+let bind_pure_steel_ a b #wp #pre #post #req #ens f g
   = FStar.Monotonic.Pure.wp_monotonic_pure ();
     fun frame ->
       let x = f () in
