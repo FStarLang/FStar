@@ -401,7 +401,7 @@ let bind_pure_steel__ens (#a:Type) (#b:Type)
 = fun m0 r m1 -> as_requires wp /\ (exists (x:a). as_ensures wp x /\ (ens x) m0 r m1)
 
 val bind_pure_steel_ (a:Type) (b:Type)
-  (wp:pure_wp a)
+  (#[@@ framing_implicit] wp:pure_wp a)
   (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t b)
   (#[@@ framing_implicit] req:a -> req_t pre) (#[@@ framing_implicit] ens:a -> ens_t pre b post)
   (f:eqtype_as_type unit -> PURE a wp) (g:(x:a -> repr b pre post (req x) (ens x)))

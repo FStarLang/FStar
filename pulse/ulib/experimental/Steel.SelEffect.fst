@@ -662,7 +662,7 @@ let bind_steelf_steel_aux a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g
 
 let bind_steelf_steel a b f g = norm_repr (bind_steelf_steel_aux a b f g)
 
-let bind_pure_steel_ a b wp #pre #post #req #ens f g
+let bind_pure_steel_ a b #wp #pre #post #req #ens f g
   = FStar.Monotonic.Pure.wp_monotonic_pure ();
     fun frame ->
       let x = f () in
@@ -934,6 +934,8 @@ let elim_vptr (#a:Type) (r:ref a) (v:erased a) (m:mem) : Lemma
 
 let alloc x =
   let r = alloc0 x in
+  extract_info (vptr_tmp r full_perm x) () (~ (R.is_null r))
+    (fun m -> R.pts_to_not_null r full_perm x m);
   change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x);
   r
 
