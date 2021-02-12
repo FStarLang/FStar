@@ -859,8 +859,8 @@ let recall_trace_ref #q (r:trace_ref q) (tr tr':partial_trace_of q)
     s
 
 let as_steelx' (#a:Type)
-  (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t a)
-  (#[@@ framing_implicit] req:req_t pre) (#[@@ framing_implicit] ens:ens_t pre a post)
+  (#[@@@ framing_implicit] pre:pre_t) (#[@@@ framing_implicit] post:post_t a)
+  (#[@@@ framing_implicit] req:req_t pre) (#[@@@ framing_implicit] ens:ens_t pre a post)
   (f:unit -> Steel a pre post req ens)
 : SX.SteelX a pre post req ens
   = as_steelx f
