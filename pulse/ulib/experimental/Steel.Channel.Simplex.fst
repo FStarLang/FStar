@@ -858,13 +858,20 @@ let recall_trace_ref #q (r:trace_ref q) (tr tr':partial_trace_of q)
     h_elim_emp_l _;
     s
 
+let as_steelx' (#a:Type)
+  (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t a)
+  (#[@@ framing_implicit] req:req_t pre) (#[@@ framing_implicit] ens:ens_t pre a post)
+  (f:unit -> Steel a pre post req ens)
+: SX.SteelX a pre post req ens
+  = as_steelx f
+
 let witness_mref (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:MRef.ref a p)
             (fact:MRef.stable_property p)
             (v:Ghost.erased a)
             (u:squash (fact v))
   : SX.SteelXT unit (MRef.pts_to r q v)
                 (fun _ -> MRef.pts_to r q v `star` pure (MRef.witnessed r fact))
-  = as_steelx (fun _ -> MRef.witness #a #q #p r fact v u)
+  = as_steelx' #_ #_ #_ #(fun _ -> True) #(fun _ _ _ -> True) (MRef.witness #_ #q #_ r fact v)
 
 let witness_trace_ref #q (r:trace_ref q) (tr:partial_trace_of q)
   : SX.SteelXT unit (MRef.pts_to r full_perm tr)
