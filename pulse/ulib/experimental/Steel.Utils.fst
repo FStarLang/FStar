@@ -89,3 +89,11 @@ let dup_pure (p:prop)
   : SteelT unit (pure p) (fun _ -> pure p `star` pure p)
   = Steel.Utils.extract_pure p;
     Steel.Effect.intro_pure p
+
+let emp_unit (p:slprop)
+  : Lemma (((p `star` emp) `equiv` p) /\
+           ((emp `star` p) `equiv` p))
+          [SMTPatOr [[SMTPat (p `star` emp)];
+                     [SMTPat (emp `star` p)]]]
+  = Steel.Memory.emp_unit p;
+    Steel.Memory.star_commutative emp p
