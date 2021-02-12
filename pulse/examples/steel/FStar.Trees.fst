@@ -64,6 +64,15 @@ let rec bst_search (#a #b: Type) {| d: ordered a |} (x: bst a b) (key: a) : opti
     if delta > 0 then bst_search left key else
     Some data.payload
 
+(**** Height *)
+
+let rec height (#a: Type) (x: tree a) : nat =
+  match x with
+  | Leaf -> 0
+  | Node data left right ->
+    if height left > height right then (height left) + 1
+    else (height right) + 1
+
 (**** Append *)
 
 let rec append_left (#a: Type) (x: tree a) (v: a) : tree a =

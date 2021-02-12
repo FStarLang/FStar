@@ -43,3 +43,16 @@ let rec append_right #a ptr v =
     pack_tree ptr (get_left node) new_right;
     ptr
   )
+
+let rec height #a ptr =
+   if is_null_t ptr then (
+     elim_linked_tree_leaf ptr; 0
+   ) else (
+     let node = unpack_tree ptr in
+     let hleft = height (get_left node) in
+     let hright = height (get_right node) in
+     pack_tree ptr (get_left node) (get_right node);
+     if hleft > hright then (
+       hleft + 1
+     ) else ( hright + 1 )
+   )
