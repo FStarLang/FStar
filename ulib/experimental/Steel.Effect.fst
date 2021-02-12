@@ -114,7 +114,7 @@ let bind_steelf_steel (a:Type) (b:Type)
 
   y
 
-let bind_pure_steel_ a b wp f g = fun frame ->
+let bind_pure_steel_ a b f g = fun frame ->
   let x = f () in
   (g x) frame
 
