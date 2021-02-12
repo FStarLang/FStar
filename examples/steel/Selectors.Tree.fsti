@@ -23,3 +23,10 @@ val append_right (#a: Type0) (ptr: t a) (v : a)
       (ensures (fun h0 ptr' h1 ->
         v_linked_tree ptr' h1 == Spec.append_right (v_linked_tree ptr h0) v
       ))
+
+val height (#a: Type0) (ptr: t a)
+    : SteelSel nat (linked_tree ptr) (fun _ -> linked_tree ptr)
+    (requires fun _ -> true)
+    (ensures fun h0 x h1 ->
+        v_linked_tree ptr h0 == v_linked_tree ptr h1 /\
+        Spec.height (v_linked_tree ptr h0) == x)
