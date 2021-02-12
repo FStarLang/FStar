@@ -5141,7 +5141,7 @@ and (tc_abs :
                             (match uu___7 with
                              | (body3, cbody, guard_body) ->
                                  let guard_body1 =
-                                   FStar_TypeChecker_Rel.solve_deferred_constraints
+                                   FStar_TypeChecker_Rel.solve_non_tactic_deferred_constraints
                                      envbody2 guard_body in
                                  if should_check_expected_effect
                                  then
