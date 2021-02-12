@@ -34,7 +34,7 @@ let atomic_repr = atomic_repr
 let return (a:Type u#a)
    (x:a)
    (opened_invariants:inames)
-   (#[@@ framing_implicit] p:a -> slprop u#1)
+   (#[@@@ framing_implicit] p:a -> slprop u#1)
   : atomic_repr a opened_invariants unobservable (p x) p (return_req (p x)) (return_ens a x p)
   = fun _ -> x
 

@@ -24,8 +24,8 @@ let lift_lemma (p:slprop) (q:prop) (l:(hmem p -> Lemma q))
   = let _ = lift_lemma_alt p q l in ()
 
 let pts_to_not_null (#a:Type)
-                    (#[@@framing_implicit] p:perm)
-                    (#[@@framing_implicit] v:FStar.Ghost.erased a)
+                    (#[@@@ framing_implicit] p:perm)
+                    (#[@@@ framing_implicit] v:FStar.Ghost.erased a)
                     (r:ref a)
   : Steel unit
     (pts_to r p v)

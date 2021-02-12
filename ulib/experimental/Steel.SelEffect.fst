@@ -50,7 +50,7 @@ let rmem_depends_only_on_post (#a:Type) (post:post_t a)
     mk_rmem (post x) m0 == mk_rmem (post x) (join m0 m1))
   = Classical.forall_intro_3 (rmem_depends_only_on_post' post)
 
-[@__steel_reduce__]
+[@@ __steel_reduce__]
 let req_to_act_req (#pre:pre_t) (req:req_t pre) : Sem.l_pre #state (hp_of pre) =
   rmem_depends_only_on pre;
   fun m0 -> interp (hp_of pre) m0 /\ req (mk_rmem pre m0)
@@ -58,7 +58,7 @@ let req_to_act_req (#pre:pre_t) (req:req_t pre) : Sem.l_pre #state (hp_of pre) =
 unfold
 let to_post (#a:Type) (post:post_t a) = fun x -> (hp_of (post x))
 
-[@__steel_reduce__]
+[@@ __steel_reduce__]
 let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post)
 : Sem.l_post #state #a (hp_of pre) (to_post post)
 = rmem_depends_only_on pre;

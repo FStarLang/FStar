@@ -48,8 +48,8 @@ val frame_delta (pre p post q : resource) : Type
 
 assume
 val frame2
-    (#[@@marker]pre #[@@marker]post #[@@marker]p #[@@marker]q : resource)
-    (#[@@marker]delta:frame_delta pre p post q)
+    (#[@@@marker]pre #[@@@marker]post #[@@@marker]p #[@@@marker]q : resource)
+    (#[@@@marker]delta:frame_delta pre p post q)
     (f:cmd p q)
   : cmd pre post
 

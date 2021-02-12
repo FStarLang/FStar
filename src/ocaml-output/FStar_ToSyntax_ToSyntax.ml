@@ -5055,12 +5055,11 @@ let rec (desugar_tycon :
                   FStar_List.map
                     (fun uu___1 ->
                        match uu___1 with
-                       | (x, t) ->
+                       | (x, q, attrs, t) ->
                            let uu___2 = FStar_Ident.range_of_id x in
-                           FStar_Parser_AST.mk_binder
+                           FStar_Parser_AST.mk_binder_with_attrs
                              (FStar_Parser_AST.Annotated (x, t)) uu___2
-                             FStar_Parser_AST.Expr
-                             FStar_Pervasives_Native.None) fields in
+                             FStar_Parser_AST.Expr q attrs) fields in
                 let result =
                   let uu___1 =
                     let uu___2 =
@@ -5080,25 +5079,28 @@ let rec (desugar_tycon :
                 (FStar_List.iter
                    (fun uu___2 ->
                       match uu___2 with
-                      | (f, uu___3) ->
-                          let uu___4 =
+                      | (f, uu___3, uu___4, uu___5) ->
+                          let uu___6 =
                             FStar_Util.for_some
                               (fun i -> FStar_Ident.ident_equals f i) names in
-                          if uu___4
+                          if uu___6
                           then
-                            let uu___5 =
-                              let uu___6 =
-                                let uu___7 = FStar_Ident.string_of_id f in
+                            let uu___7 =
+                              let uu___8 =
+                                let uu___9 = FStar_Ident.string_of_id f in
                                 FStar_Util.format1
                                   "Field %s shadows the record's name or a parameter of it, please rename it"
-                                  uu___7 in
-                              (FStar_Errors.Error_FieldShadow, uu___6) in
-                            let uu___6 = FStar_Ident.range_of_id f in
-                            FStar_Errors.raise_error uu___5 uu___6
+                                  uu___9 in
+                              (FStar_Errors.Error_FieldShadow, uu___8) in
+                            let uu___8 = FStar_Ident.range_of_id f in
+                            FStar_Errors.raise_error uu___7 uu___8
                           else ()) fields;
                  (let uu___2 =
                     FStar_All.pipe_right fields
-                      (FStar_List.map FStar_Pervasives_Native.fst) in
+                      (FStar_List.map
+                         (fun uu___3 ->
+                            match uu___3 with
+                            | (f, uu___4, uu___5, uu___6) -> f)) in
                   ((FStar_Parser_AST.TyconVariant
                       (id, parms, kopt,
                         [(constrName,
