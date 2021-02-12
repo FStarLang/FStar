@@ -523,7 +523,7 @@
         "refinement_interpretation_Tm_refine_3de5637ccdcbcf8ac24e36145fd6eda7"
       ],
       0,
-      "71b80a7a22844134e751c052156a8dbb"
+      "6129972c3b6694cc26011701562ecf71"
     ],
     [
       "Ex07c.substitution_preserves_typing",
@@ -621,7 +621,7 @@
         "refinement_interpretation_Tm_refine_eaee59a13ad929a7e5f1e6e12db5a534"
       ],
       0,
-      "87c831d8ea63faa246dfd508aad17fee"
+      "e45787e63fd7627b6c65e18d80900894"
     ],
     [
       "Ex07c.preservation",
