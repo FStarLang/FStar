@@ -135,3 +135,17 @@ let test_if10 (b:bool) (r1 r2 r3: ref) : SteelT unit
 let test_if11 () : SteelT ref emp ptr =
   let r = alloc 0 in
   if true then (noop #emp (); r) else (noop #emp (); r)
+
+
+// Test for refinement types in return values. cf PR 2224
+assume
+val f (p:prop) :
+  SteelT (u:unit{p}) emp (fun _ -> emp)
+
+let g (p:prop)
+  : Steel unit emp (fun _ -> emp) (requires fun _ -> True) (ensures fun _ _ _ -> p) =
+  let f2 (p:prop)
+    : SteelT (u:unit{p}) emp (fun _ -> emp)
+    = f p
+  in
+  let x = f2 p in x
