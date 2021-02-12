@@ -8,7 +8,7 @@ open Steel.Reference
 (* Several variants *)
 
 assume
-val pts (#a:Type u#0) (r:ref a) (p:perm) (#[@@smt_fallback] v:erased a) : slprop u#1
+val pts (#a:Type u#0) (r:ref a) (p:perm) (#[@@@ smt_fallback] v:erased a) : slprop u#1
 
 assume
 val p_read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
@@ -62,8 +62,8 @@ let swap (#a:_) (#v0 #v1:erased a) (r0 r1:ref a)
 //                   (pts_to r1 full_perm v0)
 //                   (fun _ -> ())
 
-let change_eq (#[@@ framing_implicit] p:slprop)
-              (#[@@ framing_implicit] q:slprop)
+let change_eq (#[@@@ framing_implicit] p:slprop)
+              (#[@@@ framing_implicit] q:slprop)
   : Steel unit p (fun _ -> q) (fun _ -> p == q) (fun _ _ _ -> True)
   = change_slprop p q (fun _ -> ())
 
@@ -81,8 +81,8 @@ let swap1 (#a:Type0) (#v0 #v1:erased a) (r0 r1:ref a)
       #(pts_to r0 full_perm v1 `star`
         pts_to r1 full_perm v0)
 
-let change_eq' (#[@@ framing_implicit] p:slprop)
-               (#[@@ framing_implicit] q:slprop)
+let change_eq' (#[@@@ framing_implicit] p:slprop)
+               (#[@@@ framing_implicit] q:slprop)
                (_:unit)
   : Steel unit p (fun _ -> q)
     (requires fun _ -> p==q)
@@ -90,16 +90,16 @@ let change_eq' (#[@@ framing_implicit] p:slprop)
   = change_slprop p q (fun _ -> ())
 
 [@expect_failure] //steelT </: steelF
-let change_eqF (#[@@ framing_implicit] p:slprop)
-               (#[@@ framing_implicit] q:slprop)
+let change_eqF (#[@@@ framing_implicit] p:slprop)
+               (#[@@@ framing_implicit] q:slprop)
                (_:unit)
   : SteelF unit p (fun _ -> q)
     (requires fun _ -> p==q)
     (ensures fun _ _ _ -> True)
   = change_slprop p q (fun _ -> ())
 
-let change_eqF (#[@@ framing_implicit] p:slprop)
-               (#[@@ framing_implicit] q:slprop)
+let change_eqF (#[@@@ framing_implicit] p:slprop)
+               (#[@@@ framing_implicit] q:slprop)
                (_:unit)
   : SteelF unit p (fun _ -> q)
     (requires fun _ -> p==q)
