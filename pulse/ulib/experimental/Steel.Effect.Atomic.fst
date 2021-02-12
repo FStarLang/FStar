@@ -179,7 +179,7 @@ let bind_steelaf_steela (a:Type) (b:Type) opened o1 o2
 
     y
 
-let bind_pure_steela_ (a:Type) (b:Type) opened o wp #pre #post #req #ens f g
+let bind_pure_steela_ (a:Type) (b:Type) opened o #wp #pre #post #req #ens f g
 = fun frame ->
     let x = f () in
     g x frame
