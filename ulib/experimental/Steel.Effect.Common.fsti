@@ -1505,7 +1505,7 @@ let rec resolve_tac_logical () : Tac unit =
 
 let typ_contains_req_ens (t:term) : Tac bool =
   let name, _ = collect_app t in
-  if term_eq name (`req_t) || term_eq name (`ens_t) then true
+  if term_eq name (`req_t) || term_eq name (`ens_t) || term_eq name (`pure_wp) then true
   else false
 
 let rec filter_goals (l:list goal) : Tac (list goal * list goal) =
