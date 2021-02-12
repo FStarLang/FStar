@@ -57,6 +57,15 @@ let binders_from_term (env : T.env) (qname : list string) : T.Tac (list binders)
     in
     b
 
+let rec iter2 (f : 'a -> 'b -> T.Tac unit) (l1 : list 'a) (l2 : list 'b) : T.Tac unit = 
+    match l1, l2 with
+    | [], [] -> ()
+    | x :: xs, y :: ys -> begin
+        f x y;
+        iter2 f xs ys
+        end
+    | _, _ -> T.fail "Lists have different sizes"
+
 let _ =
     assert True by begin
         let bs = 
@@ -71,16 +80,12 @@ let _ =
                 { name = "y";     qual = "Explicit"; attrs = [ `(attr1 "exp"); `(attr2 2); `(attr3 (String "y")) ]; }
             ]
         in
-        if length expected_bs = length bs then 
-            T.iter2 (fun e_b b -> 
-                if not (e_b.name = b.name) then T.fail "Binder names are different";
-                if not (e_b.qual = b.qual) then T.fail "Binder quals are different";
-                if length e_b.attrs = length b.attrs then 
-                    T.iter2 (fun e_a a ->
-                        if not (T.term_to_ast_string e_a = T.term_to_ast_string a)
-                            then T.fail ("Expected " ^ (T.term_to_ast_string e_a) ^ " got " ^ (T.term_to_ast_string a))
-                    ) e_b.attrs b.attrs
-                else T.fail "Attribute list have different size than expected"
-            ) expected_bs bs
-        else T.fail "Number of binders is different than expected"
+        iter2 (fun e_b b -> 
+            if not (e_b.name = b.name) then T.fail "Binder names are different";
+            if not (e_b.qual = b.qual) then T.fail "Binder quals are different";
+            iter2 (fun e_a a ->
+                if not (T.term_to_ast_string e_a = T.term_to_ast_string a)
+                    then T.fail ("Expected " ^ (T.term_to_ast_string e_a) ^ " got " ^ (T.term_to_ast_string a))
+            ) e_b.attrs b.attrs
+        ) expected_bs bs
     end

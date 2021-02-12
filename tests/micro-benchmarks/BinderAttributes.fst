@@ -106,6 +106,15 @@ let rec validate (expected : binders) (actual : binders) : T.Tac unit =
                 end
     | _, _ -> T.fail "Test failed. Expected different number of binders"
 
+let rec iter2 (f : 'a -> 'b -> T.Tac unit) (l1 : list 'a) (l2 : list 'b) : T.Tac unit = 
+    match l1, l2 with
+    | [], [] -> ()
+    | x :: xs, y :: ys -> begin
+        f x y;
+        iter2 f xs ys
+        end
+    | _, _ -> T.fail "Lists have different sizes"
+
 let _ =
     assert True by begin
         let b = binders_from_term (T.top_env()) (T.explode_qn (`%inductive_example)) in
@@ -116,9 +125,7 @@ let _ =
                 [{ name = "x_imp"; qual = "Implicit"; desc = Some "x_imp"; }; { name = "y_imp"; qual = "Implicit"; desc = Some "y_imp"; }]; 
                 [{ name = "x_imp"; qual = "Implicit"; desc = Some "x_imp"; }; { name = "y"; qual = "Explicit"; desc = Some "y"; }]; 
             ] in
-        if length expected = length b
-            then T.iter2 (fun ex bs -> validate ex bs) expected b
-            else T.fail "Lists have different sizes"
+        iter2 (fun ex bs -> validate ex bs) expected b
     end
 
 let _ =
@@ -126,9 +133,7 @@ let _ =
         let b = binders_from_term (T.top_env()) (T.explode_qn (`%f)) in
         let bss = T.map (fun b -> binders_to_string b) b in
         let expected = [[{ name = "x_imp"; qual = "Implicit"; desc = Some "x_imp"; }; { name = "y"; qual = "Explicit"; desc = Some "y"; }]] in
-        if length expected = length b
-            then T.iter2 (fun ex bs -> validate ex bs) expected b
-            else T.fail "Lists have different sizes"   
+        iter2 (fun ex bs -> validate ex bs) expected b
     end
 
 let _ =
@@ -136,7 +141,5 @@ let _ =
         let b = binders_from_term (T.top_env()) (T.explode_qn (`%f2)) in
         let bss = T.map (fun b -> binders_to_string b) b in
         let expected = [[{ name = "x_imp"; qual = "Implicit"; desc = Some "x_imp"; }; { name = "y"; qual = "Explicit"; desc = Some "y"; }]] in
-        if length expected = length b
-            then T.iter2 (fun ex bs -> validate ex bs) expected b
-            else T.fail "Lists have different sizes"
+        iter2 (fun ex bs -> validate ex bs) expected b
     end

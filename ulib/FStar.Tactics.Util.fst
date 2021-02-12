@@ -45,13 +45,6 @@ let rec iter f x = match x with
   | a::tl -> f a; iter f tl
 #pop-options
 
-val iter2 : ('a -> 'b -> Tac unit) -> (x:list 'a) -> (y:list 'b{length x = length y}) -> Tac unit
-#push-options "--ifuel 1"
-let rec iter2 f x y = match x, y with
-  | [], [] -> ()
-  | a::xtl, b::ytl -> f a b; iter2 f xtl ytl
-#pop-options
-
 val iteri_aux: int -> (int -> 'a -> Tac unit) -> list 'a -> Tac unit
 #push-options "--ifuel 1"
 let rec iteri_aux i f x = match x with
