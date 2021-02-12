@@ -218,21 +218,21 @@ let idk (#frame:slprop) (#a:Type) (x:a) : SteelT a frame (fun x -> frame)
   = (SteelF?.reflect (Steel.Effect.return a x)) <:
     SteelF a frame (fun _ -> frame) (return_req frame) (return_ens a x (fun _ -> frame))
 
-let kfork (#p:slprop) (#q:slprop) (f : unit -> SteelK unit p (fun _ -> q))
+assume val kfork (#p:slprop) (#q:slprop) (f : unit -> SteelK unit p (fun _ -> q))
 : SteelK (thread q) p (fun _ -> emp)
-=
-  SteelK?.reflect (
-  fun (#frame:slprop) (#postf:slprop)
-    (k : (x:(thread q) -> SteelT unit (frame `star` emp) (fun _ -> postf))) ->
-      let t1 () : SteelT unit (emp `star` p) (fun _ -> q) =
-        let r : steelK unit p (fun _ -> q) = reify (f ()) in
-        r #emp #q (fun () -> idk ())
-      in
-      let t2 (t:thread q) () : SteelT unit frame (fun _ -> postf) = k t in
-      let ff () : SteelT unit (p `star` frame) (fun _ -> postf) =
-        fork #p #q #frame #postf t1 t2
-      in
-      ff())
+// =
+//   SteelK?.reflect (
+//   fun (#frame:slprop) (#postf:slprop)
+//     (k : (x:(thread q) -> SteelT unit (frame `star` emp) (fun _ -> postf))) ->
+//       let t1 () : SteelT unit (emp `star` p) (fun _ -> q) =
+//         let r : steelK unit p (fun _ -> q) = reify (f ()) in
+//         r #emp #q (fun () -> idk ())
+//       in
+//       let t2 (t:thread q) () : SteelT unit frame (fun _ -> postf) = k t in
+//       let ff () : SteelT unit (p `star` frame) (fun _ -> postf) =
+//         fork #p #q #frame #postf t1 t2
+//       in
+//       ff())
 
 let kjoin (#p:slprop) (t : thread p) : SteelK unit emp (fun _ -> p)
  = SteelK?.reflect (fun #f k -> join t; k ())
