@@ -21,13 +21,66 @@ friend Steel.Effect
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
-let observability = observability
-let has_eq_observability = has_eq_observability
-let observable = observable
-let unobservable = unobservable
+let observability = bool
+let has_eq_observability () = ()
+let observable = true
+let unobservable = false
 
-let atomic_repr = atomic_repr
+val join_preserves_interp (hp:slprop) (m0 m1:mem)
+  : Lemma
+    (requires (interp hp m0 /\ disjoint m0 m1))
+    (ensures (interp hp (join m0 m1)))
+    [SMTPat (interp hp (join m0 m1))]
 
+let join_preserves_interp hp m0 m1
+  = intro_emp m1;
+    intro_star hp emp m0 m1;
+    affine_star hp emp (join m0 m1)
+
+val respects_fp (#fp:slprop) (p: hmem fp -> prop) : prop
+let respects_fp #fp p =
+  forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)
+
+val reveal_respects_fp (#fp:_) (p:hmem fp -> prop)
+  : Lemma (respects_fp p <==>
+           (forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)))
+          [SMTPat (respects_fp #fp p)]
+let reveal_respects_fp p = ()
+
+let fp_mprop (fp:slprop) = p:(hmem fp -> prop) { respects_fp p }
+
+val respects_binary_fp (#a:Type) (#pre:slprop) (#post:a -> slprop)
+                       (q:(hmem pre -> x:a -> hmem (post x) -> prop)) : prop
+let respects_binary_fp #a #pre #post q
+  = (forall x (h_pre:hmem pre) h_post (h:mem{disjoint h_pre h}).
+      q h_pre x h_post <==> q (join h_pre h) x h_post) /\
+    (forall x h_pre (h_post:hmem (post x)) (h:mem{disjoint h_post h}).
+      q h_pre x h_post <==> q h_pre x (join h_post h))
+
+val reveal_respects_binary_fp (#a:Type) (#pre:slprop) (#post:a -> slprop)
+                              (q:(hmem pre -> x:a -> hmem (post x) -> prop))
+  : Lemma (respects_binary_fp q <==>
+            //at this point we need to know interp pre (join h_pre h) -- use join_preserves_interp for that
+            (forall x (h_pre:hmem pre) h_post (h:mem{disjoint h_pre h}).
+              q h_pre x h_post <==> q (join h_pre h) x h_post) /\
+            //can join any disjoint heap to the post-heap and q is still valid
+            (forall x h_pre (h_post:hmem (post x)) (h:mem{disjoint h_post h}).
+              q h_pre x h_post <==> q h_pre x (join h_post h)))
+           [SMTPat (respects_binary_fp #a #pre #post q)]
+let reveal_respects_binary_fp q = ()
+
+let fp_binary_mprop #a (pre:slprop) (post: a -> slprop) =
+  p:(hmem pre -> x:a -> hmem (post x) -> prop){ respects_binary_fp p }
+
+let req_to_act_req (#pre:slprop) (req:fp_mprop pre) : mprop pre =
+  fun m -> interp pre m /\ req m
+
+let ens_to_act_ens (#pre:slprop) (#a:Type) (#post:a -> slprop) (ens:fp_binary_mprop pre post)
+: mprop2 pre post
+= fun m0 x m1 -> interp pre m0 /\ interp (post x) m1 /\ ens m0 x m1
+
+let atomic_repr a opened_invariants f pre post req ens =
+    action_except_full a opened_invariants pre post (req_to_act_req req) (ens_to_act_ens ens)
 
 let return (a:Type u#a)
    (x:a)
