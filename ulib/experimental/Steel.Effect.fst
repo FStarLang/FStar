@@ -16,8 +16,6 @@
 
 module Steel.Effect
 
-friend Steel.EffectX
-
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
 #push-options "--fuel 0 --ifuel 1 --z3rlimit 20"
@@ -166,43 +164,6 @@ let bind_div_steel (a:Type) (b:Type)
 
 polymonadic_bind (DIV, Steel) |> Steel = bind_div_steel
 
-let subcomp_x (a:Type)
-  (pre:pre_t) (post:post_t a)
-  (f:EffectX.repr a pre post (triv_pre pre) (triv_post pre post))
-: Pure (repr a pre post (triv_pre' pre) (triv_post' pre post))
-  (requires True)
-  (ensures fun _ -> True)
-= f
-
-let as_steelx0 (#a:Type)
-  (#pre:pre_t) (#post:post_t a)
-  (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:repr a pre post req ens)
-: EffectX.SteelX a pre post req ens
-= EffectX.SteelX?.reflect f
-
-let as_steelx (#a:Type)
-  (#pre:pre_t) (#post:post_t a)
-  (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:unit -> Steel a pre post req ens)
-: EffectX.SteelX a pre post req ens
-  = as_steelx0 (reify (f()))
-
-let from_steelx0 (#a:Type)
-  (#pre:pre_t) (#post:post_t a)
-  (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:EffectX.repr a pre post req ens)
-: Steel a pre post req ens
-= Steel?.reflect f
-
-let from_steelx (#a:Type)
-  (#pre:pre_t) (#post:post_t a)
-  (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:unit -> EffectX.SteelX a pre post req ens)
-: Steel a pre post req ens
-  = from_steelx0 (reify (f()))
-
-
 let par0 (#aL:Type u#a) (#preL:slprop u#1) (#postL:aL -> slprop u#1)
          (#lpreL:req_t preL) (#lpostL:ens_t preL aL postL)
          (f:repr aL preL postL lpreL lpostL)
@@ -251,13 +212,10 @@ let sladmit #a #p #q _ = SteelF?.reflect (fun _ -> NMST.nmst_admit ())
 
 let intro_pure p = change_slprop emp (pure p) (fun m -> pure_interp p m)
 
-let read #a #pcm r v0 = Steel.EffectX.read r v0
-
-let write #a #pcm r v0 v1 = Steel.EffectX.write r v0 v1
-
-let alloc #a #pcm x = Steel.EffectX.alloc x
-
-let free #a #p r x = Steel.EffectX.free r x
+let read r v0 = Steel?.reflect (action_as_repr (sel_action FStar.Set.empty r v0))
+let write r v0 v1 = Steel?.reflect (action_as_repr (upd_action FStar.Set.empty r v0 v1))
+let alloc x = Steel?.reflect (action_as_repr (alloc_action FStar.Set.empty x))
+let free r x = Steel?.reflect (action_as_repr (free_action FStar.Set.empty r x))
 
 val split' (#a:Type)
           (#p:FStar.PCM.pcm a)
@@ -267,17 +225,15 @@ val split' (#a:Type)
   : SteelT unit (pts_to r (FStar.PCM.op p v0 v1))
                 (fun _ -> pts_to r v0 `star` pts_to r v1)
 
-let split' #a #p r v0 v1 = Steel.EffectX.split r v0 v1
+let split' #a #p r v0 v1 = Steel?.reflect (action_as_repr (split_action FStar.Set.empty r v0 v1))
 
 let split #a #p r v v0 v1 =
   change_slprop (pts_to r v) (pts_to r (FStar.PCM.op p v0 v1)) (fun _ -> ());
   split' r v0 v1
 
-let gather #a #p r v0 v1 = Steel.EffectX.gather r v0 v1
-
-let witness #a #pcm r fact v u = from_steelx (fun _ -> Steel.EffectX.witness #a #pcm r fact v u)
-
-let recall #a #pcm #fact r v = Steel.EffectX.recall r v
+let gather r v0 v1 = Steel?.reflect (action_as_repr (gather_action FStar.Set.empty r v0 v1))
+let witness r fact v _ = Steel?.reflect (action_as_repr (Steel.Memory.witness FStar.Set.empty r fact v ()))
+let recall r v = Steel?.reflect (action_as_repr (Steel.Memory.recall FStar.Set.empty r v))
 
 let cond_aux (#a:Type) (b:bool) (p: (b':bool{b == b'}) -> slprop)
              (q: bool -> a -> slprop)

@@ -17,8 +17,6 @@
 
 module Steel.Effect.Atomic
 
-open Steel.EffectX.Atomic
-friend Steel.EffectX.Atomic
 friend Steel.Effect
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
