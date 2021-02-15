@@ -208,6 +208,17 @@ let rewrite_context #p #q _ =
   assert (p `equiv` q);
   SteelF?.reflect (action_as_repr (Steel.Memory.change_slprop p q (fun m -> ())))
 
+let extract_info0 (p:slprop) (fact:prop)
+  (l:(m:mem) -> Lemma (requires interp p m) (ensures fact))
+  : repr unit p (fun _ -> p)
+      (fun _ -> True)
+      (fun _ _ _ -> fact)
+  = fun frame ->
+      let m = nmst_get() in
+      l m
+
+let extract_info p fact l = Steel?.reflect (extract_info0 p fact l)
+
 let sladmit #a #p #q _ = SteelF?.reflect (fun _ -> NMST.nmst_admit ())
 
 let intro_pure p = change_slprop emp (pure p) (fun m -> pure_interp p m)

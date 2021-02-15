@@ -465,6 +465,12 @@ val rewrite_context (#[@@@ framing_implicit] p:slprop)
                     (_:unit)
   : SteelF unit p (fun _ -> q) (requires fun _ -> p `equiv` q) (ensures fun _ _ _ -> True)
 
+val extract_info (p:slprop) (fact:prop)
+  (l:(m:mem) -> Lemma (requires interp p m) (ensures fact))
+  : Steel unit p (fun _ -> p)
+      (fun _ -> True)
+      (fun _ _ _ -> fact)
+
 val sladmit (#a:Type)
             (#[@@@ framing_implicit] p:pre_t)
             (#[@@@ framing_implicit] q:post_t a)
