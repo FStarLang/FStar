@@ -6,7 +6,7 @@ open Steel.SelEffect
 
 module Spec = FStar.Trees
 
-#set-options "--fuel 1 --ifuel 1 --z3rlimit 30"
+#set-options "--fuel 3 --ifuel 3 --z3rlimit 30"
 
 let rec append_left #a ptr v =
   if is_null_t ptr then (
@@ -56,3 +56,18 @@ let rec height #a ptr =
        hleft + 1
      ) else ( hright + 1 )
    )
+
+let rec member #a ptr v =
+  if is_null_t ptr then (
+    elim_linked_tree_leaf ptr; false
+  ) else (
+    let node = unpack_tree ptr in
+    if v = get_data node then (pack_tree ptr (get_left node) (get_right node); true)
+    else (
+      admit();
+      let mleft = member (get_left node) v in
+      let mright = member (get_right node) v in
+      pack_tree ptr (get_left node) (get_right node);
+      mleft || mright
+    )
+  )

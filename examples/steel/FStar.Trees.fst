@@ -53,7 +53,7 @@ let rec mem (#a: Type) (r: tree a) (x: a) : prop =
   match r with
   | Leaf -> False
   | Node data left right ->
-    (data == x) \/ ( mem right x) \/ mem left x
+    (data == x) \/ (mem right x) \/ mem left x
 
 let rec bst_search (#a #b: Type) {| d: ordered a |} (x: bst a b) (key: a) : option b =
   match x with
@@ -72,6 +72,13 @@ let rec height (#a: Type) (x: tree a) : nat =
   | Node data left right ->
     if height left > height right then (height left) + 1
     else (height right) + 1
+
+let is_balanced (#a: Type) (x: tree a) : prop =
+  match x with
+  | Leaf -> True
+  | Node data left right ->
+    (height left - height right) <= 1 /\
+    (height right - height left) <= 1
 
 (**** Append *)
 
