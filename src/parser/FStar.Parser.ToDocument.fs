@@ -240,7 +240,6 @@ let is_list_structure cons_lid nil_lid =
   in aux
 
 let is_list = is_list_structure C.cons_lid C.nil_lid
-let is_lex_list = is_list_structure C.lexcons_lid C.lextop_lid
 
 (* [extract_from_list e] assumes that [is_list_structure xxx yyy e] holds *)
 (* and returns the list of terms contained in the list *)
@@ -274,7 +273,7 @@ let is_general_application e =
   not (is_array e || is_ref_set e)
 
 let is_general_construction e =
-  not (is_list e || is_lex_list e)
+  not (is_list e)
 
 let is_general_prefix_op op =
   let op_starting_char =  char_at (Ident.string_of_id op) 0 in
@@ -788,9 +787,9 @@ and p_typeDecl pre = function
     let comm, doc = p_typ_sep false false t in
     comm, p_typeDeclPrefix pre true lid bs typ_opt, doc, jump2
   | TyconRecord (lid, bs, typ_opt, record_field_decls) ->
-    let p_recordField (ps: bool) (lid, t) =
+    let p_recordField (ps: bool) (lid, aq, attrs, t) =
       let comm, field =
-        with_comment_sep (p_recordFieldDecl ps) (lid, t)
+        with_comment_sep (p_recordFieldDecl ps) (lid, aq, attrs, t)
                          (extend_to_end_of_line t.range) in
       let sep = if ps then semi else empty in
       inline_comment_or_above comm field sep
@@ -830,8 +829,8 @@ and p_typeDeclPrefix kw eq lid bs typ_opt =
     let binders = p_binders_list true bs in
     with_kw (fun n -> prefix2 (prefix2 n (flow break1 binders)) typ)
 
-and p_recordFieldDecl ps (lid, t) =
-  group (p_lident lid ^^ colon ^^ p_typ ps false t)
+and p_recordFieldDecl ps (lid, aq, attrs, t) =
+  group (optional p_aqual aq ^^ p_attributes attrs ^^ p_lident lid ^^ colon ^^ p_typ ps false t)
 
 and p_constructorBranch (uid, t_opt, use_of) =
   let sep = if use_of then str "of" else colon in
@@ -880,6 +879,15 @@ and p_letbinding kw (pat, e) =
   let comm, doc_expr = p_term_sep false false e in
   let doc_expr = inline_comment_or_above comm doc_expr empty in
   ifflat (doc_pat ^/^ equals ^/^ doc_expr) (doc_pat ^^ space ^^ group (equals ^^ jump2 doc_expr))
+
+and p_term_list ps pb l =
+    let rec aux = function
+        | [] -> empty
+        | [x] -> p_term ps pb x
+        | x::xs -> p_term ps pb x ^^ str ";" ^^ aux xs
+    in
+    str "[" ^^ aux l ^^ str "]"
+
 
 (* ****************************************************************************)
 (*                                                                            *)
@@ -1248,6 +1256,8 @@ and p_noSeqTerm' ps pb e = match e.tm with
   | Ensures (e, wtf) ->
       assert (wtf = None);
       group (str "ensures" ^/^ p_typ ps pb e)
+  | LexList l ->
+      group (str "%" ^^ p_term_list ps pb l)
   | Decreases (e, wtf) ->
       assert (wtf = None);
       group (str "decreases" ^/^ p_typ ps pb e)
@@ -1851,8 +1861,6 @@ and p_projectionLHS e = match e.tm with
     surround 2 0 (lbracket ^^ bar) (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) es) (bar ^^ rbracket)
   | _ when is_list e ->
     surround 2 0 lbracket (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) (extract_from_list e)) rbracket
-  | _ when is_lex_list e ->
-    surround 2 1 (percent ^^ lbracket) (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) (extract_from_list e)) rbracket
   | _ when is_ref_set e ->
     let es = extract_from_ref_set e in
     surround 2 0 (bang ^^ lbrace) (separate_map_or_flow (comma ^^ break1) p_appTerm es) rbrace
@@ -1907,6 +1915,7 @@ and p_projectionLHS e = match e.tm with
   | Antiquote _ (* p_noSeqTerm *)
   | CalcProof _ (* p_noSeqTerm *)
     -> soft_parens_with_nesting (p_term false false e)
+  | LexList l -> group (str "%" ^^ p_term_list false false l)
 
 and p_constant = function
   | Const_effect -> str "Effect"

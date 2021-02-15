@@ -5048,14 +5048,8 @@ and (encode_sigelt' :
                                      env1) in
                              match uu___8 with
                              | (tok_decls, env2) ->
-                                 let uu___9 =
-                                   FStar_Ident.lid_equals t
-                                     FStar_Parser_Const.lex_t_lid in
-                                 if uu___9
-                                 then (tok_decls, env2)
-                                 else
-                                   ((FStar_List.append tname_decl tok_decls),
-                                     env2) in
+                                 ((FStar_List.append tname_decl tok_decls),
+                                   env2) in
                            (match uu___7 with
                             | (decls, env2) ->
                                 let kindingAx =
@@ -5148,10 +5142,6 @@ and (encode_sigelt' :
                                   FStar_List.append uu___8
                                     (FStar_List.append binder_decls aux) in
                                 (g, env2))))))
-       | FStar_Syntax_Syntax.Sig_datacon
-           (d, uu___1, uu___2, uu___3, uu___4, uu___5) when
-           FStar_Ident.lid_equals d FStar_Parser_Const.lexcons_lid ->
-           ([], env)
        | FStar_Syntax_Syntax.Sig_datacon
            (d, uu___1, t, uu___2, n_tps, mutuals) ->
            let quals = se.FStar_Syntax_Syntax.sigquals in
@@ -5637,6 +5627,74 @@ and (encode_sigelt' :
                                                                     uu___21 in
                                                                    let uu___21
                                                                     =
+                                                                    let tot_or_gtot_inductive_codomain
+                                                                    c =
+                                                                    let is_inductive
+                                                                    l =
+                                                                    let uu___22
+                                                                    =
+                                                                    FStar_TypeChecker_Env.lookup_sigelt
+                                                                    env1.FStar_SMTEncoding_Env.tcenv
+                                                                    l in
+                                                                    match uu___22
+                                                                    with
+                                                                    | 
+                                                                    FStar_Pervasives_Native.Some
+                                                                    {
+                                                                    FStar_Syntax_Syntax.sigel
+                                                                    =
+                                                                    FStar_Syntax_Syntax.Sig_inductive_typ
+                                                                    uu___23;
+                                                                    FStar_Syntax_Syntax.sigrng
+                                                                    = uu___24;
+                                                                    FStar_Syntax_Syntax.sigquals
+                                                                    = uu___25;
+                                                                    FStar_Syntax_Syntax.sigmeta
+                                                                    = uu___26;
+                                                                    FStar_Syntax_Syntax.sigattrs
+                                                                    = uu___27;
+                                                                    FStar_Syntax_Syntax.sigopts
+                                                                    = uu___28;_}
+                                                                    -> true
+                                                                    | 
+                                                                    uu___23
+                                                                    -> false in
+                                                                    let res =
+                                                                    let uu___22
+                                                                    =
+                                                                    let uu___23
+                                                                    =
+                                                                    FStar_Syntax_Util.is_tot_or_gtot_comp
+                                                                    c in
+                                                                    Prims.op_Negation
+                                                                    uu___23 in
+                                                                    if
+                                                                    uu___22
+                                                                    then
+                                                                    false
+                                                                    else
+                                                                    (let uu___24
+                                                                    =
+                                                                    FStar_Syntax_Util.head_and_args
+                                                                    (FStar_Syntax_Util.comp_result
+                                                                    c) in
+                                                                    match uu___24
+                                                                    with
+                                                                    | 
+                                                                    (head1,
+                                                                    uu___25)
+                                                                    ->
+                                                                    FStar_Util.for_some
+                                                                    (fun
+                                                                    mutual ->
+                                                                    (is_inductive
+                                                                    mutual)
+                                                                    &&
+                                                                    (FStar_Syntax_Util.is_fvar
+                                                                    mutual
+                                                                    head1))
+                                                                    mutuals) in
+                                                                    res in
                                                                     let uu___22
                                                                     =
                                                                     FStar_List.fold_left2
@@ -5673,7 +5731,7 @@ and (encode_sigelt' :
                                                                     when
                                                                     let uu___26
                                                                     =
-                                                                    FStar_Syntax_Util.is_tot_or_gtot_comp
+                                                                    tot_or_gtot_inductive_codomain
                                                                     c in
                                                                     Prims.op_Negation
                                                                     uu___26
@@ -6173,6 +6231,74 @@ and (encode_sigelt' :
                                                                     uu___18 in
                                                                    let uu___18
                                                                     =
+                                                                    let tot_or_gtot_inductive_codomain
+                                                                    c =
+                                                                    let is_inductive
+                                                                    l =
+                                                                    let uu___19
+                                                                    =
+                                                                    FStar_TypeChecker_Env.lookup_sigelt
+                                                                    env1.FStar_SMTEncoding_Env.tcenv
+                                                                    l in
+                                                                    match uu___19
+                                                                    with
+                                                                    | 
+                                                                    FStar_Pervasives_Native.Some
+                                                                    {
+                                                                    FStar_Syntax_Syntax.sigel
+                                                                    =
+                                                                    FStar_Syntax_Syntax.Sig_inductive_typ
+                                                                    uu___20;
+                                                                    FStar_Syntax_Syntax.sigrng
+                                                                    = uu___21;
+                                                                    FStar_Syntax_Syntax.sigquals
+                                                                    = uu___22;
+                                                                    FStar_Syntax_Syntax.sigmeta
+                                                                    = uu___23;
+                                                                    FStar_Syntax_Syntax.sigattrs
+                                                                    = uu___24;
+                                                                    FStar_Syntax_Syntax.sigopts
+                                                                    = uu___25;_}
+                                                                    -> true
+                                                                    | 
+                                                                    uu___20
+                                                                    -> false in
+                                                                    let res =
+                                                                    let uu___19
+                                                                    =
+                                                                    let uu___20
+                                                                    =
+                                                                    FStar_Syntax_Util.is_tot_or_gtot_comp
+                                                                    c in
+                                                                    Prims.op_Negation
+                                                                    uu___20 in
+                                                                    if
+                                                                    uu___19
+                                                                    then
+                                                                    false
+                                                                    else
+                                                                    (let uu___21
+                                                                    =
+                                                                    FStar_Syntax_Util.head_and_args
+                                                                    (FStar_Syntax_Util.comp_result
+                                                                    c) in
+                                                                    match uu___21
+                                                                    with
+                                                                    | 
+                                                                    (head1,
+                                                                    uu___22)
+                                                                    ->
+                                                                    FStar_Util.for_some
+                                                                    (fun
+                                                                    mutual ->
+                                                                    (is_inductive
+                                                                    mutual)
+                                                                    &&
+                                                                    (FStar_Syntax_Util.is_fvar
+                                                                    mutual
+                                                                    head1))
+                                                                    mutuals) in
+                                                                    res in
                                                                     let uu___19
                                                                     =
                                                                     FStar_List.fold_left2
@@ -6209,7 +6335,7 @@ and (encode_sigelt' :
                                                                     when
                                                                     let uu___23
                                                                     =
-                                                                    FStar_Syntax_Util.is_tot_or_gtot_comp
+                                                                    tot_or_gtot_inductive_codomain
                                                                     c in
                                                                     Prims.op_Negation
                                                                     uu___23

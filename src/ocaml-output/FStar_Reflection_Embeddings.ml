@@ -1201,7 +1201,7 @@ let (e_comp_view :
           let uu___2 =
             let uu___3 =
               let uu___4 =
-                let uu___5 = FStar_Syntax_Embeddings.e_option e_term in
+                let uu___5 = FStar_Syntax_Embeddings.e_list e_term in
                 embed uu___5 rng md in
               FStar_Syntax_Syntax.as_arg uu___4 in
             [uu___3] in
@@ -1216,7 +1216,7 @@ let (e_comp_view :
           let uu___2 =
             let uu___3 =
               let uu___4 =
-                let uu___5 = FStar_Syntax_Embeddings.e_option e_term in
+                let uu___5 = FStar_Syntax_Embeddings.e_list e_term in
                 embed uu___5 rng md in
               FStar_Syntax_Syntax.as_arg uu___4 in
             [uu___3] in
@@ -1288,7 +1288,7 @@ let (e_comp_view :
              FStar_Util.bind_opt uu___4
                (fun t3 ->
                   let uu___5 =
-                    let uu___6 = FStar_Syntax_Embeddings.e_option e_term in
+                    let uu___6 = FStar_Syntax_Embeddings.e_list e_term in
                     unembed' w uu___6 md in
                   FStar_Util.bind_opt uu___5
                     (fun md1 ->
@@ -1304,7 +1304,7 @@ let (e_comp_view :
              FStar_Util.bind_opt uu___4
                (fun t3 ->
                   let uu___5 =
-                    let uu___6 = FStar_Syntax_Embeddings.e_option e_term in
+                    let uu___6 = FStar_Syntax_Embeddings.e_list e_term in
                     unembed' w uu___6 md in
                   FStar_Util.bind_opt uu___5
                     (fun md1 ->

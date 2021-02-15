@@ -241,7 +241,11 @@ and free_type_vars env t = match (unparen t).tm with
   | Ensures (t, _)
   | Decreases (t, _)
   | NamedTyp(_, t) -> free_type_vars env t
+
+  | LexList l -> List.collect (free_type_vars env) l
+  
   | Paren t -> failwith "impossible"
+
   | Ascribed(t, t', tacopt) ->
     let ts = t::t'::(match tacopt with None -> [] | Some t -> [t]) in
     List.collect (free_type_vars env) ts
@@ -938,9 +942,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
     | Ensures (t, lopt) ->
       desugar_formula env t, noaqs
-
-    | Decreases (t, lopt) ->
-      desugar_term_maybe_top top_level env t
 
     | Attributes ts ->
         failwith "Attributes should not be desugared by desugar_term_maybe_top"
@@ -1847,8 +1848,18 @@ and desugar_comp r (allow_type_promotion:bool) env t =
       rest |> List.partition is_decrease
     in
     let rest = desugar_args env rest in
-    let dec = desugar_args env dec in
-    let decreases_clause = List.map (fun (t, _) -> DECREASES t) dec in
+    let decreases_clause = dec |>
+      List.map (fun t -> match (unparen (fst t)).tm with
+                      | Decreases (t, _) ->
+                        let l =
+                          let t = unparen t in
+                          match t.tm with
+                          | LexList l -> l
+                          | _ -> [t] in
+                        DECREASES (l |> List.map (desugar_term env))
+                      | _ ->
+                        fail (Errors.Fatal_UnexpectedComputationTypeForLetRec,
+                              "Unexpected decreases clause")) in
 
     let no_additional_args =
         (* F# complains about not being able to use = on some types.. *)
@@ -2099,8 +2110,7 @@ let mk_indexed_projector_names iquals fvq env lid (fields:list<S.binder>) =
 
 let mk_data_projector_names iquals env se : list<sigelt> =
   match se.sigel with
-  | Sig_datacon(lid, _, t, _, n, _) when (//(not env.iface || env.admitted_iface) &&
-                                                not (lid_equals lid C.lexcons_lid)) ->
+  | Sig_datacon(lid, _, t, _, n, _) ->
     let formals, _ = U.arrow_formals t in
     begin match formals with
         | [] -> [] //no fields to project
@@ -2167,19 +2177,19 @@ let rec desugar_tycon env (d: AST.decl) quals tcs : (env_t * sigelts) =
   let tycon_record_as_variant = function
     | TyconRecord(id, parms, kopt, fields) ->
       let constrName = mk_ident("Mk" ^ (string_of_id id), (range_of_id id)) in
-      let mfields = List.map (fun (x,t) -> mk_binder (Annotated(x,t)) (range_of_id x) Expr None) fields in
+      let mfields = List.map (fun (x,q,attrs,t) -> mk_binder_with_attrs (Annotated(x,t)) (range_of_id x) Expr q attrs) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) (range_of_id id) Type_level) parms in
       let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) (range_of_id id) Type_level in
       //let _ = BU.print_string (BU.format2 "Translated record %s to constructor %s\n" ((string_of_id id)) (term_to_string constrTyp)) in
 
       let names = id :: binder_idents parms in
-      List.iter (fun (f, _) ->
+      List.iter (fun (f, _, _, _) ->
           if BU.for_some (fun i -> ident_equals f i) names then
               raise_error (Errors.Error_FieldShadow,
                               BU.format1 "Field %s shadows the record's name or a parameter of it, please rename it" (string_of_id f)) (range_of_id f))
           fields;
 
-      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false)]), fields |> List.map fst
+      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false)]), fields |> List.map (fun (f, _, _, _) -> f)
     | _ -> failwith "impossible" in
   let desugar_abstract_tc quals _env mutuals = function
     | TyconAbstract(id, binders, kopt) ->

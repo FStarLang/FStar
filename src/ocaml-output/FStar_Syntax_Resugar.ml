@@ -1732,15 +1732,19 @@ and (resugar_comp' :
                    | [] -> l
                    | hd::tl ->
                        (match hd with
-                        | FStar_Syntax_Syntax.DECREASES e ->
-                            let e1 =
+                        | FStar_Syntax_Syntax.DECREASES ts ->
+                            let lexlist =
                               let uu___3 =
                                 let uu___4 =
-                                  let uu___5 = resugar_term' env e in
-                                  (uu___5, FStar_Pervasives_Native.None) in
-                                FStar_Parser_AST.Decreases uu___4 in
+                                  FStar_All.pipe_right ts
+                                    (FStar_List.map (resugar_term' env)) in
+                                FStar_Parser_AST.LexList uu___4 in
                               mk uu___3 in
-                            aux (e1 :: l) tl
+                            let e =
+                              mk
+                                (FStar_Parser_AST.Decreases
+                                   (lexlist, FStar_Pervasives_Native.None)) in
+                            aux (e :: l) tl
                         | uu___3 -> aux l tl) in
                  let decrease = aux [] c1.FStar_Syntax_Syntax.flags in
                  let uu___2 =
@@ -1770,11 +1774,14 @@ and (resugar_comp' :
                  | [] -> l
                  | hd::tl ->
                      (match hd with
-                      | FStar_Syntax_Syntax.DECREASES e ->
-                          let e1 =
-                            let uu___4 = resugar_term' env e in
-                            (uu___4, FStar_Parser_AST.Nothing) in
-                          aux (e1 :: l) tl
+                      | FStar_Syntax_Syntax.DECREASES ts ->
+                          let es =
+                            FStar_All.pipe_right ts
+                              (FStar_List.map
+                                 (fun e ->
+                                    let uu___4 = resugar_term' env e in
+                                    (uu___4, FStar_Parser_AST.Nothing))) in
+                          aux (FStar_List.append es l) tl
                       | uu___4 -> aux l tl) in
                let decrease = aux [] c1.FStar_Syntax_Syntax.flags in
                mk
@@ -2243,13 +2250,28 @@ let (resugar_typ :
                                   FStar_All.pipe_right bs3
                                     (FStar_List.map
                                        (fun b ->
+                                          let q =
+                                            let uu___9 =
+                                              resugar_arg_qual env
+                                                b.FStar_Syntax_Syntax.binder_qual in
+                                            match uu___9 with
+                                            | FStar_Pervasives_Native.Some q1
+                                                -> q1
+                                            | FStar_Pervasives_Native.None ->
+                                                failwith
+                                                  "Unexpected inaccesible implicit argument of a data constructor while resugaring a record field" in
                                           let uu___9 =
                                             bv_as_unique_ident
                                               b.FStar_Syntax_Syntax.binder_bv in
                                           let uu___10 =
+                                            FStar_All.pipe_right
+                                              b.FStar_Syntax_Syntax.binder_attrs
+                                              (FStar_List.map
+                                                 (resugar_term' env)) in
+                                          let uu___11 =
                                             resugar_term' env
                                               (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                          (uu___9, uu___10))) in
+                                          (uu___9, q, uu___10, uu___11))) in
                                 FStar_List.append mfields fields
                             | uu___8 -> failwith "unexpected")
                        | uu___4 -> failwith "unexpected" in
