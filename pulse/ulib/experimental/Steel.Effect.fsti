@@ -430,67 +430,6 @@ polymonadic_subcomp SteelF <: Steel = subcomp
 effect SteelT (a:Type) (pre:pre_t) (post:post_t a) =
   Steel a pre post (fun _ -> True) (fun _ _ _ -> True)
 
-
-
-module AtomicX = Steel.EffectX.Atomic
-module EffectX = Steel.EffectX
-
-let triv_pre (fp:pre_t) : AtomicX.fp_mprop fp = fun _ -> True
-let triv_post (fp:pre_t) (#a:Type) (fp':post_t a) : AtomicX.fp_binary_mprop fp fp'
-  = fun _ _ _ -> True
-
-let triv_pre' (fp:pre_t) : req_t fp = fun _ -> True
-let triv_post' (fp:pre_t) (#a:Type) (fp':post_t a) : ens_t fp a fp'
-  = fun _ _ _ -> True
-
-val subcomp_x (a:Type)
-  (pre:pre_t) (post:post_t a)
-  (f:EffectX.repr a pre post (triv_pre pre) (triv_post pre post))
-: Pure (repr a pre post (triv_pre' pre) (triv_post' pre post))
-  (requires True)
-  (ensures fun _ -> True)
-
-polymonadic_subcomp EffectX.SteelX <: Steel = subcomp_x
-
-val as_steelx (#a:Type)
-  (#pre:pre_t) (#post:post_t a)
-  (#req:req_t pre) (#ens:ens_t pre a post)
-  ($f:unit -> Steel a pre post req ens)
-: EffectX.SteelX a pre post req ens
-
-
-//scratch space
-
-
-// (*
-//  * How we would like to see the Steel(F)/PURE bind
-//  *)
-
-// unfold
-// let bind_steel__pure_req (#a:Type) (#pre:pre_t) (#post:post_t a) (req:req_t pre) (ens:ens_t pre a post)
-//   (#b:Type) (wp:a -> pure_wp b)
-// : req_t pre
-// = fun m0 -> req m0 /\ (forall (x:a) (m1:hmem (post x)). ens m0 x m1 ==> as_requires (wp x))
-
-// // unfold
-// // let bind_steel__pure_ens (#a:Type) (#pre:pre_t) (#post:post_t a) (req:req_t pre) (ens:ens_t pre a post)
-// //   (#b:Type) (wp:a -> pure_wp b) (f:(x:a -> unit -> PURE b (wp x)))
-// // : ens_t pre b (fun _ -> post)
-// // = fun m0 r m1 ->
-
-
-
-// (*
-// //  * No Steel(F), PURE bind
-// //  *
-// //  * Use the steel_ret function below to return the PURE computation
-// //  *
-// //  * Note it is in SteelF (i.e. framed already)
-// //  *)
-// let steel_ret (#a:Type) (#[@@@ framing_implicit] p:a -> slprop u#1) (x:a)
-// : SteelF a (p x) p (fun _ -> True) (fun _ r _ -> r == x)
-// = SteelF?.reflect (fun _ -> x)
-
 (* Exposing actions as Steel functions *)
 
 val par (#aL:Type u#a)
