@@ -73,6 +73,11 @@ let pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pt
   in
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
 
+let extract_injective #a #p0 #p1 #v0 #v1 r =
+  extract_info (pts_to r p0 v0 `star` pts_to r p1 v1) (v0 == v1)
+    (fun m -> pts_to_ref_injective r p0 p1 v0 v1 m);
+  change_slprop (pts_to r p1 v1) (pts_to r p1 v0) (fun _ -> ())
+
 let alloc x =
   let r = H.alloc (U.raise_val x) in
   change_slprop (H.pts_to r full_perm (U.raise_val x)) (pts_to r full_perm x) (fun _ -> ());
@@ -165,6 +170,8 @@ let cas_action (#t:eqtype)
             (pts_to r full_perm v)
             (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
             frame
+            (fun _ -> True)
+            (fun _ _ _ -> True)
    = let hv =     (Ghost.hide (U.raise_val (Ghost.reveal v))) in
      let b = H.cas_action #(U.raise_t t)
                   (lift_eq #t)

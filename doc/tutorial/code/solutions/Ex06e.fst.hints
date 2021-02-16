@@ -20,7 +20,7 @@
         "subterm_ordering_Prims.Cons", "typing_Prims.__proj__Cons__item__tl"
       ],
       0,
-      "0de65186b6d4a217ce0bfbaf24c4567b"
+      "7be05e748475faf6636f61cea922909c"
     ],
     [
       "Ex06e.mem",
@@ -38,7 +38,7 @@
         "int_inversion", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "69f472dc4d23291eab76e3ab6e3886c7"
+      "31987733cf1ab9dd581f6d5d4a48e421"
     ],
     [
       "Ex06e.sorted_smaller",
@@ -76,7 +76,7 @@
         "unit_typing"
       ],
       0,
-      "f174f3daa71f0943927216492128bfa0"
+      "45963dcb89e0c205b2259d29cf54fac5"
     ],
     [
       "Ex06e.insert",
@@ -119,7 +119,7 @@
         "typing_Ex06e.insert", "typing_Ex06e.mem", "typing_Ex06e.sorted"
       ],
       0,
-      "39908bbf3ac4b10ed2ef4740b7f5a2e7"
+      "6d8de81da7a4d1f52ad3fb6cb7154a53"
     ],
     [
       "Ex06e.sort",
@@ -150,7 +150,7 @@
         "subterm_ordering_Prims.Cons", "typing_Ex06e.mem"
       ],
       0,
-      "f4d2ce4f49c1aa1466b1f2fbfe5d859c"
+      "31e57ba79a1c32fcab4246350e89eaa8"
     ]
   ]
 ]

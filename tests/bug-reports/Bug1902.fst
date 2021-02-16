@@ -42,8 +42,8 @@ let rec mk_tot_arr_decr (bs: list binder) (cod : term) decr : Tac term =
     | [] -> cod
     | (b::bs) -> pack (Tv_Arrow b (pack_comp (C_Total (mk_tot_arr_decr bs cod decr) (
       if decr_at_every_level || FStar.List.Tot.length bs = 0
-      then Some decr
-      else None
+      then [decr]
+      else []
     ))))
 
 let craft_f' use_f_type: Tac decls =

@@ -2439,6 +2439,14 @@ let rec (delta_depth_of_term :
       | FStar_Syntax_Syntax.Tm_fvar fv ->
           let uu___ = fv_delta_depth env fv in
           FStar_Pervasives_Native.Some uu___
+let (universe_has_max :
+  FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.universe -> Prims.bool) =
+  fun env ->
+    fun u ->
+      let u1 = FStar_TypeChecker_Normalize.normalize_universe env u in
+      match u1 with
+      | FStar_Syntax_Syntax.U_max uu___ -> true
+      | uu___ -> false
 let rec (head_matches :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> match_result)
@@ -5864,8 +5872,28 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                 let uu___3 = FStar_Syntax_Util.head_and_args t2 in
                 (match uu___3 with
                  | (head2, args2) ->
+                     let need_unif1 =
+                       match (((head1.FStar_Syntax_Syntax.n), args1),
+                               ((head2.FStar_Syntax_Syntax.n), args2))
+                       with
+                       | ((FStar_Syntax_Syntax.Tm_uinst (uu___4, us1),
+                           uu___5::uu___6),
+                          (FStar_Syntax_Syntax.Tm_uinst (uu___7, us2),
+                           uu___8::uu___9)) ->
+                           let uu___10 =
+                             (FStar_List.for_all
+                                (fun u ->
+                                   let uu___11 = universe_has_max env1 u in
+                                   Prims.op_Negation uu___11) us1)
+                               &&
+                               (FStar_List.for_all
+                                  (fun u ->
+                                     let uu___11 = universe_has_max env1 u in
+                                     Prims.op_Negation uu___11) us2) in
+                           if uu___10 then need_unif else true
+                       | uu___4 -> need_unif in
                      let solve_head_then wl2 k =
-                       if need_unif
+                       if need_unif1
                        then k true wl2
                        else
                          (let uu___5 =
@@ -5901,7 +5929,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                              uu___6 = FStar_Syntax_Util.Equal) in
                         if uu___5
                         then
-                          (if need_unif
+                          (if need_unif1
                            then
                              solve_t env1
                                (let uu___6 = problem in
@@ -5949,7 +5977,7 @@ and (solve_t' : FStar_TypeChecker_Env.env -> tprob -> worklist -> solution) =
                                         FStar_Pervasives_Native.None) ->
                                          let mk_sub_probs wl2 =
                                            let argp =
-                                             if need_unif
+                                             if need_unif1
                                              then
                                                FStar_List.zip
                                                  ((head1,

@@ -1182,8 +1182,12 @@ let (collect_one :
                   FStar_Util.iter_opt k collect_term;
                   FStar_List.iter
                     (fun uu___6 ->
-                       match uu___6 with | (uu___7, t) -> collect_term t)
-                    identterms)
+                       match uu___6 with
+                       | (uu___7, aq, attrs, t) ->
+                           (collect_aqual aq;
+                            FStar_All.pipe_right attrs
+                              (FStar_List.iter collect_term);
+                            collect_term t)) identterms)
              | FStar_Parser_AST.TyconVariant (uu___3, binders, k, identterms)
                  ->
                  (collect_binders binders;
@@ -1373,8 +1377,9 @@ let (collect_one :
              | FStar_Parser_AST.Paren t -> collect_term t
              | FStar_Parser_AST.Requires (t, uu___3) -> collect_term t
              | FStar_Parser_AST.Ensures (t, uu___3) -> collect_term t
-             | FStar_Parser_AST.Decreases (t, uu___3) -> collect_term t
              | FStar_Parser_AST.Labeled (t, uu___3, uu___4) -> collect_term t
+             | FStar_Parser_AST.LexList l -> FStar_List.iter collect_term l
+             | FStar_Parser_AST.Decreases (t, uu___3) -> collect_term t
              | FStar_Parser_AST.Quote (t, uu___3) -> collect_term t
              | FStar_Parser_AST.Antiquote t -> collect_term t
              | FStar_Parser_AST.VQuote t -> collect_term t

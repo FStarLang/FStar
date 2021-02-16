@@ -6,17 +6,18 @@ module FExt = FStar.FunctionalExtensionality
 open FStar.Ghost
 include Steel.SelEffect.Common
 
+#set-options "--warn_error -330"  //turn off the experimental feature warning
 
 (* focus_rmem is an additional restriction of our view of memory.
    We expose it here to be able to reduce through normalization;
    Any valid application of focus_rmem h will be reduced to the application of h *)
 
-[@__steel_reduce__]
+[@@ __steel_reduce__]
 unfold
 let unrestricted_focus_rmem (#r:vprop) (h:rmem r) (r0:vprop{r `can_be_split` r0})
   = fun (r':vprop{can_be_split r0 r'}) -> can_be_split_trans r r0 r'; h r'
 
-[@__steel_reduce__]
+[@@ __steel_reduce__]
 let focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0}) : Tot (rmem r0)
  = FExt.on_dom_g
    (r':vprop{can_be_split r0 r'})
@@ -24,7 +25,7 @@ let focus_rmem (#r: vprop) (h: rmem r) (r0: vprop{r `can_be_split` r0}) : Tot (r
 
 (* State that all "atomic" subresources have the same selectors on both views *)
 
-[@__steel_reduce__]
+[@@ __steel_reduce__]
 let rec frame_equalities
   (frame:vprop)
   (h0:rmem frame) (h1:rmem frame) : prop
@@ -60,7 +61,7 @@ let return_ens (a:Type) (x:a) (p:a -> vprop) : ens_t (p x) a p =
 (*
  * Return is parametric in post (cf. return-scoping.txt)
  *)
-val return (a:Type) (x:a) (#[@@ framing_implicit] p:a -> vprop)
+val return (a:Type) (x:a) (#[@@@ framing_implicit] p:a -> vprop)
 : repr a (return_pre (p x)) (return_post p) (return_req (p x)) (return_ens a x p)
 
 unfold
@@ -90,13 +91,13 @@ let bind_ens (#a:Type) (#b:Type)
   (exists (x:a) (m1:rmem (post_f x)). ens_f m0 x m1 /\ (ens_g x) (focus_rmem m1 (pre_g x)) y (focus_rmem m2 (post_g x y))))
 
 val bind (a:Type) (b:Type)
-  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (#[@@ framing_implicit] req_f:req_t pre_f) (#[@@ framing_implicit] ens_f:ens_t pre_f a post_f)
-  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:a -> post_t b)
-  (#[@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
-  (#[@@ framing_implicit] post:post_t b)
-  (#[@@ framing_implicit] p1:squash (can_be_split_forall post_f pre_g))
-  (#[@@ framing_implicit] p2:squash (can_be_split_post post_g post))
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
+  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
+  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#[@@@ framing_implicit] post:post_t b)
+  (#[@@@ framing_implicit] p1:squash (can_be_split_forall post_f pre_g))
+  (#[@@@ framing_implicit] p2:squash (can_be_split_post post_g post))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
 : repr b
@@ -116,12 +117,12 @@ let subcomp_pre (#a:Type)
   (forall (m0:rmem pre_g) (x:a) (m1:rmem (post_g x)). ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) ==> ens_g m0 x m1))
 
 val subcomp (a:Type)
-  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (#[@@ framing_implicit] req_f:req_t pre_f) (#[@@ framing_implicit] ens_f:ens_t pre_f a post_f)
-  (#[@@ framing_implicit] pre_g:pre_t) (#[@@ framing_implicit] post_g:post_t a)
-  (#[@@ framing_implicit] req_g:req_t pre_g) (#[@@ framing_implicit] ens_g:ens_t pre_g a post_g)
-  (#[@@ framing_implicit] p1:squash (can_be_split pre_g pre_f))
-  (#[@@ framing_implicit] p2:squash (equiv_forall post_f post_g))
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
+  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] pre_g:pre_t) (#[@@@ framing_implicit] post_g:post_t a)
+  (#[@@@ framing_implicit] req_g:req_t pre_g) (#[@@@ framing_implicit] ens_g:ens_t pre_g a post_g)
+  (#[@@@ framing_implicit] p1:squash (can_be_split pre_g pre_f))
+  (#[@@@ framing_implicit] p2:squash (equiv_forall post_f post_g))
   (f:repr a pre_f post_f req_f ens_f)
 : Pure (repr a pre_g post_g req_g ens_g)
   (requires (subcomp_pre req_f ens_f req_g ens_g p1 p2))
@@ -148,12 +149,12 @@ let if_then_else_ens (#a:Type)
   ((~ p) ==> ens_else (focus_rmem h0 pre_g) x (focus_rmem h1 (post_g x))))
 
 let if_then_else (a:Type)
-  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] pre_g:pre_t)
-  (#[@@ framing_implicit] post_f:post_t a) (#[@@ framing_implicit] post_g:post_t a)
-  (#[@@ framing_implicit] req_then:req_t pre_f) (#[@@ framing_implicit] ens_then:ens_t pre_f a post_f)
-  (#[@@ framing_implicit] req_else:req_t pre_g) (#[@@ framing_implicit] ens_else:ens_t pre_g a post_g)
-  (#[@@ framing_implicit] s_pre: squash (can_be_split pre_f pre_g))
-  (#[@@ framing_implicit] s_post: squash (equiv_forall post_f post_g))
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] pre_g:pre_t)
+  (#[@@@ framing_implicit] post_f:post_t a) (#[@@@ framing_implicit] post_g:post_t a)
+  (#[@@@ framing_implicit] req_then:req_t pre_f) (#[@@@ framing_implicit] ens_then:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] req_else:req_t pre_g) (#[@@@ framing_implicit] ens_else:ens_t pre_g a post_g)
+  (#[@@@ framing_implicit] s_pre: squash (can_be_split pre_f pre_g))
+  (#[@@@ framing_implicit] s_post: squash (equiv_forall post_f post_g))
   (f:repr a pre_f post_f req_then ens_then)
   (g:repr a pre_g post_g req_else ens_else)
   (p:bool)
@@ -230,15 +231,15 @@ let bind_steel_steel_ens (#a:Type) (#b:Type)
     (ens_g x) (focus_rmem m1 (pre_g x)) y (focus_rmem m2 (post_g x y)))))
 
 val bind_steel_steel (a:Type) (b:Type)
-  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (#[@@ framing_implicit] req_f:req_t pre_f) (#[@@ framing_implicit] ens_f:ens_t pre_f a post_f)
-  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:a -> post_t b)
-  (#[@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
-  (#[@@ framing_implicit] frame_f:vprop) (#[@@ framing_implicit] frame_g:a -> vprop)
-  (#[@@ framing_implicit] post:post_t b)
-  (#[@@ framing_implicit] p:squash (can_be_split_forall
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
+  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
+  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#[@@@ framing_implicit] frame_f:vprop) (#[@@@ framing_implicit] frame_g:a -> vprop)
+  (#[@@@ framing_implicit] post:post_t b)
+  (#[@@@ framing_implicit] p:squash (can_be_split_forall
     (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
-  (#[@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
+  (#[@@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
 : repr b
@@ -291,14 +292,14 @@ let bind_steel_steelf_ens (#a:Type) (#b:Type)
     ens_f (focus_rmem m0 pre_f) x (focus_rmem m1 (post_f x)) /\ (ens_g x) (focus_rmem m1 (pre_g x)) y (focus_rmem m2 (post_g x y))))
 
 val bind_steel_steelf (a:Type) (b:Type)
-  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (#[@@ framing_implicit] req_f:req_t pre_f) (#[@@ framing_implicit] ens_f:ens_t pre_f a post_f)
-  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:a -> post_t b)
-  (#[@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
-  (#[@@ framing_implicit] frame_f:vprop)
-  (#[@@ framing_implicit] post:post_t b)
-  (#[@@ framing_implicit] p:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
-  (#[@@ framing_implicit] p2: squash (can_be_split_post post_g post))
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
+  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
+  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#[@@@ framing_implicit] frame_f:vprop)
+  (#[@@@ framing_implicit] post:post_t b)
+  (#[@@@ framing_implicit] p:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
+  (#[@@@ framing_implicit] p2: squash (can_be_split_post post_g post))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
 : repr b
@@ -351,14 +352,14 @@ let bind_steelf_steel_ens (#a:Type) (#b:Type)
     ens_f m0 x m1 /\ (ens_g x) (focus_rmem m1 (pre_g x)) y (focus_rmem m2 (post_g x y)))))
 
 val bind_steelf_steel (a:Type) (b:Type)
-  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (#[@@ framing_implicit] req_f:req_t pre_f) (#[@@ framing_implicit] ens_f:ens_t pre_f a post_f)
-  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:a -> post_t b)
-  (#[@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
-  (#[@@ framing_implicit] frame_g:a -> vprop)
-  (#[@@ framing_implicit] post:post_t b)
-  (#[@@ framing_implicit] p:squash (can_be_split_forall post_f (fun x -> pre_g x `star` frame_g x)))
-  (#[@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
+  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
+  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#[@@@ framing_implicit] frame_g:a -> vprop)
+  (#[@@@ framing_implicit] post:post_t b)
+  (#[@@@ framing_implicit] p:squash (can_be_split_forall post_f (fun x -> pre_g x `star` frame_g x)))
+  (#[@@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
   (f:repr a pre_f post_f req_f ens_f)
   (g:(x:a -> repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
 : repr b
@@ -388,9 +389,9 @@ let bind_pure_steel__ens (#a:Type) (#b:Type)
 = fun m0 r m1 -> normal ((as_requires wp /\ (exists (x:a). as_ensures wp x /\ ((ens x) m0 r m1))))
 
 val bind_pure_steel_ (a:Type) (b:Type)
-  (wp:pure_wp a)
-  (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t b)
-  (#[@@ framing_implicit] req:a -> req_t pre) (#[@@ framing_implicit] ens:a -> ens_t pre b post)
+  (#[@@@ framing_implicit] wp:pure_wp a)
+  (#[@@@ framing_implicit] pre:pre_t) (#[@@@ framing_implicit] post:post_t b)
+  (#[@@@ framing_implicit] req:a -> req_t pre) (#[@@@ framing_implicit] ens:a -> ens_t pre b post)
   (f:eqtype_as_type unit -> PURE a wp) (g:(x:a -> repr b pre post (req x) (ens x)))
 : repr b
     pre
@@ -413,7 +414,7 @@ polymonadic_subcomp SteelSelF <: SteelSel = subcomp
 val noop (_:unit)
   : SteelSel unit vemp (fun _ -> vemp) (requires fun _ -> True) (ensures fun _ _ _ -> True)
 
-val get (#[@@framing_implicit] p:vprop) (_:unit) : SteelSelF (rmem p)
+val get (#[@@@ framing_implicit] p:vprop) (_:unit) : SteelSelF (rmem p)
   p (fun _ -> p)
   (requires fun _ -> True)
   (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))

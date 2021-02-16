@@ -17,7 +17,7 @@
 *)
 module DList.Invariant
 open Steel.Memory
-open Steel.Effect  
+open Steel.Effect
 open Steel.FractionalPermission
 open Steel.Reference
 module L = FStar.List.Tot
@@ -39,8 +39,8 @@ val mk_cell (p n: t 'a) (d:'a)
       data c == d)
 
 /// Assuming a null pointer
-let null_dlist (#a:Type) 
-  : t a 
+let null_dlist (#a:Type)
+  : t a
   = Steel.Reference.null
 
 /// Equality on same-length pointers: an assumed primitive
@@ -53,7 +53,7 @@ val ptr_eq (#a:Type) (x y:t a)
 /// Main abstract invariant
 ///    A doubly linked list segment at ptr from from left to right
 val dlist (#a:Type) (left ptr right:t a) (l:list (cell a)) : slprop u#1
-             
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // dlist nil
@@ -119,13 +119,13 @@ val invert_dlist_cons_neq (#a:Type) (left ptr right:t a) (l:list (cell a))
 //dlist is not null
 ////////////////////////////////////////////////////////////////////////////////
 
-val dlist_not_null (#a:Type) 
-                   (#[@@framing_implicit] left:t a)
-                   (#[@@framing_implicit] right:t a) 
-                   (#[@@framing_implicit] rep:list (cell a))
+val dlist_not_null (#a:Type)
+                   (#[@@@ framing_implicit] left:t a)
+                   (#[@@@ framing_implicit] right:t a)
+                   (#[@@@ framing_implicit] rep:list (cell a))
                    (p:t a)
-  : Steel unit 
+  : Steel unit
     (dlist left p right rep)
-    (fun _ -> dlist left p right rep)    
+    (fun _ -> dlist left p right rep)
     (requires fun _ -> p =!= right \/ Cons? rep)
     (ensures fun _ _ _ -> p =!= null_dlist)

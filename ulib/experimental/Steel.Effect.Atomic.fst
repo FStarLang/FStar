@@ -17,25 +17,76 @@
 
 module Steel.Effect.Atomic
 
-open Steel.EffectX.Atomic
-friend Steel.EffectX.Atomic
 friend Steel.Effect
 
 #set-options "--warn_error -330"  //turn off the experimental feature warning
 
-let observability = observability
-let has_eq_observability = has_eq_observability
-let observable = observable
-let unobservable = unobservable
+let observability = bool
+let has_eq_observability () = ()
+let observable = true
+let unobservable = false
 
-let atomic_repr = atomic_repr
+val join_preserves_interp (hp:slprop) (m0 m1:mem)
+  : Lemma
+    (requires (interp hp m0 /\ disjoint m0 m1))
+    (ensures (interp hp (join m0 m1)))
+    [SMTPat (interp hp (join m0 m1))]
 
+let join_preserves_interp hp m0 m1
+  = intro_emp m1;
+    intro_star hp emp m0 m1;
+    affine_star hp emp (join m0 m1)
+
+val respects_fp (#fp:slprop) (p: hmem fp -> prop) : prop
+let respects_fp #fp p =
+  forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)
+
+val reveal_respects_fp (#fp:_) (p:hmem fp -> prop)
+  : Lemma (respects_fp p <==>
+           (forall (m0:hmem fp) (m1:mem{disjoint m0 m1}). p m0 <==> p (join m0 m1)))
+          [SMTPat (respects_fp #fp p)]
+let reveal_respects_fp p = ()
+
+let fp_mprop (fp:slprop) = p:(hmem fp -> prop) { respects_fp p }
+
+val respects_binary_fp (#a:Type) (#pre:slprop) (#post:a -> slprop)
+                       (q:(hmem pre -> x:a -> hmem (post x) -> prop)) : prop
+let respects_binary_fp #a #pre #post q
+  = (forall x (h_pre:hmem pre) h_post (h:mem{disjoint h_pre h}).
+      q h_pre x h_post <==> q (join h_pre h) x h_post) /\
+    (forall x h_pre (h_post:hmem (post x)) (h:mem{disjoint h_post h}).
+      q h_pre x h_post <==> q h_pre x (join h_post h))
+
+val reveal_respects_binary_fp (#a:Type) (#pre:slprop) (#post:a -> slprop)
+                              (q:(hmem pre -> x:a -> hmem (post x) -> prop))
+  : Lemma (respects_binary_fp q <==>
+            //at this point we need to know interp pre (join h_pre h) -- use join_preserves_interp for that
+            (forall x (h_pre:hmem pre) h_post (h:mem{disjoint h_pre h}).
+              q h_pre x h_post <==> q (join h_pre h) x h_post) /\
+            //can join any disjoint heap to the post-heap and q is still valid
+            (forall x h_pre (h_post:hmem (post x)) (h:mem{disjoint h_post h}).
+              q h_pre x h_post <==> q h_pre x (join h_post h)))
+           [SMTPat (respects_binary_fp #a #pre #post q)]
+let reveal_respects_binary_fp q = ()
+
+let fp_binary_mprop #a (pre:slprop) (post: a -> slprop) =
+  p:(hmem pre -> x:a -> hmem (post x) -> prop){ respects_binary_fp p }
+
+let req_to_act_req (#pre:slprop) (req:fp_mprop pre) : mprop pre =
+  fun m -> interp pre m /\ req m
+
+let ens_to_act_ens (#pre:slprop) (#a:Type) (#post:a -> slprop) (ens:fp_binary_mprop pre post)
+: mprop2 pre post
+= fun m0 x m1 -> interp pre m0 /\ interp (post x) m1 /\ ens m0 x m1
+
+let atomic_repr a opened_invariants f pre post req ens =
+    action_except_full a opened_invariants pre post (req_to_act_req req) (ens_to_act_ens ens)
 
 let return (a:Type u#a)
    (x:a)
    (opened_invariants:inames)
-   (#[@@ framing_implicit] p:a -> slprop u#1)
-  : atomic_repr a opened_invariants unobservable (p x) p
+   (#[@@@ framing_implicit] p:a -> slprop u#1)
+  : atomic_repr a opened_invariants unobservable (p x) p (return_req (p x)) (return_ens a x p)
   = fun _ -> x
 
 #push-options "--fuel 0 --ifuel 0"
@@ -59,21 +110,10 @@ let interp_trans_left
           p2 `star` (frame `star` locks_invariant o m);
     }
 
-let bind (a:Type u#a) (b:Type u#b)
-   (opened:inames)
-   (o1:observability)
-   (o2:observability)
-   (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-   (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:a -> post_t b)
-   (#[@@ framing_implicit] post:post_t b)
-   (#[@@ framing_implicit] p1:squash (can_be_split_forall post_f pre_g))
-   (#[@@ framing_implicit] p2:squash (can_be_split_post post_g post))
-   (f:atomic_repr a opened o1 pre_f post_f)
-   (g:(x:a -> atomic_repr b opened o2 (pre_g x) (post_g x)))
-  : Pure (atomic_repr b opened (join_obs o1 o2) pre_f post)
-         (requires obs_at_most_one o1 o2)
-         (ensures fun _ -> True)
-  = fun frame ->
+let bind (a:Type u#a) (b:Type u#b) opened o1 o2
+   #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #post #p1 #p2
+   f g
+ = fun frame ->
     let m0:full_mem = NMSTTotal.get() in
     let x = f frame in
     let m1:full_mem = NMSTTotal.get() in
@@ -83,18 +123,8 @@ let bind (a:Type u#a) (b:Type u#b)
     interp_trans_left opened (post_g x y) (post y) frame m2;
     y
 
-let subcomp (a:Type)
-  (opened:inames)
-  (o1:observability)
-  (o2:observability)
-  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (#[@@ framing_implicit] pre_g:pre_t) (#[@@ framing_implicit] post_g:post_t a)
-  (#[@@ framing_implicit] p1:squash (can_be_split pre_g pre_f))
-  (#[@@ framing_implicit] p2:squash (can_be_split_forall post_f post_g))
-  (f:atomic_repr a opened o1 pre_f post_f)
-: Pure (atomic_repr a opened o2 pre_g post_g)
-       (requires o1 == observable ==> o2 == observable)
-       (ensures fun _ -> True)
+let subcomp (a:Type) opened o1 o2
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #p1 #p2 f
  = fun frame ->
      let m0:full_mem = NMSTTotal.get() in
      interp_trans_left opened pre_g pre_f frame m0;
@@ -108,25 +138,10 @@ let equiv_middle_left_assoc (a b c d:slprop)
   = star_associative a b c;
     star_congruence ((a `star` b) `star` c) d (a `star` (b `star` c)) d
 
-let bind_steela_steela (a:Type) (b:Type)
-  (opened:inames)
-  (o1:observability)
-  (o2:observability)
-  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:a -> post_t b)
-  (#[@@ framing_implicit] frame_f:slprop) (#[@@ framing_implicit] frame_g:a -> slprop)
-  (#[@@ framing_implicit] post:post_t b)
-  (#[@@ framing_implicit] p:squash (can_be_split_forall
-    (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
-  (#[@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
-  (f:atomic_repr a opened o1 pre_f post_f)
-  (g:(x:a -> atomic_repr b opened o2 (pre_g x) (post_g x)))
-: Pure (atomic_repr b opened (join_obs o1 o2)
-    (pre_f `star` frame_f)
-    post)
-    (requires obs_at_most_one o1 o2)
-    (ensures fun _ -> True)
-
+#push-options "--z3rlimit_factor 2"
+let bind_steela_steela a b opened o1 o2
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #p #p2
+  f g
   = fun frame ->
     let m0:full_mem = NMSTTotal.get() in
     // Initially:
@@ -152,7 +167,6 @@ let bind_steela_steela (a:Type) (b:Type)
 
     let y = g x (frame_g x `star` frame) in
     let m2:full_mem = NMSTTotal.get() in
-
     // Post-condition of executing g
     assert (interp (post_g x y `star` (frame_g x `star` frame) `star` locks_invariant opened m2) m2);
     // By AC-rewriting
@@ -162,25 +176,10 @@ let bind_steela_steela (a:Type) (b:Type)
     interp_trans_left opened (post_g x y `star` frame_g x) (post y) frame m2;
 
     y
+#pop-options
 
-let bind_steela_steelaf (a:Type) (b:Type)
-  (opened:inames)
-  (o1:observability)
-  (o2:observability)
-  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:a -> post_t b)
-  (#[@@ framing_implicit] frame_f:slprop)
-  (#[@@ framing_implicit] post:post_t b)
-  (#[@@ framing_implicit] p:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
-  (#[@@ framing_implicit] p2:squash (can_be_split_post post_g post))
-  (f:atomic_repr a opened o1 pre_f post_f)
-  (g:(x:a -> atomic_repr b opened o2 (pre_g x) (post_g x)))
-: Pure (atomic_repr b opened (join_obs o1 o2)
-         (pre_f `star` frame_f)
-         post)
-       (requires obs_at_most_one o1 o2)
-       (ensures fun _ -> True)
-
+let bind_steela_steelaf a b opened o1 o2
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #post #p #p2 f g
   = fun frame ->
     let m0:full_mem = NMSTTotal.get() in
     // Initially
@@ -204,24 +203,8 @@ let bind_steela_steelaf (a:Type) (b:Type)
 
     y
 
-let bind_steelaf_steela (a:Type) (b:Type)
-  (opened:inames)
-  (o1:observability)
-  (o2:observability)
-  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:a -> post_t b)
-  (#[@@ framing_implicit] frame_g:a -> slprop)
-  (#[@@ framing_implicit] post:post_t b)
-  (#[@@ framing_implicit] p:squash (can_be_split_forall post_f (fun x -> pre_g x `star` frame_g x)))
-  (#[@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
-  (f:atomic_repr a opened o1 pre_f post_f)
-  (g:(x:a -> atomic_repr b opened o2 (pre_g x) (post_g x)))
-: Pure (atomic_repr b opened (join_obs o1 o2)
-        pre_f
-        post)
-    (requires obs_at_most_one o1 o2)
-    (ensures fun _ -> True)
-
+let bind_steelaf_steela (a:Type) (b:Type) opened o1 o2
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_g #post #p #p2 f g
   = fun frame ->
     let m0:full_mem = NMSTTotal.get() in
     let x = f frame in
@@ -247,38 +230,16 @@ let bind_steelaf_steela (a:Type) (b:Type)
 
     y
 
-let bind_pure_steela_ (a:Type) (b:Type)
-  (opened_invariants:inames)
-  (o:observability)
-  (wp:pure_wp a)
-  (#[@@ framing_implicit] pre:pre_t) (#[@@ framing_implicit] post:post_t b)
-  (f:eqtype_as_type unit -> PURE a wp) (g:(x:a -> atomic_repr b opened_invariants o pre post))
-: Pure (atomic_repr b opened_invariants o
-    pre
-    post)
-  (requires wp (fun _ -> True))
-  (ensures fun _ -> True)
-  = fun frame ->
+let bind_pure_steela_ (a:Type) (b:Type) opened o #wp #pre #post #req #ens f g
+= fun frame ->
     let x = f () in
     g x frame
 
 module Sems = Steel.Semantics.Hoare.MST
 module Ins = Steel.Semantics.Instantiate
 
-let bind_steelatomicf_steelf (a:Type) (b:Type)
-  (is_ghost:observability)
-  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:a -> post_t b)
-  (#[@@ framing_implicit] req_g:(x:a -> req_t (pre_g x)))
-  (#[@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
-  (#[@@ framing_implicit] post:post_t b)
-  (#[@@ framing_implicit] p1:squash (can_be_split_forall post_f pre_g))
-  (#[@@ framing_implicit] p2:squash (can_be_split_post post_g post))
-  (f:atomic_repr a Set.empty is_ghost pre_f post_f)
-  (g:(x:a -> Steel.Effect.repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
-: Steel.Effect.repr b pre_f post
-    (bind_req_atomicf_steelf req_g)
-    (bind_ens_atomicf_steelf ens_g post p2)
+let bind_steelatomicf_steelf (a:Type) (b:Type) is_ghost
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #post #p1 #p2 f g
 = fun frame ->
     let m0:full_mem = NMSTTotal.get() in
     let x = f frame in
@@ -289,23 +250,8 @@ let bind_steelatomicf_steelf (a:Type) (b:Type)
     interp_trans_left Set.empty (post_g x y) (post y) frame m2;
     y
 
-let bind_steelatomic_steelf (a:Type) (b:Type)
-  (o:observability)
-  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:a -> post_t b)
-  (#[@@ framing_implicit] req_g:(x:a -> req_t (pre_g x)))
-  (#[@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
-  (#[@@ framing_implicit] frame_f:slprop)
-  (#[@@ framing_implicit] post:post_t b)
-  (#[@@ framing_implicit] p:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
-  (#[@@ framing_implicit] p2: squash (can_be_split_post post_g post))
-  (f:atomic_repr a Set.empty o pre_f post_f)
-  (g:(x:a -> Steel.Effect.repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
-: Steel.Effect.repr b
-    (pre_f `star` frame_f)
-    post
-    (bind_steelatomic_steelf_req req_g frame_f p)
-    (bind_steelatomic_steelf_ens ens_g frame_f post p p2)
+let bind_steelatomic_steelf (a:Type) (b:Type) o
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #post #p #p2 f g
 = fun frame ->
     let m0:full_mem = NMST.get() in
 
@@ -331,24 +277,8 @@ let bind_steelatomic_steelf (a:Type) (b:Type)
 
 #push-options "--z3rlimit 50"
 
-let bind_steelatomic_steel (a:Type) (b:Type)
-  (o:observability)
-  (#[@@ framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a)
-  (#[@@ framing_implicit] pre_g:a -> pre_t) (#[@@ framing_implicit] post_g:a -> post_t b)
-  (#[@@ framing_implicit] req_g:(x:a -> req_t (pre_g x)))
-  (#[@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
-  (#[@@ framing_implicit] frame_f:slprop) (#[@@ framing_implicit] frame_g:a -> slprop)
-  (#[@@ framing_implicit] post:post_t b)
-  (#[@@ framing_implicit] p:squash (can_be_split_forall
-    (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
-  (#[@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
-  (f:atomic_repr a Set.empty o pre_f post_f)
-  (g:(x:a -> Steel.Effect.repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
-: Steel.Effect.repr b
-    (pre_f `star` frame_f)
-    post
-    (bind_steelatomic_steel_req req_g frame_f frame_g p)
-    (bind_steelatomic_steel_ens ens_g frame_f frame_g post p p2)
+let bind_steelatomic_steel (a:Type) (b:Type) o
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #p #p2 f g
 = fun frame ->
     let m0:full_mem = NMST.get() in
 
@@ -385,18 +315,23 @@ let bind_steelatomic_steel (a:Type) (b:Type)
 
 #pop-options
 
-let subcomp_atomic_steel (a:Type)
-  (#[@@framing_implicit] pre_f:pre_t) (#[@@ framing_implicit] post_f:post_t a) (is_ghost:observability)
-  (f:atomic_repr a Set.empty is_ghost pre_f post_f)
-: Steel.Effect.repr a pre_f post_f (subcomp_req_atomic_steel a pre_f) (subcomp_ens_atomic_steel pre_f post_f)
-= fun frame -> f frame
+let subcomp_atomic_steel (a:Type) is_ghost
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #p1 #p2 f
+  = fun frame ->
+     let m0:full_mem = NMSTTotal.get() in
+     interp_trans_left Set.empty pre_g pre_f frame m0;
+     let x = f frame in
+     let m1:full_mem = NMSTTotal.get () in
+     interp_trans_left Set.empty (post_f x) (post_g x) frame m1;
+     x
 
-let lift_atomic_to_steelT f = f()
 let as_atomic_action f = SteelAtomic?.reflect f
 let new_invariant i p = SteelAtomic?.reflect (Steel.Memory.new_invariant i p)
-let with_invariant i f = SteelAtomic?.reflect (Steel.Memory.with_invariant i (reify (f())))
+let with_invariant #a #fp #fp' #opened i f =
+  SteelAtomic?.reflect (Steel.Memory.with_invariant #a #fp #fp' #opened i (reify (f())))
 let frame frame f = SteelAtomic?.reflect (Steel.Memory.frame frame (reify (f ())))
-let change_slprop p q proof = SteelAtomic?.reflect (Steel.Memory.change_slprop p q proof)
+let change_slprop #opened p q proof =
+  SteelAtomic?.reflect (Steel.Memory.change_slprop #opened p q proof)
 
 let h_assert_atomic p = change_slprop p p (fun m -> ())
 let h_intro_emp_l p = change_slprop p (emp `star` p) (fun m -> emp_unit p; star_commutative p emp)
@@ -409,10 +344,7 @@ let intro_h_exists x p = change_slprop (p x) (h_exists p) (fun m -> Steel.Memory
 let intro_h_exists_erased x p = change_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists (Ghost.reveal x) p m)
 let h_affine p q = change_slprop (p `star` q) p (fun m -> affine_star p q m)
 
-// open NMSTTotal
-// open MSTTotal
-
-let witness_h_exists #a #u #p s = SteelAtomic?.reflect (Steel.Memory.witness_h_exists p)
+let witness_h_exists #a #u #p s = SteelAtomic?.reflect (Steel.Memory.witness_h_exists #u p)
 let lift_h_exists_atomic #a #u p = SteelAtomic?.reflect (Steel.Memory.lift_h_exists #u p)
 let h_exists_cong_atomic p q = change_slprop (h_exists p) (h_exists q) (fun m -> h_exists_cong p q)
 let elim_pure #uses p = SteelAtomic?.reflect (Steel.Memory.elim_pure #uses p)

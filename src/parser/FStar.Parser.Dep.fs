@@ -776,7 +776,10 @@ let collect_one
         | TyconRecord (_, binders, k, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
-            List.iter (fun (_, t) -> collect_term t) identterms
+            List.iter (fun (_, aq, attrs, t) -> 
+                collect_aqual aq;
+                attrs |> List.iter collect_term;
+                collect_term t) identterms
         | TyconVariant (_, binders, k, identterms) ->
             collect_binders binders;
             iter_opt k collect_term;
@@ -906,9 +909,10 @@ let collect_one
             collect_term t
         | Requires (t, _)
         | Ensures (t, _)
-        | Decreases (t, _)
         | Labeled (t, _, _) ->
             collect_term t
+        | LexList l -> List.iter collect_term l
+        | Decreases (t, _) -> collect_term t
         | Quote (t, _)
         | Antiquote t
         | VQuote t ->

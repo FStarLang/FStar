@@ -119,36 +119,3 @@ val shuffled (p : M.slprop)
 let shuffled p q =
   by_tactic_seman canon (squash (p `M.equiv` q))
 #pop-options
-
-(*** Small examples for frame inference ***)
-
-#push-options "--no_tactics"
-
-open Steel.Semantics.Instantiate
-open Steel.Memory
-module Mem = Steel.Memory
-open Steel.EffectX
-
-(* Some helpers *)
-private
-val reshuffle0 (#p #q : slprop)
-              (_ : squash (p `equiv` q))
-   : SteelXT unit p (fun _ -> q)
-
-private
-let reshuffle0 #p #q peq = Steel.EffectX.Atomic.change_slprop p q (fun m -> ())
-
-module T = FStar.Tactics
-
-val reshuffle (#p #q : slprop)
-              (_ : squash (T.with_tactic canon
-                                         (squash (p `equiv` q))))
-   : SteelXT unit p (fun _ -> q)
-
-#push-options "--no_tactics" (* GM: This should not be needed *)
-
-let reshuffle #p #q peq =
-  T.by_tactic_seman canon (squash (p `equiv` q));
-  reshuffle0 ()
-
-#pop-options
