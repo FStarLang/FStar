@@ -36,4 +36,11 @@ val member (#a: eqtype) (ptr: t a) (v: a)
     (requires fun _ -> True)
     (ensures fun h0 b h1 ->
         v_linked_tree ptr h0 == v_linked_tree ptr h1 /\
-        Spec.mem (v_linked_tree ptr h0) v <==> b)
+        (Spec.mem (v_linked_tree ptr h0) v <==> b))
+
+val rotate_left (#a: Type) (ptr: t a)
+    : SteelSel (t a) (linked_tree ptr) (fun ptr' -> linked_tree ptr')
+    (requires fun _ -> True)
+    (ensures (fun h0 ptr' h1 ->
+        Some (v_linked_tree ptr' h1) == Spec.rotate_left (v_linked_tree ptr h0)))
+        
