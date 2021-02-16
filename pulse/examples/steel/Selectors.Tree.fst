@@ -70,12 +70,17 @@ let rec member ptr v =
       mleft || mright
     )
   )
+assume val sladmit (#a:Type)
+            (#[@@framing_implicit] p:pre_t)
+            (#[@@framing_implicit] q:post_t a)
+            (_:unit)
+  : SteelSelF a p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
 
 #push-options "--ifuel 1 --fuel 2"
 let rotate_left #a ptr =
+  let h = get #(linked_tree ptr) () in
   if is_null_t ptr then (
     elim_linked_tree_leaf ptr;
-    let h = get #(linked_tree ptr) () in
     assert(Spec.rotate_left (v_linked_tree ptr h) == None);
     assert(False);
     noop ();
@@ -83,15 +88,24 @@ let rotate_left #a ptr =
   ) else (
     let x_node = unpack_tree ptr in
     let x = get_data x_node in
-    admit();
-    let z_node = unpack_tree (get_right x_node) in
-    let z = get_data z_node in
-    let new_subnode = mk_node x (get_left x_node) (get_left z_node) in
-    let new_node = mk_node z ptr (get_right z_node) in
-    write (get_right x_node) new_subnode;
-    write ptr new_node;
-    pack_tree ptr (get_left x_node) (get_left z_node);
-    pack_tree (get_right x_node) ptr (get_right z_node);
-    (get_right x_node)
+    if is_null_t (get_right x_node) then (
+      //elim_linked_tree_leaf (get_right x_node);
+      //assert(Spec.rotate_left (v_linked_tree ptr h) == None);
+      //assert(False);
+      //pack_tree ptr (get_left x_node) (get_left x_node);
+      sladmit ();
+      ptr
+    ) else (
+         admit();
+      let z_node = unpack_tree (get_right x_node) in
+      let z = get_data z_node in
+      let new_subnode = mk_node x (get_left x_node) (get_left z_node) in
+      let new_node = mk_node z ptr (get_right z_node) in
+      write (get_right x_node) new_subnode;
+      write ptr new_node;
+      pack_tree ptr (get_left x_node) (get_left z_node);
+      pack_tree (get_right x_node) ptr (get_right z_node);
+      (get_right x_node)
+    )
   )
 #pop-options
