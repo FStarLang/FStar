@@ -263,16 +263,10 @@ and visit_comp (ff : term -> Tac unit) (c : comp) : Tac unit =
   match cv with
   | C_Total ret decr ->
       visit_tm ff ret;
-      (match decr with
-        | None -> ()
-        | Some d -> visit_tm ff d
-      )
+      iter (visit_tm ff) decr
   | C_GTotal ret decr ->
       visit_tm ff ret;
-      (match decr with
-        | None -> ()
-        | Some d -> visit_tm ff d
-      )
+      iter (visit_tm ff) decr
 
   | C_Lemma pre post pats ->
       visit_tm ff pre;

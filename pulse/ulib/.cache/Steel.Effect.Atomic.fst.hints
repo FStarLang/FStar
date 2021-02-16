@@ -1,5 +1,5 @@
 [
-  " 7≥'3ê.‰bÒÂèzÀGÁ",
+  "óÊü–\t\bäl¢ï|NDú\u0003A",
   [
     [
       "Steel.Effect.Atomic.has_eq_observability",
@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "41b2012e681c7b7523a624ef5d9e6575"
+      "d6059e3139051e85fd6719bc2a41356f"
     ],
     [
       "Steel.Effect.Atomic.join_obs",
@@ -22,7 +22,7 @@
       1,
       [ "@query" ],
       0,
-      "9ea0135b7aefd34babee52728edb4d9c"
+      "9b606510b43d80cbe41e168dfeda221a"
     ],
     [
       "Steel.Effect.Atomic.return",
@@ -31,7 +31,7 @@
       1,
       [ "@query", "equation_Steel.Memory.preserves_frame" ],
       0,
-      "a70cc1bedf3b383becd35bcd55a9bbdb"
+      "7edf5ab709fe83331a82da628916a7e2"
     ],
     [
       "Steel.Effect.Atomic.bind",
@@ -40,7 +40,7 @@
       1,
       [ "@query", "equation_Steel.Memory.preserves_frame" ],
       0,
-      "9363ccf56ee33fd4d57355d98bc91c01"
+      "bfc942279cd7e1b629cb9cc1e998ff13"
     ],
     [
       "Steel.Effect.Atomic.lift_pure_steel_atomic",
@@ -63,7 +63,7 @@
         "typing_Tm_abs_97d21a1c001c87060a53b271423aee21"
       ],
       0,
-      "f305d93449299ff4168764e6a6be64bd"
+      "f8174e10325d64e8b959e78763e0a155"
     ],
     [
       "Steel.Effect.Atomic.h_assert_atomic",
@@ -72,7 +72,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Atomic.obs_at_most_one" ],
       0,
-      "d529b20993a3916a400a7737ab7d4ce2"
+      "a1f8dd4b2e8e1b99b94f9bdb06d2fc10"
     ],
     [
       "Steel.Effect.Atomic.h_intro_emp_l",
@@ -84,7 +84,7 @@
         "equation_Steel.Memory.equiv"
       ],
       0,
-      "c913547f1373b950d51352190276fa12"
+      "d0bd92144ccd51463dc1ccc9e04c9e70"
     ],
     [
       "Steel.Effect.Atomic.h_elim_emp_l",
@@ -96,7 +96,7 @@
         "lemma_Steel.Memory.affine_star_smt", "typing_Steel.Memory.emp"
       ],
       0,
-      "0c14977df6873300b7d1a7973ed73bf8"
+      "f67cfcc5673bd71a19fca531579d2ea6"
     ],
     [
       "Steel.Effect.Atomic.intro_pure",
@@ -110,7 +110,7 @@
         "refinement_interpretation_Tm_refine_ec8f072bd1b898db4252b56b0d22e79b"
       ],
       0,
-      "11a5e8a5b8488560c5bf7aa73e8c479f"
+      "f9402a4492b69f38d4358d443338d5ea"
     ],
     [
       "Steel.Effect.Atomic.h_commute",
@@ -122,7 +122,7 @@
         "equation_Steel.Memory.equiv"
       ],
       0,
-      "ef1c1e9c5f2cb4cd54ce5abb457c0374"
+      "a9e3ad44ca64192ae8bfc3b0ae673116"
     ],
     [
       "Steel.Effect.Atomic.h_assoc_left",
@@ -134,7 +134,7 @@
         "equation_Steel.Memory.equiv"
       ],
       0,
-      "91b99bc90eaa4aa3d83d80d9052ede40"
+      "b508b058b9f14838c69e9e01f36a8824"
     ],
     [
       "Steel.Effect.Atomic.h_assoc_right",
@@ -146,7 +146,7 @@
         "equation_Steel.Memory.equiv"
       ],
       0,
-      "cfbcf2fa98d95a26d3b819f8f720ed1a"
+      "bab1e248eb57c3f854794bc99e0d4d47"
     ],
     [
       "Steel.Effect.Atomic.intro_h_exists",
@@ -155,7 +155,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Atomic.obs_at_most_one" ],
       0,
-      "6cbbebe48087e518e0210b88a553f3de"
+      "7f6085881e47c2a6f8547cb84ad219af"
     ],
     [
       "Steel.Effect.Atomic.intro_h_exists_erased",
@@ -164,7 +164,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Atomic.obs_at_most_one" ],
       0,
-      "66ed8796ba2aa9994ff588d6f4eb1cb6"
+      "a78cc26e1059b055850629693dff2260"
     ],
     [
       "Steel.Effect.Atomic.h_affine",
@@ -173,7 +173,7 @@
       1,
       [ "@query", "equation_Steel.Effect.Atomic.obs_at_most_one" ],
       0,
-      "eafc81fd8cc898931a5228447594f7ca"
+      "d617bf18e5e0343d6554cd677f9fe3ba"
     ],
     [
       "Steel.Effect.Atomic.lift_h_exists_atomic",
@@ -182,7 +182,7 @@
       1,
       [ "@query" ],
       0,
-      "68aaaa1900f4c5e061729c5cd4d5a690"
+      "3f8a6f5ba60387fedd397a7a34cbcb10"
     ],
     [
       "Steel.Effect.Atomic.h_exists_cong_atomic",
@@ -196,7 +196,7 @@
         "refinement_interpretation_Tm_refine_f6a9dcb8d1d92226714555770c75297b"
       ],
       0,
-      "40016bc8212aeeef17e9390e06732ed0"
+      "5e8f68d34f3815ceac6f5bb582593344"
     ]
   ]
 ]
