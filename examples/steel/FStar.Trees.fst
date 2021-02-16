@@ -149,3 +149,20 @@ let rec insert_bst_preserves_bst
       insert_bst_preserves_forall_keys right key payload (key_right data.key);
       insert_bst_preserves_bst right key payload
     end
+
+(**** Rotations *)
+let balance_factor (#a: Type) (x: tree a) : int =
+  match x with
+  | Leaf -> 0
+  | Node data left right ->
+      (height right) - (height left)
+
+let rotate_left (#a: Type) (r: tree a) : option (tree a) =
+  match r with
+  | Node x t1 (Node z t2 t3) -> Some (Node z (Node x t1 t2) t3)
+  | _ -> None
+  
+let rotate_right (#a: Type) (r: tree a) : option (tree a) =
+  match r with
+  | Node x (Node z t1 t2) t3 -> Some (Node z t1 (Node x t2 t3))
+  | _ -> None
