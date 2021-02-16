@@ -44,7 +44,7 @@ let bind (a b : Type) (wp_v : wp a) (wp_f: a -> wp b)
 
 irreducible let refine : unit = ()
 
-let subcomp (a:Type u#uu) (w1 w2:wp a) (#[@@ refine] u:squash (forall p. w2 p ==> w1 p))
+let subcomp (a:Type u#uu) (w1 w2:wp a) (#[@@@ refine] u:squash (forall p. w2 p ==> w1 p))
     (f : repr a w1)
 : repr a w2
 = f
