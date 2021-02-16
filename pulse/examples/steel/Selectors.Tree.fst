@@ -71,25 +71,27 @@ let rec member ptr v =
     )
   )
 
-// let rotate_left #a ptr =
-//   if is_null_t ptr then (
-//     elim_linked_tree_leaf ptr; ptr
-//   ) else (
-//     let x_node = unpack_tree ptr in
-//     let x = get_data x_node in
-//     let t1 = get_left x_node in
-//     let z_ptr = get_right x_node in
-//     let z_node = unpack_tree z_ptr in
-//     let z = get_data z_node in
-//     let t2 = get_left z_node in
-//     let t3 = get_right z_node in
-//     let new_subnode = mk_node x t1 t2 in
-//     let new_node = mk_node z ptr t3 in
-//     write z_ptr new_subnode;
-//     write ptr new_node;
-//     ptr
-//   )
-  
-    
-    
-    
+#push-options "--ifuel 1 --fuel 2"
+let rotate_left #a ptr =
+  if is_null_t ptr then (
+    elim_linked_tree_leaf ptr;
+    let h = get #(linked_tree ptr) () in
+    assert(Spec.rotate_left (v_linked_tree ptr h) == None);
+    assert(False);
+    noop ();
+    ptr
+  ) else (
+    let x_node = unpack_tree ptr in
+    let x = get_data x_node in
+    admit();
+    let z_node = unpack_tree (get_right x_node) in
+    let z = get_data z_node in
+    let new_subnode = mk_node x (get_left x_node) (get_left z_node) in
+    let new_node = mk_node z ptr (get_right z_node) in
+    write (get_right x_node) new_subnode;
+    write ptr new_node;
+    pack_tree ptr (get_left x_node) (get_left z_node);
+    pack_tree (get_right x_node) ptr (get_right z_node);
+    (get_right x_node)
+  )
+#pop-options
