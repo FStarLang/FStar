@@ -166,3 +166,13 @@ let rotate_right (#a: Type) (r: tree a) : option (tree a) =
   match r with
   | Node x (Node z t1 t2) t3 -> Some (Node z t1 (Node x t2 t3))
   | _ -> None
+
+let rotate_right_left (#a: Type) (r: tree a) : option (tree a) =
+  match r with
+  | Node x t1 (Node z (Node y t2 t3) t4) -> Some (Node y (Node x t1 t2) (Node z t3 t4))
+  | _ -> None
+
+let rotate_left_right (#a: Type) (r: tree a) : option (tree a) =
+  match r with
+  | Node x (Node z t1 (Node y t2 t3)) t4 -> Some (Node y (Node z t1 t2) (Node x t3 t4))
+  | _ -> None
