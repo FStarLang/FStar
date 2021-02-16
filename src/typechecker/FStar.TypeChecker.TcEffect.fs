@@ -648,6 +648,17 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
    *   and then discharge it
    * 
    * Similarly for the g case
+   *
+   * 02/16/2021: We expect the `_` that we apply to subcomp to be instantiated
+   *             by the unifier
+   *
+   *             However, in some cases, the binders that correspond to these `_`
+   *             may be unconstrained, and hence we may fail in solving them
+   *
+   *             As an escape hatch, these binders can be decorated with
+   *             the ite_soundness_forall attribute, in which case, instead of `_`,
+   *             we use fresh names, essentially saying forall values of these
+   *             binders, the proof should work
    *)
   let _if_then_else_is_sound = Errors.with_ctx "While checking if-then-else soundness" (fun () ->
     let r = (ed |> U.get_layered_if_then_else_combinator |> must |> snd).pos in
@@ -669,7 +680,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let ite_us, ite_t, _ = if_then_else in
 
     let us, ite_t = SS.open_univ_vars ite_us ite_t in
-    let env, ite_t_applied, f_t, g_t, p_t =
+    let env, ite_t_applied, a_b, f_t, g_t, p_t =
       match (SS.compress ite_t).n with
       | Tm_abs (bs, _, _) ->
         let bs = SS.open_binders bs in
@@ -679,40 +690,57 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           |> snd
           |> List.map (fun b -> b.binder_bv)
           |> List.map S.bv_to_name
-          |> (fun l -> let (f::g::p::[]) = l in f, g, p) in
+          |> (fun l -> let [f; g; p] = l in f, g, p) in
         Env.push_binders (Env.push_univ_vars env0 us) bs,
         S.mk_Tm_app ite_t
           (bs |> List.map (fun b -> S.bv_to_name b.binder_bv, binder_aq_to_arg_aq (b.binder_qual, b.binder_attrs)))
           r,
-        f, g, p
+        bs |> List.hd, f, g, p
       | _ -> failwith "Impossible! ite_t must have been an abstraction with at least 3 binders" in
 
-    let subcomp_f, subcomp_g =
+    let env, subcomp_f, subcomp_g =
       let _, subcomp_t, subcomp_ty = stronger_repr in
       let _, subcomp_t = SS.open_univ_vars us subcomp_t in
 
-      let aqs_except_last, last_aq =
+      let bs_except_last, aqs_except_last, last_aq =
         let _, subcomp_ty = SS.open_univ_vars us subcomp_ty in
         match (SS.compress subcomp_ty).n with
         | Tm_arrow (bs, _) ->
+          let bs = SS.open_binders bs in
           let bs_except_last, last_b = bs |> List.splitAt (List.length bs - 1) in
+          bs_except_last,
           bs_except_last |> List.map (fun b -> b.binder_qual, b.binder_attrs),
           last_b |> List.hd |> (fun b -> b.binder_qual, b.binder_attrs)
         | _ -> failwith "Impossible! subcomp_ty must have been an arrow with at lease 1 binder" in
 
-     let aqs_except_last, last_aq =
-       aqs_except_last |> List.map binder_aq_to_arg_aq,
-       last_aq |> binder_aq_to_arg_aq in
+      //use the a:Type binder as in the if_then_else combinator
+      let bs_except_last =
+        let s = [NT (bs_except_last |> List.hd |> (fun b -> b.binder_bv),
+                     a_b |> (fun b -> S.bv_to_name b.binder_bv))] in
+        a_b::(bs_except_last |> List.tl |> SS.subst_binders s) in
 
-     let aux t =
-      let tun_args = aqs_except_last |> List.map (fun aq -> S.tun, aq) in
+      //add all these fresh names to env
+      //note that due to dependencies, if we have a binder with
+      //the ite_soundness_forall attribute, we may need other binders before it
+      //for well-formedness of gamma
+      let env = Env.push_binders env (List.tl bs_except_last) in
 
-      S.mk_Tm_app
-        subcomp_t
-        (tun_args@[t, last_aq])
-        r in
+      let aqs_except_last, last_aq =
+        aqs_except_last |> List.map binder_aq_to_arg_aq,
+        last_aq |> binder_aq_to_arg_aq in
 
-     aux f_t, aux g_t in
+      let aux t =
+        let args = List.fold_left2 (fun args b aq ->
+          if U.has_attribute b.binder_attrs PC.ite_soundness_forall_attr
+          then args@[S.bv_to_name b.binder_bv, aq]  //use name
+          else args@[S.tun, aq]) [] bs_except_last aqs_except_last in
+
+        S.mk_Tm_app
+          subcomp_t
+          (args@[t, last_aq])
+          r in
+
+      env, aux f_t, aux g_t in
 
     let tm_subcomp_ascribed_f, tm_subcomp_ascribed_g =
       let aux t =
