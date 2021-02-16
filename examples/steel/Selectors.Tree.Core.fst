@@ -27,7 +27,6 @@ let mk_node #a data left right = {
   right
 }
 
-let null_t #a = R.null
 let is_null_t #a ptr = R.is_null ptr
 
 let rec tree_sl' (#a: Type0) (ptr: t a) (tree: Spec.tree (node a)) : Tot slprop (decreases tree) =
@@ -71,9 +70,3 @@ let tree_sel_node (#a: Type0) (ptr: t a) : selector (Spec.tree (node a)) (tree_s
   tree_sel_node' ptr
 
 let tree_sel #a r = fun h -> tree_view (tree_sel_node r h)
-
-assume val sladmit (#a:Type)
-            (#[@@framing_implicit] p:pre_t)
-            (#[@@framing_implicit] q:post_t a)
-            (_:unit)
-  : SteelSelF a p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
