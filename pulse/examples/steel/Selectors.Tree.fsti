@@ -44,3 +44,10 @@ val rotate_left (#a: Type) (ptr: t a)
     (ensures (fun h0 ptr' h1 ->
         Spec.rotate_left (v_linked_tree ptr h0) == Some (v_linked_tree ptr' h1)
     ))
+
+val rotate_right (#a: Type) (ptr: t a)
+    : SteelSel (t a) (linked_tree ptr) (fun ptr' -> linked_tree ptr')
+    (requires fun h0 -> Some? (Spec.rotate_right (v_linked_tree ptr h0)))
+    (ensures (fun h0 ptr' h1 ->
+        Spec.rotate_right (v_linked_tree ptr h0) == Some (v_linked_tree ptr' h1)
+    ))

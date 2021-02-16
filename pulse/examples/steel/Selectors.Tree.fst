@@ -106,4 +106,34 @@ let rotate_left #a ptr =
       (get_right x_node)
     )
   )
+
+let rotate_right #a ptr =
+  let h = get #(linked_tree ptr) () in
+  if is_null_t ptr then (
+    elim_linked_tree_leaf ptr;
+    assert(Spec.rotate_right (v_linked_tree ptr h) == None);
+    assert(False);
+    noop ();
+    ptr
+  ) else (
+    let x_node = unpack_tree ptr in
+    let x = get_data x_node in
+    if is_null_t (get_left x_node) then (
+      elim_linked_tree_leaf (get_left x_node);
+      assert(Spec.rotate_right (v_linked_tree ptr h) == None);
+      assert(False);
+      pack_tree ptr (get_left x_node) (get_right x_node);
+      ptr
+    ) else (
+      let z_node = unpack_tree (get_left x_node) in
+      let z = get_data z_node in
+      let new_subnode = mk_node x (get_right z_node) (get_right x_node) in
+      let new_node = mk_node z (get_left z_node) ptr in
+      write (get_left x_node) new_node;
+      write ptr new_subnode;
+      pack_tree ptr (get_right z_node) (get_right x_node);
+      pack_tree (get_left x_node) (get_left z_node) ptr;
+      (get_left x_node)
+    )
+  )
 #pop-options
