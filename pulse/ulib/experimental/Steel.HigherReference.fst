@@ -15,9 +15,9 @@
 *)
 
 module Steel.HigherReference
-open Steel.Effect
-open Steel.Effect.Atomic
 open Steel.Memory
+open Steel.Effect.Atomic
+open Steel.Effect
 open FStar.Ghost
 open FStar.Real
 open FStar.PCM
@@ -124,6 +124,11 @@ let pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pt
     Mem.pts_to_join r (Some (Ghost.reveal x, p)) (Some (Ghost.reveal y, p)) m
   in
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
+
+let extract_injective #a #p0 #p1 #v0 #v1 r =
+  extract_info (pts_to r p0 v0 `star` pts_to r p1 v1) (v0 == v1)
+    (fun m -> pts_to_ref_injective r p0 p1 v0 v1 m);
+  change_slprop (pts_to r p1 v1) (pts_to r p1 v0) (fun _ -> ())
 
 let pts_to_framon (#a:Type) (r:ref a) (p:perm) : Lemma (is_frame_monotonic (pts_to r p)) =
   pts_to_witinv r p
@@ -351,14 +356,14 @@ let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
        (locks_invariant uses m0)
        m0;
      assert (interp ((Mem.pts_to r fv `star` pure (perm_ok full_perm)) `star` locks_invariant uses m0) m0);
-     let fv_actual = frame (pure (perm_ok full_perm)) (sel_action uses r fv) fr in
+     let fv_actual = Mem.frame (pure (perm_ok full_perm)) (sel_action uses r fv) fr in
      assert (compatible pcm_frac fv fv_actual);
      let Some (v', p) = fv_actual in
      assert (v == Ghost.hide v');
      assert (p == full_perm);
      let b =
        if eq v' v_old
-       then (frame (pure (perm_ok full_perm)) (upd_action uses r fv fv') fr; true)
+       then (Mem.frame (pure (perm_ok full_perm)) (upd_action uses r fv fv') fr; true)
        else false
      in
      b

@@ -50,7 +50,7 @@ let rmem_depends_only_on_post (#a:Type) (post:post_t a)
     mk_rmem (post x) m0 == mk_rmem (post x) (join m0 m1))
   = Classical.forall_intro_3 (rmem_depends_only_on_post' post)
 
-[@__steel_reduce__]
+[@@ __steel_reduce__]
 let req_to_act_req (#pre:pre_t) (req:req_t pre) : Sem.l_pre #state (hp_of pre) =
   rmem_depends_only_on pre;
   fun m0 -> interp (hp_of pre) m0 /\ req (mk_rmem pre m0)
@@ -58,7 +58,7 @@ let req_to_act_req (#pre:pre_t) (req:req_t pre) : Sem.l_pre #state (hp_of pre) =
 unfold
 let to_post (#a:Type) (post:post_t a) = fun x -> (hp_of (post x))
 
-[@__steel_reduce__]
+[@@ __steel_reduce__]
 let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post)
 : Sem.l_post #state #a (hp_of pre) (to_post post)
 = rmem_depends_only_on pre;
@@ -662,7 +662,7 @@ let bind_steelf_steel_aux a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g
 
 let bind_steelf_steel a b f g = norm_repr (bind_steelf_steel_aux a b f g)
 
-let bind_pure_steel_ a b wp #pre #post #req #ens f g
+let bind_pure_steel_ a b #wp #pre #post #req #ens f g
   = FStar.Monotonic.Pure.wp_monotonic_pure ();
     fun frame ->
       let x = f () in
@@ -804,6 +804,8 @@ let extract_info0 (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
 
 let extract_info p vp fact l = SteelSel?.reflect (extract_info0 p vp fact l)
 
+let sladmit _ = SteelSelF?.reflect (fun _ -> NMST.nmst_admit ())
+
 let reveal_star0 (p1 p2:vprop)
   : repr unit (p1 `star` p2) (fun _ -> p1 `star` p2)
    (fun _ -> True)
@@ -934,6 +936,8 @@ let elim_vptr (#a:Type) (r:ref a) (v:erased a) (m:mem) : Lemma
 
 let alloc x =
   let r = alloc0 x in
+  extract_info (vptr_tmp r full_perm x) () (~ (R.is_null r))
+    (fun m -> R.pts_to_not_null r full_perm x m);
   change_slprop (vptr_tmp r full_perm x) (vptr r) () x (intro_vptr r x);
   r
 

@@ -49,6 +49,17 @@ val pts_to_not_null (#a:Type u#0)
 
 val pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to r p))
 
+val extract_injective
+      (#a: Type u#0)
+      (#p0 #p1:perm)
+      (#v0 #v1: erased a)
+      (r: ref a)
+  : Steel unit
+          (pts_to r p0 v0 `star` pts_to r p1 v1)
+          (fun _ -> pts_to r p0 v0 `star` pts_to r p1 v0)
+          (requires fun _ -> True)
+          (ensures fun _ _ _ -> v0 == v1)
+
 val alloc (#a:Type) (x:a)
   : SteelT (ref a) emp (fun r -> pts_to r full_perm x)
 
