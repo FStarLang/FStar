@@ -241,7 +241,7 @@ let ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Gho
     (ensures fun _ _ _ -> v0 == v1)
   = H.ghost_pts_to_injective_eq r (raise_erased v0) (raise_erased v1)
 
-let write_ghost (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a) (x:erased a)
+let ghost_write (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a) (x:erased a)
   : SteelAtomicT unit u unobservable
     (ghost_pts_to r full_perm v)
     (fun _ -> ghost_pts_to r full_perm x)
