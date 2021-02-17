@@ -1,5 +1,6 @@
 module Steel.Utils
 open Steel.Memory
+open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.FractionalPermission
 open Steel.Reference
@@ -24,15 +25,17 @@ let lift_lemma (p:slprop) (q:prop) (l:(hmem p -> Lemma q))
   = let _ = lift_lemma_alt p q l in ()
 
 let pts_to_not_null (#a:Type)
+                    (#opened:inames)
                     (#[@@@ framing_implicit] p:perm)
                     (#[@@@ framing_implicit] v:FStar.Ghost.erased a)
                     (r:ref a)
-  : Steel unit
+  : SteelAtomic unit opened unobservable
     (pts_to r p v)
     (fun _ -> pts_to r p v)
     (fun _ -> True)
     (fun _ _ _ -> r =!= null)
-  = lift_lemma (pts_to r p v) (r =!= null) (fun m -> Steel.Reference.pts_to_not_null r p v m)
+  = Steel.Effect.Atomic.extract_info (pts_to r p v) (r =!= null)
+      (fun m -> Steel.Reference.pts_to_not_null r p v m)
 
 let change_slprop_ens (p:slprop) (q:slprop) (r:prop) (f:(m:mem -> Lemma (requires interp p m)
                                                                        (ensures interp q m /\ r)))
