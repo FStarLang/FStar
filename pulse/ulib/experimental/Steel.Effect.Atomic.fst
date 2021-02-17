@@ -333,6 +333,17 @@ let frame frame f = SteelAtomic?.reflect (Steel.Memory.frame frame (reify (f ())
 let change_slprop #opened p q proof =
   SteelAtomic?.reflect (Steel.Memory.change_slprop #opened p q proof)
 
+let extract_info0 (#opened:inames) (p:slprop) (fact:prop)
+  (proof:(m:mem) -> Lemma (requires interp p m) (ensures fact))
+  : atomic_repr unit opened unobservable p (fun _ -> p)
+      (fun _ -> True)
+      (fun _ _ _ -> fact)
+  = fun frame ->
+      let m:full_mem = NMSTTotal.get() in
+      proof m
+
+let extract_info #opened p fact proof = SteelAtomic?.reflect (extract_info0 #opened p fact proof)
+
 let h_assert_atomic p = change_slprop p p (fun m -> ())
 let h_intro_emp_l p = change_slprop p (emp `star` p) (fun m -> emp_unit p; star_commutative p emp)
 let h_elim_emp_l p = change_slprop (emp `star` p) p (fun m -> emp_unit p; star_commutative p emp)

@@ -341,7 +341,6 @@ let bind_pure_steela__ens (#a:Type) (#b:Type)
 : ens_t pre b post
 = fun m0 r m1 -> as_requires wp /\ (exists (x:a). as_ensures wp x /\ (ens x) m0 r m1)
 
-
 val bind_pure_steela_ (a:Type) (b:Type)
   (opened_invariants:inames)
   (o:observability)
@@ -350,14 +349,11 @@ val bind_pure_steela_ (a:Type) (b:Type)
   (#[@@@ framing_implicit] req:a -> req_t pre) (#[@@@ framing_implicit] ens:a -> ens_t pre b post)
   (f:eqtype_as_type unit -> PURE a wp)
   (g:(x:a -> atomic_repr b opened_invariants o pre post (req x) (ens x)))
-: Pure (atomic_repr b opened_invariants o
+: atomic_repr b opened_invariants o
     pre
     post
     (bind_pure_steela__req wp req)
     (bind_pure_steela__ens wp ens)
-  )
-  (requires wp (fun _ -> True))
-  (ensures fun _ -> True)
 
 polymonadic_bind (PURE, SteelAtomicF) |> SteelAtomicF = bind_pure_steela_
 
@@ -489,6 +485,11 @@ val change_slprop (#opened_invariants:inames)
                   (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
   : SteelAtomicT unit opened_invariants unobservable p (fun _ -> q)
 
+val extract_info (#opened_invariants:inames) (p:slprop) (fact:prop)
+  (l:(m:mem) -> Lemma (requires interp p m) (ensures fact))
+  : SteelAtomic unit opened_invariants unobservable p (fun _ -> p)
+      (fun _ -> True)
+      (fun _ _ _ -> fact)
 
 // Some utilities
 let return_atomic #a #opened_invariants #p (x:a)

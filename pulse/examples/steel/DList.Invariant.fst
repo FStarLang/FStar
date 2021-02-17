@@ -224,7 +224,7 @@ let dlist_not_null (#a:Type)
                   (dlist left p right (hd :: tl))
                   (fun _ -> ());
     elim_dlist_cons left p right hd tl;
-    U.pts_to_not_null #_ #full_perm #(Ghost.hide hd) p;
+    U.pts_to_not_null #_ #_ #full_perm #(Ghost.hide hd) p;
     intro_dlist_cons left p right hd tl;
     change_slprop (dlist left p right (hd :: tl))
                   (dlist left p right rep)
