@@ -105,7 +105,7 @@ let change_eqF (#[@@@ framing_implicit] p:slprop)
   : SteelF unit p (fun _ -> q)
     (requires fun _ -> p==q)
     (ensures fun _ _ _ -> True)
-  = let _ = change_slprop p q (fun _ -> ()) in noop #emp ()
+  = let _ = change_slprop p q (fun _ -> ()) in noop ()
 
 [@expect_failure] //fails on a proof of (p==q) with a bad error location; not sure why it should be different than swap3. I had expected it to work better, actually
 let swap4 (#a:_) (#v0 #v1:erased a) (r0 r1:ref a)

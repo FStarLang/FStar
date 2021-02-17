@@ -459,7 +459,7 @@ let intro_pure #_ p = change_slprop emp (pure p) (fun m -> pure_interp p m)
 let h_commute p q = change_slprop (p `star` q) (q `star` p) (fun m -> star_commutative p q)
 let h_assoc_left p q r = change_slprop ((p `star` q) `star` r) (p `star` (q `star` r)) (fun m -> star_associative p q r)
 let h_assoc_right p q r = change_slprop (p `star` (q `star` r)) ((p `star` q) `star` r) (fun m -> star_associative p q r)
-let intro_h_exists x p = change_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists x p m)
+let intro_exists x p = change_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists x p m)
 let intro_h_exists_erased x p = change_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists (Ghost.reveal x) p m)
 let h_affine p q = change_slprop (p `star` q) p (fun m -> affine_star p q m)
 

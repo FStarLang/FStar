@@ -133,17 +133,6 @@ let higher_ref_pts_to_injective_eq #a #opened #p0 #p1 #v0 #v1 r =
 let pts_to_framon (#a:Type) (r:ref a) (p:perm) : Lemma (is_frame_monotonic (pts_to r p)) =
   pts_to_witinv r p
 
-let drop (p:slprop)
-  : SteelT unit p (fun _ -> emp)
-  = change_slprop _ _ (fun m -> emp_unit p; affine_star p emp m)
-
-let comm (#opened_invariants:inames)
-         (#p #q:slprop) (_:unit)
-  : SteelAtomicT unit opened_invariants unobservable
-                (p `star` q)
-                (fun x -> q `star` p)
-  = change_slprop (p `star` q) (q `star` p) (fun m -> Mem.star_commutative p q)
-
 let intro_perm_ok #uses (p:perm{perm_ok p}) (q:slprop)
   : SteelAtomicT unit uses unobservable
                 q
@@ -163,10 +152,6 @@ let intro_pts_to (p:perm{perm_ok p}) #a #uses (#v:erased a) (r:ref a) (_:unit)
                 (pts_to_raw r p v)
                 (fun _ -> pts_to r p v)
   = intro_perm_ok p _
-
-let drop_l_atomic #uses (p q:slprop)  ()
-  : SteelAtomicT unit uses unobservable (p `star` q) (fun _ -> q)
-  = change_slprop (p `star` q) q (affine_star p q)
 
 let alloc #a x =
   let v = Some (x, full_perm) in
