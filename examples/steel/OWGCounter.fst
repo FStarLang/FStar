@@ -36,6 +36,7 @@ open Steel.FractionalPermission
 open Steel.Reference
 open Steel.SpinLock
 
+open Steel.Effect.Atomic
 open Steel.Effect
 
 module R = Steel.Reference
@@ -85,7 +86,7 @@ let rewrite_perm(#a:Type) (#v:G.erased a) (r:ref a) (p1 p2:P.perm)
       (fun _ -> pts_to r p2 v)
       (fun _ -> p1 == p2)
       (fun _ _ _ -> True)
-  = A.change_slprop (pts_to r p1 v)
+  = change_slprop (pts_to r p1 v)
                   (pts_to r p2 v)
                   (fun _ -> ())
 
@@ -195,7 +196,7 @@ let incr (r:ref int) (r1 r2:ref (G.erased int))
                     (fun _ -> ());
 
       intro_exists (fst (G.reveal w), g_incr n_ghost_contrib) (lock_inv_pred r r1 r2);
-      A.change_slprop (pts_to r2 half_perm (G.hide (g_incr n_ghost_contrib)))
+      change_slprop (pts_to r2 half_perm (G.hide (g_incr n_ghost_contrib)))
                     (incr_slprop r1 r2 (g_incr n_ghost_contrib) b)
                     (fun _ -> ())
     end;
