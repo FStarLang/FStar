@@ -151,19 +151,17 @@ let if_then_else_ens (#a:Type) (#pre_f:pre_t) (#pre_g:pre_t) (#post_f:post_t a) 
 
 let if_then_else (a:Type)
   (o:inames)
-  (o1:observability)
-  (o2:observability)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] pre_g:pre_t)
   (#[@@@ framing_implicit] post_f:post_t a) (#[@@@ framing_implicit] post_g:post_t a)
   (#[@@@ framing_implicit] req_then:req_t pre_f) (#[@@@ framing_implicit] ens_then:ens_t pre_f a post_f)
   (#[@@@ framing_implicit] req_else:req_t pre_g) (#[@@@ framing_implicit] ens_else:ens_t pre_g a post_g)
   (#[@@@ framing_implicit] s_pre: squash (can_be_split pre_f pre_g))
   (#[@@@ framing_implicit] s_post: squash (equiv_forall post_f post_g))
-  (f:atomic_repr a o o1 pre_f post_f req_then ens_then)
-  (g:atomic_repr a o o2 pre_g post_g req_else ens_else)
+  (f:atomic_repr a o unobservable pre_f post_f req_then ens_then)
+  (g:atomic_repr a o unobservable pre_g post_g req_else ens_else)
   (p:bool)
 : Type
-= atomic_repr a o (join_obs o1 o2) pre_f post_f
+= atomic_repr a o unobservable pre_f post_f
        (if_then_else_req s_pre req_then req_else p)
        (if_then_else_ens s_pre s_post ens_then ens_else p)
 
