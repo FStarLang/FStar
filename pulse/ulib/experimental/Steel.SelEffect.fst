@@ -804,6 +804,8 @@ let extract_info0 (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
 
 let extract_info p vp fact l = SteelSel?.reflect (extract_info0 p vp fact l)
 
+let sladmit _ = SteelSelF?.reflect (fun _ -> NMST.nmst_admit ())
+
 let reveal_star0 (p1 p2:vprop)
   : repr unit (p1 `star` p2) (fun _ -> p1 `star` p2)
    (fun _ -> True)

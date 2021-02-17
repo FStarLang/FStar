@@ -447,6 +447,11 @@ val extract_info (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
       (fun h -> h p == reveal vp)
       (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
 
+val sladmit (#a:Type)
+            (#[@@@framing_implicit] p:pre_t)
+            (#[@@@framing_implicit] q:post_t a)
+            (_:unit)
+  : SteelSelF a p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
 
 val reveal_star (p1 p2:vprop)
  : SteelSel unit (p1 `star` p2) (fun _ -> p1 `star` p2)
