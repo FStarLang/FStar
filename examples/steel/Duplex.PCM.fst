@@ -118,6 +118,7 @@ let pcm (prot:dprot) : pcm (t prot) =
 }
 
 open Steel.Memory
+open Steel.Effect.Atomic
 open Steel.Effect
 open FStar.Ghost
 module Mem = Steel.Memory
@@ -875,6 +876,7 @@ let rec recv_a #p c next tr =
   else (
       compatible_a_r_v_is_ahead tr tr';
       let x = next_message tr tr'.tr in
+      noop ();
       change_slprop
         (pts_to c (if trace_length tr >= trace_length tr'.tr then A_R next tr else extend_node_a_r tr tr'))
         (endpoint_a c (step next x) (extend tr x))
@@ -917,6 +919,7 @@ let rec recv_b #p c next tr =
   ) else (
       compatible_b_r_v_is_ahead tr tr';
       let x = next_message tr tr'.tr in
+      noop ();
       change_slprop
         (pts_to c (if trace_length tr >= trace_length tr'.tr then B_R next tr else extend_node_b_r tr tr'))
         (endpoint_b c (step next x) (extend tr x))

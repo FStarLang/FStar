@@ -37,6 +37,7 @@ let pcm_t #a #b : pcm (t a b) = FStar.PCM.({
   refine = (fun x -> Both? x \/ Neither? x)
 })
 open Steel.Memory
+open Steel.Effect.Atomic
 open Steel.Effect
 
 let upd_first #a #b (r:ref (t a b) pcm_t) (x:Ghost.erased a) (y:a)

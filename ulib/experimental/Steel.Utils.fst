@@ -40,7 +40,7 @@ let pts_to_not_null (#a:Type)
 let change_slprop_ens (p:slprop) (q:slprop) (r:prop) (f:(m:mem -> Lemma (requires interp p m)
                                                                        (ensures interp q m /\ r)))
   : Steel unit p (fun _ -> q) (requires fun _ -> True) (ensures fun _ _ _ -> r)
-  = Steel.Effect.change_slprop p (q `star` pure r)
+  = change_slprop p (q `star` pure r)
                                  (fun m -> f m;
                                         Steel.Memory.emp_unit q;
                                         Steel.Memory.pure_star_interp q r m);
@@ -53,7 +53,7 @@ let pure_as_ens (#[@@@framing_implicit] p:prop) ()
 
 let slassert (p:slprop)
   : SteelT unit p (fun _ -> p)
-  = noop()
+  = noop (); ()
 
 let pts_to_injective_eq #a #p #q (r:ref a) (v0 v1:Ghost.erased a)
   : Steel unit (pts_to r p v0 `star` pts_to r q v1)
@@ -81,17 +81,17 @@ let rewrite #a (#[@@@framing_implicit]p:a -> slprop)(x y:a)
   : Steel unit (p x) (fun _ -> p y)
     (requires fun _ -> x == y)
     (ensures fun _ _ _ -> True)
-  = Steel.Effect.change_slprop (p x) (p y) (fun _ -> ())
+  = change_slprop (p x) (p y) (fun _ -> ())
 
 let extract_pure (p:prop)
   : Steel unit (pure p) (fun _ -> pure p) (fun _ -> True) (fun _ _ _ -> p)
   = elim_pure p;
-    Steel.Effect.intro_pure p
+    intro_pure p
 
 let dup_pure (p:prop)
   : SteelT unit (pure p) (fun _ -> pure p `star` pure p)
   = extract_pure p;
-    Steel.Effect.intro_pure p
+    intro_pure p
 
 let emp_unit (p:slprop)
   : Lemma (((p `star` emp) `equiv` p) /\
