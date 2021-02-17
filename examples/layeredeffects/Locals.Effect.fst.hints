@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "789b3e34900f1f3d4902147c50c00ade"
+      "41fc6426b151a6921ea10a1de82ffe6e"
     ],
     [
       "Locals.Effect.__proj__Mklocals_t'__item__m",
@@ -27,7 +27,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "9a3c363fab73eb501d3fe04d1a1733e9"
+      "daaf57b4b05f33e365704f45527056a0"
     ],
     [
       "Locals.Effect.__proj__Mklocals_t'__item__m",
@@ -41,7 +41,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "5557da1e1ea6cb5a7629d95790fedbe0"
+      "6065b4cf017b22e621299e5c1ef3db12"
     ],
     [
       "Locals.Effect.locals_t",
@@ -55,7 +55,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "6cb77b2130a06dc0ab9be0625b718b07"
+      "cf7649e3ea10bf192f2462bd9b410bd3"
     ],
     [
       "Locals.Effect.return",
@@ -64,7 +64,7 @@
       1,
       [ "@query" ],
       0,
-      "7476c28f60b4c9a1b58f6bc3fffcfd9d"
+      "67ef8b8e15e5b571ac5203eb5fba94ff"
     ],
     [
       "Locals.Effect.bind",
@@ -95,7 +95,7 @@
         "typing_Tm_abs_e8384b68ad10198c6025b7ea0d9e51c2"
       ],
       0,
-      "a4519ab6d5c5d40d811ce76045e46452"
+      "3f0a2e51566867446ec10b59f0d45ba8"
     ],
     [
       "Locals.Effect.subcomp",
@@ -115,7 +115,7 @@
         "typing_Tm_abs_83a87d25257ae4e73048e71a976d1d67"
       ],
       0,
-      "29f57bfe8d3cc813a2e64fa1c5ea2c03"
+      "e8e1bb4f664a009a559c7f0ddec7b30d"
     ],
     [
       "Locals.Effect.LVARS",
@@ -127,7 +127,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "3a4550b3430a2ad9066c4a7214f3a190"
+      "314accafe6c19e39ce3f0a297235f13d"
     ],
     [
       "Locals.Effect.LVARS",
@@ -139,7 +139,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "557e8d16dc9798eb22081062f0152298"
+      "3d4173fb4b52c75bd29bf0b75031643c"
     ],
     [
       "Locals.Effect.lift_pure_lvars",
@@ -165,7 +165,7 @@
         "typing_Tm_abs_f4e50037218c944d065aa19d84762d0b"
       ],
       0,
-      "761c73684a11cb17f2a99f614bed4abe"
+      "845860dfbb30bf9129e5ad15c7425586"
     ],
     [
       "Locals.Effect.create",
@@ -203,7 +203,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236"
       ],
       0,
-      "2b39d4b5de0fdbbadc42155a1ea3304b"
+      "2c007ed5284a84aa60d62301531b9e16"
     ],
     [
       "Locals.Effect.read",
@@ -218,7 +218,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "81801dd7cfbe699ce9da201f6fff07ba"
+      "7ad3e5f4d310fe63d313107868b1956b"
     ],
     [
       "Locals.Effect.write",
@@ -253,7 +253,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "e6631455caf85513cc1318fca261f6f8"
+      "4bb78d2171df8283fea743f2f3acdde7"
     ],
     [
       "Locals.Effect.get",
@@ -270,7 +270,7 @@
         "typing_Locals.Effect.__proj__Mklocals_t___item__m"
       ],
       0,
-      "0ada4830470cec8c11e6cd74874685b7"
+      "630dc60a39eeeaec9b595be572122778"
     ],
     [
       "Locals.Effect.test",
@@ -313,7 +313,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "9ddeca4ffca154c26c7e7cbabe6fd3df"
+      "856ce06bb50cffa8e2af3ec93d41feb0"
     ],
     [
       "Locals.Effect.emp_locals",
@@ -327,7 +327,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "712c9ffa5bf71af53942ef863d045042"
+      "09c933e64fbc071252d7e3d9a4fea190"
     ],
     [
       "Locals.Effect.run_with_locals",
@@ -363,7 +363,7 @@
         "typing_Tm_abs_9706396db915b3a2ea86d4646a5b8236", "unit_typing"
       ],
       0,
-      "c7479f95310cf6f6b44c45a39f8aafe4"
+      "48511e64087bce5c33b69daa6e777313"
     ],
     [
       "Locals.Effect.sum",
@@ -385,7 +385,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d16b8af6679e24d63439b61acfabb859"
+      "fbe181823af622e2f5a46929d919ea94"
     ],
     [
       "Locals.Effect.test1",
@@ -412,7 +412,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "d4e593f87bb66075ac67bdedb90d112d"
+      "970f591147ca6f3a0f0a1a0c5139f747"
     ]
   ]
 ]
