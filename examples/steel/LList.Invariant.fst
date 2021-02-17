@@ -74,6 +74,7 @@ let rec llist_fragment' (#a:Type) (ptr:t a)
       pts_to ptr full_perm hd `star`
       llist_fragment' (next hd) tl
 
+(*
 let llist2  (#a:Type) (ptr:t a)
                       (l:list (cell a))
 : Tot slprop
@@ -96,6 +97,7 @@ let rec llist2_elim (#a:Type) (ptr:t a)
     norm_spec [delta; zeta] (llist ptr (a :: q));
     norm_spec [delta; zeta] (llist2 ptr (a :: q));
     llist2_elim (next a) q m
+*)
 
 (* Helper lemmas/rewritings *)
 
