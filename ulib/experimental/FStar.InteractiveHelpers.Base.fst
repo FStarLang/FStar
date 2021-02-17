@@ -400,11 +400,11 @@ let norm_apply_subst_in_comp e c subst =
   match inspect_comp c with
   | C_Total ret decr ->
     let ret = subst ret in
-    let decr = opt_tapply subst decr in
+    let decr = map subst decr in
     pack_comp (C_Total ret decr)
   | C_GTotal ret decr ->
     let ret = subst ret in
-    let decr = opt_tapply subst decr in
+    let decr = map subst decr in
     pack_comp (C_GTotal ret decr)
   | C_Lemma pre post patterns ->
     let pre = subst pre in
@@ -520,11 +520,11 @@ and deep_apply_subst_in_comp e c subst =
   match inspect_comp c with
   | C_Total ret decr ->
     let ret = subst ret in
-    let decr = opt_tapply subst decr in
+    let decr = map subst decr in
     pack_comp (C_Total ret decr)
   | C_GTotal ret decr ->
     let ret = subst ret in
-    let decr = opt_tapply subst decr in
+    let decr = map subst decr in
     pack_comp (C_GTotal ret decr)
   | C_Lemma pre post patterns ->
     let pre = subst pre in

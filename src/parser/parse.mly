@@ -30,21 +30,11 @@ let old_attribute_syntax_warning =
   "The `[@ ...]` syntax of attributes is deprecated. \
    Use `[@@ a1; a2; ...; an]`, a semi-colon separated list of attributes, instead"
 
-(*
- * AR: convert an option (aqualifier & attributes)
- *     to an (option aqualifier & attributes)
- *)
-let get_aqual_and_attrs aqual_universe_opt =
-  match aqual_universe_opt with
-    | None -> None, []
-    | Some (q, l) -> Some q, l
+let none_to_empty_list x = 
+  match x with
+  | None -> []
+  | Some l -> l
 
-(*
- * AR: convert an (option (aqualifier & attributes)) & X
- *     to an (option aqualifier & attributes) & X from it
- *)
-let get_aqual_and_attrs_and_X (aqual_universe_opt, x) =
-  get_aqual_and_attrs aqual_universe_opt, x
 %}
 
 %token <bytes> BYTEARRAY
@@ -86,7 +76,7 @@ let get_aqual_and_attrs_and_X (aqual_universe_opt, x) =
 %token DOT COLON COLON_COLON SEMICOLON
 %token QMARK_DOT
 %token QMARK
-%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT DOT_LBRACK
+%token SEMICOLON_SEMICOLON EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
 %token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE DOLLAR
@@ -298,8 +288,11 @@ typeDefinition:
       { (fun id binders kopt -> check_id id; TyconVariant(id, binders, kopt, ct_decls)) }
 
 recordFieldDecl:
-  |  lid=lident COLON t=typ
-      { (lid, t) }
+  | qualified_lid=aqualifiedWithAttrs(lident) COLON t=typ 
+      { 
+        let (qual, attrs), lid = qualified_lid in
+        (lid, qual, attrs, t) 
+      }
 
 constructorDecl:
   | BAR uid=uident COLON t=typ                { (uid, Some t, false) }
@@ -455,23 +448,18 @@ letqualifier:
   | REC         { Rec }
   |             { NoLetQualifier }
 
- (* Remove with stratify *)
-aqual:
-  | EQUALS    {  log_issue (lhs parseState) (Warning_DeprecatedEqualityOnBinder, "The '=' notation for equality constraints on binders is deprecated; use '$' instead");
-                                        Equality, [] }
-  | q=aqualAndAttrsUniverses { q }
-
 (*
  * AR: this should be generalized to:
- *     (a) allow more than one attributes on the binders
- *     (b) allow attributes on non-implicit binders
+ *     (a) allow attributes on non-implicit binders
  *     note that in the [@@ case, we choose the Implicit aqual
  *)
-aqualAndAttrsUniverses:
-  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t, [] }
-  | HASH LBRACK_AT_AT t=tmNoEq RBRACK { Implicit, [t] }
-  | HASH      { Implicit, [] }
-  | DOLLAR    { Equality, [] }
+aqual: 
+  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t }
+  | HASH      { Implicit }
+  | DOLLAR    { Equality }
+
+binderAttributes:
+  | LBRACK_AT_AT_AT t=semiColonTermList RBRACK { t }
 
 /******************************************************************************/
 /*                         Patterns, binders                                  */
@@ -604,7 +592,11 @@ multiBinder:
 
 binders: bss=list(b=binder {[b]} | bs=multiBinder {bs}) { flatten bss }
 
-aqualifiedWithAttrs(X): x=pair(ioption(aqualAndAttrsUniverses), X) { get_aqual_and_attrs_and_X x }
+aqualifiedWithAttrs(X):
+  | aq=aqual attrs=binderAttributes x=X { (Some aq, attrs), x }
+  | aq=aqual x=X { (Some aq, []), x }
+  | attrs=binderAttributes x=X { (None, attrs), x }
+  | x=X { (None, []), x }
 
 /******************************************************************************/
 /*                      Identifiers, module paths                             */
@@ -878,8 +870,7 @@ simpleArrowDomain:
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
         ((Some (mk_meta_tac mt), []), t)
       }
-
-  | aq_opt=ioption(aqual) dom_tm=tmEqNoRefinement { get_aqual_and_attrs aq_opt, dom_tm }
+  | aq_opt=ioption(aqual) attrs_opt=ioption(binderAttributes) dom_tm=tmEqNoRefinement { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
 (* Tm already account for ( term ), we need to add an explicit case for (#Tm) *)
 %inline tmArrowDomain(Tm):
@@ -887,10 +878,8 @@ simpleArrowDomain:
       { let mt = mk_term (Var tcresolve_lid) (rhs parseState 4) Type_level in
         ((Some (mk_meta_tac mt), []), t)
       }
-
-  | LPAREN q=aqual dom_tm=Tm RPAREN { get_aqual_and_attrs (Some q), dom_tm }
-
-  | aq_opt=ioption(aqual) dom_tm=Tm { get_aqual_and_attrs aq_opt, dom_tm }
+  | LPAREN q=aqual attrs_opt=ioption(binderAttributes) dom_tm=Tm RPAREN { (Some q, none_to_empty_list attrs_opt), dom_tm }
+  | aq_opt=ioption(aqual) attrs_opt=ioption(binderAttributes) dom_tm=Tm { (aq_opt, none_to_empty_list attrs_opt), dom_tm }
 
 tmFormula:
   | e1=tmFormula DISJUNCTION e2=tmConjunction
@@ -1118,7 +1107,7 @@ projectionLHS:
   | LBRACK es=semiColonTermList RBRACK
       { mkConsList (rhs2 parseState 1 3) es }
   | PERCENT_LBRACK es=semiColonTermList RBRACK
-      { mkLexList (rhs2 parseState 1 3) es }
+      { mk_term (LexList es) (rhs2 parseState 1 3) Type_level }
   | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE
       { mkRefSet (rhs2 parseState 1 3) es }
   | ns=quident QMARK_DOT id=lident

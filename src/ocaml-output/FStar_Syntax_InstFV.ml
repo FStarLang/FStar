@@ -225,8 +225,9 @@ and (inst_comp :
                 (FStar_List.map
                    (fun uu___4 ->
                       match uu___4 with
-                      | FStar_Syntax_Syntax.DECREASES t ->
-                          let uu___5 = inst s t in
+                      | FStar_Syntax_Syntax.DECREASES l ->
+                          let uu___5 =
+                            FStar_All.pipe_right l (FStar_List.map (inst s)) in
                           FStar_Syntax_Syntax.DECREASES uu___5
                       | f -> f)) in
             {

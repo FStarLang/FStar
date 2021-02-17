@@ -354,6 +354,7 @@ rule token args = parse
      }
 
  | "///[@"
+ | "[@@@"       { LBRACK_AT_AT_AT }  
  | "[@@"       { LBRACK_AT_AT } 
  | "[@"        { LBRACK_AT }
  | "//"  [^'\n''\r']*

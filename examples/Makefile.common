@@ -85,5 +85,8 @@ include .depend
 	@echo "[OUTPUT    $(basename $(notdir $@))]"
 	$(Q)$(VERBOSE_FSTAR) -f --print_expected_failures $< >$@ 2>&1
 
+%.fst-in %.fsti-in:
+	@echo $(OTHERFLAGS) $(addprefix --include , $(INCLUDE_PATHS))
+
 clean:
 	rm -rf $(CACHE_DIR)
