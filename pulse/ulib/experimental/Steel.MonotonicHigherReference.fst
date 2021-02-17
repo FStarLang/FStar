@@ -1,8 +1,8 @@
 module Steel.MonotonicHigherReference
 open FStar.PCM
 open Steel.Memory
-open Steel.Effect
 open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.FractionalPermission
 open FStar.Ghost
 module Preorder = FStar.Preorder
@@ -246,7 +246,7 @@ let intro_pure #a #p #f
   : SteelT unit
            (M.pts_to r h)
            (fun _ -> pts_to_body r f v h)
-  = Atomic.change_slprop _ _ (fun m ->
+  = change_slprop _ _ (fun m ->
       emp_unit (M.pts_to r h);
       pure_star_interp (M.pts_to r h) (history_val h v f) m)
 
@@ -277,9 +277,9 @@ let extract_pure #a #uses #p #f
            unobservable
            (pts_to_body r f v h)
            (fun _ -> pts_to_body r f v h)
-  = Atomic.change_slprop (pts_to_body r f v h) (M.pts_to r h `star` pure (history_val h v f)) (fun _ -> ());
+  = change_slprop (pts_to_body r f v h) (M.pts_to r h `star` pure (history_val h v f)) (fun _ -> ());
     let (u:unit{history_val h v f}) = Atomic.elim_pure (history_val h v f) in
-    Atomic.change_slprop (M.pts_to r h) (pts_to_body r f v h) (fun m ->
+    change_slprop (M.pts_to r h) (pts_to_body r f v h) (fun m ->
       emp_unit (M.pts_to r h);
       pure_star_interp (M.pts_to r h) (history_val h v f) m
     );
@@ -340,7 +340,7 @@ let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> slprop)
         pts_to_is_witness_invariant r q;
         star_is_witinv_left (fun (v:a) -> pts_to r q v) f
     ) in
-    Steel.Effect.change_slprop (pts_to r q (Ghost.hide (Ghost.reveal v)) `star` f v) (h_exists (pts_to_body r q v) `star` f v) (fun _ -> ());
+    change_slprop (pts_to r q (Ghost.hide (Ghost.reveal v)) `star` f v) (h_exists (pts_to_body r q v) `star` f v) (fun _ -> ());
 
     let h = Atomic.witness_h_exists #_ #_ #(pts_to_body r q v) () in
 
@@ -348,7 +348,7 @@ let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> slprop)
 
     let hv = read #_ #_ r h in
 
-    Steel.Effect.change_slprop (M.pts_to r h) (pts_to_body r q v h) (fun m ->
+    change_slprop (M.pts_to r h) (pts_to_body r q v h) (fun m ->
       emp_unit (M.pts_to r h);
       pure_star_interp (M.pts_to r h) (history_val h v q) m);
 
@@ -356,7 +356,7 @@ let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> slprop)
     rewrite_erased (fun v -> (pts_to r q v `star` f v)) v (hval_tot hv);
     let v = hval_tot hv in
 
-    Steel.Effect.change_slprop
+    change_slprop
       (pts_to r q (hval_tot hv) `star` f (Ghost.reveal (Ghost.hide (hval_tot hv))))
       (pts_to r q v `star` f v)
       (fun _ -> ());
@@ -421,12 +421,12 @@ let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
 
     witness_thunk r (lift_fact fact) h () _;
 
-    Atomic.change_slprop (M.pts_to r h) (pts_to_body r q v h) (fun m ->
+    change_slprop (M.pts_to r h) (pts_to_body r q v h) (fun m ->
       emp_unit (M.pts_to r h);
       pure_star_interp (M.pts_to r h) (history_val h v q) m);
 
     intro_h_exists_erased h (pts_to_body r q v);
-    Steel.Effect.change_slprop (pts_to r q v) (pts_to r q v) (fun _ -> ())
+    change_slprop (pts_to r q v) (pts_to r q v) (fun _ -> ())
 
 
 let recall (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
@@ -438,11 +438,11 @@ let recall (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
 
     let h1 = Steel.Effect.recall r h in
 
-    Atomic.change_slprop (M.pts_to r h) (pts_to_body r q v h) (fun m ->
+    change_slprop (M.pts_to r h) (pts_to_body r q v h) (fun m ->
       emp_unit (M.pts_to r h);
       pure_star_interp (M.pts_to r h) (history_val h v q) m);
 
     intro_h_exists_erased h (pts_to_body r q v);
 
-    Steel.Effect.change_slprop (pts_to r q v `star` pure (lift_fact fact h1))
+    change_slprop (pts_to r q v `star` pure (lift_fact fact h1))
       (pts_to r q v `star` pure (fact v)) (fun _ -> ())

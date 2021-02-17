@@ -250,6 +250,18 @@ let bind_steelatomicf_steelf (a:Type) (b:Type) is_ghost
     interp_trans_left Set.empty (post_g x y) (post y) frame m2;
     y
 
+let bind_steelf_steelatomicf (a:Type) (b:Type) is_ghost
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #post #p1 #p2 f g
+= fun frame ->
+    let m0:full_mem = NMSTTotal.get() in
+    let x = f frame in
+    let m1:full_mem = NMSTTotal.get() in
+    interp_trans_left Set.empty (post_f x) (pre_g x) frame m1;
+    let y = g x frame in
+    let m2:full_mem = NMSTTotal.get() in
+    interp_trans_left Set.empty (post_g x y) (post y) frame m2;
+    y
+
 let bind_steelatomic_steelf (a:Type) (b:Type) o
   #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #post #p #p2 f g
 = fun frame ->
@@ -276,6 +288,31 @@ let bind_steelatomic_steelf (a:Type) (b:Type) o
     y
 
 #push-options "--z3rlimit 50"
+
+let bind_steel_steelatomicf (a:Type) (b:Type) o
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #post #p #p2 f g
+= fun frame ->
+    let m0:full_mem = NMST.get() in
+
+    // By AC-rewriting
+    equiv_middle_left_assoc pre_f frame_f frame (locks_invariant Set.empty m0);
+    assert (interp (pre_f `star` (frame_f `star` frame) `star` locks_invariant Set.empty m0) m0);
+    let x = f (frame_f `star` frame) in
+    let m1:full_mem = NMST.get() in
+    // Post-condition
+    assert (interp (post_f x `star` (frame_f `star` frame) `star` locks_invariant Set.empty m1) m1);
+    // By AC-rewriting
+    equiv_middle_left_assoc (post_f x) frame_f frame (locks_invariant Set.empty m1);
+    assert (interp ((post_f x `star` frame_f) `star` frame `star` locks_invariant Set.empty m1) m1);
+    // Property of sl_implies
+    interp_trans_left Set.empty (post_f x `star` frame_f) (pre_g x) frame m1;
+    assert (interp (pre_g x `star` frame `star` locks_invariant Set.empty m1) m1);
+
+    let y = g x frame in
+    let m2:full_mem = NMST.get() in
+    interp_trans_left Set.empty (post_g x y) (post y) frame m2;
+
+    y
 
 let bind_steelatomic_steel (a:Type) (b:Type) o
   #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #p #p2 f g

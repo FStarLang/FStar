@@ -200,9 +200,13 @@ let action_as_repr (#a:Type) (#p:slprop) (#q:a -> slprop) (f:action_except a Set
   : repr a p q (fun _ -> True) (fun _ _ _ -> True)
   = Ins.state_correspondence Set.empty; f
 
-let add_action f = Steel?.reflect (action_as_repr f)
+val add_action (#a:Type)
+               (#p:slprop)
+               (#q:a -> slprop)
+               (f:action_except a Set.empty p q)
+  : SteelT a p q
 
-let change_slprop p q proof = add_action (Steel.Memory.change_slprop p q proof)
+let add_action f = Steel?.reflect (action_as_repr f)
 
 let rewrite_context #p #q _ =
   assert (p `equiv` q);
@@ -220,6 +224,13 @@ let extract_info0 (p:slprop) (fact:prop)
 let extract_info p fact l = Steel?.reflect (extract_info0 p fact l)
 
 let sladmit #a #p #q _ = SteelF?.reflect (fun _ -> NMST.nmst_admit ())
+
+val change_slprop (p q:slprop)
+                  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
+  : SteelT unit p (fun _ -> q)
+
+let change_slprop p q proof =
+  Steel?.reflect (Steel.Memory.change_slprop #Set.empty p q proof)
 
 let intro_pure p = change_slprop emp (pure p) (fun m -> pure_interp p m)
 

@@ -15,8 +15,8 @@
 *)
 
 module Steel.SpinLock
-open Steel.Effect
 open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.Reference
 open Steel.FractionalPermission
 module Atomic = Steel.Effect.Atomic
@@ -101,14 +101,14 @@ let acquire_core #p #u r i =
   ) in
 
   (** AF: This should be done by an automatic rewriting in the tactic *)
-  Atomic.change_slprop (pts_to r full_perm (Ghost.hide (Ghost.reveal ghost))) (pts_to r full_perm ghost) (fun _ -> ());
+  change_slprop (pts_to r full_perm (Ghost.hide (Ghost.reveal ghost))) (pts_to r full_perm ghost) (fun _ -> ());
 
   let res = cas r ghost available locked in
 
   (* Not sure we can avoid calling an SMT here. Better force the manual call? *)
-  Atomic.change_slprop (if (Ghost.reveal ghost) then emp else p) (if res then p else emp)
+  change_slprop (if (Ghost.reveal ghost) then emp else p) (if res then p else emp)
     (fun _ -> ());
-  Atomic.change_slprop (if res then pts_to r full_perm (Ghost.hide locked) else pts_to r full_perm ghost) (pts_to r full_perm locked) (fun _ -> ());
+  change_slprop (if res then pts_to r full_perm (Ghost.hide locked) else pts_to r full_perm ghost) (pts_to r full_perm locked) (fun _ -> ());
 
   intro_lockinv_locked p r;
   res
@@ -122,8 +122,8 @@ let acquire' (#p:slprop) (l:lock p)
 
 let rec acquire #p l =
   let b = acquire' l in
-  if b then (Steel.Effect.change_slprop (if b then p else emp) p (fun _ -> ()); ())
-  else (Steel.Effect.change_slprop (if b then p else emp) emp (fun _ -> ()); acquire l)
+  if b then (change_slprop (if b then p else emp) p (fun _ -> ()); noop #emp ())
+  else (change_slprop (if b then p else emp) emp (fun _ -> ()); acquire l)
 
 val release_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))
   : SteelAtomicT bool u observable
@@ -137,14 +137,14 @@ let release_core #p #u r i =
     star_is_witinv_left (fun (b:bool) -> pts_to r full_perm (Ghost.hide b)) (fun (b:bool) -> if b then emp else p)
   ) in
 
-  Atomic.change_slprop (pts_to r full_perm (Ghost.hide (Ghost.reveal v))) (pts_to r full_perm v) (fun _ -> ());
+  change_slprop (pts_to r full_perm (Ghost.hide (Ghost.reveal v))) (pts_to r full_perm v) (fun _ -> ());
 
   let res = cas r v locked available in
 
   (* Not sure we can avoid calling an SMT here. Better force the manual call? *)
-  Atomic.change_slprop (if (Ghost.reveal v) then emp else p) (if res then emp else p)
+  change_slprop (if (Ghost.reveal v) then emp else p) (if res then emp else p)
     (fun _ -> ());
-  Atomic.change_slprop (if res then pts_to r full_perm (Ghost.hide available) else pts_to r full_perm v) (pts_to r full_perm available) (fun _ -> ());
+  change_slprop (if res then pts_to r full_perm (Ghost.hide available) else pts_to r full_perm v) (pts_to r full_perm available) (fun _ -> ());
 
   intro_lockinv_available p r;
   res

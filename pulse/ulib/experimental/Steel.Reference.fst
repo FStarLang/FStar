@@ -76,7 +76,7 @@ let pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pt
 let pts_to_injective_eq #a #opened #p0 #p1 #v0 #v1 r =
   A.extract_info (pts_to r p0 v0 `star` pts_to r p1 v1) (v0 == v1)
     (fun m -> pts_to_ref_injective r p0 p1 v0 v1 m);
-  A.change_slprop (pts_to r p1 v1) (pts_to r p1 v0) (fun _ -> ())
+  change_slprop (pts_to r p1 v1) (pts_to r p1 v0) (fun _ -> ())
 
 let alloc x =
   let r = H.alloc (U.raise_val x) in
@@ -116,10 +116,10 @@ let free #a #v r =
 
 let share_atomic #a #uses #p #v r =
   let v' = Ghost.hide (U.raise_val (Ghost.reveal v)) in
-  A.change_slprop (pts_to r p v) (H.pts_to r p v') (fun _ -> ());
+  change_slprop (pts_to r p v) (H.pts_to r p v') (fun _ -> ());
   H.share_atomic #_ #_ #p #v' r;
-  A.change_slprop (H.pts_to r (half_perm p) v') (pts_to r (half_perm p) v) (fun _ -> ());
-  A.change_slprop (H.pts_to r (half_perm p) v') (pts_to r (half_perm p) v) (fun _ -> ())
+  change_slprop (H.pts_to r (half_perm p) v') (pts_to r (half_perm p) v) (fun _ -> ());
+  change_slprop (H.pts_to r (half_perm p) v') (pts_to r (half_perm p) v) (fun _ -> ())
 
 let hide_raise_reveal (#a:Type) (v0:erased a) (v1:erased a)
   : Lemma (hide (U.raise_val (reveal v0)) == hide (U.raise_val (reveal v1)) <==>
@@ -134,10 +134,10 @@ let hide_raise_reveal (#a:Type) (v0:erased a) (v1:erased a)
 let gather_atomic #a #uses #p0 #p1 #v0 #v1 r =
   let v0' = Ghost.hide (U.raise_val (Ghost.reveal v0)) in
   let v1' = Ghost.hide (U.raise_val (Ghost.reveal v1)) in
-  A.change_slprop (pts_to r p0 v0) (H.pts_to r p0 v0') (fun _ -> ());
-  A.change_slprop (pts_to r p1 v1) (H.pts_to r p1 v1') (fun _ -> ());
+  change_slprop (pts_to r p0 v0) (H.pts_to r p0 v0') (fun _ -> ());
+  change_slprop (pts_to r p1 v1) (H.pts_to r p1 v1') (fun _ -> ());
   let (u:unit{v0' == v1'}) = H.gather_atomic #_ #_ #p0 #p1 #v0' #v1' r in
-  A.change_slprop (H.pts_to r (sum_perm p0 p1) v0') (pts_to r (sum_perm p0 p1) v0) (fun _ -> ());
+  change_slprop (H.pts_to r (sum_perm p0 p1) v0') (pts_to r (sum_perm p0 p1) v0) (fun _ -> ());
   u
 
 let raise_equiv (#t:Type) (x y:t)

@@ -366,6 +366,8 @@ effect SteelAtomicT (a:Type) (opened:inames) (o:observability) (pre:pre_t) (post
 
 (***** Bind and Subcomp relation with Steel.Atomic *****)
 
+(** F, F -> F **)
+
 val bind_steelatomicf_steelf (a:Type) (b:Type)
   (is_ghost:observability)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
@@ -383,6 +385,27 @@ val bind_steelatomicf_steelf (a:Type) (b:Type)
     (bind_ens req_f ens_f ens_g post p1 p2)
 
 polymonadic_bind (SteelAtomicF, Steel.Effect.SteelF) |> Steel.Effect.SteelF = bind_steelatomicf_steelf
+
+
+val bind_steelf_steelatomicf (a:Type) (b:Type)
+  (o:observability)
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
+  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
+  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x)))
+  (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#[@@@ framing_implicit] post:post_t b)
+  (#[@@@ framing_implicit] p1:squash (can_be_split_forall post_f pre_g))
+  (#[@@@ framing_implicit] p2:squash (can_be_split_post post_g post))
+  (f:Steel.Effect.repr a pre_f post_f req_f ens_f)
+  (g:(x:a -> atomic_repr b Set.empty o (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: Steel.Effect.repr b pre_f post
+    (bind_req req_f ens_f req_g p1)
+    (bind_ens req_f ens_f ens_g post p1 p2)
+
+polymonadic_bind (Steel.Effect.SteelF, SteelAtomicF) |> Steel.Effect.SteelF = bind_steelf_steelatomicf
+
+(** A, F -> F **)
 
 val bind_steelatomic_steelf (a:Type) (b:Type)
   (o:observability)
@@ -405,6 +428,29 @@ val bind_steelatomic_steelf (a:Type) (b:Type)
 
 
 polymonadic_bind (SteelAtomic, Steel.Effect.SteelF) |> Steel.Effect.SteelF = bind_steelatomic_steelf
+
+val bind_steel_steelatomicf (a:Type) (b:Type)
+  (o:observability)
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
+  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
+  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x)))
+  (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#[@@@ framing_implicit] frame_f:slprop)
+  (#[@@@ framing_implicit] post:post_t b)
+  (#[@@@ framing_implicit] p:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
+  (#[@@@ framing_implicit] p2: squash (can_be_split_post post_g post))
+  (f:Steel.Effect.repr a pre_f post_f req_f ens_f)
+  (g:(x:a -> atomic_repr b Set.empty o (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: Steel.Effect.repr b
+    (pre_f `star` frame_f)
+    post
+    (bind_steela_steelaf_req req_f ens_f req_g frame_f p)
+    (bind_steela_steelaf_ens req_f ens_f ens_g frame_f post p p2)
+
+polymonadic_bind (Steel.Effect.Steel, SteelAtomicF) |> Steel.Effect.SteelF = bind_steel_steelatomicf
+
+(** A, A -> F **)
 
 val bind_steelatomic_steel (a:Type) (b:Type)
   (o:observability)
@@ -450,6 +496,8 @@ val bind_steel_steelatomic (a:Type) (b:Type)
     (bind_steela_steela_ens req_f ens_f ens_g frame_f frame_g post p p2)
 
 polymonadic_bind (Steel.Effect.Steel, SteelAtomic) |> Steel.Effect.SteelF = bind_steel_steelatomic
+
+(** subcomp **)
 
 val subcomp_atomic_steel (a:Type) (is_ghost:observability)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)

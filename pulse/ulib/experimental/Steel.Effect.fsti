@@ -450,16 +450,6 @@ val par (#aL:Type u#a)
     (fun h -> lpreL h /\ lpreR h)
     (fun h0 y h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 (fst y) h1 /\ lpostR h0 (snd y) h1)
 
-val add_action (#a:Type)
-               (#p:slprop)
-               (#q:a -> slprop)
-               (f:action_except a Set.empty p q)
-  : SteelT a p q
-
-val change_slprop (p q:slprop)
-                  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
-  : SteelT unit p (fun _ -> q)
-
 val rewrite_context (#[@@@ framing_implicit] p:slprop)
                     (#[@@@ framing_implicit] q:slprop)
                     (_:unit)
