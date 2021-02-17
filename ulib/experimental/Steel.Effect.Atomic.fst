@@ -313,6 +313,43 @@ let bind_steelatomic_steel (a:Type) (b:Type) o
 
     y
 
+let bind_steel_steelatomic (a:Type) (b:Type) o
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #p #p2 f g
+= fun frame ->
+    let m0:full_mem = NMST.get() in
+
+    // By AC-rewriting
+    equiv_middle_left_assoc pre_f frame_f frame (locks_invariant Set.empty m0);
+    assert (interp (pre_f `star` (frame_f `star` frame) `star` locks_invariant Set.empty m0) m0);
+    let x = f (frame_f `star` frame) in
+    let m1:full_mem = NMST.get() in
+    // Post-condition
+    assert (interp (post_f x `star` (frame_f `star` frame) `star` locks_invariant Set.empty m1) m1);
+    // By AC-rewriting
+    equiv_middle_left_assoc (post_f x) frame_f frame (locks_invariant Set.empty m1);
+    assert (interp ((post_f x `star` frame_f) `star` frame `star` locks_invariant Set.empty m1) m1);
+    // Property of sl_implies
+    interp_trans_left Set.empty (post_f x `star` frame_f) (pre_g x `star` frame_g x) frame m1;
+    assert (interp ((pre_g x `star` frame_g x) `star` frame `star` locks_invariant Set.empty m1) m1);
+    equiv_middle_left_assoc (pre_g x) (frame_g x) frame (locks_invariant Set.empty m1);
+    assert (interp (pre_g x `star` (frame_g x `star` frame) `star` locks_invariant Set.empty m1) m1);
+    let y = g x (frame_g x `star` frame) in
+    let m2:full_mem = NMST.get() in
+
+
+    equiv_middle_left_assoc (post_g x y) (frame_g x) frame (locks_invariant Set.empty m2);
+    assert (interp ((post_g x y `star` frame_g x) `star` frame `star` locks_invariant Set.empty m2) m2);
+    let aux (f_frame:Sems.fp_prop frame) : Lemma (f_frame (core_mem m0) == f_frame (core_mem m2))
+      = assert (f_frame (core_mem m0) == f_frame (core_mem m1));
+        let f_frame2:Sems.fp_prop (frame_g x `star` frame) = f_frame in
+        assert (f_frame (core_mem m1) == f_frame (core_mem m2))
+    in Classical.forall_intro aux;
+
+    interp_trans_left Set.empty (post_g x y `star` frame_g x) (post y) frame m2;
+
+    y
+
+
 #pop-options
 
 let subcomp_atomic_steel (a:Type) is_ghost
@@ -332,6 +369,17 @@ let with_invariant #a #fp #fp' #opened i f =
 let frame frame f = SteelAtomic?.reflect (Steel.Memory.frame frame (reify (f ())))
 let change_slprop #opened p q proof =
   SteelAtomic?.reflect (Steel.Memory.change_slprop #opened p q proof)
+
+let extract_info0 (#opened:inames) (p:slprop) (fact:prop)
+  (proof:(m:mem) -> Lemma (requires interp p m) (ensures fact))
+  : atomic_repr unit opened unobservable p (fun _ -> p)
+      (fun _ -> True)
+      (fun _ _ _ -> fact)
+  = fun frame ->
+      let m:full_mem = NMSTTotal.get() in
+      proof m
+
+let extract_info #opened p fact proof = SteelAtomic?.reflect (extract_info0 #opened p fact proof)
 
 let h_assert_atomic p = change_slprop p p (fun m -> ())
 let h_intro_emp_l p = change_slprop p (emp `star` p) (fun m -> emp_unit p; star_commutative p emp)

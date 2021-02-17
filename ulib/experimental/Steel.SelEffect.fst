@@ -9,6 +9,8 @@ module Eff = Steel.Effect
 
 friend Steel.SelEffect.Common
 
+#set-options "--warn_error -330"  //turn off the experimental feature warning
+
 let hmem (p:vprop) = hmem (hp_of p)
 
 unfold
