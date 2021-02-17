@@ -26,7 +26,7 @@ val gather (#p:slprop) (#f0 #f1:perm) (#u:_) (i:inv p)
     (active f0 i `star` active f1 i)
     (fun _ -> active (sum_perm f0 f1) i)
 
-val dispose (#p:slprop) (#u:_) (i:inv p)
+val dispose (#p:slprop) (#u:_) (i:inv p{not (name i `Set.mem` u)})
   : SteelAtomicT unit u unobservable
     (active full_perm i)
     (fun _ -> p)
