@@ -109,3 +109,46 @@ val cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
                    uses
                    (pts_to r full_perm v)
                    (fun b -> if b then pts_to r full_perm v_new else pts_to r full_perm v)
+
+(*** Ghost references ***)
+
+val ghost_ref (a:Type u#1) : Type u#0
+
+val ghost_pts_to (#a:_) (r:ghost_ref a) (p:perm) (x:erased a) : slprop u#1
+
+val ghost_alloc (#a:Type) (#u:_) (x:erased a)
+  : SteelAtomicT (ghost_ref a) u unobservable
+                 emp
+                 (fun r -> ghost_pts_to r full_perm x)
+
+val ghost_share (#a:Type) (#u:_)
+                (#p:perm)
+                (#x:erased a)
+                (r:ghost_ref a)
+  : SteelAtomicT unit u unobservable
+    (ghost_pts_to r p x)
+    (fun _ -> ghost_pts_to r (half_perm p) x `star`
+           ghost_pts_to r (half_perm p) x)
+
+val ghost_gather (#a:Type) (#u:_)
+                 (#p0 #p1:perm)
+                 (#x0 #x1:erased a)
+                 (r:ghost_ref a)
+  : SteelAtomic unit u unobservable
+    (ghost_pts_to r p0 x0 `star`
+     ghost_pts_to r p1 x1)
+    (fun _ -> ghost_pts_to r (sum_perm p0 p1) x0)
+    (requires fun _ -> True)
+    (ensures fun _ _ _ -> x0 == x1)
+
+val ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Ghost.erased a)
+  : SteelAtomic unit u unobservable
+    (ghost_pts_to r p v0 `star` ghost_pts_to r q v1)
+    (fun _ -> ghost_pts_to r p v0 `star` ghost_pts_to r q v0)
+    (requires fun _ -> True)
+    (ensures fun _ _ _ -> v0 == v1)
+
+val ghost_write (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a) (x:erased a)
+  : SteelAtomicT unit u unobservable
+    (ghost_pts_to r full_perm v)
+    (fun _ -> ghost_pts_to r full_perm x)

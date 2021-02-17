@@ -352,3 +352,68 @@ let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
        else false
      in
      b
+
+(*** GHOST REFERENCES ***)
+
+let ghost_ref a = ref (erased a)
+
+[@@__reduce__]
+let ghost_pts_to #a (r:ghost_ref a) (p:perm) (x:erased a) = pts_to r p (Ghost.hide x)
+
+let ghost_alloc (#a:Type) (#u:_) (x:erased a)
+  : SteelAtomicT (ghost_ref a) u unobservable
+                 emp
+                 (fun r -> ghost_pts_to r full_perm x)
+  = let v : fractional (erased a) = Some (x, full_perm) in
+    assert (FStar.PCM.composable pcm_frac v None);
+    assert (compatible pcm_frac v v);
+    let r : ghost_ref a = as_atomic_action #_ #_ #unobservable (Steel.Memory.alloc_action u v) in
+    change_slprop (Steel.Memory.pts_to r v) (pts_to r full_perm (hide x))
+      (fun m -> emp_unit (pts_to_raw r full_perm (hide x));
+             pure_star_interp (pts_to_raw r full_perm (hide x)) (perm_ok full_perm) m);
+    r
+
+let ghost_share (#a:Type) (#u:_)
+                (#p:perm)
+                (#x:erased a)
+                (r:ghost_ref a)
+  : SteelAtomicT unit u unobservable
+    (ghost_pts_to r p x)
+    (fun _ -> ghost_pts_to r (half_perm p) x `star`
+           ghost_pts_to r (half_perm p) x)
+  = share_atomic r
+
+let ghost_gather (#a:Type) (#u:_)
+                 (#p0 #p1:perm)
+                 (#x0 #x1:erased a)
+                 (r:ghost_ref a)
+  : SteelAtomic unit u unobservable
+    (ghost_pts_to r p0 x0 `star`
+     ghost_pts_to r p1 x1)
+    (fun _ -> ghost_pts_to r (sum_perm p0 p1) x0)
+    (requires fun _ -> true)
+    (ensures fun _ _ _ -> x0 == x1)
+  = gather_atomic #(erased a) #u #p0 #p1 #(hide x0) #(hide x1) r
+
+let ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Ghost.erased a)
+  : SteelAtomic unit u unobservable (ghost_pts_to r p v0 `star` ghost_pts_to r q v1)
+                     (fun _ -> ghost_pts_to r p v0 `star` ghost_pts_to r q v0)
+                (requires fun _ -> True)
+                (ensures fun _ _ _ -> v0 == v1)
+  = higher_ref_pts_to_injective_eq r
+
+let ghost_write (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a) (x:erased a)
+  : SteelAtomicT unit u unobservable
+    (ghost_pts_to r full_perm v)
+    (fun _ -> ghost_pts_to r full_perm x)
+  = let v_old : erased (fractional (erased a)) = Ghost.hide (Some (v, full_perm)) in
+    let v_new : fractional (erased a) = Some (x, full_perm) in
+    change_slprop (pts_to r full_perm (hide v))
+                  (Mem.pts_to r v_old `star` pure (perm_ok full_perm))
+                  (fun _ -> ());
+    let _ = elim_perm_ok full_perm in
+    as_atomic_action #_ #_ #unobservable (Mem.upd_action u r v_old v_new);
+    change_slprop (Mem.pts_to r v_new)
+                  (pts_to r full_perm (hide x))
+                  (fun m -> emp_unit (pts_to_raw r full_perm (hide x));
+                         pure_star_interp (pts_to_raw r full_perm (hide x)) (perm_ok full_perm) m)

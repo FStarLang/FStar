@@ -25,6 +25,7 @@ let observability = bool
 let has_eq_observability () = ()
 let observable = true
 let unobservable = false
+let observability_unequal = ()
 
 val join_preserves_interp (hp:slprop) (m0 m1:mem)
   : Lemma
@@ -461,3 +462,41 @@ let witness_h_exists #a #u #p s = SteelAtomic?.reflect (Steel.Memory.witness_h_e
 let lift_h_exists_atomic #a #u p = SteelAtomic?.reflect (Steel.Memory.lift_h_exists #u p)
 let h_exists_cong_atomic p q = change_slprop (h_exists p) (h_exists q) (fun m -> h_exists_cong p q)
 let elim_pure #uses p = SteelAtomic?.reflect (Steel.Memory.elim_pure #uses p)
+
+
+(** Atomic actions on raw references *)
+let alloc (#a:Type u#1) (#u:_) (#o:_)
+          (#pcm:_)
+          (x:a{FStar.PCM.compatible pcm x x /\ pcm.FStar.PCM.refine x })
+  : SteelAtomicT (ref a pcm) u o
+           emp
+           (fun r -> pts_to r x)
+  = as_atomic_action (Steel.Memory.alloc_action u x)
+
+let read (#a:Type) (#u:_) (#o:_)
+         (#pcm:_)
+         (r:ref a pcm)
+         (v0:Ghost.erased a)
+  : SteelAtomicT (v:a { FStar.PCM.compatible pcm v0 v }) u o
+           (pts_to r v0)
+           (fun _ -> pts_to r v0)
+  = as_atomic_action (Steel.Memory.sel_action u r v0)
+
+let write (#a:Type) (#u:_) (#o:_)
+          (#pcm:_)
+          (r:ref a pcm)
+          (v0:Ghost.erased a)
+          (v1:a{FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.FStar.PCM.refine v1})
+  : SteelAtomicT unit u o
+           (pts_to r v0)
+           (fun _ -> pts_to r v1)
+  = as_atomic_action (Steel.Memory.upd_action u r v0 v1)
+
+let read (#a:Type) (#u:_) (#o:_)
+         (#pcm:_)
+         (r:ref a pcm)
+         (v0:Ghost.erased a)
+  : SteelAtomicT (v:a { FStar.PCM.compatible pcm v0 v }) u o
+           (pts_to r v0)
+           (fun _ -> pts_to r v0)
+  = as_atomic_action (Steel.Memory.sel_action u r v0)
