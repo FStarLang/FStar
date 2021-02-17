@@ -49,12 +49,13 @@ val pts_to_not_null (#a:Type u#1)
 
 val pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pts_to r p))
 
-val extract_injective
+val higher_ref_pts_to_injective_eq
       (#a: Type)
+      (#opened:inames)
       (#p0 #p1:perm)
       (#v0 #v1: erased a)
       (r: ref a)
-  : Steel unit
+  : SteelAtomic unit opened unobservable
           (pts_to r p0 v0 `star` pts_to r p1 v1)
           (fun _ -> pts_to r p0 v0 `star` pts_to r p1 v0)
           (requires fun _ -> True)

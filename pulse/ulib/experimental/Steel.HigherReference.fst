@@ -125,10 +125,10 @@ let pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pt
   in
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
 
-let extract_injective #a #p0 #p1 #v0 #v1 r =
-  extract_info (pts_to r p0 v0 `star` pts_to r p1 v1) (v0 == v1)
+let higher_ref_pts_to_injective_eq #a #opened #p0 #p1 #v0 #v1 r =
+  Atomic.extract_info (pts_to r p0 v0 `star` pts_to r p1 v1) (v0 == v1)
     (fun m -> pts_to_ref_injective r p0 p1 v0 v1 m);
-  change_slprop (pts_to r p1 v1) (pts_to r p1 v0) (fun _ -> ())
+  Atomic.change_slprop (pts_to r p1 v1) (pts_to r p1 v0) (fun _ -> ())
 
 let pts_to_framon (#a:Type) (r:ref a) (p:perm) : Lemma (is_frame_monotonic (pts_to r p)) =
   pts_to_witinv r p
