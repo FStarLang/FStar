@@ -69,6 +69,7 @@ let p : pcm stepper =
     refine = refine }
 
 open Steel.Memory
+open Steel.Effect.Atomic
 open Steel.Effect
 open FStar.Ghost
 

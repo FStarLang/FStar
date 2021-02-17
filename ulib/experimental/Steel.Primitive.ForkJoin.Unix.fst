@@ -5,6 +5,7 @@ of SteelT to get a direct style (or Unix style) fork/join. Very much a
 prototype for now. *)
 
 open Steel.Memory
+open Steel.Effect.Atomic
 open Steel.Effect
 open FStar.Ghost
 open Steel.Reference

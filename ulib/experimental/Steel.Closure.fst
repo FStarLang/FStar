@@ -1,6 +1,7 @@
 module Steel.Closure
 
 open Steel.Memory
+open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.Reference
 open Steel.FractionalPermission

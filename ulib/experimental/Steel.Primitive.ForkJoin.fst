@@ -16,6 +16,7 @@
 
 module Steel.Primitive.ForkJoin
 open Steel.Memory
+open Steel.Effect.Atomic
 open Steel.Effect
 module L = Steel.SpinLock
 open Steel.FractionalPermission
@@ -100,7 +101,7 @@ let rec join (#p:slprop) (t:thread p)
   = let _ = L.acquire t.l in
     let b = read_refine #_ #full_perm (maybe_p p) t.r in
     if b then
-      (change_slprop (lock_inv_pred t.r p b) p (fun _ -> ()); ())
+      (change_slprop (lock_inv_pred t.r p b) p (fun _ -> ()); noop #emp ())
     else
       (change_slprop (lock_inv_pred t.r p b) (lock_inv_pred t.r p false) (fun _ -> ());
       intro_exists false (lock_inv_pred t.r p);

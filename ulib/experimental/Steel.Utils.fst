@@ -40,7 +40,7 @@ let pts_to_not_null (#a:Type)
 let change_slprop_ens (p:slprop) (q:slprop) (r:prop) (f:(m:mem -> Lemma (requires interp p m)
                                                                        (ensures interp q m /\ r)))
   : Steel unit p (fun _ -> q) (requires fun _ -> True) (ensures fun _ _ _ -> r)
-  = Steel.Effect.change_slprop p (q `star` pure r)
+  = change_slprop p (q `star` pure r)
                                  (fun m -> f m;
                                         Steel.Memory.emp_unit q;
                                         Steel.Memory.pure_star_interp q r m);
@@ -81,7 +81,7 @@ let rewrite #a (#[@@@framing_implicit]p:a -> slprop)(x y:a)
   : Steel unit (p x) (fun _ -> p y)
     (requires fun _ -> x == y)
     (ensures fun _ _ _ -> True)
-  = Steel.Effect.change_slprop (p x) (p y) (fun _ -> ())
+  = change_slprop (p x) (p y) (fun _ -> ())
 
 let extract_pure (p:prop)
   : Steel unit (pure p) (fun _ -> pure p) (fun _ -> True) (fun _ _ _ -> p)
