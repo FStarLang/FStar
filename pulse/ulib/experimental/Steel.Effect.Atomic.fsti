@@ -450,6 +450,48 @@ val bind_steel_steelatomicf (a:Type) (b:Type)
 
 polymonadic_bind (Steel.Effect.Steel, SteelAtomicF) |> Steel.Effect.SteelF = bind_steel_steelatomicf
 
+(** F, A -> F **)
+
+val bind_steelf_steelatomic (a:Type) (b:Type)
+  (o:observability)
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
+  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
+  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#[@@@ framing_implicit] frame_g:a -> slprop)
+  (#[@@@ framing_implicit] post:post_t b)
+  (#[@@@ framing_implicit] p:squash (can_be_split_forall post_f (fun x -> pre_g x `star` frame_g x)))
+  (#[@@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
+  (f:Steel.Effect.repr a pre_f post_f req_f ens_f)
+  (g:(x:a -> atomic_repr b Set.empty o (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: Steel.Effect.repr b
+          pre_f
+          post
+         (bind_steelaf_steela_req req_f ens_f req_g frame_g p)
+         (bind_steelaf_steela_ens req_f ens_f ens_g frame_g post p p2)
+
+polymonadic_bind (Steel.Effect.SteelF, SteelAtomic) |> Steel.Effect.SteelF = bind_steelf_steelatomic
+
+val bind_steelatomicf_steel (a:Type) (b:Type)
+  (o:observability)
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
+  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
+  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#[@@@ framing_implicit] frame_g:a -> slprop)
+  (#[@@@ framing_implicit] post:post_t b)
+  (#[@@@ framing_implicit] p:squash (can_be_split_forall post_f (fun x -> pre_g x `star` frame_g x)))
+  (#[@@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
+  (f:atomic_repr a Set.empty o pre_f post_f req_f ens_f)
+  (g:(x:a -> Steel.Effect.repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: Steel.Effect.repr b
+          pre_f
+          post
+         (bind_steelaf_steela_req req_f ens_f req_g frame_g p)
+         (bind_steelaf_steela_ens req_f ens_f ens_g frame_g post p p2)
+
+polymonadic_bind (SteelAtomicF, Steel.Effect.Steel) |> Steel.Effect.SteelF = bind_steelatomicf_steel
+
 (** A, A -> F **)
 
 val bind_steelatomic_steel (a:Type) (b:Type)
@@ -555,11 +597,25 @@ val change_slprop (#opened_invariants:inames)
                   (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
   : SteelAtomicT unit opened_invariants unobservable p (fun _ -> q)
 
+val rewrite_context (#opened:inames)
+                    (#[@@@ framing_implicit] p:slprop)
+                    (#[@@@ framing_implicit] q:slprop)
+                    (_:unit)
+  : SteelAtomicF unit opened unobservable p (fun _ -> q)
+                 (requires fun _ -> p `equiv` q) (ensures fun _ _ _ -> True)
+
 val extract_info (#opened_invariants:inames) (p:slprop) (fact:prop)
   (l:(m:mem) -> Lemma (requires interp p m) (ensures fact))
   : SteelAtomic unit opened_invariants unobservable p (fun _ -> p)
       (fun _ -> True)
       (fun _ _ _ -> fact)
+
+val sladmit (#a:Type)
+            (#opened:inames)
+            (#[@@@ framing_implicit] p:pre_t)
+            (#[@@@ framing_implicit] q:post_t a)
+            (_:unit)
+  : SteelAtomicF a opened unobservable p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
 
 // Some utilities
 let return_atomic #a #opened_invariants #p (x:a)
@@ -575,8 +631,9 @@ val h_intro_emp_l (#opened_invariants:_) (p:slprop)
 val h_elim_emp_l (#opened_invariants:_) (p:slprop)
   : SteelAtomicT unit opened_invariants unobservable (emp `star` p) (fun _ -> p)
 
-val intro_pure (#opened_invariants:_) (#p:slprop) (q:prop { q })
-  : SteelAtomicT unit opened_invariants unobservable p (fun _ -> p `star` pure q)
+val intro_pure (#opened_invariants:_) (p:prop)
+  : SteelAtomic unit opened_invariants unobservable emp (fun _ -> pure p)
+                (requires fun _ -> p) (ensures fun _ _ _ -> True)
 
 val h_commute (#opened_invariants:_) (p q:slprop)
   : SteelAtomicT unit opened_invariants unobservable (p `star` q) (fun _ -> q `star` p)

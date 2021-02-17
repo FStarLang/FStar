@@ -314,6 +314,36 @@ let bind_steel_steelatomicf (a:Type) (b:Type) o
 
     y
 
+let bind_steelf_steelatomic (a:Type) (b:Type) o
+  #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_g #post #p #p2 f g
+  = fun frame ->
+    let m0:full_mem = NMST.get() in
+    let x = f frame in
+    let m1:full_mem = NMST.get() in
+
+    assert (interp (post_f x `star` frame `star` locks_invariant Set.empty m1) m1);
+    // By sl_implies property
+    interp_trans_left Set.empty (post_f x) (pre_g x `star` frame_g x) frame m1;
+    assert (interp ((pre_g x `star` frame_g x) `star` frame `star` locks_invariant Set.empty m1) m1);
+    // By AC-rewriting
+    equiv_middle_left_assoc (pre_g x) (frame_g x) frame (locks_invariant Set.empty m1);
+    assert (interp (pre_g x `star` (frame_g x `star` frame) `star` locks_invariant Set.empty m1) m1);
+
+    let y = g x (frame_g x `star` frame) in
+    let m2:full_mem = NMST.get() in
+    // Post-condition of g
+    assert (interp (post_g x y `star` (frame_g x `star` frame) `star` locks_invariant Set.empty m2) m2);
+    // By AC-rewriting
+    equiv_middle_left_assoc (post_g x y) (frame_g x) frame (locks_invariant Set.empty m2);
+    assert (interp ((post_g x y `star` frame_g x) `star` frame `star` locks_invariant Set.empty m2) m2);
+
+    interp_trans_left Set.empty (post_g x y `star` frame_g x) (post y) frame m2;
+
+    y
+
+let bind_steelatomicf_steel a b o #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_g #post #p #p2 f g =
+  Steel.Effect.bind_steelf_steel a b #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_g #post #(fun _ -> True) #p #p2 f g
+
 let bind_steelatomic_steel (a:Type) (b:Type) o
   #pre_f #post_f #req_f #ens_f #pre_g #post_g #req_g #ens_g #frame_f #frame_g #post #p #p2 f g
 = fun frame ->
@@ -407,6 +437,8 @@ let frame frame f = SteelAtomic?.reflect (Steel.Memory.frame frame (reify (f ())
 let change_slprop #opened p q proof =
   SteelAtomic?.reflect (Steel.Memory.change_slprop #opened p q proof)
 
+let rewrite_context #opened #p #q _ = change_slprop p q (fun _ -> ()); ()
+
 let extract_info0 (#opened:inames) (p:slprop) (fact:prop)
   (proof:(m:mem) -> Lemma (requires interp p m) (ensures fact))
   : atomic_repr unit opened unobservable p (fun _ -> p)
@@ -418,10 +450,12 @@ let extract_info0 (#opened:inames) (p:slprop) (fact:prop)
 
 let extract_info #opened p fact proof = SteelAtomic?.reflect (extract_info0 #opened p fact proof)
 
+let sladmit #a #opened #p #q _ = SteelAtomicF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
+
 let h_assert_atomic p = change_slprop p p (fun m -> ())
 let h_intro_emp_l p = change_slprop p (emp `star` p) (fun m -> emp_unit p; star_commutative p emp)
 let h_elim_emp_l p = change_slprop (emp `star` p) p (fun m -> emp_unit p; star_commutative p emp)
-let intro_pure #_ #p q = change_slprop p (p `star` pure q) (fun m -> emp_unit p; pure_star_interp p q m)
+let intro_pure #_ p = change_slprop emp (pure p) (fun m -> pure_interp p m)
 let h_commute p q = change_slprop (p `star` q) (q `star` p) (fun m -> star_commutative p q)
 let h_assoc_left p q r = change_slprop ((p `star` q) `star` r) (p `star` (q `star` r)) (fun m -> star_associative p q r)
 let h_assoc_right p q r = change_slprop (p `star` (q `star` r)) ((p `star` q) `star` r) (fun m -> star_associative p q r)

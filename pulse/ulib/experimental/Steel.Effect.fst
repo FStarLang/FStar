@@ -208,31 +208,12 @@ val add_action (#a:Type)
 
 let add_action f = Steel?.reflect (action_as_repr f)
 
-let rewrite_context #p #q _ =
-  assert (p `equiv` q);
-  SteelF?.reflect (action_as_repr (Steel.Memory.change_slprop p q (fun m -> ())))
-
-let extract_info0 (p:slprop) (fact:prop)
-  (l:(m:mem) -> Lemma (requires interp p m) (ensures fact))
-  : repr unit p (fun _ -> p)
-      (fun _ -> True)
-      (fun _ _ _ -> fact)
-  = fun frame ->
-      let m = nmst_get() in
-      l m
-
-let extract_info p fact l = Steel?.reflect (extract_info0 p fact l)
-
-let sladmit #a #p #q _ = SteelF?.reflect (fun _ -> NMST.nmst_admit ())
-
 val change_slprop (p q:slprop)
                   (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
   : SteelT unit p (fun _ -> q)
 
 let change_slprop p q proof =
   Steel?.reflect (Steel.Memory.change_slprop #Set.empty p q proof)
-
-let intro_pure p = change_slprop emp (pure p) (fun m -> pure_interp p m)
 
 let read r v0 = Steel?.reflect (action_as_repr (sel_action FStar.Set.empty r v0))
 let write r v0 v1 = Steel?.reflect (action_as_repr (upd_action FStar.Set.empty r v0 v1))
