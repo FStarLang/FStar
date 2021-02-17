@@ -17,6 +17,7 @@
 *)
 module DList.Invariant
 open Steel.Memory
+open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.FractionalPermission
 open Steel.Reference

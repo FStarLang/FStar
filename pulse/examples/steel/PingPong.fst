@@ -15,8 +15,9 @@
 *)
 
 module PingPong
-open Steel.Effect
 open Steel.Memory
+open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.Channel.Protocol
 module Duplex = Steel.Channel.Duplex
 module Protocol = Steel.Channel.Protocol
@@ -108,7 +109,7 @@ module T = Steel.Primitive.ForkJoin
 let rec join_all (threads:list (T.thread emp))
   : SteelT unit emp (fun _ -> emp)
   = let open FStar.List.Tot.Base in
-    if isEmpty threads then (noop #emp (); ()) else
+    if isEmpty threads then (noop (); ()) else
       (let Cons hd tl = threads in T.join hd; join_all tl)
 
 /// We leverage an existing fork/join library to execute n instances of client_server in parallel

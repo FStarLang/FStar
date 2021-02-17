@@ -5,6 +5,7 @@ of SteelT to get a direct style (or Unix style) fork/join. Very much a
 prototype for now. *)
 
 open Steel.Memory
+open Steel.Effect.Atomic
 open Steel.Effect
 open FStar.Ghost
 open Steel.Reference
@@ -224,7 +225,7 @@ let kfork (#p:slprop) (#q:slprop) (f : unit -> SteelK unit p (fun _ -> q))
   SteelK?.reflect (
   fun (#frame:slprop) (#postf:slprop)
     (k : (x:(thread q) -> SteelT unit (frame `star` emp) (fun _ -> postf))) ->
-      noop #emp ();
+      noop ();
       let t1 () : SteelT unit (emp `star` p) (fun _ -> q) =
         let r : steelK unit p (fun _ -> q) = reify (f ()) in
         r #emp #q (fun () -> idk ())
