@@ -653,6 +653,8 @@ val intro_h_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p
 val h_affine (#opened_invariants:_) (p q:slprop)
   : SteelAtomicT unit opened_invariants unobservable (p `star` q) (fun _ -> p)
 
+val drop (#opened:inames) (p:slprop) : SteelAtomicT unit opened unobservable p (fun _ -> emp)
+
 (* Witnessing an existential *)
 val witness_h_exists (#a:Type) (#opened_invariants:_) (#p:a -> slprop) (_:unit)
   : SteelAtomicT (Ghost.erased a) opened_invariants unobservable

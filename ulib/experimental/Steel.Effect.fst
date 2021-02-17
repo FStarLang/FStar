@@ -238,58 +238,6 @@ let gather r v0 v1 = Steel?.reflect (action_as_repr (gather_action FStar.Set.emp
 let witness r fact v _ = Steel?.reflect (action_as_repr (Steel.Memory.witness FStar.Set.empty r fact v ()))
 let recall r v = Steel?.reflect (action_as_repr (Steel.Memory.recall FStar.Set.empty r v))
 
-let cond_aux (#a:Type) (b:bool) (p: (b':bool{b == b'}) -> slprop)
-             (q: bool -> a -> slprop)
-             ($then_:squash (b==true) -> Steel a (p b) (q b) (fun _ -> b==true) (fun _ _ _ -> True))
-             ($else_:squash (b==false) -> Steel a (p b) (q b) (fun _ -> b==false) (fun _ _ _ -> True))
-  : SteelT a (p b) (q b)
-  = if b then then_ () else else_ ()
-
-let aux1 (#a:Type) (b:bool{b == true})
-         (p: (b':bool{b == b'}) -> slprop)
-         (q: bool -> a -> slprop)
-         (then_: (squash (b==true) -> SteelT a (p true) (q true)))
-  : unit -> SteelT a (p b) (q b)
-  = fun _ ->
-      change_slprop (p b) (p true) (fun _ -> ());
-      let x = then_ () in change_slprop (q true x) (q b x) (fun _ -> ());
-      x
-
-let aux2 (#a:Type) (b:bool)
-         (p: (b':bool{b == b'}) -> slprop)
-         (q: bool -> a -> slprop)
-         (then_: (squash (b==true) -> SteelT a (p true) (q true)))
-  : squash (b==true) -> Steel a (p b) (q b) (fun _ -> b == true) (fun _ _ _ -> True)
-  = fun _ -> (aux1 b p q then_) ()
-
-let aux3 (#a:Type) (b:bool{b == false})
-         (p: (b':bool{b == b'}) -> slprop)
-         (q: bool -> a -> slprop)
-         (else_: (squash (b==false) -> SteelT a (p false) (q false)))
-  : squash (b==false) -> SteelT a (p b) (q b)
-  = fun _ ->
-      change_slprop (p b) (p false) (fun _ -> ());
-      let x = else_ () in change_slprop (q false x) (q b x) (fun _ -> ());
-      x
-
-let aux4 (#a:Type) (b:bool)
-         (p: (b':bool{b == b'}) -> slprop)
-         (q: bool -> a -> slprop)
-         (else_: (squash (b==false) -> SteelT a (p false) (q false)))
-  : squash (b==false) -> Steel a (p b) (q b) (fun _ -> b == false) (fun _ _ _ -> True)
-  = fun _ -> (aux3 b p q else_) ()
-
-let cond (#a:Type)
-         (b:bool)
-         (p: (b':bool{b == b'}) -> slprop)
-         (q: bool -> a -> slprop)
-         (then_: (squash (b == true) -> SteelT a (p true) (q true)))
-         (else_: (squash (b == false) -> SteelT a (p false) (q false)))
-  : SteelT a (p b) (q b)
-  = cond_aux b p q (aux2 b p q then_) (aux4 b p q else_)
-
-let drop p = change_slprop p emp (fun m -> emp_unit p; affine_star p emp m)
-
 let noop () = change_slprop emp emp (fun _ -> ())
 
 let select_refine #a #p r x f = add_action (Steel.Memory.select_refine Set.empty r x f)
