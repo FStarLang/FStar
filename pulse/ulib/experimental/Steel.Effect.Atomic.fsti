@@ -132,15 +132,40 @@ val subcomp (a:Type)
          subcomp_pre req_f ens_f req_g ens_g p1 p2)
        (ensures fun _ -> True)
 
-// let if_then_else (a:Type)
-//   (opened_invariants:inames)
-//   (o:observability)
-//   (#[@@framing_implicit] pre:pre_t) (#[@@framing_implicit] post:post_t a)
-//   (f:atomic_repr a opened_invariants o pre post)
-//   (g:atomic_repr a opened_invariants o pre post)
-//   (p:Type0)
-//   : Type
-//   = atomic_repr a opened_invariants o pre post
+unfold
+let if_then_else_req (#pre_f:pre_t) (#pre_g:pre_t)
+  (s: squash (can_be_split pre_f pre_g))
+  (req_then:req_t pre_f) (req_else:req_t pre_g)
+  (p:Type0)
+: req_t pre_f
+= fun h -> (p ==> req_then h) /\ ((~ p) ==> req_else h)
+
+unfold
+let if_then_else_ens (#a:Type) (#pre_f:pre_t) (#pre_g:pre_t) (#post_f:post_t a) (#post_g:post_t a)
+  (s1 : squash (can_be_split pre_f pre_g))
+  (s2 : squash (equiv_forall post_f post_g))
+  (ens_then:ens_t pre_f a post_f) (ens_else:ens_t pre_g a post_g)
+  (p:Type0)
+: ens_t pre_f a post_f
+= fun h0 x h1 -> (p ==> ens_then h0 x h1) /\ ((~ p) ==> ens_else h0 x h1)
+
+let if_then_else (a:Type)
+  (o:inames)
+  (o1:observability)
+  (o2:observability)
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] pre_g:pre_t)
+  (#[@@@ framing_implicit] post_f:post_t a) (#[@@@ framing_implicit] post_g:post_t a)
+  (#[@@@ framing_implicit] req_then:req_t pre_f) (#[@@@ framing_implicit] ens_then:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] req_else:req_t pre_g) (#[@@@ framing_implicit] ens_else:ens_t pre_g a post_g)
+  (#[@@@ framing_implicit] s_pre: squash (can_be_split pre_f pre_g))
+  (#[@@@ framing_implicit] s_post: squash (equiv_forall post_f post_g))
+  (f:atomic_repr a o o1 pre_f post_f req_then ens_then)
+  (g:atomic_repr a o o2 pre_g post_g req_else ens_else)
+  (p:bool)
+: Type
+= atomic_repr a o (join_obs o1 o2) pre_f post_f
+       (if_then_else_req s_pre req_then req_else p)
+       (if_then_else_ens s_pre s_post ens_then ens_else p)
 
 [@@allow_informative_binders]
 total
@@ -158,8 +183,8 @@ layered_effect {
   repr = atomic_repr;
   return = return;
   bind = bind;
-  subcomp = subcomp
-  // if_then_else = if_then_else
+  subcomp = subcomp;
+  if_then_else = if_then_else
 }
 
 [@@allow_informative_binders]
