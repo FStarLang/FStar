@@ -463,6 +463,8 @@ let intro_exists x p = change_slprop (p x) (h_exists p) (fun m -> Steel.Memory.i
 let intro_h_exists_erased x p = change_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists (Ghost.reveal x) p m)
 let h_affine p q = change_slprop (p `star` q) p (fun m -> affine_star p q m)
 
+let drop #_ p = change_slprop p emp (fun m -> emp_unit p; affine_star p emp m)
+
 let witness_h_exists #a #u #p s = SteelAtomic?.reflect (Steel.Memory.witness_h_exists #u p)
 let lift_h_exists_atomic #a #u p = SteelAtomic?.reflect (Steel.Memory.lift_h_exists #u p)
 let h_exists_cong_atomic p q = change_slprop (h_exists p) (h_exists q) (fun m -> h_exists_cong p q)

@@ -522,16 +522,6 @@ val recall (#a:Type u#1) (#pcm:FStar.PCM.pcm a) (#fact:property a)
            (pts_to r v `star` pure (witnessed r fact))
            (fun v1 -> pts_to r v `star` pure (fact v1))
 
-val cond (#a:Type)
-         (b:bool)
-         (p: (b':bool{b == b'}) -> slprop)
-         (q: bool -> a -> slprop)
-         (then_: (squash (b == true) -> SteelT a (p true) (q true)))
-         (else_: (squash (b == false) -> SteelT a (p false) (q false)))
-  : SteelT a (p b) (q b)
-
-val drop (p:slprop) : SteelT unit p (fun _ -> emp)
-
 val noop (u:unit) : SteelT unit emp (fun _ -> emp)
 
 /// Operations on PCM Refs

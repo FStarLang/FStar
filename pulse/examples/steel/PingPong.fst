@@ -15,8 +15,9 @@
 *)
 
 module PingPong
-open Steel.Effect
 open Steel.Memory
+open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.Channel.Protocol
 module Duplex = Steel.Channel.Duplex
 module Protocol = Steel.Channel.Protocol
