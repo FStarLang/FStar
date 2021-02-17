@@ -20,8 +20,8 @@ val alloc_ghost (#a:Type) (#u:_) (x:erased a)
 
 assume
 val split_ghost (#a:Type) (#u:_)
-                (#[@@@framing_implicit] p:perm)
-                (#[@@@framing_implicit] x:erased a)
+                (#p:perm)
+                (#x:erased a)
                 (r:ghostref a)
   : SteelAtomicT unit u unobservable
     (ghost_pts_to r p x)
@@ -30,10 +30,8 @@ val split_ghost (#a:Type) (#u:_)
 
 assume
 val gather_ghost (#a:Type) (#u:_)
-                 (#[@@@framing_implicit]p0:perm)
-                 (#[@@@framing_implicit]p1:perm)
-                 (#[@@@framing_implicit]x0:erased a)
-                 (#[@@@framing_implicit]x1:erased a)
+                 (#p0 #p1:perm)
+                 (#x0 #x1:erased a)
                  (r:ghostref a)
   : SteelAtomic unit u unobservable
     (ghost_pts_to r p0 x0 `star`
@@ -60,7 +58,7 @@ val admit_atomic (#a:_) (#u:_)
                  (#[@@@framing_implicit] p:pre_t)
                  (#[@@@framing_implicit] q:post_t a)
                  (_:unit)
-  : SteelAtomicT a u unobservable p q
+  : SteelAtomicF a u unobservable p q (fun _ -> True) (fun _ _ _ -> True)
 
 assume
 val drop (#u:_) (p:slprop)
@@ -91,15 +89,11 @@ let active (#p:_) ([@@@smt_fallback]f:perm) (i:inv p) =
 
 let new_inv (#u:_) (p:slprop)
   : SteelAtomicT (inv p) u unobservable p (active full_perm)
-  = let r : ghostref bool = alloc_ghost (Ghost.hide true) in
+  = let r = alloc_ghost (Ghost.hide true) in
     split_ghost r;
     A.intro_h_exists true (conditional_inv r p);
     let i = A.new_invariant u (ex_conditional_inv r p) in
-    let tok = (| r, i |) in
-    A.change_slprop (ghost_pts_to r (half_perm full_perm) (Ghost.hide true))
-                    (active full_perm tok)
-                    (fun _ -> ());
-    tok
+    (| r, i |)
 
 let share (#p:slprop) (#f:perm) (#u:_) (i:inv p)
   : SteelAtomicT unit u unobservable
@@ -111,7 +105,7 @@ let gather (#p:slprop) (#f0 #f1:perm) (#u:_) (i:inv p)
   : SteelAtomicT unit u unobservable
     (active f0 i `star` active f1 i)
     (fun _ -> active (sum_perm f0 f1) i)
-  = gather_ghost #_ #_ #(half_perm f0) #(half_perm f1) (gref i);
+  = gather_ghost #_ #_ #(half_perm f0) (gref i);
     A.change_slprop
       (ghost_pts_to (gref i) (sum_perm (half_perm f0) (half_perm f1)) (hide true))
       (ghost_pts_to (gref i) (half_perm (sum_perm f0 f1)) (hide true))
@@ -132,7 +126,7 @@ let dispose (#p:slprop) (#u:_) (i:inv p{not (name i `Set.mem` u)})
         ex_conditional_inv r p `star`
         p)
     = let b = A.witness_h_exists #_ #_ #(conditional_inv r p) () in
-      gather_ghost #_ #_ #(half_perm full_perm) #(half_perm full_perm) #true #(hide (reveal b)) r;
+      gather_ghost #_ #_ #_ #_ #true #(hide (reveal b)) r;
       A.change_slprop (if b then p else emp) p (fun _ -> ());
       A.change_slprop (ghost_pts_to r (sum_perm (half_perm full_perm) (half_perm full_perm)) true)
                       (ghost_pts_to r full_perm true)
@@ -142,13 +136,8 @@ let dispose (#p:slprop) (#u:_) (i:inv p{not (name i `Set.mem` u)})
       A.intro_h_exists false (conditional_inv r p);
       drop (ghost_pts_to r (half_perm full_perm) false)
     in
-    A.with_invariant #unit #(ghost_pts_to (gref i) (half_perm full_perm) true)
-                           #(fun _ -> p)
-                           #u
-                           #unobservable
-                           #(ex_conditional_inv (gref i) p)
-                           (iinv i)
-                           (dispose_aux (gref i))
+    A.with_invariant (iinv i)
+                     (dispose_aux (gref i))
 
 let with_invariant (#a:Type)
                    (#fp:slprop)
@@ -179,10 +168,5 @@ let with_invariant (#a:Type)
       A.intro_h_exists true (conditional_inv r p);
       x
     in
-    A.with_invariant #a #(ghost_pts_to (gref i) (half_perm perm) true `star` fp)
-                           #(fun x -> ghost_pts_to (gref i) (half_perm perm) true `star` fp' x)
-                           #u
-                           #o
-                           #(ex_conditional_inv (gref i) p)
-                           (iinv i)
-                           (with_invariant_aux (gref i))
+    A.with_invariant (iinv i)
+                     (with_invariant_aux (gref i))
