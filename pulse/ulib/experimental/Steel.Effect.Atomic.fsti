@@ -644,7 +644,7 @@ val h_assoc_left (#opened_invariants:_) (p q r:slprop)
 val h_assoc_right (#opened_invariants:_) (p q r:slprop)
   : SteelAtomicT unit opened_invariants unobservable (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
 
-val intro_h_exists (#a:Type) (#opened_invariants:_) (x:a) (p:a -> slprop)
+val intro_exists (#a:Type) (#opened_invariants:_) (x:a) (p:a -> slprop)
   : SteelAtomicT unit opened_invariants unobservable (p x) (fun _ -> h_exists p)
 
 val intro_h_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p:a -> slprop)

@@ -290,9 +290,7 @@ let cond (#a:Type)
 
 let drop p = change_slprop p emp (fun m -> emp_unit p; affine_star p emp m)
 
-let intro_exists #a x p = change_slprop (p x) (h_exists p) (fun m -> intro_h_exists x p m)
-
-let noop #p () = change_slprop p p (fun _ -> ())
+let noop () = change_slprop emp emp (fun _ -> ())
 
 let select_refine #a #p r x f = add_action (Steel.Memory.select_refine Set.empty r x f)
 

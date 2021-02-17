@@ -38,15 +38,14 @@ val intro_lockinv_locked (#uses:inames) (p:slprop) (r:ref bool)
   : SteelAtomicT unit uses unobservable (pts_to r full_perm locked) (fun _ -> lockinv p r)
 
 let intro_lockinv_available #uses p r =
-  Atomic.intro_h_exists false
+  intro_exists false
     (fun (b: bool) ->
       pts_to r full_perm (Ghost.hide b) `star`
         (if b then emp else p)
     )
 
 let intro_lockinv_locked #uses p r =
-  let open Atomic in
-  intro_h_exists true
+  intro_exists true
     (fun b -> pts_to r full_perm (Ghost.hide b) `star`
           (if b then emp else p))
 
@@ -54,11 +53,10 @@ val elim_lockinv (#uses:inames) (p:slprop) (r:ref bool)
   : SteelAtomicT unit uses unobservable (lockinv p r) (fun _ -> h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p)))
 
 let elim_lockinv #uses p r =
-  let open Atomic in
   change_slprop (lockinv p r) (h_exists (fun b -> pts_to r full_perm (Ghost.hide b) `star` (if b then emp else p))) (fun _ -> ())
 
 val new_inv (p:slprop) : SteelT (inv p) p (fun _ -> emp)
-let new_inv p = Atomic.new_invariant Set.empty p
+let new_inv p = new_invariant Set.empty p
 
 #set-options "--fuel 0 --ifuel 0"
 
@@ -122,7 +120,7 @@ let acquire' (#p:slprop) (l:lock p)
 
 let rec acquire #p l =
   let b = acquire' l in
-  if b then (change_slprop (if b then p else emp) p (fun _ -> ()); noop #emp ())
+  if b then (change_slprop (if b then p else emp) p (fun _ -> ()); noop ())
   else (change_slprop (if b then p else emp) emp (fun _ -> ()); acquire l)
 
 val release_core (#p:slprop) (#u:inames) (r:ref bool) (i:inv (lockinv p r))

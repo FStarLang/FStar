@@ -53,7 +53,7 @@ let pure_as_ens (#[@@@framing_implicit] p:prop) ()
 
 let slassert (p:slprop)
   : SteelT unit p (fun _ -> p)
-  = noop()
+  = noop (); ()
 
 let pts_to_injective_eq #a #p #q (r:ref a) (v0 v1:Ghost.erased a)
   : Steel unit (pts_to r p v0 `star` pts_to r q v1)

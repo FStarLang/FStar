@@ -278,7 +278,7 @@ let extract_pure #a #uses #p #f
            (pts_to_body r f v h)
            (fun _ -> pts_to_body r f v h)
   = change_slprop (pts_to_body r f v h) (M.pts_to r h `star` pure (history_val h v f)) (fun _ -> ());
-    let (u:unit{history_val h v f}) = Atomic.elim_pure (history_val h v f) in
+    let (u:unit{history_val h v f}) = elim_pure (history_val h v f) in
     change_slprop (M.pts_to r h) (pts_to_body r f v h) (fun m ->
       emp_unit (M.pts_to r h);
       pure_star_interp (M.pts_to r h) (history_val h v f) m
@@ -295,7 +295,7 @@ let elim_pure #a #uses #p #f
            (pts_to_body r f v h)
            (fun _ ->  M.pts_to r h)
   = let _ = extract_pure r v h in
-    Atomic.h_affine (M.pts_to r h) (pure (history_val h v f))
+    h_affine (M.pts_to r h) (pure (history_val h v f))
 
 module ST = Steel.Memory.Tactics
 
@@ -336,13 +336,13 @@ let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> slprop)
                 (r:ref a p)
   : SteelT a (h_exists (fun (v:a) -> pts_to r q v `star` f v))
              (fun v -> pts_to r q v `star` f v)
-  = let v = Atomic.witness_h_exists #_ #_ #(fun (v:a) -> pts_to r q v `star` f v) (
+  = let v = witness_h_exists #_ #_ #(fun (v:a) -> pts_to r q v `star` f v) (
         pts_to_is_witness_invariant r q;
         star_is_witinv_left (fun (v:a) -> pts_to r q v) f
     ) in
     change_slprop (pts_to r q (Ghost.hide (Ghost.reveal v)) `star` f v) (h_exists (pts_to_body r q v) `star` f v) (fun _ -> ());
 
-    let h = Atomic.witness_h_exists #_ #_ #(pts_to_body r q v) () in
+    let h = witness_h_exists #_ #_ #(pts_to_body r q v) () in
 
     let _ = elim_pure #_ #_ #_ #q r v h in
 
@@ -352,7 +352,7 @@ let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> slprop)
       emp_unit (M.pts_to r h);
       pure_star_interp (M.pts_to r h) (history_val h v q) m);
 
-    Atomic.intro_h_exists_erased h (pts_to_body r q v);
+    intro_h_exists_erased h (pts_to_body r q v);
     rewrite_erased (fun v -> (pts_to r q v `star` f v)) v (hval_tot hv);
     let v = hval_tot hv in
 
