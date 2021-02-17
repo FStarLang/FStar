@@ -433,7 +433,6 @@ let as_atomic_action f = SteelAtomic?.reflect f
 let new_invariant i p = SteelAtomic?.reflect (Steel.Memory.new_invariant i p)
 let with_invariant #a #fp #fp' #opened i f =
   SteelAtomic?.reflect (Steel.Memory.with_invariant #a #fp #fp' #opened i (reify (f())))
-let frame frame f = SteelAtomic?.reflect (Steel.Memory.frame frame (reify (f ())))
 let change_slprop #opened p q proof =
   SteelAtomic?.reflect (Steel.Memory.change_slprop #opened p q proof)
 
@@ -452,17 +451,10 @@ let extract_info #opened p fact proof = SteelAtomic?.reflect (extract_info0 #ope
 
 let sladmit #a #opened #p #q _ = SteelAtomicF?.reflect (fun _ -> NMSTTotal.nmst_tot_admit ())
 
-let h_assert_atomic p = change_slprop p p (fun m -> ())
-let h_intro_emp_l p = change_slprop p (emp `star` p) (fun m -> emp_unit p; star_commutative p emp)
-let h_elim_emp_l p = change_slprop (emp `star` p) p (fun m -> emp_unit p; star_commutative p emp)
+let slassert p = change_slprop p p (fun m -> ())
 let intro_pure #_ p = change_slprop emp (pure p) (fun m -> pure_interp p m)
-let h_commute p q = change_slprop (p `star` q) (q `star` p) (fun m -> star_commutative p q)
-let h_assoc_left p q r = change_slprop ((p `star` q) `star` r) (p `star` (q `star` r)) (fun m -> star_associative p q r)
-let h_assoc_right p q r = change_slprop (p `star` (q `star` r)) ((p `star` q) `star` r) (fun m -> star_associative p q r)
 let intro_exists x p = change_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists x p m)
-let intro_h_exists_erased x p = change_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists (Ghost.reveal x) p m)
-let h_affine p q = change_slprop (p `star` q) p (fun m -> affine_star p q m)
-
+let intro_exists_erased x p = change_slprop (p x) (h_exists p) (fun m -> Steel.Memory.intro_h_exists (Ghost.reveal x) p m)
 let drop #_ p = change_slprop p emp (fun m -> emp_unit p; affine_star p emp m)
 
 let witness_h_exists #a #u #p s = SteelAtomic?.reflect (Steel.Memory.witness_h_exists #u p)

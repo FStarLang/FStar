@@ -210,6 +210,7 @@ let history_val #a #p (h:history a p) (v:Ghost.erased a) (f:perm)
   : prop
   = Current? h /\ hval h == v /\ hperm h == f
 
+[@@__reduce__]
 let pts_to_body #a #p (r:ref a p) (f:perm) (v:Ghost.erased a) (h:history a p) =
       M.pts_to r h `star`
       pure (history_val h v f)
@@ -295,7 +296,7 @@ let elim_pure #a #uses #p #f
            (pts_to_body r f v h)
            (fun _ ->  M.pts_to r h)
   = let _ = extract_pure r v h in
-    h_affine (M.pts_to r h) (pure (history_val h v f))
+    drop (pure (history_val h v f))
 
 module ST = Steel.Memory.Tactics
 
@@ -352,7 +353,7 @@ let read_refine (#a:Type) (#q:perm) (#p:Preorder.preorder a) (#f:a -> slprop)
       emp_unit (M.pts_to r h);
       pure_star_interp (M.pts_to r h) (history_val h v q) m);
 
-    intro_h_exists_erased h (pts_to_body r q v);
+    intro_exists_erased h (pts_to_body r q v);
     rewrite_erased (fun v -> (pts_to r q v `star` f v)) v (hval_tot hv);
     let v = hval_tot hv in
 
@@ -425,7 +426,7 @@ let witness (#a:Type) (#q:perm) (#p:Preorder.preorder a) (r:ref a p)
       emp_unit (M.pts_to r h);
       pure_star_interp (M.pts_to r h) (history_val h v q) m);
 
-    intro_h_exists_erased h (pts_to_body r q v);
+    intro_exists_erased h (pts_to_body r q v);
     change_slprop (pts_to r q v) (pts_to r q v) (fun _ -> ())
 
 
@@ -442,7 +443,7 @@ let recall (#a:Type u#1) (#q:perm) (#p:Preorder.preorder a) (#fact:property a)
       emp_unit (M.pts_to r h);
       pure_star_interp (M.pts_to r h) (history_val h v q) m);
 
-    intro_h_exists_erased h (pts_to_body r q v);
+    intro_exists_erased h (pts_to_body r q v);
 
     change_slprop (pts_to r q v `star` pure (lift_fact fact h1))
       (pts_to r q v `star` pure (fact v)) (fun _ -> ())

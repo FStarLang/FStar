@@ -153,7 +153,7 @@ let release' (#p:slprop) (l:lock p)
   let r:ref bool = fst l in
   let i: inv (lockinv p r) = snd l in
   let b = with_invariant i (fun _ -> release_core r i) in
-  h_affine emp (if b then emp else p)
+  drop (if b then emp else p)
 
 let release (#p:slprop) (l:lock p) : SteelT unit p (fun _ -> emp) =
   release' #p l

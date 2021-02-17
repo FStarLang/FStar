@@ -581,17 +581,6 @@ val with_invariant (#a:Type)
                                          (fun x -> p `star` fp' x))
   : SteelAtomicT a opened_invariants o fp fp'
 
-val frame (#a:Type)
-          (#opened_invariants:inames)
-          (#o:observability)
-          (#pre:slprop)
-          (#post:a -> slprop)
-          (frame:slprop)
-          ($f:unit -> SteelAtomicT a opened_invariants o pre post)
-  : SteelAtomicT a opened_invariants o
-                (pre `star` frame)
-                (fun x -> post x `star` frame)
-
 val change_slprop (#opened_invariants:inames)
                   (p q:slprop)
                   (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
@@ -617,41 +606,18 @@ val sladmit (#a:Type)
             (_:unit)
   : SteelAtomicF a opened unobservable p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
 
-// Some utilities
-let return_atomic #a #opened_invariants #p (x:a)
-  : SteelAtomic a opened_invariants unobservable (p x) p (return_req (p x)) (return_ens a x p)
-  = SteelAtomic?.reflect (return a x opened_invariants #p)
-
-val h_assert_atomic (#opened_invariants:_) (p:slprop)
+val slassert (#opened_invariants:_) (p:slprop)
   : SteelAtomicT unit opened_invariants unobservable p (fun _ -> p)
-
-val h_intro_emp_l (#opened_invariants:_) (p:slprop)
-  : SteelAtomicT unit opened_invariants unobservable p (fun _ -> emp `star` p)
-
-val h_elim_emp_l (#opened_invariants:_) (p:slprop)
-  : SteelAtomicT unit opened_invariants unobservable (emp `star` p) (fun _ -> p)
 
 val intro_pure (#opened_invariants:_) (p:prop)
   : SteelAtomic unit opened_invariants unobservable emp (fun _ -> pure p)
                 (requires fun _ -> p) (ensures fun _ _ _ -> True)
 
-val h_commute (#opened_invariants:_) (p q:slprop)
-  : SteelAtomicT unit opened_invariants unobservable (p `star` q) (fun _ -> q `star` p)
-
-val h_assoc_left (#opened_invariants:_) (p q r:slprop)
-  : SteelAtomicT unit opened_invariants unobservable ((p `star` q) `star` r) (fun _ -> p `star` (q `star` r))
-
-val h_assoc_right (#opened_invariants:_) (p q r:slprop)
-  : SteelAtomicT unit opened_invariants unobservable (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
-
 val intro_exists (#a:Type) (#opened_invariants:_) (x:a) (p:a -> slprop)
   : SteelAtomicT unit opened_invariants unobservable (p x) (fun _ -> h_exists p)
 
-val intro_h_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p:a -> slprop)
+val intro_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p:a -> slprop)
   : SteelAtomicT unit opened_invariants unobservable (p x) (fun _ -> h_exists p)
-
-val h_affine (#opened_invariants:_) (p q:slprop)
-  : SteelAtomicT unit opened_invariants unobservable (p `star` q) (fun _ -> p)
 
 val drop (#opened:inames) (p:slprop) : SteelAtomicT unit opened unobservable p (fun _ -> emp)
 
