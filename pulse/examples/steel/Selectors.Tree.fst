@@ -71,12 +71,6 @@ let rec member ptr v =
     )
   )
 
-assume val sladmit (#a:Type)
-            (#[@@@framing_implicit] p:pre_t)
-            (#[@@@framing_implicit] q:post_t a)
-            (_:unit)
-  : SteelSelF a p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
-
 #push-options "--ifuel 1 --fuel 2"
 let rotate_left #a ptr =
   let h0' = get () in
@@ -123,127 +117,68 @@ let rotate_right #a ptr =
 
 let rotate_right_left #a ptr =
   let h = get #(linked_tree ptr) () in
+  node_is_not_null ptr;
+  // original root node
+  let x_node = unpack_tree ptr in
+  let x = get_data x_node in
+  node_is_not_null (get_right x_node);
+  // original right node
+  // z = get_right x_node
+  let z_node = unpack_tree (get_right x_node) in
+  let z = get_data z_node in
+  node_is_not_null (get_left z_node);
+  // original left (right node)
+  // y = get_left (z_node)
+  let y_node = unpack_tree (get_left z_node) in
+  let y = get_data y_node in
+  let new_x = mk_node x (get_left x_node) (get_left y_node) in
+  let new_z = mk_node z (get_right y_node) (get_right z_node) in
+  let new_y = mk_node y ptr (get_right x_node) in
 
-  // if top pointer is null
-  if is_null_t ptr then (
-    elim_linked_tree_leaf ptr;
-    assert(Spec.rotate_right_left (v_linked_tree ptr h) == None);
-    assert(False);
-    noop ();
-    ptr
-  ) else (
+  write ptr new_x;
+  write (get_right x_node) new_z;
+  write (get_left z_node) new_y;
 
-    // original root node
-    let x_node = unpack_tree ptr in
-    let x = get_data x_node in
+  pack_tree ptr (get_left x_node) (get_left y_node);
+  pack_tree (get_right x_node) (get_right y_node) (get_right z_node);
+  pack_tree (get_left z_node) ptr (get_right x_node);
 
-    // if z is null
-    if is_null_t (get_right x_node) then (
-      elim_linked_tree_leaf (get_right x_node);
-      assert(Spec.rotate_right_left (v_linked_tree ptr h) == None);
-      assert(False);
-      pack_tree ptr (get_left x_node) (get_right x_node);
-      ptr
-    ) else (
+  (get_left z_node)
 
-      // original right node
-      // z = get_right x_node
-      let z_node = unpack_tree (get_right x_node) in
-      let z = get_data z_node in
-
-      // if y is null
-      if is_null_t (get_left z_node) then (
-        elim_linked_tree_leaf (get_left z_node);
-        assert(Spec.rotate_right_left (v_linked_tree ptr h) == None);
-        assert(False);
-        pack_tree (get_right x_node) (get_left z_node) (get_right z_node);
-        pack_tree ptr (get_left x_node) (get_right x_node);
-        ptr
-      ) else (
-
-        // original left (right node)
-        // y = get_left (z_node)
-        let y_node = unpack_tree (get_left z_node) in
-        let y = get_data y_node in
-
-        let new_x = mk_node x (get_left x_node) (get_left y_node) in
-        let new_z = mk_node z (get_right y_node) (get_right z_node) in
-        let new_y = mk_node y ptr (get_right x_node) in
-
-        write ptr new_x;
-        write (get_right x_node) new_z;
-        write (get_left z_node) new_y;
-
-        pack_tree ptr (get_left x_node) (get_left y_node);
-        pack_tree (get_right x_node) (get_right y_node) (get_right z_node);
-        pack_tree (get_left z_node) ptr (get_right x_node);
-
-        (get_left z_node)
-
-      )
-    )
-  )
 
 let rotate_left_right #a ptr =
   let h = get #(linked_tree ptr) () in
 
-  // if top pointer is null
-  if is_null_t ptr then (
-    elim_linked_tree_leaf ptr;
-    assert(Spec.rotate_right_left (v_linked_tree ptr h) == None);
-    assert(False);
-    noop ();
-    ptr
-  ) else (
+  node_is_not_null ptr;
+  // original root node
+  let x_node = unpack_tree ptr in
+  let x = get_data x_node in
 
-    // original root node
-    let x_node = unpack_tree ptr in
-    let x = get_data x_node in
+  node_is_not_null (get_left x_node);
 
-    // if z is null
-    if is_null_t (get_left x_node) then (
-      elim_linked_tree_leaf (get_left x_node);
-      assert(Spec.rotate_left_right (v_linked_tree ptr h) == None);
-      assert(False);
-      pack_tree ptr (get_left x_node) (get_right x_node);
-      ptr
-    ) else (
+  // original left node
+  // z = get_left x_node
+  let z_node = unpack_tree (get_left x_node) in
+  let z = get_data z_node in
 
-      // original left node
-      // z = get_left x_node
-      let z_node = unpack_tree (get_left x_node) in
-      let z = get_data z_node in
+  node_is_not_null (get_right z_node);
 
-      // if y is null
-      if is_null_t (get_right z_node) then (
-        elim_linked_tree_leaf (get_right z_node);
-        assert(Spec.rotate_left_right (v_linked_tree ptr h) == None);
-        assert(False);
-        pack_tree (get_left x_node) (get_left z_node) (get_right z_node);
-        pack_tree ptr (get_left x_node) (get_right x_node);
-        ptr
-      ) else (
+  // original right (left node)
+  // y = get_right (z_node)
+  let y_node = unpack_tree (get_right z_node) in
+  let y = get_data y_node in
 
-        // original right (left node)
-        // y = get_right (z_node)
-        let y_node = unpack_tree (get_right z_node) in
-        let y = get_data y_node in
+  let new_z = mk_node z (get_left z_node) (get_left y_node) in
+  let new_x = mk_node x (get_right y_node) (get_right x_node) in
+  let new_y = mk_node y (get_left x_node) ptr in
 
-        let new_z = mk_node z (get_left z_node) (get_left y_node) in
-        let new_x = mk_node x (get_right y_node) (get_right x_node) in
-        let new_y = mk_node y (get_left x_node) ptr in
+  write (get_left x_node) new_z;
+  write ptr new_x;
+  write (get_right z_node) new_y;
 
-        write (get_left x_node) new_z;
-        write ptr new_x;
-        write (get_right z_node) new_y;
+  pack_tree (get_left x_node) (get_left z_node) (get_left y_node);
+  pack_tree ptr (get_right y_node) (get_right x_node);
+  pack_tree (get_right z_node) (get_left x_node) ptr;
 
-        pack_tree (get_left x_node) (get_left z_node) (get_left y_node);
-        pack_tree ptr (get_right y_node) (get_right x_node);
-        pack_tree (get_right z_node) (get_left x_node) ptr;
-
-        (get_right z_node)
-
-      )
-    )
-  )
+  (get_right z_node)
 #pop-options
