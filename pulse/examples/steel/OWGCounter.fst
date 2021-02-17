@@ -26,7 +26,7 @@
  * See http://pm.inf.ethz.ch/publications/getpdf.php for an implementation
  *   of the OWG counters in the Chalice framework.
  *)
- 
+
 module OWGCounter
 
 module G = FStar.Ghost
@@ -85,7 +85,7 @@ let rewrite_perm(#a:Type) (#v:G.erased a) (r:ref a) (p1 p2:P.perm)
       (fun _ -> pts_to r p2 v)
       (fun _ -> p1 == p2)
       (fun _ _ _ -> True)
-  = change_slprop (pts_to r p1 v)
+  = A.change_slprop (pts_to r p1 v)
                   (pts_to r p2 v)
                   (fun _ -> ())
 
@@ -103,7 +103,7 @@ let incr_ctr (#v:G.erased int) (r:ref int)
       (fun _ -> pts_to r full_perm (g_incr v))
   = let n = R.read r in
     R.write r (n+1);
-    change_slprop (pts_to r full_perm (n + 1))
+    A.change_slprop (pts_to r full_perm (n + 1))
                   (pts_to r full_perm (g_incr v))
                   (fun _ -> ())
 
@@ -165,14 +165,14 @@ let incr (r:ref int) (r1 r2:ref (G.erased int))
 
     if b then begin
       //rewrite the `if b ...` slprop to its specialized r1 version
-      change_slprop (incr_slprop r1 r2 n_ghost_contrib b)
+      A.change_slprop (incr_slprop r1 r2 n_ghost_contrib b)
                     (pts_to r1 half_perm (G.hide n_ghost_contrib))
                     (fun _ -> ());
 
       incr_ghost_contrib #n_ghost_contrib #(fst (G.reveal w)) r1;
 
       //rewrite the pts_to assertion for r, to push `g_incr` inside at r1's contrib
-      change_slprop (pts_to r full_perm (g_incr (G.hide (fst (G.reveal w) + snd (G.reveal w)))))
+      A.change_slprop (pts_to r full_perm (g_incr (G.hide (fst (G.reveal w) + snd (G.reveal w)))))
                     (pts_to r full_perm (G.hide (g_incr n_ghost_contrib + snd (G.reveal w))))
                     (fun _ -> ());
 
@@ -195,7 +195,7 @@ let incr (r:ref int) (r1 r2:ref (G.erased int))
                     (fun _ -> ());
 
       intro_exists (fst (G.reveal w), g_incr n_ghost_contrib) (lock_inv_pred r r1 r2);
-      change_slprop (pts_to r2 half_perm (G.hide (g_incr n_ghost_contrib)))
+      A.change_slprop (pts_to r2 half_perm (G.hide (g_incr n_ghost_contrib)))
                     (incr_slprop r1 r2 (g_incr n_ghost_contrib) b)
                     (fun _ -> ())
     end;
