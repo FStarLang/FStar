@@ -149,7 +149,9 @@ let solve_deferred_to_tactic_goals env g =
         in
         let sigelt =
             if is_flex tp.lhs
-            then find_user_tac_for_uvar env (flex_uvar_head tp.lhs)
+            then (match find_user_tac_for_uvar env (flex_uvar_head tp.lhs) with
+              | None -> if is_flex tp.rhs then find_user_tac_for_uvar env (flex_uvar_head tp.rhs) else None
+              | v -> v)
             else if is_flex tp.rhs
             then find_user_tac_for_uvar env (flex_uvar_head tp.rhs)
             else None
