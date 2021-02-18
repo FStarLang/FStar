@@ -25,6 +25,7 @@ let observability = bool
 let has_eq_observability () = ()
 let observable = true
 let unobservable = false
+let observability_unequal = ()
 
 val join_preserves_interp (hp:slprop) (m0 m1:mem)
   : Lemma

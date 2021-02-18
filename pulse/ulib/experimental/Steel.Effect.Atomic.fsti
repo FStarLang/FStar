@@ -26,6 +26,7 @@ val observability : Type0
 val has_eq_observability (_:unit) : Lemma (hasEq observability)
 val observable : observability
 val unobservable : observability
+val observability_unequal : squash (observable =!= unobservable)
 
 let obs_at_most_one o1 o2 =
   o1==unobservable \/ o2==unobservable
@@ -607,6 +608,7 @@ val as_atomic_action (#a:Type u#a)
                      (#fp': a -> slprop)
                      (f:action_except a opened_invariants fp fp')
   : SteelAtomicT a opened_invariants o fp fp'
+
 
 val new_invariant (opened_invariants:inames) (p:slprop)
   : SteelAtomicT (inv p) opened_invariants unobservable p (fun _ -> emp)
