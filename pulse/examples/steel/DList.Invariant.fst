@@ -206,9 +206,9 @@ let invert_dlist_cons_neq (#a:Type) (left ptr right:t a) (l:list (cell a))
 ////////////////////////////////////////////////////////////////////////////////
 
 let dlist_not_null (#a:Type)
-                   (#[@@@ framing_implicit] left:t a)
-                   (#[@@@ framing_implicit] right:t a)
-                   (#[@@@ framing_implicit] rep:list (cell a))
+                   (#left:t a)
+                   (#right:t a)
+                   (#rep:list (cell a))
                    (p:t a)
   = U.lift_lemma (dlist left p right rep)
                  ((Cons? rep) == true)
