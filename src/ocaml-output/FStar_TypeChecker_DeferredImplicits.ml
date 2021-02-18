@@ -563,9 +563,24 @@ let (solve_deferred_to_tactic_goals :
                                      if uu___9
                                      then
                                        let uu___10 =
-                                         flex_uvar_head
-                                           tp.FStar_TypeChecker_Common.lhs in
-                                       find_user_tac_for_uvar env2 uu___10
+                                         let uu___11 =
+                                           flex_uvar_head
+                                             tp.FStar_TypeChecker_Common.lhs in
+                                         find_user_tac_for_uvar env2 uu___11 in
+                                       match uu___10 with
+                                       | FStar_Pervasives_Native.None ->
+                                           let uu___11 =
+                                             is_flex
+                                               tp.FStar_TypeChecker_Common.rhs in
+                                           (if uu___11
+                                            then
+                                              let uu___12 =
+                                                flex_uvar_head
+                                                  tp.FStar_TypeChecker_Common.rhs in
+                                              find_user_tac_for_uvar env2
+                                                uu___12
+                                            else FStar_Pervasives_Native.None)
+                                       | v -> v
                                      else
                                        (let uu___11 =
                                           is_flex
