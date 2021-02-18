@@ -189,3 +189,60 @@ let cas_action (#t:eqtype)
 
 
 let cas #t #uses r v v_old v_new = A.as_atomic_action (cas_action #t #uses r v v_old v_new)
+
+(*** GHOST REFERENCES ***)
+let ghost_ref a = H.ghost_ref (U.raise_t a)
+
+let raise_erased (#a:Type0) (x:erased a)
+  : erased (U.raise_t u#0 u#1 a)
+  = Ghost.hide (U.raise_val (Ghost.reveal x))
+
+[@__reduce__]
+let ghost_pts_to #a r p x = H.ghost_pts_to #(U.raise_t a) r p (raise_erased x)
+
+let ghost_alloc (#a:Type) (#u:_) (x:erased a)
+  : SteelAtomicT (ghost_ref a) u unobservable
+    emp
+    (fun r -> ghost_pts_to r full_perm x)
+  =
+  let r = H.ghost_alloc (raise_erased x) in
+  change_slprop
+    (H.ghost_pts_to #(FStar.Universe.raise_t a)
+      r
+      Steel.FractionalPermission.full_perm
+      (raise_erased #a x))
+    (ghost_pts_to #a r Steel.FractionalPermission.full_perm x)
+    (fun _ -> ());
+  r
+
+let ghost_share (#a:Type) (#u:_)
+                (#p:perm)
+                (#x:erased a)
+                (r:ghost_ref a)
+   = H.ghost_share r
+
+let ghost_gather (#a:Type) (#u:_)
+                 (#p0 #p1:perm)
+                 (#x0 #x1:erased a)
+                 (r:ghost_ref a)
+  : SteelAtomic unit u unobservable
+    (ghost_pts_to r p0 x0 `star`
+     ghost_pts_to r p1 x1)
+    (fun _ -> ghost_pts_to r (sum_perm p0 p1) x0)
+    (requires fun _ -> true)
+    (ensures fun _ _ _ -> x0 == x1)
+  = H.ghost_gather r
+
+let ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Ghost.erased a)
+  : SteelAtomic unit u unobservable
+    (ghost_pts_to r p v0 `star` ghost_pts_to r q v1)
+    (fun _ -> ghost_pts_to r p v0 `star` ghost_pts_to r q v0)
+    (requires fun _ -> True)
+    (ensures fun _ _ _ -> v0 == v1)
+  = H.ghost_pts_to_injective_eq r (raise_erased v0) (raise_erased v1)
+
+let ghost_write (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a) (x:erased a)
+  : SteelAtomicT unit u unobservable
+    (ghost_pts_to r full_perm v)
+    (fun _ -> ghost_pts_to r full_perm x)
+  = H.ghost_write r (raise_erased x)
