@@ -62,43 +62,6 @@ let rec llist' (#a:Type) (ptr:t a)
       llist' (next hd) tl
 let llist = llist'
 
-let rec llist_fragment' (#a:Type) (ptr:t a)
-                         (l:list (cell a))
-    : Tot slprop (decreases l)
-    =
-    match l with
-    | [] -> emp
-
-    | hd :: tl ->
-      pure (ptr =!= null_llist) `star`
-      pts_to ptr full_perm hd `star`
-      llist_fragment' (next hd) tl
-
-(*
-let llist2  (#a:Type) (ptr:t a)
-                      (l:list (cell a))
-: Tot slprop
-= llist_fragment' ptr l `star`
-  begin if Nil? l
-  then pure (ptr == null_llist)
-  else pure (next (L.last l) == null)
-  end
-
-let rec llist2_elim (#a:Type) (ptr:t a)
-                      (l:list (cell a)) (m: mem) : Lemma
-                      (requires True)
-    (ensures (interp (llist2 ptr l) m ==> interp (llist ptr l) m))
-    (decreases l)
-= match l with
-  | [] ->
-    norm_spec [delta; zeta] (llist ptr []);
-    norm_spec [delta; zeta] (llist2 ptr [])
-  | a :: q -> 
-    norm_spec [delta; zeta] (llist ptr (a :: q));
-    norm_spec [delta; zeta] (llist2 ptr (a :: q));
-    llist2_elim (next a) q m
-*)
-
 (* Helper lemmas/rewritings *)
 
 let intro_llist_nil a =
