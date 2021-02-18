@@ -90,8 +90,8 @@ let intro_chan_inv_cond_stepT (vs vr:chan_val)
     change_slprop (chan_inv_step vr vs) (chan_inv_cond vs vr) (fun _ -> ())
 
 
-let intro_chan_inv_auxT #p  (#[@@@framing_implicit] vs : chan_val)
-                            (#[@@@framing_implicit] vr : chan_val)
+let intro_chan_inv_auxT #p  (#vs : chan_val)
+                            (#vr : chan_val)
                             (c:chan_t p)
   : SteelT unit (pts_to c.send half vs `star`
                  pts_to c.recv half vr `star`
@@ -422,7 +422,7 @@ let recall_trace_ref #q (r:trace_ref q) (tr tr':partial_trace_of q)
     Steel.Utils.elim_pure (history_p _ _)
 
 
-let prot_equals #q  (#[@@@framing_implicit]p:_) (#[@@@framing_implicit] vr:chan_val) (cc:chan q)
+let prot_equals #q  (#p:_) (#vr:chan_val) (cc:chan q)
   : Steel unit
           (pts_to cc.chan_chan.recv half vr `star` receiver cc p)
           (fun _ -> pts_to cc.chan_chan.recv half vr `star` receiver cc p)
@@ -434,7 +434,7 @@ let prot_equals #q  (#[@@@framing_implicit]p:_) (#[@@@framing_implicit] vr:chan_
     Steel.Utils.elim_pure _;
     intro_in_state _ _ vr
 
-let witness_trace_until #q (#[@@@framing_implicit] vr:chan_val) (r:trace_ref q)
+let witness_trace_until #q (#vr:chan_val) (r:trace_ref q)
   : SteelT (partial_trace_of q)
            (trace_until r vr)
            (fun tr -> trace_until r vr `star` pure (MRef.witnessed r (history_p tr)))
@@ -451,8 +451,8 @@ let trace #q (cc:chan q)
     Steel.SpinLock.release cc.chan_lock;
     tr
 
-let extend_history #q (#[@@@framing_implicit] tr:partial_trace_of q)
-                       (#[@@@framing_implicit] v:chan_val)
+let extend_history #q (#tr:partial_trace_of q)
+                       (#v:chan_val)
                        (c:chan q)
   : SteelT (extension_of tr)
            (pts_to c.chan_chan.recv half v `star`
