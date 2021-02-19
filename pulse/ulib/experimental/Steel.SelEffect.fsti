@@ -414,7 +414,7 @@ polymonadic_subcomp SteelSelF <: SteelSel = subcomp
 val noop (_:unit)
   : SteelSel unit vemp (fun _ -> vemp) (requires fun _ -> True) (ensures fun _ _ _ -> True)
 
-val get (#[@@@ framing_implicit] p:vprop) (_:unit) : SteelSelF (rmem p)
+val get (#p:vprop) (_:unit) : SteelSelF (rmem p)
   p (fun _ -> p)
   (requires fun _ -> True)
   (ensures fun h0 r h1 -> normal (frame_equalities p h0 h1 /\ frame_equalities p r h1))
@@ -448,8 +448,8 @@ val extract_info (p:vprop) (vp:erased (normal (t_of p))) (fact:prop)
       (fun h0 _ h1 -> normal (frame_equalities p h0 h1) /\ fact)
 
 val sladmit (#a:Type)
-            (#[@@@framing_implicit] p:pre_t)
-            (#[@@@framing_implicit] q:post_t a)
+            (#p:pre_t)
+            (#q:post_t a)
             (_:unit)
   : SteelSelF a p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
 
