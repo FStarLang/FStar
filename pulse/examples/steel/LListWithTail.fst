@@ -135,14 +135,16 @@ let unsnoc (#a: Type) (l: list a) : Pure (list a & a)
 let unsnoc_hd (#a: Type) (l: list a) : Pure (list a) (requires (Cons? l)) (ensures (fun _ -> True)) = fst (unsnoc l)
 let unsnoc_tl (#a: Type) (l: list a) : Pure (a) (requires (Cons? l)) (ensures (fun _ -> True)) = snd (unsnoc l)
 
+[@@__reduce__]
 let llist_with_tail (#a: Type) (x: t a) (l: Ghost.erased (list (cell a))) : Tot slprop =
   llist_fragment x.head l `star` pts_to (next_last x.head l) full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head l))
 
 let create_llist_with_tail (a: Type) : SteelT (t a) emp (fun x -> llist_with_tail x []) =
   let head : cellptr a = alloc None in
   let x : t a = ({ head = head; tail = head; }) in
+//  change_slprop (pts_to head _ _) (pts_to (next_last x.head []) full_perm None) (fun _ -> ());
   intro_pure (x.tail == Ghost.reveal (next_last x.head (Ghost.hide [])));
-  change_slprop (emp `star` (* FIXME: WHY WHY WHY this emp? *) pts_to head full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head (Ghost.hide [])))) (llist_with_tail x []) (fun _ -> ());
+  change_slprop (emp `star` pts_to head full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head (Ghost.hide [])))) (llist_with_tail x []) (fun _ -> ());
   x
 
 (* BEGIN helpers to unfold definitions just to prove that I can read the head pointer of a list and check its value to determine whether the list is empty or not *)
@@ -240,7 +242,7 @@ let read_head
   (fun _ -> llist_with_tail x l)
   (requires (fun _ -> True))
   (ensures (fun _ v _ ->
-    Ghost.reveal v == begin match Ghost.reveal l with 
+    v == begin match Ghost.reveal l with 
     | [] -> None
     | a :: _ -> Some a
     end
