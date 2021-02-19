@@ -175,13 +175,9 @@ let if_then_else (a:Type)
 
 [@@allow_informative_binders]
 reifiable reflectable
-layered_effect {
-  SteelF: a:Type -> pre:pre_t -> post:post_t a -> req_t pre -> ens_t pre a post -> Effect
-  with repr = repr;
-       return = return;
-       bind = bind;
-       subcomp = subcomp;
-       if_then_else = if_then_else
+effect {
+  SteelF (a:Type) (pre:pre_t) (post:post_t a) (_:req_t pre) (_:ens_t pre a post)
+  with { repr; return; bind; subcomp; if_then_else }
 }
 
 [@@allow_informative_binders]
