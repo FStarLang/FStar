@@ -167,7 +167,8 @@ let with_invariant (#a:Type)
                                              (fun x -> p `star` fp' x))
                    ()
   : SteelT a (active perm i `star` fp) (fun x -> active perm i `star` fp' x)
-  = sladmit () //with_invariant #a #fp #fp' #Set.empty #o #p #perm i f
+  = assert (Set.equal (Set.singleton (name i)) (set_add (name i) Set.empty));
+    with_invariant #a #fp #fp' #Set.empty #o #p #perm i f
 
 let incr_main (#v:G.erased int) (r:ref int)
   : SteelT unit
