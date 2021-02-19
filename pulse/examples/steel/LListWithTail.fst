@@ -18,6 +18,8 @@ let null_llist (#a:Type) : Tot (t a) = {
   tail = null;
 }
 
+let (==) (#a:_) (x y: a) : prop = x == y
+
 let rec llist_with_tail_fragment (#a: Type0) (x: t a) (hd: Ghost.erased (LL.cell a)) (tl: Ghost.erased (list (LL.cell a))) : Tot slprop (decreases (Ghost.reveal tl)) =
   pts_to x.head full_perm hd `star`
   begin match Ghost.reveal tl with
