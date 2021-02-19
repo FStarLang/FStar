@@ -80,14 +80,14 @@ let ens_to_act_ens (#pre:slprop) (#a:Type) (#post:a -> slprop) (ens:fp_binary_mp
 : mprop2 pre post
 = fun m0 x m1 -> interp pre m0 /\ interp (post x) m1 /\ ens m0 x m1
 
-let atomic_repr a opened_invariants f pre post req ens =
+let repr a opened_invariants f pre post req ens =
     action_except_full a opened_invariants pre post (req_to_act_req req) (ens_to_act_ens ens)
 
 let return (a:Type u#a)
    (x:a)
    (opened_invariants:inames)
    (#[@@@ framing_implicit] p:a -> slprop u#1)
-  : atomic_repr a opened_invariants unobservable (p x) p (return_req (p x)) (return_ens a x p)
+  : repr a opened_invariants unobservable (p x) p (return_req (p x)) (return_ens a x p)
   = fun _ -> x
 
 #push-options "--fuel 0 --ifuel 0"
@@ -407,7 +407,7 @@ let rewrite_context #opened #p #q _ = change_slprop p q (fun _ -> ()); ()
 
 let extract_info0 (#opened:inames) (p:slprop) (fact:prop)
   (proof:(m:mem) -> Lemma (requires interp p m) (ensures fact))
-  : atomic_repr unit opened unobservable p (fun _ -> p)
+  : repr unit opened unobservable p (fun _ -> p)
       (fun _ -> True)
       (fun _ _ _ -> fact)
   = fun frame ->
