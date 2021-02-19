@@ -10,7 +10,7 @@ module L = FStar.List.Tot
 noeq
 type t (a: Type0) = {
   head: cellptr a;
-  tail: ref (cellptr a);
+  tail: cellptr a;
 }
 
 let (==) (#a:_) (x y: a) : prop = x == y
@@ -136,23 +136,16 @@ let unsnoc_hd (#a: Type) (l: list a) : Pure (list a) (requires (Cons? l)) (ensur
 let unsnoc_tl (#a: Type) (l: list a) : Pure (a) (requires (Cons? l)) (ensures (fun _ -> True)) = snd (unsnoc l)
 
 let llist_with_tail (#a: Type) (x: t a) (l: Ghost.erased (list (cell a))) : Tot slprop =
-  llist_fragment x.head l `star` pts_to (next_last x.head l) full_perm None `star` pts_to x.tail full_perm (next_last x.head l)
+  llist_fragment x.head l `star` pts_to (next_last x.head l) full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head l))
 
 let create_llist_with_tail (a: Type) : SteelT (t a) emp (fun x -> llist_with_tail x []) =
   let head : cellptr a = alloc None in
-  let tail : ref (cellptr a) = alloc head in
-  let x = ({ head = head; tail = tail; }) in
-  change_slprop (emp `star` pts_to head full_perm None `star` pts_to tail full_perm head) (llist_with_tail x []) (fun _ -> ());
+  let x : t a = ({ head = head; tail = head; }) in
+  intro_pure (x.tail == Ghost.reveal (next_last x.head (Ghost.hide [])));
+  change_slprop (emp `star` (* FIXME: WHY WHY WHY this emp? *) pts_to head full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head (Ghost.hide [])))) (llist_with_tail x []) (fun _ -> ());
   x
 
 (* BEGIN helpers to unfold definitions just to prove that I can read the head pointer of a list and check its value to determine whether the list is empty or not *)
-
-[@"opaque_to_smt"]
-let llist_fragment_read_head_cons (#a: Type) (ptr: cellptr a) (l: Ghost.erased (list (cell a)))
-: Pure (Ghost.erased (option (cell a)) & slprop)
-  (requires (Cons? l))
-  (ensures (fun (v, q) -> llist_fragment ptr l == (pts_to ptr full_perm (Ghost.reveal v) `star` q) /\  Ghost.reveal v == Some (L.hd l)))
-= (Ghost.hide (Some (L.hd l)), llist_fragment (next (L.hd l)) (L.tl l))
 
 [@"opaque_to_smt"]
 let read_head_nil
@@ -161,10 +154,10 @@ let read_head_nil
   (requires (Nil? l))
   (ensures (fun q -> llist_with_tail x l `equiv` (pts_to x.head full_perm None `star` q)))
 = assert (
-    (llist_fragment x.head l `star` pts_to (next_last x.head l) full_perm None `star` pts_to x.tail full_perm (next_last x.head l)) `equiv`
-    (pts_to (next_last x.head l) full_perm None `star` (llist_fragment x.head l `star` pts_to x.tail full_perm (next_last x.head l)))
+    (llist_fragment x.head l `star` pts_to (next_last x.head l) full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head l))) `equiv`
+    (pts_to (next_last x.head l) full_perm None `star` (llist_fragment x.head l `star` pure (x.tail == Ghost.reveal (next_last x.head l))))
   ) by canon ();
-  (llist_fragment x.head l `star` pts_to x.tail full_perm (next_last x.head l))
+  (llist_fragment x.head l `star` pure (x.tail == Ghost.reveal (next_last x.head l)))
 
 [@"opaque_to_smt"]
 let read_head_snoc
@@ -176,13 +169,12 @@ let read_head_snoc
   let hd = L.hd l in
   let tl = L.tl l in
   assert (
-    ((pts_to x.head full_perm (Some hd) `star` llist_fragment (next hd) tl) `star` pts_to (next_last x.head l) full_perm None `star` pts_to x.tail full_perm (next_last x.head l)) `equiv`
-    (pts_to x.head full_perm (Some hd) `star` (llist_fragment (next hd) tl `star` pts_to (next_last x.head l) full_perm None `star` pts_to x.tail full_perm (next_last x.head l)))
+    ((pts_to x.head full_perm (Some hd) `star` llist_fragment (next hd) tl) `star` pts_to (next_last x.head l) full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head l))) `equiv`
+    (pts_to x.head full_perm (Some hd) `star` ((llist_fragment (next hd) tl `star` pts_to (next_last x.head l) full_perm None) `star` pure (x.tail == Ghost.reveal (next_last x.head l))))
   ) by canon ();
-  llist_fragment (next hd) tl `star` pts_to (next_last x.head l) full_perm None `star` pts_to x.tail full_perm (next_last x.head l)
+  (llist_fragment (next hd) tl `star` pts_to (next_last x.head l) full_perm None) `star` pure (x.tail == Ghost.reveal (next_last x.head l))
 
-[@"opaque_to_smt"]
-let read_head_1
+let read_head_ghost
   (#a: Type) (x: t a) (l: Ghost.erased (list (cell a)))
 : Ghost (option (cell a) & slprop)
   (requires True)
@@ -214,7 +206,7 @@ let gsnd
 = snd x
 
 [@"opaque_to_smt"]
-let read_head_2
+let read_head_pure
   (#a: Type) (x: t a) (l: Ghost.erased (list (cell a)))
 : Pure (Ghost.erased (option (cell a)) & slprop)
   (requires True)
@@ -225,7 +217,7 @@ let read_head_2
     end
   ))
 = 
-  let vq = Ghost.elift1 (fun () -> read_head_1 x l) () in
+  let vq = Ghost.elift1 (fun () -> read_head_ghost x l) () in
   (gfst vq, Ghost.reveal (gsnd vq))
 
 let change_equiv_slprop
@@ -254,7 +246,7 @@ let read_head
     end
   ))
 =
-  let q : Ghost.erased (option (cell a)) & slprop = read_head_2 x l in
+  let q : Ghost.erased (option (cell a)) & slprop = read_head_pure x l in
   change_equiv_slprop (llist_with_tail x l) (pts_to x.head full_perm (fst q) `star` snd q) ();
   let r = read #(option (cell a)) #full_perm #(fst q) x.head in
   change_equiv_slprop (pts_to x.head full_perm r `star` snd q)  (llist_with_tail x l) ();
@@ -262,23 +254,31 @@ let read_head
 
 (* END helpers to unfold definitions just to prove that I can read the head pointer of a list and check its value to determine whether the list is empty or not *)
 
-(* BEGIN helpers to unfold definitions just to prove that I can read the next pointer of the head and check its value to determine whether the list has more than one element or not
 (*
+val pop
+  (#a: Type)
+  (x: t a)
+  (l: Ghost.erased (list (cell a)))
+  (next_hd: cellptr a) (* assumed I received this pointer through read_head above *)
+: Steel unit // (t a & Ghost.erased (list (cell a)))
+    (llist_with_tail x l)
+    (fun _ -> llist_with_tail x l)
+//    (fun res -> llist_with_tail (fst res) (snd res))
+    (requires (fun _ -> Cons? l /\ next_hd == next (L.hd l)))
+//    (ensures (fun _ res _ -> Cons? l /\ snd res == Ghost.hide (L.tl l)))
+    (ensures (fun _ _ _ -> True))
 
-[@"opaque_to_smt"]
-let llist_with_tail_read_next_head_nil
-  (#a: Type) (x: t a) (l: Ghost.erased (list (cell a)))
-: Ghost (slprop)
-  (requires (Cons? l /\ Nil? (unsnoc_hd l)))
-  (ensures (fun q -> llist_with_tail x l `equiv` (pts_to (next (L.hd l)) full_perm None `star` q)))
+let pop
+  #a x l next_hd
 =
-  let hd = Ghost.hide (unsnoc_hd l) in
-  let tl = Ghost.hide (unsnoc_tl l) in
-  assert (
-    (llist_fragment x.head hd `star` (pts_to (next_last x.head hd) full_perm (Some (Ghost.reveal tl)) `star` pts_to (next tl) full_perm None `star` pts_to x.tail full_perm (next_last x.head hd))) `equiv`
-    (pts_to (next tl) full_perm None `star` (pts_to (next_last x.head hd) full_perm (Some (Ghost.reveal tl)) `star` llist_fragment x.head hd `star` pts_to x.tail full_perm (next_last x.head hd)))
-  ) by (canon ());
-  pts_to (next_last x.head hd) full_perm (Some (Ghost.reveal tl)) `star` llist_fragment x.head hd `star` pts_to x.tail full_perm (next_last x.head hd)
+  noop ();
+  change_equiv_slprop (llist_with_tail x l) (
+    pts_to x.head full_perm (Some (L.hd l)) `star` ((llist_fragment (next (L.hd l)) (L.tl l) `star` pts_to (next_last x.head l) full_perm None) `star` pure (x.tail == Ghost.reveal (next_last x.head l)))
+  ) ();
+  change_equiv_slprop (
+    pts_to x.head full_perm (Some (L.hd l)) `star` ((llist_fragment (next (L.hd l)) (L.tl l) `star` pts_to (next_last x.head l) full_perm None) `star` pure (x.tail == Ghost.reveal (next_last x.head l)))
+  ) (llist_with_tail x l) ();
+  ()
 
 [@"opaque_to_smt"]
 let llist_with_tail_read_next_head_snoc
