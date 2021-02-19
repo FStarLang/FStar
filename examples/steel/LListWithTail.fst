@@ -239,14 +239,12 @@ let intro_llist_cons_cons'
   a ptr ptr0 x q m
 =
   (* destruct the hypothesis *)
-  star_commutative
-    (llist_with_tail ptr0 q)
-    (pts_to ptr.head full_perm x);
   llist_with_tail_cons ptr0 q;
-  star_associative
-    (pts_to ptr.head full_perm x)
-    (llist_with_tail_fragment ptr0 (L.hd q) (L.tl q))
-    (pure (is_null (LL.next (L.last q)) == true));
+  assert ((
+    (llist_with_tail_fragment ptr0 (L.hd q) (L.tl q) `star` pure (is_null (LL.next (L.last q)) == true)) `star` pts_to ptr.head full_perm x
+    ) `equiv` (
+    (pts_to ptr.head full_perm x `star` llist_with_tail_fragment ptr0 (L.hd q) (L.tl q)) `star` pure (is_null (LL.next (L.last q)) == true)
+  )) by (Steel.Memory.Tactics.canon ());
   pure_star_interp
     (pts_to ptr.head full_perm x `star` llist_with_tail_fragment ptr0 (L.hd q) (L.tl q))
     (is_null (LL.next (L.last q)) == true)
