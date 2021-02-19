@@ -253,8 +253,7 @@ let join_associative2 (m0 m1 m2:heap)
     join_associative m2 m0 m1
 
 ////////////////////////////////////////////////////////////////////////////////
-
-let slprop = a_heap_prop
+let slprop = p:(heap ^-> prop) { heap_prop_is_affine p }
 
 module W = FStar.WellFounded
 
@@ -263,9 +262,15 @@ let interp (p:slprop u#a) (m:heap u#a)
   : Tot prop
   = p m
 
-let as_slprop p = p
+let as_slprop p = FStar.FunctionalExtensionality.on _ p
 
-let emp : slprop u#a = fun h -> True
+let slprop_extensionality (p q:slprop)
+  : Lemma
+    (requires p `equiv` q)
+    (ensures p == q)
+  = FStar.PredicateExtensionality.predicateExtensionality _ p q
+
+let emp : slprop u#a = as_slprop (fun h -> True)
 
 let affine_hprop_intro
    (p:heap u#a -> prop)
@@ -316,41 +321,41 @@ let pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a =
     | None, None, _ -> ()
     )
   );
-  hprop
+  as_slprop hprop
 
 
 let h_and (p1 p2:slprop u#a) : slprop u#a =
-  fun (h: heap) -> p1 h /\ p2 h
+  as_slprop (fun (h: heap) -> p1 h /\ p2 h)
 
 let h_or (p1 p2:slprop u#a) : slprop u#a =
-  fun (h: heap) -> p1 h \/ p2 h
+  as_slprop (fun (h: heap) -> p1 h \/ p2 h)
 
 let star (p1 p2: slprop u#a) : slprop u#a =
-  fun (h: heap) -> exists (h1 h2 : heap).
+  as_slprop (fun (h: heap) -> exists (h1 h2 : heap).
         h1 `disjoint` h2 /\
         h == join h1 h2 /\
         interp p1 h1 /\
-        interp p2 h2
+        interp p2 h2)
 
 let wand (p1 p2: slprop u#a) : slprop u#a =
-  fun (h: heap) ->  forall (h1: heap).
+  as_slprop (fun (h: heap) ->  forall (h1: heap).
         h `disjoint` h1 /\
         interp p1 h1 ==>
-        interp p2 (join h h1)
+        interp p2 (join h h1))
 
 let h_exists_body (#a:Type u#b) (f: (a -> slprop u#a)) (h:heap) (x:a) : prop =
   interp (f x) h
 
 let h_exists  (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a =
-  fun (h: heap) -> exists x. h_exists_body f h x
+  as_slprop (fun (h: heap) -> exists x. h_exists_body f h x)
 
 let h_forall_body (#a:Type u#b) (f: (a -> slprop u#a)) (h:heap) (x:a) : prop =
   interp (f x) h
 
 let h_forall (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a =
-  fun (h: heap) -> forall x. h_forall_body f h x
+  as_slprop (fun (h: heap) -> forall x. h_forall_body f h x)
 
-let h_refine p r = h_and p r
+let h_refine p r = h_and p (as_slprop r)
 
  ////////////////////////////////////////////////////////////////////////////////
 //properties of equiv
@@ -406,7 +411,7 @@ let intro_pts_to (#a:_) (#pcm:pcm a) (x:ref a pcm) (v:a) (m:heap)
        interp (pts_to x v) m)
   = ()
 
-
+#push-options "--z3rlimit_factor 4"
 let pts_to_compatible_fwd (#a:Type u#a)
                           (#pcm:_)
                           (x:ref a pcm)
@@ -888,7 +893,6 @@ let update_addr_full_heap (h:full_heap) (a:addr) (c:cell{c.frac == Frac.full_per
   assert (forall x. contains_addr h' x ==> x==a \/ contains_addr h x);
   h'
 
-
 let upd' (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a) (v1:a {frame_preserving pcm v0 v1 /\ pcm.refine v1})
   : pre_action (pts_to r v0) unit (fun _ -> pts_to r v1)
   = fun h ->
@@ -896,7 +900,9 @@ let upd' (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a) (v1:a {frame_pr
     let h' = update_addr h (Addr?._0 r) cell in
     assert (forall x. contains_addr h' x ==> x==(Addr?._0 r) \/ contains_addr h x);
     assert (h' `contains_addr` Addr?._0 r);
-    assert (pts_to_cell pcm v1 cell);
+    FStar.PCM.compatible_refl pcm v1;
+    assert (compatible pcm v1 v1);
+    assert (pts_to_cell #a pcm v1 cell);
     assert (interp (pts_to r v1) h');
     (| (), h' |)
 
@@ -955,7 +961,7 @@ let heap_evolves_by_frame_preserving_update #a #pcm (r:ref a pcm)
     PP.frame_preserving_is_preorder_respecting pcm v0 v1;
     assert (PP.preorder_of_pcm pcm v v1)
 
-#push-options "--z3rlimit_factor 4 --max_fuel 1 --initial_ifuel 1 --max_ifuel 2"
+#push-options "--z3rlimit_factor 8 --max_fuel 1 --initial_ifuel 1 --max_ifuel 2"
 #restart-solver
 let upd_lemma'_1 (#a:_) #pcm (r:ref a pcm)
                  (v0:Ghost.erased a) (v1:a {frame_preserving pcm v0 v1 /\ pcm.refine v1})
@@ -1173,7 +1179,7 @@ let upd_gen_full_evolution #a (#p:pcm a)
     assert (full_heap_pred h1);
     assert (heap_evolves h h1)
 
-#push-options "--z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 8"
 
 let upd_gen_frame_preserving #a (#p:pcm a)
       (r:ref a p)
@@ -1332,7 +1338,13 @@ let extend #a #pcm x addr h =
      (| r, h' |)
 #pop-options
 
+let hprop_sub (p q:slprop) (h0 h1:heap)
+  : Lemma (requires (forall (hp:hprop (p `star` q)). hp h0 == hp h1))
+          (ensures (forall (hp:hprop q). hp h0 == hp h1))
+  = ()
 
+#push-options "--z3rlimit_factor 4 --max_fuel 1 --max_ifuel 1"
+#restart-solver
 let frame (#a:Type)
           (#pre:slprop)
           (#post:a -> slprop)
@@ -1350,10 +1362,21 @@ let frame (#a:Type)
                 : Lemma (requires
                             interp ((pre `star` frame) `star` frame') h0)
                         (ensures
-                            interp ((post x `star` frame) `star` frame') h1)
-                        [SMTPat ()]
+                            interp ((post x `star` frame) `star` frame') h1 /\
+                            (forall (hp:hprop frame'). hp h0 == hp h1))
                 = star_associative pre frame frame';
-                  star_associative (post x) frame frame'
+                  star_associative (post x) frame frame';
+                  hprop_sub frame frame' h0 h1
+              in
+              let aux (frame':slprop)
+                : Lemma
+                  (requires interp ((pre `star` frame) `star` frame') h0)
+                  (ensures  interp ((post x `star` frame) `star` frame') h1 /\
+                            heap_evolves h0 h1 /\
+                            (forall (hp:hprop frame'). hp h0 == hp h1) /\
+                            (forall ctr. h0 `free_above_addr` ctr ==> h1 `free_above_addr` ctr))
+                  [SMTPat ((pre `star` frame) `star` frame')]
+                 = aux frame'
               in
               assert (forall frame'. frame_related_heaps h0 h1 (pre `star` frame) (post x `star` frame) frame' false);
               (| x, h1 |)

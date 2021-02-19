@@ -146,6 +146,14 @@ let hheap (p:slprop u#a) = m:heap u#a {interp p m}
 let equiv (p1 p2:slprop) =
   forall m. interp p1 m <==> interp p2 m
 
+(**
+  An extensional equivalence principle for slprop
+ *)
+val slprop_extensionality (p q:slprop)
+  : Lemma
+    (requires p `equiv` q)
+    (ensures p == q)
+
 /// We can now define all the standard connectives of separation logic
 
 (** [emp] is the empty [slprop], valid on all heaps. It acts as the unit element *)
