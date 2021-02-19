@@ -70,16 +70,19 @@ let inv_equiv_lemma (r:ref int) (r1 r2:ghost_ref int)
     ()
 #pop-options
 
+[@@ __reduce__]
+let inv_slprop_conditional (r:ref int) (r_mine r_other:ghost_ref int) (b:bool) =
+  inv_slprop r (if b then r_mine else r_other)
+               (if b then r_other else r_mine)
+
 let enter_inv_slprop (#opened_invariants:inames)
   (r:ref int) (r_mine r_other:ghost_ref int) (b:bool)
   : SteelAtomicT unit opened_invariants unobservable
-      (inv_slprop r (if b then r_mine else r_other)
-                    (if b then r_other else r_mine))
+      (inv_slprop_conditional r r_mine r_other b)
       (fun _ -> inv_slprop r r_mine r_other)
   = if b then rewrite_context ()
     else begin
-      change_slprop (inv_slprop r (if b then r_mine else r_other)
-                                  (if b then r_other else r_mine))
+      change_slprop (inv_slprop_conditional r r_mine r_other b)
                     (inv_slprop r r_other r_mine) (fun _ -> ());
       inv_equiv_lemma r r_mine r_other;
       rewrite_context #_ #(inv_slprop r r_other r_mine) #(inv_slprop r r_mine r_other) ()
@@ -89,8 +92,7 @@ let exit_inv_slprop (#uses:inames)
   (r:ref int) (r_mine r_other:ghost_ref int) (b:bool)
   : SteelAtomicT unit uses unobservable
       (inv_slprop r r_mine r_other)
-      (fun _ -> inv_slprop r (if b then r_mine else r_other)
-                          (if b then r_other else r_mine))
+      (fun _ -> inv_slprop_conditional r r_mine r_other b)
   = if b then rewrite_context ()
     else begin
       inv_equiv_lemma r r_mine r_other;
@@ -130,22 +132,17 @@ let incr_ghost_contrib (#uses:inames) (#v1 #v2:G.erased int) (r:ghost_ref int)
     change_slprop (ghost_pts_to r (P.half_perm P.full_perm) (g_incr v1) `star`
                    ghost_pts_to r (P.half_perm P.full_perm) (g_incr v1))
                   (ghost_pts_to r half_perm (g_incr v1) `star`
-                   ghost_pts_to r half_perm (g_incr v2))
-                  (fun _ -> ())
+                   ghost_pts_to r half_perm (g_incr v2)) (fun _ -> ())
 
 let incr_with_invariant
-  (r:ref int) (r_mine r_other:ghost_ref int) (n_ghost:G.erased int) (b:bool)
-  (i:inv (inv_slprop r (if b then r_mine else r_other)
-                       (if b then r_other else r_mine)))
+  (r:ref int) (r_mine r_other:ghost_ref int) (n_ghost:G.erased int) (b:bool) (name:_)
   ()
-  : SteelAtomicT unit (Set.singleton (name i)) observable
-      (inv_slprop r (if b then r_mine else r_other)
-                    (if b then r_other else r_mine)
+  : SteelAtomicT unit (Set.singleton name) observable
+      (inv_slprop_conditional r r_mine r_other b
        `star`
        ghost_pts_to r_mine half_perm n_ghost)
       (fun _ ->
-       inv_slprop r (if b then r_mine else r_other)
-                    (if b then r_other else r_mine)
+       inv_slprop_conditional r r_mine r_other b
        `star`
        ghost_pts_to r_mine half_perm (g_incr n_ghost))
   = enter_inv_slprop #_ r r_mine r_other b;
@@ -202,7 +199,6 @@ let incr_main (#v:G.erased int) (r:ref int)
                   (fun _ -> ());
  
     intro_exists (G.hide 0, v) (inv_pred r r1 r2);
-
     let i = new_inv (inv_slprop r r1 r2) in
 
     share i;
@@ -211,7 +207,6 @@ let incr_main (#v:G.erased int) (r:ref int)
                    active (P.half_perm full_perm) i)
                   (active half_perm i `star`
                    active half_perm i) (fun _ -> ());
-
 
     let _ = par
       (with_invariant
@@ -222,7 +217,7 @@ let incr_main (#v:G.erased int) (r:ref int)
         #(inv_slprop r r1 r2)
         #half_perm
         i
-        (incr_with_invariant r r1 r2 0 true i))
+        (incr_with_invariant r r1 r2 0 true (name i)))
       (with_invariant
         #unit
         #(ghost_pts_to r2 half_perm v)
@@ -231,7 +226,7 @@ let incr_main (#v:G.erased int) (r:ref int)
         #(inv_slprop r r1 r2)
         #half_perm
         i
-        (incr_with_invariant r r2 r1 v false i)) in
+        (incr_with_invariant r r2 r1 v false (name i))) in
 
     gather #_ #half_perm #half_perm #_ i;
 
@@ -244,8 +239,8 @@ let incr_main (#v:G.erased int) (r:ref int)
 
     ghost_gather #_ #_ #_ #_ #(fst w) #_ r1;
     ghost_gather #_ #_ #_ #_ #(snd w) #_ r2;
-    drop (ghost_pts_to r1 (P.sum_perm half_perm half_perm) (fst w));
-    drop (ghost_pts_to r2 (P.sum_perm half_perm half_perm) (snd w));
+    drop (ghost_pts_to r1 _ _);
+    drop (ghost_pts_to r2 _ _);
 
     change_slprop (pts_to r full_perm (G.hide (G.reveal (fst w) + G.reveal (snd w))))
                   (pts_to r full_perm (v + 2))
