@@ -284,6 +284,30 @@ let pop
     (fun _ -> ());
   (x', Ghost.hide (L.tl l2))
 
+let test_read_head_pop
+  (#a: Type)
+  (x: t a)
+  (l: Ghost.erased (list (cell a)))
+: Steel (t a & Ghost.erased (list (cell a)))
+    (llist_with_tail x l)
+    (fun res -> llist_with_tail (fst res) (snd res))
+    (requires (fun _ -> True))
+    (ensures (fun _ res _ ->
+      match Ghost.reveal l with
+      | [] -> res == (x, l)
+      | _ :: q -> Ghost.reveal (snd res) == q
+    ))
+=
+  let r = read_head x l in
+  match r with
+  | None ->
+    noop (); // necessary, otherwise "effects PURE and SteelF cannot be composed"
+    (x, l)
+  | Some c ->
+    let n = next c in
+    let res = pop x l n in // explicit let-binding necessary, otherwise "effects SteelF and Steel cannot be composed"
+    res
+
 
 (*
   noop ();
