@@ -150,12 +150,36 @@ let rec insert_bst_preserves_bst
       insert_bst_preserves_bst right key payload
     end
 
-(**** Rotations *)
-let balance_factor (#a: Type) (x: tree a) : int =
+(**** AVL Trees *)
+
+(* An AVL is a key-value tree where the value is the node's height. *)
+let avl (a: Type) {| d: ordered a |} = x: kv_tree a int {is_bst x}
+
+let get_payload (#a: Type) (x: kv_tree a int) : int =
   match x with
   | Leaf -> 0
-  | Node data left right ->
-      (height right) - (height left)
+  | Node data left right -> data.payload
+  
+let balance_factor (#a: Type) (x: kv_tree a int) : int =
+  match x with
+  | Leaf -> 0
+  | Node data left right -> get_payload(right) - get_payload(left)
+
+// Takes in two nodes, returns max(height l, height r) + 1
+let compute_parent_height (#a: Type) (l r: kv_tree a int) : int =
+  if get_payload(l) > get_payload(r) then (
+    get_payload(l) + 1
+  ) else (
+    get_payload(r) + 1
+  )
+  
+// let rotate_left (#a: Type) (r: kv_tree a int) : option (avl a) =
+//   match r with
+//   | Node x t1 (Node z t2 t3) -> 
+//     let x' = Node ({x.key; compute_parent_height(t1, t2)}) t1 t2 in
+//     let z' = ({z.key; compute_parent_height(x', t3)}) in
+//     Some (Node z' x' t3)
+//   | _ -> None
 
 let rotate_left (#a: Type) (r: tree a) : option (tree a) =
   match r with
@@ -176,3 +200,60 @@ let rotate_left_right (#a: Type) (r: tree a) : option (tree a) =
   match r with
   | Node x (Node z t1 (Node y t2 t3)) t4 -> Some (Node y (Node z t1 t2) (Node x t3 t4))
   | _ -> None
+
+let rebalance_avl (#a: Type) {| d: ordered a |} (x: kv_tree a int) : kv_tree a int =
+    match x with
+    | Leaf -> x
+    | Node data left right ->
+ 
+      if balance_factor(x) > 1 then (
+      match left with
+      | Node ldata lleft lright ->
+        if d.compare data.key ldata.key > 0 then (
+          let r = rotate_right(x) in
+          match r with
+          | Some y -> y
+          | _ -> x
+        ) else (
+          let r = rotate_left_right(x) in
+          match r with
+          | Some y -> y
+          | _ -> x
+        )
+      | _ -> x
+
+    ) else (
+      if balance_factor(x) < -1 then (
+        match right with
+        | Node rdata rleft rright ->
+          if d.compare data.key rdata.key > 0 then (
+            let r = rotate_left(x) in
+            match r with
+            | Some y -> y
+            | _ -> x
+            ) else (
+            let r = rotate_right_left(x) in
+            match r with
+            | Some y -> y
+            | _ -> x
+          )
+        | _ -> x
+      ) else (
+        x
+      )
+    )
+    
+let rec insert_avl (#a: Type) {| d: ordered a |} (x: avl a) (key: a) : kv_tree a int =
+  match x with
+  | Leaf -> Node ({key; payload=0}) Leaf Leaf
+  | Node data left right ->
+    let delta = d.compare data.key key in
+    if delta >= 0 then (
+      let new_left = insert_avl left key in
+      let tmp = Node data new_left right in
+      rebalance_avl(tmp)
+    ) else (
+      let new_right = insert_avl right key in
+      let tmp = Node data left new_right in
+      rebalance_avl(tmp)
+    )
