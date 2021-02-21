@@ -14,3 +14,9 @@ val mk_cell (n: cellptr 'a) (d:'a)
     (ensures fun c ->
       next c == n /\
       data c == d)
+
+let datas
+  (#a: Type0)
+  (l: list (cell a))
+: Tot (list a)
+= List.Tot.map data l
