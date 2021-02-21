@@ -256,30 +256,57 @@ let read_head
 
 (* END helpers to unfold definitions just to prove that I can read the head pointer of a list and check its value to determine whether the list is empty or not *)
 
-(*
 val pop
   (#a: Type)
   (x: t a)
   (l: Ghost.erased (list (cell a)))
   (next_hd: cellptr a) (* assumed I received this pointer through read_head above *)
-: Steel unit // (t a & Ghost.erased (list (cell a)))
+: Steel (t a & Ghost.erased (list (cell a)))
     (llist_with_tail x l)
-    (fun _ -> llist_with_tail x l)
-//    (fun res -> llist_with_tail (fst res) (snd res))
+    (fun res -> llist_with_tail (fst res) (snd res))
     (requires (fun _ -> Cons? l /\ next_hd == next (L.hd l)))
-//    (ensures (fun _ res _ -> Cons? l /\ snd res == Ghost.hide (L.tl l)))
-    (ensures (fun _ _ _ -> True))
+    (ensures (fun _ res _ -> Cons? l /\ snd res == Ghost.hide (L.tl l) /\ (fst res).tail == x.tail))
 
 let pop
   #a x l next_hd
 =
+  let (l2: Ghost.erased (l: list (cell a) { Cons? l })) = Ghost.hide (Ghost.reveal l) in
+  change_equiv_slprop
+    (llist_fragment x.head l)
+    (pts_to x.head full_perm (Some (L.hd l2)) `star` llist_fragment (next (L.hd l2)) (L.tl l2))
+    ();
+  let x' = { head = next_hd ; tail = x.tail } in
+  drop (pts_to x.head full_perm (Some (L.hd l2)));
+  change_slprop
+    (llist_fragment (next (L.hd l2)) (L.tl l2)
+     `star` pts_to (next_last x.head l) full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head l)))
+    (llist_with_tail x' (L.tl l2))
+    (fun _ -> ());
+  (x', Ghost.hide (L.tl l2))
+
+
+(*
   noop ();
-  change_equiv_slprop (llist_with_tail x l) (
+  change_equiv_slprop
+    (llist_with_tail x l)
+    (
+
+  change_equiv_slprop (
+    (pts_to x.head full_perm (Some (L.hd l)) `star` llist_fragment (next (L.hd l)) (L.tl l)) `star` pts_to (next_last x.head l) full_perm None) `star` pure (x.tail == Ghost.reveal (next_last x.head l))
+  ) (
     pts_to x.head full_perm (Some (L.hd l)) `star` ((llist_fragment (next (L.hd l)) (L.tl l) `star` pts_to (next_last x.head l) full_perm None) `star` pure (x.tail == Ghost.reveal (next_last x.head l)))
   ) ();
+(*  
   change_equiv_slprop (
     pts_to x.head full_perm (Some (L.hd l)) `star` ((llist_fragment (next (L.hd l)) (L.tl l) `star` pts_to (next_last x.head l) full_perm None) `star` pure (x.tail == Ghost.reveal (next_last x.head l)))
   ) (llist_with_tail x l) ();
+*)
+  change_equiv_slprop (
+    pts_to x.head full_perm (Some (L.hd l)) `star` ((llist_fragment (next (L.hd l)) (L.tl l) `star` pts_to (next_last x.head l) full_perm None) `star` pure (x.tail == Ghost.reveal (next_last x.head l)))
+  ) (
+    (pts_to x.head full_perm (Some (L.hd l)) `star` llist_fragment (next (L.hd l)) (L.tl l)) `star` pts_to (next_last x.head l) full_perm None) `star` pure (x.tail == Ghost.reveal (next_last x.head l)
+  )  
+  ();
   ()
 
 [@"opaque_to_smt"]
