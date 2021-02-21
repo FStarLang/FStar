@@ -344,3 +344,23 @@ let enqueue
     (fun _ -> ());
   // it seems that nothing must come before the last change_slprop and the return value
   res
+
+let test
+  ()
+: SteelT unit
+    emp
+    (fun _ -> emp)
+=
+  let l = create_llist_with_tail nat in
+  let lk = enqueue l _ 1 in
+  let lk = enqueue (fst lk) _ 2 in
+  let Some c = read_head (fst lk) _ in
+  let lk = dequeue (fst lk) _ (next c) in
+  let lk = enqueue (fst lk) _ 3 in
+  let Some c = read_head (fst lk) _ in
+  let lk = dequeue (fst lk) _ (next c) in
+  let Some c = read_head (fst lk) _ in
+  let lk = dequeue (fst lk) _ (next c) in
+  assert (snd lk == Ghost.hide []);
+  assert (data c == 3);
+  drop (llist_with_tail (fst lk) _)
