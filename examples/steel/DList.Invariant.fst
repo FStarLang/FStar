@@ -24,6 +24,43 @@ open Steel.Reference
 module L = FStar.List.Tot
 module U = Steel.Utils
 
+module ST = Steel.Memory.Tactics
+module T = FStar.Tactics
+
+assume
+val rewrite_pure (p q:prop)
+  : Lemma (requires (p <==> q))
+          (ensures (pure p `equiv` pure q))
+
+assume
+val combine_pure (p q:prop)
+  : Lemma ((pure p `star` pure q) `equiv` pure (p /\ q))
+
+assume
+val use_pure (p :prop) (q r:slprop) (_:squash (p ==> q `equiv` r))
+  : Lemma ((pure p `star` q) `equiv` (pure p `star` r))
+
+assume
+val utils (_:unit)
+  : Lemma ((forall p q r. ((p `star` q) `star` r) == (p `star` (q `star` r))) /\
+           (forall p q. (p `star` q) == (q `star` p)) /\
+           (forall p q.{:pattern (p `equiv` q)} (p `equiv` q) <==> p == q) /\
+           (forall (a b:prop). {:pattern (pure a `star` pure b)}
+                          ((pure a) `star` (pure b)) `equiv` pure (a /\ b)))
+
+let rev_cons #a (x:a) (xs:list a)
+  : Lemma (List.rev (x::xs) == List.snoc (List.rev xs, x))
+  = admit()
+
+let rev_snoc #a (x:a) (xs:list a)
+  : Lemma (let prefix, last = List.unsnoc (x::xs) in
+           List.rev (x::xs) == last :: List.rev prefix)
+  = admit()
+
+let rev_involutive #a (xs:list a)
+  : Lemma (List.rev (List.rev xs) == xs)
+  = admit()
+
 #push-options "--__no_positivity"
 noeq
 type cell (a: Type0) = {
@@ -46,238 +83,353 @@ let hd l = Cons?.hd l
 let tl l = Cons?.tl l
 
 let ptr_eq (#a:Type) (x y:t a) = admit()
+let pts_to #a (x:t a) (c:cell a) = pts_to x full_perm c
 
+let pts_to_injective #a (x y:t a) (c0 c1:cell a)
+  : Lemma ((pts_to x c0 `star` pts_to y c1) `equiv`
+           ((pts_to x c0 `star` pts_to y c1) `star` pure (x =!= y)))
+  = admit()
 
 ////////////////////////////////////////////////////////////////////////////////
 // Main dlist invariant
 ////////////////////////////////////////////////////////////////////////////////
-(**
- *
- *  dlist left ptr tail right [d0;...;dn]
- *
- *  left    ptr               tail       right
- *  |        |                  |         |
- *  |        v                  v         |
- *  v       __         __       __        v
- *  <-prev-|d0|-next->|  | ... |dn|-next->
- *         |__|<-prev-|__| ..  |__|
- *
- *
- * dlist left ptr tail right []
- *   ptr
- *)
-
-let repr (a:Type) = l:list (cell a) { Cons? l }
-
 let rec dlist_cons (#a:Type) (previous :t a)
                              (cur  :t a)
                              (last :t a)
                              (right:t a)
-                             (xs:repr a)
+                             (xs:list (cell a))
     : Tot slprop (decreases xs)
     = match xs with
-      | [ x ]  ->
-        pure (cur == last /\
-              prev x == previous /\
-              next x == right) `star`
-        pts_to cur full_perm x
+      | [] ->
+        pure (last == previous /\
+              cur == right)
 
-      | x :: xs' ->
+      | x :: xs ->
         pure (prev x == previous) `star`
-        pts_to cur full_perm x `star`
-        dlist_cons cur (next x) last right xs'
+        pts_to cur x `star`
+        dlist_cons cur (next x) last right xs
 
 let rec dlist_snoc (#a:Type) (left:t a)
                              (last:t a)
                              (cur:t a)
                              (nxt:t a)
-                             (xs:repr a)
+                             (xs:list (cell a))
     : Tot slprop (decreases xs)
     = match xs with
-      | [ x ]  ->
-        pure (cur == last /\
-              prev x == left /\
-              next x == nxt) `star`
-        pts_to cur full_perm x
+      | []  ->
+        pure (last == nxt /\
+              cur == left)
 
-      | x :: xs' ->
+      | x :: xs ->
         pure (next x == nxt) `star`
-        pts_to cur full_perm x `star`
-        dlist_snoc left last (prev x) cur xs'
+        pts_to cur x `star`
+        dlist_snoc left last (prev x) cur xs
 
-let dlist_cons_snoc_nil #a (left front back right: t a) (x:_)
-  : Lemma (dlist_cons left front back right [x] `equiv`
-           dlist_snoc left front back right [x])
-  = calc (equiv) {
-         dlist_cons left front back right [x];
-      (equiv) {}
-         pure (front == back /\
-               prev x == left /\
-               next x == right) `star`
-         pts_to front full_perm x;
-       (equiv) { assume (front == back) }
-         pure (front == back /\
-               prev x == left /\
-               next x == right) `star`
-         pts_to back full_perm x;
-       (equiv) { admit () }
-         pure (back == front /\
-               prev x == left /\
-               next x == right) `star`
-         pts_to back full_perm x;
-    }
 
-module ST = Steel.Memory.Tactics
-let dlist_snoc_snoc_1 (#a:Type) (left:t a)
-                                 (last:t a)
-                                 (cur:t a)
-                                 (right:t a)
-                                 (x0:cell a)
-                                 (x:cell a)
-  : Lemma (ensures
-          (dlist_snoc left last cur right [x0;x] `equiv`
-            (pure (prev x == left) `star`
-             pts_to last full_perm x `star`
-             dlist_snoc last (next x) cur right [x0])))
-  = calc (equiv) {
-         dlist_snoc left last cur right [x0;x];
+let dlist_cons_snoc_nil #a (left front back right: t a)
+  : Lemma (dlist_cons left front back right [] `equiv`
+           dlist_snoc left front back right [])
+  = calc
+    (equiv) {
+         dlist_cons left front back right [];
     (equiv) { }
-         pure (next x0 == right) `star`
-         pts_to cur full_perm x0 `star`
-         dlist_snoc left last (prev x0) cur [x];
+         pure (back == left /\
+               front == right);
+    (equiv) { _ by (T.mapply (`rewrite_pure)) }
+         pure (front == right /\
+               back == left);
     (equiv) { }
-         pure (next x0 == right) `star`
-         pts_to cur full_perm x0 `star`
-         (pure (prev x0 == last /\
-                prev x == left /\
-                next x == cur) `star`
-          pts_to (prev x0) full_perm x);
-    (equiv) { admit() }
-         pure (prev x == left) `star`
-         pts_to last full_perm x `star`
-         (pure (cur == next x /\
-                prev x0 == last /\
-                next x0 == right) `star`
-          pts_to cur full_perm x0)                ;
+         dlist_snoc left front back right [];
     }
-
-assume
-val equiv_extensional_on_star_r (p1 p2 p3:slprop)
-  : squash (p2 `equiv` p3 ==> (p1 `star` p2) `equiv` (p1 `star` p3))
-
-assume
-val gather_pure (p q:prop) : Lemma ((pure p `star` pure q) == pure (p /\ q))
-assume
-val rewrite_pure (p q:prop) : Lemma (requires (p <==> q)) (ensures (pure p `equiv` pure q))
-
-#push-options "--z3rlimit_factor 4"
-assume
-val utils (_:unit)
-  : Lemma ((forall p q r. ((p `star` q) `star` r) == (p `star` (q `star` r))) /\
-           (forall p q. (p `star` q) == (q `star` p)) /\
-           (forall p q.{:pattern (p `equiv` q)} (p `equiv` q) <==> p == q) /\
-           (forall (a b:prop).{:pattern (pure a);(pure b)} (a <==> b) <==> (pure a == pure b)) /\
-           (forall (a b:prop). {:pattern (pure a `star` pure b)} ((pure a) `star` (pure b)) `equiv` pure (a /\ b)))
-#pop-options
-#push-options "--query_stats --initial_fuel 2 --initial_ifuel 1 --max_fuel 2 --max_ifuel 1 --z3rlimit_factor 4"
-module T = FStar.Tactics
-
-let no_prev_cycles #a (left last cur right: _) (p:_) (v:_) (xs:repr a) (m:_)
-  : Lemma (requires (interp (pts_to p full_perm v `star` dlist_snoc left last cur right xs) m))
-          (ensures (forall c. List.memP c xs ==> prev c =!= p) /\ p =!= last /\ p =!= cur)
-  = admit()
-
-let no_next_cycles #a (left cur last right: _) (p:_) (v:_) (xs:repr a) (m:_)
-  : Lemma (requires interp (pts_to p full_perm v `star` dlist_cons left cur last right xs) m)
-          (ensures (forall c. List.memP c xs ==> next c =!= p) /\ p =!= last /\ p =!= cur)
-  = admit()
-
-let stronger (p q:slprop) = forall m. interp p m ==> interp q m
-let stronger_drop (#p #q #r:slprop) : Lemma ((p `star` q) `stronger` q) = ()
-let stronger_equiv (#p #q #r:slprop) : Lemma ((p `equiv` q) ==> p `stronger` q) = ()
 
 
 let rec dlist_snoc_snoc (#a:Type) (left:t a)
                                   (last:t a)
                                   (cur:t a)
                                   (right:t a)
-                                  (xs:repr a)
+                                  (xs:list (cell a))
                                   (x:cell a)
   : Lemma (ensures
           (dlist_snoc left last cur right (List.snoc (xs, x)) `equiv`
             (pure (prev x == left) `star`
-             pts_to last full_perm x `star`
+             pts_to last x `star`
              dlist_snoc last (next x) cur right xs)))
           (decreases (List.length xs))
   = match xs with
-    | [hd] -> dlist_snoc_snoc_1 left last cur right hd x
+    | [] ->
+      assert (List.snoc (xs, x) == [x]);
+      calc
+      (equiv) {
+           dlist_snoc left last cur right (List.snoc (xs, x));
+      (equiv) { (* def *) }
+           pure (next x == right) `star`
+           pts_to cur x `star`
+           dlist_snoc left last (prev x) cur [];
+      (equiv) { (* def *) }
+           pure (next x == right) `star`
+           pts_to cur x `star`
+           pure (last == cur /\
+                 prev x == left);
+       (equiv) { (* AC *) _ by (ST.canon()) }
+           pure (next x == right) `star`
+           pure (last == cur /\
+                 prev x == left) `star`
+           pts_to cur x;
+       (equiv) { (* pure regroup *) utils () }
+           pure (next x == right /\ (last == cur /\ prev x == left)) `star`
+           pts_to cur x;
+       (equiv) {  (* pure regroup *)
+                  calc
+                  (equiv) {
+                    pure (next x == right /\ (last == cur /\ prev x == left));
+                  (equiv) { _ by (T.mapply (`rewrite_pure)) }
+                    pure (prev x == left /\ (next x == right /\ cur == last));
+                  };
+                  utils()
+               }
+           pure (prev x == left) `star`
+           pure (next x == right /\ cur == last) `star`
+           pts_to cur x;
+       (equiv) { (* AC *) _ by (ST.canon()) }
+           pure (prev x == left) `star`
+           (pure (next x == right /\ cur == last) `star`
+            pts_to cur x);
+       (equiv) { (* rewrite ... main "interesting" step *)
+                  calc
+                  (equiv) {
+                       pure (next x == right /\ cur == last) `star`
+                       pts_to cur x;
+                  (equiv) { _ by (T.mapply (`use_pure)) }
+                       pure (next x == right /\ cur == last) `star`
+                       pts_to last x;
+                  };
+                  utils()
+               }
+           pure (prev x == left) `star`
+           (pure (next x == right /\ cur == last) `star`
+            pts_to last x);
+       (equiv) { (* AC *) _ by (ST.canon()) }
+           pure (prev x == left) `star`
+           pts_to last x `star`
+           pure (next x == right /\ cur == last);
+       }
+
     | hd::xs' ->
-      let xs' : repr a = xs' in
       calc (equiv) {
         dlist_snoc left last cur right (List.snoc (hd::xs', x));
       (equiv) { (* defn *) }
         pure (next hd == right) `star`
-        pts_to cur full_perm hd `star`
+        pts_to cur hd `star`
         dlist_snoc left last (prev hd) cur (List.snoc (xs', x));
       (equiv) { (* IH *)
                 utils ();
                 dlist_snoc_snoc left last (prev hd) cur xs' x
               }
         pure (next hd == right) `star`
-        pts_to cur full_perm hd `star`
+        pts_to cur hd `star`
         (pure (prev x == left) `star`
-         pts_to last full_perm x `star`
+         pts_to last x `star`
          dlist_snoc last (next x) (prev hd) cur xs');
-      (equiv) { (* boring *) _ by (ST.canon()) }
+      (equiv) { _ by (ST.canon()) }
         pure (prev x == left) `star`
-        pts_to last full_perm x `star`
+        pts_to last x `star`
         (pure (next hd == right) `star`
-         pts_to cur full_perm hd `star`
+         pts_to cur hd `star`
          dlist_snoc last (next x) (prev hd) cur xs');
       (equiv) { }
          (pure (prev x == left) `star`
-          pts_to last full_perm x `star`
+          pts_to last x `star`
           dlist_snoc last (next x) cur right xs);
       }
-
-let rev #a (r:repr a) : repr a = let x = List.rev r in assume (Cons? x); x
-
 
 let rec dlist_cons_snoc (#a:Type) (left :t a)
                                   (head  :t a)
                                   (tail :t a)
                                   (right:t a)
-                                  (l:repr a)
+                                  (l:list (cell a))
   : Lemma (ensures dlist_cons left head tail right l `equiv`
-                   dlist_snoc left head tail right (rev l))
+                   dlist_snoc left head tail right (List.rev l))
           (decreases l)
   = match l with
-    | [x] -> dlist_cons_snoc_nil left head tail right x
+    | [] -> dlist_cons_snoc_nil left head tail right
     | x :: xs ->
       dlist_cons_snoc head (next x) tail right xs;
-      assert (dlist_cons head (next x) tail right xs `equiv`
-              dlist_snoc head (next x) tail right (rev xs));
-      assume (rev l == List.snoc (rev xs, x));
-      calc (equiv) {
-        dlist_cons left head tail right (x::xs);
+      rev_cons x xs;
+      dlist_snoc_snoc left head tail right (List.rev xs) x;
+      utils()
+
+let last #a (xs:list (cell a) { Cons? xs }) = snd (List.unsnoc xs)
+let first #a (xs:list (cell a) { Cons? xs }) = List.Tot.Base.hd xs
+let dlist_cons_tail (#a:_) (left head tail right:t a) (xs:list (cell a) { Cons? xs })
+  : Lemma (
+      let prefix, last = List.unsnoc xs in
+      dlist_cons left head tail right xs `equiv`
+      (pure (next last == right) `star`
+       pts_to tail last `star`
+       dlist_cons left head (prev last) tail prefix))
+  = let x :: xs' = xs in
+    rev_cons x xs';
+    let prefix, last = List.unsnoc xs in
+    rev_snoc x xs';
+    calc
+    (equiv) {
+         dlist_cons left head tail right xs;
+    (equiv) { _ by (T.mapply (`dlist_cons_snoc)) }
+         dlist_snoc left head tail right (List.rev xs);
+    (equiv) { }
+         dlist_snoc left head tail right (last :: List.rev prefix);
+    (equiv) { }
+         pure (next last == right) `star`
+         pts_to tail last `star`
+         dlist_snoc left head (prev last) tail (List.rev prefix);
+    (equiv) { utils();
+              dlist_cons_snoc left head (prev last) tail prefix }
+         pure (next last == right) `star`
+         pts_to tail last `star`
+         dlist_cons left head (prev last) tail prefix;
+    }
+
+let dlist_snoc_head (#a:_) (left head tail right:t a) (xs:list (cell a) { Cons? xs })
+  : Lemma (
+      let prefix, last = List.unsnoc xs in
+      dlist_snoc left head tail right xs `equiv`
+      (pure (prev last == left) `star`
+       pts_to head last `star`
+       dlist_snoc head (next last) tail right prefix))
+  = let prefix, last = List.unsnoc xs in
+    dlist_snoc_snoc left head tail right prefix last
+
+let dlist_cons_last (#a:Type)
+                    (left head tail right:t a)
+                    (x:cell a)
+                    (xs:list (cell a))
+  : Lemma
+      (equiv (pure (head == tail) `star`
+              dlist_cons left head tail right (x::xs))
+             (pure (head == tail /\ xs == []) `star`
+              dlist_cons left head tail right (x::xs)))
+  = match xs with
+    | [] ->
+      utils();
+      assert (pure (head == tail) `equiv`
+              pure (head == tail /\ xs == []))
+          by (T.mapply (`rewrite_pure))
+
+    | _ ->
+      let xs : (xs:list _ { Cons? xs }) = xs in
+      let prefix, last = List.unsnoc xs in
+      calc
+      (equiv) {
+           pure (head == tail) `star`
+           dlist_cons left head tail right (x::xs);
       (equiv) { }
-          pure (prev x == left)
-          `star`
-          pts_to head full_perm x `star`
-          dlist_cons head (next x) tail right xs;
-       (equiv) { equiv_extensional_on_star_r
-                         (pure (prev x == left)
-                               `star`
-                          pts_to head full_perm x)
-                          (dlist_cons head (next x) tail right xs)
-                          (dlist_snoc head (next x) tail right (rev xs))
-                }
-          pure (prev x == left)
-          `star`
-          pts_to head full_perm x `star`
-          (dlist_snoc head (next x) tail right (rev xs));
+           pure (head == tail) `star`
+           (pure (prev x == left) `star`
+            pts_to head x `star`
+            dlist_cons head (next x) tail right xs);
+      (equiv) {
+                calc
+                (equiv) {
+                     dlist_cons head (next x) tail right xs;
+                (equiv) { dlist_cons_tail head (next x) tail right xs }
+                    (pure (next last == right) `star`
+                     pts_to tail last `star`
+                     dlist_cons head (next x) (prev last) tail prefix);
+                };
+                utils()
+              }
+           pure (head == tail) `star`
+           (pure (prev x == left) `star`
+            pts_to head x `star`
+            (pure (next last == right) `star`
+             pts_to tail last `star`
+             dlist_cons head (next x) (prev last) tail prefix));
+       (equiv) { _ by (ST.canon()) }
+          (pts_to head x `star` pts_to tail last) `star`
+           (pure (head == tail) `star`
+            pure (prev x == left) `star`
+            pure (next last == right) `star`
+            dlist_cons head (next x) (prev last) tail prefix);
+       (equiv) { pts_to_injective head tail x last; utils () }
+          (pts_to head x `star` pts_to tail last `star` pure (head =!= tail)) `star`
+           (pure (head == tail) `star`
+            pure (prev x == left) `star`
+            pure (next last == right) `star`
+            dlist_cons head (next x) (prev last) tail prefix);
+       (equiv) { _ by (ST.canon()) }
+          (pure (head == tail) `star` pure (head =!= tail)) `star`
+          (pts_to head x `star` pts_to tail last `star`
+            pure (prev x == left) `star`
+            pure (next last == right) `star`
+            dlist_cons head (next x) (prev last) tail prefix);
+       (equiv) { utils () }
+          pure (head == tail /\ head =!= tail) `star`
+          (pts_to head x `star` pts_to tail last `star`
+            pure (prev x == left) `star`
+            pure (next last == right) `star`
+            dlist_cons head (next x) (prev last) tail prefix);
+       (equiv) { _ by (T.mapply (`use_pure)) }
+          pure (head == tail /\ head =!= tail) `star`
+          pure False;
+       (equiv) { _ by (T.mapply (`combine_pure)) }
+          pure ((head == tail /\ head =!= tail) /\ False);
+       (equiv) { _ by (T.mapply (`rewrite_pure)) }
+          pure False;
       };
-      dlist_snoc_snoc left head tail right (rev xs) x
+
+      calc
+      (equiv) {
+           pure (head == tail /\ xs == []) `star`
+           dlist_cons left head tail right (x::xs);
+      (equiv)  { _ by (T.mapply (`use_pure)) }
+           pure (head == tail /\ xs == []) `star`
+           pure False;
+       (equiv) { _ by (T.mapply (`combine_pure)) }
+          pure ((head == tail /\ xs == []) /\ False);
+       (equiv) { _ by (T.mapply (`rewrite_pure)) }
+          pure False;
+      }
+
+let dlist_snoc_last (#a:Type)
+                        (left head tail right:t a)
+                        (x:cell a)
+                        (xs:list (cell a))
+  : Lemma
+      (equiv (pure (head == tail) `star`
+              dlist_snoc left head tail right (x::xs))
+             (pure (head == tail /\ xs == []) `star`
+              dlist_snoc left head tail right (x::xs)))
+  = dlist_cons_snoc left head tail right (x :: xs);
+    let prefix, last = List.unsnoc (x :: xs) in
+    rev_snoc x xs;
+    rev_involutive (x :: xs);
+    dlist_cons_last left head tail right last (List.rev prefix);
+    calc
+    (equiv) {
+         pure (head == tail) `star`
+         dlist_snoc left head tail right (x::xs);
+    (equiv) { dlist_cons_snoc left head tail right (last :: List.rev prefix); utils() }
+         pure (head == tail) `star`
+         dlist_cons left head tail right (last :: List.rev prefix);
+    (equiv) { _ by (T.mapply (`dlist_cons_last)) }
+         pure (head == tail /\ List.rev prefix == []) `star`
+         dlist_cons left head tail right (last :: List.rev prefix);
+    (equiv) { dlist_cons_snoc left head tail right (last :: List.rev prefix); utils() }
+         pure (head == tail /\ List.rev prefix == []) `star`
+         dlist_snoc left head tail right (x :: xs);
+    (equiv) {
+              calc
+              (equiv) {
+                pure (head == tail /\ List.rev prefix == []);
+              (equiv) { rewrite_pure (head == tail /\ List.rev prefix == []) (head == tail /\ xs == []) }
+                pure (head == tail /\ xs == []);
+              };
+              utils()
+            }
+         pure (head == tail /\ xs == []) `star`
+         dlist_snoc left head tail right (x :: xs);
+    }
+
 
 
 // // assume
