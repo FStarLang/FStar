@@ -162,25 +162,25 @@ let is_avl (#a #b: Type) {| d: ordered a |} (x: kv_tree a b) : prop =
 
 let avl (a b: Type) {| d: ordered a |} = x: kv_tree a b {is_avl x}
 
-let rotate_left (#a: Type) (r: tree a) : tree a =
+let rotate_left (#a: Type) (r: tree a) : option (tree a) =
   match r with
-  | Node x t1 (Node z t2 t3) -> Node z (Node x t1 t2) t3
-  | _ -> r
+  | Node x t1 (Node z t2 t3) -> Some (Node z (Node x t1 t2) t3)
+  | _ -> None
 
-let rotate_right (#a: Type) (r: tree a) : tree a =
+let rotate_right (#a: Type) (r: tree a) : option (tree a) =
   match r with
-  | Node x (Node z t1 t2) t3 -> Node z t1 (Node x t2 t3)
-  | _ -> r
+  | Node x (Node z t1 t2) t3 -> Some (Node z t1 (Node x t2 t3))
+  | _ -> None
 
-let rotate_right_left (#a: Type) (r: tree a) : tree a =
+let rotate_right_left (#a: Type) (r: tree a) : option (tree a) =
   match r with
-  | Node x t1 (Node z (Node y t2 t3) t4) -> Node y (Node x t1 t2) (Node z t3 t4)
-  | _ -> r
+  | Node x t1 (Node z (Node y t2 t3) t4) -> Some (Node y (Node x t1 t2) (Node z t3 t4))
+  | _ -> None
 
-let rotate_left_right (#a: Type) (r: tree a) : tree a =
+let rotate_left_right (#a: Type) (r: tree a) : option (tree a) =
   match r with
-  | Node x (Node z t1 (Node y t2 t3)) t4 -> Node y (Node z t1 t2) (Node x t3 t4)
-  | _ -> r
+  | Node x (Node z t1 (Node y t2 t3)) t4 -> Some (Node y (Node z t1 t2) (Node x t3 t4))
+  | _ -> None
 
 (** rotate preserves bst *)
 let rec forall_keys_trans (#a #b: Type) (t: kv_tree a b) (cond1 cond2: a -> bool)
@@ -192,26 +192,23 @@ let rec forall_keys_trans (#a #b: Type) (t: kv_tree a b) (cond1 cond2: a -> bool
     forall_keys_trans left cond1 cond2; forall_keys_trans right cond1 cond2
 
 let rotate_left_bst (#a #b:Type) {| d : ordered a |} (r:kv_tree a b)
-  : Lemma (requires is_bst r) (ensures is_bst (rotate_left r))
+  : Lemma (requires is_bst r /\ Some? (rotate_left r)) (ensures is_bst (Some?.v (rotate_left r)))
   = match r with
   | Node x t1 (Node z t2 t3) ->
       assert (is_bst (Node z t2 t3));
       assert (is_bst (Node x t1 t2));
       forall_keys_trans t1 (key_left x.key) (key_left z.key)
-  | _ -> ()
 
 let rotate_right_bst (#a #b:Type) {| d : ordered a |} (r:kv_tree a b)
-  : Lemma (requires is_bst r) (ensures is_bst (rotate_right r))
+  : Lemma (requires is_bst r /\ Some? (rotate_right r)) (ensures is_bst (Some?.v (rotate_right r)))
   = match r with
   | Node x (Node z t1 t2) t3 ->
       assert (is_bst (Node z t1 t2));
       assert (is_bst (Node x t2 t3));
       forall_keys_trans t3 (key_right x.key) (key_right z.key)
-  | _ -> ()
-
 
 let rotate_right_left_bst (#a #b:Type) {| d : ordered a |} (r:kv_tree a b)
-  : Lemma (requires is_bst r) (ensures is_bst (rotate_right_left r))
+  : Lemma (requires is_bst r /\ Some? (rotate_right_left r)) (ensures is_bst (Some?.v (rotate_right_left r)))
   = match r with
   | Node x t1 (Node z (Node y t2 t3) t4) ->
     assert (is_bst (Node z (Node y t2 t3) t4));
@@ -231,11 +228,9 @@ let rotate_right_left_bst (#a #b:Type) {| d : ordered a |} (r:kv_tree a b)
     forall_keys_trans t4 (key_right z.key) (key_right y.key);
     assert (forall_keys right (key_right y.key))
 
-  | _ -> ()
-
 
 let rotate_left_right_bst (#a #b:Type) {| d : ordered a |} (r:kv_tree a b)
-  : Lemma (requires is_bst r) (ensures is_bst (rotate_left_right r))
+  : Lemma (requires is_bst r /\ Some? (rotate_left_right r)) (ensures is_bst (Some?.v (rotate_left_right r)))
   = match r with
   | Node x (Node z t1 (Node y t2 t3)) t4 ->
     // Node y (Node z t1 t2) (Node x t3 t4)
@@ -256,49 +251,43 @@ let rotate_left_right_bst (#a #b:Type) {| d : ordered a |} (r:kv_tree a b)
     forall_keys_trans t4 (key_right x.key) (key_right y.key);
     assert (forall_keys right (key_right y.key))
 
-  | _ -> ()
-
 (** Same elements before and after rotate **)
 
 let rotate_left_key_left (#a #b:Type) {| d : ordered a |} (r:kv_tree a b) (root:a)
-  : Lemma (requires forall_keys r (key_left root))
-          (ensures  forall_keys (rotate_left r) (key_left root))
+  : Lemma (requires forall_keys r (key_left root) /\ Some? (rotate_left r))
+          (ensures  forall_keys (Some?.v (rotate_left r)) (key_left root))
   = match r with
   | Node x t1 (Node z t2 t3) ->
       assert (forall_keys (Node z t2 t3) (key_left root));
       assert (forall_keys (Node x t1 t2) (key_left root))
-  | _ -> ()
 
 let rotate_left_key_right (#a #b:Type) {| d : ordered a |} (r:kv_tree a b) (root:a)
-  : Lemma (requires forall_keys r (key_right root))
-          (ensures  forall_keys (rotate_left r) (key_right root))
+  : Lemma (requires forall_keys r (key_right root) /\ Some? (rotate_left r))
+          (ensures  forall_keys (Some?.v (rotate_left r)) (key_right root))
   = match r with
   | Node x t1 (Node z t2 t3) ->
       assert (forall_keys (Node z t2 t3) (key_right root));
       assert (forall_keys (Node x t1 t2) (key_right root))
-  | _ -> ()
 
 let rotate_right_key_left (#a #b:Type) {| d : ordered a |} (r:kv_tree a b) (root:a)
-  : Lemma (requires forall_keys r (key_left root))
-          (ensures  forall_keys (rotate_right r) (key_left root))
+  : Lemma (requires forall_keys r (key_left root) /\ Some? (rotate_right r))
+          (ensures  forall_keys (Some?.v (rotate_right r)) (key_left root))
   = match r with
   | Node x (Node z t1 t2) t3 ->
       assert (forall_keys (Node z t1 t2) (key_left root));
       assert (forall_keys (Node x t2 t3) (key_left root))
-  | _ -> ()
 
 let rotate_right_key_right (#a #b:Type) {| d : ordered a |} (r:kv_tree a b) (root:a)
-  : Lemma (requires forall_keys r (key_right root))
-          (ensures  forall_keys (rotate_right r) (key_right root))
+  : Lemma (requires forall_keys r (key_right root) /\ Some? (rotate_right r))
+          (ensures  forall_keys (Some?.v (rotate_right r)) (key_right root))
   = match r with
   | Node x (Node z t1 t2) t3 ->
       assert (forall_keys (Node z t1 t2) (key_right root));
       assert (forall_keys (Node x t2 t3) (key_right root))
-  | _ -> ()
 
 let rotate_right_left_key_left (#a #b:Type) {| d : ordered a |} (r:kv_tree a b) (root:a)
-  : Lemma (requires forall_keys r (key_left root))
-          (ensures  forall_keys (rotate_right_left r) (key_left root))
+  : Lemma (requires forall_keys r (key_left root) /\ Some? (rotate_right_left r))
+          (ensures  forall_keys (Some?.v (rotate_right_left r)) (key_left root))
   = match r with
   | Node x t1 (Node z (Node y t2 t3) t4) ->
     assert (forall_keys (Node z (Node y t2 t3) t4) (key_left root));
@@ -308,11 +297,10 @@ let rotate_right_left_key_left (#a #b:Type) {| d : ordered a |} (r:kv_tree a b) 
     assert (forall_keys left (key_left root));
     assert (forall_keys right (key_left root))
 
-  | _ -> ()
 
 let rotate_right_left_key_right (#a #b:Type) {| d : ordered a |} (r:kv_tree a b) (root:a)
-  : Lemma (requires forall_keys r (key_right root))
-          (ensures  forall_keys (rotate_right_left r) (key_right root))
+  : Lemma (requires forall_keys r (key_right root) /\ Some? (rotate_right_left r))
+          (ensures  forall_keys (Some?.v (rotate_right_left r)) (key_right root))
   = match r with
   | Node x t1 (Node z (Node y t2 t3) t4) ->
     assert (forall_keys (Node z (Node y t2 t3) t4) (key_right root));
@@ -322,11 +310,9 @@ let rotate_right_left_key_right (#a #b:Type) {| d : ordered a |} (r:kv_tree a b)
     assert (forall_keys left (key_right root));
     assert (forall_keys right (key_right root))
 
-  | _ -> ()
-
 let rotate_left_right_key_left (#a #b:Type) {| d : ordered a |} (r:kv_tree a b) (root:a)
-  : Lemma (requires forall_keys r (key_left root))
-          (ensures  forall_keys (rotate_left_right r) (key_left root))
+  : Lemma (requires forall_keys r (key_left root) /\ Some? (rotate_left_right r))
+          (ensures  forall_keys (Some?.v (rotate_left_right r)) (key_left root))
   = match r with
   | Node x (Node z t1 (Node y t2 t3)) t4 ->
     // Node y (Node z t1 t2) (Node x t3 t4)
@@ -338,11 +324,9 @@ let rotate_left_right_key_left (#a #b:Type) {| d : ordered a |} (r:kv_tree a b) 
     assert (forall_keys left (key_left root));
     assert (forall_keys right (key_left root))
 
-  | _ -> ()
-
 let rotate_left_right_key_right (#a #b:Type) {| d : ordered a |} (r:kv_tree a b) (root:a)
-  : Lemma (requires forall_keys r (key_right root))
-          (ensures  forall_keys (rotate_left_right r) (key_right root))
+  : Lemma (requires forall_keys r (key_right root) /\ Some? (rotate_left_right r))
+          (ensures  forall_keys (Some?.v (rotate_left_right r)) (key_right root))
   = match r with
   | Node x (Node z t1 (Node y t2 t3)) t4 ->
     // Node y (Node z t1 t2) (Node x t3 t4)
@@ -353,8 +337,6 @@ let rotate_left_right_key_right (#a #b:Type) {| d : ordered a |} (r:kv_tree a b)
 
     assert (forall_keys left (key_right root));
     assert (forall_keys right (key_right root))
-
-  | _ -> ()
 
 
 (** Balancing operation for AVLs *)
@@ -370,17 +352,25 @@ let rebalance_avl (#a #b: Type) {| d: ordered a |} (x: kv_tree a b) : kv_tree a 
         if height left - height right > 1 then (
           let Node ldata lleft lright = left in
           if height lright > height lleft then (
-            rotate_left_right x
+            match rotate_left_right x with
+            | Some y -> y
+            | _ -> x
           ) else (
-            rotate_right x
+            match rotate_right x with
+            | Some y -> y
+            | _ -> x
           )
 
         ) else if height left - height right < -1 then (
           let Node rdata rleft rright = right in
             if height rleft > height rright then (
-              rotate_right_left x
+              match rotate_right_left x with
+              | Some y -> y
+              | _ -> x
             ) else (
-              rotate_left x
+              match rotate_left x with
+              | Some y -> y
+              | _ -> x
             )
         ) else (
           x
