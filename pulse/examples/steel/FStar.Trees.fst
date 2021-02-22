@@ -266,34 +266,29 @@ let rebalance_avl (#a #b: Type) {| d: ordered a |} (x: kv_tree a b) : kv_tree a 
     | Leaf -> x
     | Node data left right ->
 
-      if is_balanced(x) then (x)
+      if is_balanced x then x
       else (
 
-        if (height left - height right) > 1 then (
-        match left with
-        | Node ldata lleft lright ->
-            if d.compare data.key ldata.key > 0 then (
-              rotate_left_right(x)
-            ) else (
-              rotate_right(x)
-            )
-        | _ -> x
+        if height left - height right > 1 then (
+          let Node ldata lleft lright = left in
+          if height lright > height lleft then (
+            rotate_left_right x
+          ) else (
+            rotate_right x
+          )
 
-        ) else (
-        if (height left - height right) < -1 then (
-        match right with
-        | Node rdata rleft rright ->
-            if d.compare data.key rdata.key > 0 then (
-              rotate_left(x)
+        ) else if height left - height right < -1 then (
+          let Node rdata rleft rright = right in
+            if height rleft > height rright then (
+              rotate_right_left x
             ) else (
-              rotate_right_left(x)
+              rotate_left x
             )
-        | _ -> x
         ) else (
           x
         )
       )
-    )
+
 
 let rebalance_avl_proof (#a #b: Type) {| d: ordered a |} (x: kv_tree a b) : Lemma
   (requires is_bst x /\ (
@@ -308,21 +303,86 @@ let rebalance_avl_proof (#a #b: Type) {| d: ordered a |} (x: kv_tree a b) : Lemm
   = match x with
     | Leaf -> ()
     | Node data left right ->
+      let x_f = rebalance_avl x in
+      let Node f_data f_left f_right = x_f in
       if is_balanced x then ()
       else (
         if height left - height right > 1 then (
-        match left with
-        | Node ldata lleft lright ->
-          if d.compare data.key ldata.key > 0 then (
-            admit()
+          assert (height left = height right + 2);
+          let Node ldata lleft lright = left in
+          if height lright > height lleft then (
+            assert (height left = height lright + 1);
+
+            rotate_left_right_bst x;
+
+            let Node y t2 t3 = lright in
+            let Node x (Node z t1 (Node y t2 t3)) t4 = x in
+            assert (f_data == y);
+            assert (f_left == Node z t1 t2);
+            assert (f_right == Node x t3 t4);
+            assert (lright == Node y t2 t3);
+
+            // Left part
+
+            assert (is_balanced lright);
+            assert (height t1 - height t2 <= 1);
+
+            assert (height t2 - height t1 <= 1);
+
+            assert (is_balanced t1);
+
+            assert (is_balanced (Node y t2 t3));
+            assert (is_balanced t2);
+
+            assert (is_balanced f_left);
+
+
+            // Right part
+            assert (height t3 - height t4 <= 1);
+            assert (height t4 - height t3 <= 1);
+
+            assert (is_balanced t3);
+            assert (is_balanced t4);
+            assert (is_balanced f_right)
+
           ) else (
-            admit()
+            rotate_right_bst x;
+
+            assert (is_balanced f_left);
+            assert (is_balanced f_right);
+            assert (is_balanced x_f)
           )
-        | _ -> ()
+
         ) else if height left - height right < -1 then (
-          admit()
-        ) else (
-          ()
+          let Node rdata rleft rright = right in
+          if height rleft > height rright then (
+            rotate_right_left_bst x;
+
+            let Node x t1 (Node z (Node y t2 t3) t4) = x in
+            assert (f_data == y);
+            assert (f_left == Node x t1 t2);
+            assert (f_right == Node z t3 t4);
+
+            // Right part
+            assert (is_balanced rleft);
+            assert (height t3 - height t4 <= 1);
+            assert (height t4 - height t4 <= 1);
+
+            assert (is_balanced (Node y t2 t3));
+            assert (is_balanced f_right);
+
+            // Left part
+            assert (is_balanced t1);
+            assert (is_balanced t2);
+            assert (is_balanced f_left)
+
+          ) else (
+            rotate_left_bst x;
+
+            assert (is_balanced f_left);
+            assert (is_balanced f_right);
+            assert (is_balanced x_f)
+          )
         )
       )
 
