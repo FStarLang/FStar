@@ -66,16 +66,23 @@ val rotate_left_right (#a: Type) (ptr: t a)
         Spec.rotate_left_right (v_linked_tree ptr h0) == Some (v_linked_tree ptr' h1)
     ))
 
-val rebalance_avl (#a: Type) (ptr: t a)
+val is_balanced (#a: Type) (ptr: t a)
+    : SteelSel bool (linked_tree ptr) (fun _ -> linked_tree ptr)
+    (requires fun h0 -> True)
+    (ensures (fun h0 b h1 ->
+        v_linked_tree ptr h0 == v_linked_tree ptr h1 /\
+        Spec.is_balanced (v_linked_tree ptr h0) == b))
+
+val rebalance_avl (#a: Type) {| d : Spec.ordered a |} (ptr: t a)
     : SteelSel (t a) (linked_tree ptr) (fun ptr' -> linked_tree ptr')
     (requires fun h0 -> Spec.is_bst(v_linked_tree ptr h0))
     (ensures fun h0 ptr' h1 ->
         Spec.rebalance_avl (v_linked_tree ptr h0) == v_linked_tree ptr' h1 /\
         Spec.is_avl (v_linked_tree ptr' h1))
  
-val insert_avl (#a: Type) (ptr: t a)
+val insert_avl (#a: Type) {| d : Spec.ordered a |} (ptr: t a) (v: a)
     : SteelSel (t a) (linked_tree ptr) (fun ptr' -> linked_tree ptr')
     (requires fun h0 -> Spec.is_avl(v_linked_tree ptr h0))
     (ensures fun h0 ptr' h1 ->
-        Spec.insert_avl (v_linked_tree ptr h0) == v_linked_tree ptr' h1 /\
-        Spec.is_avl (v_linked_tree ptr' h1))
+        Spec.is_avl(v_linked_tree ptr h0) /\
+        Spec.insert_avl (v_linked_tree ptr h0) v == v_linked_tree ptr' h1)
