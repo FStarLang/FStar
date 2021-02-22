@@ -1,4 +1,4 @@
-module LListWithTail.Cell
+module LListQueue.Cell
 open Steel.Memory
 open Steel.Effect
 open Steel.Effect.Atomic

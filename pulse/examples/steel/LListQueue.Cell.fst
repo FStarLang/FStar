@@ -1,4 +1,4 @@
-module LListWithTail.Cell
+module LListQueue.Cell
 
 (* A Steel model of C cell structs *)
 

@@ -1,10 +1,10 @@
-module LListWithTail
+module LListQueue
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.FractionalPermission
 open Steel.Reference
-include LListWithTail.Cell
+include LListQueue.Cell
 module L = FStar.List.Tot
 
 noeq
@@ -136,15 +136,15 @@ let unsnoc_hd (#a: Type) (l: list a) : Pure (list a) (requires (Cons? l)) (ensur
 let unsnoc_tl (#a: Type) (l: list a) : Pure (a) (requires (Cons? l)) (ensures (fun _ -> True)) = snd (unsnoc l)
 
 [@@__reduce__]
-let llist_with_tail (#a: Type) (x: t a) (l: Ghost.erased (list (vcell a))) : Tot slprop =
+let queue (#a: Type) (x: t a) (l: Ghost.erased (list (vcell a))) : Tot slprop =
   llist_fragment x.head l `star` ccellp (next_last x.head l) full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head l))
 
-let create_llist_with_tail (a: Type) : SteelT (t a) emp (fun x -> llist_with_tail x []) =
+let create_queue (a: Type) : SteelT (t a) emp (fun x -> queue x []) =
   let head : ccell_ptrvalue a = ccell_ptrvalue_null a in
   let x : t a = ({ head = head; tail = head; }) in
   ccellp_null_intro head full_perm;
   intro_pure (x.tail == Ghost.reveal (next_last x.head (Ghost.hide [])));
-  change_slprop (emp `star` ccellp head full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head (Ghost.hide [])))) (llist_with_tail x []) (fun _ -> ());
+  change_slprop (emp `star` ccellp head full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head (Ghost.hide [])))) (queue x []) (fun _ -> ());
   x
 
 (* BEGIN helpers to unfold definitions just to prove that I can read the head pointer of a list and check its value to determine whether the list is empty or not *)
@@ -154,7 +154,7 @@ let read_head_nil
   (#a: Type) (x: t a) (l: Ghost.erased (list (vcell a)))
 : Ghost slprop
   (requires (Nil? l))
-  (ensures (fun q -> llist_with_tail x l `equiv` (ccellp x.head full_perm None `star` q)))
+  (ensures (fun q -> queue x l `equiv` (ccellp x.head full_perm None `star` q)))
 = assert (
     (llist_fragment x.head l `star` ccellp (next_last x.head l) full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head l))) `equiv`
     (ccellp (next_last x.head l) full_perm None `star` (llist_fragment x.head l `star` pure (x.tail == Ghost.reveal (next_last x.head l))))
@@ -166,7 +166,7 @@ let read_head_snoc
   (#a: Type) (x: t a) (l: Ghost.erased (list (vcell a)))
 : Ghost (slprop)
   (requires (Cons? l))
-  (ensures (fun q -> llist_with_tail x l `equiv` (ccellp x.head full_perm (Some (L.hd l)) `star` q)))
+  (ensures (fun q -> queue x l `equiv` (ccellp x.head full_perm (Some (L.hd l)) `star` q)))
 =
   let hd = L.hd l in
   let tl = L.tl l in
@@ -180,7 +180,7 @@ let read_head_ghost
   (#a: Type) (x: t a) (l: Ghost.erased (list (vcell a)))
 : Ghost (option (vcell a) & slprop)
   (requires True)
-  (ensures (fun (v, q) -> llist_with_tail x l `equiv` (ccellp x.head full_perm v `star` q) /\ 
+  (ensures (fun (v, q) -> queue x l `equiv` (ccellp x.head full_perm v `star` q) /\ 
     v == begin match Ghost.reveal l with 
     | [] -> None
     | a :: _ -> Some a
@@ -212,7 +212,7 @@ let read_head_pure
   (#a: Type) (x: t a) (l: Ghost.erased (list (vcell a)))
 : Pure (Ghost.erased (option (vcell a)) & slprop)
   (requires True)
-  (ensures (fun (v, q) -> llist_with_tail x l `equiv` (ccellp x.head full_perm v `star` q) /\ 
+  (ensures (fun (v, q) -> queue x l `equiv` (ccellp x.head full_perm v `star` q) /\ 
     Ghost.reveal v == begin match Ghost.reveal l with 
     | [] -> None
     | a :: _ -> Some a
@@ -238,18 +238,18 @@ let is_empty
   (x: t a)
   (l: Ghost.erased (list (vcell a)))
 : Steel bool
-  (llist_with_tail x l)
-  (fun _ -> llist_with_tail x l)
+  (queue x l)
+  (fun _ -> queue x l)
   (requires (fun _ -> True))
   (ensures (fun _ v _ ->
     v == Nil? (Ghost.reveal l)
   ))
 =
   let q : Ghost.erased (option (vcell a)) & slprop = read_head_pure x l in
-  change_equiv_slprop (llist_with_tail x l) (ccellp x.head full_perm (fst q) `star` snd q) ();
+  change_equiv_slprop (queue x l) (ccellp x.head full_perm (fst q) `star` snd q) ();
   let r = ccell_ptrvalue_is_null x.head in
   ccellp_is_null x.head full_perm (fst q);
-  change_equiv_slprop (ccellp x.head full_perm (fst q) `star` snd q)  (llist_with_tail x l) ();
+  change_equiv_slprop (ccellp x.head full_perm (fst q) `star` snd q)  (queue x l) ();
   r
 
 (* END helpers to unfold definitions just to prove that I can read the head pointer of a list and check its value to determine whether the list is empty or not *)
@@ -266,8 +266,8 @@ val dequeue
   (x: t a)
   (l: Ghost.erased (list (vcell a)))
 : Steel (dequeue_result a)
-    (llist_with_tail x l)
-    (fun res -> llist_with_tail (res.dq_rem) (res.dq_rem_g))
+    (queue x l)
+    (fun res -> queue (res.dq_rem) (res.dq_rem_g))
     (requires (fun _ -> Cons? l == true))
     (ensures (fun _ res _ -> Cons? l /\ res.dq_val == Ghost.reveal (L.hd l).vcell_data /\ res.dq_rem_g == Ghost.hide (L.tl l) /\ res.dq_rem.tail == x.tail))
 
@@ -296,7 +296,7 @@ let dequeue
   change_slprop
     (llist_fragment (L.hd l2).vcell_next (L.tl l2)
      `star` ccellp (next_last x.head l) full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head l)))
-    (llist_with_tail res.dq_rem res.dq_rem_g)
+    (queue res.dq_rem res.dq_rem_g)
     (fun _ -> ());
   res
 
@@ -305,8 +305,8 @@ let test_read_head_dequeue
   (x: t a)
   (l: Ghost.erased (list (vcell a)))
 : Steel (t a & Ghost.erased (list (vcell a)))
-    (llist_with_tail x l)
-    (fun res -> llist_with_tail (fst res) (snd res))
+    (queue x l)
+    (fun res -> queue (fst res) (snd res))
     (requires (fun _ -> True))
     (ensures (fun _ res _ ->
       match Ghost.reveal l with
@@ -331,8 +331,8 @@ val enqueue
   (l: Ghost.erased (list (vcell a)))
   (v: a)
 : Steel (t a & Ghost.erased (list (vcell a)))
-    (llist_with_tail x l)
-    (fun res -> llist_with_tail (fst res) (snd res))
+    (queue x l)
+    (fun res -> queue (fst res) (snd res))
     (requires (fun _ -> True))
     (ensures (fun _ res _ -> datas (snd res) == datas l `L.append` [v] /\ (fst res).head == x.head))
 
@@ -357,7 +357,7 @@ let enqueue
   let res : t a & Ghost.erased (list (cell a)) = (y, l2) in
   change_slprop
     (llist_fragment y.head l2 `star` pts_to (next_last y.head l2) full_perm None `star` pure (y.tail == Ghost.reveal (next_last y.head l2)))
-    (llist_with_tail (fst res) (snd res))
+    (queue (fst res) (snd res))
     (fun _ -> ());
   // it seems that nothing must come before the last change_slprop and the return value
   res
@@ -368,7 +368,7 @@ let test
     emp
     (fun _ -> emp)
 =
-  let l = create_llist_with_tail nat in
+  let l = create_queue nat in
   let lk = enqueue l _ 1 in
   let lk = enqueue (fst lk) _ 2 in
   let Some c = read_head (fst lk) _ in
@@ -380,4 +380,4 @@ let test
   let lk = dequeue (fst lk) _ (next c) in
   assert (snd lk == Ghost.hide []);
   assert (data c == 3);
-  drop (llist_with_tail (fst lk) _)
+  drop (queue (fst lk) _)
