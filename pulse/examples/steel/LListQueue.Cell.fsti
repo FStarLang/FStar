@@ -7,7 +7,7 @@ open Steel.Reference
 
 (* A C lvalue view of a cell struct, as a pair of two references for its data and next fields *)
 
-val ccell_ptrvalue (a: Type0) : Tot Type0 (* "ccell *" seen as a rvalue, or "ccell * const" *)
+val ccell_ptrvalue (a: Type0) : Tot Type0 (* "ccell *" seen as a rvalue *)
 
 val ccell_ptrvalue_null (a: Type0) : Tot (ccell_ptrvalue a)
 
@@ -17,7 +17,7 @@ val ccell_ptrvalue_is_null (#a: Type0) (c: ccell_ptrvalue a) : Pure bool
   (requires True)
   (ensures (fun b -> b == true <==> c == ccell_ptrvalue_null a))
 
-let ccell_lvalue (a: Type0) = (c: ccell_ptrvalue a { ccell_ptrvalue_is_null c == false }) (* "ccell" seen as a lvalue. IMPORTANT: one MUST NOT use "ref ccell_lvalue" in C code. In other words, ref can be used to model pointers to rvalues only. *)
+let ccell_lvalue (a: Type0) = (c: ccell_ptrvalue a { ccell_ptrvalue_is_null c == false }) (* "ccell" seen as a lvalue, or "ccell * const". IMPORTANT: one MUST NOT use "ref ccell_lvalue" in C code. In other words, ref can be used to model pointers to rvalues only. *)
 
 val ccell_data (#a: Type0) (c: ccell_lvalue a) : Pure (ref a)
   (requires True)
