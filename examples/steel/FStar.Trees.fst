@@ -1,5 +1,7 @@
 module FStar.Trees
 
+module M = FStar.Math.Lib
+
 #set-options "--fuel 1 --ifuel 1 --z3rlimit 20"
 
 (*** Type definitions *)
@@ -23,11 +25,11 @@ class ordered (a: Type) = {
   compare: a -> a -> int
 }
 
-let rec forall_keys (#a #b: Type) (t: kv_tree a b) (cond: a -> bool) : bool =
+let rec forall_keys (#a: Type) (t: tree a) (cond: a -> bool) : bool =
   match t with
   | Leaf -> true
   | Node data left right ->
-    cond data.key && forall_keys left cond && forall_keys right cond
+    cond data && forall_keys left cond && forall_keys right cond
 
 let key_left (#a: Type) {| d: ordered a |} (root key: a) =
   d.compare root key >= 0
@@ -35,15 +37,15 @@ let key_left (#a: Type) {| d: ordered a |} (root key: a) =
 let key_right (#a: Type) {| d: ordered a |} (root key: a) =
   d.compare root key < 0
 
-let rec is_bst (#a #b: Type) {| d: ordered a |} (x: kv_tree a b) : bool =
+let rec is_bst (#a: Type) {| d: ordered a |} (x: tree a) : bool =
   match x with
   | Leaf -> true
   | Node data left right ->
     is_bst left && is_bst right &&
-    forall_keys left (key_left data.key) &&
-    forall_keys right (key_right data.key)
+    forall_keys left (key_left data) &&
+    forall_keys right (key_right data)
 
-let bst (a b: Type) {| d: ordered a |} = x:kv_tree a b{is_bst x}
+let bst (a: Type) {| d: ordered a |} = x:tree a {is_bst x}
 
 (*** Operations *)
 
@@ -55,14 +57,14 @@ let rec mem (#a: Type) (r: tree a) (x: a) : prop =
   | Node data left right ->
     (data == x) \/ (mem right x) \/ mem left x
 
-let rec bst_search (#a #b: Type) {| d: ordered a |} (x: bst a b) (key: a) : option b =
+let rec bst_search (#a: Type) {| d: ordered a |} (x: bst a) (key: a) : option a =
   match x with
   | Leaf -> None
   | Node data left right ->
-    let delta = d.compare data.key key in
+    let delta = d.compare data key in
     if delta < 0 then bst_search right key else
     if delta > 0 then bst_search left key else
-    Some data.payload
+    Some data
 
 (**** Height *)
 
@@ -90,57 +92,55 @@ let rec append_right (#a: Type) (x: tree a) (v: a) : tree a =
 
 (**** BST insertion *)
 
-let rec insert_bst (#a #b: Type) {| d: ordered a |} (x: bst a b) (key: a) (payload: b) : kv_tree a b =
+let rec insert_bst (#a: Type) {| d: ordered a |} (x: bst a) (key: a) : tree a =
   match x with
-  | Leaf -> Node ({key; payload}) Leaf Leaf
+  | Leaf -> Node key Leaf Leaf
   | Node data left right ->
-    let delta = d.compare data.key key in
+    let delta = d.compare data key in
     if delta >= 0 then begin
-      let new_left = insert_bst left key payload in
+      let new_left = insert_bst left key in
       Node data new_left right
     end else begin
-      let new_right = insert_bst right key payload in
+      let new_right = insert_bst right key in
       Node data left new_right
     end
 
 let rec insert_bst_preserves_forall_keys
-  (#a #b: Type)
+  (#a: Type)
   {| d: ordered a |}
-  (x: bst a b)
+  (x: bst a)
   (key: a)
-  (payload: b)
   (cond: a -> bool)
     : Lemma
       (requires (forall_keys x cond /\ cond key))
-      (ensures (forall_keys (insert_bst x key payload) cond))
+      (ensures (forall_keys (insert_bst x key) cond))
   =
   match x with
   | Leaf -> ()
   | Node data left right ->
-    let delta = d.compare data.key key in
+    let delta = d.compare data key in
     if delta >= 0 then
-      insert_bst_preserves_forall_keys left key payload cond
+      insert_bst_preserves_forall_keys left key cond
     else
-      insert_bst_preserves_forall_keys right key payload cond
+      insert_bst_preserves_forall_keys right key cond
 
 let rec insert_bst_preserves_bst
-  (#a #b: Type)
+  (#a: Type)
   {| d: ordered a |}
-  (x: bst a b)
+  (x: bst a)
   (key: a)
-  (payload: b)
-    : Lemma(is_bst (insert_bst x key payload))
+    : Lemma(is_bst (insert_bst x key))
   =
   match x with
   | Leaf -> ()
   | Node data left right ->
-    let delta = d.compare data.key key in
+    let delta = d.compare data key in
     if delta >= 0 then begin
-      insert_bst_preserves_forall_keys left key payload (key_left data.key);
-      insert_bst_preserves_bst left key payload
+      insert_bst_preserves_forall_keys left key (key_left data);
+      insert_bst_preserves_bst left key
     end else begin
-      insert_bst_preserves_forall_keys right key payload (key_right data.key);
-      insert_bst_preserves_bst right key payload
+      insert_bst_preserves_forall_keys right key (key_right data);
+      insert_bst_preserves_bst right key
     end
 
 (**** AVL insertion *)
@@ -149,15 +149,14 @@ let rec is_balanced (#a: Type) (x: tree a) : bool =
   match x with
   | Leaf -> true
   | Node data left right ->
-    (height left - height right) <= 1 &&
-    (height right - height left) <= 1 &&
+    M.abs(height right - height left) <= 1 &&
     is_balanced(right) &&
     is_balanced(left)
 
-let is_avl (#a #b: Type) {| d: ordered a |} (x: kv_tree a b) : prop =
+let is_avl (#a: Type) {| d: ordered a |} (x: tree a) : prop =
   is_bst(x) /\ is_balanced(x)
 
-let avl (a b: Type) {| d: ordered a |} = x: kv_tree a b {is_avl x}
+let avl (a: Type) {| d: ordered a |} = x: tree a {is_avl x}
 
 let rotate_left (#a: Type) (r: tree a) : option (tree a) =
   match r with
@@ -179,7 +178,7 @@ let rotate_left_right (#a: Type) (r: tree a) : option (tree a) =
   | Node x (Node z t1 (Node y t2 t3)) t4 -> Some (Node y (Node z t1 t2) (Node x t3 t4))
   | _ -> None
 
-let rebalance_avl (#a #b: Type) {| d: ordered a |} (x: kv_tree a b) : kv_tree a b =
+let rebalance_avl (#a: Type) {| d: ordered a |} (x: tree a) : tree a =
     match x with
     | Leaf -> x
     | Node data left right ->
@@ -190,7 +189,7 @@ let rebalance_avl (#a #b: Type) {| d: ordered a |} (x: kv_tree a b) : kv_tree a 
         if (height left - height right) > 1 then (
         match left with
         | Node ldata lleft lright ->
-            if d.compare data.key ldata.key > 0 then (
+            if d.compare data ldata > 0 then (
             let r = rotate_left_right(x) in
             match r with
             | Some y -> y
@@ -207,7 +206,7 @@ let rebalance_avl (#a #b: Type) {| d: ordered a |} (x: kv_tree a b) : kv_tree a 
         if (height left - height right) < -1 then (
             match right with
             | Node rdata rleft rright ->
-            if d.compare data.key rdata.key > 0 then (
+            if d.compare data rdata > 0 then (
                 let r = rotate_left(x) in
                 match r with
                 | Some y -> y
@@ -225,17 +224,26 @@ let rebalance_avl (#a #b: Type) {| d: ordered a |} (x: kv_tree a b) : kv_tree a 
       )
     )
     
-let rec insert_avl (#a #b: Type) {| d: ordered a |} (x: avl a b) (key: a) (payload: b): kv_tree a b =
+let rec insert_avl (#a: Type) {| d: ordered a |} (x: avl a) (key: a) : tree a =
   match x with
-  | Leaf -> Node ({key; payload}) Leaf Leaf
+  | Leaf -> Node key Leaf Leaf
   | Node data left right ->
-    let delta = d.compare data.key key in
+    let delta = d.compare data key in
     if delta >= 0 then (
-      let new_left = insert_avl left key payload in
+      let new_left = insert_avl left key in
       let tmp = Node data new_left right in
       rebalance_avl(tmp)
     ) else (
-      let new_right = insert_avl right key payload in
+      let new_right = insert_avl right key in
       let tmp = Node data left new_right in
       rebalance_avl(tmp)
     )
+
+let insert_avl_preserves_avl
+  (#a: Type)
+  {| d: ordered a |}
+  (x: avl a)
+  (key: a)
+    : Lemma(is_avl (insert_avl x key))
+  =
+  admit()
