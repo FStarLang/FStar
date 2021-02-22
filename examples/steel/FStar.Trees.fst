@@ -143,9 +143,21 @@ let rec insert_bst_preserves_bst
       insert_bst_preserves_bst right key payload
     end
 
-(**** AVL Trees *)
+(**** AVL insertion *)
 
-let avl (a b: Type) {| d: ordered a |} = x: kv_tree a b {is_bst x}
+let rec is_balanced (#a: Type) (x: tree a) : bool =
+  match x with
+  | Leaf -> true
+  | Node data left right ->
+    (height left - height right) <= 1 &&
+    (height right - height left) <= 1 &&
+    is_balanced(right) &&
+    is_balanced(left)
+
+let is_avl (#a #b: Type) {| d: ordered a |} (x: kv_tree a b) : prop =
+  is_bst(x) /\ is_balanced(x)
+
+let avl (a b: Type) {| d: ordered a |} = x: kv_tree a b {is_avl x}
 
 let rotate_left (#a: Type) (r: tree a) : option (tree a) =
   match r with
@@ -171,41 +183,45 @@ let rebalance_avl (#a #b: Type) {| d: ordered a |} (x: kv_tree a b) : kv_tree a 
     match x with
     | Leaf -> x
     | Node data left right ->
- 
-      if (height right - height left) > 1 then (
-      match left with
-      | Node ldata lleft lright ->
-        if d.compare data.key ldata.key > 0 then (
-          let r = rotate_right(x) in
-          match r with
-          | Some y -> y
-          | _ -> x
-        ) else (
-          let r = rotate_left_right(x) in
-          match r with
-          | Some y -> y
-          | _ -> x
-        )
-      | _ -> x
 
-    ) else (
-      if (height right - height left) < -1 then (
-        match right with
-        | Node rdata rleft rright ->
-          if d.compare data.key rdata.key > 0 then (
-            let r = rotate_left(x) in
+      if is_balanced(x) then (x)
+      else (
+
+        if (height left - height right) > 1 then (
+        match left with
+        | Node ldata lleft lright ->
+            if d.compare data.key ldata.key > 0 then (
+            let r = rotate_left_right(x) in
             match r with
             | Some y -> y
             | _ -> x
             ) else (
-            let r = rotate_right_left(x) in
+            let r = rotate_right(x) in
             match r with
             | Some y -> y
             | _ -> x
-          )
+            )
         | _ -> x
-      ) else (
-        x
+
+        ) else (
+        if (height left - height right) < -1 then (
+            match right with
+            | Node rdata rleft rright ->
+            if d.compare data.key rdata.key > 0 then (
+                let r = rotate_left(x) in
+                match r with
+                | Some y -> y
+                | _ -> x
+                ) else (
+                let r = rotate_right_left(x) in
+                match r with
+                | Some y -> y
+                | _ -> x
+            )
+            | _ -> x
+        ) else (
+            x
+        )
       )
     )
     
@@ -223,15 +239,3 @@ let rec insert_avl (#a #b: Type) {| d: ordered a |} (x: avl a b) (key: a) (paylo
       let tmp = Node data left new_right in
       rebalance_avl(tmp)
     )
-
-let rec is_balanced (#a: Type) (x: tree a) : prop =
-  match x with
-  | Leaf -> True
-  | Node data left right ->
-    (height left - height right) <= 1 /\
-    (height right - height left) <= 1 /\
-    is_balanced(right) /\
-    is_balanced(left)
-
-let is_avl (#a #b: Type) {| d: ordered a |} (x: kv_tree a b) : prop =
-  is_bst(x) /\ is_balanced(x)
