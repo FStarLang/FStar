@@ -4,142 +4,148 @@ open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.FractionalPermission
 open Steel.Reference
-include LListQueue.Cell
+include LListQueue.LList
 module L = FStar.List.Tot
 
+(* High-level value, should not be used in C code outside of specs *)
+
 noeq
-type t (a: Type0) = {
-  head: ccell_ptrvalue a;
-  tail: ccell_ptrvalue a;
+type v (a: Type0) = {
+  vllist: vllist a;
+  cells: list (ccell_lvalue a & vcell a);
 }
 
 let (==) (#a:_) (x y: a) : prop = x == y
 
-let rec llist_fragment (#a:Type) (ptr: ccell_ptrvalue a)
-                                 (l:Ghost.erased (list (vcell a)))
+let rec llist_fragment (#a:Type) (rptr: ref (ccell_ptrvalue a))
+                                 (ptr: ccell_ptrvalue a)
+                                 (l:Ghost.erased (list (ccell_lvalue a & vcell a)))
     : Tot slprop (decreases (Ghost.reveal l))
     =
     match Ghost.reveal l with
     | [] -> emp
-    | hd :: tl ->
-      ccellp ptr full_perm (Some hd) `star`
-      llist_fragment hd.vcell_next tl
-
-let llist_fragment_nil (#a: Type) (ptr: ccell_ptrvalue a) (l: Ghost.erased (list (vcell a))) : Lemma
-  (requires (Nil? l))
-  (ensures (llist_fragment ptr l == emp))
-= ()
-
-let llist_fragment_cons (#a: Type) (ptr: ccell_ptrvalue a) (l: Ghost.erased (list (vcell a))) : Lemma
-  (requires (Cons? l))
-  (ensures (llist_fragment ptr l == (ccellp ptr full_perm (Some (L.hd l)) `star` llist_fragment (L.hd l).vcell_next (L.tl l))))
-= ()
+    | (chd, vhd) :: tl ->
+      pts_to rptr full_perm ptr `star`
+      pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
+      llist_fragment (ccell_next chd) vhd.vcell_next tl `star`
+      pure (chd == ptr)
 
 inline_for_extraction noextract let canon () : FStar.Tactics.Tac unit =
   (Steel.Memory.Tactics.canon ())
 
 let rec next_last
   (#a: Type)
+  (rptr: ref (ccell_ptrvalue a))
   (ptr: ccell_ptrvalue a)
-  (l: Ghost.erased (list (vcell a)))
-: Tot (Ghost.erased (ccell_ptrvalue a))
+  (l: Ghost.erased (list (ccell_lvalue a & vcell a)))
+: Tot (Ghost.erased (ref (ccell_ptrvalue a) & ccell_ptrvalue a))
   (decreases (Ghost.reveal l))
 =
   match Ghost.reveal l with
-  | [] -> Ghost.hide ptr
-  | a :: q -> next_last a.vcell_next q
+  | [] -> Ghost.hide (rptr, ptr)
+  | (ca, va) :: q -> next_last (ccell_next ca) va.vcell_next q
 
 let rec next_last_correct
   (#a: Type)
+  (rptr: ref (ccell_ptrvalue a))
   (ptr: ccell_ptrvalue a)
-  (l: Ghost.erased (list (vcell a)))
+  (l: Ghost.erased (list (ccell_lvalue a & vcell a)))
 : Lemma
   (requires (Cons? l))
-  (ensures (next_last ptr l == Ghost.hide (L.last l).vcell_next))
+  (ensures (
+    let (ca', va') = L.last l in
+    let (ca, va) = Ghost.reveal (next_last rptr ptr l) in
+    ca == ccell_next ca' /\
+    va == va'.vcell_next
+  ))
   (decreases (Ghost.reveal l))
 = match Ghost.reveal l with
   | [_] -> ()
-  | a :: q -> next_last_correct a.vcell_next (Ghost.hide q)
+  | (ca, va) :: q -> next_last_correct (ccell_next ca) va.vcell_next (Ghost.hide q)
+
+let slprop_extensionality (p q:slprop)
+  : Lemma
+    (requires p `equiv` q)
+    (ensures p == q)
+    [SMTPat (p `equiv` q)]
+=
+  slprop_extensionality p q
 
 let rec llist_fragment_append
   (#a: Type)
+  (rptr: ref (ccell_ptrvalue a))
   (ptr: ccell_ptrvalue a)
-  (l1: Ghost.erased (list (vcell a)))
-  (l2: Ghost.erased (list (vcell a)))
+  (l1: Ghost.erased (list (ccell_lvalue a & vcell a)))
+  (l2: Ghost.erased (list (ccell_lvalue a & vcell a)))
 : Lemma
   (requires True)
-  (ensures (((llist_fragment ptr l1 `star` llist_fragment (next_last ptr l1) l2)) `equiv` llist_fragment ptr (l1 `L.append` l2)))
+  (ensures (((llist_fragment rptr ptr l1 `star` llist_fragment (fst (next_last rptr ptr l1)) (snd (next_last rptr ptr l1))  l2)) `equiv` llist_fragment rptr ptr (l1 `L.append` l2)))
   (decreases (Ghost.reveal l1))
 = match Ghost.reveal l1 with
   | [] ->
     assert (
-      (emp `star` llist_fragment ptr l2) `equiv` llist_fragment ptr l2
+      (emp `star` llist_fragment rptr ptr l2) `equiv` llist_fragment rptr ptr l2
     ) by canon ()
-  | hd :: tl ->
-    assert (
-      ((ccellp ptr full_perm (Some hd) `star` llist_fragment hd.vcell_next tl) `star` llist_fragment (next_last hd.vcell_next tl) l2) `equiv`
-      (ccellp ptr full_perm (Some hd) `star` (llist_fragment hd.vcell_next tl `star` llist_fragment (next_last hd.vcell_next tl) l2))
-    ) by (Steel.Memory.Tactics.canon ());
-    llist_fragment_append hd.vcell_next tl l2;
-    star_congruence
-      (ccellp ptr full_perm (Some hd))
-      (llist_fragment hd.vcell_next (tl) `star` llist_fragment (next_last hd.vcell_next tl) l2)
-      (ccellp ptr full_perm (Some hd))
-      (llist_fragment hd.vcell_next (tl `L.append` (l2)))
+  | (chd, vhd) :: tl ->
+    assert ((
+      (
+        pts_to rptr full_perm ptr `star`
+        pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
+        llist_fragment (ccell_next chd) vhd.vcell_next tl `star`
+        pure (chd == ptr)
+      ) `star`
+      llist_fragment (fst (next_last (ccell_next chd) vhd.vcell_next tl)) (snd (next_last (ccell_next chd) vhd.vcell_next tl)) l2
+    ) `equiv` (
+        pts_to rptr full_perm ptr `star`
+        pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
+        (
+          llist_fragment (ccell_next chd) vhd.vcell_next tl `star`
+          llist_fragment (fst (next_last (ccell_next chd) vhd.vcell_next tl)) (snd (next_last (ccell_next chd) vhd.vcell_next tl)) l2
+        ) `star`
+        pure (chd == ptr)
+    )) by canon ();
+    llist_fragment_append (ccell_next chd) vhd.vcell_next tl l2
 
-(* I wish I had this:
+(* I <3 equiv extensionality *)
 
-assume val a : slprop
-assume val b : slprop
-assume val f (_: unit) : Tot (squash (a `equiv` b))
-assume val c : slprop
-let _ : squash ((a `star` c) `equiv` (b `star` c)) =
-  let q : squash (a `equiv` b) = f () in
-  assert ((a `star` c) `equiv` (b `star` c)) by (canon ())
+let queue (#a: Type) (x: cllist_lvalue a) (l: Ghost.erased (v a)) : Tot slprop =
+  pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
+  llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
+  pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _) `star`
+  pure (fst (next_last (cllist_head x) l.vllist.vllist_head l.cells) == l.vllist.vllist_tail) `star`
+  pure (ccell_ptrvalue_is_null (snd (next_last (cllist_head x) l.vllist.vllist_head l.cells)) == true)
 
-Cf. Coq's congruence tactic
+val create_queue (a: Type) : Steel (cllist_lvalue a & Ghost.erased (v a)) emp (fun x -> queue (fst x) (snd x))
+  (requires (fun _ -> True))
+  (ensures (fun _ res _ -> (snd res).cells == []))
 
-*)
+#push-options "--ide_id_info_off"
 
-let snoc_inj (#a: Type) (hd1 hd2: list a) (tl1 tl2: a) : Lemma
-  (requires (hd1 `L.append` [tl1] == hd2 `L.append` [tl2]))
-  (ensures (hd1 == hd2 /\ tl1 == tl2))
-  [SMTPat (hd1 `L.append` [tl1]); SMTPat (hd2 `L.append` [tl2])]
-= L.lemma_snoc_unsnoc (hd1, tl1);
-  L.lemma_snoc_unsnoc (hd2, tl2)
-
-let snoc_is_not_nil
-  (#a: Type)
-  (hd: list a)
-  (tl: a)
-: Lemma
-  (Nil? (hd `L.append` [tl]) == false)
-= ()
-
-let snoc_is_cons
-  (#a: Type)
-  (hd: list a)
-  (tl: a)
-: Lemma
-  (Cons? (hd `L.append` [tl]) == true)
-= ()
-
-[@"opaque_to_smt"]
-let unsnoc (#a: Type) (l: list a) : Pure (list a & a)
-  (requires (Cons? l))
-  (ensures (fun (hd, tl) -> l == hd `L.append` [tl]))
+let create_queue
+  a
 =
-  L.lemma_unsnoc_snoc l;
-  L.unsnoc l
+  let ll = alloc_cllist (ccell_ptrvalue_null _) null in
+  let cl = fst ll in
+  change_slprop (cllist (fst ll) full_perm (snd ll)) (pts_to (cllist_head cl) full_perm (snd ll).vllist_head `star` pts_to (cllist_tail cl) full_perm (snd ll).vllist_tail) (fun _ -> ());
+  write (cllist_tail cl) (cllist_head cl);
+  let wl = { vllist_head = ccell_ptrvalue_null _; vllist_tail = cllist_head cl } in
+  let w = Ghost.hide ({
+    vllist = wl;
+    cells = [];
+  }) in
+  let res = (cl, w) in
+  intro_pure (fst (next_last (cllist_head cl) w.vllist.vllist_head w.cells) == w.vllist.vllist_tail);
+  intro_pure (ccell_ptrvalue_is_null (snd (next_last (cllist_head cl) w.vllist.vllist_head w.cells)) == true);
+  change_slprop (
+    pts_to (cllist_tail cl) full_perm (cllist_head cl) `star`
+    emp `star` // necessary to account for (llist_fragment w.vllist.vllist_tail w.vllist.vllist_head w.cells)
+    pts_to (cllist_head cl) full_perm (snd ll).vllist_head `star`
+    pure (fst (next_last (cllist_head cl) w.vllist.vllist_head w.cells) == w.vllist.vllist_tail) `star`
+    pure (ccell_ptrvalue_is_null (snd (next_last (cllist_head cl) w.vllist.vllist_head w.cells)) == true)
+  ) (queue (fst res) (snd res)) (fun _ -> ());
+  res
 
-let unsnoc_hd (#a: Type) (l: list a) : Pure (list a) (requires (Cons? l)) (ensures (fun _ -> True)) = fst (unsnoc l)
-let unsnoc_tl (#a: Type) (l: list a) : Pure (a) (requires (Cons? l)) (ensures (fun _ -> True)) = snd (unsnoc l)
-
-[@@__reduce__]
-let queue (#a: Type) (x: t a) (l: Ghost.erased (list (vcell a))) : Tot slprop =
-  llist_fragment x.head l `star` ccellp (next_last x.head l) full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head l))
-
-let create_queue (a: Type) : SteelT (t a) emp (fun x -> queue x []) =
+(*
   let head : ccell_ptrvalue a = ccell_ptrvalue_null a in
   let x : t a = ({ head = head; tail = head; }) in
   ccellp_null_intro head full_perm;
@@ -230,8 +236,6 @@ let change_equiv_slprop
     (fun _ -> q)
 =
   change_slprop p q (fun _ -> ())
-
-#push-options "--ide_id_info_off"
 
 let is_empty
   (#a: Type)
