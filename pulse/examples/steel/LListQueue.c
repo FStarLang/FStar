@@ -46,6 +46,6 @@ int dequeue(cllist_ptrvalue l) {
 
 void enqueue(cllist_ptrvalue l, int v) {
   ccell_ptrvalue c = alloc_cell(v, NULL);
-  (*(l->cllist_tail))->ccell_next = c;
+  *(l->cllist_tail) = c;
   l->cllist_tail = &(c->ccell_next);
 }

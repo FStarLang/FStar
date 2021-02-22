@@ -87,9 +87,3 @@ val alloc_cell
     (fun res -> ccell (fst res) full_perm (snd res))
     (requires (fun _ -> True))
     (ensures (fun _ res _ -> Ghost.reveal (snd res) == ({ vcell_data = data; vcell_next = next; })))
-
-let datas
-  (#a: Type0)
-  (l: list (vcell a))
-: Tot (list a)
-= List.Tot.map Mkvcell?.vcell_data l
