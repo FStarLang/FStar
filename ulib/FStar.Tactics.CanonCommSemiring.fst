@@ -1519,7 +1519,11 @@ let make_fvar (#a:Type) (t:term) (unquotea:term -> Tac a) (ts:list term)
 let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vmap a) (add opp mone mult t: term) : Tac (polynomial a * list term * vmap a) =
   // ddump ("term = " ^ term_to_string t ^ "\n");
   let hd, tl = collect_app_ref t in
-  match inspect hd, list_unref tl with
+  let (explicit_tl, implicit_tl) = List.Tot.partition (fun x -> snd x = Q_Explicit) (list_unref tl) in
+  let opfv_to_term (fv:fv): Tac term =
+    Tactics.Util.fold_left (fun acc imp -> pack (Tv_App acc imp)) (pack (Tv_FVar fv)) implicit_tl
+  in
+  match inspect hd, explicit_tl with
   | Tv_FVar fv, [(t1, _) ; (t2, _)] ->
     //ddump ("add = " ^ term_to_string add ^ "
     //     \nmul = " ^ term_to_string mult);
@@ -1529,15 +1533,17 @@ let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vm
       let (e2, ts, vm) = reification_aux unquotea ts vm add opp mone mult t2 in
       (op e1 e2, ts, vm)
       in
-    if term_eq (pack (Tv_FVar fv)) add then binop Pplus else
-    if term_eq (pack (Tv_FVar fv)) mult then binop Pmult else
+    let current_op = opfv_to_term fv in
+    if term_eq current_op add then binop Pplus else
+    if term_eq current_op mult then binop Pmult else
     make_fvar t unquotea ts vm
   | Tv_FVar fv, [(t1, _)] ->
     let monop (op:polynomial a -> polynomial a) : Tac (polynomial a * list term * vmap a) =
       let (e, ts, vm) = reification_aux unquotea ts vm add opp mone mult t1 in
       (op e, ts, vm)
       in
-    if term_eq (pack (Tv_FVar fv)) opp then monop Popp else
+    let current_op = opfv_to_term fv in
+    if term_eq current_op opp then monop Popp else
     make_fvar t unquotea ts vm
   | Tv_Const _, [] -> Pconst (unquotea t), ts, vm
   | _, _ -> make_fvar t unquotea ts vm
