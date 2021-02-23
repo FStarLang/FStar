@@ -1519,7 +1519,11 @@ let make_fvar (#a:Type) (t:term) (unquotea:term -> Tac a) (ts:list term)
 let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vmap a) (add opp mone mult t: term) : Tac (polynomial a * list term * vmap a) =
   // ddump ("term = " ^ term_to_string t ^ "\n");
   let hd, tl = collect_app_ref t in
-  let (explicit_tl, implicit_tl) = List.Tot.partition (fun x -> snd x = Q_Explicit) (list_unref tl) in
+  let (explicit_tl, implicit_tl) = List.Tot.partition (fun x ->
+      match (snd x) with
+      | Q_Explicit -> true
+      | _ -> false
+  ) (list_unref tl) in
   let opfv_to_term (fv:fv): Tac term =
     Tactics.Util.fold_left (fun acc imp -> pack (Tv_App acc imp)) (pack (Tv_FVar fv)) implicit_tl
   in
@@ -1819,9 +1823,5 @@ let add_opp #m a = ()
 [@@canon_attr]
 let ring_cr #m : cr (mod_ring m) = CR ring_add_cm ring_mul_cm ( ~% ) add_opp mul_add_distr mul_zero_l
 
-#push-options "--tactic_trace_d 0 --no_smt"
-
 let test_ring_cr (#m:nat{4 < m}) (x y:mod_ring m) =
-  assert (4 *% x +% 2 *% x == 3 *% x +% 3 *% x) by (canon_semiring (ring_cr #m); trefl ())
-
-#pop-options
+  assert (4 *% x +% 2 *% x == 3 *% x +% 3 *% x) by (canon_semiring (ring_cr #m); trefl (); qed ())
