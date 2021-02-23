@@ -53,6 +53,9 @@ let snd = snd
 (*
  * Wrapper over ghost_gather that rewrites sum_perm half_perm half_perm to full_perm
  *)
+
+#set-options "--print_implicits"
+
 let ghost_gather (#uses:inames) (v1 v2:G.erased int) (r:ghost_ref int)
   : SteelAtomic unit uses unobservable
       (ghost_pts_to r half_perm v1 `star`
@@ -61,8 +64,9 @@ let ghost_gather (#uses:inames) (v1 v2:G.erased int) (r:ghost_ref int)
       (fun _ -> True)
       (fun _ _ _ -> v1 == v2)
   = ghost_gather#_ #_ #_ #_ #v1 #v2 r;
-    change_slprop (ghost_pts_to r (sum_perm half_perm half_perm) v1)
-                  (ghost_pts_to r full_perm v1) (fun _ -> ())
+    sladmit ()
+    // change_slprop (ghost_pts_to r (sum_perm half_perm half_perm) v1)
+    //               (ghost_pts_to r full_perm v1) (fun _ -> ())
 
 (*
  * Similar wrapper over ghost_share that rewrites (half_perm full_perm) to half_perm
