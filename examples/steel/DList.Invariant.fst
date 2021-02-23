@@ -430,38 +430,151 @@ let dlist_snoc_last (#a:Type)
          dlist_snoc left head tail right (x :: xs);
     }
 
+let stronger (p q: slprop) = forall m. interp p m ==> interp q m
+let stronger_star_r (p q r:slprop)
+  : Lemma (requires q `stronger` r)
+          (ensures  (p `star` q) `stronger` (p `star` r)) = admit()
+let stronger_star_l (p q r:slprop)
+  : Lemma (requires p `stronger` q)
+          (ensures  (p `star` r) `stronger` (q `star` r)) = admit()
+let stronger_drop_l (p q:slprop)
+  : Lemma (ensures  (p `star` q) `stronger` q) = admit()
+
+let rec dlist_cons_concat #a (left head1 tail1 mid:t a) (xs1:_)
+                             (tail2 right:t a) (xs2:_)
+  : Lemma (ensures
+             stronger (dlist_cons left head1 tail1 mid xs1 `star`
+                       dlist_cons tail1 mid tail2 right xs2)
+                      (dlist_cons left head1 tail2 right (xs1 @ xs2)))
+          (decreases xs1)
+  = match xs1 with
+    | [] ->
+      calc
+      (stronger) {
+        dlist_cons left head1 tail1 mid [] `star`
+        dlist_cons tail1 mid tail2 right xs2;
+      (equiv) {}
+        pure (tail1 == left /\
+              head1 == mid) `star`
+        dlist_cons tail1 mid tail2 right xs2;
+      (equiv) { _ by (T.mapply (`use_pure)) }
+        pure (tail1 == left /\
+              head1 == mid) `star`
+        dlist_cons left head1 tail2 right xs2;
+      (stronger) { _ by (T.mapply (`stronger_drop_l)) }
+        dlist_cons left head1 tail2 right xs2;
+      }
+
+    | x :: xs1' ->
+      let xs1' : (l:list _ {l << xs1}) = xs1' in
+      calc
+      (stronger) {
+          dlist_cons left head1 tail1 mid xs1 `star`
+          dlist_cons tail1 mid tail2 right xs2;
+      (equiv) {}
+        (pure (prev x == left) `star`
+         pts_to head1 x `star`
+         dlist_cons head1 (next x) tail1 mid xs1') `star`
+         dlist_cons tail1 mid tail2 right xs2;
+      (equiv) { _ by (ST.canon()) }
+         pure (prev x == left) `star`
+         pts_to head1 x `star`
+         (dlist_cons head1 (next x) tail1 mid xs1' `star`
+          dlist_cons tail1 mid tail2 right xs2);
+      (stronger) {
+                   _ by (T.mapply (`stronger_star_r);
+                         T.mapply (`dlist_cons_concat))
+              }
+        (pure (prev x == left) `star`
+         pts_to head1 x `star`
+         dlist_cons head1 (next x) tail2 right (xs1' @ xs2));
+      (equiv) { }
+         dlist_cons left head1 tail2 right (xs1 @ xs2);
+      }
+
+#push-options "--query_stats"
+assume
+val equiv_pure_emp (_:unit) : Lemma (equiv (pure True) emp)
+let dlist_cons_nil (#a:_) (left right:t a)
+  : Lemma (equiv emp (dlist_cons left right left right []))
+  = calc
+    (equiv) {
+       dlist_cons left right left right [];
+    (==) { _ by (T.norm [delta;zeta]; T.trefl()) }
+       pure (left == left /\
+             right == right);
+    (equiv) { _ by (T.mapply (`rewrite_pure)) }
+       pure True;
+    (equiv) { _ by (T.mapply (`equiv_pure_emp)) }
+       emp;
+    }
+
+let intro_dlist_nil' (#a:Type) #u (left right:t a)
+  : SteelAtomicT unit u unobservable
+      emp
+      (fun _ -> dlist_cons left right left right [])
+  = change_slprop _ _ (fun _ -> dlist_cons_nil left right)
+
+let intro_pure_l (p:prop) (q:slprop)
+  : Lemma (requires p)
+          (ensures (q `equiv` (pure p `star` q)))
+  = admit()
+
+let dlist_cons_cons (#a:_) (head tail right:t a) (hd: cell a) (xs:_)
+  : Lemma (equiv (pts_to head hd `star`
+                  dlist_cons head (next hd) tail right xs)
+                 (dlist_cons (prev hd) head tail right (hd::xs)))
+  = calc
+    (equiv) {
+       pts_to head hd `star`
+       dlist_cons head (next hd) tail right xs;
+    (equiv) { _ by (T.mapply (`intro_pure_l)) }
+      pure (prev hd == prev hd) `star`
+      (pts_to head hd `star`
+       dlist_cons head (next hd) tail right xs);
+    (equiv) { _ by (ST.canon()) }
+      pure (prev hd == prev hd) `star`
+      pts_to head hd `star`
+      dlist_cons head (next hd) tail right xs;
+    (==) { _ by (T.norm [delta; zeta]; T.trefl()) }
+      dlist_cons (prev hd) head tail right (hd::xs);
+    }
 
 
-// // assume
-// // val dlist_injective (#a:_) (left ptr right : t a)
-// //                            (l1 l2:list (cell a))
-// //                            (h:mem)
-// //   : Lemma
-// //     (requires
-// //       interp (dlist left ptr right l1) h /\
-// //       interp (dlist left ptr right l2) h)
-// //     (ensures
-// //       l1 == l2)
-// //    (decreases l1)
-// //   = match l1, l2 with
-// //     | [], [] -> ()
-// //     | hd1::tl1, hd2::tl2 ->
-// //       pts_to_injective ptr hd1 hd2 h;
-// //       assert (hd1 == hd2);
-// //       dlist_injective' ptr hd1.next right tl1 tl2 h
+let intro_dlist_cons_cons #a #u (head tail right:t a) (hd: cell a) (xs:_)
+  : SteelAtomicT unit u unobservable
+       (pts_to head hd `star`
+        dlist_cons head (next hd) tail right xs)
+       (fun _ ->
+        dlist_cons (prev hd) head tail right (hd::xs))
+  = change_slprop _ _ (fun m -> dlist_cons_cons head tail right hd xs)
 
-// //     | [], hd::tl
-// //     | hd::tl, [] ->
-// //       elim_pure (right == ptr) h;
-// //       elim_pure (right =!= ptr) h
-// // let dlist_injective = dlist_injective'
 
-// #push-options "--query_stats --fuel 1,1 --ifuel 1,1"
-// let intro_dlist_nil (#a:Type) (left right:t a)
-//    : SteelT unit emp (fun _ -> dlist left right right [])
-//    = change_slprop emp (dlist left right right [])
-//                        (fun m -> pure_interp (right == right) m;
-//                               norm_spec [delta;zeta] ((dlist left right right [])))
+let new_dlist (#a:Type) (init:a)
+  : Steel (t a & cell a)
+    emp
+    (fun pc -> dlist_cons null (fst pc) (fst pc) null [snd pc])
+    (requires fun _ -> True)
+    (ensures fun _ pc _ -> data (snd pc) == init)
+  = let cell = mk_cell null_dlist null_dlist init in
+    let p = alloc cell in
+    intro_dlist_nil' p null_dlist;
+    slassert (pts_to p cell `star` dlist_cons p null_dlist p null_dlist []);
+    sladmit()
+
+
+    // intro_dlist_cons_cons p p null_dlist cell [];
+
+    // sladmit()
+
+    // U.pts_to_not_null p;
+    // intro_dlist_nil p null_dlist;
+    // change_slprop (dlist p null_dlist null_dlist [])
+    //               (dlist p (next cell) null_dlist [])
+    //               (fun _ -> ());
+    // intro_dlist_cons null_dlist p null_dlist cell [];
+    // let pc = p, cell in
+    // pc
 
 // let elim_dlist_nil (#a:Type) (left ptr right:t a)
 //    : SteelT unit
