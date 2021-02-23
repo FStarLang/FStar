@@ -1,8 +1,6 @@
 module Steel.Effect.Common
 
 open Steel.Memory
-module Sem = Steel.Semantics.Hoare.MST
-open Steel.Semantics.Instantiate
 
 irreducible let framing_implicit : unit = ()
 irreducible let __reduce__ = ()
