@@ -116,7 +116,7 @@ let rotate_right #a ptr =
 
 
 let rotate_right_left #a ptr =
-  let h = get #(linked_tree ptr) () in
+  let h = get () in
   node_is_not_null ptr;
   // original root node
   let x_node = unpack_tree ptr in
@@ -147,7 +147,7 @@ let rotate_right_left #a ptr =
 
 
 let rotate_left_right #a ptr =
-  let h = get #(linked_tree ptr) () in
+  let h = get () in
 
   node_is_not_null ptr;
   // original root node
@@ -197,10 +197,10 @@ let rec is_balanced #a ptr =
   pack_tree ptr (get_left node) (get_right node);
   (lbal && rbal) && ((rh - lh) >= -1 && (rh - lh) <= 1))
 
-let rebalance_avl #a ptr =
-  let h = get #(linked_tree ptr) () in
+let rebalance_avl #a cmp ptr =
+  let h = get () in
 
-  assert(Spec.is_bst(v_linked_tree ptr h));
+  assert(Spec.is_bst cmp (v_linked_tree ptr h));
   noop();
 
   if is_balanced ptr then (
@@ -214,7 +214,7 @@ let rebalance_avl #a ptr =
     let rh = height (get_right node) in
 
     if (lh - rh) > 1 then (
-    
+
       let l_node = unpack_tree (get_left node) in
 
       let llh = height (get_left l_node) in
@@ -222,21 +222,21 @@ let rebalance_avl #a ptr =
       if lrh > llh then (
         pack_tree (get_left node) (get_left l_node) (get_right l_node);
         pack_tree ptr (get_left node) (get_right node);
-  
+
         let h1 = get () in
         noop();
         rotate_left_right ptr
-        
+
       ) else (
         pack_tree (get_left node) (get_left l_node) (get_right l_node);
         pack_tree ptr (get_left node) (get_right node);
         rotate_right ptr
-      ) 
-  
+      )
+
     ) else (
-      
+
       if (lh - rh) < - 1 then (
-      
+
         let r_node = unpack_tree (get_right node) in
 
         let rlh = height (get_left r_node) in
@@ -250,7 +250,7 @@ let rebalance_avl #a ptr =
             pack_tree ptr (get_left node) (get_right node);
             rotate_left ptr
         )
-        
+
       ) else (
           pack_tree ptr (get_left node) (get_right node);
           ptr
