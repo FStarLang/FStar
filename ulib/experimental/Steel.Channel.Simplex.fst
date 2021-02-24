@@ -17,8 +17,9 @@
 module Steel.Channel.Simplex
 module P = Steel.Channel.Protocol
 open Steel.SpinLock
-open Steel.Effect
 open Steel.Memory
+open Steel.Effect.Atomic
+open Steel.Effect
 open Steel.HigherReference
 open Steel.FractionalPermission
 
@@ -79,26 +80,26 @@ let intro_chan_inv_cond_eqT (vs vr:chan_val)
   : SteelT unit (pure (vs == vr))
                 (fun _ -> chan_inv_cond vs vr)
   = Steel.Utils.elim_pure (vs==vr);
-    Steel.Effect.intro_pure (vs == vs);
-    Steel.Effect.change_slprop (chan_inv_cond vs vs) (chan_inv_cond vs vr) (fun _ -> ())
+    intro_pure (vs == vs);
+    change_slprop (chan_inv_cond vs vs) (chan_inv_cond vs vr) (fun _ -> ())
 
 let intro_chan_inv_cond_stepT (vs vr:chan_val)
   : SteelT unit (chan_inv_step vr vs)
                 (fun _ -> chan_inv_cond vs vr)
   = Steel.Utils.extract_pure (chan_inv_step_p vr vs);
-    Steel.Effect.change_slprop (chan_inv_step vr vs) (chan_inv_cond vs vr) (fun _ -> ())
+    change_slprop (chan_inv_step vr vs) (chan_inv_cond vs vr) (fun _ -> ())
 
 
-let intro_chan_inv_auxT #p  (#[@@@framing_implicit] vs : chan_val)
-                            (#[@@@framing_implicit] vr : chan_val)
+let intro_chan_inv_auxT #p  (#vs : chan_val)
+                            (#vr : chan_val)
                             (c:chan_t p)
   : SteelT unit (pts_to c.send half vs `star`
                  pts_to c.recv half vr `star`
                  trace_until c.trace vr `star`
                  chan_inv_cond vs vr)
                  (fun _ -> chan_inv c)
-  = Steel.Effect.intro_exists _ (fun (vr:chan_val) -> pts_to c.recv half vr `star` trace_until c.trace vr `star` chan_inv_cond vs vr);
-    Steel.Effect.intro_exists _ (fun (vs:chan_val) -> pts_to c.send half vs `star` chan_inv_recv c vs)
+  = intro_exists _ (fun (vr:chan_val) -> pts_to c.recv half vr `star` trace_until c.trace vr `star` chan_inv_cond vs vr);
+    intro_exists _ (fun (vs:chan_val) -> pts_to c.send half vs `star` chan_inv_recv c vs)
 
 let intro_chan_inv_stepT #p (c:chan_t p) (vs vr:chan_val)
   : SteelT unit (pts_to c.send half vs `star`
@@ -151,14 +152,14 @@ let intro_chan_inv #p (c:chan_t p) (v:chan_val)
                  pts_to c.recv half v `star`
                  trace_until c.trace v)
                 (fun _ -> chan_inv c)
-  = Steel.Effect.intro_pure (v == v);
+  = intro_pure (v == v);
     intro_chan_inv_eqT c v v
 
 let chan_val_p (p:prot) = (vs0:chan_val { in_state_prop p vs0 })
 let intro_in_state (r:ref chan_val) (p:prot) (v:chan_val_p p)
   : SteelT unit (pts_to r half v) (fun _ -> in_state r p)
-  = Steel.Effect.intro_pure (in_state_prop p v);
-    Steel.Effect.intro_exists v (fun (v:chan_val) -> pts_to r half v `star` in_state_slprop p v)
+  = intro_pure (in_state_prop p v);
+    intro_exists v (fun (v:chan_val) -> pts_to r half v `star` in_state_slprop p v)
 
 #push-options "--print_universes"
 let msg t p = Msg Send unit (fun _ -> p)
@@ -170,7 +171,7 @@ let initial_trace (p:prot) : (q:partial_trace_of p {until q == p})
 let intro_trace_until #q (r:trace_ref q) (tr:partial_trace_of q) (v:chan_val)
   : SteelT unit (MRef.pts_to r full_perm tr `star` pure (until tr == step v.chan_prot v.chan_msg))
                 (fun _ -> trace_until r v)
-  = Steel.Effect.intro_exists tr
+  = intro_exists tr
           (fun (tr:partial_trace_of q) ->
              MRef.pts_to r full_perm tr `star`
              pure (until tr == (step v.chan_prot v.chan_msg)));
@@ -181,11 +182,11 @@ let chan_t_sr (p:prot) (send recv:ref chan_val) = (c:chan_t p{c.send == send /\ 
 let intro_trace_until_init  #p (c:chan_t p) (v:init_chan_val p)
   : SteelT unit (MRef.pts_to c.trace full_perm (initial_trace p))
                 (fun _ -> trace_until c.trace v)
-  = Steel.Effect.intro_pure (until (initial_trace p) == step v.chan_prot v.chan_msg);
+  = intro_pure (until (initial_trace p) == step v.chan_prot v.chan_msg);
     //TODO: Not sure why I need this assert
     Steel.Utils.slassert (MRef.pts_to c.trace full_perm (initial_trace p) `star`
                           pure (until (initial_trace p) == step v.chan_prot v.chan_msg));
-    Steel.Effect.intro_exists (initial_trace p) (trace_until_prop c.trace v)
+    intro_exists (initial_trace p) (trace_until_prop c.trace v)
 
 let mk_chan (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
   : SteelT (chan_t_sr p send recv)
@@ -193,17 +194,17 @@ let mk_chan (#p:prot) (send recv:ref chan_val) (v:init_chan_val p)
            (fun c -> chan_inv c)
   = let tr: trace_ref p = MRef.alloc (extended_to #p) (initial_trace p) in
     let c = Mkchan_t send recv tr in
-    Steel.Effect.change_slprop
+    change_slprop
       (MRef.pts_to tr full_perm (initial_trace p))
       (MRef.pts_to c.trace full_perm (initial_trace p)) (fun _ -> ());
     intro_trace_until_init c v;
-    Steel.Effect.change_slprop
+    change_slprop
       (pts_to send half v `star` pts_to recv half v)
       (pts_to c.send half v `star` pts_to c.recv half v)
       (fun _ -> ());
     intro_chan_inv #p c v;
     let c' : chan_t_sr p send recv = c in
-    Steel.Effect.change_slprop (chan_inv c) (chan_inv c') (fun _ -> ());
+    change_slprop (chan_inv c) (chan_inv c') (fun _ -> ());
     c'
 
 module H = Steel.HigherReference
@@ -218,7 +219,7 @@ let new_chan (p:prot) : SteelT (chan p) emp (fun c -> sender c p `star` receiver
     H.share recv;
     H.share send;
     (* TODO: use smt_fallback *)
-    Steel.Effect.change_slprop (pts_to send (half_perm full_perm) (Ghost.hide v) `star`
+    change_slprop (pts_to send (half_perm full_perm) (Ghost.hide v) `star`
                    pts_to send (half_perm full_perm) (Ghost.hide v) `star`
                    pts_to recv (half_perm full_perm) (Ghost.hide v) `star`
                    pts_to recv (half_perm full_perm) (Ghost.hide v))
@@ -232,8 +233,8 @@ let new_chan (p:prot) : SteelT (chan p) emp (fun c -> sender c p `star` receiver
     intro_in_state recv p vp;
     let l  = Steel.SpinLock.new_lock (chan_inv c) in
     let ch = { chan_chan = c; chan_lock = l } in
-    Steel.Effect.change_slprop (in_state send p) (sender ch p) (fun _ -> ());
-    Steel.Effect.change_slprop (in_state recv p) (receiver ch p) (fun _ -> ());
+    change_slprop (in_state send p) (sender ch p) (fun _ -> ());
+    change_slprop (in_state recv p) (receiver ch p) (fun _ -> ());
     ch
 
 [@@__reduce__]
@@ -259,8 +260,8 @@ let update_channel (#p:sprot) #q (c:chan_t q) (x:msg_t p) (vs:chan_val) (r:ref c
   = Steel.Utils.elim_pure (in_state_prop p vs);
     let vs' = next_chan_val x vs in
     H.write r vs';
-    Steel.Effect.intro_pure (in_state_prop (step p x) vs');
-    Steel.Effect.intro_pure (chan_inv_step_p vs vs');
+    intro_pure (in_state_prop (step p x) vs');
+    intro_pure (chan_inv_step_p vs vs');
     vs'
 
 [@@__reduce__]
@@ -270,7 +271,7 @@ let gather_r (#p:sprot) (r:ref chan_val) (v:chan_val)
   : SteelT unit
     (pts_to r half v `star` in_state r p)
     (fun _ -> pts_to r full_perm v `star` in_state_slprop p v)
-  = let v' = Steel.Effect.Atomic.witness_h_exists () in
+  = let v' = witness_h_exists () in
     Steel.Utils.higher_ref_pts_to_injective_eq r v _;
     H.gather r;
     rewrite_context()
@@ -283,7 +284,7 @@ let send_available (#p:sprot) #q (cc:chan q) (x:msg_t p) (vs vr:chan_val) (_:uni
     gather_r cc.chan_chan.send vs;
     let next_vs = update_channel cc.chan_chan x vs cc.chan_chan.send in
     H.share cc.chan_chan.send;
-    Steel.Effect.intro_exists next_vs (fun (next_vs:chan_val) -> pts_to cc.chan_chan.send half next_vs `star` in_state_slprop (step p x) next_vs);
+    intro_exists next_vs (fun (next_vs:chan_val) -> pts_to cc.chan_chan.send half next_vs `star` in_state_slprop (step p x) next_vs);
     intro_chan_inv_stepT cc.chan_chan next_vs vs;
     Steel.SpinLock.release cc.chan_lock
 
@@ -306,7 +307,7 @@ let next_trace_st #p (vr:chan_val) (vs:chan_val) (tr:partial_trace_of p)
   = Steel.Utils.elim_pure (chan_inv_step_p vr vs);
     Steel.Utils.elim_pure (until tr == _);
     let ts : extension_of tr = next_trace vr vs tr () () in
-    Steel.Effect.intro_pure (until ts == step vs.chan_prot vs.chan_msg);
+    intro_pure (until ts == step vs.chan_prot vs.chan_msg);
     ts
 
 
@@ -316,11 +317,11 @@ let update_trace #p (r:trace_ref p) (vr:chan_val) (vs:chan_val)
           (fun _ -> trace_until r vs)
           (requires fun _ -> chan_inv_step_p vr vs)
           (ensures fun _ _ _ -> True)
-  = Steel.Effect.intro_pure (chan_inv_step_p vr vs);
+  = intro_pure (chan_inv_step_p vr vs);
     let tr = MRef.read_refine r in
     let ts : extension_of tr = next_trace_st vr vs tr in
     MRef.write r ts;
-    Steel.Effect.intro_exists ts
+    intro_exists ts
       (fun (ts:partial_trace_of p) ->
          MRef.pts_to r full_perm ts `star`
          pure (until ts == step vs.chan_prot vs.chan_msg))
@@ -336,8 +337,8 @@ let recv_availableT (#p:sprot) #q (cc:chan q) (vs vr:chan_val) (_:unit)
     H.share cc.chan_chan.recv;
     assert (vs.chan_prot == p);
     let vs_msg : msg_t p = vs.chan_msg in
-    Steel.Effect.intro_pure (in_state_prop (step p vs_msg) vs);
-    Steel.Effect.intro_exists vs (fun (vs:chan_val) -> pts_to cc.chan_chan.recv half vs `star` in_state_slprop (step p vs_msg) vs);
+    intro_pure (in_state_prop (step p vs_msg) vs);
+    intro_exists vs (fun (vs:chan_val) -> pts_to cc.chan_chan.recv half vs `star` in_state_slprop (step p vs_msg) vs);
     update_trace cc.chan_chan.trace vr vs;
     intro_chan_inv cc.chan_chan vs;
     Steel.SpinLock.release cc.chan_lock;
@@ -354,9 +355,9 @@ let send_receive_prelude (#p:prot) (cc:chan p)
   = let c = cc.chan_chan in
     Steel.SpinLock.acquire cc.chan_lock;
     let vs = read_refine (chan_inv_recv cc.chan_chan) cc.chan_chan.send in
-    let _ = Steel.Effect.Atomic.witness_h_exists () in
+    let _ = witness_h_exists () in
     let vr = Steel.HigherReference.read cc.chan_chan.recv in
-    Steel.Effect.change_slprop (trace_until _ _ `star` chan_inv_cond _ _)
+    change_slprop (trace_until _ _ `star` chan_inv_cond _ _)
                                (trace_until cc.chan_chan.trace vr `star` chan_inv_cond vs vr)
                                (fun _ -> ());
     (vs, vr)
@@ -370,7 +371,7 @@ let rec send (#p:prot) (c:chan p) (#next:prot{more next}) (x:msg_t next)
       send_available c x (fst v) (snd v) () //TODO: inlining send_availableT here fails
     )
     else (
-      Steel.Effect.change_slprop (chan_inv_cond (fst v) (snd v))
+      change_slprop (chan_inv_cond (fst v) (snd v))
                                  (chan_inv_step (snd v) (fst v))
                                  (fun _ -> ());
       intro_chan_inv_stepT c.chan_chan (fst v) (snd v);
@@ -383,7 +384,7 @@ let rec recv (#p:prot) (#next:prot{more next}) (c:chan p)
   = let v = send_receive_prelude c in
     if (fst v).chan_ctr = (snd v).chan_ctr
     then (
-      Steel.Effect.change_slprop (chan_inv_cond (fst v) (snd v))
+      change_slprop (chan_inv_cond (fst v) (snd v))
                                  (pure (fst v == snd v))
                                  (fun _ -> ());
       intro_chan_inv_eqT c.chan_chan (fst v) (snd v);
@@ -391,7 +392,7 @@ let rec recv (#p:prot) (#next:prot{more next}) (c:chan p)
       recv c
     )
     else (
-      Steel.Effect.change_slprop (chan_inv_cond (fst v) (snd v))
+      change_slprop (chan_inv_cond (fst v) (snd v))
                                  (chan_inv_step (snd v) (fst v))
                                  (fun _ -> ());
       recv_availableT c (fst v) (snd v) ()
@@ -421,19 +422,19 @@ let recall_trace_ref #q (r:trace_ref q) (tr tr':partial_trace_of q)
     Steel.Utils.elim_pure (history_p _ _)
 
 
-let prot_equals #q  (#[@@@framing_implicit]p:_) (#[@@@framing_implicit] vr:chan_val) (cc:chan q)
+let prot_equals #q  (#p:_) (#vr:chan_val) (cc:chan q)
   : Steel unit
           (pts_to cc.chan_chan.recv half vr `star` receiver cc p)
           (fun _ -> pts_to cc.chan_chan.recv half vr `star` receiver cc p)
           (requires fun _ -> True)
           (ensures fun _ _ _ -> step vr.chan_prot vr.chan_msg == p)
-  = let vr' = Steel.Effect.Atomic.witness_h_exists () in
+  = let vr' = witness_h_exists () in
     Steel.Utils.higher_ref_pts_to_injective_eq cc.chan_chan.recv vr _;
-    Steel.Effect.change_slprop (in_state_slprop _ _) (in_state_slprop p vr) (fun _ -> ());
+    change_slprop (in_state_slprop _ _) (in_state_slprop p vr) (fun _ -> ());
     Steel.Utils.elim_pure _;
     intro_in_state _ _ vr
 
-let witness_trace_until #q (#[@@@framing_implicit] vr:chan_val) (r:trace_ref q)
+let witness_trace_until #q (#vr:chan_val) (r:trace_ref q)
   : SteelT (partial_trace_of q)
            (trace_until r vr)
            (fun tr -> trace_until r vr `star` pure (MRef.witnessed r (history_p tr)))
@@ -450,8 +451,8 @@ let trace #q (cc:chan q)
     Steel.SpinLock.release cc.chan_lock;
     tr
 
-let extend_history #q (#[@@@framing_implicit] tr:partial_trace_of q)
-                       (#[@@@framing_implicit] v:chan_val)
+let extend_history #q (#tr:partial_trace_of q)
+                       (#v:chan_val)
                        (c:chan q)
   : SteelT (extension_of tr)
            (pts_to c.chan_chan.recv half v `star`
@@ -486,7 +487,7 @@ let extend_trace (#q:prot) (#p:prot) (cc:chan q) (tr:partial_trace_of q)
   = let _ = send_receive_prelude cc in
     let tr' = extend_history cc in
     let _ = prot_equals cc in
-    Steel.Effect.change_slprop (pure (until tr' == _)) (pure (until tr' == p)) (fun _ -> ());
+    change_slprop (pure (until tr' == _)) (pure (until tr' == p)) (fun _ -> ());
     intro_chan_inv_auxT cc.chan_chan;
     Steel.SpinLock.release cc.chan_lock;
     tr'

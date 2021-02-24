@@ -125,30 +125,19 @@ let pts_to_witinv (#a:Type) (r:ref a) (p:perm) : Lemma (is_witness_invariant (pt
   in
   Classical.forall_intro_3 (fun x y -> Classical.move_requires (aux x y))
 
-let extract_injective #a #p0 #p1 #v0 #v1 r =
-  extract_info (pts_to r p0 v0 `star` pts_to r p1 v1) (v0 == v1)
+let higher_ref_pts_to_injective_eq #a #opened #p0 #p1 #v0 #v1 r =
+  Atomic.extract_info (pts_to r p0 v0 `star` pts_to r p1 v1) (v0 == v1)
     (fun m -> pts_to_ref_injective r p0 p1 v0 v1 m);
   change_slprop (pts_to r p1 v1) (pts_to r p1 v0) (fun _ -> ())
 
 let pts_to_framon (#a:Type) (r:ref a) (p:perm) : Lemma (is_frame_monotonic (pts_to r p)) =
   pts_to_witinv r p
 
-let drop (p:slprop)
-  : SteelT unit p (fun _ -> emp)
-  = Atomic.change_slprop _ _ (fun m -> emp_unit p; affine_star p emp m)
-
-let comm (#opened_invariants:inames)
-         (#p #q:slprop) (_:unit)
-  : SteelAtomicT unit opened_invariants unobservable
-                (p `star` q)
-                (fun x -> q `star` p)
-  = Atomic.change_slprop (p `star` q) (q `star` p) (fun m -> Mem.star_commutative p q)
-
 let intro_perm_ok #uses (p:perm{perm_ok p}) (q:slprop)
   : SteelAtomicT unit uses unobservable
                 q
                 (fun _ -> q `star` pure (perm_ok p))
-  = Atomic.change_slprop q (q `star` pure (perm_ok p))
+  = change_slprop q (q `star` pure (perm_ok p))
     (fun m -> emp_unit q; pure_star_interp q (perm_ok p) m)
 
 let elim_perm_ok #uses (p:perm)
@@ -164,29 +153,25 @@ let intro_pts_to (p:perm{perm_ok p}) #a #uses (#v:erased a) (r:ref a) (_:unit)
                 (fun _ -> pts_to r p v)
   = intro_perm_ok p _
 
-let drop_l_atomic #uses (p q:slprop)  ()
-  : SteelAtomicT unit uses unobservable (p `star` q) (fun _ -> q)
-  = Atomic.change_slprop (p `star` q) q (affine_star p q)
-
 let alloc #a x =
   let v = Some (x, full_perm) in
   assert (FStar.PCM.composable pcm_frac v None);
   assert (compatible pcm_frac v v);
   let r = Steel.Effect.alloc v in
-  Steel.Effect.change_slprop (Steel.Memory.pts_to r v) (pts_to r full_perm (hide x))
+  change_slprop (Steel.Memory.pts_to r v) (pts_to r full_perm (hide x))
     (fun m -> emp_unit (pts_to_raw r full_perm x); pure_star_interp (pts_to_raw r full_perm x) (perm_ok full_perm) m);
   r
 
 let read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
   = let v1 : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
-    Steel.Effect.change_slprop (pts_to r p v) (Mem.pts_to r v1 `star` pure (perm_ok p)) (fun _ -> ());
+    change_slprop (pts_to r p v) (Mem.pts_to r v1 `star` pure (perm_ok p)) (fun _ -> ());
     let _ = elim_perm_ok p in
     let v2 = Steel.Effect.read r v1 in
-    Steel.Effect.change_slprop (Steel.Memory.pts_to r v1) (pts_to r p v)
+    change_slprop (Steel.Memory.pts_to r v1) (pts_to r p v)
         (fun m -> emp_unit (pts_to_raw r p v); pure_star_interp (pts_to_raw r p v) (perm_ok p) m);
     assert (compatible pcm_frac v1 v2);
     let Some (x, _) = v2 in
-    Steel.Effect.change_slprop (pts_to r p v) (pts_to r p x) (fun _ -> ());
+    change_slprop (pts_to r p v) (pts_to r p x) (fun _ -> ());
     x
 
 let read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
@@ -197,28 +182,28 @@ let read_refine (#a:Type) (#p:perm) (q:a -> slprop) (r:ref a)
         star_is_witinv_left (fun (v:a) -> pts_to r p v) q
     ) in
 
-    Steel.Effect.change_slprop (pts_to r p (Ghost.hide (Ghost.reveal vs)) `star` q vs) (pts_to r p vs `star` q vs) (fun _ -> ());
+    change_slprop (pts_to r p (Ghost.hide (Ghost.reveal vs)) `star` q vs) (pts_to r p vs `star` q vs) (fun _ -> ());
 
     let v = read #a #p #vs r in
 
-    Steel.Effect.change_slprop (pts_to r p v `star` q vs) (pts_to r p v `star` q v) (fun _ -> ());
+    change_slprop (pts_to r p v `star` q vs) (pts_to r p v `star` q v) (fun _ -> ());
     v
 
 let write (#a:Type) (#v:erased a) (r:ref a) (x:a)
   : SteelT unit (pts_to r full_perm v) (fun _ -> pts_to r full_perm x)
   = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
     let v_new : fractional a = Some (x, full_perm) in
-    Steel.Effect.change_slprop (pts_to r full_perm v) (Mem.pts_to r v_old `star` pure (perm_ok full_perm)) (fun _ -> ());
+    change_slprop (pts_to r full_perm v) (Mem.pts_to r v_old `star` pure (perm_ok full_perm)) (fun _ -> ());
 
     let _ = elim_perm_ok full_perm in
     Steel.Effect.write r v_old v_new;
-    Steel.Effect.change_slprop (Mem.pts_to r v_new) (pts_to r full_perm x)
+    change_slprop (Mem.pts_to r v_new) (pts_to r full_perm x)
         (fun m -> emp_unit (pts_to_raw r full_perm x); pure_star_interp (pts_to_raw r full_perm x) (perm_ok full_perm) m)
 
 let free (#a:Type) (#v:erased a) (r:ref a)
   : SteelT unit (pts_to r full_perm v) (fun _ -> emp)
   = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, full_perm)) in
-    Steel.Effect.change_slprop
+    change_slprop
       (pts_to r full_perm v)
       (Mem.pts_to r v_old `star` pure (perm_ok full_perm))
       (fun _ -> ());
@@ -247,7 +232,7 @@ let share_atomic (#a:Type) #uses (#p:perm) (#v:erased a) (r:ref a)
                (pts_to r p v)
                (fun _ -> pts_to r (half_perm p) v `star` pts_to r (half_perm p) v)
   = let v_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v, p)) in
-    Atomic.change_slprop
+    change_slprop
       (pts_to r p v)
       (pts_to_raw r p v `star` pure (perm_ok p))
       (fun _ -> ());
@@ -275,11 +260,11 @@ let gather_atomic_raw (#a:Type) (#uses:_) (#p0 #p1:perm) (r:ref a) (v0:erased a)
 let gather_atomic (#a:Type) (#uses:_) (#p0:perm) (#p1:perm) (#v0 #v1:erased a) (r:ref a)
   = let v0_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v0, p0)) in
     let v1_old : erased (fractional a) = Ghost.hide (Some (Ghost.reveal v1, p1)) in
-    Atomic.change_slprop
+    change_slprop
       (pts_to r p0 v0)
       (pts_to_raw r p0 v0 `star` pure (perm_ok p0))
       (fun _ -> ());
-    Atomic.change_slprop
+    change_slprop
       (pts_to r p1 v1)
       (pts_to_raw r p1 v1 `star` pure (perm_ok p1))
       (fun _ -> ());
@@ -367,3 +352,68 @@ let cas_action (#t:Type) (eq: (x:t -> y:t -> b:bool{b <==> (x == y)}))
        else false
      in
      b
+
+(*** GHOST REFERENCES ***)
+
+let ghost_ref a = ref (erased a)
+
+[@@__reduce__]
+let ghost_pts_to #a (r:ghost_ref a) (p:perm) (x:erased a) = pts_to r p (Ghost.hide x)
+
+let ghost_alloc (#a:Type) (#u:_) (x:erased a)
+  : SteelAtomicT (ghost_ref a) u unobservable
+                 emp
+                 (fun r -> ghost_pts_to r full_perm x)
+  = let v : fractional (erased a) = Some (x, full_perm) in
+    assert (FStar.PCM.composable pcm_frac v None);
+    assert (compatible pcm_frac v v);
+    let r : ghost_ref a = as_atomic_action #_ #_ #unobservable (Steel.Memory.alloc_action u v) in
+    change_slprop (Steel.Memory.pts_to r v) (pts_to r full_perm (hide x))
+      (fun m -> emp_unit (pts_to_raw r full_perm (hide x));
+             pure_star_interp (pts_to_raw r full_perm (hide x)) (perm_ok full_perm) m);
+    r
+
+let ghost_share (#a:Type) (#u:_)
+                (#p:perm)
+                (#x:erased a)
+                (r:ghost_ref a)
+  : SteelAtomicT unit u unobservable
+    (ghost_pts_to r p x)
+    (fun _ -> ghost_pts_to r (half_perm p) x `star`
+           ghost_pts_to r (half_perm p) x)
+  = share_atomic r
+
+let ghost_gather (#a:Type) (#u:_)
+                 (#p0 #p1:perm)
+                 (#x0 #x1:erased a)
+                 (r:ghost_ref a)
+  : SteelAtomic unit u unobservable
+    (ghost_pts_to r p0 x0 `star`
+     ghost_pts_to r p1 x1)
+    (fun _ -> ghost_pts_to r (sum_perm p0 p1) x0)
+    (requires fun _ -> true)
+    (ensures fun _ _ _ -> x0 == x1)
+  = gather_atomic #(erased a) #u #p0 #p1 #(hide x0) #(hide x1) r
+
+let ghost_pts_to_injective_eq (#a:_) (#u:_) (#p #q:_) (r:ghost_ref a) (v0 v1:Ghost.erased a)
+  : SteelAtomic unit u unobservable (ghost_pts_to r p v0 `star` ghost_pts_to r q v1)
+                     (fun _ -> ghost_pts_to r p v0 `star` ghost_pts_to r q v0)
+                (requires fun _ -> True)
+                (ensures fun _ _ _ -> v0 == v1)
+  = higher_ref_pts_to_injective_eq r
+
+let ghost_write (#a:Type) (#u:_) (#v:erased a) (r:ghost_ref a) (x:erased a)
+  : SteelAtomicT unit u unobservable
+    (ghost_pts_to r full_perm v)
+    (fun _ -> ghost_pts_to r full_perm x)
+  = let v_old : erased (fractional (erased a)) = Ghost.hide (Some (v, full_perm)) in
+    let v_new : fractional (erased a) = Some (x, full_perm) in
+    change_slprop (pts_to r full_perm (hide v))
+                  (Mem.pts_to r v_old `star` pure (perm_ok full_perm))
+                  (fun _ -> ());
+    let _ = elim_perm_ok full_perm in
+    as_atomic_action #_ #_ #unobservable (Mem.upd_action u r v_old v_new);
+    change_slprop (Mem.pts_to r v_new)
+                  (pts_to r full_perm (hide x))
+                  (fun m -> emp_unit (pts_to_raw r full_perm (hide x));
+                         pure_star_interp (pts_to_raw r full_perm (hide x)) (perm_ok full_perm) m)

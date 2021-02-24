@@ -1512,9 +1512,14 @@ let update_effect_lattice env src tgt st_mlift =
        *     if there exists polymonadic binds i, j or j, i
        *     then there are multiple ways to bind i, j or j, i computations now
        *     so error out
+       *
+       *     02/23: But if i = j, the loop above returns the identity edge
+       *     Since that edge is not user added, if there is a (i, j)
+       *       polymonadic bind, we don't count that as a conflict
        *)
-      if exists_polymonadic_bind env i j |> is_some ||
-         exists_polymonadic_bind env j i |> is_some
+      if (not (lid_equals i j)) &&
+         (exists_polymonadic_bind env i j |> is_some ||
+          exists_polymonadic_bind env j i |> is_some)
       then raise_error (Errors.Fatal_Effects_Ordering_Coherence,
              BU.format5 "Updating effect lattice with a lift between %s and %s \
                induces a least upper bound %s of %s and %s, and this \

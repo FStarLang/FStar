@@ -17,35 +17,11 @@
 
 module Steel.Effect
 
-module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.Memory
 open Steel.Memory
-open Steel.Semantics.Instantiate
 include Steel.Effect.Common
 
-module Ins = Steel.Semantics.Instantiate
-
 #set-options "--warn_error -330"  //turn off the experimental feature warning
-
-let interp_depends_only_on_post (#a:Type) (hp:a -> slprop)
-: Lemma
-  (forall (x:a).
-     (forall (m0:hmem (hp x)) (m1:mem{disjoint m0 m1}). interp (hp x) m0 <==> interp (hp x) (join m0 m1)))
-= let aux (x:a)
-    : Lemma
-      (forall (m0:hmem (hp x)) (m1:mem{disjoint m0 m1}). interp (hp x) m0 <==> interp (hp x) (join m0 m1))
-    = interp_depends_only_on (hp x) in
-  Classical.forall_intro aux
-
-let req_to_act_req (#pre:pre_t) (req:req_t pre) : Sem.l_pre #state pre =
-  interp_depends_only_on pre;
-  fun m -> interp pre m /\ req m
-
-let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post)
-: Sem.l_post #state #a pre post
-= interp_depends_only_on pre;
-  interp_depends_only_on_post post;
-  fun m0 x m1 -> interp pre m0 /\ interp (post x) m1 /\ ens m0 x m1
 
 val repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) : Type u#2
 
@@ -175,13 +151,9 @@ let if_then_else (a:Type)
 
 [@@allow_informative_binders]
 reifiable reflectable
-layered_effect {
-  SteelF: a:Type -> pre:pre_t -> post:post_t a -> req_t pre -> ens_t pre a post -> Effect
-  with repr = repr;
-       return = return;
-       bind = bind;
-       subcomp = subcomp;
-       if_then_else = if_then_else
+effect {
+  SteelF (a:Type) (pre:pre_t) (post:post_t a) (_:req_t pre) (_:ens_t pre a post)
+  with { repr; return; bind; subcomp; if_then_else }
 }
 
 [@@allow_informative_binders]
@@ -450,36 +422,6 @@ val par (#aL:Type u#a)
     (fun h -> lpreL h /\ lpreR h)
     (fun h0 y h1 -> lpreL h0 /\ lpreR h0 /\ lpostL h0 (fst y) h1 /\ lpostR h0 (snd y) h1)
 
-val add_action (#a:Type)
-               (#p:slprop)
-               (#q:a -> slprop)
-               (f:action_except a Set.empty p q)
-  : SteelT a p q
-
-val change_slprop (p q:slprop)
-                  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
-  : SteelT unit p (fun _ -> q)
-
-val rewrite_context (#[@@@ framing_implicit] p:slprop)
-                    (#[@@@ framing_implicit] q:slprop)
-                    (_:unit)
-  : SteelF unit p (fun _ -> q) (requires fun _ -> p `equiv` q) (ensures fun _ _ _ -> True)
-
-val extract_info (p:slprop) (fact:prop)
-  (l:(m:mem) -> Lemma (requires interp p m) (ensures fact))
-  : Steel unit p (fun _ -> p)
-      (fun _ -> True)
-      (fun _ _ _ -> fact)
-
-val sladmit (#a:Type)
-            (#[@@@ framing_implicit] p:pre_t)
-            (#[@@@ framing_implicit] q:post_t a)
-            (_:unit)
-  : SteelF a p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
-
-val intro_pure (p:prop)
-  : Steel unit emp (fun _ -> pure p) (requires fun _ -> p) (ensures fun _ _ _ -> True)
-
 val read (#a:Type)
          (#pcm:_)
          (r:ref a pcm)
@@ -552,21 +494,7 @@ val recall (#a:Type u#1) (#pcm:FStar.PCM.pcm a) (#fact:property a)
            (pts_to r v `star` pure (witnessed r fact))
            (fun v1 -> pts_to r v `star` pure (fact v1))
 
-val cond (#a:Type)
-         (b:bool)
-         (p: (b':bool{b == b'}) -> slprop)
-         (q: bool -> a -> slprop)
-         (then_: (squash (b == true) -> SteelT a (p true) (q true)))
-         (else_: (squash (b == false) -> SteelT a (p false) (q false)))
-  : SteelT a (p b) (q b)
-
-
-val drop (p:slprop) : SteelT unit p (fun _ -> emp)
-
-val intro_exists (#a:Type) (x:a) (p:a -> slprop)
-  : SteelT unit (p x) (fun _ -> h_exists p)
-
-val noop (#[@@@ framing_implicit] p:slprop) (u:unit) : SteelT unit p (fun _ -> p)
+val noop (u:unit) : SteelT unit emp (fun _ -> emp)
 
 /// Operations on PCM Refs
 

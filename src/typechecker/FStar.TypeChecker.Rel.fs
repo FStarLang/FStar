@@ -4090,9 +4090,9 @@ let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.impl
     imps, b
   
 let resolve_implicits' env is_tac g =
-  let must_total, forcelax =
-    if is_tac then false, true
-    else (not env.phase1 && not env.lax), false in
+  let must_total =
+    if is_tac then false
+    else (not env.phase1 && not env.lax) in
 
   let rec unresolved ctx_u =
     match (Unionfind.find ctx_u.ctx_uvar_head) with
@@ -4154,10 +4154,20 @@ let resolve_implicits' env is_tac g =
           else begin
             let env = {env with gamma=ctx_u.ctx_uvar_gamma} in
             let tm = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.8" [Env.Beta] env tm in
-            if forcelax && BU.set_is_empty (Free.uvars tm)
-            then until_fixpoint (out, true) tl
+            (*
+             * AR: We do not retypecheck the solutions solved by a tactic
+             *     However we still check that any uvars remaining in those solutions
+             *       are Allow_unresolved
+             *)
+            let tm_ok_for_tac tm =
+              tm
+              |> Free.uvars
+              |> BU.set_elements
+              |> List.for_all (fun uv -> uv.ctx_uvar_should_check = Allow_unresolved) in
+            if is_tac then if tm_ok_for_tac tm
+                           then until_fixpoint (out, true) tl  //Move on to the next imp
+                           else until_fixpoint (hd::out, changed) tl  //Move hd to out
             else begin
-              let env = if forcelax then {env with lax=true} else env in
               if Env.debug env <| Options.Other "Rel"
               then BU.print5 "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"
                               (Print.uvar_to_string ctx_u.ctx_uvar_head)

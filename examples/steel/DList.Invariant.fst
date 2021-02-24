@@ -17,6 +17,7 @@
 *)
 module DList.Invariant
 open Steel.Memory
+open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.FractionalPermission
 open Steel.Reference
@@ -205,9 +206,9 @@ let invert_dlist_cons_neq (#a:Type) (left ptr right:t a) (l:list (cell a))
 ////////////////////////////////////////////////////////////////////////////////
 
 let dlist_not_null (#a:Type)
-                   (#[@@@ framing_implicit] left:t a)
-                   (#[@@@ framing_implicit] right:t a)
-                   (#[@@@ framing_implicit] rep:list (cell a))
+                   (#left:t a)
+                   (#right:t a)
+                   (#rep:list (cell a))
                    (p:t a)
   = U.lift_lemma (dlist left p right rep)
                  ((Cons? rep) == true)
@@ -224,7 +225,7 @@ let dlist_not_null (#a:Type)
                   (dlist left p right (hd :: tl))
                   (fun _ -> ());
     elim_dlist_cons left p right hd tl;
-    U.pts_to_not_null #_ #full_perm #(Ghost.hide hd) p;
+    U.pts_to_not_null #_ #_ #full_perm #(Ghost.hide hd) p;
     intro_dlist_cons left p right hd tl;
     change_slprop (dlist left p right (hd :: tl))
                   (dlist left p right rep)

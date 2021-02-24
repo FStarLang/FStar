@@ -88,6 +88,14 @@ let hmem (p:slprop u#a) = m:mem u#a {interp p m}
 (** Equivalence relation on slprops is just equivalence of their interpretations *)
 val equiv (p1 p2:slprop u#a) : prop
 
+(**
+  An extensional equivalence principle for slprop
+ *)
+val slprop_extensionality (p q:slprop)
+  : Lemma
+    (requires p `equiv` q)
+    (ensures p == q)
+
 val reveal_equiv (p1 p2:slprop u#a) : Lemma
   (ensures (forall m. interp p1 m <==> interp p2 m) <==> p1 `equiv` p2)
   [SMTPat (p1 `equiv` p2)]
