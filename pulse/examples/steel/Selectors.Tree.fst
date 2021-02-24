@@ -197,4 +197,65 @@ let rec is_balanced #a ptr =
   pack_tree ptr (get_left node) (get_right node);
   (lbal && rbal) && ((rh - lh) >= -1 && (rh - lh) <= 1))
 
+let rebalance_avl #a ptr =
+  let h = get #(linked_tree ptr) () in
+
+  assert(Spec.is_bst(v_linked_tree ptr h));
+  noop();
+
+  if is_balanced ptr then (
+    noop();
+    ptr
+  ) else (
+
+    let node = unpack_tree ptr in
+
+    let lh = height (get_left node) in
+    let rh = height (get_right node) in
+
+    if (lh - rh) > 1 then (
+    
+      let l_node = unpack_tree (get_left node) in
+
+      let llh = height (get_left l_node) in
+      let lrh = height (get_right l_node) in
+      if lrh > llh then (
+        pack_tree (get_left node) (get_left l_node) (get_right l_node);
+        pack_tree ptr (get_left node) (get_right node);
+  
+        let h1 = get () in
+        noop();
+        rotate_left_right ptr
+        
+      ) else (
+        pack_tree (get_left node) (get_left l_node) (get_right l_node);
+        pack_tree ptr (get_left node) (get_right node);
+        rotate_right ptr
+      ) 
+  
+    ) else (
+      
+      if (lh - rh) < - 1 then (
+      
+        let r_node = unpack_tree (get_right node) in
+
+        let rlh = height (get_left r_node) in
+        let rrh = height (get_right r_node) in
+        if rlh > rrh then (
+            pack_tree (get_right node) (get_left r_node) (get_right r_node);
+            pack_tree ptr (get_left node) (get_right node);
+            rotate_right_left ptr
+        ) else (
+            pack_tree (get_right node) (get_left r_node) (get_right r_node);
+            pack_tree ptr (get_left node) (get_right node);
+            rotate_left ptr
+        )
+        
+      ) else (
+          pack_tree ptr (get_left node) (get_right node);
+          ptr
+      )
+    )
+  )
+
 #pop-options
