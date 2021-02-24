@@ -26,6 +26,7 @@ val observability : Type0
 val has_eq_observability (_:unit) : Lemma (hasEq observability)
 val observable : observability
 val unobservable : observability
+val observability_unequal : squash (observable =!= unobservable)
 
 let obs_at_most_one o1 o2 =
   o1==unobservable \/ o2==unobservable
@@ -36,7 +37,7 @@ let join_obs (o1:observability) (o2:observability) =
   then observable
   else unobservable
 
-val atomic_repr (a:Type u#a)
+val repr (a:Type u#a)
    (opened_invariants:inames)
    (g:observability)
    (pre:slprop u#1)
@@ -55,7 +56,7 @@ val return (a:Type u#a)
    (x:a)
    (opened_invariants:inames)
    (#[@@@ framing_implicit] p:a -> slprop u#1)
-  : atomic_repr a opened_invariants unobservable
+  : repr a opened_invariants unobservable
                 (return_pre (p x)) (return_post p)
                 (return_req (p x)) (return_ens a x p)
 
@@ -65,11 +66,12 @@ let bind_req (#a:Type)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:a -> pre_t)
   (req_g:(x:a -> req_t (pre_g x)))
-  (_:squash (can_be_split_forall post_f pre_g))
+  (pr: a -> prop)
+  (_:squash (can_be_split_forall_dep pr post_f pre_g))
 : req_t pre_f
 = fun m0 ->
   req_f m0 /\
-  (forall (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 ==> (req_g x) m1)
+  (forall (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 ==> pr x /\ (req_g x) m1)
 
 unfold
 let bind_ens (#a:Type) (#b:Type)
@@ -78,12 +80,13 @@ let bind_ens (#a:Type) (#b:Type)
   (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
   (ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
   (post:post_t b)
-  (_:squash (can_be_split_forall post_f pre_g))
+  (pr:a -> prop)
+  (_:squash (can_be_split_forall_dep pr post_f pre_g))
   (_:squash (can_be_split_post post_g post))
 : ens_t pre_f b post
 = fun m0 y m2 ->
   req_f m0 /\
-  (exists (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 /\ (ens_g x) m1 y m2)
+  (exists (x:a) (m1:hmem (post_f x)). pr x /\ ens_f m0 x m1 /\ (ens_g x) m1 y m2)
 
 val bind (a:Type u#a) (b:Type u#b)
    (opened_invariants:inames)
@@ -94,14 +97,15 @@ val bind (a:Type u#a) (b:Type u#b)
    (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
    (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
    (#[@@@ framing_implicit] post:post_t b)
-   (#[@@@ framing_implicit] p1:squash (can_be_split_forall post_f pre_g))
+   (#[@@@ framing_implicit] pr:a -> prop)
+   (#[@@@ framing_implicit] p1:squash (can_be_split_forall_dep pr post_f pre_g))
    (#[@@@ framing_implicit] p2:squash (can_be_split_post post_g post))
-   (f:atomic_repr a opened_invariants o1 pre_f post_f req_f ens_f)
-   (g:(x:a -> atomic_repr b opened_invariants o2 (pre_g x) (post_g x) (req_g x) (ens_g x)))
-  : Pure (atomic_repr b opened_invariants (join_obs o1 o2)
+   (f:repr a opened_invariants o1 pre_f post_f req_f ens_f)
+   (g:(x:a -> repr b opened_invariants o2 (pre_g x) (post_g x) (req_g x) (ens_g x)))
+  : Pure (repr b opened_invariants (join_obs o1 o2)
                       pre_f post
-                      (bind_req req_f ens_f req_g p1)
-                      (bind_ens req_f ens_f ens_g post p1 p2)
+                      (bind_req req_f ens_f req_g pr p1)
+                      (bind_ens req_f ens_f ens_g post pr p1 p2)
                       )
          (requires obs_at_most_one o1 o2)
          (ensures fun _ -> True)
@@ -126,40 +130,57 @@ val subcomp (a:Type)
   (#[@@@ framing_implicit] req_g:req_t pre_g) (#[@@@ framing_implicit] ens_g:ens_t pre_g a post_g)
   (#[@@@ framing_implicit] p1:squash (can_be_split pre_g pre_f))
   (#[@@@ framing_implicit] p2:squash (can_be_split_forall post_f post_g))
-  (f:atomic_repr a opened_invariants o1 pre_f post_f req_f ens_f)
-: Pure (atomic_repr a opened_invariants o2 pre_g post_g req_g ens_g)
+  (f:repr a opened_invariants o1 pre_f post_f req_f ens_f)
+: Pure (repr a opened_invariants o2 pre_g post_g req_g ens_g)
        (requires (o1 == observable ==> o2 == observable) /\
          subcomp_pre req_f ens_f req_g ens_g p1 p2)
        (ensures fun _ -> True)
 
-// let if_then_else (a:Type)
-//   (opened_invariants:inames)
-//   (o:observability)
-//   (#[@@framing_implicit] pre:pre_t) (#[@@framing_implicit] post:post_t a)
-//   (f:atomic_repr a opened_invariants o pre post)
-//   (g:atomic_repr a opened_invariants o pre post)
-//   (p:Type0)
-//   : Type
-//   = atomic_repr a opened_invariants o pre post
+unfold
+let if_then_else_req (#pre_f:pre_t) (#pre_g:pre_t)
+  (s: squash (can_be_split pre_f pre_g))
+  (req_then:req_t pre_f) (req_else:req_t pre_g)
+  (p:Type0)
+: req_t pre_f
+= fun h -> (p ==> req_then h) /\ ((~ p) ==> req_else h)
+
+unfold
+let if_then_else_ens (#a:Type) (#pre_f:pre_t) (#pre_g:pre_t) (#post_f:post_t a) (#post_g:post_t a)
+  (s1 : squash (can_be_split pre_f pre_g))
+  (s2 : squash (equiv_forall post_f post_g))
+  (ens_then:ens_t pre_f a post_f) (ens_else:ens_t pre_g a post_g)
+  (p:Type0)
+: ens_t pre_f a post_f
+= fun h0 x h1 -> (p ==> ens_then h0 x h1) /\ ((~ p) ==> ens_else h0 x h1)
+
+let if_then_else (a:Type)
+  (o:inames)
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] pre_g:pre_t)
+  (#[@@@ framing_implicit] post_f:post_t a) (#[@@@ framing_implicit] post_g:post_t a)
+  (#[@@@ framing_implicit] req_then:req_t pre_f) (#[@@@ framing_implicit] ens_then:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] req_else:req_t pre_g) (#[@@@ framing_implicit] ens_else:ens_t pre_g a post_g)
+  (#[@@@ framing_implicit] s_pre: squash (can_be_split pre_f pre_g))
+  (#[@@@ framing_implicit] s_post: squash (equiv_forall post_f post_g))
+  (f:repr a o unobservable pre_f post_f req_then ens_then)
+  (g:repr a o unobservable pre_g post_g req_else ens_else)
+  (p:bool)
+: Type
+= repr a o unobservable pre_f post_f
+       (if_then_else_req s_pre req_then req_else p)
+       (if_then_else_ens s_pre s_post ens_then ens_else p)
 
 [@@allow_informative_binders]
 total
 reifiable reflectable
-layered_effect {
-  SteelAtomicF : a:Type
-              -> opened_invariants:inames
-              -> o:observability
-              -> pre:slprop u#1
-              -> post:(a -> slprop u#1)
-              -> req:req_t pre
-              -> ens:ens_t pre a post
-              -> Effect
-  with
-  repr = atomic_repr;
-  return = return;
-  bind = bind;
-  subcomp = subcomp
-  // if_then_else = if_then_else
+effect {
+  SteelAtomicF (a:Type)
+               (opened_invariants:inames)
+               (o:observability)
+               (pre:slprop u#1)
+               (post:a -> slprop u#1)
+               (req:req_t pre)
+               (ens:ens_t pre a post)
+  with { repr; return; bind; subcomp; if_then_else }
 }
 
 [@@allow_informative_binders]
@@ -172,28 +193,30 @@ let bind_steela_steela_req (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:a -> pre_t)
+  (#pr: a -> prop)
   (req_g:(x:a -> req_t (pre_g x)))
   (frame_f:slprop) (frame_g:a -> slprop)
-  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
+  (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
 : req_t (pre_f `star` frame_f)
 = fun m0 ->
   req_f m0 /\
-  (forall (x:a) (m1:hmem (post_f x `star` frame_f)). ens_f m0 x m1 ==> (req_g x) m1)
+  (forall (x:a) (m1:hmem (post_f x `star` frame_f)). ens_f m0 x m1 ==> pr x /\ (req_g x) m1)
 
 unfold
 let bind_steela_steela_ens (#a:Type) (#b:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
+  (#pr:a -> prop)
   (ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
   (frame_f:slprop) (frame_g:a -> slprop)
   (post:post_t b)
-  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
+  (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
   (_:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
 : ens_t (pre_f `star` frame_f) b post
 = fun m0 y m2 ->
   req_f m0 /\
-  (exists (x:a) (m1:hmem (post_f x `star` frame_f)). ens_f m0 x m1 /\ (ens_g x) m1 y m2)
+  (exists (x:a) (m1:hmem (post_f x `star` frame_f)). pr x /\ ens_f m0 x m1 /\ (ens_g x) m1 y m2)
 
 val bind_steela_steela (a:Type) (b:Type)
   (opened_invariants:inames)
@@ -205,12 +228,13 @@ val bind_steela_steela (a:Type) (b:Type)
   (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
   (#[@@@ framing_implicit] frame_f:slprop) (#[@@@ framing_implicit] frame_g:a -> slprop)
   (#[@@@ framing_implicit] post:post_t b)
-  (#[@@@ framing_implicit] p:squash (can_be_split_forall
+  (#[@@@ framing_implicit] pr:a -> prop)
+  (#[@@@ framing_implicit] p:squash (can_be_split_forall_dep pr
     (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
   (#[@@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
-  (f:atomic_repr a opened_invariants o1 pre_f post_f req_f ens_f)
-  (g:(x:a -> atomic_repr b opened_invariants o2 (pre_g x) (post_g x) (req_g x) (ens_g x)))
-: Pure (atomic_repr b opened_invariants (join_obs o1 o2)
+  (f:repr a opened_invariants o1 pre_f post_f req_f ens_f)
+  (g:(x:a -> repr b opened_invariants o2 (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: Pure (repr b opened_invariants (join_obs o1 o2)
       (pre_f `star` frame_f)
       post
       (bind_steela_steela_req req_f ens_f req_g frame_f frame_g p)
@@ -226,28 +250,30 @@ let bind_steela_steelaf_req (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:a -> pre_t)
+  (#pr:a -> prop)
   (req_g:(x:a -> req_t (pre_g x)))
   (frame_f:slprop)
-  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
+  (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) pre_g))
 : req_t (pre_f `star` frame_f)
 = fun m0 ->
   req_f m0 /\
-  (forall (x:a) (m1:hmem (post_f x `star` frame_f)). ens_f m0 x m1 ==> (req_g x) m1)
+  (forall (x:a) (m1:hmem (post_f x `star` frame_f)). ens_f m0 x m1 ==> pr x /\ (req_g x) m1)
 
 unfold
 let bind_steela_steelaf_ens (#a:Type) (#b:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
+  (#pr:a -> prop)
   (ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
   (frame_f:slprop)
   (post:post_t b)
-  (_:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
+  (_:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) pre_g))
   (_: squash (can_be_split_post post_g post))
 : ens_t (pre_f `star` frame_f) b post
 = fun m0 y m2 ->
   req_f m0 /\
-  (exists (x:a) (m1:hmem (post_f x `star` frame_f)). ens_f m0 x m1 /\ (ens_g x) m1 y m2)
+  (exists (x:a) (m1:hmem (post_f x `star` frame_f)). pr x /\ ens_f m0 x m1 /\ (ens_g x) m1 y m2)
 
 
 val bind_steela_steelaf (a:Type) (b:Type)
@@ -260,11 +286,12 @@ val bind_steela_steelaf (a:Type) (b:Type)
   (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
   (#[@@@ framing_implicit] frame_f:slprop)
   (#[@@@ framing_implicit] post:post_t b)
-  (#[@@@ framing_implicit] p:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
+  (#[@@@ framing_implicit] pr:a -> prop)
+  (#[@@@ framing_implicit] p:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) pre_g))
   (#[@@@ framing_implicit] p2:squash (can_be_split_post post_g post))
-  (f:atomic_repr a opened_invariants o1 pre_f post_f req_f ens_f)
-  (g:(x:a -> atomic_repr b opened_invariants o2 (pre_g x) (post_g x) (req_g x) (ens_g x)))
-: Pure (atomic_repr b opened_invariants (join_obs o1 o2)
+  (f:repr a opened_invariants o1 pre_f post_f req_f ens_f)
+  (g:(x:a -> repr b opened_invariants o2 (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: Pure (repr b opened_invariants (join_obs o1 o2)
          (pre_f `star` frame_f)
          post
         (bind_steela_steelaf_req req_f ens_f req_g frame_f p)
@@ -280,28 +307,30 @@ let bind_steelaf_steela_req (#a:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:a -> pre_t)
+  (#pr:a -> prop)
   (req_g:(x:a -> req_t (pre_g x)))
   (frame_g:a -> slprop)
-  (_:squash (can_be_split_forall post_f (fun x -> pre_g x `star` frame_g x)))
+  (_:squash (can_be_split_forall_dep pr post_f (fun x -> pre_g x `star` frame_g x)))
 : req_t pre_f
 = fun m0 ->
   req_f m0 /\
-  (forall (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 ==> (req_g x) m1)
+  (forall (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 ==> pr x /\ (req_g x) m1)
 
 unfold
 let bind_steelaf_steela_ens (#a:Type) (#b:Type)
   (#pre_f:pre_t) (#post_f:post_t a)
   (req_f:req_t pre_f) (ens_f:ens_t pre_f a post_f)
   (#pre_g:a -> pre_t) (#post_g:a -> post_t b)
+  (#pr:a -> prop)
   (ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
   (frame_g:a -> slprop)
   (post:post_t b)
-  (_:squash (can_be_split_forall post_f (fun x -> pre_g x `star` frame_g x)))
+  (_:squash (can_be_split_forall_dep pr post_f (fun x -> pre_g x `star` frame_g x)))
   (_:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
 : ens_t pre_f b post
 = fun m0 y m2 ->
   req_f m0 /\
-  (exists (x:a) (m1:hmem (post_f x)). ens_f m0 x m1 /\ (ens_g x) m1 y m2)
+  (exists (x:a) (m1:hmem (post_f x)). pr x /\ ens_f m0 x m1 /\ (ens_g x) m1 y m2)
 
 val bind_steelaf_steela (a:Type) (b:Type)
   (opened_invariants:inames)
@@ -313,11 +342,12 @@ val bind_steelaf_steela (a:Type) (b:Type)
   (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
   (#[@@@ framing_implicit] frame_g:a -> slprop)
   (#[@@@ framing_implicit] post:post_t b)
-  (#[@@@ framing_implicit] p:squash (can_be_split_forall post_f (fun x -> pre_g x `star` frame_g x)))
+  (#[@@@ framing_implicit] pr:a -> prop)
+  (#[@@@ framing_implicit] p:squash (can_be_split_forall_dep pr post_f (fun x -> pre_g x `star` frame_g x)))
   (#[@@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
-  (f:atomic_repr a opened_invariants o1 pre_f post_f req_f ens_f)
-  (g:(x:a -> atomic_repr b opened_invariants o2 (pre_g x) (post_g x) (req_g x) (ens_g x)))
-: Pure (atomic_repr b opened_invariants (join_obs o1 o2)
+  (f:repr a opened_invariants o1 pre_f post_f req_f ens_f)
+  (g:(x:a -> repr b opened_invariants o2 (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: Pure (repr b opened_invariants (join_obs o1 o2)
           pre_f
           post
          (bind_steelaf_steela_req req_f ens_f req_g frame_g p)
@@ -341,7 +371,6 @@ let bind_pure_steela__ens (#a:Type) (#b:Type)
 : ens_t pre b post
 = fun m0 r m1 -> as_requires wp /\ (exists (x:a). as_ensures wp x /\ (ens x) m0 r m1)
 
-
 val bind_pure_steela_ (a:Type) (b:Type)
   (opened_invariants:inames)
   (o:observability)
@@ -349,15 +378,12 @@ val bind_pure_steela_ (a:Type) (b:Type)
   (#[@@@ framing_implicit] pre:pre_t) (#[@@@ framing_implicit] post:post_t b)
   (#[@@@ framing_implicit] req:a -> req_t pre) (#[@@@ framing_implicit] ens:a -> ens_t pre b post)
   (f:eqtype_as_type unit -> PURE a wp)
-  (g:(x:a -> atomic_repr b opened_invariants o pre post (req x) (ens x)))
-: Pure (atomic_repr b opened_invariants o
+  (g:(x:a -> repr b opened_invariants o pre post (req x) (ens x)))
+: repr b opened_invariants o
     pre
     post
     (bind_pure_steela__req wp req)
     (bind_pure_steela__ens wp ens)
-  )
-  (requires wp (fun _ -> True))
-  (ensures fun _ -> True)
 
 polymonadic_bind (PURE, SteelAtomicF) |> SteelAtomicF = bind_pure_steela_
 
@@ -370,6 +396,8 @@ effect SteelAtomicT (a:Type) (opened:inames) (o:observability) (pre:pre_t) (post
 
 (***** Bind and Subcomp relation with Steel.Atomic *****)
 
+(** F, F -> F **)
+
 val bind_steelatomicf_steelf (a:Type) (b:Type)
   (is_ghost:observability)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
@@ -378,15 +406,38 @@ val bind_steelatomicf_steelf (a:Type) (b:Type)
   (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x)))
   (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
   (#[@@@ framing_implicit] post:post_t b)
-  (#[@@@ framing_implicit] p1:squash (can_be_split_forall post_f pre_g))
+  (#[@@@ framing_implicit] pr:a -> prop)
+  (#[@@@ framing_implicit] p1:squash (can_be_split_forall_dep pr post_f pre_g))
   (#[@@@ framing_implicit] p2:squash (can_be_split_post post_g post))
-  (f:atomic_repr a Set.empty is_ghost pre_f post_f req_f ens_f)
+  (f:repr a Set.empty is_ghost pre_f post_f req_f ens_f)
   (g:(x:a -> Steel.Effect.repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
 : Steel.Effect.repr b pre_f post
-    (bind_req req_f ens_f req_g p1)
-    (bind_ens req_f ens_f ens_g post p1 p2)
+    (bind_req req_f ens_f req_g pr p1)
+    (bind_ens req_f ens_f ens_g post pr p1 p2)
 
 polymonadic_bind (SteelAtomicF, Steel.Effect.SteelF) |> Steel.Effect.SteelF = bind_steelatomicf_steelf
+
+
+val bind_steelf_steelatomicf (a:Type) (b:Type)
+  (o:observability)
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
+  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
+  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x)))
+  (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#[@@@ framing_implicit] post:post_t b)
+  (#[@@@ framing_implicit] pr:a -> prop)
+  (#[@@@ framing_implicit] p1:squash (can_be_split_forall_dep pr post_f pre_g))
+  (#[@@@ framing_implicit] p2:squash (can_be_split_post post_g post))
+  (f:Steel.Effect.repr a pre_f post_f req_f ens_f)
+  (g:(x:a -> repr b Set.empty o (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: Steel.Effect.repr b pre_f post
+    (bind_req req_f ens_f req_g pr p1)
+    (bind_ens req_f ens_f ens_g post pr p1 p2)
+
+polymonadic_bind (Steel.Effect.SteelF, SteelAtomicF) |> Steel.Effect.SteelF = bind_steelf_steelatomicf
+
+(** A, F -> F **)
 
 val bind_steelatomic_steelf (a:Type) (b:Type)
   (o:observability)
@@ -397,9 +448,10 @@ val bind_steelatomic_steelf (a:Type) (b:Type)
   (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
   (#[@@@ framing_implicit] frame_f:slprop)
   (#[@@@ framing_implicit] post:post_t b)
-  (#[@@@ framing_implicit] p:squash (can_be_split_forall (fun x -> post_f x `star` frame_f) pre_g))
+  (#[@@@ framing_implicit] pr:a -> prop)
+  (#[@@@ framing_implicit] p:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) pre_g))
   (#[@@@ framing_implicit] p2: squash (can_be_split_post post_g post))
-  (f:atomic_repr a Set.empty o pre_f post_f req_f ens_f)
+  (f:repr a Set.empty o pre_f post_f req_f ens_f)
   (g:(x:a -> Steel.Effect.repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
 : Steel.Effect.repr b
     (pre_f `star` frame_f)
@@ -410,6 +462,74 @@ val bind_steelatomic_steelf (a:Type) (b:Type)
 
 polymonadic_bind (SteelAtomic, Steel.Effect.SteelF) |> Steel.Effect.SteelF = bind_steelatomic_steelf
 
+val bind_steel_steelatomicf (a:Type) (b:Type)
+  (o:observability)
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
+  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
+  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x)))
+  (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#[@@@ framing_implicit] frame_f:slprop)
+  (#[@@@ framing_implicit] post:post_t b)
+  (#[@@@ framing_implicit] pr:a -> prop)
+  (#[@@@ framing_implicit] p:squash (can_be_split_forall_dep pr (fun x -> post_f x `star` frame_f) pre_g))
+  (#[@@@ framing_implicit] p2: squash (can_be_split_post post_g post))
+  (f:Steel.Effect.repr a pre_f post_f req_f ens_f)
+  (g:(x:a -> repr b Set.empty o (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: Steel.Effect.repr b
+    (pre_f `star` frame_f)
+    post
+    (bind_steela_steelaf_req req_f ens_f req_g frame_f p)
+    (bind_steela_steelaf_ens req_f ens_f ens_g frame_f post p p2)
+
+polymonadic_bind (Steel.Effect.Steel, SteelAtomicF) |> Steel.Effect.SteelF = bind_steel_steelatomicf
+
+(** F, A -> F **)
+
+val bind_steelf_steelatomic (a:Type) (b:Type)
+  (o:observability)
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
+  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
+  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#[@@@ framing_implicit] frame_g:a -> slprop)
+  (#[@@@ framing_implicit] post:post_t b)
+  (#[@@@ framing_implicit] pr:a -> prop)
+  (#[@@@ framing_implicit] p:squash (can_be_split_forall_dep pr post_f (fun x -> pre_g x `star` frame_g x)))
+  (#[@@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
+  (f:Steel.Effect.repr a pre_f post_f req_f ens_f)
+  (g:(x:a -> repr b Set.empty o (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: Steel.Effect.repr b
+          pre_f
+          post
+         (bind_steelaf_steela_req req_f ens_f req_g frame_g p)
+         (bind_steelaf_steela_ens req_f ens_f ens_g frame_g post p p2)
+
+polymonadic_bind (Steel.Effect.SteelF, SteelAtomic) |> Steel.Effect.SteelF = bind_steelf_steelatomic
+
+val bind_steelatomicf_steel (a:Type) (b:Type)
+  (o:observability)
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
+  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
+  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x))) (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#[@@@ framing_implicit] frame_g:a -> slprop)
+  (#[@@@ framing_implicit] post:post_t b)
+  (#[@@@ framing_implicit] pr:a -> prop)
+  (#[@@@ framing_implicit] p:squash (can_be_split_forall_dep pr post_f (fun x -> pre_g x `star` frame_g x)))
+  (#[@@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
+  (f:repr a Set.empty o pre_f post_f req_f ens_f)
+  (g:(x:a -> Steel.Effect.repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: Steel.Effect.repr b
+          pre_f
+          post
+         (bind_steelaf_steela_req req_f ens_f req_g frame_g p)
+         (bind_steelaf_steela_ens req_f ens_f ens_g frame_g post p p2)
+
+polymonadic_bind (SteelAtomicF, Steel.Effect.Steel) |> Steel.Effect.SteelF = bind_steelatomicf_steel
+
+(** A, A -> F **)
+
 val bind_steelatomic_steel (a:Type) (b:Type)
   (o:observability)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
@@ -419,10 +539,11 @@ val bind_steelatomic_steel (a:Type) (b:Type)
   (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
   (#[@@@ framing_implicit] frame_f:slprop) (#[@@@ framing_implicit] frame_g:a -> slprop)
   (#[@@@ framing_implicit] post:post_t b)
-  (#[@@@ framing_implicit] p:squash (can_be_split_forall
+  (#[@@@ framing_implicit] pr:a -> prop)
+  (#[@@@ framing_implicit] p:squash (can_be_split_forall_dep pr
     (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
   (#[@@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
-  (f:atomic_repr a Set.empty o pre_f post_f req_f ens_f)
+  (f:repr a Set.empty o pre_f post_f req_f ens_f)
   (g:(x:a -> Steel.Effect.repr b (pre_g x) (post_g x) (req_g x) (ens_g x)))
 : Steel.Effect.repr b
     (pre_f `star` frame_f)
@@ -433,6 +554,31 @@ val bind_steelatomic_steel (a:Type) (b:Type)
 polymonadic_bind (SteelAtomic, Steel.Effect.Steel) |> Steel.Effect.SteelF =
   bind_steelatomic_steel
 
+val bind_steel_steelatomic (a:Type) (b:Type)
+  (o:observability)
+  (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
+  (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
+  (#[@@@ framing_implicit] pre_g:a -> pre_t) (#[@@@ framing_implicit] post_g:a -> post_t b)
+  (#[@@@ framing_implicit] req_g:(x:a -> req_t (pre_g x)))
+  (#[@@@ framing_implicit] ens_g:(x:a -> ens_t (pre_g x) b (post_g x)))
+  (#[@@@ framing_implicit] frame_f:slprop) (#[@@@ framing_implicit] frame_g:a -> slprop)
+  (#[@@@ framing_implicit] post:post_t b)
+  (#[@@@ framing_implicit] pr:a -> prop)
+  (#[@@@ framing_implicit] p:squash (can_be_split_forall_dep pr
+    (fun x -> post_f x `star` frame_f) (fun x -> pre_g x `star` frame_g x)))
+  (#[@@@ framing_implicit] p2:squash (can_be_split_post (fun x y -> post_g x y `star` frame_g x) post))
+  (f:Steel.Effect.repr a pre_f post_f req_f ens_f)
+  (g:(x:a -> repr b Set.empty o (pre_g x) (post_g x) (req_g x) (ens_g x)))
+: Steel.Effect.repr b
+    (pre_f `star` frame_f)
+    post
+    (bind_steela_steela_req req_f ens_f req_g frame_f frame_g p)
+    (bind_steela_steela_ens req_f ens_f ens_g frame_f frame_g post p p2)
+
+polymonadic_bind (Steel.Effect.Steel, SteelAtomic) |> Steel.Effect.SteelF = bind_steel_steelatomic
+
+(** subcomp **)
+
 val subcomp_atomic_steel (a:Type) (is_ghost:observability)
   (#[@@@ framing_implicit] pre_f:pre_t) (#[@@@ framing_implicit] post_f:post_t a)
   (#[@@@ framing_implicit] req_f:req_t pre_f) (#[@@@ framing_implicit] ens_f:ens_t pre_f a post_f)
@@ -440,7 +586,7 @@ val subcomp_atomic_steel (a:Type) (is_ghost:observability)
   (#[@@@ framing_implicit] req_g:req_t pre_g) (#[@@@ framing_implicit] ens_g:ens_t pre_g a post_g)
   (#[@@@ framing_implicit] p1:squash (can_be_split pre_g pre_f))
   (#[@@@ framing_implicit] p2:squash (can_be_split_forall post_f post_g))
-  (f:atomic_repr a Set.empty is_ghost pre_f post_f req_f ens_f)
+  (f:repr a Set.empty is_ghost pre_f post_f req_f ens_f)
 : Pure (Steel.Effect.repr a pre_g post_g req_g ens_g)
        (requires subcomp_pre req_f ens_f req_g ens_g p1 p2)
        (ensures fun _ -> True)
@@ -456,6 +602,7 @@ val as_atomic_action (#a:Type u#a)
                      (#fp': a -> slprop)
                      (f:action_except a opened_invariants fp fp')
   : SteelAtomicT a opened_invariants o fp fp'
+
 
 val new_invariant (opened_invariants:inames) (p:slprop)
   : SteelAtomicT (inv p) opened_invariants unobservable p (fun _ -> emp)
@@ -473,57 +620,45 @@ val with_invariant (#a:Type)
                                          (fun x -> p `star` fp' x))
   : SteelAtomicT a opened_invariants o fp fp'
 
-val frame (#a:Type)
-          (#opened_invariants:inames)
-          (#o:observability)
-          (#pre:slprop)
-          (#post:a -> slprop)
-          (frame:slprop)
-          ($f:unit -> SteelAtomicT a opened_invariants o pre post)
-  : SteelAtomicT a opened_invariants o
-                (pre `star` frame)
-                (fun x -> post x `star` frame)
-
 val change_slprop (#opened_invariants:inames)
                   (p q:slprop)
                   (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
   : SteelAtomicT unit opened_invariants unobservable p (fun _ -> q)
 
+val rewrite_context (#opened:inames)
+                    (#p:slprop)
+                    (#q:slprop)
+                    (_:unit)
+  : SteelAtomicF unit opened unobservable p (fun _ -> q)
+                 (requires fun _ -> p `equiv` q) (ensures fun _ _ _ -> True)
 
-// Some utilities
-let return_atomic #a #opened_invariants #p (x:a)
-  : SteelAtomic a opened_invariants unobservable (p x) p (return_req (p x)) (return_ens a x p)
-  = SteelAtomic?.reflect (return a x opened_invariants #p)
+val extract_info (#opened_invariants:inames) (p:slprop) (fact:prop)
+  (l:(m:mem) -> Lemma (requires interp p m) (ensures fact))
+  : SteelAtomic unit opened_invariants unobservable p (fun _ -> p)
+      (fun _ -> True)
+      (fun _ _ _ -> fact)
 
-val h_assert_atomic (#opened_invariants:_) (p:slprop)
+val sladmit (#a:Type)
+            (#opened:inames)
+            (#p:pre_t)
+            (#q:post_t a)
+            (_:unit)
+  : SteelAtomicF a opened unobservable p q (requires fun _ -> True) (ensures fun _ _ _ -> False)
+
+val slassert (#opened_invariants:_) (p:slprop)
   : SteelAtomicT unit opened_invariants unobservable p (fun _ -> p)
 
-val h_intro_emp_l (#opened_invariants:_) (p:slprop)
-  : SteelAtomicT unit opened_invariants unobservable p (fun _ -> emp `star` p)
+val intro_pure (#opened_invariants:_) (p:prop)
+  : SteelAtomic unit opened_invariants unobservable emp (fun _ -> pure p)
+                (requires fun _ -> p) (ensures fun _ _ _ -> True)
 
-val h_elim_emp_l (#opened_invariants:_) (p:slprop)
-  : SteelAtomicT unit opened_invariants unobservable (emp `star` p) (fun _ -> p)
-
-val intro_pure (#opened_invariants:_) (#p:slprop) (q:prop { q })
-  : SteelAtomicT unit opened_invariants unobservable p (fun _ -> p `star` pure q)
-
-val h_commute (#opened_invariants:_) (p q:slprop)
-  : SteelAtomicT unit opened_invariants unobservable (p `star` q) (fun _ -> q `star` p)
-
-val h_assoc_left (#opened_invariants:_) (p q r:slprop)
-  : SteelAtomicT unit opened_invariants unobservable ((p `star` q) `star` r) (fun _ -> p `star` (q `star` r))
-
-val h_assoc_right (#opened_invariants:_) (p q r:slprop)
-  : SteelAtomicT unit opened_invariants unobservable (p `star` (q `star` r)) (fun _ -> (p `star` q) `star` r)
-
-val intro_h_exists (#a:Type) (#opened_invariants:_) (x:a) (p:a -> slprop)
+val intro_exists (#a:Type) (#opened_invariants:_) (x:a) (p:a -> slprop)
   : SteelAtomicT unit opened_invariants unobservable (p x) (fun _ -> h_exists p)
 
-val intro_h_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p:a -> slprop)
+val intro_exists_erased (#a:Type) (#opened_invariants:_) (x:Ghost.erased a) (p:a -> slprop)
   : SteelAtomicT unit opened_invariants unobservable (p x) (fun _ -> h_exists p)
 
-val h_affine (#opened_invariants:_) (p q:slprop)
-  : SteelAtomicT unit opened_invariants unobservable (p `star` q) (fun _ -> p)
+val drop (#opened:inames) (p:slprop) : SteelAtomicT unit opened unobservable p (fun _ -> emp)
 
 (* Witnessing an existential *)
 val witness_h_exists (#a:Type) (#opened_invariants:_) (#p:a -> slprop) (_:unit)

@@ -20,6 +20,31 @@ module Steel.Effect
 
 #push-options "--fuel 0 --ifuel 1 --z3rlimit 20"
 
+module Sem = Steel.Semantics.Hoare.MST
+module Ins = Steel.Semantics.Instantiate
+
+open Steel.Semantics.Instantiate
+
+let interp_depends_only_on_post (#a:Type) (hp:a -> slprop)
+: Lemma
+  (forall (x:a).
+     (forall (m0:hmem (hp x)) (m1:mem{disjoint m0 m1}). interp (hp x) m0 <==> interp (hp x) (join m0 m1)))
+= let aux (x:a)
+    : Lemma
+      (forall (m0:hmem (hp x)) (m1:mem{disjoint m0 m1}). interp (hp x) m0 <==> interp (hp x) (join m0 m1))
+    = interp_depends_only_on (hp x) in
+  Classical.forall_intro aux
+
+let req_to_act_req (#pre:pre_t) (req:req_t pre) : Sem.l_pre #state pre =
+  interp_depends_only_on pre;
+  fun m -> interp pre m /\ req m
+
+let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post)
+: Sem.l_post #state #a pre post
+= interp_depends_only_on pre;
+  interp_depends_only_on_post post;
+  fun m0 x m1 -> interp pre m0 /\ interp (post x) m1 /\ ens m0 x m1
+
 let repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
   Sem.action_t #state #a pre post (req_to_act_req req) (ens_to_act_ens ens)
 
@@ -200,28 +225,20 @@ let action_as_repr (#a:Type) (#p:slprop) (#q:a -> slprop) (f:action_except a Set
   : repr a p q (fun _ -> True) (fun _ _ _ -> True)
   = Ins.state_correspondence Set.empty; f
 
+val add_action (#a:Type)
+               (#p:slprop)
+               (#q:a -> slprop)
+               (f:action_except a Set.empty p q)
+  : SteelT a p q
+
 let add_action f = Steel?.reflect (action_as_repr f)
 
-let change_slprop p q proof = add_action (Steel.Memory.change_slprop p q proof)
+val change_slprop (p q:slprop)
+                  (proof: (m:mem) -> Lemma (requires interp p m) (ensures interp q m))
+  : SteelT unit p (fun _ -> q)
 
-let rewrite_context #p #q _ =
-  assert (p `equiv` q);
-  SteelF?.reflect (action_as_repr (Steel.Memory.change_slprop p q (fun m -> ())))
-
-let extract_info0 (p:slprop) (fact:prop)
-  (l:(m:mem) -> Lemma (requires interp p m) (ensures fact))
-  : repr unit p (fun _ -> p)
-      (fun _ -> True)
-      (fun _ _ _ -> fact)
-  = fun frame ->
-      let m = nmst_get() in
-      l m
-
-let extract_info p fact l = Steel?.reflect (extract_info0 p fact l)
-
-let sladmit #a #p #q _ = SteelF?.reflect (fun _ -> NMST.nmst_admit ())
-
-let intro_pure p = change_slprop emp (pure p) (fun m -> pure_interp p m)
+let change_slprop p q proof =
+  Steel?.reflect (Steel.Memory.change_slprop #Set.empty p q proof)
 
 let read r v0 = Steel?.reflect (action_as_repr (sel_action FStar.Set.empty r v0))
 let write r v0 v1 = Steel?.reflect (action_as_repr (upd_action FStar.Set.empty r v0 v1))
@@ -246,61 +263,7 @@ let gather r v0 v1 = Steel?.reflect (action_as_repr (gather_action FStar.Set.emp
 let witness r fact v _ = Steel?.reflect (action_as_repr (Steel.Memory.witness FStar.Set.empty r fact v ()))
 let recall r v = Steel?.reflect (action_as_repr (Steel.Memory.recall FStar.Set.empty r v))
 
-let cond_aux (#a:Type) (b:bool) (p: (b':bool{b == b'}) -> slprop)
-             (q: bool -> a -> slprop)
-             ($then_:squash (b==true) -> Steel a (p b) (q b) (fun _ -> b==true) (fun _ _ _ -> True))
-             ($else_:squash (b==false) -> Steel a (p b) (q b) (fun _ -> b==false) (fun _ _ _ -> True))
-  : SteelT a (p b) (q b)
-  = if b then then_ () else else_ ()
-
-let aux1 (#a:Type) (b:bool{b == true})
-         (p: (b':bool{b == b'}) -> slprop)
-         (q: bool -> a -> slprop)
-         (then_: (squash (b==true) -> SteelT a (p true) (q true)))
-  : unit -> SteelT a (p b) (q b)
-  = fun _ ->
-      change_slprop (p b) (p true) (fun _ -> ());
-      let x = then_ () in change_slprop (q true x) (q b x) (fun _ -> ());
-      x
-
-let aux2 (#a:Type) (b:bool)
-         (p: (b':bool{b == b'}) -> slprop)
-         (q: bool -> a -> slprop)
-         (then_: (squash (b==true) -> SteelT a (p true) (q true)))
-  : squash (b==true) -> Steel a (p b) (q b) (fun _ -> b == true) (fun _ _ _ -> True)
-  = fun _ -> (aux1 b p q then_) ()
-
-let aux3 (#a:Type) (b:bool{b == false})
-         (p: (b':bool{b == b'}) -> slprop)
-         (q: bool -> a -> slprop)
-         (else_: (squash (b==false) -> SteelT a (p false) (q false)))
-  : squash (b==false) -> SteelT a (p b) (q b)
-  = fun _ ->
-      change_slprop (p b) (p false) (fun _ -> ());
-      let x = else_ () in change_slprop (q false x) (q b x) (fun _ -> ());
-      x
-
-let aux4 (#a:Type) (b:bool)
-         (p: (b':bool{b == b'}) -> slprop)
-         (q: bool -> a -> slprop)
-         (else_: (squash (b==false) -> SteelT a (p false) (q false)))
-  : squash (b==false) -> Steel a (p b) (q b) (fun _ -> b == false) (fun _ _ _ -> True)
-  = fun _ -> (aux3 b p q else_) ()
-
-let cond (#a:Type)
-         (b:bool)
-         (p: (b':bool{b == b'}) -> slprop)
-         (q: bool -> a -> slprop)
-         (then_: (squash (b == true) -> SteelT a (p true) (q true)))
-         (else_: (squash (b == false) -> SteelT a (p false) (q false)))
-  : SteelT a (p b) (q b)
-  = cond_aux b p q (aux2 b p q then_) (aux4 b p q else_)
-
-let drop p = change_slprop p emp (fun m -> emp_unit p; affine_star p emp m)
-
-let intro_exists #a x p = change_slprop (p x) (h_exists p) (fun m -> intro_h_exists x p m)
-
-let noop #p () = change_slprop p p (fun _ -> ())
+let noop () = change_slprop emp emp (fun _ -> ())
 
 let select_refine #a #p r x f = add_action (Steel.Memory.select_refine Set.empty r x f)
 

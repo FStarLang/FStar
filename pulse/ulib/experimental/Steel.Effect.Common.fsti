@@ -1,8 +1,6 @@
 module Steel.Effect.Common
 
 open Steel.Memory
-module Sem = Steel.Semantics.Hoare.MST
-open Steel.Semantics.Instantiate
 
 irreducible let framing_implicit : unit = ()
 irreducible let __reduce__ = ()
@@ -899,13 +897,23 @@ let normal_elim (x:Type0) : Lemma
   (ensures normal x)
   = ()
 
+exception Result of list atom * list atom * bool * list term
+
 let canon_l_r (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac unit =
   let m_unit = norm_term [iota; zeta; delta](`CM?.unit (`#m)) in
   let am = const m_unit in (* empty map *)
   let (r1_raw, ts, am) = reification eq m [] am lhs in
   let (r2_raw,  _, am) = reification eq m ts am rhs in
 
-  let l1_raw, l2_raw, emp_frame, uvar_terms = equivalent_lists (flatten r1_raw) (flatten r2_raw) am in
+// Encapsulating this in a try/with to avoid spawning uvars for smt_fallback
+  let l1_raw, l2_raw, emp_frame, uvar_terms =
+    try
+      let res = equivalent_lists (flatten r1_raw) (flatten r2_raw) am in
+      raise (Result res) with
+    | TacticFailure m -> fail m
+    | Result res -> res
+    | _ -> fail "uncaught exception in equivalent_lists"
+  in
 
   let am = convert_am am in
   let r1 = quote_exp r1_raw in
@@ -957,8 +965,7 @@ let canon_l_r (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac
            ) else (
              apply_lemma (`smt_reflexivity (`#eq))
            );
-           exact (`(FStar.Squash.return_squash (`#pr_bind)));
-           iter (fun x -> exact x) l
+           exact (`(FStar.Squash.return_squash (`#pr_bind)))
  )
 
 let canon_monoid (eq:term) (m:term) (pr:term) (pr_bind:term) : Tac unit =

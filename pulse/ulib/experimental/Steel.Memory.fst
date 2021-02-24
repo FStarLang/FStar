@@ -78,6 +78,17 @@ let interp p m = H.interp p m.heap
 
 let equiv p1 p2 = forall m. interp p1 m <==> interp p2 m
 
+let slprop_extensionality p q =
+  assert (forall m. interp p m <==> interp q m);
+  let aux (h:H.heap)
+    : Lemma (H.interp p h <==> H.interp q h)
+            [SMTPat (H.interp p h)]
+    = let m : mem = { ctr = 0; heap = h; locks = [] } in
+      assert (interp p m <==> interp q m)
+  in
+  assert (forall h. H.interp p h <==> H.interp q h);
+  Steel.Heap.slprop_extensionality p q
+
 let reveal_equiv p1 p2 = ()
 
 let ref = H.ref
