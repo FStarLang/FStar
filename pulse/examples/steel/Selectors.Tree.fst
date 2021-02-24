@@ -182,15 +182,19 @@ let rotate_left_right #a ptr =
 
   (get_right z_node)
 
-
 let rec is_balanced #a ptr =
-  let h = get #(linked_tree ptr) () in
+  if is_null_t ptr then (
+    elim_linked_tree_leaf ptr; true
+  ) else (
 
   let node = unpack_tree ptr in
   let lh = height (get_left node) in
   let rh = height (get_right node) in
-  
+
+  let lbal = is_balanced(get_left node) in
+  let rbal = is_balanced(get_right node) in
+
   pack_tree ptr (get_left node) (get_right node);
-  (((lh - rh) <= 1) && ((rh - lh) >= -1)) || (((rh - lh) <= 1) && ((lh - rh) >= -1))
+  (lbal && rbal) && ((rh - lh) >= -1 && (rh - lh) <= 1))
 
 #pop-options
