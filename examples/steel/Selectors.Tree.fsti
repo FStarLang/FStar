@@ -73,16 +73,16 @@ val is_balanced (#a: Type) (ptr: t a)
         v_linked_tree ptr h0 == v_linked_tree ptr h1 /\
         Spec.is_balanced (v_linked_tree ptr h0) == b))
 
-val rebalance_avl (#a: Type) {| d : Spec.ordered a |} (ptr: t a)
+val rebalance_avl (#a: Type) (cmp:Spec.cmp a) (ptr: t a)
     : SteelSel (t a) (linked_tree ptr) (fun ptr' -> linked_tree ptr')
-    (requires fun h0 -> Spec.is_bst(v_linked_tree ptr h0))
+    (requires fun h0 -> Spec.is_bst cmp (v_linked_tree ptr h0))
     (ensures fun h0 ptr' h1 ->
         Spec.rebalance_avl (v_linked_tree ptr h0) == v_linked_tree ptr' h1 /\
-        Spec.is_avl (v_linked_tree ptr' h1))
+        Spec.is_avl cmp (v_linked_tree ptr' h1))
 
-val insert_avl (#a: Type) {| d : Spec.ordered a |} (ptr: t a) (v: a)
+val insert_avl (#a: Type) (cmp:Spec.cmp a) (ptr: t a) (v: a)
     : SteelSel (t a) (linked_tree ptr) (fun ptr' -> linked_tree ptr')
-    (requires fun h0 -> Spec.is_avl(v_linked_tree ptr h0))
+    (requires fun h0 -> Spec.is_avl cmp (v_linked_tree ptr h0))
     (ensures fun h0 ptr' h1 ->
-        Spec.is_avl(v_linked_tree ptr h0) /\
-        Spec.insert_avl (v_linked_tree ptr h0) v == v_linked_tree ptr' h1)
+        Spec.is_avl cmp (v_linked_tree ptr h0) /\
+        Spec.insert_avl cmp (v_linked_tree ptr h0) v == v_linked_tree ptr' h1)
