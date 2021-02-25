@@ -12,7 +12,7 @@ module R = FStar.ReflexiveTransitiveClosure
 
 // Simplifying protocols for now
 let rec no_loop (p:dprot') = match p with
-  | Return _ -> False
+  | Return #a _ -> a == unit
   | Msg _ a k -> (forall x. no_loop (k x))
   | DoWhile _ _ -> False
 
@@ -20,6 +20,7 @@ let dprot = p:dprot'{no_loop p}
 
 let is_send (p:dprot) = Msg? p && (Send? (Msg?._0 p))
 let is_recv (p:dprot) = Msg? p && (Recv? (Msg?._0 p))
+let is_fin (p:dprot) = Return? p
 
 let empty_trace (p:dprot) : trace p p = Waiting p
 
@@ -47,6 +48,8 @@ type t (p:dprot) : Type u#1 =
  | A_R : q:dprot {is_recv q} -> trace p q -> t p
  | B_R : q:dprot {is_send q} -> trace p q -> t p
  | B_W : q:dprot {is_recv q} -> trace p q -> t p
+ | A_Fin : trace p (Return ()) -> t p
+ | B_Fin : trace p (Return ()) -> t p
  | Nil
 
 let ahead (tag:party) (#p:dprot) (q q':dprot) (s:trace p q) (s':trace p q') : prop
@@ -64,24 +67,52 @@ let composable #p : symrel (t p) = fun t0 t1 ->
     match t0, t1 with
     | _, Nil
     | Nil, _ -> True
+
+    (* both sides are finished and they agree on the trace *)
+    | A_Fin s, B_Fin s'
+    | B_Fin s, A_Fin s' -> s == s'
+
+    (* A is finished, B still has to read *)
+    | A_Fin s, B_R q' s'
+    | B_R q' s', A_Fin s -> ahead A (Return ()) q' s s'
+
+    (* B is finished, A still has to read *)
+    | A_R q' s', B_Fin s
+    | B_Fin s, A_R q' s' -> ahead B (Return ()) q' s s'
+
+    (* A is writing, B is reading: A is ahead *)
     | A_W q s, B_R q' s'
     | B_R q' s', A_W q s -> ahead A q q' s s'
+
+    (* B is writing, A is reading: B is ahead *)
     | B_W q s, A_R q' s'
     | A_R q' s', B_W q s -> ahead B q q' s s'
+
+    (* Both are in a reading state, either one could be ahead *)
     | A_R q s, B_R q' s'
     | B_R q' s', A_R q s -> ahead A q q' s s' \/ ahead B q' q s' s
+
     | _, _ -> False
 
 let compose (#p:dprot) (s0:t p) (s1:t p{composable s0 s1}) =
   match s0, s1 with
   | a, Nil | Nil, a -> a
+
+  | A_Fin s, _
+  | _, A_Fin s
+  | B_Fin s, _
+  | _, B_Fin s -> V ({to = Return (); tr=s })
+
   | A_W q s, B_R q' s'
   | B_R q' s', A_W q s
   | B_W q s, A_R q' s'
   | A_R q' s', B_W q s -> V ({to = q; tr = s})
+
   | A_R q s, B_R q' s'
   | B_R q' s', A_R q s ->
-      if trace_length s >= trace_length s' then V ({to = q; tr = s}) else V ({to = q'; tr = s' })
+      if trace_length s >= trace_length s'
+      then V ({to = q; tr = s})
+      else V ({to = q'; tr = s' })
 
 let p' (p:dprot) : pcm' (t p) = { composable = composable; op = compose; one = Nil }
 
@@ -129,10 +160,19 @@ val pts_to (#p:dprot) (r:chan p) (v:t p) : slprop u#1
 let pts_to r v = Mem.pts_to r v
 
 let endpoint_a (#p:dprot) (c:chan p) (next:dprot) (tr:trace p next) =
-  pts_to c (if is_send next then A_W next tr else A_R next tr)
+  pts_to c (if is_send next
+            then A_W next tr
+            else if is_recv next
+            then A_R next tr
+            else A_Fin tr)
 
 let endpoint_b (#p:dprot) (c:chan p) (next:dprot) (tr:trace p next) =
-  pts_to c (if is_send next then B_R next tr else B_W next tr)
+  pts_to c (if is_send next
+            then B_R next tr
+            else if is_recv next
+            then B_W next tr
+            else B_Fin tr)
+
 
 let frame_compatible (#p:dprot) (x:t p) (v y:t p) =
   (forall (frame:t p). {:pattern (composable x frame)}
@@ -294,15 +334,15 @@ let compatible_a_r_v_is_ahead
   =  let aux (frame:t p) : Lemma
         (requires composable (A_R q tr) frame /\ compose frame (A_R q tr) == V tr')
         (ensures ahead B tr'.to q tr'.tr tr)
-        = assert (B_R? frame \/ B_W? frame);
+        = assert (B_R? frame \/ B_W? frame \/ B_Fin? frame);
           if B_W? frame then ()
-          else (
+          else if B_R? frame then (
             let q' = B_R?.q frame in
             let tr' = B_R?._1 frame in
             if trace_length tr' >= trace_length tr then
               Classical.move_requires (lemma_ahead_is_longer A q tr q') tr'
             else ahead_refl B q tr
-         )
+         ) else ()
     in
     Classical.forall_intro (Classical.move_requires aux)
 
@@ -333,9 +373,9 @@ let compatible_b_r_v_is_ahead
   = let aux (frame:t p) : Lemma
         (requires composable (B_R q tr) frame /\ compose frame (B_R q tr) == V tr')
         (ensures ahead A tr'.to q tr'.tr tr)
-        = assert (A_R? frame \/ A_W? frame);
+        = assert (A_R? frame \/ A_W? frame \/ A_Fin? frame);
           if A_W? frame then ()
-          else (
+          else if A_R? frame then (
             let q_a = A_R?.q frame in
             let tr_a = A_R?._1 frame in
             if trace_length tr_a > trace_length tr then (
@@ -349,7 +389,7 @@ let compatible_b_r_v_is_ahead
                 assert (q == q_a /\ tr == tr_a);
                 ahead_refl A q tr
               )
-         )
+         ) else ()
     in
     Classical.forall_intro (Classical.move_requires aux)
 
@@ -361,7 +401,11 @@ let extend_node_a_r (#p:dprot) (#q:dprot{more q /\ is_recv q}) (tr:trace p q)
     let x = next_message tr tr'.tr in
     let q' = step q x in
     let tr' = extend tr x in
-    if is_send q' then A_W q' tr' else A_R q' tr'
+    if is_send q'
+    then A_W q' tr'
+    else if is_recv q'
+    then A_R q' tr'
+    else A_Fin tr'
 
 let extend_node_b_r (#p:dprot) (#q:dprot{more q /\ is_send q}) (tr:trace p q)
   (tr':partial_trace_of p{trace_length tr'.tr > trace_length tr /\
@@ -371,7 +415,11 @@ let extend_node_b_r (#p:dprot) (#q:dprot{more q /\ is_send q}) (tr:trace p q)
     let x = next_message tr tr'.tr in
     let q' = step q x in
     let tr' = extend tr x in
-    if is_send q' then B_R q' tr' else B_W q' tr'
+    if is_send q'
+    then B_R q' tr'
+    else if is_recv q'
+    then B_W q' tr'
+    else B_Fin tr'
 
 
 let lemma_compatible_a_greater_length (#p:dprot) (q:dprot{is_recv q}) (tr:trace p q) (tr':partial_trace_of p)
@@ -439,6 +487,7 @@ let lemma_same_length_ahead_implies_eq (#p:dprot) (tr tr':partial_trace_of p)
           | Message _ _ _ tail -> aux tail (Message?._3 tr2)
     in aux tr.tr tr'.tr
 
+#push-options "--z3rlimit_factor 4 --query_stats --max_ifuel 1 --max_fuel 1"
 let frame_compatible_a_extend (#p:dprot)
   (q:dprot{is_recv q /\ more q}) (tr:trace p q)
   (tr':partial_trace_of p)
@@ -451,13 +500,12 @@ let frame_compatible_a_extend (#p:dprot)
     let aux (frame:t p)
       : Lemma (requires composable x frame /\ v == compose x frame)
               (ensures composable y frame /\ v == compose y frame)
-      = assert (B_R? frame \/ B_W? frame);
+      = assert (B_R? frame \/ B_W? frame \/ B_Fin? frame);
         if B_W? frame then (
-          next_message_closure B p_tr tr'
           // The PCM gives us here that y has to be A_R, it cannot be A_W
           // because then there would be a B read in the trace ahead of x
-
-        ) else (
+          next_message_closure B p_tr tr'
+        ) else if B_R? frame then (
           let q_b = B_R?.q frame in
           let tr_b = B_R?._1 frame in
           assert (tr' == {to = q_b; tr = tr_b});
@@ -474,6 +522,12 @@ let frame_compatible_a_extend (#p:dprot)
             lemma_ahead_implies_trace_prefix B tr_a tr_b;
             Classical.move_requires (lemma_same_length_ahead_implies_eq ({to = q_a; tr = tr_a})) tr'
           )
+        ) else (
+          next_message_closure B p_tr tr';
+          let B_Fin tr_b = frame in
+          assert (tr_b == tr'.tr);
+          assert (composable y frame);
+          assert (v == compose y frame)
         )
     in Classical.forall_intro (Classical.move_requires aux)
 
@@ -489,13 +543,13 @@ let frame_compatible_b_extend (#p:dprot)
     let aux (frame:t p)
       : Lemma (requires composable x frame /\ v == compose x frame)
               (ensures composable y frame /\ v == compose y frame)
-      = assert (A_R? frame \/ A_W? frame);
+      = assert (A_R? frame \/ A_W? frame \/ A_Fin? frame);
         if A_W? frame then (
           next_message_closure A p_tr tr'
           // The PCM gives us here that y has to be B_R, it cannot be B_W
           // because then there would be a A read in the trace ahead of x
 
-        ) else (
+        ) else if A_R? frame then (
           let q_a = A_R?.q frame in
           let tr_a = A_R?._1 frame in
           assert (tr' == {to = q_a; tr = tr_a});
@@ -512,6 +566,8 @@ let frame_compatible_b_extend (#p:dprot)
             lemma_ahead_implies_trace_prefix A tr_b tr_a;
             Classical.move_requires (lemma_same_length_ahead_implies_eq ({to = q_b; tr = tr_b})) tr'
           )
+        ) else (
+               next_message_closure A p_tr tr'
         )
     in Classical.forall_intro (Classical.move_requires aux)
 
@@ -585,17 +641,26 @@ val upd_gen_action (#p:dprot)
 let upd_gen_action #p r x y f = upd_gen r x y f
 
 #push-options "--z3rlimit 20"
+#restart-solver
 let write_a_f_aux
   (#p:dprot)
   (#next:dprot{more next /\ tag_of next = Send})
   (tr:trace p next)
   (x:msg_t next)
   : FStar.PCM.frame_preserving_upd_0 (pcm p) (A_W next tr)
-    (if is_send (step next x) then
-        A_W (step next x) (extend tr x) else A_R (step next x) (extend tr x))
+    (if is_send (step next x)
+     then A_W (step next x) (extend tr x)
+     else if is_recv (step next x)
+     then A_R (step next x) (extend tr x)
+     else A_Fin (extend tr x))
   = fun (v:t p{compatible (pcm p) (A_W next tr) v}) ->
-    let post = if is_send (step next x) then
-        A_W (step next x) (extend tr x) else A_R (step next x) (extend tr x) in
+    let post =
+      if is_send (step next x)
+      then A_W (step next x) (extend tr x)
+      else if is_recv (step next x)
+      then A_R (step next x) (extend tr x)
+      else A_Fin (extend tr x)
+    in
     match v with
     | A_W n tr' ->
         assert (n == next /\ tr' == tr);
@@ -608,9 +673,14 @@ let write_a_f_aux
           = if is_send (step next x) then (
               assert (composable post (B_R next tr));
               assert (compose (B_R next tr) post == res)
-            ) else (
+            ) else if is_recv (step next x) then (
               assert (composable post (B_W (step next x) (extend tr x)));
               assert (compose (B_W (step next x) (extend tr x)) post == res)
+            ) else (
+              assert (is_fin (step next x));
+              assert (post == A_Fin (extend tr x));
+              assert (composable post (B_R next tr));
+              assert (compose (B_R next tr) post == res)
             )
         in aux ();
         res
@@ -621,11 +691,19 @@ let write_b_f_aux
   (tr:trace p next)
   (x:msg_t next)
   : FStar.PCM.frame_preserving_upd_0 (pcm p) (B_W next tr)
-    (if is_send (step next x) then
-        B_R (step next x) (extend tr x) else B_W (step next x) (extend tr x))
+    (if is_send (step next x)
+     then B_R (step next x) (extend tr x)
+     else if is_recv (step next x)
+     then B_W (step next x) (extend tr x)
+     else B_Fin (extend tr x))
   = fun (v:t p{compatible (pcm p) (B_W next tr) v}) ->
-    let post = if is_send (step next x) then
-        B_R (step next x) (extend tr x) else B_W (step next x) (extend tr x) in
+    let post =
+      if is_send (step next x)
+      then B_R (step next x) (extend tr x)
+      else if is_recv (step next x)
+      then B_W (step next x) (extend tr x)
+      else B_Fin (extend tr x)
+    in
     match v with
     | B_W n tr' ->
         assert (n == next /\ tr' == tr);
@@ -638,7 +716,12 @@ let write_b_f_aux
           = if is_send (step next x) then (
               assert (composable post (A_W (step next x) (extend tr x)));
               assert (compose (A_W (step next x) (extend tr x)) post == res)
+            ) else if is_recv (step next x) then (
+              assert (composable post (A_R next tr));
+              assert (compose (A_R next tr) post == res)
             ) else (
+              assert (is_fin (step next x));
+              assert (post == B_Fin (extend tr x));
               assert (composable post (A_R next tr));
               assert (compose (A_R next tr) post == res)
             )
@@ -754,8 +837,11 @@ let write_a_f
   (tr:trace p next)
   (x:msg_t next)
   : FStar.PCM.frame_preserving_upd (pcm p) (A_W next tr)
-    (if is_send (step next x) then
-        A_W (step next x) (extend tr x) else A_R (step next x) (extend tr x))
+    (if is_send (step next x)
+     then A_W (step next x) (extend tr x)
+     else if is_recv (step next x)
+     then A_R (step next x) (extend tr x)
+     else A_Fin (extend tr x))
   = Classical.forall_intro_2 (Classical.move_requires_2 (write_a_f_lemma #p #next tr x));
     write_a_f_aux #p #next tr x
 
@@ -765,8 +851,11 @@ let write_b_f
   (tr:trace p next)
   (x:msg_t next)
   : FStar.PCM.frame_preserving_upd (pcm p) (B_W next tr)
-    (if is_send (step next x) then
-        B_R (step next x) (extend tr x) else B_W (step next x) (extend tr x))
+    (if is_send (step next x)
+     then B_R (step next x) (extend tr x)
+     else if is_recv (step next x)
+     then B_W (step next x) (extend tr x)
+     else B_Fin (extend tr x))
   = Classical.forall_intro_2 (Classical.move_requires_2 (write_b_f_lemma #p #next tr x));
     write_b_f_aux #p #next tr x
 
@@ -778,15 +867,17 @@ let write_a
   (x:msg_t next)
   :SteelT unit (pts_to r (A_W next tr)) (fun _ -> endpoint_a r (step next x) (extend tr x))
   = change_slprop (pts_to r (A_W next tr)) (pts_to r (reveal (hide (A_W next tr)))) (fun _ -> ());
-    upd_gen_action r (hide (A_W next tr))
-                     (hide (if is_send (step next x) then
-                             A_W (step next x) (extend tr x)
-                            else A_R (step next x) (extend tr x)))
-                     (write_a_f tr x);
-    change_slprop (pts_to r (reveal (hide (if is_send (step next x) then
-                             A_W (step next x) (extend tr x)
-                            else A_R (step next x) (extend tr x)))))
-      (endpoint_a r (step next x) (extend tr x)) (fun _ -> ())
+    let v = hide (
+      if is_send (step next x)
+      then A_W (step next x) (extend tr x)
+      else if is_recv (step next x)
+      then A_R (step next x) (extend tr x)
+      else A_Fin (extend tr x)
+    ) in
+    upd_gen_action r (hide (A_W next tr)) v (write_a_f tr x);
+    change_slprop (pts_to r (reveal v))
+                  (endpoint_a r (step next x) (extend tr x))
+                  (fun _ -> ())
 
 let write_b
   (#p:dprot)
@@ -796,15 +887,16 @@ let write_b
   (x:msg_t next)
   :SteelT unit (pts_to r (B_W next tr)) (fun _ -> endpoint_b r (step next x) (extend tr x))
   = change_slprop (pts_to r (B_W next tr)) (pts_to r (reveal (hide (B_W next tr)))) (fun _ -> ());
-    upd_gen_action r (hide (B_W next tr))
-                     (hide (if is_send (step next x) then
-                             B_R (step next x) (extend tr x)
-                            else B_W (step next x) (extend tr x)))
-                     (write_b_f tr x);
-    change_slprop (pts_to r (reveal (hide (if is_send (step next x) then
-                             B_R (step next x) (extend tr x)
-                            else B_W (step next x) (extend tr x)))))
-      (endpoint_b r (step next x) (extend tr x)) (fun _ -> ())
+    let v = hide (
+      if is_send (step next x)
+      then B_R (step next x) (extend tr x)
+      else if is_recv (step next x)
+      then B_W (step next x) (extend tr x)
+      else B_Fin (extend tr x)
+    ) in
+    upd_gen_action r (hide (B_W next tr)) v (write_b_f tr x);
+    change_slprop (pts_to r (reveal v))
+                  (endpoint_b r (step next x) (extend tr x)) (fun _ -> ())
 
 val alloc (#p:dprot) (x:t p{compatible (pcm p) x x /\ refine x})
   : Steel (chan p) emp (fun r -> pts_to r x) (fun _ -> squash (compatible (pcm p) x x)) (fun _ _ _ -> True)
@@ -836,8 +928,16 @@ let new_chan p =
   lem v;
   let r = alloc v in
   split r v
-    (if is_send p then A_W p (empty_trace p) else A_R p (empty_trace p))
-    (if is_send p then B_R p (empty_trace p) else B_W p (empty_trace p))
+    (if is_send p
+     then A_W p (empty_trace p)
+     else if is_recv p
+     then A_R p (empty_trace p)
+     else A_Fin (empty_trace p))
+    (if is_send p
+     then B_R p (empty_trace p)
+     else if is_recv p
+     then B_W p (empty_trace p)
+     else B_Fin (empty_trace p))
     (ahead_refl A p (empty_trace p)) ();
   r
 
@@ -926,3 +1026,9 @@ let rec recv_b #p c next tr =
         (fun _ -> ());
       x
   )
+
+module Protocol = Steel.Channel.Protocol
+let ping_pong : dprot =
+  x <-- Protocol.send int;
+  y <-- Protocol.recv (y:int{y > x});
+  Protocol.done
