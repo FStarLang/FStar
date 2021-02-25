@@ -16,16 +16,34 @@ let half = half_perm full
 let fst x = fst x
 let snd x = snd x
 
-#push-options "--__temp_no_proj TwoLockQueue"
+open FStar.Ghost
+let witness_h_exists' (#a:Type) (#opened_invariants:_) (#p:Ghost.erased a -> slprop) (_:unit)
+  : SteelAtomicT (Ghost.erased a) opened_invariants unobservable
+                 (h_exists p) p
+  = let v : erased (erased a)  = witness_h_exists () in
+    reveal v
+
+[@@__reduce__]
+let lock_inv #a (ptr:ref (Q.t a)) (ghost:ghost_ref (Q.t a)) =
+    h_exists (fun (v:FStar.Ghost.erased (Q.t a)) ->
+                    pts_to ptr full v `star`
+                    ghost_pts_to ghost half v)
+
+let intro_lock_inv #a #u (ptr:ref (Q.t a)) (ghost:ghost_ref (Q.t a))
+  : SteelAtomicT unit u unobservable
+    (h_exists (fun (v:FStar.Ghost.erased (Q.t a)) ->
+                    pts_to ptr full v `star`
+                    ghost_pts_to ghost half v))
+    (fun _ -> lock_inv ptr ghost)
+  = rewrite_context()
+
 noeq
 type q_ptr (a:Type) = {
   ptr : ref (Q.t a);
   ghost: ghost_ref (Q.t a);
-  lock: lock (h_exists (fun (v:FStar.Ghost.erased (Q.t a)) ->
-                    pts_to ptr full v `star`
-                    ghost_pts_to ghost half v));
+  lock: lock (lock_inv ptr ghost);
 }
-#pop-options
+
 open FStar.Ghost
 [@@__reduce__]
 let queue_invariant (#a:_) (head tail:q_ptr a) =
@@ -95,15 +113,14 @@ let enqueue_core (#a:_) (#u:_) (#x:Q.cell a{x.Q.next==null}) (hdl:t a) (tl:Q.t a
     (fun _ -> queue_invariant hdl.head hdl.tail `star`
            ghost_pts_to hdl.tail.ghost half node)
   = let open FStar.Ghost in
-    let ht' : erased (erased (Q.t a & Q.t a)) = witness_h_exists () in
-    let ht : erased (Q.t a & Q.t a) = reveal ht' in
+    let ht : erased (Q.t a & Q.t a) = witness_h_exists' () in
     ghost_gather #_ #_ #half #half #tl #_ hdl.tail.ghost;
     change_slprop (ghost_pts_to hdl.tail.ghost _ _)
                   (ghost_pts_to hdl.tail.ghost full_perm (hide tl))
                   (fun _ -> ());
     change_slprop
-        (Q.queue (hide (fst (reveal (reveal ht'))))
-                 (hide (snd (reveal (reveal ht')))))
+        (Q.queue (hide (fst (reveal ht)))
+                 (hide (snd (reveal ht))))
         (Q.queue (hide (fst (reveal ht)))
                  (hide tl))
         (fun _ -> ());
@@ -112,7 +129,7 @@ let enqueue_core (#a:_) (#u:_) (#x:Q.cell a{x.Q.next==null}) (hdl:t a) (tl:Q.t a
     ghost_share hdl.tail.ghost;
     let w = hide (fst (reveal ht), node) in
     change_slprop (Q.queue (hide (fst (reveal ht))) (hide node) `star`
-                   ghost_pts_to hdl.head.ghost (half_perm full_perm) (hide (fst (reveal (reveal ht')))) `star`
+                   ghost_pts_to hdl.head.ghost (half_perm full_perm) (hide (fst (reveal ht))) `star`
                    ghost_pts_to hdl.tail.ghost (half_perm full_perm) (Ghost.hide node))
                   (Q.queue (hide (fst (reveal w))) (hide (snd (reveal w))) `star`
                    ghost_pts_to hdl.head.ghost half (hide (fst (reveal w))) `star`
@@ -126,16 +143,7 @@ let enqueue_core (#a:_) (#u:_) (#x:Q.cell a{x.Q.next==null}) (hdl:t a) (tl:Q.t a
 let enqueue (#a:_) (hdl:t a) (x:a)
   : SteelT unit emp (fun _ -> emp)
   = Steel.SpinLock.acquire hdl.tail.lock;
-    let vv : erased (erased (Q.t a)) = witness_h_exists () in
-    let v = reveal vv in
-    change_slprop
-      (pts_to hdl.tail.ptr full (Ghost.reveal vv))
-      (pts_to hdl.tail.ptr full v)
-      (fun _ -> ());
-    change_slprop
-      (ghost_pts_to hdl.tail.ghost half (Ghost.reveal vv))
-      (ghost_pts_to hdl.tail.ghost half v)
-      (fun _ -> ());
+    let v : erased (Q.t a) = witness_h_exists' () in
     let tl = read hdl.tail.ptr in
     change_slprop
       (ghost_pts_to hdl.tail.ghost half v)
@@ -152,3 +160,106 @@ let enqueue (#a:_) (hdl:t a) (x:a)
     Steel.Effect.Atomic.intro_exists (Ghost.hide node) (fun n -> pts_to hdl.tail.ptr full_perm n `star`
                                                               ghost_pts_to hdl.tail.ghost half n);
     Steel.SpinLock.release hdl.tail.lock
+
+let maybe_ghost_pts_to #a (x:ghost_ref (Q.t a)) (hd:Q.t a) (o:option (Q.t a)) =
+  match o with
+  | None -> ghost_pts_to x half hd
+  | Some next -> ghost_pts_to x half next `star` (h_exists (pts_to hd full_perm))
+
+let change_slprop' #u (p q:slprop) (_:squash (p == q))
+  : SteelAtomicT unit u unobservable p (fun _ -> q)
+  = rewrite_context()
+
+
+let elim_pure (#p:prop) #u ()
+  : SteelAtomic unit u unobservable
+                (pure p) (fun _ -> emp)
+                (requires fun _ -> True)
+                (ensures fun _ _ _ -> p)
+  = let _ = Steel.Effect.Atomic.elim_pure p in ()
+
+module T = FStar.Tactics
+let dequeue_core (#a:_) (#u:_) (hdl:t a) (hd:Q.t a) (_:unit)
+  : SteelAtomicT (option (Q.t a)) u observable
+    (queue_invariant hdl.head hdl.tail `star`
+     ghost_pts_to hdl.head.ghost half hd)
+    (fun o ->
+      queue_invariant hdl.head hdl.tail `star`
+      maybe_ghost_pts_to hdl.head.ghost hd o)
+  = let ht = witness_h_exists' () in
+    ghost_gather #_ #_ #half #half #hd #_ hdl.head.ghost;
+    change_slprop (ghost_pts_to hdl.head.ghost _ _)
+                  (ghost_pts_to hdl.head.ghost full_perm (hide hd))
+                  (fun _ -> ());
+    let tl = (hide (snd (reveal ht))) in
+    change_slprop
+        (Q.queue (hide (fst (reveal ht)))
+                 (hide (snd (reveal ht))))
+        (Q.queue (hide hd) tl)
+        (fun _ -> ());
+    change_slprop
+        (ghost_pts_to hdl.tail.ghost (half_perm full_perm) _)
+        (ghost_pts_to hdl.tail.ghost (half_perm full_perm) tl)
+        (fun _ -> ());
+    let o = Queue.dequeue #_ #_ #tl hd in
+    match o with
+    | None ->
+      change_slprop (Q.dequeue_post _ _ _)
+                    (Q.queue (hide hd) tl)
+                    (fun _ -> ());
+      ghost_share hdl.head.ghost;
+      pack_queue_invariant _ _ hdl.head hdl.tail;
+      change_slprop (ghost_pts_to hdl.head.ghost _ _)
+                    (maybe_ghost_pts_to hdl.head.ghost hd o)
+                    (fun _ -> ());
+      o
+
+    | Some p ->
+      change_slprop (Q.dequeue_post _ _ _)
+                    (Q.dequeue_post_success tl hd p)
+                    (fun _ -> ());
+      let c = witness_h_exists' () in
+      slassert (pts_to hd full_perm c `star` pure (Ghost.reveal p == c.Q.next) `star` Q.queue p tl);
+      elim_pure ();
+      intro_exists c (pts_to hd full_perm);
+      ghost_write hdl.head.ghost p;
+      ghost_share hdl.head.ghost;
+      pack_queue_invariant _ _ hdl.head hdl.tail;
+      slassert (ghost_pts_to hdl.head.ghost _ _ `star` h_exists (pts_to hd full_perm));
+      change_slprop (ghost_pts_to hdl.head.ghost _ _ `star` h_exists (pts_to hd full_perm))
+                    (maybe_ghost_pts_to hdl.head.ghost hd o)
+                    (fun _ -> ());
+      o
+
+let dequeue (#a:_) (hdl:t a)
+  : SteelT (option a) emp (fun _ -> emp)
+  = Steel.SpinLock.acquire hdl.head.lock;
+    let v : erased (Q.t a) = witness_h_exists' () in
+    let hd = read hdl.head.ptr in
+    change_slprop
+      (ghost_pts_to hdl.head.ghost half v)
+      (ghost_pts_to hdl.head.ghost half hd)
+      (fun _ -> ());
+    let o = with_invariant #_ #_ #_ #Set.empty #_ #_ hdl.inv (dequeue_core hdl hd) in
+    match o with
+    | None ->
+      change_slprop (maybe_ghost_pts_to hdl.head.ghost hd o)
+                    (ghost_pts_to hdl.head.ghost half hd)
+                    (fun _ -> ());
+      intro_exists (Ghost.hide hd) (fun (v:erased (Q.t a)) -> pts_to hdl.head.ptr full v `star` ghost_pts_to hdl.head.ghost half v);
+      Steel.SpinLock.release hdl.head.lock;
+      None
+
+    | Some next ->
+      change_slprop (maybe_ghost_pts_to hdl.head.ghost hd o)
+                    (ghost_pts_to hdl.head.ghost half next `star`
+                     h_exists (pts_to hd full_perm))
+                    (fun _ -> ());
+      let c = witness_h_exists' () in
+      write hdl.head.ptr next;
+      intro_exists (Ghost.hide next) (fun (v:erased (Q.t a)) -> pts_to hdl.head.ptr full v `star` ghost_pts_to hdl.head.ghost half v);
+      Steel.SpinLock.release hdl.head.lock;
+      let c = read hd in
+      let v = c.Q.data in
+      free hd;
+      Some v
