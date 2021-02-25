@@ -16,7 +16,7 @@ type cell (a:Type0) = {
 and t a = ref (cell a)
 #pop-options
 
-let pts_to (#a:_) (x:t a) (v: cell a) = pts_to x full_perm v
+let pts_to (#a:_) (x:t a) (v: Ghost.erased (cell a)) = pts_to x full_perm v
 
 val queue_l (#a:_) (hd tl:Ghost.erased (t a)) (l:Ghost.erased (list a))
   : slprop u#1
@@ -44,7 +44,7 @@ assume atomic field update primitive:
  let c = read tl in
  wriet (c.next) = last
 *)
-val enqueue (#a:_) (#u:_) (#hd:Ghost.erased (t a)) (tl:t a) (#v:_) (last:t a)
+val enqueue (#a:_) (#u:_) (#hd:Ghost.erased (t a)) (tl:t a) (#v:Ghost.erased (cell a)) (last:t a)
   : SteelAtomic unit u observable
                 (queue hd tl `star` pts_to last v)
                 (fun _ -> queue hd last)
@@ -62,12 +62,18 @@ assume atomic field update primitive:
                             (pts_to x {v with next = nxt})
 
 *)
+[@@__reduce__]
+let dequeue_post_success (#a:_) (tl:Ghost.erased (t a)) (hd:t a) (p:t a) =
+      h_exists (fun (c:Ghost.erased (cell a)) -> pts_to hd c `star` pure (Ghost.reveal p == c.next) `star` queue p tl)
+
+let dequeue_post (#a:_) (tl:Ghost.erased (t a)) (hd:t a) (res:option (t a)) =
+    match res with
+    | None ->
+      queue hd tl
+    | Some p ->
+      dequeue_post_success tl hd p
+
 val dequeue (#a:_) (#u:_) (#tl:Ghost.erased (t a)) (hd:t a)
   : SteelAtomicT (option (t a)) u observable
                  (queue hd tl)
-                 (fun res ->
-                   match res with
-                   | None ->
-                     queue hd tl
-                   | Some p ->
-                     h_exists (fun c -> pts_to hd c `star` pure (p == c.next) `star` queue p tl))
+                 (dequeue_post tl hd)
