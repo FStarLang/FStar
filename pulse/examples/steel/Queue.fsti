@@ -26,6 +26,24 @@ let queue (#a:_) (hd:Ghost.erased (t a)) (tl:Ghost.erased (t a)) = h_exists (que
 val new_queue (#a:_) (v:a) :
   SteelT (t a) emp (fun x -> queue x x)
 
+(*
+   tl -> { data; next=Null }
+
+---
+
+assume atomic field update primitive:
+   set_next #v (x:t a) (nxt:t a)
+     : SteelAtomic unit _ _ (pts_to x v)
+                            (pts_to x {v with next = nxt})
+
+
+
+
+
+
+ let c = read tl in
+ wriet (c.next) = last
+*)
 val enqueue (#a:_) (#u:_) (#hd:Ghost.erased (t a)) (tl:t a) (#v:_) (last:t a)
   : SteelAtomic unit u observable
                 (queue hd tl `star` pts_to last v)
