@@ -246,7 +246,9 @@ let rec dlist_snoc_snoc_alt (#a:Type) #u (left:t a)
           (decreases (List.length xs))
   = match xs with
     | [] ->
-      change_slprop (dlist_snoc left last cur right _)
+      //NS: replace the _ below with [x] and the tactic fails with a
+      //    an incorrect use of trefl
+      change_slprop (dlist_snoc left last cur right _ (* [x] *))
                     (pure (next x == right) `star`
                      pts_to cur x `star`
                      dlist_snoc left last (prev x) cur [])
@@ -289,8 +291,36 @@ let rec dlist_snoc_snoc_alt_back (#a:Type) #u (left:t a)
            pts_to last x `star`
            dlist_snoc last (next x) cur right xs)
           (fun _ -> dlist_snoc left last cur right (List.snoc (xs, x)))
-  = sladmit(); ()
-
+          (decreases (List.length xs))
+  = match xs with
+    | [] ->
+      elim_pure();
+      change_slprop (dlist_snoc _ _ _ _ _)
+                    (pure (next x == right /\ cur == last))
+                    (fun _ -> ());
+      elim_pure();
+      change_slprop (pts_to last x)
+                    (pts_to cur x)
+                    (fun _ -> ());
+      intro_pure (next x == right);
+      intro_pure (last == cur /\ prev x == left);
+      change_slprop (pure (next x == right) `star`
+                     pts_to cur x `star`
+                     dlist_snoc left last (prev x) cur [])
+                    (dlist_snoc left last cur right (List.snoc (xs, x)))
+                    (fun _ -> ())
+    | hd::xs' ->
+      change_slprop (dlist_snoc last (next x) cur right _)
+                    (pure (next hd == right) `star`
+                     pts_to cur hd `star`
+                     dlist_snoc last (next x) (prev hd) cur xs')
+                    (fun _ -> ());
+      dlist_snoc_snoc_alt_back left last (prev hd) cur xs' x;
+      change_slprop (pure (next hd == right) `star`
+                     pts_to cur hd `star`
+                     dlist_snoc left last (prev hd) cur _)
+                    (dlist_snoc left last cur right _)
+                    (fun _ -> ())
 
 let unfold_dlist_cons_cons (#a:Type) #u (left :t a)
                                         (head  :t a)
