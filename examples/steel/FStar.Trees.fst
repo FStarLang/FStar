@@ -488,7 +488,7 @@ let rebalance_avl_proof (#a: Type) (cmp:cmp a) (x: tree a)
 
 (** Insertion **)
 
-let rec insert_avl (#a: Type) (cmp:cmp a) (x: avl a cmp) (key: a) : tree a =
+let rec insert_avl (#a: Type) (cmp:cmp a) (x: tree a) (key: a) : tree a =
   match x with
   | Leaf -> Node key Leaf Leaf
   | Node data left right ->
