@@ -6,7 +6,7 @@ open Steel.SelEffect
 
 module Spec = FStar.Trees
 
-#set-options "--fuel 1 --ifuel 1 --z3rlimit 30"
+#set-options "--fuel 1 --ifuel 1 --z3rlimit 50"
 
 let rec append_left #a ptr v =
   if is_null_t ptr then (
@@ -200,36 +200,40 @@ let rec is_balanced #a ptr =
 let rebalance_avl #a cmp ptr =
   let h = get () in
 
-  assert(Spec.is_bst cmp (v_linked_tree ptr h));
-  noop();
-
   if is_balanced ptr then (
     noop();
     ptr
   ) else (
 
+    node_is_not_null ptr;
     let node = unpack_tree ptr in
 
     let lh = height (get_left node) in
     let rh = height (get_right node) in
 
     if (lh - rh) > 1 then (
-
+  
+      node_is_not_null (get_left node);
       let l_node = unpack_tree (get_left node) in
 
       let llh = height (get_left l_node) in
       let lrh = height (get_right l_node) in
-      if lrh > llh then (
-        pack_tree (get_left node) (get_left l_node) (get_right l_node);
-        pack_tree ptr (get_left node) (get_right node);
 
-        let h1 = get () in
-        noop();
+      pack_tree (get_left node) (get_left l_node) (get_right l_node);
+      let h0 = get() in
+      pack_tree ptr (get_left node) (get_right node);
+      let h1 = get () in
+  
+      assert(v_linked_tree ptr h1 == 
+        Spec.Node (get_data (sel ptr h0)) 
+          (v_linked_tree (get_left node) h0) (v_linked_tree (get_right node) h0));
+  
+      if lrh > llh then (
+        assert (Some? (Spec.rotate_left_right (v_linked_tree ptr h1)));
         rotate_left_right ptr
 
       ) else (
-        pack_tree (get_left node) (get_left l_node) (get_right l_node);
-        pack_tree ptr (get_left node) (get_right node);
+        assert (Some? (Spec.rotate_right (v_linked_tree ptr h1)));
         rotate_right ptr
       )
 
@@ -237,17 +241,26 @@ let rebalance_avl #a cmp ptr =
 
       if (lh - rh) < - 1 then (
 
+        node_is_not_null (get_right node);
         let r_node = unpack_tree (get_right node) in
-
+  
         let rlh = height (get_left r_node) in
         let rrh = height (get_right r_node) in
+
+        pack_tree (get_right node) (get_left r_node) (get_right r_node);
+        let h2 = get () in
+        pack_tree ptr (get_left node) (get_right node);
+        let h3 = get () in
+
+        assert(v_linked_tree ptr h3 == 
+          Spec.Node (get_data (sel ptr h2)) 
+            (v_linked_tree (get_left node) h2) (v_linked_tree (get_right node) h2));
+  
         if rlh > rrh then (
-            pack_tree (get_right node) (get_left r_node) (get_right r_node);
-            pack_tree ptr (get_left node) (get_right node);
+            assert (Some? (Spec.rotate_right_left (v_linked_tree ptr h3)));
             rotate_right_left ptr
         ) else (
-            pack_tree (get_right node) (get_left r_node) (get_right r_node);
-            pack_tree ptr (get_left node) (get_right node);
+            assert (Some? (Spec.rotate_left (v_linked_tree ptr h3)));
             rotate_left ptr
         )
 
@@ -257,5 +270,50 @@ let rebalance_avl #a cmp ptr =
       )
     )
   )
+
+val insert_avl_aux (#a: Type) (cmp:Spec.cmp a) (ptr: t a) (v: a)
+    : SteelSel (t a) (linked_tree ptr) (fun ptr' -> linked_tree ptr')
+    (requires fun h0 -> True)
+    (ensures fun h0 ptr' h1 ->
+        Spec.insert_avl cmp (v_linked_tree ptr h0) v == v_linked_tree ptr' h1)
+        
+let rec insert_avl_aux #a cmp ptr v =
+  let h = get () in
+  
+  if is_null_t ptr then (
+    drop_linked_tree_leaf ptr;
+    let node = mk_node v null_t null_t in
+    let new_tree = alloc node in
+    intro_linked_tree_leaf #a ();
+    intro_linked_tree_leaf #a ();
+    pack_tree new_tree null_t null_t;
+    new_tree
+  ) else (
+
+    admit();
+    
+    node_is_not_null ptr;
+    let node = unpack_tree ptr in
+
+    if cmp (get_data node) v >= 0 then (
+      node_is_not_null (get_right node);
+  
+      let new_left = insert_avl_aux cmp (get_left node) v in
+      let new_node = mk_node (get_data node) new_left (get_right node) in
+      write ptr new_node;
+
+      pack_tree ptr new_left (get_right node);
+      rebalance_avl cmp ptr
+    )
+    else (
+      sladmit()
+    )
+
+  )
+
+let insert_avl #a cmp ptr v =
+  let h = get () in
+  Spec.insert_avl_proof cmp (v_linked_tree ptr h) v;
+  insert_avl_aux cmp ptr v
 
 #pop-options
