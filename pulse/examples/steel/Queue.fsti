@@ -51,6 +51,17 @@ val enqueue (#a:_) (#u:_) (#hd:Ghost.erased (t a)) (tl:t a) (#v:_) (last:t a)
                 (requires fun _ -> v.next == null)
                 (ensures fun _ _ _ -> True)
 
+(*
+  queue hd tl ==equiv==
+
+  hd -> {data=_; next=_} * (if next == null then pure (hd == tl) else queue next tl)
+
+assume atomic field update primitive:
+   read_next #v (x:t a) (nxt:t a)
+     : SteelAtomic unit _ _ (pts_to x v)
+                            (pts_to x {v with next = nxt})
+
+*)
 val dequeue (#a:_) (#u:_) (#tl:Ghost.erased (t a)) (hd:t a)
   : SteelAtomicT (option (t a)) u observable
                  (queue hd tl)
@@ -59,4 +70,4 @@ val dequeue (#a:_) (#u:_) (#tl:Ghost.erased (t a)) (hd:t a)
                    | None ->
                      queue hd tl
                    | Some p ->
-                     h_exists (fun c -> pts_to p c `star` queue c.next tl))
+                     h_exists (fun c -> pts_to hd c `star` pure (p == c.next) `star` queue p tl))
