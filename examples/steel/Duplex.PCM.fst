@@ -11,8 +11,9 @@ module P = FStar.Preorder
 module R = FStar.ReflexiveTransitiveClosure
 
 // Simplifying protocols for now
-let rec no_loop (p:dprot') = match p with
-  | Return #a _ -> a == unit
+let rec no_loop (p:protocol 'a) =
+  match p with
+  | Return _ -> True
   | Msg _ a k -> (forall x. no_loop (k x))
   | DoWhile _ _ -> False
 
@@ -48,8 +49,8 @@ type t (p:dprot) : Type u#1 =
  | A_R : q:dprot {is_recv q} -> trace p q -> t p
  | B_R : q:dprot {is_send q} -> trace p q -> t p
  | B_W : q:dprot {is_recv q} -> trace p q -> t p
- | A_Fin : trace p (Return ()) -> t p
- | B_Fin : trace p (Return ()) -> t p
+ | A_Fin : q:dprot{is_fin q} -> trace p q -> t p
+ | B_Fin : q:dprot{is_fin q} -> trace p q -> t p
  | Nil
 
 let ahead (tag:party) (#p:dprot) (q q':dprot) (s:trace p q) (s':trace p q') : prop
@@ -69,16 +70,16 @@ let composable #p : symrel (t p) = fun t0 t1 ->
     | Nil, _ -> True
 
     (* both sides are finished and they agree on the trace *)
-    | A_Fin s, B_Fin s'
-    | B_Fin s, A_Fin s' -> s == s'
+    | A_Fin q s, B_Fin q' s'
+    | B_Fin q s, A_Fin q' s' -> q == q' /\ s == s'
 
     (* A is finished, B still has to read *)
-    | A_Fin s, B_R q' s'
-    | B_R q' s', A_Fin s -> ahead A (Return ()) q' s s'
+    | A_Fin q s, B_R q' s'
+    | B_R q' s', A_Fin q s -> ahead A q q' s s'
 
     (* B is finished, A still has to read *)
-    | A_R q' s', B_Fin s
-    | B_Fin s, A_R q' s' -> ahead B (Return ()) q' s s'
+    | A_R q' s', B_Fin q s
+    | B_Fin q s, A_R q' s' -> ahead B q q' s s'
 
     (* A is writing, B is reading: A is ahead *)
     | A_W q s, B_R q' s'
@@ -98,10 +99,10 @@ let compose (#p:dprot) (s0:t p) (s1:t p{composable s0 s1}) =
   match s0, s1 with
   | a, Nil | Nil, a -> a
 
-  | A_Fin s, _
-  | _, A_Fin s
-  | B_Fin s, _
-  | _, B_Fin s -> V ({to = Return (); tr=s })
+  | A_Fin q s, _
+  | _, A_Fin q s
+  | B_Fin q s, _
+  | _, B_Fin q s -> V ({to = q; tr=s })
 
   | A_W q s, B_R q' s'
   | B_R q' s', A_W q s
@@ -164,14 +165,14 @@ let endpoint_a (#p:dprot) (c:chan p) (next:dprot) (tr:trace p next) =
             then A_W next tr
             else if is_recv next
             then A_R next tr
-            else A_Fin tr)
+            else A_Fin next tr)
 
 let endpoint_b (#p:dprot) (c:chan p) (next:dprot) (tr:trace p next) =
   pts_to c (if is_send next
             then B_R next tr
             else if is_recv next
             then B_W next tr
-            else B_Fin tr)
+            else B_Fin next tr)
 
 
 let frame_compatible (#p:dprot) (x:t p) (v y:t p) =
@@ -405,7 +406,7 @@ let extend_node_a_r (#p:dprot) (#q:dprot{more q /\ is_recv q}) (tr:trace p q)
     then A_W q' tr'
     else if is_recv q'
     then A_R q' tr'
-    else A_Fin tr'
+    else A_Fin q' tr'
 
 let extend_node_b_r (#p:dprot) (#q:dprot{more q /\ is_send q}) (tr:trace p q)
   (tr':partial_trace_of p{trace_length tr'.tr > trace_length tr /\
@@ -419,7 +420,7 @@ let extend_node_b_r (#p:dprot) (#q:dprot{more q /\ is_send q}) (tr:trace p q)
     then B_R q' tr'
     else if is_recv q'
     then B_W q' tr'
-    else B_Fin tr'
+    else B_Fin q' tr'
 
 
 let lemma_compatible_a_greater_length (#p:dprot) (q:dprot{is_recv q}) (tr:trace p q) (tr':partial_trace_of p)
@@ -524,7 +525,7 @@ let frame_compatible_a_extend (#p:dprot)
           )
         ) else (
           next_message_closure B p_tr tr';
-          let B_Fin tr_b = frame in
+          let B_Fin _ tr_b = frame in
           assert (tr_b == tr'.tr);
           assert (composable y frame);
           assert (v == compose y frame)
@@ -652,14 +653,14 @@ let write_a_f_aux
      then A_W (step next x) (extend tr x)
      else if is_recv (step next x)
      then A_R (step next x) (extend tr x)
-     else A_Fin (extend tr x))
+     else A_Fin (step next x) (extend tr x))
   = fun (v:t p{compatible (pcm p) (A_W next tr) v}) ->
     let post =
       if is_send (step next x)
       then A_W (step next x) (extend tr x)
       else if is_recv (step next x)
       then A_R (step next x) (extend tr x)
-      else A_Fin (extend tr x)
+      else A_Fin (step next x) (extend tr x)
     in
     match v with
     | A_W n tr' ->
@@ -678,7 +679,7 @@ let write_a_f_aux
               assert (compose (B_W (step next x) (extend tr x)) post == res)
             ) else (
               assert (is_fin (step next x));
-              assert (post == A_Fin (extend tr x));
+              assert (post == A_Fin (step next x) (extend tr x));
               assert (composable post (B_R next tr));
               assert (compose (B_R next tr) post == res)
             )
@@ -695,14 +696,14 @@ let write_b_f_aux
      then B_R (step next x) (extend tr x)
      else if is_recv (step next x)
      then B_W (step next x) (extend tr x)
-     else B_Fin (extend tr x))
+     else B_Fin (step next x) (extend tr x))
   = fun (v:t p{compatible (pcm p) (B_W next tr) v}) ->
     let post =
       if is_send (step next x)
       then B_R (step next x) (extend tr x)
       else if is_recv (step next x)
       then B_W (step next x) (extend tr x)
-      else B_Fin (extend tr x)
+      else B_Fin (step next x) (extend tr x)
     in
     match v with
     | B_W n tr' ->
@@ -721,7 +722,7 @@ let write_b_f_aux
               assert (compose (A_R next tr) post == res)
             ) else (
               assert (is_fin (step next x));
-              assert (post == B_Fin (extend tr x));
+              assert (post == B_Fin (step next x) (extend tr x));
               assert (composable post (A_R next tr));
               assert (compose (A_R next tr) post == res)
             )
@@ -841,7 +842,7 @@ let write_a_f
      then A_W (step next x) (extend tr x)
      else if is_recv (step next x)
      then A_R (step next x) (extend tr x)
-     else A_Fin (extend tr x))
+     else A_Fin (step next x) (extend tr x))
   = Classical.forall_intro_2 (Classical.move_requires_2 (write_a_f_lemma #p #next tr x));
     write_a_f_aux #p #next tr x
 
@@ -855,7 +856,7 @@ let write_b_f
      then B_R (step next x) (extend tr x)
      else if is_recv (step next x)
      then B_W (step next x) (extend tr x)
-     else B_Fin (extend tr x))
+     else B_Fin (step next x) (extend tr x))
   = Classical.forall_intro_2 (Classical.move_requires_2 (write_b_f_lemma #p #next tr x));
     write_b_f_aux #p #next tr x
 
@@ -872,7 +873,7 @@ let write_a
       then A_W (step next x) (extend tr x)
       else if is_recv (step next x)
       then A_R (step next x) (extend tr x)
-      else A_Fin (extend tr x)
+      else A_Fin (step next x) (extend tr x)
     ) in
     upd_gen_action r (hide (A_W next tr)) v (write_a_f tr x);
     change_slprop (pts_to r (reveal v))
@@ -892,7 +893,7 @@ let write_b
       then B_R (step next x) (extend tr x)
       else if is_recv (step next x)
       then B_W (step next x) (extend tr x)
-      else B_Fin (extend tr x)
+      else B_Fin (step next x) (extend tr x)
     ) in
     upd_gen_action r (hide (B_W next tr)) v (write_b_f tr x);
     change_slprop (pts_to r (reveal v))
@@ -932,12 +933,12 @@ let new_chan p =
      then A_W p (empty_trace p)
      else if is_recv p
      then A_R p (empty_trace p)
-     else A_Fin (empty_trace p))
+     else A_Fin p (empty_trace p))
     (if is_send p
      then B_R p (empty_trace p)
      else if is_recv p
      then B_W p (empty_trace p)
-     else B_Fin (empty_trace p))
+     else B_Fin p (empty_trace p))
     (ahead_refl A p (empty_trace p)) ();
   r
 
@@ -1027,8 +1028,90 @@ let rec recv_b #p c next tr =
       x
   )
 
-module Protocol = Steel.Channel.Protocol
-let ping_pong : dprot =
-  x <-- Protocol.send int;
-  y <-- Protocol.recv (y:int{y > x});
-  Protocol.done
+let nl_protocol 'a = p:protocol 'a { no_loop p }
+let return (#a:_) (x:a) : nl_protocol a = Return x
+let done : dprot = return ()
+let send a : nl_protocol a = Msg Send a return
+let recv a : nl_protocol a = Msg Recv a return
+let rec bind #a #b (p:nl_protocol a) (q:(a -> nl_protocol b))
+  : nl_protocol b
+  = match p with
+    | Return v -> q v
+    | Msg tag c #a' k ->
+       let k : c -> nl_protocol b =
+        fun x -> bind (k x) q
+      in
+      Msg tag c k
+let pingpong : dprot =
+  x <-- send int;
+  y <-- recv (y:int{y > x});
+  done
+
+let step (p:dprot{more_msgs p})
+         (x:next_msg_t p)
+  : dprot
+  = Msg?.k (hnf p) x
+
+// let endpoint_ab (#p:dprot) (t:party) (c:chan p) (next_action:dprot) (tr:_) =
+//     match t with
+//     | A -> endpoint_a c next_action tr
+//     | B -> endpoint_b c next_action tr
+
+// let endpoint (#p:dprot) (t:party) (c:chan p) (next_action:dprot)
+//   : slprop u#1
+//   = h_exists (endpoint_ab t c next_action)
+
+// val esend (#p:dprot)
+//          (#e:party)
+//          (c:chan p)
+//          (#next:dprot)
+//          (x:msg_t next)
+//          (_:squash (more next /\ tag_of next = Send))
+//   : SteelT unit
+//            (endpoint e c next)
+//            (fun _ -> endpoint e c (step next x))
+// let esend #p #e c #next x _ =
+//   let tr : Ghost.erased _ = Steel.Effect.Atomic.witness_h_exists () in
+//   match e with
+//   | A ->
+//     change_slprop (endpoint_ab e c next (Ghost.reveal tr))
+//                   (endpoint_a c next (Ghost.reveal tr))
+//                   (fun _ -> ());
+
+//     sladmit()
+//   | B ->
+//     sladmit()
+
+// assume
+// val recvA (#p:dprot)
+//           (#next:dprot)
+//           (c:chan p)
+//           (_:squash (more next /\ tag_of next = Recv))
+//   : SteelT (msg_t next)
+//            (endpoint c next)
+//            (fun x -> endpoint c (step next x))
+
+// #push-options "--max_fuel 4 --max_ifuel 4 --initial_fuel 4 --initial_ifuel 4"
+// let partyA (c:chan pingpong)
+//   : SteelT (y:int{y > 17})
+//            (endpoint c pingpong)
+//            (fun _ -> endpoint c done)
+//   = // In this implementation, the client first sends the (arbitrarily chosen) integer 17
+//     sendA c 17 ();
+//     let y = recvA c () in
+//     y
+
+// #push-options "--print_implicits"
+
+// (Steel.Memory.star (Duplex.PCM.endpoint_a #Duplex.PCM.pingpong
+//                 c
+//                 (Steel.Channel.Protocol.step #Prims.unit Duplex.PCM.pingpong 17)
+//                 (Steel.Channel.Protocol.extend #Duplex.PCM.pingpong #Duplex.PCM.pingpong tr 17))
+//             (CM?.unit #Steel.Memory.slprop #Steel.Memory.Tactics.req Steel.Memory.Tactics.rm))
+//     let y = recv_a c _ _ in sladmit()
+//     // The protocol specifies that the integer received is greater than the one sent.
+//     // This fact is available in the context and can be asserted.
+//     assert (y > 17);
+//     sladmit()
+//     // To end the protocol, we return unit
+//     ()

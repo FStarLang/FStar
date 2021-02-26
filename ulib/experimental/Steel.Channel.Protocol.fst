@@ -85,6 +85,7 @@ let more_msgs (p:protocol 'a) : GTot bool = Msg? (hnf p)
 let next_msg_t (p:protocol 'a) : Type = match hnf p with | Msg _ a _ -> a | Return #a _ -> a
 let step (p:protocol 'a{more_msgs p}) (x:next_msg_t p) : protocol 'a = Msg?.k (hnf p) x
 
+
 noeq
 type trace : from:protocol unit -> to:protocol unit -> Type =
   | Waiting  : p:protocol unit -> trace p p
