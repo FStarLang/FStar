@@ -204,8 +204,62 @@ let enqueue
   intro_exists lc2 (queue_lc hd last l2);
   intro_exists l2 (queue_l hd last)
 
+assume
+val read_next (#a: _) (#u: _) (#v: _) (x:t a)
+    : SteelAtomic (t a) u observable (pts_to x v)
+                            (fun _ -> pts_to x v)
+                            (requires (fun _ -> True))
+                            (ensures (fun _ res _ -> res == v.next))
+
 let dequeue
   #a #u #tl hd
 =
-  change_slprop emp emp (fun _ -> ());
-  None
+  let l : (Ghost.erased (list a)) = witness_h_exists_erased () in
+  let lc0 : Ghost.erased (list (ref (cell a) & cell a)) = witness_h_exists_erased () in
+  change_slprop (queue_lc hd tl l lc0) (fragment hd lc0 `star` pure (queue_lc_prop tl l lc0)) (fun _ -> ());
+  elim_pure (queue_lc_prop tl l lc0);
+  let l1 : (l1: Ghost.erased (list a) { Cons? l1 }) = Ghost.hide (Ghost.reveal l) in
+  let l2 : Ghost.erased (list a) = Ghost.hide (L.tl l1) in
+  let lc : (lc: Ghost.erased (list (ref (cell a) & cell a)) { Cons? (Ghost.reveal lc) }) = lc0 in
+  change_slprop (fragment hd lc0) (fragment hd lc) (fun _ -> ());
+  let lhd : Ghost.erased (ref (cell a) & cell a) = Ghost.hide (L.hd lc) in
+  let ltl = Ghost.hide (L.tl lc) in
+  change_slprop
+    (fragment hd lc)
+    (pts_to (fst lhd) (snd lhd) `star` fragment (snd lhd).next ltl `star` pure (Ghost.reveal hd == fst lhd))
+    (fun _ -> ());
+  elim_pure (Ghost.reveal hd == fst lhd);
+  change_slprop
+    (pts_to (fst lhd) (snd lhd))
+    (pts_to hd (snd lhd))
+    (fun _ -> ());
+  let p = read_next hd in
+  if is_null p
+  then begin
+    (* we need to repack everything back to the initial queue slprop *)
+    intro_pure (Ghost.reveal hd == fst lhd);
+    change_slprop
+      (pts_to hd (snd lhd) `star` fragment (snd lhd).next ltl `star` pure (Ghost.reveal hd == fst lhd))
+      (fragment hd lc0)
+      (fun _ -> ());
+    intro_pure (queue_lc_prop tl l lc0);
+    change_slprop (fragment hd lc0 `star` pure (queue_lc_prop tl l lc0)) (queue_lc hd tl l lc0) (fun _ -> ());
+    intro_exists lc0 (queue_lc hd tl l);
+    intro_exists l (queue_l hd tl);
+    None
+  end else begin
+    change_slprop
+      (fragment (snd lhd).next ltl)
+      (fragment p ltl)
+      (fun _ -> ());
+    intro_pure (queue_lc_prop tl l2 ltl);
+    change_slprop
+      (fragment p ltl `star` pure (queue_lc_prop tl l2 ltl))
+      (queue_lc p tl l2 ltl)
+      (fun _ -> ());
+    intro_exists ltl (queue_lc p tl l2);
+    intro_exists l2 (queue_l p tl);
+    intro_pure (Ghost.reveal p == (Ghost.reveal (Ghost.hide (snd lhd))).next);
+    intro_exists (Ghost.hide (snd lhd)) (fun (c: Ghost.erased (cell a)) -> pts_to hd c `star` pure (Ghost.reveal p == c.next) `star` queue p tl);
+    Some p
+  end
