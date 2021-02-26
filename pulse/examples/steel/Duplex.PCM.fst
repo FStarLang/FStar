@@ -956,6 +956,20 @@ let send_a #p c #next x tr =
   change_slprop (endpoint_a c next tr) (pts_to c (A_W next tr)) (fun _ -> ());
   write_a c tr x
 
+val send_b
+  (#p:dprot)
+  (c:chan p)
+  (#next:dprot{more next /\ tag_of next = Recv})
+  (x:msg_t next)
+  (tr:trace p next)
+  : SteelT unit
+           (endpoint_b c next tr)
+           (fun _ -> endpoint_b c (step next x) (extend tr x))
+
+let send_b #p c #next x tr =
+  change_slprop (endpoint_b c next tr) (pts_to c (B_W next tr)) (fun _ -> ());
+  write_b c tr x
+
 val recv_a
   (#p:dprot)
   (c:chan p)
@@ -985,20 +999,6 @@ let rec recv_a #p c next tr =
       x
   )
 
-val send_b
-  (#p:dprot)
-  (c:chan p)
-  (#next:dprot{more next /\ tag_of next = Recv})
-  (x:msg_t next)
-  (tr:trace p next)
-  : SteelT unit
-           (endpoint_b c next tr)
-           (fun _ -> endpoint_b c (step next x) (extend tr x))
-
-let send_b #p c #next x tr =
-  change_slprop (endpoint_b c next tr) (pts_to c (B_W next tr)) (fun _ -> ());
-  write_b c tr x
-
 val recv_b
   (#p:dprot)
   (c:chan p)
@@ -1027,6 +1027,62 @@ let rec recv_b #p c next tr =
         (fun _ -> ());
       x
   )
+
+
+
+let endpoint (#p:dprot) (name:party) (c:chan p) (next:dprot) (t:trace p next)
+  : slprop
+  = match name with
+    | A -> endpoint_a c next t
+    | B -> endpoint_b c next t
+
+type send_next_dprot_t (name:party) =
+  next:dprot{more next /\ tag_of next == (if name = A then Send else Recv)}
+
+let send (#p:dprot) (name:party) (c:chan p) (#next:send_next_dprot_t name) (x:msg_t next) (t:trace p next)
+  : SteelT unit
+      (endpoint name c next t)
+      (fun _ -> endpoint name c (step next x) (extend t x))
+  = if name = A then begin
+      change_slprop (endpoint _ _ _ _ )
+                    (endpoint_a c next t) (fun _ -> ());
+      send_a c x t;
+      change_slprop (endpoint_a c (step next x) (extend t x))
+                    (endpoint _ _ _ _) (fun _ -> ())
+    end
+    else begin
+      change_slprop (endpoint _ _ _ _ )
+                    (endpoint_b c next t) (fun _ -> ());
+      send_b c x t;
+      change_slprop (endpoint_b c (step next x) (extend t x))
+                    (endpoint _ _ _ _) (fun _ -> ())
+    end
+
+type recv_next_dprot_t (name:party) =
+  next:dprot{more next /\ tag_of next == (if name = A then Recv else Send)}
+
+let recv (#p:dprot) (name:party) (c:chan p) (#next:recv_next_dprot_t name) (t:trace p next)
+  : SteelT (msg_t next)
+      (endpoint name c next t)
+      (fun x -> endpoint name c (step next x) (extend t x))
+  = if name = A then begin
+      change_slprop (endpoint _ _ _ _ )
+                    (endpoint_a c next t) (fun _ -> ());
+      let x = recv_a c next t in
+      change_slprop (endpoint_a c (step next x) (extend t x))
+                    (endpoint _ _ _ _) (fun _ -> ());
+      x
+    end
+    else begin
+      change_slprop (endpoint _ _ _ _ )
+                    (endpoint_b c next t) (fun _ -> ());
+      let x = recv_b c next t in
+      change_slprop (endpoint_b c (step next x) (extend t x))
+                    (endpoint _ _ _ _) (fun _ -> ());
+      x
+    end
+
+
 
 let nl_protocol 'a = p:protocol 'a { no_loop p }
 let return (#a:_) (x:a) : nl_protocol a = Return x
