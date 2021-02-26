@@ -26,7 +26,7 @@ val ref (a:Type u#0) : Type u#0
 val null (#a:Type u#0) : ref a
 val is_null (#a:Type u#0) (r:ref a) : (b:bool{b <==> r == null})
 
-val pts_to (#a:Type u#0) (r:ref a) ([@@@smt_fallback] p:perm) (v:erased a) : slprop u#1
+val pts_to (#a:Type u#0) (r:ref a) ([@@@smt_fallback] p:perm) ([@@@ smt_fallback] v:erased a) : slprop u#1
 
 val pts_to_ref_injective
       (#a: Type u#0)
@@ -107,7 +107,7 @@ val cas (#t:eqtype)
 
 val ghost_ref (a:Type u#0) : Type u#0
 
-val ghost_pts_to (#a:_) (r:ghost_ref a) ([@@@ smt_fallback] p:perm) (x:erased a) : slprop u#1
+val ghost_pts_to (#a:_) (r:ghost_ref a) ([@@@ smt_fallback] p:perm) ([@@@ smt_fallback] x:erased a) : slprop u#1
 
 val ghost_alloc (#a:Type) (#u:_) (x:erased a)
   : SteelAtomicT (ghost_ref a) u unobservable

@@ -63,10 +63,8 @@ let ghost_gather (#uses:inames) (v1 v2:G.erased int) (r:ghost_ref int)
       (fun _ -> ghost_pts_to r full_perm v1)
       (fun _ -> True)
       (fun _ _ _ -> v1 == v2)
-  = ghost_gather#_ #_ #_ #_ #v1 #v2 r;
-    sladmit ()
-    // change_slprop (ghost_pts_to r (sum_perm half_perm half_perm) v1)
-    //               (ghost_pts_to r full_perm v1) (fun _ -> ())
+  = ghost_gather #_ #_ #_ #_ #v1 #v2 r;
+    ()
 
 (*
  * Similar wrapper over ghost_share that rewrites (half_perm full_perm) to half_perm
@@ -78,11 +76,7 @@ let ghost_share (#uses:inames) (v1 v2:G.erased int) (r:ghost_ref int)
              ghost_pts_to r half_perm v2)
       (fun _ -> v1 == v2)
       (fun _ _ _ -> True)
-  = ghost_share #_ #_ #_ #v1 r;
-    change_slprop (ghost_pts_to r (P.half_perm P.full_perm) v1 `star`
-                   ghost_pts_to r (P.half_perm P.full_perm) v1)
-                  (ghost_pts_to r half_perm v1 `star`
-                   ghost_pts_to r half_perm v2) (fun _ -> ())
+  = ghost_share #_ #_ #_ #v1 r; ()
 
 (*
  * Perm rewriting wrappers over share and gather invariant
@@ -91,18 +85,13 @@ let share_invariant (#p:slprop) (#uses:inames) (i:inv p)
   : SteelAtomicT unit uses unobservable
       (active full_perm i)
       (fun _ -> active half_perm i `star` active half_perm i)
-  = share i;
-    change_slprop (active _ i `star`
-                   active _ i)
-                  _ (fun _ -> ())
+  = share i
 
 let gather_invariant (#p:slprop) (#uses:inames) (i:inv p)
   : SteelAtomicT unit uses unobservable
       (active half_perm i `star` active half_perm i)
       (fun _ -> active full_perm i)
-  = gather #_ #half_perm #half_perm #_ i;
-    change_slprop (active (sum_perm half_perm half_perm) i)
-                  (active full_perm i) (fun _ -> ())
+  = gather #_ #half_perm #half_perm #_ i; ()
 
 (*
  * A SteelAtomic to Steel lift for with_invariant
@@ -184,8 +173,7 @@ let new_inv (#uses:inames) (#v:G.erased int) (r:ref int) (r1 r2:ghost_ref int)
   = //rewrite the pts_to r in the form expected by inv_slprop
     change_slprop (pts_to r _ _)
                   (pts_to r full_perm (G.hide (G.reveal (fst (G.hide 0, v)) + G.reveal (snd (G.hide 0, v)))))
-                  (fun _ -> ());
- 
+                  (fun _ -> ()); 
     intro_exists (G.hide 0, v) (inv_pred r r1 r2);
     new_inv (inv_slprop r r1 r2)
 

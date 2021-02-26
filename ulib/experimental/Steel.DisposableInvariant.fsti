@@ -9,7 +9,7 @@ val inv (p:slprop u#1) : Type0
 
 val name (#p:_) (i:inv p) : iname
 
-val active (#p:_) (f:perm) (_:inv p) : slprop u#1
+val active (#p:_) ([@@@ smt_fallback] f:perm) (_:inv p) : slprop u#1
 
 val new_inv (#u:_) (p:slprop)
   : SteelAtomicT (inv p) u unobservable
