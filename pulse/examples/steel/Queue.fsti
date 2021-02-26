@@ -1,4 +1,5 @@
 module Queue
+include Queue.Def
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
@@ -6,15 +7,6 @@ open Steel.FractionalPermission
 open Steel.Reference
 module L = FStar.List.Tot
 module U = Steel.Utils
-
-#push-options "--__no_positivity"
-noeq
-type cell (a:Type0) = {
-  data : a;
-  next : t a;
-}
-and t a = ref (cell a)
-#pop-options
 
 let pts_to (#a:_) (x:t a) (v: Ghost.erased (cell a)) = pts_to x full_perm v
 
