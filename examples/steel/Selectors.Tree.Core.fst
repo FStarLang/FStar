@@ -138,3 +138,23 @@ let elim_linked_tree_leaf #a ptr =
   change_slprop_rel (linked_tree ptr) (linked_tree ptr)
     (fun x y -> x == y /\ y == Spec.Leaf)
     (fun m -> elim_leaf_lemma ptr m)
+
+open FStar.Ghost
+  
+let lemma_node_not_null (#a:Type) (ptr:t a) (t:tree a) (m:mem) : Lemma
+    (requires interp (tree_sl ptr) m /\ tree_sel ptr m == t /\ Spec.Node? t)
+    (ensures ptr =!= null_t)
+    = let t' = id_elim_exists (tree_sl' ptr) m in
+      assert (interp (tree_sl' ptr t') m);
+      tree_sel_interp ptr t' m;
+      match reveal t' with
+      | Spec.Node data left right ->
+          let p = (R.pts_to ptr full_perm (hide data)
+             `Mem.star` tree_sl' (get_left data) left
+             `Mem.star` tree_sl' (get_right data) right) in
+          pure_star_interp p (ptr =!= null_t) m
+
+let node_is_not_null #a ptr =
+  let h = get #(linked_tree ptr)  () in
+  let t = hide (v_linked_tree ptr h) in
+  extract_info (linked_tree ptr) t (ptr =!= null_t) (lemma_node_not_null ptr t)
