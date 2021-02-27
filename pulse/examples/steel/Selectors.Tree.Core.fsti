@@ -31,7 +31,7 @@ val mk_node (#a: Type0) (data: a) (left right: t a)
 
 (**** Slprop and selector *)
 
-let null_t (#a: Type0) : t a = Steel.Reference.null
+val null_t (#a: Type0) : t a
 val is_null_t (#a: Type0) (r: t a) : (b:bool{b <==> r == null_t})
 
 
