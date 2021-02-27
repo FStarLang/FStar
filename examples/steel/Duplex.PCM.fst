@@ -1082,7 +1082,80 @@ let recv (#p:dprot) (name:party) (c:chan p) (#next:recv_next_dprot_t name) (t:tr
       x
     end
 
+module HR = Steel.HigherReference
+module Perm = Steel.FractionalPermission
 
+type trace_t (p:dprot) = next:dprot & trace p next
+
+type channel (p:dprot) = chan p & HR.ref (next:dprot & trace p next)
+
+let fst = fst
+let snd = snd
+
+// type trace_witness_t (p:dprot) (next:dprot) =
+//   v:(trace_t p){dfst v == next}
+
+let eq2_prop (#a:Type) (x:a) (y:a) : prop = x == y
+
+[@@ __reduce__]
+let endpt_pred (#p:dprot) (name:party) (c:channel p) (next:dprot)
+  (v:(next:dprot & trace p next))
+  = HR.pts_to (snd c) Perm.full_perm (hide v)   `star`
+    pure (eq2_prop #dprot (dfst v) next)        `star`
+    endpoint name (fst c) (dfst v) (dsnd v)
+
+[@@ __reduce__]
+let endpt (#p:dprot) (name:party) (c:channel p) (next:dprot) =
+  h_exists (endpt_pred name c next)
+
+module G = FStar.Ghost
+
+#reset-options "--print_implicits --using_facts_from '* -FStar.Tactics -FStar.Reflection'"
+
+let mread (#p:dprot)
+  (w:erased (next:dprot & trace p next))
+  (r:HR.ref (next:dprot & trace p next))
+  (next:dprot)
+  : Steel ((next:dprot & trace p next) & trace p next)
+      (HR.pts_to r Perm.full_perm w)
+      (fun t -> HR.pts_to r Perm.full_perm (fst t))
+      (fun _ -> dfst w == next)
+      (fun _ t _ -> dfst w == next /\ fst t == reveal w /\ snd t == dsnd w)
+  = (* let v = HR.read r in v, snd v *) sladmit ()
+
+#set-options "--fuel 2 --ifuel 2"
+//#restart-solver
+//#set-options "--admit_smt_queries true"
+let send_w (#p:dprot) (name:party) (c:channel p) (#next:send_next_dprot_t name) (x:msg_t next)
+  : SteelT unit
+      (endpt name c next)
+      (fun _ -> endpt name c (step next x))
+  = let w : G.erased (next:dprot & trace p next) = witness_h_exists () in
+    change_slprop (HR.pts_to (snd c) Perm.full_perm (hide (reveal w)))
+                  (HR.pts_to (snd c) Perm.full_perm w) (fun _ -> ());
+    Steel.Utils.elim_pure (eq2_prop (dfst w) next);
+    let vv = mread w (snd c) next in
+
+    change_slprop (endpoint name (fst c) (dfst w) (dsnd w))
+                  (endpoint #_ name (fst c) next (snd vv)) (fun _ -> ());
+
+    send #p name (fst c) #next x (snd vv);
+
+    HR.write (snd c) (Mkdtuple2 #dprot #(fun next -> trace p next)
+                                (step next x)
+                                (extend #_ #next (snd vv) x));
+
+    intro_pure (eq2_prop #dprot (dfst (Mkdtuple2 #dprot #(fun next -> trace p next)
+                                          (step next x)
+                                          (extend #_ #next (snd vv) x))) (step next x));
+    
+    change_slprop (endpoint name (fst c) (step next x) (extend #_ #next (snd vv) x))
+                  (endpoint #p name (fst c)
+                    (dfst #dprot #(fun next -> trace p next) (Mkdtuple2 #dprot #(fun next -> trace p next) (step next x) (extend #_ #next (snd vv) x)))
+                    (dsnd #dprot #(fun next -> trace p next) (Mkdtuple2 #dprot #(fun next -> trace p next) (step next x) (extend #_ #next (snd vv) x)))) 
+                  (fun _ -> ());
+
+    intro_exists (| step next x, extend #_ #next (snd vv) x |) (endpt_pred name c (step next x))
 
 let nl_protocol 'a = p:protocol 'a { no_loop p }
 let return (#a:_) (x:a) : nl_protocol a = Return x
