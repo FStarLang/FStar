@@ -1,5 +1,28 @@
 module Duplex.PCM
 
+open FStar.Ghost
+open Steel.Memory
+open Steel.FractionalPermission
+open Steel.Effect.Atomic
+open Steel.Effect
+open Steel.Reference
+
+// assume type t (n:int) : Type0
+
+// let my_dsnd (#a:Type) (#b:a -> Type) (x:(x:a & b x)) = dsnd x
+
+// let read (#w:erased (n:int & t n)) (r:ref (n:int & t n)) (m:int)
+//   : Steel (t m)
+//       (pts_to r full_perm w)
+//       (fun _ -> pts_to r full_perm w)
+//       (fun _ -> dfst w == m)
+//       (fun _ x _ -> dfst w == m /\ x == dsnd w)
+//   = let x = read r in
+//     let y : t m = dsnd x in
+//     change_slprop (pts_to r full_perm x) (pts_to r full_perm w) (fun _ -> ());
+//     y
+
+
 open FStar.PCM
 
 open Steel.Channel.Protocol
@@ -9,6 +32,7 @@ let dprot' = protocol unit
 module WF = FStar.WellFounded
 module P = FStar.Preorder
 module R = FStar.ReflexiveTransitiveClosure
+
 
 // Simplifying protocols for now
 let rec no_loop (p:protocol 'a) =
@@ -1116,12 +1140,16 @@ let mread (#p:dprot)
   (w:erased (next:dprot & trace p next))
   (r:HR.ref (next:dprot & trace p next))
   (next:dprot)
-  : Steel ((next:dprot & trace p next) & trace p next)
+  : Steel (trace p next)
       (HR.pts_to r Perm.full_perm w)
-      (fun t -> HR.pts_to r Perm.full_perm (fst t))
+      (fun _ -> HR.pts_to r Perm.full_perm w)
       (fun _ -> dfst w == next)
-      (fun _ t _ -> dfst w == next /\ fst t == reveal w /\ snd t == dsnd w)
-  = (* let v = HR.read r in v, snd v *) sladmit ()
+      (fun _ t _ -> dfst w == next /\ t == dsnd w)
+  = let x = HR.read r in
+    let tr : trace p next = dsnd x in
+    change_slprop (HR.pts_to r Perm.full_perm x)
+                  (HR.pts_to r Perm.full_perm w) (fun _ -> ());
+    tr
 
 #set-options "--fuel 2 --ifuel 2"
 //#restart-solver
@@ -1137,25 +1165,25 @@ let send_w (#p:dprot) (name:party) (c:channel p) (#next:send_next_dprot_t name) 
     let vv = mread w (snd c) next in
 
     change_slprop (endpoint name (fst c) (dfst w) (dsnd w))
-                  (endpoint #_ name (fst c) next (snd vv)) (fun _ -> ());
+                  (endpoint #_ name (fst c) next vv) (fun _ -> ());
 
-    send #p name (fst c) #next x (snd vv);
+    send #p name (fst c) #next x vv;
 
     HR.write (snd c) (Mkdtuple2 #dprot #(fun next -> trace p next)
                                 (step next x)
-                                (extend #_ #next (snd vv) x));
+                                (extend #_ #next vv x));
 
     intro_pure (eq2_prop #dprot (dfst (Mkdtuple2 #dprot #(fun next -> trace p next)
                                           (step next x)
-                                          (extend #_ #next (snd vv) x))) (step next x));
+                                          (extend #_ #next vv x))) (step next x));
     
-    change_slprop (endpoint name (fst c) (step next x) (extend #_ #next (snd vv) x))
+    change_slprop (endpoint name (fst c) (step next x) (extend #_ #next vv x))
                   (endpoint #p name (fst c)
-                    (dfst #dprot #(fun next -> trace p next) (Mkdtuple2 #dprot #(fun next -> trace p next) (step next x) (extend #_ #next (snd vv) x)))
-                    (dsnd #dprot #(fun next -> trace p next) (Mkdtuple2 #dprot #(fun next -> trace p next) (step next x) (extend #_ #next (snd vv) x)))) 
+                    (dfst #dprot #(fun next -> trace p next) (Mkdtuple2 #dprot #(fun next -> trace p next) (step next x) (extend #_ #next vv x)))
+                    (dsnd #dprot #(fun next -> trace p next) (Mkdtuple2 #dprot #(fun next -> trace p next) (step next x) (extend #_ #next vv x)))) 
                   (fun _ -> ());
 
-    intro_exists (| step next x, extend #_ #next (snd vv) x |) (endpt_pred name c (step next x))
+    intro_exists (| step next x, extend #_ #next vv x |) (endpt_pred name c (step next x))
 
 let nl_protocol 'a = p:protocol 'a { no_loop p }
 let return (#a:_) (x:a) : nl_protocol a = Return x
