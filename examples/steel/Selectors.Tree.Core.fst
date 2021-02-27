@@ -27,6 +27,7 @@ let mk_node #a data left right = {
   right
 }
 
+let null_t #a = R.null
 let is_null_t #a ptr = R.is_null ptr
 
 let rec tree_sl' (#a: Type0) (ptr: t a) (tree: Spec.tree (node a)) : Tot slprop (decreases tree) =
@@ -107,3 +108,33 @@ let tree_sel_node (#a: Type0) (ptr: t a) : selector (Spec.tree (node a)) (tree_s
   tree_sel_node' ptr
 
 let tree_sel #a r = fun h -> tree_view (tree_sel_node r h)
+
+let tree_sel_interp (#a: Type0) (ptr: t a) (t: tree (node a)) (m: mem) : Lemma
+  (requires interp (tree_sl' ptr t) m)
+  (ensures interp (tree_sl ptr) m /\ tree_sel_node' ptr m == t)
+  = intro_h_exists t (tree_sl' ptr) m;
+    tree_sl'_witinv ptr
+
+let intro_leaf_lemma (a:Type0) (m:mem) : Lemma
+    (requires interp (hp_of vemp) m)
+    (ensures interp (tree_sl (null_t #a)) m /\ tree_sel (null_t #a) m == Spec.Leaf)
+    = let ptr:t a = null_t in
+      pure_interp (ptr == null_t) m;
+      let open FStar.Tactics in
+      assert (tree_sl' ptr Spec.Leaf == pure (ptr == null_t)) by (norm [delta; zeta; iota]);
+      tree_sel_interp ptr Spec.Leaf m
+
+let intro_linked_tree_leaf #a _ =
+    change_slprop_2 vemp (linked_tree (null_t #a)) (Spec.Leaf <: tree a) (intro_leaf_lemma a)
+
+let elim_leaf_lemma (#a:Type0) (ptr:t a) (m:mem) : Lemma
+    (requires interp (tree_sl ptr) m /\ ptr == null_t)
+    (ensures interp (tree_sl ptr) m /\ tree_sel ptr m == Spec.Leaf)
+    = let l' = id_elim_exists (tree_sl' ptr) m in
+      pure_interp (ptr == null_t) m;
+      tree_sel_interp ptr Spec.Leaf m
+
+let elim_linked_tree_leaf #a ptr =
+  change_slprop_rel (linked_tree ptr) (linked_tree ptr)
+    (fun x y -> x == y /\ y == Spec.Leaf)
+    (fun m -> elim_leaf_lemma ptr m)
