@@ -1030,6 +1030,9 @@ let rec recv_b #p c next tr =
   )
 
 
+(***** Towards a send/recv API that abstracts over the party and the concrete trace *****)
+
+#reset-options "--print_implicits --using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 1 --ifuel 1"
 
 let endpoint (#p:dprot) (name:party) (c:chan p) (next:dprot) (t:trace p next)
   : slprop
@@ -1040,7 +1043,11 @@ let endpoint (#p:dprot) (name:party) (c:chan p) (next:dprot) (t:trace p next)
 type send_next_dprot_t (name:party) =
   next:dprot{more next /\ tag_of next == (if name = A then Send else Recv)}
 
-let send (#p:dprot) (name:party) (c:chan p) (#next:send_next_dprot_t name) (x:msg_t next) (t:trace p next)
+(*
+ * A version that abstracts over the party
+ *)
+let send_aux (#p:dprot) (name:party) (c:chan p)
+  (#next:send_next_dprot_t name) (x:msg_t next) (t:trace p next)
   : SteelT unit
       (endpoint name c next t)
       (fun _ -> endpoint name c (step next x) (extend t x))
@@ -1062,7 +1069,8 @@ let send (#p:dprot) (name:party) (c:chan p) (#next:send_next_dprot_t name) (x:ms
 type recv_next_dprot_t (name:party) =
   next:dprot{more next /\ tag_of next == (if name = A then Recv else Send)}
 
-let recv (#p:dprot) (name:party) (c:chan p) (#next:recv_next_dprot_t name) (t:trace p next)
+let recv_aux (#p:dprot) (name:party) (c:chan p)
+  (#next:recv_next_dprot_t name) (t:trace p next)
   : SteelT (msg_t next)
       (endpoint name c next t)
       (fun x -> endpoint name c (step next x) (extend t x))
@@ -1106,8 +1114,6 @@ let endpt_pred (#p:dprot) (name:party) (c:channel p) (next:dprot)
 let endpt (#p:dprot) (name:party) (c:channel p) (next:dprot) =
   h_exists (endpt_pred name c next)
 
-#reset-options "--print_implicits --using_facts_from '* -FStar.Tactics -FStar.Reflection'"
-
 let read_trace_ref (#p:dprot)
   (#w:erased (next:dprot & trace p next))
   (r:HR.ref (next:dprot & trace p next))
@@ -1123,25 +1129,34 @@ let read_trace_ref (#p:dprot)
                   (HR.pts_to r _ _) (fun _ -> ());
     tr
 
-let send_w (#p:dprot)
-  (name:party)
-  (c:channel p)
-  (#next:send_next_dprot_t name)
-  (x:msg_t next)
-  : SteelT unit
+let unpack_trace_ref (#p:dprot) (name:party) (c:channel p) (is_send:bool)
+  (next:(if is_send then send_next_dprot_t name else recv_next_dprot_t name))
+  : SteelT (trace p next)
       (endpt name c next)
-      (fun _ -> endpt name c (step next x))
+      (fun tr -> endpoint name (fst c) next tr `star`
+              HR.pts_to (snd c) Perm.full_perm (| next, tr |))
   = let w : erased (next:dprot & trace p next) = witness_h_exists () in
     Steel.Utils.elim_pure (eq2_prop (dfst w) next);
     let tr = read_trace_ref (snd c) next in
 
+    change_slprop (HR.pts_to (snd c) Perm.full_perm (hide (reveal w)))
+                  (HR.pts_to (snd c) Perm.full_perm (| next, tr |)) (fun _ -> ());
+
     change_slprop (endpoint name (fst c) (dfst w) (dsnd w))
                   (endpoint name (fst c) next tr) (fun _ -> ());
+    tr
 
-    send name (fst c) x tr;
-
-    let w' = (| step next x, extend tr x |) in
-
+let pack_trace_ref (#p:dprot) (name:party) (c:channel p)
+  (#w:(next:dprot & trace p next))
+  (is_send:bool)
+  (#next:(if is_send then send_next_dprot_t name else recv_next_dprot_t name))  
+  (#tr:trace p next)
+  (x:msg_t next)
+  : SteelT unit
+      (endpoint name (fst c) (step next x) (extend tr x) `star`
+       HR.pts_to (snd c) Perm.full_perm w)
+      (fun _ -> endpt name c (step next x))
+  = let w' = (| step next x, extend tr x |) in
     HR.write (snd c) w';
 
     intro_pure (eq2_prop #dprot (dfst w') (step next x));
@@ -1152,39 +1167,35 @@ let send_w (#p:dprot)
 
     intro_exists w' (endpt_pred name c (step next x))
 
-let recv_w (#p:dprot) (name:party) (c:channel p) (#next:recv_next_dprot_t name)
+(*
+ * The final send/recv APIs
+ *)
+
+let send (#p:dprot) (name:party) (c:channel p) (#next:send_next_dprot_t name) (x:msg_t next)
+  : SteelT unit
+      (endpt name c next)
+      (fun _ -> endpt name c (step next x))
+  = let tr = unpack_trace_ref name c true next in
+    send_aux name (fst c) x tr;
+    pack_trace_ref name c true x
+
+let recv (#p:dprot) (name:party) (c:channel p) (#next:recv_next_dprot_t name)
   : SteelT (msg_t next)
       (endpt name c next)
       (fun x -> endpt name c (step next x))
-  = let w : erased (next:dprot & trace p next) = witness_h_exists () in
-    Steel.Utils.elim_pure (eq2_prop (dfst w) next);
-    let tr = read_trace_ref (snd c) next in
-
-    change_slprop (endpoint name (fst c) (dfst w) (dsnd w))
-                  (endpoint name (fst c) next tr) (fun _ -> ());
-
-    let x = recv name (fst c) tr in
-
-    let w' = (| step next x, extend tr x |) in
-
-    HR.write (snd c) w';
-
-    intro_pure (eq2_prop #dprot (dfst w') (step next x));
-    
-    change_slprop (endpoint name (fst c) (step next x) (extend tr x))
-                  (endpoint name (fst c) (dfst w') (dsnd w'))
-                  (fun _ -> ());
-
-    intro_exists w' (endpt_pred name c (step next x));
-
+  = let tr = unpack_trace_ref name c false next in
+    let x = recv_aux name (fst c) tr in
+    pack_trace_ref name c false x;
     x
 
+
+(**** End send / recv API ****)
 
 let nl_protocol 'a = p:protocol 'a { no_loop p }
 let return (#a:_) (x:a) : nl_protocol a = Return x
 let done : dprot = return ()
-let send a : nl_protocol a = Msg Send a return
-let recv a : nl_protocol a = Msg Recv a return
+let send' a : nl_protocol a = Msg Send a return
+let recv' a : nl_protocol a = Msg Recv a return
 let rec bind #a #b (p:nl_protocol a) (q:(a -> nl_protocol b))
   : nl_protocol b
   = match p with
@@ -1195,78 +1206,11 @@ let rec bind #a #b (p:nl_protocol a) (q:(a -> nl_protocol b))
       in
       Msg tag c k
 let pingpong : dprot =
-  x <-- send int;
-  y <-- recv (y:int{y > x});
+  x <-- send' int;
+  y <-- recv' (y:int{y > x});
   done
 
 let step (p:dprot{more_msgs p})
          (x:next_msg_t p)
   : dprot
   = Msg?.k (hnf p) x
-#push-options "--print_universes"
-
-(* There are two difficulties with the current interface: { send_a, recv_a, send_b, recv_b }
-
-   The main problem is that they expect the current trace as a concrete argument. See
-
-val send_a
-  (#p:dprot)
-  (c:chan p)
-  (#next:dprot{more next /\ tag_of next = Send})
-  (x:msg_t next)
-  (tr:trace p next)
-  : SteelT unit
-           (endpoint_a c next tr)
-           (fun _ -> endpoint_a c (step next x) (extend tr x))
-...
-
-  Secondarily, it would be nice to just have {send, recv} rather than
-  two separate functions: we can multiplex on the identifier of the
-  endpoint.
-
-   So,  would prefer instead to have the interface below:
-
-val send
-  (#p:dprot)
-  (#name:party)
-  (c:channel p)
-  (#next:dprot{more next /\ tag_of next = Send})
-  (x:msg_t next)
-  : SteelT unit
-           (endpt name c next)
-           (fun _ -> endpt name c (step next x))
-
-
-   The multiplexing part is relatively easy. The main bit of work is
-   to get rid of the explicit trace being passed around.
-
-   Here's one suggestion for how to do that is to basically store the
-   trace in the state rather than threading it around. i.e.,
-
-   0. Multiplex the endpoint predicate:
-
-      let endpoint (name:party) c n t =
-       match n with
-       | A -> endpoint_a c n t
-       | B -> endpoint_b c n t
-
-   1. Package the channel with a reference that holds the current trace
-
-      let channel p = (chan p & HigherReference.ref (next:dprot & trace p next))
-
-   2. Define a new predicate that encapsulates the endpoint predicate with the current
-      trace value
-
-      let endpt name c next =
-         let r = snd c in
-         h_exists (fun v -> pts_to r full_perm v `star`
-                            pure (dfst v == next) `star`
-                            endpoint name (fst c) next (dsnd v))
-
-   3. Then, we should be able to implement `send` by opening the
-      existential, reading the trace ref, getting the current trace,
-      calling send_a or send_b, getting back the result, updating the
-      trace ref, package it up and return ... basically moving from
-      state-passing to imperative state.
-
-*)
