@@ -1,28 +1,5 @@
 module Duplex.PCM
 
-open FStar.Ghost
-open Steel.Memory
-open Steel.FractionalPermission
-open Steel.Effect.Atomic
-open Steel.Effect
-open Steel.Reference
-
-// assume type t (n:int) : Type0
-
-// let my_dsnd (#a:Type) (#b:a -> Type) (x:(x:a & b x)) = dsnd x
-
-// let read (#w:erased (n:int & t n)) (r:ref (n:int & t n)) (m:int)
-//   : Steel (t m)
-//       (pts_to r full_perm w)
-//       (fun _ -> pts_to r full_perm w)
-//       (fun _ -> dfst w == m)
-//       (fun _ x _ -> dfst w == m /\ x == dsnd w)
-//   = let x = read r in
-//     let y : t m = dsnd x in
-//     change_slprop (pts_to r full_perm x) (pts_to r full_perm w) (fun _ -> ());
-//     y
-
-
 open FStar.PCM
 
 open Steel.Channel.Protocol
@@ -1116,28 +1093,23 @@ type channel (p:dprot) = chan p & HR.ref (next:dprot & trace p next)
 let fst = fst
 let snd = snd
 
-// type trace_witness_t (p:dprot) (next:dprot) =
-//   v:(trace_t p){dfst v == next}
-
 let eq2_prop (#a:Type) (x:a) (y:a) : prop = x == y
 
 [@@ __reduce__]
 let endpt_pred (#p:dprot) (name:party) (c:channel p) (next:dprot)
   (v:(next:dprot & trace p next))
-  = HR.pts_to (snd c) Perm.full_perm (hide v)   `star`
-    pure (eq2_prop #dprot (dfst v) next)        `star`
+  = HR.pts_to (snd c) Perm.full_perm (hide v) `star`
+    pure (eq2_prop #dprot (dfst v) next)      `star`
     endpoint name (fst c) (dfst v) (dsnd v)
 
 [@@ __reduce__]
 let endpt (#p:dprot) (name:party) (c:channel p) (next:dprot) =
   h_exists (endpt_pred name c next)
 
-module G = FStar.Ghost
-
 #reset-options "--print_implicits --using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 
-let mread (#p:dprot)
-  (w:erased (next:dprot & trace p next))
+let read_trace_ref (#p:dprot)
+  (#w:erased (next:dprot & trace p next))
   (r:HR.ref (next:dprot & trace p next))
   (next:dprot)
   : Steel (trace p next)
@@ -1147,43 +1119,66 @@ let mread (#p:dprot)
       (fun _ t _ -> dfst w == next /\ t == dsnd w)
   = let x = HR.read r in
     let tr : trace p next = dsnd x in
-    change_slprop (HR.pts_to r Perm.full_perm x)
-                  (HR.pts_to r Perm.full_perm w) (fun _ -> ());
+    change_slprop (HR.pts_to r _ _)
+                  (HR.pts_to r _ _) (fun _ -> ());
     tr
 
-#set-options "--fuel 2 --ifuel 2"
-//#restart-solver
-//#set-options "--admit_smt_queries true"
-let send_w (#p:dprot) (name:party) (c:channel p) (#next:send_next_dprot_t name) (x:msg_t next)
+let send_w (#p:dprot)
+  (name:party)
+  (c:channel p)
+  (#next:send_next_dprot_t name)
+  (x:msg_t next)
   : SteelT unit
       (endpt name c next)
       (fun _ -> endpt name c (step next x))
-  = let w : G.erased (next:dprot & trace p next) = witness_h_exists () in
-    change_slprop (HR.pts_to (snd c) Perm.full_perm (hide (reveal w)))
-                  (HR.pts_to (snd c) Perm.full_perm w) (fun _ -> ());
+  = let w : erased (next:dprot & trace p next) = witness_h_exists () in
     Steel.Utils.elim_pure (eq2_prop (dfst w) next);
-    let vv = mread w (snd c) next in
+    let tr = read_trace_ref (snd c) next in
 
     change_slprop (endpoint name (fst c) (dfst w) (dsnd w))
-                  (endpoint #_ name (fst c) next vv) (fun _ -> ());
+                  (endpoint name (fst c) next tr) (fun _ -> ());
 
-    send #p name (fst c) #next x vv;
+    send name (fst c) x tr;
 
-    HR.write (snd c) (Mkdtuple2 #dprot #(fun next -> trace p next)
-                                (step next x)
-                                (extend #_ #next vv x));
+    let w' = (| step next x, extend tr x |) in
 
-    intro_pure (eq2_prop #dprot (dfst (Mkdtuple2 #dprot #(fun next -> trace p next)
-                                          (step next x)
-                                          (extend #_ #next vv x))) (step next x));
+    HR.write (snd c) w';
+
+    intro_pure (eq2_prop #dprot (dfst w') (step next x));
     
-    change_slprop (endpoint name (fst c) (step next x) (extend #_ #next vv x))
-                  (endpoint #p name (fst c)
-                    (dfst #dprot #(fun next -> trace p next) (Mkdtuple2 #dprot #(fun next -> trace p next) (step next x) (extend #_ #next vv x)))
-                    (dsnd #dprot #(fun next -> trace p next) (Mkdtuple2 #dprot #(fun next -> trace p next) (step next x) (extend #_ #next vv x)))) 
+    change_slprop (endpoint name (fst c) (step next x) (extend tr x))
+                  (endpoint name (fst c) (dfst w') (dsnd w'))
                   (fun _ -> ());
 
-    intro_exists (| step next x, extend #_ #next vv x |) (endpt_pred name c (step next x))
+    intro_exists w' (endpt_pred name c (step next x))
+
+let recv_w (#p:dprot) (name:party) (c:channel p) (#next:recv_next_dprot_t name)
+  : SteelT (msg_t next)
+      (endpt name c next)
+      (fun x -> endpt name c (step next x))
+  = let w : erased (next:dprot & trace p next) = witness_h_exists () in
+    Steel.Utils.elim_pure (eq2_prop (dfst w) next);
+    let tr = read_trace_ref (snd c) next in
+
+    change_slprop (endpoint name (fst c) (dfst w) (dsnd w))
+                  (endpoint name (fst c) next tr) (fun _ -> ());
+
+    let x = recv name (fst c) tr in
+
+    let w' = (| step next x, extend tr x |) in
+
+    HR.write (snd c) w';
+
+    intro_pure (eq2_prop #dprot (dfst w') (step next x));
+    
+    change_slprop (endpoint name (fst c) (step next x) (extend tr x))
+                  (endpoint name (fst c) (dfst w') (dsnd w'))
+                  (fun _ -> ());
+
+    intro_exists w' (endpt_pred name c (step next x));
+
+    x
+
 
 let nl_protocol 'a = p:protocol 'a { no_loop p }
 let return (#a:_) (x:a) : nl_protocol a = Return x
