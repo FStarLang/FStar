@@ -20,6 +20,31 @@ module Steel.Effect
 
 #push-options "--fuel 0 --ifuel 1 --z3rlimit 20"
 
+module Sem = Steel.Semantics.Hoare.MST
+module Ins = Steel.Semantics.Instantiate
+
+open Steel.Semantics.Instantiate
+
+let interp_depends_only_on_post (#a:Type) (hp:a -> slprop)
+: Lemma
+  (forall (x:a).
+     (forall (m0:hmem (hp x)) (m1:mem{disjoint m0 m1}). interp (hp x) m0 <==> interp (hp x) (join m0 m1)))
+= let aux (x:a)
+    : Lemma
+      (forall (m0:hmem (hp x)) (m1:mem{disjoint m0 m1}). interp (hp x) m0 <==> interp (hp x) (join m0 m1))
+    = interp_depends_only_on (hp x) in
+  Classical.forall_intro aux
+
+let req_to_act_req (#pre:pre_t) (req:req_t pre) : Sem.l_pre #state pre =
+  interp_depends_only_on pre;
+  fun m -> interp pre m /\ req m
+
+let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post)
+: Sem.l_post #state #a pre post
+= interp_depends_only_on pre;
+  interp_depends_only_on_post post;
+  fun m0 x m1 -> interp pre m0 /\ interp (post x) m1 /\ ens m0 x m1
+
 let repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) =
   Sem.action_t #state #a pre post (req_to_act_req req) (ens_to_act_ens ens)
 
