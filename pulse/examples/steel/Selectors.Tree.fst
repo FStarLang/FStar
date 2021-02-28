@@ -10,12 +10,11 @@ module Spec = FStar.Trees
 
 let rec append_left #a ptr v =
   if is_null_t ptr then (
-    drop_linked_tree_leaf ptr;
-    let node = mk_node v null_t null_t in
+    elim_linked_tree_leaf ptr;
+    let node = mk_node v ptr null_t in
     let new_tree = alloc node in
     intro_linked_tree_leaf #a ();
-    intro_linked_tree_leaf #a ();
-    pack_tree new_tree null_t null_t;
+    pack_tree new_tree ptr null_t;
     new_tree
   ) else (
     let node = unpack_tree ptr in
@@ -28,12 +27,11 @@ let rec append_left #a ptr v =
 
 let rec append_right #a ptr v =
   if is_null_t ptr then (
-    drop_linked_tree_leaf ptr;
-    let node = mk_node v null_t null_t in
+    elim_linked_tree_leaf ptr;
+    let node = mk_node v null_t ptr in
     let new_tree = alloc node in
     intro_linked_tree_leaf #a ();
-    intro_linked_tree_leaf #a ();
-    pack_tree new_tree null_t null_t;
+    pack_tree new_tree null_t ptr;
     new_tree
   ) else (
     let node = unpack_tree ptr in
@@ -279,12 +277,11 @@ val insert_avl_aux (#a: Type) (cmp:Spec.cmp a) (ptr: t a) (v: a)
 
 let rec insert_avl_aux #a cmp ptr v =
   if is_null_t ptr then (
-    drop_linked_tree_leaf ptr;
-    let node = mk_node v null_t null_t in
+    elim_linked_tree_leaf ptr;
+    let node = mk_node v ptr null_t in
     let new_tree = alloc node in
     intro_linked_tree_leaf #a ();
-    intro_linked_tree_leaf #a ();
-    pack_tree new_tree null_t null_t;
+    pack_tree new_tree ptr null_t;
     new_tree
   ) else (
     let node = unpack_tree ptr in
