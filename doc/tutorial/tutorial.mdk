@@ -1602,7 +1602,7 @@ This is a list of heterogenously typed elements.
 * `LexCons v1 v2 << LexCons v1' v2'`, if and only if, either
   `v1 << v1'`; or `v1===v1'` and `v2 << v2'`.
 
-* If `v:lex_t` and `v <> LexTop`, then `v << LexTop`.
+* If `v:lex_t` and `v <> LexTop`, then `LexTop << v`.
 
 ~MK
 We could explain what that means, that longer `lex_t` are smaller?
