@@ -92,7 +92,6 @@ val pack_tree (#a: Type0) (ptr: t a) (left: t a) (right: t a)
       (vptr ptr `star` linked_tree left `star` linked_tree right)
       (fun _ -> linked_tree ptr)
       (requires (fun h0 ->
-        not (is_null_t ptr) /\
         get_left (sel ptr h0) == left /\
         get_right (sel ptr h0) == right))
       (ensures (fun h0 _ h1 ->
@@ -113,9 +112,3 @@ val unpack_tree (#a: Type0) (ptr: t a)
           (v_linked_tree (get_right node) h1) /\
         (sel ptr h1) == node
       ))
-    
-val drop_linked_tree_leaf (#a: Type0) (ptr: t a)
-    : SteelSel unit
-       (linked_tree ptr) (fun _ -> vemp)
-       (requires (fun _ -> is_null_t ptr))
-       (ensures (fun h0 _ _ -> v_linked_tree ptr h0 == Spec.Leaf))
