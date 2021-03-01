@@ -96,20 +96,19 @@ type t (a:Type0) = {
   inv : inv (queue_invariant head tail)
 }
 
-let new_qptr (#a:_) (q:Q.t a)
-  : SteelT (q_ptr a)
-           emp
-           (fun qp -> ghost_pts_to qp.ghost half q)
-  = let ptr = alloc q in
-    let ghost = ghost_alloc q in
-    ghost_share ghost;
-    intro_exists _ (fun q -> pts_to ptr full q `star` ghost_pts_to ghost half q);
-    let lock = Steel.SpinLock.new_lock _ in
-    { ptr; ghost; lock}
 
 let new_queue (#a:_) (x:a)
   : SteelT (t a) emp (fun _ -> emp)
-  = let hd = Q.new_queue x in
+  = let new_qptr (#a:_) (q:Q.t a)
+      : SteelT (q_ptr a) emp (fun qp -> ghost_pts_to qp.ghost half q)
+      = let ptr = alloc q in
+        let ghost = ghost_alloc q in
+        ghost_share ghost;
+        intro_exists _ (fun q -> pts_to ptr full q `star` ghost_pts_to ghost half q);
+        let lock = Steel.SpinLock.new_lock _ in
+        { ptr; ghost; lock}
+    in
+    let hd = Q.new_queue x in
     let head = new_qptr hd in
     let tail = new_qptr hd in
     pack_queue_invariant _ _ head tail;
@@ -117,25 +116,8 @@ let new_queue (#a:_) (x:a)
     { head; tail; inv }
 
 #push-options "--ide_id_info_off"
-let enqueue_core (#a:_) (#u:_) (#x:Q.cell a{x.Q.next==null}) (hdl:t a) (tl:Q.t a) (node:Q.t a) (_:unit)
-  : SteelAtomicT unit u observable
-    (queue_invariant hdl.head hdl.tail `star`
-     (ghost_pts_to hdl.tail.ghost half tl `star`
-      pts_to node full x))
-    (fun _ -> queue_invariant hdl.head hdl.tail `star`
-           ghost_pts_to hdl.tail.ghost half node)
-  = let open FStar.Ghost in
-    let h = open_exists () in
-    let t = open_exists () in
-    ghost_gather tl hdl.tail.ghost;
-    rewrite
-      (Q.queue h t)
-      (Q.queue h tl);
-    Q.enqueue tl node;
-    ghost_write hdl.tail.ghost node;
-    ghost_share hdl.tail.ghost;
-    pack_queue_invariant h node hdl.head hdl.tail
-
+#restart-solver
+#push-options "--query_stats --log_queries"
 let enqueue (#a:_) (hdl:t a) (x:a)
   : SteelT unit emp (fun _ -> emp)
   = Steel.SpinLock.acquire hdl.tail.lock;
@@ -147,10 +129,28 @@ let enqueue (#a:_) (hdl:t a) (x:a)
       (ghost_pts_to hdl.tail.ghost half tl);
     let cell = Q.({ data = x; next = null} ) in
     let node = alloc cell in
-    with_invariant hdl.inv (enqueue_core hdl tl node);
+    let enqueue_core #u ()
+      : SteelAtomicT unit u observable
+        (queue_invariant hdl.head hdl.tail `star`
+          (ghost_pts_to hdl.tail.ghost half tl `star` pts_to node full cell))
+        (fun _ -> queue_invariant hdl.head hdl.tail `star`
+               ghost_pts_to hdl.tail.ghost half node)
+      = let open FStar.Ghost in
+        let h = open_exists () in
+        let t = open_exists () in
+        ghost_gather tl hdl.tail.ghost;
+        rewrite
+          (Q.queue h t)
+          (Q.queue h tl);
+        Q.enqueue tl node;
+        ghost_write hdl.tail.ghost node;
+        ghost_share #_ #_ hdl.tail.ghost;
+        pack_queue_invariant _ _ _ _
+    in
+    with_invariant hdl.inv enqueue_core;
     write hdl.tail.ptr node;
     intro_exists
-      (hide node)
+      _
       (fun n -> pts_to hdl.tail.ptr full_perm n `star`
              ghost_pts_to hdl.tail.ghost half n);
     Steel.SpinLock.release hdl.tail.lock
