@@ -1,19 +1,27 @@
 module CQueue
-open Steel.Memory
-open Steel.Effect.Atomic
-open Steel.Effect
-open Steel.FractionalPermission
-open Steel.Reference
-include CQueue.LList
-module L = FStar.List.Tot
+open CQueue.LList
 
 (* High-level value, should not be used in C code outside of specs *)
+
+let t a = cllist_lvalue a
 
 noeq
 type v (a: Type0) = {
   vllist: vllist a;
   cells: list (ccell_lvalue a & vcell a);
 }
+
+let get_data
+  (#a: Type0)
+  (x: (ccell_lvalue a & vcell a))
+: Tot a
+= (snd x).vcell_data
+
+let datas
+  (#a: Type0)
+  (l: v a)
+: Tot (list a)
+= L.map get_data l.cells
 
 let (==) (#a:_) (x y: a) : prop = x == y
 
@@ -180,7 +188,9 @@ let queue_prop
   fst (next_last (cllist_head x) l.vllist.vllist_head l.cells) == l.vllist.vllist_tail /\
   ccell_ptrvalue_is_null (snd (next_last (cllist_head x) l.vllist.vllist_head l.cells)) == true
 
-let queue (#a: Type) (x: cllist_lvalue a) (l: Ghost.erased (v a)) : Tot slprop =
+let queue
+  #a x l
+=
   pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
   llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
   pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _) `star`
@@ -279,18 +289,6 @@ let change_equal_slprop
     (fun _ -> q)
 = change_equiv_slprop p q (fun _ -> sq ())
 
-let get_data
-  (#a: Type0)
-  (x: (ccell_lvalue a & vcell a))
-: Tot a
-= (snd x).vcell_data
-
-let datas
-  (#a: Type0)
-  (l: v a)
-: Tot (list a)
-= L.map get_data l.cells
-
 let get_data_update_next_last
   (#a: Type)
   (l: (list (ccell_lvalue a & vcell a)))
@@ -304,10 +302,6 @@ let get_data_update_next_last
     let (ctl, vtl) = unsnoc_tl l in
     L.map_append get_data hd [(ctl, vtl)];
     L.map_append get_data hd [(ctl, { vcell_data = vtl.vcell_data; vcell_next = n })]
-
-val create_queue (a: Type) : Steel (cllist_lvalue a & Ghost.erased (v a)) emp (fun x -> queue (fst x) (snd x))
-  (requires (fun _ -> True))
-  (ensures (fun _ res _ -> datas (snd res) == []))
 
 let create_queue
   a
@@ -337,17 +331,6 @@ let emp_equiv_pure
 =
   Classical.forall_intro intro_emp;
   Classical.forall_intro (pure_interp p)
-
-val enqueue
-  (#a: Type)
-  (x: cllist_lvalue a)
-  (l: Ghost.erased (v a))
-  (w: a)
-: Steel (Ghost.erased (v a))
-    (queue x l)
-    (fun res -> queue x res)
-    (requires (fun _ -> True))
-    (ensures (fun _ res _ -> datas res == datas l `L.append` [w]))
 
 #restart-solver
 
@@ -707,16 +690,7 @@ let read_no_change (#a:Type) (#p:perm) (#v:Ghost.erased a) (r:ref a)
   v'
 
 let queue_is_empty
-  (#a: Type)
-  (x: cllist_lvalue a)
-  (l: Ghost.erased (v a))
-: Steel bool
-    (queue x l)
-    (fun _ -> queue x l)
-    (requires (fun _ -> True))
-    (ensures (fun _ res _ ->
-      res == Nil? (datas l)
-    ))
+  #a x l
 =
   change_equiv_slprop
     (queue x l)
@@ -737,16 +711,6 @@ let queue_is_empty
     (queue x l)
     (fun _ -> queue_equiv x l);
   ccell_ptrvalue_is_null hd
-
-val dequeue
-  (#a: Type)
-  (x: cllist_lvalue a)
-  (l: Ghost.erased (v a))
-: Steel (a & Ghost.erased (v a))
-    (queue x l)
-    (fun res -> queue x (snd res))
-    (requires (fun _ -> Cons? (datas l) == true))
-    (ensures (fun _ res _ -> datas l == fst res :: datas (snd res)))
 
 let dequeue
   #a x l
