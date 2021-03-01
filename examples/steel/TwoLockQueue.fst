@@ -53,10 +53,11 @@ type q_ptr (a:Type) = {
 open FStar.Ghost
 [@@__reduce__]
 let queue_invariant (#a:_) (head tail:q_ptr a) =
-  h_exists (fun (ht: erased (Q.t a & Q.t a)) ->
-    ghost_pts_to head.ghost half (hide (fst (reveal ht))) `star`
-    ghost_pts_to tail.ghost half (hide (snd (reveal ht))) `star`
-    Q.queue (hide (fst (reveal ht))) (hide (snd (reveal ht))))
+  h_exists (fun (h:erased (Q.t a)) ->
+  h_exists (fun (t:erased (Q.t a)) ->
+    ghost_pts_to head.ghost half h `star`
+    ghost_pts_to tail.ghost half t `star`
+    Q.queue h t))
 
 let pack_queue_invariant (#a:_) (#u:_) (x:erased (Q.t a)) (y:erased (Q.t a)) (head tail:q_ptr a)
  : SteelAtomicT unit u unobservable
@@ -64,13 +65,12 @@ let pack_queue_invariant (#a:_) (#u:_) (x:erased (Q.t a)) (y:erased (Q.t a)) (he
     ghost_pts_to tail.ghost half y `star`
     Q.queue x y)
    (fun _ -> queue_invariant head tail)
- = let w = Ghost.hide (Ghost.reveal x, Ghost.reveal y) in
-   rewrite
-    (Q.queue x y)
-    (Q.queue (hide (fst (reveal w))) (hide (snd (reveal w))));
-   intro_exists w (fun w -> ghost_pts_to head.ghost half (hide (fst (reveal w))) `star`
-                         ghost_pts_to tail.ghost half (hide (snd (reveal w))) `star`
-                         Q.queue (hide (fst (reveal w))) (hide (snd (reveal w))))
+ = intro_exists y (fun y -> ghost_pts_to head.ghost half x `star`
+                         ghost_pts_to tail.ghost half y `star`
+                         Q.queue x y);
+   intro_exists x (fun x -> h_exists (fun y -> ghost_pts_to head.ghost half x `star`
+                                         ghost_pts_to tail.ghost half y `star`
+                                         Q.queue x y))
 
 noeq
 type t (a:Type0) = {
@@ -109,26 +109,19 @@ let enqueue_core (#a:_) (#u:_) (#x:Q.cell a{x.Q.next==null}) (hdl:t a) (tl:Q.t a
     (fun _ -> queue_invariant hdl.head hdl.tail `star`
            ghost_pts_to hdl.tail.ghost half node)
   = let open FStar.Ghost in
-    let ht : erased (Q.t a & Q.t a) = witness_h_exists' () in
+    let h = witness_h_exists' () in
+    let t = witness_h_exists' () in
     ghost_gather #_ #_ #half #half #tl #_ hdl.tail.ghost;
     rewrite
       (ghost_pts_to hdl.tail.ghost _ _)
       (ghost_pts_to hdl.tail.ghost full_perm (hide tl));
     rewrite
-      (Q.queue (hide (fst (reveal ht)))
-               (hide (snd (reveal ht))))
-      (Q.queue (hide (fst (reveal ht)))
-               (hide tl));
+      (Q.queue h t)
+      (Q.queue h (hide tl));
     Q.enqueue tl node;
     ghost_write hdl.tail.ghost node;
     ghost_share hdl.tail.ghost;
-    let w = hide (fst (reveal ht), node) in
-    rewrite
-      (Q.queue (hide (fst (reveal ht))) (hide node))
-      (Q.queue (hide (fst (reveal w))) (hide (snd (reveal w))));
-    Steel.Effect.Atomic.intro_exists w (fun w -> (ghost_pts_to hdl.head.ghost half (hide (fst (reveal w))) `star`
-                                               ghost_pts_to hdl.tail.ghost half (hide (snd (reveal w))) `star`
-                                               Q.queue (hide (fst (reveal w))) (hide (snd (reveal w)))))
+    pack_queue_invariant h node hdl.head hdl.tail
 
 let enqueue (#a:_) (hdl:t a) (x:a)
   : SteelT unit emp (fun _ -> emp)
@@ -171,25 +164,24 @@ let dequeue_core (#a:_) (#u:_) (hdl:t a) (hd:Q.t a) (_:unit)
     (fun o ->
       queue_invariant hdl.head hdl.tail `star`
       maybe_ghost_pts_to hdl.head.ghost hd o)
-  = let ht = witness_h_exists' () in
+  = let h = witness_h_exists' () in
+    let t = witness_h_exists' () in
     ghost_gather #_ #_ #half #half #hd #_ hdl.head.ghost;
     rewrite
       (ghost_pts_to hdl.head.ghost _ _)
       (ghost_pts_to hdl.head.ghost full_perm (hide hd));
-    let tl = (hide (snd (reveal ht))) in
     rewrite
-        (Q.queue (hide (fst (reveal ht)))
-                 (hide (snd (reveal ht))))
-        (Q.queue (hide hd) tl);
+        (Q.queue h t)
+        (Q.queue (hide hd) t);
     rewrite
         (ghost_pts_to hdl.tail.ghost (half_perm full_perm) _)
-        (ghost_pts_to hdl.tail.ghost (half_perm full_perm) tl);
-    let o = Queue.dequeue #_ #_ #tl hd in
+        (ghost_pts_to hdl.tail.ghost (half_perm full_perm) t);
+    let o = Queue.dequeue #_ #_ #t hd in
     match o with
     | None ->
       rewrite
         (Q.dequeue_post _ _ _)
-        (Q.queue (hide hd) tl);
+        (Q.queue (hide hd) t);
       ghost_share hdl.head.ghost;
       pack_queue_invariant _ _ hdl.head hdl.tail;
       rewrite
@@ -200,7 +192,7 @@ let dequeue_core (#a:_) (#u:_) (hdl:t a) (hd:Q.t a) (_:unit)
     | Some p ->
       rewrite
         (Q.dequeue_post _ _ _)
-        (Q.dequeue_post_success tl hd p);
+        (Q.dequeue_post_success t hd p);
       let c = witness_h_exists' () in
       // slassert (pts_to hd full_perm c `star` pure (Ghost.reveal p == c.Q.next) `star` Q.queue p tl);
       elim_pure ();
