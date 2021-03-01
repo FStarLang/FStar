@@ -173,12 +173,18 @@ let llist_fragment_update_next_last
 
 (* The singly-linked list as a queue *)
 
+let queue_prop
+  (#a: Type) (x: cllist_lvalue a) (l: Ghost.erased (v a))
+: Tot prop
+=
+  fst (next_last (cllist_head x) l.vllist.vllist_head l.cells) == l.vllist.vllist_tail /\
+  ccell_ptrvalue_is_null (snd (next_last (cllist_head x) l.vllist.vllist_head l.cells)) == true
+
 let queue (#a: Type) (x: cllist_lvalue a) (l: Ghost.erased (v a)) : Tot slprop =
   pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
   llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
   pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _) `star`
-  pure (fst (next_last (cllist_head x) l.vllist.vllist_head l.cells) == l.vllist.vllist_tail) `star`
-  pure (ccell_ptrvalue_is_null (snd (next_last (cllist_head x) l.vllist.vllist_head l.cells)) == true)
+  pure (queue_prop x l)
 
 #push-options "--ide_id_info_off"
 
@@ -200,11 +206,9 @@ let unpack_queue
     (pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
       llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
       pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _) `star`
-      pure (fst (next_last (cllist_head x) l.vllist.vllist_head l.cells) == l.vllist.vllist_tail) `star`
-      pure (ccell_ptrvalue_is_null (snd (next_last (cllist_head x) l.vllist.vllist_head l.cells)) == true))
+      pure (queue_prop x l))
     (fun _ -> ());
-  elim_pure (fst (next_last (cllist_head x) l.vllist.vllist_head l.cells) == l.vllist.vllist_tail);
-  elim_pure (ccell_ptrvalue_is_null (snd (next_last (cllist_head x) l.vllist.vllist_head l.cells)) == true)
+  elim_pure (queue_prop x l)
 
 let pack_queue
   (#a: Type)
@@ -219,14 +223,12 @@ let pack_queue
       ccell_ptrvalue_is_null (snd (next_last (cllist_head x) l.vllist.vllist_head l.cells)) == true
     ))
     (ensures (fun _ _ _ -> True))
-= intro_pure (fst (next_last (cllist_head x) l.vllist.vllist_head l.cells) == l.vllist.vllist_tail);
-  intro_pure (ccell_ptrvalue_is_null (snd (next_last (cllist_head x) l.vllist.vllist_head l.cells)) == true);
+= intro_pure (queue_prop x l);
   change_slprop
     (pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
       llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
       pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _) `star`
-      pure (fst (next_last (cllist_head x) l.vllist.vllist_head l.cells) == l.vllist.vllist_tail) `star`
-      pure (ccell_ptrvalue_is_null (snd (next_last (cllist_head x) l.vllist.vllist_head l.cells)) == true))
+      pure (queue_prop x l))
     (queue x l)
     (fun _ -> ())
 
@@ -276,38 +278,6 @@ let change_equal_slprop
     p
     (fun _ -> q)
 = change_equiv_slprop p q (fun _ -> sq ())
-
-let pack_queue2
-  (#a: Type)
-  (x: cllist_lvalue a) (l: Ghost.erased (v a))
-  (s1: slprop)
-  (s2: slprop)
-  (s3: slprop)
-: Steel unit
-    (s1 `star` s2 `star` s3)
-    (fun _ -> queue x l)
-    (requires (fun _ ->
-      s1 == pts_to (cllist_tail x) full_perm l.vllist.vllist_tail /\
-      s2 == llist_fragment (cllist_head x) l.vllist.vllist_head l.cells /\
-      s3 == pts_to (l.vllist.vllist_tail) full_perm (ccell_ptrvalue_null a) /\
-      fst (next_last (cllist_head x) l.vllist.vllist_head l.cells) == l.vllist.vllist_tail /\
-      ccell_ptrvalue_is_null (snd (next_last (cllist_head x) l.vllist.vllist_head l.cells)) == true
-    ))
-    (ensures (fun _ _ _ -> True))
-=
-  change_equal_slprop
-    s1
-    (pts_to (cllist_tail x) full_perm l.vllist.vllist_tail)
-    (fun _ -> ());
-  change_equal_slprop
-    s2
-    (llist_fragment (cllist_head x) l.vllist.vllist_head l.cells)
-    (fun _ -> ());
-  change_equal_slprop
-    s3
-    (pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _))
-    (fun _ -> ());
-  pack_queue x l
 
 let get_data
   (#a: Type0)
@@ -471,436 +441,405 @@ let pure_rewrite
   (p1 p2: slprop)
   (q: prop)
 : Lemma
-  (requires (q ==> p1 == p2))
+  (requires (q ==> (p1 `equiv` p2)))
   (ensures ((p1 `star` pure q) `equiv` (p2 `star` pure q)))
 = pure_star_equiv p1 q;
   pure_star_equiv p2 q
 
-noeq
-type token
-  (a: Type)
-= {
-  token_value: a;
-  token_slprop: slprop;
-  token_prop: prop
-}
-
-val read_with_token
-  (#a: Type)
-  (p: slprop)
-  (r: ref a)
-  (token: Ghost.erased (token a))
-: Steel a
-    p
-    (fun _ -> p)
-    (requires (fun _ -> p `equiv` (pts_to r full_perm token.token_value `star` token.token_slprop `star` pure token.token_prop)))
-    (ensures (fun _ res _ ->
-      res == token.token_value /\
-      token.token_prop
-    ))
-
-let read_with_token
-  #a p r token
+let pure_rewrite_intro
+  (p1 p2: slprop)
+  (q: prop)
+  (lem: unit -> Lemma (requires q) (ensures (p1 `equiv` p2)))
+: Lemma
+  (ensures ((p1 `star` pure q) `equiv` (p2 `star` pure q)))
 =
-  change_equiv_slprop p (pts_to r full_perm token.token_value `star` token.token_slprop `star` pure token.token_prop) (fun _ -> ());
-  let res = read r in
-  let sq : squash (token.token_prop) = elim_pure token.token_prop in
-  intro_pure token.token_prop;
-  change_equiv_slprop (pts_to r full_perm res `star` token.token_slprop `star` pure token.token_prop) p (fun _ -> ());
-  res
+  Classical.move_requires lem ();
+  pure_rewrite p1 p2 q
 
-[@"opaque_to_smt"]
-irreducible
-val queue_cons_ccell_next
+let rec llist_fragment'
+  (#a: Type)
+  (p: ccell_ptrvalue a)
+  (l: Ghost.erased (list (ccell_lvalue a & vcell a)))
+: Tot slprop
+  (decreases (Ghost.reveal l))
+= match Ghost.reveal l with
+  | [] -> emp
+  | (pc, vc) :: q ->
+    ccell pc full_perm vc `star` llist_fragment' vc.vcell_next q `star` pure (pc == p)
+
+let queue_prop'
   (#a: Type)
   (x: cllist_lvalue a)
   (l: Ghost.erased (v a))
-: Pure (Ghost.erased (token (ccell_ptrvalue a)))
-  (requires (Cons? l.cells))
-  (ensures (fun y ->
-    match l.cells with
-    | [] -> False
-    | ((chd, vhd) :: q) ->
-      y.token_value == vhd.vcell_next /\
-      queue x l `equiv` (pts_to (ccell_next chd) full_perm y.token_value `star` y.token_slprop `star` pure y.token_prop) /\
-      (y.token_prop ==> ccell_ptrvalue_is_null y.token_value == Nil? q)
-  ))
+: Tot prop
+= ccell_ptrvalue_is_null l.vllist.vllist_head == Nil? l.cells /\
+  begin match l.cells with
+  | [] -> l.vllist.vllist_tail == cllist_head x
+  | _ -> l.vllist.vllist_tail == ccell_next (fst (L.last l.cells)) /\ ccell_ptrvalue_is_null (snd (L.last l.cells)).vcell_next
+  end
 
-let queue_cons_ccell_next
-  #a x l
+let queue'
+  (#a: Type)
+  (x: cllist_lvalue a)
+  (l: Ghost.erased (v a))
+: Tot slprop
 =
-  let p1 : prop = ccell_ptrvalue_is_null (snd (next_last (cllist_head x) l.vllist.vllist_head l.cells)) == true in
-  let p2 : prop = fst (next_last (cllist_head x) l.vllist.vllist_head l.cells) == l.vllist.vllist_tail in
-  let (chd, vhd) :: tl = l.cells in
-  let pz : slprop = pts_to (ccell_next chd) full_perm vhd.vcell_next in
-  let p3 : prop = chd == l.vllist.vllist_head in
-  let rv = vhd.vcell_next in
-  match tl with
+  cllist x full_perm l.vllist `star`
+  llist_fragment' l.vllist.vllist_head l.cells `star`
+  pure (queue_prop' x l)
+
+let queue_prop0
+  (#a: Type)
+  (x: cllist_lvalue a)
+  (l: Ghost.erased (v a))
+: Tot prop
+= ccell_ptrvalue_is_null l.vllist.vllist_head == Nil? l.cells /\
+  fst (next_last (cllist_head x) l.vllist.vllist_head l.cells) == l.vllist.vllist_tail /\
+  ccell_ptrvalue_is_null (snd (next_last (cllist_head x) l.vllist.vllist_head l.cells)) == true
+
+let queue_prop0_equiv
+  (#a: Type)
+  (x: cllist_lvalue a)
+  (l: Ghost.erased (v a))
+: Lemma
+  (queue_prop0 x l <==> queue_prop' x l)
+= match l.cells with
+  | [] -> ()
+  | _ -> next_last_correct (cllist_head x) l.vllist.vllist_head l.cells
+
+let pure_and_equiv
+  (p q: prop)
+: Lemma
+  ((pure p `star` pure q) `equiv` pure (p /\ q))
+=
+  assert ((pure p `star` pure q) `equiv` (emp `star` pure p `star` pure q)) by canon ();
+  assert (pure (p /\ q) `equiv` (emp `star` pure (p /\ q))) by canon ();
+  pure_star_accumulate_r emp p q
+
+let pure_dup
+  (p q: prop)
+: Lemma
+  (pure p `equiv` (pure p `star` pure p))
+=
+  pure_equiv p (p /\ p);
+  pure_and_equiv p p
+
+let queue_equiv_1
+  (#a: Type)
+  (x: cllist_lvalue a)
+  (l: Ghost.erased (v a))
+: Lemma
+  (queue x l `equiv` (
+    pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
+    llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
+    pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _) `star`
+    pure (queue_prop0 x l)
+  ))
+=
+  match l.cells with
   | [] ->
-    let p0 = pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _) in
-    let r1 = 
-      pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
-      pts_to (cllist_head x) full_perm l.vllist.vllist_head `star`
-      pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
-      llist_fragment (ccell_next chd) vhd.vcell_next tl
-    in
-    let z = p0 `star` r1 `star` pure p3 `star` pure p2 `star` pure p1 in
-    let z0 = 
+    pure_equiv (queue_prop x l) (queue_prop0 x l)
+  | (chd, vhd) :: tl ->
+    pure_equiv (chd == l.vllist.vllist_head) (chd == l.vllist.vllist_head /\ ccell_ptrvalue_is_null l.vllist.vllist_head == false);
+    pure_and_equiv (chd == l.vllist.vllist_head) (ccell_ptrvalue_is_null l.vllist.vllist_head == false);
+    assert (( (* necessary, otherwise queue x l cannot be proven equiv to the lhs of the equiv below *)
+      llist_fragment (cllist_head x) l.vllist.vllist_head l.cells
+    ) == (
+        pts_to (cllist_head x) full_perm l.vllist.vllist_head `star`
+        pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
+        llist_fragment (ccell_next chd) vhd.vcell_next (Ghost.hide tl) `star`
+        pure (chd == l.vllist.vllist_head)
+    ));
+    assert ((
       pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
       (
         pts_to (cllist_head x) full_perm l.vllist.vllist_head `star`
         pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
         llist_fragment (ccell_next chd) vhd.vcell_next tl `star`
-        pure p3
+        (pure (chd == l.vllist.vllist_head) `star` pure (ccell_ptrvalue_is_null l.vllist.vllist_head == false))
       ) `star`
-      p0 `star` pure p2 `star` pure p1
-    in
-    assert (queue x l == z0);
-    assert (z0 `equiv` z) by canon ();
-    pure_star_accumulate_r (p0 `star` r1 `star` pure p3) p2 p1;
-    pure_star_accumulate_r (p0 `star` r1) p3 (p2 /\ p1);
-    pure_rewrite (p0 `star` r1) (pz `star` r1) (p3 /\ (p2 /\ p1));
-    {token_value = rv; token_slprop = r1; token_prop = (p3 /\ (p2 /\ p1)) }
-  | (chd', vhd') :: tl' ->
-    let z0 = 
+      pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _) `star`
+      pure (queue_prop x l)
+    ) `equiv` (
       pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
       (
         pts_to (cllist_head x) full_perm l.vllist.vllist_head `star`
         pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
-        (
-          pts_to (ccell_next chd) full_perm vhd.vcell_next `star`
-          pts_to (ccell_data chd') full_perm vhd'.vcell_data `star`
-          llist_fragment (ccell_next chd') vhd'.vcell_next tl' `star`
-          pure (chd' == vhd.vcell_next)
-        ) `star`
-        pure p3
+        llist_fragment (ccell_next chd) vhd.vcell_next tl `star`
+        pure (chd == l.vllist.vllist_head)
       ) `star`
-      pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _) `star` pure p2 `star` pure p1
-    in
-    assert (queue x l == z0);
-    let res =
-      pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
-      pts_to (cllist_head x) full_perm l.vllist.vllist_head `star`
-      pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
-      pts_to (ccell_data chd') full_perm vhd'.vcell_data `star`
-      llist_fragment (ccell_next chd') vhd'.vcell_next tl' `star`
       pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _) `star`
-      pure p3 `star`
-      pure p2 `star`
-      pure p1
-    in
-    assert (z0 `equiv` (pz `star` res `star` pure (chd' == vhd.vcell_next))) by canon ();
-    {token_value = rv; token_slprop = res; token_prop = (chd' == vhd.vcell_next)}
+      (
+        pure (queue_prop x l) `star`
+        pure (ccell_ptrvalue_is_null l.vllist.vllist_head == false)
+      )
+    )) by canon ();
+    pure_and_equiv (queue_prop x l) (ccell_ptrvalue_is_null l.vllist.vllist_head == false);
+    pure_equiv (queue_prop0 x l) (queue_prop x l /\ ccell_ptrvalue_is_null l.vllist.vllist_head == false)
 
-[@"opaque_to_smt"]
-irreducible
-val queue_cons_ccell_data
+let rec llist_fragment_equiv
   (#a: Type)
-  (x: cllist_lvalue a)
-  (l: Ghost.erased (v a))
-: Pure (Ghost.erased (token a))
-  (requires (Cons? l.cells))
-  (ensures (fun y ->
-    match l.cells with
-    | [] -> False
-    | ((chd, vhd) :: _) ->
-      y.token_value == vhd.vcell_data /\
-      queue x l `equiv` (pts_to (ccell_data chd) full_perm y.token_value `star` y.token_slprop `star` pure y.token_prop)
-  ))
-
-let queue_cons_ccell_data
-  #a x l
-=
-  let ((chd, vhd) :: tl) = l.cells in
-  let rv = vhd.vcell_data in
-  let z0 =
-    pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
-    (
-      pts_to (cllist_head x) full_perm l.vllist.vllist_head `star`
+  (phd: ref (ccell_ptrvalue a))
+  (hd: ccell_ptrvalue a)
+  (l: list (ccell_lvalue a & vcell a))
+: Lemma
+  (requires True)
+  (ensures ((
+    llist_fragment phd hd l `star`
+    pts_to (fst (next_last phd hd l)) full_perm (snd (next_last phd hd l))
+  ) `equiv` (
+    pts_to phd full_perm hd `star`
+    llist_fragment' hd l
+  )))
+  (decreases l)
+= match l with
+  | [] ->
+    assert (
+      (emp `star` pts_to phd full_perm hd) `equiv`
+      (pts_to phd full_perm hd `star` emp)
+    ) by canon ()
+  | (chd, vhd) :: tl ->
+    assert ((
+      pts_to phd full_perm hd `star`
       pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
       llist_fragment (ccell_next chd) vhd.vcell_next tl `star`
-      pure (chd == l.vllist.vllist_head)
-    ) `star`
-    pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _) `star`
-    pure (fst (next_last (cllist_head x) l.vllist.vllist_head l.cells) == l.vllist.vllist_tail) `star`
-    pure (ccell_ptrvalue_is_null (snd (next_last (cllist_head x) l.vllist.vllist_head l.cells)) == true)
-  in
-  assert (queue x l == z0);
-  let pr = (ccell_ptrvalue_is_null (snd (next_last (cllist_head x) l.vllist.vllist_head l.cells)) == true) in
-  let res =
+      pure (chd == hd) `star`
+      pts_to (fst (next_last phd hd l)) full_perm (snd (next_last phd hd l))
+    ) `equiv` (
+      pts_to phd full_perm hd `star`
+      pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
+        (llist_fragment (ccell_next chd) vhd.vcell_next tl `star`
+          pts_to (fst (next_last phd hd l)) full_perm (snd (next_last phd hd l))) `star`
+      pure (chd == hd)
+    )) by canon ();
+    llist_fragment_equiv (ccell_next chd) vhd.vcell_next tl;
+    assert ((
+      pts_to phd full_perm hd `star`
+      pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
+        (pts_to (ccell_next chd) full_perm vhd.vcell_next `star`
+          llist_fragment' vhd.vcell_next tl) `star`
+      pure (chd == hd)
+    ) `equiv` (
+      pts_to phd full_perm hd `star`
+      (pts_to (ccell_data chd) full_perm vhd.vcell_data `star`
+        pts_to (ccell_next chd) full_perm vhd.vcell_next `star`
+        llist_fragment' vhd.vcell_next tl `star`
+        pure (chd == hd))
+    )) by canon ()
+
+let queue_equiv_2
+  (#a: Type)
+  (x: cllist_lvalue a)
+  (l: Ghost.erased (v a))
+: Lemma
+  (requires (
+    queue_prop0 x l
+  ))
+  (ensures ((
     pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
-    pts_to (cllist_head x) full_perm l.vllist.vllist_head `star`
-    llist_fragment (ccell_next chd) vhd.vcell_next tl `star`
-    pure (chd == l.vllist.vllist_head) `star`
-    pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _) `star`
-    pure (fst (next_last (cllist_head x) l.vllist.vllist_head l.cells) == l.vllist.vllist_tail)
-  in
-  assert (z0 `equiv` (pts_to (ccell_data chd) full_perm vhd.vcell_data `star` res `star` pure pr)) by canon ();
-  { token_value = rv; token_slprop = res; token_prop = pr }
+    llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
+    pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _)
+  ) `equiv` (
+    cllist x full_perm l.vllist `star`
+    llist_fragment' l.vllist.vllist_head l.cells
+  )))
+=
+    assert ((
+      pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
+      llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
+      pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _)
+    ) `equiv` (
+      pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
+      (llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
+        pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _))
+    )) by canon ();
+    llist_fragment_equiv (cllist_head x) l.vllist.vllist_head l.cells;
+    assert ((
+      pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
+      (pts_to (cllist_head x) full_perm l.vllist.vllist_head `star`
+        llist_fragment' l.vllist.vllist_head l.cells)
+    ) `equiv` (
+      pts_to (cllist_head x) full_perm l.vllist.vllist_head `star`
+      pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
+      llist_fragment' l.vllist.vllist_head l.cells
+    )) by canon ()
 
-assume
-val queue_cllist_head
+let queue_equiv
   (#a: Type)
   (x: cllist_lvalue a)
   (l: Ghost.erased (v a))
-: Pure (Ghost.erased (token (ccell_ptrvalue a)))
-  (requires True)
-  (ensures (fun y ->
-    y.token_value == l.vllist.vllist_head /\
-    queue x l `equiv` (pts_to (cllist_head x) full_perm y.token_value `star` y.token_slprop `star` pure y.token_prop) /\
-    begin y.token_prop ==> y.token_value == begin match l.cells with
-    | [] -> ccell_ptrvalue_null _
-    | (chd, _) :: _ -> chd
-    end end
-  ))
+: Lemma
+  (queue x l `equiv` queue' x l)
+=
+  pure_rewrite_intro
+    (
+      pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
+      llist_fragment (cllist_head x) l.vllist.vllist_head l.cells `star`
+      pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _)
+    )
+    (
+      cllist x full_perm l.vllist `star`
+      llist_fragment' l.vllist.vllist_head l.cells
+    )
+    (queue_prop0 x l)
+    (fun _ -> queue_equiv_2 x l);
+  queue_equiv_1 x l;
+  queue_prop0_equiv x l;
+  pure_equiv (queue_prop0 x l) (queue_prop' x l)
 
-val dequeue
+let peek_pure
+  (#uses:_) (p:prop)
+  : SteelAtomicT (_:unit{p}) uses unobservable
+                (pure p)
+                (fun _ -> pure p)
+=
+  let q = elim_pure p in
+  intro_pure p;
+  q
+
+let read_no_change (#a:Type) (#p:perm) (#v:Ghost.erased a) (r:ref a)
+  : Steel a (pts_to r p v) (fun _ -> pts_to r p v)
+           (requires fun _ -> True)
+           (ensures fun _ x _ -> x == Ghost.reveal v)
+=
+  let v' = read r in
+  change_equal_slprop _ (pts_to r p v) (fun _ -> ());
+  v'
+
+let queue_is_empty
   (#a: Type)
   (x: cllist_lvalue a)
   (l: Ghost.erased (v a))
-: Steel unit // (a & Ghost.erased (v a))
-    (queue x l)
-    (fun res -> emp) // queue x (snd res))
-    (requires (fun _ -> Cons? (datas l) == true))
-    (ensures (fun _ res _ -> True)) // datas l == fst res :: datas (snd res)))
-
-let dequeue
-  #a x l
-= (* read *)
-  let qhd = queue_cllist_head x l in
-  let chd' = read_with_token (queue x l) (cllist_head x) qhd in
-  let chd' : ccell_lvalue a = chd' in
-  let qd = queue_cons_ccell_data x l in
-  let d = read_with_token (queue x l) (ccell_data chd') qd in
-  let qn = queue_cons_ccell_next x l in
-  let n = read_with_token (queue x l) (ccell_next chd') qn in
-  (* write *)
-  let vhd : Ghost.erased (vcell a) = Ghost.hide (snd (L.hd l.cells)) in
-  let tl : Ghost.erased (list (ccell_lvalue a & vcell a)) = Ghost.hide (L.tl l.cells) in
-  unpack_queue x l;
-  change_equal_slprop
-    (llist_fragment (cllist_head x) l.vllist.vllist_head l.cells)
-    (pts_to (cllist_head x) full_perm chd' `star`
-       pts_to (ccell_data chd') full_perm vhd.vcell_data `star`
-       llist_fragment (ccell_next chd') vhd.vcell_next tl `star`
-       pure (chd' == l.vllist.vllist_head))
-    (fun _ -> ());
-  write (cllist_head x) n;
-  drop (pts_to (ccell_data chd') full_perm vhd.vcell_data);
-  elim_pure (chd' == l.vllist.vllist_head);
-  assert (vhd.vcell_next == n);
-  if ccell_ptrvalue_is_null n
-  then begin
-    (* remaining list is empty *)
-    noop ();
-    change_slprop _ emp (fun m -> intro_emp m);
-    ()
-  end else begin
-    let l' : Ghost.erased (v a) = Ghost.hide ({
-      vllist = { vllist_head = n; vllist_tail = l.vllist.vllist_tail };
-      cells = Ghost.reveal tl;
-    }) in
-//    assert (llist_fragment (ccell_next chd') vhd.vcell_next tl == llist_fragment 
-    assume False;
-    pack_queue2 x l'
-      (pts_to (cllist_tail x) full_perm (Ghost.hide (l.vllist.vllist_tail)))
-      (llist_fragment (ccell_next chd') vhd.vcell_next tl)
-      (pts_to l.vllist.vllist_tail full_perm (ccell_ptrvalue_null _));
-    change_slprop _ emp (fun m -> intro_emp m);
-    ()
-  end
-
-(*
-
- assert (Cons? (Ghost.reveal l).cells);
-  let lc : (lc: Ghost.erased (list (ccell_lvalue a & vcell a)) { Cons? (Ghost.reveal lc) }) = Ghost.hide (Ghost.reveal l).cells in
-  let chd : Ghost.erased (ccell_lvalue a) = Ghost.hide (fst (L.hd (Ghost.reveal lc))) in
-  let vhd : Ghost.erased (vcell a) = Ghost.hide (snd (L.hd (Ghost.reveal lc))) in
-  let tl = Ghost.hide (L.tl (Ghost.reveal lc)) in 
-
-
-
-(* BEGIN helpers to unfold definitions just to prove that I can read the head pointer of a list and check its value to determine whether the list is empty or not *)
-
-[@"opaque_to_smt"]
-let read_head_nil
-  (#a: Type) (x: t a) (l: Ghost.erased (list (vcell a)))
-: Ghost slprop
-  (requires (Nil? l))
-  (ensures (fun q -> queue x l `equiv` (ccellp x.head full_perm None `star` q)))
-= assert (
-    (llist_fragment x.head l `star` ccellp (next_last x.head l) full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head l))) `equiv`
-    (ccellp (next_last x.head l) full_perm None `star` (llist_fragment x.head l `star` pure (x.tail == Ghost.reveal (next_last x.head l))))
-  ) by canon ();
-  (llist_fragment x.head l `star` pure (x.tail == Ghost.reveal (next_last x.head l)))
-
-[@"opaque_to_smt"]
-let read_head_snoc
-  (#a: Type) (x: t a) (l: Ghost.erased (list (vcell a)))
-: Ghost (slprop)
-  (requires (Cons? l))
-  (ensures (fun q -> queue x l `equiv` (ccellp x.head full_perm (Some (L.hd l)) `star` q)))
-=
-  let hd = L.hd l in
-  let tl = L.tl l in
-  assert (
-    ((ccellp x.head full_perm (Some hd) `star` llist_fragment hd.vcell_next tl) `star` ccellp (next_last x.head l) full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head l))) `equiv`
-    (ccellp x.head full_perm (Some hd) `star` ((llist_fragment hd.vcell_next tl `star` ccellp (next_last x.head l) full_perm None) `star` pure (x.tail == Ghost.reveal (next_last x.head l))))
-  ) by canon ();
-  (llist_fragment hd.vcell_next tl `star` ccellp (next_last x.head l) full_perm None) `star` pure (x.tail == Ghost.reveal (next_last x.head l))
-
-let read_head_ghost
-  (#a: Type) (x: t a) (l: Ghost.erased (list (vcell a)))
-: Ghost (option (vcell a) & slprop)
-  (requires True)
-  (ensures (fun (v, q) -> queue x l `equiv` (ccellp x.head full_perm v `star` q) /\ 
-    v == begin match Ghost.reveal l with 
-    | [] -> None
-    | a :: _ -> Some a
-    end
-  ))
-=
-  if Nil? l
-  then (None, read_head_nil x l)
-  else (Some (L.hd l), read_head_snoc x l)
-
-let gfst
-  (#a #b: Type)
-  (x: Ghost.erased (a & b))
-: Pure (Ghost.erased a)
-  (requires (True))
-  (ensures (fun y -> Ghost.reveal y == fst (Ghost.reveal x)))
-= fst x
-
-let gsnd
-  (#a #b: Type)
-  (x: Ghost.erased (a & b))
-: Pure (Ghost.erased b)
-  (requires (True))
-  (ensures (fun y -> Ghost.reveal y == snd (Ghost.reveal x)))
-= snd x
-
-[@"opaque_to_smt"]
-let read_head_pure
-  (#a: Type) (x: t a) (l: Ghost.erased (list (vcell a)))
-: Pure (Ghost.erased (option (vcell a)) & slprop)
-  (requires True)
-  (ensures (fun (v, q) -> queue x l `equiv` (ccellp x.head full_perm v `star` q) /\ 
-    Ghost.reveal v == begin match Ghost.reveal l with 
-    | [] -> None
-    | a :: _ -> Some a
-    end
-  ))
-= 
-  let vq = Ghost.elift1 (fun () -> read_head_ghost x l) () in
-  (gfst vq, Ghost.reveal (gsnd vq))
-
-let is_empty
-  (#a: Type)
-  (x: t a)
-  (l: Ghost.erased (list (vcell a)))
 : Steel bool
-  (queue x l)
-  (fun _ -> queue x l)
-  (requires (fun _ -> True))
-  (ensures (fun _ v _ ->
-    v == Nil? (Ghost.reveal l)
-  ))
-=
-  let q : Ghost.erased (option (vcell a)) & slprop = read_head_pure x l in
-  change_equiv_slprop (queue x l) (ccellp x.head full_perm (fst q) `star` snd q) ();
-  let r = ccell_ptrvalue_is_null x.head in
-  ccellp_is_null x.head full_perm (fst q);
-  change_equiv_slprop (ccellp x.head full_perm (fst q) `star` snd q)  (queue x l) ();
-  r
-
-(* END helpers to unfold definitions just to prove that I can read the head pointer of a list and check its value to determine whether the list is empty or not *)
-
-noeq
-type dequeue_result (a: Type0) = {
-  dq_val: a;
-  dq_rem: t a;
-  dq_rem_g: Ghost.erased (list (vcell a));
-}
-
-val dequeue
-  (#a: Type)
-  (x: t a)
-  (l: Ghost.erased (list (vcell a)))
-: Steel (dequeue_result a)
     (queue x l)
-    (fun res -> queue (res.dq_rem) (res.dq_rem_g))
-    (requires (fun _ -> Cons? l == true))
-    (ensures (fun _ res _ -> Cons? l /\ res.dq_val == Ghost.reveal (L.hd l).vcell_data /\ res.dq_rem_g == Ghost.hide (L.tl l) /\ res.dq_rem.tail == x.tail))
-
-let dequeue
-  #a x l
-=
-  let (l2: Ghost.erased (l: list (vcell a) { Cons? l })) = Ghost.hide (Ghost.reveal l) in // necessary otherwise refinement type checking fails
-  change_equiv_slprop
-    (llist_fragment x.head l)
-    (ccellp x.head full_perm (Some (L.hd l2)) `star` llist_fragment (L.hd l2).vcell_next (L.tl l2))
-    ();
-  ccellp_is_null x.head full_perm (Some (L.hd l2));
-  let hd : ccell_lvalue a = x.head in
-  let pval_hd = ccell_data hd in
-  let pnext_hd = ccell_next hd in
-  change_equiv_slprop
-    (ccellp x.head full_perm (Ghost.hide (Some (L.hd l2))))
-    (pts_to pval_hd full_perm (Ghost.hide (L.hd l2).vcell_data) `star` pts_to pnext_hd full_perm (Ghost.hide (L.hd l2).vcell_next))
-    ();
-  let next_hd = read pnext_hd in
-  let val_hd = read #a #full_perm #(Ghost.hide (L.hd l2).vcell_data) pval_hd in
-  let x' = { head = next_hd ; tail = x.tail } in
-  let res = { dq_val = val_hd; dq_rem = x' ; dq_rem_g = Ghost.hide (L.tl l2) } in
-  drop (pts_to pval_hd full_perm val_hd);
-  drop (pts_to pnext_hd full_perm next_hd);
-  change_slprop
-    (llist_fragment (L.hd l2).vcell_next (L.tl l2)
-     `star` ccellp (next_last x.head l) full_perm None `star` pure (x.tail == Ghost.reveal (next_last x.head l)))
-    (queue res.dq_rem res.dq_rem_g)
-    (fun _ -> ());
-  res
-
-let test_read_head_dequeue
-  (#a: Type)
-  (x: t a)
-  (l: Ghost.erased (list (vcell a)))
-: Steel (t a & Ghost.erased (list (vcell a)))
-    (queue x l)
-    (fun res -> queue (fst res) (snd res))
+    (fun _ -> queue x l)
     (requires (fun _ -> True))
     (ensures (fun _ res _ ->
-      match Ghost.reveal l with
-      | [] -> res == (x, l)
-      | _ :: q -> Ghost.reveal (snd res) == q
+      res == Nil? (datas l)
     ))
 =
-  let r = is_empty x l in
-  if r
-  then begin
-    noop (); // necessary, otherwise "effects PURE and SteelF cannot be composed"
-    (x, l)
-  end else
-    let res = dequeue x l in
-    (res.dq_rem, res.dq_rem_g)
+  change_equiv_slprop
+    (queue x l)
+    (
+      pts_to (cllist_head x) full_perm l.vllist.vllist_head `star` pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
+      llist_fragment' l.vllist.vllist_head l.cells `star`
+      pure (queue_prop' x l)
+    )
+    (fun _ -> queue_equiv x l);
+  peek_pure (queue_prop' x l);
+  let hd = read (cllist_head x) in
+  change_equiv_slprop
+    (
+        pts_to (cllist_head x) full_perm hd `star` pts_to (cllist_tail x) full_perm l.vllist.vllist_tail `star`
+        llist_fragment' l.vllist.vllist_head l.cells `star`
+        pure (queue_prop' x l)
+    )
+    (queue x l)
+    (fun _ -> queue_equiv x l);
+  ccell_ptrvalue_is_null hd
 
-let test
-  ()
-: SteelT unit
-    emp
-    (fun _ -> emp)
+val dequeue
+  (#a: Type)
+  (x: cllist_lvalue a)
+  (l: Ghost.erased (v a))
+: Steel (a & Ghost.erased (v a))
+    (queue x l)
+    (fun res -> queue x (snd res))
+    (requires (fun _ -> Cons? (datas l) == true))
+    (ensures (fun _ res _ -> datas l == fst res :: datas (snd res)))
+
+let dequeue
+  #a x l
 =
-  let l = create_queue nat in
-  let lk = enqueue l _ 1 in
-  let lk = enqueue (fst lk) _ 2 in
-  let Some c = read_head (fst lk) _ in
-  let lk = dequeue (fst lk) _ (next c) in
-  let lk = enqueue (fst lk) _ 3 in
-  let Some c = read_head (fst lk) _ in
-  let lk = dequeue (fst lk) _ (next c) in
-  let Some c = read_head (fst lk) _ in
-  let lk = dequeue (fst lk) _ (next c) in
-  assert (snd lk == Ghost.hide []);
-  assert (data c == 3);
-  drop (queue (fst lk) _)
+  let l0 : (l0: Ghost.erased (list (ccell_lvalue a & vcell a)) { Cons? l0 }) = l.cells in
+  let chd : Ghost.erased (ccell_lvalue a) = Ghost.hide (fst (L.hd l0)) in
+  let vhd : Ghost.erased (vcell a) = Ghost.hide (snd (L.hd l0)) in
+  let tl : Ghost.erased (list (ccell_lvalue a & vcell a)) = Ghost.hide (L.tl l0) in
+  change_equiv_slprop
+    (queue x l)
+    (
+      cllist x full_perm l.vllist `star`
+      (
+        ccell chd full_perm vhd `star`
+        llist_fragment' vhd.vcell_next tl `star`
+        pure (Ghost.reveal chd == l.vllist.vllist_head)
+      ) `star`
+      pure (queue_prop' x l)
+    )
+    (fun _ -> queue_equiv x l);
+  elim_pure (queue_prop' x l);
+  elim_pure (Ghost.reveal chd == l.vllist.vllist_head);
+  let chd' = read (cllist_head x) in
+  assert (chd' == Ghost.reveal chd);
+  let (chd' : ccell_lvalue a) = chd' in
+  change_equal_slprop
+    (ccell chd full_perm vhd)
+    (pts_to (ccell_data chd') full_perm vhd.vcell_data `star` pts_to (ccell_next chd') full_perm vhd.vcell_next)
+    (fun _ -> ());
+  let chd_data = read (ccell_data chd') in
+  let chd_next = read (ccell_next chd') in
+  change_equal_slprop
+    (pts_to (ccell_data chd') full_perm chd_data `star` pts_to (ccell_next chd') full_perm chd_next)
+    (ccell chd' full_perm vhd)
+    (fun _ -> ());
+  free_cell chd' _;
+  write (cllist_head x) chd_next;
+  if ccell_ptrvalue_is_null chd_next
+  then begin
+    change_equiv_slprop
+      (llist_fragment' vhd.vcell_next tl)
+      (llist_fragment' vhd.vcell_next tl `star` pure (Nil? tl == true))
+      (fun _ ->
+        match Ghost.reveal tl with
+        | [] ->
+          assert (llist_fragment' vhd.vcell_next tl `equiv` (llist_fragment' vhd.vcell_next tl `star` emp)) by canon ();
+          emp_equiv_pure (Nil? tl == true)
+        | (chd2, vhd2) :: tl2 ->
+          pure_equiv (chd2 == vhd.vcell_next) (chd2 == vhd.vcell_next /\ Nil? tl == true); // because that equality contradicts ccell_ptrvalue_is_null chd_next
+          pure_and_equiv (chd2 == vhd.vcell_next) (Nil? tl == true);
+          assert ((
+            ccell chd2 full_perm vhd2 `star` llist_fragment' vhd2.vcell_next tl2 `star` (pure (chd2 == vhd.vcell_next) `star` pure (Nil? tl == true))
+          ) `equiv` (
+            (ccell chd2 full_perm vhd2 `star` llist_fragment' vhd2.vcell_next tl2 `star` pure (chd2 == vhd.vcell_next)) `star` pure (Nil? tl == true)
+          )) by canon ()
+      );
+    elim_pure (Nil? tl == true);
+    write (cllist_tail x) (cllist_head x);
+    let l' : Ghost.erased (v a) = Ghost.hide ({
+      vllist = ({ vllist_head = chd_next; vllist_tail = cllist_head x });
+      cells = []
+    })
+    in
+    let res = (chd_data, l') in
+    intro_pure (queue_prop' x l');
+    change_equiv_slprop
+      (
+        pts_to (cllist_head x) full_perm chd_next `star`
+        pts_to (cllist_tail x) full_perm (cllist_head x) `star`
+        llist_fragment' vhd.vcell_next tl `star`
+        pure (queue_prop' x l')
+      )
+      (queue x (snd res))
+      (fun _ ->
+        queue_equiv x (snd res)
+      );
+    res
+  end else begin
+    let l' : Ghost.erased (v a) = Ghost.hide ({
+      vllist = ({ vllist_head = chd_next; vllist_tail = l.vllist.vllist_tail });
+      cells = Ghost.reveal tl;
+    })
+    in
+    let res = (chd_data, l') in
+    intro_pure (queue_prop' x l');
+    change_equiv_slprop
+      (
+        pts_to (cllist_head x) full_perm chd_next `star`
+        pts_to (cllist_tail x) full_perm _ `star`
+        llist_fragment' vhd.vcell_next tl `star`
+        pure (queue_prop' x l')
+      )
+      (queue x (snd res))
+      (fun _ -> queue_equiv x (snd res));
+    res
+  end

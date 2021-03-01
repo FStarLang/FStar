@@ -38,10 +38,12 @@ bool is_empty(cllist_ptrvalue l) {
 int dequeue(cllist_ptrvalue l) {
   ccell_ptrvalue c = l->cllist_head;
   ccell_ptrvalue next = c->ccell_next;
+  int data = c->ccell_data;
+  free(c);
   l->cllist_head = next;
   if (next == NULL)
     l->cllist_tail = &(l->cllist_head);
-  return c->ccell_data;
+  return data;
 }
 
 void enqueue(cllist_ptrvalue l, int v) {

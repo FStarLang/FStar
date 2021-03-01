@@ -45,3 +45,9 @@ let alloc_cell
   let res = (pres, gres) in
   change_slprop (pts_to rdata full_perm data `star` pts_to rnext full_perm next) (ccell (fst res) full_perm (snd res)) (fun _ -> ());
   res
+
+let free_cell
+  #a c v
+=
+  free (ccell_data c);
+  free (ccell_next c)

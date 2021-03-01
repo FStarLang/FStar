@@ -37,6 +37,12 @@ type vcell (a: Type0) = {
   vcell_next : ccell_ptrvalue a;
 }
 
+(* FIXME:
+   1/ revise the permission system for individual references to forbid freeing just one field,
+      but without assuming that such references are "non-freeable forever."
+   2/ add a "cell-level freeable" permission to free the whole cell *)
+
+[@__reduce__] // to avoid manual unfoldings through change_slprop 
 let ccell (#a: Type0) (c: ccell_lvalue a) (p: perm) (v: Ghost.erased (vcell a)) : Tot slprop =
   pts_to (ccell_data c) p v.vcell_data `star` pts_to (ccell_next c) p v.vcell_next
 
@@ -87,3 +93,11 @@ val alloc_cell
     (fun res -> ccell (fst res) full_perm (snd res))
     (requires (fun _ -> True))
     (ensures (fun _ res _ -> Ghost.reveal (snd res) == ({ vcell_data = data; vcell_next = next; })))
+
+val free_cell
+  (#a: Type0)
+  (c: ccell_lvalue a)
+  (v: Ghost.erased (vcell a))
+: SteelT unit
+    (ccell c full_perm v)
+    (fun _ -> emp)
