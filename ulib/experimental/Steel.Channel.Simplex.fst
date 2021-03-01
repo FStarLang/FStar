@@ -344,6 +344,7 @@ let recv_availableT (#p:sprot) #q (cc:chan q) (vs vr:chan_val) (_:unit)
     Steel.SpinLock.release cc.chan_lock;
     vs_msg
 
+#push-options "--ide_id_info_off"
 let send_receive_prelude (#p:prot) (cc:chan p)
   : SteelT (chan_val & chan_val)
            emp

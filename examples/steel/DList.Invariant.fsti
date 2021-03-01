@@ -25,7 +25,14 @@ module L = FStar.List.Tot
 let (=.=) #a (x y: a) : slprop = pure (x == y)
 
 val cell (a:Type0) : Type0
-let t (a:Type0) = ref (cell a)
+let t a = ref (cell a)
+
+noeq
+type tt a =
+  {
+    head: t a;
+    tail: t a;
+  }
 
 val prev (c:cell 'a) : t 'a
 val next (c:cell 'a) : t 'a
@@ -42,6 +49,7 @@ val mk_cell (p n: t 'a) (d:'a)
 let null_dlist (#a:Type)
   : t a
   = Steel.Reference.null
+
 
 /// Equality on same-length pointers: an assumed primitive
 val ptr_eq (#a:Type) (x y:t a)
