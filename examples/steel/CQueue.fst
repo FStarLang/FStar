@@ -1,8 +1,6 @@
 module CQueue
 open CQueue.LList
 
-(* High-level value, should not be used in C code outside of specs *)
-
 let t a = cllist_lvalue a
 
 noeq
