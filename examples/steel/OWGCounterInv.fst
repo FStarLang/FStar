@@ -56,7 +56,7 @@ let snd = snd
 
 #set-options "--print_implicits"
 
-let ghost_gather (#uses:inames) (v1 v2:G.erased int) (r:ghost_ref int)
+let ghost_gather (#uses:inames) (v1 #v2:G.erased int) (r:ghost_ref int)
   : SteelAtomic unit uses unobservable
       (ghost_pts_to r half_perm v1 `star`
        ghost_pts_to r half_perm v2)
@@ -69,7 +69,7 @@ let ghost_gather (#uses:inames) (v1 v2:G.erased int) (r:ghost_ref int)
 (*
  * Similar wrapper over ghost_share that rewrites (half_perm full_perm) to half_perm
  *)
-let ghost_share (#uses:inames) (v1 v2:G.erased int) (r:ghost_ref int)
+let ghost_share (#uses:inames) (v1 #v2:G.erased int) (r:ghost_ref int)
   : SteelAtomic unit uses unobservable
       (ghost_pts_to r full_perm v1)
       (fun _ -> ghost_pts_to r half_perm v1 `star`
@@ -177,7 +177,7 @@ let new_inv (#uses:inames) (#v:G.erased int) (r:ref int) (r1 r2:ghost_ref int)
     intro_exists (G.hide 0, v) (inv_pred r r1 r2);
     new_inv (inv_slprop r r1 r2)
 
-let g_incr (n:G.erased int) = G.elift1 (fun (n:int) -> n + 1) n
+let incr (n:G.erased int) = G.elift1 (fun (n:int) -> n + 1) n
 
 (*
  * We assume an atomic increment operation for int refs
@@ -185,7 +185,7 @@ let g_incr (n:G.erased int) = G.elift1 (fun (n:int) -> n + 1) n
 assume val incr_atomic (#uses:inames) (#v:G.erased int) (r:ref int)
   : SteelAtomicT unit uses observable
       (pts_to r full_perm v)
-      (fun _ -> pts_to r full_perm (g_incr v))
+      (fun _ -> pts_to r full_perm (incr v))
 
 (*
  * Incrementing the ghost contribution ref
@@ -197,13 +197,13 @@ let incr_ghost_contrib (#uses:inames) (#v1 #v2:G.erased int) (r:ghost_ref int)
   : SteelAtomic unit uses unobservable
       (ghost_pts_to r half_perm v1 `star`
        ghost_pts_to r half_perm v2)
-      (fun _ -> ghost_pts_to r half_perm (g_incr v1) `star`
-             ghost_pts_to r half_perm (g_incr v2))
+      (fun _ -> ghost_pts_to r half_perm (incr v1) `star`
+             ghost_pts_to r half_perm (incr v2))
       (fun _ -> True)
       (fun _ _ _ -> v1 == v2)
-  = ghost_gather v1 v2 r;
-    ghost_write r (g_incr v1);
-    ghost_share (g_incr v1) (g_incr v2) r
+  = ghost_gather v1 #v2 r;
+    ghost_write r (incr v1);
+    ghost_share (incr v1) #(incr v2) r
 
 (*
  * Another form of the inv_slprop with conditional on the ghost refs
@@ -230,7 +230,7 @@ let incr_with_inv_slprop
       (fun _ ->
        inv_slprop_conditional r r_mine r_other b
        `star`
-       ghost_pts_to r_mine half_perm (g_incr n_ghost))
+       ghost_pts_to r_mine half_perm (incr n_ghost))
   = //get inv_slprop in the context
     change_slprop (inv_slprop_conditional _ _ _ _)
                   (inv_slprop _ _ _) (fun _ -> ());
@@ -240,8 +240,8 @@ let incr_with_inv_slprop
 
     //restore inv_slprop, by first writing r to a form expected by the invariant
     change_slprop (pts_to r full_perm _)
-                  (pts_to r full_perm (G.hide (g_incr (fst w) + snd w))) (fun _ -> ());
-    intro_exists (g_incr (fst w), snd w) (inv_pred r r_mine r_other);
+                  (pts_to r full_perm (G.hide (incr (fst w) + snd w))) (fun _ -> ());
+    intro_exists (incr (fst w), snd w) (inv_pred r r_mine r_other);
     change_slprop (inv_slprop _ _ _)
                   (inv_slprop_conditional _ _ _ _) (fun _ -> ())
 
@@ -254,7 +254,7 @@ let incr_with_invariant
   ()
   : SteelT unit
       (active half_perm i `star` ghost_pts_to r_mine half_perm n_ghost)
-      (fun _ -> active half_perm i `star` ghost_pts_to r_mine half_perm (g_incr n_ghost))
+      (fun _ -> active half_perm i `star` ghost_pts_to r_mine half_perm (incr n_ghost))
   = with_invariant i
       (incr_with_inv_slprop r r_mine r_other n_ghost b (name i))
 
@@ -265,14 +265,14 @@ let incr_with_invariant
 let incr_main (#v:G.erased int) (r:ref int)
   : SteelT unit
       (pts_to r full_perm v)
-      (fun _ -> pts_to r full_perm (G.hide (G.reveal v + 2)))
+      (fun _ -> pts_to r full_perm (v + 2))
   = //allocate the two ghost refs
     let r1 = ghost_alloc 0 in
     let r2 = ghost_alloc v in
 
     //split their permissions
-    ghost_share 0 _ r1;
-    ghost_share v _ r2;
+    ghost_share 0 r1;
+    ghost_share v r2;
 
     //create the invariant
     let i = new_inv r r1 r2 in
@@ -291,5 +291,5 @@ let incr_main (#v:G.erased int) (r:ref int)
     let _ = A.witness_h_exists () in
 
     //drop the ghost refs
-    ghost_gather (g_incr 0) _ r1; drop (ghost_pts_to r1 _ _);
-    ghost_gather (g_incr v) _ r2; drop (ghost_pts_to r2 _ _); ()
+    ghost_gather (incr 0) r1; drop (ghost_pts_to r1 _ _);
+    ghost_gather (incr v) r2; drop (ghost_pts_to r2 _ _); ()
