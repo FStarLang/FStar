@@ -1,10 +1,10 @@
-module LListQueue
+module CQueue
 open Steel.Memory
 open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.FractionalPermission
 open Steel.Reference
-include LListQueue.LList
+include CQueue.LList
 module L = FStar.List.Tot
 
 (* High-level value, should not be used in C code outside of specs *)

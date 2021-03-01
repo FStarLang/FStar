@@ -1,4 +1,4 @@
-module LListQueue.Cell
+module CQueue.Cell
 
 (* A Steel model of C cell structs *)
 
