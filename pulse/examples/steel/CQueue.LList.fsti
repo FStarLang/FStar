@@ -1,5 +1,5 @@
-module LListQueue.LList
-include LListQueue.Cell
+module CQueue.LList
+include CQueue.Cell
 open Steel.Memory
 open Steel.Effect
 open Steel.Effect.Atomic

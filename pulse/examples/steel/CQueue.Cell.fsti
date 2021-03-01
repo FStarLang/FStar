@@ -1,4 +1,4 @@
-module LListQueue.Cell
+module CQueue.Cell
 open Steel.Memory
 open Steel.Effect
 open Steel.Effect.Atomic
