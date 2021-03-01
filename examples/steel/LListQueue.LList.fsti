@@ -38,6 +38,7 @@ type vllist (a: Type0) = {
   vllist_tail : ref (ccell_ptrvalue a);
 }
 
+[@__reduce__] // to avoid manual unfoldings through change_slprop 
 let cllist (#a: Type0) (c: cllist_lvalue a) (p: perm) (v: Ghost.erased (vllist a)) : Tot slprop =
   pts_to (cllist_head c) p v.vllist_head `star` pts_to (cllist_tail c) p v.vllist_tail
 
