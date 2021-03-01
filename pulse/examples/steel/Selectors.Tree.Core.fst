@@ -249,5 +249,160 @@ let pack_tree #a ptr left right =
     ((reveal x, reveal l), reveal r) (Spec.Node (get_data x) l r)
     (fun m -> pack_tree_lemma ptr left right x l r m)
 
+[@@__steel_reduce__]
+let tree_node' #a r : vprop' =
+  {hp = tree_sl r;
+   t = tree (node a);
+   sel = tree_sel_node r}
+unfold
+let tree_node (#a:Type0) (r:t a) = VUnit (tree_node' r)
 
-let unpack_tree #a ptr = sladmit()
+[@@ __steel_reduce__]
+let v_node
+  (#a:Type0)
+  (#p:vprop)
+  (r:t a)
+  (h:rmem p{
+    FStar.Tactics.with_tactic selector_tactic (can_be_split p (tree_node r) /\ True)
+  })
+    : GTot (tree (node a))
+  = h (tree_node r)
+
+val reveal_non_empty_tree (#a:Type0) (ptr:t a)
+  : SteelSel unit (tree_node ptr) (fun _ -> tree_node ptr)
+             (requires fun _ -> ptr =!= null_t)
+             (ensures fun h0 _ h1 -> v_node ptr h0 == v_node ptr h1 /\
+               Spec.Node? (v_node ptr h0))
+
+let reveal_non_empty_lemma (#a:Type) (ptr:t a) (t:tree (node a)) (m:mem) : Lemma
+    (requires interp (tree_sl ptr) m /\ tree_sel_node ptr m == t /\ ptr =!= null_t)
+    (ensures Spec.Node? t)
+= let l' = id_elim_exists (tree_sl' ptr) m in
+  tree_sel_interp ptr l' m;
+  pure_interp (ptr == null_t) m
+
+let is_node (#a:Type) (t:tree (node a)) : prop = match t with
+  | Spec.Leaf -> False
+  | Spec.Node _ _ _ -> True
+
+let reveal_non_empty_tree #a ptr =
+  let h = get () in
+  let t = hide (v_node ptr h) in
+  extract_info (tree_node ptr) t (is_node t) (reveal_non_empty_lemma ptr t)
+
+val unpack_tree_node (#a:Type0) (ptr:t a)
+  : SteelSel (node a)
+             (tree_node ptr)
+             (fun n -> tree_node (get_left n) `star` tree_node (get_right n) `star` vptr ptr)
+             (fun _ -> not (is_null_t ptr))
+             (fun h0 n h1 ->
+               Spec.Node? (v_node ptr h0) /\
+               sel ptr h1 == n /\
+               v_node ptr h0 == Spec.Node (sel ptr h1)
+                 (v_node (get_left n) h1) (v_node (get_right n) h1))
+
+
+let head (#a:Type0) (t:erased (tree (node a)))
+  : Pure (erased (node a)) (requires Spec.Node? (reveal t)) (ensures fun _ -> True) =
+  let Spec.Node n _ _ = reveal t in hide n
+
+let gleft (#a:Type0) (t:erased (tree (node a)))
+  : Pure (erased (tree (node a))) (requires Spec.Node? (reveal t)) (ensures fun _ -> True) =
+  let Spec.Node _ l _ = reveal t in hide l
+
+let gright (#a:Type0) (t:erased (tree (node a)))
+  : Pure (erased (tree (node a))) (requires Spec.Node? (reveal t)) (ensures fun _ -> True) =
+  let Spec.Node _ _ r = reveal t in hide r
+
+let unpack_tree_node_lemma (#a:Type0) (pt:t a) (t:tree (node a)) (m:mem) : Lemma
+  (requires Spec.Node? t /\ interp (tree_sl pt) m /\ tree_sel_node pt m == t)
+  (ensures (
+    let Spec.Node x l r = t in
+    interp (ptr pt `Mem.star` tree_sl (get_left x) `Mem.star` tree_sl (get_right x)) m /\
+    sel_of (vptr pt) m == x /\
+    tree_sel_node (get_left x) m == l /\
+    tree_sel_node (get_right x) m == r)
+  )
+  = let Spec.Node x l r = t in
+
+    tree_sel_interp pt t m;
+
+    let sl = R.pts_to pt full_perm x `Mem.star` tree_sl' (get_left x) l `Mem.star` tree_sl' (get_right x) r in
+
+    pure_star_interp sl (pt =!= null_t) m;
+    emp_unit sl;
+    assert (interp sl m);
+
+    let aux (m:mem) (ml1 ml2 mr:mem) : Lemma
+      (requires disjoint ml1 ml2 /\ disjoint (join ml1 ml2) mr /\ m == join (join ml1 ml2) mr /\
+        interp (R.pts_to pt full_perm x) ml1 /\
+        interp (tree_sl' (get_left x) l) ml2 /\
+        interp (tree_sl' (get_right x) r) mr)
+      (ensures
+        interp (ptr pt `Mem.star` tree_sl (get_left x) `Mem.star` tree_sl (get_right x)) m /\
+        sel_of (vptr pt) m == x /\
+        tree_sel_node (get_left x) m == l /\
+        tree_sel_node (get_right x) m == r)
+      = intro_h_exists (hide x) (R.pts_to pt full_perm) ml1;
+        ptr_sel_interp pt ml1;
+        R.pts_to_witinv pt full_perm;
+
+        tree_sel_interp (get_left x) l ml2;
+        intro_star (ptr pt) (tree_sl (get_left x)) ml1 ml2;
+
+        tree_sel_interp (get_right x) r mr;
+        tree_sl'_witinv (get_right x);
+        join_commutative ml1 ml2;
+        let ml = join ml1 ml2 in
+        assert (interp (ptr pt `Mem.star` tree_sl (get_left x)) ml);
+
+        intro_star (ptr pt `Mem.star` tree_sl (get_left x)) (tree_sl (get_right x)) ml mr;
+        join_commutative ml mr
+
+    in
+    elim_star
+      (R.pts_to pt full_perm x `Mem.star` tree_sl' (get_left x) l)
+      (tree_sl' (get_right x) r)
+      m;
+    Classical.forall_intro (Classical.move_requires
+      (elim_star (R.pts_to pt full_perm x) (tree_sl' (get_left x) l)));
+    Classical.forall_intro_3 (Classical.move_requires_3 (aux m))
+
+let unpack_tree_node #a ptr =
+  let h = get () in
+  let t:erased (tree (node a)) = hide (v_node ptr h) in
+  reveal_non_empty_tree ptr;
+  let gn = head t in
+  change_slprop
+    (tree_node ptr)
+    (vptr ptr `star` tree_node (get_left gn) `star` tree_node (get_right gn))
+    t ((reveal gn, reveal (gleft t)), reveal (gright t))
+    (fun m -> unpack_tree_node_lemma ptr t m);
+
+  reveal_star (vptr ptr `star` tree_node (get_left gn)) (tree_node (get_right gn));
+  reveal_star (vptr ptr) (tree_node (get_left gn));
+  let n = read ptr in
+
+  change_slprop_rel (tree_node (get_left gn)) (tree_node (get_left n)) (fun x y -> x == y) (fun _ -> ());
+  change_slprop_rel (tree_node (get_right gn)) (tree_node (get_right n)) (fun x y -> x == y) (fun _ -> ());
+
+  n
+
+let unpack_tree #a ptr =
+  let h = get() in
+  change_slprop_rel (linked_tree ptr) (tree_node ptr) (fun x y -> x == tree_view y) (fun _ -> ());
+  let h0 = get () in
+  assert (v_linked_tree ptr h == tree_view (v_node ptr h0));
+  let n = unpack_tree_node ptr in
+
+  change_slprop_rel
+    (tree_node (get_left n))
+    (linked_tree (get_left n))
+    (fun x y -> tree_view x == y)
+    (fun _ -> ());
+  change_slprop_rel
+    (tree_node (get_right n))
+    (linked_tree (get_right n))
+    (fun x y -> tree_view x == y)
+    (fun _ -> ());
+  n
