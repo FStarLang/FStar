@@ -292,7 +292,4 @@ let incr_main (#v:G.erased int) (r:ref int)
 
     //drop the ghost refs
     ghost_gather (g_incr 0) _ r1; drop (ghost_pts_to r1 _ _);
-    ghost_gather (g_incr v) _ r2; drop (ghost_pts_to r2 _ _);
-
-    change_slprop (pts_to r _ _)
-                  (pts_to r full_perm (v + 2)) (fun _ -> ())
+    ghost_gather (g_incr v) _ r2; drop (ghost_pts_to r2 _ _); ()
