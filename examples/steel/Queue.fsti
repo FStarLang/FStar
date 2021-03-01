@@ -13,7 +13,8 @@ let pts_to (#a:_) (x:t a) (v: Ghost.erased (cell a)) = pts_to x full_perm v
 val queue_l (#a:_) (hd tl:Ghost.erased (t a)) (l:Ghost.erased (list a))
   : slprop u#1
 
-let queue (#a:_) (hd:Ghost.erased (t a)) (tl:Ghost.erased (t a)) = h_exists (queue_l hd tl)
+let queue (#a:_) ([@@@smt_fallback] hd:Ghost.erased (t a))
+                 ([@@@smt_fallback] tl:Ghost.erased (t a)) = h_exists (queue_l hd tl)
 
 val new_queue (#a:_) (v:a) :
   SteelT (t a) emp (fun x -> queue x x)
