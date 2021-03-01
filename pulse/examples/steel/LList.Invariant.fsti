@@ -60,7 +60,7 @@ val intro_llist_cons (#a:Type) (ptr:t a)
    : Steel unit
      (pts_to ptr full_perm hd `star` llist (next hd) tl)
      (fun _ -> llist ptr (hd::tl))
-     (requires fun _ -> ptr =!= null_llist)
+     (requires fun _ -> ~ (is_null ptr))
      (ensures fun _ _ _ -> True)
 
 val elim_llist_cons (#a:Type) (ptr:t a)

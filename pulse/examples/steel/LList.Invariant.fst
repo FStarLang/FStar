@@ -41,7 +41,7 @@ let mk_cell (n: t 'a) (d:'a) = {
 let hd l = Cons?.hd l
 let tl l = Cons?.tl l
 
-let null_llist (#a:Type)  = admit()
+let null_llist (#a:Type)  = null
 let ptr_eq (#a:Type) (x y:t a) = admit()
 
 
@@ -61,7 +61,6 @@ let rec llist' (#a:Type) (ptr:t a)
       pts_to ptr full_perm hd `star`
       llist' (next hd) tl
 let llist = llist'
-
 
 (* Helper lemmas/rewritings *)
 
