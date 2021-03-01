@@ -8,7 +8,7 @@ open Steel.Reference
 module L = FStar.List.Tot
 module U = Steel.Utils
 
-let pts_to (#a:_) (x:t a) (v: Ghost.erased (cell a)) = pts_to x full_perm v
+let pts_to (#a:_) (x:t a) ([@@@smt_fallback]v: Ghost.erased (cell a)) = pts_to x full_perm v
 
 val queue_l (#a:_) (hd tl:Ghost.erased (t a)) (l:Ghost.erased (list a))
   : slprop u#1
@@ -56,10 +56,14 @@ assume atomic field update primitive:
 
 *)
 [@@__reduce__]
-let dequeue_post_success (#a:_) (tl:Ghost.erased (t a)) (hd:t a) (p:t a) =
+let dequeue_post_success (#a:_) ([@@@smt_fallback]tl:Ghost.erased (t a))
+                                ([@@@smt_fallback]hd:t a)
+                                ([@@@smt_fallback]p:t a) =
       h_exists (fun (c:Ghost.erased (cell a)) -> pts_to hd c `star` pure (Ghost.reveal p == c.next) `star` queue p tl)
 
-let dequeue_post (#a:_) (tl:Ghost.erased (t a)) (hd:t a) (res:option (t a)) =
+let dequeue_post (#a:_) ([@@@smt_fallback]tl:Ghost.erased (t a))
+                        ([@@@smt_fallback]hd:t a)
+                        ([@@@smt_fallback]res:option (t a)) =
     match res with
     | None ->
       queue hd tl
