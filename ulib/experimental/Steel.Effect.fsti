@@ -17,35 +17,11 @@
 
 module Steel.Effect
 
-module Sem = Steel.Semantics.Hoare.MST
 module Mem = Steel.Memory
 open Steel.Memory
-open Steel.Semantics.Instantiate
 include Steel.Effect.Common
 
-module Ins = Steel.Semantics.Instantiate
-
 #set-options "--warn_error -330"  //turn off the experimental feature warning
-
-let interp_depends_only_on_post (#a:Type) (hp:a -> slprop)
-: Lemma
-  (forall (x:a).
-     (forall (m0:hmem (hp x)) (m1:mem{disjoint m0 m1}). interp (hp x) m0 <==> interp (hp x) (join m0 m1)))
-= let aux (x:a)
-    : Lemma
-      (forall (m0:hmem (hp x)) (m1:mem{disjoint m0 m1}). interp (hp x) m0 <==> interp (hp x) (join m0 m1))
-    = interp_depends_only_on (hp x) in
-  Classical.forall_intro aux
-
-let req_to_act_req (#pre:pre_t) (req:req_t pre) : Sem.l_pre #state pre =
-  interp_depends_only_on pre;
-  fun m -> interp pre m /\ req m
-
-let ens_to_act_ens (#pre:pre_t) (#a:Type) (#post:post_t a) (ens:ens_t pre a post)
-: Sem.l_post #state #a pre post
-= interp_depends_only_on pre;
-  interp_depends_only_on_post post;
-  fun m0 x m1 -> interp pre m0 /\ interp (post x) m1 /\ ens m0 x m1
 
 val repr (a:Type) (pre:pre_t) (post:post_t a) (req:req_t pre) (ens:ens_t pre a post) : Type u#2
 

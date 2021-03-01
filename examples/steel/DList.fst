@@ -1,11 +1,12 @@
 module DList
 open Steel.Memory
-open Steel.Effect.Atomic
 open Steel.Effect
 open Steel.FractionalPermission
 open Steel.Reference
 open DList.Invariant
 module U = Steel.Utils
+open Steel.Effect.Atomic
+#push-options "--ide_id_info_off"
 
 let new_dlist (#a:Type) (init:a)
   : Steel (t a & cell a)
@@ -25,8 +26,8 @@ let new_dlist (#a:Type) (init:a)
     pc
 
 let read_norefine (#a:Type)
-                  (#p:perm)
-                  (#v:Ghost.erased a)
+                  (#[@@@ framing_implicit] p:perm)
+                  (#[@@@ framing_implicit] v:Ghost.erased a)
                   (r:ref a)
   : Steel a (pts_to r p v) (fun x -> pts_to r p v)
             (requires fun _ -> True)
@@ -134,13 +135,13 @@ let concat_nil_l (#a:Type)
              :: tl1
 
 let concat_t a =
-  (#from0:t a) ->
-  (#to0: t a) ->
-  (#hd0:cell a) ->
-  (#tl0:list (cell a)) ->
-  (#from1:t a) ->
-  (#hd1:cell a) ->
-  (#tl1:list (cell a)) ->
+  (#[@@@ framing_implicit] from0:t a) ->
+  (#[@@@ framing_implicit] to0: t a) ->
+  (#[@@@ framing_implicit] hd0:cell a) ->
+  (#[@@@ framing_implicit] tl0:list (cell a)) ->
+  (#[@@@ framing_implicit] from1:t a) ->
+  (#[@@@ framing_implicit] hd1:cell a) ->
+  (#[@@@ framing_implicit] tl1:list (cell a)) ->
   (ptr0:t a) ->
   (ptr1:t a) ->
   SteelT (list (cell a))
@@ -172,103 +173,13 @@ let concat_cons (#a:Type) (aux:concat_t a)
      c0::l
 
 let rec concat (#a:Type)
-               (#from0:t a)
-               (#to0: t a)
-               (#hd0:cell a)
-               (#tl0:list (cell a))
-               (#from1:t a)
-               (#hd1:cell a)
-               (#tl1:list (cell a))
-               (ptr0:t a)
-               (ptr1:t a)
-   : SteelT (list (cell a))
-           (dlist from0 ptr0 to0 (hd0::tl0) `star`
-            dlist from1 ptr1 null_dlist (hd1::tl1))
-           (fun l -> dlist from0 ptr0 null_dlist l)
-   =
-//     let to1 = null_dlist #a in
-
-     //1: read the ptr0 to get cell0
-
-     let c0 = read_head from0 ptr0 to0 hd0 tl0 in
-
-     //2: unfold dlist to dlist cons
-     elim_dlist_cons from0 ptr0 to0 hd0 tl0;
-
-     let b = ptr_eq (next c0) to0 in
-
-     change_slprop
-        (pts_to ptr0 full_perm hd0 `star`
-         dlist ptr0 (next hd0) to0 tl0 `star`
-         dlist from1 ptr1 null_dlist (hd1::tl1))
-        (pts_to ptr0 full_perm hd0 `star`
-         (if b
-          then dlist ptr0 to0 to0 tl0
-          else dlist ptr0 (next hd0) to0 tl0) `star`
-         dlist from1 ptr1 null_dlist (hd1::tl1))
-        (fun _ -> ());
-     cond b
-       (fun b' ->
-         pts_to ptr0 full_perm hd0 `star`
-         (if b'
-          then dlist ptr0 to0 to0 tl0
-          else dlist ptr0 (next hd0) to0 tl0) `star`
-               dlist from1 ptr1 null_dlist (hd1::tl1))
-       (fun b l -> dlist from0 ptr0 null_dlist l)
-       (fun _ ->
-         concat_nil_l from0 ptr0 to0 hd0 tl0
-                      from1 ptr1 hd1 tl1)
-       (fun _ ->
-         concat_cons (concat #a)
-                     from0 ptr0 to0 hd0 tl0
-                     from1 ptr1 hd1 tl1)
-
-let snoc (#a:Type)
-         (#from0:t a)
-         (#to0: t a)
-         (#hd0:cell a)
-         (#l0:list (cell a))
-         (ptr0:t a)
-         (v:a)
-   : SteelT (list (cell a))
-     (requires
-       dlist from0 ptr0 to0 (hd0::l0))
-     (ensures
-       dlist from0 ptr0 null_dlist)
-     // (requires fun _ ->
-     //   Cons? l0)
-     // (ensures fun _ l _ ->
-     //   datas l == datas l0 @ datas [mk_cell null_dlist null_dlist v])
-   = let tl = new_dlist v in
-     concat #_ #_ #_ #_ #_ #null_dlist #(snd tl) #[] ptr0 (fst tl)
-
-let cons (#a:Type)
-         (from0:t a) (ptr0:t a) (hd0:cell a) (l0:list (cell a))
-         (v:a)
-   : SteelT (t a & list (cell a))
-     (requires
-       dlist from0 ptr0 null_dlist (hd0::l0))
-     (ensures fun pc ->
-       dlist null_dlist (fst pc) null_dlist (snd pc))
-     // (requires fun _ ->
-     //   Cons? l0)
-     // (ensures fun _ pc _ ->
-     //   datas (snd pc) == datas [mk_cell null_dlist null_dlist v] @ datas l0)
-   = let pc = new_dlist v in
-     let l = concat #_ #null_dlist #null_dlist #(snd pc) #[] (fst pc) ptr0 in
-     fst pc, l
-
-(* this version of concat tries to use if/then/else
-   instead of a cond combinator ...
-   and seems like with some work it could actually work *)
-let rec concat_alt (#a:Type)
-               (#from0:t a)
-               (#to0: t a)
-               (#hd0:cell a)
-               (#tl0:list (cell a))
-               (#from1:t a)
-               (#hd1:cell a)
-               (#tl1:list (cell a))
+               (#[@@@ framing_implicit] from0:t a)
+               (#[@@@ framing_implicit] to0: t a)
+               (#[@@@ framing_implicit] hd0:cell a)
+               (#[@@@ framing_implicit] tl0:list (cell a))
+               (#[@@@ framing_implicit] from1:t a)
+               (#[@@@ framing_implicit] hd1:cell a)
+               (#[@@@ framing_implicit] tl1:list (cell a))
                (ptr0:t a)
                (ptr1:t a)
    : SteelT (list (cell a))
@@ -318,15 +229,51 @@ let rec concat_alt (#a:Type)
        change_slprop (dlist ptr0 (next hd0) to0 tl0)
                      (dlist ptr0 (next c0) to0 (hd0' :: tl0'))
                      (fun _ -> ());
-       let l = concat_alt (next c0) ptr1 in
+       let l = concat (next c0) ptr1 in
        intro_dlist_cons from0 ptr0 _ _ (next c0) _;
        hd0::l
      )
 
+
+let snoc (#a:Type)
+         (#[@@@ framing_implicit] from0:t a)
+         (#[@@@ framing_implicit] to0: t a)
+         (#[@@@ framing_implicit] hd0:cell a)
+         (#[@@@ framing_implicit] l0:list (cell a))
+         (ptr0:t a)
+         (v:a)
+   : SteelT (list (cell a))
+     (requires
+       dlist from0 ptr0 to0 (hd0::l0))
+     (ensures
+       dlist from0 ptr0 null_dlist)
+     // (requires fun _ ->
+     //   Cons? l0)
+     // (ensures fun _ l _ ->
+     //   datas l == datas l0 @ datas [mk_cell null_dlist null_dlist v])
+   = let tl = new_dlist v in
+     concat #_ #_ #_ #_ #_ #null_dlist #(snd tl) #[] ptr0 (fst tl)
+
+let cons (#a:Type)
+         (from0:t a) (ptr0:t a) (hd0:cell a) (l0:list (cell a))
+         (v:a)
+   : SteelT (t a & list (cell a))
+     (requires
+       dlist from0 ptr0 null_dlist (hd0::l0))
+     (ensures fun pc ->
+       dlist null_dlist (fst pc) null_dlist (snd pc))
+     // (requires fun _ ->
+     //   Cons? l0)
+     // (ensures fun _ pc _ ->
+     //   datas (snd pc) == datas [mk_cell null_dlist null_dlist v] @ datas l0)
+   = let pc = new_dlist v in
+     let l = concat #_ #null_dlist #null_dlist #(snd pc) #[] (fst pc) ptr0 in
+     fst pc, l
+
 let rec length (#a:Type)
-               (#from:t a)
-               (#to: t a)
-               (#rep:list (cell a))
+               (#[@@@ framing_implicit] from:t a)
+               (#[@@@ framing_implicit] to: t a)
+               (#[@@@ framing_implicit] rep:list (cell a))
                (p:t a)
    : Steel nat
       (dlist from p to rep)
