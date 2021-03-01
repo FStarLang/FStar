@@ -60,7 +60,7 @@ let tree_sl'_witinv (#a: Type0) (ptr: t a) : Lemma(is_witness_invariant (tree_sl
          | Spec.Node data left right ->
            Mem.pure_interp (ptr == null_t) m;
            Mem.pure_star_interp
-             (R.pts_to ptr full_perm data 
+             (R.pts_to ptr full_perm data
                `Mem.star` tree_sl' (get_left data) left
                `Mem.star` tree_sl' (get_right data) right)
              (ptr =!= null_t) m;
@@ -71,7 +71,7 @@ let tree_sl'_witinv (#a: Type0) (ptr: t a) : Lemma(is_witness_invariant (tree_sl
         | Spec.Leaf ->
            Mem.pure_interp (ptr == null_t) m;
            Mem.pure_star_interp
-             (R.pts_to ptr full_perm data1 
+             (R.pts_to ptr full_perm data1
              `Mem.star` tree_sl' (get_left data1) left1
              `Mem.star` tree_sl' (get_right data1) right1)
              (ptr =!= null_t) m;
@@ -140,7 +140,7 @@ let elim_linked_tree_leaf #a ptr =
     (fun m -> elim_leaf_lemma ptr m)
 
 open FStar.Ghost
-  
+
 let lemma_node_not_null (#a:Type) (ptr:t a) (t:tree a) (m:mem) : Lemma
     (requires interp (tree_sl ptr) m /\ tree_sel ptr m == t /\ Spec.Node? t)
     (ensures ptr =!= null_t)
@@ -158,3 +158,96 @@ let node_is_not_null #a ptr =
   let h = get #(linked_tree ptr)  () in
   let t = hide (v_linked_tree ptr h) in
   extract_info (linked_tree ptr) t (ptr =!= null_t) (lemma_node_not_null ptr t)
+
+let pack_tree_lemma_aux (#a:Type0) (pt:t a)
+  (x: node a) (l r:tree (node a)) (m:mem) : Lemma
+  (requires
+    interp (R.pts_to pt full_perm x `Mem.star`
+      tree_sl' (get_left x) l `Mem.star`
+      tree_sl' (get_right x) r)
+    m)
+  (ensures interp (tree_sl' pt (Spec.Node x l r)) m)
+  = affine_star (R.pts_to pt full_perm x `Mem.star` tree_sl' (get_left x) l)
+                (tree_sl' (get_right x) r)
+                m;
+    affine_star (R.pts_to pt full_perm x) (tree_sl' (get_left x) l) m;
+
+    R.pts_to_not_null pt full_perm x m;
+
+    emp_unit (R.pts_to pt full_perm x `Mem.star`
+      tree_sl' (get_left x) l `Mem.star`
+      tree_sl' (get_right x) r);
+    pure_star_interp (R.pts_to pt full_perm x `Mem.star`
+      tree_sl' (get_left x) l `Mem.star`
+      tree_sl' (get_right x) r)
+      (pt =!= null_t)
+      m
+
+let pack_tree_lemma (#a:Type0) (pt left right:t a)
+  (x: node a) (l r:tree a) (m:mem) : Lemma
+  (requires interp (ptr pt `Mem.star` tree_sl left `Mem.star` tree_sl right) m /\
+    get_left x == left /\ get_right x == right /\
+    sel_of (vptr pt) m == x /\
+    sel_of (linked_tree left) m == l /\
+    sel_of (linked_tree right) m == r)
+  (ensures interp (tree_sl pt) m /\ tree_sel pt m == Spec.Node (get_data x) l r)
+  = let l' = id_elim_exists (tree_sl' left) m in
+    let r' = id_elim_exists (tree_sl' right) m in
+    let aux (m:mem) (ml1 ml2 mr:mem) : Lemma
+      (requires disjoint ml1 ml2 /\ disjoint (join ml1 ml2) mr /\ m == join (join ml1 ml2) mr /\
+        interp (ptr pt) ml1 /\
+        interp (tree_sl left) ml2 /\
+        interp (tree_sl right) mr /\
+
+        interp (tree_sl' left l') m /\
+        interp (tree_sl' right r') m /\
+        ptr_sel pt ml1 == x
+      )
+      (ensures interp
+        (R.pts_to pt full_perm x `Mem.star`
+         tree_sl' left l' `Mem.star`
+         tree_sl' right r')
+       m)
+      = ptr_sel_interp pt ml1;
+
+        let l2 = id_elim_exists (tree_sl' left) ml2 in
+        join_commutative ml1 ml2;
+        assert (interp (tree_sl' left l2) m);
+        tree_sl'_witinv left;
+        assert (l2 == l');
+        assert (interp (tree_sl' left l') ml2);
+
+        let r2 = id_elim_exists (tree_sl' right) mr in
+        join_commutative (join ml1 ml2) mr;
+        assert (interp (tree_sl' right r2) m);
+        tree_sl'_witinv right;
+        assert (r2 == r');
+        assert (interp (tree_sl' right r') mr);
+
+        intro_star (R.pts_to pt full_perm x) (tree_sl' left l') ml1 ml2;
+        intro_star
+          (R.pts_to pt full_perm x `Mem.star` tree_sl' left l')
+          (tree_sl' right r')
+          (join ml1 ml2) mr
+    in
+    elim_star (ptr pt `Mem.star` tree_sl left) (tree_sl right) m;
+    Classical.forall_intro (Classical.move_requires
+      (elim_star (ptr pt) (tree_sl left)));
+    Classical.forall_intro_3 (Classical.move_requires_3 (aux m));
+    pack_tree_lemma_aux pt x l' r' m;
+    intro_h_exists (Spec.Node x l' r') (tree_sl' pt) m;
+    tree_sel_interp pt (Spec.Node x l' r') m
+
+let pack_tree #a ptr left right =
+  let h = get () in
+  let x = hide (sel ptr h) in
+  let l = hide (v_linked_tree left h) in
+  let r = hide (v_linked_tree right h) in
+  reveal_star_3 (vptr ptr) (linked_tree left) (linked_tree right);
+
+  change_slprop (vptr ptr `star` linked_tree left `star` linked_tree right) (linked_tree ptr)
+    ((reveal x, reveal l), reveal r) (Spec.Node (get_data x) l r)
+    (fun m -> pack_tree_lemma ptr left right x l r m)
+
+
+let unpack_tree #a ptr = sladmit()
