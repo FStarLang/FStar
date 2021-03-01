@@ -8,7 +8,7 @@ open Steel.Reference
 
 (* A C lvalue view of a llist struct, as a pair of two references for its head and tail fields  (C language aspects only, no semantic content) *)
 
-val cllist_ptrvalue (a: Type0) : Tot Type0 (* "cllist *" seen as a rvalue, or "cllist * const" *)
+val cllist_ptrvalue (a: Type0) : Tot Type0 (* "cllist *" seen as a rvalue *)
 
 val cllist_ptrvalue_null (a: Type0) : Tot (cllist_ptrvalue a)
 
@@ -18,7 +18,7 @@ val cllist_ptrvalue_is_null (#a: Type0) (c: cllist_ptrvalue a) : Pure bool
   (requires True)
   (ensures (fun b -> b == true <==> c == cllist_ptrvalue_null a))
 
-let cllist_lvalue (a: Type0) = (c: cllist_ptrvalue a { cllist_ptrvalue_is_null c == false }) (* "cllist" seen as a lvalue. IMPORTANT: one MUST NOT use "ref ccell_lvalue" in C code. In other words, ref can be used to model pointers to rvalues only. *)
+let cllist_lvalue (a: Type0) = (c: cllist_ptrvalue a { cllist_ptrvalue_is_null c == false }) (* "cllist" seen as a lvalue, or "cllist * const". IMPORTANT: one MUST NOT use "ref cllist_lvalue" in C code. In other words, ref can be used to model pointers to rvalues only. *)
 
 val cllist_head (#a: Type0) (c: cllist_lvalue a) : Pure (ref (ccell_ptrvalue a))
   (requires True)
