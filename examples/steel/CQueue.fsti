@@ -6,7 +6,14 @@ open Steel.FractionalPermission
 open Steel.Reference
 module L = FStar.List.Tot
 
+(* The lvalue type (or type for non-null pointers) for queues. *)
+
 val t (a: Type0) : Tot Type0
+
+(* The high-level value of a queue, should not be used in C code outside of specs.
+   Note that this interface provides no way to construct values for this type.
+   In fact, the user will only get ghost values from Steel operations below.
+*)
 
 noextract
 val v (a: Type0) : Tot Type0
