@@ -388,6 +388,14 @@ let intro_emp h = ()
 
 let h_exists_cong (#a:Type) (p q : a -> slprop) = ()
 
+let sl_implies (p q:slprop) = forall m. interp p m ==> interp q m
+let h_exists_alt (#a:Type) (p q: a -> slprop)
+  : Lemma
+    (requires (forall x. exists y. p x `sl_implies` q y) /\
+              (forall x. exists y. q x `sl_implies` p y))
+    (ensures equiv (h_exists p) (h_exists q))
+  = ()
+
 let intro_h_exists #a x p h = ()
 
 let elim_h_exists #a p h = ()
