@@ -273,14 +273,12 @@ let incr_main (#v:G.erased int) (r:ref int)
     let r2 = ghost_alloc v in
 
     //split their permissions
-    ghost_share 0 #0 r1;
-    ghost_share v #v r2;
+    ghost_share 0 r1;
+    ghost_share v r2;
 
     // //create the invariant
     intro_exists (G.hide 0, v) (inv_pred r r1 r2);
     let i = new_inv (inv_slprop r r1 r2)  in
-
-    //let i = new_inv r r1 r2 in
 
     //split the invariant permission
     share_invariant i;
@@ -297,4 +295,4 @@ let incr_main (#v:G.erased int) (r:ref int)
 
     //drop the ghost refs
     ghost_gather (incr 0) r1; drop (ghost_pts_to r1 _ _);
-    ghost_gather (incr v) r2; drop (ghost_pts_to r2 _ _); ()
+    ghost_gather (incr v) r2; drop (ghost_pts_to r2 _ _)
