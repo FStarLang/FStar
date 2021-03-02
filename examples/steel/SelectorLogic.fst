@@ -60,15 +60,37 @@ let modus_ponens_interp (p q:vprop) (m:hmem (p `star` (p `wand` q)).hp)
     assert (interp q.hp (join mq mp));
     join_commutative mq mp
 
+let test (p q:vprop)
+  : Lemma ((p `star` (p `wand` q)).hp ==
+           Mem.(p.hp `star` (p.hp `wand` q.hp)))
+  = ()
+
+let coerce (p q:Mem.slprop) (m:hmem p{interp q m})
+  : hmem q
+  = m
+
+let coerce' (#p #q:vprop) (m:hmem (p `star` (p `wand` q)).hp)
+  : hmem q.hp
+  = modus_ponens_interp p q m; m
+
 let modus_ponens_derive_sel (p q:vprop)
   (m:hmem (p `star` (p `wand` q)).hp)
   (* Only used to typecheck q.t m' *)
-  (m':hmem q.hp{m == m'}) : GTot (q.t m')
-  = let mp, mq = star_split p.hp (p `wand` q).hp m in
+  : GTot (q.t (coerce' #p #q m))
+  = // let m' = coerce' #p #q m in
+    let mp, mq = star_split p.hp (p `wand` q).hp m in
     let vp = p.sel mp in
     let res:q.t (join mq mp) = (p `wand` q).sel mq (|mp, vp|) in
     join_commutative mq mp;
     res
+
+let mp p q : vprop = star p (wand p q)
+
+let selector_coercion (#p #q:_) (s:selector q.hp q.t)
+  : GTot (selector (mp p q).hp (fun m -> q.t (coerce' #p #q m))) //(mp p q).t)
+  = fun (h:hmem (mp p q).hp)  ->
+         modus_ponens_derive_sel p q h
+
 
 (* One example of selector *)
 
