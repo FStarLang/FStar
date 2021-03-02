@@ -218,7 +218,6 @@ let incr_with_invariant
   = with_invariant i
       (incr_with_inv_slprop r r_mine r_other n_ghost b (name i))
 
-
 (*
  * The main thread
  *)
@@ -252,6 +251,5 @@ let incr_main (#v:G.erased int) (r:ref int)
 
     let _ = A.witness_h_exists () in
 
-    //drop the ghost refs
-    ghost_gather (incr 0) r1; drop (ghost_pts_to r1 _ _);
-    ghost_gather (incr v) r2; drop (ghost_pts_to r2 _ _)
+    ghost_gather (incr 0) r1; ghost_gather (incr v) r2;
+    drop_f ()
