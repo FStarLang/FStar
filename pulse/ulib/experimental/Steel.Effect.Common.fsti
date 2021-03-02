@@ -976,7 +976,9 @@ let canon_l_r (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac
              apply_lemma (`smt_reflexivity (`#eq))
            );
            t_trefl true;
+           dump "pre";
            close_equality_typ (cur_goal());
+           dump "abduct";
            exact (`(FStar.Squash.return_squash (`#pr_bind)))
  )
 
