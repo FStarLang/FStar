@@ -899,6 +899,16 @@ let normal_elim (x:Type0) : Lemma
 
 exception Result of list atom * list atom * bool * list term
 
+let close_equality_typ (t:term) : Tac unit =
+  let f = term_as_formula' t in
+  match f with
+  | App _ t -> (
+    match term_as_formula' t with
+    | Comp (Eq (Some u)) l _ -> if is_uvar u then unshelve u; exact (tc (cur_env()) l)
+    | _ -> fail "goal is not an equality"
+   )
+  | _ -> fail "goal is not squashed"
+
 let canon_l_r (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac unit =
   let m_unit = norm_term [iota; zeta; delta](`CM?.unit (`#m)) in
   let am = const m_unit in (* empty map *)
@@ -965,6 +975,8 @@ let canon_l_r (eq: term) (m: term) (pr:term) (pr_bind:term) (lhs rhs:term) : Tac
            ) else (
              apply_lemma (`smt_reflexivity (`#eq))
            );
+           t_trefl true;
+           close_equality_typ (cur_goal());
            exact (`(FStar.Squash.return_squash (`#pr_bind)))
  )
 
@@ -1572,4 +1584,5 @@ let init_resolve_tac () : Tac unit =
   // We now solve the requires/ensures goals, which are all equalities
   // All slprops are resolved by now
   set_goals loggs;
+
   resolve_tac_logical ()
