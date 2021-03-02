@@ -127,7 +127,7 @@ let enqueue (#a:_) (hdl:t a) (x:a)
   : SteelT unit emp (fun _ -> emp)
   = Steel.SpinLock.acquire hdl.tail.lock;
     let cell = Q.({ data = x; next = null} ) in
-    let v:erased (Q.t a) = open_exists () in
+    let v = open_exists () in
     let tl = read hdl.tail.ptr in
     let node = alloc cell in
     let enqueue_core #u ()
@@ -136,21 +136,18 @@ let enqueue (#a:_) (hdl:t a) (x:a)
           (ghost_pts_to hdl.tail.ghost half tl `star` pts_to node full cell))
         (fun _ -> queue_invariant hdl.head hdl.tail `star`
                ghost_pts_to hdl.tail.ghost half node)
-      = let open FStar.Ghost in
-        let h = open_exists () in
+      = let h = open_exists () in
         let t = open_exists () in
         ghost_gather tl hdl.tail.ghost;
         Q.enqueue tl node;
         ghost_write hdl.tail.ghost node;
-        ghost_share #_ #_ hdl.tail.ghost;
+        ghost_share hdl.tail.ghost;
         pack_queue_invariant _ _ _ _
     in
     let r1 = with_invariant hdl.inv enqueue_core in
     let r2 = write hdl.tail.ptr node in
-    let r3 = intro_exists
-      _
-      (fun (n:erased (Q.t a)) -> pts_to hdl.tail.ptr full_perm n `star`
-             ghost_pts_to hdl.tail.ghost half n) in
+    let r3 = intro_exists _ (fun n -> pts_to hdl.tail.ptr full_perm n `star`
+                                   ghost_pts_to hdl.tail.ghost half n) in
     Steel.SpinLock.release hdl.tail.lock
 
 #pop-options
