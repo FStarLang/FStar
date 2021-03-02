@@ -2245,23 +2245,22 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
                     (lhs:flex_t) (bs_lhs:binders) (t_res_lhs:term)
                     (rhs:term)
         : solution =
-        if Env.debug env <| Options.Other "Rel"
-        then BU.print4 "imitate_app 1:\n\tlhs=%s\n\tbs_lhs=%s\n\tt_res_lhs=%s\n\trhs=%s\n"
-           (flex_t_to_string lhs)
-           (Print.binders_to_string ", " bs_lhs)
-           (Print.term_to_string t_res_lhs)
-           (Print.term_to_string rhs);
+        // if Env.debug env <| Options.Other "Rel"
+        // then BU.print4 "imitate_app 1:\n\tlhs=%s\n\tbs_lhs=%s\n\tt_res_lhs=%s\n\trhs=%s\n"
+        //    (flex_t_to_string lhs)
+        //    (Print.binders_to_string ", " bs_lhs)
+        //    (Print.term_to_string t_res_lhs)
+        //    (Print.term_to_string rhs);
         let rhs_hd, args = U.head_and_args rhs in
         let args_rhs, last_arg_rhs = BU.prefix args in
         let rhs' = S.mk_Tm_app rhs_hd args_rhs rhs.pos in
-        if Env.debug env <| Options.Other "Rel"
-        then BU.print2 "imitate_app 2:\n\trhs'=%s\n\tlast_arg_rhs=%s\n"
-                   (Print.term_to_string rhs')
-                   (Print.args_to_string [last_arg_rhs]);
+        // if Env.debug env <| Options.Other "Rel"
+        // then BU.print2 "imitate_app 2:\n\trhs'=%s\n\tlast_arg_rhs=%s\n"
+        //            (Print.term_to_string rhs')
+        //            (Print.args_to_string [last_arg_rhs]);
         let (Flex (t_lhs, u_lhs, _lhs_args)) = lhs in
         let lhs', lhs'_last_arg, wl =
               let t_last_arg = env.type_of_well_typed ({env with lax=true; use_bv_sorts=true; expected_typ=None}) (fst last_arg_rhs) in
-              //FIXME: this may be an implicit arg ... fix qualifier
               //AR: 07/20: note the type of lhs' is t_last_arg -> t_res_lhs
               let _, lhs', wl =
                 let b = S.null_binder t_last_arg in
@@ -2270,10 +2269,10 @@ and solve_t_flex_rigid_eq env (orig:prob) wl
               let _, lhs'_last_arg, wl = copy_uvar u_lhs bs_lhs t_last_arg wl in
               lhs', lhs'_last_arg, wl
         in
-        if Env.debug env <| Options.Other "Rel"
-        then BU.print2 "imitate_app 3:\n\tlhs'=%s\n\tlast_arg_lhs=%s\n"
-                   (Print.term_to_string lhs')
-                   (Print.term_to_string lhs'_last_arg);
+        // if Env.debug env <| Options.Other "Rel"
+        // then BU.print2 "imitate_app 3:\n\tlhs'=%s\n\tlast_arg_lhs=%s\n"
+        //            (Print.term_to_string lhs')
+        //            (Print.term_to_string lhs'_last_arg);
         let sol = [TERM(u_lhs, U.abs bs_lhs (S.mk_Tm_app lhs' [(lhs'_last_arg, snd last_arg_rhs)] t_lhs.pos)
                                             (Some (U.residual_tot t_res_lhs)))]
         in
