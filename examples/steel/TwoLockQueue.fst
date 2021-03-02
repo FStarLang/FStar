@@ -129,10 +129,6 @@ let enqueue (#a:_) (hdl:t a) (x:a)
     let cell = Q.({ data = x; next = null} ) in
     let v:erased (Q.t a) = open_exists () in
     let tl = read hdl.tail.ptr in
-    // (* NS: Removing this rewrite results in a weird tactic left uninstantiated var error *)
-    // rewrite
-    //   (ghost_pts_to hdl.tail.ghost half v)
-    //   (ghost_pts_to hdl.tail.ghost half tl);
     let node = alloc cell in
     let enqueue_core #u ()
       : SteelAtomicT unit u observable
@@ -144,9 +140,6 @@ let enqueue (#a:_) (hdl:t a) (x:a)
         let h = open_exists () in
         let t = open_exists () in
         ghost_gather tl hdl.tail.ghost;
-        rewrite
-          (Q.queue h t)
-          (Q.queue h tl);
         Q.enqueue tl node;
         ghost_write hdl.tail.ghost node;
         ghost_share #_ #_ hdl.tail.ghost;
