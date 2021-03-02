@@ -4,21 +4,21 @@ open FStar.PCM
 
 open Steel.Channel.Protocol
 
-let dprot' = protocol unit
+// let dprot' = protocol unit
 
 module WF = FStar.WellFounded
 module P = FStar.Preorder
 module R = FStar.ReflexiveTransitiveClosure
 
 
-// Simplifying protocols for now
-let rec no_loop (p:protocol 'a) =
-  match p with
-  | Return _ -> True
-  | Msg _ a k -> (forall x. no_loop (k x))
-  | DoWhile _ _ -> False
+// // Simplifying protocols for now
+// let rec no_loop (p:protocol 'a) =
+//   match p with
+//   | Return _ -> True
+//   | Msg _ a k -> (forall x. no_loop (k x))
+//   | DoWhile _ _ -> False
 
-let dprot = p:dprot'{no_loop p}
+// let dprot = p:dprot'{no_loop p}
 
 let is_send (p:dprot) = Msg? p && (Send? (Msg?._0 p))
 let is_recv (p:dprot) = Msg? p && (Recv? (Msg?._0 p))
@@ -28,7 +28,7 @@ let is_fin (p:dprot) = Return? p
 
   let partial_trace_of (p:dprot) = tr:partial_trace_of p{no_loop tr.to}
 
-  type party = | A | B
+  // type party = | A | B
 
   let next (tag:party) (#p:dprot) : P.relation (partial_trace_of p) =
     fun (t0 t1: partial_trace_of p) ->
@@ -1040,8 +1040,8 @@ let endpoint (#p:dprot) (name:party) (c:chan p) (next:dprot) (t:trace p next)
     | A -> endpoint_a c next t
     | B -> endpoint_b c next t
 
-type send_next_dprot_t (name:party) =
-  next:dprot{more next /\ tag_of next == (if name = A then Send else Recv)}
+// type send_next_dprot_t (name:party) =
+//   next:dprot{more next /\ tag_of next == (if name = A then Send else Recv)}
 
 (*
  * A version that abstracts over the party
@@ -1066,8 +1066,8 @@ let send_aux (#p:dprot) (name:party) (c:chan p)
                     (endpoint _ _ _ _) (fun _ -> ())
     end
 
-type recv_next_dprot_t (name:party) =
-  next:dprot{more next /\ tag_of next == (if name = A then Recv else Send)}
+// type recv_next_dprot_t (name:party) =
+//   next:dprot{more next /\ tag_of next == (if name = A then Recv else Send)}
 
 let recv_aux (#p:dprot) (name:party) (c:chan p)
   (#next:recv_next_dprot_t name) (t:trace p next)
@@ -1171,7 +1171,17 @@ let pack_trace_ref (#p:dprot) (name:party) (c:channel p)
  * The final send/recv APIs
  *)
 
-let send (#p:dprot) (name:party) (c:channel p) (#next:send_next_dprot_t name) (x:msg_t next)
+
+noeq type ch : Type u#1 =
+  | CH : p:dprot -> c:channel p -> ch
+  
+let ep (name:party) (c:ch) (next:dprot) = endpt name (CH?.c c) next
+
+let psend (#p:dprot)
+         (#name:party)
+         (#next:dprot)
+         (c:channel p { is_send_next name next })
+         (x:msg_t next)
   : SteelT unit
       (endpt name c next)
       (fun _ -> endpt name c (step next x))
@@ -1179,7 +1189,11 @@ let send (#p:dprot) (name:party) (c:channel p) (#next:send_next_dprot_t name) (x
     send_aux name (fst c) x tr;
     pack_trace_ref name c true x
 
-let recv (#p:dprot) (name:party) (c:channel p) (#next:recv_next_dprot_t name)
+
+let precv (#p:dprot)
+         (#name:party)
+         (#next:dprot)
+         (c:channel p { is_recv_next name next })
   : SteelT (msg_t next)
       (endpt name c next)
       (fun x -> endpt name c (step next x))
@@ -1188,29 +1202,34 @@ let recv (#p:dprot) (name:party) (c:channel p) (#next:recv_next_dprot_t name)
     pack_trace_ref name c false x;
     x
 
+let send (#name:party)
+         (#next:dprot)
+         (c:ch { is_send_next name next })
+         (x:msg_t next)
+  : SteelT unit
+      (ep name c next)
+      (fun _ -> ep name c (step next x))
+  = let CH p cc = c in
+    change_slprop (ep name c next)
+                  (endpt name cc next)
+                  (fun _ -> ());
+    psend #p cc x;
+    change_slprop (endpt name cc (step next x))
+                  (ep name c (step next x))
+                  (fun _ -> ())
 
-(**** End send / recv API ****)
-
-let nl_protocol 'a = p:protocol 'a { no_loop p }
-let return (#a:_) (x:a) : nl_protocol a = Return x
-let done : dprot = return ()
-let send' a : nl_protocol a = Msg Send a return
-let recv' a : nl_protocol a = Msg Recv a return
-let rec bind #a #b (p:nl_protocol a) (q:(a -> nl_protocol b))
-  : nl_protocol b
-  = match p with
-    | Return v -> q v
-    | Msg tag c #a' k ->
-       let k : c -> nl_protocol b =
-        fun x -> bind (k x) q
-      in
-      Msg tag c k
-let pingpong : dprot =
-  x <-- send' int;
-  y <-- recv' (y:int{y > x});
-  done
-
-let step (p:dprot{more_msgs p})
-         (x:next_msg_t p)
-  : dprot
-  = Msg?.k (hnf p) x
+let recv (#name:party)
+         (#next:dprot)
+         (c:ch { is_recv_next name next })
+  : SteelT (msg_t next)
+      (ep name c next)
+      (fun x -> ep name c (step next x))
+  = let CH p cc = c in
+    change_slprop (ep name c next)
+                  (endpt name cc next)
+                  (fun _ -> ());
+    let x = precv #p cc in
+    change_slprop (endpt name cc (step next x))
+                  (ep name c (step next x))
+                  (fun _ -> ());
+    x
