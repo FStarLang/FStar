@@ -17,7 +17,7 @@ val p_read (#a:Type) (#p:perm) (#v:erased a) (r:ref a)
            (requires fun _ -> True)
            (ensures fun _ x _ -> x == Ghost.reveal v)
 
-#set-options "--print_implicits"
+#set-options "--print_implicits --ide_id_info_off"
 // #set-options "--print_implicits --log_queries --tactic_trace_d 1"
 
 let test (#v0 #v1:erased int) (r0 r1:ref int)
