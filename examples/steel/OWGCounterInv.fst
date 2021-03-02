@@ -43,7 +43,7 @@ open Steel.DisposableInvariant
 
 #set-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 0 --ifuel 0"
 
-let half_perm = half_perm (MkPerm 1.0R)
+let half_perm = half_perm (MkPerm FStar.Real.one)
 
 let fst = fst
 let snd = snd
@@ -173,7 +173,7 @@ let new_inv (#uses:inames) (#v:G.erased int) (r:ref int) (r1 r2:ghost_ref int)
   = //rewrite the pts_to r in the form expected by inv_slprop
     change_slprop (pts_to r _ _)
                   (pts_to r full_perm (G.hide (G.reveal (fst (G.hide 0, v)) + G.reveal (snd (G.hide 0, v)))))
-                  (fun _ -> ()); 
+                  (fun _ -> ());
     intro_exists (G.hide 0, v) (inv_pred r r1 r2);
     new_inv (inv_slprop r r1 r2)
 

@@ -402,7 +402,7 @@ let (__do_unify_wflags :
                               FStar_TypeChecker_Env.unif_allow_ref_guards =
                                 allow_guards
                             } in
-                          FStar_TypeChecker_Rel.try_teq false env2 t1 t2
+                          FStar_TypeChecker_Rel.try_teq true env2 t1 t2
                         else FStar_TypeChecker_Rel.teq_nosmt env1 t1 t2 in
                       (if dbg
                        then
