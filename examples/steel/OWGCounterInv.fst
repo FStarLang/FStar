@@ -43,7 +43,7 @@ open Steel.DisposableInvariant
 
 #set-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 0 --ifuel 0 --ide_id_info_off"
 
-let half_perm = half_perm (MkPerm 1.0R)
+let half_perm = half_perm (MkPerm FStar.Real.one)
 
 let fst = fst
 let snd = snd
@@ -164,7 +164,6 @@ let inv_equiv_lemma (r:ref int) (r1 r2:ghost_ref int)
 (*
  * Allocating a disposable invariant that protects inv_slprop
  *)
-
 // let new_inv (#uses:inames) (#v:G.erased int) (r:ref int) (r1 r2:ghost_ref int)
 //   : SteelAtomicT (inv (inv_slprop r r1 r2)) uses unobservable
 //       (pts_to r full_perm v  `star`
@@ -174,7 +173,7 @@ let inv_equiv_lemma (r:ref int) (r1 r2:ghost_ref int)
 //   = //rewrite the pts_to r in the form expected by inv_slprop
 //     change_slprop (pts_to r _ _)
 //                   (pts_to r full_perm (G.hide (G.reveal (fst (G.hide 0, v)) + G.reveal (snd (G.hide 0, v)))))
-//                   (fun _ -> ()); 
+//                   (fun _ -> ());
 //     intro_exists (G.hide 0, v) (inv_pred r r1 r2);
 //     new_inv (inv_slprop r r1 r2)
 
@@ -278,24 +277,24 @@ let incr_main (#v:G.erased int) (r:ref int)
     ghost_share v #v r2;
 
     // //create the invariant
-    intro_exists (G.hide 0, v) (inv_pred r r1 r2); sladmit ()
-    // let i = new_inv (inv_slprop r r1 r2) in sladmit ()
+    intro_exists (G.hide 0, v) (inv_pred r r1 r2);
+    let i = new_inv (inv_slprop r r1 r2)  in
 
-    // //let i = new_inv r r1 r2 in
+    //let i = new_inv r r1 r2 in
 
-    // //split the invariant permission
-    // share_invariant i;
+    //split the invariant permission
+    share_invariant i;
 
-    // //invoke the two threads
-    // let _ =
-    //   par (incr_with_invariant r r1 r2 0 true i)
-    //       (incr_with_invariant r r2 r1 v false i) in
+    //invoke the two threads
+    let _ =
+      par (incr_with_invariant r r1 r2 0 true i)
+          (incr_with_invariant r r2 r1 v false i) in
 
-    // //gather back the invariant and dispose it
-    // gather_invariant i; dispose i;
+    //gather back the invariant and dispose it
+    gather_invariant i; dispose i;
 
-    // let _ = A.witness_h_exists () in
+    let _ = A.witness_h_exists () in
 
-    // //drop the ghost refs
-    // ghost_gather (incr 0) r1; drop (ghost_pts_to r1 _ _);
-    // ghost_gather (incr v) r2; drop (ghost_pts_to r2 _ _); ()
+    //drop the ghost refs
+    ghost_gather (incr 0) r1; drop (ghost_pts_to r1 _ _);
+    ghost_gather (incr v) r2; drop (ghost_pts_to r2 _ _); ()
