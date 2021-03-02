@@ -904,7 +904,7 @@ let close_equality_typ (t:term) : Tac unit =
   match f with
   | App _ t -> (
     match term_as_formula' t with
-    | Comp (Eq (Some u)) l _ -> if is_uvar u then unshelve u; exact (tc (cur_env()) l)
+    | Comp (Eq (Some u)) l _ -> if is_uvar u then unshelve u; exact_with_ref (tc (cur_env()) l)
     | _ -> fail "goal is not an equality"
    )
   | _ -> fail "goal is not squashed"
