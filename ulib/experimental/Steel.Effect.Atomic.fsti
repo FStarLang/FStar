@@ -686,3 +686,8 @@ let lift_lemma #uses (p:slprop) (q:prop) (l:(hmem p -> Lemma q))
   : SteelAtomicT (u:unit{q}) uses unobservable p (fun _ -> p)
   = change_slprop p (p `star` pure q) (fun m -> l m; Steel.Memory.pure_star_interp p q m; Steel.Memory.emp_unit p);
     elim_pure q
+
+let drop_f (#opened:inames) (#p #f:slprop) ()
+  : SteelAtomicF unit opened unobservable (p `star` f) (fun _ -> p) (fun _ -> True) (fun _ _ _ -> True)
+  = change_slprop (p `star` f) p (fun _ -> ()); ()
+
