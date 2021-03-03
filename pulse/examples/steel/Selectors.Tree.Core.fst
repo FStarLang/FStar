@@ -36,8 +36,7 @@ let rec tree_sl' (#a: Type0) (ptr: t a) (tree: Spec.tree (node a)) : Tot slprop 
   | Spec.Node data left right ->
     R.pts_to ptr full_perm data `Mem.star`
     tree_sl' data.left left `Mem.star`
-    tree_sl' data.right right `Mem.star`
-    pure (ptr =!= null_t)
+    tree_sl' data.right right
 
 let tree_sl #a ptr = Mem.h_exists (tree_sl' ptr)
 
@@ -59,23 +58,18 @@ let tree_sl'_witinv (#a: Type0) (ptr: t a) : Lemma(is_witness_invariant (tree_sl
          | Spec.Leaf -> ()
          | Spec.Node data left right ->
            Mem.pure_interp (ptr == null_t) m;
-           Mem.pure_star_interp
-             (R.pts_to ptr full_perm data
-               `Mem.star` tree_sl' (get_left data) left
-               `Mem.star` tree_sl' (get_right data) right)
-             (ptr =!= null_t) m;
-           Mem.pure_interp (ptr =!= null_t) m
-
+           Mem.affine_star (R.pts_to ptr full_perm data `Mem.star` tree_sl' (get_left data) left)
+             (tree_sl' (get_right data) right) m;
+           Mem.affine_star (R.pts_to ptr full_perm data) (tree_sl' (get_left data) left) m;
+           R.pts_to_not_null ptr full_perm data m
        end
       | Spec.Node data1 left1 right1 -> begin match y with
         | Spec.Leaf ->
            Mem.pure_interp (ptr == null_t) m;
-           Mem.pure_star_interp
-             (R.pts_to ptr full_perm data1
-             `Mem.star` tree_sl' (get_left data1) left1
-             `Mem.star` tree_sl' (get_right data1) right1)
-             (ptr =!= null_t) m;
-           Mem.pure_interp (ptr =!= null_t) m
+           Mem.affine_star (R.pts_to ptr full_perm data1 `Mem.star` tree_sl' (get_left data1) left1)
+             (tree_sl' (get_right data1) right1) m;
+           Mem.affine_star (R.pts_to ptr full_perm data1) (tree_sl' (get_left data1) left1) m;
+           R.pts_to_not_null ptr full_perm data1 m
         | Spec.Node data2 left2 right2 ->
            R.pts_to_witinv ptr full_perm;
            aux (get_left data1) left1 left2 m;
@@ -147,12 +141,13 @@ let lemma_node_not_null (#a:Type) (ptr:t a) (t:tree a) (m:mem) : Lemma
     = let t' = id_elim_exists (tree_sl' ptr) m in
       assert (interp (tree_sl' ptr t') m);
       tree_sel_interp ptr t' m;
-      match reveal t' with
+       match reveal t' with
       | Spec.Node data left right ->
-          let p = (R.pts_to ptr full_perm (hide data)
-             `Mem.star` tree_sl' (get_left data) left
-             `Mem.star` tree_sl' (get_right data) right) in
-          pure_star_interp p (ptr =!= null_t) m
+           Mem.affine_star
+             (R.pts_to ptr full_perm (hide data) `Mem.star` tree_sl' (get_left data) left)
+             (tree_sl' (get_right data) right) m;
+           Mem.affine_star (R.pts_to ptr full_perm data) (tree_sl' (get_left data) left) m;
+           R.pts_to_not_null ptr full_perm data m
 
 let node_is_not_null #a ptr =
   let h = get #(linked_tree ptr)  () in
