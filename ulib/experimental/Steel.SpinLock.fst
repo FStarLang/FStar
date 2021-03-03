@@ -98,9 +98,6 @@ let acquire_core #p #u r i =
     star_is_witinv_left (fun (b:bool) -> pts_to r full_perm (Ghost.hide b)) (fun (b:bool) -> if b then emp else p)
   ) in
 
-  (** AF: This should be done by an automatic rewriting in the tactic *)
-  change_slprop (pts_to r full_perm (Ghost.hide (Ghost.reveal ghost))) (pts_to r full_perm ghost) (fun _ -> ());
-
   let res = cas r ghost available locked in
 
   (* Not sure we can avoid calling an SMT here. Better force the manual call? *)
@@ -134,8 +131,6 @@ let release_core #p #u r i =
     pts_to_witinv r full_perm;
     star_is_witinv_left (fun (b:bool) -> pts_to r full_perm (Ghost.hide b)) (fun (b:bool) -> if b then emp else p)
   ) in
-
-  change_slprop (pts_to r full_perm (Ghost.hide (Ghost.reveal v))) (pts_to r full_perm v) (fun _ -> ());
 
   let res = cas r v locked available in
 
