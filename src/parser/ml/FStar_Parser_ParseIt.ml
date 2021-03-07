@@ -2,7 +2,7 @@ module U = FStar_Util
 open FStar_Errors
 open FStar_Syntax_Syntax
 open Lexing
-open FStar_Ulexing
+open FStar_Sedlexing
 
 type filename = string
 
@@ -155,7 +155,7 @@ let parse_warn_error s =
     if s = ""
     then []
     else
-      let lexbuf = FStar_Ulexing.create s "" 0 (String.length s) in
+      let lexbuf = FStar_Sedlexing.create s "" 0 (String.length s) in
       let lexer() = let tok = FStar_Parser_LexFStar.token lexbuf in
         (tok, lexbuf.start_p, lexbuf.cur_p)
       in
