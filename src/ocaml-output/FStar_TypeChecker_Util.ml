@@ -3764,9 +3764,8 @@ let (maybe_coerce_lc :
       fun lc ->
         fun exp_t ->
           let should_coerce =
-            (((let uu___ = FStar_Options.use_two_phase_tc () in
-               Prims.op_Negation uu___) || env.FStar_TypeChecker_Env.phase1)
-               || env.FStar_TypeChecker_Env.lax)
+            (env.FStar_TypeChecker_Env.phase1 ||
+               env.FStar_TypeChecker_Env.lax)
               || (FStar_Options.lax ()) in
           if Prims.op_Negation should_coerce
           then (e, lc, FStar_TypeChecker_Env.trivial_guard)

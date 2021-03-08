@@ -674,6 +674,8 @@ let (tc_decls_knot :
        (FStar_Syntax_Syntax.sigelt Prims.list * FStar_TypeChecker_Env.env))
     FStar_Pervasives_Native.option FStar_ST.ref)
   = FStar_Util.mk_ref FStar_Pervasives_Native.None
+let (do_two_phases : FStar_TypeChecker_Env.env -> Prims.bool) =
+  fun env -> FStar_TypeChecker_Env.should_verify env
 let (tc_sig_let :
   FStar_TypeChecker_Env.env ->
     FStar_Range.range ->
@@ -1089,9 +1091,7 @@ let (tc_sig_let :
                            (uu___2.FStar_TypeChecker_Env.unif_allow_ref_guards)
                        } in
                      let e1 =
-                       let uu___2 =
-                         (FStar_Options.use_two_phase_tc ()) &&
-                           (FStar_TypeChecker_Env.should_verify env') in
+                       let uu___2 = do_two_phases env' in
                        if uu___2
                        then
                          let drop_lbtyp e_lax =
@@ -1699,9 +1699,7 @@ let (tc_decl' :
            | FStar_Syntax_Syntax.Sig_bundle (ses, lids) ->
                let env1 = FStar_TypeChecker_Env.set_range env r in
                let ses1 =
-                 let uu___2 =
-                   (FStar_Options.use_two_phase_tc ()) &&
-                     (FStar_TypeChecker_Env.should_verify env1) in
+                 let uu___2 = do_two_phases env1 in
                  if uu___2
                  then
                    let ses2 =
@@ -1931,9 +1929,7 @@ let (tc_decl' :
                       ([], (FStar_List.append ses effect_and_lift_ses), env0))
                else
                  (let ne1 =
-                    let uu___3 =
-                      (FStar_Options.use_two_phase_tc ()) &&
-                        (FStar_TypeChecker_Env.should_verify env) in
+                    let uu___3 = do_two_phases env in
                     if uu___3
                     then
                       let ne2 =
@@ -2138,9 +2134,7 @@ let (tc_decl' :
            | FStar_Syntax_Syntax.Sig_effect_abbrev (lid, uvs, tps, c, flags)
                ->
                let uu___2 =
-                 let uu___3 =
-                   (FStar_Options.use_two_phase_tc ()) &&
-                     (FStar_TypeChecker_Env.should_verify env) in
+                 let uu___3 = do_two_phases env in
                  if uu___3
                  then
                    let uu___4 =
@@ -2337,9 +2331,7 @@ let (tc_decl' :
                    FStar_Errors.raise_error uu___4 r
                  else ());
                 (let uu___3 =
-                   let uu___4 =
-                     (FStar_Options.use_two_phase_tc ()) &&
-                       (FStar_TypeChecker_Env.should_verify env1) in
+                   let uu___4 = do_two_phases env1 in
                    if uu___4
                    then
                      let uu___5 =
@@ -2494,9 +2486,7 @@ let (tc_decl' :
                  FStar_Errors.log_issue r uu___3);
                 (let env1 = FStar_TypeChecker_Env.set_range env r in
                  let uu___3 =
-                   let uu___4 =
-                     (FStar_Options.use_two_phase_tc ()) &&
-                       (FStar_TypeChecker_Env.should_verify env1) in
+                   let uu___4 = do_two_phases env1 in
                    if uu___4
                    then
                      let uu___5 =
@@ -2821,9 +2811,7 @@ let (tc_decl' :
                  "FStar.TypeChecker.Tc.tc_sig_let"
            | FStar_Syntax_Syntax.Sig_polymonadic_bind (m, n, p, t, uu___2) ->
                let t1 =
-                 let uu___3 =
-                   (FStar_Options.use_two_phase_tc ()) &&
-                     (FStar_TypeChecker_Env.should_verify env) in
+                 let uu___3 = do_two_phases env in
                  if uu___3
                  then
                    let uu___4 =
@@ -3016,9 +3004,7 @@ let (tc_decl' :
                     ([se2], [], env0))
            | FStar_Syntax_Syntax.Sig_polymonadic_subcomp (m, n, t, uu___2) ->
                let t1 =
-                 let uu___3 =
-                   (FStar_Options.use_two_phase_tc ()) &&
-                     (FStar_TypeChecker_Env.should_verify env) in
+                 let uu___3 = do_two_phases env in
                  if uu___3
                  then
                    let uu___4 =
@@ -3896,7 +3882,7 @@ let (tc_decls :
              FStar_Util.fold_flatten process_one_decl_timed ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_List.rev_append ses1 []), env1)
-let (uu___920 : unit) =
+let (uu___921 : unit) =
   FStar_ST.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :
