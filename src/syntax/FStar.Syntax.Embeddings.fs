@@ -740,7 +740,6 @@ let e_vconfig =
                    S.as_arg (embed e_fsint             vcfg.z3rlimit                                  rng None norm);
                    S.as_arg (embed e_fsint             vcfg.z3rlimit_factor                           rng None norm);
                    S.as_arg (embed e_fsint             vcfg.z3seed                                    rng None norm);
-                   S.as_arg (embed e_bool              vcfg.use_two_phase_tc                          rng None norm);
                    S.as_arg (embed e_bool              vcfg.trivial_pre_for_unannotated_effectful_fns rng None norm);
                    S.as_arg (embed (e_option e_string) vcfg.reuse_hint_for                            rng None norm);
                   ]
@@ -777,7 +776,6 @@ let e_vconfig =
             (z3rlimit, _);
             (z3rlimit_factor, _);
             (z3seed, _);
-            (use_two_phase_tc, _);
             (trivial_pre_for_unannotated_effectful_fns, _);
             (reuse_hint_for, _)
             ] when S.fv_eq_lid fv PC.mkvconfig_lid ->
@@ -806,7 +804,6 @@ let e_vconfig =
                   BU.bind_opt (unembed e_fsint             z3rlimit w norm) (fun z3rlimit ->
                   BU.bind_opt (unembed e_fsint             z3rlimit_factor w norm) (fun z3rlimit_factor ->
                   BU.bind_opt (unembed e_fsint             z3seed w norm) (fun z3seed ->
-                  BU.bind_opt (unembed e_bool              use_two_phase_tc w norm) (fun use_two_phase_tc ->
                   BU.bind_opt (unembed e_bool              trivial_pre_for_unannotated_effectful_fns w norm) (fun trivial_pre_for_unannotated_effectful_fns ->
                   BU.bind_opt (unembed (e_option e_string) reuse_hint_for w norm) (fun reuse_hint_for ->
                   Some ({
@@ -835,10 +832,9 @@ let e_vconfig =
                     z3rlimit = z3rlimit;
                     z3rlimit_factor = z3rlimit_factor;
                     z3seed = z3seed;
-                    use_two_phase_tc = use_two_phase_tc;
                     trivial_pre_for_unannotated_effectful_fns = trivial_pre_for_unannotated_effectful_fns;
                     reuse_hint_for = reuse_hint_for;
-                  })))))))))))))))))))))))))))))
+                  }))))))))))))))))))))))))))))
         | _ ->
           if w then
             Err.log_issue t0.pos (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded vconfig: %s" (Print.term_to_string t0)));
