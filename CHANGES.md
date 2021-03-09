@@ -303,6 +303,8 @@ Guidelines for the changelog:
 
 ## Command line options
 
+   `--use_two_phase_tc` is no longer a command line option.
+
    F* reads .checked files by default unless the `--cache_off` option is provided.
    To write .checked files, provide `--cache_checked_modules`
 
