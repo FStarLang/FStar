@@ -302,10 +302,10 @@ let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.ra
            && Options.ml_ish() //NS: Disabling this optimization temporarily
            then S.tun
            else let ret_wp = ed |> U.get_return_vc_combinator in
-                N.normalize [Env.Beta; Env.NoFullNorm] env
-                            (mk_Tm_app (inst_effect_fun_with [u_a] env ed ret_wp)
-                                       [S.as_arg a; S.as_arg e]
-                                       e.pos) in
+                mk_Tm_app
+                  (inst_effect_fun_with [u_a] env ed ret_wp)
+                  [S.as_arg a; S.as_arg e]
+                  e.pos in
          mk_comp ed u_a a wp [RETURN]
   in
   if debug env <| Options.Other "Return"
