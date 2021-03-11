@@ -2728,7 +2728,7 @@ let (t_apply_lemma :
                                                                     ->
                                                                     let g_typ
                                                                     =
-                                                                    FStar_TypeChecker_TcTerm.check_type_and_effect_of_well_typed_tot_or_gtot_term'
+                                                                    FStar_TypeChecker_TcTerm.check_well_typed_term_is_tot_or_gtot_at_type
                                                                     env1 term
                                                                     ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_typ
                                                                     false
