@@ -8038,7 +8038,7 @@ let (eta_expand :
                          then t
                          else
                            (let uu___5 =
-                              env1.FStar_TypeChecker_Env.type_of
+                              env1.FStar_TypeChecker_Env.type_of_tot_or_gtot_term
                                 (let uu___6 = env1 in
                                  {
                                    FStar_TypeChecker_Env.solver =
@@ -8094,14 +8094,17 @@ let (eta_expand :
                                      (uu___6.FStar_TypeChecker_Env.uvar_subtyping);
                                    FStar_TypeChecker_Env.tc_term =
                                      (uu___6.FStar_TypeChecker_Env.tc_term);
-                                   FStar_TypeChecker_Env.type_of =
-                                     (uu___6.FStar_TypeChecker_Env.type_of);
-                                   FStar_TypeChecker_Env.type_of_well_typed =
-                                     (uu___6.FStar_TypeChecker_Env.type_of_well_typed);
+                                   FStar_TypeChecker_Env.type_of_tot_or_gtot_term
+                                     =
+                                     (uu___6.FStar_TypeChecker_Env.type_of_tot_or_gtot_term);
+                                   FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term
+                                     =
+                                     (uu___6.FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term);
                                    FStar_TypeChecker_Env.universe_of =
                                      (uu___6.FStar_TypeChecker_Env.universe_of);
-                                   FStar_TypeChecker_Env.check_type_of =
-                                     (uu___6.FStar_TypeChecker_Env.check_type_of);
+                                   FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term
+                                     =
+                                     (uu___6.FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term);
                                    FStar_TypeChecker_Env.use_bv_sorts = true;
                                    FStar_TypeChecker_Env.qtbl_name_and_index
                                      =
@@ -8142,13 +8145,13 @@ let (eta_expand :
                                    FStar_TypeChecker_Env.unif_allow_ref_guards
                                      =
                                      (uu___6.FStar_TypeChecker_Env.unif_allow_ref_guards)
-                                 }) t in
+                                 }) t true in
                             match uu___5 with
                             | (uu___6, ty, uu___7) ->
                                 eta_expand_with_type env1 t ty))
                 | uu___3 ->
                     let uu___4 =
-                      env1.FStar_TypeChecker_Env.type_of
+                      env1.FStar_TypeChecker_Env.type_of_tot_or_gtot_term
                         (let uu___5 = env1 in
                          {
                            FStar_TypeChecker_Env.solver =
@@ -8204,14 +8207,16 @@ let (eta_expand :
                              (uu___5.FStar_TypeChecker_Env.uvar_subtyping);
                            FStar_TypeChecker_Env.tc_term =
                              (uu___5.FStar_TypeChecker_Env.tc_term);
-                           FStar_TypeChecker_Env.type_of =
-                             (uu___5.FStar_TypeChecker_Env.type_of);
-                           FStar_TypeChecker_Env.type_of_well_typed =
-                             (uu___5.FStar_TypeChecker_Env.type_of_well_typed);
+                           FStar_TypeChecker_Env.type_of_tot_or_gtot_term =
+                             (uu___5.FStar_TypeChecker_Env.type_of_tot_or_gtot_term);
+                           FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term
+                             =
+                             (uu___5.FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term);
                            FStar_TypeChecker_Env.universe_of =
                              (uu___5.FStar_TypeChecker_Env.universe_of);
-                           FStar_TypeChecker_Env.check_type_of =
-                             (uu___5.FStar_TypeChecker_Env.check_type_of);
+                           FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term
+                             =
+                             (uu___5.FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term);
                            FStar_TypeChecker_Env.use_bv_sorts = true;
                            FStar_TypeChecker_Env.qtbl_name_and_index =
                              (uu___5.FStar_TypeChecker_Env.qtbl_name_and_index);
@@ -8247,7 +8252,7 @@ let (eta_expand :
                              (uu___5.FStar_TypeChecker_Env.enable_defer_to_tac);
                            FStar_TypeChecker_Env.unif_allow_ref_guards =
                              (uu___5.FStar_TypeChecker_Env.unif_allow_ref_guards)
-                         }) t in
+                         }) t true in
                     (match uu___4 with
                      | (uu___5, ty, uu___6) -> eta_expand_with_type env1 t ty)))
 let (elim_uvars_aux_tc :

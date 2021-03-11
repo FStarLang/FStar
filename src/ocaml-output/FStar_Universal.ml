@@ -70,14 +70,15 @@ let with_dsenv_of_tcenv :
                  (uu___1.FStar_TypeChecker_Env.uvar_subtyping);
                FStar_TypeChecker_Env.tc_term =
                  (uu___1.FStar_TypeChecker_Env.tc_term);
-               FStar_TypeChecker_Env.type_of =
-                 (uu___1.FStar_TypeChecker_Env.type_of);
-               FStar_TypeChecker_Env.type_of_well_typed =
-                 (uu___1.FStar_TypeChecker_Env.type_of_well_typed);
+               FStar_TypeChecker_Env.type_of_tot_or_gtot_term =
+                 (uu___1.FStar_TypeChecker_Env.type_of_tot_or_gtot_term);
+               FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term =
+                 (uu___1.FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term);
                FStar_TypeChecker_Env.universe_of =
                  (uu___1.FStar_TypeChecker_Env.universe_of);
-               FStar_TypeChecker_Env.check_type_of =
-                 (uu___1.FStar_TypeChecker_Env.check_type_of);
+               FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term
+                 =
+                 (uu___1.FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term);
                FStar_TypeChecker_Env.use_bv_sorts =
                  (uu___1.FStar_TypeChecker_Env.use_bv_sorts);
                FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -235,11 +236,11 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         let uu___1 = FStar_Tactics_Interpreter.primitive_steps () in
         FStar_TypeChecker_NBE.normalize uu___1 in
       FStar_TypeChecker_Env.initial_env deps FStar_TypeChecker_TcTerm.tc_term
-        FStar_TypeChecker_TcTerm.type_of_tot_term
-        FStar_TypeChecker_TcTerm.type_of_well_typed_term
+        FStar_TypeChecker_TcTerm.type_of_tot_or_gtot_term
+        FStar_TypeChecker_TcTerm.type_of_well_typed_tot_or_gtot_term
         FStar_TypeChecker_TcTerm.universe_of
-        FStar_TypeChecker_TcTerm.check_type_of_well_typed_term solver
-        FStar_Parser_Const.prims_lid uu___ in
+        FStar_TypeChecker_TcTerm.check_type_and_effect_of_well_typed_tot_or_gtot_term
+        solver FStar_Parser_Const.prims_lid uu___ in
     let env1 =
       let uu___ = env in
       {
@@ -283,13 +284,15 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.uvar_subtyping =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
-        FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
-        FStar_TypeChecker_Env.type_of_well_typed =
-          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
+        FStar_TypeChecker_Env.type_of_tot_or_gtot_term =
+          (uu___.FStar_TypeChecker_Env.type_of_tot_or_gtot_term);
+        FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
-        FStar_TypeChecker_Env.check_type_of =
-          (uu___.FStar_TypeChecker_Env.check_type_of);
+        FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term
+          =
+          (uu___.FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term);
         FStar_TypeChecker_Env.use_bv_sorts =
           (uu___.FStar_TypeChecker_Env.use_bv_sorts);
         FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -366,13 +369,15 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.uvar_subtyping =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
-        FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
-        FStar_TypeChecker_Env.type_of_well_typed =
-          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
+        FStar_TypeChecker_Env.type_of_tot_or_gtot_term =
+          (uu___.FStar_TypeChecker_Env.type_of_tot_or_gtot_term);
+        FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
-        FStar_TypeChecker_Env.check_type_of =
-          (uu___.FStar_TypeChecker_Env.check_type_of);
+        FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term
+          =
+          (uu___.FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term);
         FStar_TypeChecker_Env.use_bv_sorts =
           (uu___.FStar_TypeChecker_Env.use_bv_sorts);
         FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -450,13 +455,15 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.uvar_subtyping =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
-        FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
-        FStar_TypeChecker_Env.type_of_well_typed =
-          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
+        FStar_TypeChecker_Env.type_of_tot_or_gtot_term =
+          (uu___.FStar_TypeChecker_Env.type_of_tot_or_gtot_term);
+        FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
-        FStar_TypeChecker_Env.check_type_of =
-          (uu___.FStar_TypeChecker_Env.check_type_of);
+        FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term
+          =
+          (uu___.FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term);
         FStar_TypeChecker_Env.use_bv_sorts =
           (uu___.FStar_TypeChecker_Env.use_bv_sorts);
         FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -534,13 +541,15 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.uvar_subtyping =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
-        FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
-        FStar_TypeChecker_Env.type_of_well_typed =
-          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
+        FStar_TypeChecker_Env.type_of_tot_or_gtot_term =
+          (uu___.FStar_TypeChecker_Env.type_of_tot_or_gtot_term);
+        FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
-        FStar_TypeChecker_Env.check_type_of =
-          (uu___.FStar_TypeChecker_Env.check_type_of);
+        FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term
+          =
+          (uu___.FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term);
         FStar_TypeChecker_Env.use_bv_sorts =
           (uu___.FStar_TypeChecker_Env.use_bv_sorts);
         FStar_TypeChecker_Env.qtbl_name_and_index =
@@ -617,13 +626,15 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.uvar_subtyping =
           (uu___.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.tc_term = (uu___.FStar_TypeChecker_Env.tc_term);
-        FStar_TypeChecker_Env.type_of = (uu___.FStar_TypeChecker_Env.type_of);
-        FStar_TypeChecker_Env.type_of_well_typed =
-          (uu___.FStar_TypeChecker_Env.type_of_well_typed);
+        FStar_TypeChecker_Env.type_of_tot_or_gtot_term =
+          (uu___.FStar_TypeChecker_Env.type_of_tot_or_gtot_term);
+        FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term =
+          (uu___.FStar_TypeChecker_Env.type_of_well_typed_tot_or_gtot_term);
         FStar_TypeChecker_Env.universe_of =
           (uu___.FStar_TypeChecker_Env.universe_of);
-        FStar_TypeChecker_Env.check_type_of =
-          (uu___.FStar_TypeChecker_Env.check_type_of);
+        FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term
+          =
+          (uu___.FStar_TypeChecker_Env.check_type_and_effect_of_well_typed_tot_or_gtot_term);
         FStar_TypeChecker_Env.use_bv_sorts =
           (uu___.FStar_TypeChecker_Env.use_bv_sorts);
         FStar_TypeChecker_Env.qtbl_name_and_index =
