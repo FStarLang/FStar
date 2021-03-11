@@ -846,7 +846,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                   // NS:05/25: protecting it under this option,
                   //           since it causes a regression in examples/vale/*Math_i.fst
                   // GM: Made it the default, but setting must_total to true
-                  FStar.TypeChecker.TcTerm.check_type_and_effect_of_well_typed_tot_or_gtot_term'
+                  FStar.TypeChecker.TcTerm.check_well_typed_term_is_tot_or_gtot_at_type
                             env term ctx_uvar.ctx_uvar_typ false true
                 in
                 bind (proc_guard

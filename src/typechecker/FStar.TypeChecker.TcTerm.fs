@@ -4022,49 +4022,47 @@ let effect_of_well_typed_tot_or_gtot_term env t = effect_of_well_typed_term env 
 //     | None -> slow_check ()
 //     | Some g -> g
 
-let check_type_and_effect_of_well_typed_tot_or_gtot_term' (env:env) (t:term) (k:typ) (must_total:bool) (is_tac:bool) =
-  //BU.print4 "Enter check_type_and_effect ... with t : %s, k : %s, t has no uvars : %s, k has no uvars : %s\n\n"
-    //(Print.term_to_string t) (Print.term_to_string k) ""
-    //(string_of_int (List.length (Free.uvars t |> set_elements)))
-    //(string_of_int (List.length (Free.uvars k |> set_elements)));
+let check_well_typed_term_is_tot_or_gtot_at_type (env:env) (t:term) (k:typ) (must_tot:bool) (uvars_ok:bool) =
   let env = Env.set_expected_typ ({env with use_bv_sorts=true}) k in
-  let slow_path () =
-    let _, _, g = env.type_of_tot_or_gtot_term env t must_total in
-    g in
-  let all_ok t = is_tac || t |> Free.uvars |> set_is_empty && t |> Free.univs |> set_is_empty in
-  let t, k = SS.compress t, SS.compress k in
-  if not (all_ok t) then slow_path ()
-  else if not (all_ok k) then slow_path ()
-  else
-  //let _ = BU.print_string "Trying fast path!!\n\n" in
-  match type_of_well_typed_tot_or_gtot_term env t with
-  | None ->
-    if Env.debug env <| Options.Other "FastImplicits"
-    then BU.print3 "Fast check for (%s <: %s) failed because could not compute the type on the fast path (%s)\n"
-           (Print.term_to_string t)
-           (Print.term_to_string k)
-           (Range.string_of_range t.pos);
-    slow_path ()
-  | Some k' ->
-    if not (all_ok k') then slow_path ()
-    else if is_tac then TcUtil.check_has_type env t k' k
-    else
-    let eff_opt = effect_of_well_typed_tot_or_gtot_term env t in
-    match eff_opt with
-    | None ->
-      if Env.debug env <| Options.Other "FastImplicits"
-      then BU.print3 "Fast check for (%s <: %s) failed because could not compute the effect on the fast path (%s)\n"
-           (Print.term_to_string t)
-           (Print.term_to_string k)
-           (Range.string_of_range t.pos);
-      slow_path ()
-    | Some eff ->
-      if not (N.non_info_norm env k) &&  //k is informative
-         must_total &&  //caller asked for must_total
-         lid_equals eff Const.effect_GTot_lid  //but we got GTot
-      then raise_error (Errors.Fatal_UnexpectedImplictArgument,
-             (BU.format1 "Implicit argument %s is GTot, expected a Tot" (Print.term_to_string t)))
-             t.pos
-      else TcUtil.check_has_type env t k' k
 
-let check_type_and_effect_of_well_typed_tot_or_gtot_term env t k must_total = check_type_and_effect_of_well_typed_tot_or_gtot_term' env t k must_total false
+  let slow_path (reason:string) (topt:option<term>) =
+    if Env.debug env <| Options.Other "FastImplicits"
+    then BU.print5 "Fast check for (%s <: %s) at %s failed because %s %s\n"
+           (Print.term_to_string t)
+           (Print.term_to_string k)
+           (Range.string_of_range t.pos)
+           reason
+           (match topt with
+            | None -> ""
+            | Some t -> "(" ^ Print.term_to_string t ^ ")");
+
+    //expected type is already set in the env
+    let _, _, g = env.type_of_tot_or_gtot_term env t must_tot in
+    g in
+  
+  let continue_fast_path t = uvars_ok || (t |> Free.uvars |> set_is_empty && t |> Free.univs |> set_is_empty) in
+
+  if not (continue_fast_path t)
+  then slow_path "t has uvars" (Some t)
+  else if not (continue_fast_path k)
+  then slow_path "k has uvars" (Some k)
+  else
+    match type_of_well_typed_tot_or_gtot_term env t with
+    | None -> slow_path "could not compute the type" None
+    | Some k' ->
+      if not (continue_fast_path k')
+      then slow_path "k' has uvars" (Some k')
+      else if N.non_info_norm env k || not must_tot
+      then TcUtil.check_has_type env t k' k
+      else
+        let eff_opt = effect_of_well_typed_tot_or_gtot_term env t in
+        match eff_opt with
+        | None -> slow_path "could not compute the effect" None
+        | Some eff ->
+          if lid_equals eff Const.effect_GTot_lid
+          then raise_error (Errors.Fatal_UnexpectedImplictArgument,
+                 (BU.format1 "Implicit argument %s is GTot, expected a Tot" (Print.term_to_string t)))
+                 t.pos
+          else TcUtil.check_has_type env t k' k
+
+let check_type_and_effect_of_well_typed_tot_or_gtot_term env t k must_total = check_well_typed_term_is_tot_or_gtot_at_type env t k must_total false

@@ -26,7 +26,7 @@ val type_of_tot_or_gtot_term: env -> term -> must_tot:bool -> term * typ * guard
 val universe_of: env -> term -> universe
 val type_of_well_typed_tot_or_gtot_term: env -> term -> option<typ>
 
-val check_type_and_effect_of_well_typed_tot_or_gtot_term': env -> term -> typ -> bool -> bool -> guard_t
+val check_well_typed_term_is_tot_or_gtot_at_type: env -> term -> typ -> bool -> bool -> guard_t
 val check_type_and_effect_of_well_typed_tot_or_gtot_term: env -> term -> typ -> bool -> guard_t
 //val check_type_of_well_typed_term': bool -> env -> term -> typ -> guard_t // always fast
 
