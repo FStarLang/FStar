@@ -175,10 +175,10 @@ and env = {
   nosynth        :bool;                         (* don't run synth tactics *)
   uvar_subtyping :bool;
   tc_term        :env -> term -> term*lcomp*guard_t; (* a callback to the type-checker; g |- e : M t wp *)
-  type_of        :env -> term -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
-  type_of_well_typed :env -> term -> typ;          (* a callback to the type-checker; falls back on type_of if the term is not well-typed *)
+  type_of_tot_or_gtot_term:env -> term -> must_tot:bool -> term*typ*guard_t;   (* a callback to the type-checker; g |- e : Tot t *)
+  type_of_well_typed_tot_or_gtot_term  :env -> term -> typ;          (* a callback to the type-checker; falls back on type_of if the term is not well-typed *)
   universe_of    :env -> term -> universe;           (* a callback to the type-checker; g |- e : Tot (Type u) *)
-  check_type_of  :bool -> env -> term -> typ -> guard_t;
+  check_type_and_effect_of_well_typed_tot_or_gtot_term:env -> term -> typ -> bool -> guard_t;
   use_bv_sorts   :bool;                              (* use bv.sort for a bound-variable's type rather than consulting gamma *)
   qtbl_name_and_index:BU.smap<int> * option<(lident*int)>;  (* the top-level term we're currently processing and the nth query for it *)
   normalized_eff_names:BU.smap<lident>;              (* cache for normalized effect names, used to be captured in the function norm_eff_name, which made it harder to roll back etc. *)
@@ -263,7 +263,7 @@ let default_table_size = 200
 let new_sigtab () = BU.smap_create default_table_size
 let new_gamma_cache () = BU.smap_create 100
 
-let initial_env deps tc_term type_of type_of_well_typed universe_of check_type_of solver module_lid nbe : env =
+let initial_env deps tc_term type_of_tot_or_gtot_term type_of_well_typed_tot_or_gtot_term universe_of check_type_and_effect_of_well_typed_tot_or_gtot_term solver module_lid nbe : env =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -291,13 +291,13 @@ let initial_env deps tc_term type_of type_of_well_typed universe_of check_type_o
     nosynth=false;
     uvar_subtyping=true;
     tc_term=tc_term;
-    type_of=type_of;
-   type_of_well_typed =
-      (fun env t -> match type_of_well_typed env t with
-        | None -> let _, ty, _ = type_of env t in ty
+    type_of_tot_or_gtot_term=type_of_tot_or_gtot_term;
+    type_of_well_typed_tot_or_gtot_term =
+      (fun env t -> match type_of_well_typed_tot_or_gtot_term env t with
+        | None -> let _, ty, _ = type_of_tot_or_gtot_term env t false in ty  //AR:TODO: why insist Tot here?
         | Some ty -> ty
       );
-    check_type_of=check_type_of;
+    check_type_and_effect_of_well_typed_tot_or_gtot_term=check_type_and_effect_of_well_typed_tot_or_gtot_term;
     universe_of=universe_of;
     use_bv_sorts=false;
     qtbl_name_and_index=BU.smap_create 10, None;  //10?
