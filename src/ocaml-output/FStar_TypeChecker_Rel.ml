@@ -3362,8 +3362,9 @@ let rec (really_solve_universe_eq :
               failwith uu___1
           | (FStar_Syntax_Syntax.U_name x, FStar_Syntax_Syntax.U_name y) ->
               let uu___ =
-                let uu___1 = FStar_Ident.string_of_id x in
-                let uu___2 = FStar_Ident.string_of_id y in uu___1 = uu___2 in
+                (let uu___1 = FStar_Ident.string_of_id x in
+                 let uu___2 = FStar_Ident.string_of_id y in uu___1 = uu___2)
+                  || (FStar_Options.ml_ish ()) in
               if uu___
               then USolved wl
               else ufailed_simple "Incompatible universes"
