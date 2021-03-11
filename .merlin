@@ -7,7 +7,7 @@ PKG zarith
 PKG menhirLib
 PKG sedlex
 PKG sedlex.ppx
-PKG ocaml-migrate-parsetree
+PKG ppxlib
 
 S src/basic/ml
 S src/extraction/ml
