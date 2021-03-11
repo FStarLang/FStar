@@ -1476,7 +1476,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
                                         (Print.univ_to_string u2))
 
         | U_name x, U_name y ->
-          if (string_of_id x) = (string_of_id y)
+          if (string_of_id x) = (string_of_id y) || Options.ml_ish ()
           then USolved wl
           else ufailed_simple "Incompatible universes"
 
